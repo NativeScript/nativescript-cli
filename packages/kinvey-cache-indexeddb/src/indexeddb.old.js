@@ -1,8 +1,3 @@
-import sift from 'sift';
-import isEmpty from 'lodash/isEmpty';
-import isArray from 'lodash/isArray';
-import { nested } from './utils';
-
 const DB_CACHE = {};
 
 const IndexedDBTransactionMode = {
@@ -154,9 +149,9 @@ class IndexedDB {
   }
 }
 
-export async function find(dbName, objectStoreName, query) {
+export function find(dbName, objectStoreName) {
   const db = new IndexedDB(dbName);
-  let docs = await new Promise((resolve, reject) => {
+  return new Promise((resolve, reject) => {
     db.open(objectStoreName, false, (txn) => {
       const store = txn.objectStore(objectStoreName);
       const request = store.openCursor();
@@ -184,80 +179,24 @@ export async function find(dbName, objectStoreName, query) {
       }
     });
   });
-
-  if (query) {
-    const {
-      filter,
-      sort,
-      limit,
-      skip,
-      fields
-    } = query;
-
-    if (filter && !isEmpty(filter)) {
-      docs = sift(filter, docs);
-    }
-
-    /* eslint-disable no-restricted-syntax, no-prototype-builtins  */
-    if (sort) {
-      docs.sort((a, b) => {
-        for (const field in sort) {
-          if (sort.hasOwnProperty(field)) {
-            // Find field in objects.
-            const aField = nested(a, field);
-            const bField = nested(b, field);
-            const modifier = sort[field]; // 1 (ascending) or -1 (descending).
-
-            if ((aField !== null && typeof aField !== 'undefined')
-              && (bField === null || typeof bField === 'undefined')) {
-              return 1 * modifier;
-            } else if ((bField !== null && typeof bField !== 'undefined')
-              && (aField === null || typeof aField === 'undefined')) {
-              return -1 * modifier;
-            } else if (typeof aField === 'undefined' && bField === null) {
-              return 0;
-            } else if (aField === null && typeof bField === 'undefined') {
-              return 0;
-            } else if (aField !== bField) {
-              return (aField < bField ? -1 : 1) * modifier;
-            }
-          }
-        }
-
-        return 0;
-      });
-    }
-    /* eslint-enable no-restricted-syntax, no-prototype-builtins */
-
-    if (skip > 0) {
-      if (limit < Infinity) {
-        docs = docs.slice(skip, skip + limit);
-      } else {
-        docs = docs.slice(skip);
-      }
-    }
-
-    if (isArray(fields) && fields.length > 0) {
-      docs = docs.map((doc) => {
-        const keys = Object.keys(doc);
-        keys.forEach((key) => {
-          if (fields.indexOf(key) === -1) {
-            // eslint-disable-next-line no-param-reassign
-            delete doc[key];
-          }
-        });
-
-        return doc;
-      });
-    }
-  }
-
-  return docs;
 }
 
-export async function count(dbName, objectStoreName, query) {
-  const docs = await find(dbName, objectStoreName, query);
-  return docs.length;
+export async function count(dbName, objectStoreName) {
+  const db = new IndexedDB(dbName);
+  return new Promise((resolve, reject) => {
+    db.open(objectStoreName, false, (txn) => {
+      const store = txn.objectStore(objectStoreName);
+      const request = store.count();
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = e => reject(e.target.error);
+    }, (error) => {
+      if (error.message.indexOf('not found') !== -1) {
+        resolve(0);
+      } else {
+        reject(error);
+      }
+    });
+  });
 }
 
 export function findById(dbName, objectStoreName, id) {
@@ -327,14 +266,6 @@ export async function removeById(dbName, objectStoreName, id) {
       };
     }, reject);
   });
-}
-
-export async function remove(dbName, objectStoreName, query) {
-  const docs = await find(dbName, objectStoreName, query);
-  const results = await Promise.all(docs.map(doc => removeById(dbName, objectStoreName, doc._id)));
-  return results.reduce((totalCount, count) => {
-    return totalCount + count;
-  }, 0);
 }
 
 export async function clear(dbName, objectStoreName) {

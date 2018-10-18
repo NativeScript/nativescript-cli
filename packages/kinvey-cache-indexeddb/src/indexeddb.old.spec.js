@@ -1,7 +1,6 @@
 import assert from 'assert';
 import indexedDB from 'fake-indexeddb';
 import { randomString, arraysEqual } from 'kinvey-test-utils';
-import { Query } from 'kinvey-query';
 import * as IndexedDB from './indexeddb.old';
 
 // Setup window
@@ -24,33 +23,6 @@ describe('IndexedDB (old)', () => {
       const foundDocs = await IndexedDB.find(DB_NAME, OBJECT_STORE_NAME);
       assert.deepStrictEqual(foundDocs, docs);
     });
-
-    it('should find all the docs that match the query', async () => {
-      const doc1 = { _id: 'test1' };
-      const doc2 = { _id: 'test2' };
-      await IndexedDB.save(DB_NAME, OBJECT_STORE_NAME, [doc1, doc2]);
-      const query = new Query().equalTo('_id', doc1._id)
-      const foundDocs = await IndexedDB.find(DB_NAME, OBJECT_STORE_NAME, query);
-      assert.deepStrictEqual(foundDocs, [doc1]);
-    });
-  });
-
-  describe('count', () => {
-    it('should count all the docs', async () => {
-      const docs = [{ _id: randomString() }];
-      await IndexedDB.save(DB_NAME, OBJECT_STORE_NAME, docs);
-      const count = await IndexedDB.count(DB_NAME, OBJECT_STORE_NAME);
-      assert.equal(count, docs.length);
-    });
-
-    it('should count all the docs that match the query', async () => {
-      const doc1 = { _id: 'test1' };
-      const doc2 = { _id: 'test2' };
-      await IndexedDB.save(DB_NAME, OBJECT_STORE_NAME, [doc1, doc2]);
-      const query = new Query().equalTo('_id', doc1._id);
-      const count = await IndexedDB.count(DB_NAME, OBJECT_STORE_NAME, query);
-      assert.equal(count, 1);
-    });
   });
 
   describe('findById', () => {
@@ -59,6 +31,15 @@ describe('IndexedDB (old)', () => {
       await IndexedDB.save(DB_NAME, OBJECT_STORE_NAME, doc);
       const foundDoc = await IndexedDB.findById(DB_NAME, OBJECT_STORE_NAME, doc._id);
       assert.deepStrictEqual(foundDoc, doc);
+    });
+  });
+
+  describe('count', () => {
+    it('should count all the docs', async () => {
+      const doc = { _id: 'test1' };
+      await IndexedDB.save(DB_NAME, OBJECT_STORE_NAME, doc);
+      const count = await IndexedDB.count(DB_NAME, OBJECT_STORE_NAME);
+      assert.equal(count, 1);
     });
   });
 
@@ -96,24 +77,6 @@ describe('IndexedDB (old)', () => {
       const docs = [].concat(docs1, docs2, docs3);
       docs.sort((a, b) => a._id.localeCompare(b._id));
       assert.deepEqual(foundDocs, docs);
-    });
-  });
-
-  describe('remove', () => {
-    it('should remove all the docs', async () => {
-      const docs = [{ _id: randomString() }];
-      await IndexedDB.save(DB_NAME, OBJECT_STORE_NAME, docs);
-      const count = await IndexedDB.remove(DB_NAME, OBJECT_STORE_NAME);
-      assert.equal(count, docs.length);
-    });
-
-    it('should remove all the docs that match the query', async () => {
-      const doc1 = { _id: 'test1' };
-      const doc2 = { _id: 'test2' };
-      await IndexedDB.save(DB_NAME, OBJECT_STORE_NAME, [doc1, doc2]);
-      const query = new Query().equalTo('_id', doc1._id);
-      const count = await IndexedDB.remove(DB_NAME, OBJECT_STORE_NAME, query);
-      assert.equal(count, 1);
     });
   });
 

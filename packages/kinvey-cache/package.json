@@ -14,7 +14,10 @@
   },
   "dependencies": {
     "@babel/runtime": "7.1.2",
-    "lodash": "4.17.11"
+    "kinvey-aggregation": "1.0.0",
+    "kinvey-query": "1.0.0",
+    "lodash": "4.17.11",
+    "sift": "6.0.0"
   },
   "devDependencies": {
     "@babel/cli": "7.1.2",
@@ -28,8 +31,6 @@
     "eslint": "5.3.0",
     "eslint-config-kinvey-platform": "kinvey/eslint-kinvey-platform#0.1.1",
     "eslint-plugin-import": "2.14.0",
-    "kinvey-aggregation": "1.0.0",
-    "kinvey-query": "1.0.0",
     "mocha": "5.2.0"
   }
 }
