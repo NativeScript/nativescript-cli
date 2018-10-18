@@ -73,21 +73,23 @@ export class Cache {
     return store.findById(this.appKey, this.collectionName, id);
   }
 
-  async save(docsToSaveOrUpdate) {
-    let docs = docsToSaveOrUpdate;
-    let singular = false;
+  async save(docs) {
+    let docsToSave = docs;
 
     if (!docs) {
       return null;
     }
 
     if (!isArray(docs)) {
-      singular = true;
-      docs = [docs];
+      docsToSave = [docs];
     }
 
-    if (docs.length > 0) {
-      docs = docs.map((doc) => {
+    // Clone the docs
+    docsToSave = docsToSave.slice(0, docsToSave.length);
+
+    // Save the docs
+    if (docsToSave.length > 0) {
+      docsToSave = docsToSave.map((doc) => {
         if (!doc._id) {
           return Object.assign({
             _id: generateId(),
@@ -98,10 +100,10 @@ export class Cache {
         return doc;
       });
 
-      await store.save(this.appKey, this.collectionName, docs);
+      await store.save(this.appKey, this.collectionName, docsToSave);
     }
 
-    return singular ? docs[0] : docs;
+    return docs;
   }
 
   async remove(query) {
