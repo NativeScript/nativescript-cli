@@ -6,6 +6,6 @@ export class DataStoreCache extends Cache {
       throw new Error('A tag can only contain letters, numbers, and "-".');
     }
 
-    super(`${appKey}${tag}`, collectionName);
+    super(`${appKey}.${tag}`, collectionName);
   }
 }

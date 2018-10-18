@@ -31,13 +31,13 @@ function serializeQuery(query) {
 
 class SyncCache extends DataStoreCache {
   constructor(appKey, collectionName, tag) {
-    super(`${appKey}${SYNC_CACHE_TAG}`, collectionName, tag);
+    super(`${appKey}.${SYNC_CACHE_TAG}`, collectionName, tag);
   }
 }
 
 class QueryCache extends DataStoreCache {
   constructor(appKey, collectionName, tag) {
-    super(`${appKey}${QUERY_CACHE_TAG}`, collectionName, tag);
+    super(`${appKey}.${QUERY_CACHE_TAG}`, collectionName, tag);
   }
 
   async findByKey(key) {

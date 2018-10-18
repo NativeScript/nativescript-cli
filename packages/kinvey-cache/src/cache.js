@@ -1,4 +1,5 @@
 import { Query } from 'kinvey-query';
+import { Aggregation } from 'kinvey-aggregation';
 import sift from 'sift';
 import isEmpty from 'lodash/isEmpty';
 import isArray from 'lodash/isArray';
@@ -64,7 +65,11 @@ export class Cache {
   async find(query) {
     let docs = await store.find(this.appKey, this.collectionName);
 
-    if (query && query instanceof Query) {
+    if (query && !(query instanceof Query)) {
+      throw new Error('query must be an instance of Query.');
+    }
+
+    if (query) {
       const {
         filter,
         sort,
@@ -131,8 +136,24 @@ export class Cache {
     }
   }
 
-  reduce(aggregation) {
-    return store.reduce(this.appKey, this.collectionName, aggregation);
+  async reduce(aggregation) {
+    if (!(aggregation instanceof Aggregation)) {
+      throw new Error('aggregation must be an instance of Aggregation.');
+    }
+
+    const { query, initial, fields, reduceFn } = aggregation;
+    const docs = await this.find(query);
+
+    if (fields.length > 0) {
+      return fields.reduce((results, field) => {
+        results[field] = docs.reduce((result, doc) => {
+          return reduceFn(result, doc, field) || result;
+        }, initial);
+        return results;
+      }, {});
+    }
+
+    return docs.reduce((result, doc) => reduceFn(doc, result) || result, Object.assign({}, initial));
   }
 
   async count(query) {
