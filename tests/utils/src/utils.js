@@ -1,3 +1,5 @@
+import assert from 'assert';
+
 function uid(size = 10) {
   let text = '';
   const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -15,4 +17,37 @@ export function randomString(size = 18, prefix = '') {
 
 export function randomNumber(max = 100) {
   return Math.floor(Math.random() * Math.floor(max));
+}
+
+export function arraysEqual(a, b) {
+  function _arraysEqual(a, b) {
+    if (a === b) return true;
+    if (a == null || b == null) return false;
+    if (a.length !== b.length) return false;
+
+    const aClone = a.slice(0, a.length);
+    aClone.sort();
+
+    console.log(a, aClone);
+
+    const bClone = a.slice(0, b.length);
+    bClone.sort();
+
+    console.log();
+    console.log(b, bClone);
+
+    for (let i = 0, len = aClone.length; i < len; i += 1) {
+      if (aClone[i] !== bClone[i]) return false;
+    }
+
+    return true;
+  }
+
+  if (!_arraysEqual(a, b)) {
+    throw new assert.AssertionError({
+      message: 'The arrays are not equal'
+    });
+  }
+
+  return true;
 }
