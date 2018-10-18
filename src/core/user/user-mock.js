@@ -1,6 +1,8 @@
 import nock from 'nock';
+import url from 'url';
 import { randomString } from '../utils';
 import { User } from './user';
+import { AuthorizationGrant } from '../identity';
 
 /**
  * @private
@@ -49,42 +51,50 @@ export class UserMock extends User {
     return super.logout(options)
       .then(() => {
         const tempLoginUriParts = url.parse('https://auth.kinvey.com/oauth/authenticate/f2cb888e651f400e8c05f8da6160bf12');
+        const clientId = this.client.appKey;
+        const username = options.username || randomString();
+        const password = options.password || randomString();
         const code = randomString();
         const token = {
           access_token: randomString(),
           token_type: 'bearer',
           expires_in: 3599,
-          refresh_token: randomString()
+          refresh_token: randomString(),
+          identity: 'kinveyAuth',
+          clientId,
+          redirectUri,
+          protocol: 'https:',
+          host: 'auth.kinvey.com'
         };
 
         // API Response
-        nock(this.client.micHostname, { encodedQueryParams: true })
+        nock(this.client.micHostname)
           .post(
-            '/oauth/auth',
-            `client_id=${this.client.appKey}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code`
+            '/v3/oauth/auth',
+            `client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code`
           )
           .reply(200, {
             temp_login_uri: tempLoginUriParts.href
           });
 
-        nock(`${tempLoginUriParts.protocol}//${tempLoginUriParts.host}`, { encodedQueryParams: true })
+        nock(`${tempLoginUriParts.protocol}//${tempLoginUriParts.host}`)
           .post(
             tempLoginUriParts.pathname,
-            `client_id=${this.client.appKey}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&username=${options.username}&password=${options.password}`
+          `client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&username=${username}&password=${password}&scope=openid`
           )
           .reply(302, null, {
             Location: `${redirectUri}/?code=${code}`
           });
 
-        nock(this.client.micHostname, { encodedQueryParams: true })
+        nock(this.client.micHostname)
           .post(
             '/oauth/token',
-            `grant_type=authorization_code&client_id=${this.client.appKey}&redirect_uri=${encodeURIComponent(redirectUri)}&code=${code}`
+            `grant_type=authorization_code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&code=${code}`
           )
           .reply(200, token);
 
-        nock(this.client.apiHostname, { encodedQueryParams: true })
-          .post(`${this.pathname}/login`, { _socialIdentity: { kinveyAuth: token } })
+        nock(this.client.apiHostname)
+          .post(`${this.pathname}/login`)
           .reply(200, {
             _id: randomString(),
             _kmd: {
@@ -100,7 +110,7 @@ export class UserMock extends User {
             }
           });
 
-        return super.loginWithMIC(redirectUri, authorizationGrant, options);
+        return super.loginWithMIC(redirectUri, AuthorizationGrant.AuthorizationCodeAPI, { username, password });
       });
   }
 
