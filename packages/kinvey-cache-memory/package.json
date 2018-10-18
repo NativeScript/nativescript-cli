@@ -13,9 +13,7 @@
   },
   "dependencies": {
     "@babel/runtime": "7.1.2",
-    "kinvey-cache": "1.0.0",
-    "lodash": "4.17.11",
-    "sift": "^6.0.0"
+    "kinvey-cache": "1.0.0"
   },
   "devDependencies": {
     "@babel/cli": "7.1.2",
