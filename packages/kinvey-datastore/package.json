@@ -14,6 +14,7 @@
   "dependencies": {
     "@babel/runtime": "7.1.2",
     "kinvey-app": "1.0.0",
+    "kinvey-aggregation": "1.0.0",
     "kinvey-cache": "1.0.0",
     "kinvey-http": "1.0.0",
     "kinvey-kmd": "1.0.0",

@@ -58,6 +58,28 @@ export class CacheStore {
     return stream;
   }
 
+  group(aggregation, options = {}) {
+    const autoSync = options.autoSync === true || this.autoSync;
+    const cache = new DataStoreCache(this.appKey, this.collectionName, this.tag);
+    const stream = KinveyObservable.create(async (observer) => {
+      try {
+        const cacheResult = await cache.group(aggregation);
+        observer.next(cacheResult);
+
+        if (autoSync) {
+          const network = new NetworkStore(this.appKey, this.collectionName);
+          const networkResult = await network.group(aggregation).toPromise();
+          observer.next(networkResult);
+        }
+
+        observer.complete();
+      } catch (error) {
+        observer.error(error);
+      }
+    });
+    return stream;
+  }
+
   findById(id, options = {}) {
     const autoSync = options.autoSync === true || this.autoSync;
     const cache = new DataStoreCache(this.appKey, this.collectionName, this.tag);

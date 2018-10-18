@@ -141,7 +141,8 @@ export class Cache {
       throw new Error('aggregation must be an instance of Aggregation.');
     }
 
-    const { query, initial, fields, reduceFn } = aggregation;
+    const { query, initial, key, reduceFn } = aggregation;
+    const fields = Object.keys(key);
     const docs = await this.find(query);
 
     if (fields.length > 0) {
