@@ -709,7 +709,7 @@ interface IiOSNotification extends NodeJS.EventEmitter {
 }
 
 interface IiOSSocketRequestExecutor {
-	executeLaunchRequest(deviceIdentifier: string, timeout: number, readyForAttachTimeout: number, projectId: string, shouldBreak?: boolean): Promise<void>;
+	executeLaunchRequest(deviceIdentifier: string, timeout: number, readyForAttachTimeout: number, projectId: string, debugOptions: IDebugOptions): Promise<void>;
 	executeAttachRequest(device: Mobile.IiOSDevice, timeout: number, projectId: string): Promise<void>;
 }
 
