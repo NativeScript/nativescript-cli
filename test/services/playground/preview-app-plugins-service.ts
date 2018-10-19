@@ -243,6 +243,16 @@ describe("previewAppPluginsService", () => {
 					"nativescript-theme-core": "3.5.0"
 				},
 				expectedWarnings: []
+			},
+			{
+				name: "should not show warning when the local plugin version is tag",
+				localPlugins: {
+					"tns-core-modules": "rc"
+				},
+				previewAppPlugins: {
+					"tns-core-modules": "5.0.0"
+				},
+				expectedWarnings: <string[]>[]
 			}
 		];
 
