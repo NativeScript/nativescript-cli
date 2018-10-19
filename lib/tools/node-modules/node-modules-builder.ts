@@ -20,10 +20,13 @@ export class NodeModulesBuilder implements INodeModulesBuilder {
 	}
 
 	private intialPrepareNodeModulesIfRequired(opts: INodeModulesBuilderData): IDependencyData[] {
-		const productionDependencies = this.$nodeModulesDependenciesBuilder.getProductionDependencies(opts.nodeModulesData.projectData.projectDir);
+		const { nodeModulesData } = opts;
+		const productionDependencies = this.$nodeModulesDependenciesBuilder.getProductionDependencies(nodeModulesData.projectData.projectDir);
 
 		if (opts.copyNodeModules) {
 			this.initialPrepareNodeModules(opts, productionDependencies);
+		} else if (nodeModulesData.appFilesUpdaterOptions.bundle) {
+			this.cleanNodeModules(nodeModulesData.absoluteOutputPath);
 		}
 
 		return productionDependencies;
