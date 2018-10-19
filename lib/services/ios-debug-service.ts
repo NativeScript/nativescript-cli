@@ -182,7 +182,7 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 	}
 
 	private async debugBrkCore(device: Mobile.IiOSDevice, debugData: IDebugData, debugOptions: IDebugOptions): Promise<string> {
-		await this.$iOSSocketRequestExecutor.executeLaunchRequest(device.deviceInfo.identifier, AWAIT_NOTIFICATION_TIMEOUT_SECONDS, AWAIT_NOTIFICATION_TIMEOUT_SECONDS, debugData.applicationIdentifier, debugOptions.debugBrk);
+		await this.$iOSSocketRequestExecutor.executeLaunchRequest(device.deviceInfo.identifier, AWAIT_NOTIFICATION_TIMEOUT_SECONDS, AWAIT_NOTIFICATION_TIMEOUT_SECONDS, debugData.applicationIdentifier, debugOptions);
 		return this.wireDebuggerClient(debugData, debugOptions, device);
 	}
 
