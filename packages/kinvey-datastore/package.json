@@ -9,7 +9,8 @@
   "scripts": {
     "prebuild": "del lib",
     "build": "babel src -d lib --ignore \"src/**/*.spec.js\"",
-    "lint": "eslint src"
+    "lint": "eslint src",
+    "test": "mocha -r @babel/register \"src/**/*.spec.js\""
   },
   "dependencies": {
     "@babel/runtime": "7.1.2",
