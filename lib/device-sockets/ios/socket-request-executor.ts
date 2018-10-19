@@ -50,19 +50,19 @@ export class IOSSocketRequestExecutor implements IiOSSocketRequestExecutor {
 
 	public async executeLaunchRequest(deviceIdentifier: string, timeout: number, readyForAttachTimeout: number, projectId: string, shouldBreak?: boolean): Promise<void> {
 		try {
+			// When --start is not set
+			// This notification will be send only once by the runtime during application start.
+			// In case app is already running, we'll fail here as we'll not receive it.
 			const appLaunchingSocket = await this.$iOSNotificationService.postNotification(deviceIdentifier, this.$iOSNotification.getAppLaunching(projectId), constants.IOS_OBSERVE_NOTIFICATION_COMMAND_TYPE);
 			await this.$iOSNotificationService.awaitNotification(deviceIdentifier, +appLaunchingSocket, timeout);
 
 			if (shouldBreak) {
+				// when --debug-brk is passed
 				await this.$iOSNotificationService.postNotification(deviceIdentifier, this.$iOSNotification.getWaitForDebug(projectId));
 			}
 
-			// We need to send the ObserveNotification ReadyForAttach before we post the AttachRequest.
-			const readyForAttachSocket = await this.$iOSNotificationService.postNotification(deviceIdentifier, this.$iOSNotification.getReadyForAttach(projectId), constants.IOS_OBSERVE_NOTIFICATION_COMMAND_TYPE);
-			const readyForAttachPromise = this.$iOSNotificationService.awaitNotification(deviceIdentifier, +readyForAttachSocket, readyForAttachTimeout);
+			await this.executeAttachAvailable(deviceIdentifier, projectId, readyForAttachTimeout);
 
-			await this.$iOSNotificationService.postNotification(deviceIdentifier, this.$iOSNotification.getAttachRequest(projectId, deviceIdentifier));
-			await readyForAttachPromise;
 		} catch (e) {
 			this.$logger.trace("Launch request error:");
 			this.$logger.trace(e);
@@ -79,6 +79,7 @@ export class IOSSocketRequestExecutor implements IiOSSocketRequestExecutor {
 			await this.$iOSNotificationService.postNotification(deviceIdentifier, this.$iOSNotification.getAttachRequest(projectId, deviceIdentifier));
 			await readyForAttachPromise;
 		} catch (e) {
+			this.$logger.trace("Error while tring to execute ready for attch request", e);
 			this.$errors.failWithoutHelp(`The application ${projectId} timed out when performing the socket handshake.`);
 		}
 	}
