@@ -2,7 +2,6 @@ import { expect } from 'chai';
 import nock from 'nock';
 import { init, ping } from './app';
 import { randomString } from 'kinvey-test-utils';
-import { Client } from './client';
 import { register } from 'kinvey-http-node';
 
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';

@@ -1,9 +1,9 @@
 import nock from 'nock';
 import expect from 'expect';
-import { CustomEndpoint } from './endpoint';
+import { endpoint } from './endpoint';
 import { KinveyError, NotFoundError } from '../../errors';
 import { register } from 'kinvey-http-node';
-import { User } from 'kinvey-identity';
+import { login } from 'kinvey-identity';
 import { init } from 'kinvey-app';
 import { randomString } from 'kinvey-test-utils';
 
@@ -17,7 +17,8 @@ describe('Endpoint', () => {
   before(() => {
     client = init({
       appKey: randomString(),
-      appSecret: randomString()
+      appSecret: randomString(),
+      apiHostname: 'https://baas.kinvey.com'
     });
   });
 
@@ -42,13 +43,13 @@ describe('Endpoint', () => {
       .post(`/user/${client.appKey}/login`, { username: username, password: password })
       .reply(200, reply);
 
-    return User.login(username, password);
+    return login(username, password);
   });
 
   describe('constructor', () => {
-    it('should not be able to create an instance of the CustomEndpoint class', () => {
+    it('should not be able to create an instance of the endpoint class', () => {
       expect(() => {
-        const endpoint = new CustomEndpoint();
+        const endpoint = new endpoint();
         return endpoint;
       }).toThrow();
     });
@@ -56,14 +57,14 @@ describe('Endpoint', () => {
 
   describe('execute()', () => {
     it('should throw a KinveyError when an endpoint argument is not provided', () => {
-      return CustomEndpoint.execute()
+      return endpoint()
         .catch((error) => {
           expect(error).toBeA(KinveyError);
         });
     });
 
     it('should throw a KinveyError when the endpoint argument is not a string', () => {
-      return CustomEndpoint.execute({})
+      return endpoint({})
         .catch((error) => {
           expect(error).toBeA(KinveyError);
         });
@@ -81,7 +82,7 @@ describe('Endpoint', () => {
         });
 
       // Execute custom endpoint
-      return CustomEndpoint.execute('doesnotexist')
+      return endpoint('doesnotexist')
         .catch((error) => {
           expect(error).toBeA(NotFoundError);
         });
@@ -101,7 +102,7 @@ describe('Endpoint', () => {
         });
 
       // Execute custom endpoint
-      return CustomEndpoint.execute('test')
+      return endpoint('test')
         .then((response) => {
           expect(response).toEqual({ message: 'Hello, World!' });
         });
@@ -121,7 +122,7 @@ describe('Endpoint', () => {
         });
 
       // Execute custom endpoint
-      return CustomEndpoint.execute('test', args)
+      return endpoint('test', args)
         .then((response) => {
           expect(response).toEqual(args);
         });
