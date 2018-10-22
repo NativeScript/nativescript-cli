@@ -5,6 +5,8 @@ import * as injector from "./yok";
 import * as crypto from "crypto";
 import * as shelljs from "shelljs";
 import { parseJson } from "./helpers";
+import stringifyPackage = require("stringify-package");
+import detectNewline = require("detect-newline");
 
 // TODO: Add .d.ts for mkdirp module (or use it from @types repo).
 const mkdirp = require("mkdirp");
@@ -205,7 +207,13 @@ export class FileSystem implements IFileSystem {
 			space = this.getIndentationCharacter(filename);
 		}
 
-		return this.writeFile(filename, JSON.stringify(data, null, space), encoding);
+		let stringifiedData = JSON.stringify(data, null, space);
+		if (path.basename(filename) === "package.json") {
+			const newline = detectNewline(stringifiedData);
+			stringifiedData = stringifyPackage(data, space, newline);
+		}
+
+		return this.writeFile(filename, stringifiedData, encoding);
 	}
 
 	public copyFile(sourceFileName: string, destinationFileName: string): void {
