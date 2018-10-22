@@ -3,14 +3,14 @@ import path from 'path';
 import nock from 'nock';
 import expect from 'expect';
 import chai from 'chai';
-import { Files } from './files';
+import { find, findById, download, upload, stream, create, remove, removeById } from './files';
 import { KinveyError, NotFoundError, ServerError } from '../../errors';
 import { randomString } from 'kinvey-test-utils';
-import { Query } from './query';
-import { NetworkRack } from './request';
-import { NodeHttpMiddleware } from '../node/http';
-import { User } from 'kinvey-identity';
+import { Query } from 'kinvey-query';
+import { register } from 'kinvey-http-node';
+import { login } from 'kinvey-identity';
 import { init } from 'kinvey-app';
+var Files = {};
 
 chai.use(require('chai-as-promised'));
 chai.should();
@@ -19,14 +19,24 @@ describe('Files', () => {
   let client;
 
   before(() => {
-    NetworkRack.useHttpMiddleware(new NodeHttpMiddleware({}));
+    register();
   });
 
   before(() => {
     client = init({
       appKey: randomString(),
-      appSecret: randomString()
+      appSecret: randomString(),
+      apiHostname: "https://baas.kinvey.com"
     });
+    Files.pathname = `/blob/${client.appKey}`;
+    Files.upload = upload;
+    Files.download = download;
+    Files.find = find;
+    Files.findById = findById;
+    Files.stream = stream;
+    Files.remove = remove;
+    Files.removeById = removeById;
+    Files.create = create;
   });
 
   before(() => {
@@ -49,12 +59,12 @@ describe('Files', () => {
       .post(`/user/${client.appKey}/login`, { username: username, password: password })
       .reply(200, reply);
 
-    return User.login(username, password);
+    return login(username, password);
   });
 
   describe('pathname', () => {
     it('should equal /blob/<appkey>', () => {
-      expect(Files.pathname).toEqual(`/blob/${Files.client.appKey}`);
+      expect(Files.pathname).toEqual(`/blob/${client.appKey}`);
     });
 
     it('should not be able to be changed', () => {
@@ -74,7 +84,7 @@ describe('Files', () => {
         .query({ tls: true })
         .reply(200, [file1, file2]);
 
-      return Files.find()
+      return find()
         .then((files) => {
           expect(files).toEqual([file1, file2]);
         });
@@ -208,9 +218,10 @@ describe('Files', () => {
           expect.restoreSpies();
         });
     });
-  });
+  }); 
 
-  describe('download()', () => {
+
+  describe.only('download()', () => {
     it('should set tls to true by default', () => {
       const fileEntity = { _id: randomString(), _downloadURL: 'http://tests.com' };
       const file = fs.readFileSync(path.resolve(__dirname, './test.png'), 'utf8');
@@ -509,7 +520,7 @@ describe('Files', () => {
       const fileSize = file.size || file.length;
 
       // Kinvey API response
-      nock(Files.client.apiHostname, { encodedQueryParams: true })
+      nock(client.apiHostname, { encodedQueryParams: true })
         .post(Files.pathname, {
           _filename: 'kinvey.png',
           _public: true,
@@ -801,7 +812,7 @@ describe('Files', () => {
       const fileSize = file.size || file.length;
 
       // Kinvey API response
-      nock(Files.client.apiHostname, { encodedQueryParams: true })
+      nock(client.apiHostname, { encodedQueryParams: true })
         .post(Files.pathname, {
           _filename: 'kinvey.png',
           _public: true,
@@ -898,7 +909,7 @@ describe('Files', () => {
       const fileSize = file.size || file.length;
 
       // Kinvey API response
-      nock(Files.client.apiHostname, { encodedQueryParams: true })
+      nock(client.apiHostname, { encodedQueryParams: true })
         .post(Files.pathname, {
           _filename: 'kinvey.png',
           _public: true,
