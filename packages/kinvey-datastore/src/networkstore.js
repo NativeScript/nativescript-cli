@@ -1,6 +1,7 @@
 import { getConfig } from 'kinvey-app';
 import { KinveyObservable } from 'kinvey-observable';
 import { get as getSession } from 'kinvey-session';
+import { Aggregation } from 'kinvey-aggregation';
 import * as Live from 'kinvey-live';
 import {
   formatKinveyBaasUrl,
@@ -80,6 +81,31 @@ export class NetworkStore {
           observer.next(response);
         } else {
           observer.next(response.data.count);
+        }
+
+        observer.complete();
+      } catch (error) {
+        observer.error(error);
+      }
+    });
+    return stream;
+  }
+
+  group(aggregation, rawResponse = false) {
+    const stream = KinveyObservable.create(async (observer) => {
+      try {
+        if (!(aggregation instanceof Aggregation)) {
+          throw new Error('aggregation must be an instance of Aggregation.');
+        }
+
+        const url = formatKinveyBaasUrl(`${this.pathname}/_group`);
+        const request = createRequest(RequestMethod.POST, url, aggregation.toPlainObject());
+        const response = await request.execute();
+
+        if (rawResponse === true) {
+          observer.next(response);
+        } else {
+          observer.next(response.data);
         }
 
         observer.complete();

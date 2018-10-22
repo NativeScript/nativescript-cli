@@ -9,13 +9,13 @@ export class Aggregation {
     const config = Object.assign({
       query: null,
       initial: {},
-      fields: [],
+      key: {},
       reduceFn: () => null
     }, aggregation);
 
     this.query = config.query;
     this.initial = config.initial;
-    this.fields = config.fields;
+    this.key = config.key;
     this.reduceFn = config.reduceFn;
   }
 
@@ -31,18 +31,6 @@ export class Aggregation {
     this._query = query;
   }
 
-  get fields() {
-    return this._fields;
-  }
-
-  set fields(fields) {
-    if (!isArray(fields)) {
-      throw new Error('Please provide a valid fields. Fields must be an array of strings.');
-    }
-
-    this._fields = fields;
-  }
-
   /**
    * Adds the filed to the array of fields.
    *
@@ -50,8 +38,19 @@ export class Aggregation {
    * @returns {Aggregation} Aggregation
    */
   by(field) {
-    this.fields.push(field);
+    this.key[field] = true;
     return this;
+  }
+
+  toPlainObject() {
+    return {
+      key: this.key,
+      initial: this.initial,
+      reduce: this.reduceFn,
+      reduceFn: this.reduceFn,
+      condition: this.query ? this.query.toPlainObject().filter : {},
+      query: this.query ? this.query.toPlainObject() : null
+    };
   }
 }
 
@@ -63,7 +62,6 @@ export class Aggregation {
  */
 export function count(field = '') {
   const aggregation = new Aggregation({
-    fields: [field],
     reduceFn: (result, doc, key) => {
       const val = doc[key];
       if (val) {
@@ -73,6 +71,7 @@ export function count(field = '') {
       return result;
     }
   });
+  aggregation.by(field);
   return aggregation;
 }
 
@@ -85,13 +84,13 @@ export function count(field = '') {
 export function sum(field = '') {
   const aggregation = new Aggregation({
     initial: { sum: 0 },
-    fields: [field],
     reduceFn: (result, doc, key) => {
       // eslint-disable-next-line no-param-reassign
       result.sum += doc[key];
       return result;
     }
   });
+  aggregation.by(field);
   return aggregation;
 }
 
@@ -104,13 +103,13 @@ export function sum(field = '') {
 export function min(field = '') {
   const aggregation = new Aggregation({
     initial: { min: Infinity },
-    fields: [field],
     reduceFn: (result, doc, key) => {
       // eslint-disable-next-line no-param-reassign
       result.min = Math.min(result.min, doc[key]);
       return result;
     }
   });
+  aggregation.by(field);
   return aggregation;
 }
 
@@ -123,13 +122,13 @@ export function min(field = '') {
 export function max(field = '') {
   const aggregation = new Aggregation({
     initial: { max: -Infinity },
-    fields: [field],
     reduceFn: (result, doc, key) => {
       // eslint-disable-next-line no-param-reassign
       result.max = Math.max(result.max, doc[key]);
       return result;
     }
   });
+  aggregation.by(field);
   return aggregation;
 }
 
@@ -142,7 +141,6 @@ export function max(field = '') {
 export function average(field = '') {
   const aggregation = new Aggregation({
     initial: { count: 0, average: 0 },
-    fields: [field],
     reduceFn: (result, doc, key) => {
       // eslint-disable-next-line no-param-reassign
       result.average = ((result.average * result.count) + doc[key]) / (result.count + 1);
@@ -151,5 +149,6 @@ export function average(field = '') {
       return result;
     }
   });
+  aggregation.by(field);
   return aggregation;
 }
