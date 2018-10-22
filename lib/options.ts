@@ -71,6 +71,7 @@ export class Options {
 			tsc: { type: OptionType.Boolean },
 			ts: { type: OptionType.Boolean },
 			typescript: { type: OptionType.Boolean },
+			yarn: { type: OptionType.Boolean },
 			androidTypings: { type: OptionType.Boolean },
 			bundle: { type: OptionType.String },
 			all: { type: OptionType.Boolean },

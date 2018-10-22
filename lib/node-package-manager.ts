@@ -1,9 +1,10 @@
 import * as path from "path";
+import { BasePackageManager } from "./base-package-manager";
 import { exported, cache } from "./common/decorators";
 import { isInteractive } from "./common/helpers";
 import { CACACHE_DIRECTORY_NAME } from "./constants";
 
-export class NodePackageManager implements INodePackageManager {
+export class NodePackageManager extends BasePackageManager implements INodePackageManager {
 	private static SCOPED_DEPENDENCY_REGEXP = /^(@.+?)(?:@(.+?))?$/;
 	private static DEPENDENCY_REGEXP = /^(.+?)(?:@(.+?))?$/;
 
@@ -12,7 +13,9 @@ export class NodePackageManager implements INodePackageManager {
 		private $errors: IErrors,
 		private $childProcess: IChildProcess,
 		private $logger: ILogger,
-		private $httpClient: Server.IHttpClient) { }
+		private $httpClient: Server.IHttpClient) {
+		super('npm');
+	}
 
 	@exported("npm")
 	public async install(packageName: string, pathToSave: string, config: INodePackageManagerInstallOptions): Promise<INpmInstallResultInfo> {
@@ -66,7 +69,7 @@ export class NodePackageManager implements INodePackageManager {
 			// We cannot use the actual install with --json to get the information because of post-install scripts which may print on stdout
 			// dry-run install is quite fast when the dependencies are already installed even for many dependencies (e.g. angular) so we can live with this approach
 			// We need the --prefix here because without it no output is emitted on stdout because all the dependencies are already installed.
-			const spawnNpmDryRunResult = await this.$childProcess.spawnFromEvent(this.getNpmExecutableName(), params, "close");
+			const spawnNpmDryRunResult = await this.$childProcess.spawnFromEvent(this.getNpmExecutableName(this.$hostInfo.isWindows), params, "close");
 			return this.parseNpmInstallResult(spawnNpmDryRunResult.stdout, spawnResult.stdout, packageName);
 		} catch (err) {
 			if (err.message && err.message.indexOf("EPEERINVALID") !== -1) {
@@ -136,43 +139,12 @@ export class NodePackageManager implements INodePackageManager {
 		return path.join(cachePath.trim(), CACACHE_DIRECTORY_NAME);
 	}
 
-	private getNpmExecutableName(): string {
-		let npmExecutableName = "npm";
-
-		if (this.$hostInfo.isWindows) {
-			npmExecutableName += ".cmd";
-		}
-
-		return npmExecutableName;
-	}
-
-	private getFlagsString(config: any, asArray: boolean): any {
-		const array: Array<string> = [];
-		for (const flag in config) {
-			if (flag === "global") {
-				array.push(`--${flag}`);
-				array.push(`${config[flag]}`);
-			} else if (config[flag]) {
-				if (flag === "dist-tags" || flag === "versions") {
-					array.push(` ${flag}`);
-					continue;
-				}
-				array.push(`--${flag}`);
-			}
-		}
-		if (asArray) {
-			return array;
-		}
-
-		return array.join(" ");
-	}
-
 	private parseNpmInstallResult(npmDryRunInstallOutput: string, npmInstallOutput: string, userSpecifiedPackageName: string): INpmInstallResultInfo {
 		// TODO: Add tests for this functionality
 		try {
 			const originalOutput: INpmInstallCLIResult | INpm5InstallCliResult = JSON.parse(npmDryRunInstallOutput);
-			const npm5Output = <INpm5InstallCliResult> originalOutput;
-			const npmOutput = <INpmInstallCLIResult> originalOutput;
+			const npm5Output = <INpm5InstallCliResult>originalOutput;
+			const npmOutput = <INpmInstallCLIResult>originalOutput;
 			let name: string;
 			_.forOwn(npmOutput.dependencies, (peerDependency: INpmPeerDependencyInfo, key: string) => {
 				if (!peerDependency.required && !peerDependency.peerMissing) {
@@ -241,60 +213,17 @@ export class NodePackageManager implements INodePackageManager {
 	}
 
 	private async getNpmInstallResult(params: string[], cwd: string): Promise<ISpawnResult> {
-		return new Promise<ISpawnResult>((resolve, reject) => {
-			const npmExecutable = this.getNpmExecutableName();
+		return new Promise<ISpawnResult>(async (resolve, reject) => {
+			const npmExecutable = this.getNpmExecutableName(this.$hostInfo.isWindows);
 			const stdioValue = isInteractive() ? "inherit" : "pipe";
-
 			const childProcess = this.$childProcess.spawn(npmExecutable, params, { cwd, stdio: stdioValue });
 
-			let isFulfilled = false;
-			let capturedOut = "";
-			let capturedErr = "";
-
-			if (childProcess.stdout) {
-				childProcess.stdout.on("data", (data: string) => {
-					this.$logger.write(data.toString());
-					capturedOut += data;
-				});
+			try {
+				const result = await this.processPackageManagerInstall(childProcess, this.$hostInfo.isWindows, params);
+				resolve(result);
+			} catch (e) {
+				reject(e);
 			}
-
-			if (childProcess.stderr) {
-				childProcess.stderr.on("data", (data: string) => {
-					capturedErr += data;
-				});
-			}
-
-			childProcess.on("close", (arg: any) => {
-				const exitCode = typeof arg === "number" ? arg : arg && arg.code;
-
-				if (exitCode === 0) {
-					isFulfilled = true;
-					const result = {
-						stdout: capturedOut,
-						stderr: capturedErr,
-						exitCode
-					};
-
-					resolve(result);
-				} else {
-					let errorMessage = `Command ${npmExecutable} ${params && params.join(" ")} failed with exit code ${exitCode}`;
-					if (capturedErr) {
-						errorMessage += ` Error output: \n ${capturedErr}`;
-					}
-
-					if (!isFulfilled) {
-						isFulfilled = true;
-						reject(new Error(errorMessage));
-					}
-				}
-			});
-
-			childProcess.on("error", (err: Error) => {
-				if (!isFulfilled) {
-					isFulfilled = true;
-					reject(err);
-				}
-			});
 		});
 	}
 }
