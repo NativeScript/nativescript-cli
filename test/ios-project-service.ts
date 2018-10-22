@@ -27,7 +27,9 @@ import { PluginsService } from "../lib/services/plugins-service";
 import { PluginVariablesHelper } from "../lib/common/plugin-variables-helper";
 import { Utils } from "../lib/common/utils";
 import { CocoaPodsService } from "../lib/services/cocoapods-service";
+import { PackageManager } from "../lib/package-manager";
 import { NodePackageManager } from "../lib/node-package-manager";
+import { YarnPackageManager } from "../lib/yarn-package-manager";
 
 import { assert } from "chai";
 import { IOSProvisionService } from "../lib/services/ios-provision-service";
@@ -115,7 +117,12 @@ function createTestInjector(projectPath: string, projectName: string, xcode?: IX
 			pbxGroupByName() { /* */ }
 		}
 	});
+	testInjector.register("userSettingsService", {
+		getSettingValue: async (settingName: string): Promise<void> => undefined
+	});
+	testInjector.register("packageManager", PackageManager);
 	testInjector.register("npm", NodePackageManager);
+	testInjector.register("yarn", YarnPackageManager);
 	testInjector.register("xCConfigService", XCConfigService);
 	testInjector.register("settingsService", SettingsService);
 	testInjector.register("httpClient", {});
@@ -130,7 +137,9 @@ function createTestInjector(projectPath: string, projectName: string, xcode?: IX
 		hasChangesInShasums: (oldPluginNativeHashes: IStringDictionary, currentPluginNativeHashes: IStringDictionary) => true,
 		generateHashes: async (files: string[]): Promise<IStringDictionary> => ({})
 	});
-
+	testInjector.register("pacoteService", {
+		extractPackage: async (packageName: string, destinationDirectory: string, options?: IPacoteExtractOptions): Promise<void> => undefined
+	});
 	return testInjector;
 }
 

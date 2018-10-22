@@ -49,7 +49,15 @@ const createTestInjector = (opts?: ITestSetup): IInjector => {
 	testInjector.register("proxyService", {
 		getCache: async (): Promise<IProxySettings> => opts.useProxySettings ? proxySettings : null
 	});
+	testInjector.register("packageManager", {
+		getCachePath: async (): Promise<string> => {
+			if (opts.npmGetCachePathError) {
+				throw opts.npmGetCachePathError;
+			}
 
+			return npmCachePath;
+		}
+	});
 	testInjector.register("npm", {
 		getCachePath: async (): Promise<string> => {
 			if (opts.npmGetCachePathError) {

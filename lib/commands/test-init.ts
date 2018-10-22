@@ -12,7 +12,7 @@ class TestInitCommand implements ICommand {
 		mocha: ['chai']
 	};
 
-	constructor(private $npm: INodePackageManager,
+	constructor(private $packageManager: INodePackageManager,
 		private $projectData: IProjectData,
 		private $errors: IErrors,
 		private $options: IOptions,
@@ -55,7 +55,7 @@ class TestInitCommand implements ICommand {
 			if (mod.version) {
 				moduleToInstall += `@${mod.version}`;
 			}
-			await this.$npm.install(moduleToInstall, projectDir, {
+			await this.$packageManager.install(moduleToInstall, projectDir, {
 				'save-dev': true,
 				'save-exact': true,
 				optional: false,
@@ -76,7 +76,7 @@ class TestInitCommand implements ICommand {
 				// catch errors when a peerDependency is already installed
 				// e.g karma is installed; karma-jasmine depends on karma and will try to install it again
 				try {
-					await this.$npm.install(`${peerDependency}@${dependencyVersion}`, projectDir, {
+					await this.$packageManager.install(`${peerDependency}@${dependencyVersion}`, projectDir, {
 						'save-dev': true,
 						'save-exact': true,
 						disableNpmInstall: false,

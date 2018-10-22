@@ -16,7 +16,7 @@ export class PreparePlatformJSService extends PreparePlatformService implements 
 		private $logger: ILogger,
 		private $projectDataService: IProjectDataService,
 		private $nodeModulesBuilder: INodeModulesBuilder,
-		private $npm: INodePackageManager) {
+		private $packageManager: INodePackageManager) {
 		super($fs, $hooksService, $xmlValidator);
 	}
 
@@ -77,7 +77,7 @@ export class PreparePlatformJSService extends PreparePlatformService implements 
 			const tempDir = temp.mkdirSync("platform-template");
 			this.$fs.writeJson(path.join(tempDir, constants.PACKAGE_JSON_FILE_NAME), {});
 			try {
-				const npmInstallResult = await this.$npm.install(selectedTemplate, tempDir, {
+				const npmInstallResult = await this.$packageManager.install(selectedTemplate, tempDir, {
 					disableNpmInstall: false,
 					frameworkPath: null,
 					ignoreScripts: false

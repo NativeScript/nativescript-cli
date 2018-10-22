@@ -84,7 +84,7 @@ function createTestInjector() {
 	testInjector.register("xmlValidator", XmlValidator);
 	testInjector.register("preparePlatformNativeService", PreparePlatformNativeService);
 	testInjector.register("preparePlatformJSService", PreparePlatformJSService);
-	testInjector.register("npm", {
+	testInjector.register("packageManager", {
 		uninstall: async () => {
 			return true;
 		}

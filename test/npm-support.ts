@@ -2,6 +2,8 @@ import yok = require('../lib/common/yok');
 import stubs = require('./stubs');
 import ErrorsLib = require("../lib/common/errors");
 import NpmLib = require("../lib/node-package-manager");
+import PackageManagerLib = require("../lib/package-manager");
+import YarnLib = require("../lib/yarn-package-manager");
 import FsLib = require("../lib/common/file-system");
 import OptionsLib = require("../lib/options");
 import StaticConfigLib = require("../lib/config");
@@ -65,7 +67,12 @@ function createTestInjector(): IInjector {
 	testInjector.register("hooksService", stubs.HooksServiceStub);
 	testInjector.register("nodeModulesBuilder", NodeModulesLib.NodeModulesBuilder);
 	testInjector.register("pluginsService", PluginsServiceLib.PluginsService);
+	testInjector.register("userSettingsService", {
+		getSettingValue: async (settingName: string): Promise<void> => undefined
+	});
 	testInjector.register("npm", NpmLib.NodePackageManager);
+	testInjector.register("packageManager", PackageManagerLib.PackageManager);
+	testInjector.register("yarn", YarnLib.YarnPackageManager);
 	testInjector.register("childProcess", ChildProcessLib.ChildProcess);
 	testInjector.register("projectFilesManager", ProjectFilesManagerLib.ProjectFilesManager);
 	testInjector.register("commandsServiceProvider", {
