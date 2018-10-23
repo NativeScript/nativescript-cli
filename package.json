@@ -16,7 +16,7 @@
     "loglevel": "~1.5.1",
     "nativescript-urlhandler": "^1.2.2",
     "promise-queue": "github:thomasconner/promise-queue",
-    "pubnub": "github:thomasconner/javascript",
+    "pubnub": "github:thomasconner/javascript#develop",
     "qs": "~6.5.1",
     "request": "~2.83.0",
     "rxjs": "~6.2.2",
