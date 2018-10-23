@@ -6,7 +6,7 @@ import { MobileIdentityConnect, AuthorizationGrant } from './mic';
 import { InsufficientCredentialsError, MobileIdentityConnectError, KinveyError } from '../../errors';
 import { randomString } from 'kinvey-test-utils';
 import { register } from 'kinvey-http-node';
-import { User } from 'kinvey-identity';
+import { login } from 'kinvey-identity';
 import { init } from 'kinvey-app';
 
 const redirectUri = 'http://localhost:3000';
@@ -21,7 +21,9 @@ describe('MobileIdentityConnect', () => {
   before(() => {
     client = init({
       appKey: randomString(),
-      appSecret: randomString()
+      appSecret: randomString(),
+      apiHostname: "https://baas.kinvey.com",
+      micHostname: "https://auth.kinvey.com"
     });
   });
 
@@ -45,7 +47,7 @@ describe('MobileIdentityConnect', () => {
       .post(`/user/${client.appKey}/login`, { username: username, password: password })
       .reply(200, reply);
 
-    return User.login(username, password);
+    return login(username, password);
   });
 
   describe('identity', () => {

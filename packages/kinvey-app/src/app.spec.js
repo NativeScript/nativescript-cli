@@ -35,7 +35,11 @@ describe('App', () => {
         appKey: appKey,
         appSecret: appSecret
       });
-      expect(client).to.be.an.instanceof(Client);
+      expect(client).to.be.instanceof(Client);
+      // expect(client).to.have.property(appKey);
+      // expect(client).to.have.property(appSecret);
+      // expect(client.appKey).to.equal(appKey);
+      // expect(client.appSecret).to.equal(appSecret);
     });
 
     it('should set default MIC host name when a custom one is not provided', () => {

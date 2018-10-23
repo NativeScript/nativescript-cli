@@ -437,8 +437,12 @@ describe('Query', () => {
       it('should return a subquery', () => {
         const query1 = new Query();
         const query2 = query1.and();
+        console.log('------------------')
+        console.log(query1);
+        console.log('------------------')
+        console.log(query2);
         expect(query2).to.be.an.instanceof(Query);
-        expect(query2._parent).to.deep.equal(query1);
+        expect(query2.parent).to.deep.equal(query1);
       });
 
       it('should update the original query', () => {
@@ -679,7 +683,7 @@ describe('Query', () => {
       query.matches(field, `^${randomString()}`);
       query.greaterThan(field, randomString());
       expect(query.toPlainObject().filter).to.have.property(field);
-      expect(query.toPlainObject().filter[field]).to.have.property(['$gt']);
+      expect(query.toPlainObject().filter[field]).to.have.property('$gt');
     });
 
     it('should return the query', () => {

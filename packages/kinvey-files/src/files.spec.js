@@ -3,7 +3,7 @@ import path from 'path';
 import nock from 'nock';
 import expect from 'expect';
 import chai from 'chai';
-import { find, findById, download, upload, stream, create, remove, removeById } from './files';
+import { find, findById, download, upload, stream, create, remove, removeById, update } from './files';
 import { KinveyError, NotFoundError, ServerError } from '../../errors';
 import { randomString } from 'kinvey-test-utils';
 import { Query } from 'kinvey-query';
@@ -37,6 +37,7 @@ describe('Files', () => {
     Files.remove = remove;
     Files.removeById = removeById;
     Files.create = create;
+    Files.update = update;
   });
 
   before(() => {
@@ -221,7 +222,7 @@ describe('Files', () => {
   }); 
 
 
-  describe.only('download()', () => {
+  describe('download()', () => {
     it('should set tls to true by default', () => {
       const fileEntity = { _id: randomString(), _downloadURL: 'http://tests.com' };
       const file = fs.readFileSync(path.resolve(__dirname, './test.png'), 'utf8');
@@ -354,7 +355,7 @@ describe('Files', () => {
   describe('findById()', () => {
     it('should call download()', () => {
       const spy = expect.spyOn(Files, 'download');
-      Files.findById();
+      Files.findById(randomString());
       expect(spy).toHaveBeenCalled();
     });
 
@@ -400,7 +401,7 @@ describe('Files', () => {
       const fileSize = file.size || file.length;
 
       // Kinvey API response
-      nock(Files.client.apiHostname, { encodedQueryParams: true })
+      nock(client.apiHostname, { encodedQueryParams: true })
         .post(Files.pathname, {
           _filename: 'kinvey.png',
           _public: true,
@@ -659,7 +660,7 @@ describe('Files', () => {
       const fileSize = file.size || file.length;
 
       // Kinvey API response
-      nock(Files.client.apiHostname, { encodedQueryParams: true })
+      nock(client.apiHostname, { encodedQueryParams: true })
         .post(Files.pathname, {
           _filename: 'kinvey.png',
           _public: true,

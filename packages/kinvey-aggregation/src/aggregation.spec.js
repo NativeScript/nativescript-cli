@@ -65,7 +65,7 @@ describe('Aggregation', () => {
     });
 
     it('should filter the entities processed using the query', () => {
-      const aggregation = Aggregation.count('title');
+      const aggregation = count('title');
       const query = new Query().equalTo('title', commonTitle);
       aggregation.query = query;
       const results = aggregation.process(entities);
@@ -76,7 +76,7 @@ describe('Aggregation', () => {
 
   describe('count()', () => {
     it('should return the count of a unique property value for all entities', () => {
-      const aggregation = Aggregation.count('title');
+      const aggregation = count('title');
       const results = aggregation.process(entities);
       expect(results).to.be.an.instanceOf(Array);
       results.forEach((result) => {
@@ -92,7 +92,7 @@ describe('Aggregation', () => {
   describe('sum()', () => {
     it('should return the sum of a property for all entities', () => {
       const sum = entities.reduce((sum, entity) => sum + entity.count, 0);
-      const aggregation = Aggregation.sum('count');
+      const aggregation = sum('count');
       const result = aggregation.process(entities);
       expect(result).to.be.an.instanceof(Object);
       expect(result.sum).to.equal(sum);
@@ -102,7 +102,7 @@ describe('Aggregation', () => {
   describe('min()', () => {
     it('should return the min value of a property for all entities', () => {
       const min = entities.reduce((min, entity) => Math.min(min, entity.count), Infinity);
-      const aggregation = Aggregation.min('count');
+      const aggregation = min('count');
       const result = aggregation.process(entities);
       expect(result).to.be.an.instanceof(Object);
       expect(result.min).to.equal(min);
@@ -112,7 +112,7 @@ describe('Aggregation', () => {
   describe('max()', () => {
     it('should return the max value of a property for all entities', () => {
       const max = entities.reduce((max, entity) => Math.max(max, entity.count), -Infinity);
-      const aggregation = Aggregation.max('count');
+      const aggregation = max('count');
       const result = aggregation.process(entities);
       expect(result).to.be.an.instanceof(Object);
       expect(result.max).to.equal(max);
@@ -127,7 +127,7 @@ describe('Aggregation', () => {
         count += 1;
         return average;
       }, 0);
-      const aggregation = Aggregation.average('count');
+      const aggregation = average('count');
       const result = aggregation.process(entities);
       expect(result).to.be.an.instanceof(Object);
       expect(result.average).to.equal(average);
