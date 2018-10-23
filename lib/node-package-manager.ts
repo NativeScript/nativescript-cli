@@ -1,20 +1,20 @@
 import * as path from "path";
 import { BasePackageManager } from "./base-package-manager";
 import { exported, cache } from "./common/decorators";
-import { isInteractive } from "./common/helpers";
 import { CACACHE_DIRECTORY_NAME } from "./constants";
 
 export class NodePackageManager extends BasePackageManager implements INodePackageManager {
 	private static SCOPED_DEPENDENCY_REGEXP = /^(@.+?)(?:@(.+?))?$/;
 	private static DEPENDENCY_REGEXP = /^(.+?)(?:@(.+?))?$/;
 
-	constructor(private $fs: IFileSystem,
-		private $hostInfo: IHostInfo,
+	constructor(
+		$childProcess: IChildProcess,
 		private $errors: IErrors,
-		private $childProcess: IChildProcess,
+		private $fs: IFileSystem,
+		$hostInfo: IHostInfo,
 		private $logger: ILogger,
 		private $httpClient: Server.IHttpClient) {
-		super('npm');
+		super($childProcess, $hostInfo, 'npm');
 	}
 
 	@exported("npm")
@@ -56,7 +56,7 @@ export class NodePackageManager extends BasePackageManager implements INodePacka
 		}
 
 		try {
-			const spawnResult: ISpawnResult = await this.getNpmInstallResult(params, cwd);
+			const spawnResult: ISpawnResult = await this.processPackageManagerInstall(params, { cwd });
 
 			// Whenever calling npm install without any arguments (hence installing all dependencies) no output is emitted on stdout
 			// Luckily, whenever you call npm install to install all dependencies chances are you won't need the name/version of the package you're installing because there is none.
@@ -69,7 +69,7 @@ export class NodePackageManager extends BasePackageManager implements INodePacka
 			// We cannot use the actual install with --json to get the information because of post-install scripts which may print on stdout
 			// dry-run install is quite fast when the dependencies are already installed even for many dependencies (e.g. angular) so we can live with this approach
 			// We need the --prefix here because without it no output is emitted on stdout because all the dependencies are already installed.
-			const spawnNpmDryRunResult = await this.$childProcess.spawnFromEvent(this.getNpmExecutableName(this.$hostInfo.isWindows), params, "close");
+			const spawnNpmDryRunResult = await this.$childProcess.spawnFromEvent(this.getPackageManagerExecutableName(), params, "close");
 			return this.parseNpmInstallResult(spawnNpmDryRunResult.stdout, spawnResult.stdout, packageName);
 		} catch (err) {
 			if (err.message && err.message.indexOf("EPEERINVALID") !== -1) {
@@ -210,21 +210,6 @@ export class NodePackageManager extends BasePackageManager implements INodePacka
 			name,
 			version
 		};
-	}
-
-	private async getNpmInstallResult(params: string[], cwd: string): Promise<ISpawnResult> {
-		return new Promise<ISpawnResult>(async (resolve, reject) => {
-			const npmExecutable = this.getNpmExecutableName(this.$hostInfo.isWindows);
-			const stdioValue = isInteractive() ? "inherit" : "pipe";
-			const childProcess = this.$childProcess.spawn(npmExecutable, params, { cwd, stdio: stdioValue });
-
-			try {
-				const result = await this.processPackageManagerInstall(childProcess, this.$hostInfo.isWindows, params);
-				resolve(result);
-			} catch (e) {
-				reject(e);
-			}
-		});
 	}
 }
 
