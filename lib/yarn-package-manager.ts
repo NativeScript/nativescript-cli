@@ -1,20 +1,19 @@
 import * as path from "path";
 import { BasePackageManager } from "./base-package-manager";
 import { exported } from './common/decorators';
-import { isInteractive } from "./common/helpers";
 
 export class YarnPackageManager extends BasePackageManager implements INodePackageManager {
 
 	constructor(
-		private $childProcess: IChildProcess,
+		$childProcess: IChildProcess,
 		private $errors: IErrors,
 		private $fs: IFileSystem,
-		private $hostInfo: IHostInfo,
+		$hostInfo: IHostInfo,
 		private $httpClient: Server.IHttpClient,
 		private $logger: ILogger,
 		private $pacoteService: IPacoteService
 	) {
-		super('yarn');
+		super($childProcess, $hostInfo, 'yarn');
 	}
 
 	@exported("yarn")
@@ -40,7 +39,7 @@ export class YarnPackageManager extends BasePackageManager implements INodePacka
 		const cwd = pathToSave;
 
 		try {
-			await this._getYarnInstallResult(params, cwd);
+			await this.processPackageManagerInstall(params, { cwd });
 
 			if (isInstallingAllDependencies) {
 				return null;
@@ -92,28 +91,13 @@ export class YarnPackageManager extends BasePackageManager implements INodePacka
 	@exported("yarn")
 	public async getRegistryPackageData(packageName: string): Promise<any> {
 		const registry = await this.$childProcess.exec(`yarn config get registry`);
-		const url =  registry.trim() + packageName;
+		const url = `${registry.trim()}/${packageName}`;
 		this.$logger.trace(`Trying to get data from yarn registry for package ${packageName}, url is: ${url}`);
 		const responseData = (await this.$httpClient.httpRequest(url)).body;
 		this.$logger.trace(`Successfully received data from yarn registry for package ${packageName}. Response data is: ${responseData}`);
 		const jsonData = JSON.parse(responseData);
 		this.$logger.trace(`Successfully parsed data from yarn registry for package ${packageName}.`);
 		return jsonData;
-	}
-
-	private async _getYarnInstallResult(params: string[], cwd: string): Promise<ISpawnResult> {
-		return new Promise<ISpawnResult>(async (resolve, reject) => {
-			const npmExecutable = this.getNpmExecutableName(this.$hostInfo.isWindows);
-			const stdioValue = isInteractive() ? "inherit" : "pipe";
-			const childProcess = this.$childProcess.spawn(npmExecutable, params, { cwd, stdio: stdioValue });
-			try {
-				await this.processPackageManagerInstall(childProcess, this.$hostInfo.isWindows, params);
-				resolve();
-			} catch (e) {
-				reject(e);
-			}
-
-		});
 	}
 
 	@exported("yarn")

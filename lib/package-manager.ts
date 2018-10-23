@@ -39,13 +39,15 @@ export class PackageManager implements INodePackageManager {
 	}
 
 	private _determinePackageManager(): void {
-		this.$userSettingsService.getSettingValue('packageManager').then ( (pm: string) => {
+		this.$userSettingsService.getSettingValue('packageManager')
+		.then((pm: string) => {
 			if (pm === 'yarn' || this.$options.yarn) {
 				this.packageManager = this.$yarn;
 			} else {
 				this.packageManager = this.$npm;
 			}
-		}, (err) => {
+		})
+		.catch((err) => {
 			this.$errors.fail(`Unable to read package manager config from user settings ${err}`);
 		});
 	}
