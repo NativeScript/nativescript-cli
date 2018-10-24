@@ -142,6 +142,12 @@ export class AndroidVirtualDeviceService implements Mobile.IAndroidVirtualDevice
 		});
 	}
 
+	public detach(deviceInfo: Mobile.IDeviceInfo) {
+		if (this.mapEmulatorIdToImageIdentifier[deviceInfo.identifier]) {
+			delete this.mapEmulatorIdToImageIdentifier[deviceInfo.identifier];
+		}
+	}
+
 	private async getEmulatorImagesCore(): Promise<Mobile.IEmulatorImagesOutput> {
 		let result: ISpawnResult = null;
 		let devices: Mobile.IDeviceInfo[] = [];
