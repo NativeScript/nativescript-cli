@@ -9,7 +9,7 @@ import * as temp from "temp";
 export class ProjectService implements IProjectService {
 
 	constructor(private $hooksService: IHooksService,
-		private $npm: INodePackageManager,
+		private $packageManager: INodePackageManager,
 		private $errors: IErrors,
 		private $fs: IFileSystem,
 		private $logger: ILogger,
@@ -99,11 +99,11 @@ export class ProjectService implements IProjectService {
 			}
 
 			if (templateVersion === constants.TemplateVersions.v1) {
-				await this.$npm.uninstall(templatePackageJsonContent.name, { save: true }, projectDir);
+				await this.$packageManager.uninstall(templatePackageJsonContent.name, { save: true }, projectDir);
 			}
 
 			// Install devDependencies and execute all scripts:
-			await this.$npm.install(projectDir, projectDir, {
+			await this.$packageManager.install(projectDir, projectDir, {
 				disableNpmInstall: false,
 				frameworkPath: null,
 				ignoreScripts

@@ -13,7 +13,7 @@ export class InstallCommand implements ICommand {
 		private $logger: ILogger,
 		private $fs: IFileSystem,
 		private $stringParameter: ICommandParameter,
-		private $npm: INodePackageManager) {
+		private $packageManager: INodePackageManager) {
 		this.$projectData.initializeProjectData();
 	}
 
@@ -54,7 +54,7 @@ export class InstallCommand implements ICommand {
 			moduleName = devPrefix + moduleName;
 		}
 
-		await this.$npm.install(moduleName, projectDir, {
+		await this.$packageManager.install(moduleName, projectDir, {
 			'save-dev': true,
 			disableNpmInstall: this.$options.disableNpmInstall,
 			frameworkPath: this.$options.frameworkPath,

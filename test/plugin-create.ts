@@ -24,7 +24,7 @@ function createTestInjector() {
 	testInjector.register("childProcess", stubs.ChildProcessStub);
 	testInjector.register("prompter", new stubs.PrompterStub());
 	testInjector.register("fs", stubs.FileSystemStub);
-	testInjector.register("npm", stubs.NpmInstallationManagerStub);
+	testInjector.register("packageManager", stubs.NpmInstallationManagerStub);
 	testInjector.register("options", {
 		username: undefined,
 		pluginName: undefined,

@@ -27,7 +27,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		private $injector: IInjector,
 		private $pluginVariablesService: IPluginVariablesService,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-		private $npm: INodePackageManager,
+		private $packageManager: INodePackageManager,
 		private $androidPluginBuildService: IAndroidPluginBuildService,
 		private $platformEnvironmentRequirements: IPlatformEnvironmentRequirements,
 		private $androidResourcesMigrationService: IAndroidResourcesMigrationService,
@@ -206,7 +206,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 				(projectPackageJson.devDependencies && projectPackageJson.devDependencies[dependency.name]);
 
 			if (!dependencyVersionInProject) {
-				await this.$npm.install(`${dependency.name}@${dependency.version}`, projectData.projectDir, npmConfig);
+				await this.$packageManager.install(`${dependency.name}@${dependency.version}`, projectData.projectDir, npmConfig);
 			} else {
 				const cleanedVersion = semver.clean(dependencyVersionInProject);
 

@@ -27,7 +27,7 @@ describe("nativescript-cli-lib", () => {
 		constants: ["CONFIG_NS_APP_RESOURCES_ENTRY", "CONFIG_NS_APP_ENTRY", "CONFIG_NS_FILE_NAME"],
 		localBuildService: ["build"],
 		deviceLogProvider: null,
-		npm: ["install", "uninstall", "view", "search"],
+		packageManager: ["install", "uninstall", "view", "search"],
 		extensibilityService: ["loadExtensions", "loadExtension", "getInstalledExtensions", "installExtension", "uninstallExtension"],
 		liveSyncService: ["liveSync", "stopLiveSync", "enableDebugging", "disableDebugging", "attachDebugger"],
 		debugService: ["debug"],
