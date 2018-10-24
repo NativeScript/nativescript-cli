@@ -79,7 +79,8 @@ export class YarnPackageManager extends BasePackageManager implements INodePacka
 
 	@exported("yarn")
 	public search(filter: string[], config: IDictionary<string | boolean>): Promise<string> {
-		throw new Error("Method not implemented. Yarn does not support searching for packages in the registry.");
+		this.$errors.fail("Method not implemented. Yarn does not support searching for packages in the registry.");
+		return null;
 	}
 
 	public async searchNpms(keyword: string): Promise<INpmsResult> {
@@ -102,7 +103,8 @@ export class YarnPackageManager extends BasePackageManager implements INodePacka
 
 	@exported("yarn")
 	getCachePath(): Promise<string> {
-		throw new Error("Method not implemented.");
+		this.$errors.fail("Method not implemented");
+		return null;
 	}
 }
 
