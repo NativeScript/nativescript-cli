@@ -121,6 +121,12 @@ export class AndroidDevice implements Mobile.IAndroidDevice {
 		}
 	}
 
+	public detach(): void {
+		if (this.isEmulator) {
+			this.$androidEmulatorServices.detach(this.deviceInfo);
+		}
+	}
+
 	private async getDeviceDetails(shellCommandArgs: string[]): Promise<IAndroidDeviceDetails> {
 		const parsedDetails: any = {};
 
