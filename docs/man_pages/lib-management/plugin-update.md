@@ -2,17 +2,21 @@
 title: tns plugin update
 position: 7
 ---<% } %>
+
 # tns plugin update
 
+### Description
+
+<% if(isConsole) { %>Uninstalls and installs the specified plugin(s) and any packages that it depends on.<% } %>
+<% if(isHtml) { %>Uninstalls and installs the specified plugin(s) and its dependencies in the local `node_modules` folder, adds it to the `dependencies` section in `package.json`, and prepares the plugin(s) for all installed platforms. If you have not configured any platforms for the project, the NativeScript CLI will prepare the plugin(s) when you add a platform. For more information about working with plugins, see [NativeScript Plugins](https://github.com/NativeScript/nativescript-cli/blob/master/PLUGINS.md).<% } %>
+
+### Commands
 
 Usage | Synopsis
 ------|-------
 General | `$ tns plugin update <Plugin(s)>`
 
-<% if(isConsole) { %>Uninstalls and installs the specified plugin(s) and any packages that it depends on.<% } %>
-<% if(isHtml) { %>Uninstalls and installs the specified plugin(s) and its dependencies in the local `node_modules` folder, adds it to the `dependencies` section in `package.json`, and prepares the plugin(s) for all installed platforms. If you have not configured any platforms for the project, the NativeScript CLI will prepare the plugin(s) when you add a platform. For more information about working with plugins, see [NativeScript Plugins](https://github.com/NativeScript/nativescript-cli/blob/master/PLUGINS.md).<% } %>
-
-### Attributes
+### Arguments
 
 * `<Plugin(s)>` is a valid NativeScript plugin or list of plugins, specified by any of the following. If not specified the command will use currently installed plugins in the project.
     * A `<Name>` or `<Name>@<Version>` where `<Name>` is the name of a plugin that is published in the npm registry and `<Version>` is a valid version of this plugin.
@@ -22,6 +26,7 @@ General | `$ tns plugin update <Plugin(s)>`
     * A `<git Remote URL>` which resolves to a `.tar.gz` archive containing a directory with the plugin and its `package.json` file.
 
 <% if(isHtml) { %>
+
 ### Prerequisites
 
 * Verify that the plugin that you want to add contains a valid `package.json` file. Valid `package.json` files contain a `nativescript` section.

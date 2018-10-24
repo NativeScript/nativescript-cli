@@ -2,16 +2,21 @@
 title: tns proxy clear
 position: 12
 ---<% } %>
+
 # tns proxy clear
 
+### Description
+
+Clears the currently configured proxy settings of the NativeScript CLI.
+
+### Commands
 
 Usage | Synopsis
 ------|-------
 General | `$ tns proxy clear`
 
-Clears proxy settings.
-
 <% if(isHtml) { %>
+
 ### Related Commands
 
 Command | Description

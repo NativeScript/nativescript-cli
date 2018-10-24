@@ -2,30 +2,36 @@
 title: tns device run
 position: 5
 ---<% } %>
+
 # tns device run
 
-
-Usage | Synopsis
-------|-------
-General | `$ tns device run <Application ID> [--device <Device ID>]`
+### Description
 
 Runs the selected application on a connected Android <% if(isMacOS) { %>or iOS <% } %>device.
 
 <% if(isConsole && (isWindows || isLinux)) { %>WARNING: You can work only with connected Android devices.<% } %>
 
-### Options
-* `--device` - If multiple devices are connected, sets the device on which you want to run the app.
+### Commands
 
-### Attributes
-* `<Application ID>` is the application identifier as listed by `$ tns device list-applications` 
-* `<Device ID>` is the device index or identifier as listed by run `$ tns device`
+Usage | Synopsis
+------|-------
+General | `$ tns device run <Application ID> [--device <Device ID>]`
+
+### Options
+
+* `--device` - If multiple devices are connected, sets the device on which you want to run the app. `<Device ID>` is the device index or identifier as listed by the `$ tns device` command.
+
+### Arguments
+
+* `<Application ID>` is the application identifier as listed by `$ tns device list-applications`.
 
 <% if(isHtml) { %>
-### Prerequisites
-Before running your app on an iOS device, verify that your system and app meet the following requirements.
 
-* You are running the NativeScript CLI on an OS X system.
-* You have installed Xcode 5 or later.
+### Prerequisites
+
+Before running your app on an iOS device, verify that your system and app meet the following requirements.
+* You are running the NativeScript CLI on a macOS system.
+* You have installed the latest version of Xcode.
 * You have built your app with the debug build configuration.
 
 Before running your app on an Android device, verify that your app meets the following requirement.
@@ -35,7 +41,7 @@ Before running your app on an Android device, verify that your app meets the fol
 ### Command Limitations
 
 * You can run this command on one connected device at a time.
-* You can run this command for iOS devices only on OS X systems.
+* You can run this command for iOS devices only on macOS systems.
 
 ### Related Commands
 

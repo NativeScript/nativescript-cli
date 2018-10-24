@@ -2,16 +2,21 @@
 title: tns doctor
 position: 5
 ---<% } %>
+
 # tns doctor
 
+### Description
+
+Checks your system for configuration problems which might prevent the NativeScript CLI from working properly.
+
+### Commands
 
 Usage | Synopsis
 ------|-------
 General | `$ tns doctor`
 
-Checks your system for configuration problems which might prevent the NativeScript CLI from working properly.
-
 <% if(isHtml) { %>
+
 ### Related Commands
 
 Command | Description

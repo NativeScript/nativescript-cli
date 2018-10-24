@@ -2,22 +2,25 @@
 title: tns device log
 position: 4
 ---<% } %>
+
 # tns device log
 
+### Description
+
+Opens the device log stream for a selected connected Android <% if(isWindows || isMacOS) { %>or iOS <% } %>device.
+
+### Commands
 
 Usage | Synopsis
 ------|-------
 General | `$ tns device log [--device <Device ID>]`
 
-Opens the device log stream for a selected connected Android <% if(isWindows || isMacOS) { %>or iOS <% } %>device. 
-
 ### Options
-* `--device` - If multiple devices are connected, sets the device for which you want to stream the log in the console.
 
-### Attributes
-* `<Device ID>` is the device index or identifier as listed by `$ tns device`
+* `--device` - If multiple devices are connected, sets the device for which you want to stream the log in the console. `<Device ID>` is the device index or identifier as listed by the `$ tns device` command.
 
-<% if(isHtml) { %> 
+<% if(isHtml) { %>
+
 ### Command Limitations
 
 * You cannot work with connected iOS devices on Linux systems.

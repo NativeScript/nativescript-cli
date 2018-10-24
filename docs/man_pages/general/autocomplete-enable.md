@@ -2,17 +2,23 @@
 title: tns autocomplete enable
 position: 2
 ---<% } %>
+
 # tns autocomplete enable
 
+### Description
+
+Enables command-line completion for bash and zsh shells. You need to restart the shell to complete the operation.
+
+<% if(isHtml) { %>> <% } %>NOTE: This operation might modify the `.bash_profile`, `.bashrc` and `.zshrc` files.
+
+### Commands
 
 Usage | Synopsis
 ------|-------
 General | `$ tns autocomplete enable`
 
-Enables command-line completion for bash and zsh shells. You need to restart the shell to complete the operation.
-
-<% if(isHtml) { %>> <% } %>NOTE: This operation might modify the `.bash_profile`, `.bashrc` and `.zshrc` files.
 <% if(isHtml) { %>
+
 ### Related Commands
 
 Command | Description
