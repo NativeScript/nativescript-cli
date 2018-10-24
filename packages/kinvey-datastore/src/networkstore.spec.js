@@ -5,8 +5,6 @@ import { Aggregation } from 'kinvey-aggregation';
 import { KinveyError, NotFoundError, ServerError } from '../../errors';
 import { randomString } from 'kinvey-test-utils';
 import { NetworkStore } from './networkstore';
-import { SyncStore } from './syncstore';
-import { mockRequiresIn } from './require-helper';
 import { register } from 'kinvey-http-node';
 import { User } from 'kinvey-identity';
 import { init } from 'kinvey-app';

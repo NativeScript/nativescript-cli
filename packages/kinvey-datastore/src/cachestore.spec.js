@@ -7,23 +7,27 @@ import { Query } from 'kinvey-query';
 import { Aggregation } from 'kinvey-aggregation';
 import { KinveyError, NotFoundError, ServerError, BadRequestError } from '../../errors';
 import { randomString } from 'kinvey-test-utils';
-import { register } from 'kinvey-http-node';
-import { User } from 'kinvey-identity';
+import { register as registerHttp } from 'kinvey-http-node';
+import { login } from 'kinvey-identity';
+import { register as registerCache} from 'kinvey-cache-memory';
 
 const collection = 'Books';
 const pendingPushEntitiesErrMsg = 'There is 1 entity, matching the provided query or id, pending push to the backend.';
 
-describe('CacheStore', () => {
+describe.only('CacheStore', () => {
   let client;
 
   before(() => {
-    register();
+    registerHttp();
+    registerCache();
   });
 
   before(() => {
     client = init({
       appKey: randomString(),
-      appSecret: randomString()
+      appSecret: randomString(),
+      apiHostname: "https://baas.kinvey.com",
+      micHostname: "https://auth.kinvey.com"
     });
   });
 
@@ -47,7 +51,7 @@ describe('CacheStore', () => {
       .post(`/user/${client.appKey}/login`, { username: username, password: password })
       .reply(200, reply);
 
-    return User.login(username, password);
+    return login(username, password);
   });
 
   afterEach(() => {
@@ -55,7 +59,8 @@ describe('CacheStore', () => {
     return store.clear();
   });
 
-  describe('pathname', () => {
+
+  describe('pathname', () => {//since cachestore does not inherit networkStore pathname getter is not available
     it(`should equal /appdata/<appkey>/${collection}`, () => {
       const store = new CacheStore(collection);
       expect(store.pathname).toEqual(`/appdata/${client.appKey}/${collection}`);
@@ -69,7 +74,7 @@ describe('CacheStore', () => {
     });
   });
 
-  describe('find()', () => {
+  describe.only('find()', () => {//Unhandle exception query.toQueryObject is not a function
     it('should throw an error if the query argument is not an instance of the Query class', (done) => {
       const store = new CacheStore(collection);
       store.find({})
@@ -88,10 +93,10 @@ describe('CacheStore', () => {
 
     it('should throw an error if there are entities to sync', (done) => {
       const entity = { _id: randomString() };
-      const syncStore = new SyncStore(collection);
+      const syncStore = new CacheStore(client.appKey, collection, {autoSync:false});
       syncStore.save(entity)
         .then(() => {
-          const store = new CacheStore(collection);
+          const store = new CacheStore(client.appKey, collection, {autoSync:true});
           store.find()
             .subscribe(null, (error) => {
               try {
