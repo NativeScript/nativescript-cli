@@ -14,6 +14,7 @@ export class AndroidVirtualDeviceService implements Mobile.IAndroidVirtualDevice
 		private $childProcess: IChildProcess,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $emulatorHelper: Mobile.IEmulatorHelper,
+		private $errors: IErrors,
 		private $fs: IFileSystem,
 		private $hostInfo: IHostInfo,
 		private $logger: ILogger) {
@@ -202,7 +203,12 @@ export class AndroidVirtualDeviceService implements Mobile.IAndroidVirtualDevice
 	@cache()
 	private get pathToAvdHomeDir(): string {
 		const searchPaths = [process.env.ANDROID_AVD_HOME, path.join(osenv.home(), AndroidVirtualDevice.ANDROID_DIR_NAME, AndroidVirtualDevice.AVD_DIR_NAME)];
-		return searchPaths.find(p => p && this.$fs.exists(p));
+		const result = searchPaths.find(p => p && this.$fs.exists(p));
+		if (!result) {
+			this.$errors.failWithoutHelp(`Unable to find the path to the AVD directory in the following searched paths: ${searchPaths}.
+				Please set ANDROID_AVD_HOME environment variable to the correct location of your AVD directory.`);
+		}
+		return result;
 	}
 
 	@cache()
