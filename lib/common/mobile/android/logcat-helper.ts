@@ -58,20 +58,6 @@ export class LogcatHelper implements Mobile.ILogcatHelper {
 		}
 	}
 
-	private async getLogcatStream(deviceIdentifier: string, pid?: string) {
-		const device = await this.$devicesService.getDevice(deviceIdentifier);
-		const minAndroidWithLogcatPidSupport = "7.0.0";
-		const isLogcatPidSupported = !!device.deviceInfo.version && semver.gte(semver.coerce(device.deviceInfo.version), minAndroidWithLogcatPidSupport);
-		const adb: Mobile.IDeviceAndroidDebugBridge = this.$injector.resolve(DeviceAndroidDebugBridge, { identifier: deviceIdentifier });
-		const logcatCommand = ["logcat"];
-
-		if (pid && isLogcatPidSupported) {
-			logcatCommand.push(`--pid=${pid}`);
-		}
-		const logcatStream = await adb.executeCommand(logcatCommand, { returnChildProcess: true });
-		return logcatStream;
-	}
-
 	public async dump(deviceIdentifier: string): Promise<void> {
 		const adb: Mobile.IDeviceAndroidDebugBridge = this.$injector.resolve(DeviceAndroidDebugBridge, { identifier: deviceIdentifier });
 		const logcatDumpStream = await adb.executeCommand(["logcat", "-d"], { returnChildProcess: true });
@@ -100,6 +86,20 @@ export class LogcatHelper implements Mobile.ILogcatHelper {
 			this.mapDevicesLoggingData[deviceIdentifier].lineStream.removeAllListeners();
 			delete this.mapDevicesLoggingData[deviceIdentifier];
 		}
+	}
+
+	private async getLogcatStream(deviceIdentifier: string, pid?: string) {
+		const device = await this.$devicesService.getDevice(deviceIdentifier);
+		const minAndroidWithLogcatPidSupport = "7.0.0";
+		const isLogcatPidSupported = !!device.deviceInfo.version && semver.gte(semver.coerce(device.deviceInfo.version), minAndroidWithLogcatPidSupport);
+		const adb: Mobile.IDeviceAndroidDebugBridge = this.$injector.resolve(DeviceAndroidDebugBridge, { identifier: deviceIdentifier });
+		const logcatCommand = ["logcat"];
+
+		if (pid && isLogcatPidSupported) {
+			logcatCommand.push(`--pid=${pid}`);
+		}
+		const logcatStream = await adb.executeCommand(logcatCommand, { returnChildProcess: true });
+		return logcatStream;
 	}
 }
 
