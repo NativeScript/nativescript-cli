@@ -61,7 +61,7 @@ export class LogcatHelper implements Mobile.ILogcatHelper {
 	private async getLogcatStream(deviceIdentifier: string, pid?: string) {
 		const device = await this.$devicesService.getDevice(deviceIdentifier);
 		const minAndroidWithLogcatPidSupport = "7.0.0";
-		const isLogcatPidSupported =  semver.gte(semver.coerce(device.deviceInfo.version), minAndroidWithLogcatPidSupport);
+		const isLogcatPidSupported = !!device.deviceInfo.version && semver.gte(semver.coerce(device.deviceInfo.version), minAndroidWithLogcatPidSupport);
 		const adb: Mobile.IDeviceAndroidDebugBridge = this.$injector.resolve(DeviceAndroidDebugBridge, { identifier: deviceIdentifier });
 		const logcatCommand = ["logcat"];
 
