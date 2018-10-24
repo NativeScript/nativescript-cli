@@ -730,6 +730,12 @@ declare module Mobile {
 		 * @returns {Promise<IStartEmulatorOutput>} Starts the emulator and returns the errors if some error occurs.
 		 */
 		startEmulator(options: Mobile.IStartEmulatorOptions): Promise<IStartEmulatorOutput>;
+
+		/**
+		 * Called when emulator is lost. Its purpose is to clean any resources used by the instance.
+		 * @returns {void}
+		 */
+		detach?(deviceInfo: Mobile.IDeviceInfo): void;
 	}
 
 	interface IStartEmulatorOutput {
@@ -772,6 +778,11 @@ declare module Mobile {
 		 * @param imageIdentifier - The imagerIdentifier of the emulator.
 		 */
 		startEmulatorArgs(imageIdentifier: string): string[];
+		/**
+		 * Called when emulator is lost. Its purpose is to clean any resources used by the instance.
+		 * @returns {void}
+		 */
+		detach?(deviceInfo: Mobile.IDeviceInfo): void;
 	}
 
 	interface IVirtualBoxService {
