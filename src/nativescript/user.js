@@ -4,7 +4,7 @@ import * as app from "application";
 
 export class User extends CoreUser {
   loginWithMIC(redirectUri, authorizationGrant, options) {
-    redirectUri = isInsidePreviewApp() ? "nsplay://" : redirectUri;
+    redirectUri = isInsidePreviewApp() ? "nsplayresume://" : redirectUri;
     const config = getDataFromPackageJson();
     return super.loginWithMIC(redirectUri || config.redirectUri, authorizationGrant, options);
   }
