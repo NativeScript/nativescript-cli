@@ -2,22 +2,28 @@
 title: tns help
 position: 10
 ---<% } %>
+
 # tns help
 
+### Description
+
+Opens the command reference for all commands in your browser or shows information about the selected command in the browser.
+
+To list all commands available in the console, run `$ tns -h`.
+To print information about a selected command in the console, run `$ tns <Command> -h`.
+
+### Commands
 
 Usage | Synopsis
 ------|-------
 General | `$ tns help [<Command>]`
 
-Opens the command reference for all commands in your browser or shows information about the selected command in the browser.
+### Arguments
 
-To list all commands available in the console, run `$ tns -h`
-To print information about a selected command in the console, run `$ tns <Command> -h`
-
-### Attributes
 * `<Command>` is any of the available commands as listed by `$ tns help` or `$ tns -h`
 
 <% if(isHtml) { %>
+
 ### Related Commands
 
 Command | Description

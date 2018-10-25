@@ -2,15 +2,19 @@
 title: tns platform update
 position: 8
 ---<% } %>
+
 # tns platform update
 
+### Description
+
+Updates a NativeScript project to the latest (or specified) version.
+
+### Commands
 
 Usage | Synopsis
 ------|-------
 Update with the latest version |`$ tns update`
 Update with specific version | `$ tns update <version>`
-
-Updates a NativeScript project to the latest (or specified) version.
 
 ### Related Commands
 

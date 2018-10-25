@@ -2,16 +2,21 @@
 title: tns autocomplete status
 position: 3
 ---<% } %>
+
 # tns autocomplete status
 
+### Description
+
+Prints your current command-line completion settings.
+
+### Commands
 
 Usage | Synopsis
 ------|-------
 General | `$ tns autocomplete status`
 
-Prints your current command-line completion settings.
-
 <% if(isHtml) { %>
+
 ### Related Commands
 
 Command | Description

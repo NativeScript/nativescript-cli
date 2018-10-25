@@ -2,31 +2,37 @@
 title: tns device
 position: 6
 ---<% } %>
+
 # tns device
 
+### Description
+
+Lists all recognized connected Android <% if(isWindows || isMacOS) { %>or iOS devices <% } %>with serial number and index<% if(isWindows || isMacOS) { %>, grouped by platform<% } %>.
+
+### Commands
 
 Usage | Synopsis
 ------|---------
 General | `$ tns device [<Command>]`
 
-Lists all recognized connected Android <% if(isWindows || isMacOS) { %>or iOS devices <% } %>with serial number and index<% if(isWindows || isMacOS) { %>, grouped by platform<% } %>. 
+### Arguments
 
-### Attributes
-`<Command>` extends the `device` command. You can set the following values for this attribute.
+`<Command>` extends the `device` command. You can set the following values for this argument:
 * `android` - Lists all recognized connected Android physical and running Android virtual devices.
-<% if(isWindows || isMacOS) { %>* `ios` - Lists all recognized connected iOS devices. <% } %> 
+<% if(isWindows || isMacOS) { %>* `ios` - Lists all recognized connected iOS devices. <% } %>
 * `log` - Opens the device log stream for a selected connected device.
 * `list-applications` - Lists the installed applications on all connected Android <% if(isWindows || isMacOS) { %>or iOS <%}%>devices.
 * `run` - Runs the selected application on a connected Android <% if(isMacOS) { %>or iOS <%}%>device.
 
-<% if(isHtml) { %> 
+<% if(isHtml) { %>
+
 ### Command Limitations
 
-* You can run `$ tns device ios` on Windows and OS X systems.
+* You can run `$ tns device ios` on Windows and macOS systems.
 
 ### Aliases
 
-* You can use `$ tns devices` as an alias for `$ tns device`. 
+* You can use `$ tns devices` as an alias for `$ tns device`.
 
 ### Related Commands
 

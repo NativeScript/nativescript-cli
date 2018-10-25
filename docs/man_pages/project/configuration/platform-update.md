@@ -2,8 +2,14 @@
 title: tns platform update
 position: 5
 ---<% } %>
+
 # tns platform update
 
+### Description
+
+Updates the NativeScript runtime for the specified platform. <% if(isMacOS) { %>You must specify the target platform that you want to update.<% } %>
+
+### Commands
 
 Usage | Synopsis
 ------|-------
@@ -12,9 +18,7 @@ Android selected runtime | `$ tns platform update android@<Version>`
 <% if(isMacOS) { %>iOS latest runtime | `$ tns platform update ios`
 iOS selected runtime | `$ tns platform update ios@<Version>` <% } %> 
 
-Updates the NativeScript runtime for the specified platform. <% if(isMacOS) { %>You must specify the target platform that you want to update.<% } %>
-
-### Attributes
+### Arguments
 
 <% if(isMacOS) { %>* `<Platform>` is the target mobile platform whose runtime you want to update. You can set the following target platforms.
 	* `android` - Updates the Android runtime.
@@ -27,7 +31,7 @@ To list only experimental versions for ios, run `$ npm view tns-ios dist-tags`
 
 ### Command Limitations
 
-* You can run `$ tns platform update ios` only on OS X systems.
+* You can run `$ tns platform update ios` only on macOS systems.
 
 ### Related Commands
 

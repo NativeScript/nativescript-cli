@@ -2,14 +2,18 @@
 title: tns setup
 position: 5
 ---<% } %>
+
 # tns setup
 
+### Description
+
+Run the setup script to automatically install the NativeScript dependencies and configure your environment for local builds.
+
+### Commands
 
 Usage | Synopsis
 ------|-------
 Run the setup script | `$ tns setup`
-
-Run the setup script to try to automatically configure your environment for local builds.
 
 ### Related Commands
 
