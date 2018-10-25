@@ -8,6 +8,7 @@ import { settlePromises } from "../../helpers";
 
 export class AndroidVirtualDeviceService implements Mobile.IAndroidVirtualDeviceService {
 	private androidHome: string;
+	private avdHomeSearchPaths: string[];
 	private mapEmulatorIdToImageIdentifier: IStringDictionary = {};
 
 	constructor(private $androidIniFileParser: Mobile.IAndroidIniFileParser,
@@ -19,6 +20,7 @@ export class AndroidVirtualDeviceService implements Mobile.IAndroidVirtualDevice
 		private $hostInfo: IHostInfo,
 		private $logger: ILogger) {
 		this.androidHome = process.env.ANDROID_HOME;
+		this.avdHomeSearchPaths = [process.env.ANDROID_AVD_HOME, path.join(osenv.home(), AndroidVirtualDevice.ANDROID_DIR_NAME, AndroidVirtualDevice.AVD_DIR_NAME)];
 	}
 
 	public async getEmulatorImages(adbDevicesOutput: string[]): Promise<Mobile.IEmulatorImagesOutput> {
@@ -47,6 +49,11 @@ export class AndroidVirtualDeviceService implements Mobile.IAndroidVirtualDevice
 	}
 
 	public async getRunningEmulatorName(emulatorId: string): Promise<string> {
+		if (!this.pathToAvdHomeDir) {
+			const searchPaths = this.avdHomeSearchPaths.filter(p => !!p);
+			this.$errors.failWithoutHelp(`Unable to find the path to the AVD directory in the following searched paths: '${searchPaths}'. Please set ANDROID_AVD_HOME environment variable to the correct location of your AVD directory.`);
+		}
+
 		const imageIdentifier = await this.getRunningEmulatorImageIdentifier(emulatorId);
 		const iniFilePath = path.join(this.pathToAvdHomeDir, `${imageIdentifier}.ini`);
 		const iniFileInfo = this.$androidIniFileParser.parseIniFile(iniFilePath);
@@ -202,12 +209,7 @@ export class AndroidVirtualDeviceService implements Mobile.IAndroidVirtualDevice
 
 	@cache()
 	private get pathToAvdHomeDir(): string {
-		const searchPaths = [process.env.ANDROID_AVD_HOME, path.join(osenv.home(), AndroidVirtualDevice.ANDROID_DIR_NAME, AndroidVirtualDevice.AVD_DIR_NAME)];
-		const result = searchPaths.find(p => p && this.$fs.exists(p));
-		if (!result) {
-			this.$errors.failWithoutHelp(`Unable to find the path to the AVD directory in the following searched paths: ${searchPaths}.
-				Please set ANDROID_AVD_HOME environment variable to the correct location of your AVD directory.`);
-		}
+		const result = this.avdHomeSearchPaths.find(p => p && this.$fs.exists(p));
 		return result;
 	}
 

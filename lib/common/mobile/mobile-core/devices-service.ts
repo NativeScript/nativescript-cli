@@ -240,6 +240,9 @@ export class DevicesService extends EventEmitter implements Mobile.IDevicesServi
 				await deviceDiscovery.startLookingForDevices(options);
 			} catch (err) {
 				this.$logger.trace("Error while checking for devices.", err);
+				if (deviceInitOpts && deviceInitOpts.throwDeviceDiscoveryErrors) {
+					throw err;
+				}
 			}
 		}
 	}
@@ -480,6 +483,9 @@ export class DevicesService extends EventEmitter implements Mobile.IDevicesServi
 				await this.startLookingForDevices(deviceInitOpts);
 			} catch (err) {
 				this.$logger.trace("Error while checking for devices.", err);
+				if (deviceInitOpts && deviceInitOpts.throwDeviceDiscoveryErrors) {
+					throw err;
+				}
 			}
 			const deviceInstances = this.getDeviceInstances();
 

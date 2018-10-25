@@ -461,6 +461,10 @@ declare module Mobile {
 		 * In case when `tns run ios --device "iPhone 6"` command is executed, the user can specify the sdk of the simulator because it is possible to have more than one device with the same name but with different sdk versions.
 		 */
 		sdk?: string;
+		/**
+		 * The errors from device discoveries are muted by default. But when `tns devices` command is executed, we want to see them.
+		 */
+		throwDeviceDiscoveryErrors?: boolean;
 	}
 
 	interface IDeviceActionResult<T> extends IDeviceIdentifier {
