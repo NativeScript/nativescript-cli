@@ -689,7 +689,8 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 											rebuiltInformation,
 											projectData,
 											deviceBuildInfoDescriptor,
-											liveSyncData,
+											// the clean option should be respected only during initial sync
+											liveSyncData: _.assign({}, liveSyncData, { clean: false }),
 											settings: latestAppPackageInstalledSettings,
 											modifiedFiles: allModifiedFiles,
 											filesToRemove: currentFilesToRemove,
