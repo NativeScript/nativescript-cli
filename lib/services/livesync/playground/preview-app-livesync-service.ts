@@ -52,6 +52,27 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 		});
 	}
 
+	public async syncFiles(data: IPreviewAppLiveSyncData, filesToSync: string[], filesToRemove: string[]): Promise<void> {
+		this.showWarningsForNativeFiles(filesToSync);
+
+		for (const device of this.$previewSdkService.connectedDevices) {
+			await this.$previewAppPluginsService.comparePluginsOnDevice(data, device);
+		}
+
+		const platforms = _(this.$previewSdkService.connectedDevices)
+			.map(device => device.platform)
+			.uniq()
+			.value();
+
+		for (const platform of platforms) {
+			await this.syncFilesForPlatformSafe(data, platform, { filesToSync, filesToRemove, useHotModuleReload: data.appFilesUpdaterOptions.useHotModuleReload });
+		}
+	}
+
+	public async stopLiveSync(): Promise<void> {
+		this.$previewSdkService.stop();
+	}
+
 	private async initializePreviewForDevice(data: IPreviewAppLiveSyncData, device: Device): Promise<FilesPayload> {
 		const filesToSyncMap: IDictionary<string[]> = {};
 		const hmrData: IDictionary<IPlatformHmrData> = {};
@@ -96,27 +117,6 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 		await this.$previewAppPluginsService.comparePluginsOnDevice(data, device);
 		const payloads = await this.syncFilesForPlatformSafe(data, device.platform, { isInitialSync: true, useHotModuleReload: data.appFilesUpdaterOptions.useHotModuleReload });
 		return payloads;
-	}
-
-	public async syncFiles(data: IPreviewAppLiveSyncData, filesToSync: string[], filesToRemove: string[]): Promise<void> {
-		this.showWarningsForNativeFiles(filesToSync);
-
-		for (const device of this.$previewSdkService.connectedDevices) {
-			await this.$previewAppPluginsService.comparePluginsOnDevice(data, device);
-		}
-
-		const platforms = _(this.$previewSdkService.connectedDevices)
-			.map(device => device.platform)
-			.uniq()
-			.value();
-
-		for (const platform of platforms) {
-			await this.syncFilesForPlatformSafe(data, platform, { filesToSync, filesToRemove, useHotModuleReload: data.appFilesUpdaterOptions.useHotModuleReload });
-		}
-	}
-
-	public async stopLiveSync(): Promise<void> {
-		this.$previewSdkService.stop();
 	}
 
 	private async syncFilesForPlatformSafe(data: IPreviewAppLiveSyncData, platform: string, opts?: ISyncFilesOptions): Promise<FilesPayload> {
