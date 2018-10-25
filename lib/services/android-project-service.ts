@@ -76,7 +76,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 				deviceBuildOutputPath: path.join(...deviceBuildOutputArr),
 				bundleBuildOutputPath: path.join(projectRoot, constants.APP_FOLDER_NAME, constants.BUILD_DIR, constants.OUTPUTS_DIR, constants.BUNDLE_DIR),
 				getValidBuildOutputData: (buildOptions: IBuildOutputOptions): IValidBuildOutputData => {
-					const buildMode = buildOptions.isReleaseBuild ? Configurations.Release.toLowerCase() : Configurations.Debug.toLowerCase();
+					const buildMode = buildOptions.release ? Configurations.Release.toLowerCase() : Configurations.Debug.toLowerCase();
 
 					if(buildOptions.androidBundle) {
 						return {
@@ -445,7 +445,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			// build Android plugins which contain AndroidManifest.xml and/or resources
 			const pluginPlatformsFolderPath = this.getPluginPlatformsFolderPath(pluginData, AndroidProjectService.ANDROID_PLATFORM_NAME);
 			if (this.$fs.exists(pluginPlatformsFolderPath)) {
-				const options: IBuildOptions = {
+				const options: IPluginBuildOptions = {
 					projectDir: projectData.projectDir,
 					pluginName: pluginData.name,
 					platformsAndroidDirPath: pluginPlatformsFolderPath,
@@ -514,7 +514,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		return item.endsWith(constants.MANIFEST_FILE_NAME) || item.endsWith(constants.RESOURCES_DIR);
 	}
 
-	public async prebuildNativePlugin(options: IBuildOptions): Promise<void> {
+	public async prebuildNativePlugin(options: IPluginBuildOptions): Promise<void> {
 		if (await this.$androidPluginBuildService.buildAar(options)) {
 			this.$logger.info(`Built aar for ${options.pluginName}`);
 		}

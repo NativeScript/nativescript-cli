@@ -437,7 +437,7 @@ interface IPlatformProjectService extends NodeJS.EventEmitter, IPlatformProjectS
 	/**
 	 * Build native part of a nativescript plugins if necessary
 	 */
-	prebuildNativePlugin(buildOptions: IBuildOptions): Promise<void>;
+	prebuildNativePlugin(buildOptions: IPluginBuildOptions): Promise<void>;
 
 	/**
 	 * Traverse through the production dependencies and find plugins that need build/rebuild

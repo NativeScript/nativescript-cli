@@ -286,10 +286,7 @@ interface IValidBuildOutputData {
 	regexes?: RegExp[];
 }
 
-interface IBuildOutputOptions extends IAndroidBundle {
-	isReleaseBuild?: boolean;
-	isForDevice?: boolean;
-}
+interface IBuildOutputOptions extends Partial<IBuildForDevice>, IRelease, IAndroidBundle {}
 
 interface IPlatformsData {
 	availablePlatforms: any;

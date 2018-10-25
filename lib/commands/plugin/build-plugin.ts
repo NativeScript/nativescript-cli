@@ -32,7 +32,7 @@ export class BuildPluginCommand implements ICommand {
 		temp.track();
 		const tempAndroidProject = temp.mkdirSync("android-project");
 
-		const options: IBuildOptions = {
+		const options: IPluginBuildOptions = {
 			aarOutputDir: platformsAndroidPath,
 			platformsAndroidDirPath: platformsAndroidPath,
 			pluginName: pluginName,

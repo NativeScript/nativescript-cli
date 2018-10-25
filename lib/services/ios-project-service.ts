@@ -70,7 +70,8 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				deviceBuildOutputPath: path.join(projectRoot, constants.BUILD_DIR, "device"),
 				emulatorBuildOutputPath: path.join(projectRoot, constants.BUILD_DIR, "emulator"),
 				getValidBuildOutputData: (buildOptions: IBuildOutputOptions): IValidBuildOutputData => {
-					if (buildOptions.isForDevice) {
+					const forDevice = !buildOptions || !!buildOptions.buildForDevice;
+					if (forDevice) {
 						return {
 							packageNames: [`${projectData.projectName}.ipa`]
 						};
@@ -1024,7 +1025,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		}
 	}
 
-	public async prebuildNativePlugin(options: IBuildOptions): Promise<void> { /** */ }
+	public async prebuildNativePlugin(options: IPluginBuildOptions): Promise<void> { /** */ }
 
 	public async checkIfPluginsNeedBuild(projectData: IProjectData): Promise<Array<any>> {
 		return [];

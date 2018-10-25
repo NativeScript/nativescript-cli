@@ -305,10 +305,10 @@ export class ProjectDataStub implements IProjectData {
 }
 
 export class AndroidPluginBuildServiceStub implements IAndroidPluginBuildService {
-	buildAar(options: IBuildOptions): Promise<boolean> {
+	buildAar(options: IPluginBuildOptions): Promise<boolean> {
 		return Promise.resolve(true);
 	}
-	migrateIncludeGradle(options: IBuildOptions): boolean {
+	migrateIncludeGradle(options: IPluginBuildOptions): boolean {
 		return true;
 	}
 }
@@ -328,7 +328,7 @@ export class PlatformProjectServiceStub extends EventEmitter implements IPlatfor
 			fastLivesyncFileExtensions: []
 		};
 	}
-	prebuildNativePlugin(options: IBuildOptions): Promise<void> {
+	prebuildNativePlugin(options: IPluginBuildOptions): Promise<void> {
 		return Promise.resolve();
 	}
 

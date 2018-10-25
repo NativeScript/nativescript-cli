@@ -169,7 +169,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 	 * @param {string} options.aarOutputDir - The path where the aar should be copied after a successful build.
 	 * @param {string} options.tempPluginDirPath - The path where the android plugin will be built.
 	 */
-	public async buildAar(options: IBuildOptions): Promise<boolean> {
+	public async buildAar(options: IPluginBuildOptions): Promise<boolean> {
 		this.validateOptions(options);
 		const manifestFilePath = this.getManifest(options.platformsAndroidDirPath);
 		const androidSourceDirectories = this.getAndroidSourceDirectories(options.platformsAndroidDirPath);
@@ -381,7 +381,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 	 * @param {Object} options
 	 * @param {string} options.platformsAndroidDirPath - The path to the 'plugin/src/platforms/android' directory.
 	 */
-	public migrateIncludeGradle(options: IBuildOptions): boolean {
+	public migrateIncludeGradle(options: IPluginBuildOptions): boolean {
 		this.validatePlatformsAndroidDirPathOption(options);
 
 		const includeGradleFilePath = path.join(options.platformsAndroidDirPath, INCLUDE_GRADLE_NAME);
@@ -435,7 +435,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		}
 	}
 
-	private validateOptions(options: IBuildOptions): void {
+	private validateOptions(options: IPluginBuildOptions): void {
 		if (!options) {
 			this.$errors.failWithoutHelp("Android plugin cannot be built without passing an 'options' object.");
 		}
@@ -455,7 +455,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		this.validatePlatformsAndroidDirPathOption(options);
 	}
 
-	private validatePlatformsAndroidDirPathOption(options: IBuildOptions): void {
+	private validatePlatformsAndroidDirPathOption(options: IPluginBuildOptions): void {
 		if (!options) {
 			this.$errors.failWithoutHelp("Android plugin cannot be built without passing an 'options' object.");
 		}
