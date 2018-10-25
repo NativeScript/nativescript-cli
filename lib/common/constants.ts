@@ -155,5 +155,5 @@ export class AndroidVirtualDevice {
 	static TIMEOUT_SECONDS = 120;
 	static GENYMOTION_DEFAULT_STDERR_STRING = "Logging activities to file";
 
-	static UNABLE_TO_START_EMULATOR_MESSAGE = "Cannot run your app in the native emulator. Increase the timeout of the operation with the --timeout option or try to restart your adb server with 'adb kill-server' command. Alternatively, run the Android Virtual Device manager and increase the allocated RAM for the virtual device.";
+	static UNABLE_TO_START_EMULATOR_MESSAGE = "Cannot run the app in the selected native emulator. Try to restart the adb server by running the `adb kill-server` command in the Command Prompt, or increase the allocated RAM of the virtual device through the Android Virtual Device manager. NativeScript CLI users can try to increase the timeout of the operation by adding the `--timeout` flag.";
 }
