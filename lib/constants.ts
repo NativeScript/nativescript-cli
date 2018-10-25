@@ -33,12 +33,14 @@ export const BUILD_XCCONFIG_FILE_NAME = "build.xcconfig";
 export const BUILD_DIR = "build";
 export const OUTPUTS_DIR = "outputs";
 export const APK_DIR = "apk";
+export const BUNDLE_DIR = "bundle";
 export const RESOURCES_DIR = "res";
 export const CONFIG_NS_FILE_NAME = "nsconfig.json";
 export const CONFIG_NS_APP_RESOURCES_ENTRY = "appResourcesPath";
 export const CONFIG_NS_APP_ENTRY = "appPath";
 export const DEPENDENCIES_JSON_NAME = "dependencies.json";
 export const APK_EXTENSION_NAME = ".apk";
+export const AAB_EXTENSION_NAME = ".aab"
 export const HASHES_FILE_NAME = ".nshashes";
 
 export class PackageVersion {

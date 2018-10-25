@@ -74,8 +74,17 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 				platformProjectService: this,
 				projectRoot: projectRoot,
 				deviceBuildOutputPath: path.join(...deviceBuildOutputArr),
+				bundleBuildOutputPath: path.join(projectRoot, constants.APP_FOLDER_NAME, constants.BUILD_DIR, constants.OUTPUTS_DIR, constants.BUNDLE_DIR),
 				getValidBuildOutputData: (buildOptions: IBuildOutputOptions): IValidBuildOutputData => {
 					const buildMode = buildOptions.isReleaseBuild ? Configurations.Release.toLowerCase() : Configurations.Debug.toLowerCase();
+
+					if(buildOptions.androidBundle) {
+						return {
+							packageNames: [
+								`${constants.APP_FOLDER_NAME}${constants.AAB_EXTENSION_NAME}`
+							]
+						}
+					}
 
 					return {
 						packageNames: [
@@ -83,6 +92,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 							`${projectData.projectName}-${buildMode}${constants.APK_EXTENSION_NAME}`,
 							`${projectData.projectName}${constants.APK_EXTENSION_NAME}`,
 							`${constants.APP_FOLDER_NAME}-${buildMode}${constants.APK_EXTENSION_NAME}`
+
 						],
 						regexes: [new RegExp(`${constants.APP_FOLDER_NAME}-.*-(${Configurations.Debug}|${Configurations.Release})${constants.APK_EXTENSION_NAME}`, "i"), new RegExp(`${packageName}-.*-(${Configurations.Debug}|${Configurations.Release})${constants.APK_EXTENSION_NAME}`, "i")]
 					};
@@ -316,16 +326,20 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	}
 
 	public async buildProject(projectRoot: string, projectData: IProjectData, buildConfig: IBuildConfig): Promise<void> {
+		let task;
 		const gradleArgs = this.getGradleBuildOptions(buildConfig, projectData);
+		const baseTask = buildConfig.androidBundle ? "bundle" : "assemble";
 		if (this.$logger.getLevel() === "TRACE") {
 			gradleArgs.unshift("--stacktrace");
 			gradleArgs.unshift("--debug");
 		}
 		if (buildConfig.release) {
-			gradleArgs.unshift("assembleRelease");
+			task = baseTask + "Release";
 		} else {
-			gradleArgs.unshift("assembleDebug");
+			task = baseTask + "Debug";
 		}
+
+		gradleArgs.unshift(task);
 
 		const handler = (data: any) => {
 			this.emit(constants.BUILD_OUTPUT_EVENT_NAME, data);

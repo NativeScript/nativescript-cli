@@ -458,7 +458,11 @@ interface IPluginSeedOptions {
 	pluginName: string;
 }
 
-interface IOptions extends IRelease, IDeviceIdentifier, IJustLaunch, IAvd, IAvailableDevices, IProfileDir, IHasEmulatorOption, IBundleString, IPlatformTemplate, IHasEmulatorOption, IClean, IProvision, ITeamIdentifier, IAndroidReleaseOptions, INpmInstallConfigurationOptions, IPort, IEnvOptions, IPluginSeedOptions, IGenerateOptions {
+interface IAndroidBundleOptions {
+	aab: boolean;
+}
+
+interface IOptions extends IRelease, IDeviceIdentifier, IJustLaunch, IAvd, IAvailableDevices, IProfileDir, IHasEmulatorOption, IBundleString, IPlatformTemplate, IHasEmulatorOption, IClean, IProvision, ITeamIdentifier, IAndroidReleaseOptions, IAndroidBundleOptions, INpmInstallConfigurationOptions, IPort, IEnvOptions, IPluginSeedOptions, IGenerateOptions {
 	argv: IYargArgv;
 	validateOptions(commandSpecificDashedOptions?: IDictionary<IDashedOption>): void;
 	options: IDictionary<IDashedOption>;
@@ -531,7 +535,11 @@ interface IEnvOptions {
 	env: Object;
 }
 
-interface IAndroidBuildOptionsSettings extends IAndroidReleaseOptions, IRelease { }
+interface IAndroidBuildOptionsSettings extends IAndroidReleaseOptions, IRelease, IAndroidBundle { }
+
+ interface IAndroidBundle {
+	androidBundle?: boolean;
+ }
 
 interface IAppFilesUpdaterOptions extends IBundle, IRelease, IOptionalWatchAllFiles, IHasUseHotModuleReloadOption { }
 

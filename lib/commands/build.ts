@@ -41,7 +41,8 @@ export abstract class BuildCommandBase extends ValidatePlatformCommandBase {
 			keyStoreAlias: this.$options.keyStoreAlias,
 			keyStorePath: this.$options.keyStorePath,
 			keyStoreAliasPassword: this.$options.keyStoreAliasPassword,
-			keyStorePassword: this.$options.keyStorePassword
+			keyStorePassword: this.$options.keyStorePassword,
+			androidBundle: this.$options.aab
 		};
 		await this.$platformService.buildPlatform(platform, buildConfig, this.$projectData);
 		if (this.$options.copyTo) {
