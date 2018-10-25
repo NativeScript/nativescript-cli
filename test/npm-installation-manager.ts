@@ -4,7 +4,10 @@ import * as ErrorsLib from "../lib/common/errors";
 import * as FsLib from "../lib/common/file-system";
 import * as HostInfoLib from "../lib/common/host-info";
 import * as LoggerLib from "../lib/common/logger";
-import * as NpmInstallationManagerLib from "../lib/npm-installation-manager";
+import * as NpmLib from "../lib/node-package-manager";
+import * as YarnLib from "../lib/yarn-package-manager";
+import * as PackageManagerLib from "../lib/package-manager";
+import * as PackageInstallationManagerLib from "../lib/package-installation-manager";
 import * as OptionsLib from "../lib/options";
 import * as StaticConfigLib from "../lib/config";
 import * as yok from "../lib/common/yok";
@@ -28,7 +31,17 @@ function createTestInjector(): IInjector {
 	testInjector.register("devicePlatformsConstants", {});
 	testInjector.register("androidResourcesMigrationService", {});
 
-	testInjector.register("npmInstallationManager", NpmInstallationManagerLib.NpmInstallationManager);
+	testInjector.register("httpClient", {});
+	testInjector.register("pacoteService", {
+		manifest: () => Promise.resolve(),
+	});
+	testInjector.register("userSettingsService", {
+		getSettingValue: async (settingName: string): Promise<void> => undefined
+	});
+	testInjector.register("npm", NpmLib.NodePackageManager);
+	testInjector.register("yarn", YarnLib.YarnPackageManager);
+	testInjector.register("packageManager", PackageManagerLib.PackageManager);
+	testInjector.register("packageInstallationManager", PackageInstallationManagerLib.PackageInstallationManager);
 
 	return testInjector;
 }
@@ -185,11 +198,11 @@ describe("Npm installation manager tests", () => {
 				const staticConfig = testInjector.resolve("staticConfig");
 				staticConfig.version = currentTestData.cliVersion;
 
-				// Mock npmInstallationManager.getLatestVersion
-				const npmInstallationManager = testInjector.resolve("npmInstallationManager");
-				npmInstallationManager.getLatestVersion = (packageName: string) => Promise.resolve(currentTestData.packageLatestVersion);
+				// Mock packageInstallationManager.getLatestVersion
+				const packageInstallationManager = testInjector.resolve("packageInstallationManager");
+				packageInstallationManager.getLatestVersion = (packageName: string) => Promise.resolve(currentTestData.packageLatestVersion);
 
-				const actualLatestCompatibleVersion = await npmInstallationManager.getLatestCompatibleVersion("", currentTestData.referenceVersion);
+				const actualLatestCompatibleVersion = await packageInstallationManager.getLatestCompatibleVersion("", currentTestData.referenceVersion);
 				assert.equal(actualLatestCompatibleVersion, currentTestData.expectedResult);
 			});
 		});

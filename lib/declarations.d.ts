@@ -54,7 +54,7 @@ interface INodePackageManager {
 	getCachePath(): Promise<string>;
 }
 
-interface INpmInstallationManager {
+interface IPackageInstallationManager {
 	install(packageName: string, packageDir: string, options?: INpmInstallOptions): Promise<any>;
 	getLatestVersion(packageName: string): Promise<string>;
 	getNextVersion(packageName: string): Promise<string>;

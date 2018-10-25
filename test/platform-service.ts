@@ -38,7 +38,7 @@ function createTestInjector() {
 	testInjector.register('errors', stubs.ErrorsStub);
 	testInjector.register('logger', stubs.LoggerStub);
 	testInjector.register("nodeModulesDependenciesBuilder", {});
-	testInjector.register('npmInstallationManager', stubs.NpmInstallationManagerStub);
+	testInjector.register('packageInstallationManager', stubs.PackageInstallationManagerStub);
 	// TODO: Remove the projectData - it shouldn't be required in the service itself.
 	testInjector.register('projectData', stubs.ProjectDataStub);
 	testInjector.register('platformsData', stubs.PlatformsDataStub);
@@ -295,8 +295,8 @@ describe('Platform Service Tests', () => {
 				projectDataService.getNSValue = (): any => null;
 
 				const latestCompatibleVersion = "1.0.0";
-				const npmInstallationManager = testInjector.resolve<INpmInstallationManager>("npmInstallationManager");
-				npmInstallationManager.getLatestCompatibleVersion = async (packageName: string, referenceVersion?: string): Promise<string> => {
+				const packageInstallationManager = testInjector.resolve<IPackageInstallationManager>("packageInstallationManager");
+				packageInstallationManager.getLatestCompatibleVersion = async (packageName: string, referenceVersion?: string): Promise<string> => {
 					return latestCompatibleVersion;
 				};
 
@@ -347,8 +347,8 @@ describe('Platform Service Tests', () => {
 			const projectDataService = testInjector.resolve("projectDataService");
 			projectDataService.getNSValue = () => nsValueObject;
 
-			const npmInstallationManager = testInjector.resolve("npmInstallationManager");
-			npmInstallationManager.install = (packageName: string, packageDir: string, options: INpmInstallOptions) => {
+			const packageInstallationManager = testInjector.resolve("packageInstallationManager");
+			packageInstallationManager.install = (packageName: string, packageDir: string, options: INpmInstallOptions) => {
 				assert.deepEqual(options.version, versionString);
 				return "";
 			};
@@ -376,8 +376,8 @@ describe('Platform Service Tests', () => {
 	describe("update Platform", () => {
 		describe("#updatePlatform(platform)", () => {
 			it("should fail when the versions are the same", async () => {
-				const npmInstallationManager: INpmInstallationManager = testInjector.resolve("npmInstallationManager");
-				npmInstallationManager.getLatestVersion = async () => "0.2.0";
+				const packageInstallationManager: IPackageInstallationManager = testInjector.resolve("packageInstallationManager");
+				packageInstallationManager.getLatestVersion = async () => "0.2.0";
 				const projectData: IProjectData = testInjector.resolve("projectData");
 
 				await assert.isRejected(platformService.updatePlatforms(["android"], "", projectData, null));

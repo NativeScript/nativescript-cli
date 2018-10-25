@@ -19,7 +19,7 @@ export class ProjectService implements IProjectService {
 		private $projectNameService: IProjectNameService,
 		private $projectTemplatesService: IProjectTemplatesService,
 		private $staticConfig: IStaticConfig,
-		private $npmInstallationManager: INpmInstallationManager) { }
+		private $packageInstallationManager: IPackageInstallationManager) { }
 
 	public async validateProjectName(opts: { projectName: string, force: boolean, pathToProject: string }) : Promise<string> {
 		let projectName = opts.projectName;
@@ -245,7 +245,7 @@ export class ProjectService implements IProjectService {
 		const projectFilePath = path.join(projectDir, this.$staticConfig.PROJECT_FILE_NAME);
 		const packageJsonData = this.$fs.readJson(projectFilePath);
 
-		const version = await this.$npmInstallationManager.getLatestCompatibleVersion(constants.TNS_CORE_MODULES_NAME);
+		const version = await this.$packageInstallationManager.getLatestCompatibleVersion(constants.TNS_CORE_MODULES_NAME);
 		packageJsonData.dependencies[constants.TNS_CORE_MODULES_NAME] = version;
 
 		this.$fs.writeJson(projectFilePath, packageJsonData);

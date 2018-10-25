@@ -24,7 +24,7 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 		private $hostInfo: IHostInfo,
 		private $logger: ILogger,
 		private $errors: IErrors,
-		private $npmInstallationManager: INpmInstallationManager,
+		private $packageInstallationManager: IPackageInstallationManager,
 		private $iOSDebuggerPortService: IIOSDebuggerPortService,
 		private $iOSNotification: IiOSNotification,
 		private $iOSSocketRequestExecutor: IiOSSocketRequestExecutor,
@@ -219,7 +219,7 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 
 	private async openAppInspector(fileDescriptor: string, debugData: IDebugData, debugOptions: IDebugOptions): Promise<void> {
 		if (debugOptions.client) {
-			const inspectorPath = await this.$npmInstallationManager.getInspectorFromCache(inspectorNpmPackageName, debugData.projectDir);
+			const inspectorPath = await this.$packageInstallationManager.getInspectorFromCache(inspectorNpmPackageName, debugData.projectDir);
 
 			const inspectorSourceLocation = path.join(inspectorPath, inspectorUiDir, "Main.html");
 			const inspectorApplicationPath = path.join(inspectorPath, inspectorAppName);

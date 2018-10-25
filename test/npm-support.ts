@@ -51,7 +51,7 @@ function createTestInjector(): IInjector {
 	testInjector.register("platformsData", PlatformsDataLib.PlatformsData);
 	testInjector.register("platformService", PlatformServiceLib.PlatformService);
 	testInjector.register("logger", stubs.LoggerStub);
-	testInjector.register("npmInstallationManager", {
+	testInjector.register("packageInstallationManager", {
 		install: () => Promise.resolve()
 	});
 	testInjector.register("prompter", {});

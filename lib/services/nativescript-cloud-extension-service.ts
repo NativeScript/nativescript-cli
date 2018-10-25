@@ -4,7 +4,7 @@ import * as semver from "semver";
 export class NativeScriptCloudExtensionService implements INativeScriptCloudExtensionService {
 	constructor(private $extensibilityService: IExtensibilityService,
 		private $logger: ILogger,
-		private $npmInstallationManager: INpmInstallationManager) { }
+		private $packageInstallationManager: IPackageInstallationManager) { }
 
 	public install(): Promise<IExtensionData> {
 		if (!this.isInstalled()) {
@@ -21,7 +21,7 @@ export class NativeScriptCloudExtensionService implements INativeScriptCloudExte
 	public async isLatestVersionInstalled(): Promise<boolean> {
 		const extensionData = this.getExtensionData();
 		if (extensionData) {
-			const latestVersion = await this.$npmInstallationManager.getLatestVersion(constants.NATIVESCRIPT_CLOUD_EXTENSION_NAME);
+			const latestVersion = await this.$packageInstallationManager.getLatestVersion(constants.NATIVESCRIPT_CLOUD_EXTENSION_NAME);
 			return semver.eq(latestVersion, extensionData.version);
 		}
 

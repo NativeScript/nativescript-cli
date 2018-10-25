@@ -35,7 +35,7 @@ function createTestInjector(configuration: { shouldNpmInstallThrow?: boolean, pa
 		}
 	});
 
-	injector.register("npmInstallationManager", {
+	injector.register("packageInstallationManager", {
 		install: (packageName: string, options?: INpmInstallOptions) => {
 			if (configuration.shouldNpmInstallThrow) {
 				throw new Error("NPM install throws error.");

@@ -22,7 +22,7 @@ export class InitService implements IInitService {
 		private $projectHelper: IProjectHelper,
 		private $prompter: IPrompter,
 		private $packageManager: INodePackageManager,
-		private $npmInstallationManager: INpmInstallationManager) { }
+		private $packageInstallationManager: IPackageInstallationManager) { }
 
 	public async initialize(): Promise<void> {
 		let projectData: any = {};
@@ -100,7 +100,7 @@ export class InitService implements IInitService {
 	}
 
 	private async getVersionData(packageName: string): Promise<IStringDictionary> {
-		const latestVersion = await this.$npmInstallationManager.getLatestCompatibleVersion(packageName);
+		const latestVersion = await this.$packageInstallationManager.getLatestCompatibleVersion(packageName);
 
 		if (this.useDefaultValue) {
 			return this.buildVersionData(latestVersion);

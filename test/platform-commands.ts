@@ -105,7 +105,7 @@ function createTestInjector() {
 	testInjector.register('platformService', PlatformServiceLib.PlatformService);
 	testInjector.register('errors', ErrorsNoFailStub);
 	testInjector.register('logger', stubs.LoggerStub);
-	testInjector.register('npmInstallationManager', stubs.NpmInstallationManagerStub);
+	testInjector.register('packageInstallationManager', stubs.PackageInstallationManagerStub);
 	testInjector.register('projectData', stubs.ProjectDataStub);
 	testInjector.register('platformsData', PlatformsData);
 	testInjector.register('devicesService', {});

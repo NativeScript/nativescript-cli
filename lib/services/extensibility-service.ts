@@ -14,7 +14,7 @@ export class ExtensibilityService implements IExtensibilityService {
 
 	constructor(private $fs: IFileSystem,
 		private $logger: ILogger,
-		private $npm: INodePackageManager,
+		private $packageManager: INodePackageManager,
 		private $settingsService: ISettingsService,
 		private $requireService: IRequireService) {
 	}
@@ -33,7 +33,7 @@ export class ExtensibilityService implements IExtensibilityService {
 		const localPath = path.resolve(extensionName);
 		const packageName = this.$fs.exists(localPath) ? localPath : extensionName;
 
-		const installResultInfo = await this.$npm.install(packageName, this.pathToExtensions, npmOpts);
+		const installResultInfo = await this.$packageManager.install(packageName, this.pathToExtensions, npmOpts);
 		this.$logger.trace(`Finished installation of extension '${extensionName}'. Trying to load it now.`);
 
 		return this.getInstalledExtensionData(installResultInfo.name);
@@ -45,7 +45,7 @@ export class ExtensibilityService implements IExtensibilityService {
 
 		await this.assertPackageJsonExists();
 
-		await this.$npm.uninstall(extensionName, { save: true }, this.pathToExtensions);
+		await this.$packageManager.uninstall(extensionName, { save: true }, this.pathToExtensions);
 
 		this.$logger.trace(`Finished uninstallation of extension '${extensionName}'.`);
 	}
@@ -112,7 +112,7 @@ export class ExtensibilityService implements IExtensibilityService {
 		let allExtensions: INpmsSingleResultData[] = [];
 
 		try {
-			const npmsResult = await this.$npm.searchNpms("nativescript:extension");
+			const npmsResult = await this.$packageManager.searchNpms("nativescript:extension");
 			allExtensions = npmsResult.results || [];
 		} catch (err) {
 			this.$logger.trace(`Unable to find extensions via npms. Error is: ${err}`);
@@ -127,7 +127,7 @@ export class ExtensibilityService implements IExtensibilityService {
 
 			try {
 				// now get full package.json for the latest version of the package
-				const registryData = await this.$npm.getRegistryPackageData(extensionName);
+				const registryData = await this.$packageManager.getRegistryPackageData(extensionName);
 				const latestPackageData = registryData.versions[registryData["dist-tags"].latest];
 				const commands: string[] = latestPackageData && latestPackageData.nativescript && latestPackageData.nativescript.commands;
 				if (commands && commands.length) {

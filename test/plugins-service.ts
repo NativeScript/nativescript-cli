@@ -1,7 +1,7 @@
 import { Yok } from '../lib/common/yok';
 import * as stubs from './stubs';
 import { PackageManager } from "../lib/package-manager";
-import { NpmInstallationManager } from "../lib/npm-installation-manager";
+import { PackageInstallationManager } from "../lib/package-installation-manager";
 import { NodePackageManager } from "../lib/node-package-manager";
 import { YarnPackageManager } from "../lib/yarn-package-manager";
 import { FileSystem } from "../lib/common/file-system";
@@ -94,7 +94,7 @@ function createTestInjector() {
 		savePluginVariablesInProjectFile: (pluginData: IPluginData) => Promise.resolve(),
 		interpolatePluginVariables: (pluginData: IPluginData, pluginConfigurationFileContent: string) => Promise.resolve(pluginConfigurationFileContent)
 	});
-	testInjector.register("npmInstallationManager", NpmInstallationManager);
+	testInjector.register("packageInstallationManager", PackageInstallationManager);
 
 	testInjector.register("deviceAppDataFactory", DeviceAppDataFactory);
 	testInjector.register("localToDevicePathDataFactory", LocalToDevicePathDataFactory);

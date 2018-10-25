@@ -84,7 +84,7 @@ $injector.requirePublic("npm", "./node-package-manager");
 $injector.requirePublic("yarn", "./yarn-package-manager");
 $injector.requireCommand("package-manager|set", "./commands/package-manager-set");
 
-$injector.require("npmInstallationManager", "./npm-installation-manager");
+$injector.require("packageInstallationManager", "./package-installation-manager");
 $injector.require("dynamicHelpProvider", "./dynamic-help-provider");
 $injector.require("mobilePlatformsCapabilities", "./mobile-platforms-capabilities");
 $injector.require("commandsServiceProvider", "./providers/commands-service-provider");

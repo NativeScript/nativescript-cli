@@ -17,7 +17,7 @@ class VersionsService implements IVersionsService {
 	private projectData: IProjectData;
 
 	constructor(private $fs: IFileSystem,
-		private $npmInstallationManager: INpmInstallationManager,
+		private $packageInstallationManager: IPackageInstallationManager,
 		private $injector: IInjector,
 		private $logger: ILogger,
 		private $staticConfig: Config.IStaticConfig,
@@ -28,7 +28,7 @@ class VersionsService implements IVersionsService {
 
 	public async getNativescriptCliVersion(): Promise<IVersionInformation> {
 		const currentCliVersion = this.$staticConfig.version;
-		const latestCliVersion = await this.$npmInstallationManager.getLatestVersion(constants.NATIVESCRIPT_KEY_NAME);
+		const latestCliVersion = await this.$packageInstallationManager.getLatestVersion(constants.NATIVESCRIPT_KEY_NAME);
 
 		return {
 			componentName: constants.NATIVESCRIPT_KEY_NAME,
@@ -38,7 +38,7 @@ class VersionsService implements IVersionsService {
 	}
 
 	public async getTnsCoreModulesVersion(): Promise<IVersionInformation> {
-		const latestTnsCoreModulesVersion = await this.$npmInstallationManager.getLatestVersion(constants.TNS_CORE_MODULES_NAME);
+		const latestTnsCoreModulesVersion = await this.$packageInstallationManager.getLatestVersion(constants.TNS_CORE_MODULES_NAME);
 		const nativescriptCoreModulesInfo: IVersionInformation = {
 			componentName: constants.TNS_CORE_MODULES_NAME,
 			latestVersion: latestTnsCoreModulesVersion
@@ -72,7 +72,7 @@ class VersionsService implements IVersionsService {
 		}
 
 		const runtimesVersions: IVersionInformation[] = await Promise.all(runtimes.map(async (runtime: string) => {
-			const latestRuntimeVersion = await this.$npmInstallationManager.getLatestVersion(runtime);
+			const latestRuntimeVersion = await this.$packageInstallationManager.getLatestVersion(runtime);
 			const runtimeInformation: IVersionInformation = {
 				componentName: runtime,
 				latestVersion: latestRuntimeVersion
