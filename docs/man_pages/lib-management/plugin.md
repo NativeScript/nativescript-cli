@@ -17,8 +17,6 @@ Lets you manage the plugins for your project.
 * `add` - Installs the specified plugin and its dependencies.
 * `remove` - Uninstalls the specified plugin and its dependencies.
 * `update` - Uninstalls and installs the specified plugin(s) and its dependencies.
-* `find` - Finds NativeScript plugins in npm.
-* `search` - Finds NativeScript plugins in npm.
 * `build` - Builds the Android parts of a NativeScript plugin.
 * `create` - Creates a project for building a new NativeScript plugin.
 
