@@ -2,21 +2,27 @@
 title: tns publish
 position: 4
 ---<% } %>
+
 # tns publish
 
+### Description
+
+Uploads project to an application store.
+
+<% if(isConsole && (isLinux || isWindows)) { %>WARNING: You can run this command only on macOS systems. To view the complete help for this command, run `$ tns help publish ios`<% } %>
+
+### Commands
 
 Usage | Synopsis
 ---|---
 General | `$ tns publish ios`
 
-Uploads project to an application store.
-
-<% if(isConsole && (isLinux || isWindows)) { %>WARNING: You can run this command only on OS X systems. To view the complete help for this command, run `$ tns help publish ios`<% } %>
 <% if(isHtml) { %>
+
 ### Command Limitations
 
-* You can run `$ tns publish` only on OS X systems.
-* Currently, you can run `$ tns publish` to publish only iOS applications.
+* You can run `$ tns publish` only on macOS systems.
+* Currently, you can use `$ tns publish` only to publish iOS applications.
 
 ### Related Commands
 

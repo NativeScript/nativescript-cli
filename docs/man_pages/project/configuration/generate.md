@@ -2,23 +2,30 @@
 title: tns generate
 position: 9
 ---<% } %>
+
 # tns generate
 
+### Description
+
+Modifies the project by executing a specified schematic to it.
+
+### Commands
 
 Usage | Synopsis
 ------|-------
 General | `$ tns generate <Schematic Name> [--collection <Collection>] [option=value]`
 
-Modifies the project by executing a specified schematic to it.
-
 ### Options
+
 * `--collection` - specifies the node package to be used as schematics collection. If it's not specified, `@nativescript/schematics` will be used.
 
-### Attributes
+### Arguments
+
 * `<Schematic Name>` - name of the schematic to be executed. The schematic should be specified in the used collection.
 * `<option=value>` - options for executed schematic.
 
 <% if(isHtml) { %>
+
 ### Related Commands
 
 Command | Description

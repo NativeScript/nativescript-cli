@@ -2,16 +2,21 @@
 title: tns extension
 position: 9
 ---<% } %>
+
 # tns extension
 
+### Description
+
+Prints information about all installed extensions.
+
+### Commands
 
 Usage | Synopsis
 ------|-------
 General | `$ tns extension`
 
-Prints information about all installed extensions.
-
 <% if(isHtml) { %>
+
 ### Related Commands
 
 Command | Description

@@ -2,25 +2,30 @@
 title: tns platform clean
 position: 3
 ---<% } %>
+
 # tns platform clean
 
+### Description
+
+Removes and adds the selected platform to the project currently targets. <% if(isMacOS) { %>You must specify the target platform that you want to remove.<% } %>
+
+### Commands
 
 Usage | Synopsis
 ------|-------
 <% if((isConsole && isMacOS) || isHtml) { %>General | `$ tns platform clean <Platform>`<% } %>
 <% if(isConsole && (isLinux || isWindows)) { %>General | `$ tns platform clean android`<% } %>
 
-Removes and adds the selected platform to the project currently targets. <% if(isMacOS) { %>You must specify the target platform that you want to remove.<% } %>
-
-<% if(isMacOS) { %>### Attributes
+<% if(isMacOS) { %>### Arguments
 `<Platform>` is the target mobile platform that you want to clean in your project. You can set the following target platforms.
 * `android` - Removes configuration changes for Android development.
 * `ios` - Removes configuration changes for iOS development.<% } %>
 
 <% if(isHtml) { %>
+
 ### Command Limitations
 
-* You can run `$ tns platform clean ios` only on OS X systems.
+* You can run `$ tns platform clean ios` only on macOS systems.
 * Clean command will not preserve your current installed platform version but will download and install latest platform version. If you are using clean with custom version of the runtime, specify the version in the command tns clean ios@2.1.0 or tns clean ios --frameworkPath <path-to-tgz>
 
 ### Related Commands

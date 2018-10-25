@@ -2,8 +2,16 @@
 title: tns autocomplete
 position: 4
 ---<% } %>
+
 # tns autocomplete
 
+### Description
+
+Prints your current command-line completion settings. If disabled, prompts you to enable it.
+
+<% if(isHtml) { %>> <% } %>NOTE: This operation might modify the `.bash_profile`, `.bashrc` and `.zshrc` files.
+
+### Commands
 
 Usage | Synopsis
 ------|-------
@@ -12,17 +20,15 @@ Get settings | `$ tns autocomplete status`
 Enable | `$ tns autocomplete enable`
 Disable | `$ tns autocomplete disable`
 
-Prints your current command-line completion settings. If disabled, prompts you to enable it.
+### Arguments
 
-<% if(isHtml) { %>> <% } %>NOTE: This operation might modify the `.bash_profile`, `.bashrc` and `.zshrc` files.
-
-### Attributes
 `<Command>` extends the `autocomplete` command. You can set the following values for this attribute.
 * `status` - Prints your current command-line completion settings.
 * `enable` - Enables command-line completion. You need to restart the shell to complete the operation.
 * `disable` - Disables command-line completion. You need to restart the shell to complete the operation.
 
 <% if(isHtml) { %>
+
 ### Related Commands
 
 Command | Description
