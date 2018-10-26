@@ -1290,7 +1290,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 
 		if (!teamId) {
 			const teams = await this.$iOSProvisionService.getDevelopmentTeams();
-			this.$logger.warn("Xcode 8 requires a team id to be specified when building for device.");
+			this.$logger.warn("Xcode requires a team id to be specified when building for device.");
 			this.$logger.warn("You can specify the team id by setting the DEVELOPMENT_TEAM setting in build.xcconfig file located in App_Resources folder of your app, or by using the --teamId option when calling run, debug or livesync commands.");
 			if (teams.length === 1) {
 				teamId = teams[0].id;
