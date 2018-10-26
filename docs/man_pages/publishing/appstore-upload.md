@@ -2,31 +2,38 @@
 title: tns appstore upload
 position: 1
 ---<% } %>
+
 # tns appstore upload
 
+### Description
+
+Uploads project to iTunes Connect. The command either issues a production build and uploads it to iTunes Connect, or uses an already built package to upload.
+
+<% if(isConsole && (isLinux || isWindows)) { %>WARNING: You can run this command only on macOS systems. To view the complete help for this command, run `$ tns help appstore upload`<% } %>
+<% if((isConsole && isMacOS) || isHtml) { %>
+
+### Commands
 
 Usage | Synopsis
 ---|---
 Build and upload package | `$ tns appstore upload [<Apple ID> [<Password> [<Mobile Provisioning Profile Identifier> [<Code Sign Identity>]]]]]`
 Upload package | `$ tns appstore upload [<Apple ID> [<Password>]] --ipa <Ipa File Path>`
 
-Uploads project to iTunes Connect. The command either issues a production build and uploads it to iTunes Connect, or uses an already built package to upload.
-
-<% if(isConsole && (isLinux || isWindows)) { %>WARNING: You can run this command only on OS X systems. To view the complete help for this command, run `$ tns help appstore upload`<% } %>
-<% if((isConsole && isMacOS) || isHtml) { %>
-
 ### Options
+
 * `--ipa` - If set, will use provided .ipa file instead of building the project.
 
-### Attributes
+### Arguments
+
 * `<Apple ID>` and `<Password>` are your credentials for logging into iTunes Connect.
 * `<Mobile Provisioning Profile Identifier>` the identifier of the mobile provision(e.g. d5d40f61-b303-4fc8-aea3-fbb229a8171c) which will be used for building. This can easily be acquired through the iPhone Configuration Utility.
 * `<Code Sign Identity>` the code sign identity which will be used for building. You can set it to something generic like 'iPhone Distribution' to let the build automatically detect a code sign identity.
 
 <% if(isHtml) { %>
+
 ### Command Limitations
 
-* You can run `$ tns appstore upload` only on OS X systems.
+* You can run `$ tns appstore upload` only on macOS systems.
 
 ### Related Commands
 

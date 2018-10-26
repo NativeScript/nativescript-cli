@@ -2,16 +2,21 @@
 title: tns info
 position: 11
 ---<% } %>
+
 # tns info
 
+### Description
+
+Displays version information about the NativeScript CLI, core modules, and runtimes.
+
+### Commands
 
 Usage | Synopsis
 ------|-------
 General | `$ tns info`
 
-Displays version information about the NativeScript CLI, core modules, and runtimes.
-
 <% if(isHtml) { %>
+
 ### Related Commands
 
 Command | Description

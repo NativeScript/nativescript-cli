@@ -2,24 +2,29 @@
 title: tns debug
 position: 6
 ---<% } %>
+
 # tns debug
 
+### Description
+
+Initiates a debugging session for your project on a connected device or native emulator. <% if(isMacOS) { %>You must specify the target platform on which you want to debug.<% } %> When necessary, the command will prepare, build, deploy and launch the app before starting the debug session. While debugging, the output from the application is printed in the console and any changes made to your code are synchronized on all connected devices or running emulators.
+
+### Commands
 
 Usage | Synopsis
 ---|---
 <% if((isConsole && isMacOS) || isHtml) { %>General | `$ tns debug <Platform>`<% } %><% if(isConsole && (isLinux || isWindows)) { %>General | `$ tns debug android`<% } %>
 
-Debugs your project on a connected device or in a native emulator. <% if(isMacOS) { %>You must specify the target platform on which you want to debug.<% } %> The command will prepare, build and deploy the app when necessary. By default listens for changes in your code, synchronizes those changes and restarts the app on the targeted device.
-
-<% if((isConsole && isMacOS) || isHtml) { %>### Attributes
+<% if((isConsole && isMacOS) || isHtml) { %>### Arguments
 `<Platform>` is the target mobile platform for which you want to debug your project. You can set the following target platforms:
-* `android` - Debugs your project on a connected Android device or Android emulator.
-* `ios` - Debugs your project on a connected iOS device or in a native iOS simulator.<% } %>
+* `android` - Start a debugging session for your project on a connected Android device or Android emulator.
+* `ios` - Start a debugging session for your project on a connected iOS device or in the native iOS simulator.<% } %>
 
 <% if(isHtml) { %>
+
 ### Command Limitations
 
-* You can run `$ tns debug ios` only on OS X systems.
+* You can run `$ tns debug ios` only on macOS systems.
 
 ### Related Commands
 

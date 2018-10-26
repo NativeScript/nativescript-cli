@@ -2,24 +2,28 @@
 title: tns error-reporting
 position: 6
 ---<% } %>
+
 # tns error-reporting
 
+### Description
+
+Configures anonymous error reporting for the NativeScript CLI. All data gathered is used strictly for improving the product and will never be used to identify or contact you.
+
+### Commands
 
 Usage | Synopsis
 ------|-------
 General | `$ tns error-reporting [<Command>]`
 
-Configures anonymous error reporting for the NativeScript CLI.
+### Arguments
 
-All data gathered is used strictly for improving the product and will never be used to identify or contact you.
-
-### Attributes
 `<Command>` extends the `error-reporting` command. You can set the following values for this attribute.
 * `status` - Shows the current configuration for anonymous error reporting for the NativeScript CLI.
 * `enable` - Enables anonymous error reporting.
 * `disable` - Disables anonymous error reporting.
 
 <% if(isHtml) { %>
+
 ### Related Commands
 
 Command | Description

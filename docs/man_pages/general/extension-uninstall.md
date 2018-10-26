@@ -2,20 +2,25 @@
 title: tns extension uninstall
 position: 8
 ---<% } %>
+
 # tns extension uninstall
 
+### Description
+
+Uninstalls the specified extension, after which you will no longer be able to use the functionality added by this extensions to the NativeScript CLI.
+
+### Commands
 
 Usage | Synopsis
 ------|-------
 General | `$ tns extension uninstall <Extension>`
 
-Uninstalls specified extension. After that you will not be able to use the functionality that this extensions adds to NativeScript CLI.
-
-### Attributes
+### Arguments
 
 * `<Extension>` is the name of the extension as listed in its `package.json` file.
 
 <% if(isHtml) { %>
+
 ### Related Commands
 
 Command | Description

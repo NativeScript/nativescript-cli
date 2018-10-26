@@ -2,14 +2,10 @@
 title: tns install
 position: 1
 ---<% } %>
+
 # tns install
 
-
-Usage | Synopsis
----|---
-Install all dependencies | `$ tns install [--path]`
-Install a selected npm module | `$ tns install <Module>`
-Enable TypeScript support | `$ tns install typescript`
+### Description
 
 Installs all dependencies described in a valid `package.json` or installs a selected NativeScript development module as a dev dependency.
 
@@ -17,10 +13,20 @@ Installs all dependencies described in a valid `package.json` or installs a sele
 The `package.json` file must be a valid `package.json` describing the configuration of a NativeScript project. If missing or corrupted, you can recreate the file by running `$ tns init` in the directory of a NativeScript project.
 <% } %>
 
+### Commands
+
+Usage | Synopsis
+---|---
+Install all dependencies | `$ tns install [--path]`
+Install a selected npm module | `$ tns install <Module>`
+Enable TypeScript support | `$ tns install typescript`
+
 ### Options
+
 * `--path` - Specifies the directory which contains the `package.json` file, if different from the current directory.
 
 ### Arguments
+
 * `<Module>` - Specifies a NativeScript development module by path to a local directory containing a valid npm module or by name in the npm registry.<% if(isHtml) { %> When a `<Module>` is specified, this command adds the module as a dev dependency in your `package.json`.
 
 > **TIP:** When installing a module from the npm registry, you can specify it by full name or suffix. NativeScript development modules are published in the npm registry with the following name format: `nativescript-dev-<suffix>`.

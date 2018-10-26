@@ -2,26 +2,32 @@
 title: tns appstore
 position: 2
 ---<% } %>
+
 # tns appstore
 
+### Description
+
+Lists all application records in iTunes Connect. The list contains name, version and bundle ID for each application record.
+
+### Commands
 
 Usage | Synopsis
 ---|---
 List applications | `$ tns appstore [<Apple ID> [<Password>]]`
 <% if((isConsole && isMacOS) || isHtml) { %>Upload | `$ tns appstore upload`<% } %>
 
-Lists all application records in iTunes Connect. The list contains name, version and bundle ID for each application record.
+### Arguments
 
-### Attributes
 <% if(isHtml) { %>
 `<Apple ID>` and `<Password>` are your credentials for logging in iTunes Connect. If you do not provide them when running the command, the NativeScript CLI will prompt you to provide them.
 
 ### Options
+
 * `--team-id` - Specifies the team id for which Xcode will try to find distribution certificate and provisioning profile when exporting for AppStore submission.
 
 ### Command Limitations
 
-* You can run `$ tns appstore upload` only on OS X systems.
+* You can run `$ tns appstore upload` only on macOS systems.
 
 ### Related Commands
 

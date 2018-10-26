@@ -2,22 +2,29 @@
 title: tns resources generate splashes
 position: 12
 ---<% } %>
+
 # tns resources generate splashes
+
+### Description
+
+Generates all splashscreens for Android and iOS platforms and places the generated images in the correct directories under `App_Resources/<platform>` directory.
+
+### Commands
 
 Usage | Synopsis
 ------|-------
 `$ tns resources generate splashes <Path to image> [--background <Color>]` | Generate all splashscreens for Android and iOS based on the specified image.
 
-Generates all splashscreens for Android and iOS platforms and places the generated images in the correct directories under `App_Resources/<platform>` directory.
-
 ### Options
-* `--background` Sets the background color of the splashscreen. Defaults to white in case it is not specified.
 
-### Attributes
-* `<Path to image>` is a valid path to an image that will be used to generate all splashscreens.
-* `<Color>` is a valid color. It can be represented with string, like `white`, `black`, `blue`, etc. or its HEX representation, for example `#FFFFFF`, `#000000`, `#0000FF`. NOTE: As the `#` is special symbol in some terminals, make sure to place the value in quotes, for example `$ tns resources generate splashes ../myImage.png --background "#FF00FF"`.
+* `--background` Sets the background color of the splashscreen. When no color is specified, a default value of `white` is used. `<Color>` is a valid color and can be represented with string, like `white`, `black`, `blue`, or with HEX representation, for example `#FFFFFF`, `#000000`, `#0000FF`. NOTE: As the `#` is special symbol in some terminals, make sure to place the value in quotes, for example `$ tns resources generate splashes ../myImage.png --background "#FF00FF"`.
+
+### Arguments
+
+* `<Path to image>` is a valid path to an image that will be used to generate all splashscreens. 
 
 <% if(isHtml) { %>
+
 ### Related Commands
 
 Command | Description

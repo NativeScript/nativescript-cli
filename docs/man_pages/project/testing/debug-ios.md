@@ -2,49 +2,55 @@
 title: tns debug ios
 position: 5
 ---<% } %>
+
 # tns debug ios
 
+### Description
+
+Initiates a debugging session for your project on a connected iOS device or in the iOS simulator. When necessary, the command will prepare, build, deploy and launch the app before starting the debug session. While debugging, the output from the application is printed in the console and any changes made to your code are synchronizes with the deployed app. <% if(isHtml) { %>Any debugging traffic is forwarded to port 8080 (or the next available one) from the device to the local machine.<% } %>
+
+<% if(isConsole && (isWindows || isLinux)) { %>WARNING: You can run this command only on macOS systems. To view the complete help for this command, run `$ tns help debug ios`<% } %>
+<% if((isConsole && isMacOS) || isHtml) { %>
+<% if(isHtml) { %>> <% } %>IMPORTANT: Before building for iOS device, verify that you have configured a valid pair of certificate and provisioning profile on your macOS system. <% if(isHtml) { %>For more information, see the [Code Signing](https://developer.apple.com/support/code-signing/) and [Maintain Signing Assets](https://help.apple.com/xcode/mac/current/#/dev3a05256b8) sections from the Apple Developer documentation.<% } %>
+
+To enable Hot Module Replacement (HMR) in Angular projects, follow the steps outlined in this wiki: https://github.com/NativeScript/nativescript-angular/wiki/HMR.
+
+### Commands
 
 Usage | Synopsis
 ---|---
-Deploy on device/simulator, run the app, start Safari Web Inspector and attache the debugger | `$ tns debug ios`
+Deploy on device/emulator, run the app, attach a debugger and generate a Chrome DevTools link for debugging | `$ tns debug ios`
 Deploy on device/simulator, run the app and stop at the first code statement | `$ tns debug ios --debug-brk [--device <Device ID>] [--no-client]`
 Deploy in the iOS simulator, run the app and stop at the first code statement | `$ tns debug ios --debug-brk --emulator [--no-client]`
 Attach the debug tools to a running app on specified device or simulator| `$ tns debug ios --start [--device <Device ID>] [--no-client]`
 Attach the debug tools to a running app in the iOS simulator | `$ tns debug ios --start --emulator [--no-client]`
 
-Prepares, builds and deploys the project when necessary. Debugs your project on a connected device or in the iOS simulator. <% if(isHtml) { %>Any debugging traffic is forwarded to port 8080( or the next available one) from the device to the local machine.<% } %>
-While debugging, prints the output from the application in the console and watches for changes in your code. Once a change is detected, it synchronizes the change with the selected device and restarts the application.
-
-<% if(isConsole && (isWindows || isLinux)) { %>WARNING: You can run this command only on OS X systems. To view the complete help for this command, run `$ tns help debug ios`<% } %>
-
-<% if((isConsole && isMacOS) || isHtml) { %>
-<% if(isHtml) { %>> <% } %>IMPORTANT: Before building for iOS device, verify that you have configured a valid pair of certificate and provisioning profile on your OS X system. <% if(isHtml) { %>For more information, see [Obtaining Signing Identities and Downloading Provisioning Profiles](https://developer.apple.com/library/mac/recipes/xcode_help-accounts_preferences/articles/obtain_certificates_and_provisioning_profiles.html).<% } %>
-
 ### Options
-* `--device` - Specifies a connected device or iOS simulator on which to run the app.
+
+* `--device` - Specifies a connected device or iOS simulator on which to run the app. `<Device ID>` is the device identifier of the target device as listed by the `$ tns device ios` command.
 * `--emulator` - Indicates that you want to debug your app in the iOS simulator.
 * `--debug-brk` - Prepares, builds and deploys the application package on a device or in a simulator, runs the app, launches the developer tools of your Safari browser and stops at the first code statement.
 * `--start` - Attaches the debug tools to a deployed and running app and launches the developer tools of your Safari browser.
 * `--no-client` - If set, the NativeScript CLI attaches the debug tools but does not launch the developer tools in Safari. Could be used on already started Safari Web Inspector.
 * `--timeout` - Sets the number of seconds that NativeScript CLI will wait to find the inspector socket port from device's logs. If not set, the default timeout is 10 seconds.
 * `--no-watch` - If set, changes in your code will not be reflected during the execution of this command.
-* `--clean` - If set, forces rebuilding the native application.
+* `--clean` - If set, forces the complete rebuild of the native application.
+* `--bundle` - Specifies that the `webpack` bundler will be used to bundle the application.
+* `--hmr` - (Beta) Enables the hot module replacement (HMR) feature. HMR depends on `webpack` and adding the `--hmr` flag to the command will automatically enable the `--bundle` option as well. <% if(isConsole) { %> The HMR feature is currently in Beta. For more information about the current development state and any known issues, please check the relevant GitHub issue: https://github.com/NativeScript/NativeScript/issues/6398.<% } %>
 * `--chrome` - Deprecated - default behavior uses '--chrome' implicitly. Allows debugging in Chrome Developer Tools. If set, Safari Web Inspector is not started and debugging is attached to Chrome Developer Tools.
 * `--inspector` - If set, the developer tools in the Safari Web Inspector are used for debugging the application.
 * `--syncAllFiles` - Watches all production dependencies inside node_modules for changes. Triggers project rebuild if necessary!
 
-### Attributes
-* `<Device ID>` is the device identifier of the target device as listed by `$ tns device ios`
 <% } %>
 <% if(isHtml) { %>
-### Prerequisite
 
-* If you want to debug in the iOS simulator, you must have Xcode 6 or later installed on your system.
+>Note: Hot Module Replacement (HMR) is currently in Beta. For more information about the current development state and any known issues, please check the relevant GitHub issue: https://github.com/NativeScript/NativeScript/issues/6398.
 
 ### Command Limitations
 
-* You can run `$ tns debug ios` only on OS X systems.
+* You can run `$ tns debug ios` only on macOS systems.
+* You must have Google Chrome installed on your machine.
+* If you want to debug in the iOS simulator, you must have the latest versions of Xcode installed on your machine.
 
 ### Related Commands
 
