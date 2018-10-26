@@ -20,5 +20,7 @@ connectivityModule.startMonitoring((newConnectionType) => {
         liveService._pubnubClient.reconnect();
       }
       break;
+    default:
+      break;
   }
 });
