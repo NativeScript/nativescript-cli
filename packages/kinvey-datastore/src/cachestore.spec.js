@@ -1,7 +1,7 @@
 import nock from 'nock';
 import expect from 'expect';
 import { CacheStore } from './cachestore';
-import { SyncOperation } from './sync';
+import { SyncEvent } from './sync';
 import { init } from 'kinvey-app';
 import { Query } from 'kinvey-query';
 import * as Aggregation from 'kinvey-aggregation';
@@ -225,7 +225,6 @@ describe.only('CacheStore', () => {
       nock(client.apiHostname)
         .get(`/appdata/${client.appKey}/${collection}`)
         .reply(200, [entity1, entity2]);
-      console.log(query.toQueryString());
 
       store.pull()
         .then(() => {
@@ -630,7 +629,7 @@ describe.only('CacheStore', () => {
     it('should add kinveyfile_tls query parameter', () => {//It seems we do not send the kinvey_tls query param
       const store = new CacheStore('comecollection');
       const entity1 = { _id: randomString() };
-
+      store.pathname = `/appdata/${client.appKey}/comecollection`;
       nock(client.apiHostname)
         .get(store.pathname)
         .query({ kinveyfile_tls: true })
@@ -1132,7 +1131,7 @@ describe.only('CacheStore', () => {
     });
   });
 
-  describe('remove()', () => {// errors should be reverted
+  describe('remove()', () => {// errors should be reverted //delete is sent to collection/id and count is simply 0
     it('should throw an error if the query argument is not an instance of the Query class', () => {
       const store = new CacheStore(client.appKey, collection, null, {autoSync:true});
       return store.remove({})
@@ -1156,7 +1155,7 @@ describe.only('CacheStore', () => {
         });
     });
 
-    it.only('should remove all the entities', () => {
+    it('should remove all the entities', () => {//Delete with no query now sends requests to collectio/id
       const store = new CacheStore(client.appKey, collection, null, {autoSync:true});
       const entity1 = { _id: randomString() };
       const entity2 = { _id: randomString() };
@@ -1185,21 +1184,21 @@ describe.only('CacheStore', () => {
         });
     });
 
-    it('should remove all the entities that match the query', () => {
-      const store = new CacheStore(collection);
+    it('should remove all the entities that match the query', () => {//The result from delete is just 1, and it should be {count:1}
+      const store = new CacheStore(client.appKey, collection, null, {autoSync:true});
       const entity1 = { _id: randomString() };
       const entity2 = { _id: randomString() };
 
-      nock(store.client.apiHostname)
-        .get(`/appdata/${store.client.appKey}/${collection}`)
+      nock(client.apiHostname)
+        .get(`/appdata/${client.appKey}/${collection}`)
         .reply(200, [entity1, entity2]);
 
       return store.pull()
         .then(() => {
           const query = new Query().equalTo('_id', entity1._id);
 
-          nock(store.client.apiHostname)
-            .delete(`/appdata/${store.client.appKey}/${collection}`)
+          nock(client.apiHostname)
+            .delete(`/appdata/${client.appKey}/${collection}/${entity1._id}`)
             .query(true)
             .reply(200);
 
@@ -1207,7 +1206,7 @@ describe.only('CacheStore', () => {
         })
         .then((result) => {
           expect(result).toEqual({ count: 1 });
-          const syncStore = new SyncStore(collection);
+          const syncStore = new CacheStore(client.appKey, collection, null, {autoSync:false});
           return syncStore.find().toPromise();
         })
         .then((entities) => {
@@ -1219,17 +1218,17 @@ describe.only('CacheStore', () => {
         });
     });
 
-    it('should not remove the entity from the cache if the backend request failed', () => {
-      const store = new CacheStore(collection);
+    it('should not remove the entity from the cache if the backend request failed', () => {//delete is sent to collection/id and count is simply 0
+      const store = new CacheStore(client.appKey, collection, null, {autoSync:true});
       const entity1 = { _id: randomString() };
       const entity2 = { _id: randomString() };
 
-      const pullScope = nock(store.client.apiHostname)
-        .get(`/appdata/${store.client.appKey}/${collection}`)
+      const pullScope = nock(client.apiHostname)
+        .get(`/appdata/${client.appKey}/${collection}`)
         .reply(200, [entity1, entity2]);
 
-      const deleteScope = nock(store.client.apiHostname)
-        .delete(`/appdata/${store.client.appKey}/${collection}`)
+      const deleteScope = nock(client.apiHostname)
+        .delete(`/appdata/${client.appKey}/${collection}/${entity1._id}`)
         .query(true)
         .reply(500);
 
@@ -1242,7 +1241,7 @@ describe.only('CacheStore', () => {
         .then((result) => {
           deleteScope.done();
           expect(result).toEqual({ count: 0 });
-          const syncStore = new SyncStore(collection);
+          const syncStore = new CacheStore(client.appKey, collection, null, {autoSync:false});
           return syncStore.find().toPromise();
         })
         .then((entities) => {
@@ -1255,20 +1254,20 @@ describe.only('CacheStore', () => {
     });
 
     it('should remove an entity if it was created locally', () => {
-      const store = new CacheStore(collection);
-      const syncStore = new SyncStore(collection);
+      const store = new CacheStore(client.appKey, collection, null, {autoSync:true});
+      const syncStore = new CacheStore(client.appKey, collection, null, {autoSync:false});
       const entity1 = { _id: randomString() };
       const entity2 = { _id: randomString() };
       const entity3 = {};
-
-      nock(store.client.apiHostname)
-        .get(`/appdata/${store.client.appKey}/${collection}`)
+      store.pathname = `/appdata/${client.appKey}/${collection}`;
+      nock(client.apiHostname)
+        .get(`/appdata/${client.appKey}/${collection}`)
         .reply(200, [entity1, entity2]);
 
       return store.pull()
         .then(() => syncStore.save(entity3))
         .then(() => {
-          nock(store.client.apiHostname)
+          nock(client.apiHostname)
             .delete(`${store.pathname}`)
             .reply(200);
 
@@ -1288,9 +1287,9 @@ describe.only('CacheStore', () => {
     });
   });
 
-  describe('removeById()', () => {
+  describe('removeById()', () => {// errors should be reverted //delete is sent to collection/id and count is simply 0
     it('should return a { count: 0 } if an id is not provided', () => {
-      const store = new CacheStore(collection);
+      const store = new CacheStore(client.appKey, collection, null, {autoSync:true});
       return store.removeById()
         .then((result) => {
           expect(result).toEqual({ count: 0 });
@@ -1298,7 +1297,7 @@ describe.only('CacheStore', () => {
     });
 
     it('should return a NotFoundError if an entity with that id does not exist', () => {
-      const store = new CacheStore(collection);
+      const store = new CacheStore(client.appKey, collection, null, {autoSync:true});
       return store.clear()
         .then(() => store.removeById(randomString()))
         .then(() => Promise.reject(new Error('Should not happen')))
@@ -1307,16 +1306,16 @@ describe.only('CacheStore', () => {
         });
     });
 
-    it('should remove the entity from cache if the entity is not found on the backend', () => {
-      const store = new CacheStore(collection);
+    it('should remove the entity from cache if the entity is not found on the backend', () => {//remove and removeById enter the pushResults.error clause and decrease the result
+      const store = new CacheStore(client.appKey, collection, null, {autoSync:true});
       const entity = { _id: randomString() };
 
-      const pullScope = nock(store.client.apiHostname)
-        .get(`/appdata/${store.client.appKey}/${collection}`)
+      const pullScope = nock(client.apiHostname)
+        .get(`/appdata/${client.appKey}/${collection}`)
         .reply(200, [entity]);
 
-      const deleteScope = nock(store.client.apiHostname)
-        .delete(`/appdata/${store.client.appKey}/${collection}/${entity._id}`)
+      const deleteScope = nock(client.apiHostname)
+        .delete(`/appdata/${client.appKey}/${collection}/${entity._id}`)
         .reply(404);
 
       return store.pull()
@@ -1327,7 +1326,7 @@ describe.only('CacheStore', () => {
         .then((result) => {
           deleteScope.done();
           expect(result).toEqual({ count: 1 });
-          const syncStore = new SyncStore(collection);
+          const syncStore = new CacheStore(client.appKey, collection, null, {autoSync:false});
           const query = new Query().equalTo('_id', entity._id);
           return syncStore.find(query).toPromise();
         })
@@ -1337,15 +1336,15 @@ describe.only('CacheStore', () => {
     });
 
     it('should remove the entity from the backend', () => {
-      const store = new CacheStore(collection);
+      const store = new CacheStore(client.appKey, collection, null, {autoSync:true});
       const entity = { _id: randomString() };
 
-      const pullScope = nock(store.client.apiHostname)
-        .get(`/appdata/${store.client.appKey}/${collection}`)
+      const pullScope = nock(client.apiHostname)
+        .get(`/appdata/${client.appKey}/${collection}`)
         .reply(200, [entity]);
 
-      const deleteScope = nock(store.client.apiHostname)
-        .delete(`/appdata/${store.client.appKey}/${collection}/${entity._id}`)
+      const deleteScope = nock(client.apiHostname)
+        .delete(`/appdata/${client.appKey}/${collection}/${entity._id}`)
         .reply(200, { count: 1 });
 
       return store.pull()
@@ -1356,7 +1355,7 @@ describe.only('CacheStore', () => {
         .then((result) => {
           deleteScope.done();
           expect(result).toEqual({ count: 1 });
-          const syncStore = new SyncStore(collection);
+          const syncStore = new CacheStore(client.appKey, collection, null, {autoSync:false});
           const query = new Query().equalTo('_id', entity._id);
           return syncStore.find(query).toPromise();
         })
@@ -1366,8 +1365,8 @@ describe.only('CacheStore', () => {
     });
 
     it('should remove the entity from the cache and sync table and not make a request for a local entity', () => {
-      const store = new CacheStore(collection);
-      const syncStore = new SyncStore(collection);
+      const store = new CacheStore(client.appKey, collection, null, {autoSync:true});
+      const syncStore = new CacheStore(client.appKey, collection, null, {autoSync:false});
       const entity = {};
 
       return syncStore.save(entity)
@@ -1388,13 +1387,13 @@ describe.only('CacheStore', () => {
     });
   });
 
-  describe('clear()', () => {
+  describe('clear()', () => {// errors should be reverted and clear returns boolean
     it('should remove all entities only from the cache', () => {
-      const store = new CacheStore(collection);
+      const store = new CacheStore(client.appKey, collection, null, {autoSync:true});
       const entity = { _id: randomString() };
 
-      nock(store.client.apiHostname)
-        .get(`/appdata/${store.client.appKey}/${collection}`)
+      nock(client.apiHostname)
+        .get(`/appdata/${client.appKey}/${collection}`)
         .reply(200, [entity]);
 
       return store.pull()
@@ -1403,7 +1402,7 @@ describe.only('CacheStore', () => {
         })
         .then((result) => {
           expect(result).toEqual({ count: 1 });
-          const syncStore = new SyncStore(collection);
+          const syncStore = new CacheStore(client.appKey, collection, null, {autoSync:false});
           return syncStore.find().toPromise();
         })
         .then((entities) => {
@@ -1456,8 +1455,8 @@ describe.only('CacheStore', () => {
 
   describe('pendingSyncCount()', () => {
     it('should return the count of entities waiting to be synced', () => {
-      const store = new CacheStore(collection);
-      const syncStore = new SyncStore(collection);
+      const store = new CacheStore(client.appKey, collection, null, {autoSync:true});
+      const syncStore = new CacheStore(client.appKey, collection, null, {autoSync:false});
       const entity = {};
 
       return syncStore.save(entity)
@@ -1473,8 +1472,8 @@ describe.only('CacheStore', () => {
 
   describe('pendingSyncEntities()', () => {
     it('should return the entities waiting to be synced', () => {
-      const store = new CacheStore(collection);
-      const syncStore = new SyncStore(collection);
+      const store = new CacheStore(client.appKey, collection, null, {autoSync:true});
+      const syncStore = new CacheStore(client.appKey, collection, null, {autoSync:false});
       const entity = {};
 
       return syncStore.save(entity)
@@ -1485,7 +1484,7 @@ describe.only('CacheStore', () => {
               expect(entities[0]).toIncludeKey('_id');
               expect(entities[0].collection).toEqual(collection);
               expect(entities[0].entityId).toEqual(entity._id);
-              expect(entities[0].state).toEqual({ operation: SyncOperation.Create });
+              expect(entities[0].state).toEqual({ operation: SyncEvent.Create });
             });
         });
     });
@@ -1493,20 +1492,21 @@ describe.only('CacheStore', () => {
 
   describe('push()', () => {
     it('should push the entities to the backend', () => {
-      const store = new CacheStore(collection);
-      const syncStore = new SyncStore(collection);
+      const store = new CacheStore(client.appKey, collection, null, {autoSync:true});
+      const syncStore = new CacheStore(client.appKey, collection, null, {autoSync:false});
       const entity = { _id: randomString() };
-
+      store.pathname = `/appdata/${client.appKey}/${collection}`
+      
       return syncStore.save(entity)
         .then(() => {
-          nock(store.client.apiHostname)
+          nock(client.apiHostname)
             .put(`${store.pathname}/${entity._id}`, entity)
             .reply(200, entity);
 
           return store.push();
         })
         .then((result) => {
-          expect(result).toEqual([{ _id: entity._id, operation: SyncOperation.Update, entity: entity }]);
+          expect(result).toEqual([{ _id: entity._id, operation: SyncEvent.Update, entity: entity }]);
           return store.pendingSyncCount();
         })
         .then((count) => {
@@ -1519,15 +1519,15 @@ describe.only('CacheStore', () => {
     it('should save entities from the backend to the cache', () => {
       const entity1 = { _id: randomString() };
       const entity2 = { _id: randomString() };
-      const store = new CacheStore(collection);
+      const store = new CacheStore(client.appKey, collection, null, {autoSync:true})
 
-      nock(store.client.apiHostname)
-        .get(`/appdata/${store.client.appKey}/${collection}`)
+      nock(client.apiHostname)
+        .get(`/appdata/${client.appKey}/${collection}`)
         .reply(200, [entity1, entity2]);
 
       store.pull()
         .then(() => {
-          const syncStore = new SyncStore(collection);
+          const syncStore = new CacheStore(client.appKey, collection, null, {autoSync:false})
           return syncStore.find().toPromise();
         })
         .then((entities) => {
@@ -1538,11 +1538,11 @@ describe.only('CacheStore', () => {
     it('should perform a delta set request', () => {
       const entity1 = { _id: randomString() };
       const entity2 = { _id: randomString() };
-      const store = new CacheStore(collection, null, { useDeltaSet: true });
+      const store = new CacheStore(client.appKey, collection, null, { useDeltaSet: true, autoSync:true });
       const lastRequestDate = new Date();
 
-      nock(store.client.apiHostname)
-        .get(`/appdata/${store.client.appKey}/${collection}`)
+      nock(client.apiHostname)
+        .get(`/appdata/${client.appKey}/${collection}`)
         .reply(200, [entity1, entity2], {
           'X-Kinvey-Request-Start': lastRequestDate.toISOString()
         });
@@ -1551,7 +1551,7 @@ describe.only('CacheStore', () => {
         .then(() => {
           const changedEntity2 = Object.assign({}, entity2, { title: 'test' });
           nock(client.apiHostname)
-            .get(`/appdata/${store.client.appKey}/${collection}/_deltaset`)
+            .get(`/appdata/${client.appKey}/${collection}/_deltaset`)
             .query({ since: lastRequestDate.toISOString() })
             .reply(200, { changed: [changedEntity2], deleted: [{ _id: entity1._id }] }, {
               'X-Kinvey-Request-Start': new Date().toISOString()
@@ -1567,11 +1567,11 @@ describe.only('CacheStore', () => {
     it('should perform a delta set request with a tagged datastore', () => {
       const entity1 = { _id: randomString() };
       const entity2 = { _id: randomString() };
-      const store = new CacheStore(collection, null, { useDeltaSet: true, tag: randomString() });
+      const store = new CacheStore(client.appKey, collection, randomString(), { useDeltaSet: true, autoSync:true });
       const lastRequestDate = new Date();
 
-      nock(store.client.apiHostname)
-        .get(`/appdata/${store.client.appKey}/${collection}`)
+      nock(client.apiHostname)
+        .get(`/appdata/${client.appKey}/${collection}`)
         .reply(200, [entity1, entity2], {
           'X-Kinvey-Request-Start': lastRequestDate.toISOString()
         });
@@ -1580,7 +1580,7 @@ describe.only('CacheStore', () => {
         .then(() => {
           const changedEntity2 = Object.assign({}, entity2, { title: 'test' });
           nock(client.apiHostname)
-            .get(`/appdata/${store.client.appKey}/${collection}/_deltaset`)
+            .get(`/appdata/${client.appKey}/${collection}/_deltaset`)
             .query({ since: lastRequestDate.toISOString() })
             .reply(200, { changed: [changedEntity2], deleted: [{ _id: entity1._id }] }, {
               'X-Kinvey-Request-Start': new Date().toISOString()
@@ -1596,25 +1596,26 @@ describe.only('CacheStore', () => {
 
   describe('sync()', () => {
     it('should push any pending sync entities and then pull entities from the backend and save them to the cache', () => {
-      const store = new CacheStore(collection);
-      const syncStore = new SyncStore(collection);
+      const store = new CacheStore(client.appKey, collection, null, {autoSync:true})
+      const syncStore = new CacheStore(client.appKey, collection, null, {autoSync:false})
       const entity1 = { _id: randomString() };
       const entity2 = { _id: randomString() };
+      store.pathname = `/appdata/${client.appKey}/${collection}`
 
       return syncStore.save(entity1)
         .then(() => {
-          nock(store.client.apiHostname)
+          nock(client.apiHostname)
             .put(`${store.pathname}/${entity1._id}`, entity1)
             .reply(200, entity1);
 
-          nock(store.client.apiHostname)
+          nock(client.apiHostname)
             .get(store.pathname)
             .reply(200, [entity1, entity2]);
 
           return store.sync();
         })
         .then((result) => {
-          expect(result.push).toEqual([{ _id: entity1._id, operation: SyncOperation.Update, entity: entity1 }]);
+          expect(result.push).toEqual([{ _id: entity1._id, operation: SyncEvent.Update, entity: entity1 }]);
           expect(result.pull).toEqual(2);
           return store.pendingSyncCount();
         })
@@ -1626,8 +1627,8 @@ describe.only('CacheStore', () => {
 
   describe('clearSync()', () => {
     it('should clear the sync table', () => {
-      const store = new CacheStore(collection);
-      const syncStore = new SyncStore(collection);
+      const store = new CacheStore(client.appKey, collection, null, {autoSync:true});
+      const syncStore = new CacheStore(client.appKey, collection, null, {autoSync:false});
       const entity = { _id: randomString() };
 
       return syncStore.save(entity)
@@ -1648,8 +1649,8 @@ describe.only('CacheStore', () => {
     });
 
     it('should clear only the entities from the sync table matching the query', () => {
-      const store = new CacheStore(collection);
-      const syncStore = new SyncStore(collection);
+      const store = new CacheStore(client.appKey, collection, null, {autoSync:true});
+      const syncStore = new CacheStore(client.appKey, collection, null, {autoSync:false});
       const entity1 = { _id: randomString() };
       const entity2 = { _id: randomString() };
 

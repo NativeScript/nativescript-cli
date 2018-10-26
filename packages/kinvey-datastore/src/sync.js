@@ -10,7 +10,7 @@ const SYNC_CACHE_TAG = 'kinvey-sync';
 const QUERY_CACHE_TAG = 'kinvey-query';
 const PAGE_LIMIT = 10000;
 
-const SyncEvent = {
+export const SyncEvent = {
   Create: 'POST',
   Update: 'PUT',
   Delete: 'DELETE'
