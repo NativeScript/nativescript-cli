@@ -10,7 +10,8 @@ export class RunCommandBase implements ICommand {
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $errors: IErrors,
 		private $hostInfo: IHostInfo,
-		private $liveSyncCommandHelper: ILiveSyncCommandHelper) { }
+		private $liveSyncCommandHelper: ILiveSyncCommandHelper,
+		private $androidBundleValidatorHelper: IAndroidBundleValidatorHelper) { }
 
 	public allowedParameters: ICommandParameter[] = [];
 	public async execute(args: string[]): Promise<void> {
@@ -21,6 +22,8 @@ export class RunCommandBase implements ICommand {
 		if (args.length) {
 			this.$errors.fail(ERROR_NO_VALID_SUBCOMMAND_FORMAT, "run");
 		}
+
+		this.$androidBundleValidatorHelper.validateNoAab();
 
 		this.$projectData.initializeProjectData();
 		this.platform = args[0] || this.platform;
@@ -35,7 +38,6 @@ export class RunCommandBase implements ICommand {
 			const checkEnvironmentRequirementsOutput = validatePlatformOutput[this.platform.toLowerCase()].checkEnvironmentRequirementsOutput;
 			this.liveSyncCommandHelperAdditionalOptions.syncToPreviewApp = checkEnvironmentRequirementsOutput && checkEnvironmentRequirementsOutput.selectedOption === "Sync to Playground";
 		}
-
 		return true;
 	}
 }
@@ -66,14 +68,14 @@ export class RunIosCommand implements ICommand {
 	}
 
 	public async execute(args: string[]): Promise<void> {
-		if (!this.$platformService.isPlatformSupportedForOS(this.$devicePlatformsConstants.iOS, this.$projectData)) {
-			this.$errors.fail(`Applications for platform ${this.$devicePlatformsConstants.iOS} can not be built on this OS`);
-		}
-
 		return this.runCommand.execute(args);
 	}
 
 	public async canExecute(args: string[]): Promise<boolean> {
+		if (!this.$platformService.isPlatformSupportedForOS(this.$devicePlatformsConstants.iOS, this.$projectData)) {
+			this.$errors.fail(`Applications for platform ${this.$devicePlatformsConstants.iOS} can not be built on this OS`);
+		}
+
 		const result = await this.runCommand.canExecute(args) && await this.$platformService.validateOptions(this.$options.provision, this.$options.teamId, this.$projectData, this.$platformsData.availablePlatforms.iOS);
 		return result;
 	}

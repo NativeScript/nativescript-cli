@@ -118,12 +118,19 @@ export class BuildAndroidCommand extends BuildCommandBase implements ICommand {
 		$platformsData: IPlatformsData,
 		$devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		$platformService: IPlatformService,
-		$bundleValidatorHelper: IBundleValidatorHelper) {
+		$bundleValidatorHelper: IBundleValidatorHelper,
+		protected $logger: ILogger) {
 			super($options, $errors, $projectData, $platformsData, $devicePlatformsConstants, $platformService, $bundleValidatorHelper);
 	}
 
 	public async execute(args: string[]): Promise<void> {
-		return this.executeCore([this.$platformsData.availablePlatforms.Android]);
+		const buildResult = await this.executeCore([this.$platformsData.availablePlatforms.Android]);
+
+		if(this.$options.aab) {
+			this.$logger.info("Link to documentation article");
+		}
+
+		return buildResult
 	}
 
 	public async canExecute(args: string[]): Promise<boolean | ICanExecuteCommandOutput> {

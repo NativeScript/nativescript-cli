@@ -864,6 +864,16 @@ interface IBundleValidatorHelper {
 	validate(minSupportedVersion?: string): void;
 }
 
+
+interface IAndroidBundleValidatorHelper {
+	/**
+	 * Validates android bundling option is not provided.
+	 * Commands that require deploy of the application must not be called with --aab option
+	 * @return {void}
+	 */
+	validateNoAab(): void;
+}
+
 interface INativeScriptCloudExtensionService {
 	/**
 	 * Installs nativescript-cloud extension
