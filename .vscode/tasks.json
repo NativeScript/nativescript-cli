@@ -1,0 +1,15 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Prepare Node SDK Tests",
+      "command": "node",
+      "args": [
+        "prepare.js"
+      ],
+      "options": {
+        "cwd": "${workspaceRoot}/tests/node"
+      }
+    }
+  ]
+}

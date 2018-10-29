@@ -9,6 +9,15 @@ module.exports = (api) => {
   ];
   const plugins = ['@babel/plugin-transform-runtime'];
 
+  if (process.env.NODE_ENV === 'development') {
+    return {
+      sourceMaps: true,
+      retainLines: true,
+      presets,
+      plugins
+    };
+  }
+
   return {
     presets,
     plugins
