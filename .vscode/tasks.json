@@ -2,14 +2,30 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "Prepare Node SDK Tests",
-      "command": "node",
+      "label": "build",
+      "command": "npm",
       "args": [
-        "prepare.js"
+        "run",
+        "build"
+      ],
+      "options": {
+        "cwd": "${workspaceRoot}/",
+        "env": {
+          "NODE_ENV": "development"
+        }
+      }
+    },
+    {
+      "label": "prepare node sdk tests",
+      "command": "npm",
+      "args": [
+        "run",
+        "prepare"
       ],
       "options": {
         "cwd": "${workspaceRoot}/tests/node"
-      }
+      },
+      "problemMatcher": []
     }
   ]
 }

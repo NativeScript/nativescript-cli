@@ -10,7 +10,7 @@
     "test:ci": "yarn lint && yarn test"
   },
   "devDependencies": {
-    "lerna": "^3.0.4"
+    "lerna": "3.4.3"
   },
   "workspaces": {
     "packages": [

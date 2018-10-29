@@ -68,13 +68,16 @@
       "name": "Node SDK Tests",
       "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
       "cwd": "${workspaceFolder}/tests/node",
-      "preLaunchTask": "Prepare Node SDK Tests",
       "args": [
         "--require",
         "dotenv/config",
-        "-u",
+        "--require",
+        "@babel/register",
+        "--ui",
         "tdd",
         "--timeout",
+        "999999",
+        "--slow",
         "999999",
         "--colors",
         "${workspaceFolder}/tests/node/tests"
@@ -82,8 +85,12 @@
       "env": {
         "NODE_ENV": "development"
       },
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
       "internalConsoleOptions": "openOnSessionStart",
-      "sourceMaps": true
+      "sourceMaps": true,
+      "smartStep": true
     }
   ]
 }

@@ -2,8 +2,6 @@
 const fs = require('fs-extra');
 const path = require('path');
 const klawSync = require('klaw-sync');
-const babel = require('@babel/core');
-const shell = require('shelljs');
 
 const SDK = 'kinvey-node-sdk';
 const SHARED_TESTS_PATH = path.resolve(__dirname, '..', 'specs');
@@ -16,12 +14,6 @@ if (!fs.existsSync(DOT_ENV_FILE)) {
     '.env file is missing. ' +
     'Please create a .env file that contains the appKey, appSecret, and masterSecret for the application you would like to use for running the integration tests.'
   );
-}
-
-// Build
-if (shell.exec('git commit -am "Auto-commit"').code !== 0) {
-  shell.echo('Error: Git commit failed');
-  shell.exit(1);
 }
 
 // Cleanup
@@ -44,11 +36,8 @@ tests.map((test) => {
     // Replace __SDK__
     const newContent = content.replace(/__SDK__/i, SDK);
 
-    // Transform with babel
-    const babelContent = babel.transform(newContent);
-
     // Write the file
-    fs.writeFileSync(newFilePath, babelContent.code);
+    fs.writeFileSync(newFilePath, newContent);
   } else {
     // Copy the file
     fs.copySync(test.path, newFilePath);
