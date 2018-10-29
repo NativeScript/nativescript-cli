@@ -30,6 +30,7 @@ export interface PushConfig {
   android?: AndroidPushConfig;
   ios?: IOSPushConfig;
   timeout?: number;
+  notificationCallback?: (message: any) => void;
 }
 
 export namespace Push {
