@@ -9,7 +9,7 @@ declare global {
 		 * @param packageName The name of the package
 		 * @param options The provided options can control which properties from package.json file will be returned. In case when fullMetadata option is provided, all data from package.json file will be returned.
 		 */
-		manifest(packageName: string, options: IPacoteManifestOptions): Promise<any>;
+		manifest(packageName: string, options?: IPacoteManifestOptions): Promise<any>;
 		/**
 		 * Downloads the specified package and extracts it in specified destination directory
 		 * @param packageName The name of the package

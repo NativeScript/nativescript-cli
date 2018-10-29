@@ -4,17 +4,15 @@ import { exported, cache } from "./common/decorators";
 import { CACACHE_DIRECTORY_NAME } from "./constants";
 
 export class NodePackageManager extends BasePackageManager implements INodePackageManager {
-	private static SCOPED_DEPENDENCY_REGEXP = /^(@.+?)(?:@(.+?))?$/;
-	private static DEPENDENCY_REGEXP = /^(.+?)(?:@(.+?))?$/;
-
 	constructor(
 		$childProcess: IChildProcess,
 		private $errors: IErrors,
 		private $fs: IFileSystem,
 		$hostInfo: IHostInfo,
 		private $logger: ILogger,
-		private $httpClient: Server.IHttpClient) {
-		super($childProcess, $hostInfo, 'npm');
+		private $httpClient: Server.IHttpClient,
+		$pacoteService: IPacoteService) {
+		super($childProcess, $hostInfo, $pacoteService, 'npm');
 	}
 
 	@exported("npm")
@@ -56,21 +54,8 @@ export class NodePackageManager extends BasePackageManager implements INodePacka
 		}
 
 		try {
-			const spawnResult: ISpawnResult = await this.processPackageManagerInstall(params, { cwd });
-
-			// Whenever calling npm install without any arguments (hence installing all dependencies) no output is emitted on stdout
-			// Luckily, whenever you call npm install to install all dependencies chances are you won't need the name/version of the package you're installing because there is none.
-			if (isInstallingAllDependencies) {
-				return null;
-			}
-
-			params = params.concat(["--json", "--dry-run", "--prefix", cwd]);
-			// After the actual install runs successfully execute a dry-run in order to get information about the package.
-			// We cannot use the actual install with --json to get the information because of post-install scripts which may print on stdout
-			// dry-run install is quite fast when the dependencies are already installed even for many dependencies (e.g. angular) so we can live with this approach
-			// We need the --prefix here because without it no output is emitted on stdout because all the dependencies are already installed.
-			const spawnNpmDryRunResult = await this.$childProcess.spawnFromEvent(this.getPackageManagerExecutableName(), params, "close");
-			return this.parseNpmInstallResult(spawnNpmDryRunResult.stdout, spawnResult.stdout, packageName);
+			const result = await this.processPackageManagerInstall(packageName, params, { cwd, isInstallingAllDependencies });
+			return result;
 		} catch (err) {
 			if (err.message && err.message.indexOf("EPEERINVALID") !== -1) {
 				// Not installed peer dependencies are treated by npm 2 as errors, but npm 3 treats them as warnings.
@@ -137,79 +122,6 @@ export class NodePackageManager extends BasePackageManager implements INodePacka
 	public async getCachePath(): Promise<string> {
 		const cachePath = await this.$childProcess.exec(`npm config get cache`);
 		return path.join(cachePath.trim(), CACACHE_DIRECTORY_NAME);
-	}
-
-	private parseNpmInstallResult(npmDryRunInstallOutput: string, npmInstallOutput: string, userSpecifiedPackageName: string): INpmInstallResultInfo {
-		// TODO: Add tests for this functionality
-		try {
-			const originalOutput: INpmInstallCLIResult | INpm5InstallCliResult = JSON.parse(npmDryRunInstallOutput);
-			const npm5Output = <INpm5InstallCliResult>originalOutput;
-			const npmOutput = <INpmInstallCLIResult>originalOutput;
-			let name: string;
-			_.forOwn(npmOutput.dependencies, (peerDependency: INpmPeerDependencyInfo, key: string) => {
-				if (!peerDependency.required && !peerDependency.peerMissing) {
-					name = key;
-					return false;
-				}
-			});
-
-			// Npm 5 return different object after performing `npm install --dry-run`.
-			// We find the correct dependency by searching for the `userSpecifiedPackageName` in the
-			// `npm5Output.updated` array and as a fallback, considering that the dependency is already installed,
-			// we find it as the first element.
-			if (!name && npm5Output.updated) {
-				const packageNameWithoutVersion = userSpecifiedPackageName.split('@')[0];
-				const updatedDependency = _.find(npm5Output.updated, ['name', packageNameWithoutVersion]) || npm5Output.updated[0];
-				return {
-					name: updatedDependency.name,
-					originalOutput,
-					version: updatedDependency.version
-				};
-			}
-			const dependency = _.pick<INpmDependencyInfo, INpmDependencyInfo | INpmPeerDependencyInfo>(npmOutput.dependencies, name);
-			return {
-				name,
-				originalOutput,
-				version: dependency[name].version
-			};
-		} catch (err) {
-			this.$logger.trace(`Unable to parse result of npm --dry-run operation. Output is: ${npmDryRunInstallOutput}.`);
-			this.$logger.trace("Now we'll try to parse the real output of npm install command.");
-
-			const npmOutputMatchRegExp = /^.--\s+(?!UNMET)(.*)@((?:\d+\.){2}\d+)/m;
-			const match = npmInstallOutput.match(npmOutputMatchRegExp);
-			if (match) {
-				return {
-					name: match[1],
-					version: match[2]
-				};
-			}
-		}
-
-		this.$logger.trace("Unable to get information from npm installation, trying to return value specified by user.");
-		return this.getDependencyInformation(userSpecifiedPackageName);
-	}
-
-	private getDependencyInformation(dependency: string): INpmInstallResultInfo {
-		const scopeDependencyMatch = dependency.match(NodePackageManager.SCOPED_DEPENDENCY_REGEXP);
-		let name: string = null;
-		let version: string = null;
-
-		if (scopeDependencyMatch) {
-			name = scopeDependencyMatch[1];
-			version = scopeDependencyMatch[2];
-		} else {
-			const matches = dependency.match(NodePackageManager.DEPENDENCY_REGEXP);
-			if (matches) {
-				name = matches[1];
-				version = matches[2];
-			}
-		}
-
-		return {
-			name,
-			version
-		};
 	}
 }
 
