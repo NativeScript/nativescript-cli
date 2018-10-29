@@ -151,6 +151,7 @@ export class AndroidVirtualDeviceService implements Mobile.IAndroidVirtualDevice
 	private async getEmulatorImagesCore(): Promise<Mobile.IEmulatorImagesOutput> {
 		let result: ISpawnResult = null;
 		let devices: Mobile.IDeviceInfo[] = [];
+		let errors: string[] = [];
 
 		if (this.pathToAvdManagerExecutable && this.$fs.exists(this.pathToAvdManagerExecutable)) {
 			result = await this.$childProcess.trySpawnFromCloseEvent(this.pathToAvdManagerExecutable, ["list", "avds"]);
@@ -160,11 +161,12 @@ export class AndroidVirtualDeviceService implements Mobile.IAndroidVirtualDevice
 
 		if (result && result.stdout) {
 			devices = this.parseListAvdsOutput(result.stdout);
+			errors = result && result.stderr ? [result.stderr] : [];
 		} else {
 			devices = this.listAvdsFromDirectory();
 		}
 
-		return { devices, errors: result && result.stderr ? [result.stderr] : [] };
+		return { devices, errors };
 	}
 
 	private async getRunningEmulatorData(runningEmulatorId: string, availableEmulators: Mobile.IDeviceInfo[]): Promise<Mobile.IDeviceInfo> {
