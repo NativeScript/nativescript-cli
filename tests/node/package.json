@@ -7,7 +7,7 @@
   "license": "Apache-2.0",
   "scripts": {
     "prepare": "node prepare.js",
-    "test": "mocha --require dotenv/config --require @babel/register -ui tdd --timeout 999999 --slow 5000 \"tests/**/*.spec.js\""
+    "test": "mocha --require dotenv/config --require @babel/register --ui tdd --timeout 999999 --slow 5000 \"tests/**/*.spec.js\""
   },
   "dependencies": {
     "@babel/runtime": "7.1.2",

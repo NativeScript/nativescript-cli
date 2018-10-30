@@ -69,7 +69,7 @@ export class Cache {
       throw new Error('query must be an instance of Query.');
     }
 
-    if (query) {
+    if (docs.length > 0 && query) {
       const {
         filter,
         sort,
@@ -82,7 +82,7 @@ export class Cache {
         docs = sift(filter, docs);
       }
 
-      if (sort) {
+      if (!isEmpty(sort)) {
         docs.sort((a, b) => {
           const result = Object.keys(sort).reduce((result, field) => {
             if (typeof result !== 'undefined') {
@@ -134,6 +134,8 @@ export class Cache {
         });
       }
     }
+
+    return docs;
   }
 
   async reduce(aggregation) {
@@ -172,12 +174,14 @@ export class Cache {
 
   async save(docs) {
     let docsToSave = docs;
+    let singular = false;
 
     if (!docs) {
       return null;
     }
 
     if (!isArray(docs)) {
+      singular = true;
       docsToSave = [docs];
     }
 
@@ -198,6 +202,7 @@ export class Cache {
       });
 
       await store.save(this.appKey, this.collectionName, docsToSave);
+      return singular ? docsToSave.shift() : docsToSave;
     }
 
     return docs;

@@ -13,7 +13,7 @@
       "args": [
         "--require",
         "@babel/register",
-        "-u",
+        "--ui",
         "tdd",
         "--timeout",
         "999999",
@@ -34,7 +34,7 @@
       "args": [
         "--require",
         "@babel/register",
-        "-u",
+        "--ui",
         "tdd",
         "--timeout",
         "999999",
@@ -52,7 +52,7 @@
       "args": [
         "--require",
         "@babel/register",
-        "-u",
+        "--ui",
         "tdd",
         "--timeout",
         "999999",
@@ -76,8 +76,6 @@
         "--ui",
         "tdd",
         "--timeout",
-        "999999",
-        "--slow",
         "999999",
         "--colors",
         "${workspaceFolder}/tests/node/tests"

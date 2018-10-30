@@ -5,6 +5,7 @@
   "scripts": {
     "bootstrap": "lerna run bootstrap",
     "build": "lerna run build --parallel",
+    "build:dev": "NODE_ENV=development npm run build",
     "lint": "lerna run lint --parallel",
     "test": "lerna run test --parallel",
     "test:ci": "yarn lint && yarn test"
