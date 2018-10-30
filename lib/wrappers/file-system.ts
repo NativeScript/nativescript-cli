@@ -13,8 +13,10 @@ export class FileSystem {
 
 	public extractZip(pathToZip: string, outputDir: string): Promise<void> {
 		return new Promise((resolve, reject) => {
-			yauzl.open(pathToZip, { autoClose: true, lazyEntries: true }, (e, zipFile) => {
-				if (e) return reject(e);
+			yauzl.open(pathToZip, { autoClose: true, lazyEntries: true }, (openError, zipFile) => {
+				if (openError) {
+					return reject(openError);
+				}
 
 				zipFile.on('entry', entry => {
 					const fn = <string>entry.fileName;
@@ -22,13 +24,15 @@ export class FileSystem {
 						return zipFile.readEntry();
 					}
 
-					zipFile.openReadStream(entry, (err, stream) => {
-						if(err) return reject(err);
+					zipFile.openReadStream(entry, (openStreamError, stream) => {
+						if(openStreamError) {
+							return reject(openStreamError);
+						};
 
 						const filePath = `${outputDir}/${fn}`;
 
 						return createParentDirsIfNeeded(filePath)
-							.catch(e => reject(e))
+							.catch(createParentDirError => reject(createParentDirError))
 							.then(() => {
 								const outfile = createOutfile(filePath);
 								stream.once('end', () => {
@@ -44,7 +48,7 @@ export class FileSystem {
 
 				zipFile.readEntry();
 			});
-		})
+		});
 	}
 
 	public readDirectory(path: string): string[] {
