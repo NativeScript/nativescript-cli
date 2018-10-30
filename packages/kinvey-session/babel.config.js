@@ -1,16 +1,18 @@
+const path = require('path');
+
+const ROOT_BABEL_CONFIG = path.resolve('..', '..', 'babel.config.js');
+
 module.exports = (api) => {
   api.cache.never();
 
-  const presets = [
-    ['@babel/env', {
-      targets: 'last 2 versions, maintained node versions, not dead',
-      useBuiltIns: 'usage'
-    }]
-  ];
-  const plugins = ['@babel/plugin-transform-runtime'];
+  if (process.env.NODE_ENV === 'development') {
+    return {
+      extends: ROOT_BABEL_CONFIG,
+      retainLines: true
+    };
+  }
 
   return {
-    presets,
-    plugins
+    extends: ROOT_BABEL_CONFIG
   };
 };

@@ -2,7 +2,6 @@
 const fs = require('fs-extra');
 const path = require('path');
 const klawSync = require('klaw-sync');
-const babel = require('@babel/core');
 
 const SDK = 'kinvey-node-sdk';
 const SHARED_TESTS_PATH = path.resolve(__dirname, '..', 'specs');
@@ -37,11 +36,8 @@ tests.map((test) => {
     // Replace __SDK__
     const newContent = content.replace(/__SDK__/i, SDK);
 
-    // Transform with babel
-    const babelContent = babel.transform(newContent);
-
     // Write the file
-    fs.writeFileSync(newFilePath, babelContent.code);
+    fs.writeFileSync(newFilePath, newContent);
   } else {
     // Copy the file
     fs.copySync(test.path, newFilePath);

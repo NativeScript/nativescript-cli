@@ -11,7 +11,7 @@ export async function count(appKey, collectionName) {
 }
 
 export async function findById(appKey, collectionName, id) {
-  const docs = find(appKey, collectionName);
+  const docs = await find(appKey, collectionName);
   return docs.find(doc => doc._id === id);
 }
 
