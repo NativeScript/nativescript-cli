@@ -52,52 +52,6 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 		});
 	}
 
-	private async initializePreviewForDevice(data: IPreviewAppLiveSyncData, device: Device): Promise<FilesPayload> {
-		const filesToSyncMap: IDictionary<string[]> = {};
-		const hmrData: IDictionary<IPlatformHmrData> = {};
-		let promise = Promise.resolve<FilesPayload>(null);
-		const startSyncFilesTimeout = async (platform: string) => {
-			await promise
-				.then(async () => {
-						const currentHmrData = _.cloneDeep(hmrData);
-						const platformHmrData = currentHmrData[platform] || <any>{};
-						const filesToSync = _.cloneDeep(filesToSyncMap[platform]);
-						// We don't need to prepare when webpack emits changed files. We just need to send a message to pubnub.
-						promise = this.syncFilesForPlatformSafe(data, platform, { filesToSync, skipPrepare: true, useHotModuleReload: data.appFilesUpdaterOptions.useHotModuleReload });
-						await promise;
-
-						if (data.appFilesUpdaterOptions.useHotModuleReload && platformHmrData.hash) {
-							const devices = _.filter(this.$previewSdkService.connectedDevices, { platform: platform.toLowerCase() });
-
-							await Promise.all(_.map(devices, async (previewDevice: Device) => {
-								const status = await this.$hmrStatusService.getHmrStatus(previewDevice.id, platformHmrData.hash);
-								if (status === HmrConstants.HMR_ERROR_STATUS) {
-									await this.syncFilesForPlatformSafe(data, platform, { filesToSync: platformHmrData.fallbackFiles, useHotModuleReload: false, deviceId: previewDevice.id });
-								}
-							}));
-						}
-					});
-			filesToSyncMap[platform] = [];
-		};
-		await this.$hooksService.executeBeforeHooks("preview-sync", {
-			hookArgs: {
-				projectData: this.$projectDataService.getProjectData(data.projectDir),
-				hmrData,
-				config: {
-					env: data.env,
-					platform: device.platform,
-					appFilesUpdaterOptions: data.appFilesUpdaterOptions,
-				},
-				externals: this.$previewAppPluginsService.getExternalPlugins(device),
-				filesToSyncMap,
-				startSyncFilesTimeout: startSyncFilesTimeout.bind(this)
-			}
-		});
-		await this.$previewAppPluginsService.comparePluginsOnDevice(data, device);
-		const payloads = await this.syncFilesForPlatformSafe(data, device.platform, { isInitialSync: true, useHotModuleReload: data.appFilesUpdaterOptions.useHotModuleReload });
-		return payloads;
-	}
-
 	public async syncFiles(data: IPreviewAppLiveSyncData, filesToSync: string[], filesToRemove: string[]): Promise<void> {
 		this.showWarningsForNativeFiles(filesToSync);
 
@@ -117,6 +71,58 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 
 	public async stopLiveSync(): Promise<void> {
 		this.$previewSdkService.stop();
+	}
+
+	private async initializePreviewForDevice(data: IPreviewAppLiveSyncData, device: Device): Promise<FilesPayload> {
+		const hookArgs = this.getHookArgs(data, device);
+		await this.$hooksService.executeBeforeHooks("preview-sync", { hookArgs });
+		await this.$previewAppPluginsService.comparePluginsOnDevice(data, device);
+		const payloads = await this.syncFilesForPlatformSafe(data, device.platform, { isInitialSync: true, useHotModuleReload: data.appFilesUpdaterOptions.useHotModuleReload });
+		return payloads;
+	}
+
+	private getHookArgs(data: IPreviewAppLiveSyncData, device: Device) {
+		const filesToSyncMap: IDictionary<string[]> = {};
+		const hmrData: IDictionary<IPlatformHmrData> = {};
+		const promise = Promise.resolve<FilesPayload>(null);
+		const result = {
+			projectData: this.$projectDataService.getProjectData(data.projectDir),
+			hmrData,
+			config: {
+				env: data.env,
+				platform: device.platform,
+				appFilesUpdaterOptions: data.appFilesUpdaterOptions,
+			},
+			externals: this.$previewAppPluginsService.getExternalPlugins(device),
+			filesToSyncMap,
+			startSyncFilesTimeout: async (platform: string) => await this.onWebpackCompilationComplete(data, hmrData, filesToSyncMap, promise, platform)
+		};
+
+		return result;
+	}
+
+	private async onWebpackCompilationComplete(data: IPreviewAppLiveSyncData, hmrData: IDictionary<IPlatformHmrData>, filesToSyncMap: IDictionary<string[]>, promise: Promise<FilesPayload>, platform: string) {
+		await promise
+			.then(async () => {
+				const currentHmrData = _.cloneDeep(hmrData);
+				const platformHmrData = currentHmrData[platform] || <any>{};
+				const filesToSync = _.cloneDeep(filesToSyncMap[platform]);
+				// We don't need to prepare when webpack emits changed files. We just need to send a message to pubnub.
+				promise = this.syncFilesForPlatformSafe(data, platform, { filesToSync, skipPrepare: true, useHotModuleReload: data.appFilesUpdaterOptions.useHotModuleReload });
+				await promise;
+
+				if (data.appFilesUpdaterOptions.useHotModuleReload && platformHmrData.hash) {
+					const devices = _.filter(this.$previewSdkService.connectedDevices, { platform: platform.toLowerCase() });
+
+					await Promise.all(_.map(devices, async (previewDevice: Device) => {
+						const status = await this.$hmrStatusService.getHmrStatus(previewDevice.id, platformHmrData.hash);
+						if (status === HmrConstants.HMR_ERROR_STATUS) {
+							await this.syncFilesForPlatformSafe(data, platform, { filesToSync: platformHmrData.fallbackFiles, useHotModuleReload: false, deviceId: previewDevice.id });
+						}
+					}));
+				}
+			});
+		filesToSyncMap[platform] = [];
 	}
 
 	private async syncFilesForPlatformSafe(data: IPreviewAppLiveSyncData, platform: string, opts?: ISyncFilesOptions): Promise<FilesPayload> {
