@@ -20,7 +20,7 @@ export class BundleValidatorHelper extends VersionValidatorHelper implements IBu
 			const bundlerVersionInDependencies = this.$projectData.dependencies && this.$projectData.dependencies[bundlePluginName];
 			const bundlerVersionInDevDependencies = this.$projectData.devDependencies && this.$projectData.devDependencies[bundlePluginName];
 			if (!bundlePluginName || (!bundlerVersionInDependencies && !bundlerVersionInDevDependencies)) {
-				this.$errors.fail(BundleValidatorMessages.MissingBundlePlugin);
+				this.$errors.failWithoutHelp(BundleValidatorMessages.MissingBundlePlugin);
 			}
 
 			const currentVersion = bundlerVersionInDependencies || bundlerVersionInDevDependencies;

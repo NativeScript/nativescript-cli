@@ -1,17 +1,41 @@
 import * as applicationManagerPath from "./ios-simulator-application-manager";
 import * as fileSystemPath from "./ios-simulator-file-system";
 import * as constants from "../../../constants";
+import * as net from "net";
 import { cache } from "../../../decorators";
 
-export class IOSSimulator implements Mobile.IiOSSimulator {
+export class IOSSimulator implements Mobile.IiOSDevice {
 	private _applicationManager: Mobile.IDeviceApplicationManager;
 	private _fileSystem: Mobile.IDeviceFileSystem;
+	private socket: net.Socket;
+
+	// private static sockets: { [id: string]: net.Socket; } = {};
+
+	// get socket(): net.Socket {
+	// 	return IOSSimulator.sockets[this.deviceInfo.identifier];
+	// }
+	// set socket(newSocket: net.Socket) {
+	// 	IOSSimulator.sockets[this.deviceInfo.identifier] = newSocket;
+	// }
 
 	constructor(private simulator: Mobile.IiSimDevice,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $injector: IInjector,
 		private $iOSSimResolver: Mobile.IiOSSimResolver,
-		private $iOSSimulatorLogProvider: Mobile.IiOSSimulatorLogProvider) { }
+		private $iOSEmulatorServices: Mobile.IiOSSimulatorService,
+		private $iOSSimulatorLogProvider: Mobile.IiOSSimulatorLogProvider,
+		private $logger: ILogger) { }
+
+	public async connectToPort(port: number): Promise<net.Socket> {
+		console.log("connectToPort");
+		this.socket = await this.$iOSEmulatorServices.connectToPort({ port });
+		this.socket.on("close", () => {
+			this.socket = null;
+			this.$logger.info("iOS Simulator socket closed!");
+		});
+
+		return this.socket;
+	}
 
 	public get deviceInfo(): Mobile.IDeviceInfo {
 		return {

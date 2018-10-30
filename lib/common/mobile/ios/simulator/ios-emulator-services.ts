@@ -85,7 +85,7 @@ class IosEmulatorServices implements Mobile.IiOSSimulatorService {
 
 		const output = await this.tryGetiOSSimDevices();
 		if (output.devices && output.devices.length) {
-			devices =  _(output.devices)
+			devices = _(output.devices)
 				.map(simDevice => this.convertSimDeviceToDeviceInfo(simDevice))
 				.sortBy(deviceInfo => deviceInfo.version)
 				.value();
@@ -102,7 +102,7 @@ class IosEmulatorServices implements Mobile.IiOSSimulatorService {
 		return [];
 	}
 
-	private async tryGetiOSSimDevices(): Promise<{devices: Mobile.IiSimDevice[], error: string}> {
+	private async tryGetiOSSimDevices(): Promise<{ devices: Mobile.IiSimDevice[], error: string }> {
 		let devices: Mobile.IiSimDevice[] = [];
 		let error: string = null;
 

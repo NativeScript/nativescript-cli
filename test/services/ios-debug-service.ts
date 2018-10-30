@@ -15,6 +15,7 @@ class IOSDebugServiceInheritor extends IOSDebugService {
 		$errors: IErrors,
 		$packageInstallationManager: IPackageInstallationManager,
 		$iOSDebuggerPortService: IIOSDebuggerPortService,
+		$iOSDeviceSocketService: Mobile.IiOSDeviceSocketsService,
 		$iOSNotification: IiOSNotification,
 		$iOSSocketRequestExecutor: IiOSSocketRequestExecutor,
 		$processService: IProcessService,
@@ -23,8 +24,8 @@ class IOSDebugServiceInheritor extends IOSDebugService {
 		$projectDataService: IProjectDataService,
 		$deviceLogProvider: Mobile.IDeviceLogProvider) {
 		super(<any>{}, $devicesService, $platformService, $iOSEmulatorServices, $childProcess, $hostInfo, $logger, $errors,
-			$packageInstallationManager, $iOSDebuggerPortService, $iOSNotification, $iOSSocketRequestExecutor, $processService,
-			$socketProxyFactory, $projectDataService, $deviceLogProvider);
+			$packageInstallationManager, $iOSDebuggerPortService, $iOSDeviceSocketService, $iOSNotification, $iOSSocketRequestExecutor,
+			$processService, $socketProxyFactory, $projectDataService, $deviceLogProvider);
 	}
 
 	public getChromeDebugUrl(debugOptions: IDebugOptions, port: number): string {

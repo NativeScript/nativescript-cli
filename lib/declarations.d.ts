@@ -732,8 +732,13 @@ interface IAndroidToolsInfoValidateInput extends IAndroidToolsInfoOptions {
 }
 
 interface ISocketProxyFactory extends NodeJS.EventEmitter {
-	createTCPSocketProxy(factory: () => Promise<any>): Promise<any>;
-	createWebSocketProxy(factory: () => Promise<any>, deviceIdentifier: string): Promise<any>;
+	getTCPSocketProxy(deviceIdentifier: string): any;
+	addTCPSocketProxy(factory: () => Promise<any>, deviceIdentifier: string): Promise<any>;
+
+	getWebSocketProxy(deviceIdentifier: string): any;
+	addWebSocketProxy(factory: () => Promise<any>, deviceIdentifier: string): Promise<any>;
+
+	removeAllProxies(): void;
 }
 
 interface IiOSNotification extends NodeJS.EventEmitter {

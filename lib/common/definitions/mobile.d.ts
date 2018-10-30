@@ -115,6 +115,11 @@ declare module Mobile {
 		openDeviceLogStream(options?: IiOSLogStreamOptions): Promise<void>;
 	}
 
+	interface IiOSDeviceSocketsService {
+		getSocket(deviceId: string): any;
+		addSocket(deviceId: string, socket: any): void;
+	}
+
 	interface IAndroidDevice extends IDevice {
 		adb: Mobile.IDeviceAndroidDebugBridge;
 		init(): Promise<void>;
@@ -125,7 +130,7 @@ declare module Mobile {
 		getDeviceHashService(appIdentifier: string): Mobile.IAndroidDeviceHashService;
 	}
 
-	interface IiOSSimulator extends IDevice { }
+	// interface IiOSSimulator extends IDevice { }
 
 	/**
 	 * Describes log stream options

@@ -7,14 +7,32 @@ import * as helpers from "../../common/helpers";
 import temp = require("temp");
 
 export class SocketProxyFactory extends EventEmitter implements ISocketProxyFactory {
+	private deviceWebServers: { [id: string]: ws.Server; } = {};
+	private deviceTcpServers: { [id: string]: net.Server; } = {};
+
 	constructor(private $logger: ILogger,
 		private $errors: IErrors,
+		private $iOSDeviceSocketService: Mobile.IiOSDeviceSocketsService,
 		private $options: IOptions,
 		private $net: INet) {
 		super();
 	}
 
-	public async createTCPSocketProxy(factory: () => Promise<net.Socket>): Promise<net.Server> {
+	public getTCPSocketProxy(deviceIdentifier: string): net.Server {
+		return this.deviceTcpServers[deviceIdentifier];
+	}
+
+	public getWebSocketProxy(deviceIdentifier: string): ws.Server {
+		return this.deviceWebServers[deviceIdentifier];
+	}
+
+	public async addTCPSocketProxy(factory: () => Promise<net.Socket>, deviceIdentifier: string): Promise<net.Server> {
+		const existingServer = this.deviceTcpServers[deviceIdentifier];
+		if (existingServer) {
+			throw new Error(`TCP socket proxy is already running for device '${deviceIdentifier}'`);
+		}
+
+		// await here?
 		const socketFactory = async (callback: (_socket: net.Socket) => void) => helpers.connectEventually(factory, callback);
 
 		this.$logger.info("\nSetting up proxy...\nPress Ctrl + C to terminate, or disconnect.\n");
@@ -22,6 +40,8 @@ export class SocketProxyFactory extends EventEmitter implements ISocketProxyFact
 		const server = net.createServer({
 			allowHalfOpen: true
 		});
+
+		this.deviceTcpServers[deviceIdentifier] = server;
 
 		server.on("connection", async (frontendSocket: net.Socket) => {
 			this.$logger.info("Frontend client connected.");
@@ -72,7 +92,12 @@ export class SocketProxyFactory extends EventEmitter implements ISocketProxyFact
 		return server;
 	}
 
-	public async createWebSocketProxy(factory: () => Promise<net.Socket>, deviceIdentifier: string): Promise<ws.Server> {
+	public async addWebSocketProxy(factory: () => Promise<net.Socket>, deviceIdentifier: string): Promise<ws.Server> {
+		const existingServer = this.deviceWebServers[deviceIdentifier];
+		if (existingServer) {
+			throw new Error(`Web socket proxy is already running for device '${deviceIdentifier}'`);
+		}
+
 		// NOTE: We will try to provide command line options to select ports, at least on the localhost.
 		const localPort = await this.$net.getAvailablePortInRange(41000);
 
@@ -90,7 +115,8 @@ export class SocketProxyFactory extends EventEmitter implements ISocketProxyFact
 				this.$logger.info("Frontend client connected.");
 				let _socket;
 				try {
-					_socket = await helpers.connectEventuallyUntilTimeout(factory, 10000);
+					const existingServerSocket = this.$iOSDeviceSocketService.getSocket(deviceIdentifier);
+					_socket = existingServerSocket || await helpers.connectEventuallyUntilTimeout(factory, 10000);
 				} catch (err) {
 					err.deviceIdentifier = deviceIdentifier;
 					this.$logger.trace(err);
@@ -103,6 +129,7 @@ export class SocketProxyFactory extends EventEmitter implements ISocketProxyFact
 				callback(true);
 			}
 		});
+		this.deviceWebServers[deviceIdentifier] = server;
 		server.on("connection", (webSocket, req) => {
 			const encoding = "utf16le";
 
@@ -137,7 +164,10 @@ export class SocketProxyFactory extends EventEmitter implements ISocketProxyFact
 
 			webSocket.on("close", () => {
 				this.$logger.info('Frontend socket closed!');
+				packets.destroy();
 				deviceSocket.destroy();
+				// delete this.deviceWebServers[deviceIdentifier];
+				// server.close();
 				if (!this.$options.watch) {
 					process.exit(0);
 				}
@@ -146,7 +176,13 @@ export class SocketProxyFactory extends EventEmitter implements ISocketProxyFact
 		});
 
 		this.$logger.info("Opened localhost " + localPort);
+		console.log("return new proxy");
 		return server;
+	}
+
+	public removeAllProxies() {
+		this.deviceWebServers = {};
+		this.deviceTcpServers = {};
 	}
 }
 $injector.register("socketProxyFactory", SocketProxyFactory);

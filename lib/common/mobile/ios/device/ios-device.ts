@@ -8,8 +8,17 @@ export class IOSDevice implements Mobile.IiOSDevice {
 	public applicationManager: Mobile.IDeviceApplicationManager;
 	public fileSystem: Mobile.IDeviceFileSystem;
 	public deviceInfo: Mobile.IDeviceInfo;
+	private socket: net.Socket;
 
-	private _socket: net.Socket;
+	// private static sockets: { [id: string]: net.Socket; } = {};
+
+	// get socket(): net.Socket {
+	// 	return IOSDevice.sockets[this.deviceInfo.identifier];
+	// }
+	// set socket(newSocket: net.Socket) {
+	// 	IOSDevice.sockets[this.deviceInfo.identifier] = newSocket;
+	// }
+
 	private _deviceLogHandler: (...args: any[]) => void;
 
 	constructor(private deviceActionInfo: IOSDeviceLib.IDeviceActionInfo,
@@ -19,6 +28,7 @@ export class IOSDevice implements Mobile.IiOSDevice {
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $iOSDeviceProductNameMapper: Mobile.IiOSDeviceProductNameMapper,
 		private $iosDeviceOperations: IIOSDeviceOperations,
+		private $logger: ILogger,
 		private $mobileHelper: Mobile.IMobileHelper) {
 
 		this.applicationManager = this.$injector.resolve(applicationManagerPath.IOSApplicationManager, { device: this, devicePointer: this.deviceActionInfo });
@@ -74,15 +84,20 @@ export class IOSDevice implements Mobile.IiOSDevice {
 
 	// This function works only on OSX
 	public async connectToPort(port: number): Promise<net.Socket> {
+		console.log("connectToPort");
 		const deviceId = this.deviceInfo.identifier;
 		const deviceResponse = _.first((await this.$iosDeviceOperations.connectToPort([{ deviceId: deviceId, port: port }]))[deviceId]);
 
-		const socket = new net.Socket();
-		socket.connect(deviceResponse.port, deviceResponse.host);
-		this._socket = socket;
+		const _socket = new net.Socket();
+		_socket.connect(deviceResponse.port, deviceResponse.host);
+		this.socket = _socket;
+		_socket.on("close", () => {
+			this.socket = null;
+			this.$logger.info("iOS Device socket closed!");
+		});
 
 		this.$processService.attachToProcessExitSignals(this, this.destroySocket);
-		return this._socket;
+		return this.socket;
 	}
 
 	private getActiveArchitecture(productType: string): string {
@@ -108,9 +123,9 @@ export class IOSDevice implements Mobile.IiOSDevice {
 	}
 
 	private destroySocket() {
-		if (this._socket) {
-			this._socket.destroy();
-			this._socket = null;
+		if (this.socket) {
+			this.socket.destroy();
+			this.socket = null;
 		}
 	}
 }
