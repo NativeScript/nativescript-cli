@@ -6,7 +6,6 @@
 		<activity
 			android:name="com.tns.NativeScriptActivity"
 			android:launchMode="singleTask">
-
 			<intent-filter>
 				<data android:scheme="{redirectUriScheme}" />
 				<action android:name="android.intent.action.VIEW" />

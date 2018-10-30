@@ -1,6 +1,6 @@
 {
   "private": true,
-  "version": "3.12.2-next.0",
+  "version": "3.12.2-next.1",
   "name": "kinvey-nativescript-sdk",
   "description": "Kinvey NativeScript SDK for developing NativeScript applications.",
   "author": "Kinvey, Inc.",
@@ -44,10 +44,11 @@
     "lib/before-preview-sync.js",
     "lib/postinstall.js",
     "lib/preuninstall.js",
-    "platforms/android/AndroidManifest.default.xml",
+    "platforms/android/AndroidManifest.xml.default",
+    "platforms/android/AndroidManifest.xml.mic",
     "platforms/android/include.gradle",
     "platforms/ios/Podfile",
-    "platforms/ios/Info.default.plist",
+    "platforms/ios/Info.plist.mic",
     "platforms/ios/app.entitlements"
   ],
   "nativescript": {
