@@ -176,14 +176,13 @@ describe("androidVirtualDeviceService", () => {
 				assert.deepEqual(result.devices, []);
 				assert.deepEqual(result.errors, []);
 			});
-			it("should return an empty array when `avdmanager list avds` command fails", async () => {
+			it("should return an empty array and no errors when `avdmanager list avds` command fails", async () => {
 				const avdManagerError = "some error while executing avdmanager list avds";
 				const avdService = mockAvdService({ avdManagerError });
 				const result = await avdService.getEmulatorImages([]);
 				assert.lengthOf(result.devices, 0);
 				assert.deepEqual(result.devices, []);
-				assert.lengthOf(result.errors, 1);
-				assert.deepEqual(result.errors, [avdManagerError]);
+				assert.lengthOf(result.errors, 0);
 			});
 			it("should return all emulators when there are available emulators and no running emulators", async () => {
 				const avdService = mockAvdService({
