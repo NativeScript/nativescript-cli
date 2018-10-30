@@ -329,6 +329,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		let task;
 		const gradleArgs = this.getGradleBuildOptions(buildConfig, projectData);
 		const baseTask = buildConfig.androidBundle ? "bundle" : "assemble";
+		const outputPath = buildConfig.androidBundle ? this._platformData.bundleBuildOutputPath : this._platformData.deviceBuildOutputPath;
 		if (this.$logger.getLevel() === "TRACE") {
 			gradleArgs.unshift("--stacktrace");
 			gradleArgs.unshift("--debug");
@@ -357,7 +358,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			})
 		);
 
-		await this.$filesHashService.saveHashesForProject(this._platformData, this._platformData.deviceBuildOutputPath);
+		await this.$filesHashService.saveHashesForProject(this._platformData, outputPath);
 	}
 
 	private getGradleBuildOptions(settings: IAndroidBuildOptionsSettings, projectData: IProjectData): Array<string> {
