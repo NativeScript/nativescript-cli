@@ -21,7 +21,7 @@ export class CacheStore {
       try {
         const cachedDocs = await cache.find(query);
         observer.next(cachedDocs);
-
+        console.log('----------------', cachedDocs);
         if (autoSync) {
           await this.pull(query, options);
           const docs = await cache.find(query);

@@ -1,50 +1,55 @@
 
 import expect from 'expect';
-import { DataStore, DataStoreType } from './index';
+import { collection, clearCache, DataStoreType } from './index';
 import { NetworkStore } from './networkstore';
 import { CacheStore } from './cachestore';
 import { KinveyError } from '../../errors';
 import { init } from 'kinvey-app';
 import { randomString } from 'kinvey-test-utils';
-const collection = 'Books';
+import { register as registerCache} from 'kinvey-cache-memory';
+const collectionName = 'Books';
+var client;
 
 describe('DataStore', () => {
   before(() => {
-    init({
+    registerCache();
+    client = init({
       appKey: randomString(),
-      appSecret: randomString()
+      appSecret: randomString(),
+      apiHostname: "https://baas.kinvey.com",
+      micHostname: "https://auth.kinvey.com"
     });
   });
 
-  describe('constructor', () => {
+  describe('constructor', () => {// There is no DataStore class
     it('should throw an error if the DataStore class is tried to be instantiated', () => {
       expect(() => {
-        const store = new DataStore(collection);
+        const store = new DataStore(collectionName);
         return store;
       }).toThrow(KinveyError);
     });
   });
 
   describe('collection()', () => {
-    it('should throw an error if a collection is not provided', () => {
+    it('should throw an error if a collection is not provided', () => {// Errors should be reverted
       expect(() => {
-        const store = DataStore.collection();
+        const store = collection();
         return store;
       }).toThrow(KinveyError);
     });
 
-    it('should throw an error if the collection is not a string', () => {
+    it('should throw an error if the collection is not a string', () => {// Errors should be reverted
       expect(() => {
-        const store = DataStore.collection({});
+        const store = collection({});
         return store;
       }).toThrow(KinveyError);
     });
 
-    describe('tagging', () => {
+    describe('tagging', () => {//No tag value validation, error not thrown when tag is set to Network store
       describe('a NetworkStore', () => {
         it('should throw an error', () => {
           expect(() => {
-            DataStore.collection(collection, DataStoreType.Network, { tag: 'any-tag' });
+            collection(collectionName, DataStoreType.Network, { tag: 'any-tag' });
           }).toThrow();
         });
       });
@@ -54,75 +59,78 @@ describe('DataStore', () => {
         describe(`a ${storeType}Store`, () => {
           it('should throw an error if the tag is not a string', () => {
             expect(() => {
-              DataStore.collection(collection, storeType, { tag: {} });
+              collection(collectionName, storeType, { tag: {} });
             }).toThrow();
           });
 
           it('should throw an error if the tag is an emptry string', () => {
             expect(() => {
-              DataStore.collection(collection, storeType, { tag: '' });
+              collection(collectionName, storeType, { tag: '' });
             }).toThrow();
           });
 
           it('should throw an error if the tag is a whitespace string', () => {
             expect(() => {
-              DataStore.collection(collection, storeType, { tag: '    \n  ' });
+              collection(collectionName, storeType, { tag: '    \n  ' });
             }).toThrow();
           });
 
           it('should throw an error if the tag contains invalid characters', () => {
             expect(() => {
-              DataStore.collection(collection, storeType, { tag: '  %  sometag  !' });
+              collection(collectionName, storeType, { tag: '  %  sometag  !' });
             }).toThrow();
           });
 
           it('should work if the provided tag is valid', () => {
-            DataStore.collection(collection, storeType, { tag: 'some-valid-tag' });
+            collection(collectionName, storeType, { tag: 'some-valid-tag' });
           });
         });
       });
     });
 
     it('should return a NetworkStore', () => {
-      const store = DataStore.collection(collection, DataStoreType.Network);
+      const store = collection(collectionName, DataStoreType.Network);
       expect(store).toBeA(NetworkStore);
     });
 
-    it('should return a CacheStore', () => {
-      const store = DataStore.collection(collection, DataStoreType.Cache);
+    it('should return a CacheStore with autoSync === true', () => {
+      const store = collection(collectionName, DataStoreType.Cache);
       expect(store).toBeA(CacheStore);
+      expect(store.autoSync).toEqual(true);
     });
 
-    it('should return a SyncStore', () => {
-      const store = DataStore.collection(collection, DataStoreType.Sync);
-      expect(store).toBeA(SyncStore);
+    it('should return a CacheStore with autoSync === false', () => {
+      const store = collection(collectionName, DataStoreType.Sync);
+      expect(store).toBeA(CacheStore);
+      expect(store.autoSync).toEqual(false);
     });
 
     it('should return a CacheStore by default', () => {
-      const store = DataStore.collection(collection);
+      const store = collection(collectionName);
       expect(store).toBeA(CacheStore);
+      expect(store.autoSync).toEqual(true);
     });
   });
 
-  describe('getInstance()', () => {
+  describe('getInstance()', () => { // No getInstance function
     afterEach(function () {
       expect.restoreSpies();
     });
 
     it('should call collection()', () => {
       const spy = expect.spyOn(DataStore, 'collection');
-      DataStore.getInstance(collection);
+      DataStore.getInstance(collectionName);
       expect(spy).toHaveBeenCalled();
     });
   });
 
   describe('clearCache()', () => {
-    it('should clear all the entities in the cache', () => {
+    it('should clear all the entities in the cache', () => {//clearCache does not seem to clear cache
       const entity = {};
-      const store = new SyncStore(collection);
+      const store = new CacheStore(client.appKey, collectionName, null, {autoSync: false});
       return store.save(entity)
         .then(() => {
-          return DataStore.clearCache();
+          return clearCache();
         })
         .then(() => {
           return store.find().toPromise();
