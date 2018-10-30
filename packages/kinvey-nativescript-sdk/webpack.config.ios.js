@@ -30,6 +30,7 @@ module.exports = (env = {}) => {
       'nativescript-urlhandler': 'nativescript-urlhandler',
       'application': 'application',
       'tns-core-modules/application': 'application',
+      'tns-core-modules/connectivity': 'connectivity',
       http: 'http',
       './kinvey-nativescript-sdk': './kinvey-nativescript-sdk',
       'tns-core-modules/http': 'http',

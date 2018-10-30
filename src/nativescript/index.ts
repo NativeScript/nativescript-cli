@@ -1,6 +1,7 @@
 import * as pick from 'lodash/pick';
 import { StorageProvider as StorageProviderEnum, repositoryProvider } from '../core/datastore';
 import './offline-data-storage';
+import './live';
 
 export * from './kinvey';
 export * from './user';
