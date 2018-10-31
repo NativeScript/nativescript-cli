@@ -78,12 +78,12 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 				getValidBuildOutputData: (buildOptions: IBuildOutputOptions): IValidBuildOutputData => {
 					const buildMode = buildOptions.release ? Configurations.Release.toLowerCase() : Configurations.Debug.toLowerCase();
 
-					if(buildOptions.androidBundle) {
+					if (buildOptions.androidBundle) {
 						return {
 							packageNames: [
 								`${constants.APP_FOLDER_NAME}${constants.AAB_EXTENSION_NAME}`
 							]
-						}
+						};
 					}
 
 					return {

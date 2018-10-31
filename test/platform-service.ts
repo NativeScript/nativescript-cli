@@ -937,6 +937,7 @@ describe('Platform Service Tests', () => {
 			platformsData.getPlatformData = (platform: string) => {
 				return {
 					deviceBuildOutputPath: "",
+					normalizedPlatformName: "",
 					platformProjectService: {
 						buildProject: () => Promise.resolve(),
 						on: () => ({}),

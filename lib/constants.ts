@@ -40,7 +40,7 @@ export const CONFIG_NS_APP_RESOURCES_ENTRY = "appResourcesPath";
 export const CONFIG_NS_APP_ENTRY = "appPath";
 export const DEPENDENCIES_JSON_NAME = "dependencies.json";
 export const APK_EXTENSION_NAME = ".apk";
-export const AAB_EXTENSION_NAME = ".aab"
+export const AAB_EXTENSION_NAME = ".aab";
 export const HASHES_FILE_NAME = ".nshashes";
 
 export class PackageVersion {
@@ -244,4 +244,7 @@ export class BundleValidatorMessages {
 	public static NotSupportedVersion = `The NativeScript CLI requires nativescript-dev-webpack %s or later to work properly. After updating nativescript-dev-webpack you need to ensure "webpack.config.js" file is up to date with the one in the new version of nativescript-dev-webpack. You can automatically update it using "./node_modules/.bin/update-ns-webpack --configs" command.`;
 }
 
-export const AAB_NOT_SUPPORTED_BY_COMMNAND_MESSAGE = "This command does not support --aab (Android Application Bundle) parameter.";
+export class AndroidBundleValidatorMessages {
+	public static AAB_NOT_SUPPORTED_BY_COMMNAND_MESSAGE = "This command does not support --aab (Android Application Bundle) parameter.";
+	public static RUNTIME_VERSION_TOO_LOW = "Android Application Bundle (--aab) option requires NativeScript Android Runtime (tns-android) version %s and above.";
+}

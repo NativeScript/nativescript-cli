@@ -119,6 +119,7 @@ export class BuildAndroidCommand extends BuildCommandBase implements ICommand {
 		$devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		$platformService: IPlatformService,
 		$bundleValidatorHelper: IBundleValidatorHelper,
+		protected $androidBundleValidatorHelper: IAndroidBundleValidatorHelper,
 		protected $logger: ILogger) {
 			super($options, $errors, $projectData, $platformsData, $devicePlatformsConstants, $platformService, $bundleValidatorHelper);
 	}
@@ -126,17 +127,17 @@ export class BuildAndroidCommand extends BuildCommandBase implements ICommand {
 	public async execute(args: string[]): Promise<void> {
 		const buildResult = await this.executeCore([this.$platformsData.availablePlatforms.Android]);
 
-		if(this.$options.aab) {
+		if (this.$options.aab) {
 			this.$logger.info("Link to documentation article");
 		}
 
-		return buildResult
+		return buildResult;
 	}
 
 	public async canExecute(args: string[]): Promise<boolean | ICanExecuteCommandOutput> {
 		const platform = this.$devicePlatformsConstants.Android;
 		super.validatePlatform(platform);
-
+		this.$androidBundleValidatorHelper.validateRuntimeVersion(this.$projectData);
 		let result = await super.canExecuteCommandBase(platform, { notConfiguredEnvOptions: { hideSyncToPreviewAppOption: true }});
 		if (result.canExecute) {
 			if (this.$options.release && (!this.$options.keyStorePath || !this.$options.keyStorePassword || !this.$options.keyStoreAlias || !this.$options.keyStoreAliasPassword)) {

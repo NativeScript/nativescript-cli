@@ -616,10 +616,10 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 	}
 
 	private getBuildOutputPath(platform: string, platformData: IPlatformData, options: IBuildOutputOptions): string {
-		if(options.androidBundle) {
+		if (options.androidBundle) {
 			return platformData.bundleBuildOutputPath;
 		}
-		
+
 		if (platform.toLowerCase() === this.$devicePlatformsConstants.iOS.toLowerCase()) {
 			return options.buildForDevice ? platformData.deviceBuildOutputPath : platformData.emulatorBuildOutputPath;
 		}

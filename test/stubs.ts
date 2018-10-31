@@ -849,6 +849,16 @@ export class AndroidResourcesMigrationServiceStub implements IAndroidResourcesMi
 	}
 }
 
+export class AndroidBundleValidatorHelper implements IAndroidBundleValidatorHelper {
+	validateNoAab() {
+		return true;
+	}
+
+	validateRuntimeVersion() {
+
+	}
+}
+
 export class InjectorStub extends Yok implements IInjector {
 	constructor() {
 		super();

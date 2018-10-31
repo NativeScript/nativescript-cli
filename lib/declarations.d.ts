@@ -872,6 +872,13 @@ interface IAndroidBundleValidatorHelper {
 	 * @return {void}
 	 */
 	validateNoAab(): void;
+
+	/**
+	 * Validates android runtime version is sufficient to support bundling option --aab.
+	 * @param {IProjectData} projectData DTO with information about the project.
+	 * @return {void}
+	 */
+	validateRuntimeVersion(projectData: IProjectData): void
 }
 
 interface INativeScriptCloudExtensionService {
