@@ -20,7 +20,7 @@ export const AuthorizationGrant = {
 };
 Object.freeze(AuthorizationGrant);
 
-async function getTempLoginUrl(clientId, redirectUri, version) {
+export async function getTempLoginUrl(clientId, redirectUri, version) {
   const request = new KinveyRequest({
     method: RequestMethod.POST,
     headers: {
@@ -98,7 +98,7 @@ async function loginWithUrl(url, username, password, clientId, redirectUri) {
         return `Basic ${credentials}`;
       }
     },
-    url,
+    url: url.temp_login_uri,
     body: {
       client_id: clientId,
       redirect_uri: redirectUri,

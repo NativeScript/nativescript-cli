@@ -29,6 +29,116 @@
     {
       "type": "node",
       "request": "launch",
+      "name": "App Tests",
+      "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
+      "cwd": "${workspaceFolder}/packages/kinvey-app",
+      "args": [
+        "--require",
+        "@babel/register",
+        "--ui",
+        "tdd",
+        "--timeout",
+        "999999",
+        "--colors",
+        "${workspaceFolder}/packages/kinvey-app/src"
+      ],
+      "env": {
+        "NODE_ENV": "development"
+      },
+      "internalConsoleOptions": "openOnSessionStart",
+      "sourceMaps": true
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Datastore Tests",
+      "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
+      "cwd": "${workspaceFolder}/packages/kinvey-datastore",
+      "args": [
+        "--require",
+        "@babel/register",
+        "--ui",
+        "tdd",
+        "--timeout",
+        "999999",
+        "--colors",
+        "${workspaceFolder}/packages/kinvey-datastore/src"
+      ],
+      "env": {
+        "NODE_ENV": "development"
+      },
+      "internalConsoleOptions": "openOnSessionStart",
+      "sourceMaps": true
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Identity Tests",
+      "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
+      "cwd": "${workspaceFolder}/packages/kinvey-identity",
+      "args": [
+        "--require",
+        "@babel/register",
+        "--ui",
+        "tdd",
+        "--timeout",
+        "999999",
+        "--colors",
+        "${workspaceFolder}/packages/kinvey-identity/src"
+      ],
+      "env": {
+        "NODE_ENV": "development"
+      },
+      "internalConsoleOptions": "openOnSessionStart",
+      "sourceMaps": true
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Endpoint Tests",
+      "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
+      "cwd": "${workspaceFolder}/packages/kinvey-endpoint",
+      "args": [
+        "--require",
+        "@babel/register",
+        "--ui",
+        "tdd",
+        "--timeout",
+        "999999",
+        "--colors",
+        "${workspaceFolder}/packages/kinvey-endpoint/src"
+      ],
+      "env": {
+        "NODE_ENV": "development"
+      },
+      "internalConsoleOptions": "openOnSessionStart",
+      "sourceMaps": true
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Files Tests",
+      "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
+      "cwd": "${workspaceFolder}/packages/kinvey-files",
+      "args": [
+        "--require",
+        "@babel/register",
+        "--ui",
+        "tdd",
+        "--timeout",
+        "999999",
+        "--colors",
+        "${workspaceFolder}/packages/kinvey-files/src"
+      ],
+      "env": {
+        "NODE_ENV": "development"
+      },
+      "internalConsoleOptions": "openOnSessionStart",
+      "sourceMaps": true
+    },
+    {
+      "type": "node",
+      "request": "launch",
       "name": "Aggregation Tests",
       "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
       "args": [

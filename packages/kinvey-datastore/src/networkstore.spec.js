@@ -69,7 +69,7 @@ describe('NetworkStore', () => {
   });
 
   describe('find()', () => {
-    it('should throw an error if the query argument is not an instance of the Query class', (done) => {//No validation for query
+    it('should throw an error if the query argument is not an instance of the Query class', (done) => {//TODO: No validation for query
       const store = new NetworkStore(client.appKey, collection);
       store.find({})
         .subscribe(null, (error) => {
@@ -115,7 +115,7 @@ describe('NetworkStore', () => {
         });
     });
 
-    it('should add kinveyfile_ttl query parameter', () => {//It seems we do not send the kinvey_ttl query param
+    it('should add kinveyfile_ttl query parameter', () => {//TODO: It seems we do not send the kinvey_ttl query param
       const store = new NetworkStore(client.appKey, 'comecollection');
       const entity1 = { _id: randomString() };
 
@@ -130,7 +130,7 @@ describe('NetworkStore', () => {
         });
     });
 
-    it('should add kinveyfile_tls query parameter', () => {//It seems we do not send the kinvey_tls query param
+    it('should add kinveyfile_tls query parameter', () => {//TODO: It seems we do not send the kinvey_tls query param
       const store = new NetworkStore(client.appKey, 'comecollection');
       const entity1 = { _id: randomString() };
 
@@ -147,7 +147,7 @@ describe('NetworkStore', () => {
   });
 
   describe('findById()', () => {
-    it('should throw a NotFoundError if the id argument does not exist', () => {//errors should be reverted
+    it('should throw a NotFoundError if the id argument does not exist', () => {//TODO: errors should be reverted
       const entityId = 1;
       nock(client.apiHostname)
         .get(`/appdata/${client.appKey}/${collection}/${entityId}`)
@@ -175,7 +175,7 @@ describe('NetworkStore', () => {
         });
     });
 
-    it('should add kinveyfile_ttl query parameter', () => {//It seems we do not send the kinvey_ttl query param
+    it('should add kinveyfile_ttl query parameter', () => {//TODO: It seems we do not send the kinvey_ttl query param
       const entityId = randomString();
       const entity1 = { _id: entityId };
 
@@ -191,7 +191,7 @@ describe('NetworkStore', () => {
         });
     });
 
-    it('should add kinveyfile_tls query parameter', () => {//It seems we do not send the kinvey_tls query param
+    it('should add kinveyfile_tls query parameter', () => {//TODO: It seems we do not send the kinvey_tls query param
       const entityId = randomString();
       const entity1 = { _id: entityId };
 
@@ -209,7 +209,7 @@ describe('NetworkStore', () => {
   });
 
   describe('group()', () => {
-    it('should throw an error for an invlad aggregation', () => {//errors should be reverted
+    it('should throw an error for an invlad aggregation', () => {//TODO: errors should be reverted
       const store = new NetworkStore(client.appKey, collection);
       return store.group({}).toPromise()
         .catch((error) => {
@@ -218,7 +218,7 @@ describe('NetworkStore', () => {
         });
     });
 
-    it('should throw a ServerError', () => {//errors should be reverted
+    it('should throw a ServerError', () => {//TODO: errors should be reverted
       nock(client.apiHostname)
         .post(`/appdata/${client.appKey}/${collection}/_group`)
         .reply(500);
@@ -232,7 +232,7 @@ describe('NetworkStore', () => {
         });
     });
 
-    it('should return the count of all unique properties on the collection', () => {//aggregation.toPlainObject is not a function
+    it('should return the count of all unique properties on the collection', () => {//TODO: aggregation.toPlainObject is not a function
       const reply = [{ title: randomString(), count: 2 }, { title: randomString(), count: 1 }];
       nock(client.apiHostname)
         .post(`/appdata/${client.appKey}/${collection}/_group`)
@@ -249,7 +249,7 @@ describe('NetworkStore', () => {
   });
 
   describe('count()', () => {
-    it('should throw an error for an invalid query', () => {//no validation for query
+    it('should throw an error for an invalid query', () => {//TODO: no validation for query
       const store = new NetworkStore(client.appKey, collection);
       return store.count({}).toPromise()
         .catch((error) => {
@@ -258,7 +258,7 @@ describe('NetworkStore', () => {
         });
     });
 
-    it('should throw a ServerError', () => {// erros should be reverted
+    it('should throw a ServerError', () => {//TODO:  erros should be reverted
       nock(client.apiHostname)
         .get(`/appdata/${client.appKey}/${collection}/_count`)
         .reply(500);
@@ -285,7 +285,7 @@ describe('NetworkStore', () => {
   });
 
   describe('create()', () => {
-    it('should throw an error if trying to create an array of entities', async () => {// erros should be reverted
+    it('should throw an error if trying to create an array of entities', async () => {//TODO:  erros should be reverted
       const store = new NetworkStore(client.appKey, collection);
       const entity1 = {
         title: randomString(),
@@ -371,7 +371,7 @@ describe('NetworkStore', () => {
   });
 
   describe('update()', () => {
-    it('should throw an error if trying to update an array of entities', async () => {// errors should be reverted
+    it('should throw an error if trying to update an array of entities', async () => {//TODO:  errors should be reverted
       const store = new NetworkStore(client.appKey, collection);
       const entity1 = {
         _id: randomString(),
@@ -394,7 +394,7 @@ describe('NetworkStore', () => {
         });
     });
 
-    it('should throw an error if an entity does not have an _id', async () => {//errors should be reverted
+    it('should throw an error if an entity does not have an _id', async () => {//TODO: errors should be reverted
       const store = new NetworkStore(client.appKey, collection);
       const entity = {
         title: randomString(),
@@ -468,7 +468,7 @@ describe('NetworkStore', () => {
   });
 
   describe('remove()', () => {
-    it('should throw an error for an invalid query', () => {//errors should be reverted
+    it('should throw an error for an invalid query', () => {//TODO: errors should be reverted
       const store = new NetworkStore(client.appKey, collection);
       return store.remove({})
         .then(() => Promise.reject(new Error('This should not happen')))
@@ -478,7 +478,7 @@ describe('NetworkStore', () => {
         });
     });
 
-    it('should throw a ServerError', () => {//errors should be reverted
+    it('should throw a ServerError', () => {//TODO: errors should be reverted
       nock(client.apiHostname)
         .delete(`/appdata/${client.appKey}/${collection}`)
         .reply(500);
@@ -508,7 +508,7 @@ describe('NetworkStore', () => {
   });
 
   describe('removeById()', () => {
-    it('should throw a NotFoundError if the id argument does not exist', () => {//errors should be reverted
+    it('should throw a NotFoundError if the id argument does not exist', () => {//TODO: errors should be reverted
       const store = new NetworkStore(client.appKey, collection);
       const _id = randomString();
 
@@ -523,7 +523,7 @@ describe('NetworkStore', () => {
         });
     });
 
-    it('should return a NotFoundError if an entity with that id does not exist', () => {//errors should be reverted
+    it('should return a NotFoundError if an entity with that id does not exist', () => {//TODO: errors should be reverted
       const store = new NetworkStore(client.appKey, collection);
       const id = randomString();
 
@@ -574,7 +574,7 @@ describe('NetworkStore', () => {
 
     afterEach(() => expect.restoreSpies());
 
-    describe('subscribe()', () => {//proxied store was never called with 
+    describe('subscribe()', () => {//TODO: proxied store was never called with 
       it('should call subscribeCollection() method of LiveCollectionManager class', () => {
         const spy = expect.spyOn(managerMock, 'subscribeCollection');
         const handler = { onMessage: () => { } };
@@ -583,7 +583,7 @@ describe('NetworkStore', () => {
       });
     });
 
-    describe('unsubscribe()', () => {//proxied store was never called with
+    describe('unsubscribe()', () => {//TODO: proxied store was never called with
       it('should call unsubscribeCollection() method of LiveCollectionManager class', () => {
         const spy = expect.spyOn(managerMock, 'unsubscribeCollection');
         proxiedStore.unsubscribe();

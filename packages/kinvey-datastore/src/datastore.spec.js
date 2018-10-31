@@ -21,7 +21,7 @@ describe('DataStore', () => {
     });
   });
 
-  describe('constructor', () => {// There is no DataStore class
+  describe('constructor', () => {//TODO:  There is no DataStore class
     it('should throw an error if the DataStore class is tried to be instantiated', () => {
       expect(() => {
         const store = new DataStore(collectionName);
@@ -31,21 +31,21 @@ describe('DataStore', () => {
   });
 
   describe('collection()', () => {
-    it('should throw an error if a collection is not provided', () => {// Errors should be reverted
+    it('should throw an error if a collection is not provided', () => {//TODO:  Errors should be reverted
       expect(() => {
         const store = collection();
         return store;
       }).toThrow(KinveyError);
     });
 
-    it('should throw an error if the collection is not a string', () => {// Errors should be reverted
+    it('should throw an error if the collection is not a string', () => {//TODO:  Errors should be reverted
       expect(() => {
         const store = collection({});
         return store;
       }).toThrow(KinveyError);
     });
 
-    describe('tagging', () => {//No tag value validation, error not thrown when tag is set to Network store
+    describe('tagging', () => {//TODO: No tag value validation, error not thrown when tag is set to Network store
       describe('a NetworkStore', () => {
         it('should throw an error', () => {
           expect(() => {
@@ -112,7 +112,7 @@ describe('DataStore', () => {
     });
   });
 
-  describe('getInstance()', () => { // No getInstance function
+  describe('getInstance()', () => { //TODO:  No getInstance function
     afterEach(function () {
       expect.restoreSpies();
     });
@@ -125,7 +125,7 @@ describe('DataStore', () => {
   });
 
   describe('clearCache()', () => {
-    it('should clear all the entities in the cache', () => {//clearCache does not seem to clear cache
+    it('should clear all the entities in the cache', () => {//TODO: clearCache does not seem to clear cache
       const entity = {};
       const store = new CacheStore(client.appKey, collectionName, null, {autoSync: false});
       return store.save(entity)

@@ -2,7 +2,7 @@ import assign from 'lodash/assign';
 import expect from 'expect';
 import nock from 'nock';
 import url from 'url';
-import { MobileIdentityConnect, AuthorizationGrant } from './mic';
+import * as mic from './mic';
 import { InsufficientCredentialsError, MobileIdentityConnectError, KinveyError } from '../../errors';
 import { randomString } from 'kinvey-test-utils';
 import { register } from 'kinvey-http-node';
@@ -51,14 +51,14 @@ describe('MobileIdentityConnect', () => {
   });
 
   describe('identity', () => {
-    it('should return MobileIdentityConnect', () => {
+    it('should return MobileIdentityConnect', () => {//TODO: obsolete?
       expect(MobileIdentityConnect.identity).toEqual('kinveyAuth');
       expect(new MobileIdentityConnect().identity).toEqual('kinveyAuth');
     });
   });
 
   describe('isSupported()', () => {
-    it('should return true', () => {
+    it('should return true', () => {//TODO:obsolete?
       expect(MobileIdentityConnect.isSupported()).toEqual(true);
       expect(new MobileIdentityConnect().isSupported()).toEqual(true);
     });
@@ -66,11 +66,11 @@ describe('MobileIdentityConnect', () => {
 
   describe('login()', () => {
     describe('AuthorizationGrant.AuthorizationCodeAPI', () => {
-      it('should fail if a redirect uri is not provided', () => {
+      it('should fail if a redirect uri is not provided', () => {// TODO:: Errors should be reverted
         const username = 'test';
         const password = 'test';
-        const mic = new MobileIdentityConnect();
-        return mic.login(null, AuthorizationGrant.AuthorizationCodeAPI, { username, password })
+        //const mic = new MobileIdentityConnect();
+        return mic.login(null, mic.AuthorizationGrant.AuthorizationCodeAPI, { username, password })
           .then(() => {
             throw new Error('This test should fail');
           })
@@ -80,12 +80,11 @@ describe('MobileIdentityConnect', () => {
           });
       });
 
-      it('should fail if redirect uri is not a string', () => {
-        it('should fail if a redirect uri is not provided', () => {
+      it('should fail if redirect uri is not a string', () => {// TODO:: Errors should be reverted
           const username = 'test';
           const password = 'test';
-          const mic = new MobileIdentityConnect();
-          return mic.login({}, AuthorizationGrant.AuthorizationCodeAPI, { username, password })
+          //const mic = new MobileIdentityConnect();
+          return mic.login({}, mic.AuthorizationGrant.AuthorizationCodeAPI, { username, password })
             .then(() => {
               throw new Error('This test should fail');
             })
@@ -93,10 +92,9 @@ describe('MobileIdentityConnect', () => {
               expect(error).toBeA(KinveyError);
               expect(error.message).toEqual('A redirectUri is required and must be a string.');
             });
-        });
       });
 
-      it('should fail with invalid credentials', () => {
+      it('should fail with invalid credentials', () => {// TODO:: In login, there is a getTempUrl function that seem to return an Object which is then passed as url?
         const tempLoginUriParts = url.parse('https://auth.kinvey.com/oauth/authenticate/f2cb888e651f400e8c05f8da6160bf12');
         const username = 'test';
         const password = 'test';
@@ -126,8 +124,8 @@ describe('MobileIdentityConnect', () => {
             'Content-Type': 'application/json; charset=utf-8'
           });
 
-        const mic = new MobileIdentityConnect();
-        return mic.login(redirectUri, AuthorizationGrant.AuthorizationCodeAPI, {
+        //const mic = new MobileIdentityConnect();
+        return mic.login(redirectUri, mic.AuthorizationGrant.AuthorizationCodeAPI, {
           username: username,
           password: password
         })
@@ -136,7 +134,7 @@ describe('MobileIdentityConnect', () => {
           });
       });
 
-      it('should fail when a location header is not provided', () => {
+      it('should fail when a location header is not provided', () => {// TODO:: In login, there is a getTempUrl function that seem to return an Object which is then passed as url?
         const tempLoginUriParts = url.parse('https://auth.kinvey.com/oauth/authenticate/f2cb888e651f400e8c05f8da6160bf12');
         const username = 'test';
         const password = 'test';
@@ -162,8 +160,8 @@ describe('MobileIdentityConnect', () => {
             'Content-Type': 'application/json; charset=utf-8'
           });
 
-        const mic = new MobileIdentityConnect();
-        return mic.login(redirectUri, AuthorizationGrant.AuthorizationCodeAPI, {
+        //const mic = new MobileIdentityConnect();
+        return mic.login(redirectUri, mic.AuthorizationGrant.AuthorizationCodeAPI, {
           username: username,
           password: password
         })
@@ -188,14 +186,14 @@ describe('MobileIdentityConnect', () => {
             'Content-Type': 'application/json; charset=utf-8'
           });
 
-        const mic = new MobileIdentityConnect();
-        return mic.requestTempLoginUrl(client.appKey, redirectUri, {version: 1})
+        //const mic = new MobileIdentityConnect();
+        return mic.getTempLoginUrl(client.appKey, redirectUri, 1)
           .then((response)=> {
-            expect(response).toBe(tempLoginUriParts.href);
+            expect(response.temp_login_uri).toBe(tempLoginUriParts.href);
           });
       });
 
-      it('should succeed with valid credentials', () => {
+      it('should succeed with valid credentials', () => {//TODO: login now returns the token and used to return the properties from the expected object
         const tempLoginUriParts = url.parse('https://auth.kinvey.com/oauth/authenticate/f2cb888e651f400e8c05f8da6160bf12');
         const username = 'custom';
         const password = '1234';
@@ -242,14 +240,14 @@ describe('MobileIdentityConnect', () => {
             'Content-Type': 'application/json; charset=utf-8'
           });
 
-        const mic = new MobileIdentityConnect();
-        return mic.login(redirectUri, AuthorizationGrant.AuthorizationCodeAPI, {
+        //const mic = new MobileIdentityConnect();
+        return mic.login(redirectUri, mic.AuthorizationGrant.AuthorizationCodeAPI, {
           username: username,
           password: password
         })
           .then((response) => {
             expect(response).toEqual(assign(token, {
-              identity: MobileIdentityConnect.identity,
+              identity: mic.IDENTITY,
               client_id: client.appKey,
               redirect_uri: redirectUri,
               protocol: client.micProtocol,
@@ -258,7 +256,7 @@ describe('MobileIdentityConnect', () => {
           });
       });
 
-      it('should ignore an invalid micId', () => {
+      it('should ignore an invalid micId', () => {//TODO: login now returns the token and used to return the properties from the expected object
         const micId = {};
         const tempLoginUriParts = url.parse('https://auth.kinvey.com/oauth/authenticate/f2cb888e651f400e8c05f8da6160bf12');
         const username = 'custom';
@@ -302,15 +300,15 @@ describe('MobileIdentityConnect', () => {
             'Content-Type': 'application/json; charset=utf-8'
           });
 
-        const mic = new MobileIdentityConnect();
-        return mic.login(redirectUri, AuthorizationGrant.AuthorizationCodeAPI, {
+        //const mic = new MobileIdentityConnect();
+        return mic.login(redirectUri, mic.AuthorizationGrant.AuthorizationCodeAPI, {
           micId: micId,
           username: username,
           password: password
         })
           .then((response) => {
             expect(response).toEqual(assign(token, {
-              identity: MobileIdentityConnect.identity,
+              identity: mic.IDENTITY,
               client_id: client.appKey,
               redirect_uri: redirectUri,
               protocol: client.micProtocol,
@@ -319,7 +317,7 @@ describe('MobileIdentityConnect', () => {
           });
       });
 
-      it('should accept a valid micId', () => {
+      it('should accept a valid micId', () => {//TODO: login now returns the token and used to return the properties from the expected object
         const micId = randomString();
         const tempLoginUriParts = url.parse('https://auth.kinvey.com/oauth/authenticate/f2cb888e651f400e8c05f8da6160bf12');
         const username = 'custom';
@@ -367,15 +365,15 @@ describe('MobileIdentityConnect', () => {
             'Content-Type': 'application/json; charset=utf-8'
           });
 
-        const mic = new MobileIdentityConnect();
-        return mic.login(redirectUri, AuthorizationGrant.AuthorizationCodeAPI, {
+        //const mic = new MobileIdentityConnect();
+        return mic.login(redirectUri, mic.AuthorizationGrant.AuthorizationCodeAPI, {
           micId: micId,
           username: username,
           password: password
         })
           .then((response) => {
             expect(response).toEqual(assign(token, {
-              identity: MobileIdentityConnect.identity,
+              identity: mic.IDENTITY,
               client_id: `${client.appKey}.${micId}`,
               redirect_uri: redirectUri,
               protocol: client.micProtocol,

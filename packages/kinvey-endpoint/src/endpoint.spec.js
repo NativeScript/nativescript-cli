@@ -23,7 +23,6 @@ describe('Endpoint', () => {
   });
 
   before(() => {
-    console.log(client);
     const username = randomString();
     const password = randomString();
     const reply = {
@@ -56,21 +55,21 @@ describe('Endpoint', () => {
   });
 
   describe('execute()', () => {
-    it('should throw a KinveyError when an endpoint argument is not provided', () => {
+    it('should throw a KinveyError when an endpoint argument is not provided', () => {//TODO: Errors shpuld ne reverted
       return endpoint()
         .catch((error) => {
           expect(error).toBeA(KinveyError);
         });
     });
 
-    it('should throw a KinveyError when the endpoint argument is not a string', () => {
+    it('should throw a KinveyError when the endpoint argument is not a string', () => {//TODO: Errors shpuld ne reverted
       return endpoint({})
         .catch((error) => {
           expect(error).toBeA(KinveyError);
         });
     });
 
-    it('should throw NotFoundError for a custom endpoint that does not exist', () => {
+    it('should throw NotFoundError for a custom endpoint that does not exist', () => {//TODO: Errors shpuld ne reverted
       // Setup nock response
       nock(client.apiHostname, { encodedQueryParams: true })
         .post(`/rpc/${client.appKey}/custom/doesnotexist`)

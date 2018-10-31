@@ -28,7 +28,7 @@ describe('App', () => {
       }).to.throw();
     });
 
-    it('should return a client', () => {
+    it('should return a client', () => {//TODO: Obsolete?
       const appKey = randomString();
       const appSecret = randomString();
       const client = init({
@@ -36,13 +36,13 @@ describe('App', () => {
         appSecret: appSecret
       });
       expect(client).to.be.instanceof(Client);
-      // expect(client).to.have.property(appKey);
-      // expect(client).to.have.property(appSecret);
-      // expect(client.appKey).to.equal(appKey);
-      // expect(client.appSecret).to.equal(appSecret);
+      expect(client).to.have.property(appKey);
+      expect(client).to.have.property(appSecret);
+      expect(client.appKey).to.equal(appKey);
+      expect(client.appSecret).to.equal(appSecret);
     });
 
-    it('should set default MIC host name when a custom one is not provided', () => {
+    it('should set default MIC host name when a custom one is not provided', () => {// TODO: SHould enable default hosts for init()
       const client = init({
         appKey: randomString(),
         appSecret: randomString()
@@ -62,7 +62,7 @@ describe('App', () => {
   });
 
   describe('ping()', () => {
-    it('should return a response', () => {
+    it('should return a response', () => {//TODO: Ping is not a function
       const reply = {
         version: 1,
         kinvey: 'hello tests',
@@ -71,7 +71,8 @@ describe('App', () => {
       };
       const client = init({
         appKey: randomString(),
-        appSecret: randomString()
+        appSecret: randomString(),
+        apiHostname: "https://baas.kinvey.com"
       });
 
       nock(client.apiHostname)

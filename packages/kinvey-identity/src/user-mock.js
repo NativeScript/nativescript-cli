@@ -1,23 +1,29 @@
 import nock from 'nock';
 import { randomString } from 'kinvey-test-utils';
 import { User } from './user';
-import {login as trueLogin} from './user'
+import * as userFuncs from './user';
+var apiHostname = "https://baas.kinvey.com";
+var micHostname =  "https://auth.kinvey.com";
 
 /**
  * @private
  */
 export class UserMock extends User {
-  static getActiveUser(client) {
-    const activeUser = super.getActiveUser(client);
+  static getActiveUser() {
+    const activeUser = userFuncs.getActiveUser();
 
     if (activeUser) {
-      return new UserMock(activeUser.data);
+      return new UserMock(activeUser);
     }
 
     return null;
   }
 
-  login(username, password, options) {
+  pathname(appKey) {
+    return `/user/${appKey}`;
+  }
+
+  login(username, password, appKey) {
     const reply = {
       _id: randomString(),
       _kmd: {
@@ -32,13 +38,13 @@ export class UserMock extends User {
     };
 
     // Setup nock response
-    nock(this.client.apiHostname, { encodedQueryParams: true })
-      .post(`${this.pathname}/login`, { username: username, password: password })
+    nock(apiHostname, { encodedQueryParams: true })
+      .post(`${`/user/${appKey}`}/login`, { username: username, password: password })
       .reply(200, reply, {
         'content-type': 'application/json; charset=utf-8'
       });
     // Login
-    return super.login(username, password, options);
+    return userFuncs.login(username, password, appKey);
   }
 
   static login(username, password, options) {
@@ -59,10 +65,10 @@ export class UserMock extends User {
         };
 
         // API Response
-        nock(this.client.micHostname, { encodedQueryParams: true })
+        nock(micHostname, { encodedQueryParams: true })
           .post(
             '/oauth/auth',
-            `client_id=${this.client.appKey}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code`
+            `client_id=${appKey}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code`
           )
           .reply(200, {
             temp_login_uri: tempLoginUriParts.href
@@ -71,21 +77,21 @@ export class UserMock extends User {
         nock(`${tempLoginUriParts.protocol}//${tempLoginUriParts.host}`, { encodedQueryParams: true })
           .post(
             tempLoginUriParts.pathname,
-            `client_id=${this.client.appKey}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&username=${options.username}&password=${options.password}`
+            `client_id=${appKey}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&username=${options.username}&password=${options.password}`
           )
           .reply(302, null, {
             Location: `${redirectUri}/?code=${code}`
           });
 
-        nock(this.client.micHostname, { encodedQueryParams: true })
+        nock(micHostname, { encodedQueryParams: true })
           .post(
             '/oauth/token',
             `grant_type=authorization_code&client_id=${this.client.appKey}&redirect_uri=${encodeURIComponent(redirectUri)}&code=${code}`
           )
           .reply(200, token);
 
-        nock(this.client.apiHostname, { encodedQueryParams: true })
-          .post(`${this.pathname}/login`, { _socialIdentity: { kinveyAuth: token } })
+        nock(apiHostname, { encodedQueryParams: true })
+          .post(`${pathname}/login`, { _socialIdentity: { kinveyAuth: token } })
           .reply(200, {
             _id: randomString(),
             _kmd: {
@@ -105,21 +111,21 @@ export class UserMock extends User {
       });
   }
 
-  logout(options) {
+  logout(appKey) {
     // Setup nock response
-    nock(this.client.apiHostname, { encodedQueryParams: true })
-      .post(`${this.pathname}/_logout`)
+    nock(apiHostname, { encodedQueryParams: true })
+      .post(`${getPathname(appKey)}/_logout`)
       .reply(204);
 
     // Logout
-    return super.logout(options);
+    return super.logout();
   }
 
-  static logout(options = {}) {
-    const user = UserMock.getActiveUser(options.client);
+  static logout(appKey) {
+    const user = UserMock.getActiveUser();
 
     if (user) {
-      return user.logout(options);
+      return userFuncs.logout();
     }
 
     return Promise.resolve(null);
@@ -146,8 +152,8 @@ export class UserMock extends User {
     };
 
     // Setup nock response
-    nock(this.client.apiHostname, { encodedQueryParams: true })
-      .post(this.pathname, () => true)
+    nock(apiHostname, { encodedQueryParams: true })
+      .post(pathname, () => true)
       .reply(201, reply);
 
     return super.signup(data, options);

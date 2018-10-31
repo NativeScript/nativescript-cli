@@ -437,10 +437,6 @@ describe('Query', () => {
       it('should return a subquery', () => {
         const query1 = new Query();
         const query2 = query1.and();
-        console.log('------------------')
-        console.log(query1);
-        console.log('------------------')
-        console.log(query2);
         expect(query2).to.be.an.instanceof(Query);
         expect(query2.parent).to.deep.equal(query1);
       });

@@ -1,7 +1,7 @@
 const sift = require('sift');
 import { Query } from 'kinvey-query';
 import { expect } from 'chai';
-import { Aggregation, count, sum, min, max, average } from './aggregation';
+import * as aggr from './aggregation';
 import {randomString} from 'kinvey-test-utils';
 
 
@@ -45,27 +45,27 @@ describe('Aggregation', () => {
   describe('query', () => {
     it('should not set an invalid query', () => {
       expect(() => {
-        const aggregation = new Aggregation();
+        const aggregation = new aggr.Aggregation();
         aggregation.query = {};
       }).to.throw();
     });
 
     it('should set the query', () => {
-      const aggregation = new Aggregation();
+      const aggregation = new aggr.Aggregation();
       const query = new Query();
       aggregation.query = query;
       expect(aggregation.query).to.equal(query);
     });
 
     it('should set the query to null', () => {
-      const aggregation = new Aggregation();
+      const aggregation = new aggr.Aggregation();
       aggregation.query = new Query();
       aggregation.query = null;
       expect(aggregation.query).to.equal(null);
     });
 
-    it('should filter the entities processed using the query', () => {
-      const aggregation = count('title');
+    it('should filter the entities processed using the query', () => {// TODO: aggregation.process is not a function
+      const aggregation = Aggregation.count('title');
       const query = new Query().equalTo('title', commonTitle);
       aggregation.query = query;
       const results = aggregation.process(entities);
@@ -75,8 +75,8 @@ describe('Aggregation', () => {
   });
 
   describe('count()', () => {
-    it('should return the count of a unique property value for all entities', () => {
-      const aggregation = count('title');
+    it('should return the count of a unique property value for all entities', () => {// TODO: aggregation.process is not a function
+      const aggregation = aggr.count('title');
       const results = aggregation.process(entities);
       expect(results).to.be.an.instanceOf(Array);
       results.forEach((result) => {
@@ -90,9 +90,9 @@ describe('Aggregation', () => {
   });
 
   describe('sum()', () => {
-    it('should return the sum of a property for all entities', () => {
+    it('should return the sum of a property for all entities', () => {// TODO: aggregation.process is not a function
       const sum = entities.reduce((sum, entity) => sum + entity.count, 0);
-      const aggregation = sum('count');
+      const aggregation = aggr.sum('count');
       const result = aggregation.process(entities);
       expect(result).to.be.an.instanceof(Object);
       expect(result.sum).to.equal(sum);
@@ -100,9 +100,9 @@ describe('Aggregation', () => {
   });
 
   describe('min()', () => {
-    it('should return the min value of a property for all entities', () => {
+    it('should return the min value of a property for all entities', () => {// TODO: aggregation.process is not a function
       const min = entities.reduce((min, entity) => Math.min(min, entity.count), Infinity);
-      const aggregation = min('count');
+      const aggregation = aggr.min('count');
       const result = aggregation.process(entities);
       expect(result).to.be.an.instanceof(Object);
       expect(result.min).to.equal(min);
@@ -110,9 +110,9 @@ describe('Aggregation', () => {
   });
 
   describe('max()', () => {
-    it('should return the max value of a property for all entities', () => {
+    it('should return the max value of a property for all entities', () => {// TODO: aggregation.process is not a function
       const max = entities.reduce((max, entity) => Math.max(max, entity.count), -Infinity);
-      const aggregation = max('count');
+      const aggregation = aggr.max('count');
       const result = aggregation.process(entities);
       expect(result).to.be.an.instanceof(Object);
       expect(result.max).to.equal(max);
@@ -120,14 +120,14 @@ describe('Aggregation', () => {
   });
 
   describe('average()', () => {
-    it('should return the count and average of a property for all entities', () => {
+    it('should return the count and average of a property for all entities', () => {// TODO: aggregation.process is not a function
       let count = 0;
       const average = entities.reduce((average, entity) => {
         average = ((average * count) + entity.count) / (count + 1);
         count += 1;
         return average;
       }, 0);
-      const aggregation = average('count');
+      const aggregation = aggr.average('count');
       const result = aggregation.process(entities);
       expect(result).to.be.an.instanceof(Object);
       expect(result.average).to.equal(average);

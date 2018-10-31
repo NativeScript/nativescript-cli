@@ -6,14 +6,16 @@ import localStorage from 'local-storage';
 import { Acl } from 'kinvey-acl';
 import { Kmd } from 'kinvey-kmd';
 import { User } from './user';
+import * as userFuncs from './user';
 import { randomString } from 'kinvey-test-utils';
 import { ActiveUserError, InvalidCredentialsError, KinveyError } from '../../errors';
 import { collection, DataStoreType } from 'kinvey-datastore';
 import { Query } from 'kinvey-query';
-import { register } from 'kinvey-http-node';
+import { register as registerHttp} from 'kinvey-http-node';
 import { init } from 'kinvey-app';
 import { getLiveService } from 'kinvey-live';
 import { UserMock } from './user-mock';
+import { register as registerCache} from 'kinvey-cache-memory';
 
 chai.use(require('chai-as-promised'));
 
@@ -23,7 +25,8 @@ describe('User', () => {
   let client;
 
   before(() => {
-    register();
+    registerHttp();
+    registerCache();
   });
 
   before(() => {
@@ -48,13 +51,13 @@ describe('User', () => {
       expect(user.data).toEqual(data);
     });
 
-    it('should set the client', () => {//Client is not defined
+    it('should set the client', () => {//TODO: Obsolete?
       const client = new Client();
       const user = new User({}, { client: client });
       expect(user.client).toEqual(client);
     });
 
-    it('should set the client to the shared instance if one is not provided', () => {//Client is not defined
+    it('should set the client to the shared instance if one is not provided', () => {//TODO: Obsolete?
       const user = new User();
       expect(user.client).toEqual(Client.sharedInstance());
     });
@@ -119,7 +122,7 @@ describe('User', () => {
     });
   });
 
-  describe('_socialIdentity', () => {//there is no _socialIdentity getter
+  describe('_socialIdentity', () => {// TODO: there is no _socialIdentity getter
     it('should return the metadata', () => {
       const data = { _socialIdentity: { kinvey: {} } };
       const user = new User(data);
@@ -136,11 +139,10 @@ describe('User', () => {
     });
   });
 
-  describe('authtoken', () => {//there is no authtoken getter
+  describe('authtoken', () => {//TODO: there is no authtoken getter
     it('should return the authtoken', () => {
       const data = { _kmd: { authtoken: randomString() } };
       const user = new User(data);
-      console.log(user);
       expect(user.authtoken).toEqual(new Kmd(data).authtoken);
     });
 
@@ -188,7 +190,7 @@ describe('User', () => {
     });
   });
 
-  describe('pathname', () => {//no pathname getter
+  describe('pathname', () => {//TODO: no pathname getter
     it('should return the pathname', () => {
       const user = new User();
       expect(user.pathname).toEqual(`/user/${client.appKey}`);
@@ -202,11 +204,11 @@ describe('User', () => {
     });
   });
 
-  describe('isActive()', () => {//Should rework user-mock - there is no client when calling logout
+  describe('isActive()', () => {// TODO: Reworked user-mock to work without client of the user
     it('should return true', () => {
-      return UserMock.logout()
+      return UserMock.logout(client.appKey)
         .then(() => {
-          return UserMock.login('test', 'test');
+          return UserMock.login('test', 'test', client.appKey);
         })
         .then((user) => {
           expect(user.isActive()).toEqual(true);
@@ -235,59 +237,60 @@ describe('User', () => {
 
   describe('login()', () => {
     beforeEach(() => {
-      return UserMock.logout();
+      return UserMock.logout(client.appKey);
     });
 
-    it('should throw an error if an active user already exists', () => {
-      return UserMock.login(randomString(), randomString())
+    it('should throw an error if an active user already exists', () => {//TODO: errors should be reverted
+      return UserMock.login(randomString(), randomString(), client.appKey)
         .then(() => {
-          return User.login(randomString(), randomString());
+          return userFuncs.login(randomString(), randomString(), client.appKey);
         })
         .catch((error) => {
           expect(error).toBeA(ActiveUserError);
         });
     });
 
-    it('should throw an error if a username is not provided', async () => {
+    it('should throw an error if a username is not provided', async () => {//TODO: errors should be reverted
       try {
-        await User.login(null, randomString());
+        await userFuncs.login(null, randomString(), client.appKey);
       } catch (error) {
         expect(error).toBeA(KinveyError);
       }
     });
 
-    it('should throw an error if the username is an empty string', async () => {
+    it('should throw an error if the username is an empty string', async () => {//TODO: errors should be reverted
       try {
-        await User.login(' ', randomString());
+        await userFuncs.login(' ', randomString(), client.appKey);
       } catch (error) {
         expect(error).toBeA(KinveyError);
       }
     });
 
-    it('should throw an error if a password is not provided', async () => {
+    it('should throw an error if a password is not provided', async () => {//TODO: errors should be reverted
       try {
-        await User.login(randomString());
+        await userFuncs.login(randomString());
       } catch (error) {
         expect(error).toBeA(KinveyError);
       }
     });
 
-    it('should throw an error if the password is an empty string', async () => {
+    it('should throw an error if the password is an empty string', async () => {//TODO: errors should be reverted
       try {
-        await User.login(randomString(), ' ');
+        await userFuncs.login(randomString(), ' ', client.appKey);
       } catch (error) {
         expect(error).toBeA(KinveyError);
       }
     });
 
-    it('should throw an error if the username and/or password is invalid', () => {
+    it('should throw an error if the username and/or password is invalid', () => {//TODO: errors should be reverted
       const user = new User();
       const username = randomString();
       const password = randomString();
+      const pathname = `/user/${client.appKey}`
 
       // Kinvey API response
       nock(client.apiHostname, { encodedQueryParams: true })
-        .post(`${user.pathname}/login`, { username: username, password: password })
+        .post(`${pathname}/login`, { username: username, password: password })
         .reply(401, {
           name: 'InvalidCredentials',
           message: 'Invalid credentials. Please retry your request with correct credentials'
@@ -295,16 +298,19 @@ describe('User', () => {
           'Content-Type': 'application/json; charset=utf-8'
         });
 
-      return user.login(username, password)
+      return userFuncs.login(username, password)
         .catch((error) => {
           expect(error).toBeA(InvalidCredentialsError);
         });
     });
 
-    it('should login a user', () => {
+    it('should login a user', () => {//TODO: the user object returned by the loginmethod returns the values in the root object and also in a first level _data object. Is it redundant?
+      //TODO: The object returned from the login contains the password value, which it seems was omitted in the master branch
       const user = new User();
       const username = randomString();
       const password = randomString();
+      const pathname = `/user/${client.appKey}`;
+
       const reply = {
         _id: randomString(),
         _kmd: {
@@ -321,19 +327,19 @@ describe('User', () => {
 
       // Kinvey API response
       nock(client.apiHostname, { encodedQueryParams: true })
-        .post(`${user.pathname}/login`, { username: username, password: password })
+        .post(`${pathname}/login`, { username: username, password: password })
         .reply(200, reply, {
           'content-type': 'application/json; charset=utf-8'
         });
 
       // Logout the test user
-      return UserMock.logout()
+      return UserMock.logout(client.appKey)
         .then(() => {
-          return user.login(username, password);
+          return userFuncs.login(username, password);
         })
         .then((user) => {
           expect(user._id).toEqual(reply._id);
-          expect(user.authtoken).toEqual(reply._kmd.authtoken);
+          expect(user._kmd.authtoken).toEqual(reply._kmd.authtoken);
           expect(user.username).toEqual(reply.username);
           expect(user.data.password).toEqual(undefined);
           expect(user.isActive()).toEqual(true);
@@ -347,6 +353,7 @@ describe('User', () => {
       let user = new User();
       const username = randomString();
       const password = randomString();
+      const pathname = `/user/${client.appKey}`;
       const reply = {
         _id: randomString(),
         _kmd: {
@@ -362,32 +369,33 @@ describe('User', () => {
 
       // Kinvey API response
       nock(client.apiHostname, { encodedQueryParams: true })
-        .post(`${user.pathname}/login`, { username: username, password: password })
+        .post(`${pathname}/login`, { username: username, password: password })
         .reply(200, reply, {
           'content-type': 'application/json; charset=utf-8'
         });
 
       // Logout the test user
-      await UserMock.logout();
+      await UserMock.logout(client.appKey);
 
       // Login
-      user = await user.login({
+      user = await userFuncs.login({
         username: username,
         password: password
       });
 
       // Expectations
       expect(user._id).toEqual(reply._id);
-      expect(user.authtoken).toEqual(reply._kmd.authtoken);
+      expect(user._kmd.authtoken).toEqual(reply._kmd.authtoken);
       expect(user.username).toEqual(reply.username);
 
       const isActive = await user.isActive();
       expect(isActive).toEqual(true);
     });
 
-    it('should login a user with _socialIdentity', async () => {
+    it('should login a user with _socialIdentity', async () => {//TODO: The social identity sent for authentication used to be added to the social identity returned with the response
       const socialIdentity = { foo: { baz: randomString() }, faa: randomString() };
       let user = new User();
+      const pathname = `/user/${client.appKey}`;
       const reply = {
         _id: randomString(),
         _kmd: {
@@ -408,26 +416,26 @@ describe('User', () => {
 
       // Kinvey API response
       nock(client.apiHostname, { encodedQueryParams: true })
-        .post(`${user.pathname}/login`, { _socialIdentity: socialIdentity })
+        .post(`${pathname}/login`, { _socialIdentity: socialIdentity })
         .reply(200, reply, {
           'content-type': 'application/json; charset=utf-8'
         });
 
       // Logout the test user
-      await UserMock.logout();
+      await UserMock.logout(client.appKey);
 
       // Login
-      user = await user.login({
+      user = await userFuncs.login({
         _socialIdentity: socialIdentity
       });
 
       // Expectations
       expect(user._id).toEqual(reply._id);
-      expect(user.authtoken).toEqual(reply._kmd.authtoken);
+      expect(user._kmd.authtoken).toEqual(reply._kmd.authtoken);
       expect(user.username).toEqual(reply.username);
-      expect(user._socialIdentity.foo.baz).toEqual(socialIdentity.foo.baz);
-      expect(user._socialIdentity.foo.bar).toEqual(reply._socialIdentity.foo.bar);
-      expect(user._socialIdentity.faa).toEqual(socialIdentity.faa);
+      expect(user.data._socialIdentity.foo.baz).toEqual(socialIdentity.foo.baz);
+      expect(user.data._socialIdentity.foo.bar).toEqual(reply._socialIdentity.foo.bar);
+      expect(user.data._socialIdentity.faa).toEqual(socialIdentity.faa);
 
       const isActive = user.isActive();
       expect(isActive).toEqual(true);
@@ -436,9 +444,9 @@ describe('User', () => {
 
   describe('logout()', () => {
     beforeEach(() => {
-      return UserMock.logout()
+      return UserMock.logout(client.appKey)
         .then(() => {
-          return UserMock.login(randomString(), randomString());
+          return UserMock.login(randomString(), randomString(), client.appKey);
         });
     });
 
@@ -480,7 +488,7 @@ describe('User', () => {
         });
 
       // Pull data into cache
-      const store = new CacheStore('foo');
+      const store = collection('foo');
       return store.pull()
         .then((entities) => {
           expect(entities).toEqual(2);
@@ -508,10 +516,10 @@ describe('User', () => {
       expect(user).toEqual(null);
     });
 
-    it('should logout the active user', () => {
-      return UserMock.logout()
+    it.only('should logout the active user', () => {
+      return UserMock.logout(client.appKey)
         .then(() => {
-          expect(User.getActiveUser()).toEqual(null);
+          expect(userFuncs.getActiveUser()).toEqual(null);
         });
     });
 

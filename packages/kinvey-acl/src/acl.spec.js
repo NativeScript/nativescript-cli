@@ -3,23 +3,23 @@ import { Acl } from './acl';
 import { randomString } from 'kinvey-test-utils';
 import { KinveyError } from '../../errors';
 
-describe.only('Acl', () => {
+describe('Acl', () => {
   describe('constructor', () => {
-    it('should throw an error if an entity is not provided', () => {
+    it('should throw an error if an entity is not provided', () => {//TODO: errors should be reverted
       expect(() => {
         const acl = new Acl();
         return acl;
       }).toThrow(KinveyError, /entity argument must be an object/);
     });
 
-    it('should create an empty acl when the entity does not contain an _acl property', () => {
+    it('should create an empty acl when the entity does not contain an _acl property', () => {//TODO: acl.toPlainObject is not a function
       const entity = {};
       const acl = new Acl(entity);
       expect(acl.toPlainObject()).toEqual({});
       expect(entity._acl).toEqual({});
     });
 
-    it('should use the _acl property on the entity', () => {
+    it('should use the _acl property on the entity', () => {//TODO: acl.toPlainObject is not a function
       const aclProp = { r: [] };
       const entity = { _acl: aclProp };
       const acl = new Acl(entity);
@@ -327,7 +327,7 @@ describe.only('Acl', () => {
     });
   });
 
-  describe('toPlainObject()', () => {
+  describe('toPlainObject()', () => {//TODO: acl.toPlainObject is not a function
     it('should return object', () => {
       const _acl = {
         gr: true,

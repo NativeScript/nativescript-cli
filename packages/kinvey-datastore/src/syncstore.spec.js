@@ -66,7 +66,7 @@ describe('SyncStore', () => {
       expect(store.pathname).toEqual(`/appdata/${client.appKey}/${collectionName}`);
     });
 
-    it('should not be able to be changed', () => {//errors should be reverted
+    it('should not be able to be changed', () => {//TODO: errors should be reverted
       expect(() => {
         const store = new CacheStore(client.appKey, collectionName, null, {autoSync: false});
         store.pathname = `/tests/${collectionName}`;
@@ -74,7 +74,7 @@ describe('SyncStore', () => {
     });
   });
 
-  describe('find()', () => {// errors should be reverted and query should have validation
+  describe('find()', () => {//TODO:  errors should be reverted and query should have validation
     it('should throw an error if the query argument is not an instance of the Query class', (done) => {
       const store = new CacheStore(client.appKey, collectionName, null, {autoSync: false});
       store.find({})
@@ -174,7 +174,7 @@ describe('SyncStore', () => {
   });
 
   describe('findById()', () => {
-    it('should return undefined if an id is not provided', (done) => {//should return undefined instead of error - in general, this behavior is correct, but we aim to have parity with the old sdk
+    it('should return undefined if an id is not provided', (done) => {//TODO: should return undefined instead of error - in general, this behavior is correct, but we aim to have parity with the old sdk
       const store = new CacheStore(client.appKey, collectionName, null, {autoSync: false});
       const onNextSpy = expect.createSpy();
       store.findById()
@@ -189,7 +189,7 @@ describe('SyncStore', () => {
         });
     });
 
-    it('should throw a NotFoundError if the entity does not exist', (done) => {//errors should be reverted
+    it('should throw a NotFoundError if the entity does not exist', (done) => {//TODO: errors should be reverted
       const entity = { _id: randomString() };
       const store = new CacheStore(client.appKey, collectionName, null, {autoSync: false});
       const onNextSpy = expect.createSpy();
@@ -235,7 +235,7 @@ describe('SyncStore', () => {
   });
 
   describe('group()', () => {
-    it('should throw an error if the query argument is not an instance of the Query class', (done) => {// errors should be reverted
+    it('should throw an error if the query argument is not an instance of the Query class', (done) => {//TODO:  errors should be reverted
       const store = new CacheStore(client.appKey, collectionName, null, {autoSync: false});
       store.group({})
         .subscribe(null, (error) => {
@@ -251,7 +251,7 @@ describe('SyncStore', () => {
         });
     });
 
-    it('should return the count of all unique properties on the collection', (done) => {// cache.group is not a function
+    it('should return the count of all unique properties on the collection', (done) => {//TODO:  cache.group is not a function
       const entity1 = { _id: randomString(), title: randomString() };
       const entity2 = { _id: randomString(), title: randomString() };
       const store = new CacheStore(client.appKey, collectionName, null, {autoSync: false});
@@ -279,7 +279,7 @@ describe('SyncStore', () => {
   });
 
   describe('count()', () => {
-    it('should throw an error if the query argument is not an instance of the Query class', (done) => {//errors should be reverted
+    it('should throw an error if the query argument is not an instance of the Query class', (done) => {//TODO: errors should be reverted
       const store = new CacheStore(client.appKey, collectionName, null, {autoSync: false});
       store.count({})
         .subscribe(null, (error) => {
@@ -323,7 +323,7 @@ describe('SyncStore', () => {
   });
 
   describe('create()', () => {
-    it('should throw an error if trying to create an array of entities', () => {//errors should be reverted
+    it('should throw an error if trying to create an array of entities', () => {//TODO: errors should be reverted
       const store = new CacheStore(client.appKey, collectionName, null, {autoSync: false});
       const entity1 = {};
       const entity2 = {};
@@ -383,7 +383,7 @@ describe('SyncStore', () => {
   });
 
   describe('update()', () => {
-    it('should throw an error if trying to update an array of entities', async () => {//errors should be reverted
+    it('should throw an error if trying to update an array of entities', async () => {//TODO: errors should be reverted
       const store = new CacheStore(client.appKey, collectionName, null, {autoSync: false});
       const entity1 = { _id: randomString() };
       const entity2 = { _id: randomString() };
@@ -396,7 +396,7 @@ describe('SyncStore', () => {
         });
     });
 
-    it('should throw an error if an entity does not have an _id', async () => {//errors should be reverted
+    it('should throw an error if an entity does not have an _id', async () => {//TODO: errors should be reverted
       const store = new CacheStore(client.appKey, collectionName, null, {autoSync: false});
       const entity = {};
 
@@ -469,7 +469,7 @@ describe('SyncStore', () => {
   });
 
   describe('remove()', () => {
-    it('should throw an error if the query argument is not an instance of the Query class', () => {//errors should be reverted
+    it('should throw an error if the query argument is not an instance of the Query class', () => {//TODO: errors should be reverted
       const store = new CacheStore(client.appKey, collectionName, null, {autoSync: false});
       return store.remove({})
         .then(() => {
@@ -481,7 +481,7 @@ describe('SyncStore', () => {
         });
     });
 
-    it('should return a { count: 0 } when no entities are removed', () => {// count is 0 instead of {count:0}
+    it('should return a { count: 0 } when no entities are removed', () => {//TODO:  count is 0 instead of {count:0}
       const store = new CacheStore(client.appKey, collectionName, null, {autoSync: false});
       return store.remove()
         .then((result) => {
@@ -489,7 +489,7 @@ describe('SyncStore', () => {
         });
     });
 
-    it('should remove all the entities', () => {// count is 1 when it should be {count:1} and the correct count is decreased by 1
+    it('should remove all the entities', () => {//TODO:  count is 1 when it should be {count:1} and the correct count is decreased by 1
       const store = new CacheStore(client.appKey, collectionName, null, {autoSync: false});
       const entity1 = { _id: randomString() };
       const entity2 = { _id: randomString() };
@@ -515,7 +515,7 @@ describe('SyncStore', () => {
         });
     });
 
-    it('should remove all the entities that match the query', () => {// count is 1 when it should be {count:1}
+    it('should remove all the entities that match the query', () => {//TODO:  count is 1 when it should be {count:1}
       const store = new CacheStore(client.appKey, collectionName, null, {autoSync: false});
       const entity1 = { _id: randomString() };
       const entity2 = { _id: randomString() };
@@ -544,7 +544,7 @@ describe('SyncStore', () => {
   });
 
   describe('removeById()', () => {
-    it('should return a `{ count: 0 } if an id is not provided', () => {// returns 0 instead of {count:0}
+    it('should return a `{ count: 0 } if an id is not provided', () => {//TODO:  returns 0 instead of {count:0}
       const store = new CacheStore(client.appKey, collectionName, null, {autoSync: false});
       return store.removeById()
         .then((result) => {
@@ -552,7 +552,7 @@ describe('SyncStore', () => {
         });
     });
 
-    it('should return a NotFoundError if an entity with that id does not exist', () => {//errors should be reverted
+    it('should return a NotFoundError if an entity with that id does not exist', () => {//TODO: errors should be reverted
       const store = new CacheStore(client.appKey, collectionName, null, {autoSync: false});
       return store.clear()
         .then(() => store.removeById(randomString()))
@@ -562,7 +562,7 @@ describe('SyncStore', () => {
         });
     });
 
-    it('should remove the entity from cache', () => {// returns 1 instead of {count: 1}
+    it('should remove the entity from cache', () => {//TODO:  returns 1 instead of {count: 1}
       const store = new CacheStore(client.appKey, collectionName, null, {autoSync: false});
       const entity = { _id: randomString() };
 
@@ -584,7 +584,7 @@ describe('SyncStore', () => {
         });
     });
 
-    it('should remove the entity from the cache and sync table', () => { // returns 1 instead of {count: 1}
+    it('should remove the entity from the cache and sync table', () => { //TODO:  returns 1 instead of {count: 1}
       const store = new CacheStore(client.appKey, collectionName, null, {autoSync: false});
       const entity = {};
 
@@ -608,11 +608,10 @@ describe('SyncStore', () => {
     });
   });
 
-  describe('clear()', () => {//clear returns undefined, but seems to clear the items
+  describe('clear()', () => {//TODO: clear returns undefined, but seems to clear the items
     it('should remove all entities only from the cache', () => {
       const store = new CacheStore(client.appKey, collectionName, null, {autoSync: false});
       const entity = { _id: randomString() };
-      console.log('areeeee vee')
 
       nock(client.apiHostname)
         .get(`/appdata/${client.appKey}/${collectionName}`)
@@ -631,7 +630,7 @@ describe('SyncStore', () => {
         });
     });
 
-    it('should remove only the entities from the cache that match the query', () => {//clear returns undefined, but seems to clear the items
+    it('should remove only the entities from the cache that match the query', () => {//TODO: clear returns undefined, but seems to clear the items
       const store = new CacheStore(client.appKey, collectionName, null, {autoSync: false});
       const entity1 = { _id: randomString() };
       const entity2 = { _id: randomString() };
@@ -672,7 +671,7 @@ describe('SyncStore', () => {
         });
     });
 
-    it('should remove an entity if it was created locally and not add it to the sync queue', () => {//remove seems to decrease the result by -1
+    it('should remove an entity if it was created locally and not add it to the sync queue', () => {//TODO: remove seems to decrease the result by -1
       const store = new CacheStore(client.appKey, collectionName, null, {autoSync: false});
       const entity1 = { _id: randomString() };
       const entity2 = { _id: randomString() };
