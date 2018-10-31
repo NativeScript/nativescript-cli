@@ -1,12 +1,7 @@
 import isArray from 'lodash/isArray';
 import isString from 'lodash/isString';
 import isFunction from 'lodash/isFunction';
-import { Base64 } from 'js-base64';
-import { getConfig } from 'kinvey-app';
-import { Kmd } from 'kinvey-kmd';
-import { get as getSession } from 'kinvey-session';
 
-const AUTHORIZATION_HEADER = 'Authorization';
 const X_KINVEY_REQUEST_START_HEADER = 'X-Kinvey-Request-Start';
 
 function isNotString(val) {
@@ -121,13 +116,6 @@ export class Headers {
   }
 }
 
-export const Auth = {
-  App: 'App',
-  Default: 'Default',
-  MasterSecret: 'MasterSecret',
-  Session: 'Session'
-};
-
 export class KinveyHeaders extends Headers {
   constructor(headers) {
     super(headers);
@@ -150,40 +138,5 @@ export class KinveyHeaders extends Headers {
 
   get requestStart() {
     return this.get(X_KINVEY_REQUEST_START_HEADER);
-  }
-
-  set(name, value) {
-    if (name.toLowerCase() === AUTHORIZATION_HEADER.toLowerCase()) {
-      const auth = value;
-
-      if (auth === Auth.Default) {
-        try {
-          return this.set(name, Auth.Session);
-        } catch (error) {
-          return this.set(name, Auth.MasterSecret);
-        }
-      }
-
-      if (auth === Auth.App) {
-        const { appKey, appSecret } = getConfig();
-        const credentials = Base64.encode(`${appKey}:${appSecret}`);
-        return super.set(name, `Basic ${credentials}`);
-      } else if (auth === Auth.MasterSecret) {
-        const { appKey, masterSecret } = getConfig();
-        const credentials = Base64.encode(`${appKey}:${masterSecret}`);
-        return super.set(name, `Basic ${credentials}`);
-      } else if (auth === Auth.Session) {
-        const session = getSession();
-
-        if (!session) {
-          throw new Error('There is no active user to authorize the request. Please login and retry the request.');
-        }
-
-        const kmd = new Kmd(session);
-        return super.set(name, `Kinvey ${kmd.authtoken}`);
-      }
-    }
-
-    return super.set(name, value);
   }
 }

@@ -3,7 +3,7 @@ import urljoin from 'url-join';
 import { parse } from 'url';
 import { Base64 } from 'js-base64';
 import { getConfig } from 'kinvey-app';
-import { formatKinveyAuthUrl, KinveyRequest, RequestMethod } from 'kinvey-http';
+import { formatKinveyUrl, KinveyRequest, RequestMethod } from 'kinvey-http';
 import { open } from 'kinvey-popup';
 
 // Export identity
@@ -21,6 +21,7 @@ export const AuthorizationGrant = {
 Object.freeze(AuthorizationGrant);
 
 export async function getTempLoginUrl(clientId, redirectUri, version) {
+  const { auth } = getConfig();
   const request = new KinveyRequest({
     method: RequestMethod.POST,
     headers: {
@@ -31,7 +32,7 @@ export async function getTempLoginUrl(clientId, redirectUri, version) {
         return `Basic ${credentials}`;
       }
     },
-    url: formatKinveyAuthUrl(urljoin(`v${version}`, '/oauth/auth')),
+    url: formatKinveyUrl(auth.protocol, auth.host, urljoin(`v${version}`, '/oauth/auth')),
     body: {
       client_id: clientId,
       redirect_uri: redirectUri,
@@ -44,13 +45,14 @@ export async function getTempLoginUrl(clientId, redirectUri, version) {
 
 function loginWithPopup(clientId, redirectUri, version) {
   return new Promise(async (resolve, reject) => {
+    const { auth } = getConfig();
     const query = {
       client_id: clientId,
       redirect_uri: redirectUri,
       response_type: 'code',
       scope: 'openid'
     };
-    const url = formatKinveyAuthUrl(urljoin(`v${version}`, '/oauth/auth'), query);
+    const url = formatKinveyUrl(auth.protocol, auth.host, urljoin(`v${version}`, '/oauth/auth'), query);
     const popup = open(url);
     let redirected = false;
 
@@ -116,6 +118,7 @@ async function loginWithUrl(url, username, password, clientId, redirectUri) {
 }
 
 async function getTokenWithCode(code, clientId, redirectUri) {
+  const { auth } = getConfig();
   const request = new KinveyRequest({
     method: RequestMethod.POST,
     headers: {
@@ -126,7 +129,7 @@ async function getTokenWithCode(code, clientId, redirectUri) {
         return `Basic ${credentials}`;
       }
     },
-    url: formatKinveyAuthUrl('/oauth/token'),
+    url: formatKinveyUrl(auth.protocol, auth.host, '/oauth/token'),
     body: {
       grant_type: 'authorization_code',
       client_id: clientId,

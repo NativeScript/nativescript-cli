@@ -1,6 +1,10 @@
 import isString from 'lodash/isString';
 import isNumber from 'lodash/isNumber';
-import { parse } from 'url';
+import { parse, format } from 'url';
+import { formatKinveyUrl, KinveyRequest, RequestMethod, Auth } from 'kinvey-http';
+
+const DEFAULT_TIMEOUT = 60000;
+const APPDATA_NAMESPACE = 'appdata';
 
 function s4() {
   return Math.floor((1 + Math.random()) * 0x10000)
@@ -24,13 +28,25 @@ export function init(config) {
     encryptionKey,
     defaultTimeout
   } = config;
+  let apiHostname = 'https://baas.kinvey.com';
+  let authHostname = 'https://auth.kinvey.com';
 
-  if (instanceId && !isString(instanceId)) {
-    throw new Error('Instance ID must be a string.');
+  if (instanceId) {
+    if (!isString(instanceId)) {
+      throw new Error('Instance ID must be a string.');
+    }
+
+    apiHostname = `https://${instanceId}-baas.kinvey.com`;
+    authHostname = `https://${instanceId}-auth.kinvey.com`;
+  } else {
+    if (isString(config.apiHostname)) {
+      apiHostname = /^https?:\/\//i.test(config.apiHostname) ? config.apiHostname : `https://${config.apiHostname}`;
+    }
+
+    if (isString(config.micHostname)) {
+      authHostname = /^https?:\/\//i.test(config.micHostname) ? config.micHostname : `https://${config.micHostname}`;
+    }
   }
-
-  const apiHostname = instanceId ? `https://${instanceId}-baas.kinvey.com` : 'https://baas.kinvey.com';
-  const authHostname = instanceId ? `https://${instanceId}-auth.kinvey.com` : 'https://auth.kinvey.com';
 
   if (!isString(appKey)) {
     throw new Error('An appKey is required and must be a string.');
@@ -56,27 +72,48 @@ export function init(config) {
     appKey,
     appSecret,
     masterSecret,
+    encryptionKey,
     appVersion,
+    defaultTimeout: defaultTimeout || DEFAULT_TIMEOUT,
+    auth: {
+      protocol: parse(authHostname).protocol,
+      host: parse(authHostname).host,
+      hostname: authHostname
+    },
     api: {
-      defaultTimeout: defaultTimeout || 60000,
-      auth: {
-        protocol: parse(authHostname).protocol,
-        host: parse(authHostname).host,
-        hostname: authHostname
-      },
-      baas: {
-        protocol: parse(apiHostname).protocol,
-        host: parse(apiHostname).host,
-        hostname: apiHostname
-      }
+      protocol: parse(apiHostname).protocol,
+      host: parse(apiHostname).host,
+      hostname: apiHostname
     },
     device: {
-      id: uuidv4(),
-      encryptionKey
+      id: uuidv4()
     }
   };
 
-  return config;
+  // TODO: change to return the config provided
+  // Right now we are returning the whole config for
+  // backwards compatibility
+  return {
+    deviceId: internalConfig.device.id,
+    apiProtocol: internalConfig.api.protocol,
+    apiHost: internalConfig.api.host,
+    apiHostname: format({
+      protocol: internalConfig.api.protocol,
+      host: internalConfig.api.host
+    }),
+    micProtocol: internalConfig.auth.protocol,
+    micHost: internalConfig.auth.host,
+    micHostname: format({
+      protocol: internalConfig.auth.protocol,
+      host: internalConfig.auth.host
+    }),
+    appKey: internalConfig.appKey,
+    appSecret: internalConfig.appSecret,
+    masterSecret: internalConfig.masterSecret,
+    encryptionKey: internalConfig.encryptionKey,
+    appVersion: internalConfig.appVersion,
+    defaultTimeout: internalConfig.defaultTimeout
+  };
 }
 
 /**
@@ -117,4 +154,31 @@ export function getAppVersion() {
 export function setAppVersion(appVersion) {
   const config = getConfig();
   config.appVersion = appVersion;
+}
+
+/**
+ * Pings the Kinvey API service. This can be used to check if you have configured the SDK correctly.
+ *
+ * @returns {Promise<Object>} The response from the ping request.
+ *
+ * @example
+ * var promise = Kinvey.ping()
+ *  .then(function(response) {
+ *     console.log('Kinvey Ping Success. Kinvey Service is alive, version: ' + response.version + ', response: ' + response.kinvey);
+ *  })
+ *  .catch(function(error) {
+ *    console.log('Kinvey Ping Failed. Response: ' + error.description);
+ *  });
+ */
+export async function ping() {
+  const { appKey, api } = getConfig();
+  const request = new KinveyRequest({
+    method: RequestMethod.GET,
+    headers: {
+      Authorization: Auth.All
+    },
+    url: formatKinveyUrl(api.protocol, api.host, `/${APPDATA_NAMESPACE}/${appKey}`)
+  });
+  const response = await request.execute();
+  return response.data;
 }

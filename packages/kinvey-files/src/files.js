@@ -1,13 +1,15 @@
 import isNumber from 'lodash/isNumber';
 import { Query } from 'kinvey-query';
 import {
-  formatKinveyBaasUrl,
+  formatKinveyUrl,
   Request,
   KinveyRequest,
   RequestMethod,
   Auth,
   Headers
 } from 'kinvey-http';
+import { getConfig } from 'kinvey-app';
+import { get as getSession } from 'kinvey-session';
 
 const NAMESPACE = 'blob';
 const MAX_BACKOFF = 32 * 1000;
@@ -22,12 +24,17 @@ export async function downloadByUrl(url) {
 }
 
 export async function find(query = new Query(), options = {}) {
-  if (query && !(query instanceof Query)) {
-    throw new Error('Invalid query. It must be an instance of the Query class.');
-  }
-
+  const { api, appKey, masterSecret } = getConfig();
   const { download = false, tls = true, ttl } = options;
-  const queryStringObject = Object.assign({}, query.toQueryObject(), { tls: tls === true });
+  let queryStringObject = Object.assign({}, { tls: tls === true });
+
+  if (query) {
+    if (!(query instanceof Query)) {
+      throw new Error('Invalid query. It must be an instance of the Query class.');
+    }
+
+    queryStringObject = Object.assign(queryStringObject, query.toQueryObject());
+  }
 
   if (isNumber(ttl)) {
     queryStringObject.ttl_in_seconds = parseInt(ttl, 10);
@@ -36,9 +43,9 @@ export async function find(query = new Query(), options = {}) {
   const request = new KinveyRequest({
     method: RequestMethod.GET,
     headers: {
-      Authorization: Auth.Default
+      Authorization: Auth.Default(getSession(), appKey, masterSecret)
     },
-    url: formatKinveyBaasUrl(`/${NAMESPACE}/appKey`, queryStringObject)
+    url: formatKinveyUrl(api.protocol, api.host, `/${NAMESPACE}/${appKey}`, queryStringObject)
   });
   const response = await request.execute();
   const files = response.data;
@@ -51,6 +58,7 @@ export async function find(query = new Query(), options = {}) {
 }
 
 export async function findById(id, options) {
+  const { api, appKey, masterSecret } = getConfig();
   const { tls = true, ttl } = options;
   const queryStringObject = Object.assign({}, { tls: tls === true });
 
@@ -61,9 +69,9 @@ export async function findById(id, options) {
   const request = new KinveyRequest({
     method: RequestMethod.GET,
     headers: {
-      Authorization: Auth.Default
+      Authorization: Auth.Default(getSession(), appKey, masterSecret)
     },
-    url: formatKinveyBaasUrl(`/${NAMESPACE}/appKey/${id}`, queryStringObject)
+    url: formatKinveyUrl(api.protocol, api.host, `/${NAMESPACE}/${appKey}/${id}`, queryStringObject)
   });
   const response = await request.execute();
   return response.data;
@@ -93,6 +101,8 @@ function transformMetadata(file = {}, metadata = {}) {
 }
 
 async function saveFileMetadata(metadata) {
+  const { api, appKey, masterSecret } = getConfig();
+
   if (metadata.size <= 0) {
     throw new Error('Unable to create a file with a size of 0.');
   }
@@ -100,10 +110,10 @@ async function saveFileMetadata(metadata) {
   const request = new KinveyRequest({
     method: metadata._id ? RequestMethod.PUT : RequestMethod.POST,
     headers: {
-      Authorization: Auth.Default,
+      Authorization: Auth.Default(getSession(), appKey, masterSecret),
       'X-Kinvey-Content-Type': metadata.mimeType
     },
-    url: metadata._id ? formatKinveyBaasUrl(`/${NAMESPACE}/appKey/${metadata._id}`) : formatKinveyBaasUrl(`/${NAMESPACE}/appKey`),
+    url: metadata._id ? formatKinveyUrl(api.protocol, api.host, `/${NAMESPACE}/${appKey}/${metadata._id}`) : formatKinveyUrl(api.protocol, api.host, `/${NAMESPACE}/${appKey}`),
     body: metadata
   });
   const response = await request.execute();
@@ -216,12 +226,13 @@ export async function remove() {
 }
 
 export async function removeById(id) {
+  const { api, appKey, masterSecret } = getConfig();
   const request = new KinveyRequest({
     method: RequestMethod.DELETE,
     headers: {
-      Authorization: Auth.Default
+      Authorization: Auth.Default(getSession(), appKey, masterSecret)
     },
-    url: formatKinveyBaasUrl(`/${NAMESPACE}/appKey/${id}`)
+    url: formatKinveyUrl(api.protocol, api.host, `/${NAMESPACE}/${appKey}/${id}`)
   });
   const response = await request.execute();
   return response.data;

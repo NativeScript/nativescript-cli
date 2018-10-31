@@ -4,7 +4,7 @@ import { get as getSession } from 'kinvey-session';
 import { Aggregation } from 'kinvey-aggregation';
 import * as Live from 'kinvey-live';
 import {
-  formatKinveyBaasUrl,
+  formatKinveyUrl,
   KinveyRequest,
   RequestMethod,
   Auth
@@ -16,7 +16,7 @@ export function createRequest(method, url, body) {
   return new KinveyRequest({
     method,
     headers: {
-      Authorization: Auth.Session
+      Authorization: Auth.Session(getSession())
     },
     url,
     body
@@ -36,8 +36,9 @@ export class NetworkStore {
     return this.collectionName;
   }
 
-  get pathname() {
-    return `/${NAMESPACE}/${this.appKey}/${this.collectionName}`;
+  get url() {
+    const { appKey } = getConfig();
+    return `/${NAMESPACE}/${appKey}/${this.collectionName}`;
   }
 
   get channelName() {
@@ -51,7 +52,8 @@ export class NetworkStore {
 
   find(query, rawResponse = false) {
     const stream = KinveyObservable.create(async (observer) => {
-      const url = formatKinveyBaasUrl(this.pathname, query ? query.toQueryObject() : undefined);
+      const { api } = getConfig();
+      const url = formatKinveyUrl(api.protocol, api.host, this.pathname, query ? query.toQueryObject() : undefined);
       const request = createRequest(RequestMethod.GET, url);
       try {
         const response = await request.execute();
@@ -72,7 +74,8 @@ export class NetworkStore {
 
   count(query, rawResponse = false) {
     const stream = KinveyObservable.create(async (observer) => {
-      const url = formatKinveyBaasUrl(`${this.pathname}/_count`, query ? query.toQueryObject() : undefined);
+      const { api } = getConfig();
+      const url = formatKinveyUrl(api.protocol, api.host, `${this.pathname}/_count`, query ? query.toQueryObject() : undefined);
       const request = createRequest(RequestMethod.GET, url);
       try {
         const response = await request.execute();
@@ -98,7 +101,8 @@ export class NetworkStore {
           throw new Error('aggregation must be an instance of Aggregation.');
         }
 
-        const url = formatKinveyBaasUrl(`${this.pathname}/_group`);
+        const { api } = getConfig();
+        const url = formatKinveyUrl(api.protocol, api.host, `${this.pathname}/_group`);
         const request = createRequest(RequestMethod.POST, url, aggregation.toPlainObject());
         const response = await request.execute();
 
@@ -118,7 +122,8 @@ export class NetworkStore {
 
   findById(id, rawResponse = false) {
     const stream = KinveyObservable.create(async (observer) => {
-      const url = formatKinveyBaasUrl(`${this.pathname}/${id}`);
+      const { api } = getConfig();
+      const url = formatKinveyUrl(api.protocol, api.host, `${this.pathname}/${id}`);
       const request = createRequest(RequestMethod.GET, url);
       try {
         if (!id) {
@@ -142,7 +147,8 @@ export class NetworkStore {
   }
 
   async create(doc, rawResponse = false) {
-    const url = formatKinveyBaasUrl(this.pathname);
+    const { api } = getConfig();
+    const url = formatKinveyUrl(api.protocol, api.host, this.pathname);
     const request = createRequest(RequestMethod.POST, url, doc);
     const response = await request.execute();
 
@@ -154,7 +160,8 @@ export class NetworkStore {
   }
 
   async update(doc, rawResponse = false) {
-    const url = formatKinveyBaasUrl(`${this.pathname}/${doc._id}`);
+    const { api } = getConfig();
+    const url = formatKinveyUrl(api.protocol, api.host, `${this.pathname}/${doc._id}`);
     const request = createRequest(RequestMethod.PUT, url, doc);
     const response = await request.execute();
 
@@ -174,7 +181,8 @@ export class NetworkStore {
   }
 
   async remove(query, rawResponse = false) {
-    const url = formatKinveyBaasUrl(this.pathname, query ? query.toQueryObject() : undefined);
+    const { api } = getConfig();
+    const url = formatKinveyUrl(api.protocol, api.host, this.pathname, query ? query.toQueryObject() : undefined);
     const request = createRequest(RequestMethod.DELETE, url);
     const response = await request.execute();
 
@@ -186,7 +194,8 @@ export class NetworkStore {
   }
 
   async removeById(id, rawResponse = false) {
-    const url = formatKinveyBaasUrl(`${this.pathname}/${id}`);
+    const { api } = getConfig();
+    const url = formatKinveyUrl(api.protocol, api.host, `${this.pathname}/${id}`);
     const request = createRequest(RequestMethod.DELETE, url);
     const response = await request.execute();
 
@@ -198,13 +207,13 @@ export class NetworkStore {
   }
 
   async subscribe(receiver) {
-    const { device } = getConfig();
+    const { api, device } = getConfig();
     const request = new KinveyRequest({
       method: RequestMethod.POST,
       headers: {
-        Authorization: Auth.Session
+        Authorization: Auth.Session(getSession())
       },
-      url: formatKinveyBaasUrl(`${this.pathname}/_subscribe`),
+      url: formatKinveyUrl(api.protocol, api.host, `${this.pathname}/_subscribe`),
       body: { deviceId: device.id }
     });
     await request.execute();
@@ -214,13 +223,13 @@ export class NetworkStore {
   }
 
   async unsubscribe() {
-    const { device } = getConfig();
+    const { api, device } = getConfig();
     const request = new KinveyRequest({
       method: RequestMethod.POST,
       headers: {
-        Authorization: Auth.Session
+        Authorization: Auth.Session(getSession())
       },
-      url: formatKinveyBaasUrl(`${this.pathname}/_unsubscribe`),
+      url: formatKinveyUrl(api.protocol, api.host, `${this.pathname}/_unsubscribe`),
       body: { deviceId: device.id }
     });
     await request.execute();

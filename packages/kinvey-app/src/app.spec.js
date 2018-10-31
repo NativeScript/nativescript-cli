@@ -4,8 +4,6 @@ import { init, ping } from './app';
 import { randomString } from 'kinvey-test-utils';
 import { register } from 'kinvey-http-node';
 
-const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
-
 describe('App', () => {
   before(() => {
     register();
@@ -28,55 +26,52 @@ describe('App', () => {
       }).to.throw();
     });
 
-    it('should return a client', () => {//TODO: Obsolete?
+    it('should return the app config', () => {
       const appKey = randomString();
       const appSecret = randomString();
-      const client = init({
+      const config = init({
         appKey: appKey,
         appSecret: appSecret
       });
-      expect(client).to.be.instanceof(Client);
-      expect(client).to.have.property(appKey);
-      expect(client).to.have.property(appSecret);
-      expect(client.appKey).to.equal(appKey);
-      expect(client.appSecret).to.equal(appSecret);
+      expect(config).to.have.own.property('appKey', appKey);
+      expect(config).to.have.own.property('appSecret', appSecret);
     });
 
-    it('should set default MIC host name when a custom one is not provided', () => {// TODO: SHould enable default hosts for init()
-      const client = init({
+    it('should set default MIC host name when a custom one is not provided', () => {
+      const config = init({
         appKey: randomString(),
         appSecret: randomString()
       });
-      expect(client).to.include({ micHostname: 'https://auth.kinvey.com' });
+      expect(config).to.include({ micHostname: 'https://auth.kinvey.com' });
     });
 
     it('should set a custom MIC host name when one is provided', () => {
       const micHostname = 'https://auth.example.com';
-      const client = init({
+      const config = init({
         appKey: randomString(),
         appSecret: randomString(),
         micHostname: micHostname
       });
-      expect(client).to.include({ micHostname: micHostname });
+      expect(config).to.include({ micHostname: micHostname });
     });
   });
 
   describe('ping()', () => {
-    it('should return a response', () => {//TODO: Ping is not a function
+    it('should return a response', () => {
       const reply = {
         version: 1,
         kinvey: 'hello tests',
         appName: 'tests',
         environmentName: 'development'
       };
-      const client = init({
+      const config = init({
         appKey: randomString(),
         appSecret: randomString(),
         apiHostname: "https://baas.kinvey.com"
       });
 
-      nock(client.apiHostname)
-        .get(`/${appdataNamespace}/${client.appKey}`)
+      nock(config.apiHostname)
+        .get(`/appdata/${config.appKey}`)
         .reply(200, reply);
 
       return ping()

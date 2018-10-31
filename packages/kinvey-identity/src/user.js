@@ -5,8 +5,9 @@ import isEmpty from 'lodash/isEmpty';
 import { clearCache } from 'kinvey-datastore';
 import { Acl } from 'kinvey-acl';
 import { Kmd } from 'kinvey-kmd';
-import { formatKinveyBaasUrl, KinveyRequest, RequestMethod, Auth } from 'kinvey-http';
+import { formatKinveyUrl, KinveyRequest, RequestMethod, Auth } from 'kinvey-http';
 import { get as getSession, set as setSession, remove as removeSession } from 'kinvey-session';
+import { getConfig } from 'kinvey-app';
 import * as MIC from './mic';
 
 const USER_NAMESPACE = 'user';
@@ -76,12 +77,13 @@ export class User {
   }
 
   async me() {
+    const { api, appKey } = getConfig();
     const request = new KinveyRequest({
       method: RequestMethod.GET,
       headers: {
-        Authorization: Auth.Session
+        Authorization: Auth.Session(getSession())
       },
-      url: formatKinveyBaasUrl(`/${USER_NAMESPACE}/appKey/_me`)
+      url: formatKinveyUrl(api.protocol, api.host, `/${USER_NAMESPACE}/${appKey}/_me`)
     });
     const response = await request.execute();
     const data = response.data;
@@ -96,12 +98,13 @@ export class User {
   }
 
   async update(data) {
+    const { api, appKey, masterSecret } = getConfig();
     const request = new KinveyRequest({
       method: RequestMethod.PUT,
       headers: {
-        Authorization: Auth.Default
+        Authorization: Auth.Default(getSession(), appKey, masterSecret)
       },
-      url: formatKinveyBaasUrl(`/${USER_NAMESPACE}/appKey/${this._id}`),
+      url: formatKinveyUrl(api.protocol, api.host, `/${USER_NAMESPACE}/${appKey}/${this._id}`),
       body: Object.assign(this.data, data)
     });
     const response = await request.execute();
@@ -126,6 +129,7 @@ export function getActiveUser() {
 }
 
 export async function signup(data, options = {}) {
+  const { api, appKey, appSecret } = getConfig();
   const activeUser = getSession();
   const { state = true } = options;
 
@@ -133,11 +137,11 @@ export async function signup(data, options = {}) {
     throw new Error('An active user already exists. Please logout the active user before you signup.');
   }
 
-  const url = formatKinveyBaasUrl(`/${USER_NAMESPACE}/appKey`);
+  const url = formatKinveyUrl(api.protocol, api.host, `/${USER_NAMESPACE}/${appKey}`);
   const request = new KinveyRequest({
     method: RequestMethod.POST,
     headers: {
-      Authorization: Auth.App
+      Authorization: Auth.App(appKey, appSecret)
     },
     url,
     body: isEmpty(data) ? null : data
@@ -153,6 +157,7 @@ export async function signup(data, options = {}) {
 }
 
 export async function login(username, password) {
+  const { api, appKey, appSecret } = getConfig();
   const activeUser = getActiveUser();
   let credentials = username;
 
@@ -180,9 +185,9 @@ export async function login(username, password) {
   const request = new KinveyRequest({
     method: RequestMethod.POST,
     headers: {
-      Authorization: Auth.App
+      Authorization: Auth.App(appKey, appSecret)
     },
-    url: formatKinveyBaasUrl(`/${USER_NAMESPACE}/appKey/login`),
+    url: formatKinveyUrl(api.protocol, api.host, `/${USER_NAMESPACE}/${appKey}/login`),
     body: credentials
   });
   const response = await request.execute();
@@ -217,16 +222,17 @@ export async function loginWithMIC(redirectUri, authorizationGrant, options) {
 }
 
 export async function logout() {
+  const { api, appKey } = getConfig();
   const activeUser = getActiveUser();
 
   if (activeUser) {
     // TODO: unregister from live service and push
 
-    const url = formatKinveyBaasUrl(`/${USER_NAMESPACE}/appKey/_logout`);
+    const url = formatKinveyUrl(api.protocol, api.host, `/${USER_NAMESPACE}/${appKey}/_logout`);
     const request = new KinveyRequest({
       method: RequestMethod.POST,
       headers: {
-        Authorization: Auth.Session
+        Authorization: Auth.Session(getSession())
       },
       url
     });
@@ -270,6 +276,7 @@ export async function update(data) {
 }
 
 export async function remove(id, options = {}) {
+  const { api, appKey, masterSecret } = getConfig();
   const { hard = false } = options;
 
   if (!id) {
@@ -280,11 +287,11 @@ export async function remove(id, options = {}) {
     throw new Error('The id provided is not a string.');
   }
 
-  const url = formatKinveyBaasUrl(`/user/appKey/${id}`, { hard });
+  const url = formatKinveyUrl(api.protocol, api.host, `/user/${appKey}/${id}`, { hard });
   const request = new KinveyRequest({
     method: RequestMethod.DELETE,
     headers: {
-      Authorization: Auth.Default
+      Authorization: Auth.Default(getSession(), appKey, masterSecret)
     },
     url
   });
@@ -294,6 +301,8 @@ export async function remove(id, options = {}) {
 }
 
 export async function verifyEmail(username) {
+  const { api, appKey, appSecret } = getConfig();
+
   if (!username) {
     throw new Error('A username was not provided.');
   }
@@ -305,15 +314,17 @@ export async function verifyEmail(username) {
   const request = new KinveyRequest({
     method: RequestMethod.POST,
     headers: {
-      Authorization: Auth.App
+      Authorization: Auth.App(appKey, appSecret)
     },
-    url: formatKinveyBaasUrl(`/${RPC_NAMESPACE}/appKey/${username}/user-email-verification-initiate`)
+    url: formatKinveyUrl(api.protocol, api.host, `/${RPC_NAMESPACE}/${appKey}/${username}/user-email-verification-initiate`)
   });
   const response = await request.execute();
   return response.data;
 }
 
 export async function forgotUsername(email) {
+  const { api, appKey, appSecret } = getConfig();
+
   if (!email) {
     throw new Error('An email was not provided.');
   }
@@ -325,9 +336,9 @@ export async function forgotUsername(email) {
   const request = new KinveyRequest({
     method: RequestMethod.POST,
     headers: {
-      Authorization: Auth.App
+      Authorization: Auth.App(appKey, appSecret)
     },
-    url: formatKinveyBaasUrl(`/${RPC_NAMESPACE}/appKey/user-forgot-username`),
+    url: formatKinveyUrl(api.protocol, api.host, `/${RPC_NAMESPACE}/${appKey}/user-forgot-username`),
     body: { email }
   });
   const response = await request.execute();
@@ -335,6 +346,8 @@ export async function forgotUsername(email) {
 }
 
 export async function resetPassword(username) {
+  const { api, appKey, appSecret } = getConfig();
+
   if (!username) {
     throw new Error('A username was not provided.');
   }
@@ -346,21 +359,22 @@ export async function resetPassword(username) {
   const request = new KinveyRequest({
     method: RequestMethod.POST,
     headers: {
-      Authorization: Auth.App
+      Authorization: Auth.App(appKey, appSecret)
     },
-    url: formatKinveyBaasUrl(`/${RPC_NAMESPACE}/appKey/${username}/user-password-reset-initiate`)
+    url: formatKinveyUrl(api.protocol, api.host, `/${RPC_NAMESPACE}/${appKey}/${username}/user-password-reset-initiate`)
   });
   const response = await request.execute();
   return response.data;
 }
 
 export async function lookup(query) {
+  const { api, appKey, masterSecret } = getConfig();
   const request = new KinveyRequest({
     method: RequestMethod.POST,
     headers: {
-      Authorization: Auth.Default
+      Authorization: Auth.Default(getSession(), appKey, masterSecret)
     },
-    url: formatKinveyBaasUrl(`/${USER_NAMESPACE}/appKey/_lookup`),
+    url: formatKinveyUrl(api.protocol, api.host, `/${USER_NAMESPACE}/${appKey}/_lookup`),
     body: query ? query.filter : undefined
   });
   const response = await request.execute();
@@ -368,6 +382,8 @@ export async function lookup(query) {
 }
 
 export async function exists(username) {
+  const { api, appKey, appSecret } = getConfig();
+
   if (!username) {
     throw new Error('A username was not provided.');
   }
@@ -379,9 +395,9 @@ export async function exists(username) {
   const request = new KinveyRequest({
     method: RequestMethod.POST,
     headers: {
-      Authorization: Auth.App
+      Authorization: Auth.App(appKey, appSecret)
     },
-    url: formatKinveyBaasUrl(`/${RPC_NAMESPACE}/appKey/check-username-exists`),
+    url: formatKinveyUrl(api.protocol, api.host, `/${RPC_NAMESPACE}/${appKey}/check-username-exists`),
     body: { username }
   });
   const response = await request.execute();
