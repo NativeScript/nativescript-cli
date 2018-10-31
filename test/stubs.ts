@@ -647,7 +647,7 @@ export class AndroidToolsInfoStub implements IAndroidToolsInfo {
 	}
 }
 
-export class ChildProcessStub {
+export class ChildProcessStub extends EventEmitter {
 	public spawnCount = 0;
 	public execCount = 0;
 	public spawnFromEventCount = 0;

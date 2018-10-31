@@ -329,7 +329,8 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		let task;
 		const gradleArgs = this.getGradleBuildOptions(buildConfig, projectData);
 		const baseTask = buildConfig.androidBundle ? "bundle" : "assemble";
-		const outputPath = buildConfig.androidBundle ? this._platformData.bundleBuildOutputPath : this._platformData.deviceBuildOutputPath;
+		const platformData = this.getPlatformData(projectData);
+		const outputPath = buildConfig.androidBundle ? platformData.bundleBuildOutputPath : platformData.deviceBuildOutputPath;
 		if (this.$logger.getLevel() === "TRACE") {
 			gradleArgs.unshift("--stacktrace");
 			gradleArgs.unshift("--debug");
