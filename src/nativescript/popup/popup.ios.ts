@@ -31,6 +31,7 @@ class SFSafariViewControllerDelegateImpl extends NSObject implements SFSafariVie
 
 export class Popup extends EventEmitter {
   private _open = false;
+  private _viewController = null;
 
   open(url = '/', options: PopupOptions = {}) {
     // Handle redirect uri
@@ -59,7 +60,13 @@ export class Popup extends EventEmitter {
 
     // Show the view controller
     const app = utils.ios.getter(UIApplication, UIApplication.sharedApplication);
-    app.keyWindow.rootViewController.presentViewControllerAnimatedCompletion(sfc, true, null);
+    this._viewController = app.keyWindow.rootViewController;
+    // Get the topmost view controller
+    while (this._viewController.presentedViewController) {
+      this._viewController = this._viewController.presentedViewController;
+    }
+
+    this._viewController.presentViewControllerAnimatedCompletion(sfc, true, null);
 
     // Set open to true
     this._open = true;
@@ -69,9 +76,8 @@ export class Popup extends EventEmitter {
   }
 
   close() {
-    if (this._open) {
-      const app = utils.ios.getter(UIApplication, UIApplication.sharedApplication);
-      app.keyWindow.rootViewController.dismissViewControllerAnimatedCompletion(true, null);
+    if (this._open && this._viewController) {
+      this._viewController.dismissViewControllerAnimatedCompletion(true, null);
     }
 
     return this;

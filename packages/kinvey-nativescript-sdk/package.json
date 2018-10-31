@@ -41,6 +41,7 @@
     "push.ios.js",
     "push.ios.js.map",
     "lib/before-checkForChanges.js",
+    "lib/before-preview-sync.js",
     "lib/postinstall.js",
     "lib/preuninstall.js",
     "platforms/android/AndroidManifest.default.xml",
@@ -54,6 +55,11 @@
       {
         "type": "before-checkForChanges",
         "script": "lib/before-checkForChanges.js",
+        "inject": true
+      },
+      {
+        "type": "before-preview-sync",
+        "script": "lib/before-preview-sync.js",
         "inject": true
       }
     ],
