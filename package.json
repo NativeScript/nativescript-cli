@@ -23,6 +23,7 @@
       "packages/kinvey-cache-memory",
       "packages/kinvey-datastore",
       "packages/kinvey-endpoint",
+      "packages/kinvey-errors",
       "packages/kinvey-files",
       "packages/kinvey-http",
       "packages/kinvey-http-nativescript",
