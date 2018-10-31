@@ -28,6 +28,12 @@ class IOSPush extends PushCommon {
           usersNotificationCallback(message);
         }
 
+        if (typeof options.notificationCallback === 'function') {
+          // let's transform the "foreground" ("0" / "1") into a proper boolean value
+          message.foreground = message.foreground === "1";
+          options.notificationCallback(message);
+        }
+
         (this as any).emit('notification', message);
       };
 

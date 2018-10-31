@@ -42,6 +42,7 @@ interface PushOptions {
     },
     notificationCallbackIOS?: (message: any) => void
   };
+  notificationCallback?: (message: any) => void;
 }
 
 // Push class
