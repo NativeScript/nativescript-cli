@@ -34,7 +34,7 @@ export class FileSystem {
 						return createParentDirsIfNeeded(filePath)
 							.catch(createParentDirError => reject(createParentDirError))
 							.then(() => {
-								const outfile = createOutfile(filePath);
+								const outfile = fs.createWriteStream(filePath);
 								stream.once('end', () => {
 									zipFile.readEntry();
 									outfile.close();
@@ -63,15 +63,11 @@ export class FileSystem {
 
 function createParentDirsIfNeeded(filePath: string) {
 	const dirs = path.dirname(filePath).split(path.sep);
-	return dirs.reduce((p, dir, index) => p.then(parent => {
+	return dirs.reduce((p, dir) => p.then(parent => {
 		const current = `${parent}${path.sep}${dir}`;
 
 		return access(current)
 			.catch(e => mkdir(current))
 			.then(() => current);
 	}), Promise.resolve(''));
-}
-
-function createOutfile(path: string): fs.WriteStream {
-	return fs.createWriteStream(path);
 }
