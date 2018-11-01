@@ -25,21 +25,21 @@
   "devDependencies": {
     "@types/chai": "4.1.0",
     "@types/mocha": "2.2.32",
-    "@types/rimraf": "^2.0.2",
+    "@types/rimraf": "2.0.2",
     "@types/semver": "5.5.0",
     "@types/temp": "0.8.29",
     "@types/winreg": "1.2.30",
-    "@types/yauzl": "^2.9.0",
+    "@types/yauzl": "2.9.0",
     "chai": "4.1.2",
-    "grunt": "^1.0.3",
+    "grunt": "1.0.3",
     "grunt-contrib-clean": "1.0.0",
-    "grunt-contrib-watch": "^1.1.0",
+    "grunt-contrib-watch": "1.1.0",
     "grunt-shell": "2.0.0",
-    "grunt-ts": "^6.0.0-beta.21",
+    "grunt-ts": "6.0.0-beta.21",
     "grunt-tslint": "3.3.0",
     "istanbul": "0.4.5",
-    "mocha": "^5.2.0",
-    "rimraf": "^2.5.4",
+    "mocha": "5.2.0",
+    "rimraf": "2.5.4",
     "tslint": "3.15.1",
     "typescript": "2.0.3"
   },
@@ -48,6 +48,6 @@
     "semver": "5.5.1",
     "temp": "0.8.3",
     "winreg": "1.2.2",
-    "yauzl": "^2.10.0"
+    "yauzl": "2.10.0"
   }
 }
