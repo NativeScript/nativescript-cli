@@ -2,8 +2,9 @@ import * as path from "path";
 import * as semver from "semver";
 import * as constants from "./constants";
 
-export class NpmInstallationManager implements INpmInstallationManager {
-	constructor(private $npm: INodePackageManager,
+export class PackageInstallationManager implements IPackageInstallationManager {
+	constructor(
+		private $packageManager: INodePackageManager,
 		private $childProcess: IChildProcess,
 		private $logger: ILogger,
 		private $settingsService: ISettingsService,
@@ -32,7 +33,7 @@ export class NpmInstallationManager implements INpmInstallationManager {
 			return latestVersion;
 		}
 
-		const data = await this.$npm.view(packageName, { "versions": true });
+		const data = await this.$packageManager.view(packageName, { "versions": true });
 
 		const maxSatisfying = semver.maxSatisfying(data, compatibleVersionRange);
 		return maxSatisfying || latestVersion;
@@ -144,7 +145,7 @@ export class NpmInstallationManager implements INpmInstallationManager {
 			npmOptions[dependencyType] = true;
 		}
 
-		return await this.$npm.install(packageName, pathToSave, npmOptions);
+		return await this.$packageManager.install(packageName, pathToSave, npmOptions);
 	}
 
 	/**
@@ -152,10 +153,10 @@ export class NpmInstallationManager implements INpmInstallationManager {
 	 * because npm view doens't work with those
 	 */
 	private async getVersion(packageName: string, version: string): Promise<string> {
-		const data: any = await this.$npm.view(packageName, { "dist-tags": true });
+		const data: any = await this.$packageManager.view(packageName, { "dist-tags": true });
 		this.$logger.trace("Using version %s. ", data[version]);
 
 		return data[version];
 	}
 }
-$injector.register("npmInstallationManager", NpmInstallationManager);
+$injector.register("packageInstallationManager", PackageInstallationManager);

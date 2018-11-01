@@ -73,7 +73,7 @@ describe('androidPluginBuildService', () => {
 				return options.addProjectRuntime ? "1.0.0" : null;
 			}
 		});
-		testInjector.register('npm', setupNpm(options));
+		testInjector.register('packageManager', setupNpm(options));
 		testInjector.register('filesHashService', <IFilesHashService>{
 			generateHashes: async (files: string[]): Promise<IStringDictionary> => ({}),
 			getChanges: async (files: string[], oldHashes: IStringDictionary): Promise<IStringDictionary> => ({}),

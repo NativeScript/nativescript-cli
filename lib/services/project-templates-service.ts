@@ -10,7 +10,7 @@ export class ProjectTemplatesService implements IProjectTemplatesService {
 	public constructor(private $analyticsService: IAnalyticsService,
 		private $fs: IFileSystem,
 		private $logger: ILogger,
-		private $npmInstallationManager: INpmInstallationManager,
+		private $packageInstallationManager: IPackageInstallationManager,
 		private $pacoteService: IPacoteService,
 		private $errors: IErrors) { }
 
@@ -86,15 +86,15 @@ export class ProjectTemplatesService implements IProjectTemplatesService {
 
 	/**
 	 * Install verified NativeScript template in the npm cache.
-	 * The "special" here is that npmInstallationManager will check current CLI version and will instal best matching version of the template.
-	 * For example in case CLI is version 10.12.8, npmInstallationManager will try to find latest 10.12.x version of the template.
+	 * The "special" here is that packageInstallationManager will check current CLI version and will instal best matching version of the template.
+	 * For example in case CLI is version 10.12.8, packageInstallationManager will try to find latest 10.12.x version of the template.
 	 * @param {string} templateName The name of the verified NativeScript template.
 	 * @param {string} version The version of the template specified by user.
 	 * @return {string} Path to the directory where the template is installed.
 	 */
 	private async prepareNativeScriptTemplate(templateName: string, version?: string, projectDir?: string): Promise<string> {
 		this.$logger.trace(`Using NativeScript verified template: ${templateName} with version ${version}.`);
-		return this.$npmInstallationManager.install(templateName, projectDir, { version: version, dependencyType: "save" });
+		return this.$packageInstallationManager.install(templateName, projectDir, { version: version, dependencyType: "save" });
 	}
 
 	private getTemplateNameToBeTracked(templateName: string, packageJsonContent: any): string {

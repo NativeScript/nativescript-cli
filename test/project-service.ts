@@ -1,6 +1,6 @@
 import * as yok from "../lib/common/yok";
 import * as stubs from "./stubs";
-import * as constants from "./../lib/constants";
+import * as constants from "../lib/constants";
 import { ChildProcess } from "../lib/common/child-process";
 import * as ProjectServiceLib from "../lib/services/project-service";
 import { ProjectNameService } from "../lib/services/project-name-service";
@@ -8,7 +8,9 @@ import * as ProjectDataServiceLib from "../lib/services/project-data-service";
 import * as ProjectHelperLib from "../lib/common/project-helper";
 import { StaticConfig } from "../lib/config";
 import * as NpmLib from "../lib/node-package-manager";
-import { NpmInstallationManager } from "../lib/npm-installation-manager";
+import * as YarnLib from "../lib/yarn-package-manager";
+import * as PackageManagerLib from "../lib/package-manager";
+import { PackageInstallationManager } from "../lib/package-installation-manager";
 import { FileSystem } from "../lib/common/file-system";
 import * as path from "path";
 import temp = require("temp");
@@ -35,7 +37,7 @@ async function prepareTestingPath(testInjector: IInjector, packageToInstall: str
 	options = options || { dependencyType: "save" };
 	const fs = testInjector.resolve<IFileSystem>("fs");
 
-	const npmInstallationManager = testInjector.resolve<INpmInstallationManager>("npmInstallationManager");
+	const packageInstallationManager = testInjector.resolve<IPackageInstallationManager>("packageInstallationManager");
 	const defaultTemplateDir = temp.mkdirSync("project-service");
 	fs.writeJson(path.join(defaultTemplateDir, constants.PACKAGE_JSON_FILE_NAME), {
 		"name": "defaultTemplate",
@@ -46,7 +48,7 @@ async function prepareTestingPath(testInjector: IInjector, packageToInstall: str
 		"repository": "dummy"
 	});
 
-	await npmInstallationManager.install(packageToInstall, defaultTemplateDir, options);
+	await packageInstallationManager.install(packageToInstall, defaultTemplateDir, options);
 	const defaultTemplatePath = path.join(defaultTemplateDir, constants.NODE_MODULES_FOLDER_NAME, packageName);
 
 	fs.deleteDirectory(path.join(defaultTemplatePath, constants.NODE_MODULES_FOLDER_NAME));
@@ -129,8 +131,12 @@ class ProjectIntegrationTest {
 			trackEventActionInGoogleAnalytics: (data: IEventActionData) => Promise.resolve()
 		});
 
-		this.testInjector.register("npmInstallationManager", NpmInstallationManager);
+		this.testInjector.register("userSettingsService", {
+			getSettingValue: async (settingName: string): Promise<void> => undefined
+		});
 		this.testInjector.register("npm", NpmLib.NodePackageManager);
+		this.testInjector.register("yarn", YarnLib.YarnPackageManager);
+		this.testInjector.register("packageManager", PackageManagerLib.PackageManager);
 		this.testInjector.register("httpClient", {});
 
 		this.testInjector.register("options", Options);
@@ -142,7 +148,7 @@ class ProjectIntegrationTest {
 				return dummyString;
 			}
 		});
-		this.testInjector.register("npmInstallationManager", NpmInstallationManager);
+		this.testInjector.register("packageInstallationManager", PackageInstallationManager);
 		this.testInjector.register("settingsService", SettingsService);
 		this.testInjector.register("devicePlatformsConstants", DevicePlatformsConstants);
 		this.testInjector.register("androidResourcesMigrationService", {
@@ -256,7 +262,7 @@ describe("Project Service Tests", () => {
 	describe("isValidNativeScriptProject", () => {
 		const getTestInjector = (projectData?: any): IInjector => {
 			const testInjector = new yok.Yok();
-			testInjector.register("npm", {});
+			testInjector.register("packageManager", {});
 			testInjector.register("errors", {});
 			testInjector.register("fs", {});
 			testInjector.register("logger", {});
@@ -268,7 +274,7 @@ describe("Project Service Tests", () => {
 			testInjector.register("projectTemplatesService", {});
 			testInjector.register("staticConfig", {});
 			testInjector.register("projectHelper", {});
-			testInjector.register("npmInstallationManager", {});
+			testInjector.register("packageInstallationManager", {});
 			testInjector.register("settingsService", SettingsService);
 			testInjector.register("hooksService", {
 				executeAfterHooks: async (commandName: string, hookArguments?: IDictionary<any>): Promise<void> => undefined

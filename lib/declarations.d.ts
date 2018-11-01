@@ -54,7 +54,7 @@ interface INodePackageManager {
 	getCachePath(): Promise<string>;
 }
 
-interface INpmInstallationManager {
+interface IPackageInstallationManager {
 	install(packageName: string, packageDir: string, options?: INpmInstallOptions): Promise<any>;
 	getLatestVersion(packageName: string): Promise<string>;
 	getNextVersion(packageName: string): Promise<string>;
@@ -506,6 +506,7 @@ interface IOptions extends IRelease, IDeviceIdentifier, IJustLaunch, IAvd, IAvai
 	framework: string;
 	frameworkName: string;
 	frameworkVersion: string;
+	yarn: string,
 	ipa: string;
 	tsc: boolean;
 	ts: boolean;

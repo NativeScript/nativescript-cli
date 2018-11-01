@@ -21,8 +21,8 @@ export class InitService implements IInitService {
 		private $staticConfig: IStaticConfig,
 		private $projectHelper: IProjectHelper,
 		private $prompter: IPrompter,
-		private $npm: INodePackageManager,
-		private $npmInstallationManager: INpmInstallationManager) { }
+		private $packageManager: INodePackageManager,
+		private $packageInstallationManager: IPackageInstallationManager) { }
 
 	public async initialize(): Promise<void> {
 		let projectData: any = {};
@@ -100,13 +100,13 @@ export class InitService implements IInitService {
 	}
 
 	private async getVersionData(packageName: string): Promise<IStringDictionary> {
-		const latestVersion = await this.$npmInstallationManager.getLatestCompatibleVersion(packageName);
+		const latestVersion = await this.$packageInstallationManager.getLatestCompatibleVersion(packageName);
 
 		if (this.useDefaultValue) {
 			return this.buildVersionData(latestVersion);
 		}
 
-		const allVersions: any = await this.$npm.view(packageName, { "versions": true });
+		const allVersions: any = await this.$packageManager.view(packageName, { "versions": true });
 		const versions = _.filter(allVersions, (version: string) => semver.gte(version, InitService.MIN_SUPPORTED_FRAMEWORK_VERSIONS[packageName]));
 		if (versions.length === 1) {
 			this.$logger.info(`Only ${versions[0]} version is available for ${packageName}.`);

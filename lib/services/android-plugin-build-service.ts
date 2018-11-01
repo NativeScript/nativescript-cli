@@ -22,7 +22,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		private $hostInfo: IHostInfo,
 		private $androidToolsInfo: IAndroidToolsInfo,
 		private $logger: ILogger,
-		private $npm: INodePackageManager,
+		private $packageManager: INodePackageManager,
 		private $projectDataService: IProjectDataService,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $errors: IErrors,
@@ -295,7 +295,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 	}
 
 	private async getRuntimeGradleVersions(projectDir: string): Promise<IRuntimeGradleVersions> {
-		const registryData = await this.$npm.getRegistryPackageData(TNS_ANDROID_RUNTIME_NAME);
+		const registryData = await this.$packageManager.getRegistryPackageData(TNS_ANDROID_RUNTIME_NAME);
 		let runtimeGradleVersions: IRuntimeGradleVersions = null;
 		if (projectDir) {
 			const projectRuntimeVersion = this.$platformService.getCurrentPlatformVersion(

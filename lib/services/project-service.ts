@@ -9,7 +9,7 @@ import * as temp from "temp";
 export class ProjectService implements IProjectService {
 
 	constructor(private $hooksService: IHooksService,
-		private $npm: INodePackageManager,
+		private $packageManager: INodePackageManager,
 		private $errors: IErrors,
 		private $fs: IFileSystem,
 		private $logger: ILogger,
@@ -19,7 +19,7 @@ export class ProjectService implements IProjectService {
 		private $projectNameService: IProjectNameService,
 		private $projectTemplatesService: IProjectTemplatesService,
 		private $staticConfig: IStaticConfig,
-		private $npmInstallationManager: INpmInstallationManager) { }
+		private $packageInstallationManager: IPackageInstallationManager) { }
 
 	public async validateProjectName(opts: { projectName: string, force: boolean, pathToProject: string }) : Promise<string> {
 		let projectName = opts.projectName;
@@ -99,11 +99,11 @@ export class ProjectService implements IProjectService {
 			}
 
 			if (templateVersion === constants.TemplateVersions.v1) {
-				await this.$npm.uninstall(templatePackageJsonContent.name, { save: true }, projectDir);
+				await this.$packageManager.uninstall(templatePackageJsonContent.name, { save: true }, projectDir);
 			}
 
 			// Install devDependencies and execute all scripts:
-			await this.$npm.install(projectDir, projectDir, {
+			await this.$packageManager.install(projectDir, projectDir, {
 				disableNpmInstall: false,
 				frameworkPath: null,
 				ignoreScripts
@@ -245,7 +245,7 @@ export class ProjectService implements IProjectService {
 		const projectFilePath = path.join(projectDir, this.$staticConfig.PROJECT_FILE_NAME);
 		const packageJsonData = this.$fs.readJson(projectFilePath);
 
-		const version = await this.$npmInstallationManager.getLatestCompatibleVersion(constants.TNS_CORE_MODULES_NAME);
+		const version = await this.$packageInstallationManager.getLatestCompatibleVersion(constants.TNS_CORE_MODULES_NAME);
 		packageJsonData.dependencies[constants.TNS_CORE_MODULES_NAME] = version;
 
 		this.$fs.writeJson(projectFilePath, packageJsonData);

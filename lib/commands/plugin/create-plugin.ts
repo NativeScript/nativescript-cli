@@ -13,7 +13,7 @@ export class CreatePluginCommand implements ICommand {
 		private $fs: IFileSystem,
 		private $childProcess: IChildProcess,
 		private $prompter: IPrompter,
-		private $npm: INodePackageManager) { }
+		private $packageManager: INodePackageManager) { }
 
 	public async execute(args: string[]): Promise<void> {
 		const pluginRepoName = args[0];
@@ -45,7 +45,7 @@ export class CreatePluginCommand implements ICommand {
 		try {
 			spinner.start();
 			const npmOptions: any = { silent: true };
-			await this.$npm.install(cwd, cwd, npmOptions);
+			await this.$packageManager.install(cwd, cwd, npmOptions);
 		} finally {
 			spinner.stop();
 		}

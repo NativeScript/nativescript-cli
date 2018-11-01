@@ -1,7 +1,7 @@
 import * as path from "path";
 import * as userSettingsServiceBaseLib from "../common/services/user-settings-service";
 
-class UserSettingsService extends userSettingsServiceBaseLib.UserSettingsServiceBase {
+export class UserSettingsService extends userSettingsServiceBaseLib.UserSettingsServiceBase {
 	constructor($fs: IFileSystem,
 		$settingsService: ISettingsService,
 		$lockfile: ILockFile,

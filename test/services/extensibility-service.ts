@@ -2,8 +2,14 @@ import { ExtensibilityService } from '../../lib/services/extensibility-service';
 import { Yok } from "../../lib/common/yok";
 import * as stubs from "../stubs";
 import { assert } from "chai";
+import { NodePackageManager } from "../../lib/node-package-manager";
+import { PackageManager } from "../../lib/package-manager";
+import { YarnPackageManager } from "../../lib/yarn-package-manager";
 import * as constants from "../../lib/constants";
+import { ChildProcess } from "../../lib/common/child-process";
 import { CommandsDelimiters } from "../../lib/common/constants";
+import { Errors } from "../../lib/common/errors";
+import { HostInfo } from "../../lib/common/host-info";
 import { SettingsService } from "../../lib/common/test/unit-tests/stubs";
 const path = require("path");
 const originalResolve = path.resolve;
@@ -36,7 +42,22 @@ describe("extensibilityService", () => {
 			readJson: (pathToFile: string): any => ({})
 		});
 		testInjector.register("logger", stubs.LoggerStub);
-		testInjector.register("npm", {});
+		testInjector.register("childProcess", ChildProcess);
+		testInjector.register("errors", Errors);
+		testInjector.register("hostInfo", HostInfo);
+		testInjector.register("httpClient", {});
+		testInjector.register("packageManager", PackageManager);
+		testInjector.register("options", {});
+		testInjector.register("pacoteService", {
+			manifest: async (packageName: string, options?: IPacoteManifestOptions): Promise<any> => {
+				return {};
+			}
+		});
+		testInjector.register("userSettingsService", {
+			getSettingValue: async (settingName: string): Promise<void> => undefined
+		});
+		testInjector.register("npm", NodePackageManager);
+		testInjector.register("yarn", YarnPackageManager);
 		testInjector.register("settingsService", SettingsService);
 		testInjector.register("requireService", {
 			require: (pathToRequire: string): any => undefined

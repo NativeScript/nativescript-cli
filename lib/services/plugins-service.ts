@@ -31,7 +31,7 @@ export class PluginsService implements IPluginsService {
 		}, PluginsService.NPM_CONFIG);
 	}
 
-	constructor(private $npm: INodePackageManager,
+	constructor(private $packageManager: INodePackageManager,
 		private $fs: IFileSystem,
 		private $options: IOptions,
 		private $logger: ILogger,
@@ -46,7 +46,7 @@ export class PluginsService implements IPluginsService {
 			plugin = possiblePackageName;
 		}
 
-		const name = (await this.$npm.install(plugin, projectData.projectDir, this.npmInstallOptions)).name;
+		const name = (await this.$packageManager.install(plugin, projectData.projectDir, this.npmInstallOptions)).name;
 		const pathToRealNpmPackageJson = path.join(projectData.projectDir, "node_modules", name, "package.json");
 		const realNpmPackageJson = this.$fs.readJson(pathToRealNpmPackageJson);
 
@@ -65,14 +65,14 @@ export class PluginsService implements IPluginsService {
 			} catch (err) {
 				// Revert package.json
 				this.$projectDataService.removeNSProperty(projectData.projectDir, this.$pluginVariablesService.getPluginVariablePropertyName(pluginData.name));
-				await this.$npm.uninstall(plugin, PluginsService.NPM_CONFIG, projectData.projectDir);
+				await this.$packageManager.uninstall(plugin, PluginsService.NPM_CONFIG, projectData.projectDir);
 
 				throw err;
 			}
 
 			this.$logger.out(`Successfully installed plugin ${realNpmPackageJson.name}.`);
 		} else {
-			await this.$npm.uninstall(realNpmPackageJson.name, { save: true }, projectData.projectDir);
+			await this.$packageManager.uninstall(realNpmPackageJson.name, { save: true }, projectData.projectDir);
 			this.$errors.failWithoutHelp(`${plugin} is not a valid NativeScript plugin. Verify that the plugin package.json file contains a nativescript key and try again.`);
 		}
 	}
@@ -181,7 +181,7 @@ export class PluginsService implements IPluginsService {
 		const notInstalledDependencies = _.difference(allDependencies, installedDependencies);
 		if (this.$options.force || notInstalledDependencies.length) {
 			this.$logger.trace("Npm install will be called from CLI. Force option is: ", this.$options.force, " Not installed dependencies are: ", notInstalledDependencies);
-			await this.$npm.install(projectData.projectDir, projectData.projectDir, {
+			await this.$packageManager.install(projectData.projectDir, projectData.projectDir, {
 				disableNpmInstall: this.$options.disableNpmInstall,
 				frameworkPath: this.$options.frameworkPath,
 				ignoreScripts: this.$options.ignoreScripts,
@@ -282,9 +282,9 @@ export class PluginsService implements IPluginsService {
 
 	private async executeNpmCommand(npmCommandName: string, npmCommandArguments: string, projectData: IProjectData): Promise<string> {
 		if (npmCommandName === PluginsService.INSTALL_COMMAND_NAME) {
-			await this.$npm.install(npmCommandArguments, projectData.projectDir, this.npmInstallOptions);
+			await this.$packageManager.install(npmCommandArguments, projectData.projectDir, this.npmInstallOptions);
 		} else if (npmCommandName === PluginsService.UNINSTALL_COMMAND_NAME) {
-			await this.$npm.uninstall(npmCommandArguments, PluginsService.NPM_CONFIG, projectData.projectDir);
+			await this.$packageManager.uninstall(npmCommandArguments, PluginsService.NPM_CONFIG, projectData.projectDir);
 		}
 
 		return this.parseNpmCommandResult(npmCommandArguments);

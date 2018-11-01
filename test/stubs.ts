@@ -226,7 +226,7 @@ export class ErrorsStub implements IErrors {
 	validateYargsArguments(parsed: any, knownOpts: any, shorthands: any, clientName?: string): void { }
 }
 
-export class NpmInstallationManagerStub implements INpmInstallationManager {
+export class PackageInstallationManagerStub implements IPackageInstallationManager {
 	async install(packageName: string, pathToSave?: string, options?: INpmInstallOptions): Promise<string> {
 		return Promise.resolve("");
 	}
@@ -873,6 +873,6 @@ export class InjectorStub extends Yok implements IInjector {
 		this.register('platformsData', PlatformsDataStub);
 		this.register("androidPluginBuildService", AndroidPluginBuildServiceStub);
 		this.register('projectData', ProjectDataStub);
-		this.register('npmInstallationManager', NpmInstallationManagerStub);
+		this.register('packageInstallationManager', PackageInstallationManagerStub);
 	}
 }

@@ -1,7 +1,9 @@
 import { Yok } from '../lib/common/yok';
 import * as stubs from './stubs';
+import { PackageManager } from "../lib/package-manager";
+import { PackageInstallationManager } from "../lib/package-installation-manager";
 import { NodePackageManager } from "../lib/node-package-manager";
-import { NpmInstallationManager } from "../lib/npm-installation-manager";
+import { YarnPackageManager } from "../lib/yarn-package-manager";
 import { FileSystem } from "../lib/common/file-system";
 import { ProjectData } from "../lib/project-data";
 import { ChildProcess } from "../lib/common/child-process";
@@ -42,7 +44,12 @@ let isErrorThrown = false;
 function createTestInjector() {
 	const testInjector = new Yok();
 	testInjector.register("messagesService", MessagesService);
+	testInjector.register("userSettingsService", {
+		getSettingValue: async (settingName: string): Promise<void> => undefined
+	});
+	testInjector.register("packageManager", PackageManager);
 	testInjector.register("npm", NodePackageManager);
+	testInjector.register("yarn", YarnPackageManager);
 	testInjector.register("fs", FileSystem);
 	testInjector.register("adb", {});
 	testInjector.register("androidDebugBridgeResultHandler", {});
@@ -87,7 +94,7 @@ function createTestInjector() {
 		savePluginVariablesInProjectFile: (pluginData: IPluginData) => Promise.resolve(),
 		interpolatePluginVariables: (pluginData: IPluginData, pluginConfigurationFileContent: string) => Promise.resolve(pluginConfigurationFileContent)
 	});
-	testInjector.register("npmInstallationManager", NpmInstallationManager);
+	testInjector.register("packageInstallationManager", PackageInstallationManager);
 
 	testInjector.register("deviceAppDataFactory", DeviceAppDataFactory);
 	testInjector.register("localToDevicePathDataFactory", LocalToDevicePathDataFactory);
@@ -123,6 +130,9 @@ function createTestInjector() {
 	testInjector.register("filesHashService", {
 		hasChangesInShasums: (oldPluginNativeHashes: IStringDictionary, currentPluginNativeHashes: IStringDictionary) => true,
 		generateHashes: async (files: string[]): Promise<IStringDictionary> => ({})
+	});
+	testInjector.register("pacoteService", {
+		extractPackage: async (packageName: string, destinationDirectory: string, options?: IPacoteExtractOptions): Promise<void> => undefined
 	});
 	return testInjector;
 }
@@ -597,7 +607,7 @@ describe("Plugins service", () => {
 				enumerateFilesInDirectorySync: (): string[] => ["some_file"]
 			});
 
-			unitTestsInjector.register("npm", {});
+			unitTestsInjector.register("packageManager", {});
 			unitTestsInjector.register("options", {});
 			unitTestsInjector.register("logger", {});
 			unitTestsInjector.register("errors", {});

@@ -28,7 +28,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		private $errors: IErrors,
 		private $fs: IFileSystem,
 		private $logger: ILogger,
-		private $npmInstallationManager: INpmInstallationManager,
+		private $packageInstallationManager: IPackageInstallationManager,
 		private $platformsData: IPlatformsData,
 		private $projectDataService: IProjectDataService,
 		private $hooksService: IHooksService,
@@ -113,7 +113,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		} else {
 			if (!version) {
 				version = this.getCurrentPlatformVersion(platform, projectData) ||
-					await this.$npmInstallationManager.getLatestCompatibleVersion(platformData.frameworkPackageName);
+					await this.$packageInstallationManager.getLatestCompatibleVersion(platformData.frameworkPackageName);
 			}
 
 			packageToInstall = `${platformData.frameworkPackageName}@${version}`;
@@ -914,8 +914,8 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 
 		const installedModuleDir = temp.mkdirSync("runtime-to-update");
 		let newVersion = version === constants.PackageVersion.NEXT ?
-			await this.$npmInstallationManager.getNextVersion(platformData.frameworkPackageName) :
-			version || await this.$npmInstallationManager.getLatestCompatibleVersion(platformData.frameworkPackageName);
+			await this.$packageInstallationManager.getNextVersion(platformData.frameworkPackageName) :
+			version || await this.$packageInstallationManager.getLatestCompatibleVersion(platformData.frameworkPackageName);
 		await this.$pacoteService.extractPackage(`${platformData.frameworkPackageName}@${newVersion}`, installedModuleDir);
 		const cachedPackageData = this.$fs.readJson(path.join(installedModuleDir, "package.json"));
 		newVersion = (cachedPackageData && cachedPackageData.version) || newVersion;
