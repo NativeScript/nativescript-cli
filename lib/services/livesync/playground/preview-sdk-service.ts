@@ -74,7 +74,7 @@ export class PreviewSdkService extends EventEmitter implements IPreviewSdkServic
 			onConnectedDevicesChange: (connectedDevices: ConnectedDevices) => ({}),
 			onDeviceConnectedMessage: (deviceConnectedMessage: DeviceConnectedMessage) => ({}),
 			onDeviceConnected: (device: Device) => ({}),
-			onDevicesPresence: (devices: Device[]) => this.$previewDevicesService.onDevicesPresence(devices),
+			onDevicesPresence: (devices: Device[]) => this.$previewDevicesService.updateConnectedDevices(devices),
 			onSendingChange: (sending: boolean) => ({ }),
 			onBiggerFilesUpload: async (filesContent, callback) => {
 				const gzippedContent = Buffer.from(pako.gzip(filesContent));

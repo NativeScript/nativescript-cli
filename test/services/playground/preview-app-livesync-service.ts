@@ -158,7 +158,7 @@ function createTestInjector(options?: {
 		}
 	});
 	injector.register("previewDevicesService", {
-		connectedDevices: [deviceMockData]
+		getConnectedDevices: () => [deviceMockData]
 	});
 
 	return injector;
