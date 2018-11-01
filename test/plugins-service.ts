@@ -132,6 +132,26 @@ function createTestInjector() {
 		generateHashes: async (files: string[]): Promise<IStringDictionary> => ({})
 	});
 	testInjector.register("pacoteService", {
+		manifest: async (packageName: string) => {
+			const projectData = testInjector.resolve("projectData");
+			const fs = testInjector.resolve("fs");
+			let result = {};
+			let packageJsonPath = null;
+
+			const packageToInstall = packageName.split("@")[0];
+
+			if (fs.exists(packageToInstall)) {
+				packageJsonPath = path.join(packageName, "package.json");
+			} else {
+				packageJsonPath = path.join(projectData.projectDir, "node_modules", packageToInstall, "package.json");
+			}
+
+			if (fs.exists(packageJsonPath)) {
+				result = fs.readJson(packageJsonPath);
+			}
+
+			return result;
+		},
 		extractPackage: async (packageName: string, destinationDirectory: string, options?: IPacoteExtractOptions): Promise<void> => undefined
 	});
 	return testInjector;
