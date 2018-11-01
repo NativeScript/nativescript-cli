@@ -75,7 +75,6 @@ class PreviewSdkServiceMock extends EventEmitter implements IPreviewSdkService {
 		return "my_cool_qr_code_url";
 	}
 
-	public connectedDevices: Device[] = [deviceMockData];
 	public initialize(getInitialFiles: (device: Device) => Promise<FilesPayload>) {
 		this.getInitialFiles = async (device) => {
 			const filesPayload = await getInitialFiles(device);
@@ -157,6 +156,9 @@ function createTestInjector(options?: {
 		executeBeforeHooks: (name: string, args: any) => {
 			isHookCalledWithHMR = args.hookArgs.config.appFilesUpdaterOptions.useHotModuleReload;
 		}
+	});
+	injector.register("previewDevicesService", {
+		connectedDevices: [deviceMockData]
 	});
 
 	return injector;
