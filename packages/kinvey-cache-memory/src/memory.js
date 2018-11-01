@@ -2,7 +2,7 @@ const store = {};
 
 export async function find(appKey, collectionName) {
   const collections = store[appKey] || {};
-  return collections[collectionName] || [];
+  return JSON.parse(JSON.stringify(collections[collectionName] || []));
 }
 
 export async function count(appKey, collectionName) {
@@ -28,7 +28,7 @@ export async function save(appKey, collectionName, docsToSave) {
     }
   });
 
-  collections[collectionName] = docs;
+  collections[collectionName] = JSON.parse(JSON.stringify(docs));
   store[appKey] = collections;
   return docsToSave;
 }

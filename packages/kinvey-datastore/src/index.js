@@ -10,19 +10,18 @@ export const DataStoreType = {
 };
 
 export function collection(collectionName, type = DataStoreType.Cache, options = {}) {
+  let datastore;
+
   if (collectionName == null || typeof collectionName !== 'string') {
     throw new Error('A collection name is required and must be a string.');
   }
 
-  const { appKey } = getConfig();
-  let datastore;
-
   if (type === DataStoreType.Network) {
-    datastore = new NetworkStore(appKey, collectionName);
+    datastore = new NetworkStore(collectionName);
   } else if (type === DataStoreType.Cache) {
-    datastore = new CacheStore(appKey, collectionName, options.tag, Object.assign({}, options, { autoSync: true }));
+    datastore = new CacheStore(collectionName, Object.assign({}, options, { autoSync: true }));
   } else if (type === DataStoreType.Sync) {
-    datastore = new CacheStore(appKey, collectionName, options.tag, Object.assign({}, options, { autoSync: false }));
+    datastore = new CacheStore(collectionName, Object.assign({}, options, { autoSync: false }));
   } else {
     throw new Error('Unknown data store type.');
   }

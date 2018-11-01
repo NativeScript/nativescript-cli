@@ -1,4 +1,3 @@
-import { format } from 'url';
 import { Headers, KinveyHeaders } from './headers';
 import { serialize } from './utils';
 import { Response } from './response';
@@ -60,15 +59,6 @@ export class Request {
 
     throw response.error;
   }
-}
-
-export function formatKinveyUrl(protocol, host, pathname, query) {
-  return format({
-    protocol,
-    host,
-    pathname,
-    query
-  });
 }
 
 export class KinveyRequest extends Request {

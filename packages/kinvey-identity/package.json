@@ -18,6 +18,7 @@
     "kinvey-acl": "1.0.0",
     "kinvey-app": "1.0.0",
     "kinvey-datastore": "1.0.0",
+    "kinvey-errors": "1.0.0",
     "kinvey-http": "1.0.0",
     "kinvey-kmd": "1.0.0",
     "kinvey-popup": "1.0.0",

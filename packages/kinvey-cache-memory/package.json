@@ -13,7 +13,8 @@
   },
   "dependencies": {
     "@babel/runtime": "7.1.2",
-    "kinvey-cache": "1.0.0"
+    "kinvey-cache": "1.0.0",
+    "lokijs": "1.5.5"
   },
   "devDependencies": {
     "@babel/cli": "7.1.2",

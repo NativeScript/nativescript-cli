@@ -2,13 +2,13 @@ import nock from 'nock';
 import expect from 'expect';
 import chai from 'chai';
 import cloneDeep from 'lodash/cloneDeep';
-import { SyncOperation, syncManagerProvider } from './sync';
-import { SyncError } from '../../errors';
+import { SyncError } from 'kinvey-errors';
 import { randomString } from 'kinvey-test-utils';
 import { Query } from 'kinvey-query';
 import { register } from 'kinvey-http-node';
-import { User } from 'kinvey-identity';
+import { set as setSession } from 'kinvey-session';
 import { init } from 'kinvey-app';
+import { SyncOperation, syncManagerProvider } from './sync';
 chai.use(require('chai-as-promised'));
 chai.should();
 const collection = 'Books';
@@ -35,25 +35,19 @@ describe('Sync', () => {
 
   before(() => {
     const username = randomString();
-    const password = randomString();
-    const reply = {
+    const session = {
       _id: randomString(),
       _kmd: {
         lmt: new Date().toISOString(),
         ect: new Date().toISOString(),
         authtoken: randomString()
       },
-      username: username,
+      username: randomString(),
       _acl: {
         creator: randomString()
       }
     };
-
-    nock(client.apiHostname)
-      .post(`/user/${client.appKey}/login`, { username: username, password: password })
-      .reply(200, reply);
-
-    return User.login(username, password);
+    return setSession(session);
   });
 
   afterEach(() => {

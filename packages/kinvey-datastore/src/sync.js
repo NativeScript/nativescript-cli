@@ -1,9 +1,10 @@
 import times from 'lodash/times';
 import isEmpty from 'lodash/isEmpty';
-import { Kmd } from 'kinvey-kmd';
 import { Query } from 'kinvey-query';
 import { formatKinveyUrl, KinveyRequest, RequestMethod, Auth, KinveyHeaders } from 'kinvey-http';
 import { get as getSession } from 'kinvey-session';
+import { getConfig } from 'kinvey-app';
+import { MissingConfigurationError, ParameterValueOutOfRangeError } from 'kinvey-errors';
 import { NetworkStore } from './networkstore';
 import { DataStoreCache } from './cache';
 
@@ -31,14 +32,22 @@ function serializeQuery(query) {
 }
 
 class SyncCache extends DataStoreCache {
-  constructor(appKey, collectionName, tag) {
-    super(`${appKey}.${SYNC_CACHE_TAG}`, collectionName, tag);
+  constructor(collectionName, tag) {
+    if (tag) {
+      super(collectionName, `${SYNC_CACHE_TAG}-${tag}`);
+    } else {
+      super(collectionName, SYNC_CACHE_TAG);
+    }
   }
 }
 
 class QueryCache extends DataStoreCache {
-  constructor(appKey, collectionName, tag) {
-    super(`${appKey}.${QUERY_CACHE_TAG}`, collectionName, tag);
+  constructor(collectionName, tag) {
+    if (tag) {
+      super(collectionName, `${QUERY_CACHE_TAG}-${tag}`);
+    } else {
+      super(collectionName, QUERY_CACHE_TAG);
+    }
   }
 
   async findByKey(key) {
@@ -55,7 +64,7 @@ class QueryCache extends DataStoreCache {
       let doc = await this.findByKey(key);
 
       if (!doc) {
-        doc = { collectionName: this.collectionName, query: key }
+        doc = { collectionName: this.collectionName, query: key };
       }
 
       doc.lastRequest = headers.requestStart;
@@ -67,20 +76,19 @@ class QueryCache extends DataStoreCache {
 }
 
 export class Sync {
-  constructor(appKey, collectionName, tag) {
-    this.appKey = appKey;
+  constructor(collectionName, tag) {
     this.collectionName = collectionName;
     this.tag = tag;
   }
 
   find(query) {
-    const syncCache = new SyncCache(this.appKey, this.collectionName, this.tag);
+    const syncCache = new SyncCache(this.collectionName, this.tag);
     return syncCache.find(query);
   }
 
 
   count(query) {
-    const syncCache = new SyncCache(this.appKey, this.collectionName, this.tag);
+    const syncCache = new SyncCache(this.collectionName, this.tag);
     return syncCache.count(query);
   }
 
@@ -97,7 +105,7 @@ export class Sync {
   }
 
   async addSyncEvent(event, docs) {
-    const syncCache = new SyncCache(this.appKey, this.collectionName, this.tag);
+    const syncCache = new SyncCache(this.collectionName, this.tag);
     let singular = false;
     let syncDocs = [];
 
@@ -114,9 +122,7 @@ export class Sync {
 
       if (event === SyncEvent.Delete) {
         docs = docs.filter((doc) => {
-          const kmd = new Kmd(doc);
-
-          if (kmd.isLocal()) {
+          if (doc._kmd && doc._kmd.local === true) {
             return false;
           }
 
@@ -124,8 +130,8 @@ export class Sync {
         });
       }
 
-      const query = new Query().contains('_id', docs.map((doc) => doc._id));
-      await syncCache.remove(query);
+      const query = new Query().contains('_id', docs.map(doc => doc._id));
+      await this.remove(query);
 
       syncDocs = await syncCache.save(docs.map((doc) => {
         return {
@@ -142,10 +148,10 @@ export class Sync {
     return singular ? syncDocs[0] : syncDocs;
   }
 
-  async push(query) {
-    const network = new NetworkStore(this.appKey, this.collectionName);
-    const cache = new DataStoreCache(this.appKey, this.collectionName, this.tag);
-    const syncCache = new SyncCache(this.appKey, this.collectionName, this.tag);
+  async push(query, options) {
+    const network = new NetworkStore(this.collectionName);
+    const cache = new DataStoreCache(this.collectionName, this.tag);
+    const syncCache = new SyncCache(this.collectionName, this.tag);
     const batchSize = 100;
     const syncDocs = await syncCache.find(query);
 
@@ -167,7 +173,7 @@ export class Sync {
           if (event === SyncEvent.Delete) {
             try {
               // Remove the doc from the backend
-              await network.removeById(_id);
+              await network.removeById(_id, options);
 
               // Remove the sync doc
               await syncCache.removeById(_id);
@@ -194,9 +200,7 @@ export class Sync {
 
               // Save the doc to the backend
               if (event === SyncEvent.Create) {
-                const kmd = new Kmd(doc);
-
-                if (kmd.isLocal()) {
+                if (doc._kmd && doc._kmd.local === true) {
                   local = true;
                   // tslint:disable-next-line:no-delete
                   delete doc._id;
@@ -204,9 +208,9 @@ export class Sync {
                   delete doc._kmd.local;
                 }
 
-                doc = await network.create(doc);
+                doc = await network.create(doc, options);
               } else {
-                doc = await network.update(doc);
+                doc = await network.update(doc, options);
               }
 
               // Remove the sync doc
@@ -254,20 +258,25 @@ export class Sync {
     return [];
   }
 
-  async pull(query) {
-    const network = new NetworkStore(this.appKey, this.collectionName);
-    const cache = new DataStoreCache(this.appKey, this.collectionName, this.tag);
-    const queryCache = new QueryCache(this.appKey, this.collectionName, this.tag);
+  async pull(query, options = {}) {
+    const network = new NetworkStore(this.collectionName);
+    const cache = new DataStoreCache(this.collectionName, this.tag);
+    const queryCache = new QueryCache(this.collectionName, this.tag);
 
     // Find the docs on the backend
-    const response = await network.find(query, true).toPromise();
+    const response = await network.find(query, Object.assign(options, { rawResponse: true })).toPromise();
     const docs = response.data;
+
+    // Clear the cache if a query was not provided
+    if (!query) {
+      await cache.clear();
+    }
 
     // Update the cache
     await cache.save(docs);
 
     // Update the query cache
-    queryCache.save(query, response);
+    await queryCache.save(query, response);
 
     // Return the number of docs
     return docs.length;
@@ -278,8 +287,8 @@ export class Sync {
 
     if (!query || (query.skip === 0 && query.limit === Infinity)) {
       try {
-        const cache = new DataStoreCache(this.appKey, this.collectionName, this.tag);
-        const queryCache = new QueryCache(this.appKey, this.collectionName, this.tag);
+        const cache = new DataStoreCache(this.collectionName, this.tag);
+        const queryCache = new QueryCache(this.collectionName, this.tag);
         const key = serializeQuery(query);
         const queryCacheDoc = await queryCache.findByKey(key);
 
@@ -291,8 +300,8 @@ export class Sync {
           }
 
           // Delta Set request
-          const { api } = getConfig();
-          const url = formatKinveyUrl(api.protocol, api.host, `/appdata/${this.appKey}/${this.collectionName}/_deltaset`, queryObject);
+          const { api, appKey } = getConfig();
+          const url = formatKinveyUrl(api.protocol, api.host, `/appdata/${appKey}/${this.collectionName}/_deltaset`, queryObject);
           const request = new KinveyRequest({ method: RequestMethod.GET, headers: { Authorization: Auth.Session(getSession()) }, url });
           const response = await request.execute();
           const { changed, deleted } = response.data;
@@ -315,7 +324,7 @@ export class Sync {
           return changed.length;
         }
       } catch (error) {
-        if (error.name !== 'MissingConfiguration' && error.name !== 'ParameterValueOutOfRange') {
+        if (!(error instanceof MissingConfigurationError) && !(error instanceof ParameterValueOutOfRangeError)) {
           throw error;
         }
       }
@@ -329,15 +338,15 @@ export class Sync {
   }
 
   async autopaginate(query, options = {}) {
-    const network = new NetworkStore(this.appKey, this.collectionName);
-    const cache = new DataStoreCache(this.appKey, this.collectionName, this.tag);
-    const queryCache = new QueryCache(this.appKey, this.collectionName, this.tag);
+    const network = new NetworkStore(this.collectionName);
+    const cache = new DataStoreCache(this.collectionName, this.tag);
+    const queryCache = new QueryCache(this.collectionName, this.tag);
 
     // Clear the cache
     await cache.clear();
 
     // Get the total count of docs
-    const response = await network.count(query, true).toPromise();
+    const response = await network.count(query, Object.assign(options, { rawResponse: true })).toPromise();
     const count = 'count' in response.data ? response.data.count : Infinity;
 
     // Create the pages
@@ -352,7 +361,7 @@ export class Sync {
 
     // Process the pages
     const pagePromises = pageQueries.map((pageQuery) => {
-      return network.find(pageQuery).toPromise()
+      return network.find(pageQuery, options).toPromise()
         .then(docs => cache.save(docs))
         .then(docs => docs.length);
     });
@@ -366,11 +375,22 @@ export class Sync {
     return totalPageCount;
   }
 
-  clear(query) {
-    const syncCache = new SyncCache(this.appKey, this.collectionName, this.tag);
-    if (query) {
-      return syncCache.remove(query);
-    }
-    return syncCache.clear();
+  async remove(query) {
+    const syncCache = new SyncCache(this.collectionName, this.tag);
+    return syncCache.remove(query);
+  }
+
+  async removeById(id) {
+    const syncCache = new SyncCache(this.collectionName, this.tag);
+    return syncCache.removeById(id);
+  }
+
+  async clear() {
+    const syncCache = new SyncCache(this.collectionName, this.tag);
+    const queryCache = new QueryCache(this.collectionName, this.tag);
+    await Promise.all([
+      syncCache.clear(),
+      queryCache.clear()
+    ]);
   }
 }

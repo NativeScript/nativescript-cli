@@ -3,7 +3,11 @@ import { Aggregation } from 'kinvey-aggregation';
 import sift from 'sift';
 import isEmpty from 'lodash/isEmpty';
 import isArray from 'lodash/isArray';
+import { KinveyError } from 'kinvey-errors';
+import PQueue from 'p-queue';
 import { nested } from './utils';
+
+const queue = new PQueue({ concurrency: 1 });
 
 let store = {
   find() {
@@ -57,90 +61,94 @@ function generateId(length = 24) {
 }
 
 export class Cache {
-  constructor(appKey, collectionName) {
-    this.appKey = appKey;
+  constructor(storeName, collectionName) {
+    this.storeName = storeName;
     this.collectionName = collectionName;
   }
 
-  async find(query) {
-    let docs = await store.find(this.appKey, this.collectionName);
+  find(query) {
+    return queue.add(async () => {
+      let docs = await store.find(this.storeName, this.collectionName);
 
-    if (query && !(query instanceof Query)) {
-      throw new Error('query must be an instance of Query.');
-    }
-
-    if (docs.length > 0 && query) {
-      const {
-        filter,
-        sort,
-        limit,
-        skip,
-        fields
-      } = query;
-
-      if (filter && !isEmpty(filter)) {
-        docs = sift(filter, docs);
+      if (query && !(query instanceof Query)) {
+        throw new KinveyError('Invalid query. It must be an instance of the Query class.');
       }
 
-      if (!isEmpty(sort)) {
-        docs.sort((a, b) => {
-          const result = Object.keys(sort).reduce((result, field) => {
-            if (typeof result !== 'undefined') {
-              return result;
-            }
+      if (docs.length > 0 && query) {
+        const {
+          filter,
+          sort,
+          limit,
+          skip,
+          fields
+        } = query;
 
-            if (Object.prototype.hasOwnProperty.call(sort, field)) {
-              const aField = nested(a, field);
-              const bField = nested(b, field);
-              const modifier = sort[field]; // 1 (ascending) or -1 (descending).
+        if (filter && !isEmpty(filter)) {
+          docs = sift(filter, docs);
+        }
 
-              if ((aField !== null && typeof aField !== 'undefined')
-                && (bField === null || typeof bField === 'undefined')) {
-                return 1 * modifier;
-              } else if ((bField !== null && typeof bField !== 'undefined')
-                && (aField === null || typeof aField === 'undefined')) {
-                return -1 * modifier;
-              } else if (typeof aField === 'undefined' && bField === null) {
-                return 0;
-              } else if (aField === null && typeof bField === 'undefined') {
-                return 0;
-              } else if (aField !== bField) {
-                return (aField < bField ? -1 : 1) * modifier;
+        if (!isEmpty(sort)) {
+          docs.sort((a, b) => {
+            const result = Object.keys(sort).reduce((result, field) => {
+              if (typeof result !== 'undefined') {
+                return result;
               }
-            }
+
+              if (Object.prototype.hasOwnProperty.call(sort, field)) {
+                const aField = nested(a, field);
+                const bField = nested(b, field);
+                const modifier = sort[field]; // 1 (ascending) or -1 (descending).
+
+                if ((aField !== null && typeof aField !== 'undefined')
+                  && (bField === null || typeof bField === 'undefined')) {
+                  return 1 * modifier;
+                } else if ((bField !== null && typeof bField !== 'undefined')
+                  && (aField === null || typeof aField === 'undefined')) {
+                  return -1 * modifier;
+                } else if (typeof aField === 'undefined' && bField === null) {
+                  return 0;
+                } else if (aField === null && typeof bField === 'undefined') {
+                  return 0;
+                } else if (aField !== bField) {
+                  return (aField < bField ? -1 : 1) * modifier;
+                }
+              }
+            });
+
+            return result || 0;
           });
+        }
 
-          return result || 0;
-        });
-      }
+        if (skip > 0) {
+          if (limit < Infinity) {
+            docs = docs.slice(skip, skip + limit);
+          } else {
+            docs = docs.slice(skip);
+          }
+        } else if (limit < Infinity) {
+          docs = docs.slice(0, limit);
+        }
 
-      if (skip > 0) {
-        if (limit < Infinity) {
-          docs = docs.slice(skip, skip + limit);
-        } else {
-          docs = docs.slice(skip);
+        if (isArray(fields) && fields.length > 0) {
+          docs = docs.map((doc) => {
+            const modifiedDoc = doc;
+            Object.keys(modifiedDoc).forEach((key) => {
+              if (fields.indexOf(key) === -1) {
+                delete modifiedDoc[key];
+              }
+            });
+            return modifiedDoc;
+          });
         }
       }
 
-      if (isArray(fields) && fields.length > 0) {
-        docs = docs.map((doc) => {
-          const modifiedDoc = doc;
-          Object.keys(modifiedDoc).forEach((key) => {
-            if (fields.indexOf(key) === -1) {
-              delete modifiedDoc[key];
-            }
-          });
-          return modifiedDoc;
-        });
-      }
-    }
-
-    return docs;
+      return docs;
+    });
   }
 
-  async reduce(aggregation) {
+  async group(aggregation) {
     if (!(aggregation instanceof Aggregation)) {
-      throw new Error('aggregation must be an instance of Aggregation.');
+      throw new KinveyError('Invalid aggregation. It must be an instance of the Aggregation class.');
     }
 
     const { query, initial, key, reduceFn } = aggregation;
@@ -165,47 +173,49 @@ export class Cache {
       return docs.length;
     }
 
-    return store.count(this.appKey, this.collectionName);
+    return queue.add(() => store.count(this.storeName, this.collectionName));
   }
 
   findById(id) {
-    return store.findById(this.appKey, this.collectionName, id);
+    return queue.add(() => store.findById(this.storeName, this.collectionName, id));
   }
 
-  async save(docs) {
-    let docsToSave = docs;
-    let singular = false;
+  save(docs) {
+    return queue.add(async () => {
+      let docsToSave = docs;
+      let singular = false;
 
-    if (!docs) {
-      return null;
-    }
+      if (!docs) {
+        return null;
+      }
 
-    if (!isArray(docs)) {
-      singular = true;
-      docsToSave = [docs];
-    }
+      if (!isArray(docs)) {
+        singular = true;
+        docsToSave = [docs];
+      }
 
-    // Clone the docs
-    docsToSave = docsToSave.slice(0, docsToSave.length);
+      // Clone the docs
+      docsToSave = docsToSave.slice(0, docsToSave.length);
 
-    // Save the docs
-    if (docsToSave.length > 0) {
-      docsToSave = docsToSave.map((doc) => {
-        if (!doc._id) {
-          return Object.assign({
-            _id: generateId(),
-            _kmd: Object.assign({}, doc._kmd, { local: true })
-          }, doc);
-        }
+      // Save the docs
+      if (docsToSave.length > 0) {
+        docsToSave = docsToSave.map((doc) => {
+          if (!doc._id) {
+            return Object.assign({
+              _id: generateId(),
+              _kmd: Object.assign({}, doc._kmd, { local: true })
+            }, doc);
+          }
 
-        return doc;
-      });
+          return doc;
+        });
 
-      await store.save(this.appKey, this.collectionName, docsToSave);
-      return singular ? docsToSave.shift() : docsToSave;
-    }
+        await store.save(this.storeName, this.collectionName, docsToSave);
+        return singular ? docsToSave.shift() : docsToSave;
+      }
 
-    return docs;
+      return docs;
+    });
   }
 
   async remove(query) {
@@ -221,14 +231,14 @@ export class Cache {
   }
 
   removeById(id) {
-    return store.removeById(this.appKey, this.collectionName, id);
+    return queue.add(() => store.removeById(this.storeName, this.collectionName, id));
   }
 
   clear() {
-    return store.clear(this.appKey, this.collectionName);
+    return queue.add(() => store.clear(this.storeName, this.collectionName));
   }
 }
 
-export function clearAll(appKey) {
-  return store.clearAll(appKey);
+export function clearAll(storeName) {
+  return queue.add(() => store.clearAll(storeName));
 }

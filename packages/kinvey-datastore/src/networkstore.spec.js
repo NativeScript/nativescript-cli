@@ -3,12 +3,12 @@ import expect from 'expect';
 import { Query } from 'kinvey-query';
 import {CacheStore} from './cachestore';
 import { Aggregation, count } from 'kinvey-aggregation';
-import { KinveyError, NotFoundError, ServerError } from '../../errors';
+import { KinveyError, NotFoundError, ServerError } from 'kinvey-errors';
 import { randomString } from 'kinvey-test-utils';
 import { mockRequiresIn } from './require-helper';
 import { NetworkStore } from './networkstore';
 import { register as registerHttp } from 'kinvey-http-node';
-import { login } from 'kinvey-identity';
+import { set as setSession } from 'kinvey-session';
 import { init } from 'kinvey-app';
 import { register as registerCache} from 'kinvey-cache-memory';
 
@@ -33,25 +33,19 @@ describe('NetworkStore', () => {
 
   before(() => {
     const username = randomString();
-    const password = randomString();
-    const reply = {
+    const session = {
       _id: randomString(),
       _kmd: {
         lmt: new Date().toISOString(),
         ect: new Date().toISOString(),
         authtoken: randomString()
       },
-      username: username,
+      username: randomString(),
       _acl: {
         creator: randomString()
       }
     };
-
-    nock(client.apiHostname)
-      .post(`/user/${client.appKey}/login`, { username: username, password: password })
-      .reply(200, reply);
-
-    return login(username, password);
+    return setSession(session);
   });
 
   describe('pathname', () => {
@@ -574,7 +568,7 @@ describe('NetworkStore', () => {
 
     afterEach(() => expect.restoreSpies());
 
-    describe('subscribe()', () => {//TODO: proxied store was never called with 
+    describe('subscribe()', () => {//TODO: proxied store was never called with
       it('should call subscribeCollection() method of LiveCollectionManager class', () => {
         const spy = expect.spyOn(managerMock, 'subscribeCollection');
         const handler = { onMessage: () => { } };

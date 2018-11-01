@@ -9,6 +9,8 @@ import {
   RequestMethod,
   Auth
 } from 'kinvey-http';
+import { KinveyError } from 'kinvey-errors';
+import isArray from 'lodash/isArray';
 
 const NAMESPACE = 'appdata';
 
@@ -24,8 +26,7 @@ export function createRequest(method, url, body) {
 }
 
 export class NetworkStore {
-  constructor(appKey, collectionName) {
-    this.appKey = appKey;
+  constructor(collectionName) {
     this.collectionName = collectionName;
   }
 
@@ -36,13 +37,14 @@ export class NetworkStore {
     return this.collectionName;
   }
 
-  get url() {
+  get pathname() {
     const { appKey } = getConfig();
     return `/${NAMESPACE}/${appKey}/${this.collectionName}`;
   }
 
   get channelName() {
-    return `${this.appKey}.c-${this.collectionName}`;
+    const { appKey } = getConfig();
+    return `${appKey}.c-${this.collectionName}`;
   }
 
   get personalChannelName() {
@@ -50,11 +52,22 @@ export class NetworkStore {
     return `${this.channelName}.u-${session._id}`;
   }
 
-  find(query, rawResponse = false) {
+  find(query, options = {}) {
     const stream = KinveyObservable.create(async (observer) => {
       const { api } = getConfig();
-      const url = formatKinveyUrl(api.protocol, api.host, this.pathname, query ? query.toQueryObject() : undefined);
+      const {
+        rawResponse = false,
+        timeout,
+        properties,
+        trace,
+        skipBL,
+        kinveyFileTTL,
+        kinveyFileTLS,
+      } = options;
+      const queryObject = Object.assign(query ? query.toQueryObject() : {}, { kinveyfile_ttl: kinveyFileTTL, kinveyfile_tls: kinveyFileTLS });
+      const url = formatKinveyUrl(api.protocol, api.host, this.pathname, queryObject);
       const request = createRequest(RequestMethod.GET, url);
+      request.headers.customRequestProperties = properties;
       try {
         const response = await request.execute();
 
@@ -72,11 +85,20 @@ export class NetworkStore {
     return stream;
   }
 
-  count(query, rawResponse = false) {
+  count(query, options = {}) {
     const stream = KinveyObservable.create(async (observer) => {
       const { api } = getConfig();
-      const url = formatKinveyUrl(api.protocol, api.host, `${this.pathname}/_count`, query ? query.toQueryObject() : undefined);
+      const {
+        rawResponse = false,
+        timeout,
+        properties,
+        trace,
+        skipBL
+      } = options;
+      const queryObject = Object.assign(query ? query.toQueryObject() : {}, {});
+      const url = formatKinveyUrl(api.protocol, api.host, `${this.pathname}/_count`, queryObject);
       const request = createRequest(RequestMethod.GET, url);
+      request.headers.customRequestProperties = properties;
       try {
         const response = await request.execute();
 
@@ -94,7 +116,7 @@ export class NetworkStore {
     return stream;
   }
 
-  group(aggregation, rawResponse = false) {
+  group(aggregation, options = {}) {
     const stream = KinveyObservable.create(async (observer) => {
       try {
         if (!(aggregation instanceof Aggregation)) {
@@ -102,8 +124,17 @@ export class NetworkStore {
         }
 
         const { api } = getConfig();
-        const url = formatKinveyUrl(api.protocol, api.host, `${this.pathname}/_group`);
+        const {
+          rawResponse = false,
+          timeout,
+          properties,
+          trace,
+          skipBL
+        } = options;
+        const queryObject = {};
+        const url = formatKinveyUrl(api.protocol, api.host, `${this.pathname}/_group`, queryObject);
         const request = createRequest(RequestMethod.POST, url, aggregation.toPlainObject());
+        request.headers.customRequestProperties = properties;
         const response = await request.execute();
 
         if (rawResponse === true) {
@@ -120,11 +151,22 @@ export class NetworkStore {
     return stream;
   }
 
-  findById(id, rawResponse = false) {
+  findById(id, options = {}) {
     const stream = KinveyObservable.create(async (observer) => {
       const { api } = getConfig();
-      const url = formatKinveyUrl(api.protocol, api.host, `${this.pathname}/${id}`);
+      const {
+        rawResponse = false,
+        timeout,
+        properties,
+        trace,
+        skipBL,
+        kinveyFileTTL,
+        kinveyFileTLS,
+      } = options;
+      const queryObject = { kinveyfile_ttl: kinveyFileTTL, kinveyfile_tls: kinveyFileTLS };
+      const url = formatKinveyUrl(api.protocol, api.host, `${this.pathname}/${id}`, queryObject);
       const request = createRequest(RequestMethod.GET, url);
+      request.headers.customRequestProperties = properties;
       try {
         if (!id) {
           throw new Error('No id was provided. A valid id is required.');
@@ -146,10 +188,23 @@ export class NetworkStore {
     return stream;
   }
 
-  async create(doc, rawResponse = false) {
+  async create(doc, options = {}) {
+    if (isArray(doc)) {
+      throw new KinveyError('Unable to create an array of entities.', 'Please create entities one by one.');
+    }
+
     const { api } = getConfig();
-    const url = formatKinveyUrl(api.protocol, api.host, this.pathname);
+    const {
+      rawResponse = false,
+      timeout,
+      properties,
+      trace,
+      skipBL
+    } = options;
+    const queryObject = {};
+    const url = formatKinveyUrl(api.protocol, api.host, this.pathname, queryObject);
     const request = createRequest(RequestMethod.POST, url, doc);
+    request.headers.customRequestProperties = properties;
     const response = await request.execute();
 
     if (rawResponse === true) {
@@ -159,10 +214,27 @@ export class NetworkStore {
     return response.data;
   }
 
-  async update(doc, rawResponse = false) {
+  async update(doc, options = {}) {
+    if (isArray(doc)) {
+      throw new KinveyError('Unable to update an array of entities.', 'Please update entities one by one.');
+    }
+
+    if (!doc._id) {
+      throw new KinveyError('The entity provided does not contain an _id. An _id is required to update the entity.', doc);
+    }
+
     const { api } = getConfig();
-    const url = formatKinveyUrl(api.protocol, api.host, `${this.pathname}/${doc._id}`);
+    const {
+      rawResponse = false,
+      timeout,
+      properties,
+      trace,
+      skipBL
+    } = options;
+    const queryObject = {};
+    const url = formatKinveyUrl(api.protocol, api.host, `${this.pathname}/${doc._id}`, queryObject);
     const request = createRequest(RequestMethod.PUT, url, doc);
+    request.headers.customRequestProperties = properties;
     const response = await request.execute();
 
     if (rawResponse === true) {
@@ -180,10 +252,19 @@ export class NetworkStore {
     return this.create(doc, options);
   }
 
-  async remove(query, rawResponse = false) {
+  async remove(query, options = {}) {
     const { api } = getConfig();
-    const url = formatKinveyUrl(api.protocol, api.host, this.pathname, query ? query.toQueryObject() : undefined);
+    const {
+      rawResponse = false,
+      timeout,
+      properties,
+      trace,
+      skipBL
+    } = options;
+    const queryObject = Object.assign(query ? query.toQueryObject() : {}, {});
+    const url = formatKinveyUrl(api.protocol, api.host, this.pathname, queryObject);
     const request = createRequest(RequestMethod.DELETE, url);
+    request.headers.customRequestProperties = properties;
     const response = await request.execute();
 
     if (rawResponse === true) {
@@ -193,10 +274,19 @@ export class NetworkStore {
     return response.data;
   }
 
-  async removeById(id, rawResponse = false) {
+  async removeById(id, options = {}) {
     const { api } = getConfig();
-    const url = formatKinveyUrl(api.protocol, api.host, `${this.pathname}/${id}`);
+    const {
+      rawResponse = false,
+      timeout,
+      properties,
+      trace,
+      skipBL
+    } = options;
+    const queryObject = {};
+    const url = formatKinveyUrl(api.protocol, api.host, `${this.pathname}/${id}`, queryObject);
     const request = createRequest(RequestMethod.DELETE, url);
+    request.headers.customRequestProperties = properties;
     const response = await request.execute();
 
     if (rawResponse === true) {

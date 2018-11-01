@@ -3,7 +3,7 @@ import expect from 'expect';
 import { collection, clearCache, DataStoreType } from './index';
 import { NetworkStore } from './networkstore';
 import { CacheStore } from './cachestore';
-import { KinveyError } from '../../errors';
+import { KinveyError } from 'kinvey-errors';
 import { init } from 'kinvey-app';
 import { randomString } from 'kinvey-test-utils';
 import { register as registerCache} from 'kinvey-cache-memory';

@@ -2,12 +2,12 @@ import assign from 'lodash/assign';
 import expect from 'expect';
 import nock from 'nock';
 import url from 'url';
-import * as mic from './mic';
-import { InsufficientCredentialsError, MobileIdentityConnectError, KinveyError } from '../../errors';
+import { InsufficientCredentialsError, MobileIdentityConnectError, KinveyError } from 'kinvey-errors';
 import { randomString } from 'kinvey-test-utils';
 import { register } from 'kinvey-http-node';
 import { login } from 'kinvey-identity';
 import { init } from 'kinvey-app';
+import * as mic from './mic';
 
 const redirectUri = 'http://localhost:3000';
 
