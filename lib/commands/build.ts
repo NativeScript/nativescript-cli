@@ -13,7 +13,7 @@ export abstract class BuildCommandBase extends ValidatePlatformCommandBase {
 			this.$projectData.initializeProjectData();
 	}
 
-	public async executeCore(args: string[]): Promise<void> {
+	public async executeCore(args: string[]): Promise<string> {
 		const platform = args[0].toLowerCase();
 		const appFilesUpdaterOptions: IAppFilesUpdaterOptions = {
 			bundle: !!this.$options.bundle,
@@ -44,10 +44,12 @@ export abstract class BuildCommandBase extends ValidatePlatformCommandBase {
 			keyStorePassword: this.$options.keyStorePassword,
 			androidBundle: this.$options.aab
 		};
-		await this.$platformService.buildPlatform(platform, buildConfig, this.$projectData);
+		const outputPath = await this.$platformService.buildPlatform(platform, buildConfig, this.$projectData);
 		if (this.$options.copyTo) {
 			this.$platformService.copyLastOutput(platform, this.$options.copyTo, buildConfig, this.$projectData);
 		}
+
+		return outputPath
 	}
 
 	protected validatePlatform(platform: string): void {
@@ -90,7 +92,7 @@ export class BuildIosCommand extends BuildCommandBase implements ICommand {
 	}
 
 	public async execute(args: string[]): Promise<void> {
-		return this.executeCore([this.$platformsData.availablePlatforms.iOS]);
+		await this.executeCore([this.$platformsData.availablePlatforms.iOS]);
 	}
 
 	public async canExecute(args: string[]): Promise<boolean | ICanExecuteCommandOutput> {
@@ -128,10 +130,9 @@ export class BuildAndroidCommand extends BuildCommandBase implements ICommand {
 		const buildResult = await this.executeCore([this.$platformsData.availablePlatforms.Android]);
 
 		if (this.$options.aab) {
+			this.$logger.info(`Your .aab file is located at: ${buildResult}`);
 			this.$logger.info("Link to documentation article");
 		}
-
-		return buildResult;
 	}
 
 	public async canExecute(args: string[]): Promise<boolean | ICanExecuteCommandOutput> {
