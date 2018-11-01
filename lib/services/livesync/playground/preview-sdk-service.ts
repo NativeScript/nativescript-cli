@@ -1,18 +1,18 @@
 import { MessagingService, Config, Device, DeviceConnectedMessage, SdkCallbacks, ConnectedDevices, FilesPayload } from "nativescript-preview-sdk";
 import { PubnubKeys } from "./preview-app-constants";
-import { DEVICE_LOG_EVENT_NAME } from "../../../common/constants";
 import { EventEmitter } from "events";
+import { DEVICE_LOG_EVENT_NAME } from "../../../common/constants";
 const pako = require("pako");
 
 export class PreviewSdkService extends EventEmitter implements IPreviewSdkService {
 	private static MAX_FILES_UPLOAD_BYTE_LENGTH = 15 * 1024 * 1024; // In MBs
 	private messagingService: MessagingService = null;
 	private instanceId: string = null;
-	public connectedDevices: Device[] = [];
 
-	constructor(private $logger: ILogger,
+	constructor(private $config: IConfiguration,
 		private $httpClient: Server.IHttpClient,
-		private $config: IConfiguration) {
+		private $logger: ILogger,
+		private $previewDevicesService: IPreviewDevicesService) {
 			super();
 	}
 
@@ -60,9 +60,8 @@ export class PreviewSdkService extends EventEmitter implements IPreviewSdkServic
 			onLogSdkMessage: (log: string) => {
 				this.$logger.trace("Received onLogSdkMessage message: ", log);
 			},
-			onConnectedDevicesChange: (connectedDevices: ConnectedDevices) => ({ }),
 			onLogMessage: (log: string, deviceName: string, deviceId: string) => {
-				const device = _.find(this.connectedDevices, { id: deviceId});
+				const device = this.$previewDevicesService.getDeviceById(deviceId);
 				this.emit(DEVICE_LOG_EVENT_NAME, log, deviceId, device ? device.platform : "");
 				this.$logger.info(`LOG from device ${deviceName}: ${log}`);
 			},
@@ -72,13 +71,10 @@ export class PreviewSdkService extends EventEmitter implements IPreviewSdkServic
 			onUncaughtErrorMessage: () => {
 				this.$logger.warn("The Preview app has terminated unexpectedly. Please run it again to get a detailed crash report.");
 			},
-			onDeviceConnectedMessage: (deviceConnectedMessage: DeviceConnectedMessage) => ({ }),
-			onDeviceConnected: (device: Device) => {
-				if (!_.find(this.connectedDevices, {id: device.id})) {
-					this.connectedDevices.push(device);
-				}
-			},
-			onDevicesPresence: (devices: Device[]) => ({ }),
+			onConnectedDevicesChange: (connectedDevices: ConnectedDevices) => ({}),
+			onDeviceConnectedMessage: (deviceConnectedMessage: DeviceConnectedMessage) => ({}),
+			onDeviceConnected: (device: Device) => ({}),
+			onDevicesPresence: (devices: Device[]) => this.$previewDevicesService.onDevicesPresence(devices),
 			onSendingChange: (sending: boolean) => ({ }),
 			onBiggerFilesUpload: async (filesContent, callback) => {
 				const gzippedContent = Buffer.from(pako.gzip(filesContent));
