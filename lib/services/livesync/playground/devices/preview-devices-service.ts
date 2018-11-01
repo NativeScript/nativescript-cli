@@ -3,9 +3,13 @@ import { EventEmitter } from "events";
 import { DeviceDiscoveryEventNames } from "../../../../common/constants";
 
 export class PreviewDevicesService extends EventEmitter implements IPreviewDevicesService {
-	public connectedDevices: Device[] = [];
+	private connectedDevices: Device[] = [];
 
-	public onDevicesPresence(devices: Device[]): void {
+	public getConnectedDevices(): Device[] {
+		return this.connectedDevices;
+	}
+
+	public updateConnectedDevices(devices: Device[]): void {
 		_(devices)
 			.reject(d => _.find(this.connectedDevices, device => d.id === device.id))
 			.each(device => this.raiseDeviceFound(device));

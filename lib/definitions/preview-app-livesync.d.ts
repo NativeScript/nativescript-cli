@@ -35,8 +35,8 @@ declare global {
 	}
 
 	interface IPreviewDevicesService extends EventEmitter {
-		connectedDevices: Device[];
-		onDevicesPresence(devices: Device[]): void;
+		getConnectedDevices(): Device[];
+		updateConnectedDevices(devices: Device[]): void;
 		getDeviceById(id: string): Device;
 		getDevicesForPlatform(platform: string): Device[];
 	}

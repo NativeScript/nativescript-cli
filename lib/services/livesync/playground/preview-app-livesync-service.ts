@@ -56,15 +56,15 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 	public async syncFiles(data: IPreviewAppLiveSyncData, filesToSync: string[], filesToRemove: string[]): Promise<void> {
 		this.showWarningsForNativeFiles(filesToSync);
 
-		for (const device of this.$previewDevicesService.connectedDevices) {
+		const connectedDevices = this.$previewDevicesService.getConnectedDevices();
+		for (const device of connectedDevices) {
 			await this.$previewAppPluginsService.comparePluginsOnDevice(data, device);
 		}
 
-		const platforms = _(this.$previewDevicesService.connectedDevices)
+		const platforms = _(connectedDevices)
 			.map(device => device.platform)
 			.uniq()
 			.value();
-
 		for (const platform of platforms) {
 			await this.syncFilesForPlatformSafe(data, platform, { filesToSync, filesToRemove, useHotModuleReload: data.appFilesUpdaterOptions.useHotModuleReload });
 		}
