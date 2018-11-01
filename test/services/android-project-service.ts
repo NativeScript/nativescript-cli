@@ -4,8 +4,6 @@ import * as stubs from "../stubs";
 import { assert } from "chai";
 import * as sinon from "sinon";
 
-
-
 const createTestInjector = (): IInjector => {
 	const testInjector = new Yok();
 	testInjector.register("androidProjectService", AndroidProjectService);
@@ -16,12 +14,12 @@ const createTestInjector = (): IInjector => {
 	testInjector.register("fs", stubs.FileSystemStub);
 	testInjector.register("injector", testInjector);
 	testInjector.register("devicePlatformsConstants", {});
-	testInjector.register("npm", {});
+	testInjector.register("packageManager", {});
 	testInjector.register("platformEnvironmentRequirements", {});
 	testInjector.register("androidResourcesMigrationService", {});
 	testInjector.register("androidPluginBuildService", {});
 	testInjector.register("filesHashService", {
-		saveHashesForProject: () => {}
+		saveHashesForProject: () => ({})
 	});
 	testInjector.register("androidPluginBuildService", {});
 	testInjector.register("errors", stubs.ErrorsStub);
@@ -34,7 +32,7 @@ const createTestInjector = (): IInjector => {
 			};
 		},
 		validateInfo: () => {
-
+			return true;
 		}
 	});
 
@@ -50,8 +48,8 @@ const getDefautlBuildConfig = (): IBuildConfig => {
 		teamId: "",
 		projectDir: "location/location",
 		keyStorePath: ""
-	}
-}
+	};
+};
 
 describe.only("androidDebugService", () => {
 	let injector: IInjector;
@@ -81,7 +79,6 @@ describe.only("androidDebugService", () => {
 					configurationFilePath: ""
 				};
 			});
-			
 		});
 
 		it("release no bundle", async () => {
@@ -93,7 +90,7 @@ describe.only("androidDebugService", () => {
 
 			//assert
 			assert.include(childProcess.lastCommandArgs, "assembleRelease");
-		})
+		});
 
 		it("debug no bundle", async () => {
 			//arrange
@@ -105,7 +102,7 @@ describe.only("androidDebugService", () => {
 
 			//assert
 			assert.include(childProcess.lastCommandArgs, "assembleDebug");
-		})
+		});
 
 		it("release bundle", async () => {
 			//arrange
@@ -117,7 +114,7 @@ describe.only("androidDebugService", () => {
 
 			//assert
 			assert.include(childProcess.lastCommandArgs, "bundleRelease");
-		})
+		});
 
 		it("debug bundle", async () => {
 			//arrange
@@ -130,6 +127,6 @@ describe.only("androidDebugService", () => {
 
 			//assert
 			assert.include(childProcess.lastCommandArgs, "bundleDebug");
-		})
+		});
 	});
 });

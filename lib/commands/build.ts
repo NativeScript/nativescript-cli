@@ -49,7 +49,7 @@ export abstract class BuildCommandBase extends ValidatePlatformCommandBase {
 			this.$platformService.copyLastOutput(platform, this.$options.copyTo, buildConfig, this.$projectData);
 		}
 
-		return outputPath
+		return outputPath;
 	}
 
 	protected validatePlatform(platform: string): void {

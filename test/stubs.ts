@@ -855,7 +855,7 @@ export class AndroidBundleValidatorHelper implements IAndroidBundleValidatorHelp
 	}
 
 	validateRuntimeVersion() {
-
+		return;
 	}
 }
 
