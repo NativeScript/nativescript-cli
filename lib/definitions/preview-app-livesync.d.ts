@@ -12,7 +12,6 @@ declare global {
 
 	interface IPreviewSdkService extends EventEmitter {
 		getQrCodeUrl(options: IHasUseHotModuleReloadOption): string;
-		connectedDevices: Device[];
 		initialize(getInitialFiles: (device: Device) => Promise<FilesPayload>): void;
 		applyChanges(filesPayload: FilesPayload): Promise<void>;
 		stop(): void;
@@ -33,5 +32,12 @@ declare global {
 		 * Default value is false.
 		 */
 		link: boolean;
+	}
+
+	interface IPreviewDevicesService extends EventEmitter {
+		getConnectedDevices(): Device[];
+		updateConnectedDevices(devices: Device[]): void;
+		getDeviceById(id: string): Device;
+		getDevicesForPlatform(platform: string): Device[];
 	}
 }

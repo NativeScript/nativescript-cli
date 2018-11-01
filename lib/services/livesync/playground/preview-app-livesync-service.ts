@@ -28,6 +28,7 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 		private $projectDataService: IProjectDataService,
 		private $previewSdkService: IPreviewSdkService,
 		private $previewAppPluginsService: IPreviewAppPluginsService,
+		private $previewDevicesService: IPreviewDevicesService,
 		private $projectFilesManager: IProjectFilesManager,
 		private $hmrStatusService: IHmrStatusService,
 		private $projectFilesProvider: IProjectFilesProvider) { }
@@ -55,15 +56,15 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 	public async syncFiles(data: IPreviewAppLiveSyncData, filesToSync: string[], filesToRemove: string[]): Promise<void> {
 		this.showWarningsForNativeFiles(filesToSync);
 
-		for (const device of this.$previewSdkService.connectedDevices) {
+		const connectedDevices = this.$previewDevicesService.getConnectedDevices();
+		for (const device of connectedDevices) {
 			await this.$previewAppPluginsService.comparePluginsOnDevice(data, device);
 		}
 
-		const platforms = _(this.$previewSdkService.connectedDevices)
+		const platforms = _(connectedDevices)
 			.map(device => device.platform)
 			.uniq()
 			.value();
-
 		for (const platform of platforms) {
 			await this.syncFilesForPlatformSafe(data, platform, { filesToSync, filesToRemove, useHotModuleReload: data.appFilesUpdaterOptions.useHotModuleReload });
 		}
@@ -112,7 +113,7 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 				await promise;
 
 				if (data.appFilesUpdaterOptions.useHotModuleReload && platformHmrData.hash) {
-					const devices = _.filter(this.$previewSdkService.connectedDevices, { platform: platform.toLowerCase() });
+					const devices = this.$previewDevicesService.getDevicesForPlatform(platform);
 
 					await Promise.all(_.map(devices, async (previewDevice: Device) => {
 						const status = await this.$hmrStatusService.getHmrStatus(previewDevice.id, platformHmrData.hash);
