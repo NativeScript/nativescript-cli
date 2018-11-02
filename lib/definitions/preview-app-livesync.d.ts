@@ -22,7 +22,7 @@ declare global {
 		getExternalPlugins(device: Device): string[];
 	}
 
-	interface IPlaygroundQrCodeGenerator {
+	interface IPreviewQrCodeService {
 		generateQrCode(options: IGenerateQrCodeOptions): Promise<void>;
 	}
 

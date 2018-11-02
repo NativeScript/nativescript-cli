@@ -13,7 +13,7 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 		private $staticConfig: IStaticConfig,
 		private $analyticsService: IAnalyticsService,
 		private $injector: IInjector,
-		private $playgroundQrCodeGenerator: IPlaygroundQrCodeGenerator) { }
+		private $previewQrCodeService: IPreviewQrCodeService) { }
 
 	@cache()
 	private get $liveSyncService(): ILiveSyncService {
@@ -194,7 +194,7 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 				useHotModuleReload: options.hmr
 			});
 
-			await this.$playgroundQrCodeGenerator.generateQrCode({ useHotModuleReload: options.hmr, link: options.link });
+			await this.$previewQrCodeService.generateQrCode({ useHotModuleReload: options.hmr, link: options.link });
 		}
 	}
 
