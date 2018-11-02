@@ -30,7 +30,8 @@ export class ProjectTemplatesService implements IProjectTemplatesService {
 		}
 
 		const templateName = constants.RESERVED_TEMPLATE_NAMES[name.toLowerCase()] || name;
-		const fullTemplateName = version ? `${templateName}@${version}` : templateName;
+		version = version || await this.$npmInstallationManager.getLatestCompatibleVersion(templateName);
+		const fullTemplateName = `${templateName}@${version}`;
 		const templatePackageJsonContent = await this.getTemplatePackageJsonContent(fullTemplateName);
 		const templateVersion = await this.getTemplateVersion(fullTemplateName);
 
