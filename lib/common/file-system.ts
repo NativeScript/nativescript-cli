@@ -5,6 +5,10 @@ import * as injector from "./yok";
 import * as crypto from "crypto";
 import * as shelljs from "shelljs";
 import { parseJson } from "./helpers";
+import { PACKAGE_JSON_FILE_NAME } from "../constants";
+import { EOL } from "os";
+import stringifyPackage = require("stringify-package");
+import detectNewline = require("detect-newline");
 
 // TODO: Add .d.ts for mkdirp module (or use it from @types repo).
 const mkdirp = require("mkdirp");
@@ -205,7 +209,19 @@ export class FileSystem implements IFileSystem {
 			space = this.getIndentationCharacter(filename);
 		}
 
-		return this.writeFile(filename, JSON.stringify(data, null, space), encoding);
+		let stringifiedData;
+		if (path.basename(filename) === PACKAGE_JSON_FILE_NAME) {
+			let newline = EOL;
+			if (fs.existsSync(filename)) {
+				const existingFile = this.readText(filename);
+				newline = detectNewline(existingFile);
+			}
+			stringifiedData = stringifyPackage(data, space, newline);
+		} else {
+			stringifiedData = JSON.stringify(data, null, space);
+		}
+
+		return this.writeFile(filename, stringifiedData, encoding);
 	}
 
 	public copyFile(sourceFileName: string, destinationFileName: string): void {

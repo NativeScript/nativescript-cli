@@ -2011,3 +2011,13 @@ interface ILockFile {
 	 */
 	check(lockFilePath?: string, lockFileOpts?: ILockFileOptions): boolean;
 }
+
+declare module "stringify-package" {
+	function stringifyPackage(data: any, indent: any, newline: string): string
+	export = stringifyPackage
+}
+
+declare module "detect-newline" {
+	function detectNewline(data: string): string | null;
+	export = detectNewline
+}
