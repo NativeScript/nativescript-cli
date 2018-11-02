@@ -239,6 +239,6 @@ export class Cache {
   }
 }
 
-export function clearAll(storeName) {
+export function clear(storeName) {
   return queue.add(() => store.clearAll(storeName));
 }

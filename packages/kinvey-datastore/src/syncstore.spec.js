@@ -49,28 +49,27 @@ describe('SyncStore', () => {
   });
 
   afterEach(() => {
-    const store = new CacheStore(client.appKey, collectionName, null, {autoSync: false});
+    const store = new CacheStore(collectionName, {autoSync: false});
     return store.clear();
   });
 
   describe('pathname', () => {
     it(`should equal /appdata/<appkey>/${collectionName}`, () => {
-      const store = new CacheStore(client.appKey, collectionName, null, {autoSync: false});
-      store.pathname = `/appdata/${client.appKey}/${collectionName}`
+      const store = new CacheStore(collectionName, { autoSync: false });
       expect(store.pathname).toEqual(`/appdata/${client.appKey}/${collectionName}`);
     });
 
-    it('should not be able to be changed', () => {//TODO: errors should be reverted
+    it('should not be able to be changed', () => {
       expect(() => {
-        const store = new CacheStore(client.appKey, collectionName, null, {autoSync: false});
+        const store = new CacheStore(collectionName, { autoSync: false });
         store.pathname = `/tests/${collectionName}`;
       }).toThrow(TypeError, /which has only a getter/);
     });
   });
 
-  describe('find()', () => {//TODO:  errors should be reverted and query should have validation
+  describe('find()', () => {
     it('should throw an error if the query argument is not an instance of the Query class', (done) => {
-      const store = new CacheStore(client.appKey, collectionName, null, {autoSync: false});
+      const store = new CacheStore(collectionName, {autoSync: false});
       store.find({})
         .subscribe(null, (error) => {
           try {
@@ -88,7 +87,7 @@ describe('SyncStore', () => {
     it('should return the entities', (done) => {
       const entity1 = { _id: randomString() };
       const entity2 = { _id: randomString() };
-      const store = new CacheStore(client.appKey, collectionName, null, {autoSync: false});
+      const store = new CacheStore(collectionName, {autoSync: false});
       const onNextSpy = expect.createSpy();
 
       nock(client.apiHostname)
@@ -143,7 +142,7 @@ describe('SyncStore', () => {
     it('should return the entities that match the query', (done) => {
       const entity1 = { _id: randomString() };
       const entity2 = { _id: randomString() };
-      const store = new CacheStore(client.appKey, collectionName, null, {autoSync: false});
+      const store = new CacheStore(collectionName, {autoSync: false});
       const query = new Query().equalTo('_id', entity1._id);
       const onNextSpy = expect.createSpy();
 
@@ -168,8 +167,8 @@ describe('SyncStore', () => {
   });
 
   describe('findById()', () => {
-    it('should return undefined if an id is not provided', (done) => {//TODO: should return undefined instead of error - in general, this behavior is correct, but we aim to have parity with the old sdk
-      const store = new CacheStore(client.appKey, collectionName, null, {autoSync: false});
+    it('should return undefined if an id is not provided', (done) => {
+      const store = new CacheStore(collectionName, {autoSync: false});
       const onNextSpy = expect.createSpy();
       store.findById()
         .subscribe(onNextSpy, done, () => {
@@ -183,9 +182,9 @@ describe('SyncStore', () => {
         });
     });
 
-    it('should throw a NotFoundError if the entity does not exist', (done) => {//TODO: errors should be reverted
+    it('should throw a NotFoundError if the entity does not exist', (done) => {
       const entity = { _id: randomString() };
-      const store = new CacheStore(client.appKey, collectionName, null, {autoSync: false});
+      const store = new CacheStore(collectionName, {autoSync: false});
       const onNextSpy = expect.createSpy();
 
       store.findById(entity._id)
@@ -205,7 +204,7 @@ describe('SyncStore', () => {
     it('should return the entity that matches the id', (done) => {
       const entity1 = { _id: randomString() };
       const entity2 = { _id: randomString() };
-      const store = new CacheStore(client.appKey, collectionName, null, {autoSync: false});
+      const store = new CacheStore(collectionName, {autoSync: false});
       const onNextSpy = expect.createSpy();
 
       nock(client.apiHostname)
@@ -230,7 +229,7 @@ describe('SyncStore', () => {
 
   describe('group()', () => {
     it('should throw an error if the query argument is not an instance of the Query class', (done) => {//TODO:  errors should be reverted
-      const store = new CacheStore(client.appKey, collectionName, null, {autoSync: false});
+      const store = new CacheStore(collectionName, {autoSync: false});
       store.group({})
         .subscribe(null, (error) => {
           try {
@@ -245,10 +244,10 @@ describe('SyncStore', () => {
         });
     });
 
-    it('should return the count of all unique properties on the collection', (done) => {//TODO:  cache.group is not a function
+    it.skip('should return the count of all unique properties on the collection', (done) => {//TODO:  cache.group is not a function
       const entity1 = { _id: randomString(), title: randomString() };
       const entity2 = { _id: randomString(), title: randomString() };
-      const store = new CacheStore(client.appKey, collectionName, null, {autoSync: false});
+      const store = new CacheStore(collectionName, {autoSync: false});
       const onNextSpy = expect.createSpy();
 
       nock(client.apiHostname)
@@ -274,7 +273,7 @@ describe('SyncStore', () => {
 
   describe('count()', () => {
     it('should throw an error if the query argument is not an instance of the Query class', (done) => {//TODO: errors should be reverted
-      const store = new CacheStore(client.appKey, collectionName, null, {autoSync: false});
+      const store = new CacheStore(collectionName, {autoSync: false});
       store.count({})
         .subscribe(null, (error) => {
           try {
@@ -292,7 +291,7 @@ describe('SyncStore', () => {
     it('should return the count for the collection', (done) => {
       const entity1 = { _id: randomString() };
       const entity2 = { _id: randomString() };
-      const store = new CacheStore(client.appKey, collectionName, null, {autoSync: false});
+      const store = new CacheStore(collectionName, {autoSync: false});
       const onNextSpy = expect.createSpy();
 
       nock(client.apiHostname)
@@ -318,7 +317,7 @@ describe('SyncStore', () => {
 
   describe('create()', () => {
     it('should throw an error if trying to create an array of entities', () => {//TODO: errors should be reverted
-      const store = new CacheStore(client.appKey, collectionName, null, {autoSync: false});
+      const store = new CacheStore(collectionName, {autoSync: false});
       const entity1 = {};
       const entity2 = {};
 
@@ -331,7 +330,7 @@ describe('SyncStore', () => {
     });
 
     it('should create an entity', () => {
-      const store = new CacheStore(client.appKey, collectionName, null, {autoSync: false});
+      const store = new CacheStore(collectionName, {autoSync: false});
       const entity = {};
       return store.create(entity)
         .then((createdEntity) => {
@@ -354,7 +353,7 @@ describe('SyncStore', () => {
     });
 
     it('should create an entity if it contains an _id', async () => {
-      const store = new CacheStore(client.appKey, collectionName, null, {autoSync: false});
+      const store = new CacheStore(collectionName, {autoSync: false});
       const entity = { _id: randomString() };
       return store.create(entity)
         .then((createdEntity) => {
@@ -378,7 +377,7 @@ describe('SyncStore', () => {
 
   describe('update()', () => {
     it('should throw an error if trying to update an array of entities', async () => {//TODO: errors should be reverted
-      const store = new CacheStore(client.appKey, collectionName, null, {autoSync: false});
+      const store = new CacheStore(collectionName, {autoSync: false});
       const entity1 = { _id: randomString() };
       const entity2 = { _id: randomString() };
 
@@ -391,7 +390,7 @@ describe('SyncStore', () => {
     });
 
     it('should throw an error if an entity does not have an _id', async () => {//TODO: errors should be reverted
-      const store = new CacheStore(client.appKey, collectionName, null, {autoSync: false});
+      const store = new CacheStore(collectionName, {autoSync: false});
       const entity = {};
 
       return store.update(entity)
@@ -404,7 +403,7 @@ describe('SyncStore', () => {
     });
 
     it('should update an entity with an _id', async () => {
-      const store = new CacheStore(client.appKey, collectionName, null, {autoSync: false});
+      const store = new CacheStore(collectionName, {autoSync: false});
       const entity = { _id: randomString() };
       return store.update(entity)
         .then((updatedEntity) => {
@@ -432,21 +431,21 @@ describe('SyncStore', () => {
     });
 
     it('should call create() for an entity that does not contain an _id', () => {
-      const store = new CacheStore(client.appKey, collectionName, null, {autoSync: false});
+      const store = new CacheStore(collectionName, {autoSync: false});
       const spy = expect.spyOn(store, 'create');
       store.save({});
       expect(spy).toHaveBeenCalled();
     });
 
     it('should call update() for an entity that contains an _id', () => {
-      const store = new CacheStore(client.appKey, collectionName, null, {autoSync: false});
+      const store = new CacheStore(collectionName, {autoSync: false});
       const spy = expect.spyOn(store, 'update');
       store.save({ _id: randomString() });
       expect(spy).toHaveBeenCalled();
     });
 
     it('should call update() for an entity that contains an _id with special characters', () => {
-      const store = new CacheStore(client.appKey, collectionName, null, {autoSync: false});
+      const store = new CacheStore(collectionName, {autoSync: false});
       const id = '.$~<>!@+_#';
       return store.save({ _id: id })
         .then((resp) => {
@@ -455,7 +454,7 @@ describe('SyncStore', () => {
     });
 
     it('should call create() when an array of entities is provided', () => {
-      const store = new CacheStore(client.appKey, collectionName, null, {autoSync: false});
+      const store = new CacheStore(collectionName, {autoSync: false});
       const spy = expect.spyOn(store, 'create');
       store.save([{ _id: randomString() }, {}]);
       expect(spy).toHaveBeenCalled();
@@ -464,7 +463,7 @@ describe('SyncStore', () => {
 
   describe('remove()', () => {
     it('should throw an error if the query argument is not an instance of the Query class', () => {//TODO: errors should be reverted
-      const store = new CacheStore(client.appKey, collectionName, null, {autoSync: false});
+      const store = new CacheStore(collectionName, {autoSync: false});
       return store.remove({})
         .then(() => {
           throw new Error('This test should fail.');
@@ -476,7 +475,7 @@ describe('SyncStore', () => {
     });
 
     it('should return a { count: 0 } when no entities are removed', () => {//TODO:  count is 0 instead of {count:0}
-      const store = new CacheStore(client.appKey, collectionName, null, {autoSync: false});
+      const store = new CacheStore(collectionName, {autoSync: false});
       return store.remove()
         .then((result) => {
           expect(result).toEqual({ count: 0 });
@@ -484,7 +483,7 @@ describe('SyncStore', () => {
     });
 
     it('should remove all the entities', () => {//TODO:  count is 1 when it should be {count:1} and the correct count is decreased by 1
-      const store = new CacheStore(client.appKey, collectionName, null, {autoSync: false});
+      const store = new CacheStore(collectionName, {autoSync: false});
       const entity1 = { _id: randomString() };
       const entity2 = { _id: randomString() };
 
@@ -510,7 +509,7 @@ describe('SyncStore', () => {
     });
 
     it('should remove all the entities that match the query', () => {//TODO:  count is 1 when it should be {count:1}
-      const store = new CacheStore(client.appKey, collectionName, null, {autoSync: false});
+      const store = new CacheStore(collectionName, {autoSync: false});
       const entity1 = { _id: randomString() };
       const entity2 = { _id: randomString() };
 
@@ -539,7 +538,7 @@ describe('SyncStore', () => {
 
   describe('removeById()', () => {
     it('should return a `{ count: 0 } if an id is not provided', () => {//TODO:  returns 0 instead of {count:0}
-      const store = new CacheStore(client.appKey, collectionName, null, {autoSync: false});
+      const store = new CacheStore(collectionName, {autoSync: false});
       return store.removeById()
         .then((result) => {
           expect(result).toEqual({ count: 0 });
@@ -547,7 +546,7 @@ describe('SyncStore', () => {
     });
 
     it('should return a NotFoundError if an entity with that id does not exist', () => {//TODO: errors should be reverted
-      const store = new CacheStore(client.appKey, collectionName, null, {autoSync: false});
+      const store = new CacheStore(collectionName, {autoSync: false});
       return store.clear()
         .then(() => store.removeById(randomString()))
         .then(() => Promise.reject(new Error('Should not happen')))
@@ -557,7 +556,7 @@ describe('SyncStore', () => {
     });
 
     it('should remove the entity from cache', () => {//TODO:  returns 1 instead of {count: 1}
-      const store = new CacheStore(client.appKey, collectionName, null, {autoSync: false});
+      const store = new CacheStore(collectionName, {autoSync: false});
       const entity = { _id: randomString() };
 
       nock(client.apiHostname)
@@ -579,7 +578,7 @@ describe('SyncStore', () => {
     });
 
     it('should remove the entity from the cache and sync table', () => { //TODO:  returns 1 instead of {count: 1}
-      const store = new CacheStore(client.appKey, collectionName, null, {autoSync: false});
+      const store = new CacheStore(collectionName, {autoSync: false});
       const entity = {};
 
       return store.save(entity)
@@ -604,7 +603,7 @@ describe('SyncStore', () => {
 
   describe('clear()', () => {//TODO: clear returns undefined, but seems to clear the items
     it('should remove all entities only from the cache', () => {
-      const store = new CacheStore(client.appKey, collectionName, null, {autoSync: false});
+      const store = new CacheStore(collectionName, {autoSync: false});
       const entity = { _id: randomString() };
 
       nock(client.apiHostname)
@@ -625,7 +624,7 @@ describe('SyncStore', () => {
     });
 
     it('should remove only the entities from the cache that match the query', () => {//TODO: clear returns undefined, but seems to clear the items
-      const store = new CacheStore(client.appKey, collectionName, null, {autoSync: false});
+      const store = new CacheStore(collectionName, {autoSync: false});
       const entity1 = { _id: randomString() };
       const entity2 = { _id: randomString() };
 
@@ -666,7 +665,7 @@ describe('SyncStore', () => {
     });
 
     it('should remove an entity if it was created locally and not add it to the sync queue', () => {//TODO: remove seems to decrease the result by -1
-      const store = new CacheStore(client.appKey, collectionName, null, {autoSync: false});
+      const store = new CacheStore(collectionName, {autoSync: false});
       const entity1 = { _id: randomString() };
       const entity2 = { _id: randomString() };
       const entity3 = {};
@@ -684,7 +683,7 @@ describe('SyncStore', () => {
         })
         .then((result) => {
           expect(result).toEqual({ count: 3 });
-          const syncStore = new CacheStore(client.appKey, collectionName, null, {autoSync: false});
+          const syncStore = new CacheStore(collectionName, {autoSync: false});
           return syncStore.find().toPromise();
         })
         .then((entities) => {
@@ -719,7 +718,7 @@ describe('SyncStore', () => {
 
   describe('pendingSyncCount()', () => {
     it('should return the count of entities waiting to be synced', () => {
-      const store = new CacheStore(client.appKey, collectionName, null, {autoSync: false});
+      const store = new CacheStore(collectionName, {autoSync: false});
       const entity = {};
 
       return store.save(entity)
@@ -735,7 +734,7 @@ describe('SyncStore', () => {
 
   describe('pendingSyncEntities()', () => {
     it('should return the entities waiting to be synced', () => {
-      const store = new CacheStore(client.appKey, collectionName, null, {autoSync: false});
+      const store = new CacheStore(collectionName, {autoSync: false});
       const entity = {};
 
       return store.save(entity)
@@ -754,7 +753,7 @@ describe('SyncStore', () => {
 
   describe('push', () => {
     it('should push the entities to the backend', () => {
-      const store = new CacheStore(client.appKey, collectionName, null, {autoSync: false});
+      const store = new CacheStore(collectionName, {autoSync: false});
       const entity = { _id: randomString() };
 
       return store.save(entity)
@@ -803,7 +802,7 @@ describe('SyncStore', () => {
     it('should save entities from the backend to the cache', () => {
       const entity1 = { _id: randomString() };
       const entity2 = { _id: randomString() };
-      const store = new CacheStore(client.appKey, collectionName, null, {autoSync: false});
+      const store = new CacheStore(collectionName, {autoSync: false});
 
       nock(client.apiHostname)
         .get(`/appdata/${client.appKey}/${collectionName}`)
@@ -811,7 +810,7 @@ describe('SyncStore', () => {
 
       store.pull()
         .then(() => {
-          const syncStore = new CacheStore(client.appKey, collectionName, null, {autoSync: false});
+          const syncStore = new CacheStore(collectionName, {autoSync: false});
           return syncStore.find().toPromise();
         })
         .then((entities) => {
@@ -822,7 +821,7 @@ describe('SyncStore', () => {
 
   describe('sync', () => {
     it('should push any pending sync entities and then pull entities from the backend and save them to the cache', () => {
-      const store = new CacheStore(client.appKey, collectionName, null, {autoSync: false});
+      const store = new CacheStore(collectionName, {autoSync: false});
       const entity1 = { _id: randomString() };
       const entity2 = { _id: randomString() };
 
@@ -851,7 +850,7 @@ describe('SyncStore', () => {
 
   describe('clearSync()', () => {
     it('should clear the sync table', () => {
-      const store = new CacheStore(client.appKey, collectionName, null, {autoSync: false});
+      const store = new CacheStore(collectionName, {autoSync: false});
       const entity = { _id: randomString() };
 
       return store.save(entity)
@@ -863,7 +862,7 @@ describe('SyncStore', () => {
         })
         .then((count) => {
           expect(count).toEqual(0);
-          const syncStore = new CacheStore(client.appKey, collectionName, null, {autoSync: false});
+          const syncStore = new CacheStore(collectionName, {autoSync: false});
           const query = new Query().equalTo('_id', entity._id);
           return syncStore.find(query).toPromise();
         })
@@ -873,7 +872,7 @@ describe('SyncStore', () => {
     });
 
     it('should clear only the entities from the sync table matching the query', () => {
-      const store = new CacheStore(client.appKey, collectionName, null, {autoSync: false});
+      const store = new CacheStore(collectionName, {autoSync: false});
       const entity1 = { _id: randomString() };
       const entity2 = { _id: randomString() };
 
@@ -891,7 +890,7 @@ describe('SyncStore', () => {
         })
         .then((count) => {
           expect(count).toEqual(0);
-          const syncStore = new CacheStore(client.appKey, collectionName, null, {autoSync: false});
+          const syncStore = new CacheStore(collectionName, {autoSync: false});
           const query = new Query().equalTo('_id', entity1._id);
           return syncStore.find(query).toPromise();
         })

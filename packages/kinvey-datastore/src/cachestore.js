@@ -1,7 +1,7 @@
 import isArray from 'lodash/isArray';
 import { KinveyObservable } from 'kinvey-observable';
 import { Query } from 'kinvey-query';
-import { KinveyError } from 'kinvey-errors';
+import { KinveyError, NotFoundError } from 'kinvey-errors';
 import { getConfig } from 'kinvey-app';
 import { DataStoreCache } from './cache';
 import { Sync } from './sync';
@@ -98,19 +98,27 @@ export class CacheStore {
         //   throw new Error('No id was provided. A valid id is required.');
         // }
 
-        const cachedDoc = await cache.findById(id);
-
-        if (!cachedDoc) {
+        if (!id) {
           observer.next(undefined);
         } else {
-          observer.next(cachedDoc);
-        }
+          const cachedDoc = await cache.findById(id);
 
-        if (autoSync) {
-          const query = new Query().equalTo('_id', id);
-          await this.pull(query, options);
-          const doc = await cache.findById(id);
-          observer.next(doc);
+          if (!cachedDoc) {
+            if (!autoSync) {
+              throw new NotFoundError();
+            }
+
+            observer.next(undefined);
+          } else {
+            observer.next(cachedDoc);
+          }
+
+          if (autoSync) {
+            const query = new Query().equalTo('_id', id);
+            await this.pull(query, options);
+            const doc = await cache.findById(id);
+            observer.next(doc);
+          }
         }
 
         observer.complete();
@@ -189,14 +197,19 @@ export class CacheStore {
     const autoSync = options.autoSync === true || this.autoSync;
     const cache = new DataStoreCache(this.collectionName, this.tag);
     const sync = new Sync(this.collectionName, this.tag);
+    let count = 0;
+
+    // Find the docs that will be removed from the cache that match the query
     const docs = await cache.find(query);
 
     if (docs.length > 0) {
-      let count = await cache.remove(query);
-      const removeQuery = new Query().contains('_id', docs.map(doc => doc._id));
-      await sync.remove(removeQuery);
+      // Remove docs from the cache
+      count = await cache.remove(query);
+
+      // Add delete events for the removed docs to sync
       const syncDocs = await sync.addDeleteSyncEvent(docs);
 
+      // Remove the docs from the backend
       if (syncDocs.length > 0 && autoSync) {
         const pushQuery = new Query().contains('_id', syncDocs.map(doc => doc._id));
         const pushResults = await this.push(pushQuery);
@@ -204,27 +217,37 @@ export class CacheStore {
           if (pushResult.error) {
             return count - 1;
           }
+
           return count;
         }, count);
       }
-
-      return { count };
     }
 
-    return { count: 0 };
+    return { count };
   }
 
   async removeById(id, options = {}) {
     const autoSync = options.autoSync === true || this.autoSync;
     const cache = new DataStoreCache(this.collectionName, this.tag);
     const sync = new Sync(this.collectionName, this.tag);
-    const doc = await cache.findById(id);
+    let count = 0;
 
-    if (doc) {
-      let count = await cache.removeById(id);
-      await sync.addDeleteSyncEvent(doc);
+    if (id) {
+      // Find the doc that will be removed
+      const doc = await cache.findById(id);
 
-      if (autoSync) {
+      if (!doc) {
+        throw new NotFoundError();
+      }
+
+      // Remove the doc from the cache
+      count = await cache.removeById(id);
+
+      // Add delete event for the removed doc to sync
+      const syncDoc = await sync.addDeleteSyncEvent(doc);
+
+      // Remove the doc from the backend
+      if (syncDoc && autoSync) {
         const query = new Query().equalTo('_id', doc._id);
         const pushResults = await this.push(query);
 
@@ -235,17 +258,20 @@ export class CacheStore {
           }
         }
       }
-
-      return count;
     }
 
-    return 0;
+    return { count };
   }
 
-  async clear() {
+  async clear(query) {
+    // Remove the sync events
+    const sync = new Sync(this.collectionName, this.tag);
+    await sync.remove(query);
+
+    // Remove the docs from the cache
     const cache = new DataStoreCache(this.collectionName, this.tag);
-    await this.clearSync();
-    return cache.clear();
+    const count = await cache.remove(query);
+    return { count };
   }
 
   async push(query, options) {
@@ -311,9 +337,9 @@ export class CacheStore {
     return sync.count(query);
   }
 
-  clearSync() {
+  clearSync(query) {
     const sync = new Sync(this.collectionName, this.tag);
-    return sync.clear();
+    return sync.remove(query);
   }
 
   async subscribe(receiver) {

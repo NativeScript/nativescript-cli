@@ -4,13 +4,26 @@ import { Query } from 'kinvey-query';
 import { formatKinveyUrl, KinveyRequest, RequestMethod, Auth, KinveyHeaders } from 'kinvey-http';
 import { get as getSession } from 'kinvey-session';
 import { getConfig } from 'kinvey-app';
-import { MissingConfigurationError, ParameterValueOutOfRangeError } from 'kinvey-errors';
+import { MissingConfigurationError, ParameterValueOutOfRangeError, SyncError } from 'kinvey-errors';
 import { NetworkStore } from './networkstore';
 import { DataStoreCache } from './cache';
 
 const SYNC_CACHE_TAG = 'kinvey-sync';
 const QUERY_CACHE_TAG = 'kinvey-query';
 const PAGE_LIMIT = 10000;
+const PUSH_IN_PROGRESS = {};
+
+function isPushInProgress(collectionName) {
+  return PUSH_IN_PROGRESS[collectionName] === true;
+}
+
+function markPushStart(collectionName) {
+  PUSH_IN_PROGRESS[collectionName] = true;
+}
+
+function markPushEnd(collectionName) {
+  PUSH_IN_PROGRESS[collectionName] = false;
+}
 
 export const SyncEvent = {
   Create: 'POST',
@@ -117,9 +130,14 @@ export class Sync {
     if (docs.length > 0) {
       const docWithNoId = docs.find(doc => !doc._id);
       if (docWithNoId) {
-        return Promise.reject(new Error('A doc is missing an _id. All docs must have an _id in order to be added to the sync collection.'));
+        throw new SyncError('A doc is missing an _id. All docs must have an _id in order to be added to the sync collection.');
       }
 
+      // Remove existing sync events that match the docs
+      const query = new Query().contains('_id', docs.map(doc => doc._id));
+      await this.remove(query);
+
+      // Don't add delete events for docs that were created offline
       if (event === SyncEvent.Delete) {
         docs = docs.filter((doc) => {
           if (doc._kmd && doc._kmd.local === true) {
@@ -130,9 +148,7 @@ export class Sync {
         });
       }
 
-      const query = new Query().contains('_id', docs.map(doc => doc._id));
-      await this.remove(query);
-
+      // Add sync events for the docs
       syncDocs = await syncCache.save(docs.map((doc) => {
         return {
           _id: doc._id,
@@ -145,10 +161,14 @@ export class Sync {
       }));
     }
 
-    return singular ? syncDocs[0] : syncDocs;
+    return singular ? syncDocs.shift() : syncDocs;
   }
 
   async push(query, options) {
+    if (isPushInProgress(this.collectionName)) {
+      throw new SyncError('Data is already being pushed to the backend. Please wait for it to complete before pushing new data to the backend.');
+    }
+
     const network = new NetworkStore(this.collectionName);
     const cache = new DataStoreCache(this.collectionName, this.tag);
     const syncCache = new SyncCache(this.collectionName, this.tag);
@@ -159,7 +179,10 @@ export class Sync {
       let i = 0;
 
       const batchPush = async (pushResults) => {
+        markPushStart(this.collectionName);
+
         if (i >= syncDocs.length) {
+          markPushEnd(this.collectionName);
           return pushResults;
         }
 
@@ -192,12 +215,10 @@ export class Sync {
               };
             }
           } else if (event === SyncEvent.Create || event === SyncEvent.Update) {
+            let doc = await cache.findById(_id);
+            let local = false;
+
             try {
-              let local = false;
-
-              // Get the doc from the cache
-              let doc = await cache.findById(_id);
-
               // Save the doc to the backend
               if (event === SyncEvent.Create) {
                 if (doc._kmd && doc._kmd.local === true) {
@@ -235,6 +256,7 @@ export class Sync {
               return {
                 _id,
                 operation: event,
+                entity: doc,
                 error
               };
             }
@@ -247,6 +269,8 @@ export class Sync {
             error: new Error('Unable to push item in sync table because the event was not recognized.')
           };
         }));
+
+        markPushEnd(this.collectionName);
 
         // Push remaining docs
         return batchPush(pushResults.concat(results));
@@ -376,6 +400,12 @@ export class Sync {
   }
 
   async remove(query) {
+    // Clear the query cache
+    if (!query) {
+      const queryCache = new QueryCache(this.collectionName, this.tag);
+      await queryCache.remove();
+    }
+
     const syncCache = new SyncCache(this.collectionName, this.tag);
     return syncCache.remove(query);
   }
@@ -386,11 +416,12 @@ export class Sync {
   }
 
   async clear() {
-    const syncCache = new SyncCache(this.collectionName, this.tag);
+    // Clear the query cache
     const queryCache = new QueryCache(this.collectionName, this.tag);
-    await Promise.all([
-      syncCache.clear(),
-      queryCache.clear()
-    ]);
+    await queryCache.remove();
+
+    // Clear the sync cache
+    const syncCache = new SyncCache(this.collectionName, this.tag);
+    return syncCache.remove();
   }
 }

@@ -2,7 +2,7 @@ import isPlainObject from 'lodash/isPlainObject';
 import isString from 'lodash/isString';
 import isArray from 'lodash/isArray';
 import isEmpty from 'lodash/isEmpty';
-import { clearCache } from 'kinvey-datastore';
+import { clear } from 'kinvey-datastore';
 import { Acl } from 'kinvey-acl';
 import { Kmd } from 'kinvey-kmd';
 import { formatKinveyUrl, KinveyRequest, RequestMethod, Auth } from 'kinvey-http';
@@ -244,7 +244,7 @@ export async function logout() {
     }
 
     removeSession();
-    await clearCache();
+    await clear();
     return activeUser;
   }
 

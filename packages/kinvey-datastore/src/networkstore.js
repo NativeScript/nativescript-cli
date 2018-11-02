@@ -3,6 +3,7 @@ import { KinveyObservable } from 'kinvey-observable';
 import { get as getSession } from 'kinvey-session';
 import { Aggregation } from 'kinvey-aggregation';
 import * as Live from 'kinvey-live';
+import { Query } from 'kinvey-query';
 import {
   formatKinveyUrl,
   KinveyRequest,
@@ -54,21 +55,25 @@ export class NetworkStore {
 
   find(query, options = {}) {
     const stream = KinveyObservable.create(async (observer) => {
-      const { api } = getConfig();
-      const {
-        rawResponse = false,
-        timeout,
-        properties,
-        trace,
-        skipBL,
-        kinveyFileTTL,
-        kinveyFileTLS,
-      } = options;
-      const queryObject = Object.assign(query ? query.toQueryObject() : {}, { kinveyfile_ttl: kinveyFileTTL, kinveyfile_tls: kinveyFileTLS });
-      const url = formatKinveyUrl(api.protocol, api.host, this.pathname, queryObject);
-      const request = createRequest(RequestMethod.GET, url);
-      request.headers.customRequestProperties = properties;
       try {
+        if (query && !(query instanceof Query)) {
+          throw new KinveyError('Invalid query. It must be an instance of the Query class.');
+        }
+
+        const { api } = getConfig();
+        const {
+          rawResponse = false,
+          timeout,
+          properties,
+          trace,
+          skipBL,
+          kinveyFileTTL,
+          kinveyFileTLS,
+        } = options;
+        const queryObject = Object.assign(query ? query.toQueryObject() : {}, { kinveyfile_ttl: kinveyFileTTL, kinveyfile_tls: kinveyFileTLS });
+        const url = formatKinveyUrl(api.protocol, api.host, this.pathname, queryObject);
+        const request = createRequest(RequestMethod.GET, url);
+        request.headers.customRequestProperties = properties;
         const response = await request.execute();
 
         if (rawResponse === true) {
@@ -87,19 +92,23 @@ export class NetworkStore {
 
   count(query, options = {}) {
     const stream = KinveyObservable.create(async (observer) => {
-      const { api } = getConfig();
-      const {
-        rawResponse = false,
-        timeout,
-        properties,
-        trace,
-        skipBL
-      } = options;
-      const queryObject = Object.assign(query ? query.toQueryObject() : {}, {});
-      const url = formatKinveyUrl(api.protocol, api.host, `${this.pathname}/_count`, queryObject);
-      const request = createRequest(RequestMethod.GET, url);
-      request.headers.customRequestProperties = properties;
       try {
+        if (query && !(query instanceof Query)) {
+          throw new KinveyError('Invalid query. It must be an instance of the Query class.');
+        }
+
+        const { api } = getConfig();
+        const {
+          rawResponse = false,
+          timeout,
+          properties,
+          trace,
+          skipBL
+        } = options;
+        const queryObject = Object.assign(query ? query.toQueryObject() : {}, {});
+        const url = formatKinveyUrl(api.protocol, api.host, `${this.pathname}/_count`, queryObject);
+        const request = createRequest(RequestMethod.GET, url);
+        request.headers.customRequestProperties = properties;
         const response = await request.execute();
 
         if (rawResponse === true) {
@@ -120,7 +129,7 @@ export class NetworkStore {
     const stream = KinveyObservable.create(async (observer) => {
       try {
         if (!(aggregation instanceof Aggregation)) {
-          throw new Error('aggregation must be an instance of Aggregation.');
+          throw new KinveyError('Invalid aggregation. It must be an instance of the Aggregation class.');
         }
 
         const { api } = getConfig();
@@ -253,6 +262,10 @@ export class NetworkStore {
   }
 
   async remove(query, options = {}) {
+    if (query && !(query instanceof Query)) {
+      throw new KinveyError('Invalid query. It must be an instance of the Query class.');
+    }
+
     const { api } = getConfig();
     const {
       rawResponse = false,
