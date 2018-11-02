@@ -121,7 +121,7 @@ export class UserMock extends User {
     return super.logout();
   }
 
-  static logout(appKey) {
+  static logout() {
     const user = UserMock.getActiveUser();
 
     if (user) {
@@ -131,7 +131,7 @@ export class UserMock extends User {
     return Promise.resolve(null);
   }
 
-  signup(data, options) {
+  signup(data, options, appKey) {
     let userData = data;
 
     if (userData instanceof User) {
@@ -153,14 +153,14 @@ export class UserMock extends User {
 
     // Setup nock response
     nock(apiHostname, { encodedQueryParams: true })
-      .post(pathname, () => true)
+      .post(`/user/${appKey}`, () => true)
       .reply(201, reply);
 
-    return super.signup(data, options);
+    return userFuncs.signup(data, options);
   }
 
-  static signup(data, options) {
+  static signup(data, options, appKey) {
     const user = new UserMock({}, options);
-    return user.signup(data, options);
+    return user.signup(data, options, appKey);
   }
 }

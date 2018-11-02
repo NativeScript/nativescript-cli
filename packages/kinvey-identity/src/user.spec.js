@@ -16,6 +16,7 @@ import { init } from 'kinvey-app';
 import { getLiveService } from 'kinvey-live';
 import { UserMock } from './user-mock';
 import { register as registerCache} from 'kinvey-cache-memory';
+import { throwError } from 'rxjs';
 
 chai.use(require('chai-as-promised'));
 
@@ -495,7 +496,7 @@ describe('User', () => {
         });
     });
 
-    afterEach(() => {
+    afterEach(() => {//TODO: ClearCache does not seem to clear the cache
       const store = collection('foo', DataStoreType.Sync);
       return store.find().toPromise()
         .then((entities) => {
@@ -516,7 +517,7 @@ describe('User', () => {
       expect(user).toEqual(null);
     });
 
-    it.only('should logout the active user', () => {
+    it('should logout the active user', () => {
       return UserMock.logout(client.appKey)
         .then(() => {
           expect(userFuncs.getActiveUser()).toEqual(null);
@@ -524,22 +525,22 @@ describe('User', () => {
     });
 
     it('should logout when there is not an active user', () => {
-      return UserMock.logout()
+      return UserMock.logout(client.appKey)
         .then(() => {
-          expect(User.getActiveUser()).toEqual(null);
+          expect(userFuncs.getActiveUser()).toEqual(null);
         })
-        .then(() => User.logout())
+        .then(() => userFuncs.logout(client.appKey))
         .then(() => {
-          expect(User.getActiveUser()).toEqual(null);
+          expect(userFuncs.getActiveUser()).toEqual(null);
         });
     });
 
-    it('should unregister user from Live Service', () => {
-      const activeUser = User.getActiveUser();
+    it('should unregister user from Live Service', () => {//TODO: logout seems to no unregister user from live services
+      const activeUser = userFuncs.getActiveUser();
       const spy = expect.spyOn(activeUser, 'unregisterFromLiveService')
         .andReturn(Promise.resolve());
 
-      return activeUser.logout()
+      return userFuncs.logout(client.appKey)
         .then(() => {
           expect(spy).toHaveBeenCalled();
           expect.restoreSpies();
@@ -552,17 +553,17 @@ describe('User', () => {
     let liveService;
 
     before(() => {
-      return UserMock.login(randomString(), randomString());
+      return UserMock.login(randomString(), randomString(), client.appKey);
     });
 
     beforeEach(() => {
-      activeUser = User.getActiveUser();
+      activeUser = userFuncs.getActiveUser();
       liveService = getLiveService(Client.sharedInstance());
     });
 
     afterEach(() => expect.restoreSpies());
 
-    describe('registerForLiveService', () => {
+    describe('registerForLiveService', () => {//TODO: OBsolete?
       it('should do nothing, if already registered', () => {
         const spy = expect.spyOn(liveService, 'fullInitialization');
         expect.spyOn(liveService, 'isInitialized')
@@ -587,7 +588,7 @@ describe('User', () => {
       });
     });
 
-    describe('unregisterFromLiveService', () => {
+    describe('unregisterFromLiveService', () => {//TODO: Obsolete?
       let activeUser;
       let liveService;
 
@@ -621,22 +622,22 @@ describe('User', () => {
     });
   });
 
-  describe('signup', () => {
+  describe('signup', () => {// TODO: the active user returned has an additional data property 
     beforeEach(() => {
-      return UserMock.logout();
+      return UserMock.logout(client.appKey);
     });
 
     it('should signup and set the user as the active user', () => {
-      return UserMock.signup({ username: randomString(), password: randomString() })
+      return UserMock.signup({ username: randomString(), password: randomString() }, {},  client.appKey)
         .then((user) => {
-          expect(user.isActive()).toEqual(true);
+          expect(user.isActive()).toEqual(true); 
           expect(user).toEqual(UserMock.getActiveUser());
         });
     });
 
-    it('should signup with a user and set the user as the active user', () => {
+    it('should signup with a user and set the user as the active user', () => {// TODO: the active user returned has an additional data property
       const user = new UserMock({ username: randomString(), password: randomString() });
-      return UserMock.signup(user)
+      return UserMock.signup(user, {}, client.appKey)
         .then((user) => {
           expect(user.isActive()).toEqual(true);
           expect(user).toEqual(UserMock.getActiveUser());
@@ -644,25 +645,25 @@ describe('User', () => {
     });
 
     it('should signup user and not set the user as the active user', () => {
-      return UserMock.signup({ username: randomString(), password: randomString() }, { state: false })
+      return UserMock.signup({ username: randomString(), password: randomString() }, { state: false }, client.appKey)
         .then((user) => {
           expect(user.isActive()).toEqual(false);
-          expect(user).toNotEqual(UserMock.getActiveUser());
+          expect(UserMock.getActiveUser()).toEqual(null);
         });
     });
 
-    it('should signup an implicit user and set the user as the active user', () => {
-      return UserMock.signup()
+    it('should signup an implicit user and set the user as the active user', () => {// TODO: the active user returned has an additional data property
+      return UserMock.signup(null, {}, client.appKey)
         .then((user) => {
           expect(user.isActive()).toEqual(true);
           expect(user).toEqual(UserMock.getActiveUser());
         });
     });
 
-    it('should merge the signup data and set the user as the active user', () => {
+    it('should merge the signup data and set the user as the active user', () => {// TODO: the active user returned has an additional data property
       const user = new UserMock({ username: randomString(), password: randomString() });
       const username = 'foo';
-      return user.signup({ username: username })
+      return user.signup({ username: username }, {}, client.appKey)
         .then((user) => {
           expect(user.isActive()).toEqual(true);
           expect(user.username).toEqual(username);
@@ -670,10 +671,10 @@ describe('User', () => {
         });
     });
 
-    it('should throw an error if an active user already exists', () => {
-      return UserMock.login(randomString(), randomString())
+    it('should throw an error if an active user already exists', () => {//TODO: Errors should be reverted
+      return UserMock.login(randomString(), randomString(), client.appKey)
         .then(() => {
-          return UserMock.signup({ username: randomString(), password: randomString() });
+          return UserMock.signup({ username: randomString(), password: randomString() }, {}, client.appKey);
         })
         .catch((error) => {
           expect(error).toBeA(ActiveUserError);
@@ -681,9 +682,9 @@ describe('User', () => {
     });
 
     it('should not throw an error with an active user and options.state set to false', () => {
-      return UserMock.login(randomString(), randomString())
+      return UserMock.login(randomString(), randomString(), client.appKey)
         .then(() => {
-          return UserMock.signup({ username: randomString(), password: randomString() }, { state: false });
+          return UserMock.signup({ username: randomString(), password: randomString() }, { state: false }, client.appKey);
         })
         .then((user) => {
           expect(user.isActive()).toEqual(false);
@@ -693,19 +694,20 @@ describe('User', () => {
   });
 
   describe('update()', () => {
-    it('should throw an error if the user does not have an _id', () => {
+    it('should throw an error if the user does not have an _id', () => {// TODO: No validation for user having an _id
       const user = new User({ email: randomString() });
-      return user.update({ email: randomString })
+      return user.update({ email: randomString() })
         .catch((error) => {
           expect(error).toBeA(KinveyError);
           expect(error.message).toEqual('User must have an _id.');
         });
     });
 
-    it('should update the active user', () => {
-      return UserMock.logout()
+    it('should update the active user', () => {// TODO: the active user returned has an additional data property
+      const pathname = `/user/${client.appKey}`;
+      return UserMock.logout(client.appKey)
         .then(() => {
-          return UserMock.login(randomString(), randomString());
+          return UserMock.login(randomString(), randomString(), client.appKey);
         })
         .then((user) => {
           const email = randomString();
@@ -714,21 +716,23 @@ describe('User', () => {
 
           // Kinvey API response
           nock(client.apiHostname, { encodedQueryParams: true })
-            .put(`${user.pathname}/${user._id}`, requestData)
+            .put(`${pathname}/${user._id}`, requestData)
             .reply(200, responseData);
 
           return user.update({ email: email })
-            .then(() => {
-              const activeUser = User.getActiveUser();
+            .then((resultingUser) => {
+              expect(resultingUser).toEqual(responseData);
+              const activeUser = userFuncs.getActiveUser();
               expect(activeUser.data).toEqual(responseData);
             });
         });
     });
 
     it('should update a user and not the active user', () => {
-      return UserMock.logout()
+      const pathname = `/user/${client.appKey}`;
+      return UserMock.logout(client.appKey)
         .then(() => {
-          return UserMock.login(randomString(), randomString());
+          return UserMock.login(randomString(), randomString(), client.appKey);
         })
         .then((activeUser) => {
           const user = new User({ _id: randomString(), email: randomString() });
@@ -738,7 +742,7 @@ describe('User', () => {
 
           // Kinvey API response
           nock(client.apiHostname, { encodedQueryParams: true })
-            .put(`${user.pathname}/${user._id}`, requestData)
+            .put(`${pathname}/${user._id}`, requestData)
             .reply(200, responseData);
 
           return user.update({ email: email })
@@ -753,7 +757,18 @@ describe('User', () => {
   });
 
   describe('me()', () => {
+    beforeEach('login a user', ()=>{
+      const username = randomString();
+      const password = randomString();
+      return UserMock.login(username, password, client.appKey)
+        .then((user)=>{
+           const activeUser = userFuncs.getActiveUser();
+           expect(activeUser.username).toEqual(username);
+        })
+        .catch((err)=> {throwError(err)})
+    })
     it('should refresh the users data', () => {
+      const pathname = `/user/${client.appKey}`;
       const user = new User({ _id: randomString(), name: randomString() });
       const reply = {
         _id: user._id,
@@ -761,8 +776,8 @@ describe('User', () => {
       };
 
       // Kinvey API response
-      nock(user.client.apiHostname, { encodedQueryParams: true })
-        .get(`${user.pathname}/_me`)
+      nock(client.apiHostname, { encodedQueryParams: true })
+        .get(`${pathname}/_me`)
         .reply(200, reply);
 
       return user.me()
@@ -773,6 +788,7 @@ describe('User', () => {
     });
 
     it('should remove any sensitive data', () => {
+      const pathname = `/user/${client.appKey}`;
       const user = new User({ _id: randomString() });
       const reply = {
         _id: user._id,
@@ -781,8 +797,8 @@ describe('User', () => {
       };
 
       // Kinvey API response
-      nock(user.client.apiHostname, { encodedQueryParams: true })
-        .get(`${user.pathname}/_me`)
+      nock(client.apiHostname, { encodedQueryParams: true })
+        .get(`${pathname}/_me`)
         .reply(200, reply);
 
       return user.me()
@@ -793,20 +809,21 @@ describe('User', () => {
     });
 
     it('should update active user', () => {
-      const user = User.getActiveUser();
+      const pathname = `/user/${client.appKey}`;
+      const user = userFuncs.getActiveUser();
       const reply = {
         _id: user._id,
         username: randomString()
       };
 
       // Kinvey API response
-      nock(user.client.apiHostname, { encodedQueryParams: true })
-        .get(`${user.pathname}/_me`)
+      nock(client.apiHostname, { encodedQueryParams: true })
+        .get(`${pathname}/_me`)
         .reply(200, reply);
 
       return user.me()
         .then((user) => {
-          expect(user.data).toEqual(User.getActiveUser().data);
+          expect(user.data).toEqual(userFuncs.getActiveUser().data);
         });
     });
 
@@ -817,18 +834,18 @@ describe('User', () => {
   });
 
   describe('getActiveUser()', () => {
-    it('should return the active user', () => {
-      return UserMock.logout()
+    it('should return the active user', () => {// TODO: the active user returned has an additional data property
+      return UserMock.logout(client.appKey)
         .then(() => {
-          return UserMock.login(randomString(), randomString());
+          return UserMock.login(randomString(), randomString(), client.appKey);
         })
         .then((user) => {
           expect(UserMock.getActiveUser()).toEqual(user);
         });
     });
 
-    it('should return null', () => {
-      return UserMock.logout()
+    it('should return null with no active user', () => {
+      return UserMock.logout(client.appKey)
         .then(() => {
           expect(UserMock.getActiveUser()).toEqual(null);
         });
@@ -836,17 +853,17 @@ describe('User', () => {
   });
 
   describe('verifyEmail()', () => {
-    it('should throw an error if a username is not provided', async () => {
+    it('should throw an error if a username is not provided', async () => {//TODO: errors should be reverted
       try {
-        await User.verifyEmail();
+        await userFuncs.verifyEmail();
       } catch (error) {
         expect(error).toBeA(KinveyError);
       }
     });
 
-    it('should throw an error if the provided username is not a string', async () => {
+    it('should throw an error if the provided username is not a string', async () => {//TODO: errors should be reverted
       try {
-        await User.verifyEmail({});
+        await userFuncs.verifyEmail({});
       } catch (error) {
         expect(error).toBeA(KinveyError);
       }
@@ -862,23 +879,23 @@ describe('User', () => {
           'content-type': 'application/json; charset=utf-8'
         });
 
-      const response = await User.verifyEmail(username);
+      const response = await userFuncs.verifyEmail(username);
       expect(response).toEqual({});
     });
   });
 
   describe('forgotUsername()', () => {
-    it('should throw an error if an email is not provided', async () => {
+    it('should throw an error if an email is not provided', async () => {//TODO: errors should be reverted
       try {
-        await User.forgotUsername();
+        await userFuncs.forgotUsername();
       } catch (error) {
         expect(error).toBeA(KinveyError);
       }
     });
 
-    it('should throw an error if the provided email is not a string', async () => {
+    it('should throw an error if the provided email is not a string', async () => {//TODO: errors should be reverted
       try {
-        await User.forgotUsername({});
+        await userFuncs.forgotUsername({});
       } catch (error) {
         expect(error).toBeA(KinveyError);
       }
@@ -894,23 +911,23 @@ describe('User', () => {
           'content-type': 'application/json; charset=utf-8'
         });
 
-      const response = await User.forgotUsername(email);
+      const response = await userFuncs.forgotUsername(email);
       expect(response).toEqual({});
     });
   });
 
   describe('resetPassword()', () => {
-    it('should throw an error if a username is not provided', async () => {
+    it('should throw an error if a username is not provided', async () => {//TODO: errors should be reverted
       try {
-        await User.resetPassword();
+        await userFuncs.resetPassword();
       } catch (error) {
         expect(error).toBeA(KinveyError);
       }
     });
 
-    it('should throw an error if the provided username is not a string', async () => {
+    it('should throw an error if the provided username is not a string', async () => {//TODO: errors should be reverted
       try {
-        await User.resetPassword({});
+        await userFuncs.resetPassword({});
       } catch (error) {
         expect(error).toBeA(KinveyError);
       }
@@ -926,18 +943,18 @@ describe('User', () => {
           'content-type': 'application/json; charset=utf-8'
         });
 
-      const response = await User.resetPassword(username);
+      const response = await userFuncs.resetPassword(username);
       expect(response).toEqual({});
     });
   });
 
-  describe('lookup()', () => {
+  describe('lookup()', () => {//TODO: lookup used to return observable, now it returns the data
     before(() => {
-      return UserMock.login(randomString(), randomString());
+      return UserMock.login(randomString(), randomString(), client.appKey);
     });
 
     it('should throw an error if the query argument is not an instance of the Query class', () => {
-      return User.lookup({}, { discover: true })
+      return userFuncs.lookup({}, { discover: true })
         .toPromise()
         .catch((error) => {
           expect(error).toBeA(KinveyError);
@@ -1026,44 +1043,46 @@ describe('User', () => {
       nock.cleanAll();
     });
 
-    it('should throw a KinveyError if an id is not provided', () => {
-      return User.remove()
+    it('should throw a KinveyError if an id is not provided', () => {//TODO: errors should be reverted
+      return userFuncs.remove()
         .catch((error) => {
           expect(error).toBeA(KinveyError);
         });
     });
 
-    it('should throw a KinveyError if an id is not a string', () => {
-      return User.remove(1)
+    it('should throw a KinveyError if an id is not a string', () => {//TODO: errors should be reverted
+      return userFuncs.remove(1)
         .catch((error) => {
           expect(error).toBeA(KinveyError);
         });
     });
 
-    it('should remove the user that matches the id argument', () => {
+    it('should remove the user that matches the id argument', () => {//TODO: hard=false is what is noiw sent by default, used to be no query sent if not set explicitly
+      const pathname = `/user/${client.appKey}`;
       // Remove the user
       const user = new User({ _id: randomString(), email: randomString() });
 
       nock(client.apiHostname)
-        .delete(`${user.pathname}/${user._id}`)
+        .delete(`${pathname}/${user._id}`)
         .reply(204);
 
-      return User.remove(user._id)
+      return userFuncs.remove(user._id)
         .then(() => {
           expect(nock.isDone()).toEqual(true);
         });
     });
 
     it('should remove the user that matches the id argument permanently', () => {
+      const pathname = `/user/${client.appKey}`;
       // Remove the user
       const user = new User({ _id: randomString(), email: randomString() });
 
       nock(client.apiHostname, { encodedQueryParams: true })
-        .delete(`${user.pathname}/${user._id}`)
+        .delete(`${pathname}/${user._id}`)
         .query({ hard: true })
         .reply(204);
 
-      return User.remove(user._id, { hard: true })
+      return userFuncs.remove(user._id, { hard: true })
         .then(() => {
           expect(nock.isDone()).toEqual(true);
         });
