@@ -969,6 +969,21 @@ interface IQrCodeGenerator {
 	generateDataUri(data: string): Promise<string>;
 }
 
+interface IQrCodeImageData {
+	/**
+	 * The original URL used for generating QR code image.
+	 */
+	originalUrl: string;
+	/**
+	 * The shorten URL used for generating QR code image.
+	 */
+	shortenUrl: string;
+	/**
+	 * Base64 encoded data used for generating QR code image.
+	 */
+	imageData: string;
+}
+
 interface IDynamicHelpProvider {
 	/**
 	 * Checks if current project's framework is one of the specified as arguments.
