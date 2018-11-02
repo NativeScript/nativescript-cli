@@ -24,14 +24,14 @@ declare global {
 
 	interface IPreviewQrCodeService {
 		getPlaygroundAppQrCode(options?: IPlaygroundAppQrCodeOptions): Promise<IDictionary<IQrCodeImageData>>;
-		printLiveSyncQrCode(options: IGenerateQrCodeOptions): Promise<void>;
+		printLiveSyncQrCode(options: IPrintLiveSyncOptions): Promise<void>;
 	}
 
 	interface IPlaygroundAppQrCodeOptions {
 		platform?: string;
 	}
 
-	interface IGenerateQrCodeOptions extends IHasUseHotModuleReloadOption {
+	interface IPrintLiveSyncOptions extends IHasUseHotModuleReloadOption {
 		/**
 		 * If set to true, a link will be shown on console instead of QR code
 		 * Default value is false.
