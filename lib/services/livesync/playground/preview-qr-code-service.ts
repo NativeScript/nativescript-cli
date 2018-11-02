@@ -29,7 +29,7 @@ export class PreviewQrCodeService implements IPreviewQrCodeService {
 		return result;
 	}
 
-	public async printLiveSyncQrCode(options: IGenerateQrCodeOptions): Promise<void> {
+	public async printLiveSyncQrCode(options: IPrintLiveSyncOptions): Promise<void> {
 		const qrCodeUrl = this.$previewSdkService.getQrCodeUrl(options);
 		const url = await this.getShortenUrl(qrCodeUrl);
 
