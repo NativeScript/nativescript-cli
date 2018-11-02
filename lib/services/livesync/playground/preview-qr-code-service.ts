@@ -2,7 +2,7 @@ import * as util from "util";
 import { EOL } from "os";
 import { PlaygroundStoreUrls } from "./preview-app-constants";
 
-export class PlaygroundQrCodeGenerator implements IPlaygroundQrCodeGenerator {
+export class PreviewQrCodeService implements IPreviewQrCodeService {
 	constructor(private $previewSdkService: IPreviewSdkService,
 		private $httpClient: Server.IHttpClient,
 		private $qrCodeTerminalService: IQrCodeTerminalService,
@@ -39,4 +39,4 @@ To scan the QR code and deploy your app on a device, you need to have the \`Nati
 		}
 	}
 }
-$injector.register("playgroundQrCodeGenerator", PlaygroundQrCodeGenerator);
+$injector.register("previewQrCodeService", PreviewQrCodeService);
