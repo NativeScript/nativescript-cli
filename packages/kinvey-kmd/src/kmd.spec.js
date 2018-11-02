@@ -4,7 +4,7 @@ import { KinveyError } from 'kinvey-errors';
 import { Kmd } from './kmd';
 
 describe('kmd', () => {
-  describe('constructor', () => {
+  describe('constructor', () => {// TODO: errors should be reverted
     it('should throw an error if an entity is not provided', () => {
       expect(() => {
         const kmd = new Kmd();
@@ -12,14 +12,14 @@ describe('kmd', () => {
       }).toThrow(KinveyError, /entity argument must be an object/);
     });
 
-    it('should create an empty kmd when the entity does not contain an _kmd property', () => {
+    it('should create an empty kmd when the entity does not contain an _kmd property', () => {//TODO: toPlainObject is not a function
       const entity = {};
       const kmd = new Kmd(entity);
       expect(kmd.toPlainObject()).toEqual({});
       expect(entity._kmd).toEqual({});
     });
 
-    it('should use the _kmd property on the entity', () => {
+    it('should use the _kmd property on the entity', () => {//TODO: toPlainObject is not a function also kmd is not in the root object but in the entity prop
       const kmdProp = { lmt: randomString() };
       const entity = { _kmd: kmdProp };
       const kmd = new Kmd(entity);
@@ -56,7 +56,7 @@ describe('kmd', () => {
     });
   });
 
-  describe('emailVerification', () => {
+  describe('emailVerification', () => {//TODO: returns {status:verified} used to return verified
     it('should return undefined', () => {
       const kmd = new Kmd({ _kmd: {} });
       expect(kmd.emailVerification).toEqual(undefined);
@@ -123,7 +123,7 @@ describe('kmd', () => {
   });
 
   describe('toPlainObject()', () => {
-    it('should return object', () => {
+    it('should return object', () => {//TODO: toPlainObject is not a function
       const kmd = {
         local: false,
         authtoken: randomString(),

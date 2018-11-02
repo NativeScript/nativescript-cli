@@ -5,7 +5,7 @@ import { randomString } from 'kinvey-test-utils';
 import { Query } from './query';
 
 describe('Query', () => {
-  describe('constructor', () => {
+  describe('constructor', () => {//TODO: Errors should be reverted
     it('should throw error when fields is not an array', () => {
       expect(() => {
         const query = new Query();
@@ -14,13 +14,13 @@ describe('Query', () => {
       }).to.throw(/fields must be an Array/);
     });
 
-    it('should parse a limit from string', () => {
+    it('should parse a limit from string', () => {//TODO: does not parse the limit
       const query = new Query();
       query.limit = '3';
       expect(query.limit).to.equal(3);
     });
 
-    it('should parse a skip from string', () => {
+    it('should parse a skip from string', () => {//TODO: does not parse the skip
       const query = new Query();
       query.skip = '10';
       expect(query.skip).to.equal(10);
@@ -28,14 +28,14 @@ describe('Query', () => {
   });
 
   describe('fields', () => {
-    it('should throw an error on invalid arguments', () => {
+    it('should throw an error on invalid arguments', () => {//TODO: Errors should be reverted also add the proper error as expectation
       expect(() => {
         const query = new Query();
         query.fields = {};
-      }).to.throw();
+      }).to.throw(/sasa/);
     });
 
-    it('should set the fields', () => {
+    it('should set the fields', () => {//TODO: Adds _id and _acl to the fields
       const fields = [randomString(), randomString()];
       const query = new Query();
       query.fields = fields;
@@ -50,7 +50,7 @@ describe('Query', () => {
   });
 
   describe('limit', () => {
-    it('should throw an error on invalid arguments', () => {
+    it('should throw an error on invalid arguments', () => {//TODO: Errors should be reverted also add the proper error as expectation
       expect(() => {
         const query = new Query();
         query.limit = {};
@@ -64,7 +64,7 @@ describe('Query', () => {
       expect(query.toPlainObject().limit).to.equal(limit);
     });
 
-    it('should unset the limit', () => {
+    it('should unset the limit', () => {// TODO: For now we should allow null value
       const query = new Query();
       query.limit = null;
       expect(query.toPlainObject().limit).to.equal(null);
@@ -72,7 +72,7 @@ describe('Query', () => {
   });
 
   describe('skip', () => {
-    it('should throw an error on invalid arguments', () => {
+    it('should throw an error on invalid arguments', () => {//TODO: Errors should be reverted also add the proper error as expectation
       expect(() => {
         const query = new Query();
         query.skip = {};
@@ -128,7 +128,7 @@ describe('Query', () => {
     });
   });
 
-  describe('equalTo()', () => {
+  describe('equalTo()', () => {// TODO: filter property used to be _filter in the old sdk
     it('should add an equal to filter', () => {
       const field = randomString();
       const value = randomString();
@@ -153,7 +153,7 @@ describe('Query', () => {
   });
 
   describe('contains()', () => {
-    it('should accept a single value', () => {
+    it('should accept a single value', () => {// TODO: We do not allow single value now
       const field = randomString();
       const value = randomString();
       const query = new Query();
@@ -183,7 +183,7 @@ describe('Query', () => {
     });
   });
 
-  describe('containsAll()', () => {
+  describe('containsAll()', () => {// TODO: We do not allow single value now
     it('should accept a single value and add a contains all filter', () => {
       const field = randomString();
       const value = randomString();
@@ -356,7 +356,7 @@ describe('Query', () => {
       expect(query).to.be.an.instanceof(Query);
     });
 
-    it('should filter out fields not equal to null', () => {
+    it('should filter out fields not equal to null', () => {//TODO: query.process is not a function
       const entity1 = { customProperty: null };
       const entity2 = { customProperty: randomString() };
       const query = new Query().notEqualTo('customProperty', null);
@@ -367,7 +367,7 @@ describe('Query', () => {
   });
 
   describe('notContainedIn()', () => {
-    it('should accept a single value and add a not contained in filter', () => {
+    it('should accept a single value and add a not contained in filter', () => {// TODO: we do not allow single value now
       const field = randomString();
       const value = randomString();
       const query = new Query();
@@ -383,7 +383,7 @@ describe('Query', () => {
       expect(query.toPlainObject().filter[field]).to.deep.equal({ $nin: value });
     });
 
-    it('should respect any existing filters on the same field', () => {
+    it('should respect any existing filters on the same field', () => {// TODO: we do not allow single value now
       const field = randomString();
       const query = new Query();
       query.notContainedIn(field, randomString());
@@ -391,7 +391,7 @@ describe('Query', () => {
       expect(query.toPlainObject().filter[field]).to.have.property('$all');
     });
 
-    it('should return the query', () => {
+    it('should return the query', () => {// TODO: we do not allow single value now
       const query = new Query().notContainedIn(randomString(), randomString());
       expect(query).to.be.an.instanceof(Query);
     });
@@ -434,7 +434,7 @@ describe('Query', () => {
     });
 
     describe('when called without arguments', () => {
-      it('should return a subquery', () => {
+      it('should return a subquery', () => {//TODO: the query parent param is called _parent in the old sdk
         const query1 = new Query();
         const query2 = query1.and();
         console.log('------------------')
@@ -493,7 +493,7 @@ describe('Query', () => {
     });
 
     describe('when called without arguments', () => {
-      it('should return a subquery', () => {
+      it('should return a subquery', () => {//TODO: the query parent param is called _parent in the old sdk
         const query1 = new Query();
         const query2 = query1.nor();
         expect(query2).to.be.an.instanceof(Query);
@@ -548,7 +548,7 @@ describe('Query', () => {
     });
 
     describe('when called without arguments', () => {
-      it('should return a subquery', () => {
+      it('should return a subquery', () => {//TODO: the query parent param is called _parent in the old sdk
         const query1 = new Query();
         const query2 = query1.or();
         expect(query2).to.be.an.instanceof(Query);
@@ -929,7 +929,7 @@ describe('Query', () => {
       expect(query.toPlainObject().sort[field2]).to.equal(-1);
     });
 
-    it('should sort the data in ascending order', () => {
+    it('should sort the data in ascending order', () => {//TODO: query.process is not a function
       const entity1 = { _id: 1, customProperty: randomString() };
       const entity2 = { _id: 2, customProperty: randomString() };
       const query = new Query().ascending('_id');
@@ -939,7 +939,7 @@ describe('Query', () => {
       expect(result[1].customProperty).to.equal(entity2.customProperty);
     });
 
-    it('should put docs with null or undefined values for sort field at the beginning of the list', () => {
+    it('should put docs with null or undefined values for sort field at the beginning of the list', () => {//TODO: query.process is not a function
       const entity1 = { _id: 1, customProperty: randomString() };
       const entity2 = { _id: null, customProperty: randomString() };
       const entity3 = { _id: 2, customProperty: randomString() };
@@ -984,7 +984,7 @@ describe('Query', () => {
       expect(query.toPlainObject().sort[field2]).to.equal(1);
     });
 
-    it('should sort the data in descending order', () => {
+    it('should sort the data in descending order', () => {//TODO: query.process is not a function
       const entity1 = { _id: 1, customProperty: randomString() };
       const entity2 = { _id: 2, customProperty: randomString() };
       const query = new Query().descending('_id');
@@ -994,7 +994,7 @@ describe('Query', () => {
       expect(result[1].customProperty).to.equal(entity1.customProperty);
     });
 
-    it('should put docs with null or undefined values for sort field at the end of the list', () => {
+    it('should put docs with null or undefined values for sort field at the end of the list', () => {//TODO: query.process is not a function
       const entity1 = { _id: 1, customProperty: randomString() };
       const entity2 = { _id: null, customProperty: randomString() };
       const entity3 = { _id: 2, customProperty: randomString() };
@@ -1197,7 +1197,7 @@ describe('Query', () => {
       expect(queryString).to.include({ query: '{"field":{"$gt":1}}' });
     });
 
-    it('throw an error when $gt comparator is not a string or number', () => {
+    it('throw an error when $gt comparator is not a string or number', () => {//TODO: Errors should be reverted
       expect(() => {
         const query = new Query();
         query.greaterThan('field', {});
@@ -1212,7 +1212,7 @@ describe('Query', () => {
       expect(queryString).to.include({ query: '{"field":{"$gte":1}}' });
     });
 
-    it('throw an error when $gte comparator is not a string or number', () => {
+    it('throw an error when $gte comparator is not a string or number', () => {//TODO: Errors should be reverted
       expect(() => {
         const query = new Query();
         query.greaterThanOrEqualTo('field', {});
@@ -1227,7 +1227,7 @@ describe('Query', () => {
       expect(queryString).to.include({ query: '{"field":{"$lt":1}}' });
     });
 
-    it('throw an error when $lt comparator is not a string or number', () => {
+    it('throw an error when $lt comparator is not a string or number', () => {//TODO: Errors should be reverted
       expect(() => {
         const query = new Query();
         query.lessThan('field', {});
@@ -1242,7 +1242,7 @@ describe('Query', () => {
       expect(queryString).to.include({ query: '{"field":{"$lte":1}}' });
     });
 
-    it('throw an error when $lte comparator is not a string or number', () => {
+    it('throw an error when $lte comparator is not a string or number', () => {//TODO: Errors should be reverted
       expect(() => {
         const query = new Query();
         query.lessThanOrEqualTo('field', {});
@@ -1294,7 +1294,7 @@ describe('Query', () => {
   });
 
   describe('process()', () => {
-    it('throw an error when a query is not supported locally', () => {
+    it('throw an error when a query is not supported locally', () => {//TODO: query.process is not a function
       expect(() => {
         const query = new Query();
         query.near('loc', [0, 0]);
@@ -1302,14 +1302,14 @@ describe('Query', () => {
       }).to.throw(/This query is not able to run locally./);
     });
 
-    it('throw an error when a data is not an array', () => {
+    it('throw an error when a data is not an array', () => {//TODO: query.process is not a function
       expect(() => {
         const query = new Query();
         return query.process({});
       }).to.throw(/data argument must be of type: Array./);
     });
 
-    it('should process a fields query', () => {
+    it('should process a fields query', () => {//TODO: query.process is not a function
       const entities = [
         { name: 'Name1', desc: 'Desc1' },
         { name: 'Name2', desc: 'Desc2' }
@@ -1319,7 +1319,7 @@ describe('Query', () => {
       expect(query.process(entities)).to.deep.equal([{ desc: 'Desc1' }, { desc: 'Desc2' }]);
     });
 
-    it('should not remove protected fields when fields are specified', () => {
+    it('should not remove protected fields when fields are specified', () => {//TODO: query.process is not a function
       const entities = [
         { _id: '0', _acl: 'acl1', _kmd: 'kmd1', name: 'Name1', desc: 'Desc1' },
         { _id: '1', _acl: 'acl2', _kmd: 'kmd2', name: 'Name2', desc: 'Desc2' }
@@ -1354,7 +1354,7 @@ describe('Query', () => {
       expect(queryString).to.include({ fields: 'foo,bar' });
     });
 
-    it('should not have a fields property', () => {
+    it('should not have a fields property', () => {//TODO: adds _ac and _id fields
       const query = new Query();
       const queryString = query.toQueryString();
       expect(queryString).to.not.have.property('fields');
