@@ -1,5 +1,3 @@
-import { format } from 'url';
-import { getConfig } from 'kinvey-app';
 import { Headers, KinveyHeaders } from './headers';
 import { serialize } from './utils';
 import { Response } from './response';
@@ -61,26 +59,6 @@ export class Request {
 
     throw response.error;
   }
-}
-
-function getKinveyUrl(protocol, host, pathname, query) {
-  const { appKey } = getConfig();
-  return format({
-    protocol,
-    host,
-    pathname: pathname.replace(/appKey/gi, appKey),
-    query
-  });
-}
-
-export function formatKinveyAuthUrl(pathname, query) {
-  const { api } = getConfig();
-  return getKinveyUrl(api.auth.protocol, api.auth.host, pathname, query);
-}
-
-export function formatKinveyBaasUrl(pathname, query) {
-  const { api } = getConfig();
-  return getKinveyUrl(api.baas.protocol, api.baas.host, pathname, query);
 }
 
 export class KinveyRequest extends Request {

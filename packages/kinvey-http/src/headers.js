@@ -1,13 +1,11 @@
 import isArray from 'lodash/isArray';
 import isString from 'lodash/isString';
 import isFunction from 'lodash/isFunction';
-import { Base64 } from 'js-base64';
-import { getConfig } from 'kinvey-app';
-import { Kmd } from 'kinvey-kmd';
-import { get as getSession } from 'kinvey-session';
+import isEmpty from 'lodash/isEmpty';
+import { KinveyError } from 'kinvey-errors';
 
-const AUTHORIZATION_HEADER = 'Authorization';
 const X_KINVEY_REQUEST_START_HEADER = 'X-Kinvey-Request-Start';
+const X_KINVEY_CUSTOM_REQUEST_PROPERTIES_HEADER = 'X-Kinvey-Custom-Request-Properties';
 
 function isNotString(val) {
   return !isString(val);
@@ -121,12 +119,21 @@ export class Headers {
   }
 }
 
-export const Auth = {
-  App: 'App',
-  Default: 'Default',
-  MasterSecret: 'MasterSecret',
-  Session: 'Session'
-};
+function byteCount(str) {
+  if (str) {
+    let count = 0;
+    const stringLength = str.length;
+
+    for (let i = 0; i < stringLength; i += 1) {
+      const partCount = encodeURI(str[i]).split('%').length;
+      count += partCount === 1 ? 1 : partCount - 1;
+    }
+
+    return count;
+  }
+
+  return 0;
+}
 
 export class KinveyHeaders extends Headers {
   constructor(headers) {
@@ -152,38 +159,26 @@ export class KinveyHeaders extends Headers {
     return this.get(X_KINVEY_REQUEST_START_HEADER);
   }
 
-  set(name, value) {
-    if (name.toLowerCase() === AUTHORIZATION_HEADER.toLowerCase()) {
-      const auth = value;
+  get customRequestProperties() {
+    return this.get(X_KINVEY_CUSTOM_REQUEST_PROPERTIES_HEADER);
+  }
 
-      if (auth === Auth.Default) {
-        try {
-          return this.set(name, Auth.Session);
-        } catch (error) {
-          return this.set(name, Auth.MasterSecret);
-        }
+  set customRequestProperties(properties) {
+    const customRequestPropertiesVal = JSON.stringify(properties);
+
+    if (!isEmpty(customRequestPropertiesVal)) {
+      const customRequestPropertiesByteCount = byteCount(customRequestPropertiesVal);
+
+      if (customRequestPropertiesByteCount >= 2000) {
+        throw new KinveyError(
+          `The custom properties are ${customRequestPropertiesByteCount} bytes.` +
+          'It must be less then 2000 bytes.',
+          'Please remove some custom properties.');
       }
 
-      if (auth === Auth.App) {
-        const { appKey, appSecret } = getConfig();
-        const credentials = Base64.encode(`${appKey}:${appSecret}`);
-        return super.set(name, `Basic ${credentials}`);
-      } else if (auth === Auth.MasterSecret) {
-        const { appKey, masterSecret } = getConfig();
-        const credentials = Base64.encode(`${appKey}:${masterSecret}`);
-        return super.set(name, `Basic ${credentials}`);
-      } else if (auth === Auth.Session) {
-        const session = getSession();
-
-        if (!session) {
-          throw new Error('There is no active user to authorize the request. Please login and retry the request.');
-        }
-
-        const kmd = new Kmd(session);
-        return super.set(name, `Kinvey ${kmd.authtoken}`);
-      }
+      this.set(X_KINVEY_CUSTOM_REQUEST_PROPERTIES_HEADER, customRequestPropertiesVal);
+    } else {
+      this.delete('X-Kinvey-Custom-Request-Properties');
     }
-
-    return super.set(name, value);
   }
 }

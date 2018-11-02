@@ -1,7 +1,7 @@
 import expect from 'expect';
-import { Kmd } from './kmd';
 import { randomString } from 'kinvey-test-utils';
-import { KinveyError } from '../../errors';
+import { KinveyError } from 'kinvey-errors';
+import { Kmd } from './kmd';
 
 describe('kmd', () => {
   describe('constructor', () => {

@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@babel/runtime": "7.1.2",
+    "kinvey-errors": "1.0.0",
     "lodash": "4.17.11"
   },
   "devDependencies": {
@@ -24,11 +25,11 @@
     "@babel/register": "7.0.0",
     "babel-eslint": "10.0.1",
     "chai": "4.2.0",
-    "expect":"~1.20.2",
     "del-cli": "1.1.0",
     "eslint": "5.3.0",
     "eslint-config-kinvey-platform": "kinvey/eslint-kinvey-platform#0.1.1",
     "eslint-plugin-import": "2.14.0",
+    "expect": "~1.20.2",
     "kinvey-test-utils": "1.0.0",
     "mocha": "5.2.0"
   }

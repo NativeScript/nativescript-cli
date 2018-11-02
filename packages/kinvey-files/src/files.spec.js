@@ -3,13 +3,13 @@ import path from 'path';
 import nock from 'nock';
 import expect from 'expect';
 import chai from 'chai';
-import { find, findById, download, upload, stream, create, remove, removeById, update } from './files';
-import { KinveyError, NotFoundError, ServerError } from '../../errors';
+import { KinveyError, NotFoundError, ServerError } from 'kinvey-errors';
 import { randomString } from 'kinvey-test-utils';
 import { Query } from 'kinvey-query';
 import { register } from 'kinvey-http-node';
 import { login } from 'kinvey-identity';
 import { init } from 'kinvey-app';
+import { find, findById, download, upload, stream, create, remove, removeById, update } from './files';
 var Files = {};
 
 chai.use(require('chai-as-promised'));
@@ -219,7 +219,7 @@ describe('Files', () => {
           expect.restoreSpies();
         });
     });
-  }); 
+  });
 
 
   describe('download()', () => {

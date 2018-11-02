@@ -14,8 +14,11 @@
   },
   "dependencies": {
     "@babel/runtime": "7.1.2",
+    "kinvey-app": "1.0.0",
+    "kinvey-errors": "1.0.0",
     "kinvey-http": "1.0.0",
     "kinvey-query": "1.0.0",
+    "kinvey-session": "1.0.0",
     "lodash": "4.17.11"
   },
   "devDependencies": {

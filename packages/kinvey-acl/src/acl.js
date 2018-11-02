@@ -1,13 +1,14 @@
 import isPlainObject from 'lodash/isPlainObject';
+import { KinveyError } from 'kinvey-errors';
 
 /**
  * This class provides a way to access the ACL (Access Control List)
  * information for an entity and to modify the access control permissions.
  */
 export class Acl {
-  constructor(entity = {}) {
+  constructor(entity) {
     if (!isPlainObject(entity)) {
-      throw new Error('entity must be an object.');
+      throw new KinveyError('entity must be an object.');
     }
 
     entity._acl = entity._acl || {}; // eslint-disable-line no-param-reassign
@@ -235,5 +236,14 @@ export class Acl {
 
     this.entity._acl.groups = Object.assign(this.entity._acl.groups, { w: groups });
     return this;
+  }
+
+  /**
+   * The acl as a plain object.
+   *
+   * @returns {Object} Acl as a plain object.
+   */
+  toPlainObject() {
+    return this.entity._acl;
   }
 }
