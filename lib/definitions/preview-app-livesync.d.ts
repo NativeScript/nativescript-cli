@@ -23,7 +23,7 @@ declare global {
 	}
 
 	interface IPreviewQrCodeService {
-		generateQrCode(options: IGenerateQrCodeOptions): Promise<void>;
+		printLiveSyncQrCode(options: IGenerateQrCodeOptions): Promise<void>;
 	}
 
 	interface IGenerateQrCodeOptions extends IHasUseHotModuleReloadOption {
