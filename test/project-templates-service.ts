@@ -15,7 +15,7 @@ function createTestInjector(configuration: { shouldNpmInstallThrow?: boolean, pa
 	injector.register("errors", stubs.ErrorsStub);
 	injector.register("logger", stubs.LoggerStub);
 	injector.register("fs", {
-		exists: (pathToCheck: string) => true,
+		exists: (pathToCheck: string) => false,
 
 		readJson: (pathToFile: string) => configuration.packageJsonContent || {},
 
