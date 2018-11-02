@@ -10,7 +10,7 @@ export class PreviewQrCodeService implements IPreviewQrCodeService {
 		private $logger: ILogger) {
 	}
 
-	public async generateQrCode(options: IGenerateQrCodeOptions): Promise<void> {
+	public async printLiveSyncQrCode(options: IGenerateQrCodeOptions): Promise<void> {
 		let url = this.$previewSdkService.getQrCodeUrl(options);
 		const shortenUrlEndpoint = util.format(this.$config.SHORTEN_URL_ENDPOINT, encodeURIComponent(url));
 		try {

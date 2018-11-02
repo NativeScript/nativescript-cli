@@ -24,7 +24,7 @@ export class PreviewCommand implements ICommand {
 			useHotModuleReload: this.$options.hmr
 		});
 
-		await this.$previewQrCodeService.generateQrCode({ useHotModuleReload: this.$options.hmr, link: this.$options.link });
+		await this.$previewQrCodeService.printLiveSyncQrCode({ useHotModuleReload: this.$options.hmr, link: this.$options.link });
 	}
 
 	public async canExecute(args: string[]): Promise<boolean> {
