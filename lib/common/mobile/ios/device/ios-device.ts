@@ -1,6 +1,7 @@
 import * as applicationManagerPath from "./ios-application-manager";
 import * as fileSystemPath from "./ios-device-file-system";
-import * as constants from "../../../constants";
+import * as commonConstants from "../../../constants";
+import * as constants from "../../../../constants";
 import * as net from "net";
 import { cache } from "../../../decorators";
 
@@ -10,25 +11,18 @@ export class IOSDevice implements Mobile.IiOSDevice {
 	public deviceInfo: Mobile.IDeviceInfo;
 	private socket: net.Socket;
 
-	// private static sockets: { [id: string]: net.Socket; } = {};
-
-	// get socket(): net.Socket {
-	// 	return IOSDevice.sockets[this.deviceInfo.identifier];
-	// }
-	// set socket(newSocket: net.Socket) {
-	// 	IOSDevice.sockets[this.deviceInfo.identifier] = newSocket;
-	// }
-
 	private _deviceLogHandler: (...args: any[]) => void;
 
 	constructor(private deviceActionInfo: IOSDeviceLib.IDeviceActionInfo,
+		private $errors: IErrors,
 		private $injector: IInjector,
+		private $iOSDebuggerPortService: IIOSDebuggerPortService,
+		private $iOSSocketRequestExecutor: IiOSSocketRequestExecutor,
 		private $processService: IProcessService,
 		private $deviceLogProvider: Mobile.IDeviceLogProvider,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $iOSDeviceProductNameMapper: Mobile.IiOSDeviceProductNameMapper,
 		private $iosDeviceOperations: IIOSDeviceOperations,
-		private $logger: ILogger,
 		private $mobileHelper: Mobile.IMobileHelper) {
 
 		this.applicationManager = this.$injector.resolve(applicationManagerPath.IOSApplicationManager, { device: this, devicePointer: this.deviceActionInfo });
@@ -36,13 +30,13 @@ export class IOSDevice implements Mobile.IiOSDevice {
 
 		const productType = deviceActionInfo.productType;
 		const isTablet = this.$mobileHelper.isiOSTablet(productType);
-		const deviceStatus = deviceActionInfo.status || constants.UNREACHABLE_STATUS;
+		const deviceStatus = deviceActionInfo.status || commonConstants.UNREACHABLE_STATUS;
 		this.deviceInfo = {
 			identifier: deviceActionInfo.deviceId,
 			vendor: "Apple",
 			platform: this.$devicePlatformsConstants.iOS,
 			status: deviceStatus,
-			errorHelp: deviceStatus === constants.UNREACHABLE_STATUS ? `Device ${deviceActionInfo.deviceId} is ${constants.UNREACHABLE_STATUS}` : null,
+			errorHelp: deviceStatus === commonConstants.UNREACHABLE_STATUS ? `Device ${deviceActionInfo.deviceId} is ${commonConstants.UNREACHABLE_STATUS}` : null,
 			type: "Device",
 			isTablet: isTablet,
 			displayName: this.$iOSDeviceProductNameMapper.resolveProductName(deviceActionInfo.deviceName) || deviceActionInfo.deviceName,
@@ -69,31 +63,45 @@ export class IOSDevice implements Mobile.IiOSDevice {
 
 	@cache()
 	public async openDeviceLogStream(): Promise<void> {
-		if (this.deviceInfo.status !== constants.UNREACHABLE_STATUS) {
+		if (this.deviceInfo.status !== commonConstants.UNREACHABLE_STATUS) {
 			this._deviceLogHandler = this.actionOnDeviceLog.bind(this);
-			this.$iosDeviceOperations.on(constants.DEVICE_LOG_EVENT_NAME, this._deviceLogHandler);
+			this.$iosDeviceOperations.on(commonConstants.DEVICE_LOG_EVENT_NAME, this._deviceLogHandler);
 			this.$iosDeviceOperations.startDeviceLog(this.deviceInfo.identifier);
 		}
 	}
 
 	public detach(): void {
 		if (this._deviceLogHandler) {
-			this.$iosDeviceOperations.removeListener(constants.DEVICE_LOG_EVENT_NAME, this._deviceLogHandler);
+			this.$iosDeviceOperations.removeListener(commonConstants.DEVICE_LOG_EVENT_NAME, this._deviceLogHandler);
 		}
 	}
 
-	// This function works only on OSX
-	public async connectToPort(port: number): Promise<net.Socket> {
-		console.log("connectToPort");
+	public async getLiveSyncSocket(appId: string, projectDir: string): Promise<net.Socket> {
+		return this.getSocket(appId, projectDir);
+	}
+
+	public async getDebugSocket(appId: string, projectDir: string): Promise<net.Socket> {
+		return this.getSocket(appId, projectDir);
+	}
+
+	private async getSocket(appId: string, projectDir: string): Promise<net.Socket> {
+		if (this.socket) {
+			return this.socket;
+		}
+
+		await this.$iOSSocketRequestExecutor.executeAttachRequest(this, constants.AWAIT_NOTIFICATION_TIMEOUT_SECONDS, appId);
+		const port = await this.$iOSDebuggerPortService.getPort({ projectDir, deviceId: this.deviceInfo.identifier, appId });
+		if (!port) {
+			this.$errors.fail("NativeScript debugger was not able to get inspector socket port.");
+		}
+
 		const deviceId = this.deviceInfo.identifier;
 		const deviceResponse = _.first((await this.$iosDeviceOperations.connectToPort([{ deviceId: deviceId, port: port }]))[deviceId]);
 
-		const _socket = new net.Socket();
-		_socket.connect(deviceResponse.port, deviceResponse.host);
-		this.socket = _socket;
-		_socket.on("close", () => {
+		this.socket = new net.Socket();
+		this.socket.connect(deviceResponse.port, deviceResponse.host);
+		this.socket.on("close", () => {
 			this.socket = null;
-			this.$logger.info("iOS Device socket closed!");
 		});
 
 		this.$processService.attachToProcessExitSignals(this, this.destroySocket);

@@ -7,7 +7,7 @@
 		{
 			"type": "node",
 			"request": "launch",
-			"cwd": "/Users/tachev/Work/Test/testJsHw",
+			"cwd": "/Users/tachev/Work/Test/debugTest",
 			"sourceMaps": true,
 			// In case you want to debug child processes started from CLI:
 			// "autoAttachChildProcesses": true,
@@ -16,7 +16,8 @@
 			// example commands
 			"args": [
 				"debug",
-				"ios"
+				"ios",
+				"--hmr"
 			]
 			// "args": [ "test", "android", "--justlaunch"]
 			// "args": [ "platform", "add", "android@1.3.0", "--path", "cliapp"]

@@ -9,11 +9,6 @@ export class IOSDeviceLiveSyncService extends DeviceLiveSyncServiceBase implemen
 	private socket: net.Socket;
 
 	constructor(
-		private $iOSSocketRequestExecutor: IiOSSocketRequestExecutor,
-		private $iOSNotification: IiOSNotification,
-		private $iOSEmulatorServices: Mobile.IiOSSimulatorService,
-		private $iOSDebuggerPortService: IIOSDebuggerPortService,
-		private $iOSDeviceSocketService: Mobile.IiOSDeviceSocketsService,
 		private $logger: ILogger,
 		private $processService: IProcessService,
 		protected $platformsData: IPlatformsData,
@@ -27,26 +22,10 @@ export class IOSDeviceLiveSyncService extends DeviceLiveSyncServiceBase implemen
 		}
 
 		const appId = projectData.projectIdentifiers.ios;
-		const existingDeviceSocket = this.$iOSDeviceSocketService.getSocket(this.device.deviceInfo.identifier);
-		if (existingDeviceSocket) {
-			this.socket = existingDeviceSocket;
-			console.log("will use existing socket");
-		} else if (this.device.isEmulator) {
-			await this.$iOSEmulatorServices.postDarwinNotification(this.$iOSNotification.getAttachRequest(appId, this.device.deviceInfo.identifier), this.device.deviceInfo.identifier);
-			const port = await this.$iOSDebuggerPortService.getPort({ projectDir: projectData.projectDir, deviceId: this.device.deviceInfo.identifier, appId });
-			this.socket = await this.device.connectToPort(port);
-			console.log("port", port);
-			if (!this.socket) {
-				return false;
-			}
-		} else {
-			await this.$iOSSocketRequestExecutor.executeAttachRequest(this.device, constants.AWAIT_NOTIFICATION_TIMEOUT_SECONDS, appId);
-			const port = await this.$iOSDebuggerPortService.getPort({ projectDir: projectData.projectDir, deviceId: this.device.deviceInfo.identifier, appId });
-			this.socket = await this.device.connectToPort(port);
-			console.log("port", port);
+		this.socket = await this.device.getLiveSyncSocket(appId, projectData.projectDir);
+		if (!this.socket) {
+			return false;
 		}
-
-		this.$iOSDeviceSocketService.addSocket(this.device.deviceInfo.identifier, this.socket);
 
 		this.attachEventHandlers();
 

@@ -3,7 +3,6 @@ import { CONNECTION_ERROR_EVENT_NAME } from "../../constants";
 import { PacketStream } from "./packet-stream";
 import * as net from "net";
 import * as ws from "ws";
-import * as helpers from "../../common/helpers";
 import temp = require("temp");
 
 export class SocketProxyFactory extends EventEmitter implements ISocketProxyFactory {
@@ -12,7 +11,6 @@ export class SocketProxyFactory extends EventEmitter implements ISocketProxyFact
 
 	constructor(private $logger: ILogger,
 		private $errors: IErrors,
-		private $iOSDeviceSocketService: Mobile.IiOSDeviceSocketsService,
 		private $options: IOptions,
 		private $net: INet) {
 		super();
@@ -32,9 +30,6 @@ export class SocketProxyFactory extends EventEmitter implements ISocketProxyFact
 			throw new Error(`TCP socket proxy is already running for device '${deviceIdentifier}'`);
 		}
 
-		// await here?
-		const socketFactory = async (callback: (_socket: net.Socket) => void) => helpers.connectEventually(factory, callback);
-
 		this.$logger.info("\nSetting up proxy...\nPress Ctrl + C to terminate, or disconnect.\n");
 
 		const server = net.createServer({
@@ -45,7 +40,6 @@ export class SocketProxyFactory extends EventEmitter implements ISocketProxyFact
 
 		server.on("connection", async (frontendSocket: net.Socket) => {
 			this.$logger.info("Frontend client connected.");
-
 			frontendSocket.on("end", () => {
 				this.$logger.info('Frontend socket closed!');
 				if (!this.$options.watch) {
@@ -53,34 +47,33 @@ export class SocketProxyFactory extends EventEmitter implements ISocketProxyFact
 				}
 			});
 
-			await socketFactory((backendSocket: net.Socket) => {
-				this.$logger.info("Backend socket created.");
+			const backendSocket = await factory();
+			this.$logger.info("Backend socket created.");
 
-				backendSocket.on("end", () => {
-					this.$logger.info("Backend socket closed!");
-					if (!this.$options.watch) {
-						process.exit(0);
-					}
-				});
-
-				frontendSocket.on("close", () => {
-					this.$logger.info("Frontend socket closed");
-					if (!(<any>backendSocket).destroyed) {
-						backendSocket.destroy();
-					}
-				});
-
-				backendSocket.on("close", () => {
-					this.$logger.info("Backend socket closed");
-					if (!(<any>frontendSocket).destroyed) {
-						frontendSocket.destroy();
-					}
-				});
-
-				backendSocket.pipe(frontendSocket);
-				frontendSocket.pipe(backendSocket);
-				frontendSocket.resume();
+			backendSocket.on("end", () => {
+				this.$logger.info("Backend socket closed!");
+				if (!this.$options.watch) {
+					process.exit(0);
+				}
 			});
+
+			frontendSocket.on("close", () => {
+				this.$logger.info("Frontend socket closed");
+				if (!(<any>backendSocket).destroyed) {
+					backendSocket.destroy();
+				}
+			});
+
+			backendSocket.on("close", () => {
+				this.$logger.info("Backend socket closed");
+				if (!(<any>frontendSocket).destroyed) {
+					frontendSocket.destroy();
+				}
+			});
+
+			backendSocket.pipe(frontendSocket);
+			frontendSocket.pipe(backendSocket);
+			frontendSocket.resume();
 		});
 
 		const socketFileLocation = temp.path({ suffix: ".sock" });
@@ -115,8 +108,7 @@ export class SocketProxyFactory extends EventEmitter implements ISocketProxyFact
 				this.$logger.info("Frontend client connected.");
 				let _socket;
 				try {
-					const existingServerSocket = this.$iOSDeviceSocketService.getSocket(deviceIdentifier);
-					_socket = existingServerSocket || await helpers.connectEventuallyUntilTimeout(factory, 10000);
+					_socket = await factory();
 				} catch (err) {
 					err.deviceIdentifier = deviceIdentifier;
 					this.$logger.trace(err);
@@ -166,8 +158,6 @@ export class SocketProxyFactory extends EventEmitter implements ISocketProxyFact
 				this.$logger.info('Frontend socket closed!');
 				packets.destroy();
 				deviceSocket.destroy();
-				// delete this.deviceWebServers[deviceIdentifier];
-				// server.close();
 				if (!this.$options.watch) {
 					process.exit(0);
 				}
