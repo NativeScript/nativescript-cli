@@ -1,6 +1,6 @@
 
 import expect from 'expect';
-import { collection, clearCache, DataStoreType } from './index';
+import { collection, getInstance, clear, DataStoreType } from './index';
 import { NetworkStore } from './networkstore';
 import { CacheStore } from './cachestore';
 import { KinveyError } from 'kinvey-errors';
@@ -21,7 +21,7 @@ describe('DataStore', () => {
     });
   });
 
-  describe('constructor', () => {//TODO:  There is no DataStore class
+  describe.skip('constructor', () => {//TODO:  There is no DataStore class
     it('should throw an error if the DataStore class is tried to be instantiated', () => {
       expect(() => {
         const store = new DataStore(collectionName);
@@ -31,21 +31,21 @@ describe('DataStore', () => {
   });
 
   describe('collection()', () => {
-    it('should throw an error if a collection is not provided', () => {//TODO:  Errors should be reverted
+    it('should throw an error if a collection is not provided', () => {
       expect(() => {
         const store = collection();
         return store;
       }).toThrow(KinveyError);
     });
 
-    it('should throw an error if the collection is not a string', () => {//TODO:  Errors should be reverted
+    it('should throw an error if the collection is not a string', () => {
       expect(() => {
         const store = collection({});
         return store;
       }).toThrow(KinveyError);
     });
 
-    describe('tagging', () => {//TODO: No tag value validation, error not thrown when tag is set to Network store
+    describe('tagging', () => {
       describe('a NetworkStore', () => {
         it('should throw an error', () => {
           expect(() => {
@@ -112,25 +112,22 @@ describe('DataStore', () => {
     });
   });
 
-  describe('getInstance()', () => { //TODO:  No getInstance function
-    afterEach(function () {
-      expect.restoreSpies();
-    });
-
+  describe.skip('getInstance()', () => {
     it('should call collection()', () => {
-      const spy = expect.spyOn(DataStore, 'collection');
-      DataStore.getInstance(collectionName);
+      const spy = expect.createSpy(collection);
+      getInstance(collectionName);
       expect(spy).toHaveBeenCalled();
+      spy.restore();
     });
   });
 
-  describe('clearCache()', () => {
-    it('should clear all the entities in the cache', () => {//TODO: clearCache does not seem to clear cache
+  describe('clear()', () => {
+    it('should clear all the entities in the cache', () => {
       const entity = {};
-      const store = new CacheStore(client.appKey, collectionName, null, {autoSync: false});
+      const store = new CacheStore(collectionName, {autoSync: false});
       return store.save(entity)
         .then(() => {
-          return clearCache();
+          return clear();
         })
         .then(() => {
           return store.find().toPromise();

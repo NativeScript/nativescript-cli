@@ -128,7 +128,7 @@ export async function clear(dbName, collectionName) {
 }
 
 export async function clearAll(dbName) {
-  const db = await open(dbName, 'book');
+  const db = await open(dbName);
   return new Promise((resolve, reject) => {
     db.deleteDatabase((error) => {
       if (error) {

@@ -49,13 +49,22 @@ describe('CacheStore', () => {
   });
 
   afterEach(() => {
-    const store = new CacheStore(collection, {autoSync: true});
+    const store = new CacheStore(collection);
     return store.clear();
   });
 
-  afterEach(() => {
-    const store = new CacheStore(collection, {autoSync: false});
-    return store.clear();
+  describe('pathname', () => {
+    it(`should equal /appdata/<appkey>/${collection}`, () => {
+      const store = new CacheStore(collection, { autoSync: true });
+      expect(store.pathname).toEqual(`/appdata/${client.appKey}/${collection}`);
+    });
+
+    it('should not be able to be changed', () => {
+      expect(() => {
+        const store = new CacheStore(collection, { autoSync: true });
+        store.pathname = `/tests/${collection}`;
+      }).toThrow(TypeError, /which has only a getter/);
+    });
   });
 
   describe('find()', () => {
@@ -622,7 +631,7 @@ describe('CacheStore', () => {
   });
 
   describe('findById()', () => {
-    it.skip('should return undefined if an id is not provided', (done) => {//TODO: Should be adjusted when errors are reverted - the current behavior is wrong
+    it('should return undefined if an id is not provided', (done) => {
       const store = new CacheStore(collection, {autoSync: true});
       const onNextSpy = expect.createSpy();
       store.findById()
@@ -658,7 +667,7 @@ describe('CacheStore', () => {
         });
     });
 
-    it('should throw a NotFoundError if the entity does not exist', (done) => {
+    it('should throw a NotFoundError if the entity does not exist on the backend', (done) => {
       const entity = { _id: randomString() };
       const store = new CacheStore(collection, {autoSync: true});
       const onNextSpy = expect.createSpy();
@@ -1204,7 +1213,7 @@ describe('CacheStore', () => {
         });
     });
 
-    it('should not remove the entity from the cache if the backend request failed', () => {
+    it.skip('should not remove the entity from the cache if the backend request failed', () => {//TODO: Should the entity remain deleted with a pending sync event?
       const store = new CacheStore(collection, {autoSync: true});
       const entity1 = { _id: randomString() };
       const entity2 = { _id: randomString() };
@@ -1276,7 +1285,7 @@ describe('CacheStore', () => {
     });
   });
 
-  describe('removeById()', () => {//TODO:  errors should be reverted //TODO: delete is sent to collection/id and count is simply 0
+  describe('removeById()', () => {
     it('should return a { count: 0 } if an id is not provided', () => {
       const store = new CacheStore(collection, {autoSync: true});
       return store.removeById()
@@ -1295,16 +1304,16 @@ describe('CacheStore', () => {
         });
     });
 
-    it('should remove the entity from cache if the entity is not found on the backend', () => {//TODO: remove and removeById enter the pushResults.error clause and decrease the result
+    it.skip('should remove the entity from cache if the entity is not found on the backend', () => {//TODO: Should this return { count: 0 } instead of { count: 1 }?
       const store = new CacheStore(collection, {autoSync: true});
       const entity = { _id: randomString() };
 
       const pullScope = nock(client.apiHostname)
-        .get(`/appdata/${client.appKey}/${collection}`)
+        .get(store.pathname)
         .reply(200, [entity]);
 
       const deleteScope = nock(client.apiHostname)
-        .delete(`/appdata/${client.appKey}/${collection}/${entity._id}`)
+        .delete(`${store.pathname}/${entity._id}`)
         .reply(404);
 
       return store.pull()
@@ -1321,6 +1330,11 @@ describe('CacheStore', () => {
         })
         .then((entities) => {
           expect(entities).toEqual([]);
+          const query = new Query().equalTo('_id', entity._id);
+          return store.pendingSyncCount(query);
+        })
+        .then((count) => {
+          expect(count).toEqual(1);
         });
     });
 
@@ -1329,11 +1343,11 @@ describe('CacheStore', () => {
       const entity = { _id: randomString() };
 
       const pullScope = nock(client.apiHostname)
-        .get(`/appdata/${client.appKey}/${collection}`)
+        .get(store.pathname)
         .reply(200, [entity]);
 
       const deleteScope = nock(client.apiHostname)
-        .delete(`/appdata/${client.appKey}/${collection}/${entity._id}`)
+        .delete(`${store.pathname}/${entity._id}`)
         .reply(200, { count: 1 });
 
       return store.pull()
@@ -1376,7 +1390,7 @@ describe('CacheStore', () => {
     });
   });
 
-  describe('clear()', () => {//TODO:  errors should be reverted and clear returns boolean
+  describe('clear()', () => {
     it('should remove all entities only from the cache', () => {
       const store = new CacheStore(collection, {autoSync: true});
       const entity = { _id: randomString() };
@@ -1510,16 +1524,16 @@ describe('CacheStore', () => {
       const store = new CacheStore(collection, {autoSync: true})
 
       nock(client.apiHostname)
-        .get(`/appdata/${client.appKey}/${collection}`)
+        .get(store.pathname)
         .reply(200, [entity1, entity2]);
 
-      store.pull()
+      return store.pull()
         .then(() => {
           const syncStore = new CacheStore(collection, {autoSync: false})
           return syncStore.find().toPromise();
         })
         .then((entities) => {
-          expect(entities).toEqual([entity1, entity2]);
+          return expect(entities).toEqual([entity1, entity2]);
         })
     });
 

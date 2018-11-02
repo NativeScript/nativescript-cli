@@ -5,10 +5,12 @@ import cloneDeep from 'lodash/cloneDeep';
 import { SyncError } from 'kinvey-errors';
 import { randomString } from 'kinvey-test-utils';
 import { Query } from 'kinvey-query';
-import { register } from 'kinvey-http-node';
+import { register as registerHttp } from 'kinvey-http-node';
+import { register as registerCache } from 'kinvey-cache-memory';
 import { set as setSession } from 'kinvey-session';
 import { init } from 'kinvey-app';
-import { SyncOperation, syncManagerProvider } from './sync';
+import { CacheStore } from './cachestore';
+import { Sync } from './sync';
 chai.use(require('chai-as-promised'));
 chai.should();
 const collection = 'Books';
@@ -22,7 +24,8 @@ describe('Sync', () => {
   let backendPathname;
 
   before(() => {
-    register();
+    registerHttp();
+    registerCache();
   });
 
   before(() => {
@@ -51,8 +54,8 @@ describe('Sync', () => {
   });
 
   afterEach(() => {
-    const manager = syncManagerProvider.getSyncManager();
-    return manager.clearSync(collection);
+    const sync = new Sync(collection);
+    return sync.clear();
   });
 
   describe('counting sync items', () => {
@@ -60,38 +63,38 @@ describe('Sync', () => {
     const entity2 = { _id: randomString() };
 
     beforeEach(() => {
-      const store = new SyncStore(collection);
+      const store = new CacheStore(collection, { autoSync: false });
       return store.save(entity1);
     });
 
     beforeEach(() => {
-      const store = new SyncStore(collection);
+      const store = new CacheStore(collection, { autoSync: false });
       return store.save(entity2);
     });
 
     it('should return the count for all entities that need to be synced', () => {
-      const manager = syncManagerProvider.getSyncManager();
-      return manager.getSyncItemCount(collection)
+      const sync = new Sync(collection);
+      return sync.count()
         .then((count) => {
           expect(count).toEqual(2);
         });
     });
 
     it('should return the count for all entities that match the query that need to be synced', () => {
-      const manager = syncManagerProvider.getSyncManager();
+      const sync = new Sync(collection);
       const query = new Query().equalTo('_id', entity1._id);
-      return manager.getSyncItemCountByEntityQuery(collection, query)
+      return sync.count(query)
         .then((count) => {
           expect(count).toEqual(1);
         });
     });
   });
 
-  describe('addCreateEvent()', () => {
+  describe('addCreateSyncEvent()', () => {
     it('should throw an error when an entity does not contain and _id', () => {
       const collection = randomString();
-      const manager = syncManagerProvider.getSyncManager();
-      return manager.addCreateEvent(collection, { prop: randomString() })
+      const sync = new Sync(collection);
+      return sync.addCreateSyncEvent({ prop: randomString() })
         .then(() => {
           throw new Error('This test should fail.');
         })
@@ -102,29 +105,43 @@ describe('Sync', () => {
 
     it('should accept a single entity', () => {
       const entity = { _id: randomString() };
-      const manager = syncManagerProvider.getSyncManager();
-      return manager.addCreateEvent(collection, entity)
+      const sync = new Sync(collection);
+      return sync.addCreateSyncEvent(entity)
         .then((syncEntity) => {
-          expect(syncEntity).toEqual(entity);
+          expect(syncEntity).toEqual({
+            _id: entity._id,
+            entityId: entity._id,
+            collection,
+            state: {
+              operation: 'POST'
+            }
+          });
         });
     });
 
     it('should accept an array of entities', () => {
       const entities = [{ _id: randomString() }];
-      const manager = syncManagerProvider.getSyncManager();
-      return manager.addCreateEvent(collection, entities)
+      const sync = new Sync(collection);
+      return sync.addCreateSyncEvent(entities)
         .then((syncEntities) => {
-          expect(syncEntities).toEqual(entities);
+          expect(syncEntities).toEqual([{
+            _id: entities[0]._id,
+            entityId: entities[0]._id,
+            collection,
+            state: {
+              operation: 'POST'
+            }
+          }]);
         });
     });
 
     it('should add entities to the sync table', () => {
       const entity = { _id: randomString() };
-      const store = new SyncStore(collection);
+      const store = new CacheStore(collection, { autoSync: false });
       return store.create(entity)
         .then(() => {
-          const manager = syncManagerProvider.getSyncManager();
-          return manager.getSyncItemCount(collection);
+          const sync = new Sync(collection);
+          return sync.count();
         })
         .then((count) => {
           expect(count).toEqual(1);
@@ -132,11 +149,11 @@ describe('Sync', () => {
     });
   });
 
-  describe('addUpdateEvent()', () => {
+  describe('addUpdateSyncEvent()', () => {
     it('should throw an error when an entity does not contain and _id', () => {
       const collection = randomString();
-      const manager = syncManagerProvider.getSyncManager();
-      return manager.addUpdateEvent(collection, { prop: randomString() })
+      const sync = new Sync(collection);
+      return sync.addUpdateSyncEvent({ prop: randomString() })
         .then(() => {
           throw new Error('This test should fail.');
         })
@@ -147,29 +164,43 @@ describe('Sync', () => {
 
     it('should accept a single entity', () => {
       const entity = { _id: randomString() };
-      const manager = syncManagerProvider.getSyncManager();
-      return manager.addUpdateEvent(collection, entity)
+      const sync = new Sync(collection);
+      return sync.addUpdateSyncEvent(entity)
         .then((syncEntity) => {
-          expect(syncEntity).toEqual(entity);
+          expect(syncEntity).toEqual({
+            _id: entity._id,
+            entityId: entity._id,
+            collection,
+            state: {
+              operation: 'PUT'
+            }
+          });
         });
     });
 
     it('should accept an array of entities', () => {
       const entities = [{ _id: randomString() }];
-      const manager = syncManagerProvider.getSyncManager();
-      return manager.addUpdateEvent(collection, entities)
+      const sync = new Sync(collection);
+      return sync.addUpdateSyncEvent(entities)
         .then((syncEntities) => {
-          expect(syncEntities).toEqual(entities);
+          expect(syncEntities).toEqual([{
+            _id: entities[0]._id,
+            entityId: entities[0]._id,
+            collection,
+            state: {
+              operation: 'PUT'
+            }
+          }]);
         });
     });
 
     it('should add entities to the sync table', () => {
       const entity = { _id: randomString() };
-      const store = new SyncStore(collection);
+      const store = new CacheStore(collection, { autoSync: false });
       return store.update(entity)
         .then(() => {
-          const manager = syncManagerProvider.getSyncManager();
-          return manager.getSyncItemCount(collection);
+          const sync = new Sync(collection);
+          return sync.count();
         })
         .then((count) => {
           expect(count).toEqual(1);
@@ -177,11 +208,11 @@ describe('Sync', () => {
     });
   });
 
-  describe('addDeleteEvent', () => {
+  describe('addDeleteSyncEvent', () => {
     it('should throw an error when an entity does not contain and _id', () => {
       const collection = randomString();
-      const manager = syncManagerProvider.getSyncManager();
-      return manager.addDeleteEvent(collection, { prop: randomString() })
+      const sync = new Sync(collection);
+      return sync.addDeleteSyncEvent({ prop: randomString() })
         .then(() => {
           throw new Error('This test should fail.');
         })
@@ -192,32 +223,46 @@ describe('Sync', () => {
 
     it('should accept a single entity', () => {
       const entity = { _id: randomString() };
-      const manager = syncManagerProvider.getSyncManager();
-      return manager.addDeleteEvent(collection, entity)
+      const sync = new Sync(collection);
+      return sync.addDeleteSyncEvent(entity)
         .then((syncEntity) => {
-          expect(syncEntity).toEqual(entity);
+          expect(syncEntity).toEqual({
+            _id: entity._id,
+            entityId: entity._id,
+            collection,
+            state: {
+              operation: 'DELETE'
+            }
+          });
         });
     });
 
     it('should accept an array of entities', () => {
       const entities = [{ _id: randomString() }];
-      const manager = syncManagerProvider.getSyncManager();
-      return manager.addDeleteEvent(collection, entities)
+      const sync = new Sync(collection);
+      return sync.addDeleteSyncEvent(entities)
         .then((syncEntities) => {
-          expect(syncEntities).toEqual(entities);
+          expect(syncEntities).toEqual([{
+            _id: entities[0]._id,
+            entityId: entities[0]._id,
+            collection,
+            state: {
+              operation: 'DELETE'
+            }
+          }]);
         });
     });
 
     it('should add entities to the sync table', () => {
       const entity = { _id: randomString() };
-      const store = new SyncStore(collection);
+      const store = new CacheStore(collection, { autoSync: false });
       return store.save(entity)
         .then(() => {
           return store.removeById(entity._id);
         })
         .then(() => {
-          const manager = syncManagerProvider.getSyncManager();
-          return manager.getSyncItemCount(collection);
+          const sync = new Sync(collection);
+          return sync.count();
         })
         .then((count) => {
           expect(count).toEqual(1);
@@ -228,7 +273,7 @@ describe('Sync', () => {
   describe('pull()', () => {
     it('should return entities from the backend', () => {
       const entity = { _id: randomString() };
-      const manager = syncManagerProvider.getSyncManager();
+      const sync = new Sync(collection);
 
       // Kinvey API Response
       nock(client.apiHostname)
@@ -236,14 +281,14 @@ describe('Sync', () => {
         .query(true)
         .reply(200, [entity]);
 
-      return manager.pull(collection)
+      return sync.pull()
         .then((entities) => {
           expect(entities).toBe(1);
         });
     });
 
     it('should add kinveyfile_ttl query parameter', () => {
-      const manager = syncManagerProvider.getSyncManager();
+      const sync = new Sync(collection);
       const entity1 = { _id: randomString() };
 
       nock(client.apiHostname)
@@ -251,14 +296,14 @@ describe('Sync', () => {
         .query({ kinveyfile_ttl: 3600 })
         .reply(200, [entity1]);
 
-      return manager.pull(collection, null, { kinveyFileTTL: 3600 })
+      return sync.pull(null, { kinveyFileTTL: 3600 })
         .then((entities) => {
           expect(entities).toBe(1);
         });
     });
 
     it('should add kinveyfile_tls query parameter', () => {
-      const manager = syncManagerProvider.getSyncManager();
+      const sync = new Sync(collection);
       const entity1 = { _id: randomString() };
 
       nock(client.apiHostname)
@@ -266,7 +311,7 @@ describe('Sync', () => {
         .query({ kinveyfile_tls: true })
         .reply(200, [entity1]);
 
-      return manager.pull(collection, null, { kinveyFileTLS: true })
+      return sync.pull(null, { kinveyFileTLS: true })
         .then((entities) => {
           expect(entities).toBe(1);
         });
@@ -277,13 +322,13 @@ describe('Sync', () => {
     before(() => nock.cleanAll());
 
     beforeEach(() => {
-      const store = new SyncStore(collection);
+      const store = new CacheStore(collection, { autoSync: false });
       return store.clear();
     });
 
     it('should remove _kmd.local for a locally created entity', async () => {
       const entityId = randomString();
-      const store = new SyncStore(collection);
+      const store = new CacheStore(collection, { autoSync: false });
       const entity = await store.save({});
 
       const response = { _id: entityId };
@@ -294,7 +339,7 @@ describe('Sync', () => {
       const result = (await store.push()).shift();
       expect(result).toEqual({
         _id: entity._id,
-        operation: SyncOperation.Create,
+        operation: 'POST',
         entity: response
       });
     });
@@ -304,8 +349,8 @@ describe('Sync', () => {
       const entity2 = { _id: randomString() };
       let entity3 = {};
       const entity3Id = randomString();
-      const manager = syncManagerProvider.getSyncManager();
-      const store = new SyncStore(collection);
+      const sync = new Sync(collection);
+      const store = new CacheStore(collection, { autoSync: false });
 
       const simulatePreSaveBLHook = (entity) => {
         const clone = cloneDeep(entity);
@@ -333,15 +378,15 @@ describe('Sync', () => {
             .post(backendPathname, () => true)
             .reply(200, simulatePreSaveBLHook({ _id: entity3Id }));
 
-          return manager.push(collection);
+          return sync.push();
         })
         .then((result) => {
           expect(result).toEqual([
-            { _id: entity2._id, operation: SyncOperation.Delete },
-            { _id: entity1._id, operation: SyncOperation.Update, entity: simulatePreSaveBLHook(entity1) },
-            { _id: entity3._id, operation: SyncOperation.Create, entity: simulatePreSaveBLHook({ _id: entity3Id }) }
+            { _id: entity1._id, operation: 'PUT', entity: simulatePreSaveBLHook(entity1) },
+            { _id: entity3._id, operation: 'POST', entity: simulatePreSaveBLHook({ _id: entity3Id }) },
+            { _id: entity2._id, operation: 'DELETE' }
           ]);
-          return manager.getSyncItemCount(collection);
+          return sync.count();
         })
         .then((count) => {
           expect(count).toEqual(0);
@@ -358,8 +403,8 @@ describe('Sync', () => {
     it('should not stop syncing if one entity results in an error', () => {
       const entity1 = { _id: randomString() };
       const entity2 = { _id: randomString() };
-      const manager = syncManagerProvider.getSyncManager();
-      const store = new SyncStore(collection);
+      const sync = new Sync(collection);
+      const store = new CacheStore(collection, { autoSync: false });
       return store.save(entity1)
         .then(() => store.save(entity2))
         .then(() => store.removeById(entity2._id))
@@ -374,16 +419,16 @@ describe('Sync', () => {
             .query(true)
             .reply(200, { count: 1 });
 
-          return manager.push(collection);
+          return sync.push();
         })
         .then((results) => {
           expect(results.length).toBe(2);
-          const updateResult = results.find(r => r.operation === SyncOperation.Update);
-          const deleteResult = results.find(r => r.operation === SyncOperation.Delete);
+          const updateResult = results.find(r => r.operation === 'PUT');
+          const deleteResult = results.find(r => r.operation === 'DELETE');
           expect(updateResult).toIncludeKey('error');
-          expect(updateResult).toInclude({ _id: entity1._id, operation: SyncOperation.Update, entity: entity1 });
-          expect(deleteResult).toEqual({ _id: entity2._id, operation: SyncOperation.Delete });
-          return manager.getSyncItemCount(collection);
+          expect(updateResult).toInclude({ _id: entity1._id, operation: 'PUT', entity: entity1 });
+          expect(deleteResult).toEqual({ _id: entity2._id, operation: 'DELETE' });
+          return sync.count();
         })
         .then((count) => {
           expect(count).toEqual(1);
@@ -392,8 +437,8 @@ describe('Sync', () => {
 
     it('should not push when an existing push is in progress', (done) => {
       const entity1 = { _id: randomString() };
-      const store = new SyncStore(collection);
-      const manager = syncManagerProvider.getSyncManager();
+      const store = new CacheStore(collection, { autoSync: false });
+      const sync = new Sync(collection);
       store.save(entity1)
         .then(() => {
           // Kinvey API Response
@@ -403,7 +448,7 @@ describe('Sync', () => {
             .reply(200, entity1);
 
           // Sync
-          manager.push(collection)
+          sync.push()
             .catch(done);
 
           // Add second sync operation
@@ -411,7 +456,7 @@ describe('Sync', () => {
           return store.save(entity2);
         })
         .then(() => {
-          return manager.push(collection);
+          return sync.push();
         })
         .catch((err) => {
           expect(err).toExist();
@@ -426,10 +471,10 @@ describe('Sync', () => {
       const collection2 = randomString();
       const entity1 = { _id: randomString() };
       const entity2 = { _id: randomString() };
-      const manager1 = syncManagerProvider.getSyncManager();
-      const manager2 = syncManagerProvider.getSyncManager();
-      const store1 = new SyncStore(collection);
-      const store2 = new SyncStore(collection2);
+      const sync1 = new Sync(collection);
+      const sync2 = new Sync(collection2);
+      const store1 = new CacheStore(collection, { autoSync: false });
+      const store2 = new CacheStore(collection2, { autoSync: false });
 
       nock(client.apiHostname)
         .put(`${backendPathname}/${entity1._id}`, () => true)
@@ -442,17 +487,17 @@ describe('Sync', () => {
 
       const promise = store1.save(entity1)
         .then(() => {
-          manager1.push(collection)
+          sync1.push()
             .then(() => promise.should.be.fulfilled)
             // ensure we're not polluting, so other tests don't fail
-            .then(() => manager1.clearSync(collection2))
+            .then(() => sync1.clear())
             .then(() => done())
             .catch(done);
 
           return store2.save(entity2);
         })
         .then(() => {
-          return manager2.push(collection2);
+          return sync2.push();
         });
     });
   });
