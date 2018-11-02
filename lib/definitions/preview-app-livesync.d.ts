@@ -23,7 +23,12 @@ declare global {
 	}
 
 	interface IPreviewQrCodeService {
+		getPlaygroundAppQrCode(options?: IPlaygroundAppQrCodeOptions): Promise<IDictionary<IQrCodeImageData>>;
 		printLiveSyncQrCode(options: IGenerateQrCodeOptions): Promise<void>;
+	}
+
+	interface IPlaygroundAppQrCodeOptions {
+		platform?: string;
 	}
 
 	interface IGenerateQrCodeOptions extends IHasUseHotModuleReloadOption {
