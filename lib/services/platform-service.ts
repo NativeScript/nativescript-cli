@@ -69,12 +69,26 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 			this.validatePlatform(platform, projectData);
 			const platformPath = path.join(projectData.platformsDir, platform);
 
-			if (this.$fs.exists(platformPath)) {
+			const isPlatformAdded = this.isPlatformAdded(platform, platformPath, projectData);
+			if (isPlatformAdded) {
 				this.$errors.failWithoutHelp(`Platform ${platform} already added`);
 			}
 
 			await this.addPlatform(platform.toLowerCase(), platformTemplate, projectData, config, frameworkPath);
 		}
+	}
+
+	private isPlatformAdded(platform: string, platformPath: string, projectData: IProjectData): boolean {
+		if (!this.$fs.exists(platformPath)) {
+			return false;
+		}
+
+		const prepareInfo = this.$projectChangesService.getPrepareInfo(platform, projectData);
+		if (!prepareInfo) {
+			return true;
+		}
+
+		return prepareInfo.nativePlatformStatus !== constants.NativePlatformStatus.requiresPlatformAdd;
 	}
 
 	public getCurrentPlatformVersion(platform: string, projectData: IProjectData): string {
