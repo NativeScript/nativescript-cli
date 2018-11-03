@@ -19,14 +19,24 @@ export class PreviewQrCodeService implements IPreviewQrCodeService {
 		const result = Object.create(null);
 
 		if (!options || !options.platform || this.$mobileHelper.isAndroidPlatform(options.platform)) {
-			result.android = await this.getQrCodeImageData(PlaygroundStoreUrls.GOOGLE_PLAY_URL);
+			result.android = await this.getLiveSyncQrCode(PlaygroundStoreUrls.GOOGLE_PLAY_URL);
 		}
 
 		if (!options || !options.platform || this.$mobileHelper.isiOSPlatform(options.platform)) {
-			result.ios = await this.getQrCodeImageData(PlaygroundStoreUrls.APP_STORE_URL);
+			result.ios = await this.getLiveSyncQrCode(PlaygroundStoreUrls.APP_STORE_URL);
 		}
 
 		return result;
+	}
+
+	public async getLiveSyncQrCode(url: string): Promise<IQrCodeImageData> {
+		const shortenUrl = await this.getShortenUrl(url);
+		const imageData = await this.$qr.generateDataUri(shortenUrl);
+		return {
+			originalUrl: url,
+			shortenUrl,
+			imageData
+		};
 	}
 
 	public async printLiveSyncQrCode(options: IPrintLiveSyncOptions): Promise<void> {
@@ -62,16 +72,6 @@ To scan the QR code and deploy your app on a device, you need to have the \`Nati
 		}
 
 		return url;
-	}
-
-	private async getQrCodeImageData(url: string): Promise<IQrCodeImageData> {
-		const shortenUrl = await this.getShortenUrl(url);
-		const imageData = await this.$qr.generateDataUri(shortenUrl);
-		return {
-			originalUrl: url,
-			shortenUrl,
-			imageData
-		};
 	}
 }
 $injector.register("previewQrCodeService", PreviewQrCodeService);
