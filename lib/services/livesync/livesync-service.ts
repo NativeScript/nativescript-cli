@@ -238,7 +238,9 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 		};
 		debugData.pathToAppPackage = this.$platformService.lastOutputPath(settings.platform, buildConfig, projectData, settings.outputPath);
 
-		return this.printDebugInformation(await this.$debugService.debug(debugData, settings.debugOptions));
+		const debugInfo = await this.$debugService.debug(debugData, settings.debugOptions);
+		const result = this.printDebugInformation(debugInfo);
+		return result;
 	}
 
 	public printDebugInformation(debugInformation: IDebugInformation): IDebugInformation {
@@ -284,6 +286,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 		} catch (err) {
 			this.$logger.trace("Couldn't attach debugger, will modify options and try again.", err);
 			attachDebuggerOptions.debugOptions.start = false;
+			attachDebuggerOptions.debugOptions.skipHandshake = true;
 			try {
 				debugInformation = await this.attachDebugger(attachDebuggerOptions);
 			} catch (innerErr) {
@@ -700,7 +703,8 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 											rebuiltInformation,
 											projectData,
 											deviceBuildInfoDescriptor,
-											liveSyncData,
+											// the clean option should be respected only during initial sync
+											liveSyncData: _.assign({}, liveSyncData, { clean: false }),
 											settings: latestAppPackageInstalledSettings,
 											modifiedFiles: allModifiedFiles,
 											filesToRemove: currentFilesToRemove,

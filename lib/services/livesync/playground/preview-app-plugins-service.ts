@@ -74,20 +74,25 @@ export class PreviewAppPluginsService implements IPreviewAppPluginsService {
 	private getWarningForPluginCore(localPlugin: string, localPluginVersion: string, devicePluginVersion: string, deviceId: string): string {
 		this.$logger.trace(`Comparing plugin ${localPlugin} with localPluginVersion ${localPluginVersion} and devicePluginVersion ${devicePluginVersion}`);
 
-		if (devicePluginVersion) {
-			const localPluginVersionData = semver.coerce(localPluginVersion);
-			const devicePluginVersionData = semver.coerce(devicePluginVersion);
+		if (!devicePluginVersion) {
+			return util.format(PluginComparisonMessages.PLUGIN_NOT_INCLUDED_IN_PREVIEW_APP, localPlugin, deviceId);
+		}
 
-			if (localPluginVersionData.major !== devicePluginVersionData.major) {
-				return util.format(PluginComparisonMessages.LOCAL_PLUGIN_WITH_DIFFERENCE_IN_MAJOR_VERSION, localPlugin, localPluginVersion, devicePluginVersion);
-			} else if (localPluginVersionData.minor > devicePluginVersionData.minor) {
-				return util.format(PluginComparisonMessages.LOCAL_PLUGIN_WITH_GREATHER_MINOR_VERSION, localPlugin, localPluginVersion, devicePluginVersion);
-			}
-
+		const shouldSkipCheck = !semver.valid(localPluginVersion) && !semver.validRange(localPluginVersion);
+		if (shouldSkipCheck) {
 			return null;
 		}
 
-		return util.format(PluginComparisonMessages.PLUGIN_NOT_INCLUDED_IN_PREVIEW_APP, localPlugin, deviceId);
+		const localPluginVersionData = semver.coerce(localPluginVersion);
+		const devicePluginVersionData = semver.coerce(devicePluginVersion);
+
+		if (localPluginVersionData.major !== devicePluginVersionData.major) {
+			return util.format(PluginComparisonMessages.LOCAL_PLUGIN_WITH_DIFFERENCE_IN_MAJOR_VERSION, localPlugin, localPluginVersion, devicePluginVersion);
+		} else if (localPluginVersionData.minor > devicePluginVersionData.minor) {
+			return util.format(PluginComparisonMessages.LOCAL_PLUGIN_WITH_GREATHER_MINOR_VERSION, localPlugin, localPluginVersion, devicePluginVersion);
+		}
+
+		return null;
 	}
 
 	private hasNativeCode(localPlugin: string, platform: string, projectDir: string): boolean {

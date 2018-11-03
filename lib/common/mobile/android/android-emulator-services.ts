@@ -59,6 +59,10 @@ export class AndroidEmulatorServices implements Mobile.IEmulatorPlatformService 
 		};
 	}
 
+	public detach(deviceInfo: Mobile.IDeviceInfo) {
+		this.$androidVirtualDeviceService.detach(deviceInfo);
+	}
+
 	private async startEmulatorCore(options: Mobile.IAndroidStartEmulatorOptions): Promise<{runningEmulator: Mobile.IDeviceInfo, errors: string[], endTimeEpoch: number}> {
 		const timeout = options.timeout || AndroidVirtualDevice.TIMEOUT_SECONDS;
 		const endTimeEpoch = getCurrentEpochTime() + this.$utils.getMilliSecondsTimeout(timeout);

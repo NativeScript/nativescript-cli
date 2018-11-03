@@ -176,14 +176,13 @@ describe("androidVirtualDeviceService", () => {
 				assert.deepEqual(result.devices, []);
 				assert.deepEqual(result.errors, []);
 			});
-			it("should return an empty array when `avdmanager list avds` command fails", async () => {
+			it("should return an empty array and no errors when `avdmanager list avds` command fails", async () => {
 				const avdManagerError = "some error while executing avdmanager list avds";
 				const avdService = mockAvdService({ avdManagerError });
 				const result = await avdService.getEmulatorImages([]);
 				assert.lengthOf(result.devices, 0);
 				assert.deepEqual(result.devices, []);
-				assert.lengthOf(result.errors, 1);
-				assert.deepEqual(result.errors, [avdManagerError]);
+				assert.lengthOf(result.errors, 0);
 			});
 			it("should return all emulators when there are available emulators and no running emulators", async () => {
 				const avdService = mockAvdService({
@@ -213,6 +212,24 @@ describe("androidVirtualDeviceService", () => {
 				assert.deepEqual(result[0], getRunningEmulatorData({ displayName: "Nexus_5_API_27", imageIdentifier: "Nexus_5_API_27", identifier: "emulator-5554", version: "8.1.0", model: "Nexus 5X" }));
 				assert.deepEqual(result[1], getAvailableEmulatorData({ displayName: "Nexus_5X_API_28", imageIdentifier: "Nexus_5X_API_28", version: "9.0.0", model: "Nexus 5X" }));
 				assert.deepEqual(result[2], getAvailableEmulatorData({ displayName: "Nexus_6P_API_28", imageIdentifier: "Nexus_6P_API_28", version: "9.0.0", model: "Nexus 6P" }));
+			});
+			// In this case we should fallback to list avd directory and should't report errors from avdmanager
+			it("should return devices and no errors when there is an error on avdmanager's stderr", async () => {
+				const iniFilesData = getIniFilesData();
+				const testInjector = createTestInjector({
+					avdManagerOutput: "",
+					avdManagerError: "my test error",
+					iniFilesData
+				});
+
+				const fs = testInjector.resolve("fs");
+				fs.readDirectory = () => _.keys(iniFilesData);
+
+				const avdService = testInjector.resolve("androidVirtualDeviceService");
+				const result = await avdService.getEmulatorImages(["emulator-5554 device"]);
+
+				assert.deepEqual(result.devices.length, 3);
+				assert.deepEqual(result.errors.length, 0);
 			});
 		});
 

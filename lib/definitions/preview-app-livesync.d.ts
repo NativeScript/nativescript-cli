@@ -12,7 +12,6 @@ declare global {
 
 	interface IPreviewSdkService extends EventEmitter {
 		getQrCodeUrl(options: IHasUseHotModuleReloadOption): string;
-		connectedDevices: Device[];
 		initialize(getInitialFiles: (device: Device) => Promise<FilesPayload>): void;
 		applyChanges(filesPayload: FilesPayload): Promise<void>;
 		stop(): void;
@@ -23,15 +22,27 @@ declare global {
 		getExternalPlugins(device: Device): string[];
 	}
 
-	interface IPlaygroundQrCodeGenerator {
-		generateQrCode(options: IGenerateQrCodeOptions): Promise<void>;
+	interface IPreviewQrCodeService {
+		getPlaygroundAppQrCode(options?: IPlaygroundAppQrCodeOptions): Promise<IDictionary<IQrCodeImageData>>;
+		printLiveSyncQrCode(options: IPrintLiveSyncOptions): Promise<void>;
 	}
 
-	interface IGenerateQrCodeOptions extends IHasUseHotModuleReloadOption {
+	interface IPlaygroundAppQrCodeOptions {
+		platform?: string;
+	}
+
+	interface IPrintLiveSyncOptions extends IHasUseHotModuleReloadOption {
 		/**
 		 * If set to true, a link will be shown on console instead of QR code
 		 * Default value is false.
 		 */
 		link: boolean;
+	}
+
+	interface IPreviewDevicesService extends EventEmitter {
+		getConnectedDevices(): Device[];
+		updateConnectedDevices(devices: Device[]): void;
+		getDeviceById(id: string): Device;
+		getDevicesForPlatform(platform: string): Device[];
 	}
 }

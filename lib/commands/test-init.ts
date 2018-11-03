@@ -93,9 +93,10 @@ class TestInitCommand implements ICommand {
 		await this.$pluginsService.add('nativescript-unit-test-runner', this.$projectData);
 
 		const testsDir = path.join(this.$projectData.appDirectoryPath, 'tests');
+		const relativeTestsDir = path.relative(this.$projectData.projectDir, testsDir);
 		let shouldCreateSampleTests = true;
 		if (this.$fs.exists(testsDir)) {
-			this.$logger.info('app/tests/ directory already exists, will not create an example test project.');
+			this.$logger.info(`${relativeTestsDir} directory already exists, will not create an example test project.`);
 			shouldCreateSampleTests = false;
 		}
 
@@ -104,8 +105,9 @@ class TestInitCommand implements ICommand {
 		const frameworks = [frameworkToInstall].concat(this.karmaConfigAdditionalFrameworks[frameworkToInstall] || [])
 			.map(fw => `'${fw}'`)
 			.join(', ');
+		const testFiles = `'${relativeTestsDir}/**/*.js'`;
 		const karmaConfTemplate = this.$resources.readText('test/karma.conf.js');
-		const karmaConf = _.template(karmaConfTemplate)({ frameworks });
+		const karmaConf = _.template(karmaConfTemplate)({ frameworks, testFiles });
 
 		this.$fs.writeFile(path.join(projectDir, 'karma.conf.js'), karmaConf);
 
@@ -113,9 +115,9 @@ class TestInitCommand implements ICommand {
 
 		if (shouldCreateSampleTests && this.$fs.exists(exampleFilePath)) {
 			this.$fs.copyFile(exampleFilePath, path.join(testsDir, 'example.js'));
-			this.$logger.info('\nExample test file created in app/tests/'.yellow);
+			this.$logger.info(`\nExample test file created in ${relativeTestsDir}`.yellow);
 		} else {
-			this.$logger.info('\nPlace your test files under app/tests/'.yellow);
+			this.$logger.info(`\nPlace your test files under ${relativeTestsDir}`.yellow);
 		}
 
 		this.$logger.info('Run your tests using the "$ tns test <platform>" command.'.yellow);
