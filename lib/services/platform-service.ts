@@ -78,19 +78,6 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		}
 	}
 
-	private isPlatformAdded(platform: string, platformPath: string, projectData: IProjectData): boolean {
-		if (!this.$fs.exists(platformPath)) {
-			return false;
-		}
-
-		const prepareInfo = this.$projectChangesService.getPrepareInfo(platform, projectData);
-		if (!prepareInfo) {
-			return true;
-		}
-
-		return prepareInfo.nativePlatformStatus !== constants.NativePlatformStatus.requiresPlatformAdd;
-	}
-
 	public getCurrentPlatformVersion(platform: string, projectData: IProjectData): string {
 		const platformData = this.$platformsData.getPlatformData(platform, projectData);
 		const currentPlatformData: any = this.$projectDataService.getNSValue(projectData.projectDir, platformData.frameworkPackageName);
@@ -978,6 +965,19 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		}
 
 		return null;
+	}
+
+	private isPlatformAdded(platform: string, platformPath: string, projectData: IProjectData): boolean {
+		if (!this.$fs.exists(platformPath)) {
+			return false;
+		}
+
+		const prepareInfo = this.$projectChangesService.getPrepareInfo(platform, projectData);
+		if (!prepareInfo) {
+			return true;
+		}
+
+		return prepareInfo.nativePlatformStatus !== constants.NativePlatformStatus.requiresPlatformAdd;
 	}
 }
 
