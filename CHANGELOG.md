@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [3.12.3](https://github.com/Kinvey/js-sdk/tree/v3.12.3) (2018-11-05)
+[Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.12.2...v3.12.3)<br/>
+
+#### Bugs
+- MLIBZ-2712: Reconnect to Live Service on NativeScript whenever an application resumes or regains a network connection. [#379](https://github.com/Kinvey/js-sdk/pull/379)
+
 ## [3.12.2](https://github.com/Kinvey/js-sdk/tree/v3.12.2) (2018-11-02)
 [Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.12.1...v3.12.2)<br/>
 
@@ -11,11 +17,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Allow `loginWithMIC()` to work properly when viewing a NativeScript application with the NativeScript Preview App. [#377](https://github.com/Kinvey/js-sdk/pull/377)
 - Add new notification callback handler for NativeScript push notifications. [#378](https://github.com/Kinvey/js-sdk/pull/378)
 
-#### Bugs
+- MLIBZ-2712: Reconnect to Live Service on NativeScript whenever an application resumes or regains a network connection. [#376](https://github.com/Kinvey/js-sdk/pull/376)
 - MLIBZ-2496: Use default `AuthorizationGrant` if `null` is provded to `loginWithMIC()`. [#372](https://github.com/Kinvey/js-sdk/pull/372)
 - MLIBZ-2656 and MLIBZ-2690: Merge `_socialIdentity` properly with response from `/me` endpoint. [#374](https://github.com/Kinvey/js-sdk/pull/374) [#375](https://github.com/Kinvey/js-sdk/pull/375)
 - MLIBZ-2497: Return the correct error message if `Files.findById()` is called without a file id. [#373](https://github.com/Kinvey/js-sdk/pull/373)
-- MLIBZ-2712: Recoonect to Live Service on NativeScript whenever an application resumes or regains a network connection. [#376](https://github.com/Kinvey/js-sdk/pull/376)
+- MLIBZ-2712: Reconnect to Live Service on NativeScript whenever an application resumes or regains a network connection. [#376](https://github.com/Kinvey/js-sdk/pull/376)
 
 ## [3.12.1](https://github.com/Kinvey/js-sdk/tree/v3.12.1) (2018-10-04)
 [Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.12.0...v3.12.1)<br/>
