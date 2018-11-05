@@ -429,7 +429,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		];
 
 		try {
-			await this.$childProcess.spawnFromEvent(gradlew, localArgs, "close", { cwd: pluginBuildSettings.pluginDir });
+			await this.$childProcess.spawnFromEvent(gradlew, localArgs, "close", { cwd: pluginBuildSettings.pluginDir, stdio: "inherit" });
 		} catch (err) {
 			this.$errors.failWithoutHelp(`Failed to build plugin ${pluginBuildSettings.pluginName} : \n${err}`);
 		}
