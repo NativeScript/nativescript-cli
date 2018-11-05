@@ -39,6 +39,8 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 		private $analyticsService: IAnalyticsService,
 		private $usbLiveSyncService: DeprecatedUsbLiveSyncService,
 		private $previewAppLiveSyncService: IPreviewAppLiveSyncService,
+		private $previewQrCodeService: IPreviewQrCodeService,
+		private $previewSdkService: IPreviewSdkService,
 		private $hmrStatusService: IHmrStatusService,
 		private $injector: IInjector) {
 		super();
@@ -49,6 +51,21 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 		this.handleWarnings(liveSyncData, projectData);
 		await this.$pluginsService.ensureAllDependenciesAreInstalled(projectData);
 		await this.liveSyncOperation(deviceDescriptors, liveSyncData, projectData);
+	}
+
+	public async liveSyncToPreviewApp(data: IPreviewAppLiveSyncData): Promise<IQrCodeImageData> {
+		await this.liveSync([], {
+			syncToPreviewApp: true,
+			projectDir: data.projectDir,
+			bundle: data.appFilesUpdaterOptions.bundle,
+			useHotModuleReload: data.appFilesUpdaterOptions.useHotModuleReload,
+			release: false,
+			env: data.env,
+		});
+
+		const url = this.$previewSdkService.getQrCodeUrl({ useHotModuleReload: data.appFilesUpdaterOptions.useHotModuleReload });
+		const result = await this.$previewQrCodeService.getLiveSyncQrCode(url);
+		return result;
 	}
 
 	public async stopLiveSync(projectDir: string, deviceIdentifiers?: string[], stopOptions?: { shouldAwaitAllActions: boolean }): Promise<void> {

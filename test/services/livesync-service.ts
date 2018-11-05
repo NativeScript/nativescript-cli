@@ -38,6 +38,8 @@ const createTestInjector = (): IInjector => {
 		}
 	});
 	testInjector.register("previewAppLiveSyncService", {});
+	testInjector.register("previewQrCodeService", {});
+	testInjector.register("previewSdkService", {});
 
 	return testInjector;
 };
@@ -60,6 +62,8 @@ class LiveSyncServiceInheritor extends LiveSyncService {
 		$usbLiveSyncService: DeprecatedUsbLiveSyncService,
 		$injector: IInjector,
 		$previewAppLiveSyncService: IPreviewAppLiveSyncService,
+		$previewQrCodeService: IPreviewQrCodeService,
+		$previewSdkService: IPreviewSdkService,
 		$hmrStatusService: IHmrStatusService,
 		$platformsData: IPlatformsData) {
 
@@ -80,6 +84,8 @@ class LiveSyncServiceInheritor extends LiveSyncService {
 			$analyticsService,
 			$usbLiveSyncService,
 			$previewAppLiveSyncService,
+			$previewQrCodeService,
+			$previewSdkService,
 			$hmrStatusService,
 			$injector
 		);

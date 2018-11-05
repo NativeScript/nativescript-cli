@@ -24,6 +24,7 @@ declare global {
 
 	interface IPreviewQrCodeService {
 		getPlaygroundAppQrCode(options?: IPlaygroundAppQrCodeOptions): Promise<IDictionary<IQrCodeImageData>>;
+		getLiveSyncQrCode(url: string): Promise<IQrCodeImageData>;
 		printLiveSyncQrCode(options: IPrintLiveSyncOptions): Promise<void>;
 	}
 
