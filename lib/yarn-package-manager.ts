@@ -11,9 +11,9 @@ export class YarnPackageManager extends BasePackageManager implements INodePacka
 		$hostInfo: IHostInfo,
 		private $httpClient: Server.IHttpClient,
 		private $logger: ILogger,
-		private $pacoteService: IPacoteService
+		$pacoteService: IPacoteService
 	) {
-		super($childProcess, $hostInfo, 'yarn');
+		super($childProcess, $hostInfo, $pacoteService, 'yarn');
 	}
 
 	@exported("yarn")
@@ -39,18 +39,8 @@ export class YarnPackageManager extends BasePackageManager implements INodePacka
 		const cwd = pathToSave;
 
 		try {
-			await this.processPackageManagerInstall(params, { cwd });
-
-			if (isInstallingAllDependencies) {
-				return null;
-			}
-
-			const packageMetadata = await this.$pacoteService.manifest(packageName, {});
-			return {
-				name: packageMetadata.name,
-				version: packageMetadata.version
-			};
-
+			const result = await this.processPackageManagerInstall(packageName, params, { cwd, isInstallingAllDependencies });
+			return result;
 		} catch (e) {
 			this.$fs.writeJson(packageJsonPath, jsonContentBefore);
 			throw e;
@@ -102,9 +92,9 @@ export class YarnPackageManager extends BasePackageManager implements INodePacka
 	}
 
 	@exported("yarn")
-	getCachePath(): Promise<string> {
-		this.$errors.fail("Method not implemented");
-		return null;
+	public async getCachePath(): Promise<string> {
+		const result = await this.$childProcess.exec(`yarn cache dir`);
+		return result;
 	}
 }
 

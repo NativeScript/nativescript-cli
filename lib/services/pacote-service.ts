@@ -1,12 +1,19 @@
 import * as pacote from "pacote";
 import * as tar from "tar";
 import * as path from "path";
+import { cache } from "../common/decorators";
 
 export class PacoteService implements IPacoteService {
 	constructor(private $fs: IFileSystem,
-		private $npm: INodePackageManager,
-		private $proxyService: IProxyService,
-		private $logger: ILogger) { }
+		private $injector: IInjector,
+		private $logger: ILogger,
+		private $proxyService: IProxyService) { }
+
+	@cache()
+	public get $packageManager(): INodePackageManager {
+		// need to be resolved here due to cyclic dependency
+		return this.$injector.resolve("packageManager");
+	}
 
 	public async manifest(packageName: string, options?: IPacoteManifestOptions): Promise<any> {
 		this.$logger.trace(`Calling pacoteService.manifest for packageName: '${packageName}' and options: ${options}`);
@@ -59,7 +66,7 @@ export class PacoteService implements IPacoteService {
 
 	private async getPacoteBaseOptions(): Promise<IPacoteBaseOptions> {
 		// In case `tns create myapp --template https://github.com/NativeScript/template-hello-world.git` command is executed, pacote module throws an error if cache option is not provided.
-		const cache = await this.$npm.getCachePath();
+		const cache = await this.$packageManager.getCachePath();
 		const pacoteOptions = { cache };
 		const proxySettings = await this.$proxyService.getCache();
 		if (proxySettings) {
