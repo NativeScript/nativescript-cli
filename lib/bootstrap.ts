@@ -138,7 +138,8 @@ $injector.require("usbLiveSyncService", "./services/livesync/livesync-service");
 $injector.require("previewAppLiveSyncService", "./services/livesync/playground/preview-app-livesync-service");
 $injector.require("previewAppPluginsService", "./services/livesync/playground/preview-app-plugins-service");
 $injector.require("previewSdkService", "./services/livesync/playground/preview-sdk-service");
-$injector.require("playgroundQrCodeGenerator", "./services/livesync/playground/qr-code-generator");
+$injector.requirePublicClass("previewDevicesService", "./services/livesync/playground/devices/preview-devices-service");
+$injector.requirePublic("previewQrCodeService", "./services/livesync/playground/preview-qr-code-service");
 $injector.requirePublic("sysInfo", "./sys-info");
 
 $injector.require("iOSNotificationService", "./services/ios-notification-service");

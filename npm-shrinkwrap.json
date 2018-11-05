@@ -1,6 +1,6 @@
 {
   "name": "nativescript",
-  "version": "5.0.0",
+  "version": "5.0.1",
   "lockfileVersion": 1,
   "requires": true,
   "dependencies": {
@@ -5103,9 +5103,9 @@
       }
     },
     "natives": {
-      "version": "1.1.5",
-      "resolved": "https://registry.npmjs.org/natives/-/natives-1.1.5.tgz",
-      "integrity": "sha512-1pJ+02gl2KJgCPFtpZGtuD4lGSJnIZvvFHCQTOeDRMSXjfu2GmYWuhI8NFMA4W2I5NNFRbfy/YCiVt4CgNpP8A=="
+      "version": "1.1.6",
+      "resolved": "https://registry.npmjs.org/natives/-/natives-1.1.6.tgz",
+      "integrity": "sha512-6+TDFewD4yxY14ptjKaS63GVdtKiES1pTPyxn9Jb0rBqPMZ7VcCiooEhPNsr+mqHtMGxa/5c/HhcC4uPEUw/nA=="
     },
     "nativescript-doctor": {
       "version": "1.6.0",

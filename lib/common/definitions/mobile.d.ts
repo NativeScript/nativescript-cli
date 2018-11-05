@@ -143,10 +143,6 @@ declare module Mobile {
 				--predicate 'eventType == logEvent and subsystem contains "com.example.my_subsystem"'
 		 */
 		predicate?: string;
-		/**
-		 * If set to true, device's log will not be displayed on the console.
-		 */
-		muted?: boolean;
 	}
 
 	interface IDeviceAppData extends IPlatform, IConnectTimeoutOption {
@@ -221,12 +217,18 @@ declare module Mobile {
 		 * @param {string} projectName The project name of the currently running application for which we need the logs.
 		 */
 		setProjectNameForDevice(deviceIdentifier: string, projectName: string): void;
+
+		/**
+		 * Disables logs on the specified device and does not print any logs on the console.
+		 * @param {string} deviceIdentifier The unique identifier of the device.
+		 */
+		muteLogsForDevice(deviceIdentifier: string): void;
 	}
 
 	/**
 	 * Describes different options for filtering device logs.
 	 */
-	interface IDeviceLogOptions extends IStringDictionary {
+	interface IDeviceLogOptions extends IDictionary<string | boolean> {
 		/**
 		 * Process id of the application on the device.
 		 */
@@ -241,6 +243,11 @@ declare module Mobile {
 		 * The project name.
 		 */
 		projectName?: string;
+
+		/**
+		 * Specifies if the logs will be printed on the console.
+		 */
+		muteLogs?: boolean;
 	}
 
 	/**
@@ -730,6 +737,12 @@ declare module Mobile {
 		 * @returns {Promise<IStartEmulatorOutput>} Starts the emulator and returns the errors if some error occurs.
 		 */
 		startEmulator(options: Mobile.IStartEmulatorOptions): Promise<IStartEmulatorOutput>;
+
+		/**
+		 * Called when emulator is lost. Its purpose is to clean any resources used by the instance.
+		 * @returns {void}
+		 */
+		detach?(deviceInfo: Mobile.IDeviceInfo): void;
 	}
 
 	interface IStartEmulatorOutput {
@@ -772,6 +785,11 @@ declare module Mobile {
 		 * @param imageIdentifier - The imagerIdentifier of the emulator.
 		 */
 		startEmulatorArgs(imageIdentifier: string): string[];
+		/**
+		 * Called when emulator is lost. Its purpose is to clean any resources used by the instance.
+		 * @returns {void}
+		 */
+		detach?(deviceInfo: Mobile.IDeviceInfo): void;
 	}
 
 	interface IVirtualBoxService {

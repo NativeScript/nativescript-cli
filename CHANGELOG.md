@@ -1,6 +1,56 @@
 NativeScript CLI Changelog
 ================
 
+5.0.0 (2018, November 1)
+==
+
+### Breaking
+
+* Existing applications that are using older Android runtime (not 5.0.0 one), but are built with CLI 5.0.0, may experience some changes - until now CLI was always passing parameter to gradle `-PsupportVersion=26.0.0-alpha1`. As CLI no longer passes this version, the default one from build.gradle will be used (for example 27.0.1). Check [this issue](https://github.com/NativeScript/nativescript-cli/pull/3923) for more information. In case you want to use the old version in your application, add the following in your `app.gradle`:
+```
+project.ext.supportVersion = "26.0.0-alpha1"
+```
+
+* CLI will not allow building for iOS with Xcode 8 or below. Check [this issue](https://github.com/NativeScript/nativescript-cli/issues/3887) for more information.
+* CLI no longer support macOS Sierra and below. In case you are using such OS, CLI will print error message on each command. It will not stop you, but certain features will not work and we will not investigate them. `tns debug ios --inspector` will not work on macOS Sierra and below.
+* You will not be able to build applications for Android without installing Android SDK 28. You can install Android SDK 28 and build tools 28 by executing the following commands:
+```
+$ANDROID_HOME/tools/bin/sdkmanager "build-tools;28.0.1"
+$ANDROID_HOME/tools/bin/sdkmanager "platforms;android-28"
+```
+* `tns create` command is interactive now. In case you are using it in CI environment where the shell is marked as TTY (Travis for example), the CI will hang as it will wait for selection. You can get back the old behavior by passing `--js`:  `tns create <name> --js`. In case the terminal is not interactive, CLI will use the old behavior. More information is available in [this issue](https://github.com/NativeScript/nativescript-cli/issues/3829).
+
+### New
+* [Implemented #1945](https://github.com/NativeScript/nativescript-cli/issues/1945): Add `tns plugin create` command.
+* [Implemented #3040](https://github.com/NativeScript/nativescript-cli/issues/3040): Ability to have different app identifiers for iOS and Android.
+* [Implemented #3813](https://github.com/NativeScript/nativescript-cli/issues/3813): Ability to preview NativeScript apps without any local setup - `tns preview` command.
+* [Implemented #3829](https://github.com/NativeScript/nativescript-cli/issues/3829): Interactive `tns create`.
+* [Implemented #3843](https://github.com/NativeScript/nativescript-cli/issues/3843): Make new Android livesync reuse socket connection.
+* [Implemented #3866](https://github.com/NativeScript/nativescript-cli/issues/3866): Read registry from npm config instead of hard-wiring to registry.npmjs.org.
+* [Implemented #3875](https://github.com/NativeScript/nativescript-cli/issues/3875): Add hot module replacement option (`--hmr`) for `tns run [<platform>]` command  - it will not to restart the app on js/ts changes.
+* [Implemented #3886](https://github.com/NativeScript/nativescript-cli/issues/3886): Drop support for macOS Sierra and below.
+* [Implemented #3887](https://github.com/NativeScript/nativescript-cli/issues/3887): CLI should not allow execution of iOS commands with Xcode 8 and below.
+* [Implemented #3923](https://github.com/NativeScript/nativescript-cli/pull/3923): Remove requirement for Android Support Repository local installation.
+* [Implemented #3991](https://github.com/NativeScript/nativescript-cli/issues/3991): Require Android SDK 28 for compilation.
+* [Implemented #4036](https://github.com/NativeScript/nativescript-cli/issues/4036): Ability to run with bundle option on multiple platforms - `tns run --bundle` command.
+
+### Fixed
+* [Fixed #3549](https://github.com/NativeScript/nativescript-cli/issues/3549): Podfile generation broken on livesync
+* [Fixed #3686](https://github.com/NativeScript/nativescript-cli/issues/3686): Pod install fails with non-error message for fresh installations
+* [Fixed #3878](https://github.com/NativeScript/nativescript-cli/pull/3878): Prompter for mail on postinstall is very obligatory
+* [Fixed #3910](https://github.com/NativeScript/nativescript-cli/pull/3910): `tns platform add ios` should not be executed on non-macOS
+* [Fixed #3912](https://github.com/NativeScript/nativescript-cli/issues/3912): Build fails with Xcode 10 with error could not find included file `../plugins-debug.xcconfig` in search paths
+* [Fixed #3920](https://github.com/NativeScript/nativescript-cli/issues/3920): iOS apps will not start with Xcode 10
+* [Fixed #3932](https://github.com/NativeScript/nativescript-cli/issues/3932): Plugins' platforms directory should not exist in tns_modules
+* [Fixed #3934](https://github.com/NativeScript/nativescript-cli/issues/3934): Unable to create project from scoped package
+* [Fixed #3937](https://github.com/NativeScript/nativescript-cli/issues/3937): The app cannot be recovered with livesync after an unhandled exception on iOS
+* [Fixed #3957](https://github.com/NativeScript/nativescript-cli/issues/3957): Always have to run plugin tests twice on iOS - Failed to load Info.plist from bundle at path
+* [Fixed #3984](https://github.com/NativeScript/nativescript-cli/issues/3984): Files are not deleted from platforms folder on `tns run` command
+* [Fixed #3986](https://github.com/NativeScript/nativescript-cli/pull/3986): `tns debug ios` command fails in some cases on iOS Simulator
+* [Fixed #4007](https://github.com/NativeScript/nativescript-cli/issues/4007): Application built in release has TypeScript files
+* [Fixed #4010](https://github.com/NativeScript/nativescript-cli/issues/4010): `node_modules` are prepared twice on initial run
+
+
 4.2.4 (2018, September 19)
 ==
 

@@ -166,7 +166,7 @@ interface ILiveSyncInfo extends IProjectDir, IEnvOptions, IBundle, IRelease, IOp
 	 * Defines the timeout in seconds {N} CLI will wait to find the inspector socket port from device's logs.
 	 * If not provided, defaults to 10seconds.
 	 */
-	timeout: string;
+	timeout?: string;
 }
 
 interface IHasSyncToPreviewAppOption {

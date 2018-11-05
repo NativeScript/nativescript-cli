@@ -8,7 +8,7 @@ const getPreviewSdkService = (): IPreviewSdkService => {
 	testInjector.register("logger", LoggerStub);
 	testInjector.register("config", {});
 	testInjector.register("previewSdkService", PreviewSdkService);
-
+	testInjector.register("previewDevicesService", {});
 	testInjector.register("httpClient", {
 		httpRequest: async (options: any, proxySettings?: IProxySettings): Promise<Server.IResponse> => undefined
 	});

@@ -302,6 +302,48 @@ describe('Platform Service Tests', () => {
 
 				await assertCorrectDataIsPassedToPacoteService(latestCompatibleVersion);
 			});
+
+			// Workflow: tns preview; tns platform add
+			it(`should add platform when only .js part of the platform has already been added (nativePlatformStatus is ${constants.NativePlatformStatus.requiresPlatformAdd})`, async () => {
+				const fs = testInjector.resolve("fs");
+				fs.exists = () => true;
+				const projectChangesService = testInjector.resolve("projectChangesService");
+				projectChangesService.getPrepareInfo = () => ({ nativePlatformStatus: constants.NativePlatformStatus.requiresPlatformAdd });
+				const projectData = testInjector.resolve("projectData");
+				let isJsPlatformAdded = false;
+				const preparePlatformJSService = testInjector.resolve("preparePlatformJSService");
+				preparePlatformJSService.addPlatform = async () => isJsPlatformAdded = true;
+				let isNativePlatformAdded = false;
+				const preparePlatformNativeService = testInjector.resolve("preparePlatformNativeService");
+				preparePlatformNativeService.addPlatform = async () => isNativePlatformAdded = true;
+
+				await platformService.addPlatforms(["android"], "", projectData, config);
+
+				assert.isTrue(isJsPlatformAdded);
+				assert.isTrue(isNativePlatformAdded);
+			});
+
+			// Workflow: tns platform add; tns platform add
+			it("shouldn't add platform when platforms folder exist and no .nsprepare file", async () => {
+				const fs = testInjector.resolve("fs");
+				fs.exists = () => true;
+				const projectChangesService = testInjector.resolve("projectChangesService");
+				projectChangesService.getPrepareInfo = () => <any>null;
+				const projectData = testInjector.resolve("projectData");
+
+				await assert.isRejected(platformService.addPlatforms(["android"], "", projectData, config), "Platform android already added");
+			});
+
+			// Workflow: tns run; tns platform add
+			it(`shouldn't add platform when both native and .js parts of the platform have already been added (nativePlatformStatus is ${constants.NativePlatformStatus.alreadyPrepared})`, async () => {
+				const fs = testInjector.resolve("fs");
+				fs.exists = () => true;
+				const projectChangesService = testInjector.resolve("projectChangesService");
+				projectChangesService.getPrepareInfo = () => ({ nativePlatformStatus: constants.NativePlatformStatus.alreadyPrepared });
+				const projectData = testInjector.resolve("projectData");
+
+				await assert.isRejected(platformService.addPlatforms(["android"], "", projectData, config), "Platform android already added");
+			});
 		});
 	});
 

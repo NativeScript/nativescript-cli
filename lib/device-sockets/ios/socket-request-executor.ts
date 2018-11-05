@@ -48,24 +48,19 @@ export class IOSSocketRequestExecutor implements IiOSSocketRequestExecutor {
 		}
 	}
 
-	public async executeLaunchRequest(deviceIdentifier: string, timeout: number, readyForAttachTimeout: number, projectId: string, shouldBreak?: boolean): Promise<void> {
+	public async executeLaunchRequest(deviceIdentifier: string, timeout: number, readyForAttachTimeout: number, projectId: string, debugOptions: IDebugOptions): Promise<void> {
 		try {
-			const appLaunchingSocket = await this.$iOSNotificationService.postNotification(deviceIdentifier, this.$iOSNotification.getAppLaunching(projectId), constants.IOS_OBSERVE_NOTIFICATION_COMMAND_TYPE);
-			await this.$iOSNotificationService.awaitNotification(deviceIdentifier, +appLaunchingSocket, timeout);
+			if (!debugOptions.skipHandshake) {
+				await this.executeHandshake(deviceIdentifier, projectId, timeout);
+			}
 
-			if (shouldBreak) {
+			if (debugOptions.debugBrk) {
 				await this.$iOSNotificationService.postNotification(deviceIdentifier, this.$iOSNotification.getWaitForDebug(projectId));
 			}
 
-			// We need to send the ObserveNotification ReadyForAttach before we post the AttachRequest.
-			const readyForAttachSocket = await this.$iOSNotificationService.postNotification(deviceIdentifier, this.$iOSNotification.getReadyForAttach(projectId), constants.IOS_OBSERVE_NOTIFICATION_COMMAND_TYPE);
-			const readyForAttachPromise = this.$iOSNotificationService.awaitNotification(deviceIdentifier, +readyForAttachSocket, readyForAttachTimeout);
-
-			await this.$iOSNotificationService.postNotification(deviceIdentifier, this.$iOSNotification.getAttachRequest(projectId, deviceIdentifier));
-			await readyForAttachPromise;
+			await this.executeAttachAvailable(deviceIdentifier, projectId, readyForAttachTimeout);
 		} catch (e) {
-			this.$logger.trace("Launch request error:");
-			this.$logger.trace(e);
+			this.$logger.trace("Launch request error: ", e);
 			this.$errors.failWithoutHelp("Error while waiting for response from NativeScript runtime.");
 		}
 	}
@@ -79,8 +74,17 @@ export class IOSSocketRequestExecutor implements IiOSSocketRequestExecutor {
 			await this.$iOSNotificationService.postNotification(deviceIdentifier, this.$iOSNotification.getAttachRequest(projectId, deviceIdentifier));
 			await readyForAttachPromise;
 		} catch (e) {
+			this.$logger.trace("Attach available error: ", e);
 			this.$errors.failWithoutHelp(`The application ${projectId} timed out when performing the socket handshake.`);
 		}
+	}
+
+	private async executeHandshake(deviceIdentifier: string, projectId: string, timeout: number): Promise<void> {
+		// This notification will be send only once by the runtime during application start.
+		// In case app is already running, we'll fail here as we'll not receive it.
+		const appLaunchingNotification = this.$iOSNotification.getAppLaunching(projectId);
+		const appLaunchingSocket = await this.$iOSNotificationService.postNotification(deviceIdentifier, appLaunchingNotification, constants.IOS_OBSERVE_NOTIFICATION_COMMAND_TYPE);
+		await this.$iOSNotificationService.awaitNotification(deviceIdentifier, +appLaunchingSocket, timeout);
 	}
 }
 
