@@ -44,10 +44,11 @@
     "lib/before-preview-sync.js",
     "lib/postinstall.js",
     "lib/preuninstall.js",
-    "platforms/android/AndroidManifest.default.xml",
+    "platforms/android/AndroidManifest.xml.default",
+    "platforms/android/AndroidManifest.xml.mic",
     "platforms/android/include.gradle",
     "platforms/ios/Podfile",
-    "platforms/ios/Info.default.plist",
+    "platforms/ios/Info.plist.mic",
     "platforms/ios/app.entitlements"
   ],
   "nativescript": {
