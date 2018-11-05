@@ -31,7 +31,7 @@ export class ProjectTemplatesService implements IProjectTemplatesService {
 
 		const templateName = constants.RESERVED_TEMPLATE_NAMES[name.toLowerCase()] || name;
 		if (!this.$fs.exists(templateName)) {
-			version = version || await this.$npmInstallationManager.getLatestCompatibleVersion(templateName);
+			version = version || await this.$packageInstallationManager.getLatestCompatibleVersion(templateName);
 		}
 
 		const fullTemplateName = version ? `${templateName}@${version}` : templateName;
