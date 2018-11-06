@@ -9,8 +9,7 @@ import { Query } from 'kinvey-query';
 import { register } from 'kinvey-http-node';
 import { login } from 'kinvey-identity';
 import { init } from 'kinvey-app';
-import { find, findById, download, upload, stream, create, remove, removeById, update } from './files';
-var Files = {};
+import * as Files from './files';
 
 chai.use(require('chai-as-promised'));
 chai.should();
@@ -29,15 +28,6 @@ describe('Files', () => {
       apiHostname: "https://baas.kinvey.com"
     });
     Files.pathname = `/blob/${client.appKey}`;
-    Files.upload = upload;
-    Files.download = download;
-    Files.find = find;
-    Files.findById = findById;
-    Files.stream = stream;
-    Files.remove = remove;
-    Files.removeById = removeById;
-    Files.create = create;
-    Files.update = update;
   });
 
   before(() => {
@@ -63,12 +53,12 @@ describe('Files', () => {
     return login(username, password);
   });
 
-  describe('pathname', () => {
+  describe('pathname', () => {// TODO: No path getter
     it('should equal /blob/<appkey>', () => {
       expect(Files.pathname).toEqual(`/blob/${client.appKey}`);
     });
 
-    it('should not be able to be changed', () => {
+    it('should not be able to be changed', () => {//TODO: errors should be reverted
       expect(() => {
         Files.pathname = '/foo';
       }).toThrow(TypeError, /which has only a getter/);
@@ -85,13 +75,13 @@ describe('Files', () => {
         .query({ tls: true })
         .reply(200, [file1, file2]);
 
-      return find()
+      return Files.find()
         .then((files) => {
           expect(files).toEqual([file1, file2]);
         });
     });
 
-    it('should throw an error if the query argument is not an instance of the Query class', () => {
+    it('should throw an error if the query argument is not an instance of the Query class', () => {//TODO: errors should be reverted
       Files.find({})
         .catch((error) => {
           expect(error).toBeA(KinveyError);
@@ -188,7 +178,7 @@ describe('Files', () => {
         });
     });
 
-    it('should download the files', () => {
+    it('should download the files', () => {//TODO: in the old sdk the downloadByUrl was not called and the test passed, now it is called but the file has not downloadUrl, so it fails
       const spy = expect.spyOn(Files, 'downloadByUrl');
       const file = { _id: randomString() };
 
@@ -204,7 +194,7 @@ describe('Files', () => {
         });
     });
 
-    it('should not download the files', () => {
+    it('should not download the files', () => {//TODO: in the old sdk the downloadByUrl was not called and the test passed, now it is called but the file has not downloadUrl, so it fails
       const spy = expect.spyOn(Files, 'downloadByUrl');
       const file = { _id: randomString() };
 
@@ -318,7 +308,7 @@ describe('Files', () => {
         });
     });
 
-    it('should steam the file', () => {
+    it('should stream the file', () => {//TODO: the stream.true does not seem to be used anywhere
       const fileEntity = { _id: randomString(), _downloadURL: 'http://tests.com' };
 
       nock(client.apiHostname)
@@ -353,20 +343,20 @@ describe('Files', () => {
   });
 
   describe('findById()', () => {
-    it('should call download()', () => {
+    it('should call download()', () => {//TODO: IN the old SDK findById used to call download
       const spy = expect.spyOn(Files, 'download');
       Files.findById(randomString());
-      expect(spy).toHaveBeenCalled();
+      expect(Files.download).toHaveBeenCalled();
     });
 
-    it('should call download() with id', () => {
+    it('should call download() with id', () => {//TODO: IN the old SDK findById used to call download
       const spy = expect.spyOn(Files, 'download');
       const id = randomString();
       Files.findById(id);
       expect(spy).toHaveBeenCalledWith(id, undefined);
     });
 
-    it('should call download() with options', () => {
+    it('should call download() with options', () => {//TODO: IN the old SDK findById used to call download
       const spy = expect.spyOn(Files, 'download');
       const options = { foo: randomString() };
       Files.findById(null, options);
@@ -375,20 +365,20 @@ describe('Files', () => {
   });
 
   describe('stream()', () => {
-    it('should call download()', () => {
+    it('should call download()', () => {//In the old SDK stream used to call download
       const spy = expect.spyOn(Files, 'download');
       Files.stream();
       expect(spy).toHaveBeenCalled();
     });
 
-    it('should call download() with id', () => {
+    it('should call download() with id', () => {//In the old SDK stream used to call download
       const spy = expect.spyOn(Files, 'download');
       const id = randomString();
       Files.stream(id);
       expect(spy).toHaveBeenCalledWith(id, { stream: true });
     });
 
-    it('should call download() with options.stream = true if it was set to false', () => {
+    it('should call download() with options.stream = true if it was set to false', () => {//In the old SDK stream used to call download
       const spy = expect.spyOn(Files, 'download');
       Files.stream(null, { stream: false });
       expect(spy).toHaveBeenCalledWith(null, { stream: true });
