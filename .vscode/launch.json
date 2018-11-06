@@ -25,7 +25,11 @@
       },
       "internalConsoleOptions": "openOnSessionStart",
       "sourceMaps": true,
-      "smartStep": true
+      "smartStep": true,
+      "skipFiles": [
+        "<node_internals>/**/*.js",
+        "${workspaceFolder}/node_modules/**/*.js"
+      ]
     },
     {
       "type": "node",
@@ -48,7 +52,11 @@
       },
       "internalConsoleOptions": "openOnSessionStart",
       "sourceMaps": true,
-      "smartStep": true
+      "smartStep": true,
+      "skipFiles": [
+        "<node_internals>/**/*.js",
+        "${workspaceFolder}/node_modules/**/*.js"
+      ]
     },
     {
       "type": "node",
@@ -98,7 +106,11 @@
       },
       "internalConsoleOptions": "openOnSessionStart",
       "sourceMaps": true,
-      "smartStep": true
+      "smartStep": true,
+      "skipFiles": [
+        "<node_internals>/**/*.js",
+        "${workspaceFolder}/node_modules/**/*.js"
+      ]
     },
     {
       "type": "node",
@@ -121,7 +133,11 @@
       },
       "internalConsoleOptions": "openOnSessionStart",
       "sourceMaps": true,
-      "smartStep": true
+      "smartStep": true,
+      "skipFiles": [
+        "<node_internals>/**/*.js",
+        "${workspaceFolder}/node_modules/**/*.js"
+      ]
     },
     {
       "type": "node",
@@ -144,7 +160,11 @@
       },
       "internalConsoleOptions": "openOnSessionStart",
       "sourceMaps": true,
-      "smartStep": true
+      "smartStep": true,
+      "skipFiles": [
+        "<node_internals>/**/*.js",
+        "${workspaceFolder}/node_modules/**/*.js"
+      ]
     },
     {
       "type": "node",
@@ -163,7 +183,11 @@
       ],
       "internalConsoleOptions": "openOnSessionStart",
       "sourceMaps": true,
-      "smartStep": true
+      "smartStep": true,
+      "skipFiles": [
+        "<node_internals>/**/*.js",
+        "${workspaceFolder}/node_modules/**/*.js"
+      ]
     },
     {
       "type": "node",
@@ -182,7 +206,11 @@
       ],
       "internalConsoleOptions": "openOnSessionStart",
       "sourceMaps": true,
-      "smartStep": true
+      "smartStep": true,
+      "skipFiles": [
+        "<node_internals>/**/*.js",
+        "${workspaceFolder}/node_modules/**/*.js"
+      ]
     },
     {
       "type": "node",
@@ -201,7 +229,11 @@
       ],
       "internalConsoleOptions": "openOnSessionStart",
       "sourceMaps": true,
-      "smartStep": true
+      "smartStep": true,
+      "skipFiles": [
+        "<node_internals>/**/*.js",
+        "${workspaceFolder}/node_modules/**/*.js"
+      ]
     },
     {
       "type": "node",
@@ -220,7 +252,11 @@
       ],
       "internalConsoleOptions": "openOnSessionStart",
       "sourceMaps": true,
-      "smartStep": true
+      "smartStep": true,
+      "skipFiles": [
+        "<node_internals>/**/*.js",
+        "${workspaceFolder}/node_modules/**/*.js"
+      ]
     },
     {
       "type": "node",
@@ -239,7 +275,11 @@
       ],
       "internalConsoleOptions": "openOnSessionStart",
       "sourceMaps": true,
-      "smartStep": true
+      "smartStep": true,
+      "skipFiles": [
+        "<node_internals>/**/*.js",
+        "${workspaceFolder}/node_modules/**/*.js"
+      ]
     },
     {
       "type": "node",
@@ -262,12 +302,13 @@
       "env": {
         "NODE_ENV": "development"
       },
-      "skipFiles": [
-        "<node_internals>/**"
-      ],
       "internalConsoleOptions": "openOnSessionStart",
       "sourceMaps": true,
-      "smartStep": true
+      "smartStep": true,
+      "skipFiles": [
+        "<node_internals>/**/*.js",
+        "${workspaceFolder}/node_modules/**/*.js"
+      ]
     }
   ]
 }
