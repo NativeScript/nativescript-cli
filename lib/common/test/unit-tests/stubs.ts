@@ -171,4 +171,6 @@ export class DeviceLogProviderStub extends EventEmitter implements Mobile.IDevic
 	setProjectNameForDevice(deviceIdentifier: string, projectName: string): void {
 		this.currentDeviceProjectNames[deviceIdentifier] = projectName;
 	}
+
+	muteLogsForDevice(deviceIdentifier: string): void { }
 }

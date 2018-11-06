@@ -8,13 +8,14 @@ import { format } from "util";
 
 let isDeleteDirectoryCalledForNodeModulesDir = false;
 const nativeScriptValidatedTemplatePath = "nsValidatedTemplatePath";
+const compatibleTemplateVersion = "1.2.3";
 
 function createTestInjector(configuration: { shouldNpmInstallThrow?: boolean, packageJsonContent?: any } = {}): IInjector {
 	const injector = new Yok();
 	injector.register("errors", stubs.ErrorsStub);
 	injector.register("logger", stubs.LoggerStub);
 	injector.register("fs", {
-		exists: (pathToCheck: string) => true,
+		exists: (pathToCheck: string) => false,
 
 		readJson: (pathToFile: string) => configuration.packageJsonContent || {},
 
@@ -42,6 +43,9 @@ function createTestInjector(configuration: { shouldNpmInstallThrow?: boolean, pa
 			}
 
 			return Promise.resolve(nativeScriptValidatedTemplatePath);
+		},
+		getLatestCompatibleVersion: (packageName: string) => {
+			return compatibleTemplateVersion;
 		}
 	});
 
@@ -164,7 +168,7 @@ describe("project-templates-service", () => {
 				const fs = testInjector.resolve<IFileSystem>("fs");
 				fs.exists = (localPath: string): boolean => path.basename(localPath) !== constants.PACKAGE_JSON_FILE_NAME;
 				const pacoteService = testInjector.resolve<IPacoteService>("pacoteService");
-				pacoteService.manifest = () => Promise.resolve({ });
+				pacoteService.manifest = () => Promise.resolve({});
 				await projectTemplatesService.prepareTemplate(localTemplatePath, "tempFolder");
 				assert.deepEqual(dataSentToGoogleAnalytics, [
 					{
@@ -215,7 +219,7 @@ describe("project-templates-service", () => {
 				const notSupportedVersionString = "not supported version";
 				const testInjector = createTestInjector({ packageJsonContent: { nativescript: { templateVersion: notSupportedVersionString } } });
 				const projectTemplatesService = testInjector.resolve<IProjectTemplatesService>("projectTemplatesService");
-				const expectedError = format(constants.ProjectTemplateErrors.InvalidTemplateVersionStringFormat, 'tns-template-hello-world-ts', notSupportedVersionString);
+				const expectedError = format(constants.ProjectTemplateErrors.InvalidTemplateVersionStringFormat, `tns-template-hello-world-ts@${compatibleTemplateVersion}`, notSupportedVersionString);
 				await assert.isRejected(projectTemplatesService.prepareTemplate("typescript", "tempFolder"), expectedError);
 			});
 
@@ -238,7 +242,7 @@ describe("project-templates-service", () => {
 				{
 					name: "is correct when scoped package name without version is passed",
 					templateName: "@nativescript/vue-template",
-					expectedVersion: "",
+					expectedVersion: compatibleTemplateVersion,
 					expectedTemplateName: "@nativescript/vue-template"
 				},
 				{

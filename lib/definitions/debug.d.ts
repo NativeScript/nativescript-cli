@@ -95,6 +95,10 @@ interface IDebugOptions {
 	 * The sdk version of the emulator.
 	 */
 	sdk?: string;
+	/**
+	 * Defines if the handshake(AppLaunching notification) between CLI and runtime should be executed. The handshake is not needed when CLI retries to attach to the debugger.
+	 */
+	skipHandshake?: boolean;
 }
 
 /**

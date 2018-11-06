@@ -28,7 +28,7 @@ function createTestInjector() {
 	testInjector.register("platformEnvironmentRequirements", PlatformEnvironmentRequirements);
 	testInjector.register("staticConfig", { SYS_REQUIREMENTS_LINK: "" });
 	testInjector.register("nativeScriptCloudExtensionService", {});
-	testInjector.register("playgroundQrCodeGenerator", {});
+	testInjector.register("previewQrCodeService", {});
 
 	return testInjector;
 }

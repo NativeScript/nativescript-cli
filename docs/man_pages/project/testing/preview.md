@@ -25,7 +25,7 @@ Generates a QR code that can be scanned by the NativeScript PlayGround app | `tn
 
 ### Options
 
-* `--bundle` - Specifies that the `webpack` bundler will be used to bundle the application.<% if(isConsole) { %> The support for webpack in preview is currently in Beta. Please, do not hesitate to report any problems that you experience with the feature by opening a new issue in the NativeScript CLI repository: https://github.com/NativeScript/nativescript-cli/issues/new/choose.<% } %>
+* `--bundle` - (Beta) Specifies that the `webpack` bundler will be used to bundle the application.<% if(isConsole) { %> The support for webpack in preview is currently in Beta. Please, do not hesitate to report any problems that you experience with the feature by opening a new issue in the NativeScript CLI repository: https://github.com/NativeScript/nativescript-cli/issues/new/choose.<% } %>
 * `--hmr` - (Beta) Enables the hot module replacement (HMR) feature. HMR depends on `webpack` and adding the `--hmr` flag to the command will automatically enable the `--bundle` option as well.<% if(isConsole) { %> The HMR feature is currently in Beta. For more information about the current development state and any known issues, please check the relevant GitHub issue: https://github.com/NativeScript/NativeScript/issues/6398.<% } %>
 
 <% if(isHtml) { %>

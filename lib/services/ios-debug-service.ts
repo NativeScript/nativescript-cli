@@ -50,20 +50,7 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 			debugOptions.emulator = true;
 		}
 
-		if (!debugOptions.justlaunch) {
-			let projectName = debugData.projectName;
-			if (!projectName && debugData.projectDir) {
-				const projectData = this.$projectDataService.getProjectData(debugData.projectDir);
-				projectName = projectData.projectName;
-			}
-
-			if (projectName) {
-				this.$deviceLogProvider.setProjectNameForDevice(debugData.deviceIdentifier, projectName);
-			}
-
-			await this.device.openDeviceLogStream({ predicate: IOS_LOG_PREDICATE });
-		}
-
+		await this.startDeviceLogProcess(debugData, debugOptions);
 		await this.$iOSDebuggerPortService.attachToDebuggerPortFoundEvent(this.device, debugData, debugOptions);
 
 		if (debugOptions.emulator) {
@@ -111,6 +98,26 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 
 		const chromeDebugUrl = super.getChromeDebugUrl(debugOpts, port);
 		return chromeDebugUrl;
+	}
+
+	private async startDeviceLogProcess(debugData: IDebugData, debugOptions: IDebugOptions): Promise<void> {
+		if (debugOptions.justlaunch) {
+			// No logs should be printed on console when `--justlaunch` option is passed.
+			// On the other side we need to start log process in order to get debugger port from logs.
+			this.$deviceLogProvider.muteLogsForDevice(debugData.deviceIdentifier);
+		}
+
+		let projectName = debugData.projectName;
+		if (!projectName && debugData.projectDir) {
+			const projectData = this.$projectDataService.getProjectData(debugData.projectDir);
+			projectName = projectData.projectName;
+		}
+
+		if (projectName) {
+			this.$deviceLogProvider.setProjectNameForDevice(debugData.deviceIdentifier, projectName);
+		}
+
+		await this.device.openDeviceLogStream({ predicate: IOS_LOG_PREDICATE });
 	}
 
 	private async killProcess(childProcess: ChildProcess): Promise<void> {
@@ -182,7 +189,7 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 	}
 
 	private async debugBrkCore(device: Mobile.IiOSDevice, debugData: IDebugData, debugOptions: IDebugOptions): Promise<string> {
-		await this.$iOSSocketRequestExecutor.executeLaunchRequest(device.deviceInfo.identifier, AWAIT_NOTIFICATION_TIMEOUT_SECONDS, AWAIT_NOTIFICATION_TIMEOUT_SECONDS, debugData.applicationIdentifier, debugOptions.debugBrk);
+		await this.$iOSSocketRequestExecutor.executeLaunchRequest(device.deviceInfo.identifier, AWAIT_NOTIFICATION_TIMEOUT_SECONDS, AWAIT_NOTIFICATION_TIMEOUT_SECONDS, debugData.applicationIdentifier, debugOptions);
 		return this.wireDebuggerClient(debugData, debugOptions, device);
 	}
 

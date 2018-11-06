@@ -73,7 +73,7 @@ function createTestInjector(projectPath: string, projectName: string, xcode?: IX
 		projectPath: projectPath,
 		projectFilePath: path.join(projectPath, "package.json"),
 		projectId: "",
-		projectIdentifiers: { android: "", ios: ""}
+		projectIdentifiers: { android: "", ios: "" }
 	});
 	testInjector.register("projectData", projectData);
 	testInjector.register("projectHelper", {});
@@ -514,7 +514,7 @@ describe("Source code in plugin support", () => {
 			const mockPrepareMethods = ["prepareFrameworks", "prepareStaticLibs", "prepareResources", "prepareNativeSourceCode"];
 
 			mockPrepareMethods.filter(m => m !== prepareMethodToCall).forEach(methodName => {
-				iOSProjectService[methodName]  = (pluginPlatformsFolderPath: string, pluginData: IPluginData): Promise<void> => {
+				iOSProjectService[methodName] = (pluginPlatformsFolderPath: string, pluginData: IPluginData): Promise<void> => {
 					return Promise.resolve();
 				};
 			});
@@ -522,7 +522,7 @@ describe("Source code in plugin support", () => {
 			iOSProjectService.getXcodeprojPath = () => {
 				return path.join(__dirname, "files");
 			};
-			let pbxProj : any;
+			let pbxProj: any;
 			iOSProjectService.savePbxProj = (project: any): Promise<void> => {
 				pbxProj = project;
 				return Promise.resolve();
@@ -553,7 +553,7 @@ describe("Source code in plugin support", () => {
 
 		it("adds plugin with Source files", async () => {
 			const sourceFileNames = [
-				"src/Header.h",	"src/ObjC.m",
+				"src/Header.h", "src/ObjC.m",
 				"src/nested/Header.hpp", "src/nested/Source.cpp", "src/nested/ObjCpp.mm",
 				"src/nested/level2/Header2.hxx", "src/nested/level2/Source2.cxx", "src/nested/level2/Source3.c",
 				"src/SomeOtherExtension.donotadd",
@@ -958,7 +958,7 @@ describe("Merge Project XCConfig files", () => {
 
 		appResourcesXcconfigPath = path.join(projectData.appResourcesDirectoryPath, "iOS", BUILD_XCCONFIG_FILE_NAME);
 		appResourceXCConfigContent = `CODE_SIGN_IDENTITY = iPhone Distribution
-			// To build for device with XCode 8 you need to specify your development team. More info: https://developer.apple.com/library/prerelease/content/releasenotes/DeveloperTools/RN-Xcode/Introduction.html
+			// To build for device with XCode you need to specify your development team. More info: https://developer.apple.com/library/prerelease/content/releasenotes/DeveloperTools/RN-Xcode/Introduction.html
 			// DEVELOPMENT_TEAM = YOUR_TEAM_ID;
 			ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 			ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
