@@ -1,3 +1,5 @@
+/* eslint-disable */
+
 import nock from 'nock';
 import { randomString } from 'kinvey-test-utils';
 import { User } from './user';
@@ -13,7 +15,7 @@ export class UserMock extends User {
     const activeUser = userFuncs.getActiveUser();
 
     if (activeUser) {
-      return new UserMock(activeUser);
+      return new UserMock(activeUser.data);
     }
 
     return null;

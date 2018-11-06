@@ -5,6 +5,7 @@ import { Base64 } from 'js-base64';
 import { getConfig } from 'kinvey-app';
 import { formatKinveyUrl, KinveyRequest, RequestMethod } from 'kinvey-http';
 import { open } from 'kinvey-popup';
+import { KinveyError, MobileIdentityConnectError } from 'kinvey-errors';
 
 // Export identity
 export const IDENTITY = 'kinveyAuth';
@@ -20,7 +21,7 @@ export const AuthorizationGrant = {
 };
 Object.freeze(AuthorizationGrant);
 
-export async function getTempLoginUrl(clientId, redirectUri, version) {
+async function getTempLoginUrl(clientId, redirectUri, version) {
   const { auth } = getConfig();
   const request = new KinveyRequest({
     method: RequestMethod.POST,
@@ -70,9 +71,9 @@ function loginWithPopup(clientId, redirectUri, version) {
           if (code) {
             resolve(code);
           } else if (error) {
-            reject(new Error(error, error_description));
+            reject(new KinveyError(error, error_description));
           } else {
-            reject(new Error('No code or error was provided.'));
+            reject(new KinveyError('No code or error was provided.'));
           }
         }
       } catch (error) {
@@ -83,7 +84,7 @@ function loginWithPopup(clientId, redirectUri, version) {
     popup.onClosed(() => {
       if (!redirected) {
         popup.removeAllListeners();
-        reject(new Error('Login has been cancelled.'));
+        reject(new KinveyError('Login has been cancelled.'));
       }
     });
   });
@@ -112,6 +113,12 @@ async function loginWithUrl(url, username, password, clientId, redirectUri) {
   });
   const response = await request.execute();
   const location = response.headers.get('location');
+
+  if (!location) {
+    throw new MobileIdentityConnectError(`Unable to authorize user with username ${username}.`,
+      'A location header was not provided with a code to exchange for an auth token.');
+  }
+
   const parsedLocation = parse(location, true) || {};
   const query = parsedLocation.query || {};
   return query.code;
@@ -138,7 +145,14 @@ async function getTokenWithCode(code, clientId, redirectUri) {
     }
   });
   const response = await request.execute();
-  return response.data;
+  const token = response.data;
+  return Object.assign({
+    identity: IDENTITY,
+    client_id: clientId,
+    redirect_uri: redirectUri,
+    protocol: auth.protocol,
+    host: auth.host
+  }, token);
 }
 
 export async function login(
@@ -151,7 +165,7 @@ export async function login(
   let code;
 
   if (!isString(redirectUri)) {
-    return Promise.reject(new Error('A redirectUri is required and must be a string.'));
+    throw new KinveyError('A redirectUri is required and must be a string.');
   }
 
   if (isString(micId)) {

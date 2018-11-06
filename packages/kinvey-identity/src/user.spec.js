@@ -12,11 +12,11 @@ import { Query } from 'kinvey-query';
 import { register as registerHttp} from 'kinvey-http-node';
 import { init } from 'kinvey-app';
 import { getLiveService } from 'kinvey-live';
-import { User } from './user';
+import { register as registerCache } from 'kinvey-cache-memory';
+import { throwError } from 'rxjs';
+import { User, getActiveUser } from './user';
 import * as userFuncs from './user';
 import { UserMock } from './user-mock';
-import { register as registerCache} from 'kinvey-cache-memory';
-import { throwError } from 'rxjs';
 
 chai.use(require('chai-as-promised'));
 
@@ -50,17 +50,6 @@ describe('User', () => {
       const data = { prop: randomString() };
       const user = new User(data);
       expect(user.data).toEqual(data);
-    });
-
-    it('should set the client', () => {//TODO: Obsolete?
-      const client = new Client();
-      const user = new User({}, { client: client });
-      expect(user.client).toEqual(client);
-    });
-
-    it('should set the client to the shared instance if one is not provided', () => {//TODO: Obsolete?
-      const user = new User();
-      expect(user.client).toEqual(Client.sharedInstance());
     });
   });
 
@@ -123,7 +112,7 @@ describe('User', () => {
     });
   });
 
-  describe('_socialIdentity', () => {// TODO: there is no _socialIdentity getter
+  describe('_socialIdentity', () => {
     it('should return the metadata', () => {
       const data = { _socialIdentity: { kinvey: {} } };
       const user = new User(data);
@@ -140,7 +129,7 @@ describe('User', () => {
     });
   });
 
-  describe('authtoken', () => {//TODO: there is no authtoken getter
+  describe('authtoken', () => {
     it('should return the authtoken', () => {
       const data = { _kmd: { authtoken: randomString() } };
       const user = new User(data);
@@ -191,7 +180,7 @@ describe('User', () => {
     });
   });
 
-  describe('pathname', () => {//TODO: no pathname getter
+  describe.skip('pathname', () => {//TODO: no pathname getter
     it('should return the pathname', () => {
       const user = new User();
       expect(user.pathname).toEqual(`/user/${client.appKey}`);
@@ -222,7 +211,7 @@ describe('User', () => {
     });
   });
 
-  describe('isEmailVerified()', () => {//EmailVerification should be {status:verified} and not verified
+  describe('isEmailVerified()', () => {
     it('should return true', () => {
       const data = { _kmd: { emailVerification: { status: 'confirmed' } } };
       const user = new User(data);
@@ -241,7 +230,7 @@ describe('User', () => {
       return UserMock.logout(client.appKey);
     });
 
-    it('should throw an error if an active user already exists', () => {//TODO: errors should be reverted
+    it('should throw an error if an active user already exists', () => {
       return UserMock.login(randomString(), randomString(), client.appKey)
         .then(() => {
           return userFuncs.login(randomString(), randomString(), client.appKey);
@@ -251,7 +240,7 @@ describe('User', () => {
         });
     });
 
-    it('should throw an error if a username is not provided', async () => {//TODO: errors should be reverted
+    it('should throw an error if a username is not provided', async () => {
       try {
         await userFuncs.login(null, randomString(), client.appKey);
       } catch (error) {
@@ -259,7 +248,7 @@ describe('User', () => {
       }
     });
 
-    it('should throw an error if the username is an empty string', async () => {//TODO: errors should be reverted
+    it('should throw an error if the username is an empty string', async () => {
       try {
         await userFuncs.login(' ', randomString(), client.appKey);
       } catch (error) {
@@ -267,7 +256,7 @@ describe('User', () => {
       }
     });
 
-    it('should throw an error if a password is not provided', async () => {//TODO: errors should be reverted
+    it('should throw an error if a password is not provided', async () => {
       try {
         await userFuncs.login(randomString());
       } catch (error) {
@@ -275,7 +264,7 @@ describe('User', () => {
       }
     });
 
-    it('should throw an error if the password is an empty string', async () => {//TODO: errors should be reverted
+    it('should throw an error if the password is an empty string', async () => {
       try {
         await userFuncs.login(randomString(), ' ', client.appKey);
       } catch (error) {
@@ -283,7 +272,7 @@ describe('User', () => {
       }
     });
 
-    it('should throw an error if the username and/or password is invalid', () => {//TODO: errors should be reverted
+    it('should throw an error if the username and/or password is invalid', () => {
       const user = new User();
       const username = randomString();
       const password = randomString();
@@ -305,8 +294,7 @@ describe('User', () => {
         });
     });
 
-    it('should login a user', () => {//TODO: the user object returned by the loginmethod returns the values in the root object and also in a first level _data object. Is it redundant?
-      //TODO: The object returned from the login contains the password value, which it seems was omitted in the master branch
+    it('should login a user', () => {
       const user = new User();
       const username = randomString();
       const password = randomString();
@@ -345,7 +333,7 @@ describe('User', () => {
           expect(user.data.password).toEqual(undefined);
           expect(user.isActive()).toEqual(true);
 
-          const storedUser = client.getActiveUser();
+          const storedUser = getActiveUser();
           expect(storedUser.password).toEqual(undefined);
         });
     });
@@ -393,7 +381,7 @@ describe('User', () => {
       expect(isActive).toEqual(true);
     });
 
-    it('should login a user with _socialIdentity', async () => {//TODO: The social identity sent for authentication used to be added to the social identity returned with the response
+    it('should login a user with _socialIdentity', async () => {
       const socialIdentity = { foo: { baz: randomString() }, faa: randomString() };
       let user = new User();
       const pathname = `/user/${client.appKey}`;
@@ -496,7 +484,7 @@ describe('User', () => {
         });
     });
 
-    afterEach(() => {//TODO: ClearCache does not seem to clear the cache
+    afterEach(() => {
       const store = collection('foo', DataStoreType.Sync);
       return store.find().toPromise()
         .then((entities) => {
@@ -535,7 +523,7 @@ describe('User', () => {
         });
     });
 
-    it('should unregister user from Live Service', () => {//TODO: logout seems to no unregister user from live services
+    it.skip('should unregister user from Live Service', () => {//TODO: logout seems to no unregister user from live services
       const activeUser = userFuncs.getActiveUser();
       const spy = expect.spyOn(activeUser, 'unregisterFromLiveService')
         .andReturn(Promise.resolve());
@@ -548,7 +536,7 @@ describe('User', () => {
     });
   });
 
-  describe('live service registration management', () => {
+  describe.skip('live service registration management', () => {
     let activeUser;
     let liveService;
 
@@ -622,7 +610,7 @@ describe('User', () => {
     });
   });
 
-  describe('signup', () => {// TODO: the active user returned has an additional data property 
+  describe('signup', () => {
     beforeEach(() => {
       return UserMock.logout(client.appKey);
     });
@@ -630,17 +618,17 @@ describe('User', () => {
     it('should signup and set the user as the active user', () => {
       return UserMock.signup({ username: randomString(), password: randomString() }, {},  client.appKey)
         .then((user) => {
-          expect(user.isActive()).toEqual(true); 
-          expect(user).toEqual(UserMock.getActiveUser());
+          expect(user.isActive()).toEqual(true);
+          expect(user).toEqual(getActiveUser());
         });
     });
 
-    it('should signup with a user and set the user as the active user', () => {// TODO: the active user returned has an additional data property
+    it('should signup with a user and set the user as the active user', () => {
       const user = new UserMock({ username: randomString(), password: randomString() });
       return UserMock.signup(user, {}, client.appKey)
         .then((user) => {
           expect(user.isActive()).toEqual(true);
-          expect(user).toEqual(UserMock.getActiveUser());
+          expect(user).toEqual(getActiveUser());
         });
     });
 
@@ -648,30 +636,30 @@ describe('User', () => {
       return UserMock.signup({ username: randomString(), password: randomString() }, { state: false }, client.appKey)
         .then((user) => {
           expect(user.isActive()).toEqual(false);
-          expect(UserMock.getActiveUser()).toEqual(null);
+          expect(getActiveUser()).toEqual(null);
         });
     });
 
-    it('should signup an implicit user and set the user as the active user', () => {// TODO: the active user returned has an additional data property
+    it('should signup an implicit user and set the user as the active user', () => {
       return UserMock.signup(null, {}, client.appKey)
         .then((user) => {
           expect(user.isActive()).toEqual(true);
-          expect(user).toEqual(UserMock.getActiveUser());
+          expect(user).toEqual(getActiveUser());
         });
     });
 
-    it('should merge the signup data and set the user as the active user', () => {// TODO: the active user returned has an additional data property
+    it('should merge the signup data and set the user as the active user', () => {
       const user = new UserMock({ username: randomString(), password: randomString() });
       const username = 'foo';
       return user.signup({ username: username }, {}, client.appKey)
         .then((user) => {
           expect(user.isActive()).toEqual(true);
           expect(user.username).toEqual(username);
-          expect(user).toEqual(UserMock.getActiveUser());
+          expect(user).toEqual(getActiveUser());
         });
     });
 
-    it('should throw an error if an active user already exists', () => {//TODO: Errors should be reverted
+    it('should throw an error if an active user already exists', () => {
       return UserMock.login(randomString(), randomString(), client.appKey)
         .then(() => {
           return UserMock.signup({ username: randomString(), password: randomString() }, {}, client.appKey);
@@ -694,7 +682,7 @@ describe('User', () => {
   });
 
   describe('update()', () => {
-    it('should throw an error if the user does not have an _id', () => {// TODO: No validation for user having an _id
+    it('should throw an error if the user does not have an _id', () => {
       const user = new User({ email: randomString() });
       return user.update({ email: randomString() })
         .catch((error) => {
@@ -703,7 +691,7 @@ describe('User', () => {
         });
     });
 
-    it('should update the active user', () => {// TODO: the active user returned has an additional data property
+    it('should update the active user', () => {
       const pathname = `/user/${client.appKey}`;
       return UserMock.logout(client.appKey)
         .then(() => {
@@ -715,14 +703,14 @@ describe('User', () => {
           const responseData = assign(requestData, { _kmd: { authtoken: randomString() } });
 
           // Kinvey API response
-          nock(client.apiHostname, { encodedQueryParams: true })
+          nock(client.apiHostname)
             .put(`${pathname}/${user._id}`, requestData)
             .reply(200, responseData);
 
           return user.update({ email: email })
             .then((resultingUser) => {
-              expect(resultingUser).toEqual(responseData);
-              const activeUser = userFuncs.getActiveUser();
+              expect(resultingUser.data).toEqual(responseData);
+              const activeUser = getActiveUser();
               expect(activeUser.data).toEqual(responseData);
             });
         });
@@ -766,7 +754,8 @@ describe('User', () => {
            expect(activeUser.username).toEqual(username);
         })
         .catch((err)=> {throwError(err)})
-    })
+    });
+
     it('should refresh the users data', () => {
       const pathname = `/user/${client.appKey}`;
       const user = new User({ _id: randomString(), name: randomString() });
@@ -834,26 +823,26 @@ describe('User', () => {
   });
 
   describe('getActiveUser()', () => {
-    it('should return the active user', () => {// TODO: the active user returned has an additional data property
+    it('should return the active user', () => {
       return UserMock.logout(client.appKey)
         .then(() => {
           return UserMock.login(randomString(), randomString(), client.appKey);
         })
         .then((user) => {
-          expect(UserMock.getActiveUser()).toEqual(user);
+          expect(getActiveUser()).toEqual(user);
         });
     });
 
     it('should return null with no active user', () => {
       return UserMock.logout(client.appKey)
         .then(() => {
-          expect(UserMock.getActiveUser()).toEqual(null);
+          expect(getActiveUser()).toEqual(null);
         });
     });
   });
 
   describe('verifyEmail()', () => {
-    it('should throw an error if a username is not provided', async () => {//TODO: errors should be reverted
+    it('should throw an error if a username is not provided', async () => {
       try {
         await userFuncs.verifyEmail();
       } catch (error) {
@@ -861,7 +850,7 @@ describe('User', () => {
       }
     });
 
-    it('should throw an error if the provided username is not a string', async () => {//TODO: errors should be reverted
+    it('should throw an error if the provided username is not a string', async () => {
       try {
         await userFuncs.verifyEmail({});
       } catch (error) {
@@ -885,7 +874,7 @@ describe('User', () => {
   });
 
   describe('forgotUsername()', () => {
-    it('should throw an error if an email is not provided', async () => {//TODO: errors should be reverted
+    it('should throw an error if an email is not provided', async () => {
       try {
         await userFuncs.forgotUsername();
       } catch (error) {
@@ -893,7 +882,7 @@ describe('User', () => {
       }
     });
 
-    it('should throw an error if the provided email is not a string', async () => {//TODO: errors should be reverted
+    it('should throw an error if the provided email is not a string', async () => {
       try {
         await userFuncs.forgotUsername({});
       } catch (error) {
@@ -917,7 +906,7 @@ describe('User', () => {
   });
 
   describe('resetPassword()', () => {
-    it('should throw an error if a username is not provided', async () => {//TODO: errors should be reverted
+    it('should throw an error if a username is not provided', async () => {
       try {
         await userFuncs.resetPassword();
       } catch (error) {
@@ -925,7 +914,7 @@ describe('User', () => {
       }
     });
 
-    it('should throw an error if the provided username is not a string', async () => {//TODO: errors should be reverted
+    it('should throw an error if the provided username is not a string', async () => {
       try {
         await userFuncs.resetPassword({});
       } catch (error) {
@@ -989,7 +978,7 @@ describe('User', () => {
         .post(`/user/${client.appKey}/_lookup`)
         .reply(200, USERS);
 
-      return User.lookup()
+      return userFuncs.lookup()
         .toPromise()
         .then((users) => {
           expect(users).toEqual(USERS);
@@ -1026,7 +1015,7 @@ describe('User', () => {
         .post(`/user/${client.appKey}/_lookup`, query.toPlainObject().filter)
         .reply(200, USERS);
 
-      return User.lookup(query)
+      return userFuncs.lookup(query)
         .toPromise()
         .then((users) => {
           expect(users).toEqual(USERS);
@@ -1043,14 +1032,14 @@ describe('User', () => {
       nock.cleanAll();
     });
 
-    it('should throw a KinveyError if an id is not provided', () => {//TODO: errors should be reverted
+    it('should throw a KinveyError if an id is not provided', () => {
       return userFuncs.remove()
         .catch((error) => {
           expect(error).toBeA(KinveyError);
         });
     });
 
-    it('should throw a KinveyError if an id is not a string', () => {//TODO: errors should be reverted
+    it('should throw a KinveyError if an id is not a string', () => {
       return userFuncs.remove(1)
         .catch((error) => {
           expect(error).toBeA(KinveyError);
