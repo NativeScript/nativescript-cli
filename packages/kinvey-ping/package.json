@@ -1,11 +1,11 @@
 {
   "private": true,
   "version": "1.0.0",
-  "name": "kinvey-query",
+  "name": "kinvey-ping",
   "author": "Kinvey, Inc.",
   "homepage": "http://www.kinvey.com",
   "license": "Apache-2.0",
-  "main": "lib/query.js",
+  "main": "lib/ping.js",
   "scripts": {
     "prebuild": "del lib",
     "build": "babel src -d lib --ignore \"src/**/*.spec.js\"",
@@ -14,7 +14,8 @@
   },
   "dependencies": {
     "@babel/runtime": "7.1.2",
-    "kinvey-errors": "1.0.0",
+    "kinvey-app": "1.0.0",
+    "kinvey-http": "1.0.0",
     "lodash": "4.17.11"
   },
   "devDependencies": {
@@ -23,12 +24,10 @@
     "@babel/plugin-transform-runtime": "7.1.0",
     "@babel/preset-env": "7.1.0",
     "babel-eslint": "10.0.1",
-    "chai": "4.2.0",
     "del-cli": "1.1.0",
     "eslint": "5.3.0",
     "eslint-config-kinvey-platform": "kinvey/eslint-kinvey-platform#0.1.1",
     "eslint-plugin-import": "2.14.0",
-    "kinvey-test-utils": "1.0.0",
-    "mocha": "5.2.0"
+    "nock": "~9.1.3"
   }
 }

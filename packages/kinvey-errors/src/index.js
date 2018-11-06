@@ -1,6 +1,6 @@
 import ActiveUserError from './activeUser';
-import ApiVersionNotAvailableError from './apiVersionNotAvailable';
-import ApiVersionNotImplementedError from './apiVersionNotImplemented';
+import APIVersionNotAvailableError from './apiVersionNotAvailable';
+import APIVersionNotImplementedError from './apiVersionNotImplemented';
 import AppProblemError from './appProblem';
 import BadRequestError from './badRequest';
 import BLError from './bl';
@@ -40,8 +40,8 @@ import WritesToCollectionDisallowedError from './writesToCollectionDisallowed';
 
 export {
   ActiveUserError,
-  ApiVersionNotAvailableError,
-  ApiVersionNotImplementedError,
+  APIVersionNotAvailableError,
+  APIVersionNotImplementedError,
   AppProblemError,
   BadRequestError,
   BLError,
