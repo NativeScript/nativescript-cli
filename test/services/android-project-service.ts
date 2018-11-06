@@ -51,7 +51,7 @@ const getDefautlBuildConfig = (): IBuildConfig => {
 	};
 };
 
-describe.only("androidDebugService", () => {
+describe("androidDebugService", () => {
 	let injector: IInjector;
 	let androidProjectService: IPlatformProjectService;
 	let sandbox: sinon.SinonSandbox = null;

@@ -1,4 +1,4 @@
-import { ANDROID_RELEASE_BUILD_ERROR_MESSAGE } from "../constants";
+import { ANDROID_RELEASE_BUILD_ERROR_MESSAGE, AndroidAppBundleMessages } from "../constants";
 import { ValidatePlatformCommandBase } from "./command-base";
 
 export abstract class BuildCommandBase extends ValidatePlatformCommandBase {
@@ -8,7 +8,8 @@ export abstract class BuildCommandBase extends ValidatePlatformCommandBase {
 		$platformsData: IPlatformsData,
 		protected $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		$platformService: IPlatformService,
-		private $bundleValidatorHelper: IBundleValidatorHelper) {
+		private $bundleValidatorHelper: IBundleValidatorHelper,
+		protected $logger: ILogger) {
 			super($options, $platformsData, $platformService, $projectData);
 			this.$projectData.initializeProjectData();
 	}
@@ -44,9 +45,13 @@ export abstract class BuildCommandBase extends ValidatePlatformCommandBase {
 			keyStorePassword: this.$options.keyStorePassword,
 			androidBundle: this.$options.aab
 		};
+
 		const outputPath = await this.$platformService.buildPlatform(platform, buildConfig, this.$projectData);
+
 		if (this.$options.copyTo) {
 			this.$platformService.copyLastOutput(platform, this.$options.copyTo, buildConfig, this.$projectData);
+		} else {
+			this.$logger.info(`Your build result is located at: ${outputPath}`);
 		}
 
 		return outputPath;
@@ -87,8 +92,9 @@ export class BuildIosCommand extends BuildCommandBase implements ICommand {
 		$platformsData: IPlatformsData,
 		$devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		$platformService: IPlatformService,
-		$bundleValidatorHelper: IBundleValidatorHelper) {
-			super($options, $errors, $projectData, $platformsData, $devicePlatformsConstants, $platformService, $bundleValidatorHelper);
+		$bundleValidatorHelper: IBundleValidatorHelper,
+		$logger: ILogger) {
+			super($options, $errors, $projectData, $platformsData, $devicePlatformsConstants, $platformService, $bundleValidatorHelper, $logger);
 	}
 
 	public async execute(args: string[]): Promise<void> {
@@ -123,15 +129,18 @@ export class BuildAndroidCommand extends BuildCommandBase implements ICommand {
 		$bundleValidatorHelper: IBundleValidatorHelper,
 		protected $androidBundleValidatorHelper: IAndroidBundleValidatorHelper,
 		protected $logger: ILogger) {
-			super($options, $errors, $projectData, $platformsData, $devicePlatformsConstants, $platformService, $bundleValidatorHelper);
+			super($options, $errors, $projectData, $platformsData, $devicePlatformsConstants, $platformService, $bundleValidatorHelper, $logger);
 	}
 
 	public async execute(args: string[]): Promise<void> {
-		const buildResult = await this.executeCore([this.$platformsData.availablePlatforms.Android]);
+		await this.executeCore([this.$platformsData.availablePlatforms.Android]);
 
 		if (this.$options.aab) {
-			this.$logger.info(`Your .aab file is located at: ${buildResult}`);
-			this.$logger.info("Link to documentation article");
+			this.$logger.info(AndroidAppBundleMessages.ANDROID_APP_BUNDLE_DOCS_MESSAGE);
+
+			if (this.$options.release) {
+				this.$logger.info(AndroidAppBundleMessages.ANDROID_APP_BUNDLE_PUBLISH_DOCS_MESSAGE);
+			}
 		}
 	}
 

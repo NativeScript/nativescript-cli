@@ -286,7 +286,7 @@ interface IValidBuildOutputData {
 	regexes?: RegExp[];
 }
 
-interface IBuildOutputOptions extends Partial<IBuildForDevice>, IRelease, IAndroidBundle {}
+interface IBuildOutputOptions extends Partial<IBuildForDevice>, IRelease, IHasAndroidBundle {}
 
 interface IPlatformsData {
 	availablePlatforms: any;

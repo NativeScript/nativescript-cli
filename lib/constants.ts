@@ -245,6 +245,11 @@ export class BundleValidatorMessages {
 }
 
 export class AndroidBundleValidatorMessages {
-	public static AAB_NOT_SUPPORTED_BY_COMMNAND_MESSAGE = "This command does not support --aab (Android Application Bundle) parameter.";
-	public static RUNTIME_VERSION_TOO_LOW = "Android Application Bundle (--aab) option requires NativeScript Android Runtime (tns-android) version %s and above.";
+	public static AAB_NOT_SUPPORTED_BY_COMMNAND_MESSAGE = "This command does not support --aab (Android App Bundle) parameter.";
+	public static NOT_SUPPORTED_RUNTIME_VERSION = "Android App Bundle (--aab) option requires NativeScript Android Runtime (tns-android) version %s and above.";
+}
+
+export class AndroidAppBundleMessages {
+	public static ANDROID_APP_BUNDLE_DOCS_MESSAGE = "What is Android App Bundle: https://docs.nativescript.org/tooling/publishing/android-app-bundle";
+	public static ANDROID_APP_BUNDLE_PUBLISH_DOCS_MESSAGE = "How to use Android App Bundle for publishing: https://docs.nativescript.org/tooling/publishing/publishing-android-apps#android-app-bundle";
 }

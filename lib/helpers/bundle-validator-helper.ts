@@ -1,8 +1,9 @@
 import * as semver from "semver";
 import * as util from "util";
 import { BundleValidatorMessages } from "../constants";
+import { VersionValidatorHelper } from "./version-validator-helper";
 
-export class BundleValidatorHelper implements IBundleValidatorHelper {
+export class BundleValidatorHelper extends VersionValidatorHelper implements IBundleValidatorHelper {
 	private bundlersMap: IStringDictionary = {
 		webpack: "nativescript-dev-webpack"
 	};
@@ -10,6 +11,7 @@ export class BundleValidatorHelper implements IBundleValidatorHelper {
 	constructor(protected $projectData: IProjectData,
 		protected $errors: IErrors,
 		protected $options: IOptions) {
+		super();
 		this.$projectData.initializeProjectData();
 	}
 
@@ -22,15 +24,9 @@ export class BundleValidatorHelper implements IBundleValidatorHelper {
 				this.$errors.fail(BundleValidatorMessages.MissingBundlePlugin);
 			}
 
-			if (minSupportedVersion) {
-				const currentVersion = bundlerVersionInDependencies || bundlerVersionInDevDependencies;
-				const shouldSkipCheck = !semver.valid(currentVersion) && !semver.validRange(currentVersion);
-				if (!shouldSkipCheck) {
-					const isBundleSupported = semver.gte(semver.coerce(currentVersion), semver.coerce(minSupportedVersion));
-					if (!isBundleSupported) {
-						this.$errors.failWithoutHelp(util.format(BundleValidatorMessages.NotSupportedVersion, minSupportedVersion));
-					}
-				}
+			const currentVersion = bundlerVersionInDependencies || bundlerVersionInDevDependencies;
+			if (minSupportedVersion && this.isValidVersion(currentVersion) && !this.compareCoerceVersions(currentVersion, minSupportedVersion, semver.gte)) {
+					this.$errors.failWithoutHelp(util.format(BundleValidatorMessages.NotSupportedVersion, minSupportedVersion));
 			}
 		}
 	}

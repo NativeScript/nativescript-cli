@@ -336,9 +336,9 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			gradleArgs.unshift("--debug");
 		}
 		if (buildConfig.release) {
-			task = baseTask + "Release";
+			task = `${baseTask}Release`;
 		} else {
-			task = baseTask + "Debug";
+			task = `${baseTask}Debug`;
 		}
 
 		gradleArgs.unshift(task);

@@ -535,9 +535,9 @@ interface IEnvOptions {
 	env: Object;
 }
 
-interface IAndroidBuildOptionsSettings extends IAndroidReleaseOptions, IRelease, IAndroidBundle { }
+interface IAndroidBuildOptionsSettings extends IAndroidReleaseOptions, IRelease, IHasAndroidBundle { }
 
- interface IAndroidBundle {
+ interface IHasAndroidBundle {
 	androidBundle?: boolean;
  }
 
