@@ -20,7 +20,7 @@ function isValidReceiver(receiver) {
   return isFunction(onMessage) || isFunction(onError) || isFunction(onStatus);
 }
 
-class Listener extends EventEmitter {
+export class Listener extends EventEmitter {
   message(m) {
     this.emit(m.channel, m);
   }
