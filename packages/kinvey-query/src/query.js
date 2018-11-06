@@ -1,5 +1,8 @@
 import isNumber from 'lodash/isNumber';
+import isString from 'lodash/isString';
 import isPlainObject from 'lodash/isPlainObject';
+import isObject from 'lodash/isObject';
+import { QueryError } from 'kinvey-errors';
 
 const PROTECTED_FIELDS = ['_id', '_acl'];
 const UNSUPPORTED_CONDITIONS = ['$nearSphere'];
@@ -31,11 +34,11 @@ export class Query {
 
   set fields(fields) {
     if (!Array.isArray(fields)) {
-      throw new Error('Please provide a valid fields. Fields must be an array or strings.');
+      throw new QueryError('fields must be an Array');
     }
 
-    if (this.parent) {
-      this.parent.fields = fields;
+    if (this._parent) {
+      this._parent.fields = fields;
     } else {
       this._fields = fields;
     }
@@ -47,11 +50,11 @@ export class Query {
 
   set sort(sort) {
     if (sort && !isPlainObject(sort)) {
-      throw new Error('Please provide a valid sort. Sort must be an plain object.');
+      throw new QueryError('sort must an Object');
     }
 
-    if (this.parent) {
-      this.parent.sort = sort;
+    if (this._parent) {
+      this._parent.sort = sort;
     } else {
       this._sort = sort;
     }
@@ -62,14 +65,20 @@ export class Query {
   }
 
   set limit(limit) {
-    if (!isNumber(limit)) {
-      throw new Error('Please provide a valid limit. Limit must be a number.');
+    let _limit = limit;
+
+    if (isString(_limit)) {
+      _limit = parseFloat(_limit);
     }
 
-    if (this.parent) {
-      this.parent.limit = limit;
+    if (limit && !isNumber(_limit)) {
+      throw new QueryError('limit must be a number');
+    }
+
+    if (this._parent) {
+      this._parent.limit = _limit;
     } else {
-      this._limit = limit;
+      this._limit = _limit;
     }
   }
 
@@ -78,14 +87,20 @@ export class Query {
   }
 
   set skip(skip) {
-    if (!isNumber(skip)) {
-      throw new Error('Please provide a valid skip. Skip must be a number.');
+    let _skip = skip;
+
+    if (isString(_skip)) {
+      _skip = parseFloat(_skip);
     }
 
-    if (this.parent) {
-      this.parent.skip = skip;
+    if (!isNumber(_skip)) {
+      throw new QueryError('skip must be a number');
+    }
+
+    if (this._parent) {
+      this._parent.skip = _skip;
     } else {
-      this._skip = skip;
+      this._skip = _skip;
     }
   }
 
@@ -103,7 +118,7 @@ export class Query {
             return true;
           }
 
-          if (typeof value !== 'object') {
+          if (!isObject(value)) {
             return true;
           }
 
@@ -154,8 +169,12 @@ export class Query {
    * @returns {Query} Query
    */
   contains(field, values) {
+    if (!values) {
+      throw new QueryError('You must supply a value.');
+    }
+
     if (!Array.isArray(values)) {
-      throw new Error('Please provide a valid values. Values must be an array.');
+      return this.addFilter(field, '$in', [values]);
     }
 
     return this.addFilter(field, '$in', values);
@@ -172,8 +191,12 @@ export class Query {
    * @returns {Query} Query
    */
   notContainedIn(field, values) {
+    if (!values) {
+      throw new QueryError('You must supply a value.');
+    }
+
     if (!Array.isArray(values)) {
-      throw new Error('Please provide a valid values. Values must be an array.');
+      return this.addFilter(field, '$nin', [values]);
     }
 
     return this.addFilter(field, '$nin', values);
@@ -190,8 +213,12 @@ export class Query {
    * @returns {Query} Query
    */
   containsAll(field, values) {
+    if (!values) {
+      throw new QueryError('You must supply a value.');
+    }
+
     if (!Array.isArray(values)) {
-      throw new Error('Please provide a valid values. Values must be an array.');
+      return this.addFilter(field, '$all', [values]);
     }
 
     return this.addFilter(field, '$all', values);
@@ -208,8 +235,8 @@ export class Query {
    * @returns {Query} Query
    */
   greaterThan(field, value) {
-    if (typeof value !== 'number' && typeof value !== 'string') {
-      throw new Error('The value must be a number or string.');
+    if (!isNumber(value) && !isString(value)) {
+      throw new QueryError('You must supply a number or string.');
     }
 
     return this.addFilter(field, '$gt', value);
@@ -226,8 +253,8 @@ export class Query {
    * @returns {Query} Query
    */
   greaterThanOrEqualTo(field, value) {
-    if (typeof value !== 'number' && typeof value !== 'string') {
-      throw new Error('The value must be a number or string.');
+    if (!isNumber(value) && !isString(value)) {
+      throw new QueryError('You must supply a number or string.');
     }
 
     return this.addFilter(field, '$gte', value);
@@ -244,8 +271,8 @@ export class Query {
    * @returns {Query} Query
    */
   lessThan(field, value) {
-    if (typeof value !== 'number' && typeof value !== 'string') {
-      throw new Error('The value must be a number or string.');
+    if (!isNumber(value) && !isString(value)) {
+      throw new QueryError('You must supply a number or string.');
     }
 
     return this.addFilter(field, '$lt', value);
@@ -262,8 +289,8 @@ export class Query {
    * @returns {Query} Query
    */
   lessThanOrEqualTo(field, value) {
-    if (typeof value !== 'number' && typeof value !== 'string') {
-      throw new Error('The value must be a number or string.');
+    if (!isNumber(value) && !isString(value)) {
+      throw new QueryError('You must supply a number or string.');
     }
 
     return this.addFilter(field, '$lte', value);
@@ -296,11 +323,11 @@ export class Query {
    */
   mod(field, divisor, remainder = 0) {
     if (!isNumber(divisor)) {
-      throw new Error('Please provide a valid divisor. Divisor must be a number.');
+      throw new QueryError('divisor must be a number');
     }
 
     if (!isNumber(remainder)) {
-      throw new Error('Please provide a valid remainder. Remainder must be a number.');
+      throw new QueryError('remainder must be a number');
     }
 
     return this.addFilter(field, '$mod', [divisor, remainder]);
@@ -330,12 +357,11 @@ export class Query {
     }
 
     if (regExp.source.indexOf('^') !== 0) {
-      throw new Error('The regExp must have \'^\' at the beginning of the expression'
-        + ' to make it an anchored expression.');
+      throw new QueryError('regExp must have \'^\' at the beginning of the expression to make it an anchored expression.');
     }
 
     if ((regExp.ignoreCase || options.ignoreCase) && options.ignoreCase !== false) {
-      throw new Error('The ignoreCase flag is not supported.');
+      throw new QueryError('ignoreCase flag is not supported');
     }
 
     if ((regExp.multiline || options.multiline) && options.multiline !== false) {
@@ -369,13 +395,13 @@ export class Query {
    * @returns {Query} Query
    */
   near(field, coord, maxDistance) {
-    if (!Array.isArray(coord) || typeof coord[0] !== 'number' || typeof coord[1] !== 'number') {
-      throw new Error('The coord must be a [number, number].');
+    if (!Array.isArray(coord) || !isNumber(coord[0]) || !isNumber(coord[1])) {
+      throw new QueryError('coord must be a [number, number]');
     }
 
     const result = this.addFilter(field, '$nearSphere', [coord[0], coord[1]]);
 
-    if (typeof maxDistance === 'number') {
+    if (isNumber(maxDistance)) {
       this.addFilter(field, '$maxDistance', maxDistance);
     }
 
@@ -397,15 +423,15 @@ export class Query {
    */
   withinBox(field, bottomLeftCoord, upperRightCoord) {
     if (!Array.isArray(bottomLeftCoord)
-      || typeof bottomLeftCoord[0] !== 'number'
-      || typeof bottomLeftCoord[1] !== 'number') {
-      throw new Error('The bottomLeftCoord must be a [number, number].');
+      || !isNumber(bottomLeftCoord[0])
+      || !isNumber(bottomLeftCoord[1])) {
+      throw new QueryError('bottomLeftCoord must be a [number, number]');
     }
 
     if (!Array.isArray(upperRightCoord)
-      || typeof upperRightCoord[0] !== 'number'
-      || typeof upperRightCoord[1] !== 'number') {
-      throw new Error('The upperRightCoord must be a [number, number].');
+      || !isNumber(upperRightCoord[0])
+      || !isNumber(upperRightCoord[1])) {
+      throw new QueryError('upperRightCoord must be a [number, number]');
     }
 
     const coords = [
@@ -427,12 +453,12 @@ export class Query {
    */
   withinPolygon(field, coords) {
     if (Array.isArray(coords) === false || coords.length === 0 || coords[0].length > 3) {
-      throw new Error('The coords must be a [[number, number]].');
+      throw new QueryError('coords must be a [[number, number]]');
     }
 
     const withinCoords = coords.map((coord) => {
-      if (typeof coord[0] !== 'number' || typeof coord[1] !== 'number') {
-        throw new Error('The coords must be a [[number, number]].');
+      if (!isNumber(coord[0]) || !isNumber(coord[1])) {
+        throw new QueryError('coords argument must be a [number, number]');
       }
 
       return [coord[0], coord[1]];
@@ -452,8 +478,8 @@ export class Query {
    * @returns {Query} Query
    */
   size(field, size) {
-    if (typeof size !== 'number') {
-      throw new Error('The size must be a number.');
+    if (!isNumber(size)) {
+      throw new QueryError('size must be a number');
     }
 
     return this.addFilter(field, '$size', size);
@@ -466,8 +492,8 @@ export class Query {
    * @returns {Query} Query
    */
   ascending(field) {
-    if (this.parent) {
-      this.parent.ascending(field);
+    if (this._parent) {
+      this._parent.ascending(field);
     } else {
       if (!this.sort) {
         this.sort = {};
@@ -487,8 +513,8 @@ export class Query {
    * @returns {Query} Query
    */
   descending(field) {
-    if (this.parent) {
-      this.parent.descending(field);
+    if (this._parent) {
+      this._parent.descending(field);
     } else {
       if (!this.sort) {
         this.sort = {};
@@ -525,8 +551,8 @@ export class Query {
   nor(...args) {
     // NOR is preceded by AND. Therefore, if this query is part of an AND-join,
     // apply the NOR onto the parent to make sure AND indeed precedes NOR.
-    if (this.parent && Object.hasOwnProperty.call(this.parent.filter, '$and')) {
-      return this.parent.nor(...args);
+    if (this._parent && Object.hasOwnProperty.call(this._parent.filter, '$and')) {
+      return this._parent.nor(...args);
     }
 
     return this.join('$nor', args);
@@ -544,8 +570,8 @@ export class Query {
     // OR has lowest precedence. Therefore, if this query is part of any join,
     // apply the OR onto the parent to make sure OR has indeed the lowest
     // precedence.
-    if (this.parent) {
-      return this.parent.or(...args);
+    if (this._parent) {
+      return this._parent.or(...args);
     }
 
     return this.join('$or', args);
@@ -567,11 +593,11 @@ export class Query {
       queryObject.fields = this.fields.join(',');
     }
 
-    if (typeof this.limit === 'number' && this.limit < Infinity) {
+    if (isNumber(this.limit) && this.limit < Infinity) {
       queryObject.limit = this.limit;
     }
 
-    if (typeof this.skip === 'number' && this.skip > 0) {
+    if (isNumber(this.skip) && this.skip > 0) {
       queryObject.skip = this.skip;
     }
 
@@ -581,7 +607,7 @@ export class Query {
 
     const keys = Object.keys(queryObject);
     keys.forEach((key) => {
-      queryObject[key] = typeof queryObject[key] === 'string' ? queryObject[key] : JSON.stringify(queryObject[key]);
+      queryObject[key] = isString(queryObject[key]) ? queryObject[key] : JSON.stringify(queryObject[key]);
     });
 
     return queryObject;
@@ -673,7 +699,7 @@ export class Query {
     if (filters.length === 0) {
       that = new Query();
       filters = [that.filter];
-      that.parent = this; // Required for operator precedence
+      that._parent = this; // Required for operator precedence
     }
 
     const currentFilter = Object.keys(this.filter).reduce((filter, key) => {
