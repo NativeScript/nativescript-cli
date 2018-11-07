@@ -27,7 +27,7 @@ General | `$ tns build android [--compileSdk <API Level>] [--key-store-path <Fil
 * `--copy-to` - Specifies the file path where the built `.apk` will be copied. If it points to a non-existent directory, it will be created. If the specified value is directory, the original file name will be used.
 * `--bundle` - Specifies that the `webpack` bundler will be used to bundle the application.
 * `--env.*` - Specifies additional flags that the bundler may process. May be passed multiple times. For example: `--env.uglify --env.snapshot`.
-* `--aab` - Specifies that the build must produce an Android App Bundle(`.aab`) file.
+* `--aab` - Specifies that the build will produce an Android App Bundle(`.aab`) file.
 
 <% if(isHtml) { %>
 

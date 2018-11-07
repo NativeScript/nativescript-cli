@@ -258,7 +258,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 
 	public async validateOptions(provision: true | string, teamId: true | string, projectData: IProjectData, platform?: string, aab?: boolean): Promise<boolean> {
 		if (platform && !this.$mobileHelper.isAndroidPlatform(platform) && aab) {
-			this.$errors.failWithoutHelp("Option --aab is supported for Android platform only.");
+			this.$errors.failWithoutHelp("The --aab option is supported only for the Android platform.");
 		}
 
 		if (platform) {

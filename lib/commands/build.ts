@@ -51,7 +51,7 @@ export abstract class BuildCommandBase extends ValidatePlatformCommandBase {
 		if (this.$options.copyTo) {
 			this.$platformService.copyLastOutput(platform, this.$options.copyTo, buildConfig, this.$projectData);
 		} else {
-			this.$logger.info(`Your build result is located at: ${outputPath}`);
+			this.$logger.info(`The build result is located at: ${outputPath}`);
 		}
 
 		return outputPath;
