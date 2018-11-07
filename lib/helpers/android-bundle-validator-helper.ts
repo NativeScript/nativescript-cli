@@ -1,4 +1,3 @@
-import * as semver from "semver";
 import * as util from "util";
 import { AndroidBundleValidatorMessages, TNS_ANDROID_RUNTIME_NAME } from "../constants";
 import { VersionValidatorHelper } from "./version-validator-helper";
@@ -23,10 +22,11 @@ export class AndroidBundleValidatorHelper extends VersionValidatorHelper impleme
 		if (this.$options.aab) {
 			const androidRuntimeInfo = this.$projectDataService.getNSValue(projectData.projectDir, TNS_ANDROID_RUNTIME_NAME);
 			const androidRuntimeVersion = androidRuntimeInfo ? androidRuntimeInfo.version : "";
-
-			if (androidRuntimeVersion &&
+			const shouldThrowError = androidRuntimeVersion &&
 				this.isValidVersion(androidRuntimeVersion) &&
-				!this.compareCoerceVersions(androidRuntimeVersion, AndroidBundleValidatorHelper.MIN_RUNTIME_VERSION, semver.gte)) {
+				this.isVersionLowerThan(androidRuntimeVersion, AndroidBundleValidatorHelper.MIN_RUNTIME_VERSION);
+
+			if (shouldThrowError) {
 				this.$errors.failWithoutHelp(util.format(AndroidBundleValidatorMessages.NOT_SUPPORTED_RUNTIME_VERSION, AndroidBundleValidatorHelper.MIN_RUNTIME_VERSION));
 			}
 		}

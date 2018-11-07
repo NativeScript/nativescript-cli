@@ -1,4 +1,3 @@
-import * as semver from "semver";
 import * as util from "util";
 import { BundleValidatorMessages } from "../constants";
 import { VersionValidatorHelper } from "./version-validator-helper";
@@ -25,7 +24,8 @@ export class BundleValidatorHelper extends VersionValidatorHelper implements IBu
 			}
 
 			const currentVersion = bundlerVersionInDependencies || bundlerVersionInDevDependencies;
-			if (minSupportedVersion && this.isValidVersion(currentVersion) && !this.compareCoerceVersions(currentVersion, minSupportedVersion, semver.gte)) {
+			const shouldThrowError = minSupportedVersion && this.isValidVersion(currentVersion) && this.isVersionLowerThan(currentVersion, minSupportedVersion);
+			if (shouldThrowError) {
 					this.$errors.failWithoutHelp(util.format(BundleValidatorMessages.NotSupportedVersion, minSupportedVersion));
 			}
 		}
