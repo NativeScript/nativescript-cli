@@ -1,5 +1,4 @@
 import * as iOSDevice from "../common/mobile/ios/device/ios-device";
-import * as net from "net";
 import * as path from "path";
 import * as log4js from "log4js";
 import { ChildProcess } from "child_process";
@@ -13,8 +12,6 @@ const inspectorUiDir = "WebInspectorUI/";
 
 export class IOSDebugService extends DebugServiceBase implements IPlatformDebugService {
 	private _lldbProcess: ChildProcess;
-	private _sockets: net.Socket[] = [];
-	private _socketProxy: any;
 
 	constructor(protected device: Mobile.IiOSDevice,
 		protected $devicesService: Mobile.IDevicesService,
@@ -74,19 +71,10 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 	}
 
 	public async debugStop(): Promise<void> {
-		if (this._socketProxy) {
-			this._socketProxy.close();
-			this._socketProxy = null;
-		}
-
-		_.forEach(this._sockets, socket => socket.destroy());
-
-		this._sockets = [];
 		this.$socketProxyFactory.removeAllProxies();
 
 		if (this._lldbProcess) {
 			this._lldbProcess.stdin.write("process detach\n");
-
 			await this.killProcess(this._lldbProcess);
 			this._lldbProcess = undefined;
 		}
@@ -210,11 +198,11 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 		// check if --no-client is passed - default to opening a tcp socket (versus Chrome DevTools (websocket))
 		const deviceIdentifier = this.device ? this.device.deviceInfo.identifier : debugData.deviceIdentifier;
 		if ((debugOptions.inspector || !debugOptions.client) && this.$hostInfo.isDarwin) {
-			const existingProxy = this.$socketProxyFactory.getTCPSocketProxy(deviceIdentifier);
-			this._socketProxy = existingProxy || await this.$socketProxyFactory.addTCPSocketProxy(this.getSocketFactory(debugData, debugOptions), deviceIdentifier);
-
-			if (!existingProxy) {
-				await this.openAppInspector(this._socketProxy.address(), debugData, debugOptions);
+			const existingTcpProxy = this.$socketProxyFactory.getTCPSocketProxy(deviceIdentifier);
+			const getDeviceSocket = async () => await this.device.getDebugSocket(debugData.applicationIdentifier, debugData.projectDir);
+			const tcpSocketProxy = existingTcpProxy || await this.$socketProxyFactory.addTCPSocketProxy(getDeviceSocket, deviceIdentifier);
+			if (!existingTcpProxy) {
+				await this.openAppInspector(tcpSocketProxy.address(), debugData, debugOptions);
 			}
 
 			return null;
@@ -223,9 +211,11 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 				this.$logger.info("'--chrome' is the default behavior. Use --inspector to debug iOS applications using the Safari Web Inspector.");
 			}
 
-			const existingProxy = this.$socketProxyFactory.getWebSocketProxy(deviceIdentifier);
-			this._socketProxy = existingProxy || await this.$socketProxyFactory.addWebSocketProxy(this.getSocketFactory(debugData, debugOptions), deviceIdentifier);
-			return this.getChromeDebugUrl(debugOptions, this._socketProxy.options.port);
+			const existingWebProxy = this.$socketProxyFactory.getWebSocketProxy(deviceIdentifier);
+			const getDeviceSocket = async () => await this.device.getDebugSocket(debugData.applicationIdentifier, debugData.projectDir);
+			const webSocketProxy = existingWebProxy || await this.$socketProxyFactory.addWebSocketProxy(getDeviceSocket, deviceIdentifier);
+
+			return this.getChromeDebugUrl(debugOptions, webSocketProxy.options.port);
 		}
 	}
 
@@ -241,26 +231,6 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 		} else {
 			this.$logger.info("Suppressing debugging client.");
 		}
-	}
-
-	private getSocketFactory(debugData: IDebugData, debugOptions: IDebugOptions): () => Promise<net.Socket> {
-		let pendingExecution: Promise<net.Socket> = null;
-		const factory = async () => {
-			if (!pendingExecution) {
-				const func = async () => {
-					const socket = await this.device.getDebugSocket(debugData.applicationIdentifier, debugData.projectDir);
-					this._sockets.push(socket);
-					pendingExecution = null;
-					return socket;
-				};
-				pendingExecution = func();
-			}
-
-			return pendingExecution;
-		};
-
-		factory.bind(this);
-		return factory;
 	}
 }
 

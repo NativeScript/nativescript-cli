@@ -171,6 +171,14 @@ export class SocketProxyFactory extends EventEmitter implements ISocketProxyFact
 	}
 
 	public removeAllProxies() {
+		for (var deviceId in this.deviceWebServers) {
+			this.deviceWebServers[deviceId].close();
+		}
+
+		for (var deviceId in this.deviceTcpServers) {
+			this.deviceTcpServers[deviceId].close();
+		}
+
 		this.deviceWebServers = {};
 		this.deviceTcpServers = {};
 	}
