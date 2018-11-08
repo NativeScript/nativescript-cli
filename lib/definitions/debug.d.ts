@@ -43,12 +43,6 @@ interface IDebugOptions {
 	 */
 	stop?: boolean;
 
-	// TODO: remove
-	/**
-	 * Defines if debug process is for emulator (not for real device).
-	 */
-	emulator?: boolean;
-
 	/**
 	 * Defines if the debug process should break on the first line.
 	 */

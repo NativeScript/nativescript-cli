@@ -26,7 +26,7 @@ export class AndroidDebugService extends DebugServiceBase implements IPlatformDe
 
 	public async debug(debugData: IDebugData, debugOptions: IDebugOptions): Promise<string> {
 		this._packageName = debugData.applicationIdentifier;
-		const result = debugOptions.emulator
+		const result = this.device.isEmulator
 			? await this.debugOnEmulator(debugData, debugOptions)
 			: await this.debugOnDevice(debugData, debugOptions);
 
@@ -108,7 +108,7 @@ export class AndroidDebugService extends DebugServiceBase implements IPlatformDe
 	private async debugOnDevice(debugData: IDebugData, debugOptions: IDebugOptions): Promise<string> {
 		let packageFile = "";
 
-		if (!debugOptions.start && !debugOptions.emulator) {
+		if (!debugOptions.start && !this.device.isEmulator) {
 			packageFile = debugData.pathToAppPackage;
 			this.$logger.out("Using ", packageFile);
 		}

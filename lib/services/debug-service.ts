@@ -57,9 +57,7 @@ export class DebugService extends EventEmitter implements IDebugService {
 				this.$errors.failWithoutHelp("To debug on iOS simulator you need to provide path to the app package.");
 			}
 
-			if (this.$hostInfo.isWindows) {
-				debugOptions.emulator = false;
-			} else if (!this.$hostInfo.isDarwin) {
+			if (!this.$hostInfo.isWindows && !this.$hostInfo.isDarwin) {
 				this.$errors.failWithoutHelp(`Debugging on iOS devices is not supported for ${platform()} yet.`);
 			}
 		}
