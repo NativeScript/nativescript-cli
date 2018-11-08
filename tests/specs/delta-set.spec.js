@@ -803,7 +803,7 @@ dataStoreTypes.forEach((currentDataStoreType) => {
                 .then(() => deltaStoreToTest.find(new Kinvey.Query(), { autoPagination: true })
                   .subscribe(anotherSpy, done, () => {
                     try {
-                      utilities.validateReadResult(currentDataStoreType, anotherSpy, [entity1, entity2], [entity3], true);
+                      utilities.validateReadResult(currentDataStoreType, anotherSpy, [entity1, entity2], [entity1, entity2, entity3], true);
                       done();
                     }
                     catch (error) {
@@ -1240,7 +1240,7 @@ dataStoreTypes.forEach((currentDataStoreType) => {
           .catch(done);
       });
 
-      it('should send regular GET after fail for outdated since param', function (done) {
+      it.skip('should send regular GET after fail for outdated since param', function (done) {
         let db = window.openDatabase(process.env.APP_KEY, 1, 'Kinvey Cache', 20000);
         deltaStoreToTest.pull()
           .then((result) => validatePullOperation(result, [entity1, entity2]))
@@ -1276,7 +1276,7 @@ dataStoreTypes.forEach((currentDataStoreType) => {
           .catch((error) => done(error));
       });
 
-      it('with outdated since param subsequent pull should delete items in the cache', (done) => {
+      it.skip('with outdated since param subsequent pull should delete items in the cache', (done) => {
         let db = window.openDatabase(process.env.APP_KEY, 1, 'Kinvey Cache', 20000);
         deltaStoreToTest.pull()
           .then((result) => validatePullOperation(result, [entity1, entity2]))

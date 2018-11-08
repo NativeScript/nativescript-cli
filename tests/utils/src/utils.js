@@ -28,13 +28,8 @@ export function arraysEqual(a, b) {
     const aClone = a.slice(0, a.length);
     aClone.sort();
 
-    console.log(a, aClone);
-
     const bClone = a.slice(0, b.length);
     bClone.sort();
-
-    console.log();
-    console.log(b, bClone);
 
     for (let i = 0, len = aClone.length; i < len; i += 1) {
       if (aClone[i] !== bClone[i]) return false;

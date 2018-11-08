@@ -45,6 +45,7 @@
       "tests/html5",
       "tests/nativescript",
       "tests/node",
+      "tests/register",
       "tests/utils"
     ],
     "nohoist": [

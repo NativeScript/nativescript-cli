@@ -1,7 +1,5 @@
 module.exports = (api) => {
-  api.cache.never();
-
-  if (process.env.NODE_ENV === 'development') {
+  if (api.env('development')) {
     return {
       sourceMaps: 'inline',
       presets: [

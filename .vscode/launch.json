@@ -349,24 +349,28 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "Node SDK Tests",
+      "name": "Integration Tests",
       "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
-      "cwd": "${workspaceFolder}/tests/node",
       "args": [
         "--require",
         "dotenv/config",
         "--require",
         "@babel/register",
+        "--require",
+        "kinvey-test-register",
         "--ui",
         "tdd",
         "--timeout",
         "999999",
         "--colors",
-        "${workspaceFolder}/tests/node/tests"
+        "${workspaceFolder}/tests/specs"
       ],
       "env": {
-        "NODE_ENV": "development"
+        "NODE_ENV": "development",
+        "SDK": "kinvey-node-sdk"
       },
+      "preLaunchTask": "build",
+      "console": "integratedTerminal",
       "internalConsoleOptions": "openOnSessionStart",
       "sourceMaps": true,
       "smartStep": true,

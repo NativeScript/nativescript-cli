@@ -23,7 +23,6 @@ export class CacheStore {
     return `/${NAMESPACE}/${appKey}/${this.collectionName}`;
   }
 
-
   find(query, options = {}) {
     const autoSync = options.autoSync === true || this.autoSync;
     const cache = new DataStoreCache(this.collectionName, this.tag);
@@ -31,6 +30,7 @@ export class CacheStore {
       try {
         const cachedDocs = await cache.find(query);
         observer.next(cachedDocs);
+
         if (autoSync) {
           await this.pull(query, options);
           const docs = await cache.find(query);
@@ -142,7 +142,7 @@ export class CacheStore {
 
     if (autoSync) {
       const query = new Query().equalTo('_id', cachedDoc._id);
-      const pushResults = await this.push(query, options);
+      const pushResults = await sync.push(query, options);
       const pushResult = pushResults.shift();
 
       if (pushResult.error) {
@@ -172,7 +172,7 @@ export class CacheStore {
 
     if (autoSync) {
       const query = new Query().equalTo('_id', cachedDoc._id);
-      const pushResults = await this.push(query, options);
+      const pushResults = await sync.push(query, options);
       const pushResult = pushResults.shift();
 
       if (pushResult.error) {
@@ -212,7 +212,7 @@ export class CacheStore {
       // Remove the docs from the backend
       if (syncDocs.length > 0 && autoSync) {
         const pushQuery = new Query().contains('_id', syncDocs.map(doc => doc._id));
-        const pushResults = await this.push(pushQuery);
+        const pushResults = await sync.push(pushQuery);
         count = pushResults.reduce((count, pushResult) => {
           if (pushResult.error) {
             return count - 1;
@@ -249,7 +249,7 @@ export class CacheStore {
       // Remove the doc from the backend
       if (syncDoc && autoSync) {
         const query = new Query().equalTo('_id', doc._id);
-        const pushResults = await this.push(query);
+        const pushResults = await sync.push(query);
 
         if (pushResults.length > 0) {
           const pushResult = pushResults.shift();
@@ -276,7 +276,7 @@ export class CacheStore {
 
   async push(query, options) {
     const sync = new Sync(this.collectionName, this.tag);
-    return sync.push(query, options);
+    return sync.push(null, options);
   }
 
   async pull(query, options = {}) {

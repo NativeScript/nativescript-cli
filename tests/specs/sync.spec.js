@@ -326,7 +326,7 @@ dataStoreTypes.forEach((currentDataStoreType) => {
             .catch(done);
         });
 
-        it('should disregard the passed query and push all entities to the backend', (done) => {
+        it.only('should disregard the passed query and push all entities to the backend', (done) => {
           const query = new Kinvey.Query();
           query.equalTo('_id', entity1._id);
           storeToTest.push(query)
