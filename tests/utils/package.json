@@ -12,10 +12,10 @@
     "lint": "eslint src"
   },
   "dependencies": {
-    "@babel/runtime": "7.1.2"
+    "@babel/runtime": "7.1.5"
   },
   "devDependencies": {
-    "@babel/cli": "7.1.2",
+    "@babel/cli": "7.1.5",
     "del-cli": "1.1.0"
   }
 }

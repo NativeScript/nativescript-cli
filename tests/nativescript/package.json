@@ -17,11 +17,11 @@
     "tns-core-modules": "4.2.1"
   },
   "devDependencies": {
-    "@babel/cli": "7.1.2",
-    "@babel/core": "7.1.2",
+    "@babel/cli": "7.1.5",
+    "@babel/core": "7.1.5",
     "@babel/plugin-transform-runtime": "7.1.0",
-    "@babel/preset-env": "7.1.0",
-    "@babel/runtime": "7.1.2",
+    "@babel/preset-env": "7.1.5",
+    "@babel/runtime": "7.1.5",
     "babel-eslint": "10.0.1",
     "babel-loader": "8.0.4",
     "chai": "4.2.0",

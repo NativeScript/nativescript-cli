@@ -11,14 +11,14 @@
     "lint": "eslint src"
   },
   "dependencies": {
-    "@babel/runtime": "7.1.2",
+    "@babel/runtime": "7.1.5",
     "chai": "4.2.0",
     "lodash": "4.17.11",
     "sinon": "7.1.1"
   },
   "devDependencies": {
-    "@babel/cli": "7.1.2",
-    "@babel/core": "7.1.2",
+    "@babel/cli": "7.1.5",
+    "@babel/core": "7.1.5",
     "del-cli": "1.1.0"
   }
 }
