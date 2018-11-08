@@ -1,0 +1,24 @@
+{
+  "private": true,
+  "version": "1.0.0",
+  "name": "kinvey-test-integration",
+  "author": "Kinvey, Inc.",
+  "homepage": "http://www.kinvey.com",
+  "license": "Apache-2.0",
+  "scripts": {
+    "prebuild": "del lib",
+    "build": "babel src -d lib",
+    "lint": "eslint src"
+  },
+  "dependencies": {
+    "@babel/runtime": "7.1.2",
+    "chai": "4.2.0",
+    "lodash": "4.17.11",
+    "sinon": "7.1.1"
+  },
+  "devDependencies": {
+    "@babel/cli": "7.1.2",
+    "@babel/core": "7.1.2",
+    "del-cli": "1.1.0"
+  }
+}

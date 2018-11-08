@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 import sinon from 'sinon';
 import _ from 'lodash';
+// eslint-disable-next-line import/extensions
 import * as Kinvey from '__SDK__';
 import * as config from './config';
 import * as utilities from './utils';

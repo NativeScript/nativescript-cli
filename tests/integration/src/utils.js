@@ -1,10 +1,12 @@
 import { expect } from 'chai';
-import isNumber from 'lodash/isNumber';
-import first from 'lodash/first';
-import sortBy from 'lodash/sortBy';
+import _ from 'lodash';
+// eslint-disable-next-line import/extensions
 import Kinvey from '__SDK__';
 import * as Constants from './constants';
-import lodash from 'lodash';
+
+export function ensureArray(entities) {
+  return [].concat(entities);
+}
 
 export function assertEntityMetadata(entities) {
   ensureArray(entities).forEach((entity) => {
@@ -63,7 +65,7 @@ export function saveEntities(collectionName, entities) {
   }))
     .then(() => syncStore.pull())
     .then(() => syncStore.find().toPromise())
-    .then(result => lodash.sortBy(deleteEntityMetadata(result), '_id'));
+    .then(result => _.sortBy(deleteEntityMetadata(result), '_id'));
 }
 
 export function deleteUsers(userIds) {
@@ -83,22 +85,22 @@ export function validateReadResult(dataStoreType, spy, cacheExpectedEntities, ba
     secondCallArgs = spy.secondCall.args[0];
   }
 
-  const isComparingEntities = !lodash.isNumber(cacheExpectedEntities);
-  const isSavedEntity = Object.prototype.hasOwnProperty.call(lodash.first(ensureArray(cacheExpectedEntities)), '_id');
+  const isComparingEntities = !_.isNumber(cacheExpectedEntities);
+  const isSavedEntity = Object.prototype.hasOwnProperty.call(_.first(ensureArray(cacheExpectedEntities)), '_id');
   const shouldPrepareForComparison = isComparingEntities && isSavedEntity;
 
   // if we have entities, which have an _id field, we remove the metadata in order to compare properly and sort by _id if needed
   if (shouldPrepareForComparison) {
     deleteEntityMetadata(firstCallArgs);
     if (sortBeforeCompare) {
-      firstCallArgs = _lodash.sortBy(firstCallArgs, '_id');
-      cacheExpectedEntities = lodash.sortBy(cacheExpectedEntities, '_id');
-      backendExpectedEntities = lodash.sortBy(backendExpectedEntities, '_id');
+      firstCallArgs = _.sortBy(firstCallArgs, '_id');
+      cacheExpectedEntities = _.sortBy(cacheExpectedEntities, '_id');
+      backendExpectedEntities = _.sortBy(backendExpectedEntities, '_id');
     }
     if (secondCallArgs) {
       deleteEntityMetadata(secondCallArgs);
       if (sortBeforeCompare) {
-        secondCallArgs = lodash.sortBy(secondCallArgs, '_id');
+        secondCallArgs = _.sortBy(secondCallArgs, '_id');
       }
     }
   }
@@ -246,7 +248,7 @@ export function assertFileMetadata(file, expectedMetadata) {
 
   delete file._acl.creator;
   const fieldsNames = Object.keys(expectedMetadata);
-  lodash.each(fieldsNames, (fieldName) => {
+  _.each(fieldsNames, (fieldName) => {
     expect(file[fieldName]).to.deep.equal(expectedMetadata[fieldName])
   });
 };
@@ -296,7 +298,7 @@ export function getFileMetadata(id, fileName, mimeType) {
 }
 
 export function getExpectedFileMetadata(metadata) {
-  const expectedMetadata = lodash.cloneDeep(metadata);
+  const expectedMetadata = _.cloneDeep(metadata);
   delete expectedMetadata.filename
   expectedMetadata._filename = metadata.filename
   return expectedMetadata;

@@ -44,7 +44,7 @@
       "sdks/kinvey-node-sdk",
       "tests/html5",
       "tests/nativescript",
-      "tests/node",
+      "tests/integration",
       "tests/register",
       "tests/utils"
     ],

@@ -193,9 +193,15 @@ export async function signup(data, options = {}) {
     headers: {
       Authorization: Auth.App(appKey, appSecret)
     },
-    url,
-    body: isEmpty(data) ? null : data
+    url
   });
+
+  if (data instanceof User) {
+    request.body = isEmpty(data.data) ? null : data.data;
+  } else {
+    request.body = isEmpty(data) ? null : data;
+  }
+
   const response = await request.execute();
   const session = response.data;
 

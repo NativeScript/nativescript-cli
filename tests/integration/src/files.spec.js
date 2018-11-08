@@ -1,9 +1,10 @@
 import { expect } from 'chai';
+// eslint-disable-next-line import/extensions
 import * as Kinvey from '__SDK__';
-import * as utilities from './utils';
 import lodash from 'lodash';
+import * as utilities from './utils';
 
-describe('Files', () => {
+describe.skip('Files', () => {
   before(() => {
     return Kinvey.init({
       appKey: process.env.APP_KEY,
@@ -93,7 +94,7 @@ describe('Files', () => {
     }));
   }
 
-  describe.only('Files Common tests', () => {
+  describe('Files Common tests', () => {
     let fileToUpload1;
     let fileToUpload2;
     // The string content should match the content of the used sample files test1.txt and test2.txt in test/integration/sample-test-files

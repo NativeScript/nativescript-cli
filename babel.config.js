@@ -6,7 +6,8 @@ module.exports = (api) => {
         ['@babel/env', {
           targets: 'current node'
         }]
-      ]
+      ],
+      retainLines: true
     };
   }
 

@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 import sinon from 'sinon';
 import _ from 'lodash';
+// eslint-disable-next-line import/extensions
 import * as Kinvey from '__SDK__';
 import * as config from './config';
 import * as utilities from './utils';
@@ -326,7 +327,7 @@ dataStoreTypes.forEach((currentDataStoreType) => {
             .catch(done);
         });
 
-        it.only('should disregard the passed query and push all entities to the backend', (done) => {
+        it('should disregard the passed query and push all entities to the backend', (done) => {
           const query = new Kinvey.Query();
           query.equalTo('_id', entity1._id);
           storeToTest.push(query)

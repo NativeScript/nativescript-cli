@@ -9,7 +9,6 @@
       "request": "launch",
       "name": "ACL Tests",
       "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
-      "cwd": "${workspaceFolder}/packages/kinvey-acl",
       "args": [
         "--require",
         "@babel/register",
@@ -23,6 +22,8 @@
       "env": {
         "NODE_ENV": "development"
       },
+      "preLaunchTask": "build",
+      "console": "integratedTerminal",
       "internalConsoleOptions": "openOnSessionStart",
       "sourceMaps": true,
       "smartStep": true,
@@ -363,7 +364,7 @@
         "--timeout",
         "999999",
         "--colors",
-        "${workspaceFolder}/tests/specs"
+        "${workspaceFolder}/tests/integration/src"
       ],
       "env": {
         "NODE_ENV": "development",
