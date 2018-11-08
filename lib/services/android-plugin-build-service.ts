@@ -2,7 +2,6 @@ import * as path from "path";
 import { MANIFEST_FILE_NAME, INCLUDE_GRADLE_NAME, ASSETS_DIR, RESOURCES_DIR, TNS_ANDROID_RUNTIME_NAME, AndroidBuildDefaults, PLUGIN_BUILD_DATA_FILENAME } from "../constants";
 import { getShortPluginName, hook } from "../common/helpers";
 import { Builder, parseString } from "xml2js";
-import { ILogger } from "log4js";
 
 export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 	/**
@@ -427,6 +426,10 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			`-PcompileSdk=android-${pluginBuildSettings.androidToolsInfo.compileSdkVersion}`,
 			`-PbuildToolsVersion=${pluginBuildSettings.androidToolsInfo.buildToolsVersion}`
 		];
+
+		if (this.$logger.getLevel() === "INFO") {
+			localArgs.push("--quiet");
+		}
 
 		try {
 			await this.$childProcess.spawnFromEvent(gradlew, localArgs, "close", { cwd: pluginBuildSettings.pluginDir, stdio: "inherit" });
