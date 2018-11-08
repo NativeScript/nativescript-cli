@@ -10,7 +10,10 @@ import { register } from 'kinvey-http-node';
 import { login } from 'kinvey-identity';
 import { init } from 'kinvey-app';
 import * as Files from './files';
+import fileFuncs from './fileModule';
+import sinon from 'sinon';
 
+Files.upload
 chai.use(require('chai-as-promised'));
 chai.should();
 
@@ -993,10 +996,10 @@ describe('Files', () => {
   });
 
   describe('create()', () => {
-    it('should call upload()', () => {
-      const spy = expect.spyOn(Files, 'upload');
-      Files.create();
-      expect(spy).toHaveBeenCalled();
+    it.only('should call upload()', () => {
+      const spy = sinon.spy(fileFuncs, 'upload');
+      fileFuncs.create();
+      expect(spy.calledOnce).toEqual(true);
     });
 
     it('should call upload() with file', () => {
