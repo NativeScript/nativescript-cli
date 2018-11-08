@@ -201,7 +201,7 @@ export class Cache {
       if (docsToSave.length > 0) {
         docsToSave = docsToSave.map((doc) => {
           if (!doc._id) {
-            return Object.assign({
+            return Object.assign({}, {
               _id: generateId(),
               _kmd: Object.assign({}, doc._kmd, { local: true })
             }, doc);

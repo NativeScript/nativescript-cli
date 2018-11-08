@@ -70,7 +70,7 @@ export class NetworkStore {
           kinveyFileTTL,
           kinveyFileTLS,
         } = options;
-        const queryObject = Object.assign(query ? query.toQueryObject() : {}, { kinveyfile_ttl: kinveyFileTTL, kinveyfile_tls: kinveyFileTLS });
+        const queryObject = Object.assign({}, query ? query.toQueryObject() : {}, { kinveyfile_ttl: kinveyFileTTL, kinveyfile_tls: kinveyFileTLS });
         const url = formatKinveyUrl(api.protocol, api.host, this.pathname, queryObject);
         const request = createRequest(RequestMethod.GET, url);
         request.headers.customRequestProperties = properties;
@@ -105,7 +105,7 @@ export class NetworkStore {
           trace,
           skipBL
         } = options;
-        const queryObject = Object.assign(query ? query.toQueryObject() : {}, {});
+        const queryObject = Object.assign({}, query ? query.toQueryObject() : {}, {});
         const url = formatKinveyUrl(api.protocol, api.host, `${this.pathname}/_count`, queryObject);
         const request = createRequest(RequestMethod.GET, url);
         request.headers.customRequestProperties = properties;
@@ -274,7 +274,7 @@ export class NetworkStore {
       trace,
       skipBL
     } = options;
-    const queryObject = Object.assign(query ? query.toQueryObject() : {}, {});
+    const queryObject = Object.assign({}, query ? query.toQueryObject() : {}, {});
     const url = formatKinveyUrl(api.protocol, api.host, this.pathname, queryObject);
     const request = createRequest(RequestMethod.DELETE, url);
     request.headers.customRequestProperties = properties;

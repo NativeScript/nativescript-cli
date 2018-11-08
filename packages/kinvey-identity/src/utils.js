@@ -3,7 +3,7 @@ export function mergeSocialIdentity(origSocialIdentity = {}, newSocialIdentity =
   return Object
     .keys(newSocialIdentity)
     .reduce((socialIdentity, identity) => {
-      socialIdentity[identity] = Object.assign(origSocialIdentity[identity], newSocialIdentity[identity]);
+      socialIdentity[identity] = Object.assign({}, origSocialIdentity[identity], newSocialIdentity[identity]);
       return socialIdentity;
     }, mergedSocialIdentity);
 }

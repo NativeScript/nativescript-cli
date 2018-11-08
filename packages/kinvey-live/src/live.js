@@ -54,7 +54,6 @@ export function register(config) {
     listener = new Listener();
     pubnub.addListener(listener);
   }
-  return this;
 }
 
 export function unregister() {

@@ -125,7 +125,7 @@ export class User {
 
   async update(data) {
     const { api, appKey, masterSecret } = getConfig();
-    const body = Object.assign(this.data, data);
+    const body = Object.assign({}, this.data, data);
 
     if (!data) {
       throw new KinveyError('No user was provided to be updated.');

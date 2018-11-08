@@ -291,7 +291,7 @@ export class CacheStore {
       // TODO in newer version
       // if (autoSync) {
       //   await sync.push();
-      //   return this.pull(query, Object.assign({ useDeltaSet, useAutoPagination, autoSync }, options));
+      //   return this.pull(query, Object.assign({}, { useDeltaSet, useAutoPagination, autoSync }, options));
       // }
 
       if (count === 1) {
@@ -305,12 +305,12 @@ export class CacheStore {
 
     // Delta Set
     if (useDeltaSet) {
-      return sync.deltaset(query, Object.assign({ useDeltaSet, useAutoPagination, autoSync }, options));
+      return sync.deltaset(query, Object.assign({}, { useDeltaSet, useAutoPagination, autoSync }, options));
     }
 
     // Auto Paginate
     if (useAutoPagination) {
-      return sync.autopaginate(query, Object.assign({ useDeltaSet, useAutoPagination, autoSync }, options));
+      return sync.autopaginate(query, Object.assign({}, { useDeltaSet, useAutoPagination, autoSync }, options));
     }
 
     // Regular sync pull

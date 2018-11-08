@@ -370,7 +370,7 @@ describe('CacheStore', () => {
             const changedEntity2 = Object.assign({}, entity2, { author: 'Kinvey' });
             nock(client.apiHostname)
               .get(`${store.pathname}/_deltaset`)
-              .query(Object.assign({ since: lastRequestDate.toISOString() }, query.toQueryString()))
+              .query(Object.assign({}, { since: lastRequestDate.toISOString() }, query.toQueryString()))
               .reply(200, { changed: [changedEntity2], deleted: [{ _id: entity1._id }] }, {
                 'X-Kinvey-Request-Start': new Date().toISOString()
               });

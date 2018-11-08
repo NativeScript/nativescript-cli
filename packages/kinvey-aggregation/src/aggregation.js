@@ -6,7 +6,7 @@ import { Query } from 'kinvey-query';
  */
 export class Aggregation {
   constructor(aggregation) {
-    const config = Object.assign({
+    const config = Object.assign({}, {
       query: null,
       initial: {},
       key: {},
