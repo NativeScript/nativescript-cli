@@ -9,7 +9,7 @@ const UNSUPPORTED_CONDITIONS = ['$nearSphere'];
 
 export class Query {
   constructor(query) {
-    const config = Object.assign({
+    const config = Object.assign({}, {
       fields: [],
       filter: {},
       sort: {},

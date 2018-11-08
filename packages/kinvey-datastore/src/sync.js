@@ -288,7 +288,7 @@ export class Sync {
     const queryCache = new QueryCache(this.collectionName, this.tag);
 
     // Find the docs on the backend
-    const response = await network.find(query, Object.assign(options, { rawResponse: true })).toPromise();
+    const response = await network.find(query, Object.assign({}, options, { rawResponse: true })).toPromise();
     const docs = response.data;
 
     // Clear the cache if a query was not provided
@@ -370,7 +370,7 @@ export class Sync {
     await cache.clear();
 
     // Get the total count of docs
-    const response = await network.count(query, Object.assign(options, { rawResponse: true })).toPromise();
+    const response = await network.count(query, Object.assign({}, options, { rawResponse: true })).toPromise();
     const count = 'count' in response.data ? response.data.count : Infinity;
 
     // Create the pages

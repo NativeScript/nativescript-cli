@@ -63,51 +63,51 @@ describe('App', () => {
     it('should throw an error if instance id is not a string', () => {
       expect(() => {
         const instanceId = {};
-        const client = init(Object.assign({ instanceId }, basicConfig));
+        const client = init(Object.assign({}, { instanceId }, basicConfig));
         return client;
       }).to.throw(/Instance ID must be a string./);
     });
 
     it('should be able to provide an instance id', () => {
       const instanceId = randomString().toLowerCase();
-      const client = init(Object.assign({ instanceId }, basicConfig));
+      const client = init(Object.assign({}, { instanceId }, basicConfig));
       expect(client.apiHostname).to.equal(`https://${instanceId}-baas.kinvey.com`);
       expect(client.micHostname).to.equal(`https://${instanceId}-auth.kinvey.com`);
     });
 
     it('should be able to provide custom apiHostname with protocol https:', () => {
       const apiHostname = 'https://mybaas.kinvey.com';
-      const client = init(Object.assign({ apiHostname: apiHostname }, basicConfig));
+      const client = init(Object.assign({}, { apiHostname: apiHostname }, basicConfig));
       expect(client.apiHostname).to.equal(apiHostname);
     });
 
     it('should be able to provide custom apiHostname with protocol http:', () => {
       const apiHostname = 'http://mybaas.kinvey.com';
-      const client = init(Object.assign({ apiHostname: apiHostname }, basicConfig));
+      const client = init(Object.assign({}, { apiHostname: apiHostname }, basicConfig));
       expect(client.apiHostname).to.equal(apiHostname);
     });
 
     it('should be able to provide custom apiHostname without protocol', () => {
       const apiHostname = 'myauth.kinvey.com';
-      const client = init(Object.assign({ apiHostname: apiHostname }, basicConfig));
+      const client = init(Object.assign({}, { apiHostname: apiHostname }, basicConfig));
       expect(client.apiHostname).to.equal(`https://${apiHostname}`);
     });
 
     it('should be able to provide custom micHostname with protocol https:', () => {
       const micHostname = 'https://myauth.kinvey.com';
-      const client = init(Object.assign({ micHostname: micHostname }, basicConfig));
+      const client = init(Object.assign({}, { micHostname: micHostname }, basicConfig));
       expect(client.micHostname).to.equal(micHostname);
     });
 
     it('should be able to provide custom micHostname with protocol http:', () => {
       const micHostname = 'http://myauth.kinvey.com';
-      const client = init(Object.assign({ micHostname: micHostname }, basicConfig));
+      const client = init(Object.assign({}, { micHostname: micHostname }, basicConfig));
       expect(client.micHostname).to.equal(micHostname);
     });
 
     it('should be able to provide custom micHostname without protocol', () => {
       const micHostname = 'myauth.kinvey.com';
-      const client = init(Object.assign({ micHostname: micHostname }, basicConfig));
+      const client = init(Object.assign({}, { micHostname: micHostname }, basicConfig));
       expect(client.micHostname).to.equal(`https://${micHostname}`);
     });
 
@@ -117,7 +117,7 @@ describe('App', () => {
         appSecret: randomString()
       }
       const appKey = randomString();
-      const client = init(Object.assign(extendableConfig,{ appKey: appKey }));
+      const client = init(Object.assign({}, extendableConfig,{ appKey: appKey }));
       expect(client.appKey).to.equal(appKey);
     });
 
@@ -127,7 +127,7 @@ describe('App', () => {
         appSecret: randomString()
       }
       const appSecret = randomString();
-      const client = init(Object.assign(extendableConfig,{ appSecret: appSecret }));
+      const client = init(Object.assign({}, extendableConfig,{ appSecret: appSecret }));
       expect(client.appSecret).to.equal(appSecret);
     });
 
@@ -139,19 +139,19 @@ describe('App', () => {
 
     it('should be able to provide an encryptionKey', () => {
       const encryptionKey = randomString();
-      const client = init(Object.assign({ encryptionKey: encryptionKey }, basicConfig));
+      const client = init(Object.assign({}, { encryptionKey: encryptionKey }, basicConfig));
       expect(client.encryptionKey).to.equal(encryptionKey);
     });
 
     it('should be able to provide an appVersion', () => {
       const appVersion = randomString();
-      const client = init(Object.assign({ appVersion: appVersion }, basicConfig));
+      const client = init(Object.assign({}, { appVersion: appVersion }, basicConfig));
       expect(client.appVersion).to.equal(appVersion);
     });
 
     it('should be able to provide a defaultTimeout', () => {
       const timeout = 1;
-      const client = init(Object.assign({ defaultTimeout: timeout }, basicConfig));
+      const client = init(Object.assign({}, { defaultTimeout: timeout }, basicConfig));
       expect(client.defaultTimeout).to.equal(timeout);
     });
 
@@ -162,18 +162,18 @@ describe('App', () => {
       });
 
       it(`should use ${defaultTimeout}ms when defaultTimeout is less than 0`, function() {
-        const client = init(Object.assign(basicConfig,{ defaultTimeout: -1 }));
+        const client = init(Object.assign({}, basicConfig,{ defaultTimeout: -1 }));
         expect(client.defaultTimeout).to.equal(defaultTimeout);
       });
 
       it(`should use ${defaultTimeout}ms when defaultTimeout is not a number`, function() {//TODO: when the value for defaultTimeout is wrong, we should use the DEFAULT_VALUE
-        const client = init(Object.assign(basicConfig,{ defaultTimeout: 'foo' }));
+        const client = init(Object.assign({}, basicConfig,{ defaultTimeout: 'foo' }));
         expect(client.defaultTimeout).to.equal(defaultTimeout);
       });
 
       it('should set the defaultTimeout to 1', function() {
         const timeout = 1;
-        const client = init(Object.assign(basicConfig,{ defaultTimeout: timeout }));
+        const client = init(Object.assign({}, basicConfig,{ defaultTimeout: timeout }));
         expect(client.defaultTimeout).to.equal(timeout);
       });
     });

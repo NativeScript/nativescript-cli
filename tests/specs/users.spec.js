@@ -226,7 +226,7 @@ describe('User tests', () => {
         .catch(done);
     });
 
-    it.skip('should signup with a user and set the user as the active user', (done) => {
+    it('should signup with a user and set the user as the active user', (done) => {
       const username = utilities.randomString();
       const newUser = new Kinvey.User({ username: username, password: utilities.randomString() });
       Kinvey.User.signup(newUser)
@@ -277,7 +277,7 @@ describe('User tests', () => {
         .catch(done);
     });
 
-    it.skip('should merge the signup data and set the user as the active user', (done) => {
+    it('should merge the signup data and set the user as the active user', (done) => {
       const username = utilities.randomString();
       const password = utilities.randomString();
 
@@ -363,7 +363,7 @@ describe('User tests', () => {
         .catch(done);
     });
 
-    it.skip('should throw an error if the user does not have an _id', (done) => {
+    it('should throw an error if the user does not have an _id', (done) => {
       Kinvey.User.update({
         email: utilities.randomString()
       })
@@ -384,8 +384,9 @@ describe('User tests', () => {
         .catch(done);
     });
 
-    it.skip('should throw an error if the query argument is not an instance of the Query class', (done) => {
+    it('should throw an error if the query argument is not an instance of the Query class', (done) => {
       Kinvey.User.lookup({})
+        .toPromise()
         .catch((error) => {
           expect(error.message).to.equal('Invalid query. It must be an instance of the Query class.');
           done();
@@ -397,6 +398,7 @@ describe('User tests', () => {
       const query = new Kinvey.Query();
       query.equalTo('username', username);
       Kinvey.User.lookup(query)
+        .toPromise()
         .then((users) => {
           expect(users).to.be.an('array');
           expect(users.length).to.equal(1);

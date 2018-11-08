@@ -146,7 +146,7 @@ async function getTokenWithCode(code, clientId, redirectUri) {
   });
   const response = await request.execute();
   const token = response.data;
-  return Object.assign({
+  return Object.assign({}, {
     identity: IDENTITY,
     client_id: clientId,
     redirect_uri: redirectUri,

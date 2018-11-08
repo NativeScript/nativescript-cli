@@ -6,7 +6,7 @@ import * as config from './config';
 import * as utilities from './utils';
 
 const dataStoreTypes = [Kinvey.DataStoreType.Cache, Kinvey.DataStoreType.Sync];
-const notFoundErrorName = 'EntityNotFound';
+const notFoundErrorName = 'NotFoundError';
 const collectionName = config.collectionName;
 let networkStore;
 let syncStore;
@@ -277,7 +277,7 @@ dataStoreTypes.forEach((currentDataStoreType) => {
             .catch(done);
         });
 
-        it.skip('should return only the entities, matching the query for a delete operation', (done) => {
+        it('should return only the entities, matching the query for a delete operation', (done) => {
           const query = new Kinvey.Query();
           query.equalTo('_id', entity3._id);
           storeToTest.pendingSyncEntities(query)
@@ -326,7 +326,7 @@ dataStoreTypes.forEach((currentDataStoreType) => {
             .catch(done);
         });
 
-        it.skip('should disregard the passed query and push all entities to the backend', (done) => {
+        it('should disregard the passed query and push all entities to the backend', (done) => {
           const query = new Kinvey.Query();
           query.equalTo('_id', entity1._id);
           storeToTest.push(query)

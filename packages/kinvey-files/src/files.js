@@ -33,7 +33,7 @@ export async function find(query = new Query(), options = {}) {
       throw new Error('Invalid query. It must be an instance of the Query class.');
     }
 
-    queryStringObject = Object.assign(queryStringObject, query.toQueryObject());
+    queryStringObject = Object.assign({}, queryStringObject, query.toQueryObject());
   }
 
   if (isNumber(ttl)) {
@@ -87,7 +87,7 @@ export async function stream(id, options = {}) {
 }
 
 function transformMetadata(file = {}, metadata = {}) {
-  const fileMetadata = Object.assign({
+  const fileMetadata = Object.assign({}, {
     filename: file._filename || file.name,
     public: false,
     size: file.size || file.length,
