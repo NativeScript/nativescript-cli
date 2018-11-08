@@ -1,8 +1,6 @@
 import { expect } from 'chai';
-import nock from 'nock';
-import { init } from './app';
-import { register } from 'kinvey-http-node';
 import { randomString } from 'kinvey-test-utils';
+import { init } from './app';
 const defaultTimeout = process.env.KINVEY_DEFAULT_TIMEOUT || 60000;
 const basicConfig = {
   appKey: randomString(),
@@ -10,10 +8,6 @@ const basicConfig = {
 }
 
 describe('App', () => {
-  before(() => {
-    register();
-  });
-
   describe('init()', () => {
     it('should throw an error if an appKey is not provided', () => {
       expect(() => {

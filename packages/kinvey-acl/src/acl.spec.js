@@ -1,7 +1,9 @@
+// eslint-disable-next-line import/no-extraneous-dependencies
 import expect from 'expect';
-import { Acl } from './acl';
+// eslint-disable-next-line import/no-extraneous-dependencies
 import { randomString } from 'kinvey-test-utils';
 import { KinveyError } from 'kinvey-errors';
+import { Acl } from './acl';
 
 describe('Acl', () => {
   describe('constructor', () => {
@@ -31,7 +33,7 @@ describe('Acl', () => {
   describe('creator', () => {
     it('should be creator value', () => {
       const creator = randomString();
-      const acl = new Acl({ _acl: { creator: creator } });
+      const acl = new Acl({ _acl: { creator } });
       expect(acl.creator).toEqual(creator);
     });
   });
@@ -339,7 +341,7 @@ describe('Acl', () => {
           w: [randomString()]
         }
       };
-      const acl = new Acl({ _acl: _acl });
+      const acl = new Acl({ _acl });
       expect(acl.toPlainObject()).toEqual(_acl);
     });
   });

@@ -2,4 +2,3 @@ node_modules
 **/package.json
 **/README.md
 **/LICENSE
-*.d.ts
