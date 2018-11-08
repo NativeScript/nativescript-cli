@@ -38,7 +38,7 @@ export class IOSSimulator implements Mobile.IiOSDevice {
 		await this.$iOSEmulatorServices.postDarwinNotification(attachRequestMessage, this.deviceInfo.identifier);
 		const port = await this.$iOSDebuggerPortService.getPort({ projectDir, deviceId: this.deviceInfo.identifier, appId });
 		if (!port) {
-			this.$errors.fail("NativeScript debugger was not able to get inspector socket port.");
+			this.$errors.failWithoutHelp("Device socket port cannot be found.");
 		}
 
 		try {

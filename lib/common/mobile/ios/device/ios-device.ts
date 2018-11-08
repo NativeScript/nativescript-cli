@@ -93,7 +93,7 @@ export class IOSDevice implements Mobile.IiOSDevice {
 		await this.$iOSSocketRequestExecutor.executeAttachRequest(this, constants.AWAIT_NOTIFICATION_TIMEOUT_SECONDS, appId);
 		const port = await this.$iOSDebuggerPortService.getPort({ projectDir, deviceId: this.deviceInfo.identifier, appId });
 		if (!port) {
-			this.$errors.fail("NativeScript debugger was not able to get inspector socket port.");
+			this.$errors.failWithoutHelp("Device socket port cannot be found.");
 		}
 
 		const deviceId = this.deviceInfo.identifier;

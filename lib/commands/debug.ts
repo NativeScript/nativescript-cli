@@ -121,7 +121,7 @@ export class DebugPlatformCommand extends ValidatePlatformCommandBase implements
 		}
 
 		if (this.$options.hmr && this.$options.debugBrk) {
-			this.$errors.fail("Expected exactly one of the --debug-brk and --hmr options");
+			this.$errors.fail("--debug-brk and --hmr flags cannot be combined");
 		}
 
 		const minSupportedWebpackVersion = this.$options.hmr ? LiveSyncCommandHelper.MIN_SUPPORTED_WEBPACK_VERSION_WITH_HMR : null;
