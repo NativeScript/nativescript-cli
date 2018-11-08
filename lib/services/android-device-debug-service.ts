@@ -2,7 +2,7 @@ import { sleep } from "../common/helpers";
 import { DebugServiceBase } from "./debug-service-base";
 import { LiveSyncPaths } from "../common/constants";
 
-export class AndroidDebugService extends DebugServiceBase implements IPlatformDebugService {
+export class AndroidDeviceDebugService extends DebugServiceBase implements IDeviceDebugService {
 	private _packageName: string;
 	private deviceIdentifier: string;
 
@@ -204,4 +204,4 @@ export class AndroidDebugService extends DebugServiceBase implements IPlatformDe
 	}
 }
 
-$injector.register("androidDebugService", AndroidDebugService, false);
+$injector.register("androidDeviceDebugService", AndroidDeviceDebugService, false);

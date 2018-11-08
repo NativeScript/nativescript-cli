@@ -137,7 +137,7 @@ class TestExecutionService implements ITestExecutionService {
 
 					if (this.$options.debugBrk) {
 						this.$logger.info('Starting debugger...');
-						const debugService: IPlatformDebugService = this.$injector.resolve(`${platform}DebugService`);
+						const debugService: IDeviceDebugService = this.$injector.resolve(`${platform}DebugService`);
 						const debugData = this.getDebugData(platform, projectData, deployOptions);
 						await debugService.debugStart(debugData, this.$options);
 					}
@@ -172,7 +172,7 @@ class TestExecutionService implements ITestExecutionService {
 
 		const karmaConfig = this.getKarmaConfiguration(platform, projectData),
 			// In case you want to debug the unit test runner, add "--inspect-brk=<port>" as a first element in the array of args.
-			karmaRunner = this.$childProcess.spawn(process.execPath, [ path.join(__dirname, "karma-execution.js")], { stdio: ["inherit", "inherit", "inherit", "ipc"] }),
+			karmaRunner = this.$childProcess.spawn(process.execPath, [path.join(__dirname, "karma-execution.js")], { stdio: ["inherit", "inherit", "inherit", "ipc"] }),
 			launchKarmaTests = async (karmaData: any) => {
 				this.$logger.trace("## Unit-testing: Parent process received message", karmaData);
 				let port: string;

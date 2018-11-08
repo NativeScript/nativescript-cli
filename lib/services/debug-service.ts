@@ -6,7 +6,7 @@ import { CONNECTED_STATUS } from "../common/constants";
 import { DebugTools, TrackActionNames } from "../constants";
 
 export class DebugService extends EventEmitter implements IDebugService {
-	private _platformDebugServices: IDictionary<IPlatformDebugService>;
+	private _platformDebugServices: IDictionary<IDeviceDebugService>;
 	constructor(private $devicesService: Mobile.IDevicesService,
 		private $errors: IErrors,
 		private $injector: IInjector,
@@ -51,7 +51,7 @@ export class DebugService extends EventEmitter implements IDebugService {
 			this.$errors.failWithoutHelp(`Unsupported device OS: ${device.deviceInfo.platform}. You can debug your applications only on iOS or Android.`);
 		}
 
-		// TODO: Consider to move this code to ios-debug-service
+		// TODO: Consider to move this code to ios-device-debug-service
 		if (this.$mobileHelper.isiOSPlatform(device.deviceInfo.platform)) {
 			if (device.isEmulator && !debugData.pathToAppPackage && debugOptions.debugBrk) {
 				this.$errors.failWithoutHelp("To debug on iOS simulator you need to provide path to the app package.");
@@ -72,13 +72,13 @@ export class DebugService extends EventEmitter implements IDebugService {
 		return debugService.debugStop();
 	}
 
-	protected getDebugService(device: Mobile.IDevice): IPlatformDebugService {
+	protected getDebugService(device: Mobile.IDevice): IDeviceDebugService {
 		if (!this._platformDebugServices[device.deviceInfo.identifier]) {
 			const platform = device.deviceInfo.platform;
 			if (this.$mobileHelper.isiOSPlatform(platform)) {
-				this._platformDebugServices[device.deviceInfo.identifier] = this.$injector.resolve("iOSDebugService", { device });
+				this._platformDebugServices[device.deviceInfo.identifier] = this.$injector.resolve("iOSDeviceDebugService", { device });
 			} else if (this.$mobileHelper.isAndroidPlatform(platform)) {
-				this._platformDebugServices[device.deviceInfo.identifier] = this.$injector.resolve("androidDebugService", { device });
+				this._platformDebugServices[device.deviceInfo.identifier] = this.$injector.resolve("androidDeviceDebugService", { device });
 			} else {
 				this.$errors.failWithoutHelp(DebugCommandErrors.UNSUPPORTED_DEVICE_OS_FOR_DEBUGGING);
 			}
@@ -89,12 +89,12 @@ export class DebugService extends EventEmitter implements IDebugService {
 		return this._platformDebugServices[device.deviceInfo.identifier];
 	}
 
-	private getDebugServiceByIdentifier(deviceIdentifier: string): IPlatformDebugService {
+	private getDebugServiceByIdentifier(deviceIdentifier: string): IDeviceDebugService {
 		const device = this.$devicesService.getDeviceByIdentifier(deviceIdentifier);
 		return this.getDebugService(device);
 	}
 
-	private attachConnectionErrorHandlers(platformDebugService: IPlatformDebugService) {
+	private attachConnectionErrorHandlers(platformDebugService: IDeviceDebugService) {
 		let connectionErrorHandler = (e: Error) => this.emit(CONNECTION_ERROR_EVENT_NAME, e);
 		connectionErrorHandler = connectionErrorHandler.bind(this);
 		platformDebugService.on(CONNECTION_ERROR_EVENT_NAME, connectionErrorHandler);

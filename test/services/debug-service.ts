@@ -74,9 +74,9 @@ describe("debugService", () => {
 			}
 		});
 
-		testInjector.register("androidDebugService", PlatformDebugService);
+		testInjector.register("androidDeviceDebugService", PlatformDebugService);
 
-		testInjector.register("iOSDebugService", PlatformDebugService);
+		testInjector.register("iOSDeviceDebugService", PlatformDebugService);
 
 		testInjector.register("mobileHelper", {
 			isAndroidPlatform: (platform: string) => {
@@ -167,7 +167,7 @@ describe("debugService", () => {
 
 				const testInjector = getTestInjectorForTestConfiguration(testData);
 				const expectedErrorMessage = "Platform specific error";
-				const platformDebugService = testInjector.resolve<IPlatformDebugService>(`${platform}DebugService`);
+				const platformDebugService = testInjector.resolve<IDeviceDebugService>(`${platform}DebugService`);
 				platformDebugService.debug = async (debugData: IDebugData, debugOptions: IDebugOptions): Promise<any> => {
 					throw new Error(expectedErrorMessage);
 				};
@@ -178,11 +178,11 @@ describe("debugService", () => {
 				await assert.isRejected(debugService.debug(debugData, null), expectedErrorMessage);
 			};
 
-			it("androidDebugService's debug method fails", async () => {
+			it("androidDeviceDebugService's debug method fails", async () => {
 				await assertIsRejectedWhenPlatformDebugServiceFails("android");
 			});
 
-			it("iOSDebugService's debug method fails", async () => {
+			it("iOSDeviceDebugService's debug method fails", async () => {
 				await assertIsRejectedWhenPlatformDebugServiceFails("iOS");
 			});
 		});
@@ -204,7 +204,7 @@ describe("debugService", () => {
 					await assert.isFulfilled(debugService.debug(debugData, null));
 
 					const expectedErrorData = { deviceIdentifier: "deviceId", message: "my message", code: 2048 };
-					const platformDebugService = testInjector.resolve<IPlatformDebugService>(`${platform}DebugService`);
+					const platformDebugService = testInjector.resolve<IDeviceDebugService>(`${platform}DebugService`);
 					platformDebugService.emit(CONNECTION_ERROR_EVENT_NAME, expectedErrorData);
 					assert.deepEqual(dataRaisedForConnectionError, expectedErrorData);
 				});

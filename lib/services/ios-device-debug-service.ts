@@ -9,7 +9,7 @@ const inspectorAppName = "NativeScript Inspector.app";
 const inspectorNpmPackageName = "tns-ios-inspector";
 const inspectorUiDir = "WebInspectorUI/";
 
-export class IOSDebugService extends DebugServiceBase implements IPlatformDebugService {
+export class IOSDeviceDebugService extends DebugServiceBase implements IDeviceDebugService {
 	private _lldbProcess: ChildProcess;
 	private deviceIdentifier: string;
 
@@ -195,4 +195,4 @@ export class IOSDebugService extends DebugServiceBase implements IPlatformDebugS
 	}
 }
 
-$injector.register("iOSDebugService", IOSDebugService, false);
+$injector.register("iOSDeviceDebugService", IOSDeviceDebugService, false);

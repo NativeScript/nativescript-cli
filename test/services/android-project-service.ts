@@ -51,7 +51,7 @@ const getDefautlBuildConfig = (): IBuildConfig => {
 	};
 };
 
-describe("androidDebugService", () => {
+describe("androidDeviceDebugService", () => {
 	let injector: IInjector;
 	let androidProjectService: IPlatformProjectService;
 	let sandbox: sinon.SinonSandbox = null;
@@ -86,7 +86,7 @@ describe("androidDebugService", () => {
 			const buildConfig = getDefautlBuildConfig();
 
 			//act
-			await androidProjectService.buildProject("local/local", projectData, buildConfig, );
+			await androidProjectService.buildProject("local/local", projectData, buildConfig);
 
 			//assert
 			assert.include(childProcess.lastCommandArgs, "assembleRelease");
@@ -98,7 +98,7 @@ describe("androidDebugService", () => {
 			buildConfig.release = false;
 
 			//act
-			await androidProjectService.buildProject("local/local", projectData, buildConfig, );
+			await androidProjectService.buildProject("local/local", projectData, buildConfig);
 
 			//assert
 			assert.include(childProcess.lastCommandArgs, "assembleDebug");
@@ -110,7 +110,7 @@ describe("androidDebugService", () => {
 			buildConfig.androidBundle = true;
 
 			//act
-			await androidProjectService.buildProject("local/local", projectData, buildConfig, );
+			await androidProjectService.buildProject("local/local", projectData, buildConfig);
 
 			//assert
 			assert.include(childProcess.lastCommandArgs, "bundleRelease");
@@ -123,7 +123,7 @@ describe("androidDebugService", () => {
 			buildConfig.release = false;
 
 			//act
-			await androidProjectService.buildProject("local/local", projectData, buildConfig, );
+			await androidProjectService.buildProject("local/local", projectData, buildConfig);
 
 			//assert
 			assert.include(childProcess.lastCommandArgs, "bundleDebug");

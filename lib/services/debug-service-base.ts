@@ -1,6 +1,6 @@
 import { EventEmitter } from "events";
 
-export abstract class DebugServiceBase extends EventEmitter implements IPlatformDebugService {
+export abstract class DebugServiceBase extends EventEmitter implements IDeviceDebugService {
 	constructor(
 		protected device: Mobile.IDevice,
 		protected $devicesService: Mobile.IDevicesService

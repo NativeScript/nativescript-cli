@@ -140,7 +140,7 @@ interface IDebugService extends IDebugServiceBase {
 /**
  * Describes actions required for debugging on specific platform (Android or iOS).
  */
-interface IPlatformDebugService extends IPlatform, NodeJS.EventEmitter {
+interface IDeviceDebugService extends IPlatform, NodeJS.EventEmitter {
 	/**
 	 * Starts debug operation.
 	 * @param {IAppDebugData} debugData Describes information for application that will be debugged.

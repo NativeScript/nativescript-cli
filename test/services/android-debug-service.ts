@@ -1,11 +1,11 @@
-import { AndroidDebugService } from "../../lib/services/android-debug-service";
+import { AndroidDeviceDebugService } from "../../lib/services/android-device-debug-service";
 import { Yok } from "../../lib/common/yok";
 import * as stubs from "../stubs";
 import { assert } from "chai";
 
 const expectedDevToolsCommitSha = "02e6bde1bbe34e43b309d4ef774b1168d25fd024";
 
-class AndroidDebugServiceInheritor extends AndroidDebugService {
+class AndroidDeviceDebugServiceInheritor extends AndroidDeviceDebugService {
 	constructor(protected $devicesService: Mobile.IDevicesService,
 		$errors: IErrors,
 		$logger: ILogger,
@@ -43,7 +43,7 @@ interface IChromeUrlTestCase {
 	scenarioName: string;
 }
 
-describe("androidDebugService", () => {
+describe("androidDeviceDebugService", () => {
 	describe("getChromeDebugUrl", () => {
 		const expectedPort = 12345;
 		const customDevToolsCommit = "customDevToolsCommit";
@@ -156,8 +156,8 @@ describe("androidDebugService", () => {
 		for (const testCase of chromUrlTestCases) {
 			it(`returns correct url when ${testCase.scenarioName}`, () => {
 				const testInjector = createTestInjector();
-				const androidDebugService = testInjector.resolve<AndroidDebugServiceInheritor>(AndroidDebugServiceInheritor);
-				const actualChromeUrl = androidDebugService.getChromeDebugUrl(testCase.debugOptions, expectedPort);
+				const androidDeviceDebugService = testInjector.resolve<AndroidDeviceDebugServiceInheritor>(AndroidDeviceDebugServiceInheritor);
+				const actualChromeUrl = androidDeviceDebugService.getChromeDebugUrl(testCase.debugOptions, expectedPort);
 				assert.equal(actualChromeUrl, testCase.expectedChromeUrl);
 			});
 		}

@@ -29,8 +29,8 @@ $injector.require("preparePlatformNativeService", "./services/prepare-platform-n
 
 $injector.require("debugDataService", "./services/debug-data-service");
 $injector.requirePublicClass("debugService", "./services/debug-service");
-$injector.require("iOSDebugService", "./services/ios-debug-service");
-$injector.require("androidDebugService", "./services/android-debug-service");
+$injector.require("iOSDeviceDebugService", "./services/ios-device-debug-service");
+$injector.require("androidDeviceDebugService", "./services/android-device-debug-service");
 
 $injector.require("userSettingsService", "./services/user-settings-service");
 $injector.requirePublic("analyticsSettingsService", "./services/analytics-settings-service");
