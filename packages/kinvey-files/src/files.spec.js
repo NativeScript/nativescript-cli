@@ -10,7 +10,10 @@ import { register } from 'kinvey-http-node';
 import { login } from 'kinvey-identity';
 import { init } from 'kinvey-app';
 import * as Files from './files';
+import fileFuncs from './fileModule';
+import sinon from 'sinon';
 
+Files.upload
 chai.use(require('chai-as-promised'));
 chai.should();
 
@@ -645,7 +648,7 @@ describe('Files', () => {
       return promise.should.be.fulfilled;
     });
 
-    it('should resume a file upload when a 5xx status code is received', () => {
+    it('should resume a file upload when a 5xx status code is received', () => {//500 is considered an error and is thrown at rquest.execute so the evaluation of the response on upload does not happen
       const file = fs.readFileSync(path.resolve(__dirname, './test.png'), 'utf8');
       const fileSize = file.size || file.length;
 
@@ -798,7 +801,7 @@ describe('Files', () => {
       return promise.should.be.fulfilled;
     });
 
-    it('should fail to upload a file when a 5xx status code is received mutiple times', () => {
+    it('should fail to upload a file when a 5xx status code is received mutiple times', () => {//I think this only succeeds because of the above error
       const file = fs.readFileSync(path.resolve(__dirname, './test.png'), 'utf8');
       const fileSize = file.size || file.length;
 
@@ -993,10 +996,10 @@ describe('Files', () => {
   });
 
   describe('create()', () => {
-    it('should call upload()', () => {
-      const spy = expect.spyOn(Files, 'upload');
-      Files.create();
-      expect(spy).toHaveBeenCalled();
+    it.only('should call upload()', () => {
+      const spy = sinon.spy(fileFuncs, 'upload');
+      fileFuncs.create();
+      expect(spy.calledOnce).toEqual(true);
     });
 
     it('should call upload() with file', () => {
