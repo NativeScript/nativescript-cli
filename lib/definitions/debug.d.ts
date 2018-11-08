@@ -1,3 +1,4 @@
+// TODO: remove IDeviceIdentifier
 /**
  * Describes information for starting debug process.
  */
