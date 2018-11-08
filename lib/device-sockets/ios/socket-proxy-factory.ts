@@ -166,7 +166,6 @@ export class SocketProxyFactory extends EventEmitter implements ISocketProxyFact
 		});
 
 		this.$logger.info("Opened localhost " + localPort);
-		console.log("return new proxy");
 		return server;
 	}
 
