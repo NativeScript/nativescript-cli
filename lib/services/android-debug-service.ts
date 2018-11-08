@@ -4,6 +4,8 @@ import { LiveSyncPaths } from "../common/constants";
 
 export class AndroidDebugService extends DebugServiceBase implements IPlatformDebugService {
 	private _packageName: string;
+	private deviceIdentifier: string;
+
 	public get platform() {
 		return "android";
 	}
@@ -17,7 +19,9 @@ export class AndroidDebugService extends DebugServiceBase implements IPlatformDe
 		private $net: INet,
 		private $projectDataService: IProjectDataService,
 		private $deviceLogProvider: Mobile.IDeviceLogProvider) {
+
 		super(device, $devicesService);
+		this.deviceIdentifier = device.deviceInfo.identifier;
 	}
 
 	public async debug(debugData: IDebugData, debugOptions: IDebugOptions): Promise<string> {
@@ -27,10 +31,10 @@ export class AndroidDebugService extends DebugServiceBase implements IPlatformDe
 			: await this.debugOnDevice(debugData, debugOptions);
 
 		if (!debugOptions.justlaunch) {
-			const pid = await this.$androidProcessService.getAppProcessId(debugData.deviceIdentifier, debugData.applicationIdentifier);
+			const pid = await this.$androidProcessService.getAppProcessId(this.deviceIdentifier, debugData.applicationIdentifier);
 			if (pid) {
-				this.$deviceLogProvider.setApplicationPidForDevice(debugData.deviceIdentifier, pid);
-				const device = await this.$devicesService.getDevice(debugData.deviceIdentifier);
+				this.$deviceLogProvider.setApplicationPidForDevice(this.deviceIdentifier, pid);
+				const device = await this.$devicesService.getDevice(this.deviceIdentifier);
 				await device.openDeviceLogStream();
 			}
 		}
@@ -39,7 +43,7 @@ export class AndroidDebugService extends DebugServiceBase implements IPlatformDe
 	}
 
 	public async debugStart(debugData: IDebugData, debugOptions: IDebugOptions): Promise<void> {
-		await this.$devicesService.initialize({ platform: this.platform, deviceId: debugData.deviceIdentifier });
+		await this.$devicesService.initialize({ platform: this.platform, deviceId: this.deviceIdentifier });
 		const projectData = this.$projectDataService.getProjectData(debugData.projectDir);
 		const appData: Mobile.IApplicationData = {
 			appId: debugData.applicationIdentifier,
@@ -48,7 +52,7 @@ export class AndroidDebugService extends DebugServiceBase implements IPlatformDe
 
 		const action = (device: Mobile.IAndroidDevice): Promise<void> => this.debugStartCore(appData, debugOptions);
 
-		await this.$devicesService.execute(action, this.getCanExecuteAction(debugData.deviceIdentifier));
+		await this.$devicesService.execute(action, this.getCanExecuteAction(this.deviceIdentifier));
 	}
 
 	public debugStop(): Promise<void> {
@@ -109,7 +113,7 @@ export class AndroidDebugService extends DebugServiceBase implements IPlatformDe
 			this.$logger.out("Using ", packageFile);
 		}
 
-		await this.$devicesService.initialize({ platform: this.platform, deviceId: debugData.deviceIdentifier });
+		await this.$devicesService.initialize({ platform: this.platform, deviceId: this.deviceIdentifier });
 
 		const projectName = this.$projectDataService.getProjectData(debugData.projectDir).projectName;
 		const appData: Mobile.IApplicationData = {
@@ -119,7 +123,7 @@ export class AndroidDebugService extends DebugServiceBase implements IPlatformDe
 
 		const action = (device: Mobile.IAndroidDevice): Promise<string> => this.debugCore(device, packageFile, appData, debugOptions);
 
-		const deviceActionResult = await this.$devicesService.execute(action, this.getCanExecuteAction(debugData.deviceIdentifier));
+		const deviceActionResult = await this.$devicesService.execute(action, this.getCanExecuteAction(this.deviceIdentifier));
 		return deviceActionResult[0].result;
 	}
 
