@@ -14,13 +14,13 @@ class IOSDebugServiceInheritor extends IOSDebugService {
 		$logger: ILogger,
 		$errors: IErrors,
 		$packageInstallationManager: IPackageInstallationManager,
-		$iOSSocketRequestExecutor: IiOSSocketRequestExecutor,
+		$iOSDebuggerPortService: IIOSDebuggerPortService,
 		$processService: IProcessService,
 		$socketProxyFactory: ISocketProxyFactory,
 		$projectDataService: IProjectDataService,
 		$deviceLogProvider: Mobile.IDeviceLogProvider) {
 		super(<any>{}, $devicesService, $platformService, $iOSEmulatorServices, $childProcess, $hostInfo, $logger, $errors,
-			$packageInstallationManager, $iOSSocketRequestExecutor,
+			$packageInstallationManager, $iOSDebuggerPortService,
 			$processService, $socketProxyFactory, $projectDataService, $deviceLogProvider);
 	}
 

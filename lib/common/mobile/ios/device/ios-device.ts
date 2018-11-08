@@ -4,6 +4,7 @@ import * as commonConstants from "../../../constants";
 import * as constants from "../../../../constants";
 import * as net from "net";
 import { cache } from "../../../decorators";
+import * as helpers from "../../../../common/helpers";
 
 export class IOSDevice implements Mobile.IiOSDevice {
 	public applicationManager: Mobile.IDeviceApplicationManager;
@@ -96,10 +97,15 @@ export class IOSDevice implements Mobile.IiOSDevice {
 		}
 
 		const deviceId = this.deviceInfo.identifier;
-		const deviceResponse = _.first((await this.$iosDeviceOperations.connectToPort([{ deviceId: deviceId, port: port }]))[deviceId]);
+		this.socket = await helpers.connectEventuallyUntilTimeout(
+			async () => {
+				const deviceResponse = _.first((await this.$iosDeviceOperations.connectToPort([{ deviceId: deviceId, port: port }]))[deviceId]);
+				const _socket = new net.Socket();
+				_socket.connect(deviceResponse.port, deviceResponse.host);
+				return _socket;
+			},
+			commonConstants.SOCKET_CONNECTION_TIMEOUT_MS);
 
-		this.socket = new net.Socket();
-		this.socket.connect(deviceResponse.port, deviceResponse.host);
 		this.socket.on("close", () => {
 			this.socket = null;
 		});

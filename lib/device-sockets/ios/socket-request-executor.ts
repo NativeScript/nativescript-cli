@@ -19,7 +19,7 @@ export class IOSSocketRequestExecutor implements IiOSSocketRequestExecutor {
 		const observeNotificationPromises = _(observeNotificationSockets)
 			.uniq()
 			.map(s => {
-				return this.$iOSNotificationService.awaitNotification(deviceIdentifier, +s, timeout);
+				return this.$iOSNotificationService.awaitNotification(deviceIdentifier, s, timeout);
 			})
 			.value();
 

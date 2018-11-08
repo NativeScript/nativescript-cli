@@ -116,11 +116,6 @@ declare module Mobile {
 		openDeviceLogStream(options?: IiOSLogStreamOptions): Promise<void>;
 	}
 
-	interface IiOSDeviceSocketsService {
-		getSocket(deviceId: string): any;
-		addSocket(deviceId: string, socket: any): void;
-	}
-
 	interface IAndroidDevice extends IDevice {
 		adb: Mobile.IDeviceAndroidDebugBridge;
 		init(): Promise<void>;

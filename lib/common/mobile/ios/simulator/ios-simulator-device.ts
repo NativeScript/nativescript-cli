@@ -6,7 +6,6 @@ import { cache } from "../../../decorators";
 import * as helpers from "../../../../common/helpers";
 
 export class IOSSimulator implements Mobile.IiOSDevice {
-	private static socketConnectionTimeout = 30000;
 	private _applicationManager: Mobile.IDeviceApplicationManager;
 	private _fileSystem: Mobile.IDeviceFileSystem;
 	private socket: net.Socket;
@@ -45,7 +44,7 @@ export class IOSSimulator implements Mobile.IiOSDevice {
 		try {
 			this.socket = await helpers.connectEventuallyUntilTimeout(
 				async () => { return this.$iOSEmulatorServices.connectToPort({ port }) },
-				IOSSimulator.socketConnectionTimeout);
+				constants.SOCKET_CONNECTION_TIMEOUT_MS);
 		} catch (e) {
 			this.$logger.warn(e);
 		}
