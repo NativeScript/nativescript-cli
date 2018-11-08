@@ -1,5 +1,5 @@
 import * as path from "path";
-import { cache, exported } from "../common/decorators";
+import { cache } from "../common/decorators";
 import * as constants from "../constants";
 import { createRegExp, regExpEscape } from "../common/helpers";
 
@@ -25,7 +25,6 @@ export class ExtensibilityService implements IExtensibilityService {
 		private $requireService: IRequireService) {
 	}
 
-	@exported("extensibilityService")
 	public async installExtension(extensionName: string): Promise<IExtensionData> {
 		this.$logger.trace(`Start installation of extension '${extensionName}'.`);
 
@@ -45,7 +44,6 @@ export class ExtensibilityService implements IExtensibilityService {
 		return this.getInstalledExtensionData(installResultInfo.name);
 	}
 
-	@exported("extensibilityService")
 	public async uninstallExtension(extensionName: string): Promise<void> {
 		this.$logger.trace(`Start uninstallation of extension '${extensionName}'.`);
 
@@ -61,7 +59,6 @@ export class ExtensibilityService implements IExtensibilityService {
 		return _.keys(installedExtensions).map(installedExtension => this.getInstalledExtensionData(installedExtension));
 	}
 
-	@exported("extensibilityService")
 	public loadExtensions(): Promise<IExtensionData>[] {
 		this.$logger.trace("Loading extensions.");
 
@@ -77,7 +74,6 @@ export class ExtensibilityService implements IExtensibilityService {
 			.map(name => this.loadExtension(name));
 	}
 
-	@exported("extensibilityService")
 	public getInstalledExtensions(): IStringDictionary {
 		if (this.$fs.exists(this.pathToPackageJson)) {
 			return this.$fs.readJson(this.pathToPackageJson).dependencies;
@@ -98,7 +94,6 @@ export class ExtensibilityService implements IExtensibilityService {
 		};
 	}
 
-	@exported("extensibilityService")
 	public async loadExtension(extensionName: string): Promise<IExtensionData> {
 		try {
 			await this.assertExtensionIsInstalled(extensionName);
