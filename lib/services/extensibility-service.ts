@@ -4,12 +4,18 @@ import * as constants from "../constants";
 import { createRegExp, regExpEscape } from "../common/helpers";
 
 export class ExtensibilityService implements IExtensibilityService {
-	private get pathToExtensions(): string {
-		return path.join(this.$settingsService.getProfileDir(), "extensions");
-	}
+	private customPathToExtensions: string = null;
 
 	private get pathToPackageJson(): string {
 		return path.join(this.pathToExtensions, constants.PACKAGE_JSON_FILE_NAME);
+	}
+
+	public get pathToExtensions(): string {
+		return this.customPathToExtensions || path.join(this.$settingsService.getProfileDir(), "extensions");
+	}
+
+	public set pathToExtensions(pathToExtensions: string) {
+		this.customPathToExtensions = pathToExtensions;
 	}
 
 	constructor(private $fs: IFileSystem,

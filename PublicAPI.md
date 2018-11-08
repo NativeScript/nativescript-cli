@@ -19,6 +19,7 @@ const tns = require("nativescript");
 	* [getIOSAssetsStructure](#getiosassetsstructure)
 	* [getAndroidAssetsStructure](#getandroidassetsstructure)
 * [extensibilityService](#extensibilityservice)
+	* [pathToExtensions](#pathToExtensions)
 	* [installExtension](#installextension)
 	* [uninstallExtension](#uninstallextension)
 	* [getInstalledExtensions](#getinstalledextensions)
@@ -289,6 +290,16 @@ interface IExtensionData {
 	 */
 	extensionName: string;
 }
+```
+### pathToExtensions
+Get/Set the to the CLI extensions.
+
+* Definition:
+```TypeScript
+/**
+ * The path to the CLI extensions.
+ */
+pathToExtensions: string;
 ```
 
 ### installExtension
