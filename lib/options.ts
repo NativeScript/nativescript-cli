@@ -115,7 +115,8 @@ export class Options {
 			default: { type: OptionType.Boolean },
 			count: { type: OptionType.Number },
 			hooks: { type: OptionType.Boolean, default: true },
-			link: { type: OptionType.Boolean, default: false }
+			link: { type: OptionType.Boolean, default: false },
+			aab: { type: OptionType.Boolean }
 		};
 	}
 

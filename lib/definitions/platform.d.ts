@@ -268,6 +268,7 @@ interface IPlatformData {
 	normalizedPlatformName: string;
 	appDestinationDirectoryPath: string;
 	deviceBuildOutputPath: string;
+	bundleBuildOutputPath?: string;
 	emulatorBuildOutputPath?: string;
 	getValidBuildOutputData(buildOptions: IBuildOutputOptions): IValidBuildOutputData;
 	frameworkFilesExtensions: string[];
@@ -285,10 +286,7 @@ interface IValidBuildOutputData {
 	regexes?: RegExp[];
 }
 
-interface IBuildOutputOptions {
-	isReleaseBuild?: boolean;
-	isForDevice?: boolean;
-}
+interface IBuildOutputOptions extends Partial<IBuildForDevice>, IRelease, IHasAndroidBundle {}
 
 interface IPlatformsData {
 	availablePlatforms: any;

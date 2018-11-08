@@ -32,7 +32,7 @@ describe('androidPluginBuildService', () => {
 		projectRuntimeGradleAndroidVersion?: string,
 		addPreviousBuildInfo?: boolean,
 		hasChangesInShasums?: boolean,
-	}): IBuildOptions {
+	}): IPluginBuildOptions {
 		options = options || {};
 		spawnFromEventCalled = false;
 		tempFolder = temp.mkdirSync("androidPluginBuildService-temp");
@@ -182,7 +182,7 @@ dependencies {
 	describe('buildAar', () => {
 
 		it('builds aar when all supported files are in the plugin', async () => {
-			const config: IBuildOptions = setup({
+			const config: IPluginBuildOptions = setup({
 				addManifest: true,
 				addResFolder: true,
 				addAssetsFolder: true
@@ -194,7 +194,7 @@ dependencies {
 		});
 
 		it('does not build aar when there are no supported files in the plugin', async () => {
-			const config: IBuildOptions = setup();
+			const config: IPluginBuildOptions = setup();
 
 			await androidBuildPluginService.buildAar(config);
 
@@ -202,7 +202,7 @@ dependencies {
 		});
 
 		it('builds aar when there are res and assets folders', async () => {
-			const config: IBuildOptions = setup({
+			const config: IPluginBuildOptions = setup({
 				addResFolder: true,
 				addAssetsFolder: true
 			});
@@ -213,7 +213,7 @@ dependencies {
 		});
 
 		it('builds aar when there is an android manifest', async () => {
-			const config: IBuildOptions = setup({
+			const config: IPluginBuildOptions = setup({
 				addManifest: true
 			});
 
@@ -223,7 +223,7 @@ dependencies {
 		});
 
 		it('builds aar when plugin is already build and source files have changed since last buid', async () => {
-			const config: IBuildOptions = setup({
+			const config: IPluginBuildOptions = setup({
 				addManifest: true,
 				addPreviousBuildInfo: true,
 				hasChangesInShasums: true
@@ -235,7 +235,7 @@ dependencies {
 		});
 
 		it('does not build aar when plugin is already build and source files have not changed', async () => {
-			const config: IBuildOptions = setup({
+			const config: IPluginBuildOptions = setup({
 				addManifest: true,
 				addPreviousBuildInfo: true
 			});
@@ -248,7 +248,7 @@ dependencies {
 		it('builds aar with the latest runtime gradle versions when no project dir is specified', async () => {
 			const expectedGradleVersion = "1.2.3";
 			const expectedAndroidVersion = "4.5.6";
-			const config: IBuildOptions = setup({
+			const config: IPluginBuildOptions = setup({
 				addManifest: true,
 				latestRuntimeGradleVersion: expectedGradleVersion,
 				latestRuntimeGradleAndroidVersion: expectedAndroidVersion
@@ -266,7 +266,7 @@ dependencies {
 		it('builds aar with the latest runtime gradle versions when a project dir without runtime versions is specified', async () => {
 			const expectedGradleVersion = "4.4.4";
 			const expectedAndroidVersion = "5.5.5";
-			const config: IBuildOptions = setup({
+			const config: IPluginBuildOptions = setup({
 				addManifest: true,
 				addProjectDir: true,
 				latestRuntimeGradleVersion: expectedGradleVersion,
@@ -288,7 +288,7 @@ dependencies {
 		it('builds aar with the specified runtime gradle versions when the project runtime has gradle versions', async () => {
 			const expectedGradleVersion = "2.2.2";
 			const expectedAndroidVersion = "3.3";
-			const config: IBuildOptions = setup({
+			const config: IPluginBuildOptions = setup({
 				addManifest: true,
 				addProjectDir: true,
 				latestRuntimeGradleVersion: "4.4.4",
@@ -308,7 +308,7 @@ dependencies {
 		});
 
 		it('builds aar with the hardcoded gradle versions when the project runtime and the latest runtime do not have versions specified', async () => {
-			const config: IBuildOptions = setup({
+			const config: IPluginBuildOptions = setup({
 				addManifest: true,
 				addProjectDir: true,
 				latestRuntimeGradleVersion: null,
@@ -330,7 +330,7 @@ dependencies {
 
 	describe('migrateIncludeGradle', () => {
 		it('if there is a legacy include.gradle file', async () => {
-			const config: IBuildOptions = setup({
+			const config: IPluginBuildOptions = setup({
 				addLegacyIncludeGradle: true
 			});
 
@@ -343,7 +343,7 @@ dependencies {
 		});
 
 		it('if there is an already migrated include.gradle file', async () => {
-			const config: IBuildOptions = setup({
+			const config: IPluginBuildOptions = setup({
 				addIncludeGradle: true
 			});
 

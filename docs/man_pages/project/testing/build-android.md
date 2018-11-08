@@ -13,7 +13,7 @@ Builds the project for Android and produces an APK that you can manually deploy 
 
 Usage | Synopsis
 ---|---
-General | `$ tns build android [--compileSdk <API Level>] [--key-store-path <File Path> --key-store-password <Password> --key-store-alias <Name> --key-store-alias-password <Password>] [--release] [--static-bindings] [--copy-to <File Path>] [--bundle [<value>] [--env.*]]`
+General | `$ tns build android [--compileSdk <API Level>] [--key-store-path <File Path> --key-store-password <Password> --key-store-alias <Name> --key-store-alias-password <Password>] [--release] [--static-bindings] [--copy-to <File Path>] [--bundle [<value>] [--env.*]] [--aab]`
 
 ### Options
 
@@ -27,6 +27,7 @@ General | `$ tns build android [--compileSdk <API Level>] [--key-store-path <Fil
 * `--copy-to` - Specifies the file path where the built `.apk` will be copied. If it points to a non-existent directory, it will be created. If the specified value is directory, the original file name will be used.
 * `--bundle` - Specifies that the `webpack` bundler will be used to bundle the application.
 * `--env.*` - Specifies additional flags that the bundler may process. May be passed multiple times. For example: `--env.uglify --env.snapshot`.
+* `--aab` - Specifies that the build will produce an Android App Bundle(`.aab`) file.
 
 <% if(isHtml) { %>
 

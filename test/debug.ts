@@ -29,6 +29,7 @@ function createTestInjector(): IInjector {
 	testInjector.register('fs', FileSystem);
 	testInjector.register('errors', stubs.ErrorsStub);
 	testInjector.register('hostInfo', {});
+	testInjector.register("androidBundleValidatorHelper", stubs.AndroidBundleValidatorHelper);
 	testInjector.register("analyticsService", {
 		trackException: async (): Promise<void> => undefined,
 		checkConsent: async (): Promise<void> => undefined,

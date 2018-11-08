@@ -74,8 +74,17 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 				platformProjectService: this,
 				projectRoot: projectRoot,
 				deviceBuildOutputPath: path.join(...deviceBuildOutputArr),
+				bundleBuildOutputPath: path.join(projectRoot, constants.APP_FOLDER_NAME, constants.BUILD_DIR, constants.OUTPUTS_DIR, constants.BUNDLE_DIR),
 				getValidBuildOutputData: (buildOptions: IBuildOutputOptions): IValidBuildOutputData => {
-					const buildMode = buildOptions.isReleaseBuild ? Configurations.Release.toLowerCase() : Configurations.Debug.toLowerCase();
+					const buildMode = buildOptions.release ? Configurations.Release.toLowerCase() : Configurations.Debug.toLowerCase();
+
+					if (buildOptions.androidBundle) {
+						return {
+							packageNames: [
+								`${constants.APP_FOLDER_NAME}${constants.AAB_EXTENSION_NAME}`
+							]
+						};
+					}
 
 					return {
 						packageNames: [
@@ -83,6 +92,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 							`${projectData.projectName}-${buildMode}${constants.APK_EXTENSION_NAME}`,
 							`${projectData.projectName}${constants.APK_EXTENSION_NAME}`,
 							`${constants.APP_FOLDER_NAME}-${buildMode}${constants.APK_EXTENSION_NAME}`
+
 						],
 						regexes: [new RegExp(`${constants.APP_FOLDER_NAME}-.*-(${Configurations.Debug}|${Configurations.Release})${constants.APK_EXTENSION_NAME}`, "i"), new RegExp(`${packageName}-.*-(${Configurations.Debug}|${Configurations.Release})${constants.APK_EXTENSION_NAME}`, "i")]
 					};
@@ -316,16 +326,22 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	}
 
 	public async buildProject(projectRoot: string, projectData: IProjectData, buildConfig: IBuildConfig): Promise<void> {
+		let task;
 		const gradleArgs = this.getGradleBuildOptions(buildConfig, projectData);
+		const baseTask = buildConfig.androidBundle ? "bundle" : "assemble";
+		const platformData = this.getPlatformData(projectData);
+		const outputPath = buildConfig.androidBundle ? platformData.bundleBuildOutputPath : platformData.deviceBuildOutputPath;
 		if (this.$logger.getLevel() === "TRACE") {
 			gradleArgs.unshift("--stacktrace");
 			gradleArgs.unshift("--debug");
 		}
 		if (buildConfig.release) {
-			gradleArgs.unshift("assembleRelease");
+			task = `${baseTask}Release`;
 		} else {
-			gradleArgs.unshift("assembleDebug");
+			task = `${baseTask}Debug`;
 		}
+
+		gradleArgs.unshift(task);
 
 		const handler = (data: any) => {
 			this.emit(constants.BUILD_OUTPUT_EVENT_NAME, data);
@@ -343,7 +359,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			})
 		);
 
-		await this.$filesHashService.saveHashesForProject(this._platformData, this._platformData.deviceBuildOutputPath);
+		await this.$filesHashService.saveHashesForProject(this._platformData, outputPath);
 	}
 
 	private getGradleBuildOptions(settings: IAndroidBuildOptionsSettings, projectData: IProjectData): Array<string> {
@@ -431,7 +447,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			// build Android plugins which contain AndroidManifest.xml and/or resources
 			const pluginPlatformsFolderPath = this.getPluginPlatformsFolderPath(pluginData, AndroidProjectService.ANDROID_PLATFORM_NAME);
 			if (this.$fs.exists(pluginPlatformsFolderPath)) {
-				const options: IBuildOptions = {
+				const options: IPluginBuildOptions = {
 					projectDir: projectData.projectDir,
 					pluginName: pluginData.name,
 					platformsAndroidDirPath: pluginPlatformsFolderPath,
@@ -500,7 +516,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		return item.endsWith(constants.MANIFEST_FILE_NAME) || item.endsWith(constants.RESOURCES_DIR);
 	}
 
-	public async prebuildNativePlugin(options: IBuildOptions): Promise<void> {
+	public async prebuildNativePlugin(options: IPluginBuildOptions): Promise<void> {
 		if (await this.$androidPluginBuildService.buildAar(options)) {
 			this.$logger.info(`Built aar for ${options.pluginName}`);
 		}

@@ -305,10 +305,10 @@ export class ProjectDataStub implements IProjectData {
 }
 
 export class AndroidPluginBuildServiceStub implements IAndroidPluginBuildService {
-	buildAar(options: IBuildOptions): Promise<boolean> {
+	buildAar(options: IPluginBuildOptions): Promise<boolean> {
 		return Promise.resolve(true);
 	}
-	migrateIncludeGradle(options: IBuildOptions): boolean {
+	migrateIncludeGradle(options: IPluginBuildOptions): boolean {
 		return true;
 	}
 }
@@ -328,7 +328,7 @@ export class PlatformProjectServiceStub extends EventEmitter implements IPlatfor
 			fastLivesyncFileExtensions: []
 		};
 	}
-	prebuildNativePlugin(options: IBuildOptions): Promise<void> {
+	prebuildNativePlugin(options: IPluginBuildOptions): Promise<void> {
 		return Promise.resolve();
 	}
 
@@ -647,7 +647,7 @@ export class AndroidToolsInfoStub implements IAndroidToolsInfo {
 	}
 }
 
-export class ChildProcessStub {
+export class ChildProcessStub extends EventEmitter {
 	public spawnCount = 0;
 	public execCount = 0;
 	public spawnFromEventCount = 0;
@@ -846,6 +846,16 @@ export class AndroidResourcesMigrationServiceStub implements IAndroidResourcesMi
 	}
 	migrate(appResourcesDir: string): Promise<void> {
 		return Promise.resolve();
+	}
+}
+
+export class AndroidBundleValidatorHelper implements IAndroidBundleValidatorHelper {
+	validateNoAab() {
+		return true;
+	}
+
+	validateRuntimeVersion() {
+		return;
 	}
 }
 

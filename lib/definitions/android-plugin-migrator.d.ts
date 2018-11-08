@@ -1,5 +1,5 @@
 
-interface IBuildOptions extends IAndroidBuildOptions{
+interface IPluginBuildOptions extends IAndroidBuildOptions{
 	projectDir?: string
 }
 
@@ -11,8 +11,8 @@ interface IAndroidBuildOptions {
 }
 
 interface IAndroidPluginBuildService {
-	buildAar(options: IBuildOptions): Promise<boolean>;
-	migrateIncludeGradle(options: IBuildOptions): boolean;
+	buildAar(options: IPluginBuildOptions): Promise<boolean>;
+	migrateIncludeGradle(options: IPluginBuildOptions): boolean;
 }
 
 /**

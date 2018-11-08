@@ -1,4 +1,4 @@
-import { ANDROID_RELEASE_BUILD_ERROR_MESSAGE } from "../constants";
+import { ANDROID_RELEASE_BUILD_ERROR_MESSAGE, AndroidAppBundleMessages } from "../constants";
 import { ValidatePlatformCommandBase } from "./command-base";
 
 export abstract class BuildCommandBase extends ValidatePlatformCommandBase {
@@ -8,12 +8,13 @@ export abstract class BuildCommandBase extends ValidatePlatformCommandBase {
 		$platformsData: IPlatformsData,
 		protected $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		$platformService: IPlatformService,
-		private $bundleValidatorHelper: IBundleValidatorHelper) {
+		private $bundleValidatorHelper: IBundleValidatorHelper,
+		protected $logger: ILogger) {
 			super($options, $platformsData, $platformService, $projectData);
 			this.$projectData.initializeProjectData();
 	}
 
-	public async executeCore(args: string[]): Promise<void> {
+	public async executeCore(args: string[]): Promise<string> {
 		const platform = args[0].toLowerCase();
 		const appFilesUpdaterOptions: IAppFilesUpdaterOptions = {
 			bundle: !!this.$options.bundle,
@@ -41,12 +42,19 @@ export abstract class BuildCommandBase extends ValidatePlatformCommandBase {
 			keyStoreAlias: this.$options.keyStoreAlias,
 			keyStorePath: this.$options.keyStorePath,
 			keyStoreAliasPassword: this.$options.keyStoreAliasPassword,
-			keyStorePassword: this.$options.keyStorePassword
+			keyStorePassword: this.$options.keyStorePassword,
+			androidBundle: this.$options.aab
 		};
-		await this.$platformService.buildPlatform(platform, buildConfig, this.$projectData);
+
+		const outputPath = await this.$platformService.buildPlatform(platform, buildConfig, this.$projectData);
+
 		if (this.$options.copyTo) {
 			this.$platformService.copyLastOutput(platform, this.$options.copyTo, buildConfig, this.$projectData);
+		} else {
+			this.$logger.info(`The build result is located at: ${outputPath}`);
 		}
+
+		return outputPath;
 	}
 
 	protected validatePlatform(platform: string): void {
@@ -84,12 +92,13 @@ export class BuildIosCommand extends BuildCommandBase implements ICommand {
 		$platformsData: IPlatformsData,
 		$devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		$platformService: IPlatformService,
-		$bundleValidatorHelper: IBundleValidatorHelper) {
-			super($options, $errors, $projectData, $platformsData, $devicePlatformsConstants, $platformService, $bundleValidatorHelper);
+		$bundleValidatorHelper: IBundleValidatorHelper,
+		$logger: ILogger) {
+			super($options, $errors, $projectData, $platformsData, $devicePlatformsConstants, $platformService, $bundleValidatorHelper, $logger);
 	}
 
 	public async execute(args: string[]): Promise<void> {
-		return this.executeCore([this.$platformsData.availablePlatforms.iOS]);
+		await this.executeCore([this.$platformsData.availablePlatforms.iOS]);
 	}
 
 	public async canExecute(args: string[]): Promise<boolean | ICanExecuteCommandOutput> {
@@ -117,18 +126,28 @@ export class BuildAndroidCommand extends BuildCommandBase implements ICommand {
 		$platformsData: IPlatformsData,
 		$devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		$platformService: IPlatformService,
-		$bundleValidatorHelper: IBundleValidatorHelper) {
-			super($options, $errors, $projectData, $platformsData, $devicePlatformsConstants, $platformService, $bundleValidatorHelper);
+		$bundleValidatorHelper: IBundleValidatorHelper,
+		protected $androidBundleValidatorHelper: IAndroidBundleValidatorHelper,
+		protected $logger: ILogger) {
+			super($options, $errors, $projectData, $platformsData, $devicePlatformsConstants, $platformService, $bundleValidatorHelper, $logger);
 	}
 
 	public async execute(args: string[]): Promise<void> {
-		return this.executeCore([this.$platformsData.availablePlatforms.Android]);
+		await this.executeCore([this.$platformsData.availablePlatforms.Android]);
+
+		if (this.$options.aab) {
+			this.$logger.info(AndroidAppBundleMessages.ANDROID_APP_BUNDLE_DOCS_MESSAGE);
+
+			if (this.$options.release) {
+				this.$logger.info(AndroidAppBundleMessages.ANDROID_APP_BUNDLE_PUBLISH_DOCS_MESSAGE);
+			}
+		}
 	}
 
 	public async canExecute(args: string[]): Promise<boolean | ICanExecuteCommandOutput> {
 		const platform = this.$devicePlatformsConstants.Android;
 		super.validatePlatform(platform);
-
+		this.$androidBundleValidatorHelper.validateRuntimeVersion(this.$projectData);
 		let result = await super.canExecuteCommandBase(platform, { notConfiguredEnvOptions: { hideSyncToPreviewAppOption: true }});
 		if (result.canExecute) {
 			if (this.$options.release && (!this.$options.keyStorePath || !this.$options.keyStorePassword || !this.$options.keyStoreAlias || !this.$options.keyStoreAliasPassword)) {

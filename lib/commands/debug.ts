@@ -19,7 +19,8 @@ export class DebugPlatformCommand extends ValidatePlatformCommandBase implements
 		private $debugDataService: IDebugDataService,
 		private $liveSyncService: IDebugLiveSyncService,
 		private $prompter: IPrompter,
-		private $liveSyncCommandHelper: ILiveSyncCommandHelper) {
+		private $liveSyncCommandHelper: ILiveSyncCommandHelper,
+		private $androidBundleValidatorHelper: IAndroidBundleValidatorHelper) {
 			super($options, $platformsData, $platformService, $projectData);
 	}
 
@@ -108,6 +109,8 @@ export class DebugPlatformCommand extends ValidatePlatformCommandBase implements
 	}
 
 	public async canExecute(args: string[]): Promise<ICanExecuteCommandOutput> {
+		this.$androidBundleValidatorHelper.validateNoAab();
+
 		if (!this.$platformService.isPlatformSupportedForOS(this.platform, this.$projectData)) {
 			this.$errors.fail(`Applications for platform ${this.platform} can not be built on this OS`);
 		}

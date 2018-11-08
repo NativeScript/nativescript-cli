@@ -458,7 +458,11 @@ interface IPluginSeedOptions {
 	pluginName: string;
 }
 
-interface IOptions extends IRelease, IDeviceIdentifier, IJustLaunch, IAvd, IAvailableDevices, IProfileDir, IHasEmulatorOption, IBundleString, IPlatformTemplate, IHasEmulatorOption, IClean, IProvision, ITeamIdentifier, IAndroidReleaseOptions, INpmInstallConfigurationOptions, IPort, IEnvOptions, IPluginSeedOptions, IGenerateOptions {
+interface IAndroidBundleOptions {
+	aab: boolean;
+}
+
+interface IOptions extends IRelease, IDeviceIdentifier, IJustLaunch, IAvd, IAvailableDevices, IProfileDir, IHasEmulatorOption, IBundleString, IPlatformTemplate, IHasEmulatorOption, IClean, IProvision, ITeamIdentifier, IAndroidReleaseOptions, IAndroidBundleOptions, INpmInstallConfigurationOptions, IPort, IEnvOptions, IPluginSeedOptions, IGenerateOptions {
 	argv: IYargArgv;
 	validateOptions(commandSpecificDashedOptions?: IDictionary<IDashedOption>): void;
 	options: IDictionary<IDashedOption>;
@@ -531,7 +535,11 @@ interface IEnvOptions {
 	env: Object;
 }
 
-interface IAndroidBuildOptionsSettings extends IAndroidReleaseOptions, IRelease { }
+interface IAndroidBuildOptionsSettings extends IAndroidReleaseOptions, IRelease, IHasAndroidBundle { }
+
+ interface IHasAndroidBundle {
+	androidBundle?: boolean;
+ }
 
 interface IAppFilesUpdaterOptions extends IBundle, IRelease, IOptionalWatchAllFiles, IHasUseHotModuleReloadOption { }
 
@@ -854,6 +862,23 @@ interface IBundleValidatorHelper {
 	 * @return {void}
 	 */
 	validate(minSupportedVersion?: string): void;
+}
+
+
+interface IAndroidBundleValidatorHelper {
+	/**
+	 * Validates android bundling option is not provided.
+	 * Commands that require deploy of the application must not be called with --aab option
+	 * @return {void}
+	 */
+	validateNoAab(): void;
+
+	/**
+	 * Validates android runtime version is sufficient to support bundling option --aab.
+	 * @param {IProjectData} projectData DTO with information about the project.
+	 * @return {void}
+	 */
+	validateRuntimeVersion(projectData: IProjectData): void
 }
 
 interface INativeScriptCloudExtensionService {

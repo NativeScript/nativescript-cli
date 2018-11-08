@@ -125,6 +125,7 @@ $injector.require("devicePathProvider", "./device-path-provider");
 $injector.requireCommand("platform|clean", "./commands/platform-clean");
 
 $injector.require("bundleValidatorHelper", "./helpers/bundle-validator-helper");
+$injector.require("androidBundleValidatorHelper", "./helpers/android-bundle-validator-helper");
 $injector.require("liveSyncCommandHelper", "./helpers/livesync-command-helper");
 $injector.require("deployCommandHelper", "./helpers/deploy-command-helper");
 
