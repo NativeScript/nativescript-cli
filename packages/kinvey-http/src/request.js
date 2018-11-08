@@ -1,3 +1,6 @@
+import isNumber from 'lodash/isNumber';
+import { KinveyError } from 'kinvey-errors';
+import { getConfig } from 'kinvey-app';
 import { Headers, KinveyHeaders } from './headers';
 import { serialize } from './utils';
 import { Response } from './response';
@@ -18,12 +21,21 @@ export const RequestMethod = {
 };
 
 export class Request {
-  constructor(request) {
-    this.headers = request.headers;
-    this.method = request.method;
-    this.url = request.url;
-    this.body = request.body;
-    this.timeout = request.timeout;
+  constructor(request = {}) {
+    const { defaultTimeout } = getConfig();
+    const {
+      headers,
+      method,
+      url,
+      body,
+      timeout = defaultTimeout
+    } = request;
+
+    this.headers = headers;
+    this.method = method;
+    this.url = url;
+    this.body = body;
+    this.timeout = timeout;
   }
 
   get headers() {
@@ -32,6 +44,18 @@ export class Request {
 
   set headers(headers) {
     this._headers = new Headers(headers);
+  }
+
+  get timeout() {
+    return this._timeout;
+  }
+
+  set timeout(timeout) {
+    if (!isNumber(timeout) || isNaN(timeout)) {
+      throw new KinveyError('Invalid timeout. Timeout must be a number.');
+    }
+
+    this._timeout = timeout;
   }
 
   async execute() {

@@ -1,10 +1,9 @@
 import isString from 'lodash/isString';
 import isNumber from 'lodash/isNumber';
+import { KinveyError } from 'kinvey-errors';
 import { parse, format } from 'url';
-import { formatKinveyUrl, KinveyRequest, RequestMethod, Auth } from 'kinvey-http';
 
 const DEFAULT_TIMEOUT = 60000;
-const APPDATA_NAMESPACE = 'appdata';
 
 function s4() {
   return Math.floor((1 + Math.random()) * 0x10000)
@@ -18,7 +17,7 @@ function uuidv4() {
 
 let internalConfig;
 
-export function init(config) {
+export function init(config = {}) {
   const {
     appKey,
     appSecret,
@@ -33,7 +32,7 @@ export function init(config) {
 
   if (instanceId) {
     if (!isString(instanceId)) {
-      throw new Error('Instance ID must be a string.');
+      throw new KinveyError('Instance ID must be a string.');
     }
 
     apiHostname = `https://${instanceId}-baas.kinvey.com`;
@@ -49,24 +48,25 @@ export function init(config) {
   }
 
   if (!isString(appKey)) {
-    throw new Error('An appKey is required and must be a string.');
+    throw new KinveyError('An appKey is required and must be a string.');
   }
 
-  if (!isString(appSecret)) {
-    throw new Error('An appSecret is required and must be a string.');
+  if (!isString(appSecret) && !isString(masterSecret)) {
+    throw new KinveyError('An appSecret is required and must be a string.');
   }
 
   if (appVersion && !isString(appVersion)) {
-    throw new Error('An appVersion must be a string.');
+    throw new KinveyError('An appVersion must be a string.');
   }
 
   if (encryptionKey && !isString(encryptionKey)) {
-    throw new Error('An encryptionKey must be a string.');
+    throw new KinveyError('An encryptionKey must be a string.');
   }
 
-  if (defaultTimeout != null && (!isNumber(defaultTimeout) || defaultTimeout < 1)) {
-    throw new Error('A defaultTimeout must be a number greater then 0.');
-  }
+  // TODO: Add check in future
+  // if (defaultTimeout != null && (!isNumber(defaultTimeout) || defaultTimeout < 1)) {
+  //   throw new KineyError('A defaultTimeout must be a number greater then 0.');
+  // }
 
   internalConfig = {
     appKey,
@@ -74,7 +74,7 @@ export function init(config) {
     masterSecret,
     encryptionKey,
     appVersion,
-    defaultTimeout: defaultTimeout || DEFAULT_TIMEOUT,
+    defaultTimeout: isNumber(defaultTimeout) && defaultTimeout >= 0 ? defaultTimeout : DEFAULT_TIMEOUT,
     auth: {
       protocol: parse(authHostname).protocol,
       host: parse(authHostname).host,
@@ -120,7 +120,7 @@ export function init(config) {
  * @deprecated Please use init().
  */
 export function initialize() {
-  return Promise.reject(new Error('initialize() has been deprecated. Please use init().'));
+  return Promise.reject(new KinveyError('initialize() has been deprecated. Please use init().'));
 }
 
 /**
@@ -128,7 +128,7 @@ export function initialize() {
  */
 export function getConfig() {
   if (!internalConfig) {
-    throw new Error('You have not initialized the Kinvey JavaScript SDK.');
+    throw new KinveyError('You have not initialized the Kinvey JavaScript SDK.');
   }
 
   return internalConfig;
@@ -154,31 +154,4 @@ export function getAppVersion() {
 export function setAppVersion(appVersion) {
   const config = getConfig();
   config.appVersion = appVersion;
-}
-
-/**
- * Pings the Kinvey API service. This can be used to check if you have configured the SDK correctly.
- *
- * @returns {Promise<Object>} The response from the ping request.
- *
- * @example
- * var promise = Kinvey.ping()
- *  .then(function(response) {
- *     console.log('Kinvey Ping Success. Kinvey Service is alive, version: ' + response.version + ', response: ' + response.kinvey);
- *  })
- *  .catch(function(error) {
- *    console.log('Kinvey Ping Failed. Response: ' + error.description);
- *  });
- */
-export async function ping() {
-  const { appKey, api } = getConfig();
-  const request = new KinveyRequest({
-    method: RequestMethod.GET,
-    headers: {
-      Authorization: Auth.All
-    },
-    url: formatKinveyUrl(api.protocol, api.host, `/${APPDATA_NAMESPACE}/${appKey}`)
-  });
-  const response = await request.execute();
-  return response.data;
 }

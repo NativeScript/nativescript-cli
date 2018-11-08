@@ -1,13 +1,14 @@
 import isPlainObject from 'lodash/isPlainObject';
+import { KinveyError } from 'kinvey-errors';
 
 /**
  * This class provides a way to access the KMD (Kinvey Metadata)
  * information for an entity.
  */
 export class Kmd {
-  constructor(entity = {}) {
+  constructor(entity) {
     if (!isPlainObject(entity)) {
-      throw new Error('entity must be an object.');
+      throw new KinveyError('entity argument must be an object');
     }
 
     entity._kmd = entity._kmd || {}; // eslint-disable-line no-param-reassign
@@ -82,7 +83,11 @@ export class Kmd {
    * @returns {Object} _kmd.emailVerification
    */
   get emailVerification() {
-    return this.entity._kmd.emailVerification;
+    if (this.entity._kmd.emailVerification) {
+      return this.entity._kmd.emailVerification.status;
+    }
+
+    return undefined;
   }
 
   /**
@@ -105,5 +110,9 @@ export class Kmd {
    */
   isLocal() {
     return this.entity._kmd.local === true;
+  }
+
+  toPlainObject() {
+    return this.entity._kmd;
   }
 }

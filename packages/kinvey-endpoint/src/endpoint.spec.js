@@ -2,7 +2,7 @@ import nock from 'nock';
 import expect from 'expect';
 import { endpoint } from './endpoint';
 import { KinveyError, NotFoundError } from 'kinvey-errors';
-import { register } from 'kinvey-http-node';
+import { register as registerHttp } from 'kinvey-http-node';
 import { login } from 'kinvey-identity';
 import { init } from 'kinvey-app';
 import { randomString } from 'kinvey-test-utils';
@@ -11,7 +11,7 @@ describe('Endpoint', () => {
   let client;
 
   before(() => {
-    register();
+    registerHttp();
   });
 
   before(() => {

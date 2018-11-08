@@ -21,7 +21,9 @@
     "kinvey-errors": "1.0.0",
     "kinvey-http": "1.0.0",
     "kinvey-kmd": "1.0.0",
+    "kinvey-observable": "1.0.0",
     "kinvey-popup": "1.0.0",
+    "kinvey-query": "1.0.0",
     "kinvey-session": "1.0.0",
     "lodash": "4.17.11",
     "url-join": "4.0.0"

@@ -2,12 +2,13 @@ import isString from 'lodash/isString';
 import { formatKinveyUrl, KinveyRequest, RequestMethod, Auth } from 'kinvey-http';
 import { get as getSession } from 'kinvey-session';
 import { getConfig } from 'kinvey-app';
+import { KinveyError } from 'kinvey-errors';
 
 const RPC_NAMESPACE = 'rpc';
 
 export async function endpoint(endpoint, args) {
   if (!isString(endpoint)) {
-    throw new Error('An endpoint is required and must be a string.');
+    throw new KinveyError('An endpoint is required and must be a string.');
   }
 
   const { api, appKey } = getConfig();

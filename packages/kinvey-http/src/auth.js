@@ -1,4 +1,5 @@
 import { Base64 } from 'js-base64';
+import { ActiveUserError } from 'kinvey-errors';
 
 export const Auth = {
   All(session, appKey, appSecret, masterSecret) {
@@ -43,7 +44,7 @@ export const Auth = {
   Session(session) {
     return function authFn() {
       if (!session || !session._kmd || !session._kmd.authtoken) {
-        throw new Error('There is no active user to authorize the request. Please login and retry the request.');
+        throw new ActiveUserError('There is no active user to authorize the request. Please login and retry the request.');
       }
 
       return `Kinvey ${session._kmd.authtoken}`;

@@ -33,6 +33,7 @@
       "packages/kinvey-kmd",
       "packages/kinvey-live",
       "packages/kinvey-observable",
+      "packages/kinvey-ping",
       "packages/kinvey-popup",
       "packages/kinvey-popup-web",
       "packages/kinvey-query",

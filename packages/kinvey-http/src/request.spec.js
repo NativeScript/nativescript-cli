@@ -4,8 +4,15 @@ import { init } from 'kinvey-app';
 import { randomString } from 'kinvey-test-utils';
 
 describe('Request', () => {
+  before(() => {
+    return init({
+      appKey: randomString(),
+      appSecret: randomString()
+    });
+  });
+
   describe('constructor', () => {
-    it('should throw an error if timeout is not a number', () => {//TODO: We have not getter and setter for timeout and validation for it
+    it('should throw an error if timeout is not a number', () => {
       expect(() => {
         const timeout = 'foo';
         const request = new Request();
@@ -13,13 +20,13 @@ describe('Request', () => {
       }).toThrow(/Invalid timeout. Timeout must be a number./);
     });
 
-    it('should set timeout with client default timeout', () => {//TODO: how does the global timeout value transfer to the requests?
+    it('should set timeout with client default timeout', () => {
       const client = init({
         appKey: randomString(),
         appSecret: randomString(),
         defaultTimeout: 10000
       })
-      const request = new Request({ client: client });
+      const request = new Request();
       expect(request.timeout).toEqual(client.defaultTimeout);
     });
 
