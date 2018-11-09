@@ -18,7 +18,6 @@ describe('Auth', () => {
 
     it('should login', async () => {
       const username = randomString();
-      console.log(username);
       const password = randomString();
       await User.signup({ username, password }, { state: false });
       const user = await User.login(username, password);

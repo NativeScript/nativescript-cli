@@ -7,8 +7,8 @@
   "license": "Apache-2.0",
   "scripts": {
     "lint": "eslint src",
-    "pretest": "",
-    "test:node": "SDK=kinvey-node-sdk mocha --require dotenv/config --require @babel/register --require kinvey-test-register --ui tdd --colors \"src/**/*.spec.js\""
+    "pretest:node": "cd ../../ && yarn build",
+    "test:node": "SDK=kinvey-node-sdk mocha --require dotenv/config --require @babel/register --require kinvey-test-register --ui tdd --timeout 999999 --colors \"src/**/*.spec.js\""
   },
   "dependencies": {
     "@babel/register": "7.0.0",
