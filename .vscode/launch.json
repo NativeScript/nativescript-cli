@@ -350,7 +350,40 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "Integration Tests",
+      "name": "HTML5 SDK Integration Tests",
+      "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
+      "args": [
+        "--require",
+        "dotenv/config",
+        "--require",
+        "@babel/register",
+        "--require",
+        "kinvey-test-register",
+        "--ui",
+        "tdd",
+        "--timeout",
+        "999999",
+        "--colors",
+        "${workspaceFolder}/tests/integration/src"
+      ],
+      "env": {
+        "NODE_ENV": "development",
+        "SDK": "kinvey-html5-sdk"
+      },
+      "preLaunchTask": "build",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "openOnSessionStart",
+      "sourceMaps": true,
+      "smartStep": true,
+      "skipFiles": [
+        "<node_internals>/**/*.js",
+        "${workspaceFolder}/node_modules/**/*.js"
+      ]
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Node SDK Integration Tests",
       "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
       "args": [
         "--require",

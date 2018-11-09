@@ -6,11 +6,17 @@
   "homepage": "http://www.kinvey.com",
   "license": "Apache-2.0",
   "scripts": {
-    "lint": "eslint src"
+    "lint": "eslint src",
+    "pretest": "",
+    "test:node": "SDK=kinvey-node-sdk mocha --require dotenv/config --require @babel/register --require kinvey-test-register --ui tdd --colors \"src/**/*.spec.js\""
   },
   "dependencies": {
+    "@babel/register": "7.0.0",
     "chai": "4.2.0",
+    "dotenv": "6.1.0",
+    "kinvey-test-register": "1.0.0",
     "lodash": "4.17.11",
+    "mocha": "5.2.0",
     "sinon": "7.1.1"
   },
   "devDependencies": {}
