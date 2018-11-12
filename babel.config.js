@@ -1,15 +1,15 @@
 module.exports = (api) => {
-  api.cache.using(() => process.env.NODE_ENV);
+  api.cache.never();
 
   if (process.env.NODE_ENV === 'development') {
     return {
-      sourceMaps: 'inline',
       presets: [
         ['@babel/env', {
           targets: 'current node'
         }]
       ],
-      retainLines: true
+      retainLines: true,
+      sourceMaps: 'inline'
     };
   }
 
@@ -17,12 +17,12 @@ module.exports = (api) => {
     presets: [
       ['@babel/env', {
         targets: 'last 2 versions, maintained node versions, not dead',
-        useBuiltIns: 'usage'
+        useBuiltIns: 'usage',
+        modules: 'umd'
       }]
     ],
     plugins: [
-      '@babel/plugin-transform-runtime',
-      '@babel/plugin-proposal-class-properties'
+      '@babel/plugin-transform-runtime'
     ]
   };
 };

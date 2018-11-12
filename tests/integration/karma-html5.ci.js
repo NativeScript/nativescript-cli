@@ -1,8 +1,7 @@
 /* eslint-disable */
 const path = require('path');
-const Dotenv = require('dotenv-webpack');
-
-const DOT_ENV_FILE = path.resolve(__dirname, '.env');
+const webpackConfig = require('./webpack.config.js');
+webpackConfig.entry = () => ({});
 
 module.exports = function (config) {
   config.set({
@@ -22,7 +21,7 @@ module.exports = function (config) {
 
     // list of files / patterns to load in the browser
     files: [
-      'tests/**/*.spec.js'
+      'shared/**/*.spec.js'
     ],
 
 
@@ -155,13 +154,6 @@ module.exports = function (config) {
     // how many browser should be started simultaneous
     concurrency: Infinity,
 
-    // Mocha config
-    client: {
-      mocha: {
-        timeout: 10000
-      }
-    },
-
     // BrowserStack
     browserStack: {
       username: 'kinveymobileteam1',
@@ -171,6 +163,23 @@ module.exports = function (config) {
       build: process.env.TRAVIS_BUILD_NUMBER,
       captureTimeout: 600,
       timeout: 600
+    },
+
+    // Mocha config
+    client: {
+      mocha: {
+        opts: path.resolve(__dirname, 'mocha.opts'),
+        reporter: 'html'
+      }
+    },
+
+    // Webpack config
+    webpack: webpackConfig,
+
+    webpackMiddleware: {
+      // webpack-dev-middleware configuration
+      // i. e.
+      stats: 'errors-only'
     }
   });
 }

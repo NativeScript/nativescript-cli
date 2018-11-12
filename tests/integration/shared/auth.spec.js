@@ -1,4 +1,5 @@
 import { expect } from 'chai';
+// eslint-disable-next-line import/extensions
 import { init, User } from '__SDK__';
 import { randomString } from './utils';
 
