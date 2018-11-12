@@ -256,7 +256,7 @@ export function assertFileMetadata(file, expectedMetadata) {
 export function testFileUpload(representation, metadata, expectedMetadata, expectedContent, query, done) {
   Kinvey.Files.upload(representation, metadata)
     .then((result) => {
-      utilities.assertFileUploadResult(result, expectedMetadata, representation)
+      assertFileUploadResult(result, expectedMetadata, representation)
       const currentQuery = query || new Kinvey.Query();
       if (!query) {
         currentQuery.equalTo('_id', result._id);
@@ -265,7 +265,7 @@ export function testFileUpload(representation, metadata, expectedMetadata, expec
     })
     .then((result) => {
       const fileMetadata = result[0];
-      utilities.assertReadFileResult(fileMetadata, expectedMetadata, null, expectedMetadata._public);
+      assertReadFileResult(fileMetadata, expectedMetadata, null, expectedMetadata._public);
       return Kinvey.Files.downloadByUrl(fileMetadata._downloadURL);
     })
     .then((result) => {
