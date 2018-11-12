@@ -2,7 +2,7 @@ import expect from 'expect';
 import PubNub from 'pubnub';
 
 import { register as registerHttp} from 'kinvey-http-node';
-import { User } from 'kinvey-identity';
+import { User } from 'kinvey-user';
 import { UserMock } from './user-mock';
 import { randomString } from 'kinvey-test-utils';
 import { init } from 'kinvey-app';

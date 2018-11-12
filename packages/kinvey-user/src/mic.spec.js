@@ -5,7 +5,7 @@ import url from 'url';
 import { InsufficientCredentialsError, MobileIdentityConnectError, KinveyError } from 'kinvey-errors';
 import { randomString } from 'kinvey-test-utils';
 import { register } from 'kinvey-http-node';
-import { login } from 'kinvey-identity';
+import { login } from 'kinvey-user';
 import { init } from 'kinvey-app';
 import * as mic from './mic';
 

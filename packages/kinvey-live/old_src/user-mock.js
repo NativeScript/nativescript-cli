@@ -1,7 +1,7 @@
 import nock from 'nock';
 import { randomString } from 'kinvey-test-utils';
-import { User } from 'kinvey-identity';
-import * as userFuncs from 'kinvey-identity';
+import { User } from 'kinvey-user';
+import * as userFuncs from 'kinvey-user';
 var apiHostname = "https://baas.kinvey.com";
 var micHostname =  "https://auth.kinvey.com";
 

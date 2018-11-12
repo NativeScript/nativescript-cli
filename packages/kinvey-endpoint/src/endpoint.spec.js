@@ -3,7 +3,7 @@ import expect from 'expect';
 import { endpoint } from './endpoint';
 import { KinveyError, NotFoundError } from 'kinvey-errors';
 import { register as registerHttp } from 'kinvey-http-node';
-import { login } from 'kinvey-identity';
+import { login } from 'kinvey-user';
 import { init } from 'kinvey-app';
 import { randomString } from 'kinvey-test-utils';
 

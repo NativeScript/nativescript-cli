@@ -22,7 +22,7 @@
     "kinvey-endpoint": "1.0.0",
     "kinvey-files": "1.0.0",
     "kinvey-http-node": "1.0.0",
-    "kinvey-identity": "1.0.0",
+    "kinvey-user": "1.0.0",
     "kinvey-kmd": "1.0.0",
     "kinvey-query": "1.0.0"
   },

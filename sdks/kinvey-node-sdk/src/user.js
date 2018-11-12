@@ -1,6 +1,6 @@
 import { register as registerHttp } from 'kinvey-http-node';
 import { register as registerCache } from 'kinvey-cache-memory';
-import * as Identity from 'kinvey-identity';
+import * as Identity from 'kinvey-user';
 
 registerHttp();
 registerCache();

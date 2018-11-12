@@ -1,13 +1,13 @@
-import * as Identity from 'kinvey-identity';
+import * as User from 'kinvey-user';
 
-const BackwardsCompatibleIdentity = Identity.User;
+const BackwardsCompatibleUser = User.User;
 
-Object.keys(Identity).forEach((key) => {
-  const val = Identity[key];
+Object.keys(User).forEach((key) => {
+  const val = User[key];
 
-  if (val !== Identity.User) {
-    BackwardsCompatibleIdentity[key] = val;
+  if (val !== User.User) {
+    BackwardsCompatibleUser[key] = val;
   }
 });
 
-export { BackwardsCompatibleIdentity as User };
+export { BackwardsCompatibleUser as User };
