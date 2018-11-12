@@ -1,10 +1,10 @@
 import { expect } from 'chai';
 // eslint-disable-next-line import/extensions
 import * as Kinvey from '__SDK__';
-import lodash from 'lodash';
+import _ from 'lodash';
 import * as utilities from './utils';
 
-describe.skip('Files', () => {
+describe('Files', () => {
   before(() => {
     return Kinvey.init({
       appKey: process.env.APP_KEY,
@@ -29,11 +29,11 @@ describe.skip('Files', () => {
     let uploadedFile;
 
     before(async () => {
-      const testFile = randomString();
-      const filename = `${randomString()}.txt`;
+      const testFile = utilities.randomString();
+      const filename = `${utilities.randomString()}.txt`;
       const mimeType = 'text/plain';
       const size = testFile.length;
-      uploadedFile = await Files.upload(testFile, {
+      uploadedFile = await Kinvey.Files.upload(testFile, {
         filename,
         mimeType,
         size
@@ -59,8 +59,8 @@ describe.skip('Files', () => {
 
   describe('upload()', () => {
     it('should upload a file', async () => {
-      const testFile = randomString();
-      const filename = `${randomString()}.txt`;
+      const testFile = utilities.randomString();
+      const filename = `${utilities.randomString()}.txt`;
       const mimeType = 'text/plain';
       const size = testFile.length;
 
@@ -136,8 +136,8 @@ describe.skip('Files', () => {
             uploadedFile1 = result.find(result => result._data === fileToUpload1);
             uploadedFile2 = result.find(result => result._data === fileToUpload2);
             const fileBasicProperties = ['_id', '_filename', 'mimeType'];
-            file1Metadata = lodash.pick(uploadedFile1, fileBasicProperties);
-            file2Metadata = lodash.pick(uploadedFile2, fileBasicProperties);
+            file1Metadata = _.pick(uploadedFile1, fileBasicProperties);
+            file2Metadata = _.pick(uploadedFile2, fileBasicProperties);
             query = new Kinvey.Query();
             query.equalTo('_filename', uploadedFile2._filename);
             done();
@@ -189,7 +189,7 @@ describe.skip('Files', () => {
               setTimeout(() => {
                 return Kinvey.Files.downloadByUrl(result[0]._downloadURL)
                   .then((result) => {
-                    expect(result).to.contain('The provided token has expired.');
+                    expect(result).to.contain('An error occurred.');
                     done();
                   })
                   .catch(done);

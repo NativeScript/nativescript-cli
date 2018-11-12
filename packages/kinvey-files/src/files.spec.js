@@ -996,7 +996,7 @@ describe('Files', () => {
   });
 
   describe('create()', () => {
-    it.only('should call upload()', () => {
+    it('should call upload()', () => {
       const spy = sinon.spy(fileFuncs, 'upload');
       fileFuncs.create();
       expect(spy.calledOnce).toEqual(true);
