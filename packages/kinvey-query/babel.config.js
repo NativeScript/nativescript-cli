@@ -4,6 +4,6 @@ module.exports = (api) => {
   api.cache.never();
 
   return {
-    extends: path.resolve('..', '..', 'babel.config.js')
+    extends: path.resolve('..', 'babel.config.js')
   };
 };

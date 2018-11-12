@@ -4,6 +4,7 @@
   ],
   "parser": "babel-eslint",
   "rules": {
+    "arrow-parens": "off",
     "import/prefer-default-export": "off"
   }
 }

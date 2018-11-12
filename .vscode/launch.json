@@ -351,8 +351,10 @@
       "type": "node",
       "request": "launch",
       "name": "Integration Tests",
-      "program": "${workspaceRoot}/tests/integration/node_modules/.bin/_mocha",
+      "program": "${workspaceFolder}/tests/integration/node_modules/.bin/_mocha",
       "cwd": "${workspaceFolder}/tests/integration",
+      "preLaunchTask": "npm: build:dev",
+      "sourceMaps": true,
       "args": [
         "--require",
         "dotenv/config",
@@ -362,17 +364,12 @@
         "kinvey-test-register",
         "--opts",
         "${workspaceFolder}/tests/integration/mocha.opts",
-        "${workspaceFolder}/tests/integration/src"
+        "${workspaceFolder}/tests/integration/shared/example.spec.js"
       ],
       "env": {
         "NODE_ENV": "development",
-        "SDK": "kinvey-node-sdk"
+        "SDK": "kinvey-example-sdk"
       },
-      "preLaunchTask": "build:dev",
-      "console": "integratedTerminal",
-      "internalConsoleOptions": "openOnSessionStart",
-      "sourceMaps": true,
-      "smartStep": true,
       "skipFiles": [
         "<node_internals>/**/*.js",
         "${workspaceFolder}/node_modules/**/*.js"

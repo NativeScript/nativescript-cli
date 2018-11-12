@@ -13,7 +13,6 @@
     "test": "mocha -r @babel/register \"src/**/*.spec.js\""
   },
   "dependencies": {
-    "@babel/runtime": "7.1.5",
     "js-base64": "^2.4.9",
     "kinvey-acl": "1.0.0",
     "kinvey-app": "1.0.0",
@@ -32,7 +31,6 @@
     "@babel/cli": "7.1.5",
     "@babel/core": "7.1.5",
     "@babel/plugin-proposal-class-properties": "7.1.0",
-    "@babel/plugin-transform-runtime": "7.1.0",
     "@babel/preset-env": "7.1.5",
     "@babel/register": "7.0.0",
     "babel-eslint": "10.0.1",

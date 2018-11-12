@@ -1,9 +1,15 @@
-const path = require('path');
-
 module.exports = (api) => {
   api.cache.never();
 
   return {
-    extends: path.resolve('..', '..', 'babel.config.js')
+    presets: [
+      ['@babel/env', {
+        targets: 'last 2 versions, maintained node versions, not dead',
+        useBuiltIns: 'usage'
+      }]
+    ],
+    plugins: [
+      '@babel/plugin-transform-runtime'
+    ]
   };
 };

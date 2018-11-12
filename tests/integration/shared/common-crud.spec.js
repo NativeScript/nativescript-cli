@@ -1,10 +1,11 @@
 import { expect } from 'chai';
-import * as Kinvey from 'kinvey-node-sdk';
-import * as utilities from './utils';
+import sinon from 'sinon';
 import _ from 'lodash';
+// eslint-disable-next-line import/extensions
+import * as Kinvey from '__SDK__';
+import * as utilities from './utils';
 import * as externalConfig from './config';
 import * as Constants from './constants';
-import sinon from 'sinon';
 
 const dataStoreTypes = [Kinvey.DataStoreType.Network, Kinvey.DataStoreType.Cache, Kinvey.DataStoreType.Sync];
 const invalidQueryMessage = 'Invalid query. It must be an instance of the Query class.';

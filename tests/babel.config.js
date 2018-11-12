@@ -4,12 +4,14 @@ module.exports = (api) => {
   return {
     presets: [
       ['@babel/env', {
-        targets: 'last 2 versions, maintained node versions, not dead',
+        targets: 'maintained node versions',
         useBuiltIns: 'usage'
       }]
     ],
     plugins: [
       '@babel/plugin-transform-runtime'
-    ]
+    ],
+    retainLines: true,
+    sourceMaps: 'inline'
   };
 };

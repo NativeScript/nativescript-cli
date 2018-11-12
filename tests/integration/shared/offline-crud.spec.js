@@ -12,7 +12,7 @@ const shouldNotBeCalledErrorMessage = 'Should not be called';
 const { collectionName } = externalConfig;
 
 dataStoreTypes.forEach((currentDataStoreType) => {
-  describe.only(`${currentDataStoreType} Store CRUD Specific Tests`, () => {
+  describe(`${currentDataStoreType} Store CRUD Specific Tests`, () => {
     let networkStore;
     let syncStore;
     let cacheStore;

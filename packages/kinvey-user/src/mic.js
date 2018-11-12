@@ -21,7 +21,7 @@ export const AuthorizationGrant = {
 };
 Object.freeze(AuthorizationGrant);
 
-async function getTempLoginUrl(clientId, redirectUri, version) {
+function getTempLoginUrl(clientId, redirectUri, version) {
   const { auth } = getConfig();
   const request = new KinveyRequest({
     method: RequestMethod.POST,
@@ -40,8 +40,9 @@ async function getTempLoginUrl(clientId, redirectUri, version) {
       response_type: 'code'
     }
   });
-  const response = await request.execute();
-  return response.data;
+  return request
+    .execute()
+    .then((response) => response.data);
 }
 
 function loginWithPopup(clientId, redirectUri, version) {
@@ -90,7 +91,7 @@ function loginWithPopup(clientId, redirectUri, version) {
   });
 }
 
-async function loginWithUrl(url, username, password, clientId, redirectUri) {
+function loginWithUrl(url, username, password, clientId, redirectUri) {
   const request = new KinveyRequest({
     method: RequestMethod.POST,
     headers: {
@@ -111,20 +112,25 @@ async function loginWithUrl(url, username, password, clientId, redirectUri) {
       scope: 'openid'
     }
   });
-  const response = await request.execute();
-  const location = response.headers.get('location');
+  return request
+    .execute()
+    .then((response) => {
+      const location = response.headers.get('location');
 
-  if (!location) {
-    throw new MobileIdentityConnectError(`Unable to authorize user with username ${username}.`,
-      'A location header was not provided with a code to exchange for an auth token.');
-  }
+      if (!location) {
+        return Promise.reject(
+          new MobileIdentityConnectError(`Unable to authorize user with username ${username}.`,
+            'A location header was not provided with a code to exchange for an auth token.')
+        );
+      }
 
-  const parsedLocation = parse(location, true) || {};
-  const query = parsedLocation.query || {};
-  return query.code;
+      const parsedLocation = parse(location, true) || {};
+      const query = parsedLocation.query || {};
+      return query.code;
+    });
 }
 
-async function getTokenWithCode(code, clientId, redirectUri) {
+function getTokenWithCode(code, clientId, redirectUri) {
   const { auth } = getConfig();
   const request = new KinveyRequest({
     method: RequestMethod.POST,
@@ -144,28 +150,30 @@ async function getTokenWithCode(code, clientId, redirectUri) {
       code
     }
   });
-  const response = await request.execute();
-  const token = response.data;
-  return Object.assign({}, {
-    identity: IDENTITY,
-    client_id: clientId,
-    redirect_uri: redirectUri,
-    protocol: auth.protocol,
-    host: auth.host
-  }, token);
+  return request
+    .execute()
+    .then((response) => {
+      const token = response.data;
+      return Object.assign({}, {
+        identity: IDENTITY,
+        client_id: clientId,
+        redirect_uri: redirectUri,
+        protocol: auth.protocol,
+        host: auth.host
+      }, token);
+    });
 }
 
-export async function login(
-  redirectUri,
-  authorizationGrant = AuthorizationGrant.AuthorizationCodeLoginPage,
-  options = {}) {
+export function login(redirectUri, authorizationGrant = AuthorizationGrant.AuthorizationCodeLoginPage, options = {}) {
   const { appKey } = getConfig();
   const { micId, version = 3, username, password } = options;
   let clientId = appKey;
-  let code;
+  let promise;
 
   if (!isString(redirectUri)) {
-    throw new KinveyError('A redirectUri is required and must be a string.');
+    return Promise.reject(
+      new KinveyError('A redirectUri is required and must be a string.')
+    );
   }
 
   if (isString(micId)) {
@@ -173,12 +181,12 @@ export async function login(
   }
 
   if (authorizationGrant === AuthorizationGrant.AuthorizationCodeAPI) {
-    const url = await getTempLoginUrl(clientId, redirectUri, version);
-    code = await loginWithUrl(url, username, password, clientId, redirectUri);
+    promise = getTempLoginUrl(clientId, redirectUri, version)
+      .then((url) => loginWithUrl(url, username, password, clientId, redirectUri))
   } else {
-    code = await loginWithPopup(clientId, redirectUri, version);
+    promise = loginWithPopup(clientId, redirectUri, version);
   }
 
-  const token = await getTokenWithCode(code, clientId, redirectUri);
-  return token;
+  return promise
+    .then((code) => getTokenWithCode(code, clientId, redirectUri));
 }
