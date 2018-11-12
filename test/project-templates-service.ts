@@ -10,7 +10,13 @@ let isDeleteDirectoryCalledForNodeModulesDir = false;
 const nativeScriptValidatedTemplatePath = "nsValidatedTemplatePath";
 const compatibleTemplateVersion = "1.2.3";
 
-function createTestInjector(configuration: { shouldNpmInstallThrow?: boolean, packageJsonContent?: any } = {}): IInjector {
+
+function createTestInjector(configuration: {
+	shouldNpmInstallThrow?: boolean,
+	packageJsonContent?: any,
+	packageVersion?: string,
+	packageName?: string
+} = {}): IInjector {
 	const injector = new Yok();
 	injector.register("errors", stubs.ErrorsStub);
 	injector.register("logger", stubs.LoggerStub);
@@ -26,28 +32,38 @@ function createTestInjector(configuration: { shouldNpmInstallThrow?: boolean, pa
 		}
 	});
 
-	injector.register("npm", {
-		install: (packageName: string, pathToSave: string, config?: any) => {
+	class NpmStub extends stubs.NodePackageManagerStub {
+		public async install(packageName: string, pathToSave: string, config: INodePackageManagerInstallOptions): Promise<INpmInstallResultInfo> {
 			if (configuration.shouldNpmInstallThrow) {
 				throw new Error("NPM install throws error.");
 			}
 
-			return "sample result";
+			return { name: "Some Result", version: "1" };
 		}
-	});
+		getPackageNameParts(fullPackageName: string): INpmPackageNameParts {
+			return {
+				name: configuration.packageName || fullPackageName,
+				version: configuration.packageVersion || ""
+			}
+		}
+	}
 
-	injector.register("npmInstallationManager", {
-		install: (packageName: string, options?: INpmInstallOptions) => {
+	injector.register("npm", NpmStub);
+
+	class NpmInstallationManagerStub extends stubs.NpmInstallationManagerStub {
+		async install(packageName: string, pathToSave?: string, options?: INpmInstallOptions): Promise<string> {
 			if (configuration.shouldNpmInstallThrow) {
 				throw new Error("NPM install throws error.");
 			}
 
 			return Promise.resolve(nativeScriptValidatedTemplatePath);
-		},
-		getLatestCompatibleVersion: (packageName: string) => {
+		}
+		async getLatestCompatibleVersionSafe(packageName: string): Promise<string> {
 			return compatibleTemplateVersion;
 		}
-	});
+	}
+
+	injector.register("npmInstallationManager", NpmInstallationManagerStub);
 
 	injector.register("projectTemplatesService", ProjectTemplatesService);
 
@@ -253,7 +269,7 @@ describe("project-templates-service", () => {
 				}
 			].forEach(testCase => {
 				it(testCase.name, async () => {
-					const testInjector = createTestInjector();
+					const testInjector = createTestInjector({ packageVersion: testCase.expectedVersion, packageName: testCase.expectedTemplateName });
 					const projectTemplatesService = testInjector.resolve<IProjectTemplatesService>("projectTemplatesService");
 					const { version, templateName } = await projectTemplatesService.prepareTemplate(testCase.templateName, "tempFolder");
 					assert.strictEqual(version, testCase.expectedVersion);

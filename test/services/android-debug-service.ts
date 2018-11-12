@@ -27,6 +27,7 @@ const createTestInjector = (): IInjector => {
 	testInjector.register("devicesService", {});
 	testInjector.register("errors", stubs.ErrorsStub);
 	testInjector.register("logger", stubs.LoggerStub);
+	testInjector.register("npm", stubs.NodePackageManagerStub);
 	testInjector.register("androidDeviceDiscovery", {});
 	testInjector.register("androidProcessService", {});
 	testInjector.register("net", {});

@@ -12,42 +12,33 @@ export class ProjectTemplatesService implements IProjectTemplatesService {
 		private $logger: ILogger,
 		private $npmInstallationManager: INpmInstallationManager,
 		private $pacoteService: IPacoteService,
-		private $errors: IErrors) { }
+		private $errors: IErrors,
+		private $npm: INodePackageManager) { }
 
-	public async prepareTemplate(originalTemplateName: string, projectDir: string): Promise<ITemplateData> {
-		if (!originalTemplateName) {
-			originalTemplateName = constants.RESERVED_TEMPLATE_NAMES["default"];
+	public async prepareTemplate(templateValue: string, projectDir: string): Promise<ITemplateData> {
+		if (!templateValue) {
+			templateValue = constants.RESERVED_TEMPLATE_NAMES["default"];
 		}
 
-		// support <reserved_name>@<version> syntax, for example typescript@1.0.0
-		// support <scoped_package_name>@<version> syntax, for example @nativescript/vue-template@1.0.0
-		const lastIndexOfAtSign = originalTemplateName.lastIndexOf("@");
-		let name = originalTemplateName;
-		let version = "";
-		if (lastIndexOfAtSign > 0) {
-			name = originalTemplateName.substr(0, lastIndexOfAtSign);
-			version = originalTemplateName.substr(lastIndexOfAtSign + 1);
-		}
+		const templateNameParts = this.$npm.getPackageNameParts(templateValue);
+		templateValue = constants.RESERVED_TEMPLATE_NAMES[templateNameParts.name] || templateNameParts.name;
 
-		const templateName = constants.RESERVED_TEMPLATE_NAMES[name.toLowerCase()] || name;
-		if (!this.$fs.exists(templateName)) {
-			version = version || await this.$npmInstallationManager.getLatestCompatibleVersion(templateName);
-		}
+		let version = templateNameParts.version || await this.$npmInstallationManager.getLatestCompatibleVersionSafe(templateValue);
+		const fullTemplateName = this.$npm.getPackageFullName({ name: templateValue, version: version });
 
-		const fullTemplateName = version ? `${templateName}@${version}` : templateName;
 		const templatePackageJsonContent = await this.getTemplatePackageJsonContent(fullTemplateName);
 		const templateVersion = await this.getTemplateVersion(fullTemplateName);
 
 		let templatePath = null;
 		if (templateVersion === constants.TemplateVersions.v1) {
-			templatePath = await this.prepareNativeScriptTemplate(templateName, version, projectDir);
+			templatePath = await this.prepareNativeScriptTemplate(templateValue, version, projectDir);
 			// this removes dependencies from templates so they are not copied to app folder
 			this.$fs.deleteDirectory(path.join(templatePath, constants.NODE_MODULES_FOLDER_NAME));
 		}
 
-		await this.$analyticsService.track("Template used for project creation", templateName);
+		await this.$analyticsService.track("Template used for project creation", templateValue);
 
-		const templateNameToBeTracked = this.getTemplateNameToBeTracked(templateName, templatePackageJsonContent);
+		const templateNameToBeTracked = this.getTemplateNameToBeTracked(templateValue, templatePackageJsonContent);
 		if (templateNameToBeTracked) {
 			await this.$analyticsService.trackEventActionInGoogleAnalytics({
 				action: constants.TrackActionNames.CreateProject,
@@ -61,7 +52,7 @@ export class ProjectTemplatesService implements IProjectTemplatesService {
 			});
 		}
 
-		return { templateName, templatePath, templateVersion, templatePackageJsonContent, version };
+		return { templateName: templateValue, templatePath, templateVersion, templatePackageJsonContent, version };
 	}
 
 	private async getTemplateVersion(templateName: string): Promise<string> {
