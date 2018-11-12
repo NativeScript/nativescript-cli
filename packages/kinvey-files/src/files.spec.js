@@ -214,7 +214,6 @@ describe('Files', () => {
     });
   });
 
-
   describe('download()', () => {
     it('should set tls to true by default', () => {
       const fileEntity = { _id: randomString(), _downloadURL: 'http://tests.com' };

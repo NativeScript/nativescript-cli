@@ -21,6 +21,7 @@
       "packages/kinvey-cache",
       "packages/kinvey-cache-indexeddb",
       "packages/kinvey-cache-memory",
+      "packages/kinvey-cache-websql",
       "packages/kinvey-datastore",
       "packages/kinvey-endpoint",
       "packages/kinvey-errors",

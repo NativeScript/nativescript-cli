@@ -1,0 +1,35 @@
+{
+  "private": true,
+  "version": "1.0.0",
+  "name": "kinvey-cache-websql",
+  "author": "Kinvey, Inc.",
+  "homepage": "http://www.kinvey.com",
+  "license": "Apache-2.0",
+  "main": "lib/index.js",
+  "scripts": {
+    "prebuild": "del lib",
+    "build": "babel src -d lib --ignore \"src/**/*.spec.js\"",
+    "lint": "eslint src",
+    "test": "mocha -r @babel/register \"src/**/*.spec.js\""
+  },
+  "dependencies": {
+    "@babel/runtime": "7.1.5",
+    "kinvey-cache": "1.0.0",
+    "lodash": "4.17.11"
+  },
+  "devDependencies": {
+    "@babel/cli": "7.1.5",
+    "@babel/core": "7.1.5",
+    "@babel/plugin-proposal-class-properties": "7.1.0",
+    "@babel/plugin-transform-runtime": "7.1.0",
+    "@babel/preset-env": "7.1.5",
+    "@babel/register": "7.0.0",
+    "babel-eslint": "10.0.1",
+    "del-cli": "1.1.0",
+    "eslint": "5.8.0",
+    "eslint-config-kinvey-platform": "kinvey/eslint-kinvey-platform#0.1.1",
+    "eslint-plugin-import": "2.14.0",
+    "kinvey-query": "1.0.0",
+    "kinvey-test-utils": "1.0.0"
+  }
+}
