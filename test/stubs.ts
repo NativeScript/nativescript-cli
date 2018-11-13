@@ -243,8 +243,59 @@ export class NpmInstallationManagerStub implements INpmInstallationManager {
 		return Promise.resolve("");
 	}
 
+	async getLatestCompatibleVersionSafe(packageName: string): Promise<string> {
+		return Promise.resolve("");
+	}
+
 	async getInspectorFromCache(name: string, projectDir: string): Promise<string> {
 		return Promise.resolve("");
+	}
+}
+
+export class NodePackageManagerStub implements INodePackageManager {
+	constructor() { }
+
+	public async install(packageName: string, pathToSave: string, config: INodePackageManagerInstallOptions): Promise<INpmInstallResultInfo> {
+		return null;
+	}
+
+	public async uninstall(packageName: string, config?: any, path?: string): Promise<string> {
+		return "";
+	}
+
+	public async search(filter: string[], config: any): Promise<string> {
+		return "";
+	}
+
+	public async view(packageName: string, config: Object): Promise<any> {
+		return {};
+	}
+
+	public async isRegistered(packageName: string): Promise<boolean> {
+		return true;
+	}
+
+	public getPackageNameParts(fullPackageName: string): INpmPackageNameParts {
+		return {
+			name: fullPackageName,
+			version: ""
+		};
+	}
+
+	public getPackageFullName(packageNameParts: INpmPackageNameParts): string {
+		return packageNameParts.version ? `${packageNameParts.name}@${packageNameParts.version}` : packageNameParts.name;
+	}
+
+	public async searchNpms(keyword: string): Promise<INpmsResult> {
+		return null;
+	}
+
+	public async getRegistryPackageData(packageName: string): Promise<any> {
+		return null;
+	}
+
+	public async getCachePath(): Promise<string> {
+		return "";
 	}
 }
 
@@ -275,7 +326,7 @@ export class ProjectDataStub implements IProjectData {
 
 	public initializeProjectData(projectDir?: string): void {
 		this.projectDir = this.projectDir || projectDir;
-		this.projectIdentifiers = { android: "", ios: ""};
+		this.projectIdentifiers = { android: "", ios: "" };
 		this.projectId = "";
 	}
 	public initializeProjectDataFromContent(): void {
@@ -429,7 +480,7 @@ export class PlatformsDataStub extends EventEmitter implements IPlatformsData {
 			normalizedPlatformName: "",
 			appDestinationDirectoryPath: "",
 			deviceBuildOutputPath: "",
-			getValidBuildOutputData: (buildOptions: IBuildOutputOptions) => ({ packageNames: []}),
+			getValidBuildOutputData: (buildOptions: IBuildOutputOptions) => ({ packageNames: [] }),
 			frameworkFilesExtensions: [],
 			relativeToFrameworkConfigurationFilePath: "",
 			fastLivesyncFileExtensions: []
