@@ -5,10 +5,11 @@ import { DeviceDiscoveryEventNames, DEVICE_LOG_EVENT_NAME } from "../../../../co
 export class PreviewDevicesService extends EventEmitter implements IPreviewDevicesService {
 	private connectedDevices: Device[] = [];
 
-	constructor(private $previewAppLogProvider: IPreviewAppLogProvider) {
-		super();
+	constructor(private $previewAppLogProvider: IPreviewAppLogProvider,
+		private $previewAppPluginsService: IPreviewAppPluginsService) {
+			super();
 
-		this.initialize();
+			this.initialize();
 	}
 
 	public getConnectedDevices(): Device[] {
@@ -37,6 +38,10 @@ export class PreviewDevicesService extends EventEmitter implements IPreviewDevic
 		this.$previewAppLogProvider.on(DEVICE_LOG_EVENT_NAME, (deviceId: string, message: string) => {
 			this.emit(DEVICE_LOG_EVENT_NAME, deviceId, message);
 		});
+	}
+
+	public getDeviceWarnings(device: Device): string[] {
+		return this.$previewAppPluginsService.getDeviceWarnings(device);
 	}
 
 	private raiseDeviceFound(device: Device) {

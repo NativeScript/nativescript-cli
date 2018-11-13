@@ -9,9 +9,22 @@ import { PLATFORMS_DIR_NAME, PACKAGE_JSON_FILE_NAME } from "../../../constants";
 export class PreviewAppPluginsService implements IPreviewAppPluginsService {
 	private previewAppVersionWarnings: IDictionary<string[]> = {};
 
-	constructor(private $fs: IFileSystem,
+	constructor(private $errors: IErrors,
+		private $fs: IFileSystem,
 		private $logger: ILogger,
 		private $pluginsService: IPluginsService) { }
+
+	public getDeviceWarnings(device: Device): string[] {
+		if (!device) {
+			this.$errors.failWithoutHelp("No device provided.");
+		}
+
+		if (!device.previewAppVersion) {
+			this.$errors.failWithoutHelp("No version of preview app provided.");
+		}
+
+		return this.previewAppVersionWarnings[device.previewAppVersion];
+	}
 
 	public async comparePluginsOnDevice(data: IPreviewAppLiveSyncData, device: Device): Promise<void> {
 		if (!this.previewAppVersionWarnings[device.previewAppVersion]) {
