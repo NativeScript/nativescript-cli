@@ -162,31 +162,35 @@ export class NetworkStore {
 
   findById(id, options = {}) {
     const stream = KinveyObservable.create(async (observer) => {
-      const { api } = getConfig();
-      const {
-        rawResponse = false,
-        timeout,
-        properties,
-        trace,
-        skipBL,
-        kinveyFileTTL,
-        kinveyFileTLS,
-      } = options;
-      const queryObject = { kinveyfile_ttl: kinveyFileTTL, kinveyfile_tls: kinveyFileTLS };
-      const url = formatKinveyUrl(api.protocol, api.host, `${this.pathname}/${id}`, queryObject);
-      const request = createRequest(RequestMethod.GET, url);
-      request.headers.customRequestProperties = properties;
       try {
-        if (!id) {
-          throw new Error('No id was provided. A valid id is required.');
-        }
+        // if (!id) {
+        //   throw new Error('No id was provided. A valid id is required.');
+        // }
 
-        const response = await request.execute();
+        if (id) {
+          const { api } = getConfig();
+          const {
+            rawResponse = false,
+            timeout,
+            properties,
+            trace,
+            skipBL,
+            kinveyFileTTL,
+            kinveyFileTLS,
+          } = options;
+          const queryObject = { kinveyfile_ttl: kinveyFileTTL, kinveyfile_tls: kinveyFileTLS };
+          const url = formatKinveyUrl(api.protocol, api.host, `${this.pathname}/${id}`, queryObject);
+          const request = createRequest(RequestMethod.GET, url);
+          request.headers.customRequestProperties = properties;
+          const response = await request.execute();
 
-        if (rawResponse === true) {
-          observer.next(response);
+          if (rawResponse === true) {
+            observer.next(response);
+          } else {
+            observer.next(response.data);
+          }
         } else {
-          observer.next(response.data);
+          observer.next(undefined);
         }
 
         observer.complete();

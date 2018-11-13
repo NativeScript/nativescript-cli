@@ -8,7 +8,7 @@
   "main": "lib/ping.js",
   "scripts": {
     "prebuild": "del lib",
-    "build": "babel src -d lib --ignore \"src/**/*.spec.js\"",
+    "build": "BABEL_ENV=development babel src -d lib --ignore \"src/**/*.spec.js\"",
     "lint": "eslint src",
     "test": "mocha -r @babel/register \"src/**/*.spec.js\""
   },
@@ -21,7 +21,6 @@
   "devDependencies": {
     "@babel/cli": "7.1.5",
     "@babel/core": "7.1.5",
-    "@babel/plugin-proposal-class-properties": "7.1.0",
     "@babel/plugin-transform-runtime": "7.1.0",
     "@babel/preset-env": "7.1.5",
     "@babel/register": "7.0.0",

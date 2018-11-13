@@ -1,9 +1,6 @@
-const path = require('path');
+const common = require('../babel.config');
 
 module.exports = (api) => {
-  api.cache.never();
-
-  return {
-    extends: path.resolve('..', 'babel.config.js')
-  };
+  const config = common(api);
+  return config;
 };

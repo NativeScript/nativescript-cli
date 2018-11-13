@@ -17,7 +17,7 @@ const APPDATA_NAMESPACE = 'appdata';
  *    console.log('Kinvey Ping Failed. Response: ' + error.description);
  *  });
  */
-export function ping() {
+export async function ping() {
   const { appKey, api } = getConfig();
   const request = new KinveyRequest({
     method: RequestMethod.GET,
@@ -26,8 +26,6 @@ export function ping() {
     },
     url: formatKinveyUrl(api.protocol, api.host, `/${APPDATA_NAMESPACE}/${appKey}`)
   });
-  return request.execute()
-    .then((response) => {
-      return response.data;
-    });
+  const response = await request.execute();
+  return response.data;
 }

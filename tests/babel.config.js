@@ -4,6 +4,7 @@ module.exports = (api) => {
   return {
     presets: [
       ['@babel/env', {
+        modules: 'umd',
         targets: 'maintained node versions',
         useBuiltIns: 'usage'
       }]

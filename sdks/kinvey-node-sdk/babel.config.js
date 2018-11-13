@@ -1,15 +1,6 @@
-module.exports = (api) => {
-  api.cache.never();
+const common = require('../babel.config');
 
-  return {
-    presets: [
-      ['@babel/env', {
-        targets: 'last 2 versions, maintained node versions, not dead',
-        useBuiltIns: 'usage'
-      }]
-    ],
-    plugins: [
-      '@babel/plugin-transform-runtime'
-    ]
-  };
+module.exports = (api) => {
+  const config = common(api);
+  return config;
 };

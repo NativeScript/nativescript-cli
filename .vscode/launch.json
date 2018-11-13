@@ -355,6 +355,7 @@
       "cwd": "${workspaceFolder}/tests/integration",
       "preLaunchTask": "npm: build:dev",
       "sourceMaps": true,
+      "smartStep": true,
       "args": [
         "--require",
         "dotenv/config",
@@ -364,11 +365,11 @@
         "kinvey-test-register",
         "--opts",
         "${workspaceFolder}/tests/integration/mocha.opts",
-        "${workspaceFolder}/tests/integration/shared/example.spec.js"
+        "${workspaceFolder}/tests/integration/shared/**/*.js"
       ],
       "env": {
         "NODE_ENV": "development",
-        "SDK": "kinvey-example-sdk"
+        "SDK": "kinvey-node-sdk"
       },
       "skipFiles": [
         "<node_internals>/**/*.js",

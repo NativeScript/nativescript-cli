@@ -165,7 +165,6 @@ dataStoreTypes.forEach((currentDataStoreType) => {
               expect(nextHandlerSpy.callCount).to.equal(expectedCallCount);
               expect(err.name).to.contain(notFoundErrorName);
             } catch (err) {
-              console.log(err);
               return done(err);
             }
             return done();
@@ -761,7 +760,7 @@ dataStoreTypes.forEach((currentDataStoreType) => {
 
         before((done) => {
           expectedAscending = _.sortBy(entities, numberFieldName);
-          // moving entities with null values at the beginning of the array, as this is the sort order on the server
+          // moving entities with null values to the beginning of the array, as this is the sort order on the server
           expectedAscending.unshift(expectedAscending.pop());
           expectedDescending = expectedAscending.slice().reverse();
           done();
@@ -794,7 +793,7 @@ dataStoreTypes.forEach((currentDataStoreType) => {
               });
           });
 
-          it('should sort by two fields ascending and descending', (done) => {
+          it.skip('should sort by two fields ascending and descending', (done) => {
             query.ascending(secondSortField);
             query.descending(textFieldName);
             query.notEqualTo('_id', entities[dataCount - 1]._id);
@@ -961,11 +960,11 @@ dataStoreTypes.forEach((currentDataStoreType) => {
           .catch(done);
       });
 
-      beforeEach(async () => {
+      beforeEach(() => {
         if (dataStoreType !== Kinvey.DataStoreType.Network) {
-          return await storeToTest.clearSync();
+          return storeToTest.clearSync();
         }
-        done();
+
         return Promise.resolve();
       });
 
@@ -1207,11 +1206,10 @@ dataStoreTypes.forEach((currentDataStoreType) => {
       });
 
       describe('remove()', () => {
-        before(async () => {
+        before(() => {
           if (dataStoreType !== Kinvey.DataStoreType.Network) {
-            return await storeToTest.clearSync();
+            return storeToTest.clearSync();
           }
-          done();
           return Promise.resolve();
         });
 

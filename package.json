@@ -5,7 +5,7 @@
   "scripts": {
     "bootstrap": "lerna run bootstrap",
     "build": "lerna run build --parallel",
-    "build:dev": "BABEL_ENV=development NODE_ENV=development npm run build",
+    "build:dev": "NODE_ENV=development npm run build",
     "lint": "lerna run lint --parallel",
     "test": "lerna run test --parallel",
     "test:ci": "yarn lint && yarn test"
@@ -40,7 +40,6 @@
       "packages/kinvey-session",
       "packages/kinvey-session-web",
       "packages/kinvey-user",
-      "sdks/kinvey-example-sdk",
       "sdks/kinvey-html5-sdk",
       "sdks/kinvey-nativescript-sdk",
       "sdks/kinvey-node-sdk",

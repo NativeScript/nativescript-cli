@@ -1,10 +1,8 @@
 import { expect } from 'chai';
-import * as Kinvey from 'kinvey-node-sdk';
+// eslint-disable-next-line import/extensions
+import * as Kinvey from '__SDK__';
 import * as utilities from './utils';
-import _ from 'lodash';
 import * as externalConfig from './config';
-import sinon from 'sinon';
-
 
 const dataStoreTypes = [Kinvey.DataStoreType.Cache, Kinvey.DataStoreType.Sync];
 const notFoundErrorName = 'NotFoundError';
@@ -123,7 +121,6 @@ dataStoreTypes.forEach((currentDataStoreType) => {
               return done(new Error(shouldNotBeCalledErrorMessage));
             })
             .catch((error) => {
-              console.log(error);
               expect(error.name).to.equal(notFoundErrorName);
               done();
             })
@@ -138,8 +135,7 @@ dataStoreTypes.forEach((currentDataStoreType) => {
             .then((entity) => syncStore.removeById(entity._id))
             .then(() => storeToTest.remove(query))
             .then(() => networkStore.findById(entity._id).toPromise())
-            .then((res) => {
-              console.log(res);
+            .then(() => {
               return done(new Error(shouldNotBeCalledErrorMessage));
             })
             .catch((error) => {

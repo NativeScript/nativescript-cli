@@ -1,10 +1,10 @@
 import { expect } from 'chai';
+import _ from 'lodash';
 // eslint-disable-next-line import/extensions
 import * as Kinvey from '__SDK__';
-import _ from 'lodash';
 import * as utilities from './utils';
 
-describe('Files', () => {
+describe.skip('Files', () => {
   before(() => {
     return Kinvey.init({
       appKey: process.env.APP_KEY,

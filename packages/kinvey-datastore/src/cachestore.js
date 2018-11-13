@@ -90,8 +90,6 @@ export class CacheStore {
   }
 
   findById(id, options = {}) {
-    const autoSync = options.autoSync === true || this.autoSync;
-    const cache = new DataStoreCache(this.collectionName, this.tag);
     const stream = KinveyObservable.create(async (observer) => {
       try {
         // if (!id) {
@@ -101,6 +99,8 @@ export class CacheStore {
         if (!id) {
           observer.next(undefined);
         } else {
+          const autoSync = options.autoSync === true || this.autoSync;
+          const cache = new DataStoreCache(this.collectionName, this.tag);
           const cachedDoc = await cache.findById(id);
 
           if (!cachedDoc) {
@@ -117,6 +117,11 @@ export class CacheStore {
             const query = new Query().equalTo('_id', id);
             await this.pull(query, options);
             const doc = await cache.findById(id);
+
+            if (!doc) {
+              throw new NotFoundError();
+            }
+
             observer.next(doc);
           }
         }
@@ -198,6 +203,7 @@ export class CacheStore {
     const cache = new DataStoreCache(this.collectionName, this.tag);
     const sync = new Sync(this.collectionName, this.tag);
     let count = 0;
+    let syncDocs = [];
 
     // Find the docs that will be removed from the cache that match the query
     const docs = await cache.find(query);
@@ -207,20 +213,23 @@ export class CacheStore {
       count = await cache.remove(query);
 
       // Add delete events for the removed docs to sync
-      const syncDocs = await sync.addDeleteSyncEvent(docs);
+      syncDocs = await sync.addDeleteSyncEvent(docs);
+    } else {
+      // Find sync docs matching the query
+      syncDocs = await sync.find(query);
+    }
 
-      // Remove the docs from the backend
-      if (syncDocs.length > 0 && autoSync) {
-        const pushQuery = new Query().contains('_id', syncDocs.map(doc => doc._id));
-        const pushResults = await sync.push(pushQuery);
-        count = pushResults.reduce((count, pushResult) => {
-          if (pushResult.error) {
-            return count - 1;
-          }
+    // Remove the docs from the backend
+    if (syncDocs.length > 0 && autoSync) {
+      const pushQuery = new Query().contains('_id', syncDocs.map(doc => doc._id));
+      const pushResults = await sync.push(pushQuery);
+      count = pushResults.reduce((count, pushResult) => {
+        if (pushResult.error) {
+          return count - 1;
+        }
 
-          return count;
-        }, count);
-      }
+        return count;
+      }, count);
     }
 
     return { count };

@@ -67,7 +67,7 @@ export async function save(dbName, collectionName, docsToSaveOrUpdate) {
     let savedDoc = collection.by('_id', doc._id);
 
     if (savedDoc) {
-      savedDoc = Object.assign({}, savedDoc, doc);
+      savedDoc = Object.assign({ $loki: savedDoc.$loki }, doc);
       collection.update(savedDoc);
       return savedDoc;
     }

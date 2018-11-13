@@ -1,18 +1,13 @@
-import { register as registerHttp } from 'kinvey-http-node';
-import { register as registerCache } from 'kinvey-cache-memory';
-import * as Identity from 'kinvey-user';
+import * as User from 'kinvey-user';
 
-registerHttp();
-registerCache();
+const BackwardsCompatibleUser = User.User;
 
-const BackwardsCompatibleIdentity = Identity.User;
+Object.keys(User).forEach((key) => {
+  const val = User[key];
 
-Object.keys(Identity).forEach((key) => {
-  const val = Identity[key];
-
-  if (val !== Identity.User) {
-    BackwardsCompatibleIdentity[key] = val;
+  if (val !== User.User) {
+    BackwardsCompatibleUser[key] = val;
   }
 });
 
-export { BackwardsCompatibleIdentity as User };
+export { BackwardsCompatibleUser as User };

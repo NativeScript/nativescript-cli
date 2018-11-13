@@ -94,7 +94,7 @@ export class User {
     return false;
   }
 
-  me() {
+  async me() {
     const { api, appKey } = getConfig();
     const request = new KinveyRequest({
       method: RequestMethod.GET,
@@ -103,49 +103,40 @@ export class User {
       },
       url: formatKinveyUrl(api.protocol, api.host, `/${USER_NAMESPACE}/${appKey}/_me`)
     });
-    return request
-      .execute()
-      .then((response) => {
-        const data = response.data;
+    const response = await request.execute();
+    const data = response.data;
 
-        // Remove sensitive data
-        delete data.password;
+    // Remove sensitive data
+    delete data.password;
 
-        // Merge _socialIdentity
-        if (data._socialIdentity) {
-          data._socialIdentity = mergeSocialIdentity(this._socialIdentity, data._socialIdentity);
-        }
+    // Merge _socialIdentity
+    if (data._socialIdentity) {
+      data._socialIdentity = mergeSocialIdentity(this._socialIdentity, data._socialIdentity);
+    }
 
-        // Update the active session
-        if (this.isActive()) {
-          setSession(data);
-        }
+    // Update the active session
+    if (this.isActive()) {
+      setSession(data);
+    }
 
-        this.data = data;
-        return this;
-      });
+    this.data = data;
+    return this;
   }
 
-  update(data) {
+  async update(data) {
     const { api, appKey, masterSecret } = getConfig();
     const body = Object.assign({}, this.data, data);
 
     if (!data) {
-      return Promise.reject(
-        new KinveyError('No user was provided to be updated.')
-      );
+      throw new KinveyError('No user was provided to be updated.');
     }
 
     if (isArray(data)) {
-      return Promise.reject(
-        new KinveyError('Only one user can be updated at one time.')
-      );
+      throw new KinveyError('Only one user can be updated at one time.');
     }
 
     if (!body._id) {
-      return Promise.reject(
-        new KinveyError('User must have an _id.')
-      );
+      throw new KinveyError('User must have an _id.');
     }
 
     const request = new KinveyRequest({
@@ -156,27 +147,24 @@ export class User {
       url: formatKinveyUrl(api.protocol, api.host, `/${USER_NAMESPACE}/${appKey}/${this._id}`),
       body
     });
-    return request
-      .execute()
-      .then((response) => {
-        const updatedData = response.data;
+    const response = await request.execute();
+    const updatedData = response.data;
 
-        // Remove sensitive data
-        delete updatedData.password;
+    // Remove sensitive data
+    delete updatedData.password;
 
-        // Merge _socialIdentity
-        if (updatedData._socialIdentity) {
-          updatedData._socialIdentity = mergeSocialIdentity(this._socialIdentity, updatedData._socialIdentity);
-        }
+    // Merge _socialIdentity
+    if (updatedData._socialIdentity) {
+      updatedData._socialIdentity = mergeSocialIdentity(this._socialIdentity, updatedData._socialIdentity);
+    }
 
-        // Update the active session
-        if (this.isActive()) {
-          setSession(updatedData);
-        }
+    // Update the active session
+    if (this.isActive()) {
+      setSession(updatedData);
+    }
 
-        this.data = updatedData;
-        return this;
-      });
+    this.data = updatedData;
+    return this;
   }
 }
 
@@ -190,15 +178,13 @@ export function getActiveUser() {
   return null;
 }
 
-export function signup(data, options = {}) {
+export async function signup(data, options = {}) {
   const { api, appKey, appSecret } = getConfig();
   const activeUser = getSession();
   const { state = true } = options;
 
   if (state === true && activeUser) {
-    Promise.reject(
-      new ActiveUserError('An active user already exists. Please logout the active user before you signup.')
-    );
+    throw new ActiveUserError('An active user already exists. Please logout the active user before you signup.');
   }
 
   const url = formatKinveyUrl(api.protocol, api.host, `/${USER_NAMESPACE}/${appKey}`);
@@ -216,28 +202,23 @@ export function signup(data, options = {}) {
     request.body = isEmpty(data) ? null : data;
   }
 
-  return request
-    .execute()
-    .then((response) => {
-      const session = response.data;
+  const response = await request.execute();
+  const session = response.data;
 
-      if (state === true) {
-        setSession(session);
-      }
+  if (state === true) {
+    setSession(session);
+  }
 
-      return new User(session);
-    });
+  return new User(session);
 }
 
-export function login(username, password) {
+export async function login(username, password) {
   const { api, appKey, appSecret } = getConfig();
   const activeUser = getActiveUser();
   let credentials = username;
 
   if (activeUser) {
-    return Promise.reject(
-      new ActiveUserError('An active user already exists. Please logout the active user before you login.')
-    );
+    throw new ActiveUserError('An active user already exists. Please logout the active user before you login.');
   }
 
   if (!isPlainObject(credentials)) {
@@ -254,9 +235,7 @@ export function login(username, password) {
 
   if ((!credentials.username || credentials.username === '' || !credentials.password || credentials.password === '')
     && !credentials._socialIdentity) {
-    return Promise.reject(
-      new KinveyError('Username and/or password missing. Please provide both a username and password to login.')
-    );
+    throw new KinveyError('Username and/or password missing. Please provide both a username and password to login.');
   }
 
   const request = new KinveyRequest({
@@ -267,119 +246,108 @@ export function login(username, password) {
     url: formatKinveyUrl(api.protocol, api.host, `/${USER_NAMESPACE}/${appKey}/login`),
     body: credentials
   });
-  return request
-    .execute()
-    .then((response) => {
-      const session = response.data;
+  const response = await request.execute();
+  const session = response.data;
 
-      // Remove sensitive data
-      delete session.password;
+  // Remove sensitive data
+  delete session.password;
 
-      // Merge _socialIdentity
-      if (credentials._socialIdentity) {
-        session._socialIdentity = mergeSocialIdentity(credentials._socialIdentity, session._socialIdentity);
-      }
+  // Merge _socialIdentity
+  if (credentials._socialIdentity) {
+    session._socialIdentity = mergeSocialIdentity(credentials._socialIdentity, session._socialIdentity);
+  }
 
-      // Store the active session
-      setSession(session);
+  // Store the active session
+  setSession(session);
 
-      // Return the user
-      return new User(session);
-    });
+  // Return the user
+  return new User(session);
 }
 
-export function loginWithMIC(redirectUri, authorizationGrant, options) {
+export async function loginWithMIC(redirectUri, authorizationGrant, options) {
   const activeUser = getActiveUser();
 
   if (activeUser) {
-    return Promise.reject(
-      new ActiveUserError(
-        'An active user already exists. Please logout the active user before you login with Mobile Identity Connect.'
-      )
+    throw new ActiveUserError(
+      'An active user already exists. Please logout the active user before you login with Mobile Identity Connect.'
     );
   }
 
-  return MIC
-    .login(redirectUri, authorizationGrant, options)
-    .then((session) => {
-      const socialIdentity = {};
-      socialIdentity[MIC.IDENTITY] = session;
-      const credentials = { _socialIdentity: socialIdentity };
+  const session = await MIC.login(redirectUri, authorizationGrant, options);
+  const socialIdentity = {};
+  socialIdentity[MIC.IDENTITY] = session;
+  const credentials = { _socialIdentity: socialIdentity };
 
-      return login(credentials)
-        .catch((error) => {
-          if (error instanceof NotFoundError) {
-            return signup(credentials);
-          }
+  try {
+    return await login(credentials);
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      return await signup(credentials);
+    }
 
-          return Promise.reject(error);
-        });
-    });
+    throw error;
+  }
 }
 
-export function logout() {
+export async function logout() {
+  const { api, appKey } = getConfig();
   const activeUser = getActiveUser();
 
   if (activeUser) {
-    // TODO: unregister from live service and push
+    try {
+      // TODO: unregister from live service and push
 
-    const { api, appKey } = getConfig();
-    const url = formatKinveyUrl(api.protocol, api.host, `/${USER_NAMESPACE}/${appKey}/_logout`);
-    const request = new KinveyRequest({
-      method: RequestMethod.POST,
-      headers: {
-        Authorization: Auth.Session(getSession())
-      },
-      url
-    });
-    return request
-      .execute()
-      // eslint-disable-next-line no-unused-vars
-      .catch((error) => {
-        // TODO: log error
-      })
-      .then(() => removeSession())
-      .then(() => clear())
-      .then(() => activeUser);
+      const url = formatKinveyUrl(api.protocol, api.host, `/${USER_NAMESPACE}/${appKey}/_logout`);
+      const request = new KinveyRequest({
+        method: RequestMethod.POST,
+        headers: {
+          Authorization: Auth.Session(getSession())
+        },
+        url
+      });
+      await request.execute();
+    } catch (error) {
+      // TODO: log error
+    }
+
+    removeSession();
+    await clear();
+    return activeUser;
   }
 
-  return Promise.resolve(null);
+  return null;
 }
 
-export function me() {
+export async function me() {
   const activeUser = getActiveUser();
 
   if (activeUser) {
     return activeUser.me();
   }
 
-  return Promise.resolve(null);
+  return null;
 }
 
-export function update(data) {
+export async function update(data) {
   const activeUser = getActiveUser();
 
   if (activeUser) {
     return activeUser.update(data);
   }
 
-  return Promise.resolve(null);
+  return null;
 }
 
-export function remove(id, options = {}) {
+export async function remove(id, options = {}) {
   const { api, appKey, masterSecret } = getConfig();
   const { hard } = options;
 
   if (!id) {
-    return Promise.reject(
-      new KinveyError('An id was not provided.')
-    );
+    throw new KinveyError('An id was not provided.');
   }
 
   if (!isString(id)) {
-    return Promise.reject(
-      new KinveyError('The id provided is not a string.')
-    );
+    throw new KinveyError('The id provided is not a string.');
   }
 
   const url = formatKinveyUrl(api.protocol, api.host, `/user/${appKey}/${id}`, { hard: hard ? hard === true : undefined });
@@ -390,27 +358,20 @@ export function remove(id, options = {}) {
     },
     url
   });
-  return request
-    .execute()
-    .then((response) => {
-      removeSession();
-      return response.data;
-    });
+  const response = await request.execute();
+  removeSession();
+  return response.data;
 }
 
-export function verifyEmail(username) {
+export async function verifyEmail(username) {
   const { api, appKey, appSecret } = getConfig();
 
   if (!username) {
-    return Promise.reject(
-      new KinveyError('A username was not provided.')
-    );
+    throw new KinveyError('A username was not provided.');
   }
 
   if (!isString(username)) {
-    return Promise.reject(
-      new KinveyError('The provided username is not a string.')
-    );
+    throw new KinveyError('The provided username is not a string.');
   }
 
   const request = new KinveyRequest({
@@ -420,24 +381,19 @@ export function verifyEmail(username) {
     },
     url: formatKinveyUrl(api.protocol, api.host, `/${RPC_NAMESPACE}/${appKey}/${username}/user-email-verification-initiate`)
   });
-  return request
-  .execute()
-  .then((response) => response.data);
+  const response = await request.execute();
+  return response.data;
 }
 
-export function forgotUsername(email) {
+export async function forgotUsername(email) {
   const { api, appKey, appSecret } = getConfig();
 
   if (!email) {
-    return Promise.reject(
-      new KinveyError('An email was not provided.')
-    );
+    throw new KinveyError('An email was not provided.');
   }
 
   if (!isString(email)) {
-    return Promise.reject(
-      new KinveyError('The provided email is not a string.')
-    );
+    throw new KinveyError('The provided email is not a string.');
   }
 
   const request = new KinveyRequest({
@@ -448,24 +404,19 @@ export function forgotUsername(email) {
     url: formatKinveyUrl(api.protocol, api.host, `/${RPC_NAMESPACE}/${appKey}/user-forgot-username`),
     body: { email }
   });
-  return request
-    .execute()
-    .then((response) => response.data);
+  const response = await request.execute();
+  return response.data;
 }
 
-export function resetPassword(username) {
+export async function resetPassword(username) {
   const { api, appKey, appSecret } = getConfig();
 
   if (!username) {
-    return Promise.reject(
-      new KinveyError('A username was not provided.')
-    );
+    throw new KinveyError('A username was not provided.');
   }
 
   if (!isString(username)) {
-    return Promise.reject(
-      new KinveyError('The provided username is not a string.')
-    );
+    throw new KinveyError('The provided username is not a string.');
   }
 
   const request = new KinveyRequest({
@@ -475,13 +426,12 @@ export function resetPassword(username) {
     },
     url: formatKinveyUrl(api.protocol, api.host, `/${RPC_NAMESPACE}/${appKey}/${username}/user-password-reset-initiate`)
   });
-  return request
-    .execute()
-    .then((response) => response.data);
+  const response = await request.execute();
+  return response.data;
 }
 
 export function lookup(query) {
-  const stream = KinveyObservable.create((observer) => {
+  const stream = KinveyObservable.create(async (observer) => {
     try {
       if (query && !(query instanceof Query)) {
         throw new KinveyError('Invalid query. It must be an instance of the Query class.');
@@ -496,12 +446,9 @@ export function lookup(query) {
         url: formatKinveyUrl(api.protocol, api.host, `/${USER_NAMESPACE}/${appKey}/_lookup`),
         body: query ? query.filter : undefined
       });
-      request
-        .execute()
-        .then((response) => {
-          observer.next(response.data);
-          observer.complete();
-        });
+      const response = await request.execute();
+      observer.next(response.data);
+      observer.complete();
     } catch (error) {
       observer.error(error);
     }
@@ -509,19 +456,15 @@ export function lookup(query) {
   return stream;
 }
 
-export function exists(username) {
+export async function exists(username) {
   const { api, appKey, appSecret } = getConfig();
 
   if (!username) {
-    return Promise.reject(
-      new KinveyError('A username was not provided.')
-    );
+    throw new KinveyError('A username was not provided.');
   }
 
   if (!isString(username)) {
-    return Promise.reject(
-      new KinveyError('The provided username is not a string.')
-    );
+    throw new KinveyError('The provided username is not a string.');
   }
 
   const request = new KinveyRequest({
@@ -532,7 +475,6 @@ export function exists(username) {
     url: formatKinveyUrl(api.protocol, api.host, `/${RPC_NAMESPACE}/${appKey}/check-username-exists`),
     body: { username }
   });
-  return request
-    .execute()
-    .then((response) => response.data.usernameExists === true);
+  const response = await request.execute();
+  return response.data.usernameExists === true;
 }

@@ -88,34 +88,36 @@ export class Cache {
         }
 
         if (!isEmpty(sort)) {
+          // eslint-disable-next-line arrow-body-style
           docs.sort((a, b) => {
-            const result = Object.keys(sort).reduce((result, field) => {
-              if (typeof result !== 'undefined') {
-                return result;
-              }
-
-              if (Object.prototype.hasOwnProperty.call(sort, field)) {
-                const aField = nested(a, field);
-                const bField = nested(b, field);
-                const modifier = sort[field]; // 1 (ascending) or -1 (descending).
-
-                if ((aField !== null && typeof aField !== 'undefined')
-                  && (bField === null || typeof bField === 'undefined')) {
-                  return 1 * modifier;
-                } else if ((bField !== null && typeof bField !== 'undefined')
-                  && (aField === null || typeof aField === 'undefined')) {
-                  return -1 * modifier;
-                } else if (typeof aField === 'undefined' && bField === null) {
-                  return 0;
-                } else if (aField === null && typeof bField === 'undefined') {
-                  return 0;
-                } else if (aField !== bField) {
-                  return (aField < bField ? -1 : 1) * modifier;
+            return Object.keys(sort)
+              .reduce((result, field) => {
+                if (typeof result !== 'undefined') {
+                  return result;
                 }
-              }
-            });
 
-            return result || 0;
+                if (Object.prototype.hasOwnProperty.call(sort, field)) {
+                  const aField = nested(a, field);
+                  const bField = nested(b, field);
+                  const modifier = sort[field]; // -1 (descending) or 1 (ascending)
+
+                  if ((aField !== null && typeof aField !== 'undefined')
+                    && (bField === null || typeof bField === 'undefined')) {
+                    return 1 * modifier;
+                  } else if ((bField !== null && typeof bField !== 'undefined')
+                    && (aField === null || typeof aField === 'undefined')) {
+                    return -1 * modifier;
+                  } else if (typeof aField === 'undefined' && bField === null) {
+                    return 0;
+                  } else if (aField === null && typeof bField === 'undefined') {
+                    return 0;
+                  } else if (aField !== bField) {
+                    return (aField < bField ? -1 : 1) * modifier;
+                  }
+                }
+
+                return 0;
+              }, undefined);
           });
         }
 

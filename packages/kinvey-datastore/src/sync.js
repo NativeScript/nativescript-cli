@@ -4,7 +4,7 @@ import { Query } from 'kinvey-query';
 import { formatKinveyUrl, KinveyRequest, RequestMethod, Auth, KinveyHeaders } from 'kinvey-http';
 import { get as getSession } from 'kinvey-session';
 import { getConfig } from 'kinvey-app';
-import { MissingConfigurationError, ParameterValueOutOfRangeError, SyncError } from 'kinvey-errors';
+import { MissingConfigurationError, ParameterValueOutOfRangeError, SyncError, NotFoundError } from 'kinvey-errors';
 import { NetworkStore } from './networkstore';
 import { DataStoreCache } from './cache';
 
@@ -195,8 +195,15 @@ export class Sync {
 
           if (event === SyncEvent.Delete) {
             try {
-              // Remove the doc from the backend
-              await network.removeById(_id, options);
+              try {
+                // Remove the doc from the backend
+                await network.removeById(_id, options);
+              } catch (error) {
+                // Rethrow the error if it is not a NotFoundError
+                if (!(error instanceof NotFoundError)) {
+                  throw error;
+                }
+              }
 
               // Remove the sync doc
               await syncCache.removeById(_id);
