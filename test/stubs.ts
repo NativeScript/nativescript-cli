@@ -279,7 +279,7 @@ export class NodePackageManagerStub implements INodePackageManager {
 		return {
 			name: fullPackageName,
 			version: ""
-		}
+		};
 	}
 
 	public getPackageFullName(packageNameParts: INpmPackageNameParts): string {
@@ -291,7 +291,7 @@ export class NodePackageManagerStub implements INodePackageManager {
 	}
 
 	public async getRegistryPackageData(packageName: string): Promise<any> {
-		return null
+		return null;
 	}
 
 	public async getCachePath(): Promise<string> {

@@ -145,7 +145,7 @@ export class NodePackageManager implements INodePackageManager {
 		return {
 			name: templateName || fullPackageName,
 			version: version
-		}
+		};
 	}
 
 	public getPackageFullName(packageNameParts: INpmPackageNameParts): string {

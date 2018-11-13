@@ -10,7 +10,6 @@ let isDeleteDirectoryCalledForNodeModulesDir = false;
 const nativeScriptValidatedTemplatePath = "nsValidatedTemplatePath";
 const compatibleTemplateVersion = "1.2.3";
 
-
 function createTestInjector(configuration: {
 	shouldNpmInstallThrow?: boolean,
 	packageJsonContent?: any,
@@ -44,7 +43,7 @@ function createTestInjector(configuration: {
 			return {
 				name: configuration.packageName || fullPackageName,
 				version: configuration.packageVersion || ""
-			}
+			};
 		}
 	}
 

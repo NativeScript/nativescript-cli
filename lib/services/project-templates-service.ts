@@ -23,7 +23,7 @@ export class ProjectTemplatesService implements IProjectTemplatesService {
 		const templateNameParts = this.$npm.getPackageNameParts(templateValue);
 		templateValue = constants.RESERVED_TEMPLATE_NAMES[templateNameParts.name] || templateNameParts.name;
 
-		let version = templateNameParts.version || await this.$npmInstallationManager.getLatestCompatibleVersionSafe(templateValue);
+		const version = templateNameParts.version || await this.$npmInstallationManager.getLatestCompatibleVersionSafe(templateValue);
 		const fullTemplateName = this.$npm.getPackageFullName({ name: templateValue, version: version });
 
 		const templatePackageJsonContent = await this.getTemplatePackageJsonContent(fullTemplateName);
