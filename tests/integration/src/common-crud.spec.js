@@ -164,7 +164,6 @@ dataStoreTypes.forEach((currentDataStoreType) => {
               expect(nextHandlerSpy.callCount).to.equal(expectedCallCount);
               expect(err.name).to.contain(notFoundErrorName);
             } catch (err) {
-              console.log(err);
               return done(err);
             }
             return done();
@@ -964,7 +963,6 @@ dataStoreTypes.forEach((currentDataStoreType) => {
         if (dataStoreType !== Kinvey.DataStoreType.Network) {
           return await storeToTest.clearSync();
         }
-        done();
         return Promise.resolve();
       });
 
@@ -1210,7 +1208,6 @@ dataStoreTypes.forEach((currentDataStoreType) => {
           if (dataStoreType !== Kinvey.DataStoreType.Network) {
             return await storeToTest.clearSync();
           }
-          done();
           return Promise.resolve();
         });
 

@@ -4,6 +4,7 @@ import * as Kinvey from '__SDK__';
 import * as config from './config';
 import * as utilities from './utils';
 
+var appCredentials;
 const collectionName = config.collectionName;
 const assertUserData = (user, expectedUsername, shouldReturnPassword) => {
   expect(user.data._id).to.exist;
@@ -37,7 +38,7 @@ const safelySignUpUser = (username, password, state, createdUserIds) => {
         username: username,
         password: password,
         email: utilities.randomEmailAddress()
-      }, { state: state });
+      }, { state: state })
     })
     .then((user) => {
       createdUserIds.push(user.data._id);
@@ -46,11 +47,15 @@ const safelySignUpUser = (username, password, state, createdUserIds) => {
 };
 
 before(() => {
-  return Kinvey.init({
+  appCredentials = Kinvey.init({
     appKey: process.env.APP_KEY,
     appSecret: process.env.APP_SECRET,
     masterSecret: process.env.MASTER_SECRET
   });
+});
+
+before(() => {
+  utilities.cleanUpCollection(appCredentials, 'user');
 });
 
 describe('User tests', () => {

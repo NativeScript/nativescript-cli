@@ -12,7 +12,7 @@ const shouldNotBeCalledErrorMessage = 'Should not be called';
 const { collectionName } = externalConfig;
 
 dataStoreTypes.forEach((currentDataStoreType) => {
-  describe.only(`${currentDataStoreType} Store CRUD Specific Tests`, () => {
+  describe(`${currentDataStoreType} Store CRUD Specific Tests`, () => {
     let networkStore;
     let syncStore;
     let cacheStore;
@@ -123,7 +123,6 @@ dataStoreTypes.forEach((currentDataStoreType) => {
               return done(new Error(shouldNotBeCalledErrorMessage));
             })
             .catch((error) => {
-              console.log(error);
               expect(error.name).to.equal(notFoundErrorName);
               done();
             })
@@ -139,7 +138,6 @@ dataStoreTypes.forEach((currentDataStoreType) => {
             .then(() => storeToTest.remove(query))
             .then(() => networkStore.findById(entity._id).toPromise())
             .then((res) => {
-              console.log(res);
               return done(new Error(shouldNotBeCalledErrorMessage));
             })
             .catch((error) => {

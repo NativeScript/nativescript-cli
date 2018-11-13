@@ -4,14 +4,19 @@ import * as Kinvey from '__SDK__';
 import _ from 'lodash';
 import * as utilities from './utils';
 
-describe('Files', () => {
+var appCredentials;
+describe.only('Files', () => {
   before(() => {
-    return Kinvey.init({
+    appCredentials = Kinvey.init({
       appKey: process.env.APP_KEY,
       appSecret: process.env.APP_SECRET,
       masterSecret: process.env.MASTER_SECRET
     });
   });
+
+  before(()=>{
+    utilities.cleanUpCollection(appCredentials, '_blob');
+  })
 
   before(async () => {
     return Kinvey.User.signup({
@@ -113,7 +118,6 @@ describe('Files', () => {
             fileToUpload1 = fs.path.join(sampleTestFilesPath, 'test1.txt');
             fileToUpload2 = fs.path.join(sampleTestFilesPath, 'test2.txt');
           } catch (error) {
-            console.log(error);
             //expect(error instanceof ReferenceError).to.be.true; //TODO error is not an instance of referenceError
             fileToUpload1 = fileContent1;
             fileToUpload2 = fileContent2;
