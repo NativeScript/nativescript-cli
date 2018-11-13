@@ -1,3 +1,4 @@
+import groovy.json.JsonSlurper
 
 buildscript {
     repositories {
@@ -32,6 +33,8 @@ def computeBuildToolsVersion = { ->
 }
 
 android {
+    applyBeforePluginGradleConfiguration()
+
     compileSdkVersion computeCompileSdkVersion()
     buildToolsVersion computeBuildToolsVersion()
 
@@ -49,4 +52,43 @@ dependencies {
     }
     compileOnly "com.android.support:support-v4:$supportVer"
     compileOnly "com.android.support:appcompat-v7:$supportVer"
+}
+
+def getAppResourcesPath() {
+    def relativePathToApp = "app"
+    def relativePathToAppResources
+    def absolutePathToAppResources
+    def projectRoot = "$rootDir/../../.."
+    def nsConfigFile = file("$projectRoot/nsconfig.json")
+    def nsConfig
+
+    if (nsConfigFile.exists()) {
+        nsConfig = new JsonSlurper().parseText(nsConfigFile.getText("UTF-8"))
+    }
+
+    if(nsConfig != null && nsConfig.appPath != null){
+        relativePathToApp = nsConfig.appPath
+    }
+
+    if(nsConfig != null && nsConfig.appResourcesPath != null ) {
+        relativePathToAppResources = nsConfig.appResourcesPath
+    } else {
+        relativePathToAppResources  = "$relativePathToApp/App_Resources"
+    }
+
+    absolutePathToAppResources = java.nio.file.Paths.get(projectRoot).resolve(relativePathToAppResources).toAbsolutePath()
+
+    project.ext.appResourcesPath = absolutePathToAppResources
+
+    return absolutePathToAppResources
+}
+
+def applyBeforePluginGradleConfiguration() {
+    def appResourcesPath = getAppResourcesPath()
+    def pathToBeforePluginGradle = "$appResourcesPath/Android/before-plugins.gradle"
+    def beforePluginGradle = file(pathToBeforePluginGradle)
+    if (beforePluginGradle.exists()) {
+        println "\t + applying user-defined configuration from ${beforePluginGradle}"
+        apply from: pathToBeforePluginGradle
+    }
 }

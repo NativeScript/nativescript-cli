@@ -21,7 +21,7 @@ export class ProjectService implements IProjectService {
 		private $staticConfig: IStaticConfig,
 		private $packageInstallationManager: IPackageInstallationManager) { }
 
-	public async validateProjectName(opts: { projectName: string, force: boolean, pathToProject: string }) : Promise<string> {
+	public async validateProjectName(opts: { projectName: string, force: boolean, pathToProject: string }): Promise<string> {
 		let projectName = opts.projectName;
 		if (!projectName) {
 			this.$errors.fail("You must specify <App name> when creating a new project.");
@@ -133,7 +133,8 @@ export class ProjectService implements IProjectService {
 				shelljs.cp('-R', path.join(templateData.templatePath, "*"), destinationDirectory);
 				break;
 			case constants.TemplateVersions.v2:
-				await this.$pacoteService.extractPackage(templateData.templateName, projectDir);
+				const fullTemplateName = templateData.version ? `${templateData.templateName}@${templateData.version}` : templateData.templateName;
+				await this.$pacoteService.extractPackage(fullTemplateName, projectDir);
 				break;
 			default:
 				this.$errors.failWithoutHelp(format(constants.ProjectTemplateErrors.InvalidTemplateVersionStringFormat, templateData.templateName, templateData.templateVersion));
