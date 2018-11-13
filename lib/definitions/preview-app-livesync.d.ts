@@ -22,6 +22,10 @@ declare global {
 		getExternalPlugins(device: Device): string[];
 	}
 
+	interface IPreviewAppLogProvider extends EventEmitter {
+		logData(log: string, deviceName: string, deviceId: string): void;
+	}
+
 	interface IPreviewQrCodeService {
 		getPlaygroundAppQrCode(options?: IPlaygroundAppQrCodeOptions): Promise<IDictionary<IQrCodeImageData>>;
 		getLiveSyncQrCode(url: string): Promise<IQrCodeImageData>;

@@ -1,7 +1,6 @@
 import { MessagingService, Config, Device, DeviceConnectedMessage, SdkCallbacks, ConnectedDevices, FilesPayload } from "nativescript-preview-sdk";
 import { PubnubKeys } from "./preview-app-constants";
 import { EventEmitter } from "events";
-import { DEVICE_LOG_EVENT_NAME } from "../../../common/constants";
 const pako = require("pako");
 
 export class PreviewSdkService extends EventEmitter implements IPreviewSdkService {
@@ -12,7 +11,8 @@ export class PreviewSdkService extends EventEmitter implements IPreviewSdkServic
 	constructor(private $config: IConfiguration,
 		private $httpClient: Server.IHttpClient,
 		private $logger: ILogger,
-		private $previewDevicesService: IPreviewDevicesService) {
+		private $previewDevicesService: IPreviewDevicesService,
+		private $previewAppLogProvider: IPreviewAppLogProvider) {
 			super();
 	}
 
@@ -61,9 +61,7 @@ export class PreviewSdkService extends EventEmitter implements IPreviewSdkServic
 				this.$logger.trace("Received onLogSdkMessage message: ", log);
 			},
 			onLogMessage: (log: string, deviceName: string, deviceId: string) => {
-				const device = this.$previewDevicesService.getDeviceById(deviceId);
-				this.emit(DEVICE_LOG_EVENT_NAME, log, deviceId, device ? device.platform : "");
-				this.$logger.info(`LOG from device ${deviceName}: ${log}`);
+				this.$previewAppLogProvider.logData(log, deviceName, deviceId);
 			},
 			onRestartMessage: () => {
 				this.$logger.trace("Received onRestartMessage event.");
