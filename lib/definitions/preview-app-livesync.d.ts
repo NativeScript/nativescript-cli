@@ -8,7 +8,7 @@ declare global {
 		stopLiveSync(): Promise<void>;
 	}
 
-	interface IPreviewAppLiveSyncData extends IProjectDir, IAppFilesUpdaterOptionsComposition, IEnvOptions { }
+	interface IPreviewAppLiveSyncData extends IProjectDir, IHasUseHotModuleReloadOption, IBundle, IEnvOptions { }
 
 	interface IPreviewSdkService extends EventEmitter {
 		getQrCodeUrl(options: IHasUseHotModuleReloadOption): string;

@@ -64,10 +64,8 @@ function createDevice(plugins: string): Device {
 function createPreviewLiveSyncData(options?: { bundle: boolean }) {
 	return {
 		projectDir,
-		appFilesUpdaterOptions: {
-			release: false,
-			bundle: options.bundle
-		},
+		release: false,
+		bundle: options.bundle,
 		env: {}
 	};
 }

@@ -60,7 +60,7 @@ export class PreviewAppPluginsService implements IPreviewAppPluginsService {
 	}
 
 	private getWarningForPlugin(data: IPreviewAppLiveSyncData, localPlugin: string, localPluginVersion: string, devicePluginVersion: string, device: Device): string {
-		if (data && data.appFilesUpdaterOptions && data.appFilesUpdaterOptions.bundle) {
+		if (data && data.bundle) {
 			const pluginPackageJsonPath = path.join(data.projectDir, NODE_MODULES_DIR_NAME, localPlugin, PACKAGE_JSON_FILE_NAME);
 			const isNativeScriptPlugin = this.$pluginsService.isNativeScriptPlugin(pluginPackageJsonPath);
 			if (!isNativeScriptPlugin || (isNativeScriptPlugin && !this.hasNativeCode(localPlugin, device.platform, data.projectDir))) {

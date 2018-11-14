@@ -66,7 +66,7 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 			.uniq()
 			.value();
 		for (const platform of platforms) {
-			await this.syncFilesForPlatformSafe(data, platform, { filesToSync, filesToRemove, useHotModuleReload: data.appFilesUpdaterOptions.useHotModuleReload });
+			await this.syncFilesForPlatformSafe(data, platform, { filesToSync, filesToRemove, useHotModuleReload: data.useHotModuleReload });
 		}
 	}
 
@@ -78,7 +78,7 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 		const hookArgs = this.getHookArgs(data, device);
 		await this.$hooksService.executeBeforeHooks("preview-sync", { hookArgs });
 		await this.$previewAppPluginsService.comparePluginsOnDevice(data, device);
-		const payloads = await this.syncFilesForPlatformSafe(data, device.platform, { isInitialSync: true, useHotModuleReload: data.appFilesUpdaterOptions.useHotModuleReload });
+		const payloads = await this.syncFilesForPlatformSafe(data, device.platform, { isInitialSync: true, useHotModuleReload: data.useHotModuleReload });
 		return payloads;
 	}
 
@@ -92,7 +92,11 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 			config: {
 				env: data.env,
 				platform: device.platform,
-				appFilesUpdaterOptions: data.appFilesUpdaterOptions,
+				appFilesUpdaterOptions: {
+					bundle: data.bundle,
+					useHotModuleReload: data.useHotModuleReload,
+					release: false
+				},
 			},
 			externals: this.$previewAppPluginsService.getExternalPlugins(device),
 			filesToSyncMap,
@@ -109,10 +113,10 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 				const platformHmrData = currentHmrData[platform] || <any>{};
 				const filesToSync = _.cloneDeep(filesToSyncMap[platform]);
 				// We don't need to prepare when webpack emits changed files. We just need to send a message to pubnub.
-				promise = this.syncFilesForPlatformSafe(data, platform, { filesToSync, skipPrepare: true, useHotModuleReload: data.appFilesUpdaterOptions.useHotModuleReload });
+				promise = this.syncFilesForPlatformSafe(data, platform, { filesToSync, skipPrepare: true, useHotModuleReload: data.useHotModuleReload });
 				await promise;
 
-				if (data.appFilesUpdaterOptions.useHotModuleReload && platformHmrData.hash) {
+				if (data.useHotModuleReload && platformHmrData.hash) {
 					const devices = this.$previewDevicesService.getDevicesForPlatform(platform);
 
 					await Promise.all(_.map(devices, async (previewDevice: Device) => {
@@ -133,12 +137,12 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 		let payloads = null;
 
 		try {
-			const { appFilesUpdaterOptions, env, projectDir } = data;
+			const { env, projectDir } = data;
 			const projectData = this.$projectDataService.getProjectData(projectDir);
 			const platformData = this.$platformsData.getPlatformData(platform, projectData);
 
 			if (!opts.skipPrepare) {
-				await this.preparePlatform(platform, appFilesUpdaterOptions, env, projectData);
+				await this.preparePlatform(platform, data, env, projectData);
 			}
 
 			if (opts.isInitialSync) {
@@ -178,7 +182,12 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 		return { files: payloads, platform: platformData.normalizedPlatformName.toLowerCase(), hmrMode, deviceId };
 	}
 
-	private async preparePlatform(platform: string, appFilesUpdaterOptions: IAppFilesUpdaterOptions, env: Object, projectData: IProjectData): Promise<void> {
+	private async preparePlatform(platform: string, data: IPreviewAppLiveSyncData, env: Object, projectData: IProjectData): Promise<void> {
+		const appFilesUpdaterOptions = {
+			bundle: data.bundle,
+			useHotModuleReload: data.useHotModuleReload,
+			release: false
+		};
 		const nativePrepare = { skipNativePrepare: true };
 		const config = <IPlatformOptions>{};
 		const platformTemplate = <string>null;
