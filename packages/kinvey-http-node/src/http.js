@@ -13,8 +13,7 @@ function http(request) {
         reject(error);
       } else {
         resolve({
-          statusCode:
-          httpResponse.statusCode,
+          statusCode: httpResponse.statusCode,
           headers: httpResponse.headers,
           data
         });

@@ -57,9 +57,9 @@ export async function find(query = new Query(), options = {}) {
   return files;
 }
 
-export async function findById(id, options) {
+export async function download(id, options = {}) {
   const { api, appKey, masterSecret } = getConfig();
-  const { tls = true, ttl } = options;
+  const { stream = false, tls = true, ttl } = options;
   const queryStringObject = Object.assign({}, { tls: tls === true });
 
   if (isNumber(ttl)) {
@@ -74,16 +74,21 @@ export async function findById(id, options) {
     url: formatKinveyUrl(api.protocol, api.host, `/${NAMESPACE}/${appKey}/${id}`, queryStringObject)
   });
   const response = await request.execute();
-  return response.data;
-}
+  const file = response.data;
 
-export async function download(id, options = {}) {
-  const file = await findById(id, options);
+  if (stream) {
+    return file;
+  }
+
   return downloadByUrl(file._downloadURL);
 }
 
-export async function stream(id, options = {}) {
-  return findById(id, options);
+export function findById(id, options) {
+  return download(id, options);
+}
+
+export async function stream(id, options) {
+  return findById(id, Object.assign({}, options, { stream: true }));
 }
 
 function transformMetadata(file = {}, metadata = {}) {

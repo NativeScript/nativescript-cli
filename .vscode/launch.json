@@ -360,9 +360,9 @@
         "--require",
         "dotenv/config",
         "--require",
-        "@babel/register",
-        "--require",
         "kinvey-test-register",
+        "--require",
+        "@babel/register",
         "--opts",
         "${workspaceFolder}/tests/integration/mocha.opts",
         "${workspaceFolder}/tests/integration/shared/**/*.js"

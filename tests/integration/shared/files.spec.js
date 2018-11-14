@@ -5,7 +5,7 @@ import * as Kinvey from '__SDK__';
 import * as utilities from './utils';
 
 var appCredentials;
-describe.skip('Files', () => {
+describe.only('Files', () => {
   before(() => {
     appCredentials = Kinvey.init({
       appKey: process.env.APP_KEY,
@@ -90,14 +90,14 @@ describe.skip('Files', () => {
   const notFoundErrorName = 'NotFoundError';
   const notFoundErrorMessage = 'This blob not found for this app backend.';
   const plainTextMimeType = 'text/plain';
-  const octetStreamMimeType = 'application/octet-stream'
+  const octetStreamMimeType = 'application/octet-stream';
   const shouldNotBeCalledMessage = 'Should not be called';
 
   const uploadFiles = (files) => {
     return Promise.all(files.map(file => {
-      return Kinvey.Files.upload(file, { 'mimeType': plainTextMimeType });
+      return Kinvey.Files.upload(file, { mimeType: plainTextMimeType });
     }));
-  }
+  };
 
   describe('Files Common tests', () => {
     let fileToUpload1;
@@ -184,19 +184,20 @@ describe.skip('Files', () => {
             .catch(done);
         });
 
-        it('should set correctly ttl', (done) => {
+        it.only('should set correctly ttl', (done) => {
           const ttlValue = 1;
-          // After the fix of MLIBZ-2453, the downloadByUrl assertion should be modified to check the error and moved to the error function
           Kinvey.Files.find(query, { ttl: ttlValue })
             .then((result) => {
               utilities.assertReadFileResult(result[0], file2Metadata);
               setTimeout(() => {
                 return Kinvey.Files.downloadByUrl(result[0]._downloadURL)
-                  .then((result) => {
-                    expect(result).to.contain('An error occurred.');
-                    done();
+                  .then(() => {
+                    done(new Error(shouldNotBeCalledMessage));
                   })
-                  .catch(done);
+                  .catch((error) => {
+                    utilities.assertError(error, 'KinveyError', 'An error occurred.');
+                    done();
+                  });
               }, ttlValue + 1000);
             })
             .catch(done);
@@ -307,17 +308,19 @@ describe.skip('Files', () => {
 
         it('should set correctly ttl', (done) => {
           const ttlValue = 1;
-          // After the fix of MLIBZ-2453, the downloadByUrl assertion should be modified to check the error and moved to the error function
           Kinvey.Files.download(uploadedFile1._id, { ttl: ttlValue, stream: true })
             .then((result) => {
               utilities.assertReadFileResult(result, file1Metadata);
               setTimeout(() => {
+                // TODO: change error message to 'The provided token has expired.'
                 return Kinvey.Files.downloadByUrl(result._downloadURL)
-                  .then((result) => {
-                    expect(result).to.contain('The provided token has expired.')
-                    done();
+                  .then(() => {
+                    done(new Error(shouldNotBeCalledMessage));
                   })
-                  .catch(done);
+                  .catch((error) => {
+                    utilities.assertError(error, 'KinveyError', 'An error occurred.');
+                    done();
+                  });
               }, ttlValue + 1000);
             })
             .catch(done);
@@ -374,17 +377,19 @@ describe.skip('Files', () => {
 
         it('should set correctly ttl', (done) => {
           const ttlValue = 1;
-          // After the fix of MLIBZ-2453, the downloadByUrl assertion should be modified to check the error and moved to the error function
           Kinvey.Files.stream(uploadedFile1._id, { ttl: ttlValue })
             .then((result) => {
               utilities.assertReadFileResult(result, file1Metadata);
               setTimeout(() => {
+                // TODO: change error message to 'The provided token has expired.'
                 return Kinvey.Files.downloadByUrl(result._downloadURL)
-                  .then((result) => {
-                    expect(result).to.contain('The provided token has expired.')
-                    done();
+                  .then(() => {
+                    done(new Error(shouldNotBeCalledMessage));
                   })
-                  .catch(done);
+                  .catch((error) => {
+                    utilities.assertError(error, 'KinveyError', 'An error occurred.');
+                    done();
+                  });
               }, ttlValue + 1000);
             })
             .catch(done);
@@ -415,8 +420,7 @@ describe.skip('Files', () => {
             .catch(done);
         });
 
-        it.skip('should return an error if the url is invalid', (done) => {
-          // The test should be included for execution after the fix of MLIBZ-2453
+        it('should return an error if the url is invalid', (done) => {
           Kinvey.Files.downloadByUrl(utilities.randomString())
             .then(() => done(new Error(shouldNotBeCalledMessage)))
             .catch((error) => {
@@ -431,12 +435,12 @@ describe.skip('Files', () => {
     describe('upload()', () => {
       it(`without metadata should upload with mimeType = ${octetStreamMimeType}`, (done) => {
         utilities.testFileUpload(fileToUpload1, undefined, { mimeType: octetStreamMimeType }, fileContent1, undefined, done);
-      })
+      });
 
       it('should set custom properties, supplied with the metadata', (done) => {
         const metadata = { testProperty: 'test' };
         utilities.testFileUpload(fileToUpload1, metadata, metadata, fileContent1, undefined, done);
-      })
+      });
 
       it('should set _acl', (done) => {
         const randomId = utilities.randomString();
@@ -447,11 +451,11 @@ describe.skip('Files', () => {
         expectedMetadata['_acl'] = {};
         expectedMetadata['_acl']['r'] = expectedArray;
         utilities.testFileUpload(fileToUpload1, { _acl: acl.toPlainObject() }, expectedMetadata, fileContent1, undefined, done);
-      })
+      });
 
       it('should upload a publicly-readable file with public = true', (done) => {
         utilities.testFileUpload(fileToUpload1, { public: true }, { _public: true }, fileContent1, undefined, done);
-      })
+      });
 
       it('should update the content and the metadata of an existing file', (done) => {
         const query = new Kinvey.Query();
@@ -470,7 +474,7 @@ describe.skip('Files', () => {
             utilities.testFileUpload(fileToUpload2, updatedmetadata, expectedMetadata, fileContent2, query, done)
           })
           .catch(done)
-      })
+      });
     });
 
     describe('removeById()', () => {
