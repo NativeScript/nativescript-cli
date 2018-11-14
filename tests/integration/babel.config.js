@@ -1,9 +1,15 @@
-const path = require('path');
+const common = require('../babel.config');
 
 module.exports = (api) => {
-  api.cache.never();
+  const config = common(api);
 
-  return {
-    extends: path.resolve('..', 'babel.config.js')
-  };
+  config.presets = [
+    ['@babel/env', {
+      modules: 'umd',
+      targets: 'maintained node versions',
+      useBuiltIns: 'usage'
+    }]
+  ];
+
+  return config;
 };

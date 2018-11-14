@@ -8,7 +8,7 @@
   "scripts": {
     "lint": "eslint src",
     "test:html5": "SDK=kinvey-html5-sdk karma start karma-html5.local.js",
-    "test:node": "SDK=kinvey-node-sdk mocha --require dotenv/config --require @babel/register --require kinvey-test-register --opts mocha.opts \"shared/**/*.spec.js\""
+    "test:node": "SDK=kinvey-node-sdk mocha --require dotenv/config --require kinvey-test-register --require @babel/register --opts mocha.opts \"shared/**/*.spec.js\""
   },
   "dependencies": {
     "@babel/core": "7.1.5",

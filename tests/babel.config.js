@@ -1,18 +1,17 @@
 module.exports = (api) => {
   api.cache.never();
 
-  return {
-    presets: [
-      ['@babel/env', {
-        modules: 'umd',
-        targets: 'maintained node versions',
-        useBuiltIns: 'usage'
-      }]
-    ],
+  const config = {
     plugins: [
       '@babel/plugin-transform-runtime'
     ],
-    retainLines: true,
-    sourceMaps: 'inline'
+    presets: [
+      ['@babel/env', {
+        targets: 'maintained node versions',
+        useBuiltIns: 'usage'
+      }]
+    ]
   };
+
+  return config;
 };
