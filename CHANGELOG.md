@@ -1,6 +1,28 @@
 NativeScript CLI Changelog
 ================
 
+5.0.1 (2018, November 14)
+==
+### Implemented
+* [Implemented #4083](https://github.com/NativeScript/nativescript-cli/pull/4083): API: Add public API for deviceFound and deviceLost for preview devices
+* [Implemented #4087](https://github.com/NativeScript/nativescript-cli/pull/4087): API: Expose public method for getting the qr code of playground app
+* [Implemented #4093](https://github.com/NativeScript/nativescript-cli/pull/4093): API: Expose public api for starting the livesync operation to preview app
+
+### Fixed
+* [Fixed #2670](https://github.com/NativeScript/nativescript-cli/issues/2670): Command line `tns run android --clean` rebuilds
+* [Fixed #4043](https://github.com/NativeScript/nativescript-cli/issues/4043): `tns preview` fails when local plugin is referenced with tag in `package.json`
+* [Fixed #4046](https://github.com/NativeScript/nativescript-cli/issues/4046):`tns debug ios` does not work with bigger projects on slower devices
+* [Fixed #4055](https://github.com/NativeScript/nativescript-cli/pull/4055): API: Remove persisted emulator's data on deviceLost event
+* [Fixed #4056](https://github.com/NativeScript/nativescript-cli/pull/4056): API: `TypeError: Invalid Version: null` is thrown when emulator is stopped immediately after start
+* [Fixed #4071](https://github.com/NativeScript/nativescript-cli/issues/4071): Unable to run `tns test <platform>`
+* [Fixed #4073](https://github.com/NativeScript/nativescript-cli/pull/4073): Error is thrown when Node.js 11 is used
+* [Fixed #4076](https://github.com/NativeScript/nativescript-cli/issues/4076): Cannot connect to device socket when run debug with justlaunch
+* [Fixed #4079](https://github.com/NativeScript/nativescript-cli/pull/4079): API: Reset errors when fallback to list avds from director
+* [Fixed #4090](https://github.com/NativeScript/nativescript-cli/issues/4090): `tns preview` and `tns platform add ...` issue
+* [Fixed #4096](https://github.com/NativeScript/nativescript-cli/issues/4096): NativeScript v4 is not using the v4 of the app templates during project creation
+* [Fixed #4100](https://github.com/NativeScript/nativescript-cli/issues/4100): Apply `before-plugins.gradle` file in the plugin `build.gradle`
+
+
 5.0.0 (2018, November 1)
 ==
 
