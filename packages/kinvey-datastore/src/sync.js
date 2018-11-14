@@ -99,6 +99,10 @@ export class Sync {
     return syncCache.find(query);
   }
 
+  findById(id) {
+    const syncCache = new SyncCache(this.collectionName, this.tag);
+    return syncCache.findById(id);
+  }
 
   count(query) {
     const syncCache = new SyncCache(this.collectionName, this.tag);
@@ -153,6 +157,7 @@ export class Sync {
         return {
           _id: doc._id,
           entityId: doc._id,
+          entity: doc,
           collection: this.collectionName,
           state: {
             operation: event

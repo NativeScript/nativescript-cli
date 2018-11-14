@@ -9,6 +9,16 @@ import { NetworkStore } from './networkstore';
 
 const NAMESPACE = 'appdata';
 
+function queryToSyncQuery(query) {
+  if (query) {
+    const newFilter = Object.keys(query.filter)
+      .reduce((filter, field) => Object.assign({}, filter, { [`entity.${field}`]: query.filter[field] }), {});
+    return new Query({ filter: newFilter });
+  }
+
+  return new Query();
+}
+
 export class CacheStore {
   constructor(collectionName, options = { tag: undefined, useDeltaSet: false, useAutoPagination: false, autoSync: true }) {
     this.collectionName = collectionName;
@@ -203,7 +213,6 @@ export class CacheStore {
     const cache = new DataStoreCache(this.collectionName, this.tag);
     const sync = new Sync(this.collectionName, this.tag);
     let count = 0;
-    let syncDocs = [];
 
     // Find the docs that will be removed from the cache that match the query
     const docs = await cache.find(query);
@@ -213,23 +222,25 @@ export class CacheStore {
       count = await cache.remove(query);
 
       // Add delete events for the removed docs to sync
-      syncDocs = await sync.addDeleteSyncEvent(docs);
-    } else {
-      // Find sync docs matching the query
-      syncDocs = await sync.find(query);
+      await sync.addDeleteSyncEvent(docs);
     }
 
     // Remove the docs from the backend
-    if (syncDocs.length > 0 && autoSync) {
-      const pushQuery = new Query().contains('_id', syncDocs.map(doc => doc._id));
-      const pushResults = await sync.push(pushQuery);
-      count = pushResults.reduce((count, pushResult) => {
-        if (pushResult.error) {
-          return count - 1;
-        }
+    if (autoSync) {
+      const findQuery = queryToSyncQuery(query).equalTo('collection', this.collectionName);
+      const syncDocs = await sync.find(findQuery);
 
-        return count;
-      }, count);
+      if (syncDocs.length > 0) {
+        const pushQuery = new Query().contains('_id', syncDocs.map(doc => doc._id));
+        const pushResults = await sync.push(pushQuery);
+        count = pushResults.reduce((count, pushResult) => {
+          if (pushResult.error) {
+            return count - 1;
+          }
+
+          return count;
+        }, syncDocs.length);
+      }
     }
 
     return { count };
@@ -245,25 +256,33 @@ export class CacheStore {
       // Find the doc that will be removed
       const doc = await cache.findById(id);
 
-      if (!doc) {
-        throw new NotFoundError();
+      if (doc) {
+        // Remove the doc from the cache
+        count = await cache.removeById(id);
+
+        // Add delete event for the removed doc to sync
+        await sync.addDeleteSyncEvent(doc);
       }
 
-      // Remove the doc from the cache
-      count = await cache.removeById(id);
-
-      // Add delete event for the removed doc to sync
-      const syncDoc = await sync.addDeleteSyncEvent(doc);
-
       // Remove the doc from the backend
-      if (syncDoc && autoSync) {
-        const query = new Query().equalTo('_id', doc._id);
-        const pushResults = await sync.push(query);
+      if (autoSync) {
+        // Find an existing sync doc
+        const syncDoc = await sync.findById(id);
 
-        if (pushResults.length > 0) {
-          const pushResult = pushResults.shift();
-          if (pushResult.error) {
-            count -= 1;
+        // Set count to 1 if we found an existing sync doc
+        if (syncDoc) {
+          count = 1;
+        }
+
+        if (syncDoc) {
+          const query = new Query().equalTo('_id', syncDoc._id);
+          const pushResults = await sync.push(query);
+
+          if (pushResults.length > 0) {
+            const pushResult = pushResults.shift();
+            if (pushResult.error) {
+              count -= 1;
+            }
           }
         }
       }

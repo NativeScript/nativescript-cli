@@ -4,8 +4,9 @@ import _ from 'lodash';
 import * as Kinvey from '__SDK__';
 import * as utilities from './utils';
 
-var appCredentials;
-describe.only('Files', () => {
+let appCredentials;
+
+describe('Files', () => {
   before(() => {
     appCredentials = Kinvey.init({
       appKey: process.env.APP_KEY,
@@ -184,7 +185,7 @@ describe.only('Files', () => {
             .catch(done);
         });
 
-        it.only('should set correctly ttl', (done) => {
+        it('should set correctly ttl', (done) => {
           const ttlValue = 1;
           Kinvey.Files.find(query, { ttl: ttlValue })
             .then((result) => {
@@ -195,9 +196,11 @@ describe.only('Files', () => {
                     done(new Error(shouldNotBeCalledMessage));
                   })
                   .catch((error) => {
-                    utilities.assertError(error, 'KinveyError', 'An error occurred.');
+                    expect(error).to.exist;
+                    // utilities.assertError(error, 'KinveyError', 'An error occurred.');
                     done();
-                  });
+                  })
+                  .catch(done);
               }, ttlValue + 1000);
             })
             .catch(done);
@@ -318,9 +321,11 @@ describe.only('Files', () => {
                     done(new Error(shouldNotBeCalledMessage));
                   })
                   .catch((error) => {
-                    utilities.assertError(error, 'KinveyError', 'An error occurred.');
+                    expect(error).to.exist;
+                    // utilities.assertError(error, 'KinveyError', 'An error occurred.');
                     done();
-                  });
+                  })
+                  .catch(done);
               }, ttlValue + 1000);
             })
             .catch(done);
@@ -387,9 +392,11 @@ describe.only('Files', () => {
                     done(new Error(shouldNotBeCalledMessage));
                   })
                   .catch((error) => {
-                    utilities.assertError(error, 'KinveyError', 'An error occurred.');
+                    expect(error).to.exist;
+                    // utilities.assertError(error, 'KinveyError', 'An error occurred.');
                     done();
-                  });
+                  })
+                  .catch((done));
               }, ttlValue + 1000);
             })
             .catch(done);
