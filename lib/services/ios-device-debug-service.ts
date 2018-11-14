@@ -24,13 +24,13 @@ export class IOSDeviceDebugService extends DebugServiceBase implements IDeviceDe
 		private $packageInstallationManager: IPackageInstallationManager,
 		private $iOSDebuggerPortService: IIOSDebuggerPortService,
 		private $processService: IProcessService,
-		private $socketProxyFactory: ISocketProxyFactory,
+		private $appDebugSocketProxyFactory: IAppDebugSocketProxyFactory,
 		private $projectDataService: IProjectDataService,
 		private $deviceLogProvider: Mobile.IDeviceLogProvider) {
 
 		super(device, $devicesService);
 		this.$processService.attachToProcessExitSignals(this, this.debugStop);
-		this.$socketProxyFactory.on(CONNECTION_ERROR_EVENT_NAME, (e: Error) => this.emit(CONNECTION_ERROR_EVENT_NAME, e));
+		this.$appDebugSocketProxyFactory.on(CONNECTION_ERROR_EVENT_NAME, (e: Error) => this.emit(CONNECTION_ERROR_EVENT_NAME, e));
 		this.deviceIdentifier = this.device.deviceInfo.identifier;
 	}
 
@@ -45,28 +45,19 @@ export class IOSDeviceDebugService extends DebugServiceBase implements IDeviceDe
 		await this.$iOSDebuggerPortService.attachToDebuggerPortFoundEvent(this.device, debugData, debugOptions);
 
 		if (!debugOptions.start) {
-			if (this.device.isEmulator) {
-				await this.startAppOnSimulator(debugData, debugOptions);
-			} else {
-				await this.startAppOnDevice(debugData, debugOptions);
-			}
+			await this.startApp(debugData, debugOptions);
 		}
 
 		return this.wireDebuggerClient(debugData, debugOptions);
 	}
 
 	public async debugStart(debugData: IDebugData, debugOptions: IDebugOptions): Promise<void> {
-		if (this.device.isEmulator) {
-			await this.startAppOnSimulator(debugData, debugOptions);
-		} else {
-			await this.startAppOnDevice(debugData, debugOptions);
-		}
-
+		await this.startApp(debugData, debugOptions);
 		await this.wireDebuggerClient(debugData, debugOptions);
 	}
 
 	public async debugStop(): Promise<void> {
-		this.$socketProxyFactory.removeAllProxies();
+		this.$appDebugSocketProxyFactory.removeAllProxies();
 		await this.stopAppDebuggerOnSimulator();
 	}
 
@@ -76,6 +67,14 @@ export class IOSDeviceDebugService extends DebugServiceBase implements IDeviceDe
 
 		const chromeDebugUrl = super.getChromeDebugUrl(debugOpts, port);
 		return chromeDebugUrl;
+	}
+
+	private async startApp(debugData: IDebugData, debugOptions: IDebugOptions) {
+		if (this.device.isEmulator) {
+			await this.startAppOnSimulator(debugData, debugOptions);
+		} else {
+			await this.startAppOnDevice(debugData, debugOptions);
+		}
 	}
 
 	private validateOptions(debugOptions: IDebugOptions) {
@@ -159,25 +158,30 @@ export class IOSDeviceDebugService extends DebugServiceBase implements IDeviceDe
 
 	private async wireDebuggerClient(debugData: IDebugData, debugOptions: IDebugOptions): Promise<string> {
 		if ((debugOptions.inspector || !debugOptions.client) && this.$hostInfo.isDarwin) {
-			const existingTcpProxy = this.$socketProxyFactory.getTCPSocketProxy(this.deviceIdentifier);
-			const getDeviceSocket = async () => await this.device.getDebugSocket(debugData.applicationIdentifier, debugData.projectDir);
-			const tcpSocketProxy = existingTcpProxy || await this.$socketProxyFactory.addTCPSocketProxy(getDeviceSocket, this.deviceIdentifier);
-			if (!existingTcpProxy) {
-				await this.openAppInspector(tcpSocketProxy.address(), debugData, debugOptions);
-			}
-
-			return null;
+			return await this.setupTcpAppDebugProxy(debugData, debugOptions);
 		} else {
-			if (debugOptions.chrome) {
-				this.$logger.info("'--chrome' is the default behavior. Use --inspector to debug iOS applications using the Safari Web Inspector.");
-			}
-
-			const existingWebProxy = this.$socketProxyFactory.getWebSocketProxy(this.deviceIdentifier);
-			const getDeviceSocket = async () => await this.device.getDebugSocket(debugData.applicationIdentifier, debugData.projectDir);
-			const webSocketProxy = existingWebProxy || await this.$socketProxyFactory.addWebSocketProxy(getDeviceSocket, this.deviceIdentifier);
-
-			return this.getChromeDebugUrl(debugOptions, webSocketProxy.options.port);
+			return await this.setupWebAppDebugProxy(debugOptions, debugData);
 		}
+	}
+
+	private async setupWebAppDebugProxy(debugOptions: IDebugOptions, debugData: IDebugData): Promise<string> {
+		if (debugOptions.chrome) {
+			this.$logger.info("'--chrome' is the default behavior. Use --inspector to debug iOS applications using the Safari Web Inspector.");
+		}
+		const existingWebProxy = this.$appDebugSocketProxyFactory.getWebSocketProxy(this.deviceIdentifier, debugData.applicationIdentifier);
+		const webSocketProxy = existingWebProxy || await this.$appDebugSocketProxyFactory.addWebSocketProxy(this.device, debugData.applicationIdentifier);
+
+		return this.getChromeDebugUrl(debugOptions, webSocketProxy.options.port);
+	}
+
+	private async setupTcpAppDebugProxy(debugData: IDebugData, debugOptions: IDebugOptions): Promise<string> {
+		const existingTcpProxy = this.$appDebugSocketProxyFactory.getTCPSocketProxy(this.deviceIdentifier, debugData.applicationIdentifier);
+		const tcpSocketProxy = existingTcpProxy || await this.$appDebugSocketProxyFactory.addTCPSocketProxy(this.device, debugData.applicationIdentifier);
+		if (!existingTcpProxy) {
+			await this.openAppInspector(tcpSocketProxy.address(), debugData, debugOptions);
+		}
+
+		return null;
 	}
 
 	private async openAppInspector(fileDescriptor: string, debugData: IDebugData, debugOptions: IDebugOptions): Promise<void> {

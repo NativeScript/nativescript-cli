@@ -17,12 +17,13 @@ export class IOSDeviceLiveSyncService extends DeviceLiveSyncServiceBase implemen
 	}
 
 	private async setupSocketIfNeeded(projectData: IProjectData): Promise<boolean> {
+		// TODO: persist the sockets per app in order to support LiveSync on multiple apps on the same device
 		if (this.socket) {
 			return true;
 		}
 
 		const appId = projectData.projectIdentifiers.ios;
-		this.socket = await this.device.getLiveSyncSocket(appId, projectData.projectDir);
+		this.socket = await this.device.getLiveSyncSocket(appId);
 		if (!this.socket) {
 			return false;
 		}
@@ -132,7 +133,10 @@ export class IOSDeviceLiveSyncService extends DeviceLiveSyncServiceBase implemen
 
 	private destroySocket(): void {
 		if (this.socket) {
-			this.socket.destroy();
+			// we do not support LiveSync on multiple apps on the same device
+			// in order to do that, we should cache the socket per app
+			// and destroy just the current app socket when possible
+			this.device.destroyAllSockets();
 			this.socket = null;
 		}
 	}

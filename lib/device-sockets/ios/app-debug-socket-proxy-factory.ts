@@ -5,9 +5,9 @@ import * as net from "net";
 import * as ws from "ws";
 import temp = require("temp");
 
-export class SocketProxyFactory extends EventEmitter implements ISocketProxyFactory {
-	private deviceWebServers: { [id: string]: ws.Server; } = {};
-	private deviceTcpServers: { [id: string]: net.Server; } = {};
+export class AppDebugSocketProxyFactory extends EventEmitter implements IAppDebugSocketProxyFactory {
+	private deviceWebServers: IDictionary<ws.Server> = {};
+	private deviceTcpServers: IDictionary<net.Server> = {};
 
 	constructor(private $logger: ILogger,
 		private $errors: IErrors,
@@ -16,18 +16,19 @@ export class SocketProxyFactory extends EventEmitter implements ISocketProxyFact
 		super();
 	}
 
-	public getTCPSocketProxy(deviceIdentifier: string): net.Server {
-		return this.deviceTcpServers[deviceIdentifier];
+	public getTCPSocketProxy(deviceIdentifier: string, appId: string): net.Server {
+		return this.deviceTcpServers[`${deviceIdentifier}-${appId}`];
 	}
 
-	public getWebSocketProxy(deviceIdentifier: string): ws.Server {
-		return this.deviceWebServers[deviceIdentifier];
+	public getWebSocketProxy(deviceIdentifier: string, appId: string): ws.Server {
+		return this.deviceWebServers[`${deviceIdentifier}-${appId}`];
 	}
 
-	public async addTCPSocketProxy(factory: () => Promise<net.Socket>, deviceIdentifier: string): Promise<net.Server> {
-		const existingServer = this.deviceTcpServers[deviceIdentifier];
+	public async addTCPSocketProxy(device: Mobile.IiOSDevice, appId: string): Promise<net.Server> {
+		const cacheKey = `${device.deviceInfo.identifier}-${appId}`;
+		const existingServer = this.deviceTcpServers[cacheKey];
 		if (existingServer) {
-			throw new Error(`TCP socket proxy is already running for device '${deviceIdentifier}'`);
+			this.$errors.failWithoutHelp(`TCP socket proxy is already running for device '${device.deviceInfo.identifier}' and app '${appId}'`);
 		}
 
 		this.$logger.info("\nSetting up proxy...\nPress Ctrl + C to terminate, or disconnect.\n");
@@ -36,7 +37,7 @@ export class SocketProxyFactory extends EventEmitter implements ISocketProxyFact
 			allowHalfOpen: true
 		});
 
-		this.deviceTcpServers[deviceIdentifier] = server;
+		this.deviceTcpServers[cacheKey] = server;
 
 		server.on("connection", async (frontendSocket: net.Socket) => {
 			this.$logger.info("Frontend client connected.");
@@ -47,10 +48,10 @@ export class SocketProxyFactory extends EventEmitter implements ISocketProxyFact
 				}
 			});
 
-			const backendSocket = await factory();
+			const appDebugSocket = await device.getDebugSocket(appId);
 			this.$logger.info("Backend socket created.");
 
-			backendSocket.on("end", () => {
+			appDebugSocket.on("end", () => {
 				this.$logger.info("Backend socket closed!");
 				if (!this.$options.watch) {
 					process.exit(0);
@@ -59,20 +60,15 @@ export class SocketProxyFactory extends EventEmitter implements ISocketProxyFact
 
 			frontendSocket.on("close", () => {
 				this.$logger.info("Frontend socket closed");
-				if (!(<any>backendSocket).destroyed) {
-					backendSocket.destroy();
-				}
+				device.destroyDebugSocket(appId);
 			});
 
-			backendSocket.on("close", () => {
+			appDebugSocket.on("close", () => {
 				this.$logger.info("Backend socket closed");
-				if (!(<any>frontendSocket).destroyed) {
-					frontendSocket.destroy();
-				}
 			});
 
-			backendSocket.pipe(frontendSocket);
-			frontendSocket.pipe(backendSocket);
+			appDebugSocket.pipe(frontendSocket);
+			frontendSocket.pipe(appDebugSocket);
 			frontendSocket.resume();
 		});
 
@@ -85,10 +81,11 @@ export class SocketProxyFactory extends EventEmitter implements ISocketProxyFact
 		return server;
 	}
 
-	public async addWebSocketProxy(factory: () => Promise<net.Socket>, deviceIdentifier: string): Promise<ws.Server> {
-		const existingServer = this.deviceWebServers[deviceIdentifier];
+	public async addWebSocketProxy(device: Mobile.IiOSDevice, appId: string): Promise<ws.Server> {
+		const cacheKey = `${device.deviceInfo.identifier}-${appId}`;
+		const existingServer = this.deviceWebServers[cacheKey];
 		if (existingServer) {
-			throw new Error(`Web socket proxy is already running for device '${deviceIdentifier}'`);
+			this.$errors.failWithoutHelp(`Web socket proxy is already running for device '${device.deviceInfo.identifier}' and app '${appId}'`);
 		}
 
 		// NOTE: We will try to provide command line options to select ports, at least on the localhost.
@@ -106,28 +103,28 @@ export class SocketProxyFactory extends EventEmitter implements ISocketProxyFact
 			host: "localhost",
 			verifyClient: async (info: any, callback: Function) => {
 				this.$logger.info("Frontend client connected.");
-				let _socket;
+				let appDebugSocket;
 				try {
-					_socket = await factory();
+					appDebugSocket = await device.getDebugSocket(appId);
 				} catch (err) {
-					err.deviceIdentifier = deviceIdentifier;
+					err.deviceIdentifier = device.deviceInfo.identifier;
 					this.$logger.trace(err);
 					this.emit(CONNECTION_ERROR_EVENT_NAME, err);
-					this.$errors.failWithoutHelp(`Cannot connect to device socket. The error message is ${err.message}`);
+					this.$errors.failWithoutHelp(`Cannot connect to device socket.The error message is ${err.message} `);
 				}
 
 				this.$logger.info("Backend socket created.");
-				info.req["__deviceSocket"] = _socket;
+				info.req["__deviceSocket"] = appDebugSocket;
 				callback(true);
 			}
 		});
-		this.deviceWebServers[deviceIdentifier] = server;
+		this.deviceWebServers[cacheKey] = server;
 		server.on("connection", (webSocket, req) => {
 			const encoding = "utf16le";
 
-			const deviceSocket: net.Socket = (<any>req)["__deviceSocket"];
+			const appDebugSocket: net.Socket = (<any>req)["__deviceSocket"];
 			const packets = new PacketStream();
-			deviceSocket.pipe(packets);
+			appDebugSocket.pipe(packets);
 
 			packets.on("data", (buffer: Buffer) => {
 				webSocket.send(buffer.toString(encoding));
@@ -137,7 +134,7 @@ export class SocketProxyFactory extends EventEmitter implements ISocketProxyFact
 				this.$logger.trace("Error on debugger websocket", err);
 			});
 
-			deviceSocket.on("error", err => {
+			appDebugSocket.on("error", err => {
 				this.$logger.trace("Error on debugger deviceSocket", err);
 			});
 
@@ -146,10 +143,10 @@ export class SocketProxyFactory extends EventEmitter implements ISocketProxyFact
 				const payload = Buffer.allocUnsafe(length + 4);
 				payload.writeInt32BE(length, 0);
 				payload.write(message, 4, length, encoding);
-				deviceSocket.write(payload);
+				appDebugSocket.write(payload);
 			});
 
-			deviceSocket.on("close", () => {
+			appDebugSocket.on("close", () => {
 				this.$logger.info("Backend socket closed!");
 				webSocket.close();
 			});
@@ -157,7 +154,7 @@ export class SocketProxyFactory extends EventEmitter implements ISocketProxyFact
 			webSocket.on("close", () => {
 				this.$logger.info('Frontend socket closed!');
 				packets.destroy();
-				deviceSocket.destroy();
+				device.destroyDebugSocket(appId);
 				if (!this.$options.watch) {
 					process.exit(0);
 				}
@@ -170,11 +167,12 @@ export class SocketProxyFactory extends EventEmitter implements ISocketProxyFact
 	}
 
 	public removeAllProxies() {
-		for (var deviceId in this.deviceWebServers) {
+		let deviceId;
+		for (deviceId in this.deviceWebServers) {
 			this.deviceWebServers[deviceId].close();
 		}
 
-		for (var deviceId in this.deviceTcpServers) {
+		for (deviceId in this.deviceTcpServers) {
 			this.deviceTcpServers[deviceId].close();
 		}
 
@@ -182,4 +180,4 @@ export class SocketProxyFactory extends EventEmitter implements ISocketProxyFact
 		this.deviceTcpServers = {};
 	}
 }
-$injector.register("socketProxyFactory", SocketProxyFactory);
+$injector.register("appDebugSocketProxyFactory", AppDebugSocketProxyFactory);

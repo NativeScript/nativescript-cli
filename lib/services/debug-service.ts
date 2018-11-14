@@ -46,7 +46,7 @@ export class DebugService extends EventEmitter implements IDebugService {
 		// After we find a way to check on iOS we should use it here.
 		let result: string;
 
-		const debugService = this.getDebugService(device);
+		const debugService = this.getDeviceDebugService(device);
 		if (!debugService) {
 			this.$errors.failWithoutHelp(`Unsupported device OS: ${device.deviceInfo.platform}. You can debug your applications only on iOS or Android.`);
 		}
@@ -68,11 +68,11 @@ export class DebugService extends EventEmitter implements IDebugService {
 	}
 
 	public debugStop(deviceIdentifier: string): Promise<void> {
-		const debugService = this.getDebugServiceByIdentifier(deviceIdentifier);
+		const debugService = this.getDeviceDebugServiceByIdentifier(deviceIdentifier);
 		return debugService.debugStop();
 	}
 
-	protected getDebugService(device: Mobile.IDevice): IDeviceDebugService {
+	protected getDeviceDebugService(device: Mobile.IDevice): IDeviceDebugService {
 		if (!this._platformDebugServices[device.deviceInfo.identifier]) {
 			const platform = device.deviceInfo.platform;
 			if (this.$mobileHelper.isiOSPlatform(platform)) {
@@ -89,9 +89,9 @@ export class DebugService extends EventEmitter implements IDebugService {
 		return this._platformDebugServices[device.deviceInfo.identifier];
 	}
 
-	private getDebugServiceByIdentifier(deviceIdentifier: string): IDeviceDebugService {
+	private getDeviceDebugServiceByIdentifier(deviceIdentifier: string): IDeviceDebugService {
 		const device = this.$devicesService.getDeviceByIdentifier(deviceIdentifier);
-		return this.getDebugService(device);
+		return this.getDeviceDebugService(device);
 	}
 
 	private attachConnectionErrorHandlers(platformDebugService: IDeviceDebugService) {

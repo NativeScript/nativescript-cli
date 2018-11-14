@@ -2,6 +2,7 @@ import * as stubs from "./stubs";
 import * as yok from "../lib/common/yok";
 import { DebugAndroidCommand, DebugPlatformCommand } from "../lib/commands/debug";
 import { assert } from "chai";
+import { BundleValidatorHelper } from "../lib/helpers/bundle-validator-helper";
 import { Configuration, StaticConfig } from "../lib/config";
 import { Options } from "../lib/options";
 import { DevicePlatformsConstants } from "../lib/common/mobile/device-platforms-constants";
@@ -30,6 +31,7 @@ function createTestInjector(): IInjector {
 	testInjector.register('errors', stubs.ErrorsStub);
 	testInjector.register('hostInfo', {});
 	testInjector.register("androidBundleValidatorHelper", stubs.AndroidBundleValidatorHelper);
+	testInjector.register("bundleValidatorHelper", BundleValidatorHelper);
 	testInjector.register("analyticsService", {
 		trackException: async (): Promise<void> => undefined,
 		checkConsent: async (): Promise<void> => undefined,

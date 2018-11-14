@@ -146,7 +146,7 @@ $injector.requirePublic("previewQrCodeService", "./services/livesync/playground/
 $injector.requirePublic("sysInfo", "./sys-info");
 
 $injector.require("iOSNotificationService", "./services/ios-notification-service");
-$injector.require("socketProxyFactory", "./device-sockets/ios/socket-proxy-factory");
+$injector.require("appDebugSocketProxyFactory", "./device-sockets/ios/app-debug-socket-proxy-factory");
 $injector.require("iOSNotification", "./device-sockets/ios/notification");
 $injector.require("iOSSocketRequestExecutor", "./device-sockets/ios/socket-request-executor");
 $injector.require("messages", "./common/messages/messages");

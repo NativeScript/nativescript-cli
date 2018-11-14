@@ -111,9 +111,14 @@ declare module Mobile {
 	}
 
 	interface IiOSDevice extends IDevice {
-		getLiveSyncSocket(appId: string, projectDir: string): Promise<any>;
-		getDebugSocket(appId: string, projectDir: string): Promise<any>;
+		getLiveSyncSocket(appId: string): Promise<any>;
+		destroyLiveSyncSocket(appId: string): void;
+
+		getDebugSocket(appId: string): Promise<any>;
+		destroyDebugSocket(appId: string): void;
+
 		openDeviceLogStream(options?: IiOSLogStreamOptions): Promise<void>;
+		destroyAllSockets(): void;
 	}
 
 	interface IAndroidDevice extends IDevice {

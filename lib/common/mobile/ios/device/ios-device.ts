@@ -5,30 +5,28 @@ import * as constants from "../../../../constants";
 import * as net from "net";
 import { cache } from "../../../decorators";
 import * as helpers from "../../../../common/helpers";
+import { IOSDeviceBase } from "../ios-device-base";
 
-export class IOSDevice implements Mobile.IiOSDevice {
+export class IOSDevice extends IOSDeviceBase {
 	public applicationManager: Mobile.IDeviceApplicationManager;
 	public fileSystem: Mobile.IDeviceFileSystem;
 	public deviceInfo: Mobile.IDeviceInfo;
-	private socket: net.Socket;
-
 	private _deviceLogHandler: (...args: any[]) => void;
 
 	constructor(private deviceActionInfo: IOSDeviceLib.IDeviceActionInfo,
-		private $errors: IErrors,
+		protected $errors: IErrors,
 		private $injector: IInjector,
-		private $iOSDebuggerPortService: IIOSDebuggerPortService,
+		protected $iOSDebuggerPortService: IIOSDebuggerPortService,
 		private $iOSSocketRequestExecutor: IiOSSocketRequestExecutor,
-		private $processService: IProcessService,
+		protected $processService: IProcessService,
 		private $deviceLogProvider: Mobile.IDeviceLogProvider,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $iOSDeviceProductNameMapper: Mobile.IiOSDeviceProductNameMapper,
 		private $iosDeviceOperations: IIOSDeviceOperations,
 		private $mobileHelper: Mobile.IMobileHelper) {
-
+		super();
 		this.applicationManager = this.$injector.resolve(applicationManagerPath.IOSApplicationManager, { device: this, devicePointer: this.deviceActionInfo });
 		this.fileSystem = this.$injector.resolve(fileSystemPath.IOSDeviceFileSystem, { device: this, devicePointer: this.deviceActionInfo });
-
 		const productType = deviceActionInfo.productType;
 		const isTablet = this.$mobileHelper.isiOSTablet(productType);
 		const deviceStatus = deviceActionInfo.status || commonConstants.UNREACHABLE_STATUS;
@@ -52,16 +50,6 @@ export class IOSDevice implements Mobile.IiOSDevice {
 		return false;
 	}
 
-	public getApplicationInfo(applicationIdentifier: string): Promise<Mobile.IApplicationInfo> {
-		return this.applicationManager.getApplicationInfo(applicationIdentifier);
-	}
-
-	private actionOnDeviceLog(response: IOSDeviceLib.IDeviceLogData): void {
-		if (response.deviceId === this.deviceInfo.identifier) {
-			this.$deviceLogProvider.logData(response.message, this.$devicePlatformsConstants.iOS, this.deviceInfo.identifier);
-		}
-	}
-
 	@cache()
 	public async openDeviceLogStream(): Promise<void> {
 		if (this.deviceInfo.status !== commonConstants.UNREACHABLE_STATUS) {
@@ -71,33 +59,11 @@ export class IOSDevice implements Mobile.IiOSDevice {
 		}
 	}
 
-	public detach(): void {
-		if (this._deviceLogHandler) {
-			this.$iosDeviceOperations.removeListener(commonConstants.DEVICE_LOG_EVENT_NAME, this._deviceLogHandler);
-		}
-	}
-
-	public async getLiveSyncSocket(appId: string, projectDir: string): Promise<net.Socket> {
-		return this.getSocket(appId, projectDir);
-	}
-
-	public async getDebugSocket(appId: string, projectDir: string): Promise<net.Socket> {
-		return this.getSocket(appId, projectDir);
-	}
-
-	private async getSocket(appId: string, projectDir: string): Promise<net.Socket> {
-		if (this.socket) {
-			return this.socket;
-		}
-
+	protected async getSocketCore(appId: string): Promise<net.Socket> {
 		await this.$iOSSocketRequestExecutor.executeAttachRequest(this, constants.AWAIT_NOTIFICATION_TIMEOUT_SECONDS, appId);
-		const port = await this.$iOSDebuggerPortService.getPort({ projectDir, deviceId: this.deviceInfo.identifier, appId });
-		if (!port) {
-			this.$errors.failWithoutHelp("Device socket port cannot be found.");
-		}
-
+		const port = await this.getDebuggerPort(appId);
 		const deviceId = this.deviceInfo.identifier;
-		this.socket = await helpers.connectEventuallyUntilTimeout(
+		const socket = await helpers.connectEventuallyUntilTimeout(
 			async () => {
 				const deviceResponse = _.first((await this.$iosDeviceOperations.connectToPort([{ deviceId: deviceId, port: port }]))[deviceId]);
 				const _socket = new net.Socket();
@@ -106,12 +72,19 @@ export class IOSDevice implements Mobile.IiOSDevice {
 			},
 			commonConstants.SOCKET_CONNECTION_TIMEOUT_MS);
 
-		this.socket.on("close", () => {
-			this.socket = null;
-		});
+		return socket;
+	}
 
-		this.$processService.attachToProcessExitSignals(this, this.destroySocket);
-		return this.socket;
+	private actionOnDeviceLog(response: IOSDeviceLib.IDeviceLogData): void {
+		if (response.deviceId === this.deviceInfo.identifier) {
+			this.$deviceLogProvider.logData(response.message, this.$devicePlatformsConstants.iOS, this.deviceInfo.identifier);
+		}
+	}
+
+	public detach(): void {
+		if (this._deviceLogHandler) {
+			this.$iosDeviceOperations.removeListener(commonConstants.DEVICE_LOG_EVENT_NAME, this._deviceLogHandler);
+		}
 	}
 
 	private getActiveArchitecture(productType: string): string {
@@ -134,13 +107,6 @@ export class IOSDevice implements Mobile.IiOSDevice {
 		}
 
 		return activeArchitecture;
-	}
-
-	private destroySocket() {
-		if (this.socket) {
-			this.socket.destroy();
-			this.socket = null;
-		}
 	}
 }
 

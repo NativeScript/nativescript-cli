@@ -4,12 +4,18 @@ import { Yok } from "../../../yok";
 import { assert } from "chai";
 import { DeviceDiscoveryEventNames, CONNECTED_STATUS } from "../../../constants";
 import { DevicePlatformsConstants } from "../../../mobile/device-platforms-constants";
+import { ErrorsStub, CommonLoggerStub, HooksServiceStub } from "../stubs";
+import { FileSystemStub } from "../../../../../test/stubs";
 
 let currentlyRunningSimulators: Mobile.IiSimDevice[];
 
 function createTestInjector(): IInjector {
 	const injector = new Yok();
+	injector.register("fs", FileSystemStub);
+	injector.register("plistParser", {});
 	injector.register("injector", injector);
+	injector.register("errors", ErrorsStub);
+	injector.register("iOSDebuggerPortService", {});
 	injector.register("iOSSimResolver", {
 		iOSSim: {
 			getRunningSimulators: async () => currentlyRunningSimulators
@@ -32,6 +38,11 @@ function createTestInjector(): IInjector {
 	injector.register("iOSSimulatorLogProvider", {});
 	injector.register("deviceLogProvider", {});
 	injector.register("iOSEmulatorServices", {});
+	injector.register("iOSNotification", {});
+	injector.register("processService", {});
+	injector.register("options", {});
+	injector.register("hooksService", HooksServiceStub);
+	injector.register("logger", CommonLoggerStub);
 
 	return injector;
 }

@@ -1,4 +1,4 @@
-interface IIOSDebuggerPortInputData extends IProjectDir {
+interface IIOSDebuggerPortInputData {
 	deviceId: string;
 	appId: string;
 }

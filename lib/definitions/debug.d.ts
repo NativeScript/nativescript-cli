@@ -5,7 +5,7 @@ interface IDebugData extends IAppDebugData, Mobile.IDeviceIdentifier {
 }
 
 /**
- * Describes information application that will be debugged.
+ * Describes information for application that will be debugged.
  */
 interface IAppDebugData extends IProjectDir {
 	/**

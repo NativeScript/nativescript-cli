@@ -1,27 +1,20 @@
-import { IOSDeviceDebugService } from "../../lib/services/ios-device-debug-service";
+import { AndroidDeviceDebugService } from "../../lib/services/android-device-debug-service";
 import { Yok } from "../../lib/common/yok";
 import * as stubs from "../stubs";
 import { assert } from "chai";
 
 const expectedDevToolsCommitSha = "02e6bde1bbe34e43b309d4ef774b1168d25fd024";
 
-class IOSDeviceDebugServiceInheritor extends IOSDeviceDebugService {
+class AndroidDeviceDebugServiceInheritor extends AndroidDeviceDebugService {
 	constructor(protected $devicesService: Mobile.IDevicesService,
-		$platformService: IPlatformService,
-		$iOSEmulatorServices: Mobile.IiOSSimulatorService,
-		$childProcess: IChildProcess,
-		$hostInfo: IHostInfo,
-		$logger: ILogger,
 		$errors: IErrors,
-		$packageInstallationManager: IPackageInstallationManager,
-		$iOSDebuggerPortService: IIOSDebuggerPortService,
-		$processService: IProcessService,
-		$socketProxyFactory: ISocketProxyFactory,
+		$logger: ILogger,
+		$androidDeviceDiscovery: Mobile.IDeviceDiscovery,
+		$androidProcessService: Mobile.IAndroidProcessService,
+		$net: INet,
 		$projectDataService: IProjectDataService,
 		$deviceLogProvider: Mobile.IDeviceLogProvider) {
-		super(<any>{}, $devicesService, $platformService, $iOSEmulatorServices, $childProcess, $hostInfo, $logger, $errors,
-			$packageInstallationManager, $iOSDebuggerPortService,
-			$processService, $socketProxyFactory, $projectDataService, $deviceLogProvider);
+		super(<any>{ deviceInfo: { identifier: "123" } }, $devicesService, $errors, $logger, $androidDeviceDiscovery, $androidProcessService, $net, $projectDataService, $deviceLogProvider);
 	}
 
 	public getChromeDebugUrl(debugOptions: IDebugOptions, port: number): string {
@@ -32,31 +25,13 @@ class IOSDeviceDebugServiceInheritor extends IOSDeviceDebugService {
 const createTestInjector = (): IInjector => {
 	const testInjector = new Yok();
 	testInjector.register("devicesService", {});
-	testInjector.register("platformService", {});
-	testInjector.register("iOSEmulatorServices", {});
-	testInjector.register("childProcess", {});
-
 	testInjector.register("errors", stubs.ErrorsStub);
 	testInjector.register("logger", stubs.LoggerStub);
-	testInjector.register("hostInfo", {});
-	testInjector.register("packageInstallationManager", {});
-	testInjector.register("iOSNotification", {});
-	testInjector.register("iOSSocketRequestExecutor", {});
-	testInjector.register("processService", {
-		attachToProcessExitSignals: (context: any, callback: () => void): void => undefined
-	});
-
-	testInjector.register("socketProxyFactory", {
-		on: (event: string | symbol, listener: Function): any => undefined
-	});
-
-	testInjector.register("net", {
-		getAvailablePortInRange: async (startPort: number, endPort?: number): Promise<number> => 41000,
-		waitForPortToListen: async (opts: { port: number, timeout: number, interval?: number }): Promise<boolean> => true
-	});
-
+	testInjector.register("npm", stubs.NodePackageManagerStub);
+	testInjector.register("androidDeviceDiscovery", {});
+	testInjector.register("androidProcessService", {});
+	testInjector.register("net", {});
 	testInjector.register("projectDataService", {});
-	testInjector.register("iOSDebuggerPortService", {});
 	testInjector.register("deviceLogProvider", {});
 
 	return testInjector;
@@ -68,7 +43,7 @@ interface IChromeUrlTestCase {
 	scenarioName: string;
 }
 
-describe("iOSDeviceDebugService", () => {
+describe("androidDeviceDebugService", () => {
 	describe("getChromeDebugUrl", () => {
 		const expectedPort = 12345;
 		const customDevToolsCommit = "customDevToolsCommit";
@@ -78,7 +53,7 @@ describe("iOSDeviceDebugService", () => {
 			{
 				scenarioName: "useBundledDevTools and useHttpUrl are not passed",
 				debugOptions: {},
-				expectedChromeUrl: `chrome-devtools://devtools/remote/serve_file/@${expectedDevToolsCommitSha}/inspector.html?experiments=true&ws=localhost:${expectedPort}`,
+				expectedChromeUrl: `chrome-devtools://devtools/bundled/inspector.html?experiments=true&ws=localhost:${expectedPort}`,
 			},
 
 			// When useBundledDevTools is true
@@ -137,7 +112,7 @@ describe("iOSDeviceDebugService", () => {
 				debugOptions: {
 					useHttpUrl: false
 				},
-				expectedChromeUrl: `chrome-devtools://devtools/remote/serve_file/@${expectedDevToolsCommitSha}/inspector.html?experiments=true&ws=localhost:${expectedPort}`,
+				expectedChromeUrl: `chrome-devtools://devtools/bundled/inspector.html?experiments=true&ws=localhost:${expectedPort}`,
 			},
 			{
 				scenarioName: "useBundledDevTools is not passed and useHttpUrl is true",
@@ -149,16 +124,16 @@ describe("iOSDeviceDebugService", () => {
 
 			// devToolsCommit tests
 			{
-				scenarioName: "devToolsCommit defaults to ${expectedDevToolsCommitSha} and is used in result when useBundledDevTools is not passed",
-				debugOptions: {},
+				scenarioName: "devToolsCommit defaults to ${expectedDevToolsCommitSha} when useBundledDevTools is set to false",
+				debugOptions: {
+					useBundledDevTools: false
+				},
 				expectedChromeUrl: `chrome-devtools://devtools/remote/serve_file/@${expectedDevToolsCommitSha}/inspector.html?experiments=true&ws=localhost:${expectedPort}`,
 			},
 			{
-				scenarioName: "devToolsCommit is set to passed value when useBundledDevTools is not passed",
-				debugOptions: {
-					devToolsCommit: customDevToolsCommit
-				},
-				expectedChromeUrl: `chrome-devtools://devtools/remote/serve_file/@${customDevToolsCommit}/inspector.html?experiments=true&ws=localhost:${expectedPort}`,
+				scenarioName: "devToolsCommit is disregarded when useBundledDevTools is not passed",
+				debugOptions: {},
+				expectedChromeUrl: `chrome-devtools://devtools/bundled/inspector.html?experiments=true&ws=localhost:${expectedPort}`,
 			},
 			{
 				scenarioName: "devToolsCommit is set to passed value when useBundledDevTools is set to false",
@@ -175,26 +150,16 @@ describe("iOSDeviceDebugService", () => {
 					devToolsCommit: customDevToolsCommit
 				},
 				expectedChromeUrl: `https://chrome-devtools-frontend.appspot.com/serve_file/@${customDevToolsCommit}/inspector.html?experiments=true&ws=localhost:${expectedPort}`,
-			},
-			{
-				scenarioName: "devToolsCommit is disregarded when useBundledDevTools is set to true",
-				debugOptions: {
-					useBundledDevTools: true,
-					devToolsCommit: customDevToolsCommit
-				},
-				expectedChromeUrl: `chrome-devtools://devtools/bundled/inspector.html?experiments=true&ws=localhost:${expectedPort}`,
 			}
-
 		];
 
 		for (const testCase of chromUrlTestCases) {
 			it(`returns correct url when ${testCase.scenarioName}`, () => {
 				const testInjector = createTestInjector();
-				const iOSDeviceDebugService = testInjector.resolve<IOSDeviceDebugServiceInheritor>(IOSDeviceDebugServiceInheritor);
-				const actualChromeUrl = iOSDeviceDebugService.getChromeDebugUrl(testCase.debugOptions, expectedPort);
+				const androidDeviceDebugService = testInjector.resolve<AndroidDeviceDebugServiceInheritor>(AndroidDeviceDebugServiceInheritor);
+				const actualChromeUrl = androidDeviceDebugService.getChromeDebugUrl(testCase.debugOptions, expectedPort);
 				assert.equal(actualChromeUrl, testCase.expectedChromeUrl);
 			});
 		}
-
 	});
 });

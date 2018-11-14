@@ -1,28 +1,18 @@
 import { DEBUGGER_PORT_FOUND_EVENT_NAME, ATTACH_REQUEST_EVENT_NAME } from "../common/constants";
 import { cache } from "../common/decorators";
-import * as semver from "semver";
 
 export class IOSDebuggerPortService implements IIOSDebuggerPortService {
 	public static DEBUG_PORT_LOG_REGEX = /NativeScript debugger has opened inspector socket on port (\d+?) for (.*)[.]/;
 	private mapDebuggerPortData: IDictionary<IIOSDebuggerPortStoredData> = {};
-	private static DEFAULT_PORT = 18181;
-	private static MIN_REQUIRED_FRAMEWORK_VERSION = "4.0.1";
 	private static DEFAULT_TIMEOUT_IN_SECONDS = 10;
 
 	constructor(private $logParserService: ILogParserService,
-		private $iOSProjectService: IPlatformProjectService,
 		private $iOSNotification: IiOSNotification,
-		private $projectDataService: IProjectDataService,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $logger: ILogger) { }
 
 	public getPort(data: IIOSDebuggerPortInputData, debugOptions?: IDebugOptions): Promise<number> {
 		return new Promise((resolve, reject) => {
-			if (!this.canStartLookingForDebuggerPort(data)) {
-				resolve(IOSDebuggerPortService.DEFAULT_PORT);
-				return;
-			}
-
 			const key = `${data.deviceId}${data.appId}`;
 			const timeout = this.getTimeout(debugOptions);
 			let retryCount = Math.max(timeout * 1000 / 500, 10);
@@ -41,19 +31,8 @@ export class IOSDebuggerPortService implements IIOSDebuggerPortService {
 	}
 
 	public async attachToDebuggerPortFoundEvent(device: Mobile.IDevice, data: IProjectDir, debugOptions: IDebugOptions): Promise<void> {
-		const projectData = this.$projectDataService.getProjectData(data && data.projectDir);
-		if (!this.canStartLookingForDebuggerPort(projectData)) {
-			return;
-		}
-
 		this.attachToDebuggerPortFoundEventCore();
 		this.attachToAttachRequestEvent(device, debugOptions);
-	}
-
-	private canStartLookingForDebuggerPort(data: IProjectDir): boolean {
-		const projectData = this.$projectDataService.getProjectData(data && data.projectDir);
-		const frameworkVersion = this.$iOSProjectService.getFrameworkVersion(projectData);
-		return !frameworkVersion || !semver.valid(frameworkVersion) || semver.gt(frameworkVersion, IOSDebuggerPortService.MIN_REQUIRED_FRAMEWORK_VERSION);
 	}
 
 	@cache()

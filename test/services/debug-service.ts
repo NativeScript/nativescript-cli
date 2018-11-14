@@ -167,7 +167,7 @@ describe("debugService", () => {
 
 				const testInjector = getTestInjectorForTestConfiguration(testData);
 				const expectedErrorMessage = "Platform specific error";
-				const platformDebugService = testInjector.resolve<IDeviceDebugService>(`${platform}DebugService`);
+				const platformDebugService = testInjector.resolve<IDeviceDebugService>(`${platform}DeviceDebugService`);
 				platformDebugService.debug = async (debugData: IDebugData, debugOptions: IDebugOptions): Promise<any> => {
 					throw new Error(expectedErrorMessage);
 				};
@@ -204,7 +204,7 @@ describe("debugService", () => {
 					await assert.isFulfilled(debugService.debug(debugData, null));
 
 					const expectedErrorData = { deviceIdentifier: "deviceId", message: "my message", code: 2048 };
-					const platformDebugService = testInjector.resolve<IDeviceDebugService>(`${platform}DebugService`);
+					const platformDebugService = testInjector.resolve<IDeviceDebugService>(`${platform}DeviceDebugService`);
 					platformDebugService.emit(CONNECTION_ERROR_EVENT_NAME, expectedErrorData);
 					assert.deepEqual(dataRaisedForConnectionError, expectedErrorData);
 				});

@@ -731,12 +731,12 @@ interface IAndroidToolsInfoValidateInput extends IAndroidToolsInfoOptions {
 	validateTargetSdk: boolean;
 }
 
-interface ISocketProxyFactory extends NodeJS.EventEmitter {
-	getTCPSocketProxy(deviceIdentifier: string): any;
-	addTCPSocketProxy(factory: () => Promise<any>, deviceIdentifier: string): Promise<any>;
+interface IAppDebugSocketProxyFactory extends NodeJS.EventEmitter {
+	getTCPSocketProxy(deviceIdentifier: string, appId: string): any;
+	addTCPSocketProxy(device: Mobile.IiOSDevice, appId: string): Promise<any>;
 
-	getWebSocketProxy(deviceIdentifier: string): any;
-	addWebSocketProxy(factory: () => Promise<any>, deviceIdentifier: string): Promise<any>;
+	getWebSocketProxy(deviceIdentifier: string, appId: string): any;
+	addWebSocketProxy(device: Mobile.IiOSDevice, appId: string): Promise<any>;
 
 	removeAllProxies(): void;
 }
