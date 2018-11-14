@@ -367,6 +367,10 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 	}
 
 	public async shouldBuild(platform: string, projectData: IProjectData, buildConfig: IBuildConfig, outputPath?: string): Promise<boolean> {
+		if (buildConfig.release && this.$projectChangesService.currentChanges.hasChanges) {
+			return true;
+		}
+
 		if (this.$projectChangesService.currentChanges.changesRequireBuild) {
 			return true;
 		}
