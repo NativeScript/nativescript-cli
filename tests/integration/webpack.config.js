@@ -24,6 +24,12 @@ module.exports = {
       }
     ]
   },
+  node: {
+    console: true,
+    fs: 'empty',
+    net: 'empty',
+    tls: 'empty'
+  },
   plugins: [
     new Dotenv({
       path: DOT_ENV_FILE
