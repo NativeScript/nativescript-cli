@@ -4,7 +4,7 @@ import * as Kinvey from '__SDK__';
 
 //the same redirect url should be configured on the server
 const serverHost = 'auth.kinvey.com';
-const redirectUrl = 'http://localhost:64320/callback';
+const redirectUrl = 'http://localhost:9876/callback';
 const authServiceId = process.env.AUTH_SERVICE_ID;
 const wrongSetupAuthServiceId = process.env.WRONG_AUTH_SERVICE_ID;
 const micDefaultVersion = 'v3';
@@ -93,8 +93,6 @@ const validateMICUser = (user, allowRefreshTokens, explicitAuthServiceId) => {
   expect(kinveyAuth.redirect_uri).to.equal(redirectUrl);
   expect(kinveyAuth.protocol).to.equal('https:');
   expect(kinveyAuth.host).to.equal(serverHost);
-
-  expect(user.client).to.exist;
 };
 
 const addLoginFacebookHandler = () => {
@@ -139,8 +137,7 @@ const resolveAfter = (timeInMs) => {
   });
 }
 
-describe('MIC Integration', () => {
-
+describe.only('MIC Integration', () => {
   before(() => {
     return Kinvey.init({
       appKey: process.env.APP_KEY,
@@ -168,7 +165,7 @@ describe('MIC Integration', () => {
     done();
   });
 
-  it.only('should login the user, using the default Auth service, which allows refresh tokens', (done) => {
+  it('should login the user, using the default Auth service, which allows refresh tokens', (done) => {
     addLoginFacebookHandler();
     Kinvey.User.loginWithMIC(redirectUrl, null)
       .then((user) => {
