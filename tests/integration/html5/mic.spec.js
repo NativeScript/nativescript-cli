@@ -152,8 +152,8 @@ describe('MIC Integration', () => {
   beforeEach((done) => {
     Kinvey.User.logout()
       .then(() => {
-        var fbWindow = window.open(fbDevUrl);
-        fbWindow.addEventListener('load', function () {
+        const fbWindow = window.open(fbDevUrl);
+        fbWindow.addEventListener('load', () => {
           expireFBCookie(fbWindow, fbCookieName, fbCookieValue, 3);
           fbWindow.close();
           winOpen = window.open;

@@ -54,7 +54,8 @@ module.exports = function (config) {
     customLaunchers: {
       Chrome_without_security: {
         base: 'Chrome',
-        flags: ['--disable-web-security']
+        chromeDataDir: path.resolve(__dirname, '.chrome'),
+        flags: ['--disable-web-security', '--disable-site-isolation-trials']
       }
     },
 
