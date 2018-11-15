@@ -111,6 +111,7 @@ describe('Sync', () => {
           expect(syncEntity).toEqual({
             _id: entity._id,
             entityId: entity._id,
+            entity,
             collection,
             state: {
               operation: 'POST'
@@ -127,6 +128,7 @@ describe('Sync', () => {
           expect(syncEntities).toEqual([{
             _id: entities[0]._id,
             entityId: entities[0]._id,
+            entity: entities[0],
             collection,
             state: {
               operation: 'POST'
@@ -170,6 +172,7 @@ describe('Sync', () => {
           expect(syncEntity).toEqual({
             _id: entity._id,
             entityId: entity._id,
+            entity,
             collection,
             state: {
               operation: 'PUT'
@@ -186,6 +189,7 @@ describe('Sync', () => {
           expect(syncEntities).toEqual([{
             _id: entities[0]._id,
             entityId: entities[0]._id,
+            entity: entities[0],
             collection,
             state: {
               operation: 'PUT'
@@ -229,6 +233,7 @@ describe('Sync', () => {
           expect(syncEntity).toEqual({
             _id: entity._id,
             entityId: entity._id,
+            entity,
             collection,
             state: {
               operation: 'DELETE'
@@ -245,6 +250,7 @@ describe('Sync', () => {
           expect(syncEntities).toEqual([{
             _id: entities[0]._id,
             entityId: entities[0]._id,
+            entity: entities[0],
             collection,
             state: {
               operation: 'DELETE'

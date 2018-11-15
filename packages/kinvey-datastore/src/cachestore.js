@@ -239,7 +239,7 @@ export class CacheStore {
           }
 
           return count;
-        }, syncDocs.length);
+        }, count || syncDocs.length);
       }
     }
 

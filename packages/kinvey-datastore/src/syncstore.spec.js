@@ -537,7 +537,7 @@ describe('SyncStore', () => {
   });
 
   describe('removeById()', () => {
-    it('should return a `{ count: 0 } if an id is not provided', () => {//TODO:  returns 0 instead of {count:0}
+    it('should return a `{ count: 0 } if an id is not provided', () => {
       const store = new CacheStore(collectionName, {autoSync: false});
       return store.removeById()
         .then((result) => {
@@ -545,17 +545,7 @@ describe('SyncStore', () => {
         });
     });
 
-    it('should return a NotFoundError if an entity with that id does not exist', () => {//TODO: errors should be reverted
-      const store = new CacheStore(collectionName, {autoSync: false});
-      return store.clear()
-        .then(() => store.removeById(randomString()))
-        .then(() => Promise.reject(new Error('Should not happen')))
-        .catch((err) => {
-          expect(err).toBeA(NotFoundError);
-        });
-    });
-
-    it('should remove the entity from cache', () => {//TODO:  returns 1 instead of {count: 1}
+    it('should remove the entity from cache', () => {
       const store = new CacheStore(collectionName, {autoSync: false});
       const entity = { _id: randomString() };
 
@@ -577,7 +567,7 @@ describe('SyncStore', () => {
         });
     });
 
-    it('should remove the entity from the cache and sync table', () => { //TODO:  returns 1 instead of {count: 1}
+    it('should remove the entity from the cache and sync table', () => {
       const store = new CacheStore(collectionName, {autoSync: false});
       const entity = {};
 
