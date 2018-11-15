@@ -18,7 +18,8 @@ module.exports = function (config) {
 
     // list of files / patterns to load in the browser
     files: [
-      'shared/**/*.spec.js'
+      'shared/**/*.spec.js',
+      'html5/**/*.spec.js'
     ],
 
     // list of files / patterns to exclude
@@ -27,7 +28,8 @@ module.exports = function (config) {
     // preprocess matching files before serving them to the browser
     // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
     preprocessors: {
-      'shared/**/*.spec.js': ['webpack']
+      'shared/**/*.spec.js': ['webpack'],
+      'html5/**/*.spec.js': ['webpack']
     },
 
     // test results reporter to use
@@ -46,11 +48,19 @@ module.exports = function (config) {
 
     // start these browsers
     // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
-    browsers: ['ChromeHeadless'],
+    browsers: ['Chrome_without_security'],
+
+    // you can define custom flags
+    customLaunchers: {
+      Chrome_without_security: {
+        base: 'Chrome',
+        flags: ['--disable-web-security']
+      }
+    },
 
     // Continuous Integration mode
     // if true, Karma captures browsers, runs the tests and exits
-    singleRun: true,
+    singleRun: false,
 
     // Concurrency level
     // how many browser should be started simultaneous
