@@ -3,17 +3,19 @@ import { PreviewDevicesService } from "../../lib/services/livesync/playground/de
 import { Device } from "nativescript-preview-sdk";
 import { assert } from "chai";
 import { DeviceDiscoveryEventNames } from "../../lib/common/constants";
-import { LoggerStub } from "../stubs";
+import { LoggerStub, ErrorsStub } from "../stubs";
 
 let foundDevices: Device[] = [];
 let lostDevices: Device[] = [];
 
 function createTestInjector(): IInjector {
 	const injector = new Yok();
+	injector.register("errors", ErrorsStub);
 	injector.register("previewDevicesService", PreviewDevicesService);
 	injector.register("previewAppLogProvider", {
 		on: () => ({})
 	});
+	injector.register("previewAppPluginsService", {});
 	injector.register("logger", LoggerStub);
 	return injector;
 }
