@@ -1,37 +1,24 @@
 import * as path from "path";
-import { FilePayload, Device, FilesPayload } from "nativescript-preview-sdk";
-import { PreviewSdkEventNames } from "./preview-app-constants";
-import { APP_FOLDER_NAME, APP_RESOURCES_FOLDER_NAME, TNS_MODULES_FOLDER_NAME } from "../../../constants";
+import { Device, FilesPayload } from "nativescript-preview-sdk";
+import { APP_RESOURCES_FOLDER_NAME, APP_FOLDER_NAME } from "../../../constants";
 import { HmrConstants } from "../../../common/constants";
-const isTextOrBinary = require('istextorbinary');
-
-interface ISyncFilesOptions {
-	filesToSync?: string[];
-	filesToRemove?: string[];
-	isInitialSync?: boolean;
-	skipPrepare?: boolean;
-	useHotModuleReload?: boolean;
-	deviceId?: string;
-}
 
 export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
-	private excludedFileExtensions = [".ts", ".sass", ".scss", ".less"];
-	private excludedFiles = [".DS_Store"];
+
 	private deviceInitializationPromise: IDictionary<Promise<FilesPayload>> = {};
 
-	constructor(private $fs: IFileSystem,
+	constructor(
 		private $errors: IErrors,
 		private $hooksService: IHooksService,
 		private $logger: ILogger,
-		private $platformService: IPlatformService,
 		private $platformsData: IPlatformsData,
 		private $projectDataService: IProjectDataService,
 		private $previewSdkService: IPreviewSdkService,
+		private $previewAppFilesService: IPreviewAppFilesService,
 		private $previewAppPluginsService: IPreviewAppPluginsService,
 		private $previewDevicesService: IPreviewDevicesService,
-		private $projectFilesManager: IProjectFilesManager,
 		private $hmrStatusService: IHmrStatusService,
-		private $projectFilesProvider: IProjectFilesProvider) { }
+	) { }
 
 	public async initialize(data: IPreviewAppLiveSyncData): Promise<void> {
 		await this.$previewSdkService.initialize(async (device: Device) => {
@@ -65,8 +52,9 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 			.map(device => device.platform)
 			.uniq()
 			.value();
+
 		for (const platform of platforms) {
-			await this.syncFilesForPlatformSafe(data, platform, { filesToSync, filesToRemove, useHotModuleReload: data.useHotModuleReload });
+			await this.syncFilesForPlatformSafe(data, { filesToSync, filesToRemove }, platform);
 		}
 	}
 
@@ -78,7 +66,7 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 		const hookArgs = this.getHookArgs(data, device);
 		await this.$hooksService.executeBeforeHooks("preview-sync", { hookArgs });
 		await this.$previewAppPluginsService.comparePluginsOnDevice(data, device);
-		const payloads = await this.syncFilesForPlatformSafe(data, device.platform, { isInitialSync: true, useHotModuleReload: data.useHotModuleReload });
+		const payloads = await this.syncInitialFilesForPlatformSafe(data, device.platform);
 		return payloads;
 	}
 
@@ -106,14 +94,55 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 		return result;
 	}
 
+	private async syncInitialFilesForPlatformSafe(data: IPreviewAppLiveSyncData, platform: string): Promise<FilesPayload> {
+		this.$logger.info(`Start syncing changes for platform ${platform}.`);
+
+		try {
+			const payloads = this.$previewAppFilesService.getInitialFilesPayload(data, platform);
+			this.$logger.info(`Successfully synced changes for platform ${platform}.`);
+			return payloads;
+		} catch (err) {
+			this.$logger.warn(`Unable to apply changes for platform ${platform}. Error is: ${err}, ${JSON.stringify(err, null, 2)}.`);
+		}
+	}
+
+	private async syncFilesForPlatformSafe(data: IPreviewAppLiveSyncData, filesData: IPreviewAppFilesData, platform: string, deviceId?: string): Promise<FilesPayload> {
+		this.$logger.info(`Start syncing changes for platform ${platform}.`);
+
+		try {
+			const payloads = this.$previewAppFilesService.getFilesPayload(data, filesData, platform);
+			await this.$previewSdkService.applyChanges(payloads);
+			this.$logger.info(`Successfully synced ${payloads.files.map(filePayload => filePayload.file.yellow)} for platform ${platform}.`);
+			return payloads;
+		} catch (err) {
+			this.$logger.warn(`Unable to apply changes for platform ${platform}. Error is: ${err}, ${JSON.stringify(err, null, 2)}.`);
+		}
+	}
+
 	private async onWebpackCompilationComplete(data: IPreviewAppLiveSyncData, hmrData: IDictionary<IPlatformHmrData>, filesToSyncMap: IDictionary<string[]>, promise: Promise<FilesPayload>, platform: string) {
 		await promise
 			.then(async () => {
 				const currentHmrData = _.cloneDeep(hmrData);
 				const platformHmrData = currentHmrData[platform] || <any>{};
-				const filesToSync = _.cloneDeep(filesToSyncMap[platform]);
-				// We don't need to prepare when webpack emits changed files. We just need to send a message to pubnub.
-				promise = this.syncFilesForPlatformSafe(data, platform, { filesToSync, skipPrepare: true, useHotModuleReload: data.useHotModuleReload });
+				const projectData = this.$projectDataService.getProjectData(data.projectDir);
+				const platformData = this.$platformsData.getPlatformData(platform, projectData);
+				const clonedFiles = _.cloneDeep(filesToSyncMap[platform]);
+				const filesToSync = _.map(clonedFiles, fileToSync => {
+						const result = path.join(platformData.appDestinationDirectoryPath, APP_FOLDER_NAME, path.relative(projectData.getAppDirectoryPath(), fileToSync));
+						console.log(result);
+						return result;
+					});
+
+				// console.log("####### FILES TO SYNC!!!!!!! %%%%%%%% ", filesToSync, data.projectDir, platformData);
+				// console.log("####### appDestinationDirectoryPath!!!! ", platformData.appDestinationDirectoryPath);
+				// console.log("hjfjdjgdfjgjfgjgj !!!!! ", projectData.getAppDirectoryPath());
+
+				// filesToSync = filesToSync.map(fileToSync => {
+				// 	console.log("appDestinationDirectoryPath !!!! ", platformData.appDestinationDirectoryPath);
+				// 	console.log("relative path!!!!!", path.relative(projectData.getAppDirectoryPath(), fileToSync));
+				// 	return result;
+				// });
+				promise = this.syncFilesForPlatformSafe(data, { filesToSync }, platform);
 				await promise;
 
 				if (data.useHotModuleReload && platformHmrData.hash) {
@@ -122,7 +151,8 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 					await Promise.all(_.map(devices, async (previewDevice: Device) => {
 						const status = await this.$hmrStatusService.getHmrStatus(previewDevice.id, platformHmrData.hash);
 						if (status === HmrConstants.HMR_ERROR_STATUS) {
-							await this.syncFilesForPlatformSafe(data, platform, { filesToSync: platformHmrData.fallbackFiles, useHotModuleReload: false, deviceId: previewDevice.id });
+							// TODO: SET useHotModuleReload: false,
+							await this.syncFilesForPlatformSafe(data, { filesToSync: platformHmrData.fallbackFiles }, platform, previewDevice.id );
 						}
 					}));
 				}
@@ -130,115 +160,9 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 		filesToSyncMap[platform] = [];
 	}
 
-	private async syncFilesForPlatformSafe(data: IPreviewAppLiveSyncData, platform: string, opts?: ISyncFilesOptions): Promise<FilesPayload> {
-		this.$logger.info(`Start syncing changes for platform ${platform}.`);
-
-		opts = opts || {};
-		let payloads = null;
-
-		try {
-			const { env, projectDir } = data;
-			const projectData = this.$projectDataService.getProjectData(projectDir);
-			const platformData = this.$platformsData.getPlatformData(platform, projectData);
-
-			if (!opts.skipPrepare) {
-				await this.preparePlatform(platform, data, env, projectData);
-			}
-
-			if (opts.isInitialSync) {
-				const platformsAppFolderPath = path.join(platformData.appDestinationDirectoryPath, APP_FOLDER_NAME);
-				opts.filesToSync = this.$projectFilesManager.getProjectFiles(platformsAppFolderPath);
-				payloads = this.getFilesPayload(platformData, projectData, opts);
-				this.$logger.info(`Successfully synced changes for platform ${platform}.`);
-			} else {
-				opts.filesToSync = _.map(opts.filesToSync, file => this.$projectFilesProvider.mapFilePath(file, platformData.normalizedPlatformName, projectData));
-				payloads = this.getFilesPayload(platformData, projectData, opts);
-				await this.$previewSdkService.applyChanges(payloads);
-				this.$logger.info(`Successfully synced ${payloads.files.map(filePayload => filePayload.file.yellow)} for platform ${platform}.`);
-			}
-
-			return payloads;
-		} catch (err) {
-			this.$logger.warn(`Unable to apply changes for platform ${platform}. Error is: ${err}, ${JSON.stringify(err, null, 2)}.`);
-		}
-	}
-
-	private getFilesPayload(platformData: IPlatformData, projectData: IProjectData, opts?: ISyncFilesOptions): FilesPayload {
-		const { filesToSync, filesToRemove, deviceId } = opts;
-
-		const filesToTransfer = filesToSync
-			.filter(file => file.indexOf(TNS_MODULES_FOLDER_NAME) === -1)
-			.filter(file => file.indexOf(APP_RESOURCES_FOLDER_NAME) === -1)
-			.filter(file => !_.includes(this.excludedFiles, path.basename(file)))
-			.filter(file => !_.includes(this.excludedFileExtensions, path.extname(file)));
-
-		this.$logger.trace(`Transferring ${filesToTransfer.join("\n")}.`);
-
-		const payloadsToSync = filesToTransfer.map(file => this.createFilePayload(file, platformData, projectData, PreviewSdkEventNames.CHANGE_EVENT_NAME));
-		const payloadsToRemove = _.map(filesToRemove, file => this.createFilePayload(file, platformData, projectData, PreviewSdkEventNames.UNLINK_EVENT_NAME));
-		const payloads = payloadsToSync.concat(payloadsToRemove);
-
-		const hmrMode = opts.useHotModuleReload ? 1 : 0;
-		return { files: payloads, platform: platformData.normalizedPlatformName.toLowerCase(), hmrMode, deviceId };
-	}
-
-	private async preparePlatform(platform: string, data: IPreviewAppLiveSyncData, env: Object, projectData: IProjectData): Promise<void> {
-		const appFilesUpdaterOptions = {
-			bundle: data.bundle,
-			useHotModuleReload: data.useHotModuleReload,
-			release: false
-		};
-		const nativePrepare = { skipNativePrepare: true };
-		const config = <IPlatformOptions>{};
-		const platformTemplate = <string>null;
-		const prepareInfo = {
-			platform,
-			appFilesUpdaterOptions,
-			env,
-			projectData,
-			nativePrepare,
-			config,
-			platformTemplate,
-			skipCopyTnsModules: true,
-			skipCopyAppResourcesFiles: true
-		};
-		await this.$platformService.preparePlatform(prepareInfo);
-	}
-
 	private showWarningsForNativeFiles(files: string[]): void {
 		_.filter(files, file => file.indexOf(APP_RESOURCES_FOLDER_NAME) > -1)
 			.forEach(file => this.$logger.warn(`Unable to apply changes from ${APP_RESOURCES_FOLDER_NAME} folder. You need to build your application in order to make changes in ${APP_RESOURCES_FOLDER_NAME} folder.`));
-	}
-
-	private createFilePayload(file: string, platformData: IPlatformData, projectData: IProjectData, event: string): FilePayload {
-		const projectFileInfo = this.$projectFilesProvider.getProjectFileInfo(file, platformData.normalizedPlatformName, null);
-		const binary = isTextOrBinary.isBinarySync(file);
-		let fileContents = "";
-		let filePath = "";
-
-		if (event === PreviewSdkEventNames.CHANGE_EVENT_NAME) {
-			const relativePath = path.relative(path.join(platformData.appDestinationDirectoryPath, APP_FOLDER_NAME), file);
-			filePath = path.join(path.dirname(relativePath), projectFileInfo.onDeviceFileName);
-
-			if (binary) {
-				const bitmap = <string>this.$fs.readFile(file);
-				const base64 = Buffer.from(bitmap).toString('base64');
-				fileContents = base64;
-			} else {
-				fileContents = this.$fs.readText(path.join(path.dirname(projectFileInfo.filePath), projectFileInfo.onDeviceFileName));
-			}
-		} else if (event === PreviewSdkEventNames.UNLINK_EVENT_NAME) {
-			filePath = path.relative(path.join(projectData.projectDir, APP_FOLDER_NAME), file);
-		}
-
-		const filePayload = {
-			event,
-			file: filePath,
-			binary,
-			fileContents
-		};
-
-		return filePayload;
 	}
 }
 $injector.register("previewAppLiveSyncService", PreviewAppLiveSyncService);
