@@ -176,4 +176,16 @@ describe("Project Changes Service Tests", () => {
 			assert.isFalse(!!androidChanges.signingChanged, "Android signingChanged expected to be false");
 		});
 	});
+
+	describe("setNativePlatformStatus", () => {
+		it("creates prepare info and sets only the native platform status when there isn't an existing prepare info", () => {
+			for (const platform of ["ios", "android"]) {
+				serviceTest.projectChangesService.setNativePlatformStatus(platform, serviceTest.projectData, { nativePlatformStatus: Constants.NativePlatformStatus.requiresPrepare });
+
+				const actualPrepareInfo = serviceTest.projectChangesService.getPrepareInfo(platform, serviceTest.projectData);
+
+				assert.deepEqual(actualPrepareInfo, { nativePlatformStatus: Constants.NativePlatformStatus.requiresPrepare });
+			}
+		});
+	});
 });

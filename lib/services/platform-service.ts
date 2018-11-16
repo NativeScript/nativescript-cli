@@ -806,10 +806,10 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 	private shouldPersistWebpackFiles(platform: string, projectData: IProjectData, prepareInfo: IPrepareInfo, appFilesUpdaterOptions: IAppFilesUpdaterOptions, nativePrepare: INativePrepare): boolean {
 		const hasPlatformDirectory = this.hasPlatformDirectory(platform, projectData);
 		const isWebpackWatcherStarted = this.$usbLiveSyncService.isInitialized;
-		const hasNativePlatformStatus = !prepareInfo || !prepareInfo.nativePlatformStatus;
+		const hasNativePlatformStatus = prepareInfo && prepareInfo.nativePlatformStatus;
 		const requiresPlatformAdd = prepareInfo && prepareInfo.nativePlatformStatus === constants.NativePlatformStatus.requiresPlatformAdd;
 		const shouldAddNativePlatform = !nativePrepare || !nativePrepare.skipNativePrepare;
-		const shouldAddPlatform = hasNativePlatformStatus || (requiresPlatformAdd && shouldAddNativePlatform);
+		const shouldAddPlatform = !hasNativePlatformStatus || (requiresPlatformAdd && shouldAddNativePlatform);
 		const result = appFilesUpdaterOptions.bundle && isWebpackWatcherStarted && hasPlatformDirectory && shouldAddPlatform;
 		return result;
 	}
