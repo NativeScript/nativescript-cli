@@ -11,6 +11,9 @@ lib
 # Dependency directories
 node_modules
 
+# files added by running the browser with disabled security
+tests/integration/''
+
 # Typescript v1 declaration files
 typings
 

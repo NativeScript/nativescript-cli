@@ -19,6 +19,14 @@ dataStoreTypes.forEach((currentDataStoreType) => {
     const entity1 = utilities.getEntity(utilities.randomString());
     const createdUserIds = [];
 
+    before(() => {
+      return Kinvey.init({
+        appKey: process.env.APP_KEY,
+        appSecret: process.env.APP_SECRET,
+        masterSecret: process.env.MASTER_SECRET
+      });
+    });
+
     before((done) => {
       utilities.cleanUpAppData(collectionName, createdUserIds)
         .then(() => Kinvey.User.signup())
