@@ -1,9 +1,15 @@
 import { Device } from "nativescript-preview-sdk";
 import { EventEmitter } from "events";
-import { DeviceDiscoveryEventNames } from "../../../../common/constants";
+import { DeviceDiscoveryEventNames, DEVICE_LOG_EVENT_NAME } from "../../../../common/constants";
 
 export class PreviewDevicesService extends EventEmitter implements IPreviewDevicesService {
 	private connectedDevices: Device[] = [];
+
+	constructor(private $previewAppLogProvider: IPreviewAppLogProvider) {
+		super();
+
+		this.initialize();
+	}
 
 	public getConnectedDevices(): Device[] {
 		return this.connectedDevices;
@@ -25,6 +31,12 @@ export class PreviewDevicesService extends EventEmitter implements IPreviewDevic
 
 	public getDevicesForPlatform(platform: string): Device[] {
 		return _.filter(this.connectedDevices, { platform: platform.toLowerCase() });
+	}
+
+	private initialize(): void {
+		this.$previewAppLogProvider.on(DEVICE_LOG_EVENT_NAME, (deviceId: string, message: string) => {
+			this.emit(DEVICE_LOG_EVENT_NAME, deviceId, message);
+		});
 	}
 
 	private raiseDeviceFound(device: Device) {

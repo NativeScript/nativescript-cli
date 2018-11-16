@@ -11,6 +11,9 @@ let lostDevices: Device[] = [];
 function createTestInjector(): IInjector {
 	const injector = new Yok();
 	injector.register("previewDevicesService", PreviewDevicesService);
+	injector.register("previewAppLogProvider", {
+		on: () => ({})
+	});
 	injector.register("logger", LoggerStub);
 	return injector;
 }
