@@ -2,7 +2,6 @@ import times from 'lodash/times';
 import isEmpty from 'lodash/isEmpty';
 import { Query } from 'kinvey-query';
 import { formatKinveyUrl, KinveyRequest, RequestMethod, Auth, KinveyHeaders } from 'kinvey-http';
-import { get as getSession } from 'kinvey-session';
 import { getConfig } from 'kinvey-app';
 import { MissingConfigurationError, ParameterValueOutOfRangeError, SyncError, NotFoundError } from 'kinvey-errors';
 import { NetworkStore } from './networkstore';
@@ -338,7 +337,7 @@ export class Sync {
           // Delta Set request
           const { api, appKey } = getConfig();
           const url = formatKinveyUrl(api.protocol, api.host, `/appdata/${appKey}/${this.collectionName}/_deltaset`, queryObject);
-          const request = new KinveyRequest({ method: RequestMethod.GET, headers: { Authorization: Auth.Session(getSession()) }, url });
+          const request = new KinveyRequest({ method: RequestMethod.GET, auth: Auth.Session, url });
           const response = await request.execute();
           const { changed, deleted } = response.data;
 

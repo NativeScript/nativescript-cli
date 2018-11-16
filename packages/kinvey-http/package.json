@@ -17,7 +17,10 @@
     "js-base64": "2.4.9",
     "kinvey-app": "1.0.0",
     "kinvey-errors": "1.0.0",
-    "lodash": "4.17.11"
+    "kinvey-session": "1.0.0",
+    "lodash": "4.17.11",
+    "promise-queue": "github:thomasconner/promise-queue",
+    "url-join": "4.0.0"
   },
   "devDependencies": {
     "@babel/cli": "7.1.5",

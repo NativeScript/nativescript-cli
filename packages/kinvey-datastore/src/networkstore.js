@@ -18,9 +18,7 @@ const NAMESPACE = 'appdata';
 export function createRequest(method, url, body) {
   return new KinveyRequest({
     method,
-    headers: {
-      Authorization: Auth.Session(getSession())
-    },
+    auth: Auth.Session,
     url,
     body
   });
@@ -317,9 +315,7 @@ export class NetworkStore {
     const { api, device } = getConfig();
     const request = new KinveyRequest({
       method: RequestMethod.POST,
-      headers: {
-        Authorization: Auth.Session(getSession())
-      },
+      auth: Auth.Session,
       url: formatKinveyUrl(api.protocol, api.host, `${this.pathname}/_subscribe`),
       body: { deviceId: device.id }
     });
@@ -333,9 +329,7 @@ export class NetworkStore {
     const { api, device } = getConfig();
     const request = new KinveyRequest({
       method: RequestMethod.POST,
-      headers: {
-        Authorization: Auth.Session(getSession())
-      },
+      auth: Auth.Session,
       url: formatKinveyUrl(api.protocol, api.host, `${this.pathname}/_unsubscribe`),
       body: { deviceId: device.id }
     });

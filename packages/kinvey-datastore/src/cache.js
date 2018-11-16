@@ -1,6 +1,5 @@
 import { Cache, clear as _clear } from 'kinvey-cache';
 import { getConfig } from 'kinvey-app';
-import { NotFoundError } from 'kinvey-errors';
 import isString from 'lodash/isString';
 
 export function isValidTag(tag) {
@@ -22,16 +21,6 @@ export class DataStoreCache extends Cache {
       super(appKey, collectionName);
     }
   }
-
-  // async findById(id) {
-  //   const doc = await super.findById(id);
-
-  //   if (!doc) {
-  //     throw new NotFoundError();
-  //   }
-
-  //   return doc;
-  // }
 }
 
 export async function clear() {

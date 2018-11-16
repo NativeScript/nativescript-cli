@@ -98,9 +98,7 @@ export class User {
     const { api, appKey } = getConfig();
     const request = new KinveyRequest({
       method: RequestMethod.GET,
-      headers: {
-        Authorization: Auth.Session(getSession())
-      },
+      auth: Auth.Session,
       url: formatKinveyUrl(api.protocol, api.host, `/${USER_NAMESPACE}/${appKey}/_me`)
     });
     const response = await request.execute();
@@ -141,9 +139,7 @@ export class User {
 
     const request = new KinveyRequest({
       method: RequestMethod.PUT,
-      headers: {
-        Authorization: Auth.Default(getSession(), appKey, masterSecret)
-      },
+      auth: Auth.Default,
       url: formatKinveyUrl(api.protocol, api.host, `/${USER_NAMESPACE}/${appKey}/${this._id}`),
       body
     });
@@ -179,7 +175,7 @@ export function getActiveUser() {
 }
 
 export async function signup(data, options = {}) {
-  const { api, appKey, appSecret } = getConfig();
+  const { api, appKey } = getConfig();
   const activeUser = getSession();
   const { state = true } = options;
 
@@ -190,9 +186,7 @@ export async function signup(data, options = {}) {
   const url = formatKinveyUrl(api.protocol, api.host, `/${USER_NAMESPACE}/${appKey}`);
   const request = new KinveyRequest({
     method: RequestMethod.POST,
-    headers: {
-      Authorization: Auth.App(appKey, appSecret)
-    },
+    auth: Auth.App,
     url
   });
 
@@ -213,7 +207,7 @@ export async function signup(data, options = {}) {
 }
 
 export async function login(username, password) {
-  const { api, appKey, appSecret } = getConfig();
+  const { api, appKey } = getConfig();
   const activeUser = getActiveUser();
   let credentials = username;
 
@@ -240,9 +234,7 @@ export async function login(username, password) {
 
   const request = new KinveyRequest({
     method: RequestMethod.POST,
-    headers: {
-      Authorization: Auth.App(appKey, appSecret)
-    },
+    auth: Auth.App,
     url: formatKinveyUrl(api.protocol, api.host, `/${USER_NAMESPACE}/${appKey}/login`),
     body: credentials
   });
@@ -300,9 +292,7 @@ export async function logout() {
       const url = formatKinveyUrl(api.protocol, api.host, `/${USER_NAMESPACE}/${appKey}/_logout`);
       const request = new KinveyRequest({
         method: RequestMethod.POST,
-        headers: {
-          Authorization: Auth.Session(getSession())
-        },
+        auth: Auth.Session,
         url
       });
       await request.execute();
@@ -339,7 +329,7 @@ export async function update(data) {
 }
 
 export async function remove(id, options = {}) {
-  const { api, appKey, masterSecret } = getConfig();
+  const { api, appKey } = getConfig();
   const { hard } = options;
 
   if (!id) {
@@ -353,9 +343,7 @@ export async function remove(id, options = {}) {
   const url = formatKinveyUrl(api.protocol, api.host, `/user/${appKey}/${id}`, { hard: hard ? hard === true : undefined });
   const request = new KinveyRequest({
     method: RequestMethod.DELETE,
-    headers: {
-      Authorization: Auth.Default(getSession(), appKey, masterSecret)
-    },
+    auth: Auth.Default,
     url
   });
   const response = await request.execute();
@@ -364,7 +352,7 @@ export async function remove(id, options = {}) {
 }
 
 export async function verifyEmail(username) {
-  const { api, appKey, appSecret } = getConfig();
+  const { api, appKey } = getConfig();
 
   if (!username) {
     throw new KinveyError('A username was not provided.');
@@ -376,9 +364,7 @@ export async function verifyEmail(username) {
 
   const request = new KinveyRequest({
     method: RequestMethod.POST,
-    headers: {
-      Authorization: Auth.App(appKey, appSecret)
-    },
+    auth: Auth.App,
     url: formatKinveyUrl(api.protocol, api.host, `/${RPC_NAMESPACE}/${appKey}/${username}/user-email-verification-initiate`)
   });
   const response = await request.execute();
@@ -386,7 +372,7 @@ export async function verifyEmail(username) {
 }
 
 export async function forgotUsername(email) {
-  const { api, appKey, appSecret } = getConfig();
+  const { api, appKey } = getConfig();
 
   if (!email) {
     throw new KinveyError('An email was not provided.');
@@ -398,9 +384,7 @@ export async function forgotUsername(email) {
 
   const request = new KinveyRequest({
     method: RequestMethod.POST,
-    headers: {
-      Authorization: Auth.App(appKey, appSecret)
-    },
+    auth: Auth.App,
     url: formatKinveyUrl(api.protocol, api.host, `/${RPC_NAMESPACE}/${appKey}/user-forgot-username`),
     body: { email }
   });
@@ -409,7 +393,7 @@ export async function forgotUsername(email) {
 }
 
 export async function resetPassword(username) {
-  const { api, appKey, appSecret } = getConfig();
+  const { api, appKey } = getConfig();
 
   if (!username) {
     throw new KinveyError('A username was not provided.');
@@ -421,9 +405,7 @@ export async function resetPassword(username) {
 
   const request = new KinveyRequest({
     method: RequestMethod.POST,
-    headers: {
-      Authorization: Auth.App(appKey, appSecret)
-    },
+    auth: Auth.App,
     url: formatKinveyUrl(api.protocol, api.host, `/${RPC_NAMESPACE}/${appKey}/${username}/user-password-reset-initiate`)
   });
   const response = await request.execute();
@@ -437,12 +419,10 @@ export function lookup(query) {
         throw new KinveyError('Invalid query. It must be an instance of the Query class.');
       }
 
-      const { api, appKey, masterSecret } = getConfig();
+      const { api, appKey } = getConfig();
       const request = new KinveyRequest({
         method: RequestMethod.POST,
-        headers: {
-          Authorization: Auth.Default(getSession(), appKey, masterSecret)
-        },
+        auth: Auth.Default,
         url: formatKinveyUrl(api.protocol, api.host, `/${USER_NAMESPACE}/${appKey}/_lookup`),
         body: query ? query.filter : undefined
       });
@@ -457,7 +437,7 @@ export function lookup(query) {
 }
 
 export async function exists(username) {
-  const { api, appKey, appSecret } = getConfig();
+  const { api, appKey } = getConfig();
 
   if (!username) {
     throw new KinveyError('A username was not provided.');
@@ -469,9 +449,7 @@ export async function exists(username) {
 
   const request = new KinveyRequest({
     method: RequestMethod.POST,
-    headers: {
-      Authorization: Auth.App(appKey, appSecret)
-    },
+    auth: Auth.App,
     url: formatKinveyUrl(api.protocol, api.host, `/${RPC_NAMESPACE}/${appKey}/check-username-exists`),
     body: { username }
   });

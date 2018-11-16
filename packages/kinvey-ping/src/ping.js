@@ -21,9 +21,7 @@ export async function ping() {
   const { appKey, api } = getConfig();
   const request = new KinveyRequest({
     method: RequestMethod.GET,
-    headers: {
-      Authorization: Auth.All
-    },
+    auth: Auth.All,
     url: formatKinveyUrl(api.protocol, api.host, `/${APPDATA_NAMESPACE}/${appKey}`)
   });
   const response = await request.execute();

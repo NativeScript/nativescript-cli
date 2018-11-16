@@ -6,6 +6,7 @@ import * as Kinvey from '__SDK__';
 const serverHost = 'auth.kinvey.com';
 const redirectUrl = 'http://localhost:9876/callback';
 const authServiceId = process.env.AUTH_SERVICE_ID;
+const noRefreshAuthServiceId = process.env.NO_REFRESH_AUTH_SERVICE_ID;
 const wrongSetupAuthServiceId = process.env.WRONG_AUTH_SERVICE_ID;
 const micDefaultVersion = 'v3';
 
@@ -75,8 +76,7 @@ const validateMICUser = (user, allowRefreshTokens, explicitAuthServiceId) => {
   if (allowRefreshTokens) {
     expect(typeof kinveyAuth.refresh_token).to.equal('string');
     expect(kinveyAuth.refresh_token).to.not.equal(notAllowedRefreshTokenValue);
-  }
-  else {
+  } else {
     expect(kinveyAuth.refresh_token).to.equal(notAllowedRefreshTokenValue);
   }
 
@@ -84,10 +84,14 @@ const validateMICUser = (user, allowRefreshTokens, explicitAuthServiceId) => {
   expect(typeof kinveyAuth.expires_in).to.equal('number');
   expect(kinveyAuth.id_token).to.exist;
   expect(kinveyAuth.identity).to.equal('kinveyAuth');
+
   if (explicitAuthServiceId) {
-    expect(kinveyAuth.client_id).to.equal(`${process.env.APP_KEY}.${authServiceId}`);
-  }
-  else {
+    if (allowRefreshTokens) {
+      expect(kinveyAuth.client_id).to.equal(`${process.env.APP_KEY}.${authServiceId}`);
+    } else {
+      expect(kinveyAuth.client_id).to.equal(`${process.env.APP_KEY}.${noRefreshAuthServiceId}`);
+    }
+  } else {
     expect(kinveyAuth.client_id).to.equal(process.env.APP_KEY);
   }
   expect(kinveyAuth.redirect_uri).to.equal(redirectUrl);
@@ -181,7 +185,7 @@ describe.only('MIC Integration', () => {
 
   it('should login the user, using the specified Auth service, which does not allow refresh tokens', (done) => {
     addLoginFacebookHandler();
-    Kinvey.User.loginWithMIC(redirectUrl, Kinvey.AuthorizationGrant.AuthorizationCodeLoginPage, { micId: authServiceId })
+    Kinvey.User.loginWithMIC(redirectUrl, Kinvey.AuthorizationGrant.AuthorizationCodeLoginPage, { micId: noRefreshAuthServiceId })
       .then((user) => {
         validateMICUser(user, false, true);
         return validateSuccessfulDataRead(done);
@@ -196,7 +200,7 @@ describe.only('MIC Integration', () => {
         expect(user).to.exist;
 
         // the test waits for the expiration of the access_token
-        return resolveAfter(defaultServiceAccessTokenTTL + 100)
+        return resolveAfter(defaultServiceAccessTokenTTL + 100);
       })
       .then(() => {
         return validateSuccessfulDataRead(done);
@@ -212,12 +216,12 @@ describe.only('MIC Integration', () => {
     Kinvey.User.loginWithMIC(invalidUrl)
       .then(() => done(new Error(shouldNotBeInvokedMessage)))
       .catch(() => {
-        expect(actualHref).to.equal(getExpectedInitialUrl(externalConfig.appKey, micDefaultVersion, invalidUrl));
+        expect(actualHref).to.equal(getExpectedInitialUrl(process.env.APP_KEY, micDefaultVersion, invalidUrl));
         done();
       }).catch(done);
   });
 
-  it(`should make a correct request to KAS with the supplied options.version`, (done) => {
+  it('should make a correct request to KAS with the supplied options.version', (done) => {
     // Currently the error function is not called when the redirect url is invalid,
     // so the test is closing the popup in order to resume execution and validate the request url
     const submittedVersion = 'v2';
@@ -226,7 +230,7 @@ describe.only('MIC Integration', () => {
     Kinvey.User.loginWithMIC(invalidUrl, Kinvey.AuthorizationGrant.AuthorizationCodeLoginPage, { version: submittedVersion })
       .then(() => done(new Error(shouldNotBeInvokedMessage)))
       .catch(() => {
-        expect(actualHref).to.equal(getExpectedInitialUrl(externalConfig.appKey, submittedVersion, invalidUrl));
+        expect(actualHref).to.equal(getExpectedInitialUrl(process.env.APP_KEY, submittedVersion, invalidUrl));
         done();
       }).catch(done);
   });

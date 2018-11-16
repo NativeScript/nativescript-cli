@@ -9,7 +9,6 @@ import {
   Headers
 } from 'kinvey-http';
 import { getConfig } from 'kinvey-app';
-import { get as getSession } from 'kinvey-session';
 
 const NAMESPACE = 'blob';
 const MAX_BACKOFF = 32 * 1000;
@@ -42,9 +41,7 @@ export async function find(query = new Query(), options = {}) {
 
   const request = new KinveyRequest({
     method: RequestMethod.GET,
-    headers: {
-      Authorization: Auth.Default(getSession(), appKey, masterSecret)
-    },
+    auth: Auth.Default,
     url: formatKinveyUrl(api.protocol, api.host, `/${NAMESPACE}/${appKey}`, queryStringObject)
   });
   const response = await request.execute();
@@ -68,9 +65,7 @@ export async function download(id, options = {}) {
 
   const request = new KinveyRequest({
     method: RequestMethod.GET,
-    headers: {
-      Authorization: Auth.Default(getSession(), appKey, masterSecret)
-    },
+    auth: Auth.Default,
     url: formatKinveyUrl(api.protocol, api.host, `/${NAMESPACE}/${appKey}/${id}`, queryStringObject)
   });
   const response = await request.execute();
@@ -115,9 +110,9 @@ async function saveFileMetadata(metadata) {
   const request = new KinveyRequest({
     method: metadata._id ? RequestMethod.PUT : RequestMethod.POST,
     headers: {
-      Authorization: Auth.Default(getSession(), appKey, masterSecret),
       'X-Kinvey-Content-Type': metadata.mimeType
     },
+    auth: Auth.Default,
     url: metadata._id ? formatKinveyUrl(api.protocol, api.host, `/${NAMESPACE}/${appKey}/${metadata._id}`) : formatKinveyUrl(api.protocol, api.host, `/${NAMESPACE}/${appKey}`),
     body: metadata
   });
@@ -231,12 +226,10 @@ export async function remove() {
 }
 
 export async function removeById(id) {
-  const { api, appKey, masterSecret } = getConfig();
+  const { api, appKey } = getConfig();
   const request = new KinveyRequest({
     method: RequestMethod.DELETE,
-    headers: {
-      Authorization: Auth.Default(getSession(), appKey, masterSecret)
-    },
+    auth: Auth.Default,
     url: formatKinveyUrl(api.protocol, api.host, `/${NAMESPACE}/${appKey}/${id}`)
   });
   const response = await request.execute();

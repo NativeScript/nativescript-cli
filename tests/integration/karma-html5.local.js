@@ -53,7 +53,7 @@ module.exports = function (config) {
     // you can define custom flags
     customLaunchers: {
       Chrome_without_security: {
-        base: 'Chrome',
+        base: 'ChromeHeadless',
         chromeDataDir: path.resolve(__dirname, '.chrome'),
         flags: ['--disable-web-security', '--disable-site-isolation-trials']
       }
@@ -61,7 +61,7 @@ module.exports = function (config) {
 
     // Continuous Integration mode
     // if true, Karma captures browsers, runs the tests and exits
-    singleRun: false,
+    singleRun: true,
 
     // Concurrency level
     // how many browser should be started simultaneous

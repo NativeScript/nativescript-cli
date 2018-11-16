@@ -6857,6 +6857,10 @@ promise-inflight@^1.0.1:
   resolved "https://registry.yarnpkg.com/promise-inflight/-/promise-inflight-1.0.1.tgz#98472870bf228132fcbdd868129bad12c3c029e3"
   integrity sha1-mEcocL8igTL8vdhoEputEsPAKeM=
 
+"promise-queue@github:thomasconner/promise-queue":
+  version "2.2.5"
+  resolved "https://codeload.github.com/thomasconner/promise-queue/tar.gz/a789c0a07a72eb7a5008159d384788802d6b969d"
+
 promise-retry@^1.1.1:
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/promise-retry/-/promise-retry-1.1.1.tgz#6739e968e3051da20ce6497fb2b50f6911df3d6d"

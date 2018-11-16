@@ -175,8 +175,11 @@ export async function login(
   if (authorizationGrant === AuthorizationGrant.AuthorizationCodeAPI) {
     const url = await getTempLoginUrl(clientId, redirectUri, version);
     code = await loginWithUrl(url, username, password, clientId, redirectUri);
-  } else {
+  } else if (!authorizationGrant || authorizationGrant === AuthorizationGrant.AuthorizationCodeLoginPage) {
     code = await loginWithPopup(clientId, redirectUri, version);
+  } else {
+    throw new KinveyError(`The authorization grant ${authorizationGrant} is unsupported. ` +
+      'Please use a supported authorization grant.');
   }
 
   const token = await getTokenWithCode(code, clientId, redirectUri);
