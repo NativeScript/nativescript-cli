@@ -921,6 +921,7 @@ describe('Platform Service Tests', () => {
 					appResourcesDestinationDirectoryPath: testDirData.appResourcesFolderPath,
 					normalizedPlatformName: "Android",
 					projectRoot: testDirData.tempFolder,
+					configurationFileName: "configFileName",
 					platformProjectService: {
 						prepareProject: (): any => null,
 						prepareAppResources: (): any => null,

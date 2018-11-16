@@ -113,7 +113,7 @@ export class PreparePlatformNativeService extends PreparePlatformService impleme
 		}
 
 		const previousPrepareInfo = this.$projectChangesService.getPrepareInfo(platform, projectData);
-		if (!previousPrepareInfo) {
+		if (!previousPrepareInfo || previousPrepareInfo.nativePlatformStatus !== constants.NativePlatformStatus.alreadyPrepared) {
 			return;
 		}
 
