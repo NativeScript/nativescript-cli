@@ -34,14 +34,14 @@ export class PreviewDevicesService extends EventEmitter implements IPreviewDevic
 		return _.filter(this.connectedDevices, { platform: platform.toLowerCase() });
 	}
 
+	public getPluginsUsageWarnings(data: IPreviewAppLiveSyncData, device: Device): string[] {
+		return this.$previewAppPluginsService.getPluginsUsageWarnings(data, device);
+	}
+
 	private initialize(): void {
 		this.$previewAppLogProvider.on(DEVICE_LOG_EVENT_NAME, (deviceId: string, message: string) => {
 			this.emit(DEVICE_LOG_EVENT_NAME, deviceId, message);
 		});
-	}
-
-	public getDeviceWarnings(device: Device): string[] {
-		return this.$previewAppPluginsService.getDeviceWarnings(device);
 	}
 
 	private raiseDeviceFound(device: Device) {

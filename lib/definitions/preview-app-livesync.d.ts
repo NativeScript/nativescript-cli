@@ -18,7 +18,7 @@ declare global {
 	}
 
 	interface IPreviewAppPluginsService {
-		getDeviceWarnings(device: Device): string[];
+		getPluginsUsageWarnings(data: IPreviewAppLiveSyncData, device: Device): string[];
 		comparePluginsOnDevice(data: IPreviewAppLiveSyncData, device: Device): Promise<void>;
 		getExternalPlugins(device: Device): string[];
 	}
@@ -50,5 +50,6 @@ declare global {
 		updateConnectedDevices(devices: Device[]): void;
 		getDeviceById(id: string): Device;
 		getDevicesForPlatform(platform: string): Device[];
+		getPluginsUsageWarnings(data: IPreviewAppLiveSyncData, device: Device): string[];
 	}
 }

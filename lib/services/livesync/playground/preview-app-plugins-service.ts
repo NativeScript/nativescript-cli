@@ -14,7 +14,7 @@ export class PreviewAppPluginsService implements IPreviewAppPluginsService {
 		private $logger: ILogger,
 		private $pluginsService: IPluginsService) { }
 
-	public getDeviceWarnings(device: Device): string[] {
+	public getPluginsUsageWarnings(data: IPreviewAppLiveSyncData, device: Device): string[] {
 		if (!device) {
 			this.$errors.failWithoutHelp("No device provided.");
 		}
@@ -23,10 +23,6 @@ export class PreviewAppPluginsService implements IPreviewAppPluginsService {
 			this.$errors.failWithoutHelp("No version of preview app provided.");
 		}
 
-		return this.previewAppVersionWarnings[device.previewAppVersion];
-	}
-
-	public async comparePluginsOnDevice(data: IPreviewAppLiveSyncData, device: Device): Promise<void> {
 		if (!this.previewAppVersionWarnings[device.previewAppVersion]) {
 			const devicePlugins = this.getDevicePlugins(device);
 			const localPlugins = this.getLocalPlugins(data.projectDir);
@@ -40,7 +36,12 @@ export class PreviewAppPluginsService implements IPreviewAppPluginsService {
 			this.previewAppVersionWarnings[device.previewAppVersion] = warnings;
 		}
 
-		this.previewAppVersionWarnings[device.previewAppVersion].map(warning => this.$logger.warn(warning));
+		return this.previewAppVersionWarnings[device.previewAppVersion];
+	}
+
+	public async comparePluginsOnDevice(data: IPreviewAppLiveSyncData, device: Device): Promise<void> {
+		const warnings = this.getPluginsUsageWarnings(data, device);
+		_.map(warnings, warning => this.$logger.warn(warning));
 	}
 
 	public getExternalPlugins(device: Device): string[] {
