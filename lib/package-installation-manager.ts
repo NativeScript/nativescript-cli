@@ -39,6 +39,16 @@ export class PackageInstallationManager implements IPackageInstallationManager {
 		return maxSatisfying || latestVersion;
 	}
 
+	public async getLatestCompatibleVersionSafe(packageName: string, referenceVersion?: string): Promise<string> {
+		let version = "";
+		const canGetVersionFromNpm = await this.$packageManager.isRegistered(packageName);
+		if (canGetVersionFromNpm) {
+			version = await this.getLatestCompatibleVersion(packageName, referenceVersion);
+		}
+
+		return version;
+	}
+
 	public async install(packageToInstall: string, projectDir: string, opts?: INpmInstallOptions): Promise<any> {
 		try {
 			const pathToSave = projectDir;
@@ -101,6 +111,7 @@ export class PackageInstallationManager implements IPackageInstallationManager {
 		if (this.$fs.exists(pathToInspector)) {
 			return true;
 		}
+
 		return false;
 	}
 
@@ -110,28 +121,13 @@ export class PackageInstallationManager implements IPackageInstallationManager {
 			packageName = possiblePackageName;
 		}
 
-		// check if the packageName is url or local file and if it is, let npm install deal with the version
-		if (this.isURL(packageName) || this.$fs.exists(packageName) || this.isTgz(packageName)) {
-			version = null;
-		} else {
-			version = version || await this.getLatestCompatibleVersion(packageName);
-		}
-
+		version = version || await this.getLatestCompatibleVersionSafe(packageName);
 		const installResultInfo = await this.npmInstall(packageName, pathToSave, version, dependencyType);
 		const installedPackageName = installResultInfo.name;
 
 		const pathToInstalledPackage = path.join(pathToSave, "node_modules", installedPackageName);
+
 		return pathToInstalledPackage;
-	}
-
-	private isTgz(packageName: string): boolean {
-		return packageName.indexOf(".tgz") >= 0;
-	}
-
-	private isURL(str: string): boolean {
-		const urlRegex = '^(?!mailto:)(?:(?:http|https|ftp)://)(?:\\S+(?::\\S*)?@)?(?:(?:(?:[1-9]\\d?|1\\d\\d|2[01]\\d|22[0-3])(?:\\.(?:1?\\d{1,2}|2[0-4]\\d|25[0-5])){2}(?:\\.(?:[0-9]\\d?|1\\d\\d|2[0-4]\\d|25[0-4]))|(?:(?:[a-z\\u00a1-\\uffff0-9]+-?)*[a-z\\u00a1-\\uffff0-9]+)(?:\\.(?:[a-z\\u00a1-\\uffff0-9]+-?)*[a-z\\u00a1-\\uffff0-9]+)*(?:\\.(?:[a-z\\u00a1-\\uffff]{2,})))|localhost)(?::\\d{2,5})?(?:(/|\\?|#)[^\\s]*)?$';
-		const url = new RegExp(urlRegex, 'i');
-		return str.length < 2083 && url.test(str);
 	}
 
 	private async npmInstall(packageName: string, pathToSave: string, version: string, dependencyType: string): Promise<INpmInstallResultInfo> {

@@ -4,6 +4,7 @@ import { Device } from "nativescript-preview-sdk";
 import { assert } from "chai";
 import * as util from "util";
 import { PluginComparisonMessages } from "../../../lib/services/livesync/playground/preview-app-constants";
+import { ErrorsStub } from "../../stubs";
 
 let readJsonParams: string[] = [];
 let warnParams: string[] = [];
@@ -43,6 +44,7 @@ function createTestInjector(localPlugins: IStringDictionary, options?: { isNativ
 		trace: () => ({}),
 		warn: (message: string) =>  warnParams.push(message)
 	});
+	injector.register("errors", ErrorsStub);
 	injector.register("previewAppPluginsService", PreviewAppPluginsService);
 	return injector;
 }
@@ -64,10 +66,8 @@ function createDevice(plugins: string): Device {
 function createPreviewLiveSyncData(options?: { bundle: boolean }) {
 	return {
 		projectDir,
-		appFilesUpdaterOptions: {
-			release: false,
-			bundle: options.bundle
-		},
+		release: false,
+		bundle: options.bundle,
 		env: {}
 	};
 }

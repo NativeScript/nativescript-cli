@@ -8,7 +8,7 @@ declare global {
 		stopLiveSync(): Promise<void>;
 	}
 
-	interface IPreviewAppLiveSyncData extends IProjectDir, IAppFilesUpdaterOptionsComposition, IEnvOptions { }
+	interface IPreviewAppLiveSyncData extends IProjectDir, IHasUseHotModuleReloadOption, IBundle, IEnvOptions { }
 
 	interface IPreviewSdkService extends EventEmitter {
 		getQrCodeUrl(options: IHasUseHotModuleReloadOption): string;
@@ -18,8 +18,13 @@ declare global {
 	}
 
 	interface IPreviewAppPluginsService {
+		getPluginsUsageWarnings(data: IPreviewAppLiveSyncData, device: Device): string[];
 		comparePluginsOnDevice(data: IPreviewAppLiveSyncData, device: Device): Promise<void>;
 		getExternalPlugins(device: Device): string[];
+	}
+
+	interface IPreviewAppLogProvider extends EventEmitter {
+		logData(log: string, deviceName: string, deviceId: string): void;
 	}
 
 	interface IPreviewQrCodeService {
@@ -45,5 +50,6 @@ declare global {
 		updateConnectedDevices(devices: Device[]): void;
 		getDeviceById(id: string): Device;
 		getDevicesForPlatform(platform: string): Device[];
+		getPluginsUsageWarnings(data: IPreviewAppLiveSyncData, device: Device): string[];
 	}
 }

@@ -9,7 +9,7 @@ export class PackageManager implements INodePackageManager {
 		private $options: IOptions,
 		private $yarn: INodePackageManager,
 		private $userSettingsService: IUserSettingsService
-	) {}
+	) { }
 
 	@cache()
 	protected async init(): Promise<void> {
@@ -40,6 +40,21 @@ export class PackageManager implements INodePackageManager {
 	@invokeInit()
 	public searchNpms(keyword: string): Promise<INpmsResult> {
 		return this.packageManager.searchNpms(keyword);
+	}
+
+	@invokeInit()
+	public async isRegistered(packageName: string): Promise<boolean> {
+		return this.packageManager.isRegistered(packageName);
+	}
+
+	@invokeInit()
+	public async getPackageFullName(packageNameParts: INpmPackageNameParts): Promise<string> {
+		return this.packageManager.getPackageFullName(packageNameParts);
+	}
+
+	@invokeInit()
+	public async getPackageNameParts(fullPackageName: string): Promise<INpmPackageNameParts> {
+		return this.packageManager.getPackageNameParts(fullPackageName);
 	}
 
 	@invokeInit()

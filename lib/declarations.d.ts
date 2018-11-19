@@ -26,6 +26,27 @@ interface INodePackageManager {
 	view(packageName: string, config: Object): Promise<any>;
 
 	/**
+	 * Checks if the specified string is name of a packaged published in the NPM registry.
+	 * @param  {string} packageName The string to be checked.
+	 * @return {Promise<boolean>} True if the specified string is a registered package name, false otherwise.
+	 */
+	isRegistered(packageName: string): Promise<boolean>;
+
+	/**
+	 * Separates the package name and version from a specified fullPackageName.
+	 * @param  {string} fullPackageName The full name of the package like nativescript@10.0.0.
+	 * @return {INpmPackageNameParts} An object containing the separated package name and version.
+	 */
+	getPackageNameParts(fullPackageName: string): Promise<INpmPackageNameParts>
+
+	/**
+	 * Returns the full name of an npm package based on the provided name and version.
+	 * @param  {INpmPackageNameParts} packageNameParts An object containing the package name and version.
+	 * @return {string} The full name of the package like nativescript@10.0.0.
+	 */
+	getPackageFullName(packageNameParts: INpmPackageNameParts): Promise<string>
+
+	/**
 	 * Searches for a package.
 	 * @param  {string[]}                            filter Keywords with which to perform the search.
 	 * @param  {IDictionary<string | boolean>} config      Additional options that can be passed to manipulate search.
@@ -59,6 +80,7 @@ interface IPackageInstallationManager {
 	getLatestVersion(packageName: string): Promise<string>;
 	getNextVersion(packageName: string): Promise<string>;
 	getLatestCompatibleVersion(packageName: string, referenceVersion?: string): Promise<string>;
+	getLatestCompatibleVersionSafe(packageName: string, referenceVersion?: string): Promise<string>;
 	getInspectorFromCache(inspectorNpmPackageName: string, projectDir: string): Promise<string>;
 }
 
@@ -353,6 +375,11 @@ interface INpmsPackageData {
 	maintainers: INpmsUser[];
 }
 
+interface INpmPackageNameParts {
+	name: string;
+	version: string;
+}
+
 interface IUsername {
 	username: string;
 }
@@ -537,9 +564,9 @@ interface IEnvOptions {
 
 interface IAndroidBuildOptionsSettings extends IAndroidReleaseOptions, IRelease, IHasAndroidBundle { }
 
- interface IHasAndroidBundle {
+interface IHasAndroidBundle {
 	androidBundle?: boolean;
- }
+}
 
 interface IAppFilesUpdaterOptions extends IBundle, IRelease, IOptionalWatchAllFiles, IHasUseHotModuleReloadOption { }
 

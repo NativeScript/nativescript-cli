@@ -173,8 +173,13 @@ export class ProjectChangesService implements IProjectChangesService {
 		this._prepareInfo = this._prepareInfo || this.getPrepareInfo(platform, projectData);
 		if (this._prepareInfo) {
 			this._prepareInfo.nativePlatformStatus = addedPlatform.nativePlatformStatus;
-			this.savePrepareInfo(platform, projectData);
+		} else {
+			this._prepareInfo = {
+				nativePlatformStatus: addedPlatform.nativePlatformStatus
+			};
 		}
+
+		this.savePrepareInfo(platform, projectData);
 	}
 
 	private async ensurePrepareInfo(platform: string, projectData: IProjectData, projectChangesOptions: IProjectChangesOptions): Promise<boolean> {
