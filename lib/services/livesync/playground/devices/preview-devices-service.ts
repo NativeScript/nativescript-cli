@@ -4,6 +4,7 @@ import { DeviceDiscoveryEventNames, DEVICE_LOG_EVENT_NAME } from "../../../../co
 
 export class PreviewDevicesService extends EventEmitter implements IPreviewDevicesService {
 	private connectedDevices: Device[] = [];
+	private deviceTimers: IDictionary<NodeJS.Timer> = {};
 
 	constructor(private $previewAppLogProvider: IPreviewAppLogProvider,
 		private $previewAppPluginsService: IPreviewAppPluginsService) {
@@ -23,7 +24,7 @@ export class PreviewDevicesService extends EventEmitter implements IPreviewDevic
 
 		_(this.connectedDevices)
 			.reject(d => _.find(devices, device => d.id === device.id))
-			.each(device => this.raiseDeviceLost(device));
+			.each(device => this.raiseDeviceLostAfterTimeout(device));
 	}
 
 	public getDeviceById(id: string): Device {
@@ -45,6 +46,10 @@ export class PreviewDevicesService extends EventEmitter implements IPreviewDevic
 	}
 
 	private raiseDeviceFound(device: Device) {
+		if (this.deviceTimers[device.id]) {
+			clearTimeout(this.deviceTimers[device.id]);
+		}
+
 		this.emit(DeviceDiscoveryEventNames.DEVICE_FOUND, device);
 		this.connectedDevices.push(device);
 	}
@@ -52,6 +57,16 @@ export class PreviewDevicesService extends EventEmitter implements IPreviewDevic
 	private raiseDeviceLost(device: Device) {
 		this.emit(DeviceDiscoveryEventNames.DEVICE_LOST, device);
 		_.remove(this.connectedDevices, d => d.id === device.id);
+	}
+
+	private raiseDeviceLostAfterTimeout(device: Device) {
+		if (!this.deviceTimers[device.id]) {
+			const timeoutId = setTimeout(() => {
+				this.raiseDeviceLost(device);
+				clearTimeout(timeoutId);
+			}, 5 * 1000);
+			this.deviceTimers[device.id] = timeoutId;
+		}
 	}
 }
 $injector.register("previewDevicesService", PreviewDevicesService);
