@@ -60,11 +60,8 @@ const defaultProjectFiles = [
 ];
 const syncFilesMockData = {
 	projectDir: projectDirPath,
-	appFilesUpdaterOptions: {
-		release: false,
-		bundle: false,
-		useHotModuleReload: false
-	},
+	bundle: false,
+	useHotModuleReload: false,
 	env: {}
 };
 
@@ -182,7 +179,7 @@ async function initialSync(input?: IActInput) {
 
 	const { previewAppLiveSyncService, previewSdkService, actOptions } = input;
 	const syncFilesData = _.cloneDeep(syncFilesMockData);
-	syncFilesData.appFilesUpdaterOptions.useHotModuleReload = actOptions.hmr;
+	syncFilesData.useHotModuleReload = actOptions.hmr;
 	await previewAppLiveSyncService.initialize(syncFilesData);
 	if (actOptions.callGetInitialFiles) {
 		await previewSdkService.getInitialFiles(deviceMockData);
@@ -195,7 +192,7 @@ async function syncFiles(input?: IActInput) {
 	const { previewAppLiveSyncService, previewSdkService, projectFiles, actOptions } = input;
 
 	const syncFilesData = _.cloneDeep(syncFilesMockData);
-	syncFilesData.appFilesUpdaterOptions.useHotModuleReload = actOptions.hmr;
+	syncFilesData.useHotModuleReload = actOptions.hmr;
 	await previewAppLiveSyncService.initialize(syncFilesData);
 	if (actOptions.callGetInitialFiles) {
 		await previewSdkService.getInitialFiles(deviceMockData);

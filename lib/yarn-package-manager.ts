@@ -2,18 +2,18 @@ import * as path from "path";
 import { BasePackageManager } from "./base-package-manager";
 import { exported } from './common/decorators';
 
-export class YarnPackageManager extends BasePackageManager implements INodePackageManager {
+export class YarnPackageManager extends BasePackageManager {
 
 	constructor(
 		$childProcess: IChildProcess,
 		private $errors: IErrors,
-		private $fs: IFileSystem,
+		$fs: IFileSystem,
 		$hostInfo: IHostInfo,
 		private $httpClient: Server.IHttpClient,
 		private $logger: ILogger,
 		$pacoteService: IPacoteService
 	) {
-		super($childProcess, $hostInfo, $pacoteService, 'yarn');
+		super($childProcess, $fs, $hostInfo, $pacoteService, 'yarn');
 	}
 
 	@exported("yarn")

@@ -3,16 +3,16 @@ import { BasePackageManager } from "./base-package-manager";
 import { exported, cache } from "./common/decorators";
 import { CACACHE_DIRECTORY_NAME } from "./constants";
 
-export class NodePackageManager extends BasePackageManager implements INodePackageManager {
+export class NodePackageManager extends BasePackageManager {
 	constructor(
 		$childProcess: IChildProcess,
 		private $errors: IErrors,
-		private $fs: IFileSystem,
+		$fs: IFileSystem,
 		$hostInfo: IHostInfo,
 		private $logger: ILogger,
 		private $httpClient: Server.IHttpClient,
 		$pacoteService: IPacoteService) {
-		super($childProcess, $hostInfo, $pacoteService, 'npm');
+		super($childProcess, $fs, $hostInfo, $pacoteService, 'npm');
 	}
 
 	@exported("npm")

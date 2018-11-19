@@ -57,13 +57,13 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 		await this.liveSync([], {
 			syncToPreviewApp: true,
 			projectDir: data.projectDir,
-			bundle: data.appFilesUpdaterOptions.bundle,
-			useHotModuleReload: data.appFilesUpdaterOptions.useHotModuleReload,
+			bundle: data.bundle,
+			useHotModuleReload: data.useHotModuleReload,
 			release: false,
 			env: data.env,
 		});
 
-		const url = this.$previewSdkService.getQrCodeUrl({ useHotModuleReload: data.appFilesUpdaterOptions.useHotModuleReload });
+		const url = this.$previewSdkService.getQrCodeUrl({ useHotModuleReload: data.useHotModuleReload });
 		const result = await this.$previewQrCodeService.getLiveSyncQrCode(url);
 		return result;
 	}
@@ -362,13 +362,10 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 
 		if (liveSyncData.syncToPreviewApp) {
 			await this.$previewAppLiveSyncService.initialize({
-				appFilesUpdaterOptions: {
-					bundle: liveSyncData.bundle,
-					release: liveSyncData.release,
-					useHotModuleReload: liveSyncData.useHotModuleReload
-				},
-				env: liveSyncData.env,
-				projectDir: projectData.projectDir
+				projectDir: projectData.projectDir,
+				bundle: liveSyncData.bundle,
+				useHotModuleReload: liveSyncData.useHotModuleReload,
+				env: liveSyncData.env
 			});
 		} else {
 			// In case liveSync is called for a second time for the same projectDir.
@@ -641,13 +638,10 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 						if (liveSyncData.syncToPreviewApp) {
 							await this.addActionToChain(projectData.projectDir, async () => {
 								await this.$previewAppLiveSyncService.syncFiles({
-									appFilesUpdaterOptions: {
-										bundle: liveSyncData.bundle,
-										release: liveSyncData.release,
-										useHotModuleReload: liveSyncData.useHotModuleReload
-									},
-									env: liveSyncData.env,
-									projectDir: projectData.projectDir
+									projectDir: projectData.projectDir,
+									bundle: liveSyncData.bundle,
+									useHotModuleReload: liveSyncData.useHotModuleReload,
+									env: liveSyncData.env
 								}, currentFilesToSync, currentFilesToRemove);
 							});
 						} else {

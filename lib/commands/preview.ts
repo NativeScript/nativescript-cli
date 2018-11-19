@@ -1,3 +1,5 @@
+import { DEVICE_LOG_EVENT_NAME } from "../common/constants";
+
 export class PreviewCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
 	private static MIN_SUPPORTED_WEBPACK_VERSION = "0.17.0";
@@ -5,12 +7,18 @@ export class PreviewCommand implements ICommand {
 	constructor(private $bundleValidatorHelper: IBundleValidatorHelper,
 		private $errors: IErrors,
 		private $liveSyncService: ILiveSyncService,
+		private $logger: ILogger,
 		private $networkConnectivityValidator: INetworkConnectivityValidator,
 		private $projectData: IProjectData,
 		private $options: IOptions,
+		private $previewAppLogProvider: IPreviewAppLogProvider,
 		private $previewQrCodeService: IPreviewQrCodeService) { }
 
 	public async execute(): Promise<void> {
+		this.$previewAppLogProvider.on(DEVICE_LOG_EVENT_NAME, (deviceId: string, message: string) => {
+			this.$logger.info(message);
+		});
+
 		await this.$liveSyncService.liveSync([], {
 			syncToPreviewApp: true,
 			projectDir: this.$projectData.projectDir,

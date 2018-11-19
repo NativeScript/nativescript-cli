@@ -19,6 +19,8 @@ export class PreparePlatformNativeService extends PreparePlatformService impleme
 		info.platformData.platformProjectService.ensureConfigurationFileInAppResources(info.projectData);
 		await info.platformData.platformProjectService.interpolateData(info.projectData, info.config);
 		info.platformData.platformProjectService.afterCreateProject(info.platformData.projectRoot, info.projectData);
+		this.$projectChangesService.setNativePlatformStatus(info.platformData.normalizedPlatformName, info.projectData,
+			{ nativePlatformStatus: constants.NativePlatformStatus.requiresPrepare });
 	}
 
 	public async preparePlatform(config: IPreparePlatformJSInfo): Promise<void> {
@@ -111,7 +113,7 @@ export class PreparePlatformNativeService extends PreparePlatformService impleme
 		}
 
 		const previousPrepareInfo = this.$projectChangesService.getPrepareInfo(platform, projectData);
-		if (!previousPrepareInfo) {
+		if (!previousPrepareInfo || previousPrepareInfo.nativePlatformStatus !== constants.NativePlatformStatus.alreadyPrepared) {
 			return;
 		}
 

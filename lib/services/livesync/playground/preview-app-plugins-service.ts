@@ -9,11 +9,20 @@ import { PLATFORMS_DIR_NAME, PACKAGE_JSON_FILE_NAME } from "../../../constants";
 export class PreviewAppPluginsService implements IPreviewAppPluginsService {
 	private previewAppVersionWarnings: IDictionary<string[]> = {};
 
-	constructor(private $fs: IFileSystem,
+	constructor(private $errors: IErrors,
+		private $fs: IFileSystem,
 		private $logger: ILogger,
 		private $pluginsService: IPluginsService) { }
 
-	public async comparePluginsOnDevice(data: IPreviewAppLiveSyncData, device: Device): Promise<void> {
+	public getPluginsUsageWarnings(data: IPreviewAppLiveSyncData, device: Device): string[] {
+		if (!device) {
+			this.$errors.failWithoutHelp("No device provided.");
+		}
+
+		if (!device.previewAppVersion) {
+			this.$errors.failWithoutHelp("No version of preview app provided.");
+		}
+
 		if (!this.previewAppVersionWarnings[device.previewAppVersion]) {
 			const devicePlugins = this.getDevicePlugins(device);
 			const localPlugins = this.getLocalPlugins(data.projectDir);
@@ -27,7 +36,12 @@ export class PreviewAppPluginsService implements IPreviewAppPluginsService {
 			this.previewAppVersionWarnings[device.previewAppVersion] = warnings;
 		}
 
-		this.previewAppVersionWarnings[device.previewAppVersion].map(warning => this.$logger.warn(warning));
+		return this.previewAppVersionWarnings[device.previewAppVersion];
+	}
+
+	public async comparePluginsOnDevice(data: IPreviewAppLiveSyncData, device: Device): Promise<void> {
+		const warnings = this.getPluginsUsageWarnings(data, device);
+		_.map(warnings, warning => this.$logger.warn(warning));
 	}
 
 	public getExternalPlugins(device: Device): string[] {
@@ -60,7 +74,7 @@ export class PreviewAppPluginsService implements IPreviewAppPluginsService {
 	}
 
 	private getWarningForPlugin(data: IPreviewAppLiveSyncData, localPlugin: string, localPluginVersion: string, devicePluginVersion: string, device: Device): string {
-		if (data && data.appFilesUpdaterOptions && data.appFilesUpdaterOptions.bundle) {
+		if (data && data.bundle) {
 			const pluginPackageJsonPath = path.join(data.projectDir, NODE_MODULES_DIR_NAME, localPlugin, PACKAGE_JSON_FILE_NAME);
 			const isNativeScriptPlugin = this.$pluginsService.isNativeScriptPlugin(pluginPackageJsonPath);
 			if (!isNativeScriptPlugin || (isNativeScriptPlugin && !this.hasNativeCode(localPlugin, device.platform, data.projectDir))) {
