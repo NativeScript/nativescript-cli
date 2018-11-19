@@ -87,7 +87,6 @@
     "xcode": "https://github.com/NativeScript/node-xcode/archive/NativeScript-1.5.2.tar.gz",
     "xml2js": "0.4.19",
     "xmldom": "0.1.21",
-    "xmlhttprequest": "https://github.com/telerik/node-XMLHttpRequest/tarball/master",
     "yargs": "6.0.0",
     "zipstream": "https://github.com/Icenium/node-zipstream/tarball/master"
   },
