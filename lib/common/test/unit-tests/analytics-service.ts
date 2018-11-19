@@ -1,6 +1,6 @@
 import { CommonLoggerStub, ErrorsStub } from "./stubs";
 import { Yok } from "../../yok";
-import { AnalyticsServiceBase } from '../../services/analytics-service-base';
+import { AnalyticsService } from '../../../services/analytics/analytics-service';
 import helpersLib = require("../../helpers");
 import { HostInfo } from "../../host-info";
 import { OsInfo } from "../../os-info";
@@ -43,9 +43,10 @@ interface ITestScenario {
 
 function createTestInjector(testScenario: ITestScenario): IInjector {
 	const testInjector = new Yok();
+
 	testInjector.register("logger", CommonLoggerStub);
 	testInjector.register("errors", ErrorsStub);
-	testInjector.register("analyticsService", AnalyticsServiceBase);
+	testInjector.register("analyticsService", AnalyticsService);
 	testInjector.register("analyticsSettingsService", {
 		canDoRequest: () => {
 			return Promise.resolve(testScenario.canDoRequest);
@@ -92,10 +93,14 @@ function createTestInjector(testScenario: ITestScenario): IInjector {
 		attachToProcessExitSignals: (context: any, callback: () => void): void => (undefined)
 	});
 
+	testInjector.register("childProcess", {});
+	testInjector.register("projectDataService", {});
+	testInjector.register("mobileHelper", {});
+
 	return testInjector;
 }
 
-describe("analytics-service-base", () => {
+describe("analytics-service", () => {
 	let baseTestScenario: ITestScenario;
 	let service: IAnalyticsService = null;
 
