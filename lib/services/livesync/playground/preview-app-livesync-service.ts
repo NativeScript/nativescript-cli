@@ -128,20 +128,10 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 				const platformData = this.$platformsData.getPlatformData(platform, projectData);
 				const clonedFiles = _.cloneDeep(filesToSyncMap[platform]);
 				const filesToSync = _.map(clonedFiles, fileToSync => {
-						const result = path.join(platformData.appDestinationDirectoryPath, APP_FOLDER_NAME, path.relative(projectData.getAppDirectoryPath(), fileToSync));
-						console.log(result);
-						return result;
-					});
+					const result = path.join(platformData.appDestinationDirectoryPath, APP_FOLDER_NAME, path.relative(projectData.getAppDirectoryPath(), fileToSync));
+					return result;
+				});
 
-				// console.log("####### FILES TO SYNC!!!!!!! %%%%%%%% ", filesToSync, data.projectDir, platformData);
-				// console.log("####### appDestinationDirectoryPath!!!! ", platformData.appDestinationDirectoryPath);
-				// console.log("hjfjdjgdfjgjfgjgj !!!!! ", projectData.getAppDirectoryPath());
-
-				// filesToSync = filesToSync.map(fileToSync => {
-				// 	console.log("appDestinationDirectoryPath !!!! ", platformData.appDestinationDirectoryPath);
-				// 	console.log("relative path!!!!!", path.relative(projectData.getAppDirectoryPath(), fileToSync));
-				// 	return result;
-				// });
 				promise = this.syncFilesForPlatformSafe(data, { filesToSync }, platform);
 				await promise;
 
@@ -151,8 +141,10 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 					await Promise.all(_.map(devices, async (previewDevice: Device) => {
 						const status = await this.$hmrStatusService.getHmrStatus(previewDevice.id, platformHmrData.hash);
 						if (status === HmrConstants.HMR_ERROR_STATUS) {
-							// TODO: SET useHotModuleReload: false,
+							const originalUseHotModuleReload = data.useHotModuleReload;
+							data.useHotModuleReload = false;
 							await this.syncFilesForPlatformSafe(data, { filesToSync: platformHmrData.fallbackFiles }, platform, previewDevice.id );
+							data.useHotModuleReload = originalUseHotModuleReload;
 						}
 					}));
 				}
