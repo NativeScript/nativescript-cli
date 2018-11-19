@@ -22,8 +22,17 @@ export class CreatePluginCommand implements ICommand {
 		const selectedPath = path.resolve(pathToProject || ".");
 		const projectDir = path.join(selectedPath, pluginRepoName);
 
-		await this.downloadPackage(selectedTemplate, projectDir);
-		await this.setupSeed(projectDir, pluginRepoName);
+		// Must be out of try catch block, because will throw error if folder alredy exists and we don't want to delete it.
+		this.ensurePackageDir(projectDir);
+
+		try {
+			await this.downloadPackage(selectedTemplate, projectDir);
+			await this.setupSeed(projectDir, pluginRepoName);
+		} catch (err) {
+			// The call to this.ensurePackageDir() above will throw error if folder alredy exists, so it is safe to delete here.
+			this.$fs.deleteDirectory(projectDir);
+			throw err;
+		}
 
 		this.$logger.printMarkdown("Solution for `%s` was successfully created.", pluginRepoName);
 	}
@@ -66,13 +75,15 @@ export class CreatePluginCommand implements ICommand {
 		}
 	}
 
-	private async downloadPackage(selectedTemplate: string, projectDir: string): Promise<void> {
+	private ensurePackageDir(projectDir: string): void {
 		this.$fs.createDirectory(projectDir);
 
 		if (this.$fs.exists(projectDir) && !this.$fs.isEmptyDir(projectDir)) {
 			this.$errors.fail("Path already exists and is not empty %s", projectDir);
 		}
+	}
 
+	private async downloadPackage(selectedTemplate: string, projectDir: string): Promise<void> {
 		if (selectedTemplate) {
 			this.$logger.printMarkdown("Make sure your custom template is compatible with the Plugin Seed at https://github.com/NativeScript/nativescript-plugin-seed/");
 		} else {
@@ -84,9 +95,6 @@ export class CreatePluginCommand implements ICommand {
 		try {
 			spinner.start();
 			await this.$pacoteService.extractPackage(packageToInstall, projectDir);
-		} catch (err) {
-			this.$fs.deleteDirectory(projectDir);
-			throw err;
 		} finally {
 			spinner.stop();
 		}
