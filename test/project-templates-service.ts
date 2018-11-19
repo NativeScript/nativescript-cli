@@ -82,7 +82,7 @@ function createTestInjector(configuration: {
 	return injector;
 }
 
-describe.only("project-templates-service", () => {
+describe("project-templates-service", () => {
 	beforeEach(() => {
 		isDeleteDirectoryCalledForNodeModulesDir = false;
 	});

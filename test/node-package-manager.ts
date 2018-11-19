@@ -13,6 +13,9 @@ function createTestInjector(configuration: {
 	injector.register("httpClient", {});
 	injector.register("fs", stubs.FileSystemStub);
 	injector.register("npm", NodePackageManager);
+	injector.register("pacoteService", {
+		manifest: () => Promise.resolve()
+	});
 
 	return injector;
 }
