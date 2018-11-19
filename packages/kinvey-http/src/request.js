@@ -2,6 +2,7 @@ import isNumber from 'lodash/isNumber';
 import { KinveyError, InvalidCredentialsError } from 'kinvey-errors';
 import { getConfig } from 'kinvey-app';
 import { get as getSession, set as setSession, remove as removeSession } from 'kinvey-session';
+import { clear } from 'kinvey-cache';
 import PQueue from 'promise-queue';
 import { Base64 } from 'js-base64';
 import { Headers, KinveyHeaders } from './headers';
@@ -129,14 +130,17 @@ export class KinveyRequest extends Request {
 
   async execute(retry = true) {
     try {
+      // Set the authorization header
       if (this.auth) {
         this.headers.set(AUTHORIZATION_HEADER, this.authorizationHeader);
       }
 
+      // Execute the request
       const response = await super.execute();
       return response;
     } catch (error) {
       if (retry) {
+        // Received an InvalidCredentialsError
         if (error instanceof InvalidCredentialsError) {
           const { appKey, appSecret, auth, api } = getConfig();
           const activeSession = getSession();
@@ -230,7 +234,8 @@ export class KinveyRequest extends Request {
             // Remove the session
             removeSession();
 
-            // TODO: Clear local data
+            // Clear data
+            clear(appKey);
           } catch (error) {
             // TODO: Log error
           }

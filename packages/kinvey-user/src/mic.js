@@ -21,6 +21,10 @@ export const AuthorizationGrant = {
 };
 Object.freeze(AuthorizationGrant);
 
+function getVersion(version = 3) {
+  return String(version).indexOf('v') === 0 ? version : `v${version}`;
+}
+
 async function getTempLoginUrl(clientId, redirectUri, version) {
   const { auth } = getConfig();
   const request = new KinveyRequest({
@@ -33,7 +37,7 @@ async function getTempLoginUrl(clientId, redirectUri, version) {
         return `Basic ${credentials}`;
       }
     },
-    url: formatKinveyUrl(auth.protocol, auth.host, urljoin(`v${version}`, '/oauth/auth')),
+    url: formatKinveyUrl(auth.protocol, auth.host, urljoin(getVersion(version), '/oauth/auth')),
     body: {
       client_id: clientId,
       redirect_uri: redirectUri,
@@ -53,7 +57,7 @@ function loginWithPopup(clientId, redirectUri, version) {
       response_type: 'code',
       scope: 'openid'
     };
-    const url = formatKinveyUrl(auth.protocol, auth.host, urljoin(`v${version}`, '/oauth/auth'), query);
+    const url = formatKinveyUrl(auth.protocol, auth.host, urljoin(getVersion(version), '/oauth/auth'), query);
     const popup = open(url);
     let redirected = false;
 
@@ -160,7 +164,7 @@ export async function login(
   authorizationGrant = AuthorizationGrant.AuthorizationCodeLoginPage,
   options = {}) {
   const { appKey } = getConfig();
-  const { micId, version = 3, username, password } = options;
+  const { micId, version, username, password } = options;
   let clientId = appKey;
   let code;
 

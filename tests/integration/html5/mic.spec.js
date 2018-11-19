@@ -141,7 +141,7 @@ const resolveAfter = (timeInMs) => {
   });
 }
 
-describe.only('MIC Integration', () => {
+describe('MIC Integration', () => {
   before(() => {
     return Kinvey.init({
       appKey: process.env.APP_KEY,
@@ -221,7 +221,7 @@ describe.only('MIC Integration', () => {
       }).catch(done);
   });
 
-  it('should make a correct request to KAS with the supplied options.version', (done) => {
+  it.only('should make a correct request to KAS with the supplied options.version', (done) => {
     // Currently the error function is not called when the redirect url is invalid,
     // so the test is closing the popup in order to resume execution and validate the request url
     const submittedVersion = 'v2';
