@@ -303,7 +303,7 @@ export class ProjectDataStub implements IProjectData {
 	projectDir: string;
 	projectName: string;
 	get platformsDir(): string {
-		return this.plafromsDir;
+		return this.plafromsDir || (this.projectDir && path.join(this.projectDir, "platforms")) || "";
 	}
 	set platformsDir(value) {
 		this.plafromsDir = value;

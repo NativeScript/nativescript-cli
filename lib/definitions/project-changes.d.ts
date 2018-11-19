@@ -1,14 +1,14 @@
 interface IAppFilesHashes {
-	appFilesHashes: IStringDictionary;
+	appFilesHashes?: IStringDictionary;
 }
 
 interface IPrepareInfo extends IAddedNativePlatform, IAppFilesHashes {
-	time: string;
-	bundle: boolean;
-	release: boolean;
-	projectFileHash: string;
-	changesRequireBuild: boolean;
-	changesRequireBuildTime: string;
+	time?: string;
+	bundle?: boolean;
+	release?: boolean;
+	projectFileHash?: string;
+	changesRequireBuild?: boolean;
+	changesRequireBuildTime?: string;
 	iOSProvisioningProfileUUID?: string;
 }
 
