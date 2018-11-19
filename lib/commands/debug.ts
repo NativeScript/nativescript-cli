@@ -34,7 +34,6 @@ export class DebugPlatformCommand extends ValidatePlatformCommandBase implements
 
 		const debugOptions = <IDebugOptions>_.cloneDeep(this.$options.argv);
 
-		await this.$platformService.trackProjectType(this.$projectData);
 		const selectedDeviceForDebug = await this.getDeviceForDebug();
 
 		const debugData = this.$debugDataService.createDebugData(this.$projectData, {device: selectedDeviceForDebug.deviceInfo.identifier});

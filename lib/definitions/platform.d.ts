@@ -191,22 +191,6 @@ interface IPlatformService extends IBuildPlatformAction, NodeJS.EventEmitter {
 	readFile(device: Mobile.IDevice, deviceFilePath: string, projectData: IProjectData): Promise<string>;
 
 	/**
-	 * Sends information to analytics for current project type.
-	 * The information is sent once per process for each project.
-	 * In long living process, where the project may change, each of the projects will be tracked after it's being opened.
-	 * @param {IProjectData} projectData DTO with information about the project.
-	 * @returns {Promise<void>}
-	 */
-	trackProjectType(projectData: IProjectData): Promise<void>;
-
-	/**
-	 * Sends information to analytics for specific platform related action, for example Build, LiveSync, etc.
-	 * @param {ITrackPlatformAction} actionData The data describing current action.
-	 * @returns {Promise<void>}
-	 */
-	trackActionForPlatform(actionData: ITrackPlatformAction): Promise<void>;
-
-	/**
 	 * Saves build information in a proprietary file.
 	 * @param {string} platform The build platform.
 	 * @param {string} projectDir The project's directory.

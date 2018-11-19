@@ -187,11 +187,6 @@ declare const enum TrackingTypes {
 	Initialization = "initialization",
 
 	/**
-	 * Defines that the data contains feature that should be tracked.
-	 */
-	Feature = "feature",
-
-	/**
 	 * Defines that the data contains exception that should be tracked.
 	 */
 	Exception = "exception",
@@ -670,19 +665,10 @@ interface IDictionary<T> {
 
 interface IAnalyticsService {
 	checkConsent(): Promise<void>;
-	trackFeature(featureName: string): Promise<void>;
 	trackException(exception: any, message: string): Promise<void>;
 	setStatus(settingName: string, enabled: boolean): Promise<void>;
 	getStatusMessage(settingName: string, jsonFormat: boolean, readableSettingName: string): Promise<string>;
 	isEnabled(settingName: string): Promise<boolean>;
-	track(featureName: string, featureValue: string): Promise<void>;
-
-	/**
-	 * Tries to stop current eqatec monitor, clean it's state and remove the process.exit event handler.
-	 * @param {string|number} code - Exit code as the method is used for process.exit event handler.
-	 * @return void
-	 */
-	tryStopEqatecMonitors(code?: string | number): void;
 
 	/**
 	 * Tracks the answer of question if user allows to be tracked.

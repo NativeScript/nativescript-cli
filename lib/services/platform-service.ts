@@ -20,8 +20,6 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		return this.$hooksService;
 	}
 
-	private _trackedProjectFilePath: string = null;
-
 	constructor(private $devicesService: Mobile.IDevicesService,
 		private $preparePlatformNativeService: IPreparePlatformService,
 		private $preparePlatformJSService: IPreparePlatformService,
@@ -294,9 +292,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		const { platform, appFilesUpdaterOptions, platformTemplate, projectData, config, nativePrepare } = preparePlatformInfo;
 		this.validatePlatform(platform, projectData);
 
-		await this.trackProjectType(projectData);
-
-		//We need dev-dependencies here, so before-prepare hooks will be executed correctly.
+		// We need dev-dependencies here, so before-prepare hooks will be executed correctly.
 		try {
 			await this.$pluginsService.ensureAllDependenciesAreInstalled(projectData);
 		} catch (err) {
@@ -405,38 +401,11 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		return prepareInfo.changesRequireBuildTime !== buildInfo.prepareTime;
 	}
 
-	public async trackProjectType(projectData: IProjectData): Promise<void> {
-		// Track each project once per process.
-		// In long living process, where we may work with multiple projects, we would like to track the information for each of them.
-		if (projectData && (projectData.projectFilePath !== this._trackedProjectFilePath)) {
-			this._trackedProjectFilePath = projectData.projectFilePath;
-
-			await this.$analyticsService.track("Working with project type", projectData.projectType);
-		}
-	}
-
-	public async trackActionForPlatform(actionData: ITrackPlatformAction): Promise<void> {
-		const normalizePlatformName = this.$mobileHelper.normalizePlatformName(actionData.platform);
-		let featureValue = normalizePlatformName;
-		if (actionData.isForDevice !== null) {
-			const deviceType = actionData.isForDevice ? "device" : "emulator";
-			featureValue += `.${deviceType}`;
-		}
-
-		await this.$analyticsService.track(actionData.action, featureValue);
-
-		if (actionData.deviceOsVersion) {
-			await this.$analyticsService.track(`Device OS version`, `${normalizePlatformName}_${actionData.deviceOsVersion}`);
-		}
-	}
-
 	public async buildPlatform(platform: string, buildConfig: IBuildConfig, projectData: IProjectData): Promise<string> {
 		this.$logger.out("Building project...");
 
 		const action = constants.TrackActionNames.Build;
-		await this.trackProjectType(projectData);
 		const isForDevice = this.$mobileHelper.isAndroidPlatform(platform) ? null : buildConfig && buildConfig.buildForDevice;
-		await this.trackActionForPlatform({ action, platform, isForDevice });
 
 		await this.$analyticsService.trackEventActionInGoogleAnalytics({
 			action,
@@ -591,7 +560,6 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 				this.$logger.out("Skipping install.");
 			}
 
-			await this.trackActionForPlatform({ action: constants.TrackActionNames.Deploy, platform: device.deviceInfo.platform, isForDevice: !device.isEmulator, deviceOsVersion: device.deviceInfo.version });
 		};
 
 		if (deployInfo.deployOptions.device) {

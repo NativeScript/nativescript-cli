@@ -26,7 +26,7 @@ const createTestInjector = (): IInjector => {
 	testInjector.register("options", {});
 
 	testInjector.register("doctorService", {
-		printWarnings: async (configOptions?: { trackResult: boolean }): Promise<boolean> => undefined
+		printWarnings: async (): Promise<boolean> => undefined
 	});
 
 	testInjector.register("analyticsService", {

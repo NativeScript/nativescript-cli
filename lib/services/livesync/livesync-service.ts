@@ -182,8 +182,6 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 	}
 
 	private async refreshApplicationWithDebug(projectData: IProjectData, liveSyncResultInfo: ILiveSyncResultInfo, debugOptions: IDebugOptions, outputPath?: string): Promise<IDebugInformation> {
-		await this.$platformService.trackProjectType(projectData);
-
 		const deviceAppData = liveSyncResultInfo.deviceAppData;
 
 		const deviceIdentifier = liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier;
@@ -462,8 +460,6 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 			});
 		}
 
-		await this.trackAction(action, platform, options);
-
 		const shouldInstall = await this.$platformService.shouldInstall(options.device, options.projectData, options, options.deviceBuildInfoDescriptor.outputPath);
 		if (shouldInstall) {
 			await this.$platformService.installApplication(options.device, { release: false }, options.projectData, pathToBuildItem, options.deviceBuildInfoDescriptor.outputPath);
@@ -471,22 +467,6 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 		}
 
 		return appInstalledOnDeviceResult;
-	}
-
-	private async trackAction(action: string, platform: string, options: IEnsureLatestAppPackageIsInstalledOnDeviceOptions): Promise<void> {
-		if (!options.settings[platform][options.device.deviceInfo.type]) {
-			let isForDevice = !options.device.isEmulator;
-			options.settings[platform][options.device.deviceInfo.type] = true;
-			if (this.$mobileHelper.isAndroidPlatform(platform)) {
-				options.settings[platform][DeviceTypes.Emulator] = true;
-				options.settings[platform][DeviceTypes.Device] = true;
-				isForDevice = null;
-			}
-
-			await this.$platformService.trackActionForPlatform({ action, platform, isForDevice });
-		}
-
-		await this.$platformService.trackActionForPlatform({ action: LiveSyncTrackActionNames.DEVICE_INFO, platform, isForDevice: !options.device.isEmulator, deviceOsVersion: options.device.deviceInfo.version });
 	}
 
 	private async installedCachedAppPackage(platform: string, options: IEnsureLatestAppPackageIsInstalledOnDeviceOptions): Promise<any> {
@@ -546,7 +526,6 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 					liveSyncDeviceInfo: deviceBuildInfoDescriptor
 				});
 
-				await this.$platformService.trackActionForPlatform({ action: "LiveSync", platform: device.deviceInfo.platform, isForDevice: !device.isEmulator, deviceOsVersion: device.deviceInfo.version });
 				await this.refreshApplication(projectData, liveSyncResultInfo, deviceBuildInfoDescriptor.debugOptions, deviceBuildInfoDescriptor.outputPath);
 				this.$logger.info(`Successfully synced application ${liveSyncResultInfo.deviceAppData.appIdentifier} on device ${liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier}.`);
 

@@ -16,21 +16,10 @@ export class AnalyticsService extends AnalyticsServiceBase {
 		$prompter: IPrompter,
 		$userSettingsService: UserSettings.IUserSettingsService,
 		$analyticsSettingsService: IAnalyticsSettingsService,
-		$osInfo: IOsInfo,
 		private $childProcess: IChildProcess,
 		private $projectDataService: IProjectDataService,
 		private $mobileHelper: Mobile.IMobileHelper) {
-		super($logger, $options, $staticConfig, $processService, $prompter, $userSettingsService, $analyticsSettingsService, $osInfo);
-	}
-
-	public track(featureName: string, featureValue: string): Promise<void> {
-		const data: IFeatureTrackingInformation = {
-			type: TrackingTypes.Feature,
-			featureName: featureName,
-			featureValue: featureValue
-		};
-
-		return this.sendInfoForTracking(data, this.$staticConfig.TRACK_FEATURE_USAGE_SETTING_NAME);
+		super($logger, $options, $staticConfig, $processService, $prompter, $userSettingsService, $analyticsSettingsService);
 	}
 
 	public trackException(exception: any, message: string): Promise<void> {

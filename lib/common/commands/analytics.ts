@@ -31,11 +31,11 @@ class AnalyticsCommand implements ICommand {
 		switch (arg.toLowerCase()) {
 			case "enable":
 				await this.$analyticsService.setStatus(this.settingName, true);
-				await this.$analyticsService.track(this.settingName, "enabled");
+				// await this.$analyticsService.track(this.settingName, "enabled");
 				this.$logger.info(`${this.humanReadableSettingName} is now enabled.`);
 				break;
 			case "disable":
-				await this.$analyticsService.track(this.settingName, "disabled");
+				// await this.$analyticsService.track(this.settingName, "disabled");
 				await this.$analyticsService.setStatus(this.settingName, false);
 				this.$logger.info(`${this.humanReadableSettingName} is now disabled.`);
 				break;
