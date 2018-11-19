@@ -1,8 +1,10 @@
 {
+	"rulesDirectory": "node_modules/tslint-microsoft-contrib",
 	"rules": {
 		"class-name": true,
 		"curly": true,
 		"eofline": true,
+		"mocha-avoid-only": true,
 		"indent": [
 			true,
 			"tabs"
