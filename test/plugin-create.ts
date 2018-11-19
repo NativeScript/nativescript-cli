@@ -3,6 +3,11 @@ import * as stubs from "./stubs";
 import { CreatePluginCommand } from "../lib/commands/plugin/create-plugin";
 import { assert } from "chai";
 import helpers = require("../lib/common/helpers");
+import * as sinon from "sinon";
+import temp = require("temp");
+import * as path from "path";
+import * as util from "util";
+temp.track();
 
 interface IPacoteOutput {
 	packageName: string;
@@ -10,7 +15,8 @@ interface IPacoteOutput {
 }
 
 const originalIsInteractive = helpers.isInteractive;
-const dummyArgs = ["dummyProjectName"];
+const dummyProjectName = "dummyProjectName";
+const dummyArgs = [dummyProjectName];
 const dummyUser = "devUsername";
 const dummyName = "devPlugin";
 const dummyPacote: IPacoteOutput = { packageName: "", destinationDirectory: "" };
@@ -141,6 +147,63 @@ describe("Plugin create command tests", () => {
 			options.username = dummyUser;
 			options.pluginName = dummyName;
 			await createPluginCommand.execute(dummyArgs);
+		});
+
+		describe("when fails", () => {
+			let sandbox: sinon.SinonSandbox;
+			let fsSpy: sinon.SinonSpy;
+			let projectPath: string;
+
+			beforeEach(() => {
+				sandbox = sinon.sandbox.create();
+				const workingPath = temp.mkdirSync("test_plugin");
+				options.path = workingPath;
+				projectPath = path.join(workingPath, dummyProjectName);
+				const fsService = testInjector.resolve("fs");
+				fsSpy = sandbox.spy(fsService, "deleteDirectory");
+			});
+
+			afterEach(() => {
+				sandbox.restore();
+			});
+
+			it("downloadPackage, should remove projectDir", async () => {
+				const errorMessage = "Test fail";
+				const pacoteService = testInjector.resolve("pacoteService");
+				sandbox.stub(pacoteService, "extractPackage").callsFake(() => {
+					return Promise.reject(new Error(errorMessage));
+				});
+
+				const executePromise = createPluginCommand.execute(dummyArgs);
+
+				await assert.isRejected(executePromise, errorMessage);
+				assert(fsSpy.calledWith(projectPath));
+			});
+
+			it("setupSeed, should remove projectDir", async () => {
+				const errorMessage = "Test fail";
+				const npmService = testInjector.resolve("npm");
+				sandbox.stub(npmService, "install").callsFake(() => {
+					return Promise.reject(new Error(errorMessage));
+				});
+
+				const executePromise = createPluginCommand.execute(dummyArgs);
+
+				await assert.isRejected(executePromise, errorMessage);
+				assert(fsSpy.calledWith(projectPath));
+			});
+
+			it("ensurePachageDir should not remove projectDir", async () => {
+				const fsService = testInjector.resolve("fs");
+				sandbox.stub(fsService, "isEmptyDir").callsFake(() => {
+					return false;
+				});
+
+				const executePromise = createPluginCommand.execute(dummyArgs);
+
+				await assert.isRejected(executePromise, util.format(createPluginCommand.pathAlreadyExistsMessageTemplate, projectPath));
+				assert(fsSpy.notCalled);
+			});
 		});
 	});
 });
