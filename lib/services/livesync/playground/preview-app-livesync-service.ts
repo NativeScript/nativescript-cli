@@ -72,6 +72,7 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 
 	public async stopLiveSync(): Promise<void> {
 		this.$previewSdkService.stop();
+		this.$previewDevicesService.updateConnectedDevices([]);
 	}
 
 	private async initializePreviewForDevice(data: IPreviewAppLiveSyncData, device: Device): Promise<FilesPayload> {
