@@ -4,7 +4,7 @@ import { DeviceDiscoveryEventNames, DEVICE_LOG_EVENT_NAME } from "../../../../co
 
 export class PreviewDevicesService extends EventEmitter implements IPreviewDevicesService {
 	private connectedDevices: Device[] = [];
-	private deviceTimers: IDictionary<NodeJS.Timer> = {};
+	private deviceLostTimers: IDictionary<NodeJS.Timer> = {};
 
 	constructor(private $previewAppLogProvider: IPreviewAppLogProvider,
 		private $previewAppPluginsService: IPreviewAppPluginsService) {
@@ -46,8 +46,8 @@ export class PreviewDevicesService extends EventEmitter implements IPreviewDevic
 	}
 
 	private raiseDeviceFound(device: Device) {
-		if (this.deviceTimers[device.id]) {
-			clearTimeout(this.deviceTimers[device.id]);
+		if (this.deviceLostTimers[device.id]) {
+			clearTimeout(this.deviceLostTimers[device.id]);
 		}
 
 		this.emit(DeviceDiscoveryEventNames.DEVICE_FOUND, device);
@@ -60,12 +60,12 @@ export class PreviewDevicesService extends EventEmitter implements IPreviewDevic
 	}
 
 	private raiseDeviceLostAfterTimeout(device: Device) {
-		if (!this.deviceTimers[device.id]) {
+		if (!this.deviceLostTimers[device.id]) {
 			const timeoutId = setTimeout(() => {
 				this.raiseDeviceLost(device);
 				clearTimeout(timeoutId);
 			}, 5 * 1000);
-			this.deviceTimers[device.id] = timeoutId;
+			this.deviceLostTimers[device.id] = timeoutId;
 		}
 	}
 }
