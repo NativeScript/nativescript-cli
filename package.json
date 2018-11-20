@@ -14,6 +14,8 @@
     "test": "node test-scripts/istanbul.js",
     "postinstall": "node postinstall.js",
     "preuninstall": "node preuninstall.js",
+    "prepack": "grunt prepare",
+    "postpack": "grunt set_dev_ga_id",
     "mocha": "node test-scripts/mocha.js",
     "tsc": "tsc",
     "tslint": "tslint -p tsconfig.json --type-check",

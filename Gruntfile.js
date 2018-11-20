@@ -233,7 +233,7 @@ module.exports = function (grunt) {
 	});
 
 	grunt.registerTask("test", ["ts:devall", "shell:npm_test"]);
-	grunt.registerTask("pack", [
+	grunt.registerTask("prepare", [
 		"clean",
 		"ts:release_build",
 		"shell:npm_test",
@@ -241,11 +241,12 @@ module.exports = function (grunt) {
 		"set_package_version",
 		"set_live_ga_id",
 		"verify_live_ga_id",
-		"shell:build_package",
 
 		"copy:package_to_drop_folder",
-		"copy:package_to_qa_drop_folder",
-		"set_dev_ga_id"
+		"copy:package_to_qa_drop_folder"
+	]);
+	grunt.registerTask("pack", [
+		"shell:build_package"
 	]);
 	grunt.registerTask("lint", ["tslint:build"]);
 	grunt.registerTask("all", ["clean", "test", "lint"]);
