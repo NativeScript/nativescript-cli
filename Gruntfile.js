@@ -119,17 +119,6 @@ module.exports = function (grunt) {
 
 		},
 
-		copy: {
-			package_to_drop_folder: {
-				src: "*.tgz",
-				dest: "<%= copyPackageTo %>/<%= jobName %>/<%= dateString %> #<%= buildNumber %>/"
-			},
-			package_to_qa_drop_folder: {
-				src: "*.tgz",
-				dest: "<%= copyPackageTo %>/<%= jobName %>/nativescript.tgz"
-			}
-		},
-
 		clean: {
 			src: ["test/**/*.js*",
 				"lib/**/*.js*",
@@ -240,10 +229,7 @@ module.exports = function (grunt) {
 
 		"set_package_version",
 		"set_live_ga_id",
-		"verify_live_ga_id",
-
-		"copy:package_to_drop_folder",
-		"copy:package_to_qa_drop_folder"
+		"verify_live_ga_id"
 	]);
 	grunt.registerTask("pack", [
 		"shell:build_package"
