@@ -64,7 +64,9 @@ export class YarnPackageManager extends BasePackageManager {
 		} catch (e) {
 			this.$errors.failWithoutHelp(e.message);
 		}
-		return JSON.parse(viewResult);
+
+		const result = JSON.parse(viewResult);
+		return result.data;
 	}
 
 	@exported("yarn")
