@@ -39,7 +39,7 @@ function resetDevices() {
 }
 
 describe("PreviewDevicesService", () => {
-	describe("onDevicesPresence", () => {
+	describe("getConnectedDevices", () => {
 		let previewDevicesService: IPreviewDevicesService = null;
 		let clock: sinon.SinonFakeTimers = null;
 		beforeEach(() => {
@@ -126,6 +126,25 @@ describe("PreviewDevicesService", () => {
 			assert.deepEqual(previewDevicesService.getConnectedDevices(), [device2]);
 			assert.deepEqual(foundDevices, [device2]);
 			assert.deepEqual(lostDevices, [device1]);
+		});
+		it("shouldn't emit deviceFound or deviceLost when preview app is restarted on device", () => {
+			const device1 = createDevice("device1");
+
+			previewDevicesService.updateConnectedDevices([device1]);
+
+			assert.deepEqual(previewDevicesService.getConnectedDevices(), [device1]);
+			assert.deepEqual(foundDevices, [device1]);
+			assert.deepEqual(lostDevices, []);
+			resetDevices();
+
+			// preview app is restarted
+			previewDevicesService.updateConnectedDevices([]);
+			clock.tick(500);
+			previewDevicesService.updateConnectedDevices([device1]);
+
+			assert.deepEqual(foundDevices, []);
+			assert.deepEqual(lostDevices, []);
+			assert.deepEqual(previewDevicesService.getConnectedDevices(), [device1]);
 		});
 	});
 });
