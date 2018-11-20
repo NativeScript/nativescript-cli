@@ -12,7 +12,7 @@ export abstract class ProxyCommandBase implements ICommand {
 
 	protected async tryTrackUsage() {
 		try {
-			// TODO: Check why we have set the `disableAnalytics` to true and we track the command as separate one
+			// TODO(Analytics): Check why we have set the `disableAnalytics` to true and we track the command as separate one
 			// instead of tracking it through the commandsService.
 			this.$logger.trace(this.commandName);
 			// await this.$analyticsService.trackFeature(this.commandName);

@@ -31,7 +31,7 @@ class DoctorService implements IDoctorService {
 		}
 
 		if (!configOptions || configOptions.trackResult) {
-			// TODO: Consider sending this information to Google Analytics
+			// TODO(Analytics): Consider sending this information to Google Analytics
 			// await this.$analyticsService.track("DoctorEnvironmentSetup", hasWarnings ? "incorrect" : "correct");
 		}
 
