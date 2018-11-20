@@ -36,6 +36,7 @@ const tns = require("nativescript");
 	* [debug](#debug)
 * [liveSyncService](#livesyncservice)
 	* [liveSync](#livesync)
+	* [liveSyncToPreviewApp](#livesynctopreviewapp)
 	* [stopLiveSync](#stopLiveSync)
 	* [enableDebugging](#enableDebugging)
 	* [attachDebugger](#attachDebugger)
@@ -58,6 +59,12 @@ const tns = require("nativescript");
 	* [startEmulator](#startemulator)
 * [deviceEmitter](#deviceemitter)
 	* [events](#deviceemitterevents)
+* [previewDevicesService](#previewdevicesservice)
+	* [deviceFound](#devicefound)
+	* [deviceLost](#devicelost)
+	* [deviceLog](#devicelog)
+* [previewQrCodeService](#previewqrcodeservice)
+	* [getPlaygroundAppQrCode](#getplaygroundappqrCode)
 
 ## Module projectService
 
@@ -1340,6 +1347,35 @@ tns.deviceEmitter.on("emulatorImageLost", (emulatorImageInfo) => {
 });
 ```
 `emulatorImageInfo` is of type [Moble.IDeviceInfo](https://github.com/telerik/mobile-cli-lib/blob/61cdaaaf7533394afbbe84dd4eee355072ade2de/definitions/mobile.d.ts#L9-L86).
+
+## previewDevicesService
+The `previewDevicesService` module allows interaction with preview devices. You can get a list of the connected preview devices and logs from specified device.
+
+### previewDevicesEmitterEvents
+
+* `deviceFound` - Raised when the QR code is scanned with any device. The callback function will receive one argument - `device`.
+Sample usage:
+```JavaScript
+tns.previewDevicesService.on("deviceFound", device => {
+	console.log("Attached device with identifier: " + device.id);
+});
+```
+
+* `deviceLost` - Raised when the Preview app is stopped on a specified device. The callback function will receive one argument - `device`.
+Sample usage:
+```JavaScript
+tns.previewDevicesService.on("deviceLost", device => {
+	console.log("Detached device with identifier: " + device.id);
+});
+```
+
+* `deviceLog` - Raised when the app deployed in Preview app reports any information. The event is raised for any device that reports data. The callback function has two arguments - `device` and `message`. <br/><br/>
+Sample usage:
+```JavaScript
+tns.previewDevicesService.on("deviceLogData", (device, message) => {
+	console.log("Device " + device.id + " reports: " + message);
+});
+```
 
 ## How to add a new method to Public API
 CLI is designed as command line tool and when it is used as a library, it does not give you access to all of the methods. This is mainly implementation detail. Most of the CLI's code is created to work in command line, not as a library, so before adding method to public API, most probably it will require some modification.
