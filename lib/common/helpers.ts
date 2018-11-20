@@ -563,6 +563,10 @@ export function getWinRegPropertyValue(key: string, propertyName: string): Promi
 	});
 }
 
+export function stringify(value: any, replacer?: (key: string, value: any) => any, space?: string | number): string {
+	return JSON.stringify(value, replacer, space || 2);
+}
+
 //--- begin part copied from AngularJS
 
 //The MIT License

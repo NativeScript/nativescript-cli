@@ -2,6 +2,7 @@ import * as path from "path";
 import { Device, FilesPayload } from "nativescript-preview-sdk";
 import { APP_RESOURCES_FOLDER_NAME, APP_FOLDER_NAME } from "../../../constants";
 import { HmrConstants } from "../../../common/constants";
+import { stringify } from "../../../common/helpers";
 
 export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 
@@ -30,7 +31,7 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 				return this.deviceInitializationPromise[device.id];
 			}
 
-			this.deviceInitializationPromise[device.id] = this.initializePreviewForDevice(data, device);
+			this.deviceInitializationPromise[device.id] = this.getInitialFilesForDevice(data, device);
 			try {
 				const payloads = await this.deviceInitializationPromise[device.id];
 				return payloads;
@@ -62,18 +63,18 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 		this.$previewSdkService.stop();
 	}
 
-	private async initializePreviewForDevice(data: IPreviewAppLiveSyncData, device: Device): Promise<FilesPayload> {
+	private async getInitialFilesForDevice(data: IPreviewAppLiveSyncData, device: Device): Promise<FilesPayload> {
 		const hookArgs = this.getHookArgs(data, device);
 		await this.$hooksService.executeBeforeHooks("preview-sync", { hookArgs });
 		await this.$previewAppPluginsService.comparePluginsOnDevice(data, device);
-		const payloads = await this.syncInitialFilesForPlatformSafe(data, device.platform);
+		const payloads = await this.getInitialFilesForPlatformSafe(data, device.platform);
 		return payloads;
 	}
 
 	private getHookArgs(data: IPreviewAppLiveSyncData, device: Device) {
 		const filesToSyncMap: IDictionary<string[]> = {};
 		const hmrData: IDictionary<IPlatformHmrData> = {};
-		const promise = Promise.resolve<FilesPayload>(null);
+		const promise = Promise.resolve();
 		const result = {
 			projectData: this.$projectDataService.getProjectData(data.projectDir),
 			hmrData,
@@ -94,32 +95,31 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 		return result;
 	}
 
-	private async syncInitialFilesForPlatformSafe(data: IPreviewAppLiveSyncData, platform: string): Promise<FilesPayload> {
-		this.$logger.info(`Start syncing changes for platform ${platform}.`);
+	private async getInitialFilesForPlatformSafe(data: IPreviewAppLiveSyncData, platform: string): Promise<FilesPayload> {
+		this.$logger.info(`Start sending initial files for platform ${platform}.`);
 
 		try {
 			const payloads = this.$previewAppFilesService.getInitialFilesPayload(data, platform);
-			this.$logger.info(`Successfully synced changes for platform ${platform}.`);
+			this.$logger.info(`Successfully sent initial files for platform ${platform}.`);
 			return payloads;
 		} catch (err) {
-			this.$logger.warn(`Unable to apply changes for platform ${platform}. Error is: ${err}, ${JSON.stringify(err, null, 2)}.`);
+			this.$logger.warn(`Unable to apply changes for platform ${platform}. Error is: ${err}, ${stringify(err)}`);
 		}
 	}
 
-	private async syncFilesForPlatformSafe(data: IPreviewAppLiveSyncData, filesData: IPreviewAppFilesData, platform: string, deviceId?: string): Promise<FilesPayload> {
+	private async syncFilesForPlatformSafe(data: IPreviewAppLiveSyncData, filesData: IPreviewAppFilesData, platform: string, deviceId?: string): Promise<void> {
 		this.$logger.info(`Start syncing changes for platform ${platform}.`);
 
 		try {
 			const payloads = this.$previewAppFilesService.getFilesPayload(data, filesData, platform);
 			await this.$previewSdkService.applyChanges(payloads);
 			this.$logger.info(`Successfully synced ${payloads.files.map(filePayload => filePayload.file.yellow)} for platform ${platform}.`);
-			return payloads;
 		} catch (err) {
-			this.$logger.warn(`Unable to apply changes for platform ${platform}. Error is: ${err}, ${JSON.stringify(err, null, 2)}.`);
+			this.$logger.warn(`Unable to apply changes for platform ${platform}. Error is: ${err}, ${stringify(err)}.`);
 		}
 	}
 
-	private async onWebpackCompilationComplete(data: IPreviewAppLiveSyncData, hmrData: IDictionary<IPlatformHmrData>, filesToSyncMap: IDictionary<string[]>, promise: Promise<FilesPayload>, platform: string) {
+	private async onWebpackCompilationComplete(data: IPreviewAppLiveSyncData, hmrData: IDictionary<IPlatformHmrData>, filesToSyncMap: IDictionary<string[]>, promise: Promise<void>, platform: string) {
 		await promise
 			.then(async () => {
 				const currentHmrData = _.cloneDeep(hmrData);

@@ -32,7 +32,7 @@ export class PreviewAppFilesService implements IPreviewAppFilesService {
 			.filter(file => !_.includes(this.excludedFiles, path.basename(file)))
 			.filter(file => !_.includes(this.excludedFileExtensions, path.extname(file)));
 
-		this.$logger.trace(`Transferring ${filesToTransfer.join("\n")}.`);
+		this.$logger.trace(`Sending ${filesToTransfer.join("\n")}.`);
 
 		const rootFilesDir = this.getRootFilesDir(data, platform);
 		const payloadsToSync = _.map(filesToTransfer, file => this.createFilePayload(file, rootFilesDir, PreviewSdkEventNames.CHANGE_EVENT_NAME));

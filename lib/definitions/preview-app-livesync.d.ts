@@ -9,8 +9,8 @@ declare global {
 	}
 
 	interface IPreviewAppFilesService {
-		getInitialFilesPayload(data: IPreviewAppLiveSyncData, platform: string, deviceId?: string): FilesPayload;
-		getFilesPayload(data: IPreviewAppLiveSyncData, filesData: IPreviewAppFilesData, platform: string, deviceId?: string): FilesPayload;
+		getInitialFilesPayload(liveSyncData: IPreviewAppLiveSyncData, platform: string, deviceId?: string): FilesPayload;
+		getFilesPayload(liveSyncData: IPreviewAppLiveSyncData, filesData: IPreviewAppFilesData, platform: string, deviceId?: string): FilesPayload;
 	}
 
 	interface IPreviewAppFilesData {
