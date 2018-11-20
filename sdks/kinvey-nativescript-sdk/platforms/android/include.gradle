@@ -1,0 +1,10 @@
+repositories {
+  mavenCentral()
+}
+
+dependencies {
+  compile 'com.orhanobut:hawk:2.0.1'
+  compile 'com.squareup.okhttp3:okhttp:3.8.1'
+  compile 'com.android.support:appcompat-v7:27.0.2'
+  compile 'com.android.support:customtabs:27.0.2'
+}

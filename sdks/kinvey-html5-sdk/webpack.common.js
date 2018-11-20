@@ -1,5 +1,7 @@
 const path = require('path');
+// eslint-disable-next-line import/no-extraneous-dependencies
 const CleanWebpackPlugin = require('clean-webpack-plugin');
+// eslint-disable-next-line import/no-extraneous-dependencies
 const webpack = require('webpack');
 const pkg = require('./package.json');
 
@@ -14,19 +16,22 @@ const BANNER = `
 
 const config = {
   entry: {},
+  node: {
+    fs: 'empty'
+  },
+  output: {
+    filename: '[name].js',
+    path: path.resolve(__dirname, 'dist'),
+    libraryTarget: 'umd',
+    library: 'Kinvey'
+  },
   plugins: [
     new CleanWebpackPlugin(['dist']),
     new webpack.BannerPlugin({
       banner: BANNER,
       raw: true
     })
-  ],
-  output: {
-    filename: '[name].js',
-    path: path.resolve(__dirname, 'dist'),
-    libraryTarget: 'umd',
-    library: 'Kinvey'
-  }
+  ]
 };
 
 config.entry[pkg.name] = path.resolve(__dirname, pkg.main);

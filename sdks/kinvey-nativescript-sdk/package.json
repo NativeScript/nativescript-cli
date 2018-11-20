@@ -18,16 +18,18 @@
     "kinvey-aggregation": "1.0.0",
     "kinvey-app": "1.0.0",
     "kinvey-cache-memory": "1.0.0",
+    "kinvey-cache-nativescript-sqlite": "1.0.0",
     "kinvey-datastore": "1.0.0",
     "kinvey-endpoint": "1.0.0",
     "kinvey-files": "1.0.0",
     "kinvey-http-nativescript": "1.0.0",
     "kinvey-user": "1.0.0",
     "kinvey-kmd": "1.0.0",
-    "kinvey-query": "1.0.0"
+    "kinvey-query": "1.0.0",
+    "nativescript-hook": "0.2.4"
   },
   "peerDependencies": {
-    "tns-core-modules": "4.2.1"
+    "tns-core-modules": "~5.0.2"
   },
   "devDependencies": {
     "@babel/cli": "7.1.5",
@@ -40,9 +42,22 @@
     "eslint-plugin-import": "2.14.0"
   },
   "files": [
-    "lib/*"
+    "hooks/*",
+    "lib/*",
+    "platforms/*"
   ],
   "nativescript": {
+    "hooks": [{
+        "type": "before-checkForChanges",
+        "script": "hooks/before-checkForChanges.js",
+        "inject": true
+      },
+      {
+        "type": "before-preview-sync",
+        "script": "hooks/before-preview-sync.js",
+        "inject": true
+      }
+    ],
     "platforms": {
       "ios": "4.0.0",
       "android": "4.0.0"

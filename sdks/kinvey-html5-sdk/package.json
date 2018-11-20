@@ -23,6 +23,7 @@
     "kinvey-app": "1.0.0",
     "kinvey-cache-indexeddb": "1.0.0",
     "kinvey-cache-memory": "1.0.0",
+    "kinvey-cache-websql": "1.0.0",
     "kinvey-datastore": "1.0.0",
     "kinvey-endpoint": "1.0.0",
     "kinvey-files": "1.0.0",

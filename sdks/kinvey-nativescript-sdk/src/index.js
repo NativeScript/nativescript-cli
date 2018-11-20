@@ -1,12 +1,12 @@
-import { Acl } from './acl';
-import { Aggregation } from './aggregation';
+import { Acl } from 'kinvey-acl';
+import { Aggregation } from 'kinvey-aggregation';
+import * as DataStore from 'kinvey-datastore';
+import { Kmd } from 'kinvey-kmd';
+import { Query } from 'kinvey-query';
+import * as Files from 'kinvey-files';
+import { endpoint } from 'kinvey-endpoint';
 import * as App from './app';
-import * as DataStore from './datastore';
 import { User } from './user';
-import { Kmd } from './kmd';
-import { Query } from './query';
-import * as Files from './files';
-import { endpoint } from './endpoint';
 
 // SDK
 const SDK = {

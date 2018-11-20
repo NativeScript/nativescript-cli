@@ -1,6 +1,6 @@
 import { register as _register } from 'kinvey-cache';
-import * as WebSQL from './websql';
+import * as SQLite from './sqlite';
 
 export function register() {
-  _register(WebSQL);
+  _register(SQLite);
 }

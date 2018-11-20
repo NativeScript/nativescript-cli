@@ -1,9 +1,4 @@
-import { register as registerHttp } from 'kinvey-http-nativescript';
-import { register as registerCache } from 'kinvey-cache-memory';
 import * as User from 'kinvey-user';
-
-registerHttp();
-registerCache();
 
 const BackwardsCompatibleUser = User.User;
 

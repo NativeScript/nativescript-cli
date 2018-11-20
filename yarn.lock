@@ -3550,6 +3550,13 @@ escodegen@1.x.x:
   optionalDependencies:
     source-map "~0.6.1"
 
+eslint-config-kinvey-platform@0.1.3:
+  version "0.1.3"
+  resolved "https://registry.yarnpkg.com/eslint-config-kinvey-platform/-/eslint-config-kinvey-platform-0.1.3.tgz#70fcc271a9775b43ba981d71d0a26c391d055c88"
+  integrity sha512-BGDcl2l08kUmHsNXAwysUL0MomFU2dT5xdM2HMPS1iy3+dYNZKiy6a4lu/LRJuPO6B2UvOo5dEaT9nMKfavdLQ==
+  dependencies:
+    eslint-import-resolver-node "0.3.2"
+
 eslint-config-kinvey-platform@kinvey/eslint-kinvey-platform#0.1.1:
   version "0.1.1"
   resolved "https://codeload.github.com/kinvey/eslint-kinvey-platform/tar.gz/3a84689e552126c73c6ff720e4a68ec218cea6e4"
@@ -4340,6 +4347,17 @@ glob@7.1.2:
     inflight "^1.0.4"
     inherits "2"
     minimatch "^3.0.4"
+    once "^1.3.0"
+    path-is-absolute "^1.0.0"
+
+glob@^6.0.1:
+  version "6.0.4"
+  resolved "https://registry.yarnpkg.com/glob/-/glob-6.0.4.tgz#0f08860f6a155127b2fadd4f9ce24b1aab6e4d22"
+  integrity sha1-DwiGD2oVUSey+t1PnOJLGqtuTSI=
+  dependencies:
+    inflight "^1.0.4"
+    inherits "2"
+    minimatch "2 || 3"
     once "^1.3.0"
     path-is-absolute "^1.0.0"
 
@@ -5818,7 +5836,7 @@ minimalistic-crypto-utils@^1.0.0, minimalistic-crypto-utils@^1.0.1:
   resolved "https://registry.yarnpkg.com/minimalistic-crypto-utils/-/minimalistic-crypto-utils-1.0.1.tgz#f6c00c1c0b082246e5c4d99dfb8c7c083b2b582a"
   integrity sha1-9sAMHAsIIkblxNmd+4x8CDsrWCo=
 
-minimatch@3.0.4, minimatch@^3.0.0, minimatch@^3.0.2, minimatch@^3.0.3, minimatch@^3.0.4:
+"minimatch@2 || 3", minimatch@3.0.4, minimatch@^3.0.0, minimatch@^3.0.2, minimatch@^3.0.3, minimatch@^3.0.4:
   version "3.0.4"
   resolved "https://registry.yarnpkg.com/minimatch/-/minimatch-3.0.4.tgz#5166e286457f03306064be5497e8dbb0c3d32083"
   integrity sha512-yJHVQEhyqPLUTgt9B83PXu6W3rx4MvvHvSUvToogpwoGDOUQ+yDrR0HRot+yOCdCO7u4hX3pWft6kWBBcqh0UA==
@@ -5995,6 +6013,19 @@ nanomatch@^1.2.9:
     regex-not "^1.0.0"
     snapdragon "^0.8.1"
     to-regex "^3.0.1"
+
+nativescript-hook@0.2.4:
+  version "0.2.4"
+  resolved "https://registry.yarnpkg.com/nativescript-hook/-/nativescript-hook-0.2.4.tgz#e591e1d9ad415a8b4f3309c15731577af44a3dd4"
+  integrity sha1-5ZHh2a1BWotPMwnBVzFXevRKPdQ=
+  dependencies:
+    glob "^6.0.1"
+    mkdirp "^0.5.1"
+
+nativescript-sqlite@2.2.3:
+  version "2.2.3"
+  resolved "https://registry.yarnpkg.com/nativescript-sqlite/-/nativescript-sqlite-2.2.3.tgz#5edbadd9483d5ef3b733422e8245cff0c29bdcae"
+  integrity sha512-BSB7ao0Vqq4lO0im22CoAimBE4EB1znrygMDag/LgfAbOFRMJKHQZnkFL6/Gf2vgjsQ2/Z/v0KgNOHVvIonxpA==
 
 natural-compare@^1.4.0:
   version "1.4.0"

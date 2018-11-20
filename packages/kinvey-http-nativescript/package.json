@@ -16,7 +16,7 @@
     "kinvey-http": "1.0.0"
   },
   "peerDependencies": {
-    "tns-core-modules": "4.2.1"
+    "tns-core-modules": "~5.0.2"
   },
   "devDependencies": {
     "@babel/cli": "7.1.5",
