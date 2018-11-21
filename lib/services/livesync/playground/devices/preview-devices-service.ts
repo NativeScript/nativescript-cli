@@ -48,6 +48,7 @@ export class PreviewDevicesService extends EventEmitter implements IPreviewDevic
 	private raiseDeviceFound(device: Device) {
 		if (this.deviceLostTimers[device.id]) {
 			clearTimeout(this.deviceLostTimers[device.id]);
+			this.deviceLostTimers[device.id] = null;
 		}
 
 		this.emit(DeviceDiscoveryEventNames.DEVICE_FOUND, device);
