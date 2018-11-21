@@ -4,6 +4,7 @@ import { Device } from "nativescript-preview-sdk";
 import { assert } from "chai";
 import { DeviceDiscoveryEventNames } from "../../lib/common/constants";
 import { LoggerStub, ErrorsStub } from "../stubs";
+import * as sinon from "sinon";
 
 let foundDevices: Device[] = [];
 let lostDevices: Device[] = [];
@@ -38,8 +39,9 @@ function resetDevices() {
 }
 
 describe("PreviewDevicesService", () => {
-	describe("onDevicesPresence", () => {
+	describe("getConnectedDevices", () => {
 		let previewDevicesService: IPreviewDevicesService = null;
+		let clock: sinon.SinonFakeTimers = null;
 		beforeEach(() => {
 			const injector = createTestInjector();
 			previewDevicesService = injector.resolve("previewDevicesService");
@@ -49,11 +51,13 @@ describe("PreviewDevicesService", () => {
 			previewDevicesService.on(DeviceDiscoveryEventNames.DEVICE_LOST, device => {
 				lostDevices.push(device);
 			});
+			clock = sinon.useFakeTimers();
 		});
 
 		afterEach(() => {
 			previewDevicesService.removeAllListeners();
 			resetDevices();
+			clock.restore();
 		});
 
 		it("should add new device", () => {
@@ -101,6 +105,7 @@ describe("PreviewDevicesService", () => {
 			resetDevices();
 
 			previewDevicesService.updateConnectedDevices([]);
+			clock.tick(5000);
 
 			assert.deepEqual(foundDevices, []);
 			assert.deepEqual(lostDevices, [device1]);
@@ -116,10 +121,30 @@ describe("PreviewDevicesService", () => {
 			resetDevices();
 
 			previewDevicesService.updateConnectedDevices([device2]);
+			clock.tick(5000);
 
 			assert.deepEqual(previewDevicesService.getConnectedDevices(), [device2]);
 			assert.deepEqual(foundDevices, [device2]);
 			assert.deepEqual(lostDevices, [device1]);
+		});
+		it("shouldn't emit deviceFound or deviceLost when preview app is restarted on device", () => {
+			const device1 = createDevice("device1");
+
+			previewDevicesService.updateConnectedDevices([device1]);
+
+			assert.deepEqual(previewDevicesService.getConnectedDevices(), [device1]);
+			assert.deepEqual(foundDevices, [device1]);
+			assert.deepEqual(lostDevices, []);
+			resetDevices();
+
+			// preview app is restarted
+			previewDevicesService.updateConnectedDevices([]);
+			clock.tick(500);
+			previewDevicesService.updateConnectedDevices([device1]);
+
+			assert.deepEqual(foundDevices, []);
+			assert.deepEqual(lostDevices, []);
+			assert.deepEqual(previewDevicesService.getConnectedDevices(), [device1]);
 		});
 	});
 });
