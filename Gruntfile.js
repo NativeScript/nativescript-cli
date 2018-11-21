@@ -227,11 +227,11 @@ module.exports = function (grunt) {
 		"ts:release_build",
 		"shell:npm_test",
 
-		"set_package_version",
 		"set_live_ga_id",
 		"verify_live_ga_id"
 	]);
 	grunt.registerTask("pack", [
+		"set_package_version",
 		"shell:build_package"
 	]);
 	grunt.registerTask("lint", ["tslint:build"]);
