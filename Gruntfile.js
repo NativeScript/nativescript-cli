@@ -1,5 +1,23 @@
 const childProcess = require("child_process");
+const EOL = require("os").EOL;
 const now = new Date().toISOString();
+
+const CONFIG_JSON_PATH = "config/config.json";
+
+const ENVIRONMENTS = {
+	live: "live",
+	dev: "dev"
+};
+
+const GA_TRACKING_IDS = {
+	[ENVIRONMENTS.dev]: "UA-111455-51",
+	[ENVIRONMENTS.live]: "UA-111455-44"
+};
+
+const CONFIG_DATA = {
+	filePath: "config/config.json",
+	gaKey: "GA_TRACKING_ID"
+}
 
 function shallowCopy(obj) {
 	var result = {};
@@ -101,17 +119,6 @@ module.exports = function (grunt) {
 
 		},
 
-		copy: {
-			package_to_drop_folder: {
-				src: "*.tgz",
-				dest: "<%= copyPackageTo %>/<%= jobName %>/<%= dateString %> #<%= buildNumber %>/"
-			},
-			package_to_qa_drop_folder: {
-				src: "*.tgz",
-				dest: "<%= copyPackageTo %>/<%= jobName %>/nativescript.tgz"
-			}
-		},
-
 		clean: {
 			src: ["test/**/*.js*",
 				"lib/**/*.js*",
@@ -191,17 +198,41 @@ module.exports = function (grunt) {
 		grunt.file.write("package.json", JSON.stringify(packageJson, null, "  "));
 	});
 
+	const setConfig = (key, value) => {
+		const configJson = grunt.file.readJSON(CONFIG_DATA.filePath);
+		configJson[key] = value;
+		const stringConfigContent = JSON.stringify(configJson, null, "	") + EOL;
+		grunt.file.write(CONFIG_DATA.filePath, stringConfigContent);
+	}
+
+	grunt.registerTask("set_live_ga_id", function() {
+		setConfig(CONFIG_DATA.gaKey, GA_TRACKING_IDS[ENVIRONMENTS.live]);
+	});
+
+	grunt.registerTask("set_dev_ga_id", function() {
+		setConfig(CONFIG_DATA.gaKey, GA_TRACKING_IDS[ENVIRONMENTS.dev]);
+	});
+
+	grunt.registerTask("verify_live_ga_id", function() {
+		var configJson = grunt.file.readJSON(CONFIG_DATA.filePath);
+
+		if(configJson[CONFIG_DATA.gaKey] !== GA_TRACKING_IDS[ENVIRONMENTS.live]) {
+			throw new Error("Google Analytics id is not configured correctly.");
+		}
+	});
+
 	grunt.registerTask("test", ["ts:devall", "shell:npm_test"]);
-	grunt.registerTask("pack", [
+	grunt.registerTask("prepare", [
 		"clean",
 		"ts:release_build",
 		"shell:npm_test",
 
+		"set_live_ga_id",
+		"verify_live_ga_id"
+	]);
+	grunt.registerTask("pack", [
 		"set_package_version",
-		"shell:build_package",
-
-		"copy:package_to_drop_folder",
-		"copy:package_to_qa_drop_folder"
+		"shell:build_package"
 	]);
 	grunt.registerTask("lint", ["tslint:build"]);
 	grunt.registerTask("all", ["clean", "test", "lint"]);

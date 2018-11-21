@@ -11,6 +11,7 @@ export class Configuration extends ConfigBase implements IConfiguration { // Use
 	UPLOAD_PLAYGROUND_FILES_ENDPOINT: string = null;
 	SHORTEN_URL_ENDPOINT: string = null;
 	PREVIEW_APP_ENVIRONMENT: string = null;
+	GA_TRACKING_ID: string = null;
 
 	/*don't require logger and everything that has logger as dependency in config.js due to cyclic dependency*/
 	constructor(protected $fs: IFileSystem) {

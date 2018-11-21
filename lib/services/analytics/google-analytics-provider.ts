@@ -3,21 +3,21 @@ import * as ua from "universal-analytics";
 import { AnalyticsClients } from "../../common/constants";
 
 export class GoogleAnalyticsProvider implements IGoogleAnalyticsProvider {
-	private static GA_TRACKING_ID = "UA-111455-44";
 	private currentPage: string;
 
 	constructor(private clientId: string,
 		private $staticConfig: IStaticConfig,
 		private $analyticsSettingsService: IAnalyticsSettingsService,
 		private $logger: ILogger,
-		private $proxyService: IProxyService) {
+		private $proxyService: IProxyService,
+		private $config: IConfiguration) {
 	}
 
 	public async trackHit(trackInfo: IGoogleAnalyticsData): Promise<void> {
 		const sessionId = uuid.v4();
 
 		try {
-			await this.track(GoogleAnalyticsProvider.GA_TRACKING_ID, trackInfo, sessionId);
+			await this.track(this.$config.GA_TRACKING_ID, trackInfo, sessionId);
 		} catch (e) {
 			this.$logger.trace("Analytics exception: ", e);
 		}

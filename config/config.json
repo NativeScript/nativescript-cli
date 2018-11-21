@@ -7,5 +7,6 @@
 	"DISABLE_HOOKS": false,
 	"UPLOAD_PLAYGROUND_FILES_ENDPOINT": "https://play.nativescript.org/api/files",
 	"SHORTEN_URL_ENDPOINT": "https://play.nativescript.org/api/shortenurl?longUrl=%s",
-	"PREVIEW_APP_ENVIRONMENT": "live"
+	"PREVIEW_APP_ENVIRONMENT": "live",
+	"GA_TRACKING_ID": "UA-111455-51"
 }
