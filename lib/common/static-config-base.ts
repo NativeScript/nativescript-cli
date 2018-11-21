@@ -94,7 +94,8 @@ export abstract class StaticConfigBase implements Config.IStaticConfig {
 
 		// prepare the directory to host our copy of adb
 		const defaultAdbDirPath = path.join(__dirname, `resources/platform-tools/android/${process.platform}`);
-		const commonLibVersion = require(path.join(__dirname, "package.json")).version;
+		const pathToPackageJson = path.join(__dirname, "..", "..", "package.json");
+		const commonLibVersion = require(pathToPackageJson).version;
 		const tmpDir = path.join(os.tmpdir(), `telerik-common-lib-${commonLibVersion}`);
 		$fs.createDirectory(tmpDir);
 
