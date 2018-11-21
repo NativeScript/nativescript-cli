@@ -2,7 +2,7 @@ import { getConfig } from 'kinvey-app';
 import { KinveyObservable } from 'kinvey-observable';
 import { get as getSession } from 'kinvey-session';
 import { Aggregation } from 'kinvey-aggregation';
-import * as Live from 'kinvey-live';
+// import * as Live from 'kinvey-live';
 import { Query } from 'kinvey-query';
 import {
   formatKinveyUrl,

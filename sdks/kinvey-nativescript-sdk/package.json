@@ -6,11 +6,15 @@
   "author": "Kinvey, Inc.",
   "homepage": "http://www.kinvey.com",
   "license": "Apache-2.0",
-  "main": "lib/index.js",
+  "main": "dist/kinvey-nativescript-sdk.js",
   "scripts": {
     "prebuild": "del lib",
     "build": "babel src -d lib --ignore \"src/**/*.spec.js\"",
-    "lint": "eslint src"
+    "prebundle": "yarn build",
+    "bundle": "webpack --config webpack.dev.js",
+    "lint": "eslint src",
+    "prerelease": "yarn build",
+    "release": "webpack --config webpack.prod.js"
   },
   "dependencies": {
     "@babel/runtime": "7.1.5",
@@ -37,11 +41,16 @@
     "@babel/plugin-transform-runtime": "7.1.0",
     "@babel/preset-env": "7.1.5",
     "babel-eslint": "10.0.1",
+    "clean-webpack-plugin": "0.1.19",
     "eslint": "5.8.0",
     "eslint-config-kinvey-platform": "kinvey/eslint-kinvey-platform#0.1.1",
-    "eslint-plugin-import": "2.14.0"
+    "eslint-plugin-import": "2.14.0",
+    "webpack": "4.20.2",
+    "webpack-cli": "3.1.2",
+    "webpack-merge": "4.1.4"
   },
   "files": [
+    "dist/*",
     "hooks/*",
     "lib/*",
     "platforms/*"
@@ -59,8 +68,8 @@
       }
     ],
     "platforms": {
-      "ios": "4.0.0",
-      "android": "4.0.0"
+      "ios": "5.0.0",
+      "android": "5.0.0"
     }
   }
 }

@@ -6,11 +6,11 @@ import {
 } from 'kinvey-app';
 import { register as registerHttp } from 'kinvey-http-nativescript';
 // import { register as registerPopup } from 'kinvey-popup-nativescript';
-import { register as registerMemoryCache } from 'kinvey-cache-memory';
+// import { register as registerMemoryCache } from 'kinvey-cache-memory';
 import { register as registerSQLiteCache } from 'kinvey-cache-nativescript-sqlite';
 
 export const StorageProvider = {
-  Memory: 'Memory',
+  // Memory: 'Memory',
   SQLite: 'SQLite'
 };
 
@@ -18,9 +18,10 @@ function init(config) {
   const { storage = StorageProvider.SQLite } = config;
 
   // Register storage
-  if (storage === StorageProvider.Memory) {
-    registerMemoryCache();
-  } else if (storage === StorageProvider.SQLite) {
+  // if (storage === StorageProvider.Memory) {
+  //   registerMemoryCache();
+  // } else
+  if (storage === StorageProvider.SQLite) {
     registerSQLiteCache();
   }
 
