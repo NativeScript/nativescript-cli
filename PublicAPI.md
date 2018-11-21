@@ -775,6 +775,38 @@ tns.liveSyncService.liveSync([ androidDeviceDescriptor, iOSDeviceDescriptor ], l
 	});
 ```
 
+
+
+
+
+
+### liveSyncToPreviewApp
+Starts a LiveSync operation to the Preview app. After scanning the QR code with the scanner provided in the NativeScript Playground app, the app will be launched on a device through the Preview app. Additionally, any changes made to the project will be automatically synchronized with the deployed app.
+
+* Definition
+```TypeScript
+/**
+ * Starts LiveSync operation by producting a QR code and starting watcher.
+ * @param {IPreviewAppLiveSyncData} liveSyncData Describes the LiveSync operation - for which project directory is the operation and other settings.
+ * @returns {Promise<IQrCodeImageData>}
+ */
+liveSyncToPreviewApp(liveSyncData: IPreviewAppLiveSyncData): Promise<IQrCodeImageData>;
+```
+
+* Usage:
+```JavaScript
+const liveSyncData = {
+	projectDir,
+	bundle: false,
+	useHotModuleReload: false,
+	env: { }
+};
+tns.liveSyncService.liveSyncToPreviewApp(liveSyncData)
+	.then(qrCodeImageData => {
+		console.log("The qrCodeImageData is: " + qrCodeImageData);
+	});
+```
+
 ### stopLiveSync
 Stops LiveSync operation. In case deviceIdentifires are passed, the operation will be stopped only for these devices.
 
