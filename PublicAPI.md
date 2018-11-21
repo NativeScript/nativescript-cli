@@ -64,7 +64,7 @@ const tns = require("nativescript");
 	* [deviceLost](#devicelost)
 	* [deviceLog](#devicelog)
 * [previewQrCodeService](#previewqrcodeservice)
-	* [getPlaygroundAppQrCode](#getplaygroundappqrCode)
+	* [getPlaygroundAppQrCode](#getplaygroundappqrcode)
 
 ## Module projectService
 
@@ -1407,6 +1407,21 @@ Sample usage:
 tns.previewDevicesService.on("deviceLogData", (device, message) => {
 	console.log("Device " + device.id + " reports: " + message);
 });
+```
+
+## previewQrCodeService
+The `previewQrCodeService` exposes methods for getting information about the QR of the Playground app and deployed app in Preview app.
+
+### getPlaygroundAppQrCode
+Returns information used to generate the QR code of the Playground app.
+
+* Usage:
+```TypeScript
+tns.previewQrCodeService.getPlaygroundAppQrCode()
+	.then(result => {
+		console.log("QR code data for iOS platform: " + result.ios);
+		console.log("QR code data for Android platform: " + result.android);
+	});
 ```
 
 ## How to add a new method to Public API
