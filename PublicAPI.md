@@ -775,11 +775,6 @@ tns.liveSyncService.liveSync([ androidDeviceDescriptor, iOSDeviceDescriptor ], l
 	});
 ```
 
-
-
-
-
-
 ### liveSyncToPreviewApp
 Starts a LiveSync operation to the Preview app. After scanning the QR code with the scanner provided in the NativeScript Playground app, the app will be launched on a device through the Preview app. Additionally, any changes made to the project will be automatically synchronized with the deployed app.
 
