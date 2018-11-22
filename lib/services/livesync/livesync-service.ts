@@ -7,6 +7,7 @@ import { PACKAGE_JSON_FILE_NAME, LiveSyncTrackActionNames, USER_INTERACTION_NEED
 import { DeviceTypes, DeviceDiscoveryEventNames, HmrConstants } from "../../common/constants";
 import { cache } from "../../common/decorators";
 import * as constants from "../../constants";
+import { PreviewAppLiveSyncEvents } from "./playground/preview-app-constants";
 
 const deviceDescriptorPrimaryKey = "identifier";
 
@@ -14,6 +15,7 @@ const LiveSyncEvents = {
 	liveSyncStopped: "liveSyncStopped",
 	// In case we name it error, EventEmitter expects instance of Error to be raised and will also raise uncaught exception in case there's no handler
 	liveSyncError: "liveSyncError",
+	previewAppLiveSyncError: PreviewAppLiveSyncEvents.PREVIEW_APP_LIVE_SYNC_ERROR,
 	liveSyncExecuted: "liveSyncExecuted",
 	liveSyncStarted: "liveSyncStarted",
 	liveSyncNotification: "notify"
@@ -54,6 +56,10 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 	}
 
 	public async liveSyncToPreviewApp(data: IPreviewAppLiveSyncData): Promise<IQrCodeImageData> {
+		this.$previewAppLiveSyncService.on(LiveSyncEvents.previewAppLiveSyncError, liveSyncData => {
+			this.emit(LiveSyncEvents.previewAppLiveSyncError, liveSyncData);
+		});
+
 		await this.liveSync([], {
 			syncToPreviewApp: true,
 			projectDir: data.projectDir,
@@ -102,6 +108,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 
 				if (liveSyncProcessInfo.syncToPreviewApp) {
 					await this.$previewAppLiveSyncService.stopLiveSync();
+					this.$previewAppLiveSyncService.removeAllListeners();
 				}
 
 				// Kill typescript watcher

@@ -1,8 +1,9 @@
 import * as path from "path";
 import { FilePayload, Device, FilesPayload } from "nativescript-preview-sdk";
-import { PreviewSdkEventNames } from "./preview-app-constants";
+import { PreviewSdkEventNames, PreviewAppLiveSyncEvents } from "./preview-app-constants";
 import { APP_FOLDER_NAME, APP_RESOURCES_FOLDER_NAME, TNS_MODULES_FOLDER_NAME } from "../../../constants";
 import { HmrConstants } from "../../../common/constants";
+import { EventEmitter } from "events";
 const isTextOrBinary = require('istextorbinary');
 
 interface ISyncFilesOptions {
@@ -14,7 +15,7 @@ interface ISyncFilesOptions {
 	deviceId?: string;
 }
 
-export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
+export class PreviewAppLiveSyncService extends EventEmitter implements IPreviewAppLiveSyncService {
 	private excludedFileExtensions = [".ts", ".sass", ".scss", ".less"];
 	private excludedFiles = [".DS_Store"];
 	private deviceInitializationPromise: IDictionary<Promise<FilesPayload>> = {};
@@ -31,7 +32,9 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 		private $previewDevicesService: IPreviewDevicesService,
 		private $projectFilesManager: IProjectFilesManager,
 		private $hmrStatusService: IHmrStatusService,
-		private $projectFilesProvider: IProjectFilesProvider) { }
+		private $projectFilesProvider: IProjectFilesProvider) {
+			super();
+		}
 
 	public async initialize(data: IPreviewAppLiveSyncData): Promise<void> {
 		await this.$previewSdkService.initialize(async (device: Device) => {
@@ -159,8 +162,14 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 			}
 
 			return payloads;
-		} catch (err) {
-			this.$logger.warn(`Unable to apply changes for platform ${platform}. Error is: ${err}, ${JSON.stringify(err, null, 2)}.`);
+		} catch (error) {
+			this.$logger.warn(`Unable to apply changes for platform ${platform}. Error is: ${error}, ${JSON.stringify(error, null, 2)}.`);
+			this.emit(PreviewAppLiveSyncEvents.PREVIEW_APP_LIVE_SYNC_ERROR, {
+				error,
+				data,
+				platform,
+				deviceId: opts.deviceId
+			});
 		}
 	}
 
