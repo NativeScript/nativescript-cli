@@ -1,6 +1,7 @@
 import * as uuid from "uuid";
 import * as ua from "universal-analytics";
 import { AnalyticsClients } from "../../common/constants";
+import { cache } from "../../common/decorators";
 
 export class GoogleAnalyticsProvider implements IGoogleAnalyticsProvider {
 	private currentPage: string;
@@ -10,7 +11,8 @@ export class GoogleAnalyticsProvider implements IGoogleAnalyticsProvider {
 		private $analyticsSettingsService: IAnalyticsSettingsService,
 		private $logger: ILogger,
 		private $proxyService: IProxyService,
-		private $config: IConfiguration) {
+		private $config: IConfiguration,
+		private analyticsLoggingService: IAnalyticsLoggingService) {
 	}
 
 	public async trackHit(trackInfo: IGoogleAnalyticsData): Promise<void> {
@@ -19,13 +21,14 @@ export class GoogleAnalyticsProvider implements IGoogleAnalyticsProvider {
 		try {
 			await this.track(this.$config.GA_TRACKING_ID, trackInfo, sessionId);
 		} catch (e) {
+			this.analyticsLoggingService.logData({ type: AnalyticsLoggingMessageType.Error, message: `Unable to track information ${JSON.stringify(trackInfo)}. Error is: ${e}` });
 			this.$logger.trace("Analytics exception: ", e);
 		}
 	}
 
-	private async track(gaTrackingId: string, trackInfo: IGoogleAnalyticsData, sessionId: string): Promise<void> {
-		const proxySettings = await this.$proxyService.getCache();
-		const proxy = proxySettings && proxySettings.proxy;
+	@cache()
+	private getVisitor(gaTrackingId: string, proxy: string): ua.Visitor {
+		this.analyticsLoggingService.logData({ message: `Initializing Google Analytics visitor for id: ${gaTrackingId} with clientId: ${this.clientId}.` });
 		const visitor = ua({
 			tid: gaTrackingId,
 			cid: this.clientId,
@@ -34,8 +37,19 @@ export class GoogleAnalyticsProvider implements IGoogleAnalyticsProvider {
 			},
 			requestOptions: {
 				proxy
-			}
+			},
+			https: true
 		});
+
+		this.analyticsLoggingService.logData({ message: `Successfully initialized Google Analytics visitor for id: ${gaTrackingId} with clientId: ${this.clientId}.` });
+		return visitor;
+	}
+
+	private async track(gaTrackingId: string, trackInfo: IGoogleAnalyticsData, sessionId: string): Promise<void> {
+		const proxySettings = await this.$proxyService.getCache();
+		const proxy = proxySettings && proxySettings.proxy;
+
+		const visitor = this.getVisitor(gaTrackingId, proxy);
 
 		await this.setCustomDimensions(visitor, trackInfo.customDimensions, sessionId);
 
@@ -68,6 +82,7 @@ export class GoogleAnalyticsProvider implements IGoogleAnalyticsProvider {
 		customDimensions = _.merge(defaultValues, customDimensions);
 
 		_.each(customDimensions, (value, key) => {
+			this.analyticsLoggingService.logData({ message: `Setting custom dimension ${key} to value ${value}` });
 			visitor.set(key, value);
 		});
 	}
@@ -76,10 +91,17 @@ export class GoogleAnalyticsProvider implements IGoogleAnalyticsProvider {
 		return new Promise<void>((resolve, reject) => {
 			visitor.event(trackInfo.category, trackInfo.action, trackInfo.label, trackInfo.value, { p: this.currentPage }, (err: Error) => {
 				if (err) {
+					this.analyticsLoggingService.logData({
+						message: `Unable to track event with category: '${trackInfo.category}', action: '${trackInfo.action}', label: '${trackInfo.label}', ` +
+							`value: '${trackInfo.value}' attached page: ${this.currentPage}. Error is: ${err}.`,
+						type: AnalyticsLoggingMessageType.Error
+					});
+
 					reject(err);
 					return;
 				}
 
+				this.analyticsLoggingService.logData({ message: `Tracked event with category: '${trackInfo.category}', action: '${trackInfo.action}', label: '${trackInfo.label}', value: '${trackInfo.value}' attached page: ${this.currentPage}.` });
 				resolve();
 			});
 		});
@@ -96,10 +118,16 @@ export class GoogleAnalyticsProvider implements IGoogleAnalyticsProvider {
 
 			visitor.pageview(pageViewData, (err) => {
 				if (err) {
+					this.analyticsLoggingService.logData({
+						message: `Unable to track pageview with path '${trackInfo.path}' and title: '${trackInfo.title}' Error is: ${err}.`,
+						type: AnalyticsLoggingMessageType.Error
+					});
+
 					reject(err);
 					return;
 				}
 
+				this.analyticsLoggingService.logData({ message: `Tracked pageview with path '${trackInfo.path}' and title: '${trackInfo.title}'.` });
 				resolve();
 			});
 		});

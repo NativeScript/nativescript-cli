@@ -1,4 +1,14 @@
 /**
+ * Describes the information that will be passed to analytics for tracking.
+ */
+interface ITrackingInformation {
+	/**
+	 * The type of the data sent to analytics service - initalization data, feature to be tracked, error to be tracked, etc.
+	 */
+	type: TrackingTypes
+}
+
+/**
  * Describes if the user allows to be tracked.
  */
 interface IAcceptUsageReportingInformation extends ITrackingInformation {
@@ -6,21 +16,6 @@ interface IAcceptUsageReportingInformation extends ITrackingInformation {
 	 * The answer of the question if user allows us to track them.
 	 */
 	acceptTrackFeatureUsage: boolean;
-}
-
-/**
- * Describes information used for tracking feature.
- */
-interface IFeatureTrackingInformation extends ITrackingInformation {
-	/**
-	 * The name of the feature that should be tracked.
-	 */
-	featureName: string;
-
-	/**
-	 * Value of the feature that should be tracked.
-	 */
-	featureValue: string;
 }
 
 /**
@@ -50,38 +45,6 @@ interface IAnalyticsBroker {
 	sendDataForTracking(trackInfo: ITrackingInformation): Promise<void>;
 }
 
-/**
- * Describes analytics provider used for tracking in a specific Analytics Service.
- */
-interface IAnalyticsProvider {
-	/**
-	 * Sends exception for tracking in the analytics service provider.
-	 * @param {IExceptionsTrackingInformation} trackInfo The information for exception that should be tracked.
-	 * @returns {Promise<void>}
-	 */
-	trackError(trackInfo: IExceptionsTrackingInformation): Promise<void>;
-
-	/**
-	 * Sends feature for tracking in the analytics service provider.
-	 * @param {IFeatureTrackingInformation} trackInfo The information for feature that should be tracked.
-	 * @returns {Promise<void>}
-	 */
-	trackInformation(trackInfo: IFeatureTrackingInformation): Promise<void>;
-
-	/**
-	 * Sends information if user accepts to be tracked.
-	 * @param {IAcceptUsageReportingInformation} trackInfo The information, containing user's answer if they allow to be tracked.
-	 * @returns {Promise<void>}
-	 */
-	acceptFeatureUsageTracking(data: IAcceptUsageReportingInformation): Promise<void>;
-
-	/**
-	 * Waits for execution of all pending requests and finishes tracking operation
-	 * @returns {Promise<void>}
-	 */
-	finishTracking(): Promise<void>;
-}
-
 interface IGoogleAnalyticsTrackingInformation extends IGoogleAnalyticsData, ITrackingInformation { }
 
 /**
@@ -94,4 +57,24 @@ interface IGoogleAnalyticsProvider {
 	 * @returns {Promise<void>}
 	 */
 	trackHit(data: IGoogleAnalyticsData): Promise<void>;
+}
+
+/**
+ * Describes message that needs to be logged in the analytics logging file.
+ */
+interface IAnalyticsLoggingMessage {
+	message: string;
+	type?: AnalyticsLoggingMessageType
+}
+
+/**
+ * Describes methods to get local logs from analytics tracking.
+ */
+interface IAnalyticsLoggingService {
+	/**
+	 * Logs specified message to the file specified with `--analyticsLogFile`.
+	 * @param {IAnalyticsLoggingMessage} analyticsLoggingMessage The message that has to be written to the logs file.
+	 * @returns {void}
+	 */
+	logData(analyticsLoggingMessage: IAnalyticsLoggingMessage): void;
 }

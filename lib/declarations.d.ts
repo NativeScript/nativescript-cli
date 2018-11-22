@@ -557,6 +557,7 @@ interface IOptions extends IRelease, IDeviceIdentifier, IJustLaunch, IAvd, IAvai
 	background: string;
 	hmr: boolean;
 	link: boolean;
+	analyticsLogFile: string;
 }
 
 interface IEnvOptions {

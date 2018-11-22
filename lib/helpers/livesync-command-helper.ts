@@ -178,7 +178,6 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 					projectName: this.$projectData.projectName
 				}
 			);
-			await this.$platformService.trackProjectType(this.$projectData);
 		}
 	}
 }

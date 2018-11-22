@@ -5,10 +5,20 @@ const enum AnalyticsMessages {
 	/**
 	 * Analytics Broker is initialized and is ready to receive information for tracking.
 	 */
-	BrokerReadyToReceive = "BrokerReadyToReceive",
+	BrokerReadyToReceive = "BrokerReadyToReceive"
+}
+
+/**
+ * Defines the type of the messages that should be written in the local analyitcs log file (in case such is specified).
+ */
+const enum AnalyticsLoggingMessageType {
+	/**
+	 * Information message. This is the default value in case type is not specified.
+	 */
+	Info = "Info",
 
 	/**
-	 * Eqatec Analytics process is initialized and is ready to receive information for tracking.
+	 * Error message - used to indicate that some action while trying to track information did not succeeded.
 	 */
-	EqatecAnalyticsReadyToReceive = "EqatecAnalyticsReadyToReceive"
+	Error = "Error"
 }

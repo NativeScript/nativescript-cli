@@ -8007,10 +8007,6 @@
       "resolved": "https://registry.npmjs.org/xmldom/-/xmldom-0.1.21.tgz",
       "integrity": "sha1-op4SENqx8QwlZltegBKbqo1pqXs="
     },
-    "xmlhttprequest": {
-      "version": "https://github.com/telerik/node-XMLHttpRequest/tarball/master",
-      "integrity": "sha512-SPnuri0YNyTOxSIU/E0voUTEOEGkwI0kFuLBe9BEsbG8aIRYa9ASuizKzK3XeqnBjypF6tou5NRpuEsAW0CBxg=="
-    },
     "xregexp": {
       "version": "2.0.0",
       "resolved": "https://registry.npmjs.org/xregexp/-/xregexp-2.0.0.tgz",

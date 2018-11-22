@@ -36,8 +36,6 @@ export class ProjectTemplatesService implements IProjectTemplatesService {
 			this.$fs.deleteDirectory(path.join(templatePath, constants.NODE_MODULES_FOLDER_NAME));
 		}
 
-		await this.$analyticsService.track("Template used for project creation", templateValue);
-
 		const templateNameToBeTracked = this.getTemplateNameToBeTracked(templateValue, templatePackageJsonContent);
 		if (templateNameToBeTracked) {
 			await this.$analyticsService.trackEventActionInGoogleAnalytics({

@@ -8,11 +8,6 @@ interface ICliGlobal extends NodeJS.Global {
 	_: any;
 
 	/**
-	 * Eqatec analytics instance.
-	 */
-	_eqatec: IEqatec;
-
-	/**
 	 * Global instance of the module used for dependency injection.
 	 */
 	$injector: IInjector;

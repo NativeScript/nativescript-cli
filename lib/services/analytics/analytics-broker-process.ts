@@ -2,16 +2,22 @@
 // The instances here are not shared with the ones in main CLI process.
 import * as fs from "fs";
 import { AnalyticsBroker } from "./analytics-broker";
+import { AnalyticsLoggingService } from "./analytics-logging-service";
 
 const pathToBootstrap = process.argv[2];
 if (!pathToBootstrap || !fs.existsSync(pathToBootstrap)) {
 	throw new Error("Invalid path to bootstrap.");
 }
 
+const logFile = process.argv[3];
 // After requiring the bootstrap we can use $injector
 require(pathToBootstrap);
 
-const analyticsBroker = $injector.resolve<IAnalyticsBroker>(AnalyticsBroker, { pathToBootstrap });
+const analyticsLoggingService = $injector.resolve<IAnalyticsLoggingService>(AnalyticsLoggingService, { logFile });
+analyticsLoggingService.logData({ message: "Initializing AnalyticsBroker." });
+
+const analyticsBroker = $injector.resolve<IAnalyticsBroker>(AnalyticsBroker, { pathToBootstrap, analyticsLoggingService });
+
 let trackingQueue: Promise<void> = Promise.resolve();
 
 let sentFinishMsg = false;
@@ -23,12 +29,15 @@ const sendDataForTracking = async (data: ITrackingInformation) => {
 };
 
 const finishTracking = async (data?: ITrackingInformation) => {
+	analyticsLoggingService.logData({ message: `analytics-broker-process finish tracking started, sentFinishMsg: ${sentFinishMsg}, receivedFinishMsg: ${receivedFinishMsg}` });
+
 	if (!sentFinishMsg) {
 		sentFinishMsg = true;
 
 		data = data || { type: TrackingTypes.Finish };
 		const action = async () => {
-			await sendDataForTracking(data);
+			await trackingQueue;
+			analyticsLoggingService.logData({ message: `analytics-broker-process tracking finished` });
 			process.disconnect();
 		};
 
@@ -46,6 +55,8 @@ const finishTracking = async (data?: ITrackingInformation) => {
 };
 
 process.on("message", async (data: ITrackingInformation) => {
+	analyticsLoggingService.logData({ message: `analytics-broker-process received message of type: ${data.type}` });
+
 	if (data.type === TrackingTypes.Finish) {
 		receivedFinishMsg = true;
 		await finishTracking(data);
@@ -56,7 +67,10 @@ process.on("message", async (data: ITrackingInformation) => {
 });
 
 process.on("disconnect", async () => {
+	analyticsLoggingService.logData({ message: "analytics-broker-process received process.disconnect event" });
 	await finishTracking();
 });
+
+analyticsLoggingService.logData({ message: `analytics-broker-process will send ${AnalyticsMessages.BrokerReadyToReceive} message` });
 
 process.send(AnalyticsMessages.BrokerReadyToReceive);
