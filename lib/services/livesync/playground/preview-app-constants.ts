@@ -18,3 +18,7 @@ export class PluginComparisonMessages {
 	public static LOCAL_PLUGIN_WITH_DIFFERENCE_IN_MAJOR_VERSION = "Local plugin %s differs in major version from plugin in preview app. The local plugin has version %s and the plugin in preview app has version %s. Some features might not work as expected.";
 	public static LOCAL_PLUGIN_WITH_GREATHER_MINOR_VERSION = "Local plugin %s differs in minor version from plugin in preview app. The local plugin has version %s and the plugin in preview app has version %s. Some features might not work as expected.";
 }
+
+export class PreviewAppLiveSyncEvents {
+	public static PREVIEW_APP_LIVE_SYNC_ERROR = "previewAppLiveSyncError";
+}
