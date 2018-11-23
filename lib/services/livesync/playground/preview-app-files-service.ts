@@ -1,0 +1,89 @@
+import * as path from "path";
+import { APP_FOLDER_NAME, TNS_MODULES_FOLDER_NAME, APP_RESOURCES_FOLDER_NAME } from "../../../constants";
+import { PreviewSdkEventNames } from "./preview-app-constants";
+import { FilePayload, FilesPayload } from "nativescript-preview-sdk";
+const isTextOrBinary = require('istextorbinary');
+
+export class PreviewAppFilesService implements IPreviewAppFilesService {
+	private excludedFileExtensions = [".ts", ".sass", ".scss", ".less"];
+	private excludedFiles = [".DS_Store"];
+
+	constructor(
+		private $fs: IFileSystem,
+		private $logger: ILogger,
+		private $platformsData: IPlatformsData,
+		private $projectDataService: IProjectDataService,
+		private $projectFilesManager: IProjectFilesManager
+	) { }
+
+	public getInitialFilesPayload(data: IPreviewAppLiveSyncData, platform: string, deviceId?: string): FilesPayload {
+		const rootFilesDir = this.getRootFilesDir(data, platform);
+		const filesToSync = this.$projectFilesManager.getProjectFiles(rootFilesDir);
+		const payloads = this.getFilesPayload(data, { filesToSync }, platform, deviceId);
+		return payloads;
+	}
+
+	public getFilesPayload(data: IPreviewAppLiveSyncData, filesData: IPreviewAppFilesData, platform: string, deviceId?: string): FilesPayload {
+		const { filesToSync, filesToRemove } = filesData;
+
+		const filesToTransfer = filesToSync
+			.filter(file => file.indexOf(TNS_MODULES_FOLDER_NAME) === -1)
+			.filter(file => file.indexOf(APP_RESOURCES_FOLDER_NAME) === -1)
+			.filter(file => !_.includes(this.excludedFiles, path.basename(file)))
+			.filter(file => !_.includes(this.excludedFileExtensions, path.extname(file)));
+
+		this.$logger.trace(`Sending ${filesToTransfer.join("\n")}.`);
+
+		const rootFilesDir = this.getRootFilesDir(data, platform);
+		const payloadsToSync = _.map(filesToTransfer, file => this.createFilePayload(file, rootFilesDir, PreviewSdkEventNames.CHANGE_EVENT_NAME));
+		const payloadsToRemove = _.map(filesToRemove, file => this.createFilePayload(file, rootFilesDir, PreviewSdkEventNames.UNLINK_EVENT_NAME));
+		const payloads = payloadsToSync.concat(payloadsToRemove);
+
+		return {
+			files: payloads,
+			platform: platform,
+			hmrMode: data.useHotModuleReload ? 1 : 0,
+			deviceId
+		};
+	}
+
+	private createFilePayload(file: string, rootFilesDir: string, event: string): FilePayload {
+		let fileContents = "";
+		let binary = false;
+
+		if (event === PreviewSdkEventNames.CHANGE_EVENT_NAME) {
+			binary = isTextOrBinary.isBinarySync(file);
+			if (binary) {
+				const bitmap = <string>this.$fs.readFile(file);
+				const base64 = Buffer.from(bitmap).toString('base64');
+				fileContents = base64;
+			} else {
+				fileContents = this.$fs.readText(file);
+			}
+		}
+
+		const filePayload = {
+			event,
+			file: path.relative(rootFilesDir, file),
+			binary,
+			fileContents
+		};
+
+		return filePayload;
+	}
+
+	private getRootFilesDir(data: IPreviewAppLiveSyncData, platform: string): string {
+		const projectData = this.$projectDataService.getProjectData(data.projectDir);
+		const platformData = this.$platformsData.getPlatformData(platform, projectData);
+
+		let rootFilesDir = null;
+		if (data.bundle) {
+			rootFilesDir = path.join(platformData.appDestinationDirectoryPath, APP_FOLDER_NAME);
+		} else {
+			rootFilesDir = projectData.getAppDirectoryPath();
+		}
+
+		return rootFilesDir;
+	}
+}
+$injector.register("previewAppFilesService", PreviewAppFilesService);

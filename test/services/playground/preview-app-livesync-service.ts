@@ -7,6 +7,7 @@ import * as chai from "chai";
 import * as path from "path";
 import { ProjectFilesManager } from "../../../lib/common/services/project-files-manager";
 import { EventEmitter } from "events";
+import { PreviewAppFilesService } from "../../../lib/services/livesync/playground/preview-app-files-service";
 
 interface ITestCase {
 	name: string;
@@ -101,9 +102,6 @@ function createTestInjector(options?: {
 
 	const injector = new Yok();
 	injector.register("logger", LoggerMock);
-	injector.register("platformService", {
-		preparePlatform: async () => ({})
-	});
 	injector.register("hmrStatusService", {});
 	injector.register("errors", ErrorsStub);
 	injector.register("platformsData", {
@@ -114,7 +112,9 @@ function createTestInjector(options?: {
 	});
 	injector.register("projectDataService", {
 		getProjectData: () => ({
-			projectDir: projectDirPath
+			projectDir: projectDirPath,
+			getAppDirectoryPath: () => path.join(projectDirPath, "app"),
+			appDirectoryPath: () => path.join(projectDirPath, "app")
 		})
 	});
 	injector.register("previewSdkService", PreviewSdkServiceMock);
@@ -157,6 +157,7 @@ function createTestInjector(options?: {
 	injector.register("previewDevicesService", {
 		getConnectedDevices: () => [deviceMockData]
 	});
+	injector.register("previewAppFilesService", PreviewAppFilesService);
 
 	return injector;
 }
@@ -234,7 +235,7 @@ function mapFiles(files: string[]): FilePayload[] {
 	return files.map(file => {
 		return {
 			event: "change",
-			file: path.relative(path.join(platformsDirPath, "app"), path.join(platformsDirPath, "app", file)),
+			file: path.join("..", "platforms", "app", file),
 			fileContents: undefined,
 			binary: false
 		};
@@ -290,34 +291,6 @@ describe("previewAppLiveSyncService", () => {
 
 	describe("syncFiles", () => {
 		afterEach(() => reset());
-
-		const excludeFilesTestCases: ITestCase[] = [
-			{
-				name: ".ts files",
-				appFiles: ["dir1/file.js", "file.ts"],
-				expectedFiles: [`dir1/file.js`]
-			},
-			{
-				name: ".sass files",
-				appFiles: ["myDir1/mySubDir/myfile.css", "myDir1/mySubDir/myfile.sass"],
-				expectedFiles: [`myDir1/mySubDir/myfile.css`]
-			},
-			{
-				name: ".scss files",
-				appFiles: ["myDir1/mySubDir/myfile1.css", "myDir1/mySubDir/myfile.scss", "my/file.js"],
-				expectedFiles: [`myDir1/mySubDir/myfile1.css`, `my/file.js`]
-			},
-			{
-				name: ".less files",
-				appFiles: ["myDir1/mySubDir/myfile1.css", "myDir1/mySubDir/myfile.less", "my/file.js"],
-				expectedFiles: [`myDir1/mySubDir/myfile1.css`, `my/file.js`]
-			},
-			{
-				name: ".DS_Store file",
-				appFiles: ["my/test/file.js", ".DS_Store"],
-				expectedFiles: [`my/test/file.js`]
-			}
-		];
 
 		const nativeFilesTestCases: ITestCase[] = [
 			{
@@ -380,10 +353,6 @@ describe("previewAppLiveSyncService", () => {
 		];
 
 		const testCategories = [
-			{
-				name: "should exclude",
-				testCases: excludeFilesTestCases
-			},
 			{
 				name: "should show warning and not transfer native files when",
 				testCases: nativeFilesTestCases.map(testCase => {
