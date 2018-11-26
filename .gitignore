@@ -17,6 +17,7 @@ lib-cov
 *.pid
 *.gz
 *.tgz
+!nativescript-doctor-1.7.0.tgz
 *.tmp
 *.sublime-workspace
 tscommand*.tmp.txt
