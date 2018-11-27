@@ -332,6 +332,11 @@
       "integrity": "sha512-AZSPpDUEZ4mAgO9geHc62dp/xCLmBJ1yIpbgTq5W/cWcVQsxmU/FyKwYKHXk2hnT9TAmYVFFdAijMrCdYjuHsA==",
       "dev": true
     },
+    "@types/winreg": {
+      "version": "1.2.30",
+      "resolved": "http://registry.npmjs.org/@types/winreg/-/winreg-1.2.30.tgz",
+      "integrity": "sha1-kdZxDlNtNFucmwF8V0z2qNpkxRg="
+    },
     "@types/ws": {
       "version": "4.0.1",
       "resolved": "http://registry.npmjs.org/@types/ws/-/ws-4.0.1.tgz",
@@ -5210,29 +5215,6 @@
         "regex-not": "^1.0.0",
         "snapdragon": "^0.8.1",
         "to-regex": "^3.0.1"
-      }
-    },
-    "nativescript-doctor": {
-      "version": "file:nativescript-doctor-1.7.0.tgz",
-      "integrity": "sha512-7yD+OV357R3+JKiXU2vLTpbLJfmTHwriqf16j6shaLDzjbHxeSrXef/fULbh2GWFM2MQ5hEt9BhYLoJXcYWfRA==",
-      "requires": {
-        "osenv": "0.1.3",
-        "semver": "5.5.1",
-        "temp": "0.8.3",
-        "winreg": "1.2.2",
-        "yauzl": "2.10.0"
-      },
-      "dependencies": {
-        "semver": {
-          "version": "5.5.1",
-          "resolved": "https://registry.npmjs.org/semver/-/semver-5.5.1.tgz",
-          "integrity": "sha512-PqpAxfrEhlSUWge8dwIp4tZnQ25DIOthpiaHNIthsjEFQD6EvqUKUDM7L8O2rShkFccYo1VjJR0coWfNkCubRw=="
-        },
-        "winreg": {
-          "version": "1.2.2",
-          "resolved": "https://registry.npmjs.org/winreg/-/winreg-1.2.2.tgz",
-          "integrity": "sha1-hQmvo7ccW70RCm18YkfsZ3NsWY8="
-        }
       }
     },
     "nativescript-preview-sdk": {

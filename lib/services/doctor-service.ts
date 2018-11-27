@@ -2,7 +2,7 @@ import { EOL } from "os";
 import * as path from "path";
 import * as helpers from "../common/helpers";
 import { TrackActionNames } from "../constants";
-import { doctor, constants } from "nativescript-doctor";
+import { doctor, constants } from "../nativescript-doctor/lib";
 
 class DoctorService implements IDoctorService {
 	private static DarwinSetupScriptLocation = path.join(__dirname, "..", "..", "setup", "mac-startup-shell-script.sh");

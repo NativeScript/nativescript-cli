@@ -1,7 +1,7 @@
 import * as path from "path";
 import * as semver from "semver";
 import { cache } from "./common/decorators";
-import { androidToolsInfo } from "nativescript-doctor";
+import { androidToolsInfo } from "./nativescript-doctor/lib";
 
 export class AndroidToolsInfo implements IAndroidToolsInfo {
 	private static ANDROID_TARGET_PREFIX = "android";
