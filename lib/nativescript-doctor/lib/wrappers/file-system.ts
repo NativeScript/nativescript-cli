@@ -47,8 +47,13 @@ export class FileSystem {
 								const outfile = fs.createWriteStream(filePath);
 								stream.once('end', () => {
 									console.log("ON STREAM END ", filePath);
-									outfile.close();
 									zipFile.readEntry();
+								});
+								outfile.on("close", () => {
+									console.log("ON OUTFILE CLOSE ", filePath);
+								});
+								outfile.once("end", () => {
+									console.log("ON OUTFILE END ", filePath);
 								});
 								stream.pipe(outfile);
 							});
