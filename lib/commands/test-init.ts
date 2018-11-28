@@ -1,5 +1,6 @@
 import * as path from 'path';
 import { TESTING_FRAMEWORKS } from '../constants';
+import { fromWindowsRelativePathToUnix } from '../common/helpers';
 
 class TestInitCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
@@ -105,7 +106,7 @@ class TestInitCommand implements ICommand {
 		const frameworks = [frameworkToInstall].concat(this.karmaConfigAdditionalFrameworks[frameworkToInstall] || [])
 			.map(fw => `'${fw}'`)
 			.join(', ');
-		const testFiles = `'${relativeTestsDir}/**/*.js'`;
+		const testFiles = `'${fromWindowsRelativePathToUnix(relativeTestsDir)}/**/*.js'`;
 		const karmaConfTemplate = this.$resources.readText('test/karma.conf.js');
 		const karmaConf = _.template(karmaConfTemplate)({ frameworks, testFiles });
 
