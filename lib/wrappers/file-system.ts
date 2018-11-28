@@ -37,7 +37,6 @@ export class FileSystem {
 								const outfile = fs.createWriteStream(filePath);
 								stream.once('end', () => {
 									zipFile.readEntry();
-									outfile.close();
 								});
 								stream.pipe(outfile);
 							});
