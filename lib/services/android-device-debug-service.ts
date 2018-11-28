@@ -76,11 +76,11 @@ export class AndroidDeviceDebugService extends DebugServiceBase implements IDevi
 	}
 
 	private async removePortForwarding(packageName?: string): Promise<void> {
-		const port = await this.getForwardedLocalDebugPortForPackageName(this.device.deviceInfo.identifier, packageName || this._packageName);
+		const port = await this.getForwardedDebugPort(this.device.deviceInfo.identifier, packageName || this._packageName);
 		return this.device.adb.executeCommand(["forward", "--remove", `tcp:${port}`]);
 	}
 
-	private async getForwardedLocalDebugPortForPackageName(deviceId: string, packageName: string): Promise<number> {
+	private async getForwardedDebugPort(deviceId: string, packageName: string): Promise<number> {
 		let port = -1;
 		const forwardsResult = await this.device.adb.executeCommand(["forward", "--list"]);
 
@@ -128,38 +128,33 @@ export class AndroidDeviceDebugService extends DebugServiceBase implements IDevi
 	}
 
 	private async debugCore(device: Mobile.IAndroidDevice, packageFile: string, appData: Mobile.IApplicationData, debugOptions: IDebugOptions): Promise<string> {
-		await this.printDebugPort(device.deviceInfo.identifier, appData.appId);
-
-		if (debugOptions.start) {
-			return await this.attachDebugger(device.deviceInfo.identifier, appData.appId, debugOptions);
-		} else if (debugOptions.stop) {
+		if (debugOptions.stop) {
 			await this.removePortForwarding();
 			return null;
-		} else {
-			await this.debugStartCore(appData, debugOptions);
-			return await this.attachDebugger(device.deviceInfo.identifier, appData.appId, debugOptions);
 		}
+
+		if (!debugOptions.start) {
+			await this.debugStartCore(appData, debugOptions);
+		}
+
+		await this.validateRunningApp(device.deviceInfo.identifier, appData.appId);
+		const debugPort = await this.getForwardedDebugPort(device.deviceInfo.identifier, appData.appId);
+		await this.printDebugPort(device.deviceInfo.identifier, debugPort);
+
+		return this.getChromeDebugUrl(debugOptions, debugPort);
 	}
 
-	private async printDebugPort(deviceId: string, packageName: string): Promise<void> {
-		const port = await this.getForwardedLocalDebugPortForPackageName(deviceId, packageName);
+	private async printDebugPort(deviceId: string, port: number): Promise<void> {
 		this.$logger.info("device: " + deviceId + " debug port: " + port + "\n");
 	}
 
-	private async attachDebugger(deviceId: string, packageName: string, debugOptions: IDebugOptions): Promise<string> {
+	private async validateRunningApp(deviceId: string, packageName: string): Promise<void> {
 		if (!(await this.isAppRunning(packageName, deviceId))) {
 			this.$errors.failWithoutHelp(`The application ${packageName} does not appear to be running on ${deviceId} or is not built with debugging enabled.`);
 		}
-
-		const port = await this.getForwardedLocalDebugPortForPackageName(deviceId, packageName);
-
-		return this.getChromeDebugUrl(debugOptions, port);
 	}
 
 	private async debugStartCore(appData: Mobile.IApplicationData, debugOptions: IDebugOptions): Promise<void> {
-		// Arguments passed to executeShellCommand must be in array ([]), but it turned out adb shell "arg with intervals" still works correctly.
-		// As we need to redirect output of a command on the device, keep using only one argument.
-		// We could rewrite this with two calls - touch and rm -f , but -f flag is not available on old Android, so rm call will fail when file does not exist.
 		await this.device.applicationManager.stopApplication(appData);
 
 		if (debugOptions.debugBrk) {
