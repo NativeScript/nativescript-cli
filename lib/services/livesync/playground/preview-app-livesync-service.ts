@@ -108,12 +108,13 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 	}
 
 	private async syncFilesForPlatformSafe(data: IPreviewAppLiveSyncData, filesData: IPreviewAppFilesData, platform: string, deviceId?: string): Promise<void> {
-		this.$logger.info(`Start syncing changes for platform ${platform}.`);
-
 		try {
 			const payloads = this.$previewAppFilesService.getFilesPayload(data, filesData, platform);
-			await this.$previewSdkService.applyChanges(payloads);
-			this.$logger.info(`Successfully synced ${payloads.files.map(filePayload => filePayload.file.yellow)} for platform ${platform}.`);
+			if (payloads && payloads.files && payloads.files.length) {
+				this.$logger.info(`Start syncing changes for platform ${platform}.`);
+				await this.$previewSdkService.applyChanges(payloads);
+				this.$logger.info(`Successfully synced ${payloads.files.map(filePayload => filePayload.file.yellow)} for platform ${platform}.`);
+			}
 		} catch (err) {
 			this.$logger.warn(`Unable to apply changes for platform ${platform}. Error is: ${err}, ${stringify(err)}.`);
 		}
