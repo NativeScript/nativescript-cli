@@ -13,7 +13,8 @@ export class PreviewAppFilesService implements IPreviewAppFilesService {
 		private $logger: ILogger,
 		private $platformsData: IPlatformsData,
 		private $projectDataService: IProjectDataService,
-		private $projectFilesManager: IProjectFilesManager
+		private $projectFilesManager: IProjectFilesManager,
+		private $projectFilesProvider: IProjectFilesProvider
 	) { }
 
 	public getInitialFilesPayload(data: IPreviewAppLiveSyncData, platform: string, deviceId?: string): FilesPayload {
@@ -34,20 +35,29 @@ export class PreviewAppFilesService implements IPreviewAppFilesService {
 
 		this.$logger.trace(`Sending ${filesToTransfer.join("\n")}.`);
 
-		const rootFilesDir = this.getRootFilesDir(data, platform);
-		const payloadsToSync = _.map(filesToTransfer, file => this.createFilePayload(file, rootFilesDir, PreviewSdkEventNames.CHANGE_EVENT_NAME));
-		const payloadsToRemove = _.map(filesToRemove, file => this.createFilePayload(file, rootFilesDir, PreviewSdkEventNames.UNLINK_EVENT_NAME));
-		const payloads = payloadsToSync.concat(payloadsToRemove);
+		const files = this.createFilePayloads(data, platform, filesToTransfer, filesToRemove);
 
 		return {
-			files: payloads,
-			platform: platform,
+			files,
+			platform,
 			hmrMode: data.useHotModuleReload ? 1 : 0,
 			deviceId
 		};
 	}
 
-	private createFilePayload(file: string, rootFilesDir: string, event: string): FilePayload {
+	private createFilePayloads(data: IPreviewAppLiveSyncData, platform: string, filesToTransfer: string[], filesToRemove: string[]): FilePayload[] {
+		const rootFilesDir = this.getRootFilesDir(data, platform);
+		const payloadsToSync = _.filter(filesToTransfer, file => {
+			const fileInfo = this.$projectFilesProvider.getProjectFileInfo(file, platform, {});
+			return fileInfo && fileInfo.shouldIncludeFile;
+		})
+		.map(file => this.createFilePayload(file, platform, rootFilesDir, PreviewSdkEventNames.CHANGE_EVENT_NAME));
+		const payloadsToRemove = _.map(filesToRemove, file => this.createFilePayload(file, platform, rootFilesDir, PreviewSdkEventNames.UNLINK_EVENT_NAME));
+		const payloads = payloadsToSync.concat(payloadsToRemove);
+		return payloads;
+	}
+
+	private createFilePayload(file: string, platform: string, rootFilesDir: string, event: string): FilePayload {
 		let fileContents = "";
 		let binary = false;
 
