@@ -36,6 +36,14 @@ function createTestInjector(data?: { files: string[] }) {
 	injector.register("projectFilesManager", {
 		getProjectFiles: () => data ? data.files : []
 	});
+	injector.register("projectFilesProvider", {
+		getProjectFileInfo: (filePath: string, platform: string) => {
+			return {
+				filePath,
+				shouldIncludeFile: true
+			};
+		}
+	});
 	return injector;
 }
 
