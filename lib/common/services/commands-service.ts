@@ -31,7 +31,7 @@ export class CommandsService implements ICommandsService {
 		private $staticConfig: Config.IStaticConfig,
 		private $helpService: IHelpService,
 		private $extensibilityService: IExtensibilityService,
-		private $optionsTrackHelper: IOptionsTrackHelper) {
+		private $optionsTracker: IOptionsTracker) {
 	}
 
 	public allCommands(opts: { includeDevCommands: boolean }): string[] {
@@ -64,7 +64,7 @@ export class CommandsService implements ICommandsService {
 				}
 
 				await analyticsService.trackInGoogleAnalytics(googleAnalyticsPageData);
-				await this.$optionsTrackHelper.trackOptions(this.$options);
+				await this.$optionsTracker.trackOptions(this.$options);
 			}
 
 			const shouldExecuteHooks = !this.$staticConfig.disableCommandHooks && (command.enableHooks === undefined || command.enableHooks === true);

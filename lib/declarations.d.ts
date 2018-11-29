@@ -910,7 +910,7 @@ interface IAndroidBundleValidatorHelper {
 	validateRuntimeVersion(projectData: IProjectData): void
 }
 
-interface IOptionsTrackHelper {
+interface IOptionsTracker {
 	trackOptions(options: IOptions): Promise<void>
 }
 

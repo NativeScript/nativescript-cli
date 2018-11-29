@@ -1,7 +1,7 @@
 import * as path from "path";
 import { TrackActionNames } from "../constants";
 
-export class OptionsTrackHelper {
+export class OptionsTracker {
 	public static PASSWORD_DETECTION_STRING = "password";
 	public static PASSOWRD_REPLACE_VALUE = "private";
 	public static PATH_REPLACE_VALUE = "_localpath";
@@ -34,10 +34,10 @@ export class OptionsTrackHelper {
 			if (this.shouldSkipProperty(key, value, shorthands, optionsDefinitions)) {
 				delete data[key];
 			} else {
-				if (key.toLowerCase().indexOf(OptionsTrackHelper.PASSWORD_DETECTION_STRING) >= 0) {
-					value = OptionsTrackHelper.PASSOWRD_REPLACE_VALUE;
+				if (key.toLowerCase().indexOf(OptionsTracker.PASSWORD_DETECTION_STRING) >= 0) {
+					value = OptionsTracker.PASSOWRD_REPLACE_VALUE;
 				} else if (_.isString(value) && value !== path.basename(value)) {
-					value = OptionsTrackHelper.PATH_REPLACE_VALUE;
+					value = OptionsTracker.PATH_REPLACE_VALUE;
 				} else if (_.isObject(value) && !_.isArray(value)) {
 					value = this.sanitizeTrackObject(value);
 				}
@@ -74,4 +74,4 @@ export class OptionsTrackHelper {
 	}
 }
 
-$injector.register("optionsTrackHelper", OptionsTrackHelper);
+$injector.register("optionsTracker", OptionsTracker);
