@@ -73,6 +73,9 @@ function createTestInjector() {
 	testInjector.register("logger", stubs.LoggerStub);
 	testInjector.register("staticConfig", StaticConfig);
 	testInjector.register("hooksService", stubs.HooksServiceStub);
+	testInjector.register("optionsTracker", {
+		trackOptions: () => Promise.resolve(null)
+	});
 	testInjector.register("commandsService", CommandsService);
 	testInjector.register("commandsServiceProvider", {
 		registerDynamicSubCommands: () => { /* intentionally empty body */ }
