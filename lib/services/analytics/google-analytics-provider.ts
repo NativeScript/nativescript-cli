@@ -69,6 +69,7 @@ export class GoogleAnalyticsProvider implements IGoogleAnalyticsProvider {
 			[GoogleAnalyticsCustomDimensions.nodeVersion]: process.version,
 			[GoogleAnalyticsCustomDimensions.clientID]: this.clientId,
 			[GoogleAnalyticsCustomDimensions.projectType]: null,
+			[GoogleAnalyticsCustomDimensions.isShared]: null,
 			[GoogleAnalyticsCustomDimensions.sessionID]: sessionId,
 			[GoogleAnalyticsCustomDimensions.client]: AnalyticsClients.Unknown
 		};

@@ -73,6 +73,7 @@ interface IProjectService {
 interface INsConfig {
 	appPath?: string;
 	appResourcesPath?: string;
+	shared?: boolean;
 }
 
 interface IProjectData extends ICreateProjectData {
