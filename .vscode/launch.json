@@ -22,7 +22,6 @@
       "env": {
         "NODE_ENV": "development"
       },
-      "preLaunchTask": "build",
       "console": "integratedTerminal",
       "internalConsoleOptions": "openOnSessionStart",
       "sourceMaps": true,
