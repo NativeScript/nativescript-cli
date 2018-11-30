@@ -1270,6 +1270,10 @@ interface IDashedOption {
 	 */
 	type: string;
 	/**
+	 * Should skip in tracking
+	 */
+	private?: boolean;
+	/**
 	 * Shorthand option passed on the command line with `-` sign, for example `-v`
 	 */
 	alias?: any;

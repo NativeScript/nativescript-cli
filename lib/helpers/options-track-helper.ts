@@ -3,7 +3,7 @@ import { TrackActionNames } from "../constants";
 
 export class OptionsTracker {
 	public static PASSWORD_DETECTION_STRING = "password";
-	public static PASSOWRD_REPLACE_VALUE = "private";
+	public static PRIVATE_REPLACE_VALUE = "private";
 	public static PATH_REPLACE_VALUE = "_localpath";
 	public static SIZE_EXEEDED_REPLACE_VALUE = "sizeExceeded";
 
@@ -34,13 +34,16 @@ export class OptionsTracker {
 			if (this.shouldSkipProperty(key, value, shorthands, optionsDefinitions)) {
 				delete data[key];
 			} else {
-				if (key.toLowerCase().indexOf(OptionsTracker.PASSWORD_DETECTION_STRING) >= 0) {
-					value = OptionsTracker.PASSOWRD_REPLACE_VALUE;
+				if (options && optionsDefinitions[key] && optionsDefinitions[key].private) {
+					value = OptionsTracker.PRIVATE_REPLACE_VALUE;
+				} else if (key.toLowerCase().indexOf(OptionsTracker.PASSWORD_DETECTION_STRING) >= 0) {
+					value = OptionsTracker.PRIVATE_REPLACE_VALUE;
 				} else if (_.isString(value) && value !== path.basename(value)) {
 					value = OptionsTracker.PATH_REPLACE_VALUE;
 				} else if (_.isObject(value) && !_.isArray(value)) {
 					value = this.sanitizeTrackObject(value);
 				}
+
 				data[key] = value;
 			}
 		});
