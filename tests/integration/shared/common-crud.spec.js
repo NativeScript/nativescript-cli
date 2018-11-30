@@ -281,7 +281,7 @@ dataStoreTypes.forEach((currentDataStoreType) => {
       });
 
       // skipped because of a bug for syncStore and different behaviour of fields for Sync and Network
-      it.skip('with fields should return only the specified fields', (done) => {
+      it('with fields should return only the specified fields', (done) => {
         const onNextSpy = sinon.spy();
         const query = new Kinvey.Query();
         query.fields = [[textFieldName]];
@@ -805,7 +805,7 @@ dataStoreTypes.forEach((currentDataStoreType) => {
             query.ascending(secondSortField);
             query.descending(textFieldName);
             query.notEqualTo('_id', entities[dataCount - 1]._id);
-            const sortedEntities = _.orderBy(entities, [secondSortField, numberFieldName], ['asc', 'desc']);
+            const sortedEntities = _.orderBy(entities, [secondSortField, textFieldName], ['asc', 'desc']);
             const expectedEntities = sortedEntities.filter(entity => entity !== entities[dataCount - 1]);
             storeToTest.find(query)
               .subscribe(onNextSpy, done, () => {
@@ -1172,8 +1172,7 @@ dataStoreTypes.forEach((currentDataStoreType) => {
       });
 
       describe('removeById()', () => {
-        // TODO: should it throw a NotFoundError
-        it.skip('should throw an error if the id argument does not exist', (done) => {
+        it('should throw an error if the id argument does not exist', (done) => {
           storeToTest.removeById(utilities.randomString())
             .then(() => done(new Error('Should not be called')))
             .catch((error) => {

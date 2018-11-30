@@ -289,10 +289,10 @@ describe('User tests', () => {
 
       const newUser = new Kinvey.User({
         username: utilities.randomString(),
-        password: password
+        password
       });
 
-      newUser.signup({ username: username })
+      newUser.signup({ username })
         .then((user) => {
           createdUserIds.push(user.data._id);
           expect(user.isActive()).to.equal(true);

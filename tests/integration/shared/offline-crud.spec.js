@@ -93,7 +93,7 @@ dataStoreTypes.forEach((currentDataStoreType) => {
             .catch(done);
         });
 
-        it.skip('findById() should remove entities that no longer exist on the backend from the cache', (done) => {
+        it('findById() should remove entities that no longer exist on the backend from the cache', (done) => {
           const entity = utilities.getEntity(utilities.randomString());
           storeToTest.save(entity)
             .then((entity) => networkStore.removeById(entity._id))
