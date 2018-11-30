@@ -163,8 +163,10 @@ declare module Server {
 	interface IRequestResponseData {
 		statusCode: number;
 		headers: { [index: string]: any };
+		complete: boolean;
 		pipe(destination: any, options?: { end?: boolean; }): IRequestResponseData;
 		on(event: string, listener: Function): void;
+		destroy(error?: Error): void;
 	}
 }
 
@@ -758,7 +760,7 @@ interface IAnalyticsSettingsService {
 	 * Gets information for projects that are exported from playground
 	 * @param projectDir Project directory path
 	 */
- 	getPlaygroundInfo(projectDir?: string): Promise<IPlaygroundInfo>;
+	getPlaygroundInfo(projectDir?: string): Promise<IPlaygroundInfo>;
 }
 
 /**

@@ -24,7 +24,9 @@ export class HttpClient implements Server.IHttpClient {
 		private $staticConfig: Config.IStaticConfig) {
 		this.cleanupData = [];
 		this.$processService.attachToProcessExitSignals(this, () => {
-			this.cleanupData.forEach(d => this.cleanupAfterRequest(d));
+			this.cleanupData.forEach(d => {
+				this.cleanupAfterRequest(d);
+			});
 		});
 	}
 
@@ -106,7 +108,7 @@ export class HttpClient implements Server.IHttpClient {
 			let timerId: number;
 			let stuckRequestTimerId: number;
 			let hasResponse = false;
-			const cleanupRequestData: ICleanupRequestData = { timers: [], stuckResponseIntervalId: null };
+			const cleanupRequestData: ICleanupRequestData = Object.create({ timers: [] });
 			this.cleanupData.push(cleanupRequestData);
 
 			const promiseActions: IPromiseActions<Server.IResponse> = {
@@ -130,12 +132,12 @@ export class HttpClient implements Server.IHttpClient {
 
 			this.$logger.trace("httpRequest: %s", util.inspect(options));
 			const requestObj = request(options);
+			cleanupRequestData.req = requestObj;
 
 			stuckRequestTimerId = setTimeout(() => {
 				clearTimeout(stuckRequestTimerId);
 				stuckRequestTimerId = null;
 				if (!hasResponse) {
-					requestObj.abort();
 					this.setResponseResult(promiseActions, cleanupRequestData, { err: new Error(HttpClient.STUCK_REQUEST_ERROR_MESSAGE) });
 				}
 			}, options.timeout || HttpClient.STUCK_REQUEST_TIMEOUT);
@@ -156,14 +158,11 @@ export class HttpClient implements Server.IHttpClient {
 					this.setResponseResult(promiseActions, cleanupRequestData, { err });
 				})
 				.on("response", (response: Server.IRequestResponseData) => {
+					cleanupRequestData.res = response;
 					hasResponse = true;
 					let lastChunkTimestamp = Date.now();
 					cleanupRequestData.stuckResponseIntervalId = setInterval(() => {
 						if (Date.now() - lastChunkTimestamp > HttpClient.STUCK_RESPONSE_CHECK_INTERVAL) {
-							if ((<any>response).destroy) {
-								(<any>response).destroy();
-							}
-
 							this.setResponseResult(promiseActions, cleanupRequestData, { err: new Error(HttpClient.STUCK_RESPONSE_ERROR_MESSAGE) });
 						}
 					}, HttpClient.STUCK_RESPONSE_CHECK_INTERVAL);
@@ -245,8 +244,8 @@ export class HttpClient implements Server.IHttpClient {
 		this.cleanupAfterRequest(cleanupRequestData);
 		if (!result.isResolved()) {
 			result.isResolved = () => true;
-			if (resultData.err) {
-				return result.reject(resultData.err);
+			if (resultData.err || !resultData.response.complete) {
+				return result.reject(resultData.err || new Error("Request canceled"));
 			}
 
 			const finalResult: any = resultData;
@@ -327,12 +326,23 @@ export class HttpClient implements Server.IHttpClient {
 			clearInterval(data.stuckResponseIntervalId);
 			data.stuckResponseIntervalId = null;
 		}
+
+		if (data.req) {
+			data.req.abort();
+		}
+
+		if (data.res) {
+			data.res.destroy();
+		}
 	}
+
 }
 
 interface ICleanupRequestData {
 	timers: number[];
 	stuckResponseIntervalId: NodeJS.Timer;
+	req: request.Request;
+	res: Server.IRequestResponseData;
 }
 
 $injector.register("httpClient", HttpClient);
