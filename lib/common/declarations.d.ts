@@ -1270,9 +1270,9 @@ interface IDashedOption {
 	 */
 	type: string;
 	/**
-	 * Should skip in tracking
+	 * Option has sensitive value
 	 */
-	private?: boolean;
+	hasSensitiveValue?: boolean;
 	/**
 	 * Shorthand option passed on the command line with `-` sign, for example `-v`
 	 */
