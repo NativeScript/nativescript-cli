@@ -3,6 +3,7 @@ import APIVersionNotAvailableError from './apiVersionNotAvailable';
 import APIVersionNotImplementedError from './apiVersionNotImplemented';
 import AppProblemError from './appProblem';
 import BadRequestError from './badRequest';
+import BaseError from './base';
 import BLError from './bl';
 import CORSDisabledError from './corsDisabled';
 import DuplicateEndUsersError from './duplicateEndUsers';
@@ -44,6 +45,7 @@ export {
   APIVersionNotImplementedError,
   AppProblemError,
   BadRequestError,
+  BaseError,
   BLError,
   CORSDisabledError,
   DuplicateEndUsersError,
