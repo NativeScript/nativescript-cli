@@ -23,7 +23,7 @@ export async function downloadByUrl(url) {
 }
 
 export async function find(query = new Query(), options = {}) {
-  const { api, appKey, masterSecret } = getConfig();
+  const { api, appKey } = getConfig();
   const { download = false, tls = true, ttl } = options;
   let queryStringObject = Object.assign({}, { tls: tls === true });
 
@@ -55,7 +55,7 @@ export async function find(query = new Query(), options = {}) {
 }
 
 export async function download(id, options = {}) {
-  const { api, appKey, masterSecret } = getConfig();
+  const { api, appKey } = getConfig();
   const { stream = false, tls = true, ttl } = options;
   const queryStringObject = Object.assign({}, { tls: tls === true });
 
@@ -101,7 +101,7 @@ function transformMetadata(file = {}, metadata = {}) {
 }
 
 async function saveFileMetadata(metadata) {
-  const { api, appKey, masterSecret } = getConfig();
+  const { api, appKey } = getConfig();
 
   if (metadata.size <= 0) {
     throw new Error('Unable to create a file with a size of 0.');
