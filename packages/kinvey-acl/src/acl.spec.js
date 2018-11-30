@@ -200,6 +200,16 @@ describe('Acl', () => {
       acl.addReaderGroup(group);
       expect(acl.readerGroups).toEqual([group]);
     });
+
+    it('should not remove writer groups', () => {
+      const group = randomString();
+      const readerGroups = [group];
+      const writerGroups = [group];
+      const acl = new Acl({ _acl: { groups: { r: readerGroups, w: writerGroups } } });
+      acl.addReaderGroup(group);
+      expect(acl.readerGroups).toEqual(readerGroups);
+      expect(acl.writerGroups).toEqual(writerGroups);
+    });
   });
 
   describe('addWriter()', () => {
@@ -233,6 +243,16 @@ describe('Acl', () => {
       const acl = new Acl({ _acl: {} });
       acl.addWriterGroup(group);
       expect(acl.writerGroups).toEqual([group]);
+    });
+
+    it('should not remove reader groups', () => {
+      const group = randomString();
+      const readerGroups = [group];
+      const writerGroups = [group];
+      const acl = new Acl({ _acl: { groups: { r: readerGroups, w: writerGroups } } });
+      acl.addWriterGroup(group);
+      expect(acl.readerGroups).toEqual(readerGroups);
+      expect(acl.writerGroups).toEqual(writerGroups);
     });
   });
 

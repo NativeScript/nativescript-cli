@@ -108,7 +108,6 @@ export class Acl {
       groups.push(group);
     }
 
-    this.entity._acl = Object.assign({}, this.entity._acl, { groups: {} });
     this.entity._acl.groups = Object.assign({}, this.entity._acl.groups, { r: groups });
     return this;
   }
@@ -143,7 +142,6 @@ export class Acl {
       groups.push(group);
     }
 
-    this.entity._acl = Object.assign({}, this.entity._acl, { groups: {} });
     this.entity._acl.groups = Object.assign({}, this.entity._acl.groups, { w: groups });
     return this;
   }
