@@ -82,7 +82,7 @@ describe('Sync', () => {
 
     it('should return the count for all entities that match the query that need to be synced', () => {
       const sync = new Sync(collection);
-      const query = new Query().equalTo('_id', entity1._id);
+      const query = new Query().equalTo('entityId', entity1._id);
       return sync.count(query)
         .then((count) => {
           expect(count).toEqual(1);
@@ -108,8 +108,7 @@ describe('Sync', () => {
       const sync = new Sync(collection);
       return sync.addCreateSyncEvent(entity)
         .then((syncEntity) => {
-          expect(syncEntity).toEqual({
-            _id: entity._id,
+          expect(syncEntity).toInclude({
             entityId: entity._id,
             entity,
             collection,
@@ -125,15 +124,14 @@ describe('Sync', () => {
       const sync = new Sync(collection);
       return sync.addCreateSyncEvent(entities)
         .then((syncEntities) => {
-          expect(syncEntities).toEqual([{
-            _id: entities[0]._id,
+          expect(syncEntities[0]).toInclude({
             entityId: entities[0]._id,
             entity: entities[0],
             collection,
             state: {
               operation: 'POST'
             }
-          }]);
+          });
         });
     });
 
@@ -169,8 +167,7 @@ describe('Sync', () => {
       const sync = new Sync(collection);
       return sync.addUpdateSyncEvent(entity)
         .then((syncEntity) => {
-          expect(syncEntity).toEqual({
-            _id: entity._id,
+          expect(syncEntity).toInclude({
             entityId: entity._id,
             entity,
             collection,
@@ -186,15 +183,14 @@ describe('Sync', () => {
       const sync = new Sync(collection);
       return sync.addUpdateSyncEvent(entities)
         .then((syncEntities) => {
-          expect(syncEntities).toEqual([{
-            _id: entities[0]._id,
+          expect(syncEntities[0]).toInclude({
             entityId: entities[0]._id,
             entity: entities[0],
             collection,
             state: {
               operation: 'PUT'
             }
-          }]);
+          });
         });
     });
 
@@ -230,8 +226,7 @@ describe('Sync', () => {
       const sync = new Sync(collection);
       return sync.addDeleteSyncEvent(entity)
         .then((syncEntity) => {
-          expect(syncEntity).toEqual({
-            _id: entity._id,
+          expect(syncEntity).toInclude({
             entityId: entity._id,
             entity,
             collection,
@@ -247,15 +242,14 @@ describe('Sync', () => {
       const sync = new Sync(collection);
       return sync.addDeleteSyncEvent(entities)
         .then((syncEntities) => {
-          expect(syncEntities).toEqual([{
-            _id: entities[0]._id,
+          expect(syncEntities[0]).toInclude({
             entityId: entities[0]._id,
             entity: entities[0],
             collection,
             state: {
               operation: 'DELETE'
             }
-          }]);
+          });
         });
     });
 
@@ -272,54 +266,6 @@ describe('Sync', () => {
         })
         .then((count) => {
           expect(count).toEqual(1);
-        });
-    });
-  });
-
-  describe('pull()', () => {
-    it('should return entities from the backend', () => {
-      const entity = { _id: randomString() };
-      const sync = new Sync(collection);
-
-      // Kinvey API Response
-      nock(client.apiHostname)
-        .get(backendPathname, () => true)
-        .query(true)
-        .reply(200, [entity]);
-
-      return sync.pull()
-        .then((entities) => {
-          expect(entities).toBe(1);
-        });
-    });
-
-    it('should add kinveyfile_ttl query parameter', () => {
-      const sync = new Sync(collection);
-      const entity1 = { _id: randomString() };
-
-      nock(client.apiHostname)
-        .get(backendPathname)
-        .query({ kinveyfile_ttl: 3600 })
-        .reply(200, [entity1]);
-
-      return sync.pull(null, { kinveyFileTTL: 3600 })
-        .then((entities) => {
-          expect(entities).toBe(1);
-        });
-    });
-
-    it('should add kinveyfile_tls query parameter', () => {
-      const sync = new Sync(collection);
-      const entity1 = { _id: randomString() };
-
-      nock(client.apiHostname)
-        .get(backendPathname)
-        .query({ kinveyfile_tls: true })
-        .reply(200, [entity1]);
-
-      return sync.pull(null, { kinveyFileTLS: true })
-        .then((entities) => {
-          expect(entities).toBe(1);
         });
     });
   });

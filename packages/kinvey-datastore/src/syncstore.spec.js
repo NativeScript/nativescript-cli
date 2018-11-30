@@ -798,7 +798,7 @@ describe('SyncStore', () => {
         .get(`/appdata/${client.appKey}/${collectionName}`)
         .reply(200, [entity1, entity2]);
 
-      store.pull()
+      return store.pull()
         .then(() => {
           const syncStore = new CacheStore(collectionName, {autoSync: false});
           return syncStore.find().toPromise();

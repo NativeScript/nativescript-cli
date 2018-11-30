@@ -1,22 +1,30 @@
 import isArray from 'lodash/isArray';
+import times from 'lodash/times';
 import { KinveyObservable } from 'kinvey-observable';
 import { Query } from 'kinvey-query';
-import { KinveyError, NotFoundError } from 'kinvey-errors';
+import { KinveyError, MissingConfigurationError, ParameterValueOutOfRangeError, NotFoundError, BaseError } from 'kinvey-errors';
 import { getConfig } from 'kinvey-app';
-import { DataStoreCache } from './cache';
-import { Sync } from './sync';
+import { formatKinveyUrl, KinveyRequest, RequestMethod, Auth } from 'kinvey-http';
+import { DataStoreCache, QueryCache } from './cache';
+import { queryToSyncQuery, Sync } from './sync';
 import { NetworkStore } from './networkstore';
 
 const NAMESPACE = 'appdata';
+const PAGE_LIMIT = 10000;
 
-function queryToSyncQuery(query) {
-  if (query) {
-    const newFilter = Object.keys(query.filter)
-      .reduce((filter, field) => Object.assign({}, filter, { [`entity.${field}`]: query.filter[field] }), {});
-    return new Query({ filter: newFilter });
+export default class InvalidDeltaSetQueryError extends BaseError {
+  constructor(message = 'Invalid delta set query.', ...args) {
+    // Pass remaining arguments (including vendor specific ones) to parent constructor
+    super(message, ...args);
+
+    // Maintains proper stack trace for where our error was thrown (only available on V8)
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, InvalidDeltaSetQueryError);
+    }
+
+    // Custom debugging information
+    this.name = 'InvalidDeltaSetQueryError';
   }
-
-  return new Query();
 }
 
 export class CacheStore {
@@ -124,14 +132,7 @@ export class CacheStore {
           }
 
           if (autoSync) {
-            const query = new Query().equalTo('_id', id);
-            await this.pull(query, options);
-            const doc = await cache.findById(id);
-
-            if (!doc) {
-              throw new NotFoundError();
-            }
-
+            const doc = await this.pullById(id, options);
             observer.next(doc);
           }
         }
@@ -153,10 +154,10 @@ export class CacheStore {
     const cache = new DataStoreCache(this.collectionName, this.tag);
     const sync = new Sync(this.collectionName, this.tag);
     const cachedDoc = await cache.save(doc);
-    await sync.addCreateSyncEvent(cachedDoc);
+    const syncDoc = await sync.addCreateSyncEvent(cachedDoc);
 
     if (autoSync) {
-      const query = new Query().equalTo('_id', cachedDoc._id);
+      const query = new Query().equalTo('_id', syncDoc._id);
       const pushResults = await sync.push(query, options);
       const pushResult = pushResults.shift();
 
@@ -183,10 +184,10 @@ export class CacheStore {
     const cache = new DataStoreCache(this.collectionName, this.tag);
     const sync = new Sync(this.collectionName, this.tag);
     const cachedDoc = await cache.save(doc);
-    await sync.addUpdateSyncEvent(cachedDoc);
+    const syncDoc = await sync.addUpdateSyncEvent(cachedDoc);
 
     if (autoSync) {
-      const query = new Query().equalTo('_id', cachedDoc._id);
+      const query = new Query().equalTo('_id', syncDoc._id);
       const pushResults = await sync.push(query, options);
       const pushResult = pushResults.shift();
 
@@ -227,7 +228,7 @@ export class CacheStore {
 
     // Remove the docs from the backend
     if (autoSync) {
-      const findQuery = queryToSyncQuery(query).equalTo('collection', this.collectionName);
+      const findQuery = queryToSyncQuery(query, this.collectionName);
       const syncDocs = await sync.find(findQuery);
 
       if (syncDocs.length > 0) {
@@ -261,20 +262,10 @@ export class CacheStore {
         count = await cache.removeById(id);
 
         // Add delete event for the removed doc to sync
-        await sync.addDeleteSyncEvent(doc);
-      }
+        const syncDoc = await sync.addDeleteSyncEvent(doc);
 
-      // Remove the doc from the backend
-      if (autoSync) {
-        // Find an existing sync doc
-        const syncDoc = await sync.findById(id);
-
-        // Set count to 1 if we found an existing sync doc
-        if (syncDoc) {
-          count = 1;
-        }
-
-        if (syncDoc) {
+        // Remove the doc from the backend
+        if (autoSync && syncDoc) {
           const query = new Query().equalTo('_id', syncDoc._id);
           const pushResults = await sync.push(query);
 
@@ -284,7 +275,11 @@ export class CacheStore {
               count -= 1;
             }
           }
+        } else {
+          count = 1;
         }
+      } else {
+        throw new NotFoundError();
       }
     }
 
@@ -292,29 +287,37 @@ export class CacheStore {
   }
 
   async clear(query) {
-    // Remove the sync events
-    const sync = new Sync(this.collectionName, this.tag);
-    await sync.remove(query);
-
     // Remove the docs from the cache
     const cache = new DataStoreCache(this.collectionName, this.tag);
     const count = await cache.remove(query);
+
+    // Remove the sync events
+    await this.clearSync(query);
+
+    // Clear the query cache
+    if (!query) {
+      const queryCache = new QueryCache(this.tag);
+      queryCache.remove();
+    }
+
+    // Return the cound
     return { count };
   }
 
-  async push(query, options) {
+  push(query, options) {
     const sync = new Sync(this.collectionName, this.tag);
     return sync.push(null, options);
   }
 
   async pull(query, options = {}) {
+    const network = new NetworkStore(this.collectionName);
+    const cache = new DataStoreCache(this.collectionName, this.tag);
+    const queryCache = new QueryCache(this.tag);
     const useDeltaSet = options.useDeltaSet === true || this.useDeltaSet;
     const useAutoPagination = options.useAutoPagination === true || options.autoPagination || this.useAutoPagination;
-    const autoSync = options.autoSync === true || this.autoSync;
-    const sync = new Sync(this.collectionName, this.tag);
 
     // Push sync queue
-    const count = await sync.count();
+    const count = await this.pendingSyncCount();
     if (count > 0) {
       // TODO in newer version
       // if (autoSync) {
@@ -331,18 +334,143 @@ export class CacheStore {
         + ' that need to be pushed to the backend.');
     }
 
-    // Delta Set
-    if (useDeltaSet) {
-      return sync.deltaset(query, Object.assign({}, { useDeltaSet, useAutoPagination, autoSync }, options));
+    // Delta set
+    if (useDeltaSet && (!query || (query.skip === 0 && query.limit === Infinity))) {
+      try {
+        const key = queryCache.serializeQuery(query);
+        const queryCacheDoc = await queryCache.findByKey(key);
+
+        if (queryCacheDoc && queryCacheDoc.lastRequest) {
+          let queryObject = { since: queryCacheDoc.lastRequest };
+
+          if (query) {
+            queryObject = Object.assign({}, query.toQueryObject(), queryObject);
+          }
+
+          // Delta Set request
+          const { api, appKey } = getConfig();
+          const url = formatKinveyUrl(api.protocol, api.host, `/appdata/${appKey}/${this.collectionName}/_deltaset`, queryObject);
+          const request = new KinveyRequest({ method: RequestMethod.GET, auth: Auth.Session, url });
+          const response = await request.execute();
+          const { changed, deleted } = response.data;
+
+          // Delete the docs that have been deleted
+          if (Array.isArray(deleted) && deleted.length > 0) {
+            const removeQuery = new Query().contains('_id', deleted.map(doc => doc._id));
+            await cache.remove(removeQuery);
+          }
+
+          // Save the docs that changed
+          if (Array.isArray(changed) && changed.length > 0) {
+            await cache.save(changed);
+          }
+
+          // Update the query cache
+          await queryCache.save(query, response);
+
+          // Return the number of changed docs
+          return changed.length;
+        }
+      } catch (error) {
+        if (!(error instanceof MissingConfigurationError) && !(error instanceof ParameterValueOutOfRangeError)) {
+          throw error;
+        }
+      }
     }
 
-    // Auto Paginate
+    // Auto pagination
     if (useAutoPagination) {
-      return sync.autopaginate(query, Object.assign({}, { useDeltaSet, useAutoPagination, autoSync }, options));
+      // Clear the cache
+      await cache.clear();
+
+      // Get the total count of docs
+      const response = await network.count(query, Object.assign({}, options, { rawResponse: true })).toPromise();
+      const count = 'count' in response.data ? response.data.count : Infinity;
+
+      // Create the pages
+      const pageSize = options.autoPaginationPageSize || (options.autoPagination && options.autoPagination.pageSize) || PAGE_LIMIT;
+      const pageCount = Math.ceil(count / pageSize);
+      const pageQueries = times(pageCount, (i) => {
+        const pageQuery = new Query(query);
+        pageQuery.skip = i * pageSize;
+        pageQuery.limit = Math.min(count - (i * pageSize), pageSize);
+        return pageQuery;
+      });
+
+      // Process the pages
+      const pagePromises = pageQueries.map((pageQuery) => {
+        return network.find(pageQuery, options).toPromise()
+          .then(docs => cache.save(docs))
+          .then(docs => docs.length);
+      });
+      const pageCounts = await Promise.all(pagePromises);
+      const totalPageCount = pageCounts.reduce((totalCount, pageCount) => totalCount + pageCount, 0);
+
+      // Update the query cache
+      queryCache.save(query, response);
+
+      // Return the total page count
+      return totalPageCount;
     }
 
-    // Regular sync pull
-    return sync.pull(query, options);
+    // Find the docs on the backend
+    const response = await network.find(query, Object.assign({}, options, { rawResponse: true })).toPromise();
+    const docs = response.data;
+
+    // Clear the cache if a query was not provided
+    if (!query) {
+      await cache.clear();
+    }
+
+    // Update the cache
+    await cache.save(docs);
+
+    // Update the query cache
+    await queryCache.save(query, response);
+
+    // Return the number of docs
+    return docs.length;
+  }
+
+  async pullById(id, options = {}) {
+    const network = new NetworkStore(this.collectionName);
+    const cache = new DataStoreCache(this.collectionName, this.tag);
+
+    // Push sync queue
+    const count = await this.pendingSyncCount();
+    if (count > 0) {
+      // TODO in newer version
+      // if (autoSync) {
+      //   await sync.push();
+      //   return this.pull(query, Object.assign({}, { useDeltaSet, useAutoPagination, autoSync }, options));
+      // }
+
+      if (count === 1) {
+        throw new KinveyError(`Unable to pull entities from the backend. There is ${count} entity`
+          + ' that needs to be pushed to the backend.');
+      }
+
+      throw new KinveyError(`Unable to pull entities from the backend. There are ${count} entities`
+        + ' that need to be pushed to the backend.');
+    }
+
+    try {
+      // Find the doc on the backend
+      const doc = await network.findById(id, options).toPromise();
+
+      // Update the doc in the cache
+      await cache.save(doc);
+
+      // Return the doc
+      return doc;
+    } catch (error) {
+      if (error instanceof NotFoundError) {
+        // Remove the doc from the cache
+        await cache.removeById(id);
+      }
+
+      throw error;
+    }
   }
 
   async sync(query, options) {
@@ -353,7 +481,8 @@ export class CacheStore {
 
   pendingSyncDocs(query) {
     const sync = new Sync(this.collectionName, this.tag);
-    return sync.find(query);
+    const findQuery = queryToSyncQuery(query, this.collectionName);
+    return sync.find(findQuery);
   }
 
   pendingSyncEntities(query) {
@@ -362,12 +491,14 @@ export class CacheStore {
 
   pendingSyncCount(query) {
     const sync = new Sync(this.collectionName, this.tag);
-    return sync.count(query);
+    const findQuery = queryToSyncQuery(query, this.collectionName);
+    return sync.count(findQuery);
   }
 
-  clearSync(query) {
+  async clearSync(query) {
     const sync = new Sync(this.collectionName, this.tag);
-    return sync.remove(query);
+    const clearQuery = queryToSyncQuery(query, this.collectionName);
+    return sync.remove(clearQuery);
   }
 
   async subscribe(receiver) {

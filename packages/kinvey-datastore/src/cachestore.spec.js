@@ -482,7 +482,7 @@ describe('CacheStore', () => {
           .catch(done);
       });
 
-      it('should send regular GET request with outdated lastRequest', function (done){
+      it('should send regular GET request with outdated lastRequest', (done) => {
         const entity1 = { _id: randomString() };
         const entity2 = { _id: randomString() };
         const store = new CacheStore(collection, { useDeltaSet: true, autoSync: true});
@@ -653,8 +653,7 @@ describe('CacheStore', () => {
       const onNextSpy = expect.createSpy();
 
       nock(client.apiHostname)
-        .get(store.pathname)
-        .query({ query: JSON.stringify({ _id: entity._id }) })
+        .get(`${store.pathname}/${entity._id}`)
         .reply(404);
 
       store.findById(entity._id)
@@ -685,9 +684,8 @@ describe('CacheStore', () => {
       store.pull()
         .then(() => {
           nock(client.apiHostname)
-            .get(store.pathname)
-            .query({ query: JSON.stringify({ _id: entity1._id }) })
-            .reply(200, [entity1]);
+            .get(`${store.pathname}/${entity1._id}`)
+            .reply(200, entity1);
 
           store.findById(entity1._id)
             .subscribe(onNextSpy, done, () => {
@@ -716,8 +714,7 @@ describe('CacheStore', () => {
       store.pull()
         .then(() => {
           nock(client.apiHostname)
-            .get(store.pathname)
-            .query({ query: JSON.stringify({ _id: entity1._id }) })
+            .get(`${store.pathname}/${entity1._id}`)
             .reply(404);
 
           store.findById(entity1._id)
@@ -1428,12 +1425,12 @@ describe('CacheStore', () => {
 
   describe('pendingSyncCount()', () => {
     it('should return the count of entities waiting to be synced', () => {
-      const store = new CacheStore(collection, {autoSync: true});
-      const syncStore = new CacheStore(collection, {autoSync: false});
-      const entity = {};
+      const store = new CacheStore(collection, { autoSync: true });
+      const syncStore = new CacheStore(collection, { autoSync: false });
 
-      return syncStore.save(entity)
-        .then((entity) => {
+      return Promise.all([{}, {}].map((entity) => syncStore.save(entity)))
+        .then((entities) => {
+          const entity = entities.shift();
           const query = new Query().equalTo('_id', entity._id);
           return store.pendingSyncCount(query);
         })
@@ -1445,12 +1442,12 @@ describe('CacheStore', () => {
 
   describe('pendingSyncEntities()', () => {
     it('should return the entities waiting to be synced', () => {
-      const store = new CacheStore(collection, {autoSync: true});
-      const syncStore = new CacheStore(collection, {autoSync: false});
-      const entity = {};
+      const store = new CacheStore(collection, { autoSync: true });
+      const syncStore = new CacheStore(collection, { autoSync: false });
 
-      return syncStore.save(entity)
-        .then((entity) => {
+      return Promise.all([{}, {}].map((entity) => syncStore.save(entity)))
+        .then((entities) => {
+          const entity = entities.shift();
           const query = new Query().equalTo('_id', entity._id);
           return store.pendingSyncEntities(query)
             .then((entities) => {
@@ -1465,8 +1462,8 @@ describe('CacheStore', () => {
 
   describe('push()', () => {
     it('should push the entities to the backend', () => {
-      const store = new CacheStore(collection, {autoSync: true});
-      const syncStore = new CacheStore(collection, {autoSync: false});
+      const store = new CacheStore(collection, { autoSync: true });
+      const syncStore = new CacheStore(collection, { autoSync: false });
       const entity = { _id: randomString() };
 
       return syncStore.save(entity)
@@ -1478,7 +1475,7 @@ describe('CacheStore', () => {
           return store.push();
         })
         .then((result) => {
-          expect(result).toEqual([{ _id: entity._id, operation: SyncEvent.Update, entity: entity }]);
+          expect(result).toEqual([{ _id: entity._id, operation: SyncEvent.Update, entity }]);
           return store.pendingSyncCount();
         })
         .then((count) => {
@@ -1488,6 +1485,11 @@ describe('CacheStore', () => {
   });
 
   describe('pull()', () => {
+    beforeEach(() => {
+      const store = new CacheStore(collection, { autoSync: true });
+      return store.clear();
+    });
+
     it('should save entities from the backend to the cache', () => {
       const entity1 = { _id: randomString() };
       const entity2 = { _id: randomString() };
@@ -1504,7 +1506,7 @@ describe('CacheStore', () => {
         })
         .then((entities) => {
           return expect(entities).toEqual([entity1, entity2]);
-        })
+        });
     });
 
     it('should perform a delta set request', () => {
@@ -1562,6 +1564,52 @@ describe('CacheStore', () => {
             .then((count) => {
               expect(count).toEqual(1);
             });
+        });
+    });
+
+    it('should return entities from the backend', () => {
+      const entity = { _id: randomString() };
+      const store = new CacheStore(collection, { autoSync: true });
+
+      // Kinvey API Response
+      nock(client.apiHostname)
+        .get(store.pathname, () => true)
+        .query(true)
+        .reply(200, [entity]);
+
+      return store.pull()
+        .then((entities) => {
+          expect(entities).toBe(1);
+        });
+    });
+
+    it('should add kinveyfile_ttl query parameter', () => {
+      const store = new CacheStore(collection, { autoSync: true });
+      const entity1 = { _id: randomString() };
+
+      nock(client.apiHostname)
+        .get(store.pathname)
+        .query({ kinveyfile_ttl: 3600 })
+        .reply(200, [entity1]);
+
+      return store.pull(null, { kinveyFileTTL: 3600 })
+        .then((entities) => {
+          expect(entities).toBe(1);
+        });
+    });
+
+    it('should add kinveyfile_tls query parameter', () => {
+      const store = new CacheStore(collection, { autoSync: true });
+      const entity1 = { _id: randomString() };
+
+      nock(client.apiHostname)
+        .get(store.pathname)
+        .query({ kinveyfile_tls: true })
+        .reply(200, [entity1]);
+
+      return store.pull(null, { kinveyFileTLS: true })
+        .then((entities) => {
+          expect(entities).toBe(1);
         });
     });
   });
