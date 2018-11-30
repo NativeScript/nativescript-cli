@@ -1,5 +1,6 @@
 import isFunction from 'lodash/isFunction';
 import PubNub from 'pubnub';
+import { KinveyError } from 'kinvey-errors';
 import { EventEmitter } from 'events';
 
 const STATUS_PREFIX = 'status:';
@@ -66,6 +67,10 @@ export function unregister() {
 }
 
 export function subscribeToChannel(channelName, receiver = {}) {
+  if (!isRegistered()) {
+    throw new KinveyError('Please register for the live service before you subscribe to a channel.');
+  }
+
   const { onMessage, onError, onStatus } = receiver;
 
   if (!isValidChannelName(channelName)) {
@@ -80,11 +85,11 @@ export function subscribeToChannel(channelName, receiver = {}) {
     throw new Error('Please register to the Live Service before you subscribe to the channel.');
   }
 
-  if (isFunction(onMessage)) {
+  if (listener && isFunction(onMessage)) {
     listener.on(channelName, onMessage);
   }
 
-  if (isFunction(onError)) {
+  if (listener && isFunction(onError)) {
     listener.on(`${STATUS_PREFIX}${channelName}`, (status) => {
       if (status.error) {
         onError(status);
@@ -92,7 +97,7 @@ export function subscribeToChannel(channelName, receiver = {}) {
     });
   }
 
-  if (isFunction(onStatus)) {
+  if (listener && isFunction(onStatus)) {
     listener.on(`${STATUS_PREFIX}${channelName}`, (status) => {
       if (!status.error) {
         onStatus(status);
@@ -102,6 +107,8 @@ export function subscribeToChannel(channelName, receiver = {}) {
 }
 
 export function unsubscribeFromChannel(channelName) {
-  listener.removeAllListeners(channelName);
-  listener.removeAllListeners(`${STATUS_PREFIX}${channelName}`);
+  if (listener) {
+    listener.removeAllListeners(channelName);
+    listener.removeAllListeners(`${STATUS_PREFIX}${channelName}`);
+  }
 }

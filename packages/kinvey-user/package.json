@@ -20,6 +20,7 @@
     "kinvey-errors": "1.0.0",
     "kinvey-http": "1.0.0",
     "kinvey-kmd": "1.0.0",
+    "kinvey-live": "1.0.0",
     "kinvey-observable": "1.0.0",
     "kinvey-popup": "1.0.0",
     "kinvey-query": "1.0.0",

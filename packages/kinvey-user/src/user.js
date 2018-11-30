@@ -11,6 +11,7 @@ import { getConfig } from 'kinvey-app';
 import { ActiveUserError, KinveyError, NotFoundError } from 'kinvey-errors';
 import { Query } from 'kinvey-query';
 import { KinveyObservable } from 'kinvey-observable';
+import * as Live from 'kinvey-live';
 import * as MIC from './mic';
 import { mergeSocialIdentity } from './utils';
 
@@ -163,6 +164,42 @@ export class User {
 
     this.data = updatedData;
     return this;
+  }
+
+  async registerForLiveService() {
+    if (!Live.isRegistered()) {
+      const { api, appKey, deviceId } = getConfig();
+      const request = new KinveyRequest({
+        method: RequestMethod.POST,
+        auth: Auth.Session,
+        url: formatKinveyUrl(api.protocol, api.host, `/${USER_NAMESPACE}/${appKey}/${this._id}/register-realtime`),
+        body: { deviceId }
+      });
+      const response = await request.execute();
+      const config = Object.assign({}, {
+        ssl: true,
+        authKey: this.authtoken
+      }, response.data);
+      Live.register(config);
+    }
+
+    return true;
+  }
+
+  async unregisterFromLiveService() {
+    if (Live.isRegistered()) {
+      const { api, appKey, deviceId } = getConfig();
+      const request = new KinveyRequest({
+        method: RequestMethod.POST,
+        auth: Auth.Session,
+        url: formatKinveyUrl(api.protocol, api.host, `/${USER_NAMESPACE}/${appKey}/${this._id}/unregister-realtime`),
+        body: { deviceId }
+      });
+      await request.execute();
+      Live.unregister();
+    }
+
+    return true;
   }
 }
 
@@ -474,4 +511,24 @@ export async function exists(username, options = {}) {
 
 export async function restore() {
   throw new KinveyError('This function requires a master secret to be provided for your application. We strongly advise not to do this.');
+}
+
+export async function registerForLiveService() {
+  const activeUser = getActiveUser();
+
+  if (activeUser) {
+    return activeUser.registerForLiveService();
+  }
+
+  throw new ActiveUserError('There is no active user');
+}
+
+export async function unregisterForLiveService() {
+  const activeUser = getActiveUser();
+
+  if (activeUser) {
+    return activeUser.unregisterForLiveService();
+  }
+
+  throw new ActiveUserError('There is no active user');
 }

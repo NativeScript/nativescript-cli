@@ -2,7 +2,7 @@ import { getConfig } from 'kinvey-app';
 import { KinveyObservable } from 'kinvey-observable';
 import { get as getSession } from 'kinvey-session';
 import { Aggregation } from 'kinvey-aggregation';
-// import * as Live from 'kinvey-live';
+import * as Live from 'kinvey-live';
 import { Query } from 'kinvey-query';
 import {
   formatKinveyUrl,
@@ -320,6 +320,10 @@ export class NetworkStore {
   }
 
   async subscribe(receiver) {
+    if (!Live.isRegistered()) {
+      throw new KinveyError('Please call Kinvey.User.registerForLiveService() before you subscribe for to the collection.');
+    }
+
     const { api, device } = getConfig();
     const request = new KinveyRequest({
       method: RequestMethod.POST,
