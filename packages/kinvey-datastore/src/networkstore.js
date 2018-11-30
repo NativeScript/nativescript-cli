@@ -72,6 +72,7 @@ export class NetworkStore {
         const url = formatKinveyUrl(api.protocol, api.host, this.pathname, queryObject);
         const request = createRequest(RequestMethod.GET, url);
         request.headers.customRequestProperties = properties;
+        request.timeout = timeout;
         const response = await request.execute();
 
         if (rawResponse === true) {
@@ -107,6 +108,7 @@ export class NetworkStore {
         const url = formatKinveyUrl(api.protocol, api.host, `${this.pathname}/_count`, queryObject);
         const request = createRequest(RequestMethod.GET, url);
         request.headers.customRequestProperties = properties;
+        request.timeout = timeout;
         const response = await request.execute();
 
         if (rawResponse === true) {
@@ -142,6 +144,7 @@ export class NetworkStore {
         const url = formatKinveyUrl(api.protocol, api.host, `${this.pathname}/_group`, queryObject);
         const request = createRequest(RequestMethod.POST, url, aggregation.toPlainObject());
         request.headers.customRequestProperties = properties;
+        request.timeout = timeout;
         const response = await request.execute();
 
         if (rawResponse === true) {
@@ -180,6 +183,7 @@ export class NetworkStore {
           const url = formatKinveyUrl(api.protocol, api.host, `${this.pathname}/${id}`, queryObject);
           const request = createRequest(RequestMethod.GET, url);
           request.headers.customRequestProperties = properties;
+          request.timeout = timeout;
           const response = await request.execute();
 
           if (rawResponse === true) {
@@ -216,6 +220,7 @@ export class NetworkStore {
     const url = formatKinveyUrl(api.protocol, api.host, this.pathname, queryObject);
     const request = createRequest(RequestMethod.POST, url, doc);
     request.headers.customRequestProperties = properties;
+    request.timeout = timeout;
     const response = await request.execute();
 
     if (rawResponse === true) {
@@ -246,6 +251,7 @@ export class NetworkStore {
     const url = formatKinveyUrl(api.protocol, api.host, `${this.pathname}/${doc._id}`, queryObject);
     const request = createRequest(RequestMethod.PUT, url, doc);
     request.headers.customRequestProperties = properties;
+    request.timeout = timeout;
     const response = await request.execute();
 
     if (rawResponse === true) {
@@ -280,6 +286,7 @@ export class NetworkStore {
     const url = formatKinveyUrl(api.protocol, api.host, this.pathname, queryObject);
     const request = createRequest(RequestMethod.DELETE, url);
     request.headers.customRequestProperties = properties;
+    request.timeout = timeout;
     const response = await request.execute();
 
     if (rawResponse === true) {
@@ -302,6 +309,7 @@ export class NetworkStore {
     const url = formatKinveyUrl(api.protocol, api.host, `${this.pathname}/${id}`, queryObject);
     const request = createRequest(RequestMethod.DELETE, url);
     request.headers.customRequestProperties = properties;
+    request.timeout = timeout;
     const response = await request.execute();
 
     if (rawResponse === true) {

@@ -6,7 +6,8 @@ async function http(request) {
     headers: request.headers,
     method: request.method,
     url: request.url,
-    content: request.body
+    content: request.body,
+    timeout: request.timeout
   });
 
   let data = response.content.raw;

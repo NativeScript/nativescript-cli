@@ -94,12 +94,13 @@ export class User {
     return false;
   }
 
-  async me() {
+  async me(options = {}) {
     const { api, appKey } = getConfig();
     const request = new KinveyRequest({
       method: RequestMethod.GET,
       auth: Auth.Session,
-      url: formatKinveyUrl(api.protocol, api.host, `/${USER_NAMESPACE}/${appKey}/_me`)
+      url: formatKinveyUrl(api.protocol, api.host, `/${USER_NAMESPACE}/${appKey}/_me`),
+      timeout: options.timeout
     });
     const response = await request.execute();
     const data = response.data;
@@ -121,7 +122,7 @@ export class User {
     return this;
   }
 
-  async update(data) {
+  async update(data, options = {}) {
     const { api, appKey } = getConfig();
     const body = Object.assign({}, this.data, data);
 
@@ -141,7 +142,8 @@ export class User {
       method: RequestMethod.PUT,
       auth: Auth.Default,
       url: formatKinveyUrl(api.protocol, api.host, `/${USER_NAMESPACE}/${appKey}/${this._id}`),
-      body
+      body,
+      timeout: options.timeout
     });
     const response = await request.execute();
     const updatedData = response.data;
@@ -187,7 +189,8 @@ export async function signup(data, options = {}) {
   const request = new KinveyRequest({
     method: RequestMethod.POST,
     auth: Auth.App,
-    url
+    url,
+    timeout: options.timeout
   });
 
   if (data instanceof User) {
@@ -210,7 +213,7 @@ export async function signupWithIdentity() {
   throw new KinveyError('This function has been deprecated. You should use loginWithMIC() instead.');
 }
 
-export async function login(username, password) {
+export async function login(username, password, options = {}) {
   const { api, appKey } = getConfig();
   const activeUser = getActiveUser();
   let credentials = username;
@@ -240,7 +243,8 @@ export async function login(username, password) {
     method: RequestMethod.POST,
     auth: Auth.App,
     url: formatKinveyUrl(api.protocol, api.host, `/${USER_NAMESPACE}/${appKey}/login`),
-    body: credentials
+    body: credentials,
+    timeout: options.timeout
   });
   const response = await request.execute();
   const session = response.data;
@@ -285,7 +289,7 @@ export async function loginWithMIC(redirectUri, authorizationGrant, options) {
   }
 }
 
-export async function logout() {
+export async function logout(options = {}) {
   const { api, appKey } = getConfig();
   const activeUser = getActiveUser();
 
@@ -297,7 +301,8 @@ export async function logout() {
       const request = new KinveyRequest({
         method: RequestMethod.POST,
         auth: Auth.Session,
-        url
+        url,
+        timeout: options.timeout
       });
       await request.execute();
     } catch (error) {
@@ -348,14 +353,15 @@ export async function remove(id, options = {}) {
   const request = new KinveyRequest({
     method: RequestMethod.DELETE,
     auth: Auth.Default,
-    url
+    url,
+    timeout: options.timeout
   });
   const response = await request.execute();
   removeSession();
   return response.data;
 }
 
-export async function verifyEmail(username) {
+export async function verifyEmail(username, options = {}) {
   const { api, appKey } = getConfig();
 
   if (!username) {
@@ -369,13 +375,14 @@ export async function verifyEmail(username) {
   const request = new KinveyRequest({
     method: RequestMethod.POST,
     auth: Auth.App,
-    url: formatKinveyUrl(api.protocol, api.host, `/${RPC_NAMESPACE}/${appKey}/${username}/user-email-verification-initiate`)
+    url: formatKinveyUrl(api.protocol, api.host, `/${RPC_NAMESPACE}/${appKey}/${username}/user-email-verification-initiate`),
+    timeout: options.timeout
   });
   const response = await request.execute();
   return response.data;
 }
 
-export async function forgotUsername(email) {
+export async function forgotUsername(email, options = {}) {
   const { api, appKey } = getConfig();
 
   if (!email) {
@@ -390,13 +397,14 @@ export async function forgotUsername(email) {
     method: RequestMethod.POST,
     auth: Auth.App,
     url: formatKinveyUrl(api.protocol, api.host, `/${RPC_NAMESPACE}/${appKey}/user-forgot-username`),
-    body: { email }
+    body: { email },
+    timeout: options.timeout
   });
   const response = await request.execute();
   return response.data;
 }
 
-export async function resetPassword(username) {
+export async function resetPassword(username, options = {}) {
   const { api, appKey } = getConfig();
 
   if (!username) {
@@ -410,13 +418,14 @@ export async function resetPassword(username) {
   const request = new KinveyRequest({
     method: RequestMethod.POST,
     auth: Auth.App,
-    url: formatKinveyUrl(api.protocol, api.host, `/${RPC_NAMESPACE}/${appKey}/${username}/user-password-reset-initiate`)
+    url: formatKinveyUrl(api.protocol, api.host, `/${RPC_NAMESPACE}/${appKey}/${username}/user-password-reset-initiate`),
+    timeout: options.timeout
   });
   const response = await request.execute();
   return response.data;
 }
 
-export function lookup(query) {
+export function lookup(query, options = {}) {
   const stream = KinveyObservable.create(async (observer) => {
     try {
       if (query && !(query instanceof Query)) {
@@ -428,7 +437,8 @@ export function lookup(query) {
         method: RequestMethod.POST,
         auth: Auth.Default,
         url: formatKinveyUrl(api.protocol, api.host, `/${USER_NAMESPACE}/${appKey}/_lookup`),
-        body: query ? query.filter : undefined
+        body: query ? query.filter : undefined,
+        timeout: options.timeout
       });
       const response = await request.execute();
       observer.next(response.data);
@@ -440,7 +450,7 @@ export function lookup(query) {
   return stream;
 }
 
-export async function exists(username) {
+export async function exists(username, options = {}) {
   const { api, appKey } = getConfig();
 
   if (!username) {
@@ -455,7 +465,8 @@ export async function exists(username) {
     method: RequestMethod.POST,
     auth: Auth.App,
     url: formatKinveyUrl(api.protocol, api.host, `/${RPC_NAMESPACE}/${appKey}/check-username-exists`),
-    body: { username }
+    body: { username },
+    timeout: options.timeout
   });
   const response = await request.execute();
   return response.data.usernameExists === true;

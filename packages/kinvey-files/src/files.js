@@ -13,10 +13,11 @@ import { getConfig } from 'kinvey-app';
 const NAMESPACE = 'blob';
 const MAX_BACKOFF = 32 * 1000;
 
-export async function downloadByUrl(url) {
+export async function downloadByUrl(url, options = {}) {
   const request = new Request({
     method: RequestMethod.GET,
-    url
+    url,
+    timeout: options.timeout
   });
   const response = await request.execute();
   return response.data;
@@ -42,7 +43,8 @@ export async function find(query = new Query(), options = {}) {
   const request = new KinveyRequest({
     method: RequestMethod.GET,
     auth: Auth.Default,
-    url: formatKinveyUrl(api.protocol, api.host, `/${NAMESPACE}/${appKey}`, queryStringObject)
+    url: formatKinveyUrl(api.protocol, api.host, `/${NAMESPACE}/${appKey}`, queryStringObject),
+    timeout: options.timeout
   });
   const response = await request.execute();
   const files = response.data;
@@ -66,7 +68,8 @@ export async function download(id, options = {}) {
   const request = new KinveyRequest({
     method: RequestMethod.GET,
     auth: Auth.Default,
-    url: formatKinveyUrl(api.protocol, api.host, `/${NAMESPACE}/${appKey}/${id}`, queryStringObject)
+    url: formatKinveyUrl(api.protocol, api.host, `/${NAMESPACE}/${appKey}/${id}`, queryStringObject),
+    timeout: options.timeout
   });
   const response = await request.execute();
   const file = response.data;
@@ -75,7 +78,7 @@ export async function download(id, options = {}) {
     return file;
   }
 
-  return downloadByUrl(file._downloadURL);
+  return downloadByUrl(file._downloadURL, options);
 }
 
 export function findById(id, options) {
@@ -100,7 +103,7 @@ function transformMetadata(file = {}, metadata = {}) {
   return fileMetadata;
 }
 
-async function saveFileMetadata(metadata) {
+async function saveFileMetadata(metadata, options = {}) {
   const { api, appKey } = getConfig();
 
   if (metadata.size <= 0) {
@@ -114,7 +117,8 @@ async function saveFileMetadata(metadata) {
     },
     auth: Auth.Default,
     url: metadata._id ? formatKinveyUrl(api.protocol, api.host, `/${NAMESPACE}/${appKey}/${metadata._id}`) : formatKinveyUrl(api.protocol, api.host, `/${NAMESPACE}/${appKey}`),
-    body: metadata
+    body: metadata,
+    timeout: options.timeout
   });
   const response = await request.execute();
   return response.data;
@@ -142,7 +146,7 @@ function randomInt(min, max) {
   return Math.floor(Math.random() * (max - min)) + min;
 }
 
-async function uploadFile(url, file, metadata, options) {
+async function uploadFile(url, file, metadata, options = {}) {
   const { count = 0, maxBackoff = MAX_BACKOFF } = options;
   let { start = 0 } = options;
 
@@ -153,7 +157,8 @@ async function uploadFile(url, file, metadata, options) {
     method: RequestMethod.PUT,
     headers: requestHeaders,
     url,
-    body: file.slice(options.start, metadata.size)
+    body: file.slice(options.start, metadata.size),
+    timeout: options.timeout
   });
   const response = await request.execute();
 
@@ -225,12 +230,13 @@ export async function remove() {
   throw new Error('Please use removeById() to remove files one by one.');
 }
 
-export async function removeById(id) {
+export async function removeById(id, options = {}) {
   const { api, appKey } = getConfig();
   const request = new KinveyRequest({
     method: RequestMethod.DELETE,
     auth: Auth.Default,
-    url: formatKinveyUrl(api.protocol, api.host, `/${NAMESPACE}/${appKey}/${id}`)
+    url: formatKinveyUrl(api.protocol, api.host, `/${NAMESPACE}/${appKey}/${id}`),
+    timeout: options.timeout
   });
   const response = await request.execute();
   return response.data;

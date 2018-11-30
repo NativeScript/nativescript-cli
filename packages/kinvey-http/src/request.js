@@ -72,7 +72,8 @@ export class Request {
       headers: this.headers.toObject(),
       method: this.method,
       url: this.url,
-      body: serialize(this.headers.contentType, this.body)
+      body: serialize(this.headers.contentType, this.body),
+      timeout: this.timeout
     });
 
     // Create a response

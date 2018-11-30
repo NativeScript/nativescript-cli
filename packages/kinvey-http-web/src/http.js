@@ -103,7 +103,8 @@ export async function http(request) {
       headers,
       method: request.method,
       url: request.url,
-      data: request.body
+      data: request.body,
+      timeout: request.timeout
     });
   } catch (error) {
     if (error.response) {

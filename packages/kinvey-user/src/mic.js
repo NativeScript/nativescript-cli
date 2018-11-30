@@ -25,7 +25,7 @@ function getVersion(version = 3) {
   return String(version).indexOf('v') === 0 ? version : `v${version}`;
 }
 
-async function getTempLoginUrl(clientId, redirectUri, version) {
+async function getTempLoginUrl(clientId, redirectUri, version, options = {}) {
   const { auth } = getConfig();
   const request = new KinveyRequest({
     method: RequestMethod.POST,
@@ -42,7 +42,8 @@ async function getTempLoginUrl(clientId, redirectUri, version) {
       client_id: clientId,
       redirect_uri: redirectUri,
       response_type: 'code'
-    }
+    },
+    timeout: options.timeout
   });
   const response = await request.execute();
   return response.data;
@@ -94,7 +95,7 @@ function loginWithPopup(clientId, redirectUri, version) {
   });
 }
 
-async function loginWithUrl(url, username, password, clientId, redirectUri) {
+async function loginWithUrl(url, username, password, clientId, redirectUri, options = {}) {
   const request = new KinveyRequest({
     method: RequestMethod.POST,
     headers: {
@@ -113,7 +114,8 @@ async function loginWithUrl(url, username, password, clientId, redirectUri) {
       username,
       password,
       scope: 'openid'
-    }
+    },
+    timeout: options.timeout
   });
   const response = await request.execute();
   const location = response.headers.get('location');
@@ -128,7 +130,7 @@ async function loginWithUrl(url, username, password, clientId, redirectUri) {
   return query.code;
 }
 
-async function getTokenWithCode(code, clientId, redirectUri) {
+async function getTokenWithCode(code, clientId, redirectUri, options = {}) {
   const { auth } = getConfig();
   const request = new KinveyRequest({
     method: RequestMethod.POST,
@@ -146,7 +148,8 @@ async function getTokenWithCode(code, clientId, redirectUri) {
       client_id: clientId,
       redirect_uri: redirectUri,
       code
-    }
+    },
+    timeout: options.timeout
   });
   const response = await request.execute();
   const token = response.data;
@@ -177,8 +180,8 @@ export async function login(
   }
 
   if (authorizationGrant === AuthorizationGrant.AuthorizationCodeAPI) {
-    const url = await getTempLoginUrl(clientId, redirectUri, version);
-    code = await loginWithUrl(url, username, password, clientId, redirectUri);
+    const url = await getTempLoginUrl(clientId, redirectUri, version, options);
+    code = await loginWithUrl(url, username, password, clientId, redirectUri, options);
   } else if (!authorizationGrant || authorizationGrant === AuthorizationGrant.AuthorizationCodeLoginPage) {
     code = await loginWithPopup(clientId, redirectUri, version);
   } else {
@@ -186,6 +189,6 @@ export async function login(
       'Please use a supported authorization grant.');
   }
 
-  const token = await getTokenWithCode(code, clientId, redirectUri);
+  const token = await getTokenWithCode(code, clientId, redirectUri, options);
   return token;
 }

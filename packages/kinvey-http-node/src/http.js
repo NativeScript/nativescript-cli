@@ -7,7 +7,8 @@ function http(request) {
       headers: request.headers,
       method: request.method,
       url: request.url,
-      body: request.body
+      body: request.body,
+      timeout: request.timeout
     }, (error, httpResponse, data) => {
       if (error) {
         reject(error);
