@@ -2,10 +2,14 @@ import isNumber from 'lodash/isNumber';
 import isString from 'lodash/isString';
 import isPlainObject from 'lodash/isPlainObject';
 import isObject from 'lodash/isObject';
+import isEmpty from 'lodash/isEmpty';
+import isArray from 'lodash/isArray';
+import sift from 'sift';
 import { QueryError } from 'kinvey-errors';
+import { nested } from './utils';
 
-const PROTECTED_FIELDS = ['_id', '_acl'];
 const UNSUPPORTED_CONDITIONS = ['$nearSphere'];
+const PROTECTED_FIELDS = ['_id', '_acl'];
 
 export class Query {
   constructor(query) {
@@ -25,11 +29,7 @@ export class Query {
   }
 
   get fields() {
-    if (this._fields.length > 0) {
-      return [].concat(this._fields, PROTECTED_FIELDS);
-    }
-
-    return [];
+    return this._fields;
   }
 
   set fields(fields) {
@@ -711,5 +711,77 @@ export class Query {
 
     this.addFilter(operator, [currentFilter].concat(filters));
     return that;
+  }
+
+  process(docs = []) {
+    if (docs.length > 0) {
+      let processedDocs;
+
+      if (this.filter && !isEmpty(this.filter)) {
+        processedDocs = sift(this.filter, docs);
+      } else {
+        processedDocs = docs;
+      }
+
+      if (!isEmpty(this.sort)) {
+        // eslint-disable-next-line arrow-body-style
+        processedDocs.sort((a, b) => {
+          return Object.keys(this.sort)
+            .reduce((result, field) => {
+              if (typeof result !== 'undefined') {
+                return result;
+              }
+
+              if (Object.prototype.hasOwnProperty.call(this.sort, field)) {
+                const aField = nested(a, field);
+                const bField = nested(b, field);
+                const modifier = this.sort[field]; // -1 (descending) or 1 (ascending)
+
+                if ((aField !== null && typeof aField !== 'undefined')
+                  && (bField === null || typeof bField === 'undefined')) {
+                  return 1 * modifier;
+                } else if ((bField !== null && typeof bField !== 'undefined')
+                  && (aField === null || typeof aField === 'undefined')) {
+                  return -1 * modifier;
+                } else if (typeof aField === 'undefined' && bField === null) {
+                  return 0;
+                } else if (aField === null && typeof bField === 'undefined') {
+                  return 0;
+                } else if (aField !== bField) {
+                  return (aField < bField ? -1 : 1) * modifier;
+                }
+              }
+
+              return 0;
+            }, undefined);
+        });
+      }
+
+      if (this.skip > 0) {
+        if (this.limit < Infinity) {
+          processedDocs = processedDocs.slice(this.skip, this.skip + this.limit);
+        } else {
+          processedDocs = processedDocs.slice(this.skip);
+        }
+      } else if (this.limit < Infinity) {
+        processedDocs = processedDocs.slice(0, this.limit);
+      }
+
+      if (isArray(this.fields) && this.fields.length > 0) {
+        processedDocs = processedDocs.map((doc) => {
+          const modifiedDoc = doc;
+          Object.keys(modifiedDoc).forEach((key) => {
+            if (this.fields.indexOf(key) === -1 && PROTECTED_FIELDS.indexOf(key) === -1) {
+              delete modifiedDoc[key];
+            }
+          });
+          return modifiedDoc;
+        });
+      }
+
+      return processedDocs;
+    }
+
+    return docs;
   }
 }
