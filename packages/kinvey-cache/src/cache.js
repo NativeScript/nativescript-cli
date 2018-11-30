@@ -1,11 +1,7 @@
 import { Query } from 'kinvey-query';
 import { Aggregation } from 'kinvey-aggregation';
-import sift from 'sift';
-import isEmpty from 'lodash/isEmpty';
-import isArray from 'lodash/isArray';
 import { KinveyError } from 'kinvey-errors';
 import PQueue from 'p-queue';
-import { nested } from './utils';
 
 const queue = new PQueue({ concurrency: 1 });
 
@@ -68,80 +64,14 @@ export class Cache {
 
   find(query) {
     return queue.add(async () => {
-      let docs = await store.find(this.storeName, this.collectionName);
+      const docs = await store.find(this.storeName, this.collectionName);
 
       if (query && !(query instanceof Query)) {
         throw new KinveyError('Invalid query. It must be an instance of the Query class.');
       }
 
       if (docs.length > 0 && query) {
-        const {
-          filter,
-          sort,
-          limit,
-          skip,
-          fields
-        } = query;
-
-        if (filter && !isEmpty(filter)) {
-          docs = sift(filter, docs);
-        }
-
-        if (!isEmpty(sort)) {
-          // eslint-disable-next-line arrow-body-style
-          docs.sort((a, b) => {
-            return Object.keys(sort)
-              .reduce((result, field) => {
-                if (typeof result !== 'undefined') {
-                  return result;
-                }
-
-                if (Object.prototype.hasOwnProperty.call(sort, field)) {
-                  const aField = nested(a, field);
-                  const bField = nested(b, field);
-                  const modifier = sort[field]; // -1 (descending) or 1 (ascending)
-
-                  if ((aField !== null && typeof aField !== 'undefined')
-                    && (bField === null || typeof bField === 'undefined')) {
-                    return 1 * modifier;
-                  } else if ((bField !== null && typeof bField !== 'undefined')
-                    && (aField === null || typeof aField === 'undefined')) {
-                    return -1 * modifier;
-                  } else if (typeof aField === 'undefined' && bField === null) {
-                    return 0;
-                  } else if (aField === null && typeof bField === 'undefined') {
-                    return 0;
-                  } else if (aField !== bField) {
-                    return (aField < bField ? -1 : 1) * modifier;
-                  }
-                }
-
-                return 0;
-              }, undefined);
-          });
-        }
-
-        if (skip > 0) {
-          if (limit < Infinity) {
-            docs = docs.slice(skip, skip + limit);
-          } else {
-            docs = docs.slice(skip);
-          }
-        } else if (limit < Infinity) {
-          docs = docs.slice(0, limit);
-        }
-
-        if (isArray(fields) && fields.length > 0) {
-          docs = docs.map((doc) => {
-            const modifiedDoc = doc;
-            Object.keys(modifiedDoc).forEach((key) => {
-              if (fields.indexOf(key) === -1) {
-                delete modifiedDoc[key];
-              }
-            });
-            return modifiedDoc;
-          });
-        }
+        return query.process(docs);
       }
 
       return docs;
@@ -191,7 +121,7 @@ export class Cache {
         return null;
       }
 
-      if (!isArray(docs)) {
+      if (!Array.isArray(docs)) {
         singular = true;
         docsToSave = [docs];
       }

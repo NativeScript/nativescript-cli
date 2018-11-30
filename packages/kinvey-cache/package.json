@@ -17,9 +17,7 @@
     "kinvey-aggregation": "1.0.0",
     "kinvey-errors": "1.0.0",
     "kinvey-query": "1.0.0",
-    "lodash": "4.17.11",
-    "p-queue": "3.0.0",
-    "sift": "6.0.0"
+    "p-queue": "3.0.0"
   },
   "devDependencies": {
     "@babel/cli": "7.1.5",
