@@ -7,7 +7,6 @@ import { HttpStatusCodes } from "./constants";
 import * as request from "request";
 
 export class HttpClient implements Server.IHttpClient {
-	private defaultUserAgent: string;
 	private static STATUS_CODE_REGEX = /statuscode=(\d+)/i;
 	private static STUCK_REQUEST_ERROR_MESSAGE = "The request can't receive any response.";
 	private static STUCK_RESPONSE_ERROR_MESSAGE = "Can't receive all parts of the response.";
@@ -15,10 +14,19 @@ export class HttpClient implements Server.IHttpClient {
 	// We receive multiple response packets every ms but we don't need to be very aggressive here.
 	private static STUCK_RESPONSE_CHECK_INTERVAL = 10000;
 
+	private defaultUserAgent: string;
+	private cleanupData: ICleanupRequestData[];
+
 	constructor(private $config: Config.IConfig,
 		private $logger: ILogger,
+		private $processService: IProcessService,
 		private $proxyService: IProxyService,
-		private $staticConfig: Config.IStaticConfig) { }
+		private $staticConfig: Config.IStaticConfig) {
+		this.cleanupData = [];
+		this.$processService.attachToProcessExitSignals(this, () => {
+			this.cleanupData.forEach(d => this.cleanupAfterRequest(d));
+		});
+	}
 
 	public async httpRequest(options: any, proxySettings?: IProxySettings): Promise<Server.IResponse> {
 		try {
@@ -97,9 +105,9 @@ export class HttpClient implements Server.IHttpClient {
 		const result = new Promise<Server.IResponse>((resolve, reject) => {
 			let timerId: number;
 			let stuckRequestTimerId: number;
-			let stuckResponseIntervalId: NodeJS.Timer;
 			let hasResponse = false;
-			const timers: number[] = [];
+			const cleanupRequestData: ICleanupRequestData = { timers: [], stuckResponseIntervalId: null };
+			this.cleanupData.push(cleanupRequestData);
 
 			const promiseActions: IPromiseActions<Server.IResponse> = {
 				resolve,
@@ -109,9 +117,9 @@ export class HttpClient implements Server.IHttpClient {
 
 			if (options.timeout) {
 				timerId = setTimeout(() => {
-					this.setResponseResult(promiseActions, timers, stuckResponseIntervalId, { err: new Error(`Request to ${unmodifiedOptions.url} timed out.`) });
+					this.setResponseResult(promiseActions, cleanupRequestData, { err: new Error(`Request to ${unmodifiedOptions.url} timed out.`) });
 				}, options.timeout);
-				timers.push(timerId);
+				cleanupRequestData.timers.push(timerId);
 
 				delete options.timeout;
 			}
@@ -128,10 +136,10 @@ export class HttpClient implements Server.IHttpClient {
 				stuckRequestTimerId = null;
 				if (!hasResponse) {
 					requestObj.abort();
-					this.setResponseResult(promiseActions, timers, stuckResponseIntervalId, { err: new Error(HttpClient.STUCK_REQUEST_ERROR_MESSAGE) });
+					this.setResponseResult(promiseActions, cleanupRequestData, { err: new Error(HttpClient.STUCK_REQUEST_ERROR_MESSAGE) });
 				}
 			}, options.timeout || HttpClient.STUCK_REQUEST_TIMEOUT);
-			timers.push(stuckRequestTimerId);
+			cleanupRequestData.timers.push(stuckRequestTimerId);
 
 			requestObj
 				.on("error", (err: IHttpRequestError) => {
@@ -145,18 +153,18 @@ export class HttpClient implements Server.IHttpClient {
 					const errorMessage = this.getErrorMessage(errorMessageStatusCode, null);
 					err.proxyAuthenticationRequired = errorMessageStatusCode === HttpStatusCodes.PROXY_AUTHENTICATION_REQUIRED;
 					err.message = errorMessage || err.message;
-					this.setResponseResult(promiseActions, timers, stuckResponseIntervalId, { err });
+					this.setResponseResult(promiseActions, cleanupRequestData, { err });
 				})
 				.on("response", (response: Server.IRequestResponseData) => {
 					hasResponse = true;
 					let lastChunkTimestamp = Date.now();
-					stuckResponseIntervalId = setInterval(() => {
+					cleanupRequestData.stuckResponseIntervalId = setInterval(() => {
 						if (Date.now() - lastChunkTimestamp > HttpClient.STUCK_RESPONSE_CHECK_INTERVAL) {
 							if ((<any>response).destroy) {
 								(<any>response).destroy();
 							}
 
-							this.setResponseResult(promiseActions, timers, stuckResponseIntervalId, { err: new Error(HttpClient.STUCK_RESPONSE_ERROR_MESSAGE) });
+							this.setResponseResult(promiseActions, cleanupRequestData, { err: new Error(HttpClient.STUCK_RESPONSE_ERROR_MESSAGE) });
 						}
 					}, HttpClient.STUCK_RESPONSE_CHECK_INTERVAL);
 					const successful = helpers.isRequestSuccessful(response);
@@ -180,7 +188,7 @@ export class HttpClient implements Server.IHttpClient {
 					if (pipeTo) {
 						pipeTo.on("finish", () => {
 							this.$logger.trace("httpRequest: Piping done. code = %d", response.statusCode.toString());
-							this.setResponseResult(promiseActions, timers, stuckResponseIntervalId, { response });
+							this.setResponseResult(promiseActions, cleanupRequestData, { response });
 						});
 
 						responseStream.pipe(pipeTo);
@@ -196,13 +204,13 @@ export class HttpClient implements Server.IHttpClient {
 							const responseBody = data.join("");
 
 							if (successful) {
-								this.setResponseResult(promiseActions, timers, stuckResponseIntervalId, { body: responseBody, response });
+								this.setResponseResult(promiseActions, cleanupRequestData, { body: responseBody, response });
 							} else {
 								const errorMessage = this.getErrorMessage(response.statusCode, responseBody);
 								const err: any = new Error(errorMessage);
 								err.response = response;
 								err.body = responseBody;
-								this.setResponseResult(promiseActions, timers, stuckResponseIntervalId, { err });
+								this.setResponseResult(promiseActions, cleanupRequestData, { err });
 							}
 						});
 					}
@@ -233,19 +241,8 @@ export class HttpClient implements Server.IHttpClient {
 		return response;
 	}
 
-	private setResponseResult(result: IPromiseActions<Server.IResponse>, timers: number[], stuckResponseIntervalId: NodeJS.Timer, resultData: { response?: Server.IRequestResponseData, body?: string, err?: Error }): void {
-		timers.forEach(t => {
-			if (t) {
-				clearTimeout(t);
-				t = null;
-			}
-		});
-
-		if (stuckResponseIntervalId) {
-			clearInterval(stuckResponseIntervalId);
-			stuckResponseIntervalId = null;
-		}
-
+	private setResponseResult(result: IPromiseActions<Server.IResponse>, cleanupRequestData: ICleanupRequestData, resultData: { response?: Server.IRequestResponseData, body?: string, err?: Error }): void {
+		this.cleanupAfterRequest(cleanupRequestData);
 		if (!result.isResolved()) {
 			result.isResolved = () => true;
 			if (resultData.err) {
@@ -317,5 +314,25 @@ export class HttpClient implements Server.IHttpClient {
 			this.$logger.trace("Using proxy: %s", options.proxy);
 		}
 	}
+
+	private cleanupAfterRequest(data: ICleanupRequestData): void {
+		data.timers.forEach(t => {
+			if (t) {
+				clearTimeout(t);
+				t = null;
+			}
+		});
+
+		if (data.stuckResponseIntervalId) {
+			clearInterval(data.stuckResponseIntervalId);
+			data.stuckResponseIntervalId = null;
+		}
+	}
 }
+
+interface ICleanupRequestData {
+	timers: number[];
+	stuckResponseIntervalId: NodeJS.Timer;
+}
+
 $injector.register("httpClient", HttpClient);
