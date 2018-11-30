@@ -24,11 +24,11 @@ export function init(config = {}) {
     masterSecret,
     appVersion,
     instanceId,
-    encryptionKey,
-    defaultTimeout
+    encryptionKey
   } = config;
   let apiHostname = 'https://baas.kinvey.com';
   let authHostname = 'https://auth.kinvey.com';
+  const defaultTimeout = isNumber(config.defaultTimeout) && config.defaultTimeout >= 0 ? config.defaultTimeout : DEFAULT_TIMEOUT
 
   if (instanceId) {
     if (!isString(instanceId)) {
@@ -74,7 +74,9 @@ export function init(config = {}) {
     masterSecret,
     encryptionKey,
     appVersion,
-    defaultTimeout: isNumber(defaultTimeout) && defaultTimeout >= 0 ? defaultTimeout : DEFAULT_TIMEOUT,
+    _appVersion: appVersion,
+    defaultTimeout,
+    _defaultTimeout: defaultTimeout,
     auth: {
       protocol: parse(authHostname).protocol,
       host: parse(authHostname).host,
