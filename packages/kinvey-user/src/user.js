@@ -122,7 +122,7 @@ export class User {
   }
 
   async update(data) {
-    const { api, appKey, masterSecret } = getConfig();
+    const { api, appKey } = getConfig();
     const body = Object.assign({}, this.data, data);
 
     if (!data) {
@@ -204,6 +204,10 @@ export async function signup(data, options = {}) {
   }
 
   return new User(session);
+}
+
+export async function signupWithIdentity() {
+  throw new KinveyError('This function has been deprecated. You should use loginWithMIC() instead.');
 }
 
 export async function login(username, password) {
@@ -455,4 +459,8 @@ export async function exists(username) {
   });
   const response = await request.execute();
   return response.data.usernameExists === true;
+}
+
+export async function restore() {
+  throw new KinveyError('This function requires a master secret to be provided for your application. We strongly advise not to do this.');
 }
