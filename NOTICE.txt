@@ -6,14 +6,13 @@
 
 NativeScript Doctor v1* (the “Product”)
 
-Copyright © 2016-2018 Telerik AD. All Rights Reserved.
+Copyright © 2016-2018 Progress Software Corporation and/or one of its subsidiaries or affiliates. All rights reserved.
 
 For license information see the LICENSE.md file which accompanies this NOTICE.txt file.
 
-Portions of the Product include certain non-proprietary open source and commercial third-party components listed below (“Third-Party Components”). The authors of the Third-Party Components require Telerik AD (“Telerik”) to include the following notices and additional licensing terms as a condition of Telerik’s use of such Third-Party Components.  You acknowledge that the authors of the Third-Party Components have no obligation to provide support to you for the Third-Party Components or the Product.  You hereby undertake to comply with all licenses related to the applicable Third-Party Components.
-
-
-1.	Special Notices Regarding Open Source Third-Party Components incorporated in the Product:
+Portions of the Product include certain open source and commercial third-party components listed below (ìThird-Party Componentsî). The authors of the Third-Party Components require Progress Software Corporation (ìPSCî) to include the following notices and additional licensing terms as a condition of PSCís use of such Third-Party Components.  You acknowledge that the authors of the Third-Party Components have no obligation to provide support to you for the Third-Party Components or the Product.  You hereby undertake to comply with all licenses related to the applicable Third-Party Components.  Notwithstanding anything to the contrary, to the extent that any of the terms and conditions of the Product Agreement conflict, vary, or are in addition to the terms and conditions of the aforementioned third-party licenses for these technology, such terms and conditions are offered by PSC alone and not by any other party.
+ 
+1.	Special Notices Regarding Open Source Third-Party Components incorporated in the Product:  
 
 (1) BSD-Style License:
 
@@ -82,8 +81,8 @@ OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 2.	Special Notices Regarding Commercially Licensed Third-Party Components incorporated in the Product:  None
+  
 
+NOTICE FROM PROGRESS SOFTWARE CORPORATION: Additional notices may be included in the release notes or other documentation that accompanies updates received in connection with support of the Product.
 
-NOTICE FROM TELERIK AD: Additional notices may be included in the release notes or other documentation that accompanies updates received in connection with support of the Product.
-
-3/26/2018
+11/20/2018
