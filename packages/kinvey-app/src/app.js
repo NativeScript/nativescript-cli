@@ -74,9 +74,7 @@ export function init(config = {}) {
     masterSecret,
     encryptionKey,
     appVersion,
-    _appVersion: appVersion,
     defaultTimeout,
-    _defaultTimeout: defaultTimeout,
     auth: {
       protocol: parse(authHostname).protocol,
       host: parse(authHostname).host,
@@ -114,7 +112,9 @@ export function init(config = {}) {
     masterSecret: internalConfig.masterSecret,
     encryptionKey: internalConfig.encryptionKey,
     appVersion: internalConfig.appVersion,
-    defaultTimeout: internalConfig.defaultTimeout
+    _appVersion: internalConfig.appVersion,
+    defaultTimeout: internalConfig.defaultTimeout,
+    _defaultTimeout: internalConfig.defaultTimeout
   };
 }
 
