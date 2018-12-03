@@ -519,8 +519,15 @@ export class ProjectDataService implements IProjectDataService {
 }
 
 export class ProjectHelperStub implements IProjectHelper {
-	get projectDir(): string {
-		return "";
+	constructor(public projectHelperErrorMsg?: string, public customProjectDir?: string) {
+	}
+
+	public get projectDir(): string {
+		if (this.projectHelperErrorMsg) {
+			throw new Error(this.projectHelperErrorMsg);
+		}
+
+		return this.customProjectDir || "";
 	}
 
 	generateDefaultAppId(appName: string, baseAppId: string): string {

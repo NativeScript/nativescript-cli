@@ -19,7 +19,8 @@ export class AnalyticsService implements IAnalyticsService, IDisposable {
 		private $analyticsSettingsService: IAnalyticsSettingsService,
 		private $childProcess: IChildProcess,
 		private $projectDataService: IProjectDataService,
-		private $mobileHelper: Mobile.IMobileHelper) {
+		private $mobileHelper: Mobile.IMobileHelper,
+		private $projectHelper: IProjectHelper) {
 	}
 
 	public setShouldDispose(shouldDispose: boolean): void {
@@ -81,12 +82,7 @@ export class AnalyticsService implements IAnalyticsService, IDisposable {
 		await this.initAnalyticsStatuses();
 
 		if (!this.$staticConfig.disableAnalytics && this.analyticsStatuses[this.$staticConfig.TRACK_FEATURE_USAGE_SETTING_NAME] === AnalyticsStatus.enabled) {
-			gaSettings.customDimensions = gaSettings.customDimensions || {};
-			gaSettings.customDimensions[GoogleAnalyticsCustomDimensions.client] = this.$options.analyticsClient || (isInteractive() ? AnalyticsClients.Cli : AnalyticsClients.Unknown);
-
-			const googleAnalyticsData: IGoogleAnalyticsTrackingInformation = _.merge({ type: TrackingTypes.GoogleAnalyticsData, category: AnalyticsClients.Cli }, gaSettings);
-			this.$logger.trace("Will send the following information to Google Analytics:", googleAnalyticsData);
-			return this.sendMessageToBroker(googleAnalyticsData);
+			return this.forcefullyTrackInGoogleAnalytics(gaSettings);
 		}
 	}
 
@@ -115,12 +111,7 @@ export class AnalyticsService implements IAnalyticsService, IDisposable {
 		}
 
 		const customDimensions: IStringDictionary = {};
-		if (data.projectDir) {
-			const projectData = this.$projectDataService.getProjectData(data.projectDir);
-			customDimensions[GoogleAnalyticsCustomDimensions.projectType] = projectData.projectType;
-			const isShared = projectData.nsConfig ? (projectData.nsConfig.shared || false) : false;
-			customDimensions[GoogleAnalyticsCustomDimensions.isShared] = isShared.toString();
-		}
+		this.setProjectRelatedCustomDimensions(customDimensions, data.projectDir);
 
 		const googleAnalyticsEventData: IGoogleAnalyticsEventData = {
 			googleAnalyticsDataType: GoogleAnalyticsDataType.Event,
@@ -130,6 +121,36 @@ export class AnalyticsService implements IAnalyticsService, IDisposable {
 		};
 
 		await this.trackInGoogleAnalytics(googleAnalyticsEventData);
+	}
+
+	private forcefullyTrackInGoogleAnalytics(gaSettings: IGoogleAnalyticsData): Promise<void> {
+		gaSettings.customDimensions = gaSettings.customDimensions || {};
+		gaSettings.customDimensions[GoogleAnalyticsCustomDimensions.client] = this.$options.analyticsClient || (isInteractive() ? AnalyticsClients.Cli : AnalyticsClients.Unknown);
+		this.setProjectRelatedCustomDimensions(gaSettings.customDimensions);
+
+		const googleAnalyticsData: IGoogleAnalyticsTrackingInformation = _.merge({ type: TrackingTypes.GoogleAnalyticsData, category: AnalyticsClients.Cli }, gaSettings);
+		this.$logger.trace("Will send the following information to Google Analytics:", googleAnalyticsData);
+		return this.sendMessageToBroker(googleAnalyticsData);
+	}
+
+	private setProjectRelatedCustomDimensions(customDimensions: IStringDictionary, projectDir?: string): IStringDictionary {
+		if (!projectDir) {
+			try {
+				projectDir = this.$projectHelper.projectDir;
+			} catch (err) {
+				// In case there's no project dir here, the above getter will fail.
+				this.$logger.trace("Unable to get the projectDir from projectHelper", err);
+			}
+		}
+
+		if (projectDir) {
+			const projectData = this.$projectDataService.getProjectData(projectDir);
+			customDimensions[GoogleAnalyticsCustomDimensions.projectType] = projectData.projectType;
+			const isShared = !!(projectData.nsConfig && projectData.nsConfig.shared);
+			customDimensions[GoogleAnalyticsCustomDimensions.isShared] = isShared.toString();
+		}
+
+		return customDimensions;
 	}
 
 	public dispose(): void {
