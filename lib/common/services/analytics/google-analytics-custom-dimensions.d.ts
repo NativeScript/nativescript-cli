@@ -6,5 +6,6 @@ declare const enum GoogleAnalyticsCustomDimensions {
 	client = "cd5",
 	nodeVersion = "cd6",
 	playgroundId = "cd7",
-	usedTutorial = "cd8"
+	usedTutorial = "cd8",
+	isShared = "cd9"
 }
