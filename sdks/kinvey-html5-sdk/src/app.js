@@ -9,6 +9,7 @@ import { register as registerPopup } from 'kinvey-popup-web';
 import { register as registerIndexedDBCache } from 'kinvey-cache-indexeddb';
 import { register as registerMemoryCache } from 'kinvey-cache-memory';
 import { register as registerWebSQLCache } from 'kinvey-cache-websql';
+import pkg from '../package.json';
 
 export const StorageProvider = {
   IndexedDB: 'IndexedDB',
@@ -29,7 +30,10 @@ function init(config) {
   }
 
   // Register http
-  registerHttp();
+  registerHttp({
+    name: pkg.name,
+    version: pkg.version
+  });
 
   // Register popup
   registerPopup();

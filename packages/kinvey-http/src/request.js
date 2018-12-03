@@ -10,7 +10,7 @@ import { serialize, formatKinveyUrl } from './utils';
 import { Response } from './response';
 import { app, master, session as sessionAuth, basic, defaultAuth, all, Auth } from './auth';
 
-const requestQueue = new PQueue();
+const REQUEST_QUEUE = new PQueue();
 
 const AUTHORIZATION_HEADER = 'Authorization';
 export const RequestMethod = {
@@ -24,8 +24,15 @@ let http = async () => {
   throw new Error('You must override the default http function.');
 };
 
-export function register(httpAdapter) {
+const KINVEY_DEVICE_INFORMATION_HEADER = 'X-Kinvey-Device-Information';
+let deviceInformation;
+const KINVEY_DEVICE_INFO_HEADER = 'X-Kinvey-Device-Info';
+let deviceInfo;
+
+export function register(httpAdapter, sdkDeviceInformation, sdkDeviceInfo) {
   http = httpAdapter;
+  deviceInformation = sdkDeviceInformation;
+  deviceInfo = sdkDeviceInfo;
 }
 
 export class Request {
@@ -131,6 +138,12 @@ export class KinveyRequest extends Request {
 
   async execute(retry = true) {
     try {
+      // Add the X-Kinvey-Device-Information header
+      this.headers.set(KINVEY_DEVICE_INFORMATION_HEADER, deviceInformation);
+
+      // Add the X-Kinvey-Device-Info header
+      this.headers.set(KINVEY_DEVICE_INFO_HEADER, JSON.stringify(deviceInfo));
+
       // Set the authorization header
       if (this.auth) {
         this.headers.set(AUTHORIZATION_HEADER, this.authorizationHeader);
@@ -151,14 +164,14 @@ export class KinveyRequest extends Request {
           const micIdentity = socialIdentity[micIdentityKey];
 
           // Queue the request if the request que is paused
-          if (requestQueue.paused) {
-            return requestQueue.add(() => this.execute(false).catch(() => Promise.reject(error)));
+          if (REQUEST_QUEUE.paused) {
+            return REQUEST_QUEUE.add(() => this.execute(false).catch(() => Promise.reject(error)));
           }
 
           if (micIdentity) {
             try {
               // Pause the request queue
-              requestQueue.pause();
+              REQUEST_QUEUE.pause();
 
               // Refresh the session
               const refreshRequest = new KinveyRequest({
@@ -211,7 +224,7 @@ export class KinveyRequest extends Request {
               const response = await this.execute(false);
 
               // Start the request queue
-              requestQueue.start();
+              REQUEST_QUEUE.start();
 
               // Return the response
               return response;
@@ -243,7 +256,7 @@ export class KinveyRequest extends Request {
         }
 
         // Start the request queue
-        requestQueue.start();
+        REQUEST_QUEUE.start();
       }
 
       // Throw the error
