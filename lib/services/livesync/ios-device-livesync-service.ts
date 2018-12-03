@@ -9,35 +9,23 @@ export class IOSDeviceLiveSyncService extends DeviceLiveSyncServiceBase implemen
 	private socket: net.Socket;
 
 	constructor(
-		private $iOSSocketRequestExecutor: IiOSSocketRequestExecutor,
-		private $iOSNotification: IiOSNotification,
-		private $iOSEmulatorServices: Mobile.IiOSSimulatorService,
-		private $iOSDebuggerPortService: IIOSDebuggerPortService,
 		private $logger: ILogger,
 		private $processService: IProcessService,
 		protected $platformsData: IPlatformsData,
 		protected device: Mobile.IiOSDevice) {
-			super($platformsData, device);
+		super($platformsData, device);
 	}
 
 	private async setupSocketIfNeeded(projectData: IProjectData): Promise<boolean> {
+		// TODO: persist the sockets per app in order to support LiveSync on multiple apps on the same device
 		if (this.socket) {
 			return true;
 		}
 
 		const appId = projectData.projectIdentifiers.ios;
-
-		if (this.device.isEmulator) {
-			await this.$iOSEmulatorServices.postDarwinNotification(this.$iOSNotification.getAttachRequest(appId, this.device.deviceInfo.identifier), this.device.deviceInfo.identifier);
-			const port = await this.$iOSDebuggerPortService.getPort({ projectDir: projectData.projectDir, deviceId: this.device.deviceInfo.identifier, appId });
-			this.socket = await this.$iOSEmulatorServices.connectToPort({ port });
-			if (!this.socket) {
-				return false;
-			}
-		} else {
-			await this.$iOSSocketRequestExecutor.executeAttachRequest(this.device, constants.AWAIT_NOTIFICATION_TIMEOUT_SECONDS, appId);
-			const port = await this.$iOSDebuggerPortService.getPort({ projectDir: projectData.projectDir, deviceId: this.device.deviceInfo.identifier, appId });
-			this.socket = await this.device.connectToPort(port);
+		this.socket = await this.device.getLiveSyncSocket(appId);
+		if (!this.socket) {
+			return false;
 		}
 
 		this.attachEventHandlers();
@@ -145,7 +133,10 @@ export class IOSDeviceLiveSyncService extends DeviceLiveSyncServiceBase implemen
 
 	private destroySocket(): void {
 		if (this.socket) {
-			this.socket.destroy();
+			// we do not support LiveSync on multiple apps on the same device
+			// in order to do that, we should cache the socket per app
+			// and destroy just the current app socket when possible
+			this.device.destroyAllSockets();
 			this.socket = null;
 		}
 	}

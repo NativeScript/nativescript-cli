@@ -29,8 +29,8 @@ $injector.require("preparePlatformNativeService", "./services/prepare-platform-n
 
 $injector.require("debugDataService", "./services/debug-data-service");
 $injector.requirePublicClass("debugService", "./services/debug-service");
-$injector.require("iOSDebugService", "./services/ios-debug-service");
-$injector.require("androidDebugService", "./services/android-debug-service");
+$injector.require("iOSDeviceDebugService", "./services/ios-device-debug-service");
+$injector.require("androidDeviceDebugService", "./services/android-device-debug-service");
 
 $injector.require("userSettingsService", "./services/user-settings-service");
 $injector.requirePublic("analyticsSettingsService", "./services/analytics-settings-service");
@@ -146,7 +146,7 @@ $injector.requirePublic("previewQrCodeService", "./services/livesync/playground/
 $injector.requirePublic("sysInfo", "./sys-info");
 
 $injector.require("iOSNotificationService", "./services/ios-notification-service");
-$injector.require("socketProxyFactory", "./device-sockets/ios/socket-proxy-factory");
+$injector.require("appDebugSocketProxyFactory", "./device-sockets/ios/app-debug-socket-proxy-factory");
 $injector.require("iOSNotification", "./device-sockets/ios/notification");
 $injector.require("iOSSocketRequestExecutor", "./device-sockets/ios/socket-request-executor");
 $injector.require("messages", "./common/messages/messages");

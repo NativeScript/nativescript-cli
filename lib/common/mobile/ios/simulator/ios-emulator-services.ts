@@ -1,10 +1,7 @@
 import * as net from "net";
-import { connectEventuallyUntilTimeout } from "../../../helpers";
 import { APPLE_VENDOR_NAME, DeviceTypes, RUNNING_EMULATOR_STATUS, NOT_RUNNING_EMULATOR_STATUS } from "../../../constants";
 
 class IosEmulatorServices implements Mobile.IiOSSimulatorService {
-	private static DEFAULT_TIMEOUT = 10000;
-
 	constructor(private $logger: ILogger,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $iOSSimResolver: Mobile.IiOSSimResolver,
@@ -72,7 +69,7 @@ class IosEmulatorServices implements Mobile.IiOSSimulatorService {
 
 	public async connectToPort(data: Mobile.IConnectToPortData): Promise<net.Socket> {
 		try {
-			const socket = await connectEventuallyUntilTimeout(async () => net.connect(data.port), data.timeout || IosEmulatorServices.DEFAULT_TIMEOUT);
+			const socket = net.connect(data.port);
 			return socket;
 		} catch (e) {
 			this.$logger.debug(e);
@@ -85,7 +82,7 @@ class IosEmulatorServices implements Mobile.IiOSSimulatorService {
 
 		const output = await this.tryGetiOSSimDevices();
 		if (output.devices && output.devices.length) {
-			devices =  _(output.devices)
+			devices = _(output.devices)
 				.map(simDevice => this.convertSimDeviceToDeviceInfo(simDevice))
 				.sortBy(deviceInfo => deviceInfo.version)
 				.value();
@@ -102,7 +99,7 @@ class IosEmulatorServices implements Mobile.IiOSSimulatorService {
 		return [];
 	}
 
-	private async tryGetiOSSimDevices(): Promise<{devices: Mobile.IiSimDevice[], error: string}> {
+	private async tryGetiOSSimDevices(): Promise<{ devices: Mobile.IiSimDevice[], error: string }> {
 		let devices: Mobile.IiSimDevice[] = [];
 		let error: string = null;
 

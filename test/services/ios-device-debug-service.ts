@@ -1,11 +1,11 @@
-import { IOSDebugService } from "../../lib/services/ios-debug-service";
+import { IOSDeviceDebugService } from "../../lib/services/ios-device-debug-service";
 import { Yok } from "../../lib/common/yok";
 import * as stubs from "../stubs";
 import { assert } from "chai";
 
 const expectedDevToolsCommitSha = "02e6bde1bbe34e43b309d4ef774b1168d25fd024";
 
-class IOSDebugServiceInheritor extends IOSDebugService {
+class IOSDeviceDebugServiceInheritor extends IOSDeviceDebugService {
 	constructor(protected $devicesService: Mobile.IDevicesService,
 		$platformService: IPlatformService,
 		$iOSEmulatorServices: Mobile.IiOSSimulatorService,
@@ -15,16 +15,13 @@ class IOSDebugServiceInheritor extends IOSDebugService {
 		$errors: IErrors,
 		$packageInstallationManager: IPackageInstallationManager,
 		$iOSDebuggerPortService: IIOSDebuggerPortService,
-		$iOSNotification: IiOSNotification,
-		$iOSSocketRequestExecutor: IiOSSocketRequestExecutor,
 		$processService: IProcessService,
-		$socketProxyFactory: ISocketProxyFactory,
-		$net: INet,
+		$appDebugSocketProxyFactory: IAppDebugSocketProxyFactory,
 		$projectDataService: IProjectDataService,
 		$deviceLogProvider: Mobile.IDeviceLogProvider) {
-		super(<any>{}, $devicesService, $platformService, $iOSEmulatorServices, $childProcess, $hostInfo, $logger, $errors,
-			$packageInstallationManager, $iOSDebuggerPortService, $iOSNotification, $iOSSocketRequestExecutor, $processService,
-			$socketProxyFactory, $projectDataService, $deviceLogProvider);
+		super(<any>{ deviceInfo: { identifier: "123" } }, $devicesService, $platformService, $iOSEmulatorServices, $childProcess, $hostInfo, $logger, $errors,
+			$packageInstallationManager, $iOSDebuggerPortService,
+			$processService, $appDebugSocketProxyFactory, $projectDataService, $deviceLogProvider);
 	}
 
 	public getChromeDebugUrl(debugOptions: IDebugOptions, port: number): string {
@@ -49,7 +46,7 @@ const createTestInjector = (): IInjector => {
 		attachToProcessExitSignals: (context: any, callback: () => void): void => undefined
 	});
 
-	testInjector.register("socketProxyFactory", {
+	testInjector.register("appDebugSocketProxyFactory", {
 		on: (event: string | symbol, listener: Function): any => undefined
 	});
 
@@ -71,7 +68,7 @@ interface IChromeUrlTestCase {
 	scenarioName: string;
 }
 
-describe("iOSDebugService", () => {
+describe("iOSDeviceDebugService", () => {
 	describe("getChromeDebugUrl", () => {
 		const expectedPort = 12345;
 		const customDevToolsCommit = "customDevToolsCommit";
@@ -193,8 +190,8 @@ describe("iOSDebugService", () => {
 		for (const testCase of chromUrlTestCases) {
 			it(`returns correct url when ${testCase.scenarioName}`, () => {
 				const testInjector = createTestInjector();
-				const iOSDebugService = testInjector.resolve<IOSDebugServiceInheritor>(IOSDebugServiceInheritor);
-				const actualChromeUrl = iOSDebugService.getChromeDebugUrl(testCase.debugOptions, expectedPort);
+				const iOSDeviceDebugService = testInjector.resolve<IOSDeviceDebugServiceInheritor>(IOSDeviceDebugServiceInheritor);
+				const actualChromeUrl = iOSDeviceDebugService.getChromeDebugUrl(testCase.debugOptions, expectedPort);
 				assert.equal(actualChromeUrl, testCase.expectedChromeUrl);
 			});
 		}

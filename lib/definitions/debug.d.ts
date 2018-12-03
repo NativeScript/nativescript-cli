@@ -1,7 +1,13 @@
 /**
  * Describes information for starting debug process.
  */
-interface IDebugData extends Mobile.IDeviceIdentifier, IProjectDir {
+interface IDebugData extends IAppDebugData, Mobile.IDeviceIdentifier {
+}
+
+/**
+ * Describes information for application that will be debugged.
+ */
+interface IAppDebugData extends IProjectDir {
 	/**
 	 * Application identifier of the app that it will be debugged.
 	 */
@@ -36,11 +42,6 @@ interface IDebugOptions {
 	 * Defines if we should stop the currently running debug process.
 	 */
 	stop?: boolean;
-
-	/**
-	 * Defines if debug process is for emulator (not for real device).
-	 */
-	emulator?: boolean;
 
 	/**
 	 * Defines if the debug process should break on the first line.
@@ -139,14 +140,14 @@ interface IDebugService extends IDebugServiceBase {
 /**
  * Describes actions required for debugging on specific platform (Android or iOS).
  */
-interface IPlatformDebugService extends IPlatform, NodeJS.EventEmitter {
+interface IDeviceDebugService extends IPlatform, NodeJS.EventEmitter {
 	/**
 	 * Starts debug operation.
-	 * @param {IDebugData} debugData Describes information for device and application that will be debugged.
+	 * @param {IAppDebugData} debugData Describes information for application that will be debugged.
 	 * @param {IDebugOptions} debugOptions Describe possible options to modify the behaivor of the debug operation, for example stop on the first line.
 	 * @returns {Promise<void>}
 	 */
-	debugStart(debugData: IDebugData, debugOptions: IDebugOptions): Promise<void>;
+	debugStart(debugData: IAppDebugData, debugOptions: IDebugOptions): Promise<void>;
 
 	/**
 	 * Stops debug operation.
@@ -156,9 +157,9 @@ interface IPlatformDebugService extends IPlatform, NodeJS.EventEmitter {
 
 	/**
 	 * Starts debug operation based on the specified debug data.
-	 * @param {IDebugData} debugData Describes information for device and application that will be debugged.
+	 * @param {IAppDebugData} debugData Describes information for application that will be debugged.
 	 * @param {IDebugOptions} debugOptions Describe possible options to modify the behaivor of the debug operation, for example stop on the first line.
 	 * @returns {Promise<string>} Full url where the frontend client may be connected.
 	 */
-	debug(debugData: IDebugData, debugOptions: IDebugOptions): Promise<string>;
+	debug(debugData: IAppDebugData, debugOptions: IDebugOptions): Promise<string>;
 }

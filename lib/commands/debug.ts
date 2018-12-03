@@ -3,11 +3,13 @@ import { isInteractive } from "../common/helpers";
 import { cache } from "../common/decorators";
 import { DebugCommandErrors } from "../constants";
 import { ValidatePlatformCommandBase } from "./command-base";
+import { LiveSyncCommandHelper } from "../helpers/livesync-command-helper";
 
 export class DebugPlatformCommand extends ValidatePlatformCommandBase implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
 
 	constructor(private platform: string,
+		private $bundleValidatorHelper: IBundleValidatorHelper,
 		private $debugService: IDebugService,
 		protected $devicesService: Mobile.IDevicesService,
 		$platformService: IPlatformService,
@@ -21,7 +23,7 @@ export class DebugPlatformCommand extends ValidatePlatformCommandBase implements
 		private $prompter: IPrompter,
 		private $liveSyncCommandHelper: ILiveSyncCommandHelper,
 		private $androidBundleValidatorHelper: IAndroidBundleValidatorHelper) {
-			super($options, $platformsData, $platformService, $projectData);
+		super($options, $platformsData, $platformService, $projectData);
 	}
 
 	public async execute(args: string[]): Promise<void> {
@@ -36,7 +38,7 @@ export class DebugPlatformCommand extends ValidatePlatformCommandBase implements
 
 		const selectedDeviceForDebug = await this.getDeviceForDebug();
 
-		const debugData = this.$debugDataService.createDebugData(this.$projectData, {device: selectedDeviceForDebug.deviceInfo.identifier});
+		const debugData = this.$debugDataService.createDebugData(this.$projectData, { device: selectedDeviceForDebug.deviceInfo.identifier });
 
 		if (this.$options.start) {
 			await this.$liveSyncService.printDebugInformation(await this.$debugService.debug(debugData, debugOptions));
@@ -118,7 +120,14 @@ export class DebugPlatformCommand extends ValidatePlatformCommandBase implements
 			this.$errors.fail("--release flag is not applicable to this command");
 		}
 
-		const result = await super.canExecuteCommandBase(this.platform, { validateOptions: true, notConfiguredEnvOptions: { hideCloudBuildOption: true }});
+		if (this.$options.hmr && this.$options.debugBrk) {
+			this.$errors.fail("--debug-brk and --hmr flags cannot be combined");
+		}
+
+		const minSupportedWebpackVersion = this.$options.hmr ? LiveSyncCommandHelper.MIN_SUPPORTED_WEBPACK_VERSION_WITH_HMR : null;
+		this.$bundleValidatorHelper.validate(minSupportedWebpackVersion);
+
+		const result = await super.canExecuteCommandBase(this.platform, { validateOptions: true, notConfiguredEnvOptions: { hideCloudBuildOption: true, hideSyncToPreviewAppOption: true } });
 		return result;
 	}
 }
@@ -209,7 +218,7 @@ export class DebugAndroidCommand implements ICommand {
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $injector: IInjector,
 		private $projectData: IProjectData) {
-			this.$projectData.initializeProjectData();
+		this.$projectData.initializeProjectData();
 	}
 
 	public execute(args: string[]): Promise<void> {

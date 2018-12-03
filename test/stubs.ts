@@ -633,7 +633,7 @@ function unexpected(msg: string): Error {
 	return err;
 }
 
-export class DebugServiceStub extends EventEmitter implements IPlatformDebugService {
+export class DebugServiceStub extends EventEmitter implements IDeviceDebugService {
 	public async debug(): Promise<string> {
 		return;
 	}

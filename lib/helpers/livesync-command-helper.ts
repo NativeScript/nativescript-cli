@@ -1,5 +1,5 @@
 export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
-	private static MIN_SUPPORTED_WEBPACK_VERSION_WITH_HMR = "0.17.0";
+	public static MIN_SUPPORTED_WEBPACK_VERSION_WITH_HMR = "0.17.0";
 
 	constructor(private $platformService: IPlatformService,
 		private $projectData: IProjectData,

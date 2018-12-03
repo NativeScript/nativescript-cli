@@ -111,8 +111,14 @@ declare module Mobile {
 	}
 
 	interface IiOSDevice extends IDevice {
-		connectToPort(port: number): Promise<any>;
+		getLiveSyncSocket(appId: string): Promise<any>;
+		destroyLiveSyncSocket(appId: string): void;
+
+		getDebugSocket(appId: string): Promise<any>;
+		destroyDebugSocket(appId: string): void;
+
 		openDeviceLogStream(options?: IiOSLogStreamOptions): Promise<void>;
+		destroyAllSockets(): void;
 	}
 
 	interface IAndroidDevice extends IDevice {
@@ -124,8 +130,6 @@ declare module Mobile {
 	interface IAndroidDeviceFileSystem extends IDeviceFileSystem {
 		getDeviceHashService(appIdentifier: string): Mobile.IAndroidDeviceHashService;
 	}
-
-	interface IiOSSimulator extends IDevice { }
 
 	/**
 	 * Describes log stream options

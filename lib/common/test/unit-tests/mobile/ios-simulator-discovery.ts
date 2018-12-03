@@ -4,12 +4,18 @@ import { Yok } from "../../../yok";
 import { assert } from "chai";
 import { DeviceDiscoveryEventNames, CONNECTED_STATUS } from "../../../constants";
 import { DevicePlatformsConstants } from "../../../mobile/device-platforms-constants";
+import { ErrorsStub, CommonLoggerStub, HooksServiceStub } from "../stubs";
+import { FileSystemStub } from "../../../../../test/stubs";
 
 let currentlyRunningSimulators: Mobile.IiSimDevice[];
 
 function createTestInjector(): IInjector {
 	const injector = new Yok();
+	injector.register("fs", FileSystemStub);
+	injector.register("plistParser", {});
 	injector.register("injector", injector);
+	injector.register("errors", ErrorsStub);
+	injector.register("iOSDebuggerPortService", {});
 	injector.register("iOSSimResolver", {
 		iOSSim: {
 			getRunningSimulators: async () => currentlyRunningSimulators
@@ -32,6 +38,11 @@ function createTestInjector(): IInjector {
 	injector.register("iOSSimulatorLogProvider", {});
 	injector.register("deviceLogProvider", {});
 	injector.register("iOSEmulatorServices", {});
+	injector.register("iOSNotification", {});
+	injector.register("processService", {});
+	injector.register("options", {});
+	injector.register("hooksService", HooksServiceStub);
+	injector.register("logger", CommonLoggerStub);
 
 	return injector;
 }
@@ -58,20 +69,20 @@ describe("ios-simulator-discovery", () => {
 	let defaultRunningSimulator: any;
 	let expectedDeviceInfo: Mobile.IDeviceInfo = null;
 
-	const detectNewSimulatorAttached = async (runningSimulator: any): Promise<Mobile.IiOSSimulator> => {
-		return new Promise<Mobile.IiOSSimulator>(async (resolve, reject) => {
+	const detectNewSimulatorAttached = async (runningSimulator: any): Promise<Mobile.IiOSDevice> => {
+		return new Promise<Mobile.IiOSDevice>(async (resolve, reject) => {
 			currentlyRunningSimulators.push(_.cloneDeep(runningSimulator));
-			iOSSimulatorDiscovery.once(DeviceDiscoveryEventNames.DEVICE_FOUND, (device: Mobile.IDevice) => {
+			iOSSimulatorDiscovery.once(DeviceDiscoveryEventNames.DEVICE_FOUND, (device: Mobile.IiOSDevice) => {
 				resolve(device);
 			});
 			await iOSSimulatorDiscovery.startLookingForDevices();
 		});
 	};
 
-	const detectSimulatorDetached = async (simulatorId: string): Promise<Mobile.IiOSSimulator> => {
+	const detectSimulatorDetached = async (simulatorId: string): Promise<Mobile.IiOSDevice> => {
 		_.remove(currentlyRunningSimulators, simulator => simulator.id === simulatorId);
-		return new Promise<Mobile.IDevice>(async (resolve, reject) => {
-			iOSSimulatorDiscovery.once(DeviceDiscoveryEventNames.DEVICE_LOST, (device: Mobile.IDevice) => {
+		return new Promise<Mobile.IiOSDevice>(async (resolve, reject) => {
+			iOSSimulatorDiscovery.once(DeviceDiscoveryEventNames.DEVICE_LOST, (device: Mobile.IiOSDevice) => {
 				resolve(device);
 			});
 			await iOSSimulatorDiscovery.startLookingForDevices();
