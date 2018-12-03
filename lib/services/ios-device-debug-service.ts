@@ -178,23 +178,30 @@ export class IOSDeviceDebugService extends DebugServiceBase implements IDeviceDe
 		const existingTcpProxy = this.$appDebugSocketProxyFactory.getTCPSocketProxy(this.deviceIdentifier, debugData.applicationIdentifier);
 		const tcpSocketProxy = existingTcpProxy || await this.$appDebugSocketProxyFactory.addTCPSocketProxy(this.device, debugData.applicationIdentifier);
 		if (!existingTcpProxy) {
-			await this.openAppInspector(tcpSocketProxy.address(), debugData, debugOptions);
+			const inspectorProcess = await this.openAppInspector(tcpSocketProxy.address(), debugData, debugOptions);
+			if (inspectorProcess) {
+				tcpSocketProxy.on("close", async () => {
+					await this.killProcess(inspectorProcess);
+				});
+			}
 		}
 
 		return null;
 	}
 
-	private async openAppInspector(fileDescriptor: string, debugData: IDebugData, debugOptions: IDebugOptions): Promise<void> {
+	private async openAppInspector(fileDescriptor: string, debugData: IDebugData, debugOptions: IDebugOptions): Promise<ChildProcess> {
 		if (debugOptions.client) {
 			const inspectorPath = await this.$packageInstallationManager.getInspectorFromCache(inspectorNpmPackageName, debugData.projectDir);
 
 			const inspectorSourceLocation = path.join(inspectorPath, inspectorUiDir, "Main.html");
-			const inspectorApplicationPath = path.join(inspectorPath, inspectorAppName);
+			const inspectorApplicationPath = path.join(inspectorPath, inspectorAppName, "Contents", "MacOS", inspectorAppName, "Contents", "MacOS", "NativeScript Inspector");
 
-			const cmd = `open -a '${inspectorApplicationPath}' --args '${inspectorSourceLocation}' '${debugData.projectName}' '${fileDescriptor}'`;
-			await this.$childProcess.exec(cmd);
+			const inspectorProcess: ChildProcess = this.$childProcess.spawn(inspectorApplicationPath, [inspectorSourceLocation, debugData.projectName, fileDescriptor]);
+			inspectorProcess.on("error", (e: Error) => this.$logger.trace(e));
+			return inspectorProcess;
 		} else {
 			this.$logger.info("Suppressing debugging client.");
+			return null;
 		}
 	}
 }
