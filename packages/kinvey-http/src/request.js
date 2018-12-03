@@ -37,13 +37,12 @@ export function register(httpAdapter, sdkDeviceInformation, sdkDeviceInfo) {
 
 export class Request {
   constructor(request = {}) {
-    const { defaultTimeout } = getConfig();
     const {
       headers,
       method,
       url,
       body,
-      timeout = defaultTimeout
+      timeout
     } = request;
 
     this.headers = headers;
@@ -66,11 +65,14 @@ export class Request {
   }
 
   set timeout(timeout) {
-    if (!isNumber(timeout) || isNaN(timeout)) {
+    const { defaultTimeout } = getConfig();
+    const requestTimeout = typeof timeout === 'undefined' || timeout === null ? defaultTimeout : timeout;
+
+    if (!isNumber(requestTimeout) || isNaN(requestTimeout)) {
       throw new KinveyError('Invalid timeout. Timeout must be a number.');
     }
 
-    this._timeout = timeout;
+    this._timeout = requestTimeout;
   }
 
   async execute() {
@@ -139,10 +141,14 @@ export class KinveyRequest extends Request {
   async execute(retry = true) {
     try {
       // Add the X-Kinvey-Device-Information header
-      this.headers.set(KINVEY_DEVICE_INFORMATION_HEADER, deviceInformation);
+      if (deviceInformation) {
+        this.headers.set(KINVEY_DEVICE_INFORMATION_HEADER, deviceInformation);
+      }
 
       // Add the X-Kinvey-Device-Info header
-      this.headers.set(KINVEY_DEVICE_INFO_HEADER, JSON.stringify(deviceInfo));
+      if (deviceInfo) {
+        this.headers.set(KINVEY_DEVICE_INFO_HEADER, JSON.stringify(deviceInfo));
+      }
 
       // Set the authorization header
       if (this.auth) {
@@ -156,17 +162,17 @@ export class KinveyRequest extends Request {
       if (retry) {
         // Received an InvalidCredentialsError
         if (error instanceof InvalidCredentialsError) {
+          // Queue the request if the request queue is paused
+          if (REQUEST_QUEUE.paused) {
+            return REQUEST_QUEUE.add(() => this.execute(false).catch(() => Promise.reject(error)));
+          }
+
           const { appKey, appSecret, auth, api } = getConfig();
           const activeSession = getSession();
           const socialIdentity = (activeSession && activeSession._socialIdentity) || {};
           const micIdentityKey = Object.keys(socialIdentity)
             .find(sessionKey => socialIdentity[sessionKey].identity === 'kinveyAuth');
           const micIdentity = socialIdentity[micIdentityKey];
-
-          // Queue the request if the request que is paused
-          if (REQUEST_QUEUE.paused) {
-            return REQUEST_QUEUE.add(() => this.execute(false).catch(() => Promise.reject(error)));
-          }
 
           if (micIdentity) {
             try {

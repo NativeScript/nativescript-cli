@@ -26,9 +26,9 @@ export function init(config = {}) {
     instanceId,
     encryptionKey
   } = config;
+  const defaultTimeout = isNumber(config.defaultTimeout) && config.defaultTimeout >= 0 ? config.defaultTimeout : DEFAULT_TIMEOUT;
   let apiHostname = 'https://baas.kinvey.com';
   let authHostname = 'https://auth.kinvey.com';
-  const defaultTimeout = isNumber(config.defaultTimeout) && config.defaultTimeout >= 0 ? config.defaultTimeout : DEFAULT_TIMEOUT
 
   if (instanceId) {
     if (!isString(instanceId)) {
