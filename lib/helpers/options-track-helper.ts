@@ -34,7 +34,7 @@ export class OptionsTracker {
 			if (this.shouldSkipProperty(key, value, shorthands, optionsDefinitions)) {
 				delete data[key];
 			} else {
-				if (options && optionsDefinitions[key] && optionsDefinitions[key].hasSensitiveValue) {
+				if (options && optionsDefinitions[key] && optionsDefinitions[key].hasSensitiveValue !== false) {
 					value = OptionsTracker.PRIVATE_REPLACE_VALUE;
 				} else if (key.toLowerCase().indexOf(OptionsTracker.PASSWORD_DETECTION_STRING) >= 0) {
 					value = OptionsTracker.PRIVATE_REPLACE_VALUE;
