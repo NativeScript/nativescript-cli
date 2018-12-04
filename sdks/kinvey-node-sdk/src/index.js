@@ -1,11 +1,11 @@
 import { Acl } from 'kinvey-acl';
-import { Aggregation } from 'kinvey-aggregation';
 import * as DataStore from 'kinvey-datastore';
 import { endpoint } from 'kinvey-endpoint';
 import * as Files from 'kinvey-files';
 import { Kmd } from 'kinvey-kmd';
 import { ping } from 'kinvey-ping';
 import { Query } from 'kinvey-query';
+import { Aggregation } from './aggregation';
 import * as App from './app';
 import { User } from './user';
 

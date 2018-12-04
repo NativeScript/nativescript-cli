@@ -1,4 +1,3 @@
-import isArray from 'lodash/isArray';
 import { Query } from 'kinvey-query';
 
 /**
