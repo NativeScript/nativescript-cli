@@ -7,7 +7,7 @@ import { Acl } from '../acl';
 import { Metadata } from '../metadata';
 import { User } from './user';
 import { randomString } from '../utils';
-import { ActiveUserError, InvalidCredentialsError, KinveyError } from '../errors';
+import { ActiveUserError, InvalidCredentialsError, KinveyError, NoActiveUserError } from '../errors';
 import { CacheStore, SyncStore } from '../datastore';
 import { Client } from '../client';
 import { Query } from '../query';
@@ -865,6 +865,17 @@ describe('User', () => {
     it('should fail for a user that is not active', () => {
       const user = new User();
       return chai.expect(user.me()).to.eventually.be.rejected;
+    });
+
+    it.only('should fail if there is no active user', () => {
+      return UserMock.logout()
+        .then(() => User.me())
+        .then(() => {
+          throw new Error('This should not fail');
+        })
+        .catch((error) => {
+          expect(error).toBeAn(NoActiveUserError);
+        });
     });
   });
 

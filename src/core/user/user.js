@@ -6,7 +6,7 @@ import isEmpty from 'lodash/isEmpty';
 import url from 'url';
 import { Client } from '../client';
 import { AuthType, RequestMethod, KinveyRequest } from '../request';
-import { KinveyError, NotFoundError, ActiveUserError } from '../errors';
+import { KinveyError, NotFoundError, ActiveUserError, NoActiveUserError } from '../errors';
 import { DataStore } from '../datastore';
 import { MobileIdentityConnect } from '../identity';
 import { Log } from '../log';
@@ -675,7 +675,7 @@ export class User {
       return activeUser.me(options);
     }
 
-    return Promise.resolve(null);
+    return Promise.reject(new NoActiveUserError());
   }
 
   /**
