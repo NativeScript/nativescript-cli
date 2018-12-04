@@ -149,7 +149,8 @@ export const enum TrackActionNames {
 	LiveSync = "LiveSync",
 	RunSetupScript = "Run Setup Script",
 	CheckLocalBuildSetup = "Check Local Build Setup",
-	CheckEnvironmentRequirements = "Check Environment Requirements"
+	CheckEnvironmentRequirements = "Check Environment Requirements",
+	Options = "Options"
 }
 
 export const AnalyticsEventLabelDelimiter = "__";

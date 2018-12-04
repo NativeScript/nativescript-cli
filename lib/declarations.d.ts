@@ -915,6 +915,10 @@ interface IAndroidBundleValidatorHelper {
 	validateRuntimeVersion(projectData: IProjectData): void
 }
 
+interface IOptionsTracker {
+	trackOptions(options: IOptions): Promise<void>
+}
+
 interface INativeScriptCloudExtensionService {
 	/**
 	 * Installs nativescript-cloud extension

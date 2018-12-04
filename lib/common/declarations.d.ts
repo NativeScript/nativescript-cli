@@ -1270,6 +1270,10 @@ interface IDashedOption {
 	 */
 	type: string;
 	/**
+	 * Option has sensitive value
+	 */
+	hasSensitiveValue: boolean;
+	/**
 	 * Shorthand option passed on the command line with `-` sign, for example `-v`
 	 */
 	alias?: any;

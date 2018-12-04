@@ -166,7 +166,7 @@ describe("options", () => {
 			process.argv.push("--test1");
 			process.argv.push("value");
 			const options = createOptions(testInjector);
-			options.validateOptions({ test1: { type: OptionType.String } });
+			options.validateOptions({ test1: { type: OptionType.String, hasSensitiveValue: false } });
 			process.argv.pop();
 			process.argv.pop();
 			assert.isFalse(isExecutionStopped);
@@ -175,7 +175,7 @@ describe("options", () => {
 		it("does not break execution when valid commandSpecificOptions are passed and user specifies globally valid option", () => {
 			const options = createOptions(testInjector);
 			process.argv.push("--version");
-			options.validateOptions({ test1: { type: OptionType.String } });
+			options.validateOptions({ test1: { type: OptionType.String, hasSensitiveValue: false } });
 			process.argv.pop();
 			assert.isFalse(isExecutionStopped);
 		});
@@ -253,7 +253,7 @@ describe("options", () => {
 			it("does not break execution when dashed option with two dashes is passed", () => {
 				process.argv.push("--special-dashed-v");
 				const options = createOptions(testInjector);
-				options.validateOptions({ specialDashedV: { type: OptionType.Boolean } });
+				options.validateOptions({ specialDashedV: { type: OptionType.Boolean, hasSensitiveValue: false } });
 				process.argv.pop();
 				assert.isFalse(isExecutionStopped, "Dashed options should be validated in specific way. Make sure validation allows yargs specific behavior:" +
 					"Dashed options (special-dashed-v) are added to yargs.argv in two ways: special-dashed-v and specialDashedV");
