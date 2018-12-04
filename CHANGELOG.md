@@ -1,5 +1,11 @@
 NativeScript CLI Changelog
 ================
+5.0.3 (2018, December 4)
+==
+### Fixed
+* [Fixed #4186](https://github.com/NativeScript/nativescript-cli/issues/4186): Fix stuck http requests/responses
+* [Fixed #4189](https://github.com/NativeScript/nativescript-cli/pull/4189): API: Fix "Cannot read property 'removeListener' of undefined" error on second stop of livesync to preview app
+
 
 5.0.2 (2018, November 29)
 ==
