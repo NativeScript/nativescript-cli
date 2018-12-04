@@ -1,3 +1,6 @@
+import isString from 'lodash/isString';
+import { KinveyError } from 'kinvey-errors';
+
 const MASTER_TABLE_NAME = 'sqlite_master';
 const SIZE = 2 * 1024 * 1024; // Database size in bytes
 
@@ -47,26 +50,35 @@ function execute(dbName, tableName, sqlQueries, write = false) {
                 });
               })
             );
-          });
-      }, reject);
-      // }, (error) => {
-      //   const errorMessage = typeof error === 'string' ? error : error.message;
+          })
+          .then((responses = []) => {
+            return responses.reduce(({ rowCount = 0, result = [] }, response) => {
+              return {
+                rowCount: rowCount + response.rowCount,
+                result: result.concat(response.result)
+              };
+            }, { rowCount: 0, result: [] });
+          })
+          .then(resolve)
+          .catch(reject);
+      }, (error) => {
+        const errorMessage = isString(error) ? error : error.message;
 
-      //   if (errorMessage && errorMessage.indexOf('no such table') === -1) {
-      //     return resolve({ result: [] });
-      //   }
-
-      //   const sql = 'SELECT name AS value from #{table} WHERE type = ? AND name = ?';
-      //   const parameters = ['table', tableName];
-      //   execute(dbName, MASTER_TABLE_NAME, [sql, parameters])
-      //     .then((response) => {
-      //       if (response.result.length === 0) {
-      //         return resolve({ result: [] });
-      //       }
-      //       return reject(new KinveyError(`Unable to open a transaction for the ${tableName} collection on the ${dbName} WebSQL database.`));
-      //     })
-      //     .catch(reject);
-      // });
+        if (errorMessage && errorMessage.indexOf('no such table') === -1) {
+          resolve({ rowCount: 0, result: [] });
+        } else {
+          const sql = 'SELECT name AS value from #{table} WHERE type = ? AND name = ?';
+          const parameters = ['table', tableName];
+          execute(dbName, MASTER_TABLE_NAME, [[sql, parameters]])
+            .then((response) => {
+              if (response.result.length === 0) {
+                return resolve({ rowCount: 0, result: [] });
+              }
+              return reject(new KinveyError(`Unable to open a transaction for the ${tableName} collection on the ${dbName} WebSQL database.`));
+            })
+            .catch(reject);
+        }
+      });
     } catch (error) {
       reject(error);
     }
