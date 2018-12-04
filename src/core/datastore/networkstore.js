@@ -118,7 +118,7 @@ export class NetworkStore {
   findById(id, options = {}) {
     if (!id) {
       return wrapInObservable((observer) => {
-        observer.next(undefined); // TODO: decide on this behaviour
+        observer.error(new KinveyError('No id was provided. An id must be provided.'));
       });
     }
 
