@@ -27,17 +27,17 @@ export function basic(appKey, appSecret, masterSecret) {
   }
 }
 
-export function defaultAuth(session, appKey, masterSecret) {
+export function defaultAuth(_session, appKey, masterSecret) {
   try {
-    return session(session);
+    return session(_session);
   } catch (error) {
     return master(appKey, masterSecret);
   }
 }
 
-export function all(session, appKey, appSecret, masterSecret) {
+export function all(_session, appKey, appSecret, masterSecret) {
   try {
-    return session(session);
+    return session(_session);
   } catch (error) {
     return basic(appKey, appSecret, masterSecret);
   }

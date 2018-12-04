@@ -937,7 +937,7 @@ describe('User', () => {
     });
   });
 
-  describe('lookup()', () => {//TODO: lookup used to return observable, now it returns the data
+  describe('lookup()', () => {
     before(() => {
       return UserMock.login(randomString(), randomString(), client.appKey);
     });
@@ -1046,9 +1046,8 @@ describe('User', () => {
         });
     });
 
-    it('should remove the user that matches the id argument', () => {//TODO: hard=false is what is noiw sent by default, used to be no query sent if not set explicitly
+    it('should remove the user that matches the id argument', () => {
       const pathname = `/user/${client.appKey}`;
-      // Remove the user
       const user = new User({ _id: randomString(), email: randomString() });
 
       nock(client.apiHostname)
@@ -1063,7 +1062,6 @@ describe('User', () => {
 
     it('should remove the user that matches the id argument permanently', () => {
       const pathname = `/user/${client.appKey}`;
-      // Remove the user
       const user = new User({ _id: randomString(), email: randomString() });
 
       nock(client.apiHostname, { encodedQueryParams: true })

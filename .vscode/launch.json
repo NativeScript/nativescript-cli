@@ -349,6 +349,29 @@
     {
       "type": "node",
       "request": "launch",
+      "name": "User Tests",
+      "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
+      "args": [
+        "--require",
+        "@babel/register",
+        "--ui",
+        "tdd",
+        "--timeout",
+        "999999",
+        "--colors",
+        "${workspaceFolder}/packages/kinvey-user/src"
+      ],
+      "internalConsoleOptions": "openOnSessionStart",
+      "sourceMaps": true,
+      "smartStep": true,
+      "skipFiles": [
+        "<node_internals>/**/*.js",
+        "${workspaceFolder}/node_modules/**/*.js"
+      ]
+    },
+    {
+      "type": "node",
+      "request": "launch",
       "name": "Integration Tests",
       "program": "${workspaceFolder}/tests/integration/node_modules/.bin/_mocha",
       "cwd": "${workspaceFolder}/tests/integration",
