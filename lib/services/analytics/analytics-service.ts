@@ -146,8 +146,7 @@ export class AnalyticsService implements IAnalyticsService, IDisposable {
 		if (projectDir) {
 			const projectData = this.$projectDataService.getProjectData(projectDir);
 			customDimensions[GoogleAnalyticsCustomDimensions.projectType] = projectData.projectType;
-			const isShared = !!(projectData.nsConfig && projectData.nsConfig.shared);
-			customDimensions[GoogleAnalyticsCustomDimensions.isShared] = isShared.toString();
+			customDimensions[GoogleAnalyticsCustomDimensions.isShared] = projectData.isShared.toString();
 		}
 
 		return customDimensions;

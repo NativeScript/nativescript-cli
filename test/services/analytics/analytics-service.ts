@@ -42,7 +42,8 @@ const createTestInjector = (opts?: { projectHelperErrorMsg?: string, projectDir?
 	testInjector.register("projectDataService", {
 		getProjectData: (projectDir?: string): IProjectData => {
 			return <any>{
-				projectType: sampleProjectType
+				projectType: sampleProjectType,
+				isShared: false
 			};
 		}
 	});
