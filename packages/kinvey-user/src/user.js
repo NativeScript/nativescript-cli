@@ -168,12 +168,12 @@ export class User {
 
   async registerForLiveService() {
     if (!Live.isRegistered()) {
-      const { api, appKey, deviceId } = getConfig();
+      const { api, appKey, device } = getConfig();
       const request = new KinveyRequest({
         method: RequestMethod.POST,
         auth: Auth.Session,
         url: formatKinveyUrl(api.protocol, api.host, `/${USER_NAMESPACE}/${appKey}/${this._id}/register-realtime`),
-        body: { deviceId }
+        body: { deviceId: device.id }
       });
       const response = await request.execute();
       const config = Object.assign({}, {
@@ -188,12 +188,12 @@ export class User {
 
   async unregisterFromLiveService() {
     if (Live.isRegistered()) {
-      const { api, appKey, deviceId } = getConfig();
+      const { api, appKey, device } = getConfig();
       const request = new KinveyRequest({
         method: RequestMethod.POST,
         auth: Auth.Session,
         url: formatKinveyUrl(api.protocol, api.host, `/${USER_NAMESPACE}/${appKey}/${this._id}/unregister-realtime`),
-        body: { deviceId }
+        body: { deviceId: device.id }
       });
       await request.execute();
       Live.unregister();
