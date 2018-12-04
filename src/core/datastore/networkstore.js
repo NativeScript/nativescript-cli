@@ -183,9 +183,8 @@ export class NetworkStore {
    * @return  {Promise}                                                 Promise.
    */
   create(entity, options = {}) {
-    // TODO: decide on this behaviour
     if (!isDefined(entity)) {
-      return Promise.resolve(null);
+      return Promise.reject(new KinveyError('No entity was provided. Please provide an entity you would like to create.'));
     }
 
     if (isArray(entity)) {
@@ -211,7 +210,7 @@ export class NetworkStore {
    */
   update(entity, options = {}) {
     if (!isDefined(entity)) {
-      return Promise.resolve(null); // TODO: really?
+      return Promise.reject(new KinveyError('No entity was provided. Please provide an entity you would like to update.'));
     }
 
     if (isArray(entity)) {
@@ -240,6 +239,10 @@ export class NetworkStore {
    * @return  {Promise}                                                 Promise.
    */
   save(entity, options) {
+    if (!entity) {
+      return Promise.reject(new KinveyError('No entity was provided. Please provide an entity you would like to save.'));
+    }
+
     if (entity._id) {
       return this.update(entity, options);
     }
