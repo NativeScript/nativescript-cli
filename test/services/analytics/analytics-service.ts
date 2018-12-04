@@ -9,7 +9,9 @@ const helpers = require("../../../lib/common/helpers");
 const originalIsInteractive = helpers.isInteractive;
 
 const trackFeatureUsage = "TrackFeatureUsage";
-const createTestInjector = (): IInjector => {
+const sampleProjectType = "SampleProjectType";
+
+const createTestInjector = (opts?: { projectHelperErrorMsg?: string, projectDir?: string }): IInjector => {
 	const testInjector = new Yok();
 	testInjector.register("options", {});
 	testInjector.register("logger", stubs.LoggerStub);
@@ -37,8 +39,15 @@ const createTestInjector = (): IInjector => {
 	testInjector.register("processService", {
 		attachToProcessExitSignals: (context: any, callback: () => void): void => undefined
 	});
-	testInjector.register("projectDataService", {});
+	testInjector.register("projectDataService", {
+		getProjectData: (projectDir?: string): IProjectData => {
+			return <any>{
+				projectType: sampleProjectType
+			};
+		}
+	});
 	testInjector.register("mobileHelper", {});
+	testInjector.register("projectHelper", new stubs.ProjectHelperStub(opts && opts.projectHelperErrorMsg, opts && opts.projectDir));
 
 	return testInjector;
 };
@@ -133,11 +142,11 @@ describe("analyticsService", () => {
 
 				assert.isTrue(opts.isChildProcessSpawned);
 				const logger = testInjector.resolve<stubs.LoggerStub>("logger");
-				assert.isTrue(logger.traceOutput.indexOf(opts.expectedErrorMessage) !== -1);
+				assert.isTrue(logger.traceOutput.indexOf(opts.expectedErrorMessage) !== -1, `Tried to find error '${opts.expectedErrorMessage}', but couldn't. logger's trace output is: ${logger.traceOutput}`);
 			};
 
-			const setupTest = (expectedErrorMessage: string): any => {
-				const testInjector = createTestInjector();
+			const setupTest = (expectedErrorMessage: string, projectHelperErrorMsg?: string): any => {
+				const testInjector = createTestInjector({ projectHelperErrorMsg });
 				const opts = {
 					isChildProcessSpawned: false,
 					expectedErrorMessage
@@ -209,13 +218,33 @@ describe("analyticsService", () => {
 
 				await assertExpectedError(testInjector, opts);
 			});
+
+			it("when trying to get projectDir from projectHelper fails", async () => {
+				const projectHelperErrorMsg = "Failed to find project directory.";
+				const { testInjector, childProcess, opts } = setupTest(`Unable to get the projectDir from projectHelper Error: ${projectHelperErrorMsg}`, projectHelperErrorMsg);
+				childProcess.spawn = (command: string, args?: string[], options?: any): any => {
+					opts.isChildProcessSpawned = true;
+					const spawnedProcess: any = getSpawnedProcess();
+
+					spawnedProcess.connected = true;
+					spawnedProcess.send = (msg: any, action: () => void): void => {
+						opts.messageSent = msg;
+						action();
+					};
+
+					setTimeout(() => spawnedProcess.emit("message", AnalyticsMessages.BrokerReadyToReceive), 1);
+					return spawnedProcess;
+				};
+
+				await assertExpectedError(testInjector, opts);
+			});
 		});
 
 		describe("sends correct message to broker", () => {
-			const setupTest = (expectedResult: any, dataToSend: any, terminalOpts?: { isInteractive: boolean }): { testInjector: IInjector, opts: any } => {
+			const setupTest = (expectedResult: any, dataToSend: any, terminalOpts?: { isInteractive: boolean }, projectHelperOpts?: { projectDir: string }): { testInjector: IInjector, opts: any } => {
 				helpers.isInteractive = () => terminalOpts ? terminalOpts.isInteractive : true;
 
-				const testInjector = createTestInjector();
+				const testInjector = createTestInjector(projectHelperOpts);
 				const opts = {
 					isChildProcessSpawned: false,
 					expectedResult,
@@ -260,16 +289,35 @@ describe("analyticsService", () => {
 				}
 			});
 
-			const getExpectedResult = (gaDataType: string, analyticsClient?: string): any => ({
-				type: "googleAnalyticsData",
-				category: "CLI",
-				googleAnalyticsDataType: gaDataType,
-				customDimensions: { customDimension1: "value1", cd5: analyticsClient || "CLI" }
-			});
+			const getExpectedResult = (gaDataType: string, analyticsClient?: string, projectType?: string): any => {
+				const expectedResult: any = {
+					type: "googleAnalyticsData",
+					category: "CLI",
+					googleAnalyticsDataType: gaDataType,
+					customDimensions: { customDimension1: "value1", cd5: analyticsClient || "CLI" }
+				};
+
+				if (projectType) {
+					expectedResult.customDimensions[GoogleAnalyticsCustomDimensions.projectType] = projectType;
+					expectedResult.customDimensions[GoogleAnalyticsCustomDimensions.isShared] = false.toString();
+				}
+
+				return expectedResult;
+			};
 
 			_.each([GoogleAnalyticsDataType.Page, GoogleAnalyticsDataType.Event], (googleAnalyticsDataType: string) => {
 				it(`when data is ${googleAnalyticsDataType}`, async () => {
 					const { testInjector, opts } = setupTest(getExpectedResult(googleAnalyticsDataType), getDataToSend(googleAnalyticsDataType));
+					await assertExpectedResult(testInjector, opts);
+				});
+
+				it(`when data is ${googleAnalyticsDataType} and command is executed from projectDir`, async () => {
+					const { testInjector, opts } = setupTest(
+						getExpectedResult(googleAnalyticsDataType, null, sampleProjectType),
+						getDataToSend(googleAnalyticsDataType),
+						null,
+						{ projectDir: "/some-dir" }
+					);
 					await assertExpectedResult(testInjector, opts);
 				});
 

@@ -96,6 +96,9 @@ function createTestInjector(testScenario: ITestScenario): IInjector {
 	testInjector.register("childProcess", {});
 	testInjector.register("projectDataService", {});
 	testInjector.register("mobileHelper", {});
+	testInjector.register("projectHelper", {
+		projectDir: ""
+	});
 
 	return testInjector;
 }
