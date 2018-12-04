@@ -3,6 +3,7 @@ import * as path from "path";
 import { cache } from "../../common/decorators";
 import { isInteractive, toBoolean } from '../../common/helpers';
 import { DeviceTypes, AnalyticsClients } from "../../common/constants";
+import { TrackActionNames } from "../../constants";
 
 export class AnalyticsService implements IAnalyticsService, IDisposable {
 	private static ANALYTICS_BROKER_START_TIMEOUT = 10 * 1000;
@@ -72,10 +73,14 @@ export class AnalyticsService implements IAnalyticsService, IDisposable {
 	}
 
 	public async trackAcceptFeatureUsage(settings: { acceptTrackFeatureUsage: boolean }): Promise<void> {
-		await this.sendMessageToBroker(<IAcceptUsageReportingInformation>{
-			type: TrackingTypes.AcceptTrackFeatureUsage,
-			acceptTrackFeatureUsage: settings.acceptTrackFeatureUsage
-		});
+		const acceptTracking = !!(settings && settings.acceptTrackFeatureUsage);
+		const googleAnalyticsEventData: IGoogleAnalyticsEventData = {
+			googleAnalyticsDataType: GoogleAnalyticsDataType.Event,
+			action: TrackActionNames.AcceptTracking,
+			label: acceptTracking.toString()
+		};
+
+		await this.forcefullyTrackInGoogleAnalytics(googleAnalyticsEventData);
 	}
 
 	public async trackInGoogleAnalytics(gaSettings: IGoogleAnalyticsData): Promise<void> {
