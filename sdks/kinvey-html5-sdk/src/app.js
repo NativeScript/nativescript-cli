@@ -18,7 +18,7 @@ export const StorageProvider = {
 };
 
 function init(config) {
-  const { storage = StorageProvider.IndexedDB } = config;
+  const { storage = StorageProvider.WebSQL } = config;
 
   // Register storage
   if (storage === StorageProvider.IndexedDB) {
