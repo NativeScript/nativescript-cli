@@ -88,7 +88,6 @@ interface IPlatformService extends IBuildPlatformAction, NodeJS.EventEmitter {
 	 * @param {Mobile.IDevice} device The device where the application should be installed.
 	 * @param {IProjectData} projectData DTO with information about the project.
 	 * @param {string} @optional outputPath Directory containing build information and artifacts.
-	 * @returns {Promise<boolean>} true indicates that the application should be installed.
 	 */
 	validateInstall(device: Mobile.IDevice, projectData: IProjectData, release: IRelease, outputPath?: string): Promise<void>;
 
