@@ -9,16 +9,6 @@ interface ITrackingInformation {
 }
 
 /**
- * Describes if the user allows to be tracked.
- */
-interface IAcceptUsageReportingInformation extends ITrackingInformation {
-	/**
-	 * The answer of the question if user allows us to track them.
-	 */
-	acceptTrackFeatureUsage: boolean;
-}
-
-/**
  * Describes information for exception that should be tracked.
  */
 interface IExceptionsTrackingInformation extends ITrackingInformation {
