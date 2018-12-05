@@ -92,6 +92,11 @@ interface IProjectData extends ICreateProjectData {
 	gradleFilesDirectoryPath: string;
 	infoPlistPath: string;
 	buildXcconfigPath: string;
+	/**
+	 * Defines if the project is a code sharing one.
+	 * Value is true when project has nsconfig.json and it has `shared: true` in it.
+	 */
+	isShared: boolean;
 
 	/**
 	 * Initializes project data with the given project directory. If none supplied defaults to --path option or cwd.

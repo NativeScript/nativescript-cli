@@ -42,26 +42,45 @@ describe("projectData", () => {
 		return testInjector;
 	};
 
+	const prepareTest = (opts?: { packageJsonData?: { dependencies?: IStringDictionary, devDependencies: IStringDictionary }, nsconfigData?: { shared: boolean } }): IProjectData => {
+		const testInjector = createTestInjector();
+		const fs = testInjector.resolve("fs");
+		fs.exists = (filePath: string) => filePath && (path.basename(filePath) === "package.json" || (path.basename(filePath) === "nsconfig.json" && opts && opts.nsconfigData));
+
+		fs.readText = (filePath: string) => {
+			if (path.basename(filePath) === "package.json") {
+				return JSON.stringify({
+					nativescript: {
+						id: "com.test.testid"
+					},
+					dependencies: opts && opts.packageJsonData && opts.packageJsonData.dependencies,
+					devDependencies: opts && opts.packageJsonData && opts.packageJsonData.devDependencies
+				});
+			} else if (path.basename(filePath) === "nsconfig.json" && opts && opts.nsconfigData) {
+				return JSON.stringify(opts.nsconfigData);
+			}
+
+			return null;
+		};
+
+		const projectHelper: IProjectHelper = testInjector.resolve("projectHelper");
+		projectHelper.projectDir = "projectDir";
+
+		const projectData: IProjectData = testInjector.resolve("projectData");
+		projectData.initializeProjectData();
+
+		return projectData;
+	};
+
 	describe("projectType", () => {
 
 		const assertProjectType = (dependencies: any, devDependencies: any, expectedProjecType: string) => {
-			const testInjector = createTestInjector();
-			const fs = testInjector.resolve("fs");
-			fs.exists = (filePath: string) => filePath && path.basename(filePath) === "package.json";
-
-			fs.readText = () => (JSON.stringify({
-				nativescript: {
-					id: "com.test.testid"
-				},
-				dependencies: dependencies,
-				devDependencies: devDependencies
-			}));
-
-			const projectHelper: IProjectHelper = testInjector.resolve("projectHelper");
-			projectHelper.projectDir = "projectDir";
-
-			const projectData: IProjectData = testInjector.resolve("projectData");
-			projectData.initializeProjectData();
+			const projectData = prepareTest({
+				packageJsonData: {
+					dependencies,
+					devDependencies
+				}
+			});
 			assert.deepEqual(projectData.projectType, expectedProjecType);
 		};
 
@@ -91,6 +110,28 @@ describe("projectData", () => {
 
 		it("detects project as JavaScript when no other project type is detected", () => {
 			assertProjectType(null, null, "Pure JavaScript");
+		});
+	});
+
+	describe("isShared", () => {
+		it("is false when nsconfig.json does not exist", () => {
+			const projectData = prepareTest();
+			assert.isFalse(projectData.isShared);
+		});
+
+		it("is false when nsconfig.json exists, but shared value is not populated", () => {
+			const projectData = prepareTest({ nsconfigData: { shared: undefined } });
+			assert.isFalse(projectData.isShared);
+		});
+
+		it("is false when nsconfig.json exists and shared value is false", () => {
+			const projectData = prepareTest({ nsconfigData: { shared: false } });
+			assert.isFalse(projectData.isShared);
+		});
+
+		it("is true when nsconfig.json exists and shared value is true", () => {
+			const projectData = prepareTest({ nsconfigData: { shared: true } });
+			assert.isTrue(projectData.isShared);
 		});
 	});
 });
