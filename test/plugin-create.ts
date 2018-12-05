@@ -182,8 +182,8 @@ describe("Plugin create command tests", () => {
 
 			it("setupSeed, should remove projectDir", async () => {
 				const errorMessage = "Test fail";
-				const npmService = testInjector.resolve("npm");
-				sandbox.stub(npmService, "install").callsFake(() => {
+				const packageManagerService = testInjector.resolve("packageManager");
+				sandbox.stub(packageManagerService, "install").callsFake(() => {
 					return Promise.reject(new Error(errorMessage));
 				});
 
