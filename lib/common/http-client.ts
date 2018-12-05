@@ -7,15 +7,48 @@ import { HttpStatusCodes } from "./constants";
 import * as request from "request";
 
 export class HttpClient implements Server.IHttpClient {
-	private defaultUserAgent: string;
 	private static STATUS_CODE_REGEX = /statuscode=(\d+)/i;
+	private static STUCK_REQUEST_ERROR_MESSAGE = "The request can't receive any response.";
+	private static STUCK_RESPONSE_ERROR_MESSAGE = "Can't receive all parts of the response.";
+	private static STUCK_REQUEST_TIMEOUT = 60000;
+	// We receive multiple response packets every ms but we don't need to be very aggressive here.
+	private static STUCK_RESPONSE_CHECK_INTERVAL = 10000;
+
+	private defaultUserAgent: string;
+	private cleanupData: ICleanupRequestData[];
 
 	constructor(private $config: Config.IConfig,
 		private $logger: ILogger,
+		private $processService: IProcessService,
 		private $proxyService: IProxyService,
-		private $staticConfig: Config.IStaticConfig) { }
+		private $staticConfig: Config.IStaticConfig) {
+		this.cleanupData = [];
+		this.$processService.attachToProcessExitSignals(this, () => {
+			this.cleanupData.forEach(d => {
+				this.cleanupAfterRequest(d);
+			});
+		});
+	}
 
-	async httpRequest(options: any, proxySettings?: IProxySettings): Promise<Server.IResponse> {
+	public async httpRequest(options: any, proxySettings?: IProxySettings): Promise<Server.IResponse> {
+		try {
+			const result = await this.httpRequestCore(options, proxySettings);
+			return result;
+		} catch (err) {
+			if (err.message === HttpClient.STUCK_REQUEST_ERROR_MESSAGE || err.message === HttpClient.STUCK_RESPONSE_ERROR_MESSAGE) {
+				// Retry the request immediately because there are at least 10 seconds between the two requests.
+				// We have to retry only once the sporadically stuck requests/responses.
+				// We can add exponential backoff retry here if we decide that we need to workaround bigger network issues on the client side.
+				this.$logger.warn("%s Retrying request to %s...", err.message, options.url || options);
+				const retryResult = await this.httpRequestCore(options, proxySettings);
+				return retryResult;
+			}
+
+			throw err;
+		}
+	}
+
+	private async httpRequestCore(options: any, proxySettings?: IProxySettings): Promise<Server.IResponse> {
 		if (_.isString(options)) {
 			options = {
 				url: options,
@@ -73,6 +106,10 @@ export class HttpClient implements Server.IHttpClient {
 
 		const result = new Promise<Server.IResponse>((resolve, reject) => {
 			let timerId: number;
+			let stuckRequestTimerId: number;
+			let hasResponse = false;
+			const cleanupRequestData: ICleanupRequestData = Object.create({ timers: [] });
+			this.cleanupData.push(cleanupRequestData);
 
 			const promiseActions: IPromiseActions<Server.IResponse> = {
 				resolve,
@@ -82,8 +119,9 @@ export class HttpClient implements Server.IHttpClient {
 
 			if (options.timeout) {
 				timerId = setTimeout(() => {
-					this.setResponseResult(promiseActions, timerId, { err: new Error(`Request to ${unmodifiedOptions.url} timed out.`) }, );
+					this.setResponseResult(promiseActions, cleanupRequestData, { err: new Error(`Request to ${unmodifiedOptions.url} timed out.`) });
 				}, options.timeout);
+				cleanupRequestData.timers.push(timerId);
 
 				delete options.timeout;
 			}
@@ -94,6 +132,16 @@ export class HttpClient implements Server.IHttpClient {
 
 			this.$logger.trace("httpRequest: %s", util.inspect(options));
 			const requestObj = request(options);
+			cleanupRequestData.req = requestObj;
+
+			stuckRequestTimerId = setTimeout(() => {
+				clearTimeout(stuckRequestTimerId);
+				stuckRequestTimerId = null;
+				if (!hasResponse) {
+					this.setResponseResult(promiseActions, cleanupRequestData, { err: new Error(HttpClient.STUCK_REQUEST_ERROR_MESSAGE) });
+				}
+			}, options.timeout || HttpClient.STUCK_REQUEST_TIMEOUT);
+			cleanupRequestData.timers.push(stuckRequestTimerId);
 
 			requestObj
 				.on("error", (err: IHttpRequestError) => {
@@ -107,15 +155,26 @@ export class HttpClient implements Server.IHttpClient {
 					const errorMessage = this.getErrorMessage(errorMessageStatusCode, null);
 					err.proxyAuthenticationRequired = errorMessageStatusCode === HttpStatusCodes.PROXY_AUTHENTICATION_REQUIRED;
 					err.message = errorMessage || err.message;
-					this.setResponseResult(promiseActions, timerId, { err });
+					this.setResponseResult(promiseActions, cleanupRequestData, { err });
 				})
 				.on("response", (response: Server.IRequestResponseData) => {
+					cleanupRequestData.res = response;
+					hasResponse = true;
+					let lastChunkTimestamp = Date.now();
+					cleanupRequestData.stuckResponseIntervalId = setInterval(() => {
+						if (Date.now() - lastChunkTimestamp > HttpClient.STUCK_RESPONSE_CHECK_INTERVAL) {
+							this.setResponseResult(promiseActions, cleanupRequestData, { err: new Error(HttpClient.STUCK_RESPONSE_ERROR_MESSAGE) });
+						}
+					}, HttpClient.STUCK_RESPONSE_CHECK_INTERVAL);
 					const successful = helpers.isRequestSuccessful(response);
 					if (!successful) {
 						pipeTo = undefined;
 					}
 
 					let responseStream = response;
+					responseStream.on("data", (chunk: string) => {
+						lastChunkTimestamp = Date.now();
+					});
 					switch (response.headers["content-encoding"]) {
 						case "gzip":
 							responseStream = responseStream.pipe(zlib.createGunzip());
@@ -128,7 +187,7 @@ export class HttpClient implements Server.IHttpClient {
 					if (pipeTo) {
 						pipeTo.on("finish", () => {
 							this.$logger.trace("httpRequest: Piping done. code = %d", response.statusCode.toString());
-							this.setResponseResult(promiseActions, timerId, { response });
+							this.setResponseResult(promiseActions, cleanupRequestData, { response });
 						});
 
 						responseStream.pipe(pipeTo);
@@ -144,13 +203,13 @@ export class HttpClient implements Server.IHttpClient {
 							const responseBody = data.join("");
 
 							if (successful) {
-								this.setResponseResult(promiseActions, timerId, { body: responseBody, response });
+								this.setResponseResult(promiseActions, cleanupRequestData, { body: responseBody, response });
 							} else {
 								const errorMessage = this.getErrorMessage(response.statusCode, responseBody);
 								const err: any = new Error(errorMessage);
 								err.response = response;
 								err.body = responseBody;
-								this.setResponseResult(promiseActions, timerId, { err });
+								this.setResponseResult(promiseActions, cleanupRequestData, { err });
 							}
 						});
 					}
@@ -181,16 +240,12 @@ export class HttpClient implements Server.IHttpClient {
 		return response;
 	}
 
-	private setResponseResult(result: IPromiseActions<Server.IResponse>, timerId: number, resultData: { response?: Server.IRequestResponseData, body?: string, err?: Error }): void {
-		if (timerId) {
-			clearTimeout(timerId);
-			timerId = null;
-		}
-
+	private setResponseResult(result: IPromiseActions<Server.IResponse>, cleanupRequestData: ICleanupRequestData, resultData: { response?: Server.IRequestResponseData, body?: string, err?: Error }): void {
+		this.cleanupAfterRequest(cleanupRequestData);
 		if (!result.isResolved()) {
 			result.isResolved = () => true;
-			if (resultData.err) {
-				return result.reject(resultData.err);
+			if (resultData.err || !resultData.response.complete) {
+				return result.reject(resultData.err || new Error("Request canceled"));
 			}
 
 			const finalResult: any = resultData;
@@ -258,5 +313,36 @@ export class HttpClient implements Server.IHttpClient {
 			this.$logger.trace("Using proxy: %s", options.proxy);
 		}
 	}
+
+	private cleanupAfterRequest(data: ICleanupRequestData): void {
+		data.timers.forEach(t => {
+			if (t) {
+				clearTimeout(t);
+				t = null;
+			}
+		});
+
+		if (data.stuckResponseIntervalId) {
+			clearInterval(data.stuckResponseIntervalId);
+			data.stuckResponseIntervalId = null;
+		}
+
+		if (data.req) {
+			data.req.abort();
+		}
+
+		if (data.res) {
+			data.res.destroy();
+		}
+	}
+
 }
+
+interface ICleanupRequestData {
+	timers: number[];
+	stuckResponseIntervalId: NodeJS.Timer;
+	req: request.Request;
+	res: Server.IRequestResponseData;
+}
+
 $injector.register("httpClient", HttpClient);

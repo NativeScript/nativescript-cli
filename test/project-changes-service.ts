@@ -187,5 +187,51 @@ describe("Project Changes Service Tests", () => {
 				assert.deepEqual(actualPrepareInfo, { nativePlatformStatus: Constants.NativePlatformStatus.requiresPrepare });
 			}
 		});
+
+		it(`shouldn't reset prepare info when native platform status is ${Constants.NativePlatformStatus.alreadyPrepared} and there is existing prepare info`, async () => {
+			for (const platform of ["ios", "android"]) {
+				await serviceTest.projectChangesService.checkForChanges({
+					platform,
+					projectData: serviceTest.projectData,
+					projectChangesOptions: {
+						bundle: false,
+						release: false,
+						provision: undefined,
+						teamId: undefined,
+						useHotModuleReload: false
+					}
+				});
+				serviceTest.projectChangesService.savePrepareInfo(platform, serviceTest.projectData);
+				const prepareInfo = serviceTest.projectChangesService.getPrepareInfo(platform, serviceTest.projectData);
+
+				serviceTest.projectChangesService.setNativePlatformStatus(platform, serviceTest.projectData, { nativePlatformStatus: Constants.NativePlatformStatus.alreadyPrepared });
+
+				const actualPrepareInfo = serviceTest.projectChangesService.getPrepareInfo(platform, serviceTest.projectData);
+				prepareInfo.nativePlatformStatus = Constants.NativePlatformStatus.alreadyPrepared;
+				assert.deepEqual(actualPrepareInfo, prepareInfo);
+			}
+		});
+
+		_.each([Constants.NativePlatformStatus.requiresPlatformAdd, Constants.NativePlatformStatus.requiresPrepare], nativePlatformStatus => {
+			it(`should reset prepare info when native platform status is ${nativePlatformStatus} and there is existing prepare info`, async () => {
+				for (const platform of ["ios", "android"]) {
+					await serviceTest.projectChangesService.checkForChanges({
+						platform,
+						projectData: serviceTest.projectData,
+						projectChangesOptions: {
+							bundle: false,
+							release: false,
+							provision: undefined,
+							teamId: undefined,
+							useHotModuleReload: false
+						}
+					});
+					serviceTest.projectChangesService.setNativePlatformStatus(platform, serviceTest.projectData, { nativePlatformStatus: nativePlatformStatus });
+
+					const actualPrepareInfo = serviceTest.projectChangesService.getPrepareInfo(platform, serviceTest.projectData);
+					assert.deepEqual(actualPrepareInfo, { nativePlatformStatus: nativePlatformStatus });
+				}
+			});
+		});
 	});
 });

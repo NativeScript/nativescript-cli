@@ -1,10 +1,12 @@
 import * as path from "path";
 import { Device, FilesPayload } from "nativescript-preview-sdk";
 import { APP_RESOURCES_FOLDER_NAME, APP_FOLDER_NAME } from "../../../constants";
+import { PreviewAppLiveSyncEvents } from "./preview-app-constants";
 import { HmrConstants } from "../../../common/constants";
 import { stringify } from "../../../common/helpers";
+import { EventEmitter } from "events";
 
-export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
+export class PreviewAppLiveSyncService extends EventEmitter implements IPreviewAppLiveSyncService {
 
 	private deviceInitializationPromise: IDictionary<Promise<FilesPayload>> = {};
 
@@ -18,8 +20,9 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 		private $previewAppFilesService: IPreviewAppFilesService,
 		private $previewAppPluginsService: IPreviewAppPluginsService,
 		private $previewDevicesService: IPreviewDevicesService,
-		private $hmrStatusService: IHmrStatusService,
-	) { }
+		private $hmrStatusService: IHmrStatusService) {
+			super();
+		}
 
 	public async initialize(data: IPreviewAppLiveSyncData): Promise<void> {
 		await this.$previewSdkService.initialize(async (device: Device) => {
@@ -61,6 +64,7 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 
 	public async stopLiveSync(): Promise<void> {
 		this.$previewSdkService.stop();
+		this.$previewDevicesService.updateConnectedDevices([]);
 	}
 
 	private async getInitialFilesForDevice(data: IPreviewAppLiveSyncData, device: Device): Promise<FilesPayload> {
@@ -115,8 +119,14 @@ export class PreviewAppLiveSyncService implements IPreviewAppLiveSyncService {
 				await this.$previewSdkService.applyChanges(payloads);
 				this.$logger.info(`Successfully synced ${payloads.files.map(filePayload => filePayload.file.yellow)} for platform ${platform}.`);
 			}
-		} catch (err) {
-			this.$logger.warn(`Unable to apply changes for platform ${platform}. Error is: ${err}, ${stringify(err)}.`);
+		} catch (error) {
+			this.$logger.warn(`Unable to apply changes for platform ${platform}. Error is: ${error}, ${JSON.stringify(error, null, 2)}.`);
+			this.emit(PreviewAppLiveSyncEvents.PREVIEW_APP_LIVE_SYNC_ERROR, {
+				error,
+				data,
+				platform,
+				deviceId
+			});
 		}
 	}
 
