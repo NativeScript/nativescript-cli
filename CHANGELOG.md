@@ -1,5 +1,26 @@
 NativeScript CLI Changelog
 ================
+5.0.3 (2018, December 4)
+==
+### Fixed
+* [Fixed #4186](https://github.com/NativeScript/nativescript-cli/issues/4186): Fix stuck http requests/responses
+* [Fixed #4189](https://github.com/NativeScript/nativescript-cli/pull/4189): API: Fix "Cannot read property 'removeListener' of undefined" error on second stop of livesync to preview app
+
+
+5.0.2 (2018, November 29)
+==
+### Implemented
+* [Implemented #4167](https://github.com/NativeScript/nativescript-cli/pull/4167): API: Expose previewAppLiveSyncError event when some error is thrown while livesyncing to preview app
+
+### Fixed
+* [Fixed #3962](https://github.com/NativeScript/nativescript-cli/issues/3962): If command 'tns plugin create .. ' failed , directory with plugin repository name must be deleted
+* [Fixed #4053](https://github.com/NativeScript/nativescript-cli/issues/4053): Update Nativescript cli setup scripts to use android sdk 28
+* [Fixed #4077](https://github.com/NativeScript/nativescript-cli/issues/4077): Platform add with framework path and custom version breaks run with "--bundle"
+* [Fixed #4129](https://github.com/NativeScript/nativescript-cli/issues/4129): tns preview doesn't sync changes when download 2 Playground projects
+* [Fixed #4135](https://github.com/NativeScript/nativescript-cli/issues/4135): Too many TypeScript "Watching for file changes" messages in console during build
+* [Fixed #4158](https://github.com/NativeScript/nativescript-cli/pull/4158): API: reset devices list when stopLiveSync method is called
+* [Fixed #4161](https://github.com/NativeScript/nativescript-cli/pull/4161): API: raise deviceLost event after timeout of 5 seconds
+
 
 5.0.1 (2018, November 14)
 ==

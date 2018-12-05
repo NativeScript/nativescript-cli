@@ -2,7 +2,7 @@ import { FilePayload, Device, FilesPayload } from "nativescript-preview-sdk";
 import { EventEmitter } from "events";
 
 declare global {
-	interface IPreviewAppLiveSyncService {
+	interface IPreviewAppLiveSyncService extends EventEmitter {
 		initialize(data: IPreviewAppLiveSyncData): void;
 		syncFiles(data: IPreviewAppLiveSyncData, filesToSync: string[], filesToRemove: string[]): Promise<void>;
 		stopLiveSync(): Promise<void>;

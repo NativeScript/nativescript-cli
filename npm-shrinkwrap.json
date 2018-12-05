@@ -521,9 +521,9 @@
       "integrity": "sha1-WWZ/QfrdTyDMvCu5a41Pf3jsA2c="
     },
     "ast-types": {
-      "version": "0.11.6",
-      "resolved": "https://registry.npmjs.org/ast-types/-/ast-types-0.11.6.tgz",
-      "integrity": "sha512-nHiuV14upVGl7MWwFUYbzJ6YlfwWS084CU9EA8HajfYQjMSli5TQi3UTRygGF58LFWVkXxS1rbgRhROEqlQkXg=="
+      "version": "0.11.7",
+      "resolved": "https://registry.npmjs.org/ast-types/-/ast-types-0.11.7.tgz",
+      "integrity": "sha512-2mP3TwtkY/aTv5X3ZsMpNAbOnyoC/aMJwJSoaELPkHId0nSQgFcnU4dRW3isxiz7+zBexk0ym3WNVjMiQBnJSw=="
     },
     "async": {
       "version": "1.2.1",
@@ -2932,7 +2932,7 @@
         },
         "string_decoder": {
           "version": "0.10.31",
-          "resolved": "https://registry.npmjs.org/string_decoder/-/string_decoder-0.10.31.tgz",
+          "resolved": "http://registry.npmjs.org/string_decoder/-/string_decoder-0.10.31.tgz",
           "integrity": "sha1-YuIDvEF2bGwoyfyEMB2rHFMQ+pQ="
         }
       }
@@ -5250,9 +5250,9 @@
       }
     },
     "nativescript-preview-sdk": {
-      "version": "0.3.0",
-      "resolved": "https://registry.npmjs.org/nativescript-preview-sdk/-/nativescript-preview-sdk-0.3.0.tgz",
-      "integrity": "sha512-HZFT/eT/4HQcZ7Y20zrwpnEXf3OvOSL8o75A+faKBAox34Y/rfGsZQd/flDfJWrNd79OwQXuKSCV8vn9hJD9Ng==",
+      "version": "0.3.1",
+      "resolved": "https://registry.npmjs.org/nativescript-preview-sdk/-/nativescript-preview-sdk-0.3.1.tgz",
+      "integrity": "sha512-8xKl150/LJk2YvmbDgCKJHOd1pFwYf/2s5PtXXF/D0fw6DpwGgFNBe26IaTHNiZJ2U0w9n4o2L9YSrHRk7kjqQ==",
       "requires": {
         "@types/axios": "0.14.0",
         "@types/pubnub": "4.0.2",

@@ -171,7 +171,7 @@ export class ProjectChangesService implements IProjectChangesService {
 
 	public setNativePlatformStatus(platform: string, projectData: IProjectData, addedPlatform: IAddedNativePlatform): void {
 		this._prepareInfo = this._prepareInfo || this.getPrepareInfo(platform, projectData);
-		if (this._prepareInfo) {
+		if (this._prepareInfo && addedPlatform.nativePlatformStatus === NativePlatformStatus.alreadyPrepared) {
 			this._prepareInfo.nativePlatformStatus = addedPlatform.nativePlatformStatus;
 		} else {
 			this._prepareInfo = {
