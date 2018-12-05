@@ -467,6 +467,9 @@ export class PlatformProjectServiceStub extends EventEmitter implements IPlatfor
 	getPluginPlatformsFolderPath(pluginData: IPluginData, platform: string): string {
 		return "";
 	}
+	getDeploymentTarget(projectData: IProjectData): IDeploymentTargetData {
+		return;
+	}
 }
 
 export class PlatformsDataStub extends EventEmitter implements IPlatformsData {
@@ -826,6 +829,10 @@ export class PlatformServiceStub extends EventEmitter implements IPlatformServic
 
 	public async shouldInstall(device: Mobile.IDevice): Promise<boolean> {
 		return true;
+	}
+
+	public async validateInstall(device: Mobile.IDevice): Promise<void> {
+		return;
 	}
 
 	public installApplication(device: Mobile.IDevice, options: IRelease): Promise<void> {
