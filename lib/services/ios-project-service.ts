@@ -384,12 +384,6 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	}
 
 	private async buildForDevice(projectRoot: string, args: string[], buildConfig: IBuildConfig, projectData: IProjectData): Promise<void> {
-		const defaultArchitectures = [
-			'ARCHS=armv7 arm64',
-			'VALID_ARCHS=armv7 arm64'
-		];
-
-		// build only for device specific architecture
 		if (!buildConfig.release && !buildConfig.architectures) {
 			await this.$devicesService.initialize({
 				platform: this.$devicePlatformsConstants.iOS.toLowerCase(), deviceId: buildConfig.device,
@@ -402,10 +396,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				.uniq()
 				.value();
 			if (devicesArchitectures.length > 0) {
-				const architectures = [
-					`ARCHS=${devicesArchitectures.join(" ")}`,
-					`VALID_ARCHS=${devicesArchitectures.join(" ")}`
-				];
+				const architectures = this.getBuildArchitectures(projectData, buildConfig, devicesArchitectures);
 				if (devicesArchitectures.length > 1) {
 					architectures.push('ONLY_ACTIVE_ARCH=NO');
 				}
@@ -413,7 +404,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			}
 		}
 
-		args = args.concat((buildConfig && buildConfig.architectures) || defaultArchitectures);
+		args = args.concat((buildConfig && buildConfig.architectures) || this.getBuildArchitectures(projectData, buildConfig, ["armv7", "arm64"]));
 
 		args = args.concat([
 			"-sdk", "iphoneos",
@@ -455,6 +446,28 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		}
 
 		return commandResult;
+	}
+
+	private getBuildArchitectures(projectData: IProjectData, buildConfig: IBuildConfig, architectures: string[]): string[] {
+		let result: string[] = [];
+
+		const frameworkVersion = this.getFrameworkVersion(projectData);
+		if (semver.valid(frameworkVersion) && semver.validRange(frameworkVersion) && semver.lt(semver.coerce(frameworkVersion), "5.1.0")) {
+			const target = this.getDeploymentTarget(projectData);
+			if (target && target.major >= 11) {
+				// We need to strip 32bit architectures as of deployment target >= 11 it is not allowed to have such
+				architectures = _.filter(architectures, arch => {
+					const is64BitArchitecture = arch === "x86_64" || arch === "arm64";
+					if (!is64BitArchitecture) {
+						this.$logger.warn(`The architecture ${arch} will be stripped as it is not supported for deployment target ${target.version}.`);
+					}
+					return is64BitArchitecture;
+				});
+			}
+			result = [`ARCHS=${architectures.join(" ")}`, `VALID_ARCHS=${architectures.join(" ")}`];
+		}
+
+		return result;
 	}
 
 	private async setupSigningFromTeam(projectRoot: string, projectData: IProjectData, teamId: string) {
@@ -555,13 +568,14 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	}
 
 	private async buildForSimulator(projectRoot: string, args: string[], projectData: IProjectData, buildConfig?: IBuildConfig): Promise<void> {
+		const architectures = this.getBuildArchitectures(projectData, buildConfig, ["i386", "x86_64"]);
+
 		args = args
+			.concat(architectures)
 			.concat([
 				"build",
 				"-configuration", buildConfig.release ? "Release" : "Debug",
 				"-sdk", "iphonesimulator",
-				"ARCHS=i386 x86_64",
-				"VALID_ARCHS=i386 x86_64",
 				"ONLY_ACTIVE_ARCH=NO",
 				"CONFIGURATION_BUILD_DIR=" + path.join(projectRoot, "build", "emulator"),
 				"CODE_SIGN_IDENTITY=",
@@ -1029,6 +1043,15 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 
 	public async checkIfPluginsNeedBuild(projectData: IProjectData): Promise<Array<any>> {
 		return [];
+	}
+
+	public getDeploymentTarget(projectData: IProjectData): semver.SemVer {
+		const target = this.$xCConfigService.readPropertyValue(this.getBuildXCConfigFilePath(projectData), "IPHONEOS_DEPLOYMENT_TARGET");
+		if (!target) {
+			return null;
+		}
+
+		return semver.coerce(target);
 	}
 
 	private getAllLibsForPluginWithFileExtension(pluginData: IPluginData, fileExtension: string): string[] {

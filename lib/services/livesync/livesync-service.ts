@@ -470,6 +470,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 			});
 		}
 
+		await this.$platformService.validateInstall(options.device, options.projectData, options, options.deviceBuildInfoDescriptor.outputPath);
 		const shouldInstall = await this.$platformService.shouldInstall(options.device, options.projectData, options, options.deviceBuildInfoDescriptor.outputPath);
 		if (shouldInstall) {
 			await this.$platformService.installApplication(options.device, { release: false }, options.projectData, pathToBuildItem, options.deviceBuildInfoDescriptor.outputPath);
