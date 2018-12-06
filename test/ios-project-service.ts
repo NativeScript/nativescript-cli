@@ -1151,6 +1151,21 @@ describe("buildProject", () => {
 			name: "shouldn't pass architecture to xcodebuild command when frameworkVersion is 5.1.0",
 			frameworkVersion: "5.1.0",
 			deploymentTarget: "11.0"
+		}, {
+			name: "should pass only 64bit architecture to xcodebuild command when frameworkVersion is 5.0.0 and deployment target is 11.0",
+			frameworkVersion: "5.0.0",
+			deploymentTarget: "11.0",
+			expectedArchs: "arm64"
+		}, {
+			name: "should pass both architectures to xcodebuild command when frameworkVersion is 5.0.0 and deployment target is 10.0",
+			frameworkVersion: "5.0.0",
+			deploymentTarget: "10.0",
+			expectedArchs: "armv7 arm64"
+		}, {
+			name: "should pass both architectures to xcodebuild command when frameworkVersion is 5.0.0 and no deployment target",
+			frameworkVersion: "5.0.0",
+			deploymentTarget: null,
+			expectedArchs: "armv7 arm64"
 		}];
 
 		executeTests(testCases, { buildForDevice: true });
@@ -1175,6 +1190,21 @@ describe("buildProject", () => {
 			name: "shouldn't pass architecture to xcodebuild command when frameworkVersion is 5.1.0",
 			frameworkVersion: "5.1.0",
 			deploymentTarget: "11.0"
+		}, {
+			name: "should pass only 64bit architecture to xcodebuild command when frameworkVersion is 5.0.0 and deployment target is 11.0",
+			frameworkVersion: "5.0.0",
+			deploymentTarget: "11.0",
+			expectedArchs: "x86_64"
+		}, {
+			name: "should pass both architectures to xcodebuild command when frameworkVersion is 5.0.0 and deployment target is 10.0",
+			frameworkVersion: "5.0.0",
+			deploymentTarget: "10.0",
+			expectedArchs: "i386 x86_64"
+		}, {
+			name: "should pass both architectures to xcodebuild command when frameworkVersion is 5.0.0 and no deployment target",
+			frameworkVersion: "5.0.0",
+			deploymentTarget: null,
+			expectedArchs: "i386 x86_64"
 		}];
 
 		executeTests(testCases, { buildForDevice: false });
