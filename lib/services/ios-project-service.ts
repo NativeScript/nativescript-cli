@@ -452,7 +452,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		let result: string[] = [];
 
 		const frameworkVersion = this.getFrameworkVersion(projectData);
-		if (semver.valid(frameworkVersion) && semver.validRange(frameworkVersion) && semver.lt(semver.coerce(frameworkVersion), "5.1.0")) {
+		if (semver.valid(frameworkVersion) && semver.lt(semver.coerce(frameworkVersion), "5.1.0")) {
 			const target = this.getDeploymentTarget(projectData);
 			if (target && target.major >= 11) {
 				// We need to strip 32bit architectures as of deployment target >= 11 it is not allowed to have such
