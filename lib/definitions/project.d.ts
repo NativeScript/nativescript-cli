@@ -449,22 +449,7 @@ interface IPlatformProjectService extends NodeJS.EventEmitter, IPlatformProjectS
 	 * Get the deployment target's version
 	 * Currently implemented only for iOS -> returns the value of IPHONEOS_DEPLOYMENT_TARGET property from xcconfig file
 	 */
-	getDeploymentTarget(projectData: IProjectData): IDeploymentTargetData;
-}
-
-interface IDeploymentTargetData {
-	/**
-	 * The whole version's value
-	 */
-	version: string;
-	/**
-	 * The major's version
-	 */
-	majorVersion: number;
-	/**
-	 * The minor's version
-	 */
-	minorVersion: number;
+	getDeploymentTarget(projectData: IProjectData): any;
 }
 
 interface IValidatePlatformOutput {

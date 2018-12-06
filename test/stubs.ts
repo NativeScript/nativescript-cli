@@ -467,7 +467,7 @@ export class PlatformProjectServiceStub extends EventEmitter implements IPlatfor
 	getPluginPlatformsFolderPath(pluginData: IPluginData, platform: string): string {
 		return "";
 	}
-	getDeploymentTarget(projectData: IProjectData): IDeploymentTargetData {
+	getDeploymentTarget(projectData: IProjectData): any {
 		return;
 	}
 }

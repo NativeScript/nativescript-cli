@@ -665,7 +665,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		// Nothing android specific to check yet.
 	}
 
-	public getDeploymentTarget(projectData: IProjectData): IDeploymentTargetData { return; }
+	public getDeploymentTarget(projectData: IProjectData): semver.SemVer { return; }
 
 	private copy(projectRoot: string, frameworkDir: string, files: string, cpArg: string): void {
 		const paths = files.split(' ').map(p => path.join(frameworkDir, p));

@@ -454,7 +454,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		const frameworkVersion = this.getFrameworkVersion(projectData);
 		if (semver.valid(frameworkVersion) && semver.validRange(frameworkVersion) && semver.lt(semver.coerce(frameworkVersion), "5.1.0")) {
 			const target = this.getDeploymentTarget(projectData);
-			if (target && target.majorVersion >= 11) {
+			if (target && target.major >= 11) {
 				// We need to strip 32bit architectures as of deployment target >= 11 it is not allowed to have such
 				architectures = _.filter(architectures, arch => {
 					const is64BitArchitecture = arch === "x86_64" || arch === "arm64";
@@ -1045,18 +1045,13 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		return [];
 	}
 
-	public getDeploymentTarget(projectData: IProjectData): IDeploymentTargetData {
+	public getDeploymentTarget(projectData: IProjectData): semver.SemVer {
 		const target = this.$xCConfigService.readPropertyValue(this.getBuildXCConfigFilePath(projectData), "IPHONEOS_DEPLOYMENT_TARGET");
 		if (!target) {
 			return null;
 		}
 
-		const parts = target.split(".");
-		return {
-			version: target,
-			majorVersion: parseInt(parts[0]),
-			minorVersion: parseInt(parts[1])
-		};
+		return semver.coerce(target);
 	}
 
 	private getAllLibsForPluginWithFileExtension(pluginData: IPluginData, fileExtension: string): string[] {
