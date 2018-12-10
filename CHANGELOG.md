@@ -1,5 +1,26 @@
 NativeScript CLI Changelog
 ================
+
+5.1.0 (2018, December 11)
+==
+
+### Implemented
+* [Implemented #2737](https://github.com/NativeScript/nativescript-cli/issues/2737): Make it possible `tns` to use Yarn as the package manager
+* [Implemented #2992](https://github.com/NativeScript/nativescript-cli/issues/2992): Do not restart application when changing `.xml`, `.html` or `.css` file when debugging
+* [Implemented #4068](https://github.com/NativeScript/nativescript-cli/issues/4068): Android application bundle initial support (build .aab files)
+* [Implemented #4152](https://github.com/NativeScript/nativescript-cli/issues/4152): Analytics: Get information for what has been tracked in Google Analytics
+* [Implemented #4200](https://github.com/NativeScript/nativescript-cli/issues/4200): Analytics: Add analytics for code-sharing projects usage
+* [Implemented #4201](https://github.com/NativeScript/nativescript-cli/issues/4201): Analytics: Track project property on every analytics hit
+* [Implemented #4211](https://github.com/NativeScript/nativescript-cli/issues/4211): Analytics: Track command options in analytics
+
+### Fixed
+* [Fixed #4075](https://github.com/NativeScript/nativescript-cli/issues/4075): `tns preview` - app is refreshed on ios devices when changing android specific files
+* [Fixed #4141](https://github.com/NativeScript/nativescript-cli/issues/4141): Don't prepare the project on `tns preview` command
+* [Fixed #4178](https://github.com/NativeScript/nativescript-cli/issues/4178): Broken files pattern in karma config
+* [Fixed #4198](https://github.com/NativeScript/nativescript-cli/issues/4198): The NativeScript Inspector is not closed on `Ctrl + C`
+* [Fixed #4049](https://github.com/NativeScript/nativescript-cli/issues/4049): `tns` commands Removing Newline Added by `npm` from `package.json`
+
+
 5.0.3 (2018, December 4)
 ==
 ### Fixed
