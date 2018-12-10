@@ -9,6 +9,7 @@ import { EventEmitter } from "events";
 import { AppFilesUpdater } from "./app-files-updater";
 import { attachAwaitDetach } from "../common/helpers";
 import * as temp from "temp";
+import { performanceLog } from ".././common/decorators";
 temp.track();
 
 const buildInfoFileName = ".nsbuildinfo";
@@ -190,6 +191,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		return _.filter(this.$platformsData.platformsNames, p => { return this.isPlatformPrepared(p, projectData); });
 	}
 
+	@performanceLog()
 	@helpers.hook('shouldPrepare')
 	public async shouldPrepare(shouldPrepareInfo: IShouldPrepareInfo): Promise<boolean> {
 		shouldPrepareInfo.changesInfo = shouldPrepareInfo.changesInfo || await this.getChangesInfo(shouldPrepareInfo.platformInfo);
@@ -222,6 +224,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		return changesInfo;
 	}
 
+	@performanceLog()
 	public async preparePlatform(platformInfo: IPreparePlatformInfo): Promise<boolean> {
 		const changesInfo = await this.getChangesInfo(platformInfo);
 		const shouldPrepare = await this.shouldPrepare({ platformInfo, changesInfo });
@@ -401,6 +404,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		return prepareInfo.changesRequireBuildTime !== buildInfo.prepareTime;
 	}
 
+	@performanceLog()
 	public async buildPlatform(platform: string, buildConfig: IBuildConfig, projectData: IProjectData): Promise<string> {
 		this.$logger.out("Building project...");
 

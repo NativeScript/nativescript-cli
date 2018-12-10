@@ -4,6 +4,7 @@ import * as temp from "temp";
 import { IOSDeviceLiveSyncService } from "./ios-device-livesync-service";
 import { PlatformLiveSyncServiceBase } from "./platform-livesync-service-base";
 import { APP_FOLDER_NAME, TNS_MODULES_FOLDER_NAME } from "../../constants";
+import { performanceLog } from "../../common/decorators";
 
 export class IOSLiveSyncService extends PlatformLiveSyncServiceBase implements IPlatformLiveSyncService {
 	constructor(protected $fs: IFileSystem,
@@ -17,6 +18,7 @@ export class IOSLiveSyncService extends PlatformLiveSyncServiceBase implements I
 		super($fs, $logger, $platformsData, $projectFilesManager, $devicePathProvider, $projectFilesProvider);
 	}
 
+	@performanceLog()
 	public async fullSync(syncInfo: IFullSyncInfo): Promise<ILiveSyncResultInfo> {
 		const device = syncInfo.device;
 
@@ -57,6 +59,7 @@ export class IOSLiveSyncService extends PlatformLiveSyncServiceBase implements I
 		};
 	}
 
+	@performanceLog()
 	public liveSyncWatchAction(device: Mobile.IDevice, liveSyncInfo: ILiveSyncWatchInfo): Promise<ILiveSyncResultInfo> {
 		if (liveSyncInfo.isReinstalled) {
 			// In this case we should execute fullsync because iOS Runtime requires the full content of app dir to be extracted in the root of sync dir.

@@ -1,6 +1,7 @@
 import * as constants from "../constants";
 import * as path from "path";
 import { PreparePlatformService } from "./prepare-platform-service";
+import { performanceLog } from "../common/decorators";
 
 export class PreparePlatformNativeService extends PreparePlatformService implements IPreparePlatformService {
 
@@ -14,6 +15,7 @@ export class PreparePlatformNativeService extends PreparePlatformService impleme
 		super($fs, $hooksService, $xmlValidator);
 	}
 
+	@performanceLog()
 	public async addPlatform(info: IAddPlatformInfo): Promise<void> {
 		await info.platformData.platformProjectService.createProject(path.resolve(info.frameworkDir), info.installedVersion, info.projectData, info.config);
 		info.platformData.platformProjectService.ensureConfigurationFileInAppResources(info.projectData);
@@ -23,6 +25,7 @@ export class PreparePlatformNativeService extends PreparePlatformService impleme
 			{ nativePlatformStatus: constants.NativePlatformStatus.requiresPrepare });
 	}
 
+	@performanceLog()
 	public async preparePlatform(config: IPreparePlatformJSInfo): Promise<void> {
 		if (config.changesInfo.hasChanges) {
 			await this.cleanProject(config.platform, config.appFilesUpdaterOptions, config.platformData, config.projectData);

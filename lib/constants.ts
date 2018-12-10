@@ -152,7 +152,8 @@ export const enum TrackActionNames {
 	CheckLocalBuildSetup = "Check Local Build Setup",
 	CheckEnvironmentRequirements = "Check Environment Requirements",
 	Options = "Options",
-	AcceptTracking = "Accept Tracking"
+	AcceptTracking = "Accept Tracking",
+	Performance = "Performance"
 }
 
 export const AnalyticsEventLabelDelimiter = "__";

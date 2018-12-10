@@ -48,6 +48,11 @@ interface IEventActionData {
 	 * Project directory, in case the action is executed inside project.
 	 */
 	projectDir?: string;
+
+	/**
+	 * Value that should be tracked
+	 */
+	value?: number;
 }
 
 /**

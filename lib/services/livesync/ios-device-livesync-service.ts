@@ -2,6 +2,7 @@ import * as constants from "../../constants";
 import * as minimatch from "minimatch";
 import * as net from "net";
 import { DeviceLiveSyncServiceBase } from "./device-livesync-service-base";
+import { performanceLog } from "../../common/decorators";
 
 let currentPageReloadId = 0;
 
@@ -33,6 +34,7 @@ export class IOSDeviceLiveSyncService extends DeviceLiveSyncServiceBase implemen
 		return true;
 	}
 
+	@performanceLog()
 	public async removeFiles(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]): Promise<void> {
 		await Promise.all(_.map(localToDevicePaths, localToDevicePathData => this.device.fileSystem.deleteFile(localToDevicePathData.getDevicePath(), deviceAppData.appIdentifier)));
 	}

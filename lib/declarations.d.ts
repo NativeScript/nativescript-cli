@@ -75,6 +75,10 @@ interface INodePackageManager {
 	getCachePath(): Promise<string>;
 }
 
+interface IPerformanceService {
+	processExecutionData(methodInfo: string, startTime: number, endTime: number, args: any[]): void;
+}
+
 interface IPackageInstallationManager {
 	install(packageName: string, packageDir: string, options?: INpmInstallOptions): Promise<any>;
 	getLatestVersion(packageName: string): Promise<string>;
@@ -563,6 +567,7 @@ interface IOptions extends IRelease, IDeviceIdentifier, IJustLaunch, IAvd, IAvai
 	hmr: boolean;
 	link: boolean;
 	analyticsLogFile: string;
+	performance: Object;
 }
 
 interface IEnvOptions {

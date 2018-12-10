@@ -4,6 +4,7 @@ import * as shell from "shelljs";
 import * as temp from "temp";
 import { hook } from "../common/helpers";
 import { PreparePlatformService } from "./prepare-platform-service";
+import { performanceLog } from "./../common/decorators";
 
 temp.track();
 
@@ -32,6 +33,7 @@ export class PreparePlatformJSService extends PreparePlatformService implements 
 		this.$projectDataService.setNSValue(info.projectData.projectDir, info.platformData.frameworkPackageName, frameworkPackageNameData);
 	}
 
+	@performanceLog()
 	@hook('prepareJSApp')
 	public async preparePlatform(config: IPreparePlatformJSInfo): Promise<void> {
 		if (!config.changesInfo || config.changesInfo.appFilesChanged || config.changesInfo.changesRequirePrepare) {
