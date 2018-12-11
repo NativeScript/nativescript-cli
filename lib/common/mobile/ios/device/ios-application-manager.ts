@@ -8,7 +8,7 @@ export class IOSApplicationManager extends ApplicationManagerBase {
 
 	constructor(protected $logger: ILogger,
 		protected $hooksService: IHooksService,
-		private device: Mobile.IDevice,
+		private device: Mobile.IiOSDevice,
 		private $errors: IErrors,
 		private $iOSNotificationService: IiOSNotificationService,
 		private $iosDeviceOperations: IIOSDeviceOperations,
@@ -87,6 +87,9 @@ export class IOSApplicationManager extends ApplicationManagerBase {
 
 	public async stopApplication(appData: Mobile.IApplicationData): Promise<void> {
 		const { appId } = appData;
+
+		this.device.destroyDebugSocket(appId);
+		this.device.destroyLiveSyncSocket(appId);
 
 		const action = () => this.$iosDeviceOperations.stop([{ deviceId: this.device.deviceInfo.identifier, ddi: this.$options.ddi, appId }]);
 
