@@ -1,11 +1,12 @@
 import { expect } from 'chai';
 import { randomString } from 'kinvey-test-utils';
 import { init } from './app';
+
 const defaultTimeout = process.env.KINVEY_DEFAULT_TIMEOUT || 60000;
 const basicConfig = {
   appKey: randomString(),
   appSecret: randomString()
-}
+};
 
 describe('App', () => {
   describe('init()', () => {
