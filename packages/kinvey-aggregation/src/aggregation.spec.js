@@ -1,8 +1,9 @@
-const sift = require('sift');
 import { Query } from 'kinvey-query';
 import { expect } from 'chai';
+import { randomString } from 'kinvey-test-utils';
 import * as aggr from './aggregation';
-import {randomString} from 'kinvey-test-utils';
+
+const sift = require('sift');
 
 
 describe('Aggregation', () => {
