@@ -5,8 +5,8 @@ import url from 'url';
 import { InsufficientCredentialsError, MobileIdentityConnectError, KinveyError } from 'kinvey-errors';
 import { randomString } from 'kinvey-test-utils';
 import { register } from 'kinvey-http-node';
-import { login } from 'kinvey-user';
 import { init } from 'kinvey-app';
+import { login } from './user';
 import * as mic from './mic';
 
 const redirectUri = 'http://localhost:3000';

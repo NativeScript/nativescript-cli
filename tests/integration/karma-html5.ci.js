@@ -175,10 +175,8 @@ module.exports = function (config) {
 
     // Webpack config
     webpack: webpackConfig,
-
     webpackMiddleware: {
-      // webpack-dev-middleware configuration
-      // i. e.
+      noInfo: true,
       stats: 'errors-only'
     }
   });

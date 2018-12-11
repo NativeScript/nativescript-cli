@@ -35,12 +35,13 @@ function execute(dbName, tableName, sqlQueries, write = false) {
 
                     if (resultSet.rows.length > 0) {
                       for (let i = 0, len = resultSet.rows.length; i < len; i += 1) {
+                        const { value } = resultSet.rows.item(i);
+
                         try {
-                          const { value } = resultSet.rows.item(i);
                           const doc = isMaster ? value : JSON.parse(value);
                           response.result.push(doc);
                         } catch (error) {
-                          // Catch the error
+                          response.result.push(value);
                         }
                       }
                     }
@@ -91,8 +92,8 @@ export async function find(dbName, tableName) {
 }
 
 export async function count(dbName, tableName) {
-  const docs = await find(dbName, tableName);
-  return docs.length;
+  const response = await execute(dbName, tableName, [['SELECT COUNT(*) AS value FROM #{table}']]);
+  return response.result;
 }
 
 export async function findById(dbName, tableName, id) {
@@ -121,12 +122,7 @@ export async function clearAll(dbName) {
   const tables = response.result;
 
   if (tables.length > 0) {
-    const promises = tables
-      // .filter(table => (/^[a-zA-Z0-9-]{1,128}/).test(table))
-      // .map(table => [`DROP TABLE IF EXISTS '${table}'`]);
-      .map(tableName => execute(dbName, tableName, [['DROP TABLE IF EXISTS #{table}']], true));
-    await Promise.all(promises);
-    // await execute(dbName, MASTER_TABLE_NAME, sqlQueries, true);
+    await Promise.all(tables.map(tableName => execute(dbName, tableName, [['DROP TABLE IF EXISTS #{table}']], true)));
   }
 
   return true;

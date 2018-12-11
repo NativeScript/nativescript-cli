@@ -44,7 +44,6 @@
     "expect": "^1.20.2",
     "kinvey-http-node": "^1.0.0",
     "kinvey-test-utils": "^1.0.0",
-    "kinvey-user": "^1.0.0",
     "local-storage": "^1.4.2",
     "mocha": "^5.2.0",
     "nock": "^10.0.4",

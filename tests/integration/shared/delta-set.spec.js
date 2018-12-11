@@ -17,7 +17,7 @@ before(() => {
 });
 
 dataStoreTypes.forEach((currentDataStoreType) => {
-  describe(`${currentDataStoreType} Deltaset tests`, () => {
+  describe.only(`${currentDataStoreType} Deltaset tests`, () => {
     const conditionalDescribe = currentDataStoreType === Kinvey.DataStoreType.Sync ? describe.skip : describe;
     const deltaCollectionName = config.deltaCollectionName;
     const collectionWithoutDelta = config.collectionName;
