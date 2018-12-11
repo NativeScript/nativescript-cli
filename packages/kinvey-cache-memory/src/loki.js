@@ -122,7 +122,7 @@ export async function clear(dbName, collectionName) {
         return reject(error);
       }
 
-      return resolve();
+      return resolve(true);
     });
   });
 }
@@ -135,7 +135,7 @@ export async function clearAll(dbName) {
         return reject(error);
       }
 
-      return resolve();
+      return resolve(true);
     });
   });
 }

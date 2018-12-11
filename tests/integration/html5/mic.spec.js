@@ -2,7 +2,7 @@ import { expect } from 'chai';
 // eslint-disable-next-line import/extensions
 import * as Kinvey from '__SDK__';
 
-//the same redirect url should be configured on the server
+// the same redirect url should be configured on the server
 const serverHost = 'auth.kinvey.com';
 const redirectUrl = 'http://localhost:9876/callback';
 const authServiceId = process.env.AUTH_SERVICE_ID;
@@ -10,7 +10,7 @@ const noRefreshAuthServiceId = process.env.NO_REFRESH_AUTH_SERVICE_ID;
 const wrongSetupAuthServiceId = process.env.WRONG_AUTH_SERVICE_ID;
 const micDefaultVersion = 'v3';
 
-//the used OAuth 2 provider is Facebook
+// the used OAuth 2 provider is Facebook
 const fbEmail = process.env.FACEBOOK_EMAIL;
 const fbPassword = process.env.FACEBOOK_PASSWORD;
 const fbDevUrl = 'https://developers.facebook.com';
@@ -49,7 +49,7 @@ const validateSuccessfulDataRead = (done) => {
 const expireFBCookie = (fbWindow, cookieName, cookieValue, expiredDays) => {
   const newDate = new Date();
   newDate.setTime(newDate.getTime() - (expiredDays * 24 * 60 * 60 * 1000));
-  const expires = 'expires=' + newDate.toUTCString();
+  const expires = `expires=${newDate.toUTCString()}`;
   const domain = 'domain=.facebook.com';
   const newValue = `${cookieName}=${cookieValue};${expires};${domain};path=/`;
   fbWindow.document.cookie = newValue;
@@ -101,18 +101,22 @@ const validateMICUser = (user, allowRefreshTokens, explicitAuthServiceId) => {
 
 const addLoginFacebookHandler = () => {
   // monkey patch window.open - the function is reset back in the afterEach hook
-  window.open = function () {
-    const fbPopup = winOpen.apply(this, arguments);
-    fbPopup.addEventListener('load', function () {
-      const setIntervalVar = setInterval(function () {
-        const email = fbPopup.document.getElementById('email')
-        const pass = fbPopup.document.getElementById('pass')
-        const loginButton = fbPopup.document.getElementById('loginbutton')
-        if (email && pass && loginButton) {
-          email.value = fbEmail;
-          pass.value = fbPassword;
-          loginButton.click();
+  window.open = (...args) => {
+    const fbPopup = winOpen.apply(this, args);
+    fbPopup.addEventListener('load', () => {
+      const setIntervalVar = setInterval(() => {
+        if (fbPopup.closed) {
           clearInterval(setIntervalVar);
+        } else {
+          const email = fbPopup.document.getElementById('email')
+          const pass = fbPopup.document.getElementById('pass')
+          const loginButton = fbPopup.document.getElementById('loginbutton')
+          if (email && pass && loginButton) {
+            email.value = fbEmail;
+            pass.value = fbPassword;
+            loginButton.click();
+            clearInterval(setIntervalVar);
+          }
         }
       }, 1000);
     });
@@ -121,9 +125,9 @@ const addLoginFacebookHandler = () => {
 };
 
 const addCloseFacebookPopupHandler = (retrievePopupUrl) => {
-  window.open = function () {
-    const fbPopup = winOpen.apply(this, arguments);
-    fbPopup.addEventListener('load', function () {
+  window.open = (...args) => {
+    const fbPopup = winOpen.apply(this, args);
+    fbPopup.addEventListener('load', () => {
       if (retrievePopupUrl) {
         actualHref = fbPopup.location.href;
       }
@@ -218,10 +222,11 @@ describe('MIC Integration', () => {
       .catch(() => {
         expect(actualHref).to.equal(getExpectedInitialUrl(process.env.APP_KEY, micDefaultVersion, invalidUrl));
         done();
-      }).catch(done);
+      })
+      .catch(done);
   });
 
-  it.only('should make a correct request to KAS with the supplied options.version', (done) => {
+  it('should make a correct request to KAS with the supplied options.version', (done) => {
     // Currently the error function is not called when the redirect url is invalid,
     // so the test is closing the popup in order to resume execution and validate the request url
     const submittedVersion = 'v2';
@@ -232,7 +237,8 @@ describe('MIC Integration', () => {
       .catch(() => {
         expect(actualHref).to.equal(getExpectedInitialUrl(process.env.APP_KEY, submittedVersion, invalidUrl));
         done();
-      }).catch(done);
+      })
+      .catch(done);
   });
 
   it('should throw an error if the user cancels the login', (done) => {
@@ -243,7 +249,8 @@ describe('MIC Integration', () => {
       .catch((err) => {
         expect(err.message).to.equal(cancelledLoginMessage);
         done();
-      }).catch(done);
+      })
+      .catch(done);
   });
 
   it('should throw an error if the authorization grant is invalid', (done) => {
@@ -253,7 +260,8 @@ describe('MIC Integration', () => {
       .catch((err) => {
         expect(err.message).to.contain('Please use a supported authorization grant.');
         done();
-      }).catch(done);
+      })
+      .catch(done);
   });
 
   it('should throw an error if an active user already exists', (done) => {
@@ -266,7 +274,8 @@ describe('MIC Integration', () => {
       .catch((err) => {
         expect(err.message).to.contain('An active user already exists.');
         done();
-      }).catch(done);
+      })
+      .catch(done);
   });
 
   it('should return the error from the Oauth provider with the default MIC version', (done) => {
@@ -278,6 +287,7 @@ describe('MIC Integration', () => {
         expect(err.message).to.equal('server_error');
         expect(err.debug).to.contain('OAuth provider returned an error when trying to retrieve the token');
         done();
-      }).catch(done);
+      })
+      .catch(done);
   });
 });

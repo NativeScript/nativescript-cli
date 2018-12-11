@@ -282,6 +282,7 @@
       "request": "launch",
       "name": "Ping Tests",
       "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
+      "preLaunchTask": "npm: build - packages/kinvey-ping",
       "args": [
         "--require",
         "@babel/register",
@@ -292,6 +293,9 @@
         "--colors",
         "${workspaceFolder}/packages/kinvey-ping/src"
       ],
+      "env": {
+        "NODE_ENV": "development"
+      },
       "internalConsoleOptions": "openOnSessionStart",
       "sourceMaps": true,
       "smartStep": true,

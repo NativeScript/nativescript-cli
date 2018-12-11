@@ -4,10 +4,6 @@ import { register as registerHttp } from 'kinvey-http-node';
 import { randomString } from 'kinvey-test-utils';
 import { init } from 'kinvey-app';
 import { ping } from './ping';
-const basicConfig = {
-  appKey: randomString(),
-  appSecret: randomString()
-}
 
 before(() => {
   registerHttp();

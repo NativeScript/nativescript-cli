@@ -274,7 +274,7 @@ export async function clear(dbName, objectStoreName) {
     db.open(objectStoreName, true, (txn) => {
       const objectStore = txn.objectStore(objectStoreName);
       objectStore.clear();
-      txn.oncomplete = (result) => resolve(true);
+      txn.oncomplete = () => resolve(true);
       txn.onerror = (err) => reject(err);
     }, reject);
   });
@@ -287,7 +287,7 @@ export function clearAll(dbName) {
 
     request.onsuccess = () => {
       delete DB_CACHE[dbName];
-      resolve();
+      resolve(true);
     };
 
     request.onerror = (e) => {

@@ -1,6 +1,6 @@
 /* eslint-disable */
 const path = require('path');
-const webpackConfig = require('./webpack.config.js');
+const webpackConfig = require('./webpack.html5.js');
 webpackConfig.entry = () => ({});
 
 module.exports = function (config) {
