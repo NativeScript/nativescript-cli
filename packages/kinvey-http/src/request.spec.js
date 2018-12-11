@@ -1,7 +1,7 @@
 import expect from 'expect';
-import { Request } from './request';
 import { init } from 'kinvey-app';
 import { randomString } from 'kinvey-test-utils';
+import { Request } from './request';
 
 describe('Request', () => {
   before(() => {

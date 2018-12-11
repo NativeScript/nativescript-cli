@@ -9,7 +9,7 @@ import { randomString } from 'kinvey-test-utils';
 import { ActiveUserError, InvalidCredentialsError, KinveyError } from 'kinvey-errors';
 import { collection, DataStoreType } from 'kinvey-datastore';
 import { Query } from 'kinvey-query';
-import { register as registerHttp} from 'kinvey-http-node';
+import { register as registerHttp } from 'kinvey-http-node';
 import { init } from 'kinvey-app';
 import { getLiveService } from 'kinvey-live';
 import { register as registerCache } from 'kinvey-cache-memory';
@@ -17,7 +17,6 @@ import { throwError } from 'rxjs';
 import { User, getActiveUser } from './user';
 import * as userFuncs from './user';
 import { UserMock } from './user-mock';
-import { doesNotReject } from 'assert';
 
 chai.use(require('chai-as-promised'));
 

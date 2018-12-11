@@ -1,16 +1,16 @@
 import nock from 'nock';
 import expect from 'expect';
 import { Query } from 'kinvey-query';
-import {CacheStore} from './cachestore';
 import { Aggregation, count } from 'kinvey-aggregation';
 import { KinveyError, NotFoundError, ServerError } from 'kinvey-errors';
 import { randomString } from 'kinvey-test-utils';
-import { mockRequiresIn } from './require-helper';
-import { NetworkStore } from './networkstore';
 import { register as registerHttp } from 'kinvey-http-node';
 import { set as setSession } from 'kinvey-session';
 import { init } from 'kinvey-app';
-import { register as registerCache} from 'kinvey-cache-memory';
+import { register as registerCache } from 'kinvey-cache-memory';
+import { mockRequiresIn } from './require-helper';
+import { NetworkStore } from './networkstore';
+import { CacheStore } from './cachestore';
 
 const collection = 'Books';
 

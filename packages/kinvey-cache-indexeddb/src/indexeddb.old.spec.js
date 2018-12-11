@@ -1,6 +1,6 @@
 import assert from 'assert';
 import indexedDB from 'fake-indexeddb';
-import { randomString, arraysEqual } from 'kinvey-test-utils';
+import { randomString } from 'kinvey-test-utils';
 import * as IndexedDB from './indexeddb.old';
 
 // Setup window

@@ -1,8 +1,20 @@
 {
   "extends": [
-    "../../.eslintrc"
+    "kinvey-platform"
   ],
   "env": {
     "browser": true
+  },
+  "parser": "babel-eslint",
+  "rules": {
+    "arrow-parens": "off",
+    "import/extensions": ["error", "ignorePackages"],
+    "import/no-extraneous-dependencies": ["error", {
+      "devDependencies": [
+        "**/*.spec.js"
+      ],
+      "optionalDependencies": false
+    }],
+    "import/prefer-default-export": "off"
   }
 }

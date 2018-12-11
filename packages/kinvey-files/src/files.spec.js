@@ -9,9 +9,9 @@ import { Query } from 'kinvey-query';
 import { register } from 'kinvey-http-node';
 import { login } from 'kinvey-user';
 import { init } from 'kinvey-app';
+import sinon from 'sinon';
 import * as Files from './files';
 import fileFuncs from './fileModule';
-import sinon from 'sinon';
 
 Files.upload
 chai.use(require('chai-as-promised'));

@@ -1,8 +1,5 @@
 import nock from 'nock';
 import expect from 'expect';
-import { SyncEvent } from './sync';
-import { CacheStore } from './cachestore';
-import { collection, DataStoreType } from './index';
 import { Aggregation, count } from 'kinvey-aggregation';
 import { Query } from 'kinvey-query';
 import { KinveyError, NotFoundError } from 'kinvey-errors';
@@ -11,6 +8,9 @@ import { register as registerHttp } from 'kinvey-http-node';
 import { set as setSession } from 'kinvey-session';
 import { register as registerCache} from 'kinvey-cache-memory';
 import { init } from 'kinvey-app';
+import { SyncEvent } from './sync';
+import { CacheStore } from './cachestore';
+import { collection, DataStoreType } from './index';
 
 const collectionName = 'Books';
 
