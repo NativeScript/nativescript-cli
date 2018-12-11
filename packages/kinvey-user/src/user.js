@@ -201,6 +201,32 @@ export class User {
 
     return true;
   }
+
+  async logout(options = {}) {
+    const { api, appKey } = getConfig();
+
+    if (this.isActive()) {
+      try {
+        // TODO: unregister from live service and push
+
+        const url = formatKinveyUrl(api.protocol, api.host, `/${USER_NAMESPACE}/${appKey}/_logout`);
+        const request = new KinveyRequest({
+          method: RequestMethod.POST,
+          auth: Auth.Session,
+          url,
+          timeout: options.timeout
+        });
+        await request.execute();
+      } catch (error) {
+        // TODO: log error
+      }
+
+      removeSession();
+      await clear();
+    }
+
+    return this;
+  }
 }
 
 export function getActiveUser() {
@@ -326,29 +352,11 @@ export async function loginWithMIC(redirectUri, authorizationGrant, options) {
   }
 }
 
-export async function logout(options = {}) {
-  const { api, appKey } = getConfig();
+export async function logout(options) {
   const activeUser = getActiveUser();
 
   if (activeUser) {
-    try {
-      // TODO: unregister from live service and push
-
-      const url = formatKinveyUrl(api.protocol, api.host, `/${USER_NAMESPACE}/${appKey}/_logout`);
-      const request = new KinveyRequest({
-        method: RequestMethod.POST,
-        auth: Auth.Session,
-        url,
-        timeout: options.timeout
-      });
-      await request.execute();
-    } catch (error) {
-      // TODO: log error
-    }
-
-    removeSession();
-    await clear();
-    return activeUser;
+    return activeUser.logout(options);
   }
 
   return null;
@@ -377,6 +385,7 @@ export async function update(data) {
 export async function remove(id, options = {}) {
   const { api, appKey } = getConfig();
   const { hard } = options;
+  const activeUser = getActiveUser();
 
   if (!id) {
     throw new KinveyError('An id was not provided.');
@@ -386,6 +395,7 @@ export async function remove(id, options = {}) {
     throw new KinveyError('The id provided is not a string.');
   }
 
+  // Remove the user from the backend
   const url = formatKinveyUrl(api.protocol, api.host, `/user/${appKey}/${id}`, { hard: hard ? hard === true : undefined });
   const request = new KinveyRequest({
     method: RequestMethod.DELETE,
@@ -394,7 +404,13 @@ export async function remove(id, options = {}) {
     timeout: options.timeout
   });
   const response = await request.execute();
-  removeSession();
+
+  // Logout the active user if it is the user we removed
+  if (activeUser._id === id) {
+    await activeUser.logout();
+  }
+
+  // Return the response
   return response.data;
 }
 
