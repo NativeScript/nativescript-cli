@@ -1,6 +1,0 @@
-.env
-app/tests
-tmp
-package-lock.json
-platforms
-hooks

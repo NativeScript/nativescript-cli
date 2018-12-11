@@ -34,20 +34,21 @@
     "kinvey-user": "1.0.0"
   },
   "devDependencies": {
-    "@babel/cli": "7.1.5",
-    "@babel/core": "7.1.5",
-    "@babel/plugin-transform-runtime": "7.1.0",
-    "@babel/preset-env": "7.1.5",
-    "babel-eslint": "10.0.1",
-    "clean-webpack-plugin": "0.1.19",
-    "del-cli": "1.1.0",
-    "eslint": "5.8.0",
-    "eslint-config-kinvey-platform": "kinvey/eslint-kinvey-platform#0.1.1",
-    "eslint-plugin-import": "2.14.0",
-    "webpack": "4.20.2",
-    "webpack-bundle-analyzer": "3.0.2",
-    "webpack-cli": "3.1.2",
-    "webpack-merge": "4.1.4"
+    "@babel/cli": "^7.1.5",
+    "@babel/core": "^7.1.5",
+    "@babel/plugin-transform-runtime": "^7.1.0",
+    "@babel/preset-env": "^7.1.5",
+    "@babel/register": "^7.0.0",
+    "babel-eslint": "^10.0.1",
+    "clean-webpack-plugin": "^0.1.19",
+    "del-cli": "^1.1.0",
+    "eslint": "^5.8.0",
+    "eslint-config-kinvey-platform": "^0.1.3",
+    "eslint-plugin-import": "^2.14.0",
+    "webpack": "^4.20.2",
+    "webpack-bundle-analyzer": "^3.0.2",
+    "webpack-cli": "^3.1.2",
+    "webpack-merge": "^4.1.4"
   },
   "files": [
     "lib/*"
