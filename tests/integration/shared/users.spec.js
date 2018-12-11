@@ -58,7 +58,7 @@ before(() => {
   utilities.cleanUpCollection(appCredentials, 'user');
 });
 
-describe('User tests', () => {
+describe.only('User tests', () => {
   const missingCredentialsError = 'Username and/or password missing';
   const createdUserIds = [];
 
@@ -488,8 +488,9 @@ describe('User tests', () => {
     it('should not logout user after remove', (done) => {
       Kinvey.User.remove(userToRemoveId1)
         .then(() => {
-          var activeUser = Kinvey.User.getActiveUser();
+          const activeUser = Kinvey.User.getActiveUser();
           expect(activeUser).to.not.equal(null);
+          done();
         })
         .catch(done);
     });
