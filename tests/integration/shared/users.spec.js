@@ -485,6 +485,15 @@ describe('User tests', () => {
         .catch(done);
     });
 
+    it('should not logout user after remove', (done) => {
+      Kinvey.User.remove(userToRemoveId1)
+        .then(() => {
+          var activeUser = Kinvey.User.getActiveUser();
+          expect(activeUser).to.not.equal(null);
+        })
+        .catch(done);
+    });
+
     it('should remove the user that matches the id argument permanently', (done) => {
       Kinvey.User.remove(userToRemoveId2, { hard: true })
         .then(() => Kinvey.User.exists(username2))

@@ -17,6 +17,7 @@ import { throwError } from 'rxjs';
 import { User, getActiveUser } from './user';
 import * as userFuncs from './user';
 import { UserMock } from './user-mock';
+import { doesNotReject } from 'assert';
 
 chai.use(require('chai-as-promised'));
 
@@ -551,7 +552,7 @@ describe('User', () => {
 
     afterEach(() => expect.restoreSpies());
 
-    describe('registerForLiveService', () => {//TODO: OBsolete?
+    describe('registerForLiveService', () => {
       it('should do nothing, if already registered', () => {
         const spy = expect.spyOn(liveService, 'fullInitialization');
         expect.spyOn(liveService, 'isInitialized')
@@ -1060,6 +1061,31 @@ describe('User', () => {
         });
     });
 
+    it('should use the proper credentials when removing a user a second time', () => {
+      const pathname = `/user/${client.appKey}`;
+      const user = new User({ _id: randomString(), email: randomString() });
+
+      var b = nock(client.apiHostname, {reqheaders:{'Authorization':/fff/}})
+        .delete(`${pathname}/${user._id}`)
+        .reply(204);
+
+      // var a = nock(client.apiHostname, {reqheaders:{'Authorization':/Kinvey/}})
+      //   .delete(`${pathname}/${user._id}`)
+      //   .reply(204);
+
+      return userFuncs.remove(user._id)
+        .then(() => {
+          userFuncs.remove(user._id)
+            .then(() => {
+              //expect(a.isDone()).toEqual(true);
+            })
+            .catch((err)=>{
+              //console.log(a.isDone())
+              throw new Error(err)
+            })
+        })
+    });
+
     it('should remove the user that matches the id argument permanently', () => {
       const pathname = `/user/${client.appKey}`;
       const user = new User({ _id: randomString(), email: randomString() });
@@ -1075,4 +1101,24 @@ describe('User', () => {
         });
     });
   });
+
+  describe('restore()', () => {
+
+    it('should return error', () => {
+      return userFuncs.restore()
+        .catch((err) => {
+          expect(err.message).toEqual('This function requires a master secret to be provided for your application. We strongly advise not to do this.');
+        })
+    })
+  })
+
+  describe('signUpWithIdentity()', () => {
+
+    it('should return error', () => {
+      return userFuncs.signupWithIdentity({})
+        .catch((err) => {
+          expect(err.message).toEqual('This function has been deprecated. You should use loginWithMIC() instead.');
+        })
+    })
+  })
 });
