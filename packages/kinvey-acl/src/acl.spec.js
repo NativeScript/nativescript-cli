@@ -1,6 +1,4 @@
-// eslint-disable-next-line import/no-extraneous-dependencies
 import expect from 'expect';
-// eslint-disable-next-line import/no-extraneous-dependencies
 import { randomString } from 'kinvey-test-utils';
 import { KinveyError } from 'kinvey-errors';
 import { Acl } from './acl';
@@ -253,7 +251,7 @@ describe('Acl', () => {
       expect(acl.readerGroups).toEqual(readerGroups);
       expect(acl.writerGroups).toEqual(writerGroups);
     });
-    
+
     it('should append new readerGroup without overriding the old one', ()=>{
       const entity = {_acl:{}};
       const readerGroup = randomString();
@@ -338,7 +336,7 @@ describe('Acl', () => {
       expect(acl.readerGroups).toEqual(readerGroups);
       expect(acl.writerGroups).toEqual(writerGroups);
     });
-    
+
     it('should append new writerGroup without overriding the old one', ()=>{
       const entity = {_acl:{}};
       const writerGroup = randomString();
