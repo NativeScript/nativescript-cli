@@ -84,6 +84,14 @@ interface IPlatformService extends IBuildPlatformAction, NodeJS.EventEmitter {
 	shouldInstall(device: Mobile.IDevice, projectData: IProjectData, release: IRelease, outputPath?: string): Promise<boolean>;
 
 	/**
+	 * 
+	 * @param {Mobile.IDevice} device The device where the application should be installed.
+	 * @param {IProjectData} projectData DTO with information about the project.
+	 * @param {string} @optional outputPath Directory containing build information and artifacts.
+	 */
+	validateInstall(device: Mobile.IDevice, projectData: IProjectData, release: IRelease, outputPath?: string): Promise<void>;
+
+	/**
 	 * Determines whether the project should undergo the prepare process.
 	 * @param {IShouldPrepareInfo} shouldPrepareInfo Options needed to decide whether to prepare.
 	 * @returns {Promise<boolean>} true indicates that the project should be prepared.
@@ -307,6 +315,13 @@ interface INodeModulesDependenciesBuilder {
 interface IBuildInfo {
 	prepareTime: string;
 	buildTime: string;
+	/** 
+	 * Currently it is used only for iOS.
+	 * As `xcrun` command does not throw an error when IPHONEOS_DEPLOYMENT_TARGET is provided in `xcconfig` file and
+	 * the simulator's version does not match IPHONEOS_DEPLOYMENT_TARGET's value, we need to save it to buildInfo file
+	 * in order check it on livesync and throw an error to the user.
+	*/
+	deploymentTarget?: string;
 }
 
 interface IPlatformDataComposition {
