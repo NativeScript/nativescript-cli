@@ -449,6 +449,12 @@ interface IPlatformProjectService extends NodeJS.EventEmitter, IPlatformProjectS
 	 * Traverse through the production dependencies and find plugins that need build/rebuild
 	 */
 	checkIfPluginsNeedBuild(projectData: IProjectData): Promise<Array<any>>;
+	
+	/**
+	 * Get the deployment target's version
+	 * Currently implemented only for iOS -> returns the value of IPHONEOS_DEPLOYMENT_TARGET property from xcconfig file
+	 */
+	getDeploymentTarget(projectData: IProjectData): any;
 }
 
 interface IValidatePlatformOutput {
