@@ -152,6 +152,8 @@ export class AppDebugSocketProxyFactory extends EventEmitter implements IAppDebu
 			appDebugSocket.on("close", () => {
 				this.$logger.info("Backend socket closed!");
 				webSocket.close();
+				server.close();
+				delete this.deviceWebServers[cacheKey];
 			});
 
 			webSocket.on("close", () => {
