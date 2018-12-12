@@ -56,9 +56,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 	}
 
 	public async liveSyncToPreviewApp(data: IPreviewAppLiveSyncData): Promise<IQrCodeImageData> {
-		this.$previewAppLiveSyncService.on(LiveSyncEvents.previewAppLiveSyncError, liveSyncData => {
-			this.emit(LiveSyncEvents.previewAppLiveSyncError, liveSyncData);
-		});
+		this.attachToPreviewAppLiveSyncError();
 
 		await this.liveSync([], {
 			syncToPreviewApp: true,
@@ -137,6 +135,13 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 		const liveSyncProcessesInfo = this.liveSyncProcessesInfo[projectDir] || <ILiveSyncProcessInfo>{};
 		const currentDescriptors = liveSyncProcessesInfo.deviceDescriptors;
 		return currentDescriptors || [];
+	}
+
+	@cache()
+	private attachToPreviewAppLiveSyncError(): void {
+		this.$previewAppLiveSyncService.on(LiveSyncEvents.previewAppLiveSyncError, liveSyncData => {
+			this.emit(LiveSyncEvents.previewAppLiveSyncError, liveSyncData);
+		});
 	}
 
 	private handleWarnings(liveSyncData: ILiveSyncInfo, projectData: IProjectData) {
