@@ -436,12 +436,19 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 
 	public saveBuildInfoFile(platform: string, projectDir: string, buildInfoFileDirname: string): void {
 		const buildInfoFile = path.join(buildInfoFileDirname, buildInfoFileName);
+		const projectData = this.$projectDataService.getProjectData(projectDir);
+		const platformData = this.$platformsData.getPlatformData(platform, projectData);
 
-		const prepareInfo = this.$projectChangesService.getPrepareInfo(platform, this.$projectDataService.getProjectData(projectDir));
-		const buildInfo = {
+		const prepareInfo = this.$projectChangesService.getPrepareInfo(platform, projectData);
+		const buildInfo: IBuildInfo = {
 			prepareTime: prepareInfo.changesRequireBuildTime,
 			buildTime: new Date().toString()
 		};
+
+		const deploymentTarget = platformData.platformProjectService.getDeploymentTarget(projectData);
+		if (deploymentTarget) {
+			buildInfo.deploymentTarget = deploymentTarget.version;
+		}
 
 		this.$fs.writeJson(buildInfoFile, buildInfo);
 	}
@@ -455,7 +462,19 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		const platformData = this.$platformsData.getPlatformData(platform, projectData);
 		const deviceBuildInfo: IBuildInfo = await this.getDeviceBuildInfo(device, projectData);
 		const localBuildInfo = this.getBuildInfo(platform, platformData, { buildForDevice: !device.isEmulator, release: release.release }, outputPath);
+
 		return !localBuildInfo || !deviceBuildInfo || deviceBuildInfo.buildTime !== localBuildInfo.buildTime;
+	}
+
+	public async validateInstall(device: Mobile.IDevice, projectData: IProjectData, release: IRelease, outputPath?: string): Promise<void> {
+		const platform = device.deviceInfo.platform;
+		const platformData = this.$platformsData.getPlatformData(platform, projectData);
+		const localBuildInfo = this.getBuildInfo(device.deviceInfo.platform, platformData, { buildForDevice: !device.isEmulator, release: release.release }, outputPath);
+		if (localBuildInfo.deploymentTarget) {
+			if (semver.lt(semver.coerce(device.deviceInfo.version), semver.coerce(localBuildInfo.deploymentTarget))) {
+				this.$errors.fail(`Unable to install on device with version ${device.deviceInfo.version} as deployment target is ${localBuildInfo.deploymentTarget}`);
+			}
+		}
 	}
 
 	public async installApplication(device: Mobile.IDevice, buildConfig: IBuildConfig, projectData: IProjectData, packageFile?: string, outputFilePath?: string): Promise<void> {
