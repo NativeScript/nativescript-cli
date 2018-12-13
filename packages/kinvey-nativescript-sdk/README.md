@@ -25,7 +25,7 @@ The Kinvey NativeScript SDK supports the following Mobile OS versions:
 
 ## Documentation
 
-For more detailed documentation, see [Kinvey DevCenter](http://devcenter.kinvey.com/angular).
+For more detailed documentation, see [Kinvey DevCenter](https://devcenter.kinvey.com/nativescript).
 
 ## License
 
