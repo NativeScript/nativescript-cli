@@ -152,6 +152,7 @@ describe('NetworkStore', () => {
         })
         .catch((error) => {
           expect(error).toBeA(KinveyError);
+          expect(error.message).toEqual('No id was provided. An id must be provided.');
         });
     });
 
