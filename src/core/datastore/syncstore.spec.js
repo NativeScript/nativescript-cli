@@ -170,18 +170,21 @@ describe('SyncStore', () => {
   });
 
   describe('findById()', () => {
-    it('should return undefined if an id is not provided', (done) => {
+    it('should throw an error if an id is not provided', (done) => {
       const store = new SyncStore(collection);
       const onNextSpy = expect.createSpy();
       store.findById()
-        .subscribe(onNextSpy, done, () => {
+        .subscribe(onNextSpy, (error) => {
           try {
-            expect(onNextSpy.calls.length).toEqual(1);
-            expect(onNextSpy.calls[0].arguments).toEqual([undefined]);
+            expect(onNextSpy.calls.length).toEqual(0);
+            expect(error).toBeA(KinveyError);
+            expect(error.message).toEqual('No id was provided. An id must be provided.');
             done();
-          } catch (error) {
-            done(error);
+          } catch (e) {
+            done(e);
           }
+        }, () => {
+          done(new Error('Should not be called'));
         });
     });
 
