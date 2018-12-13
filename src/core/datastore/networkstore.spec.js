@@ -282,6 +282,16 @@ describe('NetworkStore', () => {
   });
 
   describe('create()', () => {
+    it('should throw an error if an entity is not provided', () => {
+      const store = new NetworkStore(collection);
+      return store.create()
+        .then(() => Promise.reject(new Error('This should not happen')))
+        .catch((error) => {
+          expect(error).toBeA(KinveyError);
+          expect(error.message).toEqual('No entity was provided. Please provide an entity you would like to create.');
+        });
+    });
+
     it('should throw an error if trying to create an array of entities', async () => {
       const store = new NetworkStore(collection);
       const entity1 = {
@@ -368,6 +378,16 @@ describe('NetworkStore', () => {
   });
 
   describe('update()', () => {
+    it('should throw an error if an entity is not provided', () => {
+      const store = new NetworkStore(collection);
+      return store.update()
+        .then(() => Promise.reject(new Error('This should not happen')))
+        .catch((error) => {
+          expect(error).toBeA(KinveyError);
+          expect(error.message).toEqual('No entity was provided. Please provide an entity you would like to update.');
+        });
+    });
+
     it('should throw an error if trying to update an array of entities', async () => {
       const store = new NetworkStore(collection);
       const entity1 = {
@@ -440,6 +460,16 @@ describe('NetworkStore', () => {
   describe('save()', () => {
     afterEach(() => {
       expect.restoreSpies();
+    });
+
+    it('should throw an error if an entity is not provided', () => {
+      const store = new NetworkStore(collection);
+      return store.save()
+        .then(() => Promise.reject(new Error('This should not happen')))
+        .catch((error) => {
+          expect(error).toBeA(KinveyError);
+          expect(error.message).toEqual('No entity was provided. Please provide an entity you would like to save.');
+        });
     });
 
     it('should call create() for an entity that does not contain an _id', () => {
