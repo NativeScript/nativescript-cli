@@ -1055,3 +1055,158 @@ describe("Merge Project XCConfig files", () => {
 		}
 	});
 });
+
+describe("buildProject", () => {
+	let xcodeBuildCommandArgs: string[] = [];
+
+	function setup(data: { frameworkVersion: string, deploymentTarget: string, devices?: Mobile.IDevice[] }): IInjector {
+		const projectPath = "myTestProjectPath";
+		const projectName = "myTestProjectName";
+		const testInjector = createTestInjector(projectPath, projectName);
+
+		const childProcess = testInjector.resolve("childProcess");
+		childProcess.spawnFromEvent = (command: string, args: string[]) => {
+			if (command === "xcodebuild" && args[0] !== "-exportArchive") {
+				xcodeBuildCommandArgs = args;
+			}
+		};
+
+		const projectDataService = testInjector.resolve("projectDataService");
+		projectDataService.getNSValue = (projectDir: string, propertyName: string) => {
+			if (propertyName === "tns-ios") {
+				return {
+					name: "tns-ios",
+					version: data.frameworkVersion
+				};
+			}
+		};
+
+		const projectData = testInjector.resolve("projectData");
+		projectData.appResourcesDirectoryPath = path.join(projectPath, "app", "App_Resources");
+
+		const devicesService = testInjector.resolve("devicesService");
+		devicesService.initialize = () => ({});
+		devicesService.getDeviceInstances = () => data.devices || [];
+
+		const xCConfigService = testInjector.resolve("xCConfigService");
+		xCConfigService.readPropertyValue = (projectDir: string, propertyName: string) => {
+			if (propertyName === "IPHONEOS_DEPLOYMENT_TARGET") {
+				return data.deploymentTarget;
+			}
+		};
+
+		const pbxprojDomXcode = testInjector.resolve("pbxprojDomXcode");
+		pbxprojDomXcode.Xcode = {
+			open: () => ({
+				getSigning: () => ({}),
+				setAutomaticSigningStyle: () => ({}),
+				save: () => ({})
+			})
+		};
+
+		const iOSProvisionService = testInjector.resolve("iOSProvisionService");
+		iOSProvisionService.getDevelopmentTeams = () => ({});
+		iOSProvisionService.getTeamIdsWithName = () => ({});
+
+		return testInjector;
+	}
+
+	function executeTests(testCases: any[], data: { buildForDevice: boolean }) {
+		_.each(testCases, testCase => {
+			it(`${testCase.name}`, async () => {
+				const testInjector = setup({ frameworkVersion: testCase.frameworkVersion, deploymentTarget: testCase.deploymentTarget });
+				const projectData: IProjectData = testInjector.resolve("projectData");
+
+				const iOSProjectService = <IOSProjectService>testInjector.resolve("iOSProjectService");
+				(<any>iOSProjectService).getExportOptionsMethod = () => ({});
+				await iOSProjectService.buildProject("myProjectRoot", projectData, <any>{ buildForDevice: data.buildForDevice });
+
+				const archsItem = xcodeBuildCommandArgs.find(item => item.startsWith("ARCHS="));
+				if (testCase.expectedArchs) {
+					const archsValue = archsItem.split("=")[1];
+					assert.deepEqual(archsValue, testCase.expectedArchs);
+				} else {
+					assert.deepEqual(undefined, archsItem);
+				}
+			});
+		});
+	}
+
+	describe("for device", () => {
+		afterEach(() => {
+			xcodeBuildCommandArgs = [];
+		});
+
+		const testCases = <any[]>[{
+			name: "shouldn't exclude armv7 architecture when deployment target 10",
+			frameworkVersion: "5.0.0",
+			deploymentTarget: "10.0",
+			expectedArchs: "armv7 arm64"
+		}, {
+			name: "should exclude armv7 architecture when deployment target is 11",
+			frameworkVersion: "5.0.0",
+			deploymentTarget: "11.0",
+			expectedArchs: "arm64"
+		}, {
+			name: "shouldn't pass architecture to xcodebuild command when frameworkVersion is 5.1.0",
+			frameworkVersion: "5.1.0",
+			deploymentTarget: "11.0"
+		}, {
+			name: "should pass only 64bit architecture to xcodebuild command when frameworkVersion is 5.0.0 and deployment target is 11.0",
+			frameworkVersion: "5.0.0",
+			deploymentTarget: "11.0",
+			expectedArchs: "arm64"
+		}, {
+			name: "should pass both architectures to xcodebuild command when frameworkVersion is 5.0.0 and deployment target is 10.0",
+			frameworkVersion: "5.0.0",
+			deploymentTarget: "10.0",
+			expectedArchs: "armv7 arm64"
+		}, {
+			name: "should pass both architectures to xcodebuild command when frameworkVersion is 5.0.0 and no deployment target",
+			frameworkVersion: "5.0.0",
+			deploymentTarget: null,
+			expectedArchs: "armv7 arm64"
+		}];
+
+		executeTests(testCases, { buildForDevice: true });
+	});
+
+	describe("for simulator", () => {
+		afterEach(() => {
+			xcodeBuildCommandArgs = [];
+		});
+
+		const testCases = [{
+			name: "shouldn't exclude i386 architecture when deployment target is 10",
+			frameworkVersion: "5.0.0",
+			deploymentTarget: "10.0",
+			expectedArchs: "i386 x86_64"
+		}, {
+			name: "should exclude i386 architecture when deployment target is 11",
+			frameworkVersion: "5.0.0",
+			deploymentTarget: "11.0",
+			expectedArchs: "x86_64"
+		}, {
+			name: "shouldn't pass architecture to xcodebuild command when frameworkVersion is 5.1.0",
+			frameworkVersion: "5.1.0",
+			deploymentTarget: "11.0"
+		}, {
+			name: "should pass only 64bit architecture to xcodebuild command when frameworkVersion is 5.0.0 and deployment target is 11.0",
+			frameworkVersion: "5.0.0",
+			deploymentTarget: "11.0",
+			expectedArchs: "x86_64"
+		}, {
+			name: "should pass both architectures to xcodebuild command when frameworkVersion is 5.0.0 and deployment target is 10.0",
+			frameworkVersion: "5.0.0",
+			deploymentTarget: "10.0",
+			expectedArchs: "i386 x86_64"
+		}, {
+			name: "should pass both architectures to xcodebuild command when frameworkVersion is 5.0.0 and no deployment target",
+			frameworkVersion: "5.0.0",
+			deploymentTarget: null,
+			expectedArchs: "i386 x86_64"
+		}];
+
+		executeTests(testCases, { buildForDevice: false });
+	});
+});
