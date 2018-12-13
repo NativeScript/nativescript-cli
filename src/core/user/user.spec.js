@@ -871,7 +871,7 @@ describe('User', () => {
       return UserMock.logout()
         .then(() => User.me())
         .then(() => {
-          throw new Error('This should not fail');
+          throw new Error('This test should not successfully resolve, it should throw an error.');
         })
         .catch((error) => {
           expect(error).toBeAn(NoActiveUserError);
