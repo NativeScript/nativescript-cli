@@ -165,17 +165,18 @@ function testFunc() {
             });
           });
 
-          it('should return undefined if an id is not provided', (done) => {
+          it('should throw an error if an id is not provided', (done) => {
             const spy = sinon.spy();
-            storeToTest.findById().subscribe(spy, done, () => {
+            storeToTest.findById().subscribe(spy, (err) => {
               try {
-                expect(spy.callCount).to.equal(1);
-                const result = spy.firstCall.args[0];
-                expect(result).to.be.undefined;
+                expect(spy.callCount).to.equal(0);
+                expect(err.message).to.equal('No id was provided. An id must be provided.');
+                done();
               } catch (err) {
-                return done(err);
+                done(err);
               }
-              return done();
+            }, () => {
+              done(new Error('Should not be called'));
             });
           });
 

@@ -144,6 +144,18 @@ describe('NetworkStore', () => {
   });
 
   describe('findById()', () => {
+    it('should throw an error if an id is not provided', () => {
+      const store = new NetworkStore(collection);
+      return store.findById().toPromise()
+        .then(() => {
+          throw new Error('This should not happen.')
+        })
+        .catch((error) => {
+          expect(error).toBeA(KinveyError);
+          expect(error.message).toEqual('No id was provided. An id must be provided.');
+        });
+    });
+
     it('should throw a NotFoundError if the id argument does not exist', () => {
       const entityId = 1;
       nock(client.apiHostname)
