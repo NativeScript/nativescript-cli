@@ -15,6 +15,7 @@ export function init(config = <any>{}) {
   config.appKey = config.appKey || configFromPackageJson.appKey;
   config.appSecret = config.appSecret || configFromPackageJson.appSecret;
   config.masterSecret = config.masterSecret || configFromPackageJson.masterSecret;
+  config.instanceId = config.instanceId || configFromPackageJson.instanceId
 
   if (!isDefined(config.appKey)) {
     throw new KinveyError('No App Key was provided.'
