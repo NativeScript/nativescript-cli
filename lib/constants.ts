@@ -7,6 +7,7 @@ export const NATIVESCRIPT_KEY_NAME = "nativescript";
 export const NODE_MODULES_FOLDER_NAME = "node_modules";
 export const TNS_MODULES_FOLDER_NAME = "tns_modules";
 export const TNS_CORE_MODULES_NAME = "tns-core-modules";
+export const TNS_CORE_MODULES_WIDGETS_NAME = "tns-core-modules-widgets";
 export const TNS_ANDROID_RUNTIME_NAME = "tns-android";
 export const TNS_IOS_RUNTIME_NAME = "tns-ios";
 export const PACKAGE_JSON_FILE_NAME = "package.json";

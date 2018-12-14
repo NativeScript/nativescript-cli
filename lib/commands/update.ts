@@ -13,8 +13,8 @@ export class UpdateCommand extends ValidatePlatformCommandBase implements IComma
 		private $projectDataService: IProjectDataService,
 		private $fs: IFileSystem,
 		private $logger: ILogger) {
-			super($options, $platformsData, $platformService, $projectData);
-			this.$projectData.initializeProjectData();
+		super($options, $platformsData, $platformService, $projectData);
+		this.$projectData.initializeProjectData();
 	}
 
 	static readonly folders: string[] = [
@@ -83,8 +83,10 @@ export class UpdateCommand extends ValidatePlatformCommandBase implements IComma
 		}
 
 		await this.$platformService.removePlatforms(platforms.installed, this.$projectData);
-		await this.$pluginsService.remove("tns-core-modules", this.$projectData);
-		await this.$pluginsService.remove("tns-core-modules-widgets", this.$projectData);
+		await this.$pluginsService.remove(constants.TNS_CORE_MODULES_NAME, this.$projectData);
+		if (!!this.$projectData.dependencies[constants.TNS_CORE_MODULES_WIDGETS_NAME]) {
+			await this.$pluginsService.remove(constants.TNS_CORE_MODULES_WIDGETS_NAME, this.$projectData);
+		}
 
 		for (const folder of UpdateCommand.folders) {
 			this.$fs.deleteDirectory(path.join(this.$projectData.projectDir, folder));
@@ -95,16 +97,16 @@ export class UpdateCommand extends ValidatePlatformCommandBase implements IComma
 				await this.$platformService.addPlatforms([platform + "@" + args[0]], this.$options.platformTemplate, this.$projectData, this.$options, this.$options.frameworkPath);
 			}
 
-			await this.$pluginsService.add("tns-core-modules@" + args[0], this.$projectData);
+			await this.$pluginsService.add(`${constants.TNS_CORE_MODULES_NAME}@${args[0]}`, this.$projectData);
 		} else {
 			await this.$platformService.addPlatforms(platforms.packagePlatforms, this.$options.platformTemplate, this.$projectData, this.$options, this.$options.frameworkPath);
-			await this.$pluginsService.add("tns-core-modules", this.$projectData);
+			await this.$pluginsService.add(constants.TNS_CORE_MODULES_NAME, this.$projectData);
 		}
 
 		await this.$pluginsService.ensureAllDependenciesAreInstalled(this.$projectData);
 	}
 
-	private getPlatforms(): {installed: string[], packagePlatforms: string[]} {
+	private getPlatforms(): { installed: string[], packagePlatforms: string[] } {
 		const installedPlatforms = this.$platformService.getInstalledPlatforms(this.$projectData);
 		const availablePlatforms = this.$platformService.getAvailablePlatforms(this.$projectData);
 		const packagePlatforms: string[] = [];
