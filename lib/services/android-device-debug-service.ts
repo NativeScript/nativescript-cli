@@ -59,14 +59,6 @@ export class AndroidDeviceDebugService extends DebugServiceBase implements IDevi
 		return this.removePortForwarding();
 	}
 
-	protected getChromeDebugUrl(debugOptions: IDebugOptions, port: number): string {
-		const debugOpts = _.cloneDeep(debugOptions);
-		debugOpts.useBundledDevTools = debugOpts.useBundledDevTools === undefined ? true : debugOpts.useBundledDevTools;
-
-		const chromeDebugUrl = super.getChromeDebugUrl(debugOpts, port);
-		return chromeDebugUrl;
-	}
-
 	private async debugOnEmulator(debugData: IDebugData, debugOptions: IDebugOptions): Promise<string> {
 		// Assure we've detected the emulator as device
 		// For example in case deployOnEmulator had stated new emulator instance
