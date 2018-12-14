@@ -96,7 +96,7 @@ export class YarnPackageManager extends BasePackageManager {
 	@exported("yarn")
 	public async getCachePath(): Promise<string> {
 		const result = await this.$childProcess.exec(`yarn cache dir`);
-		return result;
+		return result.toString().trim();
 	}
 }
 
