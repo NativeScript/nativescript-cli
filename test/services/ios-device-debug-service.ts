@@ -78,7 +78,7 @@ describe("iOSDeviceDebugService", () => {
 			{
 				scenarioName: "useBundledDevTools and useHttpUrl are not passed",
 				debugOptions: {},
-				expectedChromeUrl: `chrome-devtools://devtools/remote/serve_file/@${expectedDevToolsCommitSha}/inspector.html?experiments=true&ws=localhost:${expectedPort}`,
+				expectedChromeUrl: `chrome-devtools://devtools/bundled/inspector.html?experiments=true&ws=localhost:${expectedPort}`,
 			},
 
 			// When useBundledDevTools is true
@@ -137,7 +137,7 @@ describe("iOSDeviceDebugService", () => {
 				debugOptions: {
 					useHttpUrl: false
 				},
-				expectedChromeUrl: `chrome-devtools://devtools/remote/serve_file/@${expectedDevToolsCommitSha}/inspector.html?experiments=true&ws=localhost:${expectedPort}`,
+				expectedChromeUrl: `chrome-devtools://devtools/bundled/inspector.html?experiments=true&ws=localhost:${expectedPort}`,
 			},
 			{
 				scenarioName: "useBundledDevTools is not passed and useHttpUrl is true",
@@ -149,16 +149,18 @@ describe("iOSDeviceDebugService", () => {
 
 			// devToolsCommit tests
 			{
-				scenarioName: "devToolsCommit defaults to ${expectedDevToolsCommitSha} and is used in result when useBundledDevTools is not passed",
-				debugOptions: {},
+				scenarioName: `devToolsCommit defaults to ${expectedDevToolsCommitSha} and is used in result when useBundledDevTools is not passed`,
+				debugOptions: {
+					useBundledDevTools: false
+				},
 				expectedChromeUrl: `chrome-devtools://devtools/remote/serve_file/@${expectedDevToolsCommitSha}/inspector.html?experiments=true&ws=localhost:${expectedPort}`,
 			},
 			{
-				scenarioName: "devToolsCommit is set to passed value when useBundledDevTools is not passed",
+				scenarioName: "devToolsCommit is disregarded when useBundledDevTools is not passed",
 				debugOptions: {
 					devToolsCommit: customDevToolsCommit
 				},
-				expectedChromeUrl: `chrome-devtools://devtools/remote/serve_file/@${customDevToolsCommit}/inspector.html?experiments=true&ws=localhost:${expectedPort}`,
+				expectedChromeUrl: `chrome-devtools://devtools/bundled/inspector.html?experiments=true&ws=localhost:${expectedPort}`,
 			},
 			{
 				scenarioName: "devToolsCommit is set to passed value when useBundledDevTools is set to false",

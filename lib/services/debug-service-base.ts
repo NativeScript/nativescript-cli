@@ -34,12 +34,16 @@ export abstract class DebugServiceBase extends EventEmitter implements IDeviceDe
 
 	protected getChromeDebugUrl(debugOptions: IDebugOptions, port: number): string {
 		// corresponds to 55.0.2883 Chrome version
+		// SHA is taken from https://chromium.googlesource.com/chromium/src/+/55.0.2883.100
+		// This SHA is old and does not support debugging with HMR.
+		// In case we want to stick with concrete SHA, get it from one of the tags https://chromium.googlesource.com/chromium/src/
+		// IMPORTANT: When you get the SHA, ensure you are using the `parent` commit, not the actual one.
+		// Using the actual commit will result in 404 error in the remote serve.
 		const commitSHA = debugOptions.devToolsCommit || "02e6bde1bbe34e43b309d4ef774b1168d25fd024";
-		debugOptions.useHttpUrl = debugOptions.useHttpUrl === undefined ? false : debugOptions.useHttpUrl;
 
 		let chromeDevToolsPrefix = `chrome-devtools://devtools/remote/serve_file/@${commitSHA}`;
 
-		if (debugOptions.useBundledDevTools) {
+		if (debugOptions.useBundledDevTools === undefined || debugOptions.useBundledDevTools) {
 			chromeDevToolsPrefix = "chrome-devtools://devtools/bundled";
 		}
 

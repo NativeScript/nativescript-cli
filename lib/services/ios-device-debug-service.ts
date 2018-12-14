@@ -61,14 +61,6 @@ export class IOSDeviceDebugService extends DebugServiceBase implements IDeviceDe
 		await this.stopAppDebuggerOnSimulator();
 	}
 
-	protected getChromeDebugUrl(debugOptions: IDebugOptions, port: number): string {
-		const debugOpts = _.cloneDeep(debugOptions);
-		debugOpts.useBundledDevTools = debugOpts.useBundledDevTools === undefined ? false : debugOpts.useBundledDevTools;
-
-		const chromeDebugUrl = super.getChromeDebugUrl(debugOpts, port);
-		return chromeDebugUrl;
-	}
-
 	private async startApp(debugData: IDebugData, debugOptions: IDebugOptions) {
 		if (this.device.isEmulator) {
 			await this.startAppOnSimulator(debugData, debugOptions);
