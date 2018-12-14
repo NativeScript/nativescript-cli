@@ -37,7 +37,11 @@ function createTestInjector(
 	testInjector.register("staticConfig", StaticConfig);
 	testInjector.register("androidProjectService", AndroidProjectService);
 	testInjector.register("androidToolsInfo", stubs.AndroidToolsInfoStub);
-	testInjector.register("projectData", { projectDir, initializeProjectData: () => { /* empty */ } });
+	testInjector.register("projectData", {
+		projectDir,
+		initializeProjectData: () => { /* empty */ },
+		dependencies: {}
+	});
 	testInjector.register("projectDataService", {
 		getNSValue: () => {
 			return "1.0.0";
@@ -134,7 +138,7 @@ describe("update command method tests", () => {
 			sandbox.restore();
 		});
 
-		it("if backup fails, pltforms not deleted and added, temp removed", async () => {
+		it("if backup fails, platforms not deleted and added, temp removed", async () => {
 			const installedPlatforms: string[] = ["android"];
 			const testInjector = createTestInjector(installedPlatforms);
 			const fs = testInjector.resolve("fs");
@@ -229,6 +233,12 @@ describe("update command method tests", () => {
 			sandbox.spy(pluginsService, "remove");
 			sandbox.spy(pluginsService, "add");
 			sandbox.spy(pluginsService, "ensureAllDependenciesAreInstalled");
+			const $projectData = testInjector.resolve("projectData");
+			$projectData.dependencies = {
+				"tns-core-modules": "1.0.0",
+				"tns-core-modules-widgets": "1.0.0"
+			};
+
 			const updateCommand = testInjector.resolve<UpdateCommand>(UpdateCommand);
 			return updateCommand.execute([]).then(() => {
 				assert(pluginsService.add.calledWith("tns-core-modules"));
