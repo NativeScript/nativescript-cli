@@ -23,7 +23,9 @@ module.exports = function (config) {
     ],
 
     // list of files / patterns to exclude
-    exclude: [],
+    exclude: [
+      'shared/live-services.spec.js'
+    ],
 
     // preprocess matching files before serving them to the browser
     // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
@@ -54,7 +56,6 @@ module.exports = function (config) {
     customLaunchers: {
       Chrome_without_security: {
         base: 'ChromeHeadless',
-        chromeDataDir: path.resolve(__dirname, '.chrome'),
         flags: ['--disable-web-security', '--disable-site-isolation-trials']
       }
     },

@@ -10,7 +10,10 @@
     "test:node": "SDK=kinvey-node-sdk mocha --require dotenv/config --require kinvey-test-register --require @babel/register --opts mocha.opts \"shared/**/*.spec.js\""
   },
   "dependencies": {
+    "@babel/runtime": "7.1.5",
+    "@babel/cli": "^7.1.5",
     "@babel/core": "^7.1.5",
+    "@babel/plugin-transform-runtime": "^7.1.0",
     "@babel/preset-env": "^7.1.5",
     "@babel/register": "^7.0.0",
     "babel-loader": "^8.0.4",

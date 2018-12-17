@@ -1347,7 +1347,7 @@ describe('Query', () => {
       const query = new Query();
       query.fields = ['foo', 'bar'];
       const queryString = query.toQueryString();
-      expect(queryString).to.include({ fields: 'foo,bar,_id,_acl' });
+      expect(queryString).to.include({ fields: 'foo,bar' });
     });
 
     it('should not have a fields property', () => {

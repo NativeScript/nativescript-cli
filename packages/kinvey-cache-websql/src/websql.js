@@ -93,7 +93,7 @@ export async function find(dbName, tableName) {
 
 export async function count(dbName, tableName) {
   const response = await execute(dbName, tableName, [['SELECT COUNT(*) AS value FROM #{table}']]);
-  return response.result;
+  return response.result.shift() || 0;
 }
 
 export async function findById(dbName, tableName, id) {

@@ -83,20 +83,12 @@ export class Cache {
       throw new KinveyError('Invalid aggregation. It must be an instance of the Aggregation class.');
     }
 
-    const { query, initial, key, reduceFn } = aggregation;
-    const fields = Object.keys(key);
-    const docs = await this.find(query);
+    const docs = await this.find();
+    return aggregation.process(docs);
+  }
 
-    if (fields.length > 0) {
-      return fields.reduce((results, field) => {
-        results[field] = docs.reduce((result, doc) => {
-          return reduceFn(result, doc, field) || result;
-        }, initial);
-        return results;
-      }, {});
-    }
-
-    return docs.reduce((result, doc) => reduceFn(doc, result) || result, Object.assign({}, initial));
+  reduce(aggregation) {
+    return this.group(aggregation);
   }
 
   async count(query) {

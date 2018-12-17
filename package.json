@@ -9,46 +9,9 @@
     "build": "lerna run build --parallel",
     "build:dev": "NODE_ENV=development npm run build",
     "lint": "lerna run lint --parallel",
-    "test": "lerna run test --parallel",
-    "test:ci": "yarn lint && yarn test"
+    "test": "lerna run test --parallel"
   },
   "dependencies": {
-    "lerna": "3.4.3"
-  },
-  "workspaces": {
-    "packages": [
-      "packages/kinvey-acl",
-      "packages/kinvey-aggregation",
-      "packages/kinvey-app",
-      "packages/kinvey-cache",
-      "packages/kinvey-cache-indexeddb",
-      "packages/kinvey-cache-memory",
-      "packages/kinvey-cache-nativescript-sqlite",
-      "packages/kinvey-cache-websql",
-      "packages/kinvey-datastore",
-      "packages/kinvey-endpoint",
-      "packages/kinvey-errors",
-      "packages/kinvey-files",
-      "packages/kinvey-http",
-      "packages/kinvey-http-nativescript",
-      "packages/kinvey-http-node",
-      "packages/kinvey-http-web",
-      "packages/kinvey-kmd",
-      "packages/kinvey-live",
-      "packages/kinvey-observable",
-      "packages/kinvey-ping",
-      "packages/kinvey-popup",
-      "packages/kinvey-popup-web",
-      "packages/kinvey-query",
-      "packages/kinvey-session",
-      "packages/kinvey-session-web",
-      "packages/kinvey-user",
-      "sdks/kinvey-html5-sdk",
-      "sdks/kinvey-nativescript-sdk",
-      "sdks/kinvey-node-sdk",
-      "tests/integration",
-      "tests/register",
-      "tests/utils"
-    ]
+    "lerna": "^3.6.0"
   }
 }

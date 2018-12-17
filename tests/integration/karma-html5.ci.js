@@ -1,13 +1,13 @@
 /* eslint-disable */
 const path = require('path');
-const webpackConfig = require('./webpack.config.js');
+const webpackConfig = require('./webpack.html5.js');
 webpackConfig.entry = () => ({});
 
 module.exports = function (config) {
   config.set({
     // level of logging
     // possible values: config.LOG_DISABLE || config.LOG_ERROR || config.LOG_WARN || config.LOG_INFO || config.LOG_DEBUG
-    logLevel: config.LOG_INFO,
+    logLevel: config.LOG_DEBUG,
 
 
     // base path that will be used to resolve all patterns (eg. files, exclude)
@@ -21,7 +21,8 @@ module.exports = function (config) {
 
     // list of files / patterns to load in the browser
     files: [
-      'shared/**/*.spec.js'
+      'shared/**/*.spec.js',
+      'html5/**/*.spec.js'
     ],
 
 
@@ -31,7 +32,10 @@ module.exports = function (config) {
 
     // preprocess matching files before serving them to the browser
     // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
-    preprocessors: {},
+    preprocessors: {
+      'shared/**/*.spec.js': ['webpack'],
+      'html5/**/*.spec.js': ['webpack']
+    },
 
 
     // test results reporter to use
@@ -86,12 +90,13 @@ module.exports = function (config) {
       },
 
       // Mac OS
-      bs_macos_chrome_69: {
+      bs_macos_chrome_71: {
         base: 'BrowserStack',
         browser: 'chrome',
-        browser_version: '69.0',
+        browser_version: '71.0',
         os: 'OS X',
-        os_version: 'High Sierra'
+        os_version: 'Mojave',
+        flags: ['--disable-web-security', '--disable-site-isolation-trials']
       },
       bs_macos_firefox_62: {
         base: 'BrowserStack',
@@ -100,12 +105,14 @@ module.exports = function (config) {
         os: 'OS X',
         os_version: 'High Sierra'
       },
-      bs_macos_safari_11: {
+      bs_macos_safari_12: {
         base: 'BrowserStack',
-        browser: 'safari',
-        browser_version: '11.1',
+        browser: 'Safari',
+        browser_version: '12.0',
         os: 'OS X',
-        os_version: 'High Sierra'
+        os_version: 'Mojave',
+        'browserstack.debug': true,
+        'browserstack.console': 'verbose',
       },
 
       // iOS
@@ -134,9 +141,9 @@ module.exports = function (config) {
       // 'bs_windows_edge_17',
 
       // Mac OS
-      'bs_macos_chrome_69',
-      'bs_macos_firefox_62',
-      'bs_macos_safari_11',
+      // 'bs_macos_chrome_71',
+      // 'bs_macos_firefox_62',
+      'bs_macos_safari_12',
 
       // iOS
       // 'bs_ios_11',
@@ -156,13 +163,12 @@ module.exports = function (config) {
 
     // BrowserStack
     browserStack: {
-      username: 'kinveymobileteam1',
-      accessKey: 'EGfszrX4Lx9uykWsqPHX',
-      project: 'Kinvey JavaScript SDK',
-      name: 'HTML5',
+      username: process.env.BROWSERSTACK_USERNAME,
+      accessKey: process.env.BROWSERSTACK_ACCESS_KEY,
+      project: 'Kinvey JS SDK',
+      name: 'HTML5 Integration Tests',
       build: process.env.TRAVIS_BUILD_NUMBER,
-      captureTimeout: 600,
-      timeout: 600
+      forcelocal: true
     },
 
     // Mocha config

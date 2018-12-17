@@ -41,6 +41,28 @@ export class Aggregation {
     return this;
   }
 
+  process(docs = []) {
+    if (docs.length > 0) {
+      const fields = Object.keys(this.key);
+      let filteredDocs = docs;
+
+      if (this.query) {
+        filteredDocs = this.query.process(docs);
+      }
+
+      if (fields.length > 0) {
+        return fields.reduce((results, field) => {
+          results[field] = filteredDocs.reduce((result, doc) => this.reduceFn(result, doc, field) || result, Object.assign({}, this.initial));
+          return results;
+        }, {});
+      }
+
+      return filteredDocs.reduce((result, doc) => this.reduceFn(doc, result) || result, Object.assign({}, this.initial));
+    }
+
+    return Object.assign({}, this.initial);
+  }
+
   toPlainObject() {
     return {
       key: this.key,

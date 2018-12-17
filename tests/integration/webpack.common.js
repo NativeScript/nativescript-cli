@@ -9,14 +9,6 @@ module.exports = {
     rules: [
       {
         test: /\.js$/,
-        loader: 'string-replace-loader',
-        options: {
-          search: '__SDK__',
-          replace: process.env.SDK,
-        }
-      },
-      {
-        test: /\.js$/,
         exclude: /(node_modules)/,
         use: {
           loader: 'babel-loader'
@@ -32,7 +24,8 @@ module.exports = {
   },
   plugins: [
     new Dotenv({
-      path: DOT_ENV_FILE
+      path: DOT_ENV_FILE,
+      systemvars: true
     })
   ]
 };

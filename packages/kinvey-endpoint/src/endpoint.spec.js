@@ -55,14 +55,14 @@ describe('Endpoint', () => {
   });
 
   describe('execute()', () => {
-    it('should throw a KinveyError when an endpoint argument is not provided', () => {//TODO: Errors shpuld ne reverted
+    it('should throw a KinveyError when an endpoint argument is not provided', () => {
       return endpoint()
         .catch((error) => {
           expect(error).toBeA(KinveyError);
         });
     });
 
-    it('should throw a KinveyError when the endpoint argument is not a string', () => {//TODO: Errors shpuld ne reverted
+    it('should throw a KinveyError when the endpoint argument is not a string', () => {
       return endpoint({})
         .catch((error) => {
           expect(error).toBeA(KinveyError);
