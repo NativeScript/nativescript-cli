@@ -4,6 +4,7 @@ import { cache } from "../common/decorators";
 import { DebugCommandErrors } from "../constants";
 import { ValidatePlatformCommandBase } from "./command-base";
 import { LiveSyncCommandHelper } from "../helpers/livesync-command-helper";
+import { performanceLog } from "../common/decorators";
 
 export class DebugPlatformCommand extends ValidatePlatformCommandBase implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
@@ -55,6 +56,7 @@ export class DebugPlatformCommand extends ValidatePlatformCommandBase implements
 		});
 	}
 
+	@performanceLog()
 	public async getDeviceForDebug(): Promise<Mobile.IDevice> {
 		if (this.$options.forDevice && this.$options.emulator) {
 			this.$errors.fail(DebugCommandErrors.UNABLE_TO_USE_FOR_DEVICE_AND_EMULATOR);

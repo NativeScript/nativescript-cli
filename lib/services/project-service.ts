@@ -5,6 +5,7 @@ import { format } from "util";
 import { exported } from "../common/decorators";
 import { Hooks, TemplatesV2PackageJsonKeysToRemove } from "../constants";
 import * as temp from "temp";
+import { performanceLog } from "../common/decorators";
 
 export class ProjectService implements IProjectService {
 
@@ -37,6 +38,7 @@ export class ProjectService implements IProjectService {
 	}
 
 	@exported("projectService")
+	@performanceLog()
 	public async createProject(projectOptions: IProjectSettings): Promise<ICreateProjectData> {
 		const projectName = await this.validateProjectName({ projectName: projectOptions.projectName, force: projectOptions.force, pathToProject: projectOptions.pathToProject });
 		const projectDir = this.getValidProjectDir(projectOptions.pathToProject, projectName);
@@ -120,6 +122,7 @@ export class ProjectService implements IProjectService {
 		return { projectName, projectDir };
 	}
 
+	@performanceLog()
 	private async extractTemplate(projectDir: string, templateData: ITemplateData): Promise<void> {
 		this.$fs.ensureDirectoryExists(projectDir);
 
@@ -142,6 +145,7 @@ export class ProjectService implements IProjectService {
 		}
 	}
 
+	@performanceLog()
 	private async ensureAppResourcesExist(projectDir: string): Promise<void> {
 		const projectData = this.$projectDataService.getProjectData(projectDir);
 		const appResourcesDestinationPath = projectData.getAppResourcesDirectoryPath(projectDir);
@@ -221,6 +225,7 @@ export class ProjectService implements IProjectService {
 		};
 	}
 
+	@performanceLog()
 	private alterPackageJsonData(projectDir: string, projectId: string): void {
 		const projectFilePath = path.join(projectDir, this.$staticConfig.PROJECT_FILE_NAME);
 
@@ -242,6 +247,7 @@ export class ProjectService implements IProjectService {
 		this.$projectDataService.setNSValue(projectDir, "id", projectId);
 	}
 
+	@performanceLog()
 	private async addTnsCoreModules(projectDir: string): Promise<void> {
 		const projectFilePath = path.join(projectDir, this.$staticConfig.PROJECT_FILE_NAME);
 		const packageJsonData = this.$fs.readJson(projectFilePath);
