@@ -1,4 +1,4 @@
-const { performance } = require('perf_hooks');
+import { AnalyticsEventLabelDelimiter } from "../constants";
 
 /**
  * Caches the result of the first execution of the method and returns it whenever it is called instead of executing it again.
@@ -91,28 +91,28 @@ export function performanceLog(injector?: IInjector): any {
 	return function (target: any, propertyKey: string, descriptor: PropertyDescriptor): any {
 		const originalMethod = descriptor.value;
 		const className = target.constructor.name;
-		const trackName = `${className}.${propertyKey}`;
+		const trackName = `${className}${AnalyticsEventLabelDelimiter}${propertyKey}`;
 		const performanceService: IPerformanceService = injector.resolve("performanceService");
 
 		//needed for the returned function to have the same name as the original - used in hooks decorator
 		const tempObject = {
 			[originalMethod.name]: function (...args: Array<any>) {
-				const start = performance.now();
+				const start = performanceService.now();
 				const result = originalMethod.apply(this, args);
 				const resolvedPromise = Promise.resolve(result);
 				let end;
 	
 				if (resolvedPromise !== result) {
-					end = performance.now();
+					end = performanceService.now();
 					performanceService.processExecutionData(trackName, start, end, args);
 				} else {
 					resolvedPromise
 					.then(() => {
-						end = performance.now();
+						end = performanceService.now();
 						performanceService.processExecutionData(trackName, start, end, args);
 					})
 					.catch((err) => {
-						end = performance.now();
+						end = performanceService.now();
 						performanceService.processExecutionData(trackName, start, end, args);
 					});
 	

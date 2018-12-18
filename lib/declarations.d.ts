@@ -77,6 +77,7 @@ interface INodePackageManager {
 
 interface IPerformanceService {
 	processExecutionData(methodInfo: string, startTime: number, endTime: number, args: any[]): void;
+	now(): number;
 }
 
 interface IPackageInstallationManager {

@@ -1,6 +1,7 @@
-import { TrackActionNames } from "../constants";
+import { TrackActionNames, AnalyticsEventLabelDelimiter } from "../constants";
 const EOL = require("os").EOL;
 import { getFormattedDate } from "../common/helpers";
+const { performance } = require('perf_hooks');
 
 export class PerformanceService implements IPerformanceService {
 	public static LOG_MESSAGE_TEMPLATE = `Execution of method "%s" took %s ms.`;
@@ -23,6 +24,10 @@ export class PerformanceService implements IPerformanceService {
 		} else if (this.$options.performance) {
 			this.$logger.info(PerformanceService.LOG_MESSAGE_TEMPLATE, methodInfo, executionTime);
 		}
+	}
+
+	public now(): number {
+		return performance.now();
 	}
 
 	private trackAnalyticsData(methodInfo: string, executionTime: number): void {
