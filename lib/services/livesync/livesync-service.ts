@@ -8,6 +8,7 @@ import { DeviceTypes, DeviceDiscoveryEventNames, HmrConstants } from "../../comm
 import { cache } from "../../common/decorators";
 import * as constants from "../../constants";
 import { PreviewAppLiveSyncEvents } from "./playground/preview-app-constants";
+import { performanceLog } from "../../common/decorators";
 
 const deviceDescriptorPrimaryKey = "identifier";
 
@@ -158,6 +159,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 		}
 	}
 
+	@performanceLog()
 	private async refreshApplication(projectData: IProjectData, liveSyncResultInfo: ILiveSyncResultInfo, debugOpts?: IDebugOptions, outputPath?: string): Promise<IRefreshApplicationInfo | IDebugInformation> {
 		const deviceDescriptor = this.getDeviceDescriptor(liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier, projectData.projectDir);
 
@@ -202,6 +204,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 		return result;
 	}
 
+	@performanceLog()
 	private async refreshApplicationWithDebug(projectData: IProjectData, liveSyncResultInfo: ILiveSyncResultInfo, debugOptions: IDebugOptions, outputPath?: string): Promise<IDebugInformation> {
 		let didRestart = false;
 		const deviceAppData = liveSyncResultInfo.deviceAppData;
@@ -305,6 +308,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 		return _.find(deviceDescriptors, d => d.identifier === deviceIdentifier);
 	}
 
+	@performanceLog()
 	private async enableDebuggingCoreWithoutWaitingCurrentAction(deviceOption: IEnableDebuggingDeviceOptions, debuggingAdditionalOptions: IDebuggingAdditionalOptions): Promise<IDebugInformation> {
 		const currentDeviceDescriptor = this.getDeviceDescriptor(deviceOption.deviceIdentifier, debuggingAdditionalOptions.projectDir);
 		if (!currentDeviceDescriptor) {

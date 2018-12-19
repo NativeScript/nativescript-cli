@@ -101,7 +101,7 @@ export function performanceLog(injector?: IInjector): any {
 				const result = originalMethod.apply(this, args);
 				const resolvedPromise = Promise.resolve(result);
 				let end;
-	
+
 				if (resolvedPromise !== result) {
 					end = performanceService.now();
 					performanceService.processExecutionData(trackName, start, end, args);
@@ -115,13 +115,12 @@ export function performanceLog(injector?: IInjector): any {
 						end = performanceService.now();
 						performanceService.processExecutionData(trackName, start, end, args);
 					});
-	
 				}
-	
+
 				return result;
 			}
-		}
-		descriptor.value = tempObject[originalMethod.name]
+		};
+		descriptor.value = tempObject[originalMethod.name];
 
 		// used to get parameter names in hooks decorator
 		descriptor.value.toString = () => {

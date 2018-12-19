@@ -76,7 +76,10 @@ interface INodePackageManager {
 }
 
 interface IPerformanceService {
+	// Will process the data based on the command opitons (--performance flag and user-reporting setting)
 	processExecutionData(methodInfo: string, startTime: number, endTime: number, args: any[]): void;
+
+	// Will return a reference time in milliseconds
 	now(): number;
 }
 

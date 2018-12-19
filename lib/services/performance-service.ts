@@ -1,18 +1,24 @@
-import { TrackActionNames, AnalyticsEventLabelDelimiter } from "../constants";
+import { TrackActionNames } from "../constants";
 const EOL = require("os").EOL;
 import { getFormattedDate } from "../common/helpers";
-const { performance } = require('perf_hooks');
+import * as semver from "semver";
 
 export class PerformanceService implements IPerformanceService {
 	public static LOG_MESSAGE_TEMPLATE = `Execution of method "%s" took %s ms.`;
 	public static FAIL_LOG_MESSAGE_TEMPLATE = `Failed to log pefromance data for method %s.`;
+	private static MIN_NODE_PERFORMANCE_MODULE_VERSION = "8.5.0";
+	private performance: {now(): number}  = null;
 
 	constructor(
 		private $options: IOptions,
 		private $fs: IFileSystem,
 		private $logger: ILogger,
 		private $analyticsService: IAnalyticsService
-	) { }
+	) {
+		if (this.isPerformanceModuleSupported()) {
+			this.performance = require("perf_hooks").performance;
+		}
+	}
 
 	public processExecutionData(methodInfo: string, startTime: number, endTime: number, args: any[]): void {
 		const executionTime = Math.floor(endTime - startTime);
@@ -27,7 +33,15 @@ export class PerformanceService implements IPerformanceService {
 	}
 
 	public now(): number {
-		return performance.now();
+		if (this.isPerformanceModuleSupported()) {
+			return this.performance.now();
+		} else {
+			return new Date().getTime();
+		}
+	}
+
+	private isPerformanceModuleSupported(): boolean {
+		return semver.gte(process.version, PerformanceService.MIN_NODE_PERFORMANCE_MODULE_VERSION);
 	}
 
 	private trackAnalyticsData(methodInfo: string, executionTime: number): void {
@@ -68,7 +82,7 @@ export class PerformanceService implements IPerformanceService {
 			executionTime,
 			timestamp: getFormattedDate(),
 			methodArgs: JSON.parse(methodArgs)
-		}
+		};
 
 		try {
 			this.$fs.appendFile(filePath, `${JSON.stringify(info)}${EOL}`);
