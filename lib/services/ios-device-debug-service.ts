@@ -164,8 +164,7 @@ export class IOSDeviceDebugService extends DebugServiceBase implements IDeviceDe
 		if (debugOptions.chrome) {
 			this.$logger.info("'--chrome' is the default behavior. Use --inspector to debug iOS applications using the Safari Web Inspector.");
 		}
-		const existingWebProxy = this.$appDebugSocketProxyFactory.getWebSocketProxy(this.deviceIdentifier, debugData.applicationIdentifier);
-		const webSocketProxy = existingWebProxy || await this.$appDebugSocketProxyFactory.addWebSocketProxy(this.device, debugData.applicationIdentifier);
+		const webSocketProxy = await this.$appDebugSocketProxyFactory.ensureWebSocketProxy(this.device, debugData.applicationIdentifier);
 
 		return this.getChromeDebugUrl(debugOptions, webSocketProxy.options.port);
 	}
