@@ -57,22 +57,9 @@ export class PerformanceService implements IPerformanceService {
 
 	private logDataToFile(filePath: string, methodInfo: string, executionTime: number, args: any[]) {
 		let methodArgs;
-		const getCircularReplacer = () => {
-			const seen = new WeakSet();
-			seen.add(this.$options);
-			return (key: any, value: any) => {
-				if (typeof value === "object" && value !== null) {
-					if (seen.has(value) || _.startsWith(key, "$")) {
-						return;
-					}
-					seen.add(value);
-				}
-				return value;
-			};
-		};
 
 		try {
-			methodArgs = JSON.stringify(args, getCircularReplacer());
+			methodArgs = JSON.stringify(args, this.getCircularReplacer());
 		} catch (e) {
 			methodArgs = "cyclic args";
 		}
@@ -89,6 +76,20 @@ export class PerformanceService implements IPerformanceService {
 		} catch (e) {
 			this.$logger.trace(PerformanceService.FAIL_LOG_MESSAGE_TEMPLATE, methodInfo);
 		}
+	}
+
+	private getCircularReplacer() {
+		const seen = new WeakSet();
+		seen.add(this.$options);
+		return (key: any, value: any) => {
+			if (typeof value === "object" && value !== null) {
+				if (seen.has(value) || _.startsWith(key, "$")) {
+					return;
+				}
+				seen.add(value);
+			}
+			return value;
+		};
 	}
 }
 
