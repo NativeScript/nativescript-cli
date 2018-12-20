@@ -15,7 +15,7 @@ export class AndroidDeviceLiveSyncService extends AndroidDeviceLiveSyncServiceBa
 		protected device: Mobile.IAndroidDevice,
 		$filesHashService: IFilesHashService,
 		$logger: ILogger) {
-			super($injector, $platformsData, $filesHashService, $logger, device);
+		super($injector, $platformsData, $filesHashService, $logger, device);
 	}
 
 	public async transferFilesOnDevice(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]): Promise<void> {
@@ -26,7 +26,8 @@ export class AndroidDeviceLiveSyncService extends AndroidDeviceLiveSyncServiceBa
 		await this.device.fileSystem.transferDirectory(deviceAppData, localToDevicePaths, projectFilesPath);
 	}
 
-	public async refreshApplication(projectData: IProjectData, liveSyncInfo: ILiveSyncResultInfo): Promise<void> {
+	public async refreshApplication(projectData: IProjectData, liveSyncInfo: ILiveSyncResultInfo): Promise<IRefreshApplicationInfo> {
+		const result: IRefreshApplicationInfo = { didRestart: false };
 		const deviceAppData = liveSyncInfo.deviceAppData;
 		const localToDevicePaths = liveSyncInfo.modifiedFilesData;
 		const deviceProjectRootDirname = await this.$devicePathProvider.getDeviceProjectRootPath(liveSyncInfo.deviceAppData.device, {
@@ -48,8 +49,11 @@ export class AndroidDeviceLiveSyncService extends AndroidDeviceLiveSyncServiceBa
 			(localToDevicePath: Mobile.ILocalToDevicePathData) => !this.canExecuteFastSync(liveSyncInfo, localToDevicePath.getLocalPath(), projectData, this.device.deviceInfo.platform));
 
 		if (!canExecuteFastSync) {
-			return this.restartApplication(deviceAppData, projectData.projectName);
+			await this.restartApplication(deviceAppData, projectData.projectName);
+			result.didRestart = true;
 		}
+
+		return result;
 	}
 
 	private async cleanLivesyncDirectories(deviceAppData: Mobile.IDeviceAppData): Promise<void> {

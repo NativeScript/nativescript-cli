@@ -11,8 +11,8 @@ const fakeChromeDebugUrl = `fakeChromeDebugUrl?experiments=true&ws=localhost:${f
 const defaultDeviceIdentifier = "Nexus5";
 
 class PlatformDebugService extends EventEmitter /* implements IPlatformDebugService */ {
-	public async debug(debugData: IDebugData, debugOptions: IDebugOptions): Promise<string> {
-		return fakeChromeDebugUrl;
+	public async debug(debugData: IDebugData, debugOptions: IDebugOptions): Promise<IDebugResultInfo> {
+		return { debugUrl: fakeChromeDebugUrl, hasReconnected: false };
 	}
 }
 
@@ -226,7 +226,8 @@ describe("debugService", () => {
 					assert.deepEqual(debugInfo, {
 						url: fakeChromeDebugUrl,
 						port: fakeChromeDebugPort,
-						deviceIdentifier: debugData.deviceIdentifier
+						deviceIdentifier: debugData.deviceIdentifier,
+						hasReconnected: false
 					});
 				});
 			});

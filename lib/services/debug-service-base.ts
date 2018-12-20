@@ -10,7 +10,7 @@ export abstract class DebugServiceBase extends EventEmitter implements IDeviceDe
 
 	public abstract get platform(): string;
 
-	public abstract async debug(debugData: IDebugData, debugOptions: IDebugOptions): Promise<string>;
+	public abstract async debug(debugData: IDebugData, debugOptions: IDebugOptions): Promise<IDebugResultInfo>;
 
 	public abstract async debugStart(debugData: IDebugData, debugOptions: IDebugOptions): Promise<void>;
 
