@@ -5,48 +5,13 @@ import { Base64 } from 'js-base64';
 import { getConfig } from 'kinvey-app';
 import { formatKinveyUrl, KinveyRequest, RequestMethod } from 'kinvey-http';
 import { open } from 'kinvey-popup';
-import { KinveyError, MobileIdentityConnectError } from 'kinvey-errors';
+import { KinveyError } from 'kinvey-errors';
 
 // Export identity
 export const IDENTITY = 'kinveyAuth';
 
-/**
- * Enum for Mobile Identity Connect authorization grants.
- * @property  {string}    AuthorizationCodeLoginPage   AuthorizationCodeLoginPage grant
- * @property  {string}    AuthorizationCodeAPI         AuthorizationCodeAPI grant
- */
-export const AuthorizationGrant = {
-  AuthorizationCodeLoginPage: 'AuthorizationCodeLoginPage',
-  AuthorizationCodeAPI: 'AuthorizationCodeAPI'
-};
-Object.freeze(AuthorizationGrant);
-
 function getVersion(version = 3) {
   return String(version).indexOf('v') === 0 ? version : `v${version}`;
-}
-
-async function getTempLoginUrl(clientId, redirectUri, version, options = {}) {
-  const { auth } = getConfig();
-  const request = new KinveyRequest({
-    method: RequestMethod.POST,
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-      Authorization: () => {
-        const { appSecret } = getConfig();
-        const credentials = Base64.encode(`${clientId}:${appSecret}`);
-        return `Basic ${credentials}`;
-      }
-    },
-    url: formatKinveyUrl(auth.protocol, auth.host, urljoin(getVersion(version), '/oauth/auth')),
-    body: {
-      client_id: clientId,
-      redirect_uri: redirectUri,
-      response_type: 'code'
-    },
-    timeout: options.timeout
-  });
-  const response = await request.execute();
-  return response.data;
 }
 
 function loginWithPopup(clientId, redirectUri, version) {
@@ -95,41 +60,6 @@ function loginWithPopup(clientId, redirectUri, version) {
   });
 }
 
-async function loginWithUrl(url, username, password, clientId, redirectUri, options = {}) {
-  const request = new KinveyRequest({
-    method: RequestMethod.POST,
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-      Authorization: () => {
-        const { appSecret } = getConfig();
-        const credentials = Base64.encode(`${clientId}:${appSecret}`);
-        return `Basic ${credentials}`;
-      }
-    },
-    url: url.temp_login_uri,
-    body: {
-      client_id: clientId,
-      redirect_uri: redirectUri,
-      response_type: 'code',
-      username,
-      password,
-      scope: 'openid'
-    },
-    timeout: options.timeout
-  });
-  const response = await request.execute();
-  const location = response.headers.get('location');
-
-  if (!location) {
-    throw new MobileIdentityConnectError(`Unable to authorize user with username ${username}.`,
-      'A location header was not provided with a code to exchange for an auth token.');
-  }
-
-  const parsedLocation = parse(location, true) || {};
-  const query = parsedLocation.query || {};
-  return query.code;
-}
-
 async function getTokenWithCode(code, clientId, redirectUri, options = {}) {
   const { auth } = getConfig();
   const request = new KinveyRequest({
@@ -162,14 +92,40 @@ async function getTokenWithCode(code, clientId, redirectUri, options = {}) {
   }, token);
 }
 
-export async function login(
-  redirectUri,
-  authorizationGrant = AuthorizationGrant.AuthorizationCodeLoginPage,
-  options = {}) {
+async function getTokenWithUsernamePassword(username, password, clientId, options = {}) {
+  const { auth } = getConfig();
+  const request = new KinveyRequest({
+    method: RequestMethod.POST,
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      Authorization: () => {
+        const { appSecret } = getConfig();
+        const credentials = Base64.encode(`${clientId}:${appSecret}`);
+        return `Basic ${credentials}`;
+      }
+    },
+    url: formatKinveyUrl(auth.protocol, auth.host, '/oauth/token'),
+    body: {
+      grant_type: 'password',
+      username,
+      password
+    },
+    timeout: options.timeout
+  });
+  const response = await request.execute();
+  const token = response.data;
+  return Object.assign({}, {
+    identity: IDENTITY,
+    client_id: clientId,
+    protocol: auth.protocol,
+    host: auth.host
+  }, token);
+}
+
+export async function loginWithRedirectUri(redirectUri, options = {}) {
   const { appKey } = getConfig();
-  const { micId, version, username, password } = options;
+  const { micId, version } = options;
   let clientId = appKey;
-  let code;
 
   if (!isString(redirectUri)) {
     throw new KinveyError('A redirectUri is required and must be a string.');
@@ -179,16 +135,24 @@ export async function login(
     clientId = `${clientId}.${micId}`;
   }
 
-  if (authorizationGrant === AuthorizationGrant.AuthorizationCodeAPI) {
-    const url = await getTempLoginUrl(clientId, redirectUri, version, options);
-    code = await loginWithUrl(url, username, password, clientId, redirectUri, options);
-  } else if (!authorizationGrant || authorizationGrant === AuthorizationGrant.AuthorizationCodeLoginPage) {
-    code = await loginWithPopup(clientId, redirectUri, version);
-  } else {
-    throw new KinveyError(`The authorization grant ${authorizationGrant} is unsupported. ` +
-      'Please use a supported authorization grant.');
+  const code = await loginWithPopup(clientId, redirectUri, version);
+  const token = await getTokenWithCode(code, clientId, redirectUri, options);
+  return token;
+}
+
+export async function loginWithUsernamePassword(username, password, options = {}) {
+  const { appKey } = getConfig();
+  const { micId } = options;
+  let clientId = appKey;
+
+  if (!isString(username) || !isString(password)) {
+    throw new KinveyError('A username and password are required and must be a string.');
   }
 
-  const token = await getTokenWithCode(code, clientId, redirectUri, options);
+  if (isString(micId)) {
+    clientId = `${clientId}.${micId}`;
+  }
+
+  const token = await getTokenWithUsernamePassword(username, password, clientId, options);
   return token;
 }
