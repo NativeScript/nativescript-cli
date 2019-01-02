@@ -42,9 +42,14 @@ export class PreviewAppLiveSyncService extends EventEmitter implements IPreviewA
 				} finally {
 					this.deviceInitializationPromise[device.id] = null;
 				}
-			} catch (err) {
-				this.$logger.error(err);
-				this.emit(PreviewAppLiveSyncEvents.PREVIEW_APP_LIVE_SYNC_ERROR, err);
+			} catch (error) {
+				this.$logger.error(error);
+				this.emit(PreviewAppLiveSyncEvents.PREVIEW_APP_LIVE_SYNC_ERROR, {
+					error,
+					data,
+					platform: device.platform,
+					deviceId: device.id
+				});
 			}
 		});
 	}
