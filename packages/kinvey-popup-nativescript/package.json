@@ -1,11 +1,11 @@
 {
   "private": true,
   "version": "1.0.0",
-  "name": "kinvey-http-nativescript",
+  "name": "kinvey-popup-nativescript",
   "author": "Kinvey, Inc.",
   "homepage": "http://www.kinvey.com",
   "license": "Apache-2.0",
-  "main": "lib/http.js",
+  "main": "lib/popup.js",
   "scripts": {
     "prebuild": "del lib",
     "build": "babel src -d lib --ignore \"src/**/*.spec.js\"",
@@ -13,12 +13,9 @@
   },
   "dependencies": {
     "@babel/runtime": "7.1.5",
-    "kinvey-http": "1.0.0",
-    "kinvey-session-nativescript": "1.0.0",
-    "tns-core-modules": "~5.1.1"
-  },
-  "peerDependencies": {
-    "tns-core-modules": ""
+    "kinvey-popup": "1.0.0",
+    "lodash": "4.17.11",
+    "nativescript-urlhandler": "1.2.2"
   },
   "devDependencies": {
     "@babel/cli": "^7.1.5",

@@ -1,11 +1,11 @@
 {
   "private": true,
   "version": "1.0.0",
-  "name": "kinvey-cache-nativescript-sqlite",
+  "name": "kinvey-session-nativescript",
   "author": "Kinvey, Inc.",
   "homepage": "http://www.kinvey.com",
   "license": "Apache-2.0",
-  "main": "lib/index.js",
+  "main": "lib/session.js",
   "scripts": {
     "prebuild": "del lib",
     "build": "babel src -d lib --ignore \"src/**/*.spec.js\"",
@@ -13,11 +13,8 @@
   },
   "dependencies": {
     "@babel/runtime": "7.1.5",
-    "kinvey-cache": "1.0.0",
-    "nativescript-sqlite": "2.2.3"
-  },
-  "peerDependencies": {
-    "nativescript-sqlite": "2.2.3"
+    "kinvey-session": "1.0.0",
+    "nativescript-secure-storage": "2.3.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.1.5",

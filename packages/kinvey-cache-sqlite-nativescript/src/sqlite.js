@@ -68,8 +68,8 @@ export async function find(dbName, tableName) {
 }
 
 export async function count(dbName, tableName) {
-  const docs = await find(dbName, tableName);
-  return docs.length;
+  const response = await execute(dbName, tableName, [['SELECT COUNT(*) AS value FROM #{table}']]);
+  return response.result.shift() || 0;
 }
 
 export async function findById(dbName, tableName, id) {
@@ -84,23 +84,21 @@ export async function save(dbName, tableName, docs = []) {
 }
 
 export async function removeById(dbName, tableName, id) {
-  await execute(dbName, tableName, [['DELETE FROM #{table} WHERE key = ?', [id]]], true);
+  const response = await execute(dbName, tableName, [['DELETE FROM #{table} WHERE key = ?', [id]]], true);
+  return response.rowCount;
 }
 
 export async function clear(dbName, tableName) {
-  await execute(dbName, MASTER_TABLE_NAME, [[`DROP TABLE IF EXISTS '${tableName}'`]], true);
+  await execute(dbName, tableName, [['DROP TABLE IF EXISTS #{table}']], true);
   return true;
 }
 
 export async function clearAll(dbName) {
-  const response = await execute(dbName, MASTER_TABLE_NAME, [['SELECT name AS value FROM #{collection} WHERE type = ?', ['table']]]);
+  const response = await execute(dbName, MASTER_TABLE_NAME, [['SELECT name AS value FROM #{table} WHERE type = ? AND value NOT LIKE ?', ['table', '__Webkit%']]]);
   const tables = response.result;
 
   if (tables.length > 0) {
-    const sqlQueries = tables
-      .filter(table => (/^[a-zA-Z0-9-]{1,128}/).test(table))
-      .map(table => [`DROP TABLE IF EXISTS '${table}'`]);
-    await execute(dbName, MASTER_TABLE_NAME, sqlQueries, true);
+    await Promise.all(tables.map(tableName => execute(dbName, tableName, [['DROP TABLE IF EXISTS #{table}']], true)));
   }
 
   return true;
