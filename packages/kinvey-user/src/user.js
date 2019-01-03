@@ -273,7 +273,7 @@ export async function signup(data, options = {}) {
 }
 
 export async function signupWithIdentity() {
-  throw new KinveyError('This function has been deprecated. You should use loginWithMIC() instead.');
+  throw new KinveyError('This function has been deprecated. You should use MIC to login instead.');
 }
 
 export async function login(username, password, options = {}) {
@@ -327,7 +327,7 @@ export async function login(username, password, options = {}) {
   return new User(session);
 }
 
-export async function loginWithMIC(redirectUri, authorizationGrant, options) {
+export async function loginWithRedirectUri(redirectUri, options) {
   const activeUser = getActiveUser();
 
   if (activeUser) {
@@ -336,7 +336,36 @@ export async function loginWithMIC(redirectUri, authorizationGrant, options) {
     );
   }
 
-  const session = await MIC.login(redirectUri, authorizationGrant, options);
+  const session = await MIC.loginWithRedirectUri(redirectUri, options);
+  const socialIdentity = {};
+  socialIdentity[MIC.IDENTITY] = session;
+  const credentials = { _socialIdentity: socialIdentity };
+
+  try {
+    return await login(credentials);
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      return await signup(credentials);
+    }
+
+    throw error;
+  }
+}
+
+export async function loginWithMIC(redirectUri, authorizationGrant, options) {
+  return loginWithRedirectUri(redirectUri, options);
+}
+
+export async function loginWithUsernamePassword(username, password, options) {
+  const activeUser = getActiveUser();
+
+  if (activeUser) {
+    throw new ActiveUserError(
+      'An active user already exists. Please logout the active user before you login with Mobile Identity Connect.'
+    );
+  }
+
+  const session = await MIC.loginWithUsernamePassword(username, password, options);
   const socialIdentity = {};
   socialIdentity[MIC.IDENTITY] = session;
   const credentials = { _socialIdentity: socialIdentity };

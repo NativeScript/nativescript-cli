@@ -175,7 +175,21 @@ describe('MIC Integration', () => {
 
   it('should login the user, using the default Auth service, which allows refresh tokens', (done) => {
     addLoginFacebookHandler();
-    Kinvey.User.loginWithMIC(redirectUrl, null)
+    Kinvey.User.loginWithRedirectUri(redirectUrl)
+      .then((user) => {
+        validateMICUser(user, true);
+        return Kinvey.User.exists(user.username);
+      })
+      .then((existsOnServer) => {
+        expect(existsOnServer).to.be.true;
+        return validateSuccessfulDataRead(done);
+      })
+      .catch(done);
+  });
+
+  it('should login the user, using loginWithMIC()', (done) => {
+    addLoginFacebookHandler();
+    Kinvey.User.loginWithMIC(redirectUrl)
       .then((user) => {
         validateMICUser(user, true);
         return Kinvey.User.exists(user.username);
@@ -189,7 +203,7 @@ describe('MIC Integration', () => {
 
   it('should login the user, using the specified Auth service, which does not allow refresh tokens', (done) => {
     addLoginFacebookHandler();
-    Kinvey.User.loginWithMIC(redirectUrl, Kinvey.AuthorizationGrant.AuthorizationCodeLoginPage, { micId: noRefreshAuthServiceId })
+    Kinvey.User.loginWithRedirectUri(redirectUrl, { micId: noRefreshAuthServiceId })
       .then((user) => {
         validateMICUser(user, false, true);
         return validateSuccessfulDataRead(done);
@@ -199,7 +213,7 @@ describe('MIC Integration', () => {
 
   it('should refresh an expired access_token and not logout the user', (done) => {
     addLoginFacebookHandler();
-    Kinvey.User.loginWithMIC(redirectUrl)
+    Kinvey.User.loginWithRedirectUri(redirectUrl)
       .then((user) => {
         expect(user).to.exist;
 
@@ -217,7 +231,7 @@ describe('MIC Integration', () => {
     // so the test is closing the popup in order to resume execution and validate the request url
     addCloseFacebookPopupHandler(true);
 
-    Kinvey.User.loginWithMIC(invalidUrl)
+    Kinvey.User.loginWithRedirectUri(invalidUrl)
       .then(() => done(new Error(shouldNotBeInvokedMessage)))
       .catch(() => {
         expect(actualHref).to.equal(getExpectedInitialUrl(process.env.APP_KEY, micDefaultVersion, invalidUrl));
@@ -232,7 +246,7 @@ describe('MIC Integration', () => {
     const submittedVersion = 'v2';
     addCloseFacebookPopupHandler(true);
 
-    Kinvey.User.loginWithMIC(invalidUrl, Kinvey.AuthorizationGrant.AuthorizationCodeLoginPage, { version: submittedVersion })
+    Kinvey.User.loginWithRedirectUri(invalidUrl, { version: submittedVersion })
       .then(() => done(new Error(shouldNotBeInvokedMessage)))
       .catch(() => {
         expect(actualHref).to.equal(getExpectedInitialUrl(process.env.APP_KEY, submittedVersion, invalidUrl));
@@ -244,21 +258,10 @@ describe('MIC Integration', () => {
   it('should throw an error if the user cancels the login', (done) => {
     addCloseFacebookPopupHandler();
 
-    Kinvey.User.loginWithMIC(redirectUrl)
+    Kinvey.User.loginWithRedirectUri(redirectUrl)
       .then(() => done(new Error(shouldNotBeInvokedMessage)))
       .catch((err) => {
         expect(err.message).to.equal(cancelledLoginMessage);
-        done();
-      })
-      .catch(done);
-  });
-
-  it('should throw an error if the authorization grant is invalid', (done) => {
-    addLoginFacebookHandler();
-    Kinvey.User.loginWithMIC(redirectUrl, 'InvalidAuthorizationGrant', { micId: authServiceId })
-      .then(() => done(new Error(shouldNotBeInvokedMessage)))
-      .catch((err) => {
-        expect(err.message).to.contain('Please use a supported authorization grant.');
         done();
       })
       .catch(done);
@@ -268,7 +271,7 @@ describe('MIC Integration', () => {
     addLoginFacebookHandler();
     Kinvey.User.signup()
       .then(() => {
-        return Kinvey.User.loginWithMIC(redirectUrl)
+        return Kinvey.User.loginWithRedirectUri(redirectUrl)
       })
       .then(() => done(new Error(shouldNotBeInvokedMessage)))
       .catch((err) => {
@@ -280,7 +283,7 @@ describe('MIC Integration', () => {
 
   it('should return the error from the Oauth provider with the default MIC version', (done) => {
     addLoginFacebookHandler();
-    Kinvey.User.loginWithMIC(redirectUrl, Kinvey.AuthorizationGrant.AuthorizationCodeLoginPage, { micId: wrongSetupAuthServiceId })
+    Kinvey.User.loginWithRedirectUri(redirectUrl, { micId: wrongSetupAuthServiceId })
       .then(() => done(new Error(shouldNotBeInvokedMessage)))
       .catch((err) => {
         expect(err.name).to.equal('KinveyError');

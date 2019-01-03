@@ -11,6 +11,7 @@ import { Response } from './response';
 import { app, master, session as sessionAuth, basic, defaultAuth, all, Auth } from './auth';
 
 const REQUEST_QUEUE = new PQueue();
+let refreshTokenRequestInProgress = false;
 
 const AUTHORIZATION_HEADER = 'Authorization';
 export const RequestMethod = {
@@ -102,6 +103,10 @@ export class Request {
   }
 }
 
+function isRefreshTokenRequestInProgress() {
+  return refreshTokenRequestInProgress === true;
+}
+
 export class KinveyRequest extends Request {
   constructor(request) {
     super(request);
@@ -162,8 +167,8 @@ export class KinveyRequest extends Request {
       if (retry) {
         // Received an InvalidCredentialsError
         if (error instanceof InvalidCredentialsError) {
-          // Queue the request if the request queue is paused
-          if (REQUEST_QUEUE.paused) {
+          // Queue the request if a refresh token request is in progress
+          if (isRefreshTokenRequestInProgress()) {
             return REQUEST_QUEUE.add(() => this.execute(false).catch(() => Promise.reject(error)));
           }
 
@@ -174,10 +179,11 @@ export class KinveyRequest extends Request {
             .find(sessionKey => socialIdentity[sessionKey].identity === 'kinveyAuth');
           const micIdentity = socialIdentity[micIdentityKey];
 
-          if (micIdentity) {
+          if (micIdentity && micIdentity.refresh_token && micIdentity.redirect_uri) {
             try {
               // Pause the request queue
               REQUEST_QUEUE.pause();
+              refreshTokenRequestInProgress = true;
 
               // Refresh the session
               const refreshRequest = new KinveyRequest({
@@ -230,6 +236,7 @@ export class KinveyRequest extends Request {
               const response = await this.execute(false);
 
               // Start the request queue
+              refreshTokenRequestInProgress = false;
               REQUEST_QUEUE.start();
 
               // Return the response
@@ -262,6 +269,7 @@ export class KinveyRequest extends Request {
         }
 
         // Start the request queue
+        refreshTokenRequestInProgress = false;
         REQUEST_QUEUE.start();
       }
 
