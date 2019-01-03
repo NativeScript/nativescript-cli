@@ -92,7 +92,8 @@ export class AndroidDeviceSocketsLiveSyncService extends AndroidDeviceLiveSyncSe
 		return result;
 	}
 
-	public async refreshApplication(projectData: IProjectData, liveSyncInfo: IAndroidLiveSyncResultInfo) {
+	public async refreshApplication(projectData: IProjectData, liveSyncInfo: IAndroidLiveSyncResultInfo): Promise<IRefreshApplicationInfo> {
+		const result: IRefreshApplicationInfo = { didRestart: false };
 		const canExecuteFastSync = !liveSyncInfo.isFullSync && this.canExecuteFastSyncForPaths(liveSyncInfo, liveSyncInfo.modifiedFilesData, projectData, this.device.deviceInfo.platform);
 		if (!canExecuteFastSync || !liveSyncInfo.didRefresh) {
 			await this.device.applicationManager.restartApplication({ appId: liveSyncInfo.deviceAppData.appIdentifier, projectName: projectData.projectName });
@@ -103,7 +104,11 @@ export class AndroidDeviceSocketsLiveSyncService extends AndroidDeviceLiveSyncSe
 					this.$logger.trace("Failed to connect after app restart.");
 				}
 			}
+
+			result.didRestart = true;
 		}
+
+		return result;
 	}
 
 	public async removeFiles(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], projectFilesPath: string): Promise<void> {

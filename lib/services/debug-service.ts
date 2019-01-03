@@ -40,12 +40,6 @@ export class DebugService extends EventEmitter implements IDebugService {
 		}
 
 		const debugOptions: IDebugOptions = _.cloneDeep(options);
-
-		// TODO: Check if app is running.
-		// For now we can only check if app is running on Android.
-		// After we find a way to check on iOS we should use it here.
-		let result: string;
-
 		const debugService = this.getDeviceDebugService(device);
 		if (!debugService) {
 			this.$errors.failWithoutHelp(`Unsupported device OS: ${device.deviceInfo.platform}. You can debug your applications only on iOS or Android.`);
@@ -62,9 +56,9 @@ export class DebugService extends EventEmitter implements IDebugService {
 			}
 		}
 
-		result = await debugService.debug(debugData, debugOptions);
+		const debugResultInfo = await debugService.debug(debugData, debugOptions);
 
-		return this.getDebugInformation(result, device.deviceInfo.identifier);
+		return this.getDebugInformation(debugResultInfo, device.deviceInfo.identifier);
 	}
 
 	public debugStop(deviceIdentifier: string): Promise<void> {
@@ -100,16 +94,17 @@ export class DebugService extends EventEmitter implements IDebugService {
 		platformDebugService.on(CONNECTION_ERROR_EVENT_NAME, connectionErrorHandler);
 	}
 
-	private getDebugInformation(fullUrl: string, deviceIdentifier: string): IDebugInformation {
+	private getDebugInformation(debugResultInfo: IDebugResultInfo, deviceIdentifier: string): IDebugInformation {
 		const debugInfo: IDebugInformation = {
-			url: fullUrl,
+			url: debugResultInfo.debugUrl,
 			port: 0,
-			deviceIdentifier
+			deviceIdentifier,
+			hasReconnected: debugResultInfo.hasReconnected
 		};
 
-		if (fullUrl) {
+		if (debugResultInfo.debugUrl) {
 			const parseQueryString = true;
-			const wsQueryParam = <string>parse(fullUrl, parseQueryString).query.ws;
+			const wsQueryParam = <string>parse(debugResultInfo.debugUrl, parseQueryString).query.ws;
 			const hostPortSplit = wsQueryParam && wsQueryParam.split(":");
 			debugInfo.port = hostPortSplit && +hostPortSplit[1];
 		}

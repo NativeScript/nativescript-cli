@@ -37,12 +37,14 @@ export class IOSDeviceLiveSyncService extends DeviceLiveSyncServiceBase implemen
 		await Promise.all(_.map(localToDevicePaths, localToDevicePathData => this.device.fileSystem.deleteFile(localToDevicePathData.getDevicePath(), deviceAppData.appIdentifier)));
 	}
 
-	public async refreshApplication(projectData: IProjectData, liveSyncInfo: ILiveSyncResultInfo): Promise<void> {
+	public async refreshApplication(projectData: IProjectData, liveSyncInfo: ILiveSyncResultInfo): Promise<IRefreshApplicationInfo> {
+		const result: IRefreshApplicationInfo = { didRestart: false };
 		const deviceAppData = liveSyncInfo.deviceAppData;
 		const localToDevicePaths = liveSyncInfo.modifiedFilesData;
 		if (liveSyncInfo.isFullSync) {
 			await this.restartApplication(deviceAppData, projectData.projectName);
-			return;
+			result.didRestart = true;
+			return result;
 		}
 
 		let scriptRelatedFiles: Mobile.ILocalToDevicePathData[] = [];
@@ -54,14 +56,18 @@ export class IOSDeviceLiveSyncService extends DeviceLiveSyncServiceBase implemen
 
 		if (!canExecuteFastSync) {
 			await this.restartApplication(deviceAppData, projectData.projectName);
-			return;
+			result.didRestart = true;
+			return result;
 		}
 
 		if (await this.setupSocketIfNeeded(projectData)) {
 			await this.reloadPage(otherFiles);
 		} else {
 			await this.restartApplication(deviceAppData, projectData.projectName);
+			result.didRestart = true;
 		}
+
+		return result;
 	}
 
 	private async restartApplication(deviceAppData: Mobile.IDeviceAppData, projectName: string): Promise<void> {

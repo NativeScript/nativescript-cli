@@ -645,7 +645,7 @@ function unexpected(msg: string): Error {
 }
 
 export class DebugServiceStub extends EventEmitter implements IDeviceDebugService {
-	public async debug(): Promise<string> {
+	public async debug(): Promise<IDebugResultInfo> {
 		return;
 	}
 

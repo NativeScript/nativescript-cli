@@ -473,8 +473,12 @@ interface IGenerateOptions {
 	collection?: string;
 }
 
-interface IDebugInformation extends IPort, Mobile.IDeviceIdentifier {
+interface IDebugInformation extends IPort, Mobile.IDeviceIdentifier, IHasHasReconnected {
 	url: string;
+}
+
+interface IHasHasReconnected {
+	hasReconnected: boolean;
 }
 
 interface IPort {

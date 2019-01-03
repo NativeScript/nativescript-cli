@@ -188,7 +188,7 @@ interface ILiveSyncEventData {
 	applicationIdentifier?: string,
 	projectDir: string,
 	syncedFiles?: string[],
-	error? : Error,
+	error?: Error,
 	notification?: string,
 	isFullSync?: boolean
 }
@@ -390,9 +390,16 @@ interface ITransferFilesOptions {
 interface IPlatformLiveSyncService {
 	fullSync(syncInfo: IFullSyncInfo): Promise<ILiveSyncResultInfo>;
 	liveSyncWatchAction(device: Mobile.IDevice, liveSyncInfo: ILiveSyncWatchInfo): Promise<ILiveSyncResultInfo>;
-	refreshApplication(projectData: IProjectData, liveSyncInfo: ILiveSyncResultInfo): Promise<void>;
+	refreshApplication(projectData: IProjectData, liveSyncInfo: ILiveSyncResultInfo): Promise<IRefreshApplicationInfo>;
 	prepareForLiveSync(device: Mobile.IDevice, data: IProjectDir, liveSyncInfo: ILiveSyncInfo, debugOptions: IDebugOptions): Promise<void>;
 	getDeviceLiveSyncService(device: Mobile.IDevice, projectData: IProjectData): INativeScriptDeviceLiveSyncService;
+}
+
+interface IHasDidRestart {
+	didRestart: boolean;
+}
+
+interface IRefreshApplicationInfo extends IHasDidRestart {
 }
 
 interface INativeScriptDeviceLiveSyncService extends IDeviceLiveSyncServiceBase {
@@ -405,7 +412,7 @@ interface INativeScriptDeviceLiveSyncService extends IDeviceLiveSyncServiceBase 
 	 * @return {Promise<void>}
 	 */
 	refreshApplication(projectData: IProjectData,
-		liveSyncInfo: ILiveSyncResultInfo): Promise<void>;
+		liveSyncInfo: ILiveSyncResultInfo): Promise<IRefreshApplicationInfo>;
 
 	/**
 	 * Removes specified files from a connected device
