@@ -512,7 +512,6 @@ describe('Query', () => {
       const valueNext = randomString();
       query.greaterThanOrEqualTo(field, value);
       query.greaterThanOrEqualTo(anotherField, valueNext);
-      console.log(query)
       expect(query.toPlainObject().filter[field]).to.deep.equal({ '$gte': value });
       expect(query.toPlainObject().filter[anotherField]).to.deep.equal({ '$gte': valueNext });
     });
@@ -1445,7 +1444,6 @@ describe('Query', () => {
       const polygon = [[-1, -1], [-1, 1], [1, 1], [-2, 2]];
       const query = new Query();
       query.withinPolygon(field, polygon);
-      console.log(JSON.stringify(query))
       expect(query.toPlainObject().filter[field]).to.deep.equal({ $within: { $polygon: polygon } });
     });
 
@@ -1565,7 +1563,6 @@ describe('Query', () => {
       const query = new Query();
       query.descending(field);
       query.ascending(field);
-      console.log(JSON.stringify(query));
       expect(query.toPlainObject().sort[field]).to.equal(1);
     });
 
@@ -1656,7 +1653,6 @@ describe('Query', () => {
       const query = new Query();
       query.ascending(field);
       query.descending(field);
-      console.log(JSON.stringify(query));
       expect(query.toPlainObject().sort[field]).to.equal(-1);
     });
 
@@ -2090,6 +2086,156 @@ describe('Query', () => {
       const query = new Query();
       const queryString = query.toQueryString();
       expect(queryString).to.not.have.property('sort');
+    });
+  });
+
+  describe('toPlainObject()', () => {
+    it('should have a filter property', ()=>{
+      const query = new Query();
+      expect(query.toPlainObject()).to.have.property('filter')
+    });
+
+    it('should have a fields property', ()=>{
+      const query = new Query();
+      expect(query.toPlainObject()).to.have.property('fields')
+    });
+
+    it('should have a sort property', ()=>{
+      const query = new Query();
+      expect(query.toPlainObject()).to.have.property('sort')
+    });
+
+    it('should have a limit property', ()=>{
+      const query = new Query();
+      expect(query.toPlainObject()).to.have.property('limit')
+    });
+
+    it('should have a skip property', ()=>{
+      const query = new Query();
+      expect(query.toPlainObject()).to.have.property('skip')
+    });
+  });
+
+  describe('addFilter()', () => {
+    it('should add equalTo filter', () => {
+      const query = new Query();
+      const field = randomString();
+      const value = randomString();
+      query.addFilter(field, value);
+      expect(query.toPlainObject().filter[field]).to.equal(value)
+    });
+
+    it('should add notEqualTo filter', () => {
+      const query = new Query();
+      const field = randomString();
+      const value = randomString();
+      query.addFilter(field, '$ne', value);
+      expect(query.toPlainObject().filter[field]).to.deep.equal({$ne:value})
+    });
+
+    it('should add greaterThan filter', () => {
+      const query = new Query();
+      const field = randomString();
+      const value = randomString();
+      query.addFilter(field, '$gt', value);
+      expect(query.toPlainObject().filter[field]).to.deep.equal({$gt:value})
+    });
+
+    it('should add greaterThanOrEqualTo filter', () => {
+      const query = new Query();
+      const field = randomString();
+      const value = randomString();
+      query.addFilter(field, '$gte', value);
+      expect(query.toPlainObject().filter[field]).to.deep.equal({$gte:value})
+    });
+
+    it('should add lessThan filter', () => {
+      const query = new Query();
+      const field = randomString();
+      const value = randomString();
+      query.addFilter(field, '$lt', value);
+      expect(query.toPlainObject().filter[field]).to.deep.equal({$lt:value})
+    });
+
+    it('should add lessThanOrEqualTo filter', () => {
+      const query = new Query();
+      const field = randomString();
+      const value = randomString();
+      query.addFilter(field, '$lte', value);
+      expect(query.toPlainObject().filter[field]).to.deep.equal({$lte:value})
+    });
+
+    it('should add exists filter', () => {
+      const query = new Query();
+      const field = randomString();
+      const value = randomString();
+      query.addFilter(field, '$exists', value);
+      expect(query.toPlainObject().filter[field]).to.deep.equal({$exists:value})
+    });
+
+    it('should add mod filter', () => {
+      const query = new Query();
+      const field = randomString();
+      const value = randomString();
+      query.addFilter(field, '$mod', value);
+      expect(query.toPlainObject().filter[field]).to.deep.equal({$mod:value})
+    });
+
+    it('should add size filter', () => {
+      const query = new Query();
+      const field = randomString();
+      const value = randomString();
+      query.addFilter(field, '$size', value);
+      expect(query.toPlainObject().filter[field]).to.deep.equal({$size:value})
+    });
+
+    it('should add matches filter', () => {
+      const query = new Query();
+      const field = randomString();
+      const value = randomString();
+      query.addFilter(field, '$regex', value);
+      expect(query.toPlainObject().filter[field]).to.deep.equal({$regex:value})
+    });
+
+    it('should add contains filter', () => {
+      const query = new Query();
+      const field = randomString();
+      const value = randomString();
+      query.addFilter(field, '$in', value);
+      expect(query.toPlainObject().filter[field]).to.deep.equal({$in:value})
+    });
+
+    it('should add containsAll filter', () => {
+      const query = new Query();
+      const field = randomString();
+      const value = randomString();
+      query.addFilter(field, '$all', value);
+      expect(query.toPlainObject().filter[field]).to.deep.equal({$all:value})
+    });
+
+    it('should add notContainedIn filter', () => {
+      const query = new Query();
+      const field = randomString();
+      const value = randomString();
+      query.addFilter(field, '$nin', value);
+      expect(query.toPlainObject().filter[field]).to.deep.equal({$nin:value})
+    });
+
+    it('should add near filter', () => {
+      const query = new Query();
+      const field = randomString();
+      const value = randomString();
+      query.addFilter(field, '$nearSphere', value);
+      expect(query.toPlainObject().filter[field]).to.deep.equal({$nearSphere:value})
+    });
+  });
+
+  describe('toString()', () => {
+    it('should add filter property', () => {
+      const query = new Query();
+      query.equalTo('field','value');
+      const queryToString = query.toString();
+      expect(JSON.parse(queryToString)).to.have.property('query');
     });
   });
 });
