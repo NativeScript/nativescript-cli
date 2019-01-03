@@ -773,6 +773,8 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 
 			this.savePbxProj(project, projectData);
 		}
+
+		await this.prepareNativeSourceCode("src", path.join(projectData.appDirectoryPath, constants.APP_RESOURCES_FOLDER_NAME, this.getPlatformData(projectData).normalizedPlatformName, "src"), projectData);
 	}
 
 	public prepareAppResources(appResourcesDirectoryPath: string, projectData: IProjectData): void {
@@ -780,6 +782,9 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		const filterFile = (filename: string) => this.$fs.deleteFile(path.join(platformFolder, filename));
 
 		filterFile(this.getPlatformData(projectData).configurationFileName);
+
+		// src folder should not be copied as the pbxproject will have references to its files
+		this.$fs.deleteDirectory(path.join(appResourcesDirectoryPath, this.getPlatformData(projectData).normalizedPlatformName, "src"));
 
 		this.$fs.deleteDirectory(this.getAppResourcesDestinationDirectoryPath(projectData));
 	}
@@ -1094,9 +1099,9 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		this.$fs.rename(path.join(fileRootLocation, oldFileName), path.join(fileRootLocation, newFileName));
 	}
 
-	private async prepareNativeSourceCode(pluginName: string, pluginPlatformsFolderPath: string, projectData: IProjectData): Promise<void> {
+	private async prepareNativeSourceCode(groupName: string, sourceFolderPath: string, projectData: IProjectData): Promise<void> {
 		const project = this.createPbxProj(projectData);
-		const group = this.getRootGroup(pluginName, pluginPlatformsFolderPath);
+		const group = this.getRootGroup(groupName, sourceFolderPath);
 		project.addPbxGroup(group.files, group.name, group.path, null, { isMain: true });
 		project.addToHeaderSearchPaths(group.path);
 		this.savePbxProj(project, projectData);
