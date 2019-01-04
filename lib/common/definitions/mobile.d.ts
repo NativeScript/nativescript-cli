@@ -108,17 +108,18 @@ declare module Mobile {
 		 * @returns {void}
 		 */
 		detach?(): void;
-	}
 
-	interface IiOSDevice extends IDevice {
 		getLiveSyncSocket(appId: string): Promise<any>;
 		destroyLiveSyncSocket(appId: string): void;
 
 		getDebugSocket(appId: string): Promise<any>;
 		destroyDebugSocket(appId: string): void;
 
-		openDeviceLogStream(options?: IiOSLogStreamOptions): Promise<void>;
 		destroyAllSockets(): void;
+	}
+
+	interface IiOSDevice extends IDevice {
+		openDeviceLogStream(options?: IiOSLogStreamOptions): Promise<void>;
 	}
 
 	interface IAndroidDevice extends IDevice {

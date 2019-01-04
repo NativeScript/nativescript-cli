@@ -11,12 +11,12 @@ export class AndroidDeviceDebugService extends DebugServiceBase implements IDevi
 	}
 
 	constructor(protected device: Mobile.IAndroidDevice,
+		private $appDebugSocketProxyFactory: IAppDebugSocketProxyFactory,
 		protected $devicesService: Mobile.IDevicesService,
 		private $errors: IErrors,
 		private $logger: ILogger,
 		private $androidDeviceDiscovery: Mobile.IDeviceDiscovery,
 		private $androidProcessService: Mobile.IAndroidProcessService,
-		private $net: INet,
 		private $projectDataService: IProjectDataService,
 		private $deviceLogProvider: Mobile.IDeviceLogProvider) {
 
@@ -55,8 +55,8 @@ export class AndroidDeviceDebugService extends DebugServiceBase implements IDevi
 		await this.$devicesService.execute(action, this.getCanExecuteAction(this.deviceIdentifier));
 	}
 
-	public debugStop(): Promise<void> {
-		return this.removePortForwarding();
+	public async debugStop(): Promise<void> {
+		this.device.destroyAllSockets();
 	}
 
 	private async debugOnEmulator(debugData: IDebugData, debugOptions: IDebugOptions): Promise<IDebugResultInfo> {
@@ -65,36 +65,6 @@ export class AndroidDeviceDebugService extends DebugServiceBase implements IDevi
 		// we need some time to detect it. Let's force detection.
 		await this.$androidDeviceDiscovery.startLookingForDevices();
 		return this.debugOnDevice(debugData, debugOptions);
-	}
-
-	private async removePortForwarding(packageName?: string): Promise<void> {
-		const port = await this.getForwardedDebugPort(this.device.deviceInfo.identifier, packageName || this._packageName);
-		return this.device.adb.executeCommand(["forward", "--remove", `tcp:${port}`]);
-	}
-
-	private async getForwardedDebugPort(deviceId: string, packageName: string): Promise<number> {
-		let port = -1;
-		const forwardsResult = await this.device.adb.executeCommand(["forward", "--list"]);
-
-		const unixSocketName = `${packageName}-inspectorServer`;
-
-		//matches 123a188909e6czzc tcp:40001 localabstract:org.nativescript.testUnixSockets-debug
-		const regexp = new RegExp(`(?:${deviceId} tcp:)([\\d]+)(?= localabstract:${unixSocketName})`, "g");
-		const match = regexp.exec(forwardsResult);
-
-		if (match) {
-			port = parseInt(match[1]);
-		} else {
-			port = await this.$net.getAvailablePortInRange(40000);
-
-			await this.unixSocketForward(port, `${unixSocketName}`);
-		}
-
-		return port;
-	}
-
-	private async unixSocketForward(local: number, remote: string): Promise<void> {
-		return this.device.adb.executeCommand(["forward", `tcp:${local}`, `localabstract:${remote}`]);
 	}
 
 	private async debugOnDevice(debugData: IDebugData, debugOptions: IDebugOptions): Promise<IDebugResultInfo> {
@@ -123,7 +93,7 @@ export class AndroidDeviceDebugService extends DebugServiceBase implements IDevi
 		const result: IDebugResultInfo = { hasReconnected: false, debugUrl: null };
 
 		if (debugOptions.stop) {
-			await this.removePortForwarding();
+			this.device.destroyDebugSocket(appData.appId);
 			return result;
 		}
 
@@ -133,10 +103,11 @@ export class AndroidDeviceDebugService extends DebugServiceBase implements IDevi
 		}
 
 		await this.validateRunningApp(device.deviceInfo.identifier, appData.appId);
-		const debugPort = await this.getForwardedDebugPort(device.deviceInfo.identifier, appData.appId);
-		await this.printDebugPort(device.deviceInfo.identifier, debugPort);
 
-		result.debugUrl = this.getChromeDebugUrl(debugOptions, debugPort);
+		const proxyServer = await this.$appDebugSocketProxyFactory.ensureWebSocketProxy(this.device, appData.appId);
+		// const proxyServer = await this.$appDebugSocketProxyFactory.addTCPSocketProxy(this.device, appData.appId);
+		await this.printDebugPort(device.deviceInfo.identifier, proxyServer.options.port);
+		result.debugUrl = this.getChromeDebugUrl(debugOptions, proxyServer.options.port);
 
 		return result;
 	}

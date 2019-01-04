@@ -2,11 +2,11 @@ import { EventEmitter } from "events";
 import { CONNECTION_ERROR_EVENT_NAME } from "../../constants";
 import { PacketStream } from "./packet-stream";
 import * as net from "net";
-import * as ws from "ws";
+const ws = require("ws");
 import temp = require("temp");
 
 export class AppDebugSocketProxyFactory extends EventEmitter implements IAppDebugSocketProxyFactory {
-	private deviceWebServers: IDictionary<ws.Server> = {};
+	private deviceWebServers: IDictionary<any> = {};
 	private deviceTcpServers: IDictionary<net.Server> = {};
 
 	constructor(private $logger: ILogger,
@@ -20,7 +20,7 @@ export class AppDebugSocketProxyFactory extends EventEmitter implements IAppDebu
 		return this.deviceTcpServers[`${deviceIdentifier}-${appId}`];
 	}
 
-	public async addTCPSocketProxy(device: Mobile.IiOSDevice, appId: string): Promise<net.Server> {
+	public async addTCPSocketProxy(device: Mobile.IDevice, appId: string): Promise<net.Server> {
 		const cacheKey = `${device.deviceInfo.identifier}-${appId}`;
 		const existingServer = this.deviceTcpServers[cacheKey];
 		if (existingServer) {
@@ -80,7 +80,7 @@ export class AppDebugSocketProxyFactory extends EventEmitter implements IAppDebu
 		return server;
 	}
 
-	public async ensureWebSocketProxy(device: Mobile.IiOSDevice, appId: string): Promise<ws.Server> {
+	public async ensureWebSocketProxy(device: Mobile.IDevice, appId: string): Promise<any> {
 		const existingWebProxy = this.deviceWebServers[`${device.deviceInfo.identifier}-${appId}`];
 		const result = existingWebProxy || await this.addWebSocketProxy(device, appId);
 
@@ -90,7 +90,7 @@ export class AppDebugSocketProxyFactory extends EventEmitter implements IAppDebu
 		return result;
 	}
 
-	private async addWebSocketProxy(device: Mobile.IiOSDevice, appId: string): Promise<ws.Server> {
+	private async addWebSocketProxy(device: Mobile.IDevice, appId: string): Promise<any> {
 		const cacheKey = `${device.deviceInfo.identifier}-${appId}`;
 		const existingServer = this.deviceWebServers[cacheKey];
 		if (existingServer) {
@@ -128,10 +128,18 @@ export class AppDebugSocketProxyFactory extends EventEmitter implements IAppDebu
 			}
 		});
 		this.deviceWebServers[cacheKey] = server;
-		server.on("connection", (webSocket, req) => {
+		server.on("connection", (webSocket: any, req: any) => {
 			const encoding = "utf16le";
 
 			const appDebugSocket: net.Socket = (<any>req)["__deviceSocket"];
+
+			const wss = new ws.Sender(appDebugSocket);
+			wss.send(req, {}, () => {
+				console.log(arguments);
+			});
+
+			console.log(wss);
+
 			const packets = new PacketStream();
 			appDebugSocket.pipe(packets);
 
@@ -139,7 +147,7 @@ export class AppDebugSocketProxyFactory extends EventEmitter implements IAppDebu
 				webSocket.send(buffer.toString(encoding));
 			});
 
-			webSocket.on("error", err => {
+			webSocket.on("error", (err: any) => {
 				this.$logger.trace("Error on debugger websocket", err);
 			});
 
@@ -148,11 +156,15 @@ export class AppDebugSocketProxyFactory extends EventEmitter implements IAppDebu
 			});
 
 			webSocket.on("message", (message: string) => {
-				const length = Buffer.byteLength(message, encoding);
-				const payload = Buffer.allocUnsafe(length + 4);
-				payload.writeInt32BE(length, 0);
-				payload.write(message, 4, length, encoding);
-				appDebugSocket.write(payload);
+				// const length = Buffer.byteLength(message, encoding);
+				// const payload = Buffer.allocUnsafe(length + 4);
+				// payload.writeInt32BE(length, 0);
+				// payload.write(message, 4, length, encoding);
+				// appDebugSocket.write(payload);
+				// console.log("message:", message)
+				wss.send(message, {}, () => {
+					console.log(arguments);
+				});
 			});
 
 			appDebugSocket.on("close", () => {

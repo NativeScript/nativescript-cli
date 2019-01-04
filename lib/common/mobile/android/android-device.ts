@@ -3,6 +3,10 @@ import * as applicationManagerPath from "./android-application-manager";
 import * as fileSystemPath from "./android-device-file-system";
 import * as constants from "../../constants";
 import { cache } from "../../decorators";
+import { DeviceBase } from "../device-base";
+import * as helpers from "../../../common/helpers";
+import * as net from "net";
+import * as commonConstants from "../../constants";
 
 interface IAndroidDeviceDetails {
 	model: string;
@@ -16,7 +20,7 @@ interface IAdbDeviceStatusInfo {
 	deviceStatus: string;
 }
 
-export class AndroidDevice implements Mobile.IAndroidDevice {
+export class AndroidDevice extends DeviceBase implements Mobile.IAndroidDevice {
 	public adb: Mobile.IDeviceAndroidDebugBridge;
 	public applicationManager: Mobile.IDeviceApplicationManager;
 	public fileSystem: Mobile.IAndroidDeviceFileSystem;
@@ -52,7 +56,59 @@ export class AndroidDevice implements Mobile.IAndroidDevice {
 		private $logger: ILogger,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $logcatHelper: Mobile.ILogcatHelper,
-		private $injector: IInjector) { }
+		private $injector: IInjector,
+		private $net: INet,
+		protected $errors: IErrors,
+		protected $processService: IProcessService) {
+		super();
+	}
+
+	protected async getDebugSocketCore(appId: string): Promise<net.Socket> {
+		const port = await this.getForwardedDebugPort(this.deviceInfo.identifier, appId);
+		const socket = await helpers.connectEventuallyUntilTimeout(
+			async () => {
+				const _socket = new net.Socket();
+				_socket.connect(port, "127.0.0.1");
+				return _socket;
+			},
+			commonConstants.SOCKET_CONNECTION_TIMEOUT_MS);
+
+		return socket;
+	}
+	protected async getLiveSyncSocketCore(appId: string): Promise<net.Socket> {
+		throw new Error("Method not implemented.");
+	}
+
+	private async getForwardedDebugPort(deviceId: string, packageName: string): Promise<number> {
+		let port = -1;
+		const forwardsResult = await this.adb.executeCommand(["forward", "--list"]);
+
+		const unixSocketName = `${packageName}-inspectorServer`;
+
+		//matches 123a188909e6czzc tcp:40001 localabstract:org.nativescript.testUnixSockets-debug
+		const regexp = new RegExp(`(?:${deviceId} tcp:)([\\d]+)(?= localabstract:${unixSocketName})`, "g");
+		const match = regexp.exec(forwardsResult);
+
+		if (match) {
+			port = parseInt(match[1]);
+		} else {
+			port = await this.$net.getAvailablePortInRange(40000);
+
+			await this.unixSocketForward(port, `${unixSocketName}`);
+		}
+
+		return port;
+	}
+
+	private async unixSocketForward(local: number, remote: string): Promise<void> {
+		return this.adb.executeCommand(["forward", `tcp:${local}`, `localabstract:${remote}`]);
+	}
+
+	// TODO: remove on exit
+	// private async removePortForwarding(appId: string): Promise<void> {
+	// 	const port = await this.getForwardedDebugPort(this.deviceInfo.identifier, appId);
+	// 	return this.adb.executeCommand(["forward", "--remove", `tcp:${port}`]);
+	// }
 
 	@cache()
 	public async init(): Promise<void> {
