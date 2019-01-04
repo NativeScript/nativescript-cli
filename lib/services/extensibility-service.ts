@@ -54,6 +54,11 @@ export class ExtensibilityService implements IExtensibilityService {
 		this.$logger.trace(`Finished uninstallation of extension '${extensionName}'.`);
 	}
 
+	public removeAllExtensions(): void {
+		this.$fs.deleteDirectorySafe(this.pathToExtensions);
+		this.$logger.info(`Removed all NativeScript CLI extensions.`);
+	}
+
 	public getInstalledExtensionsData(): IExtensionData[] {
 		const installedExtensions = this.getInstalledExtensions();
 		return _.keys(installedExtensions).map(installedExtension => this.getInstalledExtensionData(installedExtension));
