@@ -95,7 +95,7 @@ export function performanceLog(injector?: IInjector): any {
 		const performanceService: IPerformanceService = injector.resolve("performanceService");
 
 		//needed for the returned function to have the same name as the original - used in hooks decorator
-		const tempObject = {
+		const functionWrapper = {
 			[originalMethod.name]: function (...args: Array<any>) {
 				const start = performanceService.now();
 				const result = originalMethod.apply(this, args);
@@ -120,7 +120,7 @@ export function performanceLog(injector?: IInjector): any {
 				return result;
 			}
 		};
-		descriptor.value = tempObject[originalMethod.name];
+		descriptor.value = functionWrapper[originalMethod.name];
 
 		// used to get parameter names in hooks decorator
 		descriptor.value.toString = () => {
