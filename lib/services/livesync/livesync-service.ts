@@ -164,7 +164,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 			this.refreshApplicationWithoutDebug(projectData, liveSyncResultInfo, debugOpts, outputPath);
 	}
 
-	private async refreshApplicationWithoutDebug(projectData: IProjectData, liveSyncResultInfo: ILiveSyncResultInfo, debugOpts?: IDebugOptions, outputPath?: string, settings?: IShouldSkipEmitLiveSyncNotification): Promise<IRefreshApplicationInfo> {
+	private async refreshApplicationWithoutDebug(projectData: IProjectData, liveSyncResultInfo: ILiveSyncResultInfo, debugOpts?: IDebugOptions, outputPath?: string, settings?: IRefreshApplicationSettings): Promise<IRefreshApplicationInfo> {
 		let result: IRefreshApplicationInfo = { didRestart: false };
 		const platform = liveSyncResultInfo.deviceAppData.platform;
 		const platformLiveSyncService = this.getLiveSyncService(platform);
@@ -184,7 +184,9 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 				});
 			}
 
-			this.handleDeveloperDiskImageError(err, liveSyncResultInfo, projectData, debugOpts, outputPath);
+			if (settings && settings.shouldCheckDeveloperDiscImage) {
+				this.handleDeveloperDiskImageError(err, liveSyncResultInfo, projectData, debugOpts, outputPath);
+			}
 		}
 
 		this.emitLivesyncEvent(LiveSyncEvents.liveSyncExecuted, {
@@ -214,7 +216,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 				this.handleDeveloperDiskImageError(err, liveSyncResultInfo, projectData, debugOptions, outputPath);
 			}
 		} else {
-			const refreshInfo = await this.refreshApplicationWithoutDebug(projectData, liveSyncResultInfo, debugOptions, outputPath, { shouldSkipEmitLiveSyncNotification: true });
+			const refreshInfo = await this.refreshApplicationWithoutDebug(projectData, liveSyncResultInfo, debugOptions, outputPath, { shouldSkipEmitLiveSyncNotification: true, shouldCheckDeveloperDiscImage: true });
 			didRestart = refreshInfo.didRestart;
 		}
 

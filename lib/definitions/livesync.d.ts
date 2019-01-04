@@ -330,11 +330,9 @@ interface IEnableDebuggingDeviceOptions extends Mobile.IDeviceIdentifier, IOptio
 /**
  * Describes settings passed to livesync service in order to control event emitting during refresh application.
  */
-interface IShouldSkipEmitLiveSyncNotification {
-	/**
- 	* Whether to skip emitting an event during refresh. Default is false.
- 	*/
+interface IRefreshApplicationSettings {
 	shouldSkipEmitLiveSyncNotification: boolean;
+	shouldCheckDeveloperDiscImage: boolean;
 }
 
 /**
