@@ -110,21 +110,23 @@ export class AppDebugSocketProxyFactory extends EventEmitter implements IAppDebu
 		const server = new ws.Server(<any>{
 			port: localPort,
 			host: "localhost",
-			verifyClient: async (info: any, callback: Function) => {
+			verifyClient: async (info: any, callback: (res: boolean, code?: number, message?: string) => void) => {
+				let acceptHandshake = true;
 				this.$logger.info("Frontend client connected.");
 				let appDebugSocket;
 				try {
 					appDebugSocket = await device.getDebugSocket(appId);
+					this.$logger.info("Backend socket created.");
+					info.req["__deviceSocket"] = appDebugSocket;
 				} catch (err) {
 					err.deviceIdentifier = device.deviceInfo.identifier;
 					this.$logger.trace(err);
 					this.emit(CONNECTION_ERROR_EVENT_NAME, err);
-					this.$errors.failWithoutHelp(`Cannot connect to device socket.The error message is ${err.message} `);
+					acceptHandshake = false;
+					this.$logger.warn(`Cannot connect to device socket. The error message is '${err.message}'. Try starting the application manually.`);
 				}
 
-				this.$logger.info("Backend socket created.");
-				info.req["__deviceSocket"] = appDebugSocket;
-				callback(true);
+				callback(acceptHandshake);
 			}
 		});
 		this.deviceWebServers[cacheKey] = server;
