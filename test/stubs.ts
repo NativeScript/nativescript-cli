@@ -57,6 +57,9 @@ export class ProcessServiceStub implements IProcessService {
 }
 
 export class FileSystemStub implements IFileSystem {
+	deleteDirectorySafe(directory: string): void {
+		return this.deleteDirectory(directory);
+	}
 	async zipFiles(zipFile: string, files: string[], zipPathCallback: (path: string) => string): Promise<void> {
 		return undefined;
 	}
@@ -73,8 +76,8 @@ export class FileSystemStub implements IFileSystem {
 		return undefined;
 	}
 
-	async deleteDirectory(directory: string): Promise<void> {
-		return Promise.resolve();
+	deleteDirectory(directory: string): void {
+		return undefined;
 	}
 
 	getFileSize(path: string): number {
@@ -227,6 +230,9 @@ export class ErrorsStub implements IErrors {
 }
 
 export class PackageInstallationManagerStub implements IPackageInstallationManager {
+	clearInspectorCache(): void {
+		return undefined;
+	}
 	async install(packageName: string, pathToSave?: string, options?: INpmInstallOptions): Promise<string> {
 		return Promise.resolve("");
 	}

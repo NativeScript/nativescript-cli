@@ -85,6 +85,12 @@ interface IExtensibilityService {
 	uninstallExtension(extensionName: string): Promise<void>;
 
 	/**
+	 * Removes all installed extensions.
+	 * @returns {void}
+	 */
+	removeAllExtensions(): void;
+
+	/**
 	 * Loads all extensions, so their methods and commands can be used from CLI.
 	 * For each of the extensions, a new Promise is returned. It will be rejected in case the extension cannot be loaded. However other promises will not be reflected by this failure.
 	 * In case a promise is rejected, the error will have additional property (extensionName) that shows which is the extension that cannot be loaded in the process.

@@ -289,11 +289,18 @@ interface IFileSystem {
 	deleteFile(path: string): void;
 
 	/**
-	 * Deletes whole directory. Implementation uses shelljs.
+	 * Deletes whole directory.
 	 * @param {string} directory Path to directory that has to be deleted.
 	 * @returns {void}
 	 */
 	deleteDirectory(directory: string): void;
+
+	/**
+	 * Deletes whole directory without throwing exceptions.
+	 * @param {string} directory Path to directory that has to be deleted.
+	 * @returns {void}
+	 */
+	deleteDirectorySafe(directory: string): void;
 
 	/**
 	 * Returns the size of specified file.

@@ -130,6 +130,14 @@ export class FileSystem implements IFileSystem {
 		}
 	}
 
+	public deleteDirectorySafe(directory: string): void {
+		try {
+			this.deleteDirectory(directory);
+		} catch (e) {
+			return;
+		}
+	}
+
 	public getFileSize(path: string): number {
 		const stat = this.getFsStats(path);
 		return stat.size;

@@ -71,7 +71,7 @@ export class PackageInstallationManager implements IPackageInstallationManager {
 			return inspectorPath;
 		}
 
-		const cachePath = path.join(this.$settingsService.getProfileDir(), constants.INSPECTOR_CACHE_DIRNAME);
+		const cachePath = this.getInspectorCachePath();
 		this.prepareCacheDir(cachePath);
 		const pathToPackageInCache = path.join(cachePath, constants.NODE_MODULES_FOLDER_NAME, inspectorNpmPackageName);
 		const iOSFrameworkNSValue = this.$projectDataService.getNSValue(projectDir, constants.TNS_IOS_RUNTIME_NAME);
@@ -93,6 +93,14 @@ export class PackageInstallationManager implements IPackageInstallationManager {
 
 		this.$logger.out("Using inspector from cache.");
 		return pathToPackageInCache;
+	}
+
+	public clearInspectorCache(): void {
+		this.$fs.deleteDirectorySafe(this.getInspectorCachePath());
+	}
+
+	private getInspectorCachePath(): string {
+		return path.join(this.$settingsService.getProfileDir(), constants.INSPECTOR_CACHE_DIRNAME);
 	}
 
 	private prepareCacheDir(cacheDirName: string): void {
