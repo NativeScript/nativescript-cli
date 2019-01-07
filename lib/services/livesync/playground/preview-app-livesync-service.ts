@@ -43,7 +43,7 @@ export class PreviewAppLiveSyncService extends EventEmitter implements IPreviewA
 					this.deviceInitializationPromise[device.id] = null;
 				}
 			} catch (error) {
-				this.$logger.error(error);
+				this.$logger.trace(`Error while sending files on device ${device && device.id}. Error is`, error);
 				this.emit(PreviewAppLiveSyncEvents.PREVIEW_APP_LIVE_SYNC_ERROR, {
 					error,
 					data,

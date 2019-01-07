@@ -140,6 +140,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 	@cache()
 	private attachToPreviewAppLiveSyncError(): void {
 		this.$previewAppLiveSyncService.on(LiveSyncEvents.previewAppLiveSyncError, liveSyncData => {
+			this.$logger.error(liveSyncData.error);
 			this.emit(LiveSyncEvents.previewAppLiveSyncError, liveSyncData);
 		});
 	}
