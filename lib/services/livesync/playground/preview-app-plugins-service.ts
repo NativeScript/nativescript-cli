@@ -7,8 +7,6 @@ import { NODE_MODULES_DIR_NAME } from "../../../common/constants";
 import { PLATFORMS_DIR_NAME, PACKAGE_JSON_FILE_NAME } from "../../../constants";
 
 export class PreviewAppPluginsService implements IPreviewAppPluginsService {
-	private previewAppVersionWarnings: IDictionary<string[]> = {};
-
 	constructor(private $errors: IErrors,
 		private $fs: IFileSystem,
 		private $logger: ILogger,
@@ -23,20 +21,17 @@ export class PreviewAppPluginsService implements IPreviewAppPluginsService {
 			this.$errors.failWithoutHelp("No version of preview app provided.");
 		}
 
-		if (!this.previewAppVersionWarnings[device.previewAppVersion]) {
-			const devicePlugins = this.getDevicePlugins(device);
-			const localPlugins = this.getLocalPlugins(data.projectDir);
-			const warnings = _.keys(localPlugins)
-				.map(localPlugin => {
-					const localPluginVersion = localPlugins[localPlugin];
-					const devicePluginVersion = devicePlugins[localPlugin];
-					return this.getWarningForPlugin(data, localPlugin, localPluginVersion, devicePluginVersion, device);
-				})
-				.filter(item => !!item);
-			this.previewAppVersionWarnings[device.previewAppVersion] = warnings;
-		}
+		const devicePlugins = this.getDevicePlugins(device);
+		const localPlugins = this.getLocalPlugins(data.projectDir);
+		const warnings = _.keys(localPlugins)
+			.map(localPlugin => {
+				const localPluginVersion = localPlugins[localPlugin];
+				const devicePluginVersion = devicePlugins[localPlugin];
+				return this.getWarningForPlugin(data, localPlugin, localPluginVersion, devicePluginVersion, device);
+			})
+			.filter(item => !!item);
 
-		return this.previewAppVersionWarnings[device.previewAppVersion];
+		return warnings;
 	}
 
 	public async comparePluginsOnDevice(data: IPreviewAppLiveSyncData, device: Device): Promise<void> {
