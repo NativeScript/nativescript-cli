@@ -28,23 +28,9 @@ before_script:
 script:
 - node_modules/.bin/grunt lint
 - node_modules/.bin/grunt pack --no-color
-after_success:
-- rm -rf s3-publish
-- mkdir s3-publish
-- cp nativescript*.tgz s3-publish/nativescript.tgz
 before_deploy:
 - node .travis/add-publishConfig.js $TRAVIS_BRANCH
 deploy:
-- provider: s3
-  access_key_id: AKIAJL6X6724CSX64X3Q
-  secret_access_key:
-    secure: a0T/2S+/rkRJqEotWPAr1VELA3k5TGyRw6VmXgBQnkirc6H0Pfu0P2DY8iriO7pnTPDCPAskdBCuk6t+RYw/OCrGDzFPApnAQ7t3tksKPr2bGYqh2HVqbFKZyEbNjzwsgxn7cmLPo936ZTHP2muQItEI3o9Zh9EZ5XHtv0Maw0k=
-  bucket: nativescript-ci
-  skip_cleanup: true
-  local-dir: s3-publish
-  upload-dir: build_result
-  on:
-    branch: master
 - provider: npm
   skip_cleanup: true
   email: nativescript@telerik.com
