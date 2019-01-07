@@ -568,7 +568,8 @@ export function stringify(value: any, replacer?: (key: string, value: any) => an
 	return JSON.stringify(value, replacer, space || 2);
 }
 
-export function getFormattedDate(): string {
+//2019-01-07 18:29:50.745
+export function getFixedLengthDateString(): string {
 	const currentDate = new Date();
 	const year = currentDate.getFullYear();
 	const month = getFormattedDateComponent((currentDate.getMonth() + 1));

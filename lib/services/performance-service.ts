@@ -1,6 +1,6 @@
 import { TrackActionNames } from "../constants";
 const EOL = require("os").EOL;
-import { getFormattedDate } from "../common/helpers";
+import { getFixedLengthDateString } from "../common/helpers";
 import * as semver from "semver";
 
 export class PerformanceService implements IPerformanceService {
@@ -67,7 +67,7 @@ export class PerformanceService implements IPerformanceService {
 		const info = {
 			methodInfo,
 			executionTime,
-			timestamp: getFormattedDate(),
+			timestamp: getFixedLengthDateString(),
 			methodArgs: JSON.parse(methodArgs)
 		};
 

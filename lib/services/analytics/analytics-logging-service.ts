@@ -1,5 +1,5 @@
 import { EOL } from "os";
-import { getFormattedDate } from "../../common/helpers";
+import { getFixedLengthDateString } from "../../common/helpers";
 
 export class AnalyticsLoggingService implements IAnalyticsLoggingService {
 	constructor(private $fs: IFileSystem,
@@ -8,7 +8,7 @@ export class AnalyticsLoggingService implements IAnalyticsLoggingService {
 	public logData(analyticsLoggingMessage: IAnalyticsLoggingMessage): void {
 		if (this.logFile && analyticsLoggingMessage && analyticsLoggingMessage.message) {
 			analyticsLoggingMessage.type = analyticsLoggingMessage.type || AnalyticsLoggingMessageType.Info;
-			const formattedDate = getFormattedDate();
+			const formattedDate = getFixedLengthDateString();
 			this.$fs.appendFile(this.logFile, `[${formattedDate}] [${analyticsLoggingMessage.type}] ${analyticsLoggingMessage.message}${EOL}`);
 		}
 	}
