@@ -661,6 +661,10 @@ export class DebugServiceStub extends EventEmitter implements IDeviceDebugServic
 }
 
 export class LiveSyncServiceStub implements ILiveSyncService {
+	public async liveSyncToPreviewApp(data: IPreviewAppLiveSyncData): Promise<IQrCodeImageData> {
+		return;
+	}
+
 	public async liveSync(deviceDescriptors: ILiveSyncDeviceInfo[], liveSyncData: ILiveSyncInfo): Promise<void> {
 		return;
 	}

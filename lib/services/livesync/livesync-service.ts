@@ -137,12 +137,13 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 		return currentDescriptors || [];
 	}
 
-	@cache()
 	private attachToPreviewAppLiveSyncError(): void {
-		this.$previewAppLiveSyncService.on(LiveSyncEvents.previewAppLiveSyncError, liveSyncData => {
-			this.$logger.error(liveSyncData.error);
-			this.emit(LiveSyncEvents.previewAppLiveSyncError, liveSyncData);
-		});
+		if (!this.$usbLiveSyncService.isInitialized) {
+			this.$previewAppLiveSyncService.on(LiveSyncEvents.previewAppLiveSyncError, liveSyncData => {
+				this.$logger.error(liveSyncData.error);
+				this.emit(LiveSyncEvents.previewAppLiveSyncError, liveSyncData);
+			});
+		}
 	}
 
 	private handleWarnings(liveSyncData: ILiveSyncInfo, projectData: IProjectData) {
