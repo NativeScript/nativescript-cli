@@ -914,6 +914,11 @@ export class AndroidBundleValidatorHelper implements IAndroidBundleValidatorHelp
 	}
 }
 
+export class PerformanceService implements IPerformanceService {
+	now(): number { return 10; }
+	processExecutionData() {}
+}
+
 export class InjectorStub extends Yok implements IInjector {
 	constructor() {
 		super();
@@ -938,6 +943,7 @@ export class InjectorStub extends Yok implements IInjector {
 		this.register('platformsData', PlatformsDataStub);
 		this.register("androidPluginBuildService", AndroidPluginBuildServiceStub);
 		this.register('projectData', ProjectDataStub);
+		this.register('packageInstallationManager', PackageInstallationManagerStub);
 		this.register('packageInstallationManager', PackageInstallationManagerStub);
 	}
 }

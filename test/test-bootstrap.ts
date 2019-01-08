@@ -22,6 +22,9 @@ $injector.register("analyticsService", {
 	}
 });
 
+import { PerformanceService } from "./stubs";
+$injector.register("performanceService", PerformanceService);
+
 // Converts the js callstack to typescript
 import errors = require("../lib/common/errors");
 errors.installUncaughtExceptionListener();

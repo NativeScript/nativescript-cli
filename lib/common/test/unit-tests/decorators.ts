@@ -4,6 +4,7 @@ import { assert } from "chai";
 import { CacheDecoratorsTest } from "./mocks/decorators-cache";
 import { InvokeBeforeDecoratorsTest } from "./mocks/decorators-invoke-before";
 import { isPromise } from "../../helpers";
+import { PerformanceService } from "../../../../test/stubs";
 
 describe("decorators", () => {
 	const moduleName = "moduleName", // This is the name of the injected dependency that will be resolved, for example fs, devicesService, etc.
@@ -11,6 +12,7 @@ describe("decorators", () => {
 
 	beforeEach(() => {
 		$injector = new Yok();
+		$injector.register("performanceService", PerformanceService);
 	});
 
 	after(() => {
