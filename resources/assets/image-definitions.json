@@ -166,6 +166,14 @@
 				"filename": "LaunchScreen-AspectFill@3x.png",
 				"resizeOperation": "blank",
 				"scale": "3x"
+			},
+			{
+				"width": 768,
+				"height": 1024,
+				"directory": "Assets.xcassets/LaunchScreen.AspectFill.imageset",
+				"filename": "LaunchScree.AspectFill@3x.png",
+				"resizeOperation": "blank",
+				"scale": "3x"
 			}
 		],
 		"splashCenterImages": [
@@ -184,6 +192,22 @@
 				"filename": "LaunchScreen-Center@2x.png",
 				"resizeOperation": "overlayWith",
 				"scale": "2x"
+			},
+			{
+				"width": 384,
+				"height": 512,
+				"directory": "Assets.xcassets/LaunchScreen.Center.imageset",
+				"filename": "LaunchScreen-Center@3x.png",
+				"resizeOperation": "overlayWith",
+				"scale": "3x"
+			},
+			{
+				"width": 384,
+				"height": 512,
+				"directory": "Assets.xcassets/LaunchScreen.Center.imageset",
+				"filename": "LaunchScreen.Center@3x.png",
+				"resizeOperation": "overlayWith",
+				"scale": "3x"
 			}
 		],
 		"splashImages": [
@@ -290,6 +314,38 @@
 				"filename": "Default-Landscape-X.png",
 				"resizeOperation": "overlayWith",
 				"scale": "1x"
+			},
+			{
+				"width": 896,
+				"height": 414,
+				"directory": "Assets.xcassets/LaunchImage.launchimage",
+				"filename": "iPhone XR - Landscape iOS 12.png",
+				"resizeOperation": "overlayWith",
+				"scale": "2x"
+			},
+			{
+				"width": 414,
+				"height": 896,
+				"directory": "Assets.xcassets/LaunchImage.launchimage",
+				"filename": "iPhone XR - Portarit iOS 12.png",
+				"resizeOperation": "overlayWith",
+				"scale": "2x"
+			},
+			{
+				"width": 896,
+				"height": 414,
+				"directory": "Assets.xcassets/LaunchImage.launchimage",
+				"filename": "iPhone XS Max – Landscape iOS 12.png",
+				"resizeOperation": "overlayWith",
+				"scale": "3x"
+			},
+			{
+				"width": 414,
+				"height": 896,
+				"directory": "Assets.xcassets/LaunchImage.launchimage",
+				"filename": "Phone XS Max - Portarit iOS 12.png",
+				"resizeOperation": "overlayWith",
+				"scale": "3x"
 			}
 		]
 	},
