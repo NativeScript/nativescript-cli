@@ -19,17 +19,11 @@ export class PreviewCommand implements ICommand {
 			this.$logger.info(message);
 		});
 
-		await this.$liveSyncService.liveSync([], {
-			syncToPreviewApp: true,
-			projectDir: this.$projectData.projectDir,
-			skipWatcher: !this.$options.watch,
-			watchAllFiles: this.$options.syncAllFiles,
-			clean: this.$options.clean,
+		await this.$liveSyncService.liveSyncToPreviewApp({
 			bundle: !!this.$options.bundle,
-			release: this.$options.release,
-			env: this.$options.env,
-			timeout: this.$options.timeout,
-			useHotModuleReload: this.$options.hmr
+			useHotModuleReload: this.$options.hmr,
+			projectDir: this.$projectData.projectDir,
+			env: this.$options.env
 		});
 
 		await this.$previewQrCodeService.printLiveSyncQrCode({ useHotModuleReload: this.$options.hmr, link: this.$options.link });

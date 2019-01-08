@@ -243,6 +243,13 @@ interface ILiveSyncService {
 	liveSync(deviceDescriptors: ILiveSyncDeviceInfo[], liveSyncData: ILiveSyncInfo): Promise<void>;
 
 	/**
+	 * Starts LiveSync operation to Preview app.
+	 * @param {IPreviewAppLiveSyncData} data Describes information about the current operation.
+	 * @returns {Promise<IQrCodeImageData>} Data of the QR code that should be used to start the LiveSync operation.
+	 */
+	liveSyncToPreviewApp(data: IPreviewAppLiveSyncData): Promise<IQrCodeImageData>;
+
+	/**
 	 * Stops LiveSync operation for specified directory.
 	 * @param {string} projectDir The directory for which to stop the operation.
 	 * @param {string[]} @optional deviceIdentifiers Device ids for which to stop the application. In case nothing is passed, LiveSync operation will be stopped for all devices.
