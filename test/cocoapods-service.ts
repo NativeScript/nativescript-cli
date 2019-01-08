@@ -511,7 +511,7 @@ end`,
 			it(testCase.testCaseDescription, async () => {
 				mockFileSystem(testInjector, testCase.input, testCase.projectPodfileContent);
 
-				await cocoapodsService.applyPluginPodfileToProject(testCase.pluginData || mockPluginData, mockProjectData, nativeProjectPath);
+				await cocoapodsService.applyPodfileToProject(testCase.pluginData ? testCase.pluginData.name : mockPluginData.name, cocoapodsService.getPluginPodfilePath(testCase.pluginData || mockPluginData), mockProjectData, nativeProjectPath);
 
 				assert.deepEqual(changeNewLineCharacter(newPodfileContent), changeNewLineCharacter(testCase.output));
 			});
@@ -720,7 +720,7 @@ end`
 			it(testCase.testCaseDescription, async () => {
 				mockFileSystem(testInjector, testCase.input, testCase.projectPodfileContent);
 
-				cocoapodsService.removePluginPodfileFromProject(mockPluginData, mockProjectData, nativeProjectPath);
+				cocoapodsService.removePodfileFromProject(mockPluginData.name, cocoapodsService.getPluginPodfilePath(mockPluginData), mockProjectData, nativeProjectPath);
 
 				assert.deepEqual(changeNewLineCharacter(newPodfileContent), changeNewLineCharacter(testCase.output));
 			});

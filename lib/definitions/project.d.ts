@@ -92,6 +92,7 @@ interface IProjectData extends ICreateProjectData {
 	gradleFilesDirectoryPath: string;
 	infoPlistPath: string;
 	buildXcconfigPath: string;
+	podfilePath: string;
 	/**
 	 * Defines if the project is a code sharing one.
 	 * Value is true when project has nsconfig.json and it has `shared: true` in it.
@@ -409,7 +410,7 @@ interface IPlatformProjectService extends NodeJS.EventEmitter, IPlatformProjectS
 	getAppResourcesDestinationDirectoryPath(projectData: IProjectData): string;
 
 	cleanDeviceTempFolder(deviceIdentifier: string, projectData: IProjectData): Promise<void>;
-	processConfigurationFilesFromAppResources(release: boolean, projectData: IProjectData): Promise<void>;
+	processConfigurationFilesFromAppResources(release: boolean, projectData: IProjectData, installPods: boolean): Promise<void>;
 
 	/**
 	 * Ensures there is configuration file (AndroidManifest.xml, Info.plist) in app/App_Resources.
@@ -449,7 +450,7 @@ interface IPlatformProjectService extends NodeJS.EventEmitter, IPlatformProjectS
 	 * Traverse through the production dependencies and find plugins that need build/rebuild
 	 */
 	checkIfPluginsNeedBuild(projectData: IProjectData): Promise<Array<any>>;
-	
+
 	/**
 	 * Get the deployment target's version
 	 * Currently implemented only for iOS -> returns the value of IPHONEOS_DEPLOYMENT_TARGET property from xcconfig file
@@ -483,22 +484,39 @@ interface ICocoaPodsService {
 	getPodfileFooter(): string;
 
 	/**
+	 * Copies the Podfile(if any) in App_Resources to the project's folder.
+	 * @param {string} mainPodfilePath Path to the main Podfile.
+	 * @param {string} nativeProjectPath Path to the native Xcode project.
+	 * @returns {Promise<void>}
+	 */
+	copyMainPodfileToProject(mainPodfilePath: string, nativeProjectPath: string): Promise<void>;
+
+	/**
 	 * Prepares the Podfile content of a plugin and merges it in the project's Podfile.
-	 * @param {IPluginData} pluginData Information about the plugin.
+	 * @param {string} moduleName The module which the Podfile is from.
+	 * @param {string} podfilePath The path to the podfile.
 	 * @param {IProjectData} projectData Information about the project.
 	 * @param {string} nativeProjectPath Path to the native Xcode project.
 	 * @returns {Promise<void>}
 	 */
-	applyPluginPodfileToProject(pluginData: IPluginData, projectData: IProjectData, nativeProjectPath: string): Promise<void>;
+	applyPodfileToProject(moduleName: string, podfilePath: string, projectData: IProjectData, nativeProjectPath: string): Promise<void>;
+
+	/**
+	 * Gives the path to the plugin's Podfile.
+	 * @param {IPluginData} pluginData Information about the plugin.
+	 * @returns {string} Path to plugin's Podfile
+	 */
+	getPluginPodfilePath(pluginData: IPluginData): string;
 
 	/**
 	 * Removes plugins Podfile content from the project.
-	 * @param {IPluginData} pluginData Information about the plugin.
-	 * @param {IProjectData} projectData Information about the project.
+	 * @param {string} moduleName The name of the module.
+	 * @param {string} podfilePath The path to the module's Podfile.
+	 * @param {string} projectData Information about the project.
 	 * @param {string} nativeProjectPath Path to the native Xcode project.
 	 * @returns {void}
 	 */
-	removePluginPodfileFromProject(pluginData: IPluginData, projectData: IProjectData, nativeProjectPath: string): void;
+	removePodfileFromProject(moduleName: string, podfilePath: string, projectData: IProjectData, nativeProjectPath: string): void;
 
 	/**
 	 * Gives the path to project's Podfile.

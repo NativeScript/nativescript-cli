@@ -52,39 +52,40 @@ export class CocoaPodsService implements ICocoaPodsService {
 		return podInstallResult;
 	}
 
-	public async applyPluginPodfileToProject(pluginData: IPluginData, projectData: IProjectData, nativeProjectPath: string): Promise<void> {
-		const pluginPodFilePath = this.getPluginPodfilePath(pluginData);
-		if (!this.$fs.exists(pluginPodFilePath)) {
+	public async applyPodfileToProject(moduleName: string, podfilePath: string, projectData: IProjectData, nativeProjectPath: string): Promise<void> {
+		if (!this.$fs.exists(podfilePath)) {
+			if (podfilePath === projectData.podfilePath) {
+				this.removePodfileFromProject(moduleName, podfilePath, projectData, nativeProjectPath);
+			}
 			return;
 		}
 
-		const { pluginPodfileContent, replacedFunctions } = this.buildPodfileContent(pluginPodFilePath, pluginData.name);
+		const { podfileContent, replacedFunctions } = this.buildPodfileContent(podfilePath, moduleName);
 		const pathToProjectPodfile = this.getProjectPodfilePath(nativeProjectPath);
 		const projectPodfileContent = this.$fs.exists(pathToProjectPodfile) ? this.$fs.readText(pathToProjectPodfile).trim() : "";
 
-		if (projectPodfileContent.indexOf(pluginPodfileContent) === -1) {
+		if (projectPodfileContent.indexOf(podfileContent) === -1) {
 			// Remove old occurences of the plugin from the project's Podfile.
-			this.removePluginPodfileFromProject(pluginData, projectData, nativeProjectPath);
+			this.removePodfileFromProject(moduleName, podfilePath, projectData, nativeProjectPath);
 			let finalPodfileContent = this.$fs.exists(pathToProjectPodfile) ? this.getPodfileContentWithoutTarget(projectData, this.$fs.readText(pathToProjectPodfile)) : "";
 
-			if (pluginPodfileContent.indexOf(CocoaPodsService.PODFILE_POST_INSTALL_SECTION_NAME) !== -1) {
-				finalPodfileContent = this.addPostInstallHook(replacedFunctions, finalPodfileContent, pluginPodfileContent);
+			if (podfileContent.indexOf(CocoaPodsService.PODFILE_POST_INSTALL_SECTION_NAME) !== -1) {
+				finalPodfileContent = this.addPostInstallHook(replacedFunctions, finalPodfileContent, podfileContent);
 			}
 
-			finalPodfileContent = `${pluginPodfileContent}${EOL}${finalPodfileContent}`;
+			finalPodfileContent = `${podfileContent}${EOL}${finalPodfileContent}`;
 			this.saveProjectPodfile(projectData, finalPodfileContent, nativeProjectPath);
 		}
 	}
 
-	public removePluginPodfileFromProject(pluginData: IPluginData, projectData: IProjectData, projectRoot: string): void {
-		const pluginPodfilePath = this.getPluginPodfilePath(pluginData);
+	public removePodfileFromProject(moduleName: string, podfilePath: string, projectData: IProjectData, projectRoot: string): void {
 
-		if (this.$fs.exists(pluginPodfilePath) && this.$fs.exists(this.getProjectPodfilePath(projectRoot))) {
+		if ((this.$fs.exists(podfilePath) || podfilePath == projectData.podfilePath) && this.$fs.exists(this.getProjectPodfilePath(projectRoot))) {
 			let projectPodFileContent = this.$fs.readText(this.getProjectPodfilePath(projectRoot));
 			// Remove the data between #Begin Podfile and #EndPodfile
-			const regExpToRemove = new RegExp(`${this.getPluginPodfileHeader(pluginPodfilePath)}[\\s\\S]*?${this.getPluginPodfileEnd()}`, "mg");
+			const regExpToRemove = new RegExp(`${this.getPluginPodfileHeader(podfilePath)}[\\s\\S]*?${this.getPluginPodfileEnd()}`, "mg");
 			projectPodFileContent = projectPodFileContent.replace(regExpToRemove, "");
-			projectPodFileContent = this.removePostInstallHook(pluginData, projectPodFileContent);
+			projectPodFileContent = this.removePostInstallHook(moduleName, projectPodFileContent);
 
 			const defaultPodfileBeginning = this.getPodfileHeader(projectData.projectName);
 			const defaultContentWithPostInstallHook = `${defaultPodfileBeginning}${EOL}${this.getPostInstallHookHeader()}end${EOL}end`;
@@ -98,7 +99,7 @@ export class CocoaPodsService implements ICocoaPodsService {
 		}
 	}
 
-	private getPluginPodfilePath(pluginData: IPluginData): string {
+	public getPluginPodfilePath(pluginData: IPluginData): string {
 		const pluginPlatformsFolderPath = pluginData.pluginPlatformsFolderPath(PluginNativeDirNames.iOS);
 		const pluginPodFilePath = path.join(pluginPlatformsFolderPath, PODFILE_NAME);
 		return pluginPodFilePath;
@@ -157,8 +158,8 @@ export class CocoaPodsService implements ICocoaPodsService {
 		this.$fs.writeFile(projectPodfilePath, contentToWrite);
 	}
 
-	private removePostInstallHook(pluginData: IPluginData, projectPodFileContent: string): string {
-		const regExp = new RegExp(`^.*?${this.getHookBasicFuncNameForPlugin(CocoaPodsService.PODFILE_POST_INSTALL_SECTION_NAME, pluginData.name)}.*?$\\r?\\n`, "gm");
+	private removePostInstallHook(moduleName: string, projectPodFileContent: string): string {
+		const regExp = new RegExp(`^.*?${this.getHookBasicFuncNameForPlugin(CocoaPodsService.PODFILE_POST_INSTALL_SECTION_NAME, moduleName)}.*?$\\r?\\n`, "gm");
 		projectPodFileContent = projectPodFileContent.replace(regExp, "");
 		return projectPodFileContent;
 	}
@@ -206,12 +207,12 @@ export class CocoaPodsService implements ICocoaPodsService {
 		return `${CocoaPodsService.PODFILE_POST_INSTALL_SECTION_NAME} do |${CocoaPodsService.INSTALLER_BLOCK_PARAMETER_NAME}|${EOL}`;
 	}
 
-	private buildPodfileContent(pluginPodFilePath: string, pluginName: string): { pluginPodfileContent: string, replacedFunctions: IRubyFunction[] } {
+	private buildPodfileContent(pluginPodFilePath: string, pluginName: string): { podfileContent: string, replacedFunctions: IRubyFunction[] } {
 		const pluginPodfileContent = this.$fs.readText(pluginPodFilePath);
 		const { replacedContent, newFunctions: replacedFunctions } = this.replaceHookContent(CocoaPodsService.PODFILE_POST_INSTALL_SECTION_NAME, pluginPodfileContent, pluginName);
 
 		return {
-			pluginPodfileContent: `${this.getPluginPodfileHeader(pluginPodFilePath)}${EOL}${replacedContent}${EOL}${this.getPluginPodfileEnd()}`,
+			podfileContent: `${this.getPluginPodfileHeader(pluginPodFilePath)}${EOL}${replacedContent}${EOL}${this.getPluginPodfileEnd()}`,
 			replacedFunctions
 		};
 	}

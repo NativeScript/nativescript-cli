@@ -59,6 +59,7 @@ export class ProjectData implements IProjectData {
 	public appGradlePath: string;
 	public gradleFilesDirectoryPath: string;
 	public buildXcconfigPath: string;
+	public podfilePath: string;
 	public isShared: boolean;
 
 	constructor(private $fs: IFileSystem,
@@ -132,6 +133,7 @@ export class ProjectData implements IProjectData {
 			this.appGradlePath = path.join(this.gradleFilesDirectoryPath, constants.APP_GRADLE_FILE_NAME);
 			this.infoPlistPath = path.join(this.appResourcesDirectoryPath, this.$devicePlatformsConstants.iOS, constants.INFO_PLIST_FILE_NAME);
 			this.buildXcconfigPath = path.join(this.appResourcesDirectoryPath, this.$devicePlatformsConstants.iOS, constants.BUILD_XCCONFIG_FILE_NAME);
+			this.podfilePath = path.join(this.appResourcesDirectoryPath, this.$devicePlatformsConstants.iOS, constants.PODFILE_NAME);
 			this.isShared = !!(this.nsConfig && this.nsConfig.shared);
 			return;
 		}
