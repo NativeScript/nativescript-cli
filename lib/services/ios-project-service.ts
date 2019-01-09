@@ -14,7 +14,6 @@ import { IOSEntitlementsService } from "./ios-entitlements-service";
 import { XCConfigService } from "./xcconfig-service";
 import * as mobileprovision from "ios-mobileprovision-finder";
 import { BUILD_XCCONFIG_FILE_NAME, IosProjectConstants } from "../constants";
-import { project } from "xcode";
 
 interface INativeSourceCodeGroup {
 	name: string;
@@ -772,10 +771,11 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 			this.$logger.trace(`Images to remove from xcode project: ${imagesToRemove.join(", ")}`);
 			_.each(imagesToRemove, image => project.removeResourceFile(path.join(this.getAppResourcesDestinationDirectoryPath(projectData), image)));
 
+			await this.prepareNativeSourceCode("src", path.join(projectData.appDirectoryPath, constants.APP_RESOURCES_FOLDER_NAME, this.getPlatformData(projectData).normalizedPlatformName, "src"), projectData);
+
 			this.savePbxProj(project, projectData);
 		}
 
-		await this.prepareNativeSourceCode("src", path.join(projectData.appDirectoryPath, constants.APP_RESOURCES_FOLDER_NAME, this.getPlatformData(projectData).normalizedPlatformName, "src"), projectData);
 	}
 
 	public prepareAppResources(appResourcesDirectoryPath: string, projectData: IProjectData): void {

@@ -484,14 +484,6 @@ interface ICocoaPodsService {
 	getPodfileFooter(): string;
 
 	/**
-	 * Copies the Podfile(if any) in App_Resources to the project's folder.
-	 * @param {string} mainPodfilePath Path to the main Podfile.
-	 * @param {string} nativeProjectPath Path to the native Xcode project.
-	 * @returns {Promise<void>}
-	 */
-	copyMainPodfileToProject(mainPodfilePath: string, nativeProjectPath: string): Promise<void>;
-
-	/**
 	 * Prepares the Podfile content of a plugin and merges it in the project's Podfile.
 	 * @param {string} moduleName The module which the Podfile is from.
 	 * @param {string} podfilePath The path to the podfile.

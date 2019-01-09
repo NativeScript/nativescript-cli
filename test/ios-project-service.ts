@@ -67,14 +67,18 @@ function createTestInjector(projectPath: string, projectName: string, xcode?: IX
 	testInjector.register("iOSEntitlementsService", IOSEntitlementsService);
 	testInjector.register("logger", LoggerLib.Logger);
 	testInjector.register("options", OptionsLib.Options);
-	const projectData = Object.assign({}, ProjectDataStub, {
+	var projectData = Object.assign({}, ProjectDataStub, {
 		platformsDir: path.join(projectPath, "platforms"),
 		projectName: projectName,
 		projectPath: projectPath,
 		projectFilePath: path.join(projectPath, "package.json"),
 		projectId: "",
-		projectIdentifiers: { android: "", ios: "" }
+		projectIdentifiers: { android: "", ios: "" },
+		projectDir: "",
+		appDirectoryPath: ""
 	});
+	projectData.projectDir = temp.mkdirSync("projectDir");
+	projectData.appDirectoryPath = path.join(projectData.projectDir, "app");
 	testInjector.register("projectData", projectData);
 	testInjector.register("projectHelper", {});
 	testInjector.register("xcodeSelectService", {});
