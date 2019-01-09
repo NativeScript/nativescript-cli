@@ -86,55 +86,6 @@ function setup(localPlugins: IStringDictionary, previewAppPlugins: IStringDictio
 
 describe("previewAppPluginsService", () => {
 	describe("comparePluginsOnDevice without bundle", () => {
-		it("should persist warnings per preview app's version", async () => {
-			const localPlugins = {
-				"nativescript-facebook": "2.2.3",
-				"nativescript-theme-core": "1.0.4",
-				"tns-core-modules": "4.2.0"
-			};
-			const previewAppPlugins = {
-				"nativescript-theme-core": "2.0.4",
-				"tns-core-modules": "4.2.0"
-			};
-			const injector = createTestInjector(localPlugins);
-			const previewAppPluginsService = injector.resolve("previewAppPluginsService");
-
-			let isGetDevicePluginsCalled = false;
-			const originalGetDevicePlugins = (<any>previewAppPluginsService).getDevicePlugins;
-			(<any>previewAppPluginsService).getDevicePlugins = (device: Device) => {
-				isGetDevicePluginsCalled = true;
-				return originalGetDevicePlugins(device);
-			};
-			let isGetLocalPluginsCalled = false;
-			const originalGetLocalPlugins = (<any>previewAppPluginsService).getLocalPlugins;
-			(<any>previewAppPluginsService).getLocalPlugins = () => {
-				isGetLocalPluginsCalled = true;
-				return originalGetLocalPlugins.apply(previewAppPluginsService, [projectDir]);
-			};
-
-			const previewLiveSyncData = createPreviewLiveSyncData({ bundle: false });
-
-			await previewAppPluginsService.comparePluginsOnDevice(previewLiveSyncData, createDevice(JSON.stringify(previewAppPlugins)));
-
-			const expectedWarnings = [
-				util.format(PluginComparisonMessages.PLUGIN_NOT_INCLUDED_IN_PREVIEW_APP, "nativescript-facebook", deviceId),
-				util.format(PluginComparisonMessages.LOCAL_PLUGIN_WITH_DIFFERENCE_IN_MAJOR_VERSION, "nativescript-theme-core", "1.0.4", "2.0.4")
-			];
-			assert.isTrue(isGetDevicePluginsCalled);
-			assert.isTrue(isGetLocalPluginsCalled);
-			assert.deepEqual(warnParams, expectedWarnings);
-
-			isGetDevicePluginsCalled = false;
-			isGetLocalPluginsCalled = false;
-			warnParams = [];
-
-			await previewAppPluginsService.comparePluginsOnDevice(previewLiveSyncData, createDevice(JSON.stringify(previewAppPlugins)));
-
-			assert.isFalse(isGetDevicePluginsCalled);
-			assert.isFalse(isGetLocalPluginsCalled);
-			assert.deepEqual(warnParams, expectedWarnings);
-		});
-
 		const testCases = [
 			{
 				name: "should show warning for plugin not included in preview app",

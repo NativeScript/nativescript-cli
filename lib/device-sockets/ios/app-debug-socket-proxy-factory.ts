@@ -20,10 +20,6 @@ export class AppDebugSocketProxyFactory extends EventEmitter implements IAppDebu
 		return this.deviceTcpServers[`${deviceIdentifier}-${appId}`];
 	}
 
-	public getWebSocketProxy(deviceIdentifier: string, appId: string): ws.Server {
-		return this.deviceWebServers[`${deviceIdentifier}-${appId}`];
-	}
-
 	public async addTCPSocketProxy(device: Mobile.IiOSDevice, appId: string): Promise<net.Server> {
 		const cacheKey = `${device.deviceInfo.identifier}-${appId}`;
 		const existingServer = this.deviceTcpServers[cacheKey];
@@ -84,7 +80,17 @@ export class AppDebugSocketProxyFactory extends EventEmitter implements IAppDebu
 		return server;
 	}
 
-	public async addWebSocketProxy(device: Mobile.IiOSDevice, appId: string): Promise<ws.Server> {
+	public async ensureWebSocketProxy(device: Mobile.IiOSDevice, appId: string): Promise<ws.Server> {
+		const existingWebProxy = this.deviceWebServers[`${device.deviceInfo.identifier}-${appId}`];
+		const result = existingWebProxy || await this.addWebSocketProxy(device, appId);
+
+		// TODO: do not remove till VSCode waits for this message in order to reattach
+		this.$logger.info("Opened localhost " + result.options.port);
+
+		return result;
+	}
+
+	private async addWebSocketProxy(device: Mobile.IiOSDevice, appId: string): Promise<ws.Server> {
 		const cacheKey = `${device.deviceInfo.identifier}-${appId}`;
 		const existingServer = this.deviceWebServers[cacheKey];
 		if (existingServer) {
@@ -104,21 +110,23 @@ export class AppDebugSocketProxyFactory extends EventEmitter implements IAppDebu
 		const server = new ws.Server(<any>{
 			port: localPort,
 			host: "localhost",
-			verifyClient: async (info: any, callback: Function) => {
+			verifyClient: async (info: any, callback: (res: boolean, code?: number, message?: string) => void) => {
+				let acceptHandshake = true;
 				this.$logger.info("Frontend client connected.");
 				let appDebugSocket;
 				try {
 					appDebugSocket = await device.getDebugSocket(appId);
+					this.$logger.info("Backend socket created.");
+					info.req["__deviceSocket"] = appDebugSocket;
 				} catch (err) {
 					err.deviceIdentifier = device.deviceInfo.identifier;
 					this.$logger.trace(err);
 					this.emit(CONNECTION_ERROR_EVENT_NAME, err);
-					this.$errors.failWithoutHelp(`Cannot connect to device socket.The error message is ${err.message} `);
+					acceptHandshake = false;
+					this.$logger.warn(`Cannot connect to device socket. The error message is '${err.message}'. Try starting the application manually.`);
 				}
 
-				this.$logger.info("Backend socket created.");
-				info.req["__deviceSocket"] = appDebugSocket;
-				callback(true);
+				callback(acceptHandshake);
 			}
 		});
 		this.deviceWebServers[cacheKey] = server;
@@ -152,12 +160,11 @@ export class AppDebugSocketProxyFactory extends EventEmitter implements IAppDebu
 			appDebugSocket.on("close", () => {
 				this.$logger.info("Backend socket closed!");
 				webSocket.close();
-				server.close();
-				delete this.deviceWebServers[cacheKey];
 			});
 
 			webSocket.on("close", () => {
 				this.$logger.info('Frontend socket closed!');
+				appDebugSocket.unpipe(packets);
 				packets.destroy();
 				device.destroyDebugSocket(appId);
 				if (!this.$options.watch) {
@@ -167,7 +174,6 @@ export class AppDebugSocketProxyFactory extends EventEmitter implements IAppDebu
 
 		});
 
-		this.$logger.info("Opened localhost " + localPort);
 		return server;
 	}
 

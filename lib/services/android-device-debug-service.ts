@@ -24,7 +24,7 @@ export class AndroidDeviceDebugService extends DebugServiceBase implements IDevi
 		this.deviceIdentifier = device.deviceInfo.identifier;
 	}
 
-	public async debug(debugData: IDebugData, debugOptions: IDebugOptions): Promise<string> {
+	public async debug(debugData: IDebugData, debugOptions: IDebugOptions): Promise<IDebugResultInfo> {
 		this._packageName = debugData.applicationIdentifier;
 		const result = this.device.isEmulator
 			? await this.debugOnEmulator(debugData, debugOptions)
@@ -59,7 +59,7 @@ export class AndroidDeviceDebugService extends DebugServiceBase implements IDevi
 		return this.removePortForwarding();
 	}
 
-	private async debugOnEmulator(debugData: IDebugData, debugOptions: IDebugOptions): Promise<string> {
+	private async debugOnEmulator(debugData: IDebugData, debugOptions: IDebugOptions): Promise<IDebugResultInfo> {
 		// Assure we've detected the emulator as device
 		// For example in case deployOnEmulator had stated new emulator instance
 		// we need some time to detect it. Let's force detection.
@@ -97,7 +97,7 @@ export class AndroidDeviceDebugService extends DebugServiceBase implements IDevi
 		return this.device.adb.executeCommand(["forward", `tcp:${local}`, `localabstract:${remote}`]);
 	}
 
-	private async debugOnDevice(debugData: IDebugData, debugOptions: IDebugOptions): Promise<string> {
+	private async debugOnDevice(debugData: IDebugData, debugOptions: IDebugOptions): Promise<IDebugResultInfo> {
 		let packageFile = "";
 
 		if (!debugOptions.start && !this.device.isEmulator) {
@@ -113,27 +113,32 @@ export class AndroidDeviceDebugService extends DebugServiceBase implements IDevi
 			projectName
 		};
 
-		const action = (device: Mobile.IAndroidDevice): Promise<string> => this.debugCore(device, packageFile, appData, debugOptions);
+		const action = (device: Mobile.IAndroidDevice): Promise<IDebugResultInfo> => this.debugCore(device, packageFile, appData, debugOptions);
 
 		const deviceActionResult = await this.$devicesService.execute(action, this.getCanExecuteAction(this.deviceIdentifier));
 		return deviceActionResult[0].result;
 	}
 
-	private async debugCore(device: Mobile.IAndroidDevice, packageFile: string, appData: Mobile.IApplicationData, debugOptions: IDebugOptions): Promise<string> {
+	private async debugCore(device: Mobile.IAndroidDevice, packageFile: string, appData: Mobile.IApplicationData, debugOptions: IDebugOptions): Promise<IDebugResultInfo> {
+		const result: IDebugResultInfo = { hasReconnected: false, debugUrl: null };
+
 		if (debugOptions.stop) {
 			await this.removePortForwarding();
-			return null;
+			return result;
 		}
 
 		if (!debugOptions.start) {
 			await this.debugStartCore(appData, debugOptions);
+			result.hasReconnected = true;
 		}
 
 		await this.validateRunningApp(device.deviceInfo.identifier, appData.appId);
 		const debugPort = await this.getForwardedDebugPort(device.deviceInfo.identifier, appData.appId);
 		await this.printDebugPort(device.deviceInfo.identifier, debugPort);
 
-		return this.getChromeDebugUrl(debugOptions, debugPort);
+		result.debugUrl = this.getChromeDebugUrl(debugOptions, debugPort);
+
+		return result;
 	}
 
 	private async printDebugPort(deviceId: string, port: number): Promise<void> {

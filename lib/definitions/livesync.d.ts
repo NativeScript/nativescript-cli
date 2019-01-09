@@ -188,7 +188,7 @@ interface ILiveSyncEventData {
 	applicationIdentifier?: string,
 	projectDir: string,
 	syncedFiles?: string[],
-	error? : Error,
+	error?: Error,
 	notification?: string,
 	isFullSync?: boolean
 }
@@ -241,6 +241,13 @@ interface ILiveSyncService {
 	 * @returns {Promise<void>}
 	 */
 	liveSync(deviceDescriptors: ILiveSyncDeviceInfo[], liveSyncData: ILiveSyncInfo): Promise<void>;
+
+	/**
+	 * Starts LiveSync operation to Preview app.
+	 * @param {IPreviewAppLiveSyncData} data Describes information about the current operation.
+	 * @returns {Promise<IQrCodeImageData>} Data of the QR code that should be used to start the LiveSync operation.
+	 */
+	liveSyncToPreviewApp(data: IPreviewAppLiveSyncData): Promise<IQrCodeImageData>;
 
 	/**
 	 * Stops LiveSync operation for specified directory.
@@ -330,11 +337,9 @@ interface IEnableDebuggingDeviceOptions extends Mobile.IDeviceIdentifier, IOptio
 /**
  * Describes settings passed to livesync service in order to control event emitting during refresh application.
  */
-interface IShouldSkipEmitLiveSyncNotification {
-	/**
- 	* Whether to skip emitting an event during refresh. Default is false.
- 	*/
+interface IRefreshApplicationSettings {
 	shouldSkipEmitLiveSyncNotification: boolean;
+	shouldCheckDeveloperDiscImage: boolean;
 }
 
 /**
@@ -390,9 +395,16 @@ interface ITransferFilesOptions {
 interface IPlatformLiveSyncService {
 	fullSync(syncInfo: IFullSyncInfo): Promise<ILiveSyncResultInfo>;
 	liveSyncWatchAction(device: Mobile.IDevice, liveSyncInfo: ILiveSyncWatchInfo): Promise<ILiveSyncResultInfo>;
-	refreshApplication(projectData: IProjectData, liveSyncInfo: ILiveSyncResultInfo): Promise<void>;
+	refreshApplication(projectData: IProjectData, liveSyncInfo: ILiveSyncResultInfo): Promise<IRefreshApplicationInfo>;
 	prepareForLiveSync(device: Mobile.IDevice, data: IProjectDir, liveSyncInfo: ILiveSyncInfo, debugOptions: IDebugOptions): Promise<void>;
 	getDeviceLiveSyncService(device: Mobile.IDevice, projectData: IProjectData): INativeScriptDeviceLiveSyncService;
+}
+
+interface IHasDidRestart {
+	didRestart: boolean;
+}
+
+interface IRefreshApplicationInfo extends IHasDidRestart {
 }
 
 interface INativeScriptDeviceLiveSyncService extends IDeviceLiveSyncServiceBase {
@@ -405,7 +417,7 @@ interface INativeScriptDeviceLiveSyncService extends IDeviceLiveSyncServiceBase 
 	 * @return {Promise<void>}
 	 */
 	refreshApplication(projectData: IProjectData,
-		liveSyncInfo: ILiveSyncResultInfo): Promise<void>;
+		liveSyncInfo: ILiveSyncResultInfo): Promise<IRefreshApplicationInfo>;
 
 	/**
 	 * Removes specified files from a connected device
