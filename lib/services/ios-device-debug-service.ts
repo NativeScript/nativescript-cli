@@ -38,7 +38,8 @@ export class IOSDeviceDebugService extends DebugServiceBase implements IDeviceDe
 		return "ios";
 	}
 
-	public async debug(debugData: IDebugData, debugOptions: IDebugOptions): Promise<string> {
+	public async debug(debugData: IDebugData, debugOptions: IDebugOptions): Promise<IDebugResultInfo> {
+		const result: IDebugResultInfo = { hasReconnected: false, debugUrl: null };
 		this.validateOptions(debugOptions);
 
 		await this.startDeviceLogProcess(debugData, debugOptions);
@@ -46,9 +47,12 @@ export class IOSDeviceDebugService extends DebugServiceBase implements IDeviceDe
 
 		if (!debugOptions.start) {
 			await this.startApp(debugData, debugOptions);
+			result.hasReconnected = true;
 		}
 
-		return this.wireDebuggerClient(debugData, debugOptions);
+		result.debugUrl = await this.wireDebuggerClient(debugData, debugOptions);
+
+		return result;
 	}
 
 	public async debugStart(debugData: IDebugData, debugOptions: IDebugOptions): Promise<void> {
@@ -160,8 +164,7 @@ export class IOSDeviceDebugService extends DebugServiceBase implements IDeviceDe
 		if (debugOptions.chrome) {
 			this.$logger.info("'--chrome' is the default behavior. Use --inspector to debug iOS applications using the Safari Web Inspector.");
 		}
-		const existingWebProxy = this.$appDebugSocketProxyFactory.getWebSocketProxy(this.deviceIdentifier, debugData.applicationIdentifier);
-		const webSocketProxy = existingWebProxy || await this.$appDebugSocketProxyFactory.addWebSocketProxy(this.device, debugData.applicationIdentifier);
+		const webSocketProxy = await this.$appDebugSocketProxyFactory.ensureWebSocketProxy(this.device, debugData.applicationIdentifier);
 
 		return this.getChromeDebugUrl(debugOptions, webSocketProxy.options.port);
 	}

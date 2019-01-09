@@ -100,6 +100,10 @@ interface IDebugOptions {
 	 * Defines if the handshake(AppLaunching notification) between CLI and runtime should be executed. The handshake is not needed when CLI retries to attach to the debugger.
 	 */
 	skipHandshake?: boolean;
+	/**
+	 * Forces the debugger attach event to be emitted.
+	 */
+	forceDebuggerAttachedEvent?: boolean;
 }
 
 /**
@@ -161,5 +165,9 @@ interface IDeviceDebugService extends IPlatform, NodeJS.EventEmitter {
 	 * @param {IDebugOptions} debugOptions Describe possible options to modify the behaivor of the debug operation, for example stop on the first line.
 	 * @returns {Promise<string>} Full url where the frontend client may be connected.
 	 */
-	debug(debugData: IAppDebugData, debugOptions: IDebugOptions): Promise<string>;
+	debug(debugData: IAppDebugData, debugOptions: IDebugOptions): Promise<IDebugResultInfo>;
+}
+
+interface IDebugResultInfo extends IHasHasReconnected {
+	debugUrl: string;
 }

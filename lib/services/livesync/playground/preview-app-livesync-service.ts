@@ -26,20 +26,30 @@ export class PreviewAppLiveSyncService extends EventEmitter implements IPreviewA
 
 	public async initialize(data: IPreviewAppLiveSyncData): Promise<void> {
 		await this.$previewSdkService.initialize(async (device: Device) => {
-			if (!device) {
-				this.$errors.failWithoutHelp("Sending initial preview files without a specified device is not supported.");
-			}
-
-			if (this.deviceInitializationPromise[device.id]) {
-				return this.deviceInitializationPromise[device.id];
-			}
-
-			this.deviceInitializationPromise[device.id] = this.getInitialFilesForDevice(data, device);
 			try {
-				const payloads = await this.deviceInitializationPromise[device.id];
-				return payloads;
-			} finally {
-				this.deviceInitializationPromise[device.id] = null;
+				if (!device) {
+					this.$errors.failWithoutHelp("Sending initial preview files without a specified device is not supported.");
+				}
+
+				if (this.deviceInitializationPromise[device.id]) {
+					return this.deviceInitializationPromise[device.id];
+				}
+
+				this.deviceInitializationPromise[device.id] = this.getInitialFilesForDevice(data, device);
+				try {
+					const payloads = await this.deviceInitializationPromise[device.id];
+					return payloads;
+				} finally {
+					this.deviceInitializationPromise[device.id] = null;
+				}
+			} catch (error) {
+				this.$logger.trace(`Error while sending files on device ${device && device.id}. Error is`, error);
+				this.emit(PreviewAppLiveSyncEvents.PREVIEW_APP_LIVE_SYNC_ERROR, {
+					error,
+					data,
+					platform: device.platform,
+					deviceId: device.id
+				});
 			}
 		});
 	}

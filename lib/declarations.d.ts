@@ -474,8 +474,12 @@ interface IGenerateOptions {
 	collection?: string;
 }
 
-interface IDebugInformation extends IPort, Mobile.IDeviceIdentifier {
+interface IDebugInformation extends IPort, Mobile.IDeviceIdentifier, IHasHasReconnected {
 	url: string;
+}
+
+interface IHasHasReconnected {
+	hasReconnected: boolean;
 }
 
 interface IPort {
@@ -736,8 +740,7 @@ interface IAppDebugSocketProxyFactory extends NodeJS.EventEmitter {
 	getTCPSocketProxy(deviceIdentifier: string, appId: string): any;
 	addTCPSocketProxy(device: Mobile.IiOSDevice, appId: string): Promise<any>;
 
-	getWebSocketProxy(deviceIdentifier: string, appId: string): any;
-	addWebSocketProxy(device: Mobile.IiOSDevice, appId: string): Promise<any>;
+	ensureWebSocketProxy(device: Mobile.IiOSDevice, appId: string): Promise<any>;
 
 	removeAllProxies(): void;
 }

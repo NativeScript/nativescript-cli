@@ -651,7 +651,7 @@ function unexpected(msg: string): Error {
 }
 
 export class DebugServiceStub extends EventEmitter implements IDeviceDebugService {
-	public async debug(): Promise<string> {
+	public async debug(): Promise<IDebugResultInfo> {
 		return;
 	}
 
@@ -667,6 +667,10 @@ export class DebugServiceStub extends EventEmitter implements IDeviceDebugServic
 }
 
 export class LiveSyncServiceStub implements ILiveSyncService {
+	public async liveSyncToPreviewApp(data: IPreviewAppLiveSyncData): Promise<IQrCodeImageData> {
+		return;
+	}
+
 	public async liveSync(deviceDescriptors: ILiveSyncDeviceInfo[], liveSyncData: ILiveSyncInfo): Promise<void> {
 		return;
 	}
