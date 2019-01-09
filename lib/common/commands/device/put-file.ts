@@ -2,7 +2,7 @@ export class PutFileCommand implements ICommand {
 	constructor(private $devicesService: Mobile.IDevicesService,
 		private $stringParameter: ICommandParameter,
 		private $options: IOptions,
-		private $project: Project.IProjectBase,
+		private $projectData: IProjectData,
 		private $errors: IErrors) { }
 
 	allowedParameters: ICommandParameter[] = [this.$stringParameter, this.$stringParameter, this.$stringParameter];
@@ -11,12 +11,17 @@ export class PutFileCommand implements ICommand {
 		await this.$devicesService.initialize({ deviceId: this.$options.device, skipInferPlatform: true });
 		let appIdentifier = args[2];
 
-		if (!appIdentifier && !this.$project.projectData) {
-			this.$errors.failWithoutHelp("Please enter application identifier or execute this command in project.");
+		if (!appIdentifier) {
+			this.$projectData.initializeProjectDataSafe();
+			if (!this.$projectData.projectIdentifiers) {
+				this.$errors.failWithoutHelp("Please enter application identifier or execute this command in project.");
+			}
 		}
 
-		appIdentifier = appIdentifier || this.$project.projectData.AppIdentifier;
-		const action = (device: Mobile.IDevice) => device.fileSystem.putFile(args[0], args[1], appIdentifier);
+		const action = async (device: Mobile.IDevice) => {
+			appIdentifier = appIdentifier || this.$projectData.projectIdentifiers[device.deviceInfo.platform.toLowerCase()];
+			await device.fileSystem.putFile(args[0], args[1], appIdentifier);
+		};
 		await this.$devicesService.execute(action);
 	}
 }

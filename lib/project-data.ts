@@ -90,6 +90,14 @@ export class ProjectData implements IProjectData {
 		this.errorInvalidProject(projectDir);
 	}
 
+	public initializeProjectDataSafe(projectDir?: string): void {
+		try {
+			return this.initializeProjectData(projectDir);
+		} catch (err) {
+			// ignore the error
+		}
+	}
+
 	public initializeProjectDataFromContent(packageJsonContent: string, nsconfigContent: string, projectDir?: string): void {
 		projectDir = projectDir || this.$projectHelper.projectDir || "";
 		const projectFilePath = this.getProjectFilePath(projectDir);
