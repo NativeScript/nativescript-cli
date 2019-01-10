@@ -123,7 +123,7 @@ export class AppDebugSocketProxyFactory extends EventEmitter implements IAppDebu
 					this.$logger.trace(err);
 					this.emit(CONNECTION_ERROR_EVENT_NAME, err);
 					acceptHandshake = false;
-					this.$logger.warn(`Cannot connect to device socket. The error message is '${err.message}'. Try starting the application manually.`);
+					this.$logger.warn(`Cannot connect to device socket. The error message is '${err.message}'.`);
 				}
 
 				callback(acceptHandshake);
