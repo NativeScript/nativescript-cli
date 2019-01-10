@@ -14,6 +14,7 @@ export class IOSSimulator extends IOSDeviceBase implements Mobile.IiOSDevice {
 	constructor(private simulator: Mobile.IiSimDevice,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		protected $errors: IErrors,
+		protected $lockfile: ILockFile,
 		private $injector: IInjector,
 		protected $iOSDebuggerPortService: IIOSDebuggerPortService,
 		private $iOSSimResolver: Mobile.IiOSSimResolver,

@@ -5,7 +5,7 @@ export class UserSettingsServiceBase implements IUserSettingsService {
 	private userSettingsFilePath: string = null;
 	protected userSettingsData: any = null;
 	private get lockFilePath(): string {
-		return `${this.userSettingsFilePath}.lock`;
+		return `user-settings.lock`;
 	}
 
 	constructor(userSettingsFilePath: string,
@@ -21,7 +21,7 @@ export class UserSettingsServiceBase implements IUserSettingsService {
 			return this.userSettingsData ? this.userSettingsData[settingName] : null;
 		};
 
-		return this.executeActionWithLock<T>(action);
+		return this.$lockfile.executeActionWithLock<T>(action, this.lockFilePath);
 	}
 
 	public async saveSetting<T>(key: string, value: T): Promise<void> {
@@ -39,17 +39,7 @@ export class UserSettingsServiceBase implements IUserSettingsService {
 			await this.saveSettings();
 		};
 
-		return this.executeActionWithLock<void>(action);
-	}
-
-	private async executeActionWithLock<T>(action: () => Promise<T>): Promise<T> {
-		try {
-			await this.$lockfile.lock(this.lockFilePath);
-			const result = await action();
-			return result;
-		} finally {
-			this.$lockfile.unlock(this.lockFilePath);
-		}
+		return this.$lockfile.executeActionWithLock<void>(action, this.lockFilePath);
 	}
 
 	public saveSettings(data?: any): Promise<void> {
@@ -66,7 +56,7 @@ export class UserSettingsServiceBase implements IUserSettingsService {
 			this.$fs.writeJson(this.userSettingsFilePath, this.userSettingsData);
 		};
 
-		return this.executeActionWithLock<void>(action);
+		return this.$lockfile.executeActionWithLock<void>(action, this.lockFilePath);
 	}
 
 	// TODO: Remove Promise, reason: writeFile - blocked as other implementation of the interface has async operation.
