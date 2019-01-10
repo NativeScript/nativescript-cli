@@ -75,10 +75,12 @@ function createTestInjector(projectPath: string, projectName: string, xcode?: IX
 		projectId: "",
 		projectIdentifiers: { android: "", ios: "" },
 		projectDir: "",
-		appDirectoryPath: ""
+		appDirectoryPath: "",
+		appResourcesDirectoryPath: ""
 	});
 	projectData.projectDir = temp.mkdirSync("projectDir");
 	projectData.appDirectoryPath = path.join(projectData.projectDir, "app");
+	projectData.appResourcesDirectoryPath = path.join(projectData.appDirectoryPath, "App_Resources");
 	testInjector.register("projectData", projectData);
 	testInjector.register("projectHelper", {});
 	testInjector.register("xcodeSelectService", {});
@@ -339,6 +341,69 @@ describe("Cocoapods support", () => {
 	if (require("os").platform() !== "darwin") {
 		console.log("Skipping Cocoapods tests. They cannot work on windows");
 	} else {
+		it("adds а base Podfile", async () => {
+			const projectName = "projectDirectory";
+			const projectPath = temp.mkdirSync(projectName);
+
+			const testInjector = createTestInjector(projectPath, projectName);
+			const fs: IFileSystem = testInjector.resolve("fs");
+			const cocoapodsService = testInjector.resolve("cocoapodsService")
+
+			const packageJsonData = {
+				"name": "myProject",
+				"version": "0.1.0",
+				"nativescript": {
+					"id": "org.nativescript.myProject",
+					"tns-ios": {
+						"version": "1.0.0"
+					}
+				}
+			};
+			fs.writeJson(path.join(projectPath, "package.json"), packageJsonData);
+
+			const platformsFolderPath = path.join(projectPath, "platforms", "ios");
+			fs.createDirectory(platformsFolderPath);
+
+			const iOSProjectService = testInjector.resolve("iOSProjectService");
+			iOSProjectService.createPbxProj = () => {
+				return {
+					updateBuildProperty: () => { return {}; },
+					pbxXCBuildConfigurationSection: () => { return {}; },
+				};
+			};
+			iOSProjectService.savePbxProj = (): Promise<void> => Promise.resolve();
+
+			const projectData: IProjectData = testInjector.resolve("projectData");
+			const basePodfileModuleName = "BasePodfile";
+
+			const basePodfilePath = path.join(projectData.appDirectoryPath, "App_Resources", "iOS", "Podfile");
+			const pluginPodfileContent = ["source 'https://github.com/CocoaPods/Specs.git'", "platform :ios, '8.1'", "pod 'GoogleMaps'"].join("\n");
+			fs.writeFile(basePodfilePath, pluginPodfileContent);
+
+			projectData.podfilePath = basePodfilePath;
+
+			cocoapodsService.applyPodfileToProject(basePodfileModuleName, basePodfilePath, projectData, iOSProjectService.getPlatformData(projectData).projectRoot);
+
+			const projectPodfilePath = path.join(platformsFolderPath, "Podfile");
+			assert.isTrue(fs.exists(projectPodfilePath));
+
+			let actualProjectPodfileContent = fs.readText(projectPodfilePath);
+			let expectedProjectPodfileContent = ["use_frameworks!\n",
+				`target "${projectName}" do`,
+				`# Begin Podfile - ${basePodfilePath}`,
+				`${pluginPodfileContent}`,
+				"# End Podfile",
+				"end"]
+				.join("\n");
+			assert.equal(actualProjectPodfileContent, expectedProjectPodfileContent);
+
+			fs.deleteFile(basePodfilePath);
+
+			cocoapodsService.applyPodfileToProject(basePodfileModuleName, basePodfilePath, projectData, iOSProjectService.getPlatformData(projectData).projectRoot);
+			assert.isFalse(fs.exists(projectPodfilePath));
+
+		});
+
 		it("adds plugin with Podfile", async () => {
 			const projectName = "projectDirectory";
 			const projectPath = temp.mkdirSync(projectName);
@@ -486,10 +551,58 @@ describe("Cocoapods support", () => {
 	}
 });
 
-describe("Source code in plugin support", () => {
+describe("Source code support", () => {
 	if (require("os").platform() !== "darwin") {
 		console.log("Skipping Source code in plugin tests. They cannot work on windows");
 	} else {
+
+		const getProjectWithoutPlugins = async (files: string[]) => {
+			// Arrange
+			const projectName = "projectDirectory";
+			const projectPath = temp.mkdirSync(projectName);
+			const testInjector = createTestInjector(projectPath, projectName, xcode);
+			const fs: IFileSystem = testInjector.resolve("fs");
+
+			const packageJsonData = {
+				"name": "myProject",
+				"version": "0.1.0",
+				"nativescript": {
+					"id": "org.nativescript.myProject",
+					"tns-ios": {
+						"version": "1.0.0"
+					}
+				}
+			};
+			fs.writeJson(path.join(projectPath, "package.json"), packageJsonData);
+
+			const platformsFolderPath = path.join(projectPath, "platforms", "ios");
+			fs.createDirectory(platformsFolderPath);
+
+			const iOSProjectService = testInjector.resolve("iOSProjectService");
+
+			iOSProjectService.getXcodeprojPath = () => {
+				return path.join(__dirname, "files");
+			};
+			let pbxProj: any;
+			iOSProjectService.savePbxProj = (project: any): Promise<void> => {
+				pbxProj = project;
+				return Promise.resolve();
+			};
+
+			const projectData: IProjectData = testInjector.resolve("projectData");
+
+			const platformSpecificAppResourcesPath = path.join(projectData.appResourcesDirectoryPath, iOSProjectService.getPlatformData(projectData).normalizedPlatformName);
+
+			files.forEach(file => {
+				const fullPath = path.join(platformSpecificAppResourcesPath, file);
+				fs.createDirectory(path.dirname(fullPath));
+				fs.writeFile(fullPath, "");
+			});
+
+			await iOSProjectService.prepareNativeSourceCode("src", platformSpecificAppResourcesPath, projectData);
+
+			return pbxProj;
+		}
 
 		const preparePluginWithFiles = async (files: string[], prepareMethodToCall: string) => {
 			// Arrange
@@ -554,6 +667,45 @@ describe("Source code in plugin support", () => {
 
 			return pbxProj;
 		};
+
+		it("adds source files as resources", async () => {
+			const sourceFileNames = [
+				"src/Header.h", "src/ObjC.m",
+				"src/nested/Header.hpp", "src/nested/Source.cpp", "src/nested/ObjCpp.mm",
+				"src/nested/level2/Header2.hxx", "src/nested/level2/Source2.cxx", "src/nested/level2/Source3.c",
+				"src/SomeOtherExtension.donotadd",
+			];
+
+			const projectName = "projectDirectory";
+			const projectPath = temp.mkdirSync(projectName);
+			const testInjector = createTestInjector(projectPath, projectName, xcode);
+			const fs: IFileSystem = testInjector.resolve("fs");
+
+			const platformsFolderPath = path.join(projectPath, "platforms", "ios");
+			fs.createDirectory(platformsFolderPath);
+
+			const pbxProj = await await getProjectWithoutPlugins(sourceFileNames);
+
+			const pbxFileReference = pbxProj.hash.project.objects.PBXFileReference;
+			const pbxFileReferenceValues = Object.keys(pbxFileReference).map(key => pbxFileReference[key]);
+			const buildPhaseFiles = pbxProj.hash.project.objects.PBXSourcesBuildPhase["858B83F218CA22B800AB12DE"].files;
+
+			sourceFileNames.map(file => path.basename(file)).forEach(basename => {
+				const ext = path.extname(basename);
+				const shouldBeAdded = ext !== ".donotadd";
+				if (shouldBeAdded) {
+					assert.notEqual(pbxFileReferenceValues.indexOf(basename), -1, `${basename} not added to PBXFileRefereces`);
+
+					if (shouldBeAdded && !path.extname(basename).startsWith(".h")) {
+						const buildPhaseFile = buildPhaseFiles.find((fileObject: any) => fileObject.comment.startsWith(basename));
+						assert.isDefined(buildPhaseFile, `${basename} not added to PBXSourcesBuildPhase`);
+						assert.include(buildPhaseFile.comment, "in Sources", `${basename} must be added to Sources group`);
+					}
+				} else {
+					assert.equal(pbxFileReferenceValues.indexOf(basename), -1, `${basename} was added to PBXFileRefereces, but it shouldn't have been`);
+				}
+			});
+		});
 
 		it("adds plugin with Source files", async () => {
 			const sourceFileNames = [
