@@ -2,7 +2,7 @@ import * as lockfile from "lockfile";
 import * as path from "path";
 import { cache } from "../decorators";
 
-export class LockFile implements ILockFile {
+export class LockService implements ILockService {
 	private currentlyLockedFiles: string[] = [];
 
 	@cache()
@@ -14,10 +14,10 @@ export class LockFile implements ILockFile {
 		return path.join(this.$settingsService.getProfileDir(), relativeLockFilePath);
 	}
 
-	private get defaultLockParams(): ILockFileOptions {
+	private get defaultLockParams(): ILockOptions {
 		// We'll retry 100 times and time between retries is 100ms, i.e. full wait in case we are unable to get lock will be 10 seconds.
 		// In case lock is older than the `stale` value, consider it stale and try to get a new lock.
-		const lockParams: ILockFileOptions = {
+		const lockParams: ILockOptions = {
 			retryWait: 100,
 			retries: 100,
 			stale: 30 * 1000,
@@ -37,8 +37,19 @@ export class LockFile implements ILockFile {
 		});
 	}
 
-	public lock(lockFilePath?: string, lockFileOpts?: ILockFileOptions): Promise<string> {
-		const { filePath, fileOpts } = this.getLockFileSettings(lockFilePath, lockFileOpts);
+	public async executeActionWithLock<T>(action: () => Promise<T>, lockFilePath?: string, lockOpts?: ILockOptions): Promise<T> {
+		const resolvedLockFilePath = await this.lock(lockFilePath, lockOpts);
+
+		try {
+			const result = await action();
+			return result;
+		} finally {
+			this.unlock(resolvedLockFilePath);
+		}
+	}
+
+	private lock(lockFilePath?: string, lockOpts?: ILockOptions): Promise<string> {
+		const { filePath, fileOpts } = this.getLockFileSettings(lockFilePath, lockOpts);
 		this.currentlyLockedFiles.push(filePath);
 
 		// Prevent ENOENT error when the dir, where lock should be created, does not exist.
@@ -51,30 +62,13 @@ export class LockFile implements ILockFile {
 		});
 	}
 
-	public async executeActionWithLock<T>(action: () => Promise<T>, lockFilePath?: string, lockFileOpts?: ILockFileOptions): Promise<T> {
-		const resolvedLockFilePath = await this.lock(lockFilePath, lockFileOpts);
-
-		try {
-			const result = await action();
-			return result;
-		} finally {
-			this.unlock(resolvedLockFilePath);
-		}
-	}
-
-	public unlock(lockFilePath?: string): void {
+	private unlock(lockFilePath?: string): void {
 		const { filePath } = this.getLockFileSettings(lockFilePath);
 		_.remove(this.currentlyLockedFiles, e => e === lockFilePath);
 		lockfile.unlockSync(filePath);
 	}
 
-	public check(lockFilePath?: string, lockFileOpts?: ILockFileOptions): boolean {
-		const { filePath, fileOpts } = this.getLockFileSettings(lockFilePath, lockFileOpts);
-
-		return lockfile.checkSync(filePath, fileOpts);
-	}
-
-	private getLockFileSettings(filePath?: string, fileOpts?: ILockFileOptions): { filePath: string, fileOpts: ILockFileOptions } {
+	private getLockFileSettings(filePath?: string, fileOpts?: ILockOptions): { filePath: string, fileOpts: ILockOptions } {
 		if (filePath && !path.isAbsolute(filePath)) {
 			filePath = this.getAbsoluteLockFilePath(filePath);
 		}
@@ -89,4 +83,6 @@ export class LockFile implements ILockFile {
 	}
 }
 
-$injector.register("lockfile", LockFile);
+$injector.register("lockService", LockService);
+// backwards compatibility
+$injector.register("lockfile", LockService);

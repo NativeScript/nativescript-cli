@@ -5,7 +5,7 @@ export abstract class IOSDeviceBase implements Mobile.IiOSDevice {
 	protected abstract $errors: IErrors;
 	protected abstract $iOSDebuggerPortService: IIOSDebuggerPortService;
 	protected abstract $processService: IProcessService;
-	protected abstract $lockfile: ILockFile;
+	protected abstract $lockService: ILockService;
 	abstract deviceInfo: Mobile.IDeviceInfo;
 	abstract applicationManager: Mobile.IDeviceApplicationManager;
 	abstract fileSystem: Mobile.IDeviceFileSystem;
@@ -25,7 +25,7 @@ export abstract class IOSDeviceBase implements Mobile.IiOSDevice {
 	}
 
 	public async getSocket(appId: string): Promise<net.Socket> {
-		return this.$lockfile.executeActionWithLock(async () => {
+		return this.$lockService.executeActionWithLock(async () => {
 			if (this.cachedSockets[appId]) {
 				return this.cachedSockets[appId];
 			}

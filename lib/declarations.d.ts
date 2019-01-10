@@ -745,17 +745,11 @@ interface IAppDebugSocketProxyFactory extends NodeJS.EventEmitter {
 }
 
 interface IiOSNotification extends NodeJS.EventEmitter {
-	getWaitForDebug(projectId: string): string;
 	getAttachRequest(projectId: string, deviceId: string): string;
-	getAppLaunching(projectId: string): string;
 	getReadyForAttach(projectId: string): string;
-	getAttachAvailabilityQuery(projectId: string): string;
-	getAlreadyConnected(projectId: string): string;
-	getAttachAvailable(projectId: string): string;
 }
 
 interface IiOSSocketRequestExecutor {
-	executeLaunchRequest(device: Mobile.IiOSDevice, timeout: number, readyForAttachTimeout: number, projectId: string, debugOptions: IDebugOptions): Promise<void>;
 	executeAttachRequest(device: Mobile.IiOSDevice, timeout: number, projectId: string): Promise<void>;
 }
 
