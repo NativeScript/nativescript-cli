@@ -986,7 +986,8 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 
 	public async installPodsIfAny(projectData: IProjectData): Promise<void> {
 		const projectRoot = this.getPlatformData(projectData).projectRoot;
-		if (this.$fs.exists(this.$cocoapodsService.getProjectPodfilePath(projectRoot))) {
+		const mainPodfilePath = path.join(projectData.appResourcesDirectoryPath, this.getPlatformData(projectData).normalizedPlatformName, constants.PODFILE_NAME);
+		if (this.$fs.exists(this.$cocoapodsService.getProjectPodfilePath(projectRoot)) || this.$fs.exists(mainPodfilePath)) {
 			const xcodeProjPath = this.getXcodeprojPath(projectData);
 			const xcuserDataPath = path.join(xcodeProjPath, "xcuserdata");
 			const sharedDataPath = path.join(xcodeProjPath, "xcshareddata");
@@ -999,7 +1000,6 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 				await this.$childProcess.exec(createSchemeRubyScript, { cwd: this.getPlatformData(projectData).projectRoot });
 			}
 
-			const mainPodfilePath = path.join(projectData.appResourcesDirectoryPath, this.getPlatformData(projectData).normalizedPlatformName, constants.PODFILE_NAME);
 			await this.$cocoapodsService.applyPodfileToProject(constants.NS_BASE_PODFILE, mainPodfilePath, projectData, this.getPlatformData(projectData).projectRoot);
 
 			await this.$cocoapodsService.executePodInstall(projectRoot, xcodeProjPath);
