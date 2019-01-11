@@ -5,6 +5,7 @@ export abstract class IOSDeviceBase implements Mobile.IiOSDevice {
 	protected abstract $errors: IErrors;
 	protected abstract $iOSDebuggerPortService: IIOSDebuggerPortService;
 	protected abstract $processService: IProcessService;
+	protected abstract $lockService: ILockService;
 	abstract deviceInfo: Mobile.IDeviceInfo;
 	abstract applicationManager: Mobile.IDeviceApplicationManager;
 	abstract fileSystem: Mobile.IDeviceFileSystem;
@@ -24,21 +25,23 @@ export abstract class IOSDeviceBase implements Mobile.IiOSDevice {
 	}
 
 	public async getSocket(appId: string): Promise<net.Socket> {
-		if (this.cachedSockets[appId]) {
+		return this.$lockService.executeActionWithLock(async () => {
+			if (this.cachedSockets[appId]) {
+				return this.cachedSockets[appId];
+			}
+
+			this.cachedSockets[appId] = await this.getSocketCore(appId);
+
+			if (this.cachedSockets[appId]) {
+				this.cachedSockets[appId].on("close", () => {
+					this.destroySocket(appId);
+				});
+
+				this.$processService.attachToProcessExitSignals(this, () => this.destroySocket(appId));
+			}
+
 			return this.cachedSockets[appId];
-		}
-
-		this.cachedSockets[appId] = await this.getSocketCore(appId);
-
-		if (this.cachedSockets[appId]) {
-			this.cachedSockets[appId].on("close", () => {
-				this.destroySocket(appId);
-			});
-
-			this.$processService.attachToProcessExitSignals(this, () => this.destroySocket(appId));
-		}
-
-		return this.cachedSockets[appId];
+		}, "ios-debug-socket.lock");
 	}
 
 	public destroyLiveSyncSocket(appId: string) {

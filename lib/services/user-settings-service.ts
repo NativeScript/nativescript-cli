@@ -4,10 +4,10 @@ import * as userSettingsServiceBaseLib from "../common/services/user-settings-se
 export class UserSettingsService extends userSettingsServiceBaseLib.UserSettingsServiceBase {
 	constructor($fs: IFileSystem,
 		$settingsService: ISettingsService,
-		$lockfile: ILockFile,
+		$lockService: ILockService,
 		$logger: ILogger) {
 		const userSettingsFilePath = path.join($settingsService.getProfileDir(), "user-settings.json");
-		super(userSettingsFilePath, $fs, $lockfile, $logger);
+		super(userSettingsFilePath, $fs, $lockService, $logger);
 	}
 
 	public async loadUserSettingsFile(): Promise<void> {
