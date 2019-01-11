@@ -4,6 +4,8 @@
   "author": "Kinvey, Inc.",
   "scripts": {
     "build:html5": "node scripts/html5/build.js",
+    "bundle:html5": "npm run build:html5 && webpack --config packages/kinvey-html5-sdk/webpack.prod.js",
+    "bundle:html5:dev": "npm run build:html5 && webpack --config packages/kinvey-html5-sdk/webpack.dev.js",
     "build:nativescript": "node scripts/nativescript/build.js",
     "build:node": "node scripts/node/build.js",
     "test": "mocha -r @babel/register \"src/**/*.spec.js\"",
@@ -35,6 +37,7 @@
     "babel-loader": "8.0.5",
     "chai": "4.2.0",
     "chai-as-promised": "7.1.1",
+    "clean-webpack-plugin": "1.0.0",
     "del-cli": "1.1.0",
     "dotenv": "6.2.0",
     "dotenv-webpack": "1.6.0",
@@ -50,12 +53,14 @@
     "karma-chrome-launcher": "2.2.0",
     "karma-mocha": "1.3.0",
     "karma-mocha-reporter": "2.2.5",
-    "karma-webpack": "3.0.5",
+    "karma-webpack": "4.0.0-rc.5",
     "mocha": "5.2.0",
     "pirates": "4.0.0",
     "sinon": "7.2.2",
     "string-replace-loader": "2.1.1",
-    "webpack": "^3.0.0",
+    "webpack": "4.28.4",
+    "webpack-bundle-analyzer": "3.0.3",
+    "webpack-cli": "3.2.1",
     "webpack-merge": "4.2.1"
   }
 }

@@ -763,6 +763,14 @@ function () {
 
       var docs = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
 
+      if (!Array.isArray(docs)) {
+        throw new Error('data argument must be of type: Array.');
+      }
+
+      if (!this.isSupportedOffline()) {
+        throw new Error('This query is not able to run locally.');
+      }
+
       if (docs.length > 0) {
         var processedDocs;
 
