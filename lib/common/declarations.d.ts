@@ -1965,67 +1965,6 @@ interface IiOSNotificationService {
 	postNotification(deviceIdentifier: string, notification: string, commandType?: string): Promise<number>;
 }
 
-/**
- * Copied from @types/lockfile
- * Describes the options that can be passed to lockfile methods.
- */
-interface ILockFileOptions {
-	/**
-	 * A number of milliseconds to wait for locks to expire before giving up.
-	 * Only used by lockFile.lock. Poll for opts.wait ms.
-	 * If the lock is not cleared by the time the wait expires, then it returns with the original error.
-	 */
-	wait?: number;
-
-	/**
-	 * When using opts.wait, this is the period in ms in which it polls to check if the lock has expired. Defaults to 100.
-	 */
-	pollPeriod?: number;
-
-	/**
-	 * A number of milliseconds before locks are considered to have expired.
-	 */
-	stale?: number;
-
-	/**
-	 * Used by lock and lockSync. Retry n number of times before giving up.
-	 */
-	retries?: number;
-
-	/**
-	 * Used by lock. Wait n milliseconds before retrying.
-	 */
-	retryWait?: number;
-}
-
-/**
- * Describes methods that can be used to use file locking.
- */
-interface ILockFile {
-	/**
-	 * Acquire a file lock on the specified path.
-	 * @param {string} lockFilePath Path to lockfile that has to be created. Defaults to `<profile dir>/lockfile.lock`
-	 * @param {ILockFileOptions} lockFileOpts Options used for creating the lockfile.
-	 * @returns {Promise<void>}
-	 */
-	lock(lockFilePath?: string, lockFileOpts?: ILockFileOptions): Promise<void>;
-
-	/**
-	 * Close and unlink the lockfile.
-	 * @param {string} lockFilePath Path to lockfile that has to be created. Defaults to `<profile dir>/lockfile.lock`
-	 * @returns {void}
-	 */
-	unlock(lockFilePath?: string): void;
-
-	/**
-	 * Check if the lockfile is locked and not stale.
-	 * @param {string} lockFilePath Path to lockfile that has to be created. Defaults to `<profile dir>/lockfile.lock`
-	 * @param {ILockFileOptions} lockFileOpts Options used for creating the lockfile.
-	 * @returns {boolean} true in case file is locked, false otherwise
-	 */
-	check(lockFilePath?: string, lockFileOpts?: ILockFileOptions): boolean;
-}
-
 declare module "stringify-package" {
 	function stringifyPackage(data: any, indent: any, newline: string): string
 	export = stringifyPackage

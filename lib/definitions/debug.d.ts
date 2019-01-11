@@ -97,10 +97,6 @@ interface IDebugOptions {
 	 */
 	sdk?: string;
 	/**
-	 * Defines if the handshake(AppLaunching notification) between CLI and runtime should be executed. The handshake is not needed when CLI retries to attach to the debugger.
-	 */
-	skipHandshake?: boolean;
-	/**
 	 * Forces the debugger attach event to be emitted.
 	 */
 	forceDebuggerAttachedEvent?: boolean;

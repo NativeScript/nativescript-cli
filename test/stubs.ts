@@ -570,19 +570,6 @@ export class HooksServiceStub implements IHooksService {
 	hookArgsName = "hookArgs";
 }
 
-export class LockFile {
-
-	async check(): Promise<boolean> {
-		return false;
-	}
-
-	async lock(): Promise<void> {
-	}
-
-	async unlock(): Promise<void> {
-	}
-}
-
 export class PrompterStub implements IPrompter {
 	private strings: IDictionary<string> = {};
 	private passwords: IDictionary<string> = {};

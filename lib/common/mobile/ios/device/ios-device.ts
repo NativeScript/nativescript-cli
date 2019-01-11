@@ -17,6 +17,7 @@ export class IOSDevice extends IOSDeviceBase {
 		protected $errors: IErrors,
 		private $injector: IInjector,
 		protected $iOSDebuggerPortService: IIOSDebuggerPortService,
+		protected $lockService: ILockService,
 		private $iOSSocketRequestExecutor: IiOSSocketRequestExecutor,
 		protected $processService: IProcessService,
 		private $deviceLogProvider: Mobile.IDeviceLogProvider,
@@ -63,6 +64,7 @@ export class IOSDevice extends IOSDeviceBase {
 		await this.$iOSSocketRequestExecutor.executeAttachRequest(this, constants.AWAIT_NOTIFICATION_TIMEOUT_SECONDS, appId);
 		const port = await this.getDebuggerPort(appId);
 		const deviceId = this.deviceInfo.identifier;
+
 		const socket = await helpers.connectEventuallyUntilTimeout(
 			async () => {
 				const deviceResponse = _.first((await this.$iosDeviceOperations.connectToPort([{ deviceId: deviceId, port: port }]))[deviceId]);

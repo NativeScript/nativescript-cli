@@ -495,6 +495,7 @@ export async function connectEventuallyUntilTimeout(factory: () => Promise<net.S
 				socket.on("error", tryConnectAfterTimeout);
 			} catch (e) {
 				lastKnownError = e;
+				tryConnectAfterTimeout(e);
 			}
 		}
 
