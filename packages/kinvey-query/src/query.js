@@ -714,6 +714,12 @@ export class Query {
   }
 
   process(docs = []) {
+    if (!Array.isArray(docs)){
+      throw new Error('data argument must be of type: Array.');
+    }
+    if (!this.isSupportedOffline()){
+      throw new Error('This query is not able to run locally.')
+    }
     if (docs.length > 0) {
       let processedDocs;
 
