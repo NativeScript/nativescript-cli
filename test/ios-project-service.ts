@@ -67,7 +67,7 @@ function createTestInjector(projectPath: string, projectName: string, xcode?: IX
 	testInjector.register("iOSEntitlementsService", IOSEntitlementsService);
 	testInjector.register("logger", LoggerLib.Logger);
 	testInjector.register("options", OptionsLib.Options);
-	var projectData = Object.assign({}, ProjectDataStub, {
+	const projectData = Object.assign({}, ProjectDataStub, {
 		platformsDir: path.join(projectPath, "platforms"),
 		projectName: projectName,
 		projectPath: projectPath,
@@ -347,7 +347,7 @@ describe("Cocoapods support", () => {
 
 			const testInjector = createTestInjector(projectPath, projectName);
 			const fs: IFileSystem = testInjector.resolve("fs");
-			const cocoapodsService = testInjector.resolve("cocoapodsService")
+			const cocoapodsService = testInjector.resolve("cocoapodsService");
 
 			const packageJsonData = {
 				"name": "myProject",
@@ -387,8 +387,8 @@ describe("Cocoapods support", () => {
 			const projectPodfilePath = path.join(platformsFolderPath, "Podfile");
 			assert.isTrue(fs.exists(projectPodfilePath));
 
-			let actualProjectPodfileContent = fs.readText(projectPodfilePath);
-			let expectedProjectPodfileContent = ["use_frameworks!\n",
+			const actualProjectPodfileContent = fs.readText(projectPodfilePath);
+			const expectedProjectPodfileContent = ["use_frameworks!\n",
 				`target "${projectName}" do`,
 				`# Begin Podfile - ${basePodfilePath}`,
 				`${pluginPodfileContent}`,
@@ -602,7 +602,7 @@ describe("Source code support", () => {
 			await iOSProjectService.prepareNativeSourceCode("src", platformSpecificAppResourcesPath, projectData);
 
 			return pbxProj;
-		}
+		};
 
 		const preparePluginWithFiles = async (files: string[], prepareMethodToCall: string) => {
 			// Arrange
