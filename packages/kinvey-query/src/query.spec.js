@@ -32,7 +32,7 @@ describe('Query', () => {
       expect(() => {
         const query = new Query();
         query.fields = {};
-      }).to.throw();
+      }).to.throw(/fields must be an Array/);
     });
 
     it('should set the fields', () => {
@@ -44,6 +44,7 @@ describe('Query', () => {
 
     it('should reset the fields', () => {
       const query = new Query();
+      query.fields = [randomString()]
       query.fields = [];
       expect(query.toPlainObject().fields).to.deep.equal([]);
     });
@@ -54,7 +55,7 @@ describe('Query', () => {
       expect(() => {
         const query = new Query();
         query.limit = {};
-      }).to.throw();
+      }).to.throw(/limit must be a number/);
     });
 
     it('should set the limit', () => {
@@ -66,8 +67,24 @@ describe('Query', () => {
 
     it('should unset the limit', () => {
       const query = new Query();
+      query.limit = 10;
       query.limit = null;
       expect(query.toPlainObject().limit).to.equal(null);
+    });
+
+    it.skip('should discard limit if value is 0', () => {//TODO: Rework after MLIBZ 2705 is fixed
+      const query = new Query();
+      query.limit = 0;
+      expect(query.toPlainObject().limit).to.equal(Infinity);
+    });
+
+    it('should return only the specified number of items', () => {
+      const entity1 = { name: randomString() };
+      const entity2 = { name: randomString() };
+      const query = new Query();
+      query.limit = 1;
+      const result = query.process([entity1, entity2]);
+      expect(result.length).to.equal(1);
     });
   });
 
@@ -76,7 +93,7 @@ describe('Query', () => {
       expect(() => {
         const query = new Query();
         query.skip = {};
-      }).to.throw();
+      }).to.throw(/skip must be a number/);
     });
 
     it('should set the skip', () => {
@@ -88,8 +105,24 @@ describe('Query', () => {
 
     it('should unset the skip', () => {
       const query = new Query();
+      query.skip = 10;
       query.skip = 0;
       expect(query.toPlainObject().skip).to.equal(0);
+    });
+
+    it.skip('should discard skip if value is 0', () => {//TODO: Rework after MLIBZ 2705 is fixed
+      const query = new Query();
+      query.skip = 0;
+      expect(query.toPlainObject().skip).to.equal(0);
+    });
+
+    it('should skip the proper number of items', () => {
+      const query = new Query();
+      const entity1 = { name: randomString() };
+      const entity2 = { name: randomString() };
+      query.skip = 1;
+      const result = query.process([entity1, entity2]);
+      expect(result.length).to.equal(1);
     });
   });
 
@@ -102,10 +135,25 @@ describe('Query', () => {
       expect(query.toPlainObject().sort).to.equal(sort);
     });
 
-    it('should reset the sort.', () => {
+    it('should reset the sort', () => {
       const query = new Query();
+      query.sort = { 'name': 1 }
       query.sort = {};
       expect(query.toPlainObject().sort).to.deep.equal({});
+    });
+
+    it.skip('should throw error for non-object argument', () => {//TODO: Validation
+      expect(() => {
+        const query = new Query();
+        query.sort = randomString();
+      }).to.throw(/sort must an Object/);
+    });
+
+    it.skip('should throw error sort value different from 1 and -1', () => {
+      expect(() => {
+        const query = new Query();
+        query.sort = { 'name': 2 };
+      }).to.throw(/-1 or 1/);
     });
   });
 
@@ -128,7 +176,7 @@ describe('Query', () => {
     });
   });
 
-  describe('equalTo()', () => {// TODO: filter property used to be _filter in the old sdk
+  describe('equalTo()', () => {
     it('should add an equal to filter', () => {
       const field = randomString();
       const value = randomString();
@@ -149,6 +197,73 @@ describe('Query', () => {
     it('should return the query', () => {
       const query = new Query().equalTo(randomString(), randomString());
       expect(query).to.be.an.instanceOf(Query);
+    });
+
+    it.skip('should throw error for missing arguments', () => {//TODO: Not implemented yet
+      expect(() => {
+        const query = new Query();
+        query.equalTo()
+      }).to.throw();//TODO: add the expected error once ready
+    });
+
+    it.skip('should throw error for missing value argument', () => {//TODO: Not implemented yet
+      expect(() => {
+        const query = new Query();
+        const field = 'fieldToTest';
+        query.equalTo(field)
+      }).to.throw(); //TODO: add the expected error once ready
+    });
+
+    it.skip('should throw error for non-string argument fields argument', () => {//TODO: Not implemented yet
+      expect(() => {
+        const query = new Query();
+        const field = {};
+        query.equalTo(field, randomString());
+      }).to.throw();//TODO: add the expected error once ready
+    });
+
+    it('should override another comparative operator on the same field', () => {
+      const query = new Query();
+      const field = 'fieldToTest';
+      const value = 'value1';
+      const valueNext = 'value2';
+      query.greaterThan(field, value);
+      expect(query.toPlainObject().filter[field]).to.deep.equal({ '$gt': value });
+      query.equalTo(field, valueNext);
+      expect(query.toPlainObject().filter[field]).to.equal(valueNext);
+    });
+
+    it.skip('should be overriden by another comparative operator on the same field', () => {//TODO: Discuss
+      const query = new Query();
+      const field = 'fieldToTest';
+      const value = 'value1';
+      const valueNext = 'value2';
+      query.equalTo(field, value);
+      expect(query.toPlainObject().filter[field]).to.equal(value);
+      query.greaterThan(field, valueNext);
+      expect(query.toPlainObject().filter[field]).to.deep.equal({ '$gt': valueNext });
+    });
+
+    it('should not override another comparative operator for a different field', () => {
+      const query = new Query();
+      const field = 'fieldToTest';
+      const anotherField = 'anotherFieldToTest';
+      const value = 'value1';
+      const valueNext = 'value2';
+      query.greaterThan(field, value);
+      query.equalTo(anotherField, valueNext);
+      expect(query.toPlainObject().filter[field]).to.deep.equal({ '$gt': value });
+      expect(query.toPlainObject().filter[anotherField]).to.equal(valueNext)
+    });
+
+    it('should respect null as value', () => {
+      const query = new Query();
+      const field = 'fieldToTest';
+      const entity1 = { fieldToTest: 'someValue' };
+      const entity2 = { fieldToTest: null };
+      query.equalTo(field, null);
+      const result = query.process([entity1, entity2]);
+      expect(result).to.deep.equal([entity2]);
     });
   });
 
@@ -172,9 +287,46 @@ describe('Query', () => {
     it('should respect any existing filters on the same field', () => {
       const field = randomString();
       const query = new Query();
-      query.greaterThan(field, randomString());
-      query.contains(field, [randomString()]);
-      expect(query.toPlainObject().filter[field]).to.have.property('$gt');
+      const value = randomString();
+      const valueNext = randomString();
+      query.greaterThan(field, value);
+      query.contains(field, [valueNext]);
+      expect(query.toPlainObject().filter[field]).to.deep.equal({ '$gt': value, '$in': [valueNext] });
+    });
+
+    it('should not be overriden by another operator on a different field', () => {
+      const field = randomString();
+      const anotherField = randomString();
+      const query = new Query();
+      const value = randomString();
+      const valueNext = randomString();
+      query.contains(anotherField, [valueNext]);
+      query.greaterThan(field, value);
+      expect(query.toPlainObject().filter[field]).to.deep.equal({ '$gt': value });
+      expect(query.toPlainObject().filter[anotherField]).to.deep.equal({ '$in': [valueNext] })
+    });
+
+    it('should throw error for missing arguments', () => {
+      expect(() => {
+        const query = new Query();
+        query.contains()
+      }).to.throw(/You must supply a value./);
+    });
+
+    it('should throw error for missing value argument', () => {
+      expect(() => {
+        const query = new Query();
+        const value = 'valueToTest';
+        query.contains(value)
+      }).to.throw(/You must supply a value./);
+    });
+
+    it.skip('should throw error for non-string argument fields argument', () => {//TODO: Not implemented yet
+      expect(() => {
+        const query = new Query();
+        const field = {};
+        query.contains(field, randomString());
+      }).to.throw();//TODO: add the expected error once ready
     });
 
     it('should return the query', () => {
@@ -202,10 +354,35 @@ describe('Query', () => {
 
     it('should respect any existing filters on the same field', () => {
       const field = randomString();
+      const value = randomString();
+      const valueNext = randomString();
       const query = new Query();
-      query.greaterThan(field, randomString());
-      query.containsAll(field, [randomString()]);
-      expect(query.toPlainObject().filter[field]).to.have.property('$gt');
+      query.greaterThan(field, value);
+      query.containsAll(field, [valueNext]);
+      expect(query.toPlainObject().filter[field]).to.deep.equal({ '$gt': value, '$all': [valueNext] });
+    });
+
+    it('should throw error for missing arguments', () => {
+      expect(() => {
+        const query = new Query();
+        query.containsAll()
+      }).to.throw(/You must supply a value./);
+    });
+
+    it('should throw error for missing value argument', () => {
+      expect(() => {
+        const query = new Query();
+        const field = 'fieldToTest';
+        query.containsAll(field)
+      }).to.throw(/You must supply a value./);
+    });
+
+    it.skip('should throw error for non-string argument fields argument', () => {//TODO: Not implemented yet
+      expect(() => {
+        const query = new Query();
+        const field = {};
+        query.containsAll(field, randomString());
+      }).to.throw();//TODO: add the expected error once ready
     });
 
     it('should return the query', () => {
@@ -219,7 +396,7 @@ describe('Query', () => {
       expect(() => {
         const query = new Query();
         query.greaterThan(randomString(), null);
-      }).to.throw();
+      }).to.throw(/You must supply a number or string./);
     });
 
     it('should add a greater than filter', () => {
@@ -232,10 +409,57 @@ describe('Query', () => {
 
     it('should respect any existing filters on the same field', () => {
       const field = randomString();
+      const value = randomString();
+      const valueNext = randomString();
       const query = new Query();
-      query.greaterThan(field, randomString());
-      query.containsAll(field, [randomString()]);
-      expect(query.toPlainObject().filter[field]).to.have.property('$all');
+      query.greaterThan(field, value);
+      query.containsAll(field, [valueNext]);
+      expect(query.toPlainObject().filter[field]).to.deep.equal({ '$gt': value, '$all': [valueNext] });
+    });
+
+    it('should override $gt filter on the same field', () => {
+      const field = randomString();
+      const value = randomString();
+      const valueNext = randomString();
+      const query = new Query();
+      query.greaterThan(field, value);
+      query.greaterThan(field, valueNext);
+      expect(query.toPlainObject().filter[field]).to.deep.equal({ '$gt': valueNext });
+    });
+
+    it('should add $gt filter for a second field', () => {
+      const field = randomString();
+      const anotherField = randomString();
+      const value = randomString();
+      const valueNext = randomString();
+      const query = new Query();
+      query.greaterThan(field, value);
+      query.greaterThan(anotherField, valueNext);
+      expect(query.toPlainObject().filter[field]).to.deep.equal({ '$gt': value });
+      expect(query.toPlainObject().filter[anotherField]).to.deep.equal({ '$gt': valueNext });
+    });
+
+    it('should throw error for missing arguments', () => {
+      expect(() => {
+        const query = new Query();
+        query.greaterThan()
+      }).to.throw(/You must supply a number or string./);
+    });
+
+    it('should throw error for missing value argument', () => {
+      expect(() => {
+        const query = new Query();
+        const field = 'fieldToTest';
+        query.greaterThan(field)
+      }).to.throw(/You must supply a number or string./);
+    });
+
+    it.skip('should throw error for non-string argument fields argument', () => {//TODO: Not implemented yet
+      expect(() => {
+        const query = new Query();
+        const field = {};
+        query.greaterThan(field, randomString());
+      }).to.throw(/You must supply a number or string./);//TODO: add the expected error once ready
     });
 
     it('should return the query', () => {
@@ -249,7 +473,7 @@ describe('Query', () => {
       expect(() => {
         const query = new Query();
         query.greaterThanOrEqualTo(randomString(), null);
-      }).to.throw();
+      }).to.throw(/You must supply a number or string./);
     });
 
     it('should add a greater than or equal filter', () => {
@@ -263,9 +487,56 @@ describe('Query', () => {
     it('should respect any existing filters on the same field', () => {
       const field = randomString();
       const query = new Query();
-      query.greaterThanOrEqualTo(field, randomString());
-      query.containsAll(field, [randomString()]);
-      expect(query.toPlainObject().filter[field]).to.have.property('$all');
+      const value = randomString();
+      const valueNext = randomString();
+      query.containsAll(field, [value]);
+      query.greaterThanOrEqualTo(field, valueNext);
+      expect(query.toPlainObject().filter[field]).to.deep.equal({ '$all': [value], '$gte': valueNext });
+    });
+
+    it('should override $gte filter on the same field', () => {
+      const field = randomString();
+      const query = new Query();
+      const value = randomString();
+      const valueNext = randomString();
+      query.greaterThanOrEqualTo(field, value);
+      query.greaterThanOrEqualTo(field, valueNext);
+      expect(query.toPlainObject().filter[field]).to.deep.equal({ '$gte': valueNext });
+    });
+
+    it('should add $gte filter on another field', () => {
+      const field = randomString();
+      const anotherField = randomString();
+      const query = new Query();
+      const value = randomString();
+      const valueNext = randomString();
+      query.greaterThanOrEqualTo(field, value);
+      query.greaterThanOrEqualTo(anotherField, valueNext);
+      expect(query.toPlainObject().filter[field]).to.deep.equal({ '$gte': value });
+      expect(query.toPlainObject().filter[anotherField]).to.deep.equal({ '$gte': valueNext });
+    });
+
+    it('should throw error for missing arguments', () => {
+      expect(() => {
+        const query = new Query();
+        query.greaterThanOrEqualTo()
+      }).to.throw(/You must supply a number or string./);
+    });
+
+    it('should throw error for missing value argument', () => {
+      expect(() => {
+        const query = new Query();
+        const field = 'fieldToTest';
+        query.greaterThanOrEqualTo(field)
+      }).to.throw(/You must supply a number or string./);
+    });
+
+    it.skip('should throw error for non-string argument fields argument', () => {//TODO: Not implemented yet
+      expect(() => {
+        const query = new Query();
+        const field = {};
+        query.greaterThanOrEqualTo(field, randomString());
+      }).to.throw();//TODO: add the expected error once ready
     });
 
     it('should return the query', () => {
@@ -279,7 +550,7 @@ describe('Query', () => {
       expect(() => {
         const query = new Query();
         query.lessThan(randomString(), null);
-      }).to.throw();
+      }).to.throw(/You must supply a number or string./);
     });
 
     it('should add a less than filter', () => {
@@ -293,9 +564,56 @@ describe('Query', () => {
     it('should respect any existing filters on the same field', () => {
       const field = randomString();
       const query = new Query();
-      query.lessThan(field, randomString());
-      query.containsAll(field, [randomString()]);
-      expect(query.toPlainObject().filter[field]).to.have.property('$all');
+      const value = randomString();
+      const valueNext = randomString();
+      query.containsAll(field, [value]);
+      query.lessThan(field, valueNext);
+      expect(query.toPlainObject().filter[field]).to.deep.equal({ '$all': [value], '$lt': valueNext });
+    });
+
+    it('should override $lt filter on the same field', () => {
+      const field = randomString();
+      const query = new Query();
+      const value = randomString();
+      const valueNext = randomString();
+      query.lessThan(field, value);
+      query.lessThan(field, valueNext);
+      expect(query.toPlainObject().filter[field]).to.deep.equal({ '$lt': valueNext });
+    });
+
+    it('should add $lt filter on another field', () => {
+      const field = randomString();
+      const anotherField = randomString();
+      const query = new Query();
+      const value = randomString();
+      const valueNext = randomString();
+      query.lessThan(field, value);
+      query.lessThan(anotherField, valueNext);
+      expect(query.toPlainObject().filter[field]).to.deep.equal({ '$lt': value });
+      expect(query.toPlainObject().filter[anotherField]).to.deep.equal({ '$lt': valueNext });
+    });
+
+    it('should throw error for missing arguments', () => {
+      expect(() => {
+        const query = new Query();
+        query.lessThan()
+      }).to.throw(/You must supply a number or string./);
+    });
+
+    it('should throw error for missing value argument', () => {
+      expect(() => {
+        const query = new Query();
+        const field = 'fieldToTest';
+        query.lessThan(field)
+      }).to.throw(/You must supply a number or string./);
+    });
+
+    it.skip('should throw error for non-string argument fields argument', () => {//TODO: Not implemented yet
+      expect(() => {
+        const query = new Query();
+        const field = {};
+        query.lessThan(field, randomString());
+      }).to.throw();//TODO: add the expected error once ready
     });
 
     it('should return the query', () => {
@@ -309,7 +627,7 @@ describe('Query', () => {
       expect(() => {
         const query = new Query();
         query.lessThanOrEqualTo(randomString(), null);
-      }).to.throw();
+      }).to.throw(/You must supply a number or string./);
     });
 
     it('should add a less than or equal filter', () => {
@@ -323,9 +641,66 @@ describe('Query', () => {
     it('should respect any existing filters on the same field', () => {
       const field = randomString();
       const query = new Query();
-      query.lessThanOrEqualTo(field, randomString());
-      query.containsAll(field, [randomString()]);
-      expect(query.toPlainObject().filter[field]).to.have.property('$all');
+      const value = randomString();
+      const valueNext = randomString();
+      query.containsAll(field, [value]);
+      query.lessThanOrEqualTo(field, valueNext);
+      expect(query.toPlainObject().filter[field]).to.deep.equal({ '$all': [value], '$lte': valueNext });
+    });
+
+    it('should add any existing filters on the same field', () => {
+      const field = randomString();
+      const query = new Query();
+      const value = randomString();
+      const valueNext = randomString();
+      query.containsAll(field, [value]);
+      query.lessThanOrEqualTo(field, valueNext);
+      expect(query.toPlainObject().filter[field]).to.deep.equal({ '$all': [value], '$lte': valueNext });
+    });
+
+    it('should override $lte filter on the same field', () => {
+      const field = randomString();
+      const query = new Query();
+      const value = randomString();
+      const valueNext = randomString();
+      query.lessThanOrEqualTo(field, value);
+      query.lessThanOrEqualTo(field, valueNext);
+      expect(query.toPlainObject().filter[field]).to.deep.equal({ '$lte': valueNext });
+    });
+
+    it('should add $lte filter on another field', () => {
+      const field = randomString();
+      const anotherField = randomString();
+      const query = new Query();
+      const value = randomString();
+      const valueNext = randomString();
+      query.lessThanOrEqualTo(field, value);
+      query.lessThanOrEqualTo(anotherField, valueNext);
+      expect(query.toPlainObject().filter[field]).to.deep.equal({ '$lte': value });
+      expect(query.toPlainObject().filter[anotherField]).to.deep.equal({ '$lte': valueNext });
+    });
+
+    it('should throw error for missing arguments', () => {
+      expect(() => {
+        const query = new Query();
+        query.lessThanOrEqualTo()
+      }).to.throw(/You must supply a number or string./);
+    });
+
+    it('should throw error for missing value argument', () => {
+      expect(() => {
+        const query = new Query();
+        const field = 'fieldToTest';
+        query.lessThanOrEqualTo(field)
+      }).to.throw(/You must supply a number or string./);
+    });
+
+    it.skip('should throw error for non-string argument fields argument', () => {//TODO: Not implemented yet
+      expect(() => {
+        const query = new Query();
+        const field = {};
+        query.lessThanOrEqualTo(field, randomString());
+      }).to.throw();//TODO: add the expected error once ready
     });
 
     it('should return the query', () => {
@@ -343,26 +718,73 @@ describe('Query', () => {
       expect(query.toPlainObject().filter[field]).to.deep.equal({ $ne: value });
     });
 
-    it('should respect any existing filters on the same field', () => {
-      const field = randomString();
-      const query = new Query();
-      query.notEqualTo(field, randomString());
-      query.containsAll(field, [randomString()]);
-      expect(query.toPlainObject().filter[field]).to.have.property('$all');
-    });
-
     it('should return the query', () => {
       const query = new Query().notEqualTo(randomString(), randomString());
       expect(query).to.be.an.instanceof(Query);
     });
 
-    it.skip('should filter out fields not equal to null', () => {//TODO: query.process is not a function
+    it('should filter out fields not equal to null', () => {
       const entity1 = { customProperty: null };
       const entity2 = { customProperty: randomString() };
       const query = new Query().notEqualTo('customProperty', null);
       const result = query.process([entity1, entity2]);
       expect(result.length).to.equal(1);
       expect(result[0]).to.deep.equal(entity2);
+    });
+
+    it.skip('should throw error for missing arguments', () => {//TODO: Not implemented yet
+      expect(() => {
+        const query = new Query();
+        query.notEqualTo();
+      }).to.throw();//TODO: add the expected error once ready
+    });
+
+    it.skip('should throw error for missing value argument', () => {//TODO: Not implemented yet
+      expect(() => {
+        const query = new Query();
+        const field = 'fieldToTest';
+        query.notEqualTo(field)
+      }).to.throw(); //TODO: add the expected error once ready
+    });
+
+    it.skip('should throw error for non-string argument fields argument', () => {//TODO: Not implemented yet
+      expect(() => {
+        const query = new Query();
+        const field = {};
+        query.notEqualTo(field, randomString());
+      }).to.throw();//TODO: add the expected error once ready
+    });
+
+    it('should override $ne operator on the same field', () => {
+      const query = new Query();
+      const field = 'fieldToTest';
+      const value = 'value1';
+      const valueNext = 'value2';
+      query.notEqualTo(field, value);
+      query.notEqualTo(field, valueNext);
+      expect(query.toPlainObject().filter[field]).to.deep.equal({ '$ne': valueNext });
+    });
+
+    it('should respect any existing filters on the same field', () => {
+      const query = new Query();
+      const field = 'fieldToTest';
+      const value = 'value1';
+      const valueNext = 'value2';
+      query.greaterThan(field, value);
+      query.notEqualTo(field, valueNext);
+      expect(query.toPlainObject().filter[field]).to.deep.equal({ '$gt': value, '$ne': valueNext });
+    });
+
+    it('should not override another comparative operator for a different field', () => {
+      const query = new Query();
+      const field = 'fieldToTest';
+      const anotherField = 'anotherFieldToTest';
+      const value = 'value1';
+      const valueNext = 'value2';
+      query.greaterThan(field, value);
+      query.notEqualTo(anotherField, valueNext);
+      expect(query.toPlainObject().filter[field]).to.deep.equal({ '$gt': value });
+      expect(query.toPlainObject().filter[anotherField]).to.deep.equal({ '$ne': valueNext });
     });
   });
 
@@ -386,9 +808,34 @@ describe('Query', () => {
     it('should respect any existing filters on the same field', () => {
       const field = randomString();
       const query = new Query();
-      query.notContainedIn(field, randomString());
-      query.containsAll(field, [randomString()]);
-      expect(query.toPlainObject().filter[field]).to.have.property('$all');
+      const value = randomString();
+      const valueNext = randomString();
+      query.notContainedIn(field, value);
+      query.containsAll(field, [valueNext]);
+      expect(query.toPlainObject().filter[field]).to.deep.equal({ '$all': [valueNext], '$nin': [value] });
+    });
+
+    it('should throw error for missing arguments', () => {
+      expect(() => {
+        const query = new Query();
+        query.notContainedIn()
+      }).to.throw(/You must supply a value./);
+    });
+
+    it('should throw error for missing value argument', () => {
+      expect(() => {
+        const query = new Query();
+        const field = 'fieldToTest';
+        query.notContainedIn(field)
+      }).to.throw(/You must supply a value./);
+    });
+
+    it.skip('should throw error for non-string argument fields argument', () => {//TODO: Not implemented yet
+      expect(() => {
+        const query = new Query();
+        const field = {};
+        query.notContainedIn(field, randomString());
+      }).to.throw();//TODO: add the expected error once ready
     });
 
     it('should return the query', () => {
@@ -399,11 +846,11 @@ describe('Query', () => {
 
   describe('and()', () => {
     describe('when called with arguments', () => {
-      it('should throw an error with invalid arguments', () => {
+      it.skip('should throw an error with invalid arguments', () => {
         expect(() => {
           const query = new Query();
           query.and(randomString(), null);
-        }).to.throw();
+        }).to.throw(/query argument must be of type Kinvey.Query/);
       });
 
       it('should join a query', () => {
@@ -425,6 +872,16 @@ describe('Query', () => {
         query.and(new Query(), new Query());
         expect(query.toPlainObject().filter).to.have.property('$and');
         expect(query.toPlainObject().filter.$and.length).to.equal(3);
+      });
+
+      it('should join queries through chaining', () => {
+        const field = randomString();
+        const anotherField = randomString();
+        const value = randomString();
+        const valueNext = randomString();
+        const query = new Query();
+        query.greaterThan(field, value).and().lessThan(anotherField, valueNext);
+        expect(query.toPlainObject().filter.$and).to.deep.equal([{ [field]: { '$gt': value } }, { [anotherField]: { '$lt': valueNext } }]);
       });
 
       it('should return the query', () => {
@@ -454,11 +911,11 @@ describe('Query', () => {
 
   describe('nor()', () => {
     describe('when called with arguments', () => {
-      it('should throw an error with invalid arguments', () => {
+      it.skip('should throw an error with invalid arguments', () => {
         expect(() => {
           const query = new Query();
-          query.nor(randomString(), null);
-        }).to.throw();
+          query.nor(null);
+        }).to.throw(/query argument must be of type Kinvey.Query/);
       });
 
       it('should join a query', () => {
@@ -480,6 +937,16 @@ describe('Query', () => {
         query.nor(new Query(), new Query());
         expect(query.toPlainObject().filter).to.have.property('$nor');
         expect(query.toPlainObject().filter.$nor.length).to.equal(3);
+      });
+
+      it('should join queries through chaining', () => {
+        const field = randomString();
+        const anotherField = randomString();
+        const value = randomString();
+        const valueNext = randomString();
+        const query = new Query();
+        query.greaterThan(field, value).nor().lessThan(anotherField, valueNext);
+        expect(query.toPlainObject().filter.$nor).to.deep.equal([{ [field]: { '$gt': value } }, { [anotherField]: { '$lt': valueNext } }]);
       });
 
       it('should return the query', () => {
@@ -509,11 +976,11 @@ describe('Query', () => {
 
   describe('or()', () => {
     describe('when called with arguments', () => {
-      it('should throw an error with invalid arguments', () => {
+      it.skip('should throw an error with invalid arguments', () => {
         expect(() => {
           const query = new Query();
           query.or(randomString(), null);
-        }).to.throw();
+        }).to.throw(/query argument must be of type Kinvey.Query/);
       });
 
       it('should join a query', () => {
@@ -540,6 +1007,16 @@ describe('Query', () => {
       it('should return the query', () => {
         const query = new Query().or(new Query());
         expect(query).to.be.an.instanceof(Query);
+      });
+
+      it('should join queries through chaining', () => {
+        const field = randomString();
+        const anotherField = randomString();
+        const value = randomString();
+        const valueNext = randomString();
+        const query = new Query();
+        query.greaterThan(field, value).or().lessThan(anotherField, valueNext);
+        expect(query.toPlainObject().filter.$or).to.deep.equal([{ [field]: { '$gt': value } }, { [anotherField]: { '$lt': valueNext } }]);
       });
     });
 
@@ -579,10 +1056,42 @@ describe('Query', () => {
 
     it('should respect any existing filters on the same field', () => {
       const field = randomString();
+      const value = randomString();
       const query = new Query();
+      query.containsAll(field, [value]);
       query.exists(field);
-      query.containsAll(field, [randomString()]);
-      expect(query.toPlainObject().filter[field]).to.have.property('$all');
+      expect(query.toPlainObject().filter[field]).to.deep.equal({ '$all': [value], '$exists': true });
+    });
+
+    it.skip('should throw error for missing arguments', () => {//TODO: Not implemented yet
+      expect(() => {
+        const query = new Query();
+        query.exists()
+      }).to.throw(/You must supply a value./);
+    });
+
+    it.skip('should throw error for missing value argument', () => {//TODO: Not implemented yet
+      expect(() => {
+        const query = new Query();
+        const field = 'fieldToTest';
+        query.exists(field)
+      }).to.throw(/You must supply a value./);
+    });
+
+    it.skip('should throw error for non-string argument fields argument', () => {//TODO: Not implemented yet
+      expect(() => {
+        const query = new Query();
+        const field = {};
+        query.exists(field, randomString());
+      }).to.throw();//TODO: add the expected error once ready
+    });
+
+    it.skip('should throw error for non-boolean second argument fields argument', () => {//TODO: Not implemented yet
+      expect(() => {
+        const query = new Query();
+        const field = randomString();
+        query.exists(field, null);
+      }).to.throw();//TODO: add the expected error once ready
     });
 
     it('should return the query', () => {
@@ -596,14 +1105,14 @@ describe('Query', () => {
       expect(() => {
         const query = new Query();
         query.mod(randomString(), null);
-      }).to.throw();
+      }).to.throw(/divisor must be a number/);
     });
 
     it('should throw an error for invalid arguments remainder', () => {
       expect(() => {
         const query = new Query();
         query.mod(randomString(), 5, null);
-      }).to.throw();
+      }).to.throw(/remainder must be a number/);
     });
 
     it('should add a mod filter', () => {
@@ -615,12 +1124,45 @@ describe('Query', () => {
       expect(query.toPlainObject().filter[field]).to.deep.equal({ $mod: [divisor, remainder] });
     });
 
+    it('should add default remainder of 0 when remainder is skipped as argument', () => {
+      const field = randomString();
+      const divisor = 5;
+      const query = new Query();
+      query.mod(field, divisor);
+      expect(query.toPlainObject().filter[field]).to.deep.equal({ $mod: [divisor, 0] });
+    });
+
     it('should respect any existing filters on the same field', () => {
       const field = randomString();
       const query = new Query();
-      query.mod(field, 5);
-      query.containsAll(field, [randomString()]);
-      expect(query.toPlainObject().filter[field]).to.have.property('$all');
+      const value = randomString();
+      const valueNext = 5;
+      query.containsAll(field, [value]);
+      query.mod(field, valueNext);
+      expect(query.toPlainObject().filter[field]).to.deep.equal({ '$all': [value], '$mod': [5, 0] });
+    });
+
+    it('should throw error for missing arguments', () => {
+      expect(() => {
+        const query = new Query();
+        query.mod()
+      }).to.throw(/divisor must be a number/);
+    });
+
+    it('should throw error for missing divisor argument', () => {
+      expect(() => {
+        const query = new Query();
+        const field = 'fieldToTest';
+        query.mod(field)
+      }).to.throw(/divisor must be a number/);
+    });
+
+    it.skip('should throw error for non-string argument fields argument', () => {//TODO: Not implemented yet
+      expect(() => {
+        const query = new Query();
+        const field = {};
+        query.mod(field, 3);
+      }).to.throw(/sdsd/);//TODO: add the expected error once ready
     });
 
     it('should return the query', () => {
@@ -676,10 +1218,12 @@ describe('Query', () => {
     it('should respect any existing filters on the same field', () => {
       const field = randomString();
       const query = new Query();
-      query.matches(field, `^${randomString()}`);
-      query.greaterThan(field, randomString());
+      const value = randomString();
+      const valueNext = randomString();
+      query.greaterThan(field, value);
+      query.matches(field, `^${valueNext}`);
       expect(query.toPlainObject().filter).to.have.property(field);
-      expect(query.toPlainObject().filter[field]).to.have.property('$gt');
+      expect(query.toPlainObject().filter[field]).to.deep.equal({ '$gt': value, '$regex': `^${valueNext}` });
     });
 
     it('should return the query', () => {
@@ -790,7 +1334,7 @@ describe('Query', () => {
       expect(() => {
         const query = new Query();
         query.near(randomString(), []);
-      }).to.throw();
+      }).to.throw(/coord must be a \[number, number\]/);
     });
 
     it('should add a near filter', () => {
@@ -801,6 +1345,16 @@ describe('Query', () => {
       expect(query.toPlainObject().filter[field]).to.deep.equal({ $nearSphere: coord });
     });
 
+    it('should respect other filters on the same field', () => {
+      const field = randomString();
+      const coord = [-1, 1];
+      const boxCoord = [[-2, 2], [-1, 1]];
+      const query = new Query();
+      query.withinBox(field, boxCoord[0], boxCoord[1]);
+      query.near(field, coord);
+      expect(query.toPlainObject().filter[field]).to.deep.equal({ $nearSphere: coord, $within: { $box: boxCoord } });
+    });
+
     it('should add a near filter, with $maxDistance', () => {
       const field = randomString();
       const coord = [-1, 1];
@@ -808,6 +1362,13 @@ describe('Query', () => {
       const query = new Query();
       query.near(field, coord, maxDistance);
       expect(query.toPlainObject().filter[field]).to.deep.equal({ $nearSphere: coord, $maxDistance: maxDistance });
+    });
+
+    it('should throw an error for missing arguments', () => {
+      expect(() => {
+        const query = new Query();
+        query.near();
+      }).to.throw(/coord must be a \[number, number\]/);
     });
 
     it('should return the query', () => {
@@ -821,14 +1382,31 @@ describe('Query', () => {
       expect(() => {
         const query = new Query();
         query.withinBox(randomString(), [], [1, 1]);
-      }).to.throw();
+      }).to.throw(/bottomLeftCoord must be a \[number, number\]/);
     });
 
     it('should throw an error on invalid arguments: upperRightCoord', () => {
       expect(() => {
         const query = new Query();
         query.withinBox(randomString(), [1, 1], []);
-      }).to.throw();
+      }).to.throw(/upperRightCoord must be a \[number, number\]/);
+    });
+
+    it('should throw an error for missing arguments', () => {
+      expect(() => {
+        const query = new Query();
+        query.withinBox();
+      }).to.throw(/bottomLeftCoord must be a \[number, number\]/);
+    });
+
+    it('should respect other filters on the same field', () => {
+      const field = randomString();
+      const coord = [-1, 1];
+      const boxCoord = [[-2, 2], [-1, 1]];
+      const query = new Query();
+      query.near(field, coord);
+      query.withinBox(field, boxCoord[0], boxCoord[1]);
+      expect(query.toPlainObject().filter[field]).to.deep.equal({ $nearSphere: coord, $within: { $box: boxCoord } });
     });
 
     it('should add a within box filter', () => {
@@ -850,7 +1428,7 @@ describe('Query', () => {
       expect(() => {
         const query = new Query();
         query.withinPolygon(randomString(), []);
-      }).to.throw();
+      }).to.throw(/coords must be a \[\[number, number\]\]/);
     });
 
     it('should add a within polygon filter', () => {
@@ -861,9 +1439,38 @@ describe('Query', () => {
       expect(query.toPlainObject().filter[field]).to.deep.equal({ $within: { $polygon: polygon } });
     });
 
+    it('should add a within polygon filter with more than 3 points in the coord argument', () => {
+      const field = randomString();
+      const polygon = [[-1, -1], [-1, 1], [1, 1], [-2, 2]];
+      const query = new Query();
+      query.withinPolygon(field, polygon);
+      expect(query.toPlainObject().filter[field]).to.deep.equal({ $within: { $polygon: polygon } });
+    });
+
     it('should return the query', () => {
       const query = new Query().withinPolygon(randomString(), [[-1, -1], [-1, 1], [1, 1]]);
       expect(query).to.be.an.instanceof(Query);
+    });
+
+    it.skip('should throw an error for less than 3 points in the coord argument', () => {
+      expect(() => {
+        const query = new Query();
+        query.withinPolygon(randomString(), [[-1, 1], [0, 0]]);
+      }).to.throw(/coords must be a \[\[number, number\]\]/);
+    });
+
+    it('should throw an error for missing arguments', () => {
+      expect(() => {
+        const query = new Query();
+        query.withinPolygon();
+      }).to.throw(/coords must be a \[\[number, number\]\]/);
+    });
+
+    it.skip('should throw an error for non-string field argument', () => {
+      expect(() => {
+        const query = new Query();
+        query.withinPolygon({});
+      }).to.throw(/Field must be a string/);
     });
   });
 
@@ -872,7 +1479,7 @@ describe('Query', () => {
       expect(() => {
         const query = new Query();
         query.size(randomString(), null);
-      }).to.throw();
+      }).to.throw(/size must be a number/);
     });
 
     it('should add a size filter', () => {
@@ -885,10 +1492,26 @@ describe('Query', () => {
 
     it('should respect any existing filters on the same field', () => {
       const field = randomString();
+      const value = randomString();
+      const valueNext = 10;
       const query = new Query();
-      query.size(field, 10);
-      query.containsAll(field, [randomString()]);
-      expect(query.toPlainObject().filter[field]).to.have.property('$all');
+      query.containsAll(field, [value]);
+      query.size(field, valueNext);
+      expect(query.toPlainObject().filter[field]).to.deep.equal({ '$all': [value], '$size': valueNext });
+    });
+
+    it('should throw an error for missing arguments', () => {
+      expect(() => {
+        const query = new Query();
+        query.size();
+      }).to.throw(/size must be a number/);
+    });
+
+    it.skip('should throw an error for non-string field argument', () => {
+      expect(() => {
+        const query = new Query();
+        query.size({});
+      }).to.throw(/field must be a string/);
     });
 
     it('should return the query', () => {
@@ -925,7 +1548,25 @@ describe('Query', () => {
       expect(query.toPlainObject().sort[field2]).to.equal(-1);
     });
 
-    it.skip('should sort the data in ascending order', () => {//TODO: query.process is not a function
+    it('should exist along with filters on the same field', () => {
+      const field1 = randomString();
+      const value = randomString();
+      const query = new Query();
+      query.ascending(field1);
+      query.equalTo(field1, value);
+      expect(query.toPlainObject().sort[field1]).to.equal(1);
+      expect(query.toPlainObject().filter[field1]).to.equal(value);
+    });
+
+    it('should override a descending sort on the same field', () => {
+      const field = randomString();
+      const query = new Query();
+      query.descending(field);
+      query.ascending(field);
+      expect(query.toPlainObject().sort[field]).to.equal(1);
+    });
+
+    it('should sort the data in ascending order', () => {
       const entity1 = { _id: 1, customProperty: randomString() };
       const entity2 = { _id: 2, customProperty: randomString() };
       const query = new Query().ascending('_id');
@@ -935,7 +1576,7 @@ describe('Query', () => {
       expect(result[1].customProperty).to.equal(entity2.customProperty);
     });
 
-    it.skip('should put docs with null or undefined values for sort field at the beginning of the list', () => {//TODO: query.process is not a function
+    it('should put docs with null or undefined values for sort field at the beginning of the list', () => {
       const entity1 = { _id: 1, customProperty: randomString() };
       const entity2 = { _id: null, customProperty: randomString() };
       const entity3 = { _id: 2, customProperty: randomString() };
@@ -950,6 +1591,23 @@ describe('Query', () => {
       expect(result[3].customProperty).to.equal(entity1.customProperty);
       expect(result[4].customProperty).to.equal(entity3.customProperty);
     });
+
+    it('should throw error for missing arguments', () => {
+      expect(() => {
+        const query = new Query();
+        query.ascending();
+        expect(query.toPlainObject().sort[field]).to.equal(1);
+      }).to.throw(/field is not defined/);
+    });
+
+    it.skip('should throw error for non-string field argument', () => {
+      expect(() => {
+        const field = {};
+        const query = new Query();
+        query.ascending(field);
+      }).to.throw(/field is not defined/);
+    });
+
   });
 
   describe('descending()', () => {
@@ -980,7 +1638,25 @@ describe('Query', () => {
       expect(query.toPlainObject().sort[field2]).to.equal(1);
     });
 
-    it.skip('should sort the data in descending order', () => {//TODO: query.process is not a function
+    it('should exist along with filters on the same field', () => {
+      const field1 = randomString();
+      const value = randomString();
+      const query = new Query();
+      query.descending(field1);
+      query.equalTo(field1, value);
+      expect(query.toPlainObject().sort[field1]).to.equal(-1);
+      expect(query.toPlainObject().filter[field1]).to.equal(value);
+    });
+
+    it('should override a descending sort on the same field', () => {
+      const field = randomString();
+      const query = new Query();
+      query.ascending(field);
+      query.descending(field);
+      expect(query.toPlainObject().sort[field]).to.equal(-1);
+    });
+
+    it('should sort the data in descending order', () => {
       const entity1 = { _id: 1, customProperty: randomString() };
       const entity2 = { _id: 2, customProperty: randomString() };
       const query = new Query().descending('_id');
@@ -990,7 +1666,7 @@ describe('Query', () => {
       expect(result[1].customProperty).to.equal(entity1.customProperty);
     });
 
-    it.skip('should put docs with null or undefined values for sort field at the end of the list', () => {//TODO: query.process is not a function
+    it('should put docs with null or undefined values for sort field at the end of the list', () => {
       const entity1 = { _id: 1, customProperty: randomString() };
       const entity2 = { _id: null, customProperty: randomString() };
       const entity3 = { _id: 2, customProperty: randomString() };
@@ -1004,6 +1680,22 @@ describe('Query', () => {
       expect(result[2].customProperty).to.equal(entity5.customProperty);
       expect(result[3].customProperty).to.equal(entity4.customProperty);
       expect(result[4].customProperty).to.equal(entity2.customProperty);
+    });
+
+    it('should throw error for missing arguments', () => {
+      expect(() => {
+        const query = new Query();
+        query.descending();
+        expect(query.toPlainObject().sort[field]).to.equal(-1);
+      }).to.throw(/field is not defined/);
+    });
+
+    it.skip('should throw error for non-string field argument', () => {
+      expect(() => {
+        const field = {};
+        const query = new Query();
+        query.descending(field);
+      }).to.throw(/field is not defined/);
     });
   });
 
@@ -1289,23 +1981,23 @@ describe('Query', () => {
     });
   });
 
-  describe.skip('process()', () => {
-    it('throw an error when a query is not supported locally', () => {//TODO: query.process is not a function
+  describe('process()', () => {
+    it('throw an error when a query is not supported locally', () => {
       expect(() => {
         const query = new Query();
-        query.near('loc', [0, 0]);
+        query.near('_geoloc', [0, 0]);
         return query.process([]);
       }).to.throw(/This query is not able to run locally./);
     });
 
-    it('throw an error when a data is not an array', () => {//TODO: query.process is not a function
+    it('throw an error when a data is not an array', () => {
       expect(() => {
         const query = new Query();
         return query.process({});
       }).to.throw(/data argument must be of type: Array./);
     });
 
-    it('should process a fields query', () => {//TODO: query.process is not a function
+    it('should process a fields query', () => {
       const entities = [
         { name: 'Name1', desc: 'Desc1' },
         { name: 'Name2', desc: 'Desc2' }
@@ -1315,7 +2007,7 @@ describe('Query', () => {
       expect(query.process(entities)).to.deep.equal([{ desc: 'Desc1' }, { desc: 'Desc2' }]);
     });
 
-    it('should not remove protected fields when fields are specified', () => {//TODO: query.process is not a function
+    it('should not remove protected fields when fields are specified', () => {
       const entities = [
         { _id: '0', _acl: 'acl1', _kmd: 'kmd1', name: 'Name1', desc: 'Desc1' },
         { _id: '1', _acl: 'acl2', _kmd: 'kmd2', name: 'Name2', desc: 'Desc2' }
@@ -1394,6 +2086,156 @@ describe('Query', () => {
       const query = new Query();
       const queryString = query.toQueryString();
       expect(queryString).to.not.have.property('sort');
+    });
+  });
+
+  describe('toPlainObject()', () => {
+    it('should have a filter property', ()=>{
+      const query = new Query();
+      expect(query.toPlainObject()).to.have.property('filter')
+    });
+
+    it('should have a fields property', ()=>{
+      const query = new Query();
+      expect(query.toPlainObject()).to.have.property('fields')
+    });
+
+    it('should have a sort property', ()=>{
+      const query = new Query();
+      expect(query.toPlainObject()).to.have.property('sort')
+    });
+
+    it('should have a limit property', ()=>{
+      const query = new Query();
+      expect(query.toPlainObject()).to.have.property('limit')
+    });
+
+    it('should have a skip property', ()=>{
+      const query = new Query();
+      expect(query.toPlainObject()).to.have.property('skip')
+    });
+  });
+
+  describe('addFilter()', () => {
+    it('should add equalTo filter', () => {
+      const query = new Query();
+      const field = randomString();
+      const value = randomString();
+      query.addFilter(field, value);
+      expect(query.toPlainObject().filter[field]).to.equal(value)
+    });
+
+    it('should add notEqualTo filter', () => {
+      const query = new Query();
+      const field = randomString();
+      const value = randomString();
+      query.addFilter(field, '$ne', value);
+      expect(query.toPlainObject().filter[field]).to.deep.equal({$ne:value})
+    });
+
+    it('should add greaterThan filter', () => {
+      const query = new Query();
+      const field = randomString();
+      const value = randomString();
+      query.addFilter(field, '$gt', value);
+      expect(query.toPlainObject().filter[field]).to.deep.equal({$gt:value})
+    });
+
+    it('should add greaterThanOrEqualTo filter', () => {
+      const query = new Query();
+      const field = randomString();
+      const value = randomString();
+      query.addFilter(field, '$gte', value);
+      expect(query.toPlainObject().filter[field]).to.deep.equal({$gte:value})
+    });
+
+    it('should add lessThan filter', () => {
+      const query = new Query();
+      const field = randomString();
+      const value = randomString();
+      query.addFilter(field, '$lt', value);
+      expect(query.toPlainObject().filter[field]).to.deep.equal({$lt:value})
+    });
+
+    it('should add lessThanOrEqualTo filter', () => {
+      const query = new Query();
+      const field = randomString();
+      const value = randomString();
+      query.addFilter(field, '$lte', value);
+      expect(query.toPlainObject().filter[field]).to.deep.equal({$lte:value})
+    });
+
+    it('should add exists filter', () => {
+      const query = new Query();
+      const field = randomString();
+      const value = randomString();
+      query.addFilter(field, '$exists', value);
+      expect(query.toPlainObject().filter[field]).to.deep.equal({$exists:value})
+    });
+
+    it('should add mod filter', () => {
+      const query = new Query();
+      const field = randomString();
+      const value = randomString();
+      query.addFilter(field, '$mod', value);
+      expect(query.toPlainObject().filter[field]).to.deep.equal({$mod:value})
+    });
+
+    it('should add size filter', () => {
+      const query = new Query();
+      const field = randomString();
+      const value = randomString();
+      query.addFilter(field, '$size', value);
+      expect(query.toPlainObject().filter[field]).to.deep.equal({$size:value})
+    });
+
+    it('should add matches filter', () => {
+      const query = new Query();
+      const field = randomString();
+      const value = randomString();
+      query.addFilter(field, '$regex', value);
+      expect(query.toPlainObject().filter[field]).to.deep.equal({$regex:value})
+    });
+
+    it('should add contains filter', () => {
+      const query = new Query();
+      const field = randomString();
+      const value = randomString();
+      query.addFilter(field, '$in', value);
+      expect(query.toPlainObject().filter[field]).to.deep.equal({$in:value})
+    });
+
+    it('should add containsAll filter', () => {
+      const query = new Query();
+      const field = randomString();
+      const value = randomString();
+      query.addFilter(field, '$all', value);
+      expect(query.toPlainObject().filter[field]).to.deep.equal({$all:value})
+    });
+
+    it('should add notContainedIn filter', () => {
+      const query = new Query();
+      const field = randomString();
+      const value = randomString();
+      query.addFilter(field, '$nin', value);
+      expect(query.toPlainObject().filter[field]).to.deep.equal({$nin:value})
+    });
+
+    it('should add near filter', () => {
+      const query = new Query();
+      const field = randomString();
+      const value = randomString();
+      query.addFilter(field, '$nearSphere', value);
+      expect(query.toPlainObject().filter[field]).to.deep.equal({$nearSphere:value})
+    });
+  });
+
+  describe('toString()', () => {
+    it('should add filter property', () => {
+      const query = new Query();
+      query.equalTo('field','value');
+      const queryToString = query.toString();
+      expect(JSON.parse(queryToString)).to.have.property('query');
     });
   });
 });
