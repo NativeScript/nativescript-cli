@@ -4,7 +4,7 @@ import { Yok } from "../../../yok";
 import { assert } from "chai";
 import { DeviceDiscoveryEventNames, CONNECTED_STATUS } from "../../../constants";
 import { DevicePlatformsConstants } from "../../../mobile/device-platforms-constants";
-import { ErrorsStub, CommonLoggerStub, HooksServiceStub } from "../stubs";
+import { ErrorsStub, CommonLoggerStub, HooksServiceStub, LockServiceStub } from "../stubs";
 import { FileSystemStub } from "../../../../../test/stubs";
 
 let currentlyRunningSimulators: Mobile.IiSimDevice[];
@@ -16,6 +16,7 @@ function createTestInjector(): IInjector {
 	injector.register("injector", injector);
 	injector.register("errors", ErrorsStub);
 	injector.register("iOSDebuggerPortService", {});
+	injector.register("lockService", LockServiceStub);
 	injector.register("iOSSimResolver", {
 		iOSSim: {
 			getRunningSimulators: async () => currentlyRunningSimulators

@@ -329,7 +329,6 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 		} catch (err) {
 			this.$logger.trace("Couldn't attach debugger, will modify options and try again.", err);
 			attachDebuggerOptions.debugOptions.start = false;
-			attachDebuggerOptions.debugOptions.skipHandshake = true;
 			try {
 				debugInformation = await this.attachDebugger(attachDebuggerOptions);
 			} catch (innerErr) {
