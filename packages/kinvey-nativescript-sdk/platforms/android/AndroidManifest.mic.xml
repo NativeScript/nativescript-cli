@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+	<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+
+	<application android:name="com.tns.NativeScriptApplication">
+		<activity
+			android:name="com.tns.NativeScriptActivity"
+			android:launchMode="singleTask">
+			<intent-filter>
+				<data android:scheme="{redirectUriScheme}" />
+				<action android:name="android.intent.action.VIEW" />
+				<category android:name="android.intent.category.DEFAULT" />
+				<category android:name="android.intent.category.BROWSABLE" />
+			</intent-filter>
+		</activity>
+	</application>
+</manifest>

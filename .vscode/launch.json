@@ -376,27 +376,15 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "Integration Tests",
-      "program": "${workspaceFolder}/tests/integration/node_modules/.bin/_mocha",
-      "cwd": "${workspaceFolder}/tests/integration",
-      "preLaunchTask": "npm: build:dev",
+      "name": "HTML5 Integration Tests",
+      "program": "${workspaceFolder}/node_modules/.bin/karma",
+      "preLaunchTask": "npm: build:html5",
       "sourceMaps": true,
       "smartStep": true,
       "args": [
-        "--require",
-        "dotenv/config",
-        "--require",
-        "kinvey-test-register",
-        "--require",
-        "@babel/register",
-        "--opts",
-        "${workspaceFolder}/tests/integration/mocha.opts",
-        "${workspaceFolder}/tests/integration/shared/**/*.js"
+        "start",
+        "test/karma-html5.local.js"
       ],
-      "env": {
-        "NODE_ENV": "development",
-        "SDK": "kinvey-node-sdk"
-      },
       "skipFiles": [
         "<node_internals>/**/*.js",
         "${workspaceFolder}/node_modules/**/*.js"

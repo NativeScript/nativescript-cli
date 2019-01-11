@@ -1,0 +1,32 @@
+import exists from './exists';
+import forgotUsername from './forgotUsername';
+import { login, loginWithRedirectUri, loginWithUsernamePassword, loginWithMIC } from './login';
+import logout from './logout';
+import lookup from './lookup';
+import me from './me';
+import remove from './remove';
+import resetPassword from './resetPassword';
+import restore from './restore';
+import { signup } from './signup';
+import update from './update';
+import { getActiveUser, User } from './user';
+import verifyEmail from './verifyEmail';
+
+User.exists = exists;
+User.forgotUsername = forgotUsername;
+User.login = login;
+User.loginWithRedirectUri = loginWithRedirectUri;
+User.loginWithUsernamePassword = loginWithUsernamePassword;
+User.loginWithMIC = loginWithMIC;
+User.logout = logout;
+User.lookup = lookup;
+User.me = me;
+User.remove = remove;
+User.resetPassword = resetPassword;
+User.restore = restore;
+User.signup = signup;
+User.update = update;
+User.verifyEmail = verifyEmail;
+User.getActiveUser = getActiveUser;
+
+export default User;
