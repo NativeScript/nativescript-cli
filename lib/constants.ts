@@ -44,6 +44,8 @@ export const DEPENDENCIES_JSON_NAME = "dependencies.json";
 export const APK_EXTENSION_NAME = ".apk";
 export const AAB_EXTENSION_NAME = ".aab";
 export const HASHES_FILE_NAME = ".nshashes";
+export const TNS_NATIVE_SOURCE_GROUP_NAME = "TNSNativeSource";
+export const NATIVE_SOURCE_FOLDER = "src";
 
 export class PackageVersion {
 	static NEXT = "next";

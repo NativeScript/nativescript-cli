@@ -54,9 +54,7 @@ export class CocoaPodsService implements ICocoaPodsService {
 
 	public async applyPodfileToProject(moduleName: string, podfilePath: string, projectData: IProjectData, nativeProjectPath: string): Promise<void> {
 		if (!this.$fs.exists(podfilePath)) {
-			if (podfilePath === projectData.podfilePath) {
-				this.removePodfileFromProject(moduleName, podfilePath, projectData, nativeProjectPath);
-			}
+			this.removePodfileFromProject(moduleName, podfilePath, projectData, nativeProjectPath);
 			return;
 		}
 
@@ -80,7 +78,7 @@ export class CocoaPodsService implements ICocoaPodsService {
 
 	public removePodfileFromProject(moduleName: string, podfilePath: string, projectData: IProjectData, projectRoot: string): void {
 
-		if ((this.$fs.exists(podfilePath) || podfilePath === projectData.podfilePath) && this.$fs.exists(this.getProjectPodfilePath(projectRoot))) {
+		if (this.$fs.exists(this.getProjectPodfilePath(projectRoot))) {
 			let projectPodFileContent = this.$fs.readText(this.getProjectPodfilePath(projectRoot));
 			// Remove the data between #Begin Podfile and #EndPodfile
 			const regExpToRemove = new RegExp(`${this.getPluginPodfileHeader(podfilePath)}[\\s\\S]*?${this.getPluginPodfileEnd()}`, "mg");

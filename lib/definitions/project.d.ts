@@ -410,7 +410,7 @@ interface IPlatformProjectService extends NodeJS.EventEmitter, IPlatformProjectS
 	getAppResourcesDestinationDirectoryPath(projectData: IProjectData): string;
 
 	cleanDeviceTempFolder(deviceIdentifier: string, projectData: IProjectData): Promise<void>;
-	processConfigurationFilesFromAppResources(release: boolean, projectData: IProjectData, installPods: boolean): Promise<void>;
+	processConfigurationFilesFromAppResources(projectData: IProjectData, opts: { release: boolean,  installPods: boolean }): Promise<void>;
 
 	/**
 	 * Ensures there is configuration file (AndroidManifest.xml, Info.plist) in app/App_Resources.

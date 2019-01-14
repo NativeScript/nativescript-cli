@@ -771,7 +771,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 			this.$logger.trace(`Images to remove from xcode project: ${imagesToRemove.join(", ")}`);
 			_.each(imagesToRemove, image => project.removeResourceFile(path.join(this.getAppResourcesDestinationDirectoryPath(projectData), image)));
 
-			await this.prepareNativeSourceCode("src", path.join(projectData.appDirectoryPath, constants.APP_RESOURCES_FOLDER_NAME, this.getPlatformData(projectData).normalizedPlatformName, "src"), projectData);
+			await this.prepareNativeSourceCode(constants.TNS_NATIVE_SOURCE_GROUP_NAME, path.join(projectData.getAppResourcesDirectoryPath(), constants.APP_RESOURCES_FOLDER_NAME, this.getPlatformData(projectData).normalizedPlatformName, constants.NATIVE_SOURCE_FOLDER), projectData);
 
 			this.savePbxProj(project, projectData);
 		}
@@ -786,22 +786,22 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		filterFile(constants.PODFILE_NAME);
 
 		// src folder should not be copied as the pbxproject will have references to its files
-		this.$fs.deleteDirectory(path.join(appResourcesDirectoryPath, this.getPlatformData(projectData).normalizedPlatformName, "src"));
+		this.$fs.deleteDirectory(path.join(appResourcesDirectoryPath, this.getPlatformData(projectData).normalizedPlatformName, constants.NATIVE_SOURCE_FOLDER));
 
 		this.$fs.deleteDirectory(this.getAppResourcesDestinationDirectoryPath(projectData));
 	}
 
-	public async processConfigurationFilesFromAppResources(release: boolean, projectData: IProjectData, installPods: boolean): Promise<void> {
-		await this.mergeInfoPlists({ release }, projectData);
+	public async processConfigurationFilesFromAppResources(projectData: IProjectData, opts: { release: boolean,  installPods: boolean }): Promise<void> {
+		await this.mergeInfoPlists({ release: opts.release }, projectData);
 		await this.$iOSEntitlementsService.merge(projectData);
-		await this.mergeProjectXcconfigFiles(release, projectData);
+		await this.mergeProjectXcconfigFiles(opts.release, projectData);
 		for (const pluginData of await this.getAllInstalledPlugins(projectData)) {
 			await this.$pluginVariablesService.interpolatePluginVariables(pluginData, this.getPlatformData(projectData).configurationFilePath, projectData.projectDir);
 		}
 
 		this.$pluginVariablesService.interpolateAppIdentifier(this.getPlatformData(projectData).configurationFilePath, projectData.projectIdentifiers.ios);
 
-		if (installPods) {
+		if (opts.installPods) {
 			await this.installPodsIfAny(projectData);
 		}
 	}

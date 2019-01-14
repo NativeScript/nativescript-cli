@@ -63,7 +63,7 @@ export class PreparePlatformNativeService extends PreparePlatformService impleme
 
 		if (!config.changesInfo || config.changesInfo.configChanged || config.changesInfo.modulesChanged) {
 			// Passing !shouldPrepareModules` we assume that if the node modules are prepared base Podfile content is added and `pod install` is executed.
-			await config.platformData.platformProjectService.processConfigurationFilesFromAppResources(config.appFilesUpdaterOptions.release, config.projectData, !shouldPrepareModules);
+			await config.platformData.platformProjectService.processConfigurationFilesFromAppResources(config.projectData, {release:config.appFilesUpdaterOptions.release, installPods: !shouldPrepareModules});
 		}
 
 		config.platformData.platformProjectService.interpolateConfigurationFile(config.projectData, config.platformSpecificData);
