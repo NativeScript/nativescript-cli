@@ -4,6 +4,7 @@ import { EventEmitter } from "events";
 import { CONNECTION_ERROR_EVENT_NAME, DebugCommandErrors } from "../constants";
 import { CONNECTED_STATUS } from "../common/constants";
 import { DebugTools, TrackActionNames } from "../constants";
+import { performanceLog } from "../common/decorators";
 
 export class DebugService extends EventEmitter implements IDebugService {
 	private _platformDebugServices: IDictionary<IDeviceDebugService>;
@@ -17,6 +18,7 @@ export class DebugService extends EventEmitter implements IDebugService {
 		this._platformDebugServices = {};
 	}
 
+	@performanceLog()
 	public async debug(debugData: IDebugData, options: IDebugOptions): Promise<IDebugInformation> {
 		const device = this.$devicesService.getDeviceByIdentifier(debugData.deviceIdentifier);
 

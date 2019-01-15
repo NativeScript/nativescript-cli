@@ -7,6 +7,7 @@ import { DeviceAndroidDebugBridge } from "../common/mobile/android/device-androi
 import { attachAwaitDetach, isRecommendedAarFile } from "../common/helpers";
 import { Configurations, LiveSyncPaths } from "../common/constants";
 import { SpawnOptions } from "child_process";
+import { performanceLog } from ".././common/decorators";
 
 export class AndroidProjectService extends projectServiceBaseLib.PlatformProjectServiceBase implements IPlatformProjectService {
 	private static VALUES_DIRNAME = "values";
@@ -325,6 +326,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		return true;
 	}
 
+	@performanceLog()
 	public async buildProject(projectRoot: string, projectData: IProjectData, buildConfig: IBuildConfig): Promise<void> {
 		let task;
 		const gradleArgs = this.getGradleBuildOptions(buildConfig, projectData);

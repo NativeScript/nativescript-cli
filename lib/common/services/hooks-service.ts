@@ -1,6 +1,7 @@
 import * as path from "path";
 import * as util from "util";
 import { annotate, getValueFromNestedObject } from "../helpers";
+import { AnalyticsEventLabelDelimiter } from "../../constants";
 
 class Hook implements IHook {
 	constructor(public name: string,
@@ -22,7 +23,8 @@ export class HooksService implements IHooksService {
 		private $staticConfig: Config.IStaticConfig,
 		private $injector: IInjector,
 		private $projectHelper: IProjectHelper,
-		private $options: IOptions) { }
+		private $options: IOptions,
+		private $performanceService: IPerformanceService) { }
 
 	public get hookArgsName(): string {
 		return "hookArgs";
@@ -93,9 +95,11 @@ export class HooksService implements IHooksService {
 		hookArguments = hookArguments || {};
 		const results: any[] = [];
 		const hooks = this.getHooksByName(directoryPath, hookName);
+
 		for (let i = 0; i < hooks.length; ++i) {
 			const hook = hooks[i];
-			this.$logger.info("Executing %s hook from %s", hookName, hook.fullPath);
+			const relativePath = path.relative(directoryPath, hook.fullPath);
+			const trackId = relativePath.replace(new RegExp('\\' + path.sep, 'g'), AnalyticsEventLabelDelimiter);
 			let command = this.getSheBangInterpreter(hook);
 			let inProc = false;
 			if (!command) {
@@ -106,6 +110,7 @@ export class HooksService implements IHooksService {
 				}
 			}
 
+			const startTime = this.$performanceService.now();
 			if (inProc) {
 				this.$logger.trace("Executing %s hook at location %s in-process", hookName, hook.fullPath);
 				const hookEntryPoint = require(hook.fullPath);
@@ -155,7 +160,11 @@ export class HooksService implements IHooksService {
 				if (output.exitCode !== 0) {
 					throw new Error(output.stdout + output.stderr);
 				}
+
+				this.$logger.trace("Finished executing %s hook at location %s with environment ", hookName, hook.fullPath, environment);
 			}
+			const endTime = this.$performanceService.now();
+			this.$performanceService.processExecutionData(trackId, startTime, endTime, [hookArguments]);
 		}
 
 		return results;

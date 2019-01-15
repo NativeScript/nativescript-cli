@@ -122,7 +122,8 @@ export class AnalyticsService implements IAnalyticsService, IDisposable {
 			googleAnalyticsDataType: GoogleAnalyticsDataType.Event,
 			action: data.action,
 			label,
-			customDimensions
+			customDimensions,
+			value: data.value
 		};
 
 		await this.trackInGoogleAnalytics(googleAnalyticsEventData);

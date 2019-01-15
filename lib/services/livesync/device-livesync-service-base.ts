@@ -1,5 +1,6 @@
 import { cache } from "../../common/decorators";
 import * as path from "path";
+import { performanceLog } from "../../common/decorators";
 
 export abstract class DeviceLiveSyncServiceBase {
 	private static FAST_SYNC_FILE_EXTENSIONS = [".css", ".xml", ".html"];
@@ -27,6 +28,7 @@ export abstract class DeviceLiveSyncServiceBase {
 		return fastSyncFileExtensions;
 	}
 
+	@performanceLog()
 	public async transferFiles(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], projectFilesPath: string, projectData: IProjectData, liveSyncDeviceInfo: ILiveSyncDeviceInfo, options: ITransferFilesOptions): Promise<Mobile.ILocalToDevicePathData[]> {
 		let transferredFiles: Mobile.ILocalToDevicePathData[] = [];
 

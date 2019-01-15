@@ -1,6 +1,7 @@
 import { AndroidDeviceLiveSyncService } from "./android-device-livesync-service";
 import { AndroidDeviceSocketsLiveSyncService } from "./android-device-livesync-sockets-service";
 import { PlatformLiveSyncServiceBase } from "./platform-livesync-service-base";
+import { performanceLog } from "../../common/decorators";
 import * as semver from "semver";
 
 export class AndroidLiveSyncService extends PlatformLiveSyncServiceBase implements IPlatformLiveSyncService {
@@ -23,6 +24,7 @@ export class AndroidLiveSyncService extends PlatformLiveSyncServiceBase implemen
 		return this.$injector.resolve<INativeScriptDeviceLiveSyncService>(AndroidDeviceLiveSyncService, { device, data });
 	}
 
+	@performanceLog()
 	public async liveSyncWatchAction(device: Mobile.IDevice, liveSyncInfo: ILiveSyncWatchInfo): Promise<IAndroidLiveSyncResultInfo> {
 		let result = await this.liveSyncWatchActionCore(device, liveSyncInfo);
 
@@ -45,6 +47,7 @@ export class AndroidLiveSyncService extends PlatformLiveSyncServiceBase implemen
 		return result;
 	}
 
+	@performanceLog()
 	public async fullSync(syncInfo: IFullSyncInfo): Promise<IAndroidLiveSyncResultInfo> {
 		const liveSyncResult = await super.fullSync(syncInfo);
 		const result = await this.finalizeSync(syncInfo.device, syncInfo.projectData, liveSyncResult);

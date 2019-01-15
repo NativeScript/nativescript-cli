@@ -119,7 +119,8 @@ export class Options {
 			analyticsLogFile: { type: OptionType.String, hasSensitiveValue: true },
 			hooks: { type: OptionType.Boolean, default: true, hasSensitiveValue: false },
 			link: { type: OptionType.Boolean, default: false, hasSensitiveValue: false },
-			aab: { type: OptionType.Boolean, hasSensitiveValue: false }
+			aab: { type: OptionType.Boolean, hasSensitiveValue: false },
+			performance: { type: OptionType.Object, hasSensitiveValue: true }
 		};
 	}
 

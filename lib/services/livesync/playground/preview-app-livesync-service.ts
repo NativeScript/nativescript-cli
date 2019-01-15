@@ -5,6 +5,7 @@ import { PreviewAppLiveSyncEvents } from "./preview-app-constants";
 import { HmrConstants } from "../../../common/constants";
 import { stringify } from "../../../common/helpers";
 import { EventEmitter } from "events";
+import { performanceLog } from "../../../common/decorators";
 
 export class PreviewAppLiveSyncService extends EventEmitter implements IPreviewAppLiveSyncService {
 
@@ -24,6 +25,7 @@ export class PreviewAppLiveSyncService extends EventEmitter implements IPreviewA
 			super();
 		}
 
+	@performanceLog()
 	public async initialize(data: IPreviewAppLiveSyncData): Promise<void> {
 		await this.$previewSdkService.initialize(async (device: Device) => {
 			try {
@@ -54,6 +56,7 @@ export class PreviewAppLiveSyncService extends EventEmitter implements IPreviewA
 		});
 	}
 
+	@performanceLog()
 	public async syncFiles(data: IPreviewAppLiveSyncData, filesToSync: string[], filesToRemove: string[]): Promise<void> {
 		this.showWarningsForNativeFiles(filesToSync);
 
@@ -140,6 +143,7 @@ export class PreviewAppLiveSyncService extends EventEmitter implements IPreviewA
 		}
 	}
 
+	@performanceLog()
 	private async onWebpackCompilationComplete(data: IPreviewAppLiveSyncData, hmrData: IDictionary<IPlatformHmrData>, filesToSyncMap: IDictionary<string[]>, promise: Promise<void>, platform: string) {
 		await promise
 			.then(async () => {

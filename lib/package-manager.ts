@@ -1,5 +1,6 @@
 
 import { cache, exported, invokeInit } from './common/decorators';
+import { performanceLog } from "./common/decorators";
 export class PackageManager implements INodePackageManager {
 	private packageManager: INodePackageManager;
 
@@ -17,6 +18,7 @@ export class PackageManager implements INodePackageManager {
 	}
 
 	@exported("packageManager")
+	@performanceLog()
 	@invokeInit()
 	public install(packageName: string, pathToSave: string, config: INodePackageManagerInstallOptions): Promise<INpmInstallResultInfo> {
 		return this.packageManager.install(packageName, pathToSave, config);

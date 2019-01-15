@@ -1,3 +1,5 @@
+import { AnalyticsEventLabelDelimiter } from "../constants";
+
 /**
  * Caches the result of the first execution of the method and returns it whenever it is called instead of executing it again.
  * Works with methods and getters.
@@ -78,6 +80,51 @@ export function exported(moduleName: string): any {
 				result = originalMethod.apply(originalModule, args);
 
 			return result;
+		};
+
+		return descriptor;
+	};
+}
+
+export function performanceLog(injector?: IInjector): any {
+	injector = injector || $injector;
+	return function (target: any, propertyKey: string, descriptor: PropertyDescriptor): any {
+		const originalMethod = descriptor.value;
+		const className = target.constructor.name;
+		const trackName = `${className}${AnalyticsEventLabelDelimiter}${propertyKey}`;
+		const performanceService: IPerformanceService = injector.resolve("performanceService");
+
+		//needed for the returned function to have the same name as the original - used in hooks decorator
+		const functionWrapper = {
+			[originalMethod.name]: function (...args: Array<any>) {
+				const start = performanceService.now();
+				const result = originalMethod.apply(this, args);
+				const resolvedPromise = Promise.resolve(result);
+				let end;
+
+				if (resolvedPromise !== result) {
+					end = performanceService.now();
+					performanceService.processExecutionData(trackName, start, end, args);
+				} else {
+					resolvedPromise
+					.then(() => {
+						end = performanceService.now();
+						performanceService.processExecutionData(trackName, start, end, args);
+					})
+					.catch((err) => {
+						end = performanceService.now();
+						performanceService.processExecutionData(trackName, start, end, args);
+					});
+				}
+
+				return result;
+			}
+		};
+		descriptor.value = functionWrapper[originalMethod.name];
+
+		// used to get parameter names in hooks decorator
+		descriptor.value.toString = () => {
+			return originalMethod.toString();
 		};
 
 		return descriptor;

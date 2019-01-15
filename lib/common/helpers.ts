@@ -568,6 +568,34 @@ export function stringify(value: any, replacer?: (key: string, value: any) => an
 	return JSON.stringify(value, replacer, space || 2);
 }
 
+//2019-01-07 18:29:50.745
+export function getFixedLengthDateString(): string {
+	const currentDate = new Date();
+	const year = currentDate.getFullYear();
+	const month = getFormattedDateComponent((currentDate.getMonth() + 1));
+	const day = getFormattedDateComponent(currentDate.getDate());
+	const hour = getFormattedDateComponent(currentDate.getHours());
+	const minutes = getFormattedDateComponent(currentDate.getMinutes());
+	const seconds = getFormattedDateComponent(currentDate.getSeconds());
+	const milliseconds = getFormattedMilliseconds(currentDate);
+
+	return `${[year, month, day].join('-')} ${[hour, minutes, seconds].join(":")}.${milliseconds}`;
+}
+
+export function getFormattedDateComponent(component: number): string {
+	const stringComponent = component.toString();
+	return stringComponent.length === 1 ? `0${stringComponent}` : stringComponent;
+}
+
+export function getFormattedMilliseconds(date: Date): string {
+	let milliseconds = date.getMilliseconds().toString();
+	while (milliseconds.length < 3) {
+		milliseconds = `0${milliseconds}`;
+	}
+
+	return milliseconds;
+}
+
 //--- begin part copied from AngularJS
 
 //The MIT License
