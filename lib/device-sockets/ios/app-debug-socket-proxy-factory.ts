@@ -138,7 +138,12 @@ export class AppDebugSocketProxyFactory extends EventEmitter implements IAppDebu
 			appDebugSocket.pipe(packets);
 
 			packets.on("data", (buffer: Buffer) => {
-				webSocket.send(buffer.toString(encoding));
+				const message = buffer.toString(encoding);
+				if (webSocket.readyState === webSocket.OPEN) {
+					webSocket.send(message);
+				} else {
+					this.$logger.trace(`Received message ${message}, but unable to send it to webSocket as its state is: ${webSocket.readyState}`);
+				}
 			});
 
 			webSocket.on("error", err => {
