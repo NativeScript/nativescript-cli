@@ -1,9 +1,9 @@
 import { EventEmitter } from "events";
 import { CONNECTION_ERROR_EVENT_NAME } from "../../constants";
-import { PacketStream } from "./packet-stream";
 import * as net from "net";
 import * as ws from "ws";
 import temp = require("temp");
+import { MessageUnpackStream } from "ios-device-lib";
 
 export class AppDebugSocketProxyFactory extends EventEmitter implements IAppDebugSocketProxyFactory {
 	private deviceWebServers: IDictionary<ws.Server> = {};
@@ -134,7 +134,7 @@ export class AppDebugSocketProxyFactory extends EventEmitter implements IAppDebu
 			const encoding = "utf16le";
 
 			const appDebugSocket: net.Socket = (<any>req)["__deviceSocket"];
-			const packets = new PacketStream();
+			const packets = new MessageUnpackStream();
 			appDebugSocket.pipe(packets);
 
 			packets.on("data", (buffer: Buffer) => {
