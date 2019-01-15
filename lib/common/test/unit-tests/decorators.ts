@@ -4,15 +4,26 @@ import { assert } from "chai";
 import { CacheDecoratorsTest } from "./mocks/decorators-cache";
 import { InvokeBeforeDecoratorsTest } from "./mocks/decorators-invoke-before";
 import { isPromise } from "../../helpers";
-import { PerformanceService } from "../../../../test/stubs";
+import * as stubs from "../../../../test/stubs";
+import * as sinon from "sinon";
+import { PerformanceService } from "../../../services/performance-service";
 
 describe("decorators", () => {
-	const moduleName = "moduleName", // This is the name of the injected dependency that will be resolved, for example fs, devicesService, etc.
-		propertyName = "propertyName"; // This is the name of the method/property from the resolved module
+	const moduleName = "moduleName"; // This is the name of the injected dependency that will be resolved, for example fs, devicesService, etc.
+	const propertyName = "propertyName"; // This is the name of the method/property from the resolved module
+	const expectedResults: any[] = [
+		"string result",
+		1,
+		{ a: 1, b: "2" },
+		["string 1", "string2"],
+		true,
+		undefined,
+		null
+	];
 
 	beforeEach(() => {
 		$injector = new Yok();
-		$injector.register("performanceService", PerformanceService);
+		$injector.register("performanceService", stubs.PerformanceService);
 	});
 
 	after(() => {
@@ -21,15 +32,6 @@ describe("decorators", () => {
 	});
 
 	describe("exported", () => {
-		const expectedResults: any[] = [
-			"string result",
-			1,
-			{ a: 1, b: "2" },
-			["string 1", "string2"],
-			true,
-			undefined,
-			null
-		];
 
 		const generatePublicApiFromExportedDecorator = () => {
 			assert.deepEqual($injector.publicApi.__modules__[moduleName], undefined);
@@ -358,6 +360,130 @@ describe("decorators", () => {
 			it("when invokeBefore method is sync", async () => {
 				await assertIsCalled("methodPromisifiedInvokeBeforeWithArgs");
 			});
+		});
+	});
+
+	describe("performanceLog", () => {
+		const testErrorMessage = "testError";
+		let testInjector: IInjector;
+		let sandbox: sinon.SinonSandbox;
+		interface ITestInterface {
+			testMethod(arg: any): any;
+			throwMethod?(): void;
+			testAsyncMehtod(arg: any): Promise<any>;
+			rejectMethod?(): Promise<any>;
+		}
+		let testInstance: ITestInterface;
+		let undecoratedTestInstance: ITestInterface;
+
+		function createTestInjector(): IInjector {
+			testInjector = new Yok();
+			testInjector.register("performanceService", PerformanceService);
+			testInjector.register("options", {});
+			testInjector.register("fs", stubs.FileSystemStub);
+			testInjector.register("logger", stubs.LoggerStub);
+			testInjector.register("analyticsService", {
+				trackEventActionInGoogleAnalytics: () => { return Promise.resolve(); }
+			});
+
+			return testInjector;
+		}
+
+		beforeEach(() => {
+			sandbox = sinon.sandbox.create();
+			testInjector = createTestInjector();
+
+			class TestClass implements ITestInterface {
+				@decoratorsLib.performanceLog(testInjector)
+				testMethod(arg: any) {
+					return arg;
+				}
+
+				@decoratorsLib.performanceLog(testInjector)
+				throwMethod() {
+					throw new Error("testErrorMessage");
+				}
+
+				@decoratorsLib.performanceLog(testInjector)
+				async testAsyncMehtod(arg: any) {
+					return Promise.resolve(arg);
+				}
+
+				rejectMethod() {
+					return Promise.reject(testErrorMessage);
+				}
+			}
+
+			class UndecoratedTestClass implements ITestInterface {
+				testMethod(arg: any) {
+					return arg;
+				}
+
+				async testAsyncMehtod(arg: any) {
+					return Promise.resolve(arg);
+				}
+			}
+
+			undecoratedTestInstance = new UndecoratedTestClass();
+			testInstance = new TestClass();
+		});
+
+		afterEach(() => {
+			sandbox.restore();
+		});
+
+		_.each(expectedResults, (expectedResult: any) => {
+			it("returns proper result",  () => {
+				const actualResult = testInstance.testMethod(expectedResult);
+				assert.deepEqual(actualResult, expectedResult);
+			});
+
+			it("returns proper result when async",  () => {
+				const promise = testInstance.testAsyncMehtod(expectedResult);
+
+				assert.notDeepEqual(promise.then, undefined);
+
+				return promise.then((actualResult: any) => {
+					assert.deepEqual(actualResult, expectedResult);
+				});
+			});
+		});
+
+		it("method has same toString",  () => {
+			assert.equal(testInstance.testMethod.toString(), undecoratedTestInstance.testMethod.toString());
+		});
+
+		it("method has same name",  () => {
+			assert.equal(testInstance.testMethod.name, undecoratedTestInstance.testMethod.name);
+		});
+
+		it("does not eat errors",  () => {
+			assert.throws(testInstance.throwMethod, testErrorMessage);
+			assert.isRejected(testInstance.rejectMethod(), testErrorMessage);
+		});
+
+		it("calls performance service on method call",  async () => {
+			const performanceService = testInjector.resolve("performanceService");
+			const processExecutionDataStub: sinon.SinonStub = sinon.stub(performanceService, "processExecutionData");
+
+			const checkSubCall = (call: sinon.SinonSpyCall, methodData: string) => {
+				const callArgs = call.args;
+				const methodInfo = callArgs[0];
+				const startTime = callArgs[1];
+				const endTime = callArgs[2];
+
+				assert(methodInfo === methodData);
+				assert.isNumber(startTime);
+				assert.isNumber(endTime);
+				assert.isTrue(endTime > startTime);
+				assert.isDefined(callArgs[3][0] === "test");
+			};
+
+			testInstance.testMethod("test");
+			await testInstance.testAsyncMehtod("test");
+
+			checkSubCall(processExecutionDataStub.firstCall, "TestClass__testMethod");
+			checkSubCall(processExecutionDataStub.secondCall, "TestClass__testAsyncMehtod");
 		});
 	});
 });
