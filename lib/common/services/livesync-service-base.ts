@@ -184,7 +184,7 @@ class LiveSyncServiceBase implements ILiveSyncServiceBase {
 					}
 
 					if (!shouldRefreshApplication) {
-						await device.applicationManager.startApplication({ appId: appIdentifier, projectName: "" });
+						await device.applicationManager.startApplication({ appId: appIdentifier, projectName: "", waitForDebugger: false, enableDebugging: false });
 					}
 					wasInstalled = false;
 				}

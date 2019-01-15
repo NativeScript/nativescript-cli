@@ -3,6 +3,7 @@ import { assert } from "chai";
 import { CommonLoggerStub, HooksServiceStub } from "../stubs";
 import { ApplicationManagerBase } from "../../../mobile/application-manager-base";
 
+const testPid = "123";
 let currentlyAvailableAppsForDebugging: Mobile.IDeviceApplicationInformation[];
 let currentlyInstalledApps: string[];
 let currentlyAvailableAppWebViewsForDebugging: IDictionary<Mobile.IDebugWebViewInfo[]>;
@@ -24,7 +25,7 @@ class ApplicationManager extends ApplicationManagerBase {
 		return;
 	}
 
-	public async startApplication(appData: Mobile.IApplicationData): Promise<void> {
+	public async startApplication(appData: Mobile.IApplicationData): Promise<Mobile.IRunningAppInfo> {
 		return;
 	}
 
@@ -629,7 +630,7 @@ describe("ApplicationManagerBase", () => {
 			let passedApplicationData: Mobile.IApplicationData = null;
 			applicationManager.startApplication = (appData: Mobile.IApplicationData) => {
 				passedApplicationData = appData;
-				return Promise.resolve();
+				return Promise.resolve({ pid: testPid });
 			};
 
 			await applicationManager.restartApplication(applicationData);
@@ -648,7 +649,7 @@ describe("ApplicationManagerBase", () => {
 			applicationManager.startApplication = (appData: Mobile.IApplicationData) => {
 				assert.isTrue(isStopApplicationCalled, "When startApplication is called, stopApplication must have been resolved.");
 				isStartApplicationCalled = true;
-				return Promise.resolve();
+				return Promise.resolve({ pid: testPid });
 			};
 
 			await applicationManager.restartApplication(applicationData);
@@ -663,7 +664,7 @@ describe("ApplicationManagerBase", () => {
 
 			applicationManager.startApplication = (appData: Mobile.IApplicationData) => {
 				passedApplicationData = appData;
-				return Promise.resolve();
+				return Promise.resolve({ pid: testPid });
 			};
 
 			await applicationManager.tryStartApplication(applicationData);
@@ -693,6 +694,7 @@ describe("ApplicationManagerBase", () => {
 					}
 
 					isStartApplicationCalled = true;
+					return Promise.resolve({ pid: testPid });
 				};
 
 				await applicationManager.tryStartApplication(applicationData);

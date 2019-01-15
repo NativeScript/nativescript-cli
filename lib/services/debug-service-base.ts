@@ -12,8 +12,6 @@ export abstract class DebugServiceBase extends EventEmitter implements IDeviceDe
 
 	public abstract async debug(debugData: IDebugData, debugOptions: IDebugOptions): Promise<IDebugResultInfo>;
 
-	public abstract async debugStart(debugData: IDebugData, debugOptions: IDebugOptions): Promise<void>;
-
 	public abstract async debugStop(): Promise<void>;
 
 	protected getCanExecuteAction(deviceIdentifier: string): (device: Mobile.IDevice) => boolean {

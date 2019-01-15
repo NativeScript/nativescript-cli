@@ -1,33 +1,25 @@
 import * as path from "path";
-import * as log4js from "log4js";
 import { ChildProcess } from "child_process";
 import { DebugServiceBase } from "./debug-service-base";
-import { IOS_LOG_PREDICATE } from "../common/constants";
 import { CONNECTION_ERROR_EVENT_NAME } from "../constants";
-import { getPidFromiOSSimulatorLogs } from "../common/helpers";
 const inspectorAppName = "NativeScript Inspector.app";
 const inspectorNpmPackageName = "tns-ios-inspector";
 const inspectorUiDir = "WebInspectorUI/";
 import { performanceLog } from "../common/decorators";
 
 export class IOSDeviceDebugService extends DebugServiceBase implements IDeviceDebugService {
-	private _lldbProcess: ChildProcess;
 	private deviceIdentifier: string;
 
 	constructor(protected device: Mobile.IiOSDevice,
 		protected $devicesService: Mobile.IDevicesService,
-		private $platformService: IPlatformService,
-		private $iOSEmulatorServices: Mobile.IiOSSimulatorService,
 		private $childProcess: IChildProcess,
 		private $hostInfo: IHostInfo,
 		private $logger: ILogger,
 		private $errors: IErrors,
 		private $packageInstallationManager: IPackageInstallationManager,
-		private $iOSDebuggerPortService: IIOSDebuggerPortService,
 		private $processService: IProcessService,
 		private $appDebugSocketProxyFactory: IAppDebugSocketProxyFactory,
-		private $projectDataService: IProjectDataService,
-		private $deviceLogProvider: Mobile.IDeviceLogProvider) {
+		private $projectDataService: IProjectDataService) {
 
 		super(device, $devicesService);
 		this.$processService.attachToProcessExitSignals(this, this.debugStop);
@@ -41,38 +33,16 @@ export class IOSDeviceDebugService extends DebugServiceBase implements IDeviceDe
 
 	@performanceLog()
 	public async debug(debugData: IDebugData, debugOptions: IDebugOptions): Promise<IDebugResultInfo> {
-		const result: IDebugResultInfo = { hasReconnected: false, debugUrl: null };
+		const result: IDebugResultInfo = { debugUrl: null };
 		this.validateOptions(debugOptions);
-
-		await this.startDeviceLogProcess(debugData, debugOptions);
-		await this.$iOSDebuggerPortService.attachToDebuggerPortFoundEvent(this.device, debugData, debugOptions);
-
-		if (!debugOptions.start) {
-			await this.startApp(debugData, debugOptions);
-			result.hasReconnected = true;
-		}
 
 		result.debugUrl = await this.wireDebuggerClient(debugData, debugOptions);
 
 		return result;
 	}
 
-	public async debugStart(debugData: IDebugData, debugOptions: IDebugOptions): Promise<void> {
-		await this.startApp(debugData, debugOptions);
-		await this.wireDebuggerClient(debugData, debugOptions);
-	}
-
 	public async debugStop(): Promise<void> {
 		this.$appDebugSocketProxyFactory.removeAllProxies();
-		await this.stopAppDebuggerOnSimulator();
-	}
-
-	private async startApp(debugData: IDebugData, debugOptions: IDebugOptions) {
-		if (this.device.isEmulator) {
-			await this.startAppOnSimulator(debugData, debugOptions);
-		} else {
-			await this.startAppOnDevice(debugData, debugOptions);
-		}
 	}
 
 	private validateOptions(debugOptions: IDebugOptions) {
@@ -81,71 +51,14 @@ export class IOSDeviceDebugService extends DebugServiceBase implements IDeviceDe
 		}
 	}
 
-	@performanceLog()
-	private async startDeviceLogProcess(debugData: IDebugData, debugOptions: IDebugOptions): Promise<void> {
-		if (debugOptions.justlaunch) {
-			// No logs should be printed on console when `--justlaunch` option is passed.
-			// On the other side we need to start log process in order to get debugger port from logs.
-			this.$deviceLogProvider.muteLogsForDevice(this.deviceIdentifier);
-		}
-
+	private getProjectName(debugData: IDebugData): string {
 		let projectName = debugData.projectName;
 		if (!projectName && debugData.projectDir) {
 			const projectData = this.$projectDataService.getProjectData(debugData.projectDir);
 			projectName = projectData.projectName;
 		}
 
-		if (projectName) {
-			this.$deviceLogProvider.setProjectNameForDevice(this.deviceIdentifier, projectName);
-		}
-
-		await this.device.openDeviceLogStream({ predicate: IOS_LOG_PREDICATE });
-	}
-
-	@performanceLog()
-	private async startAppOnSimulator(debugData: IDebugData, debugOptions: IDebugOptions): Promise<void> {
-		const args = debugOptions.debugBrk ? "--nativescript-debug-brk" : "--nativescript-debug-start";
-		const launchResult = await this.$iOSEmulatorServices.runApplicationOnEmulator(debugData.pathToAppPackage, {
-			waitForDebugger: true,
-			captureStdin: true,
-			args: args,
-			appId: debugData.applicationIdentifier,
-			skipInstall: true,
-			device: this.deviceIdentifier,
-			justlaunch: debugOptions.justlaunch,
-			timeout: debugOptions.timeout,
-			sdk: debugOptions.sdk
-		});
-		const pid = getPidFromiOSSimulatorLogs(debugData.applicationIdentifier, launchResult);
-		this.startAppDebuggerOnSimulator(pid);
-	}
-
-	@performanceLog()
-	private async startAppOnDevice(debugData: IDebugData, debugOptions: IDebugOptions): Promise<void> {
-		const runOptions: IRunPlatformOptions = {
-			device: this.deviceIdentifier,
-			emulator: this.device.isEmulator,
-			justlaunch: debugOptions.justlaunch
-		};
-		const projectData = this.$projectDataService.getProjectData(debugData.projectDir);
-		await this.$platformService.startApplication(this.platform, runOptions, { appId: debugData.applicationIdentifier, projectName: projectData.projectName });
-	}
-
-	private startAppDebuggerOnSimulator(pid: string) {
-		this._lldbProcess = this.$childProcess.spawn("lldb", ["-p", pid]);
-		if (log4js.levels.TRACE.isGreaterThanOrEqualTo(this.$logger.getLevel())) {
-			this._lldbProcess.stdout.pipe(process.stdout);
-		}
-		this._lldbProcess.stderr.pipe(process.stderr);
-		this._lldbProcess.stdin.write("process continue\n");
-	}
-
-	private async stopAppDebuggerOnSimulator() {
-		if (this._lldbProcess) {
-			this._lldbProcess.stdin.write("process detach\n");
-			await this.killProcess(this._lldbProcess);
-			this._lldbProcess = undefined;
-		}
+		return projectName;
 	}
 
 	private async killProcess(childProcess: ChildProcess): Promise<void> {
@@ -170,14 +83,16 @@ export class IOSDeviceDebugService extends DebugServiceBase implements IDeviceDe
 		if (debugOptions.chrome) {
 			this.$logger.info("'--chrome' is the default behavior. Use --inspector to debug iOS applications using the Safari Web Inspector.");
 		}
-		const webSocketProxy = await this.$appDebugSocketProxyFactory.ensureWebSocketProxy(this.device, debugData.applicationIdentifier);
+		const projectName = this.getProjectName(debugData);
+		const webSocketProxy = await this.$appDebugSocketProxyFactory.ensureWebSocketProxy(this.device, debugData.applicationIdentifier, projectName);
 
 		return this.getChromeDebugUrl(debugOptions, webSocketProxy.options.port);
 	}
 
 	private async setupTcpAppDebugProxy(debugData: IDebugData, debugOptions: IDebugOptions): Promise<string> {
+		const projectName = this.getProjectName(debugData);
 		const existingTcpProxy = this.$appDebugSocketProxyFactory.getTCPSocketProxy(this.deviceIdentifier, debugData.applicationIdentifier);
-		const tcpSocketProxy = existingTcpProxy || await this.$appDebugSocketProxyFactory.addTCPSocketProxy(this.device, debugData.applicationIdentifier);
+		const tcpSocketProxy = existingTcpProxy || await this.$appDebugSocketProxyFactory.addTCPSocketProxy(this.device, debugData.applicationIdentifier, projectName);
 		if (!existingTcpProxy) {
 			const inspectorProcess = await this.openAppInspector(tcpSocketProxy.address(), debugData, debugOptions);
 			if (inspectorProcess) {

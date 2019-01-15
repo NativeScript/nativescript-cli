@@ -13,8 +13,7 @@ export class IOSLiveSyncService extends PlatformLiveSyncServiceBase implements I
 		private $injector: IInjector,
 		$devicePathProvider: IDevicePathProvider,
 		$logger: ILogger,
-		$projectFilesProvider: IProjectFilesProvider,
-		private $iOSDebuggerPortService: IIOSDebuggerPortService) {
+		$projectFilesProvider: IProjectFilesProvider) {
 		super($fs, $logger, $platformsData, $projectFilesManager, $devicePathProvider, $projectFilesProvider);
 	}
 
@@ -72,12 +71,6 @@ export class IOSLiveSyncService extends PlatformLiveSyncServiceBase implements I
 			});
 		} else {
 			return super.liveSyncWatchAction(device, liveSyncInfo);
-		}
-	}
-
-	public async prepareForLiveSync(device: Mobile.IDevice, data: IProjectDir, liveSyncInfo: ILiveSyncInfo, debugOptions: IDebugOptions): Promise<void> {
-		if (!liveSyncInfo.skipWatcher) {
-			return this.$iOSDebuggerPortService.attachToDebuggerPortFoundEvent(device, data, debugOptions);
 		}
 	}
 

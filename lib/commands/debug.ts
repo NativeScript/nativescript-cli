@@ -1,10 +1,6 @@
-import { CONNECTED_STATUS } from "../common/constants";
-import { isInteractive } from "../common/helpers";
 import { cache } from "../common/decorators";
-import { DebugCommandErrors } from "../constants";
 import { ValidatePlatformCommandBase } from "./command-base";
 import { LiveSyncCommandHelper } from "../helpers/livesync-command-helper";
-import { performanceLog } from "../common/decorators";
 
 export class DebugPlatformCommand extends ValidatePlatformCommandBase implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
@@ -21,7 +17,6 @@ export class DebugPlatformCommand extends ValidatePlatformCommandBase implements
 		protected $errors: IErrors,
 		private $debugDataService: IDebugDataService,
 		private $liveSyncService: IDebugLiveSyncService,
-		private $prompter: IPrompter,
 		private $liveSyncCommandHelper: ILiveSyncCommandHelper,
 		private $androidBundleValidatorHelper: IAndroidBundleValidatorHelper) {
 		super($options, $platformsData, $platformService, $projectData);
@@ -37,7 +32,11 @@ export class DebugPlatformCommand extends ValidatePlatformCommandBase implements
 
 		const debugOptions = <IDebugOptions>_.cloneDeep(this.$options.argv);
 
-		const selectedDeviceForDebug = await this.getDeviceForDebug();
+		const selectedDeviceForDebug = await this.$devicesService.pickSingleDevice({
+			onlyEmulators: this.$options.emulator,
+			onlyDevices: this.$options.forDevice,
+			deviceId: this.$options.device
+		});
 
 		const debugData = this.$debugDataService.createDebugData(this.$projectData, { device: selectedDeviceForDebug.deviceInfo.identifier });
 
@@ -54,61 +53,6 @@ export class DebugPlatformCommand extends ValidatePlatformCommandBase implements
 			buildPlatform: undefined,
 			skipNativePrepare: false
 		});
-	}
-
-	@performanceLog()
-	public async getDeviceForDebug(): Promise<Mobile.IDevice> {
-		if (this.$options.forDevice && this.$options.emulator) {
-			this.$errors.fail(DebugCommandErrors.UNABLE_TO_USE_FOR_DEVICE_AND_EMULATOR);
-		}
-
-		if (this.$options.device) {
-			const device = await this.$devicesService.getDevice(this.$options.device);
-			return device;
-		}
-
-		// Now let's take data for each device:
-		const availableDevicesAndEmulators = this.$devicesService.getDeviceInstances()
-			.filter(d => d.deviceInfo.status === CONNECTED_STATUS && (!this.platform || d.deviceInfo.platform.toLowerCase() === this.platform.toLowerCase()));
-
-		const selectedDevices = availableDevicesAndEmulators.filter(d => this.$options.emulator ? d.isEmulator : (this.$options.forDevice ? !d.isEmulator : true));
-
-		if (selectedDevices.length > 1) {
-			if (isInteractive()) {
-				const choices = selectedDevices.map(e => `${e.deviceInfo.identifier} - ${e.deviceInfo.displayName}`);
-
-				const selectedDeviceString = await this.$prompter.promptForChoice("Select device for debugging", choices);
-
-				const selectedDevice = _.find(selectedDevices, d => `${d.deviceInfo.identifier} - ${d.deviceInfo.displayName}` === selectedDeviceString);
-				return selectedDevice;
-			} else {
-				const sortedInstances = _.sortBy(selectedDevices, e => e.deviceInfo.version);
-				const emulators = sortedInstances.filter(e => e.isEmulator);
-				const devices = sortedInstances.filter(d => !d.isEmulator);
-				let selectedInstance: Mobile.IDevice;
-
-				if (this.$options.emulator || this.$options.forDevice) {
-					// When --emulator or --forDevice is passed, the instances are already filtered
-					// So we are sure we have exactly the type we need and we can safely return the last one (highest OS version).
-					selectedInstance = _.last(sortedInstances);
-				} else {
-					if (emulators.length) {
-						selectedInstance = _.last(emulators);
-					} else {
-						selectedInstance = _.last(devices);
-					}
-				}
-
-				this.$logger.warn(`Multiple devices/emulators found. Starting debugger on ${selectedInstance.deviceInfo.identifier}. ` +
-					"If you want to debug on specific device/emulator, you can specify it with --device option.");
-
-				return selectedInstance;
-			}
-		} else if (selectedDevices.length === 1) {
-			return _.head(selectedDevices);
-		}
-
-		this.$errors.failWithoutHelp(DebugCommandErrors.NO_DEVICES_EMULATORS_FOUND_FOR_OPTIONS);
 	}
 
 	public async canExecute(args: string[]): Promise<ICanExecuteCommandOutput> {

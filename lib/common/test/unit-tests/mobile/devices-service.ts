@@ -1,6 +1,7 @@
 import { DevicesService } from "../../../mobile/mobile-core/devices-service";
 import { Yok } from "../../../yok";
-import { EmulatorDiscoveryNames, DeviceDiscoveryEventNames } from "../../../constants";
+import { EmulatorDiscoveryNames, DeviceDiscoveryEventNames, CONNECTED_STATUS, UNREACHABLE_STATUS } from "../../../constants";
+import { DebugCommandErrors } from "../../../../constants";
 
 import { EventEmitter } from "events";
 import { assert, use } from "chai";
@@ -14,6 +15,8 @@ import { Messages } from "../../../messages/messages";
 import * as constants from "../../../constants";
 import { DevicePlatformsConstants } from "../../../mobile/device-platforms-constants";
 
+const helpers = require("../../../helpers");
+const originalIsInteractive = helpers.isInteractive;
 class AndroidEmulatorDiscoveryStub extends EventEmitter {
 	public startLookingForDevices(): void {
 		// Intentionally left blank.
@@ -156,6 +159,7 @@ function createTestInjector(): IInjector {
 	testInjector.register("androidEmulatorServices", AndroidEmulatorServices);
 	testInjector.register("iOSEmulatorServices", IOSEmulatorServices);
 	testInjector.register("messages", Messages);
+	testInjector.register("prompter", {});
 	testInjector.register("companionAppsService", {});
 	testInjector.register("processService", {
 		attachToProcessExitSignals: (context: any, callback: () => Promise<any>) => { /* no implementation required */ }
@@ -249,7 +253,7 @@ describe("devicesService", () => {
 		},
 		applicationManager: {
 			getInstalledApplications: () => Promise.resolve(["com.telerik.unitTest1", "com.telerik.unitTest2"]),
-			startApplication: (appData: Mobile.IApplicationData) => Promise.resolve(),
+			startApplication: (appData: Mobile.IApplicationData) => Promise.resolve({ pid: "123" }),
 			tryStartApplication: (appData: Mobile.IApplicationData) => Promise.resolve(),
 			reinstallApplication: (packageName: string, packageFile: string) => Promise.resolve(),
 			isApplicationInstalled: (packageName: string) => Promise.resolve(_.includes(["com.telerik.unitTest1", "com.telerik.unitTest2"], packageName)),
@@ -268,7 +272,7 @@ describe("devicesService", () => {
 		},
 		applicationManager: {
 			getInstalledApplications: () => Promise.resolve(["com.telerik.unitTest1", "com.telerik.unitTest2", "com.telerik.unitTest3"]),
-			startApplication: (appData: Mobile.IApplicationData) => Promise.resolve(),
+			startApplication: (appData: Mobile.IApplicationData) => Promise.resolve({ pid: "123" }),
 			tryStartApplication: (appData: Mobile.IApplicationData) => Promise.resolve(),
 			reinstallApplication: (packageName: string, packageFile: string) => Promise.resolve(),
 			isApplicationInstalled: (packageName: string) => Promise.resolve(_.includes(["com.telerik.unitTest1", "com.telerik.unitTest2", "com.telerik.unitTest3"], packageName)),
@@ -1699,6 +1703,240 @@ describe("devicesService", () => {
 		it("returns installed applications", async () => {
 			const actualResult = await devicesService.getInstalledApplications(androidDevice.deviceInfo.identifier);
 			assert.deepEqual(actualResult, ["com.telerik.unitTest1", "com.telerik.unitTest2", "com.telerik.unitTest3"]);
+		});
+	});
+
+	describe("getDeviceForDebug", () => {
+		it("throws error when both --for-device and --emulator are passed", async () => {
+			await assert.isRejected(devicesService.pickSingleDevice({ onlyDevices: true, onlyEmulators: true, deviceId: null }), DebugCommandErrors.UNABLE_TO_USE_FOR_DEVICE_AND_EMULATOR);
+		});
+
+		it("returns selected device, when --device is passed", async () => {
+			const deviceInstance = <Mobile.IDevice>{};
+			const specifiedDeviceOption = "device1";
+			devicesService.getDevice = async (deviceOption: string): Promise<Mobile.IDevice> => {
+				if (deviceOption === specifiedDeviceOption) {
+					return deviceInstance;
+				}
+			};
+
+			const selectedDeviceInstance = await devicesService.pickSingleDevice({ onlyDevices: false, onlyEmulators: false, deviceId: specifiedDeviceOption });
+			assert.deepEqual(selectedDeviceInstance, deviceInstance);
+		});
+
+		const assertErrorIsThrown = async (getDeviceInstancesResult: Mobile.IDevice[], passedOptions?: { forDevice: boolean, emulator: boolean }) => {
+			devicesService.getDeviceInstances = (): Mobile.IDevice[] => getDeviceInstancesResult;
+			await devicesService.initialize({ platform: "android" });
+
+			await assert.isRejected(devicesService.pickSingleDevice({
+				onlyDevices: passedOptions ? passedOptions.forDevice : false,
+				onlyEmulators: passedOptions ? passedOptions.emulator : false,
+				deviceId: null
+			}), DebugCommandErrors.NO_DEVICES_EMULATORS_FOUND_FOR_OPTIONS);
+		};
+
+		it("throws error when there are no devices/emulators available", () => {
+			return assertErrorIsThrown([]);
+		});
+
+		it("throws error when there are no devices/emulators available for selected platform", () => {
+			return assertErrorIsThrown([
+				<Mobile.IDevice>{
+					deviceInfo: {
+						platform: "ios",
+						status: CONNECTED_STATUS
+					}
+				}
+			]);
+		});
+
+		it("throws error when there are only not-trusted devices/emulators available for selected platform", () => {
+			return assertErrorIsThrown([
+				<Mobile.IDevice>{
+					deviceInfo: {
+						platform: "android",
+						status: UNREACHABLE_STATUS
+					}
+				}
+			]);
+		});
+
+		it("throws error when there are only devices and --emulator is passed", () => {
+			return assertErrorIsThrown([
+				<Mobile.IDevice>{
+					deviceInfo: {
+						platform: "android",
+						status: CONNECTED_STATUS
+					},
+					isEmulator: false
+				}
+			], {
+					forDevice: false,
+					emulator: true
+				});
+		});
+
+		it("throws error when there are only emulators and --forDevice is passed", () => {
+			return assertErrorIsThrown([
+				<Mobile.IDevice>{
+					deviceInfo: {
+						platform: "android",
+						status: CONNECTED_STATUS
+					},
+					isEmulator: true
+				}
+			], {
+					forDevice: true,
+					emulator: false
+				});
+		});
+
+		it("returns the only available device/emulator when it matches passed -- options", async () => {
+			const deviceInstance = <Mobile.IDevice>{
+				deviceInfo: {
+					platform: "android",
+					status: CONNECTED_STATUS
+				},
+				isEmulator: true
+			};
+
+			devicesService.getDeviceInstances = (): Mobile.IDevice[] => [deviceInstance];
+
+			const actualDeviceInstance =
+				await devicesService.pickSingleDevice({ onlyDevices: false, onlyEmulators: false, deviceId: null });
+
+			assert.deepEqual(actualDeviceInstance, deviceInstance);
+		});
+
+		describe("when multiple devices are detected", () => {
+			beforeEach(() => {
+				helpers.isInteractive = originalIsInteractive;
+			});
+
+			after(() => {
+				helpers.isInteractive = originalIsInteractive;
+			});
+
+			describe("when terminal is interactive", () => {
+
+				it("prompts the user with information about available devices for specified platform only and returns the selected device instance", async () => {
+					helpers.isInteractive = () => true;
+					const deviceInstance1 = <Mobile.IDevice>{
+						deviceInfo: {
+							platform: "android",
+							status: CONNECTED_STATUS,
+							identifier: "deviceInstance1",
+							displayName: "displayName1"
+						},
+						isEmulator: true
+					};
+
+					const deviceInstance2 = <Mobile.IDevice>{
+						deviceInfo: {
+							platform: "android",
+							status: CONNECTED_STATUS,
+							identifier: "deviceInstance2",
+							displayName: "displayName2"
+						},
+						isEmulator: true
+					};
+
+					const iOSDeviceInstance = <Mobile.IDevice>{
+						deviceInfo: {
+							platform: "ios",
+							status: CONNECTED_STATUS,
+							identifier: "iosDevice",
+							displayName: "iPhone"
+						},
+						isEmulator: true
+					};
+
+					await devicesService.initialize({ platform: "android" });
+					devicesService.getDeviceInstances = (): Mobile.IDevice[] => [deviceInstance1, deviceInstance2, iOSDeviceInstance];
+
+					let choicesPassedToPrompter: string[];
+					const prompter = testInjector.resolve<IPrompter>("prompter");
+					prompter.promptForChoice = async (promptMessage: string, choices: any[]): Promise<string> => {
+						choicesPassedToPrompter = choices;
+						return choices[1];
+					};
+
+					const actualDeviceInstance =
+						await devicesService.pickSingleDevice({ onlyDevices: false, onlyEmulators: false, deviceId: null });
+					const expectedChoicesPassedToPrompter = [deviceInstance1, deviceInstance2].map(d => `${d.deviceInfo.identifier} - ${d.deviceInfo.displayName}`);
+					assert.deepEqual(choicesPassedToPrompter, expectedChoicesPassedToPrompter);
+					assert.deepEqual(actualDeviceInstance, deviceInstance2);
+				});
+			});
+
+			describe("when terminal is not interactive", () => {
+				beforeEach(() => {
+					helpers.isInteractive = () => false;
+				});
+
+				const assertCorrectInstanceIsUsed = async (opts: { forDevice: boolean, emulator: boolean, isEmulatorTest: boolean, excludeLastDevice?: boolean }) => {
+					const deviceInstance1 = <Mobile.IDevice>{
+						deviceInfo: {
+							platform: "android",
+							status: CONNECTED_STATUS,
+							identifier: "deviceInstance1",
+							displayName: "displayName1",
+							version: "5.1"
+						},
+						isEmulator: opts.isEmulatorTest
+					};
+
+					const deviceInstance2 = <Mobile.IDevice>{
+						deviceInfo: {
+							platform: "android",
+							status: CONNECTED_STATUS,
+							identifier: "deviceInstance2",
+							displayName: "displayName2",
+							version: "6.0"
+						},
+						isEmulator: opts.isEmulatorTest
+					};
+
+					const deviceInstance3 = <Mobile.IDevice>{
+						deviceInfo: {
+							platform: "android",
+							status: CONNECTED_STATUS,
+							identifier: "deviceInstance3",
+							displayName: "displayName3",
+							version: "7.1"
+						},
+						isEmulator: !opts.isEmulatorTest
+					};
+
+					const deviceInstances = [deviceInstance1, deviceInstance2];
+					if (!opts.excludeLastDevice) {
+						deviceInstances.push(deviceInstance3);
+					}
+
+					devicesService.getDeviceInstances = (): Mobile.IDevice[] => deviceInstances;
+
+					const actualDeviceInstance =
+						await devicesService.pickSingleDevice({ onlyDevices: opts.forDevice, onlyEmulators: opts.emulator, deviceId: null });
+
+					assert.deepEqual(actualDeviceInstance, deviceInstance2);
+				};
+
+				it("returns the emulator with highest API level when --emulator is passed", () => {
+					return assertCorrectInstanceIsUsed({ forDevice: false, emulator: true, isEmulatorTest: true });
+				});
+
+				it("returns the device with highest API level when --forDevice is passed", () => {
+					return assertCorrectInstanceIsUsed({ forDevice: true, emulator: false, isEmulatorTest: false });
+				});
+
+				it("returns the emulator with highest API level when neither --emulator and --forDevice are passed", () => {
+					return assertCorrectInstanceIsUsed({ forDevice: false, emulator: false, isEmulatorTest: true });
+				});
+
+				it("returns the device with highest API level when neither --emulator and --forDevice are passed and emulators are not available", async () => {
+					return assertCorrectInstanceIsUsed({ forDevice: false, emulator: false, isEmulatorTest: false, excludeLastDevice: true });
+				});
+			});
 		});
 	});
 });

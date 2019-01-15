@@ -133,7 +133,7 @@ interface IPlatformService extends IBuildPlatformAction, NodeJS.EventEmitter {
 	 * @param {IProjectData} projectData DTO with information about the project.
 	 * @returns {void}
 	 */
-	startApplication(platform: string, runOptions: IRunPlatformOptions, appData: Mobile.IApplicationData): Promise<void>;
+	startApplication(platform: string, runOptions: IRunPlatformOptions, appData: Mobile.IStartApplicationData): Promise<void>;
 
 	cleanDestinationApp(platformInfo: IPreparePlatformInfo): Promise<void>;
 	validatePlatformInstalled(platform: string, projectData: IProjectData): void;
@@ -278,7 +278,7 @@ interface IValidBuildOutputData {
 	regexes?: RegExp[];
 }
 
-interface IBuildOutputOptions extends Partial<IBuildForDevice>, IRelease, IHasAndroidBundle {}
+interface IBuildOutputOptions extends Partial<IBuildForDevice>, IRelease, IHasAndroidBundle { }
 
 interface IPlatformsData {
 	availablePlatforms: any;

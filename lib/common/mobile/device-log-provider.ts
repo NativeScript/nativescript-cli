@@ -11,7 +11,7 @@ export class DeviceLogProvider extends DeviceLogProviderBase {
 		const loggingOptions = this.getDeviceLogOptionsForDevice(deviceIdentifier);
 		const data = this.$logFilter.filterData(platform, lineText, loggingOptions);
 		if (data) {
-			this.logDataCore(data, loggingOptions);
+			this.logDataCore(data);
 			this.emit(DEVICE_LOG_EVENT_NAME, lineText, deviceIdentifier, platform);
 		}
 	}
@@ -20,10 +20,8 @@ export class DeviceLogProvider extends DeviceLogProviderBase {
 		this.$logFilter.loggingLevel = logLevel.toUpperCase();
 	}
 
-	private logDataCore(data: string, loggingOptions: Mobile.IDeviceLogOptions): void {
-		if (!loggingOptions || (loggingOptions && !loggingOptions.muteLogs)) {
-			this.$logger.write(data);
-		}
+	private logDataCore(data: string): void {
+		this.$logger.write(data);
 	}
 }
 $injector.register("deviceLogProvider", DeviceLogProvider);

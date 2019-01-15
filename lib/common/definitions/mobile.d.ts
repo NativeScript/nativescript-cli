@@ -111,12 +111,8 @@ declare module Mobile {
 	}
 
 	interface IiOSDevice extends IDevice {
-		getLiveSyncSocket(appId: string): Promise<any>;
-		destroyLiveSyncSocket(appId: string): void;
-
-		getDebugSocket(appId: string): Promise<any>;
+		getDebugSocket(appId: string, projectName: string): Promise<any>;
 		destroyDebugSocket(appId: string): void;
-
 		openDeviceLogStream(options?: IiOSLogStreamOptions): Promise<void>;
 		destroyAllSockets(): void;
 	}
@@ -221,12 +217,6 @@ declare module Mobile {
 		 * @param {string} projectName The project name of the currently running application for which we need the logs.
 		 */
 		setProjectNameForDevice(deviceIdentifier: string, projectName: string): void;
-
-		/**
-		 * Disables logs on the specified device and does not print any logs on the console.
-		 * @param {string} deviceIdentifier The unique identifier of the device.
-		 */
-		muteLogsForDevice(deviceIdentifier: string): void;
 	}
 
 	/**
@@ -248,10 +238,6 @@ declare module Mobile {
 		 */
 		projectName?: string;
 
-		/**
-		 * Specifies if the logs will be printed on the console.
-		 */
-		muteLogs?: boolean;
 	}
 
 	/**
@@ -311,8 +297,17 @@ declare module Mobile {
 		justLaunch?: boolean;
 	}
 
+	interface IStartApplicationData extends IApplicationData {
+		waitForDebugger: boolean;
+		enableDebugging: boolean;
+	}
+
 	interface IInstallAppData extends IApplicationData {
 		packagePath: string;
+	}
+
+	interface IRunningAppInfo {
+		pid: string;
 	}
 
 	interface IDeviceApplicationManager extends NodeJS.EventEmitter {
@@ -321,9 +316,9 @@ declare module Mobile {
 		installApplication(packageFilePath: string, appIdentifier?: string): Promise<void>;
 		uninstallApplication(appIdentifier: string): Promise<void>;
 		reinstallApplication(appIdentifier: string, packageFilePath: string): Promise<void>;
-		startApplication(appData: IApplicationData): Promise<void>;
+		startApplication(appData: IStartApplicationData): Promise<IRunningAppInfo>;
 		stopApplication(appData: IApplicationData): Promise<void>;
-		restartApplication(appData: IApplicationData): Promise<void>;
+		restartApplication(appData: IStartApplicationData): Promise<IRunningAppInfo>;
 		checkForApplicationUpdates(): Promise<void>;
 		isLiveSyncSupported(appIdentifier: string): Promise<boolean>;
 		getApplicationInfo(applicationIdentifier: string): Promise<Mobile.IApplicationInfo>;
@@ -550,6 +545,27 @@ declare module Mobile {
 		 * @returns {Promise<string[]>} - Returns array of errors.
 		 */
 		startEmulator(options?: IStartEmulatorOptions): Promise<string[]>;
+
+		/**
+		 * Returns a single device based on the specified options. If more than one devices are matching,
+		 * prompts the user for a manual choice or returns the first one for non interactive terminals.
+		 */
+		pickSingleDevice(options: IPickSingleDeviceOptions): Promise<Mobile.IDevice>
+	}
+
+	interface IPickSingleDeviceOptions {
+		/**
+		 * Pick from the connected emulators only
+		 */
+		onlyEmulators: boolean;
+		/**
+		 * Pick from the connected real devices only
+		 */
+		onlyDevices: boolean;
+		/**
+		 * Pick a specific device
+		 */
+		deviceId: string;
 	}
 
 	interface IListEmulatorsOptions {
@@ -941,14 +957,6 @@ declare module Mobile {
 		 * @returns {net.Socket} Returns instance of net.Socket when connection is successful, otherwise undefined is returned.
 		 */
 		connectToPort(connectToPortData: IConnectToPortData): Promise<any>;
-
-		/**
-		 * Runs an application on emulator
-		 * @param app The path to executable .app
-		 * @param emulatorOptions Emulator options that can be passed
-		 * @returns {Promise<any>} Returns the appId with the process of the running application on the simulator. For example: org.nativescript.myapp 55434
-		 */
-		runApplicationOnEmulator(app: string, emulatorOptions?: IRunApplicationOnEmulatorOptions): Promise<any>;
 	}
 
 	interface IEmulatorSettingsService {
@@ -1251,9 +1259,9 @@ interface IIOSDeviceOperations extends IDisposable, NodeJS.EventEmitter {
 
 	deleteFiles(deleteArray: IOSDeviceLib.IDeleteFileData[], errorHandler?: DeviceOperationErrorHandler): Promise<IOSDeviceResponse>;
 
-	start(startArray: IOSDeviceLib.IDdiApplicationData[], errorHandler?: DeviceOperationErrorHandler): Promise<IOSDeviceResponse>;
+	start(startArray: IOSDeviceLib.IIOSApplicationData[], errorHandler?: DeviceOperationErrorHandler): Promise<IOSDeviceResponse>;
 
-	stop(stopArray: IOSDeviceLib.IDdiApplicationData[], errorHandler?: DeviceOperationErrorHandler): Promise<IOSDeviceResponse>;
+	stop(stopArray: IOSDeviceLib.IIOSApplicationData[], errorHandler?: DeviceOperationErrorHandler): Promise<IOSDeviceResponse>;
 
 	postNotification(postNotificationArray: IOSDeviceLib.IPostNotificationData[], errorHandler?: DeviceOperationErrorHandler): Promise<IOSDeviceResponse>;
 

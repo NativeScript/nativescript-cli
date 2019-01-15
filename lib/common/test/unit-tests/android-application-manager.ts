@@ -5,7 +5,7 @@ import { CommonLoggerStub, LogcatHelperStub, AndroidProcessServiceStub, DeviceLo
 const invalidIdentifier = "invalid.identifier";
 const validDeviceIdentifier = "device.identifier";
 const validIdentifier = "org.nativescript.testApp";
-const validStartOptions = { appId: validIdentifier, projectName: "" };
+const validStartOptions = { appId: validIdentifier, projectName: "", waitForDebugger: false, enableDebugging: false };
 
 class AndroidDebugBridgeStub {
 	public calledStopApplication = false;
@@ -153,7 +153,7 @@ describe("android-application-manager", () => {
 		it("is calling monkey to start the application when invalid identifier is passed", async () => {
 			setup();
 
-			await androidApplicationManager.startApplication({ appId: invalidIdentifier, projectName: "" });
+			await androidApplicationManager.startApplication({ appId: invalidIdentifier, projectName: "", waitForDebugger: false, enableDebugging: false });
 
 			assert.isFalse(androidDebugBridge.startedWithActivityManager);
 		});

@@ -51,7 +51,7 @@ export class IOSLiveSyncService implements IDeviceLiveSyncService {
 			this.$logger.trace(`Transferring from ${sourcePath} to ${destinationPath}`);
 			shell.cp("-Rf", path.join(sourcePath, "*"), destinationPath);
 
-			await this.device.applicationManager.restartApplication({ appId: deviceAppData.appIdentifier, projectName: "" });
+			await this.device.applicationManager.restartApplication({ appId: deviceAppData.appIdentifier, projectName: "", waitForDebugger: false, enableDebugging: false });
 		} else {
 			await this.device.fileSystem.deleteFile("/Documents/AppBuilder/ServerInfo.plist", deviceAppData.appIdentifier);
 			const notification = this.$project.projectData.Framework === constants.TARGET_FRAMEWORK_IDENTIFIERS.NativeScript ? "com.telerik.app.refreshApp" : "com.telerik.app.refreshWebView";

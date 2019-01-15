@@ -17,10 +17,10 @@ export class IOSDevice extends IOSDeviceBase {
 		protected $errors: IErrors,
 		private $injector: IInjector,
 		protected $iOSDebuggerPortService: IIOSDebuggerPortService,
+		protected $deviceLogProvider: Mobile.IDeviceLogProvider,
 		protected $lockService: ILockService,
 		private $iOSSocketRequestExecutor: IiOSSocketRequestExecutor,
 		protected $processService: IProcessService,
-		private $deviceLogProvider: Mobile.IDeviceLogProvider,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $iOSDeviceProductNameMapper: Mobile.IiOSDeviceProductNameMapper,
 		private $iosDeviceOperations: IIOSDeviceOperations,
@@ -60,9 +60,10 @@ export class IOSDevice extends IOSDeviceBase {
 		}
 	}
 
-	protected async getSocketCore(appId: string): Promise<net.Socket> {
+	protected async getDebugSocketCore(appId: string, projectName: string): Promise<net.Socket> {
+		await super.attachToDebuggerFoundEvent(projectName);
 		await this.$iOSSocketRequestExecutor.executeAttachRequest(this, constants.AWAIT_NOTIFICATION_TIMEOUT_SECONDS, appId);
-		const port = await this.getDebuggerPort(appId);
+		const port = await super.getDebuggerPort(appId);
 		const deviceId = this.deviceInfo.identifier;
 
 		const socket = await helpers.connectEventuallyUntilTimeout(

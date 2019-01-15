@@ -74,22 +74,23 @@ export class IOSApplicationManager extends ApplicationManagerBase {
 		this.$logger.trace("Application %s has been uninstalled successfully.", appIdentifier);
 	}
 
-	public async startApplication(appData: Mobile.IApplicationData): Promise<void> {
+	public async startApplication(appData: Mobile.IStartApplicationData): Promise<Mobile.IRunningAppInfo> {
 		if (!await this.isApplicationInstalled(appData.appId)) {
 			this.$errors.failWithoutHelp("Invalid application id: %s. All available application ids are: %s%s ", appData.appId, EOL, this.applicationsLiveSyncInfos.join(EOL));
 		}
 
 		await this.setDeviceLogData(appData);
-		await this.runApplicationCore(appData);
+		const appInfo = await this.runApplicationCore(appData);
 
 		this.$logger.info(`Successfully run application ${appData.appId} on device with ID ${this.device.deviceInfo.identifier}.`);
+
+		return appInfo;
 	}
 
 	public async stopApplication(appData: Mobile.IApplicationData): Promise<void> {
 		const { appId } = appData;
 
 		this.device.destroyDebugSocket(appId);
-		this.device.destroyLiveSyncSocket(appId);
 
 		const action = () => this.$iosDeviceOperations.stop([{ deviceId: this.device.deviceInfo.identifier, ddi: this.$options.ddi, appId }]);
 
@@ -101,11 +102,12 @@ export class IOSApplicationManager extends ApplicationManagerBase {
 		}
 	}
 
-	public async restartApplication(appData: Mobile.IApplicationData): Promise<void> {
+	public async restartApplication(appData: Mobile.IStartApplicationData): Promise<Mobile.IRunningAppInfo> {
 		try {
 			await this.setDeviceLogData(appData);
 			await this.stopApplication(appData);
-			await this.runApplicationCore(appData);
+			const appInfo = await this.runApplicationCore(appData);
+			return appInfo;
 		} catch (err) {
 			await this.$iOSNotificationService.postNotification(this.device.deviceInfo.identifier, `${appData.appId}:NativeScript.LiveSync.RestartApplication`);
 			throw err;
@@ -119,8 +121,14 @@ export class IOSApplicationManager extends ApplicationManagerBase {
 		}
 	}
 
-	private async runApplicationCore(appData: Mobile.IApplicationData): Promise<void> {
-		await this.$iosDeviceOperations.start([{ deviceId: this.device.deviceInfo.identifier, appId: appData.appId, ddi: this.$options.ddi }]);
+	private async runApplicationCore(appData: Mobile.IStartApplicationData): Promise<Mobile.IRunningAppInfo> {
+		const waitForDebugger = appData.waitForDebugger && appData.waitForDebugger.toString();
+		await this.$iosDeviceOperations.start([{ deviceId: this.device.deviceInfo.identifier, appId: appData.appId, ddi: this.$options.ddi, waitForDebugger }]);
+
+		return {
+			// we cannot get PID on a real iOS device
+			pid: ""
+		};
 	}
 
 	@cache()

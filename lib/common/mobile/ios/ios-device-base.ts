@@ -1,8 +1,10 @@
 import * as net from "net";
+import { performanceLog } from "../../decorators";
 
 export abstract class IOSDeviceBase implements Mobile.IiOSDevice {
 	private cachedSockets: IDictionary<net.Socket> = {};
 	protected abstract $errors: IErrors;
+	protected abstract $deviceLogProvider: Mobile.IDeviceLogProvider;
 	protected abstract $iOSDebuggerPortService: IIOSDebuggerPortService;
 	protected abstract $processService: IProcessService;
 	protected abstract $lockService: ILockService;
@@ -10,49 +12,39 @@ export abstract class IOSDeviceBase implements Mobile.IiOSDevice {
 	abstract applicationManager: Mobile.IDeviceApplicationManager;
 	abstract fileSystem: Mobile.IDeviceFileSystem;
 	abstract isEmulator: boolean;
-	abstract openDeviceLogStream(): Promise<void>;
+	abstract openDeviceLogStream(options?: Mobile.IiOSLogStreamOptions): Promise<void>;
 
 	public getApplicationInfo(applicationIdentifier: string): Promise<Mobile.IApplicationInfo> {
 		return this.applicationManager.getApplicationInfo(applicationIdentifier);
 	}
 
-	public async getLiveSyncSocket(appId: string): Promise<net.Socket> {
-		return this.getSocket(appId);
-	}
-
-	public async getDebugSocket(appId: string): Promise<net.Socket> {
-		return this.getSocket(appId);
-	}
-
-	public async getSocket(appId: string): Promise<net.Socket> {
+	@performanceLog()
+	public async getDebugSocket(appId: string, projectName: string): Promise<net.Socket> {
 		return this.$lockService.executeActionWithLock(async () => {
 			if (this.cachedSockets[appId]) {
 				return this.cachedSockets[appId];
 			}
 
-			this.cachedSockets[appId] = await this.getSocketCore(appId);
+			this.cachedSockets[appId] = await this.getDebugSocketCore(appId, projectName);
 
 			if (this.cachedSockets[appId]) {
 				this.cachedSockets[appId].on("close", () => {
-					this.destroySocket(appId);
+					this.destroyDebugSocket(appId);
 				});
 
-				this.$processService.attachToProcessExitSignals(this, () => this.destroySocket(appId));
+				this.$processService.attachToProcessExitSignals(this, () => this.destroyDebugSocket(appId));
 			}
 
 			return this.cachedSockets[appId];
 		}, "ios-debug-socket.lock");
 	}
 
-	public destroyLiveSyncSocket(appId: string) {
-		this.destroySocket(appId);
-	}
+	protected abstract async getDebugSocketCore(appId: string, projectName: string): Promise<net.Socket>;
 
-	public destroyDebugSocket(appId: string) {
-		this.destroySocket(appId);
+	protected async attachToDebuggerFoundEvent(projectName: string): Promise<void> {
+		await this.startDeviceLogProcess(projectName);
+		await this.$iOSDebuggerPortService.attachToDebuggerPortFoundEvent();
 	}
-
-	protected abstract async getSocketCore(appId: string): Promise<net.Socket>;
 
 	protected async getDebuggerPort(appId: string): Promise<number> {
 		const port = await this.$iOSDebuggerPortService.getPort({ deviceId: this.deviceInfo.identifier, appId });
@@ -71,7 +63,7 @@ export abstract class IOSDeviceBase implements Mobile.IiOSDevice {
 		this.cachedSockets = {};
 	}
 
-	private destroySocket(appId: string) {
+	public destroyDebugSocket(appId: string) {
 		this.destroySocketSafe(this.cachedSockets[appId]);
 		this.cachedSockets[appId] = null;
 	}
@@ -80,5 +72,13 @@ export abstract class IOSDeviceBase implements Mobile.IiOSDevice {
 		if (socket && !socket.destroyed) {
 			socket.destroy();
 		}
+	}
+
+	private async startDeviceLogProcess(projectName: string): Promise<void> {
+		if (projectName) {
+			this.$deviceLogProvider.setProjectNameForDevice(this.deviceInfo.identifier, projectName);
+		}
+
+		await this.openDeviceLogStream();
 	}
 }

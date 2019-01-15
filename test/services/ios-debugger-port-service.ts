@@ -145,13 +145,9 @@ describe("iOSDebuggerPortService", () => {
 			}
 		];
 
-		const mockProjectDirObj = {
-			projectDir: "/Users/username/projectdir"
-		};
-
 		_.each(testCases, testCase => {
 			it(testCase.name, async () => {
-				await iOSDebuggerPortService.attachToDebuggerPortFoundEvent(device, mockProjectDirObj, <any>{});
+				await iOSDebuggerPortService.attachToDebuggerPortFoundEvent();
 				if (testCase.emitStartingIOSApplicationEvent) {
 					emitStartingIOSApplicationEvent();
 				}
@@ -165,7 +161,7 @@ describe("iOSDebuggerPortService", () => {
 				assert.deepEqual(port, testCase.emittedPort);
 			});
 			it(`${testCase.name} for multiline debugger port message.`, async () => {
-				await iOSDebuggerPortService.attachToDebuggerPortFoundEvent(device, mockProjectDirObj, <any>{});
+				await iOSDebuggerPortService.attachToDebuggerPortFoundEvent();
 				if (testCase.emitStartingIOSApplicationEvent) {
 					emitStartingIOSApplicationEvent();
 				}

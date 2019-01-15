@@ -9,12 +9,10 @@ class AndroidDeviceDebugServiceInheritor extends AndroidDeviceDebugService {
 	constructor(protected $devicesService: Mobile.IDevicesService,
 		$errors: IErrors,
 		$logger: ILogger,
-		$androidDeviceDiscovery: Mobile.IDeviceDiscovery,
 		$androidProcessService: Mobile.IAndroidProcessService,
 		$net: INet,
-		$projectDataService: IProjectDataService,
 		$deviceLogProvider: Mobile.IDeviceLogProvider) {
-		super(<any>{ deviceInfo: { identifier: "123" } }, $devicesService, $errors, $logger, $androidDeviceDiscovery, $androidProcessService, $net, $projectDataService, $deviceLogProvider);
+		super(<any>{ deviceInfo: { identifier: "123" } }, $devicesService, $errors, $logger, $androidProcessService, $net, $deviceLogProvider);
 	}
 
 	public getChromeDebugUrl(debugOptions: IDebugOptions, port: number): string {

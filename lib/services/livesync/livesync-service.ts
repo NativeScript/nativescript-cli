@@ -75,8 +75,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 
 	public async stopLiveSync(projectDir: string, deviceIdentifiers?: string[], stopOptions?: { shouldAwaitAllActions: boolean }): Promise<void> {
 		const liveSyncProcessInfo = this.liveSyncProcessesInfo[projectDir];
-
-		if (liveSyncProcessInfo) {
+		if (liveSyncProcessInfo && !liveSyncProcessInfo.isStopped) {
 			// In case we are coming from error during livesync, the current action is the one that erred (but we are still executing it),
 			// so we cannot await it as this will cause infinite loop.
 			const shouldAwaitPendingOperation = !stopOptions || stopOptions.shouldAwaitAllActions;
@@ -174,6 +173,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 		const platformLiveSyncService = this.getLiveSyncService(platform);
 		const applicationIdentifier = projectData.projectIdentifiers[platform.toLowerCase()];
 		try {
+			// TODO: this.emit(DEBUGGER_DETACHED_EVENT_NAME, { deviceIdentifier }); when we have control on the restart application flow
 			result = await platformLiveSyncService.refreshApplication(projectData, liveSyncResultInfo);
 		} catch (err) {
 			this.$logger.info(`Error while trying to start application ${applicationIdentifier} on device ${liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier}. Error is: ${err.message || err}`);
@@ -206,30 +206,19 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 
 	@performanceLog()
 	private async refreshApplicationWithDebug(projectData: IProjectData, liveSyncResultInfo: ILiveSyncResultInfo, debugOptions: IDebugOptions, outputPath?: string): Promise<IDebugInformation> {
-		let didRestart = false;
-		const deviceAppData = liveSyncResultInfo.deviceAppData;
 		debugOptions = debugOptions || {};
-		const deviceIdentifier = liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier;
+		liveSyncResultInfo.enableDebugging = true;
 		if (debugOptions.debugBrk) {
-			await this.$debugService.debugStop(deviceIdentifier);
-			this.emit(DEBUGGER_DETACHED_EVENT_NAME, { deviceIdentifier });
-			const applicationId = deviceAppData.appIdentifier;
-			try {
-				await deviceAppData.device.applicationManager.stopApplication({ appId: applicationId, projectName: projectData.projectName });
-			} catch (err) {
-				this.$logger.trace("Could not stop application during debug livesync. Will try to restart app instead.", err);
-				this.handleDeveloperDiskImageError(err, liveSyncResultInfo, projectData, debugOptions, outputPath);
-			}
-		} else {
-			const refreshInfo = await this.refreshApplicationWithoutDebug(projectData, liveSyncResultInfo, debugOptions, outputPath, { shouldSkipEmitLiveSyncNotification: true, shouldCheckDeveloperDiscImage: true });
-			didRestart = refreshInfo.didRestart;
+			liveSyncResultInfo.waitForDebugger = true;
 		}
+
+		const refreshInfo = await this.refreshApplicationWithoutDebug(projectData, liveSyncResultInfo, debugOptions, outputPath, { shouldSkipEmitLiveSyncNotification: true, shouldCheckDeveloperDiscImage: true });
 
 		// we do not stop the application when debugBrk is false, so we need to attach, instead of launch
 		// if we try to send the launch request, the debugger port will not be printed and the command will timeout
 		debugOptions.start = !debugOptions.debugBrk;
 
-		debugOptions.forceDebuggerAttachedEvent = didRestart;
+		debugOptions.forceDebuggerAttachedEvent = refreshInfo.didRestart;
 		const deviceOption = {
 			deviceIdentifier: liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier,
 			debugOptions: debugOptions,
@@ -279,10 +268,8 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 			projectDir: settings.projectDir
 		};
 		debugData.pathToAppPackage = this.$platformService.lastOutputPath(settings.platform, buildConfig, projectData, settings.outputPath);
-
 		const debugInfo = await this.$debugService.debug(debugData, settings.debugOptions);
-		const fireDebuggerAttachedEvent = settings.debugOptions.forceDebuggerAttachedEvent || debugInfo.hasReconnected;
-		const result = this.printDebugInformation(debugInfo, fireDebuggerAttachedEvent);
+		const result = this.printDebugInformation(debugInfo, settings.debugOptions.forceDebuggerAttachedEvent);
 		return result;
 	}
 
@@ -545,8 +532,6 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 					release: liveSyncData.release,
 					env: liveSyncData.env
 				}, { skipNativePrepare: deviceBuildInfoDescriptor.skipNativePrepare });
-
-				await platformLiveSyncService.prepareForLiveSync(device, projectData, liveSyncData, deviceBuildInfoDescriptor.debugOptions);
 
 				const liveSyncResultInfo = await platformLiveSyncService.fullSync({
 					projectData,
