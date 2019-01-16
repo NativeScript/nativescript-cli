@@ -96,7 +96,6 @@ export class AnalyticsService implements IAnalyticsService, IDisposable {
 		const platform = device ? device.deviceInfo.platform : data.platform;
 		const normalizedPlatform = platform ? this.$mobileHelper.normalizePlatformName(platform) : platform;
 		const isForDevice = device ? !device.isEmulator : data.isForDevice;
-
 		let label: string = "";
 		label = this.addDataToLabel(label, normalizedPlatform);
 
@@ -127,6 +126,25 @@ export class AnalyticsService implements IAnalyticsService, IDisposable {
 		};
 
 		await this.trackInGoogleAnalytics(googleAnalyticsEventData);
+	}
+
+	public async trackPreviewAppData(platform: string, projectDir: string): Promise<void> {
+		const customDimensions: IStringDictionary = {};
+		this.setProjectRelatedCustomDimensions(customDimensions, projectDir);
+
+		let label: string = "";
+		label = this.addDataToLabel(label, this.$mobileHelper.normalizePlatformName(platform));
+
+		const eventActionData = {
+			googleAnalyticsDataType: GoogleAnalyticsDataType.Event,
+			action: TrackActionNames.PreviewAppData,
+			platform,
+			label,
+			customDimensions,
+			type: TrackingTypes.PreviewAppData
+		};
+
+		await this.trackInGoogleAnalytics(eventActionData);
 	}
 
 	private forcefullyTrackInGoogleAnalytics(gaSettings: IGoogleAnalyticsData): Promise<void> {

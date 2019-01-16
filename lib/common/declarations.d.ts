@@ -204,6 +204,11 @@ declare const enum TrackingTypes {
 	GoogleAnalyticsData = "googleAnalyticsData",
 
 	/**
+	 * Defines that the broker process should get and track the data from preview app to Google Analytics
+	 */
+	PreviewAppData = "PreviewAppData",
+
+	/**
 	 * Defines that all information has been sent and no more data will be tracked in current session.
 	 */
 	Finish = "finish"
@@ -689,6 +694,11 @@ interface IAnalyticsService {
 	 * @return {Promise<void>}
 	 */
 	trackEventActionInGoogleAnalytics(data: IEventActionData): Promise<void>;
+
+	/**
+	 * Tracks preview's app data to Google Analytics project.
+	 */
+	trackPreviewAppData(platform: string, projectDir: string): Promise<void>
 
 	/**
 	 * Defines if the instance should be disposed.

@@ -54,6 +54,33 @@ const finishTracking = async (data?: ITrackingInformation) => {
 	}
 };
 
+const trackPreviewAppData = async (data: any) => {
+	const mobileHelper = $injector.resolve<Mobile.IMobileHelper>("mobileHelper");
+	const devicesService = $injector.resolve<Mobile.IDevicesService>("devicesService");
+	await devicesService.initialize({ platform: data.platform, skipDeviceDetectionInterval: true, skipEmulatorStart: true });
+
+	const devices = await devicesService.getDevicesForPlatform(data.platform);
+	_.each(devices, async (device: Mobile.IDevice) => {
+		try {
+			let previewAppFilePath = null;
+			if (mobileHelper.isAndroidPlatform(device.deviceInfo.platform)) {
+				previewAppFilePath = "/sdcard/org.nativescript.preview/device.json";
+			} else if (mobileHelper.isiOSPlatform(device.deviceInfo.platform)) {
+				previewAppFilePath = "Documents/device.json";
+			}
+
+			const previewAppFileContent = await device.fileSystem.getFileContent(previewAppFilePath, "org.nativescript.preview");
+			const previewAppDeviceId = JSON.parse(previewAppFileContent).id;
+			data.label += `_${previewAppDeviceId}`;
+
+			analyticsLoggingService.logData({ message: `analytics-broker-process will send the data from preview app: ${data}` });
+			await sendDataForTracking(data);
+		} catch (err) {
+			// ignore the error
+		}
+	});
+};
+
 process.on("message", async (data: ITrackingInformation) => {
 	analyticsLoggingService.logData({ message: `analytics-broker-process received message of type: ${data.type}` });
 
@@ -61,6 +88,10 @@ process.on("message", async (data: ITrackingInformation) => {
 		receivedFinishMsg = true;
 		await finishTracking(data);
 		return;
+	}
+
+	if (data.type === TrackingTypes.PreviewAppData) {
+		await trackPreviewAppData(<IPreviewAppTrackingInformation>data);
 	}
 
 	await sendDataForTracking(data);
