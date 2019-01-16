@@ -104,7 +104,6 @@ interface IProjectData extends ICreateProjectData {
 	 * @returns {void}
 	 */
 	initializeProjectData(projectDir?: string): void;
-	initializeProjectDataSafe(projectDir?: string): void;
 	initializeProjectDataFromContent(packageJsonContent: string, nsconfigContent: string, projectDir?: string): void;
 	getAppDirectoryPath(projectDir?: string): string;
 	getAppDirectoryRelativePath(): string;

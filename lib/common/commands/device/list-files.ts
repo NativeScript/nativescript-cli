@@ -13,7 +13,11 @@ export class ListFilesCommand implements ICommand {
 		let appIdentifier = args[1];
 
 		if (!appIdentifier) {
-			this.$projectData.initializeProjectDataSafe();
+			try {
+				this.$projectData.initializeProjectData();
+			} catch (err) {
+				// ignore the error
+			}
 			if (!this.$projectData.projectIdentifiers) {
 				this.$errors.failWithoutHelp("Please enter application identifier or execute this command in project.");
 			}
