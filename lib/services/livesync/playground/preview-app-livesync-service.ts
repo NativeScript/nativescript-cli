@@ -35,7 +35,6 @@ export class PreviewAppLiveSyncService extends EventEmitter implements IPreviewA
 				}
 
 				const deviceUniqueId = (<any>device).uniqueId;
-
 				if (deviceUniqueId) {
 					this.$analyticsService.trackEventActionInGoogleAnalytics({
 						action: TrackActionNames.PreviewAppData,
