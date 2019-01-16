@@ -3981,9 +3981,9 @@
       }
     },
     "ios-sim-portable": {
-      "version": "4.0.6",
-      "resolved": "https://registry.npmjs.org/ios-sim-portable/-/ios-sim-portable-4.0.6.tgz",
-      "integrity": "sha512-V4f5aiQDnikC/ERM+RD9Kj5gRPoIaXv8zt9Zq6hoe8amQa7PP3lY4zSzvVAp8H+Cfts6rtrAaSKLtGpVzoZRPw==",
+      "version": "4.0.7",
+      "resolved": "https://registry.npmjs.org/ios-sim-portable/-/ios-sim-portable-4.0.7.tgz",
+      "integrity": "sha512-8tbgbyOTLn4PVdv/40C8tWeaKriZ+w7yOof8xC6qFlAUGpkKopHJ954akekG2sqVUnfTI3ibaXgF5tkxGtrhGA==",
       "requires": {
         "bplist-parser": "https://github.com/telerik/node-bplist-parser/tarball/master",
         "colors": "0.6.2",
@@ -4009,7 +4009,7 @@
         },
         "lodash": {
           "version": "3.2.0",
-          "resolved": "http://registry.npmjs.org/lodash/-/lodash-3.2.0.tgz",
+          "resolved": "https://registry.npmjs.org/lodash/-/lodash-3.2.0.tgz",
           "integrity": "sha1-S/UKMkP5rrC6xBpV09WZBnWkYvs="
         },
         "set-blocking": {
@@ -4019,7 +4019,7 @@
         },
         "shelljs": {
           "version": "0.7.0",
-          "resolved": "http://registry.npmjs.org/shelljs/-/shelljs-0.7.0.tgz",
+          "resolved": "https://registry.npmjs.org/shelljs/-/shelljs-0.7.0.tgz",
           "integrity": "sha1-P28uSWXOxWX2X/OGHWRPh5KBpXY=",
           "requires": {
             "glob": "^7.0.0",
@@ -4029,7 +4029,7 @@
         },
         "string-width": {
           "version": "1.0.2",
-          "resolved": "http://registry.npmjs.org/string-width/-/string-width-1.0.2.tgz",
+          "resolved": "https://registry.npmjs.org/string-width/-/string-width-1.0.2.tgz",
           "integrity": "sha1-EYvfW4zcUaKn5w0hHgfisLmxB9M=",
           "requires": {
             "code-point-at": "^1.0.0",
@@ -4039,7 +4039,7 @@
         },
         "yargs": {
           "version": "4.7.1",
-          "resolved": "http://registry.npmjs.org/yargs/-/yargs-4.7.1.tgz",
+          "resolved": "https://registry.npmjs.org/yargs/-/yargs-4.7.1.tgz",
           "integrity": "sha1-5gQyZYozh/8mnAKOrN5KUS5Djf8=",
           "requires": {
             "camelcase": "^3.0.0",
@@ -4059,7 +4059,7 @@
         },
         "yargs-parser": {
           "version": "2.4.1",
-          "resolved": "http://registry.npmjs.org/yargs-parser/-/yargs-parser-2.4.1.tgz",
+          "resolved": "https://registry.npmjs.org/yargs-parser/-/yargs-parser-2.4.1.tgz",
           "integrity": "sha1-hVaN488VD/SfpRgl8DqMiA3cxcQ=",
           "requires": {
             "camelcase": "^3.0.0",
