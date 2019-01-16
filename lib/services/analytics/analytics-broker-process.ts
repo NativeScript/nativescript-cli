@@ -92,6 +92,7 @@ process.on("message", async (data: ITrackingInformation) => {
 
 	if (data.type === TrackingTypes.PreviewAppData) {
 		await trackPreviewAppData(<IPreviewAppTrackingInformation>data);
+		return;
 	}
 
 	await sendDataForTracking(data);
