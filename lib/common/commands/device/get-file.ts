@@ -1,7 +1,7 @@
 export class GetFileCommand implements ICommand {
 	constructor(private $devicesService: Mobile.IDevicesService,
 		private $stringParameter: ICommandParameter,
-		private $project: Project.IProjectBase,
+		private $projectData: IProjectData,
 		private $errors: IErrors,
 		private $options: IOptions) { }
 
@@ -11,13 +11,21 @@ export class GetFileCommand implements ICommand {
 		await this.$devicesService.initialize({ deviceId: this.$options.device, skipInferPlatform: true });
 		let appIdentifier = args[1];
 
-		if (!appIdentifier && !this.$project.projectData) {
-			this.$errors.failWithoutHelp("Please enter application identifier or execute this command in project.");
+		if (!appIdentifier) {
+			try {
+				this.$projectData.initializeProjectData();
+			} catch (err) {
+				// ignore the error
+			}
+			if (!this.$projectData.projectIdentifiers) {
+				this.$errors.failWithoutHelp("Please enter application identifier or execute this command in project.");
+			}
 		}
 
-		appIdentifier = appIdentifier || this.$project.projectData.AppIdentifier;
-
-		const action = (device: Mobile.IDevice) => device.fileSystem.getFile(args[0], appIdentifier, this.$options.file);
+		const action = async (device: Mobile.IDevice) => {
+			appIdentifier = appIdentifier || this.$projectData.projectIdentifiers[device.deviceInfo.platform.toLowerCase()];
+			await device.fileSystem.getFile(args[0], appIdentifier, this.$options.file);
+		};
 		await this.$devicesService.execute(action);
 	}
 }
