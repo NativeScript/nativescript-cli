@@ -771,8 +771,11 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 			this.$logger.trace(`Images to remove from xcode project: ${imagesToRemove.join(", ")}`);
 			_.each(imagesToRemove, image => project.removeResourceFile(path.join(this.getAppResourcesDestinationDirectoryPath(projectData), image)));
 
+			await this.prepareNativeSourceCode(constants.TNS_NATIVE_SOURCE_GROUP_NAME, path.join(projectData.getAppResourcesDirectoryPath(), constants.APP_RESOURCES_FOLDER_NAME, this.getPlatformData(projectData).normalizedPlatformName, constants.NATIVE_SOURCE_FOLDER), projectData);
+
 			this.savePbxProj(project, projectData);
 		}
+
 	}
 
 	public prepareAppResources(appResourcesDirectoryPath: string, projectData: IProjectData): void {
@@ -780,19 +783,27 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		const filterFile = (filename: string) => this.$fs.deleteFile(path.join(platformFolder, filename));
 
 		filterFile(this.getPlatformData(projectData).configurationFileName);
+		filterFile(constants.PODFILE_NAME);
+
+		// src folder should not be copied as the pbxproject will have references to its files
+		this.$fs.deleteDirectory(path.join(appResourcesDirectoryPath, this.getPlatformData(projectData).normalizedPlatformName, constants.NATIVE_SOURCE_FOLDER));
 
 		this.$fs.deleteDirectory(this.getAppResourcesDestinationDirectoryPath(projectData));
 	}
 
-	public async processConfigurationFilesFromAppResources(release: boolean, projectData: IProjectData): Promise<void> {
-		await this.mergeInfoPlists({ release }, projectData);
+	public async processConfigurationFilesFromAppResources(projectData: IProjectData, opts: { release: boolean,  installPods: boolean }): Promise<void> {
+		await this.mergeInfoPlists({ release: opts.release }, projectData);
 		await this.$iOSEntitlementsService.merge(projectData);
-		await this.mergeProjectXcconfigFiles(release, projectData);
+		await this.mergeProjectXcconfigFiles(opts.release, projectData);
 		for (const pluginData of await this.getAllInstalledPlugins(projectData)) {
 			await this.$pluginVariablesService.interpolatePluginVariables(pluginData, this.getPlatformData(projectData).configurationFilePath, projectData.projectDir);
 		}
 
 		this.$pluginVariablesService.interpolateAppIdentifier(this.getPlatformData(projectData).configurationFilePath, projectData.projectIdentifiers.ios);
+
+		if (opts.installPods) {
+			await this.installPodsIfAny(projectData);
+		}
 	}
 
 	private getInfoPlistPath(projectData: IProjectData): string {
@@ -955,7 +966,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		await this.prepareStaticLibs(pluginPlatformsFolderPath, pluginData, projectData);
 
 		const projectRoot = this.getPlatformData(projectData).projectRoot;
-		await this.$cocoapodsService.applyPluginPodfileToProject(pluginData, projectData, projectRoot);
+		await this.$cocoapodsService.applyPodfileToProject(pluginData.name, this.$cocoapodsService.getPluginPodfilePath(pluginData), projectData, projectRoot);
 	}
 
 	public async removePluginNativeCode(pluginData: IPluginData, projectData: IProjectData): Promise<void> {
@@ -966,12 +977,17 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		this.removeStaticLibs(pluginPlatformsFolderPath, pluginData, projectData);
 		const projectRoot = this.getPlatformData(projectData).projectRoot;
 
-		this.$cocoapodsService.removePluginPodfileFromProject(pluginData, projectData, projectRoot);
+		this.$cocoapodsService.removePodfileFromProject(pluginData.name, this.$cocoapodsService.getPluginPodfilePath(pluginData), projectData, projectRoot);
 	}
 
 	public async afterPrepareAllPlugins(projectData: IProjectData): Promise<void> {
+		await this.installPodsIfAny(projectData);
+	}
+
+	public async installPodsIfAny(projectData: IProjectData): Promise<void> {
 		const projectRoot = this.getPlatformData(projectData).projectRoot;
-		if (this.$fs.exists(this.$cocoapodsService.getProjectPodfilePath(projectRoot))) {
+		const mainPodfilePath = path.join(projectData.appResourcesDirectoryPath, this.getPlatformData(projectData).normalizedPlatformName, constants.PODFILE_NAME);
+		if (this.$fs.exists(this.$cocoapodsService.getProjectPodfilePath(projectRoot)) || this.$fs.exists(mainPodfilePath)) {
 			const xcodeProjPath = this.getXcodeprojPath(projectData);
 			const xcuserDataPath = path.join(xcodeProjPath, "xcuserdata");
 			const sharedDataPath = path.join(xcodeProjPath, "xcshareddata");
@@ -983,6 +999,8 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 				const createSchemeRubyScript = `ruby -e "require 'xcodeproj'; xcproj = Xcodeproj::Project.open('${projectData.projectName}.xcodeproj'); xcproj.recreate_user_schemes; xcproj.save"`;
 				await this.$childProcess.exec(createSchemeRubyScript, { cwd: this.getPlatformData(projectData).projectRoot });
 			}
+
+			await this.$cocoapodsService.applyPodfileToProject(constants.NS_BASE_PODFILE, mainPodfilePath, projectData, this.getPlatformData(projectData).projectRoot);
 
 			await this.$cocoapodsService.executePodInstall(projectRoot, xcodeProjPath);
 		}
@@ -1094,9 +1112,9 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		this.$fs.rename(path.join(fileRootLocation, oldFileName), path.join(fileRootLocation, newFileName));
 	}
 
-	private async prepareNativeSourceCode(pluginName: string, pluginPlatformsFolderPath: string, projectData: IProjectData): Promise<void> {
+	private async prepareNativeSourceCode(groupName: string, sourceFolderPath: string, projectData: IProjectData): Promise<void> {
 		const project = this.createPbxProj(projectData);
-		const group = this.getRootGroup(pluginName, pluginPlatformsFolderPath);
+		const group = this.getRootGroup(groupName, sourceFolderPath);
 		project.addPbxGroup(group.files, group.name, group.path, null, { isMain: true });
 		project.addToHeaderSearchPaths(group.path);
 		this.savePbxProj(project, projectData);

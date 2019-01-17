@@ -3,6 +3,7 @@ require("colors");
 export const APP_FOLDER_NAME = "app";
 export const APP_RESOURCES_FOLDER_NAME = "App_Resources";
 export const PROJECT_FRAMEWORK_FOLDER_NAME = "framework";
+export const NS_BASE_PODFILE = "NSPodfileBase";
 export const NATIVESCRIPT_KEY_NAME = "nativescript";
 export const NODE_MODULES_FOLDER_NAME = "node_modules";
 export const TNS_MODULES_FOLDER_NAME = "tns_modules";
@@ -43,6 +44,8 @@ export const DEPENDENCIES_JSON_NAME = "dependencies.json";
 export const APK_EXTENSION_NAME = ".apk";
 export const AAB_EXTENSION_NAME = ".aab";
 export const HASHES_FILE_NAME = ".nshashes";
+export const TNS_NATIVE_SOURCE_GROUP_NAME = "TNSNativeSource";
+export const NATIVE_SOURCE_FOLDER = "src";
 
 export class PackageVersion {
 	static NEXT = "next";

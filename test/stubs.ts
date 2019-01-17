@@ -329,6 +329,7 @@ export class ProjectDataStub implements IProjectData {
 	public appGradlePath: string;
 	public gradleFilesDirectoryPath: string;
 	public buildXcconfigPath: string;
+	public podfilePath: string;
 	public isShared: boolean;
 
 	public initializeProjectData(projectDir?: string): void {
