@@ -1,6 +1,29 @@
 NativeScript CLI Changelog
 ================
 
+5.1.1 (2019, January 17)
+==
+
+### Fixed
+* [Fixed #4024](https://github.com/NativeScript/nativescript-cli/issues/4024): LiveSync is not working in Preview app when Angular's lazy loading is used
+* [Fixed #4197](https://github.com/NativeScript/nativescript-cli/issues/4197): Not able to change IPHONEOS_DEPLOYMENT_TARGET due to CLI overwriting ARCHS and VALID_ARCHS
+* [Fixed #4222](https://github.com/NativeScript/nativescript-cli/issues/4222): Sidekick restarts DevTools during debug when change in .xml/.css/.html file is applied
+* [Fixed #4218](https://github.com/NativeScript/nativescript-cli/issues/4218): Cannot run app after debug-brk fail
+* [Fixed #4228](https://github.com/NativeScript/nativescript-cli/issues/4228): `tns update` command doesn't work with yarn
+* [Fixed #4230](https://github.com/NativeScript/nativescript-cli/issues/4230): Debugging with HMR is not working for iOS
+* [Fixed #4234](https://github.com/NativeScript/nativescript-cli/issues/4234): Creating project hangs on Windows when yarn is set as package manager
+* [Fixed #4236](https://github.com/NativeScript/nativescript-cli/issues/4236): Chrome DevTools(iOS): Debugger does not attach after reloading the page
+* [Fixed #4238](https://github.com/NativeScript/nativescript-cli/issues/4238): Fresh project build error on ios
+* [Fixed #4251](https://github.com/NativeScript/nativescript-cli/pull/4251): Unhandled promise rejection error from sidekick when livesync to preview app with bundle
+* [Fixed #4260](https://github.com/NativeScript/nativescript-cli/issues/4260): CLI crashes when attaching to a non running iOS app
+* [Fixed #4261](https://github.com/NativeScript/nativescript-cli/issues/4261): The CLI requires developer disk image not only in debug
+* [Fixed #4272](https://github.com/NativeScript/nativescript-cli/issues/4272): Generation of splash screen fails for new templates
+* [Fixed #4273](https://github.com/NativeScript/nativescript-cli/issues/4273): `tns debug ios --hmr` If you have two open tabs and close one, breakpoints stop working
+* [Fixed #4291](https://github.com/NativeScript/nativescript-cli/issues/4291): Error during debug on iOS: WebSocket is not open: readyState 2 (CLOSING)
+* [Fixed #4292](https://github.com/NativeScript/nativescript-cli/issues/4292): Error during debug on iOS: RangeError: Index out of range
+* [Fixed #4293](https://github.com/NativeScript/nativescript-cli/issues/4293): Error during debug on iOS: RangeError [ERR_BUFFER_OUT_OF_BOUNDS]
+
+
 5.1.0 (2018, December 11)
 ==
 
