@@ -42,9 +42,10 @@ export class PreparePlatformNativeService extends PreparePlatformService impleme
 			await config.platformData.platformProjectService.prepareProject(config.projectData, config.platformSpecificData);
 		}
 
-		const shouldPrepareModules = !config.changesInfo || config.changesInfo.modulesChanged;
+		const hasModulesChange = !config.changesInfo || config.changesInfo.modulesChanged;
+		const hasConfigChange = !config.changesInfo || config.changesInfo.configChanged;
 
-		if (shouldPrepareModules) {
+		if (hasModulesChange) {
 			await this.$pluginsService.validate(config.platformData, config.projectData);
 
 			const appDestinationDirectoryPath = path.join(config.platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
@@ -64,9 +65,9 @@ export class PreparePlatformNativeService extends PreparePlatformService impleme
 			await this.$nodeModulesBuilder.prepareNodeModules({ nodeModulesData, release: config.appFilesUpdaterOptions.release });
 		}
 
-		if (!config.changesInfo || config.changesInfo.configChanged || config.changesInfo.modulesChanged) {
-			// Passing !shouldPrepareModules` we assume that if the node modules are prepared base Podfile content is added and `pod install` is executed.
-			await config.platformData.platformProjectService.processConfigurationFilesFromAppResources(config.projectData, {release:config.appFilesUpdaterOptions.release, installPods: !shouldPrepareModules});
+		if (hasModulesChange || hasConfigChange) {
+			await config.platformData.platformProjectService.processConfigurationFilesFromAppResources(config.projectData, { release: config.appFilesUpdaterOptions.release });
+			await config.platformData.platformProjectService.afterPrepareAllPlugins(config.projectData);
 		}
 
 		config.platformData.platformProjectService.interpolateConfigurationFile(config.projectData, config.platformSpecificData);

@@ -112,11 +112,6 @@ export class NpmPluginPrepare {
 	}
 
 	protected async afterPrepare(dependencies: IDependencyData[], platform: string, projectData: IProjectData): Promise<void> {
-		await this.$platformsData.getPlatformData(platform, projectData).platformProjectService.afterPrepareAllPlugins(projectData);
-		this.writePreparedDependencyInfo(dependencies, platform, projectData);
-	}
-
-	private writePreparedDependencyInfo(dependencies: IDependencyData[], platform: string, projectData: IProjectData): void {
 		const prepareData: IDictionary<boolean> = {};
 		_.each(dependencies, d => {
 			prepareData[d.name] = true;

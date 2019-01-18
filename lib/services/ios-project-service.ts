@@ -791,7 +791,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		this.$fs.deleteDirectory(this.getAppResourcesDestinationDirectoryPath(projectData));
 	}
 
-	public async processConfigurationFilesFromAppResources(projectData: IProjectData, opts: { release: boolean,  installPods: boolean }): Promise<void> {
+	public async processConfigurationFilesFromAppResources(projectData: IProjectData, opts: { release: boolean }): Promise<void> {
 		await this.mergeInfoPlists({ release: opts.release }, projectData);
 		await this.$iOSEntitlementsService.merge(projectData);
 		await this.mergeProjectXcconfigFiles(opts.release, projectData);
@@ -800,10 +800,6 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		}
 
 		this.$pluginVariablesService.interpolateAppIdentifier(this.getPlatformData(projectData).configurationFilePath, projectData.projectIdentifiers.ios);
-
-		if (opts.installPods) {
-			await this.installPodsIfAny(projectData);
-		}
 	}
 
 	private getInfoPlistPath(projectData: IProjectData): string {

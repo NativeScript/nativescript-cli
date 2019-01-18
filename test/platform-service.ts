@@ -496,6 +496,7 @@ describe('Platform Service Tests', () => {
 							}
 						},
 						processConfigurationFilesFromAppResources: () => Promise.resolve(),
+						afterPrepareAllPlugins: () => Promise.resolve(),
 						ensureConfigurationFileInAppResources: (): any => null,
 						interpolateConfigurationFile: (): void => undefined,
 						isPlatformPrepared: (projectRoot: string) => false,
@@ -931,6 +932,7 @@ describe('Platform Service Tests', () => {
 						afterCreateProject: (projectRoot: string): any => null,
 						getAppResourcesDestinationDirectoryPath: () => testDirData.appResourcesFolderPath,
 						processConfigurationFilesFromAppResources: () => Promise.resolve(),
+						afterPrepareAllPlugins: () => Promise.resolve(),
 						ensureConfigurationFileInAppResources: (): any => null,
 						interpolateConfigurationFile: (): void => undefined,
 						isPlatformPrepared: (projectRoot: string) => false,
