@@ -47,14 +47,14 @@ export class AndroidApplicationManager extends ApplicationManagerBase {
 		return this.adb.executeShellCommand(["pm", "uninstall", `${appIdentifier}`], { treatErrorsAsWarnings: true });
 	}
 
-	public async startApplication(appData: Mobile.IStartApplicationData): Promise<Mobile.IRunningAppInfo> {
+	public async startApplication(appData: Mobile.IStartApplicationData): Promise<void> {
 		if (appData.waitForDebugger) {
 			await this.adb.executeShellCommand([`cat /dev/null > ${LiveSyncPaths.ANDROID_TMP_DIR_NAME}/${appData.appId}-debugbreak`]);
 		}
 
-		if (appData.enableDebugging) {
-			await this.adb.executeShellCommand([`cat /dev/null > ${LiveSyncPaths.ANDROID_TMP_DIR_NAME}/${appData.appId}-debugger-started`]);
-		}
+		// If the app is debuggable, the Runtime will update the file when its ready for debugging
+		// and we will be able to take decisions and synchronize the debug experience based on the content
+		await this.adb.executeShellCommand([`cat /dev/null > ${LiveSyncPaths.ANDROID_TMP_DIR_NAME}/${appData.appId}-debugger-started`]);
 
 		/*
 		Example "pm dump <app_identifier> | grep -A 1 MAIN" output"
@@ -82,9 +82,9 @@ export class AndroidApplicationManager extends ApplicationManagerBase {
 			await this.adb.executeShellCommand(["monkey", "-p", appIdentifier, "-c", "android.intent.category.LAUNCHER", "1"]);
 		}
 
-		const deviceIdentifier = this.identifier;
-		const processIdentifier = await this.getAppProcessId(deviceIdentifier, appIdentifier);
 		if (!this.$options.justlaunch && !appData.justLaunch) {
+			const deviceIdentifier = this.identifier;
+			const processIdentifier = await this.getAppProcessId(deviceIdentifier, appIdentifier);
 			if (processIdentifier) {
 				this.$deviceLogProvider.setApplicationPidForDevice(deviceIdentifier, processIdentifier);
 				await this.$logcatHelper.start({
@@ -96,10 +96,6 @@ export class AndroidApplicationManager extends ApplicationManagerBase {
 				this.$errors.failWithoutHelp(`Unable to find running "${appIdentifier}" application on device "${deviceIdentifier}".`);
 			}
 		}
-
-		return {
-			pid: processIdentifier
-		};
 	}
 
 	private async getAppProcessId(deviceIdentifier: string, appIdentifier: string) {

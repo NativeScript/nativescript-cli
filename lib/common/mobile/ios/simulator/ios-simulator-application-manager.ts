@@ -54,7 +54,7 @@ export class IOSSimulatorApplicationManager extends ApplicationManagerBase {
 		return this.iosSim.uninstallApplication(this.device.deviceInfo.identifier, appIdentifier);
 	}
 
-	public async startApplication(appData: Mobile.IStartApplicationData): Promise<Mobile.IRunningAppInfo> {
+	public async startApplication(appData: Mobile.IStartApplicationData): Promise<void> {
 		const options = appData.waitForDebugger ? {
 			waitForDebugger: true,
 			args: "--nativescript-debug-brk",
@@ -65,10 +65,6 @@ export class IOSSimulatorApplicationManager extends ApplicationManagerBase {
 		if (appData.waitForDebugger) {
 			this.attachNativeDebugger(appData.appId, pid);
 		}
-
-		return {
-			pid
-		};
 	}
 
 	public async stopApplication(appData: Mobile.IApplicationData): Promise<void> {

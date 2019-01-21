@@ -298,8 +298,7 @@ declare module Mobile {
 	}
 
 	interface IStartApplicationData extends IApplicationData {
-		waitForDebugger: boolean;
-		enableDebugging: boolean;
+		waitForDebugger?: boolean;
 	}
 
 	interface IInstallAppData extends IApplicationData {
@@ -316,9 +315,9 @@ declare module Mobile {
 		installApplication(packageFilePath: string, appIdentifier?: string): Promise<void>;
 		uninstallApplication(appIdentifier: string): Promise<void>;
 		reinstallApplication(appIdentifier: string, packageFilePath: string): Promise<void>;
-		startApplication(appData: IStartApplicationData): Promise<IRunningAppInfo>;
+		startApplication(appData: IStartApplicationData): Promise<void>;
 		stopApplication(appData: IApplicationData): Promise<void>;
-		restartApplication(appData: IStartApplicationData): Promise<IRunningAppInfo>;
+		restartApplication(appData: IStartApplicationData): Promise<void>;
 		checkForApplicationUpdates(): Promise<void>;
 		isLiveSyncSupported(appIdentifier: string): Promise<boolean>;
 		getApplicationInfo(applicationIdentifier: string): Promise<Mobile.IApplicationInfo>;

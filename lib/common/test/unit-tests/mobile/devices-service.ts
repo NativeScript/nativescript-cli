@@ -253,7 +253,7 @@ describe("devicesService", () => {
 		},
 		applicationManager: {
 			getInstalledApplications: () => Promise.resolve(["com.telerik.unitTest1", "com.telerik.unitTest2"]),
-			startApplication: (appData: Mobile.IApplicationData) => Promise.resolve({ pid: "123" }),
+			startApplication: (appData: Mobile.IApplicationData) => Promise.resolve(),
 			tryStartApplication: (appData: Mobile.IApplicationData) => Promise.resolve(),
 			reinstallApplication: (packageName: string, packageFile: string) => Promise.resolve(),
 			isApplicationInstalled: (packageName: string) => Promise.resolve(_.includes(["com.telerik.unitTest1", "com.telerik.unitTest2"], packageName)),
@@ -272,7 +272,7 @@ describe("devicesService", () => {
 		},
 		applicationManager: {
 			getInstalledApplications: () => Promise.resolve(["com.telerik.unitTest1", "com.telerik.unitTest2", "com.telerik.unitTest3"]),
-			startApplication: (appData: Mobile.IApplicationData) => Promise.resolve({ pid: "123" }),
+			startApplication: (appData: Mobile.IApplicationData) => Promise.resolve(),
 			tryStartApplication: (appData: Mobile.IApplicationData) => Promise.resolve(),
 			reinstallApplication: (packageName: string, packageFile: string) => Promise.resolve(),
 			isApplicationInstalled: (packageName: string) => Promise.resolve(_.includes(["com.telerik.unitTest1", "com.telerik.unitTest2", "com.telerik.unitTest3"], packageName)),

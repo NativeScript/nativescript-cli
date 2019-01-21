@@ -85,7 +85,7 @@ export class AndroidDeviceDebugService extends DebugServiceBase implements IDevi
 
 		await this.validateRunningApp(this.deviceIdentifier, appId);
 		if (debugOptions.debugBrk) {
-			await this.waitForDebugger(appId);
+			await this.waitForDebugServer(appId);
 		}
 
 		const debugPort = await this.getForwardedDebugPort(this.deviceIdentifier, appId);
@@ -107,7 +107,7 @@ export class AndroidDeviceDebugService extends DebugServiceBase implements IDevi
 		}
 	}
 
-	private async waitForDebugger(appId: String): Promise<void> {
+	private async waitForDebugServer(appId: String): Promise<void> {
 		const debuggerStartedFilePath = `${LiveSyncPaths.ANDROID_TMP_DIR_NAME}/${appId}-debugger-started`;
 		const waitText: string = `0 ${debuggerStartedFilePath}`;
 		let maxWait = 12;

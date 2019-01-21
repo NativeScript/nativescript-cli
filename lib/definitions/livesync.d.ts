@@ -369,7 +369,6 @@ interface ILiveSyncResultInfo extends IHasUseHotModuleReloadOption {
 	modifiedFilesData: Mobile.ILocalToDevicePathData[];
 	isFullSync: boolean;
 	waitForDebugger?: boolean;
-	enableDebugging?: boolean;
 	deviceAppData: Mobile.IDeviceAppData;
 	didRecover?: boolean
 }

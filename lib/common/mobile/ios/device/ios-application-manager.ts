@@ -74,17 +74,15 @@ export class IOSApplicationManager extends ApplicationManagerBase {
 		this.$logger.trace("Application %s has been uninstalled successfully.", appIdentifier);
 	}
 
-	public async startApplication(appData: Mobile.IStartApplicationData): Promise<Mobile.IRunningAppInfo> {
+	public async startApplication(appData: Mobile.IStartApplicationData): Promise<void> {
 		if (!await this.isApplicationInstalled(appData.appId)) {
 			this.$errors.failWithoutHelp("Invalid application id: %s. All available application ids are: %s%s ", appData.appId, EOL, this.applicationsLiveSyncInfos.join(EOL));
 		}
 
 		await this.setDeviceLogData(appData);
-		const appInfo = await this.runApplicationCore(appData);
+		await this.runApplicationCore(appData);
 
 		this.$logger.info(`Successfully run application ${appData.appId} on device with ID ${this.device.deviceInfo.identifier}.`);
-
-		return appInfo;
 	}
 
 	public async stopApplication(appData: Mobile.IApplicationData): Promise<void> {
@@ -102,12 +100,11 @@ export class IOSApplicationManager extends ApplicationManagerBase {
 		}
 	}
 
-	public async restartApplication(appData: Mobile.IStartApplicationData): Promise<Mobile.IRunningAppInfo> {
+	public async restartApplication(appData: Mobile.IStartApplicationData): Promise<void> {
 		try {
 			await this.setDeviceLogData(appData);
 			await this.stopApplication(appData);
-			const appInfo = await this.runApplicationCore(appData);
-			return appInfo;
+			await this.runApplicationCore(appData);
 		} catch (err) {
 			await this.$iOSNotificationService.postNotification(this.device.deviceInfo.identifier, `${appData.appId}:NativeScript.LiveSync.RestartApplication`);
 			throw err;
@@ -121,14 +118,9 @@ export class IOSApplicationManager extends ApplicationManagerBase {
 		}
 	}
 
-	private async runApplicationCore(appData: Mobile.IStartApplicationData): Promise<Mobile.IRunningAppInfo> {
+	private async runApplicationCore(appData: Mobile.IStartApplicationData): Promise<void> {
 		const waitForDebugger = appData.waitForDebugger && appData.waitForDebugger.toString();
 		await this.$iosDeviceOperations.start([{ deviceId: this.device.deviceInfo.identifier, appId: appData.appId, ddi: this.$options.ddi, waitForDebugger }]);
-
-		return {
-			// we cannot get PID on a real iOS device
-			pid: ""
-		};
 	}
 
 	@cache()

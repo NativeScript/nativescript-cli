@@ -207,7 +207,6 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 	@performanceLog()
 	private async refreshApplicationWithDebug(projectData: IProjectData, liveSyncResultInfo: ILiveSyncResultInfo, debugOptions: IDebugOptions, outputPath?: string): Promise<IDebugInformation> {
 		debugOptions = debugOptions || {};
-		liveSyncResultInfo.enableDebugging = true;
 		if (debugOptions.debugBrk) {
 			liveSyncResultInfo.waitForDebugger = true;
 		}

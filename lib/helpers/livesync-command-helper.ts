@@ -175,9 +175,7 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 				runPlatformOptions,
 				{
 					appId: this.$projectData.projectIdentifiers[currentPlatform.toLowerCase()],
-					projectName: this.$projectData.projectName,
-					enableDebugging: false,
-					waitForDebugger: false
+					projectName: this.$projectData.projectName
 				}
 			);
 		}
