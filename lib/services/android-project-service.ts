@@ -577,11 +577,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		}
 	}
 
-	public async afterPrepareAllPlugins(projectData: IProjectData): Promise<void> {
-		return;
-	}
-
-	public async beforePrepareAllPlugins(projectData: IProjectData, dependencies?: IDependencyData[]): Promise<void> {
+	public async handleNativeDependenciesChange(projectData: IProjectData, dependencies?: IDependencyData[]): Promise<void> {
 		const shouldUseNewRoutine = this.runtimeVersionIsGreaterThanOrEquals(projectData, "3.3.0");
 
 		if (dependencies) {

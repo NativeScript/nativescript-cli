@@ -800,6 +800,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		}
 
 		this.$pluginVariablesService.interpolateAppIdentifier(this.getPlatformData(projectData).configurationFilePath, projectData.projectIdentifiers.ios);
+		await this.mergeProjectPodFile(projectData);
 	}
 
 	private getInfoPlistPath(projectData: IProjectData): string {
@@ -976,34 +977,10 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		this.$cocoapodsService.removePodfileFromProject(pluginData.name, this.$cocoapodsService.getPluginPodfilePath(pluginData), projectData, projectRoot);
 	}
 
-	public async afterPrepareAllPlugins(projectData: IProjectData): Promise<void> {
-		await this.installPodsIfAny(projectData);
-	}
-
-	public async installPodsIfAny(projectData: IProjectData): Promise<void> {
+	public async handleNativeDependenciesChange(projectData: IProjectData): Promise<void> {
 		const projectRoot = this.getPlatformData(projectData).projectRoot;
-		const mainPodfilePath = path.join(projectData.appResourcesDirectoryPath, this.getPlatformData(projectData).normalizedPlatformName, constants.PODFILE_NAME);
-		if (this.$fs.exists(this.$cocoapodsService.getProjectPodfilePath(projectRoot)) || this.$fs.exists(mainPodfilePath)) {
-			const xcodeProjPath = this.getXcodeprojPath(projectData);
-			const xcuserDataPath = path.join(xcodeProjPath, "xcuserdata");
-			const sharedDataPath = path.join(xcodeProjPath, "xcshareddata");
-
-			if (!this.$fs.exists(xcuserDataPath) && !this.$fs.exists(sharedDataPath)) {
-				this.$logger.info("Creating project scheme...");
-				await this.checkIfXcodeprojIsRequired();
-
-				const createSchemeRubyScript = `ruby -e "require 'xcodeproj'; xcproj = Xcodeproj::Project.open('${projectData.projectName}.xcodeproj'); xcproj.recreate_user_schemes; xcproj.save"`;
-				await this.$childProcess.exec(createSchemeRubyScript, { cwd: this.getPlatformData(projectData).projectRoot });
-			}
-
-			await this.$cocoapodsService.applyPodfileToProject(constants.NS_BASE_PODFILE, mainPodfilePath, projectData, this.getPlatformData(projectData).projectRoot);
-
-			await this.$cocoapodsService.executePodInstall(projectRoot, xcodeProjPath);
-		}
-	}
-
-	public beforePrepareAllPlugins(): Promise<void> {
-		return Promise.resolve();
+		const xcodeProjPath = this.getXcodeprojPath(projectData);
+		await this.$cocoapodsService.executePodInstall(projectRoot, xcodeProjPath);
 	}
 
 	public async checkForChanges(changesInfo: IProjectChangesInfo, { provision, teamId }: IProjectChangesOptions, projectData: IProjectData): Promise<void> {
@@ -1066,6 +1043,28 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		}
 
 		return semver.coerce(target);
+	}
+
+	private async mergeProjectPodFile(projectData: IProjectData): Promise<void> {
+		const platformData = this.getPlatformData(projectData);
+		const { projectRoot, normalizedPlatformName } = platformData;
+		const mainPodfilePath = path.join(projectData.appResourcesDirectoryPath, normalizedPlatformName, constants.PODFILE_NAME);
+		const projectPodfilePath = this.$cocoapodsService.getProjectPodfilePath(projectRoot);
+		if (this.$fs.exists(projectPodfilePath) || this.$fs.exists(mainPodfilePath)) {
+			const xcodeProjPath = this.getXcodeprojPath(projectData);
+			const xcuserDataPath = path.join(xcodeProjPath, "xcuserdata");
+			const sharedDataPath = path.join(xcodeProjPath, "xcshareddata");
+
+			if (!this.$fs.exists(xcuserDataPath) && !this.$fs.exists(sharedDataPath)) {
+				this.$logger.info("Creating project scheme...");
+				await this.checkIfXcodeprojIsRequired();
+
+				const createSchemeRubyScript = `ruby -e "require 'xcodeproj'; xcproj = Xcodeproj::Project.open('${projectData.projectName}.xcodeproj'); xcproj.recreate_user_schemes; xcproj.save"`;
+				await this.$childProcess.exec(createSchemeRubyScript, { cwd: projectRoot });
+			}
+
+			await this.$cocoapodsService.applyPodfileToProject(constants.NS_BASE_PODFILE, mainPodfilePath, projectData, projectRoot);
+		}
 	}
 
 	private getAllLibsForPluginWithFileExtension(pluginData: IPluginData, fileExtension: string): string[] {

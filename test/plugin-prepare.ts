@@ -14,14 +14,10 @@ class TestNpmPluginPrepare extends NpmPluginPrepare {
 		return this.previouslyPrepared;
 	}
 
-	protected async beforePrepare(dependencies: IDependencyData[], platform: string): Promise<void> {
+	protected async afterPrepare(dependencies: IDependencyData[], platform: string): Promise<void> {
 		_.each(dependencies, d => {
 			this.preparedDependencies[d.name] = true;
 		});
-	}
-
-	protected async afterPrepare(dependencies: IDependencyData[], platform: string): Promise<void> {
-		// DO NOTHING
 	}
 }
 
