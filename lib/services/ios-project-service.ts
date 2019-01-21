@@ -980,7 +980,10 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 	public async handleNativeDependenciesChange(projectData: IProjectData): Promise<void> {
 		const projectRoot = this.getPlatformData(projectData).projectRoot;
 		const xcodeProjPath = this.getXcodeprojPath(projectData);
-		await this.$cocoapodsService.executePodInstall(projectRoot, xcodeProjPath);
+		const projectPodfilePath = this.$cocoapodsService.getProjectPodfilePath(projectRoot);
+		if (this.$fs.exists(projectPodfilePath)) {
+			await this.$cocoapodsService.executePodInstall(projectRoot, xcodeProjPath);
+		}
 	}
 
 	public async checkForChanges(changesInfo: IProjectChangesInfo, { provision, teamId }: IProjectChangesOptions, projectData: IProjectData): Promise<void> {
