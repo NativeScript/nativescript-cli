@@ -193,7 +193,8 @@ class TestExecutionService implements ITestExecutionService {
 				options: {
 					debugTransport: this.$options.debugTransport,
 					debugBrk: this.$options.debugBrk,
-					watch: !!this.$options.watch
+					watch: !!this.$options.watch,
+					appDirectoryRelativePath: projectData.getAppDirectoryRelativePath()
 				}
 			},
 		};
