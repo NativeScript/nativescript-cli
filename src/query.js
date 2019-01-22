@@ -752,7 +752,7 @@ export default class Query {
         processedDocs.sort((a, b) => {
           return Object.keys(this.sort)
             .reduce((result, field) => {
-              if (typeof result !== 'undefined') {
+              if (typeof result !== 'undefined' && result !== 0) {
                 return result;
               }
 
