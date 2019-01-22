@@ -168,13 +168,22 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 	}
 
 	private async refreshApplicationWithoutDebug(projectData: IProjectData, liveSyncResultInfo: ILiveSyncResultInfo, debugOpts?: IDebugOptions, outputPath?: string, settings?: IRefreshApplicationSettings): Promise<IRefreshApplicationInfo> {
-		let result: IRefreshApplicationInfo = { didRestart: false };
+		const result = { didRefresh: false };
 		const platform = liveSyncResultInfo.deviceAppData.platform;
 		const platformLiveSyncService = this.getLiveSyncService(platform);
 		const applicationIdentifier = projectData.projectIdentifiers[platform.toLowerCase()];
 		try {
-			// TODO: this.emit(DEBUGGER_DETACHED_EVENT_NAME, { deviceIdentifier }); when we have control on the restart application flow
-			result = await platformLiveSyncService.refreshApplication(projectData, liveSyncResultInfo);
+			let shouldRestart = await platformLiveSyncService.shouldRestart(projectData, liveSyncResultInfo);
+			if (!shouldRestart) {
+				result.didRefresh = await platformLiveSyncService.tryRefreshApplication(projectData, liveSyncResultInfo);
+				shouldRestart = !result.didRefresh;
+			}
+
+			if (shouldRestart) {
+				const deviceIdentifier = liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier;
+				this.emit(DEBUGGER_DETACHED_EVENT_NAME, { deviceIdentifier });
+				await platformLiveSyncService.restartApplication(projectData, liveSyncResultInfo);
+			}
 		} catch (err) {
 			this.$logger.info(`Error while trying to start application ${applicationIdentifier} on device ${liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier}. Error is: ${err.message || err}`);
 			const msg = `Unable to start application ${applicationIdentifier} on device ${liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier}. Try starting it manually.`;
@@ -217,7 +226,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 		// if we try to send the launch request, the debugger port will not be printed and the command will timeout
 		debugOptions.start = !debugOptions.debugBrk;
 
-		debugOptions.forceDebuggerAttachedEvent = refreshInfo.didRestart;
+		debugOptions.forceDebuggerAttachedEvent = !refreshInfo.didRefresh;
 		const deviceOption = {
 			deviceIdentifier: liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier,
 			debugOptions: debugOptions,

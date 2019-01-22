@@ -396,28 +396,33 @@ interface ITransferFilesOptions {
 interface IPlatformLiveSyncService {
 	fullSync(syncInfo: IFullSyncInfo): Promise<ILiveSyncResultInfo>;
 	liveSyncWatchAction(device: Mobile.IDevice, liveSyncInfo: ILiveSyncWatchInfo): Promise<ILiveSyncResultInfo>;
-	refreshApplication(projectData: IProjectData, liveSyncInfo: ILiveSyncResultInfo): Promise<IRefreshApplicationInfo>;
+	tryRefreshApplication(projectData: IProjectData, liveSyncInfo: ILiveSyncResultInfo): Promise<boolean>;
+	restartApplication(projectData: IProjectData, liveSyncInfo: ILiveSyncResultInfo): Promise<void>;
+	shouldRestart(projectData: IProjectData, liveSyncInfo: ILiveSyncResultInfo): Promise<boolean>;
 	getDeviceLiveSyncService(device: Mobile.IDevice, projectData: IProjectData): INativeScriptDeviceLiveSyncService;
 }
-
-interface IHasDidRestart {
-	didRestart: boolean;
-}
-
-interface IRefreshApplicationInfo extends IHasDidRestart {
+interface IRefreshApplicationInfo {
+	didRefresh: boolean;
 }
 
 interface INativeScriptDeviceLiveSyncService extends IDeviceLiveSyncServiceBase {
 	/**
-	 * Refreshes the application's content on a device
-	 * @param  {Mobile.IDeviceAppData} deviceAppData Information about the application and the device.
-	 * @param  {Mobile.ILocalToDevicePathData[]} localToDevicePaths Object containing a mapping of file paths from the system to the device.
-	 * @param  {boolean} forceExecuteFullSync If this is passed a full LiveSync is performed instead of an incremental one.
-	 * @param  {IProjectData} projectData Project data.
-	 * @return {Promise<void>}
+	 * Tries to refresh the application's content on the device
 	 */
-	refreshApplication(projectData: IProjectData,
-		liveSyncInfo: ILiveSyncResultInfo): Promise<IRefreshApplicationInfo>;
+	tryRefreshApplication(projectData: IProjectData,
+		liveSyncInfo: ILiveSyncResultInfo): Promise<boolean>;
+
+	/**
+	 * Restarts the specified application
+	 */
+	restartApplication(projectData: IProjectData,
+		liveSyncInfo: ILiveSyncResultInfo): Promise<void>;
+
+	/**
+	 * Returns if the application have to be restarted in order to apply the specified livesync changes
+	 */
+	shouldRestart(projectData: IProjectData,
+		liveSyncInfo: ILiveSyncResultInfo): Promise<boolean>;
 
 	/**
 	 * Removes specified files from a connected device

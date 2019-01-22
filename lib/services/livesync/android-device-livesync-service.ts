@@ -27,8 +27,32 @@ export class AndroidDeviceLiveSyncService extends AndroidDeviceLiveSyncServiceBa
 		await this.device.fileSystem.transferDirectory(deviceAppData, localToDevicePaths, projectFilesPath);
 	}
 
-	public async refreshApplication(projectData: IProjectData, liveSyncInfo: ILiveSyncResultInfo): Promise<IRefreshApplicationInfo> {
-		const result: IRefreshApplicationInfo = { didRestart: false };
+	public async restartApplication(projectData: IProjectData, liveSyncInfo: ILiveSyncResultInfo): Promise<void> {
+		const devicePathRoot = `/data/data/${liveSyncInfo.deviceAppData.appIdentifier}/files`;
+		const devicePath = this.$mobileHelper.buildDevicePath(devicePathRoot, "code_cache", "secondary_dexes", "proxyThumb");
+		await this.device.adb.executeShellCommand(["rm", "-rf", devicePath]);
+		await this.device.applicationManager.restartApplication({
+			appId: liveSyncInfo.deviceAppData.appIdentifier,
+			projectName: projectData.projectName,
+			waitForDebugger: liveSyncInfo.waitForDebugger
+		});
+	}
+
+	public async shouldRestart(projectData: IProjectData, liveSyncInfo: IAndroidLiveSyncResultInfo): Promise<boolean> {
+		let shouldRestart = false;
+		const localToDevicePaths = liveSyncInfo.modifiedFilesData;
+		const canExecuteFastSync = !liveSyncInfo.isFullSync && !_.some(localToDevicePaths,
+			(localToDevicePath: Mobile.ILocalToDevicePathData) => !this.canExecuteFastSync(liveSyncInfo, localToDevicePath.getLocalPath(), projectData, this.device.deviceInfo.platform));
+
+		if (!canExecuteFastSync || liveSyncInfo.waitForDebugger) {
+			shouldRestart = true;
+		}
+
+		return shouldRestart;
+	}
+
+	public async tryRefreshApplication(projectData: IProjectData, liveSyncInfo: ILiveSyncResultInfo): Promise<boolean> {
+		let didRefresh = true;
 		const deviceAppData = liveSyncInfo.deviceAppData;
 		const localToDevicePaths = liveSyncInfo.modifiedFilesData;
 		const deviceProjectRootDirname = await this.$devicePathProvider.getDeviceProjectRootPath(liveSyncInfo.deviceAppData.device, {
@@ -44,17 +68,9 @@ export class AndroidDeviceLiveSyncService extends AndroidDeviceLiveSyncServiceBa
 				`${deviceProjectRootDirname}/sync`]
 		);
 
-		const reloadedSuccessfully = await this.reloadApplicationFiles(deviceAppData, localToDevicePaths);
+		didRefresh = await this.reloadApplicationFiles(deviceAppData, localToDevicePaths);
 
-		const canExecuteFastSync = reloadedSuccessfully && !liveSyncInfo.isFullSync && !_.some(localToDevicePaths,
-			(localToDevicePath: Mobile.ILocalToDevicePathData) => !this.canExecuteFastSync(liveSyncInfo, localToDevicePath.getLocalPath(), projectData, this.device.deviceInfo.platform));
-
-		if (!canExecuteFastSync || liveSyncInfo.waitForDebugger) {
-			await this.restartApplication(deviceAppData, projectData.projectName, liveSyncInfo.waitForDebugger);
-			result.didRestart = true;
-		}
-
-		return result;
+		return didRefresh;
 	}
 
 	private async cleanLivesyncDirectories(deviceAppData: Mobile.IDeviceAppData): Promise<void> {
@@ -66,14 +82,6 @@ export class AndroidDeviceLiveSyncService extends AndroidDeviceLiveSyncServiceBa
 		await this.device.adb.executeShellCommand(["rm", "-rf", this.$mobileHelper.buildDevicePath(deviceRootPath, LiveSyncPaths.FULLSYNC_DIR_NAME),
 			this.$mobileHelper.buildDevicePath(deviceRootPath, LiveSyncPaths.SYNC_DIR_NAME),
 			this.$mobileHelper.buildDevicePath(deviceRootPath, LiveSyncPaths.REMOVEDSYNC_DIR_NAME)]);
-	}
-
-	private async restartApplication(deviceAppData: Mobile.IDeviceAppData, projectName: string, waitForDebugger: boolean): Promise<void> {
-		const devicePathRoot = `/data/data/${deviceAppData.appIdentifier}/files`;
-		const devicePath = this.$mobileHelper.buildDevicePath(devicePathRoot, "code_cache", "secondary_dexes", "proxyThumb");
-		await this.device.adb.executeShellCommand(["rm", "-rf", devicePath]);
-
-		await this.device.applicationManager.restartApplication({ appId: deviceAppData.appIdentifier, projectName, waitForDebugger });
 	}
 
 	@performanceLog()

@@ -27,16 +27,27 @@ export abstract class PlatformLiveSyncServiceBase {
 
 	protected abstract _getDeviceLiveSyncService(device: Mobile.IDevice, data: IProjectData, frameworkVersion: string): INativeScriptDeviceLiveSyncService;
 
-	public async refreshApplication(projectData: IProjectData, liveSyncInfo: ILiveSyncResultInfo): Promise<IRefreshApplicationInfo> {
-		let result: IRefreshApplicationInfo = { didRestart: false };
+	public async shouldRestart(projectData: IProjectData, liveSyncInfo: ILiveSyncResultInfo): Promise<boolean> {
+		const deviceLiveSyncService = this.getDeviceLiveSyncService(liveSyncInfo.deviceAppData.device, projectData);
+		const shouldRestart = await deviceLiveSyncService.shouldRestart(projectData, liveSyncInfo);
+		return shouldRestart;
+	}
 
+	public async restartApplication(projectData: IProjectData, liveSyncInfo: ILiveSyncResultInfo): Promise<void> {
+		const deviceLiveSyncService = this.getDeviceLiveSyncService(liveSyncInfo.deviceAppData.device, projectData);
+		this.$logger.info(`Restarting application on device ${liveSyncInfo.deviceAppData.device.deviceInfo.identifier}...`);
+		await deviceLiveSyncService.restartApplication(projectData, liveSyncInfo);
+	}
+
+	public async tryRefreshApplication(projectData: IProjectData, liveSyncInfo: ILiveSyncResultInfo): Promise<boolean> {
+		let didRefresh = true;
 		if (liveSyncInfo.isFullSync || liveSyncInfo.modifiedFilesData.length) {
 			const deviceLiveSyncService = this.getDeviceLiveSyncService(liveSyncInfo.deviceAppData.device, projectData);
 			this.$logger.info(`Refreshing application on device ${liveSyncInfo.deviceAppData.device.deviceInfo.identifier}...`);
-			result = await deviceLiveSyncService.refreshApplication(projectData, liveSyncInfo);
+			didRefresh = await deviceLiveSyncService.tryRefreshApplication(projectData, liveSyncInfo);
 		}
 
-		return result;
+		return didRefresh;
 	}
 
 	public async fullSync(syncInfo: IFullSyncInfo): Promise<ILiveSyncResultInfo> {
