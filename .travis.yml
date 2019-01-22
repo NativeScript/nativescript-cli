@@ -26,8 +26,7 @@ before_script:
 - npm test
 - node_modules/.bin/grunt enableScripts:true
 script:
-- node_modules/.bin/grunt lint
-- node_modules/.bin/grunt pack --no-color
+- node_modules/.bin/grunt lint && node_modules/.bin/grunt pack --no-color
 before_deploy:
 - node .travis/add-publishConfig.js $TRAVIS_BRANCH
 deploy:
