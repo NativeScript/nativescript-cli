@@ -264,7 +264,7 @@ describe('Platform Service Tests', () => {
 						projectRoot: "",
 						normalizedPlatformName: "",
 						appDestinationDirectoryPath: "",
-						deviceBuildOutputPath: "",
+						getBuildOutputPath: () => "",
 						getValidBuildOutputData: (buildOptions: IBuildOutputOptions) => ({ packageNames: [] }),
 						frameworkFilesExtensions: [],
 						relativeToFrameworkConfigurationFilePath: "",
@@ -981,6 +981,7 @@ describe('Platform Service Tests', () => {
 				return {
 					deviceBuildOutputPath: "",
 					normalizedPlatformName: "",
+					getBuildOutputPath: () => "",
 					platformProjectService: {
 						buildProject: () => Promise.resolve(),
 						on: () => ({}),

@@ -76,7 +76,8 @@ describe("androidDeviceDebugService", () => {
 			const getPlatformDataStub: sinon.SinonStub = sandbox.stub(androidProjectService, "getPlatformData");
 			getPlatformDataStub.callsFake(() => {
 				return {
-					configurationFilePath: ""
+					configurationFilePath: "",
+					getBuildOutputPath: () => ""
 				};
 			});
 		});
