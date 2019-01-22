@@ -294,26 +294,56 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 	}
 
 	private async getRuntimeGradleVersions(projectDir: string): Promise<IRuntimeGradleVersions> {
-		const registryData = await this.$packageManager.getRegistryPackageData(TNS_ANDROID_RUNTIME_NAME);
 		let runtimeGradleVersions: IRuntimeGradleVersions = null;
 		if (projectDir) {
 			const projectRuntimeVersion = this.$platformService.getCurrentPlatformVersion(
 				this.$devicePlatformsConstants.Android,
 				this.$projectDataService.getProjectData(projectDir));
-			runtimeGradleVersions = this.getGradleVersions(registryData.versions[projectRuntimeVersion]);
+			runtimeGradleVersions = await this.getGradleVersions(projectRuntimeVersion);
 			this.$logger.trace(`Got gradle versions ${JSON.stringify(runtimeGradleVersions)} from runtime v${projectRuntimeVersion}`);
 		}
 
 		if (!runtimeGradleVersions) {
-			const latestRuntimeVersion = registryData["dist-tags"].latest;
-			runtimeGradleVersions = this.getGradleVersions(registryData.versions[latestRuntimeVersion]);
+			const latestRuntimeVersion = await this.getLatestRuntimeVersion();
+			runtimeGradleVersions = await this.getGradleVersions(latestRuntimeVersion);
 			this.$logger.trace(`Got gradle versions ${JSON.stringify(runtimeGradleVersions)} from the latest runtime v${latestRuntimeVersion}`);
 		}
 
 		return runtimeGradleVersions || {};
 	}
 
-	private getGradleVersions(packageData: { gradle: { version: string, android: string } }): IRuntimeGradleVersions {
+	private async getLatestRuntimeVersion(): Promise<string> {
+		let runtimeVersion: string = null;
+
+		try {
+			const result = await this.$packageManager.view(TNS_ANDROID_RUNTIME_NAME, { "dist-tags": true });
+			runtimeVersion = result.latest;
+		} catch (err) {
+			this.$logger.trace(`Error while getting latest android runtime version from view command: ${err}`);
+			const registryData = await this.$packageManager.getRegistryPackageData(TNS_ANDROID_RUNTIME_NAME);
+			runtimeVersion = registryData["dist-tags"].latest;
+		}
+
+		return runtimeVersion;
+	}
+
+	private async getGradleVersions(runtimeVersion: string): Promise<IRuntimeGradleVersions> {
+		let runtimeGradleVersions: { gradle: { version: string, android: string } } = null;
+
+		try {
+			const output = await this.$packageManager.view(`${TNS_ANDROID_RUNTIME_NAME}@${runtimeVersion}`, { gradle: true });
+			runtimeGradleVersions = { gradle: output };
+		} catch (err) {
+			this.$logger.trace(`Error while getting gradle data for android runtime from view command: ${err}`);
+			const registryData = await this.$packageManager.getRegistryPackageData(TNS_ANDROID_RUNTIME_NAME);
+			runtimeGradleVersions = registryData.versions[runtimeVersion];
+		}
+
+		const result = this.getGradleVersionsCore(runtimeGradleVersions);
+		return result;
+	}
+
+	private getGradleVersionsCore(packageData: { gradle: { version: string, android: string } }): IRuntimeGradleVersions {
 		const packageJsonGradle = packageData && packageData.gradle;
 		let runtimeVersions: IRuntimeGradleVersions = null;
 		if (packageJsonGradle && (packageJsonGradle.version || packageJsonGradle.android)) {

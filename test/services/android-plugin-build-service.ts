@@ -112,6 +112,34 @@ describe('androidPluginBuildService', () => {
 				};
 
 				return result;
+			},
+			view: async (packageName: string, config: any): Promise<any> => {
+				let result: any = null;
+				if (config && config.gradle) {
+					const packageVersion = packageName.split("@")[1];
+					switch (packageVersion) {
+						case "1.0.0":
+							result = {
+								version: options.projectRuntimeGradleVersion,
+								android: options.projectRuntimeGradleAndroidVersion
+							};
+							break;
+						case "4.1.2":
+							result = {
+								version: options.latestRuntimeGradleVersion,
+								android: options.latestRuntimeGradleAndroidVersion
+							};
+							break;
+					}
+				}
+
+				if (config && config["dist-tags"]) {
+					result = {
+						latest: "4.1.2"
+					};
+				}
+
+				return result;
 			}
 		};
 	}

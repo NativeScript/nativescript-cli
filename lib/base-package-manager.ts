@@ -93,7 +93,7 @@ export abstract class BasePackageManager implements INodePackageManager {
 				array.push(`--${flag}`);
 				array.push(`${config[flag]}`);
 			} else if (config[flag]) {
-				if (flag === "dist-tags" || flag === "versions" || flag === "name") {
+				if (flag === "dist-tags" || flag === "versions" || flag === "name" || flag === "gradle") {
 					array.push(` ${flag}`);
 					continue;
 				}
