@@ -448,6 +448,9 @@ export class PlatformProjectServiceStub extends EventEmitter implements IPlatfor
 	async handleNativeDependenciesChange(): Promise<void> {
 		return Promise.resolve();
 	}
+	async beforePrepareAllPlugins(): Promise<void> {
+		return Promise.resolve();
+	}
 	async cleanDeviceTempFolder(deviceIdentifier: string): Promise<void> {
 		return Promise.resolve();
 	}

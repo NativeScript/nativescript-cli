@@ -350,7 +350,7 @@ describe("debug command tests", () => {
 			testInjector = createTestInjector();
 		});
 
-		it("Ensures that handleNativeDependenciesChange will call gradle with clean option when *NOT* livesyncing", async () => {
+		it("Ensures that beforePrepareAllPlugins will call gradle with clean option when *NOT* livesyncing", async () => {
 			const platformData = testInjector.resolve<IPlatformData>("platformsData");
 			platformData.frameworkPackageName = "tns-android";
 
@@ -367,7 +367,7 @@ describe("debug command tests", () => {
 			};
 			const projectData: IProjectData = testInjector.resolve("projectData");
 			const spawnFromEventCount = childProcess.spawnFromEventCount;
-			await androidProjectService.handleNativeDependenciesChange(projectData);
+			await androidProjectService.beforePrepareAllPlugins(projectData);
 			assert.isTrue(childProcess.lastCommand.indexOf("gradle") !== -1);
 			assert.isTrue(childProcess.lastCommandArgs[0] === "clean");
 			assert.isTrue(spawnFromEventCount === 0);

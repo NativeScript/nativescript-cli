@@ -182,6 +182,7 @@ async function setupProject(dependencies?: any): Promise<any> {
 			platformProjectService: {
 				prepareProject: (): any => null,
 				prepareAppResources: (): any => null,
+				beforePrepareAllPlugins: () => Promise.resolve(),
 				handleNativeDependenciesChange: () => Promise.resolve(),
 				getAppResourcesDestinationDirectoryPath: () => path.join(androidFolderPath, "src", "main", "res"),
 				processConfigurationFilesFromAppResources: () => Promise.resolve(),

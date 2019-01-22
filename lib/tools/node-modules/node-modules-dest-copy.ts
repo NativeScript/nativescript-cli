@@ -154,6 +154,8 @@ export class NpmPluginPrepare {
 			return;
 		}
 
+		await this.$platformsData.getPlatformData(platform, projectData).platformProjectService.beforePrepareAllPlugins(projectData, dependencies);
+
 		for (const dependencyKey in dependencies) {
 			const dependency = dependencies[dependencyKey];
 			const isPlugin = !!dependency.nativescript;

@@ -400,6 +400,8 @@ interface IPlatformProjectService extends NodeJS.EventEmitter, IPlatformProjectS
 	 */
 	removePluginNativeCode(pluginData: IPluginData, projectData: IProjectData): Promise<void>;
 
+	beforePrepareAllPlugins(projectData: IProjectData, dependencies?: IDependencyData[]): Promise<void>;
+
 	handleNativeDependenciesChange(projectData: IProjectData): Promise<void>;
 
 	/**

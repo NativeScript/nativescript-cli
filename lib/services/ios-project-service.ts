@@ -986,6 +986,10 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		}
 	}
 
+	public beforePrepareAllPlugins(): Promise<void> {
+		return Promise.resolve();
+	}
+
 	public async checkForChanges(changesInfo: IProjectChangesInfo, { provision, teamId }: IProjectChangesOptions, projectData: IProjectData): Promise<void> {
 		const hasProvision = provision !== undefined;
 		const hasTeamId = teamId !== undefined;
