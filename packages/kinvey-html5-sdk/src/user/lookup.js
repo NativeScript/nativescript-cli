@@ -1,5 +1,7 @@
 "use strict";
 
+var _interopRequireWildcard = require("@babel/runtime/helpers/interopRequireWildcard");
+
 var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
 
 Object.defineProperty(exports, "__esModule", {
@@ -11,7 +13,7 @@ var _regenerator = _interopRequireDefault(require("@babel/runtime/regenerator"))
 
 var _asyncToGenerator2 = _interopRequireDefault(require("@babel/runtime/helpers/asyncToGenerator"));
 
-var _observable = _interopRequireDefault(require("../observable"));
+var rxjs = _interopRequireWildcard(require("rxjs"));
 
 var _query = _interopRequireDefault(require("../query"));
 
@@ -29,8 +31,7 @@ var USER_NAMESPACE = 'user';
 
 function lookup(query) {
   var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-
-  var stream = _observable.default.create(
+  var stream = rxjs.Observable.create(
   /*#__PURE__*/
   function () {
     var _ref = (0, _asyncToGenerator2.default)(
@@ -87,6 +88,5 @@ function lookup(query) {
       return _ref.apply(this, arguments);
     };
   }());
-
   return stream;
 }

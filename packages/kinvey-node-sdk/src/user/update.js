@@ -11,7 +11,7 @@ var _regenerator = _interopRequireDefault(require("@babel/runtime/regenerator"))
 
 var _asyncToGenerator2 = _interopRequireDefault(require("@babel/runtime/helpers/asyncToGenerator"));
 
-var _user = require("./user");
+var _getActiveUser = _interopRequireDefault(require("./getActiveUser"));
 
 function update(_x) {
   return _update.apply(this, arguments);
@@ -26,7 +26,7 @@ function _update() {
       while (1) {
         switch (_context.prev = _context.next) {
           case 0:
-            activeUser = (0, _user.getActiveUser)();
+            activeUser = (0, _getActiveUser.default)();
 
             if (!activeUser) {
               _context.next = 3;

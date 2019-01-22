@@ -11,7 +11,13 @@ var _exists = _interopRequireDefault(require("./exists"));
 
 var _forgotUsername = _interopRequireDefault(require("./forgotUsername"));
 
-var _login = require("./login");
+var _login = _interopRequireDefault(require("./login"));
+
+var _loginWithRedirectUri = _interopRequireDefault(require("./loginWithRedirectUri"));
+
+var _loginWithUsernamePassword = _interopRequireDefault(require("./loginWithUsernamePassword"));
+
+var _loginWithMIC = _interopRequireDefault(require("./loginWithMIC"));
 
 var _logout = _interopRequireDefault(require("./logout"));
 
@@ -25,29 +31,31 @@ var _resetPassword = _interopRequireDefault(require("./resetPassword"));
 
 var _restore = _interopRequireDefault(require("./restore"));
 
-var _signup = require("./signup");
+var _signup = _interopRequireDefault(require("./signup"));
 
 var _update = _interopRequireDefault(require("./update"));
 
-var _user = require("./user");
+var _getActiveUser = _interopRequireDefault(require("./getActiveUser"));
+
+var _user = _interopRequireDefault(require("./user"));
 
 var _verifyEmail = _interopRequireDefault(require("./verifyEmail"));
 
-_user.User.exists = _exists.default;
-_user.User.forgotUsername = _forgotUsername.default;
-_user.User.login = _login.login;
-_user.User.loginWithRedirectUri = _login.loginWithRedirectUri;
-_user.User.loginWithUsernamePassword = _login.loginWithUsernamePassword;
-_user.User.loginWithMIC = _login.loginWithMIC;
-_user.User.logout = _logout.default;
-_user.User.lookup = _lookup.default;
-_user.User.me = _me.default;
-_user.User.remove = _remove.default;
-_user.User.resetPassword = _resetPassword.default;
-_user.User.restore = _restore.default;
-_user.User.signup = _signup.signup;
-_user.User.update = _update.default;
-_user.User.verifyEmail = _verifyEmail.default;
-_user.User.getActiveUser = _user.getActiveUser;
-var _default = _user.User;
+_user.default.exists = _exists.default;
+_user.default.forgotUsername = _forgotUsername.default;
+_user.default.login = _login.default;
+_user.default.loginWithRedirectUri = _loginWithRedirectUri.default;
+_user.default.loginWithUsernamePassword = _loginWithUsernamePassword.default;
+_user.default.loginWithMIC = _loginWithMIC.default;
+_user.default.logout = _logout.default;
+_user.default.lookup = _lookup.default;
+_user.default.me = _me.default;
+_user.default.remove = _remove.default;
+_user.default.resetPassword = _resetPassword.default;
+_user.default.restore = _restore.default;
+_user.default.signup = _signup.default;
+_user.default.update = _update.default;
+_user.default.verifyEmail = _verifyEmail.default;
+_user.default.getActiveUser = _getActiveUser.default;
+var _default = _user.default;
 exports.default = _default;

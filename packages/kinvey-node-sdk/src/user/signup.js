@@ -5,8 +5,7 @@ var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefau
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.signup = signup;
-exports.signupWithIdentity = signupWithIdentity;
+exports.default = signup;
 
 var _regenerator = _interopRequireDefault(require("@babel/runtime/regenerator"));
 
@@ -18,8 +17,6 @@ var _config = require("../kinvey/config");
 
 var _activeUser = _interopRequireDefault(require("../errors/activeUser"));
 
-var _kinvey = _interopRequireDefault(require("../errors/kinvey"));
-
 var _utils = require("../http/utils");
 
 var _request = require("../http/request");
@@ -28,7 +25,9 @@ var _auth = require("../http/auth");
 
 var _session = require("../session");
 
-var _user = require("./user");
+var _getActiveUser = _interopRequireDefault(require("./getActiveUser"));
+
+var _user = _interopRequireDefault(require("./user"));
 
 var USER_NAMESPACE = 'user';
 
@@ -60,7 +59,7 @@ function _signup() {
           case 0:
             options = _args.length > 1 && _args[1] !== undefined ? _args[1] : {};
             _getConfig = (0, _config.get)(), apiProtocol = _getConfig.apiProtocol, apiHost = _getConfig.apiHost, appKey = _getConfig.appKey;
-            activeUser = (0, _user.getActiveUser)();
+            activeUser = (0, _getActiveUser.default)();
             _options$state = options.state, state = _options$state === void 0 ? true : _options$state;
 
             if (!(state === true && activeUser)) {
@@ -79,7 +78,7 @@ function _signup() {
               timeout: options.timeout
             });
 
-            if (data instanceof _user.User) {
+            if (data instanceof _user.default) {
               request.body = (0, _isEmpty.default)(data.data) ? null : data.data;
             } else {
               request.body = (0, _isEmpty.default)(data) ? null : data;
@@ -96,7 +95,7 @@ function _signup() {
               (0, _session.set)(session);
             }
 
-            return _context.abrupt("return", new _user.User(session));
+            return _context.abrupt("return", new _user.default(session));
 
           case 15:
           case "end":
@@ -106,28 +105,4 @@ function _signup() {
     }, _callee, this);
   }));
   return _signup.apply(this, arguments);
-}
-
-function signupWithIdentity() {
-  return _signupWithIdentity.apply(this, arguments);
-}
-
-function _signupWithIdentity() {
-  _signupWithIdentity = (0, _asyncToGenerator2.default)(
-  /*#__PURE__*/
-  _regenerator.default.mark(function _callee2() {
-    return _regenerator.default.wrap(function _callee2$(_context2) {
-      while (1) {
-        switch (_context2.prev = _context2.next) {
-          case 0:
-            throw new _kinvey.default('This function has been deprecated. You should use MIC to login instead.');
-
-          case 1:
-          case "end":
-            return _context2.stop();
-        }
-      }
-    }, _callee2, this);
-  }));
-  return _signupWithIdentity.apply(this, arguments);
 }

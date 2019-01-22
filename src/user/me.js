@@ -1,4 +1,4 @@
-import { getActiveUser } from './user';
+import getActiveUser from './getActiveUser';
 
 export default async function me() {
   const activeUser = getActiveUser();

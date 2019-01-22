@@ -1,6 +1,6 @@
 import isArray from 'lodash/isArray';
 import times from 'lodash/times';
-import KinveyObservable from '../observable';
+import { Observable } from 'rxjs';
 import Query from '../query';
 import { get as getConfig } from '../kinvey/config';
 import { formatKinveyUrl } from '../http/utils';
@@ -50,7 +50,7 @@ export class CacheStore {
   find(query, options = {}) {
     const autoSync = options.autoSync === true || this.autoSync;
     const cache = new DataStoreCache(this.collectionName, this.tag);
-    const stream = KinveyObservable.create(async (observer) => {
+    const stream = Observable.create(async (observer) => {
       try {
         const cachedDocs = await cache.find(query);
         observer.next(cachedDocs);
@@ -72,7 +72,7 @@ export class CacheStore {
   count(query, options = {}) {
     const autoSync = options.autoSync === true || this.autoSync;
     const cache = new DataStoreCache(this.collectionName, this.tag);
-    const stream = KinveyObservable.create(async (observer) => {
+    const stream = Observable.create(async (observer) => {
       try {
         const cacheCount = await cache.count(query);
         observer.next(cacheCount);
@@ -94,7 +94,7 @@ export class CacheStore {
   group(aggregation, options = {}) {
     const autoSync = options.autoSync === true || this.autoSync;
     const cache = new DataStoreCache(this.collectionName, this.tag);
-    const stream = KinveyObservable.create(async (observer) => {
+    const stream = Observable.create(async (observer) => {
       try {
         const cacheResult = await cache.group(aggregation);
         observer.next(cacheResult);
@@ -114,7 +114,7 @@ export class CacheStore {
   }
 
   findById(id, options = {}) {
-    const stream = KinveyObservable.create(async (observer) => {
+    const stream = Observable.create(async (observer) => {
       try {
         // if (!id) {
         //   throw new Error('No id was provided. A valid id is required.');

@@ -23,7 +23,7 @@ var _request = require("../http/request");
 
 var _auth = require("../http/auth");
 
-var _user = require("./user");
+var _getActiveUser = _interopRequireDefault(require("./getActiveUser"));
 
 function remove(_x) {
   return _remove.apply(this, arguments);
@@ -52,7 +52,7 @@ function _remove() {
             options = _args.length > 1 && _args[1] !== undefined ? _args[1] : {};
             _getConfig = (0, _config.get)(), apiProtocol = _getConfig.apiProtocol, apiHost = _getConfig.apiHost, appKey = _getConfig.appKey;
             hard = options.hard;
-            activeUser = (0, _user.getActiveUser)();
+            activeUser = (0, _getActiveUser.default)();
 
             if (id) {
               _context.next = 6;

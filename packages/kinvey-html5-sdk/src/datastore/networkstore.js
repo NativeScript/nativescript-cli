@@ -20,11 +20,11 @@ var _createClass2 = _interopRequireDefault(require("@babel/runtime/helpers/creat
 
 var _isArray = _interopRequireDefault(require("lodash/isArray"));
 
+var rxjs = _interopRequireWildcard(require("rxjs"));
+
 var _config = require("../kinvey/config");
 
 var _device = require("../kinvey/device");
-
-var _observable = _interopRequireDefault(require("../observable"));
 
 var _session = require("../session");
 
@@ -71,8 +71,7 @@ function () {
       var _this = this;
 
       var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-
-      var stream = _observable.default.create(
+      var stream = rxjs.Observable.create(
       /*#__PURE__*/
       function () {
         var _ref = (0, _asyncToGenerator2.default)(
@@ -137,7 +136,6 @@ function () {
           return _ref.apply(this, arguments);
         };
       }());
-
       return stream;
     }
   }, {
@@ -146,8 +144,7 @@ function () {
       var _this2 = this;
 
       var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-
-      var stream = _observable.default.create(
+      var stream = rxjs.Observable.create(
       /*#__PURE__*/
       function () {
         var _ref2 = (0, _asyncToGenerator2.default)(
@@ -209,7 +206,6 @@ function () {
           return _ref2.apply(this, arguments);
         };
       }());
-
       return stream;
     }
   }, {
@@ -218,8 +214,7 @@ function () {
       var _this3 = this;
 
       var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-
-      var stream = _observable.default.create(
+      var stream = rxjs.Observable.create(
       /*#__PURE__*/
       function () {
         var _ref3 = (0, _asyncToGenerator2.default)(
@@ -281,7 +276,6 @@ function () {
           return _ref3.apply(this, arguments);
         };
       }());
-
       return stream;
     }
   }, {
@@ -290,8 +284,7 @@ function () {
       var _this4 = this;
 
       var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-
-      var stream = _observable.default.create(
+      var stream = rxjs.Observable.create(
       /*#__PURE__*/
       function () {
         var _ref4 = (0, _asyncToGenerator2.default)(
@@ -360,7 +353,6 @@ function () {
           return _ref4.apply(this, arguments);
         };
       }());
-
       return stream;
     }
   }, {

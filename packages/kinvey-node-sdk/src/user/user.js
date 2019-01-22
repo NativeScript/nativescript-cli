@@ -5,8 +5,7 @@ var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefau
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.getActiveUser = getActiveUser;
-exports.User = void 0;
+exports.default = void 0;
 
 var _regenerator = _interopRequireDefault(require("@babel/runtime/regenerator"));
 
@@ -472,14 +471,4 @@ function () {
   return User;
 }();
 
-exports.User = User;
-
-function getActiveUser() {
-  var session = (0, _session.get)();
-
-  if (session) {
-    return new User(session);
-  }
-
-  return null;
-}
+exports.default = User;

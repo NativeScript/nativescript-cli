@@ -1,16 +1,16 @@
 import isEmpty from 'lodash/isEmpty';
 import { get as getConfig } from '../kinvey/config';
 import ActiveUserError from '../errors/activeUser';
-import KinveyError from '../errors/kinvey';
 import { formatKinveyUrl } from '../http/utils';
 import { KinveyRequest, RequestMethod } from '../http/request';
 import { Auth } from '../http/auth';
 import { set as setSession } from '../session';
-import { getActiveUser, User } from './user';
+import getActiveUser from './getActiveUser';
+import User from './user';
 
 const USER_NAMESPACE = 'user';
 
-export async function signup(data, options = {}) {
+export default async function signup(data, options = {}) {
   const { apiProtocol, apiHost, appKey } = getConfig();
   const activeUser = getActiveUser();
   const { state = true } = options;
@@ -41,8 +41,4 @@ export async function signup(data, options = {}) {
   }
 
   return new User(session);
-}
-
-export async function signupWithIdentity() {
-  throw new KinveyError('This function has been deprecated. You should use MIC to login instead.');
 }

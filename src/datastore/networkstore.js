@@ -1,7 +1,7 @@
 import isArray from 'lodash/isArray';
+import { Observable } from 'rxjs';
 import { get as getConfig } from '../kinvey/config';
 import { getId as getDeviceId } from '../kinvey/device';
-import KinveyObservable from '../observable';
 import { get as getSession } from '../session';
 import Aggregation from '../aggregation';
 import * as Live from '../live';
@@ -50,7 +50,7 @@ export class NetworkStore {
   }
 
   find(query, options = {}) {
-    const stream = KinveyObservable.create(async (observer) => {
+    const stream = Observable.create(async (observer) => {
       try {
         if (query && !(query instanceof Query)) {
           throw new KinveyError('Invalid query. It must be an instance of the Query class.');
@@ -88,7 +88,7 @@ export class NetworkStore {
   }
 
   count(query, options = {}) {
-    const stream = KinveyObservable.create(async (observer) => {
+    const stream = Observable.create(async (observer) => {
       try {
         if (query && !(query instanceof Query)) {
           throw new KinveyError('Invalid query. It must be an instance of the Query class.');
@@ -124,7 +124,7 @@ export class NetworkStore {
   }
 
   group(aggregation, options = {}) {
-    const stream = KinveyObservable.create(async (observer) => {
+    const stream = Observable.create(async (observer) => {
       try {
         if (!(aggregation instanceof Aggregation)) {
           throw new KinveyError('Invalid aggregation. It must be an instance of the Aggregation class.');
@@ -160,7 +160,7 @@ export class NetworkStore {
   }
 
   findById(id, options = {}) {
-    const stream = KinveyObservable.create(async (observer) => {
+    const stream = Observable.create(async (observer) => {
       try {
         // if (!id) {
         //   throw new Error('No id was provided. A valid id is required.');

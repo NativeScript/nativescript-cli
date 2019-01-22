@@ -1,5 +1,7 @@
 "use strict";
 
+var _interopRequireWildcard = require("@babel/runtime/helpers/interopRequireWildcard");
+
 var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
 
 Object.defineProperty(exports, "__esModule", {
@@ -27,7 +29,7 @@ var _isArray = _interopRequireDefault(require("lodash/isArray"));
 
 var _times = _interopRequireDefault(require("lodash/times"));
 
-var _observable = _interopRequireDefault(require("../observable"));
+var rxjs = _interopRequireWildcard(require("rxjs"));
 
 var _query = _interopRequireDefault(require("../query"));
 
@@ -118,8 +120,7 @@ function () {
       var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
       var autoSync = options.autoSync === true || this.autoSync;
       var cache = new _cache.DataStoreCache(this.collectionName, this.tag);
-
-      var stream = _observable.default.create(
+      var stream = rxjs.Observable.create(
       /*#__PURE__*/
       function () {
         var _ref = (0, _asyncToGenerator2.default)(
@@ -176,7 +177,6 @@ function () {
           return _ref.apply(this, arguments);
         };
       }());
-
       return stream;
     }
   }, {
@@ -187,8 +187,7 @@ function () {
       var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
       var autoSync = options.autoSync === true || this.autoSync;
       var cache = new _cache.DataStoreCache(this.collectionName, this.tag);
-
-      var stream = _observable.default.create(
+      var stream = rxjs.Observable.create(
       /*#__PURE__*/
       function () {
         var _ref2 = (0, _asyncToGenerator2.default)(
@@ -242,7 +241,6 @@ function () {
           return _ref2.apply(this, arguments);
         };
       }());
-
       return stream;
     }
   }, {
@@ -253,8 +251,7 @@ function () {
       var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
       var autoSync = options.autoSync === true || this.autoSync;
       var cache = new _cache.DataStoreCache(this.collectionName, this.tag);
-
-      var stream = _observable.default.create(
+      var stream = rxjs.Observable.create(
       /*#__PURE__*/
       function () {
         var _ref3 = (0, _asyncToGenerator2.default)(
@@ -308,7 +305,6 @@ function () {
           return _ref3.apply(this, arguments);
         };
       }());
-
       return stream;
     }
   }, {
@@ -317,8 +313,7 @@ function () {
       var _this5 = this;
 
       var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-
-      var stream = _observable.default.create(
+      var stream = rxjs.Observable.create(
       /*#__PURE__*/
       function () {
         var _ref4 = (0, _asyncToGenerator2.default)(
@@ -404,7 +399,6 @@ function () {
           return _ref4.apply(this, arguments);
         };
       }());
-
       return stream;
     }
   }, {

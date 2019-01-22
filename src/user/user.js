@@ -13,7 +13,7 @@ import { mergeSocialIdentity } from './utils';
 
 const USER_NAMESPACE = 'user';
 
-export class User {
+export default class User {
   constructor(data = {}) {
     this.data = data;
   }
@@ -222,14 +222,4 @@ export class User {
 
     return this;
   }
-}
-
-export function getActiveUser() {
-  const session = getSession();
-
-  if (session) {
-    return new User(session);
-  }
-
-  return null;
 }
