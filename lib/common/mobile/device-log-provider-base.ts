@@ -26,10 +26,6 @@ export abstract class DeviceLogProviderBase extends EventEmitter implements Mobi
 		this.setLogLevel(logLevel, deviceIdentifier);
 	}
 
-	public muteLogsForDevice(deviceIdentifier: string): void {
-		this.setDeviceLogOptionsProperty(deviceIdentifier, (deviceLogOptions: Mobile.IDeviceLogOptions) => deviceLogOptions.muteLogs, true);
-	}
-
 	protected getApplicationPidForDevice(deviceIdentifier: string): string {
 		return this.devicesLogOptions[deviceIdentifier] && this.devicesLogOptions[deviceIdentifier].applicationPid;
 	}

@@ -482,12 +482,8 @@ interface IGenerateOptions {
 	collection?: string;
 }
 
-interface IDebugInformation extends IPort, Mobile.IDeviceIdentifier, IHasHasReconnected {
+interface IDebugInformation extends IPort, Mobile.IDeviceIdentifier {
 	url: string;
-}
-
-interface IHasHasReconnected {
-	hasReconnected: boolean;
 }
 
 interface IPort {
@@ -747,9 +743,9 @@ interface IAndroidToolsInfoValidateInput extends IAndroidToolsInfoOptions {
 
 interface IAppDebugSocketProxyFactory extends NodeJS.EventEmitter {
 	getTCPSocketProxy(deviceIdentifier: string, appId: string): any;
-	addTCPSocketProxy(device: Mobile.IiOSDevice, appId: string): Promise<any>;
+	addTCPSocketProxy(device: Mobile.IiOSDevice, appId: string, projectName: string): Promise<any>;
 
-	ensureWebSocketProxy(device: Mobile.IiOSDevice, appId: string): Promise<any>;
+	ensureWebSocketProxy(device: Mobile.IiOSDevice, appId: string, projectName: string): Promise<any>;
 
 	removeAllProxies(): void;
 }

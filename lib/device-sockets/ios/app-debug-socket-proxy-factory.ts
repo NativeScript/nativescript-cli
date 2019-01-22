@@ -20,7 +20,7 @@ export class AppDebugSocketProxyFactory extends EventEmitter implements IAppDebu
 		return this.deviceTcpServers[`${deviceIdentifier}-${appId}`];
 	}
 
-	public async addTCPSocketProxy(device: Mobile.IiOSDevice, appId: string): Promise<net.Server> {
+	public async addTCPSocketProxy(device: Mobile.IiOSDevice, appId: string, projectName: string): Promise<net.Server> {
 		const cacheKey = `${device.deviceInfo.identifier}-${appId}`;
 		const existingServer = this.deviceTcpServers[cacheKey];
 		if (existingServer) {
@@ -44,7 +44,7 @@ export class AppDebugSocketProxyFactory extends EventEmitter implements IAppDebu
 				}
 			});
 
-			const appDebugSocket = await device.getDebugSocket(appId);
+			const appDebugSocket = await device.getDebugSocket(appId, projectName);
 			this.$logger.info("Backend socket created.");
 
 			appDebugSocket.on("end", () => {
@@ -80,9 +80,9 @@ export class AppDebugSocketProxyFactory extends EventEmitter implements IAppDebu
 		return server;
 	}
 
-	public async ensureWebSocketProxy(device: Mobile.IiOSDevice, appId: string): Promise<ws.Server> {
+	public async ensureWebSocketProxy(device: Mobile.IiOSDevice, appId: string, projectName: string): Promise<ws.Server> {
 		const existingWebProxy = this.deviceWebServers[`${device.deviceInfo.identifier}-${appId}`];
-		const result = existingWebProxy || await this.addWebSocketProxy(device, appId);
+		const result = existingWebProxy || await this.addWebSocketProxy(device, appId, projectName);
 
 		// TODO: do not remove till VSCode waits for this message in order to reattach
 		this.$logger.info("Opened localhost " + result.options.port);
@@ -90,7 +90,7 @@ export class AppDebugSocketProxyFactory extends EventEmitter implements IAppDebu
 		return result;
 	}
 
-	private async addWebSocketProxy(device: Mobile.IiOSDevice, appId: string): Promise<ws.Server> {
+	private async addWebSocketProxy(device: Mobile.IiOSDevice, appId: string, projectName: string): Promise<ws.Server> {
 		const cacheKey = `${device.deviceInfo.identifier}-${appId}`;
 		const existingServer = this.deviceWebServers[cacheKey];
 		if (existingServer) {
@@ -115,7 +115,7 @@ export class AppDebugSocketProxyFactory extends EventEmitter implements IAppDebu
 				this.$logger.info("Frontend client connected.");
 				let appDebugSocket;
 				try {
-					appDebugSocket = await device.getDebugSocket(appId);
+					appDebugSocket = await device.getDebugSocket(appId, projectName);
 					this.$logger.info("Backend socket created.");
 					info.req["__deviceSocket"] = appDebugSocket;
 				} catch (err) {

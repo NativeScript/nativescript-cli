@@ -11,11 +11,10 @@ export class IOSDebuggerPortService implements IIOSDebuggerPortService {
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $logger: ILogger) { }
 
-	public getPort(data: IIOSDebuggerPortInputData, debugOptions?: IDebugOptions): Promise<number> {
+	public getPort(data: IIOSDebuggerPortInputData): Promise<number> {
 		return new Promise((resolve, reject) => {
 			const key = `${data.deviceId}${data.appId}`;
-			const timeout = this.getTimeout(debugOptions);
-			let retryCount = Math.max(timeout * 1000 / 500, 10);
+			let retryCount = Math.max(IOSDebuggerPortService.DEFAULT_TIMEOUT_IN_SECONDS * 1000 / 500, 10);
 
 			const interval = setInterval(() => {
 				let port = this.getPortByKey(key);
@@ -30,9 +29,9 @@ export class IOSDebuggerPortService implements IIOSDebuggerPortService {
 		});
 	}
 
-	public async attachToDebuggerPortFoundEvent(device: Mobile.IDevice, data: IProjectDir, debugOptions: IDebugOptions): Promise<void> {
+	public async attachToDebuggerPortFoundEvent(): Promise<void> {
 		this.attachToDebuggerPortFoundEventCore();
-		this.attachToAttachRequestEvent(device, debugOptions);
+		this.attachToAttachRequestEvent();
 	}
 
 	@cache()
@@ -53,14 +52,12 @@ export class IOSDebuggerPortService implements IIOSDebuggerPortService {
 		};
 
 		this.$logger.trace(DEBUGGER_PORT_FOUND_EVENT_NAME, data);
-		this.setData(data, { port: data.port });
 		this.clearTimeout(data);
+		this.setData(data, { port: data.port });
 	}
 
 	@cache()
-	private attachToAttachRequestEvent(device: Mobile.IDevice, debugOptions: IDebugOptions): void {
-		const timeout = this.getTimeout(debugOptions);
-
+	private attachToAttachRequestEvent(): void {
 		this.$iOSNotification.on(ATTACH_REQUEST_EVENT_NAME, (data: IIOSDebuggerPortData) => {
 			this.$logger.trace(ATTACH_REQUEST_EVENT_NAME, data);
 			const timer = setTimeout(() => {
@@ -68,7 +65,7 @@ export class IOSDebuggerPortService implements IIOSDebuggerPortService {
 				if (!this.getPortByKey(`${data.deviceId}${data.appId}`)) {
 					this.$logger.warn(`NativeScript debugger was not able to get inspector socket port on device ${data.deviceId} for application ${data.appId}.`);
 				}
-			}, timeout * 1000);
+			}, IOSDebuggerPortService.DEFAULT_TIMEOUT_IN_SECONDS * 1000);
 
 			this.setData(data, { port: null, timer });
 		});
@@ -98,18 +95,6 @@ export class IOSDebuggerPortService implements IIOSDebuggerPortService {
 		if (storedData && storedData.timer) {
 			clearTimeout(storedData.timer);
 		}
-	}
-
-	private getTimeout(debugOptions: IDebugOptions): number {
-		let timeout = parseInt(debugOptions && debugOptions.timeout, 10);
-		if (timeout === 0) {
-			timeout = Number.MAX_SAFE_INTEGER;
-		}
-		if (!timeout) {
-			timeout = IOSDebuggerPortService.DEFAULT_TIMEOUT_IN_SECONDS;
-		}
-
-		return timeout;
 	}
 }
 $injector.register("iOSDebuggerPortService", IOSDebuggerPortService);

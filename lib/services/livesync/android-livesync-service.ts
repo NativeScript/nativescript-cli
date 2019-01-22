@@ -13,7 +13,7 @@ export class AndroidLiveSyncService extends PlatformLiveSyncServiceBase implemen
 		$fs: IFileSystem,
 		$logger: ILogger,
 		$projectFilesProvider: IProjectFilesProvider) {
-			super($fs, $logger, $platformsData, $projectFilesManager, $devicePathProvider, $projectFilesProvider);
+		super($fs, $logger, $platformsData, $projectFilesManager, $devicePathProvider, $projectFilesProvider);
 	}
 
 	protected _getDeviceLiveSyncService(device: Mobile.IDevice, data: IProjectDir, frameworkVersion: string): INativeScriptDeviceLiveSyncService {
@@ -53,8 +53,6 @@ export class AndroidLiveSyncService extends PlatformLiveSyncServiceBase implemen
 		const result = await this.finalizeSync(syncInfo.device, syncInfo.projectData, liveSyncResult);
 		return result;
 	}
-
-	public async prepareForLiveSync(device: Mobile.IDevice, data: IProjectDir): Promise<void> { /* */ }
 
 	private async finalizeSync(device: Mobile.IDevice, projectData: IProjectData, liveSyncResult: ILiveSyncResultInfo): Promise<IAndroidLiveSyncResultInfo> {
 		const liveSyncService = <IAndroidNativeScriptDeviceLiveSyncService>this.getDeviceLiveSyncService(device, projectData);

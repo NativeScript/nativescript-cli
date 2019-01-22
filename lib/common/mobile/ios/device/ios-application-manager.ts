@@ -74,7 +74,7 @@ export class IOSApplicationManager extends ApplicationManagerBase {
 		this.$logger.trace("Application %s has been uninstalled successfully.", appIdentifier);
 	}
 
-	public async startApplication(appData: Mobile.IApplicationData): Promise<void> {
+	public async startApplication(appData: Mobile.IStartApplicationData): Promise<void> {
 		if (!await this.isApplicationInstalled(appData.appId)) {
 			this.$errors.failWithoutHelp("Invalid application id: %s. All available application ids are: %s%s ", appData.appId, EOL, this.applicationsLiveSyncInfos.join(EOL));
 		}
@@ -89,7 +89,6 @@ export class IOSApplicationManager extends ApplicationManagerBase {
 		const { appId } = appData;
 
 		this.device.destroyDebugSocket(appId);
-		this.device.destroyLiveSyncSocket(appId);
 
 		const action = () => this.$iosDeviceOperations.stop([{ deviceId: this.device.deviceInfo.identifier, ddi: this.$options.ddi, appId }]);
 
@@ -101,7 +100,7 @@ export class IOSApplicationManager extends ApplicationManagerBase {
 		}
 	}
 
-	public async restartApplication(appData: Mobile.IApplicationData): Promise<void> {
+	public async restartApplication(appData: Mobile.IStartApplicationData): Promise<void> {
 		try {
 			await this.setDeviceLogData(appData);
 			await this.stopApplication(appData);
@@ -119,8 +118,9 @@ export class IOSApplicationManager extends ApplicationManagerBase {
 		}
 	}
 
-	private async runApplicationCore(appData: Mobile.IApplicationData): Promise<void> {
-		await this.$iosDeviceOperations.start([{ deviceId: this.device.deviceInfo.identifier, appId: appData.appId, ddi: this.$options.ddi }]);
+	private async runApplicationCore(appData: Mobile.IStartApplicationData): Promise<void> {
+		const waitForDebugger = appData.waitForDebugger && appData.waitForDebugger.toString();
+		await this.$iosDeviceOperations.start([{ deviceId: this.device.deviceInfo.identifier, appId: appData.appId, ddi: this.$options.ddi, waitForDebugger }]);
 	}
 
 	@cache()

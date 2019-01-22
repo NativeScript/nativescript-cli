@@ -643,10 +643,6 @@ export class DebugServiceStub extends EventEmitter implements IDeviceDebugServic
 		return;
 	}
 
-	public async debugStart(): Promise<void> {
-		return;
-	}
-
 	public async debugStop(): Promise<void> {
 		return;
 	}

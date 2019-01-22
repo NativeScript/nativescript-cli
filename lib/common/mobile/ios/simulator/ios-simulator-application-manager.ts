@@ -1,20 +1,33 @@
 import { ApplicationManagerBase } from "../../application-manager-base";
-import * as path from "path";
-import * as temp from "temp";
+import { ChildProcess } from "child_process";
 import { hook, getPidFromiOSSimulatorLogs } from "../../../helpers";
 import { cache } from "../../../decorators";
 import { IOS_LOG_PREDICATE } from "../../../constants";
+import * as path from "path";
+import * as temp from "temp";
+import * as log4js from "log4js";
 
 export class IOSSimulatorApplicationManager extends ApplicationManagerBase {
-	constructor(private iosSim: any,
+	private _lldbProcesses: IDictionary<ChildProcess> = {};
+
+	constructor(private $childProcess: IChildProcess,
+		private iosSim: any,
 		private device: Mobile.IiOSDevice,
 		private $options: IOptions,
 		private $fs: IFileSystem,
 		private $plistParser: IPlistParser,
+		private $processService: IProcessService,
 		private $deviceLogProvider: Mobile.IDeviceLogProvider,
 		$logger: ILogger,
 		$hooksService: IHooksService) {
 		super($logger, $hooksService);
+		this.$processService.attachToProcessExitSignals(this, () => {
+			for (const appId in this._lldbProcesses) {
+				/* tslint:disable:no-floating-promises */
+				this.detachNativeDebugger(appId);
+				/* tslint:enable:no-floating-promises */
+			}
+		});
 	}
 
 	public async getInstalledApplications(): Promise<string[]> {
@@ -37,20 +50,28 @@ export class IOSSimulatorApplicationManager extends ApplicationManagerBase {
 	}
 
 	public async uninstallApplication(appIdentifier: string): Promise<void> {
+		await this.detachNativeDebugger(appIdentifier);
 		return this.iosSim.uninstallApplication(this.device.deviceInfo.identifier, appIdentifier);
 	}
 
-	public async startApplication(appData: Mobile.IApplicationData): Promise<void> {
-		const launchResult = await this.iosSim.startApplication(this.device.deviceInfo.identifier, appData.appId);
+	public async startApplication(appData: Mobile.IStartApplicationData): Promise<void> {
+		const options = appData.waitForDebugger ? {
+			waitForDebugger: true,
+			args: "--nativescript-debug-brk",
+		} : {};
+		const launchResult = await this.iosSim.startApplication(this.device.deviceInfo.identifier, appData.appId, options);
 		const pid = getPidFromiOSSimulatorLogs(appData.appId, launchResult);
 		await this.setDeviceLogData(appData, pid);
+		if (appData.waitForDebugger) {
+			this.attachNativeDebugger(appData.appId, pid);
+		}
 	}
 
 	public async stopApplication(appData: Mobile.IApplicationData): Promise<void> {
 		const { appId } = appData;
 
 		this.device.destroyDebugSocket(appId);
-		this.device.destroyLiveSyncSocket(appId);
+		await this.detachNativeDebugger(appId);
 
 		await this.iosSim.stopApplication(this.device.deviceInfo.identifier, appData.appId, appData.projectName);
 	}
@@ -88,6 +109,36 @@ export class IOSSimulatorApplicationManager extends ApplicationManagerBase {
 		return Promise.resolve(null);
 	}
 
+	// iOS will kill the app if we freeze it in the NativeScript Runtime and wait for debug-brk.
+	// In order to avoid that, we are attaching lldb and passing it "process continue".
+	// In this way, iOS will not kill the app because it has a native debugger attached
+	// and the users will be able to attach a debug session using the debug-brk flag.
+	private attachNativeDebugger(appId: string, pid: string): void {
+		this._lldbProcesses[appId] = this.$childProcess.spawn("lldb", ["-p", pid]);
+		if (log4js.levels.TRACE.isGreaterThanOrEqualTo(this.$logger.getLevel())) {
+			this._lldbProcesses[appId].stdout.pipe(process.stdout);
+		}
+		this._lldbProcesses[appId].stderr.pipe(process.stderr);
+		this._lldbProcesses[appId].stdin.write("process continue\n");
+	}
+
+	private async detachNativeDebugger(appId: string) {
+		if (this._lldbProcesses[appId]) {
+			this._lldbProcesses[appId].stdin.write("process detach\n");
+			await this.killProcess(this._lldbProcesses[appId]);
+			this._lldbProcesses[appId] = undefined;
+		}
+	}
+
+	private async killProcess(childProcess: ChildProcess): Promise<void> {
+		if (childProcess) {
+			return new Promise<void>((resolve, reject) => {
+				childProcess.on("close", resolve);
+				childProcess.kill();
+			});
+		}
+	}
+
 	private async getParsedPlistContent(appIdentifier: string): Promise<any> {
 		if (! await this.isApplicationInstalled(appIdentifier)) {
 			return null;
@@ -110,6 +161,6 @@ export class IOSSimulatorApplicationManager extends ApplicationManagerBase {
 
 	@cache()
 	private startDeviceLog(): Promise<void> {
-		return this.device.openDeviceLogStream({predicate: IOS_LOG_PREDICATE});
+		return this.device.openDeviceLogStream({ predicate: IOS_LOG_PREDICATE });
 	}
 }

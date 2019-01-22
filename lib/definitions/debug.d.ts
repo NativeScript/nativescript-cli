@@ -142,14 +142,6 @@ interface IDebugService extends IDebugServiceBase {
  */
 interface IDeviceDebugService extends IPlatform, NodeJS.EventEmitter {
 	/**
-	 * Starts debug operation.
-	 * @param {IAppDebugData} debugData Describes information for application that will be debugged.
-	 * @param {IDebugOptions} debugOptions Describe possible options to modify the behaivor of the debug operation, for example stop on the first line.
-	 * @returns {Promise<void>}
-	 */
-	debugStart(debugData: IAppDebugData, debugOptions: IDebugOptions): Promise<void>;
-
-	/**
 	 * Stops debug operation.
 	 * @returns {Promise<void>}
 	 */
@@ -164,6 +156,6 @@ interface IDeviceDebugService extends IPlatform, NodeJS.EventEmitter {
 	debug(debugData: IAppDebugData, debugOptions: IDebugOptions): Promise<IDebugResultInfo>;
 }
 
-interface IDebugResultInfo extends IHasHasReconnected {
+interface IDebugResultInfo {
 	debugUrl: string;
 }

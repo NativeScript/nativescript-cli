@@ -6,6 +6,10 @@ import { exported } from "../../decorators";
 import { settlePromises } from "../../helpers";
 import { EventEmitter } from "events";
 import { EOL } from "os";
+import { CONNECTED_STATUS } from "../../constants";
+import { isInteractive } from "../../helpers";
+import { DebugCommandErrors } from "../../../constants";
+import { performanceLog } from "../../decorators";
 
 export class DevicesService extends EventEmitter implements Mobile.IDevicesService {
 	private static DEVICE_LOOKING_INTERVAL = 200;
@@ -42,11 +46,67 @@ export class DevicesService extends EventEmitter implements Mobile.IDevicesServi
 		private $iOSEmulatorServices: Mobile.IiOSSimulatorService,
 		private $androidEmulatorServices: Mobile.IEmulatorPlatformService,
 		private $androidEmulatorDiscovery: Mobile.IDeviceDiscovery,
-		private $emulatorHelper: Mobile.IEmulatorHelper) {
-			super();
-			this.attachToKnownDeviceDiscoveryEvents();
-			this.attachToKnownEmulatorDiscoveryEvents();
-			this._allDeviceDiscoveries = [this.$iOSDeviceDiscovery, this.$androidDeviceDiscovery, this.$iOSSimulatorDiscovery];
+		private $emulatorHelper: Mobile.IEmulatorHelper,
+		private $prompter: IPrompter) {
+		super();
+		this.attachToKnownDeviceDiscoveryEvents();
+		this.attachToKnownEmulatorDiscoveryEvents();
+		this._allDeviceDiscoveries = [this.$iOSDeviceDiscovery, this.$androidDeviceDiscovery, this.$iOSSimulatorDiscovery];
+	}
+
+	@performanceLog()
+	public async pickSingleDevice(options: Mobile.IPickSingleDeviceOptions): Promise<Mobile.IDevice> {
+		if (options.onlyDevices && options.onlyEmulators) {
+			this.$errors.fail(DebugCommandErrors.UNABLE_TO_USE_FOR_DEVICE_AND_EMULATOR);
+		}
+
+		if (options.deviceId) {
+			const device = await this.getDevice(options.deviceId);
+			return device;
+		}
+
+		// Now let's take data for each device:
+		const availableDevicesAndEmulators = this.getDeviceInstances()
+			.filter(d => d.deviceInfo.status === CONNECTED_STATUS && (!this.platform || d.deviceInfo.platform.toLowerCase() === this.platform.toLowerCase()));
+
+		const selectedDevices = availableDevicesAndEmulators.filter(d => options.onlyEmulators ? d.isEmulator : (options.onlyDevices ? !d.isEmulator : true));
+
+		if (selectedDevices.length > 1) {
+			if (isInteractive()) {
+				const choices = selectedDevices.map(e => `${e.deviceInfo.identifier} - ${e.deviceInfo.displayName}`);
+
+				const selectedDeviceString = await this.$prompter.promptForChoice("Select device for debugging", choices);
+
+				const selectedDevice = _.find(selectedDevices, d => `${d.deviceInfo.identifier} - ${d.deviceInfo.displayName}` === selectedDeviceString);
+				return selectedDevice;
+			} else {
+				const sortedInstances = _.sortBy(selectedDevices, e => e.deviceInfo.version);
+				const emulators = sortedInstances.filter(e => e.isEmulator);
+				const devices = sortedInstances.filter(d => !d.isEmulator);
+				let selectedInstance: Mobile.IDevice;
+
+				if (options.onlyEmulators || options.onlyDevices) {
+					// When --emulator or --forDevice is passed, the instances are already filtered
+					// So we are sure we have exactly the type we need and we can safely return the last one (highest OS version).
+					selectedInstance = _.last(sortedInstances);
+				} else {
+					if (emulators.length) {
+						selectedInstance = _.last(emulators);
+					} else {
+						selectedInstance = _.last(devices);
+					}
+				}
+
+				this.$logger.warn(`Multiple devices/emulators found. Starting debugger on ${selectedInstance.deviceInfo.identifier}. ` +
+					"If you want to debug on specific device/emulator, you can specify it with --device option.");
+
+				return selectedInstance;
+			}
+		} else if (selectedDevices.length === 1) {
+			return _.head(selectedDevices);
+		}
+
+		this.$errors.failWithoutHelp(DebugCommandErrors.NO_DEVICES_EMULATORS_FOUND_FOR_OPTIONS);
 	}
 
 	@exported("devicesService")
@@ -70,7 +130,7 @@ export class DevicesService extends EventEmitter implements Mobile.IDevicesServi
 			return ["Missing mandatory image identifier or name option."];
 		}
 
-		const availableEmulatorsOutput = await this.getEmulatorImages({platform: options.platform});
+		const availableEmulatorsOutput = await this.getEmulatorImages({ platform: options.platform });
 		const emulators = this.$emulatorHelper.getEmulatorsFromAvailableEmulatorsOutput(availableEmulatorsOutput);
 		const errors = this.$emulatorHelper.getErrorsFromAvailableEmulatorsOutput(availableEmulatorsOutput);
 		if (errors.length) {

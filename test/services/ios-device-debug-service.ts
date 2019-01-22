@@ -7,21 +7,16 @@ const expectedDevToolsCommitSha = "02e6bde1bbe34e43b309d4ef774b1168d25fd024";
 
 class IOSDeviceDebugServiceInheritor extends IOSDeviceDebugService {
 	constructor(protected $devicesService: Mobile.IDevicesService,
-		$platformService: IPlatformService,
-		$iOSEmulatorServices: Mobile.IiOSSimulatorService,
 		$childProcess: IChildProcess,
 		$hostInfo: IHostInfo,
 		$logger: ILogger,
 		$errors: IErrors,
 		$packageInstallationManager: IPackageInstallationManager,
-		$iOSDebuggerPortService: IIOSDebuggerPortService,
 		$processService: IProcessService,
 		$appDebugSocketProxyFactory: IAppDebugSocketProxyFactory,
-		$projectDataService: IProjectDataService,
-		$deviceLogProvider: Mobile.IDeviceLogProvider) {
-		super(<any>{ deviceInfo: { identifier: "123" } }, $devicesService, $platformService, $iOSEmulatorServices, $childProcess, $hostInfo, $logger, $errors,
-			$packageInstallationManager, $iOSDebuggerPortService,
-			$processService, $appDebugSocketProxyFactory, $projectDataService, $deviceLogProvider);
+		$projectDataService: IProjectDataService) {
+		super(<any>{ deviceInfo: { identifier: "123" } }, $devicesService, $childProcess, $hostInfo, $logger, $errors,
+			$packageInstallationManager, $processService, $appDebugSocketProxyFactory, $projectDataService);
 	}
 
 	public getChromeDebugUrl(debugOptions: IDebugOptions, port: number): string {

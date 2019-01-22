@@ -24,7 +24,7 @@ export class IOSDeviceLiveSyncService extends DeviceLiveSyncServiceBase implemen
 		}
 
 		const appId = projectData.projectIdentifiers.ios;
-		this.socket = await this.device.getLiveSyncSocket(appId);
+		this.socket = await this.device.getDebugSocket(appId, projectData.projectName);
 		if (!this.socket) {
 			return false;
 		}
@@ -43,8 +43,8 @@ export class IOSDeviceLiveSyncService extends DeviceLiveSyncServiceBase implemen
 		const result: IRefreshApplicationInfo = { didRestart: false };
 		const deviceAppData = liveSyncInfo.deviceAppData;
 		const localToDevicePaths = liveSyncInfo.modifiedFilesData;
-		if (liveSyncInfo.isFullSync) {
-			await this.restartApplication(deviceAppData, projectData.projectName);
+		if (liveSyncInfo.isFullSync || liveSyncInfo.waitForDebugger) {
+			await this.restartApplication(deviceAppData, projectData.projectName, liveSyncInfo.waitForDebugger);
 			result.didRestart = true;
 			return result;
 		}
@@ -57,7 +57,7 @@ export class IOSDeviceLiveSyncService extends DeviceLiveSyncServiceBase implemen
 		const canExecuteFastSync = this.canExecuteFastSyncForPaths(liveSyncInfo, localToDevicePaths, projectData, deviceAppData.platform);
 
 		if (!canExecuteFastSync) {
-			await this.restartApplication(deviceAppData, projectData.projectName);
+			await this.restartApplication(deviceAppData, projectData.projectName, liveSyncInfo.waitForDebugger);
 			result.didRestart = true;
 			return result;
 		}
@@ -65,15 +65,15 @@ export class IOSDeviceLiveSyncService extends DeviceLiveSyncServiceBase implemen
 		if (await this.setupSocketIfNeeded(projectData)) {
 			await this.reloadPage(otherFiles);
 		} else {
-			await this.restartApplication(deviceAppData, projectData.projectName);
+			await this.restartApplication(deviceAppData, projectData.projectName, liveSyncInfo.waitForDebugger);
 			result.didRestart = true;
 		}
 
 		return result;
 	}
 
-	private async restartApplication(deviceAppData: Mobile.IDeviceAppData, projectName: string): Promise<void> {
-		return this.device.applicationManager.restartApplication({ appId: deviceAppData.appIdentifier, projectName });
+	private async restartApplication(deviceAppData: Mobile.IDeviceAppData, projectName: string, waitForDebugger: boolean): Promise<void> {
+		await this.device.applicationManager.restartApplication({ appId: deviceAppData.appIdentifier, projectName, waitForDebugger });
 	}
 
 	private async reloadPage(localToDevicePaths: Mobile.ILocalToDevicePathData[]): Promise<void> {

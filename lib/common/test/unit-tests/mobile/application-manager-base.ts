@@ -693,6 +693,7 @@ describe("ApplicationManagerBase", () => {
 					}
 
 					isStartApplicationCalled = true;
+					return Promise.resolve();
 				};
 
 				await applicationManager.tryStartApplication(applicationData);

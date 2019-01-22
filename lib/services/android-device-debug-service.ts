@@ -15,10 +15,8 @@ export class AndroidDeviceDebugService extends DebugServiceBase implements IDevi
 		protected $devicesService: Mobile.IDevicesService,
 		private $errors: IErrors,
 		private $logger: ILogger,
-		private $androidDeviceDiscovery: Mobile.IDeviceDiscovery,
 		private $androidProcessService: Mobile.IAndroidProcessService,
 		private $net: INet,
-		private $projectDataService: IProjectDataService,
 		private $deviceLogProvider: Mobile.IDeviceLogProvider) {
 
 		super(device, $devicesService);
@@ -28,11 +26,10 @@ export class AndroidDeviceDebugService extends DebugServiceBase implements IDevi
 	@performanceLog()
 	public async debug(debugData: IDebugData, debugOptions: IDebugOptions): Promise<IDebugResultInfo> {
 		this._packageName = debugData.applicationIdentifier;
-		const result = this.device.isEmulator
-			? await this.debugOnEmulator(debugData, debugOptions)
-			: await this.debugOnDevice(debugData, debugOptions);
+		const result = await this.debugCore(debugData.applicationIdentifier, debugOptions);
 
-		if (!debugOptions.justlaunch) {
+		// TODO: extract this logic outside the debug service
+		if (debugOptions.start && !debugOptions.justlaunch) {
 			const pid = await this.$androidProcessService.getAppProcessId(this.deviceIdentifier, debugData.applicationIdentifier);
 			if (pid) {
 				this.$deviceLogProvider.setApplicationPidForDevice(this.deviceIdentifier, pid);
@@ -44,29 +41,8 @@ export class AndroidDeviceDebugService extends DebugServiceBase implements IDevi
 		return result;
 	}
 
-	public async debugStart(debugData: IDebugData, debugOptions: IDebugOptions): Promise<void> {
-		await this.$devicesService.initialize({ platform: this.platform, deviceId: this.deviceIdentifier });
-		const projectData = this.$projectDataService.getProjectData(debugData.projectDir);
-		const appData: Mobile.IApplicationData = {
-			appId: debugData.applicationIdentifier,
-			projectName: projectData.projectName
-		};
-
-		const action = (device: Mobile.IAndroidDevice): Promise<void> => this.debugStartCore(appData, debugOptions);
-
-		await this.$devicesService.execute(action, this.getCanExecuteAction(this.deviceIdentifier));
-	}
-
 	public debugStop(): Promise<void> {
 		return this.removePortForwarding();
-	}
-
-	private async debugOnEmulator(debugData: IDebugData, debugOptions: IDebugOptions): Promise<IDebugResultInfo> {
-		// Assure we've detected the emulator as device
-		// For example in case deployOnEmulator had stated new emulator instance
-		// we need some time to detect it. Let's force detection.
-		await this.$androidDeviceDiscovery.startLookingForDevices();
-		return this.debugOnDevice(debugData, debugOptions);
 	}
 
 	private async removePortForwarding(packageName?: string): Promise<void> {
@@ -100,44 +76,20 @@ export class AndroidDeviceDebugService extends DebugServiceBase implements IDevi
 	}
 
 	@performanceLog()
-	private async debugOnDevice(debugData: IDebugData, debugOptions: IDebugOptions): Promise<IDebugResultInfo> {
-		let packageFile = "";
-
-		if (!debugOptions.start && !this.device.isEmulator) {
-			packageFile = debugData.pathToAppPackage;
-			this.$logger.out("Using ", packageFile);
-		}
-
-		await this.$devicesService.initialize({ platform: this.platform, deviceId: this.deviceIdentifier });
-
-		const projectName = this.$projectDataService.getProjectData(debugData.projectDir).projectName;
-		const appData: Mobile.IApplicationData = {
-			appId: debugData.applicationIdentifier,
-			projectName
-		};
-
-		const action = (device: Mobile.IAndroidDevice): Promise<IDebugResultInfo> => this.debugCore(device, packageFile, appData, debugOptions);
-
-		const deviceActionResult = await this.$devicesService.execute(action, this.getCanExecuteAction(this.deviceIdentifier));
-		return deviceActionResult[0].result;
-	}
-
-	@performanceLog()
-	private async debugCore(device: Mobile.IAndroidDevice, packageFile: string, appData: Mobile.IApplicationData, debugOptions: IDebugOptions): Promise<IDebugResultInfo> {
-		const result: IDebugResultInfo = { hasReconnected: false, debugUrl: null };
+	private async debugCore(appId: string, debugOptions: IDebugOptions): Promise<IDebugResultInfo> {
+		const result: IDebugResultInfo = { debugUrl: null };
 		if (debugOptions.stop) {
 			await this.removePortForwarding();
 			return result;
 		}
 
-		if (!debugOptions.start) {
-			await this.debugStartCore(appData, debugOptions);
-			result.hasReconnected = true;
+		await this.validateRunningApp(this.deviceIdentifier, appId);
+		if (debugOptions.debugBrk) {
+			await this.waitForDebugServer(appId);
 		}
 
-		await this.validateRunningApp(device.deviceInfo.identifier, appData.appId);
-		const debugPort = await this.getForwardedDebugPort(device.deviceInfo.identifier, appData.appId);
-		await this.printDebugPort(device.deviceInfo.identifier, debugPort);
+		const debugPort = await this.getForwardedDebugPort(this.deviceIdentifier, appId);
+		await this.printDebugPort(this.deviceIdentifier, debugPort);
 
 		result.debugUrl = this.getChromeDebugUrl(debugOptions, debugPort);
 
@@ -148,28 +100,15 @@ export class AndroidDeviceDebugService extends DebugServiceBase implements IDevi
 		this.$logger.info("device: " + deviceId + " debug port: " + port + "\n");
 	}
 
+	// TODO: extract this logic outside the debug service
 	private async validateRunningApp(deviceId: string, packageName: string): Promise<void> {
 		if (!(await this.isAppRunning(packageName, deviceId))) {
 			this.$errors.failWithoutHelp(`The application ${packageName} does not appear to be running on ${deviceId} or is not built with debugging enabled. Try starting the application manually.`);
 		}
 	}
 
-	private async debugStartCore(appData: Mobile.IApplicationData, debugOptions: IDebugOptions): Promise<void> {
-		await this.device.applicationManager.stopApplication(appData);
-
-		if (debugOptions.debugBrk) {
-			await this.device.adb.executeShellCommand([`cat /dev/null > ${LiveSyncPaths.ANDROID_TMP_DIR_NAME}/${appData.appId}-debugbreak`]);
-		}
-
-		await this.device.adb.executeShellCommand([`cat /dev/null > ${LiveSyncPaths.ANDROID_TMP_DIR_NAME}/${appData.appId}-debugger-started`]);
-
-		await this.device.applicationManager.startApplication(appData);
-
-		await this.waitForDebugger(appData.appId);
-	}
-
-	private async waitForDebugger(packageName: String): Promise<void> {
-		const debuggerStartedFilePath = `${LiveSyncPaths.ANDROID_TMP_DIR_NAME}/${packageName}-debugger-started`;
+	private async waitForDebugServer(appId: String): Promise<void> {
+		const debuggerStartedFilePath = `${LiveSyncPaths.ANDROID_TMP_DIR_NAME}/${appId}-debugger-started`;
 		const waitText: string = `0 ${debuggerStartedFilePath}`;
 		let maxWait = 12;
 		let debuggerStarted: boolean = false;

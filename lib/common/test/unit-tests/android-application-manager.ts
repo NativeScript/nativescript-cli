@@ -44,7 +44,9 @@ class AndroidDebugBridgeStub {
 
 	public async executeShellCommand(args: string[]): Promise<any> {
 		if (args && args.length > 0) {
-			if (args[0] === "pm") {
+			if (args[0].startsWith("cat")) {
+				return;
+			} else if (args[0] === "pm") {
 				const passedIdentifier = args[2];
 				if (passedIdentifier === invalidIdentifier) {
 					return "invalid output string";

@@ -41,28 +41,6 @@ class IosEmulatorServices implements Mobile.IiOSSimulatorService {
 		return "";
 	}
 
-	public runApplicationOnEmulator(app: string, emulatorOptions?: Mobile.IRunApplicationOnEmulatorOptions): Promise<any> {
-		emulatorOptions = emulatorOptions || {};
-
-		if (emulatorOptions.availableDevices) {
-			return this.$iOSSimResolver.iOSSim.printDeviceTypes();
-		}
-
-		const options: any = {
-			sdkVersion: emulatorOptions.sdk,
-			device: emulatorOptions.device,
-			args: emulatorOptions.args,
-			waitForDebugger: emulatorOptions.waitForDebugger,
-			skipInstall: emulatorOptions.skipInstall
-		};
-
-		if (emulatorOptions.justlaunch) {
-			options.exit = true;
-		}
-
-		return this.$iOSSimResolver.iOSSim.launchApplication(app, emulatorOptions.appId, options);
-	}
-
 	public async postDarwinNotification(notification: string, deviceId: string): Promise<void> {
 		return this.$iOSSimResolver.iOSSim.sendNotification(notification, deviceId);
 	}

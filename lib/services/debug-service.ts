@@ -100,8 +100,7 @@ export class DebugService extends EventEmitter implements IDebugService {
 		const debugInfo: IDebugInformation = {
 			url: debugResultInfo.debugUrl,
 			port: 0,
-			deviceIdentifier,
-			hasReconnected: debugResultInfo.hasReconnected
+			deviceIdentifier
 		};
 
 		if (debugResultInfo.debugUrl) {

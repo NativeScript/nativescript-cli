@@ -16,8 +16,8 @@ export class IOSNotification extends EventEmitter implements IiOSNotification {
 		return this.formatNotification(IOSNotification.READY_FOR_ATTACH_NOTIFICATION_NAME, projectId);
 	}
 
-	private formatNotification(notification: string, projectId: string) {
-		return `${projectId}:NativeScript.Debug.${notification}`;
+	private formatNotification(notification: string, appId: string) {
+		return `${appId}:NativeScript.Debug.${notification}`;
 	}
 }
 $injector.register("iOSNotification", IOSNotification);

@@ -368,6 +368,7 @@ interface ILiveSyncWatchInfo extends IProjectDataComposition, IHasUseHotModuleRe
 interface ILiveSyncResultInfo extends IHasUseHotModuleReloadOption {
 	modifiedFilesData: Mobile.ILocalToDevicePathData[];
 	isFullSync: boolean;
+	waitForDebugger?: boolean;
 	deviceAppData: Mobile.IDeviceAppData;
 	didRecover?: boolean
 }
@@ -396,7 +397,6 @@ interface IPlatformLiveSyncService {
 	fullSync(syncInfo: IFullSyncInfo): Promise<ILiveSyncResultInfo>;
 	liveSyncWatchAction(device: Mobile.IDevice, liveSyncInfo: ILiveSyncWatchInfo): Promise<ILiveSyncResultInfo>;
 	refreshApplication(projectData: IProjectData, liveSyncInfo: ILiveSyncResultInfo): Promise<IRefreshApplicationInfo>;
-	prepareForLiveSync(device: Mobile.IDevice, data: IProjectDir, liveSyncInfo: ILiveSyncInfo, debugOptions: IDebugOptions): Promise<void>;
 	getDeviceLiveSyncService(device: Mobile.IDevice, projectData: IProjectData): INativeScriptDeviceLiveSyncService;
 }
 

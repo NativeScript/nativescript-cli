@@ -8,15 +8,11 @@ interface IKarmaConfigOptions {
 }
 
 class TestExecutionService implements ITestExecutionService {
-	private static MAIN_APP_NAME = `./tns_modules/${constants.TEST_RUNNER_NAME}/app.js`;
 	private static CONFIG_FILE_NAME = `node_modules/${constants.TEST_RUNNER_NAME}/config.js`;
 	private static SOCKETIO_JS_FILE_NAME = `node_modules/${constants.TEST_RUNNER_NAME}/socket.io.js`;
 
-	constructor(private $injector: IInjector,
-		private $platformService: IPlatformService,
-		private $platformsData: IPlatformsData,
+	constructor(private $platformService: IPlatformService,
 		private $liveSyncService: ILiveSyncService,
-		private $debugDataService: IDebugDataService,
 		private $httpClient: Server.IHttpClient,
 		private $config: IConfiguration,
 		private $logger: ILogger,
@@ -24,141 +20,15 @@ class TestExecutionService implements ITestExecutionService {
 		private $options: IOptions,
 		private $pluginsService: IPluginsService,
 		private $errors: IErrors,
-		private $debugService: IDebugService,
 		private $devicesService: Mobile.IDevicesService,
 		private $childProcess: IChildProcess) {
 	}
 
 	public platform: string;
 
-	public async startTestRunner(platform: string, projectData: IProjectData, projectFilesConfig: IProjectFilesConfig): Promise<void> {
-		this.platform = platform;
-		this.$options.justlaunch = true;
-		await new Promise<void>((resolve, reject) => {
-			process.on('message', async (launcherConfig: any) => {
-				try {
-					const platformData = this.$platformsData.getPlatformData(platform.toLowerCase(), projectData);
-					const projectDir = projectData.projectDir;
-					await this.$devicesService.initialize({
-						platform: platform,
-						deviceId: this.$options.device,
-						emulator: this.$options.emulator
-					});
-					const projectFilesPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
-
-					const configOptions: IKarmaConfigOptions = JSON.parse(launcherConfig);
-					this.$options.debugBrk = configOptions.debugBrk;
-					this.$options.debugTransport = configOptions.debugTransport;
-					const configJs = this.generateConfig(this.$options.port.toString(), configOptions);
-					this.$fs.writeFile(path.join(projectDir, TestExecutionService.CONFIG_FILE_NAME), configJs);
-
-					const socketIoJsUrl = `http://localhost:${this.$options.port}/socket.io/socket.io.js`;
-					const socketIoJs = (await this.$httpClient.httpRequest(socketIoJsUrl)).body;
-					this.$fs.writeFile(path.join(projectDir, TestExecutionService.SOCKETIO_JS_FILE_NAME), socketIoJs);
-					const appFilesUpdaterOptions: IAppFilesUpdaterOptions = {
-						bundle: !!this.$options.bundle,
-						release: this.$options.release,
-						useHotModuleReload: this.$options.hmr
-					};
-					const preparePlatformInfo: IPreparePlatformInfo = {
-						platform,
-						appFilesUpdaterOptions,
-						platformTemplate: this.$options.platformTemplate,
-						projectData,
-						config: this.$options,
-						env: this.$options.env
-					};
-
-					if (!await this.$platformService.preparePlatform(preparePlatformInfo)) {
-						this.$errors.failWithoutHelp("Verify that listed files are well-formed and try again the operation.");
-					}
-
-					this.detourEntryPoint(projectFilesPath);
-
-					const deployOptions: IDeployPlatformOptions = {
-						clean: this.$options.clean,
-						device: this.$options.device,
-						emulator: this.$options.emulator,
-						projectDir: this.$options.path,
-						platformTemplate: this.$options.platformTemplate,
-						release: this.$options.release,
-						provision: this.$options.provision,
-						teamId: this.$options.teamId
-					};
-
-					if (this.$options.bundle) {
-						this.$options.watch = false;
-					}
-
-					const devices = this.$devicesService.getDeviceInstances();
-					// Now let's take data for each device:
-					const platformLowerCase = this.platform && this.platform.toLowerCase();
-					const deviceDescriptors: ILiveSyncDeviceInfo[] = devices.filter(d => !platformLowerCase || d.deviceInfo.platform.toLowerCase() === platformLowerCase)
-						.map(d => {
-							const info: ILiveSyncDeviceInfo = {
-								identifier: d.deviceInfo.identifier,
-								buildAction: async (): Promise<string> => {
-									const buildConfig: IBuildConfig = {
-										buildForDevice: !d.isEmulator, // this.$options.forDevice,
-										projectDir: this.$options.path,
-										clean: this.$options.clean,
-										teamId: this.$options.teamId,
-										device: this.$options.device,
-										provision: this.$options.provision,
-										release: this.$options.release,
-										keyStoreAlias: this.$options.keyStoreAlias,
-										keyStorePath: this.$options.keyStorePath,
-										keyStoreAliasPassword: this.$options.keyStoreAliasPassword,
-										keyStorePassword: this.$options.keyStorePassword
-									};
-
-									await this.$platformService.buildPlatform(d.deviceInfo.platform, buildConfig, projectData);
-									const pathToBuildResult = await this.$platformService.lastOutputPath(d.deviceInfo.platform, buildConfig, projectData);
-									return pathToBuildResult;
-								},
-								debugOptions: this.$options
-							};
-
-							return info;
-						});
-
-					const liveSyncInfo: ILiveSyncInfo = {
-						projectDir: projectData.projectDir,
-						skipWatcher: !this.$options.watch || this.$options.justlaunch,
-						watchAllFiles: this.$options.syncAllFiles,
-						bundle: !!this.$options.bundle,
-						release: this.$options.release,
-						env: this.$options.env,
-						timeout: this.$options.timeout,
-						useHotModuleReload: this.$options.hmr
-					};
-
-					await this.$liveSyncService.liveSync(deviceDescriptors, liveSyncInfo);
-
-					if (this.$options.debugBrk) {
-						this.$logger.info('Starting debugger...');
-						const debugService: IDeviceDebugService = this.$injector.resolve(`${platform}DebugService`);
-						const debugData = this.getDebugData(platform, projectData, deployOptions);
-						await debugService.debugStart(debugData, this.$options);
-					}
-					resolve();
-				} catch (err) {
-					reject(err);
-				}
-			});
-
-			// Tell the parent that we are ready to receive the data.
-			process.send("ready");
-		});
-	}
-
 	public async startKarmaServer(platform: string, projectData: IProjectData, projectFilesConfig: IProjectFilesConfig): Promise<void> {
 		platform = platform.toLowerCase();
 		this.platform = platform;
-
-		if (this.$options.debugBrk && this.$options.watch) {
-			this.$errors.failWithoutHelp("You cannot use --watch and --debug-brk simultaneously. Remove one of the flags and try again.");
-		}
 
 		// We need the dependencies installed here, so we can start the Karma server.
 		await this.$pluginsService.ensureAllDependenciesAreInstalled(projectData);
@@ -209,66 +79,64 @@ class TestExecutionService implements ITestExecutionService {
 					this.$errors.failWithoutHelp("Verify that listed files are well-formed and try again the operation.");
 				}
 
-				const deployOptions: IDeployPlatformOptions = {
-					clean: this.$options.clean,
-					device: this.$options.device,
-					emulator: this.$options.emulator,
-					projectDir: this.$options.path,
-					platformTemplate: this.$options.platformTemplate,
+				let devices = [];
+				if (this.$options.debugBrk) {
+					const selectedDeviceForDebug = await this.$devicesService.pickSingleDevice({
+						onlyEmulators: this.$options.emulator,
+						onlyDevices: this.$options.forDevice,
+						deviceId: this.$options.device
+					});
+					devices = [selectedDeviceForDebug];
+					// const debugData = this.getDebugData(platform, projectData, deployOptions, { device: selectedDeviceForDebug.deviceInfo.identifier });
+					// await this.$debugService.debug(debugData, this.$options);
+				} else {
+					devices = this.$devicesService.getDeviceInstances();
+				}
+
+				// Now let's take data for each device:
+				const platformLowerCase = this.platform && this.platform.toLowerCase();
+				const deviceDescriptors: ILiveSyncDeviceInfo[] = devices.filter(d => !platformLowerCase || d.deviceInfo.platform.toLowerCase() === platformLowerCase)
+					.map(d => {
+						const info: ILiveSyncDeviceInfo = {
+							identifier: d.deviceInfo.identifier,
+							buildAction: async (): Promise<string> => {
+								const buildConfig: IBuildConfig = {
+									buildForDevice: !d.isEmulator,
+									projectDir: this.$options.path,
+									clean: this.$options.clean,
+									teamId: this.$options.teamId,
+									device: this.$options.device,
+									provision: this.$options.provision,
+									release: this.$options.release,
+									keyStoreAlias: this.$options.keyStoreAlias,
+									keyStorePath: this.$options.keyStorePath,
+									keyStoreAliasPassword: this.$options.keyStoreAliasPassword,
+									keyStorePassword: this.$options.keyStorePassword
+								};
+
+								await this.$platformService.buildPlatform(d.deviceInfo.platform, buildConfig, projectData);
+								const pathToBuildResult = await this.$platformService.lastOutputPath(d.deviceInfo.platform, buildConfig, projectData);
+								return pathToBuildResult;
+							},
+							debugOptions: this.$options,
+							debugggingEnabled: this.$options.debugBrk
+						};
+
+						return info;
+					});
+
+				const liveSyncInfo: ILiveSyncInfo = {
+					projectDir: projectData.projectDir,
+					skipWatcher: !this.$options.watch || this.$options.justlaunch,
+					watchAllFiles: this.$options.syncAllFiles,
+					bundle: !!this.$options.bundle,
 					release: this.$options.release,
-					provision: this.$options.provision,
-					teamId: this.$options.teamId
+					env: this.$options.env,
+					timeout: this.$options.timeout,
+					useHotModuleReload: this.$options.hmr
 				};
 
-				if (this.$options.debugBrk) {
-					const debugData = this.getDebugData(platform, projectData, deployOptions);
-					await this.$debugService.debug(debugData, this.$options);
-				} else {
-					const devices = this.$devicesService.getDeviceInstances();
-					// Now let's take data for each device:
-					const platformLowerCase = this.platform && this.platform.toLowerCase();
-					const deviceDescriptors: ILiveSyncDeviceInfo[] = devices.filter(d => !platformLowerCase || d.deviceInfo.platform.toLowerCase() === platformLowerCase)
-						.map(d => {
-							const info: ILiveSyncDeviceInfo = {
-								identifier: d.deviceInfo.identifier,
-								buildAction: async (): Promise<string> => {
-									const buildConfig: IBuildConfig = {
-										buildForDevice: !d.isEmulator,
-										projectDir: this.$options.path,
-										clean: this.$options.clean,
-										teamId: this.$options.teamId,
-										device: this.$options.device,
-										provision: this.$options.provision,
-										release: this.$options.release,
-										keyStoreAlias: this.$options.keyStoreAlias,
-										keyStorePath: this.$options.keyStorePath,
-										keyStoreAliasPassword: this.$options.keyStoreAliasPassword,
-										keyStorePassword: this.$options.keyStorePassword
-									};
-
-									await this.$platformService.buildPlatform(d.deviceInfo.platform, buildConfig, projectData);
-									const pathToBuildResult = await this.$platformService.lastOutputPath(d.deviceInfo.platform, buildConfig, projectData);
-									return pathToBuildResult;
-								},
-								debugOptions: this.$options
-							};
-
-							return info;
-						});
-
-					const liveSyncInfo: ILiveSyncInfo = {
-						projectDir: projectData.projectDir,
-						skipWatcher: !this.$options.watch || this.$options.justlaunch,
-						watchAllFiles: this.$options.syncAllFiles,
-						bundle: !!this.$options.bundle,
-						release: this.$options.release,
-						env: this.$options.env,
-						timeout: this.$options.timeout,
-						useHotModuleReload: this.$options.hmr
-					};
-
-					await this.$liveSyncService.liveSync(deviceDescriptors, liveSyncInfo);
-				}
+				await this.$liveSyncService.liveSync(deviceDescriptors, liveSyncInfo);
 			};
 
 		karmaRunner.on("message", (karmaData: any) => {
@@ -296,13 +164,6 @@ class TestExecutionService implements ITestExecutionService {
 	}
 
 	allowedParameters: ICommandParameter[] = [];
-
-	private detourEntryPoint(projectFilesPath: string): void {
-		const packageJsonPath = path.join(projectFilesPath, 'package.json');
-		const packageJson = this.$fs.readJson(packageJsonPath);
-		packageJson.main = TestExecutionService.MAIN_APP_NAME;
-		this.$fs.writeJson(packageJsonPath, packageJson);
-	}
 
 	private generateConfig(port: string, options: any): string {
 		const nics = os.networkInterfaces();
@@ -354,14 +215,6 @@ class TestExecutionService implements ITestExecutionService {
 		this.$logger.debug(JSON.stringify(karmaConfig, null, 4));
 
 		return karmaConfig;
-	}
-
-	private getDebugData(platform: string, projectData: IProjectData, deployOptions: IDeployPlatformOptions): IDebugData {
-		const buildConfig: IBuildConfig = _.merge({ buildForDevice: this.$options.forDevice }, deployOptions);
-		const debugData = this.$debugDataService.createDebugData(projectData, this.$options);
-		debugData.pathToAppPackage = this.$platformService.lastOutputPath(platform, buildConfig, projectData);
-
-		return debugData;
 	}
 }
 $injector.register('testExecutionService', TestExecutionService);

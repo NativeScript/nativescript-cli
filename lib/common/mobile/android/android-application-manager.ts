@@ -47,7 +47,15 @@ export class AndroidApplicationManager extends ApplicationManagerBase {
 		return this.adb.executeShellCommand(["pm", "uninstall", `${appIdentifier}`], { treatErrorsAsWarnings: true });
 	}
 
-	public async startApplication(appData: Mobile.IApplicationData): Promise<void> {
+	public async startApplication(appData: Mobile.IStartApplicationData): Promise<void> {
+		if (appData.waitForDebugger) {
+			await this.adb.executeShellCommand([`cat /dev/null > ${LiveSyncPaths.ANDROID_TMP_DIR_NAME}/${appData.appId}-debugbreak`]);
+		}
+
+		// If the app is debuggable, the Runtime will update the file when its ready for debugging
+		// and we will be able to take decisions and synchronize the debug experience based on the content
+		await this.adb.executeShellCommand([`cat /dev/null > ${LiveSyncPaths.ANDROID_TMP_DIR_NAME}/${appData.appId}-debugger-started`]);
+
 		/*
 		Example "pm dump <app_identifier> | grep -A 1 MAIN" output"
 			android.intent.action.MAIN:

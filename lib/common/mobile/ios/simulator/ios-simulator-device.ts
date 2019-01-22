@@ -13,6 +13,7 @@ export class IOSSimulator extends IOSDeviceBase implements Mobile.IiOSDevice {
 
 	constructor(private simulator: Mobile.IiSimDevice,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
+		protected $deviceLogProvider: Mobile.IDeviceLogProvider,
 		protected $errors: IErrors,
 		protected $lockService: ILockService,
 		private $injector: IInjector,
@@ -52,11 +53,12 @@ export class IOSSimulator extends IOSDeviceBase implements Mobile.IiOSDevice {
 		return this.$iOSSimulatorLogProvider.startLogProcess(this.simulator.id, options);
 	}
 
-	protected async getSocketCore(appId: string): Promise<net.Socket> {
+	protected async getDebugSocketCore(appId: string, projectName: string): Promise<net.Socket> {
 		let socket: net.Socket;
+		await super.attachToDebuggerFoundEvent(projectName);
 		const attachRequestMessage = this.$iOSNotification.getAttachRequest(appId, this.deviceInfo.identifier);
 		await this.$iOSEmulatorServices.postDarwinNotification(attachRequestMessage, this.deviceInfo.identifier);
-		const port = await this.getDebuggerPort(appId);
+		const port = await super.getDebuggerPort(appId);
 		try {
 			socket = await helpers.connectEventuallyUntilTimeout(
 				async () => { return this.$iOSEmulatorServices.connectToPort({ port }); },

@@ -33,7 +33,7 @@ export class AndroidDeviceSocketsLiveSyncService extends AndroidDeviceLiveSyncSe
 				const pathToLiveSyncFile = temp.path({ prefix: "livesync" });
 				this.$fs.writeFile(pathToLiveSyncFile, "");
 				await this.device.fileSystem.putFile(pathToLiveSyncFile, this.getPathToLiveSyncFileOnDevice(deviceAppData.appIdentifier), deviceAppData.appIdentifier);
-				await this.device.applicationManager.startApplication({ appId: deviceAppData.appIdentifier, projectName: this.data.projectName, justLaunch: true });
+				await this.device.applicationManager.startApplication({ appId: deviceAppData.appIdentifier, projectName: this.data.projectName, justLaunch: true, waitForDebugger: false });
 				await this.connectLivesyncTool(this.data.projectIdentifiers.android, deviceAppData.connectTimeout);
 			} catch (err) {
 				await this.device.fileSystem.deleteFile(this.getPathToLiveSyncFileOnDevice(deviceAppData.appIdentifier), deviceAppData.appIdentifier);
@@ -95,9 +95,9 @@ export class AndroidDeviceSocketsLiveSyncService extends AndroidDeviceLiveSyncSe
 	public async refreshApplication(projectData: IProjectData, liveSyncInfo: IAndroidLiveSyncResultInfo): Promise<IRefreshApplicationInfo> {
 		const result: IRefreshApplicationInfo = { didRestart: false };
 		const canExecuteFastSync = !liveSyncInfo.isFullSync && this.canExecuteFastSyncForPaths(liveSyncInfo, liveSyncInfo.modifiedFilesData, projectData, this.device.deviceInfo.platform);
-		if (!canExecuteFastSync || !liveSyncInfo.didRefresh) {
-			await this.device.applicationManager.restartApplication({ appId: liveSyncInfo.deviceAppData.appIdentifier, projectName: projectData.projectName });
-			if (!this.$options.justlaunch && this.livesyncTool.protocolVersion && semver.gte(this.livesyncTool.protocolVersion, AndroidDeviceSocketsLiveSyncService.MINIMAL_VERSION_LONG_LIVING_CONNECTION)) {
+		if (!canExecuteFastSync || !liveSyncInfo.didRefresh || liveSyncInfo.waitForDebugger) {
+			await this.device.applicationManager.restartApplication({ appId: liveSyncInfo.deviceAppData.appIdentifier, projectName: projectData.projectName, waitForDebugger: liveSyncInfo.waitForDebugger });
+			if (!this.$options.justlaunch && !liveSyncInfo.waitForDebugger && this.livesyncTool.protocolVersion && semver.gte(this.livesyncTool.protocolVersion, AndroidDeviceSocketsLiveSyncService.MINIMAL_VERSION_LONG_LIVING_CONNECTION)) {
 				try {
 					await this.connectLivesyncTool(liveSyncInfo.deviceAppData.appIdentifier);
 				} catch (e) {
