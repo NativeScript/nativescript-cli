@@ -1,6 +1,6 @@
 import * as path from "path";
 import { Device, FilesPayload } from "nativescript-preview-sdk";
-import { AnalyticsEventLabelDelimiter, APP_RESOURCES_FOLDER_NAME, APP_FOLDER_NAME, TrackActionNames } from "../../../constants";
+import { APP_RESOURCES_FOLDER_NAME, APP_FOLDER_NAME, TrackActionNames } from "../../../constants";
 import { PreviewAppLiveSyncEvents } from "./preview-app-constants";
 import { HmrConstants } from "../../../common/constants";
 import { stringify } from "../../../common/helpers";
@@ -34,12 +34,11 @@ export class PreviewAppLiveSyncService extends EventEmitter implements IPreviewA
 					this.$errors.failWithoutHelp("Sending initial preview files without a specified device is not supported.");
 				}
 
-				const deviceUniqueId = (<any>device).uniqueId;
-				if (deviceUniqueId) {
-					this.$analyticsService.trackEventActionInGoogleAnalytics({
+				if (device.uniqueId) {
+					await this.$analyticsService.trackEventActionInGoogleAnalytics({
 						action: TrackActionNames.PreviewAppData,
 						platform: device.platform,
-						additionalData: `previewAppDeviceId${AnalyticsEventLabelDelimiter}${deviceUniqueId}`
+						additionalData: device.uniqueId
 					});
 				}
 
