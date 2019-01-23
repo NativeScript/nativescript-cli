@@ -291,7 +291,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		const platformData = this.getPlatformData(projectData);
 		const projectRoot = platformData.projectRoot;
 		const archivePath = options.archivePath;
-		const buildOutputPath = path.join(projectRoot, "build");
+		const buildOutputPath = path.join(projectRoot, constants.BUILD_DIR);
 		const exportOptionsMethod = await this.getExportOptionsMethod(projectData);
 		let plistTemplate = `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -417,7 +417,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 		args = args.concat([
 			"-sdk", DevicePlatformSdkName,
-			"BUILD_DIR=" + path.join(projectRoot, "build")
+			"BUILD_DIR=" + path.join(projectRoot, constants.BUILD_DIR)
 		]);
 
 		const xcodeBuildVersion = await this.getXcodeVersion();
@@ -586,7 +586,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				"-configuration", getConfigurationName(buildConfig.release),
 				"-sdk", SimulatorPlatformSdkName,
 				"ONLY_ACTIVE_ARCH=NO",
-				"BUILD_DIR=" + path.join(projectRoot, "build"),
+				"BUILD_DIR=" + path.join(projectRoot, constants.BUILD_DIR),
 				"CODE_SIGN_IDENTITY=",
 			])
 			.concat(this.xcbuildProjectArgs(projectRoot, projectData));
@@ -1400,7 +1400,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 	}
 
 	private getExportOptionsMethod(projectData: IProjectData): string {
-		const embeddedMobileProvisionPath = path.join(this.getPlatformData(projectData).projectRoot, "build", "archive", `${projectData.projectName}.xcarchive`, 'Products', 'Applications', `${projectData.projectName}.app`, "embedded.mobileprovision");
+		const embeddedMobileProvisionPath = path.join(this.getPlatformData(projectData).projectRoot, constants.BUILD_DIR, "archive", `${projectData.projectName}.xcarchive`, 'Products', 'Applications', `${projectData.projectName}.app`, "embedded.mobileprovision");
 		const provision = mobileprovision.provision.readFromFile(embeddedMobileProvisionPath);
 
 		return {
