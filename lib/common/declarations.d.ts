@@ -1137,8 +1137,6 @@ interface IDeviceLiveSyncServiceBase {
 	 * Specifies some action that will be executed before every sync operation
 	 */
 	beforeLiveSyncAction?(deviceAppData: Mobile.IDeviceAppData): Promise<void>;
-
-	debugService?: any;
 }
 
 interface IDeviceLiveSyncService extends IDeviceLiveSyncServiceBase {

@@ -39,41 +39,51 @@ export class IOSDeviceLiveSyncService extends DeviceLiveSyncServiceBase implemen
 		await Promise.all(_.map(localToDevicePaths, localToDevicePathData => this.device.fileSystem.deleteFile(localToDevicePathData.getDevicePath(), deviceAppData.appIdentifier)));
 	}
 
-	public async refreshApplication(projectData: IProjectData, liveSyncInfo: ILiveSyncResultInfo): Promise<IRefreshApplicationInfo> {
-		const result: IRefreshApplicationInfo = { didRestart: false };
+	public async shouldRestart(projectData: IProjectData, liveSyncInfo: ILiveSyncResultInfo): Promise<boolean> {
+		let shouldRestart = false;
 		const deviceAppData = liveSyncInfo.deviceAppData;
 		const localToDevicePaths = liveSyncInfo.modifiedFilesData;
 		if (liveSyncInfo.isFullSync || liveSyncInfo.waitForDebugger) {
-			await this.restartApplication(deviceAppData, projectData.projectName, liveSyncInfo.waitForDebugger);
-			result.didRestart = true;
-			return result;
-		}
-
-		let scriptRelatedFiles: Mobile.ILocalToDevicePathData[] = [];
-		const scriptFiles = _.filter(localToDevicePaths, localToDevicePath => _.endsWith(localToDevicePath.getDevicePath(), ".js"));
-		constants.LIVESYNC_EXCLUDED_FILE_PATTERNS.forEach(pattern => scriptRelatedFiles = _.concat(scriptRelatedFiles, localToDevicePaths.filter(file => minimatch(file.getDevicePath(), pattern, { nocase: true }))));
-
-		const otherFiles = _.difference(localToDevicePaths, _.concat(scriptFiles, scriptRelatedFiles));
-		const canExecuteFastSync = this.canExecuteFastSyncForPaths(liveSyncInfo, localToDevicePaths, projectData, deviceAppData.platform);
-
-		if (!canExecuteFastSync) {
-			await this.restartApplication(deviceAppData, projectData.projectName, liveSyncInfo.waitForDebugger);
-			result.didRestart = true;
-			return result;
-		}
-
-		if (await this.setupSocketIfNeeded(projectData)) {
-			await this.reloadPage(otherFiles);
+			shouldRestart = true;
 		} else {
-			await this.restartApplication(deviceAppData, projectData.projectName, liveSyncInfo.waitForDebugger);
-			result.didRestart = true;
+			const canExecuteFastSync = this.canExecuteFastSyncForPaths(liveSyncInfo, localToDevicePaths, projectData, deviceAppData.platform);
+			if (!canExecuteFastSync || !await this.setupSocketIfNeeded(projectData)) {
+				shouldRestart = true;
+			}
 		}
 
-		return result;
+		return shouldRestart;
 	}
 
-	private async restartApplication(deviceAppData: Mobile.IDeviceAppData, projectName: string, waitForDebugger: boolean): Promise<void> {
-		await this.device.applicationManager.restartApplication({ appId: deviceAppData.appIdentifier, projectName, waitForDebugger });
+	public async tryRefreshApplication(projectData: IProjectData, liveSyncInfo: ILiveSyncResultInfo): Promise<boolean> {
+		let didRefresh = true;
+		const localToDevicePaths = liveSyncInfo.modifiedFilesData;
+
+		let scriptRelatedFiles: Mobile.ILocalToDevicePathData[] = [];
+		constants.LIVESYNC_EXCLUDED_FILE_PATTERNS.forEach(pattern => scriptRelatedFiles = _.concat(scriptRelatedFiles, localToDevicePaths.filter(file => minimatch(file.getDevicePath(), pattern, { nocase: true }))));
+
+		const scriptFiles = _.filter(localToDevicePaths, localToDevicePath => _.endsWith(localToDevicePath.getDevicePath(), ".js"));
+		const otherFiles = _.difference(localToDevicePaths, _.concat(scriptFiles, scriptRelatedFiles));
+
+		try {
+			if (await this.setupSocketIfNeeded(projectData)) {
+				await this.reloadPage(otherFiles);
+			} else {
+				didRefresh = false;
+			}
+		} catch (e) {
+			didRefresh = false;
+		}
+
+		return didRefresh;
+	}
+
+	public async restartApplication(projectData: IProjectData, liveSyncInfo: ILiveSyncResultInfo): Promise<void> {
+		await this.device.applicationManager.restartApplication({
+			appId: liveSyncInfo.deviceAppData.appIdentifier,
+			projectName: projectData.projectName,
+			waitForDebugger: liveSyncInfo.waitForDebugger
+		});
 	}
 
 	private async reloadPage(localToDevicePaths: Mobile.ILocalToDevicePathData[]): Promise<void> {

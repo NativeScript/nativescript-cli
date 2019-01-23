@@ -92,23 +92,29 @@ export class AndroidDeviceSocketsLiveSyncService extends AndroidDeviceLiveSyncSe
 		return result;
 	}
 
-	public async refreshApplication(projectData: IProjectData, liveSyncInfo: IAndroidLiveSyncResultInfo): Promise<IRefreshApplicationInfo> {
-		const result: IRefreshApplicationInfo = { didRestart: false };
+	public async restartApplication(projectData: IProjectData, liveSyncInfo: ILiveSyncResultInfo): Promise<void> {
+		await this.device.applicationManager.restartApplication({ appId: liveSyncInfo.deviceAppData.appIdentifier, projectName: projectData.projectName, waitForDebugger: liveSyncInfo.waitForDebugger });
+		if (!this.$options.justlaunch && !liveSyncInfo.waitForDebugger && this.livesyncTool.protocolVersion && semver.gte(this.livesyncTool.protocolVersion, AndroidDeviceSocketsLiveSyncService.MINIMAL_VERSION_LONG_LIVING_CONNECTION)) {
+			try {
+				await this.connectLivesyncTool(liveSyncInfo.deviceAppData.appIdentifier);
+			} catch (e) {
+				this.$logger.trace("Failed to connect after app restart.");
+			}
+		}
+	}
+
+	public async shouldRestart(projectData: IProjectData, liveSyncInfo: IAndroidLiveSyncResultInfo): Promise<boolean> {
+		let shouldRestart = false;
 		const canExecuteFastSync = !liveSyncInfo.isFullSync && this.canExecuteFastSyncForPaths(liveSyncInfo, liveSyncInfo.modifiedFilesData, projectData, this.device.deviceInfo.platform);
 		if (!canExecuteFastSync || !liveSyncInfo.didRefresh || liveSyncInfo.waitForDebugger) {
-			await this.device.applicationManager.restartApplication({ appId: liveSyncInfo.deviceAppData.appIdentifier, projectName: projectData.projectName, waitForDebugger: liveSyncInfo.waitForDebugger });
-			if (!this.$options.justlaunch && !liveSyncInfo.waitForDebugger && this.livesyncTool.protocolVersion && semver.gte(this.livesyncTool.protocolVersion, AndroidDeviceSocketsLiveSyncService.MINIMAL_VERSION_LONG_LIVING_CONNECTION)) {
-				try {
-					await this.connectLivesyncTool(liveSyncInfo.deviceAppData.appIdentifier);
-				} catch (e) {
-					this.$logger.trace("Failed to connect after app restart.");
-				}
-			}
-
-			result.didRestart = true;
+			shouldRestart = true;
 		}
 
-		return result;
+		return shouldRestart;
+	}
+
+	public async tryRefreshApplication(projectData: IProjectData, liveSyncInfo: IAndroidLiveSyncResultInfo): Promise<boolean> {
+		return true;
 	}
 
 	public async removeFiles(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], projectFilesPath: string): Promise<void> {
