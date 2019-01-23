@@ -8,7 +8,9 @@ import Aggregation from './aggregation';
  */
 export default function count(field = '') {
   const aggregation = new Aggregation({
-    reduceFn: (result, doc, key) => {
+    initial: { count: 0 },
+    // eslint-disable-next-line object-shorthand, func-names
+    reduceFn: function (result, doc, key) {
       const val = doc[key];
       if (val) {
         // eslint-disable-next-line no-param-reassign

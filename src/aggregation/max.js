@@ -9,7 +9,8 @@ import Aggregation from './aggregation';
 export default function max(field = '') {
   const aggregation = new Aggregation({
     initial: { max: -Infinity },
-    reduceFn: (result, doc, key) => {
+    // eslint-disable-next-line object-shorthand, func-names
+    reduceFn: function (result, doc, key) {
       // eslint-disable-next-line no-param-reassign
       result.max = Math.max(result.max, doc[key]);
       return result;
