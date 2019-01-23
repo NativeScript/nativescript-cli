@@ -6,7 +6,6 @@ export const StorageProvider = {
   Memory: 'Memory'
 };
 
-// eslint-disable-next-line import/prefer-default-export
 export function get() {
   const { storage = StorageProvider.Memory } = getConfig();
 
