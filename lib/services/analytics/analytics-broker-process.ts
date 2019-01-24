@@ -82,7 +82,7 @@ const trackPreviewAppData = async (data: any) => {
 };
 
 process.on("message", async (data: ITrackingInformation) => {
-	analyticsLoggingService.logData({ message: `analytics-broker-process received message of type: ${data.type}` });
+	analyticsLoggingService.logData({ message: `analytics-broker-process received message of type: ${JSON.stringify(data)}` });
 
 	if (data.type === TrackingTypes.Finish) {
 		receivedFinishMsg = true;
