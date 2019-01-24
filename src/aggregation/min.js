@@ -9,13 +9,11 @@ import Aggregation from './aggregation';
 export default function min(field = '') {
   const aggregation = new Aggregation({
     initial: { min: Infinity },
-    // eslint-disable-next-line object-shorthand, func-names
-    reduceFn: function (result, doc, key) {
-      // eslint-disable-next-line no-param-reassign
-      result.min = Math.min(result.min, doc[key]);
-      return result;
-    }
+    reduceFn: ''
+      + 'function(doc, out) {'
+      + `  out.min = Math.min(out.min, doc["${field.replace('\'', '\\\'')}"]);`
+      + '  return out;'
+      + '}'
   });
-  aggregation.by(field);
   return aggregation;
 }

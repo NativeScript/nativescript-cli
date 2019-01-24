@@ -9,13 +9,11 @@ import Aggregation from './aggregation';
 export default function sum(field = '') {
   const aggregation = new Aggregation({
     initial: { sum: 0 },
-    // eslint-disable-next-line object-shorthand, func-names
-    reduceFn: function (result, doc, key) {
-      // eslint-disable-next-line no-param-reassign
-      result.sum += doc[key];
-      return result;
-    }
+    reduceFn: ''
+      + 'function(doc, out) {'
+      + `  out.sum += doc["${field.replace('\'', '\\\'')}"];`
+      + '  return out;'
+      + '}'
   });
-  aggregation.by(field);
   return aggregation;
 }

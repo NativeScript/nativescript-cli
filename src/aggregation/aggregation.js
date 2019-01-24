@@ -6,7 +6,8 @@ export default class Aggregation {
       query: null,
       initial: {},
       key: {},
-      reduceFn: () => null
+      // eslint-disable-next-line func-names
+      reduceFn: function () { }.toString()
     }, aggregation);
 
     this.query = config.query;
@@ -39,22 +40,35 @@ export default class Aggregation {
   }
 
   process(docs = []) {
-    if (docs.length > 0) {
-      const fields = Object.keys(this.key);
-      let filteredDocs = docs;
+    // eslint-disable-next-line no-new-func
+    const reduceFn = new Function(['doc', 'out'], this.reduceFn.replace(/function[\s\S]*?\([\s\S]*?\)/, ''));
+    let filteredDocs = docs;
 
-      if (this.query) {
-        filteredDocs = this.query.process(docs);
-      }
+    if (this.query) {
+      filteredDocs = this.query.process(docs);
+    }
+
+    if (filteredDocs.length > 0) {
+      const fields = Object.keys(this.key) || [];
 
       if (fields.length > 0) {
-        return fields.reduce((results, field) => {
-          results[field] = filteredDocs.reduce((result, doc) => this.reduceFn(result, doc, field) || result, Object.assign({}, this.initial));
+        return filteredDocs.reduce((results, doc) => {
+          const index = results.findIndex((result) => fields.reduce((match, field) => match && result[field] === doc[field], true));
+          if (index === -1) {
+            const result = fields.reduce((result, field) => {
+              result[field] = doc[field];
+              return result;
+            }, Object.assign({}, this.initial));
+            results.push(reduceFn(doc, result));
+          } else {
+            const result = results[index];
+            results[index] = reduceFn(doc, result);
+          }
           return results;
-        }, {});
+        }, []);
       }
 
-      return filteredDocs.reduce((result, doc) => this.reduceFn(doc, result) || result, Object.assign({}, this.initial));
+      return filteredDocs.reduce((result, doc) => reduceFn(doc, result), Object.assign({}, this.initial));
     }
 
     return Object.assign({}, this.initial);
