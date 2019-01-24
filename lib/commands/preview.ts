@@ -4,7 +4,8 @@ export class PreviewCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
 	private static MIN_SUPPORTED_WEBPACK_VERSION = "0.17.0";
 
-	constructor(private $bundleValidatorHelper: IBundleValidatorHelper,
+	constructor(private $analyticsService: IAnalyticsService,
+		private $bundleValidatorHelper: IBundleValidatorHelper,
 		private $errors: IErrors,
 		private $liveSyncService: ILiveSyncService,
 		private $logger: ILogger,
@@ -12,7 +13,9 @@ export class PreviewCommand implements ICommand {
 		private $projectData: IProjectData,
 		private $options: IOptions,
 		private $previewAppLogProvider: IPreviewAppLogProvider,
-		private $previewQrCodeService: IPreviewQrCodeService) { }
+		private $previewQrCodeService: IPreviewQrCodeService) {
+			this.$analyticsService.setShouldDispose(this.$options.justlaunch || !this.$options.watch);
+		}
 
 	public async execute(): Promise<void> {
 		this.$previewAppLogProvider.on(DEVICE_LOG_EVENT_NAME, (deviceId: string, message: string) => {
