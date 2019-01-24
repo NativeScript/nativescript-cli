@@ -34,16 +34,16 @@ export class PreviewAppLiveSyncService extends EventEmitter implements IPreviewA
 					this.$errors.failWithoutHelp("Sending initial preview files without a specified device is not supported.");
 				}
 
+				if (this.deviceInitializationPromise[device.id]) {
+					return this.deviceInitializationPromise[device.id];
+				}
+
 				if (device.uniqueId) {
 					await this.$analyticsService.trackEventActionInGoogleAnalytics({
 						action: TrackActionNames.PreviewAppData,
 						platform: device.platform,
 						additionalData: device.uniqueId
 					});
-				}
-
-				if (this.deviceInitializationPromise[device.id]) {
-					return this.deviceInitializationPromise[device.id];
 				}
 
 				this.deviceInitializationPromise[device.id] = this.getInitialFilesForDevice(data, device);
