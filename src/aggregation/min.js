@@ -8,7 +8,7 @@ import Aggregation from './aggregation';
  */
 export default function min(field = '') {
   const aggregation = new Aggregation({
-    initial: { min: Infinity },
+    initial: { min: Number.MAX_SAFE_INTEGER },
     reduceFn: ''
       + 'function(doc, out) {'
       + `  out.min = Math.min(out.min, doc["${field.replace('\'', '\\\'')}"]);`
