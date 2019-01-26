@@ -7,5 +7,4 @@ $injector.require("iosLiveSyncServiceLocator", "./appbuilder/services/livesync/i
 $injector.require("nativeScriptProjectCapabilities", "./appbuilder/project/nativescript-project-capabilities");
 $injector.require("cordovaProjectCapabilities", "./appbuilder/project/cordova-project-capabilities");
 $injector.require("mobilePlatformsCapabilities", "./appbuilder/mobile-platforms-capabilities");
-$injector.requirePublic("npmService", "./appbuilder/services/npm-service");
 $injector.require("iOSLogFilter", "./mobile/ios/ios-log-filter");

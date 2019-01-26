@@ -116,7 +116,4 @@ $injector.require("xcodeSelectService", "./services/xcode-select-service");
 $injector.require("net", "./services/net-service");
 
 $injector.require("qr", "./services/qr");
-$injector.require("printPluginsService", "./services/plugins/print-plugins-service");
-$injector.require("npmPluginsService", "./services/plugins/npm-plugins-service");
-
 $injector.require(["lockfile", "lockService"], "./services/lock-service");

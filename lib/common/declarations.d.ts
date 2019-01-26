@@ -1690,54 +1690,6 @@ interface IProcessService {
 	attachToProcessExitSignals(context: any, callback: () => void): void;
 }
 
-interface IPrintPluginsOptions {
-	count?: number;
-	showAllPlugins?: boolean;
-}
-
-interface IPrintPluginsService {
-	printPlugins(pluginsSource: IPluginsSource, options: IPrintPluginsOptions): Promise<void>;
-}
-
-interface IPluginsSource {
-	initialize(projectDir: string, keywords: string[]): Promise<void>;
-	getPlugins(page: number, count: number): Promise<IBasicPluginInformation[]>;
-	getAllPlugins(): Promise<IBasicPluginInformation[]>;
-	hasPlugins(): boolean;
-}
-
-interface IBasicPluginInformation {
-	/**
-	 * The plugin's name
-	 * @type {string}
-	 */
-	name: string;
-
-	/**
-	 * The plugin's description
-	 * @type {string}
-	 */
-	description?: string;
-
-	/**
-	 * The plugin's version in the form of Major.Minor.Patch
-	 * @type {string}
-	 */
-	version: string;
-
-	/**
-	 * Variables used by the plugin.
-	 * @type {any[]}
-	 */
-	variables?: any[];
-
-	/**
-	 * The plugin's author
-	 * @type {string}
-	 */
-	author?: string;
-}
-
 interface IDependencyInformation {
 	name: string;
 	version?: string;
