@@ -5,7 +5,7 @@ import { IOSEntitlementsService } from "../lib/services/ios-entitlements-service
 import * as yok from "../lib/common/yok";
 import * as stubs from "./stubs";
 import * as FsLib from "../lib/common/file-system";
-import * as MobilePlatformsCapabilitiesLib from "../lib/common/appbuilder/mobile-platforms-capabilities";
+import * as MobilePlatformsCapabilitiesLib from "../lib/mobile-platforms-capabilities";
 import * as MobileHelperLib from "../lib/common/mobile/mobile-helper";
 import * as DevicePlatformsConstantsLib from "../lib/common/mobile/device-platforms-constants";
 import * as ErrorsLib from "../lib/common/errors";
