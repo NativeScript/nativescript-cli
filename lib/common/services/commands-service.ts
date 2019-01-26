@@ -22,12 +22,10 @@ export class CommandsService implements ICommandsService {
 	constructor(private $analyticsSettingsService: IAnalyticsSettingsService,
 		private $commandsServiceProvider: ICommandsServiceProvider,
 		private $errors: IErrors,
-		private $fs: IFileSystem,
 		private $hooksService: IHooksService,
 		private $injector: IInjector,
 		private $logger: ILogger,
 		private $options: IOptions,
-		private $resources: IResourceLoader,
 		private $staticConfig: Config.IStaticConfig,
 		private $helpService: IHelpService,
 		private $extensibilityService: IExtensibilityService,
@@ -86,12 +84,6 @@ export class CommandsService implements ICommandsService {
 
 			if (shouldExecuteHooks) {
 				await this.$hooksService.executeAfterHooks(commandName);
-			}
-
-			const commandHelp = this.getCommandHelp();
-			if (!command.disableCommandHelpSuggestion && commandHelp && commandHelp[commandName]) {
-				const suggestionText: string = commandHelp[commandName];
-				this.$logger.printMarkdown(~suggestionText.indexOf('%s') ? require('util').format(suggestionText, commandArguments) : suggestionText);
 			}
 
 			this.commands.pop();
@@ -370,15 +362,6 @@ export class CommandsService implements ICommandsService {
 		}
 
 		return true;
-	}
-
-	private getCommandHelp(): any {
-		let commandHelp: any = null;
-		if (this.$fs.exists(this.$resources.resolvePath(this.$staticConfig.COMMAND_HELP_FILE_NAME))) {
-			commandHelp = this.$resources.readJson(this.$staticConfig.COMMAND_HELP_FILE_NAME);
-		}
-
-		return commandHelp;
 	}
 
 	private beautifyCommandName(commandName: string): string {
