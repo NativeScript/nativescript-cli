@@ -1,24 +1,3 @@
-/**
- * Describes if LiveSync is supported for specific device and application.
- */
-interface ILiveSyncSupportedInfo extends Mobile.IDeviceApplicationInformationBase {
-	/**
-	 * Result, indicating is livesync supported for specified device and specified application.
-	 * `true` in case livesync is supported and false otherwise.
-	 */
-	isLiveSyncSupported: boolean;
-}
-
-/**
- * Describes if LiveSync is supported for specific device and application.
- */
-interface IAppInstalledInfo extends ILiveSyncSupportedInfo {
-	/**
-	 * Defines if application is installed on device.
-	 */
-	isInstalled: boolean;
-}
-
 declare module Mobile {
 	interface ISyncOptions {
 		skipRefresh?: boolean;
@@ -122,7 +101,6 @@ declare module Mobile {
 		fileSystem: Mobile.IDeviceFileSystem;
 		isEmulator: boolean;
 		openDeviceLogStream(): Promise<void>;
-		getApplicationInfo(applicationIdentifier: string): Promise<Mobile.IApplicationInfo>;
 
 		/**
 		 * Called when device is lost. Its purpose is to clean any resources used by the instance.
@@ -171,7 +149,6 @@ declare module Mobile {
 		device: Mobile.IDevice;
 		getDeviceProjectRootPath(): Promise<string>;
 		deviceSyncZipPath?: string;
-		isLiveSyncSupported(): Promise<boolean>;
 	}
 
 	interface ILogcatStartOptions {
@@ -321,22 +298,9 @@ declare module Mobile {
 		stopApplication(appData: IApplicationData): Promise<void>;
 		restartApplication(appData: IStartApplicationData): Promise<void>;
 		checkForApplicationUpdates(): Promise<void>;
-		isLiveSyncSupported(appIdentifier: string): Promise<boolean>;
-		getApplicationInfo(applicationIdentifier: string): Promise<Mobile.IApplicationInfo>;
 		tryStartApplication(appData: IApplicationData): Promise<void>;
 		getDebuggableApps(): Promise<Mobile.IDeviceApplicationInformation[]>;
 		getDebuggableAppViews(appIdentifiers: string[]): Promise<IDictionary<Mobile.IDebugWebViewInfo[]>>;
-	}
-
-	/**
-	 * Describes information about livesync in an application.
-	 */
-	interface ILiveSyncApplicationInfo extends IApplicationInfo {
-		/**
-		 * Whether LiveSync is supported
-		 * @type {boolean}
-		 */
-		isLiveSyncSupported: boolean;
 	}
 
 	/**
@@ -699,13 +663,13 @@ declare module Mobile {
 		create(fileName: string, localProjectRootPath: string, onDeviceFileName: string, deviceProjectRootPath: string): Mobile.ILocalToDevicePathData;
 	}
 
+	// TODO: Remove
 	interface IPlatformCapabilities {
 		wirelessDeploy?: boolean;
 		cableDeploy: boolean;
 		companion?: boolean;
 		hostPlatformsForDeploy: string[];
 	}
-
 	interface IAvdInfo extends IDictionary<string | number> {
 		target: string;
 		targetNum: number;
@@ -1045,11 +1009,11 @@ declare module Mobile {
 		timeout?: number;
 	}
 
+	// TODO: Consider removing
 	interface IPlatformsCapabilities {
 		getPlatformNames(): string[];
 		getAllCapabilities(): IDictionary<Mobile.IPlatformCapabilities>;
 	}
-
 	interface IMobileHelper {
 		platformNames: string[];
 		isAndroidPlatform(platform: string): boolean;

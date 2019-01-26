@@ -87,7 +87,6 @@ function mockDevice(deviceHashService: Mobile.IAndroidDeviceHashService): Mobile
 		fileSystem: mockDeviceFileSystem(deviceHashService),
 		isEmulator: true,
 		openDeviceLogStream: () => Promise.resolve(),
-		getApplicationInfo: () => Promise.resolve(null),
 		init: () => Promise.resolve()
 	};
 
@@ -114,7 +113,6 @@ function createDeviceAppData(deviceHashService: Mobile.IAndroidDeviceHashService
 		getDeviceProjectRootPath: async () => `${LiveSyncPaths.ANDROID_TMP_DIR_NAME}/${LiveSyncPaths.SYNC_DIR_NAME}`,
 		appIdentifier,
 		device: mockDevice(deviceHashService),
-		isLiveSyncSupported: async () => true,
 		platform: "Android"
 	};
 }

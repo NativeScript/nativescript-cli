@@ -794,13 +794,11 @@ export class DevicesService extends EventEmitter implements Mobile.IDevicesServi
 
 	private async isApplicationInstalledOnDevice(deviceIdentifier: string, appData: Mobile.IApplicationData): Promise<IAppInstalledInfo> {
 		let isInstalled = false;
-		let isLiveSyncSupported = false;
 		const device = this.getDeviceByIdentifier(deviceIdentifier);
 
 		try {
 			isInstalled = await device.applicationManager.isApplicationInstalled(appData.appId);
 			await device.applicationManager.tryStartApplication(appData);
-			isLiveSyncSupported = await isInstalled && !!device.applicationManager.isLiveSyncSupported(appData.appId);
 		} catch (err) {
 			this.$logger.trace("Error while checking is application installed. Error is: ", err);
 		}
@@ -808,8 +806,7 @@ export class DevicesService extends EventEmitter implements Mobile.IDevicesServi
 		return {
 			appIdentifier: appData.appId,
 			deviceIdentifier,
-			isInstalled,
-			isLiveSyncSupported
+			isInstalled
 		};
 	}
 

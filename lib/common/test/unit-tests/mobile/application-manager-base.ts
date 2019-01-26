@@ -12,10 +12,6 @@ class ApplicationManager extends ApplicationManagerBase {
 		super($logger, $hooksService);
 	}
 
-	public async isLiveSyncSupported(appIdentifier: string): Promise<boolean> {
-		return true;
-	}
-
 	public async installApplication(packageFilePath: string): Promise<void> {
 		return;
 	}
@@ -34,10 +30,6 @@ class ApplicationManager extends ApplicationManagerBase {
 
 	public async getInstalledApplications(): Promise<string[]> {
 		return _.cloneDeep(currentlyInstalledApps);
-	}
-
-	public async getApplicationInfo(applicationIdentifier: string): Promise<Mobile.IApplicationInfo> {
-		return null;
 	}
 
 	public async getDebuggableApps(): Promise<Mobile.IDeviceApplicationInformation[]> {

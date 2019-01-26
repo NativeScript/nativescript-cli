@@ -109,7 +109,6 @@ const iOSSimulator = {
 		tryStartApplication: (packageName: string, framework: string) => Promise.resolve(),
 		reinstallApplication: (packageName: string, packageFile: string) => Promise.resolve(),
 		isApplicationInstalled: (packageName: string) => Promise.resolve(_.includes(["com.telerik.unitTest1", "com.telerik.unitTest2"], packageName)),
-		isLiveSyncSupported: (appIdentifier: string) => Promise.resolve(_.includes(["com.telerik.unitTest1", "com.telerik.unitTest2"], appIdentifier))
 	},
 	deploy: (packageFile: string, packageName: string) => Promise.resolve(),
 	isEmulator: true
@@ -167,7 +166,6 @@ function createTestInjector(): IInjector {
 	testInjector.register("mobileHelper", {
 		platformNames: ["ios", "android"],
 		validatePlatformName: (platform: string) => platform.toLowerCase(),
-		getPlatformCapabilities: (platform: string) => { return { cableDeploy: true }; },
 		isiOSPlatform: (platform: string) => !!(platform && platform.toLowerCase() === "ios"),
 		isAndroidPlatform: (platform: string) => !!(platform && platform.toLowerCase() === "android")
 	});
@@ -252,7 +250,6 @@ describe("devicesService", () => {
 			tryStartApplication: (appData: Mobile.IApplicationData) => Promise.resolve(),
 			reinstallApplication: (packageName: string, packageFile: string) => Promise.resolve(),
 			isApplicationInstalled: (packageName: string) => Promise.resolve(_.includes(["com.telerik.unitTest1", "com.telerik.unitTest2"], packageName)),
-			isLiveSyncSupported: (appIdentifier: string) => Promise.resolve(_.includes(["com.telerik.unitTest1", "com.telerik.unitTest2"], appIdentifier)),
 			checkForApplicationUpdates: (): Promise<void> => Promise.resolve(),
 			getDebuggableApps: (): Promise<Mobile.IDeviceApplicationInformation[]> => Promise.resolve(null),
 			getDebuggableAppViews: (appIdentifiers: string[]): Promise<IDictionary<Mobile.IDebugWebViewInfo[]>> => Promise.resolve(null)
@@ -271,7 +268,6 @@ describe("devicesService", () => {
 			tryStartApplication: (appData: Mobile.IApplicationData) => Promise.resolve(),
 			reinstallApplication: (packageName: string, packageFile: string) => Promise.resolve(),
 			isApplicationInstalled: (packageName: string) => Promise.resolve(_.includes(["com.telerik.unitTest1", "com.telerik.unitTest2", "com.telerik.unitTest3"], packageName)),
-			isLiveSyncSupported: (appIdentifier: string) => Promise.resolve(_.includes(["com.telerik.unitTest1", "com.telerik.unitTest2", "com.telerik.unitTest3"], appIdentifier)),
 			checkForApplicationUpdates: (): Promise<void> => Promise.resolve(),
 			getDebuggableApps: (): Promise<Mobile.IDeviceApplicationInformation[]> => Promise.resolve(null),
 			getDebuggableAppViews: (appIdentifiers: string[]): Promise<IDictionary<Mobile.IDebugWebViewInfo[]>> => Promise.resolve(null)
@@ -513,7 +509,6 @@ describe("devicesService", () => {
 				assert.isTrue(realResult.isInstalled);
 				assert.deepEqual(realResult.appIdentifier, appId);
 				assert.deepEqual(realResult.deviceIdentifier, deviceIdentifiers[index]);
-				assert.deepEqual(realResult.isLiveSyncSupported, true);
 			}
 		});
 
@@ -551,7 +546,6 @@ describe("devicesService", () => {
 			applicationManager: {
 				getInstalledApplications: () => Promise.resolve(["com.telerik.unitTest1", "com.telerik.unitTest2", "com.telerik.unitTest3"]),
 				isApplicationInstalled: (packageName: string) => Promise.resolve(_.includes(["com.telerik.unitTest1", "com.telerik.unitTest2", "com.telerik.unitTest3"], packageName)),
-				isLiveSyncSupported: (appIdentifier: string) => Promise.resolve(_.includes(["com.telerik.unitTest1", "com.telerik.unitTest2", "com.telerik.unitTest3"], appIdentifier))
 			}
 		};
 

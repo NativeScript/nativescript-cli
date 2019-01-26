@@ -1639,3 +1639,13 @@ declare module "detect-newline" {
 	function detectNewline(data: string): string | null;
 	export = detectNewline
 }
+
+/**
+ * Describes information for application.
+ */
+interface IAppInstalledInfo extends Mobile.IDeviceApplicationInformationBase {
+	/**
+	 * Defines if application is installed on device.
+	 */
+	isInstalled: boolean;
+}

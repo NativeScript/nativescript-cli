@@ -108,7 +108,6 @@ function createDeviceAppData(androidVersion?: string): Mobile.IDeviceAppData {
 				version: androidVersion || "8.1.2"
 			}
 		},
-		isLiveSyncSupported: async () => true,
 		platform: "Android"
 	};
 }

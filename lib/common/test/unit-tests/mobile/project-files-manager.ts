@@ -24,14 +24,12 @@ const androidDeviceAppData: Mobile.IDeviceAppData = <any>{
 	appIdentifier: testedApplicationIdentifier,
 	platform: "Android",
 	getDeviceProjectRootPath: async () => androidDeviceProjectRootPath,
-	isLiveSyncSupported: async () => true
 };
 
 const iOSDeviceAppData: Mobile.IDeviceAppData = <any>{
 	appIdentifier: testedApplicationIdentifier,
 	platform: "iOS",
 	getDeviceProjectRootPath: async () => iOSDeviceProjectRootPath,
-	isLiveSyncSupported: async () => true
 };
 
 class MobilePlatformsCapabilitiesMock implements Mobile.IPlatformsCapabilities {

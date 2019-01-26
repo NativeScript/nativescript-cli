@@ -1,6 +1,6 @@
 import { EOL } from "os";
 import { ApplicationManagerBase } from "../application-manager-base";
-import { LiveSyncConstants, TARGET_FRAMEWORK_IDENTIFIERS, LiveSyncPaths } from "../../constants";
+import {TARGET_FRAMEWORK_IDENTIFIERS, LiveSyncPaths } from "../../constants";
 import { hook, sleep, regExpEscape } from "../../helpers";
 import { cache } from "../../decorators";
 
@@ -119,16 +119,6 @@ export class AndroidApplicationManager extends ApplicationManagerBase {
 		this.$logcatHelper.stop(this.identifier);
 		this.$deviceLogProvider.setApplicationPidForDevice(this.identifier, null);
 		return this.adb.executeShellCommand(["am", "force-stop", `${appData.appId}`]);
-	}
-
-	public getApplicationInfo(applicationIdentifier: string): Promise<Mobile.IApplicationInfo> {
-		// This method is currently only used in the ios application managers. Configurations for Android are acquired through filesystem listing.
-		return Promise.resolve(null);
-	}
-
-	public async isLiveSyncSupported(appIdentifier: string): Promise<boolean> {
-		const liveSyncVersion = await this.adb.sendBroadcastToDevice(LiveSyncConstants.CHECK_LIVESYNC_INTENT_NAME, { "app-id": appIdentifier });
-		return liveSyncVersion === LiveSyncConstants.VERSION_2 || liveSyncVersion === LiveSyncConstants.VERSION_3;
 	}
 
 	public getDebuggableApps(): Promise<Mobile.IDeviceApplicationInformation[]> {
