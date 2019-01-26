@@ -85,7 +85,6 @@ $injector.requireCommand("package-manager|set", "./commands/package-manager-set"
 $injector.requireCommand("package-manager|get", "./commands/package-manager-get");
 
 $injector.require("packageInstallationManager", "./package-installation-manager");
-$injector.require("dynamicHelpProvider", "./dynamic-help-provider");
 
 $injector.require("deviceLogProvider", "./common/mobile/device-log-provider");
 $injector.require("projectFilesProvider", "./providers/project-files-provider");

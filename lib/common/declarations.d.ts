@@ -819,24 +819,6 @@ interface IHook {
 	fullPath: string;
 }
 
-interface IDynamicHelpService {
-	/**
-	 * Checks if current project's framework is one of the specified as arguments.
-	 * @param args {string[]} Frameworks to be checked.
-	 * @returns {boolean} True in case the current project's framework is one of the passed as args, false otherwise.
-	 */
-	isProjectType(...args: string[]): boolean;
-
-	isPlatform(...args: string[]): boolean;
-
-	/**
-	 * Gives an object containing all required variables that can be used in help content and their values.
-	 * @param {any} Object with one boolean property - `isHtml` - it defines if the help content is generated for html or for console help.
-	 * @returs {IDictionary<any>} Key-value pairs of variables and their values.
-	 */
-	getLocalVariables(options: { isHtml: boolean }): IDictionary<any>;
-}
-
 /**
  * Describes standard username/password type credentials.
  */
@@ -933,22 +915,6 @@ interface IQrCodeImageData {
 	 * Base64 encoded data used for generating QR code image.
 	 */
 	imageData: string;
-}
-
-interface IDynamicHelpProvider {
-	/**
-	 * Checks if current project's framework is one of the specified as arguments.
-	 * @param args {string[]} Frameworks to be checked.
-	 * @returns {boolean} True in case the current project's framework is one of the passed as args, false otherwise.
-	 */
-	isProjectType(args: string[]): boolean;
-
-	/**
-	 * Gives an object containing all required variables that can be used in help content and their values.
-	 * @param {any} Object with one boolean property - `isHtml` - it defines if the help content is generated for html or for console help.
-	 * @returs {IDictionary<any>} Key-value pairs of variables and their values.
-	 */
-	getLocalVariables(options: { isHtml: boolean }): IDictionary<any>;
 }
 
 interface IMicroTemplateService {

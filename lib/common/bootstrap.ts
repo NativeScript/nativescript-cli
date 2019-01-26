@@ -87,7 +87,6 @@ $injector.require("autoCompletionService", "./services/auto-completion-service")
 $injector.require("processService", "./services/process-service");
 $injector.requirePublic("settingsService", "./services/settings-service");
 $injector.require("opener", "./opener");
-$injector.require("dynamicHelpService", "./services/dynamic-help-service");
 $injector.require("microTemplateService", "./services/micro-templating-service");
 $injector.require("mobileHelper", "./mobile/mobile-helper");
 $injector.require("emulatorHelper", "./mobile/emulator-helper");
