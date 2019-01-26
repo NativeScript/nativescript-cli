@@ -10,19 +10,16 @@ export class ProtonLiveSyncService implements IProtonLiveSyncService {
 	constructor(private $devicesService: Mobile.IDevicesService,
 		private $fs: IFileSystem,
 		private $injector: IInjector,
-		private $project: Project.IProjectBase,
 		private $logger: ILogger) { }
 
 	@exported("liveSyncService")
 	public livesync(deviceDescriptors: IDeviceLiveSyncInfo[], projectDir: string, filePaths?: string[]): Promise<IDeviceLiveSyncResult>[] {
-		this.$project.projectDir = projectDir;
 		this.$logger.trace(`Called livesync for identifiers ${_.map(deviceDescriptors, d => d.deviceIdentifier)}. Project dir is ${projectDir}. Files are: ${filePaths}`);
 		return _.map(deviceDescriptors, deviceDescriptor => this.liveSyncOnDevice(deviceDescriptor, filePaths));
 	}
 
 	@exported("liveSyncService")
 	public deleteFiles(deviceDescriptors: IDeviceLiveSyncInfo[], projectDir: string, filePaths: string[]): Promise<IDeviceLiveSyncResult>[] {
-		this.$project.projectDir = projectDir;
 		this.$logger.trace(`Called deleteFiles for identifiers ${_.map(deviceDescriptors, d => d.deviceIdentifier)}. Project dir is ${projectDir}. Files are: ${filePaths}`);
 		return _.map(deviceDescriptors, deviceDescriptor => this.liveSyncOnDevice(deviceDescriptor, filePaths, { isForDeletedFiles: true }));
 	}
@@ -44,10 +41,10 @@ export class ProtonLiveSyncService implements IProtonLiveSyncService {
 			return result;
 		}
 
-		if (!this.$fs.exists(this.$project.projectDir)) {
+		if (!this.$fs.exists("")) {
 			result.liveSyncToApp = result.liveSyncToCompanion = {
 				isResolved: false,
-				error: new Error(`Cannot execute LiveSync operation as the project dir ${this.$project.projectDir} does not exist on the file system.`)
+				error: new Error(`Cannot execute LiveSync operation as the project dir does not exist on the file system.`)
 			};
 
 			return result;
@@ -70,8 +67,8 @@ export class ProtonLiveSyncService implements IProtonLiveSyncService {
 			livesyncData: ILiveSyncData = {
 				platform: device.deviceInfo.platform,
 				appIdentifier: appIdentifier,
-				projectFilesPath: this.$project.projectDir,
-				syncWorkingDirectory: this.$project.projectDir,
+				projectFilesPath: "",
+				syncWorkingDirectory: "",
 				excludedProjectDirsAndFiles: this.excludedProjectDirsAndFiles,
 			};
 
