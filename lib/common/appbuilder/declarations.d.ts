@@ -106,13 +106,6 @@ declare module Project {
 		 * @type {Project.IProjectInformation}
 		 */
 		projectInformation: Project.IProjectInformation;
-
-		/**
-		 * Gets the app identifier which is going to be used to build the application.
-		 * @parameter Optional parameter the platform for which the app identifier will be returned.
-		 * @return {string} the app identifier which will be used to build the application.
-		 */
-		getAppIdentifierForPlatform(platform?: string): string;
 	}
 
 	/**

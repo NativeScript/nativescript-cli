@@ -20,7 +20,6 @@ declare module Config {
 		HTML_COMMON_HELPERS_DIR: string;
 		HTML_CLI_HELPERS_DIR: string;
 		pathToPackageJson: string;
-		APP_RESOURCES_DIR_NAME: string;
 		RESOURCE_DIR_PATH: string;
 		PATH_TO_BOOTSTRAP: string;
 		QR_SIZE: number;
@@ -30,9 +29,7 @@ declare module Config {
 
 	interface IConfig {
 		DEBUG?: boolean;
-		ON_PREM?: boolean;
 		CI_LOGGER?: boolean;
-		TYPESCRIPT_COMPILER_OPTIONS?: ITypeScriptCompilerOptions;
 		DISABLE_HOOKS: boolean;
 	}
 }

@@ -66,7 +66,7 @@ export class ProtonLiveSyncService implements IProtonLiveSyncService {
 			}
 		}
 
-		const appIdentifier = await this.$project.getAppIdentifierForPlatform(this.$devicesService.platform),
+		const appIdentifier = "",
 			canExecute = (d: Mobile.IDevice) => d.deviceInfo.identifier === device.deviceInfo.identifier,
 			livesyncData: ILiveSyncData = {
 				platform: device.deviceInfo.platform,

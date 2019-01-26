@@ -1,7 +1,6 @@
 require("./appbuilder-bootstrap");
 $injector.require("messages", "./messages/messages");
 
-$injector.require("staticConfig", "./appbuilder/proton-static-config");
 $injector.register("config", {});
 // Proton will track the features and exceptions, so no need of analyticsService here.
 $injector.register("analyiticsService", {});

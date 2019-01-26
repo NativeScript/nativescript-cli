@@ -1,13 +1,10 @@
 import { EOL } from "os";
 import * as path from "path";
 import { TARGET_FRAMEWORK_IDENTIFIERS } from "../../constants";
-import { cache } from "../../decorators";
 
 export abstract class ProjectBase implements Project.IProjectBase {
 	private static VALID_CONFIGURATION_CHARACTERS_REGEX = "[-_A-Za-z0-9]";
 	private static CONFIGURATION_FROM_FILE_NAME_REGEX = new RegExp(`^[.](${ProjectBase.VALID_CONFIGURATION_CHARACTERS_REGEX}+?)[.]abproject$`, "i");
-	private static ANDROID_MANIFEST_NAME = "AndroidManifest.xml";
-	private static APP_IDENTIFIER_PLACEHOLDER = "$AppIdentifier$";
 
 	public configurationSpecificData: IDictionary<Project.IData>;
 
@@ -76,26 +73,6 @@ export abstract class ProjectBase implements Project.IProjectBase {
 		};
 	}
 
-	@cache()
-	public getAppIdentifierForPlatform(platform?: string): string {
-		let platformSpecificAppIdentifier = this.projectData.AppIdentifier;
-
-		if (platform &&
-			platform.toLowerCase() === this.$projectConstants.ANDROID_PLATFORM_NAME.toLowerCase() &&
-			this.projectData.Framework === TARGET_FRAMEWORK_IDENTIFIERS.Cordova) {
-			const pathToAndroidResources = path.join(this.projectDir, this.$staticConfig.APP_RESOURCES_DIR_NAME, this.$projectConstants.ANDROID_PLATFORM_NAME);
-
-			const pathToAndroidManifest = path.join(pathToAndroidResources, ProjectBase.ANDROID_MANIFEST_NAME);
-			const appIdentifierInAndroidManifest = this.getAppIdentifierFromConfigFile(pathToAndroidManifest, /package\s*=\s*"(\S*)"/);
-
-			if (appIdentifierInAndroidManifest && appIdentifierInAndroidManifest !== ProjectBase.APP_IDENTIFIER_PLACEHOLDER) {
-				platformSpecificAppIdentifier = appIdentifierInAndroidManifest;
-			}
-		}
-
-		return platformSpecificAppIdentifier;
-	}
-
 	protected abstract validate(): void;
 	protected abstract saveProjectIfNeeded(): void;
 
@@ -151,19 +128,5 @@ export abstract class ProjectBase implements Project.IProjectBase {
 		}
 
 		return data;
-	}
-
-	private getAppIdentifierFromConfigFile(pathToConfigFile: string, regExp: RegExp): string {
-		if (this.$fs.exists(pathToConfigFile)) {
-			const fileContent = this.$fs.readText(pathToConfigFile);
-
-			const matches = fileContent.match(regExp);
-
-			if (matches && matches[1]) {
-				return matches[1];
-			}
-		}
-
-		return null;
 	}
 }

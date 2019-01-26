@@ -1404,13 +1404,6 @@ interface IResourceLoader {
 	 * @return {any}      Object based on the JSON contents of the resource file.
 	 */
 	readJson(path: string): any;
-
-	/**
-	 * Returns the path to App_Resources folder, which contains all resources for a given application.
-	 * @param  {string} framework The application's framework name
-	 * @return {string}           The absolute path to App_Resources folder
-	 */
-	getPathToAppResources(framework: string): string;
 }
 
 interface IPluginVariablesHelper {
