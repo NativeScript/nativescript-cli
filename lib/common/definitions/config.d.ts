@@ -23,7 +23,6 @@ declare module Config {
 		RESOURCE_DIR_PATH: string;
 		PATH_TO_BOOTSTRAP: string;
 		QR_SIZE: number;
-		INSTALLATION_SUCCESS_MESSAGE?: string;
 		PROFILE_DIR_NAME: string
 	}
 

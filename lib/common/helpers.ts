@@ -8,6 +8,62 @@ import * as crypto from "crypto";
 
 const Table = require("cli-table");
 
+export function doesCurrentNpmCommandMatch(patterns?: RegExp[]): boolean {
+	const currentNpmCommandArgv = getCurrentNpmCommandArgv();
+	let result = false;
+
+	if (currentNpmCommandArgv.length) {
+		result = someWithRegExps(currentNpmCommandArgv, patterns);
+	}
+
+	return result;
+}
+
+/**
+ * Equivalent of lodash's some, but instead of lambda, just pass array of Regular Expressions.
+ * If any of them matches any of the given elements, true is returned.
+ * @param {string[]} array Elements to be checked.
+ * @param {RegExp[]} patterns Regular expressions to be tested
+ * @returns {boolean} True in case any element of the array matches any of the patterns. False otherwise.
+ */
+export function someWithRegExps(array: string[], patterns: RegExp[]): boolean {
+	return _.some(array, item => _.some(patterns, pattern => !!item.match(pattern)));
+}
+
+export function getCurrentNpmCommandArgv(): string[] {
+	let result = [];
+	if (process.env && process.env.npm_config_argv) {
+		try {
+			const npmConfigArgv = JSON.parse(process.env.npm_config_argv);
+			result = npmConfigArgv.original || [];
+		} catch (error) {
+			// ignore
+		}
+	}
+
+	return result;
+}
+
+export function isInstallingNativeScriptGlobally(): boolean {
+	return isInstallingNativeScriptGloballyWithNpm() || isInstallingNativeScriptGloballyWithYarn();
+}
+
+function isInstallingNativeScriptGloballyWithNpm(): boolean {
+	const isInstallCommand = doesCurrentNpmCommandMatch([/^install$/, /^i$/]);
+	const isGlobalCommand = doesCurrentNpmCommandMatch([/^--global$/, /^-g$/]);
+	const hasNativeScriptPackage = doesCurrentNpmCommandMatch([/^nativescript(@.*)?$/]);
+
+	return isInstallCommand && isGlobalCommand && hasNativeScriptPackage;
+}
+
+function isInstallingNativeScriptGloballyWithYarn(): boolean {
+	// yarn populates the same env used by npm - npm_config_argv, so check it for yarn specific command
+	const isInstallCommand = doesCurrentNpmCommandMatch([/^add$/]);
+	const isGlobalCommand = doesCurrentNpmCommandMatch([/^global$/]);
+	const hasNativeScriptPackage = doesCurrentNpmCommandMatch([/^nativescript(@.*)?$/]);
+
+	return isInstallCommand && isGlobalCommand && hasNativeScriptPackage;
+}
 /**
  * Creates regular expression from input string.
  * The method replaces all occurences of RegExp special symbols in the input string with \<symbol>.

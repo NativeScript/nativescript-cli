@@ -9,6 +9,14 @@ interface ITestData {
 }
 
 describe("helpers", () => {
+	let originalProcessEnvNpmConfig: any = null;
+	beforeEach(() => {
+		originalProcessEnvNpmConfig = process.env.npm_config_argv;
+	});
+
+	afterEach(() => {
+		process.env.npm_config_argv = originalProcessEnvNpmConfig;
+	});
 
 	const assertTestData = (testData: ITestData, method: Function) => {
 		const actualResult = method(testData.input);
@@ -696,6 +704,124 @@ describe("helpers", () => {
 		it("returns correct result", () => {
 			_.each(testData, testCase => {
 				assert.deepEqual(helpers.isNumberWithoutExponent(testCase.input), testCase.expectedResult);
+			});
+		});
+	});
+
+	const setNpmConfigArgv = (original: string[]): void => {
+		process.env.npm_config_argv = JSON.stringify({ original });
+	};
+
+	describe("doesCurrentNpmCommandMatch", () => {
+		describe("when searching for global flag (--global or -g)", () => {
+			[
+				{
+					name: "returns true when `--global` is passed on terminal",
+					input: ["install", "--global", "nativescript"],
+					expectedOutput: true
+				},
+				{
+					name: "returns true when `-g` is passed on terminal",
+					input: ["install", "-g", "nativescript"],
+					expectedOutput: true
+				},
+				{
+					name: "returns false neither -g/--global are passed on terminal",
+					input: ["install", "nativescript"],
+					expectedOutput: false
+				},
+				{
+					name: "returns false when neither -g/--global are passed on terminal, but similar flag is passed",
+					input: ["install", "nativescript", "--globalEnv"],
+					expectedOutput: false
+				},
+				{
+					name: "returns false when neither -g/--global are passed on terminal, but trying to install global package",
+					input: ["install", "global"],
+					expectedOutput: false
+				}
+			].forEach(testCase => {
+				it(testCase.name, () => {
+					setNpmConfigArgv(testCase.input);
+					const result = helpers.doesCurrentNpmCommandMatch([/^--global$/, /^-g$/]);
+					assert.equal(result, testCase.expectedOutput);
+				});
+			});
+		});
+	});
+
+	describe("isInstallingNativeScriptGlobally", () => {
+		const installationFlags = ["install", "i"];
+		const globalFlags = ["--global", "-g"];
+		const validNativeScriptPackageNames = ["nativescript", "nativescript@1.0.1", "nativescript@next"];
+
+		it("returns true when installing nativescript globally with npm", () => {
+			validNativeScriptPackageNames.forEach(nativescript => {
+				installationFlags.forEach(install => {
+					globalFlags.forEach(globalFlag => {
+						const npmArgs = [install, nativescript, globalFlag];
+						setNpmConfigArgv(npmArgs);
+						const result = helpers.isInstallingNativeScriptGlobally();
+						assert.isTrue(result);
+					});
+				});
+			});
+		});
+
+		it("returns true when installing nativescript globally with yarn", () => {
+			validNativeScriptPackageNames.forEach(nativescript => {
+				const npmArgs = ["global", "add", nativescript];
+				setNpmConfigArgv(npmArgs);
+				const result = helpers.isInstallingNativeScriptGlobally();
+				assert.isTrue(result);
+			});
+		});
+
+		const invalidInstallationFlags = ["installpackage", "is"];
+		const invalidGlobalFlags = ["--globalEnv", ""];
+		const invalidNativeScriptPackageNames = ["nativescript", "nativescript-facebook", "nativescript-facebook@1.0.1", "kinvey-nativescript-plugin"];
+
+		it(`returns false when command does not install nativescript globally`, () => {
+			invalidInstallationFlags.forEach(nativescript => {
+				invalidGlobalFlags.forEach(install => {
+					invalidNativeScriptPackageNames.forEach(globalFlag => {
+						const npmArgs = [install, nativescript, globalFlag];
+						setNpmConfigArgv(npmArgs);
+						const result = helpers.isInstallingNativeScriptGlobally();
+						assert.isFalse(result);
+					});
+				});
+			});
+		});
+	});
+
+	describe("getCurrentNpmCommandArgv", () => {
+		it("returns the value of process.env.npm_config_argv.original", () => {
+			const command = ["install", "nativescript"];
+			process.env.npm_config_argv = JSON.stringify({ someOtherProp: 1, original: command });
+			const actualCommand = helpers.getCurrentNpmCommandArgv();
+			assert.deepEqual(actualCommand, command);
+		});
+
+		describe("returns empty array", () => {
+			const assertResultIsEmptyArray = () => {
+				const actualCommand = helpers.getCurrentNpmCommandArgv();
+				assert.deepEqual(actualCommand, []);
+			};
+
+			it("when npm_config_argv is not populated", () => {
+				delete process.env.npm_config_argv;
+				assertResultIsEmptyArray();
+			});
+
+			it("when npm_config_argv is not a valid json", () => {
+				process.env.npm_config_argv = "invalid datas";
+				assertResultIsEmptyArray();
+			});
+
+			it("when npm_config_argv.original is null", () => {
+				process.env.npm_config_argv = JSON.stringify({ original: null });
+				assertResultIsEmptyArray();
 			});
 		});
 	});
