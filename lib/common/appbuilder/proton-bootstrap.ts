@@ -4,8 +4,6 @@ $injector.require("messages", "./messages/messages");
 $injector.register("config", {});
 // Proton will track the features and exceptions, so no need of analyticsService here.
 $injector.register("analyiticsService", {});
-$injector.requirePublicClass("deviceEmitter", "./appbuilder/device-emitter");
-$injector.requirePublicClass("deviceLogProvider", "./appbuilder/device-log-provider");
 import { installUncaughtExceptionListener } from "../errors";
 installUncaughtExceptionListener();
 

@@ -1,6 +1,6 @@
 import { Yok } from "../../../yok";
 import * as assert from "assert";
-import { DeviceLogProvider } from "../../../appbuilder/device-log-provider";
+import { DeviceLogEmitter } from "../../../mobile/device-log-emitter";
 import { CommonLoggerStub } from "../stubs";
 import { LoggingLevels } from "../../../mobile/logging-levels";
 
@@ -31,7 +31,7 @@ describe("proton deviceLogProvider", () => {
 		describe("when device identifier is not specified", () => {
 			it("logs INFO messages when logging level is default", () => {
 				testInjector = createTestInjector(infoLogLevel);
-				deviceLogProvider = testInjector.resolve(DeviceLogProvider);
+				deviceLogProvider = testInjector.resolve(DeviceLogEmitter);
 				let emittedData: string = 'some default value that should be changed';
 				deviceLogProvider.on("data", (deviceIdentifier: string, data: string) => {
 					emittedData = data;
@@ -42,7 +42,7 @@ describe("proton deviceLogProvider", () => {
 
 			it("does not emit data when whole data is filtered", () => {
 				testInjector = createTestInjector(infoLogLevel, true);
-				deviceLogProvider = testInjector.resolve(DeviceLogProvider);
+				deviceLogProvider = testInjector.resolve(DeviceLogEmitter);
 				let emittedData: string = 'some default value that should NOT be changed';
 				deviceLogProvider.on("data", (deviceIdentifier: string, data: string) => {
 					emittedData = data;
@@ -55,7 +55,7 @@ describe("proton deviceLogProvider", () => {
 		describe("when device identifier is specified", () => {
 			it("logs INFO messages when logging level is INFO", () => {
 				testInjector = createTestInjector(infoLogLevel);
-				deviceLogProvider = testInjector.resolve(DeviceLogProvider);
+				deviceLogProvider = testInjector.resolve(DeviceLogEmitter);
 				let emittedData: string = 'some default value that should be changed';
 				let expectedDeviceIdentifier: string = null;
 				deviceLogProvider.on("data", (deviceIdentifier: string, data: string) => {
@@ -69,7 +69,7 @@ describe("proton deviceLogProvider", () => {
 
 			it("does not emit data when whole data is filtered", () => {
 				testInjector = createTestInjector(infoLogLevel, true);
-				deviceLogProvider = testInjector.resolve(DeviceLogProvider);
+				deviceLogProvider = testInjector.resolve(DeviceLogEmitter);
 				let emittedData: string = 'some default value that should NOT be changed';
 				let expectedDeviceIdentifier: string = null;
 				deviceLogProvider.on("data", (deviceIdentifier: string, data: string) => {
@@ -86,7 +86,7 @@ describe("proton deviceLogProvider", () => {
 	describe("setLogLevel", () => {
 		it("changes logFilter's loggingLevel when device identifier is not specified", () => {
 			testInjector = createTestInjector(infoLogLevel);
-			deviceLogProvider = testInjector.resolve(DeviceLogProvider);
+			deviceLogProvider = testInjector.resolve(DeviceLogEmitter);
 			deviceLogProvider.setLogLevel(fullLogLevel);
 			const logFilter = testInjector.resolve("logFilter");
 			assert.deepEqual(logFilter.loggingLevel, fullLogLevel);
@@ -94,7 +94,7 @@ describe("proton deviceLogProvider", () => {
 
 		it("does not change logFilter's loggingLevel when device identifier is specified", () => {
 			testInjector = createTestInjector(infoLogLevel);
-			deviceLogProvider = testInjector.resolve(DeviceLogProvider);
+			deviceLogProvider = testInjector.resolve(DeviceLogEmitter);
 			deviceLogProvider.setLogLevel(fullLogLevel, "deviceID");
 			const logFilter = testInjector.resolve("logFilter");
 			assert.deepEqual(logFilter.loggingLevel, infoLogLevel);
@@ -104,7 +104,7 @@ describe("proton deviceLogProvider", () => {
 	describe("keeps correct log level for each device", () => {
 		beforeEach(() => {
 			testInjector = createTestInjector(infoLogLevel);
-			deviceLogProvider = testInjector.resolve(DeviceLogProvider);
+			deviceLogProvider = testInjector.resolve(DeviceLogEmitter);
 		});
 
 		it("emits full log level for specific deviceIdentifier and info for the rest of the devices", () => {

@@ -11,8 +11,7 @@ export class ProtonLiveSyncService implements IProtonLiveSyncService {
 		private $fs: IFileSystem,
 		private $injector: IInjector,
 		private $project: Project.IProjectBase,
-		private $logger: ILogger,
-		private $companionAppsService: ICompanionAppsService) { }
+		private $logger: ILogger) { }
 
 	@exported("liveSyncService")
 	public livesync(deviceDescriptors: IDeviceLiveSyncInfo[], projectDir: string, filePaths?: string[]): Promise<IDeviceLiveSyncResult>[] {
@@ -79,11 +78,11 @@ export class ProtonLiveSyncService implements IProtonLiveSyncService {
 		const canExecuteAction = await this.$liveSyncServiceBase.getCanExecuteAction(device.deviceInfo.platform, appIdentifier, canExecute);
 
 		if (deviceDescriptor.syncToApp) {
-			result.liveSyncToApp = await this.liveSyncCore(livesyncData, device, appIdentifier, canExecuteAction, { isForCompanionApp: false, isForDeletedFiles: isForDeletedFiles }, filePaths);
+			result.liveSyncToApp = await this.liveSyncCore(livesyncData, device, appIdentifier, canExecuteAction, { isForDeletedFiles: isForDeletedFiles }, filePaths);
 		}
 
 		if (deviceDescriptor.syncToCompanion) {
-			result.liveSyncToCompanion = await this.liveSyncCore(livesyncData, device, appIdentifier, canExecuteAction, { isForCompanionApp: true, isForDeletedFiles: isForDeletedFiles }, filePaths);
+			result.liveSyncToCompanion = await this.liveSyncCore(livesyncData, device, appIdentifier, canExecuteAction, { isForDeletedFiles: isForDeletedFiles }, filePaths);
 		}
 
 		return result;
@@ -93,11 +92,6 @@ export class ProtonLiveSyncService implements IProtonLiveSyncService {
 		const liveSyncOperationResult: ILiveSyncOperationResult = {
 			isResolved: false
 		};
-
-		if (liveSyncOptions.isForCompanionApp) {
-			// We should check if the companion app is installed, not the real application.
-			livesyncData.appIdentifier = appIdentifier = this.$companionAppsService.getCompanionAppIdentifier(this.$project.projectData.Framework, device.deviceInfo.platform);
-		}
 
 		if (await device.applicationManager.isApplicationInstalled(appIdentifier)) {
 

@@ -1089,11 +1089,6 @@ interface ILiveSyncDeletionOptions {
  * Describes additional options for LiveSyncing
  */
 interface ILiveSyncOptions extends IProjectFilesConfig, ILiveSyncDeletionOptions {
-	/**
-	 * Defines if the LiveSync operation is for Companion app.
-	 * @type {boolean}
-	 */
-	isForCompanionApp: boolean
 }
 
 interface ISyncBatch {

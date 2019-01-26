@@ -160,7 +160,6 @@ function createTestInjector(): IInjector {
 	testInjector.register("iOSEmulatorServices", IOSEmulatorServices);
 	testInjector.register("messages", Messages);
 	testInjector.register("prompter", {});
-	testInjector.register("companionAppsService", {});
 	testInjector.register("processService", {
 		attachToProcessExitSignals: (context: any, callback: () => Promise<any>) => { /* no implementation required */ }
 	});
@@ -190,10 +189,6 @@ function createTestInjector(): IInjector {
 	testInjector.register("emulatorHelper", {});
 
 	return testInjector;
-}
-
-function mockIsAppInstalled(devices: { applicationManager: { isApplicationInstalled(packageName: string): Promise<boolean> } }[], expectedResult: boolean[]): void {
-	_.each(devices, (device, index) => device.applicationManager.isApplicationInstalled = (packageName: string) => Promise.resolve(expectedResult[index]));
 }
 
 async function throwErrorFunction(): Promise<void> {
@@ -1225,59 +1220,6 @@ describe("devicesService", () => {
 			androidDeviceDiscovery.emit(DeviceDiscoveryEventNames.DEVICE_FOUND, androidDevice);
 			await devicesService.initialize({ deviceId: "1", platform: "android" });
 			assert.deepEqual(devicesService.getDeviceByDeviceOption(), androidDevice);
-		});
-	});
-
-	describe("isCompanionAppInstalledOnAllDevices", () => {
-		let $companionAppsService: ICompanionAppsService;
-		const deviceIdentifiers = [iOSDevice.deviceInfo.identifier, androidDevice.deviceInfo.identifier];
-
-		beforeEach(() => {
-			$companionAppsService = testInjector.resolve("companionAppsService");
-			$companionAppsService.getCompanionAppIdentifier = (framework: string, platform: string): string => "companion-app";
-
-			devicesService.getDeviceByIdentifier = (identifier: string) => {
-				return <any>(identifier === androidDevice.deviceInfo.identifier ? androidDevice : iOSDevice);
-			};
-		});
-
-		it("should return correct result for all of the devices passed as argument.", async () => {
-			const expectedResult = [true, true];
-			mockIsAppInstalled([iOSDevice, androidDevice], expectedResult);
-			const isAppInstalledOnDevices = await Promise.all(devicesService.isCompanionAppInstalledOnDevices(deviceIdentifiers, constants.TARGET_FRAMEWORK_IDENTIFIERS.Cordova));
-			const result = _.map(isAppInstalledOnDevices, (appInstalledInfo: IAppInstalledInfo) => appInstalledInfo.isInstalled);
-
-			assert.deepEqual(result.length, deviceIdentifiers.length);
-		});
-
-		it("should return correct result when all of the devices have the companion app installed.", async () => {
-			const expectedResult = [true, true];
-			mockIsAppInstalled([iOSDevice, androidDevice], expectedResult);
-
-			const isAppInstalledOnDevices = await Promise.all(devicesService.isCompanionAppInstalledOnDevices(deviceIdentifiers, constants.TARGET_FRAMEWORK_IDENTIFIERS.Cordova));
-			const result = _.map(isAppInstalledOnDevices, (appInstalledInfo: IAppInstalledInfo) => appInstalledInfo.isInstalled);
-
-			assert.deepEqual(result, expectedResult);
-		});
-
-		it("should return correct result when some of the devices have the companion app installed.", async () => {
-			const expectedResult = [true, false];
-			mockIsAppInstalled([iOSDevice, androidDevice], expectedResult);
-
-			const isAppInstalledOnDevices = await Promise.all(devicesService.isCompanionAppInstalledOnDevices(deviceIdentifiers, constants.TARGET_FRAMEWORK_IDENTIFIERS.Cordova));
-			const result = _.map(isAppInstalledOnDevices, (appInstalledInfo: IAppInstalledInfo) => appInstalledInfo.isInstalled);
-
-			assert.deepEqual(result, expectedResult);
-		});
-
-		it("should return correct result when none of the devices have the companion app installed.", async () => {
-			const expectedResult = [false, false];
-			mockIsAppInstalled([iOSDevice, androidDevice], expectedResult);
-
-			const isAppInstalledOnDevices = await Promise.all(devicesService.isCompanionAppInstalledOnDevices(deviceIdentifiers, constants.TARGET_FRAMEWORK_IDENTIFIERS.Cordova));
-			const result = _.map(isAppInstalledOnDevices, (appInstalledInfo: IAppInstalledInfo) => appInstalledInfo.isInstalled);
-
-			assert.deepEqual(result, expectedResult);
 		});
 	});
 

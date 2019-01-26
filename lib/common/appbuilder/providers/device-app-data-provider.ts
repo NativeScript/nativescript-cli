@@ -1,8 +1,7 @@
 import * as path from "path";
 import * as util from "util";
 import { AppBuilderDeviceAppDataBase } from "../mobile/appbuilder-device-app-data-base";
-import { AppBuilderCompanionDeviceAppDataBase } from "../mobile/appbuilder-companion-device-app-data-base";
-import { LiveSyncConstants, TARGET_FRAMEWORK_IDENTIFIERS } from "../../constants";
+import { LiveSyncConstants } from "../../constants";
 import { cache } from "../../decorators";
 
 export class AndroidAppIdentifier extends AppBuilderDeviceAppDataBase implements ILiveSyncDeviceAppData {
@@ -42,50 +41,6 @@ export class AndroidAppIdentifier extends AppBuilderDeviceAppDataBase implements
 	@cache()
 	private async getLiveSyncVersion(): Promise<number> {
 		return await (<Mobile.IAndroidDevice>this.device).adb.sendBroadcastToDevice(LiveSyncConstants.CHECK_LIVESYNC_INTENT_NAME, { "app-id": this.appIdentifier });
-	}
-}
-
-export class AndroidCompanionAppIdentifier extends AppBuilderCompanionDeviceAppDataBase implements ILiveSyncDeviceAppData {
-	constructor(device: Mobile.IDevice,
-		platform: string,
-		$deployHelper: IDeployHelper,
-		$devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-		$companionAppsService: ICompanionAppsService) {
-		super($companionAppsService.getCompanionAppIdentifier(TARGET_FRAMEWORK_IDENTIFIERS.Cordova, platform), device, platform, $deployHelper);
-	}
-
-	public async getDeviceProjectRootPath(): Promise<string> {
-		return this._getDeviceProjectRootPath(util.format(LiveSyncConstants.DEVICE_TMP_DIR_FORMAT_V3, this.appIdentifier));
-	}
-
-	public get liveSyncFormat(): string {
-		return "icenium://%s?token=%s&appId=%s&configuration=%s";
-	}
-
-	protected getCompanionAppName(): string {
-		return "companion app";
-	}
-}
-
-export class AndroidNativeScriptCompanionAppIdentifier extends AppBuilderCompanionDeviceAppDataBase implements ILiveSyncDeviceAppData {
-	constructor(device: Mobile.IDevice,
-		platform: string,
-		$deployHelper: IDeployHelper,
-		$devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-		$companionAppsService: ICompanionAppsService) {
-		super($companionAppsService.getCompanionAppIdentifier(TARGET_FRAMEWORK_IDENTIFIERS.NativeScript, platform), device, platform, $deployHelper);
-	}
-
-	public async getDeviceProjectRootPath(): Promise<string> {
-		return util.format(LiveSyncConstants.DEVICE_TMP_DIR_FORMAT_V3, this.appIdentifier);
-	}
-
-	public get liveSyncFormat(): string {
-		return "nativescript://%s?token=%s&appId=%s&configuration=%s";
-	}
-
-	protected getCompanionAppName(): string {
-		return "NativeScript companion app";
 	}
 }
 
@@ -135,84 +90,6 @@ export class IOSNativeScriptAppIdentifier extends AppBuilderDeviceAppDataBase im
 	}
 }
 
-export class IOSCompanionAppIdentifier extends AppBuilderCompanionDeviceAppDataBase implements ILiveSyncDeviceAppData {
-	constructor(device: Mobile.IDevice,
-		platform: string,
-		$deployHelper: IDeployHelper,
-		$devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-		$companionAppsService: ICompanionAppsService) {
-		super($companionAppsService.getCompanionAppIdentifier(TARGET_FRAMEWORK_IDENTIFIERS.Cordova, platform), device, platform, $deployHelper);
-	}
-
-	public async getDeviceProjectRootPath(): Promise<string> {
-		return LiveSyncConstants.IOS_PROJECT_PATH;
-	}
-
-	public get liveSyncFormat(): string {
-		return "icenium://%s?LiveSyncToken=%s&appId=%s&configuration=%s";
-	}
-
-	protected getCompanionAppName(): string {
-		return "companion app";
-	}
-}
-
-export class IOSNativeScriptCompanionAppIdentifier extends AppBuilderCompanionDeviceAppDataBase implements ILiveSyncDeviceAppData {
-	constructor(device: Mobile.IDevice,
-		platform: string,
-		$deployHelper: IDeployHelper,
-		$devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-		$companionAppsService: ICompanionAppsService) {
-		super($companionAppsService.getCompanionAppIdentifier(TARGET_FRAMEWORK_IDENTIFIERS.NativeScript, platform), device, platform, $deployHelper);
-	}
-
-	public async getDeviceProjectRootPath(): Promise<string> {
-		return LiveSyncConstants.IOS_PROJECT_PATH;
-	}
-
-	public get liveSyncFormat(): string {
-		return "nativescript://%s?LiveSyncToken=%s&appId=%s&configuration=%s";
-	}
-
-	protected getCompanionAppName(): string {
-		return "NativeScript companion app";
-	}
-}
-
-export class WP8CompanionAppIdentifier extends AppBuilderCompanionDeviceAppDataBase implements ILiveSyncDeviceAppData {
-	constructor(device: Mobile.IDevice,
-		$deployHelper: IDeployHelper,
-		$devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-		public platform: string,
-		$companionAppsService: ICompanionAppsService) {
-		super($companionAppsService.getCompanionAppIdentifier(TARGET_FRAMEWORK_IDENTIFIERS.Cordova, platform), device, platform, $deployHelper);
-	}
-
-	public async getDeviceProjectRootPath(): Promise<string> {
-		return ""; // this is used only on Android for Lollipop
-	}
-
-	public get liveSyncFormat(): string {
-		return "%s/Mist/MobilePackage/redirect?token=%s&appId=%s&configuration=%s";
-	}
-
-	public encodeLiveSyncHostUri(hostUri: string): string {
-		return hostUri;
-	}
-
-	public async isLiveSyncSupported(): Promise<boolean> {
-		return true;
-	}
-
-	public getLiveSyncNotSupportedError(): string {
-		return "";
-	}
-
-	protected getCompanionAppName(): string {
-		return "companion app";
-	}
-}
-
 export class DeviceAppDataProvider implements Mobile.IDeviceAppDataProvider {
 	constructor(private $project: any) { }
 
@@ -220,26 +97,18 @@ export class DeviceAppDataProvider implements Mobile.IDeviceAppDataProvider {
 		const rules: IDictionary<IDictionary<Mobile.IDeviceAppDataFactoryRule>> = {
 			Cordova: {
 				Android: {
-					vanilla: AndroidAppIdentifier,
-					companion: AndroidCompanionAppIdentifier
+					vanilla: AndroidAppIdentifier
 				},
 				iOS: {
-					vanilla: IOSAppIdentifier,
-					companion: IOSCompanionAppIdentifier
-				},
-				WP8: {
-					vanilla: "",
-					companion: WP8CompanionAppIdentifier
+					vanilla: IOSAppIdentifier
 				}
 			},
 			NativeScript: {
 				Android: {
-					vanilla: AndroidAppIdentifier,
-					companion: AndroidNativeScriptCompanionAppIdentifier
+					vanilla: AndroidAppIdentifier
 				},
 				iOS: {
-					vanilla: IOSNativeScriptAppIdentifier,
-					companion: IOSNativeScriptCompanionAppIdentifier
+					vanilla: IOSNativeScriptAppIdentifier
 				}
 			}
 		};

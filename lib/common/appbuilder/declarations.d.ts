@@ -232,26 +232,6 @@ interface IAppInstalledInfo extends ILiveSyncSupportedInfo {
 }
 
 /**
- * Describes information about Telerik Companion Apps.
- */
-interface ICompanionAppsService {
-	/**
-	 * Returns application identifier of the companion app for specified platform and framework.
-	 * @param {string} framework The framework for which Companion app identfier should be checked. Valid values are cordova and nativescript
-	 * @param {string} platform The device platform. Valid values are android, ios and wp8.
-	 * @return {string} Companion appIdentifier or null.
-	 */
-	getCompanionAppIdentifier(framework: string, platform: string): string;
-
-	/**
-	 * Returns all companion application identifiers in a dictionary where the top level keys are framwork identifiers.
-	 * For each framework there are three values, specified in a dictionary. The keys of the dictionary are platforms (android, ios and wp8).
-	 * @return {IDictionary<IStringDictionary>} Companion appIdentifiers separated in different properties of object.
-	 */
-	getAllCompanionAppIdentifiers(): IDictionary<IStringDictionary>;
-}
-
-/**
  * Describes information for single npm dependency that has to be installed.
  */
 interface INpmDependency {

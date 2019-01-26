@@ -25,10 +25,6 @@ export class DevicesService extends EventEmitter implements Mobile.IDevicesServi
 	private deviceDetectionInterval: any;
 	private isDeviceDetectionIntervalInProgress: boolean;
 
-	private get $companionAppsService(): ICompanionAppsService {
-		return this.$injector.resolve("companionAppsService");
-	}
-
 	constructor(private $logger: ILogger,
 		private $errors: IErrors,
 		private $iOSSimulatorDiscovery: Mobile.IiOSSimulatorDiscovery,
@@ -199,12 +195,6 @@ export class DevicesService extends EventEmitter implements Mobile.IDevicesServi
 	public isAppInstalledOnDevices(deviceIdentifiers: string[], appId: string, projectName: string): Promise<IAppInstalledInfo>[] {
 		this.$logger.trace(`Called isInstalledOnDevices for identifiers ${deviceIdentifiers}. AppIdentifier is ${appId}.`);
 		return _.map(deviceIdentifiers, deviceIdentifier => this.isApplicationInstalledOnDevice(deviceIdentifier, { appId, projectName }));
-	}
-
-	@exported("devicesService")
-	public isCompanionAppInstalledOnDevices(deviceIdentifiers: string[], framework: string): Promise<IAppInstalledInfo>[] {
-		this.$logger.trace(`Called isCompanionAppInstalledOnDevices for identifiers ${deviceIdentifiers}. Framework is ${framework}.`);
-		return _.map(deviceIdentifiers, deviceIdentifier => this.isCompanionAppInstalledOnDevice(deviceIdentifier, framework));
 	}
 
 	public getDeviceInstances(): Mobile.IDevice[] {
@@ -817,26 +807,6 @@ export class DevicesService extends EventEmitter implements Mobile.IDevicesServi
 
 		return {
 			appIdentifier: appData.appId,
-			deviceIdentifier,
-			isInstalled,
-			isLiveSyncSupported
-		};
-	}
-
-	private async isCompanionAppInstalledOnDevice(deviceIdentifier: string, framework: string): Promise<IAppInstalledInfo> {
-		let isInstalled = false;
-		let isLiveSyncSupported = false;
-		const device = this.getDeviceByIdentifier(deviceIdentifier);
-		const appIdentifier = this.$companionAppsService.getCompanionAppIdentifier(framework, device.deviceInfo.platform);
-
-		try {
-			isLiveSyncSupported = isInstalled = await device.applicationManager.isApplicationInstalled(appIdentifier);
-		} catch (err) {
-			this.$logger.trace("Error while checking is application installed. Error is: ", err);
-		}
-
-		return {
-			appIdentifier,
 			deviceIdentifier,
 			isInstalled,
 			isLiveSyncSupported
