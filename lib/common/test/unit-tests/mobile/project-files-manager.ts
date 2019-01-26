@@ -32,29 +32,6 @@ const iOSDeviceAppData: Mobile.IDeviceAppData = <any>{
 	getDeviceProjectRootPath: async () => iOSDeviceProjectRootPath,
 };
 
-class MobilePlatformsCapabilitiesMock implements Mobile.IPlatformsCapabilities {
-	public getPlatformNames(): string[] {
-		return _.keys(this.getAllCapabilities());
-	}
-
-	public getAllCapabilities(): IDictionary<Mobile.IPlatformCapabilities> {
-		return {
-			iOS: {
-				wirelessDeploy: false,
-				cableDeploy: true,
-				companion: false,
-				hostPlatformsForDeploy: ["darwin"]
-			},
-			Android: {
-				wirelessDeploy: false,
-				cableDeploy: true,
-				companion: false,
-				hostPlatformsForDeploy: ["win32", "darwin", "linux"]
-			}
-		};
-	}
-}
-
 function createTestInjector(): IInjector {
 	const testInjector = new Yok();
 
@@ -64,7 +41,6 @@ function createTestInjector(): IInjector {
 	testInjector.register("hostInfo", HostInfo);
 	testInjector.register("localToDevicePathDataFactory", LocalToDevicePathDataFactory);
 	testInjector.register("mobileHelper", MobileHelper);
-	testInjector.register("mobilePlatformsCapabilities", MobilePlatformsCapabilitiesMock);
 	testInjector.register("projectFilesProvider", ProjectFilesProviderBase);
 	testInjector.register("projectFilesManager", ProjectFilesManager);
 	testInjector.register("options", {});

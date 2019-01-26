@@ -669,13 +669,6 @@ describe("devicesService", () => {
 			await assert.isRejected(devicesService.initialize({ platform: "android", deviceId: androidDevice.deviceInfo.identifier }), expectedErrorMessage);
 		});
 
-		it("when initialize is called with deviceId and invalid platform", async () => {
-			assert.isFalse(devicesService.hasDevices, "Initially devicesService hasDevices must be false.");
-			iOSDeviceDiscovery.emit(DeviceDiscoveryEventNames.DEVICE_FOUND, iOSDevice);
-			androidDeviceDiscovery.emit(DeviceDiscoveryEventNames.DEVICE_FOUND, androidDevice);
-			await assert.isRejected(devicesService.initialize({ platform: "invalidPlatform", deviceId: androidDevice.deviceInfo.identifier }), "Deploying to %s connected devices is not supported. Build the app using the `build` command and deploy the package manually.");
-		});
-
 		it("when initialize is called with platform and deviceId and device's platform is different", async () => {
 			assert.isFalse(devicesService.hasDevices, "Initially devicesService hasDevices must be false.");
 			iOSDeviceDiscovery.emit(DeviceDiscoveryEventNames.DEVICE_FOUND, iOSDevice);
@@ -888,32 +881,6 @@ describe("devicesService", () => {
 			androidDeviceDiscovery.emit(DeviceDiscoveryEventNames.DEVICE_FOUND, androidDevice);
 			iOSDeviceDiscovery.emit(DeviceDiscoveryEventNames.DEVICE_FOUND, iOSDevice);
 			await assert.isRejected(devicesService.initialize(), "Multiple device platforms detected (android and ios). Specify platform or device on command line.");
-		});
-
-		it("when parameters are not passed and devices with invalid platforms are detected initialize should work with correct devices only", async () => {
-			assert.isFalse(devicesService.hasDevices, "Initially devicesService hasDevices must be false.");
-			androidDeviceDiscovery.emit(DeviceDiscoveryEventNames.DEVICE_FOUND, androidDevice);
-			iOSDeviceDiscovery.emit(DeviceDiscoveryEventNames.DEVICE_FOUND, {
-				deviceInfo: {
-					identifier: "invalid-platform-device",
-					platform: "invalid-platform"
-				}
-			});
-
-			await devicesService.initialize();
-
-			assert.isTrue(logger.output.indexOf("is not supported") !== -1);
-		});
-
-		it("when parameters are not passed and only devices with invalid platforms are detected, initialize should throw", async () => {
-			assert.isFalse(devicesService.hasDevices, "Initially devicesService hasDevices must be false.");
-			iOSDeviceDiscovery.emit(DeviceDiscoveryEventNames.DEVICE_FOUND, {
-				deviceInfo: {
-					identifier: "invalid-platform-device",
-					platform: "invalid-platform"
-				}
-			});
-			await assert.isRejected(devicesService.initialize(), constants.ERROR_NO_DEVICES);
 		});
 
 		it("caches execution result and does not execute next time when called", async () => {

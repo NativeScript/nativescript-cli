@@ -13,7 +13,6 @@ import { assert } from "chai";
 import { LocalToDevicePathDataFactory } from "../lib/common/mobile/local-to-device-path-data-factory";
 import { MobileHelper } from "../lib/common/mobile/mobile-helper";
 import { ProjectFilesProvider } from "../lib/providers/project-files-provider";
-import { MobilePlatformsCapabilities } from "../lib/mobile-platforms-capabilities";
 import { DevicePlatformsConstants } from "../lib/common/mobile/device-platforms-constants";
 import { XmlValidator } from "../lib/xml-validator";
 import { PreparePlatformNativeService } from "../lib/services/prepare-platform-native-service";
@@ -76,7 +75,6 @@ function createTestInjector() {
 	testInjector.register("localToDevicePathDataFactory", LocalToDevicePathDataFactory);
 	testInjector.register("mobileHelper", MobileHelper);
 	testInjector.register("projectFilesProvider", ProjectFilesProvider);
-	testInjector.register("mobilePlatformsCapabilities", MobilePlatformsCapabilities);
 	testInjector.register("devicePlatformsConstants", DevicePlatformsConstants);
 	testInjector.register("xmlValidator", XmlValidator);
 	testInjector.register("preparePlatformNativeService", PreparePlatformNativeService);

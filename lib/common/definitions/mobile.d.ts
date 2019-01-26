@@ -663,13 +663,6 @@ declare module Mobile {
 		create(fileName: string, localProjectRootPath: string, onDeviceFileName: string, deviceProjectRootPath: string): Mobile.ILocalToDevicePathData;
 	}
 
-	// TODO: Remove
-	interface IPlatformCapabilities {
-		wirelessDeploy?: boolean;
-		cableDeploy: boolean;
-		companion?: boolean;
-		hostPlatformsForDeploy: string[];
-	}
 	interface IAvdInfo extends IDictionary<string | number> {
 		target: string;
 		targetNum: number;
@@ -1009,20 +1002,13 @@ declare module Mobile {
 		timeout?: number;
 	}
 
-	// TODO: Consider removing
-	interface IPlatformsCapabilities {
-		getPlatformNames(): string[];
-		getAllCapabilities(): IDictionary<Mobile.IPlatformCapabilities>;
-	}
 	interface IMobileHelper {
 		platformNames: string[];
 		isAndroidPlatform(platform: string): boolean;
 		isiOSPlatform(platform: string): boolean;
 		isWP8Platform(platform: string): boolean;
 		normalizePlatformName(platform: string): string;
-		isPlatformSupported(platform: string): boolean;
 		validatePlatformName(platform: string): string;
-		getPlatformCapabilities(platform: string): Mobile.IPlatformCapabilities;
 		buildDevicePath(...args: string[]): string;
 		correctDevicePath(filePath: string): string;
 		isiOSTablet(deviceName: string): boolean;

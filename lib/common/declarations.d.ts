@@ -781,14 +781,6 @@ interface IPlaygroundInfo {
 	usedTutorial: boolean;
 }
 
-interface IHostCapabilities {
-	capabilities: IDictionary<IHostCapability>;
-}
-
-interface IHostCapability {
-	debugToolsSupported: boolean;
-}
-
 interface IAutoCompletionService {
 
 	/**

@@ -47,29 +47,6 @@ class LocalToDevicePathDataMock {
 	}
 }
 
-class MobilePlatformsCapabilitiesMock implements Mobile.IPlatformsCapabilities {
-	public getPlatformNames(): string[] {
-		return _.keys(this.getAllCapabilities());
-	}
-
-	public getAllCapabilities(): IDictionary<Mobile.IPlatformCapabilities> {
-		return {
-			iOS: {
-				"wirelessDeploy": false,
-				"cableDeploy": true,
-				"companion": false,
-				"hostPlatformsForDeploy": ["darwin"]
-			},
-			Android: {
-				"wirelessDeploy": false,
-				"cableDeploy": true,
-				"companion": false,
-				"hostPlatformsForDeploy": ["win32", "darwin", "linux"]
-			}
-		};
-	}
-}
-
 function mockFsStats(options: { isDirectory: boolean, isFile: boolean }): (filePath: string) => { isDirectory: () => boolean, isFile: () => boolean } {
 	return (filePath: string) => ({
 		isDirectory: (): boolean => options.isDirectory,
@@ -85,7 +62,6 @@ function createTestInjector(): IInjector {
 	injector.register("config", {});
 	injector.register("options", {});
 	injector.register("errors", Errors);
-	injector.register("mobilePlatformsCapabilities", MobilePlatformsCapabilitiesMock);
 	injector.register("devicePlatformsConstants", DevicePlatformsConstants);
 	injector.register("projectFilesManager", {});
 

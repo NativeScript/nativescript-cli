@@ -87,7 +87,6 @@ $injector.requireCommand("package-manager|get", "./commands/package-manager-get"
 
 $injector.require("packageInstallationManager", "./package-installation-manager");
 $injector.require("dynamicHelpProvider", "./dynamic-help-provider");
-$injector.require("mobilePlatformsCapabilities", "./mobile-platforms-capabilities");
 $injector.require("commandsServiceProvider", "./providers/commands-service-provider");
 $injector.require("AppDataProvider", "./providers/device-app-data-provider");
 

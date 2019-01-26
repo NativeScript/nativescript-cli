@@ -15,7 +15,6 @@ export class DevicesService extends EventEmitter implements Mobile.IDevicesServi
 	private static DEVICE_LOOKING_INTERVAL = 200;
 	private _devices: IDictionary<Mobile.IDevice> = {};
 	private _availableEmulators: IDictionary<Mobile.IDeviceInfo> = {};
-	private platforms: string[] = [];
 	private _platform: string;
 	private _device: Mobile.IDevice;
 	private _isInitialized = false;
@@ -199,26 +198,6 @@ export class DevicesService extends EventEmitter implements Mobile.IDevicesServi
 
 	public getDeviceInstances(): Mobile.IDevice[] {
 		return _.values(this._devices);
-	}
-
-	private getAllPlatforms(): Array<string> {
-		if (this.platforms.length > 0) {
-			return this.platforms;
-		}
-
-		this.platforms = _.filter(this.$mobileHelper.platformNames, platform => this.$mobileHelper.getPlatformCapabilities(platform).cableDeploy);
-		return this.platforms;
-	}
-
-	private getPlatform(platform: string): string {
-		const allSupportedPlatforms = this.getAllPlatforms();
-		const normalizedPlatform = this.$mobileHelper.validatePlatformName(platform);
-		if (!_.includes(allSupportedPlatforms, normalizedPlatform)) {
-			this.$errors.failWithoutHelp("Deploying to %s connected devices is not supported. Build the " +
-				"app using the `build` command and deploy the package manually.", normalizedPlatform);
-		}
-
-		return normalizedPlatform;
 	}
 
 	@exported("devicesService")
@@ -618,7 +597,7 @@ export class DevicesService extends EventEmitter implements Mobile.IDevicesServi
 		const deviceOption = deviceInitOpts.deviceId;
 
 		if (platform && deviceOption) {
-			this._platform = this.getPlatform(deviceInitOpts.platform);
+			this._platform = this.$mobileHelper.validatePlatformName(deviceInitOpts.platform);
 			await this.startLookingForDevices(deviceInitOpts);
 			this._device = await this.getDevice(deviceOption);
 			if (this._device.deviceInfo.platform !== this._platform) {
@@ -630,7 +609,7 @@ export class DevicesService extends EventEmitter implements Mobile.IDevicesServi
 			this._device = await this.getDevice(deviceOption);
 			this._platform = this._device.deviceInfo.platform;
 		} else if (platform && !deviceOption) {
-			this._platform = this.getPlatform(platform);
+			this._platform = this.$mobileHelper.validatePlatformName(platform);
 			await this.startLookingForDevices(deviceInitOpts);
 		} else {
 			// platform and deviceId are not specified
@@ -649,7 +628,7 @@ export class DevicesService extends EventEmitter implements Mobile.IDevicesServi
 					.map(device => device.deviceInfo.platform)
 					.filter(pl => {
 						try {
-							return this.getPlatform(pl);
+							return this.$mobileHelper.validatePlatformName(pl);
 						} catch (err) {
 							this.$logger.warn(err.message);
 							return null;

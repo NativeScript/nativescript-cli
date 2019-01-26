@@ -15,7 +15,6 @@ import * as yok from "../lib/common/yok";
 import { DevicesService } from "../lib/common/mobile/mobile-core/devices-service";
 import { MobileHelper } from "../lib/common/mobile/mobile-helper";
 import { Messages } from "../lib/common/messages/messages";
-import { MobilePlatformsCapabilities } from "../lib/mobile-platforms-capabilities";
 import { DeviceLogProvider } from "../lib/common/mobile/device-log-provider";
 import { LogFilter } from "../lib/common/mobile/log-filter";
 import { LoggingLevels } from "../lib/common/mobile/logging-levels";
@@ -95,7 +94,6 @@ function createTestInjector(projectPath: string, projectName: string, xcode?: IX
 	testInjector.register("androidDeviceDiscovery", AndroidDeviceDiscovery);
 	testInjector.register("messages", Messages);
 	testInjector.register("mobileHelper", MobileHelper);
-	testInjector.register("mobilePlatformsCapabilities", MobilePlatformsCapabilities);
 	testInjector.register("deviceLogProvider", DeviceLogProvider);
 	testInjector.register("logFilter", LogFilter);
 	testInjector.register("loggingLevels", LoggingLevels);
