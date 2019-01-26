@@ -101,13 +101,6 @@ declare module Project {
 		configurations: string[];
 	}
 }
-
-interface IPathFilteringService {
-	getRulesFromFile(file: string): string[];
-	filterIgnoredFiles(files: string[], rules: string[], rootDir: string): string[];
-	isFileExcluded(file: string, rules: string[], rootDir: string): boolean
-}
-
 /**
  * Describes available methods for LiveSync operation from Proton.
  */
