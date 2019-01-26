@@ -29,8 +29,6 @@ declare module Config {
 	}
 
 	interface IConfig {
-		AB_SERVER?: string;
-		AB_SERVER_PROTO?: string;
 		DEBUG?: boolean;
 		ON_PREM?: boolean;
 		CI_LOGGER?: boolean;
