@@ -3,22 +3,6 @@ interface IDeployHelper {
 }
 
 declare module Project {
-	interface ICapabilities {
-		build: boolean;
-		buildCompanion: boolean;
-		deploy: boolean
-		simulate: boolean;
-		livesync: boolean;
-		livesyncCompanion: boolean;
-		updateKendo: boolean;
-		emulate: boolean;
-		publish: boolean;
-		uploadToAppstore: boolean;
-		canChangeFrameworkVersion: boolean;
-		imageGeneration: boolean;
-		wp8Supported: boolean;
-	}
-
 	interface IData extends IDictionary<any> {
 		ProjectName: string;
 		ProjectGuid: string;
@@ -67,7 +51,7 @@ declare module Project {
 		 * @type {boolean}
 		 */
 		hasBuildConfigurations: boolean;
-		capabilities: ICapabilities;
+		capabilities: any;
 		/**
 		 * Information about the current project.
 		 * @type {Project.IProjectInformation}

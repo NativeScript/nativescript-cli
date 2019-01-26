@@ -13,11 +13,9 @@ export abstract class ProjectBase implements Project.IProjectBase {
 
 	private _hasBuildConfigurations = false;
 
-	constructor(protected $cordovaProjectCapabilities: Project.ICapabilities,
-		protected $errors: IErrors,
+	constructor(protected $errors: IErrors,
 		protected $fs: IFileSystem,
 		protected $logger: ILogger,
-		protected $nativeScriptProjectCapabilities: Project.ICapabilities,
 		protected $options: IOptions,
 		protected $staticConfig: Config.IStaticConfig) {
 		this.configurationSpecificData = Object.create(null);
@@ -46,16 +44,7 @@ export abstract class ProjectBase implements Project.IProjectBase {
 		return this.projectDir;
 	}
 
-	public get capabilities(): Project.ICapabilities {
-		const projectData = this.projectData;
-		if (projectData) {
-			if (projectData.Framework && projectData.Framework.toLowerCase() === TARGET_FRAMEWORK_IDENTIFIERS.NativeScript.toLowerCase()) {
-				return this.$nativeScriptProjectCapabilities;
-			} else if (projectData.Framework && projectData.Framework.toLowerCase() === TARGET_FRAMEWORK_IDENTIFIERS.Cordova.toLowerCase()) {
-				return this.$cordovaProjectCapabilities;
-			}
-		}
-
+	public get capabilities(): any {
 		return null;
 	}
 
