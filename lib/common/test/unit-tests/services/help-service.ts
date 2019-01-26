@@ -42,11 +42,6 @@ const createTestInjector = (opts?: { isProjectTypeResult: boolean; isPlatformRes
 	injector.register("opener", {
 		open(target: string, appname?: string): void {/* mock */ }
 	});
-	injector.register("commandsServiceProvider", {
-		getDynamicCommands: (): Promise<string[]> => {
-			return Promise.resolve(<string[]>[]);
-		}
-	});
 
 	injector.register("fs", {
 		exists: (filePath: string) => false

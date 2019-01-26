@@ -73,9 +73,6 @@ function createTestInjector(): IInjector {
 	testInjector.register("yarn", YarnLib.YarnPackageManager);
 	testInjector.register("childProcess", ChildProcessLib.ChildProcess);
 	testInjector.register("projectFilesManager", ProjectFilesManagerLib.ProjectFilesManager);
-	testInjector.register("commandsServiceProvider", {
-		registerDynamicSubCommands: () => { /* intentionally left blank */ }
-	});
 	testInjector.register("preparePlatformNativeService", PreparePlatformNativeService);
 	testInjector.register("preparePlatformJSService", PreparePlatformJSService);
 	testInjector.register("pluginVariablesService", {});

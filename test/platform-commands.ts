@@ -116,9 +116,6 @@ function createTestInjector() {
 	testInjector.registerCommand("platform|update", PlatformUpdateCommandLib.UpdatePlatformCommand);
 	testInjector.registerCommand("platform|clean", PlatformCleanCommandLib.CleanCommand);
 	testInjector.register("resources", {});
-	testInjector.register("commandsServiceProvider", {
-		registerDynamicSubCommands: () => { /* intentionally left blank */ }
-	});
 	testInjector.register("commandsService", {
 		tryExecuteCommand: () => { /* intentionally left blank */ }
 	});

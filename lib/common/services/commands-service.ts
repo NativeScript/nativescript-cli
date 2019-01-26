@@ -16,11 +16,9 @@ export class CommandsService implements ICommandsService {
 		return _.last(this.commands);
 	}
 
-	private areDynamicSubcommandsRegistered = false;
 	private commands: ICommandData[] = [];
 
 	constructor(private $analyticsSettingsService: IAnalyticsSettingsService,
-		private $commandsServiceProvider: ICommandsServiceProvider,
 		private $errors: IErrors,
 		private $hooksService: IHooksService,
 		private $injector: IInjector,
@@ -110,10 +108,6 @@ export class CommandsService implements ICommandsService {
 			this.$options.validateOptions(command ? command.dashedOptions : null);
 		}
 
-		if (!this.areDynamicSubcommandsRegistered) {
-			this.$commandsServiceProvider.registerDynamicSubCommands();
-			this.areDynamicSubcommandsRegistered = true;
-		}
 		return this.canExecuteCommand(commandName, commandArguments);
 	}
 
@@ -161,11 +155,6 @@ export class CommandsService implements ICommandsService {
 
 			this.$errors.fail("Unable to execute command '%s'. Use '$ %s %s --help' for help.", beautifiedName, this.$staticConfig.CLIENT_NAME.toLowerCase(), beautifiedName);
 			return false;
-		} else if (!isDynamicCommand && _.startsWith(commandName, this.$commandsServiceProvider.dynamicCommandsPrefix)) {
-			if (_.some(await this.$commandsServiceProvider.getDynamicCommands())) {
-				await this.$commandsServiceProvider.generateDynamicCommands();
-				return await this.canExecuteCommand(commandName, commandArguments, true);
-			}
 		}
 
 		const commandInfo = {

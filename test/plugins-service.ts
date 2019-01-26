@@ -75,9 +75,6 @@ function createTestInjector() {
 		trackOptions: () => Promise.resolve(null)
 	});
 	testInjector.register("commandsService", CommandsService);
-	testInjector.register("commandsServiceProvider", {
-		registerDynamicSubCommands: () => { /* intentionally empty body */ }
-	});
 	testInjector.register("hostInfo", HostInfo);
 	testInjector.register("projectHelper", ProjectHelper);
 

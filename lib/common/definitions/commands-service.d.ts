@@ -6,13 +6,6 @@ interface ICommandsService {
 	completeCommand(): Promise<boolean>;
 }
 
-interface ICommandsServiceProvider {
-	dynamicCommandsPrefix: string;
-	getDynamicCommands(): Promise<string[]>;
-	generateDynamicCommands(): Promise<void>;
-	registerDynamicSubCommands(): void;
-}
-
 /**
  * Describes the command data.
  */
