@@ -75,8 +75,6 @@ $injector.require("iOSSimulatorLogProvider", "./mobile/ios/simulator/ios-simulat
 
 $injector.require("localToDevicePathDataFactory", "./mobile/local-to-device-path-data-factory");
 
-$injector.requirePublic("typeScriptService", "./services/typescript-service");
-
 $injector.requirePublic("devicesService", "./mobile/mobile-core/devices-service");
 $injector.requirePublic("androidProcessService", "./mobile/mobile-core/android-process-service");
 $injector.require("projectNameValidator", "./validators/project-name-validator");

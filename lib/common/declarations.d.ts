@@ -827,42 +827,6 @@ interface IHook {
 	fullPath: string;
 }
 
-/**
- * Describes TypeScript compilation methods.
- */
-interface ITypeScriptService {
-	/**
-	 * Transpiles specified files or all files in the project directory. The default passed options are overriden by the ones in tsconfig.json file. The options from tsconfig.json file are overriden by the passed compiler options.
-	 * @param {string} projectDir: Specifies the directory of the project.
-	 * @param {string[]} typeScriptFiles @optional The files that will be compiled.
-	 * @param {string[]} definitionFiles @optional The definition files used for compilation.
-	 * @param {ITypeScriptTranspileOptions} options @optional The transpilation options.
-	 * @return {Promise<void>}
-	 */
-	transpile(projectDir: string, typeScriptFiles?: string[], definitionFiles?: string[], options?: ITypeScriptTranspileOptions): Promise<void>;
-
-	/**
-	 * Returns new object, containing all TypeScript and all TypeScript definition files.
-	 * @param {string} projectDir The directory of the project which contains TypeScript files.
-	 * @return {ITypeScriptFiles} all TypeScript and all TypeScript definition files.
-	 */
-	getTypeScriptFilesData(projectDir: string): ITypeScriptFiles
-
-	/**
-	 * Checks if the project language is TypeScript by enumerating all files and checking if there are at least one TypeScript file (.ts), that is not definition file(.d.ts)
-	 * @param {string} projectDir The directory of the project.
-	 * @return {boolean} true when the project contains .ts files and false otherwise.
-	 */
-	isTypeScriptProject(projectDir: string): boolean;
-
-	/**
-	 * Checks if the file is TypeScript file.
-	 * @param {string} file The file name.
-	 * @return {boolean} true when the file is TypeScript file.
-	 */
-	isTypeScriptFile(file: string): boolean;
-}
-
 interface IDynamicHelpService {
 	/**
 	 * Checks if current project's framework is one of the specified as arguments.
