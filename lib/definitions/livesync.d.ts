@@ -405,7 +405,12 @@ interface IRefreshApplicationInfo {
 	didRefresh: boolean;
 }
 
-interface INativeScriptDeviceLiveSyncService extends IDeviceLiveSyncServiceBase {
+interface INativeScriptDeviceLiveSyncService {
+	/**
+	 * Specifies some action that will be executed before every sync operation
+	 */
+	beforeLiveSyncAction?(deviceAppData: Mobile.IDeviceAppData): Promise<void>;
+
 	/**
 	 * Tries to refresh the application's content on the device
 	 */

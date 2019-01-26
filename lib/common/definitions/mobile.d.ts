@@ -1,3 +1,24 @@
+/**
+ * Describes if LiveSync is supported for specific device and application.
+ */
+interface ILiveSyncSupportedInfo extends Mobile.IDeviceApplicationInformationBase {
+	/**
+	 * Result, indicating is livesync supported for specified device and specified application.
+	 * `true` in case livesync is supported and false otherwise.
+	 */
+	isLiveSyncSupported: boolean;
+}
+
+/**
+ * Describes if LiveSync is supported for specific device and application.
+ */
+interface IAppInstalledInfo extends ILiveSyncSupportedInfo {
+	/**
+	 * Defines if application is installed on device.
+	 */
+	isInstalled: boolean;
+}
+
 declare module Mobile {
 	interface ISyncOptions {
 		skipRefresh?: boolean;
@@ -151,12 +172,6 @@ declare module Mobile {
 		getDeviceProjectRootPath(): Promise<string>;
 		deviceSyncZipPath?: string;
 		isLiveSyncSupported(): Promise<boolean>;
-	}
-
-	interface IAndroidLiveSyncService {
-		liveSyncCommands: any;
-		livesync(appIdentifier: string, liveSyncRoot: string, commands: string[]): Promise<void>;
-		createCommandsFileOnDevice(commandsFileDevicePath: string, commands: string[]): Promise<void>;
 	}
 
 	interface ILogcatStartOptions {

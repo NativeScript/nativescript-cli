@@ -1004,110 +1004,8 @@ interface IXcodeSelectService {
 	getXcodeVersion(): Promise<IVersionData>;
 }
 
-interface ILiveSyncServiceBase {
-	/**
-	 * If watch option is not specified executes full sync
-	 * If watch option is specified executes partial sync
-	 */
-	sync(data: ILiveSyncData[], projectId: string, projectFilesConfig: IProjectFilesConfig, filePaths?: string[]): Promise<void>;
-
-	/**
-	 * Returns the `canExecute` method which defines if LiveSync operation can be executed on specified device.
-	 * @param {string} platform Platform for which the LiveSync operation should be executed.
-	 * @param {string} appIdentifier Application identifier.
-	 * @param {(dev: Mobile.IDevice) => boolean} canExecute Base canExecute function that will be added to the predefined checks.
-	 * @return {Promise<(dev: Mobile.IDevice) => boolean>} Function that returns boolean.
-	 */
-	getCanExecuteAction(platform: string, appIdentifier: string, canExecute?: (dev: Mobile.IDevice) => boolean): Promise<(dev: Mobile.IDevice) => boolean>;
-
-	/**
-	 * Gets LiveSync action that should be executed per device.
-	 * @param {ILiveSyncData} data LiveSync data describing the LiveSync operation.
-	 * @param {string[]} filesToSync Files that have to be synced.
-	 * @param {Function} deviceFilesAction Custom action that has to be executed instead of just copying the files.
-	 * @param {ILiveSyncOptions} liveSyncOptions Additional options for LiveSyncing
-	 * @return {Function} Function that returns Promise<void>.
-	 */
-	getSyncAction(data: ILiveSyncData, filesToSync: string[], deviceFilesAction: (deviceAppData: Mobile.IDeviceAppData, device: Mobile.IDevice, localToDevicePaths: Mobile.ILocalToDevicePathData[]) => Promise<void>, liveSyncOptions: ILiveSyncOptions): (device: Mobile.IDevice) => Promise<void>;
-
-	/**
-	 * Gets LiveSync action that should be executed per device when files should be deleted.
-	 * @param {ILiveSyncData} data LiveSync data describing the LiveSync operation.
-	 * @return {Function} Function that returns Promise<void>.
-	 */
-	getSyncRemovedFilesAction(data: ILiveSyncData): (deviceAppData: Mobile.IDeviceAppData, device: Mobile.IDevice, localToDevicePaths: Mobile.ILocalToDevicePathData[]) => Promise<void>;
-}
-
-/**
- * Describes deletion options for a LiveSync operation
- */
-interface ILiveSyncDeletionOptions {
-	/**
-	 * Defines if the LiveSync operation is for file deletion instead of addition.
-	 * @type {boolean}
-	 */
-	isForDeletedFiles: boolean
-}
-
-/**
- * Describes additional options for LiveSyncing
- */
-interface ILiveSyncOptions extends IProjectFilesConfig, ILiveSyncDeletionOptions {
-}
-
-interface ISyncBatch {
-	/**
-	 * Checks if there is a pending sync
-	 */
-	syncPending: boolean;
-	/**
-	 * Adds the file to the sync queue. All files from the queue will be pushed on the device after 250ms.
-	 */
-	addFile(file: string): void;
-	syncFiles(syncAction: (filesToSync: string[]) => Promise<void>): Promise<void>;
-}
-
 interface IPlatform {
 	platform: string;
-}
-
-interface ILiveSyncData extends IPlatform {
-	/** Application identifier */
-	appIdentifier: string;
-	/** The path to a directory that contains prepared project files for sync */
-	projectFilesPath: string;
-	/** The path to a directory that is watched */
-	syncWorkingDirectory: string;
-	forceExecuteFullSync?: boolean;
-	/** Additional configurations for which to get the information. The basic configurations are `debug` and `release`. */
-	additionalConfigurations?: string[];
-	/** Configurations for which to get the information. */
-	configuration?: string;
-	excludedProjectDirsAndFiles?: string[];
-	/**
-	 * Describes if the livesync action can be executed on specified device.
-	 * The method is called for each device.
-	 */
-	canExecute?(device: Mobile.IDevice): boolean;
-}
-
-interface IDeviceLiveSyncServiceBase {
-	/**
-	 * Specifies some action that will be executed before every sync operation
-	 */
-	beforeLiveSyncAction?(deviceAppData: Mobile.IDeviceAppData): Promise<void>;
-}
-
-interface IDeviceLiveSyncService extends IDeviceLiveSyncServiceBase {
-	/**
-	 * Refreshes the application's content on a device
-	 */
-	refreshApplication(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], forceExecuteFullSync: boolean): Promise<void>;
-	/**
-	 * Removes specified files from a connected device
-	 */
-	removeFiles(appIdentifier: string, localToDevicePaths: Mobile.ILocalToDevicePathData[]): Promise<void>;
-	afterInstallApplicationAction?(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]): Promise<boolean>;
 }
 
 interface ISystemWarning {
@@ -1571,33 +1469,6 @@ interface IProjectFilesConfig {
 	 * @type {string}
 	 */
 	configuration?: string;
-}
-
-interface ILiveSyncProvider {
-	/**
-	 * Returns a dictionary that map platform to device specific livesync service
-	 */
-	deviceSpecificLiveSyncServices: IDictionary<any>;
-	/**
-	 * Builds the application and returns the package file path
-	 */
-	buildForDevice(device: Mobile.IDevice, projectData?: any): Promise<string>;
-	/**
-	 * Prepares the platform for sync
-	 */
-	preparePlatformForSync(platform: string, provision: any, projectData?: any): Promise<void>;
-
-	/**
-	 * Checks if the specified file can be fast synced.
-	 */
-	canExecuteFastSync(filePath: string, projectData?: any, platform?: string): boolean;
-
-	transferFiles(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], projectFilesPath: string, isFullSync: boolean): Promise<void>;
-
-	/**
-	 * Returns a dictionary that map platform to platform specific livesync service.
-	 */
-	platformSpecificLiveSyncServices?: IDictionary<any>
 }
 
 /**
