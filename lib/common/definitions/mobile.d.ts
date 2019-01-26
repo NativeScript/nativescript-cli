@@ -153,19 +153,6 @@ declare module Mobile {
 		isLiveSyncSupported(): Promise<boolean>;
 	}
 
-	interface IDeviceAppDataFactory {
-		create<T extends Mobile.IDeviceAppData>(appIdentifier: string, platform: string, device: Mobile.IDevice, liveSyncOptions?: { isForCompanionApp: boolean }): T;
-	}
-
-	interface IDeviceAppDataFactoryRule {
-		vanilla: any;
-		companion?: any;
-	}
-
-	interface IDeviceAppDataProvider {
-		createFactoryRules(): IDictionary<Mobile.IDeviceAppDataFactoryRule>;
-	}
-
 	interface IAndroidLiveSyncService {
 		liveSyncCommands: any;
 		livesync(appIdentifier: string, liveSyncRoot: string, commands: string[]): Promise<void>;

@@ -20,7 +20,6 @@ import ChildProcessLib = require("../lib/common/child-process");
 import ProjectFilesManagerLib = require("../lib/common/services/project-files-manager");
 import { PreparePlatformNativeService } from "../lib/services/prepare-platform-native-service";
 import { PreparePlatformJSService } from "../lib/services/prepare-platform-js-service";
-import { DeviceAppDataFactory } from "../lib/common/mobile/device-app-data/device-app-data-factory";
 import { LocalToDevicePathDataFactory } from "../lib/common/mobile/local-to-device-path-data-factory";
 import { MobileHelper } from "../lib/common/mobile/mobile-helper";
 import { ProjectFilesProvider } from "../lib/providers/project-files-provider";
@@ -81,7 +80,6 @@ function createTestInjector(): IInjector {
 	testInjector.register("preparePlatformNativeService", PreparePlatformNativeService);
 	testInjector.register("preparePlatformJSService", PreparePlatformJSService);
 	testInjector.register("pluginVariablesService", {});
-	testInjector.register("deviceAppDataFactory", DeviceAppDataFactory);
 	testInjector.register("localToDevicePathDataFactory", LocalToDevicePathDataFactory);
 	testInjector.register("mobileHelper", MobileHelper);
 	testInjector.register("projectFilesProvider", ProjectFilesProvider);

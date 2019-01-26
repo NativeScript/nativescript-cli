@@ -1,9 +1,3 @@
-interface ILiveSyncDeviceAppData extends Mobile.IDeviceAppData {
-	liveSyncFormat: string;
-	encodeLiveSyncHostUri(hostUri: string): string;
-	getLiveSyncNotSupportedError(): string;
-}
-
 interface IDeployHelper {
 	deploy(platform?: string): Promise<void>;
 }

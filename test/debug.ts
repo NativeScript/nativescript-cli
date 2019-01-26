@@ -46,7 +46,6 @@ function createTestInjector(): IInjector {
 	testInjector.register("sysInfo", {});
 	testInjector.register("mobileHelper", {});
 	testInjector.register("pluginVariablesService", {});
-	testInjector.register("deviceAppDataFactory", {});
 	testInjector.register("projectTemplatesService", {});
 	testInjector.register("debugService", {});
 	testInjector.register("xmlValidator", {});

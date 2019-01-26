@@ -74,7 +74,6 @@ $injector.require("iOSSimResolver", "./mobile/ios/simulator/ios-sim-resolver");
 $injector.require("iOSSimulatorLogProvider", "./mobile/ios/simulator/ios-simulator-log-provider");
 
 $injector.require("localToDevicePathDataFactory", "./mobile/local-to-device-path-data-factory");
-$injector.require("deviceAppDataFactory", "./mobile/device-app-data/device-app-data-factory");
 
 $injector.requirePublic("typeScriptService", "./services/typescript-service");
 
