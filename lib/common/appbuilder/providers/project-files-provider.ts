@@ -15,7 +15,6 @@ export class ProjectFilesProvider extends ProjectFilesProviderBase {
 	}
 
 	constructor(private $pathFilteringService: IPathFilteringService,
-		private $projectConstants: Project.IConstants,
 		private $injector: IInjector,
 		$mobileHelper: Mobile.IMobileHelper,
 		$options: IOptions) {
@@ -44,11 +43,7 @@ export class ProjectFilesProvider extends ProjectFilesProviderBase {
 
 	private get ignoreFilesConfigurations(): string[] {
 		const configurations: string[] = [ProjectFilesProvider.IGNORE_FILE];
-		// unless release is explicitly set, we use debug config
-		const configFileName = "." +
-			(this.$options.release ? this.$projectConstants.RELEASE_CONFIGURATION_NAME : this.$projectConstants.DEBUG_CONFIGURATION_NAME) +
-			ProjectFilesProvider.IGNORE_FILE;
-		configurations.push(configFileName);
+
 		return configurations;
 	}
 }

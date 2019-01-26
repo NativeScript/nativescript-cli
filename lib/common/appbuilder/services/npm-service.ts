@@ -23,8 +23,7 @@ export class NpmService implements INpmService {
 		private $fs: IFileSystem,
 		private $hostInfo: IHostInfo,
 		private $httpClient: Server.IHttpClient,
-		private $logger: ILogger,
-		private $projectConstants: Project.IConstants) { }
+		private $logger: ILogger) { }
 
 	private get npmExecutableName(): string {
 		if (!this._npmExecutableName) {
@@ -225,20 +224,16 @@ export class NpmService implements INpmService {
 		try {
 			return this.$fs.readJson(pathToPackageJson);
 		} catch (err) {
-			if (err.code === "ENOENT") {
-				this.$errors.failWithoutHelp(`Unable to find ${this.$projectConstants.PACKAGE_JSON_NAME} in ${projectDir}.`);
-			}
-
 			throw err;
 		}
 	}
 
 	private getPathToPackageJson(projectDir: string): string {
-		return path.join(projectDir, this.$projectConstants.PACKAGE_JSON_NAME);
+		return path.join(projectDir, "package.json");
 	}
 
 	private getPathToReferencesFile(projectDir: string): string {
-		return path.join(projectDir, this.$projectConstants.REFERENCES_FILE_NAME);
+		return path.join(projectDir, "references.d.ts");
 	}
 
 	private async installTypingsForDependency(projectDir: string, dependency: string): Promise<ISpawnResult> {
@@ -284,13 +279,13 @@ export class NpmService implements INpmService {
 			// TypeScript 2.0 does not respect hidden definition files and we had to rename the file.
 			this.removeOldAbReferencesFile(projectDir);
 		} else {
-			this.$logger.trace(`Could not find any .d.ts files for ${this.$projectConstants.REFERENCES_FILE_NAME} file. Deleting the old file.`);
+			this.$logger.trace(`Could not find any .d.ts files for "references.d.ts" file. Deleting the old file.`);
 			this.$fs.deleteFile(pathToReferenceFile);
 		}
 	}
 
 	private removeOldAbReferencesFile(projectDir: string): void {
-		const pathToOldReferencesFile = path.join(projectDir, this.$projectConstants.OLD_REFERENCES_FILE_NAME);
+		const pathToOldReferencesFile = path.join(projectDir, ".references.d.ts");
 
 		if (this.$fs.exists(pathToOldReferencesFile)) {
 			this.$fs.deleteFile(pathToOldReferencesFile);

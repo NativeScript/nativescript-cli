@@ -32,7 +32,6 @@ export class TypeScriptService implements ITypeScriptService {
 		private $logger: ILogger,
 		private $npmService: INpmService,
 		private $options: IOptions,
-		private $projectConstants: Project.IConstants,
 		private $processService: IProcessService,
 		private $errors: IErrors) { }
 
@@ -95,7 +94,7 @@ export class TypeScriptService implements ITypeScriptService {
 	}
 
 	private getPathToTsConfigFile(projectDir: string): string {
-		return path.join(projectDir, this.$projectConstants.TSCONFIG_JSON_NAME);
+		return projectDir;
 	}
 
 	private getCompilerOptions(projectDir: string, options: ITypeScriptTranspileOptions): ITypeScriptCompilerOptions {
@@ -140,7 +139,7 @@ export class TypeScriptService implements ITypeScriptService {
 		const typeScriptInProjectsNodeModulesDir = path.join(projectDir, typeScriptInNodeModulesDir);
 		let typeScriptCompilerVersion: string;
 		if (this.$fs.exists(typeScriptInProjectsNodeModulesDir)) {
-			typeScriptCompilerVersion = this.$fs.readJson(path.join(typeScriptInProjectsNodeModulesDir, this.$projectConstants.PACKAGE_JSON_NAME)).version;
+			typeScriptCompilerVersion = this.$fs.readJson(path.join(typeScriptInProjectsNodeModulesDir, "package.json")).version;
 			if (gte(typeScriptCompilerVersion, TypeScriptService.DEFAULT_TSC_VERSION)) {
 				this.typeScriptModuleFilePath = typeScriptInProjectsNodeModulesDir;
 			} else {
@@ -167,7 +166,7 @@ export class TypeScriptService implements ITypeScriptService {
 		}
 
 		const typeScriptCompilerPath = path.join(this.typeScriptModuleFilePath, "lib", "tsc");
-		typeScriptCompilerVersion = typeScriptCompilerVersion || this.$fs.readJson(path.join(this.typeScriptModuleFilePath, this.$projectConstants.PACKAGE_JSON_NAME)).version;
+		typeScriptCompilerVersion = typeScriptCompilerVersion || this.$fs.readJson(path.join(this.typeScriptModuleFilePath, "package.json")).version;
 
 		return { pathToCompiler: typeScriptCompilerPath, version: typeScriptCompilerVersion };
 	}
@@ -244,7 +243,7 @@ export class TypeScriptService implements ITypeScriptService {
 
 	private createTempDirectoryForTsc(): string {
 		const tempDir = temp.mkdirSync(`typescript-compiler-${TypeScriptService.DEFAULT_TSC_VERSION}`);
-		this.$fs.writeJson(path.join(tempDir, this.$projectConstants.PACKAGE_JSON_NAME), { name: "tsc-container", version: "1.0.0" });
+		this.$fs.writeJson(path.join(tempDir, "package.json"), { name: "tsc-container", version: "1.0.0" });
 		return tempDir;
 	}
 }

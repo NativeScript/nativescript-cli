@@ -3,33 +3,6 @@ interface IDeployHelper {
 }
 
 declare module Project {
-	interface IConstants {
-		ADDITIONAL_FILES_DIRECTORY: string;
-		ADDITIONAL_FILE_DISPOSITION: string;
-		APPBUILDER_PROJECT_PLATFORMS_NAMES: IDictionary<string>;
-		APPIDENTIFIER_PROPERTY_NAME: string;
-		CORDOVA_PLUGIN_VARIABLES_PROPERTY_NAME: string;
-		CORE_PLUGINS_PROPERTY_NAME: string;
-		DEBUG_CONFIGURATION_NAME: string;
-		DEBUG_PROJECT_FILE_NAME: string;
-		EXPERIMENTAL_TAG: string;
-		IMAGE_DEFINITIONS_FILE_NAME: string;
-		IONIC_PROJECT_PLATFORMS_NAMES: IDictionary<string>;
-		NATIVESCRIPT_APP_DIR_NAME: string;
-		PACKAGE_JSON_NAME: string;
-		PROJECT_FILE: string;
-		PROJECT_IGNORE_FILE: string;
-		BUILD_RESULT_DISPOSITION: string;
-		REFERENCES_FILE_NAME: string;
-		OLD_REFERENCES_FILE_NAME: string;
-		RELEASE_CONFIGURATION_NAME: string;
-		RELEASE_PROJECT_FILE_NAME: string;
-		ANDROID_PLATFORM_NAME: string;
-		IOS_PLATFORM_NAME: string;
-		WP8_PLATFORM_NAME: string;
-		TSCONFIG_JSON_NAME: string;
-	}
-
 	interface ICapabilities {
 		build: boolean;
 		buildCompanion: boolean;

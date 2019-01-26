@@ -19,7 +19,6 @@ export abstract class ProjectBase implements Project.IProjectBase {
 		protected $logger: ILogger,
 		protected $nativeScriptProjectCapabilities: Project.ICapabilities,
 		protected $options: IOptions,
-		protected $projectConstants: Project.IConstants,
 		protected $staticConfig: Config.IStaticConfig) {
 		this.configurationSpecificData = Object.create(null);
 	}
@@ -80,7 +79,7 @@ export abstract class ProjectBase implements Project.IProjectBase {
 		const projectDir = this.getProjectDir();
 		this.setShouldSaveProject(false);
 		if (projectDir) {
-			const projectFilePath = path.join(projectDir, this.$projectConstants.PROJECT_FILE);
+			const projectFilePath = projectDir;
 			try {
 				this.projectData = this.getProjectData(projectFilePath);
 				this.validate();

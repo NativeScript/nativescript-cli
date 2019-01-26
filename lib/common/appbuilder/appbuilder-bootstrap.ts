@@ -1,5 +1,4 @@
 require("../bootstrap");
-$injector.require("projectConstants", "./appbuilder/project-constants");
 $injector.require("projectFilesProvider", "./appbuilder/providers/project-files-provider");
 $injector.require("pathFilteringService", "./appbuilder/services/path-filtering");
 $injector.require("liveSyncServiceBase", "./services/livesync-service-base");

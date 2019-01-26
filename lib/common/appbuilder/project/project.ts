@@ -10,9 +10,8 @@ export class Project extends ProjectBase {
 		protected $logger: ILogger,
 		protected $nativeScriptProjectCapabilities: Project.ICapabilities,
 		protected $options: IOptions,
-		protected $projectConstants: Project.IConstants,
 		protected $staticConfig: Config.IStaticConfig) {
-		super($cordovaProjectCapabilities, $errors, $fs, $logger, $nativeScriptProjectCapabilities, $options, $projectConstants, $staticConfig);
+		super($cordovaProjectCapabilities, $errors, $fs, $logger, $nativeScriptProjectCapabilities, $options, $staticConfig);
 	}
 
 	protected validate(): void { /* Currently unused */ }
