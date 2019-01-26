@@ -577,17 +577,6 @@ interface IHttpRequestError extends Error {
 	proxyAuthenticationRequired: boolean;
 }
 
-/**
- * Describes error that has stderr information.
- */
-interface IStdError extends Error {
-
-	/**
-	 * If the error comes from process and have some stderr information - use this property to store it.
-	 */
-	stderr: string;
-}
-
 interface ICommandOptions {
 	disableAnalytics?: boolean;
 	enableHooks?: boolean;
@@ -1265,46 +1254,6 @@ interface IServiceContractGenerator {
 }
 
 /**
- * Describes single registry available for search.
- */
-interface IHiveId {
-	/**
-	 * Name of the registry that will be checked.
-	 */
-	registry: string;
-}
-
-/**
- * Describes available for search registry ids.
- */
-interface IHiveIds {
-	/**
-	 * HKEY_LOCAL_MACHINE
-	 */
-	HKLM: IHiveId;
-
-	/**
-	 * HKEY_CURRENT_USER
-	 */
-	HKCU: IHiveId;
-
-	/**
-	 * HKEY_CLASSES_ROOT
-	 */
-	HKCR: IHiveId;
-
-	/**
-	 * HKEY_CURRENT_CONFIG
-	 */
-	HKCC: IHiveId;
-
-	/**
-	 * HKEY_USERS
-	 */
-	HKU: IHiveId;
-}
-
-/**
  * Used to show indication that a process is running
  */
 interface IProgressIndicator {
@@ -1316,30 +1265,6 @@ interface IProgressIndicator {
 	 * @return {Promise<T>}
 	 */
 	showProgressIndicator<T>(promise: Promise<T>, timeout: number, options?: { surpressTrailingNewLine?: boolean }): Promise<T>;
-}
-
-/**
- * Describes the spinner.
- */
-interface ISpinner {
-	/**
-	 * Sets the message that will be printed by spinner.
-	 * @param {string} msg The new message.
-	 * @returns {void}
-	 */
-	message(msg: string): void;
-
-	/**
-	 * Starts the spinner.
-	 * @returns {void}
-	 */
-	start(): void;
-
-	/**
-	 * Stops the spinner.
-	 * @returns {void}
-	 */
-	stop(): void;
 }
 
 /**

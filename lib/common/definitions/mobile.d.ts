@@ -1,8 +1,4 @@
 declare module Mobile {
-	interface ISyncOptions {
-		skipRefresh?: boolean;
-	}
-
 	/**
 	 * Describes available information for a device.
 	 */
@@ -284,10 +280,6 @@ declare module Mobile {
 		packagePath: string;
 	}
 
-	interface IRunningAppInfo {
-		pid: string;
-	}
-
 	interface IDeviceApplicationManager extends NodeJS.EventEmitter {
 		getInstalledApplications(): Promise<string[]>;
 		isApplicationInstalled(appIdentifier: string): Promise<boolean>;
@@ -377,10 +369,6 @@ declare module Mobile {
 
 	interface IDeviceAndroidDebugBridge extends IAndroidDebugBridge {
 		sendBroadcastToDevice(action: string, extras?: IStringDictionary): Promise<number>;
-	}
-
-	interface IDebugOnDeviceSetup {
-		frontEndPath?: string;
 	}
 
 	interface IDeviceDiscovery extends NodeJS.EventEmitter {
@@ -1135,36 +1123,6 @@ declare module Mobile {
 		 * @return {void}.
 		 */
 		handleErrors(errors: IAndroidDebugBridgeError[], treatErrorsAsWarnings?: boolean): void;
-	}
-
-	/**
-	 * Describes one row from Android's proc/net/tcp table.
-	 */
-	interface IAndroidPortInformation {
-		/**
-		 * Local address in format: IP-address:port both in hex format.
-		 */
-		localAddress: string;
-		/**
-		 * Remote address in format: IP-address:port both in hex format.
-		 */
-		remAddress: string;
-		/**
-		 * Process id.
-		 */
-		uid: number;
-		/**
-		 * Hex IP address.
-		 */
-		ipAddressHex: string;
-		/**
-		 * Decimal port number.
-		 */
-		number: number;
-		/**
-		 * Hex port number.
-		 */
-		numberHex: string;
 	}
 
 	/**

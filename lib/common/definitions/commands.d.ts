@@ -42,8 +42,6 @@ interface INotConfiguredEnvOptions {
 	hideCloudBuildOption?: boolean;
 }
 
-interface IDynamicCommand extends ICommand { }
-
 interface ISimilarCommand {
 	name: string;
 	rating: number;
