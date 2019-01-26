@@ -3,7 +3,6 @@ $injector.require("logger", "./common/logger");
 $injector.require("config", "./config");
 $injector.require("options", "./options");
 // note: order above is important!
-$injector.require("nativescript-cli", "./nativescript-cli");
 
 $injector.requirePublicClass("constants", "./constants-provider");
 $injector.require("projectData", "./project-data");
@@ -88,7 +87,6 @@ $injector.requireCommand("package-manager|get", "./commands/package-manager-get"
 $injector.require("packageInstallationManager", "./package-installation-manager");
 $injector.require("dynamicHelpProvider", "./dynamic-help-provider");
 $injector.require("commandsServiceProvider", "./providers/commands-service-provider");
-$injector.require("AppDataProvider", "./providers/device-app-data-provider");
 
 $injector.require("deviceLogProvider", "./common/mobile/device-log-provider");
 $injector.require("projectFilesProvider", "./providers/project-files-provider");
