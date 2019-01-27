@@ -1,4 +1,0 @@
-interface IWatcherInstance {
-	close: () => void;
-}
-

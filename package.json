@@ -42,7 +42,6 @@
     "detect-newline": "2.1.0",
     "email-validator": "1.0.4",
     "esprima": "2.7.0",
-    "gaze": "1.1.0",
     "iconv-lite": "0.4.11",
     "inquirer": "6.2.0",
     "ios-device-lib": "0.5.1",

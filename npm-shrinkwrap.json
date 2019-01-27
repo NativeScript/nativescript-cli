@@ -2497,6 +2497,7 @@
       "version": "1.1.0",
       "resolved": "https://registry.npmjs.org/gaze/-/gaze-1.1.0.tgz",
       "integrity": "sha1-dNP/sBEO3nFcnxW7pWxum4UdPOA=",
+      "dev": true,
       "requires": {
         "globule": "^1.0.0"
       }
@@ -2700,6 +2701,7 @@
       "version": "1.2.1",
       "resolved": "https://registry.npmjs.org/globule/-/globule-1.2.1.tgz",
       "integrity": "sha512-g7QtgWF4uYSL5/dn71WxubOrS7JVGCnFPEnoeChJmBnyR9Mw8nGoEwOgJL/RC2Te0WhbsEUCejfH8SZNJ+adYQ==",
+      "dev": true,
       "requires": {
         "glob": "~7.1.1",
         "lodash": "~4.17.10",
