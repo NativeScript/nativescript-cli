@@ -203,12 +203,12 @@ describe("iOSProjectService", () => {
 				if (hasCustomArchivePath) {
 					archivePath = path.resolve(options.archivePath);
 				} else {
-					archivePath = path.join(projectPath, "platforms", "ios", "build", "archive", projectName + ".xcarchive");
+					archivePath = path.join(projectPath, "platforms", "ios", "build", "Release-iphoneos", projectName + ".xcarchive");
 				}
 
 				assert.ok(args.indexOf("archive") >= 0, "Expected xcodebuild to be executed with archive param.");
 
-				expectOption(args, "-archivePath", archivePath, hasCustomArchivePath ? "Wrong path passed to xcarchive" : "Default xcarchive path is wrong.");
+				expectOption(args, "-archivePath", archivePath, hasCustomArchivePath ? "Wrong path passed to xcarchive" : "exports xcodearchive to platforms/ios/build/archive.");
 				expectOption(args, "-project", path.join(projectPath, "platforms", "ios", projectName + ".xcodeproj"), "Path to Xcode project is wrong.");
 				expectOption(args, "-scheme", projectName, "The provided scheme is wrong.");
 
