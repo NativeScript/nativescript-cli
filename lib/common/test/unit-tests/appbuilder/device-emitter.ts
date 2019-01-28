@@ -1,8 +1,7 @@
 import { Yok } from "../../../yok";
 import { assert } from "chai";
 import { EventEmitter } from "events";
-import { ProjectConstants } from "../../../appbuilder/project-constants";
-import { DeviceEmitter } from "../../../appbuilder/device-emitter";
+import { DeviceEmitter } from "../../../mobile/device-emitter";
 import { DeviceDiscoveryEventNames, DEVICE_LOG_EVENT_NAME } from "../../../constants";
 // Injector dependencies must be classes.
 // EventEmitter is function, so our annotate method will fail.
@@ -10,28 +9,10 @@ class CustomEventEmitter extends EventEmitter {
 	constructor() { super(); }
 }
 
-const companionAppIdentifiers = {
-	"cordova": {
-		"android": "cordova-android",
-		"ios": "cordova-ios",
-		"wp8": "cordova-wp8"
-	},
-
-	"nativescript": {
-		"android": "nativescript-android",
-		"ios": "nativescript-ios"
-	}
-};
-
 function createTestInjector(): IInjector {
 	const testInjector = new Yok();
 	testInjector.register("devicesService", CustomEventEmitter);
 	testInjector.register("deviceLogProvider", CustomEventEmitter);
-	testInjector.register("companionAppsService", {
-		getAllCompanionAppIdentifiers: () => companionAppIdentifiers
-	});
-
-	testInjector.register("projectConstants", ProjectConstants);
 
 	testInjector.register("deviceEmitter", DeviceEmitter);
 
@@ -216,33 +197,5 @@ describe("deviceEmitter", () => {
 				});
 			});
 		});
-
-		_.each(["companionAppInstalled", "companionAppUninstalled"], (applicationEvent: string) => {
-			describe(applicationEvent, () => {
-				_.each(companionAppIdentifiers, (companionAppIdentifersForPlatform: any, applicationFramework: string) => {
-					describe(`is raised for ${applicationFramework}`, () => {
-						const attachCompanionEventVerificationHandler = (expectedDeviceIdentifier: string, done: mocha.Done) => {
-							deviceEmitter.on(applicationEvent, (deviceIdentifier: string, framework: string) => {
-								assert.deepEqual(deviceIdentifier, expectedDeviceIdentifier);
-								assert.deepEqual(framework, applicationFramework);
-
-								// Wait for all operations to be completed and call done after that.
-								setTimeout(() => done(), 0);
-							});
-						};
-
-						it("when working with device", (done: mocha.Done) => {
-							attachCompanionEventVerificationHandler(deviceInstance.deviceInfo.identifier, done);
-							devicesService.emit(DeviceDiscoveryEventNames.DEVICE_FOUND, deviceInstance);
-							deviceInstance.applicationManager.emit("applicationInstalled", companionAppIdentifersForPlatform[deviceInstance.deviceInfo.platform]);
-							if (applicationEvent === "companionAppUninstalled") {
-								deviceInstance.applicationManager.emit("applicationUninstalled", companionAppIdentifersForPlatform[deviceInstance.deviceInfo.platform]);
-							}
-						});
-					});
-				});
-			});
-		});
-
 	});
 });

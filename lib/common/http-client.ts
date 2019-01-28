@@ -17,8 +17,7 @@ export class HttpClient implements Server.IHttpClient {
 	private defaultUserAgent: string;
 	private cleanupData: ICleanupRequestData[];
 
-	constructor(private $config: Config.IConfig,
-		private $logger: ILogger,
+	constructor(private $logger: ILogger,
 		private $processService: IProcessService,
 		private $proxyService: IProxyService,
 		private $staticConfig: Config.IStaticConfig) {
@@ -261,9 +260,7 @@ export class HttpClient implements Server.IHttpClient {
 			this.$logger.error(`You can run ${EOL}\t${clientNameLowerCase} proxy set <url> <username> <password>.${EOL}In order to supply ${clientNameLowerCase} with the credentials needed.`);
 			return "Your proxy requires authentication.";
 		} else if (statusCode === HttpStatusCodes.PAYMENT_REQUIRED) {
-			const subscriptionUrl = util.format("%s://%s/appbuilder/account/subscription", this.$config.AB_SERVER_PROTO, this.$config.AB_SERVER);
-			return util.format("Your subscription has expired. Go to %s to manage your subscription. Note: After you renew your subscription, " +
-				"log out and log back in for the changes to take effect.", subscriptionUrl);
+			return util.format("Your subscription has expired.");
 		} else {
 			this.$logger.trace("Request was unsuccessful. Server returned: ", body);
 			try {

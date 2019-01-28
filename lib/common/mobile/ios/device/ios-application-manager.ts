@@ -4,7 +4,7 @@ import { ApplicationManagerBase } from "../../application-manager-base";
 import { cache } from "../../../decorators";
 
 export class IOSApplicationManager extends ApplicationManagerBase {
-	private applicationsLiveSyncInfos: Mobile.ILiveSyncApplicationInfo[];
+	private applicationsLiveSyncInfos: Mobile.IApplicationInfo[];
 
 	constructor(protected $logger: ILogger,
 		protected $hooksService: IHooksService,
@@ -18,7 +18,7 @@ export class IOSApplicationManager extends ApplicationManagerBase {
 	}
 
 	public async getInstalledApplications(): Promise<string[]> {
-		const applicationsLiveSyncStatus = await this.getApplicationsLiveSyncSupportedStatus();
+		const applicationsLiveSyncStatus = await this.getApplicationsInformation();
 
 		return _(applicationsLiveSyncStatus)
 			.map(appLiveSyncStatus => appLiveSyncStatus.applicationIdentifier)
@@ -33,37 +33,19 @@ export class IOSApplicationManager extends ApplicationManagerBase {
 		});
 	}
 
-	public async getApplicationInfo(applicationIdentifier: string): Promise<Mobile.IApplicationInfo> {
-		if (!this.applicationsLiveSyncInfos || !this.applicationsLiveSyncInfos.length) {
-			await this.getApplicationsLiveSyncSupportedStatus();
-		}
-
-		return _.find(this.applicationsLiveSyncInfos, app => app.applicationIdentifier === applicationIdentifier);
-	}
-
-	public async getApplicationsLiveSyncSupportedStatus(): Promise<Mobile.ILiveSyncApplicationInfo[]> {
+	public async getApplicationsInformation(): Promise<Mobile.IApplicationInfo[]> {
 		const deviceIdentifier = this.device.deviceInfo.identifier;
 		const applicationsOnDeviceInfo = _.first((await this.$iosDeviceOperations.apps([deviceIdentifier]))[deviceIdentifier]);
 		const applicationsOnDevice = applicationsOnDeviceInfo ? applicationsOnDeviceInfo.response : [];
-		this.$logger.trace("Result when getting applications for which LiveSync is enabled: ", JSON.stringify(applicationsOnDevice, null, 2));
+		this.$logger.trace("Result when getting applications information: ", JSON.stringify(applicationsOnDevice, null, 2));
 
 		this.applicationsLiveSyncInfos = _.map(applicationsOnDevice, app => ({
 			applicationIdentifier: app.CFBundleIdentifier,
-			isLiveSyncSupported: app.IceniumLiveSyncEnabled,
 			configuration: app.configuration,
 			deviceIdentifier: this.device.deviceInfo.identifier
 		}));
 
 		return this.applicationsLiveSyncInfos;
-	}
-
-	public async isLiveSyncSupported(appIdentifier: string): Promise<boolean> {
-		if (!this.applicationsLiveSyncInfos || !this.applicationsLiveSyncInfos.length) {
-			await this.getApplicationsLiveSyncSupportedStatus();
-		}
-
-		const selectedApplication = _.find(this.applicationsLiveSyncInfos, app => app.applicationIdentifier === appIdentifier);
-		return !!selectedApplication && selectedApplication.isLiveSyncSupported;
 	}
 
 	public async uninstallApplication(appIdentifier: string): Promise<void> {

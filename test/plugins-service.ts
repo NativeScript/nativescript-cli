@@ -25,11 +25,9 @@ import { NodeModulesBuilder } from "../lib/tools/node-modules/node-modules-build
 import { AndroidProjectService } from "../lib/services/android-project-service";
 import { AndroidToolsInfo } from "../lib/android-tools-info";
 import { assert } from "chai";
-import { DeviceAppDataFactory } from "../lib/common/mobile/device-app-data/device-app-data-factory";
 import { LocalToDevicePathDataFactory } from "../lib/common/mobile/local-to-device-path-data-factory";
 import { MobileHelper } from "../lib/common/mobile/mobile-helper";
 import { ProjectFilesProvider } from "../lib/providers/project-files-provider";
-import { MobilePlatformsCapabilities } from "../lib/mobile-platforms-capabilities";
 import { DevicePlatformsConstants } from "../lib/common/mobile/device-platforms-constants";
 import { XmlValidator } from "../lib/xml-validator";
 import { SettingsService } from "../lib/common/test/unit-tests/stubs";
@@ -77,9 +75,6 @@ function createTestInjector() {
 		trackOptions: () => Promise.resolve(null)
 	});
 	testInjector.register("commandsService", CommandsService);
-	testInjector.register("commandsServiceProvider", {
-		registerDynamicSubCommands: () => { /* intentionally empty body */ }
-	});
 	testInjector.register("hostInfo", HostInfo);
 	testInjector.register("projectHelper", ProjectHelper);
 
@@ -99,11 +94,9 @@ function createTestInjector() {
 	});
 	testInjector.register("packageInstallationManager", PackageInstallationManager);
 
-	testInjector.register("deviceAppDataFactory", DeviceAppDataFactory);
 	testInjector.register("localToDevicePathDataFactory", LocalToDevicePathDataFactory);
 	testInjector.register("mobileHelper", MobileHelper);
 	testInjector.register("projectFilesProvider", ProjectFilesProvider);
-	testInjector.register("mobilePlatformsCapabilities", MobilePlatformsCapabilities);
 	testInjector.register("devicePlatformsConstants", DevicePlatformsConstants);
 	testInjector.register("projectTemplatesService", {
 		defaultTemplate: Promise.resolve("")

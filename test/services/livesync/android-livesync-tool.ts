@@ -6,7 +6,6 @@ import { AndroidLivesyncTool } from "../../../lib/services/livesync/android-live
 import { LiveSyncSocket } from "../../../lib/services/livesync/livesync-socket";
 import { MobileHelper } from "../../../lib/common/mobile/mobile-helper";
 import { FileSystem } from "../../../lib/common/file-system";
-import { MobilePlatformsCapabilities } from "../../../lib/mobile-platforms-capabilities";
 import { DevicePlatformsConstants } from "../../../lib/common/mobile/device-platforms-constants";
 import * as path from "path";
 import temp = require("temp");
@@ -75,7 +74,6 @@ const createTestInjector = (socket: INetSocket, fileStreams: IDictionary<NodeJS.
 		forwardFreeTcpToAbstractPort: () => Promise.resolve("")
 	});
 	testInjector.register("LiveSyncSocket", () => socket);
-	testInjector.register("mobilePlatformsCapabilities", MobilePlatformsCapabilities);
 	testInjector.register("devicePlatformsConstants", DevicePlatformsConstants);
 	testInjector.register("errors", {
 		fail: (message: string) => {

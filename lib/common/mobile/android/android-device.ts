@@ -96,22 +96,6 @@ export class AndroidDevice implements Mobile.IAndroidDevice {
 		return this.deviceInfo.type === constants.DeviceTypes.Emulator;
 	}
 
-	public async getApplicationInfo(applicationIdentifier: string): Promise<Mobile.IApplicationInfo> {
-		const files = await this.fileSystem.listFiles(constants.LiveSyncConstants.ANDROID_FILES_PATH, applicationIdentifier);
-		const androidFilesMatch = files.match(/(\S+)\.abproject/);
-		let result: Mobile.IApplicationInfo = null;
-
-		if (androidFilesMatch && androidFilesMatch[1]) {
-			result = {
-				deviceIdentifier: this.deviceInfo.identifier,
-				configuration: androidFilesMatch[1],
-				applicationIdentifier
-			};
-		}
-
-		return result;
-	}
-
 	public async openDeviceLogStream(): Promise<void> {
 		if (this.deviceInfo.status === constants.CONNECTED_STATUS) {
 			await this.$logcatHelper.start({

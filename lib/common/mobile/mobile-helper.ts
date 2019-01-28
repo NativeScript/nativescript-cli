@@ -2,27 +2,12 @@ import * as helpers from "../helpers";
 
 export class MobileHelper implements Mobile.IMobileHelper {
 	private static DEVICE_PATH_SEPARATOR = "/";
-	private platformNamesCache: string[];
 
-	constructor(private $mobilePlatformsCapabilities: Mobile.IPlatformsCapabilities,
-		private $errors: IErrors,
+	constructor(private $errors: IErrors,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants) { }
 
 	public get platformNames(): string[] {
-		this.platformNamesCache = this.platformNamesCache ||
-			_.map(this.$mobilePlatformsCapabilities.getPlatformNames(), platform => this.normalizePlatformName(platform));
-
-		return this.platformNamesCache;
-	}
-
-	public getPlatformCapabilities(platform: string): Mobile.IPlatformCapabilities {
-		const platformNames = this.$mobilePlatformsCapabilities.getPlatformNames();
-		const validPlatformName = this.validatePlatformName(platform);
-		if (!_.some(platformNames, platformName => platformName === validPlatformName)) {
-			this.$errors.failWithoutHelp("'%s' is not a valid device platform. Valid platforms are %s.", platform, platformNames);
-		}
-
-		return this.$mobilePlatformsCapabilities.getAllCapabilities()[validPlatformName];
+		return [this.$devicePlatformsConstants.iOS, this.$devicePlatformsConstants.Android];
 	}
 
 	public isAndroidPlatform(platform: string): boolean {
@@ -47,10 +32,6 @@ export class MobileHelper implements Mobile.IMobileHelper {
 		}
 
 		return undefined;
-	}
-
-	public isPlatformSupported(platform: string): boolean {
-		return _.includes(this.getPlatformCapabilities(platform).hostPlatformsForDeploy, process.platform);
 	}
 
 	public validatePlatformName(platform: string): string {

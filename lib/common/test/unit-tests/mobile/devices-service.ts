@@ -109,7 +109,6 @@ const iOSSimulator = {
 		tryStartApplication: (packageName: string, framework: string) => Promise.resolve(),
 		reinstallApplication: (packageName: string, packageFile: string) => Promise.resolve(),
 		isApplicationInstalled: (packageName: string) => Promise.resolve(_.includes(["com.telerik.unitTest1", "com.telerik.unitTest2"], packageName)),
-		isLiveSyncSupported: (appIdentifier: string) => Promise.resolve(_.includes(["com.telerik.unitTest1", "com.telerik.unitTest2"], appIdentifier))
 	},
 	deploy: (packageFile: string, packageName: string) => Promise.resolve(),
 	isEmulator: true
@@ -160,7 +159,6 @@ function createTestInjector(): IInjector {
 	testInjector.register("iOSEmulatorServices", IOSEmulatorServices);
 	testInjector.register("messages", Messages);
 	testInjector.register("prompter", {});
-	testInjector.register("companionAppsService", {});
 	testInjector.register("processService", {
 		attachToProcessExitSignals: (context: any, callback: () => Promise<any>) => { /* no implementation required */ }
 	});
@@ -168,7 +166,6 @@ function createTestInjector(): IInjector {
 	testInjector.register("mobileHelper", {
 		platformNames: ["ios", "android"],
 		validatePlatformName: (platform: string) => platform.toLowerCase(),
-		getPlatformCapabilities: (platform: string) => { return { cableDeploy: true }; },
 		isiOSPlatform: (platform: string) => !!(platform && platform.toLowerCase() === "ios"),
 		isAndroidPlatform: (platform: string) => !!(platform && platform.toLowerCase() === "android")
 	});
@@ -190,10 +187,6 @@ function createTestInjector(): IInjector {
 	testInjector.register("emulatorHelper", {});
 
 	return testInjector;
-}
-
-function mockIsAppInstalled(devices: { applicationManager: { isApplicationInstalled(packageName: string): Promise<boolean> } }[], expectedResult: boolean[]): void {
-	_.each(devices, (device, index) => device.applicationManager.isApplicationInstalled = (packageName: string) => Promise.resolve(expectedResult[index]));
 }
 
 async function throwErrorFunction(): Promise<void> {
@@ -257,7 +250,6 @@ describe("devicesService", () => {
 			tryStartApplication: (appData: Mobile.IApplicationData) => Promise.resolve(),
 			reinstallApplication: (packageName: string, packageFile: string) => Promise.resolve(),
 			isApplicationInstalled: (packageName: string) => Promise.resolve(_.includes(["com.telerik.unitTest1", "com.telerik.unitTest2"], packageName)),
-			isLiveSyncSupported: (appIdentifier: string) => Promise.resolve(_.includes(["com.telerik.unitTest1", "com.telerik.unitTest2"], appIdentifier)),
 			checkForApplicationUpdates: (): Promise<void> => Promise.resolve(),
 			getDebuggableApps: (): Promise<Mobile.IDeviceApplicationInformation[]> => Promise.resolve(null),
 			getDebuggableAppViews: (appIdentifiers: string[]): Promise<IDictionary<Mobile.IDebugWebViewInfo[]>> => Promise.resolve(null)
@@ -276,7 +268,6 @@ describe("devicesService", () => {
 			tryStartApplication: (appData: Mobile.IApplicationData) => Promise.resolve(),
 			reinstallApplication: (packageName: string, packageFile: string) => Promise.resolve(),
 			isApplicationInstalled: (packageName: string) => Promise.resolve(_.includes(["com.telerik.unitTest1", "com.telerik.unitTest2", "com.telerik.unitTest3"], packageName)),
-			isLiveSyncSupported: (appIdentifier: string) => Promise.resolve(_.includes(["com.telerik.unitTest1", "com.telerik.unitTest2", "com.telerik.unitTest3"], appIdentifier)),
 			checkForApplicationUpdates: (): Promise<void> => Promise.resolve(),
 			getDebuggableApps: (): Promise<Mobile.IDeviceApplicationInformation[]> => Promise.resolve(null),
 			getDebuggableAppViews: (appIdentifiers: string[]): Promise<IDictionary<Mobile.IDebugWebViewInfo[]>> => Promise.resolve(null)
@@ -518,7 +509,6 @@ describe("devicesService", () => {
 				assert.isTrue(realResult.isInstalled);
 				assert.deepEqual(realResult.appIdentifier, appId);
 				assert.deepEqual(realResult.deviceIdentifier, deviceIdentifiers[index]);
-				assert.deepEqual(realResult.isLiveSyncSupported, true);
 			}
 		});
 
@@ -556,7 +546,6 @@ describe("devicesService", () => {
 			applicationManager: {
 				getInstalledApplications: () => Promise.resolve(["com.telerik.unitTest1", "com.telerik.unitTest2", "com.telerik.unitTest3"]),
 				isApplicationInstalled: (packageName: string) => Promise.resolve(_.includes(["com.telerik.unitTest1", "com.telerik.unitTest2", "com.telerik.unitTest3"], packageName)),
-				isLiveSyncSupported: (appIdentifier: string) => Promise.resolve(_.includes(["com.telerik.unitTest1", "com.telerik.unitTest2", "com.telerik.unitTest3"], appIdentifier))
 			}
 		};
 
@@ -678,13 +667,6 @@ describe("devicesService", () => {
 
 			const expectedErrorMessage = getErrorMessage(testInjector, "NotFoundDeviceByIdentifierErrorMessageWithIdentifier", androidDevice.deviceInfo.identifier);
 			await assert.isRejected(devicesService.initialize({ platform: "android", deviceId: androidDevice.deviceInfo.identifier }), expectedErrorMessage);
-		});
-
-		it("when initialize is called with deviceId and invalid platform", async () => {
-			assert.isFalse(devicesService.hasDevices, "Initially devicesService hasDevices must be false.");
-			iOSDeviceDiscovery.emit(DeviceDiscoveryEventNames.DEVICE_FOUND, iOSDevice);
-			androidDeviceDiscovery.emit(DeviceDiscoveryEventNames.DEVICE_FOUND, androidDevice);
-			await assert.isRejected(devicesService.initialize({ platform: "invalidPlatform", deviceId: androidDevice.deviceInfo.identifier }), "Deploying to %s connected devices is not supported. Build the app using the `build` command and deploy the package manually.");
 		});
 
 		it("when initialize is called with platform and deviceId and device's platform is different", async () => {
@@ -899,32 +881,6 @@ describe("devicesService", () => {
 			androidDeviceDiscovery.emit(DeviceDiscoveryEventNames.DEVICE_FOUND, androidDevice);
 			iOSDeviceDiscovery.emit(DeviceDiscoveryEventNames.DEVICE_FOUND, iOSDevice);
 			await assert.isRejected(devicesService.initialize(), "Multiple device platforms detected (android and ios). Specify platform or device on command line.");
-		});
-
-		it("when parameters are not passed and devices with invalid platforms are detected initialize should work with correct devices only", async () => {
-			assert.isFalse(devicesService.hasDevices, "Initially devicesService hasDevices must be false.");
-			androidDeviceDiscovery.emit(DeviceDiscoveryEventNames.DEVICE_FOUND, androidDevice);
-			iOSDeviceDiscovery.emit(DeviceDiscoveryEventNames.DEVICE_FOUND, {
-				deviceInfo: {
-					identifier: "invalid-platform-device",
-					platform: "invalid-platform"
-				}
-			});
-
-			await devicesService.initialize();
-
-			assert.isTrue(logger.output.indexOf("is not supported") !== -1);
-		});
-
-		it("when parameters are not passed and only devices with invalid platforms are detected, initialize should throw", async () => {
-			assert.isFalse(devicesService.hasDevices, "Initially devicesService hasDevices must be false.");
-			iOSDeviceDiscovery.emit(DeviceDiscoveryEventNames.DEVICE_FOUND, {
-				deviceInfo: {
-					identifier: "invalid-platform-device",
-					platform: "invalid-platform"
-				}
-			});
-			await assert.isRejected(devicesService.initialize(), constants.ERROR_NO_DEVICES);
 		});
 
 		it("caches execution result and does not execute next time when called", async () => {
@@ -1225,59 +1181,6 @@ describe("devicesService", () => {
 			androidDeviceDiscovery.emit(DeviceDiscoveryEventNames.DEVICE_FOUND, androidDevice);
 			await devicesService.initialize({ deviceId: "1", platform: "android" });
 			assert.deepEqual(devicesService.getDeviceByDeviceOption(), androidDevice);
-		});
-	});
-
-	describe("isCompanionAppInstalledOnAllDevices", () => {
-		let $companionAppsService: ICompanionAppsService;
-		const deviceIdentifiers = [iOSDevice.deviceInfo.identifier, androidDevice.deviceInfo.identifier];
-
-		beforeEach(() => {
-			$companionAppsService = testInjector.resolve("companionAppsService");
-			$companionAppsService.getCompanionAppIdentifier = (framework: string, platform: string): string => "companion-app";
-
-			devicesService.getDeviceByIdentifier = (identifier: string) => {
-				return <any>(identifier === androidDevice.deviceInfo.identifier ? androidDevice : iOSDevice);
-			};
-		});
-
-		it("should return correct result for all of the devices passed as argument.", async () => {
-			const expectedResult = [true, true];
-			mockIsAppInstalled([iOSDevice, androidDevice], expectedResult);
-			const isAppInstalledOnDevices = await Promise.all(devicesService.isCompanionAppInstalledOnDevices(deviceIdentifiers, constants.TARGET_FRAMEWORK_IDENTIFIERS.Cordova));
-			const result = _.map(isAppInstalledOnDevices, (appInstalledInfo: IAppInstalledInfo) => appInstalledInfo.isInstalled);
-
-			assert.deepEqual(result.length, deviceIdentifiers.length);
-		});
-
-		it("should return correct result when all of the devices have the companion app installed.", async () => {
-			const expectedResult = [true, true];
-			mockIsAppInstalled([iOSDevice, androidDevice], expectedResult);
-
-			const isAppInstalledOnDevices = await Promise.all(devicesService.isCompanionAppInstalledOnDevices(deviceIdentifiers, constants.TARGET_FRAMEWORK_IDENTIFIERS.Cordova));
-			const result = _.map(isAppInstalledOnDevices, (appInstalledInfo: IAppInstalledInfo) => appInstalledInfo.isInstalled);
-
-			assert.deepEqual(result, expectedResult);
-		});
-
-		it("should return correct result when some of the devices have the companion app installed.", async () => {
-			const expectedResult = [true, false];
-			mockIsAppInstalled([iOSDevice, androidDevice], expectedResult);
-
-			const isAppInstalledOnDevices = await Promise.all(devicesService.isCompanionAppInstalledOnDevices(deviceIdentifiers, constants.TARGET_FRAMEWORK_IDENTIFIERS.Cordova));
-			const result = _.map(isAppInstalledOnDevices, (appInstalledInfo: IAppInstalledInfo) => appInstalledInfo.isInstalled);
-
-			assert.deepEqual(result, expectedResult);
-		});
-
-		it("should return correct result when none of the devices have the companion app installed.", async () => {
-			const expectedResult = [false, false];
-			mockIsAppInstalled([iOSDevice, androidDevice], expectedResult);
-
-			const isAppInstalledOnDevices = await Promise.all(devicesService.isCompanionAppInstalledOnDevices(deviceIdentifiers, constants.TARGET_FRAMEWORK_IDENTIFIERS.Cordova));
-			const result = _.map(isAppInstalledOnDevices, (appInstalledInfo: IAppInstalledInfo) => appInstalledInfo.isInstalled);
-
-			assert.deepEqual(result, expectedResult);
 		});
 	});
 

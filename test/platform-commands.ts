@@ -11,11 +11,9 @@ import * as optionsLib from "../lib/options";
 import * as hostInfoLib from "../lib/common/host-info";
 import * as ProjectFilesManagerLib from "../lib/common/services/project-files-manager";
 import { assert } from "chai";
-import { DeviceAppDataFactory } from "../lib/common/mobile/device-app-data/device-app-data-factory";
 import { LocalToDevicePathDataFactory } from "../lib/common/mobile/local-to-device-path-data-factory";
 import { MobileHelper } from "../lib/common/mobile/mobile-helper";
 import { ProjectFilesProvider } from "../lib/providers/project-files-provider";
-import { MobilePlatformsCapabilities } from "../lib/mobile-platforms-capabilities";
 import { DevicePlatformsConstants } from "../lib/common/mobile/device-platforms-constants";
 import { XmlValidator } from "../lib/xml-validator";
 import * as ChildProcessLib from "../lib/common/child-process";
@@ -118,9 +116,6 @@ function createTestInjector() {
 	testInjector.registerCommand("platform|update", PlatformUpdateCommandLib.UpdatePlatformCommand);
 	testInjector.registerCommand("platform|clean", PlatformCleanCommandLib.CleanCommand);
 	testInjector.register("resources", {});
-	testInjector.register("commandsServiceProvider", {
-		registerDynamicSubCommands: () => { /* intentionally left blank */ }
-	});
 	testInjector.register("commandsService", {
 		tryExecuteCommand: () => { /* intentionally left blank */ }
 	});
@@ -135,11 +130,9 @@ function createTestInjector() {
 	testInjector.register("projectFilesManager", ProjectFilesManagerLib.ProjectFilesManager);
 	testInjector.register("hooksService", stubs.HooksServiceStub);
 
-	testInjector.register("deviceAppDataFactory", DeviceAppDataFactory);
 	testInjector.register("localToDevicePathDataFactory", LocalToDevicePathDataFactory);
 	testInjector.register("mobileHelper", MobileHelper);
 	testInjector.register("projectFilesProvider", ProjectFilesProvider);
-	testInjector.register("mobilePlatformsCapabilities", MobilePlatformsCapabilities);
 	testInjector.register("devicePlatformsConstants", DevicePlatformsConstants);
 	testInjector.register("xmlValidator", XmlValidator);
 	testInjector.register("npm", {});

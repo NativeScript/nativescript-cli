@@ -41,7 +41,6 @@ describe("nativescript-cli-lib", () => {
 			"getInstalledApplications",
 			"initialize",
 			"isAppInstalledOnDevices",
-			"isCompanionAppInstalledOnDevices",
 			"mapAbstractToTcpPort",
 			"setLogLevel"
 		],

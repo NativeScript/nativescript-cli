@@ -19,9 +19,5 @@ export class ResourceLoader implements IResourceLoader {
 	readJson(resourcePath: string): any {
 		return this.$fs.readJson(this.resolvePath(resourcePath));
 	}
-
-	public getPathToAppResources(framework: string): string {
-		return path.join(this.resolvePath(framework), this.$staticConfig.APP_RESOURCES_DIR_NAME);
-	}
 }
 $injector.register("resources", ResourceLoader);

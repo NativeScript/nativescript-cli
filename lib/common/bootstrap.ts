@@ -74,9 +74,6 @@ $injector.require("iOSSimResolver", "./mobile/ios/simulator/ios-sim-resolver");
 $injector.require("iOSSimulatorLogProvider", "./mobile/ios/simulator/ios-simulator-log-provider");
 
 $injector.require("localToDevicePathDataFactory", "./mobile/local-to-device-path-data-factory");
-$injector.require("deviceAppDataFactory", "./mobile/device-app-data/device-app-data-factory");
-
-$injector.requirePublic("typeScriptService", "./services/typescript-service");
 
 $injector.requirePublic("devicesService", "./mobile/mobile-core/devices-service");
 $injector.requirePublic("androidProcessService", "./mobile/mobile-core/android-process-service");
@@ -90,7 +87,6 @@ $injector.require("autoCompletionService", "./services/auto-completion-service")
 $injector.require("processService", "./services/process-service");
 $injector.requirePublic("settingsService", "./services/settings-service");
 $injector.require("opener", "./opener");
-$injector.require("dynamicHelpService", "./services/dynamic-help-service");
 $injector.require("microTemplateService", "./services/micro-templating-service");
 $injector.require("mobileHelper", "./mobile/mobile-helper");
 $injector.require("emulatorHelper", "./mobile/emulator-helper");
@@ -119,7 +115,4 @@ $injector.require("xcodeSelectService", "./services/xcode-select-service");
 $injector.require("net", "./services/net-service");
 
 $injector.require("qr", "./services/qr");
-$injector.require("printPluginsService", "./services/plugins/print-plugins-service");
-$injector.require("npmPluginsService", "./services/plugins/npm-plugins-service");
-
 $injector.require(["lockfile", "lockService"], "./services/lock-service");

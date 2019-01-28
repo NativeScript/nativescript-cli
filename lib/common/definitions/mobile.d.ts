@@ -1,8 +1,4 @@
 declare module Mobile {
-	interface ISyncOptions {
-		skipRefresh?: boolean;
-	}
-
 	/**
 	 * Describes available information for a device.
 	 */
@@ -101,7 +97,6 @@ declare module Mobile {
 		fileSystem: Mobile.IDeviceFileSystem;
 		isEmulator: boolean;
 		openDeviceLogStream(): Promise<void>;
-		getApplicationInfo(applicationIdentifier: string): Promise<Mobile.IApplicationInfo>;
 
 		/**
 		 * Called when device is lost. Its purpose is to clean any resources used by the instance.
@@ -150,26 +145,6 @@ declare module Mobile {
 		device: Mobile.IDevice;
 		getDeviceProjectRootPath(): Promise<string>;
 		deviceSyncZipPath?: string;
-		isLiveSyncSupported(): Promise<boolean>;
-	}
-
-	interface IDeviceAppDataFactory {
-		create<T extends Mobile.IDeviceAppData>(appIdentifier: string, platform: string, device: Mobile.IDevice, liveSyncOptions?: { isForCompanionApp: boolean }): T;
-	}
-
-	interface IDeviceAppDataFactoryRule {
-		vanilla: any;
-		companion?: any;
-	}
-
-	interface IDeviceAppDataProvider {
-		createFactoryRules(): IDictionary<Mobile.IDeviceAppDataFactoryRule>;
-	}
-
-	interface IAndroidLiveSyncService {
-		liveSyncCommands: any;
-		livesync(appIdentifier: string, liveSyncRoot: string, commands: string[]): Promise<void>;
-		createCommandsFileOnDevice(commandsFileDevicePath: string, commands: string[]): Promise<void>;
 	}
 
 	interface ILogcatStartOptions {
@@ -305,10 +280,6 @@ declare module Mobile {
 		packagePath: string;
 	}
 
-	interface IRunningAppInfo {
-		pid: string;
-	}
-
 	interface IDeviceApplicationManager extends NodeJS.EventEmitter {
 		getInstalledApplications(): Promise<string[]>;
 		isApplicationInstalled(appIdentifier: string): Promise<boolean>;
@@ -319,22 +290,9 @@ declare module Mobile {
 		stopApplication(appData: IApplicationData): Promise<void>;
 		restartApplication(appData: IStartApplicationData): Promise<void>;
 		checkForApplicationUpdates(): Promise<void>;
-		isLiveSyncSupported(appIdentifier: string): Promise<boolean>;
-		getApplicationInfo(applicationIdentifier: string): Promise<Mobile.IApplicationInfo>;
 		tryStartApplication(appData: IApplicationData): Promise<void>;
 		getDebuggableApps(): Promise<Mobile.IDeviceApplicationInformation[]>;
 		getDebuggableAppViews(appIdentifiers: string[]): Promise<IDictionary<Mobile.IDebugWebViewInfo[]>>;
-	}
-
-	/**
-	 * Describes information about livesync in an application.
-	 */
-	interface ILiveSyncApplicationInfo extends IApplicationInfo {
-		/**
-		 * Whether LiveSync is supported
-		 * @type {boolean}
-		 */
-		isLiveSyncSupported: boolean;
 	}
 
 	/**
@@ -411,10 +369,6 @@ declare module Mobile {
 
 	interface IDeviceAndroidDebugBridge extends IAndroidDebugBridge {
 		sendBroadcastToDevice(action: string, extras?: IStringDictionary): Promise<number>;
-	}
-
-	interface IDebugOnDeviceSetup {
-		frontEndPath?: string;
 	}
 
 	interface IDeviceDiscovery extends NodeJS.EventEmitter {
@@ -520,7 +474,6 @@ declare module Mobile {
 		deployOnDevices(deviceIdentifiers: string[], packageFile: string, packageName: string, framework: string): Promise<void>[];
 		getDeviceByIdentifier(identifier: string): Mobile.IDevice;
 		mapAbstractToTcpPort(deviceIdentifier: string, appIdentifier: string, framework: string): Promise<string>;
-		isCompanionAppInstalledOnDevices(deviceIdentifiers: string[], framework: string): Promise<IAppInstalledInfo>[];
 		getDebuggableApps(deviceIdentifiers: string[]): Promise<Mobile.IDeviceApplicationInformation[]>[];
 		getDebuggableViews(deviceIdentifier: string, appIdentifier: string): Promise<Mobile.IDebugWebViewInfo[]>;
 
@@ -696,13 +649,6 @@ declare module Mobile {
 
 	interface ILocalToDevicePathDataFactory {
 		create(fileName: string, localProjectRootPath: string, onDeviceFileName: string, deviceProjectRootPath: string): Mobile.ILocalToDevicePathData;
-	}
-
-	interface IPlatformCapabilities {
-		wirelessDeploy?: boolean;
-		cableDeploy: boolean;
-		companion?: boolean;
-		hostPlatformsForDeploy: string[];
 	}
 
 	interface IAvdInfo extends IDictionary<string | number> {
@@ -1044,20 +990,13 @@ declare module Mobile {
 		timeout?: number;
 	}
 
-	interface IPlatformsCapabilities {
-		getPlatformNames(): string[];
-		getAllCapabilities(): IDictionary<Mobile.IPlatformCapabilities>;
-	}
-
 	interface IMobileHelper {
 		platformNames: string[];
 		isAndroidPlatform(platform: string): boolean;
 		isiOSPlatform(platform: string): boolean;
 		isWP8Platform(platform: string): boolean;
 		normalizePlatformName(platform: string): string;
-		isPlatformSupported(platform: string): boolean;
 		validatePlatformName(platform: string): string;
-		getPlatformCapabilities(platform: string): Mobile.IPlatformCapabilities;
 		buildDevicePath(...args: string[]): string;
 		correctDevicePath(filePath: string): string;
 		isiOSTablet(deviceName: string): boolean;
@@ -1184,36 +1123,6 @@ declare module Mobile {
 		 * @return {void}.
 		 */
 		handleErrors(errors: IAndroidDebugBridgeError[], treatErrorsAsWarnings?: boolean): void;
-	}
-
-	/**
-	 * Describes one row from Android's proc/net/tcp table.
-	 */
-	interface IAndroidPortInformation {
-		/**
-		 * Local address in format: IP-address:port both in hex format.
-		 */
-		localAddress: string;
-		/**
-		 * Remote address in format: IP-address:port both in hex format.
-		 */
-		remAddress: string;
-		/**
-		 * Process id.
-		 */
-		uid: number;
-		/**
-		 * Hex IP address.
-		 */
-		ipAddressHex: string;
-		/**
-		 * Decimal port number.
-		 */
-		number: number;
-		/**
-		 * Hex port number.
-		 */
-		numberHex: string;
 	}
 
 	/**

@@ -1,44 +1,38 @@
-const gaze = require("gaze");
+import * as choki from "chokidar";
 import * as path from "path";
 import * as os from "os";
 
-const hostInfo: IHostInfo = $injector.resolve("hostInfo");
-
 class CancellationService implements ICancellationService {
-	private watches: IDictionary<IWatcherInstance> = {};
+	private watches: IDictionary<choki.FSWatcher> = {};
 
 	constructor(private $fs: IFileSystem,
-		private $logger: ILogger) {
-		this.$fs.createDirectory(CancellationService.killSwitchDir);
-		this.$fs.chmod(CancellationService.killSwitchDir, "0777");
+		private $logger: ILogger,
+		private $hostInfo: IHostInfo) {
+
+		if (this.$hostInfo.isWindows) {
+			this.$fs.createDirectory(CancellationService.killSwitchDir);
+		}
+
 	}
 
 	public async begin(name: string): Promise<void> {
+		if (!this.$hostInfo.isWindows) {
+			return;
+		}
+
 		const triggerFile = CancellationService.makeKillSwitchFileName(name);
 
 		if (!this.$fs.exists(triggerFile)) {
 			this.$fs.writeFile(triggerFile, "");
-
-			if (!hostInfo.isWindows) {
-				this.$fs.chmod(triggerFile, "0777");
-			}
 		}
 
 		this.$logger.trace("Starting watch on killswitch %s", triggerFile);
 
-		const watcherInitialized = new Promise<IWatcherInstance>((resolve, reject) => {
-			gaze(triggerFile, function (err: any, watcher: any) {
-				this.on("deleted", (filePath: string) => process.exit());
-
-				if (err) {
-					reject(err);
-				} else {
-					resolve(watcher);
-				}
+		const watcher = choki.watch(triggerFile, { ignoreInitial: true })
+			.on("unlink", (filePath: string) => {
+				this.$logger.info(`Exiting process as the file ${filePath} has been deleted. Probably reinstalling CLI while there's a working instance.`);
+				process.exit(ErrorCodes.DELETED_KILL_FILE);
 			});
-		});
-
-		const watcher = await watcherInitialized;
 
 		if (watcher) {
 			this.watches[name] = watcher;
@@ -47,8 +41,10 @@ class CancellationService implements ICancellationService {
 
 	public end(name: string): void {
 		const watcher = this.watches[name];
-		delete this.watches[name];
-		watcher.close();
+		if (watcher) {
+			delete this.watches[name];
+			watcher.close();
+		}
 	}
 
 	public dispose(): void {
@@ -64,22 +60,4 @@ class CancellationService implements ICancellationService {
 	}
 }
 
-class CancellationServiceDummy implements ICancellationService {
-	dispose(): void {
-		/* intentionally left blank */
-	}
-
-	async begin(name: string): Promise<void> {
-		return;
-	}
-
-	end(name: string): void {
-		/* intentionally left blank */
-	}
-}
-
-if (hostInfo.isWindows) {
-	$injector.register("cancellation", CancellationService);
-} else {
-	$injector.register("cancellation", CancellationServiceDummy);
-}
+$injector.register("cancellation", CancellationService);

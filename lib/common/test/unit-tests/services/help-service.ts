@@ -20,32 +20,10 @@ const createTestInjector = (opts?: { isProjectTypeResult: boolean; isPlatformRes
 	injector.register("logger", CommonLoggerStub);
 
 	opts = opts || { isPlatformResult: true, isProjectTypeResult: true };
-
-	injector.register("dynamicHelpProvider", {
-		getLocalVariables: () => ({})
-	});
-
-	injector.register("dynamicHelpService", {
-		isProjectType: (...args: string[]): boolean => opts.isProjectTypeResult,
-		isPlatform: (...args: string[]): boolean => { return opts.isPlatformResult; },
-		getLocalVariables: (): IDictionary<any> => {
-			const localVariables: IDictionary<any> = {};
-			localVariables["myLocalVar"] = opts.isProjectTypeResult;
-			localVariables["isLinux"] = opts.isPlatformResult;
-			localVariables["isWindows"] = opts.isPlatformResult;
-			localVariables["isMacOS"] = opts.isPlatformResult;
-			return localVariables;
-		}
-	});
 	injector.register("microTemplateService", MicroTemplateService);
 	injector.register("helpService", HelpService);
 	injector.register("opener", {
 		open(target: string, appname?: string): void {/* mock */ }
-	});
-	injector.register("commandsServiceProvider", {
-		getDynamicCommands: (): Promise<string[]> => {
-			return Promise.resolve(<string[]>[]);
-		}
 	});
 
 	injector.register("fs", {
@@ -58,6 +36,15 @@ const createTestInjector = (opts?: { isProjectTypeResult: boolean; isPlatformRes
 
 	injector.registerCommand("foo", {});
 
+	const microTemplateService: any = injector.resolve("microTemplateService");
+	microTemplateService.getLocalVariables = (): IDictionary<any> => {
+		const localVariables: IDictionary<any> = {};
+		localVariables["myLocalVar"] = opts.isProjectTypeResult;
+		localVariables["isLinux"] = opts.isPlatformResult;
+		localVariables["isWindows"] = opts.isPlatformResult;
+		localVariables["isMacOS"] = opts.isPlatformResult;
+		return localVariables;
+	};
 	return injector;
 };
 

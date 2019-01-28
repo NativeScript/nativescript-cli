@@ -1,7 +1,7 @@
-import { DeviceLogProviderBase } from "../mobile/device-log-provider-base";
+import { DeviceLogProviderBase } from "./device-log-provider-base";
 import { DEVICE_LOG_EVENT_NAME } from "../constants";
 
-export class DeviceLogProvider extends DeviceLogProviderBase {
+export class DeviceLogEmitter extends DeviceLogProviderBase {
 	constructor(protected $logFilter: Mobile.ILogFilter,
 		$logger: ILogger,
 		private $loggingLevels: Mobile.ILoggingLevels) {
@@ -34,4 +34,4 @@ export class DeviceLogProvider extends DeviceLogProviderBase {
 	}
 }
 
-$injector.register("deviceLogProvider", DeviceLogProvider);
+$injector.register("deviceLogProvider", DeviceLogEmitter);

@@ -14,10 +14,6 @@ export abstract class IOSDeviceBase implements Mobile.IiOSDevice {
 	abstract isEmulator: boolean;
 	abstract openDeviceLogStream(options?: Mobile.IiOSLogStreamOptions): Promise<void>;
 
-	public getApplicationInfo(applicationIdentifier: string): Promise<Mobile.IApplicationInfo> {
-		return this.applicationManager.getApplicationInfo(applicationIdentifier);
-	}
-
 	@performanceLog()
 	public async getDebugSocket(appId: string, projectName: string): Promise<net.Socket> {
 		return this.$lockService.executeActionWithLock(async () => {

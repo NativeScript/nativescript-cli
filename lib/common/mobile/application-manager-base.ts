@@ -76,14 +76,11 @@ export abstract class ApplicationManagerBase extends EventEmitter implements Mob
 		}
 	}
 
-	public abstract async isLiveSyncSupported(appIdentifier: string): Promise<boolean>;
-
 	public abstract async installApplication(packageFilePath: string, appIdentifier?: string): Promise<void>;
 	public abstract async uninstallApplication(appIdentifier: string): Promise<void>;
 	public abstract async startApplication(appData: Mobile.IApplicationData): Promise<void>;
 	public abstract async stopApplication(appData: Mobile.IApplicationData): Promise<void>;
 	public abstract async getInstalledApplications(): Promise<string[]>;
-	public abstract async getApplicationInfo(applicationIdentifier: string): Promise<Mobile.IApplicationInfo>;
 	public abstract async getDebuggableApps(): Promise<Mobile.IDeviceApplicationInformation[]>;
 	public abstract async getDebuggableAppViews(appIdentifiers: string[]): Promise<IDictionary<Mobile.IDebugWebViewInfo[]>>;
 

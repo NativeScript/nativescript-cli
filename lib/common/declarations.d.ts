@@ -577,17 +577,6 @@ interface IHttpRequestError extends Error {
 	proxyAuthenticationRequired: boolean;
 }
 
-/**
- * Describes error that has stderr information.
- */
-interface IStdError extends Error {
-
-	/**
-	 * If the error comes from process and have some stderr information - use this property to store it.
-	 */
-	stderr: string;
-}
-
 interface ICommandOptions {
 	disableAnalytics?: boolean;
 	enableHooks?: boolean;
@@ -600,7 +589,8 @@ declare const enum ErrorCodes {
 	INVALID_ARGUMENT = 128,
 	RESOURCE_PROBLEM = 129,
 	KARMA_FAIL = 130,
-	UNHANDLED_REJECTION_FAILURE = 131
+	UNHANDLED_REJECTION_FAILURE = 131,
+	DELETED_KILL_FILE = 132,
 }
 
 interface IFutureDispatcher {
@@ -781,14 +771,6 @@ interface IPlaygroundInfo {
 	usedTutorial: boolean;
 }
 
-interface IHostCapabilities {
-	capabilities: IDictionary<IHostCapability>;
-}
-
-interface IHostCapability {
-	debugToolsSupported: boolean;
-}
-
 interface IAutoCompletionService {
 
 	/**
@@ -825,60 +807,6 @@ interface IHooksService {
 interface IHook {
 	name: string;
 	fullPath: string;
-}
-
-/**
- * Describes TypeScript compilation methods.
- */
-interface ITypeScriptService {
-	/**
-	 * Transpiles specified files or all files in the project directory. The default passed options are overriden by the ones in tsconfig.json file. The options from tsconfig.json file are overriden by the passed compiler options.
-	 * @param {string} projectDir: Specifies the directory of the project.
-	 * @param {string[]} typeScriptFiles @optional The files that will be compiled.
-	 * @param {string[]} definitionFiles @optional The definition files used for compilation.
-	 * @param {ITypeScriptTranspileOptions} options @optional The transpilation options.
-	 * @return {Promise<void>}
-	 */
-	transpile(projectDir: string, typeScriptFiles?: string[], definitionFiles?: string[], options?: ITypeScriptTranspileOptions): Promise<void>;
-
-	/**
-	 * Returns new object, containing all TypeScript and all TypeScript definition files.
-	 * @param {string} projectDir The directory of the project which contains TypeScript files.
-	 * @return {ITypeScriptFiles} all TypeScript and all TypeScript definition files.
-	 */
-	getTypeScriptFilesData(projectDir: string): ITypeScriptFiles
-
-	/**
-	 * Checks if the project language is TypeScript by enumerating all files and checking if there are at least one TypeScript file (.ts), that is not definition file(.d.ts)
-	 * @param {string} projectDir The directory of the project.
-	 * @return {boolean} true when the project contains .ts files and false otherwise.
-	 */
-	isTypeScriptProject(projectDir: string): boolean;
-
-	/**
-	 * Checks if the file is TypeScript file.
-	 * @param {string} file The file name.
-	 * @return {boolean} true when the file is TypeScript file.
-	 */
-	isTypeScriptFile(file: string): boolean;
-}
-
-interface IDynamicHelpService {
-	/**
-	 * Checks if current project's framework is one of the specified as arguments.
-	 * @param args {string[]} Frameworks to be checked.
-	 * @returns {boolean} True in case the current project's framework is one of the passed as args, false otherwise.
-	 */
-	isProjectType(...args: string[]): boolean;
-
-	isPlatform(...args: string[]): boolean;
-
-	/**
-	 * Gives an object containing all required variables that can be used in help content and their values.
-	 * @param {any} Object with one boolean property - `isHtml` - it defines if the help content is generated for html or for console help.
-	 * @returs {IDictionary<any>} Key-value pairs of variables and their values.
-	 */
-	getLocalVariables(options: { isHtml: boolean }): IDictionary<any>;
 }
 
 /**
@@ -979,22 +907,6 @@ interface IQrCodeImageData {
 	imageData: string;
 }
 
-interface IDynamicHelpProvider {
-	/**
-	 * Checks if current project's framework is one of the specified as arguments.
-	 * @param args {string[]} Frameworks to be checked.
-	 * @returns {boolean} True in case the current project's framework is one of the passed as args, false otherwise.
-	 */
-	isProjectType(args: string[]): boolean;
-
-	/**
-	 * Gives an object containing all required variables that can be used in help content and their values.
-	 * @param {any} Object with one boolean property - `isHtml` - it defines if the help content is generated for html or for console help.
-	 * @returs {IDictionary<any>} Key-value pairs of variables and their values.
-	 */
-	getLocalVariables(options: { isHtml: boolean }): IDictionary<any>;
-}
-
 interface IMicroTemplateService {
 	parseContent(data: string, options: { isHtml: boolean }): Promise<string>;
 }
@@ -1040,115 +952,8 @@ interface IXcodeSelectService {
 	getXcodeVersion(): Promise<IVersionData>;
 }
 
-interface ILiveSyncServiceBase {
-	/**
-	 * If watch option is not specified executes full sync
-	 * If watch option is specified executes partial sync
-	 */
-	sync(data: ILiveSyncData[], projectId: string, projectFilesConfig: IProjectFilesConfig, filePaths?: string[]): Promise<void>;
-
-	/**
-	 * Returns the `canExecute` method which defines if LiveSync operation can be executed on specified device.
-	 * @param {string} platform Platform for which the LiveSync operation should be executed.
-	 * @param {string} appIdentifier Application identifier.
-	 * @param {(dev: Mobile.IDevice) => boolean} canExecute Base canExecute function that will be added to the predefined checks.
-	 * @return {Promise<(dev: Mobile.IDevice) => boolean>} Function that returns boolean.
-	 */
-	getCanExecuteAction(platform: string, appIdentifier: string, canExecute?: (dev: Mobile.IDevice) => boolean): Promise<(dev: Mobile.IDevice) => boolean>;
-
-	/**
-	 * Gets LiveSync action that should be executed per device.
-	 * @param {ILiveSyncData} data LiveSync data describing the LiveSync operation.
-	 * @param {string[]} filesToSync Files that have to be synced.
-	 * @param {Function} deviceFilesAction Custom action that has to be executed instead of just copying the files.
-	 * @param {ILiveSyncOptions} liveSyncOptions Additional options for LiveSyncing
-	 * @return {Function} Function that returns Promise<void>.
-	 */
-	getSyncAction(data: ILiveSyncData, filesToSync: string[], deviceFilesAction: (deviceAppData: Mobile.IDeviceAppData, device: Mobile.IDevice, localToDevicePaths: Mobile.ILocalToDevicePathData[]) => Promise<void>, liveSyncOptions: ILiveSyncOptions): (device: Mobile.IDevice) => Promise<void>;
-
-	/**
-	 * Gets LiveSync action that should be executed per device when files should be deleted.
-	 * @param {ILiveSyncData} data LiveSync data describing the LiveSync operation.
-	 * @return {Function} Function that returns Promise<void>.
-	 */
-	getSyncRemovedFilesAction(data: ILiveSyncData): (deviceAppData: Mobile.IDeviceAppData, device: Mobile.IDevice, localToDevicePaths: Mobile.ILocalToDevicePathData[]) => Promise<void>;
-}
-
-/**
- * Describes deletion options for a LiveSync operation
- */
-interface ILiveSyncDeletionOptions {
-	/**
-	 * Defines if the LiveSync operation is for file deletion instead of addition.
-	 * @type {boolean}
-	 */
-	isForDeletedFiles: boolean
-}
-
-/**
- * Describes additional options for LiveSyncing
- */
-interface ILiveSyncOptions extends IProjectFilesConfig, ILiveSyncDeletionOptions {
-	/**
-	 * Defines if the LiveSync operation is for Companion app.
-	 * @type {boolean}
-	 */
-	isForCompanionApp: boolean
-}
-
-interface ISyncBatch {
-	/**
-	 * Checks if there is a pending sync
-	 */
-	syncPending: boolean;
-	/**
-	 * Adds the file to the sync queue. All files from the queue will be pushed on the device after 250ms.
-	 */
-	addFile(file: string): void;
-	syncFiles(syncAction: (filesToSync: string[]) => Promise<void>): Promise<void>;
-}
-
 interface IPlatform {
 	platform: string;
-}
-
-interface ILiveSyncData extends IPlatform {
-	/** Application identifier */
-	appIdentifier: string;
-	/** The path to a directory that contains prepared project files for sync */
-	projectFilesPath: string;
-	/** The path to a directory that is watched */
-	syncWorkingDirectory: string;
-	forceExecuteFullSync?: boolean;
-	/** Additional configurations for which to get the information. The basic configurations are `debug` and `release`. */
-	additionalConfigurations?: string[];
-	/** Configurations for which to get the information. */
-	configuration?: string;
-	excludedProjectDirsAndFiles?: string[];
-	/**
-	 * Describes if the livesync action can be executed on specified device.
-	 * The method is called for each device.
-	 */
-	canExecute?(device: Mobile.IDevice): boolean;
-}
-
-interface IDeviceLiveSyncServiceBase {
-	/**
-	 * Specifies some action that will be executed before every sync operation
-	 */
-	beforeLiveSyncAction?(deviceAppData: Mobile.IDeviceAppData): Promise<void>;
-}
-
-interface IDeviceLiveSyncService extends IDeviceLiveSyncServiceBase {
-	/**
-	 * Refreshes the application's content on a device
-	 */
-	refreshApplication(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], forceExecuteFullSync: boolean): Promise<void>;
-	/**
-	 * Removes specified files from a connected device
-	 */
-	removeFiles(appIdentifier: string, localToDevicePaths: Mobile.ILocalToDevicePathData[]): Promise<void>;
-	afterInstallApplicationAction?(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]): Promise<boolean>;
 }
 
 interface ISystemWarning {
@@ -1404,13 +1209,6 @@ interface IResourceLoader {
 	 * @return {any}      Object based on the JSON contents of the resource file.
 	 */
 	readJson(path: string): any;
-
-	/**
-	 * Returns the path to App_Resources folder, which contains all resources for a given application.
-	 * @param  {string} framework The application's framework name
-	 * @return {string}           The absolute path to App_Resources folder
-	 */
-	getPathToAppResources(framework: string): string;
 }
 
 interface IPluginVariablesHelper {
@@ -1457,46 +1255,6 @@ interface IServiceContractGenerator {
 }
 
 /**
- * Describes single registry available for search.
- */
-interface IHiveId {
-	/**
-	 * Name of the registry that will be checked.
-	 */
-	registry: string;
-}
-
-/**
- * Describes available for search registry ids.
- */
-interface IHiveIds {
-	/**
-	 * HKEY_LOCAL_MACHINE
-	 */
-	HKLM: IHiveId;
-
-	/**
-	 * HKEY_CURRENT_USER
-	 */
-	HKCU: IHiveId;
-
-	/**
-	 * HKEY_CLASSES_ROOT
-	 */
-	HKCR: IHiveId;
-
-	/**
-	 * HKEY_CURRENT_CONFIG
-	 */
-	HKCC: IHiveId;
-
-	/**
-	 * HKEY_USERS
-	 */
-	HKU: IHiveId;
-}
-
-/**
  * Used to show indication that a process is running
  */
 interface IProgressIndicator {
@@ -1508,30 +1266,6 @@ interface IProgressIndicator {
 	 * @return {Promise<T>}
 	 */
 	showProgressIndicator<T>(promise: Promise<T>, timeout: number, options?: { surpressTrailingNewLine?: boolean }): Promise<T>;
-}
-
-/**
- * Describes the spinner.
- */
-interface ISpinner {
-	/**
-	 * Sets the message that will be printed by spinner.
-	 * @param {string} msg The new message.
-	 * @returns {void}
-	 */
-	message(msg: string): void;
-
-	/**
-	 * Starts the spinner.
-	 * @returns {void}
-	 */
-	start(): void;
-
-	/**
-	 * Stops the spinner.
-	 * @returns {void}
-	 */
-	stop(): void;
 }
 
 /**
@@ -1619,33 +1353,6 @@ interface IProjectFilesConfig {
 	 * @type {string}
 	 */
 	configuration?: string;
-}
-
-interface ILiveSyncProvider {
-	/**
-	 * Returns a dictionary that map platform to device specific livesync service
-	 */
-	deviceSpecificLiveSyncServices: IDictionary<any>;
-	/**
-	 * Builds the application and returns the package file path
-	 */
-	buildForDevice(device: Mobile.IDevice, projectData?: any): Promise<string>;
-	/**
-	 * Prepares the platform for sync
-	 */
-	preparePlatformForSync(platform: string, provision: any, projectData?: any): Promise<void>;
-
-	/**
-	 * Checks if the specified file can be fast synced.
-	 */
-	canExecuteFastSync(filePath: string, projectData?: any, platform?: string): boolean;
-
-	transferFiles(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], projectFilesPath: string, isFullSync: boolean): Promise<void>;
-
-	/**
-	 * Returns a dictionary that map platform to platform specific livesync service.
-	 */
-	platformSpecificLiveSyncServices?: IDictionary<any>
 }
 
 /**
@@ -1738,165 +1445,9 @@ interface IProcessService {
 	attachToProcessExitSignals(context: any, callback: () => void): void;
 }
 
-interface IPrintPluginsOptions {
-	count?: number;
-	showAllPlugins?: boolean;
-}
-
-interface IPrintPluginsService {
-	printPlugins(pluginsSource: IPluginsSource, options: IPrintPluginsOptions): Promise<void>;
-}
-
-interface IPluginsSource {
-	initialize(projectDir: string, keywords: string[]): Promise<void>;
-	getPlugins(page: number, count: number): Promise<IBasicPluginInformation[]>;
-	getAllPlugins(): Promise<IBasicPluginInformation[]>;
-	hasPlugins(): boolean;
-}
-
-interface IBasicPluginInformation {
-	/**
-	 * The plugin's name
-	 * @type {string}
-	 */
-	name: string;
-
-	/**
-	 * The plugin's description
-	 * @type {string}
-	 */
-	description?: string;
-
-	/**
-	 * The plugin's version in the form of Major.Minor.Patch
-	 * @type {string}
-	 */
-	version: string;
-
-	/**
-	 * Variables used by the plugin.
-	 * @type {any[]}
-	 */
-	variables?: any[];
-
-	/**
-	 * The plugin's author
-	 * @type {string}
-	 */
-	author?: string;
-}
-
 interface IDependencyInformation {
 	name: string;
 	version?: string;
-}
-
-/**
- * Defines an object, containing all TypeScript files (.ts) within project and all TypeScript definition files (.d.ts).
- * TypeScript files are all files ending with .ts, so if there are any definition files, they will be placed in both
- * TypeScript files and definitionFiles collections.
- */
-interface ITypeScriptFiles {
-	definitionFiles: string[],
-	typeScriptFiles: string[]
-}
-
-interface ITypeScriptCompilerOptions {
-	/**
-	 * Specify the codepage to use when opening source files.
-	 */
-	codePage?: number;
-
-	/**
-	 * Generates corresponding .d.ts file.
-	 */
-	declaration?: boolean;
-
-	/**
-	 * Specifies the location where debugger should locate map files instead of generated locations.
-	 */
-	mapRoot?: string;
-
-	/**
-	 * Specify module code generation: 'commonjs' or 'amd'.
-	 */
-	module?: string;
-
-	/**
-	 * Warn on expressions and declarations with an implied 'any' type.
-	 */
-	noImplicitAny?: boolean;
-
-	/**
-	 * Concatenate and emit output to single file.
-	 */
-	outFile?: string;
-
-	/**
-	 * Redirect output structure to the directory.
-	 */
-	outDir?: string;
-
-	/**
-	 * Do not emit comments to output.
-	 */
-	removeComments?: boolean;
-
-	/**
-	 * Generates corresponding .map file.
-	 */
-	sourceMap?: boolean;
-
-	/**
-	 * Specifies the location where debugger should locate TypeScript files instead of source locations.
-	 */
-	sourceRoot?: string;
-
-	/**
-	 * Specify ECMAScript target version: 'ES3' (default), or 'ES5'.
-	 */
-	target?: string;
-
-	/**
-	 * Do not emit outputs if any errors were reported.
-	 */
-	noEmitOnError?: boolean;
-
-	[key: string]: any;
-}
-
-/**
- * Describes the properties in tsconfig.json file.
- */
-interface ITypeScriptConfig {
-	compilerOptions: ITypeScriptCompilerOptions;
-	files?: string[];
-	exclude?: string[];
-}
-
-/**
- * Describes the options for transpiling TypeScript files.
- */
-interface ITypeScriptTranspileOptions {
-	/**
-	 * Describes the options in tsconfig.json file.
-	 */
-	compilerOptions?: ITypeScriptCompilerOptions;
-
-	/**
-	 * The default options which will be used if there is no tsconfig.json file.
-	 */
-	defaultCompilerOptions?: ITypeScriptCompilerOptions;
-
-	/**
-	 * Path to the default .d.ts files.
-	 */
-	pathToDefaultDefinitionFiles?: string;
-
-	/**
-	 * Use the typescript compiler which is installed localy for the project.
-	 */
-	useLocalTypeScriptCompiler?: boolean;
 }
 
 /**
@@ -1971,4 +1522,14 @@ declare module "stringify-package" {
 declare module "detect-newline" {
 	function detectNewline(data: string): string | null;
 	export = detectNewline
+}
+
+/**
+ * Describes information for application.
+ */
+interface IAppInstalledInfo extends Mobile.IDeviceApplicationInformationBase {
+	/**
+	 * Defines if application is installed on device.
+	 */
+	isInstalled: boolean;
 }

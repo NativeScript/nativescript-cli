@@ -37,17 +37,6 @@ export class LiveSyncPaths {
 	static ANDROID_TMP_DIR_NAME = "/data/local/tmp";
 }
 
-export class LiveSyncConstants {
-	static VERSION_2 = 2;
-	static VERSION_3 = 3;
-	static GUID = "12590FAA-5EDD-4B12-856D-F52A0A1599F2";
-	static DEVICE_TMP_DIR_FORMAT_V2 = `${LiveSyncPaths.ANDROID_TMP_DIR_NAME}/${LiveSyncConstants.GUID}/%s`;
-	static ANDROID_FILES_PATH = `files/${LiveSyncConstants.GUID}`;
-	static DEVICE_TMP_DIR_FORMAT_V3 = `/mnt/sdcard/Android/data/%s/${LiveSyncConstants.ANDROID_FILES_PATH}`;
-	static CHECK_LIVESYNC_INTENT_NAME = "com.telerik.IsLiveSyncSupported";
-	static IOS_PROJECT_PATH = "/Documents/AppBuilder/LiveSync";
-}
-
 export class HmrConstants {
 	public static HMR_ERROR_STATUS = 3;
 	public static HMR_SUCCESS_STATUS = 2;

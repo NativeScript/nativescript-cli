@@ -3,20 +3,10 @@ import { DeviceDiscoveryEventNames, EmulatorDiscoveryNames, DEVICE_LOG_EVENT_NAM
 
 export class DeviceEmitter extends EventEmitter {
 	constructor(private $deviceLogProvider: EventEmitter,
-		private $devicesService: Mobile.IDevicesService,
-		private $companionAppsService: ICompanionAppsService) {
+		private $devicesService: Mobile.IDevicesService) {
 		super();
 
 		this.initialize();
-	}
-
-	private _companionAppIdentifiers: IDictionary<IStringDictionary>;
-	private get companionAppIdentifiers(): IDictionary<IStringDictionary> {
-		if (!this._companionAppIdentifiers) {
-			this._companionAppIdentifiers = this.$companionAppsService.getAllCompanionAppIdentifiers();
-		}
-
-		return this._companionAppIdentifiers;
 	}
 
 	public initialize(): void {
@@ -50,12 +40,10 @@ export class DeviceEmitter extends EventEmitter {
 	private attachApplicationChangedHandlers(device: Mobile.IDevice): void {
 		device.applicationManager.on("applicationInstalled", (appIdentifier: string) => {
 			this.emit("applicationInstalled", device.deviceInfo.identifier, appIdentifier);
-			this.checkCompanionAppChanged(device, appIdentifier, "companionAppInstalled");
 		});
 
 		device.applicationManager.on("applicationUninstalled", (appIdentifier: string) => {
 			this.emit("applicationUninstalled", device.deviceInfo.identifier, appIdentifier);
-			this.checkCompanionAppChanged(device, appIdentifier, "companionAppUninstalled");
 		});
 
 		device.applicationManager.on("debuggableAppFound", (debuggableAppInfo: Mobile.IDeviceApplicationInformation) => {
@@ -76,17 +64,6 @@ export class DeviceEmitter extends EventEmitter {
 
 		device.applicationManager.on("debuggableViewChanged", (appIdentifier: string, debuggableWebViewInfo: Mobile.IDebugWebViewInfo) => {
 			this.emit("debuggableViewChanged", device.deviceInfo.identifier, appIdentifier, debuggableWebViewInfo);
-		});
-	}
-
-	private checkCompanionAppChanged(device: Mobile.IDevice, applicationName: string, eventName: string): void {
-		const devicePlatform = device.deviceInfo.platform.toLowerCase();
-		_.each(this.companionAppIdentifiers, (platformsCompanionAppIdentifiers: IStringDictionary, framework: string) => {
-			if (applicationName === platformsCompanionAppIdentifiers[devicePlatform]) {
-				this.emit(eventName, device.deviceInfo.identifier, framework);
-				// break each
-				return false;
-			}
 		});
 	}
 }
