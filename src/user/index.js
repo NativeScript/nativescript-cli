@@ -1,3 +1,4 @@
+import AuthorizationGrant from './authorizationGrant';
 import exists from './exists';
 import forgotUsername from './forgotUsername';
 import login from './login';
@@ -16,6 +17,7 @@ import getActiveUser from './getActiveUser';
 import User from './user';
 import verifyEmail from './verifyEmail';
 
+User.AuthorizationGrant = AuthorizationGrant;
 User.exists = exists;
 User.forgotUsername = forgotUsername;
 User.login = login;

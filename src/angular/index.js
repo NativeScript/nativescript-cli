@@ -5,6 +5,7 @@ import { DataStoreType } from '../datastore';
 import Query from '../query';
 import { get as getAppVersion, set as setAppVersion } from '../kinvey/appVersion';
 import Kmd from '../kmd';
+import AuthorizationGrant from '../user/authorizationGrant';
 import DataStoreService from './datastore.service';
 import EndpointService from './endpoint.service';
 import FilesService from './files.service';
@@ -45,7 +46,7 @@ export {
   Query,
 
   // User
-  // TODO: AuthorizationGrant
+  AuthorizationGrant,
   UserService,
 
   // Ping

@@ -1,7 +1,7 @@
 {
   "name": "kinvey-nativescript-sdk",
   "description": "Kinvey NativeScript SDK for developing NativeScript applications.",
-  "version": "3.14.0-next.0",
+  "version": "3.13.0-next.0",
   "homepage": "https://www.progress.com/kinvey",
   "license": "Apache-2.0",
   "contributors": [
@@ -16,6 +16,7 @@
     "loglevel": "~1.6.1",
     "loglevel-plugin-prefix": "~0.8.4",
     "lokijs": "~1.5.6",
+    "nativescript-hook": "~0.2.4",
     "nativescript-secure-storage": "~2.3.0",
     "nativescript-sqlite": "~2.2.3",
     "nativescript-urlhandler": "~1.2.2",
@@ -26,5 +27,28 @@
     "tns-core-modules": "~5.1.1",
     "url": "~0.11.0",
     "url-join": "~4.0.0"
+  },
+  "files": [
+    "lib/**/*",
+    "platforms/**/*",
+    "src/**/*",
+    "angular.js"
+  ],
+  "nativescript": {
+    "hooks": [{
+        "type": "before-checkForChanges",
+        "script": "lib/before-checkForChanges.js",
+        "inject": true
+      },
+      {
+        "type": "before-preview-sync",
+        "script": "lib/before-preview-sync.js",
+        "inject": true
+      }
+    ],
+    "platforms": {
+      "ios": "5.1.0",
+      "android": "5.1.0"
+    }
   }
 }
