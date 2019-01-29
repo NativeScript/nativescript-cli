@@ -5,6 +5,7 @@ import { ReadStream } from "tty";
 import { Configurations } from "./constants";
 import { EventEmitter } from "events";
 import * as crypto from "crypto";
+import * as _ from "lodash";
 
 const Table = require("cli-table");
 
