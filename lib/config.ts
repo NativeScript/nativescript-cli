@@ -42,7 +42,7 @@ export class StaticConfig implements IStaticConfig {
 	public get PROFILE_DIR_NAME(): string {
 		return ".nativescript-cli";
 	}
-	public RESOURCE_DIR_PATH = path.join(__dirname, "../../resources");
+	public RESOURCE_DIR_PATH = path.join(__dirname, "..", "resources");
 
 	constructor(private $injector: IInjector) {
 	}
@@ -118,7 +118,7 @@ export class StaticConfig implements IStaticConfig {
 	}
 
 	public get HTML_COMMON_HELPERS_DIR(): string {
-		return path.join(__dirname, "lib", "common", "docs", "helpers");
+		return path.join(__dirname, "common", "docs", "helpers");
 	}
 
 	private async getAdbFilePathCore(): Promise<string> {
