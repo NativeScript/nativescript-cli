@@ -2,6 +2,7 @@ import * as path from "path";
 import * as shell from "shelljs";
 import * as semver from "semver";
 import * as constants from "../constants";
+import { Configurations } from "../common/constants";
 import * as helpers from "../common/helpers";
 import { attachAwaitDetach } from "../common/helpers";
 import * as projectServiceBaseLib from "./platform-project-service-base";
@@ -20,6 +21,12 @@ interface INativeSourceCodeGroup {
 	path: string;
 	files: string[];
 }
+
+const DevicePlatformSdkName = "iphoneos";
+const SimulatorPlatformSdkName = "iphonesimulator";
+
+const getPlatformSdkName = (forDevice: boolean): string => forDevice ? DevicePlatformSdkName : SimulatorPlatformSdkName;
+const getConfigurationName = (release: boolean): string => release ? Configurations.Release : Configurations.Debug;
 
 export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServiceBase implements IPlatformProjectService {
 	private static XCODEBUILD_MIN_VERSION = "6.0";
@@ -67,8 +74,10 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				appDestinationDirectoryPath: path.join(projectRoot, projectData.projectName),
 				platformProjectService: this,
 				projectRoot: projectRoot,
-				deviceBuildOutputPath: path.join(projectRoot, constants.BUILD_DIR, "device"),
-				emulatorBuildOutputPath: path.join(projectRoot, constants.BUILD_DIR, "emulator"),
+				getBuildOutputPath: (options : IBuildOutputOptions): string => {
+					const config = getConfigurationName(!options || options.release);
+					return path.join(projectRoot, constants.BUILD_DIR, `${config}-${getPlatformSdkName(!options || options.buildForDevice)}`);
+				},
 				getValidBuildOutputData: (buildOptions: IBuildOutputOptions): IValidBuildOutputData => {
 					const forDevice = !buildOptions || !!buildOptions.buildForDevice;
 					if (forDevice) {
@@ -206,10 +215,11 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	 * Returns the path to the .xcarchive.
 	 */
 	public async archive(projectData: IProjectData, buildConfig?: IBuildConfig, options?: { archivePath?: string, additionalArgs?: string[] }): Promise<string> {
+		const platformData = this.getPlatformData(projectData);
 		const projectRoot = this.getPlatformData(projectData).projectRoot;
-		const archivePath = options && options.archivePath ? path.resolve(options.archivePath) : path.join(projectRoot, "/build/archive/", projectData.projectName + ".xcarchive");
+		const archivePath = options && options.archivePath ? path.resolve(options.archivePath) : path.join(platformData.getBuildOutputPath(buildConfig), projectData.projectName + ".xcarchive");
 		let args = ["archive", "-archivePath", archivePath, "-configuration",
-			(!buildConfig || buildConfig.release) ? "Release" : "Debug"]
+			getConfigurationName(!buildConfig || buildConfig.release)]
 			.concat(this.xcbuildProjectArgs(projectRoot, projectData, "scheme"));
 
 		if (options && options.additionalArgs) {
@@ -278,12 +288,11 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	/**
 	 * Exports .xcarchive for a development device.
 	 */
-	private async exportDevelopmentArchive(projectData: IProjectData, buildConfig: IBuildConfig, options: { archivePath: string, exportDir?: string, teamID?: string, provision?: string }): Promise<string> {
+	private async exportDevelopmentArchive(projectData: IProjectData, buildConfig: IBuildConfig, options: { archivePath: string, provision?: string }): Promise<string> {
 		const platformData = this.getPlatformData(projectData);
 		const projectRoot = platformData.projectRoot;
 		const archivePath = options.archivePath;
-		const buildOutputPath = path.join(projectRoot, "build", "device");
-		const exportOptionsMethod = await this.getExportOptionsMethod(projectData);
+		const exportOptionsMethod = await this.getExportOptionsMethod(projectData, archivePath);
 		let plistTemplate = `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -311,7 +320,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		this.$fs.writeFile(exportOptionsPlist, plistTemplate);
 
 		// The xcodebuild exportPath expects directory and writes the <project-name>.ipa at that directory.
-		const exportPath = path.resolve(options.exportDir || buildOutputPath);
+		const exportPath = path.resolve(path.dirname(archivePath));
 		const exportFile = path.join(exportPath, projectData.projectName + ".ipa");
 
 		await this.xcodebuild(
@@ -407,8 +416,8 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		args = args.concat((buildConfig && buildConfig.architectures) || this.getBuildArchitectures(projectData, buildConfig, ["armv7", "arm64"]));
 
 		args = args.concat([
-			"-sdk", "iphoneos",
-			"CONFIGURATION_BUILD_DIR=" + path.join(projectRoot, "build", "device")
+			"-sdk", DevicePlatformSdkName,
+			"BUILD_DIR=" + path.join(projectRoot, constants.BUILD_DIR)
 		]);
 
 		const xcodeBuildVersion = await this.getXcodeVersion();
@@ -574,10 +583,10 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			.concat(architectures)
 			.concat([
 				"build",
-				"-configuration", buildConfig.release ? "Release" : "Debug",
-				"-sdk", "iphonesimulator",
+				"-configuration", getConfigurationName(buildConfig.release),
+				"-sdk", SimulatorPlatformSdkName,
 				"ONLY_ACTIVE_ARCH=NO",
-				"CONFIGURATION_BUILD_DIR=" + path.join(projectRoot, "build", "emulator"),
+				"BUILD_DIR=" + path.join(projectRoot, constants.BUILD_DIR),
 				"CODE_SIGN_IDENTITY=",
 			])
 			.concat(this.xcbuildProjectArgs(projectRoot, projectData));
@@ -1390,8 +1399,8 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		}
 	}
 
-	private getExportOptionsMethod(projectData: IProjectData): string {
-		const embeddedMobileProvisionPath = path.join(this.getPlatformData(projectData).projectRoot, "build", "archive", `${projectData.projectName}.xcarchive`, 'Products', 'Applications', `${projectData.projectName}.app`, "embedded.mobileprovision");
+	private getExportOptionsMethod(projectData: IProjectData, archivePath: string): string {
+		const embeddedMobileProvisionPath = path.join(archivePath, 'Products', 'Applications', `${projectData.projectName}.app`, "embedded.mobileprovision");
 		const provision = mobileprovision.provision.readFromFile(embeddedMobileProvisionPath);
 
 		return {

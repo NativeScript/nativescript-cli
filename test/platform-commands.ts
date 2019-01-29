@@ -37,7 +37,7 @@ class PlatformData implements IPlatformData {
 		}
 	};
 	projectRoot = "";
-	deviceBuildOutputPath = "";
+	getBuildOutputPath = () => "";
 	getValidBuildOutputData = (buildOptions: IBuildOutputOptions) => ({ packageNames: [""] });
 	validPackageNamesForDevice: string[] = [];
 	frameworkFilesExtensions = [".jar", ".dat"];

@@ -239,9 +239,8 @@ interface IPlatformData {
 	projectRoot: string;
 	normalizedPlatformName: string;
 	appDestinationDirectoryPath: string;
-	deviceBuildOutputPath: string;
+	getBuildOutputPath(options: IBuildOutputOptions): string;
 	bundleBuildOutputPath?: string;
-	emulatorBuildOutputPath?: string;
 	getValidBuildOutputData(buildOptions: IBuildOutputOptions): IValidBuildOutputData;
 	frameworkFilesExtensions: string[];
 	frameworkDirectoriesExtensions?: string[];

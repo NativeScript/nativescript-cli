@@ -74,7 +74,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 				appDestinationDirectoryPath: path.join(...appDestinationDirectoryArr),
 				platformProjectService: this,
 				projectRoot: projectRoot,
-				deviceBuildOutputPath: path.join(...deviceBuildOutputArr),
+				getBuildOutputPath: () =>  path.join(...deviceBuildOutputArr),
 				bundleBuildOutputPath: path.join(projectRoot, constants.APP_FOLDER_NAME, constants.BUILD_DIR, constants.OUTPUTS_DIR, constants.BUNDLE_DIR),
 				getValidBuildOutputData: (buildOptions: IBuildOutputOptions): IValidBuildOutputData => {
 					const buildMode = buildOptions.release ? Configurations.Release.toLowerCase() : Configurations.Debug.toLowerCase();
@@ -332,7 +332,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		const gradleArgs = this.getGradleBuildOptions(buildConfig, projectData);
 		const baseTask = buildConfig.androidBundle ? "bundle" : "assemble";
 		const platformData = this.getPlatformData(projectData);
-		const outputPath = buildConfig.androidBundle ? platformData.bundleBuildOutputPath : platformData.deviceBuildOutputPath;
+		const outputPath = buildConfig.androidBundle ? platformData.bundleBuildOutputPath : platformData.getBuildOutputPath(buildConfig);
 		if (this.$logger.getLevel() === "TRACE") {
 			gradleArgs.unshift("--stacktrace");
 			gradleArgs.unshift("--debug");

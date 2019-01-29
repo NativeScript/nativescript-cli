@@ -376,8 +376,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		}
 
 		const platformData = this.$platformsData.getPlatformData(platform, projectData);
-		const forDevice = !buildConfig || !!buildConfig.buildForDevice;
-		outputPath = outputPath || (forDevice ? platformData.deviceBuildOutputPath : platformData.emulatorBuildOutputPath || platformData.deviceBuildOutputPath);
+		outputPath = outputPath || platformData.getBuildOutputPath(buildConfig);
 		if (!this.$fs.exists(outputPath)) {
 			return true;
 		}
@@ -533,7 +532,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		}
 
 		let hashes = {};
-		const hashesFilePath = path.join(outputFilePath || platformData.deviceBuildOutputPath, constants.HASHES_FILE_NAME);
+		const hashesFilePath = path.join(outputFilePath || platformData.getBuildOutputPath(null), constants.HASHES_FILE_NAME);
 		if (this.$fs.exists(hashesFilePath)) {
 			hashes = this.$fs.readJson(hashesFilePath);
 		}
@@ -618,10 +617,10 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		}
 
 		if (platform.toLowerCase() === this.$devicePlatformsConstants.iOS.toLowerCase()) {
-			return options.buildForDevice ? platformData.deviceBuildOutputPath : platformData.emulatorBuildOutputPath;
+			return platformData.getBuildOutputPath(options);
 		}
 
-		return platformData.deviceBuildOutputPath;
+		return platformData.getBuildOutputPath(options);
 	}
 
 	private async getDeviceBuildInfoFilePath(device: Mobile.IDevice, projectData: IProjectData): Promise<string> {
@@ -904,13 +903,13 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 	}
 
 	public getLatestApplicationPackageForDevice(platformData: IPlatformData, buildConfig: IBuildConfig, outputPath?: string): IApplicationPackage {
-		return this.getLatestApplicationPackage(outputPath || platformData.deviceBuildOutputPath, platformData.getValidBuildOutputData({ buildForDevice: true, release: buildConfig.release, androidBundle: buildConfig.androidBundle }));
+		return this.getLatestApplicationPackage(outputPath || platformData.getBuildOutputPath(buildConfig), platformData.getValidBuildOutputData({ buildForDevice: true, release: buildConfig.release, androidBundle: buildConfig.androidBundle }));
 	}
 
 	public getLatestApplicationPackageForEmulator(platformData: IPlatformData, buildConfig: IBuildConfig, outputPath?: string): IApplicationPackage {
+		outputPath = outputPath || this.getBuildOutputPath(platformData.normalizedPlatformName.toLowerCase(), platformData, buildConfig);
 		const buildOutputOptions: IBuildOutputOptions = { buildForDevice: false, release: buildConfig.release, androidBundle: buildConfig.androidBundle };
-		outputPath = outputPath || this.getBuildOutputPath(platformData.normalizedPlatformName.toLowerCase(), platformData, buildOutputOptions);
-		return this.getLatestApplicationPackage(outputPath || platformData.emulatorBuildOutputPath || platformData.deviceBuildOutputPath, platformData.getValidBuildOutputData(buildOutputOptions));
+		return this.getLatestApplicationPackage(outputPath || platformData.getBuildOutputPath(buildConfig), platformData.getValidBuildOutputData(buildOutputOptions));
 	}
 
 	private async updatePlatform(platform: string, version: string, platformTemplate: string, projectData: IProjectData, config: IPlatformOptions): Promise<void> {
