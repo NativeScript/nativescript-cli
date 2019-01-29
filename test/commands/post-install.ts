@@ -43,6 +43,8 @@ const createTestInjector = (): IInjector => {
 
 	testInjector.registerCommand("post-install-cli", PostInstallCliCommand);
 
+	testInjector.register("hostInfo", {});
+
 	return testInjector;
 };
 
