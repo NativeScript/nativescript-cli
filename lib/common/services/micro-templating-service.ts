@@ -1,6 +1,6 @@
 import * as util from "util";
 import * as os from "os";
-import * as constants from "../constants";
+import * as constants from "../../constants";
 import { formatListOfNames } from '../helpers';
 
 export class MicroTemplateService implements IMicroTemplateService {
