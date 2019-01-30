@@ -1,6 +1,8 @@
 import * as semver from "semver";
 import * as helpers from "../common/helpers";
 import { EOL } from "os";
+import * as path from "path";
+import { IosProjectConstants } from "../constants";
 
 class XcprojService implements IXcprojService {
 	private xcprojInfoCache: IXcprojInfo;
@@ -10,6 +12,10 @@ class XcprojService implements IXcprojService {
 		private $logger: ILogger,
 		private $sysInfo: ISysInfo,
 		private $xcodeSelectService: IXcodeSelectService) {
+	}
+
+	public getXcodeprojPath(projectData: IProjectData, platformData: IPlatformData): string {
+		return path.join(platformData.projectRoot, projectData.projectName + IosProjectConstants.XcodeProjExtName);
 	}
 
 	public async verifyXcproj(opts: IVerifyXcprojOptions): Promise<boolean> {
@@ -61,6 +67,17 @@ class XcprojService implements IXcprojService {
 		}
 
 		return this.xcprojInfoCache;
+	}
+
+	public async checkIfXcodeprojIsRequired(): Promise<boolean> {
+		const xcprojInfo = await this.getXcprojInfo();
+		if (xcprojInfo.shouldUseXcproj && !xcprojInfo.xcprojAvailable) {
+			const errorMessage = `You are using CocoaPods version ${xcprojInfo.cocoapodVer} which does not support Xcode ${xcprojInfo.xcodeVersion.major}.${xcprojInfo.xcodeVersion.minor} yet.${EOL}${EOL}You can update your cocoapods by running $sudo gem install cocoapods from a terminal.${EOL}${EOL}In order for the NativeScript CLI to be able to work correctly with this setup you need to install xcproj command line tool and add it to your PATH. Xcproj can be installed with homebrew by running $ brew install xcproj from the terminal`;
+
+			this.$errors.failWithoutHelp(errorMessage);
+
+			return true;
+		}
 	}
 }
 

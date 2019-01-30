@@ -605,7 +605,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		}
 	}
 
-	public async handleNativeDependenciesChange(projectData: IProjectData): Promise<void> {
+	public async handleNativeDependenciesChange(projectData: IProjectData, opts: IRelease): Promise<void> {
 		return;
 	}
 

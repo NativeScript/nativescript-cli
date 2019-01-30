@@ -67,7 +67,7 @@ export class PreparePlatformNativeService extends PreparePlatformService impleme
 
 		if (hasModulesChange || hasConfigChange) {
 			await config.platformData.platformProjectService.processConfigurationFilesFromAppResources(config.projectData, { release: config.appFilesUpdaterOptions.release });
-			await config.platformData.platformProjectService.handleNativeDependenciesChange(config.projectData);
+			await config.platformData.platformProjectService.handleNativeDependenciesChange(config.projectData, { release: config.appFilesUpdaterOptions.release });
 		}
 
 		config.platformData.platformProjectService.interpolateConfigurationFile(config.projectData, config.platformSpecificData);

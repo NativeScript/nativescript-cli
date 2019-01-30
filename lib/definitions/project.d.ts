@@ -402,7 +402,7 @@ interface IPlatformProjectService extends NodeJS.EventEmitter, IPlatformProjectS
 
 	beforePrepareAllPlugins(projectData: IProjectData, dependencies?: IDependencyData[]): Promise<void>;
 
-	handleNativeDependenciesChange(projectData: IProjectData): Promise<void>;
+	handleNativeDependenciesChange(projectData: IProjectData, opts: IRelease): Promise<void>;
 
 	/**
 	 * Gets the path wheren App_Resources should be copied.
@@ -485,6 +485,14 @@ interface ICocoaPodsService {
 	getPodfileFooter(): string;
 
 	/**
+	 * Merges the Podfile's content from App_Resources in the project's Podfile.
+	 * @param projectData Information about the project.
+	 * @param platformData Information about the platform.
+	 * @returns {Promise<void>}
+	 */
+	applyPodfileFromAppResources(projectData: IProjectData, platformData: IPlatformData): Promise<void>;
+
+	/**
 	 * Prepares the Podfile content of a plugin and merges it in the project's Podfile.
 	 * @param {string} moduleName The module which the Podfile is from.
 	 * @param {string} podfilePath The path to the podfile.
@@ -525,6 +533,14 @@ interface ICocoaPodsService {
 	 * @returns {Promise<ISpawnResult>} Information about the spawned process.
 	 */
 	executePodInstall(projectRoot: string, xcodeProjPath: string): Promise<ISpawnResult>;
+
+	/**
+	 * Merges pod's xcconfig file into project's xcconfig file
+	 * @param projectData 
+	 * @param platformData 
+	 * @param opts 
+	 */
+	mergePodXcconfigFile(projectData: IProjectData, platformData: IPlatformData, opts: IRelease): Promise<void>;
 }
 
 interface IRubyFunction {
