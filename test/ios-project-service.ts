@@ -8,7 +8,7 @@ import * as HostInfoLib from "../lib/common/host-info";
 import * as iOSProjectServiceLib from "../lib/services/ios-project-service";
 import { IOSProjectService } from "../lib/services/ios-project-service";
 import { IOSEntitlementsService } from "../lib/services/ios-entitlements-service";
-import { XCConfigService } from "../lib/services/xcconfig-service";
+import { XcconfigService } from "../lib/services/xcconfig-service";
 import * as LoggerLib from "../lib/common/logger";
 import * as OptionsLib from "../lib/options";
 import * as yok from "../lib/common/yok";
@@ -63,7 +63,7 @@ function createTestInjector(projectPath: string, projectName: string, xcode?: IX
 	testInjector.register("cocoapodsService", CocoaPodsService);
 	testInjector.register("iOSProjectService", iOSProjectServiceLib.IOSProjectService);
 	testInjector.register("iOSProvisionService", {});
-	testInjector.register("xCConfigService", XCConfigService);
+	testInjector.register("xcconfigService", XcconfigService);
 	testInjector.register("iOSEntitlementsService", IOSEntitlementsService);
 	testInjector.register("logger", LoggerLib.Logger);
 	testInjector.register("options", OptionsLib.Options);
@@ -106,7 +106,11 @@ function createTestInjector(projectPath: string, projectName: string, xcode?: IX
 			return {
 				shouldUseXcproj: false
 			};
-		}
+		},
+		getXcodeprojPath: (projData: IProjectData, platformData: IPlatformData) => {
+			return path.join(platformData.projectRoot, projData.projectName + ".xcodeproj");
+		},
+		checkIfXcodeprojIsRequired: () => ({})
 	});
 	testInjector.register("iosDeviceOperations", {});
 	testInjector.register("pluginVariablesService", PluginVariablesService);
@@ -129,7 +133,7 @@ function createTestInjector(projectPath: string, projectName: string, xcode?: IX
 	testInjector.register("packageManager", PackageManager);
 	testInjector.register("npm", NodePackageManager);
 	testInjector.register("yarn", YarnPackageManager);
-	testInjector.register("xCConfigService", XCConfigService);
+	testInjector.register("xcconfigService", XcconfigService);
 	testInjector.register("settingsService", SettingsService);
 	testInjector.register("httpClient", {});
 	testInjector.register("platformEnvironmentRequirements", {});
@@ -578,11 +582,12 @@ describe("Source code support", () => {
 			const platformsFolderPath = path.join(projectPath, "platforms", "ios");
 			fs.createDirectory(platformsFolderPath);
 
-			const iOSProjectService = testInjector.resolve("iOSProjectService");
-
-			iOSProjectService.getXcodeprojPath = () => {
+			const xcprojService = testInjector.resolve("xcprojService");
+			xcprojService.getXcodeprojPath = () => {
 				return path.join(__dirname, "files");
 			};
+
+			const iOSProjectService = testInjector.resolve("iOSProjectService");
 			let pbxProj: any;
 			iOSProjectService.savePbxProj = (project: any): Promise<void> => {
 				pbxProj = project;
@@ -636,9 +641,11 @@ describe("Source code support", () => {
 				};
 			});
 
-			iOSProjectService.getXcodeprojPath = () => {
+			const xcprojService = testInjector.resolve("xcprojService");
+			xcprojService.getXcodeprojPath = () => {
 				return path.join(__dirname, "files");
 			};
+
 			let pbxProj: any;
 			iOSProjectService.savePbxProj = (project: any): Promise<void> => {
 				pbxProj = project;
@@ -993,6 +1000,7 @@ describe("iOS Project Service Signing", () => {
 			};
 			const changes = <IProjectChangesInfo>{};
 			await iOSProjectService.checkForChanges(changes, { bundle: false, release: false, provision: "NativeScriptDev", teamId: undefined, useHotModuleReload: false }, projectData);
+			console.log("CHANGES !!!! ", changes);
 			assert.isFalse(!!changes.signingChanged);
 		});
 	});
@@ -1083,7 +1091,7 @@ describe("Merge Project XCConfig files", () => {
 		return;
 	}
 	const assertPropertyValues = (expected: any, xcconfigPath: string, injector: IInjector) => {
-		const service = <XCConfigService>injector.resolve('xCConfigService');
+		const service = <IXcconfigService>injector.resolve('xcconfigService');
 		_.forOwn(expected, (value, key) => {
 			const actual = service.readPropertyValue(xcconfigPath, key);
 			assert.equal(actual, value);
@@ -1092,6 +1100,7 @@ describe("Merge Project XCConfig files", () => {
 
 	let projectName: string;
 	let projectPath: string;
+	let projectRoot: string;
 	let testInjector: IInjector;
 	let iOSProjectService: IOSProjectService;
 	let projectData: IProjectData;
@@ -1099,6 +1108,7 @@ describe("Merge Project XCConfig files", () => {
 	let appResourcesXcconfigPath: string;
 	let appResourceXCConfigContent: string;
 	let iOSEntitlementsService: IOSEntitlementsService;
+	let xcconfigService: IXcconfigService;
 
 	beforeEach(() => {
 		projectName = "projectDirectory";
@@ -1125,6 +1135,8 @@ describe("Merge Project XCConfig files", () => {
 		};
 		fs = testInjector.resolve("fs");
 		fs.writeJson(path.join(projectPath, "package.json"), testPackageJson);
+		xcconfigService = testInjector.resolve("xcconfigService");
+		projectRoot = iOSProjectService.getPlatformData(projectData).projectRoot;
 	});
 
 	it("Uses the build.xcconfig file content from App_Resources", async () => {
@@ -1133,10 +1145,9 @@ describe("Merge Project XCConfig files", () => {
 
 		// run merge for all release: debug|release
 		for (const release in [true, false]) {
-			await (<any>iOSProjectService).mergeProjectXcconfigFiles(release, projectData);
+			await (<any>iOSProjectService).mergeProjectXcconfigFiles(projectData, { release });
 
-			const destinationFilePath = release ? (<any>iOSProjectService).getPluginsReleaseXcconfigFilePath(projectData)
-				: (<any>iOSProjectService).getPluginsDebugXcconfigFilePath(projectData);
+			const destinationFilePath = xcconfigService.getPluginsXcconfigFilePath(projectRoot, { release: !!release });
 
 			assert.isTrue(fs.exists(destinationFilePath), 'Target build xcconfig is missing for release: ' + release);
 			const expected = {
@@ -1160,10 +1171,9 @@ describe("Merge Project XCConfig files", () => {
 				return realExistsFunction(filePath);
 			};
 
-			await (<any>iOSProjectService).mergeProjectXcconfigFiles(release, projectData);
+			await (<any>iOSProjectService).mergeProjectXcconfigFiles(projectData, { release });
 
-			const destinationFilePath = release ? (<any>iOSProjectService).getPluginsReleaseXcconfigFilePath(projectData)
-				: (<any>iOSProjectService).getPluginsDebugXcconfigFilePath(projectData);
+			const destinationFilePath = xcconfigService.getPluginsXcconfigFilePath(projectRoot, { release: !!release });
 
 			assert.isTrue(fs.exists(destinationFilePath), 'Target build xcconfig is missing for release: ' + release);
 			const expected = {
@@ -1181,10 +1191,9 @@ describe("Merge Project XCConfig files", () => {
 
 		// run merge for all release: debug|release
 		for (const release in [true, false]) {
-			await (<any>iOSProjectService).mergeProjectXcconfigFiles(release, projectData);
+			await (<any>iOSProjectService).mergeProjectXcconfigFiles(projectData, { release });
 
-			const destinationFilePath = release ? (<any>iOSProjectService).getPluginsReleaseXcconfigFilePath(projectData)
-				: (<any>iOSProjectService).getPluginsDebugXcconfigFilePath(projectData);
+			const destinationFilePath = xcconfigService.getPluginsXcconfigFilePath(projectRoot, { release: !!release });
 
 			assert.isTrue(fs.exists(destinationFilePath), 'Target build xcconfig is missing for release: ' + release);
 			const expected = {
@@ -1200,10 +1209,9 @@ describe("Merge Project XCConfig files", () => {
 	it("creates empty plugins-<config>.xcconfig in case there are no build.xcconfig in App_Resources and in plugins", async () => {
 		// run merge for all release: debug|release
 		for (const release in [true, false]) {
-			await (<any>iOSProjectService).mergeProjectXcconfigFiles(release, projectData);
+			await (<any>iOSProjectService).mergeProjectXcconfigFiles(projectData, { release });
 
-			const destinationFilePath = release ? (<any>iOSProjectService).getPluginsReleaseXcconfigFilePath(projectData)
-				: (<any>iOSProjectService).getPluginsDebugXcconfigFilePath(projectData);
+			const destinationFilePath = xcconfigService.getPluginsXcconfigFilePath(projectRoot, { release: !!release });
 
 			assert.isTrue(fs.exists(destinationFilePath), 'Target build xcconfig is missing for release: ' + release);
 			const content = fs.readFile(destinationFilePath).toString();
@@ -1244,8 +1252,8 @@ describe("buildProject", () => {
 		devicesService.initialize = () => ({});
 		devicesService.getDeviceInstances = () => data.devices || [];
 
-		const xCConfigService = testInjector.resolve("xCConfigService");
-		xCConfigService.readPropertyValue = (projectDir: string, propertyName: string) => {
+		const xcconfigService = testInjector.resolve("xcconfigService");
+		xcconfigService.readPropertyValue = (projectDir: string, propertyName: string) => {
 			if (propertyName === "IPHONEOS_DEPLOYMENT_TARGET") {
 				return data.deploymentTarget;
 			}
@@ -1364,5 +1372,29 @@ describe("buildProject", () => {
 		}];
 
 		executeTests(testCases, { buildForDevice: false });
+	});
+});
+
+describe("handleNativeDependenciesChange", () => {
+	it("ensure the correct order of pod install and merging pod's xcconfig file", async () => {
+		const executedCocoapodsMethods: string[] = [];
+		const projectPodfilePath = "my/test/project/platforms/ios/Podfile";
+
+		const testInjector = createTestInjector("myTestProjectPath", "myTestProjectName");
+		const iOSProjectService = testInjector.resolve("iOSProjectService");
+		const projectData = testInjector.resolve("projectData");
+
+		const cocoapodsService = testInjector.resolve("cocoapodsService");
+		cocoapodsService.executePodInstall = async () => executedCocoapodsMethods.push("podInstall");
+		cocoapodsService.mergePodXcconfigFile = async () => executedCocoapodsMethods.push("podMerge");
+		cocoapodsService.applyPodfileFromAppResources = async () => ({});
+		cocoapodsService.getProjectPodfilePath = () => projectPodfilePath;
+
+		const fs = testInjector.resolve("fs");
+		fs.exists = (filePath: string) => filePath === projectPodfilePath;
+
+		await iOSProjectService.handleNativeDependenciesChange(projectData);
+
+		assert.deepEqual(executedCocoapodsMethods, ["podInstall", "podMerge"]);
 	});
 });
