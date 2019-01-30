@@ -13,6 +13,7 @@ import { performanceLog } from "../../decorators";
 
 export class DevicesService extends EventEmitter implements Mobile.IDevicesService {
 	private static DEVICE_LOOKING_INTERVAL = 200;
+	private static EMULATOR_IMAGES_DETECTION_INTERVAL = 60 * 1000;
 	private _devices: IDictionary<Mobile.IDevice> = {};
 	private _availableEmulators: IDictionary<Mobile.IDeviceInfo> = {};
 	private _platform: string;
@@ -21,8 +22,7 @@ export class DevicesService extends EventEmitter implements Mobile.IDevicesServi
 	private _data: Mobile.IDevicesServicesInitializationOptions;
 	private _otherDeviceDiscoveries: Mobile.IDeviceDiscovery[] = [];
 	private _allDeviceDiscoveries: Mobile.IDeviceDiscovery[] = [];
-	private deviceDetectionInterval: any;
-	private isDeviceDetectionIntervalInProgress: boolean;
+	private deviceDetectionIntervals: NodeJS.Timer[] = [];
 
 	constructor(private $logger: ILogger,
 		private $errors: IErrors,
@@ -287,43 +287,51 @@ export class DevicesService extends EventEmitter implements Mobile.IDevicesServi
 		}
 	}
 
-	protected async startDeviceDetectionInterval(deviceInitOpts: Mobile.IDevicesServicesInitializationOptions = {}): Promise<void> {
+	protected async startDeviceDetectionIntervals(deviceInitOpts: Mobile.IDevicesServicesInitializationOptions = {}): Promise<void> {
 		this.$processService.attachToProcessExitSignals(this, this.clearDeviceDetectionInterval);
 
-		if (this.deviceDetectionInterval) {
-			this.$logger.trace("Device detection interval is already started. New Interval will not be started.");
+		if (this.deviceDetectionIntervals.length) {
+			this.$logger.trace("Device detection intervals are already started. New intervals will not be started.");
 			return;
 		}
-		let isFirstExecution = true;
 
-		return new Promise<void>((resolve, reject) => {
-			this.deviceDetectionInterval = setInterval(async () => {
-				if (this.isDeviceDetectionIntervalInProgress) {
-					return;
-				}
+		let isDeviceDetectionIntervalInProgress = false;
+		const deviceDetectionInterval = setInterval(async () => {
+			if (isDeviceDetectionIntervalInProgress) {
+				return;
+			}
 
-				this.isDeviceDetectionIntervalInProgress = true;
+			isDeviceDetectionIntervalInProgress = true;
 
-				await this.detectCurrentlyAttachedDevices(deviceInitOpts);
-				await this.detectCurrentlyAvailableEmulators();
+			await this.detectCurrentlyAttachedDevices(deviceInitOpts);
 
-				try {
-					const trustedDevices = _.filter(this._devices, device => device.deviceInfo.status === constants.CONNECTED_STATUS);
-					await settlePromises(_.map(trustedDevices, device => device.applicationManager.checkForApplicationUpdates()));
-				} catch (err) {
-					this.$logger.trace("Error checking for application updates on devices.", err);
-				}
+			try {
+				const trustedDevices = _.filter(this._devices, device => device.deviceInfo.status === constants.CONNECTED_STATUS);
+				await settlePromises(_.map(trustedDevices, device => device.applicationManager.checkForApplicationUpdates()));
+			} catch (err) {
+				this.$logger.trace("Error checking for application updates on devices.", err);
+			}
 
-				if (isFirstExecution) {
-					isFirstExecution = false;
-					resolve();
-					this.deviceDetectionInterval.unref();
-				}
+			isDeviceDetectionIntervalInProgress = false;
 
-				this.isDeviceDetectionIntervalInProgress = false;
+		}, DevicesService.DEVICE_LOOKING_INTERVAL);
 
-			}, DevicesService.DEVICE_LOOKING_INTERVAL);
-		});
+		deviceDetectionInterval.unref();
+		this.deviceDetectionIntervals.push(deviceDetectionInterval);
+
+		let isEmulatorDetectionIntervalRunning = false;
+		const emulatorDetectionInterval = setInterval(async () => {
+			if (isEmulatorDetectionIntervalRunning) {
+				return;
+			}
+
+			isEmulatorDetectionIntervalRunning = true;
+			await this.detectCurrentlyAvailableEmulators();
+			isEmulatorDetectionIntervalRunning = false;
+		}, DevicesService.EMULATOR_IMAGES_DETECTION_INTERVAL);
+
+		emulatorDetectionInterval.unref();
+		this.deviceDetectionIntervals.push(emulatorDetectionInterval);
 	}
 
 	/**
@@ -348,14 +356,17 @@ export class DevicesService extends EventEmitter implements Mobile.IDevicesServi
 	/**
 	 * Starts looking for running devices. All found devices are pushed to _devices variable.
 	 */
-	private startLookingForDevices(deviceInitOpts?: Mobile.IDevicesServicesInitializationOptions): Promise<void> {
+	private async startLookingForDevices(deviceInitOpts?: Mobile.IDevicesServicesInitializationOptions): Promise<void> {
 		this.$logger.trace("startLookingForDevices; platform is %s", this._platform);
 
 		if (this._platform) {
 			return this.detectCurrentlyAttachedDevices(deviceInitOpts);
 		}
 
-		return this.startDeviceDetectionInterval(deviceInitOpts);
+		await this.detectCurrentlyAttachedDevices(deviceInitOpts);
+		await this.detectCurrentlyAvailableEmulators();
+
+		await this.startDeviceDetectionIntervals(deviceInitOpts);
 	}
 
 	/**
@@ -690,10 +701,14 @@ export class DevicesService extends EventEmitter implements Mobile.IDevicesServi
 	}
 
 	private clearDeviceDetectionInterval(): void {
-		if (this.deviceDetectionInterval) {
-			clearInterval(this.deviceDetectionInterval);
+		if (this.deviceDetectionIntervals.length) {
+			for (const interval of this.deviceDetectionIntervals) {
+				clearInterval(interval);
+			}
+
+			this.deviceDetectionIntervals.splice(0, this.deviceDetectionIntervals.length);
 		} else {
-			this.$logger.trace("Device detection interval is not started, so it cannot be stopped.");
+			this.$logger.trace("Device detection intervals are not started, so it cannot be stopped.");
 		}
 	}
 
