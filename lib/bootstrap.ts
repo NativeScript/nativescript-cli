@@ -17,6 +17,7 @@ $injector.require("iOSProvisionService", "./services/ios-provision-service");
 $injector.require("xcconfigService", "./services/xcconfig-service");
 
 $injector.require("cocoapodsService", "./services/cocoapods-service");
+$injector.require("cocoaPodsPlatformManager", "./services/cocoapods-platform-manager");
 
 $injector.require("projectTemplatesService", "./services/project-templates-service");
 $injector.require("projectNameService", "./services/project-name-service");
