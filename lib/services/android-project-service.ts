@@ -577,10 +577,6 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		}
 	}
 
-	public async afterPrepareAllPlugins(projectData: IProjectData): Promise<void> {
-		return;
-	}
-
 	public async beforePrepareAllPlugins(projectData: IProjectData, dependencies?: IDependencyData[]): Promise<void> {
 		const shouldUseNewRoutine = this.runtimeVersionIsGreaterThanOrEquals(projectData, "3.3.0");
 
@@ -607,6 +603,10 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			const projectRoot = this.getPlatformData(projectData).projectRoot;
 			await this.cleanProject(projectRoot, projectData);
 		}
+	}
+
+	public async handleNativeDependenciesChange(projectData: IProjectData, opts: IRelease): Promise<void> {
+		return;
 	}
 
 	private filterUniqueDependencies(dependencies: IDependencyData[]): IDependencyData[] {

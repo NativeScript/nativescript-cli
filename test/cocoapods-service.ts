@@ -3,6 +3,7 @@ import { assert } from "chai";
 import { CocoaPodsService } from "../lib/services/cocoapods-service";
 import { EOL } from "os";
 import { LoggerStub, ErrorsStub } from "./stubs";
+import { XcconfigService } from "../lib/services/xcconfig-service";
 
 interface IMergePodfileHooksTestCase {
 	input: string;
@@ -22,6 +23,7 @@ function createTestInjector(): IInjector {
 	testInjector.register("xcprojService", {});
 	testInjector.register("logger", LoggerStub);
 	testInjector.register("config", {});
+	testInjector.register("xcconfigService", XcconfigService);
 
 	return testInjector;
 }

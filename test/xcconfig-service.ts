@@ -1,6 +1,6 @@
 import temp = require("temp");
 import { assert } from "chai";
-import { XCConfigService } from "../lib/services/xcconfig-service";
+import { XcconfigService } from "../lib/services/xcconfig-service";
 import * as yok from "../lib/common/yok";
 
 // start tracking temporary folders/files
@@ -14,8 +14,10 @@ describe("XCConfig Service Tests", () => {
 				return true;
 			}
 		});
+		testInjector.register('childProcess', {});
+		testInjector.register('xcprojService', {});
 
-		testInjector.register('xCConfigService', XCConfigService);
+		testInjector.register('xcconfigService', XcconfigService);
 
 		return testInjector;
 	};
@@ -28,8 +30,8 @@ describe("XCConfig Service Tests", () => {
 		});
 	};
 
-	function getXCConfigService(injector: IInjector): XCConfigService {
-		return injector.resolve("xCConfigService");
+	function getXCConfigService(injector: IInjector): IXcconfigService {
+		return injector.resolve("xcconfigService");
 	}
 
 	function getFileSystemMock(injector: IInjector): any {

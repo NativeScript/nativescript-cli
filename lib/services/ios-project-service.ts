@@ -12,7 +12,6 @@ import * as temp from "temp";
 import * as plist from "plist";
 import { IOSProvisionService } from "./ios-provision-service";
 import { IOSEntitlementsService } from "./ios-entitlements-service";
-import { XCConfigService } from "./xcconfig-service";
 import * as mobileprovision from "ios-mobileprovision-finder";
 import { BUILD_XCCONFIG_FILE_NAME, IosProjectConstants } from "../constants";
 
@@ -54,7 +53,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		private $platformEnvironmentRequirements: IPlatformEnvironmentRequirements,
 		private $plistParser: IPlistParser,
 		private $sysInfo: ISysInfo,
-		private $xCConfigService: XCConfigService) {
+		private $xcconfigService: IXcconfigService) {
 		super($fs, $projectDataService);
 	}
 
@@ -800,19 +799,15 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		this.$fs.deleteDirectory(this.getAppResourcesDestinationDirectoryPath(projectData));
 	}
 
-	public async processConfigurationFilesFromAppResources(projectData: IProjectData, opts: { release: boolean,  installPods: boolean }): Promise<void> {
-		await this.mergeInfoPlists({ release: opts.release }, projectData);
+	public async processConfigurationFilesFromAppResources(projectData: IProjectData, opts: IRelease): Promise<void> {
+		await this.mergeInfoPlists(projectData, opts);
 		await this.$iOSEntitlementsService.merge(projectData);
-		await this.mergeProjectXcconfigFiles(opts.release, projectData);
+		await this.mergeProjectXcconfigFiles(projectData, opts);
 		for (const pluginData of await this.getAllInstalledPlugins(projectData)) {
 			await this.$pluginVariablesService.interpolatePluginVariables(pluginData, this.getPlatformData(projectData).configurationFilePath, projectData.projectDir);
 		}
 
 		this.$pluginVariablesService.interpolateAppIdentifier(this.getPlatformData(projectData).configurationFilePath, projectData.projectIdentifiers.ios);
-
-		if (opts.installPods) {
-			await this.installPodsIfAny(projectData);
-		}
 	}
 
 	private getInfoPlistPath(projectData: IProjectData): string {
@@ -835,7 +830,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		return Promise.resolve();
 	}
 
-	private async mergeInfoPlists(buildOptions: IRelease, projectData: IProjectData): Promise<void> {
+	private async mergeInfoPlists(projectData: IProjectData, buildOptions: IRelease): Promise<void> {
 		const projectDir = projectData.projectDir;
 		const infoPlistPath = path.join(projectData.appResourcesDirectoryPath, this.getPlatformData(projectData).normalizedPlatformName, this.getPlatformData(projectData).configurationFileName);
 		this.ensureConfigurationFileInAppResources();
@@ -922,18 +917,6 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		return (<IPluginsService>this.$injector.resolve("pluginsService")).getAllInstalledPlugins(projectData);
 	}
 
-	private getXcodeprojPath(projectData: IProjectData): string {
-		return path.join(this.getPlatformData(projectData).projectRoot, projectData.projectName + IosProjectConstants.XcodeProjExtName);
-	}
-
-	private getPluginsDebugXcconfigFilePath(projectData: IProjectData): string {
-		return path.join(this.getPlatformData(projectData).projectRoot, "plugins-debug.xcconfig");
-	}
-
-	private getPluginsReleaseXcconfigFilePath(projectData: IProjectData): string {
-		return path.join(this.getPlatformData(projectData).projectRoot, "plugins-release.xcconfig");
-	}
-
 	private replace(name: string): string {
 		if (_.startsWith(name, '"')) {
 			name = name.substr(1, name.length - 2);
@@ -948,7 +931,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 	}
 
 	private getPbxProjPath(projectData: IProjectData): string {
-		return path.join(this.getXcodeprojPath(projectData), "project.pbxproj");
+		return path.join(this.$xcprojService.getXcodeprojPath(projectData, this.getPlatformData(projectData)), "project.pbxproj");
 	}
 
 	private createPbxProj(projectData: IProjectData): any {
@@ -989,32 +972,20 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		this.$cocoapodsService.removePodfileFromProject(pluginData.name, this.$cocoapodsService.getPluginPodfilePath(pluginData), projectData, projectRoot);
 	}
 
-	public async afterPrepareAllPlugins(projectData: IProjectData): Promise<void> {
-		await this.installPodsIfAny(projectData);
-	}
+	public async handleNativeDependenciesChange(projectData: IProjectData, opts: IRelease): Promise<void> {
+		const platformData = this.getPlatformData(projectData);
+		await this.$cocoapodsService.applyPodfileFromAppResources(projectData, platformData);
 
-	public async installPodsIfAny(projectData: IProjectData): Promise<void> {
-		const projectRoot = this.getPlatformData(projectData).projectRoot;
-		const mainPodfilePath = path.join(projectData.appResourcesDirectoryPath, this.getPlatformData(projectData).normalizedPlatformName, constants.PODFILE_NAME);
-		if (this.$fs.exists(this.$cocoapodsService.getProjectPodfilePath(projectRoot)) || this.$fs.exists(mainPodfilePath)) {
-			const xcodeProjPath = this.getXcodeprojPath(projectData);
-			const xcuserDataPath = path.join(xcodeProjPath, "xcuserdata");
-			const sharedDataPath = path.join(xcodeProjPath, "xcshareddata");
-
-			if (!this.$fs.exists(xcuserDataPath) && !this.$fs.exists(sharedDataPath)) {
-				this.$logger.info("Creating project scheme...");
-				await this.checkIfXcodeprojIsRequired();
-
-				const createSchemeRubyScript = `ruby -e "require 'xcodeproj'; xcproj = Xcodeproj::Project.open('${projectData.projectName}.xcodeproj'); xcproj.recreate_user_schemes; xcproj.save"`;
-				await this.$childProcess.exec(createSchemeRubyScript, { cwd: this.getPlatformData(projectData).projectRoot });
-			}
-
-			await this.$cocoapodsService.applyPodfileToProject(constants.NS_BASE_PODFILE, mainPodfilePath, projectData, this.getPlatformData(projectData).projectRoot);
-
-			await this.$cocoapodsService.executePodInstall(projectRoot, xcodeProjPath);
+		const projectPodfilePath = this.$cocoapodsService.getProjectPodfilePath(platformData.projectRoot);
+		if (this.$fs.exists(projectPodfilePath)) {
+			await this.$cocoapodsService.executePodInstall(platformData.projectRoot, this.$xcprojService.getXcodeprojPath(projectData, platformData));
+			// The `pod install` command adds a new target to the .pbxproject. This target adds additional build phases to xcodebuild.
+			// Some of these phases relies on env variables (like PODS_PODFILE_DIR_PATH or PODS_ROOT).
+			// These variables are produced from merge of pod's xcconfig file and project's xcconfig file.
+			// So the correct order is `pod install` to be executed before merging pod's xcconfig file.
+			await this.$cocoapodsService.mergePodXcconfigFile(projectData, platformData, opts);
 		}
 	}
-
 	public beforePrepareAllPlugins(): Promise<void> {
 		return Promise.resolve();
 	}
@@ -1073,7 +1044,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 	}
 
 	public getDeploymentTarget(projectData: IProjectData): semver.SemVer {
-		const target = this.$xCConfigService.readPropertyValue(this.getBuildXCConfigFilePath(projectData), "IPHONEOS_DEPLOYMENT_TARGET");
+		const target = this.$xcconfigService.readPropertyValue(this.getBuildXCConfigFilePath(projectData), "IPHONEOS_DEPLOYMENT_TARGET");
 		if (!target) {
 			return null;
 		}
@@ -1217,34 +1188,24 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		this.$fs.writeFile(path.join(headersFolderPath, "module.modulemap"), modulemap);
 	}
 
-	private async mergeXcconfigFiles(pluginFile: string, projectFile: string): Promise<void> {
-		if (!this.$fs.exists(projectFile)) {
-			this.$fs.writeFile(projectFile, "");
-		}
-
-		await this.checkIfXcodeprojIsRequired();
-		const escapedProjectFile = projectFile.replace(/'/g, "\\'"),
-			escapedPluginFile = pluginFile.replace(/'/g, "\\'"),
-			mergeScript = `require 'xcodeproj'; Xcodeproj::Config.new('${escapedProjectFile}').merge(Xcodeproj::Config.new('${escapedPluginFile}')).save_as(Pathname.new('${escapedProjectFile}'))`;
-		await this.$childProcess.exec(`ruby -e "${mergeScript}"`);
-	}
-
-	private async mergeProjectXcconfigFiles(release: boolean, projectData: IProjectData): Promise<void> {
-		const pluginsXcconfigFilePath = release ? this.getPluginsReleaseXcconfigFilePath(projectData) : this.getPluginsDebugXcconfigFilePath(projectData);
+	private async mergeProjectXcconfigFiles(projectData: IProjectData, opts: IRelease): Promise<void> {
+		const platformData = this.getPlatformData(projectData);
+		const pluginsXcconfigFilePath = this.$xcconfigService.getPluginsXcconfigFilePath(platformData.projectRoot, opts);
 		this.$fs.deleteFile(pluginsXcconfigFilePath);
 
-		const allPlugins: IPluginData[] = await (<IPluginsService>this.$injector.resolve("pluginsService")).getAllInstalledPlugins(projectData);
+		const pluginsService = <IPluginsService>this.$injector.resolve("pluginsService");
+		const allPlugins: IPluginData[] = await pluginsService.getAllInstalledPlugins(projectData);
 		for (const plugin of allPlugins) {
 			const pluginPlatformsFolderPath = plugin.pluginPlatformsFolderPath(IOSProjectService.IOS_PLATFORM_NAME);
 			const pluginXcconfigFilePath = path.join(pluginPlatformsFolderPath, BUILD_XCCONFIG_FILE_NAME);
 			if (this.$fs.exists(pluginXcconfigFilePath)) {
-				await this.mergeXcconfigFiles(pluginXcconfigFilePath, pluginsXcconfigFilePath);
+				await this.$xcconfigService.mergeFiles(pluginXcconfigFilePath, pluginsXcconfigFilePath);
 			}
 		}
 
 		const appResourcesXcconfigPath = path.join(projectData.appResourcesDirectoryPath, this.getPlatformData(projectData).normalizedPlatformName, BUILD_XCCONFIG_FILE_NAME);
 		if (this.$fs.exists(appResourcesXcconfigPath)) {
-			await this.mergeXcconfigFiles(appResourcesXcconfigPath, pluginsXcconfigFilePath);
+			await this.$xcconfigService.mergeFiles(appResourcesXcconfigPath, pluginsXcconfigFilePath);
 		}
 
 		if (!this.$fs.exists(pluginsXcconfigFilePath)) {
@@ -1255,7 +1216,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		}
 
 		// Set Entitlements Property to point to default file if not set explicitly by the user.
-		const entitlementsPropertyValue = this.$xCConfigService.readPropertyValue(pluginsXcconfigFilePath, constants.CODE_SIGN_ENTITLEMENTS);
+		const entitlementsPropertyValue = this.$xcconfigService.readPropertyValue(pluginsXcconfigFilePath, constants.CODE_SIGN_ENTITLEMENTS);
 		if (entitlementsPropertyValue === null && this.$fs.exists(this.$iOSEntitlementsService.getPlatformsEntitlementsPath(projectData))) {
 			temp.track();
 			const tempEntitlementsDir = temp.mkdirSync("entitlements");
@@ -1263,28 +1224,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 			const entitlementsRelativePath = this.$iOSEntitlementsService.getPlatformsEntitlementsRelativePath(projectData);
 			this.$fs.writeFile(tempEntitlementsFilePath, `CODE_SIGN_ENTITLEMENTS = ${entitlementsRelativePath}${EOL}`);
 
-			await this.mergeXcconfigFiles(tempEntitlementsFilePath, pluginsXcconfigFilePath);
-		}
-
-		const podFilesRootDirName = path.join("Pods", "Target Support Files", `Pods-${projectData.projectName}`);
-		const podFolder = path.join(this.getPlatformData(projectData).projectRoot, podFilesRootDirName);
-		if (this.$fs.exists(podFolder)) {
-			if (release) {
-				await this.mergeXcconfigFiles(path.join(this.getPlatformData(projectData).projectRoot, podFilesRootDirName, `Pods-${projectData.projectName}.release.xcconfig`), this.getPluginsReleaseXcconfigFilePath(projectData));
-			} else {
-				await this.mergeXcconfigFiles(path.join(this.getPlatformData(projectData).projectRoot, podFilesRootDirName, `Pods-${projectData.projectName}.debug.xcconfig`), this.getPluginsDebugXcconfigFilePath(projectData));
-			}
-		}
-	}
-
-	private async checkIfXcodeprojIsRequired(): Promise<boolean> {
-		const xcprojInfo = await this.$xcprojService.getXcprojInfo();
-		if (xcprojInfo.shouldUseXcproj && !xcprojInfo.xcprojAvailable) {
-			const errorMessage = `You are using CocoaPods version ${xcprojInfo.cocoapodVer} which does not support Xcode ${xcprojInfo.xcodeVersion.major}.${xcprojInfo.xcodeVersion.minor} yet.${EOL}${EOL}You can update your cocoapods by running $sudo gem install cocoapods from a terminal.${EOL}${EOL}In order for the NativeScript CLI to be able to work correctly with this setup you need to install xcproj command line tool and add it to your PATH. Xcproj can be installed with homebrew by running $ brew install xcproj from the terminal`;
-
-			this.$errors.failWithoutHelp(errorMessage);
-
-			return true;
+			await this.$xcconfigService.mergeFiles(tempEntitlementsFilePath, pluginsXcconfigFilePath);
 		}
 	}
 
@@ -1310,7 +1250,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 	}
 
 	private readTeamId(projectData: IProjectData): string {
-		let teamId = this.$xCConfigService.readPropertyValue(this.getBuildXCConfigFilePath(projectData), "DEVELOPMENT_TEAM");
+		let teamId = this.$xcconfigService.readPropertyValue(this.getBuildXCConfigFilePath(projectData), "DEVELOPMENT_TEAM");
 
 		const fileName = path.join(this.getPlatformData(projectData).projectRoot, "teamid");
 		if (this.$fs.exists(fileName)) {
@@ -1321,19 +1261,19 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 	}
 
 	private readXCConfigProvisioningProfile(projectData: IProjectData): string {
-		return this.$xCConfigService.readPropertyValue(this.getBuildXCConfigFilePath(projectData), "PROVISIONING_PROFILE");
+		return this.$xcconfigService.readPropertyValue(this.getBuildXCConfigFilePath(projectData), "PROVISIONING_PROFILE");
 	}
 
 	private readXCConfigProvisioningProfileForIPhoneOs(projectData: IProjectData): string {
-		return this.$xCConfigService.readPropertyValue(this.getBuildXCConfigFilePath(projectData), "PROVISIONING_PROFILE[sdk=iphoneos*]");
+		return this.$xcconfigService.readPropertyValue(this.getBuildXCConfigFilePath(projectData), "PROVISIONING_PROFILE[sdk=iphoneos*]");
 	}
 
 	private readXCConfigProvisioningProfileSpecifier(projectData: IProjectData): string {
-		return this.$xCConfigService.readPropertyValue(this.getBuildXCConfigFilePath(projectData), "PROVISIONING_PROFILE_SPECIFIER");
+		return this.$xcconfigService.readPropertyValue(this.getBuildXCConfigFilePath(projectData), "PROVISIONING_PROFILE_SPECIFIER");
 	}
 
 	private readXCConfigProvisioningProfileSpecifierForIPhoneOs(projectData: IProjectData): string {
-		return this.$xCConfigService.readPropertyValue(this.getBuildXCConfigFilePath(projectData), "PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]");
+		return this.$xcconfigService.readPropertyValue(this.getBuildXCConfigFilePath(projectData), "PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]");
 	}
 
 	private async getDevelopmentTeam(projectData: IProjectData, teamId?: string): Promise<string> {

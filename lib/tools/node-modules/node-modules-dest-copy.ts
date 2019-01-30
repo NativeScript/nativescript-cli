@@ -107,16 +107,7 @@ export class NpmPluginPrepare {
 	) {
 	}
 
-	protected async beforePrepare(dependencies: IDependencyData[], platform: string, projectData: IProjectData): Promise<void> {
-		await this.$platformsData.getPlatformData(platform, projectData).platformProjectService.beforePrepareAllPlugins(projectData, dependencies);
-	}
-
 	protected async afterPrepare(dependencies: IDependencyData[], platform: string, projectData: IProjectData): Promise<void> {
-		await this.$platformsData.getPlatformData(platform, projectData).platformProjectService.afterPrepareAllPlugins(projectData);
-		this.writePreparedDependencyInfo(dependencies, platform, projectData);
-	}
-
-	private writePreparedDependencyInfo(dependencies: IDependencyData[], platform: string, projectData: IProjectData): void {
 		const prepareData: IDictionary<boolean> = {};
 		_.each(dependencies, d => {
 			prepareData[d.name] = true;
@@ -163,7 +154,8 @@ export class NpmPluginPrepare {
 			return;
 		}
 
-		await this.beforePrepare(dependencies, platform, projectData);
+		await this.$platformsData.getPlatformData(platform, projectData).platformProjectService.beforePrepareAllPlugins(projectData, dependencies);
+
 		for (const dependencyKey in dependencies) {
 			const dependency = dependencies[dependencyKey];
 			const isPlugin = !!dependency.nativescript;

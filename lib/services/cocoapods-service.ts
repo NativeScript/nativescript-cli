@@ -1,6 +1,6 @@
 import { EOL } from "os";
 import * as path from "path";
-import { PluginNativeDirNames, PODFILE_NAME } from "../constants";
+import { PluginNativeDirNames, PODFILE_NAME, NS_BASE_PODFILE } from "../constants";
 
 export class CocoaPodsService implements ICocoaPodsService {
 	private static PODFILE_POST_INSTALL_SECTION_NAME = "post_install";
@@ -11,7 +11,8 @@ export class CocoaPodsService implements ICocoaPodsService {
 		private $errors: IErrors,
 		private $xcprojService: IXcprojService,
 		private $logger: ILogger,
-		private $config: IConfiguration) { }
+		private $config: IConfiguration,
+		private $xcconfigService: IXcconfigService) { }
 
 	public getPodfileHeader(targetName: string): string {
 		return `use_frameworks!${EOL}${EOL}target "${targetName}" do${EOL}`;
@@ -50,6 +51,26 @@ export class CocoaPodsService implements ICocoaPodsService {
 		}
 
 		return podInstallResult;
+	}
+
+	public async mergePodXcconfigFile(projectData: IProjectData, platformData: IPlatformData, opts: IRelease) {
+		const podFilesRootDirName = path.join("Pods", "Target Support Files", `Pods-${projectData.projectName}`);
+		const podFolder = path.join(platformData.projectRoot, podFilesRootDirName);
+		if (this.$fs.exists(podFolder)) {
+			const podXcconfigFilePath = opts && opts.release ? path.join(podFolder, `Pods-${projectData.projectName}.release.xcconfig`)
+				: path.join(podFolder, `Pods-${projectData.projectName}.debug.xcconfig`);
+			const pluginsXcconfigFilePath = this.$xcconfigService.getPluginsXcconfigFilePath(platformData.projectRoot, opts);
+			await this.$xcconfigService.mergeFiles(podXcconfigFilePath, pluginsXcconfigFilePath);
+		}
+	}
+
+	public async applyPodfileFromAppResources(projectData: IProjectData, platformData: IPlatformData): Promise<void> {
+		const { projectRoot, normalizedPlatformName } = platformData;
+		const mainPodfilePath = path.join(projectData.appResourcesDirectoryPath, normalizedPlatformName, PODFILE_NAME);
+		const projectPodfilePath = this.getProjectPodfilePath(projectRoot);
+		if (this.$fs.exists(projectPodfilePath) || this.$fs.exists(mainPodfilePath)) {
+			await this.applyPodfileToProject(NS_BASE_PODFILE, mainPodfilePath, projectData, projectRoot);
+		}
 	}
 
 	public async applyPodfileToProject(moduleName: string, podfilePath: string, projectData: IProjectData, nativeProjectPath: string): Promise<void> {

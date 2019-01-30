@@ -7,21 +7,25 @@ class TestNpmPluginPrepare extends NpmPluginPrepare {
 	public preparedDependencies: IDictionary<boolean> = {};
 
 	constructor(private previouslyPrepared: IDictionary<boolean>) {
-		super(null, null, null, null);
+		super(null, null, <any>{
+			getPlatformData: () => {
+				return {
+					platformProjectService: {
+						beforePrepareAllPlugins: () => Promise.resolve()
+					}
+				};
+			}
+		}, null);
 	}
 
 	protected getPreviouslyPreparedDependencies(platform: string): IDictionary<boolean> {
 		return this.previouslyPrepared;
 	}
 
-	protected async beforePrepare(dependencies: IDependencyData[], platform: string): Promise<void> {
+	protected async afterPrepare(dependencies: IDependencyData[], platform: string): Promise<void> {
 		_.each(dependencies, d => {
 			this.preparedDependencies[d.name] = true;
 		});
-	}
-
-	protected async afterPrepare(dependencies: IDependencyData[], platform: string): Promise<void> {
-		// DO NOTHING
 	}
 }
 

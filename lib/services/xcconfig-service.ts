@@ -1,12 +1,42 @@
-export class XCConfigService {
-	constructor(private $fs: IFileSystem) {
+import * as path from "path";
+
+export class XcconfigService implements IXcconfigService {
+	constructor(
+		private $childProcess: IChildProcess,
+		private $fs: IFileSystem,
+		private $xcprojService: IXcprojService) { }
+
+	public getPluginsXcconfigFilePath(projectRoot: string, opts: IRelease): string {
+		if (opts && opts.release) {
+			return this.getPluginsReleaseXcconfigFilePath(projectRoot);
+		}
+
+		return this.getPluginsDebugXcconfigFilePath(projectRoot);
 	}
 
-	/**
-	 * Returns the Value of a Property from a XC Config file.
-	 * @param xcconfigFilePath
-	 * @param propertyName
-	 */
+	private getPluginsDebugXcconfigFilePath(projectRoot: string): string {
+		return path.join(projectRoot, "plugins-debug.xcconfig");
+	}
+
+	private getPluginsReleaseXcconfigFilePath(projectRoot: string): string {
+		return path.join(projectRoot, "plugins-release.xcconfig");
+	}
+
+	public async mergeFiles(sourceFile: string, destinationFile: string): Promise<void> {
+		if (!this.$fs.exists(destinationFile)) {
+			this.$fs.writeFile(destinationFile, "");
+		}
+
+		// TODO: Consider to remove this method
+		await this.$xcprojService.checkIfXcodeprojIsRequired();
+
+		const escapedDestinationFile = destinationFile.replace(/'/g, "\\'");
+		const escapedSourceFile = sourceFile.replace(/'/g, "\\'");
+
+		const mergeScript = `require 'xcodeproj'; Xcodeproj::Config.new('${escapedDestinationFile}').merge(Xcodeproj::Config.new('${escapedSourceFile}')).save_as(Pathname.new('${escapedDestinationFile}'))`;
+		await this.$childProcess.exec(`ruby -e "${mergeScript}"`);
+	}
+
 	public readPropertyValue(xcconfigFilePath: string, propertyName: string): string {
 		if (this.$fs.exists(xcconfigFilePath)) {
 			const text = this.$fs.readText(xcconfigFilePath);
@@ -37,4 +67,4 @@ export class XCConfigService {
 	}
 }
 
-$injector.register("xCConfigService", XCConfigService);
+$injector.register("xcconfigService", XcconfigService);

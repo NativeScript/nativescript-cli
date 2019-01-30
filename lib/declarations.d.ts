@@ -841,6 +841,13 @@ interface IVerifyXcprojOptions {
  */
 interface IXcprojService {
 	/**
+	 * Returns the path to the xcodeproj file
+	 * @param projectData Information about the project.
+	 * @param platformData Information about the platform.
+	 * @return {string} The full path to the xcodeproj
+	 */
+	getXcodeprojPath(projectData: IProjectData, platformData: IPlatformData): string;
+	/**
 	 * Checks whether the system needs xcproj to execute ios builds successfully.
 	 * In case the system does need xcproj but does not have it, prints an error message.
 	 * @param {IVerifyXcprojOptions} opts whether to fail with error message or not
@@ -852,6 +859,11 @@ interface IXcprojService {
 	 * @return {Promise<XcprojInfo>} collected info about xcproj.
 	 */
 	getXcprojInfo(): Promise<IXcprojInfo>;
+	/**
+	 * Checks if xcproj is available and throws an error in case when it is not available.
+	 * @return {Promise<boolean>}
+	 */
+	checkIfXcodeprojIsRequired(): Promise<boolean>;
 }
 
 /**
@@ -874,6 +886,32 @@ interface IXcprojInfo {
 	 * determines whether xcproj can be called from the command line
 	 */
 	xcprojAvailable: boolean;
+}
+
+interface IXcconfigService {
+	/**
+	 * Returns the path to the xcconfig file
+	 * @param projectRoot The path to root folder of native project (platforms/ios)
+	 * @param opts
+	 * @returns {string}
+	 */
+	getPluginsXcconfigFilePath(projectRoot: string, opts: IRelease): string;
+
+	/**
+	 * Returns the value of a property from a xcconfig file.
+	 * @param xcconfigFilePath The path to the xcconfig file
+	 * @param propertyName The name of the property which value will be returned
+	 * @returns {string}
+	 */
+	readPropertyValue(xcconfigFilePath: string, propertyName: string): string;
+
+	/**
+	 * Merges the content of source file into destination file
+	 * @param sourceFile The content of thes source file
+	 * @param destinationFile The content of the destination file
+	 * @returns {Promise<void>}
+	 */
+	mergeFiles(sourceFile: string, destinationFile: string): Promise<void>;
 }
 
 /**

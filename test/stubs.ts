@@ -445,7 +445,7 @@ export class PlatformProjectServiceStub extends EventEmitter implements IPlatfor
 
 	async removePluginNativeCode(pluginData: IPluginData): Promise<void> { }
 
-	async afterPrepareAllPlugins(): Promise<void> {
+	async handleNativeDependenciesChange(): Promise<void> {
 		return Promise.resolve();
 	}
 	async beforePrepareAllPlugins(): Promise<void> {
