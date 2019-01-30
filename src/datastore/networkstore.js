@@ -4,7 +4,6 @@ import { get as getConfig } from '../kinvey/config';
 import { getId as getDeviceId } from '../kinvey/device';
 import { get as getSession } from '../session';
 import Aggregation from '../aggregation';
-import * as Live from '../live';
 import Query from '../query';
 import { formatKinveyUrl } from '../http/utils';
 import { KinveyRequest, RequestMethod } from '../http/request';
@@ -315,39 +314,5 @@ export class NetworkStore {
     }
 
     return response.data;
-  }
-
-  async subscribe(receiver) {
-    if (!Live.isRegistered()) {
-      throw new KinveyError('Please call Kinvey.User.registerForLiveService() before you subscribe for to the collection.');
-    }
-
-    const { apiProtocol, apiHost } = getConfig();
-    const deviceId = getDeviceId();
-    const request = new KinveyRequest({
-      method: RequestMethod.POST,
-      auth: Auth.Session,
-      url: formatKinveyUrl(apiProtocol, apiHost, `${this.pathname}/_subscribe`),
-      body: { deviceId }
-    });
-    await request.execute();
-    Live.subscribeToChannel(this.channelName, receiver);
-    Live.subscribeToChannel(this.personalChannelName, receiver);
-    return this;
-  }
-
-  async unsubscribe() {
-    const { apiProtocol, apiHost } = getConfig();
-    const deviceId = getDeviceId();
-    const request = new KinveyRequest({
-      method: RequestMethod.POST,
-      auth: Auth.Session,
-      url: formatKinveyUrl(apiProtocol, apiHost, `${this.pathname}/_unsubscribe`),
-      body: { deviceId }
-    });
-    await request.execute();
-    Live.unsubscribeFromChannel(this.channelName);
-    Live.unsubscribeFromChannel(this.personalChannelName);
-    return this;
   }
 }

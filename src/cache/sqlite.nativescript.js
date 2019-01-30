@@ -27,7 +27,7 @@ function execute(dbName, tableName, sqlQueries, write = false) {
           if (write) {
             promise = db.execSQL(sqlQuery.replace('#{table}', escapedTableName), parameters);
           } else {
-            promise = db.all(sqlQuery, parameters);
+            promise = db.all(sqlQuery.replace('#{table}', escapedTableName), parameters);
           }
 
           return promise

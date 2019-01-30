@@ -1,7 +1,7 @@
 {
   "name": "kinvey-node-sdk",
   "description": "Kinvey JavaScript SDK for NodeJS applications.",
-  "version": "3.13.0-next.0",
+  "version": "3.13.0-next.1",
   "homepage": "https://www.progress.com/kinvey",
   "license": "Apache-2.0",
   "contributors": [
@@ -16,7 +16,6 @@
     "loglevel-plugin-prefix": "~0.8.4",
     "lokijs": "~1.5.6",
     "p-queue": "~3.0.0",
-    "pubnub": "~4.21.6",
     "request": "~2.88.0",
     "rxjs": "~6.3.3",
     "sift": "~7.0.1",
