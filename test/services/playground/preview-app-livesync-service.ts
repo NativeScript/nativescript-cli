@@ -158,6 +158,9 @@ function createTestInjector(options?: {
 		getConnectedDevices: () => [deviceMockData]
 	});
 	injector.register("previewAppFilesService", PreviewAppFilesService);
+	injector.register("analyticsService", {
+		trackEventActionInGoogleAnalytics: () => ({})
+	});
 
 	return injector;
 }

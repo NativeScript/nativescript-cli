@@ -48,6 +48,11 @@ export class AndroidDeviceFileSystem implements Mobile.IDeviceFileSystem {
 		}
 	}
 
+	public async getFileContent(deviceFilePath: string, appIdentifier: string): Promise<string> {
+		const result = await this.adb.executeShellCommand(["cat", deviceFilePath]);
+		return result;
+	}
+
 	public async putFile(localFilePath: string, deviceFilePath: string, appIdentifier: string): Promise<void> {
 		await this.adb.pushFile(localFilePath, deviceFilePath);
 	}

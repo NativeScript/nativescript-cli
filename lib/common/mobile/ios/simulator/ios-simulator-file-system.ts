@@ -16,6 +16,11 @@ export class IOSSimulatorFileSystem implements Mobile.IDeviceFileSystem {
 		}
 	}
 
+	public async getFileContent(deviceFilePath: string, appIdentifier: string): Promise<string> {
+		const result = this.$fs.readText(deviceFilePath);
+		return result;
+	}
+
 	public async putFile(localFilePath: string, deviceFilePath: string, appIdentifier: string): Promise<void> {
 		shelljs.cp("-f", localFilePath, deviceFilePath);
 	}
@@ -27,7 +32,7 @@ export class IOSSimulatorFileSystem implements Mobile.IDeviceFileSystem {
 	public async transferFiles(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]): Promise<Mobile.ILocalToDevicePathData[]> {
 		await Promise.all(
 			_.map(localToDevicePaths, localToDevicePathData => this.transferFile(localToDevicePathData.getLocalPath(), localToDevicePathData.getDevicePath())
-			));
+		));
 		return localToDevicePaths;
 	}
 

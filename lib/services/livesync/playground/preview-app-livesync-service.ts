@@ -1,6 +1,6 @@
 import * as path from "path";
 import { Device, FilesPayload } from "nativescript-preview-sdk";
-import { APP_RESOURCES_FOLDER_NAME, APP_FOLDER_NAME } from "../../../constants";
+import { APP_RESOURCES_FOLDER_NAME, APP_FOLDER_NAME, TrackActionNames } from "../../../constants";
 import { PreviewAppLiveSyncEvents } from "./preview-app-constants";
 import { HmrConstants } from "../../../common/constants";
 import { stringify } from "../../../common/helpers";
@@ -12,6 +12,7 @@ export class PreviewAppLiveSyncService extends EventEmitter implements IPreviewA
 	private deviceInitializationPromise: IDictionary<Promise<FilesPayload>> = {};
 
 	constructor(
+		private $analyticsService: IAnalyticsService,
 		private $errors: IErrors,
 		private $hooksService: IHooksService,
 		private $logger: ILogger,
@@ -35,6 +36,14 @@ export class PreviewAppLiveSyncService extends EventEmitter implements IPreviewA
 
 				if (this.deviceInitializationPromise[device.id]) {
 					return this.deviceInitializationPromise[device.id];
+				}
+
+				if (device.uniqueId) {
+					await this.$analyticsService.trackEventActionInGoogleAnalytics({
+						action: TrackActionNames.PreviewAppData,
+						platform: device.platform,
+						additionalData: device.uniqueId
+					});
 				}
 
 				this.deviceInitializationPromise[device.id] = this.getInitialFilesForDevice(data, device);

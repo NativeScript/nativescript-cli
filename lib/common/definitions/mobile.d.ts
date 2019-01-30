@@ -320,6 +320,7 @@ declare module Mobile {
 	interface IDeviceFileSystem {
 		listFiles(devicePath: string, appIdentifier?: string): Promise<any>;
 		getFile(deviceFilePath: string, appIdentifier: string, outputFilePath?: string): Promise<void>;
+		getFileContent(deviceFilePath: string, appIdentifier: string): Promise<string>;
 		putFile(localFilePath: string, deviceFilePath: string, appIdentifier: string): Promise<void>;
 		deleteFile(deviceFilePath: string, appIdentifier: string): Promise<void>;
 		transferFiles(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]): Promise<Mobile.ILocalToDevicePathData[]>;

@@ -23,15 +23,19 @@ export class IOSDeviceFileSystem implements Mobile.IDeviceFileSystem {
 	}
 
 	public async getFile(deviceFilePath: string, appIdentifier: string, outputFilePath?: string): Promise<void> {
-		if (!outputFilePath) {
-			const result = await this.$iosDeviceOperations.readFiles([{ deviceId: this.device.deviceInfo.identifier, path: deviceFilePath, appId: appIdentifier }]);
-			const response = result[this.device.deviceInfo.identifier][0];
-			if (response) {
-				this.$logger.out(response.response);
-			}
-		} else {
+		if (outputFilePath) {
 			await this.$iosDeviceOperations.downloadFiles([{ appId: appIdentifier, deviceId: this.device.deviceInfo.identifier, source: deviceFilePath, destination: outputFilePath }]);
+			return;
 		}
+
+		const fileContent = await this.getFileContent(deviceFilePath, appIdentifier);
+		this.$logger.out(fileContent);
+	}
+
+	public async getFileContent(deviceFilePath: string, appIdentifier: string): Promise<string> {
+		const result = await this.$iosDeviceOperations.readFiles([{ deviceId: this.device.deviceInfo.identifier, path: deviceFilePath, appId: appIdentifier }]);
+		const response = result[this.device.deviceInfo.identifier][0];
+		return response.response;
 	}
 
 	public async putFile(localFilePath: string, deviceFilePath: string, appIdentifier: string): Promise<void> {

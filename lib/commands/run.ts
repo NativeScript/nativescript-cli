@@ -6,7 +6,9 @@ export class RunCommandBase implements ICommand {
 	private liveSyncCommandHelperAdditionalOptions: ILiveSyncCommandHelperAdditionalOptions = <ILiveSyncCommandHelperAdditionalOptions>{};
 
 	public platform: string;
-	constructor(private $projectData: IProjectData,
+	constructor(
+		private $analyticsService: IAnalyticsService,
+		private $projectData: IProjectData,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $errors: IErrors,
 		private $hostInfo: IHostInfo,
@@ -15,6 +17,7 @@ export class RunCommandBase implements ICommand {
 
 	public allowedParameters: ICommandParameter[] = [];
 	public async execute(args: string[]): Promise<void> {
+		await this.$analyticsService.trackPreviewAppData(this.platform, this.$projectData.projectDir);
 		return this.$liveSyncCommandHelper.executeCommandLiveSync(this.platform, this.liveSyncCommandHelperAdditionalOptions);
 	}
 

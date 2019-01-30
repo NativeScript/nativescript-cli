@@ -29,7 +29,8 @@ function createDevice(id: string): Device {
 		name: "my test name",
 		osVersion: "10.0.0",
 		previewAppVersion: "19.0.0",
-		runtimeVersion: "5.0.0"
+		runtimeVersion: "5.0.0",
+		uniqueId: "testUniqueId"
 	};
 }
 

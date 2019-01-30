@@ -156,7 +156,8 @@ export const enum TrackActionNames {
 	CheckEnvironmentRequirements = "Check Environment Requirements",
 	Options = "Options",
 	AcceptTracking = "Accept Tracking",
-	Performance = "Performance"
+	Performance = "Performance",
+	PreviewAppData = "Preview App Data"
 }
 
 export const AnalyticsEventLabelDelimiter = "__";

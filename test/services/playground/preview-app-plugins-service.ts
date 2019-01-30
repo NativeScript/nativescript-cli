@@ -59,7 +59,8 @@ function createDevice(plugins: string): Device {
 		previewAppVersion: "28.0.0",
 		runtimeVersion: "4.3.0",
 		plugins,
-		pluginsExpanded: false
+		pluginsExpanded: false,
+		uniqueId: "testId"
 	};
 }
 
