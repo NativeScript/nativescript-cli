@@ -103,13 +103,13 @@ interface IPlatformService extends IBuildPlatformAction, NodeJS.EventEmitter {
 	 * When finishes, saves .nsbuildinfo in application root folder to indicate the prepare that was used to build the app.
 	 * * .nsbuildinfo is not persisted when building for release.
 	 * @param {Mobile.IDevice} device The device where the application should be installed.
-	 * @param {IRelease} options Whether the application was built in release configuration.
+	 * @param {IBuildConfig} options The build configuration.
 	 * @param {string} @optional pathToBuiltApp Path to build artifact.
 	 * @param {string} @optional outputPath Directory containing build information and artifacts.
 	 * @param {IProjectData} projectData DTO with information about the project.
 	 * @returns {void}
 	 */
-	installApplication(device: Mobile.IDevice, options: IRelease, projectData: IProjectData, pathToBuiltApp?: string, outputPath?: string): Promise<void>;
+	installApplication(device: Mobile.IDevice, options: IBuildConfig, projectData: IProjectData, pathToBuiltApp?: string, outputPath?: string): Promise<void>;
 
 	/**
 	 * Gets first chance to validate the options provided as command line arguments.
