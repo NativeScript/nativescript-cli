@@ -267,14 +267,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 
 		// Of the properties below only `buildForDevice` and `release` are currently used.
 		// Leaving the others with placeholder values so that they may not be forgotten in future implementations.
-		const buildConfig: IBuildConfig = {
-			buildForDevice: !settings.isEmulator,
-			release: false,
-			device: settings.deviceIdentifier,
-			provision: null,
-			teamId: null,
-			projectDir: settings.projectDir
-		};
+		const buildConfig = this.getInstallApplicationBuildConfig(settings.deviceIdentifier, settings.projectDir, { isEmulator: settings.isEmulator });
 		debugData.pathToAppPackage = this.$platformService.lastOutputPath(settings.platform, buildConfig, projectData, settings.outputPath);
 		const debugInfo = await this.$debugService.debug(debugData, settings.debugOptions);
 		const result = this.printDebugInformation(debugInfo, settings.debugOptions.forceDebuggerAttachedEvent);
@@ -489,7 +482,8 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 		await this.$platformService.validateInstall(options.device, options.projectData, options, options.deviceBuildInfoDescriptor.outputPath);
 		const shouldInstall = await this.$platformService.shouldInstall(options.device, options.projectData, options, options.deviceBuildInfoDescriptor.outputPath);
 		if (shouldInstall) {
-			await this.$platformService.installApplication(options.device, { release: false }, options.projectData, pathToBuildItem, options.deviceBuildInfoDescriptor.outputPath);
+			const buildConfig = this.getInstallApplicationBuildConfig(options.device.deviceInfo.identifier, options.projectData.projectDir, { isEmulator: options.device.isEmulator });
+			await this.$platformService.installApplication(options.device, buildConfig, options.projectData, pathToBuildItem, options.deviceBuildInfoDescriptor.outputPath);
 			appInstalledOnDeviceResult.appInstalled = true;
 		}
 
@@ -502,7 +496,8 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 		if (rebuildInfo) {
 			// Case where we have three devices attached, a change that requires build is found,
 			// we'll rebuild the app only for the first device, but we should install new package on all three devices.
-			await this.$platformService.installApplication(options.device, { release: false }, options.projectData, rebuildInfo.pathToBuildItem, options.deviceBuildInfoDescriptor.outputPath);
+			const buildConfig = this.getInstallApplicationBuildConfig(options.device.deviceInfo.identifier, options.projectData.projectDir, { isEmulator: options.device.isEmulator });
+			await this.$platformService.installApplication(options.device, buildConfig, options.projectData, rebuildInfo.pathToBuildItem, options.deviceBuildInfoDescriptor.outputPath);
 			return rebuildInfo.pathToBuildItem;
 		}
 
@@ -873,6 +868,19 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 			const result = await liveSyncInfo.actionsChain;
 			return result;
 		}
+	}
+
+	private getInstallApplicationBuildConfig(deviceIdentifier: string, projectDir: string, opts: { isEmulator: boolean }): IBuildConfig {
+		const buildConfig: IBuildConfig = {
+			buildForDevice: !opts.isEmulator,
+			release: false,
+			device: deviceIdentifier,
+			provision: null,
+			teamId: null,
+			projectDir
+		};
+
+		return buildConfig;
 	}
 
 	public emitLivesyncEvent(event: string, livesyncData: ILiveSyncEventData): boolean {
