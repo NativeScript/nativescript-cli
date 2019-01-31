@@ -134,14 +134,16 @@ export class HttpClient implements Server.IHttpClient {
 			const requestObj = request(options);
 			cleanupRequestData.req = requestObj;
 
-			stuckRequestTimerId = setTimeout(() => {
-				clearTimeout(stuckRequestTimerId);
-				stuckRequestTimerId = null;
-				if (!hasResponse) {
-					this.setResponseResult(promiseActions, cleanupRequestData, { err: new Error(HttpClient.STUCK_REQUEST_ERROR_MESSAGE) });
-				}
-			}, options.timeout || HttpClient.STUCK_REQUEST_TIMEOUT);
-			cleanupRequestData.timers.push(stuckRequestTimerId);
+			if (options.method !== "PUT" && options.method !== "POST") {
+				stuckRequestTimerId = setTimeout(() => {
+					clearTimeout(stuckRequestTimerId);
+					stuckRequestTimerId = null;
+					if (!hasResponse) {
+						this.setResponseResult(promiseActions, cleanupRequestData, { err: new Error(HttpClient.STUCK_REQUEST_ERROR_MESSAGE) });
+					}
+				}, options.timeout || HttpClient.STUCK_REQUEST_TIMEOUT);
+				cleanupRequestData.timers.push(stuckRequestTimerId);
+			}
 
 			requestObj
 				.on("error", (err: IHttpRequestError) => {
