@@ -1,29 +1,29 @@
+import { EventEmitter } from 'events';
 import { Color } from 'tns-core-modules/color';
 import { topmost } from 'tns-core-modules/ui/frame';
 import * as app from 'tns-core-modules/application';
 import { Page } from 'tns-core-modules/ui/page';
 import { GridLayout } from 'tns-core-modules/ui/layouts/grid-layout';
 import { StackLayout } from 'tns-core-modules/ui/layouts/stack-layout';
-import { WebView } from 'tns-core-modules/ui/web-view';
-import { handleOpenURL } from 'nativescript-urlhandler';
-
-const EventEmitter = require('events');
+import { WebView, LoadEventData} from 'tns-core-modules/ui/web-view';
+import { handleOpenURL, AppURL } from 'nativescript-urlhandler';
 
 const LOADED_EVENT = 'loaded';
 const CLOSED_EVENT = 'closed';
 // const ERROR_EVENT = 'error';
 
-const customtabs = android.support.customtabs || {};
+const androidSupport: any = android.support;
+const customtabs = androidSupport.customtabs || {};
 const CustomTabsCallback = customtabs.CustomTabsCallback;
 const CustomTabsServiceConnection = customtabs.CustomTabsServiceConnection;
 const CustomTabsIntent = customtabs.CustomTabsIntent;
 const CustomTabsClient = customtabs.CustomTabsClient;
 const Uri = android.net.Uri;
 
-// export interface PopupOptions {
-//   toolbarColor?: string;
-//   showTitle?: boolean;
-// }
+interface PopupOptions {
+  toolbarColor?: string;
+  showTitle?: boolean;
+}
 
 const NavigationEvent = {
   Started: 1,
@@ -35,7 +35,10 @@ const NavigationEvent = {
 };
 
 class OAuthPageProvider {
-  constructor(authUrl, webviewIntercept) {
+  private authUrl: string;
+  private webviewIntercept: (webview: any, error?: any, url?: string) => boolean;
+
+  constructor(authUrl: string, webviewIntercept: (webview: any, error?: any, url?: string) => boolean) {
     this.authUrl = authUrl;
     this.webviewIntercept = webviewIntercept;
   }
@@ -43,11 +46,11 @@ class OAuthPageProvider {
   createWebViewPage() {
     const webview = new WebView();
 
-    webview.on(WebView.loadFinishedEvent, (args) => {
+    webview.on(WebView.loadFinishedEvent, (args: LoadEventData) => {
       this.webviewIntercept(webview, args.error, args.url);
     });
 
-    webview.on(WebView.loadStartedEvent, (args) => {
+    webview.on(WebView.loadStartedEvent, (args: LoadEventData) => {
       this.webviewIntercept(webview, args.error, args.url);
     });
 
@@ -67,9 +70,11 @@ class OAuthPageProvider {
 }
 
 class LegacyPopup extends EventEmitter {
+  private _open = false;
+
   open(url = '/') {
     if (this._open !== true) {
-      const webViewIntercept = (webview, error, url) => {
+      const webViewIntercept = (webview: any, error: any, url: string): boolean => {
         let urlStr = '';
 
         try {
@@ -105,7 +110,9 @@ class LegacyPopup extends EventEmitter {
 }
 
 class Popup extends EventEmitter {
-  open(url, options = {}) {
+  private _open = false;
+
+  open(url = '/', options: PopupOptions = {}) {
     if (this._open !== true) {
       const activity = app.android.startActivity || app.android.foregroundActivity;
       let shouldClose = false;
@@ -113,7 +120,7 @@ class Popup extends EventEmitter {
 
       try {
         const callback = CustomTabsCallback.extend({
-          onNavigationEvent: (navigationEvent) => {
+          onNavigationEvent: (navigationEvent: any) => {
             switch (navigationEvent) {
               case NavigationEvent.Finished:
               case NavigationEvent.Failed:
@@ -133,12 +140,12 @@ class Popup extends EventEmitter {
         });
 
         // Handle redirect uri
-        handleOpenURL((appURL) => {
+        handleOpenURL((appURL: AppURL) => {
           this.emit(LOADED_EVENT, { url: appURL.toString() });
         });
 
         const serviceConnection = CustomTabsServiceConnection.extend({
-          onCustomTabsServiceConnected: (name, client) => {
+          onCustomTabsServiceConnected: (name: any, client: any) => {
             // Create a new session
             const session = client.newSession(new callback());
 
@@ -166,7 +173,7 @@ class Popup extends EventEmitter {
             this._open = true;
           },
 
-          onServiceDisconnected(name) {
+          onServiceDisconnected(name: any) {
             // TODO: Do nothing for now. Should this change?
           }
         });
@@ -198,7 +205,7 @@ class Popup extends EventEmitter {
   }
 }
 
-export default function open(url, options) {
+export default function open(url: string, options: PopupOptions) {
   const popup = new Popup();
   return popup.open(url, options);
 }

@@ -1,50 +1,63 @@
-import isFunction from 'lodash/isFunction';
+import { EventEmitter } from 'events';
 import { Color } from 'tns-core-modules/color';
-import { ios } from 'tns-core-modules/utils/utils';
-import { handleOpenURL } from 'nativescript-urlhandler';
-
-const EventEmitter = require('events');
+import { handleOpenURL, AppURL } from 'nativescript-urlhandler';
+import { ios } from "tns-core-modules/utils/utils";
 
 const LOADED_EVENT = 'loaded';
 const CLOSED_EVENT = 'closed';
 const ERROR_EVENT = 'error';
 
-class SFSafariViewControllerDelegateImpl extends NSObject {
-  static initWithOwnerCallback(owner, callback) {
-    let delegate = SFSafariViewControllerDelegateImpl.new();
-    delegate.ObjCProtocols = [SFSafariViewControllerDelegate];
+interface PopupOptions {
+  toolbarColor?: string;
+  showTitle?: boolean;
+}
+
+class SFSafariViewControllerDelegateImpl extends NSObject implements SFSafariViewControllerDelegate {
+  public static ObjCProtocols = [SFSafariViewControllerDelegate];
+  private _owner: WeakRef<any>;
+  private _callback: Function;
+
+  static new(): SFSafariViewControllerDelegateImpl {
+    return <SFSafariViewControllerDelegateImpl>super.new();
+  }
+
+  public static initWithOwnerCallback(owner: WeakRef<any>, callback: Function): SFSafariViewControllerDelegateImpl {
+    let delegate = <SFSafariViewControllerDelegateImpl>SFSafariViewControllerDelegateImpl.new();
     delegate._owner = owner;
     delegate._callback = callback;
     return delegate;
   }
 
-  safariViewControllerDidFinish() {
-    if (isFunction(this._callback)) {
+  safariViewControllerDidFinish(): void {
+    if (this._callback && typeof this._callback === 'function') {
       this._callback(true);
     }
   }
 }
 
 class Popup extends EventEmitter {
+  private _open = false;
+  private _viewController: UIViewController = null;
+
   isClosed() {
     return this._open !== true;
   }
 
-  onLoaded(listener) {
+  onLoaded(listener: any) {
     return this.on(LOADED_EVENT, listener);
   }
 
-  onClosed(listener) {
+  onClosed(listener: any) {
     return this.on(CLOSED_EVENT, listener);
   }
 
-  onError(listener) {
+  onError(listener: any) {
     return this.on(ERROR_EVENT, listener);
   }
 
-  open(url, options = {}) {
+  open(url = '/', options: PopupOptions = {}) {
     // Handle redirect uri
-    handleOpenURL((appURL) => {
+    handleOpenURL((appURL: AppURL) => {
       this.emit(LOADED_EVENT, { url: appURL.toString() });
     });
 
@@ -97,7 +110,7 @@ class Popup extends EventEmitter {
   }
 }
 
-export default function open(url, options) {
+export default function open(url: string, options: PopupOptions): Popup {
   const popup = new Popup();
   return popup.open(url, options);
 }
