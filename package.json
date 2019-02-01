@@ -3,6 +3,7 @@
   "license": "Apache-2.0",
   "author": "Kinvey, Inc.",
   "scripts": {
+    "build:all": "npm run build:angular && npm run build:html5 && npm run build:nativescript && npm run build:node",
     "build:angular": "node scripts/build/build.angular.js",
     "bundle:angular": "npm run build:angular && webpack --config packages/kinvey-angular-sdk/webpack.prod.js",
     "bundle:angular:dev": "npm run build:angular && webpack --config packages/kinvey-angular-sdk/webpack.dev.js",
