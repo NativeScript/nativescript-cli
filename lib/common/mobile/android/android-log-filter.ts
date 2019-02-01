@@ -45,11 +45,6 @@ export class AndroidLogFilter implements Mobile.IPlatformLogFilter {
 			consoleLogMessage = { tag: match[1].trim(), message: match[2] };
 		}
 
-		if (!consoleLogMessage) {
-			const matchingTag = _.some(acceptedTags, (tag: string) => { return lineText.indexOf(tag) !== -1; });
-			consoleLogMessage = matchingTag ? { message: lineText } : null;
-		}
-
 		return consoleLogMessage;
 	}
 }
