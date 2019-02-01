@@ -18,7 +18,10 @@ import update from '../user/update';
 import getActiveUser from '../user/getActiveUser';
 import verifyEmail from '../user/verifyEmail';
 
-class UserService {
+@Injectable({
+  providedIn: 'root'
+})
+export default class UserService {
   exists(...args) {
     return exists(...args);
   }
@@ -51,8 +54,8 @@ class UserService {
     return lookup(...args);
   }
 
-  me(...args) {
-    return me(...args);
+  me() {
+    return me();
   }
 
   remove(...args) {
@@ -63,8 +66,8 @@ class UserService {
     return resetPassword(...args);
   }
 
-  restore(...args) {
-    return restore(...args);
+  restore() {
+    return restore();
   }
 
   signup(...args) {
@@ -83,9 +86,3 @@ class UserService {
     return verifyEmail(...args);
   }
 }
-
-UserService.decorators = [
-  { type: Injectable }
-];
-
-export default UserService;

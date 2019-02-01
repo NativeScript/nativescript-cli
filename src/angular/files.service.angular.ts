@@ -12,7 +12,10 @@ import stream from '../files/stream';
 import update from '../files/update';
 import upload from '../files/upload';
 
-class FileService {
+@Injectable({
+  providedIn: 'root'
+})
+export default class FileService {
   create(...args) {
     return create(...args);
   }
@@ -53,9 +56,3 @@ class FileService {
     return upload(...args);
   }
 }
-
-FileService.decorators = [
-  { type: Injectable }
-];
-
-export default FileService;

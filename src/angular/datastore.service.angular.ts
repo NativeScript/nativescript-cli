@@ -3,7 +3,10 @@
 import { Injectable } from '@angular/core';
 import { collection, getInstance, clear, clearCache } from '../datastore';
 
-class DataStoreService {
+@Injectable({
+  providedIn: 'root'
+})
+export default class DataStoreService {
   collection(...args) {
     return collection(...args);
   }
@@ -12,17 +15,11 @@ class DataStoreService {
     return getInstance(...args);
   }
 
-  clear(...args) {
-    return clear(...args);
+  clear() {
+    return clear();
   }
 
-  clearCache(...args) {
-    return clearCache(...args);
+  clearCache() {
+    return clearCache();
   }
 }
-
-DataStoreService.decorators = [
-  { type: Injectable }
-];
-
-export default DataStoreService;

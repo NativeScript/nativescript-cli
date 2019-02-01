@@ -3,7 +3,10 @@
 import { Injectable } from '@angular/core';
 import endpoint from '../endpoint';
 
-class EndpointService {
+@Injectable({
+  providedIn: 'root'
+})
+export default class EndpointService {
   endpoint(...args) {
     return endpoint(...args);
   }
@@ -12,9 +15,3 @@ class EndpointService {
     return this.endpoint(...args);
   }
 }
-
-EndpointService.decorators = [
-  { type: Injectable }
-];
-
-export default EndpointService;

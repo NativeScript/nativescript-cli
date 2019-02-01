@@ -1,14 +1,15 @@
 import { NgModule } from '@angular/core';
-import init from '../kinvey/init';
+import sdkInit from '../kinvey/init';
 import DataStoreService from './datastore.service';
 import EndpointService from './endpoint.service';
 import FilesService from './files.service';
 import PingService from './ping.service';
 import UserService from './user.service';
 
-class KinveyModule {
-  static init(config) {
-    init(config);
+@NgModule()
+export default class KinveyModule {
+  static init(config : any) {
+    sdkInit(config);
     return {
       ngModule: KinveyModule,
       providers: [
@@ -21,9 +22,3 @@ class KinveyModule {
     };
   }
 }
-
-KinveyModule.decorators = [
-  { type: NgModule }
-];
-
-export default KinveyModule;
