@@ -1,9 +1,21 @@
+const fs = require('fs-extra');
 const path = require('path');
-const build = require('./build');
+const { buildJS } = require('./build');
 const { PACKAGES_DIR, ROOT_DIR } = require('../utils');
 
-const SRC_DIR = path.resolve(ROOT_DIR, 'src');
-const BUILD_DIR = path.resolve(PACKAGES_DIR, 'kinvey-html5-sdk', 'src');
-const EXTENSIONS = ['.html5'];
+async function build() {
+  const srcDir = path.resolve(ROOT_DIR, 'src');
+  const buildDir = path.resolve(PACKAGES_DIR, 'kinvey-html5-sdk', 'src');
+  const extensions = ['.html5'];
 
-build(SRC_DIR, BUILD_DIR, EXTENSIONS);
+  // Remove the existing SDK src directory
+  await fs.remove(buildDir);
+
+  // Create the SDK src directory
+  await fs.ensureDir(buildDir);
+
+  // Build JS
+  buildJS(srcDir, buildDir, extensions);
+}
+
+build();

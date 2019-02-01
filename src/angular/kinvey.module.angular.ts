@@ -8,7 +8,7 @@ import UserService from './user.service';
 
 @NgModule()
 export default class KinveyModule {
-  static init(config : any) {
+  static init(config: any) {
     sdkInit(config);
     return {
       ngModule: KinveyModule,
