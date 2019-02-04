@@ -70,7 +70,7 @@ class Popup extends EventEmitter {
     }
 
     // Delegate
-    sfc.delegate = SFSafariViewControllerDelegateImpl.initWithOwnerCallback(new WeakRef(this), (finish) => {
+    sfc.delegate = SFSafariViewControllerDelegateImpl.initWithOwnerCallback(new WeakRef(this), (finish: boolean) => {
       if (finish) {
         // Set open to false
         this._open = false;
