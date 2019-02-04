@@ -2,7 +2,6 @@
 
 "use strict";
 var path = require("path"),
-	node = require("../package.json").engines.node,
 	pathToLib = path.join(__dirname, "..", "lib"),
 	pathToCommon = path.join(pathToLib, "common");
 
@@ -10,27 +9,4 @@ require(path.join(pathToCommon, "verify-node-version")).verifyNodeVersion();
 
 var pathToCliExecutable = path.join(pathToLib, "nativescript-cli.js");
 
-var nodeArgs = require(path.join(pathToCommon, "scripts", "node-args")).getNodeArgs();
-
-if (nodeArgs.length) {
-	// We need custom args for Node process, so pass them here.
-	var childProcess = require("child_process");
-	var args = process.argv;
-
-	// Remove `node` and `nativescript` from the arguments.
-	args.shift();
-	args.shift();
-
-	args.unshift(pathToCliExecutable);
-
-	args = nodeArgs.concat(args);
-
-	var nodeProcess = childProcess.spawn(process.execPath, args, { stdio: "inherit" });
-
-	nodeProcess.on("close", function (code) {
-		// We need this handler so if command fails, we'll exit with same exit code as CLI.
-		process.exit(code);
-	});
-} else {
-	require(pathToCliExecutable);
-}
+require(pathToCliExecutable);

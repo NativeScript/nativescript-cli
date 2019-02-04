@@ -2,7 +2,6 @@ import { assert } from "chai";
 import * as fs from "fs";
 import * as path from "path";
 import * as childProcess from "child_process";
-const nodeArgs = require(path.join(__dirname, "..", "lib", "common", "scripts", "node-args")).getNodeArgs();
 
 describe("nativescript-cli-lib", () => {
 	it("is main entry of the package", () => {
@@ -67,7 +66,7 @@ describe("nativescript-cli-lib", () => {
 			// For example $injector.register("errors", Errors) will add the errors module with its resolver (Errors) to $injector's cache.
 			// Calling $injector.require("errors", <path to errors file>), that's executed in our bootstrap, will fail, as the module errors is already in the cache.
 			// In order to workaround this problem, start new process and assert there. This way all files will not be required in it and $injector.require(...) will work correctly.
-			let testMethod = `"${process.execPath}" ${nodeArgs.join(" ")} -e "` +
+			let testMethod = `"${process.execPath}" -e "` +
 				"var assert = require('chai').assert;" +
 				`var result = require('${pathToEntryPoint}');` +
 				`assert.ok(result.${moduleName});`;
