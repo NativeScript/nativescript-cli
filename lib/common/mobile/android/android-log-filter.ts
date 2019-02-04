@@ -35,7 +35,8 @@ export class AndroidLogFilter implements Mobile.IPlatformLogFilter {
 			return null;
 		}
 
-		const acceptedTags = ["chromium", "Web Console", "JS", "ActivityManager", "System.err"];
+		// Messages with category TNS.Native and TNS.Java will be printed by runtime to Logcat only when `__enableVerboseLogging()` is called in the application.
+		const acceptedTags = ["chromium", "Web Console", "JS", "ActivityManager", "System.err", "TNS.Native", "TNS.Java"];
 
 		let consoleLogMessage: { tag?: string, message: string };
 
