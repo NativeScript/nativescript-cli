@@ -10,7 +10,7 @@ import { handleOpenURL, AppURL } from 'nativescript-urlhandler';
 
 const LOADED_EVENT = 'loaded';
 const CLOSED_EVENT = 'closed';
-// const ERROR_EVENT = 'error';
+const ERROR_EVENT = 'error';
 
 const androidSupport: any = android.support;
 const customtabs = androidSupport.customtabs || {};
@@ -111,6 +111,22 @@ class LegacyPopup extends EventEmitter {
 
 class Popup extends EventEmitter {
   private _open = false;
+
+  isClosed() {
+    return this._open !== true;
+  }
+
+  onLoaded(listener: any) {
+    return this.on(LOADED_EVENT, listener);
+  }
+
+  onClosed(listener: any) {
+    return this.on(CLOSED_EVENT, listener);
+  }
+
+  onError(listener: any) {
+    return this.on(ERROR_EVENT, listener);
+  }
 
   open(url = '/', options: PopupOptions = {}) {
     if (this._open !== true) {
