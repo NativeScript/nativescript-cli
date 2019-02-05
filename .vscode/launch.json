@@ -15,7 +15,7 @@
 			"program": "${workspaceRoot}/lib/nativescript-cli.js",
 
 			// example commands
-			"args": [ "create", "cliapp"]
+			"args": [ "create", "cliapp", "--path", "${workspaceRoot}/scratch"]
 			// "args": [ "test", "android", "--justlaunch"]
 			// "args": [ "platform", "add", "android@1.3.0", "--path", "cliapp"]
 			// "args": [ "platform", "remove", "android", "--path", "cliapp"]
@@ -41,50 +41,10 @@
 
 		{
 			"type": "node",
-			"runtimeArgs": [
-				"--harmony"
-			],
-			"request": "launch",
-			"name": "Launch CLI (Node 4, Node 5)",
-			"program": "${workspaceRoot}/lib/nativescript-cli.js",
-			"cwd": "${workspaceRoot}",
-			"sourceMaps": true,
-			// define the arguments that you would like to pass to CLI, for example
-			// "args": [ "build", "android", "--justlaunch" ]
-			"args": [
-
-			]
-		},
-
-		{
-			// in case you want to debug a single test, modify it's code to be `it.only(...` instead of `it(...`
-			"type": "node",
-			"runtimeArgs": [
-				"--harmony"
-			],
-			"request": "launch",
-			"name": "Launch Tests (Node 4, Node 5)",
-			"program": "${workspaceRoot}/node_modules/mocha/bin/_mocha",
-			"cwd": "${workspaceRoot}",
-			"sourceMaps": true
-		},
-
-		{
-			"type": "node",
 			"request": "attach",
 			"name": "Attach to Broker Process",
 			// In case you want to debug Analytics Broker process, add `--debug-brk=9897` (or --inspect-brk=9897) when spawning analytics-broker-process.
 			"port": 9897,
-			"sourceMaps": true
-		},
-
-		{
-			"type": "node",
-			"request": "attach",
-			"name": "Attach to Eqatec Process",
-			// In case you want to debug Eqatec Analytics process, add `--debug-brk=9855` (or --inspect-brk=9855) when spawning eqatec-analytics-process.
-			// NOTE: Ensure you set it only for one of the analytics processes.
-			"port": 9855,
 			"sourceMaps": true
 		}
 
