@@ -6,7 +6,6 @@ import { hook } from "../../common/helpers";
 import { PACKAGE_JSON_FILE_NAME, LiveSyncTrackActionNames, USER_INTERACTION_NEEDED_EVENT_NAME, DEBUGGER_ATTACHED_EVENT_NAME, DEBUGGER_DETACHED_EVENT_NAME, TrackActionNames } from "../../constants";
 import { DeviceTypes, DeviceDiscoveryEventNames, HmrConstants } from "../../common/constants";
 import { cache } from "../../common/decorators";
-import * as constants from "../../constants";
 import { PreviewAppLiveSyncEvents } from "./playground/preview-app-constants";
 import { performanceLog } from "../../common/decorators";
 
@@ -149,12 +148,6 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 	private handleWarnings(liveSyncData: ILiveSyncInfo, projectData: IProjectData) {
 		if (liveSyncData.useHotModuleReload) {
 			this.$logger.warn("Hot Module Replacement (HMR) is currently in Beta. For more information about the current development state and any known issues, please check the relevant GitHub issue: https://github.com/NativeScript/NativeScript/issues/6398");
-			if (projectData.projectType === constants.NgFlavorName) {
-				this.$logger.warn("To enable Hot Module Replacement (HMR) in Angular projects, follow the steps outlined in this wiki: https://github.com/NativeScript/nativescript-angular/wiki/HMR");
-			}
-		}
-		if (liveSyncData.syncToPreviewApp && liveSyncData.bundle) {
-			this.$logger.warn("Webpack support for the `tns preview` command is currently in Beta. Please, do not hesitate to report any problems that you experience with the feature by opening a new issue in the NativeScript CLI repository: https://github.com/NativeScript/nativescript-cli/issues/new/choose");
 		}
 	}
 
