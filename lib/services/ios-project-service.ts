@@ -779,9 +779,15 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 			this.$logger.trace(`Images to remove from xcode project: ${imagesToRemove.join(", ")}`);
 			_.each(imagesToRemove, image => project.removeResourceFile(path.join(this.getAppResourcesDestinationDirectoryPath(projectData), image)));
 
-			await this.prepareNativeSourceCode(constants.TNS_NATIVE_SOURCE_GROUP_NAME, path.join(projectData.getAppResourcesDirectoryPath(), constants.APP_RESOURCES_FOLDER_NAME, this.getPlatformData(projectData).normalizedPlatformName, constants.NATIVE_SOURCE_FOLDER), projectData);
-
 			this.savePbxProj(project, projectData);
+
+			const resourcesNativeCodePath = path.join(
+				projectData.getAppResourcesDirectoryPath(),
+				this.getPlatformData(projectData).normalizedPlatformName,
+				constants.NATIVE_SOURCE_FOLDER
+			);
+
+			await this.prepareNativeSourceCode(constants.TNS_NATIVE_SOURCE_GROUP_NAME, resourcesNativeCodePath, projectData);
 		}
 
 	}
