@@ -2,8 +2,6 @@ const childProcess = require("child_process");
 const EOL = require("os").EOL;
 const now = new Date().toISOString();
 
-const CONFIG_JSON_PATH = "config/config.json";
-
 const ENVIRONMENTS = {
 	live: "live",
 	dev: "dev"
@@ -143,7 +141,7 @@ module.exports = function (grunt) {
 						"isWindows": true,
 						"isMacOS": true,
 						"isLinux": true,
-						"formatListOfNames": () => {},
+						"formatListOfNames": () => { },
 						"constants": ""
 					}
 				},
@@ -173,29 +171,13 @@ module.exports = function (grunt) {
 
 		var packageJson = grunt.file.readJSON("package.json");
 		var versionParts = packageJson.version.split("-");
-		if (process.env["RELEASE_BUILD"]) {
-			// HACK - excluded until 1.0.0 release or we refactor our project infrastructure (whichever comes first)
-			//			packageJson.version = versionParts[0];
-		} else {
-			versionParts[1] = buildVersion;
-			packageJson.version = versionParts.join("-");
-		}
+		versionParts[1] = buildVersion;
+		packageJson.version = versionParts.join("-");
 		grunt.file.write("package.json", JSON.stringify(packageJson, null, "  "));
 	});
 
 	grunt.registerTask("tslint:build", function (version) {
 		childProcess.execSync("npm run tslint", { stdio: "inherit" });
-	});
-
-	grunt.registerTask("enableScripts", function (enable) {
-		var enableTester = /false/i;
-		var newScriptsAttr = !enableTester.test(enable) ? "scripts" : "skippedScripts";
-		var packageJson = grunt.file.readJSON("package.json");
-		var oldScriptsAttrValue = packageJson.scripts || packageJson.skippedScripts;
-		delete packageJson.scripts;
-		delete packageJson.skippedScripts;
-		packageJson[newScriptsAttr] = oldScriptsAttrValue;
-		grunt.file.write("package.json", JSON.stringify(packageJson, null, "  "));
 	});
 
 	const setConfig = (key, value) => {
@@ -205,18 +187,18 @@ module.exports = function (grunt) {
 		grunt.file.write(CONFIG_DATA.filePath, stringConfigContent);
 	}
 
-	grunt.registerTask("set_live_ga_id", function() {
+	grunt.registerTask("set_live_ga_id", function () {
 		setConfig(CONFIG_DATA.gaKey, GA_TRACKING_IDS[ENVIRONMENTS.live]);
 	});
 
-	grunt.registerTask("set_dev_ga_id", function() {
+	grunt.registerTask("set_dev_ga_id", function () {
 		setConfig(CONFIG_DATA.gaKey, GA_TRACKING_IDS[ENVIRONMENTS.dev]);
 	});
 
-	grunt.registerTask("verify_live_ga_id", function() {
+	grunt.registerTask("verify_live_ga_id", function () {
 		var configJson = grunt.file.readJSON(CONFIG_DATA.filePath);
 
-		if(configJson[CONFIG_DATA.gaKey] !== GA_TRACKING_IDS[ENVIRONMENTS.live]) {
+		if (configJson[CONFIG_DATA.gaKey] !== GA_TRACKING_IDS[ENVIRONMENTS.live]) {
 			throw new Error("Google Analytics id is not configured correctly.");
 		}
 	});
@@ -234,6 +216,14 @@ module.exports = function (grunt) {
 		"set_package_version",
 		"shell:build_package"
 	]);
+
+	grunt.registerTask("travisPack", function () {
+		if (travis && process.env.TRAVIS_PULL_REQUEST_BRANCH) {
+			return grunt.task.run("pack");
+		}
+
+		console.log(`Skipping travisPack step as the current build is not from PR, so it will be packed from the deploy provider.`);
+	});
 	grunt.registerTask("lint", ["tslint:build"]);
 	grunt.registerTask("all", ["clean", "test", "lint"]);
 	grunt.registerTask("rebuild", ["clean", "ts:devlib"]);

@@ -6,7 +6,7 @@
 !vendor/*.js
 !resources/**
 *.js.map
-
+!.travis/**/*
 coverage
 lib-cov
 *.seed

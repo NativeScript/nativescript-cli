@@ -30,3 +30,5 @@ scratch/
 .travis.yml
 docs/html/
 dev/
+
+.travis/**/*

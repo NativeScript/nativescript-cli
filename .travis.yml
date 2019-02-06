@@ -19,14 +19,8 @@ before_script:
 - gem install xcodeproj
 - gem install cocoapods
 - npm install grunt
-- node_modules/.bin/grunt enableScripts:false
-- grunt rebuild
-- "./bin/nativescript error-reporting disable"
-- "./bin/nativescript usage-reporting disable"
-- npm test
-- node_modules/.bin/grunt enableScripts:true
 script:
-- node_modules/.bin/grunt lint && node_modules/.bin/grunt pack --no-color
+- node_modules/.bin/grunt lint && node_modules/.bin/grunt travisPack --no-color
 before_deploy:
 - node .travis/add-publishConfig.js $TRAVIS_BRANCH
 deploy:
