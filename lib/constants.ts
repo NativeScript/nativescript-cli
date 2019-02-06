@@ -45,7 +45,9 @@ export const APK_EXTENSION_NAME = ".apk";
 export const AAB_EXTENSION_NAME = ".aab";
 export const HASHES_FILE_NAME = ".nshashes";
 export const TNS_NATIVE_SOURCE_GROUP_NAME = "TNSNativeSource";
+export const TNS_NATIVE_EXTENSIONS_GROUP_NAME = "TNSExtensions";
 export const NATIVE_SOURCE_FOLDER = "src";
+export const NATIVE_EXTENSION_FOLDER = "extensions";
 
 export class PackageVersion {
 	static NEXT = "next";

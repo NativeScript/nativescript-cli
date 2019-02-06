@@ -779,9 +779,10 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 			this.$logger.trace(`Images to remove from xcode project: ${imagesToRemove.join(", ")}`);
 			_.each(imagesToRemove, image => project.removeResourceFile(path.join(this.getAppResourcesDestinationDirectoryPath(projectData), image)));
 
-			await this.prepareNativeSourceCode(constants.TNS_NATIVE_SOURCE_GROUP_NAME, path.join(projectData.getAppResourcesDirectoryPath(), constants.APP_RESOURCES_FOLDER_NAME, this.getPlatformData(projectData).normalizedPlatformName, constants.NATIVE_SOURCE_FOLDER), projectData);
-
 			this.savePbxProj(project, projectData);
+
+			await this.prepareNativeSourceCode(constants.TNS_NATIVE_SOURCE_GROUP_NAME, path.join(projectData.getAppResourcesDirectoryPath(), constants.APP_RESOURCES_FOLDER_NAME, this.getPlatformData(projectData).normalizedPlatformName, constants.NATIVE_SOURCE_FOLDER), projectData);
+			await this.prepareExtensionsCode(constants.TNS_NATIVE_EXTENSIONS_GROUP_NAME, path.join(projectData.getAppResourcesDirectoryPath(), this.getPlatformData(projectData).normalizedPlatformName, constants.NATIVE_EXTENSION_FOLDER), projectData);
 		}
 
 	}
@@ -795,6 +796,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 
 		// src folder should not be copied as the pbxproject will have references to its files
 		this.$fs.deleteDirectory(path.join(appResourcesDirectoryPath, this.getPlatformData(projectData).normalizedPlatformName, constants.NATIVE_SOURCE_FOLDER));
+		this.$fs.deleteDirectory(path.join(appResourcesDirectoryPath, this.getPlatformData(projectData).normalizedPlatformName, constants.NATIVE_EXTENSION_FOLDER));
 
 		this.$fs.deleteDirectory(this.getAppResourcesDestinationDirectoryPath(projectData));
 	}
@@ -956,6 +958,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		await this.prepareResources(pluginPlatformsFolderPath, pluginData, projectData);
 		await this.prepareFrameworks(pluginPlatformsFolderPath, pluginData, projectData);
 		await this.prepareStaticLibs(pluginPlatformsFolderPath, pluginData, projectData);
+		//await this.prepareApplicationExtensions(pluginPlatformsFolderPath, pluginData, projectData);
 
 		const projectRoot = this.getPlatformData(projectData).projectRoot;
 		await this.$cocoapodsService.applyPodfileToProject(pluginData.name, this.$cocoapodsService.getPluginPodfilePath(pluginData), projectData, projectRoot);
@@ -1100,6 +1103,51 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		this.savePbxProj(project, projectData);
 	}
 
+	private async prepareExtensionsCode(groupName: string, extensionsFolderPath: string, projectData: IProjectData): Promise<void> {
+		const project = this.createPbxProj(projectData);
+
+		this.$fs.readDirectory(extensionsFolderPath).forEach(extensionFolder => {
+			const group = this.getRootGroup(extensionFolder,  path.join(extensionsFolderPath, extensionFolder));
+
+			const target = project.addTarget(
+				extensionFolder,
+				'app_extension'
+			);
+			const sourcesBuildPhase = project.addBuildPhase(
+				[],
+				'PBXSourcesBuildPhase',
+				'Sources',
+				target.uuid
+			);
+			const frameworksBuildPhase = project.addBuildPhase(
+				[],
+				'PBXFrameworksBuildPhase',
+				'Frameworks',
+				target.uuid
+			);
+
+			const extensionJson = this.$fs.readJson(path.join(extensionsFolderPath, extensionFolder, "extension.json"));
+			_.forEach(extensionJson.frameworks, framework => {
+				project.addFramework(
+					framework,
+					{ target: target.uuid }
+				);
+			});
+			var resourcesBuildPhase = project.addBuildPhase(
+				[],
+				'PBXResourcesBuildPhase',
+				'Resources',
+				target.uuid
+			);
+
+
+			project.addPbxGroup(group.files, group.name, group.path, null, { isMain: true, target: target.uuid });
+		
+		});
+
+		this.savePbxProj(project, projectData);
+	}
+
 	private getRootGroup(name: string, rootPath: string) {
 		const filePathsArr: string[] = [];
 		const rootGroup: INativeSourceCodeGroup = { name: name, files: filePathsArr, path: rootPath };
@@ -1137,6 +1185,10 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 			await this.addStaticLibrary(path.join(pluginPlatformsFolderPath, fileName), projectData);
 		}
 	}
+
+	// private prepareApplicationExtensions(pluginPlatformsFolderPath: string, pluginData: IPluginData, projectData: IProjectData): Promise<void> {
+
+	// }
 
 	private removeNativeSourceCode(pluginPlatformsFolderPath: string, pluginData: IPluginData, projectData: IProjectData): void {
 		const project = this.createPbxProj(projectData);
