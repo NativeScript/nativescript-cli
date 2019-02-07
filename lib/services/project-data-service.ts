@@ -2,6 +2,7 @@ import * as path from "path";
 import { ProjectData } from "../project-data";
 import { exported } from "../common/decorators";
 import { NATIVESCRIPT_PROPS_INTERNAL_DELIMITER, AssetConstants, SRC_DIR, RESOURCES_DIR, MAIN_DIR, CLI_RESOURCES_DIR_NAME } from "../constants";
+import * as imageSize from "image-size";
 
 interface IProjectFileData {
 	projectData: any;
@@ -152,6 +153,8 @@ export class ProjectDataService implements IProjectDataService {
 					}
 				}
 
+				console.log("IMAGE", image, "ASSET ITEM", assetItem);
+
 				if (assetItem) {
 					if (!image.width || !image.height) {
 						image.width = assetItem.width;
@@ -166,6 +169,20 @@ export class ProjectDataService implements IProjectDataService {
 					return false;
 				}
 			});
+
+			// if ((!image.width || !image.height) && image.path) {
+			// 	try {
+			// 		const dimensions = imageSize(image.path);
+			// 		image.width = dimensions.width;
+			// 		image.height = dimensions.height;
+			// 		image.size = `${image.width}${AssetConstants.sizeDelimiter}${image.height}`;
+			// 		// As we are using original size, ensure the scale is correct.
+			// 		image.scale = "1x";
+			// 		console.log(image);
+			// 	} catch (err) {
+			// 		this.$logger.trace(`Unable to get size of image ${image.path}. Error is`, err);
+			// 	}
+			// }
 		});
 
 		return content;

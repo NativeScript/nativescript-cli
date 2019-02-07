@@ -83,6 +83,7 @@ export class AssetsGenerationService implements IAssetsGenerationService {
 					await this.generateImage(generationData.background, width, height, outputPath);
 					break;
 				case Operations.Resize:
+					console.log("ASSET ITME", assetItem);
 					const resizedImage = await this.resize(generationData.imagePath, width, height);
 					resizedImage.write(outputPath);
 					break;
