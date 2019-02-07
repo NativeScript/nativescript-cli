@@ -19,14 +19,8 @@ before_script:
 - gem install xcodeproj
 - gem install cocoapods
 - npm install grunt
-- node_modules/.bin/grunt enableScripts:false
-- grunt rebuild
-- "./bin/nativescript error-reporting disable"
-- "./bin/nativescript usage-reporting disable"
-- npm test
-- node_modules/.bin/grunt enableScripts:true
 script:
-- node_modules/.bin/grunt lint && node_modules/.bin/grunt pack --no-color
+- node_modules/.bin/grunt lint && node_modules/.bin/grunt travisPack --no-color
 before_deploy:
 - node .travis/add-publishConfig.js $TRAVIS_BRANCH
 deploy:
@@ -34,20 +28,6 @@ deploy:
   skip_cleanup: true
   email: nativescript@telerik.com
   on:
-    branch: master
-  api_key:
-    secure: "FM9QLOkFq6JpHlfHkT1i2Ht1ZlttZLq7K3kQNLabw7Z5+BPMcy/f3LRJkAkYMezrKLKRkq1uXmhY0BapoTnR9AVEO/t4g6dtbZ1TZ3xBH/HHnFofTFubOrc7+61DJzKduYtnQ/sn3EEOkN8jrXSY9uas4qZh7PSm1hcfjPI8gdI="
-- provider: npm
-  skip_cleanup: true
-  email: nativescript@telerik.com
-  on:
-    branch: release
-  api_key:
-    secure: "FM9QLOkFq6JpHlfHkT1i2Ht1ZlttZLq7K3kQNLabw7Z5+BPMcy/f3LRJkAkYMezrKLKRkq1uXmhY0BapoTnR9AVEO/t4g6dtbZ1TZ3xBH/HHnFofTFubOrc7+61DJzKduYtnQ/sn3EEOkN8jrXSY9uas4qZh7PSm1hcfjPI8gdI="
-- provider: npm
-  skip_cleanup: true
-  email: nativescript@telerik.com
-  on:
-    branch: release-patch
+    all_branches: true
   api_key:
     secure: "FM9QLOkFq6JpHlfHkT1i2Ht1ZlttZLq7K3kQNLabw7Z5+BPMcy/f3LRJkAkYMezrKLKRkq1uXmhY0BapoTnR9AVEO/t4g6dtbZ1TZ3xBH/HHnFofTFubOrc7+61DJzKduYtnQ/sn3EEOkN8jrXSY9uas4qZh7PSm1hcfjPI8gdI="
