@@ -77,7 +77,7 @@ export class LiveService {
     return this.registerUser(user)
       .then((pubnubConfig) => {
         // const copy = extend({}, pubnubConfig);
-        const pubnubClient = new PubNub(pubnubConfig);
+        const pubnubClient = new PubNub(Object.assign({ dedupeOnSubscribe: true }, pubnubConfig));
         const listener = new PubNubListener();
         this.initialize(pubnubClient, listener);
         // return copy;
