@@ -1,6 +1,33 @@
 NativeScript CLI Changelog
 ================
 
+
+5.2.0 (2018, February 13)
+==
+
+### Implemented
+* [Implemented #3807](https://github.com/NativeScript/nativescript-cli/issues/3807): Enable app Podfile
+* [Implemented #4243](https://github.com/NativeScript/nativescript-cli/issues/4243): CLI command steps profiling and performance analytics
+* [Implemented #4305](https://github.com/NativeScript/nativescript-cli/issues/4305): Add official support for Node.js 11
+* [Implemented #4313](https://github.com/NativeScript/nativescript-cli/issues/4313): Track how many users used {N} CLI and Playground
+* [Implemented #4323](https://github.com/NativeScript/nativescript-cli/issues/4323): Skip CLI's postinstall in case it is not installed globally
+* [Implemented #4325](https://github.com/NativeScript/nativescript-cli/issues/4325): Angular apps should work with HMR out of the box 
+* [Implemented #4343](https://github.com/NativeScript/nativescript-cli/issues/4343): Support Objective-C code in App Resources for iOS applications 
+
+### Fixed
+* [Fixed #3122](https://github.com/NativeScript/nativescript-cli/issues/3122): `tns debug ios --debug-brk` fails the majority of the time
+* [Fixed #3161](https://github.com/NativeScript/nativescript-cli/issues/3161): `tns test` command fails to find a running iOS simulator
+* [Fixed #4232](https://github.com/NativeScript/nativescript-cli/issues/4232): Unit testing for freshly created angular project is broken on Android emulator
+* [Fixed #4253](https://github.com/NativeScript/nativescript-cli/issues/4253): LiveSync stops working in Preview app when make change in scss file
+* [Fixed #4255](https://github.com/NativeScript/nativescript-cli/issues/4255): Uninstalling NativeScript should also remove its extensions
+* [Fixed #4283](https://github.com/NativeScript/nativescript-cli/issues/4283): `tns run android` fails with private npm registry
+* [Fixed #4300](https://github.com/NativeScript/nativescript-cli/issues/4300): Strange logs after project built for Android
+* [Fixed #4311](https://github.com/NativeScript/nativescript-cli/issues/4311): [iOS] Build with nativescript-plugin-firebase requires legacy build system
+* [Fixed #4324](https://github.com/NativeScript/nativescript-cli/issues/4324): High CPU utilization during `tns run`
+* [Fixed #4327](https://github.com/NativeScript/nativescript-cli/issues/4327): `tns devices --availableDevices` prompts to install Xcode command line tools
+* [Fixed #4347](https://github.com/NativeScript/nativescript-cli/issues/4347): `tns resources generate splashes <path to image>` fails for newly created project
+
+
 5.1.1 (2019, January 17)
 ==
 
