@@ -2,19 +2,17 @@ import isPlainObject from 'lodash/isPlainObject';
 import { get as getConfig } from '../kinvey/config';
 import ActiveUserError from '../errors/activeUser';
 import KinveyError from '../errors/kinvey';
-import NotFoundError from '../errors/notFound';
 import { formatKinveyUrl } from '../http/utils';
 import { KinveyRequest, RequestMethod } from '../http/request';
 import { Auth } from '../http/auth';
 import { set as setSession } from '../session';
-import { getActiveUser, User } from './user';
+import getActiveUser from './getActiveUser';
+import User from './user';
 import { mergeSocialIdentity } from './utils';
-import * as MIC from './mic';
-import { signup } from './signup';
 
 const USER_NAMESPACE = 'user';
 
-export async function login(username, password, options = {}) {
+export default async function login(username, password, options = {}) {
   const { apiProtocol, apiHost, appKey } = getConfig();
   const activeUser = getActiveUser();
   let credentials = username;
@@ -63,58 +61,4 @@ export async function login(username, password, options = {}) {
 
   // Return the user
   return new User(session);
-}
-
-export async function loginWithRedirectUri(redirectUri, options) {
-  const activeUser = getActiveUser();
-
-  if (activeUser) {
-    throw new ActiveUserError(
-      'An active user already exists. Please logout the active user before you login with Mobile Identity Connect.'
-    );
-  }
-
-  const session = await MIC.loginWithRedirectUri(redirectUri, options);
-  const socialIdentity = {};
-  socialIdentity[MIC.IDENTITY] = session;
-  const credentials = { _socialIdentity: socialIdentity };
-
-  try {
-    return await login(credentials);
-  } catch (error) {
-    if (error instanceof NotFoundError) {
-      return await signup(credentials);
-    }
-
-    throw error;
-  }
-}
-
-export async function loginWithMIC(redirectUri, authorizationGrant, options) {
-  return loginWithRedirectUri(redirectUri, options);
-}
-
-export async function loginWithUsernamePassword(username, password, options) {
-  const activeUser = getActiveUser();
-
-  if (activeUser) {
-    throw new ActiveUserError(
-      'An active user already exists. Please logout the active user before you login with Mobile Identity Connect.'
-    );
-  }
-
-  const session = await MIC.loginWithUsernamePassword(username, password, options);
-  const socialIdentity = {};
-  socialIdentity[MIC.IDENTITY] = session;
-  const credentials = { _socialIdentity: socialIdentity };
-
-  try {
-    return await login(credentials);
-  } catch (error) {
-    if (error instanceof NotFoundError) {
-      return await signup(credentials);
-    }
-
-    throw error;
-  }
 }

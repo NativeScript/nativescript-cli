@@ -1,17 +1,23 @@
+import AuthorizationGrant from './authorizationGrant';
 import exists from './exists';
 import forgotUsername from './forgotUsername';
-import { login, loginWithRedirectUri, loginWithUsernamePassword, loginWithMIC } from './login';
+import login from './login';
+import loginWithRedirectUri from './loginWithRedirectUri';
+import loginWithUsernamePassword from './loginWithUsernamePassword';
+import loginWithMIC from './loginWithMIC';
 import logout from './logout';
 import lookup from './lookup';
 import me from './me';
 import remove from './remove';
 import resetPassword from './resetPassword';
 import restore from './restore';
-import { signup } from './signup';
+import signup from './signup';
 import update from './update';
-import { getActiveUser, User } from './user';
+import getActiveUser from './getActiveUser';
+import User from './user';
 import verifyEmail from './verifyEmail';
 
+User.AuthorizationGrant = AuthorizationGrant;
 User.exists = exists;
 User.forgotUsername = forgotUsername;
 User.login = login;

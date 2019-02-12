@@ -37,7 +37,7 @@ export function serialize(contentType, body) {
     if (contentType.indexOf('application/x-www-form-urlencoded') === 0) {
       const str = [];
       Object.keys(body).forEach((key) => {
-        str.push(`${global.encodeURIComponent(key)}=${global.encodeURIComponent(body[key])}`);
+        str.push(`${encodeURIComponent(key)}=${encodeURIComponent(body[key])}`);
       });
       return str.join('&');
     } else if (contentType.indexOf('application/json') === 0) {

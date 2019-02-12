@@ -8,14 +8,12 @@ import Aggregation from './aggregation';
  */
 export default function count(field = '') {
   const aggregation = new Aggregation({
-    reduceFn: (result, doc, key) => {
-      const val = doc[key];
-      if (val) {
-        // eslint-disable-next-line no-param-reassign
-        result[val] = typeof result[val] === 'undefined' ? 1 : result[val] + 1;
-      }
-      return result;
-    }
+    initial: { count: 0 },
+    reduceFn: ''
+      + 'function(doc, out) {'
+      + '  out.count += 1;'
+      + '  return out;'
+      + '}'
   });
   aggregation.by(field);
   return aggregation;

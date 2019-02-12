@@ -9,14 +9,12 @@ import Aggregation from './aggregation';
 export default function average(field = '') {
   const aggregation = new Aggregation({
     initial: { count: 0, average: 0 },
-    reduceFn: (result, doc, key) => {
-      // eslint-disable-next-line no-param-reassign
-      result.average = ((result.average * result.count) + doc[key]) / (result.count + 1);
-      // eslint-disable-next-line no-param-reassign
-      result.count += 1;
-      return result;
-    }
+    reduceFn: ''
+      + 'function(doc, out) {'
+      + `  out.average = (out.average * out.count + doc["${field.replace('\'', '\\\'')}"]) / (out.count + 1);`
+      + '  out.count += 1;'
+      + '  return out;'
+      + '}'
   });
-  aggregation.by(field);
   return aggregation;
 }

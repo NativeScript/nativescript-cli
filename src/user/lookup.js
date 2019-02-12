@@ -1,4 +1,4 @@
-import KinveyObservable from '../observable';
+import { Observable } from 'rxjs';
 import Query from '../query';
 import KinveyError from '../errors/kinvey';
 import { get as getConfig } from '../kinvey/config';
@@ -9,7 +9,7 @@ import { Auth } from '../http/auth';
 const USER_NAMESPACE = 'user';
 
 export default function lookup(query, options = {}) {
-  const stream = KinveyObservable.create(async (observer) => {
+  const stream = Observable.create(async (observer) => {
     try {
       if (query && !(query instanceof Query)) {
         throw new KinveyError('Invalid query. It must be an instance of the Query class.');

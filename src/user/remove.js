@@ -4,7 +4,7 @@ import KinveyError from '../errors/kinvey';
 import { formatKinveyUrl } from '../http/utils';
 import { KinveyRequest, RequestMethod } from '../http/request';
 import { Auth } from '../http/auth';
-import { getActiveUser } from './user';
+import getActiveUser from './getActiveUser';
 
 export default async function remove(id, options = {}) {
   const { apiProtocol, apiHost, appKey } = getConfig();

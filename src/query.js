@@ -752,7 +752,7 @@ export default class Query {
         processedDocs.sort((a, b) => {
           return Object.keys(this.sort)
             .reduce((result, field) => {
-              if (typeof result !== 'undefined') {
+              if (typeof result !== 'undefined' && result !== 0) {
                 return result;
               }
 
@@ -781,13 +781,13 @@ export default class Query {
         });
       }
 
-      if (this.skip > 0) {
-        if (this.limit < Infinity) {
+      if (isNumber(this.skip) && this.skip > 0) {
+        if (isNumber(this.limit) && this.limit < Infinity) {
           processedDocs = processedDocs.slice(this.skip, this.skip + this.limit);
         } else {
           processedDocs = processedDocs.slice(this.skip);
         }
-      } else if (this.limit < Infinity) {
+      } else if (isNumber(this.limit) && this.limit < Infinity) {
         processedDocs = processedDocs.slice(0, this.limit);
       }
 

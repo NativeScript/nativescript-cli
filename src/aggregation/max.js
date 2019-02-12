@@ -8,13 +8,12 @@ import Aggregation from './aggregation';
  */
 export default function max(field = '') {
   const aggregation = new Aggregation({
-    initial: { max: -Infinity },
-    reduceFn: (result, doc, key) => {
-      // eslint-disable-next-line no-param-reassign
-      result.max = Math.max(result.max, doc[key]);
-      return result;
-    }
+    initial: { max: -1 * Number.MAX_SAFE_INTEGER },
+    reduceFn: ''
+      + 'function(doc, out) {'
+      + `  out.max = Math.max(out.max, doc["${field.replace('\'', '\\\'')}"]);`
+      + '  return out;'
+      + '}'
   });
-  aggregation.by(field);
   return aggregation;
 }
