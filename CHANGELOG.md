@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [3.12.4](https://github.com/Kinvey/js-sdk/tree/v3.12.4) (2019-02-12)
+[Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.12.3...v3.12.4)<br/>
+
+#### Bugs
+- MLIBZ-2732: Prevent duplicate Live Service messages. [#389](https://github.com/Kinvey/js-sdk/pull/389)
+
 ## [3.12.3](https://github.com/Kinvey/js-sdk/tree/v3.12.3) (2018-11-05)
 [Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.12.2...v3.12.3)<br/>
 
