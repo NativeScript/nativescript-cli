@@ -637,5 +637,50 @@ describe('User tests', () => {
           .catch(done);
       });
     });
+
+    describe('restore', () => {
+      before(() => {
+        Kinvey.User.signup()
+          .then((user) => {
+            createdUserIds.push(user.data._id);
+          })
+          .catch((err) => {
+            done(err);
+          });
+      });
+
+      it('should return error when using the function', (done) => {
+        Kinvey.User.restore('nonExistingUser')
+          .then(() => {
+            Promise.reject(new Error('This should not happen'));
+          })
+          .catch((err) => {
+            expect(err.message).to.equal('This function requires a master secret to be provided for your application. We strongly advise not to do this.');
+            done();
+          });
+      });
+    });
+
+    describe('signUpWithIdentity', () => {
+      before(() => {
+        Kinvey.User.signup()
+          .then((user) => {
+            createdUserIds.push(user.data._id);
+          })
+          .catch((err) => {
+            done(err);
+          });
+      });
+      it('should return error when using the function', (done) => {
+        Kinvey.User.signUpWithIdentity('identity')
+          .then(() => {
+            Promise.reject(new Error('This should not happen'));
+          })
+          .catch((err) => {
+            expect(err.message).to.equal('This function has been deprecated. You should use loginWithMIC() instead.');
+            done();
+          });
+      });
+    });
   });
 });
