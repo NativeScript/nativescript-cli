@@ -936,8 +936,8 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		return project;
 	}
 
-	private savePbxProj(project: any, projectData: IProjectData): void {
-		return this.$fs.writeFile(this.getPbxProjPath(projectData), project.writeSync());
+	private savePbxProj(project: any, projectData: IProjectData, omitEmptyValues?: boolean): void {
+		return this.$fs.writeFile(this.getPbxProjPath(projectData), project.writeSync({omitEmptyValues}));
 	}
 
 	public async preparePluginNativeCode(pluginData: IPluginData, projectData: IProjectData, opts?: any): Promise<void> {
@@ -1100,11 +1100,14 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		const project = this.createPbxProj(projectData);
 
 		this.$fs.readDirectory(extensionsFolderPath).forEach(extensionFolder => {
-			const group = this.getRootGroup(extensionFolder,  path.join(extensionsFolderPath, extensionFolder));
+			const extensionPath = path.join(extensionsFolderPath, extensionFolder);
+			const group = this.getRootGroup(extensionFolder,  extensionPath);
 
 			const target = project.addTarget(
 				extensionFolder,
-				'app_extension'
+				'app_extension',
+				path.relative(this.getPlatformData(projectData).projectRoot, extensionPath)
+
 			);
 			const sourcesBuildPhase = project.addBuildPhase(
 				[],
@@ -1135,10 +1138,11 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 
 
 			project.addPbxGroup(group.files, group.name, group.path, null, { isMain: true, target: target.uuid });
-		
+			project.addBuildProperty("PRODUCT_BUNDLE_IDENTIFIER", `${projectData.projectIdentifiers.ios}.${extensionFolder}`, "Debug", extensionFolder);
+			project.addBuildProperty("PRODUCT_BUNDLE_IDENTIFIER", `${projectData.projectIdentifiers.ios}.${extensionFolder}`, "Release", extensionFolder);
 		});
 
-		this.savePbxProj(project, projectData);
+		this.savePbxProj(project, projectData, true);
 	}
 
 	private getRootGroup(name: string, rootPath: string) {
