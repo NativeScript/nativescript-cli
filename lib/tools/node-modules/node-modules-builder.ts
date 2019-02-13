@@ -1,4 +1,3 @@
-import * as shelljs from "shelljs";
 import { TnsModulesCopy, NpmPluginPrepare } from "./node-modules-dest-copy";
 
 export class NodeModulesBuilder implements INodeModulesBuilder {
@@ -23,20 +22,14 @@ export class NodeModulesBuilder implements INodeModulesBuilder {
 		const { nodeModulesData } = opts;
 		const productionDependencies = this.$nodeModulesDependenciesBuilder.getProductionDependencies(nodeModulesData.projectData.projectDir);
 
-		if (opts.copyNodeModules) {
+		if (opts.copyNodeModules && !nodeModulesData.appFilesUpdaterOptions.bundle) {
 			this.initialPrepareNodeModules(opts, productionDependencies);
-		} else if (nodeModulesData.appFilesUpdaterOptions.bundle) {
-			this.cleanNodeModules(nodeModulesData.absoluteOutputPath);
 		}
 
 		return productionDependencies;
 	}
 
-	public cleanNodeModules(absoluteOutputPath: string): void {
-		shelljs.rm("-rf", absoluteOutputPath);
-	}
-
-	private initialPrepareNodeModules(opts: INodeModulesBuilderData, productionDependencies: IDependencyData[]): IDependencyData[] {
+	private initialPrepareNodeModules(opts: INodeModulesBuilderData, productionDependencies: IDependencyData[]): void {
 		const { nodeModulesData, release } = opts;
 
 		if (!this.$fs.exists(nodeModulesData.absoluteOutputPath)) {
@@ -44,16 +37,11 @@ export class NodeModulesBuilder implements INodeModulesBuilder {
 			nodeModulesData.lastModifiedTime = null;
 		}
 
-		if (!nodeModulesData.appFilesUpdaterOptions.bundle) {
-			const tnsModulesCopy: TnsModulesCopy = this.$injector.resolve(TnsModulesCopy, {
-				outputRoot: nodeModulesData.absoluteOutputPath
-			});
-			tnsModulesCopy.copyModules({ dependencies: productionDependencies, release });
-		} else {
-			this.cleanNodeModules(nodeModulesData.absoluteOutputPath);
-		}
+		const tnsModulesCopy: TnsModulesCopy = this.$injector.resolve(TnsModulesCopy, {
+			outputRoot: nodeModulesData.absoluteOutputPath
+		});
 
-		return productionDependencies;
+		tnsModulesCopy.copyModules({ dependencies: productionDependencies, release });
 	}
 }
 
