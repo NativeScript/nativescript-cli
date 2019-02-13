@@ -1,7 +1,7 @@
 {
   "name": "nativescript",
   "preferGlobal": true,
-  "version": "5.2.0",
+  "version": "5.2.1",
   "author": "Telerik <support@telerik.com>",
   "description": "Command-line interface for building NativeScript projects",
   "bin": {
@@ -50,7 +50,7 @@
     "istextorbinary": "2.2.1",
     "jimp": "0.2.28",
     "lockfile": "1.0.3",
-    "lodash": "4.17.10",
+    "lodash": "4.17.11",
     "log4js": "1.0.1",
     "marked": "0.5.1",
     "marked-terminal": "3.1.1",
