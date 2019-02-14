@@ -294,28 +294,6 @@ describe("Npm support tests", () => {
 
 		assert.isTrue(filteredResults.length === 1);
 	});
-
-	it("Ensures that tns_modules absent when bundling", async () => {
-		const fs = testInjector.resolve("fs");
-		const options = testInjector.resolve("options");
-		const tnsModulesFolderPath = path.join(appDestinationFolderPath, "app", "tns_modules");
-
-		try {
-			options.bundle = false;
-			await preparePlatform(testInjector);
-			assert.isTrue(fs.exists(tnsModulesFolderPath), "tns_modules created first");
-
-			options.bundle = true;
-			await preparePlatform(testInjector);
-			assert.isFalse(fs.exists(tnsModulesFolderPath), "tns_modules deleted when bundling");
-
-			options.bundle = false;
-			await preparePlatform(testInjector);
-			assert.isTrue(fs.exists(tnsModulesFolderPath), "tns_modules recreated");
-		} finally {
-			options.bundle = false;
-		}
-	});
 });
 
 describe("Flatten npm modules tests", () => {

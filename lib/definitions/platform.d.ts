@@ -284,7 +284,6 @@ interface INodeModulesBuilderData {
 interface INodeModulesBuilder {
 	prepareNodeModules(opts: INodeModulesBuilderData): Promise<void>;
 	prepareJSNodeModules(opts: INodeModulesBuilderData): Promise<void>;
-	cleanNodeModules(absoluteOutputPath: string): void;
 }
 
 interface INodeModulesDependenciesBuilder {
