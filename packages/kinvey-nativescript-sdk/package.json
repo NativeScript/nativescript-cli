@@ -28,6 +28,7 @@
     "nativescript-sqlite": "~2.2.3",
     "nativescript-urlhandler": "~1.2.2",
     "p-queue": "~3.0.0",
+    "pubnub": "git+https://github.com/thomasconner/javascript.git#develop",
     "rxjs": "~6.3.3",
     "sift": "~7.0.1",
     "tns-core-modules": "~5.1.1",

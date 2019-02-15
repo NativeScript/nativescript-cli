@@ -1,7 +1,7 @@
 import isArray from 'lodash/isArray';
 import { Observable } from 'rxjs';
 import { get as getConfig } from '../kinvey/config';
-import { getId as getDeviceId } from '../kinvey/device';
+import getDeviceId from '../device';
 import { get as getSession } from '../session';
 import Aggregation from '../aggregation';
 import Query from '../query';
@@ -9,6 +9,7 @@ import { formatKinveyUrl } from '../http/utils';
 import { KinveyRequest, RequestMethod } from '../http/request';
 import { Auth } from '../http/auth';
 import KinveyError from '../errors/kinvey';
+import { subscribeToChannel, unsubscribeFromChannel } from '../live';
 
 const NAMESPACE = 'appdata';
 
@@ -314,5 +315,41 @@ export class NetworkStore {
     }
 
     return response.data;
+  }
+
+  async subscribe(receiver, options = {}) {
+    const { apiProtocol, apiHost } = getConfig();
+    const {
+      timeout,
+      properties,
+      trace,
+      skipBL
+    } = options;
+    const url = formatKinveyUrl(apiProtocol, apiHost, `${this.pathname}/_subscribe`);
+    const request = createRequest(RequestMethod.POST, url, { deviceId: getDeviceId() });
+    request.headers.customRequestProperties = properties;
+    request.timeout = timeout;
+    await request.execute();
+    subscribeToChannel(this.channelName, receiver);
+    subscribeToChannel(this.personalChannelName, receiver);
+    return true;
+  }
+
+  async unsubscribe(options = {}) {
+    const { apiProtocol, apiHost } = getConfig();
+    const {
+      timeout,
+      properties,
+      trace,
+      skipBL
+    } = options;
+    const url = formatKinveyUrl(apiProtocol, apiHost, `${this.pathname}/_unsubscribe`);
+    const request = createRequest(RequestMethod.POST, url, { deviceId: getDeviceId() });
+    request.headers.customRequestProperties = properties;
+    request.timeout = timeout;
+    await request.execute();
+    unsubscribeFromChannel(this.channelName);
+    unsubscribeFromChannel(this.personalChannelName);
+    return true;
   }
 }

@@ -507,15 +507,13 @@ export class CacheStore {
     return sync.remove(clearQuery);
   }
 
-  async subscribe(receiver) {
+  async subscribe(receiver, options) {
     const network = new NetworkStore(this.collectionName);
-    await network.subscribe(receiver);
-    return this;
+    return network.subscribe(receiver, options);
   }
 
-  async unsubscribe() {
+  async unsubscribe(options) {
     const network = new NetworkStore(this.collectionName);
-    await network.unsubscribe();
-    return this;
+    return network.unsubscribe(options);
   }
 }

@@ -1,8 +1,7 @@
 import isFunction from 'lodash/isFunction';
 import PubNub from 'pubnub';
 import { EventEmitter } from 'events';
-import KinveyError from './errors/kinvey';
-
+import KinveyError from '../errors/kinvey';
 
 const STATUS_PREFIX = 'status:';
 const UNCLASSIFIED_EVENTS = 'pubNubEventsNotRouted';
@@ -22,9 +21,9 @@ function isValidReceiver(receiver) {
   return isFunction(onMessage) || isFunction(onError) || isFunction(onStatus);
 }
 
-export class Listener extends EventEmitter {
+class Listener extends EventEmitter {
   message(m) {
-    this.emit(m.channel, m);
+    this.emit(m.channel, m.message);
   }
 
   status(s) {
@@ -50,9 +49,16 @@ export function isRegistered() {
   return !!pubnub && !!listener;
 }
 
+export function reconnect() {
+  if (isRegistered()) {
+    pubnub.reconnect();
+  }
+}
+
 export function register(config) {
   if (!isRegistered()) {
-    pubnub = new PubNub(config);
+    pubnub = new PubNub(Object.assign({}, { ssl: true, dedupeOnSubscribe: true }, config));
+    pubnub.subscribe({ channelGroups: [config.userChannelGroup] });
     listener = new Listener();
     pubnub.addListener(listener);
   }
@@ -105,6 +111,8 @@ export function subscribeToChannel(channelName, receiver = {}) {
       }
     });
   }
+
+  return true;
 }
 
 export function unsubscribeFromChannel(channelName) {
@@ -112,4 +120,6 @@ export function unsubscribeFromChannel(channelName) {
     listener.removeAllListeners(channelName);
     listener.removeAllListeners(`${STATUS_PREFIX}${channelName}`);
   }
+
+  return true;
 }

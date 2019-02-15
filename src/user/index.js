@@ -16,6 +16,8 @@ import update from './update';
 import getActiveUser from './getActiveUser';
 import User from './user';
 import verifyEmail from './verifyEmail';
+import registerForLiveService from './registerForLiveService';
+import unregisterForLiveService from './unregisterForLiveService';
 
 User.AuthorizationGrant = AuthorizationGrant;
 User.exists = exists;
@@ -34,5 +36,7 @@ User.signup = signup;
 User.update = update;
 User.verifyEmail = verifyEmail;
 User.getActiveUser = getActiveUser;
+User.registerForLiveService = registerForLiveService;
+User.unregisterForLiveService = unregisterForLiveService;
 
 export default User;

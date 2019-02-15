@@ -18,6 +18,7 @@
     "loglevel-plugin-prefix": "~0.8.4",
     "lokijs": "~1.5.6",
     "p-queue": "~3.0.0",
+    "pubnub": "~4.21.7",
     "rxjs": "~6.3.3",
     "sift": "~7.0.1",
     "url-join": "~4.0.0"

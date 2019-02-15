@@ -6,9 +6,10 @@ import { formatKinveyUrl } from '../http/utils';
 import { KinveyRequest, RequestMethod } from '../http/request';
 import { Auth } from '../http/auth';
 import { get as getConfig } from '../kinvey/config';
-import { getId as getDeviceId } from '../kinvey/device';
+import getDeviceId from '../device';
 import KinveyError from '../errors/kinvey';
 import { clear } from '../datastore';
+import { isRegistered, register, unregister } from '../live';
 import { mergeSocialIdentity } from './utils';
 
 const USER_NAMESPACE = 'user';
@@ -160,7 +161,7 @@ export default class User {
   }
 
   async registerForLiveService() {
-    if (!Live.isRegistered()) {
+    if (!isRegistered()) {
       const { apiProtocol, apiHost, appKey } = getConfig();
       const deviceId = getDeviceId();
       const request = new KinveyRequest({
@@ -170,18 +171,15 @@ export default class User {
         body: { deviceId }
       });
       const response = await request.execute();
-      const config = Object.assign({}, {
-        ssl: true,
-        authKey: this.authtoken
-      }, response.data);
-      Live.register(config);
+      const config = Object.assign({}, { authKey: this.authtoken }, response.data);
+      register(config);
     }
 
     return true;
   }
 
   async unregisterFromLiveService() {
-    if (Live.isRegistered()) {
+    if (isRegistered()) {
       const { apiProtocol, apiHost, appKey } = getConfig();
       const deviceId = getDeviceId();
       const request = new KinveyRequest({
@@ -191,7 +189,7 @@ export default class User {
         body: { deviceId }
       });
       await request.execute();
-      Live.unregister();
+      unregister();
     }
 
     return true;
