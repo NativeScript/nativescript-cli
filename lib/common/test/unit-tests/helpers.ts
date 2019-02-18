@@ -825,4 +825,40 @@ describe("helpers", () => {
 			});
 		});
 	});
+
+	describe("stripComments", () => {
+		const testData: ITestData[] = [
+			{
+				input: `// this is comment,
+const test = require("./test");`,
+				expectedResult: `\nconst test = require("./test");`
+			},
+			{
+				input: `/* this is multiline
+comment */
+const test = require("./test");`,
+				expectedResult: `\nconst test = require("./test");`
+			},
+			{
+				input: `/* this is multiline
+comment
+// with inner one line comment inside it
+the multiline comment finishes here
+*/
+const test = require("./test");`,
+				expectedResult: `\nconst test = require("./test");`
+			},
+
+			{
+				input: `const test /*inline comment*/ = require("./test");`,
+				expectedResult: `const test  = require("./test");`
+			},
+		];
+
+		it("strips comments correctly", () => {
+			testData.forEach(testCase => {
+				assertTestData(testCase, helpers.stripComments);
+			});
+		});
+	});
 });

@@ -8,6 +8,12 @@ import * as crypto from "crypto";
 import * as _ from "lodash";
 
 const Table = require("cli-table");
+const STRIP_COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/mg;
+
+export function stripComments(content: string): string {
+	const newContent = content.replace(STRIP_COMMENTS, "");
+	return newContent;
+}
 
 export function doesCurrentNpmCommandMatch(patterns?: RegExp[]): boolean {
 	const currentNpmCommandArgv = getCurrentNpmCommandArgv();
@@ -682,7 +688,6 @@ const CONSTRUCTOR_ARGS = /constructor\s*([^\(]*)\(\s*([^\)]*)\)/m;
 const FN_NAME_AND_ARGS = /^(?:function)?\s*([^\(]*)\(\s*([^\)]*)\)\s*(=>)?\s*[{_]/m;
 const FN_ARG_SPLIT = /,/;
 const FN_ARG = /^\s*(_?)(\S+?)\1\s*$/;
-const STRIP_COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/mg;
 
 export function annotate(fn: any) {
 	let $inject: any,

@@ -527,6 +527,10 @@ export class ProjectDataService implements IProjectDataService {
 	async getAndroidAssetsStructure(opts: IProjectDir): Promise<IAssetGroup> {
 		return null;
 	}
+
+	getAppExecutableFiles(projectDir: string): string[] {
+		return [];
+	}
 }
 
 export class ProjectHelperStub implements IProjectHelper {
@@ -913,7 +917,7 @@ export class AndroidBundleValidatorHelper implements IAndroidBundleValidatorHelp
 
 export class PerformanceService implements IPerformanceService {
 	now(): number { return 10; }
-	processExecutionData() {}
+	processExecutionData() { }
 }
 
 export class InjectorStub extends Yok implements IInjector {

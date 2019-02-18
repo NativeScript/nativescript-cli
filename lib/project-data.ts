@@ -16,19 +16,19 @@ export class ProjectData implements IProjectData {
 	 */
 	private static PROJECT_TYPES: IProjectType[] = [
 		{
-			type: "Pure JavaScript",
+			type: constants.ProjectTypes.JsFlavorName,
 			isDefaultProjectType: true
 		},
 		{
-			type: constants.NgFlavorName,
+			type: constants.ProjectTypes.NgFlavorName,
 			requiredDependencies: ["@angular/core", "nativescript-angular"]
 		},
 		{
-			type: constants.VueFlavorName,
+			type: constants.ProjectTypes.VueFlavorName,
 			requiredDependencies: ["nativescript-vue"]
 		},
 		{
-			type: "Pure TypeScript",
+			type: constants.ProjectTypes.TsFlavorName,
 			requiredDependencies: ["typescript", "nativescript-dev-typescript"]
 		}
 	];

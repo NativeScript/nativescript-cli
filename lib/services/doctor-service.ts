@@ -1,10 +1,10 @@
 import { EOL } from "os";
 import * as path from "path";
 import * as helpers from "../common/helpers";
-import { TrackActionNames } from "../constants";
+import { TrackActionNames, NODE_MODULES_FOLDER_NAME, TNS_CORE_MODULES_NAME } from "../constants";
 import { doctor, constants } from "nativescript-doctor";
 
-class DoctorService implements IDoctorService {
+export class DoctorService implements IDoctorService {
 	private static DarwinSetupScriptLocation = path.join(__dirname, "..", "..", "setup", "mac-startup-shell-script.sh");
 	private static WindowsSetupScriptExecutable = "powershell.exe";
 	private static WindowsSetupScriptArguments = ["start-process", "-FilePath", "PowerShell.exe", "-NoNewWindow", "-Wait", "-ArgumentList", '"-NoProfile -ExecutionPolicy Bypass -Command iex ((new-object net.webclient).DownloadString(\'https://www.nativescript.org/setup/win\'))"'];
@@ -14,10 +14,12 @@ class DoctorService implements IDoctorService {
 		private $logger: ILogger,
 		private $childProcess: IChildProcess,
 		private $injector: IInjector,
+		private $projectDataService: IProjectDataService,
+		private $fs: IFileSystem,
 		private $terminalSpinnerService: ITerminalSpinnerService,
 		private $versionsService: IVersionsService) { }
 
-	public async printWarnings(configOptions?: { trackResult: boolean , projectDir?: string, runtimeVersion?: string, options?: IOptions }): Promise<void> {
+	public async printWarnings(configOptions?: { trackResult: boolean, projectDir?: string, runtimeVersion?: string, options?: IOptions }): Promise<void> {
 		const infos = await this.$terminalSpinnerService.execute<NativeScriptDoctor.IInfo[]>({
 			text: `Getting environment information ${EOL}`
 		}, () => doctor.getInfos({ projectDir: configOptions && configOptions.projectDir, androidRuntimeVersion: configOptions && configOptions.runtimeVersion }));
@@ -47,6 +49,8 @@ class DoctorService implements IDoctorService {
 		} catch (err) {
 			this.$logger.error("Cannot get the latest versions information from npm. Please try again later.");
 		}
+
+		this.checkForDeprecatedShortImportsInAppDir(configOptions.projectDir);
 
 		await this.$injector.resolve<IPlatformEnvironmentRequirements>("platformEnvironmentRequirements").checkEnvironmentRequirements({
 			platform: null,
@@ -111,6 +115,59 @@ class DoctorService implements IDoctorService {
 		});
 
 		return !hasWarnings;
+	}
+
+	public checkForDeprecatedShortImportsInAppDir(projectDir: string): void {
+		if (projectDir) {
+			try {
+				const files = this.$projectDataService.getAppExecutableFiles(projectDir);
+				const shortImports = this.getDeprecatedShortImportsInFiles(files, projectDir);
+				if (shortImports.length) {
+					this.$logger.printMarkdown("Detected short imports in your application. Please note that `short imports are deprecated` since NativeScript 5.2.0. More information can be found in this blogpost https://www.nativescript.org/blog/say-goodbye-to-short-imports-in-nativescript");
+					shortImports.forEach(shortImport => {
+						this.$logger.printMarkdown(`In file \`${shortImport.file}\` line \`${shortImport.line}\` is short import. Add \`tns-core-modules/\` in front of the required/imported module.`);
+					});
+				}
+			} catch (err) {
+				this.$logger.trace(`Unable to validate if project has short imports. Error is`, err);
+			}
+		}
+	}
+
+	protected getDeprecatedShortImportsInFiles(files: string[], projectDir: string): { file: string, line: string }[] {
+		const shortImportRegExps = this.getShortImportRegExps(projectDir);
+		const shortImports: { file: string, line: string }[] = [];
+
+		for (const file of files) {
+			const fileContent = this.$fs.readText(file);
+			const strippedComments = helpers.stripComments(fileContent);
+			const linesWithRequireStatements = strippedComments
+				.split(/\r?\n/)
+				.filter(line => /\btns-core-modules\b/.exec(line) === null && (/\bimport\b/.exec(line) || /\brequire\b/.exec(line)));
+
+			for (const line of linesWithRequireStatements) {
+				for (const regExp of shortImportRegExps) {
+					const matches = line.match(regExp);
+
+					if (matches && matches.length) {
+						shortImports.push({ file, line });
+						break;
+					}
+				}
+			}
+		}
+
+		return shortImports;
+	}
+
+	private getShortImportRegExps(projectDir: string): RegExp[] {
+		const pathToTnsCoreModules = path.join(projectDir, NODE_MODULES_FOLDER_NAME, TNS_CORE_MODULES_NAME);
+		const contents = this.$fs.readDirectory(pathToTnsCoreModules)
+			.filter(entry => this.$fs.getFsStats(path.join(pathToTnsCoreModules, entry)).isDirectory());
+
+		const regExps = contents.map(c => new RegExp(`[\"\']${c}[\"\'/]`, "g"));
+
+		return regExps;
 	}
 
 	private async runSetupScriptCore(executablePath: string, setupScriptArgs: string[]): Promise<ISpawnResult> {

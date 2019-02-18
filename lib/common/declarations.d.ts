@@ -1168,6 +1168,13 @@ interface IDoctorService {
 	 * @returns {Promise<boolean>} true if the environment is properly configured for local builds
 	 */
 	canExecuteLocalBuild(platform?: string, projectDir?: string, runtimeVersion?: string): Promise<boolean>;
+
+	/**
+	 * Checks and notifies users for deprecated short imports in their applications.
+	 * @param {string} projectDir Path to the application.
+	 * @returns {void}
+	 */
+	checkForDeprecatedShortImportsInAppDir(projectDir: string): void;
 }
 
 interface IUtils {
