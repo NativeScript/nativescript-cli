@@ -5,6 +5,7 @@ import EndpointService from './endpoint.service';
 import FilesService from './files.service';
 import PingService from './ping.service';
 import UserService from './user.service';
+import PushService from './push.service';
 
 @NgModule()
 export default class KinveyModule {
@@ -17,7 +18,8 @@ export default class KinveyModule {
         EndpointService,
         FilesService,
         PingService,
-        UserService
+        UserService,
+        PushService
       ]
     };
   }
