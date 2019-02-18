@@ -26,7 +26,7 @@ export class CocoaPodsPlatformManager implements ICocoaPodsPlatformManager {
 			const allPodfiles = projectPodfileContent.match(podfileContentRegExp) || [];
 			const selectedPlatformData = this.selectPlatformDataFromProjectPodfile(allPodfiles);
 			const newPlatformSection = selectedPlatformData ? this.buildPlatformSection(selectedPlatformData) : "";
-			const regExp = new RegExp(`${EOL}${platformSectionData.platformSectionContent}${EOL}`, "mg");
+			const regExp = new RegExp(`${platformSectionData.platformSectionContent}`, "mg");
 			projectPodfileContent = projectPodfileContent.replace(regExp, newPlatformSection);
 		}
 
