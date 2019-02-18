@@ -46,6 +46,13 @@ module.exports = function (hookArgs) {
           if (currentContent !== micInfoPlistFileContent) {
             fs.writeFileSync(destinationInfoPlistFile, micInfoPlistFileContent);
           }
+        } else {
+          const defaultInfoPlistFile = path.join(__dirname, '..', 'platforms', 'ios', 'Info.default.plist');
+          const defaultInfoPlistFileContent = fs.readFileSync(micInfoPlistFile).toString();
+          const currentContent = fs.existsSync(destinationInfoPlistFile) && fs.readFileSync(destinationInfoPlistFile).toString();
+          if (currentContent !== defaultInfoPlistFileContent) {
+            fs.writeFileSync(destinationInfoPlistFile, defaultInfoPlistFileContent);
+          }
         }
       }
 
