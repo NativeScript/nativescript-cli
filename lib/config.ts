@@ -156,10 +156,10 @@ export class StaticConfig implements IStaticConfig {
 			$hostInfo: IHostInfo = this.$injector.resolve("$hostInfo");
 
 		// prepare the directory to host our copy of adb
-		const defaultAdbDirPath = path.join(__dirname, `resources/platform-tools/android/${process.platform}`);
-		const pathToPackageJson = path.join(__dirname, "..", "..", "package.json");
-		const commonLibVersion = require(pathToPackageJson).version;
-		const tmpDir = path.join(os.tmpdir(), `telerik-common-lib-${commonLibVersion}`);
+		const defaultAdbDirPath = path.join(__dirname, "common", "resources", "platform-tools", "android", process.platform);
+		const pathToPackageJson = path.join(__dirname, "..", "package.json");
+		const nsCliVersion = require(pathToPackageJson).version;
+		const tmpDir = path.join(os.tmpdir(), `nativescript-cli-${nsCliVersion}`);
 		$fs.createDirectory(tmpDir);
 
 		// copy the adb and associated files
