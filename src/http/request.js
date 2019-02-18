@@ -199,6 +199,7 @@ export class KinveyRequest extends Request {
 
               // Create a new session
               const newMicIdentity = Object.assign({}, refreshResponse.data, {
+                identity: micIdentity.identity,
                 client_id: micIdentity.client_id,
                 redirect_uri: micIdentity.redirect_uri,
                 protocol: authProtocol,
