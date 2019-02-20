@@ -1,4 +1,4 @@
-import { messaging, Message } from 'nativescript-plugin-firebase/messaging';
+import { messaging } from 'nativescript-plugin-firebase/messaging';
 import { device } from 'tns-core-modules/platform';
 import { formatKinveyUrl } from '../http/utils';
 import { KinveyRequest, RequestMethod } from '../http/request';
@@ -7,7 +7,7 @@ import { get as getConfig } from '../kinvey/config';
 
 const PUSH_NAMESPACE = 'push';
 
-export async function register(callback: (message: Message) => void, options: any = {}) {
+export async function register(callback: (message: any) => void, options: any = {}) {
   // Register for push notifications
   const {
     // Whether you want the firebase plugin to automatically display the notifications or just notify the callback. Currently used on iOS only. Default value for the plugin is true.
