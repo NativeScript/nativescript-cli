@@ -78,38 +78,37 @@ export class PreparePlatformNativeService extends PreparePlatformService impleme
 	private prepareAppResources(platformData: IPlatformData, projectData: IProjectData): void {
 		const appDestinationDirectoryPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
 		const appResourcesDestinationDirectoryPath = path.join(appDestinationDirectoryPath, constants.APP_RESOURCES_FOLDER_NAME);
+		const appResourcesSourceDirectoryPath = projectData.appResourcesDirectoryPath;
 
-		if (this.$fs.exists(appResourcesDestinationDirectoryPath)) {
-			platformData.platformProjectService.prepareAppResources(appResourcesDestinationDirectoryPath, projectData);
+		if (this.$fs.exists(appResourcesSourceDirectoryPath)) {
+			// This is not correct, as the Android implementation deletes files from the passed directory.
+			platformData.platformProjectService.prepareAppResources(appResourcesSourceDirectoryPath, projectData);
 			const appResourcesDestination = platformData.platformProjectService.getAppResourcesDestinationDirectoryPath(projectData);
 			this.$fs.ensureDirectoryExists(appResourcesDestination);
 
 			if (platformData.normalizedPlatformName.toLowerCase() === "android") {
-				const appResourcesDirectoryPath = projectData.getAppResourcesDirectoryPath();
-				const appResourcesDirStructureHasMigrated = this.$androidResourcesMigrationService.hasMigrated(appResourcesDirectoryPath);
-				const appResourcesAndroid = path.join(appResourcesDirectoryPath, platformData.normalizedPlatformName);
+				const appResourcesDirStructureHasMigrated = this.$androidResourcesMigrationService.hasMigrated(appResourcesSourceDirectoryPath);
+				const appResourcesAndroid = path.join(appResourcesSourceDirectoryPath, platformData.normalizedPlatformName);
 
 				if (appResourcesDirStructureHasMigrated) {
 					this.$fs.copyFile(path.join(appResourcesAndroid, "src", "*"), appResourcesDestination);
 
-					this.$fs.deleteDirectory(appResourcesDestinationDirectoryPath);
-					return;
+					// this.$fs.deleteDirectory(appResourcesDestinationDirectoryPath);
+					// return;
+				} else {
+					// https://github.com/NativeScript/android-runtime/issues/899
+					// App_Resources/Android/libs is reserved to user's aars and jars, but they should not be copied as resources
+					this.$fs.copyFile(path.join(appResourcesSourceDirectoryPath, platformData.normalizedPlatformName, "*"), appResourcesDestination);
+					this.$fs.deleteDirectory(path.join(appResourcesDestination, "libs"));
 				}
-
-				// https://github.com/NativeScript/android-runtime/issues/899
-				// App_Resources/Android/libs is reserved to user's aars and jars, but they should not be copied as resources
-				this.$fs.copyFile(path.join(appResourcesDestinationDirectoryPath, platformData.normalizedPlatformName, "*"), appResourcesDestination);
-				this.$fs.deleteDirectory(path.join(appResourcesDestination, "libs"));
-
-				this.$fs.deleteDirectory(appResourcesDestinationDirectoryPath);
-
-				return;
+			} else {
+				// TODO: Copy only required files
+				this.$fs.copyFile(path.join(appResourcesSourceDirectoryPath, platformData.normalizedPlatformName, "*"), appResourcesDestination);
 			}
-
-			this.$fs.copyFile(path.join(appResourcesDestinationDirectoryPath, platformData.normalizedPlatformName, "*"), appResourcesDestination);
-
-			this.$fs.deleteDirectory(appResourcesDestinationDirectoryPath);
 		}
+
+		// Ensure <project dir>/platforms/<platform>/.../app/App_Resources/ dir will be deleted.
+		this.$fs.deleteDirectory(appResourcesDestinationDirectoryPath);
 	}
 
 	private async cleanProject(platform: string, appFilesUpdaterOptions: IAppFilesUpdaterOptions, platformData: IPlatformData, projectData: IProjectData): Promise<void> {
