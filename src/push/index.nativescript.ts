@@ -10,9 +10,9 @@ const PUSH_NAMESPACE = 'push';
 export async function register(callback: (message: Message) => void, options: any = {}) {
   // Register for push notifications
   const {
-    // Whether you want this plugin to automatically display the notifications or just notify the callback. Currently used on iOS only. Default true.
+    // Whether you want the firebase plugin to automatically display the notifications or just notify the callback. Currently used on iOS only. Default value for the plugin is true.
     showNotifications = true,
-    // Whether you want this plugin to always handle the notifications when the app is in foreground. Currently used on iOS only. Default false.
+    // Whether you want the firebase plugin to always handle the notifications when the app is in foreground. Currently used on iOS only. Default value for the plugin is false.
     showNotificationsWhenInForeground = true
   } = options;
   await messaging.registerForPushNotifications({ showNotifications, showNotificationsWhenInForeground });
