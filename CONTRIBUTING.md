@@ -5,9 +5,10 @@ Contribute to the Telerik NativeScript Command-Line Interface
 
 The Telerik NativeScript CLI lets you create, build, and deploy NativeScript-based projects on iOS and Android devices.
 
-* [Report an Issue](#bug "Learn how to report an issue")
-* [Request a Feature](#request "Learn how to submit a feature or improvement request")
-* [Contribute to the Code Base](#contribute "Learn how to submit your own improvements to the code")
+* [Report an Issue](#report-an-issue "Learn how to report an issue")
+* [Request a Feature](#request-a-feature "Learn how to submit a feature or improvement request")
+* [Contribute to the Code Base](#contribute-to-the-code-base "Learn how to submit your own improvements to the code")
+* [Updating the CLI Documentation](#updating-the-cli-documentation "Learn how to make changes to CLI help and documentation")
 
 Report an Issue
 ===
@@ -63,9 +64,9 @@ Before you submit a Pull Request, consider the following guidelines.
 ```bash
     ./node_modules/.bin/grunt lint
 ```
-* Commit your changes and create a descriptive commit message (the commit message is used to generate release notes).
+* Commit your changes following the [commit message guidelines](https://github.com/NativeScript/NativeScript/blob/master/CONTRIBUTING.md#-commit-message-guidelines) (the commit message is used to generate release notes). 
 ```bash
-    git commit -a
+    git commit -m "fix: my awesome fix"
 ```
 * Push your branch to GitHub.
 ```bash
@@ -101,7 +102,7 @@ When the patch is reviewed and merged, you can safely delete your branch and pul
 
 [Back to Top][1]
 
-Updating the CLI documentation
+Updating the CLI Documentation
 ===
 
 The CLI documentation is what you see when running the `tns help` command. 
