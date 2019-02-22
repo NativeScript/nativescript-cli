@@ -37,6 +37,7 @@ import { BUILD_XCCONFIG_FILE_NAME } from "../lib/constants";
 import { ProjectDataStub } from "./stubs";
 import { xcode } from "../lib/node/xcode";
 import temp = require("temp");
+import { CocoaPodsPlatformManager } from "../lib/services/cocoapods-platform-manager";
 temp.track();
 
 class IOSSimulatorDiscoveryMock extends DeviceDiscovery {
@@ -66,6 +67,7 @@ function createTestInjector(projectPath: string, projectName: string, xcode?: IX
 	testInjector.register("iOSEntitlementsService", IOSEntitlementsService);
 	testInjector.register("logger", LoggerLib.Logger);
 	testInjector.register("options", OptionsLib.Options);
+	testInjector.register("cocoaPodsPlatformManager", CocoaPodsPlatformManager);
 	const projectData = Object.assign({}, ProjectDataStub, {
 		platformsDir: path.join(projectPath, "platforms"),
 		projectName: projectName,
@@ -384,26 +386,32 @@ describe("Cocoapods support", () => {
 
 			projectData.podfilePath = basePodfilePath;
 
-			cocoapodsService.applyPodfileToProject(basePodfileModuleName, basePodfilePath, projectData, iOSProjectService.getPlatformData(projectData).projectRoot);
+			await cocoapodsService.applyPodfileToProject(basePodfileModuleName, basePodfilePath, projectData, iOSProjectService.getPlatformData(projectData).projectRoot);
 
 			const projectPodfilePath = path.join(platformsFolderPath, "Podfile");
-			assert.isTrue(fs.exists(projectPodfilePath));
+			assert.isTrue(fs.exists(projectPodfilePath), `File ${projectPodfilePath} must exist as we have already applied Podfile to it.`);
 
 			const actualProjectPodfileContent = fs.readText(projectPodfilePath);
+			const expectedPluginPodfileContent = ["source 'https://github.com/CocoaPods/Specs.git'", "# platform :ios, '8.1'", "pod 'GoogleMaps'"].join("\n");
+			const expectedPlatformSection = [
+				`# NativeScriptPlatformSection ${basePodfilePath} with 8.1`,
+				"platform :ios, '8.1'",
+				"# End NativeScriptPlatformSection",
+			].join("\n");
 			const expectedProjectPodfileContent = ["use_frameworks!\n",
 				`target "${projectName}" do`,
 				`# Begin Podfile - ${basePodfilePath}`,
-				`${pluginPodfileContent}`,
-				"# End Podfile",
+				expectedPluginPodfileContent,
+				"# End Podfile\n",
+				expectedPlatformSection,
 				"end"]
 				.join("\n");
 			assert.equal(actualProjectPodfileContent, expectedProjectPodfileContent);
 
 			fs.deleteFile(basePodfilePath);
 
-			cocoapodsService.applyPodfileToProject(basePodfileModuleName, basePodfilePath, projectData, iOSProjectService.getPlatformData(projectData).projectRoot);
-			assert.isFalse(fs.exists(projectPodfilePath));
-
+			await cocoapodsService.applyPodfileToProject(basePodfileModuleName, basePodfilePath, projectData, iOSProjectService.getPlatformData(projectData).projectRoot);
+			assert.isFalse(fs.exists(projectPodfilePath), `The projectPodfilePath (${projectPodfilePath}) must not exist when all Podfiles have been deleted and project is prepared again. (i.e. CLI should delete the project Podfile in this case)`);
 		});
 
 		it("adds plugin with Podfile", async () => {
@@ -462,11 +470,18 @@ describe("Cocoapods support", () => {
 			assert.isTrue(fs.exists(projectPodfilePath));
 
 			const actualProjectPodfileContent = fs.readText(projectPodfilePath);
+			const expectedPluginPodfileContent = ["source 'https://github.com/CocoaPods/Specs.git'", "# platform :ios, '8.1'", "pod 'GoogleMaps'"].join("\n");
+			const expectedPlatformSection = [
+				`# NativeScriptPlatformSection ${pluginPodfilePath} with 8.1`,
+				"platform :ios, '8.1'",
+				"# End NativeScriptPlatformSection",
+			].join("\n");
 			const expectedProjectPodfileContent = ["use_frameworks!\n",
 				`target "${projectName}" do`,
 				`# Begin Podfile - ${pluginPodfilePath}`,
-				`${pluginPodfileContent}`,
-				"# End Podfile",
+				expectedPluginPodfileContent,
+				"# End Podfile\n",
+				expectedPlatformSection,
 				"end"]
 				.join("\n");
 			assert.equal(actualProjectPodfileContent, expectedProjectPodfileContent);
@@ -537,11 +552,18 @@ describe("Cocoapods support", () => {
 			assert.isTrue(fs.exists(projectPodfilePath));
 
 			const actualProjectPodfileContent = fs.readText(projectPodfilePath);
+			const expectedPluginPodfileContent = ["source 'https://github.com/CocoaPods/Specs.git'", "# platform :ios, '8.1'", "pod 'GoogleMaps'"].join("\n");
+			const expectedPlatformSection = [
+				`# NativeScriptPlatformSection ${pluginPodfilePath} with 8.1`,
+				"platform :ios, '8.1'",
+				"# End NativeScriptPlatformSection",
+			].join("\n");
 			const expectedProjectPodfileContent = ["use_frameworks!\n",
 				`target "${projectName}" do`,
 				`# Begin Podfile - ${pluginPodfilePath}`,
-				`${pluginPodfileContent}`,
-				"# End Podfile",
+				expectedPluginPodfileContent,
+				"# End Podfile\n",
+				expectedPlatformSection,
 				"end"]
 				.join("\n");
 			assert.equal(actualProjectPodfileContent, expectedProjectPodfileContent);
@@ -1386,6 +1408,7 @@ describe("handleNativeDependenciesChange", () => {
 		cocoapodsService.executePodInstall = async () => executedCocoapodsMethods.push("podInstall");
 		cocoapodsService.mergePodXcconfigFile = async () => executedCocoapodsMethods.push("podMerge");
 		cocoapodsService.applyPodfileFromAppResources = async () => ({});
+		cocoapodsService.removeDuplicatedPlatfomsFromProjectPodFile = async () => ({});
 		cocoapodsService.getProjectPodfilePath = () => projectPodfilePath;
 
 		const fs = testInjector.resolve("fs");

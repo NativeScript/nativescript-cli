@@ -542,7 +542,28 @@ interface ICocoaPodsService {
 	mergePodXcconfigFile(projectData: IProjectData, platformData: IPlatformData, opts: IRelease): Promise<void>;
 }
 
+interface ICocoaPodsPlatformManager {
+	addPlatformSection(projectData: IProjectData, podfilePlatformData: IPodfilePlatformData, projectPodfileContent: string): string;
+	removePlatformSection(moduleName: string, projectPodFileContent: string, podfilePath: string): string;
+	replacePlatformRow(podfileContent: string, podfilePath: string): { replacedContent: string, podfilePlatformData: IPodfilePlatformData };
+}
+
 interface IRubyFunction {
 	functionName: string;
 	functionParameters?: string;
+}
+
+interface IPodfilePlatformData {
+	/**
+	 * The content of the whole pod's platform row
+	 */
+	content: string;
+	/**
+	 * The version of the pod's platform
+	 */
+	version: string;
+	/**
+	 * The path to the pod's file
+	 */
+	path: string;
 }
