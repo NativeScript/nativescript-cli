@@ -386,10 +386,10 @@ describe("Cocoapods support", () => {
 
 			projectData.podfilePath = basePodfilePath;
 
-			cocoapodsService.applyPodfileToProject(basePodfileModuleName, basePodfilePath, projectData, iOSProjectService.getPlatformData(projectData).projectRoot);
+			await cocoapodsService.applyPodfileToProject(basePodfileModuleName, basePodfilePath, projectData, iOSProjectService.getPlatformData(projectData).projectRoot);
 
 			const projectPodfilePath = path.join(platformsFolderPath, "Podfile");
-			assert.isTrue(fs.exists(projectPodfilePath));
+			assert.isTrue(fs.exists(projectPodfilePath), `File ${projectPodfilePath} must exist as we have already applied Podfile to it.`);
 
 			const actualProjectPodfileContent = fs.readText(projectPodfilePath);
 			const expectedPluginPodfileContent = ["source 'https://github.com/CocoaPods/Specs.git'", "# platform :ios, '8.1'", "pod 'GoogleMaps'"].join("\n");
@@ -410,8 +410,8 @@ describe("Cocoapods support", () => {
 
 			fs.deleteFile(basePodfilePath);
 
-			cocoapodsService.applyPodfileToProject(basePodfileModuleName, basePodfilePath, projectData, iOSProjectService.getPlatformData(projectData).projectRoot);
-			assert.isFalse(fs.exists(projectPodfilePath));
+			await cocoapodsService.applyPodfileToProject(basePodfileModuleName, basePodfilePath, projectData, iOSProjectService.getPlatformData(projectData).projectRoot);
+			assert.isFalse(fs.exists(projectPodfilePath), `The projectPodfilePath (${projectPodfilePath}) must not exist when all Podfiles have been deleted and project is prepared again. (i.e. CLI should delete the project Podfile in this case)`);
 		});
 
 		it("adds plugin with Podfile", async () => {
