@@ -913,7 +913,7 @@ export class AndroidBundleValidatorHelper implements IAndroidBundleValidatorHelp
 
 export class PerformanceService implements IPerformanceService {
 	now(): number { return 10; }
-	processExecutionData() {}
+	processExecutionData() { }
 }
 
 export class InjectorStub extends Yok implements IInjector {
@@ -942,5 +942,17 @@ export class InjectorStub extends Yok implements IInjector {
 		this.register('projectData', ProjectDataStub);
 		this.register('packageInstallationManager', PackageInstallationManagerStub);
 		this.register('packageInstallationManager', PackageInstallationManagerStub);
+		this.register("httpClient", {
+			httpRequest: async (options: any, proxySettings?: IProxySettings): Promise<Server.IResponse> => undefined
+		});
+		this.register("pluginsService", {
+			add: async (): Promise<void> => undefined,
+			remove: async (): Promise<void> => undefined,
+			ensureAllDependenciesAreInstalled: () => { return Promise.resolve(); },
+		});
+		this.register("devicesService", {
+			getDevice: (): Mobile.IDevice => undefined,
+			getDeviceByIdentifier: (): Mobile.IDevice => undefined
+		});
 	}
 }

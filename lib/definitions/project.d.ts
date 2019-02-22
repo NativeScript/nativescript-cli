@@ -465,6 +465,7 @@ interface IValidatePlatformOutput {
 
 interface ITestExecutionService {
 	startKarmaServer(platform: string, projectData: IProjectData, projectFilesConfig: IProjectFilesConfig): Promise<void>;
+	canStartKarmaServer(projectData: IProjectData): Promise<boolean>;
 }
 
 /**
