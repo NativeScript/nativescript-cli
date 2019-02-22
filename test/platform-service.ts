@@ -118,6 +118,9 @@ function createTestInjector() {
 		}
 	});
 	testInjector.register("usbLiveSyncService", () => ({}));
+	testInjector.register("doctorService", {
+		checkForDeprecatedShortImportsInAppDir: (projectDir: string): void => undefined
+	});
 
 	return testInjector;
 }

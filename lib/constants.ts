@@ -116,6 +116,12 @@ export const NgFlavorName = "Angular";
 export const VueFlavorName = "Vue.js";
 export const TsFlavorName = "Plain TypeScript";
 export const JsFlavorName = "Plain JavaScript";
+export class ProjectTypes {
+	public static NgFlavorName = NgFlavorName;
+	public static VueFlavorName = VueFlavorName;
+	public static TsFlavorName = "Pure TypeScript";
+	public static JsFlavorName = "Pure JavaScript";
+}
 export const BUILD_OUTPUT_EVENT_NAME = "buildOutput";
 export const CONNECTION_ERROR_EVENT_NAME = "connectionError";
 export const USER_INTERACTION_NEEDED_EVENT_NAME = "userInteractionNeeded";

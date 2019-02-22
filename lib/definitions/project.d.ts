@@ -172,6 +172,13 @@ interface IProjectDataService {
 	 * @returns {Promise<IAssetGroup>} An object describing the current asset structure for Android.
 	 */
 	getAndroidAssetsStructure(opts: IProjectDir): Promise<IAssetGroup>;
+
+	/**
+	 * Returns array with paths to all `.js` or `.ts` files in application's app directory.
+	 * @param {string} projectDir Path to application.
+	 * @returns {string[]} Array of paths to `.js` or `.ts` files.
+	 */
+	getAppExecutableFiles(projectDir: string): string[];
 }
 
 interface IAssetItem {
@@ -535,9 +542,9 @@ interface ICocoaPodsService {
 
 	/**
 	 * Merges pod's xcconfig file into project's xcconfig file
-	 * @param projectData 
-	 * @param platformData 
-	 * @param opts 
+	 * @param projectData
+	 * @param platformData
+	 * @param opts
 	 */
 	mergePodXcconfigFile(projectData: IProjectData, platformData: IPlatformData, opts: IRelease): Promise<void>;
 }

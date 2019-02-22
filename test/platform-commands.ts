@@ -176,6 +176,9 @@ function createTestInjector() {
 		trackOptions: () => Promise.resolve(null)
 	});
 	testInjector.register("usbLiveSyncService", ({}));
+	testInjector.register("doctorService", {
+		checkForDeprecatedShortImportsInAppDir: (projectDir: string): void => undefined
+	});
 
 	return testInjector;
 }

@@ -107,6 +107,9 @@ function createTestInjector(): IInjector {
 		extractPackage: async (packageName: string, destinationDirectory: string, options?: IPacoteExtractOptions): Promise<void> => undefined
 	});
 	testInjector.register("usbLiveSyncService", () => ({}));
+	testInjector.register("doctorService", {
+		checkForDeprecatedShortImportsInAppDir: (projectDir: string): void => undefined
+	});
 
 	return testInjector;
 }
