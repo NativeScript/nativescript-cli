@@ -45,7 +45,7 @@ export class CocoaPodsPlatformManager implements ICocoaPodsPlatformManager {
 	}
 
 	private getPlatformSectionData(projectPodfileContent: string): { podfilePlatformData: IPodfilePlatformData, platformSectionContent: string } {
-		const platformSectionRegExp = new RegExp(`${this.getPlatformSectionHeader()} ([\\s\\S]*?)with (.*)[\\s\\S]*?${this.getPlatformSectionFooter()}`, "m");
+		const platformSectionRegExp = new RegExp(`${this.getPlatformSectionHeader()} ([\\s\\S]*?)with[\\s\\S]*?\\n([\\s\\S]*?(?:,\\s*?['"](.+)['"])?)\\n${this.getPlatformSectionFooter()}`, "m");
 		const match = platformSectionRegExp.exec(projectPodfileContent);
 		let result = null;
 		if (match && match[0]) {
@@ -53,8 +53,8 @@ export class CocoaPodsPlatformManager implements ICocoaPodsPlatformManager {
 				platformSectionContent: match[0],
 				podfilePlatformData: {
 					path: match[1].trim(),
-					content: "",
-					version: match[2]
+					content: match[2],
+					version: match[3]
 				}
 			};
 		}
@@ -104,7 +104,7 @@ export class CocoaPodsPlatformManager implements ICocoaPodsPlatformManager {
 		const appResourcesPodfilePath = path.join(projectData.getAppResourcesDirectoryPath(), "iOS", PODFILE_NAME);
 		const isFromAppResources = oldPodfilePlatformData.path !== appResourcesPodfilePath && currentPodfilePlatformData.path === appResourcesPodfilePath;
 		const isFromAppResourcesWithGreaterPlatformVersion = oldPodfilePlatformData.path === appResourcesPodfilePath && currentPodfilePlatformData.path === appResourcesPodfilePath && semver.gt(semver.coerce(currentPodfilePlatformData.version), semver.coerce(oldPodfilePlatformData.version));
-		const isPodfileWithGreaterPlatformVersion = !currentPodfilePlatformData.version || semver.gt(semver.coerce(currentPodfilePlatformData.version), semver.coerce(oldPodfilePlatformData.version));
+		const isPodfileWithGreaterPlatformVersion = !currentPodfilePlatformData.version || (oldPodfilePlatformData.version && semver.gt(semver.coerce(currentPodfilePlatformData.version), semver.coerce(oldPodfilePlatformData.version)));
 		const result = isFromAppResources || isFromAppResourcesWithGreaterPlatformVersion || isPodfileWithGreaterPlatformVersion;
 		return result;
 	}
