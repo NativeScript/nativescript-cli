@@ -1052,6 +1052,39 @@ platform :ios
 end`
 			},
 			{
+				name: "shouldn't replace the platform without version when no Podfile in App_Resources",
+				pods: [{
+					name: 'myPluginWithoutPlatform',
+					path: 'node_modules/myPluginWithoutPlatform/Podfile',
+					content: `pod 'myPod' ~> 0.3.4`
+				}, {
+					name: 'myFirstPluginWithPlatform',
+					path: 'node_modules/myFirstPluginWithPlatform/Podfile',
+					content: `platform :ios`
+				}, {
+					name: 'mySecondPluginWithPlatform',
+					path: 'node_modules/mySecondPluginWithPlatform/Podfile',
+					content: `platform :ios, '10.0'`
+				}],
+				expectedProjectPodfileContent: `use_frameworks!
+
+target "projectName" do
+# Begin Podfile - node_modules/mySecondPluginWithPlatform/Podfile
+# platform :ios, '10.0'
+# End Podfile
+
+# Begin Podfile - node_modules/myFirstPluginWithPlatform/Podfile
+# platform :ios
+# End Podfile
+
+# Begin Podfile - node_modules/myPluginWithoutPlatform/Podfile
+pod 'myPod' ~> 0.3.4
+# End Podfile# NativeScriptPlatformSection node_modules/myFirstPluginWithPlatform/Podfile with
+platform :ios
+# End NativeScriptPlatformSection
+end`
+			},
+			{
 				name: "should select platform from plugins when the podfile in App_Resources/iOS/Podfile has no platform",
 				pods: [{
 					name: "mySecondPluginWithPlatform",
