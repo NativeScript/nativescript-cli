@@ -341,8 +341,7 @@ export function cleanUpCollection(config, collectionName) {
         // for _blob if there are no files, the clean up request returns 404
         if ((!error && response.statusCode == 200) || response.statusCode === 404) {
           resolve();
-        }
-        else {
+        } else {
           reject(`${collectionName} collection cleanup failed!`);
         }
       });
@@ -362,8 +361,8 @@ export function cleanUpCollection(config, collectionName) {
           }
         })
         .catch(reject);
+    } else {
+      reject(new Error(`Unable to clean up ${collectionName} clollection.`));
     }
-
-    reject(new Error(`Unable to clean up ${collectionName} clollection.`));
   });
-};
+}
