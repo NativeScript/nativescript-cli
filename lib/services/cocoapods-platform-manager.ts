@@ -4,11 +4,14 @@ import * as semver from "semver";
 import { PODFILE_NAME } from "../constants";
 
 export class CocoaPodsPlatformManager implements ICocoaPodsPlatformManager {
+	constructor(private $logger: ILogger) { }
+
 	public addPlatformSection(projectData: IProjectData, podfilePlatformData: IPodfilePlatformData, projectPodfileContent: string): string {
 		const platformSectionData = this.getPlatformSectionData(projectPodfileContent);
 		if (platformSectionData && platformSectionData.podfilePlatformData) {
 			const shouldReplacePlatformSection = this.shouldReplacePlatformSection(projectData, platformSectionData.podfilePlatformData, podfilePlatformData);
 			if (shouldReplacePlatformSection) {
+				this.$logger.warn(`Multiple identical platforms with different versions have been detected during the processing of podfiles. The current platform's content "${platformSectionData.podfilePlatformData.content}" from ${platformSectionData.podfilePlatformData.path} will be replaced with "${podfilePlatformData.content}" from ${podfilePlatformData.path}`);
 				const newSection = this.buildPlatformSection(podfilePlatformData);
 				projectPodfileContent = projectPodfileContent.replace(platformSectionData.platformSectionContent, newSection);
 			}
