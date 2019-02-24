@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import sinon from 'sinon';
+import { spy } from 'sinon';
 import _ from 'lodash';
 // eslint-disable-next-line import/extensions
 import * as Kinvey from '__SDK__';
@@ -83,7 +83,7 @@ dataStoreTypes.forEach((currentDataStoreType) => {
         });
 
         it('should return the count for the collection', (done) => {
-          const onNextSpy = sinon.spy();
+          const onNextSpy = spy();
           storeToTest.count()
             .subscribe(onNextSpy, done, () => {
               try {
@@ -98,7 +98,7 @@ dataStoreTypes.forEach((currentDataStoreType) => {
         it('should return the count of the entities that match the query', (done) => {
           const query = new Kinvey.Query();
           query.equalTo('_id', entity2._id);
-          const onNextSpy = sinon.spy();
+          const onNextSpy = spy();
           storeToTest.count(query)
             .subscribe(onNextSpy, done, () => {
               try {
@@ -125,7 +125,7 @@ dataStoreTypes.forEach((currentDataStoreType) => {
         });
 
         it('should return all the entities', (done) => {
-          const onNextSpy = sinon.spy();
+          const onNextSpy = spy();
           storeToTest.find()
             .subscribe(onNextSpy, done, () => {
               try {
@@ -147,7 +147,7 @@ dataStoreTypes.forEach((currentDataStoreType) => {
         });
 
         it('should find the entities that match the query', (done) => {
-          const onNextSpy = sinon.spy();
+          const onNextSpy = spy();
           const query = new Kinvey.Query();
           query.equalTo('_id', entity2._id);
           storeToTest.find(query)
@@ -165,7 +165,7 @@ dataStoreTypes.forEach((currentDataStoreType) => {
       describe('findById()', () => {
         it('should throw a NotFoundError if an entity with the given id does not exist', (done) => {
           const entityId = utilities.randomString();
-          const nextHandlerSpy = sinon.spy();
+          const nextHandlerSpy = spy();
 
           storeToTest.findById(entityId).subscribe(nextHandlerSpy, (err) => {
             const expectedCallCount = dataStoreType === Kinvey.DataStoreType.Cache ? 1 : 0;
@@ -182,7 +182,7 @@ dataStoreTypes.forEach((currentDataStoreType) => {
         });
 
         it('should return undefined if an id is not provided', (done) => {
-          const spy = sinon.spy();
+          const spy = spy();
           storeToTest.findById().subscribe(spy, done, () => {
             try {
               expect(spy.callCount).to.equal(1);
@@ -196,7 +196,7 @@ dataStoreTypes.forEach((currentDataStoreType) => {
         });
 
         it('should return the entity that matches the id argument', (done) => {
-          const onNextSpy = sinon.spy();
+          const onNextSpy = spy();
           storeToTest.findById(entity2._id)
             .subscribe(onNextSpy, done, () => {
               try {
@@ -229,7 +229,7 @@ dataStoreTypes.forEach((currentDataStoreType) => {
       });
 
       it('should sort ascending and skip correctly', (done) => {
-        const onNextSpy = sinon.spy();
+        const onNextSpy = spy();
         const query = new Kinvey.Query();
         query.skip = dataCount - 2;
         query.ascending('_id');
@@ -246,7 +246,7 @@ dataStoreTypes.forEach((currentDataStoreType) => {
       });
 
       it('should sort descending and limit correctly', (done) => {
-        const onNextSpy = sinon.spy();
+        const onNextSpy = spy();
         const query = new Kinvey.Query();
         query.limit = 2;
         query.descending('_id');
@@ -263,7 +263,7 @@ dataStoreTypes.forEach((currentDataStoreType) => {
       });
 
       it('should skip and limit correctly', (done) => {
-        const onNextSpy = sinon.spy();
+        const onNextSpy = spy();
         const query = new Kinvey.Query();
         query.limit = 1;
         query.skip = dataCount - 2;
@@ -282,7 +282,7 @@ dataStoreTypes.forEach((currentDataStoreType) => {
 
       // skipped because of a bug for syncStore and different behaviour of fields for Sync and Network
       it('with fields should return only the specified fields', (done) => {
-        const onNextSpy = sinon.spy();
+        const onNextSpy = spy();
         const query = new Kinvey.Query();
         query.fields = [[textFieldName]];
         query.ascending('_id');
@@ -331,7 +331,7 @@ dataStoreTypes.forEach((currentDataStoreType) => {
       });
 
       beforeEach((done) => {
-        onNextSpy = sinon.spy();
+        onNextSpy = spy();
         query = new Kinvey.Query();
         done();
       });
@@ -1190,7 +1190,7 @@ dataStoreTypes.forEach((currentDataStoreType) => {
             .then(() => storeToTest.removeById(newEntity._id))
             .then((result) => {
               expect(result.count).to.equal(1);
-              const onNextSpy = sinon.spy();
+              const onNextSpy = spy();
               const query = new Kinvey.Query();
               query.equalTo('_id', newEntity._id);
               return storeToTest.count(query)
@@ -1243,7 +1243,7 @@ dataStoreTypes.forEach((currentDataStoreType) => {
             })
             .then((result) => {
               expect(result.count).to.equal(2);
-              const onNextSpy = sinon.spy();
+              const onNextSpy = spy();
               return storeToTest.count(query)
                 .subscribe(onNextSpy, done, () => {
                   try {

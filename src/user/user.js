@@ -9,7 +9,7 @@ import { get as getConfig } from '../kinvey/config';
 import getDeviceId from '../device';
 import KinveyError from '../errors/kinvey';
 import { clear } from '../datastore';
-import { isRegistered, register, unregister } from '../live';
+// import { isRegistered, register, unregister } from '../live';
 import { mergeSocialIdentity } from './utils';
 
 const USER_NAMESPACE = 'user';
@@ -160,40 +160,40 @@ export default class User {
     return this;
   }
 
-  async registerForLiveService() {
-    if (!isRegistered()) {
-      const { apiProtocol, apiHost, appKey } = getConfig();
-      const deviceId = getDeviceId();
-      const request = new KinveyRequest({
-        method: RequestMethod.POST,
-        auth: Auth.Session,
-        url: formatKinveyUrl(apiProtocol, apiHost, `/${USER_NAMESPACE}/${appKey}/${this._id}/register-realtime`),
-        body: { deviceId }
-      });
-      const response = await request.execute();
-      const config = Object.assign({}, { authKey: this.authtoken }, response.data);
-      register(config);
-    }
+  // async registerForLiveService() {
+  //   if (!isRegistered()) {
+  //     const { apiProtocol, apiHost, appKey } = getConfig();
+  //     const deviceId = getDeviceId();
+  //     const request = new KinveyRequest({
+  //       method: RequestMethod.POST,
+  //       auth: Auth.Session,
+  //       url: formatKinveyUrl(apiProtocol, apiHost, `/${USER_NAMESPACE}/${appKey}/${this._id}/register-realtime`),
+  //       body: { deviceId }
+  //     });
+  //     const response = await request.execute();
+  //     const config = Object.assign({}, { authKey: this.authtoken }, response.data);
+  //     register(config);
+  //   }
 
-    return true;
-  }
+  //   return true;
+  // }
 
-  async unregisterFromLiveService() {
-    if (isRegistered()) {
-      const { apiProtocol, apiHost, appKey } = getConfig();
-      const deviceId = getDeviceId();
-      const request = new KinveyRequest({
-        method: RequestMethod.POST,
-        auth: Auth.Session,
-        url: formatKinveyUrl(apiProtocol, apiHost, `/${USER_NAMESPACE}/${appKey}/${this._id}/unregister-realtime`),
-        body: { deviceId }
-      });
-      await request.execute();
-      unregister();
-    }
+  // async unregisterFromLiveService() {
+  //   if (isRegistered()) {
+  //     const { apiProtocol, apiHost, appKey } = getConfig();
+  //     const deviceId = getDeviceId();
+  //     const request = new KinveyRequest({
+  //       method: RequestMethod.POST,
+  //       auth: Auth.Session,
+  //       url: formatKinveyUrl(apiProtocol, apiHost, `/${USER_NAMESPACE}/${appKey}/${this._id}/unregister-realtime`),
+  //       body: { deviceId }
+  //     });
+  //     await request.execute();
+  //     unregister();
+  //   }
 
-    return true;
-  }
+  //   return true;
+  // }
 
   async logout(options = {}) {
     const { apiProtocol, apiHost, appKey } = getConfig();
