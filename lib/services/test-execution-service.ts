@@ -7,7 +7,7 @@ interface IKarmaConfigOptions {
 	debugTransport: boolean;
 }
 
-class TestExecutionService implements ITestExecutionService {
+export class TestExecutionService implements ITestExecutionService {
 	private static CONFIG_FILE_NAME = `node_modules/${constants.TEST_RUNNER_NAME}/config.js`;
 	private static SOCKETIO_JS_FILE_NAME = `node_modules/${constants.TEST_RUNNER_NAME}/socket.io.js`;
 
@@ -161,6 +161,19 @@ class TestExecutionService implements ITestExecutionService {
 
 			karmaRunner.send({ karmaConfig: karmaConfig });
 		});
+	}
+
+	public async canStartKarmaServer(projectData: IProjectData): Promise<boolean> {
+		let canStartKarmaServer = true;
+		const requiredDependencies = ["karma", "nativescript-unit-test-runner"];
+		_.each(requiredDependencies, (dep) => {
+			if (!projectData.dependencies[dep] && !projectData.devDependencies[dep]) {
+				canStartKarmaServer = false;
+				return;
+			}
+		});
+
+		return canStartKarmaServer;
 	}
 
 	allowedParameters: ICommandParameter[] = [];

@@ -596,6 +596,7 @@ declare const enum ErrorCodes {
 	KARMA_FAIL = 130,
 	UNHANDLED_REJECTION_FAILURE = 131,
 	DELETED_KILL_FILE = 132,
+	TESTS_INIT_REQUIRED = 133
 }
 
 interface IFutureDispatcher {

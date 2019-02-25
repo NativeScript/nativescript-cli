@@ -1,30 +1,75 @@
 import * as helpers from "../common/helpers";
 
-function RunKarmaTestCommandFactory(platform: string) {
-	return function RunKarmaTestCommand($options: IOptions, $testExecutionService: ITestExecutionService, $projectData: IProjectData, $analyticsService: IAnalyticsService, $platformEnvironmentRequirements: IPlatformEnvironmentRequirements) {
-		$projectData.initializeProjectData();
-		$analyticsService.setShouldDispose($options.justlaunch || !$options.watch);
-		const projectFilesConfig = helpers.getProjectFilesConfig({ isReleaseBuild: $options.release });
-		this.execute = (args: string[]): Promise<void> => $testExecutionService.startKarmaServer(platform, $projectData, projectFilesConfig);
-		this.canExecute = (args: string[]): Promise<boolean> => canExecute({ $platformEnvironmentRequirements, $projectData, $options, platform });
-		this.allowedParameters = [];
-	};
-}
+abstract class TestCommandBase {
+	public allowedParameters: ICommandParameter[] = [];
+	private projectFilesConfig: IProjectFilesConfig;
+	protected abstract platform: string;
+	protected abstract $projectData: IProjectData;
+	protected abstract $testExecutionService: ITestExecutionService;
+	protected abstract $analyticsService: IAnalyticsService;
+	protected abstract $options: IOptions;
+	protected abstract $platformEnvironmentRequirements: IPlatformEnvironmentRequirements;
+	protected abstract $errors: IErrors;
 
-async function canExecute(input: { $platformEnvironmentRequirements: IPlatformEnvironmentRequirements, $projectData: IProjectData, $options: IOptions, platform: string }): Promise<boolean> {
-	const { $platformEnvironmentRequirements, $projectData, $options, platform } = input;
-	const output = await $platformEnvironmentRequirements.checkEnvironmentRequirements({
-		platform,
-		projectDir: $projectData.projectDir,
-		options: $options,
-		notConfiguredEnvOptions: {
-			hideSyncToPreviewAppOption: true,
-			hideCloudBuildOption: true
+	async execute(args: string[]): Promise<void> {
+		await this.$testExecutionService.startKarmaServer(this.platform, this.$projectData, this.projectFilesConfig);
+	}
+
+	async canExecute(args: string[]): Promise<boolean | ICanExecuteCommandOutput> {
+		this.$projectData.initializeProjectData();
+		this.$analyticsService.setShouldDispose(this.$options.justlaunch || !this.$options.watch);
+		this.projectFilesConfig = helpers.getProjectFilesConfig({ isReleaseBuild: this.$options.release });
+
+		const output = await this.$platformEnvironmentRequirements.checkEnvironmentRequirements({
+			platform: this.platform,
+			projectDir: this.$projectData.projectDir,
+			options: this.$options,
+			notConfiguredEnvOptions: {
+				hideSyncToPreviewAppOption: true,
+				hideCloudBuildOption: true
+			}
+		});
+
+		const canStartKarmaServer = await this.$testExecutionService.canStartKarmaServer(this.$projectData);
+		if (!canStartKarmaServer) {
+			this.$errors.fail({
+				formatStr: "Error: In order to run unit tests, your project must already be configured by running $ tns test init.",
+				suppressCommandHelp: true,
+				errorCode: ErrorCodes.TESTS_INIT_REQUIRED
+			});
 		}
-	});
 
-	return output.canExecute;
+		return output.canExecute && canStartKarmaServer;
+	}
 }
 
-$injector.registerCommand("test|android", RunKarmaTestCommandFactory('android'));
-$injector.registerCommand("test|ios", RunKarmaTestCommandFactory('iOS'));
+class TestAndroidCommand extends TestCommandBase implements ICommand {
+	protected platform = "android";
+
+	constructor(protected $projectData: IProjectData,
+		protected $testExecutionService: ITestExecutionService,
+		protected $analyticsService: IAnalyticsService,
+		protected $options: IOptions,
+		protected $platformEnvironmentRequirements: IPlatformEnvironmentRequirements,
+		protected $errors: IErrors) {
+		super();
+	}
+
+}
+
+class TestIosCommand extends TestCommandBase implements ICommand {
+	protected platform = "iOS";
+
+	constructor(protected $projectData: IProjectData,
+		protected $testExecutionService: ITestExecutionService,
+		protected $analyticsService: IAnalyticsService,
+		protected $options: IOptions,
+		protected $platformEnvironmentRequirements: IPlatformEnvironmentRequirements,
+		protected $errors: IErrors) {
+		super();
+	}
+
+}
+
+$injector.registerCommand("test|android", TestAndroidCommand);
+$injector.registerCommand("test|ios", TestIosCommand);

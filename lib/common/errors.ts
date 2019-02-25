@@ -1,6 +1,7 @@
 import * as util from "util";
 import * as path from "path";
 import { SourceMapConsumer } from "source-map";
+import { isInteractive } from "./helpers";
 
 // we need this to overwrite .stack property (read-only in Error)
 function Exception() {
@@ -159,7 +160,7 @@ export class Errors implements IErrors {
 		} catch (ex) {
 			const loggerLevel: string = $injector.resolve("logger").getLevel().toUpperCase();
 			const printCallStack = this.printCallStack || loggerLevel === "TRACE" || loggerLevel === "DEBUG";
-			const message = printCallStack ? resolveCallStack(ex) : `\x1B[31;1m${ex.message}\x1B[0m`;
+			const message = printCallStack ? resolveCallStack(ex) : isInteractive() ? `\x1B[31;1m${ex.message}\x1B[0m` : ex.message;
 
 			if (ex.printOnStdout) {
 				this.$injector.resolve("logger").out(message);
