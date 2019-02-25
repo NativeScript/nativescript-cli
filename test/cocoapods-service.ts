@@ -913,6 +913,128 @@ end`
 	describe("remove duplicated platfoms from project podfile", () => {
 		const projectRoot = "my/project/platforms/ios";
 		const projectPodfilePath = path.join(projectRoot, "testProjectPodfilePath");
+		let projectPodfileContent = "";
+
+		beforeEach(() => {
+			cocoapodsService.getProjectPodfilePath = () => projectPodfilePath;
+			projectPodfileContent = "";
+		});
+
+		function setupMocks(pods: any[]): { projectData: IProjectData } {
+			const podsPaths = pods.map(p => p.path);
+			const projectData = testInjector.resolve("projectData");
+			projectData.getAppResourcesDirectoryPath = () => "my/full/path/to/app/App_Resources";
+			projectData.projectName = "projectName";
+
+			const fs = testInjector.resolve("fs");
+			fs.exists = (filePath: string) => projectPodfilePath === filePath || _.includes(podsPaths, filePath);
+			fs.readText = (filePath: string) => {
+				if (filePath === projectPodfilePath) {
+					return projectPodfileContent;
+				}
+
+				const pod = _.find(pods, p => p.path === filePath);
+				if (pod) {
+					return pod.content;
+				}
+			};
+			fs.writeFile = (filePath: string, fileContent: string) => {
+				if (filePath === projectPodfilePath) {
+					projectPodfileContent = fileContent;
+				}
+			};
+			fs.deleteFile = () => ({});
+
+			return { projectData };
+		}
+
+		const testCasesWithApplyAndRemove = [
+			{
+				name: "should select the podfile with highest platform after Podfile from App_Resources has been deleted",
+				pods: [{
+					name: "mySecondPluginWithPlatform",
+					path: "node_modules/  mypath  with spaces/mySecondPluginWithPlatform/Podfile",
+					content: `platform :ios, '10.0'`
+				}, {
+					name: "myPluginWithoutPlatform",
+					path: "node_modules/myPluginWithoutPlatform/Podfile",
+					content: `pod 'myPod' ~> 0.3.4`
+				}, {
+					name: "myFirstPluginWithPlatform",
+					path: "node_modules/myFirstPluginWithPlatform/Podfile",
+					content: `platform :ios, '11.0'`
+				}, {
+					name: "App_Resources",
+					path: "my/full/path/to/app/App_Resources/iOS/Podfile",
+					content: `platform :ios, '8.0'`
+				}],
+				podsToRemove: [{
+					name: "NSPodfileBase",
+					path: "my/full/path/to/app/App_Resources/iOS/Podfile"
+				}],
+				expectedProjectPodfileContentAfterApply: `use_frameworks!
+
+target "projectName" do
+# Begin Podfile - my/full/path/to/app/App_Resources/iOS/Podfile
+# platform :ios, '8.0'
+# End Podfile
+
+# Begin Podfile - node_modules/myFirstPluginWithPlatform/Podfile
+# platform :ios, '11.0'
+# End Podfile
+
+# Begin Podfile - node_modules/myPluginWithoutPlatform/Podfile
+pod 'myPod' ~> 0.3.4
+# End Podfile
+
+# Begin Podfile - node_modules/  mypath  with spaces/mySecondPluginWithPlatform/Podfile
+# platform :ios, '10.0'
+# End Podfile
+
+# NativeScriptPlatformSection my/full/path/to/app/App_Resources/iOS/Podfile with 8.0
+platform :ios, '8.0'
+# End NativeScriptPlatformSection
+end`,
+				expectedProjectPodfileContentAfterRemove: `use_frameworks!
+
+target "projectName" do
+
+# Begin Podfile - node_modules/myFirstPluginWithPlatform/Podfile
+# platform :ios, '11.0'
+# End Podfile
+
+# Begin Podfile - node_modules/myPluginWithoutPlatform/Podfile
+pod 'myPod' ~> 0.3.4
+# End Podfile
+
+# Begin Podfile - node_modules/  mypath  with spaces/mySecondPluginWithPlatform/Podfile
+# platform :ios, '10.0'
+# End Podfile
+# NativeScriptPlatformSection node_modules/myFirstPluginWithPlatform/Podfile with 11.0
+platform :ios, '11.0'
+# End NativeScriptPlatformSection
+end`
+			}
+		];
+
+		_.each(testCasesWithApplyAndRemove, testCase => {
+			it(testCase.name, async () => {
+				const { projectData } = setupMocks(testCase.pods);
+
+				for (const pod of testCase.pods) {
+					await cocoapodsService.applyPodfileToProject(pod.name, pod.path, projectData, projectPodfilePath);
+				}
+
+				assert.deepEqual(projectPodfileContent, testCase.expectedProjectPodfileContentAfterApply);
+
+				for (const pod of testCase.podsToRemove) {
+					await cocoapodsService.removePodfileFromProject(pod.name, pod.path, projectData, projectPodfilePath);
+				}
+
+				assert.deepEqual(projectPodfileContent, testCase.expectedProjectPodfileContentAfterRemove);
+			});
+		});
+
 		const testCases = [
 			{
 				name: "should not change the Podfile when no platform",
@@ -1130,36 +1252,9 @@ end`
 			}
 		];
 
-		beforeEach(() => {
-			cocoapodsService.getProjectPodfilePath = () => projectPodfilePath;
-		});
-
 		_.each(testCases, testCase => {
 			it(testCase.name, async () => {
-				const podsPaths = testCase.pods.map(p => p.path);
-				let projectPodfileContent = "";
-
-				const projectData = testInjector.resolve("projectData");
-				projectData.getAppResourcesDirectoryPath = () => "my/full/path/to/app/App_Resources";
-				projectData.projectName = "projectName";
-
-				const fs = testInjector.resolve("fs");
-				fs.exists = (filePath: string) => projectPodfilePath === filePath || _.includes(podsPaths, filePath);
-				fs.readText = (filePath: string) => {
-					if (filePath === projectPodfilePath) {
-						return projectPodfileContent;
-					}
-
-					const pod = _.find(testCase.pods, p => p.path === filePath);
-					if (pod) {
-						return pod.content;
-					}
-				};
-				fs.writeFile = (filePath: string, fileContent: string) => {
-					if (filePath === projectPodfilePath) {
-						projectPodfileContent = fileContent;
-					}
-				};
+				const { projectData } = setupMocks(testCase.pods);
 				cocoapodsService.removePodfileFromProject = () => ({});
 
 				for (const pod of testCase.pods) {

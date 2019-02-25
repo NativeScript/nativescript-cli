@@ -118,7 +118,7 @@ export class CocoaPodsPlatformManager implements ICocoaPodsPlatformManager {
 			result += ` ${podfilePlatformData.version}`;
 		}
 
-		result += `${EOL}${podfilePlatformData.content}${EOL}${this.getPlatformSectionFooter()}`;
+		result += `${EOL}${podfilePlatformData.content}${EOL}${this.getPlatformSectionFooter()}${EOL}`;
 		return result;
 	}
 
