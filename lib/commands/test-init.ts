@@ -37,7 +37,9 @@ class TestInitCommand implements ICommand {
 		const dependencies = this.frameworkDependencies[frameworkToInstall] || [];
 		const modulesToInstall: IDependencyInformation[] = [
 			{
-				name: 'karma'
+				name: 'karma',
+				// Hardcode the version unitl https://github.com/karma-runner/karma/issues/3052 is fixed
+				version: "2.0.2"
 			},
 			{
 				name: `karma-${frameworkToInstall}`

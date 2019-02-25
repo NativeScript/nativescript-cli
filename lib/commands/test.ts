@@ -3,15 +3,13 @@ import * as helpers from "../common/helpers";
 abstract class TestCommandBase {
 	public allowedParameters: ICommandParameter[] = [];
 	private projectFilesConfig: IProjectFilesConfig;
+	protected abstract platform: string;
 	protected abstract $projectData: IProjectData;
 	protected abstract $testExecutionService: ITestExecutionService;
 	protected abstract $analyticsService: IAnalyticsService;
 	protected abstract $options: IOptions;
 	protected abstract $platformEnvironmentRequirements: IPlatformEnvironmentRequirements;
 	protected abstract $errors: IErrors;
-
-	constructor(private platform: string) {
-	}
 
 	async execute(args: string[]): Promise<void> {
 		await this.$testExecutionService.startKarmaServer(this.platform, this.$projectData, this.projectFilesConfig);
@@ -46,25 +44,29 @@ abstract class TestCommandBase {
 }
 
 class TestAndroidCommand extends TestCommandBase implements ICommand {
+	protected platform = "android";
+
 	constructor(protected $projectData: IProjectData,
 		protected $testExecutionService: ITestExecutionService,
 		protected $analyticsService: IAnalyticsService,
 		protected $options: IOptions,
 		protected $platformEnvironmentRequirements: IPlatformEnvironmentRequirements,
 		protected $errors: IErrors) {
-		super("android");
+		super();
 	}
 
 }
 
 class TestIosCommand extends TestCommandBase implements ICommand {
+	protected platform = "iOS";
+
 	constructor(protected $projectData: IProjectData,
 		protected $testExecutionService: ITestExecutionService,
 		protected $analyticsService: IAnalyticsService,
 		protected $options: IOptions,
 		protected $platformEnvironmentRequirements: IPlatformEnvironmentRequirements,
 		protected $errors: IErrors) {
-		super("iOS");
+		super();
 	}
 
 }
