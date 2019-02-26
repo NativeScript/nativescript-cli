@@ -70,7 +70,7 @@ export class IOSApplicationManager extends ApplicationManagerBase {
 	public async stopApplication(appData: Mobile.IApplicationData): Promise<void> {
 		const { appId } = appData;
 
-		this.device.destroyDebugSocket(appId);
+		await this.device.destroyDebugSocket(appId);
 
 		const action = () => this.$iosDeviceOperations.stop([{ deviceId: this.device.deviceInfo.identifier, ddi: this.$options.ddi, appId }]);
 

@@ -48,7 +48,7 @@ export class LockService implements ILockService {
 		}
 	}
 
-	private lock(lockFilePath?: string, lockOpts?: ILockOptions): Promise<string> {
+	public lock(lockFilePath?: string, lockOpts?: ILockOptions): Promise<string> {
 		const { filePath, fileOpts } = this.getLockFileSettings(lockFilePath, lockOpts);
 		this.currentlyLockedFiles.push(filePath);
 
@@ -62,7 +62,7 @@ export class LockService implements ILockService {
 		});
 	}
 
-	private unlock(lockFilePath?: string): void {
+	public unlock(lockFilePath?: string): void {
 		const { filePath } = this.getLockFileSettings(lockFilePath);
 		_.remove(this.currentlyLockedFiles, e => e === lockFilePath);
 		lockfile.unlockSync(filePath);

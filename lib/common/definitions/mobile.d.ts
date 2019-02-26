@@ -107,9 +107,9 @@ declare module Mobile {
 
 	interface IiOSDevice extends IDevice {
 		getDebugSocket(appId: string, projectName: string): Promise<any>;
-		destroyDebugSocket(appId: string): void;
+		destroyDebugSocket(appId: string): Promise<void>;
 		openDeviceLogStream(options?: IiOSLogStreamOptions): Promise<void>;
-		destroyAllSockets(): void;
+		destroyAllSockets(): Promise<void>;
 	}
 
 	interface IAndroidDevice extends IDevice {

@@ -4,6 +4,13 @@ import * as util from "util";
 import { EventEmitter } from "events";
 
 export class LockServiceStub implements ILockService {
+	public async lock(lockFilePath?: string, lockOpts?: ILockOptions): Promise<string> {
+		return lockFilePath;
+	}
+
+	public unlock(lockFilePath?: string): void {
+	}
+
 	public async executeActionWithLock<T>(action: () => Promise<T>, lockFilePath?: string, lockOpts?: ILockOptions): Promise<T> {
 		const result = await action();
 		return result;
