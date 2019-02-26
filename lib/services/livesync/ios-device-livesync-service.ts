@@ -150,16 +150,16 @@ export class IOSDeviceLiveSyncService extends DeviceLiveSyncServiceBase implemen
 			});
 		} catch (error) {
 			this.$logger.trace("Error while sending message:", error);
-			this.destroySocket();
+			await this.destroySocket();
 		}
 	}
 
-	private destroySocket(): void {
+	private async destroySocket(): Promise<void> {
 		if (this.socket) {
 			// we do not support LiveSync on multiple apps on the same device
 			// in order to do that, we should cache the socket per app
 			// and destroy just the current app socket when possible
-			this.device.destroyAllSockets();
+			await this.device.destroyAllSockets();
 			this.socket = null;
 		}
 	}
