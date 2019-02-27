@@ -3,7 +3,9 @@ import { PlatformEnvironmentRequirements } from '../../lib/services/platform-env
 import * as stubs from "../stubs";
 import { assert } from "chai";
 import { EOL } from "os";
+const helpers = require("../../lib/common/helpers");
 
+const originalIsInteractive = helpers.isInteractive;
 const platform = "android";
 const cloudBuildsErrorMessage = `In order to test your application use the $ tns login command to log in with your account and then $ tns cloud build command to build your app in the cloud.`;
 const manuallySetupErrorMessage = `To be able to build for ${platform}, verify that your environment is configured according to the system requirements described at `;
@@ -34,6 +36,14 @@ function createTestInjector() {
 }
 
 describe("platformEnvironmentRequirements ", () => {
+	beforeEach(() => {
+		helpers.isInteractive = () => true;
+	});
+
+	afterEach(() => {
+		helpers.isInteractive = originalIsInteractive;
+	});
+
 	describe("checkRequirements", () => {
 		let testInjector: IInjector = null;
 		let platformEnvironmentRequirements: IPlatformEnvironmentRequirements = null;
@@ -221,8 +231,7 @@ describe("platformEnvironmentRequirements ", () => {
 
 		describe("when console is non interactive", () => {
 			beforeEach(() => {
-				(<any>process).stdout.isTTY = false;
-				(<any>process.stdin).isTTY = false;
+				helpers.isInteractive = () => false;
 				mockDoctorService({ canExecuteLocalBuild: false });
 			});
 
