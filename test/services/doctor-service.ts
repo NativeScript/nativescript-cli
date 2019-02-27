@@ -121,17 +121,6 @@ const Observable = require("data/observable").Observable;
 			{
 				filesContents: {
 					file1: `const application = require("application");
-const Observable = require("data/observable").Observable;
-`
-				},
-				expectedShortImports: [
-					{ file: "file1", line: 'const application = require("application");' },
-					{ file: "file1", line: 'const Observable = require("data/observable").Observable;' },
-				]
-			},
-			{
-				filesContents: {
-					file1: `const application = require("application");
 const Observable = require("tns-core-modules/data/observable").Observable;
 `
 				},

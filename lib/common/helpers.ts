@@ -309,7 +309,27 @@ export function versionCompare(version1: string | IVersionData, version2: string
 }
 
 export function isInteractive(): boolean {
-	return process.stdout.isTTY && process.stdin.isTTY;
+	const isInteractive = isRunningInTTY() && !isCIEnvironment();
+	return isInteractive;
+}
+
+/**
+ * Checks if current process is running in Text Terminal (TTY)
+ */
+function isRunningInTTY(): boolean {
+	return process.stdout &&
+		process.stdout.isTTY &&
+		process.stdin &&
+		process.stdin.isTTY;
+}
+
+function isCIEnvironment(): boolean {
+	// The following CI environments set their own environment variables that we respect:
+	//  travis: "CI",
+	//  circleCI: "CI",
+	//  jenkins: "JENKINS_HOME"
+
+	return !!(process.env && (process.env.CI || process.env.JENKINS_HOME));
 }
 
 export function toBoolean(str: any): boolean {
