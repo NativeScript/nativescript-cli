@@ -1101,7 +1101,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 	private async prepareNativeSourceCode(groupName: string, sourceFolderPath: string, projectData: IProjectData): Promise<void> {
 		const project = this.createPbxProj(projectData);
 		const group = this.getRootGroup(groupName, sourceFolderPath);
-		project.addPbxGroup(group.files, group.name, group.path, null, { isMain: true });
+		project.addPbxGroup(group.files, group.name, group.path, null, { isMain: true, filesRelativeToProject: true });
 		project.addToHeaderSearchPaths(group.path);
 		this.savePbxProj(project, projectData);
 	}
