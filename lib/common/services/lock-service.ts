@@ -74,7 +74,7 @@ export class LockService implements ILockService {
 		}
 
 		filePath = filePath || this.defaultLockFilePath;
-		fileOpts = fileOpts || this.defaultLockParams;
+		fileOpts = fileOpts ? _.assign({}, this.defaultLockParams, fileOpts) : this.defaultLockParams;
 
 		return {
 			filePath,

@@ -1,5 +1,5 @@
 import { EventEmitter } from "events";
-import { CONNECTION_ERROR_EVENT_NAME } from "../../constants";
+import { CONNECTION_ERROR_EVENT_NAME, APPLICATION_RESPONSE_TIMEOUT_SECONDS } from "../../constants";
 import * as net from "net";
 import * as ws from "ws";
 import temp = require("temp");
@@ -115,7 +115,15 @@ export class AppDebugSocketProxyFactory extends EventEmitter implements IAppDebu
 			port: localPort,
 			host: "localhost",
 			verifyClient: async (info: any, callback: (res: boolean, code?: number, message?: string) => void) => {
-				await this.$lockService.lock(clientConnectionLockFile);
+				await this.$lockService.lock(
+					clientConnectionLockFile,
+					{
+						// increase the timeout with `APPLICATION_RESPONSE_TIMEOUT_SECONDS` as a workaround
+						// till startApplication is resolved before the application is really started
+						stale: (APPLICATION_RESPONSE_TIMEOUT_SECONDS + 30) * 1000,
+					}
+				);
+
 				let acceptHandshake = true;
 				this.$logger.info("Frontend client connected.");
 				let appDebugSocket;
