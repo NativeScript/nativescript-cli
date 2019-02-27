@@ -1,5 +1,6 @@
 import * as net from "net";
 import { performanceLog } from "../../decorators";
+import { APPLICATION_RESPONSE_TIMEOUT_SECONDS } from "../../../constants";
 
 export abstract class IOSDeviceBase implements Mobile.IiOSDevice {
 	private cachedSockets: IDictionary<net.Socket> = {};
@@ -16,23 +17,31 @@ export abstract class IOSDeviceBase implements Mobile.IiOSDevice {
 
 	@performanceLog()
 	public async getDebugSocket(appId: string, projectName: string): Promise<net.Socket> {
-		return this.$lockService.executeActionWithLock(async () => {
-			if (this.cachedSockets[appId]) {
+		return this.$lockService.executeActionWithLock(
+			async () => {
+				if (this.cachedSockets[appId]) {
+					return this.cachedSockets[appId];
+				}
+
+				this.cachedSockets[appId] = await this.getDebugSocketCore(appId, projectName);
+
+				if (this.cachedSockets[appId]) {
+					this.cachedSockets[appId].on("close", async () => {
+						await this.destroyDebugSocket(appId);
+					});
+
+					this.$processService.attachToProcessExitSignals(this, () => this.destroyDebugSocket(appId));
+				}
+
 				return this.cachedSockets[appId];
+			},
+			`ios-debug-socket-${this.deviceInfo.identifier}-${appId}.lock`,
+			{
+				// increase the timeout with `APPLICATION_RESPONSE_TIMEOUT_SECONDS` as a workaround
+				// till startApplication is resolved before the application is really started
+				stale: (APPLICATION_RESPONSE_TIMEOUT_SECONDS + 30) * 1000,
 			}
-
-			this.cachedSockets[appId] = await this.getDebugSocketCore(appId, projectName);
-
-			if (this.cachedSockets[appId]) {
-				this.cachedSockets[appId].on("close", async () => {
-					await this.destroyDebugSocket(appId);
-				});
-
-				this.$processService.attachToProcessExitSignals(this, () => this.destroyDebugSocket(appId));
-			}
-
-			return this.cachedSockets[appId];
-		}, "ios-debug-socket.lock");
+		);
 	}
 
 	protected abstract async getDebugSocketCore(appId: string, projectName: string): Promise<net.Socket>;

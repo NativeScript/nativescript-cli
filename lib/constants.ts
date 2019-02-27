@@ -46,6 +46,7 @@ export const AAB_EXTENSION_NAME = ".aab";
 export const HASHES_FILE_NAME = ".nshashes";
 export const TNS_NATIVE_SOURCE_GROUP_NAME = "TNSNativeSource";
 export const NATIVE_SOURCE_FOLDER = "src";
+export const APPLICATION_RESPONSE_TIMEOUT_SECONDS = 60;
 
 export class PackageVersion {
 	static NEXT = "next";
