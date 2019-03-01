@@ -27,7 +27,10 @@ export class CommandsService implements ICommandsService {
 		private $staticConfig: Config.IStaticConfig,
 		private $helpService: IHelpService,
 		private $extensibilityService: IExtensibilityService,
-		private $optionsTracker: IOptionsTracker) {
+		private $optionsTracker: IOptionsTracker,
+		private $projectDataService: IProjectDataService) {
+			const projectData = this.$projectDataService.getProjectData();
+			this.$options.setupOptions(projectData);
 	}
 
 	public allCommands(opts: { includeDevCommands: boolean }): string[] {

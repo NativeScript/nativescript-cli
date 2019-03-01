@@ -568,6 +568,7 @@ interface IOptions extends IRelease, IDeviceIdentifier, IJustLaunch, IAvd, IAvai
 	link: boolean;
 	analyticsLogFile: string;
 	performance: Object;
+	setupOptions(projectData: IProjectData): void;
 }
 
 interface IEnvOptions {
