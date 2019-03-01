@@ -29,13 +29,6 @@ var travis = process.env["TRAVIS"];
 var buildNumber = process.env["PACKAGE_VERSION"] || process.env["BUILD_NUMBER"] || "non-ci";
 
 module.exports = function (grunt) {
-	var path = require("path");
-	var commonLibNodeModules = path.join("lib", "common", "node_modules");
-	if (require("fs").existsSync(commonLibNodeModules)) {
-		grunt.file.delete(commonLibNodeModules);
-	}
-	grunt.file.write(path.join("lib", "common", ".d.ts"), "");
-
 	grunt.initConfig({
 		copyPackageTo: process.env["CopyPackageTo"] || ".",
 
@@ -229,7 +222,7 @@ module.exports = function (grunt) {
 		if (travis && process.env.TRAVIS_PULL_REQUEST_BRANCH) {
 			return grunt.task.run("pack");
 		}
-		
+
 		// Set correct version in Travis job, so the deploy will not publish strict version (for example 5.2.0).
 		grunt.task.run("set_package_version");
 		console.log(`Skipping pack step as the current build is not from PR, so it will be packed from the deploy provider.`);

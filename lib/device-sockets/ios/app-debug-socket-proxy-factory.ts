@@ -1,5 +1,5 @@
 import { EventEmitter } from "events";
-import { CONNECTION_ERROR_EVENT_NAME, APPLICATION_RESPONSE_TIMEOUT_SECONDS } from "../../constants";
+import { CONNECTION_ERROR_EVENT_NAME } from "../../constants";
 import * as net from "net";
 import * as ws from "ws";
 import temp = require("temp");
@@ -92,7 +92,7 @@ export class AppDebugSocketProxyFactory extends EventEmitter implements IAppDebu
 	}
 
 	private async addWebSocketProxy(device: Mobile.IiOSDevice, appId: string, projectName: string): Promise<ws.Server> {
-		const clientConnectionLockFile = `debug-connection-${device.deviceInfo.identifier}-${appId}.lock`;
+		let clientConnectionLockRelease: () => void;
 		const cacheKey = `${device.deviceInfo.identifier}-${appId}`;
 		const existingServer = this.deviceWebServers[cacheKey];
 		if (existingServer) {
@@ -115,19 +115,15 @@ export class AppDebugSocketProxyFactory extends EventEmitter implements IAppDebu
 			port: localPort,
 			host: "localhost",
 			verifyClient: async (info: any, callback: (res: boolean, code?: number, message?: string) => void) => {
-				await this.$lockService.lock(
-					clientConnectionLockFile,
-					{
-						// increase the timeout with `APPLICATION_RESPONSE_TIMEOUT_SECONDS` as a workaround
-						// till startApplication is resolved before the application is really started
-						stale: (APPLICATION_RESPONSE_TIMEOUT_SECONDS + 30) * 1000,
-					}
-				);
-
 				let acceptHandshake = true;
-				this.$logger.info("Frontend client connected.");
-				let appDebugSocket;
+				clientConnectionLockRelease = null;
+
 				try {
+					clientConnectionLockRelease =
+						await this.$lockService.lock(`debug-connection-${device.deviceInfo.identifier}-${appId}.lock`);
+
+					this.$logger.info("Frontend client connected.");
+					let appDebugSocket;
 					if (currentAppSocket) {
 						currentAppSocket.removeAllListeners();
 						currentAppSocket = null;
@@ -143,11 +139,13 @@ export class AppDebugSocketProxyFactory extends EventEmitter implements IAppDebu
 					this.$logger.info("Backend socket created.");
 					info.req["__deviceSocket"] = appDebugSocket;
 				} catch (err) {
+					if (clientConnectionLockRelease) {
+						clientConnectionLockRelease();
+					}
 					err.deviceIdentifier = device.deviceInfo.identifier;
 					this.$logger.trace(err);
 					this.emit(CONNECTION_ERROR_EVENT_NAME, err);
 					acceptHandshake = false;
-					this.$lockService.unlock(clientConnectionLockFile);
 					this.$logger.warn(`Cannot connect to device socket. The error message is '${err.message}'.`);
 				}
 
@@ -205,7 +203,7 @@ export class AppDebugSocketProxyFactory extends EventEmitter implements IAppDebu
 				}
 			});
 
-			this.$lockService.unlock(clientConnectionLockFile);
+			clientConnectionLockRelease();
 		});
 
 		return server;

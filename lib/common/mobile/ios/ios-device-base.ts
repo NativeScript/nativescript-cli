@@ -1,6 +1,5 @@
 import * as net from "net";
 import { performanceLog } from "../../decorators";
-import { APPLICATION_RESPONSE_TIMEOUT_SECONDS } from "../../../constants";
 
 export abstract class IOSDeviceBase implements Mobile.IiOSDevice {
 	private cachedSockets: IDictionary<net.Socket> = {};
@@ -35,12 +34,7 @@ export abstract class IOSDeviceBase implements Mobile.IiOSDevice {
 
 				return this.cachedSockets[appId];
 			},
-			`ios-debug-socket-${this.deviceInfo.identifier}-${appId}.lock`,
-			{
-				// increase the timeout with `APPLICATION_RESPONSE_TIMEOUT_SECONDS` as a workaround
-				// till startApplication is resolved before the application is really started
-				stale: (APPLICATION_RESPONSE_TIMEOUT_SECONDS + 30) * 1000,
-			}
+			`ios-debug-socket-${this.deviceInfo.identifier}-${appId}.lock`
 		);
 	}
 
