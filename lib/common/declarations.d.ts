@@ -596,6 +596,7 @@ declare const enum ErrorCodes {
 	KARMA_FAIL = 130,
 	UNHANDLED_REJECTION_FAILURE = 131,
 	DELETED_KILL_FILE = 132,
+	TESTS_INIT_REQUIRED = 133
 }
 
 interface IFutureDispatcher {
@@ -1168,6 +1169,13 @@ interface IDoctorService {
 	 * @returns {Promise<boolean>} true if the environment is properly configured for local builds
 	 */
 	canExecuteLocalBuild(platform?: string, projectDir?: string, runtimeVersion?: string): Promise<boolean>;
+
+	/**
+	 * Checks and notifies users for deprecated short imports in their applications.
+	 * @param {string} projectDir Path to the application.
+	 * @returns {void}
+	 */
+	checkForDeprecatedShortImportsInAppDir(projectDir: string): void;
 }
 
 interface IUtils {

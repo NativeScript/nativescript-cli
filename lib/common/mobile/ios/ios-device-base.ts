@@ -16,23 +16,26 @@ export abstract class IOSDeviceBase implements Mobile.IiOSDevice {
 
 	@performanceLog()
 	public async getDebugSocket(appId: string, projectName: string): Promise<net.Socket> {
-		return this.$lockService.executeActionWithLock(async () => {
-			if (this.cachedSockets[appId]) {
+		return this.$lockService.executeActionWithLock(
+			async () => {
+				if (this.cachedSockets[appId]) {
+					return this.cachedSockets[appId];
+				}
+
+				this.cachedSockets[appId] = await this.getDebugSocketCore(appId, projectName);
+
+				if (this.cachedSockets[appId]) {
+					this.cachedSockets[appId].on("close", async () => {
+						await this.destroyDebugSocket(appId);
+					});
+
+					this.$processService.attachToProcessExitSignals(this, () => this.destroyDebugSocket(appId));
+				}
+
 				return this.cachedSockets[appId];
-			}
-
-			this.cachedSockets[appId] = await this.getDebugSocketCore(appId, projectName);
-
-			if (this.cachedSockets[appId]) {
-				this.cachedSockets[appId].on("close", () => {
-					this.destroyDebugSocket(appId);
-				});
-
-				this.$processService.attachToProcessExitSignals(this, () => this.destroyDebugSocket(appId));
-			}
-
-			return this.cachedSockets[appId];
-		}, "ios-debug-socket.lock");
+			},
+			`ios-debug-socket-${this.deviceInfo.identifier}-${appId}.lock`
+		);
 	}
 
 	protected abstract async getDebugSocketCore(appId: string, projectName: string): Promise<net.Socket>;
@@ -51,22 +54,25 @@ export abstract class IOSDeviceBase implements Mobile.IiOSDevice {
 		return port;
 	}
 
-	public destroyAllSockets() {
+	public async destroyAllSockets(): Promise<void> {
 		for (const appId in this.cachedSockets) {
-			this.destroySocketSafe(this.cachedSockets[appId]);
+			await this.destroySocketSafe(this.cachedSockets[appId]);
 		}
 
 		this.cachedSockets = {};
 	}
 
-	public destroyDebugSocket(appId: string) {
-		this.destroySocketSafe(this.cachedSockets[appId]);
+	public async destroyDebugSocket(appId: string): Promise<void> {
+		await this.destroySocketSafe(this.cachedSockets[appId]);
 		this.cachedSockets[appId] = null;
 	}
 
-	private destroySocketSafe(socket: net.Socket) {
+	private async destroySocketSafe(socket: net.Socket): Promise<void> {
 		if (socket && !socket.destroyed) {
-			socket.destroy();
+			return new Promise<void>((resolve, reject) => {
+				socket.on("close", resolve);
+				socket.destroy();
+			});
 		}
 	}
 

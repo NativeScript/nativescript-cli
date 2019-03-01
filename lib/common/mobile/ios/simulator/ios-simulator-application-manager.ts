@@ -69,7 +69,7 @@ export class IOSSimulatorApplicationManager extends ApplicationManagerBase {
 	public async stopApplication(appData: Mobile.IApplicationData): Promise<void> {
 		const { appId } = appData;
 
-		this.device.destroyDebugSocket(appId);
+		await this.device.destroyDebugSocket(appId);
 		await this.detachNativeDebugger(appId);
 
 		await this.iosSim.stopApplication(this.device.deviceInfo.identifier, appData.appId, appData.projectName);

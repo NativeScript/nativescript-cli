@@ -27,6 +27,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		private $errors: IErrors,
 		private $fs: IFileSystem,
 		private $logger: ILogger,
+		private $doctorService: IDoctorService,
 		private $packageInstallationManager: IPackageInstallationManager,
 		private $platformsData: IPlatformsData,
 		private $projectDataService: IProjectDataService,
@@ -236,6 +237,8 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 			if (changesInfo.bundleChanged) {
 				await this.cleanDestinationApp(platformInfo);
 			}
+
+			this.$doctorService.checkForDeprecatedShortImportsInAppDir(platformInfo.projectData.projectDir);
 
 			await this.preparePlatformCore(
 				platformInfo.platform,

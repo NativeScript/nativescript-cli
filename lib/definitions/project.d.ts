@@ -172,6 +172,13 @@ interface IProjectDataService {
 	 * @returns {Promise<IAssetGroup>} An object describing the current asset structure for Android.
 	 */
 	getAndroidAssetsStructure(opts: IProjectDir): Promise<IAssetGroup>;
+
+	/**
+	 * Returns array with paths to all `.js` or `.ts` files in application's app directory.
+	 * @param {string} projectDir Path to application.
+	 * @returns {string[]} Array of paths to `.js` or `.ts` files.
+	 */
+	getAppExecutableFiles(projectDir: string): string[];
 }
 
 interface IAssetItem {
@@ -465,6 +472,7 @@ interface IValidatePlatformOutput {
 
 interface ITestExecutionService {
 	startKarmaServer(platform: string, projectData: IProjectData, projectFilesConfig: IProjectFilesConfig): Promise<void>;
+	canStartKarmaServer(projectData: IProjectData): Promise<boolean>;
 }
 
 /**
@@ -535,14 +543,35 @@ interface ICocoaPodsService {
 
 	/**
 	 * Merges pod's xcconfig file into project's xcconfig file
-	 * @param projectData 
-	 * @param platformData 
-	 * @param opts 
+	 * @param projectData
+	 * @param platformData
+	 * @param opts
 	 */
 	mergePodXcconfigFile(projectData: IProjectData, platformData: IPlatformData, opts: IRelease): Promise<void>;
+}
+
+interface ICocoaPodsPlatformManager {
+	addPlatformSection(projectData: IProjectData, podfilePlatformData: IPodfilePlatformData, projectPodfileContent: string): string;
+	removePlatformSection(moduleName: string, projectPodFileContent: string, podfilePath: string): string;
+	replacePlatformRow(podfileContent: string, podfilePath: string): { replacedContent: string, podfilePlatformData: IPodfilePlatformData };
 }
 
 interface IRubyFunction {
 	functionName: string;
 	functionParameters?: string;
+}
+
+interface IPodfilePlatformData {
+	/**
+	 * The content of the whole pod's platform row
+	 */
+	content: string;
+	/**
+	 * The version of the pod's platform
+	 */
+	version: string;
+	/**
+	 * The path to the pod's file
+	 */
+	path: string;
 }

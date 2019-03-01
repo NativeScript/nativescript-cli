@@ -2,9 +2,10 @@ import { Yok } from "../../lib/common/yok";
 import { assert } from "chai";
 import { ProjectDataService } from "../../lib/services/project-data-service";
 import { LoggerStub } from "../stubs";
-import { NATIVESCRIPT_PROPS_INTERNAL_DELIMITER, PACKAGE_JSON_FILE_NAME, AssetConstants } from '../../lib/constants';
+import { NATIVESCRIPT_PROPS_INTERNAL_DELIMITER, PACKAGE_JSON_FILE_NAME, AssetConstants, ProjectTypes } from '../../lib/constants';
 import { DevicePlatformsConstants } from "../../lib/common/mobile/device-platforms-constants";
-import { basename } from "path";
+import { basename, join } from "path";
+import { FileSystem } from "../../lib/common/file-system";
 
 const CLIENT_NAME_KEY_IN_PROJECT_FILE = "nativescript";
 
@@ -297,6 +298,164 @@ describe("projectDataService", () => {
 			};
 
 			assert.deepEqual(assetStructure, { ios: emptyAssetStructure, android: _.merge(_.cloneDeep(emptyAssetStructure), { splashImages: null }) });
+		});
+	});
+
+	describe("getAppExecutableFiles", () => {
+		const appDirectoryPath = "appDirPath";
+		const appResourcesDirectoryPath = join(appDirectoryPath, "App_Resources");
+
+		const getAppExecutableFilesTestData = [
+			{
+				projectType: ProjectTypes.NgFlavorName,
+				appFiles: [
+					"component1.ts",
+					"component1.js",
+					"component2.ts",
+					"App_Resources"
+				],
+				expectedResult: [
+					join(appDirectoryPath, "component1.ts"),
+					join(appDirectoryPath, "component2.ts"),
+				]
+			},
+			{
+				projectType: ProjectTypes.TsFlavorName,
+				appFiles: [
+					"component1.ts",
+					"component1.js",
+					"component2.ts",
+					"App_Resources"
+				],
+				expectedResult: [
+					join(appDirectoryPath, "component1.ts"),
+					join(appDirectoryPath, "component2.ts"),
+				]
+			},
+			{
+				projectType: ProjectTypes.JsFlavorName,
+				appFiles: [
+					"component1.ts",
+					"component1.js",
+					"component2.ts",
+					"App_Resources"
+				],
+				expectedResult: [
+					join(appDirectoryPath, "component1.js"),
+				]
+			},
+			{
+				projectType: ProjectTypes.VueFlavorName,
+				appFiles: [
+					"component1.ts",
+					"component1.js",
+					"component2.ts",
+					"App_Resources"
+				],
+				expectedResult: [
+					join(appDirectoryPath, "component1.js"),
+				]
+			}
+		];
+
+		const setupTestCase = (testCase: any): { projectDataService: IProjectDataService, testInjector: IInjector } => {
+			const testInjector = createTestInjector();
+			const fs = testInjector.resolve<IFileSystem>("fs");
+			const realFileSystemInstance = <FileSystem>testInjector.resolve(FileSystem);
+			fs.enumerateFilesInDirectorySync = realFileSystemInstance.enumerateFilesInDirectorySync;
+
+			const appResourcesContent: string[] = [
+				"file1.ts",
+				"file1.js"
+			];
+
+			fs.exists = (filePath: string) => true;
+			fs.getFsStats = (filePath: string) => {
+				if (filePath === appDirectoryPath || filePath === appResourcesDirectoryPath) {
+					return <any>{ isDirectory: () => true };
+				}
+
+				return <any>{ isDirectory: () => false };
+			};
+
+			fs.readDirectory = (dirPath: string) => {
+				if (dirPath === appDirectoryPath) {
+					return testCase.appFiles;
+				}
+
+				if (dirPath === appResourcesDirectoryPath) {
+					return appResourcesContent;
+				}
+
+				return [];
+			};
+
+			const projectDataService = testInjector.resolve<IProjectDataService>("projectDataService");
+			projectDataService.getProjectData = () => <any>({
+				appDirectoryPath,
+				appResourcesDirectoryPath,
+				projectType: testCase.projectType
+			});
+
+			return { projectDataService, testInjector };
+		};
+
+		getAppExecutableFilesTestData.forEach(testCase => {
+			it(`returns correct files for application type ${testCase.projectType}`, () => {
+				const { projectDataService } = setupTestCase(testCase);
+				const appExecutableFiles = projectDataService.getAppExecutableFiles("projectDir");
+				assert.deepEqual(appExecutableFiles, testCase.expectedResult);
+			});
+		});
+
+		it("returns correct files when inner dirs exist in app dir", () => {
+			const innerDirName = "innerDir";
+			const innerDirPath = join(appDirectoryPath, innerDirName);
+			const testCase = {
+				projectType: ProjectTypes.NgFlavorName,
+				appFiles: [
+					"component1.ts",
+					"component1.js",
+					"component2.ts",
+					"App_Resources",
+					innerDirName
+				],
+				expectedResult: [
+					join(appDirectoryPath, "component1.ts"),
+					join(appDirectoryPath, "component2.ts"),
+					join(innerDirPath, "subcomponent1.ts"),
+					join(innerDirPath, "subcomponent2.ts"),
+				]
+			};
+			const { projectDataService, testInjector } = setupTestCase(testCase);
+			const fs = testInjector.resolve<IFileSystem>("fs");
+			const baseFsReadDirectory = fs.readDirectory;
+			const innerDirContents = [
+				"subcomponent1.ts",
+				"subcomponent1.js",
+				"subcomponent2.ts",
+				"subcomponent2.js",
+			];
+
+			fs.readDirectory = (dirPath) => {
+				if (dirPath === innerDirPath) {
+					return innerDirContents;
+				}
+
+				return baseFsReadDirectory(dirPath);
+			};
+
+			const baseFsGetFsStats = fs.getFsStats;
+			fs.getFsStats = (filePath: string) => {
+				if (filePath === innerDirPath) {
+					return <any>{ isDirectory: () => true };
+				}
+
+				return baseFsGetFsStats(filePath);
+			};
+
+			const appExecutableFiles = projectDataService.getAppExecutableFiles("projectDir");
+			assert.deepEqual(appExecutableFiles, testCase.expectedResult);
 		});
 	});
 });
