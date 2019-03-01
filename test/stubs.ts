@@ -331,6 +331,7 @@ export class ProjectDataStub implements IProjectData {
 	public buildXcconfigPath: string;
 	public podfilePath: string;
 	public isShared: boolean;
+	public isHmrEnabledByDefault: boolean;
 
 	public initializeProjectData(projectDir?: string): void {
 		this.projectDir = this.projectDir || projectDir;

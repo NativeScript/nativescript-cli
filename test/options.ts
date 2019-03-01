@@ -261,6 +261,98 @@ describe("options", () => {
 
 		});
 	});
+
+	describe("setupOptions", () => {
+		const testsWithNoHmrByDefault = [
+			{
+				name: "no nsconfig.json ",
+				isHmrEnabledByDefault: false,
+				args: [],
+				expectedHmr: false,
+				expectedBundle: false
+			},
+			{
+				name: "no nsconfig.json and --hmr is provided",
+				isHmrEnabledByDefault: false,
+				args: ["--hmr"],
+				expectedHmr: true,
+				expectedBundle: true
+			},
+			{
+				name: "no nsconfig.json and --no-hmr is provided",
+				isHmrEnabledByDefault: false,
+				args: ["--no-hmr"],
+				expectedHmr: false,
+				expectedBundle: false
+			},
+			{
+				name: "no nsconfig.json and --release is provided",
+				isHmrEnabledByDefault: false,
+				args: ["--release"],
+				expectedHmr: false,
+				expectedBundle: false
+			},
+			{
+				name: "no nsconfig.json and --bundle is provided",
+				isHmrEnabledByDefault: false,
+				args: ["--bundle"],
+				expectedHmr: false,
+				expectedBundle: true
+			}
+		];
+		const testsWithHmrByDefault = <any>[
+			{
+				name: "has nsconfig.json",
+				isHmrEnabledByDefault: true,
+				expectedHmr: true,
+				expectedBundle: true
+			},
+			{
+				name: "has nsconfig.json and --hmr is provided",
+				isHmrEnabledByDefault: true,
+				args: ["--hmr"],
+				expectedHmr: true,
+				expectedBundle: true
+			},
+			{
+				name: "has nsconfig.json and --no-hmr is provided",
+				isHmrEnabledByDefault: true,
+				args: ["--no-hmr"],
+				expectedHmr: false,
+				expectedBundle: false
+			},
+			{
+				name: "has nsconfig.json and --release is provided",
+				isHmrEnabledByDefault: true,
+				args: ["--release"],
+				expectedHmr: false,
+				expectedBundle: true
+			},
+			{
+				name: "has nsconfig.json and --bundle is provided",
+				isHmrEnabledByDefault: true,
+				args: ["--bundle"],
+				expectedHmr: true,
+				expectedBundle: true
+			}
+		];
+		const testCases = testsWithNoHmrByDefault.concat(testsWithHmrByDefault);
+
+		_.each(testCases, testCase => {
+			it(`should pass correctly when ${testCase.name}`, () => {
+				(testCase.args || []).forEach(arg => process.argv.push(arg));
+
+				const options = createOptions(testInjector);
+				const projectData = <IProjectData>{ isHmrEnabledByDefault: testCase.isHmrEnabledByDefault };
+				options.setupOptions(projectData);
+
+				(testCase.args || []).forEach(arg => process.argv.pop());
+
+				assert.equal(!!options.argv.hmr, !!testCase.expectedHmr);
+				assert.equal(!!options.argv.bundle, !!testCase.expectedBundle);
+			});
+		});
+	});
 });
 
 function createOptionsWithProfileDir(defaultProfileDir?: string): IOptions {
