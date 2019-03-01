@@ -4,6 +4,8 @@ import { CocoaPodsService } from "../lib/services/cocoapods-service";
 import { EOL } from "os";
 import { LoggerStub, ErrorsStub } from "./stubs";
 import { XcconfigService } from "../lib/services/xcconfig-service";
+import * as path from "path";
+import { CocoaPodsPlatformManager } from "../lib/services/cocoapods-platform-manager";
 
 interface IMergePodfileHooksTestCase {
 	input: string;
@@ -24,6 +26,8 @@ function createTestInjector(): IInjector {
 	testInjector.register("logger", LoggerStub);
 	testInjector.register("config", {});
 	testInjector.register("xcconfigService", XcconfigService);
+	testInjector.register("projectData", ({}));
+	testInjector.register("cocoaPodsPlatformManager", CocoaPodsPlatformManager);
 
 	return testInjector;
 }
@@ -903,6 +907,362 @@ end`
 				}
 			]);
 
+		});
+	});
+
+	describe("remove duplicated platfoms from project podfile", () => {
+		const projectRoot = "my/project/platforms/ios";
+		const projectPodfilePath = path.join(projectRoot, "testProjectPodfilePath");
+		let projectPodfileContent = "";
+
+		beforeEach(() => {
+			cocoapodsService.getProjectPodfilePath = () => projectPodfilePath;
+			projectPodfileContent = "";
+		});
+
+		function setupMocks(pods: any[]): { projectData: IProjectData } {
+			const podsPaths = pods.map(p => p.path);
+			const projectData = testInjector.resolve("projectData");
+			projectData.getAppResourcesDirectoryPath = () => "my/full/path/to/app/App_Resources";
+			projectData.projectName = "projectName";
+
+			const fs = testInjector.resolve("fs");
+			fs.exists = (filePath: string) => projectPodfilePath === filePath || _.includes(podsPaths, filePath);
+			fs.readText = (filePath: string) => {
+				if (filePath === projectPodfilePath) {
+					return projectPodfileContent;
+				}
+
+				const pod = _.find(pods, p => p.path === filePath);
+				if (pod) {
+					return pod.content;
+				}
+			};
+			fs.writeFile = (filePath: string, fileContent: string) => {
+				if (filePath === projectPodfilePath) {
+					projectPodfileContent = fileContent;
+				}
+			};
+			fs.deleteFile = () => ({});
+
+			return { projectData };
+		}
+
+		const testCasesWithApplyAndRemove = [
+			{
+				name: "should select the podfile with highest platform after Podfile from App_Resources has been deleted",
+				pods: [{
+					name: "mySecondPluginWithPlatform",
+					path: "node_modules/  mypath  with spaces/mySecondPluginWithPlatform/Podfile",
+					content: `platform :ios, '10.0'`
+				}, {
+					name: "myPluginWithoutPlatform",
+					path: "node_modules/myPluginWithoutPlatform/Podfile",
+					content: `pod 'myPod' ~> 0.3.4`
+				}, {
+					name: "myFirstPluginWithPlatform",
+					path: "node_modules/myFirstPluginWithPlatform/Podfile",
+					content: `platform :ios, '11.0'`
+				}, {
+					name: "App_Resources",
+					path: "my/full/path/to/app/App_Resources/iOS/Podfile",
+					content: `platform :ios, '8.0'`
+				}],
+				podsToRemove: [{
+					name: "NSPodfileBase",
+					path: "my/full/path/to/app/App_Resources/iOS/Podfile"
+				}],
+				expectedProjectPodfileContentAfterApply: `use_frameworks!
+
+target "projectName" do
+# Begin Podfile - my/full/path/to/app/App_Resources/iOS/Podfile
+# platform :ios, '8.0'
+# End Podfile
+
+# Begin Podfile - node_modules/myFirstPluginWithPlatform/Podfile
+# platform :ios, '11.0'
+# End Podfile
+
+# Begin Podfile - node_modules/myPluginWithoutPlatform/Podfile
+pod 'myPod' ~> 0.3.4
+# End Podfile
+
+# Begin Podfile - node_modules/  mypath  with spaces/mySecondPluginWithPlatform/Podfile
+# platform :ios, '10.0'
+# End Podfile
+
+# NativeScriptPlatformSection my/full/path/to/app/App_Resources/iOS/Podfile with 8.0
+platform :ios, '8.0'
+# End NativeScriptPlatformSection
+end`,
+				expectedProjectPodfileContentAfterRemove: `use_frameworks!
+
+target "projectName" do
+
+# Begin Podfile - node_modules/myFirstPluginWithPlatform/Podfile
+# platform :ios, '11.0'
+# End Podfile
+
+# Begin Podfile - node_modules/myPluginWithoutPlatform/Podfile
+pod 'myPod' ~> 0.3.4
+# End Podfile
+
+# Begin Podfile - node_modules/  mypath  with spaces/mySecondPluginWithPlatform/Podfile
+# platform :ios, '10.0'
+# End Podfile
+# NativeScriptPlatformSection node_modules/myFirstPluginWithPlatform/Podfile with 11.0
+platform :ios, '11.0'
+# End NativeScriptPlatformSection
+end`
+			}
+		];
+
+		_.each(testCasesWithApplyAndRemove, testCase => {
+			it(testCase.name, async () => {
+				const { projectData } = setupMocks(testCase.pods);
+
+				for (const pod of testCase.pods) {
+					await cocoapodsService.applyPodfileToProject(pod.name, pod.path, projectData, projectPodfilePath);
+				}
+
+				assert.deepEqual(projectPodfileContent, testCase.expectedProjectPodfileContentAfterApply);
+
+				for (const pod of testCase.podsToRemove) {
+					await cocoapodsService.removePodfileFromProject(pod.name, pod.path, projectData, projectPodfilePath);
+				}
+
+				assert.deepEqual(projectPodfileContent, testCase.expectedProjectPodfileContentAfterRemove);
+			});
+		});
+
+		const testCases = [
+			{
+				name: "should not change the Podfile when no platform",
+				pods: [{
+					name: 'plugin1',
+					path: 'path/to/my/plugin1/platforms/ios/Podfile',
+					content: `pod 'Firebase', '~> 3.1'`
+				}],
+				expectedProjectPodfileContent: `use_frameworks!
+
+target "projectName" do
+# Begin Podfile - path/to/my/plugin1/platforms/ios/Podfile
+pod 'Firebase', '~> 3.1'
+# End Podfile
+end`
+			},
+			{
+				name: "should not change the Podfile when there is only one platform",
+				pods: [{
+					name: 'plugin2',
+					path: 'path/to/my/plugin2/platforms/ios/Podfile',
+					content: `platform :ios, '9.0'`
+				}],
+				expectedProjectPodfileContent: `use_frameworks!
+
+target "projectName" do
+# Begin Podfile - path/to/my/plugin2/platforms/ios/Podfile
+# platform :ios, '9.0'
+# End Podfile
+
+# NativeScriptPlatformSection path/to/my/plugin2/platforms/ios/Podfile with 9.0
+platform :ios, '9.0'
+# End NativeScriptPlatformSection
+end`
+			},
+			{
+				name: "should select the platform from Podfile in App_Resources",
+				pods: [{
+					name: 'plugin1',
+					path: 'my/full/path/to/plugin1/platforms/ios/Podfile',
+					content: `platform :ios, '10.0'`
+				}, {
+					name: 'plugin2',
+					path: 'my/full/path/to/plugin2/platforms/ios/Podfile',
+					content: `pod 'myPod' ~> 0.3.4`
+				}, {
+					name: 'App_Resources',
+					path: 'my/full/path/to/app/App_Resources/iOS/Podfile',
+					content: `platform :ios, '9.0'`
+				}],
+				expectedProjectPodfileContent: `use_frameworks!
+
+target "projectName" do
+# Begin Podfile - my/full/path/to/app/App_Resources/iOS/Podfile
+# platform :ios, '9.0'
+# End Podfile
+
+# Begin Podfile - my/full/path/to/plugin2/platforms/ios/Podfile
+pod 'myPod' ~> 0.3.4
+# End Podfile
+
+# Begin Podfile - my/full/path/to/plugin1/platforms/ios/Podfile
+# platform :ios, '10.0'
+# End Podfile
+
+# NativeScriptPlatformSection my/full/path/to/app/App_Resources/iOS/Podfile with 9.0
+platform :ios, '9.0'
+# End NativeScriptPlatformSection
+end`
+			},
+			{
+				name: "should select the platform with highest version from plugins when no Podfile in App_Resources",
+				pods: [{
+					name: 'pluginWithPlatform',
+					path: 'node_modules/myFirstPluginWithPlatform/Podfile',
+					content: `platform :ios, '9.0'`
+				}, {
+					name: 'mySecondPluginWithPlatform',
+					path: 'node_modules/mySecondPluginWithPlatform/Podfile',
+					content: `platform :ios, '10.0'`
+				}, {
+					name: 'myPluginWithoutPlatform',
+					path: 'node_modules/myPluginWithoutPlatform/Podfile',
+					content: `pod 'myPod' ~> 0.3.4`
+				}],
+				expectedProjectPodfileContent: `use_frameworks!
+
+target "projectName" do
+# Begin Podfile - node_modules/myPluginWithoutPlatform/Podfile
+pod 'myPod' ~> 0.3.4
+# End Podfile
+
+# Begin Podfile - node_modules/mySecondPluginWithPlatform/Podfile
+# platform :ios, '10.0'
+# End Podfile
+
+# Begin Podfile - node_modules/myFirstPluginWithPlatform/Podfile
+# platform :ios, '9.0'
+# End Podfile
+
+# NativeScriptPlatformSection node_modules/mySecondPluginWithPlatform/Podfile with 10.0
+platform :ios, '10.0'
+# End NativeScriptPlatformSection
+end`
+			},
+			{
+				name: "should select the platform without version when no Podfile in App_Resources",
+				pods: [{
+					name: 'myPluginWithoutPlatform',
+					path: 'node_modules/myPluginWithoutPlatform/Podfile',
+					content: `pod 'myPod' ~> 0.3.4`
+				}, {
+					name: 'mySecondPluginWithPlatform',
+					path: 'node_modules/mySecondPluginWithPlatform/Podfile',
+					content: `platform :ios, '10.0'`
+				}, {
+					name: 'myFirstPluginWithPlatform',
+					path: 'node_modules/myFirstPluginWithPlatform/Podfile',
+					content: `platform :ios`
+				}],
+				expectedProjectPodfileContent: `use_frameworks!
+
+target "projectName" do
+# Begin Podfile - node_modules/myFirstPluginWithPlatform/Podfile
+# platform :ios
+# End Podfile
+
+# Begin Podfile - node_modules/mySecondPluginWithPlatform/Podfile
+# platform :ios, '10.0'
+# End Podfile
+
+# Begin Podfile - node_modules/myPluginWithoutPlatform/Podfile
+pod 'myPod' ~> 0.3.4
+# End Podfile# NativeScriptPlatformSection node_modules/myFirstPluginWithPlatform/Podfile with
+platform :ios
+# End NativeScriptPlatformSection
+end`
+			},
+			{
+				name: "shouldn't replace the platform without version when no Podfile in App_Resources",
+				pods: [{
+					name: 'myPluginWithoutPlatform',
+					path: 'node_modules/myPluginWithoutPlatform/Podfile',
+					content: `pod 'myPod' ~> 0.3.4`
+				}, {
+					name: 'myFirstPluginWithPlatform',
+					path: 'node_modules/myFirstPluginWithPlatform/Podfile',
+					content: `platform :ios`
+				}, {
+					name: 'mySecondPluginWithPlatform',
+					path: 'node_modules/mySecondPluginWithPlatform/Podfile',
+					content: `platform :ios, '10.0'`
+				}],
+				expectedProjectPodfileContent: `use_frameworks!
+
+target "projectName" do
+# Begin Podfile - node_modules/mySecondPluginWithPlatform/Podfile
+# platform :ios, '10.0'
+# End Podfile
+
+# Begin Podfile - node_modules/myFirstPluginWithPlatform/Podfile
+# platform :ios
+# End Podfile
+
+# Begin Podfile - node_modules/myPluginWithoutPlatform/Podfile
+pod 'myPod' ~> 0.3.4
+# End Podfile# NativeScriptPlatformSection node_modules/myFirstPluginWithPlatform/Podfile with
+platform :ios
+# End NativeScriptPlatformSection
+end`
+			},
+			{
+				name: "should select platform from plugins when the podfile in App_Resources/iOS/Podfile has no platform",
+				pods: [{
+					name: "mySecondPluginWithPlatform",
+					path: "node_modules/  mypath  with spaces/mySecondPluginWithPlatform/Podfile",
+					content: `platform :ios, '10.0'`
+				}, {
+					name: "myPluginWithoutPlatform",
+					path: "node_modules/myPluginWithoutPlatform/Podfile",
+					content: `pod 'myPod' ~> 0.3.4`
+				}, {
+					name: "myFirstPluginWithPlatform",
+					path: "node_modules/myFirstPluginWithPlatform/Podfile",
+					content: `platform :ios, '11.0'`
+				}, {
+					name: "App_Resources",
+					path: "my/full/path/to/app/App_Resources/iOS/Podfile",
+					content: `pod: 'mySecondPlatformPod' ~> 2.0.0${EOL}pod: 'platformKit' ~> 1.0`
+				}],
+				expectedProjectPodfileContent: `use_frameworks!
+
+target "projectName" do
+# Begin Podfile - my/full/path/to/app/App_Resources/iOS/Podfile
+pod: 'mySecondPlatformPod' ~> 2.0.0
+pod: 'platformKit' ~> 1.0
+# End Podfile
+
+# Begin Podfile - node_modules/myFirstPluginWithPlatform/Podfile
+# platform :ios, '11.0'
+# End Podfile
+
+# Begin Podfile - node_modules/myPluginWithoutPlatform/Podfile
+pod 'myPod' ~> 0.3.4
+# End Podfile
+
+# Begin Podfile - node_modules/  mypath  with spaces/mySecondPluginWithPlatform/Podfile
+# platform :ios, '10.0'
+# End Podfile
+
+# NativeScriptPlatformSection node_modules/myFirstPluginWithPlatform/Podfile with 11.0
+platform :ios, '11.0'
+# End NativeScriptPlatformSection
+end`
+			}
+		];
+
+		_.each(testCases, testCase => {
+			it(testCase.name, async () => {
+				const { projectData } = setupMocks(testCase.pods);
+				cocoapodsService.removePodfileFromProject = () => ({});
+
+				for (const pod of testCase.pods) {
+					await cocoapodsService.applyPodfileToProject(pod.name, pod.path, projectData, projectPodfilePath);
+				}
+
+				assert.deepEqual(projectPodfileContent, testCase.expectedProjectPodfileContent);
+			});
 		});
 	});
 });

@@ -11,6 +11,7 @@ export class AppDebugSocketProxyFactory extends EventEmitter implements IAppDebu
 
 	constructor(private $logger: ILogger,
 		private $errors: IErrors,
+		private $lockService: ILockService,
 		private $options: IOptions,
 		private $net: INet) {
 		super();
@@ -54,9 +55,9 @@ export class AppDebugSocketProxyFactory extends EventEmitter implements IAppDebu
 				}
 			});
 
-			frontendSocket.on("close", () => {
+			frontendSocket.on("close", async () => {
 				this.$logger.info("Frontend socket closed");
-				device.destroyDebugSocket(appId);
+				await device.destroyDebugSocket(appId);
 			});
 
 			appDebugSocket.on("close", () => {
@@ -91,6 +92,7 @@ export class AppDebugSocketProxyFactory extends EventEmitter implements IAppDebu
 	}
 
 	private async addWebSocketProxy(device: Mobile.IiOSDevice, appId: string, projectName: string): Promise<ws.Server> {
+		let clientConnectionLockRelease: () => void;
 		const cacheKey = `${device.deviceInfo.identifier}-${appId}`;
 		const existingServer = this.deviceWebServers[cacheKey];
 		if (existingServer) {
@@ -107,18 +109,39 @@ export class AppDebugSocketProxyFactory extends EventEmitter implements IAppDebu
 		// We store the socket that connects us to the device in the upgrade request object itself and later on retrieve it
 		// in the connection callback.
 
+		let currentAppSocket: net.Socket = null;
+		let currentWebSocket: ws = null;
 		const server = new ws.Server(<any>{
 			port: localPort,
 			host: "localhost",
 			verifyClient: async (info: any, callback: (res: boolean, code?: number, message?: string) => void) => {
 				let acceptHandshake = true;
-				this.$logger.info("Frontend client connected.");
-				let appDebugSocket;
+				clientConnectionLockRelease = null;
+
 				try {
+					clientConnectionLockRelease =
+						await this.$lockService.lock(`debug-connection-${device.deviceInfo.identifier}-${appId}.lock`);
+
+					this.$logger.info("Frontend client connected.");
+					let appDebugSocket;
+					if (currentAppSocket) {
+						currentAppSocket.removeAllListeners();
+						currentAppSocket = null;
+						if (currentWebSocket) {
+							currentWebSocket.removeAllListeners();
+							currentWebSocket.close();
+							currentWebSocket = null;
+						}
+						await device.destroyDebugSocket(appId);
+					}
 					appDebugSocket = await device.getDebugSocket(appId, projectName);
+					currentAppSocket = appDebugSocket;
 					this.$logger.info("Backend socket created.");
 					info.req["__deviceSocket"] = appDebugSocket;
 				} catch (err) {
+					if (clientConnectionLockRelease) {
+						clientConnectionLockRelease();
+					}
 					err.deviceIdentifier = device.deviceInfo.identifier;
 					this.$logger.trace(err);
 					this.emit(CONNECTION_ERROR_EVENT_NAME, err);
@@ -131,6 +154,7 @@ export class AppDebugSocketProxyFactory extends EventEmitter implements IAppDebu
 		});
 		this.deviceWebServers[cacheKey] = server;
 		server.on("connection", (webSocket, req) => {
+			currentWebSocket = webSocket;
 			const encoding = "utf16le";
 
 			const appDebugSocket: net.Socket = (<any>req)["__deviceSocket"];
@@ -163,20 +187,23 @@ export class AppDebugSocketProxyFactory extends EventEmitter implements IAppDebu
 			});
 
 			appDebugSocket.on("close", () => {
+				currentAppSocket = null;
 				this.$logger.info("Backend socket closed!");
 				webSocket.close();
 			});
 
-			webSocket.on("close", () => {
+			webSocket.on("close", async () => {
+				currentWebSocket = null;
 				this.$logger.info('Frontend socket closed!');
 				appDebugSocket.unpipe(packets);
 				packets.destroy();
-				device.destroyDebugSocket(appId);
+				await device.destroyDebugSocket(appId);
 				if (!this.$options.watch) {
 					process.exit(0);
 				}
 			});
 
+			clientConnectionLockRelease();
 		});
 
 		return server;

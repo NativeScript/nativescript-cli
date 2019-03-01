@@ -1,10 +1,10 @@
 import { DEBUGGER_PORT_FOUND_EVENT_NAME, ATTACH_REQUEST_EVENT_NAME } from "../common/constants";
 import { cache } from "../common/decorators";
+import { APPLICATION_RESPONSE_TIMEOUT_SECONDS } from "../constants";
 
 export class IOSDebuggerPortService implements IIOSDebuggerPortService {
 	public static DEBUG_PORT_LOG_REGEX = /NativeScript debugger has opened inspector socket on port (\d+?) for (.*)[.]/;
 	private mapDebuggerPortData: IDictionary<IIOSDebuggerPortStoredData> = {};
-	private static DEFAULT_TIMEOUT_IN_SECONDS = 10;
 
 	constructor(private $logParserService: ILogParserService,
 		private $iOSNotification: IiOSNotification,
@@ -14,7 +14,8 @@ export class IOSDebuggerPortService implements IIOSDebuggerPortService {
 	public getPort(data: IIOSDebuggerPortInputData): Promise<number> {
 		return new Promise((resolve, reject) => {
 			const key = `${data.deviceId}${data.appId}`;
-			let retryCount = Math.max(IOSDebuggerPortService.DEFAULT_TIMEOUT_IN_SECONDS * 1000 / 500, 10);
+			const retryInterval = 500;
+			let retryCount = Math.max(APPLICATION_RESPONSE_TIMEOUT_SECONDS * 1000 / retryInterval, 10);
 
 			const interval = setInterval(() => {
 				let port = this.getPortByKey(key);
@@ -25,7 +26,7 @@ export class IOSDebuggerPortService implements IIOSDebuggerPortService {
 					port = this.getPortByKey(key);
 					retryCount--;
 				}
-			}, 500);
+			}, retryInterval);
 		});
 	}
 
@@ -65,7 +66,7 @@ export class IOSDebuggerPortService implements IIOSDebuggerPortService {
 				if (!this.getPortByKey(`${data.deviceId}${data.appId}`)) {
 					this.$logger.warn(`NativeScript debugger was not able to get inspector socket port on device ${data.deviceId} for application ${data.appId}.`);
 				}
-			}, IOSDebuggerPortService.DEFAULT_TIMEOUT_IN_SECONDS * 1000);
+			}, APPLICATION_RESPONSE_TIMEOUT_SECONDS * 1000);
 
 			this.setData(data, { port: null, timer });
 		});

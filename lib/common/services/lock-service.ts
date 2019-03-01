@@ -1,6 +1,7 @@
-import * as lockfile from "lockfile";
+import * as lockfile from "proper-lockfile";
 import * as path from "path";
 import { cache } from "../decorators";
+import { getHash } from "../helpers";
 
 export class LockService implements ILockService {
 	private currentlyLockedFiles: string[] = [];
@@ -15,12 +16,11 @@ export class LockService implements ILockService {
 	}
 
 	private get defaultLockParams(): ILockOptions {
-		// We'll retry 100 times and time between retries is 100ms, i.e. full wait in case we are unable to get lock will be 10 seconds.
-		// In case lock is older than the `stale` value, consider it stale and try to get a new lock.
 		const lockParams: ILockOptions = {
-			retryWait: 100,
-			retries: 100,
-			stale: 30 * 1000,
+			// https://www.npmjs.com/package/retry#retrytimeoutsoptions
+			retriesObj: { retries: 13, minTimeout: 100, maxTimeout: 1000, factor: 2 },
+			stale: 10 * 1000,
+			realpath: false
 		};
 
 		return lockParams;
@@ -31,41 +31,49 @@ export class LockService implements ILockService {
 		private $processService: IProcessService) {
 		this.$processService.attachToProcessExitSignals(this, () => {
 			const locksToRemove = _.clone(this.currentlyLockedFiles);
-			_.each(locksToRemove, lock => {
-				this.unlock(lock);
-			});
+			for (const lockToRemove of locksToRemove) {
+				lockfile.unlockSync(lockToRemove);
+				this.cleanLock(lockToRemove);
+			}
 		});
 	}
 
 	public async executeActionWithLock<T>(action: () => Promise<T>, lockFilePath?: string, lockOpts?: ILockOptions): Promise<T> {
-		const resolvedLockFilePath = await this.lock(lockFilePath, lockOpts);
+		const releaseFunc = await this.lock(lockFilePath, lockOpts);
 
 		try {
 			const result = await action();
 			return result;
 		} finally {
-			this.unlock(resolvedLockFilePath);
+			releaseFunc();
 		}
 	}
 
-	private lock(lockFilePath?: string, lockOpts?: ILockOptions): Promise<string> {
+	public async lock(lockFilePath?: string, lockOpts?: ILockOptions): Promise<() => void> {
 		const { filePath, fileOpts } = this.getLockFileSettings(lockFilePath, lockOpts);
 		this.currentlyLockedFiles.push(filePath);
+		this.$fs.writeFile(filePath, "");
 
-		// Prevent ENOENT error when the dir, where lock should be created, does not exist.
-		this.$fs.ensureDirectoryExists(path.dirname(filePath));
-
-		return new Promise<string>((resolve, reject) => {
-			lockfile.lock(filePath, fileOpts, (err: Error) => {
-				err ? reject(new Error(`Timeout while waiting for lock "${filePath}"`)) : resolve(filePath);
-			});
-		});
+		try {
+			const releaseFunc = await lockfile.lock(filePath, fileOpts);
+			return async () => {
+				await releaseFunc();
+				this.cleanLock(filePath);
+			};
+		} catch (err) {
+			throw new Error(`Timeout while waiting for lock "${filePath}"`);
+		}
 	}
 
-	private unlock(lockFilePath?: string): void {
+	public unlock(lockFilePath?: string): void {
 		const { filePath } = this.getLockFileSettings(lockFilePath);
-		_.remove(this.currentlyLockedFiles, e => e === lockFilePath);
 		lockfile.unlockSync(filePath);
+		this.cleanLock(filePath);
+	}
+
+	private cleanLock(lockPath: string): void {
+		_.remove(this.currentlyLockedFiles, e => e === lockPath);
+		this.$fs.deleteFile(lockPath);
 	}
 
 	private getLockFileSettings(filePath?: string, fileOpts?: ILockOptions): { filePath: string, fileOpts: ILockOptions } {
@@ -74,12 +82,32 @@ export class LockService implements ILockService {
 		}
 
 		filePath = filePath || this.defaultLockFilePath;
-		fileOpts = fileOpts || this.defaultLockParams;
+		fileOpts = fileOpts ? _.assign({}, this.defaultLockParams, fileOpts) : this.defaultLockParams;
+
+		fileOpts.retriesObj = fileOpts.retriesObj || {};
+		if (fileOpts.retries) {
+			fileOpts.retriesObj.retries = fileOpts.retries;
+		}
+
+		if (fileOpts.retryWait) {
+			// backwards compatibility
+			fileOpts.retriesObj.minTimeout = fileOpts.retriesObj.maxTimeout = fileOpts.retryWait;
+		}
+
+		(<any>fileOpts.retries) = fileOpts.retriesObj;
 
 		return {
-			filePath,
+			filePath: this.getShortFileLock(filePath),
 			fileOpts
 		};
+	}
+
+	private getShortFileLock(filePath: string) {
+		const dirPath = path.dirname(filePath);
+		const fileName = path.basename(filePath);
+		const hashedFileName = getHash(fileName, { algorithm: "MD5" });
+		filePath = path.join(dirPath, hashedFileName);
+		return filePath;
 	}
 }
 

@@ -10,6 +10,7 @@ interface IDependencyInfo {
 	depth: number;
 	dependencies?: IDependencyInfo[];
 	nativescript?: any;
+	isDevDependency?: boolean;
 }
 
 // TODO: Add integration tests.
@@ -58,10 +59,11 @@ describe("nodeModulesDependenciesBuilder", () => {
 				return path.join(parentDir || pathToProject, constants.NODE_MODULES_FOLDER_NAME, dependencyName);
 			};
 
-			const getNodeModuleInfoForExpecteDependency = (name: string, depth: number, nativescript?: any, dependencies?: string[]): IDependencyData => {
+			const getNodeModuleInfoForExpecteDependency = (dir: string, depth: number, nativescript?: any, dependencies?: string[], name?: string): IDependencyData => {
+				const packageName = name || path.basename(dir);
 				const result: IDependencyData = {
-					name: path.basename(name),
-					directory: getPathToDependencyInNodeModules(name),
+					name: packageName,
+					directory: getPathToDependencyInNodeModules(dir),
 					depth,
 					dependencies: dependencies || []
 				};
@@ -77,14 +79,20 @@ describe("nodeModulesDependenciesBuilder", () => {
 				return path.join(getPathToDependencyInNodeModules(dependencyName, parentDir), constants.PACKAGE_JSON_FILE_NAME);
 			};
 
-			const getDependenciesObjectFromDependencyInfo = (depInfos: IDependencyInfo[], nativescript: any): { dependencies: any, nativescript?: any } => {
+			const getDependenciesObjectFromDependencyInfo = (depInfos: IDependencyInfo[], nativescript: any): { dependencies: IStringDictionary, nativescript?: any, devDependencies: IStringDictionary } => {
 				const dependencies: any = {};
+				const devDepdencies: any = {};
 				_.each(depInfos, innerDependency => {
-					dependencies[innerDependency.name] = innerDependency.version;
+					if (innerDependency.isDevDependency) {
+						devDepdencies[innerDependency.name] = innerDependency.version;
+					} else {
+						dependencies[innerDependency.name] = innerDependency.version;
+					}
 				});
 
 				const result: any = {
-					dependencies
+					dependencies,
+					devDepdencies
 				};
 
 				if (nativescript) {
@@ -94,8 +102,8 @@ describe("nodeModulesDependenciesBuilder", () => {
 				return result;
 			};
 
-			const getDependenciesObject = (filename: string, deps: IDependencyInfo[], parentDir: string): { dependencies: any } => {
-				let result: { dependencies: any } = null;
+			const getDependenciesObject = (filename: string, deps: IDependencyInfo[], parentDir: string): { dependencies: IStringDictionary, nativescript?: any, devDependencies: IStringDictionary } => {
+				let result: { dependencies: IStringDictionary, nativescript?: any, devDependencies: IStringDictionary } = null;
 				for (const dependencyInfo of deps) {
 					const pathToPackageJson = getPathToPackageJsonOfDependency(dependencyInfo.name, parentDir);
 					if (filename === pathToPackageJson) {
@@ -177,13 +185,14 @@ describe("nodeModulesDependenciesBuilder", () => {
 				return nodeModulesDependenciesBuilder;
 			};
 
-			const generateDependency = (name: string, version: string, depth: number, dependencies: IDependencyInfo[], nativescript?: any): IDependencyInfo => {
+			const generateDependency = (name: string, version: string, depth: number, dependencies: IDependencyInfo[], nativescript?: any, opts?: { isDevDependency: boolean }): IDependencyInfo => {
 				return {
 					name,
 					version,
 					depth,
 					dependencies,
-					nativescript
+					nativescript,
+					isDevDependency: !!(opts && opts.isDevDependency)
 				};
 			};
 
@@ -194,6 +203,100 @@ describe("nodeModulesDependenciesBuilder", () => {
 			const firstPackage = "firstPackage";
 			const secondPackage = "secondPackage";
 			const thirdPackage = "thirdPackage";
+
+			it("when there are both dependencies and devDependencies installed", async () => {
+				// The test validates the following dependency tree, when npm 3+ is used.
+				// <project dir>
+				// ├── firstPackage@1.0.0
+				// ├── secondPackage@1.1.0
+				// └── thirdPackage@1.2.0 // this is devDependency
+
+				const rootDeps: IDependencyInfo[] = [
+					generateDependency(firstPackage, "1.0.0", 0, null),
+					generateDependency(secondPackage, "1.1.0", 0, null),
+					generateDependency(thirdPackage, "1.2.0", 0, null, null, { isDevDependency: true })
+				];
+
+				const nodeModulesDependenciesBuilder = generateTest(rootDeps);
+				const actualResult = await nodeModulesDependenciesBuilder.getProductionDependencies(pathToProject);
+
+				const expectedResult: IDependencyData[] = [
+					getNodeModuleInfoForExpecteDependency(firstPackage, 0),
+					getNodeModuleInfoForExpecteDependency(secondPackage, 0)
+				];
+
+				assert.deepEqual(actualResult, expectedResult);
+			});
+
+			it("when there are both dependencies and devDependencies installed, does not handle dependencies of devDependencies", async () => {
+				// The test validates the following dependency tree, when npm 3+ is used.
+				// <project dir>
+				// ├─┬ firstPackage@1.0.0 // this is devDependency
+				// │ └── secondPackage@1.2.0
+				// └── secondPackage@1.1.0
+
+				const rootDeps: IDependencyInfo[] = [
+					generateDependency(firstPackage, "1.0.0", 0, [generateDependency(secondPackage, "1.2.0", 1, null)], null, { isDevDependency: true }),
+					generateDependency(secondPackage, "1.1.0", 0, null)
+				];
+
+				const expectedResult: IDependencyData[] = [
+					getNodeModuleInfoForExpecteDependency(secondPackage, 0),
+				];
+
+				const nodeModulesDependenciesBuilder = generateTest(rootDeps);
+				const actualResult = await nodeModulesDependenciesBuilder.getProductionDependencies(pathToProject);
+				assert.deepEqual(actualResult, expectedResult);
+
+			});
+
+			it("when there are scoped dependencies", async () => {
+				// The test validates the following dependency tree, when npm 3+ is used.
+				// <project dir>
+				// ├─┬ @scope/firstPackage@1.0.0
+				// │ └── secondPackage@1.2.0
+				// └── secondPackage@1.1.0
+
+				const scopedPackageName = `@scope/${firstPackage}`;
+				const rootDeps: IDependencyInfo[] = [
+					generateDependency(scopedPackageName, "1.0.0", 0, [generateDependency(secondPackage, "1.2.0", 1, null)]),
+					generateDependency(secondPackage, "1.1.0", 0, null)
+				];
+
+				const expectedResult: IDependencyData[] = [
+					getNodeModuleInfoForExpecteDependency(scopedPackageName, 0, null, [secondPackage], scopedPackageName),
+					getNodeModuleInfoForExpecteDependency(secondPackage, 0),
+					getNodeModuleInfoForExpecteDependency(path.join(scopedPackageName, constants.NODE_MODULES_FOLDER_NAME, secondPackage), 1)
+				];
+
+				const nodeModulesDependenciesBuilder = generateTest(rootDeps);
+				const actualResult = await nodeModulesDependenciesBuilder.getProductionDependencies(pathToProject);
+				assert.deepEqual(actualResult, expectedResult);
+			});
+
+			it("when there are scoped dependencies as dependency of other non-scoped dependency", async () => {
+				// The test validates the following dependency tree, when npm 3+ is used.
+				// <project dir>
+				// ├─┬ firstPackage@1.0.0
+				// │ └── @scope/secondPackage@1.2.0
+				// └── thirdPackage@1.1.0
+
+				const scopedPackageName = `@scope/${secondPackage}`;
+				const rootDeps: IDependencyInfo[] = [
+					generateDependency(firstPackage, "1.0.0", 0, [generateDependency(scopedPackageName, "1.2.0", 1, null)]),
+					generateDependency(thirdPackage, "1.1.0", 0, null)
+				];
+
+				const expectedResult: IDependencyData[] = [
+					getNodeModuleInfoForExpecteDependency(firstPackage, 0, null, [scopedPackageName]),
+					getNodeModuleInfoForExpecteDependency(thirdPackage, 0),
+					getNodeModuleInfoForExpecteDependency(path.join(firstPackage, constants.NODE_MODULES_FOLDER_NAME, scopedPackageName), 1, null, null, scopedPackageName)
+				];
+
+				const nodeModulesDependenciesBuilder = generateTest(rootDeps);
+				const actualResult = await nodeModulesDependenciesBuilder.getProductionDependencies(pathToProject);
+				assert.deepEqual(actualResult, expectedResult);
+			});
 
 			it("when all dependencies are installed at the root level of the project", async () => {
 				// The test validates the following dependency tree, when npm 3+ is used.

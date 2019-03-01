@@ -985,7 +985,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		const projectPodfilePath = this.$cocoapodsService.getProjectPodfilePath(platformData.projectRoot);
 		if (this.$fs.exists(projectPodfilePath)) {
 			await this.$cocoapodsService.executePodInstall(platformData.projectRoot, this.$xcprojService.getXcodeprojPath(projectData, platformData));
-			// The `pod install` command adds a new target to the .pbxproject. This target adds additional build phases to xcodebuild.
+			// The `pod install` command adds a new target to the .pbxproject. This target adds additional build phases to Xcode project.
 			// Some of these phases relies on env variables (like PODS_PODFILE_DIR_PATH or PODS_ROOT).
 			// These variables are produced from merge of pod's xcconfig file and project's xcconfig file.
 			// So the correct order is `pod install` to be executed before merging pod's xcconfig file.

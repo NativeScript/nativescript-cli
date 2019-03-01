@@ -46,6 +46,7 @@ export const AAB_EXTENSION_NAME = ".aab";
 export const HASHES_FILE_NAME = ".nshashes";
 export const TNS_NATIVE_SOURCE_GROUP_NAME = "TNSNativeSource";
 export const NATIVE_SOURCE_FOLDER = "src";
+export const APPLICATION_RESPONSE_TIMEOUT_SECONDS = 60;
 
 export class PackageVersion {
 	static NEXT = "next";
@@ -116,6 +117,12 @@ export const NgFlavorName = "Angular";
 export const VueFlavorName = "Vue.js";
 export const TsFlavorName = "Plain TypeScript";
 export const JsFlavorName = "Plain JavaScript";
+export class ProjectTypes {
+	public static NgFlavorName = NgFlavorName;
+	public static VueFlavorName = VueFlavorName;
+	public static TsFlavorName = "Pure TypeScript";
+	public static JsFlavorName = "Pure JavaScript";
+}
 export const BUILD_OUTPUT_EVENT_NAME = "buildOutput";
 export const CONNECTION_ERROR_EVENT_NAME = "connectionError";
 export const USER_INTERACTION_NEEDED_EVENT_NAME = "userInteractionNeeded";

@@ -1,7 +1,7 @@
 import * as path from "path";
 import { ProjectData } from "../project-data";
 import { exported } from "../common/decorators";
-import { NATIVESCRIPT_PROPS_INTERNAL_DELIMITER, AssetConstants, SRC_DIR, RESOURCES_DIR, MAIN_DIR, CLI_RESOURCES_DIR_NAME } from "../constants";
+import { NATIVESCRIPT_PROPS_INTERNAL_DELIMITER, AssetConstants, SRC_DIR, RESOURCES_DIR, MAIN_DIR, CLI_RESOURCES_DIR_NAME, ProjectTypes } from "../constants";
 
 interface IProjectFileData {
 	projectData: any;
@@ -114,6 +114,32 @@ export class ProjectDataService implements IProjectDataService {
 			splashCenterImages: this.getAndroidAssetSubGroup(content.splashCenterImages, currentStructure),
 			splashImages: null
 		};
+	}
+
+	public getAppExecutableFiles(projectDir: string): string[] {
+		const projectData = this.getProjectData(projectDir);
+
+		let supportedFileExtension = ".js";
+		if (projectData.projectType === ProjectTypes.NgFlavorName || projectData.projectType === ProjectTypes.TsFlavorName) {
+			supportedFileExtension = ".ts";
+		}
+
+		const files = this.$fs.enumerateFilesInDirectorySync(
+			projectData.appDirectoryPath,
+			(filePath, fstat) => {
+				if (filePath.indexOf(projectData.appResourcesDirectoryPath) !== -1) {
+					return false;
+				}
+
+				if (fstat.isDirectory()) {
+					return true;
+				}
+
+				return path.extname(filePath) === supportedFileExtension;
+			}
+		);
+
+		return files;
 	}
 
 	private getImageDefinitions(): IImageDefinitionsStructure {

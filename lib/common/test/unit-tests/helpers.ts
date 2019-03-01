@@ -825,4 +825,91 @@ describe("helpers", () => {
 			});
 		});
 	});
+
+	describe("stripComments", () => {
+		const testData: ITestData[] = [
+			{
+				input: `// this is comment,
+const test = require("./test");`,
+				expectedResult: `\nconst test = require("./test");`
+			},
+			{
+				input: `/* this is multiline
+comment */
+const test = require("./test");`,
+				expectedResult: `\nconst test = require("./test");`
+			},
+			{
+				input: `/* this is multiline
+comment
+// with inner one line comment inside it
+the multiline comment finishes here
+*/
+const test = require("./test");`,
+				expectedResult: `\nconst test = require("./test");`
+			},
+
+			{
+				input: `const test /*inline comment*/ = require("./test");`,
+				expectedResult: `const test  = require("./test");`
+			},
+		];
+
+		it("strips comments correctly", () => {
+			testData.forEach(testCase => {
+				assertTestData(testCase, helpers.stripComments);
+			});
+		});
+	});
+
+	describe("isInteractive", () => {
+		const originalEnv = process.env;
+		const originalStdoutIsTTY = process.stdout.isTTY;
+		const originalStdinIsTTY = process.stdin.isTTY;
+		beforeEach(() => {
+			process.env.CI = "";
+			process.env.JENKINS_HOME = "";
+		});
+
+		afterEach(() => {
+			process.env = originalEnv;
+			process.stdout.isTTY = originalStdoutIsTTY;
+			process.stdin.isTTY = originalStdinIsTTY;
+		});
+
+		it("returns false when stdout is not TTY", () => {
+			(<any>process.stdout).isTTY = false;
+			(<any>process.stdin).isTTY = true;
+			assert.isFalse(helpers.isInteractive());
+		});
+
+		it("returns false when stdin is not TTY", () => {
+			(<any>process.stdin).isTTY = false;
+			(<any>process.stdout).isTTY = true;
+			assert.isFalse(helpers.isInteractive());
+		});
+
+		it("returns false when stdout and stdin are TTY, but CI env var is set", () => {
+			(<any>process.stdout).isTTY = true;
+			(<any>process.stdin).isTTY = true;
+			process.env.CI = "true";
+
+			assert.isFalse(helpers.isInteractive());
+		});
+
+		it("returns false when stdout and stdin are TTY, but JENKINS_HOME env var is set", () => {
+			(<any>process.stdout).isTTY = true;
+			(<any>process.stdin).isTTY = true;
+			process.env.JENKINS_HOME = "/usr/local/lib/jenkins";
+
+			assert.isFalse(helpers.isInteractive());
+		});
+
+		it("returns true when stdout and stdin are TTY and neither CI or JENKINS_HOME are set", () => {
+			(<any>process.stdout).isTTY = true;
+			(<any>process.stdin).isTTY = true;
+
+			assert.isTrue(helpers.isInteractive());
+		});
+	});
 });
