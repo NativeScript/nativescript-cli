@@ -1,11 +1,25 @@
-NativeScript Command-Line Interface
-================
-Master Branch [![Build Status](https://travis-ci.org/NativeScript/nativescript-cli.svg?branch=build)][2].
-[![Waffle.io - NativeScript CLI](https://badge.waffle.io/NativeScript/nativescript-cli.svg?columns=In%20Progress)](https://waffle.io/NativeScript/nativescript-cli)
+
+<h1 align="center">
+  <br>
+  <a href="https://www.npmjs.com/package/nativescript"><img src="https://blog.jscrambler.com/content/images/2018/10/jscrambler-blog-react-native-ionic-nativescript-logo.png" alt="Nativescript Logo" width="200"></a>
+  <br>
+	  <br>
+   NativeScript Command-Line Interface
+  <br>
+</h1>
+
+<h4 align="center">The NativeScript CLI lets you create, build, and deploy <a href="https://docs.nativescript.org/" target="_blank">NativeScript</a>-based projects on iOS and Android devices.</h4>
+  </a>
+</p>
+
+<h5 align="center">Master Branch</h5>
+<p align="center"> 
+<img alt="Build Status" src="https://travis-ci.org/NativeScript/nativescript-cli.svg?branch=build">
+<a href="https://waffle.io/NativeScript/nativescript-cli"><img alt="Waffle.io - NativeScript CLI" src="https://badge.waffle.io/NativeScript/nativescript-cli.svg?columns=In%20Progress"></a>
+</p>
 
 Get it using: `npm install -g nativescript`
 
-The NativeScript CLI lets you create, build, and deploy [NativeScript][7]-based projects on iOS and Android devices.
 
 * [What is NativeScript](#what-is-nativescript "Quick overview of NativeScript, the JavaScript framework for cross-platform development of native iOS and Android apps")
 * [How the NativeScript CLI works](#how-the-nativescript-cli-works "How the CLI works in more detail")
