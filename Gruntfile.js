@@ -250,7 +250,7 @@ function registerTestingDependenciesTasks(grunt) {
 		const dependenciesVersions = {};
 		const testDependencies = grunt.file.readJSON(path.join(configsBasePath, "test-dependencies.json"));
 		for (var dependency of testDependencies) {
-			const dependencyVersion = await latestVersion(dependency.name);
+			const dependencyVersion = dependency.version || await latestVersion(dependency.name);
 			dependenciesVersions[dependency.name] = dependencyVersion;
 		}
 		grunt.file.write(path.join(configsBasePath, generatedVersionFileName), JSON.stringify(dependenciesVersions));
