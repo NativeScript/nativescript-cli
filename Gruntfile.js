@@ -1,6 +1,8 @@
 const childProcess = require("child_process");
 const EOL = require("os").EOL;
+const path = require("path");
 const now = new Date().toISOString();
+const latestVersion = require('latest-version');
 
 const ENVIRONMENTS = {
 	live: "live",
@@ -205,9 +207,14 @@ module.exports = function (grunt) {
 	});
 
 	grunt.registerTask("test", ["ts:devall", "shell:npm_test"]);
+
+	registerTestingDependenciesTasks(grunt);
+
 	grunt.registerTask("prepare", [
 		"clean",
 		"ts:release_build",
+		"generate_unit_testing_dependencies",
+		"verify_unit_testing_dependencies",
 		"shell:npm_test",
 
 		"set_live_ga_id",
@@ -230,6 +237,30 @@ module.exports = function (grunt) {
 	grunt.registerTask("lint", ["tslint:build"]);
 	grunt.registerTask("all", ["clean", "test", "lint"]);
 	grunt.registerTask("rebuild", ["clean", "ts:devlib"]);
-	grunt.registerTask("default", "ts:devlib");
+	grunt.registerTask("default", ["ts:devlib", "generate_unit_testing_dependencies"]);
 	grunt.registerTask("docs-jekyll", ['template']);
 };
+
+function registerTestingDependenciesTasks(grunt) {
+	const configsBasePath = path.join(__dirname, "config");
+	const generatedVersionFileName = "test-deps-versions-generated.json";
+
+	grunt.registerTask("generate_unit_testing_dependencies", async function () {
+		var done = this.async();
+		const dependenciesVersions = {};
+		const testDependencies = grunt.file.readJSON(path.join(configsBasePath, "test-dependencies.json"));
+		for (var dependency of testDependencies) {
+			const dependencyVersion = await latestVersion(dependency.name);
+			dependenciesVersions[dependency.name] = dependencyVersion;
+		}
+		grunt.file.write(path.join(configsBasePath, generatedVersionFileName), JSON.stringify(dependenciesVersions));
+		done();
+	});
+
+	grunt.registerTask("verify_unit_testing_dependencies", function () {
+		if (!grunt.file.exists(path.join(configsBasePath, generatedVersionFileName))) {
+			throw new Error("Unit testing dependencies are not configured.");
+		}
+	});
+}
+

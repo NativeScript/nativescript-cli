@@ -79,3 +79,4 @@ lib/common/xunit.xml
 lib/common/test-reports.xml
 !lib/common/test-scripts/**
 !lib/common/scripts/**
+config/test-deps-versions-generated.json

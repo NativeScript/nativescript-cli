@@ -1,0 +1,28 @@
+[
+    {
+        "name": "karma"
+    },
+    {
+        "name": "karma-nativescript-launcher"
+    },
+    {
+        "name": "karma-jasmine",
+        "framework": "jasmine"
+    },
+    {
+        "name": "karma-mocha",
+        "framework": "mocha"
+    },
+    {
+        "name": "karma-chai",
+        "framework": "mocha"
+    },
+    {
+        "name": "mocha",
+        "framework": "mocha"
+    },
+    {
+        "name": "karma-qunit",
+        "framework": "qunit"
+    }
+]

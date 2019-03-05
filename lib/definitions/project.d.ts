@@ -475,6 +475,11 @@ interface ITestExecutionService {
 	canStartKarmaServer(projectData: IProjectData): Promise<boolean>;
 }
 
+interface ITestInitializationService {
+	getDependencies(framework: string): string[]
+	getDependenciesVersions(): IDictionary<string>
+}
+
 /**
  * Describes a service used to facilitate communication with CocoaPods
  */
