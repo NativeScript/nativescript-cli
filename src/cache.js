@@ -6,7 +6,7 @@ import { generateId } from './utils';
 
 const queue = new PQueue({ concurrency: 1 });
 
-export class Cache {
+export default class Cache {
   constructor(store) {
     if (!store) {
       throw new KinveyError('You must override the default cache adapter.');
@@ -114,11 +114,8 @@ export class Cache {
   clear() {
     return queue.add(() => this.store.clear());
   }
-}
 
-// TODO
-export function clear() {
-  throw new KinveyError('Fix');
-  // const store = getStore();
-  // return queue.add(() => store.clearAll(storeName));
+  clearAll() {
+    return queue.add(() => this.store.clearAll());
+  }
 }

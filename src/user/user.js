@@ -8,7 +8,7 @@ import { Auth } from '../http/auth';
 import { get as getConfig } from '../kinvey/config';
 import getDeviceId from '../device';
 import KinveyError from '../errors/kinvey';
-import { clear } from '../datastore';
+import { DataStoreCache, QueryCache, SyncCache } from '../datastore/cache';
 // import { isRegistered, register, unregister } from '../live';
 import { mergeSocialIdentity } from './utils';
 
@@ -214,8 +214,20 @@ export default class User {
         // TODO: log error
       }
 
+      // Remove the session
       removeSession();
-      await clear();
+
+      // Clear the query cache
+      const queryCache = new QueryCache();
+      await queryCache.clearAll();
+
+      // Clear the sync cache
+      const syncCache = new SyncCache();
+      await syncCache.clearAll();
+
+      // Clear the datastore cache
+      const datastoreCache = new DataStoreCache();
+      await datastoreCache.clearAll();
     }
 
     return this;

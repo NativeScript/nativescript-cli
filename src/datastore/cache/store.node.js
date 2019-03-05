@@ -1,5 +1,5 @@
-import { get as getConfig } from '../kinvey/config';
-import KinveyError from '../errors/kinvey';
+import { get as getConfig } from '../../kinvey/config';
+import KinveyError from '../../errors/kinvey';
 import Memory from './memory';
 
 export const StorageProvider = {

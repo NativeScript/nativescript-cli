@@ -67,6 +67,7 @@
     "karma-mocha-reporter": "2.2.5",
     "karma-webpack": "4.0.0-rc.5",
     "mocha": "5.2.0",
+    "nock": "10.0.6",
     "pirates": "4.0.0",
     "sinon": "7.2.2",
     "string-replace-loader": "2.1.1",

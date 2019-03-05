@@ -2,7 +2,7 @@ import { expect, use } from 'chai';
 import * as sinon from 'sinon';
 import Query from './query';
 import Aggregation from './aggregation';
-import { Cache } from './cache';
+import Cache from './cache';
 import Memory from './datastore/cache/memory';
 
 // Use chai-as-promised

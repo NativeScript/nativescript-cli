@@ -1,3 +1,4 @@
+/* eslint-disable import/prefer-default-export */
 import { join } from 'path';
 import Proxyquire from 'proxyquire';
 

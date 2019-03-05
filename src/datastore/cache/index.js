@@ -1,12 +1,13 @@
 import isString from 'lodash/isString';
 import isEmpty from 'lodash/isEmpty';
-import { Cache, clear as _clear } from '../../cache';
+import Cache from '../../cache';
 import { get as getConfig } from '../../kinvey/config';
 import { KinveyHeaders } from '../../http/headers';
 import Query from '../../query';
 import { get as getStore } from './store';
 
 const QUERY_CACHE_TAG = '_QueryCache';
+const SYNC_CACHE_TAG = 'kinvey_sync';
 
 export function isValidTag(tag) {
   const regexp = /^[a-z0-9-]+$/i;
@@ -73,9 +74,8 @@ export class QueryCache extends DataStoreCache {
   }
 }
 
-
-export async function clear() {
-  const { appKey } = getConfig();
-  await _clear(appKey);
-  return null;
+export class SyncCache extends DataStoreCache {
+  constructor(tag) {
+    super(SYNC_CACHE_TAG, tag);
+  }
 }

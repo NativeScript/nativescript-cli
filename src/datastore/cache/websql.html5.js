@@ -1,5 +1,5 @@
 import isString from 'lodash/isString';
-import KinveyError from '../errors/kinvey';
+import KinveyError from '../../errors/kinvey';
 
 const MASTER_TABLE_NAME = 'sqlite_master';
 const SIZE = 2 * 1024 * 1024; // Database size in bytes

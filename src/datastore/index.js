@@ -1,6 +1,6 @@
 import isString from 'lodash/isString';
 import KinveyError from '../errors/kinvey';
-import { isValidTag, clear as _clear } from './cache';
+import { isValidTag } from './cache';
 import { NetworkStore } from './networkstore';
 import { CacheStore } from './cachestore';
 
@@ -40,12 +40,4 @@ export function collection(collectionName, type = DataStoreType.Cache, options =
 
 export function getInstance(collection, type, options) {
   return collection(collection, type, options);
-}
-
-export async function clear() {
-  return _clear();
-}
-
-export async function clearCache() {
-  return clear();
 }

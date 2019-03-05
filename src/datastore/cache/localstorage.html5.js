@@ -1,4 +1,4 @@
-export default LocalStorageStore {
+export default class LocalStorageStore {
   constructor(dbName, tableName) {
     this.dbName = dbName;
     this.tableName = tableName;

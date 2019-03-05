@@ -1,4 +1,4 @@
-export default SessionStorageStore {
+export default class SessionStorageStore {
   constructor(dbName, tableName) {
     this.dbName = dbName;
     this.tableName = tableName;

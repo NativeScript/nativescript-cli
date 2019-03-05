@@ -18,7 +18,7 @@ import { NetworkStore } from './networkstore';
 const NAMESPACE = 'appdata';
 const PAGE_LIMIT = 10000;
 
-export default class InvalidDeltaSetQueryError extends BaseError {
+export class InvalidDeltaSetQueryError extends BaseError {
   constructor(message = 'Invalid delta set query.', ...args) {
     // Pass remaining arguments (including vendor specific ones) to parent constructor
     super(message, ...args);

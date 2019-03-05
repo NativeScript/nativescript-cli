@@ -1,8 +1,8 @@
 import isArray from 'lodash/isArray';
 import { Observable } from 'rxjs';
 import { get as getConfig } from '../kinvey/config';
-import getDeviceId from '../device';
-import { get as getSession } from '../session';
+// import getDeviceId from '../device';
+// import { get as getSession } from '../session';
 import Aggregation from '../aggregation';
 import Query from '../query';
 import { formatKinveyUrl } from '../http/utils';
@@ -44,10 +44,10 @@ export class NetworkStore {
     return `${appKey}.c-${this.collectionName}`;
   }
 
-  get personalChannelName() {
-    const session = getSession();
-    return `${this.channelName}.u-${session._id}`;
-  }
+  // get personalChannelName() {
+  //   const session = getSession();
+  //   return `${this.channelName}.u-${session._id}`;
+  // }
 
   find(query, options = {}) {
     const stream = Observable.create(async (observer) => {
