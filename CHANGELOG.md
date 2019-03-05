@@ -1,6 +1,18 @@
 NativeScript CLI Changelog
 ================
 
+5.2.1 (2019, March 05)
+==
+### Implemented
+* [Implemented #4375](https://github.com/NativeScript/nativescript-cli/issues/4375): Show warning for deprecated short imports/require used in application
+
+### Fixed
+* [Fixed #3604](https://github.com/NativeScript/nativescript-cli/issues/3604): iOS build breaks with multiple plugins with Podfile
+* [Fixed #4301](https://github.com/NativeScript/nativescript-cli/issues/4301): Disconnect previous iOS chrome debuggers when opening a new one
+* [Fixed #4354](https://github.com/NativeScript/nativescript-cli/issues/4354): Unable to apply a change when application is not running on device
+* [Fixed #4373](https://github.com/NativeScript/nativescript-cli/issues/4373): `tns test` throws an error in newly created apps
+* [Fixed #4383](https://github.com/NativeScript/nativescript-cli/issues/4383): `tns doctor` command does not report any information on CircleCI and Travis virtual machines
+
 
 5.2.0 (2018, February 13)
 ==
@@ -11,8 +23,8 @@ NativeScript CLI Changelog
 * [Implemented #4305](https://github.com/NativeScript/nativescript-cli/issues/4305): Add official support for Node.js 11
 * [Implemented #4313](https://github.com/NativeScript/nativescript-cli/issues/4313): Track how many users used {N} CLI and Playground
 * [Implemented #4323](https://github.com/NativeScript/nativescript-cli/issues/4323): Skip CLI's postinstall in case it is not installed globally
-* [Implemented #4325](https://github.com/NativeScript/nativescript-cli/issues/4325): Angular apps should work with HMR out of the box 
-* [Implemented #4343](https://github.com/NativeScript/nativescript-cli/issues/4343): Support Objective-C code in App Resources for iOS applications 
+* [Implemented #4325](https://github.com/NativeScript/nativescript-cli/issues/4325): Angular apps should work with HMR out of the box
+* [Implemented #4343](https://github.com/NativeScript/nativescript-cli/issues/4343): Support Objective-C code in App Resources for iOS applications
 
 ### Fixed
 * [Fixed #3122](https://github.com/NativeScript/nativescript-cli/issues/3122): `tns debug ios --debug-brk` fails the majority of the time
