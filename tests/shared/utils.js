@@ -1,17 +1,10 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { expect } from 'chai';
+import request from 'request';
 import _ from 'lodash';
 // eslint-disable-next-line import/extensions
 import Kinvey from '__SDK__';
 import * as Constants from './constants';
-
-let request;
-let tnsRequest;
-try {
-  request = require('request');
-} catch (error) {
-  tnsRequest = require('tns-core-modules/http').request;
-}
 
 export function ensureArray(entities) {
   return [].concat(entities);
@@ -336,33 +329,13 @@ export function cleanUpCollection(config, collectionName) {
 
   // Start the request
   return new Promise((resolve, reject) => {
-    if (request) {
-      request(options, (error, response) => {
-        // for _blob if there are no files, the clean up request returns 404
-        if ((!error && response.statusCode == 200) || response.statusCode === 404) {
-          resolve();
-        } else {
-          reject(`${collectionName} collection cleanup failed!`);
-        }
-      });
-    } else if (tnsRequest) {
-      tnsRequest({
-        headers: options.headers,
-        method: options.method,
-        url: options.url,
-        content: options.body
-      })
-        .then((response) => {
-          // for _blob if there are no files, the clean up request returns 404
-          if (response.statusCode === 200 || response.statusCode === 404) {
-            resolve();
-          } else {
-            reject(`${collectionName} collection cleanup failed!`);
-          }
-        })
-        .catch(reject);
-    } else {
-      reject(new Error(`Unable to clean up ${collectionName} clollection.`));
-    }
+    request(options, (error, response) => {
+      // for _blob if there are no files, the clean up request returns 404
+      if ((!error && response.statusCode === 200) || response.statusCode === 404) {
+        resolve();
+      } else {
+        reject(`${collectionName} collection cleanup failed!`);
+      }
+    });
   });
 }

@@ -86,44 +86,51 @@ function execute(dbName, tableName, sqlQueries, write = false) {
   });
 }
 
-export async function find(dbName, tableName) {
-  const response = await execute(dbName, tableName, [['SELECT value FROM #{table}']]);
-  return response.result;
-}
-
-export async function count(dbName, tableName) {
-  const response = await execute(dbName, tableName, [['SELECT COUNT(DISTINCT key) AS value FROM #{table}']]);
-  return response.result.shift() || 0;
-}
-
-export async function findById(dbName, tableName, id) {
-  const response = await execute(dbName, tableName, [['SELECT value FROM #{table} WHERE key = ?', [id]]]);
-  return response.result.shift();
-}
-
-export async function save(dbName, tableName, docs = []) {
-  const sqlQueries = docs.map((doc) => ['REPLACE INTO #{table} (key, value) VALUES (?, ?)', [doc._id, JSON.stringify(doc)]]);
-  await execute(dbName, tableName, sqlQueries, true);
-  return docs;
-}
-
-export async function removeById(dbName, tableName, id) {
-  const response = await execute(dbName, tableName, [['DELETE FROM #{table} WHERE key = ?', [id]]], true);
-  return response.rowCount;
-}
-
-export async function clear(dbName, tableName) {
-  await execute(dbName, tableName, [['DROP TABLE IF EXISTS #{table}']], true);
-  return true;
-}
-
-export async function clearAll(dbName) {
-  const response = await execute(dbName, MASTER_TABLE_NAME, [['SELECT name AS value FROM #{table} WHERE type = ? AND value NOT LIKE ?', ['table', '__Webkit%']]]);
-  const tables = response.result;
-
-  if (tables.length > 0) {
-    await Promise.all(tables.map(tableName => execute(dbName, tableName, [['DROP TABLE IF EXISTS #{table}']], true)));
+export default class WebSQLStore {
+  constructor(dbName, tableName) {
+    this.dbName = dbName;
+    this.tableName = tableName;
   }
 
-  return true;
+  async find() {
+    const response = await execute(this.dbName, this.tableName, [['SELECT value FROM #{table}']]);
+    return response.result;
+  }
+
+  async count() {
+    const response = await execute(this.dbName, this.tableName, [['SELECT COUNT(DISTINCT key) AS value FROM #{table}']]);
+    return response.result.shift() || 0;
+  }
+
+  async findById(id) {
+    const response = await execute(this.dbName, this.tableName, [['SELECT value FROM #{table} WHERE key = ?', [id]]]);
+    return response.result.shift();
+  }
+
+  async save(docs = []) {
+    const sqlQueries = docs.map((doc) => ['REPLACE INTO #{table} (key, value) VALUES (?, ?)', [doc._id, JSON.stringify(doc)]]);
+    await execute(this.dbName, this.tableName, sqlQueries, true);
+    return docs;
+  }
+
+  async removeById(id) {
+    const response = await execute(this.dbName, this.tableName, [['DELETE FROM #{table} WHERE key = ?', [id]]], true);
+    return response.rowCount;
+  }
+
+  async clear() {
+    await execute(this.dbName, this.tableName, [['DROP TABLE IF EXISTS #{table}']], true);
+    return true;
+  }
+
+  async clearAll() {
+    const response = await execute(this.dbName, MASTER_TABLE_NAME, [['SELECT name AS value FROM #{table} WHERE type = ? AND value NOT LIKE ?', ['table', '__Webkit%']]]);
+    const tables = response.result;
+
+    if (tables.length > 0) {
+      await Promise.all(tables.map(tableName => execute(this.dbName, tableName, [['DROP TABLE IF EXISTS #{table}']], true)));
+    }
+
+    return true;
+  }
 }

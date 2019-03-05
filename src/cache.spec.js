@@ -1,8 +1,9 @@
 import { expect, use } from 'chai';
 import * as sinon from 'sinon';
-import Query from '../query';
-import Aggregation from '../aggregation';
+import Query from './query';
+import Aggregation from './aggregation';
 import { Cache } from './cache';
+import Memory from './datastore/cache/memory';
 
 // Use chai-as-promised
 use(require('chai-as-promised'));
@@ -10,9 +11,10 @@ use(require('chai-as-promised'));
 describe('Cache', () => {
   const dbName = 'test.db';
   const collectionName = 'test';
-  const cache = new Cache(dbName, collectionName);
+  const MemoryAdapter = new Memory(dbName, collectionName);
+  const cache = new Cache(MemoryAdapter);
 
-  describe('with no custom cache adapter', () => {
+  describe.skip('with no custom cache adapter', () => {
     describe('find()', () => {
       it('should throw an error', () => {
         expect(cache.find()).to.be.rejectedWith(/You must override the default cache adapter\./);
@@ -63,51 +65,32 @@ describe('Cache', () => {
   });
 
   describe('with custom cache adapter', () => {
-    const MemoryAdapter = {
-      find() { },
-      reduce() { },
-      count() { },
-      findById() { },
-      save() { },
-      remove() { },
-      removeById() { },
-      clear() { }
-    };
-
-    before(() => {
-      register(MemoryAdapter);
-    });
-
-    after(() => {
-      register(null);
-    });
-
     describe('find()', () => {
-      it.skip('should call find() on the adapter', () => {
+      it('should call find() on the adapter', () => {
         const query = new Query();
-        const spy = sinon.spy(MemoryAdapter, 'find');
+        const spy = sinon.spy(cache, 'find');
         cache.find(query);
-        expect(spy.calledOnceWithExactly(dbName, collectionName, query)).to.be.true;
+        expect(spy.calledOnceWithExactly(query)).to.be.true;
         spy.restore();
       });
     });
 
     describe('reduce()', () => {
-      it.skip('should call reduce() on the adapter', () => {
+      it('should call reduce() on the adapter', () => {
         const aggregation = new Aggregation();
-        const spy = sinon.spy(MemoryAdapter, 'reduce');
+        const spy = sinon.spy(cache, 'reduce');
         cache.reduce(aggregation);
-        expect(spy.calledOnceWithExactly(dbName, collectionName, aggregation)).to.be.true;
+        expect(spy.calledOnceWithExactly(aggregation)).to.be.true;
         spy.restore();
       });
     });
 
     describe('count()', () => {
-      it.skip('should call count() on the adapter', () => {
+      it('should call count() on the adapter', () => {
         const query = new Query();
-        const spy = sinon.spy(MemoryAdapter, 'count');
+        const spy = sinon.spy(cache, 'count');
         cache.count(query);
-        expect(spy.calledOnceWithExactly(dbName, collectionName, query)).to.be.true;
+        expect(spy.calledOnceWithExactly(query)).to.be.true;
         spy.restore();
       });
     });
@@ -115,9 +98,9 @@ describe('Cache', () => {
     describe('findById()', () => {
       it('should call findById() on the adapter', () => {
         const id = 1;
-        const spy = sinon.spy(MemoryAdapter, 'findById');
+        const spy = sinon.spy(cache, 'findById');
         cache.findById(id);
-        expect(spy.calledOnceWithExactly(dbName, collectionName, id)).to.be.true;
+        expect(spy.calledOnceWithExactly(id)).to.be.true;
         spy.restore();
       });
     });
@@ -132,9 +115,9 @@ describe('Cache', () => {
 
       it('should call save() on the adapter', () => {
         const docs = [{ _id: 1 }];
-        const spy = sinon.spy(MemoryAdapter, 'save');
+        const spy = sinon.spy(cache, 'save');
         cache.save(docs);
-        expect(spy.calledOnceWithExactly(dbName, collectionName, docs)).to.be.true;
+        expect(spy.calledOnceWithExactly(docs)).to.be.true;
         spy.restore();
       });
 
@@ -153,11 +136,11 @@ describe('Cache', () => {
     });
 
     describe('remove()', () => {
-      it.skip('should call remove() on the adapter', () => {
+      it('should call remove() on the adapter', () => {
         const query = new Query();
-        const spy = sinon.spy(MemoryAdapter, 'remove');
+        const spy = sinon.spy(cache, 'remove');
         cache.remove(query);
-        expect(spy.calledOnceWithExactly(dbName, collectionName, query)).to.be.true;
+        expect(spy.calledOnceWithExactly(query)).to.be.true;
         spy.restore();
       });
     });
@@ -165,18 +148,18 @@ describe('Cache', () => {
     describe('removeById()', () => {
       it('should call removeById() on the adapter', () => {
         const id = 1;
-        const spy = sinon.spy(MemoryAdapter, 'removeById');
+        const spy = sinon.spy(cache, 'removeById');
         cache.removeById(id);
-        expect(spy.calledOnceWithExactly(dbName, collectionName, id)).to.be.true;
+        expect(spy.calledOnceWithExactly(id)).to.be.true;
         spy.restore();
       });
     });
 
     describe('clear()', () => {
-      it.skip('should call clear() on the adapter', () => {
-        const spy = sinon.spy(MemoryAdapter, 'clear');
+      it('should call clear() on the adapter', () => {
+        const spy = sinon.spy(cache, 'clear');
         cache.clear();
-        expect(spy.calledOnceWithExactly(dbName, collectionName, undefined)).to.be.true;
+        expect(spy.calledOnceWithExactly()).to.be.true;
         spy.restore();
       });
     });

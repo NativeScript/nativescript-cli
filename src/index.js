@@ -1,5 +1,5 @@
 import Acl from './acl';
-import { StorageProvider } from './cache/store';
+import { StorageProvider } from './datastore/cache/store';
 import * as DataStore from './datastore';
 import Kmd from './kmd';
 import Query from './query';

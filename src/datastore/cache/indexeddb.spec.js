@@ -1,7 +1,6 @@
 import assert from 'assert';
 import indexedDB from 'fake-indexeddb';
-import { randomString } from 'kinvey-test-utils';
-import * as IndexedDB from './indexeddb.old';
+import IndexedDB from './indexeddb.html5';
 
 // Setup window
 global.window = {
@@ -11,16 +10,33 @@ global.window = {
 const DB_NAME = 'test';
 const OBJECT_STORE_NAME = 'books';
 
-describe('IndexedDB (old)', () => {
+function uid(size = 10) {
+  let text = '';
+  const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+
+  for (let i = 0; i < size; i += 1) {
+    text += possible.charAt(Math.floor(Math.random() * possible.length));
+  }
+
+  return text;
+}
+
+function randomString(size = 18, prefix = '') {
+  return `${prefix}${uid(size)}`;
+}
+
+describe('IndexedDB', () => {
+  const indexedDB = new IndexedDB(DB_NAME, OBJECT_STORE_NAME);
+
   beforeEach(() => {
-    return IndexedDB.clearAll(DB_NAME);
+    return indexedDB.clearAll();
   });
 
   describe('find', () => {
     it('should find all the docs', async () => {
       const docs = [{ _id: randomString() }];
-      await IndexedDB.save(DB_NAME, OBJECT_STORE_NAME, docs);
-      const foundDocs = await IndexedDB.find(DB_NAME, OBJECT_STORE_NAME);
+      await indexedDB.save(docs);
+      const foundDocs = await indexedDB.find();
       assert.deepStrictEqual(foundDocs, docs);
     });
   });
@@ -28,8 +44,8 @@ describe('IndexedDB (old)', () => {
   describe('findById', () => {
     it('should find the doc by id', async () => {
       const doc = { _id: 'test1' };
-      await IndexedDB.save(DB_NAME, OBJECT_STORE_NAME, doc);
-      const foundDoc = await IndexedDB.findById(DB_NAME, OBJECT_STORE_NAME, doc._id);
+      await indexedDB.save(doc);
+      const foundDoc = await indexedDB.findById(doc._id);
       assert.deepStrictEqual(foundDoc, doc);
     });
   });
@@ -37,8 +53,8 @@ describe('IndexedDB (old)', () => {
   describe('count', () => {
     it('should count all the docs', async () => {
       const doc = { _id: 'test1' };
-      await IndexedDB.save(DB_NAME, OBJECT_STORE_NAME, doc);
-      const count = await IndexedDB.count(DB_NAME, OBJECT_STORE_NAME);
+      await indexedDB.save(doc);
+      const count = await indexedDB.count();
       assert.equal(count, 1);
     });
   });
@@ -46,7 +62,7 @@ describe('IndexedDB (old)', () => {
   describe('save', () => {
     it('should throw an error if any of the docs do not have an _id', async () => {
       const docs = [{ id: randomString() }];
-      return assert.rejects(IndexedDB.save(DB_NAME, OBJECT_STORE_NAME, docs), {
+      return assert.rejects(indexedDB.save(docs), {
         name: 'DataError',
         message: 'Data provided to an operation does not meet requirements.'
       });
@@ -54,9 +70,9 @@ describe('IndexedDB (old)', () => {
 
     it('should save the docs', async () => {
       const docs = [{ _id: randomString() }];
-      const savedDocs = await IndexedDB.save(DB_NAME, OBJECT_STORE_NAME, docs);
+      const savedDocs = await indexedDB.save(docs);
       assert.deepStrictEqual(savedDocs, docs);
-      const foundDocs = await IndexedDB.find(DB_NAME, OBJECT_STORE_NAME);
+      const foundDocs = await indexedDB.find();
       assert.deepStrictEqual(foundDocs, docs);
     });
 
@@ -65,14 +81,14 @@ describe('IndexedDB (old)', () => {
       const docs2 = [{ _id: randomString() }];
       const docs3 = [{ _id: randomString() }];
       const savedDocs = await Promise.all([
-        IndexedDB.save(DB_NAME, OBJECT_STORE_NAME, docs1),
-        IndexedDB.save(DB_NAME, OBJECT_STORE_NAME, docs2),
-        IndexedDB.save(DB_NAME, OBJECT_STORE_NAME, docs3)
+        indexedDB.save(docs1),
+        indexedDB.save(docs2),
+        indexedDB.save(docs3)
       ]);
       assert.deepStrictEqual(savedDocs[0], docs1);
       assert.deepStrictEqual(savedDocs[1], docs2);
       assert.deepStrictEqual(savedDocs[2], docs3);
-      const foundDocs = await IndexedDB.find(DB_NAME, OBJECT_STORE_NAME);
+      const foundDocs = await indexedDB.find();
       foundDocs.sort((a, b) => a._id.localeCompare(b._id));
       const docs = [].concat(docs1, docs2, docs3);
       docs.sort((a, b) => a._id.localeCompare(b._id));
@@ -83,8 +99,8 @@ describe('IndexedDB (old)', () => {
   describe('removeById', () => {
     it('should remove the doc that matches the id', async () => {
       const doc = { _id: 'test1' };
-      await IndexedDB.save(DB_NAME, OBJECT_STORE_NAME, doc);
-      const count = await IndexedDB.removeById(DB_NAME, OBJECT_STORE_NAME, doc._id);
+      await indexedDB.save(doc);
+      const count = await indexedDB.removeById(doc._id);
       assert.equal(count, 1);
     });
   });

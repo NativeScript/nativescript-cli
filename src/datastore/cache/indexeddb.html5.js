@@ -149,153 +149,160 @@ class IndexedDB {
   }
 }
 
-export function find(dbName, objectStoreName) {
-  const db = new IndexedDB(dbName);
-  return new Promise((resolve, reject) => {
-    db.open(objectStoreName, false, (txn) => {
-      const store = txn.objectStore(objectStoreName);
-      const request = store.openCursor();
-      const docs = [];
+export default class IndexedDBStore {
+  constructor(dbName, objectStoreName) {
+    this.dbName = dbName;
+    this.objectStoreName = objectStoreName;
+  }
 
-      request.onsuccess = (e) => {
-        const cursor = e.target.result;
+  find() {
+    const db = new IndexedDB(this.dbName);
+    return new Promise((resolve, reject) => {
+      db.open(this.objectStoreName, false, (txn) => {
+        const store = txn.objectStore(this.objectStoreName);
+        const request = store.openCursor();
+        const docs = [];
 
-        if (cursor) {
-          docs.push(cursor.value);
-          return cursor.continue();
-        }
+        request.onsuccess = (e) => {
+          const cursor = e.target.result;
 
-        return resolve(docs);
-      };
+          if (cursor) {
+            docs.push(cursor.value);
+            return cursor.continue();
+          }
 
-      request.onerror = (e) => {
-        reject(e.target.error);
-      };
-    }, (error) => {
-      if (error.message.indexOf('not found') !== -1) {
-        resolve([]);
-      } else {
-        reject(error);
-      }
-    });
-  });
-}
+          return resolve(docs);
+        };
 
-export async function count(dbName, objectStoreName) {
-  const db = new IndexedDB(dbName);
-  return new Promise((resolve, reject) => {
-    db.open(objectStoreName, false, (txn) => {
-      const store = txn.objectStore(objectStoreName);
-      const request = store.count();
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = e => reject(e.target.error);
-    }, (error) => {
-      if (error.message.indexOf('not found') !== -1) {
-        resolve(0);
-      } else {
-        reject(error);
-      }
-    });
-  });
-}
-
-export function findById(dbName, objectStoreName, id) {
-  const db = new IndexedDB(dbName);
-  return new Promise((resolve, reject) => {
-    db.open(objectStoreName, false, (txn) => {
-      const store = txn.objectStore(objectStoreName);
-      const request = store.get(id);
-
-      request.onsuccess = (e) => {
-        resolve(e.target.result);
-      };
-
-      request.onerror = (e) => {
-        reject(e.target.error);
-      };
-    }, reject);
-  });
-}
-
-export async function save(dbName, objectStoreName, docs = []) {
-  const db = new IndexedDB(dbName);
-  return new Promise((resolve, reject) => {
-    db.open(objectStoreName, true, (txn) => {
-      const store = txn.objectStore(objectStoreName);
-      let docsToSave = docs;
-
-      if (!Array.isArray(docs)) {
-        docsToSave = [docs];
-      }
-
-      docsToSave.forEach((doc) => {
-        store.put(doc);
-      });
-
-      txn.oncomplete = () => {
-        resolve(docs);
-      };
-
-      txn.onerror = (e) => {
-        reject(new Error(`An error occurred while saving the entities to the ${objectStoreName} collection on the ${this.dbName} IndexedDB database. ${e.target.error.message}.`));
-      };
-    }, reject);
-  });
-}
-
-export async function removeById(dbName, objectStoreName, id) {
-  const db = new IndexedDB(dbName);
-  return new Promise((resolve, reject) => {
-    db.open(objectStoreName, true, (txn) => {
-      const store = txn.objectStore(objectStoreName);
-      const request = store.get(id);
-      store.delete(id);
-
-      txn.oncomplete = () => {
-        const doc = request.result;
-
-        if (doc) {
-          resolve(1);
+        request.onerror = (e) => {
+          reject(e.target.error);
+        };
+      }, (error) => {
+        if (error.message.indexOf('not found') !== -1) {
+          resolve([]);
         } else {
-          reject(new Error(`An entity with _id = ${id} was not found in the ${objectStoreName} collection on the ${this.dbName} database.`));
+          reject(error);
         }
+      });
+    });
+  }
+
+  async count() {
+    const db = new IndexedDB(this.dbName);
+    return new Promise((resolve, reject) => {
+      db.open(this.objectStoreName, false, (txn) => {
+        const store = txn.objectStore(this.objectStoreName);
+        const request = store.count();
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = e => reject(e.target.error);
+      }, (error) => {
+        if (error.message.indexOf('not found') !== -1) {
+          resolve(0);
+        } else {
+          reject(error);
+        }
+      });
+    });
+  }
+
+  findById(id) {
+    const db = new IndexedDB(this.dbName);
+    return new Promise((resolve, reject) => {
+      db.open(this.objectStoreName, false, (txn) => {
+        const store = txn.objectStore(this.objectStoreName);
+        const request = store.get(id);
+
+        request.onsuccess = (e) => {
+          resolve(e.target.result);
+        };
+
+        request.onerror = (e) => {
+          reject(e.target.error);
+        };
+      }, reject);
+    });
+  }
+
+  async save(docs = []) {
+    const db = new IndexedDB(this.dbName);
+    return new Promise((resolve, reject) => {
+      db.open(this.objectStoreName, true, (txn) => {
+        const store = txn.objectStore(this.objectStoreName);
+        let docsToSave = docs;
+
+        if (!Array.isArray(docs)) {
+          docsToSave = [docs];
+        }
+
+        docsToSave.forEach((doc) => {
+          store.put(doc);
+        });
+
+        txn.oncomplete = () => {
+          resolve(docs);
+        };
+
+        txn.onerror = (e) => {
+          reject(new Error(`An error occurred while saving the entities to the ${this.objectStoreName} collection on the ${this.dbName} IndexedDB database. ${e.target.error.message}.`));
+        };
+      }, reject);
+    });
+  }
+
+  async removeById(id) {
+    const db = new IndexedDB(this.dbName);
+    return new Promise((resolve, reject) => {
+      db.open(this.objectStoreName, true, (txn) => {
+        const store = txn.objectStore(this.objectStoreName);
+        const request = store.get(id);
+        store.delete(id);
+
+        txn.oncomplete = () => {
+          const doc = request.result;
+
+          if (doc) {
+            resolve(1);
+          } else {
+            reject(new Error(`An entity with _id = ${id} was not found in the ${this.objectStoreName} collection on the ${this.dbName} database.`));
+          }
+        };
+
+        txn.onerror = () => {
+          reject(new Error(`An entity with _id = ${id} was not found in the ${this.objectStoreName} collection on the ${this.dbName} database.`));
+        };
+      }, reject);
+    });
+  }
+
+  async clear() {
+    const db = new IndexedDB(this.dbName);
+    return new Promise((resolve, reject) => {
+      db.open(this.objectStoreName, true, (txn) => {
+        const objectStore = txn.objectStore(this.objectStoreName);
+        objectStore.clear();
+        txn.oncomplete = () => resolve(true);
+        txn.onerror = (err) => reject(err);
+      }, reject);
+    });
+  }
+
+  clearAll() {
+    return new Promise((resolve, reject) => {
+      const indexedDB = window.indexedDB || window.webkitIndexedDB || window.mozIndexedDB || window.msIndexedDB;
+      const request = indexedDB.deleteDatabase(this.dbName);
+
+      request.onsuccess = () => {
+        delete DB_CACHE[this.dbName];
+        resolve(true);
       };
 
-      txn.onerror = () => {
-        reject(new Error(`An entity with _id = ${id} was not found in the ${objectStoreName} collection on the ${this.dbName} database.`));
+      request.onerror = (e) => {
+        reject(new Error(`An error occurred while clearing the ${this.dbName} IndexedDB database. ${e.target.error.message}.`));
       };
-    }, reject);
-  });
-}
 
-export async function clear(dbName, objectStoreName) {
-  const db = new IndexedDB(dbName);
-  return new Promise((resolve, reject) => {
-    db.open(objectStoreName, true, (txn) => {
-      const objectStore = txn.objectStore(objectStoreName);
-      objectStore.clear();
-      txn.oncomplete = () => resolve(true);
-      txn.onerror = (err) => reject(err);
-    }, reject);
-  });
-}
-
-export function clearAll(dbName) {
-  return new Promise((resolve, reject) => {
-    const indexedDB = window.indexedDB || window.webkitIndexedDB || window.mozIndexedDB || window.msIndexedDB;
-    const request = indexedDB.deleteDatabase(dbName);
-
-    request.onsuccess = () => {
-      delete DB_CACHE[dbName];
-      resolve(true);
-    };
-
-    request.onerror = (e) => {
-      reject(new Error(`An error occurred while clearing the ${dbName} IndexedDB database. ${e.target.error.message}.`));
-    };
-
-    request.onblocked = () => {
-      reject(new Error(`The ${dbName} IndexedDB database could not be cleared due to the operation being blocked.`));
-    };
-  });
+      request.onblocked = () => {
+        reject(new Error(`The ${this.dbName} IndexedDB database could not be cleared due to the operation being blocked.`));
+      };
+    });
+  }
 }

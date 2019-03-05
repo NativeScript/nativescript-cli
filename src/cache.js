@@ -1,22 +1,23 @@
 import PQueue from 'p-queue';
-import Query from '../query';
-import Aggregation from '../aggregation';
-import KinveyError from '../errors/kinvey';
+import Query from './query';
+import Aggregation from './aggregation';
+import KinveyError from './errors/kinvey';
 import { generateId } from './utils';
-import { get as getStore } from './store';
 
 const queue = new PQueue({ concurrency: 1 });
 
 export class Cache {
-  constructor(storeName, collectionName) {
-    this.storeName = storeName;
-    this.collectionName = collectionName;
-    this.store = getStore();
+  constructor(store) {
+    if (!store) {
+      throw new KinveyError('You must override the default cache adapter.');
+    }
+
+    this.store = store;
   }
 
   find(query) {
     return queue.add(async () => {
-      const docs = await this.store.find(this.storeName, this.collectionName);
+      const docs = await this.store.find();
 
       if (query && !(query instanceof Query)) {
         throw new KinveyError('Invalid query. It must be an instance of the Query class.');
@@ -49,11 +50,11 @@ export class Cache {
       return docs.length;
     }
 
-    return queue.add(() => this.store.count(this.storeName, this.collectionName));
+    return queue.add(() => this.store.count());
   }
 
   findById(id) {
-    return queue.add(() => this.store.findById(this.storeName, this.collectionName, id));
+    return queue.add(() => this.store.findById(id));
   }
 
   save(docs) {
@@ -86,7 +87,7 @@ export class Cache {
           return doc;
         });
 
-        await this.store.save(this.storeName, this.collectionName, docsToSave);
+        await this.store.save(docsToSave);
         return singular ? docsToSave.shift() : docsToSave;
       }
 
@@ -107,15 +108,17 @@ export class Cache {
   }
 
   removeById(id) {
-    return queue.add(() => this.store.removeById(this.storeName, this.collectionName, id));
+    return queue.add(() => this.store.removeById(id));
   }
 
   clear() {
-    return queue.add(() => this.store.clear(this.storeName, this.collectionName));
+    return queue.add(() => this.store.clear());
   }
 }
 
-export function clear(storeName) {
-  const store = getStore();
-  return queue.add(() => store.clearAll(storeName));
+// TODO
+export function clear() {
+  throw new KinveyError('Fix');
+  // const store = getStore();
+  // return queue.add(() => store.clearAll(storeName));
 }

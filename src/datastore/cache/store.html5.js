@@ -1,10 +1,10 @@
 import { get as getConfig } from '../kinvey/config';
 import KinveyError from '../errors/kinvey';
-import * as indexedDB from './indexeddb';
-import * as localStorage from './localstorage';
-import * as memory from './memory';
-import * as sessionStorage from './sessionstorage';
-import * as webSQL from './websql';
+import IndexedDB from './indexeddb';
+import LocalStorage from './localstorage';
+import Memory from './memory';
+import SessionStorage from './sessionstorage';
+import WebSQL from './websql';
 
 export const StorageProvider = {
   IndexedDB: 'IndexedDB',
@@ -14,19 +14,19 @@ export const StorageProvider = {
   WebSQL: 'WebSQL'
 };
 
-export function get() {
+export function get(dbName, collectionName) {
   const { storage = StorageProvider.WebSQL } = getConfig();
 
   if (storage === StorageProvider.IndexedDB) {
-    return indexedDB;
+    return new IndexedDB(dbName, collectionName);
   } else if (storage === StorageProvider.LocalStorage) {
-    return localStorage;
+    return new LocalStorage(dbName, collectionName);
   } else if (storage === StorageProvider.Memory) {
-    return memory;
+    return new Memory(dbName, collectionName);
   } else if (storage === StorageProvider.SessionStorage) {
-    return sessionStorage;
+    return new SessionStorage(dbName, collectionName);
   } else if (storage === StorageProvider.WebSQL) {
-    return webSQL;
+    return new WebSQL(dbName, collectionName);
   }
 
   throw new KinveyError('You must override the default cache store.');

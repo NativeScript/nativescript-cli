@@ -1,6 +1,6 @@
 import Acl from '../acl';
 import Aggregation from '../aggregation';
-import { StorageProvider } from '../cache/store';
+import { StorageProvider } from '../datastore/cache/store';
 import { DataStoreType } from '../datastore';
 import Query from '../query';
 import { get as getAppVersion, set as setAppVersion } from '../kinvey/appVersion';

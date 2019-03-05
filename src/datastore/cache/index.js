@@ -1,9 +1,10 @@
 import isString from 'lodash/isString';
 import isEmpty from 'lodash/isEmpty';
-import { Cache, clear as _clear } from '../cache';
-import { get as getConfig } from '../kinvey/config';
-import { KinveyHeaders } from '../http/headers';
-import Query from '../query';
+import { Cache, clear as _clear } from '../../cache';
+import { get as getConfig } from '../../kinvey/config';
+import { KinveyHeaders } from '../../http/headers';
+import Query from '../../query';
+import { get as getStore } from './store';
 
 const QUERY_CACHE_TAG = '_QueryCache';
 
@@ -21,9 +22,9 @@ export class DataStoreCache extends Cache {
     }
 
     if (tag) {
-      super(appKey, `${collectionName}.${tag}`);
+      super(getStore(appKey, `${collectionName}.${tag}`));
     } else {
-      super(appKey, collectionName);
+      super(getStore(appKey, collectionName));
     }
   }
 }
