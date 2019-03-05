@@ -19,7 +19,9 @@ describe('Aggregation', () => {
     // Returns a random integer between min (included) and max (included)
     // Using Math.round() will give you a non-uniform distribution!
     function getRandomIntInclusive(min, max) {
+      // eslint-disable-next-line no-param-reassign
       min = Math.ceil(min);
+      // eslint-disable-next-line no-param-reassign
       max = Math.floor(max);
       return Math.floor(Math.random() * ((max - min) + 1)) + min;
     }
@@ -75,19 +77,19 @@ describe('Aggregation', () => {
       const aggregation = AggregationCount('title');
       aggregation.query = new Query().equalTo('title', commonTitle);
       const result = aggregation.process(entities);
-      expect(result).to.deep.equal({ title: { [commonTitle]: 26 } });
+      expect(result).to.deep.equal([{ count: 26, title: commonTitle }]);
     });
   });
 
   describe('count()', () => {
     it('should return the count of a unique property value for all entities', () => {
       const aggregation = AggregationCount('title');
-      const result = aggregation.process(entities);
-      Object.keys(result.title).forEach((title) => {
-        if (title === commonTitle) {
-          expect(result.title[title]).to.equal(26);
+      const results = aggregation.process(entities);
+      results.forEach((result) => {
+        if (result.title === commonTitle) {
+          expect(result.count).to.equal(26);
         } else {
-          expect(result.title[title]).to.equal(1);
+          expect(result.count).to.equal(1);
         }
       });
     });
@@ -98,7 +100,7 @@ describe('Aggregation', () => {
       const sum = entities.reduce((sum, entity) => sum + entity.count, 0);
       const aggregation = AggregationSum('count');
       const result = aggregation.process(entities);
-      expect(result.count.sum).to.equal(sum);
+      expect(result.sum).to.equal(sum);
     });
   });
 
@@ -107,7 +109,7 @@ describe('Aggregation', () => {
       const min = entities.reduce((min, entity) => Math.min(min, entity.count), Infinity);
       const aggregation = AggregationMin('count');
       const result = aggregation.process(entities);
-      expect(result.count.min).to.equal(min);
+      expect(result.min).to.equal(min);
     });
   });
 
@@ -116,7 +118,7 @@ describe('Aggregation', () => {
       const max = entities.reduce((max, entity) => Math.max(max, entity.count), -Infinity);
       const aggregation = AggregationMax('count');
       const result = aggregation.process(entities);
-      expect(result.count.max).to.equal(max);
+      expect(result.max).to.equal(max);
     });
   });
 
@@ -124,14 +126,15 @@ describe('Aggregation', () => {
     it('should return the count and average of a property for all entities', () => {
       let count = 0;
       const average = entities.reduce((average, entity) => {
+        // eslint-disable-next-line no-param-reassign
         average = ((average * count) + entity.count) / (count + 1);
         count += 1;
         return average;
       }, 0);
       const aggregation = AggregationAverage('count');
       const result = aggregation.process(entities);
-      expect(result.count.average).to.equal(average);
-      expect(result.count.count).to.equal(count);
+      expect(result.average).to.equal(average);
+      expect(result.count).to.equal(count);
     });
   });
 });
