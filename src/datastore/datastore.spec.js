@@ -1,19 +1,30 @@
-
 import expect from 'expect';
-import { collection, getInstance, clear, DataStoreType } from './index';
-import { NetworkStore } from './networkstore';
+import KinveyError from '../errors/kinvey';
+import init from '../kinvey/init';
+import { collection, getInstance, DataStoreType } from './index';
 import { CacheStore } from './cachestore';
-import { KinveyError } from 'kinvey-errors';
-import { init } from 'kinvey-app';
-import { randomString } from 'kinvey-test-utils';
-import { register as registerCache } from 'kinvey-cache-memory';
+import { NetworkStore } from './networkstore';
+
 const collectionName = 'Books';
-var client;
+
+function uid(size = 10) {
+  let text = '';
+  const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+
+  for (let i = 0; i < size; i += 1) {
+    text += possible.charAt(Math.floor(Math.random() * possible.length));
+  }
+
+  return text;
+}
+
+function randomString(size = 18, prefix = '') {
+  return `${prefix}${uid(size)}`;
+}
 
 describe('DataStore', () => {
   before(() => {
-    registerCache();
-    client = init({
+    init({
       appKey: randomString(),
       appSecret: randomString(),
       apiHostname: "https://baas.kinvey.com",
@@ -127,7 +138,7 @@ describe('DataStore', () => {
       const store = new CacheStore(collectionName, { autoSync: false });
       return store.save(entity)
         .then(() => {
-          return clear();
+          return store.clear();
         })
         .then(() => {
           return store.find().toPromise();

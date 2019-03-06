@@ -1,12 +1,12 @@
 import isArray from 'lodash/isArray';
 import Acl from '../acl';
 import Kmd from '../kmd';
-import { get as getSession, set as setSession, remove as removeSession } from '../session';
+import { get as getSession, set as setSession, remove as removeSession } from './session';
 import { formatKinveyUrl } from '../http/utils';
 import { KinveyRequest, RequestMethod } from '../http/request';
 import { Auth } from '../http/auth';
 import { get as getConfig } from '../kinvey/config';
-import getDeviceId from '../device';
+// import getDeviceId from '../device';
 import KinveyError from '../errors/kinvey';
 import { DataStoreCache, QueryCache, SyncCache } from '../datastore/cache';
 // import { isRegistered, register, unregister } from '../live';

@@ -1,26 +1,34 @@
 import nock from 'nock';
 import expect from 'expect';
-import { Aggregation, count } from 'kinvey-aggregation';
-import { Query } from 'kinvey-query';
-import { KinveyError, NotFoundError } from 'kinvey-errors';
-import { randomString } from 'kinvey-test-utils';
-import { register as registerHttp } from 'kinvey-http-node';
-import { set as setSession } from 'kinvey-session';
-import { register as registerCache } from 'kinvey-cache-memory';
-import { init } from 'kinvey-app';
-import { SyncEvent } from './sync';
+import Query from '../query';
+import Aggregation from '../aggregation';
+import KinveyError from '../errors/kinvey';
+import NotFoundError from '../errors/notFound';
+import init from '../kinvey/init';
 import { CacheStore } from './cachestore';
+import { set as setSession } from '../user/session';
+import { SyncEvent } from './sync';
 import { collection, DataStoreType } from './index';
 
 const collectionName = 'Books';
 
+function uid(size = 10) {
+  let text = '';
+  const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+
+  for (let i = 0; i < size; i += 1) {
+    text += possible.charAt(Math.floor(Math.random() * possible.length));
+  }
+
+  return text;
+}
+
+function randomString(size = 18, prefix = '') {
+  return `${prefix}${uid(size)}`;
+}
+
 describe('SyncStore', () => {
   let client;
-
-  before(() => {
-    registerHttp();
-    registerCache();
-  });
 
   before(() => {
     client = init({
@@ -256,7 +264,7 @@ describe('SyncStore', () => {
 
       store.pull()
         .then(() => {
-          const aggregation = count('title');
+          const aggregation = Aggregation.count('title');
           store.group(aggregation)
             .subscribe(onNextSpy, done, () => {
               try {

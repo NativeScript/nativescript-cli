@@ -44,7 +44,7 @@ export default class MemoryStore {
   }
 
   async count() {
-    const docs = await find();
+    const docs = await this.find();
     return docs.length;
   }
 

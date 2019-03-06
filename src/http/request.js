@@ -4,7 +4,7 @@ import { Base64 } from 'js-base64';
 import KinveyError from '../errors/kinvey';
 import InvalidCredentialsError from '../errors/invalidCredentials';
 import { get as getConfig } from '../kinvey/config';
-import { get as getSession, set as setSession, remove as removeSession } from '../session';
+import { get as getSession, set as setSession, remove as removeSession } from '../user/session';
 import { clear } from '../cache';
 import { Headers, KinveyHeaders } from './headers';
 import { serialize, formatKinveyUrl } from './utils';

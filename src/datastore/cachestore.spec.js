@@ -1,26 +1,36 @@
 import nock from 'nock';
 import expect from 'expect';
-import { init } from 'kinvey-app';
-import { Query } from 'kinvey-query';
-import * as Aggregation from 'kinvey-aggregation';
-import { KinveyError, NotFoundError, ServerError, BadRequestError } from 'kinvey-errors';
-import { randomString } from 'kinvey-test-utils';
-import { register as registerHttp } from 'kinvey-http-node';
-import { register as registerCache } from 'kinvey-cache-memory';
-import { set as setSession } from 'kinvey-session';
+import Query from '../query';
+import Aggregation from '../aggregation';
+import KinveyError from '../errors/kinvey';
+import NotFoundError from '../errors/notFound';
+import ServerError from '../errors/server';
+import BadRequestError from '../errors/badRequest';
+import init from '../kinvey/init';
 import { CacheStore } from './cachestore';
+import { set as setSession } from '../user/session';
 import { SyncEvent } from './sync';
 
 const collection = 'Books';
 const pendingPushEntitiesErrMsg = 'Unable to pull entities from the backend. There is 1 entity that needs to be pushed to the backend.';
 
+function uid(size = 10) {
+  let text = '';
+  const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+
+  for (let i = 0; i < size; i += 1) {
+    text += possible.charAt(Math.floor(Math.random() * possible.length));
+  }
+
+  return text;
+}
+
+function randomString(size = 18, prefix = '') {
+  return `${prefix}${uid(size)}`;
+}
+
 describe('CacheStore', () => {
   let client;
-
-  before(() => {
-    registerHttp();
-    registerCache();
-  });
 
   before(() => {
     client = init({
@@ -755,7 +765,7 @@ describe('CacheStore', () => {
 
     it('should throw a ServerError', (done) => {
       const store = new CacheStore(collection, { autoSync: true });
-      const aggregation = new Aggregation.Aggregation();
+      const aggregation = new Aggregation();
 
       nock(client.apiHostname)
         .post(`/appdata/${client.appKey}/${collection}/_group`)

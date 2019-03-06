@@ -1,14 +1,14 @@
 import nock from 'nock';
 import expect from 'expect';
 import Query from '../query';
-// import Aggregation from '../aggregation';
+import Aggregation from '../aggregation';
 import KinveyError from '../errors/kinvey';
 import NotFoundError from '../errors/notFound';
 import ServerError from '../errors/server';
-import init from '../kinvey/initCommon';
+import init from '../kinvey/init';
 import { NetworkStore } from './networkstore';
 import { CacheStore } from './cachestore';
-import { set as setSession } from '../session/session.node';
+import { set as setSession } from '../user/session';
 import { mockRequiresIn } from './require-helper';
 
 const collection = 'Books';
@@ -29,7 +29,7 @@ function randomString(size = 18, prefix = '') {
 }
 
 
-describe.only('NetworkStore', () => {
+describe('NetworkStore', () => {
   let client;
 
   before(() => {
@@ -227,7 +227,7 @@ describe.only('NetworkStore', () => {
         .reply(500);
 
       const store = new NetworkStore(collection);
-      const aggregation = count('title');
+      const aggregation = Aggregation.count('title');
       return store.group(aggregation).toPromise()
         .catch((error) => {
           expect(error).toBeA(ServerError);
@@ -242,7 +242,7 @@ describe.only('NetworkStore', () => {
         .reply(200, reply);
 
       const store = new NetworkStore(collection);
-      const aggregation = count('title');
+      const aggregation = Aggregation.count('title');
       return store.group(aggregation).toPromise()
         .then((result) => {
           expect(result).toBeA(Array);

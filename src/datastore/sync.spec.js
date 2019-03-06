@@ -2,18 +2,32 @@ import nock from 'nock';
 import expect from 'expect';
 import chai from 'chai';
 import cloneDeep from 'lodash/cloneDeep';
-import { SyncError } from 'kinvey-errors';
-import { randomString } from 'kinvey-test-utils';
-import { Query } from 'kinvey-query';
-import { register as registerHttp } from 'kinvey-http-node';
-import { register as registerCache } from 'kinvey-cache-memory';
-import { set as setSession } from 'kinvey-session';
-import { init } from 'kinvey-app';
+import Query from '../query';
+import SyncError from '../errors/sync';
+import init from '../kinvey/init';
 import { CacheStore } from './cachestore';
+import { set as setSession } from '../user/session';
 import { Sync } from './sync';
+
 chai.use(require('chai-as-promised'));
 chai.should();
+
 const collection = 'Books';
+
+function uid(size = 10) {
+  let text = '';
+  const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+
+  for (let i = 0; i < size; i += 1) {
+    text += possible.charAt(Math.floor(Math.random() * possible.length));
+  }
+
+  return text;
+}
+
+function randomString(size = 18, prefix = '') {
+  return `${prefix}${uid(size)}`;
+}
 
 function getBackendPathnameForCollection(client, collection) {
   return `/appdata/${client.appKey}/${collection}`;
@@ -22,11 +36,6 @@ function getBackendPathnameForCollection(client, collection) {
 describe('Sync', () => {
   let client;
   let backendPathname;
-
-  before(() => {
-    registerHttp();
-    registerCache();
-  });
 
   before(() => {
     client = init({

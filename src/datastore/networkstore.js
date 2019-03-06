@@ -2,7 +2,7 @@ import isArray from 'lodash/isArray';
 import { Observable } from 'rxjs';
 import { get as getConfig } from '../kinvey/config';
 // import getDeviceId from '../device';
-// import { get as getSession } from '../session';
+// import { get as getSession } from '../user/session';
 import Aggregation from '../aggregation';
 import Query from '../query';
 import { formatKinveyUrl } from '../http/utils';

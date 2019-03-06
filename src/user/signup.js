@@ -4,7 +4,7 @@ import ActiveUserError from '../errors/activeUser';
 import { formatKinveyUrl } from '../http/utils';
 import { KinveyRequest, RequestMethod } from '../http/request';
 import { Auth } from '../http/auth';
-import { set as setSession } from '../session';
+import { set as setSession } from './session';
 import getActiveUser from './getActiveUser';
 import User from './user';
 
