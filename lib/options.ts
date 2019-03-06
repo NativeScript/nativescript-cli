@@ -35,7 +35,7 @@ export class Options {
 			return;
 		}
 
-		if (projectData.isHmrEnabledByDefault) {
+		if (projectData && projectData.isHmrEnabledByDefault) {
 			this.argv.bundle = this.argv.bundle !== undefined ? this.argv.bundle : "webpack";
 			this.argv.hmr = !this.argv.release;
 		}

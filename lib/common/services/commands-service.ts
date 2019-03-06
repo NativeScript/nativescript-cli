@@ -29,7 +29,13 @@ export class CommandsService implements ICommandsService {
 		private $extensibilityService: IExtensibilityService,
 		private $optionsTracker: IOptionsTracker,
 		private $projectDataService: IProjectDataService) {
-			const projectData = this.$projectDataService.getProjectData();
+			let projectData = null;
+			try {
+				projectData = this.$projectDataService.getProjectData();
+			} catch (err) {
+				this.$logger.trace(`Error while trying to get project data. More info: ${err}`);
+			}
+
 			this.$options.setupOptions(projectData);
 	}
 
