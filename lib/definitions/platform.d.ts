@@ -352,7 +352,6 @@ interface IOptionalFilesToRemove {
 
 interface IPreparePlatformInfoBase extends IPlatform, IAppFilesUpdaterOptionsComposition, IProjectDataComposition, IEnvOptions, IOptionalFilesToSync, IOptionalFilesToRemove, IOptionalNativePrepareComposition {
 	skipCopyTnsModules?: boolean;
-	skipCopyAppResourcesFiles?: boolean;
 }
 
 interface IOptionalNativePrepareComposition {

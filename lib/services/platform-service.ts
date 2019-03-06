@@ -250,7 +250,6 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 				platformInfo.filesToSync,
 				platformInfo.filesToRemove,
 				platformInfo.nativePrepare,
-				platformInfo.skipCopyAppResourcesFiles,
 				platformInfo.skipCopyTnsModules
 			);
 			this.$projectChangesService.savePrepareInfo(platformInfo.platform, platformInfo.projectData);
@@ -321,7 +320,6 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		filesToSync?: string[],
 		filesToRemove?: string[],
 		nativePrepare?: INativePrepare,
-		skipCopyAppResourcesFiles?: boolean,
 		skipCopyTnsModules?: boolean): Promise<void> {
 
 		this.$logger.out("Preparing project...");
@@ -339,7 +337,6 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 			filesToSync,
 			filesToRemove,
 			env,
-			skipCopyAppResourcesFiles,
 			skipCopyTnsModules
 		});
 
