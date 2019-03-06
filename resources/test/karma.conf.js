@@ -1,5 +1,5 @@
 module.exports = function(config) {
-  config.set({
+  const options = {
 
     // base path that will be used to resolve all patterns (eg. files, exclude)
     basePath: '',
@@ -73,5 +73,33 @@ module.exports = function(config) {
     // Continuous Integration mode
     // if true, Karma captures browsers, runs the tests and exits
     singleRun: false
-  })
+  };
+
+  setWebpackPreprocessor(config, options);
+  setWebpack(config, options);
+  
+  config.set(options);
+}
+
+function setWebpackPreprocessor(config, options) {
+  if (config && config.bundle) {
+    if (!options.preprocessors) {
+      options.preprocessors = {};
+    }
+
+    options.files.forEach(file => {
+      if (!options.preprocessors[file]) {
+        options.preprocessors[file] = [];
+      }
+      options.preprocessors[file].push('webpack');
+    });
+  }
+}
+
+function setWebpack(config, options) {
+  if (config && config.bundle) {
+    const env = {};
+    env[config.platform] = true;
+    options.webpack = require('./webpack.config')(env);
+  }
 }

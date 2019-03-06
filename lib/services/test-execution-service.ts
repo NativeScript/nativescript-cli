@@ -208,6 +208,8 @@ export class TestExecutionService implements ITestExecutionService {
 		}
 
 		karmaConfig.projectDir = projectData.projectDir;
+		karmaConfig.bundle = this.$options.bundle;
+		karmaConfig.platform = platform.toLowerCase();
 		this.$logger.debug(JSON.stringify(karmaConfig, null, 4));
 
 		return karmaConfig;
