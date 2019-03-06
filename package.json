@@ -120,7 +120,7 @@
     "grunt-template": "1.0.0",
     "grunt-ts": "6.0.0-beta.16",
     "istanbul": "0.4.5",
-    "latest-version": "^4.0.0",
+    "latest-version": "4.0.0",
     "mocha": "3.1.2",
     "should": "7.0.2",
     "sinon": "4.1.2",

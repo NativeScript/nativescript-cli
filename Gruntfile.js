@@ -243,7 +243,7 @@ module.exports = function (grunt) {
 
 function registerTestingDependenciesTasks(grunt) {
 	const configsBasePath = path.join(__dirname, "config");
-	const generatedVersionFileName = "test-deps-versions-generated.json";
+	const generatedVersionFilePath = path.join(configsBasePath, "test-deps-versions-generated.json");
 
 	grunt.registerTask("generate_unit_testing_dependencies", async function () {
 		var done = this.async();
@@ -253,12 +253,12 @@ function registerTestingDependenciesTasks(grunt) {
 			const dependencyVersion = dependency.version || await latestVersion(dependency.name);
 			dependenciesVersions[dependency.name] = dependencyVersion;
 		}
-		grunt.file.write(path.join(configsBasePath, generatedVersionFileName), JSON.stringify(dependenciesVersions));
+		grunt.file.write(generatedVersionFilePath, JSON.stringify(dependenciesVersions));
 		done();
 	});
 
 	grunt.registerTask("verify_unit_testing_dependencies", function () {
-		if (!grunt.file.exists(path.join(configsBasePath, generatedVersionFileName))) {
+		if (!grunt.file.exists(generatedVersionFilePath)) {
 			throw new Error("Unit testing dependencies are not configured.");
 		}
 	});

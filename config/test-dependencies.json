@@ -6,8 +6,8 @@
         "name": "karma-nativescript-launcher"
     },
     {
-        "name": "karma-jasmine",
-        "framework": "jasmine"
+        "name": "mocha",
+        "framework": "mocha"
     },
     {
         "name": "karma-mocha",
@@ -18,8 +18,8 @@
         "framework": "mocha"
     },
     {
-        "name": "mocha",
-        "framework": "mocha"
+        "name": "karma-jasmine",
+        "framework": "jasmine"
     },
     {
         "name": "karma-qunit",
