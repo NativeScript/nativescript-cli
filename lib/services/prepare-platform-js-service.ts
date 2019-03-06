@@ -51,12 +51,6 @@ export class PreparePlatformJSService extends PreparePlatformService implements 
 		}
 
 		if (!config.changesInfo || config.changesInfo.modulesChanged) {
-			if (!config.skipCopyTnsModules) {
-				await this.copyTnsModules(config.platform, config.platformData, config.projectData, config.appFilesUpdaterOptions, config.projectFilesConfig);
-			}
-		}
-
-		if (!config.skipCopyTnsModules && !this.$fs.exists(path.join(config.platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME, constants.TNS_MODULES_FOLDER_NAME, constants.TNS_CORE_MODULES_NAME))) {
 			await this.copyTnsModules(config.platform, config.platformData, config.projectData, config.appFilesUpdaterOptions, config.projectFilesConfig);
 		}
 	}

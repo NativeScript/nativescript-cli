@@ -350,9 +350,7 @@ interface IOptionalFilesToRemove {
 	filesToRemove?: string[];
 }
 
-interface IPreparePlatformInfoBase extends IPlatform, IAppFilesUpdaterOptionsComposition, IProjectDataComposition, IEnvOptions, IOptionalFilesToSync, IOptionalFilesToRemove, IOptionalNativePrepareComposition {
-	skipCopyTnsModules?: boolean;
-}
+interface IPreparePlatformInfoBase extends IPlatform, IAppFilesUpdaterOptionsComposition, IProjectDataComposition, IEnvOptions, IOptionalFilesToSync, IOptionalFilesToRemove, IOptionalNativePrepareComposition { }
 
 interface IOptionalNativePrepareComposition {
 	nativePrepare?: INativePrepare;
