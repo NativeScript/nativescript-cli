@@ -107,13 +107,16 @@ export class TestExecutionService implements ITestExecutionService {
 						return info;
 					});
 
+				const env = this.$options.env || {};
+				env.unitTesting = !!this.$options.bundle;
+
 				const liveSyncInfo: ILiveSyncInfo = {
 					projectDir: projectData.projectDir,
 					skipWatcher: !this.$options.watch || this.$options.justlaunch,
 					watchAllFiles: this.$options.syncAllFiles,
 					bundle: !!this.$options.bundle,
 					release: this.$options.release,
-					env: this.$options.env,
+					env,
 					timeout: this.$options.timeout,
 					useHotModuleReload: this.$options.hmr
 				};
