@@ -1,19 +1,28 @@
 import nock from 'nock';
 import expect from 'expect';
-import { randomString } from '../tests/utils';
 import KinveyError from './errors/kinvey';
 import NotFoundError from './errors/notFound';
-import { register as registerHttp } from 'kinvey-http-node';
 import login from './user/login';
 import init from './kinvey/init';
-import { endpoint } from './endpoint';
+import endpoint from './endpoint';
+
+function uid(size = 10) {
+  let text = '';
+  const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+
+  for (let i = 0; i < size; i += 1) {
+    text += possible.charAt(Math.floor(Math.random() * possible.length));
+  }
+
+  return text;
+}
+
+function randomString(size = 18, prefix = '') {
+  return `${prefix}${uid(size)}`;
+}
 
 describe('Endpoint', () => {
   let client;
-
-  before(() => {
-    registerHttp();
-  });
 
   before(() => {
     client = init({

@@ -1,13 +1,22 @@
 import { expect } from 'chai';
 import nock from 'nock';
-import { register as registerHttp } from 'kinvey-http-node';
-import { randomString } from 'kinvey-test-utils';
-import { init } from 'kinvey-app';
-import { ping } from './ping';
+import init from './kinvey/init';
+import ping from './ping';
 
-before(() => {
-  registerHttp();
-});
+function uid(size = 10) {
+  let text = '';
+  const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+
+  for (let i = 0; i < size; i += 1) {
+    text += possible.charAt(Math.floor(Math.random() * possible.length));
+  }
+
+  return text;
+}
+
+function randomString(size = 18, prefix = '') {
+  return `${prefix}${uid(size)}`;
+}
 
 describe('ping()', () => {
   it('should return a response', () => {

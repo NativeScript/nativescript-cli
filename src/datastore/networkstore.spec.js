@@ -28,7 +28,6 @@ function randomString(size = 18, prefix = '') {
   return `${prefix}${uid(size)}`;
 }
 
-
 describe('NetworkStore', () => {
   let client;
 
