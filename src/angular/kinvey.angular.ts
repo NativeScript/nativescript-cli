@@ -1,10 +1,10 @@
 import { NgModule } from '@angular/core';
 import sdkInit from '../kinvey/init';
-import DataStoreService from './datastore.service';
-import EndpointService from './endpoint.service';
-import FilesService from './files.service';
-import PingService from './ping.service';
-import UserService from './user.service';
+import DataStoreService from './datastore';
+import EndpointService from './endpoint';
+import FilesService from './files';
+import PingService from './ping';
+import UserService from './user';
 
 @NgModule()
 export default class KinveyModule {
