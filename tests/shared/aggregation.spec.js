@@ -8,7 +8,6 @@ import * as constants from './constants'
 
 const dataStoreTypes = [Kinvey.DataStoreType.Network, Kinvey.DataStoreType.Sync];
 var createdUserIds = []
-const textFieldValues = ['Europe', 'Asia', 'America'];
 
 before(() => {
     return Kinvey.init({
@@ -19,7 +18,7 @@ before(() => {
 });
 
 
-describe.only('Aggregation', () => {
+describe('Aggregation', () => {
     const entity1 = utilities.getEntity(utilities.randomString(), 'Europe', 1);
     const entity2 = utilities.getEntity(utilities.randomString(), 'Asia', 3);
     const entity3 = utilities.getEntity(utilities.randomString(), 'Asia', 2);
@@ -488,7 +487,6 @@ describe.only('Aggregation', () => {
 
     dataStoreTypes.forEach((dataStoreType) => {
         describe(`Aggregation with ${dataStoreType}`, () => {
-            console.log(dataStoreType)
             const activeStore = Kinvey.DataStore.collection(collectionName, dataStoreType);
             before((done) => {
                 utilities.cleanUpCollectionData(collectionName)
@@ -676,7 +674,6 @@ describe.only('Aggregation', () => {
                     const stream = activeStore.group(aggregation);
                     stream.subscribe((countResult) => {
                         try {
-                            console.log('1')
                             expect(countResult.length).to.equal(4);
                             expect(pickAggregationResult(pickAggregationResult(countResult, 'Europe'), 1, constants.NumberFieldName)[0].count).to.equal(2);
                             expect(pickAggregationResult(pickAggregationResult(countResult, 'Europe'), 2, constants.NumberFieldName)[0].count).to.equal(1);

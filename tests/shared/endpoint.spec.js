@@ -4,7 +4,7 @@ import * as Kinvey from '__SDK__';
 import * as config from './config';
 import * as utilities from './utils';
 
-describe.only('Endpoint', () => {
+describe('Endpoint', () => {
     var createdUserIds = [];
     before(() => {
         return Kinvey.init({
