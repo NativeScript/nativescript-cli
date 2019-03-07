@@ -187,5 +187,6 @@ $injector.require("hmrStatusService", "./services/hmr-status-service");
 
 $injector.require("pacoteService", "./services/pacote-service");
 $injector.require("qrCodeTerminalService", "./services/qr-code-terminal-service");
+$injector.require("testInitializationService", "./services/test-initialization-service");
 
 $injector.require("networkConnectivityValidator", "./helpers/network-connectivity-validator");

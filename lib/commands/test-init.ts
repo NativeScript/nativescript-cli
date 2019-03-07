@@ -5,10 +5,6 @@ import { fromWindowsRelativePathToUnix } from '../common/helpers';
 class TestInitCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
 
-	private frameworkDependencies: IDictionary<string[]> = {
-		mocha: ['karma-chai', 'mocha'],
-	};
-
 	private karmaConfigAdditionalFrameworks: IDictionary<string[]> = {
 		mocha: ['chai']
 	};
@@ -21,7 +17,8 @@ class TestInitCommand implements ICommand {
 		private $fs: IFileSystem,
 		private $resources: IResourceLoader,
 		private $pluginsService: IPluginsService,
-		private $logger: ILogger) {
+		private $logger: ILogger,
+		private $testInitializationService: ITestInitializationService) {
 		this.$projectData.initializeProjectData();
 	}
 
@@ -34,28 +31,25 @@ class TestInitCommand implements ICommand {
 			this.$errors.fail(`Unknown or unsupported unit testing framework: ${frameworkToInstall}`);
 		}
 
-		const dependencies = this.frameworkDependencies[frameworkToInstall] || [];
-		const modulesToInstall: IDependencyInformation[] = [
-			{
-				name: 'karma',
-				// Hardcode the version unitl https://github.com/karma-runner/karma/issues/3052 is fixed
-				version: "2.0.2"
-			},
-			{
-				name: `karma-${frameworkToInstall}`
-			},
-			{
-				name: 'karma-nativescript-launcher'
-			}
-		];
+		let modulesToInstall: IDependencyInformation[] = [];
+		try {
+			const dependencies = this.$testInitializationService.getDependencies(frameworkToInstall);
+			const dependenciesVersions = this.$testInitializationService.getDependenciesVersions();
+			modulesToInstall = dependencies.map(dependency => {
+				const dependencyVersion = dependenciesVersions[dependency];
+				if (!dependencyVersion) {
+					this.$errors.failWithoutHelp(`'${dependency}' is not a registered dependency.`);
+				}
 
-		modulesToInstall.push(...dependencies.map(f => ({ name: f })));
+				return { name: dependency, version: dependencyVersion };
+			});
+		} catch (err) {
+			this.$errors.failWithoutHelp(`Unable to install the unit testing dependencies. Error: '${err.message}'`);
+		}
 
 		for (const mod of modulesToInstall) {
 			let moduleToInstall = mod.name;
-			if (mod.version) {
-				moduleToInstall += `@${mod.version}`;
-			}
+			moduleToInstall += `@${mod.version}`;
 			await this.$packageManager.install(moduleToInstall, projectDir, {
 				'save-dev': true,
 				'save-exact': true,
