@@ -775,7 +775,6 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 			);
 
 			await this.prepareNativeSourceCode(constants.TNS_NATIVE_SOURCE_GROUP_NAME, resourcesNativeCodePath, projectData);
-			await this.prepareExtensionsCode(constants.TNS_NATIVE_EXTENSIONS_GROUP_NAME, path.join(projectData.getAppResourcesDirectoryPath(), this.getPlatformData(projectData).normalizedPlatformName, constants.NATIVE_EXTENSION_FOLDER), projectData);
 		}
 
 	}
@@ -981,6 +980,17 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 			// So the correct order is `pod install` to be executed before merging pod's xcconfig file.
 			await this.$cocoapodsService.mergePodXcconfigFile(projectData, platformData, opts);
 		}
+
+		this.removeExtensions(projectData);
+		await this.prepareExtensionsCode(path.join(projectData.getAppResourcesDirectoryPath(), this.getPlatformData(projectData).normalizedPlatformName, constants.NATIVE_EXTENSION_FOLDER), projectData);
+		const plugins = await this.getAllInstalledPlugins(projectData);
+		for (const pluginIndex in plugins) {
+			const pluginData = plugins[pluginIndex];
+			const pluginPlatformsFolderPath = pluginData.pluginPlatformsFolderPath(IOSProjectService.IOS_PLATFORM_NAME);
+
+			const extensionPath = path.join(pluginPlatformsFolderPath, constants.NATIVE_EXTENSION_FOLDER);
+			await this.prepareExtensionsCode(extensionPath, projectData);
+		};
 	}
 	public beforePrepareAllPlugins(): Promise<void> {
 		return Promise.resolve();
@@ -1096,7 +1106,11 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		this.savePbxProj(project, projectData);
 	}
 
-	private async prepareExtensionsCode(groupName: string, extensionsFolderPath: string, projectData: IProjectData): Promise<void> {
+	private async prepareExtensionsCode(extensionsFolderPath: string, projectData: IProjectData): Promise<void> {
+		if(!this.$fs.exists(extensionsFolderPath)){
+			return;
+		}
+
 		const project = this.createPbxProj(projectData);
 
 		this.$fs.readDirectory(extensionsFolderPath).forEach(extensionFolder => {
@@ -1109,35 +1123,40 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 				path.relative(this.getPlatformData(projectData).projectRoot, extensionPath)
 
 			);
-			const sourcesBuildPhase = project.addBuildPhase(
+			project.addBuildPhase(
 				[],
 				'PBXSourcesBuildPhase',
 				'Sources',
 				target.uuid
 			);
-			const frameworksBuildPhase = project.addBuildPhase(
-				[],
-				'PBXFrameworksBuildPhase',
-				'Frameworks',
-				target.uuid
-			);
 
-			const extensionJson = this.$fs.readJson(path.join(extensionsFolderPath, extensionFolder, "extension.json"));
-			_.forEach(extensionJson.frameworks, framework => {
-				project.addFramework(
-					framework,
-					{ target: target.uuid }
-				);
-			});
-			var resourcesBuildPhase = project.addBuildPhase(
+			project.addBuildPhase(
 				[],
 				'PBXResourcesBuildPhase',
 				'Resources',
 				target.uuid
 			);
 
+			project.addBuildPhase(
+				[],
+				'PBXFrameworksBuildPhase',
+				'Frameworks',
+				target.uuid
+			);
 
-			project.addPbxGroup(group.files, group.name, group.path, null, { isMain: true, target: target.uuid });
+			const extJsonPath = path.join(extensionsFolderPath, extensionFolder, "extension.json");
+			if(this.$fs.exists(extJsonPath)) {
+				const extensionJson = this.$fs.readJson(extJsonPath);
+				_.forEach(extensionJson.frameworks, framework => {
+					project.addFramework(
+						framework,
+						{ target: target.uuid }
+					);
+				});
+			}
+
+
+			project.addPbxGroup(group.files, group.name, group.path, null, { isMain: true, target: target.uuid, filesRelativeToProject: true });
 			project.addBuildProperty("PRODUCT_BUNDLE_IDENTIFIER", `${projectData.projectIdentifiers.ios}.${extensionFolder}`, "Debug", extensionFolder);
 			project.addBuildProperty("PRODUCT_BUNDLE_IDENTIFIER", `${projectData.projectIdentifiers.ios}.${extensionFolder}`, "Release", extensionFolder);
 		});
@@ -1192,6 +1211,12 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		const group = this.getRootGroup(pluginData.name, pluginPlatformsFolderPath);
 		project.removePbxGroup(group.name, group.path);
 		project.removeFromHeaderSearchPaths(group.path);
+		this.savePbxProj(project, projectData);
+	}
+
+	private removeExtensions(projectData: IProjectData): void {
+		const project = this.createPbxProj(projectData);
+		project.removeTargetsByProductType("com.apple.product-type.app-extension");
 		this.savePbxProj(project, projectData);
 	}
 
