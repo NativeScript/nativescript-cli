@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import * as Kinvey from '__SDK__';
-import * as utilities from '../shared/utils';
-import * as config from '../shared/config';
+import * as utilities from '../../shared/utils';
+import * as config from '../../shared/config';
 import * as idb from 'idb';
 
 const createdUserIds = [];
