@@ -74,7 +74,7 @@ interface INsConfig {
 	appPath?: string;
 	appResourcesPath?: string;
 	shared?: boolean;
-	isHmrEnabledByDefault?: boolean;
+	useLegacyWorkflow?: boolean;
 }
 
 interface IProjectData extends ICreateProjectData {
@@ -103,7 +103,7 @@ interface IProjectData extends ICreateProjectData {
 	/**
 	 * Defines if the project has hmr enabled by default
 	 */
-	isHmrEnabledByDefault: boolean;
+	useLegacyWorkflow: boolean;
 
 	/**
 	 * Initializes project data with the given project directory. If none supplied defaults to --path option or cwd.

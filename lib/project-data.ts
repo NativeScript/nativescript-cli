@@ -61,7 +61,7 @@ export class ProjectData implements IProjectData {
 	public buildXcconfigPath: string;
 	public podfilePath: string;
 	public isShared: boolean;
-	public isHmrEnabledByDefault: boolean;
+	public useLegacyWorkflow: boolean;
 
 	constructor(private $fs: IFileSystem,
 		private $errors: IErrors,
@@ -136,7 +136,7 @@ export class ProjectData implements IProjectData {
 			this.buildXcconfigPath = path.join(this.appResourcesDirectoryPath, this.$devicePlatformsConstants.iOS, constants.BUILD_XCCONFIG_FILE_NAME);
 			this.podfilePath = path.join(this.appResourcesDirectoryPath, this.$devicePlatformsConstants.iOS, constants.PODFILE_NAME);
 			this.isShared = !!(this.nsConfig && this.nsConfig.shared);
-			this.isHmrEnabledByDefault = !!(this.nsConfig && this.nsConfig.isHmrEnabledByDefault);
+			this.useLegacyWorkflow = this.nsConfig && this.nsConfig.useLegacyWorkflow;
 			return;
 		}
 
