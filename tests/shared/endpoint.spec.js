@@ -3,7 +3,7 @@ import * as Kinvey from '__SDK__';
 import * as config from './config';
 import * as utilities from './utils';
 
-describe.only('Endpoint', () => {
+describe('Endpoint', () => {
   const createdUserIds = [];
 
   before(() => {
@@ -66,7 +66,7 @@ describe.only('Endpoint', () => {
       });
   });
 
-  //Skipped until MLIBZ-2844
+  // Skipped until MLIBZ-2844
   it.skip('should throw error for non-object args parameter', (done) => {
     Kinvey.CustomEndpoint.execute('testEndpoint', 'stringValue')
       .then(() => {

@@ -23,7 +23,7 @@ export default class SessionStorageStore {
   }
 
   async save(docs = []) {
-    const existingDocs = await this.find(dbName, tableName);
+    const existingDocs = await this.find(this.dbName, this.tableName);
     const savedDocs = docs.concat(existingDocs.filter((existingDoc) => docs.findIndex((doc) => doc._id === existingDoc._id) < 0));
     window.sessionStorage.setItem(`${this.dbName}.${this.tableName}`, JSON.stringify(savedDocs));
     return docs;
