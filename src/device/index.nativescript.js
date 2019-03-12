@@ -5,7 +5,7 @@ import { uuidv4 } from './utils';
 const secureStorage = new SecureStorage();
 
 // eslint-disable-next-line import/prefer-default-export
-export default function get() {
+export function get() {
   const { appKey } = getConfig();
   const key = `${appKey}.deviceId`;
   let id = secureStorage.getSync({ key });

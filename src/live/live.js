@@ -1,5 +1,4 @@
 import isFunction from 'lodash/isFunction';
-import PubNub from 'pubnub';
 import { EventEmitter } from 'events';
 import KinveyError from '../errors/kinvey';
 
@@ -55,12 +54,11 @@ export function reconnect() {
   }
 }
 
-export function register(config) {
+export function register(_pubnub) {
   if (!isRegistered()) {
-    pubnub = new PubNub(Object.assign({}, { ssl: true, dedupeOnSubscribe: true }, config));
-    pubnub.subscribe({ channelGroups: [config.userChannelGroup] });
     listener = new Listener();
-    pubnub.addListener(listener);
+    _pubnub.addListener(listener);
+    pubnub = _pubnub;
   }
 }
 
