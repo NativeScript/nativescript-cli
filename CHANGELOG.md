@@ -1,6 +1,20 @@
 NativeScript CLI Changelog
 ================
 
+5.2.3 (2019, March 12)
+==
+
+### Fixed
+* [Fixed #4426](https://github.com/NativeScript/nativescript-cli/pull/4426): Some http requests may stuck and instead of hanging, we should retry them
+
+
+5.2.2 (2019, March 08)
+==
+
+### Fixed
+* [Fixed #4390](https://github.com/NativeScript/nativescript-cli/issues/4390): Update and synchronise the unit testing dependencies
+
+
 5.2.1 (2019, March 05)
 ==
 ### Implemented
