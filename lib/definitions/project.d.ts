@@ -74,6 +74,7 @@ interface INsConfig {
 	appPath?: string;
 	appResourcesPath?: string;
 	shared?: boolean;
+	useLegacyWorkflow?: boolean;
 }
 
 interface IProjectData extends ICreateProjectData {
@@ -98,6 +99,11 @@ interface IProjectData extends ICreateProjectData {
 	 * Value is true when project has nsconfig.json and it has `shared: true` in it.
 	 */
 	isShared: boolean;
+
+	/**
+	 * Defines if the project has hmr enabled by default
+	 */
+	useLegacyWorkflow: boolean;
 
 	/**
 	 * Initializes project data with the given project directory. If none supplied defaults to --path option or cwd.
