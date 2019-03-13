@@ -490,6 +490,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			}
 
 			xcode.setAutomaticSigningStyle(projectData.projectName, teamId);
+			xcode.setAutomaticSigningStyleByTargetProductType("com.apple.product-type.app-extension", teamId);
 			xcode.save();
 
 			this.$logger.trace(`Set Automatic signing style and team id ${teamId}.`);
@@ -524,13 +525,14 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				if (!mobileprovision) {
 					this.$errors.failWithoutHelp("Failed to find mobile provision with UUID or Name: " + provision);
 				}
-
-				xcode.setManualSigningStyle(projectData.projectName, {
+				const configuration = {
 					team: mobileprovision.TeamIdentifier && mobileprovision.TeamIdentifier.length > 0 ? mobileprovision.TeamIdentifier[0] : undefined,
 					uuid: mobileprovision.UUID,
 					name: mobileprovision.Name,
 					identity: mobileprovision.Type === "Development" ? "iPhone Developer" : "iPhone Distribution"
-				});
+				}
+				xcode.setManualSigningStyle(projectData.projectName, configuration);
+				xcode.setManualSigningStyleByTargetProductType("com.apple.product-type.app-extension", configuration);
 				xcode.save();
 
 				// this.cache(uuid);
@@ -1107,6 +1109,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 	}
 
 	private async prepareExtensionsCode(extensionsFolderPath: string, projectData: IProjectData): Promise<void> {
+		const targetUuids: string[] = [];
 		if(!this.$fs.exists(extensionsFolderPath)){
 			return;
 		}
@@ -1159,9 +1162,27 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 			project.addPbxGroup(group.files, group.name, group.path, null, { isMain: true, target: target.uuid, filesRelativeToProject: true });
 			project.addBuildProperty("PRODUCT_BUNDLE_IDENTIFIER", `${projectData.projectIdentifiers.ios}.${extensionFolder}`, "Debug", extensionFolder);
 			project.addBuildProperty("PRODUCT_BUNDLE_IDENTIFIER", `${projectData.projectIdentifiers.ios}.${extensionFolder}`, "Release", extensionFolder);
+			targetUuids.push(target.uuid);
 		});
 
 		this.savePbxProj(project, projectData, true);
+
+		const xcode = this.$pbxprojDomXcode.Xcode.open(this.getPbxProjPath(projectData));
+		const signing = xcode.getSigning(projectData.projectName);
+		if(signing !== undefined) {
+			_.forEach(targetUuids, targetUuid => {
+				if(signing.style === "Automatic"){
+					xcode.setAutomaticSigningStyleByTargetKey(targetUuid, signing.team);
+				} else {
+					for(let config in signing.configurations) {
+						const signingConfiguration = signing.configurations[config];
+						xcode.setManualSigningStyleByTargetKey(targetUuid, signingConfiguration);
+						break;
+					}
+				}
+			})
+		}
+		xcode.save();
 	}
 
 	private getRootGroup(name: string, rootPath: string) {
