@@ -12,6 +12,7 @@ import FilesService from './files';
 import KinveyModule from './kinvey';
 import PingService from './ping';
 import UserService from './user';
+import PushService from './push.service';
 
 export {
   // Kinvey
@@ -50,5 +51,8 @@ export {
   UserService,
 
   // Ping
-  PingService
+  PingService,
+
+  // Push
+  PushService
 };

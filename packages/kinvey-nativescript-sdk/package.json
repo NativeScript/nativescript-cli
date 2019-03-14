@@ -24,6 +24,7 @@
     "loglevel": "~1.6.1",
     "loglevel-plugin-prefix": "~0.8.4",
     "lokijs": "~1.5.6",
+    "nativescript-plugin-firebase": "~7.7.0",
     "nativescript-secure-storage": "~2.3.0",
     "nativescript-sqlite": "~2.2.3",
     "nativescript-urlhandler": "~1.2.2",
