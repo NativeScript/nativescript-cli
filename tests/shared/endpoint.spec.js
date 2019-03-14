@@ -5,7 +5,7 @@ import * as utilities from './utils';
 
 describe('Endpoint', () => {
   const createdUserIds = [];
-
+  
   before(() => {
     return Kinvey.init({
       appKey: process.env.APP_KEY,
