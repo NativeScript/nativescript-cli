@@ -2,7 +2,7 @@ import { get as getConfig } from '../kinvey/config';
 import { uuidv4 } from './utils';
 
 // eslint-disable-next-line import/prefer-default-export
-export default function get() {
+export function get() {
   const { appKey } = getConfig();
   const key = `${appKey}.deviceId`;
   let id = window.localStorage.getItem(key);

@@ -1,15 +1,15 @@
 import isArray from 'lodash/isArray';
 import { Observable } from 'rxjs';
 import { get as getConfig } from '../kinvey/config';
-// import getDeviceId from '../device';
-// import { get as getSession } from '../user/session';
+import { get as getDeviceId } from '../device';
+import { get as getSession } from '../user/session';
 import Aggregation from '../aggregation';
 import Query from '../query';
 import { formatKinveyUrl } from '../http/utils';
 import { KinveyRequest, RequestMethod } from '../http/request';
 import { Auth } from '../http/auth';
 import KinveyError from '../errors/kinvey';
-// import { subscribeToChannel, unsubscribeFromChannel } from '../live';
+import { subscribeToChannel, unsubscribeFromChannel } from '../live';
 
 const NAMESPACE = 'appdata';
 
@@ -27,9 +27,6 @@ export class NetworkStore {
     this.collectionName = collectionName;
   }
 
-  /**
-   * @deprecated 4.0.0 - Use collectionName instead.
-   */
   get collection() {
     return this.collectionName;
   }
@@ -44,10 +41,10 @@ export class NetworkStore {
     return `${appKey}.c-${this.collectionName}`;
   }
 
-  // get personalChannelName() {
-  //   const session = getSession();
-  //   return `${this.channelName}.u-${session._id}`;
-  // }
+  get personalChannelName() {
+    const session = getSession();
+    return `${this.channelName}.u-${session._id}`;
+  }
 
   find(query, options = {}) {
     const stream = Observable.create(async (observer) => {
@@ -317,39 +314,39 @@ export class NetworkStore {
     return response.data;
   }
 
-  // async subscribe(receiver, options = {}) {
-  //   const { apiProtocol, apiHost } = getConfig();
-  //   const {
-  //     timeout,
-  //     properties,
-  //     trace,
-  //     skipBL
-  //   } = options;
-  //   const url = formatKinveyUrl(apiProtocol, apiHost, `${this.pathname}/_subscribe`);
-  //   const request = createRequest(RequestMethod.POST, url, { deviceId: getDeviceId() });
-  //   request.headers.customRequestProperties = properties;
-  //   request.timeout = timeout;
-  //   await request.execute();
-  //   subscribeToChannel(this.channelName, receiver);
-  //   subscribeToChannel(this.personalChannelName, receiver);
-  //   return true;
-  // }
+  async subscribe(receiver, options = {}) {
+    const { apiProtocol, apiHost } = getConfig();
+    const {
+      timeout,
+      properties,
+      trace,
+      skipBL
+    } = options;
+    const url = formatKinveyUrl(apiProtocol, apiHost, `${this.pathname}/_subscribe`);
+    const request = createRequest(RequestMethod.POST, url, { deviceId: getDeviceId() });
+    request.headers.customRequestProperties = properties;
+    request.timeout = timeout;
+    await request.execute();
+    subscribeToChannel(this.channelName, receiver);
+    subscribeToChannel(this.personalChannelName, receiver);
+    return true;
+  }
 
-  // async unsubscribe(options = {}) {
-  //   const { apiProtocol, apiHost } = getConfig();
-  //   const {
-  //     timeout,
-  //     properties,
-  //     trace,
-  //     skipBL
-  //   } = options;
-  //   const url = formatKinveyUrl(apiProtocol, apiHost, `${this.pathname}/_unsubscribe`);
-  //   const request = createRequest(RequestMethod.POST, url, { deviceId: getDeviceId() });
-  //   request.headers.customRequestProperties = properties;
-  //   request.timeout = timeout;
-  //   await request.execute();
-  //   unsubscribeFromChannel(this.channelName);
-  //   unsubscribeFromChannel(this.personalChannelName);
-  //   return true;
-  // }
+  async unsubscribe(options = {}) {
+    const { apiProtocol, apiHost } = getConfig();
+    const {
+      timeout,
+      properties,
+      trace,
+      skipBL
+    } = options;
+    const url = formatKinveyUrl(apiProtocol, apiHost, `${this.pathname}/_unsubscribe`);
+    const request = createRequest(RequestMethod.POST, url, { deviceId: getDeviceId() });
+    request.headers.customRequestProperties = properties;
+    request.timeout = timeout;
+    await request.execute();
+    unsubscribeFromChannel(this.channelName);
+    unsubscribeFromChannel(this.personalChannelName);
+    return true;
+  }
 }
