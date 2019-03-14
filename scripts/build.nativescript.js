@@ -8,7 +8,7 @@ const tsConfigNativeScript = require('../tsconfig.nativescript.json');
 async function build() {
   const srcDir = path.resolve(ROOT_DIR, 'src');
   const buildDir = path.resolve(PACKAGES_DIR, 'kinvey-nativescript-sdk', 'src');
-  const extensions = ['.nativescript', '.angular'];
+  const extensions = ['angular', 'nativescript'];
 
   // Remove the existing SDK src directory
   await fs.remove(buildDir);

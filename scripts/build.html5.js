@@ -6,7 +6,7 @@ const { PACKAGES_DIR, ROOT_DIR } = require('./utils');
 async function build() {
   const srcDir = path.resolve(ROOT_DIR, 'src');
   const buildDir = path.resolve(PACKAGES_DIR, 'kinvey-html5-sdk', 'src');
-  const extensions = ['.html5'];
+  const extensions = ['html5'];
 
   // Remove the existing SDK src directory
   await fs.remove(buildDir);

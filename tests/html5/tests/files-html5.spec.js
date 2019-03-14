@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 // eslint-disable-next-line import/extensions
 import * as Kinvey from '__SDK__';
-import * as utilities from '../shared/utils';
+import * as utilities from '../../shared/utils';
 
 describe('Files', () => {
   const stringContent = utilities.randomString();

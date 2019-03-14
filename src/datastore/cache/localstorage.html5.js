@@ -23,7 +23,7 @@ export default class LocalStorageStore {
   }
 
   async save(docs = []) {
-    const existingDocs = await this.find(dbName, tableName);
+    const existingDocs = await this.find(this.dbName, this.tableName);
     const savedDocs = docs.concat(existingDocs.filter((existingDoc) => docs.findIndex((doc) => doc._id === existingDoc._id) < 0));
     window.localStorage.setItem(`${this.dbName}.${this.tableName}`, JSON.stringify(savedDocs));
     return docs;
@@ -48,7 +48,7 @@ export default class LocalStorageStore {
   async clearAll() {
     for (let i = 0, len = window.localStorage.length; i < len; i += 1) {
       const key = window.localStorage.key(i);
-      if (key.indexOf(this.dbName) >= 0) {
+      if (key && key.indexOf(this.dbName) >= 0) {
         window.localStorage.removeItem(key);
       }
     }

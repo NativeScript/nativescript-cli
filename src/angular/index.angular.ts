@@ -6,12 +6,12 @@ import Query from '../query';
 import { get as getAppVersion, set as setAppVersion } from '../kinvey/appVersion';
 import Kmd from '../kmd';
 import AuthorizationGrant from '../user/authorizationGrant';
-import DataStoreService from './datastore.service';
-import EndpointService from './endpoint.service';
-import FilesService from './files.service';
-import KinveyModule from './kinvey.module';
-import PingService from './ping.service';
-import UserService from './user.service';
+import DataStoreService from './datastore';
+import EndpointService from './endpoint';
+import FilesService from './files';
+import KinveyModule from './kinvey';
+import PingService from './ping';
+import UserService from './user';
 
 export {
   // Kinvey

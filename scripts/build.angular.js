@@ -7,7 +7,7 @@ const tsConfig = require('../tsconfig.json');
 async function build() {
   const srcDir = path.resolve(ROOT_DIR, 'src');
   const buildDir = path.resolve(PACKAGES_DIR, 'kinvey-angular-sdk', 'src');
-  const extensions = ['.html5', '.angular'];
+  const extensions = ['html5', 'angular'];
 
   // Remove the existing SDK src directory
   await fs.remove(buildDir);

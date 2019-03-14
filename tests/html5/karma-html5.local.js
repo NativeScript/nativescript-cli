@@ -18,21 +18,22 @@ module.exports = function (config) {
 
     // list of files / patterns to load in the browser
     files: [
-      '../shared/auth.spec.js',
-      // 'specs/html5/**/*.spec.js'
+      '../shared/**/*.spec.js',
+      './tests/**/*.spec.js'
     ],
 
     // list of files / patterns to exclude
     exclude: [
       '../shared/delta-set.spec.js',
-      '../shared/live-services.spec.js'
+      '../shared/live-services.spec.js',
+      '../shared/files.spec.js'
     ],
 
     // preprocess matching files before serving them to the browser
     // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
     preprocessors: {
-      '../shared/auth.spec.js': ['webpack'],
-      // 'specs/html5/**/*.spec.js': ['webpack']
+      '../shared/**/*.spec.js': ['webpack'],
+      './tests/**/*.spec.js': ['webpack']
     },
 
     // test results reporter to use
