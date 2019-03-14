@@ -20,7 +20,7 @@ const config = {
     fs: 'empty'
   },
   output: {
-    filename: '[name].js',
+    filename: `[name]-${pkg.version}.js`,
     path: path.resolve(__dirname, 'dist'),
     libraryTarget: 'umd',
     library: 'Kinvey'

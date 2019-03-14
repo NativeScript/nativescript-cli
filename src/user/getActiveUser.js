@@ -1,4 +1,4 @@
-import { get as getSession } from '../session';
+import { get as getSession } from './session';
 import User from './user';
 
 export default function getActiveUser() {

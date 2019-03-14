@@ -21,9 +21,7 @@ jobs:
     - stages: "Tests"
       name: "Unit Tests"
       script:
-      - npx lerna bootstrap
-      - npx lerna run build --parallel --stream
-      - npx lerna run test --stream
+      - npm test
     - script:
       - npx lerna bootstrap
       - npx lerna run build --parallel --stream

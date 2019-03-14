@@ -107,6 +107,7 @@ async function getTokenWithUsernamePassword(username, password, clientId, option
     url: formatKinveyUrl(authProtocol, authHost, '/oauth/token'),
     body: {
       grant_type: 'password',
+      client_id: clientId,
       username,
       password
     },

@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { randomString } from '../../tests/utils';
-import init from './init';
+import init from './initCommon';
 
 const defaultTimeout = process.env.KINVEY_DEFAULT_TIMEOUT || 60000;
 const basicConfig = {

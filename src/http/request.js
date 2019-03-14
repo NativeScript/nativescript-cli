@@ -4,7 +4,7 @@ import { Base64 } from 'js-base64';
 import KinveyError from '../errors/kinvey';
 import InvalidCredentialsError from '../errors/invalidCredentials';
 import { get as getConfig } from '../kinvey/config';
-import { get as getSession, set as setSession, remove as removeSession } from '../session';
+import { get as getSession, set as setSession, remove as removeSession } from '../user/session';
 import { clear } from '../cache';
 import { Headers, KinveyHeaders } from './headers';
 import { serialize, formatKinveyUrl } from './utils';
@@ -199,6 +199,7 @@ export class KinveyRequest extends Request {
 
               // Create a new session
               const newMicIdentity = Object.assign({}, refreshResponse.data, {
+                identity: micIdentity.identity,
                 client_id: micIdentity.client_id,
                 redirect_uri: micIdentity.redirect_uri,
                 protocol: authProtocol,

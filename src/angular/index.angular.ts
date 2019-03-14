@@ -1,17 +1,17 @@
 import Acl from '../acl';
 import Aggregation from '../aggregation';
-import { StorageProvider } from '../cache/store';
+import { StorageProvider } from '../datastore/cache/store';
 import { DataStoreType } from '../datastore';
 import Query from '../query';
 import { get as getAppVersion, set as setAppVersion } from '../kinvey/appVersion';
 import Kmd from '../kmd';
 import AuthorizationGrant from '../user/authorizationGrant';
-import DataStoreService from './datastore.service';
-import EndpointService from './endpoint.service';
-import FilesService from './files.service';
-import KinveyModule from './kinvey.module';
-import PingService from './ping.service';
-import UserService from './user.service';
+import DataStoreService from './datastore';
+import EndpointService from './endpoint';
+import FilesService from './files';
+import KinveyModule from './kinvey';
+import PingService from './ping';
+import UserService from './user';
 import PushService from './push.service';
 
 export {
