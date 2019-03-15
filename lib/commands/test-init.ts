@@ -41,6 +41,7 @@ class TestInitCommand implements ICommand {
 					this.$errors.failWithoutHelp(`'${dependency}' is not a registered dependency.`);
 				}
 
+
 				return { name: dependency, version: dependencyVersion };
 			});
 		} catch (err) {
@@ -66,6 +67,11 @@ class TestInitCommand implements ICommand {
 			const modulePeerDependencies = modulePackageJsonContent.peerDependencies || {};
 
 			for (const peerDependency in modulePeerDependencies) {
+				const isPeerDependencyExcluded = _.includes(mod.excludedPeerDependencies, peerDependency);
+				if (isPeerDependencyExcluded) {
+					continue;
+				}
+
 				const dependencyVersion = modulePeerDependencies[peerDependency] || "*";
 
 				// catch errors when a peerDependency is already installed

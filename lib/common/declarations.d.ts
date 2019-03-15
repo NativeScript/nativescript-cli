@@ -1466,6 +1466,7 @@ interface IProcessService {
 interface IDependencyInformation {
 	name: string;
 	version?: string;
+	excludedPeerDependencies?: string[];
 }
 
 /**
