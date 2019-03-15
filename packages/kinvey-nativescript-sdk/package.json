@@ -1,7 +1,7 @@
 {
   "name": "kinvey-nativescript-sdk",
   "description": "Kinvey NativeScript SDK for developing NativeScript applications.",
-  "version": "3.13.0-next.6",
+  "version": "3.13.0-next.7",
   "homepage": "https://www.progress.com/kinvey",
   "license": "Apache-2.0",
   "contributors": [
@@ -13,7 +13,7 @@
     "preuninstall": "node lib/preuninstall.js"
   },
   "dependencies": {
-    "nativescript-hook": "0.2.4"
+    "nativescript-hook": "~0.2.5"
   },
   "peerDependencies": {
     "@babel/runtime": "~7.2.0",
