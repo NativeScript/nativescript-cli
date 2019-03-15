@@ -11,7 +11,6 @@ import initialize from './kinvey/initialize';
 import { get as getAppVersion, set as setAppVersion } from './kinvey/appVersion';
 import User from './user';
 import ping from './ping';
-import * as Push from './push';
 
 // SDK
 const SDK = {
@@ -49,10 +48,7 @@ const SDK = {
   AuthorizationGrant: User.AuthorizationGrant,
 
   // Ping
-  ping,
-
-  // Push
-  Push
+  ping
 };
 
 // Export
