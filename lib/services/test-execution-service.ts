@@ -197,6 +197,7 @@ export class TestExecutionService implements ITestExecutionService {
 					debugTransport: this.$options.debugTransport,
 					debugBrk: this.$options.debugBrk,
 					watch: !!this.$options.watch,
+					bundle: !!this.$options.bundle,
 					appDirectoryRelativePath: projectData.getAppDirectoryRelativePath()
 				}
 			},

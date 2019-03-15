@@ -101,5 +101,7 @@ function setWebpack(config, options) {
     const env = {};
     env[config.platform] = true;
     options.webpack = require('./webpack.config')(env);
+    delete options.webpack.entry;
+    delete options.webpack.output.libraryTarget;
   }
 }
