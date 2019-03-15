@@ -49,7 +49,7 @@ describe("doctorService", () => {
 				filesContents: {
 					file1: 'const application = require("application");'
 				},
-				expectedShortImports: [{ file: "file1", line: 'const application = require("application");' }]
+				expectedShortImports: [{ file: "file1", line: 'const application = require("application")' }]
 			},
 			{
 				filesContents: {
@@ -61,7 +61,7 @@ describe("doctorService", () => {
 				filesContents: {
 					file1: 'const Observable = require("data/observable").Observable;'
 				},
-				expectedShortImports: [{ file: "file1", line: 'const Observable = require("data/observable").Observable;' }]
+				expectedShortImports: [{ file: "file1", line: 'const Observable = require("data/observable").Observable' }]
 			},
 			{
 				filesContents: {
@@ -73,7 +73,7 @@ describe("doctorService", () => {
 				filesContents: {
 					file1: 'import * as application from "application";'
 				},
-				expectedShortImports: [{ file: "file1", line: 'import * as application from "application";' }]
+				expectedShortImports: [{ file: "file1", line: 'import * as application from "application"' }]
 			},
 			{
 				filesContents: {
@@ -85,7 +85,7 @@ describe("doctorService", () => {
 				filesContents: {
 					file1: 'import { run } from "application";'
 				},
-				expectedShortImports: [{ file: "file1", line: 'import { run } from "application";' }]
+				expectedShortImports: [{ file: "file1", line: 'import { run } from "application"' }]
 			},
 			{
 				filesContents: {
@@ -98,7 +98,7 @@ describe("doctorService", () => {
 				filesContents: {
 					file1: "import { run } from 'application';"
 				},
-				expectedShortImports: [{ file: "file1", line: "import { run } from 'application';" }]
+				expectedShortImports: [{ file: "file1", line: "import { run } from 'application'" }]
 			},
 			{
 				// Using single quotes
@@ -114,8 +114,8 @@ const Observable = require("data/observable").Observable;
 `
 				},
 				expectedShortImports: [
-					{ file: "file1", line: 'const application = require("application");' },
-					{ file: "file1", line: 'const Observable = require("data/observable").Observable;' },
+					{ file: "file1", line: 'const application = require("application")' },
+					{ file: "file1", line: 'const Observable = require("data/observable").Observable' },
 				]
 			},
 			{
@@ -125,7 +125,7 @@ const Observable = require("tns-core-modules/data/observable").Observable;
 `
 				},
 				expectedShortImports: [
-					{ file: "file1", line: 'const application = require("application");' },
+					{ file: "file1", line: 'const application = require("application")' },
 				]
 			},
 			{
@@ -137,8 +137,8 @@ const Observable = require("tns-core-modules/data/observable").Observable;
 const Observable = require("data/observable").Observable;`
 				},
 				expectedShortImports: [
-					{ file: "file1", line: 'const application = require("application");' },
-					{ file: "file2", line: 'const Observable = require("data/observable").Observable;'  },
+					{ file: "file1", line: 'const application = require("application")' },
+					{ file: "file2", line: 'const Observable = require("data/observable").Observable' },
 				]
 			},
 			{
@@ -150,7 +150,45 @@ const Observable = require("tns-core-modules/data/observable").Observable;
 					file2: `const application = require("some-name-tns-core-modules-widgets/application");
 const Observable = require("tns-core-modules-widgets/data/observable").Observable;`
 				},
-				expectedShortImports: [ ]
+				expectedShortImports: []
+			},
+			{
+				filesContents: {
+					// several statements on one line
+					file1: 'const _ = require("lodash");console.log("application");'
+				},
+				expectedShortImports: []
+			},
+			{
+				filesContents: {
+					// several statements on one line with actual short imports
+					file1: 'const _ = require("lodash");const application = require("application");console.log("application");',
+					file2: 'const _ = require("lodash");const application = require("application");const Observable = require("data/observable").Observable;'
+				},
+				expectedShortImports: [
+					{ file: "file1", line: 'const application = require("application")' },
+					{ file: "file2", line: 'const application = require("application")' },
+					{ file: "file2", line: 'const Observable = require("data/observable").Observable' },
+				]
+			},
+			{
+				filesContents: {
+					// several statements on one line withoutshort imports
+					file1: 'const _ = require("lodash");const application = require("tns-core-modules/application");console.log("application");',
+					file2: 'const _ = require("lodash");const application = require("tns-core-modules/application");const Observable = require("tns-core-modules/data/observable").Observable;'
+				},
+				expectedShortImports: []
+			},
+			{
+				// Incorrect behavior, currently by design
+				// In case you have a multiline string and one of the lines matches our RegExp we'll detect it as short import
+				filesContents: {
+					file1: 'const _ = require("lodash");const application = require("application");console.log("application");console.log(`this is line\nyou should import some long words here "application" module and other words here`)',
+				},
+				expectedShortImports: [
+					{ file: "file1", line: 'const application = require("application")' },
+					{ file: "file1", line: 'you should import some long words here "application" module and other words here`)' },
+				]
 			},
 		];
 

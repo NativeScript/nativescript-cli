@@ -1,7 +1,15 @@
 import * as path from "path";
 import { ProjectData } from "../project-data";
 import { exported } from "../common/decorators";
-import { NATIVESCRIPT_PROPS_INTERNAL_DELIMITER, AssetConstants, SRC_DIR, RESOURCES_DIR, MAIN_DIR, CLI_RESOURCES_DIR_NAME, ProjectTypes } from "../constants";
+import {
+	NATIVESCRIPT_PROPS_INTERNAL_DELIMITER,
+	AssetConstants, SRC_DIR,
+	RESOURCES_DIR,
+	MAIN_DIR,
+	CLI_RESOURCES_DIR_NAME,
+	ProjectTypes,
+	NODE_MODULES_FOLDER_NAME
+} from "../constants";
 
 interface IProjectFileData {
 	projectData: any;
@@ -124,6 +132,7 @@ export class ProjectDataService implements IProjectDataService {
 			supportedFileExtension = ".ts";
 		}
 
+		const pathToProjectNodeModules = path.join(projectDir, NODE_MODULES_FOLDER_NAME);
 		const files = this.$fs.enumerateFilesInDirectorySync(
 			projectData.appDirectoryPath,
 			(filePath, fstat) => {
@@ -132,6 +141,12 @@ export class ProjectDataService implements IProjectDataService {
 				}
 
 				if (fstat.isDirectory()) {
+					if (filePath === pathToProjectNodeModules) {
+						// we do not want to get the files from node_modules directory of the project.
+						// We'll get here only when you have nsconfig.json with appDirectoryPath set to "."
+						return false;
+					}
+
 					return true;
 				}
 
