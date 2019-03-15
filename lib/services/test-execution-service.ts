@@ -124,7 +124,12 @@ export class TestExecutionService implements ITestExecutionService {
 				await this.$liveSyncService.liveSync(deviceDescriptors, liveSyncInfo);
 			};
 
-		karmaRunner.on("message", (karmaData: any) => {
+		karmaRunner.on("message",  (karmaData: any) => {
+			this.$logger.trace(`The received message from karma is: `, karmaData);
+			if (!karmaData.launcherConfig && !karmaData.url) {
+				return;
+			}
+
 			launchKarmaTests(karmaData)
 				.catch((result) => {
 					this.$logger.error(result);
