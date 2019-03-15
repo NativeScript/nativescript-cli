@@ -36,7 +36,9 @@ Migration steps:
 -->
 
 
-## Need additional testing?
+<!-- 
+E2E TESTS
+
 Additional e2e tests can be executed by comment including trigger phrase.
 
 Phrases:
@@ -49,3 +51,4 @@ Phrases:
 `cli-tests`: Tests for `tns test` command.
 `cli-vue`: Smoke tests for VueJS projects based on {N} cli.
 `cli-templates`: Tests for `tns run` on {N} templates.
+-->
