@@ -51,4 +51,9 @@ Phrases:
 `cli-tests`: Tests for `tns test` command.
 `cli-vue`: Smoke tests for VueJS projects based on {N} cli.
 `cli-templates`: Tests for `tns run` on {N} templates.
+
+Notes:
+If PR is against release branch additional comment should be added:
+`test package_version#<tag>` (for example `test package_version#latest`)
+This will tell what version of other packages will be used in tests.
 -->
