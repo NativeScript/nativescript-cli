@@ -35,3 +35,17 @@ Migration steps:
 [Provide a migration path for existing applications.]
 -->
 
+
+## Need additional testing?
+Additional e2e tests can be executed by comment including trigger phrase.
+
+Phrases:
+`test cli-smoke`: Smoke tests for `tns run`.
+`test cli-create`: Tests for `tns create` commans.
+`test cli-plugin`: Tests for `tns plugin *` commands.
+`cli-preview`: Tests for `tns preview` command.
+`cli-regression`: Tests for backward compatibility with old projects.
+`cli-resources`: Test for resource generate.
+`cli-tests`: Tests for `tns test` command.
+`cli-vue`: Smoke tests for VueJS projects based on {N} cli.
+`cli-templates`: Tests for `tns run` on {N} templates.
