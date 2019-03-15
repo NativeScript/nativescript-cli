@@ -36,13 +36,11 @@ class TestInitCommand implements ICommand {
 			const dependencies = this.$testInitializationService.getDependencies(frameworkToInstall);
 			const dependenciesVersions = this.$testInitializationService.getDependenciesVersions();
 			modulesToInstall = dependencies.map(dependency => {
-				const dependencyVersion = dependenciesVersions[dependency];
-				if (!dependencyVersion) {
+				dependency.version = dependenciesVersions[dependency.name];
+				if (!dependency.version) {
 					this.$errors.failWithoutHelp(`'${dependency}' is not a registered dependency.`);
 				}
-
-
-				return { name: dependency, version: dependencyVersion };
+				return dependency;
 			});
 		} catch (err) {
 			this.$errors.failWithoutHelp(`Unable to install the unit testing dependencies. Error: '${err.message}'`);

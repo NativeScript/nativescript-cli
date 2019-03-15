@@ -482,7 +482,7 @@ interface ITestExecutionService {
 }
 
 interface ITestInitializationService {
-	getDependencies(framework: string): string[];
+	getDependencies(framework: string): IDependencyInformation[];
 	getDependenciesVersions(): IDictionary<string>;
 }
 

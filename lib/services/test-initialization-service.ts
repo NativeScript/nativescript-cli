@@ -7,12 +7,11 @@ export class TestInitializationService implements ITestInitializationService {
 	constructor(private $fs: IFileSystem) { }
 
 	@cache()
-	public getDependencies(selectedFramework: string): string[] {
+	public getDependencies(selectedFramework: string): IDependencyInformation[] {
 		const dependenciesPath = path.join(this.configsPath, "test-dependencies.json");
 		const allDependencies: { name: string, framework: string }[] = this.$fs.readJson(dependenciesPath);
-		const targetFrameworkDependencies: string[] = allDependencies
-			.filter(dependency => !dependency.framework || dependency.framework === selectedFramework)
-			.map(dependency => dependency.name);
+		const targetFrameworkDependencies: IDependencyInformation[] = allDependencies
+			.filter(dependency => !dependency.framework || dependency.framework === selectedFramework);
 
 		return targetFrameworkDependencies;
 	}
