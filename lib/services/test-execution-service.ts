@@ -19,7 +19,6 @@ export class TestExecutionService implements ITestExecutionService {
 		private $fs: IFileSystem,
 		private $options: IOptions,
 		private $pluginsService: IPluginsService,
-		private $errors: IErrors,
 		private $devicesService: Mobile.IDevicesService,
 		private $childProcess: IChildProcess) {
 	}
@@ -59,7 +58,8 @@ export class TestExecutionService implements ITestExecutionService {
 					this.$fs.writeFile(path.join(projectDir, TestExecutionService.CONFIG_FILE_NAME), configJs);
 				}
 
-				await this.preparePlatform(projectData, platform);
+				// Prepare the project AFTER the TestExecutionService.CONFIG_FILE_NAME file is created in node_modules
+				// so it will be sent to device.
 
 				let devices = [];
 				if (this.$options.debugBrk) {
@@ -216,33 +216,6 @@ export class TestExecutionService implements ITestExecutionService {
 		this.$logger.debug(JSON.stringify(karmaConfig, null, 4));
 
 		return karmaConfig;
-	}
-
-	private async preparePlatform(projectData: IProjectData, platform: string): Promise<void> {
-		if (this.$options.bundle) {
-			return;
-		}
-
-		const appFilesUpdaterOptions: IAppFilesUpdaterOptions = {
-			bundle: !!this.$options.bundle,
-			release: this.$options.release,
-			useHotModuleReload: this.$options.hmr
-		};
-		const preparePlatformInfo: IPreparePlatformInfo = {
-			platform,
-			appFilesUpdaterOptions,
-			platformTemplate: this.$options.platformTemplate,
-			projectData,
-			config: this.$options,
-			env: this.$options.env
-		};
-
-		// Prepare the project AFTER the TestExecutionService.CONFIG_FILE_NAME file is created in node_modules
-		// so it will be sent to device.
-		const isPlatformPrepared = await this.$platformService.preparePlatform(preparePlatformInfo);
-		if (!isPlatformPrepared) {
-			this.$errors.failWithoutHelp("Verify that listed files are well-formed and try again the operation.");
-		}
 	}
 }
 $injector.register('testExecutionService', TestExecutionService);
