@@ -40,7 +40,8 @@
     "lib/**/*",
     "platforms/**/*",
     "src/**/*",
-    "angular.js"
+    "angular/**/*",
+    "push.js"
   ],
   "nativescript": {
     "hooks": [
