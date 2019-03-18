@@ -359,7 +359,7 @@ describe('User', () => {
     });
   });
 
-  describe.skip('pathname', () => {//TODO: no pathname getter
+  describe('pathname', () => {//TODO: no pathname getter
     it('should return the pathname', () => {
       const user = new User();
       expect(user.pathname).toEqual(`/user/${client.appKey}`);
@@ -715,7 +715,7 @@ describe('User', () => {
     });
   });
 
-  describe.skip('live service registration management', () => {
+  describe.skip('live service registration management', () => {//TODO - rework along with the other live services tests
     let activeUser;
     let liveService;
 

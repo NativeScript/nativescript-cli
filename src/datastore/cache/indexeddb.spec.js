@@ -61,7 +61,7 @@ describe('IndexedDB', () => {
   });
 
   describe('save', () => {
-    it.only('should throw an error if any of the docs do not have an _id', async () => {
+    it('should throw an error if any of the docs do not have an _id', async () => {
       const docs = [{ id: randomString() }];
       await expect(indexedDB.save(docs)).to.be.rejectedWith(/Data provided to an operation does not meet requirements\./);
     });
