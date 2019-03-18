@@ -56,30 +56,30 @@ export class HttpClient implements Server.IHttpClient {
 			};
 		}
 
-		const unmodifiedOptions = _.clone(options);
+		const clonedOptions = _.cloneDeep(options);
 
-		if (options.url) {
-			const urlParts = url.parse(options.url);
+		if (clonedOptions.url) {
+			const urlParts = url.parse(clonedOptions.url);
 			if (urlParts.protocol) {
-				options.proto = urlParts.protocol.slice(0, -1);
+				clonedOptions.proto = urlParts.protocol.slice(0, -1);
 			}
-			options.host = urlParts.hostname;
-			options.port = urlParts.port;
-			options.path = urlParts.path;
+			clonedOptions.host = urlParts.hostname;
+			clonedOptions.port = urlParts.port;
+			clonedOptions.path = urlParts.path;
 		}
 
-		const requestProto = options.proto || "http";
-		const body = options.body;
-		delete options.body;
-		let pipeTo = options.pipeTo;
-		delete options.pipeTo;
+		const requestProto = clonedOptions.proto || "http";
+		const body = clonedOptions.body;
+		delete clonedOptions.body;
+		let pipeTo = options.pipeTo; // Use the real stream because the _.cloneDeep can't clone the internal state of a stream.
+		delete clonedOptions.pipeTo;
 
 		const cliProxySettings = await this.$proxyService.getCache();
 
-		options.headers = options.headers || {};
-		const headers = options.headers;
+		clonedOptions.headers = clonedOptions.headers || {};
+		const headers = clonedOptions.headers;
 
-		await this.useProxySettings(proxySettings, cliProxySettings, options, headers, requestProto);
+		await this.useProxySettings(proxySettings, cliProxySettings, clonedOptions, headers, requestProto);
 
 		if (!headers.Accept || headers.Accept.indexOf("application/json") < 0) {
 			if (headers.Accept) {
@@ -115,21 +115,21 @@ export class HttpClient implements Server.IHttpClient {
 				isResolved: () => false
 			};
 
-			if (options.timeout) {
+			clonedOptions.url = clonedOptions.url || `${clonedOptions.proto}://${clonedOptions.host}${clonedOptions.path}`;
+			if (clonedOptions.timeout) {
 				timerId = setTimeout(() => {
-					this.setResponseResult(promiseActions, cleanupRequestData, { err: new Error(`Request to ${unmodifiedOptions.url} timed out.`) });
-				}, options.timeout);
+					this.setResponseResult(promiseActions, cleanupRequestData, { err: new Error(`Request to ${clonedOptions.url} timed out.`) });
+				}, clonedOptions.timeout);
 				cleanupRequestData.timers.push(timerId);
 
-				delete options.timeout;
+				delete clonedOptions.timeout;
 			}
 
-			options.url = options.url || `${options.proto}://${options.host}${options.path}`;
-			options.encoding = null;
-			options.followAllRedirects = true;
+			clonedOptions.encoding = null;
+			clonedOptions.followAllRedirects = true;
 
-			this.$logger.trace("httpRequest: %s", util.inspect(options));
-			const requestObj = request(options);
+			this.$logger.trace("httpRequest: %s", util.inspect(clonedOptions));
+			const requestObj = request(clonedOptions);
 			cleanupRequestData.req = requestObj;
 
 			requestObj
@@ -151,7 +151,7 @@ export class HttpClient implements Server.IHttpClient {
 
 					stuckRequestTimerId = setTimeout(() => {
 						this.setResponseResult(promiseActions, cleanupRequestData, { err: new Error(HttpClient.STUCK_REQUEST_ERROR_MESSAGE) });
-					}, options.timeout || HttpClient.STUCK_REQUEST_TIMEOUT);
+					}, clonedOptions.timeout || HttpClient.STUCK_REQUEST_TIMEOUT);
 
 					cleanupRequestData.timers.push(stuckRequestTimerId);
 
@@ -230,6 +230,7 @@ export class HttpClient implements Server.IHttpClient {
 		const response = await result;
 
 		if (helpers.isResponseRedirect(response.response)) {
+			const unmodifiedOptions = _.cloneDeep(options);
 			if (response.response.statusCode === HttpStatusCodes.SEE_OTHER) {
 				unmodifiedOptions.method = "GET";
 			}
