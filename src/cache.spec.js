@@ -1,12 +1,9 @@
-import { expect, use } from 'chai';
+import { expect } from 'chai';
 import * as sinon from 'sinon';
 import Query from './query';
 import Aggregation from './aggregation';
 import Cache from './cache';
 import Memory from './datastore/cache/memory';
-
-// Use chai-as-promised
-use(require('chai-as-promised'));
 
 describe('Cache', () => {
   const dbName = 'test.db';
@@ -14,52 +11,52 @@ describe('Cache', () => {
   const MemoryAdapter = new Memory(dbName, collectionName);
   const cache = new Cache(MemoryAdapter);
 
-  describe.skip('with no custom cache adapter', () => {
+  describe('with no custom cache adapter', () => {
     describe('find()', () => {
-      it('should throw an error', () => {
-        expect(cache.find()).to.be.rejectedWith(/You must override the default cache adapter\./);
+      it('should throw an error', async () => {
+        await expect(cache.count()).to.be.rejectedWith(/You must override the default cache adapter\./);
       });
     });
 
     describe('reduce()', () => {
-      it('should throw an error', () => {
-        expect(cache.reduce()).to.be.rejectedWith(/Invalid aggregation. It must be an instance of the Aggregation class\./);
+      it('should throw an error', async () => {
+        await expect(cache.reduce()).to.be.rejectedWith(/Invalid aggregation. It must be an instance of the Aggregation class\./);
       });
     });
 
     describe('count()', () => {
-      it('should throw an error', () => {
-        expect(cache.count()).to.be.rejectedWith(/You must override the default cache adapter\./);
+      it('should throw an error', async () => {
+        await expect(cache.count()).to.be.rejectedWith(/You must override the default cache adapter\./);
       });
     });
 
     describe('findById()', () => {
-      it('should throw an error', () => {
-        expect(cache.findById()).to.be.rejectedWith(/You must override the default cache adapter\./);
+      it('should throw an error', async () => {
+        await expect(cache.findById()).to.be.rejectedWith(/You must override the default cache adapter\./);
       });
     });
 
     describe('save()', () => {
-      it('should throw an error', () => {
-        expect(cache.save([{}])).to.be.rejectedWith(/You must override the default cache adapter\./);
+      it('should throw an error', async () => {
+        await expect(cache.save([{}])).to.be.rejectedWith(/You must override the default cache adapter\./);
       });
     });
 
     describe('remove()', () => {
-      it('should throw an error', () => {
-        expect(cache.remove()).to.be.rejectedWith(/You must override the default cache adapter\./);
+      it('should throw an error', async () => {
+        await expect(cache.remove()).to.be.rejectedWith(/You must override the default cache adapter\./);
       });
     });
 
     describe('removeById()', () => {
-      it('should throw an error', () => {
-        expect(cache.removeById()).to.be.rejectedWith(/You must override the default cache adapter\./);
+      it('should throw an error', async () => {
+        await expect(cache.removeById()).to.be.rejectedWith(/You must override the default cache adapter\./);
       });
     });
 
     describe('clear()', () => {
-      it('should throw an error', () => {
-        expect(cache.clear()).to.be.rejectedWith(/You must override the default cache adapter\./);
+      it('should throw an error', async () => {
+        await expect(cache.clear()).to.be.rejectedWith(/You must override the default cache adapter\./);
       });
     });
   });
