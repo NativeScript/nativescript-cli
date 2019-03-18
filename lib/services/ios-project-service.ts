@@ -28,7 +28,6 @@ const getPlatformSdkName = (forDevice: boolean): string => forDevice ? DevicePla
 const getConfigurationName = (release: boolean): string => release ? Configurations.Release : Configurations.Debug;
 
 export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServiceBase implements IPlatformProjectService {
-	private static XCODEBUILD_MIN_VERSION = "6.0";
 	private static IOS_PROJECT_NAME_PLACEHOLDER = "__PROJECT_NAME__";
 	private static IOS_PLATFORM_NAME = "ios";
 
@@ -144,11 +143,6 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			options,
 			notConfiguredEnvOptions
 		});
-
-		const xcodeBuildVersion = await this.getXcodeVersion();
-		if (helpers.versionCompare(xcodeBuildVersion, IOSProjectService.XCODEBUILD_MIN_VERSION) < 0) {
-			this.$errors.fail("NativeScript can only run in Xcode version %s or greater", IOSProjectService.XCODEBUILD_MIN_VERSION);
-		}
 
 		return {
 			checkEnvironmentRequirementsOutput
@@ -353,13 +347,6 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		if (semver.lt(frameworkVersion, "1.4.0")) {
 			basicArgs.push("-xcconfig", path.join(projectRoot, projectData.projectName, BUILD_XCCONFIG_FILE_NAME));
 		}
-
-		// if (this.$logger.getLevel() === "INFO") {
-		// 	let xcodeBuildVersion = this.getXcodeVersion();
-		// 	if (helpers.versionCompare(xcodeBuildVersion, "8.0") >= 0) {
-		// 		basicArgs.push("-quiet");
-		// 	}
-		// }
 
 		const handler = (data: any) => {
 			this.emit(constants.BUILD_OUTPUT_EVENT_NAME, data);
@@ -1238,7 +1225,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		let xcodeBuildVersion = "";
 
 		try {
-			xcodeBuildVersion = await this.$childProcess.exec("xcodebuild -version | head -n 1 | sed -e 's/Xcode //'");
+			xcodeBuildVersion = await this.$sysInfo.getXcodeVersion();
 		} catch (error) {
 			this.$errors.fail("xcodebuild execution failed. Make sure that you have latest Xcode and tools installed.");
 		}

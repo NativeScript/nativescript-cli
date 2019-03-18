@@ -118,7 +118,9 @@ function createTestInjector(projectPath: string, projectName: string, xcode?: IX
 	testInjector.register("pluginsService", PluginsService);
 	testInjector.register("androidProcessService", {});
 	testInjector.register("processService", {});
-	testInjector.register("sysInfo", {});
+	testInjector.register("sysInfo", {
+		getXcodeVersion: async () => ""
+	});
 	testInjector.register("pbxprojDomXcode", {});
 	testInjector.register("xcode", xcode || {
 		project: class {
