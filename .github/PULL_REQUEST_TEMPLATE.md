@@ -45,15 +45,16 @@ Phrases:
 `test cli-smoke`: Smoke tests for `tns run`.
 `test cli-create`: Tests for `tns create` commans.
 `test cli-plugin`: Tests for `tns plugin *` commands.
-`cli-preview`: Tests for `tns preview` command.
-`cli-regression`: Tests for backward compatibility with old projects.
-`cli-resources`: Test for resource generate.
-`cli-tests`: Tests for `tns test` command.
-`cli-vue`: Smoke tests for VueJS projects based on {N} cli.
-`cli-templates`: Tests for `tns run` on {N} templates.
+`test cli-preview`: Tests for `tns preview` command.
+`test cli-regression`: Tests for backward compatibility with old projects.
+`test cli-resources`: Test for resource generate.
+`test cli-tests`: Tests for `tns test` command.
+`test cli-vue`: Smoke tests for VueJS projects based on {N} cli.
+`test cli-templates`: Tests for `tns run` on {N} templates.
 
-Notes:
-If PR is against release branch additional comment should be added:
-`test package_version#<tag>` (for example `test package_version#latest`)
-This will tell what version of other packages will be used in tests.
+Define other packages used in e2e tests:
+
+- If PR targets master branch e2e tests will take runtimes and modules @next.
+- If PR targets release branch e2e tests will take runtimes and modules @rc.
+- You can control version of other packages used in e2e test by adding `package_version#<tag>` as param in trigger phrase  (for example `test package_version#latest`).
 -->
