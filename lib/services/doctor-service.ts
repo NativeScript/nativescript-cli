@@ -141,8 +141,10 @@ export class DoctorService implements IDoctorService {
 		for (const file of files) {
 			const fileContent = this.$fs.readText(file);
 			const strippedComments = helpers.stripComments(fileContent);
-			const linesWithRequireStatements = strippedComments
+			const linesToCheck = _.flatten(strippedComments
 				.split(/\r?\n/)
+				.map(line => line.split(";")));
+			const linesWithRequireStatements = linesToCheck
 				.filter(line => /\btns-core-modules\b/.exec(line) === null && (/\bimport\b/.exec(line) || /\brequire\b/.exec(line)));
 
 			for (const line of linesWithRequireStatements) {
