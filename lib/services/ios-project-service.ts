@@ -952,7 +952,6 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		await this.prepareResources(pluginPlatformsFolderPath, pluginData, projectData);
 		await this.prepareFrameworks(pluginPlatformsFolderPath, pluginData, projectData);
 		await this.prepareStaticLibs(pluginPlatformsFolderPath, pluginData, projectData);
-		//await this.prepareApplicationExtensions(pluginPlatformsFolderPath, pluginData, projectData);
 
 		const projectRoot = this.getPlatformData(projectData).projectRoot;
 		await this.$cocoapodsService.applyPodfileToProject(pluginData.name, this.$cocoapodsService.getPluginPodfilePath(pluginData), projectData, projectRoot);
@@ -984,15 +983,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		}
 
 		this.removeExtensions(projectData);
-		await this.prepareExtensionsCode(path.join(projectData.getAppResourcesDirectoryPath(), this.getPlatformData(projectData).normalizedPlatformName, constants.NATIVE_EXTENSION_FOLDER), projectData);
-		const plugins = await this.getAllInstalledPlugins(projectData);
-		for (const pluginIndex in plugins) {
-			const pluginData = plugins[pluginIndex];
-			const pluginPlatformsFolderPath = pluginData.pluginPlatformsFolderPath(IOSProjectService.IOS_PLATFORM_NAME);
-
-			const extensionPath = path.join(pluginPlatformsFolderPath, constants.NATIVE_EXTENSION_FOLDER);
-			await this.prepareExtensionsCode(extensionPath, projectData);
-		};
+		await this.addExtensions(projectData);
 	}
 	public beforePrepareAllPlugins(): Promise<void> {
 		return Promise.resolve();
@@ -1108,6 +1099,18 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		this.savePbxProj(project, projectData);
 	}
 
+	private async addExtensions(projectData: IProjectData): Promise<void> {
+		await this.prepareExtensionsCode(path.join(projectData.getAppResourcesDirectoryPath(), this.getPlatformData(projectData).normalizedPlatformName, constants.NATIVE_EXTENSION_FOLDER), projectData);
+		const plugins = await this.getAllInstalledPlugins(projectData);
+		for (const pluginIndex in plugins) {
+			const pluginData = plugins[pluginIndex];
+			const pluginPlatformsFolderPath = pluginData.pluginPlatformsFolderPath(IOSProjectService.IOS_PLATFORM_NAME);
+
+			const extensionPath = path.join(pluginPlatformsFolderPath, constants.NATIVE_EXTENSION_FOLDER);
+			await this.prepareExtensionsCode(extensionPath, projectData);
+		};
+	}
+
 	private async prepareExtensionsCode(extensionsFolderPath: string, projectData: IProjectData): Promise<void> {
 		const targetUuids: string[] = [];
 		if(!this.$fs.exists(extensionsFolderPath)){
@@ -1215,10 +1218,6 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 			await this.addStaticLibrary(path.join(pluginPlatformsFolderPath, fileName), projectData);
 		}
 	}
-
-	// private prepareApplicationExtensions(pluginPlatformsFolderPath: string, pluginData: IPluginData, projectData: IProjectData): Promise<void> {
-
-	// }
 
 	private removeNativeSourceCode(pluginPlatformsFolderPath: string, pluginData: IPluginData, projectData: IProjectData): void {
 		const project = this.createPbxProj(projectData);
