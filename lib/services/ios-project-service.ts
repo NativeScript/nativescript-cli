@@ -1116,57 +1116,47 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 
 		const project = this.createPbxProj(projectData);
 
-		this.$fs.readDirectory(extensionsFolderPath).forEach(extensionFolder => {
-			const extensionPath = path.join(extensionsFolderPath, extensionFolder);
-			const group = this.getRootGroup(extensionFolder,  extensionPath);
+		this.$fs.readDirectory(extensionsFolderPath)
+			.filter(fileName => {
+				const filePath = path.join(extensionsFolderPath, fileName);
+				const stats = this.$fs.getFsStats(filePath);
+				return stats.isDirectory() && !fileName.startsWith(".");
+			})
+			.forEach(extensionFolder => {
+				const extensionPath = path.join(extensionsFolderPath, extensionFolder);
+				const extensionRelativePath = path.relative(this.getPlatformData(projectData).projectRoot, extensionPath);
+				const group = this.getRootGroup(extensionFolder,  extensionPath);
+				const target = project.addTarget(extensionFolder, 'app_extension', extensionRelativePath);
+				project.addBuildPhase([], 'PBXSourcesBuildPhase', 'Sources', target.uuid);
+				project.addBuildPhase([], 'PBXResourcesBuildPhase', 'Resources', target.uuid);
+				project.addBuildPhase([], 'PBXFrameworksBuildPhase', 'Frameworks', target.uuid);
 
-			const target = project.addTarget(
-				extensionFolder,
-				'app_extension',
-				path.relative(this.getPlatformData(projectData).projectRoot, extensionPath)
+				const extJsonPath = path.join(extensionsFolderPath, extensionFolder, "extension.json");
+				if(this.$fs.exists(extJsonPath)) {
+					const extensionJson = this.$fs.readJson(extJsonPath);
+					_.forEach(extensionJson.frameworks, framework => {
+						project.addFramework(
+							framework,
+							{ target: target.uuid }
+						);
+					});
+					if(extensionJson.assetcatalogCompilerAppiconName){
+						project.addToBuildSettings("ASSETCATALOG_COMPILER_APPICON_NAME", extensionJson.assetcatalogCompilerAppiconName, target.uuid);
+					}
+				}
 
-			);
-			project.addBuildPhase(
-				[],
-				'PBXSourcesBuildPhase',
-				'Sources',
-				target.uuid
-			);
-
-			project.addBuildPhase(
-				[],
-				'PBXResourcesBuildPhase',
-				'Resources',
-				target.uuid
-			);
-
-			project.addBuildPhase(
-				[],
-				'PBXFrameworksBuildPhase',
-				'Frameworks',
-				target.uuid
-			);
-
-			const extJsonPath = path.join(extensionsFolderPath, extensionFolder, "extension.json");
-			if(this.$fs.exists(extJsonPath)) {
-				const extensionJson = this.$fs.readJson(extJsonPath);
-				_.forEach(extensionJson.frameworks, framework => {
-					project.addFramework(
-						framework,
-						{ target: target.uuid }
-					);
-				});
-			}
-
-
-			project.addPbxGroup(group.files, group.name, group.path, null, { isMain: true, target: target.uuid, filesRelativeToProject: true });
-			project.addBuildProperty("PRODUCT_BUNDLE_IDENTIFIER", `${projectData.projectIdentifiers.ios}.${extensionFolder}`, "Debug", extensionFolder);
-			project.addBuildProperty("PRODUCT_BUNDLE_IDENTIFIER", `${projectData.projectIdentifiers.ios}.${extensionFolder}`, "Release", extensionFolder);
-			targetUuids.push(target.uuid);
-		});
+				project.addPbxGroup(group.files, group.name, group.path, null, { isMain: true, target: target.uuid, filesRelativeToProject: true });
+				project.addBuildProperty("PRODUCT_BUNDLE_IDENTIFIER", `${projectData.projectIdentifiers.ios}.${extensionFolder}`, "Debug", extensionFolder);
+				project.addBuildProperty("PRODUCT_BUNDLE_IDENTIFIER", `${projectData.projectIdentifiers.ios}.${extensionFolder}`, "Release", extensionFolder);
+				targetUuids.push(target.uuid);
+				project.addToHeaderSearchPaths(group.path, target.pbxNativeTarget.productName);
+			});
 
 		this.savePbxProj(project, projectData, true);
+		this.prepareExtensionSigning(targetUuids, projectData);
+	}
 
+	private prepareExtensionSigning(targetUuids: string[], projectData:IProjectData) {
 		const xcode = this.$pbxprojDomXcode.Xcode.open(this.getPbxProjPath(projectData));
 		const signing = xcode.getSigning(projectData.projectName);
 		if(signing !== undefined) {
@@ -1189,11 +1179,14 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		const filePathsArr: string[] = [];
 		const rootGroup: INativeSourceCodeGroup = { name: name, files: filePathsArr, path: rootPath };
 
-		if (this.$fs.exists(rootPath) && !this.$fs.isEmptyDir(rootPath)) {
-			this.$fs.readDirectory(rootPath).forEach(fileName => {
-				const filePath = path.join(rootGroup.path, fileName);
-				filePathsArr.push(filePath);
-			});
+		if (this.$fs.exists(rootPath)) {
+			const stats = this.$fs.getFsStats(rootPath);
+			if(stats.isDirectory() && !this.$fs.isEmptyDir(rootPath)) {
+				this.$fs.readDirectory(rootPath).forEach(fileName => {
+					const filePath = path.join(rootGroup.path, fileName);
+					filePathsArr.push(filePath);
+				});
+			}
 		}
 
 		return rootGroup;
