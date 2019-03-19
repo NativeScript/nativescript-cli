@@ -38,12 +38,6 @@ export class PreparePlatformJSService extends PreparePlatformService implements 
 	public async preparePlatform(config: IPreparePlatformJSInfo): Promise<void> {
 		if (!config.changesInfo || config.changesInfo.appFilesChanged || config.changesInfo.changesRequirePrepare) {
 			await this.copyAppFiles(config);
-			if (!config.skipCopyAppResourcesFiles) {
-				this.copyAppResourcesFiles(config);
-			}
-		}
-
-		if (!config.skipCopyAppResourcesFiles && !this.$fs.exists(path.join(config.platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME, constants.APP_RESOURCES_FOLDER_NAME))) {
 			this.copyAppResourcesFiles(config);
 		}
 
@@ -57,12 +51,6 @@ export class PreparePlatformJSService extends PreparePlatformService implements 
 		}
 
 		if (!config.changesInfo || config.changesInfo.modulesChanged) {
-			if (!config.skipCopyTnsModules) {
-				await this.copyTnsModules(config.platform, config.platformData, config.projectData, config.appFilesUpdaterOptions, config.projectFilesConfig);
-			}
-		}
-
-		if (!config.skipCopyTnsModules && !this.$fs.exists(path.join(config.platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME, constants.TNS_MODULES_FOLDER_NAME, constants.TNS_CORE_MODULES_NAME))) {
 			await this.copyTnsModules(config.platform, config.platformData, config.projectData, config.appFilesUpdaterOptions, config.projectFilesConfig);
 		}
 	}
