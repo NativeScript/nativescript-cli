@@ -6,6 +6,10 @@
         "name": "karma-nativescript-launcher"
     },
     {
+        "name": "karma-webpack",
+        "excludedPeerDependencies": ["webpack"]
+    },
+    {
         "name": "mocha",
         "framework": "mocha"
     },

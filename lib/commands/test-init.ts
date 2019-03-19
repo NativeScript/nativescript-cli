@@ -33,16 +33,7 @@ class TestInitCommand implements ICommand {
 
 		let modulesToInstall: IDependencyInformation[] = [];
 		try {
-			const dependencies = this.$testInitializationService.getDependencies(frameworkToInstall);
-			const dependenciesVersions = this.$testInitializationService.getDependenciesVersions();
-			modulesToInstall = dependencies.map(dependency => {
-				const dependencyVersion = dependenciesVersions[dependency];
-				if (!dependencyVersion) {
-					this.$errors.failWithoutHelp(`'${dependency}' is not a registered dependency.`);
-				}
-
-				return { name: dependency, version: dependencyVersion };
-			});
+			modulesToInstall = this.$testInitializationService.getDependencies(frameworkToInstall);
 		} catch (err) {
 			this.$errors.failWithoutHelp(`Unable to install the unit testing dependencies. Error: '${err.message}'`);
 		}
@@ -66,6 +57,11 @@ class TestInitCommand implements ICommand {
 			const modulePeerDependencies = modulePackageJsonContent.peerDependencies || {};
 
 			for (const peerDependency in modulePeerDependencies) {
+				const isPeerDependencyExcluded = _.includes(mod.excludedPeerDependencies, peerDependency);
+				if (isPeerDependencyExcluded) {
+					continue;
+				}
+
 				const dependencyVersion = modulePeerDependencies[peerDependency] || "*";
 
 				// catch errors when a peerDependency is already installed

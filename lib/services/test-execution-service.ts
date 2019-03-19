@@ -19,7 +19,6 @@ export class TestExecutionService implements ITestExecutionService {
 		private $fs: IFileSystem,
 		private $options: IOptions,
 		private $pluginsService: IPluginsService,
-		private $errors: IErrors,
 		private $devicesService: Mobile.IDevicesService,
 		private $childProcess: IChildProcess) {
 	}
@@ -59,25 +58,8 @@ export class TestExecutionService implements ITestExecutionService {
 					this.$fs.writeFile(path.join(projectDir, TestExecutionService.CONFIG_FILE_NAME), configJs);
 				}
 
-				const appFilesUpdaterOptions: IAppFilesUpdaterOptions = {
-					bundle: !!this.$options.bundle,
-					release: this.$options.release,
-					useHotModuleReload: this.$options.hmr
-				};
-				const preparePlatformInfo: IPreparePlatformInfo = {
-					platform,
-					appFilesUpdaterOptions,
-					platformTemplate: this.$options.platformTemplate,
-					projectData,
-					config: this.$options,
-					env: this.$options.env
-				};
-
 				// Prepare the project AFTER the TestExecutionService.CONFIG_FILE_NAME file is created in node_modules
 				// so it will be sent to device.
-				if (!await this.$platformService.preparePlatform(preparePlatformInfo)) {
-					this.$errors.failWithoutHelp("Verify that listed files are well-formed and try again the operation.");
-				}
 
 				let devices = [];
 				if (this.$options.debugBrk) {
@@ -125,13 +107,16 @@ export class TestExecutionService implements ITestExecutionService {
 						return info;
 					});
 
+				const env = this.$options.env || {};
+				env.unitTesting = !!this.$options.bundle;
+
 				const liveSyncInfo: ILiveSyncInfo = {
 					projectDir: projectData.projectDir,
 					skipWatcher: !this.$options.watch || this.$options.justlaunch,
 					watchAllFiles: this.$options.syncAllFiles,
 					bundle: !!this.$options.bundle,
 					release: this.$options.release,
-					env: this.$options.env,
+					env,
 					timeout: this.$options.timeout,
 					useHotModuleReload: this.$options.hmr
 				};
@@ -139,7 +124,12 @@ export class TestExecutionService implements ITestExecutionService {
 				await this.$liveSyncService.liveSync(deviceDescriptors, liveSyncInfo);
 			};
 
-		karmaRunner.on("message", (karmaData: any) => {
+		karmaRunner.on("message",  (karmaData: any) => {
+			this.$logger.trace(`The received message from karma is: `, karmaData);
+			if (!karmaData.launcherConfig && !karmaData.url) {
+				return;
+			}
+
 			launchKarmaTests(karmaData)
 				.catch((result) => {
 					this.$logger.error(result);
@@ -207,6 +197,7 @@ export class TestExecutionService implements ITestExecutionService {
 					debugTransport: this.$options.debugTransport,
 					debugBrk: this.$options.debugBrk,
 					watch: !!this.$options.watch,
+					bundle: !!this.$options.bundle,
 					appDirectoryRelativePath: projectData.getAppDirectoryRelativePath()
 				}
 			},
@@ -226,6 +217,8 @@ export class TestExecutionService implements ITestExecutionService {
 		}
 
 		karmaConfig.projectDir = projectData.projectDir;
+		karmaConfig.bundle = this.$options.bundle;
+		karmaConfig.platform = platform.toLowerCase();
 		this.$logger.debug(JSON.stringify(karmaConfig, null, 4));
 
 		return karmaConfig;
