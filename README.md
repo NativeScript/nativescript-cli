@@ -1,7 +1,7 @@
 
 <h1 align="center">
   <br>
-  <a href="https://www.npmjs.com/package/nativescript"><img src="https://blog.jscrambler.com/content/images/2018/10/jscrambler-blog-react-native-ionic-nativescript-logo.png" alt="Nativescript Logo" width="200"></a>
+  <a href="https://www.npmjs.com/package/nativescript"><img src="https://user-images.githubusercontent.com/760518/54612598-e70a3600-4a61-11e9-8d6d-7dd0c557e7cf.png" alt="Nativescript Logo" width="200"></a>
   <br>
 	  <br>
    NativeScript Command-Line Interface
