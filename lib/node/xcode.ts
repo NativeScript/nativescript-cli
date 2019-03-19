@@ -1,4 +1,4 @@
-import * as xcode from "xcode";
+import * as xcode from "nativescript-dev-xcode";
 
 declare global {
 	type IXcode = typeof xcode;

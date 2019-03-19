@@ -1,4 +1,4 @@
-declare module "xcode" {
+declare module "nativescript-dev-xcode" {
     interface Options {
         [key: string]: any;
 

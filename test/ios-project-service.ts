@@ -697,7 +697,7 @@ describe("Source code support", () => {
 			return pbxProj;
 		};
 
-		it("adds source files as resources", async () => {
+		it("adds source files in Sources build phase", async () => {
 			const sourceFileNames = [
 				"src/Header.h", "src/ObjC.m",
 				"src/nested/Header.hpp", "src/nested/Source.cpp", "src/nested/ObjCpp.mm",
@@ -721,14 +721,15 @@ describe("Source code support", () => {
 
 			sourceFileNames.map(file => path.basename(file)).forEach(basename => {
 				const ext = path.extname(basename);
-				const shouldBeAdded = ext !== ".donotadd" && !ext.startsWith(".h");
+				const shouldBeAdded = ext !== ".donotadd";
 				assert.notEqual(pbxFileReferenceValues.indexOf(basename), -1, `${basename} not added to PBXFileRefereces`);
+
 				const buildPhaseFile = buildPhaseFiles.find((fileObject: any) => fileObject.comment.startsWith(basename));
-				if (shouldBeAdded) {
+				if (shouldBeAdded && !path.extname(basename).startsWith(".h")) {
 					assert.isDefined(buildPhaseFile, `${basename} not added to PBXSourcesBuildPhase`);
 					assert.include(buildPhaseFile.comment, "in Sources", `${basename} must be added to Sources group`);
 				} else {
-					assert.isUndefined(buildPhaseFile, `${basename} must not be added to Sources group`);
+					assert.isUndefined(buildPhaseFile, `${basename} is added to PBXSourcesBuildPhase, but it shouldn't have been.`);
 				}
 			});
 		});
@@ -749,14 +750,15 @@ describe("Source code support", () => {
 
 			sourceFileNames.map(file => path.basename(file)).forEach(basename => {
 				const ext = path.extname(basename);
-				const shouldBeAdded = ext !== ".donotadd" && !ext.startsWith(".h");
-				const buildPhaseFile = buildPhaseFiles.find((fileObject: any) => fileObject.comment.startsWith(basename));
+				const shouldBeAdded = ext !== ".donotadd";
 				assert.notEqual(pbxFileReferenceValues.indexOf(basename), -1, `${basename} not added to PBXFileRefereces`);
-				if (shouldBeAdded) {
+
+				const buildPhaseFile = buildPhaseFiles.find((fileObject: any) => fileObject.comment.startsWith(basename));
+				if (shouldBeAdded && !path.extname(basename).startsWith(".h")) {
 					assert.isDefined(buildPhaseFile, `${basename} not added to PBXSourcesBuildPhase`);
 					assert.include(buildPhaseFile.comment, "in Sources", `${basename} must be added to Sources group`);
 				} else {
-					assert.isUndefined(buildPhaseFile, `${basename} must not be added to Sources group`);
+					assert.isUndefined(buildPhaseFile, `${basename} was added to PBXSourcesBuildPhase, but it shouldn't have been`);
 				}
 			});
 		});
