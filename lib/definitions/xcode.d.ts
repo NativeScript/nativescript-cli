@@ -27,5 +27,34 @@ declare module "nativescript-dev-xcode" {
         updateBuildProperty(key: string, value: any): void;
 
         pbxXCBuildConfigurationSection(): any;
+
+        addTarget(targetName: string, targetType: string, targetPath?: string): target;
+        addBuildPhase(filePathsArray: string[],
+            buildPhaseType: string,
+            comment: string,
+            target?: string,
+            optionsOrFolderType?: Object|string,
+            subfolderPath?: string
+        ): any;
+        addToBuildSettings(buildSetting: string, value: any, targetUuid?: string): void;
+        addPbxGroup(
+            filePathsArray: string[],
+            name: string,
+            path: string,
+            sourceTree: string,
+            opt: {filesRelativeToProject?: boolean, target?: string, uuid?: string, isMain?: boolean }
+        ): group;
+        addBuildProperty(prop: string, value: any, build_name?: string, productName?: string): void;
+        addToHeaderSearchPaths(file: string|Object, productName?: string): void;
+    }
+
+    class target {
+        uuid: string;
+        pbxNativeTarget: {productName: string}
+    }
+
+    class group {
+        uuid: string;
+        pbxGroup: Object;
     }
 }

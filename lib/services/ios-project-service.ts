@@ -1126,37 +1126,43 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 				return stats.isDirectory() && !fileName.startsWith(".");
 			})
 			.forEach(extensionFolder => {
-				const extensionPath = path.join(extensionsFolderPath, extensionFolder);
-				const extensionRelativePath = path.relative(this.getPlatformData(projectData).projectRoot, extensionPath);
-				const group = this.getRootGroup(extensionFolder,  extensionPath);
-				const target = project.addTarget(extensionFolder, 'app_extension', extensionRelativePath);
-				project.addBuildPhase([], 'PBXSourcesBuildPhase', 'Sources', target.uuid);
-				project.addBuildPhase([], 'PBXResourcesBuildPhase', 'Resources', target.uuid);
-				project.addBuildPhase([], 'PBXFrameworksBuildPhase', 'Frameworks', target.uuid);
-
-				const extJsonPath = path.join(extensionsFolderPath, extensionFolder, "extension.json");
-				if(this.$fs.exists(extJsonPath)) {
-					const extensionJson = this.$fs.readJson(extJsonPath);
-					_.forEach(extensionJson.frameworks, framework => {
-						project.addFramework(
-							framework,
-							{ target: target.uuid }
-						);
-					});
-					if(extensionJson.assetcatalogCompilerAppiconName){
-						project.addToBuildSettings("ASSETCATALOG_COMPILER_APPICON_NAME", extensionJson.assetcatalogCompilerAppiconName, target.uuid);
-					}
-				}
-
-				project.addPbxGroup(group.files, group.name, group.path, null, { isMain: true, target: target.uuid, filesRelativeToProject: true });
-				project.addBuildProperty("PRODUCT_BUNDLE_IDENTIFIER", `${projectData.projectIdentifiers.ios}.${extensionFolder}`, "Debug", extensionFolder);
-				project.addBuildProperty("PRODUCT_BUNDLE_IDENTIFIER", `${projectData.projectIdentifiers.ios}.${extensionFolder}`, "Release", extensionFolder);
-				targetUuids.push(target.uuid);
-				project.addToHeaderSearchPaths(group.path, target.pbxNativeTarget.productName);
+				const targetUuid = this.addExtensionToProject(extensionsFolderPath, extensionFolder, project, projectData);
+				targetUuids.push(targetUuid);
 			});
 
 		this.savePbxProj(project, projectData, true);
 		this.prepareExtensionSigning(targetUuids, projectData);
+	}
+
+	private addExtensionToProject(extensionsFolderPath: string, extensionFolder: string, project: IXcode.project, projectData: IProjectData): string {
+		const extensionPath = path.join(extensionsFolderPath, extensionFolder);
+		const extensionRelativePath = path.relative(this.getPlatformData(projectData).projectRoot, extensionPath);
+		const group = this.getRootGroup(extensionFolder,  extensionPath);
+		const target = project.addTarget(extensionFolder, 'app_extension', extensionRelativePath);
+		project.addBuildPhase([], 'PBXSourcesBuildPhase', 'Sources', target.uuid);
+		project.addBuildPhase([], 'PBXResourcesBuildPhase', 'Resources', target.uuid);
+		project.addBuildPhase([], 'PBXFrameworksBuildPhase', 'Frameworks', target.uuid);
+
+		const extJsonPath = path.join(extensionsFolderPath, extensionFolder, "extension.json");
+		if(this.$fs.exists(extJsonPath)) {
+			const extensionJson = this.$fs.readJson(extJsonPath);
+			_.forEach(extensionJson.frameworks, framework => {
+				project.addFramework(
+					framework,
+					{ target: target.uuid }
+				);
+			});
+			if(extensionJson.assetcatalogCompilerAppiconName){
+				project.addToBuildSettings("ASSETCATALOG_COMPILER_APPICON_NAME", extensionJson.assetcatalogCompilerAppiconName, target.uuid);
+			}
+		}
+
+		project.addPbxGroup(group.files, group.name, group.path, null, { isMain: true, target: target.uuid, filesRelativeToProject: true });
+		project.addBuildProperty("PRODUCT_BUNDLE_IDENTIFIER", `${projectData.projectIdentifiers.ios}.${extensionFolder}`, "Debug", extensionFolder);
+		project.addBuildProperty("PRODUCT_BUNDLE_IDENTIFIER", `${projectData.projectIdentifiers.ios}.${extensionFolder}`, "Release", extensionFolder);
+		project.addToHeaderSearchPaths(group.path, target.pbxNativeTarget.productName);
+
+		return target.uuid
 	}
 
 	private prepareExtensionSigning(targetUuids: string[], projectData:IProjectData) {
