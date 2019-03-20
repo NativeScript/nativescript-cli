@@ -579,11 +579,9 @@ interface IAddExtensionsFromPathOptions{
 	projectData: IProjectData;
 	platformData: IPlatformData;
 	pbxProjPath: string;
-	project: IXcode.project;
 }
 
 interface IRemoveExtensionsOptions {
-	project: IXcode.project;
 	pbxProjPath: string
 }
 

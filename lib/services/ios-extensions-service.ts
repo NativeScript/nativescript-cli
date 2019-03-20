@@ -2,15 +2,17 @@ import * as path from "path";
 
 export class IOSExtensionsService implements IIOSExtensionsService {
 	constructor(private $fs: IFileSystem,
-		private $pbxprojDomXcode: IPbxprojDomXcode) {
+		private $pbxprojDomXcode: IPbxprojDomXcode,
+		private $xcode: IXcode) {
 	}
 
-	public async addExtensionsFromPath({extensionsFolderPath, projectData, platformData, pbxProjPath, project}: IAddExtensionsFromPathOptions): Promise<void> {
+	public async addExtensionsFromPath({extensionsFolderPath, projectData, platformData, pbxProjPath}: IAddExtensionsFromPathOptions): Promise<void> {
 		const targetUuids: string[] = [];
 		if (!this.$fs.exists(extensionsFolderPath)) {
 			return;
 		}
-
+		const project = new this.$xcode.project(pbxProjPath);
+		project.parseSync();
 		this.$fs.readDirectory(extensionsFolderPath)
 			.filter(fileName => {
 				const filePath = path.join(extensionsFolderPath, fileName);
@@ -79,7 +81,9 @@ export class IOSExtensionsService implements IIOSExtensionsService {
 		xcode.save();
 	}
 
-	public removeExtensions({project, pbxProjPath}: IRemoveExtensionsOptions): void {
+	public removeExtensions({pbxProjPath}: IRemoveExtensionsOptions): void {
+		const project = new this.$xcode.project(pbxProjPath);
+		project.parseSync();
 		project.removeTargetsByProductType("com.apple.product-type.app-extension");
 		this.$fs.writeFile(pbxProjPath, project.writeSync({omitEmptyValues: true}));
 	}

@@ -984,8 +984,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		}
 
 		const pbxProjPath = this.getPbxProjPath(projectData);
-		const project = this.createPbxProj(projectData);
-		this.$iOSExtensionsService.removeExtensions({project, pbxProjPath});
+		this.$iOSExtensionsService.removeExtensions({pbxProjPath});
 		await this.addExtensions(projectData);
 	}
 	public beforePrepareAllPlugins(): Promise<void> {
@@ -1109,15 +1108,14 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		);
 		const platformData = this.getPlatformData(projectData);
 		const pbxProjPath = this.getPbxProjPath(projectData);
-		const project = this.createPbxProj(projectData);
-		await this.$iOSExtensionsService.addExtensionsFromPath({extensionsFolderPath: resorcesExtensionsPath, projectData, platformData, pbxProjPath, project});
+		await this.$iOSExtensionsService.addExtensionsFromPath({extensionsFolderPath: resorcesExtensionsPath, projectData, platformData, pbxProjPath});
 		const plugins = await this.getAllInstalledPlugins(projectData);
 		for (const pluginIndex in plugins) {
 			const pluginData = plugins[pluginIndex];
 			const pluginPlatformsFolderPath = pluginData.pluginPlatformsFolderPath(IOSProjectService.IOS_PLATFORM_NAME);
 
 			const extensionPath = path.join(pluginPlatformsFolderPath, constants.NATIVE_EXTENSION_FOLDER);
-			await this.$iOSExtensionsService.addExtensionsFromPath({extensionsFolderPath: extensionPath, projectData, platformData, pbxProjPath, project});
+			await this.$iOSExtensionsService.addExtensionsFromPath({extensionsFolderPath: extensionPath, projectData, platformData, pbxProjPath});
 		}
 	}
 
