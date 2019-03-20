@@ -152,7 +152,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 	}
 
 	@performanceLog()
-	private async refreshApplication(projectData: IProjectData, liveSyncResultInfo: ILiveSyncResultInfo, debugOpts?: IDebugOptions, outputPath?: string): Promise<IRefreshApplicationInfo | IDebugInformation> {
+	private async refreshApplication(projectData: IProjectData, liveSyncResultInfo: ILiveSyncResultInfo, debugOpts?: IDebugOptions, outputPath?: string): Promise<IRestartApplicationInfo | IDebugInformation> {
 		const deviceDescriptor = this.getDeviceDescriptor(liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier, projectData.projectDir);
 
 		return deviceDescriptor && deviceDescriptor.debugggingEnabled ?
@@ -160,22 +160,22 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 			this.refreshApplicationWithoutDebug(projectData, liveSyncResultInfo, debugOpts, outputPath);
 	}
 
-	private async refreshApplicationWithoutDebug(projectData: IProjectData, liveSyncResultInfo: ILiveSyncResultInfo, debugOpts?: IDebugOptions, outputPath?: string, settings?: IRefreshApplicationSettings): Promise<IRefreshApplicationInfo> {
-		const result = { didRefresh: false };
+	private async refreshApplicationWithoutDebug(projectData: IProjectData, liveSyncResultInfo: ILiveSyncResultInfo, debugOpts?: IDebugOptions, outputPath?: string, settings?: IRefreshApplicationSettings): Promise<IRestartApplicationInfo> {
+		const result = { didRestart: false };
 		const platform = liveSyncResultInfo.deviceAppData.platform;
 		const platformLiveSyncService = this.getLiveSyncService(platform);
 		const applicationIdentifier = projectData.projectIdentifiers[platform.toLowerCase()];
 		try {
 			let shouldRestart = await platformLiveSyncService.shouldRestart(projectData, liveSyncResultInfo);
 			if (!shouldRestart) {
-				result.didRefresh = await platformLiveSyncService.tryRefreshApplication(projectData, liveSyncResultInfo);
-				shouldRestart = !result.didRefresh;
+				shouldRestart = !await platformLiveSyncService.tryRefreshApplication(projectData, liveSyncResultInfo);
 			}
 
 			if (shouldRestart) {
 				const deviceIdentifier = liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier;
 				this.emit(DEBUGGER_DETACHED_EVENT_NAME, { deviceIdentifier });
 				await platformLiveSyncService.restartApplication(projectData, liveSyncResultInfo);
+				result.didRestart = true;
 			}
 		} catch (err) {
 			this.$logger.info(`Error while trying to start application ${applicationIdentifier} on device ${liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier}. Error is: ${err.message || err}`);
@@ -219,7 +219,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 		// if we try to send the launch request, the debugger port will not be printed and the command will timeout
 		debugOptions.start = !debugOptions.debugBrk;
 
-		debugOptions.forceDebuggerAttachedEvent = !refreshInfo.didRefresh;
+		debugOptions.forceDebuggerAttachedEvent = refreshInfo.didRestart;
 		const deviceOption = {
 			deviceIdentifier: liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier,
 			debugOptions: debugOptions,
