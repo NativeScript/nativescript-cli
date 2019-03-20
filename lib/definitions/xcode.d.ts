@@ -13,7 +13,7 @@ declare module "nativescript-dev-xcode" {
         parse(callback: () => void): void;
         parseSync(): void;
 
-        writeSync(): string;
+        writeSync(options: any): string;
 
         addFramework(filepath: string, options?: Options): void;
         removeFramework(filePath: string, options?: Options): void;
@@ -46,6 +46,7 @@ declare module "nativescript-dev-xcode" {
         ): group;
         addBuildProperty(prop: string, value: any, build_name?: string, productName?: string): void;
         addToHeaderSearchPaths(file: string|Object, productName?: string): void;
+        removeTargetsByProductType(targetType: string): void
     }
 
     class target {

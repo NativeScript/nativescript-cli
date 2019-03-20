@@ -472,6 +472,12 @@ interface IPlatformProjectService extends NodeJS.EventEmitter, IPlatformProjectS
 	getDeploymentTarget(projectData: IProjectData): any;
 }
 
+interface INativeSourceCodeGroup {
+	name: string;
+	path: string;
+	files: string[];
+}
+
 interface IValidatePlatformOutput {
 	checkEnvironmentRequirementsOutput: ICheckEnvironmentRequirementsOutput;
 }
@@ -564,6 +570,14 @@ interface ICocoaPodsPlatformManager {
 	addPlatformSection(projectData: IProjectData, podfilePlatformData: IPodfilePlatformData, projectPodfileContent: string): string;
 	removePlatformSection(moduleName: string, projectPodFileContent: string, podfilePath: string): string;
 	replacePlatformRow(podfileContent: string, podfilePath: string): { replacedContent: string, podfilePlatformData: IPodfilePlatformData };
+}
+
+/**
+ * Describes a service used to add and remove iOS extension
+ */
+interface IIOSExtensionsService {
+	addExtensionsFromPath(extensionsFolderPath: string, projectData: IProjectData, platformData: IPlatformData, projectPath: string, project: IXcode.project): Promise<void>;
+	removeExtensions(project: IXcode.project, projectPath: string): void;
 }
 
 interface IRubyFunction {

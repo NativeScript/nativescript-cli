@@ -156,6 +156,10 @@ function createTestInjector(projectPath: string, projectName: string, xcode?: IX
 	testInjector.register("pacoteService", {
 		extractPackage: async (packageName: string, destinationDirectory: string, options?: IPacoteExtractOptions): Promise<void> => undefined
 	});
+	testInjector.register("iOSExtensionsService", {
+		removeExtensions: () => { /* */ },
+		addExtensionsFromPath: () => Promise.resolve()
+	});
 	return testInjector;
 }
 

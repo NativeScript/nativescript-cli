@@ -15,12 +15,6 @@ import { IOSEntitlementsService } from "./ios-entitlements-service";
 import * as mobileprovision from "ios-mobileprovision-finder";
 import { BUILD_XCCONFIG_FILE_NAME, IosProjectConstants } from "../constants";
 
-interface INativeSourceCodeGroup {
-	name: string;
-	path: string;
-	files: string[];
-}
-
 const DevicePlatformSdkName = "iphoneos";
 const SimulatorPlatformSdkName = "iphonesimulator";
 
@@ -52,7 +46,8 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		private $platformEnvironmentRequirements: IPlatformEnvironmentRequirements,
 		private $plistParser: IPlistParser,
 		private $sysInfo: ISysInfo,
-		private $xcconfigService: IXcconfigService) {
+		private $xcconfigService: IXcconfigService,
+		private $iOSExtensionsService: IIOSExtensionsService) {
 		super($fs, $projectDataService);
 	}
 
@@ -982,7 +977,9 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 			await this.$cocoapodsService.mergePodXcconfigFile(projectData, platformData, opts);
 		}
 
-		this.removeExtensions(projectData);
+		const pbxprojPath = this.getPbxProjPath(projectData);
+		const project = this.createPbxProj(projectData);
+		this.$iOSExtensionsService.removeExtensions(project, pbxprojPath);
 		await this.addExtensions(projectData);
 	}
 	public beforePrepareAllPlugins(): Promise<void> {
@@ -1100,88 +1097,22 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 	}
 
 	private async addExtensions(projectData: IProjectData): Promise<void> {
-		await this.prepareExtensionsCode(path.join(projectData.getAppResourcesDirectoryPath(), this.getPlatformData(projectData).normalizedPlatformName, constants.NATIVE_EXTENSION_FOLDER), projectData);
+		const resorcesExtensionsPath = path.join(
+			projectData.getAppResourcesDirectoryPath(),
+			this.getPlatformData(projectData).normalizedPlatformName, constants.NATIVE_EXTENSION_FOLDER
+		);
+		const platformData = this.getPlatformData(projectData);
+		const pbxProjectPath = this.getPbxProjPath(projectData);
+		const project = this.createPbxProj(projectData);
+		await this.$iOSExtensionsService.addExtensionsFromPath(resorcesExtensionsPath, projectData, platformData, pbxProjectPath, project);
 		const plugins = await this.getAllInstalledPlugins(projectData);
 		for (const pluginIndex in plugins) {
 			const pluginData = plugins[pluginIndex];
 			const pluginPlatformsFolderPath = pluginData.pluginPlatformsFolderPath(IOSProjectService.IOS_PLATFORM_NAME);
 
 			const extensionPath = path.join(pluginPlatformsFolderPath, constants.NATIVE_EXTENSION_FOLDER);
-			await this.prepareExtensionsCode(extensionPath, projectData);
+			await this.$iOSExtensionsService.addExtensionsFromPath(extensionPath, projectData, platformData, pbxProjectPath, project);
 		}
-	}
-
-	private async prepareExtensionsCode(extensionsFolderPath: string, projectData: IProjectData): Promise<void> {
-		const targetUuids: string[] = [];
-		if (!this.$fs.exists(extensionsFolderPath)) {
-			return;
-		}
-
-		const project = this.createPbxProj(projectData);
-
-		this.$fs.readDirectory(extensionsFolderPath)
-			.filter(fileName => {
-				const filePath = path.join(extensionsFolderPath, fileName);
-				const stats = this.$fs.getFsStats(filePath);
-				return stats.isDirectory() && !fileName.startsWith(".");
-			})
-			.forEach(extensionFolder => {
-				const targetUuid = this.addExtensionToProject(extensionsFolderPath, extensionFolder, project, projectData);
-				targetUuids.push(targetUuid);
-			});
-
-		this.savePbxProj(project, projectData, true);
-		this.prepareExtensionSigning(targetUuids, projectData);
-	}
-
-	private addExtensionToProject(extensionsFolderPath: string, extensionFolder: string, project: IXcode.project, projectData: IProjectData): string {
-		const extensionPath = path.join(extensionsFolderPath, extensionFolder);
-		const extensionRelativePath = path.relative(this.getPlatformData(projectData).projectRoot, extensionPath);
-		const group = this.getRootGroup(extensionFolder,  extensionPath);
-		const target = project.addTarget(extensionFolder, 'app_extension', extensionRelativePath);
-		project.addBuildPhase([], 'PBXSourcesBuildPhase', 'Sources', target.uuid);
-		project.addBuildPhase([], 'PBXResourcesBuildPhase', 'Resources', target.uuid);
-		project.addBuildPhase([], 'PBXFrameworksBuildPhase', 'Frameworks', target.uuid);
-
-		const extJsonPath = path.join(extensionsFolderPath, extensionFolder, "extension.json");
-		if (this.$fs.exists(extJsonPath)) {
-			const extensionJson = this.$fs.readJson(extJsonPath);
-			_.forEach(extensionJson.frameworks, framework => {
-				project.addFramework(
-					framework,
-					{ target: target.uuid }
-				);
-			});
-			if (extensionJson.assetcatalogCompilerAppiconName) {
-				project.addToBuildSettings("ASSETCATALOG_COMPILER_APPICON_NAME", extensionJson.assetcatalogCompilerAppiconName, target.uuid);
-			}
-		}
-
-		project.addPbxGroup(group.files, group.name, group.path, null, { isMain: true, target: target.uuid, filesRelativeToProject: true });
-		project.addBuildProperty("PRODUCT_BUNDLE_IDENTIFIER", `${projectData.projectIdentifiers.ios}.${extensionFolder}`, "Debug", extensionFolder);
-		project.addBuildProperty("PRODUCT_BUNDLE_IDENTIFIER", `${projectData.projectIdentifiers.ios}.${extensionFolder}`, "Release", extensionFolder);
-		project.addToHeaderSearchPaths(group.path, target.pbxNativeTarget.productName);
-
-		return target.uuid;
-	}
-
-	private prepareExtensionSigning(targetUuids: string[], projectData:IProjectData) {
-		const xcode = this.$pbxprojDomXcode.Xcode.open(this.getPbxProjPath(projectData));
-		const signing = xcode.getSigning(projectData.projectName);
-		if (signing !== undefined) {
-			_.forEach(targetUuids, targetUuid => {
-				if (signing.style === "Automatic") {
-					xcode.setAutomaticSigningStyleByTargetKey(targetUuid, signing.team);
-				} else {
-					for (const config in signing.configurations) {
-						const signingConfiguration = signing.configurations[config];
-						xcode.setManualSigningStyleByTargetKey(targetUuid, signingConfiguration);
-						break;
-					}
-				}
-			});
-		}
-		xcode.save();
 	}
 
 	private getRootGroup(name: string, rootPath: string) {
@@ -1230,12 +1161,6 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		const group = this.getRootGroup(pluginData.name, pluginPlatformsFolderPath);
 		project.removePbxGroup(group.name, group.path);
 		project.removeFromHeaderSearchPaths(group.path);
-		this.savePbxProj(project, projectData);
-	}
-
-	private removeExtensions(projectData: IProjectData): void {
-		const project = this.createPbxProj(projectData);
-		project.removeTargetsByProductType("com.apple.product-type.app-extension");
 		this.savePbxProj(project, projectData);
 	}
 
