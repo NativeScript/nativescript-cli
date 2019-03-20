@@ -530,7 +530,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 					uuid: mobileprovision.UUID,
 					name: mobileprovision.Name,
 					identity: mobileprovision.Type === "Development" ? "iPhone Developer" : "iPhone Distribution"
-				}
+				};
 				xcode.setManualSigningStyle(projectData.projectName, configuration);
 				xcode.setManualSigningStyleByTargetProductType("com.apple.product-type.app-extension", configuration);
 				xcode.save();
@@ -1108,12 +1108,12 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 
 			const extensionPath = path.join(pluginPlatformsFolderPath, constants.NATIVE_EXTENSION_FOLDER);
 			await this.prepareExtensionsCode(extensionPath, projectData);
-		};
+		}
 	}
 
 	private async prepareExtensionsCode(extensionsFolderPath: string, projectData: IProjectData): Promise<void> {
 		const targetUuids: string[] = [];
-		if(!this.$fs.exists(extensionsFolderPath)){
+		if (!this.$fs.exists(extensionsFolderPath)) {
 			return;
 		}
 
@@ -1144,7 +1144,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		project.addBuildPhase([], 'PBXFrameworksBuildPhase', 'Frameworks', target.uuid);
 
 		const extJsonPath = path.join(extensionsFolderPath, extensionFolder, "extension.json");
-		if(this.$fs.exists(extJsonPath)) {
+		if (this.$fs.exists(extJsonPath)) {
 			const extensionJson = this.$fs.readJson(extJsonPath);
 			_.forEach(extensionJson.frameworks, framework => {
 				project.addFramework(
@@ -1152,7 +1152,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 					{ target: target.uuid }
 				);
 			});
-			if(extensionJson.assetcatalogCompilerAppiconName){
+			if (extensionJson.assetcatalogCompilerAppiconName) {
 				project.addToBuildSettings("ASSETCATALOG_COMPILER_APPICON_NAME", extensionJson.assetcatalogCompilerAppiconName, target.uuid);
 			}
 		}
@@ -1162,24 +1162,24 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		project.addBuildProperty("PRODUCT_BUNDLE_IDENTIFIER", `${projectData.projectIdentifiers.ios}.${extensionFolder}`, "Release", extensionFolder);
 		project.addToHeaderSearchPaths(group.path, target.pbxNativeTarget.productName);
 
-		return target.uuid
+		return target.uuid;
 	}
 
 	private prepareExtensionSigning(targetUuids: string[], projectData:IProjectData) {
 		const xcode = this.$pbxprojDomXcode.Xcode.open(this.getPbxProjPath(projectData));
 		const signing = xcode.getSigning(projectData.projectName);
-		if(signing !== undefined) {
+		if (signing !== undefined) {
 			_.forEach(targetUuids, targetUuid => {
-				if(signing.style === "Automatic"){
+				if (signing.style === "Automatic") {
 					xcode.setAutomaticSigningStyleByTargetKey(targetUuid, signing.team);
 				} else {
-					for(let config in signing.configurations) {
+					for (const config in signing.configurations) {
 						const signingConfiguration = signing.configurations[config];
 						xcode.setManualSigningStyleByTargetKey(targetUuid, signingConfiguration);
 						break;
 					}
 				}
-			})
+			});
 		}
 		xcode.save();
 	}
@@ -1190,7 +1190,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 
 		if (this.$fs.exists(rootPath)) {
 			const stats = this.$fs.getFsStats(rootPath);
-			if(stats.isDirectory() && !this.$fs.isEmptyDir(rootPath)) {
+			if (stats.isDirectory() && !this.$fs.isEmptyDir(rootPath)) {
 				this.$fs.readDirectory(rootPath).forEach(fileName => {
 					const filePath = path.join(rootGroup.path, fileName);
 					filePathsArr.push(filePath);

@@ -77,7 +77,7 @@ function createTestInjector(projectPath: string, projectName: string, xcode?: IX
 		projectDir: "",
 		appDirectoryPath: "",
 		appResourcesDirectoryPath: "",
-		getAppResourcesDirectoryPath: ()=>""
+		getAppResourcesDirectoryPath: () => ""
 	});
 	projectData.projectDir = temp.mkdirSync("projectDir");
 	projectData.appDirectoryPath = path.join(projectData.projectDir, "app");
