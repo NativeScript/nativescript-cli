@@ -135,7 +135,7 @@ export class DoctorService implements IDoctorService {
 	}
 
 	protected getDeprecatedShortImportsInFiles(files: string[], projectDir: string): { file: string, line: string }[] {
-		const shortImportRegExps = this.getShortImportRegExps(projectDir);
+		const shortImportRegExp = this.getShortImportRegExp(projectDir);
 		const shortImports: { file: string, line: string }[] = [];
 
 		for (const file of files) {
@@ -144,17 +144,15 @@ export class DoctorService implements IDoctorService {
 			const linesToCheck = _.flatten(strippedComments
 				.split(/\r?\n/)
 				.map(line => line.split(";")));
+
 			const linesWithRequireStatements = linesToCheck
 				.filter(line => /\btns-core-modules\b/.exec(line) === null && (/\bimport\b/.exec(line) || /\brequire\b/.exec(line)));
 
 			for (const line of linesWithRequireStatements) {
-				for (const regExp of shortImportRegExps) {
-					const matches = line.match(regExp);
+				const matches = line.match(shortImportRegExp);
 
-					if (matches && matches.length) {
-						shortImports.push({ file, line });
-						break;
-					}
+				if (matches && matches.length) {
+					shortImports.push({ file, line });
 				}
 			}
 		}
@@ -162,14 +160,24 @@ export class DoctorService implements IDoctorService {
 		return shortImports;
 	}
 
-	private getShortImportRegExps(projectDir: string): RegExp[] {
+	private getShortImportRegExp(projectDir: string): RegExp {
 		const pathToTnsCoreModules = path.join(projectDir, NODE_MODULES_FOLDER_NAME, TNS_CORE_MODULES_NAME);
-		const contents = this.$fs.readDirectory(pathToTnsCoreModules)
+		const coreModulesSubDirs = this.$fs.readDirectory(pathToTnsCoreModules)
 			.filter(entry => this.$fs.getFsStats(path.join(pathToTnsCoreModules, entry)).isDirectory());
 
-		const regExps = contents.map(c => new RegExp(`[\"\']${c}[\"\'/]`, "g"));
+		const stringRegularExpressionsPerDir = coreModulesSubDirs.map(c => {
+			// require("text");
+			// require("text/smth");
+			// require(   "text/smth");
+			// require(   "text/smth"   );
+			// import * as text from "text";
+			// import { a } from "text";
+			// import {a } from "text/abc"
+			const subDirPart = `[\"\']${c}[\"\'/]`;
+			return `(\\brequire\\s*?\\(\\s*?${subDirPart})|(\\bimport\\b.*?from\\s*?${subDirPart})`;
+		});
 
-		return regExps;
+		return new RegExp(stringRegularExpressionsPerDir.join("|"), "g");
 	}
 
 	private async runSetupScriptCore(executablePath: string, setupScriptArgs: string[]): Promise<ISpawnResult> {
