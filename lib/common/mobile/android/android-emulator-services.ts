@@ -15,9 +15,11 @@ export class AndroidEmulatorServices implements Mobile.IEmulatorPlatformService 
 		const adbDevicesOutput = await this.$adb.getDevicesSafe();
 		const avdAvailableEmulatorsOutput = await this.$androidVirtualDeviceService.getEmulatorImages(adbDevicesOutput);
 		const genyAvailableDevicesOutput = await this.$androidGenymotionService.getEmulatorImages(adbDevicesOutput);
+		const devices = _.concat(avdAvailableEmulatorsOutput.devices, genyAvailableDevicesOutput.devices)
+			.filter(item => !!item);
 
 		return {
-			devices: avdAvailableEmulatorsOutput.devices.concat(genyAvailableDevicesOutput.devices),
+			devices,
 			errors: avdAvailableEmulatorsOutput.errors.concat(genyAvailableDevicesOutput.errors)
 		};
 	}
@@ -97,10 +99,10 @@ export class AndroidEmulatorServices implements Mobile.IEmulatorPlatformService 
 
 		while (hasTimeLeft || isInfiniteWait) {
 			const emulators = (await this.getEmulatorImages()).devices;
-			emulator = _.find(emulators, e => e.imageIdentifier === emulator.imageIdentifier);
-			if (emulator && this.$emulatorHelper.isEmulatorRunning(emulator)) {
+			const newEmulator = _.find(emulators, e => e.imageIdentifier === emulator.imageIdentifier);
+			if (newEmulator && this.$emulatorHelper.isEmulatorRunning(newEmulator)) {
 				return {
-					runningEmulator: emulator,
+					runningEmulator: newEmulator,
 					errors: [],
 					endTimeEpoch
 				};
