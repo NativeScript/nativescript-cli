@@ -4,33 +4,40 @@ import { APPLICATION_RESPONSE_TIMEOUT_SECONDS } from "../constants";
 
 export class IOSDebuggerPortService implements IIOSDebuggerPortService {
 	public static DEBUG_PORT_LOG_REGEX = /NativeScript debugger has opened inspector socket on port (\d+?) for (.*)[.]/;
+	public static APP_CRASH_LOG_REGEX = /Fatal JavaScript exception \- application has been terminated/;
 	private mapDebuggerPortData: IDictionary<IIOSDebuggerPortStoredData> = {};
+	private currentAppId: string;
 
 	constructor(private $logParserService: ILogParserService,
 		private $iOSNotification: IiOSNotification,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $logger: ILogger) { }
 
-	public getPort(data: IIOSDebuggerPortInputData): Promise<number> {
-		return new Promise((resolve, reject) => {
+	public async getPort(data: IIOSDebuggerPortInputData): Promise<number> {
+		return new Promise<number>((resolve, reject) => {
 			const key = `${data.deviceId}${data.appId}`;
 			const retryInterval = 500;
 			let retryCount = Math.max(APPLICATION_RESPONSE_TIMEOUT_SECONDS * 1000 / retryInterval, 10);
 
 			const interval = setInterval(() => {
-				let port = this.getPortByKey(key);
+				const port = this.getPortByKey(key);
 				if (port || retryCount === 0) {
 					clearInterval(interval);
 					resolve(port);
 				} else {
-					port = this.getPortByKey(key);
-					retryCount--;
+					if (this.mapDebuggerPortData[key] && this.mapDebuggerPortData[key].error) {
+						clearInterval(interval);
+						reject(this.mapDebuggerPortData[key].error);
+					} else {
+						retryCount--;
+					}
 				}
 			}, retryInterval);
 		});
 	}
 
-	public async attachToDebuggerPortFoundEvent(): Promise<void> {
+	public async attachToDebuggerPortFoundEvent(appId: string): Promise<void> {
+		this.currentAppId = appId;
 		this.attachToDebuggerPortFoundEventCore();
 		this.attachToAttachRequestEvent();
 	}
@@ -43,6 +50,23 @@ export class IOSDebuggerPortService implements IIOSDebuggerPortService {
 			name: "debugPort",
 			platform: this.$devicePlatformsConstants.iOS.toLowerCase()
 		});
+		this.$logParserService.addParseRule({
+			regex: IOSDebuggerPortService.APP_CRASH_LOG_REGEX,
+			handler: this.handleAppCrash.bind(this),
+			name: "appCrash",
+			platform: this.$devicePlatformsConstants.iOS.toLowerCase()
+		});
+	}
+	private handleAppCrash(matches: RegExpMatchArray, deviceId: string): void {
+		const data = {
+			port: 0,
+			appId: this.currentAppId,
+			deviceId,
+			error: new Error("The application has been terminated.")
+		};
+
+		this.clearTimeout(data);
+		this.setData(data, { port: data.port, error: data.error });
 	}
 
 	private handlePortFound(matches: RegExpMatchArray, deviceId: string): void {
@@ -73,7 +97,7 @@ export class IOSDebuggerPortService implements IIOSDebuggerPortService {
 	}
 
 	private getPortByKey(key: string): number {
-		if (this.mapDebuggerPortData[key]) {
+		if (this.mapDebuggerPortData[key] && this.mapDebuggerPortData[key].port) {
 			return this.mapDebuggerPortData[key].port;
 		}
 
@@ -89,6 +113,7 @@ export class IOSDebuggerPortService implements IIOSDebuggerPortService {
 
 		this.mapDebuggerPortData[key].port = storedData.port;
 		this.mapDebuggerPortData[key].timer = storedData.timer;
+		this.mapDebuggerPortData[key].error = storedData.error;
 	}
 
 	private clearTimeout(data: IIOSDebuggerPortData): void {

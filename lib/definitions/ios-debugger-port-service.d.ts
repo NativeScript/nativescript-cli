@@ -12,6 +12,7 @@ interface IIOSDebuggerPortData {
 interface IIOSDebuggerPortStoredData {
 	port: number;
 	timer?: NodeJS.Timer;
+	error?: Error;
 }
 
 interface IIOSDebuggerPortService {
@@ -24,5 +25,5 @@ interface IIOSDebuggerPortService {
 	 * Attaches on DEBUGGER_PORT_FOUND event and stores the port
 	 * @returns {Promise<void>}
 	 */
-	attachToDebuggerPortFoundEvent(): Promise<void>;
+	attachToDebuggerPortFoundEvent(appId: string): Promise<void>;
 }

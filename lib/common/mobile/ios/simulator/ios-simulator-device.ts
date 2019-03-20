@@ -53,9 +53,8 @@ export class IOSSimulator extends IOSDeviceBase implements Mobile.IiOSDevice {
 		return this.$iOSSimulatorLogProvider.startLogProcess(this.simulator.id, options);
 	}
 
-	protected async getDebugSocketCore(appId: string, projectName: string): Promise<net.Socket> {
+	protected async getDebugSocketCore(appId: string): Promise<net.Socket> {
 		let socket: net.Socket;
-		await super.attachToDebuggerFoundEvent(projectName);
 		const attachRequestMessage = this.$iOSNotification.getAttachRequest(appId, this.deviceInfo.identifier);
 		await this.$iOSEmulatorServices.postDarwinNotification(attachRequestMessage, this.deviceInfo.identifier);
 		const port = await super.getDebuggerPort(appId);
