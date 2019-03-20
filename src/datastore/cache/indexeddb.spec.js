@@ -1,4 +1,5 @@
 import assert from 'assert';
+import { expect } from 'chai';
 import indexedDB from 'fake-indexeddb';
 import IndexedDB from './indexeddb.html5';
 
@@ -62,10 +63,7 @@ describe('IndexedDB', () => {
   describe('save', () => {
     it('should throw an error if any of the docs do not have an _id', async () => {
       const docs = [{ id: randomString() }];
-      return assert.rejects(indexedDB.save(docs), {
-        name: 'DataError',
-        message: 'Data provided to an operation does not meet requirements.'
-      });
+      await expect(indexedDB.save(docs)).to.be.rejectedWith(/Data provided to an operation does not meet requirements\./);
     });
 
     it('should save the docs', async () => {

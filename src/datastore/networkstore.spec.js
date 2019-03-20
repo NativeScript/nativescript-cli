@@ -556,14 +556,14 @@ describe('NetworkStore', () => {
     });
   });
 
-  describe.skip('when working with live service', () => {
+  describe.skip('when working with live service', () => {//TODO rework along with the other live services tests
     const path = './networkstore';
     const managerMock = {
       subscribeCollection: () => { },
       unsubscribeCollection: () => { }
     };
     const requireMocks = {
-      '../live': { getLiveCollectionManager: () => managerMock }
+      '../live/live': { getLiveCollectionManager: () => managerMock }
     };
 
     /** @type {NetworkStore} */

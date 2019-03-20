@@ -9,7 +9,7 @@ import { formatKinveyUrl } from '../http/utils';
 import { KinveyRequest, RequestMethod } from '../http/request';
 import { Auth } from '../http/auth';
 import KinveyError from '../errors/kinvey';
-import { subscribeToChannel, unsubscribeFromChannel } from '../live';
+import { subscribeToChannel, unsubscribeFromChannel } from '../live/live';
 
 const NAMESPACE = 'appdata';
 

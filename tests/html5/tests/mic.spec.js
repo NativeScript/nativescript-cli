@@ -145,7 +145,7 @@ const resolveAfter = (timeInMs) => {
   });
 }
 
-describe.only('MIC Integration', () => {
+describe('MIC Integration', () => {
   before(() => {
     return Kinvey.init({
       appKey: process.env.APP_KEY,

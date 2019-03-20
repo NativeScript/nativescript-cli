@@ -784,7 +784,7 @@ describe('CacheStore', () => {
         });
     });
 
-    it.skip('should return the count of all unique properties on the collection', (done) => {
+    it('should return the count of all unique properties on the collection', (done) => {
       const entity1 = { _id: randomString(), title: randomString() };
       const entity2 = { _id: randomString(), title: randomString() };
       const store = new CacheStore(collection, { autoSync: true });

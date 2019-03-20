@@ -32,7 +32,7 @@ describe('DataStore', () => {
     });
   });
 
-  describe.skip('constructor', () => {//TODO:  There is no DataStore class
+  describe('constructor', () => {//TODO:  There is no DataStore class
     it('should throw an error if the DataStore class is tried to be instantiated', () => {
       expect(() => {
         const store = new DataStore(collectionName);
@@ -123,7 +123,7 @@ describe('DataStore', () => {
     });
   });
 
-  describe.skip('getInstance()', () => {
+  describe('getInstance()', () => {//TODO Failing
     it('should call collection()', () => {
       const spy = expect.createSpy(collection);
       getInstance(collectionName);

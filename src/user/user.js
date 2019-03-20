@@ -9,7 +9,7 @@ import { get as getConfig } from '../kinvey/config';
 import { get as getDeviceId } from '../device';
 import KinveyError from '../errors/kinvey';
 import { DataStoreCache, QueryCache, SyncCache } from '../datastore/cache';
-import { isRegistered, register, unregister } from '../live';
+import { isRegistered, register, unregister } from '../live/live';
 import { mergeSocialIdentity } from './utils';
 
 const USER_NAMESPACE = 'user';

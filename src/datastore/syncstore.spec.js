@@ -252,7 +252,7 @@ describe('SyncStore', () => {
         });
     });
 
-    it.skip('should return the count of all unique properties on the collection', (done) => {//TODO:  cache.group is not a function
+    it('should return the count of all unique properties on the collection', (done) => {//TODO:  cache.group is not a function
       const entity1 = { _id: randomString(), title: randomString() };
       const entity2 = { _id: randomString(), title: randomString() };
       const store = new CacheStore(collectionName, { autoSync: false });
