@@ -52,7 +52,8 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		private $platformEnvironmentRequirements: IPlatformEnvironmentRequirements,
 		private $plistParser: IPlistParser,
 		private $sysInfo: ISysInfo,
-		private $xcconfigService: IXcconfigService) {
+		private $xcconfigService: IXcconfigService,
+		private $iOSExtensionsService: IIOSExtensionsService) {
 		super($fs, $projectDataService);
 	}
 
@@ -490,6 +491,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			}
 
 			xcode.setAutomaticSigningStyle(projectData.projectName, teamId);
+			xcode.setAutomaticSigningStyleByTargetProductType("com.apple.product-type.app-extension", teamId);
 			xcode.save();
 
 			this.$logger.trace(`Set Automatic signing style and team id ${teamId}.`);
@@ -524,13 +526,14 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				if (!mobileprovision) {
 					this.$errors.failWithoutHelp("Failed to find mobile provision with UUID or Name: " + provision);
 				}
-
-				xcode.setManualSigningStyle(projectData.projectName, {
+				const configuration = {
 					team: mobileprovision.TeamIdentifier && mobileprovision.TeamIdentifier.length > 0 ? mobileprovision.TeamIdentifier[0] : undefined,
 					uuid: mobileprovision.UUID,
 					name: mobileprovision.Name,
 					identity: mobileprovision.Type === "Development" ? "iPhone Developer" : "iPhone Distribution"
-				});
+				};
+				xcode.setManualSigningStyle(projectData.projectName, configuration);
+				xcode.setManualSigningStyleByTargetProductType("com.apple.product-type.app-extension", configuration);
 				xcode.save();
 
 				// this.cache(uuid);
@@ -788,6 +791,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 
 		// src folder should not be copied as the pbxproject will have references to its files
 		this.$fs.deleteDirectory(path.join(appResourcesDirectoryPath, this.getPlatformData(projectData).normalizedPlatformName, constants.NATIVE_SOURCE_FOLDER));
+		this.$fs.deleteDirectory(path.join(appResourcesDirectoryPath, this.getPlatformData(projectData).normalizedPlatformName, constants.NATIVE_EXTENSION_FOLDER));
 
 		this.$fs.deleteDirectory(this.getAppResourcesDestinationDirectoryPath(projectData));
 	}
@@ -934,8 +938,8 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		return project;
 	}
 
-	private savePbxProj(project: any, projectData: IProjectData): void {
-		return this.$fs.writeFile(this.getPbxProjPath(projectData), project.writeSync());
+	private savePbxProj(project: any, projectData: IProjectData, omitEmptyValues?: boolean): void {
+		return this.$fs.writeFile(this.getPbxProjPath(projectData), project.writeSync({omitEmptyValues}));
 	}
 
 	public async preparePluginNativeCode(pluginData: IPluginData, projectData: IProjectData, opts?: any): Promise<void> {
@@ -978,6 +982,10 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 			// So the correct order is `pod install` to be executed before merging pod's xcconfig file.
 			await this.$cocoapodsService.mergePodXcconfigFile(projectData, platformData, opts);
 		}
+
+		const pbxProjPath = this.getPbxProjPath(projectData);
+		this.$iOSExtensionsService.removeExtensions({pbxProjPath});
+		await this.addExtensions(projectData);
 	}
 	public beforePrepareAllPlugins(): Promise<void> {
 		return Promise.resolve();
@@ -1093,15 +1101,36 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		this.savePbxProj(project, projectData);
 	}
 
+	private async addExtensions(projectData: IProjectData): Promise<void> {
+		const resorcesExtensionsPath = path.join(
+			projectData.getAppResourcesDirectoryPath(),
+			this.getPlatformData(projectData).normalizedPlatformName, constants.NATIVE_EXTENSION_FOLDER
+		);
+		const platformData = this.getPlatformData(projectData);
+		const pbxProjPath = this.getPbxProjPath(projectData);
+		await this.$iOSExtensionsService.addExtensionsFromPath({extensionsFolderPath: resorcesExtensionsPath, projectData, platformData, pbxProjPath});
+		const plugins = await this.getAllInstalledPlugins(projectData);
+		for (const pluginIndex in plugins) {
+			const pluginData = plugins[pluginIndex];
+			const pluginPlatformsFolderPath = pluginData.pluginPlatformsFolderPath(IOSProjectService.IOS_PLATFORM_NAME);
+
+			const extensionPath = path.join(pluginPlatformsFolderPath, constants.NATIVE_EXTENSION_FOLDER);
+			await this.$iOSExtensionsService.addExtensionsFromPath({extensionsFolderPath: extensionPath, projectData, platformData, pbxProjPath});
+		}
+	}
+
 	private getRootGroup(name: string, rootPath: string) {
 		const filePathsArr: string[] = [];
 		const rootGroup: INativeSourceCodeGroup = { name: name, files: filePathsArr, path: rootPath };
 
-		if (this.$fs.exists(rootPath) && !this.$fs.isEmptyDir(rootPath)) {
-			this.$fs.readDirectory(rootPath).forEach(fileName => {
-				const filePath = path.join(rootGroup.path, fileName);
-				filePathsArr.push(filePath);
-			});
+		if (this.$fs.exists(rootPath)) {
+			const stats = this.$fs.getFsStats(rootPath);
+			if (stats.isDirectory() && !this.$fs.isEmptyDir(rootPath)) {
+				this.$fs.readDirectory(rootPath).forEach(fileName => {
+					const filePath = path.join(rootGroup.path, fileName);
+					filePathsArr.push(filePath);
+				});
+			}
 		}
 
 		return rootGroup;

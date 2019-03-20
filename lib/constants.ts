@@ -47,6 +47,7 @@ export const HASHES_FILE_NAME = ".nshashes";
 export const TNS_NATIVE_SOURCE_GROUP_NAME = "TNSNativeSource";
 export const NATIVE_SOURCE_FOLDER = "src";
 export const APPLICATION_RESPONSE_TIMEOUT_SECONDS = 60;
+export const NATIVE_EXTENSION_FOLDER = "extensions";
 
 export class PackageVersion {
 	static NEXT = "next";

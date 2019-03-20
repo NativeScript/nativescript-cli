@@ -22,7 +22,6 @@ import { DeviceDiscovery } from "../lib/common/mobile/mobile-core/device-discove
 import { IOSDeviceDiscovery } from "../lib/common/mobile/mobile-core/ios-device-discovery";
 import { AndroidDeviceDiscovery } from "../lib/common/mobile/mobile-core/android-device-discovery";
 import { PluginVariablesService } from "../lib/services/plugin-variables-service";
-import { PluginsService } from "../lib/services/plugins-service";
 import { PluginVariablesHelper } from "../lib/common/plugin-variables-helper";
 import { Utils } from "../lib/common/utils";
 import { CocoaPodsService } from "../lib/services/cocoapods-service";
@@ -77,7 +76,8 @@ function createTestInjector(projectPath: string, projectName: string, xcode?: IX
 		projectIdentifiers: { android: "", ios: "" },
 		projectDir: "",
 		appDirectoryPath: "",
-		appResourcesDirectoryPath: ""
+		appResourcesDirectoryPath: "",
+		getAppResourcesDirectoryPath: () => ""
 	});
 	projectData.projectDir = temp.mkdirSync("projectDir");
 	projectData.appDirectoryPath = path.join(projectData.projectDir, "app");
@@ -115,7 +115,9 @@ function createTestInjector(projectPath: string, projectName: string, xcode?: IX
 	testInjector.register("iosDeviceOperations", {});
 	testInjector.register("pluginVariablesService", PluginVariablesService);
 	testInjector.register("pluginVariablesHelper", PluginVariablesHelper);
-	testInjector.register("pluginsService", PluginsService);
+	testInjector.register("pluginsService", {
+		getAllInstalledPlugins: (): string[] => []
+	});
 	testInjector.register("androidProcessService", {});
 	testInjector.register("processService", {});
 	testInjector.register("sysInfo", {
@@ -127,6 +129,8 @@ function createTestInjector(projectPath: string, projectName: string, xcode?: IX
 			constructor() { /* */ }
 			parseSync() { /* */ }
 			pbxGroupByName() { /* */ }
+			removeTargetsByProductType() { /* */ }
+			writeSync() { /* */ }
 		}
 	});
 	testInjector.register("userSettingsService", {
@@ -151,6 +155,10 @@ function createTestInjector(projectPath: string, projectName: string, xcode?: IX
 	});
 	testInjector.register("pacoteService", {
 		extractPackage: async (packageName: string, destinationDirectory: string, options?: IPacoteExtractOptions): Promise<void> => undefined
+	});
+	testInjector.register("iOSExtensionsService", {
+		removeExtensions: () => { /* */ },
+		addExtensionsFromPath: () => Promise.resolve()
 	});
 	return testInjector;
 }
@@ -1055,7 +1063,9 @@ describe("iOS Project Service Signing", () => {
 						},
 						setManualSigningStyle(targetName: string, manualSigning: any) {
 							stack.push({ targetName, manualSigning });
-						}
+						},
+						setManualSigningStyleByTargetProductType: () => ({}),
+						setManualSigningStyleByTargetKey: () => ({})
 					};
 				};
 				await iOSProjectService.prepareProject(projectData, { sdk: undefined, provision: "NativeScriptDev", teamId: undefined });
@@ -1074,7 +1084,9 @@ describe("iOS Project Service Signing", () => {
 						},
 						setManualSigningStyle(targetName: string, manualSigning: any) {
 							stack.push({ targetName, manualSigning });
-						}
+						},
+						setManualSigningStyleByTargetProductType: () => ({}),
+						setManualSigningStyleByTargetKey: () => ({})
 					};
 				};
 				await iOSProjectService.prepareProject(projectData, { sdk: undefined, provision: "NativeScriptDist", teamId: undefined });
@@ -1093,7 +1105,9 @@ describe("iOS Project Service Signing", () => {
 						},
 						setManualSigningStyle(targetName: string, manualSigning: any) {
 							stack.push({ targetName, manualSigning });
-						}
+						},
+						setManualSigningStyleByTargetProductType: () => ({}),
+						setManualSigningStyleByTargetKey: () => ({})
 					};
 				};
 				await iOSProjectService.prepareProject(projectData, { sdk: undefined, provision: "NativeScriptAdHoc", teamId: undefined });
@@ -1282,6 +1296,8 @@ describe("buildProject", () => {
 			open: () => ({
 				getSigning: () => ({}),
 				setAutomaticSigningStyle: () => ({}),
+				setAutomaticSigningStyleByTargetProductType: () => ({}),
+				setAutomaticSigningStyleByTargetKey: () => ({}),
 				save: () => ({})
 			})
 		};

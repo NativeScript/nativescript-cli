@@ -566,6 +566,25 @@ interface ICocoaPodsPlatformManager {
 	replacePlatformRow(podfileContent: string, podfilePath: string): { replacedContent: string, podfilePlatformData: IPodfilePlatformData };
 }
 
+/**
+ * Describes a service used to add and remove iOS extension
+ */
+interface IIOSExtensionsService {
+	addExtensionsFromPath(options: IAddExtensionsFromPathOptions): Promise<void>;
+	removeExtensions(options: IRemoveExtensionsOptions): void;
+}
+
+interface IAddExtensionsFromPathOptions{
+	extensionsFolderPath: string;
+	projectData: IProjectData;
+	platformData: IPlatformData;
+	pbxProjPath: string;
+}
+
+interface IRemoveExtensionsOptions {
+	pbxProjPath: string
+}
+
 interface IRubyFunction {
 	functionName: string;
 	functionParameters?: string;
