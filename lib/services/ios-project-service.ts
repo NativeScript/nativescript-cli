@@ -15,6 +15,12 @@ import { IOSEntitlementsService } from "./ios-entitlements-service";
 import * as mobileprovision from "ios-mobileprovision-finder";
 import { BUILD_XCCONFIG_FILE_NAME, IosProjectConstants } from "../constants";
 
+interface INativeSourceCodeGroup {
+	name: string;
+	path: string;
+	files: string[];
+}
+
 const DevicePlatformSdkName = "iphoneos";
 const SimulatorPlatformSdkName = "iphonesimulator";
 
@@ -977,9 +983,9 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 			await this.$cocoapodsService.mergePodXcconfigFile(projectData, platformData, opts);
 		}
 
-		const pbxprojPath = this.getPbxProjPath(projectData);
+		const pbxProjPath = this.getPbxProjPath(projectData);
 		const project = this.createPbxProj(projectData);
-		this.$iOSExtensionsService.removeExtensions(project, pbxprojPath);
+		this.$iOSExtensionsService.removeExtensions({project, pbxProjPath});
 		await this.addExtensions(projectData);
 	}
 	public beforePrepareAllPlugins(): Promise<void> {
@@ -1102,16 +1108,16 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 			this.getPlatformData(projectData).normalizedPlatformName, constants.NATIVE_EXTENSION_FOLDER
 		);
 		const platformData = this.getPlatformData(projectData);
-		const pbxProjectPath = this.getPbxProjPath(projectData);
+		const pbxProjPath = this.getPbxProjPath(projectData);
 		const project = this.createPbxProj(projectData);
-		await this.$iOSExtensionsService.addExtensionsFromPath(resorcesExtensionsPath, projectData, platformData, pbxProjectPath, project);
+		await this.$iOSExtensionsService.addExtensionsFromPath({extensionsFolderPath: resorcesExtensionsPath, projectData, platformData, pbxProjPath, project});
 		const plugins = await this.getAllInstalledPlugins(projectData);
 		for (const pluginIndex in plugins) {
 			const pluginData = plugins[pluginIndex];
 			const pluginPlatformsFolderPath = pluginData.pluginPlatformsFolderPath(IOSProjectService.IOS_PLATFORM_NAME);
 
 			const extensionPath = path.join(pluginPlatformsFolderPath, constants.NATIVE_EXTENSION_FOLDER);
-			await this.$iOSExtensionsService.addExtensionsFromPath(extensionPath, projectData, platformData, pbxProjectPath, project);
+			await this.$iOSExtensionsService.addExtensionsFromPath({extensionsFolderPath: extensionPath, projectData, platformData, pbxProjPath, project});
 		}
 	}
 

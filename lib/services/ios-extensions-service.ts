@@ -5,7 +5,7 @@ export class IOSExtensionsService implements IIOSExtensionsService {
 		private $pbxprojDomXcode: IPbxprojDomXcode) {
 	}
 
-	public async addExtensionsFromPath(extensionsFolderPath: string, projectData: IProjectData, platformData: IPlatformData, projectPath: string, project: IXcode.project): Promise<void> {
+	public async addExtensionsFromPath({extensionsFolderPath, projectData, platformData, pbxProjPath, project}: IAddExtensionsFromPathOptions): Promise<void> {
 		const targetUuids: string[] = [];
 		if (!this.$fs.exists(extensionsFolderPath)) {
 			return;
@@ -23,8 +23,8 @@ export class IOSExtensionsService implements IIOSExtensionsService {
 				targetUuids.push(targetUuid);
 			});
 
-		this.$fs.writeFile(projectPath, project.writeSync({omitEmptyValues: true}));
-		this.prepareExtensionSigning(targetUuids, projectData, projectPath);
+		this.$fs.writeFile(pbxProjPath, project.writeSync({omitEmptyValues: true}));
+		this.prepareExtensionSigning(targetUuids, projectData, pbxProjPath);
 	}
 
 	private addExtensionToProject(extensionsFolderPath: string, extensionFolder: string, project: IXcode.project, projectData: IProjectData, platformData: IPlatformData): string {
@@ -33,7 +33,6 @@ export class IOSExtensionsService implements IIOSExtensionsService {
 		const files = this.$fs.readDirectory(extensionPath)
 				.filter(filePath => !filePath.startsWith("."))
 				.map(filePath => path.join(extensionPath, filePath));
-		const group: INativeSourceCodeGroup = { name: extensionFolder, path: extensionPath, files};
 		const target = project.addTarget(extensionFolder, 'app_extension', extensionRelativePath);
 		project.addBuildPhase([], 'PBXSourcesBuildPhase', 'Sources', target.uuid);
 		project.addBuildPhase([], 'PBXResourcesBuildPhase', 'Resources', target.uuid);
@@ -53,10 +52,10 @@ export class IOSExtensionsService implements IIOSExtensionsService {
 			}
 		}
 
-		project.addPbxGroup(group.files, group.name, group.path, null, { isMain: true, target: target.uuid, filesRelativeToProject: true });
+		project.addPbxGroup(files, extensionFolder, extensionPath, null, { isMain: true, target: target.uuid, filesRelativeToProject: true });
 		project.addBuildProperty("PRODUCT_BUNDLE_IDENTIFIER", `${projectData.projectIdentifiers.ios}.${extensionFolder}`, "Debug", extensionFolder);
 		project.addBuildProperty("PRODUCT_BUNDLE_IDENTIFIER", `${projectData.projectIdentifiers.ios}.${extensionFolder}`, "Release", extensionFolder);
-		project.addToHeaderSearchPaths(group.path, target.pbxNativeTarget.productName);
+		project.addToHeaderSearchPaths(extensionPath, target.pbxNativeTarget.productName);
 
 		return target.uuid;
 	}
@@ -80,9 +79,9 @@ export class IOSExtensionsService implements IIOSExtensionsService {
 		xcode.save();
 	}
 
-	public removeExtensions(project: IXcode.project, projectPath: string): void {
+	public removeExtensions({project, pbxProjPath}: IRemoveExtensionsOptions): void {
 		project.removeTargetsByProductType("com.apple.product-type.app-extension");
-		this.$fs.writeFile(projectPath, project.writeSync({omitEmptyValues: true}));
+		this.$fs.writeFile(pbxProjPath, project.writeSync({omitEmptyValues: true}));
 	}
 }
 
