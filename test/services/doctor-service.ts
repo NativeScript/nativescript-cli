@@ -41,7 +41,8 @@ describe("doctorService", () => {
 	describe("checkForDeprecatedShortImportsInAppDir", () => {
 		const tnsCoreModulesDirs = [
 			"application",
-			"data"
+			"data",
+			"text"
 		];
 
 		const testData: { filesContents: IStringDictionary, expectedShortImports: any[] }[] = [
@@ -180,14 +181,53 @@ const Observable = require("tns-core-modules-widgets/data/observable").Observabl
 				expectedShortImports: []
 			},
 			{
+				filesContents: {
+					// minified code that has both require and some of the tns-core-modules subdirs (i.e. text)
+					file1: `o.cache&&(r+="&cache="+u(o.cache)),t=["<!DOCTYPE html>","<html>","<head>",'<meta charset="UTF-8" />','<script type="text/javascript">',"   var UWA = {hosts:"+n(e.hosts)+"},",'       curl = {apiName: "require"};`
+				},
+				expectedShortImports: []
+			},
+			{
+				filesContents: {
+					// spaces around require
+					file1: 'const application   = require     (  "application"   ); console.log("application");',
+				},
+				expectedShortImports: [
+					{ file: "file1", line: 'const application   = require     (  "application"   )' }
+				]
+			},
+			{
+				filesContents: {
+					// spaces around require
+					file1: 'const application   = require     (  "tns-core-modules/application"   ); console.log("application");',
+				},
+				expectedShortImports: []
+			},
+			{
+				filesContents: {
+					// spaces in import line
+					file1: "import     { run }       from    'application'       ;",
+				},
+				expectedShortImports: [
+					{ file: "file1", line: "import     { run }       from    'application'       " }
+				]
+			},
+			{
+				filesContents: {
+					// spaces in import line
+					file1: "import     { run }       from    'tns-core-modules/application'       ;",
+				},
+				expectedShortImports: []
+			},
+			{
 				// Incorrect behavior, currently by design
 				// In case you have a multiline string and one of the lines matches our RegExp we'll detect it as short import
 				filesContents: {
-					file1: 'const _ = require("lodash");const application = require("application");console.log("application");console.log(`this is line\nyou should import some long words here "application" module and other words here`)',
+					file1: 'const _ = require("lodash");const application = require("application");console.log("application");console.log(`this is line\nyou should import some long words here require("application") module and other words here`)',
 				},
 				expectedShortImports: [
 					{ file: "file1", line: 'const application = require("application")' },
-					{ file: "file1", line: 'you should import some long words here "application" module and other words here`)' },
+					{ file: "file1", line: 'you should import some long words here require("application") module and other words here`)' },
 				]
 			},
 		];
