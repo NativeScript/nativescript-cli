@@ -50,7 +50,6 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 
 	public async liveSync(deviceDescriptors: ILiveSyncDeviceInfo[], liveSyncData: ILiveSyncInfo): Promise<void> {
 		const projectData = this.$projectDataService.getProjectData(liveSyncData.projectDir);
-		this.handleWarnings(liveSyncData, projectData);
 		await this.$pluginsService.ensureAllDependenciesAreInstalled(projectData);
 		await this.liveSyncOperation(deviceDescriptors, liveSyncData, projectData);
 	}
@@ -142,12 +141,6 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 				this.$logger.error(liveSyncData.error);
 				this.emit(LiveSyncEvents.previewAppLiveSyncError, liveSyncData);
 			});
-		}
-	}
-
-	private handleWarnings(liveSyncData: ILiveSyncInfo, projectData: IProjectData) {
-		if (liveSyncData.useHotModuleReload) {
-			this.$logger.warn("Hot Module Replacement (HMR) is currently in Beta. For more information about the current development state and any known issues, please check the relevant GitHub issue: https://github.com/NativeScript/NativeScript/issues/6398");
 		}
 	}
 
