@@ -60,8 +60,7 @@ export class IOSDevice extends IOSDeviceBase {
 		}
 	}
 
-	protected async getDebugSocketCore(appId: string, projectName: string): Promise<net.Socket> {
-		await super.attachToDebuggerFoundEvent(projectName);
+	protected async getDebugSocketCore(appId: string): Promise<net.Socket> {
 		await this.$iOSSocketRequestExecutor.executeAttachRequest(this, constants.AWAIT_NOTIFICATION_TIMEOUT_SECONDS, appId);
 		const port = await super.getDebuggerPort(appId);
 		const deviceId = this.deviceInfo.identifier;

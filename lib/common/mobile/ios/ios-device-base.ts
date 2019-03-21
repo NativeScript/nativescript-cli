@@ -22,7 +22,9 @@ export abstract class IOSDeviceBase implements Mobile.IiOSDevice {
 					return this.cachedSockets[appId];
 				}
 
-				this.cachedSockets[appId] = await this.getDebugSocketCore(appId, projectName);
+				await this.attachToDebuggerFoundEvent(appId, projectName);
+				await this.applicationManager.startApplication({ appId, projectName });
+				this.cachedSockets[appId] = await this.getDebugSocketCore(appId);
 
 				if (this.cachedSockets[appId]) {
 					this.cachedSockets[appId].on("close", async () => {
@@ -38,11 +40,11 @@ export abstract class IOSDeviceBase implements Mobile.IiOSDevice {
 		);
 	}
 
-	protected abstract async getDebugSocketCore(appId: string, projectName: string): Promise<net.Socket>;
+	protected abstract async getDebugSocketCore(appId: string): Promise<net.Socket>;
 
-	protected async attachToDebuggerFoundEvent(projectName: string): Promise<void> {
+	protected async attachToDebuggerFoundEvent(appId: string, projectName: string): Promise<void> {
 		await this.startDeviceLogProcess(projectName);
-		await this.$iOSDebuggerPortService.attachToDebuggerPortFoundEvent();
+		await this.$iOSDebuggerPortService.attachToDebuggerPortFoundEvent(appId);
 	}
 
 	protected async getDebuggerPort(appId: string): Promise<number> {

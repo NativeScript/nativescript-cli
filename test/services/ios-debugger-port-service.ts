@@ -90,6 +90,48 @@ function getMultilineDebuggerPortMessage(port: number) {
 		2018-04-20 09:45:51.260951+0300  localhost nglog[17917]: NativeScript debugger has opened inspector socket on port ${port} for ${appId}.`;
 }
 
+function getAppCrashMessage() {
+	return `***** Fatal JavaScript exception - application has been terminated. *****`;
+}
+
+function getMultilineAppCrashMessage() {
+	return `Mar 20 15:13:23 iOS-Team-iPad-2-Mini-Black hwJs(NativeScript)[3946] <Notice>: ***** Fatal JavaScript exception - application has been terminated. *****
+	Mar 20 15:13:23 iOS-Team-iPad-2-Mini-Black hwJs(NativeScript)[3946] <Notice>: Native stack trace:
+	Mar 20 15:13:23 iOS-Team-iPad-2-Mini-Black hwJs(NativeScript)[3946] <Notice>: 1   0x1013ef370 NativeScript::reportFatalErrorBeforeShutdown(JSC::ExecState*, JSC::Exception*, bool)
+	Mar 20 15:13:23 iOS-Team-iPad-2-Mini-Black hwJs(NativeScript)[3946] <Notice>: 2   0x10141fdec NativeScript::FFICallback<NativeScript::ObjCMethodCallback>::ffiClosureCallback(ffi_cif*, void*, void**, void*)
+	Mar 20 15:13:23 iOS-Team-iPad-2-Mini-Black hwJs(NativeScript)[3946] <Notice>: 3   0x101e84494 ffi_closure_SYSV_inner
+	Mar 20 15:13:23 iOS-Team-iPad-2-Mini-Black hwJs(NativeScript)[3946] <Notice>: 4   0x101e881b4 .Ldo_closure
+	Mar 20 15:13:23 iOS-Team-iPad-2-Mini-Black hwJs(NativeScript)[3946] <Notice>: 5   0x183760c3c <redacted>
+	Mar 20 15:13:23 iOS-Team-iPad-2-Mini-Black hwJs(NativeScript)[3946] <Notice>: 6   0x1837601b8 <redacted>
+	Mar 20 15:13:23 iOS-Team-iPad-2-Mini-Black hwJs(NativeScript)[3946] <Notice>: 7   0x18375ff14 <redacted>
+	Mar 20 15:13:23 iOS-Team-iPad-2-Mini-Black hwJs(NativeScript)[3946] <Notice>: 8   0x1837dd84c <redacted>
+	Mar 20 15:13:23 iOS-Team-iPad-2-Mini-Black hwJs(NativeScript)[3946] <Notice>: 9   0x183696f38 _CFXNotificationPost
+	Mar 20 15:13:23 iOS-Team-iPad-2-Mini-Black hwJs(NativeScript)[3946] <Notice>: 10  0x184107bbc <redacted>
+	Mar 20 15:13:23 iOS-Team-iPad-2-Mini-Black hwJs(NativeScript)[3946] <Notice>: 11  0x18d3da2f0 <redacted>
+	Mar 20 15:13:23 iOS-Team-iPad-2-Mini-Black hwJs(NativeScript)[3946] <Notice>: 12  0x18d3a75e0 <redacted>
+	Mar 20 15:13:23 iOS-Team-iPad-2-Mini-Black hwJs(NativeScript)[3946] <Notice>: 13  0x18d9d7b1c <redacted>
+	Mar 20 15:13:23 iOS-Team-iPad-2-Mini-Black hwJs(NativeScript)[3946] <Notice>: 14  0x18d3a6dd0 <redacted>
+	Mar 20 15:13:23 iOS-Team-iPad-2-Mini-Black hwJs(NativeScript)[3946] <Notice>: 15  0x18d3a6c6c <redacted>
+	Mar 20 15:13:23 iOS-Team-iPad-2-Mini-Black hwJs(NativeScript)[3946] <Notice>: 16  0x18d3a5afc <redacted>
+	Mar 20 15:13:23 iOS-Team-iPad-2-Mini-Black hwJs(NativeScript)[3946] <Notice>: 17  0x18e03b84c <redacted>
+	Mar 20 15:13:23 iOS-Team-iPad-2-Mini-Black hwJs(NativeScript)[3946] <Notice>: 18  0x18d3a51ec <redacted>
+	Mar 20 15:13:23 iOS-Team-iPad-2-Mini-Black hwJs(NativeScript)[3946] <Notice>: 19  0x18de20ac8 <redacted>
+	Mar 20 15:13:23 iOS-Team-iPad-2-Mini-Black hwJs(NativeScript)[3946] <Notice>: 20  0x18df6ebf8 _performActionsWithDelayForTransitionContext
+	Mar 20 15:13:23 iOS-Team-iPad-2-Mini-Black hwJs(NativeScript)[3946] <Notice>: 21  0x18d3a4c0c <redacted>
+	Mar 20 15:13:23 iOS-Team-iPad-2-Mini-Black hwJs(NativeScript)[3946] <Notice>: 22  0x18d3a45a8 <redacted>
+	Mar 20 15:13:23 iOS-Team-iPad-2-Mini-Black hwJs(NativeScript)[3946] <Notice>: 23  0x18d3a15e0 <redacted>
+	Mar 20 15:13:23 iOS-Team-iPad-2-Mini-Black hwJs(NativeScript)[3946] <Notice>: 24  0x18d3a1330 <redacted>
+	Mar 20 15:13:23 iOS-Team-iPad-2-Mini-Black hwJs(NativeScript)[3946] <Notice>: 25  0x185fcf470 <redacted>
+	Mar 20 15:13:23 iOS-Team-iPad-2-Mini-Black hwJs(NativeScript)[3946] <Notice>: 26  0x185fd7d6c <redacted>
+	Mar 20 15:13:23 iOS-Team-iPad-2-Mini-Black hwJs(NativeScript)[3946] <Notice>: 27  0x1830c0a60 <redacted>
+	Mar 20 15:13:23 iOS-Team-iPad-2-Mini-Black hwJs(NativeScript)[3946] <Notice>: 28  0x1830c8170 <redacted>
+	Mar 20 15:13:23 iOS-Team-iPad-2-Mini-Black hwJs(NativeScript)[3946] <Notice>: 29  0x186003878 <redacted>
+	Mar 20 15:13:23 iOS-Team-iPad-2-Mini-Black hwJs(NativeScript)[3946] <Notice>: 30  0x18600351c <redacted>
+	Mar 20 15:13:23 iOS-Team-iPad-2-Mini-Black hwJs(NativeScript)[3946] <Notice>: 31  0x186003ab8 <redacted>
+	Mar 20 15:13:23 iOS-Team-iPad-2-Mini-Black hwJs(NativeScript)[3946] <Notice>: JavaScript stack trace:
+	Mar 20 15:13:23 iOS-Team-iPad-2-Mini-Black hwJs(NativeScript)[3946] <Notice>: 1   @file:///app/vendor.js:12552:56`;
+}
+
 describe("iOSDebuggerPortService", () => {
 	let injector: IInjector, iOSDebuggerPortService: IIOSDebuggerPortService, deviceLogProvider: Mobile.IDeviceLogProvider;
 	let clock: sinon.SinonFakeTimers = null;
@@ -108,71 +150,63 @@ describe("iOSDebuggerPortService", () => {
 	function emitDeviceLog(message: string) {
 		deviceLogProvider.emit(DEVICE_LOG_EVENT_NAME, message, device.deviceInfo.identifier);
 	}
-
-	function emitStartingIOSApplicationEvent() {
-		device.applicationManager.emit("STARTING_IOS_APPLICATION", {
-			appId: appId,
-			deviceId: device.deviceInfo.identifier
-		});
-	}
-
 	describe("getPort", () => {
-		const testCases = [
+		const testCases: { name: string, emittedPort?: number, crashApp?: boolean, expectedError?: string }[] = [
 			{
 				name: `should return null when ${DEBUGGER_PORT_FOUND_EVENT_NAME} event is not emitted`,
-				emittedPort: null,
-				emitStartingIOSApplicationEvent: false
+				emittedPort: null
 			},
 			{
 				name: `should return default port when ${DEBUGGER_PORT_FOUND_EVENT_NAME} event is emitted`,
-				emittedPort: 18181,
-				emitStartingIOSApplicationEvent: false
+				emittedPort: 18181
 			},
 			{
 				name: `should return random port when ${DEBUGGER_PORT_FOUND_EVENT_NAME} event is emitted`,
-				emittedPort: 65432,
-				emitStartingIOSApplicationEvent: false
+				emittedPort: 65432
 			},
 			{
-				name: `should return default port when ${DEBUGGER_PORT_FOUND_EVENT_NAME} and STARTING_IOS_APPLICATION events are emitted`,
-				emittedPort: 18181,
-				emitStartingIOSApplicationEvent: true
-			},
-			{
-				name: `should return random port when ${DEBUGGER_PORT_FOUND_EVENT_NAME} and STARTING_IOS_APPLICATION events are emitted`,
-				emittedPort: 12345,
-				emitStartingIOSApplicationEvent: true
+				name: `should reject when the app crashes`,
+				expectedError: "The application has been terminated.",
+				crashApp: true
 			}
 		];
 
 		_.each(testCases, testCase => {
 			it(testCase.name, async () => {
-				await iOSDebuggerPortService.attachToDebuggerPortFoundEvent();
-				if (testCase.emitStartingIOSApplicationEvent) {
-					emitStartingIOSApplicationEvent();
-				}
+				await iOSDebuggerPortService.attachToDebuggerPortFoundEvent(appId);
 				if (testCase.emittedPort) {
 					emitDeviceLog(getDebuggerPortMessage(testCase.emittedPort));
+				} else if (testCase.crashApp) {
+					emitDeviceLog(getAppCrashMessage());
 				}
 
 				const promise = iOSDebuggerPortService.getPort({ deviceId: deviceId, appId: appId });
 				clock.tick(70000);
-				const port = await promise;
-				assert.deepEqual(port, testCase.emittedPort);
+				let port = 0;
+				try {
+					port = await promise;
+					assert.deepEqual(port, testCase.emittedPort);
+				} catch (err) {
+					assert.deepEqual(err.message, testCase.expectedError);
+				}
 			});
 			it(`${testCase.name} for multiline debugger port message.`, async () => {
-				await iOSDebuggerPortService.attachToDebuggerPortFoundEvent();
-				if (testCase.emitStartingIOSApplicationEvent) {
-					emitStartingIOSApplicationEvent();
-				}
+				await iOSDebuggerPortService.attachToDebuggerPortFoundEvent(appId);
 				if (testCase.emittedPort) {
 					emitDeviceLog(getMultilineDebuggerPortMessage(testCase.emittedPort));
+				} else if (testCase.crashApp) {
+					emitDeviceLog(getMultilineAppCrashMessage());
 				}
 
 				const promise = iOSDebuggerPortService.getPort({ deviceId: deviceId, appId: appId });
 				clock.tick(70000);
-				const port = await promise;
-				assert.deepEqual(port, testCase.emittedPort);
+				let port = 0;
+				try {
+					port = await promise;
+					assert.deepEqual(port, testCase.emittedPort);
+				} catch (err) {
+					assert.deepEqual(err.message, testCase.expectedError);
+				}
 			});
 		});
 	});

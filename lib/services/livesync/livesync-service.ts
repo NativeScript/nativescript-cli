@@ -664,12 +664,17 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 										const service = this.getLiveSyncService(device.deviceInfo.platform);
 
 										const watchAction = async (watchInfo: ILiveSyncWatchInfo): Promise<void> => {
+											const isInHMRMode = liveSyncData.useHotModuleReload && platformHmrData.hash;
+											if (isInHMRMode) {
+												this.$hmrStatusService.watchHmrStatus(device.deviceInfo.identifier, platformHmrData.hash);
+											}
+
 											let liveSyncResultInfo = await service.liveSyncWatchAction(device, watchInfo);
 
 											await this.refreshApplication(projectData, liveSyncResultInfo, deviceBuildInfoDescriptor.debugOptions, deviceBuildInfoDescriptor.outputPath);
 
-											// If didRecover is true, this means we were in ErrorActivity and fallback files were already transfered and app will be restarted.
-											if (!liveSyncResultInfo.didRecover && liveSyncData.useHotModuleReload && platformHmrData.hash) {
+											// If didRecover is true, this means we were in ErrorActivity and fallback files were already transferred and app will be restarted.
+											if (!liveSyncResultInfo.didRecover && isInHMRMode) {
 												const status = await this.$hmrStatusService.getHmrStatus(device.deviceInfo.identifier, platformHmrData.hash);
 												if (status === HmrConstants.HMR_ERROR_STATUS) {
 													watchInfo.filesToSync = platformHmrData.fallbackFiles;
