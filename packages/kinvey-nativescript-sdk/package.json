@@ -12,9 +12,6 @@
     "postinstall": "node lib/postinstall.js",
     "preuninstall": "node lib/preuninstall.js"
   },
-  "dependencies": {
-    "nativescript-hook": "~0.2.5"
-  },
   "peerDependencies": {
     "@babel/runtime": "~7.2.0",
     "@angular/core": "~7.2.2",
@@ -24,6 +21,7 @@
     "loglevel": "~1.6.1",
     "loglevel-plugin-prefix": "~0.8.4",
     "lokijs": "~1.5.6",
+    "nativescript-hook": "~0.2.5",
     "nativescript-plugin-firebase": "~7.7.0",
     "nativescript-secure-storage": "~2.3.0",
     "nativescript-sqlite": "~2.2.3",

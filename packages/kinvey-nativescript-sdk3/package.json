@@ -1,0 +1,39 @@
+{
+  "name": "kinvey-nativescript-sdk",
+  "version": "3.13.0-next.7",
+  "description": "Kinvey NativeScript SDK for developing NativeScript applications.",
+  "main": "./src/angular.js",
+  "scripts": {
+    "ngc": "ngc -p tsconfig.angular.json",
+    "webpack-dev": "cross-env NODE_ENV=development webpack --mode development",
+    "webpack-prod": "cross-env NODE_ENV=production webpack --mode production",
+    "build": "npm run ngc",
+    "build:clean": "del-cli 'src/**/*.js' 'src/**/*.js.map' 'src/**/*.ngsummary.json' 'src/**/*.metadata.json' 'src/**/**/*.ngfactory.ts' 'src/**/*.ngstyle.ts' 'src/**/*.shim.ts' 'src/**/*.d.ts'",
+    "serve": "lite-server"
+  },
+  "dependencies": {
+    "nativescript-secure-storage": "~2.3.0",
+    "pubnub": "git+https://github.com/thomasconner/javascript.git#develop"
+  },
+  "peerDependencies": {
+    "@angular/core": "~7.2.0",
+    "nativescript-secure-storage": "~2.3.0",
+    "pubnub": "git+https://github.com/thomasconner/javascript.git#develop",
+    "rxjs": "^6.3.3",
+    "tns-core-modules": "^5.1.0 || >5.1.0- || >5.2.0-",
+    "typescript": "~3.1.1",
+    "zone.js": "^0.8.4"
+  },
+  "devDependencies": {
+    "@angular/compiler": "~7.2.0",
+    "@angular/compiler-cli": "~7.2.0",
+    "@angular/core": "~7.2.0",
+    "del-cli": "~1.1.0",
+    "rxjs": "~6.3.3",
+    "tns-platform-declarations": "~5.2.2",
+    "tslint": "^5.5.0",
+    "typescript": "~3.1.1",
+    "rollup": "~1.7.0",
+    "zone.js": "^0.8.4"
+  }
+}

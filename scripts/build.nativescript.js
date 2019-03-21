@@ -1,69 +1,52 @@
 const fs = require('fs-extra');
 const glob = require('glob-promise');
 const path = require('path');
-const { buildJS, buildTS } = require('./build');
-const { PACKAGES_DIR, ROOT_DIR } = require('./utils');
-const tsConfig = require('../tsconfig.json');
-const tsConfigNativeScript = require('../tsconfig.nativescript.json');
+const helpers = require('./helpers');
 
-const srcDir = path.resolve(ROOT_DIR, 'src');
-const buildDir = path.resolve(PACKAGES_DIR, 'kinvey-nativescript-sdk', 'src');
-const tsCompilerOptions = Object.assign({}, tsConfig.compilerOptions, tsConfigNativeScript.compilerOptions);
+async function copyFiles(src, dest, allowedExtensions = ['ts']) {
+  // Remove the existing build directory
+  await fs.remove(dest);
 
-async function build() {
-  // Remove the existing SDK src directory
-  await fs.remove(buildDir);
-
-  // Create the SDK src directory
-  await fs.ensureDir(buildDir);
-
-  // Build JavaScript Files
-  return glob(path.resolve(srcDir, '**/*.js'))
+  await glob(path.join(src, '**/*.ts'))
     .then((files) => files.filter((file) => {
       const extensions = file.split('.').slice(1);
-      return extensions.length === 1;
+      return extensions.reduce((allowed, extension) => {
+        if (!allowed) {
+          return allowed;
+        }
+        return allowedExtensions.indexOf(extension) !== -1;
+      }, true);
     }))
-    .then((files) => Promise.all(files.map((file) => buildJS(file).then(({ code }) => fs.outputFile(path.join(buildDir, file.replace(srcDir, '')), code)))))
+    .then((files) => files.map((file) => helpers
+      .copyFile(file, path.join(dest, file.replace(src, '')))
+    ));
 
-    // Build Angular JavaScript Files
-    .then(() => glob(path.resolve(srcDir, '**/*.angular.js')))
-    .then((files) => Promise.all(files.map((file) => buildJS(file).then(({ code }) => fs.outputFile(path.join(buildDir, file.replace(srcDir, '').replace('.angular', '')), code)))))
+  // Copy NativeScript TypeScript Files
+  await glob(path.join(src, '**/*.nativescript.ts'))
+    .then((files) => files.map((file) => helpers
+      .copyFile(file, path.join(dest, file.replace(src, '').replace('.nativescript', '')))
+    ));
 
-    // Build NativeScript JavaScript Files
-    .then(() => glob(path.resolve(srcDir, '**/*.nativescript.js')))
-    .then((files) => Promise.all(files.map((file) => buildJS(file).then(({ code }) => fs.outputFile(path.join(buildDir, file.replace(srcDir, '').replace('.nativescript', '')), code)))))
+  // Copy NativeScript Android TypeScript Files
+  await glob(path.join(src, '**/*.nativescript.android.ts'))
+    .then((files) => files.map((file) => helpers
+      .copyFile(file, path.join(dest, file.replace(src, '').replace('.nativescript', '')))
+    ));
 
-    // Build NativeScript Android JavaScript Files
-    .then(() => glob(path.resolve(srcDir, '**/*.nativescript.android.js'))
-    .then((files) => Promise.all(files.map((file) => buildJS(file).then(({ code }) => fs.outputFile(path.join(buildDir, file.replace(srcDir, '').replace('.nativescript', '')), code))))))
-
-    // Build NativeScript iOS JavaScript Files
-    .then(() => glob(path.resolve(srcDir, '**/*.nativescript.ios.js'))
-    .then((files) => Promise.all(files.map((file) => buildJS(file).then(({ code }) => fs.outputFile(path.join(buildDir, file.replace(srcDir, '').replace('.nativescript', '')), code))))))
-
-    // Build TypeScript Files
-    .then(() => glob(path.resolve(srcDir, '**/*.ts')))
-    .then((files) => files.filter((file) => {
-      const extensions = file.split('.').slice(1);
-      return extensions.length === 1;
-    }))
-    .then((files) => Promise.all(files.map((file) => buildTS(file, tsCompilerOptions).then(({ outputText }) => fs.outputFile(path.join(buildDir, file.replace(srcDir, '').replace('.ts', '.js')), outputText)))))
-
-    // Build Angular TypeScript Files
-    .then(() => glob(path.resolve(srcDir, '**/*.angular.ts')))
-    .then((files) => Promise.all(files.map((file) => buildTS(file, tsCompilerOptions).then(({ outputText }) => fs.outputFile(path.join(buildDir, file.replace(srcDir, '').replace('.angular', '').replace('.ts', '.js')), outputText)))))
-
-    // Build NativeScript TypeScript Files
-    .then(() => glob(path.resolve(srcDir, '**/*.nativescript.ts')))
-    .then((files) => Promise.all(files.map((file) => buildTS(file, tsCompilerOptions).then(({ outputText }) => fs.outputFile(path.join(buildDir, file.replace(srcDir, '').replace('.nativescript', '').replace('.ts', '.js')), outputText)))))
-
-    // Build NativeScript Android TypeScript Files
-    .then(() => glob(path.resolve(srcDir, '**/*.nativescript.android.ts')))
-    .then((files) => Promise.all(files.map((file) => buildTS(file, tsCompilerOptions).then(({ outputText }) => fs.outputFile(path.join(buildDir, file.replace(srcDir, '').replace('.nativescript', '').replace('.ts', '.js')), outputText)))))
-
-    // Build NativeScript iOS TypeScript Files
-    .then(() => glob(path.resolve(srcDir, '**/*.nativescript.ios.ts')))
-    .then((files) => Promise.all(files.map((file) => buildTS(file, tsCompilerOptions).then(({ outputText }) => fs.outputFile(path.join(buildDir, file.replace(srcDir, '').replace('.nativescript', '').replace('.ts', '.js')), outputText)))));
+  // Copy NativeScript iOS TypeScript Files
+  await glob(path.join(src, '**/*.nativescript.ios.ts'))
+    .then((files) => files.map((file) => helpers
+      .copyFile(file, path.join(dest, file.replace(src, '').replace('.nativescript', '')))
+    ));
 }
 
-build();
+copyFiles(
+  helpers.root('src/core'),
+  helpers.root('packages/kinvey-nativescript-sdk3/src/core')
+);
+
+copyFiles(
+  helpers.root('src/angular'),
+  helpers.root('packages/kinvey-nativescript-sdk3/src/angular'),
+  ['ts', 'service', 'module']
+);
