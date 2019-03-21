@@ -5551,8 +5551,8 @@
       }
     },
     "nativescript-dev-xcode": {
-      "version": "https://github.com/NativeScript/nativescript-dev-xcode/archive/master.tar.gz",
-      "integrity": "sha512-eiN7ntoIdoiDwNly9Oo4q+mkINQJL25wnjmDdb6Q2DWh81l6cPkRTcpNGsJ8xUjqg+AQ43IB1WxJEV0Zu1PJCw==",
+      "version": "https://github.com/NativeScript/nativescript-dev-xcode/archive/d62fa9e2bcbc7733fb41f360ee3df30d575c85bd.tar.gz",
+      "integrity": "sha512-NEBdB5kj1YGE+WzzuBBhWjwqsyUFvZEy4OVSAkzQ/ZWSJIrSmJkmuz9LV+AwVtUP2xX8jMFuXjuhgqeGSg1eIQ==",
       "requires": {
         "simple-plist": "^1.0.0",
         "uuid": "^3.3.2"
