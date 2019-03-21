@@ -35,3 +35,26 @@ Migration steps:
 [Provide a migration path for existing applications.]
 -->
 
+
+<!-- 
+E2E TESTS
+
+Additional e2e tests can be executed by comment including trigger phrase.
+
+Phrases:
+`test cli-smoke`: Smoke tests for `tns run`.
+`test cli-create`: Tests for `tns create` commans.
+`test cli-plugin`: Tests for `tns plugin *` commands.
+`test cli-preview`: Tests for `tns preview` command.
+`test cli-regression`: Tests for backward compatibility with old projects.
+`test cli-resources`: Test for resource generate.
+`test cli-tests`: Tests for `tns test` command.
+`test cli-vue`: Smoke tests for VueJS projects based on {N} cli.
+`test cli-templates`: Tests for `tns run` on {N} templates.
+
+Define other packages used in e2e tests:
+
+- If PR targets master branch e2e tests will take runtimes and modules @next.
+- If PR targets release branch e2e tests will take runtimes and modules @rc.
+- You can control version of other packages used in e2e test by adding `package_version#<tag>` as param in trigger phrase  (for example `test package_version#latest`).
+-->
