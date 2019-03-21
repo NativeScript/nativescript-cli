@@ -58,9 +58,10 @@ export class IOSSimulatorApplicationManager extends ApplicationManagerBase {
 			waitForDebugger: true,
 			args: "--nativescript-debug-brk",
 		} : {};
+		await this.setDeviceLogData(appData);
 		const launchResult = await this.iosSim.startApplication(this.device.deviceInfo.identifier, appData.appId, options);
 		const pid = getPidFromiOSSimulatorLogs(appData.appId, launchResult);
-		await this.setDeviceLogData(appData, pid);
+		this.$deviceLogProvider.setApplicationPidForDevice(this.device.deviceInfo.identifier, pid);
 		if (appData.waitForDebugger) {
 			this.attachNativeDebugger(appData.appId, pid);
 		}
@@ -114,8 +115,7 @@ export class IOSSimulatorApplicationManager extends ApplicationManagerBase {
 		}
 	}
 
-	private async setDeviceLogData(appData: Mobile.IApplicationData, pid: string): Promise<void> {
-		this.$deviceLogProvider.setApplicationPidForDevice(this.device.deviceInfo.identifier, pid);
+	private async setDeviceLogData(appData: Mobile.IApplicationData): Promise<void> {
 		this.$deviceLogProvider.setProjectNameForDevice(this.device.deviceInfo.identifier, appData.projectName);
 
 		if (!this.$options.justlaunch) {
