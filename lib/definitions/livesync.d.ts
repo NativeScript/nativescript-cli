@@ -401,8 +401,8 @@ interface IPlatformLiveSyncService {
 	shouldRestart(projectData: IProjectData, liveSyncInfo: ILiveSyncResultInfo): Promise<boolean>;
 	getDeviceLiveSyncService(device: Mobile.IDevice, projectData: IProjectData): INativeScriptDeviceLiveSyncService;
 }
-interface IRefreshApplicationInfo {
-	didRefresh: boolean;
+interface IRestartApplicationInfo {
+	didRestart: boolean;
 }
 
 interface INativeScriptDeviceLiveSyncService {
