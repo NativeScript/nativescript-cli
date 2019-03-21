@@ -1,5 +1,5 @@
 import { cache } from "../common/decorators";
-import { HmrConstants } from "../common/constants";
+import { HmrConstants, IOS_APP_CRASH_LOG_REG_EXP } from "../common/constants";
 
 export class HmrStatusService implements IHmrStatusService {
 	public static HMR_STATUS_LOG_REGEX = /([a-z A-Z]*) hmr hash ([a-z0-9]*)\./;
@@ -11,9 +11,10 @@ export class HmrStatusService implements IHmrStatusService {
 
 	constructor(private $logParserService: ILogParserService,
 		private $processService: IProcessService,
+		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $logger: ILogger) {
-			this.$processService.attachToProcessExitSignals(this, this.dispose);
-		}
+		this.$processService.attachToProcessExitSignals(this, this.dispose);
+	}
 
 	public getHmrStatus(deviceId: string, operationHash: string): Promise<number> {
 		return new Promise((resolve, reject) => {
@@ -33,6 +34,10 @@ export class HmrStatusService implements IHmrStatusService {
 		});
 	}
 
+	public watchHmrStatus(deviceId: string, operationHash: string): void {
+		this.setData(deviceId, operationHash);
+	}
+
 	@cache()
 	public attachToHmrStatusEvent(): void {
 		this.$logParserService.addParseRule({
@@ -40,6 +45,21 @@ export class HmrStatusService implements IHmrStatusService {
 			handler: this.handleHmrStatusFound.bind(this),
 			name: "hmrStatus"
 		});
+		this.$logParserService.addParseRule({
+			regex: IOS_APP_CRASH_LOG_REG_EXP,
+			handler: this.handleAppCrash.bind(this),
+			name: "appCrashHmr",
+			platform: this.$devicePlatformsConstants.iOS.toLowerCase()
+		});
+	}
+
+	private handleAppCrash(matches: RegExpMatchArray, deviceId: string): void {
+		for (const operationId in this.hashOperationStatuses) {
+			const operation = this.hashOperationStatuses[operationId];
+			if (operationId.startsWith(deviceId) && !operation.status) {
+				operation.status = HmrConstants.HMR_ERROR_STATUS;
+			}
+		}
 	}
 
 	private handleHmrStatusFound(matches: RegExpMatchArray, deviceId: string): void {
@@ -65,7 +85,7 @@ export class HmrStatusService implements IHmrStatusService {
 		this.$logger.trace("Found hmr status.", { status, hash });
 
 		if (status) {
-			this.setData(status, hash, deviceId);
+			this.setData(deviceId, hash, status);
 		}
 	}
 
@@ -77,7 +97,7 @@ export class HmrStatusService implements IHmrStatusService {
 		return null;
 	}
 
-	private setData(status: Number, operationHash: string, deviceId: string): void {
+	private setData(deviceId: string, operationHash: string, status?: Number): void {
 		const key = `${deviceId}${operationHash}`;
 
 		if (!this.hashOperationStatuses[key]) {

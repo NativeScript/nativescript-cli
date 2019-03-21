@@ -1,10 +1,9 @@
-import { DEBUGGER_PORT_FOUND_EVENT_NAME, ATTACH_REQUEST_EVENT_NAME } from "../common/constants";
+import { DEBUGGER_PORT_FOUND_EVENT_NAME, ATTACH_REQUEST_EVENT_NAME, IOS_APP_CRASH_LOG_REG_EXP } from "../common/constants";
 import { cache } from "../common/decorators";
 import { APPLICATION_RESPONSE_TIMEOUT_SECONDS } from "../constants";
 
 export class IOSDebuggerPortService implements IIOSDebuggerPortService {
 	public static DEBUG_PORT_LOG_REGEX = /NativeScript debugger has opened inspector socket on port (\d+?) for (.*)[.]/;
-	public static APP_CRASH_LOG_REGEX = /Fatal JavaScript exception \- application has been terminated/;
 	private mapDebuggerPortData: IDictionary<IIOSDebuggerPortStoredData> = {};
 	private currentAppId: string;
 
@@ -51,12 +50,13 @@ export class IOSDebuggerPortService implements IIOSDebuggerPortService {
 			platform: this.$devicePlatformsConstants.iOS.toLowerCase()
 		});
 		this.$logParserService.addParseRule({
-			regex: IOSDebuggerPortService.APP_CRASH_LOG_REGEX,
+			regex: IOS_APP_CRASH_LOG_REG_EXP,
 			handler: this.handleAppCrash.bind(this),
 			name: "appCrash",
 			platform: this.$devicePlatformsConstants.iOS.toLowerCase()
 		});
 	}
+
 	private handleAppCrash(matches: RegExpMatchArray, deviceId: string): void {
 		const data = {
 			port: 0,
