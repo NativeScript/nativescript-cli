@@ -66,10 +66,6 @@ export class DebugPlatformCommand extends ValidatePlatformCommandBase implements
 			this.$errors.fail("--release flag is not applicable to this command");
 		}
 
-		if (this.$options.hmr && this.$options.debugBrk) {
-			this.$errors.fail("--debug-brk and --hmr flags cannot be combined");
-		}
-
 		const minSupportedWebpackVersion = this.$options.hmr ? LiveSyncCommandHelper.MIN_SUPPORTED_WEBPACK_VERSION_WITH_HMR : null;
 		this.$bundleValidatorHelper.validate(minSupportedWebpackVersion);
 
