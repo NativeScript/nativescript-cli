@@ -30,7 +30,7 @@ export class PreviewCommand implements ICommand {
 		});
 
 		await this.$previewQrCodeService.printLiveSyncQrCode({
-			nsConfigPreviewAppSchema: this.$projectData.previewAppSchema,
+			projectDir: this.$projectData.projectDir,
 			useHotModuleReload: this.$options.hmr,
 			link: this.$options.link
 		});
