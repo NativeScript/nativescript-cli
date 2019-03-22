@@ -62,6 +62,7 @@ export class ProjectData implements IProjectData {
 	public podfilePath: string;
 	public isShared: boolean;
 	public useLegacyWorkflow: boolean;
+	public previewAppSchema: string;
 
 	constructor(private $fs: IFileSystem,
 		private $errors: IErrors,
@@ -137,6 +138,7 @@ export class ProjectData implements IProjectData {
 			this.podfilePath = path.join(this.appResourcesDirectoryPath, this.$devicePlatformsConstants.iOS, constants.PODFILE_NAME);
 			this.isShared = !!(this.nsConfig && this.nsConfig.shared);
 			this.useLegacyWorkflow = this.nsConfig && this.nsConfig.useLegacyWorkflow;
+			this.previewAppSchema = this.nsConfig && this.nsConfig.previewAppSchema;
 			return;
 		}
 

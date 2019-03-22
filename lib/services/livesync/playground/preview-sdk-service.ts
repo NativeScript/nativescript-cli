@@ -16,9 +16,13 @@ export class PreviewSdkService extends EventEmitter implements IPreviewSdkServic
 			super();
 	}
 
-	public getQrCodeUrl(options: IHasUseHotModuleReloadOption): string {
-		const hmrValue = options.useHotModuleReload ? "1" : "0";
-		return `nsplay://boot?instanceId=${this.instanceId}&pKey=${PubnubKeys.PUBLISH_KEY}&sKey=${PubnubKeys.SUBSCRIBE_KEY}&template=play-ng&hmr=${hmrValue}`;
+	public getQrCodeUrl(options: IGetQrCodeUrlOptions): string {
+		const { nsConfigPreviewAppSchema, qrCodeData = { }, useHotModuleReload } = options;
+		const schema = qrCodeData.schemaName || nsConfigPreviewAppSchema || "nsplay";
+		const publishKey = qrCodeData.publishKey || PubnubKeys.PUBLISH_KEY;
+		const subscribeKey = qrCodeData.subscribeKey || PubnubKeys.SUBSCRIBE_KEY;
+		const hmrValue = useHotModuleReload ? "1" : "0";
+		return `${schema}://boot?instanceId=${this.instanceId}&pKey=${publishKey}&sKey=${subscribeKey}&template=play-ng&hmr=${hmrValue}`;
 	}
 
 	public async initialize(getInitialFiles: (device: Device) => Promise<FilesPayload>): Promise<void> {

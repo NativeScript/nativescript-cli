@@ -29,7 +29,11 @@ export class PreviewCommand implements ICommand {
 			env: this.$options.env
 		});
 
-		await this.$previewQrCodeService.printLiveSyncQrCode({ useHotModuleReload: this.$options.hmr, link: this.$options.link });
+		await this.$previewQrCodeService.printLiveSyncQrCode({
+			nsConfigPreviewAppSchema: this.$projectData.previewAppSchema,
+			useHotModuleReload: this.$options.hmr,
+			link: this.$options.link
+		});
 	}
 
 	public async canExecute(args: string[]): Promise<boolean> {
