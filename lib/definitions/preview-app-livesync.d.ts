@@ -18,15 +18,7 @@ declare global {
 		filesToRemove?: string[];
 	}
 
-	interface IPreviewAppLiveSyncData extends IProjectDir, IHasUseHotModuleReloadOption, IBundle, IEnvOptions {
-		qrCodeData?: IPreviewAppQrCodeData;
-	}
-
-	interface IPreviewAppQrCodeData {
-		publishKey?: string;
-		subscribeKey?: string;
-		schemaName?: string;
-	}
+	interface IPreviewAppLiveSyncData extends IProjectDir, IHasUseHotModuleReloadOption, IBundle, IEnvOptions { }
 
 	interface IPreviewSdkService extends EventEmitter {
 		getQrCodeUrl(options: IGetQrCodeUrlOptions): string;
@@ -35,10 +27,7 @@ declare global {
 		stop(): void;
 	}
 
-	interface IGetQrCodeUrlOptions extends IHasUseHotModuleReloadOption {
-		nsConfigPreviewAppSchema?: string;
-		qrCodeData?: IPreviewAppQrCodeData;
-	}
+	interface IGetQrCodeUrlOptions extends IHasUseHotModuleReloadOption, IProjectDir { }
 
 	interface IPreviewAppPluginsService {
 		getPluginsUsageWarnings(data: IPreviewAppLiveSyncData, device: Device): string[];
@@ -60,8 +49,7 @@ declare global {
 		platform?: string;
 	}
 
-	interface IPrintLiveSyncOptions extends IHasUseHotModuleReloadOption {
-		nsConfigPreviewAppSchema?: string;
+	interface IPrintLiveSyncOptions extends IGetQrCodeUrlOptions {
 		/**
 		 * If set to true, a link will be shown on console instead of QR code
 		 * Default value is false.
