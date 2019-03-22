@@ -423,8 +423,10 @@ export class CacheStore {
     const response = await network.find(query, Object.assign({}, options, { rawResponse: true })).toPromise();
     const docs = response.data;
 
-    // Clear the cache if a query was not provided
-    if (!query) {
+    // Remove the docs matching the provided query
+    if (query) {
+      await cache.remove(query);
+    } else {
       await cache.clear();
     }
 
