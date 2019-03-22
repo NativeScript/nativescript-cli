@@ -10,6 +10,7 @@ import { get as getDeviceId } from '../device';
 import KinveyError from '../errors/kinvey';
 import { DataStoreCache, QueryCache, SyncCache } from '../datastore/cache';
 import { isRegistered, register, unregister } from '../live/live';
+import log from '../log';
 import { mergeSocialIdentity } from './utils';
 
 const USER_NAMESPACE = 'user';
@@ -215,7 +216,8 @@ export default class User {
         });
         await request.execute();
       } catch (error) {
-        // TODO: log error
+        log.error('Logout request failed.');
+        log.error(error.message);
       }
 
       // Remove the session
