@@ -15,7 +15,7 @@ export abstract class IOSDeviceBase implements Mobile.IiOSDevice {
 	abstract openDeviceLogStream(options?: Mobile.IiOSLogStreamOptions): Promise<void>;
 
 	@performanceLog()
-	public async getDebugSocket(appId: string, projectName: string): Promise<net.Socket> {
+	public async getDebugSocket(appId: string, projectName: string, ensureAppStarted: boolean = false): Promise<net.Socket> {
 		return this.$lockService.executeActionWithLock(
 			async () => {
 				if (this.cachedSockets[appId]) {
@@ -23,7 +23,10 @@ export abstract class IOSDeviceBase implements Mobile.IiOSDevice {
 				}
 
 				await this.attachToDebuggerFoundEvent(appId, projectName);
-				await this.applicationManager.startApplication({ appId, projectName });
+				if (ensureAppStarted) {
+					await this.applicationManager.startApplication({ appId, projectName });
+				}
+
 				this.cachedSockets[appId] = await this.getDebugSocketCore(appId);
 
 				if (this.cachedSockets[appId]) {
