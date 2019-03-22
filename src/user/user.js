@@ -10,6 +10,7 @@ import { get as getDeviceId } from '../device';
 import KinveyError from '../errors/kinvey';
 import { DataStoreCache, QueryCache, SyncCache } from '../datastore/cache';
 import { isRegistered, register, unregister } from '../live/live';
+import log from '../log';
 import { mergeSocialIdentity } from './utils';
 
 const USER_NAMESPACE = 'user';
@@ -199,12 +200,12 @@ export default class User {
     const { apiProtocol, apiHost, appKey } = getConfig();
 
     if (this.isActive()) {
+      // TODO: unregister push
+
+      // Unregister from Live Service
+      this.unregisterFromLiveService();
+
       try {
-        // TODO: unregister push
-
-        // Unregister from Live Service
-        this.unregisterFromLiveService();
-
         // Logout
         const url = formatKinveyUrl(apiProtocol, apiHost, `/${USER_NAMESPACE}/${appKey}/_logout`);
         const request = new KinveyRequest({
@@ -214,24 +215,25 @@ export default class User {
           timeout: options.timeout
         });
         await request.execute();
-
-        // Remove the session
-        removeSession();
-
-        // Clear the query cache
-        const queryCache = new QueryCache();
-        await queryCache.clearAll();
-
-        // Clear the sync cache
-        const syncCache = new SyncCache();
-        await syncCache.clearAll();
-
-        // Clear the datastore cache
-        const datastoreCache = new DataStoreCache();
-        await datastoreCache.clearAll();
       } catch (error) {
-        // TODO: log error
+        log.error('Logout request failed.');
+        log.error(error.message);
       }
+
+      // Remove the session
+      removeSession();
+
+      // Clear the query cache
+      const queryCache = new QueryCache();
+      await queryCache.clearAll();
+
+      // Clear the sync cache
+      const syncCache = new SyncCache();
+      await syncCache.clearAll();
+
+      // Clear the datastore cache
+      const datastoreCache = new DataStoreCache();
+      await datastoreCache.clearAll();
     }
 
     return this;
