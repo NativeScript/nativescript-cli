@@ -332,6 +332,7 @@ export class ProjectDataStub implements IProjectData {
 	public podfilePath: string;
 	public isShared: boolean;
 	public useLegacyWorkflow: boolean;
+	public previewAppSchema: string;
 
 	public initializeProjectData(projectDir?: string): void {
 		this.projectDir = this.projectDir || projectDir;

@@ -12,13 +12,21 @@ export class PreviewSdkService extends EventEmitter implements IPreviewSdkServic
 		private $httpClient: Server.IHttpClient,
 		private $logger: ILogger,
 		private $previewDevicesService: IPreviewDevicesService,
-		private $previewAppLogProvider: IPreviewAppLogProvider) {
+		private $previewAppLogProvider: IPreviewAppLogProvider,
+		private $projectDataService: IProjectDataService) {
 			super();
 	}
 
-	public getQrCodeUrl(options: IHasUseHotModuleReloadOption): string {
-		const hmrValue = options.useHotModuleReload ? "1" : "0";
-		return `nsplay://boot?instanceId=${this.instanceId}&pKey=${PubnubKeys.PUBLISH_KEY}&sKey=${PubnubKeys.SUBSCRIBE_KEY}&template=play-ng&hmr=${hmrValue}`;
+	public getQrCodeUrl(options: IGetQrCodeUrlOptions): string {
+		const { projectDir, useHotModuleReload } = options;
+		const projectData = this.$projectDataService.getProjectData(projectDir);
+		const schema = projectData.previewAppSchema || "nsplay";
+		// TODO: Use the correct keys for the schema
+		const publishKey = PubnubKeys.PUBLISH_KEY;
+		const subscribeKey = PubnubKeys.SUBSCRIBE_KEY;
+		const hmrValue = useHotModuleReload ? "1" : "0";
+		const result = `${schema}://boot?instanceId=${this.instanceId}&pKey=${publishKey}&sKey=${subscribeKey}&template=play-ng&hmr=${hmrValue}`;
+		return result;
 	}
 
 	public async initialize(getInitialFiles: (device: Device) => Promise<FilesPayload>): Promise<void> {

@@ -66,7 +66,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 			env: data.env,
 		});
 
-		const url = this.$previewSdkService.getQrCodeUrl({ useHotModuleReload: data.useHotModuleReload });
+		const url = this.$previewSdkService.getQrCodeUrl({ projectDir: data.projectDir, useHotModuleReload: data.useHotModuleReload });
 		const result = await this.$previewQrCodeService.getLiveSyncQrCode(url);
 		return result;
 	}

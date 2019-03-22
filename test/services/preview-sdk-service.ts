@@ -3,7 +3,7 @@ import { Yok } from "../../lib/common/yok";
 import { assert } from "chai";
 import { LoggerStub } from "../stubs";
 
-const getPreviewSdkService = (): IPreviewSdkService => {
+const createTestInjector = (): IInjector => {
 	const testInjector = new Yok();
 	testInjector.register("logger", LoggerStub);
 	testInjector.register("config", {});
@@ -13,26 +13,65 @@ const getPreviewSdkService = (): IPreviewSdkService => {
 	testInjector.register("httpClient", {
 		httpRequest: async (options: any, proxySettings?: IProxySettings): Promise<Server.IResponse> => undefined
 	});
+	testInjector.register("projectDataService", {
+		getProjectData: () => ({})
+	});
 
-	return testInjector.resolve("previewSdkService");
+	return testInjector;
 };
 
 describe('PreviewSdkService', () => {
-	describe('getQrCodeUrl', () => {
-		it('sets hmr to 1 when useHotModuleReload is true', async () => {
-			const sdk = getPreviewSdkService();
+	let injector: IInjector, previewSdkService: IPreviewSdkService;
 
-			const previewUrl = sdk.getQrCodeUrl({ useHotModuleReload: true });
-
-			assert.isTrue(previewUrl.indexOf("hmr=1") > -1);
-		});
+	beforeEach(() => {
+		injector = createTestInjector();
+		previewSdkService = injector.resolve("previewSdkService");
 	});
 
-	it('sets hmr to 0 when useHotModuleReload is false', async () => {
-		const sdk = getPreviewSdkService();
+	describe('getQrCodeUrl', () => {
+		describe("hmr", () => {
+			it('sets hmr to 1 when useHotModuleReload is true', async () => {
+				const previewUrl = previewSdkService.getQrCodeUrl({ projectDir: "", useHotModuleReload: true });
 
-		const previewUrl = sdk.getQrCodeUrl({ useHotModuleReload: false });
+				assert.isTrue(previewUrl.indexOf("hmr=1") > -1);
+			});
+			it('sets hmr to 0 when useHotModuleReload is false', async () => {
+				const previewUrl = previewSdkService.getQrCodeUrl({ projectDir: "", useHotModuleReload: false });
 
-		assert.isTrue(previewUrl.indexOf("hmr=0") > -1);
+				assert.isTrue(previewUrl.indexOf("hmr=0") > -1);
+			});
+		});
+
+		describe("schema", () => {
+			const testCases = [
+				{
+					name: "should return the schema from api",
+					schemaFromNsConfig: "nsplay",
+					expectedSchemaName: "nsplay"
+				},
+				{
+					name: "should return the schema from nsconfig",
+					schemaFromNsConfig: "ksplay",
+					expectedSchemaName: "ksplay"
+				},
+				{
+					name: "should return the default schema",
+					schemaFromNsConfig: null,
+					expectedSchemaName: "nsplay"
+				}
+			];
+
+			_.each(testCases, testCase => {
+				it(`${testCase.name}`, () => {
+					const qrCodeOptions = { projectDir: "myTestDir", useHotModuleReload: true };
+					const projectDataService = injector.resolve("projectDataService");
+					projectDataService.getProjectData = () => ({ previewAppSchema: testCase.schemaFromNsConfig });
+
+					const qrCodeUrl = previewSdkService.getQrCodeUrl(qrCodeOptions);
+
+					assert.deepEqual(qrCodeUrl.split(":")[0], testCase.expectedSchemaName);
+				});
+			});
+		});
 	});
 });
