@@ -20,7 +20,7 @@ const defaultMicHostname = 'https://auth.kinvey.com';
 const instanceId = 'testinstance';
 const encryptionKey = 'key';
 const collectionName = config.collectionName;
-const testItem = {name: 'randomName'};
+const testItem = { name: 'randomName' };
 
 const setupOfflineProvider = (offlineProvider) => {
   const init = Kinvey.init({
@@ -28,7 +28,7 @@ const setupOfflineProvider = (offlineProvider) => {
     appSecret: process.env.APP_SECRET,
     storage: offlineProvider
   });
-    //expect(init.storage).to.equal(offlineProvider);
+  expect(init.storage).to.equal(offlineProvider);
   return Kinvey.User.signup()
     .then((user) => { createdUserIds.push(user.data._id) })
     .catch((err) => { Promise.reject(err) });
@@ -46,7 +46,6 @@ const checkIndexedDB = async () => {
     return res;
   })
     .then(obj => {
-      console.log(obj)
       expect(obj).to.deep.equal(insertedItem);
     })
     .catch((err) => Promise.reject(err));
@@ -57,7 +56,7 @@ const checkWebSQL = async () => {
   const insertedItem = await collection.save(testItem);
   const db = window.openDatabase(process.env.APP_KEY, 1, collectionName, 20000);
   db.transaction((tx) => {
-    tx.executeSql(`SELECT * FROM ${collectionName} WHERE value LIKE '%${insertedItem._id}%'`, [], (tx, resultSet)=> {
+    tx.executeSql(`SELECT * FROM ${collectionName} WHERE value LIKE '%${insertedItem._id}%'`, [], (tx, resultSet) => {
       expect(JSON.parse(resultSet.rows[0].value)).to.deep.equal(insertedItem);
     });
   });
@@ -67,14 +66,14 @@ const checkLocalStorage = async () => {
   const collection = Kinvey.DataStore.collection(collectionName, Kinvey.DataStoreType.Sync);
   const insertedItem = await collection.save(testItem);
   const items = window.localStorage.getItem(`${process.env.APP_KEY}.${collectionName}`);
-  expect(JSON.parse(items[0])).to.deep.equal(insertedItem);
+  expect(JSON.parse(items)[0]).to.deep.equal(insertedItem);
 };
 
 const checkSessionStorage = async () => {
   const collection = Kinvey.DataStore.collection(collectionName, Kinvey.DataStoreType.Sync);
   const insertedItem = await collection.save(testItem);
   const items = window.sessionStorage.getItem(`${process.env.APP_KEY}.${collectionName}`);
-  expect(JSON.parse(items[0])).to.deep.equal(insertedItem);
+  expect(JSON.parse(items)[0]).to.deep.equal(insertedItem);
 };
 
 describe('Init tests', () => {
@@ -161,11 +160,15 @@ describe('Init tests', () => {
 
   describe('ping()', () => {
     it('should return kinvey response', (done) => {
+      const init = Kinvey.init({
+        appKey: process.env.APP_KEY,
+        appSecret: process.env.APP_SECRET
+      });
       Kinvey.ping()
         .then((res) => {
           expect(res.appName).to.not.equal(undefined);
           expect(res.environmentName).to.not.equal(undefined);
-          expect(res.kinvey).to.contain('Hello');
+          expect(res.kinvey).to.contain('hello');
           expect(res.version).to.not.equal(undefined);
           done();
         })
