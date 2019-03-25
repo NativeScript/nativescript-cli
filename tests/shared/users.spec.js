@@ -674,7 +674,7 @@ describe('User tests', () => {
     });
     
     it('should return error when using the function', (done) => {
-      Kinvey.User.signUpWithIdentity('identity')
+      Kinvey.User.signupWithIdentity('identity')
         .then(() => {
           Promise.reject(new Error('This should not happen'));
         })
