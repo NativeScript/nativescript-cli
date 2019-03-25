@@ -1110,17 +1110,17 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		const pbxProjPath = this.getPbxProjPath(projectData);
 		const addedExtensionsFromResources = await this.$iOSExtensionsService.addExtensionsFromPath({extensionsFolderPath: resorcesExtensionsPath, projectData, platformData, pbxProjPath});
 		const plugins = await this.getAllInstalledPlugins(projectData);
-		let addedExtensionsFromPlugisns = false;
+		let addedExtensionsFromPlugins = false;
 		for (const pluginIndex in plugins) {
 			const pluginData = plugins[pluginIndex];
 			const pluginPlatformsFolderPath = pluginData.pluginPlatformsFolderPath(IOSProjectService.IOS_PLATFORM_NAME);
 
 			const extensionPath = path.join(pluginPlatformsFolderPath, constants.NATIVE_EXTENSION_FOLDER);
 			const addedExtensionFromPlugin = await this.$iOSExtensionsService.addExtensionsFromPath({extensionsFolderPath: extensionPath, projectData, platformData, pbxProjPath});
-			addedExtensionsFromPlugisns = addedExtensionsFromPlugisns || addedExtensionFromPlugin;
+			addedExtensionsFromPlugins = addedExtensionsFromPlugins || addedExtensionFromPlugin;
 		}
 
-		if (addedExtensionsFromResources || addedExtensionsFromPlugisns) {
+		if (addedExtensionsFromResources || addedExtensionsFromPlugins) {
 			this.$logger.warn("The support for iOS App Extensions is currently in Beta. For more information about the current development state and any known issues, please check the relevant GitHub issue: https://github.com/NativeScript/nativescript-cli/issues/4472");
 		}
 	}
