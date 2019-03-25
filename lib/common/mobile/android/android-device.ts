@@ -71,11 +71,16 @@ export class AndroidDevice implements Mobile.IAndroidDevice {
 		const adbStatusInfo = AndroidDevice.ADB_DEVICE_STATUS_INFO[this.status];
 		const type = await this.getType();
 
+		let version = details.release;
+		if (version && version.toLowerCase() === 'q') {
+			version = '10.0.0';
+		}
+
 		this.deviceInfo = {
 			identifier: this.identifier,
 			displayName: details.name,
 			model: details.model,
-			version: details.release,
+			version,
 			vendor: details.brand,
 			platform: this.$devicePlatformsConstants.Android,
 			status: adbStatusInfo ? adbStatusInfo.deviceStatus : this.status,
