@@ -570,7 +570,7 @@ interface ICocoaPodsPlatformManager {
  * Describes a service used to add and remove iOS extension
  */
 interface IIOSExtensionsService {
-	addExtensionsFromPath(options: IAddExtensionsFromPathOptions): Promise<void>;
+	addExtensionsFromPath(options: IAddExtensionsFromPathOptions): Promise<boolean>;
 	removeExtensions(options: IRemoveExtensionsOptions): void;
 }
 

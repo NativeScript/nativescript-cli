@@ -6,10 +6,11 @@ export class IOSExtensionsService implements IIOSExtensionsService {
 		private $xcode: IXcode) {
 	}
 
-	public async addExtensionsFromPath({extensionsFolderPath, projectData, platformData, pbxProjPath}: IAddExtensionsFromPathOptions): Promise<void> {
+	public async addExtensionsFromPath({extensionsFolderPath, projectData, platformData, pbxProjPath}: IAddExtensionsFromPathOptions): Promise<boolean> {
 		const targetUuids: string[] = [];
+		let addedExtensions = false;
 		if (!this.$fs.exists(extensionsFolderPath)) {
-			return;
+			return false;
 		}
 		const project = new this.$xcode.project(pbxProjPath);
 		project.parseSync();
@@ -23,10 +24,13 @@ export class IOSExtensionsService implements IIOSExtensionsService {
 			.forEach(extensionFolder => {
 				const targetUuid = this.addExtensionToProject(extensionsFolderPath, extensionFolder, project, projectData, platformData);
 				targetUuids.push(targetUuid);
+				addedExtensions = true;
 			});
 
 		this.$fs.writeFile(pbxProjPath, project.writeSync({omitEmptyValues: true}));
 		this.prepareExtensionSigning(targetUuids, projectData, pbxProjPath);
+
+		return addedExtensions;
 	}
 
 	private addExtensionToProject(extensionsFolderPath: string, extensionFolder: string, project: IXcode.project, projectData: IProjectData, platformData: IPlatformData): string {
