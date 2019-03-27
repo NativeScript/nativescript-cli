@@ -387,11 +387,7 @@ declare module Mobile {
 	/**
 	 * Describes options that can be passed to devices service's initialization method.
 	 */
-	interface IDevicesServicesInitializationOptions {
-		/**
-		 * The platform for which to initialize. If passed will detect only devices belonging to said platform.
-		 */
-		platform?: string;
+	interface IDevicesServicesInitializationOptions extends Partial<IDeviceLookingOptions> {
 		/**
 		 * If passed will start an emulator if necesasry.
 		 */
@@ -412,10 +408,6 @@ declare module Mobile {
 		 * Specifies whether we should skip the emulator starting.
 		 */
 		skipEmulatorStart?: boolean;
-		/**
-		 * Defines if the initialization should await the whole iOS detection to finish or it can just start the detection.
-		 */
-		shouldReturnImmediateResult?: boolean;
 		/**
 		 * Currently available only for iOS. Specifies the sdk version of the iOS simulator.
 		 * In case when `tns run ios --device "iPhone 6"` command is executed, the user can specify the sdk of the simulator because it is possible to have more than one device with the same name but with different sdk versions.
@@ -1029,7 +1021,11 @@ declare module Mobile {
 		resolveProductName(deviceType: string): string;
 	}
 
-	interface IDeviceLookingOptions extends IHasEmulatorOption {
+	interface IHasDetectionInterval {
+		detectionInterval?: number;
+	}
+
+	interface IDeviceLookingOptions extends IHasEmulatorOption, IHasDetectionInterval {
 		shouldReturnImmediateResult: boolean;
 		platform: string;
 	}
