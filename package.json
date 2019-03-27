@@ -5,7 +5,7 @@
   "main": "lib/index.js",
   "types": "./typings/nativescript-doctor.d.ts",
   "scripts": {
-    "test": "node_modules/.bin/istanbul cover node_modules/.bin/mocha -- --recursive"
+    "test": "node_modules/.bin/istanbul cover ./node_modules/mocha/bin/_mocha -- --recursive"
   },
   "repository": {
     "type": "git",

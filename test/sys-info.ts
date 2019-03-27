@@ -82,6 +82,8 @@ function createChildProcessResults(childProcessResult: IChildProcessResults): ID
 		"npm -v": childProcessResult.npmV,
 		"node -v": childProcessResult.nodeV,
 		'"javac" -version': childProcessResult.javacVersion,
+		'which javac': { result: '' },
+		'where javac': { result: '' },
 		"node-gyp -v": childProcessResult.nodeGypVersion,
 		"xcodebuild -version": childProcessResult.xCodeVersion,
 		"pod --version": childProcessResult.podVersion,
@@ -178,16 +180,19 @@ describe("SysInfo unit tests", () => {
 
 	describe("Should execute correct commands to check for", () => {
 		let spawnFromEventCommand: string;
-		let execCommand: string;
+		let execCommands: string[] = [];
+		let fileSystem: any;
+		let hostInfo: any;
 
 		beforeEach(() => {
+			execCommands = [];
 			const childProcess: ChildProcess = {
 				spawnFromEvent: async (command: string, args: string[], event: string) => {
 					spawnFromEventCommand = `${command} ${args.join(" ")}`;
 					return { stdout: "", stderr: "" };
 				},
 				exec: async (command: string) => {
-					execCommand = command;
+					execCommands.push(command);
 					return { stdout: "", stderr: "" };
 				},
 				execFile: async () => {
@@ -197,7 +202,17 @@ describe("SysInfo unit tests", () => {
 			};
 
 			const helpers = new Helpers(null);
-			sysInfo = new SysInfo(childProcess, null, helpers, null, null, androidToolsInfo);
+			fileSystem = {
+				exists: () => false,
+				extractZip: () => Promise.resolve(),
+				readDirectory: () => Promise.resolve([])
+			};
+
+			hostInfo = {
+				isWindows: false
+			};
+
+			sysInfo = new SysInfo(childProcess, fileSystem, helpers, hostInfo, null, androidToolsInfo);
 		});
 
 		it("java compiler version when there is JAVA_HOME.", async () => {
@@ -205,21 +220,31 @@ describe("SysInfo unit tests", () => {
 			process.env[JavaHomeName] = "mock";
 
 			const pathToJavac = path.join(process.env[JavaHomeName], "bin", "javac");
+			fileSystem.exists = () => true;
 			await sysInfo.getJavaCompilerVersion();
 
 			process.env[JavaHomeName] = originalJavaHome;
-			assert.deepEqual(execCommand, `"${pathToJavac}" -version`);
+			assert.deepEqual(execCommands[0], `"${pathToJavac}" -version`);
 		});
 
-		it("java compiler version when there is no JAVA_HOME.", async () => {
+		it("java compiler version when there is no JAVA_HOME on non-Windows OS", async () => {
 			const originalJavaHome = process.env[JavaHomeName];
 
 			delete process.env[JavaHomeName];
-
 			await sysInfo.getJavaCompilerVersion();
 
 			process.env[JavaHomeName] = originalJavaHome;
-			assert.deepEqual(execCommand, `"javac" -version`);
+			assert.deepEqual(execCommands, ['which javac', '"javac" -version']);
+		});
+
+		it("java compiler version when there is no JAVA_HOME on Window OS", async () => {
+			const originalJavaHome = process.env[JavaHomeName];
+			hostInfo.isWindows = true;
+			delete process.env[JavaHomeName];
+			await sysInfo.getJavaCompilerVersion();
+
+			process.env[JavaHomeName] = originalJavaHome;
+			assert.deepEqual(execCommands, ['where javac', '"javac" -version']);
 		});
 	});
 
@@ -352,7 +377,7 @@ describe("SysInfo unit tests", () => {
 				childProcessResult.adbVersion = {
 					result: null
 				};
-				sysInfo = mockSysInfo(childProcessResult, { isWindows: false, isDarwin: false, dotNetVersion: "4.5.1"}, null);
+				sysInfo = mockSysInfo(childProcessResult, { isWindows: false, isDarwin: false, dotNetVersion: "4.5.1" }, null);
 				const adbVersion = await sysInfo.getAdbVersion();
 				const isAndroidSdkConfiguredCorrectly = await sysInfo.isAndroidSdkConfiguredCorrectly();
 				assert.deepEqual(adbVersion, null);
@@ -362,12 +387,12 @@ describe("SysInfo unit tests", () => {
 
 		describe("pythonInfo", () => {
 			it("should return null when platform is windows", async () => {
-				sysInfo = mockSysInfo(childProcessResult, { isWindows: true, isDarwin: false, dotNetVersion: "4.5.1"}, null);
+				sysInfo = mockSysInfo(childProcessResult, { isWindows: true, isDarwin: false, dotNetVersion: "4.5.1" }, null);
 				const pythonInfo = await sysInfo.getPythonInfo();
 				assert.deepEqual(pythonInfo, null);
 			});
 			it("should return null when platform is linux", async () => {
-				sysInfo = mockSysInfo(childProcessResult, { isWindows: false, isDarwin: false, dotNetVersion: "4.5.1"}, null);
+				sysInfo = mockSysInfo(childProcessResult, { isWindows: false, isDarwin: false, dotNetVersion: "4.5.1" }, null);
 				const pythonInfo = await sysInfo.getPythonInfo();
 				assert.deepEqual(pythonInfo, null);
 			});
@@ -385,7 +410,7 @@ describe("SysInfo unit tests", () => {
 			});
 			it("should return {isInstalled: true, isSixPackageInstalled: false} when python is installed but six package is not", async () => {
 				childProcessResult.pythonInfo = { shouldThrowError: true, errorCode: 1 };
-				sysInfo = mockSysInfo(childProcessResult, { isWindows: false, isDarwin: true, dotNetVersion: "4.5.1"}, null);
+				sysInfo = mockSysInfo(childProcessResult, { isWindows: false, isDarwin: true, dotNetVersion: "4.5.1" }, null);
 				const pythonInfo = await sysInfo.getPythonInfo();
 				assert.deepEqual(pythonInfo, { isInstalled: true, isSixPackageInstalled: false });
 			});
@@ -528,12 +553,12 @@ ${expectedCliVersion}`;
 				assert.deepEqual(result.isCocoaPodsWorkingCorrectly, true);
 				assert.deepEqual(result.xcprojInfo, undefined);
 				assert.deepEqual(result.isCocoaPodsUpdateRequired, false);
-				assert.deepEqual(result.pythonInfo, {isInstalled: false, isSixPackageInstalled: false, installationErrorMessage: "Cannot read property 'shouldThrowError' of undefined"});
+				assert.deepEqual(result.pythonInfo, { isInstalled: false, isSixPackageInstalled: false, installationErrorMessage: "Cannot read property 'shouldThrowError' of undefined" });
 			};
 
 			it("iOS platform is specified", async () => {
 				sysInfo = mockSysInfo(childProcessResult, { isWindows: false, isDarwin: true, dotNetVersion });
-				const result = await sysInfo.getSysInfo({platform: "iOS"});
+				const result = await sysInfo.getSysInfo({ platform: "iOS" });
 
 				assertCommonSysInfo(result);
 				assertiOSSysInfo(result);
@@ -547,7 +572,7 @@ ${expectedCliVersion}`;
 			});
 			it("Android platform is specified", async () => {
 				sysInfo = mockSysInfo(childProcessResult, { isWindows: false, isDarwin: true, dotNetVersion }, { existsResult: true });
-				const result = await sysInfo.getSysInfo({platform: "Android"});
+				const result = await sysInfo.getSysInfo({ platform: "Android" });
 
 				assertCommonSysInfo(result);
 				assertAndroidSysInfo(result);
@@ -561,7 +586,7 @@ ${expectedCliVersion}`;
 				assert.deepEqual(result.isCocoaPodsUpdateRequired, undefined);
 				assert.deepEqual(result.pythonInfo, undefined);
 			});
-			it("no platform is specified", async() => {
+			it("no platform is specified", async () => {
 				sysInfo = mockSysInfo(childProcessResult, { isWindows: false, isDarwin: true, dotNetVersion });
 				const result = await sysInfo.getSysInfo();
 				assertCommonSysInfo(result);

@@ -57,15 +57,8 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 
 	public getJavaCompilerVersion(): Promise<string> {
 		return this.getValueForProperty(() => this.javaCompilerVerCache, async (): Promise<string> => {
-			const javaCompileExecutableName = "javac";
-			const javaHome = process.env["JAVA_HOME"];
-			const pathToJavaCompilerExecutable = javaHome ? path.join(javaHome, "bin", javaCompileExecutableName) : javaCompileExecutableName;
-			try {
-				const output = await this.childProcess.exec(`"${pathToJavaCompilerExecutable}" -version`);
-				return SysInfo.JAVA_COMPILER_VERSION_REGEXP.exec(`${output.stderr}${EOL}${output.stdout}`)[1];
-			} catch (err) {
-				return null;
-			}
+			const javacVersion = (await this.getJavacVersionFromJavaHome()) || (await this.getJavacVersionFromPath());
+			return javacVersion;
 		});
 	}
 
@@ -498,5 +491,45 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 
 			return result;
 		});
+	}
+
+	private async getJavacVersionFromPath(): Promise<string> {
+		let javacVersion: string = null;
+
+		try {
+			const detectionCommand = this.hostInfo.isWindows ? "where" : "which";
+			// if this command succeeds, we have javac in the PATH. In case it is not there, it will throw an error.
+			await this.childProcess.exec(`${detectionCommand} ${Constants.JAVAC_EXECUTABLE_NAME}`);
+			javacVersion = await this.executeJavacVersion(Constants.JAVAC_EXECUTABLE_NAME);
+		} catch (err) { /* intentionally left blank */ }
+
+		return javacVersion;
+	}
+
+	private async getJavacVersionFromJavaHome(): Promise<string> {
+		let javacVersion: string = null;
+
+		try {
+			const javaHome = process.env["JAVA_HOME"];
+			const javacExecutableFile = this.hostInfo.isWindows ? `${Constants.JAVAC_EXECUTABLE_NAME}.exe` : Constants.JAVAC_EXECUTABLE_NAME;
+
+			if (javaHome) {
+				const pathToJavaCompilerExecutable = path.join(javaHome, "bin", javacExecutableFile);
+				if (this.fileSystem.exists(pathToJavaCompilerExecutable)) {
+					javacVersion = await this.executeJavacVersion(pathToJavaCompilerExecutable);
+				}
+			}
+		} catch (err) { /* intentionally left blank */ }
+
+		return javacVersion;
+	}
+
+	private async executeJavacVersion(pathToJavaCompilerExecutable: string): Promise<string> {
+		try {
+			const output = await this.childProcess.exec(`"${pathToJavaCompilerExecutable}" -version`);
+			return SysInfo.JAVA_COMPILER_VERSION_REGEXP.exec(`${output.stderr}${EOL}${output.stdout}`)[1];
+		} catch (err) {
+			return null;
+		}
 	}
 }
