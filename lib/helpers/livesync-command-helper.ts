@@ -1,3 +1,5 @@
+import { LiveSyncEvents } from "../constants";
+
 export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 	public static MIN_SUPPORTED_WEBPACK_VERSION_WITH_HMR = "0.17.0";
 
@@ -119,6 +121,15 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 			useHotModuleReload: this.$options.hmr,
 			force: this.$options.force
 		};
+
+		const remainingDevicesToSync = devices.map(d => d.deviceInfo.identifier);
+		this.$liveSyncService.on(LiveSyncEvents.liveSyncStopped, (data: { projectDir: string, deviceIdentifier: string }) => {
+			_.remove(remainingDevicesToSync, d => d === data.deviceIdentifier);
+
+			if (remainingDevicesToSync.length === 0) {
+				process.exit(ErrorCodes.ALL_DEVICES_DISCONNECTED);
+			}
+		});
 
 		await this.$liveSyncService.liveSync(deviceDescriptors, liveSyncInfo);
 	}
