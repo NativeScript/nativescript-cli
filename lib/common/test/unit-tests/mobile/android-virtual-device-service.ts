@@ -76,6 +76,10 @@ function createTestInjector(data: { avdManagerOutput?: string, avdManagerError?:
 	testInjector.register("emulatorHelper", EmulatorHelper);
 	testInjector.register("hostInfo", {});
 	testInjector.register("logger", { trace: () => ({}) });
+	testInjector.register("sysInfo", {
+		getJavaVersionFromJavaHome: async () => "1.8.0",
+		getJavaVersionFromPath: async () => "1.8.0"
+	});
 
 	return testInjector;
 }
