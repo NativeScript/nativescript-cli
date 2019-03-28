@@ -10,6 +10,24 @@ declare module NativeScriptDoctor {
 		getJavaCompilerVersion(): Promise<string>;
 
 		/**
+		 * Returns the currently installed Java version.
+		 * @return {Promise<string>} The currently installed Java version.
+		 */
+		getJavaVersion(): Promise<string>;
+
+		/**
+		 * Gets JAVA version based on the executable in PATH.
+		 * @return {Promise<string>}
+		 */
+		getJavaVersionFromPath(): Promise<string>;
+
+		/**
+		 * Gets JAVA version based on the JAVA from JAVA_HOME.
+		 * @return {Promise<string>}
+		 */
+		getJavaVersionFromJavaHome(): Promise<string>;
+
+		/**
 		 * Returns the currently installed version of Xcode.
 		 * @return {Promise<string>} Returns the currently installed version of Xcode or null if Xcode is not installed or executed on Linux or Windows.
 		 */
