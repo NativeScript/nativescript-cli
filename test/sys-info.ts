@@ -31,6 +31,7 @@ interface IChildProcessResults {
 	npmV: IChildProcessResultDescription;
 	nodeV: IChildProcessResultDescription;
 	javacVersion: IChildProcessResultDescription;
+	javaVersion: IChildProcessResultDescription;
 	nodeGypVersion: IChildProcessResultDescription;
 	xCodeVersion: IChildProcessResultDescription;
 	adbVersion: IChildProcessResultDescription;
@@ -82,8 +83,11 @@ function createChildProcessResults(childProcessResult: IChildProcessResults): ID
 		"npm -v": childProcessResult.npmV,
 		"node -v": childProcessResult.nodeV,
 		'"javac" -version': childProcessResult.javacVersion,
+		'"java" -version': childProcessResult.javaVersion,
 		'which javac': { result: '' },
 		'where javac': { result: '' },
+		'which java': { result: '' },
+		'where java': { result: '' },
 		"node-gyp -v": childProcessResult.nodeGypVersion,
 		"xcodebuild -version": childProcessResult.xCodeVersion,
 		"pod --version": childProcessResult.podVersion,
@@ -246,6 +250,38 @@ describe("SysInfo unit tests", () => {
 			process.env[JavaHomeName] = originalJavaHome;
 			assert.deepEqual(execCommands, ['where javac', '"javac" -version']);
 		});
+
+		it("java version when there is JAVA_HOME.", async () => {
+			const originalJavaHome = process.env[JavaHomeName];
+			process.env[JavaHomeName] = "mock";
+
+			const pathToJava = path.join(process.env[JavaHomeName], "bin", "java");
+			fileSystem.exists = () => true;
+			await sysInfo.getJavaVersion();
+
+			process.env[JavaHomeName] = originalJavaHome;
+			assert.deepEqual(execCommands[0], `"${pathToJava}" -version`);
+		});
+
+		it("java version when there is no JAVA_HOME on non-Windows OS", async () => {
+			const originalJavaHome = process.env[JavaHomeName];
+
+			delete process.env[JavaHomeName];
+			await sysInfo.getJavaVersion();
+
+			process.env[JavaHomeName] = originalJavaHome;
+			assert.deepEqual(execCommands, ['which java', '"java" -version']);
+		});
+
+		it("java version when there is no JAVA_HOME on Window OS", async () => {
+			const originalJavaHome = process.env[JavaHomeName];
+			hostInfo.isWindows = true;
+			delete process.env[JavaHomeName];
+			await sysInfo.getJavaVersion();
+
+			process.env[JavaHomeName] = originalJavaHome;
+			assert.deepEqual(execCommands, ['where java', '"java" -version']);
+		});
 	});
 
 	describe("getSysInfo", () => {
@@ -259,6 +295,11 @@ describe("SysInfo unit tests", () => {
 				npmV: { result: setStdOut("2.14.1") },
 				nodeV: { result: setStdOut("v6.0.0") },
 				javacVersion: { result: setStdErr("javac 1.8.0_60") },
+				javaVersion: {
+					result: setStdErr(`java version "1.8.0_202"
+Java(TM) SE Runtime Environment (build 1.8.0_202-b08)
+Java HotSpot(TM) 64-Bit Server VM (build 25.202-b08, mixed mode)`)
+				},
 				nodeGypVersion: { result: setStdOut("2.0.0") },
 				xCodeVersion: { result: setStdOut("Xcode 6.4.0") },
 				adbVersion: { result: setStdOut("Android Debug Bridge version 1.0.32") },
@@ -286,6 +327,7 @@ describe("SysInfo unit tests", () => {
 				assert.deepEqual(result.npmVer, childProcessResult.npmV.result.stdout);
 				assert.deepEqual(result.nodeVer, "6.0.0");
 				assert.deepEqual(result.javacVersion, "1.8.0_60");
+				assert.deepEqual(result.javaVersion, "1.8.0_202");
 				assert.deepEqual(result.nodeGypVer, childProcessResult.nodeGypVersion.result.stdout);
 				assert.deepEqual(result.adbVer, "1.0.32");
 				assert.deepEqual(result.androidInstalled, true);
@@ -477,6 +519,7 @@ ${expectedCliVersion}`;
 					npmV: { shouldThrowError: true },
 					nodeV: { shouldThrowError: true },
 					javacVersion: { shouldThrowError: true },
+					javaVersion: { shouldThrowError: true },
 					nodeGypVersion: { shouldThrowError: true },
 					xCodeVersion: { shouldThrowError: true },
 					adbVersion: { shouldThrowError: true },
@@ -592,6 +635,32 @@ ${expectedCliVersion}`;
 				assertCommonSysInfo(result);
 				assertAndroidSysInfo(result);
 				assertiOSSysInfo(result);
+			});
+		});
+
+		describe("getJavaVersion", () => {
+			it("parses correctly OpenJDK output", async () => {
+				childProcessResult.javaVersion = {
+					result: setStdOut(`openjdk version "1.8.0_64"
+OpenJDK Runtime Environment (AdoptOpenJDK)(build 1.8.0_64-b08)
+OpenJDK 64-Bit Server VM (build 25.202-b08, mixed mode)`)
+				};
+
+				sysInfo = mockSysInfo(childProcessResult, { isWindows: false, isDarwin: true, dotNetVersion });
+				const result = await sysInfo.getJavaVersion();
+				assert.equal(result, "1.8.0_64");
+			});
+
+			it("parses correctly OpenJDK output", async () => {
+				childProcessResult.javaVersion = {
+					result: setStdOut(`java version "1.8.0_25"
+Java(TM) SE Runtime Environment (build 1.8.0_25-b08)
+Java HotSpot(TM) 64-Bit Server VM (build 25.202-b08, mixed mode)`)
+				};
+
+				sysInfo = mockSysInfo(childProcessResult, { isWindows: false, isDarwin: true, dotNetVersion });
+				const result = await sysInfo.getJavaVersion();
+				assert.equal(result, "1.8.0_25");
 			});
 		});
 	});
