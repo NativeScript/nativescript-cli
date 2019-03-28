@@ -2,7 +2,8 @@
   "private": true,
   "name": "kinvey",
   "scripts": {
-    "build": "lerna run build"
+    "build": "lerna run build",
+    "postinstall": "lerna bootstrap"
   },
   "devDependencies": {
     "lerna": "^3.6.0"
