@@ -28,5 +28,25 @@
     {
         "name": "karma-qunit",
         "framework": "qunit"
+    },
+    {
+        "name": "@types/karma-chai",
+        "framework": "mocha",
+        "projectType": ".ts"
+    },
+    {
+        "name": "@types/mocha",
+        "framework": "mocha",
+        "projectType": ".ts"
+    },
+    {
+        "name": "@types/jasmine",
+        "framework": "jasmine",
+        "projectType": ".ts"
+    },
+    {
+        "name": "@types/qunit",
+        "framework": "qunit",
+        "projectType": ".ts"
     }
 ]
