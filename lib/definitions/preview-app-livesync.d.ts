@@ -21,11 +21,13 @@ declare global {
 	interface IPreviewAppLiveSyncData extends IProjectDir, IHasUseHotModuleReloadOption, IBundle, IEnvOptions { }
 
 	interface IPreviewSdkService extends EventEmitter {
-		getQrCodeUrl(options: IHasUseHotModuleReloadOption): string;
+		getQrCodeUrl(options: IGetQrCodeUrlOptions): string;
 		initialize(getInitialFiles: (device: Device) => Promise<FilesPayload>): void;
 		applyChanges(filesPayload: FilesPayload): Promise<void>;
 		stop(): void;
 	}
+
+	interface IGetQrCodeUrlOptions extends IHasUseHotModuleReloadOption, IProjectDir { }
 
 	interface IPreviewAppPluginsService {
 		getPluginsUsageWarnings(data: IPreviewAppLiveSyncData, device: Device): string[];
@@ -47,7 +49,7 @@ declare global {
 		platform?: string;
 	}
 
-	interface IPrintLiveSyncOptions extends IHasUseHotModuleReloadOption {
+	interface IPrintLiveSyncOptions extends IGetQrCodeUrlOptions {
 		/**
 		 * If set to true, a link will be shown on console instead of QR code
 		 * Default value is false.

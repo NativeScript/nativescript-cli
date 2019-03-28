@@ -194,7 +194,7 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 				useHotModuleReload: options.hmr
 			});
 
-			await this.$previewQrCodeService.printLiveSyncQrCode({ useHotModuleReload: options.hmr, link: options.link });
+			await this.$previewQrCodeService.printLiveSyncQrCode({ projectDir, useHotModuleReload: options.hmr, link: options.link });
 		}
 	}
 
