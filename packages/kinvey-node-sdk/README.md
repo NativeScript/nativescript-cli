@@ -1,1 +1,0 @@
-# kinvey-node-sdk

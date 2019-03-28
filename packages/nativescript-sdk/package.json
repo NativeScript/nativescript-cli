@@ -1,0 +1,42 @@
+{
+  "name": "kinvey-nativescript-sdk",
+  "version": "0.0.0",
+  "license": "MIT",
+  "main": "lib/index.js",
+  "keywords": [
+    "NativeScript",
+    "JavaScript",
+    "Android",
+    "iOS"
+  ],
+  "nativescript": {
+    "platforms": {
+      "android": "5.2.0",
+      "ios": "5.2.0"
+    }
+  },
+  "scripts": {
+    "build": "npm run tsc && npm run build.native",
+    "build.native": "node scripts/build-native.js",
+    "tsc": "tsc"
+  },
+  "peerDependencies": {
+    "events": "~3.0.0",
+    "kinvey-js-sdk": "~0.0.0",
+    "nativescript-secure-storage": "~2.4.0",
+    "nativescript-urlhandler": "~1.2.3",
+    "tns-core-modules": "~5.2.2"
+  },
+  "devDependencies": {
+    "@types/node": "~11.11.6",
+    "@types/events": "~3.0.0",
+    "events": "~3.0.0",
+    "kinvey-js-sdk": "~0.0.0",
+    "nativescript-secure-storage": "~2.4.0",
+    "nativescript-urlhandler": "~1.2.3",
+    "tns-core-modules": "~5.2.2",
+    "tns-platform-declarations": "~5.3.0",
+    "tslint": "~5.14.0",
+    "typescript": "~3.3.3"
+  }
+}

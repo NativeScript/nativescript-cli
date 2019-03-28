@@ -1,0 +1,36 @@
+{
+	"private": true,
+	"name": "kinvey-nativescript-angular-sdk",
+	"version": "0.0.0",
+	"license": "MIT",
+	"scripts": {
+	  "type-check": "tsc --noEmit",
+	  "type-check:watch": "npm run type-check -- --watch",
+	  "build": "ng-packagr -p ng-package.json"
+	},
+	"peerDependencies": {
+		"@angular/common": "~7.2.10",
+		"@angular/core": "~7.2.10",
+    "kinvey-nativescript-sdk": "~0.0.0"
+	},
+	"devDependencies": {
+		"@angular/common": "~7.2.10",
+		"@angular/compiler": "^7.2.10",
+		"@angular/compiler-cli": "^7.2.10",
+		"@angular/core": "~7.2.10",
+		"@types/node": "~11.11.6",
+		"js-base64": "~2.5.1",
+    "kinvey-js-sdk": "~0.0.0",
+		"kinvey-nativescript-sdk": "~0.0.0",
+		"lodash": "~4.17.11",
+		"nativescript-secure-storage": "~2.4.0",
+		"ng-packagr": "^4.7.1",
+		"rxjs": "^6.0.0",
+		"tns-core-modules": "~5.2.2",
+		"tsickle": "~0.34.3",
+		"typescript": "~3.2",
+		"url": "~0.11.0",
+		"url-join": "~4.0.0",
+		"zone.js": "~0.8.26"
+	}
+}
