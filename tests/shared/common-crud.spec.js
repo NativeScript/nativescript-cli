@@ -182,11 +182,11 @@ dataStoreTypes.forEach((currentDataStoreType) => {
         });
 
         it('should return undefined if an id is not provided', (done) => {
-          const spy = spy();
-          storeToTest.findById().subscribe(spy, done, () => {
+          const onNextSpy = spy();
+          storeToTest.findById().subscribe(onNextSpy, done, () => {
             try {
-              expect(spy.callCount).to.equal(1);
-              const result = spy.firstCall.args[0];
+              expect(onNextSpy.callCount).to.equal(1);
+              const result = onNextSpy.firstCall.args[0];
               expect(result).to.be.undefined;
             } catch (err) {
               return done(err);
@@ -210,9 +210,7 @@ dataStoreTypes.forEach((currentDataStoreType) => {
       });
     });
 
-    // These are smoke tests and will not be executed for now.
-    // If we decide to execute 'Modifiers' describe only for Sync data store, these tests will be added back
-    describe.skip('find with modifiers', () => {
+    describe('find with modifiers', () => {
       let entities = [];
       const dataCount = 10;
       before((done) => {
@@ -280,13 +278,13 @@ dataStoreTypes.forEach((currentDataStoreType) => {
           });
       });
 
-      // skipped because of a bug for syncStore and different behaviour of fields for Sync and Network
       it('with fields should return only the specified fields', (done) => {
         const onNextSpy = spy();
         const query = new Kinvey.Query();
-        query.fields = [[textFieldName]];
-        query.ascending('_id');
-        const expectedEntity = { [textFieldName]: entities[dataCount - 2][textFieldName] };
+        query.fields = [textFieldName];
+        query.equalTo(textFieldName, entities[0][textFieldName]);
+        const entitySorted = entities.filter(x => x[textFieldName]===entities[0][textFieldName]);
+        const expectedEntity = { _id:entitySorted[0]._id, [textFieldName]:entitySorted[0][textFieldName]};
         storeToTest.find(query)
           .subscribe(onNextSpy, done, () => {
             try {
@@ -801,7 +799,7 @@ dataStoreTypes.forEach((currentDataStoreType) => {
               });
           });
 
-          it.skip('should sort by two fields ascending and descending', (done) => {
+          it('should sort by two fields ascending and descending', (done) => {
             query.ascending(secondSortField);
             query.descending(textFieldName);
             query.notEqualTo('_id', entities[dataCount - 1]._id);
