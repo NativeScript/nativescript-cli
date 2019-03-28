@@ -31,7 +31,7 @@ export async function loginWithRedirectUri(redirectUri: string, options: MICOpti
     clientId = `${clientId}.${micId}`;
   }
 
-  const code = await loginWithPopup(clientId, redirectUri, String(version));
+  const code = await loginWithPopup(clientId, redirectUri, version);
   const token = await getTokenWithCode(code, clientId, redirectUri, options);
   const socialIdentity = { [token.identity]: token };
   const credentials = { _socialIdentity: socialIdentity };

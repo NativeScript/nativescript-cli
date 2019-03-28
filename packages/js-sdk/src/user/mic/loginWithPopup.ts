@@ -4,7 +4,7 @@ import { KinveyError } from '../../errors/kinvey';
 import { getVersion } from './utils';
 import { open } from './popup';
 
-export function loginWithPopup(clientId: string, redirectUri: string, version?: string): Promise<string> {
+export function loginWithPopup(clientId: string, redirectUri: string, version?: string | number): Promise<string> {
   return new Promise(async (resolve, reject) => {
     const url = formatKinveyAuthUrl(`/${getVersion(version)}/oauth/auth`, {
       client_id: clientId,

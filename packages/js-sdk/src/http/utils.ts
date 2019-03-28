@@ -38,7 +38,7 @@ export function formatKinveyBaasUrl(namespace: KinveyBaasNamespace, path?: strin
 
 export function formatKinveyAuthUrl(path?: string, query?: { [key: string]: any }) {
   return format({
-    protocol: getAuthHost(),
+    protocol: getAuthProtocol(),
     host: getAuthHost(),
     pathname: path,
     query: query ? clean(query) : undefined
