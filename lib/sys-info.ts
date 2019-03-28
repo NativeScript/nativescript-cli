@@ -13,6 +13,7 @@ import { Constants } from "./constants";
 
 export class SysInfo implements NativeScriptDoctor.ISysInfo {
 	private static JAVA_COMPILER_VERSION_REGEXP = /^javac (.*)/im;
+	private static JAVA_VERSION_REGEXP = /^(?:(?:java)|(?:openjdk)).*?\"(.*)\"/im;
 	private static XCODE_VERSION_REGEXP = /Xcode (.*)/;
 	private static VERSION_REGEXP = /(\d{1,})\.(\d{1,})\.*([\w-]{0,})/m;
 	private static CLI_OUTPUT_VERSION_REGEXP = /^(?:\d+\.){2}\d+.*?$/m;
@@ -22,6 +23,9 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 	private monoVerRegExp = /version (\d+[.]\d+[.]\d+) /gm;
 
 	private javaCompilerVerCache: string;
+	private javaVerCache: string;
+	private javaVerJavaHomeCache: string;
+	private javaVerPathCache: string;
 	private xCodeVerCache: string;
 	private npmVerCache: string;
 	private nodeVerCache: string;
@@ -57,15 +61,29 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 
 	public getJavaCompilerVersion(): Promise<string> {
 		return this.getValueForProperty(() => this.javaCompilerVerCache, async (): Promise<string> => {
-			const javaCompileExecutableName = "javac";
-			const javaHome = process.env["JAVA_HOME"];
-			const pathToJavaCompilerExecutable = javaHome ? path.join(javaHome, "bin", javaCompileExecutableName) : javaCompileExecutableName;
-			try {
-				const output = await this.childProcess.exec(`"${pathToJavaCompilerExecutable}" -version`);
-				return SysInfo.JAVA_COMPILER_VERSION_REGEXP.exec(`${output.stderr}${EOL}${output.stdout}`)[1];
-			} catch (err) {
-				return null;
-			}
+			const javacVersion = (await this.getVersionOfJavaExecutableFromJavaHome(Constants.JAVAC_EXECUTABLE_NAME, SysInfo.JAVA_COMPILER_VERSION_REGEXP)) ||
+				(await this.getVersionOfJavaExecutableFromPath(Constants.JAVAC_EXECUTABLE_NAME, SysInfo.JAVA_COMPILER_VERSION_REGEXP));
+
+			return javacVersion;
+		});
+	}
+
+	public getJavaVersion(): Promise<string> {
+		return this.getValueForProperty(() => this.javaVerCache, async (): Promise<string> => {
+			const javaVersion = (await this.getJavaVersionFromJavaHome()) || (await this.getJavaVersionFromPath());
+			return javaVersion;
+		});
+	}
+
+	public getJavaVersionFromPath(): Promise<string> {
+		return this.getValueForProperty(() => this.javaVerPathCache, (): Promise<string> => {
+			return this.getVersionOfJavaExecutableFromPath(Constants.JAVA_EXECUTABLE_NAME, SysInfo.JAVA_VERSION_REGEXP);
+		});
+	}
+
+	public getJavaVersionFromJavaHome(): Promise<string> {
+		return this.getValueForProperty(() => this.javaVerJavaHomeCache, (): Promise<string> => {
+			return this.getVersionOfJavaExecutableFromJavaHome(Constants.JAVA_EXECUTABLE_NAME, SysInfo.JAVA_VERSION_REGEXP);
 		});
 	}
 
@@ -490,6 +508,7 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 
 			result.dotNetVer = await this.hostInfo.dotNetVersion();
 			result.javacVersion = await this.getJavaCompilerVersion();
+			result.javaVersion = await this.getJavaVersion();
 			result.adbVer = await this.getAdbVersion(config && config.androidToolsInfo && config.androidToolsInfo.pathToAdb);
 			result.androidInstalled = await this.isAndroidInstalled();
 			result.monoVer = await this.getMonoVersion();
@@ -498,5 +517,45 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 
 			return result;
 		});
+	}
+
+	private async getVersionOfJavaExecutableFromJavaHome(javaExecutableName: string, regExp: RegExp): Promise<string> {
+		let javaExecutableVersion: string = null;
+
+		try {
+			const javaHome = process.env["JAVA_HOME"];
+			const javaExecutableFile = this.hostInfo.isWindows ? `${javaExecutableName}.exe` : javaExecutableName;
+
+			if (javaHome) {
+				const pathToJavaExecutable = path.join(javaHome, "bin", javaExecutableFile);
+				if (this.fileSystem.exists(pathToJavaExecutable)) {
+					javaExecutableVersion = await this.getVersionOfJavaExecutable(pathToJavaExecutable, regExp);
+				}
+			}
+		} catch (err) { /* intentionally left blank */ }
+
+		return javaExecutableVersion;
+	}
+
+	private async getVersionOfJavaExecutableFromPath(javaExecutableName: string, regExp: RegExp): Promise<string> {
+		let javaExecutableVersion: string = null;
+
+		try {
+			const detectionCommand = this.hostInfo.isWindows ? "where" : "which";
+			// if this command succeeds, we have javac in the PATH. In case it is not there, it will throw an error.
+			await this.childProcess.exec(`${detectionCommand} ${javaExecutableName}`);
+			javaExecutableVersion = await this.getVersionOfJavaExecutable(javaExecutableName, regExp);
+		} catch (err) { /* intentionally left blank */ }
+
+		return javaExecutableVersion;
+	}
+
+	private async getVersionOfJavaExecutable(executable: string, regExp: RegExp): Promise<string> {
+		try {
+			const output = await this.childProcess.exec(`"${executable}" -version`);
+			return regExp.exec(`${output.stderr}${EOL}${output.stdout}`)[1];
+		} catch (err) {
+			return null;
+		}
 	}
 }

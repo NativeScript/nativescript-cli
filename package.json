@@ -1,11 +1,11 @@
 {
   "name": "nativescript-doctor",
-  "version": "1.8.1",
+  "version": "1.9.0",
   "description": "Library that helps identifying if the environment can be used for development of {N} apps.",
   "main": "lib/index.js",
   "types": "./typings/nativescript-doctor.d.ts",
   "scripts": {
-    "test": "node_modules/.bin/istanbul cover node_modules/.bin/mocha -- --recursive"
+    "test": "node_modules/.bin/istanbul cover ./node_modules/mocha/bin/_mocha -- --recursive"
   },
   "repository": {
     "type": "git",

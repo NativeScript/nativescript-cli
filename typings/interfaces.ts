@@ -318,6 +318,11 @@ declare module NativeScriptDoctor {
 		 */
 		javacVersion: string;
 		/**
+		 * java version string as returned by `java -version`.
+		 * @type {string}
+		 */
+		javaVersion: string;
+		/**
 		 * true if the Android SDK Tools are installed and configured correctly.
 		 * @type {boolean}
 		 */
