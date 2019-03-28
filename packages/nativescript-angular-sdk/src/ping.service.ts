@@ -1,16 +1,16 @@
 import { Injectable, Inject } from '@angular/core';
-import { init, ping, KinveyConfig, PingResponse } from 'kinvey-nativescript-sdk';
+import { init, ping } from 'kinvey-nativescript-sdk';
 import { KinveyConfigToken } from './utils';
 
 @Injectable({
   providedIn: 'root'
 })
 export class PingService {
-  constructor(@Inject(KinveyConfigToken) config: KinveyConfig) {
+  constructor(@Inject(KinveyConfigToken) config: any) {
     init(config);
   }
 
-  ping(): Promise<PingResponse> {
+  ping(): Promise<any> {
     return ping();
   }
 }

@@ -1,8 +1,6 @@
 {
   "packages": [
-    "packages/angular-sdk",
-    "packages/html5-sdk",
-    "packages/js-sdk"
+    "packages/*"
   ],
   "version": "independent"
 }

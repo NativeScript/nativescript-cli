@@ -55,7 +55,7 @@ export class Popup extends EventEmitter {
     return this.on(ERROR_EVENT, listener);
   }
 
-  open(url = '/', options: PopupOptions = {}) {
+  async open(url = '/', options: PopupOptions = {}) {
     // Handle redirect uri
     handleOpenURL((appURL: AppURL) => {
       this.emit(LOADED_EVENT, { url: appURL.toString() });
@@ -98,7 +98,7 @@ export class Popup extends EventEmitter {
     return this;
   }
 
-  close() {
+  async close() {
     if (this._open && this._viewController) {
       this._viewController.dismissViewControllerAnimatedCompletion(true, null);
       this._viewController = null;
@@ -107,5 +107,10 @@ export class Popup extends EventEmitter {
 
     this.emit(CLOSED_EVENT);
     return this;
+  }
+
+  static open(url: string, options?: PopupOptions) {
+    const popup = new Popup();
+    return popup.open(url, options);
   }
 }

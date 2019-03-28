@@ -1,9 +1,8 @@
-import { KinveyError } from 'kinvey-js-sdk/lib/errors';
+import { KinveyError } from 'kinvey-js-sdk';
 import * as IndexedDB from './indexeddb';
 import * as LocalStorage from './localstorage';
 import * as SessionStorage from './sessionstorage';
 import * as WebSQL from './websql';
-import { StorageAdapter } from 'kinvey-js-sdk/lib/storage';
 
 export enum StorageProvider {
   IndexedDB = 'IndexedDB',
@@ -12,7 +11,7 @@ export enum StorageProvider {
   WebSQL = 'WebSQL'
 };
 
-export function getStorageAdapter(storageProvider = StorageProvider.WebSQL): StorageAdapter {
+export function getStorageAdapter(storageProvider = StorageProvider.WebSQL) {
   if (storageProvider === StorageProvider.IndexedDB) {
     return IndexedDB;
   } else if (storageProvider === StorageProvider.LocalStorage) {

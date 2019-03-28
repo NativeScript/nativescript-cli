@@ -1,42 +1,60 @@
 {
   "name": "kinvey-nativescript-sdk",
-  "version": "0.0.0",
-  "license": "MIT",
-  "main": "lib/index.js",
+  "description": "Kinvey JavaScript SDK for NativeScript applications.",
+  "version": "3.13.0-next.5",
+  "homepage": "https://www.progress.com/kinvey",
+  "license": "Apache-2.0",
+  "author": {
+    "name": "Kinvey Team"
+  },
+  "contributors": [
+    "Thomas Conner <thomas.conner@progress.com>"
+  ],
   "keywords": [
     "NativeScript",
-    "JavaScript",
-    "Android",
-    "iOS"
+    "JavaScript"
   ],
-  "nativescript": {
-    "platforms": {
-      "android": "5.2.0",
-      "ios": "5.2.0"
-    }
-  },
+  "main": "lib/publicApi.js",
   "scripts": {
-    "build": "npm run tsc && npm run build.native",
-    "build.native": "node scripts/build-native.js",
-    "tsc": "tsc"
+    "prebuild": "del lib",
+    "build": "tsc"
   },
   "peerDependencies": {
     "events": "~3.0.0",
     "kinvey-js-sdk": "~0.0.0",
     "nativescript-secure-storage": "~2.4.0",
+    "nativescript-sqlite": "~2.3.3",
     "nativescript-urlhandler": "~1.2.3",
     "tns-core-modules": "~5.2.2"
   },
   "devDependencies": {
     "@types/node": "~11.11.6",
     "@types/events": "~3.0.0",
+    "del-cli": "~1.1.0",
     "events": "~3.0.0",
+    "js-base64": "~2.5.1",
     "kinvey-js-sdk": "~0.0.0",
+    "lodash": "~4.17.11",
+    "loglevel": "~1.6.1",
+    "loglevel-plugin-prefix": "~0.8.4",
     "nativescript-secure-storage": "~2.4.0",
+    "nativescript-sqlite": "~2.3.3",
     "nativescript-urlhandler": "~1.2.3",
+    "p-queue": "~4.0.0",
+    "pubnub": "git+https://github.com/thomasconner/javascript.git#develop",
+    "rxjs": "~6.4.0",
+    "sift": "~7.0.1",
     "tns-core-modules": "~5.2.2",
     "tns-platform-declarations": "~5.3.0",
     "tslint": "~5.14.0",
-    "typescript": "~3.3.3"
+    "typescript": "~3.3.3",
+    "url": "~0.11.0",
+    "url-join": "~4.0.0"
+  },
+  "nativescript": {
+    "platforms": {
+      "android": "5.2.0",
+      "ios": "5.2.0"
+    }
   }
 }

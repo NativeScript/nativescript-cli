@@ -1,7 +1,6 @@
 import { Inject, Injectable } from '@angular/core';
-import { init, DataStore, DataStoreType } from 'kinvey-html5-sdk';
+import { init, DataStore, DataStoreType } from 'kinvey-nativescript-sdk';
 import { KinveyConfigToken } from './utils';
-;
 
 @Injectable({
   providedIn: 'root'
