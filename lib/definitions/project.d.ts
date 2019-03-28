@@ -75,6 +75,7 @@ interface INsConfig {
 	appResourcesPath?: string;
 	shared?: boolean;
 	useLegacyWorkflow?: boolean;
+	previewAppSchema?: string;
 }
 
 interface IProjectData extends ICreateProjectData {
@@ -104,6 +105,11 @@ interface IProjectData extends ICreateProjectData {
 	 * Defines if the project has hmr enabled by default
 	 */
 	useLegacyWorkflow: boolean;
+
+	/**
+	 * Defines the schema for the preview app
+	 */
+	previewAppSchema: string;
 
 	/**
 	 * Initializes project data with the given project directory. If none supplied defaults to --path option or cwd.
@@ -570,7 +576,7 @@ interface ICocoaPodsPlatformManager {
  * Describes a service used to add and remove iOS extension
  */
 interface IIOSExtensionsService {
-	addExtensionsFromPath(options: IAddExtensionsFromPathOptions): Promise<void>;
+	addExtensionsFromPath(options: IAddExtensionsFromPathOptions): Promise<boolean>;
 	removeExtensions(options: IRemoveExtensionsOptions): void;
 }
 

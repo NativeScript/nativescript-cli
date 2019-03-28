@@ -25,7 +25,9 @@ export class IOSDeviceLiveSyncService extends DeviceLiveSyncServiceBase implemen
 
 		const appId = projectData.projectIdentifiers.ios;
 		try {
-			this.socket = await this.device.getDebugSocket(appId, projectData.projectName);
+			// TODO: temp workaround till we setup the sockets along with the app start
+			const ensureAppStarted = true;
+			this.socket = await this.device.getDebugSocket(appId, projectData.projectName, ensureAppStarted);
 		} catch (err) {
 			this.$logger.trace(`Error while connecting to the debug socket. Error is:`, err);
 		}
