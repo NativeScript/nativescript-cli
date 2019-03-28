@@ -58,6 +58,10 @@ const tns = require("nativescript");
 * [devicesService](#devicesservice)
 	* [getEmulatorImages](#getemulatorimages)
 	* [startEmulator](#startemulator)
+	* [startDeviceDetectionInterval](#startdevicedetectioninterval)
+	* [stopDeviceDetectionInterval](#stopdevicedetectioninterval)
+	* [startEmulatorDetectionInterval](#startemulatordetectioninterval)
+	* [stopEmulatorDetectionInterval](#stopemulatordetectioninterval)
 * [deviceEmitter](#deviceemitter)
 	* [events](#deviceemitterevents)
 * [previewDevicesService](#previewdevicesservice)
@@ -1285,6 +1289,59 @@ The `startEmulator` method starts the emulator specified by provided options. Re
 ```TypeScript
 tns.devicesService.startEmulator({imageIdentifier: "my emulator imageIdentifier"})
 	.then(errors => { });
+```
+
+### startDeviceDetectionInterval
+Starts device detection interval, which is run on specified number of seconds. This allows detection of new attached devices, started emulators/simulators, detection when device/emulator/simulator is disconnected, etc.
+> NOTE: The interval is started automatically when you call `devicesService.initialize` without passing `skipDeviceDetectionInterval: true`.
+
+> NOTE: iOS Device detection interval cannot be stopped, so once started, it will always report connected/disconnected devices.
+
+* Definition
+```TypeScript
+startDeviceDetectionInterval({ detectionInterval?: number, platform?: string }): void
+```
+
+* Usage
+```JavaScript
+tns.devicesService.startDeviceDetectionInterval({ detectionInterval: 1000 });
+```
+
+### stopDeviceDetectionInterval
+Stops device detection interval started by `devicesService.initialize` or `devicesService.startDeviceDetectionInterval`.
+* Definition
+```TypeScript
+stopDeviceDetectionInterval(): void
+```
+
+* Usage
+```JavaScript
+tns.devicesService.stopDeviceDetectionInterval();
+```
+
+### startEmulatorDetectionInterval
+Starts emulator images detection interval, which is run on specified number of seconds. This allows detection of new installed emulator/simulator images.
+
+* Definition
+```TypeScript
+startEmulatorDetectionInterval({ detectionInterval?: number }): void
+```
+
+* Usage
+```JavaScript
+tns.devicesService.startEmulatorDetectionInterval({ detectionInterval: 1000 });
+```
+
+### stopEmulatorDetectionInterval
+Stops device detection interval started by `devicesService.startEmulatorDetectionInterval`.
+* Definition
+```TypeScript
+stopEmulatorDetectionInterval(): void
+```
+
+* Usage
+```JavaScript
+tns.devicesService.stopEmulatorDetectionInterval();
 ```
 
 ## deviceEmitter
