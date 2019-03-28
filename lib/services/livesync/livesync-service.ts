@@ -3,23 +3,20 @@ import * as choki from "chokidar";
 import { EOL } from "os";
 import { EventEmitter } from "events";
 import { hook } from "../../common/helpers";
-import { PACKAGE_JSON_FILE_NAME, LiveSyncTrackActionNames, USER_INTERACTION_NEEDED_EVENT_NAME, DEBUGGER_ATTACHED_EVENT_NAME, DEBUGGER_DETACHED_EVENT_NAME, TrackActionNames } from "../../constants";
+import {
+	PACKAGE_JSON_FILE_NAME,
+	LiveSyncTrackActionNames,
+	USER_INTERACTION_NEEDED_EVENT_NAME,
+	DEBUGGER_ATTACHED_EVENT_NAME,
+	DEBUGGER_DETACHED_EVENT_NAME,
+	TrackActionNames,
+	LiveSyncEvents
+} from "../../constants";
 import { DeviceTypes, DeviceDiscoveryEventNames, HmrConstants } from "../../common/constants";
 import { cache } from "../../common/decorators";
-import { PreviewAppLiveSyncEvents } from "./playground/preview-app-constants";
 import { performanceLog } from "../../common/decorators";
 
 const deviceDescriptorPrimaryKey = "identifier";
-
-const LiveSyncEvents = {
-	liveSyncStopped: "liveSyncStopped",
-	// In case we name it error, EventEmitter expects instance of Error to be raised and will also raise uncaught exception in case there's no handler
-	liveSyncError: "liveSyncError",
-	previewAppLiveSyncError: PreviewAppLiveSyncEvents.PREVIEW_APP_LIVE_SYNC_ERROR,
-	liveSyncExecuted: "liveSyncExecuted",
-	liveSyncStarted: "liveSyncStarted",
-	liveSyncNotification: "notify"
-};
 
 export class LiveSyncService extends EventEmitter implements IDebugLiveSyncService {
 	// key is projectDir
@@ -66,7 +63,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 			env: data.env,
 		});
 
-		const url = this.$previewSdkService.getQrCodeUrl({ useHotModuleReload: data.useHotModuleReload });
+		const url = this.$previewSdkService.getQrCodeUrl({ projectDir: data.projectDir, useHotModuleReload: data.useHotModuleReload });
 		const result = await this.$previewQrCodeService.getLiveSyncQrCode(url);
 		return result;
 	}

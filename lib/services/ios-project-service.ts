@@ -1108,14 +1108,20 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		);
 		const platformData = this.getPlatformData(projectData);
 		const pbxProjPath = this.getPbxProjPath(projectData);
-		await this.$iOSExtensionsService.addExtensionsFromPath({extensionsFolderPath: resorcesExtensionsPath, projectData, platformData, pbxProjPath});
+		const addedExtensionsFromResources = await this.$iOSExtensionsService.addExtensionsFromPath({extensionsFolderPath: resorcesExtensionsPath, projectData, platformData, pbxProjPath});
 		const plugins = await this.getAllInstalledPlugins(projectData);
+		let addedExtensionsFromPlugins = false;
 		for (const pluginIndex in plugins) {
 			const pluginData = plugins[pluginIndex];
 			const pluginPlatformsFolderPath = pluginData.pluginPlatformsFolderPath(IOSProjectService.IOS_PLATFORM_NAME);
 
 			const extensionPath = path.join(pluginPlatformsFolderPath, constants.NATIVE_EXTENSION_FOLDER);
-			await this.$iOSExtensionsService.addExtensionsFromPath({extensionsFolderPath: extensionPath, projectData, platformData, pbxProjPath});
+			const addedExtensionFromPlugin = await this.$iOSExtensionsService.addExtensionsFromPath({extensionsFolderPath: extensionPath, projectData, platformData, pbxProjPath});
+			addedExtensionsFromPlugins = addedExtensionsFromPlugins || addedExtensionFromPlugin;
+		}
+
+		if (addedExtensionsFromResources || addedExtensionsFromPlugins) {
+			this.$logger.warn("The support for iOS App Extensions is currently in Beta. For more information about the current development state and any known issues, please check the relevant GitHub issue: https://github.com/NativeScript/nativescript-cli/issues/4472");
 		}
 	}
 

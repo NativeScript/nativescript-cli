@@ -1,6 +1,23 @@
 NativeScript CLI Changelog
 ================
 
+5.3.0 (2019, March 27)
+==
+
+### Implemented
+* [Implemented #3965](https://github.com/NativeScript/nativescript-cli/issues/3965): [Beta] Support for iOS app extensions
+* [Implemented #4389](https://github.com/NativeScript/nativescript-cli/issues/4389): Provide a way to use Hot Module Replacement (`--hmr`) by default for a project
+* [Implemented #4392](https://github.com/NativeScript/nativescript-cli/issues/4392): Ability to run unit tests with `--bundle`
+* [Implemented #4456](https://github.com/NativeScript/nativescript-cli/issues/4456): Official support for Hot Module Replacement (`--hmr`)
+
+### Fixed
+* [Fixed #4403](https://github.com/NativeScript/nativescript-cli/issues/4403): Exception in iOS app entry point not shown in terminal
+* [Fixed #4440](https://github.com/NativeScript/nativescript-cli/issues/4440): `NativeScript can only run in Xcode version 6.0 or greater` error is shown on every iOS command
+* [Fixed #4441](https://github.com/NativeScript/nativescript-cli/issues/4441): Nothing happens with app on device if you delete a file with bundle
+* [Fixed #4458](https://github.com/NativeScript/nativescript-cli/issues/4458): Warnings for short imports are shown for browser code
+* [Fixed #4459](https://github.com/NativeScript/nativescript-cli/pull/4459): API: Raise `debuggerAttached` only if app is restarted during debug
+
+
 5.2.3 (2019, March 12)
 ==
 

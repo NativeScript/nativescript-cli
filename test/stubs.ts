@@ -332,6 +332,7 @@ export class ProjectDataStub implements IProjectData {
 	public podfilePath: string;
 	public isShared: boolean;
 	public useLegacyWorkflow: boolean;
+	public previewAppSchema: string;
 
 	public initializeProjectData(projectDir?: string): void {
 		this.projectDir = this.projectDir || projectDir;
@@ -655,7 +656,7 @@ export class DebugServiceStub extends EventEmitter implements IDeviceDebugServic
 	public platform: string;
 }
 
-export class LiveSyncServiceStub implements ILiveSyncService {
+export class LiveSyncServiceStub extends EventEmitter implements ILiveSyncService {
 	public async liveSyncToPreviewApp(data: IPreviewAppLiveSyncData): Promise<IQrCodeImageData> {
 		return;
 	}
