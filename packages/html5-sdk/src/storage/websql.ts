@@ -118,7 +118,7 @@ export async function clear(dbName: string, tableName: string) {
   return true;
 }
 
-export async function clearAll(dbName: string) {
+export async function clearDatabase(dbName: string) {
   const response = await execute(dbName, MASTER_TABLE_NAME, [['SELECT name AS value FROM #{table} WHERE type = ? AND value NOT LIKE ?', ['table', '__Webkit%']]]);
   const tables = response.result;
 

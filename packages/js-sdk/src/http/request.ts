@@ -2,7 +2,8 @@ import isString from 'lodash/isString';
 import PQueue from 'p-queue';
 import { ConfigKey, getConfig } from '../config';
 import { InvalidCredentialsError } from '../errors/invalidCredentials';
-import { getAppSecret, getAuthProtocol, getAuthHost } from '../kinvey';
+import { getAppKey, getAppSecret, getAuthProtocol, getAuthHost } from '../kinvey';
+import { Storage } from '../storage';
 import { HttpHeaders, KinveyHttpHeaders, KinveyHttpAuth } from './headers';
 import { HttpResponse, HttpResponseObject } from './response';
 import { getSession, setSession, removeSession } from './session';
@@ -229,7 +230,7 @@ export class KinveyHttpRequest extends HttpRequest {
             removeSession();
 
             // Clear data
-            // clear(appKey);
+            Storage.clear(getAppKey());
           } catch (error) {
             // TODO: Log error
           }

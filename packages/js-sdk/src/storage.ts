@@ -49,7 +49,7 @@ export interface StorageAdapter {
   save(dbName: string, collectionName: string, docs: Entity[]): Promise<Entity[]>;
   removeById(dbName: string, collectionName: string, id: string): Promise<number>;
   clear(dbName: string, collectionName: string): Promise<any>;
-  clearAll(dbName: string): Promise<any>;
+  clearDatabase(dbName: string): Promise<any>;
 }
 
 export class Storage<T extends Entity> {
@@ -154,7 +154,8 @@ export class Storage<T extends Entity> {
     return queue.add(() => this.storageAdapter.clear(this.dbName, this.collectionName));
   }
 
-  clearAll() {
-    return queue.add(() => this.storageAdapter.clearAll(this.dbName));
+  static clear(dbName: string) {
+    const storageAdapter = getConfig<StorageAdapter>(ConfigKey.StorageAdapter);
+    return queue.add(() => storageAdapter.clearDatabase(dbName));
   }
 }

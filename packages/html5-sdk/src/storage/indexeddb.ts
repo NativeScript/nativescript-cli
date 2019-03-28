@@ -287,7 +287,7 @@ export function clear(dbName: string, objectStoreName: string): Promise<any> {
   });
 }
 
-export function clearAll(dbName: string) {
+export function clearDatabase(dbName: string) {
   return new Promise((resolve, reject) => {
     const indexedDB = window.indexedDB || (window as any).webkitIndexedDB || (window as any).mozIndexedDB || (window as any).msIndexedDB;
     const request = indexedDB.deleteDatabase(dbName);

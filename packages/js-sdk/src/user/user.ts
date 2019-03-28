@@ -14,7 +14,7 @@ import {
 } from '../http';
 import { KinveyError } from '../errors/kinvey';
 import { Entity } from '../storage';
-// import { DataStoreCache, QueryCache, SyncCache } from '../datastore/cache';
+import { DataStoreCache, QueryCache, SyncCache } from '../datastore/cache';
 // import { isRegistered, register, unregister } from '../live/live';
 // import log from '../log';
 import { mergeSocialIdentity } from './utils';
@@ -229,17 +229,10 @@ export class User {
       // Remove the session
       removeSession();
 
-      // // Clear the query cache
-      // const queryCache = new QueryCache();
-      // await queryCache.clearAll();
-
-      // // Clear the sync cache
-      // const syncCache = new SyncCache();
-      // await syncCache.clearAll();
-
-      // // Clear the datastore cache
-      // const datastoreCache = new DataStoreCache();
-      // await datastoreCache.clearAll();
+      // Clear cache's
+      await QueryCache.clear();
+      await SyncCache.clear();
+      await DataStoreCache.clear();
     }
 
     return this;

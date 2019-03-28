@@ -1,7 +1,7 @@
 import { getAppKey } from './kinvey';
 import { Storage, Entity } from './storage';
 
-const COLLECTION_NAME = '_kdevice';
+const COLLECTION_NAME = '_Device';
 
 function s4() {
   return Math.floor((1 + Math.random()) * 0x10000)

@@ -1,11 +1,10 @@
 import { EventEmitter } from 'events';
-import { PopupWindow } from 'kinvey-js-sdk/lib/user/mic/popup';
 
 const LOADED_EVENT = 'loaded';
 const CLOSED_EVENT = 'closed';
 const ERROR_EVENT = 'error';
 
-class Popup extends EventEmitter implements PopupWindow {
+class Popup extends EventEmitter {
   private popupWindow: Window | null;
   private interval: number | null;
 

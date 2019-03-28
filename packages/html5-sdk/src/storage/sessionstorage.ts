@@ -39,7 +39,7 @@ export async function clear(dbName: string, tableName: string) {
   return true;
 }
 
-export async function clearAll(dbName: string) {
+export async function clearDatabase(dbName: string) {
   for (let i = 0, len = window.sessionStorage.length; i < len; i += 1) {
     const key = window.sessionStorage.key(i);
     if (key && key.indexOf(dbName) >= 0) {

@@ -25,6 +25,10 @@ export class DataStoreCache<T extends Entity> extends Storage<T> {
       super(getAppKey(), collectionName);
     }
   }
+
+  static clear() {
+    return super.clear(getAppKey());
+  }
 }
 
 export interface QueryEntity extends Entity {
