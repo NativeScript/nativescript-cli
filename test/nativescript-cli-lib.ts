@@ -37,11 +37,17 @@ describe("nativescript-cli-lib", () => {
 			"getDebuggableApps",
 			"getDebuggableViews",
 			"getDevices",
+			"getEmulatorImages",
 			"getInstalledApplications",
 			"initialize",
 			"isAppInstalledOnDevices",
 			"mapAbstractToTcpPort",
-			"setLogLevel"
+			"setLogLevel",
+			"startDeviceDetectionInterval",
+			"stopDeviceDetectionInterval",
+			"startEmulator",
+			"startEmulatorDetectionInterval",
+			"stopEmulatorDetectionInterval",
 		],
 		assetsGenerationService: [
 			"generateIcons",

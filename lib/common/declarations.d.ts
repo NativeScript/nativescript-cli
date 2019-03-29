@@ -993,6 +993,18 @@ interface ISysInfo {
 	getJavaCompilerVersion(): Promise<string>;
 
 	/**
+	 * Gets JAVA version based on the executable in PATH.
+	 * @return {Promise<string>}
+	 */
+	getJavaVersionFromPath(): Promise<string>;
+
+	/**
+	 * Gets JAVA version based on the JAVA from JAVA_HOME.
+	 * @return {Promise<string>}
+	 */
+	getJavaVersionFromJavaHome(): Promise<string>;
+
+	/**
 	 * Gets all global warnings for the current environment, for example Node.js version compatibility, OS compatibility, etc.
 	 * @return {Promise<ISystemWarning[]>} All warnings. Empty array is returned in case the system is setup correctly.
 	 */
