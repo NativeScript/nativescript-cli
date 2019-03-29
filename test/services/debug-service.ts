@@ -168,7 +168,7 @@ describe("debugService", () => {
 				const testInjector = getTestInjectorForTestConfiguration(testData);
 				const expectedErrorMessage = "Platform specific error";
 				const platformDebugService = testInjector.resolve<IDeviceDebugService>(`${platform}DeviceDebugService`);
-				platformDebugService.debug = async (debugData: IDebugData, debugOptions: IDebugOptions): Promise<any> => {
+				platformDebugService.debug = async (data: IDebugData, debugOptions: IDebugOptions): Promise<any> => {
 					throw new Error(expectedErrorMessage);
 				};
 

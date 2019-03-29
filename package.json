@@ -20,7 +20,7 @@
     "tsc": "tsc",
     "tslint": "tslint -p tsconfig.json",
     "test-watch": "node ./dev/tsc-to-mocha-watch.js",
-    "tslint-fix": "tslint -p tsconfig.json --type-check --fix"
+    "tslint-fix": "tslint -p tsconfig.json --fix"
   },
   "repository": {
     "type": "git",

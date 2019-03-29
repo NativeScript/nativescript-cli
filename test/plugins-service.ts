@@ -530,7 +530,7 @@ describe("Plugins service", () => {
 
 			// Mock plugins service
 			const pluginsService: IPluginsService = testInjector.resolve("pluginsService");
-			pluginsService.getAllInstalledPlugins = async (projectData: IProjectData) => {
+			pluginsService.getAllInstalledPlugins = async (pData: IProjectData) => {
 				return <any[]>[{ name: "" }];
 			};
 
@@ -583,7 +583,7 @@ describe("Plugins service", () => {
 
 			const unitTestsInjector = new Yok();
 			unitTestsInjector.register("platformsData", {
-				getPlatformData: (platform: string, projectData: IProjectData) => ({
+				getPlatformData: (_platform: string, pData: IProjectData) => ({
 					projectRoot: "projectRoot",
 					platformProjectService: {
 						preparePluginNativeCode: async (pluginData: IPluginData, projData: IProjectData) => {
@@ -594,7 +594,7 @@ describe("Plugins service", () => {
 			});
 
 			const pluginHashes = opts.newPluginHashes || { "file1": "hash1" };
-			const pluginData: IPluginData = <any>{
+			const samplePluginData: IPluginData = <any>{
 				fullPath: "plugin_full_path",
 				name: "plugin_name"
 			};
@@ -617,7 +617,7 @@ describe("Plugins service", () => {
 					return true;
 				},
 				readJson: (file: string) => ({
-					[pluginData.name]: pluginHashes
+					[samplePluginData.name]: pluginHashes
 				}),
 				writeJson: (file: string, json: any) => { testData.dataPassedToWriteJson = json; },
 				enumerateFilesInDirectorySync: (): string[] => ["some_file"]
@@ -631,7 +631,7 @@ describe("Plugins service", () => {
 
 			const pluginsService: PluginsService = unitTestsInjector.resolve(PluginsService);
 			testData.pluginsService = pluginsService;
-			testData.pluginData = pluginData;
+			testData.pluginData = samplePluginData;
 			return testData;
 		};
 

@@ -48,9 +48,9 @@ export class YarnPackageManager extends BasePackageManager {
 	}
 
 	@exported("yarn")
-	public uninstall(packageName: string, config?: IDictionary<string | boolean>, path?: string): Promise<string> {
+	public uninstall(packageName: string, config?: IDictionary<string | boolean>, cwd?: string): Promise<string> {
 		const flags = this.getFlagsString(config, false);
-		return this.$childProcess.exec(`yarn remove ${packageName} ${flags}`, { cwd: path });
+		return this.$childProcess.exec(`yarn remove ${packageName} ${flags}`, { cwd });
 	}
 
 	@exported("yarn")

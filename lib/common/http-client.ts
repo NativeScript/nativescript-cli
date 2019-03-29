@@ -160,24 +160,24 @@ export class HttpClient implements Server.IHttpClient {
 						stuckRequestTimerId = null;
 					});
 				})
-				.on("response", (response: Server.IRequestResponseData) => {
-					cleanupRequestData.res = response;
+				.on("response", (responseData: Server.IRequestResponseData) => {
+					cleanupRequestData.res = responseData;
 					let lastChunkTimestamp = Date.now();
 					cleanupRequestData.stuckResponseIntervalId = setInterval(() => {
 						if (Date.now() - lastChunkTimestamp > HttpClient.STUCK_RESPONSE_CHECK_INTERVAL) {
 							this.setResponseResult(promiseActions, cleanupRequestData, { err: new Error(HttpClient.STUCK_RESPONSE_ERROR_MESSAGE) });
 						}
 					}, HttpClient.STUCK_RESPONSE_CHECK_INTERVAL);
-					const successful = helpers.isRequestSuccessful(response);
+					const successful = helpers.isRequestSuccessful(responseData);
 					if (!successful) {
 						pipeTo = undefined;
 					}
 
-					let responseStream = response;
+					let responseStream = responseData;
 					responseStream.on("data", (chunk: string) => {
 						lastChunkTimestamp = Date.now();
 					});
-					switch (response.headers["content-encoding"]) {
+					switch (responseData.headers["content-encoding"]) {
 						case "gzip":
 							responseStream = responseStream.pipe(zlib.createGunzip());
 							break;
@@ -188,8 +188,8 @@ export class HttpClient implements Server.IHttpClient {
 
 					if (pipeTo) {
 						pipeTo.on("finish", () => {
-							this.$logger.trace("httpRequest: Piping done. code = %d", response.statusCode.toString());
-							this.setResponseResult(promiseActions, cleanupRequestData, { response });
+							this.$logger.trace("httpRequest: Piping done. code = %d", responseData.statusCode.toString());
+							this.setResponseResult(promiseActions, cleanupRequestData, { response: responseData });
 						});
 
 						responseStream.pipe(pipeTo);
@@ -201,15 +201,15 @@ export class HttpClient implements Server.IHttpClient {
 						});
 
 						responseStream.on("end", () => {
-							this.$logger.trace("httpRequest: Done. code = %d", response.statusCode.toString());
+							this.$logger.trace("httpRequest: Done. code = %d", responseData.statusCode.toString());
 							const responseBody = data.join("");
 
 							if (successful) {
-								this.setResponseResult(promiseActions, cleanupRequestData, { body: responseBody, response });
+								this.setResponseResult(promiseActions, cleanupRequestData, { body: responseBody, response: responseData });
 							} else {
-								const errorMessage = this.getErrorMessage(response.statusCode, responseBody);
+								const errorMessage = this.getErrorMessage(responseData.statusCode, responseBody);
 								const err: any = new Error(errorMessage);
-								err.response = response;
+								err.response = responseData;
 								err.body = responseBody;
 								this.setResponseResult(promiseActions, cleanupRequestData, { err });
 							}

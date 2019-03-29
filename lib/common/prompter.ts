@@ -22,33 +22,33 @@ export class Prompter implements IPrompter {
 			});
 		});
 		try {
-				this.muteStdout();
+			this.muteStdout();
 
-				if (!helpers.isInteractive()) {
-					if (_.some(questions, s => !s.default)) {
-						throw new Error("Console is not interactive and no default action specified.");
-					} else {
-						const result: any = {};
-
-						_.each(questions, s => {
-							// Curly brackets needed because s.default() may return false and break the loop
-							result[s.name] = s.default();
-						});
-
-						return result;
-					}
+			if (!helpers.isInteractive()) {
+				if (_.some(questions, s => !s.default)) {
+					throw new Error("Console is not interactive and no default action specified.");
 				} else {
-					const result = await prompt.prompt(questions);
+					const result: any = {};
+
+					_.each(questions, s => {
+						// Curly brackets needed because s.default() may return false and break the loop
+						result[s.name] = s.default();
+					});
+
 					return result;
 				}
+			} else {
+				const result = await prompt.prompt(questions);
+				return result;
+			}
 		} finally {
 			this.unmuteStdout();
 		}
 	}
 
-	public async getPassword(prompt: string, options?: IAllowEmpty): Promise<string> {
+	public async getPassword(message: string, options?: IAllowEmpty): Promise<string> {
 		const schema: prompt.Question = {
-			message: prompt,
+			message,
 			type: "password",
 			name: "password",
 			validate: (value: any) => {
@@ -61,14 +61,14 @@ export class Prompter implements IPrompter {
 		return result.password;
 	}
 
-	public async getString(prompt: string, options?: IPrompterOptions): Promise<string> {
+	public async getString(message: string, options?: IPrompterOptions): Promise<string> {
 		const schema: prompt.Question = {
-			message: prompt,
+			message,
 			type: "input",
 			name: "inputString",
 			validate: (value: any) => {
 				const doesNotAllowEmpty = options && _.has(options, "allowEmpty") && !options.allowEmpty;
-				return (doesNotAllowEmpty && !value) ? `${prompt} must be non-empty` : true;
+				return (doesNotAllowEmpty && !value) ? `${message} must be non-empty` : true;
 			},
 			default: options && options.defaultAction
 		};
@@ -109,12 +109,12 @@ export class Prompter implements IPrompter {
 		return result.userAnswer;
 	}
 
-	public async confirm(prompt: string, defaultAction?: () => boolean): Promise<boolean> {
+	public async confirm(message: string, defaultAction?: () => boolean): Promise<boolean> {
 		const schema = {
 			type: "confirm",
 			name: "prompt",
 			default: defaultAction,
-			message: prompt
+			message
 		};
 
 		const result = await this.get([schema]);

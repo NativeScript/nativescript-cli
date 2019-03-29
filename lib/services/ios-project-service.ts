@@ -12,7 +12,7 @@ import * as temp from "temp";
 import * as plist from "plist";
 import { IOSProvisionService } from "./ios-provision-service";
 import { IOSEntitlementsService } from "./ios-entitlements-service";
-import * as mobileprovision from "ios-mobileprovision-finder";
+import * as mobileProvisionFinder from "ios-mobileprovision-finder";
 import { BUILD_XCCONFIG_FILE_NAME, IosProjectConstants } from "../constants";
 
 interface INativeSourceCodeGroup {
@@ -500,7 +500,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		}
 	}
 
-	private async setupSigningFromProvision(projectRoot: string, projectData: IProjectData, provision?: string, mobileProvisionData?: mobileprovision.provision.MobileProvision): Promise<void> {
+	private async setupSigningFromProvision(projectRoot: string, projectData: IProjectData, provision?: string, mobileProvisionData?: mobileProvisionFinder.provision.MobileProvision): Promise<void> {
 		if (provision) {
 			const xcode = this.$pbxprojDomXcode.Xcode.open(this.getPbxProjPath(projectData));
 			const signing = xcode.getSigning(projectData.projectName);
@@ -1369,7 +1369,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 
 	private getExportOptionsMethod(projectData: IProjectData, archivePath: string): string {
 		const embeddedMobileProvisionPath = path.join(archivePath, 'Products', 'Applications', `${projectData.projectName}.app`, "embedded.mobileprovision");
-		const provision = mobileprovision.provision.readFromFile(embeddedMobileProvisionPath);
+		const provision = mobileProvisionFinder.provision.readFromFile(embeddedMobileProvisionPath);
 
 		return {
 			"Development": "development",

@@ -100,7 +100,7 @@ describe("debug command tests", () => {
 
 			const childProcess: stubs.ChildProcessStub = testInjector.resolve("childProcess");
 			const androidProjectService: IPlatformProjectService = testInjector.resolve("androidProjectService");
-			androidProjectService.getPlatformData = (projectData: IProjectData): IPlatformData => {
+			androidProjectService.getPlatformData = (_projectData: IProjectData): IPlatformData => {
 				return platformData;
 			};
 			const projectData: IProjectData = testInjector.resolve("projectData");

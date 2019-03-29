@@ -309,8 +309,8 @@ export function versionCompare(version1: string | IVersionData, version2: string
 }
 
 export function isInteractive(): boolean {
-	const isInteractive = isRunningInTTY() && !isCIEnvironment();
-	return isInteractive;
+	const result = isRunningInTTY() && !isCIEnvironment();
+	return result;
 }
 
 /**

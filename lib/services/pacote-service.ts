@@ -66,8 +66,8 @@ export class PacoteService implements IPacoteService {
 
 	private async getPacoteBaseOptions(): Promise<IPacoteBaseOptions> {
 		// In case `tns create myapp --template https://github.com/NativeScript/template-hello-world.git` command is executed, pacote module throws an error if cache option is not provided.
-		const cache = await this.$packageManager.getCachePath();
-		const pacoteOptions = { cache };
+		const cachePath = await this.$packageManager.getCachePath();
+		const pacoteOptions = { cache: cachePath };
 		const proxySettings = await this.$proxyService.getCache();
 		if (proxySettings) {
 			_.extend(pacoteOptions, proxySettings);
