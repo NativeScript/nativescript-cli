@@ -10,7 +10,6 @@ import { CONNECTED_STATUS } from "../../constants";
 import { isInteractive } from "../../helpers";
 import { DebugCommandErrors } from "../../../constants";
 import { performanceLog } from "../../decorators";
-import { Timers } from "../../timers";
 
 export class DevicesService extends EventEmitter implements Mobile.IDevicesService {
 	private static DEVICE_LOOKING_INTERVAL = 200;
@@ -44,7 +43,7 @@ export class DevicesService extends EventEmitter implements Mobile.IDevicesServi
 		private $androidEmulatorDiscovery: Mobile.IDeviceDiscovery,
 		private $emulatorHelper: Mobile.IEmulatorHelper,
 		private $prompter: IPrompter,
-		private $timers: Timers) {
+		private $timers: ITimers) {
 		super();
 		this.attachToKnownDeviceDiscoveryEvents();
 		this.attachToKnownEmulatorDiscoveryEvents();
@@ -337,14 +336,14 @@ export class DevicesService extends EventEmitter implements Mobile.IDevicesServi
 	@exported("devicesService")
 	public stopDeviceDetectionInterval(): void {
 		if (this.deviceDetectionInterval) {
-			clearInterval(this.deviceDetectionInterval);
+			this.$timers.clearInterval(this.deviceDetectionInterval);
 		}
 	}
 
 	@exported("devicesService")
 	public stopEmulatorDetectionInterval(): void {
 		if (this.emulatorDetectionInterval) {
-			clearInterval(this.emulatorDetectionInterval);
+			this.$timers.clearInterval(this.emulatorDetectionInterval);
 		}
 	}
 
