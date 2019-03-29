@@ -268,9 +268,7 @@ describe("subscriptionService", () => {
 			const testInjector = createTestInjector();
 
 			const prompter = testInjector.resolve<IPrompter>("prompter");
-			let schemasPassedToPromter: prompt.Question[] = null;
 			prompter.get = async (schemas: prompt.Question[]): Promise<any> => {
-				schemasPassedToPromter = schemas;
 				return { inputEmail: email };
 			};
 

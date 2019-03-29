@@ -8,9 +8,9 @@ export class PreviewDevicesService extends EventEmitter implements IPreviewDevic
 
 	constructor(private $previewAppLogProvider: IPreviewAppLogProvider,
 		private $previewAppPluginsService: IPreviewAppPluginsService) {
-			super();
+		super();
 
-			this.initialize();
+		this.initialize();
 	}
 
 	public getConnectedDevices(): Device[] {
@@ -19,11 +19,11 @@ export class PreviewDevicesService extends EventEmitter implements IPreviewDevic
 
 	public updateConnectedDevices(devices: Device[]): void {
 		_(devices)
-			.reject(d => _.find(this.connectedDevices, device => d.id === device.id))
+			.reject(d => _.some(this.connectedDevices, device => d.id === device.id))
 			.each(device => this.raiseDeviceFound(device));
 
 		_(this.connectedDevices)
-			.reject(d => _.find(devices, device => d.id === device.id))
+			.reject(d => _.some(devices, device => d.id === device.id))
 			.each(device => this.raiseDeviceLostAfterTimeout(device));
 	}
 

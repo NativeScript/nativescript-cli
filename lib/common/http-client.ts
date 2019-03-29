@@ -105,7 +105,7 @@ export class HttpClient implements Server.IHttpClient {
 		}
 
 		const result = new Promise<Server.IResponse>((resolve, reject) => {
-			let timerId: number;
+			let timerId: NodeJS.Timer;
 			const cleanupRequestData: ICleanupRequestData = Object.create({ timers: [] });
 			this.cleanupData.push(cleanupRequestData);
 
@@ -147,7 +147,7 @@ export class HttpClient implements Server.IHttpClient {
 					this.setResponseResult(promiseActions, cleanupRequestData, { err });
 				})
 				.on("socket", (s: TLSSocket) => {
-					let stuckRequestTimerId: number;
+					let stuckRequestTimerId: NodeJS.Timer;
 
 					stuckRequestTimerId = setTimeout(() => {
 						this.setResponseResult(promiseActions, cleanupRequestData, { err: new Error(HttpClient.STUCK_REQUEST_ERROR_MESSAGE) });
@@ -340,7 +340,7 @@ export class HttpClient implements Server.IHttpClient {
 }
 
 interface ICleanupRequestData {
-	timers: number[];
+	timers: NodeJS.Timer[];
 	stuckResponseIntervalId: NodeJS.Timer;
 	req: request.Request;
 	res: Server.IRequestResponseData;

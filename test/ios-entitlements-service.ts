@@ -35,7 +35,6 @@ describe("IOSEntitlements Service Tests", () => {
 	};
 
 	let injector: IInjector;
-	let platformsData: any;
 	let projectData: IProjectData;
 	let fs: IFileSystem;
 	let iOSEntitlementsService: IOSEntitlementsService;
@@ -44,7 +43,6 @@ describe("IOSEntitlements Service Tests", () => {
 	beforeEach(() => {
 		injector = createTestInjector();
 
-		platformsData = injector.resolve("platformsData");
 		projectData = injector.resolve<IProjectData>("projectData");
 		projectData.projectName = 'testApp';
 

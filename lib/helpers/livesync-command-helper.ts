@@ -158,10 +158,10 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 			justlaunch: this.$options.justlaunch
 		};
 
-		const deployOptions = _.merge<IDeployPlatformOptions>({
+		const deployOptions = _.merge<IDeployPlatformOptions, IYargArgv>((<IDeployPlatformOptions>{
 			projectDir: this.$projectData.projectDir,
-			clean: true,
-		}, this.$options.argv);
+			clean: true
+		}), this.$options.argv);
 
 		const availablePlatforms = this.getPlatformsForOperation(platform);
 		for (const currentPlatform of availablePlatforms) {

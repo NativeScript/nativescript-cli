@@ -76,7 +76,7 @@ export abstract class PlatformLiveSyncServiceBase {
 	public async liveSyncWatchAction(device: Mobile.IDevice, liveSyncInfo: ILiveSyncWatchInfo): Promise<ILiveSyncResultInfo> {
 		const projectData = liveSyncInfo.projectData;
 		const deviceLiveSyncService = this.getDeviceLiveSyncService(device, projectData);
-		const syncInfo = _.merge<IFullSyncInfo>({ device, watch: true }, liveSyncInfo);
+		const syncInfo = _.merge({ device, watch: true }, liveSyncInfo);
 		const deviceAppData = await this.getAppData(syncInfo);
 
 		if (deviceLiveSyncService.beforeLiveSyncAction) {

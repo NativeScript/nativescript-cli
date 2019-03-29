@@ -1056,7 +1056,6 @@ describe('Platform Service Tests', () => {
 		const platform = "android";
 		const platformTemplate = "testPlatformTemplate";
 		const appFilesUpdaterOptions = { bundle: true };
-		let isPlatformAdded = false;
 		let areWebpackFilesPersisted = false;
 
 		let projectData: IProjectData = null;
@@ -1066,7 +1065,7 @@ describe('Platform Service Tests', () => {
 		beforeEach(() => {
 			reset();
 
-			(<any>platformService).addPlatform = () => isPlatformAdded = true;
+			(<any>platformService).addPlatform = () => { /** */ };
 			(<any>platformService).persistWebpackFiles = () => areWebpackFilesPersisted = true;
 
 			projectData = testInjector.resolve("projectData");
@@ -1077,7 +1076,6 @@ describe('Platform Service Tests', () => {
 		});
 
 		function reset() {
-			isPlatformAdded = false;
 			areWebpackFilesPersisted = false;
 		}
 

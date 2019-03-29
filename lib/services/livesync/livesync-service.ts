@@ -5,7 +5,6 @@ import { EventEmitter } from "events";
 import { hook } from "../../common/helpers";
 import {
 	PACKAGE_JSON_FILE_NAME,
-	LiveSyncTrackActionNames,
 	USER_INTERACTION_NEEDED_EVENT_NAME,
 	DEBUGGER_ATTACHED_EVENT_NAME,
 	DEBUGGER_DETACHED_EVENT_NAME,
@@ -449,11 +448,9 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 			<any>{ buildForDevice: !options.device.isEmulator, clean: options.liveSyncData && options.liveSyncData.clean },
 			options.deviceBuildInfoDescriptor.outputPath);
 		let pathToBuildItem = null;
-		let action = LiveSyncTrackActionNames.LIVESYNC_OPERATION;
 		if (shouldBuild) {
 			pathToBuildItem = await options.deviceBuildInfoDescriptor.buildAction();
 			options.rebuiltInformation.push({ isEmulator: options.device.isEmulator, platform, pathToBuildItem });
-			action = LiveSyncTrackActionNames.LIVESYNC_OPERATION_BUILD;
 		} else {
 			await this.$analyticsService.trackEventActionInGoogleAnalytics({
 				action: TrackActionNames.LiveSync,

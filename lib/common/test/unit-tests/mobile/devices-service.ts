@@ -1318,17 +1318,13 @@ describe("devicesService", () => {
 		describe("ios simulator check", () => {
 			let $iOSSimulatorDiscovery: Mobile.IDeviceDiscovery;
 			let $hostInfo: IHostInfo;
-			let hasCheckedForIosSimulator: boolean;
 
 			beforeEach(() => {
 				$iOSSimulatorDiscovery = testInjector.resolve("iOSSimulatorDiscovery");
-				(<any>$iOSSimulatorDiscovery).checkForDevices = async (): Promise<void> => {
-					hasCheckedForIosSimulator = true;
-				};
+				(<any>$iOSSimulatorDiscovery).checkForDevices = async (): Promise<void> => { /** */ };
 
 				$hostInfo = testInjector.resolve("hostInfo");
 				$hostInfo.isDarwin = true;
-				hasCheckedForIosSimulator = false;
 			});
 
 			it("should not throw if ios simulator check fails throws an exception.", async () => {

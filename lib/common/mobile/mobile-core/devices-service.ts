@@ -658,7 +658,7 @@ export class DevicesService extends EventEmitter implements Mobile.IDevicesServi
 					.map(device => device.deviceInfo.platform)
 					.filter(pl => {
 						try {
-							return this.$mobileHelper.validatePlatformName(pl);
+							return !!this.$mobileHelper.validatePlatformName(pl);
 						} catch (err) {
 							this.$logger.warn(err.message);
 							return null;
