@@ -7,8 +7,8 @@ export interface SessionObject extends Entity {
 }
 
 export interface SessionStore {
-  get(key: string): SessionObject | null;
-  set(key: string, session: SessionObject): boolean;
+  get(key: string): string | null;
+  set(key: string, session: string): boolean;
   remove(key: string): boolean;
 }
 
@@ -21,11 +21,15 @@ function getKey() {
 }
 
 export function getSession(): SessionObject | null {
-  return getStore().get(getKey());
+  const session = getStore().get(getKey());
+  if (session) {
+    return JSON.parse(session);
+  }
+  return null;
 }
 
 export function setSession(session: SessionObject): boolean {
-  return getStore().set(getKey(), session);
+  return getStore().set(getKey(), JSON.stringify(session));
 }
 
 export function removeSession(): boolean {

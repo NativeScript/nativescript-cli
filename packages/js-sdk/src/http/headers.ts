@@ -145,7 +145,7 @@ export class KinveyHttpHeaders extends HttpHeaders {
       value = `Basic ${credentials}`;
     } else if (auth === KinveyHttpAuth.Session) {
       const session = getSession();
-      if (!session || !session._kmd) {
+      if (!session || !session._kmd || !session._kmd.authtoken) {
         throw new Error('There is no active user to authorize the request. Please login and retry the request.');
       }
       value = `Kinvey ${session._kmd.authtoken}`;

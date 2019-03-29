@@ -6,7 +6,7 @@ import { endpoint } from 'kinvey-js-sdk/lib/endpoint';
 import * as Files from 'kinvey-js-sdk/lib/files';
 import { Kmd } from 'kinvey-js-sdk/lib/kmd';
 import { Query } from 'kinvey-js-sdk/lib/query';
-import { User } from 'kinvey-js-sdk/lib/user';
+import { User } from './user';
 import { init } from './init';
 import { StorageProvider } from './storage';
 

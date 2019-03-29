@@ -1,20 +1,15 @@
-import { SessionObject } from 'kinvey-js-sdk';
 import { SecureStorage } from 'nativescript-secure-storage';
 
 const secureStorage = new SecureStorage();
 
-export function get(key: string): SessionObject | null {
-  const session = secureStorage.getSync({ key });
-  if (session) {
-    return JSON.parse(session);
-  }
-  return null;
+export function get(key: string) {
+  return secureStorage.getSync({ key });
 }
 
-export function set(key: string, session: SessionObject): boolean {
+export function set(key: string, session: string): boolean {
   return secureStorage.setSync({
     key,
-    value: JSON.stringify(session)
+    value: session
   });
 }
 

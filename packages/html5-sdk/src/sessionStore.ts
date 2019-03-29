@@ -1,15 +1,11 @@
 import { SessionObject } from 'kinvey-js-sdk';
 
-export function get(key: string): SessionObject | null {
-  const session = window.localStorage.getItem(key);
-  if (session) {
-    return JSON.parse(session);
-  }
-  return null;
+export function get(key: string) {
+  return window.localStorage.getItem(key);
 }
 
-export function set(key: string, session: SessionObject) {
-  window.localStorage.setItem(key, JSON.stringify(session));
+export function set(key: string, session: string) {
+  window.localStorage.setItem(key, session);
   return true;
 }
 

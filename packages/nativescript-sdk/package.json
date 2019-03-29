@@ -17,7 +17,12 @@
   "main": "lib/publicApi.js",
   "scripts": {
     "prebuild": "del lib",
-    "build": "tsc"
+    "build": "tsc",
+    "postinstall": "node lib/postinstall.js",
+    "preuninstall": "node lib/preuninstall.js"
+  },
+  "dependencies": {
+    "nativescript-hook": "~0.2.5"
   },
   "peerDependencies": {
     "events": "~3.0.0",
@@ -52,9 +57,25 @@
     "url-join": "~4.0.0"
   },
   "nativescript": {
+    "hooks": [{
+        "type": "before-checkForChanges",
+        "script": "lib/before-checkForChanges.js",
+        "inject": true
+      },
+      {
+        "type": "before-preview-sync",
+        "script": "lib/before-preview-sync.js",
+        "inject": true
+      }
+    ],
     "platforms": {
       "android": "5.2.0",
       "ios": "5.2.0"
     }
-  }
+  },
+  "files": [
+    "lib/**/*",
+    "platforms/**/*",
+    "scripts/**/*"
+  ]
 }
