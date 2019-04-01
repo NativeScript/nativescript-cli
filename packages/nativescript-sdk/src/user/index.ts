@@ -1,4 +1,4 @@
-import { User } from 'kinvey-js-sdk/lib/src/user/user';
+import { User } from 'kinvey-js-sdk';
 import { loginWithMIC } from './loginWithMIC';
 import { loginWithRedirectUri } from './loginWithRedirectUri';
 

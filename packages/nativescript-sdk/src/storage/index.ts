@@ -1,4 +1,4 @@
-import { KinveyError } from 'kinvey-js-sdk/lib/src/errors/kinvey';
+import { KinveyError } from 'kinvey-js-sdk';
 import * as SQLite from './sqlite';
 
 export enum StorageProvider {

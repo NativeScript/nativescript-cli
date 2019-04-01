@@ -1,5 +1,4 @@
 {
-  "private": true,
   "name": "kinvey-html5-sdk",
   "description": "Kinvey JavaScript SDK for HTML5 applications.",
   "version": "3.13.0-next.7",

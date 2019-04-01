@@ -14,7 +14,7 @@ const BANNER = `
 
 module.exports = {
   mode: 'production',
-  entry: path.join(__dirname, 'lib', pkg.main),
+  entry: path.join(__dirname, pkg.main),
   output: {
     filename: `${pkg.name}-${pkg.version}.js`,
     path: path.join(__dirname, 'dist'),

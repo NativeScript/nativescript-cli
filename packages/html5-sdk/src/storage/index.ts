@@ -1,4 +1,4 @@
-import { KinveyError } from 'kinvey-js-sdk/lib/src/errors/kinvey';
+import { KinveyError } from 'kinvey-js-sdk';
 import * as IndexedDB from './indexeddb';
 import * as LocalStorage from './localstorage';
 import * as Memory from './memory';

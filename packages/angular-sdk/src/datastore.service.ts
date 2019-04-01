@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@angular/core';
-import { init, DataStore, DataStoreType } from 'kinvey-html5-sdk/lib/src/publicApi';
+import { init, DataStore, DataStoreType } from 'kinvey-html5-sdk';
 import { KinveyConfigToken } from './utils';
 ;
 

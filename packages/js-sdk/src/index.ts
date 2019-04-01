@@ -1,6 +1,7 @@
+import * as Files from './files';
+
 export * from './datastore';
 export * from './errors';
-export * from './files';
 export * from './http';
 export * from './user';
 export * from './acl';
@@ -17,3 +18,4 @@ export * from './observable';
 export * from './ping';
 export * from './query';
 export * from './storage';
+export { Files };

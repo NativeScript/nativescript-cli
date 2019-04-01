@@ -1,12 +1,15 @@
-import { ping } from 'kinvey-js-sdk/lib/src/ping';
-import { Acl } from 'kinvey-js-sdk/lib/src/acl';
-import { Aggregation } from 'kinvey-js-sdk/lib/src/aggregation';
-import { collection, DataStoreType } from 'kinvey-js-sdk/lib/src/datastore';
-import { endpoint } from 'kinvey-js-sdk/lib/src/endpoint';
-import * as Files from 'kinvey-js-sdk/lib/src/files';
-import { Kmd } from 'kinvey-js-sdk/lib/src/kmd';
-import { Query } from 'kinvey-js-sdk/lib/src/query';
-import { getAppVersion, setAppVersion } from 'kinvey-js-sdk/lib/src/http/headers';
+import {
+  getAppVersion,
+  setAppVersion,
+  ping,
+  Acl,
+  Aggregation,
+  collection, DataStoreType,
+  endpoint,
+  Files,
+  Kmd,
+  Query
+} from 'kinvey-js-sdk';
 import { User } from './user';
 import { init, initialize } from './init';
 import { StorageProvider } from './storage';

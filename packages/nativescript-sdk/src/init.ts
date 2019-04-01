@@ -1,5 +1,4 @@
-import { init as coreInit } from 'kinvey-js-sdk/lib/src/init';
-import { KinveyConfig } from 'kinvey-js-sdk/lib/src/kinvey';
+import { init as coreInit, KinveyConfig } from 'kinvey-js-sdk';
 import * as HttpAdapter from './httpAdapter';
 import * as SessionStore from './sessionStore';
 import * as Popup from './popup';

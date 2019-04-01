@@ -1,5 +1,4 @@
 {
-  "private": true,
   "name": "kinvey-angular-sdk",
   "description": "Kinvey JavaScript SDK for Angular applications.",
   "version": "3.13.0-next.7",
@@ -23,11 +22,9 @@
   ],
   "main": "src/publicApi.js",
   "scripts": {
-    "prebuild": "node scripts/prebuild.js",
     "build": "tsc",
-    "postbuild": "node scripts/postbuild.js",
     "prebundle": "npm run build",
-    "bundle": "ng-packagr -p ng-package.json"
+    "bundle": "node scripts/bundle.js"
   },
   "dependencies": {
     "kinvey-html5-sdk": "3.13.0-next.7"

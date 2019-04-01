@@ -2,7 +2,6 @@
   "compilerOptions": {
     "target": "es5",
     "module": "commonjs",
-    "outDir": "lib",
     "declaration": true,
     "removeComments": true,
     "noLib": false,
@@ -26,9 +25,6 @@
     "noFallthroughCasesInSwitch": true,
     "resolveJsonModule": true
   },
-  "include": [
-    "src"
-  ],
   "exclude": [
     "node_modules"
   ],

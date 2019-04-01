@@ -3,7 +3,7 @@
   "lib": {
     "entryFile": "src/publicApi.ts",
     "umdModuleIds": {
-      "kinvey-nativescript-sdk/lib/src/publicApi": "Kinvey"
+      "kinvey-nativescript-sdk": "Kinvey"
     }
   },
   "whitelistedNonPeerDependencies": [

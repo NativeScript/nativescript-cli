@@ -1,5 +1,3 @@
-import { Entity } from "kinvey-js-sdk/lib/src/storage";
-
 const DB_CACHE: any = {};
 
 const IndexedDBTransactionMode = {
@@ -158,7 +156,7 @@ class IndexedDB {
 
 export function find(dbName: string, objectStoreName: string) {
   const db = new IndexedDB(dbName);
-  return new Promise<Entity[]>((resolve, reject) => {
+  return new Promise<any[]>((resolve, reject) => {
     db.open(objectStoreName, false, (txn: any) => {
       const store = txn.objectStore(objectStoreName);
       const request = store.openCursor();
@@ -226,7 +224,7 @@ export function findById(dbName: string, objectStoreName: string, id: string) {
 
 export function save(dbName: string, objectStoreName: string, docs: any = []) {
   const db = new IndexedDB(dbName);
-  return new Promise<Entity[]>((resolve, reject) => {
+  return new Promise<any[]>((resolve, reject) => {
     db.open(objectStoreName, true, (txn: any) => {
       const store = txn.objectStore(objectStoreName);
       let docsToSave = docs;

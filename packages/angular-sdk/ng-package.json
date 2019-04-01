@@ -3,7 +3,7 @@
   "lib": {
     "entryFile": "src/publicApi.ts",
     "umdModuleIds": {
-      "kinvey-html5-sdk/lib/src/publicApi": "Kinvey"
+      "kinvey-html5-sdk": "Kinvey"
     }
   },
   "whitelistedNonPeerDependencies": [

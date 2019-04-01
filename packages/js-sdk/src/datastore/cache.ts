@@ -27,7 +27,7 @@ export class DataStoreCache<T extends Entity> extends Storage<T> {
   }
 
   static clear() {
-    return super.clear(getAppKey());
+    return Storage.clear(getAppKey());
   }
 }
 

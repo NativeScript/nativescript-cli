@@ -1,36 +1,39 @@
 {
+  "angularCompilerOptions": {
+    "annotateForClosureCompiler": true,
+    "skipTemplateCodegen": true,
+    "strictMetadataEmit": true,
+    "fullTemplateTypeCheck": true,
+    "enableResourceInlining": true
+  },
+  "buildOnSave": false,
+  "compileOnSave": false,
   "compilerOptions": {
-    "target": "es5",
-    "module": "commonjs",
-    "outDir": "lib/src",
+    "baseUrl": ".",
+    "target": "es2015",
+    "module": "es2015",
+    "moduleResolution": "node",
+    "outDir": "dist",
     "declaration": true,
-    "removeComments": true,
-    "noLib": false,
+    "declarationDir": "dist",
+    "inlineSourceMap": true,
+    "inlineSources": true,
+    "skipLibCheck": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-    "skipLibCheck": true,
-    "lib": [
-      "es6",
-      "dom"
-    ],
-    "sourceMap": true,
-    "pretty": true,
-    "allowUnreachableCode": false,
-    "allowUnusedLabels": false,
+    "importHelpers": true,
+    "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true,
-    "noEmitHelpers": true,
-    "noEmitOnError": false,
-    "noImplicitAny": false,
-    "noImplicitReturns": true,
-    "noImplicitUseStrict": false,
-    "noFallthroughCasesInSwitch": true,
-    "resolveJsonModule": true
+    "lib": [
+      "dom",
+      "es2018"
+    ]
   },
-  "include": [
-    "src"
-  ],
   "exclude": [
-    "node_modules"
-  ],
-  "compileOnSave": false
+    "node_modules",
+    "dist",
+    "**/*.ngfactory.ts",
+    "**/*.shim.ts",
+    "**/*.spec.ts"
+  ]
 }

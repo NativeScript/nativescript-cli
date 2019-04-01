@@ -1,5 +1,4 @@
 {
-  "private": true,
   "name": "kinvey-js-sdk",
   "description": "Kinvey JavaScript SDK for JavaScript applications.",
   "version": "3.13.0-next.7",
@@ -22,9 +21,7 @@
   ],
   "main": "src/index.js",
   "scripts": {
-    "prebuild": "node scripts/prebuild.js",
-    "build": "tsc",
-    "postbuild": "node scripts/postbuild.js"
+    "build": "tsc"
   },
   "peerDependencies": {
     "events": "~3.0.0",
