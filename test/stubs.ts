@@ -3,7 +3,7 @@
 import * as util from "util";
 import * as chai from "chai";
 import { EventEmitter } from "events";
-import * as path from "path";
+import { join } from "path";
 import * as constants from "./../lib/constants";
 import * as prompt from "inquirer";
 import { Yok } from "./../lib/common/yok";
@@ -309,7 +309,7 @@ export class ProjectDataStub implements IProjectData {
 	projectDir: string;
 	projectName: string;
 	get platformsDir(): string {
-		return this.plafromsDir || (this.projectDir && path.join(this.projectDir, "platforms")) || "";
+		return this.plafromsDir || (this.projectDir && join(this.projectDir, "platforms")) || "";
 	}
 	set platformsDir(value) {
 		this.plafromsDir = value;
@@ -348,7 +348,7 @@ export class ProjectDataStub implements IProjectData {
 		}
 
 		// always return app/App_Resources
-		return path.join(projectDir, constants.APP_FOLDER_NAME, constants.APP_RESOURCES_FOLDER_NAME);
+		return join(projectDir, constants.APP_FOLDER_NAME, constants.APP_RESOURCES_FOLDER_NAME);
 	}
 	public getAppResourcesRelativeDirectoryPath(): string {
 		return "";
@@ -358,7 +358,7 @@ export class ProjectDataStub implements IProjectData {
 			projectDir = this.projectDir;
 		}
 
-		return path.join(projectDir, "app") || "";
+		return join(projectDir, "app") || "";
 	}
 	public getAppDirectoryRelativePath(): string {
 		return "";
@@ -595,16 +595,16 @@ export class PrompterStub implements IPrompter {
 	async get(schemas: prompt.Question[]): Promise<any> {
 		throw unreachable();
 	}
-	async getPassword(prompt: string, options?: IAllowEmpty): Promise<string> {
-		chai.assert.ok(prompt in this.passwords, `PrompterStub didn't expect to give password for: ${prompt}`);
-		const result = this.passwords[prompt];
-		delete this.passwords[prompt];
+	async getPassword(message: string, options?: IAllowEmpty): Promise<string> {
+		chai.assert.ok(message in this.passwords, `PrompterStub didn't expect to give password for: ${message}`);
+		const result = this.passwords[message];
+		delete this.passwords[message];
 		return result;
 	}
-	async getString(prompt: string, options?: IPrompterOptions): Promise<string> {
-		chai.assert.ok(prompt in this.strings, `PrompterStub didn't expect to be asked for: ${prompt}`);
-		const result = this.strings[prompt];
-		delete this.strings[prompt];
+	async getString(message: string, options?: IPrompterOptions): Promise<string> {
+		chai.assert.ok(message in this.strings, `PrompterStub didn't expect to be asked for: ${message}`);
+		const result = this.strings[message];
+		delete this.strings[message];
 		return result;
 	}
 	async promptForChoice(promptMessage: string, choices: any[]): Promise<string> {
@@ -617,7 +617,7 @@ export class PrompterStub implements IPrompter {
 		delete this.answers[question];
 		return result;
 	}
-	async confirm(prompt: string, defaultAction?: () => boolean): Promise<boolean> {
+	async confirm(message: string, defaultAction?: () => boolean): Promise<boolean> {
 		throw unreachable();
 	}
 	dispose(): void {

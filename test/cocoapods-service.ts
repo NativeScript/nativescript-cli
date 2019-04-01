@@ -70,7 +70,7 @@ describe("Cocoapods service", () => {
 			newPodfileContent = content;
 		};
 
-		fs.deleteFile = (path: string): void => {
+		fs.deleteFile = (pathToFile: string): void => {
 			newPodfileContent = null;
 			projectPodfileContent = null;
 		};

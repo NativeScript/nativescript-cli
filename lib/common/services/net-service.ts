@@ -10,7 +10,7 @@ export class Net implements INet {
 		private $osInfo: IOsInfo) { }
 
 	public async getFreePort(): Promise<number> {
-		const server = net.createServer((sock: string) => { /* empty - noone will connect here */ });
+		const server = net.createServer((sock: net.Socket) => { /* empty - noone will connect here */ });
 
 		return new Promise<number>((resolve, reject) => {
 			let isResolved = false;

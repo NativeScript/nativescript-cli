@@ -57,11 +57,11 @@ export class AndroidDeviceDiscovery extends DeviceDiscovery implements Mobile.IA
 
 		_(this._devices)
 			.reject(d => _.find(currentDevices, device => device.identifier === d.identifier && device.status === d.status))
-			.each(d => this.deleteAndRemoveDevice(d.identifier));
+			.each((d: IAdbAndroidDeviceInfo) => this.deleteAndRemoveDevice(d.identifier));
 
 		await Promise.all(_(currentDevices)
 			.reject(d => _.find(this._devices, device => device.identifier === d.identifier && device.status === d.status))
-			.map(d => this.createAndAddDevice(d)).value());
+			.map((d: IAdbAndroidDeviceInfo) => this.createAndAddDevice(d)).value());
 	}
 
 	public async ensureAdbServerStarted(): Promise<any> {

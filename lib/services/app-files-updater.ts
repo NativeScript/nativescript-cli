@@ -1,13 +1,14 @@
 import * as path from "path";
 import * as minimatch from "minimatch";
 import * as constants from "../constants";
+// TODO: ??
 import * as fs from "fs";
 
 export class AppFilesUpdater {
 	constructor(private appSourceDirectoryPath: string,
 		private appDestinationDirectoryPath: string,
 		public options: IAppFilesUpdaterOptions,
-		public fs: IFileSystem
+		public fileSystem: IFileSystem
 	) {
 	}
 
@@ -46,21 +47,21 @@ export class AppFilesUpdater {
 	}
 
 	protected readDestinationDir(): string[] {
-		if (this.fs.exists(this.appDestinationDirectoryPath)) {
-			return this.fs.readDirectory(this.appDestinationDirectoryPath);
+		if (this.fileSystem.exists(this.appDestinationDirectoryPath)) {
+			return this.fileSystem.readDirectory(this.appDestinationDirectoryPath);
 		} else {
 			return [];
 		}
 	}
 
 	protected deleteDestinationItem(directoryItem: string): void {
-		this.fs.deleteDirectory(path.join(this.appDestinationDirectoryPath, directoryItem));
+		this.fileSystem.deleteDirectory(path.join(this.appDestinationDirectoryPath, directoryItem));
 	}
 
 	protected readSourceDir(projectData: IProjectData): string[] {
 		const tnsDir = path.join(this.appSourceDirectoryPath, constants.TNS_MODULES_FOLDER_NAME);
 
-		return this.fs.enumerateFilesInDirectorySync(this.appSourceDirectoryPath, null, { includeEmptyDirectories: true }).filter(dirName => dirName !== tnsDir);
+		return this.fileSystem.enumerateFilesInDirectorySync(this.appSourceDirectoryPath, null, { includeEmptyDirectories: true }).filter(dirName => dirName !== tnsDir);
 	}
 
 	protected resolveAppSourceFiles(projectData: IProjectData): string[] {
@@ -94,10 +95,10 @@ export class AppFilesUpdater {
 				exists = fs.lstatSync(source);
 			}
 			if (exists.isDirectory()) {
-				return this.fs.createDirectory(destinationPath);
+				return this.fileSystem.createDirectory(destinationPath);
 			}
 
-			return this.fs.copyFile(source, destinationPath);
+			return this.fileSystem.copyFile(source, destinationPath);
 		});
 	}
 }

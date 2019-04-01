@@ -249,13 +249,13 @@ describe('Platform Service Tests', () => {
 
 				const pacoteService = testInjector.resolve<IPacoteService>("pacoteService");
 				let packageNamePassedToPacoteService = "";
-				pacoteService.extractPackage = async (packageName: string, destinationDirectory: string, options?: IPacoteExtractOptions): Promise<void> => {
-					packageNamePassedToPacoteService = packageName;
+				pacoteService.extractPackage = async (name: string, destinationDirectory: string, options?: IPacoteExtractOptions): Promise<void> => {
+					packageNamePassedToPacoteService = name;
 				};
 
 				const platformsData = testInjector.resolve<IPlatformsData>("platformsData");
 				const packageName = "packageName";
-				platformsData.getPlatformData = (platform: string, projectData: IProjectData): IPlatformData => {
+				platformsData.getPlatformData = (platform: string, pData: IProjectData): IPlatformData => {
 					return {
 						frameworkPackageName: packageName,
 						platformProjectService: new stubs.PlatformProjectServiceStub(),
@@ -482,7 +482,7 @@ describe('Platform Service Tests', () => {
 						createProject: (projectRoot: string, frameworkDir: string) => Promise.resolve(),
 						interpolateData: (projectRoot: string) => Promise.resolve(),
 						afterCreateProject: (projectRoot: string): any => null,
-						getAppResourcesDestinationDirectoryPath: (projectData: IProjectData, frameworkVersion?: string): string => {
+						getAppResourcesDestinationDirectoryPath: (pData: IProjectData, frameworkVersion?: string): string => {
 							if (platform.toLowerCase() === "ios") {
 								const dirPath = path.join(testDirData.appDestFolderPath, "Resources");
 								fs.ensureDirectoryExists(dirPath);
@@ -498,7 +498,7 @@ describe('Platform Service Tests', () => {
 						ensureConfigurationFileInAppResources: (): any => null,
 						interpolateConfigurationFile: (): void => undefined,
 						isPlatformPrepared: (projectRoot: string) => false,
-						prepareAppResources: (appResourcesDirectoryPath: string, projectData: IProjectData): void => undefined,
+						prepareAppResources: (appResourcesDirectoryPath: string, pData: IProjectData): void => undefined,
 						checkForChanges: () => { /* */ }
 					}
 				};
@@ -1056,7 +1056,6 @@ describe('Platform Service Tests', () => {
 		const platform = "android";
 		const platformTemplate = "testPlatformTemplate";
 		const appFilesUpdaterOptions = { bundle: true };
-		let isPlatformAdded = false;
 		let areWebpackFilesPersisted = false;
 
 		let projectData: IProjectData = null;
@@ -1066,7 +1065,7 @@ describe('Platform Service Tests', () => {
 		beforeEach(() => {
 			reset();
 
-			(<any>platformService).addPlatform = () => isPlatformAdded = true;
+			(<any>platformService).addPlatform = () => { /** */ };
 			(<any>platformService).persistWebpackFiles = () => areWebpackFilesPersisted = true;
 
 			projectData = testInjector.resolve("projectData");
@@ -1077,7 +1076,6 @@ describe('Platform Service Tests', () => {
 		});
 
 		function reset() {
-			isPlatformAdded = false;
 			areWebpackFilesPersisted = false;
 		}
 

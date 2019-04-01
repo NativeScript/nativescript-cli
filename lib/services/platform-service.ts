@@ -15,12 +15,6 @@ temp.track();
 const buildInfoFileName = ".nsbuildinfo";
 
 export class PlatformService extends EventEmitter implements IPlatformService {
-	// Type with hooks needs to have either $hooksService or $injector injected.
-	// In order to stop TypeScript from failing for not used $hooksService, use it here.
-	private get _hooksService(): IHooksService {
-		return this.$hooksService;
-	}
-
 	constructor(private $devicesService: Mobile.IDevicesService,
 		private $preparePlatformNativeService: IPreparePlatformService,
 		private $preparePlatformJSService: IPreparePlatformService,
@@ -31,7 +25,6 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		private $packageInstallationManager: IPackageInstallationManager,
 		private $platformsData: IPlatformsData,
 		private $projectDataService: IProjectDataService,
-		private $hooksService: IHooksService,
 		private $pluginsService: IPluginsService,
 		private $projectFilesManager: IProjectFilesManager,
 		private $mobileHelper: Mobile.IMobileHelper,
@@ -42,7 +35,8 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		private $analyticsService: IAnalyticsService,
 		private $terminalSpinnerService: ITerminalSpinnerService,
 		private $pacoteService: IPacoteService,
-		private $usbLiveSyncService: any
+		private $usbLiveSyncService: any,
+		public $hooksService: IHooksService
 	) {
 		super();
 	}

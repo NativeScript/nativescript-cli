@@ -1,12 +1,12 @@
 import * as util from "util";
-import * as path from "path";
+import { join } from "path";
 
 export class MessagesService implements IMessagesService {
 	private _pathsToMessageJsonFiles: string[] = null;
 	private _messageJsonFilesContentsCache: any[] = null;
 
 	private get pathToDefaultMessageJson(): string {
-		return path.join(__dirname, "..", "resources", "messages", "errorMessages.json");
+		return join(__dirname, "..", "resources", "messages", "errorMessages.json");
 	}
 
 	private get messageJsonFilesContents(): any[] {

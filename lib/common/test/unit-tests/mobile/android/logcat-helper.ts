@@ -53,10 +53,10 @@ function createTestInjector(): IInjector {
 	injector.register("devicesService", {
 		getDevice: (): Mobile.IDevice => {
 			return <Mobile.IDevice>{
-					deviceInfo: {
-						version: "9.0.0"
-					}
-				} ;
+				deviceInfo: {
+					version: "9.0.0"
+				}
+			};
 		}
 	});
 	injector.register("devicePlatformsConstants", { Android: "Android" });
@@ -92,12 +92,12 @@ describe("logcat-helper", () => {
 	const validIdentifier = "valid-identifier";
 	let injector: IInjector;
 	let loggedData: string[];
-	let childProcess: ChildProcessStub;
+	let childProcessStub: ChildProcessStub;
 
 	beforeEach(() => {
 		injector = createTestInjector();
 		loggedData = [];
-		childProcess = injector.resolve<ChildProcessStub>("childProcess");
+		childProcessStub = injector.resolve<ChildProcessStub>("childProcess");
 	});
 
 	describe("start", () => {
@@ -121,7 +121,7 @@ describe("logcat-helper", () => {
 				logData(line: string, platform: string, deviceIdentifier: string): void {
 					loggedData.push(line);
 					if (line === "end") {
-						assert.include(childProcess.adbProcessArgs, `--pid=${expectedPid}`);
+						assert.include(childProcessStub.adbProcessArgs, `--pid=${expectedPid}`);
 						done();
 					}
 				}
@@ -135,10 +135,10 @@ describe("logcat-helper", () => {
 			injector.register("devicesService", {
 				getDevice: (): Mobile.IDevice => {
 					return <Mobile.IDevice>{
-							deviceInfo: {
-								version: "6.0.0"
-							}
-						} ;
+						deviceInfo: {
+							version: "6.0.0"
+						}
+					};
 				}
 			});
 
@@ -146,7 +146,7 @@ describe("logcat-helper", () => {
 				logData(line: string, platform: string, deviceIdentifier: string): void {
 					loggedData.push(line);
 					if (line === "end") {
-						assert.notInclude(childProcess.adbProcessArgs, `--pid=${expectedPid}`);
+						assert.notInclude(childProcessStub.adbProcessArgs, `--pid=${expectedPid}`);
 						done();
 					}
 				}
@@ -168,7 +168,7 @@ describe("logcat-helper", () => {
 				deviceIdentifier: validIdentifier
 			});
 
-			assert.equal(childProcess.processSpawnCallCount, 1);
+			assert.equal(childProcessStub.processSpawnCallCount, 1);
 		});
 
 		it("should start multiple logcat processes when called multiple times with different identifiers", async () => {
@@ -184,7 +184,7 @@ describe("logcat-helper", () => {
 				deviceIdentifier: `${validIdentifier}3`
 			});
 
-			assert.equal(childProcess.processSpawnCallCount, 3);
+			assert.equal(childProcessStub.processSpawnCallCount, 3);
 		});
 	});
 	describe("stop", () => {
@@ -194,13 +194,13 @@ describe("logcat-helper", () => {
 			await logcatHelper.start({
 				deviceIdentifier: validIdentifier
 			});
-			assert.equal(childProcess.processSpawnCallCount, 1);
+			assert.equal(childProcessStub.processSpawnCallCount, 1);
 			await logcatHelper.stop(validIdentifier);
 			await logcatHelper.start({
 				deviceIdentifier: validIdentifier
 			});
 
-			assert.equal(childProcess.processSpawnCallCount, 2);
+			assert.equal(childProcessStub.processSpawnCallCount, 2);
 		});
 
 		it("should kill the process just once if called multiple times", async () => {
@@ -212,7 +212,7 @@ describe("logcat-helper", () => {
 			await logcatHelper.stop(validIdentifier);
 			await logcatHelper.stop(validIdentifier);
 
-			assert.equal(childProcess.processKillCallCount, 1);
+			assert.equal(childProcessStub.processKillCallCount, 1);
 		});
 
 		it("should not kill the process if started with keepSingleProcess", async () => {
@@ -225,7 +225,7 @@ describe("logcat-helper", () => {
 
 			await logcatHelper.stop(validIdentifier);
 			await logcatHelper.stop(validIdentifier);
-			assert.equal(childProcess.processKillCallCount, 0);
+			assert.equal(childProcessStub.processKillCallCount, 0);
 		});
 
 		it("should do nothing if called without start", async () => {
@@ -233,8 +233,8 @@ describe("logcat-helper", () => {
 
 			await logcatHelper.stop(validIdentifier);
 
-			assert.equal(childProcess.processSpawnCallCount, 0);
-			assert.equal(childProcess.processKillCallCount, 0);
+			assert.equal(childProcessStub.processSpawnCallCount, 0);
+			assert.equal(childProcessStub.processKillCallCount, 0);
 		});
 	});
 });

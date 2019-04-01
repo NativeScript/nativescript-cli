@@ -28,12 +28,12 @@ export class IOSSimulatorDiscovery extends DeviceDiscovery {
 
 			// Remove old simulators
 			_(this.cachedSimulators)
-				.reject(s => _.find(currentSimulators, simulator => simulator && s && simulator.id === s.id && simulator.state === s.state))
+				.reject(s => _.some(currentSimulators, simulator => simulator && s && simulator.id === s.id && simulator.state === s.state))
 				.each(s => this.deleteAndRemoveDevice(s));
 
 			// Add new simulators
 			_(currentSimulators)
-				.reject(s => _.find(this.cachedSimulators, simulator => simulator && s && simulator.id === s.id && simulator.state === s.state))
+				.reject(s => _.some(this.cachedSimulators, simulator => simulator && s && simulator.id === s.id && simulator.state === s.state))
 				.each(s => this.createAndAddDevice(s));
 		}
 	}
