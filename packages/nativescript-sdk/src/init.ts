@@ -21,3 +21,7 @@ export function init(config?: NativeScriptKinveyConfig) {
   })
   return config;
 }
+
+export function initialize(config?: NativeScriptKinveyConfig) {
+  return init(config);
+}

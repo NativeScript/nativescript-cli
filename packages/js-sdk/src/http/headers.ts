@@ -107,6 +107,16 @@ export enum KinveyHttpAuth {
   SessionOrApp = 'SessionOrApp'
 }
 
+const globalKinveyHeaders: { [name: string]: string } = {};
+
+export function getAppVersion() {
+  return globalKinveyHeaders['X-Kinvey-Client-App-Version'];
+}
+
+export function setAppVersion(appVersion: string) {
+  return globalKinveyHeaders['X-Kinvey-Client-App-Version'] = appVersion;
+}
+
 export class KinveyHttpHeaders extends HttpHeaders {
   constructor(headers?: KinveyHttpHeaders)
   constructor(headers?: { [name: string]: string | string[] })
@@ -128,6 +138,9 @@ export class KinveyHttpHeaders extends HttpHeaders {
     if (!this.has('X-Kinvey-Api-Version')) {
       this.set('X-Kinvey-Api-Version', '4');
     }
+
+    // Add global Kinvey headers
+    this.join(new KinveyHttpHeaders(globalKinveyHeaders));
   }
 
   get requestStart() {
@@ -144,7 +157,7 @@ export class KinveyHttpHeaders extends HttpHeaders {
       const credentials = Base64.encode(`${getAppKey()}:${getMasterSecret()}`);
       value = `Basic ${credentials}`;
     } else if (auth === KinveyHttpAuth.Session) {
-      const session = getSession();
+      let session = getSession();
       if (!session || !session._kmd || !session._kmd.authtoken) {
         throw new Error('There is no active user to authorize the request. Please login and retry the request.');
       }

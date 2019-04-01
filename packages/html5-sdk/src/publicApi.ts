@@ -7,15 +7,16 @@ import * as Files from 'kinvey-js-sdk/lib/files';
 import { Kmd } from 'kinvey-js-sdk/lib/kmd';
 import { Query } from 'kinvey-js-sdk/lib/query';
 import { User } from 'kinvey-js-sdk/lib/user';
-import { init } from './init';
+import { getAppVersion, setAppVersion } from 'kinvey-js-sdk/lib/http/headers';
+import { init, initialize } from './init';
 import { StorageProvider } from './storage';
 
 // SDK
 export {
   init,
-  // initialize,
-  // getAppVersion,
-  // setAppVersion,
+  initialize,
+  getAppVersion,
+  setAppVersion,
 
   // Acl
   Acl,

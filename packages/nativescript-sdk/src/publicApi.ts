@@ -6,16 +6,17 @@ import { endpoint } from 'kinvey-js-sdk/lib/endpoint';
 import * as Files from 'kinvey-js-sdk/lib/files';
 import { Kmd } from 'kinvey-js-sdk/lib/kmd';
 import { Query } from 'kinvey-js-sdk/lib/query';
+import { getAppVersion, setAppVersion } from 'kinvey-js-sdk/lib/http/headers';
 import { User } from './user';
-import { init } from './init';
+import { init, initialize } from './init';
 import { StorageProvider } from './storage';
 
 // SDK
 export {
   init,
-  // initialize,
-  // getAppVersion,
-  // setAppVersion,
+  initialize,
+  getAppVersion,
+  setAppVersion,
 
   // Acl
   Acl,

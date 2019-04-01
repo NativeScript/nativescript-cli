@@ -1,16 +1,71 @@
 import axios from 'axios';
-import { HttpRequestObject } from 'kinvey-js-sdk';
+import { name, version } from './package.json';
 
-export async function send(request: HttpRequestObject) {
+// Helper function to detect the browser name and version.
+function browserDetect(ua: string) {
+  // Cast arguments.
+  ua = ua.toLowerCase();
+
+  // User-Agent patterns.
+  const rChrome = /(chrome)\/([\w]+)/;
+  const rFirefox = /(firefox)\/([\w.]+)/;
+  const rIE = /(msie) ([\w.]+)/i;
+  const rOpera = /(opera)(?:.*version)?[ /]([\w.]+)/;
+  const rSafari = /(safari)\/([\w.]+)/;
+
+  return rChrome.exec(ua) || rFirefox.exec(ua) || rIE.exec(ua) ||
+    rOpera.exec(ua) || rSafari.exec(ua) || [];
+}
+
+function deviceInformation() {
+  const browser = browserDetect(window.navigator.userAgent);
+  const platform = browser[1];
+  const version = browser[2];
+  const manufacturer = window.navigator.platform;
+
+  // Return the device information string.
+  const parts = [`js-${name}/${version}`];
+
+  return parts.concat([platform, version, manufacturer]).map((part) => {
+    if (part) {
+      return part.toString().replace(/\s/g, '_').toLowerCase();
+    }
+
+    return 'unknown';
+  }).join(' ');
+}
+
+export function deviceInfo() {
+  return {
+    hv: 1,
+    os: window.navigator.appVersion,
+    ov: window.navigator.appVersion,
+    sdk: {
+      name,
+      version
+    },
+    pv: window.navigator.userAgent
+  };
+}
+
+export async function send(request: any) {
+  const { url, method, headers, body, timeout } = request;
+  const kinveyUrlRegex = /kinvey\.com/gm;
   let response;
+
+  // Add kinvey device information headers
+  if (kinveyUrlRegex.test(url)) {
+    headers['X-Kinvey-Device-Information'] = deviceInformation();
+    headers['X-Kinvey-Device-Info'] = JSON.stringify(deviceInfo());
+  }
 
   try {
     response = await axios({
-      headers: request.headers,
-      method: request.method,
-      url: request.url,
-      data: request.body,
-      timeout: request.timeout
+      headers,
+      method,
+      url,
+      data: body,
+      timeout
     });
   } catch (error) {
     if (error.response) {
@@ -20,5 +75,9 @@ export async function send(request: HttpRequestObject) {
     throw error;
   }
 
-  return { statusCode: response.status, headers: response.headers, data: response.data };
+  return {
+    statusCode: response.status,
+    headers: response.headers,
+    data: response.data
+  };
 }

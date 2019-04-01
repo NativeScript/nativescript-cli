@@ -1,11 +1,10 @@
 import isFunction from 'lodash/isFunction';
 import { EventEmitter } from 'events';
 import PubNub from 'pubnub';
+import { KinveyError } from './errors';
 
 const STATUS_PREFIX = 'status:';
 const UNCLASSIFIED_EVENTS = 'pubNubEventsNotRouted';
-
-let listener;
 
 interface KinveyPubNub extends PubNub {
   reconnect(): void;
@@ -53,54 +52,68 @@ class Listener extends EventEmitter {
   }
 }
 
-export class Live {
-  public pubnub: PubNub;
-  public listener: Listener;
+const listener = new Listener();
+let pubnub: PubNub | null;
 
-  constructor(config: any) {
-    this.pubnub = new PubNub(Object.assign({}, { ssl: true, dedupeOnSubscribe: true }, config));
-    this.pubnub.subscribe({ channelGroups: [config.userChannelGroup] });
-    this.listener = new Listener();
-    this.pubnub.addListener(this.listener);
+export function subscribe(config: any) {
+  if (pubnub) {
+    throw new KinveyError('You are already subscribed to the live service. Please unsubscribe before you subscribe again.');
   }
 
-  subscribeToChannel(channelName: string, receiver: LiveServiceReceiver = {}) {
-    const { onMessage, onError, onStatus } = receiver;
+  pubnub = new PubNub(Object.assign({}, { ssl: true, dedupeOnSubscribe: true }, config));
+  pubnub.subscribe({ channelGroups: [config.userChannelGroup] });
+  pubnub.addListener(listener);
+}
 
-    if (!isValidChannelName(channelName)) {
-      throw new Error('Invalid channel name.');
-    }
+export function subscribeToChannel(channelName: string, receiver: LiveServiceReceiver = {}) {
+  const { onMessage, onError, onStatus } = receiver;
 
-    if (!isValidReceiver(receiver)) {
-      throw new Error('Invalid receiver.');
-    }
-
-    if (isFunction(onMessage)) {
-      this.listener.on(channelName, onMessage);
-    }
-
-    if (isFunction(onError)) {
-      this.listener.on(`${STATUS_PREFIX}${channelName}`, (status) => {
-        if (status.error) {
-          onError(status);
-        }
-      });
-    }
-
-    if (isFunction(onStatus)) {
-      this.listener.on(`${STATUS_PREFIX}${channelName}`, (status) => {
-        if (!status.error) {
-          onStatus(status);
-        }
-      });
-    }
-
-    return true;
+  if (!isValidChannelName(channelName)) {
+    throw new Error('Invalid channel name.');
   }
 
-  unsubscribeFromChannel(channelName: string) {
-    this.listener.removeAllListeners(channelName);
-    this.listener.removeAllListeners(`${STATUS_PREFIX}${channelName}`);
-    return true;
+  if (!isValidReceiver(receiver)) {
+    throw new Error('Invalid receiver.');
   }
+
+  if (isFunction(onMessage)) {
+    listener.on(channelName, onMessage);
+  }
+
+  if (isFunction(onError)) {
+    listener.on(`${STATUS_PREFIX}${channelName}`, (status) => {
+      if (status.error) {
+        onError(status);
+      }
+    });
+  }
+
+  if (isFunction(onStatus)) {
+    listener.on(`${STATUS_PREFIX}${channelName}`, (status) => {
+      if (!status.error) {
+        onStatus(status);
+      }
+    });
+  }
+
+  return true;
+}
+
+export function unsubscribeFromChannel(channelName?: string) {
+  listener.removeAllListeners(channelName);
+  listener.removeAllListeners(`${STATUS_PREFIX}${channelName}`);
+  return true;
+}
+
+export function unsubscribe() {
+  unsubscribeFromChannel();
+
+  if (pubnub) {
+    pubnub.removeListener(listener);
+    pubnub.unsubscribeAll();
+    pubnub.stop();
+    pubnub = null;
+  }
+
+  return true;
 }

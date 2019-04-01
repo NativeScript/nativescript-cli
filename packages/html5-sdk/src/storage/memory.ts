@@ -1,151 +1,52 @@
-// import Loki from 'lokijs';
+const store = new Map<string, Map<string, any>>();
 
-// const memAdapter = new Loki.LokiMemoryAdapter();
+function getTable(dbName: string, tableName: string) {
+  return store.get(`${dbName}.${tableName}`) || new Map<string, any>();
+}
 
-// export default class MemoryStore {
-//   public dbName: string;
-//   public collectionName: string;
+function setTable(dbName: string, tableName: string, table: Map<string, any>) {
+  return store.set(`${dbName}.${tableName}`, table);
+}
 
-//   constructor(dbName: string, collectionName: string) {
-//     this.dbName = dbName;
-//     this.collectionName = collectionName;
-//   }
+export async function find(dbName: string, tableName: string) {
+  const table = getTable(dbName, tableName);
+  return Array.from(table.values());
+}
 
-//   open() {
-//     return new Promise((resolve, reject) => {
-//       const db = new Loki(this.dbName, {
-//         adapter: memAdapter,
-//         autosave: false,
-//         autoload: true,
-//         autoloadCallback: (error) => {
-//           if (error) {
-//             reject(error);
-//           } else {
-//             if (this.collectionName) {
-//               let collection = db.getCollection(this.collectionName);
+export async function count(dbName: string, tableName: string) {
+  const docs = await find(dbName, tableName);
+  return docs.length;
+}
 
-//               if (!collection) {
-//                 collection = db.addCollection(this.collectionName, {
-//                   clone: true,
-//                   unique: ['_id'],
-//                   disableMeta: true
-//                 });
-//               }
-//             }
+export async function findById(dbName: string, tableName: string, id: string) {
+  const docs = await find(dbName, tableName);
+  return docs.find((doc: any) => doc._id === id);
+}
 
-//             resolve(db);
-//           }
-//         }
-//       });
-//     });
-//   }
+export async function save(dbName: string, tableName: string, docs: any = []) {
+  const table = getTable(dbName, tableName);
+  docs.forEach((doc: { _id: string; }) => {
+    table.set(doc._id, doc);
+  });
+  setTable(dbName, tableName, table);
+  return docs;
+}
 
-//   async find() {
-//     const db = await this.open();
-//     const collection = db.getCollection(this.collectionName);
-//     return collection.chain().data({ removeMeta: true });
-//   }
+export async function removeById(dbName: string, tableName: string, id: string) {
+  const table = getTable(dbName, tableName);
+  if (table.delete(id)) {
+    setTable(dbName, tableName, table);
+    return 1;
+  }
+  return 0;
+}
 
-//   async count() {
-//     const docs = await this.find();
-//     return docs.length;
-//   }
+export async function clear(dbName: string, tableName: string) {
+  store.delete(`${dbName}.${tableName}`);
+  return true;
+}
 
-//   async findById(id) {
-//     const db = await this.open();
-//     const collection = db.getCollection(this.collectionName);
-//     const doc = collection.by('_id', id);
-
-//     if (doc) {
-//       delete doc.$loki;
-//     }
-
-//     return doc;
-//   }
-
-//   async save(docsToSaveOrUpdate) {
-//     const db = await this.open();
-//     const collection = db.getCollection(this.collectionName);
-//     let docs = docsToSaveOrUpdate;
-
-//     if (!docs) {
-//       return null;
-//     }
-
-//     docs = docs.map((doc) => {
-//       let savedDoc = collection.by('_id', doc._id);
-
-//       if (savedDoc) {
-//         savedDoc = Object.assign({ $loki: savedDoc.$loki }, doc);
-//         collection.update(savedDoc);
-//         return savedDoc;
-//       }
-
-//       collection.insert(doc);
-//       return doc;
-//     });
-
-//     return new Promise((resolve, reject) => {
-//       db.save((error) => {
-//         if (error) {
-//           return reject(error);
-//         }
-
-//         return resolve(docs);
-//       });
-//     });
-//   }
-
-//   async removeById(id) {
-//     const db = await this.open();
-//     const collection = db.getCollection(this.collectionName);
-//     const doc = collection.by('_id', id);
-
-//     if (doc) {
-//       const removedDoc = collection.remove(doc);
-
-//       if (removedDoc) {
-//         return new Promise((resolve, reject) => {
-//           db.save((error) => {
-//             if (error) {
-//               return reject(error);
-//             }
-
-//             return resolve(1);
-//           });
-//         });
-//       }
-//     }
-
-//     return 0;
-//   }
-
-//   async clear() {
-//     const db = await this.open();
-//     const collection = db.getCollection(this.collectionName);
-//     collection.clear();
-
-//     return new Promise((resolve, reject) => {
-//       db.save((error) => {
-//         if (error) {
-//           return reject(error);
-//         }
-
-//         return resolve(true);
-//       });
-//     });
-//   }
-
-//   async clearAll() {
-//     const db = await this.open();
-//     return new Promise((resolve, reject) => {
-//       db.deleteDatabase((error) => {
-//         if (error) {
-//           return reject(error);
-//         }
-
-//         return resolve(true);
-//       });
-//     });
-//   }
-// }
+export async function clearDatabase() {
+  store.clear();
+  return true;
+}

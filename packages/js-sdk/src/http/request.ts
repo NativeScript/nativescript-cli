@@ -39,7 +39,7 @@ export interface HttpAdapter {
   send: (request: HttpRequestObject) => Promise<HttpResponseObject>;
 }
 
-export function serialize(contentType: string, body?: string) {
+export function serialize(contentType: string, body?: any) {
   if (body && !isString(body)) {
     if (contentType.indexOf('application/x-www-form-urlencoded') === 0) {
       const str: string[] = [];

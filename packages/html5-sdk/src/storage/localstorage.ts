@@ -1,7 +1,19 @@
+function getTable(dbName: string, tableName: string) {
+  const tableJson = window.localStorage.getItem(`${dbName}.${tableName}`);
+  if (tableJson) {
+    return new Map<string, any>(JSON.parse(tableJson));
+  }
+  return new Map<string, any>();
+}
+
+function setTable(dbName: string, tableName: string, table: Map<string, any>) {
+  window.localStorage.setItem(`${dbName}.${tableName}`, JSON.stringify([...table]));
+}
+
 export async function find(dbName: string, tableName: string) {
-  const data = window.localStorage.getItem(`${dbName}.${tableName}`);
-  if (data) {
-    return JSON.parse(data);
+  const table = getTable(dbName, tableName);
+  if (table) {
+    return Array.from(table.values());
   }
   return [];
 }
@@ -17,18 +29,18 @@ export async function findById(dbName: string, tableName: string, id: string) {
 }
 
 export async function save(dbName: string, tableName: string, docs: any = []) {
-  const existingDocs = await find(dbName, tableName);
-  const savedDocs = docs.concat(existingDocs.filter((existingDoc: any) => docs.findIndex((doc: any) => doc._id === existingDoc._id) < 0));
-  window.localStorage.setItem(`${dbName}.${tableName}`, JSON.stringify(savedDocs));
+  const table = getTable(dbName, tableName);
+  docs.forEach((doc: { _id: string; }) => {
+    table.set(doc._id, doc);
+  });
+  setTable(dbName, tableName, table);
   return docs;
 }
 
 export async function removeById(dbName: string, tableName: string, id: string) {
-  const existingDocs = await find(dbName, tableName);
-  const index = existingDocs.findIndex((doc: any) => doc._id === id);
-  if (index > 0) {
-    existingDocs.splice(index, 1);
-    window.localStorage.setItem(`${dbName}.${tableName}`, JSON.stringify(existingDocs));
+  const table = getTable(dbName, tableName);
+  if (table.delete(id)) {
+    setTable(dbName, tableName, table);
     return 1;
   }
   return 0;

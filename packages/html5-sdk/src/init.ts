@@ -18,3 +18,7 @@ export function init(config: HTML5KinveyConfig) {
   })
   return config;
 }
+
+export function initialize(config: HTML5KinveyConfig) {
+  return init(config);
+}

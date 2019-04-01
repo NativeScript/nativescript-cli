@@ -1,13 +1,23 @@
 import { request as tnsRequest } from 'tns-core-modules/http';
-import { HttpRequestObject, HttpResponseObject } from 'kinvey-js-sdk';
+import { device } from 'tns-core-modules/platform';
+import { name, version } from './package.json';
 
-export async function send(request: HttpRequestObject): Promise<HttpResponseObject> {
+export async function send(request: any): Promise<any> {
+  const { url, method, headers, body, timeout } = request;
+  const kinveyUrlRegex = /kinvey\.com/gm;
+
+  // Add kinvey device information headers
+  if (kinveyUrlRegex.test(url)) {
+    headers['X-Kinvey-Device-Information'] = deviceInformation();
+    headers['X-Kinvey-Device-Info'] = JSON.stringify(deviceInfo());
+  }
+
   const response = await tnsRequest({
-    headers: request.headers,
-    method: request.method,
-    url: request.url,
-    content: request.body,
-    timeout: request.timeout
+    headers,
+    method,
+    url,
+    content: body,
+    timeout
   });
 
   let data;
@@ -22,7 +32,38 @@ export async function send(request: HttpRequestObject): Promise<HttpResponseObje
 
   return {
     statusCode: response.statusCode,
-    headers: response.headers as { [name: string ]: string },
+    headers: response.headers,
     data
+  };
+}
+
+function deviceInformation() {
+  const platform = device.os;
+  const version = device.osVersion;
+  const manufacturer = device.manufacturer;
+  const parts = [`js-${name}/${version}`];
+
+  return parts.concat([platform, version, manufacturer]).map((part) => {
+    if (part) {
+      return part.toString().replace(/\s/g, '_').toLowerCase();
+    }
+
+    return 'unknown';
+  }).join(' ');
+}
+
+function deviceInfo() {
+  return {
+    hv: 1,
+    md: device.model,
+    os: device.os,
+    ov: device.osVersion,
+    sdk: {
+      name,
+      version
+    },
+    pv: device.sdkVersion,
+    ty: device.deviceType,
+    id: device.uuid
   };
 }

@@ -65,7 +65,8 @@ export class HttpResponse {
     this.statusCode = config.statusCode;
     this.headers = new HttpHeaders(config.headers);
 
-    if (config.data && this.headers.get('Content-Type') === 'application/json') {
+    const contentType = this.headers.get('Content-Type') || '';
+    if (config.data && contentType.indexOf('application/json') !== -1) {
       this.data = JSON.parse(config.data);
     } else {
       this.data = config.data;

@@ -1,12 +1,12 @@
 import { SecureStorage } from 'nativescript-secure-storage';
 
-const secureStorage = new SecureStorage();
-
 export function get(key: string) {
+  const secureStorage = new SecureStorage();
   return secureStorage.getSync({ key });
 }
 
 export function set(key: string, session: string): boolean {
+  const secureStorage = new SecureStorage();
   return secureStorage.setSync({
     key,
     value: session
@@ -14,5 +14,6 @@ export function set(key: string, session: string): boolean {
 }
 
 export function remove(key: string): boolean {
+  const secureStorage = new SecureStorage();
   return secureStorage.removeSync({ key });
 }

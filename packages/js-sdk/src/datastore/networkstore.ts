@@ -1,12 +1,12 @@
 import isArray from 'lodash/isArray';
 import { Observable } from 'rxjs';
-// import { get as getDeviceId } from '../device';
+import { getDeviceId } from '../device';
 import { Aggregation } from '../aggregation';
 import { Query } from '../query';
 import { KinveyError } from '../errors/kinvey';
 import { getSession, formatKinveyBaasUrl, HttpRequestMethod, KinveyHttpRequest, KinveyBaasNamespace, KinveyHttpAuth } from '../http';
 import { getAppKey } from '../kinvey';
-// import { subscribeToChannel, unsubscribeFromChannel } from '../live/live';
+import { subscribeToChannel, unsubscribeFromChannel, LiveServiceReceiver } from '../live';
 
 export function createRequest(method: HttpRequestMethod, url: string, body?: any) {
   return new KinveyHttpRequest({
@@ -41,7 +41,7 @@ export class NetworkStore {
     if (session) {
       return `${this.channelName}.u-${session._id}`;
     }
-    return null;
+    return undefined;
   }
 
   find(query?: Query, options: any = {}) {
@@ -304,39 +304,39 @@ export class NetworkStore {
     return response.data;
   }
 
-  // async subscribe(receiver, options = {}) {
-  //   const { apiProtocol, apiHost } = getConfig();
-  //   const {
-  //     timeout,
-  //     properties,
-  //     trace,
-  //     skipBL
-  //   } = options;
-  //   const url = formatKinveyUrl(apiProtocol, apiHost, `${this.pathname}/_subscribe`);
-  //   const request = createRequest(RequestMethod.POST, url, { deviceId: getDeviceId() });
-  //   request.headers.customRequestProperties = properties;
-  //   request.timeout = timeout;
-  //   await request.execute();
-  //   subscribeToChannel(this.channelName, receiver);
-  //   subscribeToChannel(this.personalChannelName, receiver);
-  //   return true;
-  // }
+  async subscribe(receiver: LiveServiceReceiver, options: any = {}) {
+    const {
+      timeout,
+      properties,
+      trace,
+      skipBL
+    } = options;
+    const url = formatKinveyBaasUrl(KinveyBaasNamespace.AppData, `${this.pathname}/_subscribe`);
+    const request = createRequest(HttpRequestMethod.POST, url, { deviceId: getDeviceId() });
+    request.headers.setCustomRequestProperties(properties);
+    request.timeout = timeout;
+    await request.execute();
+    subscribeToChannel(this.channelName, receiver);
+    if (this.personalChannelName) {
+      subscribeToChannel(this.personalChannelName, receiver);
+    }
+    return true;
+  }
 
-  // async unsubscribe(options = {}) {
-  //   const { apiProtocol, apiHost } = getConfig();
-  //   const {
-  //     timeout,
-  //     properties,
-  //     trace,
-  //     skipBL
-  //   } = options;
-  //   const url = formatKinveyUrl(apiProtocol, apiHost, `${this.pathname}/_unsubscribe`);
-  //   const request = createRequest(RequestMethod.POST, url, { deviceId: getDeviceId() });
-  //   request.headers.customRequestProperties = properties;
-  //   request.timeout = timeout;
-  //   await request.execute();
-  //   unsubscribeFromChannel(this.channelName);
-  //   unsubscribeFromChannel(this.personalChannelName);
-  //   return true;
-  // }
+  async unsubscribe(options: any = {}) {
+    const {
+      timeout,
+      properties,
+      trace,
+      skipBL
+    } = options;
+    const url = formatKinveyBaasUrl(KinveyBaasNamespace.AppData, `${this.pathname}/_unsubscribe`);
+    const request = createRequest(HttpRequestMethod.POST, url, { deviceId: getDeviceId() });
+    request.headers.setCustomRequestProperties(properties);
+    request.timeout = timeout;
+    await request.execute();
+    unsubscribeFromChannel(this.channelName);
+    unsubscribeFromChannel(this.personalChannelName);
+    return true;
+  }
 }

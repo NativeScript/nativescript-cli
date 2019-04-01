@@ -6,11 +6,12 @@ import { KinveyError } from '../errors/kinvey';
 import { MissingConfigurationError } from '../errors/missingConfiguration';
 import { ParameterValueOutOfRangeError } from '../errors/parameterValueOutOfRange';
 import { NotFoundError } from '../errors/notFound';
+import { Aggregation } from '../aggregation';
+import { formatKinveyBaasUrl, KinveyBaasNamespace, KinveyHttpRequest, HttpRequestMethod, KinveyHttpAuth } from '../http';
+import { LiveServiceReceiver } from '../live';
 import { DataStoreCache, QueryCache } from './cache';
 import { queryToSyncQuery, Sync } from './sync';
 import { NetworkStore } from './networkstore';
-import { Aggregation } from '../aggregation';
-import { formatKinveyBaasUrl, KinveyBaasNamespace, KinveyHttpRequest, HttpRequestMethod, KinveyHttpAuth } from '../http';
 
 const PAGE_LIMIT = 10000;
 
@@ -501,13 +502,13 @@ export class CacheStore {
     return sync.remove(clearQuery);
   }
 
-  // async subscribe(receiver, options) {
-  //   const network = new NetworkStore(this.collectionName);
-  //   return network.subscribe(receiver, options);
-  // }
+  async subscribe(receiver: LiveServiceReceiver, options?: any) {
+    const network = new NetworkStore(this.collectionName);
+    return network.subscribe(receiver, options);
+  }
 
-  // async unsubscribe(options) {
-  //   const network = new NetworkStore(this.collectionName);
-  //   return network.unsubscribe(options);
-  // }
+  async unsubscribe(options?: any) {
+    const network = new NetworkStore(this.collectionName);
+    return network.unsubscribe(options);
+  }
 }

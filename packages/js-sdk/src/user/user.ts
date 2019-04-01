@@ -1,7 +1,7 @@
 import isArray from 'lodash/isArray';
 import { Acl } from '../acl';
 import { Kmd } from '../kmd';
-// import { get as getDeviceId } from '../device';
+import { getDeviceId } from '../device';
 import {
   getSession,
   setSession,
@@ -15,8 +15,8 @@ import {
 import { KinveyError } from '../errors/kinvey';
 import { Entity } from '../storage';
 import { DataStoreCache, QueryCache, SyncCache } from '../datastore/cache';
-// import { isRegistered, register, unregister } from '../live/live';
-// import log from '../log';
+import { Live } from '../live';
+import { log } from '../log';
 import { mergeSocialIdentity } from './utils';
 
 export interface UserData extends Entity {
@@ -27,6 +27,7 @@ export interface UserData extends Entity {
 
 export class User {
   public data: UserData;
+  private live?: Live;
 
   constructor(data: UserData = {}) {
     this.data = data;
@@ -170,47 +171,46 @@ export class User {
     return this;
   }
 
-  // async registerForLiveService() {
-  //   if (!isRegistered()) {
-  //     const { apiProtocol, apiHost, appKey } = getConfig();
-  //     const deviceId = getDeviceId();
-  //     const request = new KinveyRequest({
-  //       method: RequestMethod.POST,
-  //       auth: Auth.Session,
-  //       url: formatKinveyBaasUrl(apiProtocol, apiHost, `/${USER_NAMESPACE}/${appKey}/${this._id}/register-realtime`),
-  //       body: { deviceId }
-  //     });
-  //     const response = await request.execute();
-  //     const config = Object.assign({}, { authKey: this.authtoken }, response.data);
-  //     register(config);
-  //   }
+  async registerForLiveService() {
+    if (!this.live) {
+      const deviceId = getDeviceId();
+      const request = new KinveyHttpRequest({
+        method: HttpRequestMethod.POST,
+        auth: KinveyHttpAuth.Session,
+        url: formatKinveyBaasUrl(KinveyBaasNamespace.User, `/${this._id}/register-realtime`),
+        body: { deviceId }
+      });
+      const response = await request.execute();
+      const config = Object.assign({}, { authKey: this.authtoken }, response.data);
+      this.live = new Live();
+      this.live.subscribe(config);
+    }
+    return true;
+  }
 
-  //   return true;
-  // }
+  async unregisterFromLiveService() {
+    if (this.live) {
+      const deviceId = getDeviceId();
+      const request = new KinveyHttpRequest({
+        method: HttpRequestMethod.POST,
+        auth: KinveyHttpAuth.Session,
+        url: formatKinveyBaasUrl(KinveyBaasNamespace.User, `/${this._id}/unregister-realtime`),
+        body: { deviceId }
+      });
+      await request.execute();
+      this.live.unsubscribe();
+      this.live = undefined;
+    }
 
-  // async unregisterFromLiveService() {
-  //   if (isRegistered()) {
-  //     const { apiProtocol, apiHost, appKey } = getConfig();
-  //     const deviceId = getDeviceId();
-  //     const request = new KinveyRequest({
-  //       method: RequestMethod.POST,
-  //       auth: Auth.Session,
-  //       url: formatKinveyBaasUrl(apiProtocol, apiHost, `/${USER_NAMESPACE}/${appKey}/${this._id}/unregister-realtime`),
-  //       body: { deviceId }
-  //     });
-  //     await request.execute();
-  //     unregister();
-  //   }
-
-  //   return true;
-  // }
+    return true;
+  }
 
   async logout(options: { timeout?: number } = {}) {
     if (this.isActive()) {
       // TODO: unregister push
 
       // Unregister from Live Service
-      // this.unregisterFromLiveService();
+      this.unregisterFromLiveService();
 
       try {
         // Logout
@@ -222,8 +222,8 @@ export class User {
         });
         await request.execute();
       } catch (error) {
-        // log.error('Logout request failed.');
-        // log.error(error.message);
+        log.error('Logout request failed.');
+        log.error(error.message);
       }
 
       // Remove the session
