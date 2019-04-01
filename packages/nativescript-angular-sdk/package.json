@@ -1,34 +1,34 @@
 {
 	"name": "kinvey-nativescript-angular-sdk",
 	"description": "Kinvey JavaScript SDK for NativeScript Angular applications.",
-	"version": "3.13.0-next.7",
+	"version": "3.13.0-next.8",
 	"license": "Apache-2.0",
 	"homepage": "https://github.com/Kinvey/js-sdk/tree/master/packages/nativescript-angular-sdk",
 	"repository": {
-	  "type": "git",
-	  "url": "https://github.com/Kinvey/js-sdk.git"
+		"type": "git",
+		"url": "https://github.com/Kinvey/js-sdk.git"
 	},
 	"bugs": {
-	  "url": "https://github.com/Kinvey/js-sdk/issues"
+		"url": "https://github.com/Kinvey/js-sdk/issues"
 	},
 	"author": {
-	  "name": "Thomas Conner",
-	  "email": "thomas.conner@progress.com"
+		"name": "Thomas Conner",
+		"email": "thomas.conner@progress.com"
 	},
 	"keywords": [
-	  "Kinvey",
+		"Kinvey",
 		"JavaScript",
 		"NativeScript",
 		"Angular"
 	],
 	"main": "src/publicApi.js",
 	"scripts": {
-	  "build": "tsc",
+		"build": "tsc",
 		"prebundle": "npm run build",
 		"bundle": "node scripts/bundle.js"
 	},
 	"dependencies": {
-		"kinvey-nativescript-sdk": "3.13.0-next.7"
+		"kinvey-nativescript-sdk": "^3.13.0-next.8"
 	},
 	"peerDependencies": {
 		"@angular/core": "~7.2.10"
