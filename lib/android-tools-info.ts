@@ -33,7 +33,8 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 		private $fs: IFileSystem,
 		private $logger: ILogger,
 		private $options: IOptions,
-		protected $staticConfig: Config.IStaticConfig) { }
+		protected $staticConfig: Config.IStaticConfig) {
+	}
 
 	@cache()
 	public getToolsInfo(): IAndroidToolsInfoData {

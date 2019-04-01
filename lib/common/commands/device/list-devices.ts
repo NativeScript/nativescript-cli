@@ -30,7 +30,6 @@ export class ListDevicesCommand implements ICommand {
 		const table: any = createTable(["#", "Device Name", "Platform", "Device Identifier", "Type", "Status"], []);
 		let action: (_device: Mobile.IDevice) => Promise<void>;
 		if (this.$options.json) {
-			this.$logger.setLevel("ERROR");
 			action = async (device) => {
 				this.$logger.out(JSON.stringify(device.deviceInfo));
 			};

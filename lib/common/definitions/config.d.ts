@@ -28,7 +28,6 @@ declare module Config {
 
 	interface IConfig {
 		DEBUG?: boolean;
-		CI_LOGGER?: boolean;
 		DISABLE_HOOKS: boolean;
 	}
 }

@@ -18,7 +18,6 @@ export class LockServiceStub implements ILockService {
 }
 
 export class CommonLoggerStub implements ILogger {
-	setLevel(level: string): void { }
 	getLevel(): string { return undefined; }
 	fatal(...args: string[]): void { }
 	error(...args: string[]): void { }
@@ -175,7 +174,6 @@ export class DeviceLogProviderStub extends EventEmitter implements Mobile.IDevic
 	}
 
 	setLogLevel(level: string, deviceIdentifier?: string): void {
-		this.logger.setLevel(level);
 	}
 
 	setApplicationPidForDevice(deviceIdentifier: string, pid: string): void {
