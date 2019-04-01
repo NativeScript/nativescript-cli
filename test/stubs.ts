@@ -11,7 +11,6 @@ import { HostInfo } from "./../lib/common/host-info";
 import { DevicePlatformsConstants } from "./../lib/common/mobile/device-platforms-constants";
 
 export class LoggerStub implements ILogger {
-	setLevel(level: string): void { }
 	getLevel(): string { return undefined; }
 	fatal(...args: string[]): void { }
 	error(...args: string[]): void { }

@@ -6,37 +6,36 @@ const TerminalRenderer = require("marked-terminal");
 const chalk = require("chalk");
 
 export class Logger implements ILogger {
-	private log4jsLogger: log4js.ILogger = null;
+	private log4jsLogger: log4js.Logger = null;
 	private passwordRegex = /(password=).*?(['&,]|$)|(password["']?\s*:\s*["']).*?(["'])/i;
 	private passwordReplacement = "$1$3*******$2$4";
 	private static LABEL = "[WARNING]:";
 
 	constructor($config: Config.IConfig,
 		private $options: IOptions) {
-		const appenders: log4js.IAppender[] = [];
-
-		if (!$config.CI_LOGGER) {
-			appenders.push({
-				type: "console",
-				layout: {
-					type: "messagePassThrough"
-				}
-			});
+		const appenders: IDictionary<log4js.Appender> = {};
+		const categories: IDictionary<{ appenders: string[]; level: string; }> = {};
+		let level: string = null;
+		if (this.$options.log) {
+			level = this.$options.log;
+		} else {
+			level = $config.DEBUG ? "TRACE" : "INFO";
 		}
 
-		log4js.configure({ appenders: appenders });
+		appenders["out"] = {
+			type: "console",
+			layout: {
+				type: "messagePassThrough"
+			}
+		};
+		categories["default"] = {
+			appenders: ['out'],
+			level
+		};
+
+		log4js.configure({ appenders, categories });
 
 		this.log4jsLogger = log4js.getLogger();
-
-		if (this.$options.log) {
-			this.log4jsLogger.setLevel(this.$options.log);
-		} else {
-			this.log4jsLogger.setLevel($config.DEBUG ? "TRACE" : "INFO");
-		}
-	}
-
-	setLevel(level: string): void {
-		this.log4jsLogger.setLevel(level);
 	}
 
 	getLevel(): string {

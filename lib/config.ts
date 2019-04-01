@@ -3,7 +3,6 @@ import * as shelljs from "shelljs";
 import * as os from "os";
 
 export class Configuration implements IConfiguration { // User specific config
-	CI_LOGGER = false;
 	DEBUG = false;
 	ANDROID_DEBUG_UI: string = null;
 	USE_POD_SANDBOX: boolean = false;
