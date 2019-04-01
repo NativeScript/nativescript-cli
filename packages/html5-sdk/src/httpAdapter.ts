@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { name, version } from './package.json';
+import { name, version } from '../package.json';
 
 // Helper function to detect the browser name and version.
 function browserDetect(ua: string) {

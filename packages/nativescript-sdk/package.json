@@ -1,32 +1,38 @@
 {
+  "private": true,
   "name": "kinvey-nativescript-sdk",
   "description": "Kinvey JavaScript SDK for NativeScript applications.",
-  "version": "3.13.0-next.5",
-  "homepage": "https://www.progress.com/kinvey",
+  "version": "3.13.0-next.7",
   "license": "Apache-2.0",
-  "author": {
-    "name": "Kinvey Team"
+  "homepage": "https://github.com/Kinvey/js-sdk/tree/master/packages/nativescript-sdk",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Kinvey/js-sdk.git"
   },
-  "contributors": [
-    "Thomas Conner <thomas.conner@progress.com>"
-  ],
+  "bugs": {
+    "url": "https://github.com/Kinvey/js-sdk/issues"
+  },
+  "author": {
+    "name": "Thomas Conner",
+    "email": "thomas.conner@progress.com"
+  },
   "keywords": [
-    "NativeScript",
-    "JavaScript"
+    "Kinvey",
+    "JavaScript",
+    "NativeScript"
   ],
-  "main": "lib/publicApi.js",
+  "main": "src/publicApi.js",
   "scripts": {
-    "prebuild": "del lib",
+    "prebuild": "node scripts/prebuild.js",
     "build": "tsc",
-    "postinstall": "node scripts/postinstall.js",
-    "preuninstall": "node scripts/preuninstall.js"
+    "postbuild": "node scripts/postbuild.js"
   },
   "dependencies": {
-    "nativescript-hook": "~0.2.5"
+    "kinvey-js-sdk": "3.13.0-next.7"
   },
   "peerDependencies": {
     "events": "~3.0.0",
-    "kinvey-js-sdk": "~0.0.0",
+    "nativescript-hook": "~0.2.5",
     "nativescript-secure-storage": "~2.4.0",
     "nativescript-sqlite": "~2.3.3",
     "nativescript-urlhandler": "~1.2.3",
@@ -35,10 +41,8 @@
   "devDependencies": {
     "@types/node": "~11.11.6",
     "@types/events": "~3.0.0",
-    "del-cli": "~1.1.0",
     "events": "~3.0.0",
     "js-base64": "~2.5.1",
-    "kinvey-js-sdk": "~0.0.0",
     "lodash": "~4.17.11",
     "loglevel": "~1.6.1",
     "loglevel-plugin-prefix": "~0.8.4",
@@ -72,10 +76,5 @@
       "android": "5.2.0",
       "ios": "5.2.0"
     }
-  },
-  "files": [
-    "lib/**/*",
-    "platforms/**/*",
-    "scripts/**/*"
-  ]
+  }
 }

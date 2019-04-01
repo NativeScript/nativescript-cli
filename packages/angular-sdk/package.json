@@ -2,31 +2,40 @@
   "private": true,
   "name": "kinvey-angular-sdk",
   "description": "Kinvey JavaScript SDK for Angular applications.",
-  "version": "3.13.0-next.6",
-  "homepage": "https://www.progress.com/kinvey",
+  "version": "3.13.0-next.7",
   "license": "Apache-2.0",
-  "author": {
-    "name": "Kinvey Team"
+  "homepage": "https://github.com/Kinvey/js-sdk/tree/master/packages/angular-sdk",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Kinvey/js-sdk.git"
   },
-  "contributors": [
-    "Thomas Conner <thomas.conner@progress.com>"
-  ],
+  "bugs": {
+    "url": "https://github.com/Kinvey/js-sdk/issues"
+  },
+  "author": {
+    "name": "Thomas Conner",
+    "email": "thomas.conner@progress.com"
+  },
   "keywords": [
+    "Kinvey",
     "JavaScript",
     "Angular"
   ],
-  "main": "lib/publicApi.js",
+  "main": "src/publicApi.js",
   "scripts": {
-    "prebuild": "del lib",
-    "build": "tsc && ng-packagr -p ng-package.json"
+    "prebuild": "node scripts/prebuild.js",
+    "build": "tsc",
+    "postbuild": "node scripts/postbuild.js",
+    "prebundle": "npm run build",
+    "bundle": "ng-packagr -p ng-package.json"
+  },
+  "dependencies": {
+    "kinvey-html5-sdk": "3.13.0-next.7"
   },
   "peerDependencies": {
-    "@angular/common": "~7.2.10",
-    "@angular/core": "~7.2.10",
-    "kinvey-html5-sdk": "~3.13.0-next.5"
+    "@angular/core": "~7.2.10"
   },
   "devDependencies": {
-    "@angular/common": "~7.2.10",
     "@angular/compiler": "^7.2.10",
     "@angular/compiler-cli": "^7.2.10",
     "@angular/core": "~7.2.10",
@@ -35,8 +44,6 @@
 		"del-cli": "~1.1.0",
     "events": "~3.0.0",
     "js-base64": "~2.5.1",
-    "kinvey-html5-sdk": "~3.13.0-next.5",
-    "kinvey-js-sdk": "~0.0.0",
     "lodash": "~4.17.11",
     "loglevel": "~1.6.1",
     "loglevel-plugin-prefix": "~0.8.4",

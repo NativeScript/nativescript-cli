@@ -1,5 +1,3 @@
-import { SessionObject } from 'kinvey-js-sdk';
-
 export function get(key: string) {
   return window.localStorage.getItem(key);
 }

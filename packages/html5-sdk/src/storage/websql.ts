@@ -1,6 +1,6 @@
 import isString from 'lodash/isString';
-import { StorageAdapter } from 'kinvey-js-sdk/lib/storage';
-import { KinveyError } from 'kinvey-js-sdk/lib/errors';
+import { StorageAdapter } from 'kinvey-js-sdk/lib/src/storage';
+import { KinveyError } from 'kinvey-js-sdk/lib/src/errors';
 
 const MASTER_TABLE_NAME = 'sqlite_master';
 const SIZE = 2 * 1024 * 1024; // Database size in bytes

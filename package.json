@@ -3,6 +3,8 @@
   "name": "kinvey",
   "scripts": {
     "build": "lerna run build",
+    "prebundle": "npm run build",
+    "bundle": "lerna run bundle",
     "postinstall": "lerna bootstrap"
   },
   "devDependencies": {

@@ -14,10 +14,10 @@ const BANNER = `
 
 module.exports = {
   mode: 'production',
-  entry: path.resolve(__dirname, pkg.main),
+  entry: path.join(__dirname, 'lib', pkg.main),
   output: {
     filename: `${pkg.name}-${pkg.version}.js`,
-    path: path.resolve(__dirname, 'dist'),
+    path: path.join(__dirname, 'dist'),
     libraryTarget: 'umd',
     library: 'Kinvey'
   },

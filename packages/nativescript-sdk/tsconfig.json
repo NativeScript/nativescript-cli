@@ -17,6 +17,7 @@
     "pretty": true,
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,
+    "allowSyntheticDefaultImports": true,
     "noEmitHelpers": true,
     "noEmitOnError": false,
     "noImplicitAny": false,
@@ -26,9 +27,7 @@
     "resolveJsonModule": true
   },
   "include": [
-    "src/**/*.ts",
-    "src/**/*.android.ts",
-    "src/**/*.ios.ts"
+    "src"
   ],
   "exclude": [
     "node_modules"

@@ -1,7 +1,8 @@
 {
+  "private": true,
   "name": "kinvey-js-sdk",
   "description": "Kinvey JavaScript SDK for JavaScript applications.",
-  "version": "3.13.0-next.6",
+  "version": "3.13.0-next.7",
   "license": "Apache-2.0",
   "homepage": "https://github.com/Kinvey/js-sdk/tree/master/packages/js-sdk",
   "repository": {
@@ -21,8 +22,9 @@
   ],
   "main": "src/index.js",
   "scripts": {
-    "prebuild": "del lib",
-    "build": "tsc"
+    "prebuild": "node scripts/prebuild.js",
+    "build": "tsc",
+    "postbuild": "node scripts/postbuild.js"
   },
   "peerDependencies": {
     "events": "~3.0.0",
@@ -45,8 +47,8 @@
     "@types/node": "~11.11.6",
     "@types/pubnub": "~4.0.5",
     "@types/url-join": "~4.0.0",
-    "del-cli": "~1.1.0",
     "events": "~3.0.0",
+    "fs-extra": "~7.0.1",
     "js-base64": "~2.5.1",
     "lodash": "~4.17.11",
     "loglevel": "~1.6.1",

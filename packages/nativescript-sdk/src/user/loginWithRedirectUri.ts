@@ -1,6 +1,8 @@
 import * as app from 'tns-core-modules/application';
 import { getDataFromPackageJson } from '../utils';
-import { loginWithRedirectUri as loginWithRedirectUriCommon } from 'kinvey-js-sdk/lib/user/loginWithRedirectUri';
+import { loginWithRedirectUri as loginWithRedirectUriCommon } from 'kinvey-js-sdk/lib/src/user/loginWithRedirectUri';
+
+declare const NSBundle: any;
 
 function getAppIdentifier() {
   if (app.android) {

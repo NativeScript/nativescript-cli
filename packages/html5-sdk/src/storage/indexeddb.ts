@@ -1,4 +1,4 @@
-import { Entity } from "kinvey-js-sdk/lib/storage";
+import { Entity } from "kinvey-js-sdk/lib/src/storage";
 
 const DB_CACHE: any = {};
 

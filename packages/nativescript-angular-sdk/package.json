@@ -2,28 +2,39 @@
 	"private": true,
 	"name": "kinvey-nativescript-angular-sdk",
 	"description": "Kinvey JavaScript SDK for NativeScript Angular applications.",
-	"version": "3.13.0-next.6",
-	"homepage": "https://www.progress.com/kinvey",
+	"version": "3.13.0-next.7",
 	"license": "Apache-2.0",
-	"author": {
-	  "name": "Kinvey Team"
+	"homepage": "https://github.com/Kinvey/js-sdk/tree/master/packages/nativescript-angular-sdk",
+	"repository": {
+	  "type": "git",
+	  "url": "https://github.com/Kinvey/js-sdk.git"
 	},
-	"contributors": [
-	  "Thomas Conner <thomas.conner@progress.com>"
-	],
+	"bugs": {
+	  "url": "https://github.com/Kinvey/js-sdk/issues"
+	},
+	"author": {
+	  "name": "Thomas Conner",
+	  "email": "thomas.conner@progress.com"
+	},
 	"keywords": [
-	  "JavaScript",
-		"Angular",
-		"NativeScript"
+	  "Kinvey",
+		"JavaScript",
+		"NativeScript",
+		"Angular"
 	],
-	"main": "lib/publicApi.js",
+	"main": "src/publicApi.js",
 	"scripts": {
-	  "prebuild": "del lib",
-	  "build": "tsc && ng-packagr -p ng-package.json"
+	  "prebuild": "node scripts/prebuild.js",
+	  "build": "tsc",
+		"postbuild": "node scripts/postbuild.js",
+		"prebundle": "npm run build",
+		"bundle": "ng-packagr -p ng-package.json"
+	},
+	"dependencies": {
+		"kinvey-nativescript-sdk": "3.13.0-next.7"
 	},
 	"peerDependencies": {
-		"@angular/core": "~7.2.10",
-    "kinvey-nativescript-sdk": "~3.13.0-next.5"
+		"@angular/core": "~7.2.10"
 	},
 	"devDependencies": {
 		"@angular/common": "~7.2.10",
@@ -31,11 +42,8 @@
 		"@angular/compiler-cli": "^7.2.10",
 		"@angular/core": "~7.2.10",
 		"@types/node": "~11.11.6",
-		"del-cli": "~1.1.0",
 		"events": "~3.0.0",
 		"js-base64": "~2.5.1",
-    "kinvey-js-sdk": "~0.0.0",
-		"kinvey-nativescript-sdk": "~3.13.0-next.5",
 		"lodash": "~4.17.11",
 		"loglevel": "~1.6.1",
 		"loglevel-plugin-prefix": "~0.8.4",
@@ -53,11 +61,5 @@
 		"url": "~0.11.0",
 		"url-join": "~4.0.0",
 		"zone.js": "~0.8.26"
-	},
-	"nativescript": {
-	  "platforms": {
-	    "android": "5.2.0",
-	    "ios": "5.2.0"
-	  }
 	}
 }

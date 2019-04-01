@@ -6,7 +6,7 @@ import {
   Kmd,
   Query,
   AuthorizationGrant
-} from 'kinvey-html5-sdk';
+} from 'kinvey-html5-sdk/lib/src/publicApi';
 import { DataStoreService } from './datastore.service';
 import { EndpointService } from './endpoint.service';
 import { FilesService } from './files.service';
