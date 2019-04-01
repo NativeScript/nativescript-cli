@@ -45,17 +45,13 @@ export class ProjectChangesService implements IProjectChangesService {
 	private _outputProjectMtime: number;
 	private _outputProjectCTime: number;
 
-	private get $hooksService(): IHooksService {
-		return this.$injector.resolve<IHooksService>("hooksService");
-	}
-
 	constructor(
 		private $platformsData: IPlatformsData,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $fs: IFileSystem,
 		private $filesHashService: IFilesHashService,
 		private $logger: ILogger,
-		private $injector: IInjector) {
+		public $hooksService: IHooksService) {
 	}
 
 	public get currentChanges(): IProjectChangesInfo {

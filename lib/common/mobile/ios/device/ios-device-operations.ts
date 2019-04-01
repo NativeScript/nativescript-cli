@@ -222,7 +222,7 @@ export class IOSDeviceOperations extends EventEmitter implements IIOSDeviceOpera
 			}
 		}
 
-		const groupedResults = _.groupBy(result, r => (<any>r).deviceId);
+		const groupedResults = _.groupBy(result, r => (<string>(<any>r).deviceId));
 		this.$logger.trace("Received multiple results:");
 		this.$logger.trace(groupedResults);
 

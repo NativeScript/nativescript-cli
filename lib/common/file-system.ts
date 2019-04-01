@@ -1,5 +1,5 @@
 import * as fs from "fs";
-import * as path from "path";
+import { join, dirname, basename, resolve as pathResolve, extname, normalize } from "path";
 import * as minimatch from "minimatch";
 import * as injector from "./yok";
 import * as crypto from "crypto";
@@ -74,7 +74,7 @@ export class FileSystem implements IFileSystem {
 
 		let proc: string;
 		if ($hostInfo.isWindows) {
-			proc = path.join(__dirname, "resources/platform-tools/unzip/win32/unzip");
+			proc = join(__dirname, "resources/platform-tools/unzip/win32/unzip");
 		} else if ($hostInfo.isDarwin) {
 			proc = "unzip"; // darwin unzip is info-zip
 		} else if ($hostInfo.isLinux) {
@@ -98,11 +98,11 @@ export class FileSystem implements IFileSystem {
 	}
 
 	private findFileCaseInsensitive(file: string): string {
-		const dir = path.dirname(file);
-		const basename = path.basename(file);
+		const dir = dirname(file);
+		const baseName = basename(file);
 		const entries = this.readDirectory(dir);
-		const match = minimatch.match(entries, basename, { nocase: true, nonegate: true, nonull: true })[0];
-		const result = path.join(dir, match);
+		const match = minimatch.match(entries, baseName, { nocase: true, nonegate: true, nonull: true })[0];
+		const result = join(dir, match);
 		return result;
 	}
 
@@ -204,7 +204,7 @@ export class FileSystem implements IFileSystem {
 	}
 
 	public writeFile(filename: string, data: string | NodeBuffer, encoding?: string): void {
-		this.createDirectory(path.dirname(filename));
+		this.createDirectory(dirname(filename));
 		fs.writeFileSync(filename, data, { encoding: encoding });
 	}
 
@@ -218,7 +218,7 @@ export class FileSystem implements IFileSystem {
 		}
 
 		let stringifiedData;
-		if (path.basename(filename) === PACKAGE_JSON_FILE_NAME) {
+		if (basename(filename) === PACKAGE_JSON_FILE_NAME) {
 			let newline = EOL;
 			if (fs.existsSync(filename)) {
 				const existingFile = this.readText(filename);
@@ -233,11 +233,11 @@ export class FileSystem implements IFileSystem {
 	}
 
 	public copyFile(sourceFileName: string, destinationFileName: string): void {
-		if (path.resolve(sourceFileName) === path.resolve(destinationFileName)) {
+		if (pathResolve(sourceFileName) === pathResolve(destinationFileName)) {
 			return;
 		}
 
-		this.createDirectory(path.dirname(destinationFileName));
+		this.createDirectory(dirname(destinationFileName));
 
 		// MobileApplication.app is resolved as a directory on Mac,
 		// therefore we need to copy it recursively as it's not a single file.
@@ -284,8 +284,8 @@ export class FileSystem implements IFileSystem {
 		if (!this.exists(baseName)) {
 			return baseName;
 		}
-		const extension = path.extname(baseName);
-		const prefix = path.basename(baseName, extension);
+		const extension = extname(baseName);
+		const prefix = basename(baseName, extension);
 
 		for (let i = 2; ; ++i) {
 			const numberedName = prefix + i + extension;
@@ -301,8 +301,8 @@ export class FileSystem implements IFileSystem {
 	}
 
 	public isRelativePath(p: string): boolean {
-		const normal = path.normalize(p);
-		const absolute = path.resolve(p);
+		const normal = normalize(p);
+		const absolute = pathResolve(p);
 		return normal !== absolute;
 	}
 
@@ -357,7 +357,7 @@ export class FileSystem implements IFileSystem {
 
 		const contents = this.readDirectory(directoryPath);
 		for (let i = 0; i < contents.length; ++i) {
-			const file = path.join(directoryPath, contents[i]);
+			const file = join(directoryPath, contents[i]);
 			let stat: fs.Stats = null;
 			if (this.exists(file)) {
 				stat = this.getFsStats(file);
@@ -420,11 +420,11 @@ export class FileSystem implements IFileSystem {
 	}
 
 	public deleteEmptyParents(directory: string): void {
-		let parent = this.exists(directory) ? directory : path.dirname(directory);
+		let parent = this.exists(directory) ? directory : dirname(directory);
 
 		while (this.isEmptyDir(parent)) {
 			this.deleteDirectory(parent);
-			parent = path.dirname(parent);
+			parent = dirname(parent);
 		}
 	}
 

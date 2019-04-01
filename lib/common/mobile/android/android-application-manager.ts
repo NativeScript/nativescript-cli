@@ -1,6 +1,6 @@
 import { EOL } from "os";
 import { ApplicationManagerBase } from "../application-manager-base";
-import {TARGET_FRAMEWORK_IDENTIFIERS, LiveSyncPaths } from "../../constants";
+import { TARGET_FRAMEWORK_IDENTIFIERS, LiveSyncPaths } from "../../constants";
 import { hook, sleep, regExpEscape } from "../../helpers";
 import { cache } from "../../decorators";
 

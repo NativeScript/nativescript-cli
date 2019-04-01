@@ -9,7 +9,7 @@ export class ChildProcess extends EventEmitter implements IChildProcess {
 
 	public async exec(command: string, options?: any, execOptions?: IExecOptions): Promise<any> {
 		return new Promise<any>((resolve, reject) => {
-			const callback = (error: Error, stdout: NodeBuffer, stderr: NodeBuffer) => {
+			const callback = (error: Error, stdout: string | NodeBuffer, stderr: string | NodeBuffer) => {
 				this.$logger.trace("Exec %s \n stdout: %s \n stderr: %s", command, stdout.toString(), stderr.toString());
 
 				if (error) {
@@ -33,7 +33,7 @@ export class ChildProcess extends EventEmitter implements IChildProcess {
 		this.$logger.debug("execFile: %s %s", command, this.getArgumentsAsQuotedString(args));
 
 		return new Promise<any>((resolve, reject) => {
-			child_process.execFile(command, args, (error: any, stdout: NodeBuffer) => {
+			child_process.execFile(command, args, (error: any, stdout: string | NodeBuffer) => {
 				if (error) {
 					reject(error);
 				} else {

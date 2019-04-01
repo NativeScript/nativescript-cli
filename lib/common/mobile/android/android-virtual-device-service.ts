@@ -16,6 +16,7 @@ export class AndroidVirtualDeviceService implements Mobile.IAndroidVirtualDevice
 		private $emulatorHelper: Mobile.IEmulatorHelper,
 		private $fs: IFileSystem,
 		private $hostInfo: IHostInfo,
+		private $sysInfo: ISysInfo,
 		private $logger: ILogger) {
 		this.androidHome = process.env.ANDROID_HOME;
 	}
@@ -152,8 +153,12 @@ export class AndroidVirtualDeviceService implements Mobile.IAndroidVirtualDevice
 		let result: ISpawnResult = null;
 		let devices: Mobile.IDeviceInfo[] = [];
 		let errors: string[] = [];
+		const canExecuteAvdManagerCommand = await this.canExecuteAvdManagerCommand();
+		if (!canExecuteAvdManagerCommand) {
+			errors = ["Unable to execute avdmanager, ensure JAVA_HOME is set and points to correct directory"];
+		}
 
-		if (this.pathToAvdManagerExecutable && this.$fs.exists(this.pathToAvdManagerExecutable)) {
+		if (canExecuteAvdManagerCommand) {
 			result = await this.$childProcess.trySpawnFromCloseEvent(this.pathToAvdManagerExecutable, ["list", "avds"]);
 		} else if (this.pathToAndroidExecutable && this.$fs.exists(this.pathToAndroidExecutable)) {
 			result = await this.$childProcess.trySpawnFromCloseEvent(this.pathToAndroidExecutable, ["list", "avd"]);
@@ -167,6 +172,22 @@ export class AndroidVirtualDeviceService implements Mobile.IAndroidVirtualDevice
 		}
 
 		return { devices, errors };
+	}
+
+	@cache()
+	private async canExecuteAvdManagerCommand(): Promise<boolean> {
+		let canExecute = false;
+		if (this.pathToAvdManagerExecutable && this.$fs.exists(this.pathToAvdManagerExecutable)) {
+			if (process.env.JAVA_HOME) {
+				// In case JAVA_HOME is set, but it points to incorrect directory (i.e. there's no java in $JAVA_HOME/bin/java), avdmanager will fail
+				// no matter if you have correct java in PATH.
+				canExecute = !!(await this.$sysInfo.getJavaVersionFromJavaHome());
+			} else {
+				canExecute = !!(await this.$sysInfo.getJavaVersionFromPath());
+			}
+		}
+
+		return canExecute;
 	}
 
 	private async getRunningEmulatorData(runningEmulatorId: string, availableEmulators: Mobile.IDeviceInfo[]): Promise<Mobile.IDeviceInfo> {

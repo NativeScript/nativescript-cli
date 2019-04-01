@@ -31,9 +31,9 @@ export class SubscriptionService implements ISubscriptionService {
 		return helpers.isInteractive() && process.env.CLI_NOPROMPT !== "1" && !(await this.$userSettingsService.getSettingValue("EMAIL_REGISTERED"));
 	}
 
-	private async getEmail(prompt: string, options?: IPrompterOptions): Promise<string> {
+	private async getEmail(message: string, options?: IPrompterOptions): Promise<string> {
 		const schema: prompt.Question = {
-			message: prompt,
+			message,
 			type: "input",
 			name: "inputEmail",
 			validate: (value: any) => {

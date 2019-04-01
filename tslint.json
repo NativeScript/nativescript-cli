@@ -56,7 +56,6 @@
 			true,
 			"allow-null-check"
 		],
-		"typeof-compare": true,
 		"use-isnan": true,
 		"variable-name": [
 			true,

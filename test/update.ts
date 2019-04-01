@@ -6,7 +6,7 @@ import { assert } from "chai";
 import * as sinon from 'sinon';
 import { Options } from "../lib/options";
 import { AndroidProjectService } from "../lib/services/android-project-service";
-import {StaticConfig } from "../lib/config";
+import { StaticConfig } from "../lib/config";
 import { SettingsService } from "../lib/common/test/unit-tests/stubs";
 const projectFolder = "test";
 
@@ -49,10 +49,10 @@ function createTestInjector(
 	});
 	testInjector.register("pluginVariablesService", {});
 	testInjector.register("platformService", {
-		getInstalledPlatforms: function(): string[]{
+		getInstalledPlatforms: function(): string[] {
 			return installedPlatforms;
 		},
-		getAvailablePlatforms: function(): string[]{
+		getAvailablePlatforms: function(): string[] {
 			return availablePlatforms;
 		},
 		removePlatforms: async (): Promise<void> => undefined,

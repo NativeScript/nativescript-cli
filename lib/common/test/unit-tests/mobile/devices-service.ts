@@ -14,6 +14,7 @@ import { CommonLoggerStub, ErrorsStub } from "../stubs";
 import { Messages } from "../../../messages/messages";
 import * as constants from "../../../constants";
 import { DevicePlatformsConstants } from "../../../mobile/device-platforms-constants";
+import { Timers } from "../../../timers";
 
 const helpers = require("../../../helpers");
 const originalIsInteractive = helpers.isInteractive;
@@ -28,11 +29,11 @@ class DevicesServiceInheritor extends DevicesService {
 		return super.startEmulatorIfNecessary(data);
 	}
 
-	public startDeviceDetectionIntervals(deviceInitOpts: Mobile.IDevicesServicesInitializationOptions = {}): Promise<void> {
-		return super.startDeviceDetectionIntervals(deviceInitOpts);
+	public startDeviceDetectionInterval(deviceInitOpts: Mobile.IDeviceLookingOptions = <any>{}): void {
+		return super.startDeviceDetectionInterval(deviceInitOpts);
 	}
 
-	public detectCurrentlyAttachedDevices(options?: Mobile.IDevicesServicesInitializationOptions): Promise<void> {
+	public detectCurrentlyAttachedDevices(options?: Mobile.IDeviceLookingOptions): Promise<void> {
 		return super.detectCurrentlyAttachedDevices(options);
 	}
 }
@@ -185,6 +186,7 @@ function createTestInjector(): IInjector {
 	testInjector.register("androidProcessService", { /* no implementation required */ });
 	testInjector.register("androidEmulatorDiscovery", AndroidEmulatorDiscoveryStub);
 	testInjector.register("emulatorHelper", {});
+	testInjector.register("timers", Timers);
 
 	return testInjector;
 }
@@ -227,7 +229,10 @@ function mockSetInterval(testCaseCallback?: Function): void {
 
 		};
 
-		process.nextTick(() => execution());
+		/* tslint:disable:no-floating-promises */
+		execution();
+		/* tslint:enable:no-floating-promises */
+
 		return nodeJsTimer;
 	};
 }
@@ -238,10 +243,10 @@ function resetDefaultSetInterval(): void {
 
 async function assertOnNextTick(assertionFunction: Function): Promise<void> {
 	await new Promise(resolve => {
-		process.nextTick(() => {
+		setTimeout(() => {
 			assertionFunction();
 			resolve();
-		});
+		}, 2);
 	});
 }
 
@@ -1193,7 +1198,7 @@ describe("devicesService", () => {
 		});
 	});
 
-	describe("startDeviceDetectionIntervals", () => {
+	describe("startDeviceDetectionInterval", () => {
 		let setIntervalsCalledCount: number;
 
 		beforeEach(() => {
@@ -1212,7 +1217,7 @@ describe("devicesService", () => {
 				hasStartedDeviceDetectionInterval = true;
 			});
 
-			await devicesService.startDeviceDetectionIntervals();
+			devicesService.startDeviceDetectionInterval();
 
 			assert.isTrue(hasStartedDeviceDetectionInterval);
 		});
@@ -1225,7 +1230,9 @@ describe("devicesService", () => {
 					await callback();
 				};
 
-				process.nextTick(execution);
+				/* tslint:disable:no-floating-promises */
+				execution();
+				/* tslint:enable:no-floating-promises */
 
 				return {
 					ref: () => { /* no implementation required */ },
@@ -1236,11 +1243,11 @@ describe("devicesService", () => {
 				};
 			};
 
-			await devicesService.startDeviceDetectionIntervals();
-			await devicesService.startDeviceDetectionIntervals();
-			await devicesService.startDeviceDetectionIntervals();
+			devicesService.startDeviceDetectionInterval();
+			devicesService.startDeviceDetectionInterval();
+			devicesService.startDeviceDetectionInterval();
 
-			assert.deepEqual(setIntervalsCalledCount, 2);
+			assert.deepEqual(setIntervalsCalledCount, 1);
 		});
 
 		describe("ios devices check", () => {
@@ -1257,7 +1264,7 @@ describe("devicesService", () => {
 					hasCheckedForIosDevices = true;
 				};
 
-				await devicesService.startDeviceDetectionIntervals();
+				devicesService.startDeviceDetectionInterval();
 
 				assert.isTrue(hasCheckedForIosDevices);
 			});
@@ -1265,7 +1272,14 @@ describe("devicesService", () => {
 			it("should not throw if ios device check fails throws an exception.", async () => {
 				(<any>$iOSDeviceDiscovery).checkForDevices = throwErrorFunction;
 
-				await assert.isFulfilled(devicesService.startDeviceDetectionIntervals());
+				let hasUnhandledRejection = false;
+				process.on("unhandledRejection", (reason: any, promise: Promise<any>) => {
+					hasUnhandledRejection = true;
+				});
+
+				devicesService.startDeviceDetectionInterval();
+
+				await assertOnNextTick(() => assert.isFalse(hasUnhandledRejection));
 			});
 		});
 
@@ -1284,37 +1298,46 @@ describe("devicesService", () => {
 				};
 
 				mockSetInterval();
-				await devicesService.startDeviceDetectionIntervals();
+				devicesService.startDeviceDetectionInterval();
 				await assertOnNextTick(() => assert.isTrue(hasCheckedForAndroidDevices));
 			});
 
 			it("should not throw if android device check fails throws an exception.", async () => {
 				$androidDeviceDiscovery.startLookingForDevices = throwErrorFunction;
+				let hasUnhandledRejection = false;
+				process.on("unhandledRejection", (reason: any, promise: Promise<any>) => {
+					hasUnhandledRejection = true;
+				});
 
-				await assert.isFulfilled(devicesService.startDeviceDetectionIntervals());
+				devicesService.startDeviceDetectionInterval();
+
+				await assertOnNextTick(() => assert.isFalse(hasUnhandledRejection));
 			});
 		});
 
 		describe("ios simulator check", () => {
 			let $iOSSimulatorDiscovery: Mobile.IDeviceDiscovery;
 			let $hostInfo: IHostInfo;
-			let hasCheckedForIosSimulator: boolean;
 
 			beforeEach(() => {
 				$iOSSimulatorDiscovery = testInjector.resolve("iOSSimulatorDiscovery");
-				(<any>$iOSSimulatorDiscovery).checkForDevices = async (): Promise<void> => {
-					hasCheckedForIosSimulator = true;
-				};
+				(<any>$iOSSimulatorDiscovery).checkForDevices = async (): Promise<void> => { /** */ };
 
 				$hostInfo = testInjector.resolve("hostInfo");
 				$hostInfo.isDarwin = true;
-				hasCheckedForIosSimulator = false;
 			});
 
 			it("should not throw if ios simulator check fails throws an exception.", async () => {
 				(<any>$iOSSimulatorDiscovery).checkForDevices = throwErrorFunction;
 
-				await assert.isFulfilled(devicesService.startDeviceDetectionIntervals());
+				let hasUnhandledRejection = false;
+				process.on("unhandledRejection", (reason: any, promise: Promise<any>) => {
+					hasUnhandledRejection = true;
+				});
+
+				devicesService.startDeviceDetectionInterval();
+
+				await assertOnNextTick(() => assert.isFalse(hasUnhandledRejection));
 			});
 		});
 
@@ -1334,7 +1357,7 @@ describe("devicesService", () => {
 				};
 
 				mockSetInterval();
-				await devicesService.startDeviceDetectionIntervals();
+				devicesService.startDeviceDetectionInterval();
 
 				await assertOnNextTick(() => assert.isTrue(hasCheckedForDevices));
 			});
@@ -1342,7 +1365,14 @@ describe("devicesService", () => {
 			it("should not throw if device check fails throws an exception.", async () => {
 				customDeviceDiscovery.startLookingForDevices = throwErrorFunction;
 
-				await assert.isFulfilled(devicesService.startDeviceDetectionIntervals());
+				let hasUnhandledRejection = false;
+				process.on("unhandledRejection", (reason: any, promise: Promise<any>) => {
+					hasUnhandledRejection = true;
+				});
+
+				devicesService.startDeviceDetectionInterval();
+
+				await assertOnNextTick(() => assert.isFalse(hasUnhandledRejection));
 			});
 		});
 
@@ -1371,7 +1401,7 @@ describe("devicesService", () => {
 			});
 
 			it("should check for application updates for all connected devices.", async () => {
-				await devicesService.startDeviceDetectionIntervals();
+				devicesService.startDeviceDetectionInterval();
 
 				await assertOnNextTick(() => {
 					assert.isTrue(hasCheckedForAndroidAppUpdates);
@@ -1382,14 +1412,14 @@ describe("devicesService", () => {
 			it("should check for application updates if the check on one device throws an exception.", async () => {
 				iOSDevice.applicationManager.checkForApplicationUpdates = throwErrorFunction;
 
-				await devicesService.startDeviceDetectionIntervals();
+				devicesService.startDeviceDetectionInterval();
 
 				await assertOnNextTick(() => assert.isTrue(hasCheckedForAndroidAppUpdates));
 			});
 
 			it("should check for application updates only on devices with status Connected", async () => {
 				androidDevice.deviceInfo.status = constants.UNREACHABLE_STATUS;
-				await devicesService.startDeviceDetectionIntervals();
+				devicesService.startDeviceDetectionInterval();
 
 				await assertOnNextTick(() => {
 					assert.isFalse(hasCheckedForAndroidAppUpdates);
@@ -1402,7 +1432,7 @@ describe("devicesService", () => {
 				androidDevice.applicationManager.checkForApplicationUpdates = throwErrorFunction;
 
 				const callback = () => {
-					devicesService.startDeviceDetectionIntervals.call(devicesService);
+					devicesService.startDeviceDetectionInterval.call(devicesService);
 				};
 
 				assert.doesNotThrow(callback);

@@ -34,6 +34,14 @@ export class SysInfo implements ISysInfo {
 		return sysInfo.getJavaCompilerVersion();
 	}
 
+	public getJavaVersionFromPath(): Promise<string> {
+		return sysInfo.getJavaVersionFromPath();
+	}
+
+	public getJavaVersionFromJavaHome(): Promise<string> {
+		return sysInfo.getJavaVersionFromJavaHome();
+	}
+
 	@exported("sysInfo")
 	public async getSystemWarnings(): Promise<ISystemWarning[]> {
 		const warnings: ISystemWarning[] = [];

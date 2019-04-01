@@ -54,12 +54,13 @@ export class HostInfo implements IHostInfo {
 
 		const systemProfileCommand = "system_profiler SPSoftwareDataType -detailLevel mini";
 		this.$logger.trace("Trying to get macOS version.");
+		let macOSVersion: string;
 		try {
 			const systemProfileOutput = await this.$childProcess.exec(systemProfileCommand);
 
 			const versionRegExp = /System Version:\s+?macOS\s+?(\d+\.\d+)(\.\d+)?\s+/g;
 			const regExpMatchers = versionRegExp.exec(systemProfileOutput);
-			const macOSVersion = regExpMatchers && regExpMatchers[1];
+			macOSVersion = regExpMatchers && regExpMatchers[1];
 			if (macOSVersion) {
 				this.$logger.trace(`macOS version based on system_profiler is ${macOSVersion}.`);
 				return macOSVersion;
@@ -75,7 +76,7 @@ export class HostInfo implements IHostInfo {
 		// So the version becomes "10.12" in this case.
 		const osRelease = this.$osInfo.release();
 		const majorVersion = osRelease && _.first(osRelease.split("."));
-		const macOSVersion = majorVersion && `10.${+majorVersion - 4}`;
+		macOSVersion = majorVersion && `10.${+majorVersion - 4}`;
 		this.$logger.trace(`macOS version based on os.release() (${osRelease}) is ${macOSVersion}.`);
 		return macOSVersion;
 	}

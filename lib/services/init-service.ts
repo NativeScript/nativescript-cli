@@ -107,7 +107,7 @@ export class InitService implements IInitService {
 		}
 
 		const allVersions: any = await this.$packageManager.view(packageName, { "versions": true });
-		const versions = _.filter(allVersions, (version: string) => semver.gte(version, InitService.MIN_SUPPORTED_FRAMEWORK_VERSIONS[packageName]));
+		const versions = _.filter(allVersions, (v: string) => semver.gte(v, InitService.MIN_SUPPORTED_FRAMEWORK_VERSIONS[packageName]));
 		if (versions.length === 1) {
 			this.$logger.info(`Only ${versions[0]} version is available for ${packageName}.`);
 			return this.buildVersionData(versions[0]);
