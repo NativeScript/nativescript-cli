@@ -232,7 +232,7 @@ export class ProjectService implements IProjectService {
 		const packageJsonData = this.$fs.readJson(projectFilePath);
 
 		// Remove the metadata keys from the package.json
-		let updatedPackageJsonData = _.omitBy<any, any>(packageJsonData, (value: any, key: string) => _.startsWith(key, "_") || TemplatesV2PackageJsonKeysToRemove.indexOf(key) !== -1);
+		let updatedPackageJsonData = _.omitBy(packageJsonData, (value: any, key: string) => _.startsWith(key, "_") || TemplatesV2PackageJsonKeysToRemove.indexOf(key) !== -1);
 		updatedPackageJsonData = _.merge(updatedPackageJsonData, this.packageJsonDefaultData);
 
 		if (updatedPackageJsonData.nativescript && updatedPackageJsonData.nativescript.templateVersion) {

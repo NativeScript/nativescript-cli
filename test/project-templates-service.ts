@@ -160,7 +160,7 @@ describe("project-templates-service", () => {
 				const templateName = "my-own-local-template";
 				const localTemplatePath = "/Users/username/localtemplate";
 				const fs = testInjector.resolve<IFileSystem>("fs");
-				fs.exists = (path: string): boolean => true;
+				fs.exists = (filePath: string): boolean => true;
 				const pacoteService = testInjector.resolve<IPacoteService>("pacoteService");
 				pacoteService.manifest = () => Promise.resolve({ name: templateName });
 				await projectTemplatesService.prepareTemplate(localTemplatePath, "tempFolder");

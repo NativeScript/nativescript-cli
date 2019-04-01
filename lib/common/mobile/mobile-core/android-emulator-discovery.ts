@@ -18,12 +18,12 @@ export class AndroidEmulatorDiscovery extends EventEmitter implements Mobile.IDe
 
 		// Remove old emulators
 		const lostEmulators = _(cachedEmulators)
-			.reject(e => _.find(currentEmulators, emulator => emulator && e && emulator.imageIdentifier === e.imageIdentifier))
+			.reject(e => _.some(currentEmulators, emulator => emulator && e && emulator.imageIdentifier === e.imageIdentifier))
 			.value();
 
 		// Add new emulators
 		const foundEmulators = _(currentEmulators)
-			.reject(e => _.find(cachedEmulators, emulator => emulator && e && emulator.imageIdentifier === e.imageIdentifier))
+			.reject(e => _.some(cachedEmulators, emulator => emulator && e && emulator.imageIdentifier === e.imageIdentifier))
 			.value();
 
 		if (lostEmulators.length) {

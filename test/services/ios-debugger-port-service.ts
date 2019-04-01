@@ -11,7 +11,7 @@ import * as sinon from "sinon";
 class DeviceApplicationManagerMock extends EventEmitter { }
 
 class DeveiceLogProviderMock extends EventEmitter {
-	public logData(deviceId: string): void {
+	public logData(id: string): void {
 		// need this to be empty
 	}
 }

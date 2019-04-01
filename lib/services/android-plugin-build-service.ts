@@ -4,13 +4,6 @@ import { getShortPluginName, hook } from "../common/helpers";
 import { Builder, parseString } from "xml2js";
 
 export class AndroidPluginBuildService implements IAndroidPluginBuildService {
-	/**
-	 * Required for hooks execution to work.
-	 */
-	private get $hooksService(): IHooksService {
-		return this.$injector.resolve("hooksService");
-	}
-
 	private get $platformService(): IPlatformService {
 		return this.$injector.resolve("platformService");
 	}
@@ -25,7 +18,8 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		private $projectDataService: IProjectDataService,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $errors: IErrors,
-		private $filesHashService: IFilesHashService) { }
+		private $filesHashService: IFilesHashService,
+		public $hooksService: IHooksService) { }
 
 	private static MANIFEST_ROOT = {
 		$: {

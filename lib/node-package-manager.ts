@@ -1,4 +1,4 @@
-import * as path from "path";
+import { join, relative } from "path";
 import { BasePackageManager } from "./base-package-manager";
 import { exported, cache } from "./common/decorators";
 import { CACACHE_DIRECTORY_NAME } from "./constants";
@@ -24,7 +24,7 @@ export class NodePackageManager extends BasePackageManager {
 			config["ignore-scripts"] = true;
 		}
 
-		const packageJsonPath = path.join(pathToSave, "package.json");
+		const packageJsonPath = join(pathToSave, "package.json");
 		const jsonContentBefore = this.$fs.readJson(packageJsonPath);
 
 		const flags = this.getFlagsString(config, true);
@@ -39,14 +39,14 @@ export class NodePackageManager extends BasePackageManager {
 		// Npm creates `etc` directory in installation dir when --prefix is passed
 		// https://github.com/npm/npm/issues/11486
 		// we should delete it if it was created because of us
-		const etcDirectoryLocation = path.join(cwd, "etc");
+		const etcDirectoryLocation = join(cwd, "etc");
 		const etcExistsPriorToInstallation = this.$fs.exists(etcDirectoryLocation);
 
 		//TODO: plamen5kov: workaround is here for a reason (remove whole file later)
 		if (config.path) {
 			let relativePathFromCwdToSource = "";
 			if (config.frameworkPath) {
-				relativePathFromCwdToSource = path.relative(config.frameworkPath, pathToSave);
+				relativePathFromCwdToSource = relative(config.frameworkPath, pathToSave);
 				if (this.$fs.exists(relativePathFromCwdToSource)) {
 					packageName = relativePathFromCwdToSource;
 				}
@@ -121,7 +121,7 @@ export class NodePackageManager extends BasePackageManager {
 	@cache()
 	public async getCachePath(): Promise<string> {
 		const cachePath = await this.$childProcess.exec(`npm config get cache`);
-		return path.join(cachePath.trim(), CACACHE_DIRECTORY_NAME);
+		return join(cachePath.trim(), CACACHE_DIRECTORY_NAME);
 	}
 }
 

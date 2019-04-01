@@ -269,7 +269,7 @@ describe("yok", () => {
 			injector.register("foo", obj);
 
 			class Test {
-				private foo: any;
+				public foo: any;
 
 				constructor(foo: any) {
 					this.foo = foo;
@@ -288,8 +288,8 @@ describe("yok", () => {
 			injector.register("foo", obj);
 
 			class Test {
-				private foo: any;
-				private bar: any;
+				public foo: any;
+				public bar: any;
 
 				constructor(foo: any, bar: any) {
 					this.foo = foo;
@@ -309,7 +309,7 @@ describe("yok", () => {
 			injector.register("foo", obj);
 
 			class Test {
-				private foo: any;
+				public foo: any;
 
 				constructor(foo: any) {
 					this.foo = foo;
@@ -331,8 +331,8 @@ describe("yok", () => {
 			injector.register("foo", obj);
 
 			class Test {
-				private foo: any;
-				private bar: any;
+				public foo: any;
+				public bar: any;
 
 				constructor(foo: any, bar: any) {
 					this.foo = foo;
@@ -354,7 +354,7 @@ describe("yok", () => {
 			injector.register("foo", obj);
 
 			class Test {
-				private foo: any;
+				public foo: any;
 				constructor($foo: any) {
 					this.foo = $foo;
 				}
@@ -381,7 +381,7 @@ describe("yok", () => {
 			const injector = new Yok();
 
 			class Test {
-				private foo: any;
+				public foo: any;
 				constructor() {
 					this.foo = "foo";
 				}

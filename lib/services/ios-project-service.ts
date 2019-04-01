@@ -12,7 +12,7 @@ import * as temp from "temp";
 import * as plist from "plist";
 import { IOSProvisionService } from "./ios-provision-service";
 import { IOSEntitlementsService } from "./ios-entitlements-service";
-import * as mobileprovision from "ios-mobileprovision-finder";
+import * as mobileProvisionFinder from "ios-mobileprovision-finder";
 import { BUILD_XCCONFIG_FILE_NAME, IosProjectConstants } from "../constants";
 
 interface INativeSourceCodeGroup {
@@ -73,7 +73,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				appDestinationDirectoryPath: path.join(projectRoot, projectData.projectName),
 				platformProjectService: this,
 				projectRoot: projectRoot,
-				getBuildOutputPath: (options : IBuildOutputOptions): string => {
+				getBuildOutputPath: (options: IBuildOutputOptions): string => {
 					const config = getConfigurationName(!options || options.release);
 					return path.join(projectRoot, constants.BUILD_DIR, `${config}-${getPlatformSdkName(!options || options.buildForDevice)}`);
 				},
@@ -387,7 +387,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			});
 			const instances = this.$devicesService.getDeviceInstances();
 			const devicesArchitectures = _(instances)
-				.filter(d => this.$mobileHelper.isiOSPlatform(d.deviceInfo.platform) && d.deviceInfo.activeArchitecture)
+				.filter(d => this.$mobileHelper.isiOSPlatform(d.deviceInfo.platform) && !!d.deviceInfo.activeArchitecture)
 				.map(d => d.deviceInfo.activeArchitecture)
 				.uniq()
 				.value();
@@ -500,7 +500,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		}
 	}
 
-	private async setupSigningFromProvision(projectRoot: string, projectData: IProjectData, provision?: string, mobileProvisionData?: mobileprovision.provision.MobileProvision): Promise<void> {
+	private async setupSigningFromProvision(projectRoot: string, projectData: IProjectData, provision?: string, mobileProvisionData?: mobileProvisionFinder.provision.MobileProvision): Promise<void> {
 		if (provision) {
 			const xcode = this.$pbxprojDomXcode.Xcode.open(this.getPbxProjPath(projectData));
 			const signing = xcode.getSigning(projectData.projectName);
@@ -939,7 +939,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 	}
 
 	private savePbxProj(project: any, projectData: IProjectData, omitEmptyValues?: boolean): void {
-		return this.$fs.writeFile(this.getPbxProjPath(projectData), project.writeSync({omitEmptyValues}));
+		return this.$fs.writeFile(this.getPbxProjPath(projectData), project.writeSync({ omitEmptyValues }));
 	}
 
 	public async preparePluginNativeCode(pluginData: IPluginData, projectData: IProjectData, opts?: any): Promise<void> {
@@ -984,7 +984,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		}
 
 		const pbxProjPath = this.getPbxProjPath(projectData);
-		this.$iOSExtensionsService.removeExtensions({pbxProjPath});
+		this.$iOSExtensionsService.removeExtensions({ pbxProjPath });
 		await this.addExtensions(projectData);
 	}
 	public beforePrepareAllPlugins(): Promise<void> {
@@ -1108,7 +1108,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		);
 		const platformData = this.getPlatformData(projectData);
 		const pbxProjPath = this.getPbxProjPath(projectData);
-		const addedExtensionsFromResources = await this.$iOSExtensionsService.addExtensionsFromPath({extensionsFolderPath: resorcesExtensionsPath, projectData, platformData, pbxProjPath});
+		const addedExtensionsFromResources = await this.$iOSExtensionsService.addExtensionsFromPath({ extensionsFolderPath: resorcesExtensionsPath, projectData, platformData, pbxProjPath });
 		const plugins = await this.getAllInstalledPlugins(projectData);
 		let addedExtensionsFromPlugins = false;
 		for (const pluginIndex in plugins) {
@@ -1116,7 +1116,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 			const pluginPlatformsFolderPath = pluginData.pluginPlatformsFolderPath(IOSProjectService.IOS_PLATFORM_NAME);
 
 			const extensionPath = path.join(pluginPlatformsFolderPath, constants.NATIVE_EXTENSION_FOLDER);
-			const addedExtensionFromPlugin = await this.$iOSExtensionsService.addExtensionsFromPath({extensionsFolderPath: extensionPath, projectData, platformData, pbxProjPath});
+			const addedExtensionFromPlugin = await this.$iOSExtensionsService.addExtensionsFromPath({ extensionsFolderPath: extensionPath, projectData, platformData, pbxProjPath });
 			addedExtensionsFromPlugins = addedExtensionsFromPlugins || addedExtensionFromPlugin;
 		}
 
@@ -1369,7 +1369,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 
 	private getExportOptionsMethod(projectData: IProjectData, archivePath: string): string {
 		const embeddedMobileProvisionPath = path.join(archivePath, 'Products', 'Applications', `${projectData.projectName}.app`, "embedded.mobileprovision");
-		const provision = mobileprovision.provision.readFromFile(embeddedMobileProvisionPath);
+		const provision = mobileProvisionFinder.provision.readFromFile(embeddedMobileProvisionPath);
 
 		return {
 			"Development": "development",

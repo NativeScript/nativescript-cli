@@ -2,11 +2,8 @@ import { Block } from "../codeGeneration/code-entity";
 import { CodePrinter } from "../codeGeneration/code-printer";
 
 export class MessageContractGenerator implements IServiceContractGenerator {
-	private pendingModels: any;
-
 	constructor(private $fs: IFileSystem,
 		private $messagesService: IMessagesService) {
-		this.pendingModels = {};
 	}
 
 	public async generate(): Promise<IServiceContractClientCode> {

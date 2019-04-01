@@ -70,10 +70,10 @@ export class DebugService extends EventEmitter implements IDebugService {
 
 	protected getDeviceDebugService(device: Mobile.IDevice): IDeviceDebugService {
 		if (!this._platformDebugServices[device.deviceInfo.identifier]) {
-			const platform = device.deviceInfo.platform;
-			if (this.$mobileHelper.isiOSPlatform(platform)) {
+			const devicePlatform = device.deviceInfo.platform;
+			if (this.$mobileHelper.isiOSPlatform(devicePlatform)) {
 				this._platformDebugServices[device.deviceInfo.identifier] = this.$injector.resolve("iOSDeviceDebugService", { device });
-			} else if (this.$mobileHelper.isAndroidPlatform(platform)) {
+			} else if (this.$mobileHelper.isAndroidPlatform(devicePlatform)) {
 				this._platformDebugServices[device.deviceInfo.identifier] = this.$injector.resolve("androidDeviceDebugService", { device });
 			} else {
 				this.$errors.failWithoutHelp(DebugCommandErrors.UNSUPPORTED_DEVICE_OS_FOR_DEBUGGING);
