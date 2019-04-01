@@ -15,7 +15,7 @@ import {
 import { KinveyError } from '../errors/kinvey';
 import { Entity } from '../storage';
 import { DataStoreCache, QueryCache, SyncCache } from '../datastore/cache';
-import { Live } from '../live';
+import { subscribe, unsubscribe, isSubscribed } from '../live';
 import { log } from '../log';
 import { mergeSocialIdentity } from './utils';
 
@@ -27,7 +27,6 @@ export interface UserData extends Entity {
 
 export class User {
   public data: UserData;
-  private live?: Live;
 
   constructor(data: UserData = {}) {
     this.data = data;
@@ -172,7 +171,7 @@ export class User {
   }
 
   async registerForLiveService() {
-    if (!this.live) {
+    if (!isSubscribed()) {
       const deviceId = getDeviceId();
       const request = new KinveyHttpRequest({
         method: HttpRequestMethod.POST,
@@ -182,14 +181,13 @@ export class User {
       });
       const response = await request.execute();
       const config = Object.assign({}, { authKey: this.authtoken }, response.data);
-      this.live = new Live();
-      this.live.subscribe(config);
+      subscribe(config);
     }
     return true;
   }
 
   async unregisterFromLiveService() {
-    if (this.live) {
+    if (isSubscribed()) {
       const deviceId = getDeviceId();
       const request = new KinveyHttpRequest({
         method: HttpRequestMethod.POST,
@@ -198,8 +196,7 @@ export class User {
         body: { deviceId }
       });
       await request.execute();
-      this.live.unsubscribe();
-      this.live = undefined;
+      unsubscribe();
     }
 
     return true;

@@ -55,6 +55,18 @@ class Listener extends EventEmitter {
 const listener = new Listener();
 let pubnub: PubNub | null;
 
+export function isSubscribed(channelName?: string) {
+  if (pubnub) {
+    if (channelName) {
+      return listener.eventNames().indexOf(channelName) !== -1;
+    }
+
+    return true;
+  }
+
+  return false;
+}
+
 export function subscribe(config: any) {
   if (pubnub) {
     throw new KinveyError('You are already subscribed to the live service. Please unsubscribe before you subscribe again.');
