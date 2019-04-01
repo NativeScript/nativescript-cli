@@ -28,7 +28,7 @@ export class PreviewAppLiveSyncService extends EventEmitter implements IPreviewA
 
 	@performanceLog()
 	public async initialize(data: IPreviewAppLiveSyncData): Promise<void> {
-		await this.$previewSdkService.initialize(async (device: Device) => {
+		await this.$previewSdkService.initialize(data.projectDir, async (device: Device) => {
 			try {
 				if (!device) {
 					this.$errors.failWithoutHelp("Sending initial preview files without a specified device is not supported.");
