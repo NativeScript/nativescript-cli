@@ -241,6 +241,31 @@ describe("SysInfo unit tests", () => {
 			assert.deepEqual(execCommands, ['which javac', '"javac" -version']);
 		});
 
+		it("null when there is incorrect JAVA_HOME on non-Windows OS", async () => {
+			const originalJavaHome = process.env[JavaHomeName];
+			process.env[JavaHomeName] = "/some/invalid/dir/name/where/java/does/not/exist";
+
+			const result = await sysInfo.getJavaCompilerVersion();
+
+			process.env[JavaHomeName] = originalJavaHome;
+
+			assert.deepEqual(result, null);
+			assert.deepEqual(execCommands, []);
+		});
+
+		it("null when there is incorrect JAVA_HOME on Window OS", async () => {
+			const originalJavaHome = process.env[JavaHomeName];
+			hostInfo.isWindows = true;
+			process.env[JavaHomeName] = "C:\\Program Files\\Not existing dir";
+
+			const result = await sysInfo.getJavaCompilerVersion();
+
+			process.env[JavaHomeName] = originalJavaHome;
+
+			assert.deepEqual(result, null);
+			assert.deepEqual(execCommands, []);
+		});
+
 		it("java compiler version when there is no JAVA_HOME on Window OS", async () => {
 			const originalJavaHome = process.env[JavaHomeName];
 			hostInfo.isWindows = true;

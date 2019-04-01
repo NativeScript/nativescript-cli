@@ -61,7 +61,7 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 
 	public getJavaCompilerVersion(): Promise<string> {
 		return this.getValueForProperty(() => this.javaCompilerVerCache, async (): Promise<string> => {
-			const javacVersion = (await this.getVersionOfJavaExecutableFromJavaHome(Constants.JAVAC_EXECUTABLE_NAME, SysInfo.JAVA_COMPILER_VERSION_REGEXP)) ||
+			const javacVersion = process.env["JAVA_HOME"] ? (await this.getVersionOfJavaExecutableFromJavaHome(Constants.JAVAC_EXECUTABLE_NAME, SysInfo.JAVA_COMPILER_VERSION_REGEXP)) :
 				(await this.getVersionOfJavaExecutableFromPath(Constants.JAVAC_EXECUTABLE_NAME, SysInfo.JAVA_COMPILER_VERSION_REGEXP));
 
 			return javacVersion;
