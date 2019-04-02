@@ -45,7 +45,7 @@ declare global {
 		printLiveSyncQrCode(options: IPrintLiveSyncOptions): Promise<void>;
 	}
 
-	interface IPlaygroundAppQrCodeOptions {
+	interface IPlaygroundAppQrCodeOptions extends IProjectDir {
 		platform?: string;
 	}
 
@@ -71,8 +71,10 @@ declare global {
 
 	interface IPreviewSchemaData {
 		name: string;
-		previewAppId: string;
 		scannerAppId: string;
+		scannerAppStoreId: string;
+		previewAppId: string;
+		previewAppStoreId: string;
 		msvKey: string;
 		publishKey: string;
 		subscribeKey: string;

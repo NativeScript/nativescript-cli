@@ -4,8 +4,10 @@ export class PreviewSchemaService implements IPreviewSchemaService {
 	private previewSchemas: IDictionary<IPreviewSchemaData> = {
 		"nsplay": {
 			name: "nsplay",
-			previewAppId: "org.nativescript.preview",
 			scannerAppId: "org.nativescript.play",
+			scannerAppStoreId: "1263543946",
+			previewAppId: "org.nativescript.preview",
+			previewAppStoreId: "1264484702",
 			msvKey: "cli",
 			publishKey: PubnubKeys.PUBLISH_KEY,
 			subscribeKey: PubnubKeys.SUBSCRIBE_KEY,
@@ -13,8 +15,10 @@ export class PreviewSchemaService implements IPreviewSchemaService {
 		},
 		"ksplay": {
 			name: "ksplay",
-			previewAppId: "com.kinvey.preview",
 			scannerAppId: "com.kinvey.scanner",
+			scannerAppStoreId: "1263543946",
+			previewAppId: "com.kinvey.preview",
+			previewAppStoreId: "1264484702",
 			msvKey: "kinveyStudio",
 			publishKey: PubnubKeys.PUBLISH_KEY,
 			subscribeKey: PubnubKeys.SUBSCRIBE_KEY
@@ -25,9 +29,7 @@ export class PreviewSchemaService implements IPreviewSchemaService {
 		private $projectDataService: IProjectDataService) { }
 
 	public getSchemaData(projectDir: string): IPreviewSchemaData {
-		const projectData = this.$projectDataService.getProjectData(projectDir);
-
-		let schemaName = projectData.previewAppSchema;
+		let schemaName = this.getSchemaNameFromProject(projectDir);
 		if (!schemaName) {
 			schemaName = _.findKey(this.previewSchemas, previewSchema => previewSchema.default);
 		}
@@ -38,6 +40,15 @@ export class PreviewSchemaService implements IPreviewSchemaService {
 		}
 
 		return result;
+	}
+
+	private getSchemaNameFromProject(projectDir: string): string {
+		try {
+			const projectData = this.$projectDataService.getProjectData(projectDir);
+			return projectData.previewAppSchema;
+		} catch (err) { /* ignore the error */ }
+
+		return null;
 	}
 }
 $injector.register("previewSchemaService", PreviewSchemaService);
