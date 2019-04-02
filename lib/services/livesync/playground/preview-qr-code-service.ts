@@ -16,7 +16,7 @@ export class PreviewQrCodeService implements IPreviewQrCodeService {
 
 	@exported("previewQrCodeService")
 	public async getPlaygroundAppQrCode(options?: IPlaygroundAppQrCodeOptions): Promise<IDictionary<IQrCodeImageData>> {
-		const { projectDir } = options;
+		const { projectDir } = options || <any>{ };
 		const result = Object.create(null);
 
 		if (!options || !options.platform || this.$mobileHelper.isAndroidPlatform(options.platform)) {

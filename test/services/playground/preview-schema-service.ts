@@ -24,8 +24,8 @@ const nsPlaySchema = {
 	default: true
 };
 
-const ksPlaySchema = {
-	name: 'ksplay',
+const ksPreviewSchema = {
+	name: 'kspreview',
 	scannerAppId: 'com.kinvey.scanner',
 	scannerAppStoreId: '1263543946',
 	previewAppId: 'com.kinvey.preview',
@@ -56,9 +56,9 @@ describe("PreviewSchemaService", () => {
 			expectedSchema: nsPlaySchema
 		},
 		{
-			name: "should return ksplay schema when { 'previewAppSchema': 'ksplay' } in nsconfig",
-			previewAppSchema: "ksplay",
-			expectedSchema: ksPlaySchema
+			name: "should return kspreview schema when { 'previewAppSchema': 'kspreview' } in nsconfig",
+			previewAppSchema: "kspreview",
+			expectedSchema: ksPreviewSchema
 		},
 		{
 			name: "should throw an error when invalid previewAppSchema is specified in nsconfig",
