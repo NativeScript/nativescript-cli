@@ -56,7 +56,9 @@ export class PreviewSdkService extends EventEmitter implements IPreviewSdkServic
 			msvEnv: this.$config.PREVIEW_APP_ENVIRONMENT,
 			showLoadingPage: false,
 			callbacks: this.getCallbacks(),
-			getInitialFiles
+			getInitialFiles,
+			previewAppStoreId: schema.previewAppStoreId,
+			previewAppGooglePlayId: schema.previewAppId
 		};
 	}
 
