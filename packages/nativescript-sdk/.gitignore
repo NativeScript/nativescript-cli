@@ -1,12 +1,7 @@
 .vscode
 .idea
 .DS_Store
-*.esm.json
-*.js
-*.js.map
 *.log
-src/*.d.ts
-!src/index.d.ts
 !src/references.d.ts
 node_modules
 lib
