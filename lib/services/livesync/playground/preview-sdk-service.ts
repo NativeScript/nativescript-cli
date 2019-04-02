@@ -54,7 +54,6 @@ export class PreviewSdkService extends EventEmitter implements IPreviewSdkServic
 			pubnubSubscribeKey: schema.subscribeKey,
 			msvKey: schema.msvKey,
 			msvEnv: this.$config.PREVIEW_APP_ENVIRONMENT,
-			showLoadingPage: false,
 			callbacks: this.getCallbacks(),
 			getInitialFiles,
 			previewAppStoreId: schema.previewAppStoreId,

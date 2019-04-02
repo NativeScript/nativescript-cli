@@ -35,7 +35,7 @@ const ksPlaySchema = {
 	subscribeKey: PubnubKeys.SUBSCRIBE_KEY
 };
 
-describe.only("PreviewSchemaService", () => {
+describe("PreviewSchemaService", () => {
 	let injector: IInjector;
 	let previewSchemaService: IPreviewSchemaService;
 
