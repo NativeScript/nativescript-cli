@@ -24,7 +24,10 @@
     "noImplicitUseStrict": false,
     "noFallthroughCasesInSwitch": true,
     "resolveJsonModule": true,
-    "downlevelIteration": true
+    "downlevelIteration": true,
+    "outDir": "lib",
+    "importHelpers": true,
+    "esModuleInterop": true
   },
   "exclude": [
     "node_modules"

@@ -96,20 +96,14 @@ export class Query {
   }
 
   set limit(limit) {
-    let _limit = limit;
-
-    if (isString(_limit)) {
-      _limit = parseFloat(_limit);
-    }
-
-    if (limit && !isNumber(_limit)) {
+    if (limit && !isNumber(limit)) {
       throw new QueryError('limit must be a number');
     }
 
     if (this._parent) {
-      this._parent.limit = _limit;
+      this._parent.limit = limit;
     } else {
-      this._limit = _limit;
+      this._limit = limit;
     }
   }
 
@@ -118,20 +112,14 @@ export class Query {
   }
 
   set skip(skip) {
-    let _skip = skip;
-
-    if (isString(_skip)) {
-      _skip = parseFloat(_skip);
-    }
-
-    if (!isNumber(_skip)) {
+    if (!isNumber(skip)) {
       throw new QueryError('skip must be a number');
     }
 
     if (this._parent) {
-      this._parent.skip = _skip;
+      this._parent.skip = skip;
     } else {
-      this._skip = _skip;
+      this._skip = skip;
     }
   }
 

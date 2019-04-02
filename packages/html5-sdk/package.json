@@ -1,7 +1,7 @@
 {
   "name": "kinvey-html5-sdk",
   "description": "Kinvey JavaScript SDK for HTML5 applications.",
-  "version": "3.13.0-next.8",
+  "version": "3.13.0-next.17",
   "license": "Apache-2.0",
   "homepage": "https://github.com/Kinvey/js-sdk/tree/master/packages/html5-sdk",
   "repository": {
@@ -20,21 +20,22 @@
     "JavaScript",
     "HTML5"
   ],
-  "main": "src/publicApi.js",
+  "main": "lib/publicApi.js",
   "scripts": {
-    "prebuild": "node scripts/prebuild.js",
+    "prebuild": "del lib",
     "build": "tsc",
     "postbuild": "node scripts/postbuild.js",
     "prebundle": "npm run build",
     "bundle": "webpack"
   },
   "dependencies": {
-    "kinvey-js-sdk": "^3.13.0-next.8"
+    "kinvey-js-sdk": "^3.13.0-next.17"
   },
   "peerDependencies": {
     "axios": "~0.18.0",
     "events": "~3.0.0",
-    "lodash": "~4.17.11"
+    "lodash": "~4.17.11",
+    "tslib": "~1.9.3"
   },
   "devDependencies": {
     "@types/events": "~3.0.0",
@@ -59,5 +60,8 @@
     "url-join": "~4.0.0",
     "webpack": "~4.29.6",
     "webpack-cli": "^3.3.0"
-  }
+  },
+  "files": [
+    "/lib"
+  ]
 }

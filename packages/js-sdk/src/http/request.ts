@@ -1,5 +1,6 @@
 import isString from 'lodash/isString';
 import PQueue from 'p-queue';
+import { Base64 } from 'js-base64';
 import { ConfigKey, getConfig } from '../config';
 import { InvalidCredentialsError } from '../errors/invalidCredentials';
 import { getAppKey, getAppSecret, getAuthProtocol, getAuthHost } from '../kinvey';

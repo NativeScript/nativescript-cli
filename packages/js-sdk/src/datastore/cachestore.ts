@@ -405,7 +405,7 @@ export class CacheStore {
           .then((docs: { length: any; }) => docs.length);
       });
       const pageCounts = await Promise.all(pagePromises);
-      const totalPageCount = pageCounts.reduce((totalCount, pageCount) => totalCount + pageCount, 0);
+      const totalPageCount = pageCounts.reduce((totalCount: number, pageCount: number) => totalCount + pageCount, 0);
 
       // Update the query cache
       queryCache.saveQuery(query!, response);

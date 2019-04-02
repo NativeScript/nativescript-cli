@@ -107,14 +107,14 @@ export enum KinveyHttpAuth {
   SessionOrApp = 'SessionOrApp'
 }
 
-const globalKinveyHeaders: { [name: string]: string } = {};
+const globalHeaders = new HttpHeaders();
 
 export function getAppVersion() {
-  return globalKinveyHeaders['X-Kinvey-Client-App-Version'];
+  return globalHeaders.get('X-Kinvey-Client-App-Version');
 }
 
 export function setAppVersion(appVersion: string) {
-  return globalKinveyHeaders['X-Kinvey-Client-App-Version'] = appVersion;
+  globalHeaders.set('X-Kinvey-Client-App-Version', appVersion);
 }
 
 export class KinveyHttpHeaders extends HttpHeaders {
@@ -140,7 +140,7 @@ export class KinveyHttpHeaders extends HttpHeaders {
     }
 
     // Add global Kinvey headers
-    this.join(new KinveyHttpHeaders(globalKinveyHeaders));
+    this.join(globalHeaders);
   }
 
   get requestStart() {

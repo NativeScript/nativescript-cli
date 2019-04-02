@@ -1,3 +1,4 @@
+import isString from 'lodash/isString';
 import { APIVersionNotAvailableError } from '../errors/apiVersionNotAvailable';
 import { APIVersionNotImplementedError } from '../errors/apiVersionNotImplemented';
 import { AppProblemError } from '../errors/appProblem';
@@ -66,7 +67,7 @@ export class HttpResponse {
     this.headers = new HttpHeaders(config.headers);
 
     const contentType = this.headers.get('Content-Type') || '';
-    if (config.data && contentType.indexOf('application/json') !== -1) {
+    if (isString(config.data) && contentType.indexOf('application/json') !== -1) {
       this.data = JSON.parse(config.data);
     } else {
       this.data = config.data;

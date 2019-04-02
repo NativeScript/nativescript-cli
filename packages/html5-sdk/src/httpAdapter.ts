@@ -20,13 +20,13 @@ function browserDetect(ua: string) {
 function deviceInformation() {
   const browser = browserDetect(window.navigator.userAgent);
   const platform = browser[1];
-  const version = browser[2];
+  const browserVersion = browser[2];
   const manufacturer = window.navigator.platform;
 
   // Return the device information string.
   const parts = [`js-${name}/${version}`];
 
-  return parts.concat([platform, version, manufacturer]).map((part) => {
+  return parts.concat([platform, browserVersion, manufacturer]).map((part) => {
     if (part) {
       return part.toString().replace(/\s/g, '_').toLowerCase();
     }

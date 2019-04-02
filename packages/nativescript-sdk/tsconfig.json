@@ -23,7 +23,9 @@
     "noImplicitReturns": true,
     "noImplicitUseStrict": false,
     "noFallthroughCasesInSwitch": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "outDir": "lib",
+    "esModuleInterop": true
   },
   "exclude": [
     "node_modules"
