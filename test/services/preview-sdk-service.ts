@@ -54,8 +54,8 @@ describe('PreviewSdkService', () => {
 				},
 				{
 					name: "should return the schema from nsconfig",
-					schemaFromNsConfig: "ksplay",
-					expectedSchemaName: "ksplay"
+					schemaFromNsConfig: "kspreview",
+					expectedSchemaName: "kspreview"
 				},
 				{
 					name: "should return the default schema",

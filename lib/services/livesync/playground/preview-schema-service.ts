@@ -13,8 +13,8 @@ export class PreviewSchemaService implements IPreviewSchemaService {
 			subscribeKey: PubnubKeys.SUBSCRIBE_KEY,
 			default: true
 		},
-		"ksplay": {
-			name: "ksplay",
+		"kspreview": {
+			name: "kspreview",
 			scannerAppId: "com.kinvey.scanner",
 			scannerAppStoreId: "1263543946",
 			previewAppId: "com.kinvey.preview",
