@@ -22,7 +22,7 @@ declare global {
 
 	interface IPreviewSdkService extends EventEmitter {
 		getQrCodeUrl(options: IGetQrCodeUrlOptions): string;
-		initialize(getInitialFiles: (device: Device) => Promise<FilesPayload>): void;
+		initialize(projectDir: string, getInitialFiles: (device: Device) => Promise<FilesPayload>): void;
 		applyChanges(filesPayload: FilesPayload): Promise<void>;
 		stop(): void;
 	}
@@ -45,7 +45,7 @@ declare global {
 		printLiveSyncQrCode(options: IPrintLiveSyncOptions): Promise<void>;
 	}
 
-	interface IPlaygroundAppQrCodeOptions {
+	interface IPlaygroundAppQrCodeOptions extends IProjectDir {
 		platform?: string;
 	}
 
@@ -63,5 +63,21 @@ declare global {
 		getDeviceById(id: string): Device;
 		getDevicesForPlatform(platform: string): Device[];
 		getPluginsUsageWarnings(data: IPreviewAppLiveSyncData, device: Device): string[];
+	}
+
+	interface IPreviewSchemaService {
+		getSchemaData(projectDir: string): IPreviewSchemaData;
+	}
+
+	interface IPreviewSchemaData {
+		name: string;
+		scannerAppId: string;
+		scannerAppStoreId: string;
+		previewAppId: string;
+		previewAppStoreId: string;
+		msvKey: string;
+		publishKey: string;
+		subscribeKey: string;
+		default?: boolean;
 	}
 }

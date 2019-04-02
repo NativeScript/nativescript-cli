@@ -3731,10 +3731,10 @@ nativescript-doctor@1.9.2:
     winreg "1.2.2"
     yauzl "2.10.0"
 
-nativescript-preview-sdk@0.3.3:
-  version "0.3.3"
-  resolved "https://registry.yarnpkg.com/nativescript-preview-sdk/-/nativescript-preview-sdk-0.3.3.tgz#0e95e5a92db8d4566d9bb9767a2a849217574787"
-  integrity sha512-QHi4SbDblN+dSZCIztx1xVdrB4cP911OXV92REIVOqDHXyAFYUZeWu5DH0/3IHdC9fnMgXMeJ0WZEpgGgieqtQ==
+nativescript-preview-sdk@0.3.4:
+  version "0.3.4"
+  resolved "https://registry.yarnpkg.com/nativescript-preview-sdk/-/nativescript-preview-sdk-0.3.4.tgz#bb0dc3ce7da2be7e1e91cd2836b61b3699555f95"
+  integrity sha512-Dw4Nn6MXbZMW8dkQIf1NfXSSNtu3rDOw0z1KE159lwPEVMM8F7qxrqqT57XTiQP5pnqXMARhoQvkgW55qTVx6Q==
   dependencies:
     "@types/axios" "0.14.0"
     "@types/pubnub" "4.0.2"

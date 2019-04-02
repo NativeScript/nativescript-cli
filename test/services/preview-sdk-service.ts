@@ -2,6 +2,7 @@ import { PreviewSdkService } from "../../lib/services/livesync/playground/previe
 import { Yok } from "../../lib/common/yok";
 import { assert } from "chai";
 import { LoggerStub } from "../stubs";
+import { PreviewSchemaService } from "../../lib/services/livesync/playground/preview-schema-service";
 
 const createTestInjector = (): IInjector => {
 	const testInjector = new Yok();
@@ -9,6 +10,7 @@ const createTestInjector = (): IInjector => {
 	testInjector.register("config", {});
 	testInjector.register("previewSdkService", PreviewSdkService);
 	testInjector.register("previewDevicesService", {});
+	testInjector.register("previewSchemaService", PreviewSchemaService);
 	testInjector.register("previewAppLogProvider", {});
 	testInjector.register("httpClient", {
 		httpRequest: async (options: any, proxySettings?: IProxySettings): Promise<Server.IResponse> => undefined
@@ -16,6 +18,7 @@ const createTestInjector = (): IInjector => {
 	testInjector.register("projectDataService", {
 		getProjectData: () => ({})
 	});
+	testInjector.register("errors", {});
 
 	return testInjector;
 };
