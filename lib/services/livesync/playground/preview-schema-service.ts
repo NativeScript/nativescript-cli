@@ -16,9 +16,9 @@ export class PreviewSchemaService implements IPreviewSchemaService {
 		"kspreview": {
 			name: "kspreview",
 			scannerAppId: "com.kinvey.scanner",
-			scannerAppStoreId: "1263543946",
+			scannerAppStoreId: "1458317125",
 			previewAppId: "com.kinvey.preview",
-			previewAppStoreId: "1264484702",
+			previewAppStoreId: "1458502055",
 			msvKey: "kinveyStudio",
 			publishKey: PubnubKeys.PUBLISH_KEY,
 			subscribeKey: PubnubKeys.SUBSCRIBE_KEY
