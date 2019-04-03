@@ -108,21 +108,6 @@ export class PluginsService implements IPluginsService {
 		return await platformData.platformProjectService.validatePlugins(projectData);
 	}
 
-	public async prepare(dependencyData: IDependencyData, platform: string, projectData: IProjectData, projectFilesConfig: IProjectFilesConfig): Promise<void> {
-		platform = platform.toLowerCase();
-		const platformData = this.$platformsData.getPlatformData(platform, projectData);
-		const pluginData = this.convertToPluginData(dependencyData, projectData.projectDir);
-
-		const appFolderExists = this.$fs.exists(path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME));
-		if (appFolderExists) {
-			this.preparePluginScripts(pluginData, platform, projectData, projectFilesConfig);
-			await this.preparePluginNativeCode(pluginData, platform, projectData);
-
-			// Show message
-			this.$logger.out(`Successfully prepared plugin ${pluginData.name} for ${platform}.`);
-		}
-	}
-
 	public preparePluginScripts(pluginData: IPluginData, platform: string, projectData: IProjectData, projectFilesConfig: IProjectFilesConfig): void {
 		const platformData = this.$platformsData.getPlatformData(platform, projectData);
 		const pluginScriptsDestinationPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME, "tns_modules");

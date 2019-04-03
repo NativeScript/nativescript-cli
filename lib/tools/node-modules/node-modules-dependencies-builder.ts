@@ -19,21 +19,27 @@ export class NodeModulesDependenciesBuilder implements INodeModulesDependenciesB
 
 		const resolvedDependencies: IDependencyData[] = [];
 
-		const queue: IDependencyDescription[] = _.keys(dependencies)
-			.map(dependencyName => ({
-				parent: null,
-				parentDir: projectPath,
-				name: dependencyName,
-				depth: 0
-			}));
+		const queue: IDependencyDescription[] = _.map(dependencies, (version: string, dependencyName: string) => ({
+			parent: null,
+			parentDir: projectPath,
+			name: dependencyName,
+			depth: 0,
+			version
+		}));
 
 		while (queue.length) {
 			const currentModule = queue.shift();
 			const resolvedDependency = this.findModule(rootNodeModulesPath, currentModule, resolvedDependencies);
 
 			if (resolvedDependency && !_.some(resolvedDependencies, r => r.directory === resolvedDependency.directory)) {
-				_.each(resolvedDependency.dependencies, d => {
-					const dependency: IDependencyDescription = { parent: currentModule, name: d, parentDir: resolvedDependency.directory, depth: resolvedDependency.depth + 1 };
+
+				_.each(resolvedDependency.dependencies, (d, key) => {
+					const dependency: IDependencyDescription = {
+						parent: currentModule,
+						name: d,
+						parentDir: resolvedDependency.directory,
+						depth: resolvedDependency.depth + 1
+					};
 
 					const shouldAdd = !_.some(queue, element =>
 						element.parent === dependency.parent &&
@@ -46,7 +52,41 @@ export class NodeModulesDependenciesBuilder implements INodeModulesDependenciesB
 					}
 				});
 
-				resolvedDependencies.push(resolvedDependency);
+				const alreadyAddedDependency = _.find(resolvedDependencies, r => r.name === resolvedDependency.name && !r.deduped);
+				if (!!alreadyAddedDependency) {
+					// TODO: These checks are valid only for NativeScript plugins with existing platforms dir.
+					// TODO: Consider cases when one of the versions of a plugin is a NativeScript plugin and another one is not.
+					const isNativeScriptPlugin = !!alreadyAddedDependency.nativescript;
+					if (isNativeScriptPlugin) {
+						if (alreadyAddedDependency.version === resolvedDependency.version) {
+							let dedupedLocation = "";
+							let locationToBeUsed = "";
+							if (alreadyAddedDependency.depth > resolvedDependency.depth) {
+								// alreadyAddedDependency.deduped = true;
+								dedupedLocation = alreadyAddedDependency.directory;
+								locationToBeUsed = resolvedDependency.directory;
+								alreadyAddedDependency.warning = `Will not add ${resolvedDependency.name} from location ${dedupedLocation} as it has already been added from ${locationToBeUsed}.
+It is not expected to have the same version of a dependency in different locations. Consider removing node_modules and package-lock.json (npm-shrinkwrap.json) and installing dependencies again.`;
+							} else {
+								// resolvedDependency.deduped = true;
+								dedupedLocation = resolvedDependency.directory;
+								locationToBeUsed = alreadyAddedDependency.directory;
+								resolvedDependency.warning = `Will not add ${resolvedDependency.name} from location ${dedupedLocation} as it has already been added from ${locationToBeUsed}.
+It is not expected to have the same version of a dependency in different locations. Consider removing node_modules and package-lock.json (npm-shrinkwrap.json) and installing dependencies again.`;
+							}
+
+							resolvedDependencies.push(resolvedDependency);
+						} else {
+							throw new Error(`Unable to add dependency ${resolvedDependency.directory} as different version of the same dependency has been added from ${alreadyAddedDependency.directory}`);
+						}
+					} else if (alreadyAddedDependency.version === resolvedDependency.version) {
+						resolvedDependency.warning = `Detected the same version of a package installed on different locations: ${alreadyAddedDependency.directory} and ${resolvedDependency.directory}
+It is not expected to have the same version of a dependency in different locations. Consider removing node_modules and package-lock.json (npm-shrinkwrap.json) and installing dependencies again.`;
+						resolvedDependencies.push(resolvedDependency);
+					}
+				} else {
+					resolvedDependencies.push(resolvedDependency);
+				}
 			}
 		}
 
@@ -66,7 +106,7 @@ export class NodeModulesDependenciesBuilder implements INodeModulesDependenciesB
 			while (parent && !moduleExists) {
 				modulePath = path.join(depDescription.parent.parentDir, NODE_MODULES_FOLDER_NAME, depDescription.name);
 				moduleExists = this.moduleExists(modulePath);
-				if (!moduleExists)  {
+				if (!moduleExists) {
 					parent = parent.parent;
 				}
 			}
@@ -90,24 +130,24 @@ export class NodeModulesDependenciesBuilder implements INodeModulesDependenciesB
 	}
 
 	private getDependencyData(name: string, directory: string, depth: number): IDependencyData {
-		const dependency: IDependencyData = {
-			name,
-			directory,
-			depth
-		};
-
 		const packageJsonPath = path.join(directory, PACKAGE_JSON_FILE_NAME);
-		const packageJsonExists = this.$fs.getLsStats(packageJsonPath).isFile();
+		const packageJsonExists = this.$fs.exists(packageJsonPath) && this.$fs.getLsStats(packageJsonPath).isFile();
 
 		if (packageJsonExists) {
 			const packageJsonContents = this.$fs.readJson(packageJsonPath);
+			const dependency: IDependencyData = {
+				name,
+				directory,
+				depth,
+				dependencies: _.keys(packageJsonContents.dependencies),
+				version: packageJsonContents.version
+			};
 
 			if (!!packageJsonContents.nativescript) {
 				// add `nativescript` property, necessary for resolving plugins
 				dependency.nativescript = packageJsonContents.nativescript;
 			}
 
-			dependency.dependencies = _.keys(packageJsonContents.dependencies);
 			return dependency;
 		}
 

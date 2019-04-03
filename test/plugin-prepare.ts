@@ -44,12 +44,14 @@ describe("Plugin preparation", () => {
 				depth: 0,
 				directory: "some dir",
 				nativescript: null,
+				version: "1.0.0"
 			},
 			{
 				name: "nativescript-calendar",
 				depth: 0,
 				directory: "some dir",
 				nativescript: null,
+				version: "1.0.0"
 			}
 		];
 		await pluginPrepare.preparePlugins(testDependencies, "android", null, {});

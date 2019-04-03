@@ -2,8 +2,7 @@ import { TnsModulesCopy, NpmPluginPrepare } from "./node-modules-dest-copy";
 
 export class NodeModulesBuilder implements INodeModulesBuilder {
 	constructor(private $fs: IFileSystem,
-		private $injector: IInjector,
-		private $nodeModulesDependenciesBuilder: INodeModulesDependenciesBuilder
+		private $injector: IInjector
 	) { }
 
 	public async prepareNodeModules(opts: INodeModulesBuilderData): Promise<void> {
@@ -20,7 +19,7 @@ export class NodeModulesBuilder implements INodeModulesBuilder {
 
 	private intialPrepareNodeModulesIfRequired(opts: INodeModulesBuilderData): IDependencyData[] {
 		const { nodeModulesData } = opts;
-		const productionDependencies = this.$nodeModulesDependenciesBuilder.getProductionDependencies(nodeModulesData.projectData.projectDir);
+		const productionDependencies = nodeModulesData.productionDependencies;
 
 		if (opts.copyNodeModules && !nodeModulesData.appFilesUpdaterOptions.bundle) {
 			this.initialPrepareNodeModules(opts, productionDependencies);
@@ -38,10 +37,10 @@ export class NodeModulesBuilder implements INodeModulesBuilder {
 		}
 
 		const tnsModulesCopy: TnsModulesCopy = this.$injector.resolve(TnsModulesCopy, {
-			outputRoot: nodeModulesData.absoluteOutputPath
+			outputRoot: nodeModulesData.absoluteOutputPath,
+			projectDir: opts.nodeModulesData.projectData.projectDir
 		});
-
-		tnsModulesCopy.copyModules({ dependencies: productionDependencies, release });
+		tnsModulesCopy.prepareNodeModules({ dependencies: productionDependencies, release });
 	}
 }
 

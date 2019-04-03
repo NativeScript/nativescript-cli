@@ -10,38 +10,39 @@ export interface ILocalDependencyData extends IDependencyData {
 export class TnsModulesCopy {
 	constructor(
 		private outputRoot: string,
+		private projectDir: string,
 		private $fs: IFileSystem,
 		private $pluginsService: IPluginsService
 	) {
 	}
 
-	public copyModules(opts: { dependencies: IDependencyData[], release: boolean }): void {
+	public prepareNodeModules(opts: { dependencies: IDependencyData[], release: boolean }): void {
 		const filePatternsToDelete = opts.release ? "**/*.ts" : "**/*.d.ts";
 		for (const entry in opts.dependencies) {
 			const dependency = opts.dependencies[entry];
 
-			this.copyDependencyDir(dependency, filePatternsToDelete);
+			if (dependency.depth === 0) {
+				this.copyDependencyDir(dependency, filePatternsToDelete);
+			}
 		}
 	}
 
 	private copyDependencyDir(dependency: IDependencyData, filePatternsToDelete: string): void {
-		if (dependency.depth === 0) {
-			const targetPackageDir = path.join(this.outputRoot, dependency.name);
+		const targetPackageDir = path.join(this.outputRoot, dependency.name);
 
-			shelljs.mkdir("-p", targetPackageDir);
+		shelljs.mkdir("-p", targetPackageDir);
 
-			const isScoped = dependency.name.indexOf("@") === 0;
-			const destinationPath = isScoped ? path.join(this.outputRoot, dependency.name.substring(0, dependency.name.indexOf("/"))) : this.outputRoot;
-			shelljs.cp("-RfL", dependency.directory, destinationPath);
+		const isScoped = dependency.name.indexOf("@") === 0;
+		const destinationPath = isScoped ? path.join(this.outputRoot, dependency.name.substring(0, dependency.name.indexOf("/"))) : this.outputRoot;
+		shelljs.cp("-RfL", dependency.directory, destinationPath);
 
-			// remove platform-specific files (processed separately by plugin services)
-			shelljs.rm("-rf", path.join(targetPackageDir, "platforms"));
+		// remove platform-specific files (processed separately by plugin services)
+		shelljs.rm("-rf", path.join(targetPackageDir, "platforms"));
 
-			this.removeNonProductionDependencies(dependency, targetPackageDir);
-			this.removeDependenciesPlatformsDirs(targetPackageDir);
-			const allFiles = this.$fs.enumerateFilesInDirectorySync(targetPackageDir);
-			allFiles.filter(file => minimatch(file, filePatternsToDelete, { nocase: true })).map(file => this.$fs.deleteFile(file));
-		}
+		this.removeNonProductionDependencies(dependency, targetPackageDir);
+		this.removeDependenciesPlatformsDirs(targetPackageDir);
+		const allFiles = this.$fs.enumerateFilesInDirectorySync(targetPackageDir);
+		allFiles.filter(file => minimatch(file, filePatternsToDelete, { nocase: true })).map(file => this.$fs.deleteFile(file));
 	}
 
 	private removeDependenciesPlatformsDirs(dependencyDir: string): void {
@@ -83,16 +84,24 @@ export class TnsModulesCopy {
 	}
 
 	private getDependencies(dependenciesFolder: string): string[] {
-		const dependencies = _.flatten(this.$fs.readDirectory(dependenciesFolder)
-			.map(dir => {
-				if (_.startsWith(dir, "@")) {
-					const pathToDir = path.join(dependenciesFolder, dir);
-					const contents = this.$fs.readDirectory(pathToDir);
-					return _.map(contents, subDir => `${dir}/${subDir}`);
-				}
+		const dependencies = _.flatten(
+			this.$fs.readDirectory(dependenciesFolder)
+				.map(dir => {
+					if (_.startsWith(dir, "@")) {
+						const pathToDir = path.join(dependenciesFolder, dir);
+						const contents = this.$fs.readDirectory(pathToDir);
+						return _.map(contents, subDir => `${dir}/${subDir}`);
+					}
 
-				return dir;
-			}));
+					return dir;
+				})
+		)
+			.filter(dir => {
+				// remove folders that do not have package.json inside - they are not dependencies.
+				// such dir for example is .bin produced in node_modules.
+				const pathToDir = path.join(dependenciesFolder, dir);
+				return this.$fs.exists(path.join(pathToDir, constants.PACKAGE_JSON_FILE_NAME));
+			});
 
 		return dependencies;
 	}
@@ -159,7 +168,7 @@ export class NpmPluginPrepare {
 		for (const dependencyKey in dependencies) {
 			const dependency = dependencies[dependencyKey];
 			const isPlugin = !!dependency.nativescript;
-			if (isPlugin) {
+			if (isPlugin && !dependency.deduped) {
 				const pluginData = this.$pluginsService.convertToPluginData(dependency, projectData.projectDir);
 				await this.$pluginsService.preparePluginNativeCode(pluginData, platform, projectData);
 			}
@@ -173,15 +182,16 @@ export class NpmPluginPrepare {
 			return;
 		}
 
-		for (const dependencyKey in dependencies) {
-			const dependency = dependencies[dependencyKey];
-			const isPlugin = !!dependency.nativescript;
-			if (isPlugin) {
-				platform = platform.toLowerCase();
-				const pluginData = this.$pluginsService.convertToPluginData(dependency, projectData.projectDir);
-				const platformData = this.$platformsData.getPlatformData(platform, projectData);
-				const appFolderExists = this.$fs.exists(path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME));
-				if (appFolderExists) {
+		platform = platform.toLowerCase();
+		const platformData = this.$platformsData.getPlatformData(platform, projectData);
+		const appFolderExists = this.$fs.exists(path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME));
+
+		if (appFolderExists) {
+			for (const dependencyKey in dependencies) {
+				const dependency = dependencies[dependencyKey];
+				const isPlugin = !!dependency.nativescript;
+				if (isPlugin) {
+					const pluginData = this.$pluginsService.convertToPluginData(dependency, projectData.projectDir);
 					this.$pluginsService.preparePluginScripts(pluginData, platform, projectData, projectFilesConfig);
 					// Show message
 					this.$logger.out(`Successfully prepared plugin ${pluginData.name} for ${platform}.`);

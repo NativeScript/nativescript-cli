@@ -273,6 +273,7 @@ interface INodeModulesData extends IPlatform, IProjectDataComposition, IAppFiles
 	absoluteOutputPath: string;
 	lastModifiedTime: Date;
 	projectFilesConfig: IProjectFilesConfig;
+	productionDependencies: IDependencyData[];
 }
 
 interface INodeModulesBuilderData {
@@ -334,6 +335,7 @@ interface IOptionalProjectChangesInfoComposition {
 
 interface IPreparePlatformCoreInfo extends IPreparePlatformInfoBase, IOptionalProjectChangesInfoComposition {
 	platformSpecificData: IPlatformSpecificData;
+	productionDependencies: IDependencyData[];
 }
 
 interface IPreparePlatformInfo extends IPreparePlatformInfoBase, IPlatformConfig, IPlatformTemplate, ISkipNativeCheckOptional { }

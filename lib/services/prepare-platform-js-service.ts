@@ -51,7 +51,7 @@ export class PreparePlatformJSService extends PreparePlatformService implements 
 		}
 
 		if (!config.changesInfo || config.changesInfo.modulesChanged) {
-			await this.copyTnsModules(config.platform, config.platformData, config.projectData, config.appFilesUpdaterOptions, config.projectFilesConfig);
+			await this.copyTnsModules(config);
 		}
 	}
 
@@ -83,8 +83,8 @@ export class PreparePlatformJSService extends PreparePlatformService implements 
 		return null;
 	}
 
-	private async copyTnsModules(platform: string, platformData: IPlatformData, projectData: IProjectData, appFilesUpdaterOptions: IAppFilesUpdaterOptions, projectFilesConfig?: IProjectFilesConfig): Promise<void> {
-		const appDestinationDirectoryPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
+	private async copyTnsModules(config: IPreparePlatformJSInfo): Promise<void> {
+		const appDestinationDirectoryPath = path.join(config.platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
 		const lastModifiedTime = this.$fs.exists(appDestinationDirectoryPath) ? this.$fs.getFsStats(appDestinationDirectoryPath).mtime : null;
 
 		try {
@@ -93,13 +93,14 @@ export class PreparePlatformJSService extends PreparePlatformService implements 
 			await this.$nodeModulesBuilder.prepareJSNodeModules({
 				nodeModulesData: {
 					absoluteOutputPath,
-					platform,
+					platform: config.platform,
 					lastModifiedTime,
-					projectData,
-					appFilesUpdaterOptions,
-					projectFilesConfig
+					projectData: config.projectData,
+					appFilesUpdaterOptions: config.appFilesUpdaterOptions,
+					projectFilesConfig: config.projectFilesConfig,
+					productionDependencies: config.productionDependencies
 				},
-				release: appFilesUpdaterOptions.release,
+				release: config.appFilesUpdaterOptions.release,
 				copyNodeModules: true
 			});
 		} catch (error) {

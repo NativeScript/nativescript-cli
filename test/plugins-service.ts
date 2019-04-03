@@ -205,31 +205,6 @@ async function addPluginWhenExpectingToFail(testInjector: IInjector, plugin: str
 	assert.isTrue(isErrorThrown);
 }
 
-function createAndroidManifestFile(projectFolder: string, fs: IFileSystem): void {
-	const manifest = `
-        <?xml version="1.0" encoding="UTF-8"?>
-		<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example.android.basiccontactables" android:versionCode="1" android:versionName="1.0" >
-            <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
-            <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
-            <uses-permission android:name="android.permission.INTERNET"/>
-            <application android:allowBackup="true" android:icon="@drawable/ic_launcher" android:label="@string/app_name" android:theme="@style/Theme.Sample" >
-                <activity android:name="com.example.android.basiccontactables.MainActivity" android:label="@string/app_name" android:launchMode="singleTop">
-                    <meta-data android:name="android.app.searchable" android:resource="@xml/searchable" />
-                    <intent-filter>
-                        <action android:name="android.intent.action.SEARCH" />
-                    </intent-filter>
-                    <intent-filter>
-                        <action android:name="android.intent.action.MAIN" />
-                    </intent-filter>
-                </activity>
-            </application>
-		</manifest>`;
-
-	fs.createDirectory(path.join(projectFolder, "platforms"));
-	fs.createDirectory(path.join(projectFolder, "platforms", "android"));
-	fs.writeFile(path.join(projectFolder, "platforms", "android", "AndroidManifest.xml"), manifest);
-}
-
 describe("Plugins service", () => {
 	let testInjector: IInjector;
 	const commands = ["add", "install"];
@@ -500,76 +475,6 @@ describe("Plugins service", () => {
 				const commandsService = testInjector.resolve(CommandsService);
 				await commandsService.tryExecuteCommand(`plugin|${command}`, [pluginFolderPath]);
 			});
-		});
-	});
-
-	describe("merge xmls tests", () => {
-		beforeEach(() => {
-			testInjector = createTestInjector();
-			testInjector.registerCommand("plugin|add", AddPluginCommand);
-		});
-		it("fails if the plugin contains incorrect xml", async () => {
-			const pluginName = "mySamplePlugin";
-			const projectFolder = createProjectFile(testInjector);
-			const pluginFolderPath = path.join(projectFolder, pluginName);
-			const pluginJsonData: IDependencyData = {
-				name: pluginName,
-				nativescript: {
-					platforms: {
-						android: "0.10.0"
-					}
-				},
-				depth: 0,
-				directory: "some dir"
-			};
-			const fs = testInjector.resolve("fs");
-			fs.writeJson(path.join(pluginFolderPath, "package.json"), pluginJsonData);
-
-			// Adds AndroidManifest.xml file in platforms/android folder
-			createAndroidManifestFile(projectFolder, fs);
-
-			// Mock plugins service
-			const pluginsService: IPluginsService = testInjector.resolve("pluginsService");
-			pluginsService.getAllInstalledPlugins = async (pData: IProjectData) => {
-				return <any[]>[{ name: "" }];
-			};
-
-			const appDestinationDirectoryPath = path.join(projectFolder, "platforms", "android");
-
-			// Mock platformsData
-			const platformsData = testInjector.resolve("platformsData");
-			platformsData.getPlatformData = (platform: string) => {
-				return {
-					appDestinationDirectoryPath: appDestinationDirectoryPath,
-					frameworkPackageName: "tns-android",
-					configurationFileName: "AndroidManifest.xml",
-					normalizedPlatformName: "Android",
-					platformProjectService: {
-						preparePluginNativeCode: (pluginData: IPluginData) => Promise.resolve()
-					}
-				};
-			};
-
-			// Ensure the pluginDestinationPath folder exists
-			const pluginPlatformsDirPath = path.join(projectFolder, "node_modules", pluginName, "platforms", "android");
-			const projectData: IProjectData = testInjector.resolve("projectData");
-			projectData.initializeProjectData();
-			fs.ensureDirectoryExists(pluginPlatformsDirPath);
-
-			// Creates invalid plugin's AndroidManifest.xml file
-			const xml = '<?xml version="1.0" encoding="UTF-8"?>' +
-				'<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example.android.basiccontactables" android:versionCode="1" android:versionName="1.0" >' +
-				'<uses-permission android:name="android.permission.READ_CONTACTS"/>';
-			const pluginConfigurationFilePath = path.join(pluginPlatformsDirPath, "AndroidManifest.xml");
-			fs.writeFile(pluginConfigurationFilePath, xml);
-
-			// Expected error message. The assertion happens in mockBeginCommand
-			const expectedErrorMessage = `Exception: Invalid xml file ${pluginConfigurationFilePath}. Additional technical information: element parse error: Exception: Invalid xml file ` +
-				`${pluginConfigurationFilePath}. Additional technical information: unclosed xml attribute` +
-				`\n@#[line:1,col:39].` +
-				`\n@#[line:1,col:39].`;
-			mockBeginCommand(testInjector, expectedErrorMessage);
-			await pluginsService.prepare(pluginJsonData, "android", projectData, {});
 		});
 	});
 

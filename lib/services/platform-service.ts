@@ -36,7 +36,8 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		private $terminalSpinnerService: ITerminalSpinnerService,
 		private $pacoteService: IPacoteService,
 		private $usbLiveSyncService: any,
-		public $hooksService: IHooksService
+		public $hooksService: IHooksService,
+		private $nodeModulesDependenciesBuilder: INodeModulesDependenciesBuilder
 	) {
 		super();
 	}
@@ -301,6 +302,57 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		await this.ensurePlatformInstalled(platform, platformTemplate, projectData, config, appFilesUpdaterOptions, nativePrepare);
 	}
 
+	private analyzeDependencies(productionDependencies: IDependencyData[]): void {
+		const groupedDependencies = _.groupBy(productionDependencies, p => p.name);
+		_.each(groupedDependencies, (listOfDependencies, name) => {
+			if (listOfDependencies.length > 1) {
+				// if all dependencies have the same version, something is wrong:
+				const groupedByVersion = _.groupBy(listOfDependencies, g => g.version);
+				if (_.keys(groupedByVersion).length === 1) {
+					// Something is wrong with the installation, but same versions are detected.
+					if (!!listOfDependencies[0].nativescript) {
+						// NativeScript dependencies.
+						const packageAtTopLevel = _.find(listOfDependencies, d => d.depth === 0);
+						this.$logger.warn(`Detected same versions of the ${listOfDependencies[0].name} installed at locations: ${_.map(listOfDependencies, d => d.directory).join(", ")}`);
+						if (!!packageAtTopLevel) {
+							// we will use only this package
+							this.$logger.warn(`CLI will use only ${packageAtTopLevel.directory}.`);
+							_.each(listOfDependencies, d => {
+								if (d !== packageAtTopLevel) {
+									d.deduped = true;
+								}
+							});
+						} else {
+							this.$errors.failWithoutHelp(`As none of the packages is installed at the root level, CLI cannot use them. Add at least one instance of the plugin as direct dependency of your project by calling 'npm install --save --save-exact ${listOfDependencies[0].name}@${listOfDependencies[0].version}`);
+						}
+					} else {
+						// Not a nativescript plugin
+						const packageAtTopLevel = _.find(listOfDependencies, d => d.depth === 0);
+						this.$logger.warn(`Detected same versions of the ${listOfDependencies[0].name} installed at locations: ${_.map(listOfDependencies, d => d.directory).join(", ")}`);
+						if (!!packageAtTopLevel) {
+							// we will use only this package
+							this.$logger.warn(`CLI will use only ${packageAtTopLevel.directory}.`);
+							_.each(listOfDependencies, d => {
+								if (d !== packageAtTopLevel) {
+									d.deduped = true;
+								}
+							});
+						}
+					}
+				} else {
+					// Different versions detected
+					if (!!listOfDependencies[0].nativescript) {
+						this.$errors.failWithoutHelp(`Cannot use different versions of a nativescript plugin in your application.`);
+					} else {
+						// Not a nativescript plugin - nothing
+					}
+				}
+			}
+		});
+
+		console.log("DEDUPED DEPENDENCIES ARE: ", _.filter(productionDependencies, d => d.deduped));
+	}
+
 	/* Hooks are expected to use "filesToSync" parameter, as to give plugin authors additional information about the sync process.*/
 	@performanceLog()
 	@helpers.hook('prepare')
@@ -318,6 +370,17 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 
 		const platformData = this.$platformsData.getPlatformData(platform, projectData);
 		const projectFilesConfig = helpers.getProjectFilesConfig({ isReleaseBuild: appFilesUpdaterOptions.release });
+		const productionDependencies = this.$nodeModulesDependenciesBuilder.getProductionDependencies(projectData.projectDir)
+
+		_.each(productionDependencies, dependency => {
+			if (dependency.warning) {
+				this.$logger.warn(dependency.warning);
+			}
+		});
+
+		// TODO: Analyze dependencies and print warnings/errors
+		this.analyzeDependencies(productionDependencies);
+
 		await this.$preparePlatformJSService.preparePlatform({
 			platform,
 			platformData,
@@ -328,7 +391,8 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 			changesInfo,
 			filesToSync,
 			filesToRemove,
-			env
+			env,
+			productionDependencies
 		});
 
 		if (!nativePrepare || !nativePrepare.skipNativePrepare) {
@@ -342,7 +406,8 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 				filesToSync,
 				filesToRemove,
 				projectFilesConfig,
-				env
+				env,
+				productionDependencies
 			});
 		}
 
