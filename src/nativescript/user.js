@@ -16,7 +16,7 @@ export class User extends CoreUser {
   }
 }
 
-function getRedirectUri() {
+function getRedirectUri(redirectUri) {
   const appIdentifier = getAppIdentifier();
 
   switch (appIdentifier) {
