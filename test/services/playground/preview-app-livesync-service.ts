@@ -73,7 +73,7 @@ class PreviewSdkServiceMock extends EventEmitter implements IPreviewSdkService {
 		return "my_cool_qr_code_url";
 	}
 
-	public initialize(getInitialFiles: (device: Device) => Promise<FilesPayload>) {
+	public initialize(projectDir: string, getInitialFiles: (device: Device) => Promise<FilesPayload>) {
 		this.getInitialFiles = async (device) => {
 			const filesPayload = await getInitialFiles(device);
 			initialFiles.push(...filesPayload.files);

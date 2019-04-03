@@ -1,5 +1,4 @@
 import { MessagingService, Config, Device, DeviceConnectedMessage, SdkCallbacks, ConnectedDevices, FilesPayload } from "nativescript-preview-sdk";
-import { PubnubKeys } from "./preview-app-constants";
 import { EventEmitter } from "events";
 const pako = require("pako");
 
@@ -13,24 +12,20 @@ export class PreviewSdkService extends EventEmitter implements IPreviewSdkServic
 		private $logger: ILogger,
 		private $previewDevicesService: IPreviewDevicesService,
 		private $previewAppLogProvider: IPreviewAppLogProvider,
-		private $projectDataService: IProjectDataService) {
+		private $previewSchemaService: IPreviewSchemaService) {
 			super();
 	}
 
 	public getQrCodeUrl(options: IGetQrCodeUrlOptions): string {
 		const { projectDir, useHotModuleReload } = options;
-		const projectData = this.$projectDataService.getProjectData(projectDir);
-		const schema = projectData.previewAppSchema || "nsplay";
-		// TODO: Use the correct keys for the schema
-		const publishKey = PubnubKeys.PUBLISH_KEY;
-		const subscribeKey = PubnubKeys.SUBSCRIBE_KEY;
+		const schema = this.$previewSchemaService.getSchemaData(projectDir);
 		const hmrValue = useHotModuleReload ? "1" : "0";
-		const result = `${schema}://boot?instanceId=${this.instanceId}&pKey=${publishKey}&sKey=${subscribeKey}&template=play-ng&hmr=${hmrValue}`;
+		const result = `${schema.name}://boot?instanceId=${this.instanceId}&pKey=${schema.publishKey}&sKey=${schema.subscribeKey}&template=play-ng&hmr=${hmrValue}`;
 		return result;
 	}
 
-	public async initialize(getInitialFiles: (device: Device) => Promise<FilesPayload>): Promise<void> {
-		const initConfig = this.getInitConfig(getInitialFiles);
+	public async initialize(projectDir: string, getInitialFiles: (device: Device) => Promise<FilesPayload>): Promise<void> {
+		const initConfig = this.getInitConfig(projectDir, getInitialFiles);
 		this.messagingService = new MessagingService();
 		this.instanceId = await this.messagingService.initialize(initConfig);
 	}
@@ -51,15 +46,18 @@ export class PreviewSdkService extends EventEmitter implements IPreviewSdkServic
 		this.messagingService.stop();
 	}
 
-	private getInitConfig(getInitialFiles: (device: Device) => Promise<FilesPayload>): Config {
+	private getInitConfig(projectDir: string, getInitialFiles: (device: Device) => Promise<FilesPayload>): Config {
+		const schema = this.$previewSchemaService.getSchemaData(projectDir);
+
 		return {
-			pubnubPublishKey: PubnubKeys.PUBLISH_KEY,
-			pubnubSubscribeKey: PubnubKeys.SUBSCRIBE_KEY,
-			msvKey: "cli",
+			pubnubPublishKey: schema.publishKey,
+			pubnubSubscribeKey: schema.subscribeKey,
+			msvKey: schema.msvKey,
 			msvEnv: this.$config.PREVIEW_APP_ENVIRONMENT,
-			showLoadingPage: false,
 			callbacks: this.getCallbacks(),
-			getInitialFiles
+			getInitialFiles,
+			previewAppStoreId: schema.previewAppStoreId,
+			previewAppGooglePlayId: schema.previewAppId
 		};
 	}
 

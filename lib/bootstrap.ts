@@ -140,6 +140,7 @@ $injector.require("previewAppLiveSyncService", "./services/livesync/playground/p
 $injector.require("previewAppLogProvider", "./services/livesync/playground/preview-app-log-provider");
 $injector.require("previewAppPluginsService", "./services/livesync/playground/preview-app-plugins-service");
 $injector.require("previewSdkService", "./services/livesync/playground/preview-sdk-service");
+$injector.require("previewSchemaService", "./services/livesync/playground/preview-schema-service");
 $injector.requirePublicClass("previewDevicesService", "./services/livesync/playground/devices/preview-devices-service");
 $injector.requirePublic("previewQrCodeService", "./services/livesync/playground/preview-qr-code-service");
 $injector.requirePublic("sysInfo", "./sys-info");
