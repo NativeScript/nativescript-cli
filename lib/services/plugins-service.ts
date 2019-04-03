@@ -235,8 +235,7 @@ export class PluginsService implements IPluginsService {
 		const packageJsonFilePath = this.getPackageJsonFilePath(projectDir);
 		return _.keys(require(packageJsonFilePath).dependencies);
 	}
-
-	private getNodeModuleData(module: string, projectDir: string): INodeModuleData { // module can be  modulePath or moduleName
+		private getNodeModuleData(module: string, projectDir: string): INodeModuleData { // module can be  modulePath or moduleName
 		if (!this.$fs.exists(module) || path.basename(module) !== "package.json") {
 			module = this.getPackageJsonFilePathForModule(module, projectDir);
 		}

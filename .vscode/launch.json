@@ -7,7 +7,7 @@
 		{
 			"type": "node",
 			"request": "launch",
-			"cwd": "${workspaceRoot}",
+			"cwd": "${workspaceRoot}/scratch/appNgEntAuth",
 			"sourceMaps": true,
 			// In case you want to debug child processes started from CLI:
 			// "autoAttachChildProcesses": true,
@@ -15,7 +15,7 @@
 			"program": "${workspaceRoot}/lib/nativescript-cli.js",
 
 			// example commands
-			"args": [ "create", "cliapp", "--path", "${workspaceRoot}/scratch"]
+			"args": [ "prepare", "ios"]
 			// "args": [ "test", "android", "--justlaunch"]
 			// "args": [ "platform", "add", "android@1.3.0", "--path", "cliapp"]
 			// "args": [ "platform", "remove", "android", "--path", "cliapp"]

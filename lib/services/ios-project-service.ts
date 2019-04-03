@@ -53,7 +53,8 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		private $plistParser: IPlistParser,
 		private $sysInfo: ISysInfo,
 		private $xcconfigService: IXcconfigService,
-		private $iOSExtensionsService: IIOSExtensionsService) {
+		private $iOSExtensionsService: IIOSExtensionsService,
+		private $nodeModulesDependenciesBuilder: INodeModulesDependenciesBuilder) {
 		super($fs, $projectDataService);
 	}
 
@@ -369,14 +370,14 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	}
 
 	public async validatePlugins(projectData: IProjectData): Promise<void> {
-		const installedPlugins = await (<IPluginsService>this.$injector.resolve("pluginsService")).getAllInstalledPlugins(projectData);
-		for (const pluginData of installedPlugins) {
-			const pluginsFolderExists = this.$fs.exists(path.join(pluginData.pluginPlatformsFolderPath(this.$devicePlatformsConstants.iOS.toLowerCase()), "Podfile"));
-			const cocoaPodVersion = await this.$sysInfo.getCocoaPodsVersion();
-			if (pluginsFolderExists && !cocoaPodVersion) {
-				this.$errors.failWithoutHelp(`${pluginData.name} has Podfile and you don't have Cocoapods installed or it is not configured correctly. Please verify Cocoapods can work on your machine.`);
-			}
-		}
+			// const installedPlugins = await (<IPluginsService>this.$injector.resolve("pluginsService")).getAllInstalledPlugins(projectData);
+			// for (const pluginData of installedPlugins) {
+			// 	const pluginsFolderExists = this.$fs.exists(path.join(pluginData.pluginPlatformsFolderPath(this.$devicePlatformsConstants.iOS.toLowerCase()), "Podfile"));
+			// 	const cocoaPodVersion = await this.$sysInfo.getCocoaPodsVersion();
+			// 	if (pluginsFolderExists && !cocoaPodVersion) {
+			// 		this.$errors.failWithoutHelp(`${pluginData.name} has Podfile and you don't have Cocoapods installed or it is not configured correctly. Please verify Cocoapods can work on your machine.`);
+			// 	}
+			// }
 	}
 
 	private async buildForDevice(projectRoot: string, args: string[], buildConfig: IBuildConfig, projectData: IProjectData): Promise<void> {
@@ -800,9 +801,10 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		await this.mergeInfoPlists(projectData, opts);
 		await this.$iOSEntitlementsService.merge(projectData);
 		await this.mergeProjectXcconfigFiles(projectData, opts);
-		for (const pluginData of await this.getAllInstalledPlugins(projectData)) {
-			await this.$pluginVariablesService.interpolatePluginVariables(pluginData, this.getPlatformData(projectData).configurationFilePath, projectData.projectDir);
-		}
+
+		// for (const pluginData of await this.$nodeModulesDependenciesBuilder.getProductionDependencies(projectData.projectDir)) {
+		// 	await this.$pluginVariablesService.interpolatePluginVariables(pluginData, this.getPlatformData(projectData).configurationFilePath, projectData.projectDir);
+		// }
 
 		this.$pluginVariablesService.interpolateAppIdentifier(this.getPlatformData(projectData).configurationFilePath, projectData.projectIdentifiers.ios);
 	}
@@ -857,9 +859,11 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 			});
 		};
 
-		const allPlugins = await this.getAllInstalledPlugins(projectData);
+
+		const allPlugins = await this.$nodeModulesDependenciesBuilder.getProductionDependencies(projectData.projectDir);
+
 		for (const plugin of allPlugins) {
-			const pluginInfoPlistPath = path.join(plugin.pluginPlatformsFolderPath(IOSProjectService.IOS_PLATFORM_NAME), this.getPlatformData(projectData).configurationFileName);
+			const pluginInfoPlistPath = path.join(plugin.directory, "platforms", IOSProjectService.IOS_PLATFORM_NAME, this.getPlatformData(projectData).configurationFileName);
 			makePatch(pluginInfoPlistPath);
 		}
 
@@ -908,10 +912,6 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 
 		this.$logger.trace("Info.plist: Write to: " + this.getPlatformData(projectData).configurationFilePath);
 		this.$fs.writeFile(this.getPlatformData(projectData).configurationFilePath, plistContent);
-	}
-
-	private getAllInstalledPlugins(projectData: IProjectData): Promise<IPluginData[]> {
-		return (<IPluginsService>this.$injector.resolve("pluginsService")).getAllInstalledPlugins(projectData);
 	}
 
 	private replace(name: string): string {
@@ -1109,11 +1109,11 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		const platformData = this.getPlatformData(projectData);
 		const pbxProjPath = this.getPbxProjPath(projectData);
 		const addedExtensionsFromResources = await this.$iOSExtensionsService.addExtensionsFromPath({ extensionsFolderPath: resorcesExtensionsPath, projectData, platformData, pbxProjPath });
-		const plugins = await this.getAllInstalledPlugins(projectData);
+		const plugins = await this.$nodeModulesDependenciesBuilder.getProductionDependencies(projectData.projectDir);
 		let addedExtensionsFromPlugins = false;
 		for (const pluginIndex in plugins) {
 			const pluginData = plugins[pluginIndex];
-			const pluginPlatformsFolderPath = pluginData.pluginPlatformsFolderPath(IOSProjectService.IOS_PLATFORM_NAME);
+			const pluginPlatformsFolderPath = path.join(pluginData.directory, "platforms", IOSProjectService.IOS_PLATFORM_NAME);
 
 			const extensionPath = path.join(pluginPlatformsFolderPath, constants.NATIVE_EXTENSION_FOLDER);
 			const addedExtensionFromPlugin = await this.$iOSExtensionsService.addExtensionsFromPath({ extensionsFolderPath: extensionPath, projectData, platformData, pbxProjPath });
