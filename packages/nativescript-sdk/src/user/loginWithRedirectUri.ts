@@ -1,10 +1,10 @@
 import * as app from 'tns-core-modules/application';
+import { loginWithRedirectUri as loginWithRedirectUriCommon } from 'kinvey-js-sdk/lib/user/loginWithRedirectUri';
 import { getDataFromPackageJson } from '../utils';
-import { loginWithRedirectUri as loginWithRedirectUriCommon } from 'kinvey-js-sdk/src/user/loginWithRedirectUri';
 
 declare const NSBundle: any;
 
-function getAppIdentifier() {
+function getAppIdentifier(): string | null {
   if (app.android) {
     return app.android.packageName;
   } else if (app.ios) {
@@ -13,12 +13,22 @@ function getAppIdentifier() {
   return null;
 }
 
-function isInsidePreviewApp() {
-  return getAppIdentifier() === 'org.nativescript.preview';
+function getRedirectUri(redirectUri?: string) {
+  const appIdentifier = getAppIdentifier();
+
+  if (appIdentifier) {
+    if (appIdentifier === 'org.nativescript.preview') {
+      return 'nsplayresume://';
+    } else if (appIdentifier === 'com.kinvey.preview') {
+      return 'kspreviewresume://';
+    }
+  }
+
+  return redirectUri;
 }
 
-export function loginWithRedirectUri(providedRedirectUri: string, options: any) {
-  const redirectUri = isInsidePreviewApp() ? 'nsplayresume://' : providedRedirectUri;
+export function loginWithRedirectUri(providedRedirectUri?: string, options?: any) {
+  const redirectUri = getRedirectUri(providedRedirectUri);
   const config = getDataFromPackageJson();
   return loginWithRedirectUriCommon(redirectUri || config.redirectUri, options);
 }

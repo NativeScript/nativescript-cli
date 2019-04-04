@@ -5,7 +5,8 @@ export enum ConfigKey {
   HttpAdapter,
   SessionStore,
   StorageAdapter,
-  Popup
+  Popup,
+  PubNub
 }
 
 export function getConfig<T>(key: ConfigKey) {

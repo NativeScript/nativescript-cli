@@ -3,6 +3,7 @@ import PQueue from 'p-queue';
 import { ConfigKey, getConfig } from './config';
 import { Query } from './query';
 import { Aggregation } from './aggregation';
+import { KinveyError } from './errors/kinvey';
 
 const queue = new PQueue({ concurrency: 1 });
 
@@ -67,6 +68,10 @@ export class Storage<T extends Entity> {
 
   find(query?: Query): Promise<T[]> {
     return queue.add(async () => {
+      if (query && !(query instanceof Query)) {
+        throw new KinveyError('Invalid query. It must be an instance of the Query class.');
+      }
+
       const docs = await this.storageAdapter.find(this.dbName, this.collectionName);
 
       if (docs.length > 0 && query) {
@@ -78,6 +83,10 @@ export class Storage<T extends Entity> {
   }
 
   async group(aggregation: Aggregation): Promise<any> {
+    if (!(aggregation instanceof Aggregation)) {
+      throw new KinveyError('Invalid aggregation. It must be an instance of the Aggregation class.');
+    }
+
     const docs = await this.find();
     return aggregation.process(docs);
   }

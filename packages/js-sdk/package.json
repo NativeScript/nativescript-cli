@@ -1,7 +1,7 @@
 {
   "name": "kinvey-js-sdk",
   "description": "Kinvey JavaScript SDK for JavaScript applications.",
-  "version": "3.13.0-next.17",
+  "version": "3.13.0-next.26",
   "license": "Apache-2.0",
   "homepage": "https://github.com/Kinvey/js-sdk/tree/master/packages/js-sdk",
   "repository": {
@@ -31,7 +31,6 @@
     "loglevel": "~1.6.1",
     "loglevel-plugin-prefix": "~0.8.4",
     "p-queue": "~4.0.0",
-    "pubnub": "git+https://github.com/thomasconner/javascript.git#develop",
     "rxjs": "~6.4.0",
     "sift": "~7.0.1",
     "tslib": "~1.9.3",
@@ -44,7 +43,6 @@
     "@types/lodash": "~4.14.123",
     "@types/loglevel": "~1.5.4",
     "@types/node": "~11.11.6",
-    "@types/pubnub": "~4.0.5",
     "@types/url-join": "~4.0.0",
     "del-cli": "~1.1.0",
     "events": "~3.0.0",
@@ -54,7 +52,6 @@
     "loglevel": "~1.6.1",
     "loglevel-plugin-prefix": "~0.8.4",
     "p-queue": "~4.0.0",
-    "pubnub": "git+https://github.com/thomasconner/javascript.git#develop",
     "rxjs": "~6.4.0",
     "sift": "~7.0.1",
     "typescript": "~3.3.3",

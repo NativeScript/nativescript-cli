@@ -50,11 +50,10 @@ export function deviceInfo() {
 
 export async function send(request: any) {
   const { url, method, headers, body, timeout } = request;
-  const kinveyUrlRegex = /kinvey\.com/gm;
   let response;
 
   // Add kinvey device information headers
-  if (kinveyUrlRegex.test(url)) {
+  if (/kinvey\.com/gm.test(url)) {
     headers['X-Kinvey-Device-Information'] = deviceInformation();
     headers['X-Kinvey-Device-Info'] = JSON.stringify(deviceInfo());
   }
@@ -70,9 +69,9 @@ export async function send(request: any) {
   } catch (error) {
     if (error.response) {
       response = error.response;
+    } else {
+      throw error;
     }
-
-    throw error;
   }
 
   return {

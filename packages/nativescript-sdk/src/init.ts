@@ -1,4 +1,5 @@
 import { init as coreInit, KinveyConfig } from 'kinvey-js-sdk';
+import PubNub from 'pubnub/lib/nativescript';
 import * as HttpAdapter from './httpAdapter';
 import * as SessionStore from './sessionStore';
 import * as Popup from './popup';
@@ -17,7 +18,8 @@ export function init(config?: NativeScriptKinveyConfig) {
     httpAdapter: HttpAdapter,
     sessionStore: SessionStore,
     popup: Popup,
-    storageAdapter: getStorageAdapter(config.storage)
+    storageAdapter: getStorageAdapter(mergedConfig.storage),
+    pubnub: PubNub
   })
   return config;
 }

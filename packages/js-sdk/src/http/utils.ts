@@ -23,6 +23,7 @@ function clean(value: { [key: string]: any }) {
 export enum KinveyBaasNamespace {
   AppData = 'appdata',
   Blob = 'blob',
+  Push = 'push',
   Rpc = 'rpc',
   User = 'user'
 }

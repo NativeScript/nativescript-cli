@@ -5,7 +5,9 @@
     "build": "lerna run build",
     "prebundle": "npm run build",
     "bundle": "lerna run bundle",
-    "postinstall": "lerna bootstrap"
+    "postinstall": "lerna bootstrap",
+    "pretest": "npm run build",
+    "test": "lerna run test"
   },
   "devDependencies": {
     "lerna": "^3.6.0"

@@ -9,7 +9,8 @@ export interface Config {
   httpAdapter: HttpAdapter;
   sessionStore: SessionStore;
   popup: Popup,
-  storageAdapter: StorageAdapter
+  storageAdapter: StorageAdapter,
+  pubnub: any
 }
 
 export function init(config: Config) {
@@ -18,5 +19,6 @@ export function init(config: Config) {
   setConfig(ConfigKey.SessionStore, config.sessionStore);
   setConfig(ConfigKey.Popup, config.popup);
   setConfig(ConfigKey.StorageAdapter, config.storageAdapter);
+  setConfig(ConfigKey.PubNub, config.pubnub);
   return config;
 }

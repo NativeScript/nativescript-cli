@@ -1,14 +1,10 @@
 import isFunction from 'lodash/isFunction';
 import { EventEmitter } from 'events';
-import PubNub from 'pubnub';
+import { getConfig, ConfigKey } from './config';
 import { KinveyError } from './errors';
 
 const STATUS_PREFIX = 'status:';
 const UNCLASSIFIED_EVENTS = 'pubNubEventsNotRouted';
-
-interface KinveyPubNub extends PubNub {
-  reconnect(): void;
-}
 
 export interface LiveServiceReceiver {
   onMessage?: (message: any) => void;
@@ -53,7 +49,7 @@ class Listener extends EventEmitter {
 }
 
 const listener = new Listener();
-let pubnub: PubNub | null;
+let pubnub: any | null;
 
 export function isSubscribed(channelName?: string) {
   if (pubnub) {
@@ -72,6 +68,7 @@ export function subscribe(config: any) {
     throw new KinveyError('You are already subscribed to the live service. Please unsubscribe before you subscribe again.');
   }
 
+  const PubNub: any = getConfig(ConfigKey.PubNub);
   pubnub = new PubNub(Object.assign({}, { ssl: true, dedupeOnSubscribe: true }, config));
   pubnub.subscribe({ channelGroups: [config.userChannelGroup] });
   pubnub.addListener(listener);

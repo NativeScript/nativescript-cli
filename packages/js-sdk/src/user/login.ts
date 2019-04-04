@@ -1,4 +1,5 @@
 import isString from 'lodash/isString';
+import isPlainObject from 'lodash/isPlainObject';
 import { ActiveUserError } from '../errors/activeUser';
 import { KinveyError } from '../errors/kinvey';
 import { setSession, formatKinveyBaasUrl, HttpRequestMethod, KinveyHttpRequest, KinveyBaasNamespace, KinveyHttpAuth } from '../http';
@@ -13,16 +14,19 @@ export interface LoginOptions {
 // export async function login(credentials: { username: string, password: string}, options: LoginOptions = {}): Promise<User>
 export async function login(username: string | { username?: string, password?: string, _socialIdentity?: any }, password?: string, options: LoginOptions = {}) {
   const activeUser = getActiveUser();
-  let credentials;
+  let credentials: any = { username, password };
+  let timeout = options.timeout;
 
   if (activeUser) {
     throw new ActiveUserError('An active user already exists. Please logout the active user before you login.');
   }
 
-  if (isString(username)) {
-    credentials = { username, password }
-  } else {
+  if (isPlainObject(username)) {
     credentials = username;
+
+    if (isPlainObject(password)) {
+      timeout = (password as LoginOptions).timeout;
+    }
   }
 
   if (credentials.username) {
@@ -42,7 +46,7 @@ export async function login(username: string | { username?: string, password?: s
     auth: KinveyHttpAuth.App,
     url: formatKinveyBaasUrl(KinveyBaasNamespace.User, '/login'),
     body: credentials,
-    timeout: options.timeout
+    timeout
   });
   const response = await request.execute();
   const session = response.data;
