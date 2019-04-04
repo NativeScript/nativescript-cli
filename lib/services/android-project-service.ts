@@ -16,8 +16,6 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	private static MIN_RUNTIME_VERSION_WITH_GRADLE = "1.5.0";
 	private static MIN_RUNTIME_VERSION_WITHOUT_DEPS = "4.2.0-2018-06-29-02";
 
-	private isAndroidStudioTemplate: boolean;
-
 	constructor(private $androidToolsInfo: IAndroidToolsInfo,
 		private $childProcess: IChildProcess,
 		private $errors: IErrors,
@@ -34,7 +32,6 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		private $androidResourcesMigrationService: IAndroidResourcesMigrationService,
 		private $filesHashService: IFilesHashService) {
 		super($fs, $projectDataService);
-		this.isAndroidStudioTemplate = false;
 	}
 
 	private _platformData: IPlatformData = null;
@@ -44,27 +41,10 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		}
 		if (projectData && projectData.platformsDir) {
 			const projectRoot = path.join(projectData.platformsDir, AndroidProjectService.ANDROID_PLATFORM_NAME);
-			if (this.isAndroidStudioCompatibleTemplate(projectData)) {
-				this.isAndroidStudioTemplate = true;
-			}
 
-			const appDestinationDirectoryArr = [projectRoot];
-			if (this.isAndroidStudioTemplate) {
-				appDestinationDirectoryArr.push(constants.APP_FOLDER_NAME);
-			}
-			appDestinationDirectoryArr.push(constants.SRC_DIR, constants.MAIN_DIR, constants.ASSETS_DIR);
-
-			const configurationsDirectoryArr = [projectRoot];
-			if (this.isAndroidStudioTemplate) {
-				configurationsDirectoryArr.push(constants.APP_FOLDER_NAME);
-			}
-			configurationsDirectoryArr.push(constants.SRC_DIR, constants.MAIN_DIR, constants.MANIFEST_FILE_NAME);
-
-			const deviceBuildOutputArr = [projectRoot];
-			if (this.isAndroidStudioTemplate) {
-				deviceBuildOutputArr.push(constants.APP_FOLDER_NAME);
-			}
-			deviceBuildOutputArr.push(constants.BUILD_DIR, constants.OUTPUTS_DIR, constants.APK_DIR);
+			const appDestinationDirectoryArr = [projectRoot, constants.APP_FOLDER_NAME, constants.SRC_DIR, constants.MAIN_DIR, constants.ASSETS_DIR];
+			const configurationsDirectoryArr = [projectRoot, constants.APP_FOLDER_NAME, constants.SRC_DIR, constants.MAIN_DIR, constants.MANIFEST_FILE_NAME];
+			const deviceBuildOutputArr = [projectRoot, constants.APP_FOLDER_NAME, constants.BUILD_DIR, constants.OUTPUTS_DIR, constants.APK_DIR];
 
 			const packageName = this.getProjectNameFromId(projectData);
 
@@ -160,30 +140,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		const targetSdkVersion = androidToolsInfo && androidToolsInfo.targetSdkVersion;
 		this.$logger.trace(`Using Android SDK '${targetSdkVersion}'.`);
 
-		this.isAndroidStudioTemplate = this.isAndroidStudioCompatibleTemplate(projectData, frameworkVersion);
-		if (this.isAndroidStudioTemplate) {
-			this.copy(this.getPlatformData(projectData).projectRoot, frameworkDir, "*", "-R");
-		} else {
-			this.copy(this.getPlatformData(projectData).projectRoot, frameworkDir, "libs", "-R");
-
-			if (config.pathToTemplate) {
-				const mainPath = path.join(this.getPlatformData(projectData).projectRoot, constants.SRC_DIR, constants.MAIN_DIR);
-				this.$fs.createDirectory(mainPath);
-				shell.cp("-R", path.join(path.resolve(config.pathToTemplate), "*"), mainPath);
-			} else {
-				this.copy(this.getPlatformData(projectData).projectRoot, frameworkDir, constants.SRC_DIR, "-R");
-			}
-			this.copy(this.getPlatformData(projectData).projectRoot, frameworkDir, "build.gradle settings.gradle build-tools", "-Rf");
-
-			try {
-				this.copy(this.getPlatformData(projectData).projectRoot, frameworkDir, "gradle.properties", "-Rf");
-			} catch (e) {
-				this.$logger.warn(`\n${e}\nIt's possible, the final .apk file will contain all architectures instead of the ones described in the abiFilters!\nYou can fix this by using the latest android platform.`);
-			}
-
-			this.copy(this.getPlatformData(projectData).projectRoot, frameworkDir, "gradle", "-R");
-			this.copy(this.getPlatformData(projectData).projectRoot, frameworkDir, "gradlew gradlew.bat", "-f");
-		}
+		this.copy(this.getPlatformData(projectData).projectRoot, frameworkDir, "*", "-R");
 
 		this.cleanResValues(targetSdkVersion, projectData);
 
@@ -745,24 +702,6 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		}
 	}
 
-	private isAndroidStudioCompatibleTemplate(projectData: IProjectData, frameworkVersion?: string): boolean {
-		const currentPlatformData: IDictionary<any> = this.$projectDataService.getNSValue(projectData.projectDir, constants.TNS_ANDROID_RUNTIME_NAME);
-		const platformVersion = (currentPlatformData && currentPlatformData[constants.VERSION_STRING]) || frameworkVersion;
-
-		if (!platformVersion) {
-			return true;
-		}
-
-		if (platformVersion === constants.PackageVersion.NEXT || platformVersion === constants.PackageVersion.LATEST || platformVersion === constants.PackageVersion.RC) {
-			return true;
-		}
-
-		const androidStudioCompatibleTemplate = "3.4.0";
-		const normalizedPlatformVersion = `${semver.major(platformVersion)}.${semver.minor(platformVersion)}.0`;
-
-		return semver.gte(normalizedPlatformVersion, androidStudioCompatibleTemplate);
-	}
-
 	private runtimeVersionIsGreaterThanOrEquals(projectData: IProjectData, versionString: string): boolean {
 		const platformVersion = this.getCurrentPlatformVersion(this.getPlatformData(projectData), projectData);
 
@@ -775,20 +714,12 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	}
 
 	private getLegacyAppResourcesDestinationDirPath(projectData: IProjectData): string {
-		const resourcePath: string[] = [constants.SRC_DIR, constants.MAIN_DIR, constants.RESOURCES_DIR];
-		if (this.isAndroidStudioTemplate) {
-			resourcePath.unshift(constants.APP_FOLDER_NAME);
-		}
-
+		const resourcePath: string[] = [constants.APP_FOLDER_NAME, constants.SRC_DIR, constants.MAIN_DIR, constants.RESOURCES_DIR];
 		return path.join(this.getPlatformData(projectData).projectRoot, ...resourcePath);
 	}
 
 	private getUpdatedAppResourcesDestinationDirPath(projectData: IProjectData): string {
-		const resourcePath: string[] = [constants.SRC_DIR];
-		if (this.isAndroidStudioTemplate) {
-			resourcePath.unshift(constants.APP_FOLDER_NAME);
-		}
-
+		const resourcePath: string[] = [constants.APP_FOLDER_NAME, constants.SRC_DIR];
 		return path.join(this.getPlatformData(projectData).projectRoot, ...resourcePath);
 	}
 
