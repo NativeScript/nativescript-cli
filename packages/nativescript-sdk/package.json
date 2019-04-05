@@ -1,7 +1,7 @@
 {
   "name": "kinvey-nativescript-sdk",
   "description": "Kinvey JavaScript SDK for NativeScript applications.",
-  "version": "3.13.0-next.26",
+  "version": "3.13.0-next.27",
   "license": "Apache-2.0",
   "homepage": "https://github.com/Kinvey/js-sdk/tree/master/packages/nativescript-sdk",
   "repository": {
@@ -29,7 +29,7 @@
     "preuninstall": "node nativescript-hook-scripts/preuninstall.js"
   },
   "dependencies": {
-    "kinvey-js-sdk": "^3.13.0-next.26",
+    "kinvey-js-sdk": "^3.13.0-next.27",
     "nativescript-hook": "~0.2.5"
   },
   "peerDependencies": {

@@ -1,35 +1,46 @@
-# Overview
+# Kinvey HTML5 SDK
 
-[Kinvey](http://www.kinvey.com) (pronounced Kin-vey, like convey) makes it ridiculously easy for developers to setup, use and operate a cloud backend for their mobile apps. They don't have to worry about connecting to various cloud services, setting up servers for their backend, or maintaining and scaling them.
+## Installation
 
-## Getting Started
+From the command prompt go to your app's root folder and execute:
 
-Install and save the Kinvey HTML5 SDK:
-
-```javascript
-npm install --save kinvey-html5-sdk
+```bash
+npm i kinvey-html5-sdk@next axios@0.18.0 events@3.0.0 js-base64@2.5.1 lodash@4.17.11 loglevel@1.6.1 loglevel-plugin-prefix@0.8.4 p-queue@4.0.0 pubnub@4.23.0 rxjs@6.4.0 sift@7.0.1 tslib@1.9.3 url@0.11.0 url-join@4.0.0
 ```
 
-Import the Kinvey HTML5 SDK:
+or if you would prefer you can just [download the latest bundle](https://download.kinvey.com/js/kinvey-html5-sdk-3.13.0-next.27.min.js) and include it in your application.
 
-```javascript
-const Kinvey = require('kinvey-html5-sdk');
+## Usage
+
+### Initialize SDK
+
+We need to initialize the SDK.
+
+#### JavaScript with NPM
+```js
+var Kinvey = require('kinvey-nativescript-sdk');
+
+Kinvey.init({
+  appKey: '<yourAppKey>',
+  appSecret: '<yourAppSecret>'
+});
 ```
 
-## Browser Compatibility
+#### JavaScript with bundle
+```js
+window.Kinvey.init({
+  appKey: '<yourAppKey>',
+  appSecret: '<yourAppSecret>'
+});
+```
 
-The Kinvey HTML5 SDK supports the following browsers:
+#### Angular
+Please take a look at our `kinvey-angular-sdk`.
 
-- Safari 10+
-- Chrome 56+
-- Firefox 50+
-- IE 11+
-- Edge
+## Build
 
-## Documentation
+If you would like to build the SDK yourself, clone the monorepo, then:
+- `npm i`
+- `npm run build`
 
-For more detailed documentation, see [Kinvey DevCenter](http://devcenter.kinvey.com/html5).
-
-## License
-
-See [LICENSE](LICENSE) for details.
+You can then install the SDK build by running `npm i /<localpath>/packages/html5-sdk`

@@ -1,7 +1,7 @@
 {
 	"name": "kinvey-nativescript-angular-sdk",
 	"description": "Kinvey JavaScript SDK for NativeScript Angular applications.",
-	"version": "3.13.0-next.26",
+	"version": "3.13.0-next.27",
 	"license": "Apache-2.0",
 	"homepage": "https://github.com/Kinvey/js-sdk/tree/master/packages/nativescript-angular-sdk",
 	"repository": {
@@ -26,7 +26,7 @@
 		"build": "node scripts/build.js"
 	},
 	"dependencies": {
-		"kinvey-nativescript-sdk": "^3.13.0-next.26"
+		"kinvey-nativescript-sdk": "^3.13.0-next.27"
 	},
 	"peerDependencies": {
 		"@angular/core": "~7.2.10"

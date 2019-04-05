@@ -12,7 +12,7 @@ npm i kinvey-nativescript-angular-sdk@next kinvey-nativescript-sdk@next @angular
 
 ### Config
 
-Open `src/package.json` and add the config for the `kinvey-nativescript-plugin`:
+Open `src/package.json` and add this:
 
 ```json
 {
@@ -30,7 +30,7 @@ Open `src/package.json` and add the config for the `kinvey-nativescript-plugin`:
 
 ### Initialize SDK
 
-We need to initialize the SDK before your app starts, so open `app.module.ts` and add this:
+Open `app.module.ts` and add this:
 
 ```js
 const { KinveyModule } = require('kinvey-nativescript-angular-sdk');
