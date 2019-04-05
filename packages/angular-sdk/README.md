@@ -1,4 +1,4 @@
-# Kinvey NativeScript Angular SDK
+# Kinvey Angular SDK
 
 ## Installation
 
