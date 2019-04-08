@@ -168,7 +168,7 @@ export class HttpClient implements Server.IHttpClient {
 							this.setResponseResult(promiseActions, cleanupRequestData, { err: new Error(HttpClient.STUCK_RESPONSE_ERROR_MESSAGE) });
 						}
 					}, HttpClient.STUCK_RESPONSE_CHECK_INTERVAL);
-					const successful = helpers.isRequestSuccessful(responseData);
+					const successful = helpers.isRequestSuccessful(responseData) || responseData.statusCode === HttpStatusCodes.NOT_MODIFIED;
 					if (!successful) {
 						pipeTo = undefined;
 					}

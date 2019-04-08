@@ -92,6 +92,7 @@ export class Proxy {
  */
 export class HttpStatusCodes {
 	static SEE_OTHER = 303;
+	static NOT_MODIFIED = 304;
 	static PAYMENT_REQUIRED = 402;
 	static PROXY_AUTHENTICATION_REQUIRED = 407;
 }
