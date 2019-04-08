@@ -1,0 +1,55 @@
+{
+  "name": "kinvey-angular-sdk",
+  "description": "Kinvey JavaScript SDK for Angular applications.",
+  "version": "3.13.0-next.27",
+  "license": "Apache-2.0",
+  "homepage": "https://github.com/Kinvey/js-sdk/tree/master/packages/angular-sdk",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Kinvey/js-sdk.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Kinvey/js-sdk/issues"
+  },
+  "author": {
+    "name": "Thomas Conner",
+    "email": "thomas.conner@progress.com"
+  },
+  "keywords": [
+    "Kinvey",
+    "JavaScript",
+    "Angular"
+  ],
+  "main": "lib/publicApi.js",
+  "scripts": {
+    "build": "node scripts/build.js"
+  },
+  "dependencies": {
+    "kinvey-html5-sdk": "^3.13.0-next.27"
+  },
+  "peerDependencies": {
+    "@angular/core": "~7.2.10"
+  },
+  "devDependencies": {
+    "@angular/compiler": "^7.2.10",
+    "@angular/compiler-cli": "^7.2.10",
+    "@angular/core": "~7.2.10",
+    "@types/node": "~11.11.6",
+    "axios": "~0.18.0",
+    "events": "~3.0.0",
+    "js-base64": "~2.5.1",
+    "lodash": "~4.17.11",
+    "loglevel": "~1.6.1",
+    "loglevel-plugin-prefix": "~0.8.4",
+    "ng-packagr": "^4.7.1",
+    "p-queue": "~4.0.0",
+    "pubnub": "git+https://github.com/thomasconner/javascript.git#develop",
+    "rxjs": "^6.0.0",
+    "sift": "~7.0.1",
+    "tsickle": "~0.34.3",
+    "typescript": "~3.2",
+    "url": "~0.11.0",
+    "url-join": "~4.0.0",
+    "zone.js": "~0.8.26"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "$schema": "./node_modules/ng-packagr/ng-package.schema.json",
+  "lib": {
+    "entryFile": "src/publicApi.ts",
+    "umdModuleIds": {
+      "kinvey-html5-sdk": "Kinvey"
+    }
+  },
+  "whitelistedNonPeerDependencies": [
+    "kinvey-html5-sdk"
+  ]
+}

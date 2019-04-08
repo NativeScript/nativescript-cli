@@ -377,13 +377,13 @@
       "type": "node",
       "request": "launch",
       "name": "HTML5 Integration Tests",
-      "program": "${workspaceFolder}/node_modules/.bin/karma",
-      "preLaunchTask": "npm: build:html5",
+      "program": "${workspaceFolder}/tests/integration/html5/node_modules/.bin/karma",
+      // "preLaunchTask": "npm: build:html5",
       "sourceMaps": true,
       "smartStep": true,
       "args": [
         "start",
-        "test/karma-html5.local.js"
+        "tests/integration/html5/karma.js"
       ],
       "skipFiles": [
         "<node_internals>/**/*.js",

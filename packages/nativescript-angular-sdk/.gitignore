@@ -1,0 +1,8 @@
+.vscode
+.idea
+.DS_Store
+*.log
+!src/references.d.ts
+node_modules
+lib
+dist

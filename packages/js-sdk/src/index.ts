@@ -1,0 +1,21 @@
+import * as Files from './files';
+
+export * from './datastore';
+export * from './errors';
+export * from './http';
+export * from './user';
+export * from './acl';
+export * from './aggregation';
+export * from './config';
+export * from './device';
+export * from './endpoint';
+export * from './init';
+export * from './kinvey';
+export * from './kmd';
+// export * from './live';
+export * from './log';
+export * from './observable';
+export * from './ping';
+export * from './query';
+export * from './storage';
+export { Files };
