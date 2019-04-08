@@ -3,6 +3,7 @@ import { KinveyError } from '../errors/kinvey';
 import { isValidTag } from './cache';
 import { NetworkStore } from './networkstore';
 import { CacheStore } from './cachestore';
+import { DataStoreCache } from './cache';
 
 export enum DataStoreType {
   Cache = 'Cache',
@@ -40,4 +41,8 @@ export function collection(collectionName: string, type = DataStoreType.Cache, o
 
 export function getInstance(collectionName: string, type?: DataStoreType, options?: any) {
   return collection(collectionName, type, options);
+}
+
+export function clearCache() {
+  return DataStoreCache.clear();
 }
