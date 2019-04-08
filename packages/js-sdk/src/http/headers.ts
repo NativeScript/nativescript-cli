@@ -88,7 +88,7 @@ export class HttpHeaders {
     return this.headers.delete(name);
   }
 
-  toObject() {
+  toPlainObject(): { [name: string]: string } {
     return this.keys()
       .reduce((headers: { [name: string]: string }, header) => {
         const value = this.get(header);

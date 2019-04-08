@@ -65,7 +65,7 @@ export class QueryCache extends DataStoreCache<QueryEntity> {
     const key = this.serializeQuery(query);
 
     if (key !== null) {
-      const headers = new KinveyHttpHeaders(response.headers.toObject());
+      const headers = new KinveyHttpHeaders(response.headers.toPlainObject());
       let doc = await this.findByKey(key);
 
       if (!doc) {

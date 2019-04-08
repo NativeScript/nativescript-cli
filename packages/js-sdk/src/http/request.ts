@@ -1,12 +1,13 @@
 import isString from 'lodash/isString';
 import PQueue from 'p-queue';
 import { Base64 } from 'js-base64';
-import { ConfigKey, getConfig } from '../config';
 import { InvalidCredentialsError } from '../errors/invalidCredentials';
-import { getAppKey, getAppSecret, getAuthProtocol, getAuthHost } from '../kinvey';
-import { Storage } from '../storage';
+import { getAppSecret} from '../kinvey';
+import { log } from '../log';
+import { DataStoreCache, QueryCache, SyncCache } from '../datastore/cache';
 import { HttpHeaders, KinveyHttpHeaders, KinveyHttpAuth } from './headers';
-import { HttpResponse, HttpResponseObject } from './response';
+import { HttpResponse } from './response';
+import { send } from './http';
 import { getSession, setSession, removeSession } from './session';
 import { formatKinveyAuthUrl, formatKinveyBaasUrl, KinveyBaasNamespace } from './utils';
 
@@ -26,18 +27,6 @@ export interface HttpRequestConfig {
   url: string;
   body?: string | object;
   timeout?: number;
-}
-
-export interface HttpRequestObject {
-  headers: { [name: string]: string };
-  method: string;
-  url: string;
-  body?: string;
-  timeout?: number;
-}
-
-export interface HttpAdapter {
-  send: (request: HttpRequestObject) => Promise<HttpResponseObject>;
 }
 
 export function serialize(contentType: string, body?: any) {
@@ -75,26 +64,9 @@ export class HttpRequest {
     this.timeout = config.timeout;
   }
 
-  get httpAdapter() {
-    return getConfig<HttpAdapter>(ConfigKey.HttpAdapter);
-  }
-
   async execute(): Promise<HttpResponse> {
     // Make http request
-    const responseObject = await this.httpAdapter.send({
-      headers: this.headers.toObject(),
-      method: this.method,
-      url: this.url,
-      body: this.body ? serialize(this.headers.contentType!, this.body) : undefined,
-      timeout: this.timeout
-    });
-
-    // Create a response
-    const response = new HttpResponse({
-      statusCode: responseObject.statusCode,
-      headers: new HttpHeaders(responseObject.headers),
-      data: responseObject.data
-    });
+    const response = await send(this.toPlainObject());
 
     // Return the response if it was successful
     if (response.isSuccess()) {
@@ -104,10 +76,30 @@ export class HttpRequest {
     // Else throw the error
     throw response.error;
   }
+
+  toPlainObject() {
+    return {
+      headers: this.headers.toPlainObject(),
+      method: this.method,
+      url: this.url,
+      body: this.body ? serialize(this.headers.contentType!, this.body) : undefined,
+      timeout: this.timeout
+    };
+  }
 }
 
 function isRefreshTokenRequestInProgress() {
   return refreshTokenRequestInProgress === true;
+}
+
+function markRefreshTokenRequestInProgress() {
+  REQUEST_QUEUE.pause();
+  refreshTokenRequestInProgress = true;
+}
+
+function markRefreshTokenRequestComplete() {
+  refreshTokenRequestInProgress = false;
+  REQUEST_QUEUE.start();
 }
 
 export interface KinveyHttpRequestConfig extends HttpRequestConfig {
@@ -117,6 +109,7 @@ export interface KinveyHttpRequestConfig extends HttpRequestConfig {
 
 export class KinveyHttpRequest extends HttpRequest {
   public headers: KinveyHttpHeaders;
+  public auth?: KinveyHttpAuth;
 
   constructor(config: KinveyHttpRequestConfig) {
     super(config);
@@ -124,78 +117,74 @@ export class KinveyHttpRequest extends HttpRequest {
 
     if (config.auth) {
       this.headers.setAuthorization(config.auth);
+      this.auth = config.auth;
     }
   }
 
   async execute(retry = true): Promise<HttpResponse> {
     try {
-      return super.execute();
+      return await super.execute();
     } catch (error) {
       if (retry) {
         // Received an InvalidCredentialsError
         if (error instanceof InvalidCredentialsError) {
-          // Queue the request if a refresh token request is in progress
           if (isRefreshTokenRequestInProgress()) {
-            return REQUEST_QUEUE.add(() => this.execute(false).catch(() => Promise.reject(error)));
+            return REQUEST_QUEUE.add(() => {
+              const request = new KinveyHttpRequest(this);
+              return request.execute(false).catch(() => Promise.reject(error));
+            });
           }
 
+          // Mark refresh token request in progress
+          markRefreshTokenRequestInProgress();
+
+          // Get existing mic session
           const activeSession = getSession();
           const socialIdentity = (activeSession && activeSession._socialIdentity) || {};
-          const micIdentityKey = Object.keys(socialIdentity)
-            .find(sessionKey => socialIdentity[sessionKey].identity === 'kinveyAuth');
+          const micIdentityKey = Object.keys(socialIdentity).find(sessionKey => socialIdentity[sessionKey].identity === 'kinveyAuth');
 
           if (micIdentityKey) {
-            const micIdentity = socialIdentity[micIdentityKey];
+            const micSession = socialIdentity[micIdentityKey];
 
-            if (micIdentity && micIdentity.refresh_token && micIdentity.redirect_uri) {
+            if (micSession) {
               try {
-                // Pause the request queue
-                REQUEST_QUEUE.pause();
-                refreshTokenRequestInProgress = true;
-
-                // Refresh the session
+                // Refresh the MIC session
                 const refreshRequest = new KinveyHttpRequest({
                   method: HttpRequestMethod.POST,
                   headers: new KinveyHttpHeaders({
                     'Content-Type': () => 'application/x-www-form-urlencoded',
                     Authorization: () => {
-                      const credentials = Base64.encode(`${micIdentity.client_id}:${getAppSecret()}`);
+                      const credentials = Base64.encode(`${micSession.client_id}:${getAppSecret()}`);
                       return `Basic ${credentials}`;
                     }
                   }),
                   url: formatKinveyAuthUrl('/oauth/token'),
                   body: {
                     grant_type: 'refresh_token',
-                    client_id: micIdentity.client_id,
-                    redirect_uri: micIdentity.redirect_uri,
-                    refresh_token: micIdentity.refresh_token
+                    client_id: micSession.client_id,
+                    redirect_uri: micSession.redirect_uri,
+                    refresh_token: micSession.refresh_token
                   }
                 });
                 const refreshResponse = await refreshRequest.execute();
 
-                // Create a new session
-                const newMicIdentity = Object.assign({}, refreshResponse.data, {
-                  identity: micIdentity.identity,
-                  client_id: micIdentity.client_id,
-                  redirect_uri: micIdentity.redirect_uri,
-                  protocol: getAuthProtocol(),
-                  host: getAuthHost()
-                });
+                // Create a new MIC session
+                const newMICSession = Object.assign({}, micSession, refreshResponse.data);
 
-                // Login the new MIC identity
+                // Login with the new MIC session
                 const loginRequest = new KinveyHttpRequest({
                   method: HttpRequestMethod.POST,
                   auth: KinveyHttpAuth.App,
                   url: formatKinveyBaasUrl(KinveyBaasNamespace.User, '/login'),
                   body: {
                     _socialIdentity: {
-                      [micIdentityKey]: newMicIdentity
+                      [micIdentityKey]: newMICSession
                     }
                   }
                 });
                 const loginResponse = await loginRequest.execute();
                 const newSession = loginResponse.data;
-                newSession._socialIdentity[micIdentityKey] = Object.assign({}, newSession._socialIdentity[micIdentityKey], newMicIdentity);
+                newSession._socialIdentity[micIdentityKey] = Object.assign({}, newSession._socialIdentity[micIdentityKey], newMICSession);
 
                 // Set the new session
                 setSession(newSession);
@@ -204,14 +193,13 @@ export class KinveyHttpRequest extends HttpRequest {
                 const request = new KinveyHttpRequest(this);
                 const response = await request.execute(false);
 
-                // Start the request queue
-                refreshTokenRequestInProgress = false;
-                REQUEST_QUEUE.start();
+                // Mark the refresh token as complete
+                markRefreshTokenRequestComplete();
 
                 // Return the response
                 return response;
               } catch (error) {
-                // TODO: Log error
+                log.error(error.message);
               }
             }
           }
@@ -230,16 +218,17 @@ export class KinveyHttpRequest extends HttpRequest {
             // Remove the session
             removeSession();
 
-            // Clear data
-            Storage.clear(getAppKey());
+            // Clear cache's
+            await QueryCache.clear();
+            await SyncCache.clear();
+            await DataStoreCache.clear();
           } catch (error) {
-            // TODO: Log error
+            log.error(error.message);
           }
         }
 
-        // Start the request queue
-        refreshTokenRequestInProgress = false;
-        REQUEST_QUEUE.start();
+        // Mark the refresh token as complete
+        markRefreshTokenRequestComplete();
       }
 
       // Throw the error

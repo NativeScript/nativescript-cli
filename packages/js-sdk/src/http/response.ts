@@ -51,12 +51,6 @@ export interface HttpResponseConfig {
   data?: string;
 }
 
-export interface HttpResponseObject {
-  statusCode: number;
-  headers: { [name: string]: string };
-  data?: string;
-}
-
 export class HttpResponse {
   public statusCode: HttpStatusCode;
   public headers: HttpHeaders;
