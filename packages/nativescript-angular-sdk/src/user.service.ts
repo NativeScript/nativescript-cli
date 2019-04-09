@@ -77,4 +77,12 @@ export class UserService {
   verifyEmail(username: string, options?: any) {
     return User.verifyEmail(username, options);
   }
+
+  registerForLiveService(options?: { timeout?: number }) {
+    return User.registerForLiveService(options);
+  }
+
+  unregisterFromLiveService(options?: { timeout?: number }) {
+    return User.unregisterFromLiveService(options);
+  }
 }

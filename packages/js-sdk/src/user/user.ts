@@ -170,14 +170,15 @@ export class User {
     return this;
   }
 
-  async registerForLiveService() {
+  async registerForLiveService(options: { timeout?: number } = {}) {
     if (!isSubscribed()) {
       const deviceId = getDeviceId();
       const request = new KinveyHttpRequest({
         method: HttpRequestMethod.POST,
         auth: KinveyHttpAuth.Session,
         url: formatKinveyBaasUrl(KinveyBaasNamespace.User, `/${this._id}/register-realtime`),
-        body: { deviceId }
+        body: { deviceId },
+        timeout: options.timeout
       });
       const response = await request.execute();
       const config = Object.assign({}, { authKey: this.authtoken }, response.data);
@@ -186,14 +187,15 @@ export class User {
     return true;
   }
 
-  async unregisterFromLiveService() {
+  async unregisterFromLiveService(options: { timeout?: number } = {}) {
     if (isSubscribed()) {
       const deviceId = getDeviceId();
       const request = new KinveyHttpRequest({
         method: HttpRequestMethod.POST,
         auth: KinveyHttpAuth.Session,
         url: formatKinveyBaasUrl(KinveyBaasNamespace.User, `/${this._id}/unregister-realtime`),
-        body: { deviceId }
+        body: { deviceId },
+        timeout: options.timeout
       });
       await request.execute();
       unsubscribe();

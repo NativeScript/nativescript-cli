@@ -17,8 +17,8 @@ import { update } from './update';
 import { getActiveUser } from './getActiveUser';
 import { User as KinveyUser } from './user';
 import { verifyEmail, VerifyEmailOptions } from './verifyEmail';
-// import { registerForLiveService } from './registerForLiveService';
-// import { unregisterForLiveService } from './unregisterForLiveService';
+import { registerForLiveService } from './registerForLiveService';
+import { unregisterFromLiveService } from './unregisterFromLiveService';
 
 
 export { AuthorizationGrant };
@@ -90,5 +90,13 @@ export class User extends KinveyUser {
 
   static verifyEmail(username: string, options?: VerifyEmailOptions) {
     return verifyEmail(username, options);
+  }
+
+  static registerForLiveService(options?: { timeout?: number }) {
+    return registerForLiveService(options);
+  }
+
+  static unregisterFromLiveService(options?: { timeout?: number }) {
+    return unregisterFromLiveService(options);
   }
 }
