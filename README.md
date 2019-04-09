@@ -6,14 +6,11 @@
 
 The JS SDK is used as a way to share common code for platform specific SDK shims. Here is a list of the platforms we currently support.
 
-* [NativeScript](https://github.com/Kinvey/nativescript-sdk)
-* [Angular](https://github.com/Kinvey/angular-sdk)
-* [Angular 2](https://github.com/Kinvey/angular2-sdk)
-* [Backbone](https://github.com/Kinvey/backbone-sdk)
-* [HTML5](src/html5)
-* [NodeJS](https://github.com/Kinvey/node-sdk)
-* [PhoneGap](https://github.com/Kinvey/phonegap-sdk)
-* [Titanium](https://github.com/Kinvey/titanium-sdk)
+* [Angular](packages/angular-sdk)
+* [HTML5](packages/html5-sdk)
+* [NativeScript](packages/nativescript-sdk)
+* [NativeScript Angular](packages/nativescript-angular-sdk)
+* [NodeJS](packages/node-sdk)
 
 ## Thanks
 Thanks to [BrowserStack](http://browserstack.com) for providing us with a free account.
@@ -28,3 +25,25 @@ See [LICENSE](LICENSE) for details.
 
 ## Contributing
 See [CONTRIBUTING.md](CONTRIBUTING.md) for details on reporting bugs and making contributions.
+
+# Development
+
+Fork the repo on GitHub and clone your fork to your local machine. You can then submit PRs to the main repo from your fork for changes that you make.
+
+## Setup
+
+Run `npm install` from the command line at the root of the project.
+
+## Build
+
+Run `npm run build` from the command line at the root of the project.
+
+## Test
+
+The project is setup with unit and integration tests.
+
+### Integration Tests
+
+Run `npm run test` from the command line at the root of the project.
+
+_Note: You can also run integration tests for just HTML5 by running `npm run test:html5` or for just NodeJS by running `npm run test:node`._

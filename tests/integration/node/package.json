@@ -1,6 +1,6 @@
 {
   "private": true,
-  "name": "kinvey-nodejs-integration-tests",
+  "name": "kinvey-node-integration-tests",
   "description": "Integration tests for kinvey-nodejs-sdk.",
   "version": "0.0.0",
   "scripts": {

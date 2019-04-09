@@ -15,7 +15,7 @@ npm i kinvey-angular-sdk@next @angular/core@7.2.10 axios@0.18.0 events@3.0.0 js-
 Open `app.module.ts` and add this:
 
 ```js
-const { KinveyModule } = require('kinvey-nativescript-angular-sdk');
+const { KinveyModule } = require('kinvey-angular-sdk');
 
 @NgModule({
   imports: [

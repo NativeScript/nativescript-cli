@@ -18,7 +18,7 @@ We need to initialize the SDK.
 
 #### JavaScript with NPM
 ```js
-var Kinvey = require('kinvey-nativescript-sdk');
+var Kinvey = require('kinvey-html5-sdk');
 
 Kinvey.init({
   appKey: '<yourAppKey>',
