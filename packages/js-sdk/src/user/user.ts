@@ -219,8 +219,8 @@ export class User {
         });
         await request.execute();
       } catch (error) {
-        // log.error('Logout request failed.');
-        // log.error(error.message);
+        log.error('Logout request failed.');
+        log.error(error.message);
       }
 
       // Remove the session

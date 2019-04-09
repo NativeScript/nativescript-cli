@@ -121,7 +121,7 @@ var _axios = _interopRequireDefault(require("axios"));
 
 var _lodash = _interopRequireDefault(require("lodash"));
 
-var Kinvey = _interopRequireWildcard(require("kinvey-html5-sdk"));
+var Kinvey = _interopRequireWildcard(require("kinvey-node-sdk"));
 
 var Constants = _interopRequireWildcard(require("./constants"));
 

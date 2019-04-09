@@ -22,9 +22,9 @@ module.exports = function (config) {
 
     // list of files / patterns to exclude
     exclude: [
-      './src/delta-set.spec.js',
-      './src/live-services.spec.js',
-      './src/files.spec.js'
+      './src/common/delta-set.spec.js',
+      './src/common/live-services.spec.js',
+      './src/common/files.spec.js'
     ],
 
     // preprocess matching files before serving them to the browser
