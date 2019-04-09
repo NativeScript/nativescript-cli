@@ -1,8 +1,12 @@
 import {
+  getAppVersion,
+  setAppVersion,
+  logger,
   Acl,
   Aggregation,
   StorageProvider,
   DataStoreType,
+  Errors,
   Kmd,
   Query,
   AuthorizationGrant
@@ -15,12 +19,19 @@ import { PingService } from './ping.service';
 import { UserService } from './user.service';
 
 export {
-  // Kinvey
+  // Init
   KinveyModule,
+  StorageProvider,
 
   // App Version
-  // getAppVersion,
-  // setAppVersion,
+  getAppVersion,
+  setAppVersion,
+
+  // Logger
+  logger,
+
+  // Ping
+  PingService,
 
   // Acl
   Acl,
@@ -28,13 +39,15 @@ export {
   // Aggregation
   Aggregation,
 
-  // DataStore
-  StorageProvider,
-  DataStoreType,
-  DataStoreService,
-
   // Custom Endpoint
   EndpointService,
+
+  // DataStore
+  DataStoreService,
+  DataStoreType,
+
+  // Errors
+  Errors,
 
   // Files
   FilesService,
@@ -47,9 +60,6 @@ export {
   Query,
 
   // User
-  AuthorizationGrant,
   UserService,
-
-  // Ping
-  PingService
+  AuthorizationGrant
 };

@@ -4,7 +4,8 @@
   "description": "Integration tests for kinvey-nodejs-sdk.",
   "version": "0.0.0",
   "scripts": {
-		"pretest": "node scripts/pretest.js",
+    "build": "node scripts/build.js",
+    "pretest": "npm run build",
     "test": "mocha --opts mocha.opts --require dotenv/config \"src/**/*.spec.js\""
   },
   "devDependencies": {

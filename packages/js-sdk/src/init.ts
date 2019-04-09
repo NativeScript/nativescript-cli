@@ -22,3 +22,7 @@ export function init(config: Config) {
   setConfig(ConfigKey.PubNub, config.pubnub);
   return config;
 }
+
+export function initialize(config: Config) {
+  return init(config);
+}

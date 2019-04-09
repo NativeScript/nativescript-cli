@@ -1,4 +1,4 @@
-import { KinveyError } from 'kinvey-js-sdk';
+import { Errors } from 'kinvey-js-sdk';
 import * as SQLite from './sqlite';
 
 export enum StorageProvider {
@@ -10,5 +10,5 @@ export function getStorageAdapter(storageProvider = StorageProvider.SQLite) {
     return SQLite;
   }
 
-  throw new KinveyError('You must override the default cache store.');
+  throw new Errors.KinveyError('You must override the default cache store.');
 }

@@ -26,4 +26,4 @@ prefix.apply(log, logPrefix);
 // };
 
 // Export
-export { log };
+export { log as logger };

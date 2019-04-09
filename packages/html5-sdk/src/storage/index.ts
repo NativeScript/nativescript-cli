@@ -1,4 +1,4 @@
-import { KinveyError } from 'kinvey-js-sdk';
+import { Errors } from 'kinvey-js-sdk';
 import * as IndexedDB from './indexeddb';
 import * as LocalStorage from './localstorage';
 import * as Memory from './memory';
@@ -26,5 +26,5 @@ export function getStorageAdapter(storageProvider = StorageProvider.WebSQL) {
     return WebSQL;
   }
 
-  throw new KinveyError('You must override the default cache store.');
+  throw new Errors.KinveyError('You must override the default cache store.');
 }

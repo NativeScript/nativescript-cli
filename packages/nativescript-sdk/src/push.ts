@@ -1,6 +1,6 @@
 import { messaging } from 'nativescript-plugin-firebase/messaging';
 import { device } from 'tns-core-modules/platform';
-import { formatKinveyBaasUrl, KinveyHttpRequest, HttpRequestMethod, KinveyHttpAuth, KinveyBaasNamespace } from 'kinvey-js-sdk';
+import { formatKinveyBaasUrl, KinveyHttpRequest, HttpRequestMethod, KinveyHttpAuth, KinveyBaasNamespace } from 'kinvey-js-sdk/lib/http';
 
 export async function register(callback: (message: any) => void, options: any = {}) {
   // Register for push notifications

@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@angular/core';
-import { init, User } from 'kinvey-html5-sdk';
+import { init, User, Query } from 'kinvey-html5-sdk';
 import { KinveyConfigToken } from './utils';
 
 @Injectable({
@@ -10,67 +10,71 @@ export class UserService {
     init(config);
   }
 
-  exists(...args: any[]) {
-    return (User as any).exists(...args);
+  exists(username: string, options?: any) {
+    return User.exists(username, options);
   }
 
-  forgotUsername(...args: any[]) {
-    return (User as any).forgotUsername(...args);
+  forgotUsername(email: string, options?: any) {
+    return User.forgotUsername(email, options);
   }
 
-  login(...args: any[]) {
-    return (User as any).login(...args);
+  login(username: string | { username?: string, password?: string, _socialIdentity?: any }, password?: string, options?: any): Promise<User> {
+    return User.login(username, password, options);
   }
 
-  loginWithRedirectUri(...args: any[]) {
-    return (User as any).loginWithRedirectUri(...args);
+  loginWithRedirectUri(redirectUri: string, options?: any): Promise<User> {
+    return User.loginWithRedirectUri(redirectUri, options);
   }
 
-  loginWithUsernamePassword(...args: any[]) {
-    return (User as any).loginWithUsernamePassword(...args);
+  loginWithUsernamePassword(username: string, password: string, options?: any): Promise<User> {
+    return User.loginWithUsernamePassword(username, password, options);
   }
 
-  loginWithMIC(...args: any[]) {
-    return (User as any).loginWithMIC(...args);
+  loginWithMIC(redirectUri: string, authorizationGrant: any, options?: any): Promise<User> {
+    return User.loginWithMIC(redirectUri, authorizationGrant, options);
   }
 
-  logout(...args: any[]) {
-    return (User as any).logout(...args);
+  logout(options?: any): Promise<User> {
+    return User.logout(options);
   }
 
-  lookup(...args: any[]) {
-    return (User as any).lookup(...args);
+  lookup(query?: Query, options?: any) {
+    return User.lookup(query, options);
   }
 
-  me(...args: any[]) {
-    return (User as any).me(...args);
+  me(options?: { timeout?: number }): Promise<User> {
+    return User.me(options);
   }
 
-  remove(...args: any[]) {
-    return (User as any).remove(...args);
+  remove(id: string, options?: { timeout?: number, hard?: boolean }) {
+    return User.remove(id, options);
   }
 
-  resetPassword(...args: any[]) {
-    return (User as any).resetPassword(...args);
+  resetPassword(username: string, options?: { timeout?: number }) {
+    return User.resetPassword(username, options);
   }
 
-  restore(...args: any[]) {
-    return (User as any).restore(...args);
+  restore() {
+    return User.restore();
   }
 
-  signup(...args: any[]) {
-    return (User as any).signup(...args);
+  signup(data: object | User, options?: { timeout?: number, state?: boolean }): Promise<User> {
+    return User.signup(data, options);
   }
 
-  update(...args: any[]) {
-    return (User as any).update(...args);
+  signUpWithIdentity() {
+    return User.signUpWithIdentity();
   }
 
-  getActiveUser(...args: any[]) {
-    return (User as any).getActiveUser(...args);
+  update(data: any, options?: { timeout?: number }): Promise<User> {
+    return User.update(data, options);
   }
 
-  verifyEmail(...args: any[]) {
-    return (User as any).verifyEmail(...args);
+  getActiveUser(): User {
+    return User.getActiveUser();
+  }
+
+  verifyEmail(username: string, options?: any) {
+    return User.verifyEmail(username, options);
   }
 }

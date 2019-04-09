@@ -1,14 +1,18 @@
 import {
   getAppVersion,
   setAppVersion,
+  logger,
   ping,
   Acl,
   Aggregation,
-  collection, DataStoreType,
-  endpoint,
+  CustomEndpoint,
+  DataStore,
+  DataStoreType,
+  Errors,
   Files,
   Kmd,
-  Query
+  Query,
+  AuthorizationGrant
 } from 'kinvey-js-sdk';
 import { User } from './user';
 import { init, initialize } from './init';
@@ -16,10 +20,20 @@ import { StorageProvider } from './storage';
 
 // SDK
 export {
+  // Init
   init,
   initialize,
+  StorageProvider,
+
+  // App Version
   getAppVersion,
   setAppVersion,
+
+  // Logger
+  logger,
+
+  // Ping
+  ping,
 
   // Acl
   Acl,
@@ -27,35 +41,27 @@ export {
   // Aggregation
   Aggregation,
 
+  // Custom Endpoint
+  CustomEndpoint,
+
   // DataStore
+  DataStore,
   DataStoreType,
-  StorageProvider,
+
+  // Errors
+  Errors,
 
   // Files
   Files,
 
   // Kmd
   Kmd,
-  // Metadata: Kmd,
+  Kmd as Metadata,
 
   // Query
   Query,
 
   // User
   User,
-
-  // Ping
-  ping
+  AuthorizationGrant
 };
-
-// DataStore
-const DataStore = { collection };
-export { DataStore };
-
-// Custom Endpoint
-const CustomEndpoint = { execute: endpoint };
-export { CustomEndpoint };
-
-// User
-const AuthorizationGrant = (User as any).AuthorizationGrant;
-export { AuthorizationGrant };

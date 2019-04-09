@@ -1,5 +1,5 @@
 import isString from 'lodash/isString';
-import { KinveyError } from 'kinvey-js-sdk';
+import { Errors } from 'kinvey-js-sdk';
 
 const MASTER_TABLE_NAME = 'sqlite_master';
 const SIZE = 2 * 1024 * 1024; // Database size in bytes
@@ -75,7 +75,7 @@ function execute(dbName: string, tableName: string, sqlQueries: any, write = fal
               if (response.result.length === 0) {
                 return resolve({ rowCount: 0, result: [] });
               }
-              return reject(new KinveyError(`Unable to open a transaction for the ${tableName} collection on the ${dbName} WebSQL database.`));
+              return reject(new Errors.KinveyError(`Unable to open a transaction for the ${tableName} collection on the ${dbName} WebSQL database.`));
             })
             .catch(reject);
         }

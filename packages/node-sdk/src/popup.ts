@@ -1,5 +1,5 @@
-import { KinveyError } from 'kinvey-js-sdk';
+import { Errors } from 'kinvey-js-sdk';
 
 export async function open(url: string): Promise<any> {
-  throw new KinveyError('NodeJS does not support the opening of popups.');
+  throw new Errors.KinveyError('NodeJS does not support the opening of popups.');
 }

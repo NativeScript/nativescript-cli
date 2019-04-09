@@ -1,6 +1,6 @@
 export * from './activeUser';
 export * from './apiVersionNotAvailable';
-export *from './apiVersionNotImplemented';
+export * from './apiVersionNotImplemented';
 export * from './appProblem';
 export * from './badRequest';
 export * from './base';

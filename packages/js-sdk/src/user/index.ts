@@ -1,11 +1,12 @@
-import { exists } from './exists';
-import { forgotUsername } from './forgotUsername';
-import { login } from './login';
-import { loginWithRedirectUri } from './loginWithRedirectUri';
+import { Query } from '../query';
+import { exists, ExistsOptions } from './exists';
+import { forgotUsername, ForgotUsernameOptions } from './forgotUsername';
+import { login, LoginOptions } from './login';
+import { loginWithRedirectUri, MICOptions } from './loginWithRedirectUri';
 import { loginWithUsernamePassword } from './loginWithUsernamePassword';
 import { loginWithMIC, AuthorizationGrant } from './loginWithMIC';
 import { logout } from './logout';
-import { lookup } from './lookup';
+import { lookup, LookupOptions } from './lookup';
 import { me } from './me';
 import { remove } from './remove';
 import { resetPassword } from './resetPassword';
@@ -14,30 +15,80 @@ import { signup } from './signup';
 import { signUpWithIdentity } from './signupWithIdentity';
 import { update } from './update';
 import { getActiveUser } from './getActiveUser';
-import { User } from './user';
-import { verifyEmail } from './verifyEmail';
+import { User as KinveyUser } from './user';
+import { verifyEmail, VerifyEmailOptions } from './verifyEmail';
 // import { registerForLiveService } from './registerForLiveService';
 // import { unregisterForLiveService } from './unregisterForLiveService';
 
-(User as any).AuthorizationGrant = AuthorizationGrant;
-(User as any).exists = exists;
-(User as any).forgotUsername = forgotUsername;
-(User as any).login = login;
-(User as any).loginWithRedirectUri = loginWithRedirectUri;
-(User as any).loginWithUsernamePassword = loginWithUsernamePassword;
-(User as any).loginWithMIC = loginWithMIC;
-(User as any).logout = logout;
-(User as any).lookup = lookup;
-(User as any).me = me;
-(User as any).remove = remove;
-(User as any).resetPassword = resetPassword;
-(User as any).restore = restore;
-(User as any).signup = signup;
-(User as any).signUpWithIdentity = signUpWithIdentity;
-(User as any).update = update;
-(User as any).verifyEmail = verifyEmail;
-(User as any).getActiveUser = getActiveUser;
-// (User as any).registerForLiveService = registerForLiveService;
-// (User as any).unregisterForLiveService = unregisterForLiveService;
 
-export { User };
+export { AuthorizationGrant };
+
+export class User extends KinveyUser {
+  static exists(username: string, options?: ExistsOptions) {
+    return exists(username, options);
+  }
+
+  static forgotUsername(email: string, options?: ForgotUsernameOptions) {
+    return forgotUsername(email, options);
+  }
+
+  static login(username: string | { username?: string, password?: string, _socialIdentity?: any }, password?: string, options?: LoginOptions) {
+    return login(username, password, options);
+  }
+
+  static loginWithRedirectUri(redirectUri: string, options?: MICOptions) {
+    return loginWithRedirectUri(redirectUri, options);
+  }
+
+  static loginWithUsernamePassword(username: string, password: string, options?: MICOptions) {
+    return loginWithUsernamePassword(username, password, options);
+  }
+
+  static loginWithMIC(redirectUri: string, authorizationGrant: AuthorizationGrant, options?: any) {
+    return loginWithMIC(redirectUri, authorizationGrant, options);
+  }
+
+  static logout(options?: any) {
+    return logout(options);
+  }
+
+  static lookup(query?: Query, options?: LookupOptions) {
+    return lookup(query, options);
+  }
+
+  static me(options?: { timeout?: number }) {
+    return me(options);
+  }
+
+  static remove(id: string, options?: { timeout?: number, hard?: boolean }) {
+    return remove(id, options);
+  }
+
+  static resetPassword(username: string, options?: { timeout?: number }) {
+    return resetPassword(username, options);
+  }
+
+  static restore() {
+    return restore();
+  }
+
+  static signup(data: object | User, options?: { timeout?: number, state?: boolean }) {
+    return signup(data, options);
+  }
+
+  static signUpWithIdentity() {
+    return signUpWithIdentity();
+  }
+
+  static update(data: any, options?: { timeout?: number }) {
+    return update(data, options);
+  }
+
+  static getActiveUser() {
+    return getActiveUser();
+  }
+
+  static verifyEmail(username: string, options?: VerifyEmailOptions) {
+    return verifyEmail(username, options);
+  }
+}

@@ -1,8 +1,13 @@
-import { User } from 'kinvey-js-sdk';
+import { User as CoreUser } from 'kinvey-js-sdk';
 import { loginWithMIC } from './loginWithMIC';
 import { loginWithRedirectUri } from './loginWithRedirectUri';
 
-(User as any).loginWithMIC = loginWithMIC;
-(User as any).loginWithRedirectUri = loginWithRedirectUri;
+export class User extends CoreUser {
+  static loginWithMIC(redirectUri?: string, authorizationGrant?: any, options?: any) {
+    return loginWithMIC(redirectUri, authorizationGrant, options);
+  }
 
-export { User };
+  static loginWithRedirectUri(redirectUri?: string, options?: any) {
+    return loginWithRedirectUri(redirectUri, options);
+  }
+}

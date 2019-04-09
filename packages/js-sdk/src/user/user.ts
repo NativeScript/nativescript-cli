@@ -16,7 +16,7 @@ import { KinveyError } from '../errors/kinvey';
 import { Entity } from '../storage';
 import { DataStoreCache, QueryCache, SyncCache } from '../datastore/cache';
 import { subscribe, unsubscribe, isSubscribed } from '../live';
-import { log } from '../log';
+import { logger } from '../log';
 import { mergeSocialIdentity } from './utils';
 
 export interface UserData extends Entity {
@@ -219,8 +219,8 @@ export class User {
         });
         await request.execute();
       } catch (error) {
-        log.error('Logout request failed.');
-        log.error(error.message);
+        logger.error('Logout request failed.');
+        logger.error(error.message);
       }
 
       // Remove the session

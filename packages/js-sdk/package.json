@@ -19,7 +19,7 @@
     "Kinvey",
     "JavaScript"
   ],
-  "main": "lib/index.js",
+  "main": "lib/publicApi.js",
   "scripts": {
     "prebuild": "del lib",
     "build": "tsc"

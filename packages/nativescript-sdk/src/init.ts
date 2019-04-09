@@ -1,4 +1,4 @@
-import { init as coreInit, KinveyConfig } from 'kinvey-js-sdk';
+import { init as coreInit } from 'kinvey-js-sdk';
 import PubNub from 'pubnub/lib/nativescript';
 import * as HttpAdapter from './httpAdapter';
 import * as SessionStore from './sessionStore';
@@ -6,11 +6,16 @@ import * as Popup from './popup';
 import { getStorageAdapter, StorageProvider } from './storage';
 import { getDataFromPackageJson } from './utils';
 
-export interface NativeScriptKinveyConfig extends KinveyConfig {
+export interface KinveyConfig {
+  appKey: string;
+  appSecret: string;
+  masterSecret?: string;
+  appVersion?: string;
+  instanceId?: string;
   storage?: StorageProvider;
 }
 
-export function init(config?: NativeScriptKinveyConfig) {
+export function init(config?: KinveyConfig) {
   const configFromPackageJson = getDataFromPackageJson();
   const mergedConfig = Object.assign({}, configFromPackageJson, config);
   coreInit({
@@ -24,6 +29,6 @@ export function init(config?: NativeScriptKinveyConfig) {
   return config;
 }
 
-export function initialize(config?: NativeScriptKinveyConfig) {
+export function initialize(config?: KinveyConfig) {
   return init(config);
 }

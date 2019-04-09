@@ -1,15 +1,19 @@
-import { init as coreInit, KinveyConfig } from 'kinvey-js-sdk';
+import { init as coreInit } from 'kinvey-js-sdk';
 import PubNub from 'pubnub';
 import * as HttpAdapter from './httpAdapter';
 import * as SessionStore from './sessionStore';
 import * as Popup from './popup';
 import { getStorageAdapter, StorageProvider } from './storage';
 
-export interface NodeJSKinveyConfig extends KinveyConfig {
+export interface KinveyConfig {
+  appKey: string;
+  appSecret: string;
+  masterSecret?: string;
+  appVersion?: string;
+  instanceId?: string;
   storage?: StorageProvider;
 }
-
-export function init(config: NodeJSKinveyConfig) {
+export function init(config: KinveyConfig) {
   coreInit({
     kinveyConfig: config,
     httpAdapter: HttpAdapter,
@@ -21,6 +25,6 @@ export function init(config: NodeJSKinveyConfig) {
   return config;
 }
 
-export function initialize(config: NodeJSKinveyConfig) {
+export function initialize(config: KinveyConfig) {
   return init(config);
 }

@@ -3,7 +3,7 @@ import PQueue from 'p-queue';
 import { Base64 } from 'js-base64';
 import { InvalidCredentialsError } from '../errors/invalidCredentials';
 import { getAppSecret} from '../kinvey';
-import { log } from '../log';
+import { logger } from '../log';
 import { DataStoreCache, QueryCache, SyncCache } from '../datastore/cache';
 import { HttpHeaders, KinveyHttpHeaders, KinveyHttpAuth } from './headers';
 import { HttpResponse } from './response';
@@ -199,7 +199,7 @@ export class KinveyHttpRequest extends HttpRequest {
                 // Return the response
                 return response;
               } catch (error) {
-                log.error(error.message);
+                logger.error(error.message);
               }
             }
           }
@@ -223,7 +223,7 @@ export class KinveyHttpRequest extends HttpRequest {
             await SyncCache.clear();
             await DataStoreCache.clear();
           } catch (error) {
-            log.error(error.message);
+            logger.error(error.message);
           }
         }
 
