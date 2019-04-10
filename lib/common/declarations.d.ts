@@ -207,11 +207,6 @@ declare const enum TrackingTypes {
 	 * Defines that the broker process should get and track the data from preview app to Google Analytics
 	 */
 	PreviewAppData = "PreviewAppData",
-
-	/**
-	 * Defines that all information has been sent and no more data will be tracked in current session.
-	 */
-	Finish = "finish"
 }
 
 /**
