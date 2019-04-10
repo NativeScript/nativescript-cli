@@ -2,7 +2,7 @@ import { Yok } from "../../yok";
 import { ProcessService } from "../../services/process-service";
 import { assert } from "chai";
 
-const processExitSignals = ["exit", "SIGINT", "SIGTERM"];
+const processExitSignals = ["exit", "SIGTERM"];
 const emptyFunction = () => { /* no implementation required */ };
 function createTestInjector(): IInjector {
 	const testInjector = new Yok();

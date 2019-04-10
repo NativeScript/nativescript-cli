@@ -1,5 +1,5 @@
 export class ProcessService implements IProcessService {
-	private static PROCESS_EXIT_SIGNALS = ["exit", "SIGINT", "SIGTERM"];
+	private static PROCESS_EXIT_SIGNALS = ["exit", "SIGTERM"];
 	private _listeners: IListener[];
 
 	public get listenersCount(): number {
