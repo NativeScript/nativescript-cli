@@ -1,6 +1,5 @@
 import * as constants from "../constants";
 import * as path from "path";
-import * as shell from "shelljs";
 import * as temp from "temp";
 import { hook } from "../common/helpers";
 import { PreparePlatformService } from "./prepare-platform-service";
@@ -16,7 +15,6 @@ export class PreparePlatformJSService extends PreparePlatformService implements 
 		private $errors: IErrors,
 		private $logger: ILogger,
 		private $projectDataService: IProjectDataService,
-		private $nodeModulesBuilder: INodeModulesBuilder,
 		private $packageManager: INodePackageManager) {
 		super($fs, $hooksService, $xmlValidator);
 	}
@@ -36,23 +34,7 @@ export class PreparePlatformJSService extends PreparePlatformService implements 
 	@performanceLog()
 	@hook('prepareJSApp')
 	public async preparePlatform(config: IPreparePlatformJSInfo): Promise<void> {
-		if (!config.changesInfo || config.changesInfo.appFilesChanged || config.changesInfo.changesRequirePrepare) {
-			await this.copyAppFiles(config);
-			this.copyAppResourcesFiles(config);
-		}
-
-		if (config.changesInfo && !config.changesInfo.changesRequirePrepare) {
-			// remove the App_Resources folder from the app/assets as here we're applying other files changes.
-			const appDestinationDirectoryPath = path.join(config.platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
-			const appResourcesDirectoryPath = path.join(appDestinationDirectoryPath, path.basename(config.projectData.appResourcesDirectoryPath));
-			if (this.$fs.exists(appResourcesDirectoryPath)) {
-				this.$fs.deleteDirectory(appResourcesDirectoryPath);
-			}
-		}
-
-		if (!config.changesInfo || config.changesInfo.modulesChanged) {
-			await this.copyTnsModules(config.platform, config.platformData, config.projectData, config.appFilesUpdaterOptions, config.projectFilesConfig);
-		}
+		// intentionally left blank, keep the support for before-prepareJSApp and after-prepareJSApp hooks
 	}
 
 	private async getPathToPlatformTemplate(selectedTemplate: string, frameworkPackageName: string, projectDir: string): Promise<{ selectedTemplate: string, pathToTemplate: string }> {
@@ -81,39 +63,6 @@ export class PreparePlatformJSService extends PreparePlatformService implements 
 		}
 
 		return null;
-	}
-
-	private async copyTnsModules(platform: string, platformData: IPlatformData, projectData: IProjectData, appFilesUpdaterOptions: IAppFilesUpdaterOptions, projectFilesConfig?: IProjectFilesConfig): Promise<void> {
-		const appDestinationDirectoryPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
-		const lastModifiedTime = this.$fs.exists(appDestinationDirectoryPath) ? this.$fs.getFsStats(appDestinationDirectoryPath).mtime : null;
-
-		try {
-			const absoluteOutputPath = path.join(appDestinationDirectoryPath, constants.TNS_MODULES_FOLDER_NAME);
-			// Process node_modules folder
-			await this.$nodeModulesBuilder.prepareJSNodeModules({
-				nodeModulesData: {
-					absoluteOutputPath,
-					platform,
-					lastModifiedTime,
-					projectData,
-					appFilesUpdaterOptions,
-					projectFilesConfig
-				},
-				release: appFilesUpdaterOptions.release,
-				copyNodeModules: true
-			});
-		} catch (error) {
-			this.$logger.debug(error);
-			shell.rm("-rf", appDestinationDirectoryPath);
-			this.$errors.failWithoutHelp(`Processing node_modules failed. ${error}`);
-		}
-	}
-
-	private copyAppResourcesFiles(config: IPreparePlatformJSInfo): void {
-		const appDestinationDirectoryPath = path.join(config.platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
-		const appResourcesSourcePath = config.projectData.appResourcesDirectoryPath;
-
-		shell.cp("-Rf", appResourcesSourcePath, path.join(appDestinationDirectoryPath, constants.APP_RESOURCES_FOLDER_NAME));
 	}
 }
 

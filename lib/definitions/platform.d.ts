@@ -283,7 +283,6 @@ interface INodeModulesBuilderData {
 
 interface INodeModulesBuilder {
 	prepareNodeModules(opts: INodeModulesBuilderData): Promise<void>;
-	prepareJSNodeModules(opts: INodeModulesBuilderData): Promise<void>;
 }
 
 interface INodeModulesDependenciesBuilder {
