@@ -34,7 +34,7 @@ export class InstallCommand implements ICommand {
 					const platformProjectService = platformData.platformProjectService;
 					await platformProjectService.validate(this.$projectData, this.$options);
 
-					await this.$platformService.addPlatforms([`${platform}@${frameworkPackageData.version}`], this.$options.platformTemplate, this.$projectData, this.$options, this.$options.frameworkPath);
+					await this.$platformService.addPlatforms([`${platform}@${frameworkPackageData.version}`], this.$projectData, this.$options, this.$options.frameworkPath);
 				} catch (err) {
 					error = `${error}${EOL}${err}`;
 				}

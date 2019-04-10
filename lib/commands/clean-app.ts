@@ -25,7 +25,6 @@ export class CleanAppCommandBase extends ValidatePlatformCommandBase implements 
 			appFilesUpdaterOptions,
 			platform: this.platform.toLowerCase(),
 			config: this.$options,
-			platformTemplate: this.$options.platformTemplate,
 			projectData: this.$projectData,
 			env: this.$options.env
 		};

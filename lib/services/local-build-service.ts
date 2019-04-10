@@ -12,7 +12,7 @@ export class LocalBuildService extends EventEmitter implements ILocalBuildServic
 		super();
 	}
 
-	public async build(platform: string, platformBuildOptions: IPlatformBuildData, platformTemplate?: string): Promise<string> {
+	public async build(platform: string, platformBuildOptions: IPlatformBuildData): Promise<string> {
 		if (this.$mobileHelper.isAndroidPlatform(platform) && platformBuildOptions.release && (!platformBuildOptions.keyStorePath || !platformBuildOptions.keyStorePassword || !platformBuildOptions.keyStoreAlias || !platformBuildOptions.keyStoreAliasPassword)) {
 			this.$errors.fail(ANDROID_RELEASE_BUILD_ERROR_MESSAGE);
 		}
@@ -21,7 +21,6 @@ export class LocalBuildService extends EventEmitter implements ILocalBuildServic
 		const prepareInfo: IPreparePlatformInfo = {
 			platform,
 			appFilesUpdaterOptions: platformBuildOptions,
-			platformTemplate,
 			projectData: this.$projectData,
 			env: platformBuildOptions.env,
 			config: {

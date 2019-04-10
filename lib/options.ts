@@ -90,7 +90,6 @@ export class Options {
 			compileSdk: { type: OptionType.Number, hasSensitiveValue: false },
 			port: { type: OptionType.Number, hasSensitiveValue: false },
 			copyTo: { type: OptionType.String, hasSensitiveValue: true },
-			platformTemplate: { type: OptionType.String, hasSensitiveValue: true },
 			js: { type: OptionType.Boolean, hasSensitiveValue: false },
 			javascript: { type: OptionType.Boolean, hasSensitiveValue: false },
 			ng: { type: OptionType.Boolean, hasSensitiveValue: false },

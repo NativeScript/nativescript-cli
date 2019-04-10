@@ -21,7 +21,6 @@ export class PrepareCommand extends ValidatePlatformCommandBase implements IComm
 		const platformInfo: IPreparePlatformInfo = {
 			platform: args[0],
 			appFilesUpdaterOptions,
-			platformTemplate: this.$options.platformTemplate,
 			projectData: this.$projectData,
 			config: this.$options,
 			env: this.$options.env

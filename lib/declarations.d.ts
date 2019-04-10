@@ -441,11 +441,6 @@ interface IBundleString {
 	bundle: string;
 }
 
-interface IPlatformTemplate {
-	platformTemplate: string;
-}
-
-
 interface IClean {
 	clean: boolean;
 }
@@ -499,7 +494,7 @@ interface IAndroidBundleOptions {
 	aab: boolean;
 }
 
-interface IOptions extends IRelease, IDeviceIdentifier, IJustLaunch, IAvd, IAvailableDevices, IProfileDir, IHasEmulatorOption, IBundleString, IPlatformTemplate, IHasEmulatorOption, IClean, IProvision, ITeamIdentifier, IAndroidReleaseOptions, IAndroidBundleOptions, INpmInstallConfigurationOptions, IPort, IEnvOptions, IPluginSeedOptions, IGenerateOptions {
+interface IOptions extends IRelease, IDeviceIdentifier, IJustLaunch, IAvd, IAvailableDevices, IProfileDir, IHasEmulatorOption, IBundleString, IHasEmulatorOption, IClean, IProvision, ITeamIdentifier, IAndroidReleaseOptions, IAndroidBundleOptions, INpmInstallConfigurationOptions, IPort, IEnvOptions, IPluginSeedOptions, IGenerateOptions {
 	argv: IYargArgv;
 	validateOptions(commandSpecificDashedOptions?: IDictionary<IDashedOption>): void;
 	options: IDictionary<IDashedOption>;
@@ -589,11 +584,11 @@ interface IDeviceEmulator extends IHasEmulatorOption, IDeviceIdentifier { }
 
 interface IRunPlatformOptions extends IJustLaunch, IDeviceEmulator { }
 
-interface IDeployPlatformOptions extends IAndroidReleaseOptions, IPlatformTemplate, IRelease, IClean, IDeviceEmulator, IProvision, ITeamIdentifier, IProjectDir {
+interface IDeployPlatformOptions extends IAndroidReleaseOptions, IRelease, IClean, IDeviceEmulator, IProvision, ITeamIdentifier, IProjectDir {
 	forceInstall?: boolean;
 }
 
-interface IUpdatePlatformOptions extends IPlatformTemplate {
+interface IUpdatePlatformOptions {
 	currentVersion: string;
 	newVersion: string;
 	canUpdate: boolean;

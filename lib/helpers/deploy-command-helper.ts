@@ -17,7 +17,6 @@ export class DeployCommandHelper implements IDeployCommandHelper {
 			device: this.$options.device,
 			projectDir: this.$projectData.projectDir,
 			emulator: this.$options.emulator,
-			platformTemplate: this.$options.platformTemplate,
 			release: this.$options.release,
 			forceInstall: true,
 			provision: this.$options.provision,

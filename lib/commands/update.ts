@@ -94,12 +94,12 @@ export class UpdateCommand extends ValidatePlatformCommandBase implements IComma
 
 		if (args.length === 1) {
 			for (const platform of platforms.packagePlatforms) {
-				await this.$platformService.addPlatforms([platform + "@" + args[0]], this.$options.platformTemplate, this.$projectData, this.$options, this.$options.frameworkPath);
+				await this.$platformService.addPlatforms([platform + "@" + args[0]], this.$projectData, this.$options, this.$options.frameworkPath);
 			}
 
 			await this.$pluginsService.add(`${constants.TNS_CORE_MODULES_NAME}@${args[0]}`, this.$projectData);
 		} else {
-			await this.$platformService.addPlatforms(platforms.packagePlatforms, this.$options.platformTemplate, this.$projectData, this.$options, this.$options.frameworkPath);
+			await this.$platformService.addPlatforms(platforms.packagePlatforms, this.$projectData, this.$options, this.$options.frameworkPath);
 			await this.$pluginsService.add(constants.TNS_CORE_MODULES_NAME, this.$projectData);
 		}
 
