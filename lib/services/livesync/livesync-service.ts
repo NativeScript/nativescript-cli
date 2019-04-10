@@ -429,7 +429,6 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 				nativePrepare: nativePrepare,
 				filesToSync: options.filesToSync,
 				filesToRemove: options.filesToRemove,
-				platformTemplate: null,
 				skipModulesNativeCheck: options.skipModulesNativeCheck,
 				config: platformSpecificOptions
 			};

@@ -15,9 +15,9 @@ interface IBuildPlatformAction {
 }
 
 interface IPlatformService extends IBuildPlatformAction, NodeJS.EventEmitter {
-	cleanPlatforms(platforms: string[], platformTemplate: string, projectData: IProjectData, config: IPlatformOptions, framework?: string): Promise<void>;
+	cleanPlatforms(platforms: string[], projectData: IProjectData, config: IPlatformOptions, framework?: string): Promise<void>;
 
-	addPlatforms(platforms: string[], platformTemplate: string, projectData: IProjectData, config: IPlatformOptions, frameworkPath?: string): Promise<void>;
+	addPlatforms(platforms: string[], projectData: IProjectData, config: IPlatformOptions, frameworkPath?: string): Promise<void>;
 
 	/**
 	 * Gets list of all installed platforms (the ones for which <project dir>/platforms/<platform> exists).
@@ -48,7 +48,7 @@ interface IPlatformService extends IBuildPlatformAction, NodeJS.EventEmitter {
 	 */
 	removePlatforms(platforms: string[], projectData: IProjectData): Promise<void>;
 
-	updatePlatforms(platforms: string[], platformTemplate: string, projectData: IProjectData, config: IPlatformOptions): Promise<void>;
+	updatePlatforms(platforms: string[], projectData: IProjectData, config: IPlatformOptions): Promise<void>;
 
 	/**
 	 * Ensures that the specified platform and its dependencies are installed.
@@ -316,7 +316,6 @@ interface IAddPlatformInfo extends IProjectDataComposition, IPlatformDataComposi
 	frameworkDir: string;
 	installedVersion: string;
 	config: IPlatformOptions;
-	platformTemplate?: string;
 }
 
 interface IPreparePlatformJSInfo extends IPreparePlatformCoreInfo, ICopyAppFilesData {
@@ -335,7 +334,7 @@ interface IPreparePlatformCoreInfo extends IPreparePlatformInfoBase, IOptionalPr
 	platformSpecificData: IPlatformSpecificData;
 }
 
-interface IPreparePlatformInfo extends IPreparePlatformInfoBase, IPlatformConfig, IPlatformTemplate, ISkipNativeCheckOptional { }
+interface IPreparePlatformInfo extends IPreparePlatformInfoBase, IPlatformConfig, ISkipNativeCheckOptional { }
 
 interface IPlatformConfig {
 	config: IPlatformOptions;

@@ -24,7 +24,6 @@ export abstract class BuildCommandBase extends ValidatePlatformCommandBase {
 		const platformInfo: IPreparePlatformInfo = {
 			platform,
 			appFilesUpdaterOptions,
-			platformTemplate: this.$options.platformTemplate,
 			projectData: this.$projectData,
 			config: this.$options,
 			env: this.$options.env

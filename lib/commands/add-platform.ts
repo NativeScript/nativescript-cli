@@ -13,7 +13,7 @@ export class AddPlatformCommand extends ValidatePlatformCommandBase implements I
 	}
 
 	public async execute(args: string[]): Promise<void> {
-		await this.$platformService.addPlatforms(args, this.$options.platformTemplate, this.$projectData, this.$options, this.$options.frameworkPath);
+		await this.$platformService.addPlatforms(args, this.$projectData, this.$options, this.$options.frameworkPath);
 	}
 
 	public async canExecute(args: string[]): Promise<ICanExecuteCommandOutput> {
