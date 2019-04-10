@@ -1038,12 +1038,6 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		}
 	}
 
-	public async prebuildNativePlugin(options: IPluginBuildOptions): Promise<void> { /** */ }
-
-	public async checkIfPluginsNeedBuild(projectData: IProjectData): Promise<Array<any>> {
-		return [];
-	}
-
 	public getDeploymentTarget(projectData: IProjectData): semver.SemVer {
 		const target = this.$xcconfigService.readPropertyValue(this.getBuildXCConfigFilePath(projectData), "IPHONEOS_DEPLOYMENT_TARGET");
 		if (!target) {

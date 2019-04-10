@@ -97,12 +97,6 @@ export function regExpEscape(input: string): string {
 	return input.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-export function isRecommendedAarFile(foundAarFile: string, packageJsonPluginName: string): boolean {
-	const filename = foundAarFile.replace(/^.*[\\\/]/, '');
-	packageJsonPluginName = getShortPluginName(packageJsonPluginName);
-	return `${packageJsonPluginName}.aar` === filename;
-}
-
 export function getShortPluginName(pluginName: string): string {
 	return sanitizePluginName(pluginName).replace(/[\-]/g, "_");
 }

@@ -461,16 +461,6 @@ interface IPlatformProjectService extends NodeJS.EventEmitter, IPlatformProjectS
 	checkForChanges(changeset: IProjectChangesInfo, options: IProjectChangesOptions, projectData: IProjectData): Promise<void>;
 
 	/**
-	 * Build native part of a nativescript plugins if necessary
-	 */
-	prebuildNativePlugin(buildOptions: IPluginBuildOptions): Promise<void>;
-
-	/**
-	 * Traverse through the production dependencies and find plugins that need build/rebuild
-	 */
-	checkIfPluginsNeedBuild(projectData: IProjectData): Promise<Array<any>>;
-
-	/**
 	 * Get the deployment target's version
 	 * Currently implemented only for iOS -> returns the value of IPHONEOS_DEPLOYMENT_TARGET property from xcconfig file
 	 */
