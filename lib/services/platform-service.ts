@@ -757,7 +757,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 
 		platform = platform.split("@")[0].toLowerCase();
 
-		if (!this.isValidPlatform(platform, projectData)) {
+		if (!this.$platformsData.getPlatformData(platform, projectData)) {
 			this.$errors.fail("Invalid platform %s. Valid platforms are %s.", platform, helpers.formatListOfNames(this.$platformsData.platformsNames));
 		}
 	}
@@ -820,10 +820,6 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 
 	private hasPlatformDirectory(platform: string, projectData: IProjectData): boolean {
 		return this.$fs.exists(path.join(projectData.platformsDir, platform.toLowerCase()));
-	}
-
-	private isValidPlatform(platform: string, projectData: IProjectData) {
-		return this.$platformsData.getPlatformData(platform, projectData);
 	}
 
 	public isPlatformSupportedForOS(platform: string, projectData: IProjectData): boolean {

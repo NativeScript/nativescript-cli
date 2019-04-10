@@ -4,7 +4,7 @@ import * as constants from "../constants";
 import * as semver from "semver";
 import * as projectServiceBaseLib from "./platform-project-service-base";
 import { DeviceAndroidDebugBridge } from "../common/mobile/android/device-android-debug-bridge";
-import { attachAwaitDetach, isRecommendedAarFile } from "../common/helpers";
+import { attachAwaitDetach } from "../common/helpers";
 import { Configurations, LiveSyncPaths } from "../common/constants";
 import { SpawnOptions } from "child_process";
 import { performanceLog } from ".././common/decorators";
@@ -14,7 +14,6 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	private static VALUES_VERSION_DIRNAME_PREFIX = AndroidProjectService.VALUES_DIRNAME + "-v";
 	private static ANDROID_PLATFORM_NAME = "android";
 	private static MIN_RUNTIME_VERSION_WITH_GRADLE = "1.5.0";
-	private static MIN_RUNTIME_VERSION_WITHOUT_DEPS = "4.2.0-2018-06-29-02";
 
 	private isAndroidStudioTemplate: boolean;
 
@@ -26,9 +25,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		private $logger: ILogger,
 		$projectDataService: IProjectDataService,
 		private $injector: IInjector,
-		private $pluginVariablesService: IPluginVariablesService,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-		private $packageManager: INodePackageManager,
 		private $androidPluginBuildService: IAndroidPluginBuildService,
 		private $platformEnvironmentRequirements: IPlatformEnvironmentRequirements,
 		private $androidResourcesMigrationService: IAndroidResourcesMigrationService,
@@ -186,52 +183,6 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		}
 
 		this.cleanResValues(targetSdkVersion, projectData);
-
-		if (semver.lt(frameworkVersion, AndroidProjectService.MIN_RUNTIME_VERSION_WITHOUT_DEPS)) {
-			await this.installRuntimeDeps(projectData, config);
-		}
-	}
-
-	private async installRuntimeDeps(projectData: IProjectData, config: ICreateProjectOptions) {
-		const requiredDevDependencies = [
-			{ name: "babel-traverse", version: "^6.4.5" },
-			{ name: "babel-types", version: "^6.4.5" },
-			{ name: "babylon", version: "^6.4.5" },
-			{ name: "lazy", version: "^1.0.11" }
-		];
-
-		const npmConfig: INodePackageManagerInstallOptions = {
-			save: true,
-			"save-dev": true,
-			"save-exact": true,
-			silent: true,
-			disableNpmInstall: false,
-			frameworkPath: config.frameworkPath,
-			ignoreScripts: config.ignoreScripts
-		};
-
-		const projectPackageJson: any = this.$fs.readJson(projectData.projectFilePath);
-
-		for (const dependency of requiredDevDependencies) {
-			let dependencyVersionInProject = (projectPackageJson.dependencies && projectPackageJson.dependencies[dependency.name]) ||
-				(projectPackageJson.devDependencies && projectPackageJson.devDependencies[dependency.name]);
-
-			if (!dependencyVersionInProject) {
-				await this.$packageManager.install(`${dependency.name}@${dependency.version}`, projectData.projectDir, npmConfig);
-			} else {
-				const cleanedVersion = semver.clean(dependencyVersionInProject);
-
-				// The plugin version is not valid. Check node_modules for the valid version.
-				if (!cleanedVersion) {
-					const pathToPluginPackageJson = path.join(projectData.projectDir, constants.NODE_MODULES_FOLDER_NAME, dependency.name, constants.PACKAGE_JSON_FILE_NAME);
-					dependencyVersionInProject = this.$fs.exists(pathToPluginPackageJson) && this.$fs.readJson(pathToPluginPackageJson).version;
-				}
-
-				if (!semver.satisfies(dependencyVersionInProject || cleanedVersion, dependency.version)) {
-					this.$errors.failWithoutHelp(`Your project have installed ${dependency.name} version ${cleanedVersion} but Android platform requires version ${dependency.version}.`);
-				}
-			}
-		}
 	}
 
 	private cleanResValues(targetSdkVersion: number, projectData: IProjectData): void {
@@ -442,166 +393,37 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	}
 
 	public async preparePluginNativeCode(pluginData: IPluginData, projectData: IProjectData): Promise<void> {
-		if (!this.runtimeVersionIsGreaterThanOrEquals(projectData, "3.3.0")) {
-			const pluginPlatformsFolderPath = this.getPluginPlatformsFolderPath(pluginData, AndroidProjectService.ANDROID_PLATFORM_NAME);
-			await this.processResourcesFromPlugin(pluginData, pluginPlatformsFolderPath, projectData);
-		} else if (this.runtimeVersionIsGreaterThanOrEquals(projectData, "4.0.0")) {
-			// build Android plugins which contain AndroidManifest.xml and/or resources
-			const pluginPlatformsFolderPath = this.getPluginPlatformsFolderPath(pluginData, AndroidProjectService.ANDROID_PLATFORM_NAME);
-			if (this.$fs.exists(pluginPlatformsFolderPath)) {
-				const options: IPluginBuildOptions = {
-					projectDir: projectData.projectDir,
-					pluginName: pluginData.name,
-					platformsAndroidDirPath: pluginPlatformsFolderPath,
-					aarOutputDir: pluginPlatformsFolderPath,
-					tempPluginDirPath: path.join(projectData.platformsDir, "tempPlugin")
-				};
+		// build Android plugins which contain AndroidManifest.xml and/or resources
+		const pluginPlatformsFolderPath = this.getPluginPlatformsFolderPath(pluginData, AndroidProjectService.ANDROID_PLATFORM_NAME);
+		if (this.$fs.exists(pluginPlatformsFolderPath)) {
+			const options: IPluginBuildOptions = {
+				projectDir: projectData.projectDir,
+				pluginName: pluginData.name,
+				platformsAndroidDirPath: pluginPlatformsFolderPath,
+				aarOutputDir: pluginPlatformsFolderPath,
+				tempPluginDirPath: path.join(projectData.platformsDir, "tempPlugin")
+			};
 
-				await this.prebuildNativePlugin(options);
+			if (await this.$androidPluginBuildService.buildAar(options)) {
+				this.$logger.info(`Built aar for ${options.pluginName}`);
 			}
+
+			this.$androidPluginBuildService.migrateIncludeGradle(options);
 		}
-
-		// Do nothing, the Android Gradle script will configure itself based on the input dependencies.json
-	}
-
-	public async checkIfPluginsNeedBuild(projectData: IProjectData): Promise<Array<{ platformsAndroidDirPath: string, pluginName: string }>> {
-		const detectedPlugins: Array<{ platformsAndroidDirPath: string, pluginName: string }> = [];
-
-		const platformsAndroid = path.join(constants.PLATFORMS_DIR_NAME, "android");
-		const pathToPlatformsAndroid = path.join(projectData.projectDir, platformsAndroid);
-		const dependenciesJson = await this.$fs.readJson(path.join(pathToPlatformsAndroid, constants.DEPENDENCIES_JSON_NAME));
-		const productionDependencies = dependenciesJson.map((item: any) => {
-			return path.resolve(pathToPlatformsAndroid, item.directory);
-		});
-
-		for (const dependency of productionDependencies) {
-			const jsonContent = this.$fs.readJson(path.join(dependency, constants.PACKAGE_JSON_FILE_NAME));
-			const isPlugin = !!jsonContent.nativescript;
-			const pluginName = jsonContent.name;
-			if (isPlugin) {
-				const platformsAndroidDirPath = path.join(dependency, platformsAndroid);
-				if (this.$fs.exists(platformsAndroidDirPath)) {
-					let hasGeneratedAar = false;
-					let generatedAarPath = "";
-					const nativeFiles = this.$fs.enumerateFilesInDirectorySync(platformsAndroidDirPath).filter((item) => {
-						if (isRecommendedAarFile(item, pluginName)) {
-							generatedAarPath = item;
-							hasGeneratedAar = true;
-						}
-						return this.isAllowedFile(item);
-					});
-
-					if (hasGeneratedAar) {
-						const aarStat = this.$fs.getFsStats(generatedAarPath);
-						nativeFiles.forEach((item) => {
-							const currentItemStat = this.$fs.getFsStats(item);
-							if (currentItemStat.mtime > aarStat.mtime) {
-								detectedPlugins.push({
-									platformsAndroidDirPath,
-									pluginName
-								});
-							}
-						});
-					} else if (nativeFiles.length > 0) {
-						detectedPlugins.push({
-							platformsAndroidDirPath,
-							pluginName
-						});
-					}
-				}
-			}
-		}
-		return detectedPlugins;
-	}
-
-	private isAllowedFile(item: string): boolean {
-		return item.endsWith(constants.MANIFEST_FILE_NAME) || item.endsWith(constants.RESOURCES_DIR);
-	}
-
-	public async prebuildNativePlugin(options: IPluginBuildOptions): Promise<void> {
-		if (await this.$androidPluginBuildService.buildAar(options)) {
-			this.$logger.info(`Built aar for ${options.pluginName}`);
-		}
-
-		this.$androidPluginBuildService.migrateIncludeGradle(options);
 	}
 
 	public async processConfigurationFilesFromAppResources(): Promise<void> {
 		return;
 	}
 
-	private async processResourcesFromPlugin(pluginData: IPluginData, pluginPlatformsFolderPath: string, projectData: IProjectData): Promise<void> {
-		const configurationsDirectoryPath = path.join(this.getPlatformData(projectData).projectRoot, "configurations");
-		this.$fs.ensureDirectoryExists(configurationsDirectoryPath);
-
-		const pluginConfigurationDirectoryPath = path.join(configurationsDirectoryPath, pluginData.name);
-		if (this.$fs.exists(pluginPlatformsFolderPath)) {
-			this.$fs.ensureDirectoryExists(pluginConfigurationDirectoryPath);
-
-			const isScoped = pluginData.name.indexOf("@") === 0;
-			const flattenedDependencyName = isScoped ? pluginData.name.replace("/", "_") : pluginData.name;
-
-			// Copy all resources from plugin
-			const resourcesDestinationDirectoryPath = path.join(this.getPlatformData(projectData).projectRoot, constants.SRC_DIR, flattenedDependencyName);
-			this.$fs.ensureDirectoryExists(resourcesDestinationDirectoryPath);
-			shell.cp("-Rf", path.join(pluginPlatformsFolderPath, "*"), resourcesDestinationDirectoryPath);
-
-			const filesForInterpolation = this.$fs.enumerateFilesInDirectorySync(resourcesDestinationDirectoryPath, file => this.$fs.getFsStats(file).isDirectory() || path.extname(file) === constants.XML_FILE_EXTENSION) || [];
-			for (const file of filesForInterpolation) {
-				this.$logger.trace(`Interpolate data for plugin file: ${file}`);
-				await this.$pluginVariablesService.interpolate(pluginData, file, projectData.projectDir, projectData.projectIdentifiers.android);
-			}
-		}
-
-		// Copy include.gradle file
-		const includeGradleFilePath = path.join(pluginPlatformsFolderPath, constants.INCLUDE_GRADLE_NAME);
-		if (this.$fs.exists(includeGradleFilePath)) {
-			shell.cp("-f", includeGradleFilePath, pluginConfigurationDirectoryPath);
-		}
-	}
-
 	public async removePluginNativeCode(pluginData: IPluginData, projectData: IProjectData): Promise<void> {
-		try {
-			if (!this.runtimeVersionIsGreaterThanOrEquals(projectData, "3.3.0")) {
-				const pluginConfigDir = path.join(this.getPlatformData(projectData).projectRoot, "configurations", pluginData.name);
-				if (this.$fs.exists(pluginConfigDir)) {
-					await this.cleanProject(this.getPlatformData(projectData).projectRoot, projectData);
-				}
-			}
-		} catch (e) {
-			if (e.code === "ENOENT") {
-				this.$logger.debug("No native code jars found: " + e.message);
-			} else {
-				throw e;
-			}
-		}
+		// not implemented
 	}
 
 	public async beforePrepareAllPlugins(projectData: IProjectData, dependencies?: IDependencyData[]): Promise<void> {
-		const shouldUseNewRoutine = this.runtimeVersionIsGreaterThanOrEquals(projectData, "3.3.0");
-
 		if (dependencies) {
 			dependencies = this.filterUniqueDependencies(dependencies);
-			if (shouldUseNewRoutine) {
-				this.provideDependenciesJson(projectData, dependencies);
-			} else {
-				const platformDir = path.join(projectData.platformsDir, AndroidProjectService.ANDROID_PLATFORM_NAME);
-				const buildDir = path.join(platformDir, "build-tools");
-				const checkV8dependants = path.join(buildDir, "check-v8-dependants.js");
-				if (this.$fs.exists(checkV8dependants)) {
-					const stringifiedDependencies = JSON.stringify(dependencies);
-					try {
-						await this.spawn('node', [checkV8dependants, stringifiedDependencies, projectData.platformsDir], { stdio: "inherit" });
-					} catch (e) {
-						this.$logger.info("Checking for dependants on v8 public API failed. This is likely caused because of cyclic production dependencies. Error code: " + e.code + "\nMore information: https://github.com/NativeScript/nativescript-cli/issues/2561");
-					}
-				}
-			}
-		}
-
-		if (!shouldUseNewRoutine) {
-			const projectRoot = this.getPlatformData(projectData).projectRoot;
-			await this.cleanProject(projectRoot, projectData);
+			this.provideDependenciesJson(projectData, dependencies);
 		}
 	}
 
@@ -761,17 +583,6 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		const normalizedPlatformVersion = `${semver.major(platformVersion)}.${semver.minor(platformVersion)}.0`;
 
 		return semver.gte(normalizedPlatformVersion, androidStudioCompatibleTemplate);
-	}
-
-	private runtimeVersionIsGreaterThanOrEquals(projectData: IProjectData, versionString: string): boolean {
-		const platformVersion = this.getCurrentPlatformVersion(this.getPlatformData(projectData), projectData);
-
-		if (platformVersion === constants.PackageVersion.NEXT) {
-			return true;
-		}
-
-		const normalizedPlatformVersion = `${semver.major(platformVersion)}.${semver.minor(platformVersion)}.0`;
-		return semver.gte(normalizedPlatformVersion, versionString);
 	}
 
 	private getLegacyAppResourcesDestinationDirPath(projectData: IProjectData): string {
