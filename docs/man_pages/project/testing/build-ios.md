@@ -27,7 +27,13 @@ General | `$ tns build ios [--for-device] [--release] [--copy-to <File Path>] [-
 * `--team-id` - If used without parameter, lists all team names and ids. If used with team name or id, it will switch to automatic signing mode and configure the .xcodeproj file of your app. In this case .xcconfig should not contain any provisioning/team id flags. This team id will be further used for codesigning the app. For Xcode 9.0+, xcodebuild will be allowed to update and modify automatically managed provisioning profiles.
 * `--provision` - If used without parameter, lists all eligible provisioning profiles. If used with UUID or name of your provisioning profile, it will switch to manual signing mode and configure the .xcodeproj file of your app. In this case xcconfig should not contain any provisioning/team id flags. This provisioning profile will be further used for codesigning the app.
 * `--bundle` - Specifies that the `webpack` bundler will be used to bundle the application.
-* `--env.*` - Specifies additional flags that the bundler may process. May be passed multiple times. For example: `--env.uglify --env.snapshot`.
+* `--env.*` - Specifies additional flags that the bundler may process. May be passed multiple times. Supported additional flags:
+    *   `--env.aot` - creates Ahead-Of-Time build (Angular only).
+    *   `--env.snapshot`- creates [Snapshot](https://docs.nativescript.org/performance-optimizations/bundling-with-webpack#v8-heap-snapshot) (only for release builds on Mac OS & for Android).
+    *   `--env.uglify` - provides basic obfuscation and smaller app size.
+    *   `--env.report` - creates a Webpack report inside a `report` folder in the root folder.
+    *   `--env.sourceMap` - creates inline source maps (useful for debbuging bundled app).
+    *   `--env.hiddenSourceMap` - creates sources maps in the root folder (useful for Crashlytics usage with bundled app in release).
 
 <% } %>
 
