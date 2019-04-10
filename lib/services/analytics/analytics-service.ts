@@ -222,7 +222,7 @@ export class AnalyticsService implements IAnalyticsService, IDisposable {
 			});
 
 			broker.on("message", (data: any) => {
-				if (data === AnalyticsMessages.BrokerReadyToReceive) {
+				if (data === DetachedProcessMessages.ProcessReadyToReceive) {
 					clearTimeout(timeoutId);
 
 					if (!isSettled) {

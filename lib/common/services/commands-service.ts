@@ -28,7 +28,8 @@ export class CommandsService implements ICommandsService {
 		private $helpService: IHelpService,
 		private $extensibilityService: IExtensibilityService,
 		private $optionsTracker: IOptionsTracker,
-		private $projectDataService: IProjectDataService) {
+		private $projectDataService: IProjectDataService,
+		private $cleanupService: ICleanupService) {
 			let projectData = null;
 			try {
 				projectData = this.$projectDataService.getProjectData();
@@ -37,6 +38,7 @@ export class CommandsService implements ICommandsService {
 			}
 
 			this.$options.setupOptions(projectData);
+			this.$cleanupService.setShouldDispose(this.$options.justlaunch || !this.$options.watch);
 	}
 
 	public allCommands(opts: { includeDevCommands: boolean }): string[] {

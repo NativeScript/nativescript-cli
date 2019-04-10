@@ -147,6 +147,7 @@ export class Options {
 			default: { type: OptionType.Boolean, hasSensitiveValue: false },
 			count: { type: OptionType.Number, hasSensitiveValue: false },
 			analyticsLogFile: { type: OptionType.String, hasSensitiveValue: true },
+			cleanupLogFile: { type: OptionType.String, hasSensitiveValue: true },
 			hooks: { type: OptionType.Boolean, default: true, hasSensitiveValue: false },
 			link: { type: OptionType.Boolean, default: false, hasSensitiveValue: false },
 			aab: { type: OptionType.Boolean, hasSensitiveValue: false },

@@ -194,7 +194,7 @@ describe("analyticsService", () => {
 
 					spawnedProcess.connected = false;
 					spawnedProcess.send = (): void => undefined;
-					setTimeout(() => spawnedProcess.emit("message", AnalyticsMessages.BrokerReadyToReceive), 1);
+					setTimeout(() => spawnedProcess.emit("message", DetachedProcessMessages.ProcessReadyToReceive), 1);
 					return spawnedProcess;
 				};
 
@@ -213,7 +213,7 @@ describe("analyticsService", () => {
 						throw new Error("Failed to sent data.");
 					};
 
-					setTimeout(() => spawnedProcess.emit("message", AnalyticsMessages.BrokerReadyToReceive), 1);
+					setTimeout(() => spawnedProcess.emit("message", DetachedProcessMessages.ProcessReadyToReceive), 1);
 					return spawnedProcess;
 				};
 
@@ -233,7 +233,7 @@ describe("analyticsService", () => {
 						action();
 					};
 
-					setTimeout(() => spawnedProcess.emit("message", AnalyticsMessages.BrokerReadyToReceive), 1);
+					setTimeout(() => spawnedProcess.emit("message", DetachedProcessMessages.ProcessReadyToReceive), 1);
 					return spawnedProcess;
 				};
 
@@ -264,7 +264,7 @@ describe("analyticsService", () => {
 						action();
 					};
 
-					setTimeout(() => spawnedProcess.emit("message", AnalyticsMessages.BrokerReadyToReceive), 1);
+					setTimeout(() => spawnedProcess.emit("message", DetachedProcessMessages.ProcessReadyToReceive), 1);
 
 					return spawnedProcess;
 				};

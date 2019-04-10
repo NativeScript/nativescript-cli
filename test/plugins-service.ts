@@ -150,6 +150,11 @@ function createTestInjector() {
 		},
 		extractPackage: async (packageName: string, destinationDirectory: string, options?: IPacoteExtractOptions): Promise<void> => undefined
 	});
+
+	testInjector.register("cleanupService", {
+		setShouldDispose: (shouldDispose: boolean): void => undefined
+	});
+
 	return testInjector;
 }
 

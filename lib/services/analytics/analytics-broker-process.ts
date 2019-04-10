@@ -2,7 +2,7 @@
 // The instances here are not shared with the ones in main CLI process.
 import * as fs from "fs";
 import { AnalyticsBroker } from "./analytics-broker";
-import { AnalyticsLoggingService } from "./analytics-logging-service";
+import { FileLogService } from "../../detached-processes/file-log-service";
 
 const pathToBootstrap = process.argv[2];
 if (!pathToBootstrap || !fs.existsSync(pathToBootstrap)) {
@@ -13,7 +13,7 @@ const logFile = process.argv[3];
 // After requiring the bootstrap we can use $injector
 require(pathToBootstrap);
 
-const analyticsLoggingService = $injector.resolve<IAnalyticsLoggingService>(AnalyticsLoggingService, { logFile });
+const analyticsLoggingService = $injector.resolve<IFileLogService>(FileLogService, { logFile });
 analyticsLoggingService.logData({ message: "Initializing AnalyticsBroker." });
 
 const analyticsBroker = $injector.resolve<IAnalyticsBroker>(AnalyticsBroker, { pathToBootstrap, analyticsLoggingService });
@@ -76,6 +76,6 @@ process.on("disconnect", async () => {
 	await finishTracking();
 });
 
-analyticsLoggingService.logData({ message: `analytics-broker-process will send ${AnalyticsMessages.BrokerReadyToReceive} message` });
+analyticsLoggingService.logData({ message: `analytics-broker-process will send ${DetachedProcessMessages.ProcessReadyToReceive} message` });
 
-process.send(AnalyticsMessages.BrokerReadyToReceive);
+process.send(DetachedProcessMessages.ProcessReadyToReceive);
