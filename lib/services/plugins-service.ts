@@ -12,9 +12,6 @@ export class PluginsService implements IPluginsService {
 	private get $platformsData(): IPlatformsData {
 		return this.$injector.resolve("platformsData");
 	}
-	private get $pluginVariablesService(): IPluginVariablesService {
-		return this.$injector.resolve("pluginVariablesService");
-	}
 	private get $projectDataService(): IProjectDataService {
 		return this.$injector.resolve("projectDataService");
 	}
@@ -57,16 +54,6 @@ export class PluginsService implements IPluginsService {
 
 			await this.executeForAllInstalledPlatforms(action, projectData);
 
-			try {
-				await this.$pluginVariablesService.savePluginVariablesInProjectFile(pluginData, projectData.projectDir);
-			} catch (err) {
-				// Revert package.json
-				this.$projectDataService.removeNSProperty(projectData.projectDir, this.$pluginVariablesService.getPluginVariablePropertyName(pluginData.name));
-				await this.$packageManager.uninstall(plugin, PluginsService.NPM_CONFIG, projectData.projectDir);
-
-				throw err;
-			}
-
 			this.$logger.out(`Successfully installed plugin ${realNpmPackageJson.name}.`);
 		} else {
 			await this.$packageManager.uninstall(realNpmPackageJson.name, { save: true }, projectData.projectDir);
@@ -81,7 +68,6 @@ export class PluginsService implements IPluginsService {
 			await platformData.platformProjectService.removePluginNativeCode(pluginData, projectData);
 		};
 
-		this.$pluginVariablesService.removePluginVariablesFromProjectFile(pluginName.toLowerCase(), projectData.projectDir);
 		await this.executeForAllInstalledPlatforms(removePluginNativeCodeAction, projectData);
 
 		await this.executeNpmCommand(PluginsService.UNINSTALL_COMMAND_NAME, pluginName, projectData);

@@ -43,7 +43,6 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		private $devicesService: Mobile.IDevicesService,
 		private $mobileHelper: Mobile.IMobileHelper,
 		private $hostInfo: IHostInfo,
-		private $pluginVariablesService: IPluginVariablesService,
 		private $xcprojService: IXcprojService,
 		private $iOSProvisionService: IOSProvisionService,
 		private $pbxprojDomXcode: IPbxprojDomXcode,
@@ -800,11 +799,6 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		await this.mergeInfoPlists(projectData, opts);
 		await this.$iOSEntitlementsService.merge(projectData);
 		await this.mergeProjectXcconfigFiles(projectData, opts);
-		for (const pluginData of await this.getAllInstalledPlugins(projectData)) {
-			await this.$pluginVariablesService.interpolatePluginVariables(pluginData, this.getPlatformData(projectData).configurationFilePath, projectData.projectDir);
-		}
-
-		this.$pluginVariablesService.interpolateAppIdentifier(this.getPlatformData(projectData).configurationFilePath, projectData.projectIdentifiers.ios);
 	}
 
 	private getInfoPlistPath(projectData: IProjectData): string {

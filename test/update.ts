@@ -47,7 +47,6 @@ function createTestInjector(
 			return "1.0.0";
 		}
 	});
-	testInjector.register("pluginVariablesService", {});
 	testInjector.register("platformService", {
 		getInstalledPlatforms: function(): string[] {
 			return installedPlatforms;

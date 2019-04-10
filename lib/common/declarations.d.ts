@@ -1242,11 +1242,6 @@ interface IResourceLoader {
 	readJson(path: string): any;
 }
 
-interface IPluginVariablesHelper {
-	getPluginVariableFromVarOption(variableName: string, configuration?: string): any;
-	simplifyYargsObject(obj: any, configuration?: string): any;
-}
-
 /**
  * Used for getting strings for informational/error messages.
  */
