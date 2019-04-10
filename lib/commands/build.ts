@@ -33,6 +33,7 @@ export abstract class BuildCommandBase extends ValidatePlatformCommandBase {
 		await this.$platformService.preparePlatform(platformInfo);
 		const buildConfig: IBuildConfig = {
 			buildForDevice: this.$options.forDevice,
+			iCloudContainerEnvironment: this.$options.iCloudContainerEnvironment,
 			projectDir: this.$options.path,
 			clean: this.$options.clean,
 			teamId: this.$options.teamId,

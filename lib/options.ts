@@ -76,6 +76,7 @@ export class Options {
 			framework: { type: OptionType.String, hasSensitiveValue: false },
 			frameworkVersion: { type: OptionType.String, hasSensitiveValue: false },
 			forDevice: { type: OptionType.Boolean, hasSensitiveValue: false },
+			iCloudContainerEnvironment: { type: OptionType.String, hasSensitiveValue: false },
 			provision: { type: OptionType.Object, hasSensitiveValue: true },
 			client: { type: OptionType.Boolean, default: true, hasSensitiveValue: false },
 			env: { type: OptionType.Object, hasSensitiveValue: false },

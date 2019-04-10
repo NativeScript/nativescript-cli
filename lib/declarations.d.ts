@@ -544,6 +544,7 @@ interface IOptions extends IRelease, IDeviceIdentifier, IJustLaunch, IAvd, IAvai
 	copyTo: string;
 	debugTransport: boolean;
 	forDevice: boolean;
+	iCloudContainerEnvironment: string;
 	framework: string;
 	frameworkName: string;
 	frameworkVersion: string;

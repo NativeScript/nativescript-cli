@@ -858,6 +858,7 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 	private getInstallApplicationBuildConfig(deviceIdentifier: string, projectDir: string, opts: { isEmulator: boolean }): IBuildConfig {
 		const buildConfig: IBuildConfig = {
 			buildForDevice: !opts.isEmulator,
+			iCloudContainerEnvironment: null,
 			release: false,
 			device: deviceIdentifier,
 			provision: null,

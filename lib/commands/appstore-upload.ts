@@ -78,6 +78,7 @@ export class PublishIOS implements ICommand {
 					provision: this.$options.provision,
 					teamId: this.$options.teamId,
 					buildForDevice: true,
+					iCloudContainerEnvironment: this.$options.iCloudContainerEnvironment,
 					mobileProvisionIdentifier,
 					codeSignIdentity
 				};
