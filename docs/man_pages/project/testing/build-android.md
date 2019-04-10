@@ -26,7 +26,13 @@ General | `$ tns build android [--compileSdk <API Level>] [--key-store-path <Fil
 * `--key-store-alias-password` - Provides the password for the alias specified with `--key-store-alias-password`. You can use the `--key-store-*` options along with `--release` to produce a signed release build. You need to specify all `--key-store-*` options.
 * `--copy-to` - Specifies the file path where the built `.apk` will be copied. If it points to a non-existent directory path, it will be created. If the specified value is existing directory, the original file name will be used.
 * `--bundle` - Specifies that the `webpack` bundler will be used to bundle the application.
-* `--env.*` - Specifies additional flags that the bundler may process. May be passed multiple times. For example: `--env.uglify --env.snapshot`.
+* `--env.*` - Specifies additional flags that the bundler may process. May be passed multiple times. Supported additional flags:
+    *   `--env.aot` - creates Ahead-Of-Time build (Angular only)
+    *   `--env.snapshot`- creates Snapshot (only on Mac OS & only for Android)
+    *   `--env.uglify` - obfuscates the code with Uglify.js
+    *   `--env.report` - creates a report inside a `report` folder in the root folde
+    *   `--env.sourceMap` - creates inline source maps (useful for debbuging bundled app).
+    *   `--env.hiddenSourceMap` - creates sources maps in the root folder (useful for Crashlytics usage with bundled app in release)
 * `--aab` - Specifies that the build will produce an Android App Bundle(`.aab`) file.
 
 <% if(isHtml) { %>
