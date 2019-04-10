@@ -21,8 +21,6 @@ import { LoggingLevels } from "../lib/common/mobile/logging-levels";
 import { DeviceDiscovery } from "../lib/common/mobile/mobile-core/device-discovery";
 import { IOSDeviceDiscovery } from "../lib/common/mobile/mobile-core/ios-device-discovery";
 import { AndroidDeviceDiscovery } from "../lib/common/mobile/mobile-core/android-device-discovery";
-import { PluginVariablesService } from "../lib/services/plugin-variables-service";
-import { PluginVariablesHelper } from "../lib/common/plugin-variables-helper";
 import { Utils } from "../lib/common/utils";
 import { CocoaPodsService } from "../lib/services/cocoapods-service";
 import { PackageManager } from "../lib/package-manager";
@@ -113,8 +111,6 @@ function createTestInjector(projectPath: string, projectName: string, xCode?: IX
 		checkIfXcodeprojIsRequired: () => ({})
 	});
 	testInjector.register("iosDeviceOperations", {});
-	testInjector.register("pluginVariablesService", PluginVariablesService);
-	testInjector.register("pluginVariablesHelper", PluginVariablesHelper);
 	testInjector.register("pluginsService", {
 		getAllInstalledPlugins: (): string[] => []
 	});
