@@ -76,6 +76,7 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 
 				const buildConfig: IBuildConfig = {
 					buildForDevice: !d.isEmulator,
+					iCloudContainerEnvironment: this.$options.iCloudContainerEnvironment,
 					projectDir: this.$options.path,
 					clean: this.$options.clean,
 					teamId: this.$options.teamId,

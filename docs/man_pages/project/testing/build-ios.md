@@ -23,6 +23,7 @@ General | `$ tns build ios [--for-device] [--release] [--copy-to <File Path>] [-
 
 * `--release` - If set, produces a release build. Otherwise, produces a debug build.
 * `--for-device` - If set, produces an application package that you can deploy on device. Otherwise, produces a build that you can run only in the native iOS Simulator.
+* `--i-cloud-container-environment` - If set, adds the passed `iCloudContainerEnvironment` when exporting an application package with the `--for-device` option.
 * `--copy-to` - Specifies the file path where the built `.ipa` will be copied. If it points to a non-existent directory path, it will be created. If the specified value is existing directory, the original file name will be used.
 * `--team-id` - If used without parameter, lists all team names and ids. If used with team name or id, it will switch to automatic signing mode and configure the .xcodeproj file of your app. In this case .xcconfig should not contain any provisioning/team id flags. This team id will be further used for codesigning the app. For Xcode 9.0+, xcodebuild will be allowed to update and modify automatically managed provisioning profiles.
 * `--provision` - If used without parameter, lists all eligible provisioning profiles. If used with UUID or name of your provisioning profile, it will switch to manual signing mode and configure the .xcodeproj file of your app. In this case xcconfig should not contain any provisioning/team id flags. This provisioning profile will be further used for codesigning the app.
