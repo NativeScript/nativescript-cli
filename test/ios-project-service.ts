@@ -119,7 +119,6 @@ function createTestInjector(projectPath: string, projectName: string, xCode?: IX
 		getAllInstalledPlugins: (): string[] => []
 	});
 	testInjector.register("androidProcessService", {});
-	testInjector.register("processService", {});
 	testInjector.register("sysInfo", {
 		getXcodeVersion: async () => ""
 	});

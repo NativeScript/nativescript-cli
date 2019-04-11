@@ -17,7 +17,9 @@ export class AndroidDeviceDebugService extends DebugServiceBase implements IDevi
 		private $logger: ILogger,
 		private $androidProcessService: Mobile.IAndroidProcessService,
 		private $net: INet,
-		private $deviceLogProvider: Mobile.IDeviceLogProvider) {
+		private $cleanupService: ICleanupService,
+		private $deviceLogProvider: Mobile.IDeviceLogProvider,
+		private $staticConfig: IStaticConfig) {
 
 		super(device, $devicesService);
 		this.deviceIdentifier = device.deviceInfo.identifier;
@@ -50,6 +52,7 @@ export class AndroidDeviceDebugService extends DebugServiceBase implements IDevi
 		return this.device.adb.executeCommand(["forward", "--remove", `tcp:${port}`]);
 	}
 
+	// TODO: Remove this method and reuse logic from androidProcessService
 	private async getForwardedDebugPort(deviceId: string, packageName: string): Promise<number> {
 		let port = -1;
 		const forwardsResult = await this.device.adb.executeCommand(["forward", "--list"]);
@@ -68,11 +71,14 @@ export class AndroidDeviceDebugService extends DebugServiceBase implements IDevi
 			await this.unixSocketForward(port, `${unixSocketName}`);
 		}
 
+		await this.$cleanupService.addCleanupAction({ command: await this.$staticConfig.getAdbFilePath(), args: ["-s", deviceId, "forward", "--remove", `tcp:${port}`] });
+
 		return port;
 	}
 
+	// TODO: Remove this method and reuse logic from androidProcessService
 	private async unixSocketForward(local: number, remote: string): Promise<void> {
-		return this.device.adb.executeCommand(["forward", `tcp:${local}`, `localabstract:${remote}`]);
+		await this.device.adb.executeCommand(["forward", `tcp:${local}`, `localabstract:${remote}`]);
 	}
 
 	@performanceLog()

@@ -160,9 +160,6 @@ function createTestInjector(): IInjector {
 	testInjector.register("iOSEmulatorServices", IOSEmulatorServices);
 	testInjector.register("messages", Messages);
 	testInjector.register("prompter", {});
-	testInjector.register("processService", {
-		attachToProcessExitSignals: (context: any, callback: () => Promise<any>) => { /* no implementation required */ }
-	});
 
 	testInjector.register("mobileHelper", {
 		platformNames: ["ios", "android"],

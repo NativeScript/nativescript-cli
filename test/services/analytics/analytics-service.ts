@@ -36,9 +36,6 @@ const createTestInjector = (opts?: { projectHelperErrorMsg?: string, projectDir?
 	});
 	testInjector.register("osInfo", {});
 	testInjector.register("childProcess", {});
-	testInjector.register("processService", {
-		attachToProcessExitSignals: (context: any, callback: () => void): void => undefined
-	});
 	testInjector.register("projectDataService", {
 		getProjectData: (projectDir?: string): IProjectData => {
 			return <any>{

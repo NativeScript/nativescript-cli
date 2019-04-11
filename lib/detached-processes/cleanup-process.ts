@@ -54,7 +54,7 @@ const addCleanupAction = (newAction: ICleanupAction): void => {
 
 const removeCleanupAction = (actionToRemove: ICleanupAction): void => {
 	if (_.some(actionsToExecute, currentAction => _.isEqual(currentAction, actionToRemove))) {
-		_.remove(actionsToExecute, currentAction => _.isEqual(currentAction, actionToRemove))
+		_.remove(actionsToExecute, currentAction => _.isEqual(currentAction, actionToRemove));
 		fileLogService.logData({ message: `cleanup-process removed action for execution: ${JSON.stringify(actionToRemove)}` });
 	} else {
 		fileLogService.logData({ message: `cleanup-process cannot remove action for execution as it has note been added before: ${JSON.stringify(actionToRemove)}` });

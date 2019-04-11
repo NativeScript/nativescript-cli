@@ -19,15 +19,9 @@ export class HttpClient implements Server.IHttpClient {
 	private cleanupData: ICleanupRequestData[];
 
 	constructor(private $logger: ILogger,
-		private $processService: IProcessService,
 		private $proxyService: IProxyService,
 		private $staticConfig: Config.IStaticConfig) {
 		this.cleanupData = [];
-		this.$processService.attachToProcessExitSignals(this, () => {
-			this.cleanupData.forEach(d => {
-				this.cleanupAfterRequest(d);
-			});
-		});
 	}
 
 	public async httpRequest(options: any, proxySettings?: IProxySettings): Promise<Server.IResponse> {

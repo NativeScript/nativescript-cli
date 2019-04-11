@@ -1466,11 +1466,6 @@ interface INet {
 	waitForPortToListen(waitForPortListenData: IWaitForPortListenData): Promise<boolean>;
 }
 
-interface IProcessService {
-	listenersCount: number;
-	attachToProcessExitSignals(context: any, callback: () => void): void;
-}
-
 interface IDependencyInformation {
 	name: string;
 	version?: string;

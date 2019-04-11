@@ -12,11 +12,10 @@ class IOSDeviceDebugServiceInheritor extends IOSDeviceDebugService {
 		$logger: ILogger,
 		$errors: IErrors,
 		$packageInstallationManager: IPackageInstallationManager,
-		$processService: IProcessService,
 		$appDebugSocketProxyFactory: IAppDebugSocketProxyFactory,
 		$projectDataService: IProjectDataService) {
 		super(<any>{ deviceInfo: { identifier: "123" } }, $devicesService, $childProcess, $hostInfo, $logger, $errors,
-			$packageInstallationManager, $processService, $appDebugSocketProxyFactory, $projectDataService);
+			$packageInstallationManager, $appDebugSocketProxyFactory, $projectDataService);
 	}
 
 	public getChromeDebugUrl(debugOptions: IDebugOptions, port: number): string {
@@ -37,10 +36,6 @@ const createTestInjector = (): IInjector => {
 	testInjector.register("packageInstallationManager", {});
 	testInjector.register("iOSNotification", {});
 	testInjector.register("iOSSocketRequestExecutor", {});
-	testInjector.register("processService", {
-		attachToProcessExitSignals: (context: any, callback: () => void): void => undefined
-	});
-
 	testInjector.register("appDebugSocketProxyFactory", {
 		on: (event: string | symbol, listener: Function): any => undefined
 	});

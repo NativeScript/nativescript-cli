@@ -8,7 +8,7 @@ export class LockServiceStub implements ILockService {
 		return () => { };
 	}
 
-	public unlock(lockFilePath?: string): void {
+	public async unlock(lockFilePath?: string): Promise<void> {
 	}
 
 	public async executeActionWithLock<T>(action: () => Promise<T>, lockFilePath?: string, lockOpts?: ILockOptions): Promise<T> {

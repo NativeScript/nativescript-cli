@@ -85,7 +85,6 @@ $injector.require("iOSEmulatorServices", "./mobile/ios/simulator/ios-emulator-se
 $injector.require("wp8EmulatorServices", "./mobile/wp8/wp8-emulator-services");
 
 $injector.require("autoCompletionService", "./services/auto-completion-service");
-$injector.require("processService", "./services/process-service");
 $injector.requirePublic("settingsService", "./services/settings-service");
 $injector.require("opener", "./opener");
 $injector.require("microTemplateService", "./services/micro-templating-service");

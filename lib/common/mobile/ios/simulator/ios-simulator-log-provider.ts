@@ -8,7 +8,6 @@ export class IOSSimulatorLogProvider extends EventEmitter implements Mobile.IiOS
 
 	constructor(private $iOSSimResolver: Mobile.IiOSSimResolver,
 		private $logger: ILogger,
-		private $processService: IProcessService,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $deviceLogProvider: Mobile.IDeviceLogProvider) {
 			super();
@@ -46,8 +45,6 @@ export class IOSSimulatorLogProvider extends EventEmitter implements Mobile.IiOS
 			if (deviceLogChildProcess.stderr) {
 				deviceLogChildProcess.stderr.on("data", action.bind(this));
 			}
-
-			this.$processService.attachToProcessExitSignals(this, deviceLogChildProcess.kill);
 
 			this.simulatorsLoggingEnabled[deviceId] = true;
 			this.simulatorsLogProcess[deviceId] = deviceLogChildProcess;
