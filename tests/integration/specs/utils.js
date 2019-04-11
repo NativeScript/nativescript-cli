@@ -8,6 +8,17 @@ export function ensureArray(entities) {
   return [].concat(entities);
 };
 
+export function setOfflineProvider(initObject, provider) {
+  switch (provider){
+    case 'Default': return initObject;
+    case 'IndexedDB': return Object.assign(initObject, {storage: Kinvey.StorageProvider.IndexedDB});
+    case 'LocalStorage': return Object.assign(initObject, {storage: Kinvey.StorageProvider.LocalStorage});
+    case 'SessionStorage': return Object.assign(initObject, {storage: Kinvey.StorageProvider.SessionStorage});
+    case 'Memory': return Object.assign(initObject, {storage: Kinvey.StorageProvider.Memory});
+    default: return initObject;
+  }
+}
+
 export function assertEntityMetadata(entities) {
   ensureArray(entities).forEach((entity) => {
     expect(entity._kmd.lmt).to.exist;
