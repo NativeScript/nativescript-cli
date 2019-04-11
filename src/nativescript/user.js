@@ -4,7 +4,8 @@ import * as app from "application";
 
 export class User extends CoreUser {
   loginWithMIC(redirectUri, authorizationGrant, options) {
-    redirectUri = isInsidePreviewApp() ? "nsplayresume://" : redirectUri;
+    redirectUri = getRedirectUri(redirectUri);
+
     const config = getDataFromPackageJson();
     return super.loginWithMIC(redirectUri || config.redirectUri, authorizationGrant, options);
   }
@@ -15,8 +16,17 @@ export class User extends CoreUser {
   }
 }
 
-function isInsidePreviewApp() {
-  return getAppIdentifier() === "org.nativescript.preview";
+function getRedirectUri(redirectUri) {
+  const appIdentifier = getAppIdentifier();
+
+  switch (appIdentifier) {
+    case "org.nativescript.preview":
+      return  "nsplayresume://";
+    case "com.kinvey.preview":
+      return "kspreviewresume://";
+    default:
+      return redirectUri;
+  }
 }
 
 function getAppIdentifier() {
