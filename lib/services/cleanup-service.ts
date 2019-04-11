@@ -20,6 +20,21 @@ export class CleanupService implements ICleanupService {
 		cleanupProcess.send(<ICleanupProcessMessage>{ actionType: CleanupProcessMessageType.AddCleanAction, action });
 	}
 
+	public async removeCleanupAction(action: ICleanupAction): Promise<void> {
+		const cleanupProcess = await this.getCleanupProcess();
+		cleanupProcess.send(<ICleanupProcessMessage>{ actionType: CleanupProcessMessageType.RemoveCleanAction, action });
+	}
+
+	public async addCleanupDeleteAction(filePath: string): Promise<void> {
+		const cleanupProcess = await this.getCleanupProcess();
+		cleanupProcess.send(<ICleanupDeleteActionMessage>{ actionType: CleanupProcessMessageType.AddDeleteAction, filePath });
+	}
+
+	public async removeCleanupDeleteAction(filePath: string): Promise<void> {
+		const cleanupProcess = await this.getCleanupProcess();
+		cleanupProcess.send(<ICleanupDeleteActionMessage>{ actionType: CleanupProcessMessageType.RemoveDeleteAction, filePath });
+	}
+
 	@exported("cleanupService")
 	public setCleanupLogFile(filePath: string): void {
 		this.pathToCleanupLogFile = filePath;

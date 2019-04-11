@@ -24,5 +24,24 @@ declare const enum FileLogMessageType {
 }
 
 declare const enum CleanupProcessMessageType {
+	/**
+	 * This type of action defines that cleanup procedure should execute specific action.
+	 */
 	AddCleanAction = "AddCleanAction",
+
+	/**
+	 * This type of action defines that cleanup procedure should not execute previously defined cleanup action.
+	 */
+	RemoveCleanAction = "RemoveCleanAction",
+
+	/**
+	 * This type of action defines that cleanup procedure should delete specified files.
+	 */
+	AddDeleteAction = "AddDeleteAction",
+
+	/**
+	 * This type of action defines the cleanup procedure should not delete previously specified file.
+	 */
+	RemoveDeleteAction = "RemoveDeleteAction",
+
 }

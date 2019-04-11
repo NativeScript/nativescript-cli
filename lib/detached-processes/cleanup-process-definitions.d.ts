@@ -19,10 +19,18 @@ interface ICleanupProcessMessage {
 	 * Type of the action
 	 */
 	actionType: CleanupProcessMessageType;
+}
 
+interface ICleanupActionMessage extends ICleanupProcessMessage {
 	/**
 	 * Describes the action that must be executed
 	 */
 	action: ICleanupAction;
 }
 
+interface ICleanupDeleteActionMessage extends ICleanupProcessMessage {
+	/**
+	 * Path to file/directory to be deleted.
+	 */
+	filePath: string;
+}
