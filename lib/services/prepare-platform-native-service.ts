@@ -9,7 +9,6 @@ export class PreparePlatformNativeService extends PreparePlatformService impleme
 		$xmlValidator: IXmlValidator,
 		$hooksService: IHooksService,
 		private $nodeModulesBuilder: INodeModulesBuilder,
-		private $pluginsService: IPluginsService,
 		private $projectChangesService: IProjectChangesService,
 		private $androidResourcesMigrationService: IAndroidResourcesMigrationService) {
 		super($fs, $hooksService, $xmlValidator);
@@ -46,8 +45,6 @@ export class PreparePlatformNativeService extends PreparePlatformService impleme
 		const hasConfigChange = !config.changesInfo || config.changesInfo.configChanged;
 
 		if (hasModulesChange) {
-			await this.$pluginsService.validate(config.platformData, config.projectData);
-
 			const appDestinationDirectoryPath = path.join(config.platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
 			const lastModifiedTime = this.$fs.exists(appDestinationDirectoryPath) ? this.$fs.getFsStats(appDestinationDirectoryPath).mtime : null;
 

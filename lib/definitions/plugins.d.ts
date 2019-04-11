@@ -10,7 +10,6 @@ interface IPluginsService {
 	 * @returns {IPackageJsonDepedenciesResult}
 	 */
 	getDependenciesFromPackageJson(projectDir: string): IPackageJsonDepedenciesResult;
-	validate(platformData: IPlatformData, projectData: IProjectData): Promise<void>;
 	preparePluginNativeCode(pluginData: IPluginData, platform: string, projectData: IProjectData): Promise<void>;
 	convertToPluginData(cacheData: any, projectDir: string): IPluginData;
 	isNativeScriptPlugin(pluginPackageJsonPath: string): boolean;
