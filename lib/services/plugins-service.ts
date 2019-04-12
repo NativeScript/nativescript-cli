@@ -87,10 +87,6 @@ export class PluginsService implements IPluginsService {
 		}
 	}
 
-	public async validate(platformData: IPlatformData, projectData: IProjectData): Promise<void> {
-		return await platformData.platformProjectService.validatePlugins(projectData);
-	}
-
 	public async preparePluginNativeCode(pluginData: IPluginData, platform: string, projectData: IProjectData): Promise<void> {
 		const platformData = this.$platformsData.getPlatformData(platform, projectData);
 		pluginData.pluginPlatformsFolderPath = (_platform: string) => path.join(pluginData.fullPath, "platforms", _platform.toLowerCase());

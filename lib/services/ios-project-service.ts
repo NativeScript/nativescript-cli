@@ -50,7 +50,6 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		private $iOSEntitlementsService: IOSEntitlementsService,
 		private $platformEnvironmentRequirements: IPlatformEnvironmentRequirements,
 		private $plistParser: IPlistParser,
-		private $sysInfo: ISysInfo,
 		private $xcconfigService: IXcconfigService,
 		private $iOSExtensionsService: IIOSExtensionsService) {
 		super($fs, $projectDataService);
@@ -110,25 +109,17 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		if (provision === true) {
 			await this.$iOSProvisionService.listProvisions(projectId);
 			this.$errors.failWithoutHelp("Please provide provisioning profile uuid or name with the --provision option.");
-			return false;
 		}
 
 		if (teamId === true) {
 			await this.$iOSProvisionService.listTeams();
 			this.$errors.failWithoutHelp("Please provide team id or team name with the --teamId options.");
-			return false;
 		}
 
 		return true;
 	}
 
 	public getAppResourcesDestinationDirectoryPath(projectData: IProjectData): string {
-		const frameworkVersion = this.getFrameworkVersion(projectData);
-
-		if (semver.lt(frameworkVersion, "1.3.0")) {
-			return path.join(this.getPlatformData(projectData).projectRoot, projectData.projectName, "Resources", "icons");
-		}
-
 		return path.join(this.getPlatformData(projectData).projectRoot, projectData.projectName, "Resources");
 	}
 
@@ -342,12 +333,6 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			'SHARED_PRECOMPS_DIR=' + path.join(projectRoot, 'build', 'sharedpch')
 		];
 
-		// Starting from tns-ios 1.4 the xcconfig file is referenced in the project template
-		const frameworkVersion = this.getFrameworkVersion(projectData);
-		if (semver.lt(frameworkVersion, "1.4.0")) {
-			basicArgs.push("-xcconfig", path.join(projectRoot, projectData.projectName, BUILD_XCCONFIG_FILE_NAME));
-		}
-
 		const handler = (data: any) => {
 			this.emit(constants.BUILD_OUTPUT_EVENT_NAME, data);
 		};
@@ -365,17 +350,6 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		}
 
 		this.validateApplicationIdentifier(projectData);
-	}
-
-	public async validatePlugins(projectData: IProjectData): Promise<void> {
-		const installedPlugins = await (<IPluginsService>this.$injector.resolve("pluginsService")).getAllInstalledPlugins(projectData);
-		for (const pluginData of installedPlugins) {
-			const pluginsFolderExists = this.$fs.exists(path.join(pluginData.pluginPlatformsFolderPath(this.$devicePlatformsConstants.iOS.toLowerCase()), "Podfile"));
-			const cocoaPodVersion = await this.$sysInfo.getCocoaPodsVersion();
-			if (pluginsFolderExists && !cocoaPodVersion) {
-				this.$errors.failWithoutHelp(`${pluginData.name} has Podfile and you don't have Cocoapods installed or it is not configured correctly. Please verify Cocoapods can work on your machine.`);
-			}
-		}
 	}
 
 	private async buildForDevice(projectRoot: string, args: string[], buildConfig: IBuildConfig, projectData: IProjectData): Promise<void> {
@@ -406,24 +380,15 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			"BUILD_DIR=" + path.join(projectRoot, constants.BUILD_DIR)
 		]);
 
-		const xcodeBuildVersion = await this.getXcodeVersion();
-		if (helpers.versionCompare(xcodeBuildVersion, "8.0") >= 0) {
-			await this.setupSigningForDevice(projectRoot, buildConfig, projectData);
-		}
+		await this.setupSigningForDevice(projectRoot, buildConfig, projectData);
 
 		await this.createIpa(projectRoot, projectData, buildConfig, args);
 	}
 
 	private async xcodebuild(args: string[], cwd: string, stdio: any = "inherit"): Promise<ISpawnResult> {
 		const localArgs = [...args];
-		const xcodeBuildVersion = await this.getXcodeVersion();
-		try {
-			if (helpers.versionCompare(xcodeBuildVersion, "9.0") >= 0) {
-				localArgs.push("-allowProvisioningUpdates");
-			}
-		} catch (e) {
-			this.$logger.warn("Failed to detect whether -allowProvisioningUpdates can be used with your xcodebuild version due to error: " + e);
-		}
+		localArgs.push("-allowProvisioningUpdates");
+
 		if (this.$logger.getLevel() === "INFO") {
 			localArgs.push("-quiet");
 			this.$logger.info("Xcode build...");
@@ -650,87 +615,6 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		return contentIsTheSame;
 	}
 
-	/**
-	 * Patch **LaunchScreen.xib** so we can be backward compatible for eternity.
-	 * The **xcodeproj** template proior v**2.1.0** had blank white screen launch screen.
-	 * We extended that by adding **app/AppResources/iOS/LaunchScreen.storyboard**
-	 * However for projects created prior **2.1.0** to keep working without the obsolete **LaunchScreen.xib**
-	 * we must still provide it on prepare.
-	 * Here we check if **UILaunchStoryboardName** is set to **LaunchScreen** in the **platform/ios/<proj>/<proj>-Info.plist**.
-	 * If it is, and no **LaunchScreen.storyboard** nor **.xib** is found in the project, we will create one.
-	 */
-	private provideLaunchScreenIfMissing(projectData: IProjectData): void {
-		try {
-			this.$logger.trace("Checking if we need to provide compatability LaunchScreen.xib");
-			const platformData = this.getPlatformData(projectData);
-			const projectPath = path.join(platformData.projectRoot, projectData.projectName);
-			const projectPlist = this.getInfoPlistPath(projectData);
-			const plistContent = plist.parse(this.$fs.readText(projectPlist));
-			const storyName = plistContent["UILaunchStoryboardName"];
-			this.$logger.trace(`Examining ${projectPlist} UILaunchStoryboardName: "${storyName}".`);
-			if (storyName !== "LaunchScreen") {
-				this.$logger.trace("The project has its UILaunchStoryboardName set to " + storyName + " which is not the pre v2.1.0 default LaunchScreen, probably the project is migrated so we are good to go.");
-				return;
-			}
-
-			const expectedStoryPath = path.join(projectPath, "Resources", "LaunchScreen.storyboard");
-			if (this.$fs.exists(expectedStoryPath)) {
-				// Found a LaunchScreen on expected path
-				this.$logger.trace("LaunchScreen.storyboard was found. Project is up to date.");
-				return;
-			}
-			this.$logger.trace("LaunchScreen file not found at: " + expectedStoryPath);
-
-			const expectedXibPath = path.join(projectPath, "en.lproj", "LaunchScreen.xib");
-			if (this.$fs.exists(expectedXibPath)) {
-				this.$logger.trace("Obsolete LaunchScreen.xib was found. It'k OK, we are probably running with iOS runtime from pre v2.1.0.");
-				return;
-			}
-			this.$logger.trace("LaunchScreen file not found at: " + expectedXibPath);
-
-			const isTheLaunchScreenFile = (fileName: string) => fileName === "LaunchScreen.xib" || fileName === "LaunchScreen.storyboard";
-			const matches = this.$fs.enumerateFilesInDirectorySync(projectPath, isTheLaunchScreenFile, { enumerateDirectories: false });
-			if (matches.length > 0) {
-				this.$logger.trace("Found LaunchScreen by slowly traversing all files here: " + matches + "\nConsider moving the LaunchScreen so it could be found at: " + expectedStoryPath);
-				return;
-			}
-
-			const compatabilityXibPath = path.join(projectPath, "Resources", "LaunchScreen.xib");
-			this.$logger.warn(`Failed to find LaunchScreen.storyboard but it was specified in the Info.plist.
-Consider updating the resources in app/App_Resources/iOS/.
-A good starting point would be to create a new project and diff the changes with your current one.
-Also the following repo may be helpful: https://github.com/NativeScript/template-hello-world/tree/master/App_Resources/iOS
-We will now place an empty obsolete compatability white screen LauncScreen.xib for you in ${path.relative(projectData.projectDir, compatabilityXibPath)} so your app may appear as it did in pre v2.1.0 versions of the ios runtime.`);
-
-			const content = `<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="6751" systemVersion="14A389" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" launchScreen="YES" useTraitCollections="YES">
-    <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="6736"/>
-    </dependencies>
-    <objects>
-        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
-        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
-        <view contentMode="scaleToFill" id="iN0-l3-epB">
-            <rect key="frame" x="0.0" y="0.0" width="480" height="480"/>
-            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-            <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
-            <nil key="simulatedStatusBarMetrics"/>
-            <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
-            <point key="canvasLocation" x="548" y="455"/>
-        </view>
-    </objects>
-</document>`;
-			try {
-				this.$fs.createDirectory(path.dirname(compatabilityXibPath));
-				this.$fs.writeFile(compatabilityXibPath, content);
-			} catch (e) {
-				this.$logger.warn("We have failed to add compatability LaunchScreen.xib due to: " + e);
-			}
-		} catch (e) {
-			this.$logger.warn("We have failed to check if we need to add a compatability LaunchScreen.xib due to: " + e);
-		}
-	}
-
 	public async prepareProject(projectData: IProjectData, platformSpecificData: IPlatformSpecificData): Promise<void> {
 		const projectRoot = path.join(projectData.platformsDir, "ios");
 
@@ -744,8 +628,6 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		}
 
 		const project = this.createPbxProj(projectData);
-
-		this.provideLaunchScreenIfMissing(projectData);
 
 		const resources = project.pbxGroupByName("Resources");
 
@@ -801,14 +683,6 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		await this.mergeProjectXcconfigFiles(projectData, opts);
 	}
 
-	private getInfoPlistPath(projectData: IProjectData): string {
-		return path.join(
-			projectData.appResourcesDirectoryPath,
-			this.getPlatformData(projectData).normalizedPlatformName,
-			this.getPlatformData(projectData).configurationFileName
-		);
-	}
-
 	public ensureConfigurationFileInAppResources(): void {
 		return null;
 	}
@@ -825,11 +699,6 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		const projectDir = projectData.projectDir;
 		const infoPlistPath = path.join(projectData.appResourcesDirectoryPath, this.getPlatformData(projectData).normalizedPlatformName, this.getPlatformData(projectData).configurationFileName);
 		this.ensureConfigurationFileInAppResources();
-
-		if (!this.$fs.exists(infoPlistPath)) {
-			this.$logger.trace("Info.plist: No app/App_Resources/iOS/Info.plist found, falling back to pre-1.6.0 Info.plist behavior.");
-			return;
-		}
 
 		const reporterTraceMessage = "Info.plist:";
 		const reporter: Reporter = {
@@ -1242,21 +1111,6 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 
 			await this.$xcconfigService.mergeFiles(tempEntitlementsFilePath, pluginsXcconfigFilePath);
 		}
-	}
-
-	private async getXcodeVersion(): Promise<string> {
-		let xcodeBuildVersion = "";
-
-		try {
-			xcodeBuildVersion = await this.$sysInfo.getXcodeVersion();
-		} catch (error) {
-			this.$errors.fail("xcodebuild execution failed. Make sure that you have latest Xcode and tools installed.");
-		}
-
-		const splitedXcodeBuildVersion = xcodeBuildVersion.split(".");
-		xcodeBuildVersion = `${splitedXcodeBuildVersion[0] || 0}.${splitedXcodeBuildVersion[1] || 0}`;
-
-		return xcodeBuildVersion;
 	}
 
 	private getBuildXCConfigFilePath(projectData: IProjectData): string {

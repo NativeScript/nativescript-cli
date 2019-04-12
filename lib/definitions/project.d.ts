@@ -372,8 +372,6 @@ interface IPlatformProjectService extends NodeJS.EventEmitter, IPlatformProjectS
 	 */
 	validateOptions(projectId?: string, provision?: true | string, teamId?: true | string): Promise<boolean>;
 
-	validatePlugins(projectData: IProjectData): Promise<void>;
-
 	buildProject(projectRoot: string, projectData: IProjectData, buildConfig: IBuildConfig): Promise<void>;
 
 	/**
