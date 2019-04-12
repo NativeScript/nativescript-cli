@@ -648,7 +648,8 @@ interface ISpawnFromEventOptions {
 	throwError: boolean;
 	emitOptions?: {
 		eventName: string;
-	}
+	},
+	timeout?: number;
 }
 
 interface IProjectDir {
