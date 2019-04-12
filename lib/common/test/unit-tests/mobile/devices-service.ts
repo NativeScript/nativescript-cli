@@ -14,7 +14,6 @@ import { CommonLoggerStub, ErrorsStub } from "../stubs";
 import { Messages } from "../../../messages/messages";
 import * as constants from "../../../constants";
 import { DevicePlatformsConstants } from "../../../mobile/device-platforms-constants";
-import { Timers } from "../../../timers";
 
 const helpers = require("../../../helpers");
 const originalIsInteractive = helpers.isInteractive;
@@ -183,7 +182,6 @@ function createTestInjector(): IInjector {
 	testInjector.register("androidProcessService", { /* no implementation required */ });
 	testInjector.register("androidEmulatorDiscovery", AndroidEmulatorDiscoveryStub);
 	testInjector.register("emulatorHelper", {});
-	testInjector.register("timers", Timers);
 
 	return testInjector;
 }

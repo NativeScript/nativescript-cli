@@ -159,7 +159,6 @@ function createTestInjector(projectPath: string, projectName: string, xCode?: IX
 		removeExtensions: () => { /* */ },
 		addExtensionsFromPath: () => Promise.resolve()
 	});
-	testInjector.register("timers", {});
 	return testInjector;
 }
 
