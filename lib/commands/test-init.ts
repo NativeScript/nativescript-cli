@@ -1,5 +1,5 @@
 import * as path from 'path';
-import { TESTING_FRAMEWORKS } from '../constants';
+import { TESTING_FRAMEWORKS, ProjectTypes } from '../constants';
 import { fromWindowsRelativePathToUnix } from '../common/helpers';
 
 class TestInitCommand implements ICommand {
@@ -31,12 +31,16 @@ class TestInitCommand implements ICommand {
 			this.$errors.fail(`Unknown or unsupported unit testing framework: ${frameworkToInstall}`);
 		}
 
+		const projectFilesExtension = this.$projectData.projectType === ProjectTypes.TsFlavorName || this.$projectData.projectType === ProjectTypes.NgFlavorName ? ".ts" : ".js";
+
 		let modulesToInstall: IDependencyInformation[] = [];
 		try {
 			modulesToInstall = this.$testInitializationService.getDependencies(frameworkToInstall);
 		} catch (err) {
 			this.$errors.failWithoutHelp(`Unable to install the unit testing dependencies. Error: '${err.message}'`);
 		}
+
+		modulesToInstall = modulesToInstall.filter(moduleToInstall => !moduleToInstall.projectType || moduleToInstall.projectType === projectFilesExtension);
 
 		for (const mod of modulesToInstall) {
 			let moduleToInstall = mod.name;
@@ -96,16 +100,16 @@ class TestInitCommand implements ICommand {
 		const frameworks = [frameworkToInstall].concat(this.karmaConfigAdditionalFrameworks[frameworkToInstall] || [])
 			.map(fw => `'${fw}'`)
 			.join(', ');
-		const testFiles = `'${fromWindowsRelativePathToUnix(relativeTestsDir)}/**/*.js'`;
+		const testFiles = `'${fromWindowsRelativePathToUnix(relativeTestsDir)}/**/*${projectFilesExtension}'`;
 		const karmaConfTemplate = this.$resources.readText('test/karma.conf.js');
 		const karmaConf = _.template(karmaConfTemplate)({ frameworks, testFiles });
 
 		this.$fs.writeFile(path.join(projectDir, 'karma.conf.js'), karmaConf);
 
-		const exampleFilePath = this.$resources.resolvePath(`test/example.${frameworkToInstall}.js`);
+		const exampleFilePath = this.$resources.resolvePath(`test/example.${frameworkToInstall}${projectFilesExtension}`);
 
 		if (shouldCreateSampleTests && this.$fs.exists(exampleFilePath)) {
-			this.$fs.copyFile(exampleFilePath, path.join(testsDir, 'example.js'));
+			this.$fs.copyFile(exampleFilePath, path.join(testsDir, `example${projectFilesExtension}`));
 			this.$logger.info(`\nExample test file created in ${relativeTestsDir}`.yellow);
 		} else {
 			this.$logger.info(`\nPlace your test files under ${relativeTestsDir}`.yellow);
