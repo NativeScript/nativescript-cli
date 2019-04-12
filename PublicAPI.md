@@ -70,6 +70,8 @@ const tns = require("nativescript");
 	* [deviceLog](#devicelog)
 * [previewQrCodeService](#previewqrcodeservice)
 	* [getPlaygroundAppQrCode](#getplaygroundappqrcode)
+* [cleanupService](#cleanupservice)
+	* [setCleanupLogFile](#setcleanuplogfile)
 
 ## Module projectService
 
@@ -1485,6 +1487,31 @@ tns.previewQrCodeService.getPlaygroundAppQrCode()
 		console.log("QR code data for iOS platform: " + result.ios);
 		console.log("QR code data for Android platform: " + result.android);
 	});
+```
+
+## cleanupService
+The `cleanupService` is used to handle actions that should be executed after CLI's process had exited. This is an internal service, that runs detached childProcess in which it executes CLI's cleanup actions once CLI is dead. As the process is detached, logs from it are not shown anywhere, so the service exposes a way to add log file in which the child process will write its logs.
+
+### setCleanupLogFile
+Defines the log file location where the child cleanup process will write its logs.
+
+> NOTE: You must call this method immediately after requiring NativeScript CLI. In case you call it after the cleanup process had started, it will not use the passed log file.
+
+* Definition
+```TypeScript
+/**
+ * Sets the file in which the cleanup process will write its logs.
+ * This method must be called before starting the cleanup process, i.e. when CLI is initialized.
+ * @param {string} filePath Path to file where the logs will be written. The logs are appended to the passed file.
+ * @returns {void}
+ */
+setCleanupLogFile(filePath: string): void;
+```
+
+* Usage
+```JavaScript
+const tns = require("nativescript");
+tns.cleanupService.setCleanupLogFile("/Users/username/cleanup-logs.txt");
 ```
 
 ## How to add a new method to Public API
