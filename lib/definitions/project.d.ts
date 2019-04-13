@@ -439,10 +439,10 @@ interface IPlatformProjectService extends NodeJS.EventEmitter, IPlatformProjectS
 	/**
 	 * Stops all running processes that might hold a lock on the filesystem.
 	 * Android: Gradle daemon processes are terminated.
-	 * @param {string} projectRoot The root directory of the native project.
+	 * @param {IPlatformData} platformData The data for the specified platform.
 	 * @returns {void}
 	 */
-	stopServices(projectRoot: string): Promise<ISpawnResult>;
+	stopServices(platformData: IPlatformData): Promise<ISpawnResult>;
 
 	/**
 	 * Removes build artifacts specific to the platform

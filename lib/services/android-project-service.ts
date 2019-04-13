@@ -4,9 +4,7 @@ import * as constants from "../constants";
 import * as semver from "semver";
 import * as projectServiceBaseLib from "./platform-project-service-base";
 import { DeviceAndroidDebugBridge } from "../common/mobile/android/device-android-debug-bridge";
-import { attachAwaitDetach } from "../common/helpers";
 import { Configurations, LiveSyncPaths } from "../common/constants";
-import { SpawnOptions } from "child_process";
 import { performanceLog } from ".././common/decorators";
 
 export class AndroidProjectService extends projectServiceBaseLib.PlatformProjectServiceBase implements IPlatformProjectService {
@@ -18,10 +16,8 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	private isAndroidStudioTemplate: boolean;
 
 	constructor(private $androidToolsInfo: IAndroidToolsInfo,
-		private $childProcess: IChildProcess,
 		private $errors: IErrors,
 		$fs: IFileSystem,
-		private $hostInfo: IHostInfo,
 		private $logger: ILogger,
 		$projectDataService: IProjectDataService,
 		private $injector: IInjector,
@@ -29,7 +25,9 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		private $androidPluginBuildService: IAndroidPluginBuildService,
 		private $platformEnvironmentRequirements: IPlatformEnvironmentRequirements,
 		private $androidResourcesMigrationService: IAndroidResourcesMigrationService,
-		private $filesHashService: IFilesHashService) {
+		private $filesHashService: IFilesHashService,
+		private $gradleCommandService: IGradleCommandService,
+		private $gradleBuildService: IGradleBuildService) {
 		super($fs, $projectDataService);
 		this.isAndroidStudioTemplate = false;
 	}
@@ -277,74 +275,11 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 	@performanceLog()
 	public async buildProject(projectRoot: string, projectData: IProjectData, buildConfig: IBuildConfig): Promise<void> {
-		let task;
-		const gradleArgs = this.getGradleBuildOptions(buildConfig, projectData);
-		const baseTask = buildConfig.androidBundle ? "bundle" : "assemble";
 		const platformData = this.getPlatformData(projectData);
+		await this.$gradleBuildService.buildProject(platformData.projectRoot, buildConfig);
+
 		const outputPath = buildConfig.androidBundle ? platformData.bundleBuildOutputPath : platformData.getBuildOutputPath(buildConfig);
-		if (this.$logger.getLevel() === "TRACE") {
-			gradleArgs.unshift("--stacktrace");
-			gradleArgs.unshift("--debug");
-		}
-		if (buildConfig.release) {
-			task = `${baseTask}Release`;
-		} else {
-			task = `${baseTask}Debug`;
-		}
-
-		gradleArgs.unshift(task);
-
-		const handler = (data: any) => {
-			this.emit(constants.BUILD_OUTPUT_EVENT_NAME, data);
-		};
-
-		await attachAwaitDetach(constants.BUILD_OUTPUT_EVENT_NAME,
-			this.$childProcess,
-			handler,
-			this.executeCommand({
-				projectRoot: this.getPlatformData(projectData).projectRoot,
-				gradleArgs,
-				childProcessOpts: { stdio: buildConfig.buildOutputStdio || "inherit" },
-				spawnFromEventOptions: { emitOptions: { eventName: constants.BUILD_OUTPUT_EVENT_NAME }, throwError: true },
-				message: "Gradle build..."
-			})
-		);
-
 		await this.$filesHashService.saveHashesForProject(this._platformData, outputPath);
-	}
-
-	private getGradleBuildOptions(settings: IAndroidBuildOptionsSettings, projectData: IProjectData): Array<string> {
-		const configurationFilePath = this.getPlatformData(projectData).configurationFilePath;
-
-		const buildOptions: Array<string> = this.getBuildOptions(configurationFilePath);
-
-		if (settings.release) {
-			buildOptions.push("-Prelease");
-			buildOptions.push(`-PksPath=${path.resolve(settings.keyStorePath)}`);
-			buildOptions.push(`-Palias=${settings.keyStoreAlias}`);
-			buildOptions.push(`-Ppassword=${settings.keyStoreAliasPassword}`);
-			buildOptions.push(`-PksPassword=${settings.keyStorePassword}`);
-		}
-
-		return buildOptions;
-	}
-
-	private getBuildOptions(configurationFilePath?: string): Array<string> {
-		this.$androidToolsInfo.validateInfo({ showWarningsAsErrors: true, validateTargetSdk: true });
-
-		const androidToolsInfo = this.$androidToolsInfo.getToolsInfo();
-		const compileSdk = androidToolsInfo.compileSdkVersion;
-		const targetSdk = this.getTargetFromAndroidManifest(configurationFilePath) || compileSdk;
-		const buildToolsVersion = androidToolsInfo.buildToolsVersion;
-		const generateTypings = androidToolsInfo.generateTypings;
-		const buildOptions = [
-			`-PcompileSdk=android-${compileSdk}`,
-			`-PtargetSdk=${targetSdk}`,
-			`-PbuildToolsVersion=${buildToolsVersion}`,
-			`-PgenerateTypings=${generateTypings}`
-		];
-
-		return buildOptions;
 	}
 
 	public async buildForDeploy(projectRoot: string, projectData: IProjectData, buildConfig?: IBuildConfig): Promise<void> {
@@ -456,25 +391,19 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		return nativescript && (nativescript.android || (nativescript.platforms && nativescript.platforms.android));
 	}
 
-	public stopServices(projectRoot: string): Promise<ISpawnResult> {
-		return this.executeCommand({
-			projectRoot,
-			gradleArgs: ["--stop", "--quiet"],
-			childProcessOpts: { stdio: "pipe" },
-			message: "Gradle stop services..."
+	public async stopServices(platformData: IPlatformData): Promise<ISpawnResult> {
+		const result = await this.$gradleCommandService.executeCommand(["--stop", "--quiet"], {
+			cwd: platformData.projectRoot,
+			message: "Gradle stop services...",
+			stdio: "pipe"
 		});
+
+		return result;
 	}
 
 	public async cleanProject(projectRoot: string, projectData: IProjectData): Promise<void> {
-		if (this.$androidToolsInfo.getToolsInfo().androidHomeEnvVar) {
-			const gradleArgs = this.getGradleBuildOptions({ release: false }, projectData);
-			gradleArgs.unshift("clean");
-			await this.executeCommand({
-				projectRoot,
-				gradleArgs,
-				message: "Gradle clean..."
-			});
-		}
+		// TODO: Check why there isn't a clean release build and a clean release aab build
+		await this.$gradleBuildService.cleanProject(projectRoot, { release: false });
 	}
 
 	public async cleanDeviceTempFolder(deviceIdentifier: string, projectData: IProjectData): Promise<void> {
@@ -492,10 +421,6 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	private copy(projectRoot: string, frameworkDir: string, files: string, cpArg: string): void {
 		const paths = files.split(' ').map(p => path.join(frameworkDir, p));
 		shell.cp(cpArg, paths, projectRoot);
-	}
-
-	private async spawn(command: string, args: string[], opts?: any, spawnOpts?: ISpawnFromEventOptions): Promise<ISpawnResult> {
-		return this.$childProcess.spawnFromEvent(command, args, "close", opts || { stdio: "inherit" }, spawnOpts);
 	}
 
 	private validatePackageName(packageName: string): void {
@@ -519,49 +444,6 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		//Classes in Java don't begin with numbers
 		if (/^[0-9]/.test(projectName)) {
 			this.$errors.fail("Project name must not begin with a number");
-		}
-	}
-
-	private getTargetFromAndroidManifest(configurationFilePath: string): string {
-		let versionInManifest: string;
-		if (this.$fs.exists(configurationFilePath)) {
-			const targetFromAndroidManifest: string = this.$fs.readText(configurationFilePath);
-			if (targetFromAndroidManifest) {
-				const match = targetFromAndroidManifest.match(/.*?android:targetSdkVersion=\"(.*?)\"/);
-				if (match && match[1]) {
-					versionInManifest = match[1];
-				}
-			}
-		}
-
-		return versionInManifest;
-	}
-
-	private async executeCommand(opts: { projectRoot: string, gradleArgs: any, childProcessOpts?: SpawnOptions, spawnFromEventOptions?: ISpawnFromEventOptions, message: string }): Promise<ISpawnResult> {
-		if (this.$androidToolsInfo.getToolsInfo().androidHomeEnvVar) {
-			const { projectRoot, gradleArgs, message, spawnFromEventOptions } = opts;
-			const gradlew = this.$hostInfo.isWindows ? "gradlew.bat" : "./gradlew";
-
-			if (this.$logger.getLevel() === "INFO") {
-				gradleArgs.push("--quiet");
-			}
-
-			this.$logger.info(message);
-
-			const childProcessOpts = opts.childProcessOpts || {};
-			childProcessOpts.cwd = childProcessOpts.cwd || projectRoot;
-			childProcessOpts.stdio = childProcessOpts.stdio || "inherit";
-			let commandResult;
-			try {
-				commandResult = await this.spawn(gradlew,
-					gradleArgs,
-					childProcessOpts,
-					spawnFromEventOptions);
-			} catch (err) {
-				this.$errors.failWithoutHelp(err.message);
-			}
-
-			return commandResult;
 		}
 	}
 
