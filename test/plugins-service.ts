@@ -35,6 +35,9 @@ import StaticConfigLib = require("../lib/config");
 import * as path from "path";
 import * as temp from "temp";
 import { PLUGINS_BUILD_DATA_FILENAME } from '../lib/constants';
+import { GradleCommandService } from '../lib/services/android/gradle-command-service';
+import { GradleBuildService } from '../lib/services/android/gradle-build-service';
+import { GradleBuildArgsService } from '../lib/services/android/gradle-build-args-service';
 temp.track();
 
 let isErrorThrown = false;
@@ -150,6 +153,10 @@ function createTestInjector() {
 		},
 		extractPackage: async (packageName: string, destinationDirectory: string, options?: IPacoteExtractOptions): Promise<void> => undefined
 	});
+	testInjector.register("gradleCommandService", GradleCommandService);
+	testInjector.register("gradleBuildService", GradleBuildService);
+	testInjector.register("gradleBuildArgsService", GradleBuildArgsService);
+
 	return testInjector;
 }
 
