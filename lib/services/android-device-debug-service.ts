@@ -71,7 +71,7 @@ export class AndroidDeviceDebugService extends DebugServiceBase implements IDevi
 			await this.unixSocketForward(port, `${unixSocketName}`);
 		}
 
-		await this.$cleanupService.addCleanupAction({ command: await this.$staticConfig.getAdbFilePath(), args: ["-s", deviceId, "forward", "--remove", `tcp:${port}`] });
+		await this.$cleanupService.addCleanupCommand({ command: await this.$staticConfig.getAdbFilePath(), args: ["-s", deviceId, "forward", "--remove", `tcp:${port}`] });
 
 		return port;
 	}

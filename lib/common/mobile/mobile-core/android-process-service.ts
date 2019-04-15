@@ -122,7 +122,7 @@ export class AndroidProcessService implements Mobile.IAndroidProcessService {
 		}
 
 		this._forwardedLocalPorts[portForwardInputData.deviceIdentifier] = localPort;
-		await this.$cleanupService.addCleanupAction({ command: await this.$staticConfig.getAdbFilePath(), args: ["-s", portForwardInputData.deviceIdentifier, "forward", "--remove", `tcp:${localPort}`] });
+		await this.$cleanupService.addCleanupCommand({ command: await this.$staticConfig.getAdbFilePath(), args: ["-s", portForwardInputData.deviceIdentifier, "forward", "--remove", `tcp:${localPort}`] });
 		return localPort && +localPort;
 	}
 

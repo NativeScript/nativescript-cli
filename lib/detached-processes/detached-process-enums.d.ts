@@ -23,25 +23,25 @@ declare const enum FileLogMessageType {
 	Error = "Error"
 }
 
-declare const enum CleanupProcessMessageType {
+declare const enum CleanupProcessMessage {
 	/**
-	 * This type of action defines that cleanup procedure should execute specific action.
+	 * This type of message defines that cleanup procedure should execute specific command.
 	 */
-	AddCleanAction = "AddCleanAction",
+	AddCleanCommand = "AddCleanCommand",
 
 	/**
-	 * This type of action defines that cleanup procedure should not execute previously defined cleanup action.
+	 * This type of message defines that cleanup procedure should not execute previously defined cleanup command.
 	 */
-	RemoveCleanAction = "RemoveCleanAction",
+	RemoveCleanCommand = "RemoveCleanCommand",
 
 	/**
-	 * This type of action defines that cleanup procedure should delete specified files.
+	 * This type of message defines that cleanup procedure should delete specified files.
 	 */
-	AddDeleteAction = "AddDeleteAction",
+	AddDeleteFileAction = "AddDeleteFileAction",
 
 	/**
-	 * This type of action defines the cleanup procedure should not delete previously specified file.
+	 * This type of message defines the cleanup procedure should not delete previously specified file.
 	 */
-	RemoveDeleteAction = "RemoveDeleteAction",
+	RemoveDeleteFileAction = "RemoveDeleteFileAction",
 
 }

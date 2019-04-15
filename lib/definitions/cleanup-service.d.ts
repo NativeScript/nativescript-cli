@@ -5,18 +5,18 @@
 interface ICleanupService extends IShouldDispose, IDisposable {
 	/**
 	 * Add new action to be executed when CLI process exits.
-	 * @param {ICleanupAction} action The action that should be executed, including command and args.
+	 * @param {ISpawnCommandInfo} commandInfo The command that should be executed, including command and args.
 	 * @returns {Promise<void>}
 	 */
-	addCleanupAction(action: ICleanupAction): Promise<void>;
+	addCleanupCommand(commandInfo: ISpawnCommandInfo): Promise<void>;
 
 	/**
 	 * Remove action to be executed when CLI process exits.
 	 * NOTE: The action should be added in the action list by calling `addCleanupAction` first.
-	 * @param {ICleanupAction} action The action that should be removed from cleanup execution, including command and args.
+	 * @param {ISpawnCommandInfo} commandInfo The command that should be removed from cleanup execution, including command and args.
 	 * @returns {Promise<void>}
 	 */
-	removeCleanupAction(action: ICleanupAction): Promise<void>
+	removeCleanupCommand(commandInfo: ISpawnCommandInfo): Promise<void>
 
 	/**
 	 * Sets the file in which the cleanup process will write its logs.

@@ -1,4 +1,4 @@
-interface ICleanupAction {
+interface ISpawnCommandInfo {
 	/**
 	 * Executable to be started.
 	 */
@@ -8,27 +8,28 @@ interface ICleanupAction {
 	 * Arguments that will be passed to the child process
 	 */
 	args: string[];
+
 	/**
 	 * Timeout to execute the action.
 	 */
 	timeout?: number;
 }
 
-interface ICleanupProcessMessage {
+interface ICleanupMessageBase {
 	/**
-	 * Type of the action
+	 * Type of the message
 	 */
-	actionType: CleanupProcessMessageType;
+	messageType: CleanupProcessMessage;
 }
 
-interface ICleanupActionMessage extends ICleanupProcessMessage {
+interface ISpawnCommandCleanupMessage extends ICleanupMessageBase {
 	/**
-	 * Describes the action that must be executed
+	 * Describes the command that must be executed
 	 */
-	action: ICleanupAction;
+	commandInfo: ISpawnCommandInfo;
 }
 
-interface ICleanupDeleteActionMessage extends ICleanupProcessMessage {
+interface IDeleteFileCleanupMessage extends ICleanupMessageBase {
 	/**
 	 * Path to file/directory to be deleted.
 	 */

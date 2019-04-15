@@ -17,19 +17,19 @@ require(pathToBootstrap);
 const fileLogService = $injector.resolve<IFileLogService>(FileLogService, { logFile });
 fileLogService.logData({ message: "Initializing Cleanup process." });
 
-const actionsToExecute: ICleanupAction[] = [];
+const commandsInfos: ISpawnCommandInfo[] = [];
 const filesToDelete: string[] = [];
 
 const executeCleanup = async () => {
 	const $childProcess = $injector.resolve<IChildProcess>("childProcess");
-	for (const action of actionsToExecute) {
+	for (const commandInfo of commandsInfos) {
 		try {
-			fileLogService.logData({ message: `Start executing action: ${JSON.stringify(action)}` });
+			fileLogService.logData({ message: `Start executing command: ${JSON.stringify(commandInfo)}` });
 
-			await $childProcess.trySpawnFromCloseEvent(action.command, action.args, {}, { throwError: true, timeout: action.timeout || 3000 });
-			fileLogService.logData({ message: `Successfully executed action: ${JSON.stringify(action)}` });
+			await $childProcess.trySpawnFromCloseEvent(commandInfo.command, commandInfo.args, {}, { throwError: true, timeout: commandInfo.timeout || 3000 });
+			fileLogService.logData({ message: `Successfully executed command: ${JSON.stringify(commandInfo)}` });
 		} catch (err) {
-			fileLogService.logData({ message: `Unable to execute action: ${JSON.stringify(action)}`, type: FileLogMessageType.Error });
+			fileLogService.logData({ message: `Unable to execute command: ${JSON.stringify(commandInfo)}`, type: FileLogMessageType.Error });
 		}
 	}
 
@@ -42,21 +42,21 @@ const executeCleanup = async () => {
 	process.exit();
 };
 
-const addCleanupAction = (newAction: ICleanupAction): void => {
-	if (_.some(actionsToExecute, currentAction => _.isEqual(currentAction, newAction))) {
-		fileLogService.logData({ message: `cleanup-process will not add action for execution as it has been added already: ${JSON.stringify(newAction)}` });
+const addCleanupAction = (commandInfo: ISpawnCommandInfo): void => {
+	if (_.some(commandsInfos, currentCommandInfo => _.isEqual(currentCommandInfo, commandInfo))) {
+		fileLogService.logData({ message: `cleanup-process will not add command for execution as it has been added already: ${JSON.stringify(commandInfo)}` });
 	} else {
-		fileLogService.logData({ message: `cleanup-process added action for execution: ${JSON.stringify(newAction)}` });
-		actionsToExecute.push(newAction);
+		fileLogService.logData({ message: `cleanup-process added command for execution: ${JSON.stringify(commandInfo)}` });
+		commandsInfos.push(commandInfo);
 	}
 };
 
-const removeCleanupAction = (actionToRemove: ICleanupAction): void => {
-	if (_.some(actionsToExecute, currentAction => _.isEqual(currentAction, actionToRemove))) {
-		_.remove(actionsToExecute, currentAction => _.isEqual(currentAction, actionToRemove));
-		fileLogService.logData({ message: `cleanup-process removed action for execution: ${JSON.stringify(actionToRemove)}` });
+const removeCleanupAction = (commandInfo: ISpawnCommandInfo): void => {
+	if (_.some(commandsInfos, currentCommandInfo => _.isEqual(currentCommandInfo, commandInfo))) {
+		_.remove(commandsInfos, currentCommandInfo => _.isEqual(currentCommandInfo, commandInfo));
+		fileLogService.logData({ message: `cleanup-process removed command for execution: ${JSON.stringify(commandInfo)}` });
 	} else {
-		fileLogService.logData({ message: `cleanup-process cannot remove action for execution as it has note been added before: ${JSON.stringify(actionToRemove)}` });
+		fileLogService.logData({ message: `cleanup-process cannot remove command for execution as it has note been added before: ${JSON.stringify(commandInfo)}` });
 	}
 };
 
@@ -82,24 +82,24 @@ const removeDeleteAction = (filePath: string): void => {
 	}
 };
 
-process.on("message", async (cleanupProcessMessage: ICleanupProcessMessage) => {
+process.on("message", async (cleanupProcessMessage: ICleanupMessageBase) => {
 	fileLogService.logData({ message: `cleanup-process received message of type: ${JSON.stringify(cleanupProcessMessage)}` });
 
-	switch (cleanupProcessMessage.actionType) {
-		case CleanupProcessMessageType.AddCleanAction:
-			addCleanupAction((<ICleanupActionMessage>cleanupProcessMessage).action);
+	switch (cleanupProcessMessage.messageType) {
+		case CleanupProcessMessage.AddCleanCommand:
+			addCleanupAction((<ISpawnCommandCleanupMessage>cleanupProcessMessage).commandInfo);
 			break;
-		case CleanupProcessMessageType.RemoveCleanAction:
-			removeCleanupAction((<ICleanupActionMessage>cleanupProcessMessage).action);
+		case CleanupProcessMessage.RemoveCleanCommand:
+			removeCleanupAction((<ISpawnCommandCleanupMessage>cleanupProcessMessage).commandInfo);
 			break;
-		case CleanupProcessMessageType.AddDeleteAction:
-			addDeleteAction((<ICleanupDeleteActionMessage>cleanupProcessMessage).filePath);
+		case CleanupProcessMessage.AddDeleteFileAction:
+			addDeleteAction((<IDeleteFileCleanupMessage>cleanupProcessMessage).filePath);
 			break;
-		case CleanupProcessMessageType.RemoveDeleteAction:
-			removeDeleteAction((<ICleanupDeleteActionMessage>cleanupProcessMessage).filePath);
+		case CleanupProcessMessage.RemoveDeleteFileAction:
+			removeDeleteAction((<IDeleteFileCleanupMessage>cleanupProcessMessage).filePath);
 			break;
 		default:
-			fileLogService.logData({ message: `Unable to handle message of type ${cleanupProcessMessage.actionType}. Full message is ${JSON.stringify(cleanupProcessMessage)}`, type: FileLogMessageType.Error });
+			fileLogService.logData({ message: `Unable to handle message of type ${cleanupProcessMessage.messageType}. Full message is ${JSON.stringify(cleanupProcessMessage)}`, type: FileLogMessageType.Error });
 			break;
 	}
 

@@ -15,24 +15,24 @@ export class CleanupService implements ICleanupService {
 
 	public shouldDispose = false;
 
-	public async addCleanupAction(action: ICleanupAction): Promise<void> {
+	public async addCleanupCommand(commandInfo: ISpawnCommandInfo): Promise<void> {
 		const cleanupProcess = await this.getCleanupProcess();
-		cleanupProcess.send(<ICleanupProcessMessage>{ actionType: CleanupProcessMessageType.AddCleanAction, action });
+		cleanupProcess.send(<ISpawnCommandCleanupMessage>{ messageType: CleanupProcessMessage.AddCleanCommand, commandInfo });
 	}
 
-	public async removeCleanupAction(action: ICleanupAction): Promise<void> {
+	public async removeCleanupCommand(commandInfo: ISpawnCommandInfo): Promise<void> {
 		const cleanupProcess = await this.getCleanupProcess();
-		cleanupProcess.send(<ICleanupProcessMessage>{ actionType: CleanupProcessMessageType.RemoveCleanAction, action });
+		cleanupProcess.send(<ISpawnCommandCleanupMessage>{ messageType: CleanupProcessMessage.RemoveCleanCommand, commandInfo });
 	}
 
 	public async addCleanupDeleteAction(filePath: string): Promise<void> {
 		const cleanupProcess = await this.getCleanupProcess();
-		cleanupProcess.send(<ICleanupDeleteActionMessage>{ actionType: CleanupProcessMessageType.AddDeleteAction, filePath });
+		cleanupProcess.send(<IDeleteFileCleanupMessage>{ messageType: CleanupProcessMessage.AddDeleteFileAction, filePath });
 	}
 
 	public async removeCleanupDeleteAction(filePath: string): Promise<void> {
 		const cleanupProcess = await this.getCleanupProcess();
-		cleanupProcess.send(<ICleanupDeleteActionMessage>{ actionType: CleanupProcessMessageType.RemoveDeleteAction, filePath });
+		cleanupProcess.send(<IDeleteFileCleanupMessage>{ messageType: CleanupProcessMessage.RemoveDeleteFileAction, filePath });
 	}
 
 	@exported("cleanupService")
