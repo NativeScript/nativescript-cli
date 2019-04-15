@@ -1,0 +1,9 @@
+.vscode
+.idea
+.DS_Store
+*.log
+node_modules
+lib
+.env
+src
+TestApp

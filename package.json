@@ -8,8 +8,8 @@
     "postinstall": "lerna bootstrap",
     "pretest": "npm run build",
     "test": "lerna run test",
-    "test:html5": "lerna run test --scope kinvey-html5-integration-tests",
-    "test:node": "lerna run test --scope kinvey-node-integration-tests"
+    "test:html5": "lerna run test --scope kinvey-html5-integration-tests --stream",
+    "test:node": "lerna run test --scope kinvey-node-integration-tests --stream"
   },
   "devDependencies": {
     "lerna": "^3.6.0"

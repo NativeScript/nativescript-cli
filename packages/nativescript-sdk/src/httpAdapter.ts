@@ -2,6 +2,37 @@ import { request as tnsRequest } from 'tns-core-modules/http';
 import { device } from 'tns-core-modules/platform';
 import { name, version } from '../package.json';
 
+function deviceInformation() {
+  const platform = device.os;
+  const version = device.osVersion;
+  const manufacturer = device.manufacturer;
+  const parts = [`js-${name}/${version}`];
+
+  return parts.concat([platform, version, manufacturer]).map((part) => {
+    if (part) {
+      return part.toString().replace(/\s/g, '_').toLowerCase();
+    }
+
+    return 'unknown';
+  }).join(' ');
+}
+
+function deviceInfo() {
+  return {
+    hv: 1,
+    md: device.model,
+    os: device.os,
+    ov: device.osVersion,
+    sdk: {
+      name,
+      version
+    },
+    pv: device.sdkVersion,
+    ty: device.deviceType,
+    id: device.uuid
+  };
+}
+
 export async function send(request: any): Promise<any> {
   const { url, method, headers, body, timeout } = request;
   const kinveyUrlRegex = /kinvey\.com/gm;
@@ -34,36 +65,5 @@ export async function send(request: any): Promise<any> {
     statusCode: response.statusCode,
     headers: response.headers,
     data
-  };
-}
-
-function deviceInformation() {
-  const platform = device.os;
-  const version = device.osVersion;
-  const manufacturer = device.manufacturer;
-  const parts = [`js-${name}/${version}`];
-
-  return parts.concat([platform, version, manufacturer]).map((part) => {
-    if (part) {
-      return part.toString().replace(/\s/g, '_').toLowerCase();
-    }
-
-    return 'unknown';
-  }).join(' ');
-}
-
-function deviceInfo() {
-  return {
-    hv: 1,
-    md: device.model,
-    os: device.os,
-    ov: device.osVersion,
-    sdk: {
-      name,
-      version
-    },
-    pv: device.sdkVersion,
-    ty: device.deviceType,
-    id: device.uuid
   };
 }
