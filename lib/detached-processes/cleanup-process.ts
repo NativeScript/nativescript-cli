@@ -26,7 +26,6 @@ const executeCleanup = async () => {
 		try {
 			fileLogService.logData({ message: `Start executing action: ${JSON.stringify(action)}` });
 
-			// TODO: Add timeout for each action here
 			await $childProcess.trySpawnFromCloseEvent(action.command, action.args, {}, { throwError: true, timeout: action.timeout || 3000 });
 			fileLogService.logData({ message: `Successfully executed action: ${JSON.stringify(action)}` });
 		} catch (err) {
