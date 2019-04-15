@@ -13,7 +13,7 @@ export class CleanupService implements ICleanupService {
 		this.pathToCleanupLogFile = $options.cleanupLogFile;
 	}
 
-	public shouldDispose = false;
+	public shouldDispose = true;
 
 	public async addCleanupCommand(commandInfo: ISpawnCommandInfo): Promise<void> {
 		const cleanupProcess = await this.getCleanupProcess();
