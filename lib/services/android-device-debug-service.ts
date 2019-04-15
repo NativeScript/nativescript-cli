@@ -17,9 +17,7 @@ export class AndroidDeviceDebugService extends DebugServiceBase implements IDevi
 		private $logger: ILogger,
 		private $androidProcessService: Mobile.IAndroidProcessService,
 		private $net: INet,
-		private $cleanupService: ICleanupService,
-		private $deviceLogProvider: Mobile.IDeviceLogProvider,
-		private $staticConfig: IStaticConfig) {
+		private $deviceLogProvider: Mobile.IDeviceLogProvider) {
 
 		super(device, $devicesService);
 		this.deviceIdentifier = device.deviceInfo.identifier;
@@ -71,7 +69,8 @@ export class AndroidDeviceDebugService extends DebugServiceBase implements IDevi
 			await this.unixSocketForward(port, `${unixSocketName}`);
 		}
 
-		await this.$cleanupService.addCleanupCommand({ command: await this.$staticConfig.getAdbFilePath(), args: ["-s", deviceId, "forward", "--remove", `tcp:${port}`] });
+		// TODO: Uncomment for 6.0.0 release
+		// await this.$cleanupService.addCleanupCommand({ command: await this.$staticConfig.getAdbFilePath(), args: ["-s", deviceId, "forward", "--remove", `tcp:${port}`] });
 
 		return port;
 	}

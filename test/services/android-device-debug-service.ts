@@ -11,10 +11,8 @@ class AndroidDeviceDebugServiceInheritor extends AndroidDeviceDebugService {
 		$logger: ILogger,
 		$androidProcessService: Mobile.IAndroidProcessService,
 		$net: INet,
-		$deviceLogProvider: Mobile.IDeviceLogProvider,
-		$cleanupService: ICleanupService,
-		$staticConfig: IStaticConfig) {
-		super(<any>{ deviceInfo: { identifier: "123" } }, $devicesService, $errors, $logger, $androidProcessService, $net, $cleanupService, $deviceLogProvider, $staticConfig);
+		$deviceLogProvider: Mobile.IDeviceLogProvider) {
+		super(<any>{ deviceInfo: { identifier: "123" } }, $devicesService, $errors, $logger, $androidProcessService, $net, $deviceLogProvider);
 	}
 
 	public getChromeDebugUrl(debugOptions: IDebugOptions, port: number): string {
