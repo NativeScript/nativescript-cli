@@ -43,7 +43,11 @@ export class LockService implements ILockService {
 
 	public async lock(lockFilePath?: string, lockOpts?: ILockOptions): Promise<() => void> {
 		const { filePath, fileOpts } = this.getLockFileSettings(lockFilePath, lockOpts);
-		await this.$cleanupService.addCleanupDeleteAction(filePath);
+
+		for (const pathToClean of this.getPathsForCleanupAction(filePath)) {
+			await this.$cleanupService.addCleanupDeleteAction(pathToClean);
+		}
+
 		this.$fs.writeFile(filePath, "");
 
 		try {
@@ -65,7 +69,18 @@ export class LockService implements ILockService {
 
 	private async cleanLock(lockPath: string): Promise<void> {
 		this.$fs.deleteFile(lockPath);
-		await this.$cleanupService.removeCleanupDeleteAction(lockPath);
+		for (const filePath of this.getPathsForCleanupAction(lockPath)) {
+			await this.$cleanupService.removeCleanupDeleteAction(filePath);
+		}
+	}
+
+	private getPathsForCleanupAction(lockPath: string): string[] {
+		// The proper-lockfile creates directory with the passed name and `.lock` at the end.
+		// Ensure we will take care of it as well.
+		return [
+			lockPath,
+			`${lockPath}.lock`
+		];
 	}
 
 	private getLockFileSettings(filePath?: string, fileOpts?: ILockOptions): { filePath: string, fileOpts: ILockOptions } {
