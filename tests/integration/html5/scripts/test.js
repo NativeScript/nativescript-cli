@@ -41,7 +41,7 @@ function copy(files) {
     });
 }
 
-fs.remove(SRC_DIR)
+fs.remove(TEST_DIR)
   .then(() => {
     return []
       .concat(glob.sync(path.join(SPECS_DIR, '*.js')))
