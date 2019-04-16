@@ -66,7 +66,7 @@ export class RunIosCommand implements ICommand {
 		private $errors: IErrors,
 		private $injector: IInjector,
 		private $platformService: IPlatformService,
-		private $projectData: IProjectData,
+		private $projectDataService: IProjectDataService,
 		private $options: IOptions) {
 	}
 
@@ -75,11 +75,11 @@ export class RunIosCommand implements ICommand {
 	}
 
 	public async canExecute(args: string[]): Promise<boolean> {
-		if (!this.$platformService.isPlatformSupportedForOS(this.$devicePlatformsConstants.iOS, this.$projectData)) {
+		if (!this.$platformService.isPlatformSupportedForOS(this.$devicePlatformsConstants.iOS, projectData)) {
 			this.$errors.fail(`Applications for platform ${this.$devicePlatformsConstants.iOS} can not be built on this OS`);
 		}
 
-		const result = await this.runCommand.canExecute(args) && await this.$platformService.validateOptions(this.$options.provision, this.$options.teamId, this.$projectData, this.$platformsData.availablePlatforms.iOS);
+		const result = await this.runCommand.canExecute(args) && await this.$platformService.validateOptions(this.$options.provision, this.$options.teamId, projectData, this.$platformsData.availablePlatforms.iOS);
 		return result;
 	}
 }
