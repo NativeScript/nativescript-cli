@@ -13,4 +13,8 @@ export class DataStoreService {
   collection(collectionName: string, type?: DataStoreType, options?: any): any {
     return DataStore.collection(collectionName, type, options);
   }
+
+  clearCache(): any {
+    return DataStore.clearCache();
+  }
 }

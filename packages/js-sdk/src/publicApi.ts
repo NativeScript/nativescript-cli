@@ -1,6 +1,6 @@
 import { Acl } from './acl';
 import { Aggregation } from './aggregation';
-import { collection, getInstance, DataStoreType } from './datastore';
+import { collection, getInstance, clearCache, DataStoreType } from './datastore';
 import { endpoint } from './endpoint';
 import * as Errors from './errors';
 import * as Files from './files';
@@ -13,7 +13,7 @@ import { User, AuthorizationGrant} from './user';
 import { getAppVersion, setAppVersion } from './http';
 
 const CustomEndpoint = { execute: endpoint };
-const DataStore = { collection, getInstance };
+const DataStore = { collection, getInstance, clearCache };
 
 export {
   // Init
