@@ -338,7 +338,7 @@ export class CacheStore {
     if (useDeltaSet && (!query || (query.skip === 0 && query.limit === Number.MAX_SAFE_INTEGER))) {
       try {
         const key = queryCache.serializeQuery(query);
-        if (key) {
+        if (key !== null) {
           const queryCacheDoc = await queryCache.findByKey(key);
 
           if (queryCacheDoc && queryCacheDoc.lastRequest) {
