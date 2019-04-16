@@ -17,20 +17,20 @@ module.exports = function (config) {
 
     // list of files / patterns to load in the browser
     files: [
-      './src/**/*.spec.js'
+      './test/**/*.spec.js'
     ],
 
     // list of files / patterns to exclude
     exclude: [
-      './src/common/delta-set.spec.js',
-      './src/common/live-services.spec.js',
-      './src/common/files.spec.js'
+      './test/common/delta-set.spec.js',
+      './test/common/live-services.spec.js',
+      './test/common/files.spec.js'
     ],
 
     // preprocess matching files before serving them to the browser
     // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
     preprocessors: {
-      './src/**/*.spec.js': ['webpack']
+      './test/**/*.spec.js': ['webpack']
     },
 
     // test results reporter to use

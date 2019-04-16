@@ -24,6 +24,9 @@
     "prebuild": "del lib",
     "build": "tsc"
   },
+  "dependencies": {
+    "tslib": "~1.9.3"
+  },
   "peerDependencies": {
     "events": "~3.0.0",
     "js-base64": "~2.5.1",
@@ -33,7 +36,6 @@
     "p-queue": "~4.0.0",
     "rxjs": "~6.4.0",
     "sift": "~7.0.1",
-    "tslib": "~1.9.3",
     "url": "~0.11.0",
     "url-join": "~4.0.0"
   },

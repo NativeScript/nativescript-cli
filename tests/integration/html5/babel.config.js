@@ -7,7 +7,10 @@ module.exports = function (api) {
       useBuiltIns: 'usage'
     }]
   ];
-  const plugins = [];
+  const plugins = [
+    '@babel/plugin-transform-runtime',
+    'transform-inline-environment-variables'
+  ];
 
   return {
     presets,

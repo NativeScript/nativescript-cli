@@ -26,7 +26,8 @@
 		"build": "node scripts/build.js"
 	},
 	"dependencies": {
-		"kinvey-nativescript-sdk": "^3.13.0-next.27"
+		"kinvey-nativescript-sdk": "^3.13.0-next.27",
+		"tslib": "~1.9.3"
 	},
 	"peerDependencies": {
 		"@angular/core": "~7.2.10"

@@ -98,7 +98,7 @@ fs.outputFileSync(path.join(appPath, 'package.json'), JSON.stringify(newAppPacka
 spinner.text = 'Bundling test files and copying them to the the NativeScript app...';
 const testFiles = []
   .concat(glob.sync(path.join(sharedTestsPath, '*.js')))
-  .concat(glob.sync(path.join(sharedTestsPath, 'common/**/*.spec.js')))
+  .concat(glob.sync(path.join(sharedTestsPath, 'common/**/*.js')))
   .concat(glob.sync(path.join(sharedTestsPath, 'nativescript/**/*.js')));
 build(testFiles)
   .map((result) => {

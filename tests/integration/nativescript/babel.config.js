@@ -8,6 +8,7 @@ module.exports = function (api) {
     }]
   ];
   const plugins = [
+    '@babel/plugin-transform-runtime',
     'transform-inline-environment-variables'
   ];
 

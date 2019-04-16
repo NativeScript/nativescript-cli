@@ -3,9 +3,10 @@ const fs = require('fs-extra');
 const path = require('path');
 const glob = require('glob-promise');
 const babel = require('@babel/core');
+require('dotenv').config({ path: path.join(__dirname, '../.env') });
 
 const SPECS_DIR = path.join(__dirname, '../../specs');
-const SRC_DIR = path.join(__dirname, '../src');
+const TEST_DIR = path.join(__dirname, '../test');
 
 function build(file) {
   let singular = false;
@@ -30,35 +31,24 @@ function copy(files) {
     .then(function (results) {
       return Promise.all(results
         .map(function (result) {
-          result.code = result.code.replace('__SDK__', 'kinvey-html5-sdk');
+          result.code = result.code.replace('__SDK__', 'kinvey-node-sdk');
           return result;
         })
         .map(function (result) {
-          const filePath = path.join(SRC_DIR, result.options.filename.replace(SPECS_DIR, ''));
+          const filePath = path.join(TEST_DIR, result.options.filename.replace(SPECS_DIR, ''));
           return fs.outputFile(filePath, result.code);
         }));
     });
 }
 
-fs.remove(SRC_DIR)
-  .then(function() {
-    return glob(path.join(SPECS_DIR, '*.js'))
-      .then(function (files) {
-        return copy(files);
-      });
+fs.remove(TEST_DIR)
+  .then(() => {
+    return []
+      .concat(glob.sync(path.join(SPECS_DIR, '*.js')))
+      .concat(glob.sync(path.join(SPECS_DIR, 'common/**/*.js')))
+      .concat(glob.sync(path.join(SPECS_DIR, 'node/**/*.js')));
   })
-  .then(function () {
-    return glob(path.join(SPECS_DIR, 'common/**/*.js'))
-      .then(function (files) {
-        return copy(files);
-      });
-  })
-  .then(function () {
-    return glob(path.join(SPECS_DIR, 'html5/**/*.js'))
-      .then(function (files) {
-        return copy(files);
-      });
-  })
+  .then((files) => copy(files))
   .catch(function (error) {
     console.log(error);
   });

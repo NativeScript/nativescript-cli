@@ -25,7 +25,8 @@
     "build": "node scripts/build.js"
   },
   "dependencies": {
-    "kinvey-html5-sdk": "^3.13.0-next.27"
+    "kinvey-html5-sdk": "^3.13.0-next.27",
+    "tslib": "~1.9.3"
   },
   "peerDependencies": {
     "@angular/core": "~7.2.10"

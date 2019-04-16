@@ -30,7 +30,8 @@
   },
   "dependencies": {
     "kinvey-js-sdk": "^3.13.0-next.27",
-    "nativescript-hook": "~0.2.5"
+    "nativescript-hook": "~0.2.5",
+    "tslib": "~1.9.3"
   },
   "peerDependencies": {
     "events": "~3.0.0",
