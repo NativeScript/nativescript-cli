@@ -4,9 +4,8 @@
   "description": "Integration tests for kinvey-nativescript-sdk.",
   "version": "0.0.0",
   "scripts": {
-    "build": "node scripts/build.js",
-    "pretest": "node scripts/test.js",
-    "test": "cd TestApp && tns test ios"
+    "test:android": "node scripts/test.js && cd TestApp && tns test android",
+    "test:ios": "node scripts/test.js && cd TestApp && tns test ios"
   },
   "dependencies": {
     "events": "~3.0.0",
