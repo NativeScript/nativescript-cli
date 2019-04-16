@@ -172,7 +172,7 @@ export class User {
 
   async registerForLiveService(options: { timeout?: number } = {}) {
     if (!isSubscribed()) {
-      const deviceId = getDeviceId();
+      const deviceId = await getDeviceId();
       const request = new KinveyHttpRequest({
         method: HttpRequestMethod.POST,
         auth: KinveyHttpAuth.Session,
@@ -189,7 +189,7 @@ export class User {
 
   async unregisterFromLiveService(options: { timeout?: number } = {}) {
     if (isSubscribed()) {
-      const deviceId = getDeviceId();
+      const deviceId = await getDeviceId();
       const request = new KinveyHttpRequest({
         method: HttpRequestMethod.POST,
         auth: KinveyHttpAuth.Session,

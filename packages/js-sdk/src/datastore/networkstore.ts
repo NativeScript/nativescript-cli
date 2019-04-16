@@ -311,8 +311,9 @@ export class NetworkStore {
       trace,
       skipBL
     } = options;
+    const deviceId = await getDeviceId();
     const url = formatKinveyBaasUrl(KinveyBaasNamespace.AppData, `${this.pathname}/_subscribe`);
-    const request = createRequest(HttpRequestMethod.POST, url, { deviceId: getDeviceId() });
+    const request = createRequest(HttpRequestMethod.POST, url, { deviceId });
     request.headers.setCustomRequestProperties(properties);
     request.timeout = timeout;
     await request.execute();
@@ -330,8 +331,9 @@ export class NetworkStore {
       trace,
       skipBL
     } = options;
+    const deviceId = await getDeviceId();
     const url = formatKinveyBaasUrl(KinveyBaasNamespace.AppData, `${this.pathname}/_unsubscribe`);
-    const request = createRequest(HttpRequestMethod.POST, url, { deviceId: getDeviceId() });
+    const request = createRequest(HttpRequestMethod.POST, url, { deviceId });
     request.headers.setCustomRequestProperties(properties);
     request.timeout = timeout;
     await request.execute();
