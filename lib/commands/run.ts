@@ -75,6 +75,8 @@ export class RunIosCommand implements ICommand {
 	}
 
 	public async canExecute(args: string[]): Promise<boolean> {
+		const projectData = this.$projectDataService.getProjectData();
+		
 		if (!this.$platformService.isPlatformSupportedForOS(this.$devicePlatformsConstants.iOS, projectData)) {
 			this.$errors.fail(`Applications for platform ${this.$devicePlatformsConstants.iOS} can not be built on this OS`);
 		}
