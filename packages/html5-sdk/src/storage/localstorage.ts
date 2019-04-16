@@ -1,13 +1,20 @@
 function getTable(dbName: string, tableName: string) {
-  const tableJson = window.localStorage.getItem(`${dbName}.${tableName}`);
-  if (tableJson) {
-    return new Map<string, any>(JSON.parse(tableJson));
+  const docsJson = window.localStorage.getItem(`${dbName}.${tableName}`);
+  if (docsJson) {
+    const docs = JSON.parse(docsJson);
+    const map = new Map<string, any>();
+    docs.forEach((doc) => {
+      map.set(doc._id, doc);
+    });
+    return map;
   }
   return new Map<string, any>();
 }
 
 function setTable(dbName: string, tableName: string, table: Map<string, any>) {
-  window.localStorage.setItem(`${dbName}.${tableName}`, JSON.stringify([...table]));
+  const docs = [];
+  table.forEach((value) => docs.push(value));
+  window.localStorage.setItem(`${dbName}.${tableName}`, JSON.stringify(docs));
 }
 
 export async function find(dbName: string, tableName: string) {
