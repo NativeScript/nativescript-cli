@@ -18,7 +18,7 @@ const checkLocalStorageForSubscriptionKey = () => {
   return hasSubscriptionKey;
 }
 
-describe.skip('Live-services', () => {
+describe('Live-services', () => {
   networkStore = Kinvey.DataStore.collection(collectionName, Kinvey.DataStoreType.Network);
 
   var messageCreated;
@@ -29,11 +29,12 @@ describe.skip('Live-services', () => {
   const entity3 = utilities.getEntity(utilities.randomString());
 
   before(() => {
-    appCredentials = Kinvey.init({
+    const initProperties = {
       appKey: process.env.APP_KEY,
       appSecret: process.env.APP_SECRET,
       masterSecret: process.env.MASTER_SECRET
-    });
+    }
+    appCredentials = Kinvey.init(utilities.setOfflineProvider(initProperties, process.env.OFFLINE_STORAGE));
   });
 
   before((done) => {

@@ -1,13 +1,14 @@
 import { expect } from 'chai';
 import { init, User } from '__SDK__';
-import { randomString } from '../utils';
+import { randomString, setOfflineProvider } from '../utils';
 
 before(() => {
-  return init({
+  const initProperties = {
     appKey: process.env.APP_KEY,
     appSecret: process.env.APP_SECRET,
     masterSecret: process.env.MASTER_SECRET
-  });
+  }
+  return init(setOfflineProvider(initProperties, process.env.OFFLINE_STORAGE));
 });
 
 describe('Auth', function() {
