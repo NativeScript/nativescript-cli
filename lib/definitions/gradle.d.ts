@@ -3,10 +3,10 @@ interface IGradleCommandService {
 }
 
 interface IGradleCommandOptions { 
-	message?: string;
 	cwd: string;
+	message?: string;
 	stdio?: string;
-	spawnOptions?: any;
+	spawnOptions?: ISpawnFromEventOptions;
 }
 
 interface IAndroidBuildConfig extends IRelease, IAndroidReleaseOptions, IHasAndroidBundle {

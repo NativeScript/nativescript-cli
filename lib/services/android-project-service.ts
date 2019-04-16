@@ -359,7 +359,6 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	}
 
 	public async cleanProject(projectRoot: string, projectData: IProjectData): Promise<void> {
-		// TODO: Check why there isn't a clean release build and a clean release aab build
 		await this.$gradleBuildService.cleanProject(projectRoot, { release: false });
 	}
 

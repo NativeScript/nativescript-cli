@@ -18,7 +18,7 @@ export class GradleCommandService implements IGradleCommandService {
 		return result;
 	}
 
-	private async executeCommandSafe(gradleExecutable: string, gradleArgs: string[], childProcessOptions: any, spawnOptions: any) {
+	private async executeCommandSafe(gradleExecutable: string, gradleArgs: string[], childProcessOptions: { cwd: string, stdio: string }, spawnOptions: ISpawnFromEventOptions) {
 		try {
 			const result = await this.$childProcess.spawnFromEvent(gradleExecutable, gradleArgs, "close", childProcessOptions, spawnOptions);
 

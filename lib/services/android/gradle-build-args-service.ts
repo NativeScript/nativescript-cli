@@ -25,6 +25,7 @@ export class GradleBuildArgsService implements IGradleBuildArgsService {
 		const toolsInfo = this.$androidToolsInfo.getToolsInfo();
 		args.push(
 			`-PcompileSdk=android-${toolsInfo.compileSdkVersion}`,
+			`-PtargetSdk=${toolsInfo.targetSdkVersion}`,
 			`-PbuildToolsVersion=${toolsInfo.buildToolsVersion}`,
 			`-PgenerateTypings=${toolsInfo.generateTypings}`
 		);
