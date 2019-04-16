@@ -44,6 +44,9 @@ The project is setup with unit and integration tests.
 
 ### Integration Tests
 
-Run `npm run test` from the command line at the root of the project.
+Run `npm run test` from the command line at the root of the project to run the same tests against each of the SDKs. You can also run the tests against each individual SDK like this:
 
-_Note: You can also run integration tests for just HTML5 by running `npm run test:html5` or for just NodeJS by running `npm run test:node`._
+- HTML5 SDK - `npm run test:html5`
+- NativeScript SDK on iOS - `npm run test:nativescript:ios`
+- NativeScript SDK on Android - `npm run test:nativescript:android`
+- NodeJS SDK - `npm run test:node`
