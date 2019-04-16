@@ -113,7 +113,6 @@ export class Sync {
       syncDocs = await syncCache.save(docsToSync.map((doc: { _id: any; }) => {
         return {
           entityId: doc._id,
-          entity: doc,
           collection: this.collectionName,
           state: {
             operation: event
