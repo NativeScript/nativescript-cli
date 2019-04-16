@@ -1,3 +1,4 @@
+import isNumber = require('lodash/isNumber');
 import { getConfig, ConfigKey } from './config';
 
 export interface KinveyConfig {
@@ -6,6 +7,8 @@ export interface KinveyConfig {
   masterSecret?: string;
   appVersion?: string;
   instanceId?: string;
+  defaultTimeout?: number;
+  encryptionKey?: string;
 }
 
 export function getAppKey() {
@@ -54,4 +57,17 @@ export function getAuthHost() {
   }
 
   return 'auth.kinvey.com';
+}
+
+export function getDefaultTimeout() {
+  const config = getConfig<KinveyConfig>(ConfigKey.KinveyConfig);
+  if (isNumber(config.defaultTimeout)) {
+    return config.defaultTimeout;
+  }
+  return 60000; // 1 minute
+}
+
+export function getEncryptionKey() {
+  const config = getConfig<KinveyConfig>(ConfigKey.KinveyConfig);
+  return config.encryptionKey;
 }

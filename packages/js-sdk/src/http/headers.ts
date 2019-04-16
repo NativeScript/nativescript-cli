@@ -48,8 +48,8 @@ export class HttpHeaders {
     return this.headers.has(name.toLowerCase());
   }
 
-  get(name: string): string | null {
-    return this.headers.get(name.toLowerCase()) || null;
+  get(name: string): string | undefined {
+    return this.headers.get(name.toLowerCase()) || undefined;
   }
 
   keys(): string[] {

@@ -18,7 +18,7 @@ export interface KinveyConfig {
 export function init(config?: KinveyConfig) {
   const configFromPackageJson = getDataFromPackageJson();
   const mergedConfig = Object.assign({}, configFromPackageJson, config);
-  coreInit({
+  const kinveyConfig = coreInit({
     kinveyConfig: mergedConfig,
     httpAdapter: HttpAdapter,
     sessionStore: SessionStore,
@@ -26,7 +26,7 @@ export function init(config?: KinveyConfig) {
     storageAdapter: getStorageAdapter(mergedConfig.storage),
     pubnub: PubNub
   })
-  return config;
+  return Object.assign({}, kinveyConfig, { storage: config.storage });
 }
 
 export function initialize(config?: KinveyConfig) {

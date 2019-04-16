@@ -14,7 +14,7 @@ export interface KinveyConfig {
   storage?: StorageProvider;
 }
 export function init(config: KinveyConfig) {
-  coreInit({
+  const kinveyConfig = coreInit({
     kinveyConfig: config,
     httpAdapter: HttpAdapter,
     sessionStore: SessionStore,
@@ -22,7 +22,7 @@ export function init(config: KinveyConfig) {
     storageAdapter: getStorageAdapter(config.storage),
     pubnub: PubNub
   })
-  return config;
+  return Object.assign({}, kinveyConfig, { storage: config.storage });
 }
 
 export function initialize(config: KinveyConfig) {
