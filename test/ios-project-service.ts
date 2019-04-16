@@ -119,7 +119,6 @@ function createTestInjector(projectPath: string, projectName: string, xCode?: IX
 		getAllInstalledPlugins: (): string[] => []
 	});
 	testInjector.register("androidProcessService", {});
-	testInjector.register("processService", {});
 	testInjector.register("sysInfo", {
 		getXcodeVersion: async () => ""
 	});
@@ -160,7 +159,6 @@ function createTestInjector(projectPath: string, projectName: string, xCode?: IX
 		removeExtensions: () => { /* */ },
 		addExtensionsFromPath: () => Promise.resolve()
 	});
-	testInjector.register("timers", {});
 	return testInjector;
 }
 

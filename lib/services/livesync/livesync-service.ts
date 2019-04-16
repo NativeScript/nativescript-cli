@@ -28,7 +28,6 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $nodeModulesDependenciesBuilder: INodeModulesDependenciesBuilder,
 		private $logger: ILogger,
-		private $processService: IProcessService,
 		private $hooksService: IHooksService,
 		private $pluginsService: IPluginsService,
 		private $debugService: IDebugService,
@@ -810,15 +809,6 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 
 			this.liveSyncProcessesInfo[liveSyncData.projectDir].watcherInfo = { watcher, patterns };
 			this.liveSyncProcessesInfo[liveSyncData.projectDir].timer = timeoutTimer;
-
-			this.$processService.attachToProcessExitSignals(this, () => {
-				_.keys(this.liveSyncProcessesInfo).forEach(projectDir => {
-					// Do not await here, we are in process exit's handler.
-					/* tslint:disable:no-floating-promises */
-					this.stopLiveSync(projectDir);
-					/* tslint:enable:no-floating-promises */
-				});
-			});
 		}
 	}
 

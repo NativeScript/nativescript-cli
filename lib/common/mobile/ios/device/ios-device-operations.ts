@@ -9,16 +9,11 @@ export class IOSDeviceOperations extends EventEmitter implements IIOSDeviceOpera
 	public shouldDispose: boolean;
 	private deviceLib: IOSDeviceLib.IOSDeviceLib;
 
-	constructor(private $logger: ILogger,
-		private $processService: IProcessService) {
+	constructor(private $logger: ILogger) {
 		super();
 
 		this.isInitialized = false;
 		this.shouldDispose = true;
-		this.$processService.attachToProcessExitSignals(this, () => {
-			this.setShouldDispose(true);
-			this.dispose();
-		});
 	}
 
 	public async install(ipaPath: string, deviceIdentifiers: string[], errorHandler: DeviceOperationErrorHandler): Promise<IOSDeviceResponse> {

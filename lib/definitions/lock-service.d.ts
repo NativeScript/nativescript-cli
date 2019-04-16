@@ -34,6 +34,6 @@ declare global {
          * Resolves the specified file lock. Whenever possible you should use the `release` function instead.
          * @param {string} lockFilePath Path to lock file that has to be unlocked. Defaults to `<profile dir>/lockfile.lock`
          */
-        unlock(lockFilePath?: string): void
+        unlock(lockFilePath?: string): Promise<void>
     }
 }

@@ -16,7 +16,6 @@ export class LogcatHelper implements Mobile.ILogcatHelper {
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $logger: ILogger,
 		private $injector: IInjector,
-		private $processService: IProcessService,
 		private $devicesService: Mobile.IDevicesService) {
 		this.mapDevicesLoggingData = Object.create(null);
 	}
@@ -53,8 +52,6 @@ export class LogcatHelper implements Mobile.ILogcatHelper {
 				const lineText = line.toString();
 				this.$deviceLogProvider.logData(lineText, this.$devicePlatformsConstants.Android, deviceIdentifier);
 			});
-
-			this.$processService.attachToProcessExitSignals(this, logcatStream.kill);
 		}
 	}
 
@@ -72,8 +69,6 @@ export class LogcatHelper implements Mobile.ILogcatHelper {
 			logcatDumpStream.removeAllListeners();
 			lineStream.removeAllListeners();
 		});
-
-		this.$processService.attachToProcessExitSignals(this, logcatDumpStream.kill);
 	}
 
 	/**

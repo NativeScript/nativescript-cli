@@ -5,7 +5,7 @@ import { assert } from "chai";
 import { DeviceDiscoveryEventNames, CONNECTED_STATUS } from "../../../constants";
 import { DevicePlatformsConstants } from "../../../mobile/device-platforms-constants";
 import { ErrorsStub, CommonLoggerStub, HooksServiceStub, LockServiceStub } from "../stubs";
-import { FileSystemStub, ChildProcessStub, ProcessServiceStub } from "../../../../../test/stubs";
+import { FileSystemStub, ChildProcessStub } from "../../../../../test/stubs";
 
 let currentlyRunningSimulators: Mobile.IiSimDevice[];
 
@@ -41,7 +41,6 @@ function createTestInjector(): IInjector {
 	injector.register("deviceLogProvider", {});
 	injector.register("iOSEmulatorServices", {});
 	injector.register("iOSNotification", {});
-	injector.register("processService", ProcessServiceStub);
 	injector.register("options", {});
 	injector.register("hooksService", HooksServiceStub);
 	injector.register("logger", CommonLoggerStub);

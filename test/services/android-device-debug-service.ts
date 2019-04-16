@@ -31,6 +31,8 @@ const createTestInjector = (): IInjector => {
 	testInjector.register("net", {});
 	testInjector.register("projectDataService", {});
 	testInjector.register("deviceLogProvider", {});
+	testInjector.register("cleanupService", {});
+	testInjector.register("staticConfig", {});
 
 	return testInjector;
 };

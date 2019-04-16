@@ -20,7 +20,6 @@ export class IOSDevice extends IOSDeviceBase {
 		protected $deviceLogProvider: Mobile.IDeviceLogProvider,
 		protected $lockService: ILockService,
 		private $iOSSocketRequestExecutor: IiOSSocketRequestExecutor,
-		protected $processService: IProcessService,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $iOSDeviceProductNameMapper: Mobile.IiOSDeviceProductNameMapper,
 		private $iosDeviceOperations: IIOSDeviceOperations,

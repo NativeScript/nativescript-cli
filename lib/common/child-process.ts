@@ -62,7 +62,15 @@ export class ChildProcess extends EventEmitter implements IChildProcess {
 			let isResolved = false;
 			let capturedOut = "";
 			let capturedErr = "";
+			let killTimer: NodeJS.Timer = null;
 
+			if (spawnFromEventOptions && spawnFromEventOptions.timeout) {
+				this.$logger.trace(`Setting maximum time for execution of current child process to ${spawnFromEventOptions.timeout}`);
+				killTimer = setTimeout(() => {
+					this.$logger.trace(`Sending SIGTERM to current child process as maximum time for execution ${spawnFromEventOptions.timeout} had passed.`);
+					childProcess.kill('SIGTERM');
+				}, spawnFromEventOptions.timeout);
+			}
 			if (childProcess.stdout) {
 				childProcess.stdout.on("data", (data: string) => {
 					if (spawnFromEventOptions && spawnFromEventOptions.emitOptions && spawnFromEventOptions.emitOptions.eventName) {
@@ -91,17 +99,27 @@ export class ChildProcess extends EventEmitter implements IChildProcess {
 					exitCode: exitCode
 				};
 
+				const clearKillTimer = () => {
+					if (killTimer) {
+						clearTimeout(killTimer);
+					}
+				};
+
+				const resolveAction = () => {
+					isResolved = true;
+					resolve(result);
+					clearKillTimer();
+				};
+
 				if (spawnFromEventOptions && spawnFromEventOptions.throwError === false) {
 					if (!isResolved) {
 						this.$logger.trace("Result when throw error is false:");
 						this.$logger.trace(result);
-						isResolved = true;
-						resolve(result);
+						resolveAction();
 					}
 				} else {
 					if (exitCode === 0) {
-						isResolved = true;
-						resolve(result);
+						resolveAction();
 					} else {
 						let errorMessage = `Command ${command} failed with exit code ${exitCode}`;
 						if (capturedErr) {
@@ -111,6 +129,7 @@ export class ChildProcess extends EventEmitter implements IChildProcess {
 						if (!isResolved) {
 							isResolved = true;
 							reject(new Error(errorMessage));
+							clearKillTimer();
 						}
 					}
 				}
