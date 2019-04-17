@@ -3,6 +3,9 @@ import { Yok } from "../../lib/common/yok";
 import * as stubs from "../stubs";
 import { assert } from "chai";
 import * as sinon from "sinon";
+import { GradleCommandService } from "../../lib/services/android/gradle-command-service";
+import { GradleBuildService } from "../../lib/services/android/gradle-build-service";
+import { GradleBuildArgsService } from "../../lib/services/android/gradle-build-args-service";
 
 const createTestInjector = (): IInjector => {
 	const testInjector = new Yok();
@@ -35,6 +38,9 @@ const createTestInjector = (): IInjector => {
 			return true;
 		}
 	});
+	testInjector.register("gradleCommandService", GradleCommandService);
+	testInjector.register("gradleBuildService", GradleBuildService);
+	testInjector.register("gradleBuildArgsService", GradleBuildArgsService);
 
 	return testInjector;
 };
