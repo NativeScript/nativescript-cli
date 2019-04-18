@@ -53,7 +53,8 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		private $plistParser: IPlistParser,
 		private $sysInfo: ISysInfo,
 		private $xcconfigService: IXcconfigService,
-		private $iOSExtensionsService: IIOSExtensionsService) {
+		private $iOSExtensionsService: IIOSExtensionsService,
+		private $iOSWatchAppService: IIOSExtensionsService) {
 		super($fs, $projectDataService);
 	}
 
@@ -403,7 +404,6 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		args = args.concat((buildConfig && buildConfig.architectures) || this.getBuildArchitectures(projectData, buildConfig, ["armv7", "arm64"]));
 
 		args = args.concat([
-			"-sdk", DevicePlatformSdkName,
 			"BUILD_DIR=" + path.join(projectRoot, constants.BUILD_DIR)
 		]);
 
@@ -492,6 +492,8 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 			xcode.setAutomaticSigningStyle(projectData.projectName, teamId);
 			xcode.setAutomaticSigningStyleByTargetProductType("com.apple.product-type.app-extension", teamId);
+			xcode.setAutomaticSigningStyleByTargetProductType("com.apple.product-type.watchkit2-extension", teamId);
+			xcode.setAutomaticSigningStyleByTargetProductType("com.apple.product-type.application.watchapp2", teamId);
 			xcode.save();
 
 			this.$logger.trace(`Set Automatic signing style and team id ${teamId}.`);
@@ -573,12 +575,13 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			.concat([
 				"build",
 				"-configuration", getConfigurationName(buildConfig.release),
-				"-sdk", SimulatorPlatformSdkName,
 				"ONLY_ACTIVE_ARCH=NO",
 				"BUILD_DIR=" + path.join(projectRoot, constants.BUILD_DIR),
-				"CODE_SIGN_IDENTITY=",
+				"CODE_SIGNING_ALLOWED=NO",
+				"-destination",
+				"generic/platform=iOS Simulator"
 			])
-			.concat(this.xcbuildProjectArgs(projectRoot, projectData));
+			.concat(this.xcbuildProjectArgs(projectRoot, projectData, "scheme"));
 
 		await this.xcodebuild(args, projectRoot, buildConfig.buildOutputStdio);
 	}
@@ -770,15 +773,18 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 			_.each(imagesToRemove, image => project.removeResourceFile(path.join(this.getAppResourcesDestinationDirectoryPath(projectData), image)));
 
 			this.savePbxProj(project, projectData);
-
-			const resourcesNativeCodePath = path.join(
-				projectData.getAppResourcesDirectoryPath(),
-				this.getPlatformData(projectData).normalizedPlatformName,
-				constants.NATIVE_SOURCE_FOLDER
-			);
-
-			await this.prepareNativeSourceCode(constants.TNS_NATIVE_SOURCE_GROUP_NAME, resourcesNativeCodePath, projectData);
 		}
+		
+		const platformData = this.getPlatformData(projectData);
+		const resourlcesDirectoryPath = projectData.getAppResourcesDirectoryPath();
+		const pbxProjPath = this.getPbxProjPath(projectData);
+		const resourcesNativeCodePath = path.join(
+			projectData.getAppResourcesDirectoryPath(),
+			platformData.normalizedPlatformName,
+			constants.NATIVE_SOURCE_FOLDER
+		);
+		await this.prepareNativeSourceCode(constants.TNS_NATIVE_SOURCE_GROUP_NAME, resourcesNativeCodePath, projectData);
+		await this.$iOSWatchAppService.addExtensionsFromPath({ extensionsFolderPath: path.join(resourlcesDirectoryPath, platformData.normalizedPlatformName), projectData, platformData, pbxProjPath });
 
 	}
 
