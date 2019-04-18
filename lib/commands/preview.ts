@@ -14,12 +14,14 @@ export class PreviewCommand implements ICommand {
 		private $options: IOptions,
 		private $previewAppLogProvider: IPreviewAppLogProvider,
 		private $previewQrCodeService: IPreviewQrCodeService,
+		protected $workflowService: IWorkflowService,
 		$cleanupService: ICleanupService) {
-			this.$analyticsService.setShouldDispose(false);
-			$cleanupService.setShouldDispose(false);
-		}
+		this.$analyticsService.setShouldDispose(false);
+		$cleanupService.setShouldDispose(false);
+	}
 
 	public async execute(): Promise<void> {
+		await this.$workflowService.handleLegacyWorkflow(this.$projectData.projectDir, this.$options);
 		this.$previewAppLogProvider.on(DEVICE_LOG_EVENT_NAME, (deviceId: string, message: string) => {
 			this.$logger.info(message);
 		});

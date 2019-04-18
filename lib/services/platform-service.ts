@@ -36,7 +36,8 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		private $terminalSpinnerService: ITerminalSpinnerService,
 		private $pacoteService: IPacoteService,
 		private $usbLiveSyncService: any,
-		public $hooksService: IHooksService
+		public $hooksService: IHooksService,
+		public $workflowService: IWorkflowService
 	) {
 		super();
 	}
@@ -221,6 +222,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 
 	@performanceLog()
 	public async preparePlatform(platformInfo: IPreparePlatformInfo): Promise<boolean> {
+		await this.$workflowService.handleLegacyWorkflow(platformInfo.projectData.projectDir, platformInfo.appFilesUpdaterOptions);
 		const changesInfo = await this.getChangesInfo(platformInfo);
 		const shouldPrepare = await this.shouldPrepare({ platformInfo, changesInfo });
 

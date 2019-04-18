@@ -571,6 +571,7 @@ interface IOptions extends IRelease, IDeviceIdentifier, IJustLaunch, IAvd, IAvai
 	performance: Object;
 	setupOptions(projectData: IProjectData): void;
 	cleanupLogFile: string;
+	workflow: boolean;
 }
 
 interface IEnvOptions {
@@ -940,6 +941,12 @@ interface IBundleValidatorHelper {
 	 * @return {void}
 	 */
 	validate(minSupportedVersion?: string): void;
+
+	/**
+	 * Returns the installed bundler version.
+	 * @return {string}
+	 */
+	getBundlerDependencyVersion(bundlerName?: string): string;
 }
 
 

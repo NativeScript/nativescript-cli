@@ -497,6 +497,9 @@ export class PlatformsDataStub extends EventEmitter implements IPlatformsData {
 }
 
 export class ProjectDataService implements IProjectDataService {
+	setUseLegacyWorkflow(projectDir: string, value: any): Promise<void> {
+		return;
+	}
 	getNSValue(propertyName: string): any {
 		return {};
 	}
