@@ -10,6 +10,7 @@ export class IOSSimulator extends IOSDeviceBase implements Mobile.IiOSDevice {
 	public applicationManager: Mobile.IDeviceApplicationManager;
 	public fileSystem: Mobile.IDeviceFileSystem;
 	public deviceInfo: Mobile.IDeviceInfo;
+	public watchSimulator: Mobile.IIOSWatchSimulatorDevice;
 
 	constructor(private simulator: Mobile.IiSimDevice,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
