@@ -13,11 +13,11 @@ export class WorkflowService implements IWorkflowService {
 	) {
 	}
 
-	public async handleLegacyWorkflow(projectDir: string, settings: IWebpackWorkflowSettings, force?: boolean): Promise<void> {
+	public async handleLegacyWorkflow(projectDir: string, settings: IWebpackWorkflowSettings, skipWarnings?: boolean, force?: boolean): Promise<void> {
 		if (!settings.bundle || force) {
 			const projectData = this.$projectDataService.getProjectData(projectDir);
-			if (projectData.useLegacyWorkflow === null || projectData.useLegacyWorkflow === undefined || force) {
-				const hasSwitched = await this.handleWebpackWorkflowSwitch(projectData, force);
+			if (typeof (projectData.useLegacyWorkflow) !== "boolean" || force) {
+				const hasSwitched = await this.handleWebpackWorkflowSwitch(projectData, skipWarnings, force);
 				if (hasSwitched) {
 					this.$options.bundle = "webpack";
 					this.$options.hmr = !settings.release;
@@ -28,15 +28,15 @@ export class WorkflowService implements IWorkflowService {
 					}
 					settings.useHotModuleReload = this.$options.hmr;
 				}
-			} else if (projectData.useLegacyWorkflow === true) {
+			} else if (!skipWarnings && projectData.useLegacyWorkflow === true) {
 				this.showLegacyWorkflowWarning();
-			} else {
+			} else if (!skipWarnings && projectData.useLegacyWorkflow === false) {
 				this.showNoBundleWarning();
 			}
 		}
 	}
 
-	private async handleWebpackWorkflowSwitch(projectData: IProjectData, force: boolean): Promise<boolean> {
+	private async handleWebpackWorkflowSwitch(projectData: IProjectData, skipWarnings: boolean, force: boolean): Promise<boolean> {
 		let hasSwitched = false;
 		if (force || helpers.isInteractive()) {
 			hasSwitched = force || await this.$prompter.confirm("Please use webpack!", () => true);
@@ -45,21 +45,20 @@ export class WorkflowService implements IWorkflowService {
 				await this.ensureWebpackPluginInstalled(projectData);
 			} else {
 				this.$projectDataService.setUseLegacyWorkflow(projectData.projectDir, true);
-				await this.showLegacyWorkflowWarning();
 			}
-		} else {
+		} else if (!skipWarnings) {
 			await this.showLegacyWorkflowWarning();
 		}
 
 		return hasSwitched;
 	}
 
-	private async showLegacyWorkflowWarning() {
-		this.$logger.warn("WARNINGGGGG LEGACY TRUE!!!");
+	private showLegacyWorkflowWarning() {
+		this.$logger.warn("TODO: <Add a legacy workflow warning here>");
 	}
 
 	private showNoBundleWarning() {
-		this.$logger.warn("WARNINGGGGG NO BUNDLE!!!");
+		this.$logger.warn("TODO: <Add a `--no-bundle` workflow warning here>");
 	}
 
 	private async ensureWebpackPluginInstalled(projectData: IProjectData) {
@@ -70,20 +69,19 @@ export class WorkflowService implements IWorkflowService {
 
 		let isInstalledVersionSupported = true;
 		const installedVersion = this.$bundleValidatorHelper.getBundlerDependencyVersion(webpackPluginName);
-		// TODO: use trace
-		this.$logger.info(`Updating to webpack workflow: Found ${webpackPluginName} v${installedVersion}`);
+		this.$logger.trace(`Updating to webpack workflow: Found ${webpackPluginName} v${installedVersion}`);
 		if (validWebpackPluginTags.indexOf(installedVersion) === -1) {
 			const isInstalledVersionValid = !!semver.valid(installedVersion) || !!semver.coerce(installedVersion);
 			isInstalledVersionSupported =
 				isInstalledVersionValid && semver.gte(semver.coerce(installedVersion), hmrOutOfBetaWebpackPluginVersion);
-			this.$logger.info(`Updating to webpack workflow: Is installedVersion valid: ${isInstalledVersionValid}`);
+			this.$logger.trace(`Updating to webpack workflow: Is installed version valid?: ${isInstalledVersionValid}`);
 		}
 
-		this.$logger.info(`Updating to webpack workflow: Is installedVersion supported: ${isInstalledVersionSupported}`);
+		this.$logger.trace(`Updating to webpack workflow: Is installed version supported?: ${isInstalledVersionSupported}`);
 		if (!isInstalledVersionSupported) {
 			const webpackConfigPath = path.join(projectData.projectDir, webpackConfigFileName);
 			if (this.$fs.exists(webpackConfigPath)) {
-				this.$logger.info(`Your Webpack config was stored to .bak!!`);
+				this.$logger.info(`<TODO: Add a webpack cofnig backup info here>`);
 				this.$fs.rename(webpackConfigPath, `${webpackConfigPath}.bak`);
 			}
 
@@ -94,7 +92,7 @@ export class WorkflowService implements IWorkflowService {
 				frameworkPath: null,
 				ignoreScripts: false,
 			});
-			this.$logger.info(`Updating to webpack workflow: The ${webpackPluginName} was updated to v${installResult.version}`);
+			this.$logger.trace(`Updating to webpack workflow: The ${webpackPluginName} was updated to v${installResult.version}`);
 		}
 	}
 }

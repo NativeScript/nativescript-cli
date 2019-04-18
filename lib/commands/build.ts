@@ -9,12 +9,14 @@ export abstract class BuildCommandBase extends ValidatePlatformCommandBase {
 		protected $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		$platformService: IPlatformService,
 		private $bundleValidatorHelper: IBundleValidatorHelper,
-		protected $logger: ILogger) {
-			super($options, $platformsData, $platformService, $projectData);
-			this.$projectData.initializeProjectData();
+		protected $logger: ILogger,
+		protected $workflowService: IWorkflowService) {
+		super($options, $platformsData, $platformService, $projectData);
+		this.$projectData.initializeProjectData();
 	}
 
 	public async executeCore(args: string[]): Promise<string> {
+		await this.$workflowService.handleLegacyWorkflow(this.$projectData.projectDir, this.$options, true);
 		const platform = args[0].toLowerCase();
 		const appFilesUpdaterOptions: IAppFilesUpdaterOptions = {
 			bundle: !!this.$options.bundle,
@@ -94,8 +96,9 @@ export class BuildIosCommand extends BuildCommandBase implements ICommand {
 		$devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		$platformService: IPlatformService,
 		$bundleValidatorHelper: IBundleValidatorHelper,
-		$logger: ILogger) {
-			super($options, $errors, $projectData, $platformsData, $devicePlatformsConstants, $platformService, $bundleValidatorHelper, $logger);
+		$logger: ILogger,
+		$workflowService: IWorkflowService) {
+		super($options, $errors, $projectData, $platformsData, $devicePlatformsConstants, $platformService, $bundleValidatorHelper, $logger, $workflowService);
 	}
 
 	public async execute(args: string[]): Promise<void> {
@@ -107,7 +110,7 @@ export class BuildIosCommand extends BuildCommandBase implements ICommand {
 
 		super.validatePlatform(platform);
 
-		let result = await super.canExecuteCommandBase(platform, { notConfiguredEnvOptions: { hideSyncToPreviewAppOption: true }});
+		let result = await super.canExecuteCommandBase(platform, { notConfiguredEnvOptions: { hideSyncToPreviewAppOption: true } });
 		if (result.canExecute) {
 			result = await super.validateArgs(args, platform);
 		}
@@ -129,8 +132,9 @@ export class BuildAndroidCommand extends BuildCommandBase implements ICommand {
 		$platformService: IPlatformService,
 		$bundleValidatorHelper: IBundleValidatorHelper,
 		protected $androidBundleValidatorHelper: IAndroidBundleValidatorHelper,
-		protected $logger: ILogger) {
-			super($options, $errors, $projectData, $platformsData, $devicePlatformsConstants, $platformService, $bundleValidatorHelper, $logger);
+		protected $logger: ILogger,
+		$workflowService: IWorkflowService) {
+		super($options, $errors, $projectData, $platformsData, $devicePlatformsConstants, $platformService, $bundleValidatorHelper, $logger, $workflowService);
 	}
 
 	public async execute(args: string[]): Promise<void> {
@@ -149,7 +153,7 @@ export class BuildAndroidCommand extends BuildCommandBase implements ICommand {
 		const platform = this.$devicePlatformsConstants.Android;
 		super.validatePlatform(platform);
 		this.$androidBundleValidatorHelper.validateRuntimeVersion(this.$projectData);
-		let result = await super.canExecuteCommandBase(platform, { notConfiguredEnvOptions: { hideSyncToPreviewAppOption: true }});
+		let result = await super.canExecuteCommandBase(platform, { notConfiguredEnvOptions: { hideSyncToPreviewAppOption: true } });
 		if (result.canExecute) {
 			if (this.$options.release && (!this.$options.keyStorePath || !this.$options.keyStorePassword || !this.$options.keyStoreAlias || !this.$options.keyStoreAliasPassword)) {
 				this.$errors.fail(ANDROID_RELEASE_BUILD_ERROR_MESSAGE);

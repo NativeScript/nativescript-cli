@@ -21,7 +21,7 @@ export class PreviewCommand implements ICommand {
 	}
 
 	public async execute(): Promise<void> {
-		await this.$workflowService.handleLegacyWorkflow(this.$projectData.projectDir, this.$options);
+		await this.$workflowService.handleLegacyWorkflow(this.$projectData.projectDir, this.$options, true);
 		this.$previewAppLogProvider.on(DEVICE_LOG_EVENT_NAME, (deviceId: string, message: string) => {
 			this.$logger.info(message);
 		});

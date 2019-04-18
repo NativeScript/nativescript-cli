@@ -7,12 +7,14 @@ export class PrepareCommand extends ValidatePlatformCommandBase implements IComm
 		$platformService: IPlatformService,
 		$projectData: IProjectData,
 		private $platformCommandParameter: ICommandParameter,
-		$platformsData: IPlatformsData) {
-			super($options, $platformsData, $platformService, $projectData);
-			this.$projectData.initializeProjectData();
+		$platformsData: IPlatformsData,
+		private $workflowService: IWorkflowService) {
+		super($options, $platformsData, $platformService, $projectData);
+		this.$projectData.initializeProjectData();
 	}
 
 	public async execute(args: string[]): Promise<void> {
+		await this.$workflowService.handleLegacyWorkflow(this.$projectData.projectDir, this.$options, true);
 		const appFilesUpdaterOptions: IAppFilesUpdaterOptions = {
 			bundle: !!this.$options.bundle,
 			release: this.$options.release,

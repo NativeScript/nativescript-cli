@@ -18,11 +18,13 @@ export class DebugPlatformCommand extends ValidatePlatformCommandBase implements
 		private $debugDataService: IDebugDataService,
 		private $liveSyncService: IDebugLiveSyncService,
 		private $liveSyncCommandHelper: ILiveSyncCommandHelper,
-		private $androidBundleValidatorHelper: IAndroidBundleValidatorHelper) {
+		private $androidBundleValidatorHelper: IAndroidBundleValidatorHelper,
+		private $workflowService: IWorkflowService) {
 		super($options, $platformsData, $platformService, $projectData);
 	}
 
 	public async execute(args: string[]): Promise<void> {
+		await this.$workflowService.handleLegacyWorkflow(this.$projectData.projectDir, this.$options, true);
 		await this.$devicesService.initialize({
 			platform: this.platform,
 			deviceId: this.$options.device,

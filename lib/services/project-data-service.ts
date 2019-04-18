@@ -137,11 +137,10 @@ export class ProjectDataService implements IProjectDataService {
 	}
 
 	public setUseLegacyWorkflow(projectDir: string, value: any): void {
-		// TODO: use trace
-		this.$logger.info(`useLegacyWorkflow will be set to ${value}`);
+		this.$logger.trace(`useLegacyWorkflow will be set to ${value}`);
 		this.updateNsConfigValue(projectDir, { useLegacyWorkflow: value });
 		this.refreshProjectData(projectDir);
-		this.$logger.info(`useLegacyWorkflow was set to ${value}`);
+		this.$logger.trace(`useLegacyWorkflow was set to ${value}`);
 	}
 
 	public getAppExecutableFiles(projectDir: string): string[] {
