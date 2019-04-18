@@ -622,6 +622,11 @@ interface IITMSData extends ICredentials {
 	 * @type {string}
 	 */
 	ipaFilePath: string;
+
+	/**
+	 * Specified if the ipa options is provided
+	 */
+	ipaFileOption: boolean;
 	/**
 	 * Specifies whether the logging level of the itmstransporter command-line tool should be set to verbose.
 	 * @type {string}
@@ -639,12 +644,6 @@ interface IITMSTransporterService {
 	 * @return {Promise<void>}
 	 */
 	upload(data: IITMSData): Promise<void>;
-	/**
-	 * Queries Apple's content delivery API to get the user's registered iOS applications.
-	 * @param  {ICredentials}                               credentials Credentials for authentication with iTunes Connect.
-	 * @return {Promise<IItunesConnectApplication[]>}          The user's iOS applications.
-	 */
-	getiOSApplications(credentials: ICredentials): Promise<IiTunesConnectApplication[]>;
 }
 
 /**

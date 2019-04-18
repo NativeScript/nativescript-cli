@@ -5,7 +5,7 @@ export class ListiOSApps implements ICommand {
 	public allowedParameters: ICommandParameter[] = [new StringCommandParameter(this.$injector), new StringCommandParameter(this.$injector)];
 
 	constructor(private $injector: IInjector,
-		private $itmsTransporterService: IITMSTransporterService,
+		private $applePortalApplicationService: IApplePortalApplicationService,
 		private $logger: ILogger,
 		private $projectData: IProjectData,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
@@ -31,17 +31,25 @@ export class ListiOSApps implements ICommand {
 			password = await this.$prompter.getPassword("Apple ID password");
 		}
 
-		const iOSApplications = await this.$itmsTransporterService.getiOSApplications({ username, password });
+		const applications = await this.$applePortalApplicationService.getApplications({ username, password });
 
-		if (!iOSApplications || !iOSApplications.length) {
+		if (!applications || !applications.length) {
 			this.$logger.out("Seems you don't have any applications yet.");
 		} else {
-			const table: any = createTable(["Application Name", "Bundle Identifier", "Version"], iOSApplications.map(element => {
-				return [element.name, element.bundleId, element.version];
+			const table: any = createTable(["Application Name", "Bundle Identifier", "In Flight Version"], applications.map(application => {
+				return [application.name, application.bundleId, this.getVersion(application)];
 			}));
 
 			this.$logger.out(table.toString());
 		}
+	}
+
+	private getVersion(application: IApplePortalApplicationSummary): string {
+		if (application && application.versionSets && application.versionSets.length && application.versionSets[0].inFlightVersion) {
+			return application.versionSets[0].inFlightVersion.version;
+		}
+
+		return "";
 	}
 }
 
