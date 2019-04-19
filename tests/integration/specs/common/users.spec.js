@@ -46,11 +46,12 @@ const safelySignUpUser = (username, password, state, createdUserIds) => {
 };
 
 before(() => {
-  appCredentials = Kinvey.init({
+  const initProperties = {
     appKey: process.env.APP_KEY,
     appSecret: process.env.APP_SECRET,
     masterSecret: process.env.MASTER_SECRET
-  });
+  }
+  appCredentials = Kinvey.init(utilities.setOfflineProvider(initProperties, process.env.OFFLINE_STORAGE));
 });
 
 before(() => {
