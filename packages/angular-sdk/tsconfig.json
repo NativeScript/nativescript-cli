@@ -1,39 +1,28 @@
 {
-  "angularCompilerOptions": {
-    "annotateForClosureCompiler": true,
-    "skipTemplateCodegen": true,
-    "strictMetadataEmit": true,
-    "fullTemplateTypeCheck": true,
-    "enableResourceInlining": true
-  },
-  "buildOnSave": false,
-  "compileOnSave": false,
   "compilerOptions": {
-    "baseUrl": ".",
-    "target": "es2015",
-    "module": "es2015",
+    "target": "es5",
+    "module": "commonjs",
     "moduleResolution": "node",
-    "outDir": "dist",
-    "declaration": true,
-    "declarationDir": "dist",
-    "inlineSourceMap": true,
-    "inlineSources": true,
-    "skipLibCheck": true,
+    "sourceMap": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-    "importHelpers": true,
-    "resolveJsonModule": true,
-    "allowSyntheticDefaultImports": true,
+    "noImplicitUseStrict": true,
+    "noEmitHelpers": true,
+    "declaration": true,
+    "removeComments": false,
+    "noEmitOnError": true,
+    "noImplicitAny": false,
     "lib": [
       "dom",
-      "es2018"
-    ]
+      "es6",
+      "es2015.iterable"
+    ],
+    "outDir": "lib"
   },
-  "exclude": [
-    "node_modules",
-    "dist",
-    "**/*.ngfactory.ts",
-    "**/*.shim.ts",
-    "**/*.spec.ts"
-  ]
+  "angularCompilerOptions": {
+    "genDir": ".",
+    "skipMetadataEmit": false,
+    "skipTemplateCodegen": true,
+    "strictMetadataEmit": true
+  }
 }
