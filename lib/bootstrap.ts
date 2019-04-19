@@ -192,3 +192,7 @@ $injector.require("qrCodeTerminalService", "./services/qr-code-terminal-service"
 $injector.require("testInitializationService", "./services/test-initialization-service");
 
 $injector.require("networkConnectivityValidator", "./helpers/network-connectivity-validator");
+
+$injector.require("applePortalSessionService", "./services/apple-portal/apple-portal-session-service");
+$injector.require("applePortalCookieService", "./services/apple-portal/apple-portal-cookie-service");
+$injector.require("applePortalApplicationService", "./services/apple-portal/apple-portal-application-service");
