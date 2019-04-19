@@ -1,8 +1,14 @@
 import * as helpers from "../common/helpers";
 import * as path from "path";
 import * as semver from "semver";
+import { EOL } from "os";
 
 export class WorkflowService implements IWorkflowService {
+	private legacyWorkflowDeprecationMessage = `With the upcoming NativeScript 6.0 the Webpack workflow will become the only way of build apps.
+More info about the reason for this change and how to migrate your project can be found in the link below:
+<TODO: add link here>`;
+	private webpackWorkflowConfirmMessage = `Do you want to switch your app to the Webpack workflow?`;
+
 	constructor(private $bundleValidatorHelper: IBundleValidatorHelper,
 		private $fs: IFileSystem,
 		private $logger: ILogger,
@@ -37,9 +43,17 @@ export class WorkflowService implements IWorkflowService {
 	}
 
 	private async handleWebpackWorkflowSwitch(projectData: IProjectData, skipWarnings: boolean, force: boolean): Promise<boolean> {
-		let hasSwitched = false;
+		let hasSwitched = force;
 		if (force || helpers.isInteractive()) {
-			hasSwitched = force || await this.$prompter.confirm("Please use webpack!", () => true);
+			if (!force) {
+				this.$logger.info();
+				this.$logger.printMarkdown(`
+__Improve your project by switching to the Webpack workflow.__
+
+\`${this.legacyWorkflowDeprecationMessage}\``);
+				hasSwitched = await this.$prompter.confirm(this.webpackWorkflowConfirmMessage, () => true);
+			}
+
 			if (hasSwitched) {
 				this.$projectDataService.setUseLegacyWorkflow(projectData.projectDir, false);
 				await this.ensureWebpackPluginInstalled(projectData);
@@ -54,11 +68,17 @@ export class WorkflowService implements IWorkflowService {
 	}
 
 	private showLegacyWorkflowWarning() {
-		this.$logger.warn("TODO: <Add a legacy workflow warning here>");
+		const legacyWorkflowWarning = `You are using the Legacy Workflow.${EOL}${EOL}${this.legacyWorkflowDeprecationMessage}`;
+		const warningWithBorders = helpers.getMessageWithBorders(legacyWorkflowWarning);
+
+		this.$logger.warn(warningWithBorders);
 	}
 
 	private showNoBundleWarning() {
-		this.$logger.warn("TODO: <Add a `--no-bundle` workflow warning here>");
+		const legacyWorkflowWarning = `You are using the '--no-bundle' flag which is switching to the Legacy Workflow.${EOL}${EOL}${this.legacyWorkflowDeprecationMessage}`;
+		const warningWithBorders = helpers.getMessageWithBorders(legacyWorkflowWarning);
+
+		this.$logger.warn(warningWithBorders);
 	}
 
 	private async ensureWebpackPluginInstalled(projectData: IProjectData) {
@@ -81,8 +101,8 @@ export class WorkflowService implements IWorkflowService {
 		if (!isInstalledVersionSupported) {
 			const webpackConfigPath = path.join(projectData.projectDir, webpackConfigFileName);
 			if (this.$fs.exists(webpackConfigPath)) {
-				this.$logger.info(`<TODO: Add a webpack cofnig backup info here>`);
 				this.$fs.rename(webpackConfigPath, `${webpackConfigPath}.bak`);
+				this.$logger.warn(`The 'nativescript-dev-webpack' plugin was updated and your '${webpackConfigFileName}' was replaced. You can find your old '${webpackConfigPath}' in '${webpackConfigPath}.bak'.`);
 			}
 
 			const installResult = await this.$packageManager.install(`${webpackPluginName}@latest`, projectData.projectDir, {
