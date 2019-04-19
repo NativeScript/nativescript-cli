@@ -1,6 +1,6 @@
 import { request as tnsRequest } from 'tns-core-modules/http';
 import { device } from 'tns-core-modules/platform';
-import { name, version } from '../package.json';
+import { name, version } from '../../package.json';
 
 function deviceInformation() {
   const platform = device.os;

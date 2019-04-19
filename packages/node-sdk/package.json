@@ -20,33 +20,24 @@
     "JavaScript",
     "NodeJS"
   ],
-  "main": "lib/publicApi.js",
+  "main": "lib/src/publicApi.js",
   "scripts": {
     "prebuild": "del lib",
-    "build": "tsc",
-    "postbuild": "node scripts/postbuild.js"
+    "build": "tsc -p tsconfig.json"
   },
   "dependencies": {
-    "kinvey-js-sdk": "^3.13.0-next.27",
-    "tslib": "~1.9.3"
-  },
-  "peerDependencies": {
-    "axios": "~0.18.0",
-    "events": "~3.0.0",
-    "lodash": "~4.17.11",
-    "pubnub": "~4.23.0"
+    "axios": "0.18.0",
+    "events": "3.0.0",
+    "kinvey-js-sdk": "3.13.0-next.27",
+    "lodash": "4.17.11",
+    "pubnub": "4.23.0",
+    "tslib": "1.9.3"
   },
   "devDependencies": {
     "@types/events": "~3.0.0",
     "@types/lodash": "~4.14.123",
-    "@types/node": "~11.11.6",
-    "axios": "~0.18.0",
     "del-cli": "~1.1.0",
-    "events": "~3.0.0",
-    "fs-extra": "~7.0.1",
-    "lodash": "~4.17.11",
-    "pubnub": "~4.23.0",
-    "typescript": "~3.3.3"
+    "typescript": "~3.4.4"
   },
   "files": [
     "/lib"

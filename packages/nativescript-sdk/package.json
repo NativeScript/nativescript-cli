@@ -20,68 +20,47 @@
     "JavaScript",
     "NativeScript"
   ],
-  "main": "lib/publicApi.js",
+  "main": "lib/src/nativescript/index.js",
   "scripts": {
     "prebuild": "del lib",
-    "build": "tsc",
-    "postbuild": "node scripts/postbuild.js",
-    "postinstall": "node nativescript-hook-scripts/postinstall.js",
-    "preuninstall": "node nativescript-hook-scripts/preuninstall.js"
+    "build": "ngc -p tsconfig.json",
+    "postinstall": "node scripts/postinstall.js",
+    "preuninstall": "node scripts/preuninstall.js"
   },
   "dependencies": {
-    "kinvey-js-sdk": "^3.13.0-next.27",
-    "nativescript-hook": "~0.2.5",
-    "tslib": "~1.9.3"
-  },
-  "peerDependencies": {
-    "events": "~3.0.0",
-    "nativescript-plugin-firebase": "~8.1.1",
-    "nativescript-secure-storage": "~2.4.0",
-    "nativescript-sqlite": "~2.3.3",
-    "nativescript-urlhandler": "~1.2.3",
-    "pubnub": "git+https://github.com/thomasconner/javascript.git#develop",
-    "tns-core-modules": "~5.2.2"
+    "events": "3.0.0",
+    "kinvey-js-sdk": "3.13.0-next.27",
+    "nativescript-hook": "0.2.5",
+    "nativescript-secure-storage": "2.4.0",
+    "nativescript-sqlite": "2.3.3",
+    "nativescript-urlhandler": "1.2.3",
+    "pubnub": "git+https://github.com/thomasconner/javascript.git#develop"
   },
   "devDependencies": {
-    "@types/events": "~3.0.0",
-    "@types/node": "~11.11.6",
+    "@angular/compiler": "~7.2.13",
+    "@angular/compiler-cli": "~7.2.13",
+    "@angular/core": "~7.2.13",
     "del-cli": "~1.1.0",
-    "events": "~3.0.0",
-    "js-base64": "~2.5.1",
-    "lodash": "~4.17.11",
-    "loglevel": "~1.6.1",
-    "loglevel-plugin-prefix": "~0.8.4",
-    "nativescript-plugin-firebase": "~8.1.1",
-    "nativescript-secure-storage": "~2.4.0",
-    "nativescript-sqlite": "~2.3.3",
-    "nativescript-urlhandler": "~1.2.3",
-    "p-queue": "~4.0.0",
-    "pubnub": "git+https://github.com/thomasconner/javascript.git#develop",
-    "rxjs": "~6.4.0",
-    "sift": "~7.0.1",
-    "tns-core-modules": "~5.2.2",
-    "tns-platform-declarations": "~5.3.0",
-    "tslint": "~5.14.0",
-    "typescript": "~3.3.3",
-    "url": "~0.11.0",
-    "url-join": "~4.0.0"
+    "tns-core-modules": "~5.3.1",
+    "tns-platform-declarations": "~5.3.1",
+    "typescript": "~3.2.0"
   },
   "files": [
     "lib/",
-    "nativescript-hook-scripts/",
     "platforms/",
-    "push.js"
+    "scripts/",
+    "angular.js"
   ],
   "nativescript": {
     "hooks": [
       {
         "type": "before-checkForChanges",
-        "script": "nativescript-hook-scripts/before-checkForChanges.js",
+        "script": "scripts/before-checkForChanges.js",
         "inject": true
       },
       {
         "type": "before-preview-sync",
-        "script": "nativescript-hook-scripts/before-preview-sync.js",
+        "script": "scripts/before-preview-sync.js",
         "inject": true
       }
     ],

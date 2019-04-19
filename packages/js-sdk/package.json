@@ -22,22 +22,20 @@
   "main": "lib/publicApi.js",
   "scripts": {
     "prebuild": "del lib",
-    "build": "tsc"
+    "build": "tsc -p tsconfig.json"
   },
   "dependencies": {
-    "tslib": "~1.9.3"
-  },
-  "peerDependencies": {
-    "events": "~3.0.0",
-    "js-base64": "~2.5.1",
-    "lodash": "~4.17.11",
-    "loglevel": "~1.6.1",
-    "loglevel-plugin-prefix": "~0.8.4",
-    "p-queue": "~4.0.0",
-    "rxjs": "~6.4.0",
-    "sift": "~7.0.1",
-    "url": "~0.11.0",
-    "url-join": "~4.0.0"
+    "events": "3.0.0",
+    "js-base64": "2.5.1",
+    "lodash": "4.17.11",
+    "loglevel": "1.6.1",
+    "loglevel-plugin-prefix": "0.8.4",
+    "p-queue": "5.0.0",
+    "rxjs": "6.4.0",
+    "sift": "7.0.1",
+    "tslib": "1.9.3",
+    "url": "0.11.0",
+    "url-join": "4.0.0"
   },
   "devDependencies": {
     "@types/events": "~3.0.0",
@@ -47,18 +45,7 @@
     "@types/node": "~11.11.6",
     "@types/url-join": "~4.0.0",
     "del-cli": "~1.1.0",
-    "events": "~3.0.0",
-    "fs-extra": "~7.0.1",
-    "js-base64": "~2.5.1",
-    "lodash": "~4.17.11",
-    "loglevel": "~1.6.1",
-    "loglevel-plugin-prefix": "~0.8.4",
-    "p-queue": "~4.0.0",
-    "rxjs": "~6.4.0",
-    "sift": "~7.0.1",
-    "typescript": "~3.3.3",
-    "url": "~0.11.0",
-    "url-join": "~4.0.0"
+    "typescript": "~3.3.3"
   },
   "files": [
     "/lib"

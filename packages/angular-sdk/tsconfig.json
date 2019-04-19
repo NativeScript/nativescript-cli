@@ -17,6 +17,8 @@
       "es6",
       "es2015.iterable"
     ],
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
     "outDir": "lib"
   },
   "angularCompilerOptions": {
@@ -24,5 +26,8 @@
     "skipMetadataEmit": false,
     "skipTemplateCodegen": true,
     "strictMetadataEmit": true
-  }
+  },
+  "exclude": [
+    "node_modules"
+  ]
 }

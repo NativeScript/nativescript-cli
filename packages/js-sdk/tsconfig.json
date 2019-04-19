@@ -2,33 +2,25 @@
   "compilerOptions": {
     "target": "es5",
     "module": "commonjs",
-    "declaration": true,
-    "removeComments": true,
-    "noLib": false,
+    "moduleResolution": "node",
+    "sourceMap": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-    "skipLibCheck": true,
-    "lib": [
-      "es6",
-      "dom"
-    ],
-    "sourceMap": true,
-    "pretty": true,
-    "allowUnreachableCode": false,
-    "allowUnusedLabels": false,
-    "allowSyntheticDefaultImports": true,
+    "noImplicitUseStrict": true,
     "noEmitHelpers": true,
-    "noEmitOnError": false,
+    "declaration": true,
+    "removeComments": false,
+    "noEmitOnError": true,
     "noImplicitAny": false,
-    "noImplicitReturns": true,
-    "noImplicitUseStrict": false,
-    "noFallthroughCasesInSwitch": true,
-    "outDir": "lib",
-    "importHelpers": true,
-    "esModuleInterop": true
+    "lib": [
+      "dom",
+      "es6",
+      "es2015.iterable"
+    ],
+    "allowSyntheticDefaultImports": true,
+    "outDir": "lib"
   },
   "exclude": [
     "node_modules"
-  ],
-  "compileOnSave": false
+  ]
 }

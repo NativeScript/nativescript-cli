@@ -1,5 +1,5 @@
 import { Injectable, Inject } from '@angular/core';
-import { init, Files, Query } from 'kinvey-nativescript-sdk';
+import { init, Files, Query } from '../nativescript';
 import { KinveyConfigToken } from './utils';
 
 @Injectable({

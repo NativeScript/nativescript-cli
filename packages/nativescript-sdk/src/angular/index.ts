@@ -10,7 +10,7 @@ import {
   Kmd,
   Query,
   AuthorizationGrant
-} from 'kinvey-nativescript-sdk';
+} from '../nativescript';
 import { DataStoreService } from './datastore.service';
 import { EndpointService } from './endpoint.service';
 import { FilesService } from './files.service';

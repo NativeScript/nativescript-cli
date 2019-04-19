@@ -1,9 +1,9 @@
 {
-  "name": "kinvey-angular-sdk",
-  "description": "Kinvey JavaScript SDK for Angular applications.",
+  "name": "kinvey-nativescript-push",
+  "description": "Push plugin for Kinvey NativeScript applications.",
   "version": "3.13.0-next.27",
   "license": "Apache-2.0",
-  "homepage": "https://github.com/Kinvey/js-sdk/tree/master/packages/angular-sdk",
+  "homepage": "https://github.com/Kinvey/js-sdk/tree/master/packages/nativescript-push",
   "repository": {
     "type": "git",
     "url": "https://github.com/Kinvey/js-sdk.git"
@@ -18,25 +18,38 @@
   "keywords": [
     "Kinvey",
     "JavaScript",
-    "Angular"
+    "NativeScript"
   ],
-  "main": "lib/publicApi.js",
+  "main": "lib/src/nativescript/index.js",
   "scripts": {
     "prebuild": "del lib",
     "build": "ngc -p tsconfig.json"
   },
   "dependencies": {
-    "kinvey-html5-sdk": "3.13.0-next.27",
-    "tslib": "1.9.3"
+    "kinvey-js-sdk": "3.13.0-next.27",
+    "nativescript-plugin-firebase": "8.2.0"
   },
   "peerDependencies": {
-    "@angular/core": "~7.2.0"
+    "kinvey-nativescript-sdk": "~3.13.0-next.27"
   },
   "devDependencies": {
     "@angular/compiler": "~7.2.13",
     "@angular/compiler-cli": "~7.2.13",
     "@angular/core": "~7.2.13",
     "del-cli": "~1.1.0",
+    "kinvey-nativescript-sdk": "~3.13.0-next.27",
+    "tns-core-modules": "~5.3.1",
     "typescript": "~3.2.0"
+  },
+  "files": [
+    "lib/",
+    "platforms/",
+    "angular.js"
+  ],
+  "nativescript": {
+    "platforms": {
+      "android": "5.2.0",
+      "ios": "5.2.0"
+    }
   }
 }
