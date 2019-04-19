@@ -54,7 +54,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		private $sysInfo: ISysInfo,
 		private $xcconfigService: IXcconfigService,
 		private $iOSExtensionsService: IIOSExtensionsService,
-		private $iOSWatchAppService: IIOSExtensionsService) {
+		private $iOSWatchAppService: IIOSWatchAppService) {
 		super($fs, $projectDataService);
 	}
 
@@ -785,9 +785,9 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 
 			this.savePbxProj(project, projectData);
 		}
-		
+
 		const platformData = this.getPlatformData(projectData);
-		const resourlcesDirectoryPath = projectData.getAppResourcesDirectoryPath();
+		const resourcesDirectoryPath = projectData.getAppResourcesDirectoryPath();
 		const pbxProjPath = this.getPbxProjPath(projectData);
 		const resourcesNativeCodePath = path.join(
 			projectData.getAppResourcesDirectoryPath(),
@@ -795,7 +795,8 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 			constants.NATIVE_SOURCE_FOLDER
 		);
 		await this.prepareNativeSourceCode(constants.TNS_NATIVE_SOURCE_GROUP_NAME, resourcesNativeCodePath, projectData);
-		await this.$iOSWatchAppService.addExtensionsFromPath({ extensionsFolderPath: path.join(resourlcesDirectoryPath, platformData.normalizedPlatformName), projectData, platformData, pbxProjPath });
+		this.$iOSWatchAppService.removeWatchApp({ pbxProjPath });
+		await this.$iOSWatchAppService.addWatchAppFromPath({ watchAppFolderPath: path.join(resourcesDirectoryPath, platformData.normalizedPlatformName), projectData, platformData, pbxProjPath });
 
 	}
 
@@ -809,6 +810,8 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		// src folder should not be copied as the pbxproject will have references to its files
 		this.$fs.deleteDirectory(path.join(appResourcesDirectoryPath, this.getPlatformData(projectData).normalizedPlatformName, constants.NATIVE_SOURCE_FOLDER));
 		this.$fs.deleteDirectory(path.join(appResourcesDirectoryPath, this.getPlatformData(projectData).normalizedPlatformName, constants.NATIVE_EXTENSION_FOLDER));
+		this.$fs.deleteDirectory(path.join(appResourcesDirectoryPath, this.getPlatformData(projectData).normalizedPlatformName, "watchapp"));
+		this.$fs.deleteDirectory(path.join(appResourcesDirectoryPath, this.getPlatformData(projectData).normalizedPlatformName, "watchextension"));
 
 		this.$fs.deleteDirectory(this.getAppResourcesDestinationDirectoryPath(projectData));
 	}
