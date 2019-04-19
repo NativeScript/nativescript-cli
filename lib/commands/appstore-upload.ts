@@ -109,7 +109,7 @@ export class PublishIOS implements ICommand {
 			username,
 			password,
 			ipaFilePath,
-			ipaFileOption: !!this.$options.ipa,
+			shouldExtractIpa: !!this.$options.ipa,
 			verboseLogging: this.$logger.getLevel() === "TRACE"
 		});
 	}

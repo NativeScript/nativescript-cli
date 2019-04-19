@@ -37,19 +37,12 @@ export class ListiOSApps implements ICommand {
 			this.$logger.out("Seems you don't have any applications yet.");
 		} else {
 			const table: any = createTable(["Application Name", "Bundle Identifier", "In Flight Version"], applications.map(application => {
-				return [application.name, application.bundleId, this.getVersion(application)];
+				const version = (application && application.versionSets && application.versionSets.length && application.versionSets[0].inFlightVersion &&  application.versionSets[0].inFlightVersion.version) || "";
+				return [application.name, application.bundleId, version];
 			}));
 
 			this.$logger.out(table.toString());
 		}
-	}
-
-	private getVersion(application: IApplePortalApplicationSummary): string {
-		if (application && application.versionSets && application.versionSets.length && application.versionSets[0].inFlightVersion) {
-			return application.versionSets[0].inFlightVersion.version;
-		}
-
-		return "";
 	}
 }
 

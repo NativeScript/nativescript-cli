@@ -44,9 +44,9 @@ export class ITMSTransporterService implements IITMSTransporterService {
 	}
 
 	private async getBundleIdentifier(data: IITMSData): Promise<string> {
-		const { ipaFileOption, ipaFilePath } = data;
+		const { shouldExtractIpa, ipaFilePath } = data;
 
-		if (ipaFileOption) {
+		if (shouldExtractIpa) {
 			if (!this.$fs.exists(ipaFilePath) || path.extname(ipaFilePath) !== ".ipa") {
 				this.$errors.failWithoutHelp(`Cannot use specified ipa file ${ipaFilePath}. File either does not exist or is not an ipa file.`);
 			}

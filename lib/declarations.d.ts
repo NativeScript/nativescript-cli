@@ -624,9 +624,9 @@ interface IITMSData extends ICredentials {
 	ipaFilePath: string;
 
 	/**
-	 * Specified if the ipa options is provided
+	 * Specify if the service should extract the `.ipa` file into `temp` directory in order to get bundleIdentifier from info.plist
 	 */
-	ipaFileOption: boolean;
+	shouldExtractIpa: boolean;
 	/**
 	 * Specifies whether the logging level of the itmstransporter command-line tool should be set to verbose.
 	 * @type {string}
