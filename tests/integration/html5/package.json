@@ -8,25 +8,14 @@
     "test": "karma start karma.conf.js"
   },
   "dependencies": {
-    "axios": "~0.18.0",
-    "events": "~3.0.0",
-    "js-base64": "~2.5.1",
-    "kinvey-html5-sdk": "~3.13.0-next.27",
-    "lodash": "~4.17.11",
-    "loglevel": "~1.6.1",
-    "loglevel-plugin-prefix": "~0.8.4",
-    "p-queue": "~4.0.0",
-    "pubnub": "~4.23.0",
-    "rxjs": "~6.4.0",
-    "sift": "~7.0.1",
-    "url": "~0.11.0",
-    "url-join": "~4.0.0"
+    "kinvey-html5-sdk": "~3.13.0-next.27"
   },
   "devDependencies": {
     "@babel/core": "~7.4.3",
     "@babel/plugin-transform-runtime": "~7.4.3",
     "@babel/preset-env": "~7.4.3",
     "@babel/runtime": "~7.4.3",
+    "axios": "~0.18.0",
     "babel-plugin-transform-inline-environment-variables": "~0.4.3",
     "chai": "~4.2.0",
     "core-js": "^3.0.1",

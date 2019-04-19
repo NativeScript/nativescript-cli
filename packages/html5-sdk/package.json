@@ -20,10 +20,11 @@
     "JavaScript",
     "HTML5"
   ],
-  "main": "lib/src/publicApi.js",
+  "main": "lib/index.js",
   "scripts": {
     "prebuild": "del lib",
     "build": "tsc -p tsconfig.json",
+    "postbuild": "node scripts/postbuild.js",
     "prebundle": "npm run build",
     "bundle": "webpack"
   },
@@ -43,6 +44,6 @@
     "webpack-cli": "^3.3.0"
   },
   "files": [
-    "/lib"
+    "lib/**/*"
   ]
 }

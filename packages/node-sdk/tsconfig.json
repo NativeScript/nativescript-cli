@@ -17,8 +17,9 @@
       "es6",
       "es2015.iterable"
     ],
-    "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
     "outDir": "lib"
   },
   "exclude": [

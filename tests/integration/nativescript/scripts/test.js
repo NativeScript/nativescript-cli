@@ -1,7 +1,8 @@
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '../.env') });
 const chalk = require('chalk');
 const ora = require('ora');
 const isArray = require('lodash/isArray');
-const path = require('path');
 const spawn = require('cross-spawn');
 const del = require('del');
 const fs = require('fs-extra');
@@ -9,7 +10,7 @@ const glob = require('glob');
 const webpack = require('webpack');
 const babel = require('@babel/core');
 const pkg = require('../package.json');
-require('dotenv').config({ path: path.join(__dirname, '../.env') });
+const webpackConfig = require('../webpack.config');
 
 const appName = 'TestApp';
 const rootPath = path.join(__dirname, '..');
@@ -112,40 +113,7 @@ build(testFiles)
   });
 
 // Bundle test files
-webpack({
-  mode: 'development',
-  entry: glob.sync(path.resolve(tmpPath, '**/*.spec.js')).reduce((entries, testFile) => {
-    const basename = path.basename(testFile);
-    entries[basename] = testFile;
-    return entries;
-  }, {}),
-  output: {
-    path: appTestsPath,
-    filename: '[name].js',
-    libraryTarget: 'umd'
-  },
-  externals: [
-    'events',
-    'js-base64',
-    'kinvey-js-sdk',
-    'kinvey-nativescript-sdk',
-    /^lodash/,
-    'loglevel',
-    'loglevel-plugin-prefix',
-    'nativescript-secure-storage',
-    'nativescript-sqlite',
-    'nativescript-urlhandler',
-    'p-queue',
-    'pubnub',
-    'rxjs',
-    'sift',
-    /^tns-core-modules/,
-    'tslib',
-    'url',
-    'url-join'
-  ],
-  target: 'node'
-}, (err, stats) => {
+webpack(webpackConfig, (err, stats) => {
   if (err) {
     console.log(chalk.red(err.stack || err));
     if (err.details) {

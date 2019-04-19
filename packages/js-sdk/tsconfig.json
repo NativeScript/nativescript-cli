@@ -17,6 +17,7 @@
       "es6",
       "es2015.iterable"
     ],
+    "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "outDir": "lib"
   },

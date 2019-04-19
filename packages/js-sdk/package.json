@@ -19,7 +19,7 @@
     "Kinvey",
     "JavaScript"
   ],
-  "main": "lib/publicApi.js",
+  "main": "lib/index.js",
   "scripts": {
     "prebuild": "del lib",
     "build": "tsc -p tsconfig.json"
@@ -48,6 +48,6 @@
     "typescript": "~3.3.3"
   },
   "files": [
-    "/lib"
+    "lib"
   ]
 }

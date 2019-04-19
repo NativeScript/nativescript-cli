@@ -20,12 +20,13 @@
     "JavaScript",
     "NativeScript"
   ],
-  "main": "lib/src/nativescript/index.js",
+  "main": "lib/nativescript/index.js",
   "scripts": {
     "prebuild": "del lib",
     "build": "ngc -p tsconfig.json",
-    "postinstall": "node scripts/postinstall.js",
-    "preuninstall": "node scripts/preuninstall.js"
+    "postbuild": "node scripts/postbuild.js",
+    "postinstall": "node nativescript-hook-scripts/postinstall.js",
+    "preuninstall": "node nativescript-hook-scripts/preuninstall.js"
   },
   "dependencies": {
     "events": "3.0.0",
@@ -36,31 +37,35 @@
     "nativescript-urlhandler": "1.2.3",
     "pubnub": "git+https://github.com/thomasconner/javascript.git#develop"
   },
+  "peerDependencies": {
+    "@angular/core": "~7.2.0"
+  },
   "devDependencies": {
     "@angular/compiler": "~7.2.13",
     "@angular/compiler-cli": "~7.2.13",
     "@angular/core": "~7.2.13",
     "del-cli": "~1.1.0",
+    "fs-extra": "~7.0.1",
     "tns-core-modules": "~5.3.1",
     "tns-platform-declarations": "~5.3.1",
     "typescript": "~3.2.0"
   },
   "files": [
-    "lib/",
-    "platforms/",
-    "scripts/",
+    "lib",
+    "nativescript-hook-scripts",
+    "platforms",
     "angular.js"
   ],
   "nativescript": {
     "hooks": [
       {
         "type": "before-checkForChanges",
-        "script": "scripts/before-checkForChanges.js",
+        "script": "nativescript-hook-scripts/before-checkForChanges.js",
         "inject": true
       },
       {
         "type": "before-preview-sync",
-        "script": "scripts/before-preview-sync.js",
+        "script": "nativescript-hook-scripts/before-preview-sync.js",
         "inject": true
       }
     ],

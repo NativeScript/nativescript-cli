@@ -20,7 +20,7 @@
     "JavaScript",
     "NativeScript"
   ],
-  "main": "lib/src/nativescript/index.js",
+  "main": "lib/nativescript/index.js",
   "scripts": {
     "prebuild": "del lib",
     "build": "ngc -p tsconfig.json"
@@ -42,8 +42,8 @@
     "typescript": "~3.2.0"
   },
   "files": [
-    "lib/",
-    "platforms/",
+    "lib/**/*",
+    "platforms/**/*",
     "angular.js"
   ],
   "nativescript": {

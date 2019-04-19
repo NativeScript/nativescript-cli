@@ -17,16 +17,16 @@
       "es6",
       "es2015.iterable"
     ],
-    "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
-    "outDir": "lib"
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "outDir": "./lib"
   },
   "angularCompilerOptions": {
     "genDir": ".",
     "skipMetadataEmit": false,
     "skipTemplateCodegen": true,
-    "strictMetadataEmit": true,
-    "fullTemplateTypeCheck": true
+    "strictMetadataEmit": true
   },
   "exclude": [
     "node_modules",

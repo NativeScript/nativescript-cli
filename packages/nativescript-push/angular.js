@@ -1,1 +1,1 @@
-module.exports = require('./lib/src/angular');
+module.exports = require('./lib/angular');

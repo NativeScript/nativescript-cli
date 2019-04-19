@@ -20,10 +20,11 @@
     "JavaScript",
     "NodeJS"
   ],
-  "main": "lib/src/publicApi.js",
+  "main": "lib/index.js",
   "scripts": {
     "prebuild": "del lib",
-    "build": "tsc -p tsconfig.json"
+    "build": "tsc -p tsconfig.json",
+    "postbuild": "node scripts/postbuild.js"
   },
   "dependencies": {
     "axios": "0.18.0",
@@ -37,9 +38,10 @@
     "@types/events": "~3.0.0",
     "@types/lodash": "~4.14.123",
     "del-cli": "~1.1.0",
+    "fs-extra": "~7.0.1",
     "typescript": "~3.4.4"
   },
   "files": [
-    "/lib"
+    "lib/**/*"
   ]
 }

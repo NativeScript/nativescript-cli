@@ -20,7 +20,7 @@
     "JavaScript",
     "Angular"
   ],
-  "main": "lib/publicApi.js",
+  "main": "lib/index.js",
   "scripts": {
     "prebuild": "del lib",
     "build": "ngc -p tsconfig.json"
@@ -37,6 +37,10 @@
     "@angular/compiler-cli": "~7.2.13",
     "@angular/core": "~7.2.13",
     "del-cli": "~1.1.0",
+    "fs-extra": "~7.0.1",
     "typescript": "~3.2.0"
-  }
+  },
+  "files": [
+    "lib/**/*"
+  ]
 }

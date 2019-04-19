@@ -17,8 +17,8 @@
       "es6",
       "es2015.iterable"
     ],
+    "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-    "resolveJsonModule": true,
     "outDir": "lib"
   },
   "angularCompilerOptions": {
