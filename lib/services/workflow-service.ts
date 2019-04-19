@@ -68,7 +68,7 @@ export class WorkflowService implements IWorkflowService {
 		const validWebpackPluginTags = ["*", "latest", "next", "rc"];
 
 		let isInstalledVersionSupported = true;
-		const installedVersion = this.$bundleValidatorHelper.getBundlerDependencyVersion(webpackPluginName);
+		const installedVersion = this.$bundleValidatorHelper.getBundlerDependencyVersion(projectData, webpackPluginName);
 		this.$logger.trace(`Updating to webpack workflow: Found ${webpackPluginName} v${installedVersion}`);
 		if (validWebpackPluginTags.indexOf(installedVersion) === -1) {
 			const isInstalledVersionValid = !!semver.valid(installedVersion) || !!semver.coerce(installedVersion);

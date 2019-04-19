@@ -916,6 +916,12 @@ export class PerformanceService implements IPerformanceService {
 	processExecutionData() { }
 }
 
+export class WorkflowServiceStub implements IWorkflowService {
+	handleLegacyWorkflow(projectDir: string, settings: IWebpackWorkflowSettings, skipWarnings?: boolean, force?: boolean): Promise<void> {
+		return;
+	}
+}
+
 export class InjectorStub extends Yok implements IInjector {
 	constructor() {
 		super();
@@ -954,5 +960,6 @@ export class InjectorStub extends Yok implements IInjector {
 			getDevice: (): Mobile.IDevice => undefined,
 			getDeviceByIdentifier: (): Mobile.IDevice => undefined
 		});
+		this.register("workflowService", WorkflowServiceStub);
 	}
 }

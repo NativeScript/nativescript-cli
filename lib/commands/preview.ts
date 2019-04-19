@@ -46,7 +46,7 @@ export class PreviewCommand implements ICommand {
 		}
 
 		await this.$networkConnectivityValidator.validate();
-		this.$bundleValidatorHelper.validate(PreviewCommand.MIN_SUPPORTED_WEBPACK_VERSION);
+		this.$bundleValidatorHelper.validate(this.$projectData, PreviewCommand.MIN_SUPPORTED_WEBPACK_VERSION);
 		return true;
 	}
 }

@@ -69,7 +69,7 @@ export class DebugPlatformCommand extends ValidatePlatformCommandBase implements
 		}
 
 		const minSupportedWebpackVersion = this.$options.hmr ? LiveSyncCommandHelper.MIN_SUPPORTED_WEBPACK_VERSION_WITH_HMR : null;
-		this.$bundleValidatorHelper.validate(minSupportedWebpackVersion);
+		this.$bundleValidatorHelper.validate(this.$projectData, minSupportedWebpackVersion);
 
 		const result = await super.canExecuteCommandBase(this.platform, { validateOptions: true, notConfiguredEnvOptions: { hideCloudBuildOption: true, hideSyncToPreviewAppOption: true } });
 		return result;

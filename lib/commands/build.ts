@@ -65,7 +65,7 @@ export abstract class BuildCommandBase extends ValidatePlatformCommandBase {
 			this.$errors.fail(`Applications for platform ${platform} can not be built on this OS`);
 		}
 
-		this.$bundleValidatorHelper.validate();
+		this.$bundleValidatorHelper.validate(this.$projectData);
 	}
 
 	protected async validateArgs(args: string[], platform: string): Promise<ICanExecuteCommandOutput> {

@@ -19,7 +19,7 @@ interface IProjectFileData {
 }
 
 export class ProjectDataService implements IProjectDataService {
-	private defaultProjectDir = "";
+	private defaultProjectDir: string;
 	private static DEPENDENCIES_KEY_NAME = "dependencies";
 	private projectDataCache: IDictionary<IProjectData> = {};
 
@@ -28,12 +28,16 @@ export class ProjectDataService implements IProjectDataService {
 		private $logger: ILogger,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $androidResourcesMigrationService: IAndroidResourcesMigrationService,
-		private $injector: IInjector,
-		$projectData: IProjectData) {
-		// add the ProjectData of the default projectDir to the projectData cache
-		$projectData.initializeProjectData();
-		this.defaultProjectDir = $projectData.projectDir;
-		this.projectDataCache[this.defaultProjectDir] = $projectData;
+		private $injector: IInjector) {
+		try {
+			// add the ProjectData of the default projectDir to the projectData cache
+			const projectData = this.$injector.resolve("projectData");
+			projectData.initializeProjectData();
+			this.defaultProjectDir = projectData.projectDir;
+			this.projectDataCache[this.defaultProjectDir] = projectData;
+		} catch (e) {
+			// the CLI is required as a lib from a non-project folder
+		}
 	}
 
 	public getNSValue(projectDir: string, propertyName: string): any {

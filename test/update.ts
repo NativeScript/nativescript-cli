@@ -25,6 +25,7 @@ function createTestInjector(
 ): IInjector {
 	const testInjector: IInjector = new yok.Yok();
 	testInjector.register("logger", stubs.LoggerStub);
+	testInjector.register("workflowService", stubs.WorkflowServiceStub);
 	testInjector.register("options", Options);
 	testInjector.register('fs', stubs.FileSystemStub);
 	testInjector.register("analyticsService", {
@@ -49,10 +50,10 @@ function createTestInjector(
 	});
 	testInjector.register("pluginVariablesService", {});
 	testInjector.register("platformService", {
-		getInstalledPlatforms: function(): string[] {
+		getInstalledPlatforms: function (): string[] {
 			return installedPlatforms;
 		},
-		getAvailablePlatforms: function(): string[] {
+		getAvailablePlatforms: function (): string[] {
 			return availablePlatforms;
 		},
 		removePlatforms: async (): Promise<void> => undefined,
@@ -66,9 +67,9 @@ function createTestInjector(
 		getPlatformData: () => {
 			return {
 				platformProjectService: {
-						validate
-					}
-				};
+					validate
+				}
+			};
 		}
 	});
 	testInjector.register("settingsService", SettingsService);
@@ -161,7 +162,7 @@ describe("update command method tests", () => {
 			const fs = testInjector.resolve("fs");
 			const copyFileStub = sandbox.stub(fs, "copyFile");
 			const updateCommand = testInjector.resolve<UpdateCommand>(UpdateCommand);
-			return updateCommand.execute(["3.3.0"]).then( () => {
+			return updateCommand.execute(["3.3.0"]).then(() => {
 				assert.isTrue(copyFileStub.calledWith(path.join(projectFolder, "package.json")));
 				for (const folder of UpdateCommand.folders) {
 					assert.isTrue(copyFileStub.calledWith(path.join(projectFolder, folder)));

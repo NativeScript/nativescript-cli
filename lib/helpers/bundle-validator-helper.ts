@@ -7,16 +7,14 @@ export class BundleValidatorHelper extends VersionValidatorHelper implements IBu
 		webpack: "nativescript-dev-webpack"
 	};
 
-	constructor(protected $projectData: IProjectData,
-		protected $errors: IErrors,
+	constructor(protected $errors: IErrors,
 		protected $options: IOptions) {
 		super();
-		this.$projectData.initializeProjectData();
 	}
 
-	public validate(minSupportedVersion?: string): void {
+	public validate(projectData: IProjectData, minSupportedVersion?: string): void {
 		if (this.$options.bundle) {
-			const currentVersion = this.getBundlerDependencyVersion();
+			const currentVersion = this.getBundlerDependencyVersion(projectData);
 			if (!currentVersion) {
 				this.$errors.failWithoutHelp(BundleValidatorMessages.MissingBundlePlugin);
 			}
@@ -28,11 +26,11 @@ export class BundleValidatorHelper extends VersionValidatorHelper implements IBu
 		}
 	}
 
-	public getBundlerDependencyVersion(bundlerName?: string): string {
+	public getBundlerDependencyVersion(projectData: IProjectData, bundlerName?: string): string {
 		let dependencyVersion = null;
 		const bundlePluginName = bundlerName || this.bundlersMap[this.$options.bundle];
-		const bundlerVersionInDependencies = this.$projectData.dependencies && this.$projectData.dependencies[bundlePluginName];
-		const bundlerVersionInDevDependencies = this.$projectData.devDependencies && this.$projectData.devDependencies[bundlePluginName];
+		const bundlerVersionInDependencies = projectData.dependencies && projectData.dependencies[bundlePluginName];
+		const bundlerVersionInDevDependencies = projectData.devDependencies && projectData.devDependencies[bundlePluginName];
 		dependencyVersion = bundlerVersionInDependencies || bundlerVersionInDevDependencies;
 
 		return dependencyVersion;

@@ -940,13 +940,13 @@ interface IBundleValidatorHelper {
 	 * @param {string} minSupportedVersion the minimum supported version of nativescript-dev-webpack
 	 * @return {void}
 	 */
-	validate(minSupportedVersion?: string): void;
+	validate(projectData: IProjectData, minSupportedVersion?: string): void;
 
 	/**
 	 * Returns the installed bundler version.
 	 * @return {string}
 	 */
-	getBundlerDependencyVersion(bundlerName?: string): string;
+	getBundlerDependencyVersion(projectData: IProjectData, bundlerName?: string): string;
 }
 
 
