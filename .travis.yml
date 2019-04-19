@@ -3,6 +3,7 @@ branches:
     - master
     - release
     - release-patch
+    - feature/webpack-only
 env:
   global:
   - DATE=$(date +%Y-%m-%d)
