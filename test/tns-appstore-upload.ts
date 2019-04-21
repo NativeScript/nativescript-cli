@@ -18,6 +18,7 @@ class AppStore {
 	platformService: any;
 	iOSPlatformData: any;
 	iOSProjectService: any;
+	xcodebuildService: IXcodebuildService;
 	loggerService: LoggerStub;
 	itmsTransporterService: any;
 
@@ -27,16 +28,11 @@ class AppStore {
 	archiveCalls: number = 0;
 	expectedArchiveCalls: number = 0;
 	exportArchiveCalls: number = 0;
-	expectedExportArchiveCalls: number = 0;
 	itmsTransporterServiceUploadCalls: number = 0;
 	expectedItmsTransporterServiceUploadCalls: number = 0;
 
 	before() {
 		this.iOSPlatformData = {
-			"platformProjectService": this.iOSProjectService = {
-				archive() { console.log("Archive!"); },
-				exportArchive() { console.log("Export Archive!"); }
-			},
 			"projectRoot": "/Users/person/git/MyProject"
 		};
 		this.initInjector({
@@ -62,6 +58,17 @@ class AppStore {
 						chai.assert.equal(platform, "iOS");
 						return this.iOSPlatformData;
 					}
+				},
+				"xcodebuildService": this.xcodebuildService = {
+					buildForDevice: async () => {
+						this.archiveCalls++;
+						return "/Users/person/git/MyProject/platforms/ios/archive/MyProject.ipa";
+					},
+					buildForSimulator: async () => ({}),
+					buildForAppStore: async () => {
+						this.archiveCalls++;
+						return "/Users/person/git/MyProject/platforms/ios/archive/MyProject.ipa";
+					}
 				}
 			}
 		});
@@ -85,7 +92,6 @@ class AppStore {
 		this.prompter.assert();
 		chai.assert.equal(this.preparePlatformCalls, this.expectedPreparePlatformCalls, "Mismatched number of $platformService.preparePlatform calls.");
 		chai.assert.equal(this.archiveCalls, this.expectedArchiveCalls, "Mismatched number of iOSProjectService.archive calls.");
-		chai.assert.equal(this.exportArchiveCalls, this.expectedExportArchiveCalls, "Mismatched number of iOSProjectService.exportArchive calls.");
 		chai.assert.equal(this.itmsTransporterServiceUploadCalls, this.expectedItmsTransporterServiceUploadCalls, "Mismatched number of itmsTransporterService.upload calls.");
 	}
 
@@ -107,24 +113,10 @@ class AppStore {
 
 	expectArchive() {
 		this.expectedArchiveCalls = 1;
-		this.iOSProjectService.archive = (projectData: IProjectData) => {
+		this.xcodebuildService.buildForDevice = (platformData: any, projectData: IProjectData) => {
 			this.archiveCalls++;
 			chai.assert.equal(projectData.projectDir, "/Users/person/git/MyProject");
 			return Promise.resolve("/Users/person/git/MyProject/platforms/ios/archive/MyProject.xcarchive");
-		};
-	}
-
-	expectExportArchive(expectedOptions?: { teamID?: string }) {
-		this.expectedExportArchiveCalls = 1;
-		this.iOSProjectService.exportArchive = (projectData: IProjectData, options?: { teamID?: string, archivePath?: string }) => {
-			this.exportArchiveCalls++;
-			chai.assert.equal(options.archivePath, "/Users/person/git/MyProject/platforms/ios/archive/MyProject.xcarchive", "Expected xcarchive path to be the one that we just archived.");
-			if (expectedOptions && expectedOptions.teamID) {
-				chai.assert.equal(options.teamID, expectedOptions.teamID, "Expected --team-id to be passed as teamID to the exportArchive");
-			} else {
-				chai.assert.isUndefined(options.teamID, "Expected teamID in exportArchive to be undefined");
-			}
-			return Promise.resolve("/Users/person/git/MyProject/platforms/ios/archive/MyProject.ipa");
 		};
 	}
 
@@ -144,7 +136,6 @@ class AppStore {
 		this.expectItunesPrompt();
 		this.expectPreparePlatform();
 		this.expectArchive();
-		this.expectExportArchive();
 		this.expectITMSTransporterUpload();
 
 		await this.command.execute([]);
@@ -155,7 +146,6 @@ class AppStore {
 	async itunesconnectArgs() {
 		this.expectPreparePlatform();
 		this.expectArchive();
-		this.expectExportArchive();
 		this.expectITMSTransporterUpload();
 
 		await this.command.execute([AppStore.itunesconnect.user, AppStore.itunesconnect.pass]);
@@ -167,7 +157,6 @@ class AppStore {
 		this.expectItunesPrompt();
 		this.expectPreparePlatform();
 		this.expectArchive();
-		this.expectExportArchive({ teamID: "MyTeamID" });
 		this.expectITMSTransporterUpload();
 
 		this.options.teamId = "MyTeamID";
