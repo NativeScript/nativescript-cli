@@ -110,6 +110,9 @@ class ItunesConnectApplicationTypesClass implements IiTunesConnectApplicationTyp
 	public Mac = "Mac OS X App";
 }
 
+export const iOSAppResourcesFolderName = "iOS";
+export const androidAppResourcesFolderName = "Android";
+
 export const ItunesConnectApplicationTypes = new ItunesConnectApplicationTypesClass();
 export const VUE_NAME = "vue";
 export const ANGULAR_NAME = "angular";

@@ -1,4 +1,4 @@
-import { join, resolve, dirname, basename, extname } from "path";
+import { join, dirname, basename, extname } from "path";
 import { EOL } from "os";
 import * as ChildProcessLib from "../lib/common/child-process";
 import * as ConfigLib from "../lib/config";
@@ -35,6 +35,11 @@ import { ProjectDataStub } from "./stubs";
 import { xcode } from "../lib/node/xcode";
 import temp = require("temp");
 import { CocoaPodsPlatformManager } from "../lib/services/cocoapods-platform-manager";
+import { XcodebuildService } from "../lib/services/ios/xcodebuild-service";
+import { XcodebuildCommandService } from "../lib/services/ios/xcodebuild-command-service";
+import { XcodebuildArgsService } from "../lib/services/ios/xcodebuild-args-service";
+import { ExportOptionsPlistService } from "../lib/services/ios/export-options-plist-service";
+import { IOSSigningService } from "../lib/services/ios/ios-signing-service";
 temp.track();
 
 class IOSSimulatorDiscoveryMock extends DeviceDiscovery {
@@ -105,8 +110,8 @@ function createTestInjector(projectPath: string, projectName: string, xCode?: IX
 				shouldUseXcproj: false
 			};
 		},
-		getXcodeprojPath: (projData: IProjectData, platformData: IPlatformData) => {
-			return join(platformData.projectRoot, projData.projectName + ".xcodeproj");
+		getXcodeprojPath: (projData: IProjectData, projectRoot: string) => {
+			return join(projectRoot, projData.projectName + ".xcodeproj");
 		},
 		checkIfXcodeprojIsRequired: () => ({})
 	});
@@ -155,6 +160,13 @@ function createTestInjector(projectPath: string, projectName: string, xCode?: IX
 		removeExtensions: () => { /* */ },
 		addExtensionsFromPath: () => Promise.resolve()
 	});
+	testInjector.register("timers", {});
+	testInjector.register("iOSSigningService", IOSSigningService);
+	testInjector.register("xcodebuildService", XcodebuildService);
+	testInjector.register("xcodebuildCommandService", XcodebuildCommandService);
+	testInjector.register("xcodebuildArgsService", XcodebuildArgsService);
+	testInjector.register("exportOptionsPlistService", ExportOptionsPlistService);
+
 	return testInjector;
 }
 
@@ -173,178 +185,6 @@ function createPackageJson(testInjector: IInjector, projectPath: string, project
 	};
 	testInjector.resolve("fs").writeJson(join(projectPath, "package.json"), packageJsonData);
 }
-
-function expectOption(args: string[], option: string, value: string, message?: string): void {
-	const index = args.indexOf(option);
-	assert.ok(index >= 0, "Expected " + option + " to be set.");
-	assert.ok(args.length > index + 1, "Expected " + option + " to have value");
-	assert.equal(args[index + 1], value, message);
-}
-
-function readOption(args: string[], option: string): string {
-	const index = args.indexOf(option);
-	assert.ok(index >= 0, "Expected " + option + " to be set.");
-	assert.ok(args.length > index + 1, "Expected " + option + " to have value");
-	return args[index + 1];
-}
-
-describe("iOSProjectService", () => {
-	describe("archive", () => {
-		async function setupArchive(options?: { archivePath?: string }): Promise<{ run: () => Promise<void>, assert: () => void }> {
-			const hasCustomArchivePath = options && options.archivePath;
-
-			const projectName = "projectDirectory";
-			const projectPath = temp.mkdirSync(projectName);
-
-			const testInjector = createTestInjector(projectPath, projectName);
-			const iOSProjectService = <IOSProjectService>testInjector.resolve("iOSProjectService");
-			const projectData: IProjectData = testInjector.resolve("projectData");
-
-			const childProcess = testInjector.resolve("childProcess");
-			let xcodebuildExeced = false;
-
-			let archivePath: string;
-
-			childProcess.spawnFromEvent = (cmd: string, args: string[]) => {
-				assert.equal(cmd, "xcodebuild", "Expected iOSProjectService.archive to call xcodebuild.archive");
-				xcodebuildExeced = true;
-
-				if (hasCustomArchivePath) {
-					archivePath = resolve(options.archivePath);
-				} else {
-					archivePath = join(projectPath, "platforms", "ios", "build", "Release-iphoneos", projectName + ".xcarchive");
-				}
-
-				assert.ok(args.indexOf("archive") >= 0, "Expected xcodebuild to be executed with archive param.");
-
-				expectOption(args, "-archivePath", archivePath, hasCustomArchivePath ? "Wrong path passed to xcarchive" : "exports xcodearchive to platforms/ios/build/archive.");
-				expectOption(args, "-project", join(projectPath, "platforms", "ios", projectName + ".xcodeproj"), "Path to Xcode project is wrong.");
-				expectOption(args, "-scheme", projectName, "The provided scheme is wrong.");
-
-				return Promise.resolve();
-			};
-
-			let resultArchivePath: string;
-
-			return {
-				run: async (): Promise<void> => {
-					if (hasCustomArchivePath) {
-						resultArchivePath = await iOSProjectService.archive(projectData, null, { archivePath: options.archivePath });
-					} else {
-						resultArchivePath = await iOSProjectService.archive(projectData, null);
-					}
-				},
-				assert: () => {
-					assert.ok(xcodebuildExeced, "Expected xcodebuild archive to be executed");
-					assert.equal(resultArchivePath, archivePath, "iOSProjectService.archive expected to return the path to the archive");
-				}
-			};
-		}
-
-		if (require("os").platform() !== "darwin") {
-			console.log("Skipping iOS archive tests. They can work only on macOS");
-		} else {
-			it("by default exports xcodearchive to platforms/ios/build/archive/<projname>.xcarchive", async () => {
-				const setup = await setupArchive();
-				await setup.run();
-				setup.assert();
-			});
-			it("can pass archivePath to xcodebuild -archivePath", async () => {
-				const setup = await setupArchive({ archivePath: "myarchive.xcarchive" });
-				await setup.run();
-				setup.assert();
-			});
-		}
-	});
-
-	describe("exportArchive", () => {
-		const noTeamPlist = `<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-    <key>method</key>
-    <string>app-store</string>
-    <key>uploadBitcode</key>
-    <false/>
-    <key>compileBitcode</key>
-    <false/>
-    <key>uploadSymbols</key>
-    <false/>
-</dict>
-</plist>`;
-
-		const myTeamPlist = `<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-    <key>teamID</key>
-    <string>MyTeam</string>
-    <key>method</key>
-    <string>app-store</string>
-    <key>uploadBitcode</key>
-    <false/>
-    <key>compileBitcode</key>
-    <false/>
-    <key>uploadSymbols</key>
-    <false/>
-</dict>
-</plist>`;
-
-		async function testExportArchive(options: { teamID?: string }, expectedPlistContent: string): Promise<void> {
-			const projectName = "projectDirectory";
-			const projectPath = temp.mkdirSync(projectName);
-
-			const testInjector = createTestInjector(projectPath, projectName);
-			const iOSProjectService = <IOSProjectService>testInjector.resolve("iOSProjectService");
-			const projectData: IProjectData = testInjector.resolve("projectData");
-
-			const archivePath = join(projectPath, "platforms", "ios", "build", "archive", projectName + ".xcarchive");
-
-			const childProcess = testInjector.resolve("childProcess");
-			const fs = <IFileSystem>testInjector.resolve("fs");
-
-			let xcodebuildExeced = false;
-
-			childProcess.spawnFromEvent = (cmd: string, args: string[]) => {
-				assert.equal(cmd, "xcodebuild", "Expected xcodebuild to be called");
-				xcodebuildExeced = true;
-
-				assert.ok(args.indexOf("-exportArchive") >= 0, "Expected -exportArchive to be set on xcodebuild.");
-
-				expectOption(args, "-archivePath", archivePath, "Expected the -archivePath to be passed to xcodebuild.");
-				expectOption(args, "-exportPath", join(projectPath, "platforms", "ios", "build", "archive"), "Expected the -archivePath to be passed to xcodebuild.");
-				const plist = readOption(args, "-exportOptionsPlist");
-
-				assert.ok(plist);
-
-				const plistContent = fs.readText(plist);
-				// There may be better way to equal property lists
-				assert.equal(plistContent, expectedPlistContent, "Mismatch in exportOptionsPlist content");
-
-				return Promise.resolve();
-			};
-
-			const resultIpa = await iOSProjectService.exportArchive(projectData, { archivePath, teamID: options.teamID });
-			const expectedIpa = join(projectPath, "platforms", "ios", "build", "archive", projectName + ".ipa");
-
-			assert.equal(resultIpa, expectedIpa, "Expected IPA at the specified location");
-
-			assert.ok(xcodebuildExeced, "Expected xcodebuild to be executed");
-		}
-
-		if (require("os").platform() !== "darwin") {
-			console.log("Skipping iOS export archive tests. They can work only on macOS");
-		} else {
-			it("calls xcodebuild -exportArchive to produce .IPA", async () => {
-				await testExportArchive({}, noTeamPlist);
-			});
-
-			it("passes the --team-id option down the xcodebuild -exportArchive throug the -exportOptionsPlist", async () => {
-				await testExportArchive({ teamID: "MyTeam" }, myTeamPlist);
-			});
-		}
-	});
-});
 
 describe("Cocoapods support", () => {
 	if (require("os").platform() !== "darwin") {
@@ -1025,91 +865,6 @@ describe("iOS Project Service Signing", () => {
 			assert.isFalse(!!changes.signingChanged);
 		});
 	});
-
-	describe("specifying provision", () => {
-		describe("from Automatic to provision name", () => {
-			beforeEach(() => {
-				files[pbxproj] = "";
-				pbxprojDomXcode.Xcode.open = <any>function (path: string) {
-					return {
-						getSigning(x: string) {
-							return { style: "Automatic", teamID: "AutoTeam" };
-						}
-					};
-				};
-			});
-			it("fails with proper error if the provision can not be found", async () => {
-				try {
-					await iOSProjectService.prepareProject(projectData, { sdk: undefined, provision: "NativeScriptDev2", teamId: undefined });
-				} catch (e) {
-					assert.isTrue(e.toString().indexOf("Failed to find mobile provision with UUID or Name: NativeScriptDev2") >= 0);
-				}
-			});
-			it("succeeds if the provision name is provided for development cert", async () => {
-				const stack: any = [];
-				pbxprojDomXcode.Xcode.open = <any>function (path: string) {
-					assert.equal(path, pbxproj);
-					return {
-						getSigning() {
-							return { style: "Automatic", teamID: "AutoTeam" };
-						},
-						save() {
-							stack.push("save()");
-						},
-						setManualSigningStyle(targetName: string, manualSigning: any) {
-							stack.push({ targetName, manualSigning });
-						},
-						setManualSigningStyleByTargetProductType: () => ({}),
-						setManualSigningStyleByTargetKey: () => ({})
-					};
-				};
-				await iOSProjectService.prepareProject(projectData, { sdk: undefined, provision: "NativeScriptDev", teamId: undefined });
-				assert.deepEqual(stack, [{ targetName: projectDirName, manualSigning: { team: "TKID101", uuid: "12345", name: "NativeScriptDev", identity: "iPhone Developer" } }, "save()"]);
-			});
-			it("succeds if the provision name is provided for distribution cert", async () => {
-				const stack: any = [];
-				pbxprojDomXcode.Xcode.open = <any>function (path: string) {
-					assert.equal(path, pbxproj);
-					return {
-						getSigning() {
-							return { style: "Automatic", teamID: "AutoTeam" };
-						},
-						save() {
-							stack.push("save()");
-						},
-						setManualSigningStyle(targetName: string, manualSigning: any) {
-							stack.push({ targetName, manualSigning });
-						},
-						setManualSigningStyleByTargetProductType: () => ({}),
-						setManualSigningStyleByTargetKey: () => ({})
-					};
-				};
-				await iOSProjectService.prepareProject(projectData, { sdk: undefined, provision: "NativeScriptDist", teamId: undefined });
-				assert.deepEqual(stack, [{ targetName: projectDirName, manualSigning: { team: "TKID202", uuid: "6789", name: "NativeScriptDist", identity: "iPhone Distribution" } }, "save()"]);
-			});
-			it("succeds if the provision name is provided for adhoc cert", async () => {
-				const stack: any = [];
-				pbxprojDomXcode.Xcode.open = <any>function (path: string) {
-					assert.equal(path, pbxproj);
-					return {
-						getSigning() {
-							return { style: "Automatic", teamID: "AutoTeam" };
-						},
-						save() {
-							stack.push("save()");
-						},
-						setManualSigningStyle(targetName: string, manualSigning: any) {
-							stack.push({ targetName, manualSigning });
-						},
-						setManualSigningStyleByTargetProductType: () => ({}),
-						setManualSigningStyleByTargetKey: () => ({})
-					};
-				};
-				await iOSProjectService.prepareProject(projectData, { sdk: undefined, provision: "NativeScriptAdHoc", teamId: undefined });
-				assert.deepEqual(stack, [{ targetName: projectDirName, manualSigning: { team: "TKID303", uuid: "1010", name: "NativeScriptAdHoc", identity: "iPhone Distribution" } }, "save()"]);
-			});
-		});
-	});
 });
 
 describe("Merge Project XCConfig files", () => {
@@ -1244,163 +999,6 @@ describe("Merge Project XCConfig files", () => {
 			const content = fs.readFile(destinationFilePath).toString();
 			assert.equal(content, "");
 		}
-	});
-});
-
-describe("buildProject", () => {
-	let xcodeBuildCommandArgs: string[] = [];
-
-	function setup(data: { frameworkVersion: string, deploymentTarget: string, devices?: Mobile.IDevice[] }): IInjector {
-		const projectPath = "myTestProjectPath";
-		const projectName = "myTestProjectName";
-		const testInjector = createTestInjector(projectPath, projectName);
-
-		const childProcess = testInjector.resolve("childProcess");
-		childProcess.spawnFromEvent = (command: string, args: string[]) => {
-			if (command === "xcodebuild" && args[0] !== "-exportArchive") {
-				xcodeBuildCommandArgs = args;
-			}
-		};
-
-		const projectDataService = testInjector.resolve("projectDataService");
-		projectDataService.getNSValue = (projectDir: string, propertyName: string) => {
-			if (propertyName === "tns-ios") {
-				return {
-					name: "tns-ios",
-					version: data.frameworkVersion
-				};
-			}
-		};
-
-		const projectData = testInjector.resolve("projectData");
-		projectData.appResourcesDirectoryPath = join(projectPath, "app", "App_Resources");
-
-		const devicesService = testInjector.resolve("devicesService");
-		devicesService.initialize = () => ({});
-		devicesService.getDeviceInstances = () => data.devices || [];
-
-		const xcconfigService = testInjector.resolve("xcconfigService");
-		xcconfigService.readPropertyValue = (projectDir: string, propertyName: string) => {
-			if (propertyName === "IPHONEOS_DEPLOYMENT_TARGET") {
-				return data.deploymentTarget;
-			}
-		};
-
-		const pbxprojDomXcode = testInjector.resolve("pbxprojDomXcode");
-		pbxprojDomXcode.Xcode = {
-			open: () => ({
-				getSigning: () => ({}),
-				setAutomaticSigningStyle: () => ({}),
-				setAutomaticSigningStyleByTargetProductType: () => ({}),
-				setAutomaticSigningStyleByTargetKey: () => ({}),
-				save: () => ({})
-			})
-		};
-
-		const iOSProvisionService = testInjector.resolve("iOSProvisionService");
-		iOSProvisionService.getDevelopmentTeams = () => ({});
-		iOSProvisionService.getTeamIdsWithName = () => ({});
-
-		return testInjector;
-	}
-
-	function executeTests(testCases: any[], data: { buildForDevice: boolean }) {
-		_.each(testCases, testCase => {
-			it(`${testCase.name}`, async () => {
-				const testInjector = setup({ frameworkVersion: testCase.frameworkVersion, deploymentTarget: testCase.deploymentTarget });
-				const projectData: IProjectData = testInjector.resolve("projectData");
-
-				const iOSProjectService = <IOSProjectService>testInjector.resolve("iOSProjectService");
-				(<any>iOSProjectService).getExportOptionsMethod = () => ({});
-				await iOSProjectService.buildProject("myProjectRoot", projectData, <any>{ buildForDevice: data.buildForDevice });
-
-				const archsItem = xcodeBuildCommandArgs.find(item => item.startsWith("ARCHS="));
-				if (testCase.expectedArchs) {
-					const archsValue = archsItem.split("=")[1];
-					assert.deepEqual(archsValue, testCase.expectedArchs);
-				} else {
-					assert.deepEqual(undefined, archsItem);
-				}
-			});
-		});
-	}
-
-	describe("for device", () => {
-		afterEach(() => {
-			xcodeBuildCommandArgs = [];
-		});
-
-		const testCases = <any[]>[{
-			name: "shouldn't exclude armv7 architecture when deployment target 10",
-			frameworkVersion: "5.0.0",
-			deploymentTarget: "10.0",
-			expectedArchs: "armv7 arm64"
-		}, {
-			name: "should exclude armv7 architecture when deployment target is 11",
-			frameworkVersion: "5.0.0",
-			deploymentTarget: "11.0",
-			expectedArchs: "arm64"
-		}, {
-			name: "shouldn't pass architecture to xcodebuild command when frameworkVersion is 5.1.0",
-			frameworkVersion: "5.1.0",
-			deploymentTarget: "11.0"
-		}, {
-			name: "should pass only 64bit architecture to xcodebuild command when frameworkVersion is 5.0.0 and deployment target is 11.0",
-			frameworkVersion: "5.0.0",
-			deploymentTarget: "11.0",
-			expectedArchs: "arm64"
-		}, {
-			name: "should pass both architectures to xcodebuild command when frameworkVersion is 5.0.0 and deployment target is 10.0",
-			frameworkVersion: "5.0.0",
-			deploymentTarget: "10.0",
-			expectedArchs: "armv7 arm64"
-		}, {
-			name: "should pass both architectures to xcodebuild command when frameworkVersion is 5.0.0 and no deployment target",
-			frameworkVersion: "5.0.0",
-			deploymentTarget: null,
-			expectedArchs: "armv7 arm64"
-		}];
-
-		executeTests(testCases, { buildForDevice: true });
-	});
-
-	describe("for simulator", () => {
-		afterEach(() => {
-			xcodeBuildCommandArgs = [];
-		});
-
-		const testCases = [{
-			name: "shouldn't exclude i386 architecture when deployment target is 10",
-			frameworkVersion: "5.0.0",
-			deploymentTarget: "10.0",
-			expectedArchs: "i386 x86_64"
-		}, {
-			name: "should exclude i386 architecture when deployment target is 11",
-			frameworkVersion: "5.0.0",
-			deploymentTarget: "11.0",
-			expectedArchs: "x86_64"
-		}, {
-			name: "shouldn't pass architecture to xcodebuild command when frameworkVersion is 5.1.0",
-			frameworkVersion: "5.1.0",
-			deploymentTarget: "11.0"
-		}, {
-			name: "should pass only 64bit architecture to xcodebuild command when frameworkVersion is 5.0.0 and deployment target is 11.0",
-			frameworkVersion: "5.0.0",
-			deploymentTarget: "11.0",
-			expectedArchs: "x86_64"
-		}, {
-			name: "should pass both architectures to xcodebuild command when frameworkVersion is 5.0.0 and deployment target is 10.0",
-			frameworkVersion: "5.0.0",
-			deploymentTarget: "10.0",
-			expectedArchs: "i386 x86_64"
-		}, {
-			name: "should pass both architectures to xcodebuild command when frameworkVersion is 5.0.0 and no deployment target",
-			frameworkVersion: "5.0.0",
-			deploymentTarget: null,
-			expectedArchs: "i386 x86_64"
-		}];
-
-		executeTests(testCases, { buildForDevice: false });
 	});
 });
 

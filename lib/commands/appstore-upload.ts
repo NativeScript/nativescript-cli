@@ -1,6 +1,5 @@
-import { StringCommandParameter } from "../common/command-params";
 import * as path from "path";
-import { IOSProjectService } from "../services/ios-project-service";
+import { StringCommandParameter } from "../common/command-params";
 
 export class PublishIOS implements ICommand {
 	public allowedParameters: ICommandParameter[] = [new StringCommandParameter(this.$injector), new StringCommandParameter(this.$injector),
@@ -13,7 +12,8 @@ export class PublishIOS implements ICommand {
 		private $projectData: IProjectData,
 		private $options: IOptions,
 		private $prompter: IPrompter,
-		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants) {
+		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
+		private $xcodebuildService: IXcodebuildService) {
 		this.$projectData.initializeProjectData();
 	}
 
@@ -32,7 +32,6 @@ export class PublishIOS implements ICommand {
 		let password = args[1];
 		const mobileProvisionIdentifier = args[2];
 		const codeSignIdentity = args[3];
-		const teamID = this.$options.teamId;
 		let ipaFilePath = this.$options.ipa ? path.resolve(this.$options.ipa) : null;
 
 		if (!username) {
@@ -68,35 +67,31 @@ export class PublishIOS implements ICommand {
 				config: this.$options,
 				env: this.$options.env
 			};
+			const buildConfig: IBuildConfig = {
+				projectDir: this.$options.path,
+				release: this.$options.release,
+				device: this.$options.device,
+				provision: this.$options.provision,
+				teamId: this.$options.teamId,
+				buildForDevice: true,
+				iCloudContainerEnvironment: this.$options.iCloudContainerEnvironment,
+				mobileProvisionIdentifier,
+				codeSignIdentity
+			};
 
 			if (mobileProvisionIdentifier || codeSignIdentity) {
-				const iOSBuildConfig: IBuildConfig = {
-					projectDir: this.$options.path,
-					release: this.$options.release,
-					device: this.$options.device,
-					provision: this.$options.provision,
-					teamId: this.$options.teamId,
-					buildForDevice: true,
-					iCloudContainerEnvironment: this.$options.iCloudContainerEnvironment,
-					mobileProvisionIdentifier,
-					codeSignIdentity
-				};
 				this.$logger.info("Building .ipa with the selected mobile provision and/or certificate.");
 				// This is not very correct as if we build multiple targets we will try to sign all of them using the signing identity here.
 				await this.$platformService.preparePlatform(platformInfo);
-				await this.$platformService.buildPlatform(platform, iOSBuildConfig, this.$projectData);
-				ipaFilePath = this.$platformService.lastOutputPath(platform, iOSBuildConfig, this.$projectData);
+				await this.$platformService.buildPlatform(platform, buildConfig, this.$projectData);
+				ipaFilePath = this.$platformService.lastOutputPath(platform, buildConfig, this.$projectData);
 			} else {
 				this.$logger.info("No .ipa, mobile provision or certificate set. Perfect! Now we'll build .xcarchive and let Xcode pick the distribution certificate and provisioning profile for you when exporting .ipa for AppStore submission.");
 				await this.$platformService.preparePlatform(platformInfo);
 
 				const platformData = this.$platformsData.getPlatformData(platform, this.$projectData);
-				const iOSProjectService = <IOSProjectService>platformData.platformProjectService;
 
-				const archivePath = await iOSProjectService.archive(this.$projectData);
-				this.$logger.info("Archive at: " + archivePath);
-
-				const exportPath = await iOSProjectService.exportArchive(this.$projectData, { archivePath, teamID, provision: mobileProvisionIdentifier || this.$options.provision });
+				const exportPath = await this.$xcodebuildService.buildForAppStore(platformData, this.$projectData, buildConfig);
 				this.$logger.info("Export at: " + exportPath);
 
 				ipaFilePath = exportPath;

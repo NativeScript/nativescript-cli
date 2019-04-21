@@ -841,10 +841,10 @@ interface IXcprojService {
 	/**
 	 * Returns the path to the xcodeproj file
 	 * @param projectData Information about the project.
-	 * @param platformData Information about the platform.
+	 * @param projectRoot The root folder of native project.
 	 * @return {string} The full path to the xcodeproj
 	 */
-	getXcodeprojPath(projectData: IProjectData, platformData: IPlatformData): string;
+	getXcodeprojPath(projectData: IProjectData, projectRoot: string): string;
 	/**
 	 * Checks whether the system needs xcproj to execute ios builds successfully.
 	 * In case the system does need xcproj but does not have it, prints an error message.

@@ -19,6 +19,11 @@ $injector.require("iOSExtensionsService", "./services/ios-extensions-service");
 $injector.require("iOSProjectService", "./services/ios-project-service");
 $injector.require("iOSProvisionService", "./services/ios-provision-service");
 $injector.require("xcconfigService", "./services/xcconfig-service");
+$injector.require("iOSSigningService", "./services/ios/ios-signing-service");
+$injector.require("xcodebuildArgsService", "./services/ios/xcodebuild-args-service");
+$injector.require("xcodebuildCommandService", "./services/ios/xcodebuild-command-service");
+$injector.require("xcodebuildService", "./services/ios/xcodebuild-service");
+$injector.require("exportOptionsPlistService", "./services/ios/export-options-plist-service");
 
 $injector.require("cocoapodsService", "./services/cocoapods-service");
 $injector.require("cocoaPodsPlatformManager", "./services/cocoapods-platform-manager");
