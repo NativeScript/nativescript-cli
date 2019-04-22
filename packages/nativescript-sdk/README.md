@@ -88,7 +88,7 @@ You will need to install `nativescript-plugin-firebase` and follow the instructi
 You can then use the Push module to register the device running your app like this:
 
 ```js
-import * as Push from 'kinvey-nativescript-sdk/push`;
+import * as Push from 'kinvey-nativescript-sdk/push';
 
 function receivedPushNotificaiton(message) {
   console.log("Title: " + message.title);
@@ -109,7 +109,7 @@ Push.register(receivedPushNotification)
 To unregister the device running your app do this:
 
 ```js
-import * as Push from 'kinvey-nativescript-sdk/push`;
+import * as Push from 'kinvey-nativescript-sdk/push';
 
 Push.unregister()
   .then((deviceToken) => {
