@@ -172,6 +172,7 @@ export class User {
 
   async registerForLiveService(options: { timeout?: number } = {}) {
     if (!isSubscribed()) {
+      // Register the user
       const deviceId = await getDeviceId();
       const request = new KinveyHttpRequest({
         method: HttpRequestMethod.POST,
@@ -182,6 +183,8 @@ export class User {
       });
       const response = await request.execute();
       const config = Object.assign({}, { authKey: this.authtoken }, response.data);
+
+      // Subscribe to PubNub
       subscribe(config);
     }
     return true;
@@ -189,6 +192,10 @@ export class User {
 
   async unregisterFromLiveService(options: { timeout?: number } = {}) {
     if (isSubscribed()) {
+      // Unsubscribe from PubNub
+      unsubscribe();
+
+      // Unregister the user
       const deviceId = await getDeviceId();
       const request = new KinveyHttpRequest({
         method: HttpRequestMethod.POST,
@@ -198,7 +205,6 @@ export class User {
         timeout: options.timeout
       });
       await request.execute();
-      unsubscribe();
     }
 
     return true;

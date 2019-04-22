@@ -119,8 +119,7 @@ export function unsubscribe() {
 
   if (pubnub) {
     pubnub.removeListener(listener);
-    pubnub.unsubscribeAll();
-    pubnub.stop();
+    pubnub.destroy();
     pubnub = null;
   }
 
