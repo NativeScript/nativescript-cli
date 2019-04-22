@@ -8,7 +8,7 @@ From the command prompt go to your app's root folder and execute:
 npm i kinvey-html5-sdk@next
 ```
 
-or if you would prefer you can just [download the latest bundle](https://download.kinvey.com/js/kinvey-html5-sdk-3.13.0-next.27.js) and include it in your application.
+or if you would prefer you can just [download the latest bundle](https://download.kinvey.com/js/kinvey-html5-sdk-3.13.0-next.28.js) and include it in your application.
 
 ## Usage
 
