@@ -37,7 +37,7 @@ module.exports = function (hookArgs) {
           }
         }
       } else if (platform === 'ios') {
-        const destinationInfoPlistFile = path.join(__dirname, '..', 'platforms', 'ios', 'info.plist');
+        const destinationInfoPlistFile = path.join(__dirname, '..', 'platforms', 'ios', 'Info.plist');
 
         if (redirectUriScheme) {
           const micInfoPlistFile = path.join(__dirname, '..', 'platforms', 'ios', 'info.mic.plist');
@@ -45,6 +45,12 @@ module.exports = function (hookArgs) {
           const currentContent = fs.existsSync(destinationInfoPlistFile) && fs.readFileSync(destinationInfoPlistFile).toString();
           if (currentContent !== micInfoPlistFileContent) {
             fs.writeFileSync(destinationInfoPlistFile, micInfoPlistFileContent);
+          }
+        } else {
+          const defaultInfoPlistFile = path.join(__dirname, '..', 'platforms', 'ios', 'info.default.plist');
+          const currentContent = fs.existsSync(destinationInfoPlistFile) && fs.readFileSync(destinationInfoPlistFile).toString();
+          if (currentContent !== defaultInfoPlistFile) {
+            fs.writeFileSync(destinationInfoPlistFile, defaultInfoPlistFile);
           }
         }
       }

@@ -6,4 +6,4 @@ import { PushService } from './push.service';
     PushService
   ]
 })
-export class KinveyPushModule {}
+export class KinveyPushModule { }

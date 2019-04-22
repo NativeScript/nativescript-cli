@@ -39,7 +39,8 @@
     "tslib": "1.9.3"
   },
   "peerDependencies": {
-    "@angular/core": "~7.2.0"
+    "@angular/core": "~7.2.0",
+    "nativescript-plugin-firebase": "~8.2.0"
   },
   "devDependencies": {
     "@angular/compiler": "~7.2.13",
@@ -48,15 +49,17 @@
     "@types/events": "~3.0.0",
     "del-cli": "~1.1.0",
     "fs-extra": "~7.0.1",
+    "nativescript-plugin-firebase": "~8.2.0",
     "tns-core-modules": "~5.3.1",
     "tns-platform-declarations": "~5.3.1",
     "typescript": "~3.2.0"
   },
   "files": [
+    "angular",
     "lib",
     "nativescript-hook-scripts",
     "platforms",
-    "angular.js"
+    "push.js"
   ],
   "nativescript": {
     "hooks": [
@@ -72,8 +75,8 @@
       }
     ],
     "platforms": {
-      "android": "5.2.0",
-      "ios": "5.2.0"
+      "android": "5.3.0",
+      "ios": "5.3.0"
     }
   }
 }

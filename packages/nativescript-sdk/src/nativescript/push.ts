@@ -1,4 +1,4 @@
-import { messaging } from 'nativescript-plugin-firebase/messaging';
+import firebase from 'nativescript-plugin-firebase';
 import { device } from 'tns-core-modules/platform';
 import { formatKinveyBaasUrl, KinveyHttpRequest, HttpRequestMethod, KinveyHttpAuth, KinveyBaasNamespace } from 'kinvey-js-sdk/lib/http';
 
@@ -10,13 +10,13 @@ export async function register(callback: (message: any) => void, options: any = 
     // Whether you want the firebase plugin to always handle the notifications when the app is in foreground. Currently used on iOS only. Default value for the plugin is false.
     showNotificationsWhenInForeground = true
   } = options;
-  await messaging.registerForPushNotifications({ showNotifications, showNotificationsWhenInForeground });
+  await firebase.init({ showNotifications, showNotificationsWhenInForeground });
 
   // Add the callback
-  await messaging.addOnMessageReceivedCallback(callback);
+  await firebase.addOnMessageReceivedCallback(callback);
 
   // Get the device token
-  const token = await messaging.getCurrentPushToken();
+  const token = await firebase.getCurrentPushToken();
 
   // Register device with Kinvey
   const request = new KinveyHttpRequest({
@@ -38,11 +38,11 @@ export async function register(callback: (message: any) => void, options: any = 
 }
 
 export async function unregister(options: any = {}) {
-  // Get the deivce token
-  const token = await messaging.getCurrentPushToken();
-
   // Unregister for push notifications
-  await messaging.unregisterForPushNotifications();
+  await firebase.unregisterForPushNotifications();
+
+  // Get the device token
+  const token = await firebase.getCurrentPushToken();
 
   // Unregister the device on Kinvey
   const request = new KinveyHttpRequest({
@@ -57,6 +57,8 @@ export async function unregister(options: any = {}) {
     },
     timeout: options.timeout
   });
-  const response = await request.execute();
-  return response.data;
+  await request.execute();
+
+  // Return the token
+  return token;
 }
