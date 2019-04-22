@@ -1,6 +1,15 @@
 NativeScript CLI Changelog
 ================
 
+5.3.2 (2019, April 12)
+==
+
+### Fixed
+* [Fixed #1798](https://github.com/NativeScript/nativescript-cli/issues/1798): Test init command doesn't add a sample test in TypeScript for TypeScript/Angular projects
+* [Fixed #4498](https://github.com/NativeScript/nativescript-cli/pull/4498): API: Change the AppStore ids for kinvey scanner and preview app
+* [Fixed #4504](https://github.com/NativeScript/nativescript-cli/issues/4504): Custom tagged versions of android runtime are not supported
+* [Fixed #4510](https://github.com/NativeScript/nativescript-cli/pull/4510): Handle HTTP 304 response status code
+
 5.3.0 (2019, March 27)
 ==
 
