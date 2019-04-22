@@ -11,7 +11,7 @@ before(() => {
   return init(setOfflineProvider(initProperties, process.env.OFFLINE_STORAGE));
 });
 
-describe.only('Auth', function() {
+describe('Auth', function() {
   describe('login()', function() {
     it('should login', async function() {
       const username = randomString();

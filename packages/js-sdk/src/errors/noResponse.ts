@@ -1,8 +1,8 @@
 import { KinveyError } from './kinvey';
 
 export class NoResponseError extends KinveyError {
-  constructor(message = 'No response was provided.') {
-    super(message);
+  constructor(message = 'No response was provided.', debug) {
+    super(message, debug);
     this.name = 'NoResponseError';
   }
 }
