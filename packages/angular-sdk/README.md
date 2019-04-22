@@ -30,7 +30,7 @@ Then you can use dependency injection to inject a Kinvey service in your module 
 
 ```js
 import { Component } from '@angular/core';
-import { UserService } from 'kinvey-angular-sdk`;
+import { UserService } from 'kinvey-angular-sdk';
 
 @Component()
 export class AppComponent {
