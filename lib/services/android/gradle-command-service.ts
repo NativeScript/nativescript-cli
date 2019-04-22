@@ -7,10 +7,10 @@ export class GradleCommandService implements IGradleCommandService {
 	) { }
 
 	public async executeCommand(gradleArgs: string[], options: IGradleCommandOptions): Promise<ISpawnResult> {
-		const { message, cwd, stdio = "inherit", spawnOptions } = options;
+		const { message, cwd, stdio, spawnOptions } = options;
 		this.$logger.info(message);
 
-		const childProcessOptions = { cwd, stdio };
+		const childProcessOptions = { cwd, stdio: stdio || "inherit" };
 		const gradleExecutable = this.$hostInfo.isWindows ? "gradlew.bat" : "./gradlew";
 
 		const result = await this.executeCommandSafe(gradleExecutable, gradleArgs, childProcessOptions, spawnOptions);
@@ -18,7 +18,7 @@ export class GradleCommandService implements IGradleCommandService {
 		return result;
 	}
 
-	private async executeCommandSafe(gradleExecutable: string, gradleArgs: string[], childProcessOptions: { cwd: string, stdio: string }, spawnOptions: ISpawnFromEventOptions) {
+	private async executeCommandSafe(gradleExecutable: string, gradleArgs: string[], childProcessOptions: { cwd: string, stdio: string }, spawnOptions: ISpawnFromEventOptions): Promise<ISpawnResult> {
 		try {
 			const result = await this.$childProcess.spawnFromEvent(gradleExecutable, gradleArgs, "close", childProcessOptions, spawnOptions);
 

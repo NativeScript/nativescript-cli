@@ -7,6 +7,7 @@ function createTestInjector(): IInjector {
 	injector.register("androidToolsInfo", {
 		getToolsInfo: () => ({
 			compileSdkVersion: 28,
+			targetSdkVersion: 26,
 			buildToolsVersion: "my-build-tools-version",
 			generateTypings: true
 		})
@@ -36,13 +37,13 @@ function executeTests(testCases: any[], testFunction: (gradleBuildArgsService: I
 
 const expectedInfoLoggingArgs = ["--quiet"];
 const expectedTraceLoggingArgs = ["--stacktrace", "--debug"];
-const expectedDebugBuildArgs = ["-PcompileSdk=android-28", "-PbuildToolsVersion=my-build-tools-version", "-PgenerateTypings=true"];
-const expectedReleaseBuildArgs = expectedDebugBuildArgs.concat(["-Prelease", "-PksPath=/Users/havaluova/Work/nativescript-cli/keyStorePath",
+const expectedDebugBuildArgs = ["-PcompileSdk=android-28", "-PtargetSdk=26", "-PbuildToolsVersion=my-build-tools-version", "-PgenerateTypings=true"];
+const expectedReleaseBuildArgs = expectedDebugBuildArgs.concat(["-Prelease", "-PksPath=/my/key/store/path",
 	"-Palias=keyStoreAlias", "-Ppassword=keyStoreAliasPassword", "-PksPassword=keyStorePassword"]);
 
 const releaseBuildConfig = {
 	release: true,
-	keyStorePath: "keyStorePath",
+	keyStorePath: "/my/key/store/path",
 	keyStoreAlias: "keyStoreAlias",
 	keyStoreAliasPassword: "keyStoreAliasPassword",
 	keyStorePassword: "keyStorePassword"
