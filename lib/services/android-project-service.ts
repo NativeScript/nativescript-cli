@@ -348,9 +348,9 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		return nativescript && (nativescript.android || (nativescript.platforms && nativescript.platforms.android));
 	}
 
-	public async stopServices(platformData: IPlatformData): Promise<ISpawnResult> {
+	public async stopServices(projectRoot: string): Promise<ISpawnResult> {
 		const result = await this.$gradleCommandService.executeCommand(["--stop", "--quiet"], {
-			cwd: platformData.projectRoot,
+			cwd: projectRoot,
 			message: "Gradle stop services...",
 			stdio: "pipe"
 		});

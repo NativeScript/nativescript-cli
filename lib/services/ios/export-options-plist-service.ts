@@ -41,7 +41,7 @@ export class ExportOptionsPlistService implements IExportOptionsPlistService {
 		return { exportFileDir, exportFilePath, exportOptionsPlistFilePath };
 	}
 
-	public createDistributionExportOptionsPlist(projectRoot: string, projectData: IProjectData, buildConfig: IBuildConfig): IExportOptionsPlistOutput {
+	public createDistributionExportOptionsPlist(archivePath: string, projectData: IProjectData, buildConfig: IBuildConfig): IExportOptionsPlistOutput {
 		const provision = buildConfig.provision || buildConfig.mobileProvisionIdentifier;
 		const teamId = buildConfig.teamId;
 		let plistTemplate = `<?xml version="1.0" encoding="UTF-8"?>
@@ -77,7 +77,7 @@ export class ExportOptionsPlistService implements IExportOptionsPlistService {
 		const exportOptionsPlistFilePath = temp.path({ prefix: "export-", suffix: ".plist" });
 		this.$fs.writeFile(exportOptionsPlistFilePath, plistTemplate);
 
-		const exportFileDir = path.resolve(path.join(projectRoot, "/build/archive"));
+		const exportFileDir = path.resolve(path.dirname(archivePath));
 		const exportFilePath = path.join(exportFileDir, projectData.projectName + ".ipa");
 
 		return { exportFileDir, exportFilePath, exportOptionsPlistFilePath };

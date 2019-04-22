@@ -64,7 +64,7 @@ class AppStore {
 						this.archiveCalls++;
 						return "/Users/person/git/MyProject/platforms/ios/archive/MyProject.ipa";
 					},
-					buildForSimulator: async () => ({}),
+					buildForSimulator: () => Promise.resolve(),
 					buildForAppStore: async () => {
 						this.archiveCalls++;
 						return "/Users/person/git/MyProject/platforms/ios/archive/MyProject.ipa";

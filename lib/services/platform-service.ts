@@ -694,7 +694,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 			let errorMessage;
 
 			try {
-				await platformData.platformProjectService.stopServices(platformData);
+				await platformData.platformProjectService.stopServices(platformData.projectRoot);
 			} catch (err) {
 				errorMessage = err.message;
 			}

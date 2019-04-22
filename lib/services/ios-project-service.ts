@@ -210,7 +210,6 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				this.$xcodebuildService.buildForSimulator(platformData, projectData, buildConfig));
 		}
 
-		// TODO: Check if we need to validate the identifier here
 		this.validateApplicationIdentifier(projectData);
 	}
 

@@ -8,10 +8,10 @@ export class XcodebuildCommandService implements IXcodebuildCommandService {
 	) { }
 
 	public async executeCommand(args: string[], options: { cwd: string, stdio: string, message?: string, spawnOptions?: any }): Promise<ISpawnResult> {
-		const { message, cwd, stdio = "inherit", spawnOptions } = options;
+		const { message, cwd, stdio, spawnOptions } = options;
 		this.$logger.info(message || "Xcode build...");
 
-		const childProcessOptions = { cwd, stdio };
+		const childProcessOptions = { cwd, stdio: stdio || "inherit" };
 
 		try {
 			const commandResult = await this.$childProcess.spawnFromEvent("xcodebuild",
