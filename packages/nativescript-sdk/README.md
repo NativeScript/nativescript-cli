@@ -56,7 +56,7 @@ Then you can use dependency injection to inject a Kinvey service in your module 
 
 ```js
 import { Component } from '@angular/core';
-import { UserService } from 'kinvey-nativescript-sdk/angular`;
+import { UserService } from 'kinvey-nativescript-sdk/angular';
 
 @Component()
 export class AppComponent {
