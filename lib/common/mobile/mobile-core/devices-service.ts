@@ -42,8 +42,7 @@ export class DevicesService extends EventEmitter implements Mobile.IDevicesServi
 		private $androidEmulatorServices: Mobile.IEmulatorPlatformService,
 		private $androidEmulatorDiscovery: Mobile.IDeviceDiscovery,
 		private $emulatorHelper: Mobile.IEmulatorHelper,
-		private $prompter: IPrompter,
-		private $timers: ITimers) {
+		private $prompter: IPrompter) {
 		super();
 		this.attachToKnownDeviceDiscoveryEvents();
 		this.attachToKnownEmulatorDiscoveryEvents();
@@ -293,7 +292,7 @@ export class DevicesService extends EventEmitter implements Mobile.IDevicesServi
 		if (!this.deviceDetectionInterval) {
 			let isDeviceDetectionIntervalInProgress = false;
 
-			this.deviceDetectionInterval = this.$timers.setInterval(async () => {
+			this.deviceDetectionInterval = setInterval(async () => {
 				if (isDeviceDetectionIntervalInProgress) {
 					return;
 				}
@@ -320,7 +319,7 @@ export class DevicesService extends EventEmitter implements Mobile.IDevicesServi
 	@exported("devicesService")
 	public startEmulatorDetectionInterval(opts: Mobile.IHasDetectionInterval = {}): void {
 		let isEmulatorDetectionIntervalRunning = false;
-		this.emulatorDetectionInterval = this.$timers.setInterval(async () => {
+		this.emulatorDetectionInterval = setInterval(async () => {
 			if (isEmulatorDetectionIntervalRunning) {
 				return;
 			}
@@ -336,14 +335,14 @@ export class DevicesService extends EventEmitter implements Mobile.IDevicesServi
 	@exported("devicesService")
 	public stopDeviceDetectionInterval(): void {
 		if (this.deviceDetectionInterval) {
-			this.$timers.clearInterval(this.deviceDetectionInterval);
+			clearInterval(this.deviceDetectionInterval);
 		}
 	}
 
 	@exported("devicesService")
 	public stopEmulatorDetectionInterval(): void {
 		if (this.emulatorDetectionInterval) {
-			this.$timers.clearInterval(this.emulatorDetectionInterval);
+			clearInterval(this.emulatorDetectionInterval);
 		}
 	}
 

@@ -304,6 +304,10 @@ interface IBuildForDevice {
 	buildForDevice: boolean;
 }
 
+interface IiCloudContainerEnvironment {
+	iCloudContainerEnvironment: string;
+}
+
 interface INativePrepare {
 	skipNativePrepare: boolean;
 }
@@ -317,7 +321,7 @@ interface IBuildConfig extends IAndroidBuildOptionsSettings, IiOSBuildConfig, IP
 /**
  * Describes iOS-specific build configuration properties
  */
-interface IiOSBuildConfig extends IBuildForDevice, IDeviceIdentifier, IProvision, ITeamIdentifier, IRelease {
+interface IiOSBuildConfig extends IBuildForDevice, IiCloudContainerEnvironment, IDeviceIdentifier, IProvision, ITeamIdentifier, IRelease {
 	/**
 	 * Identifier of the mobile provision which will be used for the build. If not set a provision will be selected automatically if possible.
 	 */

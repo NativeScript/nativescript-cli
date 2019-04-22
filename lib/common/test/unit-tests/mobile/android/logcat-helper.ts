@@ -60,11 +60,6 @@ function createTestInjector(): IInjector {
 		}
 	});
 	injector.register("devicePlatformsConstants", { Android: "Android" });
-	injector.register("processService", {
-		attachToProcessExitSignals(context: any, callback: () => void): void {
-			//left blank intentionally because of lint
-		},
-	});
 	injector.register("deviceLogProvider", {
 		logData(line: string, platform: string, deviceIdentifier: string): void {
 			//left blank intentionally because of lint

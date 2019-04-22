@@ -7,8 +7,10 @@ export class OpenDeviceLogStreamCommand implements ICommand {
 		private $options: IOptions,
 		private $deviceLogProvider: Mobile.IDeviceLogProvider,
 		private $loggingLevels: Mobile.ILoggingLevels,
-		$iOSSimulatorLogProvider: Mobile.IiOSSimulatorLogProvider) {
+		$iOSSimulatorLogProvider: Mobile.IiOSSimulatorLogProvider,
+		$cleanupService: ICleanupService) {
 			$iOSSimulatorLogProvider.setShouldDispose(false);
+			$cleanupService.setShouldDispose(false);
 		}
 
 	allowedParameters: ICommandParameter[] = [];

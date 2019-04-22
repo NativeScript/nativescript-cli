@@ -15,8 +15,8 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 		private $bundleValidatorHelper: IBundleValidatorHelper,
 		private $errors: IErrors,
 		private $iOSSimulatorLogProvider: Mobile.IiOSSimulatorLogProvider,
-		private $logger: ILogger) {
-		this.$analyticsService.setShouldDispose(this.$options.justlaunch || !this.$options.watch);
+		private $logger: ILogger,
+		private $cleanupService: ICleanupService) {
 	}
 
 	public getPlatformsForOperation(platform: string): string[] {
@@ -59,9 +59,14 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 
 		const workingWithiOSDevices = !platform || this.$mobileHelper.isiOSPlatform(platform);
 		const shouldKeepProcessAlive = this.$options.watch || !this.$options.justlaunch;
-		if (workingWithiOSDevices && shouldKeepProcessAlive) {
-			this.$iosDeviceOperations.setShouldDispose(false);
-			this.$iOSSimulatorLogProvider.setShouldDispose(false);
+		if (shouldKeepProcessAlive) {
+			this.$analyticsService.setShouldDispose(false);
+			this.$cleanupService.setShouldDispose(false);
+
+			if (workingWithiOSDevices) {
+				this.$iosDeviceOperations.setShouldDispose(false);
+				this.$iOSSimulatorLogProvider.setShouldDispose(false);
+			}
 		}
 
 		if (this.$options.release) {
@@ -76,6 +81,7 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 
 				const buildConfig: IBuildConfig = {
 					buildForDevice: !d.isEmulator,
+					iCloudContainerEnvironment: this.$options.iCloudContainerEnvironment,
 					projectDir: this.$options.path,
 					clean: this.$options.clean,
 					teamId: this.$options.teamId,

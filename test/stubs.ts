@@ -47,14 +47,6 @@ export class LoggerStub implements ILogger {
 	}
 }
 
-export class ProcessServiceStub implements IProcessService {
-	public listenersCount: number;
-
-	public attachToProcessExitSignals(context: any, callback: () => void): void {
-		return undefined;
-	}
-}
-
 export class FileSystemStub implements IFileSystem {
 	deleteDirectorySafe(directory: string): void {
 		return this.deleteDirectory(directory);

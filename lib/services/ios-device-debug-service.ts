@@ -17,12 +17,10 @@ export class IOSDeviceDebugService extends DebugServiceBase implements IDeviceDe
 		private $logger: ILogger,
 		private $errors: IErrors,
 		private $packageInstallationManager: IPackageInstallationManager,
-		private $processService: IProcessService,
 		private $appDebugSocketProxyFactory: IAppDebugSocketProxyFactory,
 		private $projectDataService: IProjectDataService) {
 
 		super(device, $devicesService);
-		this.$processService.attachToProcessExitSignals(this, this.debugStop);
 		this.$appDebugSocketProxyFactory.on(CONNECTION_ERROR_EVENT_NAME, (e: Error) => this.emit(CONNECTION_ERROR_EVENT_NAME, e));
 		this.deviceIdentifier = this.device.deviceInfo.identifier;
 	}

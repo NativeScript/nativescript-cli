@@ -19,7 +19,7 @@ export class AndroidDeviceSocketsLiveSyncService extends AndroidDeviceLiveSyncSe
 		$logger: ILogger,
 		protected device: Mobile.IAndroidDevice,
 		private $options: IOptions,
-		private $processService: IProcessService,
+		private $cleanupService: ICleanupService,
 		private $fs: IFileSystem,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		$filesHashService: IFilesHashService) {
@@ -59,6 +59,18 @@ export class AndroidDeviceSocketsLiveSyncService extends AndroidDeviceLiveSyncSe
 		}
 	}
 
+	private async getCleanupCommand(appIdentifier: string): Promise<ISpawnCommandInfo> {
+		return {
+			command: await this.$staticConfig.getAdbFilePath(), args: [
+				"-s",
+				this.device.deviceInfo.identifier,
+				"shell",
+				"rm",
+				"-rf",
+				appIdentifier
+			]
+		};
+	}
 	private async doSync(liveSyncInfo: ILiveSyncResultInfo, projectData: IProjectData): Promise<IAndroidLivesyncSyncOperationResult> {
 		const operationId = this.livesyncTool.generateOperationIdentifier();
 
@@ -74,12 +86,14 @@ export class AndroidDeviceSocketsLiveSyncService extends AndroidDeviceLiveSyncSe
 				}
 			}, AndroidDeviceSocketsLiveSyncService.STATUS_UPDATE_INTERVAL);
 
+			const cleanupCommand = await this.getCleanupCommand(liveSyncInfo.deviceAppData.appIdentifier);
 			const actionOnEnd = async () => {
 				clearInterval(syncInterval);
 				await this.device.fileSystem.deleteFile(this.getPathToLiveSyncFileOnDevice(liveSyncInfo.deviceAppData.appIdentifier), liveSyncInfo.deviceAppData.appIdentifier);
+				await this.$cleanupService.removeCleanupCommand(cleanupCommand);
 			};
 
-			this.$processService.attachToProcessExitSignals(this, actionOnEnd);
+			await this.$cleanupService.addCleanupCommand(cleanupCommand);
 			// We need to clear resources when the action fails
 			// But we also need the real result of the action.
 			await doSyncPromise.then(actionOnEnd.bind(this), actionOnEnd.bind(this));

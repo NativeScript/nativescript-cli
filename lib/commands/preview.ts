@@ -13,8 +13,10 @@ export class PreviewCommand implements ICommand {
 		private $projectData: IProjectData,
 		private $options: IOptions,
 		private $previewAppLogProvider: IPreviewAppLogProvider,
-		private $previewQrCodeService: IPreviewQrCodeService) {
-			this.$analyticsService.setShouldDispose(this.$options.justlaunch || !this.$options.watch);
+		private $previewQrCodeService: IPreviewQrCodeService,
+		$cleanupService: ICleanupService) {
+			this.$analyticsService.setShouldDispose(false);
+			$cleanupService.setShouldDispose(false);
 		}
 
 	public async execute(): Promise<void> {

@@ -207,11 +207,6 @@ declare const enum TrackingTypes {
 	 * Defines that the broker process should get and track the data from preview app to Google Analytics
 	 */
 	PreviewAppData = "PreviewAppData",
-
-	/**
-	 * Defines that all information has been sent and no more data will be tracked in current session.
-	 */
-	Finish = "finish"
 }
 
 /**
@@ -653,7 +648,8 @@ interface ISpawnFromEventOptions {
 	throwError: boolean;
 	emitOptions?: {
 		eventName: string;
-	}
+	},
+	timeout?: number;
 }
 
 interface IProjectDir {
@@ -1466,14 +1462,10 @@ interface INet {
 	waitForPortToListen(waitForPortListenData: IWaitForPortListenData): Promise<boolean>;
 }
 
-interface IProcessService {
-	listenersCount: number;
-	attachToProcessExitSignals(context: any, callback: () => void): void;
-}
-
 interface IDependencyInformation {
 	name: string;
 	version?: string;
+	projectType?: string;
 	excludedPeerDependencies?: string[];
 }
 

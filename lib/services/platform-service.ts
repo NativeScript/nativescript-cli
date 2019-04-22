@@ -546,6 +546,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		const action = async (device: Mobile.IDevice): Promise<void> => {
 			const buildConfig: IBuildConfig = {
 				buildForDevice: !this.$devicesService.isiOSSimulator(device),
+				iCloudContainerEnvironment: null,
 				projectDir: deployInfo.deployOptions.projectDir,
 				release: deployInfo.deployOptions.release,
 				device: deployInfo.deployOptions.device,

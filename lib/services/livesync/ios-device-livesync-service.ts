@@ -11,7 +11,6 @@ export class IOSDeviceLiveSyncService extends DeviceLiveSyncServiceBase implemen
 
 	constructor(
 		private $logger: ILogger,
-		private $processService: IProcessService,
 		protected $platformsData: IPlatformsData,
 		protected device: Mobile.IiOSDevice) {
 		super($platformsData, device);
@@ -108,8 +107,6 @@ export class IOSDeviceLiveSyncService extends DeviceLiveSyncServiceBase implemen
 	}
 
 	private attachEventHandlers(): void {
-		this.$processService.attachToProcessExitSignals(this, this.destroySocket);
-
 		this.socket.on("close", (hadError: boolean) => {
 			this.$logger.trace(`Socket closed, hadError is ${hadError}.`);
 			this.socket = null;

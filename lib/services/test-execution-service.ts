@@ -84,6 +84,7 @@ export class TestExecutionService implements ITestExecutionService {
 							buildAction: async (): Promise<string> => {
 								const buildConfig: IBuildConfig = {
 									buildForDevice: !d.isEmulator,
+									iCloudContainerEnvironment: this.$options.iCloudContainerEnvironment,
 									projectDir: this.$options.path,
 									clean: this.$options.clean,
 									teamId: this.$options.teamId,

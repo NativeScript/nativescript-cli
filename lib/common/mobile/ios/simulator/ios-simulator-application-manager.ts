@@ -15,18 +15,10 @@ export class IOSSimulatorApplicationManager extends ApplicationManagerBase {
 		private device: Mobile.IiOSDevice,
 		private $options: IOptions,
 		private $fs: IFileSystem,
-		private $processService: IProcessService,
 		private $deviceLogProvider: Mobile.IDeviceLogProvider,
 		$logger: ILogger,
 		$hooksService: IHooksService) {
 		super($logger, $hooksService);
-		this.$processService.attachToProcessExitSignals(this, () => {
-			for (const appId in this._lldbProcesses) {
-				/* tslint:disable:no-floating-promises */
-				this.detachNativeDebugger(appId);
-				/* tslint:enable:no-floating-promises */
-			}
-		});
 	}
 
 	public async getInstalledApplications(): Promise<string[]> {

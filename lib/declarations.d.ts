@@ -539,6 +539,7 @@ interface IOptions extends IRelease, IDeviceIdentifier, IJustLaunch, IAvd, IAvai
 	copyTo: string;
 	debugTransport: boolean;
 	forDevice: boolean;
+	iCloudContainerEnvironment: string;
 	framework: string;
 	frameworkName: string;
 	frameworkVersion: string;
@@ -564,6 +565,7 @@ interface IOptions extends IRelease, IDeviceIdentifier, IJustLaunch, IAvd, IAvai
 	analyticsLogFile: string;
 	performance: Object;
 	setupOptions(projectData: IProjectData): void;
+	cleanupLogFile: string;
 }
 
 interface IEnvOptions {

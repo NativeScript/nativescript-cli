@@ -49,6 +49,7 @@ const getDefautlBuildConfig = (): IBuildConfig => {
 	return {
 		release: true,
 		buildForDevice: false,
+		iCloudContainerEnvironment: null,
 		device: "testDevice",
 		provision: null,
 		teamId: "",

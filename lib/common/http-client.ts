@@ -15,19 +15,11 @@ export class HttpClient implements Server.IHttpClient {
 	// We receive multiple response packets every ms but we don't need to be very aggressive here.
 	private static STUCK_RESPONSE_CHECK_INTERVAL = 10000;
 
-	private defaultUserAgent: string;
-	private cleanupData: ICleanupRequestData[];
+private defaultUserAgent: string;
 
 	constructor(private $logger: ILogger,
-		private $processService: IProcessService,
 		private $proxyService: IProxyService,
 		private $staticConfig: Config.IStaticConfig) {
-		this.cleanupData = [];
-		this.$processService.attachToProcessExitSignals(this, () => {
-			this.cleanupData.forEach(d => {
-				this.cleanupAfterRequest(d);
-			});
-		});
 	}
 
 	public async httpRequest(options: any, proxySettings?: IProxySettings): Promise<Server.IResponse> {
@@ -107,7 +99,6 @@ export class HttpClient implements Server.IHttpClient {
 		const result = new Promise<Server.IResponse>((resolve, reject) => {
 			let timerId: NodeJS.Timer;
 			const cleanupRequestData: ICleanupRequestData = Object.create({ timers: [] });
-			this.cleanupData.push(cleanupRequestData);
 
 			const promiseActions: IPromiseActions<Server.IResponse> = {
 				resolve,
@@ -168,7 +159,7 @@ export class HttpClient implements Server.IHttpClient {
 							this.setResponseResult(promiseActions, cleanupRequestData, { err: new Error(HttpClient.STUCK_RESPONSE_ERROR_MESSAGE) });
 						}
 					}, HttpClient.STUCK_RESPONSE_CHECK_INTERVAL);
-					const successful = helpers.isRequestSuccessful(responseData);
+					const successful = helpers.isRequestSuccessful(responseData) || responseData.statusCode === HttpStatusCodes.NOT_MODIFIED;
 					if (!successful) {
 						pipeTo = undefined;
 					}

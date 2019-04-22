@@ -12,7 +12,7 @@ export class GoogleAnalyticsProvider implements IGoogleAnalyticsProvider {
 		private $logger: ILogger,
 		private $proxyService: IProxyService,
 		private $config: IConfiguration,
-		private analyticsLoggingService: IAnalyticsLoggingService) {
+		private analyticsLoggingService: IFileLogService) {
 	}
 
 	public async trackHit(trackInfo: IGoogleAnalyticsData): Promise<void> {
@@ -21,7 +21,7 @@ export class GoogleAnalyticsProvider implements IGoogleAnalyticsProvider {
 		try {
 			await this.track(this.$config.GA_TRACKING_ID, trackInfo, sessionId);
 		} catch (e) {
-			this.analyticsLoggingService.logData({ type: AnalyticsLoggingMessageType.Error, message: `Unable to track information ${JSON.stringify(trackInfo)}. Error is: ${e}` });
+			this.analyticsLoggingService.logData({ type: FileLogMessageType.Error, message: `Unable to track information ${JSON.stringify(trackInfo)}. Error is: ${e}` });
 			this.$logger.trace("Analytics exception: ", e);
 		}
 	}
@@ -95,7 +95,7 @@ export class GoogleAnalyticsProvider implements IGoogleAnalyticsProvider {
 					this.analyticsLoggingService.logData({
 						message: `Unable to track event with category: '${trackInfo.category}', action: '${trackInfo.action}', label: '${trackInfo.label}', ` +
 							`value: '${trackInfo.value}' attached page: ${this.currentPage}. Error is: ${err}.`,
-						type: AnalyticsLoggingMessageType.Error
+						type: FileLogMessageType.Error
 					});
 
 					reject(err);
@@ -121,7 +121,7 @@ export class GoogleAnalyticsProvider implements IGoogleAnalyticsProvider {
 				if (err) {
 					this.analyticsLoggingService.logData({
 						message: `Unable to track pageview with path '${trackInfo.path}' and title: '${trackInfo.title}' Error is: ${err}.`,
-						type: AnalyticsLoggingMessageType.Error
+						type: FileLogMessageType.Error
 					});
 
 					reject(err);

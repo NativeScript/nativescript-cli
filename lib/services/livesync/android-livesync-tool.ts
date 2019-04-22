@@ -41,12 +41,10 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 		private $fs: IFileSystem,
 		private $logger: ILogger,
 		private $mobileHelper: Mobile.IMobileHelper,
-		private $processService: IProcessService,
 		private $injector: IInjector) {
 			this.operationPromises = Object.create(null);
 			this.socketError = null;
 			this.socketConnection = null;
-			this.$processService.attachToProcessExitSignals(this, this.dispose);
 	}
 
 	public async connect(configuration: IAndroidLivesyncToolConfiguration): Promise<void> {
@@ -443,28 +441,6 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 		const relativeFilePath = path.relative(this.configuration.appPlatformsPath, filePath);
 
 		return this.$mobileHelper.buildDevicePath(relativeFilePath);
-	}
-
-	private dispose(): void {
-		if (this.pendingConnectionData) {
-			clearTimeout(this.pendingConnectionData.connectionTimer);
-
-			if (this.pendingConnectionData.socketTimer) {
-				clearTimeout(this.pendingConnectionData.socketTimer);
-			}
-			if (this.pendingConnectionData.socket) {
-				this.pendingConnectionData.socket.removeAllListeners();
-			}
-
-			this.pendingConnectionData.rejectHandler("LiveSync aborted.");
-		}
-		this.end();
-
-		_.keys(this.operationPromises)
-			.forEach(operationId => {
-				const operationPromise = this.operationPromises[operationId];
-				clearTimeout(operationPromise.timeoutId);
-			});
 	}
 
 	private async writeToSocket(data: Buffer): Promise<Boolean> {

@@ -22,8 +22,7 @@ export class IOSSimulator extends IOSDeviceBase implements Mobile.IiOSDevice {
 		private $iOSEmulatorServices: Mobile.IiOSSimulatorService,
 		private $iOSNotification: IiOSNotification,
 		private $iOSSimulatorLogProvider: Mobile.IiOSSimulatorLogProvider,
-		private $logger: ILogger,
-		protected $processService: IProcessService) {
+		private $logger: ILogger) {
 		super();
 		this.applicationManager = this.$injector.resolve(applicationManagerPath.IOSSimulatorApplicationManager, { iosSim: this.$iOSSimResolver.iOSSim, device: this });
 		this.fileSystem = this.$injector.resolve(fileSystemPath.IOSSimulatorFileSystem, { iosSim: this.$iOSSimResolver.iOSSim });

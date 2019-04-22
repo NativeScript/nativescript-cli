@@ -156,6 +156,9 @@ function createTestInjector() {
 	testInjector.register("gradleCommandService", GradleCommandService);
 	testInjector.register("gradleBuildService", GradleBuildService);
 	testInjector.register("gradleBuildArgsService", GradleBuildArgsService);
+	testInjector.register("cleanupService", {
+		setShouldDispose: (shouldDispose: boolean): void => undefined
+	});
 
 	return testInjector;
 }

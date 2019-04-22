@@ -59,6 +59,9 @@ describe("nativescript-cli-lib", () => {
 		sysInfo: [
 			"getSupportedNodeVersionRange",
 			"getSystemWarnings"
+		],
+		cleanupService: [
+			"setCleanupLogFile"
 		]
 	};
 

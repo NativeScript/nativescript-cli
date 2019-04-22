@@ -13,7 +13,6 @@ export class AnalyticsService implements IAnalyticsService, IDisposable {
 
 	constructor(private $logger: ILogger,
 		private $options: IOptions,
-		private $processService: IProcessService,
 		private $staticConfig: Config.IStaticConfig,
 		private $prompter: IPrompter,
 		private $userSettingsService: UserSettings.IUserSettingsService,
@@ -223,20 +222,12 @@ export class AnalyticsService implements IAnalyticsService, IDisposable {
 			});
 
 			broker.on("message", (data: any) => {
-				if (data === AnalyticsMessages.BrokerReadyToReceive) {
+				if (data === DetachedProcessMessages.ProcessReadyToReceive) {
 					clearTimeout(timeoutId);
 
 					if (!isSettled) {
 						isSettled = true;
-
-						this.$processService.attachToProcessExitSignals(this, () => {
-							broker.send({
-								type: TrackingTypes.Finish
-							});
-						});
-
 						this.brokerProcess = broker;
-
 						resolve(broker);
 					}
 				}

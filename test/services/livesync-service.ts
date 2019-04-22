@@ -17,7 +17,6 @@ const createTestInjector = (): IInjector => {
 	testInjector.register("devicePlatformsConstants", {});
 	testInjector.register("nodeModulesDependenciesBuilder", {});
 	testInjector.register("logger", LoggerStub);
-	testInjector.register("processService", {});
 	testInjector.register("debugService", {});
 	testInjector.register("errors", {});
 	testInjector.register("debugDataService", {});
@@ -52,7 +51,6 @@ class LiveSyncServiceInheritor extends LiveSyncService {
 		$devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		$nodeModulesDependenciesBuilder: INodeModulesDependenciesBuilder,
 		$logger: ILogger,
-		$processService: IProcessService,
 		$hooksService: IHooksService,
 		$pluginsService: IPluginsService,
 		$debugService: IDebugService,
@@ -75,7 +73,6 @@ class LiveSyncServiceInheritor extends LiveSyncService {
 			$devicePlatformsConstants,
 			$nodeModulesDependenciesBuilder,
 			$logger,
-			$processService,
 			$hooksService,
 			$pluginsService,
 			$debugService,

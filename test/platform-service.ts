@@ -120,6 +120,9 @@ function createTestInjector() {
 	testInjector.register("doctorService", {
 		checkForDeprecatedShortImportsInAppDir: (projectDir: string): void => undefined
 	});
+	testInjector.register("cleanupService", {
+		setShouldDispose: (shouldDispose: boolean): void => undefined
+	});
 
 	return testInjector;
 }

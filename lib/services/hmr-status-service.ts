@@ -10,10 +10,8 @@ export class HmrStatusService implements IHmrStatusService {
 	private intervals: IDictionary<any> = {};
 
 	constructor(private $logParserService: ILogParserService,
-		private $processService: IProcessService,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $logger: ILogger) {
-		this.$processService.attachToProcessExitSignals(this, this.dispose);
 	}
 
 	public getHmrStatus(deviceId: string, operationHash: string): Promise<number> {
@@ -105,13 +103,6 @@ export class HmrStatusService implements IHmrStatusService {
 		}
 
 		this.hashOperationStatuses[key].status = status;
-	}
-
-	private dispose() {
-		_.forEach(this.intervals, (value, key) => {
-			clearInterval(value);
-			this.intervals[key] = null;
-		});
 	}
 }
 

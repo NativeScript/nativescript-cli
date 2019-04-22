@@ -10,14 +10,14 @@ export class AnalyticsBroker implements IAnalyticsBroker {
 
 	constructor(private $analyticsSettingsService: IAnalyticsSettingsService,
 		private $injector: IInjector,
-		private analyticsLoggingService: IAnalyticsLoggingService) { }
+		private analyticsLoggingService: IFileLogService) { }
 
 	public async sendDataForTracking(trackInfo: ITrackingInformation): Promise<void> {
 		try {
 			const googleProvider = await this.getGoogleAnalyticsProvider();
 			await googleProvider.trackHit(<IGoogleAnalyticsTrackingInformation>trackInfo);
 		} catch (err) {
-			this.analyticsLoggingService.logData({ message: `AnalyticsBroker unable to execute action in sendDataForTracking: ${err}`, type: AnalyticsLoggingMessageType.Error });
+			this.analyticsLoggingService.logData({ message: `AnalyticsBroker unable to execute action in sendDataForTracking: ${err}`, type: FileLogMessageType.Error });
 		}
 	}
 }
