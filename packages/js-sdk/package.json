@@ -45,7 +45,7 @@
     "@types/node": "~11.11.6",
     "@types/url-join": "~4.0.0",
     "del-cli": "~1.1.0",
-    "typescript": "~3.3.3"
+    "typescript": "~3.4.4"
   },
   "files": [
     "lib"

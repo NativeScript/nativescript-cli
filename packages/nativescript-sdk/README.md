@@ -5,7 +5,7 @@
 From the command prompt go to your app's root folder and execute:
 
 ```bash
-npm i kinvey-nativescript-sdk@next events@3.0.0 js-base64@2.5.1 lodash@4.17.11 loglevel@1.6.1 loglevel-plugin-prefix@0.8.4 nativescript-secure-storage@2.4.0 nativescript-sqlite@2.3.3 nativescript-urlhandler@1.2.3 p-queue@4.0.0 pubnub@git+https://github.com/thomasconner/javascript.git#develop rxjs@6.4.0 sift@7.0.1 tns-core-modules@5.2.2 tslib@1.9.3 url@0.11.0 url-join@4.0.0
+npm i kinvey-nativescript-sdk@next
 ```
 
 ## Usage
@@ -16,7 +16,7 @@ We need to initialize the SDK before your app starts, so open `app.js` and add t
 
 #### JavaScript
 ```js
-var Kinvey = require('kinvey-nativescript-sdk');
+import * as Kinvey from 'kinvey-nativescript-sdk';
 
 Kinvey.init({
   appKey: '<yourAppKey>',
@@ -26,7 +26,7 @@ Kinvey.init({
 
 #### TypeScript
 ```js
-const Kinvey = require('kinvey-nativescript-sdk');
+import * as Kinvey from 'kinvey-nativescript-sdk';
 
 Kinvey.init({
   appKey: '<yourAppKey>',
@@ -35,7 +35,51 @@ Kinvey.init({
 ```
 
 #### Angular
-Please take a look at our `kinvey-nativescript-angular-sdk`.
+Import the `KinveyModule` in your `app.module.ts` like this to initialize the SDK:
+
+```js
+import { NgModule } from '@angular/core';
+import { KinveyModule } from 'kinvey-nativescript-sdk/angular';
+
+@NgModule({
+  imports: [
+    KinveyModule.init({
+      appKey: '<yourAppKey>',
+      appSecret: '<yourAppSecret>'
+    })
+  ]
+})
+export class AppModule { }
+```
+
+Then you can use dependency injection to inject a Kinvey service in your module like this:
+
+```js
+import { Component } from '@angular/core';
+import { UserService } from 'kinvey-nativescript-sdk/angular`;
+
+@Component()
+export class AppComponent {
+  constructor(private userService: UserService) {}
+
+  async login() {
+    try {
+      const user = await this.userService.login('<username>', '<password>');
+      console.log(user);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+}
+```
+
+The following services are available to use with dependency injection:
+
+- `DataStoreService`
+- `EndpointService`
+- `FilesService`
+- `PingService`
+- `UserService`
 
 ## Build
 

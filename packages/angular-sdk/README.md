@@ -5,17 +5,15 @@
 From the command prompt go to your app's root folder and execute:
 
 ```bash
-npm i kinvey-angular-sdk@next @angular/core@7.2.10 axios@0.18.0 events@3.0.0 js-base64@2.5.1 lodash@4.17.11 loglevel@1.6.1 loglevel-plugin-prefix@0.8.4 p-queue@4.0.0 pubnub@4.23.0 rxjs@6.4.0 sift@7.0.1 tslib@1.9.3 url@0.11.0 url-join@4.0.0
+npm i kinvey-angular-sdk@next
 ```
 
 ## Usage
-
-### Initialize SDK
-
-Open `app.module.ts` and add this:
+Import the `KinveyModule` in your `app.module.ts` like this to initialize the SDK:
 
 ```js
-const { KinveyModule } = require('kinvey-angular-sdk');
+import { NgModule } from '@angular/core';
+import { KinveyModule } from 'kinvey-angular-sdk';
 
 @NgModule({
   imports: [
@@ -27,6 +25,35 @@ const { KinveyModule } = require('kinvey-angular-sdk');
 })
 export class AppModule { }
 ```
+
+Then you can use dependency injection to inject a Kinvey service in your module like this:
+
+```js
+import { Component } from '@angular/core';
+import { UserService } from 'kinvey-angular-sdk`;
+
+@Component()
+export class AppComponent {
+  constructor(private userService: UserService) {}
+
+  async login() {
+    try {
+      const user = await this.userService.login('<username>', '<password>');
+      console.log(user);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+}
+```
+
+The following services are available to use with dependency injection:
+
+- `DataStoreService`
+- `EndpointService`
+- `FilesService`
+- `PingService`
+- `UserService`
 
 ## Build
 

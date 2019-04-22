@@ -12,13 +12,14 @@
     "removeComments": false,
     "noEmitOnError": true,
     "noImplicitAny": false,
+    "importHelpers": true,
     "lib": [
       "dom",
       "es6",
       "es2015.iterable"
     ],
-    "resolveJsonModule": true,
     "esModuleInterop": true,
+    "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true,
     "outDir": "./lib"
   },

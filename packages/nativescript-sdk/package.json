@@ -35,7 +35,8 @@
     "nativescript-secure-storage": "2.4.0",
     "nativescript-sqlite": "2.3.3",
     "nativescript-urlhandler": "1.2.3",
-    "pubnub": "git+https://github.com/thomasconner/javascript.git#develop"
+    "pubnub": "git+https://github.com/thomasconner/javascript.git#develop",
+    "tslib": "1.9.3"
   },
   "peerDependencies": {
     "@angular/core": "~7.2.0"
@@ -44,6 +45,7 @@
     "@angular/compiler": "~7.2.13",
     "@angular/compiler-cli": "~7.2.13",
     "@angular/core": "~7.2.13",
+    "@types/events": "~3.0.0",
     "del-cli": "~1.1.0",
     "fs-extra": "~7.0.1",
     "tns-core-modules": "~5.3.1",

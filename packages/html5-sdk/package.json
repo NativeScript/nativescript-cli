@@ -36,10 +36,11 @@
     "tslib": "1.9.3"
   },
   "devDependencies": {
+    "@types/events": "^3.0.0",
     "@types/lodash": "~4.14.123",
     "clean-webpack-plugin": "~2.0.1",
     "del-cli": "~1.1.0",
-    "typescript": "~3.3.3",
+    "typescript": "~3.4.4",
     "webpack": "~4.29.6",
     "webpack-cli": "^3.3.0"
   },
