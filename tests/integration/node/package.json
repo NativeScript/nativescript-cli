@@ -2,13 +2,13 @@
   "private": true,
   "name": "kinvey-node-integration-tests",
   "description": "Integration tests for kinvey-nodejs-sdk.",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "scripts": {
     "pretest": "node scripts/test.js",
     "test": "mocha --opts mocha.opts \"test/**/*.spec.js\""
   },
   "dependencies": {
-    "kinvey-node-sdk": "~3.13.0-next.27"
+    "kinvey-node-sdk": "^3.13.0-next.29"
   },
   "devDependencies": {
     "@babel/core": "~7.4.3",
@@ -18,8 +18,8 @@
     "axios": "~0.18.0",
     "babel-plugin-transform-inline-environment-variables": "~0.4.3",
     "chai": "~4.2.0",
-		"core-js": "^3.0.1",
-		"dotenv": "~7.0.0",
+    "core-js": "^3.0.1",
+    "dotenv": "~7.0.0",
     "glob-promise": "~3.4.0",
     "mocha": "~6.0.2",
     "sinon": "~7.3.1"
