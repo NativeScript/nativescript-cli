@@ -1,5 +1,16 @@
 import * as path from "path";
 
+export enum BuildNames {
+	debug = "Debug",
+	release = "Release"
+}
+
+export interface IXcodeTargetBuildConfigurationProperty {
+	name: string;
+	value: any;
+	buildNames?: BuildNames[];
+}
+
 export abstract class NativeTargetServiceBase implements IIOSNativeTargetServiceBase {
 	constructor(protected $fs: IFileSystem,
 		protected $pbxprojDomXcode: IPbxprojDomXcode,
@@ -39,5 +50,39 @@ export abstract class NativeTargetServiceBase implements IIOSNativeTargetService
 			});
 		}
 		xcode.save();
+	}
+
+	protected getTargetDirectories(folderPath: string): string[] {
+		return this.$fs.readDirectory(folderPath)
+			.filter(fileName => {
+				const filePath = path.join(folderPath, fileName);
+				const stats = this.$fs.getFsStats(filePath);
+
+				return stats.isDirectory() && !fileName.startsWith(".");
+			});
+	}
+
+	protected setXcodeTargetBuildConfigurationProperties(properties: IXcodeTargetBuildConfigurationProperty[], targetName: string, project: IXcode.project): void {
+		properties.forEach(property => {
+			const buildNames = property.buildNames || [BuildNames.debug, BuildNames.release];
+			buildNames.forEach((buildName) => {
+				project.addBuildProperty(property.name, property.value, buildName, targetName);
+			});
+		});
+	}
+
+	protected setConfigurationsFromJsonFile(jsonPath: string, targetUuid: string, project: IXcode.project) {
+		if (this.$fs.exists(jsonPath)) {
+			const configurationJson = this.$fs.readJson(jsonPath) || {};
+			_.forEach(configurationJson.frameworks, framework => {
+				project.addFramework(
+					framework,
+					{ target: targetUuid }
+				);
+			});
+			if (configurationJson.assetcatalogCompilerAppiconName) {
+				project.addToBuildSettings("ASSETCATALOG_COMPILER_APPICON_NAME", configurationJson.assetcatalogCompilerAppiconName, targetUuid);
+			}
+		}
 	}
 }

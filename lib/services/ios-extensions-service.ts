@@ -16,13 +16,7 @@ export class IOSExtensionsService extends NativeTargetServiceBase implements IIO
 		}
 		const project = new this.$xcode.project(pbxProjPath);
 		project.parseSync();
-		this.$fs.readDirectory(extensionsFolderPath)
-			.filter(fileName => {
-				const filePath = path.join(extensionsFolderPath, fileName);
-				const stats = this.$fs.getFsStats(filePath);
-
-				return stats.isDirectory() && !fileName.startsWith(".");
-			})
+		this.getTargetDirectories(extensionsFolderPath)
 			.forEach(extensionFolder => {
 				const target = this.addTargetToProject(extensionsFolderPath, extensionFolder, 'app_extension', project, platformData);
 				this.configureTarget(extensionFolder, path.join(extensionsFolderPath, extensionFolder), target, project, projectData);
@@ -38,21 +32,12 @@ export class IOSExtensionsService extends NativeTargetServiceBase implements IIO
 
 	private configureTarget(extensionName: string, extensionPath: string, target: IXcode.target, project: IXcode.project, projectData: IProjectData) {
 		const extJsonPath = path.join(extensionPath, "extension.json");
-		if (this.$fs.exists(extJsonPath)) {
-			const extensionJson = this.$fs.readJson(extJsonPath);
-			_.forEach(extensionJson.frameworks, framework => {
-				project.addFramework(
-					framework,
-					{ target: target.uuid }
-				);
-			});
-			if (extensionJson.assetcatalogCompilerAppiconName) {
-				project.addToBuildSettings("ASSETCATALOG_COMPILER_APPICON_NAME", extensionJson.assetcatalogCompilerAppiconName, target.uuid);
-			}
-		}
+		this.setConfigurationsFromJsonFile(extJsonPath, target.uuid, project);
 
-		project.addBuildProperty("PRODUCT_BUNDLE_IDENTIFIER", `${projectData.projectIdentifiers.ios}.${extensionName}`, "Debug", extensionName);
-		project.addBuildProperty("PRODUCT_BUNDLE_IDENTIFIER", `${projectData.projectIdentifiers.ios}.${extensionName}`, "Release", extensionName);
+		this.setXcodeTargetBuildConfigurationProperties(
+			[{name: "PRODUCT_BUNDLE_IDENTIFIER", value: `${projectData.projectIdentifiers.ios}.${extensionName}`}],
+			extensionName,
+			project);
 	}
 
 	public removeExtensions({pbxProjPath}: IRemoveExtensionsOptions): void {
