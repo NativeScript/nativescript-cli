@@ -26,7 +26,7 @@ export function init(config?: KinveyConfig) {
     storageAdapter: getStorageAdapter(mergedConfig.storage),
     pubnub: PubNub
   })
-  return Object.assign({}, kinveyConfig, { storage: config.storage });
+  return Object.assign({}, kinveyConfig, { storage: mergedConfig.storage });
 }
 
 export function initialize(config?: KinveyConfig) {
