@@ -12,7 +12,7 @@
     "removeComments": false,
     "noEmitOnError": true,
     "noImplicitAny": false,
-    "importHelpers": true,
+    "importHelpers": false,
     "lib": [
       "dom",
       "es6",
