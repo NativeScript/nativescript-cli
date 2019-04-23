@@ -35,8 +35,7 @@
     "nativescript-secure-storage": "2.4.0",
     "nativescript-sqlite": "2.3.3",
     "nativescript-urlhandler": "1.2.3",
-    "pubnub": "git+https://github.com/thomasconner/javascript.git#develop",
-    "tslib": "1.9.3"
+    "pubnub": "git+https://github.com/thomasconner/javascript.git#develop"
   },
   "peerDependencies": {
     "@angular/core": "~7.2.0",
