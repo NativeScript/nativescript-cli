@@ -222,7 +222,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 
 	@performanceLog()
 	public async preparePlatform(platformInfo: IPreparePlatformInfo): Promise<boolean> {
-		await this.$workflowService.handleLegacyWorkflow(platformInfo.projectData.projectDir, platformInfo.appFilesUpdaterOptions);
+		await this.$workflowService.handleLegacyWorkflow({ projectDir: platformInfo.projectData.projectDir, settings: platformInfo.appFilesUpdaterOptions });
 		const changesInfo = await this.getChangesInfo(platformInfo);
 		const shouldPrepare = await this.shouldPrepare({ platformInfo, changesInfo });
 

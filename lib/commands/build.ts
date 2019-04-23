@@ -16,7 +16,7 @@ export abstract class BuildCommandBase extends ValidatePlatformCommandBase {
 	}
 
 	public async executeCore(args: string[]): Promise<string> {
-		await this.$workflowService.handleLegacyWorkflow(this.$projectData.projectDir, this.$options, true);
+		await this.$workflowService.handleLegacyWorkflow({ projectDir: this.$projectData.projectDir, settings: this.$options, skipWarnings: true });
 		const platform = args[0].toLowerCase();
 		const appFilesUpdaterOptions: IAppFilesUpdaterOptions = {
 			bundle: !!this.$options.bundle,

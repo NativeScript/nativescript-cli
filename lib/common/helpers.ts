@@ -385,7 +385,11 @@ export function createTable(headers: string[], data: string[][]): any {
 }
 
 export function getMessageWithBorders(message: string, spanLength = 3): string {
-	const longestRowLength = message.split(EOL).sort(function (a, b) { return b.length - a.length; })[0].length;
+	if (!message) {
+		return "";
+	}
+
+	const longestRowLength = message.split(EOL).sort((a, b) => { return b.length - a.length; })[0].length;
 	let border = "*".repeat(longestRowLength + 2 * spanLength); // * 2 for both sides
 	if (border.length % 2 === 0) {
 		border += "*"; // the * should always be an odd number in order to get * in each edge (we will remove the even *s below)

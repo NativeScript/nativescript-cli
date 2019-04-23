@@ -15,7 +15,14 @@ interface IBuildPlatformAction {
 }
 
 interface IWorkflowService {
-	handleLegacyWorkflow(projectDir: string, settings: IWebpackWorkflowSettings, skipWarnings?: boolean, force?: boolean): Promise<void>;
+	handleLegacyWorkflow(options: IHandleLegacyWorkflowOptions): Promise<void>;
+}
+
+interface IHandleLegacyWorkflowOptions {
+	projectDir: string;
+	settings: IWebpackWorkflowSettings;
+	skipWarnings?: boolean;
+	force?: boolean;
 }
 
 interface IWebpackWorkflowSettings {

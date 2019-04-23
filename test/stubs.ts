@@ -917,7 +917,7 @@ export class PerformanceService implements IPerformanceService {
 }
 
 export class WorkflowServiceStub implements IWorkflowService {
-	handleLegacyWorkflow(projectDir: string, settings: IWebpackWorkflowSettings, skipWarnings?: boolean, force?: boolean): Promise<void> {
+	handleLegacyWorkflow(options: IHandleLegacyWorkflowOptions): Promise<void> {
 		return;
 	}
 }

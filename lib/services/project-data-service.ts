@@ -1,7 +1,6 @@
 import * as path from "path";
 import * as constants from "../constants";
 import { ProjectData } from "../project-data";
-import { parseJson } from "../common/helpers";
 import { exported } from "../common/decorators";
 import {
 	NATIVESCRIPT_PROPS_INTERNAL_DELIMITER,
@@ -197,9 +196,8 @@ export class ProjectDataService implements IProjectDataService {
 	private getNsConfig(nsConfigPath: string): INsConfig {
 		let result = this.getNsConfigDefaultObject();
 		if (this.$fs.exists(nsConfigPath)) {
-			const nsConfigContent = this.$fs.readText(nsConfigPath);
 			try {
-				result = <INsConfig>parseJson(nsConfigContent);
+				result = <INsConfig>this.$fs.readJson(nsConfigPath);
 			} catch (e) {
 				// default
 			}

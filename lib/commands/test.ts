@@ -14,7 +14,7 @@ abstract class TestCommandBase {
 	protected abstract $workflowService: IWorkflowService;
 
 	async execute(args: string[]): Promise<void> {
-		await this.$workflowService.handleLegacyWorkflow(this.$projectData.projectDir, this.$options, true);
+		await this.$workflowService.handleLegacyWorkflow({ projectDir: this.$projectData.projectDir, settings: this.$options, skipWarnings: true });
 		await this.$testExecutionService.startKarmaServer(this.platform, this.$projectData, this.projectFilesConfig);
 	}
 

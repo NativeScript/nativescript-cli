@@ -4,8 +4,8 @@ import * as semver from "semver";
 import { EOL } from "os";
 
 export class WorkflowService implements IWorkflowService {
-	private legacyWorkflowDeprecationMessage = `With the upcoming NativeScript 6.0 the Webpack workflow will become the only way of build apps.
-More info about the reason for this change and how to migrate your project can be found in the link below:
+	private legacyWorkflowDeprecationMessage = `With the upcoming NativeScript 6.0 the Webpack workflow will become the only way of building apps.
+More info about the reasons for this change and how to migrate your project can be found in the link below:
 <TODO: add link here>`;
 	private webpackWorkflowConfirmMessage = `Do you want to switch your app to the Webpack workflow?`;
 
@@ -19,7 +19,8 @@ More info about the reason for this change and how to migrate your project can b
 	) {
 	}
 
-	public async handleLegacyWorkflow(projectDir: string, settings: IWebpackWorkflowSettings, skipWarnings?: boolean, force?: boolean): Promise<void> {
+	public async handleLegacyWorkflow(options: IHandleLegacyWorkflowOptions): Promise<void> {
+		const { projectDir, settings, skipWarnings, force } = options;
 		if (!settings.bundle || force) {
 			const projectData = this.$projectDataService.getProjectData(projectDir);
 			if (typeof (projectData.useLegacyWorkflow) !== "boolean" || force) {

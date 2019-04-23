@@ -30,8 +30,7 @@ export class UpdateCommand extends ValidatePlatformCommandBase implements IComma
 
 	public async execute(args: string[]): Promise<void> {
 		if (this.$options.workflow) {
-			const forceWebpackWorkflow = true;
-			await this.$workflowService.handleLegacyWorkflow(this.$projectData.projectDir, this.$options, forceWebpackWorkflow);
+			await this.$workflowService.handleLegacyWorkflow({ projectDir: this.$projectData.projectDir, settings: this.$options, force: true });
 			return;
 		}
 

@@ -24,7 +24,7 @@ export class DebugPlatformCommand extends ValidatePlatformCommandBase implements
 	}
 
 	public async execute(args: string[]): Promise<void> {
-		await this.$workflowService.handleLegacyWorkflow(this.$projectData.projectDir, this.$options, true);
+		await this.$workflowService.handleLegacyWorkflow({ projectDir: this.$projectData.projectDir, settings: this.$options, skipWarnings: true });
 		await this.$devicesService.initialize({
 			platform: this.platform,
 			deviceId: this.$options.device,
