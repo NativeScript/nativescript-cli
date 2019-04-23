@@ -890,12 +890,11 @@ interface IXcprojInfo {
 
 interface IXcconfigService {
 	/**
-	 * Returns the path to the xcconfig file
+	 * Returns the paths to the xcconfig files for build configuration (debug/release)
 	 * @param projectRoot The path to root folder of native project (platforms/ios)
-	 * @param opts
-	 * @returns {string}
+	 * @returns {IStringDictionary}
 	 */
-	getPluginsXcconfigFilePath(projectRoot: string, opts: IRelease): string;
+	getPluginsXcconfigFilePaths(projectRoot: string): IStringDictionary;
 
 	/**
 	 * Returns the value of a property from a xcconfig file.
