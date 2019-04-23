@@ -1,7 +1,7 @@
 {
   "name": "kinvey-nativescript-sdk",
   "description": "Kinvey JavaScript SDK for NativeScript applications.",
-  "version": "3.13.0-next.29",
+  "version": "3.13.0-next.30",
   "license": "Apache-2.0",
   "homepage": "https://github.com/Kinvey/js-sdk/tree/master/packages/nativescript-sdk",
   "repository": {
@@ -30,7 +30,7 @@
   },
   "dependencies": {
     "events": "3.0.0",
-    "kinvey-js-sdk": "^3.13.0-next.29",
+    "kinvey-js-sdk": "^3.13.0-next.30",
     "nativescript-hook": "0.2.5",
     "nativescript-secure-storage": "2.4.0",
     "nativescript-sqlite": "2.3.3",
