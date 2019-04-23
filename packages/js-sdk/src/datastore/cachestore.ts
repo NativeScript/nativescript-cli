@@ -288,12 +288,12 @@ export class CacheStore {
   }
 
   async clear(query?: Query) {
+    // Remove the sync events
+    await this.clearSync(query);
+
     // Remove the docs from the cache
     const cache = new DataStoreCache(this.collectionName, this.tag);
     const count = await cache.remove(query);
-
-    // Remove the sync events
-    await this.clearSync(query);
 
     // Clear the query cache
     if (!query) {
@@ -301,7 +301,7 @@ export class CacheStore {
       queryCache.remove();
     }
 
-    // Return the cound
+    // Return the count
     return { count };
   }
 
@@ -507,8 +507,15 @@ export class CacheStore {
 
   async clearSync(query?: Query) {
     const sync = new Sync(this.collectionName, this.tag);
-    const clearQuery = queryToSyncQuery(query, this.collectionName);
-    return sync.remove(clearQuery);
+    const syncDocs = await sync.find();
+    const cache = new DataStoreCache(this.collectionName, this.tag);
+    let docs = await Promise.all(syncDocs.map((syncDoc) => cache.findById(syncDoc.entityId)));
+    docs = without(docs, undefined);
+    if (query) {
+      docs = query.process(docs);
+    }
+    const clearSyncQuery = new Query().contains('entityId', docs.map((doc) => doc._id));
+    return sync.remove(clearSyncQuery);
   }
 
   async subscribe(receiver: LiveServiceReceiver, options?: any) {
