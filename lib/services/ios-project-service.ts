@@ -1,6 +1,5 @@
 import * as path from "path";
 import * as shell from "shelljs";
-import * as semver from "semver";
 import * as constants from "../constants";
 import { Configurations } from "../common/constants";
 import * as helpers from "../common/helpers";
@@ -12,7 +11,6 @@ import * as temp from "temp";
 import * as plist from "plist";
 import { IOSProvisionService } from "./ios-provision-service";
 import { IOSEntitlementsService } from "./ios-entitlements-service";
-import * as mobileProvisionFinder from "ios-mobileprovision-finder";
 import { BUILD_XCCONFIG_FILE_NAME, IosProjectConstants } from "../constants";
 
 interface INativeSourceCodeGroup {
@@ -38,19 +36,18 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		private $logger: ILogger,
 		private $injector: IInjector,
 		$projectDataService: IProjectDataService,
-		private $prompter: IPrompter,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-		private $devicesService: Mobile.IDevicesService,
-		private $mobileHelper: Mobile.IMobileHelper,
 		private $hostInfo: IHostInfo,
 		private $xcprojService: IXcprojService,
 		private $iOSProvisionService: IOSProvisionService,
+		private $iOSSigningService: IiOSSigningService,
 		private $pbxprojDomXcode: IPbxprojDomXcode,
 		private $xcode: IXcode,
 		private $iOSEntitlementsService: IOSEntitlementsService,
 		private $platformEnvironmentRequirements: IPlatformEnvironmentRequirements,
 		private $plistParser: IPlistParser,
 		private $xcconfigService: IXcconfigService,
+		private $xcodebuildService: IXcodebuildService,
 		private $iOSExtensionsService: IIOSExtensionsService) {
 		super($fs, $projectDataService);
 	}
@@ -194,374 +191,26 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			path.join(projectRoot, projectData.projectName));
 	}
 
-	/**
-	 * Archive the Xcode project to .xcarchive.
-	 * Returns the path to the .xcarchive.
-	 */
-	public async archive(projectData: IProjectData, buildConfig?: IBuildConfig, options?: { archivePath?: string, additionalArgs?: string[] }): Promise<string> {
-		const platformData = this.getPlatformData(projectData);
-		const projectRoot = this.getPlatformData(projectData).projectRoot;
-		const archivePath = options && options.archivePath ? path.resolve(options.archivePath) : path.join(platformData.getBuildOutputPath(buildConfig), projectData.projectName + ".xcarchive");
-		let args = ["archive", "-archivePath", archivePath, "-configuration",
-			getConfigurationName(!buildConfig || buildConfig.release)]
-			.concat(this.xcbuildProjectArgs(projectRoot, projectData, "scheme"));
-
-		if (options && options.additionalArgs) {
-			args = args.concat(options.additionalArgs);
-		}
-
-		await this.xcodebuild(args, projectRoot, buildConfig && buildConfig.buildOutputStdio);
-		return archivePath;
-	}
-
-	/**
-	 * Exports .xcarchive for AppStore distribution.
-	 */
-	public async exportArchive(projectData: IProjectData, options: { archivePath: string, exportDir?: string, teamID?: string, provision?: string }): Promise<string> {
-		const projectRoot = this.getPlatformData(projectData).projectRoot;
-		const archivePath = options.archivePath;
-		// The xcodebuild exportPath expects directory and writes the <project-name>.ipa at that directory.
-		const exportPath = path.resolve(options.exportDir || path.join(projectRoot, "/build/archive"));
-		const exportFile = path.join(exportPath, projectData.projectName + ".ipa");
-
-		// These are the options that you can set in the Xcode UI when exporting for AppStore deployment.
-		let plistTemplate = `<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-`;
-		if (options && options.teamID) {
-			plistTemplate += `    <key>teamID</key>
-    <string>${options.teamID}</string>
-`;
-		}
-		if (options && options.provision) {
-			plistTemplate += `    <key>provisioningProfiles</key>
-    <dict>
-        <key>${projectData.projectIdentifiers.ios}</key>
-        <string>${options.provision}</string>
-    </dict>`;
-		}
-		plistTemplate += `    <key>method</key>
-    <string>app-store</string>
-    <key>uploadBitcode</key>
-    <false/>
-    <key>compileBitcode</key>
-    <false/>
-    <key>uploadSymbols</key>
-    <false/>
-</dict>
-</plist>`;
-
-		// Save the options...
-		temp.track();
-		const exportOptionsPlist = temp.path({ prefix: "export-", suffix: ".plist" });
-		this.$fs.writeFile(exportOptionsPlist, plistTemplate);
-
-		await this.xcodebuild(
-			[
-				"-exportArchive",
-				"-archivePath", archivePath,
-				"-exportPath", exportPath,
-				"-exportOptionsPlist", exportOptionsPlist
-			],
-			projectRoot);
-		return exportFile;
-	}
-
-	private iCloudContainerEnvironment(buildConfig: IBuildConfig): string {
-		return buildConfig && buildConfig.iCloudContainerEnvironment ? buildConfig.iCloudContainerEnvironment : null;
-	}
-
-	/**
-	 * Exports .xcarchive for a development device.
-	 */
-	private async exportDevelopmentArchive(projectData: IProjectData, buildConfig: IBuildConfig, options: { archivePath: string, provision?: string }): Promise<string> {
-		const platformData = this.getPlatformData(projectData);
-		const projectRoot = platformData.projectRoot;
-		const archivePath = options.archivePath;
-		const exportOptionsMethod = await this.getExportOptionsMethod(projectData, archivePath);
-		const iCloudContainerEnvironment = this.iCloudContainerEnvironment(buildConfig);
-		let plistTemplate = `<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-    <key>method</key>
-	<string>${exportOptionsMethod}</string>`;
-		if (options && options.provision) {
-			plistTemplate += `    <key>provisioningProfiles</key>
-<dict>
-	<key>${projectData.projectIdentifiers.ios}</key>
-	<string>${options.provision}</string>
-</dict>`;
-		}
-		plistTemplate += `
-    <key>uploadBitcode</key>
-    <false/>
-    <key>compileBitcode</key>
-    <false/>`;
-		if (iCloudContainerEnvironment) {
-			plistTemplate += `
-    <key>iCloudContainerEnvironment</key>
-    <string>${iCloudContainerEnvironment}</string>`;
-		}
-		plistTemplate += `
-</dict>
-</plist>`;
-
-		// Save the options...
-		temp.track();
-		const exportOptionsPlist = temp.path({ prefix: "export-", suffix: ".plist" });
-		this.$fs.writeFile(exportOptionsPlist, plistTemplate);
-
-		// The xcodebuild exportPath expects directory and writes the <project-name>.ipa at that directory.
-		const exportPath = path.resolve(path.dirname(archivePath));
-		const exportFile = path.join(exportPath, projectData.projectName + ".ipa");
-
-		await this.xcodebuild(
-			[
-				"-exportArchive",
-				"-archivePath", archivePath,
-				"-exportPath", exportPath,
-				"-exportOptionsPlist", exportOptionsPlist
-			],
-			projectRoot, buildConfig.buildOutputStdio);
-		return exportFile;
-	}
-
-	private xcbuildProjectArgs(projectRoot: string, projectData: IProjectData, product?: "scheme" | "target"): string[] {
-		const xcworkspacePath = path.join(projectRoot, projectData.projectName + ".xcworkspace");
-		if (this.$fs.exists(xcworkspacePath)) {
-			return ["-workspace", xcworkspacePath, product ? "-" + product : "-scheme", projectData.projectName];
-		} else {
-			const xcodeprojPath = path.join(projectRoot, projectData.projectName + ".xcodeproj");
-			return ["-project", xcodeprojPath, product ? "-" + product : "-target", projectData.projectName];
-		}
-	}
-
 	public async buildProject(projectRoot: string, projectData: IProjectData, buildConfig: IBuildConfig): Promise<void> {
-		const basicArgs = [
-			'SHARED_PRECOMPS_DIR=' + path.join(projectRoot, 'build', 'sharedpch')
-		];
-
+		const platformData = this.getPlatformData(projectData);
 		const handler = (data: any) => {
 			this.emit(constants.BUILD_OUTPUT_EVENT_NAME, data);
 		};
 
 		if (buildConfig.buildForDevice) {
+			await this.$iOSSigningService.setupSigningForDevice(projectRoot, projectData, buildConfig);
 			await attachAwaitDetach(constants.BUILD_OUTPUT_EVENT_NAME,
 				this.$childProcess,
 				handler,
-				this.buildForDevice(projectRoot, basicArgs, buildConfig, projectData));
+				this.$xcodebuildService.buildForDevice(platformData, projectData, buildConfig));
 		} else {
 			await attachAwaitDetach(constants.BUILD_OUTPUT_EVENT_NAME,
 				this.$childProcess,
 				handler,
-				this.buildForSimulator(projectRoot, basicArgs, projectData, buildConfig));
+				this.$xcodebuildService.buildForSimulator(platformData, projectData, buildConfig));
 		}
 
 		this.validateApplicationIdentifier(projectData);
-	}
-
-	private async buildForDevice(projectRoot: string, args: string[], buildConfig: IBuildConfig, projectData: IProjectData): Promise<void> {
-		if (!buildConfig.release && !buildConfig.architectures) {
-			await this.$devicesService.initialize({
-				platform: this.$devicePlatformsConstants.iOS.toLowerCase(), deviceId: buildConfig.device,
-				skipEmulatorStart: true
-			});
-			const instances = this.$devicesService.getDeviceInstances();
-			const devicesArchitectures = _(instances)
-				.filter(d => this.$mobileHelper.isiOSPlatform(d.deviceInfo.platform) && !!d.deviceInfo.activeArchitecture)
-				.map(d => d.deviceInfo.activeArchitecture)
-				.uniq()
-				.value();
-			if (devicesArchitectures.length > 0) {
-				const architectures = this.getBuildArchitectures(projectData, buildConfig, devicesArchitectures);
-				if (devicesArchitectures.length > 1) {
-					architectures.push('ONLY_ACTIVE_ARCH=NO');
-				}
-				buildConfig.architectures = architectures;
-			}
-		}
-
-		args = args.concat((buildConfig && buildConfig.architectures) || this.getBuildArchitectures(projectData, buildConfig, ["armv7", "arm64"]));
-
-		args = args.concat([
-			"-sdk", DevicePlatformSdkName,
-			"BUILD_DIR=" + path.join(projectRoot, constants.BUILD_DIR)
-		]);
-
-		await this.setupSigningForDevice(projectRoot, buildConfig, projectData);
-
-		await this.createIpa(projectRoot, projectData, buildConfig, args);
-	}
-
-	private async xcodebuild(args: string[], cwd: string, stdio: any = "inherit"): Promise<ISpawnResult> {
-		const localArgs = [...args];
-		localArgs.push("-allowProvisioningUpdates");
-
-		if (this.$logger.getLevel() === "INFO") {
-			localArgs.push("-quiet");
-			this.$logger.info("Xcode build...");
-		}
-
-		let commandResult;
-		try {
-			commandResult = await this.$childProcess.spawnFromEvent("xcodebuild",
-				localArgs,
-				"exit",
-				{ stdio: stdio || "inherit", cwd },
-				{ emitOptions: { eventName: constants.BUILD_OUTPUT_EVENT_NAME }, throwError: true });
-		} catch (err) {
-			this.$errors.failWithoutHelp(err.message);
-		}
-
-		return commandResult;
-	}
-
-	private getBuildArchitectures(projectData: IProjectData, buildConfig: IBuildConfig, architectures: string[]): string[] {
-		let result: string[] = [];
-
-		const frameworkVersion = this.getFrameworkVersion(projectData);
-		if (semver.valid(frameworkVersion) && semver.lt(semver.coerce(frameworkVersion), "5.1.0")) {
-			const target = this.getDeploymentTarget(projectData);
-			if (target && target.major >= 11) {
-				// We need to strip 32bit architectures as of deployment target >= 11 it is not allowed to have such
-				architectures = _.filter(architectures, arch => {
-					const is64BitArchitecture = arch === "x86_64" || arch === "arm64";
-					if (!is64BitArchitecture) {
-						this.$logger.warn(`The architecture ${arch} will be stripped as it is not supported for deployment target ${target.version}.`);
-					}
-					return is64BitArchitecture;
-				});
-			}
-			result = [`ARCHS=${architectures.join(" ")}`, `VALID_ARCHS=${architectures.join(" ")}`];
-		}
-
-		return result;
-	}
-
-	private async setupSigningFromTeam(projectRoot: string, projectData: IProjectData, teamId: string) {
-		const xcode = this.$pbxprojDomXcode.Xcode.open(this.getPbxProjPath(projectData));
-		const signing = xcode.getSigning(projectData.projectName);
-
-		let shouldUpdateXcode = false;
-		if (signing && signing.style === "Automatic") {
-			if (signing.team !== teamId) {
-				// Maybe the provided team is name such as "Telerik AD" and we need to convert it to CH******37
-				const teamIdsForName = await this.$iOSProvisionService.getTeamIdsWithName(teamId);
-				if (!teamIdsForName.some(id => id === signing.team)) {
-					shouldUpdateXcode = true;
-				}
-			}
-		} else {
-			shouldUpdateXcode = true;
-		}
-
-		if (shouldUpdateXcode) {
-			const teamIdsForName = await this.$iOSProvisionService.getTeamIdsWithName(teamId);
-			if (teamIdsForName.length > 0) {
-				this.$logger.trace(`Team id ${teamIdsForName[0]} will be used for team name "${teamId}".`);
-				teamId = teamIdsForName[0];
-			}
-
-			xcode.setAutomaticSigningStyle(projectData.projectName, teamId);
-			xcode.setAutomaticSigningStyleByTargetProductType("com.apple.product-type.app-extension", teamId);
-			xcode.save();
-
-			this.$logger.trace(`Set Automatic signing style and team id ${teamId}.`);
-		} else {
-			this.$logger.trace(`The specified ${teamId} is already set in the Xcode.`);
-		}
-	}
-
-	private async setupSigningFromProvision(projectRoot: string, projectData: IProjectData, provision?: string, mobileProvisionData?: mobileProvisionFinder.provision.MobileProvision): Promise<void> {
-		if (provision) {
-			const xcode = this.$pbxprojDomXcode.Xcode.open(this.getPbxProjPath(projectData));
-			const signing = xcode.getSigning(projectData.projectName);
-
-			let shouldUpdateXcode = false;
-			if (signing && signing.style === "Manual") {
-				for (const config in signing.configurations) {
-					const options = signing.configurations[config];
-					if (options.name !== provision && options.uuid !== provision) {
-						shouldUpdateXcode = true;
-						break;
-					}
-				}
-			} else {
-				shouldUpdateXcode = true;
-			}
-
-			if (shouldUpdateXcode) {
-				const pickStart = Date.now();
-				const mobileprovision = mobileProvisionData || await this.$iOSProvisionService.pick(provision, projectData.projectIdentifiers.ios);
-				const pickEnd = Date.now();
-				this.$logger.trace("Searched and " + (mobileprovision ? "found" : "failed to find ") + " matching provisioning profile. (" + (pickEnd - pickStart) + "ms.)");
-				if (!mobileprovision) {
-					this.$errors.failWithoutHelp("Failed to find mobile provision with UUID or Name: " + provision);
-				}
-				const configuration = {
-					team: mobileprovision.TeamIdentifier && mobileprovision.TeamIdentifier.length > 0 ? mobileprovision.TeamIdentifier[0] : undefined,
-					uuid: mobileprovision.UUID,
-					name: mobileprovision.Name,
-					identity: mobileprovision.Type === "Development" ? "iPhone Developer" : "iPhone Distribution"
-				};
-				xcode.setManualSigningStyle(projectData.projectName, configuration);
-				xcode.setManualSigningStyleByTargetProductType("com.apple.product-type.app-extension", configuration);
-				xcode.save();
-
-				// this.cache(uuid);
-				this.$logger.trace(`Set Manual signing style and provisioning profile: ${mobileprovision.Name} (${mobileprovision.UUID})`);
-			} else {
-				this.$logger.trace(`The specified provisioning profile is already set in the Xcode: ${provision}`);
-			}
-		} else {
-			// read uuid from Xcode and cache...
-		}
-	}
-
-	private async setupSigningForDevice(projectRoot: string, buildConfig: IiOSBuildConfig, projectData: IProjectData): Promise<void> {
-		const xcode = this.$pbxprojDomXcode.Xcode.open(this.getPbxProjPath(projectData));
-		const signing = xcode.getSigning(projectData.projectName);
-
-		const hasProvisioningProfileInXCConfig =
-			this.readXCConfigProvisioningProfileSpecifierForIPhoneOs(projectData) ||
-			this.readXCConfigProvisioningProfileSpecifier(projectData) ||
-			this.readXCConfigProvisioningProfileForIPhoneOs(projectData) ||
-			this.readXCConfigProvisioningProfile(projectData);
-
-		if (hasProvisioningProfileInXCConfig && (!signing || signing.style !== "Manual")) {
-			xcode.setManualSigningStyle(projectData.projectName);
-			xcode.save();
-		} else if (!buildConfig.provision && !(signing && signing.style === "Manual" && !buildConfig.teamId)) {
-			const teamId = await this.getDevelopmentTeam(projectData, buildConfig.teamId);
-			await this.setupSigningFromTeam(projectRoot, projectData, teamId);
-		}
-	}
-
-	private async buildForSimulator(projectRoot: string, args: string[], projectData: IProjectData, buildConfig?: IBuildConfig): Promise<void> {
-		const architectures = this.getBuildArchitectures(projectData, buildConfig, ["i386", "x86_64"]);
-
-		args = args
-			.concat(architectures)
-			.concat([
-				"build",
-				"-configuration", getConfigurationName(buildConfig.release),
-				"-sdk", SimulatorPlatformSdkName,
-				"ONLY_ACTIVE_ARCH=NO",
-				"BUILD_DIR=" + path.join(projectRoot, constants.BUILD_DIR),
-				"CODE_SIGN_IDENTITY=",
-			])
-			.concat(this.xcbuildProjectArgs(projectRoot, projectData));
-
-		await this.xcodebuild(args, projectRoot, buildConfig.buildOutputStdio);
-	}
-
-	private async createIpa(projectRoot: string, projectData: IProjectData, buildConfig: IBuildConfig, args: string[]): Promise<string> {
-		const archivePath = await this.archive(projectData, buildConfig, { additionalArgs: args });
-		const exportFileIpa = await this.exportDevelopmentArchive(projectData, buildConfig, { archivePath, provision: buildConfig.provision || buildConfig.mobileProvisionIdentifier });
-		return exportFileIpa;
 	}
 
 	public isPlatformPrepared(projectRoot: string, projectData: IProjectData): boolean {
@@ -632,10 +281,10 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		const provision = platformSpecificData && platformSpecificData.provision;
 		const teamId = platformSpecificData && platformSpecificData.teamId;
 		if (provision) {
-			await this.setupSigningFromProvision(projectRoot, projectData, provision, platformSpecificData.mobileProvisionData);
+			await this.$iOSSigningService.setupSigningFromProvision(projectRoot, projectData, provision, platformSpecificData.mobileProvisionData);
 		}
 		if (teamId) {
-			await this.setupSigningFromTeam(projectRoot, projectData, teamId);
+			await this.$iOSSigningService.setupSigningFromTeam(projectRoot, projectData, teamId);
 		}
 
 		const project = this.createPbxProj(projectData);
@@ -671,7 +320,6 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 			await this.prepareNativeSourceCode(constants.TNS_NATIVE_SOURCE_GROUP_NAME, resourcesNativeCodePath, projectData);
 		}
-
 	}
 
 	public prepareAppResources(appResourcesDirectoryPath: string, projectData: IProjectData): void {
@@ -696,14 +344,6 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 	public ensureConfigurationFileInAppResources(): void {
 		return null;
-	}
-
-	public async stopServices(): Promise<ISpawnResult> {
-		return { stderr: "", stdout: "", exitCode: 0 };
-	}
-
-	public async cleanProject(projectRoot: string): Promise<void> {
-		return Promise.resolve();
 	}
 
 	private async mergeInfoPlists(projectData: IProjectData, buildOptions: IRelease): Promise<void> {
@@ -802,7 +442,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	}
 
 	private getPbxProjPath(projectData: IProjectData): string {
-		return path.join(this.$xcprojService.getXcodeprojPath(projectData, this.getPlatformData(projectData)), "project.pbxproj");
+		return path.join(this.$xcprojService.getXcodeprojPath(projectData, this.getPlatformData(projectData).projectRoot), "project.pbxproj");
 	}
 
 	private createPbxProj(projectData: IProjectData): any {
@@ -849,7 +489,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 		const projectPodfilePath = this.$cocoapodsService.getProjectPodfilePath(platformData.projectRoot);
 		if (this.$fs.exists(projectPodfilePath)) {
-			await this.$cocoapodsService.executePodInstall(platformData.projectRoot, this.$xcprojService.getXcodeprojPath(projectData, platformData));
+			await this.$cocoapodsService.executePodInstall(platformData.projectRoot, this.$xcprojService.getXcodeprojPath(projectData, platformData.projectRoot));
 			// The `pod install` command adds a new target to the .pbxproject. This target adds additional build phases to Xcode project.
 			// Some of these phases relies on env variables (like PODS_PODFILE_DIR_PATH or PODS_ROOT).
 			// These variables are produced from merge of pod's xcconfig file and project's xcconfig file.
@@ -861,6 +501,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		this.$iOSExtensionsService.removeExtensions({ pbxProjPath });
 		await this.addExtensions(projectData);
 	}
+
 	public beforePrepareAllPlugins(): Promise<void> {
 		return Promise.resolve();
 	}
@@ -912,13 +553,9 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		}
 	}
 
-	public getDeploymentTarget(projectData: IProjectData): semver.SemVer {
+	public getDeploymentTarget(projectData: IProjectData): string {
 		const target = this.$xcconfigService.readPropertyValue(this.getBuildXCConfigFilePath(projectData), "IPHONEOS_DEPLOYMENT_TARGET");
-		if (!target) {
-			return null;
-		}
-
-		return semver.coerce(target);
+		return target;
 	}
 
 	private getAllLibsForPluginWithFileExtension(pluginData: IPluginData, fileExtension: string): string[] {
@@ -1130,80 +767,6 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		return buildXCConfig;
 	}
 
-	private readTeamId(projectData: IProjectData): string {
-		let teamId = this.$xcconfigService.readPropertyValue(this.getBuildXCConfigFilePath(projectData), "DEVELOPMENT_TEAM");
-
-		const fileName = path.join(this.getPlatformData(projectData).projectRoot, "teamid");
-		if (this.$fs.exists(fileName)) {
-			teamId = this.$fs.readText(fileName);
-		}
-
-		return teamId;
-	}
-
-	private readXCConfigProvisioningProfile(projectData: IProjectData): string {
-		return this.$xcconfigService.readPropertyValue(this.getBuildXCConfigFilePath(projectData), "PROVISIONING_PROFILE");
-	}
-
-	private readXCConfigProvisioningProfileForIPhoneOs(projectData: IProjectData): string {
-		return this.$xcconfigService.readPropertyValue(this.getBuildXCConfigFilePath(projectData), "PROVISIONING_PROFILE[sdk=iphoneos*]");
-	}
-
-	private readXCConfigProvisioningProfileSpecifier(projectData: IProjectData): string {
-		return this.$xcconfigService.readPropertyValue(this.getBuildXCConfigFilePath(projectData), "PROVISIONING_PROFILE_SPECIFIER");
-	}
-
-	private readXCConfigProvisioningProfileSpecifierForIPhoneOs(projectData: IProjectData): string {
-		return this.$xcconfigService.readPropertyValue(this.getBuildXCConfigFilePath(projectData), "PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]");
-	}
-
-	private async getDevelopmentTeam(projectData: IProjectData, teamId?: string): Promise<string> {
-		teamId = teamId || this.readTeamId(projectData);
-
-		if (!teamId) {
-			const teams = await this.$iOSProvisionService.getDevelopmentTeams();
-			this.$logger.warn("Xcode requires a team id to be specified when building for device.");
-			this.$logger.warn("You can specify the team id by setting the DEVELOPMENT_TEAM setting in build.xcconfig file located in App_Resources folder of your app, or by using the --teamId option when calling run, debug or livesync commands.");
-			if (teams.length === 1) {
-				teamId = teams[0].id;
-				this.$logger.warn("Found and using the following development team installed on your system: " + teams[0].name + " (" + teams[0].id + ")");
-			} else if (teams.length > 0) {
-				if (!helpers.isInteractive()) {
-					this.$errors.failWithoutHelp(`Unable to determine default development team. Available development teams are: ${_.map(teams, team => team.id)}. Specify team in app/App_Resources/iOS/build.xcconfig file in the following way: DEVELOPMENT_TEAM = <team id>`);
-				}
-
-				const choices: string[] = [];
-				for (const team of teams) {
-					choices.push(team.name + " (" + team.id + ")");
-				}
-				const choice = await this.$prompter.promptForChoice('Found multiple development teams, select one:', choices);
-				teamId = teams[choices.indexOf(choice)].id;
-
-				const choicesPersist = [
-					"Yes, set the DEVELOPMENT_TEAM setting in build.xcconfig file.",
-					"Yes, persist the team id in platforms folder.",
-					"No, don't persist this setting."
-				];
-				const choicePersist = await this.$prompter.promptForChoice("Do you want to make teamId: " + teamId + " a persistent choice for your app?", choicesPersist);
-				switch (choicesPersist.indexOf(choicePersist)) {
-					case 0:
-						const xcconfigFile = path.join(projectData.appResourcesDirectoryPath, this.getPlatformData(projectData).normalizedPlatformName, BUILD_XCCONFIG_FILE_NAME);
-						this.$fs.appendFile(xcconfigFile, "\nDEVELOPMENT_TEAM = " + teamId + "\n");
-						break;
-					case 1:
-						this.$fs.writeFile(path.join(this.getPlatformData(projectData).projectRoot, "teamid"), teamId);
-						break;
-					default:
-						break;
-				}
-			}
-		}
-
-		this.$logger.trace(`Selected teamId is '${teamId}'.`);
-
-		return teamId;
-	}
-
 	private validateApplicationIdentifier(projectData: IProjectData): void {
 		const infoPlistPath = path.join(projectData.appResourcesDirectoryPath, this.getPlatformData(projectData).normalizedPlatformName, this.getPlatformData(projectData).configurationFileName);
 		const mergedPlistPath = this.getPlatformData(projectData).configurationFilePath;
@@ -1218,18 +781,6 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		if (infoPlist.CFBundleIdentifier && infoPlist.CFBundleIdentifier !== mergedPlist.CFBundleIdentifier) {
 			this.$logger.warnWithLabel("The CFBundleIdentifier key inside the 'Info.plist' will be overriden by the 'id' inside 'package.json'.");
 		}
-	}
-
-	private getExportOptionsMethod(projectData: IProjectData, archivePath: string): string {
-		const embeddedMobileProvisionPath = path.join(archivePath, 'Products', 'Applications', `${projectData.projectName}.app`, "embedded.mobileprovision");
-		const provision = mobileProvisionFinder.provision.readFromFile(embeddedMobileProvisionPath);
-
-		return {
-			"Development": "development",
-			"AdHoc": "ad-hoc",
-			"Distribution": "app-store",
-			"Enterprise": "enterprise"
-		}[provision.Type];
 	}
 }
 

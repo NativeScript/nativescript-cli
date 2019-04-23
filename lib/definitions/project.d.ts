@@ -446,7 +446,7 @@ interface IPlatformProjectService extends NodeJS.EventEmitter, IPlatformProjectS
 	 * @param {IPlatformData} platformData The data for the specified platform.
 	 * @returns {void}
 	 */
-	stopServices(platformData: IPlatformData): Promise<ISpawnResult>;
+	stopServices?(projectRoot: string): Promise<ISpawnResult>;
 
 	/**
 	 * Removes build artifacts specific to the platform
@@ -454,7 +454,7 @@ interface IPlatformProjectService extends NodeJS.EventEmitter, IPlatformProjectS
 	 * @param {IProjectData} projectData DTO with information about the project.
 	 * @returns {void}
 	 */
-	cleanProject(projectRoot: string, projectData: IProjectData): Promise<void>
+	cleanProject?(projectRoot: string, projectData: IProjectData): Promise<void>
 
 	/**
 	 * Check the current state of the project, and validate against the options.
@@ -466,7 +466,7 @@ interface IPlatformProjectService extends NodeJS.EventEmitter, IPlatformProjectS
 	 * Get the deployment target's version
 	 * Currently implemented only for iOS -> returns the value of IPHONEOS_DEPLOYMENT_TARGET property from xcconfig file
 	 */
-	getDeploymentTarget(projectData: IProjectData): any;
+	getDeploymentTarget?(projectData: IProjectData): any;
 }
 
 interface IValidatePlatformOutput {
