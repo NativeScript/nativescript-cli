@@ -50,8 +50,9 @@ export class Sync {
     return pushInProgress.get(this.collectionName) === true;
   }
 
-  find(query?: Query) {
+  find(providedQuery?: Query) {
     const syncCache = new SyncCache(this.tag);
+    const query = new Query(providedQuery).equalTo('collection', this.collectionName);
     return syncCache.find(query);
   }
 
@@ -60,8 +61,9 @@ export class Sync {
     return syncCache.findById(id);
   }
 
-  count(query?: Query) {
+  count(providedQuery?: Query) {
     const syncCache = new SyncCache(this.tag);
+    const query = new Query(providedQuery).equalTo('collection', this.collectionName);
     return syncCache.count(query);
   }
 
@@ -250,8 +252,9 @@ export class Sync {
     return [];
   }
 
-  async remove(query?: Query) {
+  async remove(providedQuery?: Query) {
     const syncCache = new SyncCache(this.tag);
+    const query = new Query(providedQuery).equalTo('collection', this.collectionName);
     return syncCache.remove(query);
   }
 

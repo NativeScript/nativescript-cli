@@ -88,7 +88,6 @@ export enum SyncEvent {
 
 export interface SyncEntity extends Entity {
   entityId: string;
-  entity: Entity;
   collection: string;
   state: {
     operation: SyncEvent;

@@ -1,5 +1,6 @@
 import isArray from 'lodash/isArray';
 import times from 'lodash/times';
+import without from 'lodash/without';
 import { Observable } from 'rxjs';
 import { Query } from '../query';
 import { KinveyError } from '../errors/kinvey';
@@ -492,10 +493,16 @@ export class CacheStore {
     return this.pendingSyncDocs(query);
   }
 
-  pendingSyncCount(query?: Query) {
+  async pendingSyncCount(query?: Query) {
+    const cache = new DataStoreCache(this.collectionName, this.tag);
     const sync = new Sync(this.collectionName, this.tag);
-    const findQuery = queryToSyncQuery(query, this.collectionName);
-    return sync.count(findQuery);
+    const syncDocs = await sync.find();
+    let docs = await Promise.all(syncDocs.map((syncDoc) => cache.findById(syncDoc.entityId)));
+    docs = without(docs, undefined);
+    if (query) {
+      return query.process(docs).length;
+    }
+    return docs.length;
   }
 
   async clearSync(query?: Query) {
