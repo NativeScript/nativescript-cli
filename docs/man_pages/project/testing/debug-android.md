@@ -31,12 +31,12 @@ Attach the debug tools to a running app in the native emulator | `$ tns debug an
 * `--no-watch` - If set, changes in your code will not be reflected during the execution of this command.
 * `--clean` - If set, forces the complete rebuild of the native application.
 * `--bundle` - Specifies that the `webpack` bundler will be used to bundle the application.
-* `--hmr` - (Beta) Enables the hot module replacement (HMR) feature. HMR depends on `webpack` and adding the `--hmr` flag to the command will automatically enable the `--bundle` option as well.<% if(isConsole) { %> The HMR feature is currently in Beta. For more information about the current development state and any known issues, please check the relevant GitHub issue: https://github.com/NativeScript/NativeScript/issues/6398.<% } %>
+* `--hmr` - Enables the hot module replacement (HMR) feature. HMR depends on `webpack` and adding the `--hmr` flag to the command will automatically enable the `--bundle` option as well.<% if(isConsole) { %> For more information about the current development state and any known issues, please check the relevant GitHub issue: https://github.com/NativeScript/NativeScript/issues/6398.<% } %>
 * `--syncAllFiles` - Watches all production dependencies inside node_modules for changes. Triggers project rebuild if necessary!
 
 <% if(isHtml) { %>
 
->Note: Hot Module Replacement (HMR) is currently in Beta. For more information about the current development state and any known issues, please check the relevant GitHub issue: https://github.com/NativeScript/NativeScript/issues/6398.
+>Note: For more information about HMR, the current development state and any known issues, please check the relevant GitHub issue: https://github.com/NativeScript/NativeScript/issues/6398.
 
 ### Command Limitations
 
