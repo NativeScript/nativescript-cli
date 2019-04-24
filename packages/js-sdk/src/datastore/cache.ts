@@ -54,30 +54,6 @@ export class QueryCache extends DataStoreCache<QueryEntity> {
     const queryObject = query.toQueryObject();
     return queryObject && !isEmpty(queryObject) ? JSON.stringify(queryObject) : '';
   }
-
-  async findByKey(key: string) {
-    const query = new Query().equalTo('query', key);
-    const docs = await this.find(query);
-    return docs.shift();
-  }
-
-  async saveQuery(query: Query, response: HttpResponse) {
-    const key = this.serializeQuery(query);
-
-    if (key !== null) {
-      const headers = new KinveyHttpHeaders(response.headers.toPlainObject());
-      let doc = await this.findByKey(key);
-
-      if (!doc) {
-        doc = { collectionName: this.collectionName, query: key, lastRequest: null };
-      }
-
-      doc.lastRequest = headers.requestStart;
-      return super.save(doc);
-    }
-
-    return null;
-  }
 }
 
 export enum SyncEvent {

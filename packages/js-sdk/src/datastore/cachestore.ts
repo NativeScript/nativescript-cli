@@ -8,7 +8,7 @@ import { MissingConfigurationError } from '../errors/missingConfiguration';
 import { ParameterValueOutOfRangeError } from '../errors/parameterValueOutOfRange';
 import { NotFoundError } from '../errors/notFound';
 import { Aggregation } from '../aggregation';
-import { formatKinveyBaasUrl, KinveyBaasNamespace, KinveyHttpRequest, HttpRequestMethod, KinveyHttpAuth } from '../http';
+import { formatKinveyBaasUrl, KinveyBaasNamespace, KinveyHttpRequest, HttpRequestMethod, KinveyHttpAuth, KinveyHttpHeaders } from '../http';
 import { LiveServiceReceiver } from '../live';
 import { DataStoreCache, QueryCache } from './cache';
 import { queryToSyncQuery, Sync } from './sync';
@@ -316,6 +316,12 @@ export class CacheStore {
     const useDeltaSet = options.useDeltaSet === true || this.useDeltaSet;
     const useAutoPagination = options.useAutoPagination === true || options.autoPagination || this.useAutoPagination;
 
+    // Retrieve existing queryCacheDoc
+    const queryKey = queryCache.serializeQuery(query);
+    const findQueryCacheQuery = new Query().equalTo('query', queryKey).equalTo('collectionName', this.collectionName);
+    const queryCacheDocs = await queryCache.find(findQueryCacheQuery);
+    const queryCacheDoc = queryCacheDocs.shift() || { collectionName: this.collectionName, query: queryKey, lastRequest: null };
+
     // Push sync queue
     const count = await this.pendingSyncCount();
     if (count > 0) {
@@ -335,43 +341,38 @@ export class CacheStore {
     }
 
     // Delta set
-    if (useDeltaSet && (!query || (query.skip === 0 && query.limit === Number.MAX_SAFE_INTEGER))) {
+    if (useDeltaSet && queryCacheDoc && queryCacheDoc.lastRequest) {
       try {
-        const key = queryCache.serializeQuery(query);
-        if (key !== null) {
-          const queryCacheDoc = await queryCache.findByKey(key);
+        let queryObject = { since: queryCacheDoc.lastRequest };
 
-          if (queryCacheDoc && queryCacheDoc.lastRequest) {
-            let queryObject = { since: queryCacheDoc.lastRequest };
-
-            if (query) {
-              queryObject = Object.assign({}, query.toQueryObject(), queryObject);
-            }
-
-            // Delta Set request
-            const url = formatKinveyBaasUrl(KinveyBaasNamespace.AppData, `/${this.collectionName}/_deltaset`, queryObject);
-            const request = new KinveyHttpRequest({ method: HttpRequestMethod.GET, auth: KinveyHttpAuth.Session, url });
-            const response = await request.execute();
-            const { changed, deleted } = response.data;
-
-            // Delete the docs that have been deleted
-            if (Array.isArray(deleted) && deleted.length > 0) {
-              const removeQuery = new Query().contains('_id', deleted.map(doc => doc._id));
-              await cache.remove(removeQuery);
-            }
-
-            // Save the docs that changed
-            if (Array.isArray(changed) && changed.length > 0) {
-              await cache.save(changed);
-            }
-
-            // Update the query cache
-            await queryCache.saveQuery(query!, response);
-
-            // Return the number of changed docs
-            return changed.length;
-          }
+        if (query) {
+          queryObject = Object.assign({}, query.toQueryObject(), queryObject);
         }
+
+        // Delta Set request
+        const url = formatKinveyBaasUrl(KinveyBaasNamespace.AppData, `/${this.collectionName}/_deltaset`, queryObject);
+        const request = new KinveyHttpRequest({ method: HttpRequestMethod.GET, auth: KinveyHttpAuth.Session, url });
+        const response = await request.execute();
+        const { changed, deleted } = response.data;
+
+        // Delete the docs that have been deleted
+        if (Array.isArray(deleted) && deleted.length > 0) {
+          const removeQuery = new Query().contains('_id', deleted.map(doc => doc._id));
+          await cache.remove(removeQuery);
+        }
+
+        // Save the docs that changed
+        if (Array.isArray(changed) && changed.length > 0) {
+          await cache.save(changed);
+        }
+
+        // Update the query cache
+        const headers = new KinveyHttpHeaders(response.headers.toPlainObject());
+        queryCacheDoc.lastRequest = headers.requestStart;
+        await queryCache.save(queryCacheDoc);
+
+        // Return the number of changed docs
+        return changed.length;
       } catch (error) {
         if (!(error instanceof MissingConfigurationError) && !(error instanceof ParameterValueOutOfRangeError)) {
           throw error;
@@ -408,7 +409,9 @@ export class CacheStore {
       const totalPageCount = pageCounts.reduce((totalCount: number, pageCount: number) => totalCount + pageCount, 0);
 
       // Update the query cache
-      queryCache.saveQuery(query!, response);
+      const headers = new KinveyHttpHeaders(response.headers.toPlainObject());
+      queryCacheDoc.lastRequest = headers.requestStart;
+      await queryCache.save(queryCacheDoc);
 
       // Return the total page count
       return totalPageCount;
@@ -428,8 +431,10 @@ export class CacheStore {
     // Update the cache
     await cache.save(docs);
 
-    // Update the query cache
-    await queryCache.saveQuery(query!, response);
+    /// Update the query cache
+    const headers = new KinveyHttpHeaders(response.headers.toPlainObject());
+    queryCacheDoc.lastRequest = headers.requestStart;
+    await queryCache.save(queryCacheDoc);
 
     // Return the number of docs
     return docs.length;
