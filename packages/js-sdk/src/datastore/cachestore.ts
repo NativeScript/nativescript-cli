@@ -229,8 +229,7 @@ export class CacheStore {
 
     // Remove the docs from the backend
     if (autoSync) {
-      const findQuery = queryToSyncQuery(query, this.collectionName);
-      const syncDocs = await sync.find(findQuery);
+      const syncDocs = await sync.find(queryToSyncQuery(query));
 
       if (syncDocs.length > 0) {
         const pushQuery = new Query().contains('_id', syncDocs.map(doc => doc._id));
@@ -288,12 +287,12 @@ export class CacheStore {
   }
 
   async clear(query?: Query) {
-    // Remove the sync events
-    await this.clearSync(query);
-
     // Remove the docs from the cache
     const cache = new DataStoreCache(this.collectionName, this.tag);
     const count = await cache.remove(query);
+
+    // Remove the sync events
+    await this.clearSync(query);
 
     // Clear the query cache
     if (!query) {
@@ -483,10 +482,9 @@ export class CacheStore {
     return { push, pull };
   }
 
-  pendingSyncDocs(query?: Query) {
+  async pendingSyncDocs(query?: Query) {
     const sync = new Sync(this.collectionName, this.tag);
-    const findQuery = queryToSyncQuery(query, this.collectionName);
-    return sync.find(findQuery);
+    return sync.find(queryToSyncQuery(query));
   }
 
   pendingSyncEntities(query?: Query) {
@@ -494,28 +492,13 @@ export class CacheStore {
   }
 
   async pendingSyncCount(query?: Query) {
-    const cache = new DataStoreCache(this.collectionName, this.tag);
-    const sync = new Sync(this.collectionName, this.tag);
-    const syncDocs = await sync.find();
-    let docs = await Promise.all(syncDocs.map((syncDoc) => cache.findById(syncDoc.entityId)));
-    docs = without(docs, undefined);
-    if (query) {
-      return query.process(docs).length;
-    }
-    return docs.length;
+    const syncDocs = await this.pendingSyncDocs(query);
+    return syncDocs.length;
   }
 
   async clearSync(query?: Query) {
     const sync = new Sync(this.collectionName, this.tag);
-    const syncDocs = await sync.find();
-    const cache = new DataStoreCache(this.collectionName, this.tag);
-    let docs = await Promise.all(syncDocs.map((syncDoc) => cache.findById(syncDoc.entityId)));
-    docs = without(docs, undefined);
-    if (query) {
-      docs = query.process(docs);
-    }
-    const clearSyncQuery = new Query().contains('entityId', docs.map((doc) => doc._id));
-    return sync.remove(clearSyncQuery);
+    return sync.remove(queryToSyncQuery(query));
   }
 
   async subscribe(receiver: LiveServiceReceiver, options?: any) {

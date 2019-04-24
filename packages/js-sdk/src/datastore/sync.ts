@@ -14,24 +14,18 @@ function markPushEnd(collectionName: string) {
   pushInProgress.set(collectionName, false);;
 }
 
-export function queryToSyncQuery(query?: Query, collectionName?: string) {
+export function queryToSyncQuery(query?: Query) {
   if (query && query instanceof Query) {
     const newFilter = Object.keys(query.filter)
       .reduce((filter, field) => Object.assign({}, filter, { [`entity.${field}`]: query.filter[field] }), {});
     const newSort = Object.keys(query.sort)
       .reduce((sort, field) => Object.assign({}, sort, { [`entity.${field}`]: query.sort[field] }), {});
-    const syncQuery = new Query({
+    return new Query({
       filter: newFilter,
       sort: newSort,
       skip: query.skip,
       limit: query.limit
     });
-
-    if (collectionName) {
-      syncQuery.equalTo('collection', collectionName);
-    }
-
-    return syncQuery;
   }
 
   return undefined;
@@ -115,6 +109,7 @@ export class Sync {
       syncDocs = await syncCache.save(docsToSync.map((doc: { _id: any; }) => {
         return {
           entityId: doc._id,
+          entity: doc,
           collection: this.collectionName,
           state: {
             operation: event
@@ -126,7 +121,7 @@ export class Sync {
     return singular ? syncDocs.shift() : syncDocs;
   }
 
-  async push(query?: Query, options?: any) {
+  async push(providedQuery?: Query, options?: any) {
     const network = new NetworkStore(this.collectionName);
     const cache = new DataStoreCache(this.collectionName, this.tag);
     const syncCache = new SyncCache(this.tag);
@@ -136,6 +131,7 @@ export class Sync {
     }
 
     const batchSize = 100;
+    const query = new Query(providedQuery).equalTo('collection', this.collectionName);
     const syncDocs = await syncCache.find(query);
 
     if (syncDocs.length > 0) {
@@ -265,6 +261,7 @@ export class Sync {
 
   async clear() {
     const syncCache = new SyncCache(this.tag);
-    return syncCache.remove();
+    const query = new Query().equalTo('collection', this.collectionName);
+    return syncCache.remove(query);
   }
 }
