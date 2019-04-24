@@ -9,7 +9,7 @@ position: 4
 
 Initiates a debugging session for your project on a connected Android device or Android emulator. When necessary, the command will prepare, build, deploy and launch the app before starting the debug session. While debugging, the output from the application is printed in the console and any changes made to your code are synchronizes with the deployed app.
 
-To enable Hot Module Replacement (HMR) in Angular projects, follow the steps outlined in this wiki: https://github.com/NativeScript/nativescript-angular/wiki/HMR.
+To enable Hot Module Replacement (HMR) in Angular projects, follow the steps outlined in [the HMR documentation section](https://docs.nativescript.org/performance-optimizations/bundling-with-webpack#hot-module-replacement).
 
 ### Commands
 
