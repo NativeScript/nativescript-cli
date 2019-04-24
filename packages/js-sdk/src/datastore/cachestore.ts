@@ -229,19 +229,13 @@ export class CacheStore {
 
     // Remove the docs from the backend
     if (autoSync) {
-      const syncDocs = await sync.find(queryToSyncQuery(query));
+      // Remove the docs on the backend
+      const network = new NetworkStore(this.collectionName);
+      const result = await network.remove(query, options);
+      count = result.count;
 
-      if (syncDocs.length > 0) {
-        const pushQuery = new Query().contains('_id', syncDocs.map(doc => doc._id));
-        const pushResults = await sync.push(pushQuery);
-        count = pushResults.reduce((count: number, pushResult: { error: any; }) => {
-          if (pushResult.error) {
-            return count - 1;
-          }
-
-          return count;
-        }, count || syncDocs.length);
-      }
+      // Clear the sync items that match the query
+      await this.clearSync(query);
     }
 
     return { count };
