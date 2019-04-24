@@ -8,13 +8,16 @@ export class DeployOnDeviceCommand extends ValidatePlatformCommandBase implement
 		private $platformCommandParameter: ICommandParameter,
 		$options: IOptions,
 		$projectData: IProjectData,
+		$logger: ILogger,
+		$lockService: ILockService,
+		$processService: IProcessService,
 		private $deployCommandHelper: IDeployCommandHelper,
-		private $errors: IErrors,
+		$errors: IErrors,
 		private $mobileHelper: Mobile.IMobileHelper,
 		$platformsData: IPlatformsData,
 		private $bundleValidatorHelper: IBundleValidatorHelper,
 		private $androidBundleValidatorHelper: IAndroidBundleValidatorHelper) {
-			super($options, $platformsData, $platformService, $projectData);
+			super($options, $platformsData, $platformService, $projectData, $errors, $logger, $lockService, $processService);
 			this.$projectData.initializeProjectData();
 	}
 

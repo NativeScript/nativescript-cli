@@ -1,8 +1,16 @@
-export abstract class ValidatePlatformCommandBase {
+import { ExecutionLockCommandBase } from "./execution-lock-command-base";
+
+export abstract class ValidatePlatformCommandBase extends ExecutionLockCommandBase {
 	constructor(protected $options: IOptions,
 		protected $platformsData: IPlatformsData,
 		protected $platformService: IPlatformService,
-		protected $projectData: IProjectData) { }
+		protected $projectData: IProjectData,
+		$errors: IErrors,
+		protected $logger: ILogger,
+		protected $lockService: ILockService,
+		protected $processService: IProcessService) { 
+			super($projectData, $errors, $logger, $lockService, $processService);
+		}
 
 	abstract allowedParameters: ICommandParameter[];
 	abstract execute(args: string[]): Promise<void>;

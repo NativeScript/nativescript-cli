@@ -4,8 +4,12 @@ import * as util from "util";
 import { EventEmitter } from "events";
 
 export class LockServiceStub implements ILockService {
-	public async lock(lockFilePath?: string, lockOpts?: ILockOptions): Promise<() => void> {
-		return () => { };
+	public async lock(lockFilePath?: string, lockOpts?: ILockOptions): Promise<() => Promise<void>> {
+		return async () => { /* empty */};
+	}
+
+	public async check(lockFilePath?: string): Promise<boolean> {
+		return true;
 	}
 
 	public unlock(lockFilePath?: string): void {

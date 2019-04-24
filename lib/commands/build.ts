@@ -9,8 +9,10 @@ export abstract class BuildCommandBase extends ValidatePlatformCommandBase {
 		protected $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		$platformService: IPlatformService,
 		private $bundleValidatorHelper: IBundleValidatorHelper,
-		protected $logger: ILogger) {
-			super($options, $platformsData, $platformService, $projectData);
+		$logger: ILogger,
+		$lockService: ILockService,
+		$processService: IProcessService) {
+			super($options, $platformsData, $platformService, $projectData, $errors, $logger, $lockService, $processService);
 			this.$projectData.initializeProjectData();
 	}
 
@@ -93,8 +95,10 @@ export class BuildIosCommand extends BuildCommandBase implements ICommand {
 		$devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		$platformService: IPlatformService,
 		$bundleValidatorHelper: IBundleValidatorHelper,
-		$logger: ILogger) {
-			super($options, $errors, $projectData, $platformsData, $devicePlatformsConstants, $platformService, $bundleValidatorHelper, $logger);
+		$logger: ILogger,
+		$lockService: ILockService,
+		$processService: IProcessService) {
+			super($options, $errors, $projectData, $platformsData, $devicePlatformsConstants, $platformService, $bundleValidatorHelper, $logger, $lockService, $processService);
 	}
 
 	public async execute(args: string[]): Promise<void> {
@@ -127,9 +131,11 @@ export class BuildAndroidCommand extends BuildCommandBase implements ICommand {
 		$devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		$platformService: IPlatformService,
 		$bundleValidatorHelper: IBundleValidatorHelper,
+		$lockService: ILockService,
+		$processService: IProcessService,
 		protected $androidBundleValidatorHelper: IAndroidBundleValidatorHelper,
 		protected $logger: ILogger) {
-			super($options, $errors, $projectData, $platformsData, $devicePlatformsConstants, $platformService, $bundleValidatorHelper, $logger);
+			super($options, $errors, $projectData, $platformsData, $devicePlatformsConstants, $platformService, $bundleValidatorHelper, $logger, $lockService, $processService);
 	}
 
 	public async execute(args: string[]): Promise<void> {

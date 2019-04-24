@@ -10,8 +10,11 @@ export class CleanAppCommandBase extends ValidatePlatformCommandBase implements 
 		$platformService: IPlatformService,
 		protected $errors: IErrors,
 		protected $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-		$platformsData: IPlatformsData) {
-			super($options, $platformsData, $platformService, $projectData);
+		$platformsData: IPlatformsData,
+		$logger: ILogger,
+		$lockService: ILockService,
+		$processService: IProcessService) {
+			super($options, $platformsData, $platformService, $projectData, $errors, $logger, $lockService, $processService);
 			this.$projectData.initializeProjectData();
 	}
 
@@ -49,8 +52,11 @@ export class CleanAppIosCommand extends CleanAppCommandBase implements ICommand 
 		protected $platformsData: IPlatformsData,
 		protected $errors: IErrors,
 		$platformService: IPlatformService,
-		$projectData: IProjectData) {
-		super($options, $projectData, $platformService, $errors, $devicePlatformsConstants, $platformsData);
+		$projectData: IProjectData,
+		$logger: ILogger,
+		$lockService: ILockService,
+		$processService: IProcessService) {
+		super($options, $projectData, $platformService, $errors, $devicePlatformsConstants, $platformsData, $logger, $lockService, $processService);
 	}
 
 	protected get platform(): string {
@@ -66,8 +72,11 @@ export class CleanAppAndroidCommand extends CleanAppCommandBase implements IComm
 		protected $platformsData: IPlatformsData,
 		protected $errors: IErrors,
 		$platformService: IPlatformService,
-		$projectData: IProjectData) {
-		super($options, $projectData, $platformService, $errors, $devicePlatformsConstants, $platformsData);
+		$projectData: IProjectData,
+		$logger: ILogger,
+		$lockService: ILockService,
+		$processService: IProcessService) {
+		super($options, $projectData, $platformService, $errors, $devicePlatformsConstants, $platformsData, $logger, $lockService, $processService);
 	}
 
 	protected get platform(): string {

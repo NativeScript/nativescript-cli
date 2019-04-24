@@ -28,12 +28,18 @@ declare global {
          * @param {ILockOptions} lockOpts Options used for creating the lock file.
          * @returns {Promise<() => void>} Returns a `release` function that should be called when you want to release the lock.
          */
-        lock(lockFilePath?: string, lockOpts?: ILockOptions): Promise<() => void>
+        lock(lockFilePath?: string, lockOpts?: ILockOptions): Promise<() => Promise<void>>
 
         /**
          * Resolves the specified file lock. Whenever possible you should use the `release` function instead.
          * @param {string} lockFilePath Path to lock file that has to be unlocked. Defaults to `<profile dir>/lockfile.lock`
          */
         unlock(lockFilePath?: string): void
+
+        /**
+         * Resolves the specified file lock. Whenever possible you should use the `release` function instead.
+         * @param {string} lockFilePath Path to lock file that has to be unlocked. Defaults to `<profile dir>/lockfile.lock`
+         */
+        check(lockFilePath?: string): Promise<boolean>
     }
 }

@@ -83,7 +83,9 @@ export class CommandsService implements ICommandsService {
 
 				await this.$hooksService.executeBeforeHooks(commandName);
 			}
-
+			if(command.lockExecution) {
+				await command.lockExecution();
+			}
 			await command.execute(commandArguments);
 			if (command.postCommandAction) {
 				await command.postCommandAction(commandArguments);
@@ -115,6 +117,10 @@ export class CommandsService implements ICommandsService {
 		const command = this.$injector.resolveCommand(commandName);
 		if (!command || (command && !command.isHierarchicalCommand)) {
 			this.$options.validateOptions(command ? command.dashedOptions : null);
+		}
+
+		if(command.checkExecutionLock) {
+			await command.checkExecutionLock();
 		}
 
 		return this.canExecuteCommand(commandName, commandArguments);

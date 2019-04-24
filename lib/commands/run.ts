@@ -1,4 +1,5 @@
 import { ERROR_NO_VALID_SUBCOMMAND_FORMAT } from "../common/constants";
+import { ExecutionLockCommandBase } from "./execution-lock-command-base";
 import { ANDROID_RELEASE_BUILD_ERROR_MESSAGE } from "../constants";
 import { cache } from "../common/decorators";
 
@@ -86,7 +87,7 @@ export class RunIosCommand implements ICommand {
 
 $injector.registerCommand("run|ios", RunIosCommand);
 
-export class RunAndroidCommand implements ICommand {
+export class RunAndroidCommand extends ExecutionLockCommandBase implements ICommand {
 
 	@cache()
 	private get runCommand(): RunCommandBase {
@@ -102,11 +103,16 @@ export class RunAndroidCommand implements ICommand {
 
 	constructor(private $platformsData: IPlatformsData,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-		private $errors: IErrors,
+		$errors: IErrors,
 		private $injector: IInjector,
 		private $platformService: IPlatformService,
-		private $projectData: IProjectData,
-		private $options: IOptions) { }
+		$projectData: IProjectData,
+		private $options: IOptions,
+		$logger: ILogger,
+		$lockService: ILockService,
+		$processService: IProcessService) { 
+			super($projectData, $errors, $logger, $lockService, $processService);
+		}
 
 	public execute(args: string[]): Promise<void> {
 		return this.runCommand.execute(args);

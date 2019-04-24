@@ -13,13 +13,15 @@ export class DebugPlatformCommand extends ValidatePlatformCommandBase implements
 		$projectData: IProjectData,
 		$options: IOptions,
 		$platformsData: IPlatformsData,
+		$lockService: ILockService,
+		$processService: IProcessService,
 		protected $logger: ILogger,
 		protected $errors: IErrors,
 		private $debugDataService: IDebugDataService,
 		private $liveSyncService: IDebugLiveSyncService,
 		private $liveSyncCommandHelper: ILiveSyncCommandHelper,
 		private $androidBundleValidatorHelper: IAndroidBundleValidatorHelper) {
-		super($options, $platformsData, $platformService, $projectData);
+			super($options, $platformsData, $platformService, $projectData, $errors, $logger, $lockService, $processService);
 	}
 
 	public async execute(args: string[]): Promise<void> {

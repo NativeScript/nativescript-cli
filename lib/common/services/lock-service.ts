@@ -49,7 +49,7 @@ export class LockService implements ILockService {
 		}
 	}
 
-	public async lock(lockFilePath?: string, lockOpts?: ILockOptions): Promise<() => void> {
+	public async lock(lockFilePath?: string, lockOpts?: ILockOptions): Promise<() => Promise<void>> {
 		const { filePath, fileOpts } = this.getLockFileSettings(lockFilePath, lockOpts);
 		this.currentlyLockedFiles.push(filePath);
 		this.$fs.writeFile(filePath, "");
@@ -69,6 +69,16 @@ export class LockService implements ILockService {
 		const { filePath } = this.getLockFileSettings(lockFilePath);
 		lockfile.unlockSync(filePath);
 		this.cleanLock(filePath);
+	}
+
+	public async check(lockFilePath?: string): Promise<boolean> {
+		const { filePath } = this.getLockFileSettings(lockFilePath);
+
+		if(this.$fs.exists(filePath)) {
+			return await lockfile.check(filePath);
+		}
+
+		return false;
 	}
 
 	private cleanLock(lockPath: string): void {

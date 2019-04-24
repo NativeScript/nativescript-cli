@@ -1,5 +1,5 @@
 
-interface ICommand extends ICommandOptions {
+interface ICommand extends ICommandOptions, Partial<IExecutionLockCommandBase> {
 	execute(args: string[]): Promise<void>;
 	allowedParameters: ICommandParameter[];
 
@@ -21,6 +21,12 @@ interface ICommand extends ICommandOptions {
 	 * @returns {Promise<void>}
 	 */
 	postCommandAction?(args: string[]): Promise<void>;
+}
+
+interface IExecutionLockCommandBase {
+	lockExecution(): Promise<void>
+	checkExecutionLock(): Promise<void>
+	unlockExecution(): Promise<void>
 }
 
 interface ICanExecuteCommandOutput {

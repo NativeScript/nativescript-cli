@@ -9,11 +9,14 @@ export class UpdateCommand extends ValidatePlatformCommandBase implements IComma
 		$projectData: IProjectData,
 		$platformService: IPlatformService,
 		$platformsData: IPlatformsData,
+		$lockService: ILockService,
+		$processService: IProcessService,
+		$errors: IErrors,
+		$logger: ILogger,
 		private $pluginsService: IPluginsService,
 		private $projectDataService: IProjectDataService,
-		private $fs: IFileSystem,
-		private $logger: ILogger) {
-		super($options, $platformsData, $platformService, $projectData);
+		private $fs: IFileSystem) {
+		super($options, $platformsData, $platformService, $projectData, $errors, $logger, $lockService, $processService);
 		this.$projectData.initializeProjectData();
 	}
 
