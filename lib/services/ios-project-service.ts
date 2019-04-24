@@ -13,7 +13,7 @@ import * as plist from "plist";
 import { IOSProvisionService } from "./ios-provision-service";
 import { IOSEntitlementsService } from "./ios-entitlements-service";
 import * as mobileProvisionFinder from "ios-mobileprovision-finder";
-import { BUILD_XCCONFIG_FILE_NAME, IosProjectConstants } from "../constants";
+import { BUILD_XCCONFIG_FILE_NAME, IosProjectConstants, IOSNativeTargetProductTypes } from "../constants";
 
 interface INativeSourceCodeGroup {
 	name: string;
@@ -513,9 +513,12 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			}
 
 			xcode.setAutomaticSigningStyle(projectData.projectName, teamId);
-			xcode.setAutomaticSigningStyleByTargetProductType("com.apple.product-type.app-extension", teamId);
-			xcode.setAutomaticSigningStyleByTargetProductType("com.apple.product-type.watchkit2-extension", teamId);
-			xcode.setAutomaticSigningStyleByTargetProductType("com.apple.product-type.application.watchapp2", teamId);
+			xcode.setAutomaticSigningStyleByTargetProductTypesList([
+				IOSNativeTargetProductTypes.appExtension,
+				IOSNativeTargetProductTypes.watchApp,
+				IOSNativeTargetProductTypes.watchExtension
+			],
+			teamId);
 			xcode.save();
 
 			this.$logger.trace(`Set Automatic signing style and team id ${teamId}.`);
@@ -557,7 +560,12 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 					identity: mobileprovision.Type === "Development" ? "iPhone Developer" : "iPhone Distribution"
 				};
 				xcode.setManualSigningStyle(projectData.projectName, configuration);
-				xcode.setManualSigningStyleByTargetProductType("com.apple.product-type.app-extension", configuration);
+				xcode.setManualSigningStyleByTargetProductTypesList([
+					IOSNativeTargetProductTypes.appExtension,
+					IOSNativeTargetProductTypes.watchApp,
+					IOSNativeTargetProductTypes.watchExtension
+				],
+				configuration);
 				xcode.save();
 
 				// this.cache(uuid);
@@ -813,7 +821,11 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		);
 		await this.prepareNativeSourceCode(constants.TNS_NATIVE_SOURCE_GROUP_NAME, resourcesNativeCodePath, projectData);
 		this.$iOSWatchAppService.removeWatchApp({ pbxProjPath });
-		await this.$iOSWatchAppService.addWatchAppFromPath({ watchAppFolderPath: path.join(resourcesDirectoryPath, platformData.normalizedPlatformName), projectData, platformData, pbxProjPath });
+		const addedWatchApp = await this.$iOSWatchAppService.addWatchAppFromPath({ watchAppFolderPath: path.join(resourcesDirectoryPath, platformData.normalizedPlatformName), projectData, platformData, pbxProjPath });
+
+		if (addedWatchApp) {
+			this.$logger.warn("The support for Apple Watch App is currently in Beta. For more information about the current development state and any known issues, please check the relevant GitHub issue: ISSUE LINK");
+		}
 
 	}
 

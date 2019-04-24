@@ -1,5 +1,6 @@
 import * as path from "path";
 import { NativeTargetServiceBase } from "./ios-native-target-service-base";
+import { IOSNativeTargetProductTypes, IOSNativeTargetTypes } from "../constants";
 
 export class IOSExtensionsService extends NativeTargetServiceBase implements IIOSExtensionsService {
 	constructor(protected $fs: IFileSystem,
@@ -18,7 +19,7 @@ export class IOSExtensionsService extends NativeTargetServiceBase implements IIO
 		project.parseSync();
 		this.getTargetDirectories(extensionsFolderPath)
 			.forEach(extensionFolder => {
-				const target = this.addTargetToProject(extensionsFolderPath, extensionFolder, 'app_extension', project, platformData);
+				const target = this.addTargetToProject(extensionsFolderPath, extensionFolder, IOSNativeTargetTypes.appExtension, project, platformData);
 				this.configureTarget(extensionFolder, path.join(extensionsFolderPath, extensionFolder), target, project, projectData);
 				targetUuids.push(target.uuid);
 				addedExtensions = true;
@@ -43,7 +44,7 @@ export class IOSExtensionsService extends NativeTargetServiceBase implements IIO
 	public removeExtensions({pbxProjPath}: IRemoveExtensionsOptions): void {
 		const project = new this.$xcode.project(pbxProjPath);
 		project.parseSync();
-		project.removeTargetsByProductType("com.apple.product-type.app-extension");
+		project.removeTargetsByProductType(IOSNativeTargetProductTypes.appExtension);
 		this.$fs.writeFile(pbxProjPath, project.writeSync({omitEmptyValues: true}));
 	}
 }

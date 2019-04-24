@@ -1,7 +1,10 @@
 import * as path from "path";
 import { NativeTargetServiceBase } from "./ios-native-target-service-base";
+import { IOSDeviceTargets, IOS_WATCHAPP_FOLDER, IOS_WATCHAPP_EXTENSION_FOLDER, IOSNativeTargetProductTypes, IOSNativeTargetTypes } from "../constants";
 
 export class IOSWatchAppService extends NativeTargetServiceBase implements IIOSWatchAppService {
+	private static WATCH_APP_IDENTIFIER = "watchkitapp";
+	private static WACTCH_EXTENSION_IDENTIFIER = "watchkitextension";
 	constructor(protected $fs: IFileSystem,
 		protected $pbxprojDomXcode: IPbxprojDomXcode,
 		protected $xcode: IXcode) {
@@ -15,31 +18,31 @@ export class IOSWatchAppService extends NativeTargetServiceBase implements IIOSW
 			return false;
 		}
 
-		const appPath = path.join(watchAppFolderPath, "watchapp");
+		const appPath = path.join(watchAppFolderPath, IOS_WATCHAPP_FOLDER);
 		const appFolder = this.getTargetDirectories(appPath)[0];
 
-		const extensionPath = path.join(watchAppFolderPath, "watchextension");
+		const extensionPath = path.join(watchAppFolderPath, IOS_WATCHAPP_EXTENSION_FOLDER);
 		const extensionFolder = this.getTargetDirectories(extensionPath)[0];
 
 		const project = new this.$xcode.project(pbxProjPath);
 		project.parseSync();
 
-		const watchApptarget = this.addTargetToProject(appPath, appFolder, "watch_app", project, platformData, project.getFirstTarget().uuid);
+		const watchApptarget = this.addTargetToProject(appPath, appFolder, IOSNativeTargetTypes.watchApp, project, platformData, project.getFirstTarget().uuid);
 		this.configureTarget(
 			appFolder,
 			path.join(appPath, appFolder),
-			`${projectData.projectIdentifiers.ios}.watchkitapp`,
+			`${projectData.projectIdentifiers.ios}.${IOSWatchAppService.WATCH_APP_IDENTIFIER}`,
 			"watchapp.json",
 			watchApptarget,
 			project
 		);
 		targetUuids.push(watchApptarget.uuid);
 
-		const watchExtensionTarget = this.addTargetToProject(extensionPath, extensionFolder, "watch_extension", project, platformData, watchApptarget.uuid);
+		const watchExtensionTarget = this.addTargetToProject(extensionPath, extensionFolder, IOSNativeTargetTypes.watchExtension, project, platformData, watchApptarget.uuid);
 		this.configureTarget(
 			extensionFolder,
 			path.join(extensionPath, extensionFolder),
-			`${projectData.projectIdentifiers.ios}.watchkitapp.watchkitextension`,
+			`${projectData.projectIdentifiers.ios}.${IOSWatchAppService.WATCH_APP_IDENTIFIER}.${IOSWatchAppService.WACTCH_EXTENSION_IDENTIFIER}`,
 			"extension.json",
 			watchExtensionTarget,
 			project);
@@ -54,8 +57,8 @@ export class IOSWatchAppService extends NativeTargetServiceBase implements IIOSW
 	public removeWatchApp({pbxProjPath}: IRemoveWatchAppOptions): void {
 		const project = new this.$xcode.project(pbxProjPath);
 		project.parseSync();
-		project.removeTargetsByProductType("com.apple.product-type.application.watchapp2");
-		project.removeTargetsByProductType("com.apple.product-type.watchkit2-extension");
+		project.removeTargetsByProductType(IOSNativeTargetProductTypes.watchApp);
+		project.removeTargetsByProductType(IOSNativeTargetProductTypes.watchExtension);
 		this.$fs.writeFile(pbxProjPath, project.writeSync({omitEmptyValues: true}));
 	}
 
@@ -70,8 +73,8 @@ export class IOSWatchAppService extends NativeTargetServiceBase implements IIOSW
 		this.setXcodeTargetBuildConfigurationProperties([
 			{name: "PRODUCT_BUNDLE_IDENTIFIER", value: identifier},
 			{name: "SDKROOT", value: "watchos"},
-			{name: "TARGETED_DEVICE_FAMILY", value: 4},
-			{name: "WATCHOS_DEPLOYMENT_TARGET", value: 4.1},
+			{name: "TARGETED_DEVICE_FAMILY", value: IOSDeviceTargets.watchos},
+			{name: "WATCHOS_DEPLOYMENT_TARGET", value: 4.1}, //TODO consider WATCHOS_DEPLOYMENT_TARGET in json configuration
 			{name: "WK_APP_BUNDLE_IDENTIFIER", value: wkAppBundleIdentifier}
 		], targetName, project);
 

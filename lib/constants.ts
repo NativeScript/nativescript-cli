@@ -282,3 +282,20 @@ export const LiveSyncEvents = {
 	liveSyncStarted: "liveSyncStarted",
 	liveSyncNotification: "notify"
 };
+
+export enum IOSDeviceTargets {
+	ios = "1,2",
+	watchos = 4
+}
+
+export enum IOSNativeTargetProductTypes {
+	watchApp = "com.apple.product-type.application.watchapp2",
+	watchExtension = "com.apple.product-type.watchkit2-extension",
+	appExtension = "com.apple.product-type.app-extension"
+}
+
+export enum IOSNativeTargetTypes {
+	watchApp = "watch_app",
+	watchExtension = "watch_extension",
+	appExtension = "app_extension"
+}
