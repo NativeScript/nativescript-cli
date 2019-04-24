@@ -13,10 +13,13 @@ export class RunCommandBase implements ICommand {
 		private $errors: IErrors,
 		private $hostInfo: IHostInfo,
 		private $liveSyncCommandHelper: ILiveSyncCommandHelper,
-		private $androidBundleValidatorHelper: IAndroidBundleValidatorHelper) { }
+		private $androidBundleValidatorHelper: IAndroidBundleValidatorHelper,
+		private $options: IOptions,
+		private $workflowService: IWorkflowService) { }
 
 	public allowedParameters: ICommandParameter[] = [];
 	public async execute(args: string[]): Promise<void> {
+		await this.$workflowService.handleLegacyWorkflow({ projectDir: this.$projectData.projectDir, settings: this.$options, skipWarnings: true });
 		await this.$analyticsService.trackPreviewAppData(this.platform, this.$projectData.projectDir);
 		return this.$liveSyncCommandHelper.executeCommandLiveSync(this.platform, this.liveSyncCommandHelperAdditionalOptions);
 	}

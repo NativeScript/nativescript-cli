@@ -1,6 +1,6 @@
 import { Yok } from "../../../lib/common/yok";
 import * as _ from 'lodash';
-import { LoggerStub, ErrorsStub } from "../../stubs";
+import { LoggerStub, ErrorsStub, WorkflowServiceStub } from "../../stubs";
 import { FilePayload, Device, FilesPayload } from "nativescript-preview-sdk";
 import { PreviewAppLiveSyncService } from "../../../lib/services/livesync/playground/preview-app-livesync-service";
 import * as chai from "chai";
@@ -101,6 +101,7 @@ function createTestInjector(options?: {
 	options = options || {};
 
 	const injector = new Yok();
+	injector.register("workflowService", WorkflowServiceStub);
 	injector.register("logger", LoggerMock);
 	injector.register("hmrStatusService", {});
 	injector.register("errors", ErrorsStub);

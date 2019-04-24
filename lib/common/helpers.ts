@@ -384,6 +384,35 @@ export function createTable(headers: string[], data: string[][]): any {
 	return table;
 }
 
+export function getMessageWithBorders(message: string, spanLength = 3): string {
+	if (!message) {
+		return "";
+	}
+
+	const longestRowLength = message.split(EOL).sort((a, b) => { return b.length - a.length; })[0].length;
+	let border = "*".repeat(longestRowLength + 2 * spanLength); // * 2 for both sides
+	if (border.length % 2 === 0) {
+		border += "*"; // the * should always be an odd number in order to get * in each edge (we will remove the even *s below)
+	}
+	border = border.replace(/\*\*/g, "* "); // ***** => * * * in order to have similar padding to the side borders
+	const formatRow = function (row: string) {
+		return _.padEnd("*", spanLength) + _.padEnd(row, border.length - (2 * spanLength)) + _.padStart("*", spanLength) + EOL;
+	};
+	const emptyRow = formatRow("");
+
+	const messageWithBorders = [];
+	messageWithBorders.push(
+		EOL,
+		border + EOL,
+		emptyRow,
+		...message.split(EOL).map(row => formatRow(row)),
+		emptyRow,
+		border + EOL,
+		EOL
+	);
+	return messageWithBorders.join("");
+}
+
 export function remove<T>(array: T[], predicate: (element: T) => boolean, numberOfElements?: number): T[] {
 	numberOfElements = numberOfElements || 1;
 	const index = _.findIndex(array, predicate);

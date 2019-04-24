@@ -15,6 +15,7 @@ import { SettingsService } from "../lib/common/test/unit-tests/stubs";
 function createTestInjector(): IInjector {
 	const testInjector: IInjector = new yok.Yok();
 
+	testInjector.register("workflowService", stubs.WorkflowServiceStub);
 	testInjector.register("debug|android", DebugAndroidCommand);
 	testInjector.register("config", Configuration);
 	testInjector.register("staticConfig", StaticConfig);

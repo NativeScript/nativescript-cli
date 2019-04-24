@@ -32,6 +32,7 @@ temp.track();
 function createTestInjector() {
 	const testInjector = new yok.Yok();
 
+	testInjector.register("workflowService", stubs.WorkflowServiceStub);
 	testInjector.register('platformService', PlatformServiceLib.PlatformService);
 	testInjector.register('errors', stubs.ErrorsStub);
 	testInjector.register('logger', stubs.LoggerStub);

@@ -497,6 +497,9 @@ export class PlatformsDataStub extends EventEmitter implements IPlatformsData {
 }
 
 export class ProjectDataService implements IProjectDataService {
+	setUseLegacyWorkflow(projectDir: string, value: any): Promise<void> {
+		return;
+	}
 	getNSValue(propertyName: string): any {
 		return {};
 	}
@@ -913,6 +916,12 @@ export class PerformanceService implements IPerformanceService {
 	processExecutionData() { }
 }
 
+export class WorkflowServiceStub implements IWorkflowService {
+	handleLegacyWorkflow(options: IHandleLegacyWorkflowOptions): Promise<void> {
+		return;
+	}
+}
+
 export class InjectorStub extends Yok implements IInjector {
 	constructor() {
 		super();
@@ -951,5 +960,6 @@ export class InjectorStub extends Yok implements IInjector {
 			getDevice: (): Mobile.IDevice => undefined,
 			getDeviceByIdentifier: (): Mobile.IDevice => undefined
 		});
+		this.register("workflowService", WorkflowServiceStub);
 	}
 }

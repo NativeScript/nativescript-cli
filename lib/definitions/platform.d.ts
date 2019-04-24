@@ -14,6 +14,23 @@ interface IBuildPlatformAction {
 	buildPlatform(platform: string, buildConfig: IBuildConfig, projectData: IProjectData): Promise<string>;
 }
 
+interface IWorkflowService {
+	handleLegacyWorkflow(options: IHandleLegacyWorkflowOptions): Promise<void>;
+}
+
+interface IHandleLegacyWorkflowOptions {
+	projectDir: string;
+	settings: IWebpackWorkflowSettings;
+	skipWarnings?: boolean;
+	force?: boolean;
+}
+
+interface IWebpackWorkflowSettings {
+	bundle?: boolean | string;
+	useHotModuleReload?: boolean;
+	release?: boolean;
+}
+
 interface IPlatformService extends IBuildPlatformAction, NodeJS.EventEmitter {
 	cleanPlatforms(platforms: string[], platformTemplate: string, projectData: IProjectData, config: IPlatformOptions, framework?: string): Promise<void>;
 

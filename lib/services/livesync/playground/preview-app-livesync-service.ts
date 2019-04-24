@@ -22,13 +22,15 @@ export class PreviewAppLiveSyncService extends EventEmitter implements IPreviewA
 		private $previewAppFilesService: IPreviewAppFilesService,
 		private $previewAppPluginsService: IPreviewAppPluginsService,
 		private $previewDevicesService: IPreviewDevicesService,
-		private $hmrStatusService: IHmrStatusService) {
-			super();
-		}
+		private $hmrStatusService: IHmrStatusService,
+		protected $workflowService: IWorkflowService) {
+		super();
+	}
 
 	@performanceLog()
 	public async initialize(data: IPreviewAppLiveSyncData): Promise<void> {
 		await this.$previewSdkService.initialize(data.projectDir, async (device: Device) => {
+			await this.$workflowService.handleLegacyWorkflow({ projectDir: data.projectDir, settings: data });
 			try {
 				if (!device) {
 					this.$errors.failWithoutHelp("Sending initial preview files without a specified device is not supported.");
@@ -177,7 +179,7 @@ export class PreviewAppLiveSyncService extends EventEmitter implements IPreviewA
 						if (status === HmrConstants.HMR_ERROR_STATUS) {
 							const originalUseHotModuleReload = data.useHotModuleReload;
 							data.useHotModuleReload = false;
-							await this.syncFilesForPlatformSafe(data, { filesToSync: platformHmrData.fallbackFiles }, platform, previewDevice.id );
+							await this.syncFilesForPlatformSafe(data, { filesToSync: platformHmrData.fallbackFiles }, platform, previewDevice.id);
 							data.useHotModuleReload = originalUseHotModuleReload;
 						}
 					}));

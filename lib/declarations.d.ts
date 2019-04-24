@@ -571,6 +571,7 @@ interface IOptions extends IRelease, IDeviceIdentifier, IJustLaunch, IAvd, IAvai
 	performance: Object;
 	setupOptions(projectData: IProjectData): void;
 	cleanupLogFile: string;
+	workflow: boolean;
 }
 
 interface IEnvOptions {
@@ -938,7 +939,13 @@ interface IBundleValidatorHelper {
 	 * @param {string} minSupportedVersion the minimum supported version of nativescript-dev-webpack
 	 * @return {void}
 	 */
-	validate(minSupportedVersion?: string): void;
+	validate(projectData: IProjectData, minSupportedVersion?: string): void;
+
+	/**
+	 * Returns the installed bundler version.
+	 * @return {string}
+	 */
+	getBundlerDependencyVersion(projectData: IProjectData, bundlerName?: string): string;
 }
 
 

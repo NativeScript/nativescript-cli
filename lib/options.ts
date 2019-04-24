@@ -136,6 +136,7 @@ export class Options {
 			file: { type: OptionType.String, hasSensitiveValue: true },
 			force: { type: OptionType.Boolean, alias: "f", hasSensitiveValue: false },
 			// remove legacy
+			workflow: { type: OptionType.Boolean, hasSensitiveValue: false },
 			companion: { type: OptionType.Boolean, hasSensitiveValue: false },
 			emulator: { type: OptionType.Boolean, hasSensitiveValue: false },
 			sdk: { type: OptionType.String, hasSensitiveValue: false },

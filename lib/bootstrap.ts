@@ -190,6 +190,7 @@ $injector.require("hmrStatusService", "./services/hmr-status-service");
 $injector.require("pacoteService", "./services/pacote-service");
 $injector.require("qrCodeTerminalService", "./services/qr-code-terminal-service");
 $injector.require("testInitializationService", "./services/test-initialization-service");
+$injector.require("workflowService", "./services/workflow-service");
 
 $injector.require("networkConnectivityValidator", "./helpers/network-connectivity-validator");
 $injector.requirePublic("cleanupService", "./services/cleanup-service");

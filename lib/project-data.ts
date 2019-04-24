@@ -263,4 +263,4 @@ export class ProjectData implements IProjectData {
 		this.$logger.warnWithLabel("IProjectData.projectId is deprecated. Please use IProjectData.projectIdentifiers[platform].");
 	}
 }
-$injector.register("projectData", ProjectData);
+$injector.register("projectData", ProjectData, true);

@@ -1,4 +1,5 @@
 import * as path from "path";
+import * as constants from "../constants";
 import { ProjectData } from "../project-data";
 import { exported } from "../common/decorators";
 import {
@@ -17,7 +18,9 @@ interface IProjectFileData {
 }
 
 export class ProjectDataService implements IProjectDataService {
+	private defaultProjectDir: string;
 	private static DEPENDENCIES_KEY_NAME = "dependencies";
+	private projectDataCache: IDictionary<IProjectData> = {};
 
 	constructor(private $fs: IFileSystem,
 		private $staticConfig: IStaticConfig,
@@ -25,6 +28,15 @@ export class ProjectDataService implements IProjectDataService {
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $androidResourcesMigrationService: IAndroidResourcesMigrationService,
 		private $injector: IInjector) {
+		try {
+			// add the ProjectData of the default projectDir to the projectData cache
+			const projectData = this.$injector.resolve("projectData");
+			projectData.initializeProjectData();
+			this.defaultProjectDir = projectData.projectDir;
+			this.projectDataCache[this.defaultProjectDir] = projectData;
+		} catch (e) {
+			// the CLI is required as a lib from a non-project folder
+		}
 	}
 
 	public getNSValue(projectDir: string, propertyName: string): any {
@@ -49,16 +61,19 @@ export class ProjectDataService implements IProjectDataService {
 	// TODO: Remove $projectData and replace it with $projectDataService.getProjectData
 	@exported("projectDataService")
 	public getProjectData(projectDir: string): IProjectData {
-		const projectDataInstance = this.$injector.resolve<IProjectData>(ProjectData);
-		projectDataInstance.initializeProjectData(projectDir);
-		return projectDataInstance;
+		projectDir = projectDir || this.defaultProjectDir;
+		this.projectDataCache[projectDir] = this.projectDataCache[projectDir] || this.$injector.resolve<IProjectData>(ProjectData);
+		this.projectDataCache[projectDir].initializeProjectData(projectDir);
+
+		return this.projectDataCache[projectDir];
 	}
 
 	@exported("projectDataService")
 	public getProjectDataFromContent(packageJsonContent: string, nsconfigContent: string, projectDir?: string): IProjectData {
-		const projectDataInstance = this.$injector.resolve<IProjectData>(ProjectData);
-		projectDataInstance.initializeProjectDataFromContent(packageJsonContent, nsconfigContent, projectDir);
-		return projectDataInstance;
+		projectDir = projectDir || this.defaultProjectDir;
+		this.projectDataCache[projectDir] = this.projectDataCache[projectDir] || this.$injector.resolve<IProjectData>(ProjectData);
+		this.projectDataCache[projectDir].initializeProjectDataFromContent(packageJsonContent, nsconfigContent, projectDir);
+		return this.projectDataCache[projectDir];
 	}
 
 	@exported("projectDataService")
@@ -124,6 +139,13 @@ export class ProjectDataService implements IProjectDataService {
 		};
 	}
 
+	public setUseLegacyWorkflow(projectDir: string, value: any): void {
+		this.$logger.trace(`useLegacyWorkflow will be set to ${value}`);
+		this.updateNsConfigValue(projectDir, { useLegacyWorkflow: value });
+		this.refreshProjectData(projectDir);
+		this.$logger.trace(`useLegacyWorkflow was set to ${value}`);
+	}
+
 	public getAppExecutableFiles(projectDir: string): string[] {
 		const projectData = this.getProjectData(projectDir);
 
@@ -155,6 +177,33 @@ export class ProjectDataService implements IProjectDataService {
 		);
 
 		return files;
+	}
+
+	private refreshProjectData(projectDir: string) {
+		if (this.projectDataCache[projectDir]) {
+			this.projectDataCache[projectDir].initializeProjectData(projectDir);
+		}
+	}
+
+	private updateNsConfigValue(projectDir: string, updateObject: INsConfig): void {
+		const nsConfigPath = path.join(projectDir, constants.CONFIG_NS_FILE_NAME);
+		const currentNsConfig = this.getNsConfig(nsConfigPath);
+		const newNsConfig = Object.assign(currentNsConfig, updateObject);
+
+		this.$fs.writeJson(nsConfigPath, newNsConfig);
+	}
+
+	private getNsConfig(nsConfigPath: string): INsConfig {
+		let result = this.getNsConfigDefaultObject();
+		if (this.$fs.exists(nsConfigPath)) {
+			try {
+				result = <INsConfig>this.$fs.readJson(nsConfigPath);
+			} catch (e) {
+				// default
+			}
+		}
+
+		return result;
 	}
 
 	private getImageDefinitions(): IImageDefinitionsStructure {
@@ -308,10 +357,16 @@ export class ProjectDataService implements IProjectDataService {
 		};
 	}
 
+	private getNsConfigDefaultObject(data?: Object): INsConfig {
+		const config: INsConfig = { useLegacyWorkflow: false };
+		Object.assign(config, data);
+
+		return config;
+	}
+
 	@exported("projectDataService")
 	public getNsConfigDefaultContent(data?: Object): string {
-		const config: INsConfig = {};
-		Object.assign(config, data);
+		const config = this.getNsConfigDefaultObject(data);
 
 		return JSON.stringify(config);
 	}
