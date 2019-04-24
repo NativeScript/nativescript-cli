@@ -1,6 +1,18 @@
 NativeScript CLI Changelog
 ================
 
+5.3.4 (2019, April 24)
+==
+
+### Fixed
+* [Fixed #4561](https://github.com/NativeScript/nativescript-cli/issues/4561): CLI merges xcconfig files only for specified build configuration
+
+5.3.3 (2019, April 23)
+==
+
+### Fixed
+* [Fixed #4527](https://github.com/NativeScript/nativescript-cli/issues/4527): Unable to upload applications to App Store
+
 5.3.2 (2019, April 12)
 ==
 
