@@ -159,6 +159,10 @@ function createTestInjector(projectPath: string, projectName: string, xCode?: IX
 		removeExtensions: () => { /* */ },
 		addExtensionsFromPath: () => Promise.resolve()
 	});
+	testInjector.register("iOSWatchAppService", {
+		removeWatchApp: () => { /* */ },
+		addWatchAppFromPath: () => Promise.resolve()
+	});
 	return testInjector;
 }
 
@@ -1064,6 +1068,7 @@ describe("iOS Project Service Signing", () => {
 							stack.push({ targetName, manualSigning });
 						},
 						setManualSigningStyleByTargetProductType: () => ({}),
+						setManualSigningStyleByTargetProductTypesList: () => ({}),
 						setManualSigningStyleByTargetKey: () => ({})
 					};
 				};
@@ -1085,6 +1090,7 @@ describe("iOS Project Service Signing", () => {
 							stack.push({ targetName, manualSigning });
 						},
 						setManualSigningStyleByTargetProductType: () => ({}),
+						setManualSigningStyleByTargetProductTypesList: () => ({}),
 						setManualSigningStyleByTargetKey: () => ({})
 					};
 				};
@@ -1106,6 +1112,7 @@ describe("iOS Project Service Signing", () => {
 							stack.push({ targetName, manualSigning });
 						},
 						setManualSigningStyleByTargetProductType: () => ({}),
+						setManualSigningStyleByTargetProductTypesList: () => ({}),
 						setManualSigningStyleByTargetKey: () => ({})
 					};
 				};
@@ -1296,6 +1303,7 @@ describe("buildProject", () => {
 				getSigning: () => ({}),
 				setAutomaticSigningStyle: () => ({}),
 				setAutomaticSigningStyleByTargetProductType: () => ({}),
+				setAutomaticSigningStyleByTargetProductTypesList: () => ({}),
 				setAutomaticSigningStyleByTargetKey: () => ({}),
 				save: () => ({})
 			})

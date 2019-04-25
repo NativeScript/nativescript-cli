@@ -773,6 +773,8 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 
 	public async prepareProject(projectData: IProjectData, platformSpecificData: IPlatformSpecificData): Promise<void> {
 		const projectRoot = path.join(projectData.platformsDir, "ios");
+		const platformData = this.getPlatformData(projectData);
+		const resourcesDirectoryPath = projectData.getAppResourcesDirectoryPath();
 
 		const provision = platformSpecificData && platformSpecificData.provision;
 		const teamId = platformSpecificData && platformSpecificData.teamId;
@@ -809,17 +811,16 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 			_.each(imagesToRemove, image => project.removeResourceFile(path.join(this.getAppResourcesDestinationDirectoryPath(projectData), image)));
 
 			this.savePbxProj(project, projectData);
+
+			const resourcesNativeCodePath = path.join(
+				resourcesDirectoryPath,
+				platformData.normalizedPlatformName,
+				constants.NATIVE_SOURCE_FOLDER
+			);
+			await this.prepareNativeSourceCode(constants.TNS_NATIVE_SOURCE_GROUP_NAME, resourcesNativeCodePath, projectData);
 		}
 
-		const platformData = this.getPlatformData(projectData);
-		const resourcesDirectoryPath = projectData.getAppResourcesDirectoryPath();
 		const pbxProjPath = this.getPbxProjPath(projectData);
-		const resourcesNativeCodePath = path.join(
-			resourcesDirectoryPath,
-			platformData.normalizedPlatformName,
-			constants.NATIVE_SOURCE_FOLDER
-		);
-		await this.prepareNativeSourceCode(constants.TNS_NATIVE_SOURCE_GROUP_NAME, resourcesNativeCodePath, projectData);
 		this.$iOSWatchAppService.removeWatchApp({ pbxProjPath });
 		const addedWatchApp = await this.$iOSWatchAppService.addWatchAppFromPath({ watchAppFolderPath: path.join(resourcesDirectoryPath, platformData.normalizedPlatformName), projectData, platformData, pbxProjPath });
 
