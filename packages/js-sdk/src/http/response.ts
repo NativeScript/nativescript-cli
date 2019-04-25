@@ -29,6 +29,7 @@ import { StaleRequestError } from '../errors/staleRequest';
 import { UserAlreadyExistsError } from '../errors/userAlreadyExists';
 import { WritesToCollectionDisallowedError } from '../errors/writesToCollectionDisallowed';
 import { HttpHeaders } from './headers';
+import isPlainObject = require('lodash/isPlainObject');
 
 export enum HttpStatusCode {
   Ok = 200,
@@ -62,7 +63,11 @@ export class HttpResponse {
 
     const contentType = this.headers.get('Content-Type') || '';
     if (isString(config.data) && contentType.indexOf('application/json') !== -1) {
-      this.data = JSON.parse(config.data);
+      try {
+        this.data = JSON.parse(config.data);
+      } catch (error) {
+        this.data = config.data;
+      }
     } else {
       this.data = config.data;
     }
@@ -70,87 +75,91 @@ export class HttpResponse {
 
   get error() {
     if (!this.isSuccess()) {
-      const message = this.data.message || this.data.description;
-      const name = this.data.name || this.data.error;
-      const debug = this.data.debug;
+      if (isPlainObject(this.data)) {
+        const message = this.data.message || this.data.description;
+        const name = this.data.name || this.data.error;
+        const debug = this.data.debug;
 
-      if (name === 'APIVersionNotAvailable') {
-        return new APIVersionNotAvailableError(message, debug);
-      } else if (name === 'APIVersionNotImplemented') {
-        return new APIVersionNotImplementedError(message, debug);
-      } else if (name === 'AppProblem') {
-        return new AppProblemError(message, debug);
-      } else if (name === 'AppProblem') {
-        return new AppProblemError(message, debug);
-      } else if (name === 'BadRequest') {
-        return new BadRequestError(message, debug);
-      } else if (name === 'BLInternalError'
-        || name === 'BLRuntimeError'
-        || name === 'BLSyntaxError'
-        || name === 'BLTimeoutError'
-        || name === 'BLViolationError') {
-        return new BLError(message, debug);
-      } else if (name === 'CORSDisabled') {
-        return new CORSDisabledError(message, debug);
-      } else if (name === 'DuplicateEndUsers') {
-        return new DuplicateEndUsersError(message, debug);
-      } else if (name === 'FeatureUnavailable') {
-        return new FeatureUnavailableError(message, debug);
-      } else if (name === 'IncompleteRequestBody') {
-        return new IncompleteRequestBodyError(message, debug);
-      } else if (name === 'IndirectCollectionAccessDisallowed') {
-        return new IndirectCollectionAccessDisallowedError(message, debug);
-      } else if (name === 'InsufficientCredentials') {
-        return new InsufficientCredentialsError(message, debug);
-      } else if (name === 'InvalidCredentials') {
-        return new InvalidCredentialsError(message, debug);
-      } else if (name === 'InvalidIdentifier') {
-        return new InvalidIdentifierError(message, debug);
-      } else if (name === 'InvalidQuerySyntax') {
-        return new InvalidQuerySyntaxError(message, debug);
-      } else if (name === 'JSONParseError') {
-        return new JSONParseError(message, debug);
-      } else if (name === 'KinveyInternalErrorRetry') {
-        return new KinveyInternalErrorRetry(message, debug);
-      } else if (name === 'KinveyInternalErrorStop') {
-        return new KinveyInternalErrorStop(message, debug);
-      } else if (name === 'MissingQuery') {
-        return new MissingQueryError(message, debug);
-      } else if (name === 'MissingRequestHeader') {
-        return new MissingRequestHeaderError(message, debug);
-      } else if (name === 'MissingRequestParameter') {
-        return new MissingRequestParameterError(message, debug);
-      } else if (name === 'MissingConfiguration') {
-        return new MissingConfigurationError(message, debug);
-      } else if (name === 'EntityNotFound'
-        || name === 'CollectionNotFound'
-        || name === 'AppNotFound'
-        || name === 'UserNotFound'
-        || name === 'BlobNotFound'
-        || name === 'DocumentNotFound') {
-        return new NotFoundError(message, debug);
-      } else if (name === 'ParameterValueOutOfRange') {
-        return new ParameterValueOutOfRangeError(message, debug);
-      } else if (name === 'ResultSetSizeExceeded') {
-        return new ResultSetSizeExceededError(message, debug);
-      } else if (name === 'ServerError') {
-        return new ServerError(message, debug);
-      } else if (name === 'StaleRequest') {
-        return new StaleRequestError(message, debug);
-      } else if (name === 'UserAlreadyExists') {
-        return new UserAlreadyExistsError(message, debug);
-      } else if (name === 'WritesToCollectionDisallowed') {
-        return new WritesToCollectionDisallowedError(message, debug);
-      } else if (this.statusCode === HttpStatusCode.Unauthorized
-        || this.statusCode === HttpStatusCode.Forbidden) {
-        return new InsufficientCredentialsError(message, debug);
-      } else if (this.statusCode === HttpStatusCode.NotFound) {
-        return new NotFoundError(message, debug);
-      } else if (this.statusCode === HttpStatusCode.ServerError) {
-        return new ServerError(message, debug);
+        if (name === 'APIVersionNotAvailable') {
+          return new APIVersionNotAvailableError(message, debug);
+        } else if (name === 'APIVersionNotImplemented') {
+          return new APIVersionNotImplementedError(message, debug);
+        } else if (name === 'AppProblem') {
+          return new AppProblemError(message, debug);
+        } else if (name === 'AppProblem') {
+          return new AppProblemError(message, debug);
+        } else if (name === 'BadRequest') {
+          return new BadRequestError(message, debug);
+        } else if (name === 'BLInternalError'
+          || name === 'BLRuntimeError'
+          || name === 'BLSyntaxError'
+          || name === 'BLTimeoutError'
+          || name === 'BLViolationError') {
+          return new BLError(message, debug);
+        } else if (name === 'CORSDisabled') {
+          return new CORSDisabledError(message, debug);
+        } else if (name === 'DuplicateEndUsers') {
+          return new DuplicateEndUsersError(message, debug);
+        } else if (name === 'FeatureUnavailable') {
+          return new FeatureUnavailableError(message, debug);
+        } else if (name === 'IncompleteRequestBody') {
+          return new IncompleteRequestBodyError(message, debug);
+        } else if (name === 'IndirectCollectionAccessDisallowed') {
+          return new IndirectCollectionAccessDisallowedError(message, debug);
+        } else if (name === 'InsufficientCredentials') {
+          return new InsufficientCredentialsError(message, debug);
+        } else if (name === 'InvalidCredentials') {
+          return new InvalidCredentialsError(message, debug);
+        } else if (name === 'InvalidIdentifier') {
+          return new InvalidIdentifierError(message, debug);
+        } else if (name === 'InvalidQuerySyntax') {
+          return new InvalidQuerySyntaxError(message, debug);
+        } else if (name === 'JSONParseError') {
+          return new JSONParseError(message, debug);
+        } else if (name === 'KinveyInternalErrorRetry') {
+          return new KinveyInternalErrorRetry(message, debug);
+        } else if (name === 'KinveyInternalErrorStop') {
+          return new KinveyInternalErrorStop(message, debug);
+        } else if (name === 'MissingQuery') {
+          return new MissingQueryError(message, debug);
+        } else if (name === 'MissingRequestHeader') {
+          return new MissingRequestHeaderError(message, debug);
+        } else if (name === 'MissingRequestParameter') {
+          return new MissingRequestParameterError(message, debug);
+        } else if (name === 'MissingConfiguration') {
+          return new MissingConfigurationError(message, debug);
+        } else if (name === 'EntityNotFound'
+          || name === 'CollectionNotFound'
+          || name === 'AppNotFound'
+          || name === 'UserNotFound'
+          || name === 'BlobNotFound'
+          || name === 'DocumentNotFound') {
+          return new NotFoundError(message, debug);
+        } else if (name === 'ParameterValueOutOfRange') {
+          return new ParameterValueOutOfRangeError(message, debug);
+        } else if (name === 'ResultSetSizeExceeded') {
+          return new ResultSetSizeExceededError(message, debug);
+        } else if (name === 'ServerError') {
+          return new ServerError(message, debug);
+        } else if (name === 'StaleRequest') {
+          return new StaleRequestError(message, debug);
+        } else if (name === 'UserAlreadyExists') {
+          return new UserAlreadyExistsError(message, debug);
+        } else if (name === 'WritesToCollectionDisallowed') {
+          return new WritesToCollectionDisallowedError(message, debug);
+        } else if (this.statusCode === HttpStatusCode.Unauthorized
+          || this.statusCode === HttpStatusCode.Forbidden) {
+          return new InsufficientCredentialsError(message, debug);
+        } else if (this.statusCode === HttpStatusCode.NotFound) {
+          return new NotFoundError(message, debug);
+        } else if (this.statusCode === HttpStatusCode.ServerError) {
+          return new ServerError(message, debug);
+        }
+
+        return new KinveyError(message, debug);
       }
 
-      return new KinveyError(message, debug);
+      return new KinveyError();
     }
 
     return null;
