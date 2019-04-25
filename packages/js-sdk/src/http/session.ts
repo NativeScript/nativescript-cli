@@ -16,7 +16,7 @@ function getStore() {
   return getConfig<SessionStore>(ConfigKey.SessionStore);
 }
 
-function getKey() {
+export function getKey() {
   return `${getAppKey()}.active_user`;
 }
 

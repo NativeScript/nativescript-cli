@@ -97,11 +97,17 @@ export async function clear(dbName: string, tableName: string) {
   return true;
 }
 
-export async function clearDatabase(dbName: string) {
+export async function clearDatabase(dbName: string, exclude: string[] = []) {
   const tables = await execute(dbName, MASTER_TABLE_NAME, [['SELECT name AS value FROM #{table} WHERE type = ?', ['table']]]);
 
   if (tables.length > 0) {
-    await Promise.all(tables.map(tableName => execute(dbName, tableName, [['DROP TABLE IF EXISTS #{table}']], true)));
+    await Promise.all(tables.map((tableName: string) => {
+      if (exclude.indexOf(tableName) === -1) {
+        return execute(dbName, tableName, [['DROP TABLE IF EXISTS #{table}']], true);
+      }
+
+      return null;
+    }));
   }
 
   return true;

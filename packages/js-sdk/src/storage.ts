@@ -4,6 +4,7 @@ import { ConfigKey, getConfig } from './config';
 import { Query } from './query';
 import { Aggregation } from './aggregation';
 import { KinveyError } from './errors/kinvey';
+import { getKey as getSessionKey } from './http';
 
 const queue = new PQueue({ concurrency: 1 });
 
@@ -50,7 +51,7 @@ export interface StorageAdapter {
   save(dbName: string, collectionName: string, docs: Entity[]): Promise<Entity[]>;
   removeById(dbName: string, collectionName: string, id: string): Promise<number>;
   clear(dbName: string, collectionName: string): Promise<any>;
-  clearDatabase(dbName: string): Promise<any>;
+  clearDatabase(dbName: string, exclude?: string[]): Promise<any>;
 }
 
 export class Storage<T extends Entity> {
@@ -165,6 +166,7 @@ export class Storage<T extends Entity> {
 
   static clear(dbName: string) {
     const storageAdapter = getConfig<StorageAdapter>(ConfigKey.StorageAdapter);
-    return queue.add(() => storageAdapter.clearDatabase(dbName));
+    const exclude = [getSessionKey()];
+    return queue.add(() => storageAdapter.clearDatabase(dbName, exclude));
   }
 }

@@ -58,12 +58,18 @@ export async function clear(dbName: string, tableName: string) {
   return true;
 }
 
-export async function clearDatabase(dbName: string) {
+export async function clearDatabase(dbName: string, exclude: string[] = []) {
+  const keys = [];
+
   for (let i = 0, len = window.sessionStorage.length; i < len; i += 1) {
-    const key = window.sessionStorage.key(i);
-    if (key && key.indexOf(dbName) >= 0) {
+    keys.push(window.sessionStorage.key(i));
+  }
+
+  keys.forEach((key) => {
+    if (key && key.indexOf(dbName) >= 0 && exclude.indexOf(key) === -1) {
       window.sessionStorage.removeItem(key);
     }
-  }
+  });
+
   return true;
 }
