@@ -36,7 +36,7 @@ async function saveFileMetadata(metadata: any, options: any = {}) {
     headers: new KinveyHttpHeaders({
       'X-Kinvey-Content-Type': metadata.mimeType
     }),
-    auth: KinveyHttpAuth.SessionOrApp,
+    auth: KinveyHttpAuth.SessionOrMaster,
     url: metadata._id ? formatKinveyBaasUrl(KinveyBaasNamespace.Blob, `/${metadata._id}`) : formatKinveyBaasUrl(KinveyBaasNamespace.Blob),
     body: metadata,
     timeout: options.timeout

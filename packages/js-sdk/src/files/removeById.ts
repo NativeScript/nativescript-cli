@@ -3,7 +3,7 @@ import { KinveyHttpRequest, HttpRequestMethod, KinveyHttpAuth, formatKinveyBaasU
 export async function removeById(id: string, options: any = {}) {
   const request = new KinveyHttpRequest({
     method: HttpRequestMethod.DELETE,
-    auth: KinveyHttpAuth.SessionOrApp,
+    auth: KinveyHttpAuth.SessionOrMaster,
     url: formatKinveyBaasUrl(KinveyBaasNamespace.Blob, `/${id}`),
     timeout: options.timeout
   });

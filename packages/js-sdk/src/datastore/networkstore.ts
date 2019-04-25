@@ -11,7 +11,7 @@ import { subscribeToChannel, unsubscribeFromChannel, LiveServiceReceiver } from 
 export function createRequest(method: HttpRequestMethod, url: string, body?: any) {
   return new KinveyHttpRequest({
     method,
-    auth: KinveyHttpAuth.Session,
+    auth: KinveyHttpAuth.SessionOrMaster,
     url,
     body
   });

@@ -101,10 +101,12 @@ export class HttpHeaders {
 }
 
 export enum KinveyHttpAuth {
+  All = 'All',
   App = 'App',
   Master = 'Master',
   Session = 'Session',
-  SessionOrApp = 'SessionOrApp'
+  SessionOrApp = 'SessionOrApp',
+  SessionOrMaster = 'SessionOrMaster'
 }
 
 const globalHeaders = new HttpHeaders();
@@ -162,11 +164,27 @@ export class KinveyHttpHeaders extends HttpHeaders {
         throw new Error('There is no active user to authorize the request. Please login and retry the request.');
       }
       value = `Kinvey ${session._kmd.authtoken}`;
+    } else if (auth === KinveyHttpAuth.All) {
+      try {
+        return this.setAuthorization(KinveyHttpAuth.Session);
+      } catch (error) {
+        try {
+          return this.setAuthorization(KinveyHttpAuth.App);
+        } catch (error) {
+          return this.setAuthorization(KinveyHttpAuth.Master);
+        }
+      }
     } else if (auth === KinveyHttpAuth.SessionOrApp) {
       try {
         return this.setAuthorization(KinveyHttpAuth.Session);
       } catch (error) {
         return this.setAuthorization(KinveyHttpAuth.App);
+      }
+    } else if (auth === KinveyHttpAuth.SessionOrMaster) {
+      try {
+        return this.setAuthorization(KinveyHttpAuth.Session);
+      } catch (error) {
+        return this.setAuthorization(KinveyHttpAuth.Master);
       }
     }
 

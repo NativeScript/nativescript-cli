@@ -16,7 +16,7 @@ export function lookup(query?: Query, options: LookupOptions = {}) {
 
       const request = new KinveyHttpRequest({
         method: HttpRequestMethod.POST,
-        auth: KinveyHttpAuth.SessionOrApp,
+        auth: KinveyHttpAuth.SessionOrMaster,
         url: formatKinveyBaasUrl(KinveyBaasNamespace.User, '/_lookup'),
         body: query ? query.filter : undefined,
         timeout: options.timeout

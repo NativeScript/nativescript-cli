@@ -22,7 +22,7 @@ export async function find(query = new Query(), options: any = {}) {
 
   const request = new KinveyHttpRequest({
     method: HttpRequestMethod.GET,
-    auth: KinveyHttpAuth.SessionOrApp,
+    auth: KinveyHttpAuth.SessionOrMaster,
     url: formatKinveyBaasUrl(KinveyBaasNamespace.Blob, '/', queryStringObject),
     timeout: options.timeout
   });

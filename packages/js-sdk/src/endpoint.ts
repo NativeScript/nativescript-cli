@@ -13,7 +13,7 @@ export async function endpoint(endpoint: string, args?: any, options: EndpointOp
 
   const request = new KinveyHttpRequest({
     method: HttpRequestMethod.POST,
-    auth: KinveyHttpAuth.Session,
+    auth: KinveyHttpAuth.SessionOrMaster,
     url: formatKinveyBaasUrl(KinveyBaasNamespace.Rpc, `/custom/${endpoint}`),
     body: args,
     timeout: options.timeout

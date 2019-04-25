@@ -19,7 +19,7 @@ export async function remove(id: string, options: { timeout?: number, hard?: boo
   const url = formatKinveyBaasUrl(KinveyBaasNamespace.User, `/${id}`, { hard: hard ? hard === true : undefined });
   const request = new KinveyHttpRequest({
     method: HttpRequestMethod.DELETE,
-    auth: KinveyHttpAuth.SessionOrApp,
+    auth: KinveyHttpAuth.SessionOrMaster,
     url,
     timeout: options.timeout
   });

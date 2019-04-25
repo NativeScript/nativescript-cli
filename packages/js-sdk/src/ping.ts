@@ -14,7 +14,7 @@ export interface PingResponse {
 export async function ping(options: PingOptions = {}): Promise<PingResponse> {
   const request = new KinveyHttpRequest({
     method: HttpRequestMethod.GET,
-    auth: KinveyHttpAuth.SessionOrApp,
+    auth: KinveyHttpAuth.All,
     url: formatKinveyBaasUrl(KinveyBaasNamespace.AppData),
     timeout: options.timeout
   });

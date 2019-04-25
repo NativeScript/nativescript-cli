@@ -145,7 +145,7 @@ export class User {
 
     const request = new KinveyHttpRequest({
       method: HttpRequestMethod.PUT,
-      auth: KinveyHttpAuth.SessionOrApp,
+      auth: KinveyHttpAuth.SessionOrMaster,
       url: formatKinveyBaasUrl(KinveyBaasNamespace.User, `/${this._id}`),
       body,
       timeout: options.timeout

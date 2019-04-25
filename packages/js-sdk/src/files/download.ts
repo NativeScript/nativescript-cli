@@ -12,7 +12,7 @@ export async function download(id?: string, options: any = {}) {
 
   const request = new KinveyHttpRequest({
     method: HttpRequestMethod.GET,
-    auth: KinveyHttpAuth.SessionOrApp,
+    auth: KinveyHttpAuth.SessionOrMaster,
     url: formatKinveyBaasUrl(KinveyBaasNamespace.Blob, `/${id}`, queryStringObject),
     timeout: options.timeout
   });
