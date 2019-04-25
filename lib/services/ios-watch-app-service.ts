@@ -13,15 +13,14 @@ export class IOSWatchAppService extends NativeTargetServiceBase implements IIOSW
 
 	public async addWatchAppFromPath({watchAppFolderPath, projectData, platformData, pbxProjPath}: IAddWatchAppFromPathOptions): Promise<boolean> {
 		const targetUuids: string[] = [];
+		const appPath = path.join(watchAppFolderPath, IOS_WATCHAPP_FOLDER);
+		const extensionPath = path.join(watchAppFolderPath, IOS_WATCHAPP_EXTENSION_FOLDER);
 
-		if (!this.$fs.exists(watchAppFolderPath)) {
+		if (!this.$fs.exists(appPath) || !this.$fs.exists(extensionPath)) {
 			return false;
 		}
 
-		const appPath = path.join(watchAppFolderPath, IOS_WATCHAPP_FOLDER);
 		const appFolder = this.getTargetDirectories(appPath)[0];
-
-		const extensionPath = path.join(watchAppFolderPath, IOS_WATCHAPP_EXTENSION_FOLDER);
 		const extensionFolder = this.getTargetDirectories(extensionPath)[0];
 
 		const project = new this.$xcode.project(pbxProjPath);
