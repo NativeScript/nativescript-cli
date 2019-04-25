@@ -2,13 +2,13 @@
   "private": true,
   "name": "kinvey-html5-integration-tests",
   "description": "Integration tests for kinvey-html5-sdk.",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "scripts": {
     "pretest": "node scripts/test.js",
     "test": "karma start karma.conf.js"
   },
   "dependencies": {
-    "kinvey-html5-sdk": "^3.13.0-next.31"
+    "kinvey-html5-sdk": "^3.13.0-next.32"
   },
   "devDependencies": {
     "@babel/core": "~7.4.3",
