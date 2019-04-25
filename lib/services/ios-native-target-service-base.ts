@@ -11,7 +11,7 @@ export interface IXcodeTargetBuildConfigurationProperty {
 	buildNames?: BuildNames[];
 }
 
-export abstract class NativeTargetServiceBase implements IIOSNativeTargetServiceBase {
+export abstract class NativeTargetServiceBase {
 	constructor(protected $fs: IFileSystem,
 		protected $pbxprojDomXcode: IPbxprojDomXcode,
 		protected $xcode: IXcode) {

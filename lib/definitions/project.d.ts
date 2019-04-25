@@ -592,9 +592,6 @@ interface IIOSExtensionsService {
 	removeExtensions(options: IRemoveExtensionsOptions): void;
 }
 
-interface IIOSNativeTargetServiceBase {
-}
-
 /**
  * Describes a service used to add and remove iOS extension
  */

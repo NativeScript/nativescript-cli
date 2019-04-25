@@ -81,10 +81,6 @@ declare module Mobile {
 		imageIdentifier?: string;
 	}
 
-	interface IIOSWatchSimulatorDevice extends IDeviceInfo{
-		
-	}
-
 	interface IDeviceError extends Error, IDeviceIdentifier { }
 
 	interface IDeviceIdentifier {
