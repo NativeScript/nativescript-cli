@@ -18,7 +18,7 @@ const checkLocalStorageForSubscriptionKey = () => {
   return hasSubscriptionKey;
 }
 
-describe('Live-services', () => {
+describe.only('Live-services', () => {
   networkStore = Kinvey.DataStore.collection(collectionName, Kinvey.DataStoreType.Network);
 
   var messageCreated;
@@ -75,7 +75,9 @@ describe('Live-services', () => {
     activeUser.registerForLiveService()
       .then((res) => {
         expect(res).to.equal(true);
-        expect(checkLocalStorageForSubscriptionKey()).to.equal(true);
+        if (Kinvey.StorageProvider.Memory === undefined && Kinvey.StorageProvider.SQLite === undefined){
+          expect(checkLocalStorageForSubscriptionKey()).to.equal(true);
+        }
         done();
       })
       .catch(done);
@@ -86,7 +88,9 @@ describe('Live-services', () => {
     activeUser.registerForLiveService()
       .then((res) => {
         expect(res).to.equal(true);
-        expect(checkLocalStorageForSubscriptionKey()).to.equal(true);
+        if (Kinvey.StorageProvider.Memory === undefined && Kinvey.StorageProvider.SQLite === undefined){
+          expect(checkLocalStorageForSubscriptionKey()).to.equal(true);
+        }
         networkStore.subscribe({
           onMessage: (m) => {
             messageCreated = m;
@@ -121,7 +125,9 @@ describe('Live-services', () => {
     activeUser.registerForLiveService()
       .then((res) => {
         expect(res).to.equal(true);
-        expect(checkLocalStorageForSubscriptionKey()).to.equal(true);
+        if (Kinvey.StorageProvider.Memory === undefined && Kinvey.StorageProvider.SQLite === undefined){
+          expect(checkLocalStorageForSubscriptionKey()).to.equal(true);
+        }
         networkStore.subscribe({
           onMessage: (m) => {
             messageUpdated = m;
