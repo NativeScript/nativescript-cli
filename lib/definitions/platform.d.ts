@@ -307,11 +307,6 @@ interface IPlatformDataComposition {
 
 interface ICopyAppFilesData extends IProjectDataComposition, IAppFilesUpdaterOptionsComposition, IPlatformDataComposition, IOptionalFilesToSync, IOptionalFilesToRemove { }
 
-interface IPreparePlatformService {
-	addPlatform(info: IAddPlatformInfo): Promise<void>;
-	preparePlatform(config: IPreparePlatformJSInfo): Promise<void>;
-}
-
 interface IAddPlatformInfo extends IProjectDataComposition, IPlatformDataComposition {
 	frameworkDir: string;
 	installedVersion: string;
@@ -334,7 +329,9 @@ interface IPreparePlatformCoreInfo extends IPreparePlatformInfoBase, IOptionalPr
 	platformSpecificData: IPlatformSpecificData;
 }
 
-interface IPreparePlatformInfo extends IPreparePlatformInfoBase, IPlatformConfig, ISkipNativeCheckOptional { }
+interface IPreparePlatformInfo extends IPreparePlatformInfoBase, IPlatformConfig, ISkipNativeCheckOptional {
+	webpackCompilerConfig: IWebpackCompilerConfig;
+}
 
 interface IPlatformConfig {
 	config: IPlatformOptions;

@@ -1,28 +1,27 @@
-import * as temp from "temp";
 import { hook } from "../common/helpers";
-import { PreparePlatformService } from "./prepare-platform-service";
 import { performanceLog } from "./../common/decorators";
+import { EventEmitter } from "events";
 
-temp.track();
+export class PreparePlatformJSService extends EventEmitter implements IPreparePlatformService {
 
-export class PreparePlatformJSService extends PreparePlatformService implements IPreparePlatformService {
-
-	constructor($fs: IFileSystem,
-		$xmlValidator: IXmlValidator,
-		$hooksService: IHooksService,
-		private $projectDataService: IProjectDataService) {
-		super($fs, $hooksService, $xmlValidator);
-	}
-
-	public async addPlatform(info: IAddPlatformInfo): Promise<void> {
-		const frameworkPackageNameData: any = { version: info.installedVersion };
-		this.$projectDataService.setNSValue(info.projectData.projectDir, info.platformData.frameworkPackageName, frameworkPackageNameData);
+	constructor(
+		private $webpackCompilerService: IWebpackCompilerService
+	) {
+		super();
 	}
 
 	@performanceLog()
 	@hook('prepareJSApp')
 	public async preparePlatform(config: IPreparePlatformJSInfo): Promise<void> {
 		// intentionally left blank, keep the support for before-prepareJSApp and after-prepareJSApp hooks
+	}
+
+	public async startWatcher(platformData: IPlatformData, projectData: IProjectData, config: IPreparePlatformJSInfo): Promise<void> {
+		this.$webpackCompilerService.on("webpackEmittedFiles", files => {
+			this.emit("jsFilesChanged", files);
+		});
+
+		await this.$webpackCompilerService.startWatcher(platformData, projectData, <any>config);
 	}
 }
 

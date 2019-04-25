@@ -10,8 +10,7 @@ export abstract class PlatformLiveSyncServiceBase {
 		protected $logger: ILogger,
 		protected $platformsData: IPlatformsData,
 		protected $projectFilesManager: IProjectFilesManager,
-		private $devicePathProvider: IDevicePathProvider,
-		private $projectFilesProvider: IProjectFilesProvider) { }
+		private $devicePathProvider: IDevicePathProvider) { }
 
 	public getDeviceLiveSyncService(device: Mobile.IDevice, projectData: IProjectData): INativeScriptDeviceLiveSyncService {
 		const platform = device.deviceInfo.platform.toLowerCase();
@@ -86,12 +85,12 @@ export abstract class PlatformLiveSyncServiceBase {
 		let modifiedLocalToDevicePaths: Mobile.ILocalToDevicePathData[] = [];
 		if (liveSyncInfo.filesToSync.length) {
 			const filesToSync = liveSyncInfo.filesToSync;
-			const mappedFiles = _.map(filesToSync, filePath => this.$projectFilesProvider.mapFilePath(filePath, device.deviceInfo.platform, projectData));
+			// const mappedFiles = _.map(filesToSync, filePath => this.$projectFilesProvider.mapFilePath(filePath, device.deviceInfo.platform, projectData));
 
 			// Some plugins modify platforms dir on afterPrepare (check nativescript-dev-sass) - we want to sync only existing file.
-			const existingFiles = mappedFiles.filter(m => m && this.$fs.exists(m));
+			const existingFiles = filesToSync.filter(m => m && this.$fs.exists(m));
 			this.$logger.trace("Will execute livesync for files: ", existingFiles);
-			const skippedFiles = _.difference(mappedFiles, existingFiles);
+			const skippedFiles = _.difference(filesToSync, existingFiles);
 			if (skippedFiles.length) {
 				this.$logger.trace("The following files will not be synced as they do not exist:", skippedFiles);
 			}
@@ -111,7 +110,7 @@ export abstract class PlatformLiveSyncServiceBase {
 			const platformData = this.$platformsData.getPlatformData(device.deviceInfo.platform, projectData);
 
 			const mappedFiles = _(filePaths)
-				.map(filePath => this.$projectFilesProvider.mapFilePath(filePath, device.deviceInfo.platform, projectData))
+				// .map(filePath => this.$projectFilesProvider.mapFilePath(filePath, device.deviceInfo.platform, projectData))
 				.filter(filePath => !!filePath)
 				.value();
 			const projectFilesPath = path.join(platformData.appDestinationDirectoryPath, APP_FOLDER_NAME);

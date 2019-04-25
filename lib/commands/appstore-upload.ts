@@ -65,7 +65,11 @@ export class PublishIOS implements ICommand {
 				appFilesUpdaterOptions,
 				projectData: this.$projectData,
 				config: this.$options,
-				env: this.$options.env
+				env: this.$options.env,
+				webpackCompilerConfig: {
+					watch: false,
+					env: this.$options.env
+				}
 			};
 			const buildConfig: IBuildConfig = {
 				projectDir: this.$options.path,

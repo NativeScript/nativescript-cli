@@ -1,31 +1,82 @@
-import * as constants from "../constants";
 import * as path from "path";
-import { PreparePlatformService } from "./prepare-platform-service";
+import * as choki from "chokidar";
+import * as constants from "../constants";
 import { performanceLog } from "../common/decorators";
+import { EventEmitter } from "events";
 
-export class PreparePlatformNativeService extends PreparePlatformService implements IPreparePlatformService {
+export class PreparePlatformNativeService extends EventEmitter implements IPreparePlatformService {
+	private watchersInfo: IDictionary<choki.FSWatcher> = {};
 
-	constructor($fs: IFileSystem,
-		$xmlValidator: IXmlValidator,
-		$hooksService: IHooksService,
+	constructor(
+		private $fs: IFileSystem,
+		private $logger: ILogger,
 		private $nodeModulesBuilder: INodeModulesBuilder,
 		private $projectChangesService: IProjectChangesService,
 		private $androidResourcesMigrationService: IAndroidResourcesMigrationService) {
-		super($fs, $hooksService, $xmlValidator);
+			super();
 	}
 
 	@performanceLog()
 	public async addPlatform(info: IAddPlatformInfo): Promise<void> {
-		await info.platformData.platformProjectService.createProject(path.resolve(info.frameworkDir), info.installedVersion, info.projectData, info.config);
-		info.platformData.platformProjectService.ensureConfigurationFileInAppResources(info.projectData);
-		await info.platformData.platformProjectService.interpolateData(info.projectData, info.config);
-		info.platformData.platformProjectService.afterCreateProject(info.platformData.projectRoot, info.projectData);
-		this.$projectChangesService.setNativePlatformStatus(info.platformData.normalizedPlatformName, info.projectData,
+		const { platformData, projectData, frameworkDir, installedVersion, config } = info;
+
+		const platformDir = path.join(projectData.platformsDir, platformData.normalizedPlatformName.toLowerCase());
+		this.$fs.deleteDirectory(platformDir);
+
+		await platformData.platformProjectService.createProject(path.resolve(frameworkDir), installedVersion, projectData, config);
+		platformData.platformProjectService.ensureConfigurationFileInAppResources(projectData);
+		await info.platformData.platformProjectService.interpolateData(projectData, config);
+		info.platformData.platformProjectService.afterCreateProject(platformData.projectRoot, projectData);
+		this.$projectChangesService.setNativePlatformStatus(platformData.normalizedPlatformName, projectData,
 			{ nativePlatformStatus: constants.NativePlatformStatus.requiresPrepare });
 	}
 
+	public async startWatcher(platformData: IPlatformData, projectData: IProjectData, config: IPreparePlatformJSInfo): Promise<void> {
+		const watcherOptions: choki.WatchOptions = {
+			ignoreInitial: true,
+			cwd: projectData.projectDir,
+			awaitWriteFinish: {
+				pollInterval: 100,
+				stabilityThreshold: 500
+			},
+			ignored: ["**/.*", ".*"] // hidden files
+		};
+
+		await this.preparePlatform(config);
+
+		// TODO: node_modules/**/platforms -> when no platform is provided,
+		//       node_modules/**/platforms/ios -> when iOS platform is provided
+		//       node_modules/**/platforms/android -> when Android is provided
+		const patterns = [projectData.getAppResourcesRelativeDirectoryPath(), "node_modules/**/platforms/"];
+
+		// TODO: Add stopWatcher function
+		const watcher = choki.watch(patterns, watcherOptions)
+			.on("all", async (event: string, filePath: string) => {
+				filePath = path.join(projectData.projectDir, filePath);
+				this.$logger.trace(`Chokidar raised event ${event} for ${filePath}.`);
+				await this.preparePlatform(config);
+			});
+
+		this.watchersInfo[projectData.projectDir] = watcher;
+	}
+
+	public stopWatchers(): void {
+		// TODO: stop the watchers here
+	}
+
 	@performanceLog()
-	public async preparePlatform(config: IPreparePlatformJSInfo): Promise<void> {
+	public async preparePlatform(config: IPreparePlatformJSInfo): Promise<void> { // TODO: should return 3 states for nativeFilesChanged, hasChanges, noChanges, skipChanges
+		const shouldAddNativePlatform = !config.nativePrepare || !config.nativePrepare.skipNativePrepare;
+		if (!shouldAddNativePlatform) {
+			this.emit("nativeFilesChanged", false);
+		}
+
+		const hasModulesChange = !config.changesInfo || config.changesInfo.modulesChanged;
+		const hasConfigChange = !config.changesInfo || config.changesInfo.configChanged;
+		const hasChangesRequirePrepare = !config.changesInfo || config.changesInfo.changesRequirePrepare;
+
+		const hasChanges = hasModulesChange || hasConfigChange || hasChangesRequirePrepare;
+
 		if (config.changesInfo.hasChanges) {
 			await this.cleanProject(config.platform, config.appFilesUpdaterOptions, config.platformData, config.projectData);
 		}
@@ -33,16 +84,11 @@ export class PreparePlatformNativeService extends PreparePlatformService impleme
 		// Move the native application resources from platforms/.../app/App_Resources
 		// to the right places in the native project,
 		// because webpack copies them on every build (not every change).
-		if (!config.changesInfo || config.changesInfo.changesRequirePrepare || config.appFilesUpdaterOptions.bundle) {
-			this.prepareAppResources(config.platformData, config.projectData);
-		}
+		this.prepareAppResources(config.platformData, config.projectData);
 
-		if (!config.changesInfo || config.changesInfo.changesRequirePrepare) {
+		if (hasChangesRequirePrepare) {
 			await config.platformData.platformProjectService.prepareProject(config.projectData, config.platformSpecificData);
 		}
-
-		const hasModulesChange = !config.changesInfo || config.changesInfo.modulesChanged;
-		const hasConfigChange = !config.changesInfo || config.changesInfo.configChanged;
 
 		if (hasModulesChange) {
 			const appDestinationDirectoryPath = path.join(config.platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
@@ -70,6 +116,8 @@ export class PreparePlatformNativeService extends PreparePlatformService impleme
 		config.platformData.platformProjectService.interpolateConfigurationFile(config.projectData, config.platformSpecificData);
 		this.$projectChangesService.setNativePlatformStatus(config.platform, config.projectData,
 			{ nativePlatformStatus: constants.NativePlatformStatus.alreadyPrepared });
+
+		this.emit("nativeFilesChanged", hasChanges);
 	}
 
 	private prepareAppResources(platformData: IPlatformData, projectData: IProjectData): void {

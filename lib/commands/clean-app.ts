@@ -26,7 +26,11 @@ export class CleanAppCommandBase extends ValidatePlatformCommandBase implements 
 			platform: this.platform.toLowerCase(),
 			config: this.$options,
 			projectData: this.$projectData,
-			env: this.$options.env
+			env: this.$options.env,
+			webpackCompilerConfig: {
+				watch: false,
+				env: this.$options.env
+			}
 		};
 
 		return this.$platformService.cleanDestinationApp(platformInfo);

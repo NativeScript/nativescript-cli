@@ -1,5 +1,5 @@
-import * as path from "path";
-import * as choki from "chokidar";
+// import * as path from "path";
+// import * as choki from "chokidar";
 import { EOL } from "os";
 import { EventEmitter } from "events";
 import { hook } from "../../common/helpers";
@@ -329,6 +329,8 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 	@hook('watchPatterns')
 	public async getWatcherPatterns(liveSyncData: ILiveSyncInfo, projectData: IProjectData, platforms: string[]): Promise<string[]> {
 		// liveSyncData and platforms are used by plugins that make use of the watchPatterns hook
+		// TODO: ignore getAppDirectoryRelativePath
+		// TODO: watch platforms folder of node_modules e.g native source folders of nativescript plugins
 		return [projectData.getAppDirectoryRelativePath(), projectData.getAppResourcesRelativeDirectoryPath()];
 	}
 
@@ -413,26 +415,6 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 		const appInstalledOnDeviceResult: IAppInstalledOnDeviceResult = { appInstalled: false };
 		if (options.preparedPlatforms.indexOf(platform) === -1) {
 			options.preparedPlatforms.push(platform);
-
-			const platformSpecificOptions = options.deviceBuildInfoDescriptor.platformSpecificOptions || <IPlatformOptions>{};
-			const prepareInfo: IPreparePlatformInfo = {
-				platform,
-				appFilesUpdaterOptions: {
-					bundle: options.bundle,
-					release: options.release,
-					watchAllFiles: options.liveSyncData.watchAllFiles,
-					useHotModuleReload: options.liveSyncData.useHotModuleReload
-				},
-				projectData: options.projectData,
-				env: options.env,
-				nativePrepare: nativePrepare,
-				filesToSync: options.filesToSync,
-				filesToRemove: options.filesToRemove,
-				skipModulesNativeCheck: options.skipModulesNativeCheck,
-				config: platformSpecificOptions
-			};
-
-			await this.$platformService.preparePlatform(prepareInfo);
 		}
 
 		const buildResult = await this.installedCachedAppPackage(platform, options);
@@ -600,13 +582,18 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 			let filesToRemove: string[] = [];
 			let timeoutTimer: NodeJS.Timer;
 
-			const startSyncFilesTimeout = (platform?: string, opts?: { calledFromHook: boolean }) => {
+			const startSyncFilesTimeout = (files: string[], platform?: string, opts?: { calledFromHook: boolean }) => {
 				timeoutTimer = setTimeout(async () => {
 					if (platform && liveSyncData.bundle) {
 						filesToSync = filesToSyncMap[platform];
 					}
 
-					if (filesToSync.length || filesToRemove.length) {
+					if (files) {
+						filesToSync = files;
+					}
+
+					if ((filesToSync && filesToSync.length) || (filesToRemove && filesToRemove.length)) {
+						console.log("============================== FILES_TO_SYNC ==================== ", filesToSync);
 						const currentFilesToSync = _.cloneDeep(filesToSync);
 						filesToSync.splice(0, filesToSync.length);
 
@@ -766,47 +753,82 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 					filesToSyncMap,
 					hmrData,
 					filesToRemove,
-					startSyncFilesTimeout: async (platform: string) => {
-						const opts = { calledFromHook: true };
-						if (platform) {
-							await startSyncFilesTimeout(platform, opts);
-						} else {
-							// This code is added for backwards compatibility with old versions of nativescript-dev-webpack plugin.
-							await startSyncFilesTimeout(null, opts);
-						}
-					}
+					// startSyncFilesTimeout: async (platform: string) => {
+					// 	const opts = { calledFromHook: true };
+					// 	if (platform) {
+					// 		await startSyncFilesTimeout(platform, opts);
+					// 	} else {
+					// 		// This code is added for backwards compatibility with old versions of nativescript-dev-webpack plugin.
+					// 		await startSyncFilesTimeout(null, opts);
+					// 	}
+					// }
 				}
 			});
 
-			const watcherOptions: choki.WatchOptions = {
-				ignoreInitial: true,
-				cwd: liveSyncData.projectDir,
-				awaitWriteFinish: {
-					pollInterval: 100,
-					stabilityThreshold: 500
+			let isFirstSync = true;
+			this.$platformService.on("changedFiles", async files => {
+				console.log("===================== CHANGED FILES =============== ", files);
+				if (!isFirstSync) {
+					// filesToSyncMap["ios"] = files;
+					await startSyncFilesTimeout(files, "ios", { calledFromHook: true });
+				} else {
+					isFirstSync = false;
+				}
+			});
+
+			// const platformSpecificOptions = options.deviceBuildInfoDescriptor.platformSpecificOptions || <IPlatformOptions>{};
+			const prepareInfo: IPreparePlatformInfo = {
+				platform: "ios",
+				appFilesUpdaterOptions: {
+					bundle: true,
+					release: false,
+					watchAllFiles: false,
+					useHotModuleReload: false
 				},
-				ignored: ["**/.*", ".*"] // hidden files
+				projectData: this.$projectDataService.getProjectData(liveSyncData.projectDir),
+				env: liveSyncData.env,
+				nativePrepare: null,
+				// filesToSync: options.filesToSync,
+				// filesToRemove: options.filesToRemove,
+				// skipModulesNativeCheck: liveSyncData.skipModulesNativeCheck,
+				config: <any>{},
+				webpackCompilerConfig: {
+					watch: true,
+					env: liveSyncData.env
+				}
 			};
 
-			const watcher = choki.watch(patterns, watcherOptions)
-				.on("all", async (event: string, filePath: string) => {
+			await this.$platformService.preparePlatform(prepareInfo);
 
-					clearTimeout(timeoutTimer);
+			// const watcherOptions: choki.WatchOptions = {
+			// 	ignoreInitial: true,
+			// 	cwd: liveSyncData.projectDir,
+			// 	awaitWriteFinish: {
+			// 		pollInterval: 100,
+			// 		stabilityThreshold: 500
+			// 	},
+			// 	ignored: ["**/.*", ".*"] // hidden files
+			// };
 
-					filePath = path.join(liveSyncData.projectDir, filePath);
+			// const watcher = choki.watch(patterns, watcherOptions)
+			// 	.on("all", async (event: string, filePath: string) => {
 
-					this.$logger.trace(`Chokidar raised event ${event} for ${filePath}.`);
+			// 		clearTimeout(timeoutTimer);
 
-					if (event === "add" || event === "addDir" || event === "change" /* <--- what to do when change event is raised ? */) {
-						filesToSync.push(filePath);
-					} else if (event === "unlink" || event === "unlinkDir") {
-						filesToRemove.push(filePath);
-					}
+			// 		filePath = path.join(liveSyncData.projectDir, filePath);
 
-					startSyncFilesTimeout();
-				});
+			// 		this.$logger.trace(`Chokidar raised event ${event} for ${filePath}.`);
 
-			this.liveSyncProcessesInfo[liveSyncData.projectDir].watcherInfo = { watcher, patterns };
+			// 		if (event === "add" || event === "addDir" || event === "change" /* <--- what to do when change event is raised ? */) {
+			// 			filesToSync.push(filePath);
+			// 		} else if (event === "unlink" || event === "unlinkDir") {
+			// 			filesToRemove.push(filePath);
+			// 		}
+
+			// 		startSyncFilesTimeout();
+			// 	});
+
+			// this.liveSyncProcessesInfo[liveSyncData.projectDir].watcherInfo = { watcher, patterns };
 			this.liveSyncProcessesInfo[liveSyncData.projectDir].timer = timeoutTimer;
 		}
 	}
@@ -862,7 +884,6 @@ export class LiveSyncService extends EventEmitter implements IDebugLiveSyncServi
 		this.$logger.trace(`Will emit event ${event} with data`, livesyncData);
 		return this.emit(event, livesyncData);
 	}
-
 }
 
 $injector.register("liveSyncService", LiveSyncService);

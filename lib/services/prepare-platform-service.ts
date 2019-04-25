@@ -1,11 +1,13 @@
 import * as constants from "../constants";
 import * as path from "path";
 import { AppFilesUpdater } from "./app-files-updater";
+import { EventEmitter } from "events";
 
-export class PreparePlatformService {
+export class PreparePlatformService extends EventEmitter {
 	constructor(protected $fs: IFileSystem,
 		public $hooksService: IHooksService,
 		private $xmlValidator: IXmlValidator) {
+			super();
 	}
 
 	protected async copyAppFiles(copyAppFilesData: ICopyAppFilesData): Promise<void> {

@@ -201,3 +201,5 @@ $injector.require("testInitializationService", "./services/test-initialization-s
 
 $injector.require("networkConnectivityValidator", "./helpers/network-connectivity-validator");
 $injector.requirePublic("cleanupService", "./services/cleanup-service");
+
+$injector.require("webpackCompilerService", "./services/webpack/webpack-compiler-service");

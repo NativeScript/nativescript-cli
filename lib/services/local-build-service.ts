@@ -29,6 +29,10 @@ export class LocalBuildService extends EventEmitter implements ILocalBuildServic
 				sdk: null,
 				frameworkPath: null,
 				ignoreScripts: false
+			},
+			webpackCompilerConfig: {
+				watch: false,
+				env: platformBuildOptions.env
 			}
 		};
 

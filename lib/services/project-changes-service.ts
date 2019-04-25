@@ -6,19 +6,16 @@ const prepareInfoFileName = ".nsprepareinfo";
 
 class ProjectChangesInfo implements IProjectChangesInfo {
 
-	public appFilesChanged: boolean;
 	public appResourcesChanged: boolean;
 	public modulesChanged: boolean;
 	public configChanged: boolean;
 	public packageChanged: boolean;
 	public nativeChanged: boolean;
-	public bundleChanged: boolean;
 	public signingChanged: boolean;
 	public nativePlatformStatus: NativePlatformStatus;
 
 	public get hasChanges(): boolean {
 		return this.packageChanged ||
-			this.appFilesChanged ||
 			this.appResourcesChanged ||
 			this.modulesChanged ||
 			this.configChanged ||
@@ -49,7 +46,6 @@ export class ProjectChangesService implements IProjectChangesService {
 		private $platformsData: IPlatformsData,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $fs: IFileSystem,
-		private $filesHashService: IFilesHashService,
 		private $logger: ILogger,
 		public $hooksService: IHooksService) {
 	}
@@ -67,7 +63,6 @@ export class ProjectChangesService implements IProjectChangesService {
 		if (!isNewPrepareInfo) {
 			this._newFiles = 0;
 
-			this._changesInfo.appFilesChanged = await this.hasChangedAppFiles(projectData);
 
 			this._changesInfo.packageChanged = this.isProjectFileChanged(projectData, platform);
 
@@ -109,10 +104,8 @@ export class ProjectChangesService implements IProjectChangesService {
 
 		if (projectChangesOptions.bundle !== this._prepareInfo.bundle || projectChangesOptions.release !== this._prepareInfo.release) {
 			this.$logger.trace(`Setting all setting to true. Current options are: `, projectChangesOptions, " old prepare info is: ", this._prepareInfo);
-			this._changesInfo.appFilesChanged = true;
 			this._changesInfo.appResourcesChanged = true;
 			this._changesInfo.modulesChanged = true;
-			this._changesInfo.bundleChanged = true;
 			this._changesInfo.configChanged = true;
 			this._prepareInfo.release = projectChangesOptions.release;
 			this._prepareInfo.bundle = projectChangesOptions.bundle;
@@ -199,14 +192,12 @@ export class ProjectChangesService implements IProjectChangesService {
 			release: projectChangesOptions.release,
 			changesRequireBuild: true,
 			projectFileHash: this.getProjectFileStrippedHash(projectData, platform),
-			changesRequireBuildTime: null,
-			appFilesHashes: await this.$filesHashService.generateHashes(this.getAppFiles(projectData))
+			changesRequireBuildTime: null
 		};
 
 		this._outputProjectMtime = 0;
 		this._outputProjectCTime = 0;
 		this._changesInfo = this._changesInfo || new ProjectChangesInfo();
-		this._changesInfo.appFilesChanged = true;
 		this._changesInfo.appResourcesChanged = true;
 		this._changesInfo.modulesChanged = true;
 		this._changesInfo.configChanged = true;
@@ -334,21 +325,6 @@ export class ProjectChangesService implements IProjectChangesService {
 			}
 		}
 		return false;
-	}
-
-	private getAppFiles(projectData: IProjectData): string[] {
-		return this.$fs.enumerateFilesInDirectorySync(projectData.appDirectoryPath, (filePath: string, stat: IFsStats) => filePath !== projectData.appResourcesDirectoryPath);
-	}
-
-	private async hasChangedAppFiles(projectData: IProjectData): Promise<boolean> {
-		const files = this.getAppFiles(projectData);
-		const changedFiles = await this.$filesHashService.getChanges(files, this._prepareInfo.appFilesHashes || {});
-		const hasChanges = changedFiles && _.keys(changedFiles).length > 0;
-		if (hasChanges) {
-			this._prepareInfo.appFilesHashes = await this.$filesHashService.generateHashes(files);
-		}
-
-		return hasChanges;
 	}
 }
 $injector.register("projectChangesService", ProjectChangesService);

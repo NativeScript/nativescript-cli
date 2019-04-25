@@ -23,7 +23,11 @@ export class PrepareCommand extends ValidatePlatformCommandBase implements IComm
 			appFilesUpdaterOptions,
 			projectData: this.$projectData,
 			config: this.$options,
-			env: this.$options.env
+			env: this.$options.env,
+			webpackCompilerConfig: {
+				watch: false,
+				env: this.$options.env
+			}
 		};
 
 		await this.$platformService.preparePlatform(platformInfo);
