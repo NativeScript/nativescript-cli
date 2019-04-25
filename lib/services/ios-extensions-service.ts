@@ -33,12 +33,13 @@ export class IOSExtensionsService extends NativeTargetServiceBase implements IIO
 
 	private configureTarget(extensionName: string, extensionPath: string, target: IXcode.target, project: IXcode.project, projectData: IProjectData) {
 		const extJsonPath = path.join(extensionPath, "extension.json");
-		this.setConfigurationsFromJsonFile(extJsonPath, target.uuid, project);
 
 		this.setXcodeTargetBuildConfigurationProperties(
 			[{name: "PRODUCT_BUNDLE_IDENTIFIER", value: `${projectData.projectIdentifiers.ios}.${extensionName}`}],
 			extensionName,
 			project);
+
+		this.setConfigurationsFromJsonFile(extJsonPath, target.uuid, extensionName, project);
 	}
 
 	public removeExtensions({pbxProjPath}: IRemoveExtensionsOptions): void {

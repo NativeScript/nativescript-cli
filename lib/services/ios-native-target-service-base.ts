@@ -71,17 +71,25 @@ export abstract class NativeTargetServiceBase implements IIOSNativeTargetService
 		});
 	}
 
-	protected setConfigurationsFromJsonFile(jsonPath: string, targetUuid: string, project: IXcode.project) {
+	protected setConfigurationsFromJsonFile(jsonPath: string, targetUuid: string, targetName: string, project: IXcode.project) {
 		if (this.$fs.exists(jsonPath)) {
 			const configurationJson = this.$fs.readJson(jsonPath) || {};
+
 			_.forEach(configurationJson.frameworks, framework => {
 				project.addFramework(
 					framework,
 					{ target: targetUuid }
 				);
 			});
+
 			if (configurationJson.assetcatalogCompilerAppiconName) {
-				project.addToBuildSettings("ASSETCATALOG_COMPILER_APPICON_NAME", configurationJson.assetcatalogCompilerAppiconName, targetUuid);
+				project.addToBuildSettings("ASSETCATALOG_COMPILER_APPICON_NAME", configurationJson.assetcatalogCompilerAppiconName,  targetUuid);
+			}
+
+			if (configurationJson.targetBuildConfigurationProperties) {
+				const properties: IXcodeTargetBuildConfigurationProperty[] = [];
+				_.forEach(configurationJson.targetBuildConfigurationProperties, (value, name: string) => properties.push({value, name}));
+				this.setXcodeTargetBuildConfigurationProperties(properties, targetName, project);
 			}
 		}
 	}

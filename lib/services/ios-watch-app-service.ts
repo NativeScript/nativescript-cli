@@ -64,7 +64,6 @@ export class IOSWatchAppService extends NativeTargetServiceBase implements IIOSW
 
 	private configureTarget(targetName: string, targetPath: string, identifier: string, configurationFileName: string, target: IXcode.target, project: IXcode.project) {
 		const targetConfigurationJsonPath = path.join(targetPath, configurationFileName);
-		this.setConfigurationsFromJsonFile(targetConfigurationJsonPath, target.uuid, project);
 
 		const identifierParts = identifier.split(".");
 		identifierParts.pop();
@@ -74,10 +73,11 @@ export class IOSWatchAppService extends NativeTargetServiceBase implements IIOSW
 			{name: "PRODUCT_BUNDLE_IDENTIFIER", value: identifier},
 			{name: "SDKROOT", value: "watchos"},
 			{name: "TARGETED_DEVICE_FAMILY", value: IOSDeviceTargets.watchos},
-			{name: "WATCHOS_DEPLOYMENT_TARGET", value: 4.1}, //TODO consider WATCHOS_DEPLOYMENT_TARGET in json configuration
+			{name: "WATCHOS_DEPLOYMENT_TARGET", value: 5.2},
 			{name: "WK_APP_BUNDLE_IDENTIFIER", value: wkAppBundleIdentifier}
 		], targetName, project);
 
+		this.setConfigurationsFromJsonFile(targetConfigurationJsonPath, target.uuid, targetName, project);
 		project.addToHeaderSearchPaths(targetPath, target.pbxNativeTarget.productName);
 	}
 }
