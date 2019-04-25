@@ -389,7 +389,7 @@ export function getMessageWithBorders(message: string, spanLength = 3): string {
 		return "";
 	}
 
-	const longestRowLength = message.split(EOL).sort((a, b) => { return b.length - a.length; })[0].length;
+	const longestRowLength = message.split("\n").sort((a, b) => { return b.length - a.length; })[0].length;
 	let border = "*".repeat(longestRowLength + 2 * spanLength); // * 2 for both sides
 	if (border.length % 2 === 0) {
 		border += "*"; // the * should always be an odd number in order to get * in each edge (we will remove the even *s below)
@@ -405,7 +405,7 @@ export function getMessageWithBorders(message: string, spanLength = 3): string {
 		EOL,
 		border + EOL,
 		emptyRow,
-		...message.split(EOL).map(row => formatRow(row)),
+		...message.split("\n").map(row => formatRow(row.trim())),
 		emptyRow,
 		border + EOL,
 		EOL
