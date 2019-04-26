@@ -1,22 +1,21 @@
-import firebase from 'nativescript-plugin-firebase';
+import { messaging } from 'nativescript-plugin-firebase/messaging';
 import { device } from 'tns-core-modules/platform';
 import { formatKinveyBaasUrl, KinveyHttpRequest, HttpRequestMethod, KinveyHttpAuth, KinveyBaasNamespace } from 'kinvey-js-sdk/lib/http';
 
 export async function register(callback: (message: any) => void, options: any = {}) {
   // Register for push notifications
-  const {
+  messaging.initFirebaseMessaging(Object.assign({
     // Whether you want the firebase plugin to automatically display the notifications or just notify the callback. Currently used on iOS only. Default value for the plugin is true.
-    showNotifications = true,
+    showNotifications: true,
     // Whether you want the firebase plugin to always handle the notifications when the app is in foreground. Currently used on iOS only. Default value for the plugin is false.
-    showNotificationsWhenInForeground = true
-  } = options;
-  await firebase.init({ showNotifications, showNotificationsWhenInForeground });
+    showNotificationsWhenInForeground: true
+  }, options))
 
   // Add the callback
-  await firebase.addOnMessageReceivedCallback(callback);
+  await messaging.addOnMessageReceivedCallback(callback);
 
   // Get the device token
-  const token = await firebase.getCurrentPushToken();
+  const token = await messaging.getCurrentPushToken();
 
   // Register device with Kinvey
   const request = new KinveyHttpRequest({
@@ -38,11 +37,8 @@ export async function register(callback: (message: any) => void, options: any = 
 }
 
 export async function unregister(options: any = {}) {
-  // Unregister for push notifications
-  await firebase.unregisterForPushNotifications();
-
   // Get the device token
-  const token = await firebase.getCurrentPushToken();
+  const token = await messaging.getCurrentPushToken();
 
   // Unregister the device on Kinvey
   const request = new KinveyHttpRequest({
@@ -58,6 +54,9 @@ export async function unregister(options: any = {}) {
     timeout: options.timeout
   });
   await request.execute();
+
+  // Unregister for push notifications
+  await messaging.unregisterForPushNotifications();
 
   // Return the token
   return token;
