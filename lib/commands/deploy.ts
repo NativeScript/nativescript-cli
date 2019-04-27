@@ -4,7 +4,8 @@ import { ValidatePlatformCommandBase } from "./command-base";
 export class DeployOnDeviceCommand extends ValidatePlatformCommandBase implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
 
-	constructor($platformService: IPlatformService,
+	constructor($platformValidationService: IPlatformValidationService,
+		private $platformService: IPlatformService,
 		private $platformCommandParameter: ICommandParameter,
 		$options: IOptions,
 		$projectData: IProjectData,
@@ -14,7 +15,7 @@ export class DeployOnDeviceCommand extends ValidatePlatformCommandBase implement
 		$platformsData: IPlatformsData,
 		private $bundleValidatorHelper: IBundleValidatorHelper,
 		private $androidBundleValidatorHelper: IAndroidBundleValidatorHelper) {
-			super($options, $platformsData, $platformService, $projectData);
+			super($options, $platformsData, $platformValidationService, $projectData);
 			this.$projectData.initializeProjectData();
 	}
 

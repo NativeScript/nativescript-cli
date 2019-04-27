@@ -370,9 +370,10 @@ export class PlatformProjectServiceStub extends EventEmitter implements IPlatfor
 		return {
 			frameworkPackageName: "",
 			normalizedPlatformName: "",
+			platformNameLowerCase: "",
 			platformProjectService: this,
 			projectRoot: "",
-			getBuildOutputPath: () => "",
+			getBuildOutputPath: (buildConfig: IBuildConfig) => "",
 			getValidBuildOutputData: (buildOptions: IBuildOutputOptions) => ({ packageNames: [] }),
 			frameworkFilesExtensions: [],
 			appDestinationDirectoryPath: "",
@@ -450,7 +451,7 @@ export class PlatformProjectServiceStub extends EventEmitter implements IPlatfor
 	async cleanProject(projectRoot: string, projectData: IProjectData): Promise<void> {
 		return Promise.resolve();
 	}
-	async checkForChanges(changesInfo: IProjectChangesInfo, options: IProjectChangesOptions, projectData: IProjectData): Promise<void> {
+	async checkForChanges(changesInfo: IProjectChangesInfo, options: any, projectData: IProjectData): Promise<void> {
 		// Nothing yet.
 	}
 	getFrameworkVersion(projectData: IProjectData): string {
@@ -471,6 +472,7 @@ export class PlatformsDataStub extends EventEmitter implements IPlatformsData {
 		return {
 			frameworkPackageName: "",
 			platformProjectService: new PlatformProjectServiceStub(),
+			platformNameLowerCase: "",
 			projectRoot: "",
 			normalizedPlatformName: "",
 			appDestinationDirectoryPath: "",
@@ -805,7 +807,7 @@ export class PlatformServiceStub extends EventEmitter implements IPlatformServic
 		return Promise.resolve();
 	}
 
-	public preparePlatform(platformInfo: IPreparePlatformInfo): Promise<boolean> {
+	public preparePlatform(platformData: IPlatformData, projectData: IProjectData, preparePlatformData: IPreparePlatformData): Promise<boolean> {
 		return Promise.resolve(true);
 	}
 

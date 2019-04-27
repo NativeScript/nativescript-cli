@@ -1,16 +1,19 @@
 export class UpdatePlatformCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
 
-	constructor(private $options: IOptions,
-		private $projectData: IProjectData,
-		private $platformService: IPlatformService,
+	constructor(
+		private $errors: IErrors,
+		private $options: IOptions,
 		private $platformEnvironmentRequirements: IPlatformEnvironmentRequirements,
-		private $errors: IErrors) {
+		private $platformCommandsService: IPlatformCommandsService,
+		private $platformValidationService: IPlatformValidationService,
+		private $projectData: IProjectData,
+	) {
 		this.$projectData.initializeProjectData();
 	}
 
 	public async execute(args: string[]): Promise<void> {
-		await this.$platformService.updatePlatforms(args, this.$projectData, this.$options);
+		await this.$platformCommandsService.updatePlatforms(args, this.$projectData);
 	}
 
 	public async canExecute(args: string[]): Promise<boolean> {
@@ -20,7 +23,7 @@ export class UpdatePlatformCommand implements ICommand {
 
 		_.each(args, arg => {
 			const platform = arg.split("@")[0];
-			this.$platformService.validatePlatform(platform, this.$projectData);
+			this.$platformValidationService.validatePlatform(platform, this.$projectData);
 		});
 
 		for (const arg of args) {

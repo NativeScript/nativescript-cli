@@ -13,6 +13,8 @@ export class PublishIOS implements ICommand {
 		private $options: IOptions,
 		private $prompter: IPrompter,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
+		private $platformValidationService: IPlatformValidationService,
+		private $platformBuildService: IPlatformBuildService,
 		private $xcodebuildService: IXcodebuildService) {
 		this.$projectData.initializeProjectData();
 	}
@@ -55,21 +57,10 @@ export class PublishIOS implements ICommand {
 		if (!ipaFilePath) {
 			const platform = this.$devicePlatformsConstants.iOS;
 			// No .ipa path provided, build .ipa on out own.
-			const appFilesUpdaterOptions: IAppFilesUpdaterOptions = {
-				bundle: !!this.$options.bundle,
+			const preparePlatformData: IPreparePlatformData = {
 				release: this.$options.release,
-				useHotModuleReload: false
-			};
-			const platformInfo: IPreparePlatformInfo = {
-				platform,
-				appFilesUpdaterOptions,
-				projectData: this.$projectData,
-				config: this.$options,
+				useHotModuleReload: false,
 				env: this.$options.env,
-				webpackCompilerConfig: {
-					watch: false,
-					env: this.$options.env
-				}
 			};
 			const buildConfig: IBuildConfig = {
 				projectDir: this.$options.path,
@@ -83,22 +74,20 @@ export class PublishIOS implements ICommand {
 				codeSignIdentity
 			};
 
+			const platformData = this.$platformsData.getPlatformData(platform, this.$projectData);
+
 			if (mobileProvisionIdentifier || codeSignIdentity) {
 				this.$logger.info("Building .ipa with the selected mobile provision and/or certificate.");
 				// This is not very correct as if we build multiple targets we will try to sign all of them using the signing identity here.
-				await this.$platformService.preparePlatform(platformInfo);
-				await this.$platformService.buildPlatform(platform, buildConfig, this.$projectData);
+				await this.$platformService.preparePlatform(platformData, this.$projectData, preparePlatformData);
+				await this.$platformBuildService.buildPlatform(platformData, this.$projectData, buildConfig);
 				ipaFilePath = this.$platformService.lastOutputPath(platform, buildConfig, this.$projectData);
 			} else {
 				this.$logger.info("No .ipa, mobile provision or certificate set. Perfect! Now we'll build .xcarchive and let Xcode pick the distribution certificate and provisioning profile for you when exporting .ipa for AppStore submission.");
-				await this.$platformService.preparePlatform(platformInfo);
+				await this.$platformService.preparePlatform(platformData, this.$projectData, preparePlatformData);
 
-				const platformData = this.$platformsData.getPlatformData(platform, this.$projectData);
-
-				const exportPath = await this.$xcodebuildService.buildForAppStore(platformData, this.$projectData, buildConfig);
-				this.$logger.info("Export at: " + exportPath);
-
-				ipaFilePath = exportPath;
+				ipaFilePath = await this.$xcodebuildService.buildForAppStore(platformData, this.$projectData, buildConfig);
+				this.$logger.info(`Export at: ${ipaFilePath}`);
 			}
 		}
 
@@ -111,7 +100,7 @@ export class PublishIOS implements ICommand {
 	}
 
 	public async canExecute(args: string[]): Promise<boolean> {
-		if (!this.$platformService.isPlatformSupportedForOS(this.$devicePlatformsConstants.iOS, this.$projectData)) {
+		if (!this.$platformValidationService.isPlatformSupportedForOS(this.$devicePlatformsConstants.iOS, this.$projectData)) {
 			this.$errors.fail(`Applications for platform ${this.$devicePlatformsConstants.iOS} can not be built on this OS`);
 		}
 

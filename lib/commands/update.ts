@@ -5,15 +5,18 @@ import { ValidatePlatformCommandBase } from "./command-base";
 export class UpdateCommand extends ValidatePlatformCommandBase implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
 
-	constructor($options: IOptions,
-		$projectData: IProjectData,
-		$platformService: IPlatformService,
-		$platformsData: IPlatformsData,
-		private $pluginsService: IPluginsService,
-		private $projectDataService: IProjectDataService,
+	constructor(
 		private $fs: IFileSystem,
-		private $logger: ILogger) {
-		super($options, $platformsData, $platformService, $projectData);
+		private $logger: ILogger,
+		$options: IOptions,
+		private $platformCommandsService: IPlatformCommandsService,
+		$platformsData: IPlatformsData,
+		$platformValidationService: IPlatformValidationService,
+		private $pluginsService: IPluginsService,
+		$projectData: IProjectData,
+		private $projectDataService: IProjectDataService,
+	) {
+		super($options, $platformsData, $platformValidationService, $projectData);
 		this.$projectData.initializeProjectData();
 	}
 
@@ -82,7 +85,7 @@ export class UpdateCommand extends ValidatePlatformCommandBase implements IComma
 			this.$projectDataService.removeNSProperty(this.$projectData.projectDir, platformData.frameworkPackageName);
 		}
 
-		await this.$platformService.removePlatforms(platforms.installed, this.$projectData);
+		await this.$platformCommandsService.removePlatforms(platforms.installed, this.$projectData);
 		await this.$pluginsService.remove(constants.TNS_CORE_MODULES_NAME, this.$projectData);
 		if (!!this.$projectData.dependencies[constants.TNS_CORE_MODULES_WIDGETS_NAME]) {
 			await this.$pluginsService.remove(constants.TNS_CORE_MODULES_WIDGETS_NAME, this.$projectData);
@@ -94,12 +97,12 @@ export class UpdateCommand extends ValidatePlatformCommandBase implements IComma
 
 		if (args.length === 1) {
 			for (const platform of platforms.packagePlatforms) {
-				await this.$platformService.addPlatforms([platform + "@" + args[0]], this.$projectData, this.$options, this.$options.frameworkPath);
+				await this.$platformCommandsService.addPlatforms([platform + "@" + args[0]], this.$projectData, this.$options.frameworkPath);
 			}
 
 			await this.$pluginsService.add(`${constants.TNS_CORE_MODULES_NAME}@${args[0]}`, this.$projectData);
 		} else {
-			await this.$platformService.addPlatforms(platforms.packagePlatforms, this.$projectData, this.$options, this.$options.frameworkPath);
+			await this.$platformCommandsService.addPlatforms(platforms.packagePlatforms, this.$projectData, this.$options.frameworkPath);
 			await this.$pluginsService.add(constants.TNS_CORE_MODULES_NAME, this.$projectData);
 		}
 
@@ -107,8 +110,8 @@ export class UpdateCommand extends ValidatePlatformCommandBase implements IComma
 	}
 
 	private getPlatforms(): { installed: string[], packagePlatforms: string[] } {
-		const installedPlatforms = this.$platformService.getInstalledPlatforms(this.$projectData);
-		const availablePlatforms = this.$platformService.getAvailablePlatforms(this.$projectData);
+		const installedPlatforms = this.$platformCommandsService.getInstalledPlatforms(this.$projectData);
+		const availablePlatforms = this.$platformCommandsService.getAvailablePlatforms(this.$projectData);
 		const packagePlatforms: string[] = [];
 
 		for (const platform of availablePlatforms) {

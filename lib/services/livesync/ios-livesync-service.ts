@@ -12,9 +12,8 @@ export class IOSLiveSyncService extends PlatformLiveSyncServiceBase implements I
 		protected $projectFilesManager: IProjectFilesManager,
 		private $injector: IInjector,
 		$devicePathProvider: IDevicePathProvider,
-		$logger: ILogger,
-		$projectFilesProvider: IProjectFilesProvider) {
-		super($fs, $logger, $platformsData, $projectFilesManager, $devicePathProvider, $projectFilesProvider);
+		$logger: ILogger) {
+		super($fs, $logger, $platformsData, $projectFilesManager, $devicePathProvider);
 	}
 
 	@performanceLog()

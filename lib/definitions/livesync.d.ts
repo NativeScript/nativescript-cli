@@ -129,11 +129,6 @@ declare global {
 		 * Whether debugging has been enabled for this device or not
 		 */
 		debugggingEnabled?: boolean;
-
-		/**
-		 * Describes options specific for each platform, like provision for iOS, target sdk for Android, etc.
-		 */
-		platformSpecificOptions?: IPlatformOptions;
 	}
 
 	interface IOptionalSkipWatcher {
@@ -146,13 +141,9 @@ declare global {
 	/**
 	 * Describes a LiveSync operation.
 	 */
-	interface ILiveSyncInfo extends IProjectDir, IEnvOptions, IBundle, IRelease, IOptionalSkipWatcher, IHasUseHotModuleReloadOption, IHasSyncToPreviewAppOption {
-		/**
-		 * Defines if all project files should be watched for changes. In case it is not passed, only `app` dir of the project will be watched for changes.
-		 * In case it is set to true, the package.json of the project and node_modules directory will also be watched, so any change there will be transferred to device(s).
-		 */
-		watchAllFiles?: boolean;
-
+	interface ILiveSyncInfo extends IProjectDir, IRelease, IOptionalSkipWatcher, IHasUseHotModuleReloadOption, IHasSyncToPreviewAppOption {
+		webpackCompilerConfig: IWebpackCompilerConfig;
+		
 		/**
 		 * Forces a build before the initial livesync.
 		 */
@@ -170,6 +161,8 @@ declare global {
 		 * If not provided, defaults to 10seconds.
 		 */
 		timeout?: string;
+
+		nativePrepare?: INativePrepare;
 	}
 
 	interface IHasSyncToPreviewAppOption {
@@ -213,7 +206,7 @@ declare global {
 	/**
 	 * Desribes object that can be passed to ensureLatestAppPackageIsInstalledOnDevice method.
 	 */
-	interface IEnsureLatestAppPackageIsInstalledOnDeviceOptions extends IProjectDataComposition, IEnvOptions, IBundle, IRelease, ISkipNativeCheckOptional, IOptionalFilesToRemove, IOptionalFilesToSync {
+	interface IEnsureLatestAppPackageIsInstalledOnDeviceOptions extends IProjectDataComposition, IEnvOptions, IBundle, IRelease, IOptionalFilesToRemove, IOptionalFilesToSync {
 		device: Mobile.IDevice;
 		preparedPlatforms: string[];
 		rebuiltInformation: ILiveSyncBuildInfo[];

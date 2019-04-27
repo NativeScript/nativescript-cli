@@ -63,19 +63,18 @@ export class ProjectChangesService implements IProjectChangesService {
 		if (!isNewPrepareInfo) {
 			this._newFiles = 0;
 
-
 			this._changesInfo.packageChanged = this.isProjectFileChanged(projectData, platform);
 
 			const platformResourcesDir = path.join(projectData.appResourcesDirectoryPath, platformData.normalizedPlatformName);
 			this._changesInfo.appResourcesChanged = this.containsNewerFiles(platformResourcesDir, null, projectData);
 			/*done because currently all node_modules are traversed, a possible improvement could be traversing only the production dependencies*/
-			this._changesInfo.nativeChanged = projectChangesOptions.skipModulesNativeCheck ? false : this.containsNewerFiles(
+			this._changesInfo.nativeChanged = this.containsNewerFiles(
 				path.join(projectData.projectDir, NODE_MODULES_FOLDER_NAME),
 				path.join(projectData.projectDir, NODE_MODULES_FOLDER_NAME, "tns-ios-inspector"),
 				projectData,
 				this.fileChangeRequiresBuild);
 
-			this.$logger.trace(`Set nativeChanged to ${this._changesInfo.nativeChanged}. skipModulesNativeCheck is: ${projectChangesOptions.skipModulesNativeCheck}`);
+			this.$logger.trace(`Set nativeChanged to ${this._changesInfo.nativeChanged}.`);
 
 			if (this._newFiles > 0 || this._changesInfo.nativeChanged) {
 				this.$logger.trace(`Setting modulesChanged to true, newFiles: ${this._newFiles}, nativeChanged: ${this._changesInfo.nativeChanged}`);
@@ -99,16 +98,15 @@ export class ProjectChangesService implements IProjectChangesService {
 
 		if (checkForChangesOpts.projectChangesOptions.nativePlatformStatus !== NativePlatformStatus.requiresPlatformAdd) {
 			const projectService = platformData.platformProjectService;
-			await projectService.checkForChanges(this._changesInfo, projectChangesOptions, projectData);
+			await projectService.checkForChanges(this._changesInfo, <IiOSSigningOptions>projectChangesOptions.signingOptions, projectData);
 		}
 
-		if (projectChangesOptions.bundle !== this._prepareInfo.bundle || projectChangesOptions.release !== this._prepareInfo.release) {
+		if (projectChangesOptions.release !== this._prepareInfo.release) {
 			this.$logger.trace(`Setting all setting to true. Current options are: `, projectChangesOptions, " old prepare info is: ", this._prepareInfo);
 			this._changesInfo.appResourcesChanged = true;
 			this._changesInfo.modulesChanged = true;
 			this._changesInfo.configChanged = true;
 			this._prepareInfo.release = projectChangesOptions.release;
-			this._prepareInfo.bundle = projectChangesOptions.bundle;
 		}
 		if (this._changesInfo.packageChanged) {
 			this.$logger.trace("Set modulesChanged to true as packageChanged is true");
@@ -188,7 +186,6 @@ export class ProjectChangesService implements IProjectChangesService {
 		this._prepareInfo = {
 			time: "",
 			nativePlatformStatus: projectChangesOptions.nativePlatformStatus,
-			bundle: projectChangesOptions.bundle,
 			release: projectChangesOptions.release,
 			changesRequireBuild: true,
 			projectFileHash: this.getProjectFileStrippedHash(projectData, platform),

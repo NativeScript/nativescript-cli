@@ -114,10 +114,10 @@ export class TestExecutionService implements ITestExecutionService {
 				const liveSyncInfo: ILiveSyncInfo = {
 					projectDir: projectData.projectDir,
 					skipWatcher: !this.$options.watch || this.$options.justlaunch,
-					watchAllFiles: this.$options.syncAllFiles,
-					bundle: !!this.$options.bundle,
 					release: this.$options.release,
-					env,
+					webpackCompilerConfig: {
+						env,
+					},
 					timeout: this.$options.timeout,
 					useHotModuleReload: this.$options.hmr
 				};

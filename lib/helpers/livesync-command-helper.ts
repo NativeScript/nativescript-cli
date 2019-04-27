@@ -100,7 +100,6 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 
 				const info: ILiveSyncDeviceInfo = {
 					identifier: d.deviceInfo.identifier,
-					platformSpecificOptions: this.$options,
 					buildAction,
 					debugggingEnabled: additionalOptions && additionalOptions.deviceDebugMap && additionalOptions.deviceDebugMap[d.deviceInfo.identifier],
 					debugOptions: this.$options,
@@ -118,11 +117,11 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 		const liveSyncInfo: ILiveSyncInfo = {
 			projectDir: this.$projectData.projectDir,
 			skipWatcher: !this.$options.watch,
-			watchAllFiles: this.$options.syncAllFiles,
 			clean: this.$options.clean,
-			bundle: !!this.$options.bundle,
 			release: this.$options.release,
-			env: this.$options.env,
+			webpackCompilerConfig: {
+				env: this.$options.env
+			},
 			timeout: this.$options.timeout,
 			useHotModuleReload: this.$options.hmr,
 			force: this.$options.force
@@ -181,7 +180,7 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 				deployOptions,
 				buildPlatform: this.$platformService.buildPlatform.bind(this.$platformService),
 				projectData: this.$projectData,
-				config: this.$options,
+				config: <any>this.$options,
 				env: this.$options.env
 			};
 

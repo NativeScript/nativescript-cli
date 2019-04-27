@@ -9,7 +9,7 @@ export class DebugPlatformCommand extends ValidatePlatformCommandBase implements
 		private $bundleValidatorHelper: IBundleValidatorHelper,
 		private $debugService: IDebugService,
 		protected $devicesService: Mobile.IDevicesService,
-		$platformService: IPlatformService,
+		$platformValidationService: IPlatformValidationService,
 		$projectData: IProjectData,
 		$options: IOptions,
 		$platformsData: IPlatformsData,
@@ -19,7 +19,7 @@ export class DebugPlatformCommand extends ValidatePlatformCommandBase implements
 		private $liveSyncService: IDebugLiveSyncService,
 		private $liveSyncCommandHelper: ILiveSyncCommandHelper,
 		private $androidBundleValidatorHelper: IAndroidBundleValidatorHelper) {
-		super($options, $platformsData, $platformService, $projectData);
+		super($options, $platformsData, $platformValidationService, $projectData);
 	}
 
 	public async execute(args: string[]): Promise<void> {
@@ -58,7 +58,7 @@ export class DebugPlatformCommand extends ValidatePlatformCommandBase implements
 	public async canExecute(args: string[]): Promise<ICanExecuteCommandOutput> {
 		this.$androidBundleValidatorHelper.validateNoAab();
 
-		if (!this.$platformService.isPlatformSupportedForOS(this.platform, this.$projectData)) {
+		if (!this.$platformValidationService.isPlatformSupportedForOS(this.platform, this.$projectData)) {
 			this.$errors.fail(`Applications for platform ${this.platform} can not be built on this OS`);
 		}
 
@@ -85,7 +85,7 @@ export class DebugIOSCommand implements ICommand {
 
 	constructor(protected $errors: IErrors,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-		private $platformService: IPlatformService,
+		private $platformValidationService: IPlatformValidationService,
 		private $options: IOptions,
 		private $injector: IInjector,
 		private $sysInfo: ISysInfo,
@@ -108,7 +108,7 @@ export class DebugIOSCommand implements ICommand {
 	}
 
 	public async canExecute(args: string[]): Promise<ICanExecuteCommandOutput> {
-		if (!this.$platformService.isPlatformSupportedForOS(this.$devicePlatformsConstants.iOS, this.$projectData)) {
+		if (!this.$platformValidationService.isPlatformSupportedForOS(this.$devicePlatformsConstants.iOS, this.$projectData)) {
 			this.$errors.fail(`Applications for platform ${this.$devicePlatformsConstants.iOS} can not be built on this OS`);
 		}
 

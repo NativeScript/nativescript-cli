@@ -4,16 +4,17 @@ export class AddPlatformCommand extends ValidatePlatformCommandBase implements I
 	public allowedParameters: ICommandParameter[] = [];
 
 	constructor($options: IOptions,
-		$platformService: IPlatformService,
+		private $platformCommandsService: IPlatformCommandsService,
+		$platformValidationService: IPlatformValidationService,
 		$projectData: IProjectData,
 		$platformsData: IPlatformsData,
 		private $errors: IErrors) {
-			super($options, $platformsData, $platformService, $projectData);
+			super($options, $platformsData, $platformValidationService, $projectData);
 			this.$projectData.initializeProjectData();
 	}
 
 	public async execute(args: string[]): Promise<void> {
-		await this.$platformService.addPlatforms(args, this.$projectData, this.$options, this.$options.frameworkPath);
+		await this.$platformCommandsService.addPlatforms(args, this.$projectData, this.$options.frameworkPath);
 	}
 
 	public async canExecute(args: string[]): Promise<ICanExecuteCommandOutput> {
@@ -23,9 +24,9 @@ export class AddPlatformCommand extends ValidatePlatformCommandBase implements I
 
 		let canExecute = true;
 		for (const arg of args) {
-			this.$platformService.validatePlatform(arg, this.$projectData);
+			this.$platformValidationService.validatePlatform(arg, this.$projectData);
 
-			if (!this.$platformService.isPlatformSupportedForOS(arg, this.$projectData)) {
+			if (!this.$platformValidationService.isPlatformSupportedForOS(arg, this.$projectData)) {
 				this.$errors.fail(`Applications for platform ${arg} can not be built on this OS`);
 			}
 

@@ -1,7 +1,7 @@
 export abstract class ValidatePlatformCommandBase {
 	constructor(protected $options: IOptions,
 		protected $platformsData: IPlatformsData,
-		protected $platformService: IPlatformService,
+		protected $platformValidationService: IPlatformValidationService,
 		protected $projectData: IProjectData) { }
 
 	abstract allowedParameters: ICommandParameter[];
@@ -14,7 +14,7 @@ export abstract class ValidatePlatformCommandBase {
 		let result = { canExecute, suppressCommandHelp: !canExecute };
 
 		if (canExecute && options.validateOptions) {
-			const validateOptionsOutput = await this.$platformService.validateOptions(this.$options.provision, this.$options.teamId, this.$projectData, platform);
+			const validateOptionsOutput = await this.$platformValidationService.validateOptions(this.$options.provision, this.$options.teamId, this.$projectData, platform);
 			result = { canExecute: validateOptionsOutput, suppressCommandHelp: false };
 		}
 

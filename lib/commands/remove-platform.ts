@@ -1,14 +1,17 @@
 export class RemovePlatformCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
 
-	constructor(private $platformService: IPlatformService,
-		private $projectData: IProjectData,
-		private $errors: IErrors) {
+	constructor(
+		private $errors: IErrors,
+		private $platformCommandsService: IPlatformCommandsService,
+		private $platformValidationService: IPlatformValidationService,
+		private $projectData: IProjectData
+		) {
 		this.$projectData.initializeProjectData();
 	}
 
 	public execute(args: string[]): Promise<void> {
-		return this.$platformService.removePlatforms(args, this.$projectData);
+		return this.$platformCommandsService.removePlatforms(args, this.$projectData);
 	}
 
 	public async canExecute(args: string[]): Promise<boolean> {
@@ -17,7 +20,7 @@ export class RemovePlatformCommand implements ICommand {
 		}
 
 		_.each(args, platform => {
-			this.$platformService.validatePlatform(platform, this.$projectData);
+			this.$platformValidationService.validatePlatform(platform, this.$projectData);
 		});
 
 		return true;

@@ -11,9 +11,8 @@ export class AndroidLiveSyncService extends PlatformLiveSyncServiceBase implemen
 		private $injector: IInjector,
 		$devicePathProvider: IDevicePathProvider,
 		$fs: IFileSystem,
-		$logger: ILogger,
-		$projectFilesProvider: IProjectFilesProvider) {
-		super($fs, $logger, $platformsData, $projectFilesManager, $devicePathProvider, $projectFilesProvider);
+		$logger: ILogger) {
+		super($fs, $logger, $platformsData, $projectFilesManager, $devicePathProvider);
 	}
 
 	protected _getDeviceLiveSyncService(device: Mobile.IDevice, data: IProjectDir, frameworkVersion: string): INativeScriptDeviceLiveSyncService {

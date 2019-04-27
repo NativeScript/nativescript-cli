@@ -15,41 +15,6 @@ interface IBuildPlatformAction {
 }
 
 interface IPlatformService extends IBuildPlatformAction, NodeJS.EventEmitter {
-	cleanPlatforms(platforms: string[], projectData: IProjectData, config: IPlatformOptions, framework?: string): Promise<void>;
-
-	addPlatforms(platforms: string[], projectData: IProjectData, config: IPlatformOptions, frameworkPath?: string): Promise<void>;
-
-	/**
-	 * Gets list of all installed platforms (the ones for which <project dir>/platforms/<platform> exists).
-	 * @param {IProjectData} projectData DTO with information about the project.
-	 * @returns {string[]} List of currently installed platforms.
-	 */
-	getInstalledPlatforms(projectData: IProjectData): string[];
-
-	/**
-	 * Gets a list of all platforms that can be used on current OS, but are not installed at the moment.
-	 * @param {IProjectData} projectData DTO with information about the project.
-	 * @returns {string[]} List of all available platforms.
-	 */
-	getAvailablePlatforms(projectData: IProjectData): string[];
-
-	/**
-	 * Returns a list of all currently prepared platforms.
-	 * @param {IProjectData} projectData DTO with information about the project.
-	 * @returns {string[]} List of all prepared platforms.
-	 */
-	getPreparedPlatforms(projectData: IProjectData): string[];
-
-	/**
-	 * Remove platforms from specified project (`<project dir>/platforms/<platform>` dir).
-	 * @param {string[]} platforms Platforms to be removed.
-	 * @param {IProjectData} projectData DTO with information about the project.
-	 * @returns {Promise<void>}
-	 */
-	removePlatforms(platforms: string[], projectData: IProjectData): Promise<void>;
-
-	updatePlatforms(platforms: string[], projectData: IProjectData, config: IPlatformOptions): Promise<void>;
-
 	/**
 	 * Ensures that the specified platform and its dependencies are installed.
 	 * When there are changes to be prepared, it prepares the native project for the specified platform.
@@ -58,7 +23,7 @@ interface IPlatformService extends IBuildPlatformAction, NodeJS.EventEmitter {
 	 * @param {IPreparePlatformInfo} platformInfo Options to control the preparation.
 	 * @returns {boolean} true indicates that the platform was prepared.
 	 */
-	preparePlatform(platformInfo: IPreparePlatformInfo): Promise<boolean>;
+	preparePlatform(platformData: IPlatformData, projectData: IProjectData, preparePlatformData: IPreparePlatformData): Promise<boolean>;
 
 	/**
 	 * Determines whether a build is necessary. A build is necessary when one of the following is true:
@@ -92,13 +57,6 @@ interface IPlatformService extends IBuildPlatformAction, NodeJS.EventEmitter {
 	validateInstall(device: Mobile.IDevice, projectData: IProjectData, release: IRelease, outputPath?: string): Promise<void>;
 
 	/**
-	 * Determines whether the project should undergo the prepare process.
-	 * @param {IShouldPrepareInfo} shouldPrepareInfo Options needed to decide whether to prepare.
-	 * @returns {Promise<boolean>} true indicates that the project should be prepared.
-	 */
-	shouldPrepare(shouldPrepareInfo: IShouldPrepareInfo): Promise<boolean>;
-
-	/**
 	 * Installs the application on specified device.
 	 * When finishes, saves .nsbuildinfo in application root folder to indicate the prepare that was used to build the app.
 	 * * .nsbuildinfo is not persisted when building for release.
@@ -110,13 +68,6 @@ interface IPlatformService extends IBuildPlatformAction, NodeJS.EventEmitter {
 	 * @returns {void}
 	 */
 	installApplication(device: Mobile.IDevice, options: IBuildConfig, projectData: IProjectData, pathToBuiltApp?: string, outputPath?: string): Promise<void>;
-
-	/**
-	 * Gets first chance to validate the options provided as command line arguments.
-	 * If no platform is provided or a falsy (null, undefined, "", false...) platform is provided,
-	 * the options will be validated for all available platforms.
-	 */
-	validateOptions(provision: true | string, teamId: true | string, projectData: IProjectData, platform?: string): Promise<boolean>;
 
 	/**
 	 * Executes prepare, build and installOnPlatform when necessary to ensure that the latest version of the app is installed on specified platform.
@@ -134,22 +85,6 @@ interface IPlatformService extends IBuildPlatformAction, NodeJS.EventEmitter {
 	 * @returns {void}
 	 */
 	startApplication(platform: string, runOptions: IRunPlatformOptions, appData: Mobile.IStartApplicationData): Promise<void>;
-
-	cleanDestinationApp(platformInfo: IPreparePlatformInfo): Promise<void>;
-	validatePlatformInstalled(platform: string, projectData: IProjectData): void;
-
-	/**
-	 * Ensures the passed platform is a valid one (from the supported ones)
-	 */
-	validatePlatform(platform: string, projectData: IProjectData): void;
-
-	/**
-	 * Checks whether passed platform can be built on the current OS
-	 * @param {string} platform The mobile platform.
-	 * @param {IProjectData} projectData DTO with information about the project.
-	 * @returns {boolean} Whether the platform is supported for current OS or not.
-	 */
-	isPlatformSupportedForOS(platform: string, projectData: IProjectData): boolean;
 
 	/**
 	 * Returns information about the latest built application for device in the current project.
@@ -238,6 +173,7 @@ interface IPlatformData {
 	platformProjectService: IPlatformProjectService;
 	projectRoot: string;
 	normalizedPlatformName: string;
+	platformNameLowerCase: string;
 	appDestinationDirectoryPath: string;
 	getBuildOutputPath(options: IBuildOutputOptions): string;
 	bundleBuildOutputPath?: string;
@@ -275,14 +211,8 @@ interface INodeModulesData extends IPlatform, IProjectDataComposition, IAppFiles
 	projectFilesConfig: IProjectFilesConfig;
 }
 
-interface INodeModulesBuilderData {
-	nodeModulesData: INodeModulesData;
-	release: boolean;
-	copyNodeModules?: boolean;
-}
-
 interface INodeModulesBuilder {
-	prepareNodeModules(opts: INodeModulesBuilderData): Promise<void>;
+	prepareNodeModules(platformData: IPlatformData, projectData: IProjectData): Promise<void>;
 }
 
 interface INodeModulesDependenciesBuilder {
@@ -307,14 +237,11 @@ interface IPlatformDataComposition {
 
 interface ICopyAppFilesData extends IProjectDataComposition, IAppFilesUpdaterOptionsComposition, IPlatformDataComposition, IOptionalFilesToSync, IOptionalFilesToRemove { }
 
-interface IAddPlatformInfo extends IProjectDataComposition, IPlatformDataComposition {
-	frameworkDir: string;
-	installedVersion: string;
-	config: IPlatformOptions;
-}
-
 interface IPreparePlatformJSInfo extends IPreparePlatformCoreInfo, ICopyAppFilesData {
 	projectFilesConfig?: IProjectFilesConfig;
+}
+
+interface IPlatformOptions extends IRelease, IHasUseHotModuleReloadOption {
 }
 
 interface IShouldPrepareInfo extends IOptionalProjectChangesInfoComposition {
@@ -329,7 +256,7 @@ interface IPreparePlatformCoreInfo extends IPreparePlatformInfoBase, IOptionalPr
 	platformSpecificData: IPlatformSpecificData;
 }
 
-interface IPreparePlatformInfo extends IPreparePlatformInfoBase, IPlatformConfig, ISkipNativeCheckOptional {
+interface IPreparePlatformInfo extends IPreparePlatformInfoBase, IPlatformConfig {
 	webpackCompilerConfig: IWebpackCompilerConfig;
 }
 
@@ -349,10 +276,6 @@ interface IPreparePlatformInfoBase extends IPlatform, IAppFilesUpdaterOptionsCom
 
 interface IOptionalNativePrepareComposition {
 	nativePrepare?: INativePrepare;
-}
-
-interface IOptionalWatchAllFiles {
-	watchAllFiles?: boolean;
 }
 
 interface IDeployPlatformInfo extends IPlatform, IAppFilesUpdaterOptionsComposition, IProjectDataComposition, IPlatformConfig, IEnvOptions, IOptionalNativePrepareComposition, IOptionalOutputPath, IBuildPlatformAction {

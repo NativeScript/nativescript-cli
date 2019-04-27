@@ -358,7 +358,7 @@ interface IPlatformProjectService extends NodeJS.EventEmitter, IPlatformProjectS
 	validate(projectData: IProjectData, options: IOptions, notConfiguredEnvOptions?: INotConfiguredEnvOptions): Promise<IValidatePlatformOutput>;
 	createProject(frameworkDir: string, frameworkVersion: string, projectData: IProjectData, config: ICreateProjectOptions): Promise<void>;
 	interpolateData(projectData: IProjectData, platformSpecificData: IPlatformSpecificData): Promise<void>;
-	interpolateConfigurationFile(projectData: IProjectData, platformSpecificData: IPlatformSpecificData): void;
+	interpolateConfigurationFile(projectData: IProjectData, signingOptions: IiOSSigningOptions | IAndroidSigningOptions): void;
 
 	/**
 	 * Executes additional actions after native project is created.
@@ -384,7 +384,7 @@ interface IPlatformProjectService extends NodeJS.EventEmitter, IPlatformProjectS
 	 * @param {any} platformSpecificData Platform specific data required for project preparation.
 	 * @returns {void}
 	 */
-	prepareProject(projectData: IProjectData, platformSpecificData: IPlatformSpecificData): Promise<void>;
+	prepareProject(projectData: IProjectData, signingOptions: IiOSSigningOptions | IAndroidSigningOptions): Promise<void>;
 
 	/**
 	 * Prepares App_Resources in the native project by clearing data from other platform and applying platform specific rules.
@@ -460,7 +460,7 @@ interface IPlatformProjectService extends NodeJS.EventEmitter, IPlatformProjectS
 	 * Check the current state of the project, and validate against the options.
 	 * If there are parts in the project that are inconsistent with the desired options, marks them in the changeset flags.
 	 */
-	checkForChanges(changeset: IProjectChangesInfo, options: IProjectChangesOptions, projectData: IProjectData): Promise<void>;
+	checkForChanges(changeset: IProjectChangesInfo, signingOptions: IiOSSigningOptions, projectData: IProjectData): Promise<void>;
 
 	/**
 	 * Get the deployment target's version

@@ -1,7 +1,6 @@
 import * as yok from "../lib/common/yok";
 import * as stubs from "./stubs";
 import * as PlatformServiceLib from "../lib/services/platform-service";
-import * as StaticConfigLib from "../lib/config";
 import { VERSION_STRING, PACKAGE_JSON_FILE_NAME, AddPlaformErrors } from "../lib/constants";
 import * as fsLib from "../lib/common/file-system";
 import * as optionsLib from "../lib/options";
@@ -15,14 +14,16 @@ import { MobileHelper } from "../lib/common/mobile/mobile-helper";
 import { ProjectFilesProvider } from "../lib/providers/project-files-provider";
 import { DevicePlatformsConstants } from "../lib/common/mobile/device-platforms-constants";
 import { XmlValidator } from "../lib/xml-validator";
-import { PreparePlatformNativeService } from "../lib/services/prepare-platform-native-service";
-import { PreparePlatformJSService } from "../lib/services/prepare-platform-js-service";
+import { PlatformJSService } from "../lib/services/prepare-platform-js-service";
 import * as ChildProcessLib from "../lib/common/child-process";
 import ProjectChangesLib = require("../lib/services/project-changes-service");
 import { Messages } from "../lib/common/messages/messages";
 import { SettingsService } from "../lib/common/test/unit-tests/stubs";
 import { mkdir } from "shelljs";
 import * as constants from "../lib/constants";
+import { PlatformCommandsService } from "../lib/services/platform/platform-commands-service";
+import { StaticConfig } from "../lib/config";
+import { PlatformNativeService } from "../lib/services/prepare-platform-native-service";
 
 require("should");
 const temp = require("temp");
@@ -32,6 +33,7 @@ function createTestInjector() {
 	const testInjector = new yok.Yok();
 
 	testInjector.register('platformService', PlatformServiceLib.PlatformService);
+	testInjector.register("platformCommandsService", PlatformCommandsService);
 	testInjector.register('errors', stubs.ErrorsStub);
 	testInjector.register('logger', stubs.LoggerStub);
 	testInjector.register("nodeModulesDependenciesBuilder", {});
@@ -49,7 +51,7 @@ function createTestInjector() {
 	});
 	testInjector.register("options", optionsLib.Options);
 	testInjector.register("hostInfo", hostInfoLib.HostInfo);
-	testInjector.register("staticConfig", StaticConfigLib.StaticConfig);
+	testInjector.register("staticConfig", StaticConfig);
 	testInjector.register("nodeModulesBuilder", {
 		prepareNodeModules: () => {
 			return Promise.resolve();
@@ -76,8 +78,8 @@ function createTestInjector() {
 	testInjector.register("projectFilesProvider", ProjectFilesProvider);
 	testInjector.register("devicePlatformsConstants", DevicePlatformsConstants);
 	testInjector.register("xmlValidator", XmlValidator);
-	testInjector.register("preparePlatformNativeService", PreparePlatformNativeService);
-	testInjector.register("preparePlatformJSService", PreparePlatformJSService);
+	testInjector.register("platformNativeService", PlatformNativeService);
+	testInjector.register("platformJSService", PlatformJSService);
 	testInjector.register("packageManager", {
 		uninstall: async () => {
 			return true;
@@ -128,19 +130,13 @@ function createTestInjector() {
 }
 
 describe('Platform Service Tests', () => {
-	let platformService: IPlatformService, testInjector: IInjector;
-	const config: IPlatformOptions = {
-		ignoreScripts: false,
-		provision: null,
-		teamId: null,
-		sdk: null,
-		frameworkPath: null
-	};
+	let platformCommandsService: IPlatformCommandsService, platformService: IPlatformService, testInjector: IInjector;
 
 	beforeEach(() => {
 		testInjector = createTestInjector();
 		testInjector.register("fs", stubs.FileSystemStub);
 		testInjector.resolve("projectData").initializeProjectData();
+		platformCommandsService = testInjector.resolve("platformCommandsService");
 		platformService = testInjector.resolve("platformService");
 	});
 
@@ -150,22 +146,22 @@ describe('Platform Service Tests', () => {
 				const fs = testInjector.resolve("fs");
 				fs.exists = () => false;
 				const projectData: IProjectData = testInjector.resolve("projectData");
-				await platformService.addPlatforms(["Android"], projectData, config);
-				await platformService.addPlatforms(["ANDROID"], projectData, config);
-				await platformService.addPlatforms(["AnDrOiD"], projectData, config);
-				await platformService.addPlatforms(["androiD"], projectData, config);
+				await platformCommandsService.addPlatforms(["Android"], projectData, "");
+				await platformCommandsService.addPlatforms(["ANDROID"], projectData, "");
+				await platformCommandsService.addPlatforms(["AnDrOiD"], projectData, "");
+				await platformCommandsService.addPlatforms(["androiD"], projectData, "");
 
-				await platformService.addPlatforms(["iOS"], projectData, config);
-				await platformService.addPlatforms(["IOS"], projectData, config);
-				await platformService.addPlatforms(["IoS"], projectData, config);
-				await platformService.addPlatforms(["iOs"], projectData, config);
+				await platformCommandsService.addPlatforms(["iOS"], projectData, "");
+				await platformCommandsService.addPlatforms(["IOS"], projectData, "");
+				await platformCommandsService.addPlatforms(["IoS"], projectData, "");
+				await platformCommandsService.addPlatforms(["iOs"], projectData, "");
 			});
 
 			it("should fail if platform is already installed", async () => {
 				const projectData: IProjectData = testInjector.resolve("projectData");
 				// By default fs.exists returns true, so the platforms directory should exists
-				await assert.isRejected(platformService.addPlatforms(["android"], projectData, config), "Platform android already added");
-				await assert.isRejected(platformService.addPlatforms(["ios"], projectData, config), "Platform ios already added");
+				await assert.isRejected(platformCommandsService.addPlatforms(["android"], projectData, ""), "Platform android already added");
+				await assert.isRejected(platformCommandsService.addPlatforms(["ios"], projectData, ""), "Platform ios already added");
 			});
 
 			it("should fail if unable to extract runtime package", async () => {
@@ -179,7 +175,7 @@ describe('Platform Service Tests', () => {
 				};
 
 				const projectData: IProjectData = testInjector.resolve("projectData");
-				await assert.isRejected(platformService.addPlatforms(["android"], projectData, config), errorMessage);
+				await assert.isRejected(platformCommandsService.addPlatforms(["android"], projectData, ""), errorMessage);
 			});
 
 			it("fails when path passed to frameworkPath does not exist", async () => {
@@ -189,7 +185,7 @@ describe('Platform Service Tests', () => {
 				const projectData: IProjectData = testInjector.resolve("projectData");
 				const frameworkPath = "invalidPath";
 				const errorMessage = format(AddPlaformErrors.InvalidFrameworkPathStringFormat, frameworkPath);
-				await assert.isRejected(platformService.addPlatforms(["android"], projectData, config, frameworkPath), errorMessage);
+				await assert.isRejected(platformCommandsService.addPlatforms(["android"], projectData, frameworkPath), errorMessage);
 			});
 
 			const assertCorrectDataIsPassedToPacoteService = async (versionString: string): Promise<void> => {
@@ -207,6 +203,7 @@ describe('Platform Service Tests', () => {
 				platformsData.getPlatformData = (platform: string, pData: IProjectData): IPlatformData => {
 					return {
 						frameworkPackageName: packageName,
+						platformNameLowerCase: "",
 						platformProjectService: new stubs.PlatformProjectServiceStub(),
 						projectRoot: "",
 						normalizedPlatformName: "",
@@ -220,9 +217,9 @@ describe('Platform Service Tests', () => {
 				};
 				const projectData: IProjectData = testInjector.resolve("projectData");
 
-				await platformService.addPlatforms(["android"], projectData, config);
+				await platformCommandsService.addPlatforms(["android"], projectData, "");
 				assert.equal(packageNamePassedToPacoteService, `${packageName}@${versionString}`);
-				await platformService.addPlatforms(["ios"], projectData, config);
+				await platformCommandsService.addPlatforms(["ios"], projectData, "");
 				assert.equal(packageNamePassedToPacoteService, `${packageName}@${versionString}`);
 			};
 			it("should respect platform version in package.json's nativescript key", async () => {
@@ -264,7 +261,7 @@ describe('Platform Service Tests', () => {
 				const preparePlatformNativeService = testInjector.resolve("preparePlatformNativeService");
 				preparePlatformNativeService.addPlatform = async () => isNativePlatformAdded = true;
 
-				await platformService.addPlatforms(["android"], projectData, config);
+				await platformCommandsService.addPlatforms(["android"], projectData, "");
 
 				assert.isTrue(isJsPlatformAdded);
 				assert.isTrue(isNativePlatformAdded);
@@ -278,7 +275,7 @@ describe('Platform Service Tests', () => {
 				projectChangesService.getPrepareInfo = () => <any>null;
 				const projectData = testInjector.resolve("projectData");
 
-				await assert.isRejected(platformService.addPlatforms(["android"], projectData, config), "Platform android already added");
+				await assert.isRejected(platformCommandsService.addPlatforms(["android"], projectData, ""), "Platform android already added");
 			});
 
 			// Workflow: tns run; tns platform add
@@ -289,7 +286,7 @@ describe('Platform Service Tests', () => {
 				projectChangesService.getPrepareInfo = () => ({ nativePlatformStatus: constants.NativePlatformStatus.alreadyPrepared });
 				const projectData = testInjector.resolve("projectData");
 
-				await assert.isRejected(platformService.addPlatforms(["android"], projectData, config), "Platform android already added");
+				await assert.isRejected(platformCommandsService.addPlatforms(["android"], projectData, ""), "Platform android already added");
 			});
 		});
 	});
@@ -302,13 +299,13 @@ describe('Platform Service Tests', () => {
 			testInjector.resolve("fs").exists = () => false;
 
 			try {
-				await platformService.removePlatforms(["android"], projectData);
+				await platformCommandsService.removePlatforms(["android"], projectData);
 			} catch (e) {
 				errorsCaught++;
 			}
 
 			try {
-				await platformService.removePlatforms(["ios"], projectData);
+				await platformCommandsService.removePlatforms(["ios"], projectData);
 			} catch (e) {
 				errorsCaught++;
 			}
@@ -318,10 +315,10 @@ describe('Platform Service Tests', () => {
 		it("shouldn't fail when platforms are added", async () => {
 			const projectData: IProjectData = testInjector.resolve("projectData");
 			testInjector.resolve("fs").exists = () => false;
-			await platformService.addPlatforms(["android"], projectData, config);
+			await platformCommandsService.addPlatforms(["android"], projectData, "");
 
 			testInjector.resolve("fs").exists = () => true;
-			await platformService.removePlatforms(["android"], projectData);
+			await platformCommandsService.removePlatforms(["android"], projectData);
 		});
 	});
 
@@ -343,15 +340,15 @@ describe('Platform Service Tests', () => {
 			};
 
 			const projectData: IProjectData = testInjector.resolve("projectData");
-			platformService.removePlatforms = (platforms: string[], prjctData: IProjectData): Promise<void> => {
+			platformCommandsService.removePlatforms = (platforms: string[], prjctData: IProjectData): Promise<void> => {
 				nsValueObject[VERSION_STRING] = undefined;
 				return Promise.resolve();
 			};
 
-			await platformService.cleanPlatforms(["android"], projectData, config);
+			await platformCommandsService.cleanPlatforms(["android"], projectData, "");
 
 			nsValueObject[VERSION_STRING] = versionString;
-			await platformService.cleanPlatforms(["ios"], projectData, config);
+			await platformCommandsService.cleanPlatforms(["ios"], projectData, "");
 		});
 	});
 
@@ -369,7 +366,7 @@ describe('Platform Service Tests', () => {
 				packageInstallationManager.getLatestVersion = async () => "0.2.0";
 				const projectData: IProjectData = testInjector.resolve("projectData");
 
-				await assert.isRejected(platformService.updatePlatforms(["android"], projectData, null));
+				await assert.isRejected(platformCommandsService.updatePlatforms(["android"], projectData));
 			});
 		});
 	});
@@ -467,7 +464,7 @@ describe('Platform Service Tests', () => {
 	// 			appFilesUpdaterOptions,
 	// 			platformTemplate: "",
 	// 			projectData,
-	// 			config: { provision: null, teamId: null, sdk: null, frameworkPath: null, ignoreScripts: false },
+	// 			"": { provision: null, teamId: null, sdk: null, frameworkPath: null, ignoreScripts: false },
 	// 			env: {}
 	// 		});
 	// 	}
@@ -906,7 +903,7 @@ describe('Platform Service Tests', () => {
 	// 				appFilesUpdaterOptions,
 	// 				platformTemplate: "",
 	// 				projectData,
-	// 				config: { provision: null, teamId: null, sdk: null, frameworkPath: null, ignoreScripts: false },
+	// 				"": { provision: null, teamId: null, sdk: null, frameworkPath: null, ignoreScripts: false },
 	// 				env: {}
 	// 			});
 	// 		} finally {
@@ -1014,8 +1011,8 @@ describe('Platform Service Tests', () => {
 		beforeEach(() => {
 			reset();
 
-			(<any>platformService).addPlatform = () => { /** */ };
-			(<any>platformService).persistWebpackFiles = () => areWebpackFilesPersisted = true;
+			(<any>platformCommandsService).addPlatform = () => { /** */ };
+			(<any>platformCommandsService).persistWebpackFiles = () => areWebpackFilesPersisted = true;
 
 			projectData = testInjector.resolve("projectData");
 			usbLiveSyncService = testInjector.resolve("usbLiveSyncService");
@@ -1081,7 +1078,7 @@ describe('Platform Service Tests', () => {
 				usbLiveSyncService.isInitialized = testCase.isWebpackWatcherStarted === undefined ? true : testCase.isWebpackWatcherStarted;
 				mockPrepareInfo(testCase.prepareInfo);
 
-				await (<any>platformService).ensurePlatformInstalled(platform, projectData, config, appFilesUpdaterOptions, testCase.nativePrepare);
+				await (<any>platformCommandsService).ensurePlatformInstalled(platform, projectData, "", appFilesUpdaterOptions, testCase.nativePrepare);
 				assert.deepEqual(areWebpackFilesPersisted, testCase.areWebpackFilesPersisted);
 			});
 		});
@@ -1089,64 +1086,64 @@ describe('Platform Service Tests', () => {
 		it("should not persist webpack files after the second execution of `tns preview --bundle` or `tns cloud run --bundle`", async () => {
 			// First execution of `tns preview --bundle`
 			mockPrepareInfo(null);
-			await (<any>platformService).ensurePlatformInstalled(platform, projectData, config, appFilesUpdaterOptions, { skipNativePrepare: true });
+			await (<any>platformCommandsService).ensurePlatformInstalled(platform, projectData, "", appFilesUpdaterOptions, { skipNativePrepare: true });
 			assert.isTrue(areWebpackFilesPersisted);
 
 			// Second execution of `tns preview --bundle`
 			reset();
 			mockPrepareInfo({ nativePlatformStatus: constants.NativePlatformStatus.requiresPlatformAdd });
-			await (<any>platformService).ensurePlatformInstalled(platform, projectData, config, appFilesUpdaterOptions, { skipNativePrepare: true });
+			await (<any>platformCommandsService).ensurePlatformInstalled(platform, projectData, "", appFilesUpdaterOptions, { skipNativePrepare: true });
 			assert.isFalse(areWebpackFilesPersisted);
 		});
 
 		it("should not persist webpack files after the second execution of `tns run --bundle`", async () => {
 			// First execution of `tns run --bundle`
 			mockPrepareInfo(null);
-			await (<any>platformService).ensurePlatformInstalled(platform, projectData, config, appFilesUpdaterOptions);
+			await (<any>platformCommandsService).ensurePlatformInstalled(platform, projectData, "", appFilesUpdaterOptions);
 			assert.isTrue(areWebpackFilesPersisted);
 
 			// Second execution of `tns run --bundle`
 			reset();
 			mockPrepareInfo({ nativePlatformStatus: constants.NativePlatformStatus.alreadyPrepared });
-			await (<any>platformService).ensurePlatformInstalled(platform, projectData, config, appFilesUpdaterOptions);
+			await (<any>platformCommandsService).ensurePlatformInstalled(platform, projectData, "", appFilesUpdaterOptions);
 			assert.isFalse(areWebpackFilesPersisted);
 		});
 
 		it("should handle correctly the following sequence of commands: `tns preview --bundle`, `tns run --bundle` and `tns preview --bundle`", async () => {
 			// First execution of `tns preview --bundle`
 			mockPrepareInfo(null);
-			await (<any>platformService).ensurePlatformInstalled(platform, projectData, config, appFilesUpdaterOptions, { skipNativePrepare: true });
+			await (<any>platformCommandsService).ensurePlatformInstalled(platform, projectData, "", appFilesUpdaterOptions, { skipNativePrepare: true });
 			assert.isTrue(areWebpackFilesPersisted);
 
 			// Execution of `tns run --bundle`
 			reset();
 			mockPrepareInfo({ nativePlatformStatus: constants.NativePlatformStatus.requiresPlatformAdd });
-			await (<any>platformService).ensurePlatformInstalled(platform, projectData, config, appFilesUpdaterOptions);
+			await (<any>platformCommandsService).ensurePlatformInstalled(platform, projectData, "", appFilesUpdaterOptions);
 			assert.isTrue(areWebpackFilesPersisted);
 
 			// Execution of `tns preview --bundle`
 			reset();
 			mockPrepareInfo({ nativePlatformStatus: constants.NativePlatformStatus.alreadyPrepared });
-			await (<any>platformService).ensurePlatformInstalled(platform, projectData, config, appFilesUpdaterOptions, { skipNativePrepare: true });
+			await (<any>platformCommandsService).ensurePlatformInstalled(platform, projectData, "", appFilesUpdaterOptions, { skipNativePrepare: true });
 			assert.isFalse(areWebpackFilesPersisted);
 		});
 
 		it("should handle correctly the following sequence of commands: `tns preview --bundle`, `tns run --bundle` and `tns build --bundle`", async () => {
 			// Execution of `tns preview --bundle`
 			mockPrepareInfo(null);
-			await (<any>platformService).ensurePlatformInstalled(platform, projectData, config, appFilesUpdaterOptions, { skipNativePrepare: true });
+			await (<any>platformCommandsService).ensurePlatformInstalled(platform, projectData, "", appFilesUpdaterOptions, { skipNativePrepare: true });
 			assert.isTrue(areWebpackFilesPersisted);
 
 			// Execution of `tns run --bundle`
 			reset();
 			mockPrepareInfo({ nativePlatformStatus: constants.NativePlatformStatus.requiresPlatformAdd });
-			await (<any>platformService).ensurePlatformInstalled(platform, projectData, config, appFilesUpdaterOptions);
+			await (<any>platformCommandsService).ensurePlatformInstalled(platform, projectData, "", appFilesUpdaterOptions);
 			assert.isTrue(areWebpackFilesPersisted);
 
 			// Execution of `tns build --bundle`
 			reset();
 			mockPrepareInfo({ nativePlatformStatus: constants.NativePlatformStatus.alreadyPrepared });
-			await (<any>platformService).ensurePlatformInstalled(platform, projectData, config, appFilesUpdaterOptions);
+			await (<any>platformCommandsService).ensurePlatformInstalled(platform, projectData, "", appFilesUpdaterOptions);
 			assert.isFalse(areWebpackFilesPersisted);
 		});
 	});

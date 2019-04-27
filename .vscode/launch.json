@@ -15,7 +15,7 @@
 			"program": "${workspaceRoot}/lib/nativescript-cli.js",
 
 			// example commands
-			"args": [ "run", "ios", "--path", "${workspaceRoot}/scratch/webpackApp", "--bundle"]
+			"args": [ "build", "ios", "--path", "${workspaceRoot}/scratch/webpackApp", "--bundle"]
 			// "args": [ "test", "android", "--justlaunch"]
 			// "args": [ "platform", "add", "android@1.3.0", "--path", "cliapp"]
 			// "args": [ "platform", "remove", "android", "--path", "cliapp"]

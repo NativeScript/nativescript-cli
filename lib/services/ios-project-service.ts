@@ -65,6 +65,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			this._platformData = {
 				frameworkPackageName: constants.TNS_IOS_RUNTIME_NAME,
 				normalizedPlatformName: "iOS",
+				platformNameLowerCase: "ios",
 				appDestinationDirectoryPath: path.join(projectRoot, projectData.projectName),
 				platformProjectService: this,
 				projectRoot: projectRoot,
@@ -275,13 +276,13 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		return contentIsTheSame;
 	}
 
-	public async prepareProject(projectData: IProjectData, platformSpecificData: IPlatformSpecificData): Promise<void> {
+	public async prepareProject(projectData: IProjectData, signingOptions: IiOSSigningOptions): Promise<void> {
 		const projectRoot = path.join(projectData.platformsDir, "ios");
 
-		const provision = platformSpecificData && platformSpecificData.provision;
-		const teamId = platformSpecificData && platformSpecificData.teamId;
+		const provision = signingOptions && signingOptions.provision;
+		const teamId = signingOptions && signingOptions.teamId;
 		if (provision) {
-			await this.$iOSSigningService.setupSigningFromProvision(projectRoot, projectData, provision, platformSpecificData.mobileProvisionData);
+			await this.$iOSSigningService.setupSigningFromProvision(projectRoot, projectData, provision, signingOptions.mobileProvisionData);
 		}
 		if (teamId) {
 			await this.$iOSSigningService.setupSigningFromTeam(projectRoot, projectData, teamId);
@@ -506,7 +507,8 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		return Promise.resolve();
 	}
 
-	public async checkForChanges(changesInfo: IProjectChangesInfo, { provision, teamId }: IProjectChangesOptions, projectData: IProjectData): Promise<void> {
+	public async checkForChanges(changesInfo: IProjectChangesInfo, signingOptions: IiOSSigningOptions, projectData: IProjectData): Promise<void> {
+		const { provision, teamId } = signingOptions;
 		const hasProvision = provision !== undefined;
 		const hasTeamId = teamId !== undefined;
 		if (hasProvision || hasTeamId) {

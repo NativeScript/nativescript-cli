@@ -46,10 +46,17 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			this._platformData = {
 				frameworkPackageName: constants.TNS_ANDROID_RUNTIME_NAME,
 				normalizedPlatformName: "Android",
+				platformNameLowerCase: "android",
 				appDestinationDirectoryPath: path.join(...appDestinationDirectoryArr),
 				platformProjectService: this,
 				projectRoot: projectRoot,
-				getBuildOutputPath: () =>  path.join(...deviceBuildOutputArr),
+				getBuildOutputPath: (buildConfig: IBuildConfig) => {
+					if (buildConfig.androidBundle) {
+						return path.join(projectRoot, constants.APP_FOLDER_NAME, constants.BUILD_DIR, constants.OUTPUTS_DIR, constants.BUNDLE_DIR);
+					}
+
+					return path.join(...deviceBuildOutputArr);
+				},
 				bundleBuildOutputPath: path.join(projectRoot, constants.APP_FOLDER_NAME, constants.BUILD_DIR, constants.OUTPUTS_DIR, constants.BUNDLE_DIR),
 				getValidBuildOutputData: (buildOptions: IBuildOutputOptions): IValidBuildOutputData => {
 					const buildMode = buildOptions.release ? Configurations.Release.toLowerCase() : Configurations.Debug.toLowerCase();
@@ -160,9 +167,9 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		_.map(directoriesToClean, dir => this.$fs.deleteDirectory(dir));
 	}
 
-	public async interpolateData(projectData: IProjectData, platformSpecificData: IPlatformSpecificData): Promise<void> {
+	public async interpolateData(projectData: IProjectData, signingOptions: any): Promise<void> {
 		// Interpolate the apilevel and package
-		this.interpolateConfigurationFile(projectData, platformSpecificData);
+		this.interpolateConfigurationFile(projectData, signingOptions);
 		const appResourcesDirectoryPath = projectData.getAppResourcesDirectoryPath();
 
 		let stringsFilePath: string;
@@ -192,11 +199,11 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		}
 	}
 
-	public interpolateConfigurationFile(projectData: IProjectData, platformSpecificData: IPlatformSpecificData): void {
+	public interpolateConfigurationFile(projectData: IProjectData, signingOptions: IAndroidSigningOptions): void {
 		const manifestPath = this.getPlatformData(projectData).configurationFilePath;
 		shell.sed('-i', /__PACKAGE__/, projectData.projectIdentifiers.android, manifestPath);
 		if (this.$androidToolsInfo.getToolsInfo().androidHomeEnvVar) {
-			const sdk = (platformSpecificData && platformSpecificData.sdk) || (this.$androidToolsInfo.getToolsInfo().compileSdkVersion || "").toString();
+			const sdk = (signingOptions && signingOptions.sdk) || (this.$androidToolsInfo.getToolsInfo().compileSdkVersion || "").toString();
 			shell.sed('-i', /__APILEVEL__/, sdk, manifestPath);
 		}
 	}
@@ -368,7 +375,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		await adb.executeShellCommand(["rm", "-rf", deviceRootPath]);
 	}
 
-	public async checkForChanges(changesInfo: IProjectChangesInfo, options: IProjectChangesOptions, projectData: IProjectData): Promise<void> {
+	public async checkForChanges(): Promise<void> {
 		// Nothing android specific to check yet.
 	}
 

@@ -33,7 +33,7 @@ export class DeployCommandHelper implements IDeployCommandHelper {
 			deployOptions,
 			projectData: this.$projectData,
 			buildPlatform: this.$platformService.buildPlatform.bind(this.$platformService),
-			config: this.$options,
+			config: <any>this.$options,
 			env: this.$options.env,
 
 		};

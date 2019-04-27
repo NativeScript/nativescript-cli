@@ -25,17 +25,8 @@ interface IProjectChangesInfo extends IAddedNativePlatform {
 	readonly changesRequirePrepare: boolean;
 }
 
-/**
- * Describes interface for controlling checking node_modules for native changes.
- */
-interface ISkipNativeCheckOptional {
-	/**
-	 * Designates node_modules should not be checked for native changes.
-	 */
-	skipModulesNativeCheck?: boolean;
-}
-
-interface IProjectChangesOptions extends IAppFilesUpdaterOptions, IProvision, ITeamIdentifier, ISkipNativeCheckOptional {
+interface IProjectChangesOptions extends IRelease, IHasUseHotModuleReloadOption {
+	signingOptions: IiOSSigningOptions | IAndroidSigningOptions;
 	nativePlatformStatus?: "1" | "2" | "3";
 }
 

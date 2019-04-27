@@ -578,9 +578,9 @@ interface IHasAndroidBundle {
 	androidBundle?: boolean;
 }
 
-interface IAppFilesUpdaterOptions extends IBundle, IRelease, IOptionalWatchAllFiles, IHasUseHotModuleReloadOption { }
+interface IAppFilesUpdaterOptions { }
 
-interface IPlatformBuildData extends IAppFilesUpdaterOptions, IBuildConfig, IEnvOptions { }
+interface IPlatformBuildData extends IRelease, IHasUseHotModuleReloadOption, IBuildConfig, IEnvOptions { }
 
 interface IDeviceEmulator extends IHasEmulatorOption, IDeviceIdentifier { }
 
@@ -1025,4 +1025,62 @@ interface IRuntimeGradleVersions {
 
 interface INetworkConnectivityValidator {
 	validate(): Promise<void>;
+}
+
+interface IBundleWorkflowService {
+
+}
+
+interface IPlatformValidationService {
+	/**
+	 * Ensures the passed platform is a valid one (from the supported ones)
+	 */
+	validatePlatform(platform: string, projectData: IProjectData): void;
+
+	/**
+	 * Gets first chance to validate the options provided as command line arguments.
+	 * If no platform is provided or a falsy (null, undefined, "", false...) platform is provided,
+	 * the options will be validated for all available platforms.
+	 */
+	validateOptions(provision: true | string, teamId: true | string, projectData: IProjectData, platform?: string): Promise<boolean>;
+
+
+	validatePlatformInstalled(platform: string, projectData: IProjectData): void;
+
+	/**
+	 * Checks whether passed platform can be built on the current OS
+	 * @param {string} platform The mobile platform.
+	 * @param {IProjectData} projectData DTO with information about the project.
+	 * @returns {boolean} Whether the platform is supported for current OS or not.
+	 */
+	isPlatformSupportedForOS(platform: string, projectData: IProjectData): boolean;
+}
+
+interface IBuildArtefactsService {
+	getLastBuiltPackagePath(platformData: IPlatformData, buildConfig: IBuildConfig, outputPath?: string): Promise<string>;
+}
+
+interface IPlatformAddService {
+	addPlatform(addPlatformData: IAddPlatformData, projectData: IProjectData): Promise<void>;
+}
+
+interface IPlatformCommandsService {
+	addPlatforms(platforms: string[], projectData: IProjectData, frameworkPath: string): Promise<void>;
+	cleanPlatforms(platforms: string[], projectData: IProjectData, framworkPath: string): Promise<void>;
+	removePlatforms(platforms: string[], projectData: IProjectData): Promise<void>;
+	updatePlatforms(platforms: string[], projectData: IProjectData): Promise<void>;
+	getInstalledPlatforms(projectData: IProjectData): string[];
+	getAvailablePlatforms(projectData: IProjectData): string[];
+	getPreparedPlatforms(projectData: IProjectData): string[];
+}
+
+interface IAddPlatformData {
+	platformParam: string;
+	frameworkPath?: string;
+	nativePrepare?: INativePrepare;
+}
+
+interface IPlatformBuildService {
+	buildPlatform(platformData: IPlatformData, projectData: IProjectData, buildConfig: IBuildConfig): Promise<string>;
+	saveBuildInfoFile(platformData: IPlatformData, projectData: IProjectData, buildInfoFileDirname: string): void;
 }

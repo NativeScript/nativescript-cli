@@ -153,10 +153,11 @@ describe("Project Changes Service Tests", () => {
 				platform: "ios",
 				projectData: serviceTest.projectData,
 				projectChangesOptions: {
-					bundle: false,
 					release: false,
-					provision: undefined,
-					teamId: undefined,
+					signingOptions: {
+						provision: undefined,
+						teamId: undefined,
+					},
 					useHotModuleReload: false
 				}
 			});
@@ -166,10 +167,11 @@ describe("Project Changes Service Tests", () => {
 				platform: "android",
 				projectData: serviceTest.projectData,
 				projectChangesOptions: {
-					bundle: false,
 					release: false,
-					provision: undefined,
-					teamId: undefined,
+					signingOptions: {
+						provision: undefined,
+						teamId: undefined,
+					},
 					useHotModuleReload: false
 				}
 			});
@@ -194,10 +196,11 @@ describe("Project Changes Service Tests", () => {
 					platform,
 					projectData: serviceTest.projectData,
 					projectChangesOptions: {
-						bundle: false,
 						release: false,
-						provision: undefined,
-						teamId: undefined,
+						signingOptions: {
+							provision: undefined,
+							teamId: undefined,
+						},
 						useHotModuleReload: false
 					}
 				});
@@ -219,10 +222,11 @@ describe("Project Changes Service Tests", () => {
 						platform,
 						projectData: serviceTest.projectData,
 						projectChangesOptions: {
-							bundle: false,
 							release: false,
-							provision: undefined,
-							teamId: undefined,
+							signingOptions: {
+								provision: undefined,
+								teamId: undefined,
+							},
 							useHotModuleReload: false
 						}
 					});

@@ -4,9 +4,7 @@ import * as constants from "../constants";
 import { Configurations } from "../common/constants";
 import * as helpers from "../common/helpers";
 import * as semver from "semver";
-import { format } from "util";
 import { EventEmitter } from "events";
-import { AppFilesUpdater } from "./app-files-updater";
 import { attachAwaitDetach } from "../common/helpers";
 import * as temp from "temp";
 import { performanceLog } from ".././common/decorators";
@@ -16,300 +14,43 @@ const buildInfoFileName = ".nsbuildinfo";
 
 export class PlatformService extends EventEmitter implements IPlatformService {
 	constructor(private $devicesService: Mobile.IDevicesService,
-		private $preparePlatformNativeService: IPreparePlatformService,
-		private $preparePlatformJSService: IPreparePlatformService,
 		private $errors: IErrors,
 		private $fs: IFileSystem,
 		private $logger: ILogger,
-		private $packageInstallationManager: IPackageInstallationManager,
 		private $platformsData: IPlatformsData,
 		private $projectDataService: IProjectDataService,
-		private $pluginsService: IPluginsService,
-		// private $projectFilesManager: IProjectFilesManager,
+		private $webpackCompilerService: IWebpackCompilerService,
+		// private $platformJSService: IPreparePlatformService,
+		private $platformNativeService: IPreparePlatformService,
 		private $mobileHelper: Mobile.IMobileHelper,
 		private $hostInfo: IHostInfo,
 		private $devicePathProvider: IDevicePathProvider,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $projectChangesService: IProjectChangesService,
 		private $analyticsService: IAnalyticsService,
-		private $terminalSpinnerService: ITerminalSpinnerService,
-		private $pacoteService: IPacoteService,
-		// private $usbLiveSyncService: any,
 		public $hooksService: IHooksService,
-	) {
-		super();
-	}
-
-	public async cleanPlatforms(platforms: string[], projectData: IProjectData, config: IPlatformOptions, framworkPath?: string): Promise<void> {
-		for (const platform of platforms) {
-			const version: string = this.getCurrentPlatformVersion(platform, projectData);
-
-			let platformWithVersion: string = platform;
-			if (version !== undefined) {
-				platformWithVersion += "@" + version;
-			}
-
-			await this.removePlatforms([platform], projectData);
-			await this.addPlatforms([platformWithVersion], projectData, config);
-		}
-	}
-
-	public async addPlatforms(platforms: string[], projectData: IProjectData, config: IPlatformOptions, frameworkPath?: string): Promise<void> {
-		const platformsDir = projectData.platformsDir;
-		this.$fs.ensureDirectoryExists(platformsDir);
-
-		for (const platform of platforms) {
-			this.validatePlatform(platform, projectData);
-			const platformPath = path.join(projectData.platformsDir, platform);
-
-			const isPlatformAdded = this.isPlatformAdded(platform, platformPath, projectData);
-			if (isPlatformAdded) {
-				this.$errors.failWithoutHelp(`Platform ${platform} already added`);
-			}
-
-			await this.addPlatform(platform.toLowerCase(), projectData, config, frameworkPath);
-		}
-	}
+	) { super(); }
 
 	public getCurrentPlatformVersion(platform: string, projectData: IProjectData): string {
 		const platformData = this.$platformsData.getPlatformData(platform, projectData);
 		const currentPlatformData: any = this.$projectDataService.getNSValue(projectData.projectDir, platformData.frameworkPackageName);
-		let version: string;
-		if (currentPlatformData && currentPlatformData[constants.VERSION_STRING]) {
-			version = currentPlatformData[constants.VERSION_STRING];
-		}
+		const version = currentPlatformData && currentPlatformData.version;
 
 		return version;
 	}
 
-	private async addPlatform(platformParam: string, projectData: IProjectData, config: IPlatformOptions, frameworkPath?: string, nativePrepare?: INativePrepare): Promise<void> {
-		const data = platformParam.split("@");
-		const platform = data[0].toLowerCase();
-		let version = data[1];
-
-		const platformData = this.$platformsData.getPlatformData(platform, projectData);
-
-		// Log the values for project
-		this.$logger.trace("Creating NativeScript project for the %s platform", platform);
-		this.$logger.trace("Path: %s", platformData.projectRoot);
-		this.$logger.trace("Package: %s", projectData.projectIdentifiers[platform]);
-		this.$logger.trace("Name: %s", projectData.projectName);
-
-		this.$logger.out("Copying template files...");
-
-		let packageToInstall = "";
-		if (frameworkPath) {
-			packageToInstall = path.resolve(frameworkPath);
-			if (!this.$fs.exists(packageToInstall)) {
-				const errorMessage = format(constants.AddPlaformErrors.InvalidFrameworkPathStringFormat, frameworkPath);
-				this.$errors.fail(errorMessage);
-			}
-		} else if (!version) {
-			version = this.getCurrentPlatformVersion(platform, projectData) || await this.$packageInstallationManager.getLatestCompatibleVersion(platformData.frameworkPackageName);
-
-			packageToInstall = `${platformData.frameworkPackageName}@${version}`;
-		}
-
-		const spinner = this.$terminalSpinnerService.createSpinner();
-		const platformPath = path.join(projectData.platformsDir, platform);
-		let installedPlatformVersion;
-
-		try {
-			spinner.start();
-			const downloadedPackagePath = temp.mkdirSync("runtimeDir");
-			temp.track();
-			await this.$pacoteService.extractPackage(packageToInstall, downloadedPackagePath);
-			let frameworkDir = path.join(downloadedPackagePath, constants.PROJECT_FRAMEWORK_FOLDER_NAME);
-			frameworkDir = path.resolve(frameworkDir);
-			installedPlatformVersion =
-				await this.addPlatformCore(platformData, frameworkDir, projectData, config, nativePrepare);
-		} catch (err) {
-			this.$fs.deleteDirectory(platformPath);
-			throw err;
-		} finally {
-			spinner.stop();
-		}
-
-		this.$fs.ensureDirectoryExists(platformPath);
-		this.$logger.out(`Platform ${platform} successfully added. v${installedPlatformVersion}`);
-	}
-
-	private async addPlatformCore(platformData: IPlatformData, frameworkDir: string, projectData: IProjectData, config: IPlatformOptions, nativePrepare?: INativePrepare): Promise<string> {
-		const coreModuleData = this.$fs.readJson(path.join(frameworkDir, "..", "package.json"));
-		const installedVersion = coreModuleData.version;
-
-		// JS platform add
-		const frameworkPackageNameData = { version: installedVersion };
-		this.$projectDataService.setNSValue(projectData.projectDir, platformData.frameworkPackageName, frameworkPackageNameData);
-
-		if (!nativePrepare || !nativePrepare.skipNativePrepare) {
-
-			await this.$preparePlatformNativeService.addPlatform({
-				platformData,
-				frameworkDir,
-				installedVersion,
-				projectData,
-				config
-			});
-		}
-
-		return installedVersion;
-	}
-
-	public getInstalledPlatforms(projectData: IProjectData): string[] {
-		if (!this.$fs.exists(projectData.platformsDir)) {
-			return [];
-		}
-
-		const subDirs = this.$fs.readDirectory(projectData.platformsDir);
-		return _.filter(subDirs, p => this.$platformsData.platformsNames.indexOf(p) > -1);
-	}
-
-	public getAvailablePlatforms(projectData: IProjectData): string[] {
-		const installedPlatforms = this.getInstalledPlatforms(projectData);
-		return _.filter(this.$platformsData.platformsNames, p => {
-			return installedPlatforms.indexOf(p) < 0 && this.isPlatformSupportedForOS(p, projectData); // Only those not already installed
-		});
-	}
-
-	public getPreparedPlatforms(projectData: IProjectData): string[] {
-		return _.filter(this.$platformsData.platformsNames, p => { return this.isPlatformPrepared(p, projectData); });
-	}
-
 	@performanceLog()
-	@helpers.hook('shouldPrepare')
-	public async shouldPrepare(shouldPrepareInfo: IShouldPrepareInfo): Promise<boolean> {
-		shouldPrepareInfo.changesInfo = shouldPrepareInfo.changesInfo || await this.getChangesInfo(shouldPrepareInfo.platformInfo);
-		const requiresNativePrepare = (!shouldPrepareInfo.platformInfo.nativePrepare || !shouldPrepareInfo.platformInfo.nativePrepare.skipNativePrepare) && shouldPrepareInfo.changesInfo.nativePlatformStatus === constants.NativePlatformStatus.requiresPrepare;
-
-		return shouldPrepareInfo.changesInfo.hasChanges || requiresNativePrepare;
-	}
-
-	private async getChangesInfo(preparePlatformInfo: IPreparePlatformInfo): Promise<IProjectChangesInfo> {
-		await this.initialPrepare(preparePlatformInfo);
-
-		const { platform, appFilesUpdaterOptions, projectData, config, nativePrepare } = preparePlatformInfo;
-		const bundle = appFilesUpdaterOptions.bundle;
-		const nativePlatformStatus = (nativePrepare && nativePrepare.skipNativePrepare) ? constants.NativePlatformStatus.requiresPlatformAdd : constants.NativePlatformStatus.requiresPrepare;
-		const changesInfo = await this.$projectChangesService.checkForChanges({
-			platform,
-			projectData,
-			projectChangesOptions: {
-				bundle,
-				release: appFilesUpdaterOptions.release,
-				provision: config.provision,
-				teamId: config.teamId,
-				nativePlatformStatus,
-				skipModulesNativeCheck: preparePlatformInfo.skipModulesNativeCheck,
-				useHotModuleReload: appFilesUpdaterOptions.useHotModuleReload
-			}
-		});
-
-		this.$logger.trace("Changes info in prepare platform:", changesInfo);
-		return changesInfo;
-	}
-
-	@performanceLog()
-	public async preparePlatform(platformInfo: IPreparePlatformInfo, callback?: (shouldRebuild: boolean) => {}): Promise<boolean> {
-		const { platform, projectData, webpackCompilerConfig, config, appFilesUpdaterOptions, filesToSync, filesToRemove, env } = platformInfo;
-		const changesInfo = await this.getChangesInfo(platformInfo);
-		const projectFilesConfig = helpers.getProjectFilesConfig({ isReleaseBuild: appFilesUpdaterOptions.release });
-		const platformData = this.$platformsData.getPlatformData(platform, projectData);
-		const prepareNativePlatformData = {
-			platform,
-			platformData,
-			appFilesUpdaterOptions,
-			projectData,
-			platformSpecificData: config,
-			changesInfo,
-			filesToSync,
-			filesToRemove,
-			projectFilesConfig,
-			env
-		};
-
+	public async preparePlatform(platformData: IPlatformData, projectData: IProjectData, preparePlatformData: IPreparePlatformData): Promise<boolean> {
 		this.$logger.out("Preparing project...");
 
-		const nativePromise = helpers.deferPromise<string[]>();
-		const jsPromise = helpers.deferPromise<string[]>();
-		const jsFiles: string[] = [];
+		await this.$webpackCompilerService.compile(platformData, projectData, { watch: false, env: preparePlatformData.env });
+		await this.$platformNativeService.preparePlatform(platformData, projectData, preparePlatformData);
 
-		this.$preparePlatformJSService.on("jsFilesChanged", files => {
-			jsFiles.push(...files);
-			if (!jsPromise.isResolved()) {
-				jsPromise.resolve(jsFiles);
-			}
+		this.$projectChangesService.savePrepareInfo(platformData.platformNameLowerCase, projectData);
 
-			if (nativePromise.isResolved()) {
-				this.emit("changedFiles", _.uniq(jsFiles));
-			}
-		});
-		await this.$preparePlatformJSService.startWatcher(platformData, projectData, webpackCompilerConfig);
-
-		this.$preparePlatformNativeService.on("nativeFilesChanged", (files: any) => {
-			if (!nativePromise.isResolved()) {
-				nativePromise.resolve([]);
-			}
-
-			if (jsPromise.isResolved()) {
-				this.emit("changedFiles", jsPromise.getResult());
-			}
-		});
-		await this.$preparePlatformNativeService.startWatcher(platformData, projectData, prepareNativePlatformData);
-
-		await Promise.all([jsPromise, nativePromise]);
-
-		this.$logger.out(`Project successfully prepared (${platform})`);
+		this.$logger.out(`Project successfully prepared (${platformData.platformNameLowerCase})`);
 
 		return true;
-	}
-
-	public async validateOptions(provision: true | string, teamId: true | string, projectData: IProjectData, platform?: string, aab?: boolean): Promise<boolean> {
-		if (platform && !this.$mobileHelper.isAndroidPlatform(platform) && aab) {
-			this.$errors.failWithoutHelp("The --aab option is supported only for the Android platform.");
-		}
-
-		if (platform) {
-			platform = this.$mobileHelper.normalizePlatformName(platform);
-			this.$logger.trace("Validate options for platform: " + platform);
-			const platformData = this.$platformsData.getPlatformData(platform, projectData);
-
-			const result = await platformData.platformProjectService.validateOptions(
-				projectData.projectIdentifiers[platform.toLowerCase()],
-				provision,
-				teamId
-			);
-
-			return result;
-		} else {
-			let valid = true;
-			for (const availablePlatform in this.$platformsData.availablePlatforms) {
-				this.$logger.trace("Validate options for platform: " + availablePlatform);
-				const platformData = this.$platformsData.getPlatformData(availablePlatform, projectData);
-				valid = valid && await platformData.platformProjectService.validateOptions(
-					projectData.projectIdentifiers[availablePlatform.toLowerCase()],
-					provision,
-					teamId
-				);
-			}
-
-			return valid;
-		}
-	}
-
-	private async initialPrepare(preparePlatformInfo: IPreparePlatformInfo) {
-		const { platform, appFilesUpdaterOptions, projectData, config, nativePrepare } = preparePlatformInfo;
-		this.validatePlatform(platform, projectData);
-
-		// We need dev-dependencies here, so before-prepare hooks will be executed correctly.
-		try {
-			await this.$pluginsService.ensureAllDependenciesAreInstalled(projectData);
-		} catch (err) {
-			this.$logger.trace(err);
-			this.$errors.failWithoutHelp(`Unable to install dependencies. Make sure your package.json is valid and all dependencies are correct. Error is: ${err.message}`);
-		}
-
-		await this.ensurePlatformInstalled(platform, projectData, config, appFilesUpdaterOptions, nativePrepare);
 	}
 
 	public async shouldBuild(platform: string, projectData: IProjectData, buildConfig: IBuildConfig, outputPath?: string): Promise<boolean> {
@@ -487,20 +228,23 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 	}
 
 	public async deployPlatform(deployInfo: IDeployPlatformInfo): Promise<void> {
-		await this.preparePlatform({
-			platform: deployInfo.platform,
-			appFilesUpdaterOptions: deployInfo.appFilesUpdaterOptions,
-			projectData: deployInfo.projectData,
-			config: deployInfo.config,
-			nativePrepare: deployInfo.nativePrepare,
-			env: deployInfo.env,
-			webpackCompilerConfig: {
-				watch: false,
-				env: deployInfo.env
-			}
-		});
+		// TODO: Refactor deploy platform command
+		// await this.preparePlatform({
+		// 	platform: deployInfo.platform,
+		// 	appFilesUpdaterOptions: deployInfo.appFilesUpdaterOptions,
+		// 	projectData: deployInfo.projectData,
+		// 	config: deployInfo.config,
+		// 	nativePrepare: deployInfo.nativePrepare,
+		// 	env: deployInfo.env,
+		// 	webpackCompilerConfig: {
+		// 		watch: false,
+		// 		env: deployInfo.env
+		// 	}
+		// });
 		const options: Mobile.IDevicesServicesInitializationOptions = {
-			platform: deployInfo.platform, deviceId: deployInfo.deployOptions.device, emulator: deployInfo.deployOptions.emulator
+			platform: deployInfo.platform,
+			deviceId: deployInfo.deployOptions.device,
+			emulator: deployInfo.deployOptions.emulator
 		};
 		await this.$devicesService.initialize(options);
 		const action = async (device: Mobile.IDevice): Promise<void> => {
@@ -606,16 +350,6 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		return null;
 	}
 
-	@helpers.hook('cleanApp')
-	public async cleanDestinationApp(platformInfo: IPreparePlatformInfo): Promise<void> {
-		await this.ensurePlatformInstalled(platformInfo.platform, platformInfo.projectData, platformInfo.config, platformInfo.appFilesUpdaterOptions, platformInfo.nativePrepare);
-
-		const platformData = this.$platformsData.getPlatformData(platformInfo.platform, platformInfo.projectData);
-		const appDestinationDirectoryPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
-		const appUpdater = new AppFilesUpdater(platformInfo.projectData.appDirectoryPath, appDestinationDirectoryPath, platformInfo.appFilesUpdaterOptions, this.$fs);
-		appUpdater.cleanDestinationApp();
-	}
-
 	public lastOutputPath(platform: string, buildConfig: IBuildConfig, projectData: IProjectData, outputPath?: string): string {
 		let packageFile: string;
 		const platformData = this.$platformsData.getPlatformData(platform, projectData);
@@ -645,48 +379,6 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		}
 		this.$fs.copyFile(packageFile, targetPath);
 		this.$logger.info(`Copied file '${packageFile}' to '${targetPath}'.`);
-	}
-
-	public async removePlatforms(platforms: string[], projectData: IProjectData): Promise<void> {
-		for (const platform of platforms) {
-			this.validatePlatformInstalled(platform, projectData);
-			const platformData = this.$platformsData.getPlatformData(platform, projectData);
-			let errorMessage;
-
-			try {
-				await platformData.platformProjectService.stopServices(platformData.projectRoot);
-			} catch (err) {
-				errorMessage = err.message;
-			}
-
-			try {
-				const platformDir = path.join(projectData.platformsDir, platform.toLowerCase());
-				this.$fs.deleteDirectory(platformDir);
-				this.$projectDataService.removeNSProperty(projectData.projectDir, platformData.frameworkPackageName);
-
-				this.$logger.out(`Platform ${platform} successfully removed.`);
-			} catch (err) {
-				this.$logger.error(`Failed to remove ${platform} platform with errors:`);
-				if (errorMessage) {
-					this.$logger.error(errorMessage);
-				}
-				this.$errors.failWithoutHelp(err.message);
-			}
-		}
-	}
-
-	public async updatePlatforms(platforms: string[], projectData: IProjectData, config: IPlatformOptions): Promise<void> {
-		for (const platformParam of platforms) {
-			const data = platformParam.split("@"),
-				platform = data[0],
-				version = data[1];
-
-			if (this.hasPlatformDirectory(platform, projectData)) {
-				await this.updatePlatform(platform, version, projectData, config);
-			} else {
-				await this.addPlatform(platformParam, projectData, config);
-			}
-		}
 	}
 
 	private getCanExecuteAction(platform: string, options: IDeviceEmulator): any {
@@ -719,40 +411,6 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		if (!this.$platformsData.getPlatformData(platform, projectData)) {
 			this.$errors.fail("Invalid platform %s. Valid platforms are %s.", platform, helpers.formatListOfNames(this.$platformsData.platformsNames));
 		}
-	}
-
-	public validatePlatformInstalled(platform: string, projectData: IProjectData): void {
-		this.validatePlatform(platform, projectData);
-
-		if (!this.hasPlatformDirectory(platform, projectData)) {
-			this.$errors.fail("The platform %s is not added to this project. Please use 'tns platform add <platform>'", platform);
-		}
-	}
-
-	private async ensurePlatformInstalled(platform: string, projectData: IProjectData, config: IPlatformOptions, appFilesUpdaterOptions: IAppFilesUpdaterOptions, nativePrepare?: INativePrepare): Promise<void> {
-		const prepareInfo = this.$projectChangesService.getPrepareInfo(platform, projectData);
-		const hasPlatformDirectory = this.hasPlatformDirectory(platform, projectData);
-		const shouldAddNativePlatform = !nativePrepare || !nativePrepare.skipNativePrepare;
-		const requiresNativePlatformAdd = prepareInfo && prepareInfo.nativePlatformStatus === constants.NativePlatformStatus.requiresPlatformAdd;
-		const shouldAddPlatform = !hasPlatformDirectory || (shouldAddNativePlatform && requiresNativePlatformAdd);
-		if (shouldAddPlatform) {
-			await this.addPlatform(platform, projectData, config, "", nativePrepare);
-		}
-	}
-
-	private hasPlatformDirectory(platform: string, projectData: IProjectData): boolean {
-		return this.$fs.exists(path.join(projectData.platformsDir, platform.toLowerCase()));
-	}
-
-	public isPlatformSupportedForOS(platform: string, projectData: IProjectData): boolean {
-		const targetedOS = this.$platformsData.getPlatformData(platform, projectData).targetedOS;
-		const res = !targetedOS || targetedOS.indexOf("*") >= 0 || targetedOS.indexOf(process.platform) >= 0;
-		return res;
-	}
-
-	private isPlatformPrepared(platform: string, projectData: IProjectData): boolean {
-		const platformData = this.$platformsData.getPlatformData(platform, projectData);
-		return platformData.platformProjectService.isPlatformPrepared(platformData.projectRoot, projectData);
 	}
 
 	private getApplicationPackages(buildOutputPath: string, validBuildOutputData: IValidBuildOutputData): IApplicationPackage[] {
@@ -821,46 +479,6 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		return this.getLatestApplicationPackage(outputPath || platformData.getBuildOutputPath(buildConfig), platformData.getValidBuildOutputData(buildOutputOptions));
 	}
 
-	private async updatePlatform(platform: string, version: string, projectData: IProjectData, config: IPlatformOptions): Promise<void> {
-		const platformData = this.$platformsData.getPlatformData(platform, projectData);
-
-		const data = this.$projectDataService.getNSValue(projectData.projectDir, platformData.frameworkPackageName);
-		const currentVersion = data && data.version ? data.version : "0.2.0";
-
-		const installedModuleDir = temp.mkdirSync("runtime-to-update");
-		let newVersion = version === constants.PackageVersion.NEXT ?
-			await this.$packageInstallationManager.getNextVersion(platformData.frameworkPackageName) :
-			version || await this.$packageInstallationManager.getLatestCompatibleVersion(platformData.frameworkPackageName);
-		await this.$pacoteService.extractPackage(`${platformData.frameworkPackageName}@${newVersion}`, installedModuleDir);
-		const cachedPackageData = this.$fs.readJson(path.join(installedModuleDir, "package.json"));
-		newVersion = (cachedPackageData && cachedPackageData.version) || newVersion;
-
-		const canUpdate = platformData.platformProjectService.canUpdatePlatform(installedModuleDir, projectData);
-		if (canUpdate) {
-			if (!semver.valid(newVersion)) {
-				this.$errors.fail("The version %s is not valid. The version should consists from 3 parts separated by dot.", newVersion);
-			}
-
-			if (!semver.gt(currentVersion, newVersion)) {
-				await this.updatePlatformCore(platformData, { currentVersion, newVersion, canUpdate }, projectData, config);
-			} else if (semver.eq(currentVersion, newVersion)) {
-				this.$errors.fail("Current and new version are the same.");
-			} else {
-				this.$errors.fail(`Your current version: ${currentVersion} is higher than the one you're trying to install ${newVersion}.`);
-			}
-		} else {
-			this.$errors.failWithoutHelp("Native Platform cannot be updated.");
-		}
-	}
-
-	private async updatePlatformCore(platformData: IPlatformData, updateOptions: IUpdatePlatformOptions, projectData: IProjectData, config: IPlatformOptions): Promise<void> {
-		let packageName = platformData.normalizedPlatformName.toLowerCase();
-		await this.removePlatforms([packageName], projectData);
-		packageName = updateOptions.newVersion ? `${packageName}@${updateOptions.newVersion}` : packageName;
-		await this.addPlatform(packageName, projectData, config);
-		this.$logger.out("Successfully updated to version ", updateOptions.newVersion);
-	}
-
 	// TODO: Remove this method from here. It has nothing to do with platform
 	public async readFile(device: Mobile.IDevice, deviceFilePath: string, projectData: IProjectData): Promise<string> {
 		temp.track();
@@ -879,19 +497,6 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		}
 
 		return null;
-	}
-
-	private isPlatformAdded(platform: string, platformPath: string, projectData: IProjectData): boolean {
-		if (!this.$fs.exists(platformPath)) {
-			return false;
-		}
-
-		const prepareInfo = this.$projectChangesService.getPrepareInfo(platform, projectData);
-		if (!prepareInfo) {
-			return true;
-		}
-
-		return prepareInfo.nativePlatformStatus !== constants.NativePlatformStatus.requiresPlatformAdd;
 	}
 }
 

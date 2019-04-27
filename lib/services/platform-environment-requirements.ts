@@ -185,11 +185,11 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 				syncToPreviewApp: true,
 				projectDir,
 				skipWatcher: !options.watch,
-				watchAllFiles: options.syncAllFiles,
 				clean: options.clean,
-				bundle: !!options.bundle,
 				release: options.release,
-				env: options.env,
+				webpackCompilerConfig: {
+					env: options.env,
+				},
 				timeout: options.timeout,
 				useHotModuleReload: options.hmr
 			});

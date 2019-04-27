@@ -1,10 +1,10 @@
 export class PlatformCommandParameter implements ICommandParameter {
-	constructor(private $platformService: IPlatformService,
+	constructor(private $platformValidationService: IPlatformValidationService,
 		private $projectData: IProjectData) { }
 	mandatory = true;
 	async validate(value: string): Promise<boolean> {
 		this.$projectData.initializeProjectData();
-		this.$platformService.validatePlatform(value, this.$projectData);
+		this.$platformValidationService.validatePlatform(value, this.$projectData);
 		return true;
 	}
 }

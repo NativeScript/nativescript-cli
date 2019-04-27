@@ -34,8 +34,18 @@ $injector.require("tnsModulesService", "./services/tns-modules-service");
 
 $injector.require("platformsData", "./platforms-data");
 $injector.require("platformService", "./services/platform-service");
-$injector.require("preparePlatformJSService", "./services/prepare-platform-js-service");
-$injector.require("preparePlatformNativeService", "./services/prepare-platform-native-service");
+$injector.require("platformJSService", "./services/prepare-platform-js-service");
+$injector.require("platformNativeService", "./services/prepare-platform-native-service");
+$injector.require("platformAddService", "./services/platform/platform-add-service");
+$injector.require("platformBuildService", "./services/platform/platform-build-service");
+$injector.require("platformValidationService", "./services/platform/platform-validation-service");
+$injector.require("platformCommandsService", "./services/platform/platform-commands-service");
+
+$injector.require("platformWorkflowService", "./services/workflow/platform-workflow-service");
+
+$injector.require("platformWorkflowDataFactory", "./factory/platform-workflow-data-factory");
+
+$injector.require("buildArtefactsService", "./services/build-artefacts-service");
 
 $injector.require("debugDataService", "./services/debug-data-service");
 $injector.requirePublicClass("debugService", "./services/debug-service");
@@ -46,8 +56,6 @@ $injector.require("userSettingsService", "./services/user-settings-service");
 $injector.requirePublic("analyticsSettingsService", "./services/analytics-settings-service");
 $injector.require("analyticsService", "./services/analytics/analytics-service");
 $injector.require("googleAnalyticsProvider", "./services/analytics/google-analytics-provider");
-
-$injector.require("emulatorSettingsService", "./services/emulator-settings-service");
 
 $injector.require("platformCommandParameter", "./platform-command-param");
 $injector.requireCommand("create", "./commands/create-project");
@@ -66,8 +74,6 @@ $injector.requireCommand("debug|ios", "./commands/debug");
 $injector.requireCommand("debug|android", "./commands/debug");
 
 $injector.requireCommand("prepare", "./commands/prepare");
-$injector.requireCommand("clean-app|ios", "./commands/clean-app");
-$injector.requireCommand("clean-app|android", "./commands/clean-app");
 $injector.requireCommand("build|ios", "./commands/build");
 $injector.requireCommand("build|android", "./commands/build");
 $injector.requireCommand("deploy", "./commands/deploy");

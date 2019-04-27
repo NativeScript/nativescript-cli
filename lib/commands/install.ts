@@ -6,7 +6,7 @@ export class InstallCommand implements ICommand {
 
 	constructor(private $options: IOptions,
 		private $platformsData: IPlatformsData,
-		private $platformService: IPlatformService,
+		private $platformCommandsService: IPlatformCommandsService,
 		private $projectData: IProjectData,
 		private $projectDataService: IProjectDataService,
 		private $pluginsService: IPluginsService,
@@ -34,7 +34,7 @@ export class InstallCommand implements ICommand {
 					const platformProjectService = platformData.platformProjectService;
 					await platformProjectService.validate(this.$projectData, this.$options);
 
-					await this.$platformService.addPlatforms([`${platform}@${frameworkPackageData.version}`], this.$projectData, this.$options, this.$options.frameworkPath);
+					await this.$platformCommandsService.addPlatforms([`${platform}@${frameworkPackageData.version}`], this.$projectData, this.$options.frameworkPath);
 				} catch (err) {
 					error = `${error}${EOL}${err}`;
 				}
