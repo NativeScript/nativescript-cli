@@ -48,6 +48,7 @@ export class PlatformWatcherService extends EventEmitter implements IPlatformWat
 	private async startJsWatcher(platformData: IPlatformData, projectData: IProjectData, config: IWebpackCompilerConfig): Promise<void> {
 		if (!this.watchersData[projectData.projectDir][platformData.platformNameLowerCase].webpackCompilerProcess) {
 			this.$webpackCompilerService.on("webpackEmittedFiles", files => {
+				console.log("RECEIVED webpackEmittedFiles =================");
 				this.emitFilesChangeEvent({ files, hasNativeChange: false });
 			});
 
@@ -86,6 +87,7 @@ export class PlatformWatcherService extends EventEmitter implements IPlatformWat
 	}
 
 	private emitFilesChangeEvent(filesChangeData: IFilesChangeData) {
+		console.log("================ emitFilesChangeEvent ================ ", this.isInitialSyncEventEmitted);
 		if (this.isInitialSyncEventEmitted) {
 			this.emit("fileChangeData", filesChangeData);
 		} else {

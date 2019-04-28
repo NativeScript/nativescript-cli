@@ -34,9 +34,7 @@ export class IOSLiveSyncService extends PlatformLiveSyncServiceBase implements I
 		this.$logger.trace("Creating zip file: " + tempZip);
 		this.$fs.copyFile(path.join(path.dirname(projectFilesPath), `${APP_FOLDER_NAME}/*`), tempApp);
 
-		if (!syncInfo.syncAllFiles) {
-			this.$fs.deleteDirectory(path.join(tempApp, TNS_MODULES_FOLDER_NAME));
-		}
+		this.$fs.deleteDirectory(path.join(tempApp, TNS_MODULES_FOLDER_NAME));
 
 		await this.$fs.zipFiles(tempZip, this.$fs.enumerateFilesInDirectorySync(tempApp), (res) => {
 			return path.join(APP_FOLDER_NAME, path.relative(tempApp, res));
@@ -63,7 +61,7 @@ export class IOSLiveSyncService extends PlatformLiveSyncServiceBase implements I
 			// In this case we should execute fullsync because iOS Runtime requires the full content of app dir to be extracted in the root of sync dir.
 			return this.fullSync({
 				projectData: liveSyncInfo.projectData,
-				device, syncAllFiles: liveSyncInfo.syncAllFiles,
+				device,
 				liveSyncDeviceInfo: liveSyncInfo.liveSyncDeviceInfo,
 				watch: true,
 				useHotModuleReload: liveSyncInfo.useHotModuleReload

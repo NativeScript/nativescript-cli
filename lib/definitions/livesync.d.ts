@@ -264,6 +264,10 @@ declare global {
 		getLiveSyncDeviceDescriptors(projectDir: string): ILiveSyncDeviceInfo[];
 	}
 
+	interface ILiveSyncService2 {
+		fullSync(device: Mobile.IDevice, deviceBuildInfoDescriptor: ILiveSyncDeviceInfo, projectData: IProjectData, liveSyncInfo: ILiveSyncInfo): Promise<ILiveSyncResultInfo>;
+	}
+
 	/**
 	 * Describes LiveSync operations while debuggging.
 	 */
@@ -374,7 +378,6 @@ declare global {
 	interface IFullSyncInfo extends IProjectDataComposition, IHasUseHotModuleReloadOption, IConnectTimeoutOption {
 		device: Mobile.IDevice;
 		watch: boolean;
-		syncAllFiles: boolean;
 		liveSyncDeviceInfo: ILiveSyncDeviceInfo;
 		force?: boolean;
 	}

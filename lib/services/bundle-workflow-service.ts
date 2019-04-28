@@ -1,24 +1,34 @@
-import * as path from "path";
-import * as constants from "../constants";
+// import * as path from "path";
+// import * as constants from "../constants";
 
+const deviceDescriptorPrimaryKey = "identifier";
+
+// TODO: Rename this class to RunWorkflowService
 export class BundleWorkflowService implements IBundleWorkflowService {
+	private liveSyncProcessesInfo: IDictionary<any> = {};
+
 	constructor(
 		private $devicesService: Mobile.IDevicesService,
+		private $deviceWorkflowService: IDeviceWorkflowService,
 		private $errors: IErrors,
-		private $fs: IFileSystem,
+		private $liveSyncService: ILiveSyncService2,
+		// private $fs: IFileSystem,
 		private $logger: ILogger,
-		private $platformAddService: IPlatformAddService,
+		// private $platformAddService: IPlatformAddService,
 		private $platformsData: IPlatformsData,
 		private $platformWatcherService: IPlatformWatcherService,
+		private $platformWorkflowService: IPlatformWorkflowService,
 		private $pluginsService: IPluginsService,
-		private $projectChangesService: IProjectChangesService
+		private $projectDataService: IProjectDataService,
+		// private $projectChangesService: IProjectChangesService
 	) { }
 
 	// processInfo[projectDir] = {
 	// 		deviceDescriptors, nativeFilesWatcher, jsFilesWatcher
 	// }
 
-	public async start(projectData: IProjectData, deviceDescriptors: ILiveSyncDeviceInfo[], liveSyncInfo: ILiveSyncInfo): Promise<void> {
+	public async start(projectDir: string, deviceDescriptors: ILiveSyncDeviceInfo[], liveSyncInfo: ILiveSyncInfo): Promise<void> {
+		const projectData = this.$projectDataService.getProjectData(projectDir);
 		await this.initializeSetup(projectData);
 
 		const platforms = _(deviceDescriptors)
@@ -26,47 +36,102 @@ export class BundleWorkflowService implements IBundleWorkflowService {
 			.map(device => device.deviceInfo.platform)
 			.uniq()
 			.value();
-		for (const platform in platforms) {
-			const platformData = this.$platformsData.getPlatformData(platform, projectData);
 
-			const shouldAddPlatform = this.shouldAddPlatform(platformData, projectData, liveSyncInfo.nativePrepare);
-			if (shouldAddPlatform) {
-				await this.$platformAddService.addPlatform({
-					platformParam: (<any>liveSyncInfo).platformParam,
-					frameworkPath: (<any>liveSyncInfo).frameworkPath,
-					nativePrepare: liveSyncInfo.nativePrepare
-				}, projectData);
+		const workflowData: IPlatformWorkflowData = {
+			platformParam: null,
+			nativePrepare: liveSyncInfo.nativePrepare,
+			release: liveSyncInfo.release,
+			useHotModuleReload: liveSyncInfo.useHotModuleReload,
+			signingOptions: {
+				teamId: (<any>liveSyncInfo).teamId,
+				provision: (<any>liveSyncInfo).provision
 			}
+		};
 
-			this.$platformWatcherService.on("onInitialSync", async () => {
-				console.log("================= RECEIVED INITIAL SYNC ============= ");
-				// check if we should build, install, transfer files
-				// AddActionToChain
-			});
-			this.$platformWatcherService.on("onFilesChange", () => {
-				console.log("=================== RECEIVED FILES CHANGE ================ ");
-				// Emitted when webpack compilatation is done and native prepare is done
-				// console.log("--------- ========= ---------- ", data);
-				// AddActionToChain
-			});
+		// Ensure platform is added before starting JS(webpack) and native prepare
+		for (const platform of platforms) {
+			const platformNameLowerCase = platform.toLowerCase();
+			const platformData = this.$platformsData.getPlatformData(platformNameLowerCase, projectData);
+			workflowData.platformParam = platformNameLowerCase;
+			await this.$platformWorkflowService.addPlatformIfNeeded(platformData, projectData, workflowData);
+		}
 
-			await this.$platformWatcherService.startWatcher(platformData, projectData, {
-				webpackCompilerConfig: liveSyncInfo.webpackCompilerConfig,
-				preparePlatformData: {
-					release: liveSyncInfo.release,
-					useHotModuleReload: liveSyncInfo.useHotModuleReload,
-					nativePrepare: liveSyncInfo.nativePrepare,
-					signingOptions: {
-						teamId: (<any>liveSyncInfo).teamId,
-						provision: (<any>liveSyncInfo).provision
+		this.setLiveSyncProcessInfo(projectDir, liveSyncInfo, deviceDescriptors);
+
+		const initalSyncDeviceAction = async (device: Mobile.IDevice): Promise<void> => {
+			console.log("================== INITIAL SYNC DEVICE ACTION ================");
+			const deviceBuildInfoDescriptor = _.find(deviceDescriptors, dd => dd.identifier === device.deviceInfo.identifier);
+			const platform = device.deviceInfo.platform;
+			const platformData = this.$platformsData.getPlatformData(platform, projectData);
+			const buildConfig = {
+				buildForDevice: !device.isEmulator,
+				device: device.deviceInfo.identifier,
+				release: liveSyncInfo.release,
+				clean: liveSyncInfo.clean,
+				iCloudContainerEnvironment: "",
+				projectDir: projectData.projectDir,
+				teamId: <any>null,
+				provision: <any>null,
+			};
+			const outputPath = deviceBuildInfoDescriptor.outputPath || platformData.getBuildOutputPath(buildConfig);
+			const packageFilePath = await this.$platformWorkflowService.buildPlatformIfNeeded(platformData, projectData, workflowData, buildConfig, outputPath);
+
+			await this.$deviceWorkflowService.installOnDeviceIfNeeded(device, platformData, projectData, buildConfig, packageFilePath, outputPath);
+
+			await this.$liveSyncService.fullSync(device, deviceBuildInfoDescriptor, projectData, liveSyncInfo);
+		};
+
+		// const filesChangeDeviceAction = async (device: Mobile.IDevice): Promise<void> {
+		// 	// test
+		// };
+
+		this.$platformWatcherService.on("onInitialSync", async () => { // TODO: emit correct initialSyncData -> platform + hasNativeChange
+			await this.addActionToChain(projectData.projectDir, () => this.$devicesService.execute(initalSyncDeviceAction, (device: Mobile.IDevice) => _.some(deviceDescriptors, deviceDescriptor => deviceDescriptor.identifier === device.deviceInfo.identifier)));
+		});
+		this.$platformWatcherService.on("fileChangeData", () => {
+			console.log("=================== RECEIVED FILES CHANGE ================ ");
+			// Emitted when webpack compilatation is done and native prepare is done
+			// console.log("--------- ========= ---------- ", data);
+			// AddActionToChain
+		});
+
+		const shouldStartWatcher = !liveSyncInfo.skipWatcher && (liveSyncInfo.syncToPreviewApp || this.liveSyncProcessesInfo[projectData.projectDir].deviceDescriptors.length);
+
+		if (shouldStartWatcher) {
+			// TODO: Extract the preparePlatformData to separate variable
+			for (const platform of platforms) {
+				const platformData = this.$platformsData.getPlatformData(platform.toLocaleLowerCase(), projectData);
+				await this.$platformWatcherService.startWatcher(platformData, projectData, {
+					webpackCompilerConfig: liveSyncInfo.webpackCompilerConfig,
+					preparePlatformData: {
+						release: liveSyncInfo.release,
+						useHotModuleReload: liveSyncInfo.useHotModuleReload,
+						nativePrepare: liveSyncInfo.nativePrepare,
+						signingOptions: {
+							teamId: (<any>liveSyncInfo).teamId,
+							provision: (<any>liveSyncInfo).provision
+						}
 					}
-				}
-			});
+				});
+			}
 		}
+	}
 
-		for (const deviceDescriptor in deviceDescriptors) {
-			console.log("============ DEVICE DESCRIPTOR ============== ", deviceDescriptor);
-		}
+	public getLiveSyncDeviceDescriptors(projectDir: string): ILiveSyncDeviceInfo[] {
+		const liveSyncProcessesInfo = this.liveSyncProcessesInfo[projectDir] || <ILiveSyncProcessInfo>{};
+		const currentDescriptors = liveSyncProcessesInfo.deviceDescriptors;
+		return currentDescriptors || [];
+	}
+
+	private setLiveSyncProcessInfo(projectDir: string, liveSyncInfo: ILiveSyncInfo, deviceDescriptors: ILiveSyncDeviceInfo[]): void {
+		this.liveSyncProcessesInfo[projectDir] = this.liveSyncProcessesInfo[projectDir] || Object.create(null);
+		this.liveSyncProcessesInfo[projectDir].actionsChain = this.liveSyncProcessesInfo[projectDir].actionsChain || Promise.resolve();
+		this.liveSyncProcessesInfo[projectDir].currentSyncAction = this.liveSyncProcessesInfo[projectDir].actionsChain;
+		this.liveSyncProcessesInfo[projectDir].isStopped = false;
+		this.liveSyncProcessesInfo[projectDir].syncToPreviewApp = liveSyncInfo.syncToPreviewApp;
+
+		const currentDeviceDescriptors = this.getLiveSyncDeviceDescriptors(projectDir);
+		this.liveSyncProcessesInfo[projectDir].deviceDescriptors = _.uniqBy(currentDeviceDescriptors.concat(deviceDescriptors), deviceDescriptorPrimaryKey);
 	}
 
 	private async initializeSetup(projectData: IProjectData): Promise<void> {
@@ -78,15 +143,20 @@ export class BundleWorkflowService implements IBundleWorkflowService {
 		}
 	}
 
-	private shouldAddPlatform(platformData: IPlatformData, projectData: IProjectData, nativePrepare: INativePrepare): boolean {
-		const platformName = platformData.normalizedPlatformName.toLowerCase();
-		const prepareInfo = this.$projectChangesService.getPrepareInfo(platformName, projectData);
-		const hasPlatformDirectory = this.$fs.exists(path.join(projectData.platformsDir, platformName));
-		const shouldAddNativePlatform = !nativePrepare || !nativePrepare.skipNativePrepare;
-		const requiresNativePlatformAdd = prepareInfo && prepareInfo.nativePlatformStatus === constants.NativePlatformStatus.requiresPlatformAdd;
-		const result = !hasPlatformDirectory || (shouldAddNativePlatform && requiresNativePlatformAdd);
+	private async addActionToChain<T>(projectDir: string, action: () => Promise<T>): Promise<T> {
+		const liveSyncInfo = this.liveSyncProcessesInfo[projectDir];
+		if (liveSyncInfo) {
+			liveSyncInfo.actionsChain = liveSyncInfo.actionsChain.then(async () => {
+				if (!liveSyncInfo.isStopped) {
+					liveSyncInfo.currentSyncAction = action();
+					const res = await liveSyncInfo.currentSyncAction;
+					return res;
+				}
+			});
 
-		return result;
+			const result = await liveSyncInfo.actionsChain;
+			return result;
+		}
 	}
 }
 $injector.register("bundleWorkflowService", BundleWorkflowService);

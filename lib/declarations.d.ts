@@ -1028,7 +1028,7 @@ interface INetworkConnectivityValidator {
 }
 
 interface IBundleWorkflowService {
-
+	start(projectDir: string, deviceDescriptors: ILiveSyncDeviceInfo[], liveSyncInfo: ILiveSyncInfo): Promise<void>;
 }
 
 interface IPlatformValidationService {
@@ -1058,6 +1058,7 @@ interface IPlatformValidationService {
 
 interface IBuildArtefactsService {
 	getLastBuiltPackagePath(platformData: IPlatformData, buildConfig: IBuildConfig, outputPath?: string): Promise<string>;
+	getAllBuiltApplicationPackages(buildOutputPath: string, validBuildOutputData: IValidBuildOutputData): IApplicationPackage[];
 }
 
 interface IPlatformAddService {
@@ -1083,4 +1084,5 @@ interface IAddPlatformData {
 interface IPlatformBuildService {
 	buildPlatform(platformData: IPlatformData, projectData: IProjectData, buildConfig: IBuildConfig): Promise<string>;
 	saveBuildInfoFile(platformData: IPlatformData, projectData: IProjectData, buildInfoFileDirname: string): void;
+	getBuildInfoFromFile(platformData: IPlatformData, buildConfig: IBuildConfig, buildOutputPath?: string): IBuildInfo;
 }

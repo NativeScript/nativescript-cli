@@ -70,5 +70,20 @@ export class PlatformBuildService extends EventEmitter implements IPlatformBuild
 
 		this.$fs.writeJson(buildInfoFile, buildInfo);
 	}
+
+	public getBuildInfoFromFile(platformData: IPlatformData, buildConfig: IBuildConfig, buildOutputPath?: string): IBuildInfo {
+		buildOutputPath = buildOutputPath || platformData.getBuildOutputPath(buildConfig);
+		const buildInfoFile = path.join(buildOutputPath, buildInfoFileName);
+		if (this.$fs.exists(buildInfoFile)) {
+			try {
+				const buildInfo = this.$fs.readJson(buildInfoFile);
+				return buildInfo;
+			} catch (e) {
+				return null;
+			}
+		}
+
+		return null;
+	}
 }
 $injector.register("platformBuildService", PlatformBuildService);

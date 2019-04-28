@@ -40,8 +40,12 @@ $injector.require("platformAddService", "./services/platform/platform-add-servic
 $injector.require("platformBuildService", "./services/platform/platform-build-service");
 $injector.require("platformValidationService", "./services/platform/platform-validation-service");
 $injector.require("platformCommandsService", "./services/platform/platform-commands-service");
+$injector.require("platformWatcherService", "./services/platform/platform-watcher-service");
 
 $injector.require("platformWorkflowService", "./services/workflow/platform-workflow-service");
+$injector.require("deviceWorkflowService", "./services/workflow/device-workflow-service");
+$injector.require("runWorkflowService", "./services/workflow/run-workflow-service");
+$injector.require("bundleWorkflowService", "./services/bundle-workflow-service");
 
 $injector.require("platformWorkflowDataFactory", "./factory/platform-workflow-data-factory");
 

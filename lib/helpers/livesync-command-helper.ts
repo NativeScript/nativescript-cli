@@ -1,4 +1,4 @@
-import { LiveSyncEvents } from "../constants";
+// import { LiveSyncEvents } from "../constants";
 
 export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 	public static MIN_SUPPORTED_WEBPACK_VERSION_WITH_HMR = "0.17.0";
@@ -6,7 +6,8 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 	constructor(private $platformService: IPlatformService,
 		private $projectData: IProjectData,
 		private $options: IOptions,
-		private $liveSyncService: ILiveSyncService,
+		private $bundleWorkflowService: IBundleWorkflowService,
+		// private $liveSyncService: ILiveSyncService,
 		private $iosDeviceOperations: IIOSDeviceOperations,
 		private $mobileHelper: Mobile.IMobileHelper,
 		private $devicesService: Mobile.IDevicesService,
@@ -127,16 +128,18 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 			force: this.$options.force
 		};
 
-		const remainingDevicesToSync = devices.map(d => d.deviceInfo.identifier);
-		this.$liveSyncService.on(LiveSyncEvents.liveSyncStopped, (data: { projectDir: string, deviceIdentifier: string }) => {
-			_.remove(remainingDevicesToSync, d => d === data.deviceIdentifier);
+		await this.$bundleWorkflowService.start(this.$projectData.projectDir, deviceDescriptors, liveSyncInfo);
 
-			if (remainingDevicesToSync.length === 0) {
-				process.exit(ErrorCodes.ALL_DEVICES_DISCONNECTED);
-			}
-		});
+		// const remainingDevicesToSync = devices.map(d => d.deviceInfo.identifier);
+		// this.$liveSyncService.on(LiveSyncEvents.liveSyncStopped, (data: { projectDir: string, deviceIdentifier: string }) => {
+		// 	_.remove(remainingDevicesToSync, d => d === data.deviceIdentifier);
 
-		await this.$liveSyncService.liveSync(deviceDescriptors, liveSyncInfo);
+		// 	if (remainingDevicesToSync.length === 0) {
+		// 		process.exit(ErrorCodes.ALL_DEVICES_DISCONNECTED);
+		// 	}
+		// });
+
+		// await this.$liveSyncService.liveSync(deviceDescriptors, liveSyncInfo);
 	}
 
 	public async validatePlatform(platform: string): Promise<IDictionary<IValidatePlatformOutput>> {

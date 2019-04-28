@@ -1,3 +1,179 @@
+import { performanceLog } from "../../common/decorators";
+
+export class LiveSyncService  implements ILiveSyncService2 {
+	constructor(
+		// private $devicesService: Mobile.IDevicesService,
+		private $errors: IErrors,
+		private $injector: IInjector,
+		private $logger: ILogger,
+		private $mobileHelper: Mobile.IMobileHelper,
+	) { }
+
+	public async fullSync(device: Mobile.IDevice, liveSyncDeviceInfo: ILiveSyncDeviceInfo, projectData: IProjectData, liveSyncInfo: ILiveSyncInfo): Promise<ILiveSyncResultInfo> {
+		const platformLiveSyncService = this.getLiveSyncService("ios");
+		const liveSyncResultInfo = await platformLiveSyncService.fullSync({
+			projectData,
+			device,
+			useHotModuleReload: liveSyncInfo.useHotModuleReload,
+			watch: !liveSyncInfo.skipWatcher,
+			force: liveSyncInfo.force,
+			liveSyncDeviceInfo
+		});
+
+		return liveSyncResultInfo;
+	}
+
+	@performanceLog()
+	public async refreshApplication(liveSyncDeviceInfo: ILiveSyncDeviceInfo, projectData: IProjectData, liveSyncResultInfo: ILiveSyncResultInfo, debugOpts?: IDebugOptions, outputPath?: string): Promise<IRestartApplicationInfo | IDebugInformation> {
+		// const deviceDescriptor = this.getDeviceDescriptor(liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier, projectData.projectDir);
+
+		return liveSyncDeviceInfo && liveSyncDeviceInfo.debugggingEnabled ?
+			this.refreshApplicationWithDebug(projectData, liveSyncResultInfo, debugOpts, outputPath) :
+			this.refreshApplicationWithoutDebug(projectData, liveSyncResultInfo, debugOpts, outputPath);
+	}
+
+	public async attachDebugger(settings: IAttachDebuggerOptions): Promise<IDebugInformation> {
+		return null;
+		// Default values
+		// if (settings.debugOptions) {
+		// 	settings.debugOptions.chrome = settings.debugOptions.chrome === undefined ? true : settings.debugOptions.chrome;
+		// 	settings.debugOptions.start = settings.debugOptions.start === undefined ? true : settings.debugOptions.start;
+		// } else {
+		// 	settings.debugOptions = {
+		// 		chrome: true,
+		// 		start: true
+		// 	};
+		// }
+
+		// const projectData = this.$projectDataService.getProjectData(settings.projectDir);
+		// const debugData = this.$debugDataService.createDebugData(projectData, { device: settings.deviceIdentifier });
+
+		// // Of the properties below only `buildForDevice` and `release` are currently used.
+		// // Leaving the others with placeholder values so that they may not be forgotten in future implementations.
+		// const buildConfig = this.getInstallApplicationBuildConfig(settings.deviceIdentifier, settings.projectDir, { isEmulator: settings.isEmulator });
+		// debugData.pathToAppPackage = this.$platformService.lastOutputPath(settings.platform, buildConfig, projectData, settings.outputPath);
+		// const debugInfo = await this.$debugService.debug(debugData, settings.debugOptions);
+		// const result = this.printDebugInformation(debugInfo, settings.debugOptions.forceDebuggerAttachedEvent);
+		// return result;
+	}
+
+	@performanceLog()
+	private async refreshApplicationWithDebug(projectData: IProjectData, liveSyncResultInfo: ILiveSyncResultInfo, debugOptions: IDebugOptions, outputPath?: string): Promise<IDebugInformation> {
+		debugOptions = debugOptions || {};
+		if (debugOptions.debugBrk) {
+			liveSyncResultInfo.waitForDebugger = true;
+		}
+
+		const refreshInfo = await this.refreshApplicationWithoutDebug(projectData, liveSyncResultInfo, debugOptions, outputPath, { shouldSkipEmitLiveSyncNotification: true, shouldCheckDeveloperDiscImage: true });
+
+		// we do not stop the application when debugBrk is false, so we need to attach, instead of launch
+		// if we try to send the launch request, the debugger port will not be printed and the command will timeout
+		debugOptions.start = !debugOptions.debugBrk;
+
+		debugOptions.forceDebuggerAttachedEvent = refreshInfo.didRestart;
+		const deviceOption = {
+			deviceIdentifier: liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier,
+			debugOptions: debugOptions,
+		};
+
+		return this.enableDebuggingCoreWithoutWaitingCurrentAction(deviceOption, { projectDir: projectData.projectDir });
+	}
+
+	private async refreshApplicationWithoutDebug(projectData: IProjectData, liveSyncResultInfo: ILiveSyncResultInfo, debugOpts?: IDebugOptions, outputPath?: string, settings?: IRefreshApplicationSettings): Promise<IRestartApplicationInfo> {
+		const result = { didRestart: false };
+		const platform = liveSyncResultInfo.deviceAppData.platform;
+		const platformLiveSyncService = this.getLiveSyncService(platform);
+		const applicationIdentifier = projectData.projectIdentifiers[platform.toLowerCase()];
+		try {
+			let shouldRestart = await platformLiveSyncService.shouldRestart(projectData, liveSyncResultInfo);
+			if (!shouldRestart) {
+				shouldRestart = !await platformLiveSyncService.tryRefreshApplication(projectData, liveSyncResultInfo);
+			}
+
+			if (shouldRestart) {
+				// const deviceIdentifier = liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier;
+				// this.emit(DEBUGGER_DETACHED_EVENT_NAME, { deviceIdentifier });
+				await platformLiveSyncService.restartApplication(projectData, liveSyncResultInfo);
+				result.didRestart = true;
+			}
+		} catch (err) {
+			this.$logger.info(`Error while trying to start application ${applicationIdentifier} on device ${liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier}. Error is: ${err.message || err}`);
+			const msg = `Unable to start application ${applicationIdentifier} on device ${liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier}. Try starting it manually.`;
+			this.$logger.warn(msg);
+			if (!settings || !settings.shouldSkipEmitLiveSyncNotification) {
+				// this.emitLivesyncEvent(LiveSyncEvents.liveSyncNotification, {
+				// 	projectDir: projectData.projectDir,
+				// 	applicationIdentifier,
+				// 	deviceIdentifier: liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier,
+				// 	notification: msg
+				// });
+			}
+
+			if (settings && settings.shouldCheckDeveloperDiscImage) {
+				// this.handleDeveloperDiskImageError(err, liveSyncResultInfo, projectData, debugOpts, outputPath);
+			}
+		}
+
+		// this.emitLivesyncEvent(LiveSyncEvents.liveSyncExecuted, {
+		// 	projectDir: projectData.projectDir,
+		// 	applicationIdentifier,
+		// 	syncedFiles: liveSyncResultInfo.modifiedFilesData.map(m => m.getLocalPath()),
+		// 	deviceIdentifier: liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier,
+		// 	isFullSync: liveSyncResultInfo.isFullSync
+		// });
+
+		return result;
+	}
+
+	@performanceLog()
+	private async enableDebuggingCoreWithoutWaitingCurrentAction(deviceOption: IEnableDebuggingDeviceOptions, debuggingAdditionalOptions: IDebuggingAdditionalOptions): Promise<IDebugInformation> {
+		return null;
+		// const currentDeviceDescriptor = this.getDeviceDescriptor(deviceOption.deviceIdentifier, debuggingAdditionalOptions.projectDir);
+		// if (!currentDeviceDescriptor) {
+		// 	this.$errors.failWithoutHelp(`Couldn't enable debugging for ${deviceOption.deviceIdentifier}`);
+		// }
+
+		// currentDeviceDescriptor.debugggingEnabled = true;
+		// currentDeviceDescriptor.debugOptions = deviceOption.debugOptions;
+		// const currentDeviceInstance = this.$devicesService.getDeviceByIdentifier(deviceOption.deviceIdentifier);
+		// const attachDebuggerOptions: IAttachDebuggerOptions = {
+		// 	deviceIdentifier: deviceOption.deviceIdentifier,
+		// 	isEmulator: currentDeviceInstance.isEmulator,
+		// 	outputPath: currentDeviceDescriptor.outputPath,
+		// 	platform: currentDeviceInstance.deviceInfo.platform,
+		// 	projectDir: debuggingAdditionalOptions.projectDir,
+		// 	debugOptions: deviceOption.debugOptions
+		// };
+
+		// let debugInformation: IDebugInformation;
+		// try {
+		// 	debugInformation = await this.attachDebugger(attachDebuggerOptions);
+		// } catch (err) {
+		// 	this.$logger.trace("Couldn't attach debugger, will modify options and try again.", err);
+		// 	attachDebuggerOptions.debugOptions.start = false;
+		// 	try {
+		// 		debugInformation = await this.attachDebugger(attachDebuggerOptions);
+		// 	} catch (innerErr) {
+		// 		this.$logger.trace("Couldn't attach debugger with modified options.", innerErr);
+		// 		throw err;
+		// 	}
+		// }
+
+		// return debugInformation;
+	}
+
+	private getLiveSyncService(platform: string): IPlatformLiveSyncService {
+		if (this.$mobileHelper.isiOSPlatform(platform)) {
+			return this.$injector.resolve("iOSLiveSyncService");
+		} else if (this.$mobileHelper.isAndroidPlatform(platform)) {
+			return this.$injector.resolve("androidLiveSyncService");
+		}
+
+		this.$errors.failWithoutHelp(`Invalid platform ${platform}. Supported platforms are: ${this.$mobileHelper.platformNames.join(", ")}`);
+	}
+}
+$injector.register("liveSyncService", LiveSyncService);
+
 // // import * as path from "path";
 // // import * as choki from "chokidar";
 // import { EOL } from "os";
@@ -900,3 +1076,4 @@
 // }
 
 // $injector.register("usbLiveSyncService", DeprecatedUsbLiveSyncService);
+

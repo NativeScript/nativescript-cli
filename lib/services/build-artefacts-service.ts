@@ -19,6 +19,27 @@ export class BuildArtefactsService implements IBuildArtefactsService {
 		return packageFile;
 	}
 
+	public getAllBuiltApplicationPackages(buildOutputPath: string, validBuildOutputData: IValidBuildOutputData): IApplicationPackage[] {
+		const rootFiles = this.$fs.readDirectory(buildOutputPath).map(filename => path.join(buildOutputPath, filename));
+		let result = this.getApplicationPackagesCore(rootFiles, validBuildOutputData.packageNames);
+		if (result) {
+			return result;
+		}
+
+		const candidates = this.$fs.enumerateFilesInDirectorySync(buildOutputPath);
+		result = this.getApplicationPackagesCore(candidates, validBuildOutputData.packageNames);
+		if (result) {
+			return result;
+		}
+
+		if (validBuildOutputData.regexes && validBuildOutputData.regexes.length) {
+			const packages = candidates.filter(filepath => _.some(validBuildOutputData.regexes, regex => regex.test(path.basename(filepath))));
+			return this.createApplicationPackages(packages);
+		}
+
+		return [];
+	}
+
 	private getLatestApplicationPackageForDevice(platformData: IPlatformData, buildConfig: IBuildConfig, outputPath?: string): IApplicationPackage {
 		outputPath = outputPath || platformData.getBuildOutputPath(buildConfig);
 		const buildOutputOptions = { buildForDevice: true, release: buildConfig.release, androidBundle: buildConfig.androidBundle };
@@ -32,7 +53,7 @@ export class BuildArtefactsService implements IBuildArtefactsService {
 	}
 
 	private getLatestApplicationPackage(buildOutputPath: string, validBuildOutputData: IValidBuildOutputData): IApplicationPackage {
-		let packages = this.getApplicationPackages(buildOutputPath, validBuildOutputData);
+		let packages = this.getAllBuiltApplicationPackages(buildOutputPath, validBuildOutputData);
 		const packageExtName = path.extname(validBuildOutputData.packageNames[0]);
 		if (packages.length === 0) {
 			this.$errors.fail(`No ${packageExtName} found in ${buildOutputPath} directory.`);
@@ -47,26 +68,6 @@ export class BuildArtefactsService implements IBuildArtefactsService {
 		return packages[0];
 	}
 
-	private getApplicationPackages(buildOutputPath: string, validBuildOutputData: IValidBuildOutputData): IApplicationPackage[] {
-		// Get latest package` that is produced from build
-		let result = this.getApplicationPackagesCore(this.$fs.readDirectory(buildOutputPath).map(filename => path.join(buildOutputPath, filename)), validBuildOutputData.packageNames);
-		if (result) {
-			return result;
-		}
-
-		const candidates = this.$fs.enumerateFilesInDirectorySync(buildOutputPath);
-		result = this.getApplicationPackagesCore(candidates, validBuildOutputData.packageNames);
-		if (result) {
-			return result;
-		}
-
-		if (validBuildOutputData.regexes && validBuildOutputData.regexes.length) {
-			return this.createApplicationPackages(candidates.filter(filepath => _.some(validBuildOutputData.regexes, regex => regex.test(path.basename(filepath)))));
-		}
-
-		return [];
-	}
-
 	private getApplicationPackagesCore(candidates: string[], validPackageNames: string[]): IApplicationPackage[] {
 		const packages = candidates.filter(filePath => _.includes(validPackageNames, path.basename(filePath)));
 		if (packages.length > 0) {
@@ -77,14 +78,12 @@ export class BuildArtefactsService implements IBuildArtefactsService {
 	}
 
 	private createApplicationPackages(packages: string[]): IApplicationPackage[] {
-		return packages.map(filepath => this.createApplicationPackage(filepath));
-	}
-
-	private createApplicationPackage(packageName: string): IApplicationPackage {
-		return {
-			packageName,
-			time: this.$fs.getFsStats(packageName).mtime
-		};
+		return packages.map(packageName => {
+			return {
+				packageName,
+				time: this.$fs.getFsStats(packageName).mtime
+			};
+		});
 	}
 }
 $injector.register("buildArtefactsService", BuildArtefactsService);
