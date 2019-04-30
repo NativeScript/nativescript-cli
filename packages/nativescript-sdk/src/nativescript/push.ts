@@ -1,13 +1,17 @@
-import { messaging } from 'nativescript-plugin-firebase/messaging';
+import { messaging, Message } from 'nativescript-plugin-firebase/messaging';
 import { device } from 'tns-core-modules/platform';
 import { formatKinveyBaasUrl, KinveyHttpRequest, HttpRequestMethod, KinveyHttpAuth, KinveyBaasNamespace } from 'kinvey-js-sdk/lib/http';
 
-export async function register(callback: (message: any) => void, options: any = {}) {
-  // Register for push notifications
+export interface PushRegisterOptions {
+  showNotifications?: boolean; // Whether you want the firebase plugin to automatically display the notifications or just notify the callback. Currently used on iOS only. Default value for the plugin is true.
+  showNotificationsWhenInForeground?: boolean // Whether you want the firebase plugin to always handle the notifications when the app is in foreground. Currently used on iOS only. Default value for the plugin is false.
+  timeout?: number;
+}
+
+export async function register(callback: (message: Message) => void, options: PushRegisterOptions = {}) {
+  // Init Firebase messaging
   messaging.initFirebaseMessaging(Object.assign({
-    // Whether you want the firebase plugin to automatically display the notifications or just notify the callback. Currently used on iOS only. Default value for the plugin is true.
     showNotifications: true,
-    // Whether you want the firebase plugin to always handle the notifications when the app is in foreground. Currently used on iOS only. Default value for the plugin is false.
     showNotificationsWhenInForeground: true
   }, options))
 
@@ -36,7 +40,11 @@ export async function register(callback: (message: any) => void, options: any = 
   return token;
 }
 
-export async function unregister(options: any = {}) {
+export interface PushUnregisterOptions {
+  timeout?: number;
+}
+
+export async function unregister(options: PushUnregisterOptions = {}) {
   // Get the device token
   const token = await messaging.getCurrentPushToken();
 
