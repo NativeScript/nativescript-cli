@@ -12,7 +12,7 @@ export interface MICOptions extends GetTokenWithUsernamePasswordOptions {
   micId?: string;
 }
 
-export async function loginWithUsernamePassword(username: string, password: string, options: MICOptions = {}) {
+export async function loginWithMICUsingResourceOwnerCredentials(username: string, password: string, options: MICOptions = {}) {
   const activeUser = getActiveUser();
   const { micId } = options;
   let clientId = getAppKey();

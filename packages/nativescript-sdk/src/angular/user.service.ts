@@ -26,8 +26,8 @@ export class UserService {
     return User.loginWithRedirectUri(redirectUri, options);
   }
 
-  loginWithUsernamePassword(username: string, password: string, options?: any): Promise<User> {
-    return User.loginWithUsernamePassword(username, password, options);
+  loginWithMICUsingResourceOwnerCredentials(username: string, password: string, options?: any): Promise<User> {
+    return User.loginWithMICUsingResourceOwnerCredentials(username, password, options);
   }
 
   loginWithMIC(redirectUri: string, authorizationGrant: any, options?: any): Promise<User> {
