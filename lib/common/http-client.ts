@@ -289,7 +289,9 @@ private defaultUserAgent: string;
 	 * @param {string} requestProto The protocol used for the current request - http or https.
 	 */
 	private async useProxySettings(proxySettings: IProxySettings, cliProxySettings: IProxySettings, options: any, headers: any, requestProto: string): Promise<void> {
-		if (proxySettings || cliProxySettings) {
+		const isLocalRequest = options.host === "localhost" || options.host === "127.0.0.1";
+		// don't use the proxy for requests to localhost
+		if (!isLocalRequest && (proxySettings || cliProxySettings)) {
 			const proto = (proxySettings && proxySettings.protocol) || cliProxySettings.protocol || "http:";
 			const host = (proxySettings && proxySettings.hostname) || cliProxySettings.hostname;
 			const port = (proxySettings && proxySettings.port) || cliProxySettings.port;
