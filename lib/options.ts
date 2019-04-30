@@ -204,6 +204,20 @@ export class Options {
 		});
 	}
 
+	public printMessagesForDeprecatedOptions($logger: ILogger) {
+		if (this.argv.platformTemplate) {
+			$logger.warn(`"--platformTemplate" option has been deprecated and will be removed in the upcoming NativeScript CLI v.6.0.0. More info can be found in this issue https://github.com/NativeScript/nativescript-cli/issues/4518.`);
+		}
+
+		if (this.argv.syncAllFiles) {
+			$logger.warn(`"--syncAllFiles" option has been deprecated and will be removed in the upcoming NativeScript CLI v.6.0.0. More info can be found in this issue https://github.com/NativeScript/nativescript-cli/issues/4518.`);
+		}
+
+		if (this.argv.bundle) {
+			$logger.warn(`"--bundle" option has been deprecated and as of NativeScript CLI v.6.0.0 Webpack workflow will become the only way of building apps.`);
+		}
+	}
+
 	private getCorrectOptionName(optionName: string): string {
 		const secondaryOptionName = this.getNonDashedOptionName(optionName);
 		return _.includes(this.optionNames, secondaryOptionName) ? secondaryOptionName : optionName;

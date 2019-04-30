@@ -10,12 +10,15 @@ export class CleanAppCommandBase extends ValidatePlatformCommandBase implements 
 		$platformService: IPlatformService,
 		protected $errors: IErrors,
 		protected $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-		$platformsData: IPlatformsData) {
+		$platformsData: IPlatformsData,
+		private $logger: ILogger) {
 			super($options, $platformsData, $platformService, $projectData);
 			this.$projectData.initializeProjectData();
 	}
 
 	public async execute(args: string[]): Promise<void> {
+		this.$logger.warn(`"tns clean-app ${this.platform.toLowerCase()}" command has been deprecated and will be removed in the upcoming NativeScript CLI v.6.0.0. More info can be found in this issue https://github.com/NativeScript/nativescript-cli/issues/4518.`);
+
 		const appFilesUpdaterOptions: IAppFilesUpdaterOptions = {
 			bundle: !!this.$options.bundle,
 			release: this.$options.release,
@@ -49,8 +52,9 @@ export class CleanAppIosCommand extends CleanAppCommandBase implements ICommand 
 		protected $platformsData: IPlatformsData,
 		protected $errors: IErrors,
 		$platformService: IPlatformService,
-		$projectData: IProjectData) {
-		super($options, $projectData, $platformService, $errors, $devicePlatformsConstants, $platformsData);
+		$projectData: IProjectData,
+		$logger: ILogger) {
+		super($options, $projectData, $platformService, $errors, $devicePlatformsConstants, $platformsData, $logger);
 	}
 
 	protected get platform(): string {
@@ -66,8 +70,9 @@ export class CleanAppAndroidCommand extends CleanAppCommandBase implements IComm
 		protected $platformsData: IPlatformsData,
 		protected $errors: IErrors,
 		$platformService: IPlatformService,
-		$projectData: IProjectData) {
-		super($options, $projectData, $platformService, $errors, $devicePlatformsConstants, $platformsData);
+		$projectData: IProjectData,
+		$logger: ILogger) {
+		super($options, $projectData, $platformService, $errors, $devicePlatformsConstants, $platformsData, $logger);
 	}
 
 	protected get platform(): string {
