@@ -4,6 +4,76 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [3.12.3](https://github.com/Kinvey/js-sdk/tree/v3.12.3) (2018-11-05)
+[Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.12.2...v3.12.3)<br/>
+
+#### Bugs
+- MLIBZ-2712: Reconnect to Live Service on NativeScript whenever an application resumes or regains a network connection. [#379](https://github.com/Kinvey/js-sdk/pull/379)
+
+## [3.12.2](https://github.com/Kinvey/js-sdk/tree/v3.12.2) (2018-11-02)
+[Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.12.1...v3.12.2)<br/>
+
+#### Enhancements
+- Allow `loginWithMIC()` to work properly when viewing a NativeScript application with the NativeScript Preview App. [#377](https://github.com/Kinvey/js-sdk/pull/377)
+- Add new notification callback handler for NativeScript push notifications. [#378](https://github.com/Kinvey/js-sdk/pull/378)
+
+- MLIBZ-2712: Reconnect to Live Service on NativeScript whenever an application resumes or regains a network connection. [#376](https://github.com/Kinvey/js-sdk/pull/376)
+- MLIBZ-2496: Use default `AuthorizationGrant` if `null` is provded to `loginWithMIC()`. [#372](https://github.com/Kinvey/js-sdk/pull/372)
+- MLIBZ-2656 and MLIBZ-2690: Merge `_socialIdentity` properly with response from `/me` endpoint. [#374](https://github.com/Kinvey/js-sdk/pull/374) [#375](https://github.com/Kinvey/js-sdk/pull/375)
+- MLIBZ-2497: Return the correct error message if `Files.findById()` is called without a file id. [#373](https://github.com/Kinvey/js-sdk/pull/373)
+- MLIBZ-2712: Reconnect to Live Service on NativeScript whenever an application resumes or regains a network connection. [#376](https://github.com/Kinvey/js-sdk/pull/376)
+
+## [3.12.1](https://github.com/Kinvey/js-sdk/tree/v3.12.1) (2018-10-04)
+[Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.12.0...v3.12.1)<br/>
+
+#### Bugs
+- MLIBZ-2695: Updated `webpack.config.ios.js` and `webpack.config.android.js` to treat any  `tns-core-module` imported by the SDK as an external import to prevent the bundle from including the `tns-core-module` package. [#363](https://github.com/Kinvey/js-sdk/pull/363)
+- MLIBZ-2671: Fixed MIC on Microsoft Edge and IE browsers. [#364](https://github.com/Kinvey/js-sdk/pull/364)
+- Removed the use of `tns-core-modules/connectivity`. [#365](https://github.com/Kinvey/js-sdk/pull/365)
+
+## [3.12.0](https://github.com/Kinvey/js-sdk/tree/v3.12.0) (2018-10-03)
+[Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.11.7...v3.12.0)<br/>
+
+#### Enhancements
+- MLIBZ-2366: Update MIC for NativeScript to use `SFSafariViewController` on iOS and `Chrome Custom Tabs` on Android. Register the custom scheme used by the app as the `redirectUri` for MIC in the `AndroidManifest.xml` on Android and the `Info.plist` on iOS.  [#305](https://github.com/Kinvey/js-sdk/pull/360) [#362](https://github.com/Kinvey/js-sdk/pull/362)
+
+#### Bugs
+- MLIBZ-2665: Send custom properties to the backend using the `x-kinvey-custom-request-properties` header when creating an entity. [#360](https://github.com/Kinvey/js-sdk/pull/360)
+- MLIBZ-2660: Fix TypeScript definitions for `Push.unregister()` on NativeScript to allow the passing of options. Fix the boolean logic in `Push.register()` to allow interactive settings for push notifications to be registered for iOS on NativeScript. [#359](https://github.com/Kinvey/js-sdk/pull/359)
+- MLIBZ-2543: Fix encoding issue when downloading files via the NativeScript SDK. [#361](https://github.com/Kinvey/js-sdk/pull/359)
+
+## [3.11.7](https://github.com/Kinvey/js-sdk/tree/v3.11.7) (2018-09-20)
+[Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.11.6...v3.11.7)<br/>
+
+#### Enhancements
+- MLIBZ-2466: Add new defice info header information. [#343](https://github.com/Kinvey/js-sdk/pull/343)
+- MLIBZ-649: Add encryption for NativeScript. [#351](https://github.com/Kinvey/js-sdk/pull/351)
+
+#### Bugs
+- MLIBZ-2684: Fix NativeScript TypeScript definitions for Push. [#352](https://github.com/Kinvey/js-sdk/pull/352)
+- MLIBZ-2502: Update [rxjs](https://github.com/ReactiveX/rxjs) to 6.x. [#353](https://github.com/Kinvey/js-sdk/pull/353)
+
+## [3.11.6](https://github.com/Kinvey/js-sdk/tree/v3.11.6) (2018-08-02)
+[Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.11.5...v3.11.6)<br/>
+
+## [3.11.5](https://github.com/Kinvey/js-sdk/tree/v3.11.5) (2018-07-25)
+[Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.11.4...v3.11.5)<br/>
+
+#### Bugs
+- MLIBZ-2532: Add `instanceId?: string` to `ClientConfig` TypeScript definition. [#341](https://github.com/Kinvey/js-sdk/pull/341)
+- MLIBZ-2630: Return response from backend when calling `datastore.find()`. [#342](https://github.com/Kinvey/js-sdk/pull/342)
+
+#### Enhancements
+- MLIBZ-2502: Updated [rxjs](https://github.com/ReactiveX/rxjs) to 6.x. [#340](https://github.com/Kinvey/js-sdk/pull/340)
+
+## [3.11.4](https://github.com/Kinvey/js-sdk/tree/v3.11.4) (2018-07-09)
+[Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.11.3...v3.11.4)<br/>
+
+#### Bugs
+- MLIBZ-2580: Use correct Authorization header value when sending a request to refresh a MIC access token. [#315](https://github.com/Kinvey/js-sdk/pull/315)
+- MLIBZ-2585: Queue network requests while in the middle of refreshing a MIC access token. [#321](https://github.com/Kinvey/js-sdk/pull/321)
+- MLIBZ-2586: Use PubNub fork to fix Live Service on Android for NativeScript. [#326](https://github.com/Kinvey/js-sdk/pull/326)
+
 ## [3.11.3](https://github.com/Kinvey/js-sdk/tree/v3.11.3) (2018-06-29)
 [Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.11.2...v3.11.3)<br/>
 
