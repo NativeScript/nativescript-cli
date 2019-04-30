@@ -2,13 +2,13 @@
   "private": true,
   "name": "kinvey-nativescript-integration-tests",
   "description": "Integration tests for kinvey-nativescript-sdk.",
-  "version": "0.0.9",
+  "version": "0.0.11",
   "scripts": {
     "test:android": "node scripts/test.js && cd TestApp && tns test android",
     "test:ios": "node scripts/test.js && cd TestApp && tns test ios"
   },
   "dependencies": {
-    "kinvey-nativescript-sdk": "^3.13.0-next.37"
+    "kinvey-nativescript-sdk": "^3.13.0-next.39"
   },
   "devDependencies": {
     "@babel/core": "~7.4.3",
