@@ -15,6 +15,7 @@ import {
 } from './kinvey';
 import { Popup } from './user/mic/popup';
 import { StorageAdapter } from './storage';
+import { KinveyError } from './errors/kinvey';
 
 export interface Config {
   kinveyConfig: KinveyConfig;
@@ -26,6 +27,19 @@ export interface Config {
 }
 
 export function init(config: Config) {
+  // Check that an appKey was provided
+  if (config.kinveyConfig.appKey === null && config.kinveyConfig.appKey === undefined) {
+    throw new KinveyError('No app key was provided to initialize the Kinvey JavaScript SDK.');
+  }
+
+  // Check that an appSecret or masterSecret was provided
+  if (config.kinveyConfig.appSecret === null
+    && config.kinveyConfig.appSecret === undefined
+    && config.kinveyConfig.masterSecret === null
+    && config.kinveyConfig.masterSecret === undefined) {
+    throw new KinveyError('No app secret was provided to initialize the Kinvey JavaScript SDK.');
+  }
+
   setConfig(ConfigKey.KinveyConfig, config.kinveyConfig);
   setConfig(ConfigKey.HttpAdapter, config.httpAdapter);
   setConfig(ConfigKey.SessionStore, config.sessionStore);
