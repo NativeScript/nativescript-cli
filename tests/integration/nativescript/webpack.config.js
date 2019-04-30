@@ -22,7 +22,8 @@ module.exports = {
     libraryTarget: 'umd'
   },
   externals: [
-    'kinvey-nativescript-sdk'
+    'kinvey-nativescript-sdk',
+    'tns-core-modules/file-system'
   ],
   target: 'node'
 }

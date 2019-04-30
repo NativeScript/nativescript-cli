@@ -9,7 +9,7 @@ export function ensureArray(entities) {
 };
 
 export function setOfflineProvider(initObject, provider) {
-  switch (provider){
+  switch (provider) {
     case 'Default': return initObject;
     case 'IndexedDB': return Object.assign(initObject, {storage: Kinvey.StorageProvider.IndexedDB});
     case 'LocalStorage': return Object.assign(initObject, {storage: Kinvey.StorageProvider.LocalStorage});
