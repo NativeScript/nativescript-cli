@@ -12,21 +12,21 @@ import {
 
 const MAX_BACKOFF = 32 * 1000;
 
-function transformMetadata(file: any = {}, metadata: any = {}) {
+export function transformMetadata(file: any = {}, metadata: any = {}) {
   const fileMetadata = Object.assign({}, {
     filename: file._filename || file.name,
     public: false,
     size: file.size || file.length,
     mimeType: file.mimeType || file.type || 'application/octet-stream'
   }, metadata);
-  fileMetadata._filename = metadata.filename;
+  fileMetadata._filename = fileMetadata.filename;
   delete fileMetadata.filename;
-  fileMetadata._public = metadata.public;
+  fileMetadata._public = fileMetadata.public;
   delete fileMetadata.public;
   return fileMetadata;
 }
 
-async function saveFileMetadata(metadata: any, options: any = {}) {
+export async function saveFileMetadata(metadata: any, options: any = {}) {
   if (metadata.size <= 0) {
     throw new KinveyError('Unable to create a file with a size of 0.');
   }
@@ -45,7 +45,7 @@ async function saveFileMetadata(metadata: any, options: any = {}) {
   return response.data;
 }
 
-function checkUploadStatus(url: string, headers: any, metadata: any, timeout: number) {
+export function checkUploadStatus(url: string, headers: any, metadata: any, timeout: number) {
   const requestHeaders = new HttpHeaders(headers);
   requestHeaders.set('Content-Type', metadata.mimeType);
   requestHeaders.set('Content-Range', `bytes */${metadata.size}`);
@@ -58,16 +58,16 @@ function checkUploadStatus(url: string, headers: any, metadata: any, timeout: nu
   return request.execute();
 }
 
-function getStartIndex(rangeHeader: string, max: number) {
+export function getStartIndex(rangeHeader: string, max: number) {
   const start = rangeHeader ? parseInt(rangeHeader.split('-')[1], 10) + 1 : 0;
   return start >= max ? max - 1 : start;
 }
 
-function randomInt(min: number, max: number) {
+export function randomInt(min: number, max: number) {
   return Math.floor(Math.random() * (max - min)) + min;
 }
 
-async function uploadFile(url: string, file: any, metadata: any, options: any = {}): Promise<any> {
+export async function uploadFile(url: string, file: any, metadata: any, options: any = {}): Promise<any> {
   const { count = 0, maxBackoff = MAX_BACKOFF } = options;
   let { start = 0 } = options;
 
