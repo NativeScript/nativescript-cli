@@ -3,34 +3,39 @@ import { Yok } from "../../../../yok";
 import { assert } from "chai";
 import * as path from "path";
 import * as childProcess from "child_process";
+import * as fileSystem from "fs";
+import { EventEmitter } from "events";
+import stream = require("stream");
+
+class ChildProcessMockInstance extends EventEmitter {
+	public stdout: stream.Readable;
+	public stderr: any;
+	public processKillCallCount = 0;
+
+	constructor(pathToSample: string) {
+		super();
+		this.stdout = fileSystem.createReadStream(pathToSample);
+		this.stderr = new EventEmitter();
+	}
+
+	public kill(): void {
+		this.processKillCallCount++;
+	}
+}
 
 class ChildProcessStub {
 	public processSpawnCallCount = 0;
-	public processKillCallCount = 0;
 	public adbProcessArgs: string[] = [];
-	private isWin = /^win/.test(process.platform);
+	public lastSpawnedProcess: ChildProcessMockInstance = null;
 
 	public spawn(command: string, args?: string[], options?: any): childProcess.ChildProcess {
 		this.adbProcessArgs = args;
 		this.processSpawnCallCount++;
-		let pathToExecutable = "";
-		let shell = "";
-		if (this.isWin) {
-			pathToExecutable = "type";
-			shell = "cmd";
-		} else {
-			pathToExecutable = "cat";
-		}
-		pathToExecutable = path.join(pathToExecutable);
 		const pathToSample = path.join(__dirname, "valid-sample.txt");
-		const spawnedProcess = childProcess.spawn(pathToExecutable, [pathToSample], { shell });
-		const spawnedProcessKill = spawnedProcess.kill;
-		spawnedProcess.kill = (signal: string) => {
-			this.processKillCallCount++;
-			spawnedProcessKill.call(spawnedProcessKill, signal);
-		};
 
-		return spawnedProcess;
+		this.lastSpawnedProcess = new ChildProcessMockInstance(pathToSample);
+
+		return <any>this.lastSpawnedProcess;
 	}
 }
 
@@ -207,7 +212,7 @@ describe("logcat-helper", () => {
 			await logcatHelper.stop(validIdentifier);
 			await logcatHelper.stop(validIdentifier);
 
-			assert.equal(childProcessStub.processKillCallCount, 1);
+			assert.equal(childProcessStub.lastSpawnedProcess.processKillCallCount, 1);
 		});
 
 		it("should not kill the process if started with keepSingleProcess", async () => {
@@ -220,7 +225,7 @@ describe("logcat-helper", () => {
 
 			await logcatHelper.stop(validIdentifier);
 			await logcatHelper.stop(validIdentifier);
-			assert.equal(childProcessStub.processKillCallCount, 0);
+			assert.equal(childProcessStub.lastSpawnedProcess.processKillCallCount, 0);
 		});
 
 		it("should do nothing if called without start", async () => {
@@ -229,7 +234,27 @@ describe("logcat-helper", () => {
 			await logcatHelper.stop(validIdentifier);
 
 			assert.equal(childProcessStub.processSpawnCallCount, 0);
-			assert.equal(childProcessStub.processKillCallCount, 0);
 		});
+
+		for (const keepSingleProcess of [false, true]) {
+			it(`should clear the device identifier cache when the logcat process is killed manually and keepSingleProcess is ${keepSingleProcess}`, async () => {
+				const logcatHelper = injector.resolve<LogcatHelper>("logcatHelper");
+
+				await logcatHelper.start({
+					deviceIdentifier: validIdentifier,
+					keepSingleProcess
+				});
+
+				assert.equal(childProcessStub.processSpawnCallCount, 1);
+
+				childProcessStub.lastSpawnedProcess.emit("close");
+
+				await logcatHelper.start({
+					deviceIdentifier: validIdentifier
+				});
+
+				assert.equal(childProcessStub.processSpawnCallCount, 2);
+			});
+		}
 	});
 });
