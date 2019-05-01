@@ -983,6 +983,7 @@ declare module Mobile {
 		buildDevicePath(...args: string[]): string;
 		correctDevicePath(filePath: string): string;
 		isiOSTablet(deviceName: string): boolean;
+		getDeviceFileContent(device: Mobile.IDevice, deviceFilePath: string, projectData: IProjectData): Promise<string>;
 	}
 
 	interface IEmulatorHelper {

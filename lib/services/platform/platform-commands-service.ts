@@ -31,7 +31,7 @@ export class PlatformCommandsService implements IPlatformCommandsService {
 			}
 
 			const addPlatformData = { platformParam: platform.toLowerCase(), frameworkPath };
-			await this.$platformAddService.addPlatform(addPlatformData, projectData);
+			await this.$platformAddService.addPlatform(projectData, addPlatformData);
 		}
 	}
 
@@ -83,7 +83,7 @@ export class PlatformCommandsService implements IPlatformCommandsService {
 			if (hasPlatformDirectory) {
 				await this.updatePlatform(platform, version, projectData);
 			} else {
-				await this.$platformAddService.addPlatform({ platformParam }, projectData);
+				await this.$platformAddService.addPlatform(projectData, { platformParam });
 			}
 		}
 	}
@@ -113,7 +113,8 @@ export class PlatformCommandsService implements IPlatformCommandsService {
 			return false;
 		}
 
-		const prepareInfo = this.$projectChangesService.getPrepareInfo(platform, projectData);
+		const platformData = this.$platformsData.getPlatformData(platform, projectData);
+		const prepareInfo = this.$projectChangesService.getPrepareInfo(platformData);
 		if (!prepareInfo) {
 			return true;
 		}
@@ -158,7 +159,7 @@ export class PlatformCommandsService implements IPlatformCommandsService {
 		await this.removePlatforms([packageName], projectData);
 		packageName = updateOptions.newVersion ? `${packageName}@${updateOptions.newVersion}` : packageName;
 		const addPlatformData = { platformParam: packageName };
-		await this.$platformAddService.addPlatform(addPlatformData, projectData);
+		await this.$platformAddService.addPlatform(projectData, addPlatformData);
 		this.$logger.out("Successfully updated to version ", updateOptions.newVersion);
 	}
 

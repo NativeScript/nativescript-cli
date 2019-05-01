@@ -4,7 +4,6 @@ export class PrepareCommand extends ValidatePlatformCommandBase implements IComm
 	public allowedParameters = [this.$platformCommandParameter];
 
 	constructor($options: IOptions,
-		private $platformWorkflowDataFactory: IPlatformWorkflowDataFactory,
 		private $platformWorkflowService: IPlatformWorkflowService,
 		$platformValidationService: IPlatformValidationService,
 		$projectData: IProjectData,
@@ -16,10 +15,8 @@ export class PrepareCommand extends ValidatePlatformCommandBase implements IComm
 
 	public async execute(args: string[]): Promise<void> {
 		const platform = args[0];
-		const platformData = this.$platformsData.getPlatformData(platform, this.$projectData);
-		const workflowData = this.$platformWorkflowDataFactory.createPlatformWorkflowData(platform, this.$options);
 
-		await this.$platformWorkflowService.preparePlatform(platformData, this.$projectData, workflowData);
+		await this.$platformWorkflowService.preparePlatform(platform, this.$projectData.projectDir, this.$options);
 	}
 
 	public async canExecute(args: string[]): Promise<boolean | ICanExecuteCommandOutput> {

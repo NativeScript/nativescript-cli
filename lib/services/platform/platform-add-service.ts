@@ -1,6 +1,7 @@
 import * as path from "path";
 import * as temp from "temp";
-import { PROJECT_FRAMEWORK_FOLDER_NAME } from "../../constants";
+import { PROJECT_FRAMEWORK_FOLDER_NAME, NativePlatformStatus } from "../../constants";
+import { AddPlatformData } from "../workflow/workflow-data-service";
 
 export class PlatformAddService implements IPlatformAddService {
 	constructor(
@@ -12,11 +13,12 @@ export class PlatformAddService implements IPlatformAddService {
 		private $platformsData: IPlatformsData,
 		private $platformJSService: IPreparePlatformService,
 		private $platformNativeService: IPreparePlatformService,
+		private $projectChangesService: IProjectChangesService,
 		private $projectDataService: IProjectDataService,
 		private $terminalSpinnerService: ITerminalSpinnerService
 	) { }
 
-	public async addPlatform(addPlatformData: IAddPlatformData, projectData: IProjectData): Promise<void> {
+	public async addPlatform(projectData: IProjectData, addPlatformData: AddPlatformData): Promise<void> {
 		const { platformParam, frameworkPath, nativePrepare } = addPlatformData;
 		const [ platform, version ] = platformParam.toLowerCase().split("@");
 		const platformData = this.$platformsData.getPlatformData(platform, projectData);
@@ -34,6 +36,13 @@ export class PlatformAddService implements IPlatformAddService {
 
 		this.$fs.ensureDirectoryExists(path.join(projectData.platformsDir, platform));
 		this.$logger.out(`Platform ${platform} successfully added. v${installedPlatformVersion}`);
+	}
+
+	public async addPlatformIfNeeded(platformData: IPlatformData, projectData: IProjectData, addPlatformData: AddPlatformData): Promise<void> {
+		const shouldAddPlatform = this.shouldAddPlatform(platformData, projectData, addPlatformData.nativePrepare);
+		if (shouldAddPlatform) {
+			await this.addPlatform(projectData, addPlatformData);
+		}
 	}
 
 	private async getPackageToInstall(platformData: IPlatformData, projectData: IProjectData, frameworkPath?: string, version?: string): Promise<string> {
@@ -97,6 +106,17 @@ export class PlatformAddService implements IPlatformAddService {
 		const version = currentPlatformData && currentPlatformData.version;
 
 		return version;
+	}
+
+	private shouldAddPlatform(platformData: IPlatformData, projectData: IProjectData, nativePrepare: INativePrepare): boolean {
+		const platformName = platformData.platformNameLowerCase;
+		const hasPlatformDirectory = this.$fs.exists(path.join(projectData.platformsDir, platformName));
+		const shouldAddNativePlatform = !nativePrepare || !nativePrepare.skipNativePrepare;
+		const prepareInfo = this.$projectChangesService.getPrepareInfo(platformData);
+		const requiresNativePlatformAdd = prepareInfo && prepareInfo.nativePlatformStatus === NativePlatformStatus.requiresPlatformAdd;
+		const result = !hasPlatformDirectory || (shouldAddNativePlatform && requiresNativePlatformAdd);
+
+		return !!result;
 	}
 }
 $injector.register("platformAddService", PlatformAddService);

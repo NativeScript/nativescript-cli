@@ -25,24 +25,6 @@ interface IProjectChangesInfo extends IAddedNativePlatform {
 	readonly changesRequirePrepare: boolean;
 }
 
-interface IProjectChangesOptions extends IRelease, IHasUseHotModuleReloadOption {
-	signingOptions: IiOSSigningOptions | IAndroidSigningOptions;
-	nativePlatformStatus?: "1" | "2" | "3";
-}
-
-interface ICheckForChangesOptions extends IPlatform, IProjectDataComposition {
-	projectChangesOptions: IProjectChangesOptions;
-}
-
-interface IProjectChangesService {
-	checkForChanges(checkForChangesOpts: ICheckForChangesOptions): Promise<IProjectChangesInfo>;
-	getPrepareInfo(platform: string, projectData: IProjectData): IPrepareInfo;
-	savePrepareInfo(platform: string, projectData: IProjectData): void;
-	getPrepareInfoFilePath(platform: string, projectData: IProjectData): string;
-	setNativePlatformStatus(platform: string, projectData: IProjectData, nativePlatformStatus: IAddedNativePlatform): void;
-	currentChanges: IProjectChangesInfo;
-}
-
 /**
  * NativePlatformStatus.requiresPlatformAdd | NativePlatformStatus.requiresPrepare | NativePlatformStatus.alreadyPrepared
  */

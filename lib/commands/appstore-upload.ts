@@ -14,27 +14,28 @@ export class PublishIOS implements ICommand {
 		private $prompter: IPrompter,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $platformValidationService: IPlatformValidationService,
-		private $platformBuildService: IPlatformBuildService,
-		private $xcodebuildService: IXcodebuildService) {
+		// private $platformBuildService: IPlatformBuildService,
+		// private $xcodebuildService: IXcodebuildService
+		) {
 		this.$projectData.initializeProjectData();
 	}
 
-	private get $platformsData(): IPlatformsData {
-		return this.$injector.resolve("platformsData");
-	}
+	// private get $platformsData(): IPlatformsData {
+	// 	return this.$injector.resolve("platformsData");
+	// }
 
 	// This property was introduced due to the fact that the $platformService dependency
 	// ultimately tries to resolve the current project's dir and fails if not executed from within a project
-	private get $platformService(): IPlatformService {
-		return this.$injector.resolve("platformService");
-	}
+	// private get $platformService(): IPlatformService {
+	// 	return this.$injector.resolve("platformService");
+	// }
 
 	public async execute(args: string[]): Promise<void> {
 		let username = args[0];
 		let password = args[1];
 		const mobileProvisionIdentifier = args[2];
 		const codeSignIdentity = args[3];
-		let ipaFilePath = this.$options.ipa ? path.resolve(this.$options.ipa) : null;
+		const ipaFilePath = this.$options.ipa ? path.resolve(this.$options.ipa) : null;
 
 		if (!username) {
 			username = await this.$prompter.getString("Apple ID", { allowEmpty: false });
@@ -55,40 +56,45 @@ export class PublishIOS implements ICommand {
 		this.$options.release = true;
 
 		if (!ipaFilePath) {
-			const platform = this.$devicePlatformsConstants.iOS;
+			// const platform = this.$devicePlatformsConstants.iOS;
 			// No .ipa path provided, build .ipa on out own.
-			const preparePlatformData: IPreparePlatformData = {
-				release: this.$options.release,
-				useHotModuleReload: false,
-				env: this.$options.env,
-			};
-			const buildConfig: IBuildConfig = {
-				projectDir: this.$options.path,
-				release: this.$options.release,
-				device: this.$options.device,
-				provision: this.$options.provision,
-				teamId: this.$options.teamId,
-				buildForDevice: true,
-				iCloudContainerEnvironment: this.$options.iCloudContainerEnvironment,
-				mobileProvisionIdentifier,
-				codeSignIdentity
-			};
+			// const platformWorkflowData = {
+			// 	release: this.$options.release,
+			// 	useHotModuleReload: false,
+			// 	env: this.$options.env,
+			// 	platformParam: platform,
+			// 	signingOptions: {
+			// 		teamId: this.$options.teamId,
+			// 		provision: this.$options.provision
+			// 	}
+			// };
+			// const buildConfig: IBuildConfig = {
+			// 	projectDir: this.$options.path,
+			// 	release: this.$options.release,
+			// 	device: this.$options.device,
+			// 	provision: this.$options.provision,
+			// 	teamId: this.$options.teamId,
+			// 	buildForDevice: true,
+			// 	iCloudContainerEnvironment: this.$options.iCloudContainerEnvironment,
+			// 	mobileProvisionIdentifier,
+			// 	codeSignIdentity
+			// };
 
-			const platformData = this.$platformsData.getPlatformData(platform, this.$projectData);
+			// const platformData = this.$platformsData.getPlatformData(platform, this.$projectData);
 
-			if (mobileProvisionIdentifier || codeSignIdentity) {
-				this.$logger.info("Building .ipa with the selected mobile provision and/or certificate.");
-				// This is not very correct as if we build multiple targets we will try to sign all of them using the signing identity here.
-				await this.$platformService.preparePlatform(platformData, this.$projectData, preparePlatformData);
-				await this.$platformBuildService.buildPlatform(platformData, this.$projectData, buildConfig);
-				ipaFilePath = this.$platformService.lastOutputPath(platform, buildConfig, this.$projectData);
-			} else {
-				this.$logger.info("No .ipa, mobile provision or certificate set. Perfect! Now we'll build .xcarchive and let Xcode pick the distribution certificate and provisioning profile for you when exporting .ipa for AppStore submission.");
-				await this.$platformService.preparePlatform(platformData, this.$projectData, preparePlatformData);
+			// if (mobileProvisionIdentifier || codeSignIdentity) {
+			// 	this.$logger.info("Building .ipa with the selected mobile provision and/or certificate.");
+			// 	// This is not very correct as if we build multiple targets we will try to sign all of them using the signing identity here.
+			// 	await this.$platformService.preparePlatform(platformData, this.$projectData, platformWorkflowData);
+			// 	await this.$platformBuildService.buildPlatform(platformData, this.$projectData, buildConfig);
+			// 	ipaFilePath = this.$platformService.lastOutputPath(platform, buildConfig, this.$projectData);
+			// } else {
+			// 	this.$logger.info("No .ipa, mobile provision or certificate set. Perfect! Now we'll build .xcarchive and let Xcode pick the distribution certificate and provisioning profile for you when exporting .ipa for AppStore submission.");
+			// 	await this.$platformService.preparePlatform(platformData, this.$projectData, platformWorkflowData);
 
-				ipaFilePath = await this.$xcodebuildService.buildForAppStore(platformData, this.$projectData, buildConfig);
-				this.$logger.info(`Export at: ${ipaFilePath}`);
-			}
+			// 	ipaFilePath = await this.$xcodebuildService.buildForAppStore(platformData, this.$projectData, buildConfig);
+			// 	this.$logger.info(`Export at: ${ipaFilePath}`);
+			// }
 		}
 
 		await this.$itmsTransporterService.upload({

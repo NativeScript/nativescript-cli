@@ -264,8 +264,10 @@ declare global {
 		getLiveSyncDeviceDescriptors(projectDir: string): ILiveSyncDeviceInfo[];
 	}
 
+	// TODO: Rename this interface and change method's definition
 	interface ILiveSyncService2 {
-		fullSync(device: Mobile.IDevice, deviceBuildInfoDescriptor: ILiveSyncDeviceInfo, projectData: IProjectData, liveSyncInfo: ILiveSyncInfo): Promise<ILiveSyncResultInfo>;
+		syncInitialDataOnDevice(device: Mobile.IDevice, deviceBuildInfoDescriptor: ILiveSyncDeviceInfo, projectData: IProjectData, liveSyncInfo: ILiveSyncInfo): Promise<ILiveSyncResultInfo>;
+		syncChangedDataOnDevice(device: Mobile.IDevice, filesToSync: string[], liveSyncDeviceInfo: ILiveSyncDeviceInfo, projectData: IProjectData, liveSyncInfo: ILiveSyncInfo): Promise<ILiveSyncResultInfo>;
 	}
 
 	/**
@@ -359,7 +361,6 @@ declare global {
 		filesToRemove: string[];
 		filesToSync: string[];
 		isReinstalled: boolean;
-		syncAllFiles: boolean;
 		liveSyncDeviceInfo: ILiveSyncDeviceInfo;
 		hmrData: IPlatformHmrData;
 		force?: boolean;

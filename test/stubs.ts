@@ -9,6 +9,7 @@ import * as prompt from "inquirer";
 import { Yok } from "./../lib/common/yok";
 import { HostInfo } from "./../lib/common/host-info";
 import { DevicePlatformsConstants } from "./../lib/common/mobile/device-platforms-constants";
+import { PreparePlatformData } from "../lib/services/workflow/workflow-data-service";
 
 export class LoggerStub implements ILogger {
 	getLevel(): string { return undefined; }
@@ -723,18 +724,18 @@ export class ChildProcessStub extends EventEmitter {
 }
 
 export class ProjectChangesService implements IProjectChangesService {
-	public async checkForChanges(checkForChangesOpts: ICheckForChangesOptions): Promise<IProjectChangesInfo> {
+	public async checkForChanges(platform: string, projectData: IProjectData, preparePlatformData: PreparePlatformData): Promise<IProjectChangesInfo> {
 		return <IProjectChangesInfo>{};
 	}
 
-	public getPrepareInfo(platform: string): IPrepareInfo {
+	public getPrepareInfo(platformData: IPlatformData): IPrepareInfo {
 		return null;
 	}
 
-	public savePrepareInfo(platform: string): void {
+	public savePrepareInfo(platformData: IPlatformData): void {
 	}
 
-	public getPrepareInfoFilePath(platform: string): string {
+	public getPrepareInfoFilePath(platformData: IPlatformData): string {
 		return "";
 	}
 
@@ -742,7 +743,7 @@ export class ProjectChangesService implements IProjectChangesService {
 		return <IProjectChangesInfo>{};
 	}
 
-	public setNativePlatformStatus(platform: string, projectData: IProjectData, nativePlatformStatus: IAddedNativePlatform): void {
+	public setNativePlatformStatus(platformData: IPlatformData, addedPlatform: IAddedNativePlatform): void {
 		return;
 	}
 }
@@ -807,7 +808,7 @@ export class PlatformServiceStub extends EventEmitter implements IPlatformServic
 		return Promise.resolve();
 	}
 
-	public preparePlatform(platformData: IPlatformData, projectData: IProjectData, preparePlatformData: IPreparePlatformData): Promise<boolean> {
+	public async preparePlatform(platformData: IPlatformData, projectData: IProjectData, preparePlatformData: PreparePlatformData): Promise<boolean> {
 		return Promise.resolve(true);
 	}
 

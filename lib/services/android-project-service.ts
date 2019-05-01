@@ -6,8 +6,9 @@ import * as projectServiceBaseLib from "./platform-project-service-base";
 import { DeviceAndroidDebugBridge } from "../common/mobile/android/device-android-debug-bridge";
 import { Configurations, LiveSyncPaths } from "../common/constants";
 import { performanceLog } from ".././common/decorators";
+import { PreparePlatformData } from "./workflow/workflow-data-service";
 
-export class AndroidProjectService extends projectServiceBaseLib.PlatformProjectServiceBase implements IPlatformProjectService {
+export class AndroidProjectService extends projectServiceBaseLib.PlatformProjectServiceBase {
 	private static VALUES_DIRNAME = "values";
 	private static VALUES_VERSION_DIRNAME_PREFIX = AndroidProjectService.VALUES_DIRNAME + "-v";
 	private static ANDROID_PLATFORM_NAME = "android";
@@ -48,7 +49,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 				normalizedPlatformName: "Android",
 				platformNameLowerCase: "android",
 				appDestinationDirectoryPath: path.join(...appDestinationDirectoryArr),
-				platformProjectService: this,
+				platformProjectService: <any>this,
 				projectRoot: projectRoot,
 				getBuildOutputPath: (buildConfig: IBuildConfig) => {
 					if (buildConfig.androidBundle) {
@@ -57,7 +58,6 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 					return path.join(...deviceBuildOutputArr);
 				},
-				bundleBuildOutputPath: path.join(projectRoot, constants.APP_FOLDER_NAME, constants.BUILD_DIR, constants.OUTPUTS_DIR, constants.BUNDLE_DIR),
 				getValidBuildOutputData: (buildOptions: IBuildOutputOptions): IValidBuildOutputData => {
 					const buildMode = buildOptions.release ? Configurations.Release.toLowerCase() : Configurations.Debug.toLowerCase();
 
@@ -199,13 +199,9 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		}
 	}
 
-	public interpolateConfigurationFile(projectData: IProjectData, signingOptions: IAndroidSigningOptions): void {
+	public interpolateConfigurationFile(projectData: IProjectData, preparePlatformData: PreparePlatformData): void {
 		const manifestPath = this.getPlatformData(projectData).configurationFilePath;
 		shell.sed('-i', /__PACKAGE__/, projectData.projectIdentifiers.android, manifestPath);
-		if (this.$androidToolsInfo.getToolsInfo().androidHomeEnvVar) {
-			const sdk = (signingOptions && signingOptions.sdk) || (this.$androidToolsInfo.getToolsInfo().compileSdkVersion || "").toString();
-			shell.sed('-i', /__APILEVEL__/, sdk, manifestPath);
-		}
 	}
 
 	private getProjectNameFromId(projectData: IProjectData): string {
@@ -242,7 +238,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		const platformData = this.getPlatformData(projectData);
 		await this.$gradleBuildService.buildProject(platformData.projectRoot, buildConfig);
 
-		const outputPath = buildConfig.androidBundle ? platformData.bundleBuildOutputPath : platformData.getBuildOutputPath(buildConfig);
+		const outputPath = platformData.getBuildOutputPath(buildConfig);
 		await this.$filesHashService.saveHashesForProject(this._platformData, outputPath);
 	}
 

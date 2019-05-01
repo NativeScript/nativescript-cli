@@ -9,8 +9,7 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 		private $childProcess: IChildProcess
 	) { super(); }
 
-	// TODO: Rename this to compileWithWatch()
-	public async startWatcher(platformData: IPlatformData, projectData: IProjectData, config: IWebpackCompilerConfig): Promise<any> {
+	public async compileWithWatch(platformData: IPlatformData, projectData: IProjectData, config: IWebpackCompilerConfig): Promise<any> {
 		return new Promise((resolve, reject) => {
 			if (this.webpackProcesses[platformData.platformNameLowerCase]) {
 				resolve();
@@ -35,6 +34,7 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 					const files = message.emittedFiles
 						.filter((file: string) => file.indexOf("App_Resources") === -1)
 						.map((file: string) => path.join(platformData.appDestinationDirectoryPath, "app", file));
+					console.log("===================== BEFORE EMIT webpack files ", files);
 					this.emit("webpackEmittedFiles", files);
 				}
 			});
@@ -53,8 +53,7 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 		});
 	}
 
-	// TODO: Rename this to compileWithoutWatch()
-	public async compile(platformData: IPlatformData, projectData: IProjectData, config: IWebpackCompilerConfig): Promise<void> {
+	public async compileWithoutWatch(platformData: IPlatformData, projectData: IProjectData, config: IWebpackCompilerConfig): Promise<void> {
 		return new Promise((resolve, reject) => {
 			if (this.webpackProcesses[platformData.platformNameLowerCase]) {
 				resolve();

@@ -1,6 +1,7 @@
 import * as path from "path";
 import { NODE_MODULES_FOLDER_NAME, NativePlatformStatus, PACKAGE_JSON_FILE_NAME, APP_GRADLE_FILE_NAME, BUILD_XCCONFIG_FILE_NAME } from "../constants";
 import { getHash, hook } from "../common/helpers";
+import { PreparePlatformData } from "./workflow/workflow-data-service";
 
 const prepareInfoFileName = ".nsprepareinfo";
 
@@ -55,15 +56,14 @@ export class ProjectChangesService implements IProjectChangesService {
 	}
 
 	@hook("checkForChanges")
-	public async checkForChanges(checkForChangesOpts: ICheckForChangesOptions): Promise<IProjectChangesInfo> {
-		const { platform, projectData, projectChangesOptions } = checkForChangesOpts;
+	public async checkForChanges(platform: string, projectData: IProjectData, preparePlatformData: PreparePlatformData): Promise<IProjectChangesInfo> {
 		const platformData = this.$platformsData.getPlatformData(platform, projectData);
 		this._changesInfo = new ProjectChangesInfo();
-		const isNewPrepareInfo = await this.ensurePrepareInfo(platform, projectData, projectChangesOptions);
+		const isNewPrepareInfo = await this.ensurePrepareInfo(platform, projectData, preparePlatformData);
 		if (!isNewPrepareInfo) {
 			this._newFiles = 0;
 
-			this._changesInfo.packageChanged = this.isProjectFileChanged(projectData, platform);
+			this._changesInfo.packageChanged = this.isProjectFileChanged(projectData.projectDir, platformData);
 
 			const platformResourcesDir = path.join(projectData.appResourcesDirectoryPath, platformData.normalizedPlatformName);
 			this._changesInfo.appResourcesChanged = this.containsNewerFiles(platformResourcesDir, null, projectData);
@@ -96,17 +96,16 @@ export class ProjectChangesService implements IProjectChangesService {
 			this.$logger.trace(`Set value of configChanged to ${this._changesInfo.configChanged}`);
 		}
 
-		if (checkForChangesOpts.projectChangesOptions.nativePlatformStatus !== NativePlatformStatus.requiresPlatformAdd) {
-			const projectService = platformData.platformProjectService;
-			await projectService.checkForChanges(this._changesInfo, <IiOSSigningOptions>projectChangesOptions.signingOptions, projectData);
+		if (!preparePlatformData.nativePrepare || !preparePlatformData.nativePrepare.skipNativePrepare) {
+			await platformData.platformProjectService.checkForChanges(this._changesInfo, preparePlatformData, projectData);
 		}
 
-		if (projectChangesOptions.release !== this._prepareInfo.release) {
-			this.$logger.trace(`Setting all setting to true. Current options are: `, projectChangesOptions, " old prepare info is: ", this._prepareInfo);
+		if (preparePlatformData.release !== this._prepareInfo.release) {
+			this.$logger.trace(`Setting all setting to true. Current options are: `, preparePlatformData, " old prepare info is: ", this._prepareInfo);
 			this._changesInfo.appResourcesChanged = true;
 			this._changesInfo.modulesChanged = true;
 			this._changesInfo.configChanged = true;
-			this._prepareInfo.release = projectChangesOptions.release;
+			this._prepareInfo.release = preparePlatformData.release;
 		}
 		if (this._changesInfo.packageChanged) {
 			this.$logger.trace("Set modulesChanged to true as packageChanged is true");
@@ -123,7 +122,7 @@ export class ProjectChangesService implements IProjectChangesService {
 				this._prepareInfo.changesRequireBuildTime = this._prepareInfo.time;
 			}
 
-			this._prepareInfo.projectFileHash = this.getProjectFileStrippedHash(projectData, platform);
+			this._prepareInfo.projectFileHash = this.getProjectFileStrippedHash(projectData.projectDir, platformData);
 		}
 
 		this._changesInfo.nativePlatformStatus = this._prepareInfo.nativePlatformStatus;
@@ -132,14 +131,14 @@ export class ProjectChangesService implements IProjectChangesService {
 		return this._changesInfo;
 	}
 
-	public getPrepareInfoFilePath(platform: string, projectData: IProjectData): string {
-		const platformData = this.$platformsData.getPlatformData(platform, projectData);
+	public getPrepareInfoFilePath(platformData: IPlatformData): string {
 		const prepareInfoFilePath = path.join(platformData.projectRoot, prepareInfoFileName);
+
 		return prepareInfoFilePath;
 	}
 
-	public getPrepareInfo(platform: string, projectData: IProjectData): IPrepareInfo {
-		const prepareInfoFilePath = this.getPrepareInfoFilePath(platform, projectData);
+	public getPrepareInfo(platformData: IPlatformData): IPrepareInfo {
+		const prepareInfoFilePath = this.getPrepareInfoFilePath(platformData);
 		let prepareInfo: IPrepareInfo = null;
 		if (this.$fs.exists(prepareInfoFilePath)) {
 			try {
@@ -148,16 +147,17 @@ export class ProjectChangesService implements IProjectChangesService {
 				prepareInfo = null;
 			}
 		}
+
 		return prepareInfo;
 	}
 
-	public savePrepareInfo(platform: string, projectData: IProjectData): void {
-		const prepareInfoFilePath = this.getPrepareInfoFilePath(platform, projectData);
+	public savePrepareInfo(platformData: IPlatformData): void {
+		const prepareInfoFilePath = this.getPrepareInfoFilePath(platformData);
 		this.$fs.writeJson(prepareInfoFilePath, this._prepareInfo);
 	}
 
-	public setNativePlatformStatus(platform: string, projectData: IProjectData, addedPlatform: IAddedNativePlatform): void {
-		this._prepareInfo = this._prepareInfo || this.getPrepareInfo(platform, projectData);
+	public setNativePlatformStatus(platformData: IPlatformData, addedPlatform: IAddedNativePlatform): void {
+		this._prepareInfo = this._prepareInfo || this.getPrepareInfo(platformData);
 		if (this._prepareInfo && addedPlatform.nativePlatformStatus === NativePlatformStatus.alreadyPrepared) {
 			this._prepareInfo.nativePlatformStatus = addedPlatform.nativePlatformStatus;
 		} else {
@@ -166,29 +166,27 @@ export class ProjectChangesService implements IProjectChangesService {
 			};
 		}
 
-		this.savePrepareInfo(platform, projectData);
+		this.savePrepareInfo(platformData);
 	}
 
-	private async ensurePrepareInfo(platform: string, projectData: IProjectData, projectChangesOptions: IProjectChangesOptions): Promise<boolean> {
-		this._prepareInfo = this.getPrepareInfo(platform, projectData);
+	private async ensurePrepareInfo(platform: string, projectData: IProjectData, preparePlatformData: PreparePlatformData): Promise<boolean> {
+		const platformData = this.$platformsData.getPlatformData(platform, projectData);
+		this._prepareInfo = this.getPrepareInfo(platformData);
 		if (this._prepareInfo) {
-			this._prepareInfo.nativePlatformStatus = this._prepareInfo.nativePlatformStatus && this._prepareInfo.nativePlatformStatus < projectChangesOptions.nativePlatformStatus ?
-				projectChangesOptions.nativePlatformStatus :
-				this._prepareInfo.nativePlatformStatus || projectChangesOptions.nativePlatformStatus;
-
-			const platformData = this.$platformsData.getPlatformData(platform, projectData);
 			const prepareInfoFile = path.join(platformData.projectRoot, prepareInfoFileName);
 			this._outputProjectMtime = this.$fs.getFsStats(prepareInfoFile).mtime.getTime();
 			this._outputProjectCTime = this.$fs.getFsStats(prepareInfoFile).ctime.getTime();
 			return false;
 		}
 
+		const nativePlatformStatus = (!preparePlatformData.nativePrepare || !preparePlatformData.nativePrepare.skipNativePrepare) ?
+			NativePlatformStatus.requiresPrepare : NativePlatformStatus.requiresPlatformAdd;
 		this._prepareInfo = {
 			time: "",
-			nativePlatformStatus: projectChangesOptions.nativePlatformStatus,
-			release: projectChangesOptions.release,
+			nativePlatformStatus,
+			release: preparePlatformData.release,
 			changesRequireBuild: true,
-			projectFileHash: this.getProjectFileStrippedHash(projectData, platform),
+			projectFileHash: this.getProjectFileStrippedHash(projectData.projectDir, platformData),
 			changesRequireBuildTime: null
 		};
 
@@ -201,14 +199,13 @@ export class ProjectChangesService implements IProjectChangesService {
 		return true;
 	}
 
-	private getProjectFileStrippedHash(projectData: IProjectData, platform: string): string {
-		platform = platform.toLowerCase();
-		const projectFilePath = path.join(projectData.projectDir, PACKAGE_JSON_FILE_NAME);
+	private getProjectFileStrippedHash(projectDir: string, platformData: IPlatformData): string {
+		const projectFilePath = path.join(projectDir, PACKAGE_JSON_FILE_NAME);
 		const projectFileContents = this.$fs.readJson(projectFilePath);
 		_(this.$devicePlatformsConstants)
 			.keys()
 			.map(k => k.toLowerCase())
-			.difference([platform])
+			.difference([platformData.platformNameLowerCase])
 			.each(otherPlatform => {
 				delete projectFileContents.nativescript[`tns-${otherPlatform}`];
 			});
@@ -216,9 +213,9 @@ export class ProjectChangesService implements IProjectChangesService {
 		return getHash(JSON.stringify(projectFileContents));
 	}
 
-	private isProjectFileChanged(projectData: IProjectData, platform: string): boolean {
-		const projectFileStrippedContentsHash = this.getProjectFileStrippedHash(projectData, platform);
-		const prepareInfo = this.getPrepareInfo(platform, projectData);
+	private isProjectFileChanged(projectDir: string, platformData: IPlatformData): boolean {
+		const projectFileStrippedContentsHash = this.getProjectFileStrippedHash(projectDir, platformData);
+		const prepareInfo = this.getPrepareInfo(platformData);
 		return projectFileStrippedContentsHash !== prepareInfo.projectFileHash;
 	}
 

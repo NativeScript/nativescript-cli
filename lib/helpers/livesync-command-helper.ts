@@ -78,8 +78,6 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 		// Now let's take data for each device:
 		const deviceDescriptors: ILiveSyncDeviceInfo[] = devices
 			.map(d => {
-				let buildAction: IBuildAction;
-
 				const buildConfig: IBuildConfig = {
 					buildForDevice: !d.isEmulator,
 					iCloudContainerEnvironment: this.$options.iCloudContainerEnvironment,
@@ -95,20 +93,22 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 					keyStorePassword: this.$options.keyStorePassword
 				};
 
-				buildAction = additionalOptions && additionalOptions.buildPlatform ?
+				const buildAction = additionalOptions && additionalOptions.buildPlatform ?
 					additionalOptions.buildPlatform.bind(additionalOptions.buildPlatform, d.deviceInfo.platform, buildConfig, this.$projectData) :
 					this.$platformService.buildPlatform.bind(this.$platformService, d.deviceInfo.platform, buildConfig, this.$projectData);
+
+				const outputPath = additionalOptions && additionalOptions.getOutputDirectory && additionalOptions.getOutputDirectory({
+					platform: d.deviceInfo.platform,
+					emulator: d.isEmulator,
+					projectDir: this.$projectData.projectDir
+				});
 
 				const info: ILiveSyncDeviceInfo = {
 					identifier: d.deviceInfo.identifier,
 					buildAction,
 					debugggingEnabled: additionalOptions && additionalOptions.deviceDebugMap && additionalOptions.deviceDebugMap[d.deviceInfo.identifier],
 					debugOptions: this.$options,
-					outputPath: additionalOptions && additionalOptions.getOutputDirectory && additionalOptions.getOutputDirectory({
-						platform: d.deviceInfo.platform,
-						emulator: d.isEmulator,
-						projectDir: this.$projectData.projectDir
-					}),
+					outputPath,
 					skipNativePrepare: additionalOptions && additionalOptions.skipNativePrepare,
 				};
 

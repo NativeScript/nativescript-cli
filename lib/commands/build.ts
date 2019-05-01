@@ -7,8 +7,7 @@ export abstract class BuildCommandBase extends ValidatePlatformCommandBase {
 		$projectData: IProjectData,
 		$platformsData: IPlatformsData,
 		protected $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-		protected $platformWorkflowDataFactory: IPlatformWorkflowDataFactory,
-		private $platformWorkflowService: IPlatformWorkflowService,
+		protected $platformWorkflowService: IPlatformWorkflowService,
 		$platformValidationService: IPlatformValidationService,
 		private $bundleValidatorHelper: IBundleValidatorHelper,
 		protected $logger: ILogger) {
@@ -18,26 +17,7 @@ export abstract class BuildCommandBase extends ValidatePlatformCommandBase {
 
 	public async executeCore(args: string[]): Promise<string> {
 		const platform = args[0].toLowerCase();
-
-		const buildConfig: IBuildConfig = {
-			buildForDevice: this.$options.forDevice,
-			iCloudContainerEnvironment: this.$options.iCloudContainerEnvironment,
-			projectDir: this.$options.path,
-			clean: this.$options.clean,
-			teamId: this.$options.teamId,
-			device: this.$options.device,
-			provision: this.$options.provision,
-			release: this.$options.release,
-			keyStoreAlias: this.$options.keyStoreAlias,
-			keyStorePath: this.$options.keyStorePath,
-			keyStoreAliasPassword: this.$options.keyStoreAliasPassword,
-			keyStorePassword: this.$options.keyStorePassword,
-			androidBundle: this.$options.aab
-		};
-
-		const platformData = this.$platformsData.getPlatformData(platform, this.$projectData);
-		const workflowData = this.$platformWorkflowDataFactory.createPlatformWorkflowData(platform, this.$options);
-		const outputPath = await this.$platformWorkflowService.buildPlatform(platformData, this.$projectData, workflowData, buildConfig);
+		const outputPath = await this.$platformWorkflowService.buildPlatform(platform, this.$projectData.projectDir, this.$options);
 
 		return outputPath;
 	}
@@ -76,12 +56,11 @@ export class BuildIosCommand extends BuildCommandBase implements ICommand {
 		$projectData: IProjectData,
 		$platformsData: IPlatformsData,
 		$devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-		$platformWorkflowDataFactory: IPlatformWorkflowDataFactory,
 		$platformWorkflowService: IPlatformWorkflowService,
 		$platformValidationService: IPlatformValidationService,
 		$bundleValidatorHelper: IBundleValidatorHelper,
 		$logger: ILogger) {
-			super($options, $errors, $projectData, $platformsData, $devicePlatformsConstants, $platformWorkflowDataFactory, $platformWorkflowService, $platformValidationService, $bundleValidatorHelper, $logger);
+			super($options, $errors, $projectData, $platformsData, $devicePlatformsConstants, $platformWorkflowService, $platformValidationService, $bundleValidatorHelper, $logger);
 	}
 
 	public async execute(args: string[]): Promise<void> {
@@ -112,13 +91,12 @@ export class BuildAndroidCommand extends BuildCommandBase implements ICommand {
 		$projectData: IProjectData,
 		$platformsData: IPlatformsData,
 		$devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-		$platformWorkflowDataFactory: IPlatformWorkflowDataFactory,
 		$platformWorkflowService: IPlatformWorkflowService,
 		$platformValidationService: IPlatformValidationService,
 		$bundleValidatorHelper: IBundleValidatorHelper,
 		protected $androidBundleValidatorHelper: IAndroidBundleValidatorHelper,
 		protected $logger: ILogger) {
-			super($options, $errors, $projectData, $platformsData, $devicePlatformsConstants, $platformWorkflowDataFactory, $platformWorkflowService, $platformValidationService, $bundleValidatorHelper, $logger);
+			super($options, $errors, $projectData, $platformsData, $devicePlatformsConstants, $platformWorkflowService, $platformValidationService, $bundleValidatorHelper, $logger);
 	}
 
 	public async execute(args: string[]): Promise<void> {

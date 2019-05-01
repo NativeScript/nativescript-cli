@@ -1,6 +1,7 @@
 import { hook } from "../common/helpers";
 import { performanceLog } from "./../common/decorators";
 import { EventEmitter } from "events";
+import { PreparePlatformData } from "./workflow/workflow-data-service";
 
 export class PlatformJSService extends EventEmitter implements IPreparePlatformService {
 
@@ -16,7 +17,7 @@ export class PlatformJSService extends EventEmitter implements IPreparePlatformS
 
 	@performanceLog()
 	@hook('prepareJSApp')
-	public async preparePlatform(platformData: IPlatformData, projectData: IProjectData, preparePlatformData: IPreparePlatformData): Promise<boolean> {
+	public async preparePlatform(platformData: IPlatformData, projectData: IProjectData, preparePlatformData: PreparePlatformData): Promise<boolean> {
 		// intentionally left blank, keep the support for before-prepareJSApp and after-prepareJSApp hooks
 		return true;
 	}

@@ -8,6 +8,7 @@ import { EventEmitter } from "events";
 import { attachAwaitDetach } from "../common/helpers";
 import * as temp from "temp";
 import { performanceLog } from ".././common/decorators";
+import { PreparePlatformData } from "./workflow/workflow-data-service";
 temp.track();
 
 const buildInfoFileName = ".nsbuildinfo";
@@ -40,13 +41,13 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 	}
 
 	@performanceLog()
-	public async preparePlatform(platformData: IPlatformData, projectData: IProjectData, preparePlatformData: IPreparePlatformData): Promise<boolean> {
+	public async preparePlatform(platformData: IPlatformData, projectData: IProjectData, preparePlatformData: PreparePlatformData): Promise<boolean> {
 		this.$logger.out("Preparing project...");
 
-		await this.$webpackCompilerService.compile(platformData, projectData, { watch: false, env: preparePlatformData.env });
+		await this.$webpackCompilerService.compileWithoutWatch(platformData, projectData, { watch: false, env: preparePlatformData.env });
 		await this.$platformNativeService.preparePlatform(platformData, projectData, preparePlatformData);
 
-		this.$projectChangesService.savePrepareInfo(platformData.platformNameLowerCase, projectData);
+		this.$projectChangesService.savePrepareInfo(platformData);
 
 		this.$logger.out(`Project successfully prepared (${platformData.platformNameLowerCase})`);
 
@@ -74,7 +75,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 			return true;
 		}
 
-		const prepareInfo = this.$projectChangesService.getPrepareInfo(platform, projectData);
+		const prepareInfo = this.$projectChangesService.getPrepareInfo(platformData);
 		const buildInfo = this.getBuildInfo(platform, platformData, buildConfig, outputPath);
 		if (!prepareInfo || !buildInfo) {
 			return true;
@@ -116,7 +117,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 			this.$logger.printInfoMessageOnSameLine(data.data.toString());
 		};
 
-		await attachAwaitDetach(constants.BUILD_OUTPUT_EVENT_NAME, platformData.platformProjectService, handler, platformData.platformProjectService.buildProject(platformData.projectRoot, projectData, buildConfig));
+		await attachAwaitDetach(constants.BUILD_OUTPUT_EVENT_NAME, platformData.platformProjectService, handler, platformData.platformProjectService.buildProject(platformData.projectRoot, projectData, <any>buildConfig));
 
 		const buildInfoFilePath = this.getBuildOutputPath(platform, platformData, buildConfig);
 		this.saveBuildInfoFile(platform, projectData.projectDir, buildInfoFilePath);
@@ -130,7 +131,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		const projectData = this.$projectDataService.getProjectData(projectDir);
 		const platformData = this.$platformsData.getPlatformData(platform, projectData);
 
-		const prepareInfo = this.$projectChangesService.getPrepareInfo(platform, projectData);
+		const prepareInfo = this.$projectChangesService.getPrepareInfo(platformData);
 		const buildInfo: IBuildInfo = {
 			prepareTime: prepareInfo.changesRequireBuildTime,
 			buildTime: new Date().toString()
@@ -263,10 +264,10 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 				clean: deployInfo.deployOptions.clean
 			};
 
-			let installPackageFile: string;
+			const installPackageFile: string = "";
 			const shouldBuild = await this.shouldBuild(deployInfo.platform, deployInfo.projectData, buildConfig, deployInfo.outputPath);
 			if (shouldBuild) {
-				installPackageFile = await deployInfo.buildPlatform(deployInfo.platform, buildConfig, deployInfo.projectData);
+				// installPackageFile = await deployInfo.buildPlatform(deployInfo.platform, buildConfig, deployInfo.projectData);
 			} else {
 				this.$logger.out("Skipping package build. No changes detected on the native side. This will be fast!");
 			}
@@ -306,9 +307,9 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 	}
 
 	private getBuildOutputPath(platform: string, platformData: IPlatformData, options: IBuildOutputOptions): string {
-		if (options.androidBundle) {
-			return platformData.bundleBuildOutputPath;
-		}
+		// if (options.androidBundle) {
+		// 	return platformData.bundleBuildOutputPath;
+		// }
 
 		if (platform.toLowerCase() === this.$devicePlatformsConstants.iOS.toLowerCase()) {
 			return platformData.getBuildOutputPath(options);

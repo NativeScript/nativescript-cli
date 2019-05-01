@@ -139,6 +139,9 @@ export const POST_INSTALL_COMMAND_NAME = "post-install-cli";
 export const ANDROID_RELEASE_BUILD_ERROR_MESSAGE = "When producing a release build, you need to specify all --key-store-* options.";
 export const CACACHE_DIRECTORY_NAME = "_cacache";
 
+export const FILES_CHANGE_EVENT_NAME = "filesChangeEventData";
+export const INITIAL_SYNC_EVENT_NAME = "initialSyncEventData";
+
 export class DebugCommandErrors {
 	public static UNABLE_TO_USE_FOR_DEVICE_AND_EMULATOR = "The options --for-device and --emulator cannot be used simultaneously. Please use only one of them.";
 	public static NO_DEVICES_EMULATORS_FOUND_FOR_OPTIONS = "Unable to find device or emulator for specified options.";

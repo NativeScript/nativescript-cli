@@ -1,15 +1,15 @@
 import { EventEmitter } from "events";
 import { ANDROID_RELEASE_BUILD_ERROR_MESSAGE } from "../constants";
+import { WorkflowDataService } from "./workflow/workflow-data-service";
 
 export class LocalBuildService extends EventEmitter implements ILocalBuildService {
 	constructor(
 		private $errors: IErrors,
 		private $mobileHelper: Mobile.IMobileHelper,
 		private $platformsData: IPlatformsData,
-		private $platformWorkflowDataFactory: IPlatformWorkflowDataFactory,
-		private $platformWorkflowService: IPlatformWorkflowService,
-		private $projectData: IProjectData,
-		private $projectDataService: IProjectDataService
+		private $platformBuildService: IPlatformBuildService,
+		private $projectDataService: IProjectDataService,
+		private $workflowDataService: WorkflowDataService
 	) { super(); }
 
 	public async build(platform: string, platformBuildOptions: IPlatformBuildData): Promise<string> {
@@ -17,15 +17,9 @@ export class LocalBuildService extends EventEmitter implements ILocalBuildServic
 			this.$errors.fail(ANDROID_RELEASE_BUILD_ERROR_MESSAGE);
 		}
 
-		this.$projectData.initializeProjectData(platformBuildOptions.projectDir);
+		const { nativePlatformData, projectData, buildPlatformData } = this.$workflowDataService.createWorkflowData(platform, platformBuildOptions.projectDir, platformBuildOptions);
 
-		const projectData = this.$projectDataService.getProjectData(platformBuildOptions.projectDir);
-		const platformData = this.$platformsData.getPlatformData(platform, projectData);
-		const workflowData = this.$platformWorkflowDataFactory.createPlatformWorkflowData(platform, <any>platformBuildOptions, (<any>platformBuildOptions).nativePrepare);
-
-		platformBuildOptions.buildOutputStdio = "pipe";
-
-		const result = await this.$platformWorkflowService.buildPlatform(platformData, projectData, workflowData, platformBuildOptions);
+		const result = await this.$platformBuildService.buildPlatform(nativePlatformData, projectData, buildPlatformData);
 
 		return result;
 	}

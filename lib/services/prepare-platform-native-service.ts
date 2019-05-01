@@ -1,6 +1,7 @@
 import * as path from "path";
 import * as constants from "../constants";
 import { performanceLog } from "../common/decorators";
+import { PreparePlatformData } from "./workflow/workflow-data-service";
 
 export class PlatformNativeService implements IPreparePlatformService {
 	constructor(
@@ -21,28 +22,17 @@ export class PlatformNativeService implements IPreparePlatformService {
 		platformData.platformProjectService.ensureConfigurationFileInAppResources(projectData);
 		await platformData.platformProjectService.interpolateData(projectData, config);
 		platformData.platformProjectService.afterCreateProject(platformData.projectRoot, projectData);
-		this.$projectChangesService.setNativePlatformStatus(platformData.normalizedPlatformName, projectData,
-			{ nativePlatformStatus: constants.NativePlatformStatus.requiresPrepare });
+		this.$projectChangesService.setNativePlatformStatus(platformData, { nativePlatformStatus: constants.NativePlatformStatus.requiresPrepare });
 	}
 
 	@performanceLog()
-	public async preparePlatform(platformData: IPlatformData, projectData: IProjectData, preparePlatformData: IPreparePlatformData): Promise<boolean> {
-		const { nativePrepare, release, useHotModuleReload, signingOptions } = preparePlatformData;
+	public async preparePlatform(platformData: IPlatformData, projectData: IProjectData, preparePlatformData: PreparePlatformData): Promise<boolean> {
+		const { nativePrepare, release } = preparePlatformData;
 		if (nativePrepare && nativePrepare.skipNativePrepare) {
 			return false;
 		}
 
-		const nativePlatformStatus = (nativePrepare && nativePrepare.skipNativePrepare) ? constants.NativePlatformStatus.requiresPlatformAdd : constants.NativePlatformStatus.requiresPrepare;
-		const changesInfo = await this.$projectChangesService.checkForChanges({
-			platform: platformData.platformNameLowerCase,
-			projectData,
-			projectChangesOptions: {
-				signingOptions,
-				release,
-				nativePlatformStatus,
-				useHotModuleReload
-			}
-		});
+		const changesInfo = await this.$projectChangesService.checkForChanges(platformData.platformNameLowerCase, projectData, preparePlatformData);
 
 		const hasModulesChange = !changesInfo || changesInfo.modulesChanged;
 		const hasConfigChange = !changesInfo || changesInfo.configChanged;
@@ -60,7 +50,7 @@ export class PlatformNativeService implements IPreparePlatformService {
 		this.prepareAppResources(platformData, projectData);
 
 		if (hasChangesRequirePrepare) {
-			await platformData.platformProjectService.prepareProject(projectData, signingOptions);
+			await platformData.platformProjectService.prepareProject(projectData, preparePlatformData);
 		}
 
 		if (hasModulesChange) {
@@ -72,9 +62,8 @@ export class PlatformNativeService implements IPreparePlatformService {
 			await platformData.platformProjectService.handleNativeDependenciesChange(projectData, { release });
 		}
 
-		platformData.platformProjectService.interpolateConfigurationFile(projectData, signingOptions);
-		this.$projectChangesService.setNativePlatformStatus(platformData.platformNameLowerCase, projectData,
-			{ nativePlatformStatus: constants.NativePlatformStatus.alreadyPrepared });
+		platformData.platformProjectService.interpolateConfigurationFile(projectData, preparePlatformData);
+		this.$projectChangesService.setNativePlatformStatus(platformData, { nativePlatformStatus: constants.NativePlatformStatus.alreadyPrepared });
 
 		return hasChanges;
 	}
@@ -123,7 +112,7 @@ export class PlatformNativeService implements IPreparePlatformService {
 			return;
 		}
 
-		const previousPrepareInfo = this.$projectChangesService.getPrepareInfo(platformData.platformNameLowerCase, projectData);
+		const previousPrepareInfo = this.$projectChangesService.getPrepareInfo(platformData);
 		if (!previousPrepareInfo || previousPrepareInfo.nativePlatformStatus !== constants.NativePlatformStatus.alreadyPrepared) {
 			return;
 		}

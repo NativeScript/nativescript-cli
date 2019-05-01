@@ -9,8 +9,8 @@ export class LiveSyncService  implements ILiveSyncService2 {
 		private $mobileHelper: Mobile.IMobileHelper,
 	) { }
 
-	public async fullSync(device: Mobile.IDevice, liveSyncDeviceInfo: ILiveSyncDeviceInfo, projectData: IProjectData, liveSyncInfo: ILiveSyncInfo): Promise<ILiveSyncResultInfo> {
-		const platformLiveSyncService = this.getLiveSyncService("ios");
+	public async syncInitialDataOnDevice(device: Mobile.IDevice, liveSyncDeviceInfo: ILiveSyncDeviceInfo, projectData: IProjectData, liveSyncInfo: ILiveSyncInfo): Promise<ILiveSyncResultInfo> {
+		const platformLiveSyncService = this.getLiveSyncService(device.deviceInfo.platform);
 		const liveSyncResultInfo = await platformLiveSyncService.fullSync({
 			projectData,
 			device,
@@ -23,10 +23,47 @@ export class LiveSyncService  implements ILiveSyncService2 {
 		return liveSyncResultInfo;
 	}
 
+	public async syncChangedDataOnDevice(device: Mobile.IDevice, filesToSync: string[], liveSyncDeviceInfo: ILiveSyncDeviceInfo, projectData: IProjectData, liveSyncInfo: ILiveSyncInfo): Promise<ILiveSyncResultInfo> {
+		// const isInHMRMode = liveSyncInfo.useHotModuleReload; // && platformHmrData.hash;
+		// if (isInHMRMode) {
+		// 	this.$hmrStatusService.watchHmrStatus(device.deviceInfo.identifier, platformHmrData.hash);
+		// }
+
+		const platformLiveSyncService = this.getLiveSyncService(device.deviceInfo.platform);
+		const liveSyncResultInfo = await platformLiveSyncService.liveSyncWatchAction(device, {
+			liveSyncDeviceInfo,
+			projectData,
+			filesToRemove: [],
+			filesToSync,
+			isReinstalled: false,
+			hmrData: null, // platformHmrData,
+			useHotModuleReload: liveSyncInfo.useHotModuleReload,
+			force: liveSyncInfo.force,
+			connectTimeout: 1000
+		});
+
+		console.log("============ liveSyncResultInfo ============= ", liveSyncResultInfo);
+
+		// await this.refreshApplication(projectData, liveSyncResultInfo, deviceBuildInfoDescriptor.debugOptions, deviceBuildInfoDescriptor.outputPath);
+
+		// // If didRecover is true, this means we were in ErrorActivity and fallback files were already transferred and app will be restarted.
+		// if (!liveSyncResultInfo.didRecover && isInHMRMode) {
+		// 	const status = await this.$hmrStatusService.getHmrStatus(device.deviceInfo.identifier, platformHmrData.hash);
+		// 	if (status === HmrConstants.HMR_ERROR_STATUS) {
+		// 		watchInfo.filesToSync = platformHmrData.fallbackFiles;
+		// 		liveSyncResultInfo = await service.liveSyncWatchAction(device, watchInfo);
+		// 		// We want to force a restart of the application.
+		// 		liveSyncResultInfo.isFullSync = true;
+		// 		await this.refreshApplication(projectData, liveSyncResultInfo, deviceBuildInfoDescriptor.debugOptions, deviceBuildInfoDescriptor.outputPath);
+		// 	}
+		// }
+
+		// this.$logger.info(`Successfully synced application ${liveSyncResultInfo.deviceAppData.appIdentifier} on device ${liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier}.`);
+		return;
+	}
+
 	@performanceLog()
 	public async refreshApplication(liveSyncDeviceInfo: ILiveSyncDeviceInfo, projectData: IProjectData, liveSyncResultInfo: ILiveSyncResultInfo, debugOpts?: IDebugOptions, outputPath?: string): Promise<IRestartApplicationInfo | IDebugInformation> {
-		// const deviceDescriptor = this.getDeviceDescriptor(liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier, projectData.projectDir);
-
 		return liveSyncDeviceInfo && liveSyncDeviceInfo.debugggingEnabled ?
 			this.refreshApplicationWithDebug(projectData, liveSyncResultInfo, debugOpts, outputPath) :
 			this.refreshApplicationWithoutDebug(projectData, liveSyncResultInfo, debugOpts, outputPath);
@@ -1076,4 +1113,3 @@ $injector.register("liveSyncService", LiveSyncService);
 // }
 
 // $injector.register("usbLiveSyncService", DeprecatedUsbLiveSyncService);
-

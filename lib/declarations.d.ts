@@ -1062,7 +1062,8 @@ interface IBuildArtefactsService {
 }
 
 interface IPlatformAddService {
-	addPlatform(addPlatformData: IAddPlatformData, projectData: IProjectData): Promise<void>;
+	addPlatform(projectData: IProjectData, addPlatformData: any): Promise<void>;
+	addPlatformIfNeeded(platformData: IPlatformData, projectData: IProjectData, addPlatformData: any): Promise<void>;
 }
 
 interface IPlatformCommandsService {
@@ -1079,10 +1080,4 @@ interface IAddPlatformData {
 	platformParam: string;
 	frameworkPath?: string;
 	nativePrepare?: INativePrepare;
-}
-
-interface IPlatformBuildService {
-	buildPlatform(platformData: IPlatformData, projectData: IProjectData, buildConfig: IBuildConfig): Promise<string>;
-	saveBuildInfoFile(platformData: IPlatformData, projectData: IProjectData, buildInfoFileDirname: string): void;
-	getBuildInfoFromFile(platformData: IPlatformData, buildConfig: IBuildConfig, buildOutputPath?: string): IBuildInfo;
 }
