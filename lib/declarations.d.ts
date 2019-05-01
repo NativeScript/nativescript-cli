@@ -1028,7 +1028,9 @@ interface INetworkConnectivityValidator {
 }
 
 interface IBundleWorkflowService {
-	start(projectDir: string, deviceDescriptors: ILiveSyncDeviceInfo[], liveSyncInfo: ILiveSyncInfo): Promise<void>;
+	preparePlatform(platform: string, projectDir: string, options: IOptions): Promise<void>;
+	buildPlatform(platform: string, projectDir: string, options: IOptions): Promise<string>;
+	runPlatform(projectDir: string, deviceDescriptors: ILiveSyncDeviceInfo[], liveSyncInfo: ILiveSyncInfo): Promise<void>;
 }
 
 interface IPlatformValidationService {

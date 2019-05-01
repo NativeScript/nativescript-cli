@@ -1,5 +1,6 @@
 import { ANDROID_RELEASE_BUILD_ERROR_MESSAGE, AndroidAppBundleMessages } from "../constants";
 import { ValidatePlatformCommandBase } from "./command-base";
+import { BundleWorkflowService } from "../services/bundle-workflow-service";
 
 export abstract class BuildCommandBase extends ValidatePlatformCommandBase {
 	constructor($options: IOptions,
@@ -7,7 +8,7 @@ export abstract class BuildCommandBase extends ValidatePlatformCommandBase {
 		$projectData: IProjectData,
 		$platformsData: IPlatformsData,
 		protected $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-		protected $platformWorkflowService: IPlatformWorkflowService,
+		protected $bundleWorkflowService: BundleWorkflowService,
 		$platformValidationService: IPlatformValidationService,
 		private $bundleValidatorHelper: IBundleValidatorHelper,
 		protected $logger: ILogger) {
@@ -17,7 +18,7 @@ export abstract class BuildCommandBase extends ValidatePlatformCommandBase {
 
 	public async executeCore(args: string[]): Promise<string> {
 		const platform = args[0].toLowerCase();
-		const outputPath = await this.$platformWorkflowService.buildPlatform(platform, this.$projectData.projectDir, this.$options);
+		const outputPath = await this.$bundleWorkflowService.buildPlatform(platform, this.$projectData.projectDir, this.$options);
 
 		return outputPath;
 	}
@@ -56,11 +57,11 @@ export class BuildIosCommand extends BuildCommandBase implements ICommand {
 		$projectData: IProjectData,
 		$platformsData: IPlatformsData,
 		$devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-		$platformWorkflowService: IPlatformWorkflowService,
+		$bundleWorkflowService: BundleWorkflowService,
 		$platformValidationService: IPlatformValidationService,
 		$bundleValidatorHelper: IBundleValidatorHelper,
 		$logger: ILogger) {
-			super($options, $errors, $projectData, $platformsData, $devicePlatformsConstants, $platformWorkflowService, $platformValidationService, $bundleValidatorHelper, $logger);
+			super($options, $errors, $projectData, $platformsData, $devicePlatformsConstants, $bundleWorkflowService, $platformValidationService, $bundleValidatorHelper, $logger);
 	}
 
 	public async execute(args: string[]): Promise<void> {
@@ -91,12 +92,12 @@ export class BuildAndroidCommand extends BuildCommandBase implements ICommand {
 		$projectData: IProjectData,
 		$platformsData: IPlatformsData,
 		$devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-		$platformWorkflowService: IPlatformWorkflowService,
+		$bundleWorkflowService: BundleWorkflowService,
 		$platformValidationService: IPlatformValidationService,
 		$bundleValidatorHelper: IBundleValidatorHelper,
 		protected $androidBundleValidatorHelper: IAndroidBundleValidatorHelper,
 		protected $logger: ILogger) {
-			super($options, $errors, $projectData, $platformsData, $devicePlatformsConstants, $platformWorkflowService, $platformValidationService, $bundleValidatorHelper, $logger);
+			super($options, $errors, $projectData, $platformsData, $devicePlatformsConstants, $bundleWorkflowService, $platformValidationService, $bundleValidatorHelper, $logger);
 	}
 
 	public async execute(args: string[]): Promise<void> {

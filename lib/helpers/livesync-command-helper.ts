@@ -128,7 +128,7 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 			force: this.$options.force
 		};
 
-		await this.$bundleWorkflowService.start(this.$projectData.projectDir, deviceDescriptors, liveSyncInfo);
+		await this.$bundleWorkflowService.runPlatform(this.$projectData.projectDir, deviceDescriptors, liveSyncInfo);
 
 		// const remainingDevicesToSync = devices.map(d => d.deviceInfo.identifier);
 		// this.$liveSyncService.on(LiveSyncEvents.liveSyncStopped, (data: { projectDir: string, deviceIdentifier: string }) => {

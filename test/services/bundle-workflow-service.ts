@@ -1,7 +1,6 @@
 import { Yok } from "../../lib/common/yok";
 import { BundleWorkflowService } from "../../lib/services/bundle-workflow-service";
 import { assert } from "chai";
-import { PlatformWorkflowService } from "../../lib/services/workflow/platform-workflow-service";
 
 const deviceMap: IDictionary<any> = {
 	myiOSDevice: {
@@ -42,7 +41,7 @@ function createTestInjector(): IInjector {
 		emit: () => ({}),
 		startWatcher: () => ({})
 	}));
-	injector.register("platformWorkflowService", PlatformWorkflowService);
+	injector.register("bundleWorkflowService", BundleWorkflowService);
 	injector.register("pluginsService", ({}));
 	injector.register("projectDataService", ({
 		getProjectData: () => ({
@@ -102,7 +101,7 @@ describe("BundleWorkflowService", () => {
 				};
 
 				const bundleWorkflowService: IBundleWorkflowService = injector.resolve("bundleWorkflowService");
-				await bundleWorkflowService.start(projectDir, [iOSDeviceDescriptor], liveSyncInfo);
+				await bundleWorkflowService.runPlatform(projectDir, [iOSDeviceDescriptor], liveSyncInfo);
 
 				assert.isTrue(isStartWatcherCalled);
 			});
@@ -130,13 +129,13 @@ describe("BundleWorkflowService", () => {
 					const injector = createTestInjector();
 
 					const actualAddedPlatforms: IPlatformData[] = [];
-					const platformAddService: IPlatformAddService = injector.resolve("platformWorkflowService");
+					const platformAddService: IPlatformAddService = injector.resolve("bundleWorkflowService");
 					platformAddService.addPlatformIfNeeded = async (platformData: IPlatformData) => {
 						actualAddedPlatforms.push(platformData);
 					};
 
 					const bundleWorkflowService: IBundleWorkflowService = injector.resolve("bundleWorkflowService");
-					await bundleWorkflowService.start(projectDir, testCase.connectedDevices, liveSyncInfo);
+					await bundleWorkflowService.runPlatform(projectDir, testCase.connectedDevices, liveSyncInfo);
 
 					assert.deepEqual(actualAddedPlatforms.map(pData => pData.platformNameLowerCase), testCase.expectedAddedPlatforms);
 				});
@@ -148,7 +147,7 @@ describe("BundleWorkflowService", () => {
 			beforeEach(() => {
 				injector = createTestInjector();
 
-				const platformAddService: IPlatformAddService = injector.resolve("platformWorkflowService");
+				const platformAddService: IPlatformAddService = injector.resolve("bundleWorkflowService");
 				platformAddService.addPlatformIfNeeded = async () => { return; };
 
 				const platformBuildService: IPlatformBuildService = injector.resolve("platformBuildService");

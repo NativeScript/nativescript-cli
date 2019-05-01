@@ -1,12 +1,8 @@
 import { INITIAL_SYNC_EVENT_NAME, FILES_CHANGE_EVENT_NAME } from "../constants";
 import { WorkflowDataService } from "./workflow/workflow-data-service";
 
-// import * as path from "path";
-// import * as constants from "../constants";
-
 const deviceDescriptorPrimaryKey = "identifier";
 
-// TODO: Rename this class to RunWorkflowService
 export class BundleWorkflowService implements IBundleWorkflowService {
 	private liveSyncProcessesInfo: IDictionary<any> = {};
 
@@ -17,23 +13,33 @@ export class BundleWorkflowService implements IBundleWorkflowService {
 		private $errors: IErrors,
 		private $injector: IInjector,
 		private $mobileHelper: Mobile.IMobileHelper,
-		// private $fs: IFileSystem,
 		private $logger: ILogger,
-		// private $platformAddService: IPlatformAddService,
+		private $platformService: IPlatformService,
 		private $platformAddService: IPlatformAddService,
 		private $platformBuildService: IPlatformBuildService,
 		private $platformWatcherService: IPlatformWatcherService,
 		private $pluginsService: IPluginsService,
 		private $projectDataService: IProjectDataService,
 		private $workflowDataService: WorkflowDataService
-		// private $projectChangesService: IProjectChangesService
 	) { }
 
-	// processInfo[projectDir] = {
-	// 		deviceDescriptors, nativeFilesWatcher, jsFilesWatcher
-	// }
+	public async preparePlatform(platform: string, projectDir: string, options: IOptions): Promise<void> {
+		const { nativePlatformData, projectData, addPlatformData, preparePlatformData } = this.$workflowDataService.createWorkflowData(platform, projectDir, options);
 
-	public async start(projectDir: string, deviceDescriptors: ILiveSyncDeviceInfo[], liveSyncInfo: ILiveSyncInfo): Promise<void> {
+		await this.$platformAddService.addPlatformIfNeeded(nativePlatformData, projectData, addPlatformData);
+		await this.$platformService.preparePlatform(nativePlatformData, projectData, preparePlatformData);
+	}
+
+	public async buildPlatform(platform: string, projectDir: string, options: IOptions): Promise<string> {
+		const { nativePlatformData, projectData, buildPlatformData } = this.$workflowDataService.createWorkflowData(platform, projectDir, options);
+
+		await this.preparePlatform(platform, projectDir, options);
+		const result = await this.$platformBuildService.buildPlatform(nativePlatformData, projectData, buildPlatformData);
+
+		return result;
+	}
+
+	public async runPlatform(projectDir: string, deviceDescriptors: ILiveSyncDeviceInfo[], liveSyncInfo: ILiveSyncInfo): Promise<void> {
 		const projectData = this.$projectDataService.getProjectData(projectDir);
 		await this.initializeSetup(projectData);
 
@@ -81,6 +87,7 @@ export class BundleWorkflowService implements IBundleWorkflowService {
 
 	private async syncInitialDataOnDevice(device: Mobile.IDevice, deviceDescriptor: ILiveSyncDeviceInfo, projectData: IProjectData, liveSyncInfo: ILiveSyncInfo): Promise<void> {
 		const { nativePlatformData: platformData, buildPlatformData } = this.$workflowDataService.createWorkflowData(device.deviceInfo.platform, projectData.projectDir, liveSyncInfo);
+
 		const outputPath = deviceDescriptor.outputPath || platformData.getBuildOutputPath(buildPlatformData);
 		const packageFilePath = await this.$platformBuildService.buildPlatformIfNeeded(platformData, projectData, buildPlatformData, outputPath);
 
@@ -88,14 +95,8 @@ export class BundleWorkflowService implements IBundleWorkflowService {
 
 		// TODO: Consider to improve this
 		const platformLiveSyncService = this.getLiveSyncService(platformData.platformNameLowerCase);
-		const liveSyncResultInfo = await platformLiveSyncService.fullSync({
-			projectData,
-			device,
-			useHotModuleReload: liveSyncInfo.useHotModuleReload,
-			watch: !liveSyncInfo.skipWatcher,
-			force: liveSyncInfo.force,
-			liveSyncDeviceInfo: deviceDescriptor
-		});
+		const { force, useHotModuleReload, skipWatcher } = liveSyncInfo;
+		const liveSyncResultInfo = await platformLiveSyncService.fullSync({ force, useHotModuleReload, projectData, device, watch: !skipWatcher, liveSyncDeviceInfo: deviceDescriptor });
 
 		await this.$deviceRestartApplicationService.restartOnDevice(deviceDescriptor, projectData, liveSyncResultInfo, platformLiveSyncService);
 	}

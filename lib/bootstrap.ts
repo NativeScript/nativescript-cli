@@ -45,7 +45,6 @@ $injector.require("platformWatcherService", "./services/platform/platform-watche
 $injector.require("deviceInstallationService", "./services/device/device-installation-service");
 $injector.require("deviceRestartApplicationService", "./services/device/device-restart-application-service");
 
-$injector.require("platformWorkflowService", "./services/workflow/platform-workflow-service");
 $injector.require("workflowDataService", "./services/workflow/workflow-data-service");
 $injector.require("bundleWorkflowService", "./services/bundle-workflow-service");
 
