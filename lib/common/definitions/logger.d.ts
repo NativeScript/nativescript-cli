@@ -14,6 +14,5 @@ interface ILogger {
 
 	prepare(item: any): string;
 	printInfoMessageOnSameLine(message: string): void;
-	printMsgWithTimeout(message: string, timeout: number): Promise<void>;
 	printOnStderr(formatStr?: any, ...args: any[]): void;
 }

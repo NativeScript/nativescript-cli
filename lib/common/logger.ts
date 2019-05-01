@@ -113,16 +113,6 @@ export class Logger implements ILogger {
 		}
 	}
 
-	public printMsgWithTimeout(message: string, timeout: number): Promise<void> {
-		return new Promise<void>((resolve, reject) => {
-			setTimeout(() => {
-				this.printInfoMessageOnSameLine(message);
-				resolve();
-			}, timeout);
-
-		});
-	}
-
 	public printMarkdown(...args: string[]): void {
 		const opts = {
 			unescape: true,

@@ -47,9 +47,6 @@ export class CommonLoggerStub implements ILogger {
 	}
 
 	printInfoMessageOnSameLine(message: string): void { }
-	async printMsgWithTimeout(message: string, timeout: number): Promise<void> {
-		return null;
-	}
 
 	printMarkdown(message: string): void {
 		this.output += message;
