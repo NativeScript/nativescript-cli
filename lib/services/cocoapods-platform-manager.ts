@@ -13,10 +13,10 @@ export class CocoaPodsPlatformManager implements ICocoaPodsPlatformManager {
 			if (shouldReplacePlatformSection) {
 				this.$logger.warn(`Multiple identical platforms with different versions have been detected during the processing of podfiles. The current platform's content "${platformSectionData.podfilePlatformData.content}" from ${platformSectionData.podfilePlatformData.path} will be replaced with "${podfilePlatformData.content}" from ${podfilePlatformData.path}`);
 				const newSection = this.buildPlatformSection(podfilePlatformData);
-				projectPodfileContent = projectPodfileContent.replace(platformSectionData.platformSectionContent, newSection);
+				projectPodfileContent = projectPodfileContent.replace(platformSectionData.platformSectionContent, newSection.trim());
 			}
 		} else {
-			projectPodfileContent += this.buildPlatformSection(podfilePlatformData);
+			projectPodfileContent = projectPodfileContent.trim() + EOL + EOL + this.buildPlatformSection(podfilePlatformData);
 		}
 
 		return projectPodfileContent;
@@ -29,7 +29,7 @@ export class CocoaPodsPlatformManager implements ICocoaPodsPlatformManager {
 			const allPodfiles = projectPodfileContent.match(podfileContentRegExp) || [];
 			const selectedPlatformData = this.selectPlatformDataFromProjectPodfile(allPodfiles);
 			const newPlatformSection = selectedPlatformData ? this.buildPlatformSection(selectedPlatformData) : "";
-			const regExp = new RegExp(`\\r?\\n${platformSectionData.platformSectionContent}\\r?\\n`, "mg");
+			const regExp = new RegExp(`${platformSectionData.platformSectionContent}\\r?\\n`, "mg");
 			projectPodfileContent = projectPodfileContent.replace(regExp, newPlatformSection);
 		}
 
