@@ -48,9 +48,10 @@ module.exports = function (hookArgs) {
           }
         } else {
           const defaultInfoPlistFile = path.join(__dirname, '..', 'platforms', 'ios', 'info.default.plist');
+          const defaultInfoPlistFileContent = fs.readFileSync(defaultInfoPlistFile).toString();
           const currentContent = fs.existsSync(destinationInfoPlistFile) && fs.readFileSync(destinationInfoPlistFile).toString();
-          if (currentContent !== defaultInfoPlistFile) {
-            fs.writeFileSync(destinationInfoPlistFile, defaultInfoPlistFile);
+          if (currentContent !== defaultInfoPlistFileContent) {
+            fs.writeFileSync(destinationInfoPlistFile, defaultInfoPlistFileContent);
           }
         }
       }

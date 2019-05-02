@@ -2,13 +2,13 @@
   "private": true,
   "name": "kinvey-node-integration-tests",
   "description": "Integration tests for kinvey-nodejs-sdk.",
-  "version": "0.0.4",
+  "version": "0.0.11",
   "scripts": {
     "pretest": "node scripts/test.js",
     "test": "mocha --opts mocha.opts \"test/**/*.spec.js\""
   },
   "dependencies": {
-    "kinvey-node-sdk": "^3.13.0-next.32"
+    "kinvey-node-sdk": "^3.13.0-next.39"
   },
   "devDependencies": {
     "@babel/core": "~7.4.3",

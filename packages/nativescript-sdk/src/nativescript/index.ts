@@ -9,11 +9,11 @@ import {
   DataStore,
   DataStoreType,
   Errors,
-  Files,
   Kmd,
   Query,
   AuthorizationGrant
 } from 'kinvey-js-sdk';
+import * as Files from './files';
 import { User } from './user';
 import { init, initialize } from './init';
 import { StorageProvider } from './storage';

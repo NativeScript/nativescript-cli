@@ -13,6 +13,8 @@
 			</array>
 		</dict>
 	</array>
+	<key>UseExternalPushProvider</key>
+	<true/>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>remote-notification</string>
