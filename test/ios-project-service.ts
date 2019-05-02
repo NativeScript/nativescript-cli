@@ -1176,17 +1176,19 @@ describe("Merge Project XCConfig files", () => {
 
 		// run merge for all release: debug|release
 		for (const release in [true, false]) {
-			await (<any>iOSProjectService).mergeProjectXcconfigFiles(projectData, { release });
+			await (<any>iOSProjectService).mergeProjectXcconfigFiles(projectData);
 
-			const destinationFilePath = xcconfigService.getPluginsXcconfigFilePath(projectRoot, { release: !!release });
+			const destinationFilePaths = xcconfigService.getPluginsXcconfigFilePaths(projectRoot);
 
-			assert.isTrue(fs.exists(destinationFilePath), 'Target build xcconfig is missing for release: ' + release);
-			const expected = {
-				'ASSETCATALOG_COMPILER_APPICON_NAME': 'AppIcon',
-				'ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME': 'LaunchImage',
-				'CODE_SIGN_IDENTITY': 'iPhone Distribution'
-			};
-			assertPropertyValues(expected, destinationFilePath, testInjector);
+			_.each(destinationFilePaths, destinationFilePath => {
+				assert.isTrue(fs.exists(destinationFilePath), 'Target build xcconfig is missing for release: ' + release);
+				const expected = {
+					'ASSETCATALOG_COMPILER_APPICON_NAME': 'AppIcon',
+					'ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME': 'LaunchImage',
+					'CODE_SIGN_IDENTITY': 'iPhone Distribution'
+				};
+				assertPropertyValues(expected, destinationFilePath, testInjector);
+			});
 		}
 	});
 
@@ -1204,13 +1206,15 @@ describe("Merge Project XCConfig files", () => {
 
 			await (<any>iOSProjectService).mergeProjectXcconfigFiles(projectData, { release });
 
-			const destinationFilePath = xcconfigService.getPluginsXcconfigFilePath(projectRoot, { release: !!release });
+			const destinationFilePaths = xcconfigService.getPluginsXcconfigFilePaths(projectRoot);
 
-			assert.isTrue(fs.exists(destinationFilePath), 'Target build xcconfig is missing for release: ' + release);
-			const expected = {
-				'CODE_SIGN_ENTITLEMENTS': iOSEntitlementsService.getPlatformsEntitlementsRelativePath(projectData)
-			};
-			assertPropertyValues(expected, destinationFilePath, testInjector);
+			_.each(destinationFilePaths, destinationFilePath => {
+				assert.isTrue(fs.exists(destinationFilePath), 'Target build xcconfig is missing for release: ' + release);
+				const expected = {
+					'CODE_SIGN_ENTITLEMENTS': iOSEntitlementsService.getPlatformsEntitlementsRelativePath(projectData)
+				};
+				assertPropertyValues(expected, destinationFilePath, testInjector);
+			});
 		}
 	});
 
@@ -1220,13 +1224,12 @@ describe("Merge Project XCConfig files", () => {
 		const xcconfigEntitlements = appResourceXCConfigContent + `${EOL}CODE_SIGN_ENTITLEMENTS = ${expectedEntitlementsFile}`;
 		fs.writeFile(appResourcesXcconfigPath, xcconfigEntitlements);
 
-		// run merge for all release: debug|release
-		for (const release in [true, false]) {
-			await (<any>iOSProjectService).mergeProjectXcconfigFiles(projectData, { release });
+		await (<any>iOSProjectService).mergeProjectXcconfigFiles(projectData);
 
-			const destinationFilePath = xcconfigService.getPluginsXcconfigFilePath(projectRoot, { release: !!release });
+		const destinationFilePaths = xcconfigService.getPluginsXcconfigFilePaths(projectRoot);
 
-			assert.isTrue(fs.exists(destinationFilePath), 'Target build xcconfig is missing for release: ' + release);
+		_.each(destinationFilePaths, destinationFilePath => {
+			assert.isTrue(fs.exists(destinationFilePath), `Target build xcconfig ${destinationFilePath} is missing.`);
 			const expected = {
 				'ASSETCATALOG_COMPILER_APPICON_NAME': 'AppIcon',
 				'ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME': 'LaunchImage',
@@ -1234,20 +1237,19 @@ describe("Merge Project XCConfig files", () => {
 				'CODE_SIGN_ENTITLEMENTS': expectedEntitlementsFile
 			};
 			assertPropertyValues(expected, destinationFilePath, testInjector);
-		}
+		});
 	});
 
 	it("creates empty plugins-<config>.xcconfig in case there are no build.xcconfig in App_Resources and in plugins", async () => {
-		// run merge for all release: debug|release
-		for (const release in [true, false]) {
-			await (<any>iOSProjectService).mergeProjectXcconfigFiles(projectData, { release });
+		await (<any>iOSProjectService).mergeProjectXcconfigFiles(projectData);
 
-			const destinationFilePath = xcconfigService.getPluginsXcconfigFilePath(projectRoot, { release: !!release });
+		const destinationFilePaths = xcconfigService.getPluginsXcconfigFilePaths(projectRoot);
 
-			assert.isTrue(fs.exists(destinationFilePath), 'Target build xcconfig is missing for release: ' + release);
+		_.each(destinationFilePaths, destinationFilePath => {
+			assert.isTrue(fs.exists(destinationFilePath), `Target build xcconfig ${destinationFilePath} is missing.` );
 			const content = fs.readFile(destinationFilePath).toString();
 			assert.equal(content, "");
-		}
+		});
 	});
 });
 
