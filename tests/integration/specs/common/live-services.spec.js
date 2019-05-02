@@ -18,7 +18,7 @@ const checkLocalStorageForSubscriptionKey = () => {
   return hasSubscriptionKey;
 }
 
-describe.only('Live-services', () => {
+describe('Live-services', () => {
   networkStore = Kinvey.DataStore.collection(collectionName, Kinvey.DataStoreType.Network);
 
   var messageCreated;
