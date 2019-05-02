@@ -55,14 +55,16 @@ export class CocoaPodsService implements ICocoaPodsService {
 		return podInstallResult;
 	}
 
-	public async mergePodXcconfigFile(projectData: IProjectData, platformData: IPlatformData, opts: IRelease) {
+	public async mergePodXcconfigFile(projectData: IProjectData, platformData: IPlatformData): Promise<void> {
 		const podFilesRootDirName = path.join("Pods", "Target Support Files", `Pods-${projectData.projectName}`);
 		const podFolder = path.join(platformData.projectRoot, podFilesRootDirName);
 		if (this.$fs.exists(podFolder)) {
-			const podXcconfigFilePath = opts && opts.release ? path.join(podFolder, `Pods-${projectData.projectName}.release.xcconfig`)
-				: path.join(podFolder, `Pods-${projectData.projectName}.debug.xcconfig`);
-			const pluginsXcconfigFilePath = this.$xcconfigService.getPluginsXcconfigFilePath(platformData.projectRoot, opts);
-			await this.$xcconfigService.mergeFiles(podXcconfigFilePath, pluginsXcconfigFilePath);
+			const pluginsXcconfigFilePaths = this.$xcconfigService.getPluginsXcconfigFilePaths(platformData.projectRoot);
+			for (const configuration in pluginsXcconfigFilePaths) {
+				const pluginsXcconfigFilePath = pluginsXcconfigFilePaths[configuration];
+				const podXcconfigFilePath = path.join(podFolder, `Pods-${projectData.projectName}.${configuration}.xcconfig`);
+				await this.$xcconfigService.mergeFiles(podXcconfigFilePath, pluginsXcconfigFilePath);
+			}
 		}
 	}
 

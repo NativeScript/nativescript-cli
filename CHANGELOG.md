@@ -1,6 +1,18 @@
 NativeScript CLI Changelog
 ================
 
+5.3.4 (2019, April 24)
+==
+
+### Fixed
+* [Fixed #4561](https://github.com/NativeScript/nativescript-cli/issues/4561): CLI merges xcconfig files only for specified build configuration
+
+5.3.3 (2019, April 23)
+==
+
+### Fixed
+* [Fixed #4527](https://github.com/NativeScript/nativescript-cli/issues/4527): Unable to upload applications to App Store
+
 5.3.2 (2019, April 12)
 ==
 
@@ -9,6 +21,17 @@ NativeScript CLI Changelog
 * [Fixed #4498](https://github.com/NativeScript/nativescript-cli/pull/4498): API: Change the AppStore ids for kinvey scanner and preview app
 * [Fixed #4504](https://github.com/NativeScript/nativescript-cli/issues/4504): Custom tagged versions of android runtime are not supported
 * [Fixed #4510](https://github.com/NativeScript/nativescript-cli/pull/4510): Handle HTTP 304 response status code
+
+5.3.1 (2019, April 03)
+==
+
+### Implemented
+* [Implemented #4492](https://github.com/NativeScript/nativescript-cli/pull/4492): API(kinvey): provide correct data to preview-sdk based on the schema
+
+### Fixed
+* [Fixed #4370](https://github.com/NativeScript/nativescript-cli/issues/4370): NativeScript CLI installation fails on linux
+* [Fixed #4451](https://github.com/NativeScript/nativescript-cli/issues/4451): Error while trying to start application on Android emulator with API level Q
+* [Fixed #4483](https://github.com/NativeScript/nativescript-cli/pull/4483): Detection fixes for emulator/device
 
 5.3.0 (2019, March 27)
 ==
