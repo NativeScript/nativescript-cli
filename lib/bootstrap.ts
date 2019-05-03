@@ -41,8 +41,8 @@ $injector.require("platformValidationService", "./services/platform/platform-val
 $injector.require("platformCommandsService", "./services/platform/platform-commands-service");
 $injector.require("platformWatcherService", "./services/platform/platform-watcher-service");
 
-$injector.require("deviceInstallationService", "./services/device/device-installation-service");
-$injector.require("deviceRefreshApplicationService", "./services/device/device-refresh-application-service");
+$injector.require("deviceInstallAppService", "./services/device/device-install-app-service");
+$injector.require("deviceRefreshAppService", "./services/device/device-refresh-app-service");
 
 $injector.require("workflowDataService", "./services/workflow/workflow-data-service");
 

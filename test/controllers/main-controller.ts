@@ -134,8 +134,8 @@ describe("MainController", () => {
 						actualAddedPlatforms.push(platformData);
 					};
 
-					const bundleWorkflowService: IBundleWorkflowService = injector.resolve("bundleWorkflowService");
-					await bundleWorkflowService.runPlatform(projectDir, testCase.connectedDevices, liveSyncInfo);
+					const mainController = injector.resolve("mainController");
+					await mainController.runPlatform(projectDir, testCase.connectedDevices, liveSyncInfo);
 
 					assert.deepEqual(actualAddedPlatforms.map(pData => pData.platformNameLowerCase), testCase.expectedAddedPlatforms);
 				});
@@ -165,8 +165,8 @@ describe("MainController", () => {
 			// 		const platformWatcherService: IPlatformWatcherService = injector.resolve("platformWatcherService");
 			// 		platformWatcherService.emit(INITIAL_SYNC_EVENT_NAME, { platform, hasNativeChanges: true });
 
-			// 		const bundleWorkflowService: IBundleWorkflowService = injector.resolve("bundleWorkflowService");
-			// 		await bundleWorkflowService.start(projectDir, [iOSDeviceDescriptor], liveSyncInfo);
+			// 		const mainController: MainController = injector.resolve("mainController");
+			// 		await mainController.start(projectDir, [iOSDeviceDescriptor], liveSyncInfo);
 
 			// 		assert.isTrue(isBuildPlatformCalled);
 			// 	});

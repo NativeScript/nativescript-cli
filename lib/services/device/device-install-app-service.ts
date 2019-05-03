@@ -6,7 +6,7 @@ import { BuildPlatformService } from "../platform/build-platform-service";
 
 const buildInfoFileName = ".nsbuildinfo";
 
-export class DeviceInstallationService implements IDeviceInstallationService {
+export class DeviceInstallAppService {
 	constructor(
 		private $analyticsService: IAnalyticsService,
 		private $buildArtefactsService: IBuildArtefactsService,
@@ -109,4 +109,4 @@ export class DeviceInstallationService implements IDeviceInstallationService {
 		}
 	}
 }
-$injector.register("deviceInstallationService", DeviceInstallationService);
+$injector.register("deviceInstallAppService", DeviceInstallAppService);

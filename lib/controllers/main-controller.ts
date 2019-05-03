@@ -1,10 +1,11 @@
-import { INITIAL_SYNC_EVENT_NAME, FILES_CHANGE_EVENT_NAME, LiveSyncEvents } from "../constants";
-import { WorkflowDataService } from "../services/workflow/workflow-data-service";
 import { AddPlatformService } from "../services/platform/add-platform-service";
 import { BuildPlatformService } from "../services/platform/build-platform-service";
-import { PreparePlatformService } from "../services/platform/prepare-platform-service";
+import { DeviceInstallAppService } from "../services/device/device-install-app-service";
+import { DeviceRefreshAppService } from "../services/device/device-refresh-app-service";
 import { EventEmitter } from "events";
-import { DeviceRefreshApplicationService } from "../services/device/device-refresh-application-service";
+import { FILES_CHANGE_EVENT_NAME, INITIAL_SYNC_EVENT_NAME, LiveSyncEvents } from "../constants";
+import { PreparePlatformService } from "../services/platform/prepare-platform-service";
+import { WorkflowDataService } from "../services/workflow/workflow-data-service";
 
 const deviceDescriptorPrimaryKey = "identifier";
 
@@ -14,8 +15,8 @@ export class MainController extends EventEmitter {
 	constructor(
 		private $addPlatformService: AddPlatformService,
 		private $buildPlatformService: BuildPlatformService,
-		private $deviceInstallationService: IDeviceInstallationService,
-		private $deviceRefreshApplicationService: DeviceRefreshApplicationService,
+		private $deviceInstallAppService: DeviceInstallAppService,
+		private $deviceRefreshAppService: DeviceRefreshAppService,
 		private $devicesService: Mobile.IDevicesService,
 		private $errors: IErrors,
 		private $hooksService: IHooksService,
@@ -55,7 +56,7 @@ export class MainController extends EventEmitter {
 		const executeAction = async (device: Mobile.IDevice) => {
 			const { nativePlatformData, projectData, buildPlatformData } = this.$workflowDataService.createWorkflowData(device.deviceInfo.platform, projectDir, liveSyncInfo);
 			await this.$buildPlatformService.buildPlatformIfNeeded(nativePlatformData, projectData, buildPlatformData);
-			await this.$deviceInstallationService.installOnDeviceIfNeeded(device, nativePlatformData, projectData, buildPlatformData);
+			await this.$deviceInstallAppService.installOnDeviceIfNeeded(device, nativePlatformData, projectData, buildPlatformData);
 		};
 
 		await this.$devicesService.execute(executeAction, (device: Mobile.IDevice) => true);
@@ -110,14 +111,14 @@ export class MainController extends EventEmitter {
 			const outputPath = deviceDescriptor.outputPath || platformData.getBuildOutputPath(buildPlatformData);
 			const packageFilePath = await this.$buildPlatformService.buildPlatformIfNeeded(platformData, projectData, buildPlatformData, outputPath);
 
-			await this.$deviceInstallationService.installOnDeviceIfNeeded(device, platformData, projectData, buildPlatformData, packageFilePath, outputPath);
+			await this.$deviceInstallAppService.installOnDeviceIfNeeded(device, platformData, projectData, buildPlatformData, packageFilePath, outputPath);
 
 			// TODO: Consider to improve this
 			const platformLiveSyncService = this.getLiveSyncService(platformData.platformNameLowerCase);
 			const { force, useHotModuleReload, skipWatcher } = liveSyncInfo;
 			const liveSyncResultInfo = await platformLiveSyncService.fullSync({ force, useHotModuleReload, projectData, device, watch: !skipWatcher, liveSyncDeviceInfo: deviceDescriptor });
 
-			await this.$deviceRefreshApplicationService.refreshApplication(deviceDescriptor, projectData, liveSyncResultInfo, platformLiveSyncService, this);
+			await this.$deviceRefreshAppService.refreshApplication(deviceDescriptor, projectData, liveSyncResultInfo, platformLiveSyncService, this);
 		} catch (err) {
 			this.$logger.warn(`Unable to apply changes on device: ${device.deviceInfo.identifier}. Error is: ${err.message}.`);
 
@@ -213,7 +214,7 @@ export class MainController extends EventEmitter {
 			connectTimeout: 1000
 		});
 
-		await this.$deviceRefreshApplicationService.refreshApplication(deviceDescriptor, projectData, liveSyncResultInfo, platformLiveSyncService, this);
+		await this.$deviceRefreshAppService.refreshApplication(deviceDescriptor, projectData, liveSyncResultInfo, platformLiveSyncService, this);
 	}
 
 	public getLiveSyncDeviceDescriptors(projectDir: string): ILiveSyncDeviceInfo[] {

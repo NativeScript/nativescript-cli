@@ -3,7 +3,7 @@ import { EventEmitter } from "events";
 import { DEBUGGER_DETACHED_EVENT_NAME, USER_INTERACTION_NEEDED_EVENT_NAME, LiveSyncEvents, DEBUGGER_ATTACHED_EVENT_NAME } from "../../constants";
 import { EOL } from "os";
 
-export class DeviceRefreshApplicationService {
+export class DeviceRefreshAppService {
 
 	constructor(
 		// private $buildArtefactsService: IBuildArtefactsService,
@@ -177,4 +177,4 @@ export class DeviceRefreshApplicationService {
 		}
 	}
 }
-$injector.register("deviceRefreshApplicationService", DeviceRefreshApplicationService);
+$injector.register("deviceRefreshAppService", DeviceRefreshAppService);

@@ -40,12 +40,6 @@ declare global {
 		hasNativeChanges: boolean;
 	}
 
-	interface IDeviceInstallationService {
-		installOnDevice(device: Mobile.IDevice, platformData: IPlatformData, projectData: IProjectData, buildConfig: IBuildConfig, packageFile?: string, outputFilePath?: string): Promise<void>;
-		installOnDeviceIfNeeded(device: Mobile.IDevice, platformData: IPlatformData, projectData: IProjectData, buildConfig: IBuildConfig, packageFile?: string, outputFilePath?: string): Promise<void>;
-		getDeviceBuildInfoFilePath(device: Mobile.IDevice, projectData: IProjectData): Promise<string>;
-	}
-
 	interface IDeviceRestartApplicationService {
 		restartOnDevice(deviceDescriptor: ILiveSyncDeviceInfo, projectData: IProjectData, liveSyncResultInfo: ILiveSyncResultInfo, platformLiveSyncService: IPlatformLiveSyncService): Promise<IRestartApplicationInfo | IDebugInformation>;
 	}
