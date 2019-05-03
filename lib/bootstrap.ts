@@ -42,7 +42,7 @@ $injector.require("platformCommandsService", "./services/platform/platform-comma
 $injector.require("platformWatcherService", "./services/platform/platform-watcher-service");
 
 $injector.require("deviceInstallationService", "./services/device/device-installation-service");
-$injector.require("deviceRestartApplicationService", "./services/device/device-restart-application-service");
+$injector.require("deviceRefreshApplicationService", "./services/device/device-refresh-application-service");
 
 $injector.require("workflowDataService", "./services/workflow/workflow-data-service");
 $injector.require("bundleWorkflowService", "./services/bundle-workflow-service");

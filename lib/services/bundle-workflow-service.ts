@@ -1,30 +1,33 @@
-import { INITIAL_SYNC_EVENT_NAME, FILES_CHANGE_EVENT_NAME } from "../constants";
+import { INITIAL_SYNC_EVENT_NAME, FILES_CHANGE_EVENT_NAME, LiveSyncEvents } from "../constants";
 import { WorkflowDataService } from "./workflow/workflow-data-service";
 import { AddPlatformService } from "./platform/add-platform-service";
 import { BuildPlatformService } from "./platform/build-platform-service";
 import { PreparePlatformService } from "./platform/prepare-platform-service";
+import { EventEmitter } from "events";
+import { DeviceRefreshApplicationService } from "./device/device-refresh-application-service";
 
 const deviceDescriptorPrimaryKey = "identifier";
 
-export class BundleWorkflowService implements IBundleWorkflowService {
-	private liveSyncProcessesInfo: IDictionary<any> = {};
+export class BundleWorkflowService extends EventEmitter implements IBundleWorkflowService {
+	private liveSyncProcessesInfo: IDictionary<ILiveSyncProcessInfo> = {};
 
 	constructor(
-		private $deviceInstallationService: IDeviceInstallationService,
-		private $deviceRestartApplicationService: IDeviceRestartApplicationService,
-		private $devicesService: Mobile.IDevicesService,
-		private $errors: IErrors,
-		private $injector: IInjector,
-		private $mobileHelper: Mobile.IMobileHelper,
-		private $logger: ILogger,
-		private $preparePlatformService: PreparePlatformService,
 		private $addPlatformService: AddPlatformService,
 		private $buildPlatformService: BuildPlatformService,
+		private $deviceInstallationService: IDeviceInstallationService,
+		private $deviceRefreshApplicationService: DeviceRefreshApplicationService,
+		private $devicesService: Mobile.IDevicesService,
+		private $errors: IErrors,
+		private $hooksService: IHooksService,
+		private $injector: IInjector,
+		private $logger: ILogger,
+		private $mobileHelper: Mobile.IMobileHelper,
 		private $platformWatcherService: IPlatformWatcherService,
 		private $pluginsService: IPluginsService,
+		private $preparePlatformService: PreparePlatformService,
 		private $projectDataService: IProjectDataService,
 		private $workflowDataService: WorkflowDataService
-	) { }
+	) { super(); }
 
 	public async preparePlatform(platform: string, projectDir: string, options: IOptions): Promise<void> {
 		const { nativePlatformData, projectData, addPlatformData, preparePlatformData } = this.$workflowDataService.createWorkflowData(platform, projectDir, options);
@@ -53,11 +56,6 @@ export class BundleWorkflowService implements IBundleWorkflowService {
 			const { nativePlatformData, projectData, buildPlatformData } = this.$workflowDataService.createWorkflowData(device.deviceInfo.platform, projectDir, liveSyncInfo);
 			await this.$buildPlatformService.buildPlatformIfNeeded(nativePlatformData, projectData, buildPlatformData);
 			await this.$deviceInstallationService.installOnDeviceIfNeeded(device, nativePlatformData, projectData, buildPlatformData);
-			await device.applicationManager.startApplication({
-				appId: projectData.projectIdentifiers[device.deviceInfo.platform.toLowerCase()],
-				projectName: projectData.projectName
-			});
-			this.$logger.out(`Successfully started on device with identifier '${device.deviceInfo.identifier}'.`);
 		};
 
 		await this.$devicesService.execute(executeAction, (device: Mobile.IDevice) => true);
@@ -108,17 +106,89 @@ export class BundleWorkflowService implements IBundleWorkflowService {
 	private async syncInitialDataOnDevice(device: Mobile.IDevice, deviceDescriptor: ILiveSyncDeviceInfo, projectData: IProjectData, liveSyncInfo: ILiveSyncInfo): Promise<void> {
 		const { nativePlatformData: platformData, buildPlatformData } = this.$workflowDataService.createWorkflowData(device.deviceInfo.platform, projectData.projectDir, liveSyncInfo);
 
-		const outputPath = deviceDescriptor.outputPath || platformData.getBuildOutputPath(buildPlatformData);
-		const packageFilePath = await this.$buildPlatformService.buildPlatformIfNeeded(platformData, projectData, buildPlatformData, outputPath);
+		try {
+			const outputPath = deviceDescriptor.outputPath || platformData.getBuildOutputPath(buildPlatformData);
+			const packageFilePath = await this.$buildPlatformService.buildPlatformIfNeeded(platformData, projectData, buildPlatformData, outputPath);
 
-		await this.$deviceInstallationService.installOnDeviceIfNeeded(device, platformData, projectData, buildPlatformData, packageFilePath, outputPath);
+			await this.$deviceInstallationService.installOnDeviceIfNeeded(device, platformData, projectData, buildPlatformData, packageFilePath, outputPath);
 
-		// TODO: Consider to improve this
-		const platformLiveSyncService = this.getLiveSyncService(platformData.platformNameLowerCase);
-		const { force, useHotModuleReload, skipWatcher } = liveSyncInfo;
-		const liveSyncResultInfo = await platformLiveSyncService.fullSync({ force, useHotModuleReload, projectData, device, watch: !skipWatcher, liveSyncDeviceInfo: deviceDescriptor });
+			// TODO: Consider to improve this
+			const platformLiveSyncService = this.getLiveSyncService(platformData.platformNameLowerCase);
+			const { force, useHotModuleReload, skipWatcher } = liveSyncInfo;
+			const liveSyncResultInfo = await platformLiveSyncService.fullSync({ force, useHotModuleReload, projectData, device, watch: !skipWatcher, liveSyncDeviceInfo: deviceDescriptor });
 
-		await this.$deviceRestartApplicationService.restartOnDevice(deviceDescriptor, projectData, liveSyncResultInfo, platformLiveSyncService);
+			await this.$deviceRefreshApplicationService.refreshApplication(deviceDescriptor, projectData, liveSyncResultInfo, platformLiveSyncService, this);
+		} catch (err) {
+			this.$logger.warn(`Unable to apply changes on device: ${device.deviceInfo.identifier}. Error is: ${err.message}.`);
+
+			this.emitLivesyncEvent(LiveSyncEvents.liveSyncError, {
+				error: err,
+				deviceIdentifier: device.deviceInfo.identifier,
+				projectDir: projectData.projectDir,
+				applicationIdentifier: projectData.projectIdentifiers[platformData.platformNameLowerCase]
+			});
+
+			await this.stopLiveSync(projectData.projectDir, [device.deviceInfo.identifier], { shouldAwaitAllActions: false });
+		}
+	}
+
+	public async stopLiveSync(projectDir: string, deviceIdentifiers?: string[], stopOptions?: { shouldAwaitAllActions: boolean }): Promise<void> {
+		const liveSyncProcessInfo = this.liveSyncProcessesInfo[projectDir];
+		if (liveSyncProcessInfo && !liveSyncProcessInfo.isStopped) {
+			// In case we are coming from error during livesync, the current action is the one that erred (but we are still executing it),
+			// so we cannot await it as this will cause infinite loop.
+			const shouldAwaitPendingOperation = !stopOptions || stopOptions.shouldAwaitAllActions;
+
+			const deviceIdentifiersToRemove = deviceIdentifiers || _.map(liveSyncProcessInfo.deviceDescriptors, d => d.identifier);
+
+			const removedDeviceIdentifiers = _.remove(liveSyncProcessInfo.deviceDescriptors, descriptor => _.includes(deviceIdentifiersToRemove, descriptor.identifier))
+				.map(descriptor => descriptor.identifier);
+
+			// In case deviceIdentifiers are not passed, we should stop the whole LiveSync.
+			if (!deviceIdentifiers || !deviceIdentifiers.length || !liveSyncProcessInfo.deviceDescriptors || !liveSyncProcessInfo.deviceDescriptors.length) {
+				if (liveSyncProcessInfo.timer) {
+					clearTimeout(liveSyncProcessInfo.timer);
+				}
+
+				if (liveSyncProcessInfo.watcherInfo && liveSyncProcessInfo.watcherInfo.watcher) {
+					liveSyncProcessInfo.watcherInfo.watcher.close();
+				}
+
+				liveSyncProcessInfo.watcherInfo = null;
+				liveSyncProcessInfo.isStopped = true;
+
+				if (liveSyncProcessInfo.actionsChain && shouldAwaitPendingOperation) {
+					await liveSyncProcessInfo.actionsChain;
+				}
+
+				liveSyncProcessInfo.deviceDescriptors = [];
+
+				if (liveSyncProcessInfo.syncToPreviewApp) {
+					// await this.$previewAppLiveSyncService.stopLiveSync();
+					// this.$previewAppLiveSyncService.removeAllListeners();
+				}
+
+				// Kill typescript watcher
+				const projectData = this.$projectDataService.getProjectData(projectDir);
+				await this.$hooksService.executeAfterHooks('watch', {
+					hookArgs: {
+						projectData
+					}
+				});
+			} else if (liveSyncProcessInfo.currentSyncAction && shouldAwaitPendingOperation) {
+				await liveSyncProcessInfo.currentSyncAction;
+			}
+
+			// Emit LiveSync stopped when we've really stopped.
+			_.each(removedDeviceIdentifiers, deviceIdentifier => {
+				this.emitLivesyncEvent(LiveSyncEvents.liveSyncStopped, { projectDir, deviceIdentifier });
+			});
+		}
+	}
+
+	public emitLivesyncEvent(event: string, livesyncData: ILiveSyncEventData): boolean {
+		this.$logger.trace(`Will emit event ${event} with data`, livesyncData);
+		return this.emit(event, livesyncData);
 	}
 
 	private async syncChangedDataOnDevice(device: Mobile.IDevice, deviceDescriptor: ILiveSyncDeviceInfo, data: IFilesChangeEventData, projectData: IProjectData, liveSyncInfo: ILiveSyncInfo): Promise<void> {
@@ -142,7 +212,8 @@ export class BundleWorkflowService implements IBundleWorkflowService {
 			force: liveSyncInfo.force,
 			connectTimeout: 1000
 		});
-		await this.$deviceRestartApplicationService.restartOnDevice(deviceDescriptor, projectData, liveSyncResultInfo, platformLiveSyncService);
+
+		await this.$deviceRefreshApplicationService.refreshApplication(deviceDescriptor, projectData, liveSyncResultInfo, platformLiveSyncService, this);
 	}
 
 	public getLiveSyncDeviceDescriptors(projectDir: string): ILiveSyncDeviceInfo[] {
