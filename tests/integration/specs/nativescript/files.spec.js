@@ -4,7 +4,7 @@ import { knownFolders, path, File } from 'tns-core-modules/file-system';
 import * as Kinvey from '__SDK__';
 import * as utilities from '../utils';
 
-describe.only('Files', function() {
+describe('Files', function() {
   before(function() {
     const config = Kinvey.init({
       appKey: process.env.APP_KEY,

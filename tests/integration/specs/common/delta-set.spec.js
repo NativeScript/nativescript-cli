@@ -20,6 +20,7 @@ dataStoreTypes.forEach((currentDataStoreType) => {
   describe(`${currentDataStoreType} Deltaset tests`, () => {
     const conditionalDescribe = currentDataStoreType === Kinvey.DataStoreType.Sync ? describe.skip : describe;
     const deltaCollectionName = config.deltaCollectionName;
+    const secondDeltaCollectionName = config.secondDeltaCollectioName;
     const collectionWithoutDelta = config.collectionName;
     const tagStore = 'kinveyTest';
     let deltaNetworkStore;
@@ -43,9 +44,16 @@ dataStoreTypes.forEach((currentDataStoreType) => {
         });
     }
 
-    const validateNewPullOperation = (result, expectedPulledItems, expectedDeletedItems, tagStore) => {
+    const validateNewPullOperation = (result, expectedPulledItems, expectedDeletedItems, tagStore, collectionName) => {
+      const collectioNameForStore = collectionName ? collectionName : deltaCollectionName;
       expect(result).to.equal(expectedPulledItems.length);
-      const storeToFind = tagStore ? Kinvey.DataStore.collection(deltaCollectionName, Kinvey.DataStoreType.Sync, { tag: tagStore }) : syncStore;
+      let storeToFind;
+      if (tagStore){
+        storeToFind = Kinvey.DataStore.collection(collectioNameForStore, Kinvey.DataStoreType.Sync, { tag: tagStore });
+      }
+      else{
+        storeToFind = collectionName? Kinvey.DataStore.collection(collectioNameForStore, Kinvey.DataStoreType.Sync) : syncStore;
+      }
       return storeToFind.find().toPromise()
         .then((result) => {
           expectedPulledItems.forEach((entity) => {
@@ -72,6 +80,9 @@ dataStoreTypes.forEach((currentDataStoreType) => {
       const entity1 = utilities.getEntity(utilities.randomString());
       const entity2 = utilities.getEntity(utilities.randomString());
       const entity3 = utilities.getEntity(utilities.randomString());
+      const entity1Col2 = utilities.getEntity(utilities.randomString());
+      const entity2Col2 = utilities.getEntity(utilities.randomString());
+      const entity3Col2 = utilities.getEntity(utilities.randomString());
       const createdUserIds = [];
       let deltaStoreToTest;
       let taggedDeltaStoreToTest;
@@ -83,6 +94,7 @@ dataStoreTypes.forEach((currentDataStoreType) => {
 
       before((done) => {
         utilities.cleanUpAppData(deltaCollectionName, createdUserIds)
+          .then(() => utilities.cleanUpAppData(secondDeltaCollectionName, createdUserIds))
           .then(() => Kinvey.User.signup())
           .then((user) => {
             createdUserIds.push(user.data._id);
@@ -104,6 +116,26 @@ dataStoreTypes.forEach((currentDataStoreType) => {
           .then(() => done())
           .catch(done);
       });
+
+      it('should return corrsect number of items for multiple collections', (done) => {
+        const secondDeltaCollection = Kinvey.DataStore.collection(secondDeltaCollectionName, currentDataStoreType, { useDeltaSet: true });
+        const secondDeltaCollectionNetwork = Kinvey.DataStore.collection(secondDeltaCollectionName, Kinvey.DataStoreType.Network);
+        const secondDeltaCollectionSync = Kinvey.DataStore.collection(secondDeltaCollectionName, Kinvey.DataStoreType.Sync);
+        secondDeltaCollectionNetwork.save(entity1Col2)
+          .then(() => deltaStoreToTest.pull())
+          .then((result) => validatePullOperation(result, [entity1, entity2]))
+          .then(() => deltaNetworkStore.save(entity3))
+          .then(() => secondDeltaCollectionNetwork.save(entity2Col2))
+          .then(() => secondDeltaCollection.pull())
+          .then((result) => validatePullOperation(result, [entity1Col2, entity2Col2], 2, null, secondDeltaCollectionName))
+          .then(() => secondDeltaCollectionNetwork.save(entity3Col2))
+          .then(() => deltaStoreToTest.pull())
+          .then((result) => validateNewPullOperation(result, [entity3], []))
+          .then(() => secondDeltaCollection.pull())
+          .then((result) => validateNewPullOperation(result, [entity3Col2], [], null, secondDeltaCollectionName))
+          .then(() => done())
+          .catch((error) => done(error));
+      })
 
       it('should return correct number of items without changes', (done) => {
         deltaStoreToTest.pull()
