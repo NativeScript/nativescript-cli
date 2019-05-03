@@ -15,15 +15,15 @@ export class InitializeService implements IInitializeService {
 
 	private async showWarnings($logger: ILogger): Promise<void> {
 		const $sysInfo = $injector.resolve<ISysInfo>("sysInfo");
-		const macOSWarning = await $sysInfo.getMacOSWarningMessage();
-		if (macOSWarning) {
-			const message = `${EOL}${macOSWarning.message}${EOL}`;
-			if (macOSWarning.severity === SystemWarningsSeverity.high) {
+		const systemWarnings = await $sysInfo.getSystemWarnings();
+		_.each(systemWarnings, systemWarning => {
+			const message = `${EOL}${systemWarning.message}${EOL}`;
+			if (systemWarning.severity === SystemWarningsSeverity.high) {
 				$logger.printOnStderr(message.red.bold);
 			} else {
 				$logger.warn(message);
 			}
-		}
+		});
 	}
 }
 
