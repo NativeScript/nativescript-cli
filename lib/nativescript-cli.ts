@@ -1,6 +1,5 @@
 require("./bootstrap");
 
-import { EOL } from "os";
 import * as shelljs from "shelljs";
 shelljs.config.silent = true;
 shelljs.config.fatal = true;
@@ -25,22 +24,16 @@ process.on = (event: string, listener: any): any => {
 	const err: IErrors = $injector.resolve("$errors");
 	err.printCallStack = config.DEBUG;
 
+	const $options = $injector.resolve<IOptions>("options");
+
+	const $initializeService = $injector.resolve<IInitializeService>("initializeService");
+	await $initializeService.initialize({ loggerOptions: { level: <any>$options.log } });
+
 	const extensibilityService: IExtensibilityService = $injector.resolve("extensibilityService");
 	try {
 		await settlePromises<IExtensionData>(extensibilityService.loadExtensions());
 	} catch (err) {
 		logger.trace("Unable to load extensions. Error is: ", err);
-	}
-
-	const $sysInfo = $injector.resolve<ISysInfo>("sysInfo");
-	const macOSWarning = await $sysInfo.getMacOSWarningMessage();
-	if (macOSWarning) {
-		const message = `${EOL}${macOSWarning.message}${EOL}`;
-		if (macOSWarning.severity === SystemWarningsSeverity.high) {
-			logger.printOnStderr(message.red.bold);
-		} else {
-			logger.warn(message);
-		}
 	}
 
 	const commandDispatcher: ICommandDispatcher = $injector.resolve("commandDispatcher");

@@ -199,3 +199,5 @@ $injector.requirePublic("cleanupService", "./services/cleanup-service");
 $injector.require("applePortalSessionService", "./services/apple-portal/apple-portal-session-service");
 $injector.require("applePortalCookieService", "./services/apple-portal/apple-portal-cookie-service");
 $injector.require("applePortalApplicationService", "./services/apple-portal/apple-portal-application-service");
+
+$injector.requirePublicClass("initializeService", "./services/initialize-service");

@@ -67,6 +67,9 @@ describe("nativescript-cli-lib", () => {
 			"initialize",
 			"getLevel",
 			"info"
+		],
+		initializeService: [
+			"initialize"
 		]
 	};
 
