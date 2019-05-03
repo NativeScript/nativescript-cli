@@ -495,7 +495,9 @@ declare module Mobile {
 		 * Returns a single device based on the specified options. If more than one devices are matching,
 		 * prompts the user for a manual choice or returns the first one for non interactive terminals.
 		 */
-		pickSingleDevice(options: IPickSingleDeviceOptions): Promise<Mobile.IDevice>
+		pickSingleDevice(options: IPickSingleDeviceOptions): Promise<Mobile.IDevice>;
+
+		getPlatformsFromDeviceDescriptors(deviceDescriptors: ILiveSyncDeviceInfo[]): string[];
 	}
 
 	interface IPickSingleDeviceOptions {

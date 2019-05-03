@@ -1,4 +1,5 @@
 import { BuildPlatformService } from "../services/platform/build-platform-service";
+import { MainController } from "../controllers/main-controller";
 
 // import { LiveSyncEvents } from "../constants";
 
@@ -8,7 +9,7 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 	constructor(
 		private $projectData: IProjectData,
 		private $options: IOptions,
-		private $bundleWorkflowService: IBundleWorkflowService,
+		private $mainController: MainController,
 		private $iosDeviceOperations: IIOSDeviceOperations,
 		private $mobileHelper: Mobile.IMobileHelper,
 		private $devicesService: Mobile.IDevicesService,
@@ -132,7 +133,7 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 			// return;
 		// }
 
-		await this.$bundleWorkflowService.runPlatform(this.$projectData.projectDir, deviceDescriptors, liveSyncInfo);
+		await this.$mainController.runPlatform(this.$projectData.projectDir, deviceDescriptors, liveSyncInfo);
 
 		// const remainingDevicesToSync = devices.map(d => d.deviceInfo.identifier);
 		// this.$liveSyncService.on(LiveSyncEvents.liveSyncStopped, (data: { projectDir: string, deviceIdentifier: string }) => {

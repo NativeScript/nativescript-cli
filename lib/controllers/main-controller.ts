@@ -1,14 +1,14 @@
 import { INITIAL_SYNC_EVENT_NAME, FILES_CHANGE_EVENT_NAME, LiveSyncEvents } from "../constants";
-import { WorkflowDataService } from "./workflow/workflow-data-service";
-import { AddPlatformService } from "./platform/add-platform-service";
-import { BuildPlatformService } from "./platform/build-platform-service";
-import { PreparePlatformService } from "./platform/prepare-platform-service";
+import { WorkflowDataService } from "../services/workflow/workflow-data-service";
+import { AddPlatformService } from "../services/platform/add-platform-service";
+import { BuildPlatformService } from "../services/platform/build-platform-service";
+import { PreparePlatformService } from "../services/platform/prepare-platform-service";
 import { EventEmitter } from "events";
-import { DeviceRefreshApplicationService } from "./device/device-refresh-application-service";
+import { DeviceRefreshApplicationService } from "../services/device/device-refresh-application-service";
 
 const deviceDescriptorPrimaryKey = "identifier";
 
-export class BundleWorkflowService extends EventEmitter implements IBundleWorkflowService {
+export class MainController extends EventEmitter {
 	private liveSyncProcessesInfo: IDictionary<ILiveSyncProcessInfo> = {};
 
 	constructor(
@@ -46,7 +46,7 @@ export class BundleWorkflowService extends EventEmitter implements IBundleWorkfl
 	}
 
 	public async deployPlatform(projectDir: string, deviceDescriptors: ILiveSyncDeviceInfo[], liveSyncInfo: ILiveSyncInfo): Promise<void> {
-		const platforms = this.getPlatformsFromDevices(deviceDescriptors);
+		const platforms = this.$devicesService.getPlatformsFromDeviceDescriptors(deviceDescriptors);
 
 		for (const platform of platforms) {
 			await this.preparePlatform(platform, projectDir, <any>liveSyncInfo);
@@ -65,7 +65,7 @@ export class BundleWorkflowService extends EventEmitter implements IBundleWorkfl
 		const projectData = this.$projectDataService.getProjectData(projectDir);
 		await this.initializeSetup(projectData);
 
-		const platforms = this.getPlatformsFromDevices(deviceDescriptors);
+		const platforms = this.$devicesService.getPlatformsFromDeviceDescriptors(deviceDescriptors);
 
 		for (const platform of platforms) {
 			const { nativePlatformData, addPlatformData } = this.$workflowDataService.createWorkflowData(platform, projectDir, { ...liveSyncInfo, platformParam: platform });
@@ -267,15 +267,5 @@ export class BundleWorkflowService extends EventEmitter implements IBundleWorkfl
 
 		this.$errors.failWithoutHelp(`Invalid platform ${platform}. Supported platforms are: ${this.$mobileHelper.platformNames.join(", ")}`);
 	}
-
-	private getPlatformsFromDevices(deviceDescriptors: ILiveSyncDeviceInfo[]): string[] {
-		const platforms = _(deviceDescriptors)
-			.map(device => this.$devicesService.getDeviceByIdentifier(device.identifier))
-			.map(device => device.deviceInfo.platform)
-			.uniq()
-			.value();
-
-		return platforms;
-	}
 }
-$injector.register("bundleWorkflowService", BundleWorkflowService);
+$injector.register("mainController", MainController);

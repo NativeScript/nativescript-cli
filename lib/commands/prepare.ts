@@ -1,11 +1,11 @@
 import { ValidatePlatformCommandBase } from "./command-base";
-import { BundleWorkflowService } from "../services/bundle-workflow-service";
+import { MainController } from "../controllers/main-controller";
 
 export class PrepareCommand extends ValidatePlatformCommandBase implements ICommand {
 	public allowedParameters = [this.$platformCommandParameter];
 
 	constructor($options: IOptions,
-		private $bundleWorkflowService: BundleWorkflowService,
+		private $mainController: MainController,
 		$platformValidationService: IPlatformValidationService,
 		$projectData: IProjectData,
 		private $platformCommandParameter: ICommandParameter,
@@ -17,7 +17,7 @@ export class PrepareCommand extends ValidatePlatformCommandBase implements IComm
 	public async execute(args: string[]): Promise<void> {
 		const platform = args[0];
 
-		await this.$bundleWorkflowService.preparePlatform(platform, this.$projectData.projectDir, this.$options);
+		await this.$mainController.preparePlatform(platform, this.$projectData.projectDir, this.$options);
 	}
 
 	public async canExecute(args: string[]): Promise<boolean | ICanExecuteCommandOutput> {

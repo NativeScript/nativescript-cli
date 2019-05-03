@@ -45,7 +45,9 @@ $injector.require("deviceInstallationService", "./services/device/device-install
 $injector.require("deviceRefreshApplicationService", "./services/device/device-refresh-application-service");
 
 $injector.require("workflowDataService", "./services/workflow/workflow-data-service");
-$injector.require("bundleWorkflowService", "./services/bundle-workflow-service");
+
+$injector.require("mainController", "./controllers/main-controller");
+$injector.require("runOnDeviceController", "./controllers/run-on-device");
 
 $injector.require("buildArtefactsService", "./services/build-artefacts-service");
 

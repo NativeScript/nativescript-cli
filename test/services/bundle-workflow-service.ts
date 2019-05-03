@@ -1,7 +1,7 @@
 import { Yok } from "../../lib/common/yok";
-import { BundleWorkflowService } from "../../lib/services/bundle-workflow-service";
 import { assert } from "chai";
 import { AddPlatformService } from "../../lib/services/platform/add-platform-service";
+import { MainController } from "../../lib/controllers/main-controller";
 
 const deviceMap: IDictionary<any> = {
 	myiOSDevice: {
@@ -42,7 +42,7 @@ function createTestInjector(): IInjector {
 		emit: () => ({}),
 		startWatcher: () => ({})
 	}));
-	injector.register("bundleWorkflowService", BundleWorkflowService);
+	injector.register("mainController", MainController);
 	injector.register("pluginsService", ({}));
 	injector.register("projectDataService", ({
 		getProjectData: () => ({
@@ -55,7 +55,6 @@ function createTestInjector(): IInjector {
 	injector.register("platformService", ({}));
 	injector.register("projectChangesService", ({}));
 	injector.register("fs", ({}));
-	injector.register("bundleWorkflowService", BundleWorkflowService);
 
 	return injector;
 }
@@ -75,7 +74,7 @@ const liveSyncInfo = {
 	}
 };
 
-describe("BundleWorkflowService", () => {
+describe("MainController", () => {
 	describe("start", () => {
 		describe("when the run on device is called for second time for the same projectDir", () => {
 			it("should run only for new devies (for which the initial sync is still not executed)", async () => {
@@ -101,8 +100,8 @@ describe("BundleWorkflowService", () => {
 					return true;
 				};
 
-				const bundleWorkflowService: IBundleWorkflowService = injector.resolve("bundleWorkflowService");
-				await bundleWorkflowService.runPlatform(projectDir, [iOSDeviceDescriptor], liveSyncInfo);
+				const mainController: MainController = injector.resolve("mainController");
+				await mainController.runPlatform(projectDir, [iOSDeviceDescriptor], liveSyncInfo);
 
 				assert.isTrue(isStartWatcherCalled);
 			});
@@ -130,7 +129,7 @@ describe("BundleWorkflowService", () => {
 					const injector = createTestInjector();
 
 					const actualAddedPlatforms: IPlatformData[] = [];
-					const platformAddService: AddPlatformService = injector.resolve("bundleWorkflowService");
+					const platformAddService: AddPlatformService = injector.resolve("platformAddService");
 					platformAddService.addPlatformIfNeeded = async (platformData: IPlatformData) => {
 						actualAddedPlatforms.push(platformData);
 					};
