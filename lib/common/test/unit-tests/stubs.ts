@@ -18,6 +18,7 @@ export class LockServiceStub implements ILockService {
 }
 
 export class CommonLoggerStub implements ILogger {
+	initialize(opts?: ILoggerOptions): void { }
 	getLevel(): string { return undefined; }
 	fatal(...args: string[]): void { }
 	error(...args: string[]): void { }

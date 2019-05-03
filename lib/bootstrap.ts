@@ -1,5 +1,5 @@
 require("./common/bootstrap");
-$injector.require("logger", "./common/logger");
+$injector.requirePublicClass("logger", "./common/logger");
 $injector.require("config", "./config");
 $injector.require("options", "./options");
 // note: order above is important!

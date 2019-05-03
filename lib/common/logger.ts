@@ -2,6 +2,7 @@ import * as log4js from "log4js";
 import * as util from "util";
 import * as stream from "stream";
 import * as marked from "marked";
+import { cache } from "./decorators";
 const TerminalRenderer = require("marked-terminal");
 const chalk = require("chalk");
 
@@ -11,26 +12,35 @@ export class Logger implements ILogger {
 	private passwordReplacement = "$1$3*******$2$4";
 	private static LABEL = "[WARNING]:";
 
-	constructor($config: Config.IConfig,
+	constructor(private $config: Config.IConfig,
 		private $options: IOptions) {
-		const appenders: IDictionary<log4js.Appender> = {};
-		const categories: IDictionary<{ appenders: string[]; level: string; }> = {};
-		let level: string = null;
-		if (this.$options.log) {
-			level = this.$options.log;
-		} else {
-			level = $config.DEBUG ? "TRACE" : "INFO";
-		}
+	}
 
-		appenders["out"] = {
+	@cache()
+	public initialize(opts?: ILoggerOptions): void {
+		opts = opts || {};
+		const { appenderOptions: appenderOpts, level } = opts;
+
+		const appender: any = {
 			type: "console",
 			layout: {
 				type: "messagePassThrough"
 			}
 		};
-		categories["default"] = {
-			appenders: ['out'],
-			level
+
+		if (appenderOpts) {
+			_.merge(appender, appenderOpts);
+		}
+
+		const appenders: IDictionary<log4js.Appender> = {
+			out: appender
+		};
+
+		const categories: IDictionary<{ appenders: string[]; level: string; }> = {
+			default: {
+				appenders: ['out'],
+				level: level || (this.$config.DEBUG ? "TRACE" : "INFO")
+			}
 		};
 
 		log4js.configure({ appenders, categories });
@@ -39,14 +49,20 @@ export class Logger implements ILogger {
 	}
 
 	getLevel(): string {
+		this.initialize();
+
 		return this.log4jsLogger.level.toString();
 	}
 
 	fatal(...args: string[]): void {
+		this.initialize();
+
 		this.log4jsLogger.fatal.apply(this.log4jsLogger, args);
 	}
 
 	error(...args: string[]): void {
+		this.initialize();
+
 		const message = util.format.apply(null, args);
 		const colorizedMessage = message.red;
 
@@ -54,6 +70,8 @@ export class Logger implements ILogger {
 	}
 
 	warn(...args: string[]): void {
+		this.initialize();
+
 		const message = util.format.apply(null, args);
 		const colorizedMessage = message.yellow;
 
@@ -61,20 +79,28 @@ export class Logger implements ILogger {
 	}
 
 	warnWithLabel(...args: string[]): void {
+		this.initialize();
+
 		const message = util.format.apply(null, args);
 		this.warn(`${Logger.LABEL} ${message}`);
 	}
 
 	info(...args: string[]): void {
+		this.initialize();
+
 		this.log4jsLogger.info.apply(this.log4jsLogger, args);
 	}
 
 	debug(...args: string[]): void {
+		this.initialize();
+
 		const encodedArgs: string[] = this.getPasswordEncodedArguments(args);
 		this.log4jsLogger.debug.apply(this.log4jsLogger, encodedArgs);
 	}
 
 	trace(...args: string[]): void {
+		this.initialize();
+
 		const encodedArgs: string[] = this.getPasswordEncodedArguments(args);
 		this.log4jsLogger.trace.apply(this.log4jsLogger, encodedArgs);
 	}

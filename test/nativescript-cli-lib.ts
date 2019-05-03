@@ -23,7 +23,7 @@ describe("nativescript-cli-lib", () => {
 			"getIOSAssetsStructure",
 			"getAndroidAssetsStructure"
 		],
-		constants: ["CONFIG_NS_APP_RESOURCES_ENTRY", "CONFIG_NS_APP_ENTRY", "CONFIG_NS_FILE_NAME"],
+		constants: ["CONFIG_NS_APP_RESOURCES_ENTRY", "CONFIG_NS_APP_ENTRY", "CONFIG_NS_FILE_NAME", "LoggerLevel", "LoggerAppenders"],
 		localBuildService: ["build"],
 		deviceLogProvider: null,
 		packageManager: ["install", "uninstall", "view", "search"],
@@ -62,6 +62,11 @@ describe("nativescript-cli-lib", () => {
 		],
 		cleanupService: [
 			"setCleanupLogFile"
+		],
+		logger: [
+			"initialize",
+			"getLevel",
+			"info"
 		]
 	};
 

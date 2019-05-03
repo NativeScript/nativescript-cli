@@ -45,6 +45,8 @@ describe("logger", () => {
 			}
 		};
 
+		// Initialize the logger manually, so we can overwrite the log4jsLogger property
+		logger.initialize();
 		logger.log4jsLogger = log4jsLogger;
 	});
 
