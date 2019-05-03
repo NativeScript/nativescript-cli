@@ -7,12 +7,12 @@ let appCredentials;
 
 describe('Files', () => {
   before(() => {
-    const initProperties = {
+    appCredentials = {
       appKey: process.env.APP_KEY,
       appSecret: process.env.APP_SECRET,
       masterSecret: process.env.MASTER_SECRET
     }
-    return Kinvey.init(utilities.setOfflineProvider(initProperties, process.env.OFFLINE_STORAGE));
+    return Kinvey.init(utilities.setOfflineProvider(appCredentials, process.env.OFFLINE_STORAGE));
   });
 
   before(()=>{
