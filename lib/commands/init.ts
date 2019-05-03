@@ -1,12 +1,12 @@
-export class InitCommand implements ICommand {
+export class ProjectInitCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
 	public enableHooks = false;
 
-	constructor(private $initService: IInitService) { }
+	constructor(private $projectInitService: IProjectInitService) { }
 
 	public async execute(args: string[]): Promise<void> {
-		return this.$initService.initialize();
+		return this.$projectInitService.initialize();
 	}
 }
 
-$injector.registerCommand("init", InitCommand);
+$injector.registerCommand("init", ProjectInitCommand);

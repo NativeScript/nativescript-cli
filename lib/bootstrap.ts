@@ -109,7 +109,7 @@ $injector.require("xcprojService", "./services/xcproj-service");
 $injector.require("versionsService", "./services/versions-service");
 $injector.requireCommand("install", "./commands/install");
 
-$injector.require("initService", "./services/init-service");
+$injector.require("projectInitService", "./services/project-init-service");
 $injector.requireCommand("init", "./commands/init");
 
 $injector.require("infoService", "./services/info-service");

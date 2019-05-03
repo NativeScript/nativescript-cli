@@ -603,7 +603,7 @@ interface IUpdatePlatformOptions extends IPlatformTemplate {
 	canUpdate: boolean;
 }
 
-interface IInitService {
+interface IProjectInitService {
 	initialize(): Promise<void>;
 }
 
