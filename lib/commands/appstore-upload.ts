@@ -14,7 +14,7 @@ export class PublishIOS implements ICommand {
 		private $prompter: IPrompter,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $platformValidationService: IPlatformValidationService,
-		// private $platformBuildService: IPlatformBuildService,
+		// private $buildPlatformService: BuildPlatformService,
 		// private $xcodebuildService: IXcodebuildService
 		) {
 		this.$projectData.initializeProjectData();

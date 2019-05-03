@@ -11,8 +11,8 @@ export class TestExecutionService implements ITestExecutionService {
 	private static CONFIG_FILE_NAME = `node_modules/${constants.TEST_RUNNER_NAME}/config.js`;
 	private static SOCKETIO_JS_FILE_NAME = `node_modules/${constants.TEST_RUNNER_NAME}/socket.io.js`;
 
-	constructor(private $platformService: IPlatformService,
-		private $liveSyncService: ILiveSyncService,
+	constructor(
+		private $liveSyncCommandHelper: ILiveSyncCommandHelper,
 		private $httpClient: Server.IHttpClient,
 		private $config: IConfiguration,
 		private $logger: ILogger,
@@ -75,54 +75,10 @@ export class TestExecutionService implements ITestExecutionService {
 					devices = this.$devicesService.getDeviceInstances();
 				}
 
-				// Now let's take data for each device:
-				const platformLowerCase = this.platform && this.platform.toLowerCase();
-				const deviceDescriptors: ILiveSyncDeviceInfo[] = devices.filter(d => !platformLowerCase || d.deviceInfo.platform.toLowerCase() === platformLowerCase)
-					.map(d => {
-						const info: ILiveSyncDeviceInfo = {
-							identifier: d.deviceInfo.identifier,
-							buildAction: async (): Promise<string> => {
-								const buildConfig: IBuildConfig = {
-									buildForDevice: !d.isEmulator,
-									iCloudContainerEnvironment: this.$options.iCloudContainerEnvironment,
-									projectDir: this.$options.path,
-									clean: this.$options.clean,
-									teamId: this.$options.teamId,
-									device: this.$options.device,
-									provision: this.$options.provision,
-									release: this.$options.release,
-									keyStoreAlias: this.$options.keyStoreAlias,
-									keyStorePath: this.$options.keyStorePath,
-									keyStoreAliasPassword: this.$options.keyStoreAliasPassword,
-									keyStorePassword: this.$options.keyStorePassword
-								};
+				if (!this.$options.env) { this.$options.env = { }; }
+				this.$options.env.unitTesting = true;
 
-								await this.$platformService.buildPlatform(d.deviceInfo.platform, buildConfig, projectData);
-								const pathToBuildResult = await this.$platformService.lastOutputPath(d.deviceInfo.platform, buildConfig, projectData);
-								return pathToBuildResult;
-							},
-							debugOptions: this.$options,
-							debugggingEnabled: this.$options.debugBrk
-						};
-
-						return info;
-					});
-
-				const env = this.$options.env || {};
-				env.unitTesting = !!this.$options.bundle;
-
-				const liveSyncInfo: ILiveSyncInfo = {
-					projectDir: projectData.projectDir,
-					skipWatcher: !this.$options.watch || this.$options.justlaunch,
-					release: this.$options.release,
-					webpackCompilerConfig: {
-						env,
-					},
-					timeout: this.$options.timeout,
-					useHotModuleReload: this.$options.hmr
-				};
-
-				await this.$liveSyncService.liveSync(deviceDescriptors, liveSyncInfo);
+				await this.$liveSyncCommandHelper.executeLiveSyncOperation(devices, this.platform, <any>{});
 			};
 
 		karmaRunner.on("message",  (karmaData: any) => {

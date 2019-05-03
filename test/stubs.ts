@@ -767,119 +767,6 @@ export class CommandsService implements ICommandsService {
 	}
 }
 
-export class PlatformServiceStub extends EventEmitter implements IPlatformService {
-	public shouldPrepare(): Promise<boolean> {
-		return Promise.resolve(true);
-	}
-
-	public validateOptions(): Promise<boolean> {
-		return Promise.resolve(true);
-	}
-
-	public cleanPlatforms(platforms: string[]): Promise<void> {
-		return Promise.resolve();
-	}
-
-	public addPlatforms(platforms: string[]): Promise<void> {
-		return Promise.resolve();
-	}
-
-	public getInstalledPlatforms(): string[] {
-		return [];
-	}
-
-	public getAvailablePlatforms(): string[] {
-		return [];
-	}
-
-	public getPreparedPlatforms(): string[] {
-		return [];
-	}
-
-	public saveBuildInfoFile(platform: string, projectDir: string, buildInfoFileDirname: string): void {
-		return;
-	}
-
-	public async removePlatforms(platforms: string[]): Promise<void> {
-
-	}
-
-	public updatePlatforms(platforms: string[]): Promise<void> {
-		return Promise.resolve();
-	}
-
-	public async preparePlatform(platformData: IPlatformData, projectData: IProjectData, preparePlatformData: PreparePlatformData): Promise<boolean> {
-		return Promise.resolve(true);
-	}
-
-	public shouldBuild(platform: string, projectData: IProjectData, buildConfig?: IBuildConfig): Promise<boolean> {
-		return Promise.resolve(true);
-	}
-
-	public buildPlatform(platform: string, buildConfig?: IBuildConfig): Promise<string> {
-		return Promise.resolve("");
-	}
-
-	public async shouldInstall(device: Mobile.IDevice): Promise<boolean> {
-		return true;
-	}
-
-	public async validateInstall(device: Mobile.IDevice): Promise<void> {
-		return;
-	}
-
-	public installApplication(device: Mobile.IDevice, options: IRelease): Promise<void> {
-		return Promise.resolve();
-	}
-
-	public deployPlatform(config: IDeployPlatformInfo): Promise<void> {
-		return Promise.resolve();
-	}
-
-	public startApplication(platform: string, runOptions: IRunPlatformOptions): Promise<void> {
-		return Promise.resolve();
-	}
-
-	public cleanDestinationApp(platformInfo: IPreparePlatformInfo): Promise<void> {
-		return Promise.resolve();
-	}
-
-	public validatePlatformInstalled(platform: string): void {
-
-	}
-
-	public validatePlatform(platform: string): void {
-
-	}
-
-	isPlatformSupportedForOS(platform: string, projectData: IProjectData): boolean {
-		return true;
-	}
-
-	public getLatestApplicationPackageForDevice(platformData: IPlatformData): IApplicationPackage {
-		return null;
-	}
-
-	public getLatestApplicationPackageForEmulator(platformData: IPlatformData, buildConfig: IBuildConfig): IApplicationPackage {
-		return null;
-	}
-
-	public copyLastOutput(platform: string, targetPath: string, buildConfig: IBuildConfig): void {
-	}
-
-	public lastOutputPath(platform: string, buildConfig: IBuildConfig): string {
-		return "";
-	}
-
-	public readFile(device: Mobile.IDevice, deviceFilePath: string): Promise<string> {
-		return Promise.resolve("");
-	}
-
-	public getCurrentPlatformVersion(platform: string, projectData: IProjectData): string {
-		return null;
-	}
-}
-
 export class AndroidResourcesMigrationServiceStub implements IAndroidResourcesMigrationService {
 	canMigrate(platformString: string): boolean {
 		return true;
@@ -922,7 +809,6 @@ export class InjectorStub extends Yok implements IInjector {
 		this.register('projectDataService', ProjectDataService);
 		this.register('devicePlatformsConstants', DevicePlatformsConstants);
 		this.register("androidResourcesMigrationService", AndroidResourcesMigrationServiceStub);
-		this.register("platformService", PlatformServiceStub);
 		this.register("commandsService", CommandsService);
 		this.register("projectChangesService", ProjectChangesService);
 		this.register('childProcess', ChildProcessStub);

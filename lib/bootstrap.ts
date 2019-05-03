@@ -34,10 +34,9 @@ $injector.require("tnsModulesService", "./services/tns-modules-service");
 
 $injector.require("platformsData", "./platforms-data");
 $injector.require("platformService", "./services/platform-service");
-$injector.require("platformJSService", "./services/prepare-platform-js-service");
-$injector.require("platformNativeService", "./services/prepare-platform-native-service");
-$injector.require("platformAddService", "./services/platform/platform-add-service");
-$injector.require("platformBuildService", "./services/platform/platform-build-service");
+$injector.require("addPlatformService", "./services/platform/add-platform-service");
+$injector.require("buildPlatformService", "./services/platform/build-platform-service");
+$injector.require("preparePlatformService", "./services/platform/prepare-platform-service");
 $injector.require("platformValidationService", "./services/platform/platform-validation-service");
 $injector.require("platformCommandsService", "./services/platform/platform-commands-service");
 $injector.require("platformWatcherService", "./services/platform/platform-watcher-service");

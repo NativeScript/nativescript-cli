@@ -1,32 +1,34 @@
+import { performanceLog } from "../../common/decorators";
+import { PreparePlatformData } from "../workflow/workflow-data-service";
 import * as path from "path";
-import * as constants from "../constants";
-import { performanceLog } from "../common/decorators";
-import { PreparePlatformData } from "./workflow/workflow-data-service";
+import { NativePlatformStatus, APP_FOLDER_NAME, APP_RESOURCES_FOLDER_NAME } from "../../constants";
 
-export class PlatformNativeService implements IPreparePlatformService {
+export class PreparePlatformService {
 	constructor(
+		private $androidResourcesMigrationService: IAndroidResourcesMigrationService,
 		private $fs: IFileSystem,
+		private $logger: ILogger,
 		private $nodeModulesBuilder: INodeModulesBuilder,
 		private $projectChangesService: IProjectChangesService,
-		private $androidResourcesMigrationService: IAndroidResourcesMigrationService
+		private $webpackCompilerService: IWebpackCompilerService,
 	) { }
 
 	@performanceLog()
-	public async addPlatform(platformData: IPlatformData, projectData: IProjectData, frameworkDirPath: string, frameworkVersion: string): Promise<void> {
-		const config = <any>{};
+	public async preparePlatform(platformData: IPlatformData, projectData: IProjectData, preparePlatformData: PreparePlatformData): Promise<boolean> {
+		this.$logger.out("Preparing project...");
 
-		const platformDir = path.join(projectData.platformsDir, platformData.normalizedPlatformName.toLowerCase());
-		this.$fs.deleteDirectory(platformDir);
+		await this.$webpackCompilerService.compileWithoutWatch(platformData, projectData, { watch: false, env: preparePlatformData.env });
+		await this.prepareNativePlatform(platformData, projectData, preparePlatformData);
 
-		await platformData.platformProjectService.createProject(path.resolve(frameworkDirPath), frameworkVersion, projectData, config);
-		platformData.platformProjectService.ensureConfigurationFileInAppResources(projectData);
-		await platformData.platformProjectService.interpolateData(projectData, config);
-		platformData.platformProjectService.afterCreateProject(platformData.projectRoot, projectData);
-		this.$projectChangesService.setNativePlatformStatus(platformData, { nativePlatformStatus: constants.NativePlatformStatus.requiresPrepare });
+		this.$projectChangesService.savePrepareInfo(platformData);
+
+		this.$logger.out(`Project successfully prepared (${platformData.platformNameLowerCase})`);
+
+		return true;
 	}
 
 	@performanceLog()
-	public async preparePlatform(platformData: IPlatformData, projectData: IProjectData, preparePlatformData: PreparePlatformData): Promise<boolean> {
+	public async prepareNativePlatform(platformData: IPlatformData, projectData: IProjectData, preparePlatformData: PreparePlatformData): Promise<boolean> {
 		const { nativePrepare, release } = preparePlatformData;
 		if (nativePrepare && nativePrepare.skipNativePrepare) {
 			return false;
@@ -63,14 +65,14 @@ export class PlatformNativeService implements IPreparePlatformService {
 		}
 
 		platformData.platformProjectService.interpolateConfigurationFile(projectData, preparePlatformData);
-		this.$projectChangesService.setNativePlatformStatus(platformData, { nativePlatformStatus: constants.NativePlatformStatus.alreadyPrepared });
+		this.$projectChangesService.setNativePlatformStatus(platformData, { nativePlatformStatus: NativePlatformStatus.alreadyPrepared });
 
 		return hasChanges;
 	}
 
 	private prepareAppResources(platformData: IPlatformData, projectData: IProjectData): void {
-		const appDestinationDirectoryPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
-		const appResourcesDestinationDirectoryPath = path.join(appDestinationDirectoryPath, constants.APP_RESOURCES_FOLDER_NAME);
+		const appDestinationDirectoryPath = path.join(platformData.appDestinationDirectoryPath, APP_FOLDER_NAME);
+		const appResourcesDestinationDirectoryPath = path.join(appDestinationDirectoryPath, APP_RESOURCES_FOLDER_NAME);
 
 		if (this.$fs.exists(appResourcesDestinationDirectoryPath)) {
 			platformData.platformProjectService.prepareAppResources(appResourcesDestinationDirectoryPath, projectData);
@@ -113,7 +115,7 @@ export class PlatformNativeService implements IPreparePlatformService {
 		}
 
 		const previousPrepareInfo = this.$projectChangesService.getPrepareInfo(platformData);
-		if (!previousPrepareInfo || previousPrepareInfo.nativePlatformStatus !== constants.NativePlatformStatus.alreadyPrepared) {
+		if (!previousPrepareInfo || previousPrepareInfo.nativePlatformStatus !== NativePlatformStatus.alreadyPrepared) {
 			return;
 		}
 
@@ -124,5 +126,4 @@ export class PlatformNativeService implements IPreparePlatformService {
 		}
 	}
 }
-
-$injector.register("platformNativeService", PlatformNativeService);
+$injector.register("preparePlatformService", PreparePlatformService);

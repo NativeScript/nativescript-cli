@@ -1,24 +1,26 @@
+import { BuildPlatformService } from "../services/platform/build-platform-service";
+
 // import { LiveSyncEvents } from "../constants";
 
 export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 	public static MIN_SUPPORTED_WEBPACK_VERSION_WITH_HMR = "0.17.0";
 
-	constructor(private $platformService: IPlatformService,
+	constructor(
 		private $projectData: IProjectData,
 		private $options: IOptions,
 		private $bundleWorkflowService: IBundleWorkflowService,
-		// private $liveSyncService: ILiveSyncService,
 		private $iosDeviceOperations: IIOSDeviceOperations,
 		private $mobileHelper: Mobile.IMobileHelper,
 		private $devicesService: Mobile.IDevicesService,
 		private $platformsData: IPlatformsData,
+		private $buildPlatformService: BuildPlatformService,
 		private $analyticsService: IAnalyticsService,
 		private $bundleValidatorHelper: IBundleValidatorHelper,
 		private $errors: IErrors,
 		private $iOSSimulatorLogProvider: Mobile.IiOSSimulatorLogProvider,
 		private $logger: ILogger,
-		private $cleanupService: ICleanupService) {
-	}
+		private $cleanupService: ICleanupService
+	) { }
 
 	public getPlatformsForOperation(platform: string): string[] {
 		const availablePlatforms = platform ? [platform] : _.values<string>(this.$platformsData.availablePlatforms);
@@ -70,11 +72,6 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 			}
 		}
 
-		if (this.$options.release) {
-			await this.runInReleaseMode(platform, additionalOptions);
-			return;
-		}
-
 		// Now let's take data for each device:
 		const deviceDescriptors: ILiveSyncDeviceInfo[] = devices
 			.map(d => {
@@ -95,7 +92,7 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 
 				const buildAction = additionalOptions && additionalOptions.buildPlatform ?
 					additionalOptions.buildPlatform.bind(additionalOptions.buildPlatform, d.deviceInfo.platform, buildConfig, this.$projectData) :
-					this.$platformService.buildPlatform.bind(this.$platformService, d.deviceInfo.platform, buildConfig, this.$projectData);
+					this.$buildPlatformService.buildPlatform.bind(this.$buildPlatformService, d.deviceInfo.platform, buildConfig, this.$projectData);
 
 				const outputPath = additionalOptions && additionalOptions.getOutputDirectory && additionalOptions.getOutputDirectory({
 					platform: d.deviceInfo.platform,
@@ -125,8 +122,15 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 			},
 			timeout: this.$options.timeout,
 			useHotModuleReload: this.$options.hmr,
-			force: this.$options.force
+			force: this.$options.force,
+			emulator: this.$options.emulator
 		};
+
+		// if (this.$options.release) {
+			// liveSyncInfo.skipWatcher = true;
+			// await this.$bundleWorkflowService.deployPlatform(this.$projectData.projectDir, deviceDescriptors, liveSyncInfo);
+			// return;
+		// }
 
 		await this.$bundleWorkflowService.runPlatform(this.$projectData.projectDir, deviceDescriptors, liveSyncInfo);
 
@@ -157,47 +161,6 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 		this.$bundleValidatorHelper.validate(minSupportedWebpackVersion);
 
 		return result;
-	}
-
-	private async runInReleaseMode(platform: string, additionalOptions?: ILiveSyncCommandHelperAdditionalOptions): Promise<void> {
-		const runPlatformOptions: IRunPlatformOptions = {
-			device: this.$options.device,
-			emulator: this.$options.emulator,
-			justlaunch: this.$options.justlaunch
-		};
-
-		const deployOptions = _.merge<IDeployPlatformOptions, IYargArgv>((<IDeployPlatformOptions>{
-			projectDir: this.$projectData.projectDir,
-			clean: true
-		}), this.$options.argv);
-
-		const availablePlatforms = this.getPlatformsForOperation(platform);
-		for (const currentPlatform of availablePlatforms) {
-			const deployPlatformInfo: IDeployPlatformInfo = {
-				platform: currentPlatform,
-				appFilesUpdaterOptions: {
-					bundle: !!this.$options.bundle,
-					release: this.$options.release,
-					useHotModuleReload: this.$options.hmr
-				},
-				deployOptions,
-				buildPlatform: this.$platformService.buildPlatform.bind(this.$platformService),
-				projectData: this.$projectData,
-				config: <any>this.$options,
-				env: this.$options.env
-			};
-
-			await this.$platformService.deployPlatform(deployPlatformInfo);
-
-			await this.$platformService.startApplication(
-				currentPlatform,
-				runPlatformOptions,
-				{
-					appId: this.$projectData.projectIdentifiers[currentPlatform.toLowerCase()],
-					projectName: this.$projectData.projectName
-				}
-			);
-		}
 	}
 }
 

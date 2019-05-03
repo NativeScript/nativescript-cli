@@ -1,12 +1,13 @@
+import { PlatformCommandsService } from "../services/platform/platform-commands-service";
+
 export class CleanCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
 
 	constructor(
 		private $errors: IErrors,
 		private $options: IOptions,
-		private $platformCommandsService: IPlatformCommandsService,
+		private $platformCommandsService: PlatformCommandsService,
 		private $platformValidationService: IPlatformValidationService,
-		private $platformService: IPlatformService,
 		private $platformEnvironmentRequirements: IPlatformEnvironmentRequirements,
 		private $projectData: IProjectData
 	) {
@@ -29,7 +30,7 @@ export class CleanCommand implements ICommand {
 		for (const platform of args) {
 			this.$platformValidationService.validatePlatformInstalled(platform, this.$projectData);
 
-			const currentRuntimeVersion = this.$platformService.getCurrentPlatformVersion(platform, this.$projectData);
+			const currentRuntimeVersion = this.$platformCommandsService.getCurrentPlatformVersion(platform, this.$projectData);
 			await this.$platformEnvironmentRequirements.checkEnvironmentRequirements({
 				platform,
 				projectDir: this.$projectData.projectDir,

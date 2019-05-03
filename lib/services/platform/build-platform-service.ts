@@ -7,7 +7,7 @@ import { BuildPlatformDataBase } from "../workflow/workflow-data-service";
 
 const buildInfoFileName = ".nsbuildinfo";
 
-export class PlatformBuildService extends EventEmitter implements IPlatformBuildService {
+export class BuildPlatformService extends EventEmitter {
 	constructor(
 		private $analyticsService: IAnalyticsService,
 		private $buildArtefactsService: IBuildArtefactsService,
@@ -135,4 +135,4 @@ export class PlatformBuildService extends EventEmitter implements IPlatformBuild
 		return prepareInfo.changesRequireBuildTime !== buildInfo.prepareTime;
 	}
 }
-$injector.register("platformBuildService", PlatformBuildService);
+$injector.register("buildPlatformService", BuildPlatformService);

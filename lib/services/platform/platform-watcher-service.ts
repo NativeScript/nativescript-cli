@@ -4,6 +4,7 @@ import { EventEmitter } from "events";
 import * as path from "path";
 import { INITIAL_SYNC_EVENT_NAME, FILES_CHANGE_EVENT_NAME } from "../../constants";
 import { PreparePlatformData } from "../workflow/workflow-data-service";
+import { PreparePlatformService } from "./prepare-platform-service";
 
 interface IPlatformWatcherData {
 	webpackCompilerProcess: child_process.ChildProcess;
@@ -17,7 +18,7 @@ export class PlatformWatcherService extends EventEmitter implements IPlatformWat
 
 	constructor(
 		private $logger: ILogger,
-		private $platformNativeService: IPreparePlatformService,
+		private $preparePlatformService: PreparePlatformService,
 		private $webpackCompilerService: IWebpackCompilerService
 	) { super(); }
 
@@ -35,15 +36,16 @@ export class PlatformWatcherService extends EventEmitter implements IPlatformWat
 			};
 		}
 
-		await this.prepareJSCodeWithWatch(platformData, projectData, { env: preparePlatformData.env }); // -> start watcher + initial compilation
-		const hasNativeChanges = await this.prepareNativeCodeWithWatch(platformData, projectData, preparePlatformData); // -> start watcher + initial prepare
+		await this.startJSWatcherWithPrepare(platformData, projectData, { env: preparePlatformData.env }); // -> start watcher + initial compilation
+		const hasNativeChanges = await this.startNativeWatcherWithPrepare(platformData, projectData, preparePlatformData); // -> start watcher + initial prepare
 
 		this.emitInitialSyncEvent({ platform: platformData.platformNameLowerCase, hasNativeChanges });
 	}
 
-	private async prepareJSCodeWithWatch(platformData: IPlatformData, projectData: IProjectData, config: IWebpackCompilerConfig): Promise<void> {
+	private async startJSWatcherWithPrepare(platformData: IPlatformData, projectData: IProjectData, config: IWebpackCompilerConfig): Promise<void> {
 		if (!this.watchersData[projectData.projectDir][platformData.platformNameLowerCase].webpackCompilerProcess) {
 			this.$webpackCompilerService.on("webpackEmittedFiles", files => {
+				console.log("=============== WEBPACK EMITTED FILES ============");
 				this.emitFilesChangeEvent({ files, hasNativeChanges: false, platform: platformData.platformNameLowerCase });
 			});
 
@@ -52,7 +54,7 @@ export class PlatformWatcherService extends EventEmitter implements IPlatformWat
 		}
 	}
 
-	private async prepareNativeCodeWithWatch(platformData: IPlatformData, projectData: IProjectData, preparePlatformData: PreparePlatformData): Promise<boolean> {
+	private async startNativeWatcherWithPrepare(platformData: IPlatformData, projectData: IProjectData, preparePlatformData: PreparePlatformData): Promise<boolean> {
 		if ((preparePlatformData.nativePrepare && preparePlatformData.nativePrepare.skipNativePrepare) || this.watchersData[projectData.projectDir][platformData.platformNameLowerCase].nativeFilesWatcher) {
 			return false;
 		}
@@ -79,7 +81,7 @@ export class PlatformWatcherService extends EventEmitter implements IPlatformWat
 
 		this.watchersData[projectData.projectDir][platformData.platformNameLowerCase].nativeFilesWatcher = watcher;
 
-		const hasNativeChanges = await this.$platformNativeService.preparePlatform(platformData, projectData, preparePlatformData);
+		const hasNativeChanges = await this.$preparePlatformService.prepareNativePlatform(platformData, projectData, preparePlatformData);
 
 		return hasNativeChanges;
 	}

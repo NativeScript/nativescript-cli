@@ -1,13 +1,14 @@
 import { EventEmitter } from "events";
 import { ANDROID_RELEASE_BUILD_ERROR_MESSAGE } from "../constants";
 import { WorkflowDataService } from "./workflow/workflow-data-service";
+import { BuildPlatformService } from "./platform/build-platform-service";
 
 export class LocalBuildService extends EventEmitter implements ILocalBuildService {
 	constructor(
 		private $errors: IErrors,
 		private $mobileHelper: Mobile.IMobileHelper,
 		private $platformsData: IPlatformsData,
-		private $platformBuildService: IPlatformBuildService,
+		private $buildPlatformService: BuildPlatformService,
 		private $projectDataService: IProjectDataService,
 		private $workflowDataService: WorkflowDataService
 	) { super(); }
@@ -19,7 +20,7 @@ export class LocalBuildService extends EventEmitter implements ILocalBuildServic
 
 		const { nativePlatformData, projectData, buildPlatformData } = this.$workflowDataService.createWorkflowData(platform, platformBuildOptions.projectDir, platformBuildOptions);
 
-		const result = await this.$platformBuildService.buildPlatform(nativePlatformData, projectData, buildPlatformData);
+		const result = await this.$buildPlatformService.buildPlatform(nativePlatformData, projectData, buildPlatformData);
 
 		return result;
 	}

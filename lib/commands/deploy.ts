@@ -5,24 +5,23 @@ export class DeployOnDeviceCommand extends ValidatePlatformCommandBase implement
 	public allowedParameters: ICommandParameter[] = [];
 
 	constructor($platformValidationService: IPlatformValidationService,
-		private $platformService: IPlatformService,
 		private $platformCommandParameter: ICommandParameter,
 		$options: IOptions,
 		$projectData: IProjectData,
-		private $deployCommandHelper: IDeployCommandHelper,
 		private $errors: IErrors,
 		private $mobileHelper: Mobile.IMobileHelper,
 		$platformsData: IPlatformsData,
 		private $bundleValidatorHelper: IBundleValidatorHelper,
+		private $liveSyncCommandHelper: ILiveSyncCommandHelper,
 		private $androidBundleValidatorHelper: IAndroidBundleValidatorHelper) {
 			super($options, $platformsData, $platformValidationService, $projectData);
 			this.$projectData.initializeProjectData();
 	}
 
 	public async execute(args: string[]): Promise<void> {
-		const deployPlatformInfo = this.$deployCommandHelper.getDeployPlatformInfo(args[0]);
-
-		return this.$platformService.deployPlatform(deployPlatformInfo);
+		const platform = args[0].toLowerCase();
+		// TODO: Add a separate deployCommandHelper with base class for it and LiveSyncCommandHelper
+		await this.$liveSyncCommandHelper.executeCommandLiveSync(platform, <any>{ release: true });
 	}
 
 	public async canExecute(args: string[]): Promise<boolean | ICanExecuteCommandOutput> {

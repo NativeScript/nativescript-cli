@@ -1,6 +1,7 @@
 import { Yok } from "../../lib/common/yok";
 import { BundleWorkflowService } from "../../lib/services/bundle-workflow-service";
 import { assert } from "chai";
+import { AddPlatformService } from "../../lib/services/platform/add-platform-service";
 
 const deviceMap: IDictionary<any> = {
 	myiOSDevice: {
@@ -49,7 +50,7 @@ function createTestInjector(): IInjector {
 		})
 	}));
 	injector.register("buildArtefactsService", ({}));
-	injector.register("platformBuildService", ({}));
+	injector.register("buildPlatformService", ({}));
 	injector.register("platformAddService", ({}));
 	injector.register("platformService", ({}));
 	injector.register("projectChangesService", ({}));
@@ -89,7 +90,7 @@ describe("BundleWorkflowService", () => {
 				const injector = createTestInjector();
 
 				let isAddPlatformIfNeededCalled = false;
-				const platformAddService: IPlatformAddService = injector.resolve("platformAddService");
+				const platformAddService: AddPlatformService = injector.resolve("platformAddService");
 				platformAddService.addPlatformIfNeeded = async () => { isAddPlatformIfNeededCalled = true; };
 
 				let isStartWatcherCalled = false;
@@ -129,7 +130,7 @@ describe("BundleWorkflowService", () => {
 					const injector = createTestInjector();
 
 					const actualAddedPlatforms: IPlatformData[] = [];
-					const platformAddService: IPlatformAddService = injector.resolve("bundleWorkflowService");
+					const platformAddService: AddPlatformService = injector.resolve("bundleWorkflowService");
 					platformAddService.addPlatformIfNeeded = async (platformData: IPlatformData) => {
 						actualAddedPlatforms.push(platformData);
 					};
@@ -147,11 +148,11 @@ describe("BundleWorkflowService", () => {
 			beforeEach(() => {
 				injector = createTestInjector();
 
-				const platformAddService: IPlatformAddService = injector.resolve("bundleWorkflowService");
-				platformAddService.addPlatformIfNeeded = async () => { return; };
+				const addPlatformService = injector.resolve("addPlatformService");
+				addPlatformService.addPlatformIfNeeded = async () => { return; };
 
-				const platformBuildService: IPlatformBuildService = injector.resolve("platformBuildService");
-				platformBuildService.buildPlatform = async () => { isBuildPlatformCalled = true; return buildOutputPath; };
+				const buildPlatformService = injector.resolve("buildPlatformService");
+				buildPlatformService.buildPlatform = async () => { isBuildPlatformCalled = true; return buildOutputPath; };
 			});
 
 			console.log("============== isBuildPlatformCalled ============= ", isBuildPlatformCalled);

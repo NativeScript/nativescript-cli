@@ -1,5 +1,8 @@
 import { INITIAL_SYNC_EVENT_NAME, FILES_CHANGE_EVENT_NAME } from "../constants";
 import { WorkflowDataService } from "./workflow/workflow-data-service";
+import { AddPlatformService } from "./platform/add-platform-service";
+import { BuildPlatformService } from "./platform/build-platform-service";
+import { PreparePlatformService } from "./platform/prepare-platform-service";
 
 const deviceDescriptorPrimaryKey = "identifier";
 
@@ -14,9 +17,9 @@ export class BundleWorkflowService implements IBundleWorkflowService {
 		private $injector: IInjector,
 		private $mobileHelper: Mobile.IMobileHelper,
 		private $logger: ILogger,
-		private $platformService: IPlatformService,
-		private $platformAddService: IPlatformAddService,
-		private $platformBuildService: IPlatformBuildService,
+		private $preparePlatformService: PreparePlatformService,
+		private $addPlatformService: AddPlatformService,
+		private $buildPlatformService: BuildPlatformService,
 		private $platformWatcherService: IPlatformWatcherService,
 		private $pluginsService: IPluginsService,
 		private $projectDataService: IProjectDataService,
@@ -26,32 +29,49 @@ export class BundleWorkflowService implements IBundleWorkflowService {
 	public async preparePlatform(platform: string, projectDir: string, options: IOptions): Promise<void> {
 		const { nativePlatformData, projectData, addPlatformData, preparePlatformData } = this.$workflowDataService.createWorkflowData(platform, projectDir, options);
 
-		await this.$platformAddService.addPlatformIfNeeded(nativePlatformData, projectData, addPlatformData);
-		await this.$platformService.preparePlatform(nativePlatformData, projectData, preparePlatformData);
+		await this.$addPlatformService.addPlatformIfNeeded(nativePlatformData, projectData, addPlatformData);
+		await this.$preparePlatformService.preparePlatform(nativePlatformData, projectData, preparePlatformData);
 	}
 
 	public async buildPlatform(platform: string, projectDir: string, options: IOptions): Promise<string> {
 		const { nativePlatformData, projectData, buildPlatformData } = this.$workflowDataService.createWorkflowData(platform, projectDir, options);
 
 		await this.preparePlatform(platform, projectDir, options);
-		const result = await this.$platformBuildService.buildPlatform(nativePlatformData, projectData, buildPlatformData);
+		const result = await this.$buildPlatformService.buildPlatform(nativePlatformData, projectData, buildPlatformData);
 
 		return result;
+	}
+
+	public async deployPlatform(projectDir: string, deviceDescriptors: ILiveSyncDeviceInfo[], liveSyncInfo: ILiveSyncInfo): Promise<void> {
+		const platforms = this.getPlatformsFromDevices(deviceDescriptors);
+
+		for (const platform of platforms) {
+			await this.preparePlatform(platform, projectDir, <any>liveSyncInfo);
+		}
+
+		const executeAction = async (device: Mobile.IDevice) => {
+			const { nativePlatformData, projectData, buildPlatformData } = this.$workflowDataService.createWorkflowData(device.deviceInfo.platform, projectDir, liveSyncInfo);
+			await this.$buildPlatformService.buildPlatformIfNeeded(nativePlatformData, projectData, buildPlatformData);
+			await this.$deviceInstallationService.installOnDeviceIfNeeded(device, nativePlatformData, projectData, buildPlatformData);
+			await device.applicationManager.startApplication({
+				appId: projectData.projectIdentifiers[device.deviceInfo.platform.toLowerCase()],
+				projectName: projectData.projectName
+			});
+			this.$logger.out(`Successfully started on device with identifier '${device.deviceInfo.identifier}'.`);
+		};
+
+		await this.$devicesService.execute(executeAction, (device: Mobile.IDevice) => true);
 	}
 
 	public async runPlatform(projectDir: string, deviceDescriptors: ILiveSyncDeviceInfo[], liveSyncInfo: ILiveSyncInfo): Promise<void> {
 		const projectData = this.$projectDataService.getProjectData(projectDir);
 		await this.initializeSetup(projectData);
 
-		const platforms = _(deviceDescriptors)
-			.map(device => this.$devicesService.getDeviceByIdentifier(device.identifier))
-			.map(device => device.deviceInfo.platform)
-			.uniq()
-			.value();
+		const platforms = this.getPlatformsFromDevices(deviceDescriptors);
 
 		for (const platform of platforms) {
 			const { nativePlatformData, addPlatformData } = this.$workflowDataService.createWorkflowData(platform, projectDir, { ...liveSyncInfo, platformParam: platform });
-			await this.$platformAddService.addPlatformIfNeeded(nativePlatformData, projectData, addPlatformData);
+			await this.$addPlatformService.addPlatformIfNeeded(nativePlatformData, projectData, addPlatformData);
 		}
 
 		this.setLiveSyncProcessInfo(projectDir, liveSyncInfo, deviceDescriptors);
@@ -89,7 +109,7 @@ export class BundleWorkflowService implements IBundleWorkflowService {
 		const { nativePlatformData: platformData, buildPlatformData } = this.$workflowDataService.createWorkflowData(device.deviceInfo.platform, projectData.projectDir, liveSyncInfo);
 
 		const outputPath = deviceDescriptor.outputPath || platformData.getBuildOutputPath(buildPlatformData);
-		const packageFilePath = await this.$platformBuildService.buildPlatformIfNeeded(platformData, projectData, buildPlatformData, outputPath);
+		const packageFilePath = await this.$buildPlatformService.buildPlatformIfNeeded(platformData, projectData, buildPlatformData, outputPath);
 
 		await this.$deviceInstallationService.installOnDeviceIfNeeded(device, platformData, projectData, buildPlatformData, packageFilePath, outputPath);
 
@@ -107,7 +127,7 @@ export class BundleWorkflowService implements IBundleWorkflowService {
 
 		if (data.hasNativeChanges) {
 			// TODO: Consider to handle nativePluginsChange here (aar rebuilt)
-			await this.$platformBuildService.buildPlatform(nativePlatformData, projectData, buildPlatformData);
+			await this.$buildPlatformService.buildPlatform(nativePlatformData, projectData, buildPlatformData);
 		}
 
 		const platformLiveSyncService = this.getLiveSyncService(device.deviceInfo.platform);
@@ -175,6 +195,16 @@ export class BundleWorkflowService implements IBundleWorkflowService {
 		}
 
 		this.$errors.failWithoutHelp(`Invalid platform ${platform}. Supported platforms are: ${this.$mobileHelper.platformNames.join(", ")}`);
+	}
+
+	private getPlatformsFromDevices(deviceDescriptors: ILiveSyncDeviceInfo[]): string[] {
+		const platforms = _(deviceDescriptors)
+			.map(device => this.$devicesService.getDeviceByIdentifier(device.identifier))
+			.map(device => device.deviceInfo.platform)
+			.uniq()
+			.value();
+
+		return platforms;
 	}
 }
 $injector.register("bundleWorkflowService", BundleWorkflowService);

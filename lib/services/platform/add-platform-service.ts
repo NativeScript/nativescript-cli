@@ -2,8 +2,9 @@ import * as path from "path";
 import * as temp from "temp";
 import { PROJECT_FRAMEWORK_FOLDER_NAME, NativePlatformStatus } from "../../constants";
 import { AddPlatformData } from "../workflow/workflow-data-service";
+import { performanceLog } from "../../common/decorators";
 
-export class PlatformAddService implements IPlatformAddService {
+export class AddPlatformService {
 	constructor(
 		private $errors: IErrors,
 		private $fs: IFileSystem,
@@ -11,8 +12,6 @@ export class PlatformAddService implements IPlatformAddService {
 		private $packageInstallationManager: IPackageInstallationManager,
 		private $pacoteService: IPacoteService,
 		private $platformsData: IPlatformsData,
-		private $platformJSService: IPreparePlatformService,
-		private $platformNativeService: IPreparePlatformService,
 		private $projectChangesService: IProjectChangesService,
 		private $projectDataService: IProjectDataService,
 		private $terminalSpinnerService: ITerminalSpinnerService
@@ -74,10 +73,10 @@ export class PlatformAddService implements IPlatformAddService {
 			const frameworkPackageJsonContent = this.$fs.readJson(path.join(frameworkDirPath, "..", "package.json"));
 			const frameworkVersion = frameworkPackageJsonContent.version;
 
-			await this.$platformJSService.addPlatform(platformData, projectData, frameworkDirPath, frameworkVersion);
+			await this.addJSPlatform(platformData, projectData, frameworkDirPath, frameworkVersion);
 
 			if (!nativePrepare || !nativePrepare.skipNativePrepare) {
-				await this.$platformNativeService.addPlatform(platformData, projectData, frameworkDirPath, frameworkVersion);
+				await this.addNativePlatform(platformData, projectData, frameworkDirPath, frameworkVersion);
 			}
 
 			return frameworkVersion;
@@ -118,5 +117,24 @@ export class PlatformAddService implements IPlatformAddService {
 
 		return !!result;
 	}
+
+	private async addJSPlatform(platformData: IPlatformData, projectData: IProjectData, frameworkDirPath: string, frameworkVersion: string): Promise<void> {
+		const frameworkPackageNameData = { version: frameworkVersion };
+		this.$projectDataService.setNSValue(projectData.projectDir, platformData.frameworkPackageName, frameworkPackageNameData);
+	}
+
+	@performanceLog()
+	private async addNativePlatform(platformData: IPlatformData, projectData: IProjectData, frameworkDirPath: string, frameworkVersion: string): Promise<void> {
+		const config = <any>{};
+
+		const platformDir = path.join(projectData.platformsDir, platformData.normalizedPlatformName.toLowerCase());
+		this.$fs.deleteDirectory(platformDir);
+
+		await platformData.platformProjectService.createProject(path.resolve(frameworkDirPath), frameworkVersion, projectData, config);
+		platformData.platformProjectService.ensureConfigurationFileInAppResources(projectData);
+		await platformData.platformProjectService.interpolateData(projectData, config);
+		platformData.platformProjectService.afterCreateProject(platformData.projectRoot, projectData);
+		this.$projectChangesService.setNativePlatformStatus(platformData, { nativePlatformStatus: NativePlatformStatus.requiresPrepare });
+	}
 }
-$injector.register("platformAddService", PlatformAddService);
+$injector.register("addPlatformService", AddPlatformService);

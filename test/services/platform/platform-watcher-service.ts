@@ -16,8 +16,8 @@ function createTestInjector(data: { hasNativeChanges: boolean }): IInjector {
 		out: () => ({}),
 		trace: () => ({})
 	}));
-	injector.register("platformNativeService", ({
-		preparePlatform: async () => {
+	injector.register("preparePlatformService", ({
+		prepareNativePlatform: async () => {
 			isNativePrepareCalled = true;
 			return data.hasNativeChanges;
 		}
@@ -74,8 +74,8 @@ describe("PlatformWatcherService", () => {
 
 					const platformWatcherService: IPlatformWatcherService = injector.resolve("platformWatcherService");
 
-					const platformNativeService = injector.resolve("platformNativeService");
-					platformNativeService.preparePlatform = async () => {
+					const preparePlatformService = injector.resolve("preparePlatformService");
+					preparePlatformService.prepareNativePlatform = async () => {
 						const nativeFilesWatcher = (<any>platformWatcherService).watchersData[projectData.projectDir][platformData.platformNameLowerCase].nativeFilesWatcher;
 						nativeFilesWatcher.emit("all", "change", "my/project/App_Resources/some/file");
 						isNativePrepareCalled = true;
@@ -98,9 +98,9 @@ describe("PlatformWatcherService", () => {
 					const injector = createTestInjector({ hasNativeChanges: false });
 					const hasNativeChanges = false;
 
-					const platformNativeService = injector.resolve("platformNativeService");
+					const preparePlatformService = injector.resolve("preparePlatformService");
 					const webpackCompilerService = injector.resolve("webpackCompilerService");
-					platformNativeService.preparePlatform = async () => {
+					preparePlatformService.prepareNativePlatform = async () => {
 						webpackCompilerService.emit("webpackEmittedFiles", ["/some/file/path"]);
 						isNativePrepareCalled = true;
 						return hasNativeChanges;

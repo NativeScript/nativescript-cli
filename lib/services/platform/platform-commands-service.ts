@@ -2,6 +2,7 @@ import * as path from "path";
 import * as semver from "semver";
 import * as temp from "temp";
 import * as constants from "../../constants";
+import { AddPlatformService } from "./add-platform-service";
 
 export class PlatformCommandsService implements IPlatformCommandsService {
 	constructor(
@@ -10,7 +11,7 @@ export class PlatformCommandsService implements IPlatformCommandsService {
 		private $logger: ILogger,
 		private $packageInstallationManager: IPackageInstallationManager,
 		private $pacoteService: IPacoteService,
-		private $platformAddService: IPlatformAddService,
+		private $addPlatformService: AddPlatformService,
 		private $platformsData: IPlatformsData,
 		private $platformValidationService: IPlatformValidationService,
 		private $projectChangesService: IProjectChangesService,
@@ -31,7 +32,7 @@ export class PlatformCommandsService implements IPlatformCommandsService {
 			}
 
 			const addPlatformData = { platformParam: platform.toLowerCase(), frameworkPath };
-			await this.$platformAddService.addPlatform(projectData, addPlatformData);
+			await this.$addPlatformService.addPlatform(projectData, addPlatformData);
 		}
 	}
 
@@ -83,7 +84,7 @@ export class PlatformCommandsService implements IPlatformCommandsService {
 			if (hasPlatformDirectory) {
 				await this.updatePlatform(platform, version, projectData);
 			} else {
-				await this.$platformAddService.addPlatform(projectData, { platformParam });
+				await this.$addPlatformService.addPlatform(projectData, { platformParam });
 			}
 		}
 	}
@@ -106,6 +107,14 @@ export class PlatformCommandsService implements IPlatformCommandsService {
 
 	public getPreparedPlatforms(projectData: IProjectData): string[] {
 		return _.filter(this.$platformsData.platformsNames, p => { return this.isPlatformPrepared(p, projectData); });
+	}
+
+	public getCurrentPlatformVersion(platform: string, projectData: IProjectData): string {
+		const platformData = this.$platformsData.getPlatformData(platform, projectData);
+		const currentPlatformData: any = this.$projectDataService.getNSValue(projectData.projectDir, platformData.frameworkPackageName);
+		const version = currentPlatformData && currentPlatformData.version;
+
+		return version;
 	}
 
 	private isPlatformAdded(platform: string, platformPath: string, projectData: IProjectData): boolean {
@@ -158,17 +167,9 @@ export class PlatformCommandsService implements IPlatformCommandsService {
 		let packageName = platformData.normalizedPlatformName.toLowerCase();
 		await this.removePlatforms([packageName], projectData);
 		packageName = updateOptions.newVersion ? `${packageName}@${updateOptions.newVersion}` : packageName;
-		const addPlatformData = { platformParam: packageName };
-		await this.$platformAddService.addPlatform(projectData, addPlatformData);
+		const addPlatformData = { platformParam: packageName, frameworkPath: <any>null, nativePrepare: <any>null};
+		await this.$addPlatformService.addPlatform(projectData, addPlatformData);
 		this.$logger.out("Successfully updated to version ", updateOptions.newVersion);
-	}
-
-	private getCurrentPlatformVersion(platform: string, projectData: IProjectData): string {
-		const platformData = this.$platformsData.getPlatformData(platform, projectData);
-		const currentPlatformData: any = this.$projectDataService.getNSValue(projectData.projectDir, platformData.frameworkPackageName);
-		const version = currentPlatformData && currentPlatformData.version;
-
-		return version;
 	}
 
 	private isPlatformPrepared(platform: string, projectData: IProjectData): boolean {

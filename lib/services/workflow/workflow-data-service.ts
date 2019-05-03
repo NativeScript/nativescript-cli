@@ -1,3 +1,5 @@
+export type AddPlatformData = Pick<any, 'platformParam'> & Partial<Pick<IOptions, 'frameworkPath'>> & Partial<Pick<any, 'nativePrepare'>>;
+
 export class WorkflowDataService {
 	constructor(
 		private $platformsData: IPlatformsData,
@@ -12,26 +14,34 @@ export class WorkflowDataService {
 			ios: {
 				projectData,
 				nativePlatformData,
-				addPlatformData: new AddPlatformData("ios", options),
+				addPlatformData: this.getAddPlatformData("ios", options),
 				preparePlatformData: new PreparePlatformData(options),
 				buildPlatformData: new IOSBuildData(options),
-				installOnDeviceData: {},
+				deployPlatformData: new DeployPlatformData(options),
 				liveSyncData: {},
 				restartOnDeviceData: {}
 			},
 			android: {
 				projectData,
 				nativePlatformData,
-				addPlatformData: new AddPlatformData("android", options),
+				addPlatformData: this.getAddPlatformData("android", options),
 				preparePlatformData: new PreparePlatformData(options),
 				buildPlatformData: new AndroidBuildData(options),
-				installOnDeviceData: {},
+				deployPlatformData: new DeployPlatformData(options),
 				liveSyncData: {},
 				restartOnDeviceData: {}
 			}
 		};
 
 		return data[platform.toLowerCase()];
+	}
+
+	private getAddPlatformData(platform: string, options: IOptions | any) {
+		return {
+			frameworkPath: options.frameworkPath,
+			nativePrepare: options.nativePrepare,
+			platformParam: options.platformParam || platform,
+		};
 	}
 }
 $injector.register("workflowDataService", WorkflowDataService);
@@ -42,18 +52,18 @@ export class WorkflowData {
 	public addPlatformData: AddPlatformData;
 	public preparePlatformData: PreparePlatformData;
 	public buildPlatformData: any;
-	public installOnDeviceData: any;
+	public deployPlatformData: DeployPlatformData;
 	public liveSyncData: any;
 	public restartOnDeviceData: any;
 }
 
-export class AddPlatformData {
-	constructor(private platform: string, private options: IOptions | any) { }
+// export class AddPlatformData {
+// 	constructor(private platform: string, private options: IOptions | any) { }
 
-	public platformParam = this.options.platformParam || this.platform;
-	public frameworkPath = this.options.frameworkPath;
-	public nativePrepare = this.options.nativePrepare;
-}
+// 	public platformParam = this.options.platformParam || this.platform;
+// 	public frameworkPath = this.options.frameworkPath;
+// 	public nativePrepare = this.options.nativePrepare;
+// }
 
 export class PreparePlatformData {
 	constructor(protected options: IOptions | any) { }
@@ -97,4 +107,12 @@ export class AndroidBuildData extends BuildPlatformDataBase {
 	public keyStoreAliasPassword = this.options.keyStoreAliasPassword;
 	public keyStorePassword = this.options.keyStorePassword;
 	public androidBundle = this.options.aab;
+}
+
+export class DeployPlatformData {
+	constructor(private options: IOptions) { }
+
+	public clean = this.options.clean;
+	public release = this.options.release;
+	public forceInstall = true;
 }

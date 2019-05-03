@@ -81,6 +81,7 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 			"--preserve-symlinks",
 			`--config=${path.join(projectData.projectDir, "webpack.config.js")}`,
 			`--env.${platformData.normalizedPlatformName.toLowerCase()}`
+			// `--env.unitTesting`
 		];
 
 		if (config.watch) {

@@ -143,6 +143,7 @@ declare global {
 	 */
 	interface ILiveSyncInfo extends IProjectDir, IRelease, IOptionalSkipWatcher, IHasUseHotModuleReloadOption, IHasSyncToPreviewAppOption {
 		webpackCompilerConfig: IWebpackCompilerConfig;
+		emulator?: boolean;
 		
 		/**
 		 * Forces a build before the initial livesync.

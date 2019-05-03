@@ -1030,6 +1030,7 @@ interface INetworkConnectivityValidator {
 interface IBundleWorkflowService {
 	preparePlatform(platform: string, projectDir: string, options: IOptions): Promise<void>;
 	buildPlatform(platform: string, projectDir: string, options: IOptions): Promise<string>;
+	deployPlatform(projectDir: string, deviceDescriptors: ILiveSyncDeviceInfo[], liveSyncInfo: ILiveSyncInfo): Promise<void>;
 	runPlatform(projectDir: string, deviceDescriptors: ILiveSyncDeviceInfo[], liveSyncInfo: ILiveSyncInfo): Promise<void>;
 }
 
@@ -1061,11 +1062,6 @@ interface IPlatformValidationService {
 interface IBuildArtefactsService {
 	getLastBuiltPackagePath(platformData: IPlatformData, buildConfig: IBuildConfig, outputPath?: string): Promise<string>;
 	getAllBuiltApplicationPackages(buildOutputPath: string, validBuildOutputData: IValidBuildOutputData): IApplicationPackage[];
-}
-
-interface IPlatformAddService {
-	addPlatform(projectData: IProjectData, addPlatformData: any): Promise<void>;
-	addPlatformIfNeeded(platformData: IPlatformData, projectData: IProjectData, addPlatformData: any): Promise<void>;
 }
 
 interface IPlatformCommandsService {

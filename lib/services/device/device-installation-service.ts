@@ -2,6 +2,7 @@ import { TrackActionNames, HASHES_FILE_NAME } from "../../constants";
 import { MobileHelper } from "../../common/mobile/mobile-helper";
 import * as helpers from "../../common/helpers";
 import * as path from "path";
+import { BuildPlatformService } from "../platform/build-platform-service";
 
 const buildInfoFileName = ".nsbuildinfo";
 
@@ -13,7 +14,7 @@ export class DeviceInstallationService implements IDeviceInstallationService {
 		private $fs: IFileSystem,
 		private $logger: ILogger,
 		private $mobileHelper: MobileHelper,
-		private $platformBuildService: IPlatformBuildService
+		private $buildPlatformService: BuildPlatformService
 	) { }
 
 	public async installOnDevice(device: Mobile.IDevice, platformData: IPlatformData, projectData: IProjectData, buildConfig: IBuildConfig, packageFile?: string, outputFilePath?: string): Promise<void> {
@@ -93,7 +94,7 @@ export class DeviceInstallationService implements IDeviceInstallationService {
 		}
 
 		const deviceBuildInfo: IBuildInfo = await this.getDeviceBuildInfo(device, projectData);
-		const localBuildInfo = this.$platformBuildService.getBuildInfoFromFile(platformData, <any>{ buildForDevice: !device.isEmulator, release: release.release }, outputPath);
+		const localBuildInfo = this.$buildPlatformService.getBuildInfoFromFile(platformData, <any>{ buildForDevice: !device.isEmulator, release: release.release }, outputPath);
 
 		return !localBuildInfo || !deviceBuildInfo || deviceBuildInfo.buildTime !== localBuildInfo.buildTime;
 	}
