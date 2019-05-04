@@ -64,17 +64,11 @@ export abstract class PlatformLiveSyncServiceBase {
 		const localToDevicePaths = await this.$projectFilesManager.createLocalToDevicePaths(deviceAppData, projectFilesPath, null, []);
 		const modifiedFilesData = await this.transferFiles(deviceAppData, localToDevicePaths, projectFilesPath, projectData, syncInfo.liveSyncDeviceInfo, { isFullSync: true, force: syncInfo.force });
 
-		let waitForDebugger = null;
-		if (syncInfo.liveSyncDeviceInfo && syncInfo.liveSyncDeviceInfo.debugggingEnabled) {
-			waitForDebugger = syncInfo.liveSyncDeviceInfo && syncInfo.liveSyncDeviceInfo.debugOptions && syncInfo.liveSyncDeviceInfo.debugOptions.debugBrk;
-		}
-
 		return {
 			modifiedFilesData,
 			isFullSync: true,
 			deviceAppData,
 			useHotModuleReload: syncInfo.useHotModuleReload,
-			waitForDebugger
 		};
 	}
 

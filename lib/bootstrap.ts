@@ -44,8 +44,11 @@ $injector.require("platformWatcherService", "./services/platform/platform-watche
 $injector.require("buildArtefactsService", "./services/build-artefacts-service");
 
 $injector.require("runOnDevicesDataService", "./services/run-on-devices-data-service");
+$injector.require("runOnDevicesEmitter", "./run-on-devices-emitter");
+
 $injector.require("deviceInstallAppService", "./services/device/device-install-app-service");
 $injector.require("deviceRefreshAppService", "./services/device/device-refresh-app-service");
+$injector.require("deviceDebugAppService", "./services/device/device-debug-app-service");
 
 $injector.require("workflowDataService", "./services/workflow/workflow-data-service");
 

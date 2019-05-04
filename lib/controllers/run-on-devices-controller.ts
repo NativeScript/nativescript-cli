@@ -1,15 +1,17 @@
-import { WorkflowDataService } from "../services/workflow/workflow-data-service";
 import { BuildPlatformService } from "../services/platform/build-platform-service";
+import { DeviceDebugAppService } from "../services/device/device-debug-app-service";
 import { DeviceInstallAppService } from "../services/device/device-install-app-service";
 import { DeviceRefreshAppService } from "../services/device/device-refresh-app-service";
-import { LiveSyncServiceResolver } from "../resolvers/livesync-service-resolver";
 import { EventEmitter } from "events";
+import { LiveSyncServiceResolver } from "../resolvers/livesync-service-resolver";
 import { RunOnDevicesDataService } from "../services/run-on-devices-data-service";
-import { RunOnDeviceEvents } from "../constants";
+import { RunOnDevicesEmitter } from "../run-on-devices-emitter";
+import { WorkflowDataService } from "../services/workflow/workflow-data-service";
 
 export class RunOnDevicesController extends EventEmitter {
 	constructor(
 		private $buildPlatformService: BuildPlatformService,
+		private $deviceDebugAppService: DeviceDebugAppService,
 		private $deviceInstallAppService: DeviceInstallAppService,
 		private $deviceRefreshAppService: DeviceRefreshAppService,
 		private $devicesService: Mobile.IDevicesService,
@@ -17,6 +19,7 @@ export class RunOnDevicesController extends EventEmitter {
 		private $liveSyncServiceResolver: LiveSyncServiceResolver,
 		private $logger: ILogger,
 		private $runOnDevicesDataService: RunOnDevicesDataService,
+		private $runOnDevicesEmitter: RunOnDevicesEmitter,
 		private $workflowDataService: WorkflowDataService
 	) { super(); }
 
@@ -54,24 +57,26 @@ export class RunOnDevicesController extends EventEmitter {
 			const { force, useHotModuleReload, skipWatcher } = liveSyncInfo;
 			const liveSyncResultInfo = await platformLiveSyncService.fullSync({ force, useHotModuleReload, projectData, device, watch: !skipWatcher, liveSyncDeviceInfo: deviceDescriptor });
 
-			await this.$deviceRefreshAppService.refreshApplication(deviceDescriptor, projectData, liveSyncResultInfo, platformLiveSyncService, this);
+			const refreshInfo = await this.$deviceRefreshAppService.refreshApplicationWithoutDebug(projectData, liveSyncResultInfo, deviceDescriptor);
+
+			this.$runOnDevicesEmitter.emitRunOnDeviceExecutedEvent(projectData, liveSyncResultInfo.deviceAppData.device, {
+				syncedFiles: liveSyncResultInfo.modifiedFilesData.map(m => m.getLocalPath()),
+				isFullSync: liveSyncResultInfo.isFullSync
+			});
+
+			if (liveSyncResultInfo && deviceDescriptor.debugggingEnabled) {
+				await this.$deviceDebugAppService.refreshApplicationWithDebug(projectData, deviceDescriptor, refreshInfo);
+			}
 
 			this.$logger.info(`Successfully synced application ${liveSyncResultInfo.deviceAppData.appIdentifier} on device ${liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier}.`);
 
-			this.emitRunOnDeviceEvent(RunOnDeviceEvents.runOnDeviceStarted, {
-				projectDir: projectData.projectDir,
-				deviceIdentifier: device.deviceInfo.identifier,
-				applicationIdentifier: projectData.projectIdentifiers[device.deviceInfo.platform.toLowerCase()]
-			});
+			this.$runOnDevicesEmitter.emitRunOnDeviceStartedEvent(projectData, device);
 		} catch (err) {
 			this.$logger.warn(`Unable to apply changes on device: ${device.deviceInfo.identifier}. Error is: ${err.message}.`);
 
-			this.emitRunOnDeviceEvent(RunOnDeviceEvents.runOnDeviceError, {
-				error: err,
-				deviceIdentifier: device.deviceInfo.identifier,
-				projectDir: projectData.projectDir,
-				applicationIdentifier: projectData.projectIdentifiers[platformData.platformNameLowerCase]
-			});
+			this.$runOnDevicesEmitter.emitRunOnDeviceErrorEvent(projectData, device, err);
+
+			// TODO: Consider to call here directly stopRunOnDevices
 		}
 	}
 
@@ -97,19 +102,25 @@ export class RunOnDevicesController extends EventEmitter {
 				connectTimeout: 1000
 			});
 
-			await this.$deviceRefreshAppService.refreshApplication(deviceDescriptor, projectData, liveSyncResultInfo, platformLiveSyncService, this);
+			const refreshInfo = await this.$deviceRefreshAppService.refreshApplicationWithoutDebug(projectData, liveSyncResultInfo, deviceDescriptor);
+
+			this.$runOnDevicesEmitter.emitRunOnDeviceExecutedEvent(projectData, liveSyncResultInfo.deviceAppData.device, {
+				syncedFiles: liveSyncResultInfo.modifiedFilesData.map(m => m.getLocalPath()),
+				isFullSync: liveSyncResultInfo.isFullSync
+			});
+
+			if (liveSyncResultInfo && deviceDescriptor.debugggingEnabled) {
+				await this.$deviceDebugAppService.refreshApplicationWithDebug(projectData, deviceDescriptor, refreshInfo);
+			}
+
+			this.$logger.info(`Successfully synced application ${liveSyncResultInfo.deviceAppData.appIdentifier} on device ${liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier}.`);
 		} catch (err) {
 			const allErrors = (<Mobile.IDevicesOperationError>err).allErrors;
 
 			if (allErrors && _.isArray(allErrors)) {
 				for (const deviceError of allErrors) {
 					this.$logger.warn(`Unable to apply changes for device: ${deviceError.deviceIdentifier}. Error is: ${deviceError.message}.`);
-					this.emitRunOnDeviceEvent(RunOnDeviceEvents.runOnDeviceError, {
-						error: deviceError,
-						deviceIdentifier: deviceError.deviceIdentifier,
-						projectDir: projectData.projectDir,
-						applicationIdentifier: projectData.projectIdentifiers[device.deviceInfo.platform.toLowerCase()]
-					});
+					this.$runOnDevicesEmitter.emitRunOnDeviceErrorEvent(projectData, device, deviceError);
 				}
 			}
 		}
@@ -129,11 +140,6 @@ export class RunOnDevicesController extends EventEmitter {
 			const result = await liveSyncInfo.actionsChain;
 			return result;
 		}
-	}
-
-	private emitRunOnDeviceEvent(event: string, runOnDeviceData: ILiveSyncEventData): boolean {
-		this.$logger.trace(`Will emit event ${event} with data`, runOnDeviceData);
-		return this.emit(event, runOnDeviceData);
 	}
 }
 $injector.register("runOnDevicesController", RunOnDevicesController);
