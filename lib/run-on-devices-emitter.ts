@@ -42,6 +42,13 @@ export class RunOnDevicesEmitter extends EventEmitter {
 		});
 	}
 
+	public emitRunOnDeviceStoppedEvent(projectDir: string, deviceIdentifier: string) {
+		this.emitCore(RunOnDeviceEvents.runOnDeviceStopped, {
+			projectDir,
+			deviceIdentifier
+		});
+	}
+
 	public emitDebuggerAttachedEvent(debugInformation: IDebugInformation) {
 		this.emit(DEBUGGER_ATTACHED_EVENT_NAME, debugInformation);
 	}

@@ -5,6 +5,10 @@ export class RunOnDevicesDataService {
 		return this.liveSyncProcessesInfo[projectDir];
 	}
 
+	public getAllData(): IDictionary<ILiveSyncProcessInfo> {
+		return this.liveSyncProcessesInfo;
+	}
+
 	public getDeviceDescriptors(projectDir: string): ILiveSyncDeviceInfo[] {
 		const liveSyncProcessesInfo = this.liveSyncProcessesInfo[projectDir] || <ILiveSyncProcessInfo>{};
 		const currentDescriptors = liveSyncProcessesInfo.deviceDescriptors;

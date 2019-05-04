@@ -9,6 +9,7 @@ import { RunOnDevicesController } from "./run-on-devices-controller";
 import { RunOnDevicesDataService } from "../services/run-on-devices-data-service";
 import { cache } from "../common/decorators";
 import { DeviceDiscoveryEventNames } from "../common/constants";
+import { RunOnDevicesEmitter } from "../run-on-devices-emitter";
 
 export class MainController extends EventEmitter {
 	constructor(
@@ -25,6 +26,7 @@ export class MainController extends EventEmitter {
 		private $projectDataService: IProjectDataService,
 		private $runOnDevicesController: RunOnDevicesController,
 		private $runOnDevicesDataService: RunOnDevicesDataService,
+		private $runOnDevicesEmitter: RunOnDevicesEmitter,
 		private $workflowDataService: WorkflowDataService
 	) { super(); }
 
@@ -146,7 +148,7 @@ export class MainController extends EventEmitter {
 
 			// Emit RunOnDevice stopped when we've really stopped.
 			_.each(removedDeviceIdentifiers, deviceIdentifier => {
-				this.emit(RunOnDeviceEvents.runOnDeviceStopped, { projectDir, deviceIdentifier });
+				this.$runOnDevicesEmitter.emitRunOnDeviceStoppedEvent(projectDir, deviceIdentifier);
 			});
 		}
 	}
@@ -157,12 +159,7 @@ export class MainController extends EventEmitter {
 
 	private handleRunOnDeviceEvents(projectDir: string): void {
 		this.$runOnDevicesController.on(RunOnDeviceEvents.runOnDeviceError, async data => {
-			this.emit(RunOnDeviceEvents.runOnDeviceError, data);
 			await this.stopRunOnDevices(projectDir, [data.deviceIdentifier], { shouldAwaitAllActions: false });
-		});
-
-		this.$runOnDevicesController.on(RunOnDeviceEvents.runOnDeviceStarted, data => {
-			this.emit(RunOnDeviceEvents.runOnDeviceStarted, data);
 		});
 	}
 
@@ -190,15 +187,16 @@ export class MainController extends EventEmitter {
 		this.$devicesService.on(DeviceDiscoveryEventNames.DEVICE_LOST, async (device: Mobile.IDevice) => {
 			this.$logger.trace(`Received ${DeviceDiscoveryEventNames.DEVICE_LOST} event in LiveSync service for ${device.deviceInfo.identifier}. Will stop LiveSync operation for this device.`);
 
-			// for (const projectDir in this.liveSyncProcessesInfo) {
-			// 	try {
-			// 		if (_.find(this.liveSyncProcessesInfo[projectDir].deviceDescriptors, d => d.identifier === device.deviceInfo.identifier)) {
-			// 			await this.stopLiveSync(projectDir, [device.deviceInfo.identifier]);
-			// 		}
-			// 	} catch (err) {
-			// 		this.$logger.warn(`Unable to stop LiveSync operation for ${device.deviceInfo.identifier}.`, err);
-			// 	}
-			// }
+			for (const projectDir in this.$runOnDevicesDataService.getAllData()) {
+				try {
+					const deviceDescriptors = this.$runOnDevicesDataService.getDeviceDescriptors(projectDir);
+					if (_.find(deviceDescriptors, d => d.identifier === device.deviceInfo.identifier)) {
+						await this.stopRunOnDevices(projectDir, [device.deviceInfo.identifier]);
+					}
+				} catch (err) {
+					this.$logger.warn(`Unable to stop LiveSync operation for ${device.deviceInfo.identifier}.`, err);
+				}
+			}
 		});
 	}
 }
