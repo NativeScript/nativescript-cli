@@ -69,9 +69,7 @@ const liveSyncInfo = {
 	projectDir,
 	release: false,
 	useHotModuleReload: false,
-	webpackCompilerConfig: {
-		env: {},
-	}
+	env: {}
 };
 
 describe("MainController", () => {

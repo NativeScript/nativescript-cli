@@ -1,4 +1,6 @@
 export type AddPlatformData = Pick<any, 'platformParam'> & Partial<Pick<IOptions, 'frameworkPath'>> & Partial<Pick<any, 'nativePrepare'>>;
+export type PreparePlatformData = Pick<any, 'nativePrepare'> & Pick<IOptions, 'env' | 'release'>;
+export type IOSPrepareData = PreparePlatformData & Pick<IOptions, 'teamId' | 'provision'> & Pick<any, 'mobileProvisionData'>;
 
 export class WorkflowDataService {
 	constructor(
@@ -15,7 +17,7 @@ export class WorkflowDataService {
 				projectData,
 				nativePlatformData,
 				addPlatformData: this.getAddPlatformData("ios", options),
-				preparePlatformData: new PreparePlatformData(options),
+				preparePlatformData: this.getIOSPrepareData(options),
 				buildPlatformData: new IOSBuildData(options),
 				deployPlatformData: new DeployPlatformData(options),
 				liveSyncData: {},
@@ -25,7 +27,7 @@ export class WorkflowDataService {
 				projectData,
 				nativePlatformData,
 				addPlatformData: this.getAddPlatformData("android", options),
-				preparePlatformData: new PreparePlatformData(options),
+				preparePlatformData: this.getPreparePlatformData(options),
 				buildPlatformData: new AndroidBuildData(options),
 				deployPlatformData: new DeployPlatformData(options),
 				liveSyncData: {},
@@ -41,6 +43,23 @@ export class WorkflowDataService {
 			frameworkPath: options.frameworkPath,
 			nativePrepare: options.nativePrepare,
 			platformParam: options.platformParam || platform,
+		};
+	}
+
+	private getPreparePlatformData(options: IOptions | any) {
+		return {
+			env: options.env,
+			release: options.release,
+			nativePrepare: options.nativePrepare
+		};
+	}
+
+	private getIOSPrepareData(options: IOptions | any) {
+		return {
+			...this.getPreparePlatformData(options),
+			teamId: options.teamId,
+			provision: options.provision,
+			mobileProvisionData: options.mobileProvisionData
 		};
 	}
 }
@@ -65,21 +84,21 @@ export class WorkflowData {
 // 	public nativePrepare = this.options.nativePrepare;
 // }
 
-export class PreparePlatformData {
-	constructor(protected options: IOptions | any) { }
+// export class PreparePlatformData {
+// 	constructor(protected options: IOptions | any) { }
 
-	public env = this.options.env;
-	public release = this.options.release;
-	public nativePrepare = this.options.nativePrepare;
-}
+// 	public env = this.options.env;
+// 	public release = this.options.release;
+// 	public nativePrepare = this.options.nativePrepare;
+// }
 
-export class IOSPrepareData extends PreparePlatformData {
-	constructor(options: IOptions | any) { super(options); }
+// export class IOSPrepareData extends PreparePlatformData {
+// 	constructor(options: IOptions | any) { super(options); }
 
-	public teamId = this.options.teamId;
-	public provision = this.options.provision;
-	public mobileProvisionData = this.options.mobileProvisionData;
-}
+// 	public teamId = this.options.teamId;
+// 	public provision = this.options.provision;
+// 	public mobileProvisionData = this.options.mobileProvisionData;
+// }
 
 export class BuildPlatformDataBase {
 	constructor(protected options: IOptions | any) { }

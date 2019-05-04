@@ -106,20 +106,12 @@ interface IPreparePlatformJSInfo extends IPreparePlatformCoreInfo, ICopyAppFiles
 interface IPlatformOptions extends IRelease, IHasUseHotModuleReloadOption {
 }
 
-interface IShouldPrepareInfo extends IOptionalProjectChangesInfoComposition {
-	platformInfo: IPreparePlatformInfo;
-}
-
 interface IOptionalProjectChangesInfoComposition {
 	changesInfo?: IProjectChangesInfo;
 }
 
 interface IPreparePlatformCoreInfo extends IPreparePlatformInfoBase, IOptionalProjectChangesInfoComposition {
 	platformSpecificData: IPlatformSpecificData;
-}
-
-interface IPreparePlatformInfo extends IPreparePlatformInfoBase, IPlatformConfig {
-	webpackCompilerConfig: IWebpackCompilerConfig;
 }
 
 interface IPlatformConfig {

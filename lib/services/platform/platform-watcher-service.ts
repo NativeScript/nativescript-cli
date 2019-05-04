@@ -45,7 +45,6 @@ export class PlatformWatcherService extends EventEmitter implements IPlatformWat
 	private async startJSWatcherWithPrepare(platformData: IPlatformData, projectData: IProjectData, config: IWebpackCompilerConfig): Promise<void> {
 		if (!this.watchersData[projectData.projectDir][platformData.platformNameLowerCase].webpackCompilerProcess) {
 			this.$webpackCompilerService.on("webpackEmittedFiles", files => {
-				console.log("=============== WEBPACK EMITTED FILES ============");
 				this.emitFilesChangeEvent({ files, hasNativeChanges: false, platform: platformData.platformNameLowerCase });
 			});
 

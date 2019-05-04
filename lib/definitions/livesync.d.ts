@@ -141,8 +141,7 @@ declare global {
 	/**
 	 * Describes a LiveSync operation.
 	 */
-	interface ILiveSyncInfo extends IProjectDir, IRelease, IOptionalSkipWatcher, IHasUseHotModuleReloadOption, IHasSyncToPreviewAppOption {
-		webpackCompilerConfig: IWebpackCompilerConfig;
+	interface ILiveSyncInfo extends IProjectDir, IEnvOptions, IRelease, IOptionalSkipWatcher, IHasUseHotModuleReloadOption, IHasSyncToPreviewAppOption {
 		emulator?: boolean;
 		
 		/**

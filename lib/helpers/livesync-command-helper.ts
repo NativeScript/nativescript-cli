@@ -118,9 +118,7 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 			skipWatcher: !this.$options.watch,
 			clean: this.$options.clean,
 			release: this.$options.release,
-			webpackCompilerConfig: {
-				env: this.$options.env
-			},
+			env: this.$options.env,
 			timeout: this.$options.timeout,
 			useHotModuleReload: this.$options.hmr,
 			force: this.$options.force,
