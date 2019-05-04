@@ -277,12 +277,12 @@ export class AndroidAppBundleMessages {
 	public static ANDROID_APP_BUNDLE_PUBLISH_DOCS_MESSAGE = "How to use Android App Bundle for publishing: https://docs.nativescript.org/tooling/publishing/publishing-android-apps#android-app-bundle";
 }
 
-export const LiveSyncEvents = {
-	liveSyncStopped: "liveSyncStopped",
+export const RunOnDeviceEvents = {
+	runOnDeviceStopped: "runOnDeviceStopped",
 	// In case we name it error, EventEmitter expects instance of Error to be raised and will also raise uncaught exception in case there's no handler
-	liveSyncError: "liveSyncError",
+	runOnDeviceError: "runOnDeviceError",
 	previewAppLiveSyncError: PreviewAppLiveSyncEvents.PREVIEW_APP_LIVE_SYNC_ERROR,
-	liveSyncExecuted: "liveSyncExecuted",
-	liveSyncStarted: "liveSyncStarted",
-	liveSyncNotification: "notify"
+	runOnDeviceExecuted: "runOnDeviceExecuted",
+	runOnDeviceStarted: "runOnDeviceStarted",
+	runOnDeviceNotification: "notify"
 };

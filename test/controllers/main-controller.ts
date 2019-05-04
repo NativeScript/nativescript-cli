@@ -101,7 +101,7 @@ describe("MainController", () => {
 				};
 
 				const mainController: MainController = injector.resolve("mainController");
-				await mainController.runPlatform(projectDir, [iOSDeviceDescriptor], liveSyncInfo);
+				await mainController.runOnDevices(projectDir, [iOSDeviceDescriptor], liveSyncInfo);
 
 				assert.isTrue(isStartWatcherCalled);
 			});

@@ -1,6 +1,6 @@
 import { performanceLog } from "../../common/decorators";
 import { EventEmitter } from "events";
-import { DEBUGGER_DETACHED_EVENT_NAME, USER_INTERACTION_NEEDED_EVENT_NAME, LiveSyncEvents, DEBUGGER_ATTACHED_EVENT_NAME } from "../../constants";
+import { DEBUGGER_DETACHED_EVENT_NAME, USER_INTERACTION_NEEDED_EVENT_NAME, RunOnDeviceEvents, DEBUGGER_ATTACHED_EVENT_NAME } from "../../constants";
 import { EOL } from "os";
 
 export class DeviceRefreshAppService {
@@ -66,7 +66,7 @@ export class DeviceRefreshAppService {
 			const msg = `Unable to start application ${applicationIdentifier} on device ${liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier}. Try starting it manually.`;
 			this.$logger.warn(msg);
 			if (!settings || !settings.shouldSkipEmitLiveSyncNotification) {
-				eventEmitter.emit(LiveSyncEvents.liveSyncNotification, {
+				eventEmitter.emit(RunOnDeviceEvents.runOnDeviceNotification, {
 					projectDir: projectData.projectDir,
 					applicationIdentifier,
 					deviceIdentifier: liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier,
@@ -79,7 +79,7 @@ export class DeviceRefreshAppService {
 			}
 		}
 
-		eventEmitter.emit(LiveSyncEvents.liveSyncExecuted, {
+		eventEmitter.emit(RunOnDeviceEvents.runOnDeviceExecuted, {
 			projectDir: projectData.projectDir,
 			applicationIdentifier,
 			syncedFiles: liveSyncResultInfo.modifiedFilesData.map(m => m.getLocalPath()),

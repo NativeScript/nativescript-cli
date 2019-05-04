@@ -133,7 +133,7 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 			// return;
 		// }
 
-		await this.$mainController.runPlatform(this.$projectData.projectDir, deviceDescriptors, liveSyncInfo);
+		await this.$mainController.runOnDevices(this.$projectData.projectDir, deviceDescriptors, liveSyncInfo);
 
 		// const remainingDevicesToSync = devices.map(d => d.deviceInfo.identifier);
 		// this.$liveSyncService.on(LiveSyncEvents.liveSyncStopped, (data: { projectDir: string, deviceIdentifier: string }) => {

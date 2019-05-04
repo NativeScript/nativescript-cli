@@ -41,15 +41,18 @@ $injector.require("platformValidationService", "./services/platform/platform-val
 $injector.require("platformCommandsService", "./services/platform/platform-commands-service");
 $injector.require("platformWatcherService", "./services/platform/platform-watcher-service");
 
+$injector.require("buildArtefactsService", "./services/build-artefacts-service");
+
+$injector.require("runOnDevicesDataService", "./services/run-on-devices-data-service");
 $injector.require("deviceInstallAppService", "./services/device/device-install-app-service");
 $injector.require("deviceRefreshAppService", "./services/device/device-refresh-app-service");
 
 $injector.require("workflowDataService", "./services/workflow/workflow-data-service");
 
 $injector.require("mainController", "./controllers/main-controller");
-$injector.require("runOnDeviceController", "./controllers/run-on-device");
+$injector.require("runOnDevicesController", "./controllers/run-on-devices-controller");
 
-$injector.require("buildArtefactsService", "./services/build-artefacts-service");
+$injector.require("liveSyncServiceResolver", "./resolvers/livesync-service-resolver");
 
 $injector.require("debugDataService", "./services/debug-data-service");
 $injector.requirePublicClass("debugService", "./services/debug-service");
