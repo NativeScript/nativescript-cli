@@ -66,7 +66,7 @@ declare global {
 		/**
 		 * Whether debugging has been enabled for this device or not
 		 */
-		debugggingEnabled?: boolean;
+		debuggingEnabled?: boolean;
 	}
 
 	/**
@@ -169,56 +169,6 @@ declare global {
 		 * @returns {ILiveSyncDeviceInfo[]} Array of elements describing parameters used to start LiveSync on each device.
 		 */
 		getLiveSyncDeviceDescriptors(projectDir: string): ILiveSyncDeviceInfo[];
-	}
-
-	// TODO: Rename this interface and change method's definition
-	interface ILiveSyncService2 {
-		syncInitialDataOnDevice(device: Mobile.IDevice, deviceBuildInfoDescriptor: ILiveSyncDeviceInfo, projectData: IProjectData, liveSyncInfo: ILiveSyncInfo): Promise<ILiveSyncResultInfo>;
-		syncChangedDataOnDevice(device: Mobile.IDevice, filesToSync: string[], liveSyncDeviceInfo: ILiveSyncDeviceInfo, projectData: IProjectData, liveSyncInfo: ILiveSyncInfo): Promise<ILiveSyncResultInfo>;
-	}
-
-	/**
-	 * Describes LiveSync operations while debuggging.
-	 */
-	interface IDebugLiveSyncService extends ILiveSyncService {
-		/**
-		 * Method used to retrieve the glob patterns which CLI will watch for file changes. Defaults to the whole app directory.
-		 * @param {ILiveSyncInfo} liveSyncData Information needed for livesync - for example if bundle is passed or if a release build should be performed.
-		 * @param  {IProjectData} projectData Project data.
-		 * @param  {string[]} platforms Platforms to start the watcher for.
-		 * @returns {Promise<string[]>} The glob patterns.
-		 */
-		getWatcherPatterns(liveSyncData: ILiveSyncInfo, projectData: IProjectData, platforms: string[]): Promise<string[]>;
-
-		/**
-		 * Prints debug information.
-		 * @param {IDebugInformation} debugInformation Information to be printed.
-		 * @returns {IDebugInformation} Full url and port where the frontend client can be connected.
-		 */
-		printDebugInformation(debugInformation: IDebugInformation): IDebugInformation;
-
-		/**
-		 * Enables debugging for the specified devices
-		 * @param {IEnableDebuggingDeviceOptions[]} deviceOpts Settings used for enabling debugging for each device.
-		 * @param {IDebuggingAdditionalOptions} enableDebuggingOptions Settings used for enabling debugging.
-		 * @returns {Promise<IDebugInformation>[]} Array of promises for each device.
-		 */
-		enableDebugging(deviceOpts: IEnableDebuggingDeviceOptions[], enableDebuggingOptions: IDebuggingAdditionalOptions): Promise<IDebugInformation>[];
-
-		/**
-		 * Disables debugging for the specified devices
-		 * @param {IDisableDebuggingDeviceOptions[]} deviceOptions Settings used for disabling debugging for each device.
-		 * @param {IDebuggingAdditionalOptions} debuggingAdditionalOptions Settings used for disabling debugging.
-		 * @returns {Promise<void>[]} Array of promises for each device.
-		 */
-		disableDebugging(deviceOptions: IDisableDebuggingDeviceOptions[], debuggingAdditionalOptions: IDebuggingAdditionalOptions): Promise<void>[];
-
-		/**
-		 * Attaches a debugger to the specified device.
-		 * @param {IAttachDebuggerOptions} settings Settings used for controling the attaching process.
-		 * @returns {Promise<IDebugInformation>} Full url and port where the frontend client can be connected.
-		 */
-		attachDebugger(settings: IAttachDebuggerOptions): Promise<IDebugInformation>;
 	}
 
 	/**

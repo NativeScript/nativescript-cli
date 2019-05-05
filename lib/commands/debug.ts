@@ -1,6 +1,7 @@
 import { cache } from "../common/decorators";
 import { ValidatePlatformCommandBase } from "./command-base";
 import { LiveSyncCommandHelper } from "../helpers/livesync-command-helper";
+import { DeviceDebugAppService } from "../services/device/device-debug-app-service";
 
 export class DebugPlatformCommand extends ValidatePlatformCommandBase implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
@@ -16,7 +17,7 @@ export class DebugPlatformCommand extends ValidatePlatformCommandBase implements
 		protected $logger: ILogger,
 		protected $errors: IErrors,
 		private $debugDataService: IDebugDataService,
-		private $liveSyncService: IDebugLiveSyncService,
+		private $deviceDebugAppService: DeviceDebugAppService,
 		private $liveSyncCommandHelper: ILiveSyncCommandHelper,
 		private $androidBundleValidatorHelper: IAndroidBundleValidatorHelper) {
 		super($options, $platformsData, $platformValidationService, $projectData);
@@ -41,7 +42,7 @@ export class DebugPlatformCommand extends ValidatePlatformCommandBase implements
 		const debugData = this.$debugDataService.createDebugData(this.$projectData, { device: selectedDeviceForDebug.deviceInfo.identifier });
 
 		if (this.$options.start) {
-			await this.$liveSyncService.printDebugInformation(await this.$debugService.debug(debugData, debugOptions));
+			await this.$deviceDebugAppService.printDebugInformation(await this.$debugService.debug(debugData, debugOptions));
 			return;
 		}
 
