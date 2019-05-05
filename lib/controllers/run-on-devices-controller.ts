@@ -47,7 +47,7 @@ export class RunOnDevicesController extends EventEmitter {
 					isFullSync: liveSyncResultInfo.isFullSync
 				});
 
-				if (liveSyncResultInfo && deviceDescriptor.debugggingEnabled) {
+				if (liveSyncResultInfo && deviceDescriptor.debuggingEnabled) {
 					await this.$deviceDebugAppService.enableDebugging(projectData, deviceDescriptor, refreshInfo);
 				}
 
@@ -136,7 +136,7 @@ export class RunOnDevicesController extends EventEmitter {
 			isFullSync: liveSyncResultInfo.isFullSync
 		});
 
-		if (liveSyncResultInfo && deviceDescriptor.debugggingEnabled) {
+		if (liveSyncResultInfo && deviceDescriptor.debuggingEnabled) {
 			await this.$deviceDebugAppService.enableDebugging(projectData, deviceDescriptor, refreshInfo);
 		}
 	}

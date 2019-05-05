@@ -104,7 +104,7 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 				const info: ILiveSyncDeviceInfo = {
 					identifier: d.deviceInfo.identifier,
 					buildAction,
-					debugggingEnabled: additionalOptions && additionalOptions.deviceDebugMap && additionalOptions.deviceDebugMap[d.deviceInfo.identifier],
+					debuggingEnabled: additionalOptions && additionalOptions.deviceDebugMap && additionalOptions.deviceDebugMap[d.deviceInfo.identifier],
 					debugOptions: this.$options,
 					outputPath,
 					skipNativePrepare: additionalOptions && additionalOptions.skipNativePrepare,
@@ -115,7 +115,7 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 
 		const liveSyncInfo: ILiveSyncInfo = {
 			projectDir: this.$projectData.projectDir,
-			skipWatcher: !this.$options.watch,
+			skipWatcher: !this.$options.watch || this.$options.justlaunch,
 			clean: this.$options.clean,
 			release: this.$options.release,
 			env: this.$options.env,

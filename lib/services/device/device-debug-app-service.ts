@@ -71,7 +71,7 @@ export class DeviceDebugAppService {
 			this.$errors.failWithoutHelp(`Couldn't enable debugging for ${deviceOption.deviceIdentifier}`);
 		}
 
-		deviceDescriptor.debugggingEnabled = true;
+		deviceDescriptor.debuggingEnabled = true;
 		deviceDescriptor.debugOptions = deviceOption.debugOptions;
 		const currentDeviceInstance = this.$devicesService.getDeviceByIdentifier(deviceOption.deviceIdentifier);
 		const attachDebuggerOptions: IAttachDebuggerOptions = {

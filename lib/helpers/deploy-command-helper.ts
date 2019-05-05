@@ -53,7 +53,7 @@ export class DeployCommandHelper {
 				const info: ILiveSyncDeviceInfo = {
 					identifier: d.deviceInfo.identifier,
 					buildAction,
-					debugggingEnabled: additionalOptions && additionalOptions.deviceDebugMap && additionalOptions.deviceDebugMap[d.deviceInfo.identifier],
+					debuggingEnabled: additionalOptions && additionalOptions.deviceDebugMap && additionalOptions.deviceDebugMap[d.deviceInfo.identifier],
 					debugOptions: this.$options,
 					outputPath,
 					skipNativePrepare: additionalOptions && additionalOptions.skipNativePrepare,

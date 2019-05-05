@@ -78,7 +78,10 @@ export class TestExecutionService implements ITestExecutionService {
 				if (!this.$options.env) { this.$options.env = { }; }
 				this.$options.env.unitTesting = true;
 
-				await this.$liveSyncCommandHelper.executeLiveSyncOperation(devices, this.platform, <any>{});
+				const deviceDebugMap: IDictionary<boolean> = {};
+				devices.forEach(device => deviceDebugMap[device.deviceInfo.identifier] = this.$options.debugBrk);
+
+				await this.$liveSyncCommandHelper.executeLiveSyncOperation(devices, this.platform, <any>{ deviceDebugMap });
 			};
 
 		karmaRunner.on("message",  (karmaData: any) => {
