@@ -35,7 +35,18 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 					const files = message.emittedFiles
 						.filter((file: string) => file.indexOf("App_Resources") === -1)
 						.map((file: string) => path.join(platformData.appDestinationDirectoryPath, "app", file));
-					this.emit("webpackEmittedFiles", files);
+
+					const result = this.getUpdatedEmittedFiles(message.emittedFiles);
+
+					const data = {
+						files,
+						hmrData: {
+							hash: result.hash,
+							fallbackFiles: result.fallbackFiles
+						}
+					};
+
+					this.emit("webpackEmittedFiles", data);
 				}
 			});
 
@@ -142,6 +153,35 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 		});
 
 		return args;
+	}
+
+	private getUpdatedEmittedFiles(emittedFiles: string[]) {
+		let fallbackFiles: string[] = [];
+		let hotHash;
+		if (emittedFiles.some(x => x.endsWith('.hot-update.json'))) {
+			let result = emittedFiles.slice();
+			const hotUpdateScripts = emittedFiles.filter(x => x.endsWith('.hot-update.js'));
+			hotUpdateScripts.forEach(hotUpdateScript => {
+				const { name, hash } = this.parseHotUpdateChunkName(hotUpdateScript);
+				hotHash = hash;
+				// remove bundle/vendor.js files if there's a bundle.XXX.hot-update.js or vendor.XXX.hot-update.js
+				result = result.filter(file => file !== `${name}.js`);
+			});
+			//if applying of hot update fails, we must fallback to the full files
+			fallbackFiles = emittedFiles.filter(file => result.indexOf(file) === -1);
+			return { emittedFiles: result, fallbackFiles, hash: hotHash };
+		}
+
+		return { emittedFiles, fallbackFiles };
+	}
+
+	private parseHotUpdateChunkName(name: string) {
+		const matcher = /^(.+)\.(.+)\.hot-update/gm;
+		const matches = matcher.exec(name);
+		return {
+			name: matches[1] || "",
+			hash: matches[2] || "",
+		};
 	}
 }
 $injector.register("webpackCompilerService", WebpackCompilerService);

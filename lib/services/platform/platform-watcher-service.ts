@@ -44,8 +44,8 @@ export class PlatformWatcherService extends EventEmitter implements IPlatformWat
 
 	private async startJSWatcherWithPrepare(platformData: IPlatformData, projectData: IProjectData, config: IWebpackCompilerConfig): Promise<void> {
 		if (!this.watchersData[projectData.projectDir][platformData.platformNameLowerCase].webpackCompilerProcess) {
-			this.$webpackCompilerService.on("webpackEmittedFiles", files => {
-				this.emitFilesChangeEvent({ files, hasNativeChanges: false, platform: platformData.platformNameLowerCase });
+			this.$webpackCompilerService.on("webpackEmittedFiles", data => {
+				this.emitFilesChangeEvent({ ...data, hasNativeChanges: false, platform: platformData.platformNameLowerCase });
 			});
 
 			const childProcess = await this.$webpackCompilerService.compileWithWatch(platformData, projectData, config);
@@ -75,7 +75,7 @@ export class PlatformWatcherService extends EventEmitter implements IPlatformWat
 			.on("all", async (event: string, filePath: string) => {
 				filePath = path.join(projectData.projectDir, filePath);
 				this.$logger.trace(`Chokidar raised event ${event} for ${filePath}.`);
-				this.emitFilesChangeEvent({ files: [], hasNativeChanges: true, platform: platformData.platformNameLowerCase });
+				this.emitFilesChangeEvent({ files: [], hmrData: null, hasNativeChanges: true, platform: platformData.platformNameLowerCase });
 			});
 
 		this.watchersData[projectData.projectDir][platformData.platformNameLowerCase].nativeFilesWatcher = watcher;

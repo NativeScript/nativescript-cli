@@ -39,28 +39,34 @@ export class WorkflowDataService {
 	}
 
 	private getAddPlatformData(platform: string, options: IOptions | any) {
-		return {
+		const result = {
 			frameworkPath: options.frameworkPath,
 			nativePrepare: options.nativePrepare,
 			platformParam: options.platformParam || platform,
 		};
+
+		return result;
 	}
 
 	private getPreparePlatformData(options: IOptions | any) {
-		return {
-			env: options.env,
+		const result = {
+			env: { ...options.env, hmr: options.hmr || options.useHotModuleReload },
 			release: options.release,
 			nativePrepare: options.nativePrepare
 		};
+
+		return result;
 	}
 
 	private getIOSPrepareData(options: IOptions | any) {
-		return {
+		const result =  {
 			...this.getPreparePlatformData(options),
 			teamId: options.teamId,
 			provision: options.provision,
 			mobileProvisionData: options.mobileProvisionData
 		};
+
+		return result;
 	}
 }
 $injector.register("workflowDataService", WorkflowDataService);

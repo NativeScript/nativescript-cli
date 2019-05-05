@@ -32,6 +32,7 @@ declare global {
 	interface IFilesChangeEventData {
 		platform: string;
 		files: string[];
+		hmrData: IPlatformHmrData;
 		hasNativeChanges: boolean;
 	}
 

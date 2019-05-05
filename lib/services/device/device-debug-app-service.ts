@@ -14,7 +14,7 @@ export class DeviceDebugAppService {
 	) { }
 
 	@performanceLog()
-	public async refreshApplicationWithDebug(projectData: IProjectData, deviceDescriptor: ILiveSyncDeviceInfo, refreshInfo: IRestartApplicationInfo): Promise<IDebugInformation> {
+	public async enableDebugging(projectData: IProjectData, deviceDescriptor: ILiveSyncDeviceInfo, refreshInfo: IRestartApplicationInfo): Promise<IDebugInformation> {
 		const { debugOptions } = deviceDescriptor;
 		// we do not stop the application when debugBrk is false, so we need to attach, instead of launch
 		// if we try to send the launch request, the debugger port will not be printed and the command will timeout
