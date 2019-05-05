@@ -7,8 +7,8 @@ export class PreviewCommand implements ICommand {
 	constructor(private $analyticsService: IAnalyticsService,
 		private $bundleValidatorHelper: IBundleValidatorHelper,
 		private $errors: IErrors,
-		private $liveSyncService: ILiveSyncService,
 		private $logger: ILogger,
+		private $previewAppLiveSyncService: IPreviewAppLiveSyncService,
 		private $networkConnectivityValidator: INetworkConnectivityValidator,
 		private $projectData: IProjectData,
 		private $options: IOptions,
@@ -24,10 +24,10 @@ export class PreviewCommand implements ICommand {
 			this.$logger.info(message);
 		});
 
-		await this.$liveSyncService.liveSyncToPreviewApp({
+		await this.$previewAppLiveSyncService.initialize({
+			projectDir: this.$projectData.projectDir,
 			bundle: !!this.$options.bundle,
 			useHotModuleReload: this.$options.hmr,
-			projectDir: this.$projectData.projectDir,
 			env: this.$options.env
 		});
 

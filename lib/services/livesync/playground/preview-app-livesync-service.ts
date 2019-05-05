@@ -1,30 +1,33 @@
 import * as path from "path";
 import { Device, FilesPayload } from "nativescript-preview-sdk";
-import { APP_RESOURCES_FOLDER_NAME, APP_FOLDER_NAME, TrackActionNames } from "../../../constants";
+import { APP_RESOURCES_FOLDER_NAME, APP_FOLDER_NAME, TrackActionNames, FILES_CHANGE_EVENT_NAME } from "../../../constants";
 import { PreviewAppLiveSyncEvents } from "./preview-app-constants";
 import { HmrConstants } from "../../../common/constants";
 import { stringify } from "../../../common/helpers";
 import { EventEmitter } from "events";
 import { performanceLog } from "../../../common/decorators";
+import { WorkflowDataService } from "../../workflow/workflow-data-service";
+import { PlatformWatcherService } from "../../platform/platform-watcher-service";
 
 export class PreviewAppLiveSyncService extends EventEmitter implements IPreviewAppLiveSyncService {
 
 	private deviceInitializationPromise: IDictionary<Promise<FilesPayload>> = {};
+	private promise = Promise.resolve();
 
 	constructor(
 		private $analyticsService: IAnalyticsService,
 		private $errors: IErrors,
-		private $hooksService: IHooksService,
+		private $hmrStatusService: IHmrStatusService,
 		private $logger: ILogger,
 		private $platformsData: IPlatformsData,
+		private $platformWatcherService: PlatformWatcherService,
 		private $projectDataService: IProjectDataService,
 		private $previewSdkService: IPreviewSdkService,
 		private $previewAppFilesService: IPreviewAppFilesService,
 		private $previewAppPluginsService: IPreviewAppPluginsService,
 		private $previewDevicesService: IPreviewDevicesService,
-		private $hmrStatusService: IHmrStatusService) {
-			super();
-		}
+		private $workflowDataService: WorkflowDataService
+	) { super(); }
 
 	@performanceLog()
 	public async initialize(data: IPreviewAppLiveSyncData): Promise<void> {
@@ -46,7 +49,15 @@ export class PreviewAppLiveSyncService extends EventEmitter implements IPreviewA
 					});
 				}
 
-				this.deviceInitializationPromise[device.id] = this.getInitialFilesForDevice(data, device);
+				this.deviceInitializationPromise[device.id] = this.getInitialFilesForPlatformSafe(data, device.platform);
+
+				this.$platformWatcherService.on(FILES_CHANGE_EVENT_NAME, async (filesChangeData: IFilesChangeEventData) => {
+					await this.onWebpackCompilationComplete(data, filesChangeData.hmrData, filesChangeData.files, device.platform);
+				});
+
+				const { nativePlatformData, projectData, preparePlatformData } = this.$workflowDataService.createWorkflowData(device.platform.toLowerCase(), data.projectDir, data);
+				await this.$platformWatcherService.startWatchers(nativePlatformData, projectData, preparePlatformData);
+
 				try {
 					const payloads = await this.deviceInitializationPromise[device.id];
 					return payloads;
@@ -89,38 +100,6 @@ export class PreviewAppLiveSyncService extends EventEmitter implements IPreviewA
 		this.$previewDevicesService.updateConnectedDevices([]);
 	}
 
-	private async getInitialFilesForDevice(data: IPreviewAppLiveSyncData, device: Device): Promise<FilesPayload> {
-		const hookArgs = this.getHookArgs(data, device);
-		await this.$hooksService.executeBeforeHooks("preview-sync", { hookArgs });
-		await this.$previewAppPluginsService.comparePluginsOnDevice(data, device);
-		const payloads = await this.getInitialFilesForPlatformSafe(data, device.platform);
-		return payloads;
-	}
-
-	private getHookArgs(data: IPreviewAppLiveSyncData, device: Device) {
-		const filesToSyncMap: IDictionary<string[]> = {};
-		const hmrData: IDictionary<IPlatformHmrData> = {};
-		const promise = Promise.resolve();
-		const result = {
-			projectData: this.$projectDataService.getProjectData(data.projectDir),
-			hmrData,
-			config: {
-				env: data.env,
-				platform: device.platform,
-				appFilesUpdaterOptions: {
-					bundle: data.bundle,
-					useHotModuleReload: data.useHotModuleReload,
-					release: false
-				},
-			},
-			externals: this.$previewAppPluginsService.getExternalPlugins(device),
-			filesToSyncMap,
-			startSyncFilesTimeout: async (platform: string) => await this.onWebpackCompilationComplete(data, hmrData, filesToSyncMap, promise, platform)
-		};
-
-		return result;
-	}
-
 	private async getInitialFilesForPlatformSafe(data: IPreviewAppLiveSyncData, platform: string): Promise<FilesPayload> {
 		this.$logger.info(`Start sending initial files for platform ${platform}.`);
 
@@ -153,21 +132,20 @@ export class PreviewAppLiveSyncService extends EventEmitter implements IPreviewA
 	}
 
 	@performanceLog()
-	private async onWebpackCompilationComplete(data: IPreviewAppLiveSyncData, hmrData: IDictionary<IPlatformHmrData>, filesToSyncMap: IDictionary<string[]>, promise: Promise<void>, platform: string) {
-		await promise
+	private async onWebpackCompilationComplete(data: IPreviewAppLiveSyncData, hmrData: IPlatformHmrData, files: string[], platform: string) {
+		await this.promise
 			.then(async () => {
-				const currentHmrData = _.cloneDeep(hmrData);
-				const platformHmrData = currentHmrData[platform] || <any>{};
+				const platformHmrData = _.cloneDeep(hmrData);
 				const projectData = this.$projectDataService.getProjectData(data.projectDir);
 				const platformData = this.$platformsData.getPlatformData(platform, projectData);
-				const clonedFiles = _.cloneDeep(filesToSyncMap[platform]);
+				const clonedFiles = _.cloneDeep(files);
 				const filesToSync = _.map(clonedFiles, fileToSync => {
 					const result = path.join(platformData.appDestinationDirectoryPath, APP_FOLDER_NAME, path.relative(projectData.getAppDirectoryPath(), fileToSync));
 					return result;
 				});
 
-				promise = this.syncFilesForPlatformSafe(data, { filesToSync }, platform);
-				await promise;
+				this.promise = this.syncFilesForPlatformSafe(data, { filesToSync }, platform);
+				await this.promise;
 
 				if (data.useHotModuleReload && platformHmrData.hash) {
 					const devices = this.$previewDevicesService.getDevicesForPlatform(platform);
@@ -183,7 +161,6 @@ export class PreviewAppLiveSyncService extends EventEmitter implements IPreviewA
 					}));
 				}
 			});
-		filesToSyncMap[platform] = [];
 	}
 
 	private showWarningsForNativeFiles(files: string[]): void {

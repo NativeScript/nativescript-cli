@@ -578,8 +578,6 @@ interface IHasAndroidBundle {
 	androidBundle?: boolean;
 }
 
-interface IAppFilesUpdaterOptions { }
-
 interface IPlatformBuildData extends IRelease, IHasUseHotModuleReloadOption, IBuildConfig, IEnvOptions { }
 
 interface IDeviceEmulator extends IHasEmulatorOption, IDeviceIdentifier { }
