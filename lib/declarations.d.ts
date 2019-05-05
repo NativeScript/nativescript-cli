@@ -913,18 +913,6 @@ interface IXcconfigService {
 }
 
 /**
- * Describes helper used during execution of deploy commands.
- */
-interface IDeployCommandHelper {
-	/**
-	 * Retrieves data needed to execute deploy command.
-	 * @param {string} platform platform to which to deploy - could be android or ios.
-	 * @return {IDeployPlatformInfo} data needed to execute deploy command.
-	 */
-	getDeployPlatformInfo(platform: string): IDeployPlatformInfo;
-}
-
-/**
  * Describes helper for validating bundling.
  */
 interface IBundleValidatorHelper {

@@ -14,8 +14,6 @@ interface IBuildPlatformAction {
 	buildPlatform(platform: string, buildConfig: IBuildConfig, projectData: IProjectData): Promise<string>;
 }
 
-interface IPlatformOptions extends IPlatformSpecificData, ICreateProjectOptions { }
-
 /**
  * Platform specific data required for project preparation.
  */
@@ -63,16 +61,6 @@ interface IPlatformsData {
 	getPlatformData(platform: string, projectData: IProjectData): IPlatformData;
 }
 
-interface IAppFilesUpdaterOptionsComposition {
-	appFilesUpdaterOptions: IAppFilesUpdaterOptions;
-}
-
-interface INodeModulesData extends IPlatform, IProjectDataComposition, IAppFilesUpdaterOptionsComposition {
-	absoluteOutputPath: string;
-	lastModifiedTime: Date;
-	projectFilesConfig: IProjectFilesConfig;
-}
-
 interface INodeModulesBuilder {
 	prepareNodeModules(platformData: IPlatformData, projectData: IProjectData): Promise<void>;
 }
@@ -91,53 +79,6 @@ interface IBuildInfo {
 	 * in order check it on livesync and throw an error to the user.
 	*/
 	deploymentTarget?: string;
-}
-
-interface IPlatformDataComposition {
-	platformData: IPlatformData;
-}
-
-interface ICopyAppFilesData extends IProjectDataComposition, IAppFilesUpdaterOptionsComposition, IPlatformDataComposition, IOptionalFilesToSync, IOptionalFilesToRemove { }
-
-interface IPreparePlatformJSInfo extends IPreparePlatformCoreInfo, ICopyAppFilesData {
-	projectFilesConfig?: IProjectFilesConfig;
-}
-
-interface IPlatformOptions extends IRelease, IHasUseHotModuleReloadOption {
-}
-
-interface IOptionalProjectChangesInfoComposition {
-	changesInfo?: IProjectChangesInfo;
-}
-
-interface IPreparePlatformCoreInfo extends IPreparePlatformInfoBase, IOptionalProjectChangesInfoComposition {
-	platformSpecificData: IPlatformSpecificData;
-}
-
-interface IPlatformConfig {
-	config: IPlatformOptions;
-}
-
-interface IOptionalFilesToSync {
-	filesToSync?: string[];
-}
-
-interface IOptionalFilesToRemove {
-	filesToRemove?: string[];
-}
-
-interface IPreparePlatformInfoBase extends IPlatform, IAppFilesUpdaterOptionsComposition, IProjectDataComposition, IEnvOptions, IOptionalFilesToSync, IOptionalFilesToRemove, IOptionalNativePrepareComposition { }
-
-interface IOptionalNativePrepareComposition {
-	nativePrepare?: INativePrepare;
-}
-
-interface IDeployPlatformInfo extends IPlatform, IAppFilesUpdaterOptionsComposition, IProjectDataComposition, IPlatformConfig, IEnvOptions, IOptionalNativePrepareComposition, IOptionalOutputPath, IBuildPlatformAction {
-	deployOptions: IDeployPlatformOptions
-}
-
-interface IUpdateAppOptions extends IOptionalFilesToSync, IOptionalFilesToRemove {
-	beforeCopyAction: (sourceFiles: string[]) => void;
 }
 
 interface IPlatformEnvironmentRequirements {

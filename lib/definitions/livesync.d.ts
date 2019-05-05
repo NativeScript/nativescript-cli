@@ -1,70 +1,8 @@
 import { EventEmitter } from "events";
 
 declare global {
-	// This interface is a mashup of NodeJS' along with Chokidar's event watchers
-	interface IFSWatcher extends NodeJS.EventEmitter {
-		// from fs.FSWatcher
-		close(): void;
-
-		/**
-		 * events.EventEmitter
-		 *   1. change
-		 *   2. error
-		 */
-		addListener(event: string, listener: Function): this;
-		addListener(event: "change", listener: (eventType: string, filename: string | Buffer) => void): this;
-		addListener(event: "error", listener: (code: number, signal: string) => void): this;
-
-		on(event: string, listener: Function): this;
-		on(event: "change", listener: (eventType: string, filename: string | Buffer) => void): this;
-		on(event: "error", listener: (code: number, signal: string) => void): this;
-
-		once(event: string, listener: Function): this;
-		once(event: "change", listener: (eventType: string, filename: string | Buffer) => void): this;
-		once(event: "error", listener: (code: number, signal: string) => void): this;
-
-		prependListener(event: string, listener: Function): this;
-		prependListener(event: "change", listener: (eventType: string, filename: string | Buffer) => void): this;
-		prependListener(event: "error", listener: (code: number, signal: string) => void): this;
-
-		prependOnceListener(event: string, listener: Function): this;
-		prependOnceListener(event: "change", listener: (eventType: string, filename: string | Buffer) => void): this;
-		prependOnceListener(event: "error", listener: (code: number, signal: string) => void): this;
-
-		// From chokidar FSWatcher
-
-		/**
-		 * Add files, directories, or glob patterns for tracking. Takes an array of strings or just one
-		 * string.
-		 */
-		add(paths: string | string[]): void;
-
-		/**
-		 * Stop watching files, directories, or glob patterns. Takes an array of strings or just one
-		 * string.
-		 */
-		unwatch(paths: string | string[]): void;
-
-		/**
-		 * Returns an object representing all the paths on the file system being watched by this
-		 * `FSWatcher` instance. The object's keys are all the directories (using absolute paths unless
-		 * the `cwd` option was used), and the values are arrays of the names of the items contained in
-		 * each directory.
-		 */
-		getWatched(): IDictionary<string[]>;
-
-		/**
-		 * Removes all listeners from watched files.
-		 */
-		close(): void;
-	}
-
 	interface ILiveSyncProcessInfo {
 		timer: NodeJS.Timer;
-		watcherInfo: {
-			watcher: IFSWatcher,
-			patterns: string[]
-		};
 		actionsChain: Promise<any>;
 		isStopped: boolean;
 		deviceDescriptors: ILiveSyncDeviceInfo[];
@@ -131,18 +69,16 @@ declare global {
 		debugggingEnabled?: boolean;
 	}
 
-	interface IOptionalSkipWatcher {
+	/**
+	 * Describes a LiveSync operation.
+	 */
+	interface ILiveSyncInfo extends IProjectDir, IEnvOptions, IRelease, IHasUseHotModuleReloadOption, IHasSyncToPreviewAppOption {
+		emulator?: boolean;
+
 		/**
 		 * Defines if the watcher should be skipped. If not passed, fs.Watcher will be started.
 		 */
 		skipWatcher?: boolean;
-	}
-
-	/**
-	 * Describes a LiveSync operation.
-	 */
-	interface ILiveSyncInfo extends IProjectDir, IEnvOptions, IRelease, IOptionalSkipWatcher, IHasUseHotModuleReloadOption, IHasSyncToPreviewAppOption {
-		emulator?: boolean;
 		
 		/**
 		 * Forces a build before the initial livesync.
@@ -189,41 +125,12 @@ declare global {
 		isFullSync?: boolean
 	}
 
-	interface ILatestAppPackageInstalledSettings extends IDictionary<IDictionary<boolean>> { /* empty */ }
-
 	interface IIsEmulator {
 		isEmulator: boolean;
 	}
 
-	interface ILiveSyncBuildInfo extends IIsEmulator, IPlatform {
-		pathToBuildItem: string;
-	}
-
 	interface IProjectDataComposition {
 		projectData: IProjectData;
-	}
-
-	/**
-	 * Desribes object that can be passed to ensureLatestAppPackageIsInstalledOnDevice method.
-	 */
-	interface IEnsureLatestAppPackageIsInstalledOnDeviceOptions extends IProjectDataComposition, IEnvOptions, IBundle, IRelease, IOptionalFilesToRemove, IOptionalFilesToSync {
-		device: Mobile.IDevice;
-		preparedPlatforms: string[];
-		rebuiltInformation: ILiveSyncBuildInfo[];
-		deviceBuildInfoDescriptor: ILiveSyncDeviceInfo;
-		settings: ILatestAppPackageInstalledSettings;
-		liveSyncData?: ILiveSyncInfo;
-		modifiedFiles?: string[];
-	}
-
-	/**
-	 * Describes the action that has been executed during ensureLatestAppPackageIsInstalledOnDevice execution.
-	 */
-	interface IAppInstalledOnDeviceResult {
-		/**
-		 * Defines if the app has been installed on device from the ensureLatestAppPackageIsInstalledOnDevice method.
-		 */
-		appInstalled: boolean;
 	}
 
 	/**
@@ -401,6 +308,7 @@ declare global {
 		shouldRestart(projectData: IProjectData, liveSyncInfo: ILiveSyncResultInfo): Promise<boolean>;
 		getDeviceLiveSyncService(device: Mobile.IDevice, projectData: IProjectData): INativeScriptDeviceLiveSyncService;
 	}
+
 	interface IRestartApplicationInfo {
 		didRestart: boolean;
 	}
