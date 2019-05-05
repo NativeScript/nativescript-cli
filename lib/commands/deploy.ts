@@ -1,5 +1,6 @@
 import { ANDROID_RELEASE_BUILD_ERROR_MESSAGE } from "../constants";
 import { ValidatePlatformCommandBase } from "./command-base";
+import { DeployCommandHelper } from "../helpers/deploy-command-helper";
 
 export class DeployOnDeviceCommand extends ValidatePlatformCommandBase implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
@@ -12,7 +13,7 @@ export class DeployOnDeviceCommand extends ValidatePlatformCommandBase implement
 		private $mobileHelper: Mobile.IMobileHelper,
 		$platformsData: IPlatformsData,
 		private $bundleValidatorHelper: IBundleValidatorHelper,
-		private $liveSyncCommandHelper: ILiveSyncCommandHelper,
+		private $deployCommandHelper: DeployCommandHelper,
 		private $androidBundleValidatorHelper: IAndroidBundleValidatorHelper) {
 			super($options, $platformsData, $platformValidationService, $projectData);
 			this.$projectData.initializeProjectData();
@@ -20,8 +21,7 @@ export class DeployOnDeviceCommand extends ValidatePlatformCommandBase implement
 
 	public async execute(args: string[]): Promise<void> {
 		const platform = args[0].toLowerCase();
-		// TODO: Add a separate deployCommandHelper with base class for it and LiveSyncCommandHelper
-		await this.$liveSyncCommandHelper.executeCommandLiveSync(platform, <any>{ release: true });
+		await this.$deployCommandHelper.deploy(platform, <any>{ release: true });
 	}
 
 	public async canExecute(args: string[]): Promise<boolean | ICanExecuteCommandOutput> {
