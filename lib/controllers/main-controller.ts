@@ -10,6 +10,7 @@ import { RunOnDevicesDataService } from "../services/run-on-devices-data-service
 import { cache } from "../common/decorators";
 import { DeviceDiscoveryEventNames } from "../common/constants";
 import { RunOnDevicesEmitter } from "../run-on-devices-emitter";
+import { PlatformWatcherService } from "../services/platform/platform-watcher-service";
 
 export class MainController extends EventEmitter {
 	constructor(
@@ -20,7 +21,7 @@ export class MainController extends EventEmitter {
 		private $errors: IErrors,
 		private $hooksService: IHooksService,
 		private $logger: ILogger,
-		private $platformWatcherService: IPlatformWatcherService,
+		private $platformWatcherService: PlatformWatcherService,
 		private $pluginsService: IPluginsService,
 		private $preparePlatformService: PreparePlatformService,
 		private $projectDataService: IProjectDataService,
@@ -90,7 +91,7 @@ export class MainController extends EventEmitter {
 
 			for (const platform of platforms) {
 				const { nativePlatformData, preparePlatformData } = this.$workflowDataService.createWorkflowData(platform, projectDir, liveSyncInfo);
-				await this.$platformWatcherService.startWatcher(nativePlatformData, projectData, preparePlatformData);
+				await this.$platformWatcherService.startWatchers(nativePlatformData, projectData, preparePlatformData);
 			}
 		}
 
@@ -117,11 +118,11 @@ export class MainController extends EventEmitter {
 					clearTimeout(liveSyncProcessInfo.timer);
 				}
 
-				if (liveSyncProcessInfo.watcherInfo && liveSyncProcessInfo.watcherInfo.watcher) {
-					liveSyncProcessInfo.watcherInfo.watcher.close();
-				}
+				_.each(liveSyncProcessInfo.deviceDescriptors, deviceDescriptor => {
+					const device = this.$devicesService.getDeviceByIdentifier(deviceDescriptor.identifier);
+					this.$platformWatcherService.stopWatchers(projectDir, device.deviceInfo.platform);
+				});
 
-				liveSyncProcessInfo.watcherInfo = null;
 				liveSyncProcessInfo.isStopped = true;
 
 				if (liveSyncProcessInfo.actionsChain && shouldAwaitPendingOperation) {

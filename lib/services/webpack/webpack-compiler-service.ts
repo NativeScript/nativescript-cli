@@ -7,6 +7,7 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 
 	constructor(
 		private $childProcess: IChildProcess,
+		private $logger: ILogger,
 		private $projectData: IProjectData
 	) { super(); }
 
@@ -84,6 +85,14 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 				}
 			});
 		});
+	}
+
+	public stopWebpackCompile(platform: string) {
+		if (platform) {
+			this.stopWebpackForPlatform(platform);
+		} else {
+			Object.keys(this.webpackProcesses).forEach(pl => this.stopWebpackForPlatform(pl));
+		}
 	}
 
 	private startWebpackProcess(platformData: IPlatformData, projectData: IProjectData, config: IWebpackCompilerConfig): child_process.ChildProcess {
@@ -182,6 +191,15 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 			name: matches[1] || "",
 			hash: matches[2] || "",
 		};
+	}
+
+	private stopWebpackForPlatform(platform: string) {
+		this.$logger.trace(`Stopping webpack watch for platform ${platform}.`);
+		const webpackProcess = this.webpackProcesses[platform];
+		if (webpackProcess) {
+			webpackProcess.kill("SIGINT");
+			delete this.webpackProcesses[platform];
+		}
 	}
 }
 $injector.register("webpackCompilerService", WebpackCompilerService);

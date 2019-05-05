@@ -5,13 +5,14 @@ import * as path from "path";
 import { INITIAL_SYNC_EVENT_NAME, FILES_CHANGE_EVENT_NAME } from "../../constants";
 import { PreparePlatformData } from "../workflow/workflow-data-service";
 import { PreparePlatformService } from "./prepare-platform-service";
+import { WebpackCompilerService } from "../webpack/webpack-compiler-service";
 
 interface IPlatformWatcherData {
 	webpackCompilerProcess: child_process.ChildProcess;
 	nativeFilesWatcher: choki.FSWatcher;
 }
 
-export class PlatformWatcherService extends EventEmitter implements IPlatformWatcherService {
+export class PlatformWatcherService extends EventEmitter {
 	private watchersData: IDictionary<IDictionary<IPlatformWatcherData>> = {};
 	private isInitialSyncEventEmitted = false;
 	private persistedFilesChangeEventData: IFilesChangeEventData[] = [];
@@ -19,10 +20,10 @@ export class PlatformWatcherService extends EventEmitter implements IPlatformWat
 	constructor(
 		private $logger: ILogger,
 		private $preparePlatformService: PreparePlatformService,
-		private $webpackCompilerService: IWebpackCompilerService
+		private $webpackCompilerService: WebpackCompilerService
 	) { super(); }
 
-	public async startWatcher(platformData: IPlatformData, projectData: IProjectData, preparePlatformData: PreparePlatformData): Promise<void> {
+	public async startWatchers(platformData: IPlatformData, projectData: IProjectData, preparePlatformData: PreparePlatformData): Promise<void> {
 		this.$logger.out("Starting watchers...");
 
 		if (!this.watchersData[projectData.projectDir]) {
@@ -40,6 +41,20 @@ export class PlatformWatcherService extends EventEmitter implements IPlatformWat
 		const hasNativeChanges = await this.startNativeWatcherWithPrepare(platformData, projectData, preparePlatformData); // -> start watcher + initial prepare
 
 		this.emitInitialSyncEvent({ platform: platformData.platformNameLowerCase, hasNativeChanges });
+	}
+
+	public async stopWatchers(projectDir: string, platform: string) {
+		const platformLowerCase = platform.toLowerCase();
+
+		if (this.watchersData && this.watchersData[projectDir] && this.watchersData[projectDir][platformLowerCase] && this.watchersData[projectDir][platformLowerCase].nativeFilesWatcher) {
+			this.watchersData[projectDir][platformLowerCase].nativeFilesWatcher.close();
+			this.watchersData[projectDir][platformLowerCase].nativeFilesWatcher = null;
+		}
+
+		if (this.watchersData && this.watchersData[projectDir] && this.watchersData[projectDir][platformLowerCase] && this.watchersData[projectDir][platformLowerCase].webpackCompilerProcess) {
+			this.$webpackCompilerService.stopWebpackCompile(platform);
+			this.watchersData[projectDir][platformLowerCase].webpackCompilerProcess = null;
+		}
 	}
 
 	private async startJSWatcherWithPrepare(platformData: IPlatformData, projectData: IProjectData, config: IWebpackCompilerConfig): Promise<void> {
