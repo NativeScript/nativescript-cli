@@ -2,6 +2,11 @@ import { Yok } from "../../lib/common/yok";
 import { assert } from "chai";
 import { AddPlatformService } from "../../lib/services/platform/add-platform-service";
 import { MainController } from "../../lib/controllers/main-controller";
+import { RunOnDeviceEvents } from "../../lib/constants";
+import { RunOnDevicesEmitter } from "../../lib/run-on-devices-emitter";
+import { WorkflowDataService } from "../../lib/services/workflow/workflow-data-service";
+import { RunOnDevicesDataService } from "../../lib/services/run-on-devices-data-service";
+import { PlatformWatcherService } from "../../lib/services/platform/platform-watcher-service";
 
 const deviceMap: IDictionary<any> = {
 	myiOSDevice: {
@@ -22,7 +27,15 @@ function createTestInjector(): IInjector {
 	const injector = new Yok();
 
 	injector.register("devicesService", ({
-		getDeviceByIdentifier: (identifier: string) => { return deviceMap[identifier]; }
+		on: () => ({}),
+		getDeviceByIdentifier: (identifier: string) => { return deviceMap[identifier]; },
+		getPlatformsFromDeviceDescriptors: (deviceDescriptors: ILiveSyncDeviceInfo[]) => {
+			return _(deviceDescriptors)
+				.map(device => deviceMap[device.identifier])
+				.map(device => device.deviceInfo.platform)
+				.uniq()
+				.value();
+		}
 	}));
 	injector.register("deviceWorkflowService", ({}));
 	injector.register("errors", ({
@@ -40,7 +53,7 @@ function createTestInjector(): IInjector {
 	injector.register("platformWatcherService", ({
 		on: () => ({}),
 		emit: () => ({}),
-		startWatcher: () => ({})
+		startWatchers: () => ({})
 	}));
 	injector.register("mainController", MainController);
 	injector.register("pluginsService", ({}));
@@ -50,11 +63,23 @@ function createTestInjector(): IInjector {
 		})
 	}));
 	injector.register("buildArtefactsService", ({}));
+	injector.register("addPlatformService", {});
 	injector.register("buildPlatformService", ({}));
-	injector.register("platformAddService", ({}));
-	injector.register("platformService", ({}));
-	injector.register("projectChangesService", ({}));
+	injector.register("preparePlatformService", ({}));
+	injector.register("deviceInstallAppService", {});
+	injector.register("deviceRefreshAppService", {});
+	injector.register("deviceDebugAppService", {});
 	injector.register("fs", ({}));
+	injector.register("hooksService", {
+		executeAfterHooks: () => ({})
+	});
+	injector.register("projectChangesService", ({}));
+	injector.register("runOnDevicesController", {
+		on: () => ({})
+	});
+	injector.register("runOnDevicesDataService", RunOnDevicesDataService);
+	injector.register("runOnDevicesEmitter", RunOnDevicesEmitter);
+	injector.register("workflowDataService", WorkflowDataService);
 
 	return injector;
 }
@@ -73,7 +98,7 @@ const liveSyncInfo = {
 };
 
 describe("MainController", () => {
-	describe("start", () => {
+	describe("runOnDevices", () => {
 		describe("when the run on device is called for second time for the same projectDir", () => {
 			it("should run only for new devies (for which the initial sync is still not executed)", async () => {
 				return;
@@ -87,15 +112,14 @@ describe("MainController", () => {
 				const injector = createTestInjector();
 
 				let isAddPlatformIfNeededCalled = false;
-				const platformAddService: AddPlatformService = injector.resolve("platformAddService");
-				platformAddService.addPlatformIfNeeded = async () => { isAddPlatformIfNeededCalled = true; };
+				const addPlatformService: AddPlatformService = injector.resolve("addPlatformService");
+				addPlatformService.addPlatformIfNeeded = async () => { isAddPlatformIfNeededCalled = true; };
 
 				let isStartWatcherCalled = false;
-				const platformWatcherService: IPlatformWatcherService = injector.resolve("platformWatcherService");
-				(<any>platformWatcherService).startWatcher = async () => {
+				const platformWatcherService: PlatformWatcherService = injector.resolve("platformWatcherService");
+				platformWatcherService.startWatchers = async () => {
 					assert.isTrue(isAddPlatformIfNeededCalled);
 					isStartWatcherCalled = true;
-					return true;
 				};
 
 				const mainController: MainController = injector.resolve("mainController");
@@ -127,13 +151,13 @@ describe("MainController", () => {
 					const injector = createTestInjector();
 
 					const actualAddedPlatforms: IPlatformData[] = [];
-					const platformAddService: AddPlatformService = injector.resolve("platformAddService");
-					platformAddService.addPlatformIfNeeded = async (platformData: IPlatformData) => {
+					const addPlatformService: AddPlatformService = injector.resolve("addPlatformService");
+					addPlatformService.addPlatformIfNeeded = async (platformData: IPlatformData) => {
 						actualAddedPlatforms.push(platformData);
 					};
 
-					const mainController = injector.resolve("mainController");
-					await mainController.runPlatform(projectDir, testCase.connectedDevices, liveSyncInfo);
+					const mainController: MainController = injector.resolve("mainController");
+					await mainController.runOnDevices(projectDir, testCase.connectedDevices, liveSyncInfo);
 
 					assert.deepEqual(actualAddedPlatforms.map(pData => pData.platformNameLowerCase), testCase.expectedAddedPlatforms);
 				});
@@ -197,5 +221,59 @@ describe("MainController", () => {
 				return;
 			});
 		});
+	});
+	describe("stopRunOnDevices", () => {
+		const testCases = [
+			{
+				name: "stops LiveSync operation for all devices and emits liveSyncStopped for all of them when stopLiveSync is called without deviceIdentifiers",
+				currentDeviceIdentifiers: ["device1", "device2", "device3"],
+				expectedDeviceIdentifiers: ["device1", "device2", "device3"]
+			},
+			{
+				name: "stops LiveSync operation for all devices and emits liveSyncStopped for all of them when stopLiveSync is called without deviceIdentifiers (when a single device is attached)",
+				currentDeviceIdentifiers: ["device1"],
+				expectedDeviceIdentifiers: ["device1"]
+			},
+			{
+				name: "stops LiveSync operation for specified devices and emits liveSyncStopped for each of them (when a single device is attached)",
+				currentDeviceIdentifiers: ["device1"],
+				expectedDeviceIdentifiers: ["device1"],
+				deviceIdentifiersToBeStopped: ["device1"]
+			},
+			{
+				name: "stops LiveSync operation for specified devices and emits liveSyncStopped for each of them",
+				currentDeviceIdentifiers: ["device1", "device2", "device3"],
+				expectedDeviceIdentifiers: ["device1", "device3"],
+				deviceIdentifiersToBeStopped: ["device1", "device3"]
+			},
+			{
+				name: "does not raise liveSyncStopped event for device, which is not currently being liveSynced",
+				currentDeviceIdentifiers: ["device1", "device2", "device3"],
+				expectedDeviceIdentifiers: ["device1"],
+				deviceIdentifiersToBeStopped: ["device1", "device4"]
+			}
+		];
+
+		for (const testCase of testCases) {
+			it(testCase.name, async () => {
+				const testInjector = createTestInjector();
+				const mainController = testInjector.resolve("mainController");
+
+				const runOnDevicesDataService: RunOnDevicesDataService = testInjector.resolve("runOnDevicesDataService");
+				runOnDevicesDataService.persistData(projectDir, testCase.currentDeviceIdentifiers.map(identifier => (<any>{ identifier })));
+
+				const emittedDeviceIdentifiersForLiveSyncStoppedEvent: string[] = [];
+
+				const runOnDevicesEmitter = testInjector.resolve("runOnDevicesEmitter");
+				runOnDevicesEmitter.on(RunOnDeviceEvents.runOnDeviceStopped, (data: any) => {
+					assert.equal(data.projectDir, projectDir);
+					emittedDeviceIdentifiersForLiveSyncStoppedEvent.push(data.deviceIdentifier);
+				});
+
+				await mainController.stopRunOnDevices(projectDir, testCase.deviceIdentifiersToBeStopped);
+
+				assert.deepEqual(emittedDeviceIdentifiersForLiveSyncStoppedEvent, testCase.expectedDeviceIdentifiers);
+			});
+		}
 	});
 });

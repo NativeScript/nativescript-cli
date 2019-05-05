@@ -76,7 +76,7 @@ export class MainController extends EventEmitter {
 
 		// TODO: Consider to handle correctly the descriptors when livesync is executed for second time for the same projectDir
 
-		this.$runOnDevicesDataService.persistData(projectDir, liveSyncInfo, deviceDescriptors);
+		this.$runOnDevicesDataService.persistData(projectDir, deviceDescriptors);
 
 		const shouldStartWatcher = !liveSyncInfo.skipWatcher && (liveSyncInfo.syncToPreviewApp || this.$runOnDevicesDataService.hasDeviceDescriptors(projectDir));
 		if (shouldStartWatcher) {

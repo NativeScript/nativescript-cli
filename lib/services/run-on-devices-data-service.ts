@@ -19,12 +19,11 @@ export class RunOnDevicesDataService {
 		return this.liveSyncProcessesInfo[projectDir].deviceDescriptors.length;
 	}
 
-	public persistData(projectDir: string, liveSyncInfo: ILiveSyncInfo, deviceDescriptors: ILiveSyncDeviceInfo[]): void {
+	public persistData(projectDir: string, deviceDescriptors: ILiveSyncDeviceInfo[]): void {
 		this.liveSyncProcessesInfo[projectDir] = this.liveSyncProcessesInfo[projectDir] || Object.create(null);
 		this.liveSyncProcessesInfo[projectDir].actionsChain = this.liveSyncProcessesInfo[projectDir].actionsChain || Promise.resolve();
 		this.liveSyncProcessesInfo[projectDir].currentSyncAction = this.liveSyncProcessesInfo[projectDir].actionsChain;
 		this.liveSyncProcessesInfo[projectDir].isStopped = false;
-		this.liveSyncProcessesInfo[projectDir].syncToPreviewApp = liveSyncInfo.syncToPreviewApp;
 
 		const currentDeviceDescriptors = this.getDeviceDescriptors(projectDir);
 		this.liveSyncProcessesInfo[projectDir].deviceDescriptors = _.uniqBy(currentDeviceDescriptors.concat(deviceDescriptors), "identifier");
