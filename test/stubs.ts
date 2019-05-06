@@ -301,13 +301,16 @@ export class ProjectDataStub implements IProjectData {
 	projectDir: string;
 	projectName: string;
 	get platformsDir(): string {
-		return this.plafromsDir || (this.projectDir && join(this.projectDir, "platforms")) || "";
+		return this.platformsDirCache || (this.projectDir && join(this.projectDir, "platforms")) || "";
 	}
 	set platformsDir(value) {
-		this.plafromsDir = value;
+		this.platformsDirCache = value;
 	}
 	projectFilePath: string;
-	projectIdentifiers: Mobile.IProjectIdentifier;
+	projectIdentifiers: Mobile.IProjectIdentifier = {
+		android: "org.nativescirpt.myiOSApp",
+		ios: "org.nativescript.myProjectApp"
+	};
 	projectId: string;
 	dependencies: any;
 	nsConfig: any;
@@ -315,7 +318,7 @@ export class ProjectDataStub implements IProjectData {
 	devDependencies: IStringDictionary;
 	projectType: string;
 	appResourcesDirectoryPath: string;
-	private plafromsDir: string = "";
+	private platformsDirCache: string = "";
 	public androidManifestPath: string;
 	public infoPlistPath: string;
 	public appGradlePath: string;
@@ -367,11 +370,15 @@ export class AndroidPluginBuildServiceStub implements IAndroidPluginBuildService
 }
 
 export class PlatformProjectServiceStub extends EventEmitter implements IPlatformProjectService {
+	constructor(private platform: string) {
+		super();
+	}
+
 	getPlatformData(projectData: IProjectData): IPlatformData {
 		return {
-			frameworkPackageName: "",
-			normalizedPlatformName: "",
-			platformNameLowerCase: "",
+			frameworkPackageName: `tns-${this.platform.toLowerCase()}`,
+			normalizedPlatformName: this.platform.toLowerCase() === "ios" ? "iOS" : "Android",
+			platformNameLowerCase: this.platform.toLowerCase(),
 			platformProjectService: this,
 			projectRoot: "",
 			getBuildOutputPath: (buildConfig: IBuildConfig) => "",
@@ -471,11 +478,11 @@ export class PlatformsDataStub extends EventEmitter implements IPlatformsData {
 
 	public getPlatformData(platform: string, projectData: IProjectData): IPlatformData {
 		return {
-			frameworkPackageName: "",
-			platformProjectService: new PlatformProjectServiceStub(),
-			platformNameLowerCase: "",
+			frameworkPackageName: `tns-${platform.toLowerCase()}`,
+			platformProjectService: new PlatformProjectServiceStub(platform),
+			platformNameLowerCase: platform.toLowerCase(),
 			projectRoot: "",
-			normalizedPlatformName: "",
+			normalizedPlatformName: platform.toLowerCase() === "ios" ? "iOS" : "Android",
 			appDestinationDirectoryPath: "",
 			getBuildOutputPath: () => "",
 			getValidBuildOutputData: (buildOptions: IBuildOutputOptions) => ({ packageNames: [] }),
@@ -501,7 +508,17 @@ export class ProjectDataService implements IProjectDataService {
 
 	removeDependency(dependencyName: string): void { }
 
-	getProjectData(projectDir: string): IProjectData { return null; }
+	getProjectData(projectDir: string): IProjectData {
+		return <any>{
+			projectDir: "/path/to/my/projecDir",
+			projectName: "myTestProjectName",
+			platformsDir: "/path/to/my/projecDir/platforms",
+			projectIdentifiers: {
+				ios: "org.nativescript.myiosApp",
+				android: "org.nativescript.myAndroidApp"
+			},
+		};
+	}
 
 	async getAssetsStructure(opts: IProjectDir): Promise<IAssetsStructure> {
 		return null;

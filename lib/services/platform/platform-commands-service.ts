@@ -3,17 +3,18 @@ import * as semver from "semver";
 import * as temp from "temp";
 import * as constants from "../../constants";
 import { AddPlatformService } from "./add-platform-service";
+import { PlatformValidationService } from "./platform-validation-service";
 
 export class PlatformCommandsService implements IPlatformCommandsService {
 	constructor(
+		private $addPlatformService: AddPlatformService,
 		private $fs: IFileSystem,
 		private $errors: IErrors,
 		private $logger: ILogger,
 		private $packageInstallationManager: IPackageInstallationManager,
 		private $pacoteService: IPacoteService,
-		private $addPlatformService: AddPlatformService,
 		private $platformsData: IPlatformsData,
-		private $platformValidationService: IPlatformValidationService,
+		private $platformValidationService: PlatformValidationService,
 		private $projectChangesService: IProjectChangesService,
 		private $projectDataService: IProjectDataService
 	) { }
