@@ -1,6 +1,5 @@
-import * as path from "path";
 import { Device, FilesPayload } from "nativescript-preview-sdk";
-import { APP_RESOURCES_FOLDER_NAME, APP_FOLDER_NAME, TrackActionNames, FILES_CHANGE_EVENT_NAME } from "../../../constants";
+import { APP_RESOURCES_FOLDER_NAME, TrackActionNames, FILES_CHANGE_EVENT_NAME } from "../../../constants";
 import { PreviewAppLiveSyncEvents } from "./preview-app-constants";
 import { HmrConstants } from "../../../common/constants";
 import { stringify } from "../../../common/helpers";
@@ -19,9 +18,7 @@ export class PreviewAppLiveSyncService extends EventEmitter implements IPreviewA
 		private $errors: IErrors,
 		private $hmrStatusService: IHmrStatusService,
 		private $logger: ILogger,
-		private $platformsData: IPlatformsData,
 		private $platformWatcherService: PlatformWatcherService,
-		private $projectDataService: IProjectDataService,
 		private $previewSdkService: IPreviewSdkService,
 		private $previewAppFilesService: IPreviewAppFilesService,
 		private $previewAppPluginsService: IPreviewAppPluginsService,
@@ -49,12 +46,14 @@ export class PreviewAppLiveSyncService extends EventEmitter implements IPreviewA
 					});
 				}
 
+				await this.$previewAppPluginsService.comparePluginsOnDevice(data, device);
 				this.deviceInitializationPromise[device.id] = this.getInitialFilesForPlatformSafe(data, device.platform);
 
 				this.$platformWatcherService.on(FILES_CHANGE_EVENT_NAME, async (filesChangeData: IFilesChangeEventData) => {
 					await this.onWebpackCompilationComplete(data, filesChangeData.hmrData, filesChangeData.files, device.platform);
 				});
 
+				// TODO: Stop native watcher here!!!! -> maybe with skipNativePrepare
 				const { nativePlatformData, projectData, preparePlatformData } = this.$workflowDataService.createWorkflowData(device.platform.toLowerCase(), data.projectDir, data);
 				await this.$platformWatcherService.startWatchers(nativePlatformData, projectData, preparePlatformData);
 
@@ -136,15 +135,8 @@ export class PreviewAppLiveSyncService extends EventEmitter implements IPreviewA
 		await this.promise
 			.then(async () => {
 				const platformHmrData = _.cloneDeep(hmrData);
-				const projectData = this.$projectDataService.getProjectData(data.projectDir);
-				const platformData = this.$platformsData.getPlatformData(platform, projectData);
-				const clonedFiles = _.cloneDeep(files);
-				const filesToSync = _.map(clonedFiles, fileToSync => {
-					const result = path.join(platformData.appDestinationDirectoryPath, APP_FOLDER_NAME, path.relative(projectData.getAppDirectoryPath(), fileToSync));
-					return result;
-				});
 
-				this.promise = this.syncFilesForPlatformSafe(data, { filesToSync }, platform);
+				this.promise = this.syncFilesForPlatformSafe(data, { filesToSync: files }, platform);
 				await this.promise;
 
 				if (data.useHotModuleReload && platformHmrData.hash) {

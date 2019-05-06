@@ -38,7 +38,7 @@ export class MainController extends EventEmitter {
 		await this.$preparePlatformService.preparePlatform(nativePlatformData, projectData, preparePlatformData);
 	}
 
-	public async buildPlatform(platform: string, projectDir: string, options: IOptions): Promise<string> {
+	public async buildPlatform(platform: string, projectDir: string, options: IOptions | any): Promise<string> {
 		const { nativePlatformData, projectData, buildPlatformData } = this.$workflowDataService.createWorkflowData(platform, projectDir, options);
 
 		await this.preparePlatform(platform, projectDir, options);

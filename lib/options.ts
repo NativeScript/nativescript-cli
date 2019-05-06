@@ -105,7 +105,6 @@ export class Options {
 			bundle: { type: OptionType.String, hasSensitiveValue: false },
 			all: { type: OptionType.Boolean, hasSensitiveValue: false },
 			teamId: { type: OptionType.Object, hasSensitiveValue: true },
-			syncAllFiles: { type: OptionType.Boolean, default: false, hasSensitiveValue: false },
 			chrome: { type: OptionType.Boolean, hasSensitiveValue: false },
 			inspector: { type: OptionType.Boolean, hasSensitiveValue: false },
 			clean: { type: OptionType.Boolean, hasSensitiveValue: false },

@@ -741,7 +741,7 @@ export class ChildProcessStub extends EventEmitter {
 }
 
 export class ProjectChangesService implements IProjectChangesService {
-	public async checkForChanges(platform: string, projectData: IProjectData, preparePlatformData: PreparePlatformData): Promise<IProjectChangesInfo> {
+	public async checkForChanges(platformData: IPlatformData, projectData: IProjectData, preparePlatformData: PreparePlatformData): Promise<IProjectChangesInfo> {
 		return <IProjectChangesInfo>{};
 	}
 

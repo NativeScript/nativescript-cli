@@ -314,8 +314,8 @@ dependencies {
 		});
 
 		it('builds aar with the specified runtime gradle versions when the project runtime has gradle versions', async () => {
-			const expectedGradleVersion = "2.2.2";
-			const expectedAndroidVersion = "3.3";
+			const expectedGradleVersion = "4.4.4";
+			const expectedAndroidVersion = "5.5.5";
 			const config: IPluginBuildOptions = setup({
 				addManifest: true,
 				addProjectDir: true,

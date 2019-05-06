@@ -102,7 +102,6 @@ function createTestInjector() {
 	testInjector.register("hooksService", stubs.HooksServiceStub);
 	testInjector.register("staticConfig", StaticConfigLib.StaticConfig);
 	testInjector.register("nodeModulesDependenciesBuilder", {});
-	// testInjector.register('platformService', PlatformServiceLib.PlatformService);
 	testInjector.register('platformCommandsService', PlatformCommandsService);
 	testInjector.register('platformValidationService', PlatformValidationService);
 	testInjector.register('errors', ErrorsNoFailStub);
@@ -185,6 +184,7 @@ function createTestInjector() {
 	testInjector.register("cleanupService", {
 		setShouldDispose: (shouldDispose: boolean): void => undefined
 	});
+	testInjector.register("addPlatformService", {});
 
 	return testInjector;
 }

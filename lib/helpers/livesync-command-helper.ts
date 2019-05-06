@@ -13,35 +13,24 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 		private $iosDeviceOperations: IIOSDeviceOperations,
 		private $mobileHelper: Mobile.IMobileHelper,
 		private $devicesService: Mobile.IDevicesService,
-		private $platformsData: IPlatformsData,
+		private $injector: IInjector,
 		private $buildPlatformService: BuildPlatformService,
 		private $analyticsService: IAnalyticsService,
 		private $bundleValidatorHelper: IBundleValidatorHelper,
 		private $errors: IErrors,
 		private $iOSSimulatorLogProvider: Mobile.IiOSSimulatorLogProvider,
-		private $logger: ILogger,
 		private $cleanupService: ICleanupService
 	) { }
 
-	public getPlatformsForOperation(platform: string): string[] {
-		const availablePlatforms = platform ? [platform] : _.values<string>(this.$platformsData.availablePlatforms);
-		return availablePlatforms;
+	private get $platformsData(): IPlatformsData {
+		return this.$injector.resolve("platformsData");
 	}
 
-	public async executeCommandLiveSync(platform?: string, additionalOptions?: ILiveSyncCommandHelperAdditionalOptions) {
-		if (additionalOptions && additionalOptions.syncToPreviewApp) {
-			return;
-		}
-
-		if (!this.$options.syncAllFiles) {
-			this.$logger.info("Skipping node_modules folder! Use the syncAllFiles option to sync files from this folder.");
-		}
-
-		const emulator = this.$options.emulator;
+	public async getDeviceInstances(platform?: string): Promise<Mobile.IDevice[]> {
 		await this.$devicesService.initialize({
-			deviceId: this.$options.device,
 			platform,
-			emulator,
+			deviceId: this.$options.device,
+			emulator: this.$options.emulator,
 			skipInferPlatform: !platform,
 			sdk: this.$options.sdk
 		});
@@ -49,10 +38,26 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 		const devices = this.$devicesService.getDeviceInstances()
 			.filter(d => !platform || d.deviceInfo.platform.toLowerCase() === platform.toLowerCase());
 
-		await this.executeLiveSyncOperation(devices, platform, additionalOptions);
+		return devices;
 	}
 
-	public async executeLiveSyncOperation(devices: Mobile.IDevice[], platform: string, additionalOptions?: ILiveSyncCommandHelperAdditionalOptions): Promise<void> {
+	public createLiveSyncInfo(): ILiveSyncInfo {
+		const liveSyncInfo: ILiveSyncInfo = {
+			projectDir: this.$projectData.projectDir,
+			skipWatcher: !this.$options.watch || this.$options.justlaunch,
+			clean: this.$options.clean,
+			release: this.$options.release,
+			env: this.$options.env,
+			timeout: this.$options.timeout,
+			useHotModuleReload: this.$options.hmr,
+			force: this.$options.force,
+			emulator: this.$options.emulator
+		};
+
+		return liveSyncInfo;
+	}
+
+	public async createDeviceDescriptors(devices: Mobile.IDevice[], platform: string, additionalOptions?: ILiveSyncCommandHelperAdditionalOptions): Promise<ILiveSyncDeviceInfo[]> {
 		if (!devices || !devices.length) {
 			if (platform) {
 				this.$errors.failWithoutHelp("Unable to find applicable devices to execute operation. Ensure connected devices are trusted and try again.");
@@ -112,6 +117,22 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 
 				return info;
 			});
+
+			return deviceDescriptors;
+	}
+
+	public getPlatformsForOperation(platform: string): string[] {
+		const availablePlatforms = platform ? [platform] : _.values<string>(this.$platformsData.availablePlatforms);
+		return availablePlatforms;
+	}
+
+	public async executeCommandLiveSync(platform?: string, additionalOptions?: ILiveSyncCommandHelperAdditionalOptions) {
+		const devices = await this.getDeviceInstances(platform);
+		await this.executeLiveSyncOperation(devices, platform, additionalOptions);
+	}
+
+	public async executeLiveSyncOperation(devices: Mobile.IDevice[], platform: string, additionalOptions?: ILiveSyncCommandHelperAdditionalOptions): Promise<void> {
+		const deviceDescriptors = await this.createDeviceDescriptors(devices, platform, additionalOptions);
 
 		const liveSyncInfo: ILiveSyncInfo = {
 			projectDir: this.$projectData.projectDir,

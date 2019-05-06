@@ -34,7 +34,7 @@ export class PreparePlatformService {
 			return false;
 		}
 
-		const changesInfo = await this.$projectChangesService.checkForChanges(platformData.platformNameLowerCase, projectData, preparePlatformData);
+		const changesInfo = await this.$projectChangesService.checkForChanges(platformData, projectData, preparePlatformData);
 
 		const hasModulesChange = !changesInfo || changesInfo.modulesChanged;
 		const hasConfigChange = !changesInfo || changesInfo.configChanged;

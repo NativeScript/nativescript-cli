@@ -556,7 +556,6 @@ interface IOptions extends IRelease, IDeviceIdentifier, IJustLaunch, IAvd, IAvai
 	javascript: boolean;
 	androidTypings: boolean;
 	production: boolean; //npm flag
-	syncAllFiles: boolean;
 	chrome: boolean;
 	inspector: boolean; // the counterpart to --chrome
 	background: string;
@@ -1036,11 +1035,6 @@ interface IPlatformValidationService {
 	 * @returns {boolean} Whether the platform is supported for current OS or not.
 	 */
 	isPlatformSupportedForOS(platform: string, projectData: IProjectData): boolean;
-}
-
-interface IBuildArtefactsService {
-	getLastBuiltPackagePath(platformData: IPlatformData, buildConfig: IBuildConfig, outputPath?: string): Promise<string>;
-	getAllBuiltApplicationPackages(buildOutputPath: string, validBuildOutputData: IValidBuildOutputData): IApplicationPackage[];
 }
 
 interface IPlatformCommandsService {

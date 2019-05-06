@@ -2,6 +2,10 @@ import { PublishIOS } from "../lib/commands/appstore-upload";
 import { PrompterStub, LoggerStub, ProjectDataStub } from "./stubs";
 import * as chai from "chai";
 import * as yok from "../lib/common/yok";
+import { BuildPlatformService } from "../lib/services/platform/build-platform-service";
+import { PreparePlatformService } from "../lib/services/platform/prepare-platform-service";
+import { MainController } from "../lib/controllers/main-controller";
+import { WorkflowDataService } from "../lib/services/workflow/workflow-data-service";
 
 class AppStore {
 	static itunesconnect = {
@@ -15,16 +19,19 @@ class AppStore {
 	options: any;
 	prompter: PrompterStub;
 	projectData: ProjectDataStub;
-	platformService: any;
+	buildPlatformService: BuildPlatformService;
+	preparePlatformService: PreparePlatformService;
+	platformCommandsService: any;
+	platformValidationService: any;
+	mainController: MainController;
 	iOSPlatformData: any;
 	iOSProjectService: any;
-	xcodebuildService: IXcodebuildService;
+	workflowDataService: WorkflowDataService;
 	loggerService: LoggerStub;
 	itmsTransporterService: any;
 
 	// Counters
 	preparePlatformCalls: number = 0;
-	expectedPreparePlatformCalls: number = 0;
 	archiveCalls: number = 0;
 	expectedArchiveCalls: number = 0;
 	exportArchiveCalls: number = 0;
@@ -52,24 +59,25 @@ class AppStore {
 				"devicePlatformsConstants": {
 					"iOS": "iOS"
 				},
-				"platformService": this.platformService = {},
+				"preparePlatformService": this.preparePlatformService = <any>{},
+				"platformCommandsService": this.platformCommandsService = {},
+				"platformValidationService": this.platformValidationService = {},
+				"mainController": this.mainController = <any>{
+					buildPlatform: () => ({})
+				},
+				"buildPlatformService": this.buildPlatformService = <any>{
+					buildPlatform: async () => {
+						this.archiveCalls++;
+						return "/Users/person/git/MyProject/platforms/ios/archive/MyProject.ipa";
+					}
+				},
 				"platformsData": {
 					getPlatformData: (platform: string) => {
 						chai.assert.equal(platform, "iOS");
 						return this.iOSPlatformData;
 					}
 				},
-				"xcodebuildService": this.xcodebuildService = {
-					buildForDevice: async () => {
-						this.archiveCalls++;
-						return "/Users/person/git/MyProject/platforms/ios/archive/MyProject.ipa";
-					},
-					buildForSimulator: () => Promise.resolve(),
-					buildForAppStore: async () => {
-						this.archiveCalls++;
-						return "/Users/person/git/MyProject/platforms/ios/archive/MyProject.ipa";
-					}
-				}
+				"workflowDataService": this.workflowDataService = <any>{},
 			}
 		});
 		this.projectData.initializeProjectData(this.iOSPlatformData.projectRoot);
@@ -90,7 +98,6 @@ class AppStore {
 
 	assert() {
 		this.prompter.assert();
-		chai.assert.equal(this.preparePlatformCalls, this.expectedPreparePlatformCalls, "Mismatched number of $platformService.preparePlatform calls.");
 		chai.assert.equal(this.archiveCalls, this.expectedArchiveCalls, "Mismatched number of iOSProjectService.archive calls.");
 		chai.assert.equal(this.itmsTransporterServiceUploadCalls, this.expectedItmsTransporterServiceUploadCalls, "Mismatched number of itmsTransporterService.upload calls.");
 	}
@@ -102,21 +109,13 @@ class AppStore {
 		});
 	}
 
-	expectPreparePlatform() {
-		this.expectedPreparePlatformCalls = 1;
-		this.platformService.preparePlatform = (platformInfo: any) => {
-			chai.assert.equal(platformInfo.platform, "iOS");
-			this.preparePlatformCalls++;
-			return Promise.resolve(true);
-		};
-	}
-
 	expectArchive() {
 		this.expectedArchiveCalls = 1;
-		this.xcodebuildService.buildForDevice = (platformData: any, projectData: IProjectData) => {
+		this.mainController.buildPlatform = (platform: string, projectDir: string, options) => {
 			this.archiveCalls++;
-			chai.assert.equal(projectData.projectDir, "/Users/person/git/MyProject");
-			return Promise.resolve("/Users/person/git/MyProject/platforms/ios/archive/MyProject.xcarchive");
+			chai.assert.equal(projectDir, "/Users/person/git/MyProject");
+			chai.assert.isTrue(options.buildForAppStore);
+			return Promise.resolve("/Users/person/git/MyProject/platforms/ios/archive/MyProject.ipa");
 		};
 	}
 
@@ -134,7 +133,6 @@ class AppStore {
 
 	async noArgs() {
 		this.expectItunesPrompt();
-		this.expectPreparePlatform();
 		this.expectArchive();
 		this.expectITMSTransporterUpload();
 
@@ -144,7 +142,6 @@ class AppStore {
 	}
 
 	async itunesconnectArgs() {
-		this.expectPreparePlatform();
 		this.expectArchive();
 		this.expectITMSTransporterUpload();
 
@@ -155,7 +152,6 @@ class AppStore {
 
 	async teamIdOption() {
 		this.expectItunesPrompt();
-		this.expectPreparePlatform();
 		this.expectArchive();
 		this.expectITMSTransporterUpload();
 

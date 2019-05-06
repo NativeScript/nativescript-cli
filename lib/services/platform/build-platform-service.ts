@@ -1,16 +1,17 @@
 import * as constants from "../../constants";
 import { Configurations } from "../../common/constants";
-import { EventEmitter } from "events";
 import { attachAwaitDetach } from "../../common/helpers";
-import * as path from "path";
+import { BuildArtefactsService } from "../build-artefacts-service";
 import { BuildPlatformDataBase } from "../workflow/workflow-data-service";
+import { EventEmitter } from "events";
+import * as path from "path";
 
 const buildInfoFileName = ".nsbuildinfo";
 
 export class BuildPlatformService extends EventEmitter {
 	constructor(
 		private $analyticsService: IAnalyticsService,
-		private $buildArtefactsService: IBuildArtefactsService,
+		private $buildArtefactsService: BuildArtefactsService,
 		private $fs: IFileSystem,
 		private $logger: ILogger,
 		private $mobileHelper: Mobile.IMobileHelper,
@@ -49,10 +50,10 @@ export class BuildPlatformService extends EventEmitter {
 
 		this.$logger.out("Project successfully built.");
 
-		const result = await this.$buildArtefactsService.getLastBuiltPackagePath(platformData, <any>buildPlatformData);
+		const result = await this.$buildArtefactsService.getLatestApplicationPackagePath(platformData, buildPlatformData);
 
 		// if (this.$options.copyTo) {
-		// 	this.$platformService.copyLastOutput(platform, this.$options.copyTo, buildConfig, this.$projectData);
+		// 	this.$platformService.copyLastOutput(platform, this.$options.copyTo, buildPlatformData, this.$projectData);
 		// } else {
 		// 	this.$logger.info(`The build result is located at: ${outputPath}`);
 		// }
@@ -84,8 +85,8 @@ export class BuildPlatformService extends EventEmitter {
 		this.$fs.writeJson(buildInfoFile, buildInfo);
 	}
 
-	public getBuildInfoFromFile(platformData: IPlatformData, buildConfig: BuildPlatformDataBase, buildOutputPath?: string): IBuildInfo {
-		buildOutputPath = buildOutputPath || platformData.getBuildOutputPath(buildConfig);
+	public getBuildInfoFromFile(platformData: IPlatformData, buildPlatformData: BuildPlatformDataBase, buildOutputPath?: string): IBuildInfo {
+		buildOutputPath = buildOutputPath || platformData.getBuildOutputPath(buildPlatformData);
 		const buildInfoFile = path.join(buildOutputPath, buildInfoFileName);
 		if (this.$fs.exists(buildInfoFile)) {
 			try {
@@ -99,8 +100,8 @@ export class BuildPlatformService extends EventEmitter {
 		return null;
 	}
 
-	private async shouldBuildPlatform(platformData: IPlatformData, projectData: IProjectData, buildConfig: BuildPlatformDataBase, outputPath: string): Promise<boolean> {
-		if (buildConfig.release && this.$projectChangesService.currentChanges.hasChanges) {
+	private async shouldBuildPlatform(platformData: IPlatformData, projectData: IProjectData, buildPlatformData: BuildPlatformDataBase, outputPath: string): Promise<boolean> {
+		if (buildPlatformData.release && this.$projectChangesService.currentChanges.hasChanges) {
 			return true;
 		}
 
@@ -112,19 +113,19 @@ export class BuildPlatformService extends EventEmitter {
 			return true;
 		}
 
-		const validBuildOutputData = platformData.getValidBuildOutputData(buildConfig);
-		const packages = this.$buildArtefactsService.getAllBuiltApplicationPackages(outputPath, validBuildOutputData);
+		const validBuildOutputData = platformData.getValidBuildOutputData(buildPlatformData);
+		const packages = this.$buildArtefactsService.getAllApplicationPackages(outputPath, validBuildOutputData);
 		if (packages.length === 0) {
 			return true;
 		}
 
 		const prepareInfo = this.$projectChangesService.getPrepareInfo(platformData);
-		const buildInfo = this.getBuildInfoFromFile(platformData, buildConfig, outputPath);
+		const buildInfo = this.getBuildInfoFromFile(platformData, buildPlatformData, outputPath);
 		if (!prepareInfo || !buildInfo) {
 			return true;
 		}
 
-		if (buildConfig.clean) {
+		if (buildPlatformData.clean) {
 			return true;
 		}
 

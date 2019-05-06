@@ -205,6 +205,11 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				this.$childProcess,
 				handler,
 				this.$xcodebuildService.buildForDevice(platformData, projectData, <any>buildPlatformData));
+		} else if (buildPlatformData.buildForAppStore) {
+			await attachAwaitDetach(constants.BUILD_OUTPUT_EVENT_NAME,
+				this.$childProcess,
+				handler,
+				this.$xcodebuildService.buildForAppStore(platformData, projectData, <any>buildPlatformData));
 		} else {
 			await attachAwaitDetach(constants.BUILD_OUTPUT_EVENT_NAME,
 				this.$childProcess,

@@ -358,7 +358,7 @@ interface IValidatePlatformOutput {
 }
 
 interface ITestExecutionService {
-	startKarmaServer(platform: string, projectData: IProjectData, projectFilesConfig: IProjectFilesConfig): Promise<void>;
+	startKarmaServer(platform: string, liveSyncInfo: ILiveSyncInfo, deviceDescriptors: ILiveSyncDeviceInfo[]): Promise<void>;
 	canStartKarmaServer(projectData: IProjectData): Promise<boolean>;
 }
 

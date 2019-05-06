@@ -4,9 +4,13 @@ export type IOSPrepareData = PreparePlatformData & Pick<IOptions, 'teamId' | 'pr
 
 export class WorkflowDataService {
 	constructor(
-		private $platformsData: IPlatformsData,
+		private $injector: IInjector,
 		private $projectDataService: IProjectDataService,
 	) { }
+
+	private get $platformsData(): IPlatformsData {
+		return this.$injector.resolve("platformsData");
+	}
 
 	public createWorkflowData(platform: string, projectDir: string, options: IOptions | any): WorkflowData {
 		const projectData = this.$projectDataService.getProjectData(projectDir);
@@ -122,6 +126,7 @@ export class IOSBuildData extends BuildPlatformDataBase {
 
 	public teamId = this.options.teamId;
 	public provision = this.options.provision;
+	public buildForAppStore = this.options.buildForAppStore;
 }
 
 export class AndroidBuildData extends BuildPlatformDataBase {

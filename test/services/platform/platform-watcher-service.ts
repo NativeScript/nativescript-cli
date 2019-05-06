@@ -31,7 +31,7 @@ function createTestInjector(data: { hasNativeChanges: boolean }): IInjector {
 	}));
 	injector.register("platformWatcherService", PlatformWatcherService);
 
-	const platformWatcherService: IPlatformWatcherService = injector.resolve("platformWatcherService");
+	const platformWatcherService: PlatformWatcherService = injector.resolve("platformWatcherService");
 	platformWatcherService.emit = (eventName: string, eventData: any) => {
 		emittedEventNames.push(eventName);
 		emittedEventData.push(eventData);
@@ -56,8 +56,8 @@ describe("PlatformWatcherService", () => {
 						const injector = createTestInjector({ hasNativeChanges });
 
 						const platformData = <any>{ platformNameLowerCase: platform.toLowerCase(), normalizedPlatformName: platform };
-						const platformWatcherService: IPlatformWatcherService = injector.resolve("platformWatcherService");
-						await platformWatcherService.startWatcher(platformData, projectData, preparePlatformData);
+						const platformWatcherService: PlatformWatcherService = injector.resolve("platformWatcherService");
+						await platformWatcherService.startWatchers(platformData, projectData, preparePlatformData);
 
 						assert.lengthOf(emittedEventNames, 1);
 						assert.lengthOf(emittedEventData, 1);
@@ -72,7 +72,7 @@ describe("PlatformWatcherService", () => {
 				it(`should respect native changes that are made before the initial preparation of the project had been done for ${platform}`, async () => {
 					const injector = createTestInjector({ hasNativeChanges: false });
 
-					const platformWatcherService: IPlatformWatcherService = injector.resolve("platformWatcherService");
+					const platformWatcherService: PlatformWatcherService = injector.resolve("platformWatcherService");
 
 					const preparePlatformService = injector.resolve("preparePlatformService");
 					preparePlatformService.prepareNativePlatform = async () => {
@@ -83,7 +83,7 @@ describe("PlatformWatcherService", () => {
 					};
 
 					const platformData = <any>{ platformNameLowerCase: platform.toLowerCase(), normalizedPlatformName: platform };
-					await platformWatcherService.startWatcher(platformData, projectData, preparePlatformData);
+					await platformWatcherService.startWatchers(platformData, projectData, preparePlatformData);
 
 					assert.lengthOf(emittedEventNames, 1);
 					assert.lengthOf(emittedEventData, 1);
@@ -106,9 +106,9 @@ describe("PlatformWatcherService", () => {
 						return hasNativeChanges;
 					};
 
-					const platformWatcherService: IPlatformWatcherService = injector.resolve("platformWatcherService");
+					const platformWatcherService: PlatformWatcherService = injector.resolve("platformWatcherService");
 					const platformData = <any>{ platformNameLowerCase: platform.toLowerCase(), normalizedPlatformName: platform };
-					await platformWatcherService.startWatcher(platformData, projectData, preparePlatformData);
+					await platformWatcherService.startWatchers(platformData, projectData, preparePlatformData);
 
 					assert.lengthOf(emittedEventNames, 1);
 					assert.lengthOf(emittedEventData, 1);

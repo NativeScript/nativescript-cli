@@ -8,6 +8,7 @@ import * as path from "path";
 import { ProjectFilesManager } from "../../../lib/common/services/project-files-manager";
 import { EventEmitter } from "events";
 import { PreviewAppFilesService } from "../../../lib/services/livesync/playground/preview-app-files-service";
+import { WorkflowDataService, PreparePlatformData } from "../../../lib/services/workflow/workflow-data-service";
 
 interface ITestCase {
 	name: string;
@@ -37,7 +38,7 @@ interface IActInput {
 }
 
 let isComparePluginsOnDeviceCalled = false;
-let isHookCalledWithHMR = false;
+let isHMRPassedToEnv = false;
 let applyChangesParams: FilePayload[] = [];
 let initialFiles: FilePayload[] = [];
 let readTextParams: string[] = [];
@@ -149,11 +150,6 @@ function createTestInjector(options?: {
 		},
 		mapFilePath: (filePath: string) => path.join(path.join(platformsDirPath, "app"), path.relative(path.join(projectDirPath, "app"), filePath))
 	});
-	injector.register("hooksService", {
-		executeBeforeHooks: (name: string, args: any) => {
-			isHookCalledWithHMR = args.hookArgs.config.appFilesUpdaterOptions.useHotModuleReload;
-		}
-	});
 	injector.register("previewDevicesService", {
 		getConnectedDevices: () => [deviceMockData]
 	});
@@ -161,6 +157,13 @@ function createTestInjector(options?: {
 	injector.register("analyticsService", {
 		trackEventActionInGoogleAnalytics: () => ({})
 	});
+	injector.register("platformWatcherService", {
+		startWatchers: (platformData: IPlatformData, projectData: IProjectData, preparePlatformData: PreparePlatformData) => {
+			isHMRPassedToEnv = preparePlatformData.env.hmr;
+		},
+		on: () => ({})
+	});
+	injector.register("workflowDataService", WorkflowDataService);
 
 	return injector;
 }
@@ -209,7 +212,7 @@ async function assert(expectedFiles: string[], options?: IAssertOptions) {
 	options = options || {};
 	const actualFiles = options.checkInitialFiles ? initialFiles : applyChangesParams;
 
-	chai.assert.equal(isHookCalledWithHMR, options.hmr || false);
+	chai.assert.equal(isHMRPassedToEnv, options.hmr || false);
 	chai.assert.deepEqual(actualFiles, mapFiles(expectedFiles));
 
 	if (options.checkWarnings) {
@@ -223,7 +226,7 @@ async function assert(expectedFiles: string[], options?: IAssertOptions) {
 
 function reset() {
 	isComparePluginsOnDeviceCalled = false;
-	isHookCalledWithHMR = false;
+	isHMRPassedToEnv = false;
 	applyChangesParams = [];
 	initialFiles = [];
 	readTextParams = [];

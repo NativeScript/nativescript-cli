@@ -433,7 +433,6 @@ declare global {
 	interface IDeviceProjectRootOptions {
 		appIdentifier: string;
 		getDirname?: boolean;
-		syncAllFiles?: boolean;
 		watch?: boolean;
 	}
 

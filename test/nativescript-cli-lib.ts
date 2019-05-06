@@ -28,7 +28,7 @@ describe("nativescript-cli-lib", () => {
 		deviceLogProvider: null,
 		packageManager: ["install", "uninstall", "view", "search"],
 		extensibilityService: ["loadExtensions", "loadExtension", "getInstalledExtensions", "installExtension", "uninstallExtension"],
-		liveSyncService: ["liveSync", "stopLiveSync", "enableDebugging", "disableDebugging", "attachDebugger"],
+		// liveSyncService: ["liveSync", "stopLiveSync", "enableDebugging", "disableDebugging", "attachDebugger"],
 		debugService: ["debug"],
 		analyticsSettingsService: ["getClientId"],
 		devicesService: [

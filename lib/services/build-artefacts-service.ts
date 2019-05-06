@@ -1,16 +1,17 @@
 import * as path from "path";
+import { BuildPlatformDataBase } from "./workflow/workflow-data-service";
 
-export class BuildArtefactsService implements IBuildArtefactsService {
+export class BuildArtefactsService {
 	constructor(
 		private $errors: IErrors,
 		private $fs: IFileSystem,
 		private $logger: ILogger
 	) { }
 
-	public async getLastBuiltPackagePath(platformData: IPlatformData, buildConfig: IBuildConfig, outputPath?: string): Promise<string> {
-		const packageFile = buildConfig.buildForDevice ?
-			this.getLatestApplicationPackageForDevice(platformData, buildConfig, outputPath).packageName :
-			this.getLatestApplicationPackageForEmulator(platformData, buildConfig, outputPath).packageName;
+	public async getLatestApplicationPackagePath(platformData: IPlatformData, buildPlatformData: BuildPlatformDataBase, outputPath?: string): Promise<string> {
+		outputPath = outputPath || platformData.getBuildOutputPath(buildPlatformData);
+		const applicationPackage = this.getLatestApplicationPackage(outputPath, platformData.getValidBuildOutputData(buildPlatformData));
+		const packageFile = applicationPackage.packageName;
 
 		if (!packageFile || !this.$fs.exists(packageFile)) {
 			this.$errors.failWithoutHelp(`Unable to find built application. Try 'tns build ${platformData.platformNameLowerCase}'.`);
@@ -19,7 +20,7 @@ export class BuildArtefactsService implements IBuildArtefactsService {
 		return packageFile;
 	}
 
-	public getAllBuiltApplicationPackages(buildOutputPath: string, validBuildOutputData: IValidBuildOutputData): IApplicationPackage[] {
+	public getAllApplicationPackages(buildOutputPath: string, validBuildOutputData: IValidBuildOutputData): IApplicationPackage[] {
 		const rootFiles = this.$fs.readDirectory(buildOutputPath).map(filename => path.join(buildOutputPath, filename));
 		let result = this.getApplicationPackagesCore(rootFiles, validBuildOutputData.packageNames);
 		if (result) {
@@ -40,20 +41,8 @@ export class BuildArtefactsService implements IBuildArtefactsService {
 		return [];
 	}
 
-	private getLatestApplicationPackageForDevice(platformData: IPlatformData, buildConfig: IBuildConfig, outputPath?: string): IApplicationPackage {
-		outputPath = outputPath || platformData.getBuildOutputPath(buildConfig);
-		const buildOutputOptions = { buildForDevice: true, release: buildConfig.release, androidBundle: buildConfig.androidBundle };
-		return this.getLatestApplicationPackage(outputPath, platformData.getValidBuildOutputData(buildOutputOptions));
-	}
-
-	private getLatestApplicationPackageForEmulator(platformData: IPlatformData, buildConfig: IBuildConfig, outputPath?: string): IApplicationPackage {
-		outputPath = outputPath || platformData.getBuildOutputPath(buildConfig);
-		const buildOutputOptions = { buildForDevice: false, release: buildConfig.release, androidBundle: buildConfig.androidBundle };
-		return this.getLatestApplicationPackage(outputPath, platformData.getValidBuildOutputData(buildOutputOptions));
-	}
-
 	private getLatestApplicationPackage(buildOutputPath: string, validBuildOutputData: IValidBuildOutputData): IApplicationPackage {
-		let packages = this.getAllBuiltApplicationPackages(buildOutputPath, validBuildOutputData);
+		let packages = this.getAllApplicationPackages(buildOutputPath, validBuildOutputData);
 		const packageExtName = path.extname(validBuildOutputData.packageNames[0]);
 		if (packages.length === 0) {
 			this.$errors.fail(`No ${packageExtName} found in ${buildOutputPath} directory.`);

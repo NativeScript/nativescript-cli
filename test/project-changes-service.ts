@@ -60,7 +60,12 @@ class ProjectChangesServiceTest extends BaseServiceTest {
 
 	getPlatformData(platform: string): IPlatformData {
 		return <any>{
-			projectRoot: path.join(this.projectDir, "platforms", platform.toLowerCase())
+			projectRoot: path.join(this.projectDir, "platforms", platform.toLowerCase()),
+			platformProjectService: {
+				checkForChanges: async (changesInfo: IProjectChangesInfo) => {
+					changesInfo.signingChanged = true;
+				}
+			}
 		};
 	}
 }
@@ -155,7 +160,7 @@ describe("Project Changes Service Tests", () => {
 
 	describe("Accumulates Changes From Project Services", () => {
 		it("accumulates changes from the project service", async () => {
-			const iOSChanges = await serviceTest.projectChangesService.checkForChanges("ios", serviceTest.projectData, <any>{
+			const iOSChanges = await serviceTest.projectChangesService.checkForChanges(serviceTest.getPlatformData("ios"), serviceTest.projectData, <any>{
 				provision: undefined,
 				teamId: undefined
 			});
@@ -176,7 +181,7 @@ describe("Project Changes Service Tests", () => {
 
 		it(`shouldn't reset prepare info when native platform status is ${Constants.NativePlatformStatus.alreadyPrepared} and there is existing prepare info`, async () => {
 			for (const platform of ["ios", "android"]) {
-				await serviceTest.projectChangesService.checkForChanges(platform, serviceTest.projectData, <any>{});
+				await serviceTest.projectChangesService.checkForChanges(serviceTest.getPlatformData(platform), serviceTest.projectData, <any>{});
 				serviceTest.projectChangesService.savePrepareInfo(serviceTest.getPlatformData(platform));
 				const prepareInfo = serviceTest.projectChangesService.getPrepareInfo(serviceTest.getPlatformData(platform));
 
@@ -191,7 +196,7 @@ describe("Project Changes Service Tests", () => {
 		_.each([Constants.NativePlatformStatus.requiresPlatformAdd, Constants.NativePlatformStatus.requiresPrepare], nativePlatformStatus => {
 			it(`should reset prepare info when native platform status is ${nativePlatformStatus} and there is existing prepare info`, async () => {
 				for (const platform of ["ios", "android"]) {
-					await serviceTest.projectChangesService.checkForChanges(platform, serviceTest.projectData, <any>{});
+					await serviceTest.projectChangesService.checkForChanges(serviceTest.getPlatformData(platform), serviceTest.projectData, <any>{});
 					serviceTest.projectChangesService.setNativePlatformStatus(serviceTest.getPlatformData(platform), { nativePlatformStatus: nativePlatformStatus });
 
 					const actualPrepareInfo = serviceTest.projectChangesService.getPrepareInfo(serviceTest.getPlatformData(platform));

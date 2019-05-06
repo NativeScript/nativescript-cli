@@ -17,16 +17,12 @@ declare global {
 	}
 
 	interface IProjectChangesService {
-		checkForChanges(platform: string, projectData: IProjectData, preparePlatformData: PreparePlatformData): Promise<IProjectChangesInfo>;
+		checkForChanges(platformData: IPlatformData, projectData: IProjectData, preparePlatformData: PreparePlatformData): Promise<IProjectChangesInfo>;
 		getPrepareInfoFilePath(platformData: IPlatformData): string;
 		getPrepareInfo(platformData: IPlatformData): IPrepareInfo;
 		savePrepareInfo(platformData: IPlatformData): void;
 		setNativePlatformStatus(platformData: IPlatformData, addedPlatform: IAddedNativePlatform): void;
 		currentChanges: IProjectChangesInfo;
-	}
-
-	interface IPlatformWatcherService extends EventEmitter {
-		startWatcher(platformData: IPlatformData, projectData: IProjectData, preparePlatformData: PreparePlatformData): Promise<void>;
 	}
 
 	interface IFilesChangeEventData {

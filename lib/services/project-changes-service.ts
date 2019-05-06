@@ -44,7 +44,6 @@ export class ProjectChangesService implements IProjectChangesService {
 	private _outputProjectCTime: number;
 
 	constructor(
-		private $platformsData: IPlatformsData,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $fs: IFileSystem,
 		private $logger: ILogger,
@@ -56,10 +55,9 @@ export class ProjectChangesService implements IProjectChangesService {
 	}
 
 	@hook("checkForChanges")
-	public async checkForChanges(platform: string, projectData: IProjectData, preparePlatformData: PreparePlatformData): Promise<IProjectChangesInfo> {
-		const platformData = this.$platformsData.getPlatformData(platform, projectData);
+	public async checkForChanges(platformData: IPlatformData, projectData: IProjectData, preparePlatformData: PreparePlatformData): Promise<IProjectChangesInfo> {
 		this._changesInfo = new ProjectChangesInfo();
-		const isNewPrepareInfo = await this.ensurePrepareInfo(platform, projectData, preparePlatformData);
+		const isNewPrepareInfo = await this.ensurePrepareInfo(platformData, projectData, preparePlatformData);
 		if (!isNewPrepareInfo) {
 			this._newFiles = 0;
 
@@ -81,7 +79,7 @@ export class ProjectChangesService implements IProjectChangesService {
 				this._changesInfo.modulesChanged = true;
 			}
 
-			if (platform === this.$devicePlatformsConstants.iOS.toLowerCase()) {
+			if (platformData.platformNameLowerCase === this.$devicePlatformsConstants.iOS.toLowerCase()) {
 				this._changesInfo.configChanged = this.filesChanged([path.join(platformResourcesDir, platformData.configurationFileName),
 				path.join(platformResourcesDir, "LaunchScreen.storyboard"),
 				path.join(platformResourcesDir, BUILD_XCCONFIG_FILE_NAME)
@@ -169,8 +167,7 @@ export class ProjectChangesService implements IProjectChangesService {
 		this.savePrepareInfo(platformData);
 	}
 
-	private async ensurePrepareInfo(platform: string, projectData: IProjectData, preparePlatformData: PreparePlatformData): Promise<boolean> {
-		const platformData = this.$platformsData.getPlatformData(platform, projectData);
+	private async ensurePrepareInfo(platformData: IPlatformData, projectData: IProjectData, preparePlatformData: PreparePlatformData): Promise<boolean> {
 		this._prepareInfo = this.getPrepareInfo(platformData);
 		if (this._prepareInfo) {
 			const prepareInfoFile = path.join(platformData.projectRoot, prepareInfoFileName);

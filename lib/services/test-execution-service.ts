@@ -1,6 +1,7 @@
 import * as constants from "../constants";
 import * as path from 'path';
 import * as os from 'os';
+import { MainController } from "../controllers/main-controller";
 
 interface IKarmaConfigOptions {
 	debugBrk: boolean;
@@ -12,76 +13,50 @@ export class TestExecutionService implements ITestExecutionService {
 	private static SOCKETIO_JS_FILE_NAME = `node_modules/${constants.TEST_RUNNER_NAME}/socket.io.js`;
 
 	constructor(
-		private $liveSyncCommandHelper: ILiveSyncCommandHelper,
+		private $mainController: MainController,
 		private $httpClient: Server.IHttpClient,
 		private $config: IConfiguration,
 		private $logger: ILogger,
 		private $fs: IFileSystem,
 		private $options: IOptions,
 		private $pluginsService: IPluginsService,
-		private $devicesService: Mobile.IDevicesService,
-		private $childProcess: IChildProcess) {
-	}
+		private $projectDataService: IProjectDataService,
+		private $childProcess: IChildProcess) { }
 
 	public platform: string;
 
-	public async startKarmaServer(platform: string, projectData: IProjectData, projectFilesConfig: IProjectFilesConfig): Promise<void> {
+	public async startKarmaServer(platform: string, liveSyncInfo: ILiveSyncInfo, deviceDescriptors: ILiveSyncDeviceInfo[]): Promise<void> {
 		platform = platform.toLowerCase();
 		this.platform = platform;
+
+		const projectData = this.$projectDataService.getProjectData(liveSyncInfo.projectDir);
 
 		// We need the dependencies installed here, so we can start the Karma server.
 		await this.$pluginsService.ensureAllDependenciesAreInstalled(projectData);
 
-		const projectDir = projectData.projectDir;
-		await this.$devicesService.initialize({
-			platform: platform,
-			deviceId: this.$options.device,
-			emulator: this.$options.emulator
-		});
-
-		const karmaConfig = this.getKarmaConfiguration(platform, projectData),
+		const karmaConfig = this.getKarmaConfiguration(platform, projectData);
 			// In case you want to debug the unit test runner, add "--inspect-brk=<port>" as a first element in the array of args.
-			karmaRunner = this.$childProcess.spawn(process.execPath, [path.join(__dirname, "karma-execution.js")], { stdio: ["inherit", "inherit", "inherit", "ipc"] }),
-			launchKarmaTests = async (karmaData: any) => {
+		const karmaRunner = this.$childProcess.spawn(process.execPath, [path.join(__dirname, "karma-execution.js")], { stdio: ["inherit", "inherit", "inherit", "ipc"] });
+		const launchKarmaTests = async (karmaData: any) => {
 				this.$logger.trace("## Unit-testing: Parent process received message", karmaData);
 				let port: string;
 				if (karmaData.url) {
 					port = karmaData.url.port;
 					const socketIoJsUrl = `http://${karmaData.url.host}/socket.io/socket.io.js`;
 					const socketIoJs = (await this.$httpClient.httpRequest(socketIoJsUrl)).body;
-					this.$fs.writeFile(path.join(projectDir, TestExecutionService.SOCKETIO_JS_FILE_NAME), socketIoJs);
+					this.$fs.writeFile(path.join(liveSyncInfo.projectDir, TestExecutionService.SOCKETIO_JS_FILE_NAME), socketIoJs);
 				}
 
 				if (karmaData.launcherConfig) {
 					const configOptions: IKarmaConfigOptions = JSON.parse(karmaData.launcherConfig);
 					const configJs = this.generateConfig(port, configOptions);
-					this.$fs.writeFile(path.join(projectDir, TestExecutionService.CONFIG_FILE_NAME), configJs);
+					this.$fs.writeFile(path.join(liveSyncInfo.projectDir, TestExecutionService.CONFIG_FILE_NAME), configJs);
 				}
 
 				// Prepare the project AFTER the TestExecutionService.CONFIG_FILE_NAME file is created in node_modules
 				// so it will be sent to device.
 
-				let devices = [];
-				if (this.$options.debugBrk) {
-					const selectedDeviceForDebug = await this.$devicesService.pickSingleDevice({
-						onlyEmulators: this.$options.emulator,
-						onlyDevices: this.$options.forDevice,
-						deviceId: this.$options.device
-					});
-					devices = [selectedDeviceForDebug];
-					// const debugData = this.getDebugData(platform, projectData, deployOptions, { device: selectedDeviceForDebug.deviceInfo.identifier });
-					// await this.$debugService.debug(debugData, this.$options);
-				} else {
-					devices = this.$devicesService.getDeviceInstances();
-				}
-
-				if (!this.$options.env) { this.$options.env = { }; }
-				this.$options.env.unitTesting = true;
-
-				const deviceDebugMap: IDictionary<boolean> = {};
-				devices.forEach(device => deviceDebugMap[device.deviceInfo.identifier] = this.$options.debugBrk);
-
-				await this.$liveSyncCommandHelper.executeLiveSyncOperation(devices, this.platform, <any>{ deviceDebugMap });
+				await this.$mainController.runOnDevices(liveSyncInfo.projectDir, deviceDescriptors, liveSyncInfo);
 			};
 
 		karmaRunner.on("message",  (karmaData: any) => {
