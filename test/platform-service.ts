@@ -516,6 +516,7 @@ describe('Platform Service Tests', () => {
 
 			platformService = testInjector.resolve("platformService");
 			const appFilesUpdaterOptions: IAppFilesUpdaterOptions = { bundle: false, release: release, useHotModuleReload: false };
+			platformService.getCurrentPlatformVersion = () => "5.1.1";
 			await platformService.preparePlatform({
 				platform: platformToTest,
 				appFilesUpdaterOptions,
@@ -950,6 +951,7 @@ describe('Platform Service Tests', () => {
 			projectData.appResourcesDirectoryPath = projectData.getAppResourcesDirectoryPath();
 
 			platformService = testInjector.resolve("platformService");
+			platformService.getCurrentPlatformVersion = () => "5.1.1";
 			const oldLoggerWarner = testInjector.resolve("$logger").warn;
 			let warnings: string = "";
 			try {
