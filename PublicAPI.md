@@ -72,6 +72,16 @@ const tns = require("nativescript");
 	* [getPlaygroundAppQrCode](#getplaygroundappqrcode)
 * [cleanupService](#cleanupservice)
 	* [setCleanupLogFile](#setcleanuplogfile)
+* [initializeService](#initializeService)
+	* [initialize](#initialize)
+* [logger](#logger)
+	* [initialize](#initialize)
+	* [getLevel](#getlevel)
+	* [appenders](#appenders)
+		* [emit-appender](#emit-appender)
+		* [cli-appender](#cli-appender)
+	* [custom layouts](#custom-layouts)
+
 
 ## Module projectService
 
@@ -1512,6 +1522,155 @@ setCleanupLogFile(filePath: string): void;
 ```JavaScript
 const tns = require("nativescript");
 tns.cleanupService.setCleanupLogFile("/Users/username/cleanup-logs.txt");
+```
+
+## initializeService
+The `initializeService` is used to initialize CLI's configuration and the beginning and print all warnings related to current environment.
+
+### initialize
+This method inits CLI's logger and prints all system warnings.
+
+* Definition
+```TypeScript
+initialize(initOpts?: { loggerOptions?: ILoggerOptions }): Promise<void>
+```
+
+> NOTE: For more information about loggerOptions, you can check `logger`.
+
+* Usage
+```JavaScript
+const tns = require("nativescript");
+tns.initializeService.initialize();
+```
+
+## logger
+
+`logger` module is used to show any kind of information to the user. The `logger` uses `log4js` internally, which allows setting different levels for the messages.
+The levels are available in `tns.constants.LoggerLevel` enum. Only messages from the current log level (or higher) are shown to the user, i.e. in case the log level is set to `INFO`, `DEBUG` and `TRACE` messages will not be shown to the user, but `WARN` and `ERROR` messages will be shown. </br>
+`logger` module can be configured how to show the messages by using different appenders and layouts. </br>
+* `appenders` are responsible for output of log events. They may write events to files, send emails, store them in a database, or anything. Most appenders use layouts to serialise the events to strings for output.
+* `layout` is a function for converting a LogEvent into a string representation.
+
+`log4js` has predefined appenders and layouts that can be used. In case you do not pass any options to logger's initialization, CLI will default to [console appender](https://log4js-node.github.io/log4js-node/console.html) with [messagePassThrough layout](https://log4js-node.github.io/log4js-node/layouts.html#message-pass-through) with `INFO` log level.</br>
+You can override only the properties you want, i.e. only the log level, the layout or the appender. </br>
+`nativescript` itself has additional appenders that you can use. More information about them can be found below. You can get a full list of the available appenders by checking the `tns.constants.LoggerAppenders` object. </br>
+
+> NOTE: When CLI is used as a command-line tool, it uses a custom appender and layout in order to write coloured messages to stdout or stderr.
+
+### initialize
+The `initialize` method initializes the log4js settings - level, appender and layout. Once called, the settings cannot be changed anymore for the current process.
+
+* Definition
+```TypeScript
+interface IAppenderOptions extends IDictionary<any> {
+	type: string;
+	layout?: Layout;
+}
+
+interface ILoggerOptions {
+	level?: LoggerLevel;
+	appenderOptions?: IAppenderOptions;
+}
+
+initialize(opts?: ILoggerOptions): void;
+```
+
+* Usage
+  * Initialize with default settings:
+	```JavaScript
+	tns.logger.initialize();
+	```
+  * Initialize with DEBUG log level:
+	```JavaScript
+	tns.logger.initialize({ level: tns.constants.LoggerLevel.DEBUG });
+	```
+  * Initialize with different appender, for example [fileSync](https://log4js-node.github.io/log4js-node/fileSync.html) appender:
+	```JavaScript
+	tns.logger.initialize({ appenderOptions: { type: "fileSync" } });
+	```
+  * Initialize with different layout, for example [Pattern](https://log4js-node.github.io/log4js-node/layouts.html#pattern) layout:
+	```JavaScript
+	tns.logger.initialize({ appenderOptions: { layout: { type: "pattern" } } });
+	```
+  * Initialize with custom appender, layout and level:
+	```JavaScript
+	tns.logger.initialize({ appenderOptions: { type: "fileSync", layout: { type: "pattern" } }, level: tns.constants.LoggerLevel.DEBUG });
+	```
+
+### getLevel
+This method returns information for the current log level.
+
+* Definition
+```TypeScript
+getLevel(): string;
+```
+
+* Usage
+```JavaScript
+console.log(`Current log level is: ${tns.logger.getLevel()}`);
+```
+
+### appenders
+The `appenders` are log4js concept. `appenders` are responsible for output of log events. You can use all predefined [log4js appenders](https://log4js-node.github.io/log4js-node/appenders.html) and also several predefined CLI appenders
+
+#### emit-appender
+The `emit-appender` is used to emit the log events through a passed emitter instead of writing the messages. Whenever a message should be shown, the `emit-appender` emits `logData` event with an object containing the `loggingEvent` and the message passed through the specified layout stored in `formattedMessage` property.
+
+* Usage:
+```JavaScript
+const tns = require("nativescript");
+const { EventEmitter } = require("events");
+const { EMIT_APPENDER_EVENT_NAME, LoggerAppenders } = tns.constants;
+const emitter = new EventEmitter();
+// IMPORTANT: Add the event handler before calling logger's initialize method.
+// This is required as log4js makes a copy of the appenderOptions, where the emitter is passed
+// NOTE: In case you want to debug the event handler, place `debugger` in it.
+emitter.on(EMIT_APPENDER_EVENT_NAME, (logData) => {
+	if (logData.loggingEvent.level.levelStr === LoggerLevel.WARN) {
+		console.log(`WARNING: ${logData.formattedMessage}`);
+	}
+});
+
+const logger = tns.logger;
+logger.initialize({
+	appenderOptions: {
+		type: LoggerAppenders.emitAppender,
+		emitter
+	}
+});
+```
+
+> NOTE: In several cases CLI passes additional configuration properties in the `context` of the `loggingEvent`. Full list is available in the `tns.constants.LoggerConfigData` object. These properties are used by CLI's layout and appender to change the way the message is printed on the terminal and if it should be on stderr or stdout.
+
+#### cli-appender
+`cli-appender` prints messages to stdout or stderr based on the passed options for the message.
+
+* Usage
+```JavaScript
+const tns = require("nativescript");
+const { EventEmitter } = require("events");
+const { EMIT_APPENDER_EVENT_NAME, LoggerAppenders } = tns.constants;
+
+const logger = tns.logger;
+logger.initialize({
+	appenderOptions: {
+		type: LoggerAppenders.cliAppender,
+	}
+});
+```
+
+### custom layouts
+You can define your own layout function in the following way:
+```JavaScript
+const log4js = require("nativescript/node_modules/log4js");
+const util = require("util");
+log4js.addLayout("myCustomLayout", (config) => {
+    return (loggingEvent) => {
+        return util.format.apply(null, loggingEvent.data);
+    }
+});
+
+tns.logger.initialize({ appenderOptions: { layout: { type: "myCustomLayout" } } });
 ```
 
 ## How to add a new method to Public API
