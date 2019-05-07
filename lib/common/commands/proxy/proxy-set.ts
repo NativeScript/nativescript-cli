@@ -107,8 +107,8 @@ export class ProxySetCommand extends ProxyCommandBase {
 		this.$logger.warn(`${messageNote}Run '${clientName} proxy set --help' for more information.`);
 
 		await this.$proxyService.setCache(settings);
-		this.$logger.out(`Successfully setup proxy.${EOL}`);
-		this.$logger.out(await this.$proxyService.getInfo());
+		this.$logger.info(`Successfully setup proxy.${EOL}`);
+		this.$logger.info(await this.$proxyService.getInfo());
 		await this.tryTrackUsage();
 	}
 

@@ -1,5 +1,6 @@
 import { DeviceLogProviderBase } from "./device-log-provider-base";
 import { DEVICE_LOG_EVENT_NAME } from "../constants";
+import { LoggerConfigData } from "../../constants";
 
 export class DeviceLogProvider extends DeviceLogProviderBase {
 	constructor(protected $logFilter: Mobile.ILogFilter,
@@ -21,7 +22,7 @@ export class DeviceLogProvider extends DeviceLogProviderBase {
 	}
 
 	private logDataCore(data: string): void {
-		this.$logger.write(data);
+		this.$logger.info(data, { [LoggerConfigData.skipNewLine]: true });
 	}
 }
 $injector.register("deviceLogProvider", DeviceLogProvider);

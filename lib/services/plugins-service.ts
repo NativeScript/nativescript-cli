@@ -70,7 +70,7 @@ export class PluginsService implements IPluginsService {
 				throw err;
 			}
 
-			this.$logger.out(`Successfully installed plugin ${realNpmPackageJson.name}.`);
+			this.$logger.info(`Successfully installed plugin ${realNpmPackageJson.name}.`);
 		} else {
 			await this.$packageManager.uninstall(realNpmPackageJson.name, { save: true }, projectData.projectDir);
 			this.$errors.failWithoutHelp(`${plugin} is not a valid NativeScript plugin. Verify that the plugin package.json file contains a nativescript key and try again.`);
@@ -93,14 +93,14 @@ export class PluginsService implements IPluginsService {
 		const action = async (modulesDestinationPath: string, platform: string, platformData: IPlatformData): Promise<void> => {
 			shelljs.rm("-rf", path.join(modulesDestinationPath, pluginName));
 
-			this.$logger.out(`Successfully removed plugin ${pluginName} for ${platform}.`);
+			this.$logger.info(`Successfully removed plugin ${pluginName} for ${platform}.`);
 			showMessage = false;
 		};
 
 		await this.executeForAllInstalledPlatforms(action, projectData);
 
 		if (showMessage) {
-			this.$logger.out(`Successfully removed plugin ${pluginName}`);
+			this.$logger.info(`Successfully removed plugin ${pluginName}`);
 		}
 	}
 
@@ -119,7 +119,7 @@ export class PluginsService implements IPluginsService {
 			await this.preparePluginNativeCode(pluginData, platform, projectData);
 
 			// Show message
-			this.$logger.out(`Successfully prepared plugin ${pluginData.name} for ${platform}.`);
+			this.$logger.info(`Successfully prepared plugin ${pluginData.name} for ${platform}.`);
 		}
 	}
 

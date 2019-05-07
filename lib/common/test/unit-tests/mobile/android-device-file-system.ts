@@ -1,7 +1,7 @@
 import { AndroidDeviceFileSystem } from "../../../mobile/android/android-device-file-system";
 import { Yok } from "../../../yok";
 import { Errors } from "../../../errors";
-import { Logger } from "../../../logger";
+import { Logger } from "../../../logger/logger";
 import { MobileHelper } from "../../../mobile/mobile-helper";
 import { DevicePlatformsConstants } from "../../../mobile/device-platforms-constants";
 

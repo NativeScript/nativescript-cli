@@ -74,7 +74,7 @@ export class ProjectInitService implements IProjectInitService {
 			throw err;
 		}
 
-		this.$logger.out("Project successfully initialized.");
+		this.$logger.info("Project successfully initialized.");
 	}
 
 	private get projectFilePath(): string {

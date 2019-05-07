@@ -3,7 +3,7 @@ import * as ConfigLib from "../lib/config";
 import * as ErrorsLib from "../lib/common/errors";
 import * as FsLib from "../lib/common/file-system";
 import * as HostInfoLib from "../lib/common/host-info";
-import * as LoggerLib from "../lib/common/logger";
+import * as LoggerLib from "../lib/common/logger/logger";
 import * as NpmLib from "../lib/node-package-manager";
 import * as YarnLib from "../lib/yarn-package-manager";
 import * as PackageManagerLib from "../lib/package-manager";

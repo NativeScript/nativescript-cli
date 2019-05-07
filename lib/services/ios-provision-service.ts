@@ -55,16 +55,16 @@ export class IOSProvisionService {
 		}
 		match.eligable.forEach(prov => pushProvision(prov));
 
-		this.$logger.out(table.toString());
-		this.$logger.out();
-		this.$logger.out("There are also " + match.nonEligable.length + " non-eligable provisioning profiles.");
-		this.$logger.out();
+		this.$logger.info(table.toString());
+		this.$logger.info();
+		this.$logger.info("There are also " + match.nonEligable.length + " non-eligable provisioning profiles.");
+		this.$logger.info();
 	}
 
 	public async listTeams(): Promise<void> {
 		const teams = await this.getDevelopmentTeams();
 		const table = createTable(["Team Name", "Team ID"], teams.map(team => [quoteString(team.name), team.id]));
-		this.$logger.out(table.toString());
+		this.$logger.info(table.toString());
 	}
 
 	private async queryProvisioningProfilesAndDevices(projectId: string): Promise<{ devices: string[], match: mobileprovision.provision.Result }> {

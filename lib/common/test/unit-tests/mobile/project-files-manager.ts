@@ -7,7 +7,7 @@ import { HostInfo } from "../../../host-info";
 import { LocalToDevicePathDataFactory } from "../../../mobile/local-to-device-path-data-factory";
 import { MobileHelper } from "../../../mobile/mobile-helper";
 import { ProjectFilesManager } from "../../../services/project-files-manager";
-import { Logger } from "../../../logger";
+import { Logger } from "../../../logger/logger";
 import * as path from "path";
 import { Yok } from "../../../yok";
 import { ProjectFilesProviderBase } from "../../../services/project-files-provider-base";

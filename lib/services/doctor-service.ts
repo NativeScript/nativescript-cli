@@ -40,7 +40,7 @@ export class DoctorService implements IDoctorService {
 		if (hasWarnings) {
 			this.$logger.info("There seem to be issues with your configuration.");
 		} else {
-			this.$logger.out("No issues were detected.".bold);
+			this.$logger.info("No issues were detected.".bold);
 			this.printInfosCore(infos);
 		}
 
@@ -74,7 +74,7 @@ export class DoctorService implements IDoctorService {
 			return;
 		}
 
-		this.$logger.out("Running the setup script to try and automatically configure your environment.");
+		this.$logger.info("Running the setup script to try and automatically configure your environment.");
 
 		if (this.$hostInfo.isDarwin) {
 			await this.runSetupScriptCore(DoctorService.DarwinSetupScriptLocation, []);
@@ -186,9 +186,9 @@ export class DoctorService implements IDoctorService {
 
 	private printPackageManagerTip() {
 		if (this.$hostInfo.isWindows) {
-			this.$logger.out("TIP: To avoid setting up the necessary environment variables, you can use the chocolatey package manager to install the Android SDK and its dependencies." + EOL);
+			this.$logger.info("TIP: To avoid setting up the necessary environment variables, you can use the chocolatey package manager to install the Android SDK and its dependencies." + EOL);
 		} else if (this.$hostInfo.isDarwin) {
-			this.$logger.out("TIP: To avoid setting up the necessary environment variables, you can use the Homebrew package manager to install the Android SDK and its dependencies." + EOL);
+			this.$logger.info("TIP: To avoid setting up the necessary environment variables, you can use the Homebrew package manager to install the Android SDK and its dependencies." + EOL);
 		}
 	}
 
@@ -199,7 +199,7 @@ export class DoctorService implements IDoctorService {
 				if (info.type === constants.WARNING_TYPE_NAME) {
 					message = `WARNING: ${info.message.yellow} ${EOL} ${info.additionalInformation} ${EOL}`;
 				}
-				this.$logger.out(message);
+				this.$logger.info(message);
 			});
 		}
 

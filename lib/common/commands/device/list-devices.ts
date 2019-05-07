@@ -23,7 +23,7 @@ export class ListDevicesCommand implements ICommand {
 			this.printEmulators("\nAvailable emulators", emulators);
 		}
 
-		this.$logger.out("\nConnected devices & emulators");
+		this.$logger.info("\nConnected devices & emulators");
 		let index = 1;
 		await this.$devicesService.initialize({ platform: args[0], deviceId: null, skipInferPlatform: true, skipDeviceDetectionInterval: true, skipEmulatorStart: true });
 
@@ -31,7 +31,7 @@ export class ListDevicesCommand implements ICommand {
 		let action: (_device: Mobile.IDevice) => Promise<void>;
 		if (this.$options.json) {
 			action = async (device) => {
-				this.$logger.out(JSON.stringify(device.deviceInfo));
+				this.$logger.info(JSON.stringify(device.deviceInfo));
 			};
 		} else {
 			action = async (device) => {
@@ -44,18 +44,18 @@ export class ListDevicesCommand implements ICommand {
 		await this.$devicesService.execute(action, undefined, { allowNoDevices: true });
 
 		if (!this.$options.json && table.length) {
-			this.$logger.out(table.toString());
+			this.$logger.info(table.toString());
 		}
 	}
 
 	private printEmulators(title: string, emulators: Mobile.IDeviceInfo[]) {
-		this.$logger.out(title);
+		this.$logger.info(title);
 		const table: any = createTable(["Device Name", "Platform", "Version", "Device Identifier", "Image Identifier", "Error Help"], []);
 		for (const info of emulators) {
 			table.push([info.displayName, info.platform, info.version, info.identifier || "", info.imageIdentifier || "", info.errorHelp || ""]);
 		}
 
-		this.$logger.out(table.toString());
+		this.$logger.info(table.toString());
 	}
 }
 
