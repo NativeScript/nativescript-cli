@@ -12,12 +12,15 @@ import { DevicePlatformsConstants } from "./../lib/common/mobile/device-platform
 
 export class LoggerStub implements ILogger {
 	initialize(opts?: ILoggerOptions): void { }
+	initializeCliLogger(): void { }
 	getLevel(): string { return undefined; }
 	fatal(...args: string[]): void { }
 	error(...args: string[]): void { }
 	warn(...args: string[]): void { }
-	warnWithLabel(...args: string[]): void { }
-	info(...args: string[]): void { }
+	info(...args: string[]): void {
+		this.output += util.format.apply(null, args) + "\n";
+	}
+
 	debug(...args: string[]): void { }
 	trace(...args: string[]): void {
 		this.traceOutput += util.format.apply(null, args) + "\n";
@@ -26,23 +29,11 @@ export class LoggerStub implements ILogger {
 	public output = "";
 	public traceOutput = "";
 
-	out(...args: string[]): void {
-		this.output += util.format.apply(null, args) + "\n";
-	}
-
-	write(...args: string[]): void { }
-
 	prepare(item: any): string {
 		return "";
 	}
 
-	printInfoMessageOnSameLine(message: string): void { }
-
 	printMarkdown(message: string): void { }
-
-	printOnStderr(...args: string[]): void {
-		// nothing to do here
-	}
 }
 
 export class FileSystemStub implements IFileSystem {

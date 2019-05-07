@@ -301,8 +301,10 @@ export enum IOSNativeTargetTypes {
 	appExtension = "app_extension"
 }
 
+const pathToLoggerAppendersDir = join(__dirname, "common", "logger", "appenders");
 export const LoggerAppenders = {
-	emitAppender: join(__dirname, "common", "logger-appenders", "emit-appender"),
+	emitAppender: join(pathToLoggerAppendersDir, "emit-appender"),
+	cliAppender: join(pathToLoggerAppendersDir, "cli-appender")
 };
 
 export enum LoggerLevel {
@@ -362,3 +364,11 @@ export enum LoggerLevel {
 	 */
 	OFF = "OFF"
 }
+
+export enum LoggerConfigData {
+	useStderr = "useStderr",
+	wrapMessageWithBorders = "wrapMessageWithBorders",
+	skipNewLine = "skipNewLine"
+}
+
+export const EMIT_APPENDER_EVENT_NAME = "logData";

@@ -2,7 +2,9 @@ import * as log4js from "log4js";
 import * as util from "util";
 import * as stream from "stream";
 import * as marked from "marked";
-import { cache } from "./decorators";
+import { cache } from "../decorators";
+import { layout } from "./layouts/cli-layout";
+import { LoggerConfigData, LoggerLevel, LoggerAppenders } from "../../constants";
 const TerminalRenderer = require("marked-terminal");
 const chalk = require("chalk");
 
@@ -10,7 +12,6 @@ export class Logger implements ILogger {
 	private log4jsLogger: log4js.Logger = null;
 	private passwordRegex = /(password=).*?(['&,]|$)|(password["']?\s*:\s*["']).*?(["'])/i;
 	private passwordReplacement = "$1$3*******$2$4";
-	private static LABEL = "[WARNING]:";
 
 	constructor(private $config: Config.IConfig,
 		private $options: IOptions) {
@@ -48,68 +49,49 @@ export class Logger implements ILogger {
 		this.log4jsLogger = log4js.getLogger();
 	}
 
+	public initializeCliLogger(): void {
+		log4js.addLayout("cli", layout);
+
+		this.initialize({
+			appenderOptions: { type: LoggerAppenders.cliAppender, layout: { type: "cli" } },
+			level: <any>this.$options.log
+		});
+	}
+
 	getLevel(): string {
 		this.initialize();
 
 		return this.log4jsLogger.level.toString();
 	}
 
-	fatal(...args: string[]): void {
-		this.initialize();
-
-		this.log4jsLogger.fatal.apply(this.log4jsLogger, args);
+	fatal(...args: any[]): void {
+		this.logMessage(args, LoggerLevel.FATAL);
 	}
 
-	error(...args: string[]): void {
-		this.initialize();
-
-		const message = util.format.apply(null, args);
-		const colorizedMessage = message.red;
-
-		this.log4jsLogger.error.apply(this.log4jsLogger, [colorizedMessage]);
+	error(...args: any[]): void {
+		args.push({ [LoggerConfigData.useStderr]: true });
+		this.logMessage(args, LoggerLevel.ERROR);
 	}
 
-	warn(...args: string[]): void {
-		this.initialize();
-
-		const message = util.format.apply(null, args);
-		const colorizedMessage = message.yellow;
-
-		this.log4jsLogger.warn.apply(this.log4jsLogger, [colorizedMessage]);
+	warn(...args: any[]): void {
+		this.logMessage(args, LoggerLevel.WARN);
 	}
 
-	warnWithLabel(...args: string[]): void {
-		this.initialize();
-
-		const message = util.format.apply(null, args);
-		this.warn(`${Logger.LABEL} ${message}`);
+	info(...args: any[]): void {
+		this.logMessage(args, LoggerLevel.INFO);
 	}
 
-	info(...args: string[]): void {
-		this.initialize();
-
-		this.log4jsLogger.info.apply(this.log4jsLogger, args);
-	}
-
-	debug(...args: string[]): void {
-		this.initialize();
-
+	debug(...args: any[]): void {
 		const encodedArgs: string[] = this.getPasswordEncodedArguments(args);
-		this.log4jsLogger.debug.apply(this.log4jsLogger, encodedArgs);
+		this.logMessage(encodedArgs, LoggerLevel.DEBUG);
 	}
 
-	trace(...args: string[]): void {
-		this.initialize();
-
+	trace(...args: any[]): void {
 		const encodedArgs: string[] = this.getPasswordEncodedArguments(args);
-		this.log4jsLogger.trace.apply(this.log4jsLogger, encodedArgs);
+		this.logMessage(encodedArgs, LoggerLevel.TRACE);
 	}
 
-	out(...args: string[]): void {
-		console.log(util.format.apply(null, args));
-	}
-
-	write(...args: string[]): void {
+	write(...args: any[]): void {
 		process.stdout.write(util.format.apply(null, args));
 	}
 
@@ -133,12 +115,6 @@ export class Logger implements ILogger {
 		return JSON.stringify(item);
 	}
 
-	public printInfoMessageOnSameLine(message: string): void {
-		if (!this.$options.log || this.$options.log === "info") {
-			this.write(message);
-		}
-	}
-
 	public printMarkdown(...args: string[]): void {
 		const opts = {
 			unescape: true,
@@ -160,13 +136,53 @@ export class Logger implements ILogger {
 		marked.setOptions({ renderer: new TerminalRenderer(opts) });
 
 		const formattedMessage = marked(util.format.apply(null, args));
-		this.write(formattedMessage);
+		this.info(formattedMessage, { [LoggerConfigData.skipNewLine]: true });
 	}
 
-	public printOnStderr(...args: string[]): void {
-		if (process.stderr) {
-			process.stderr.write(util.format.apply(null, args));
+	private logMessage(inputData: any[], logMethod: string): void {
+		this.initialize();
+
+		const logOpts = this.getLogOptionsForMessage(inputData);
+		const data = logOpts.data;
+		delete logOpts.data;
+
+		for (const prop in logOpts) {
+			this.log4jsLogger.addContext(prop, logOpts[prop]);
 		}
+
+		(<IDictionary<any>>this.log4jsLogger)[logMethod.toLowerCase()].apply(this.log4jsLogger, data);
+
+		for (const prop in logOpts) {
+			this.log4jsLogger.removeContext(prop);
+		}
+	}
+
+	private getLogOptionsForMessage(data: any[]): { data: any[], [key: string]: any } {
+		const opts = _.keys(LoggerConfigData);
+
+		const result: any = {};
+		const cleanedData = _.cloneDeep(data);
+
+		const dataToCheck = data.filter(el => typeof el === "object");
+
+		for (const element of dataToCheck) {
+			if (opts.length === 0) {
+				break;
+			}
+
+			const remainingOpts = _.cloneDeep(opts);
+			for (const prop of remainingOpts) {
+				const hasProp = element && element.hasOwnProperty(prop);
+				if (hasProp) {
+					opts.splice(opts.indexOf(prop), 1);
+					result[prop] = element[prop];
+					cleanedData.splice(cleanedData.indexOf(element), 1);
+				}
+			}
+		}
+
+		result.data = cleanedData;
+		return result;
 	}
 
 	private getPasswordEncodedArguments(args: string[]): string[] {

@@ -1,14 +1,14 @@
 import { LoggingEvent } from "log4js";
 import { EventEmitter } from "events";
+import { EmitAppenderEventName } from "../../../constants";
 
-const logDataEventName = "logData";
 function emitAppender(layout: Function, emitter: EventEmitter) {
 	const appender = (loggingEvent: LoggingEvent) => {
-		emitter.emit(logDataEventName, { loggingEvent, formattedMessage: layout(loggingEvent) });
+		emitter.emit(EmitAppenderEventName, { loggingEvent, formattedMessage: layout(loggingEvent) });
 	};
 
 	appender.shutdown = () => {
-		emitter.removeAllListeners(logDataEventName);
+		emitter.removeAllListeners(EmitAppenderEventName);
 	};
 
 	return appender;

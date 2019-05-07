@@ -8,7 +8,11 @@ export class InitializeService implements IInitializeService {
 	public async initialize(initOpts?: { loggerOptions?: ILoggerOptions }): Promise<void> {
 		initOpts = initOpts || {};
 		const $logger = this.$injector.resolve<ILogger>("logger");
-		$logger.initialize(initOpts.loggerOptions);
+		if (initOpts.loggerOptions) {
+			$logger.initialize(initOpts.loggerOptions);
+		} else {
+			$logger.initializeCliLogger();
+		}
 
 		await this.showWarnings($logger);
 	}
@@ -19,7 +23,7 @@ export class InitializeService implements IInitializeService {
 		_.each(systemWarnings, systemWarning => {
 			const message = `${EOL}${systemWarning.message}${EOL}`;
 			if (systemWarning.severity === SystemWarningsSeverity.high) {
-				$logger.printOnStderr(message.red.bold);
+				$logger.error(message);
 			} else {
 				$logger.warn(message);
 			}

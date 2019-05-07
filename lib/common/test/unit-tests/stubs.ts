@@ -2,6 +2,7 @@
 
 import * as util from "util";
 import { EventEmitter } from "events";
+import { LoggerConfigData } from "../../../constants";
 
 export class LockServiceStub implements ILockService {
 	public async lock(lockFilePath?: string, lockOpts?: ILockOptions): Promise<() => void> {
@@ -19,42 +20,30 @@ export class LockServiceStub implements ILockService {
 
 export class CommonLoggerStub implements ILogger {
 	initialize(opts?: ILoggerOptions): void { }
+	initializeCliLogger(): void { }
 	getLevel(): string { return undefined; }
-	fatal(...args: string[]): void { }
-	error(...args: string[]): void { }
-	warn(...args: string[]): void {
-		this.out.apply(this, args);
+	fatal(...args: any[]): void { }
+	error(...args: any[]): void { }
+	warn(...args: any[]): void {
+		this.output += util.format.apply(null, args) + "\n";
 	}
-	warnWithLabel(...args: string[]): void { }
-	info(...args: string[]): void {
-		this.out.apply(this, args);
+	info(...args: any[]): void {
+		this.output += util.format.apply(null, args) + "\n";
 	}
-	debug(...args: string[]): void { }
-	trace(...args: string[]): void {
+	debug(...args: any[]): void { }
+	trace(...args: any[]): void {
 		this.traceOutput += util.format.apply(null, args) + "\n";
 	}
 
 	public output = "";
 	public traceOutput = "";
 
-	out(...args: string[]): void {
-		this.output += util.format.apply(null, args) + "\n";
-	}
-
-	write(...args: string[]): void { }
-
 	prepare(item: any): string {
 		return "";
 	}
 
-	printInfoMessageOnSameLine(message: string): void { }
-
 	printMarkdown(message: string): void {
 		this.output += message;
-	}
-
-	printOnStderr(...args: string[]): void {
-		// nothing to do here
 	}
 }
 
@@ -168,7 +157,7 @@ export class DeviceLogProviderStub extends EventEmitter implements Mobile.IDevic
 	public currentDeviceProjectNames: IStringDictionary = {};
 
 	logData(line: string, platform: string, deviceIdentifier: string): void {
-		this.logger.write(line, platform, deviceIdentifier);
+		this.logger.info(line, platform, deviceIdentifier, { [LoggerConfigData.skipNewLine]: true });
 	}
 
 	setLogLevel(level: string, deviceIdentifier?: string): void {

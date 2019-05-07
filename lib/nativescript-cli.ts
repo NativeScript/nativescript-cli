@@ -24,10 +24,8 @@ process.on = (event: string, listener: any): any => {
 	const err: IErrors = $injector.resolve("$errors");
 	err.printCallStack = config.DEBUG;
 
-	const $options = $injector.resolve<IOptions>("options");
-
 	const $initializeService = $injector.resolve<IInitializeService>("initializeService");
-	await $initializeService.initialize({ loggerOptions: { level: <any>$options.log } });
+	await $initializeService.initialize();
 
 	const extensibilityService: IExtensibilityService = $injector.resolve("extensibilityService");
 	try {

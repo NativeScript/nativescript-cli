@@ -1,5 +1,5 @@
 import { Yok } from "../../yok";
-import { Logger } from "../../logger";
+import { Logger } from "../../logger/logger";
 import * as path from "path";
 import { assert } from "chai";
 import * as fileSystemFile from "../../file-system";
