@@ -5,6 +5,7 @@ import { LoggerLevel } from "../../constants";
 declare global {
 	interface IAppenderOptions extends IDictionary<any> {
 		type: string;
+		layout?: Layout;
 	}
 
 	interface ILoggerOptions {
@@ -26,9 +27,11 @@ declare global {
 		prepare(item: any): string;
 	}
 
-
-	interface Log4JSEmitAppenderConfiguration extends Configuration {
+	interface Log4JSAppenderConfiguration extends Configuration {
 		layout: Layout;
+	}
+
+	interface Log4JSEmitAppenderConfiguration extends Log4JSAppenderConfiguration {
 		emitter: EventEmitter;
 	}
 }

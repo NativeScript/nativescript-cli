@@ -13,7 +13,7 @@ function cliAppender(layout: Function) {
 	return appender;
 }
 
-function configure(config: Log4JSEmitAppenderConfiguration, layouts: any) {
+function configure(config: Log4JSAppenderConfiguration, layouts: any) {
 	// the default layout for the appender
 	let layout = layouts.messagePassThroughLayout;
 
