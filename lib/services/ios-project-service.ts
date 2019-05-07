@@ -13,12 +13,17 @@ import * as plist from "plist";
 import { IOSProvisionService } from "./ios-provision-service";
 import { IOSEntitlementsService } from "./ios-entitlements-service";
 import * as mobileProvisionFinder from "ios-mobileprovision-finder";
-import { BUILD_XCCONFIG_FILE_NAME, IosProjectConstants } from "../constants";
+import { BUILD_XCCONFIG_FILE_NAME, IosProjectConstants, IOSNativeTargetProductTypes } from "../constants";
 
 interface INativeSourceCodeGroup {
 	name: string;
 	path: string;
 	files: string[];
+}
+
+enum ProductArgs {
+	target = "target",
+	scheme = "scheme"
 }
 
 const DevicePlatformSdkName = "iphoneos";
@@ -53,7 +58,8 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		private $plistParser: IPlistParser,
 		private $sysInfo: ISysInfo,
 		private $xcconfigService: IXcconfigService,
-		private $iOSExtensionsService: IIOSExtensionsService) {
+		private $iOSExtensionsService: IIOSExtensionsService,
+		private $iOSWatchAppService: IIOSWatchAppService) {
 		super($fs, $projectDataService);
 	}
 
@@ -214,7 +220,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		const archivePath = options && options.archivePath ? path.resolve(options.archivePath) : path.join(platformData.getBuildOutputPath(buildConfig), projectData.projectName + ".xcarchive");
 		let args = ["archive", "-archivePath", archivePath, "-configuration",
 			getConfigurationName(!buildConfig || buildConfig.release)]
-			.concat(this.xcbuildProjectArgs(projectRoot, projectData, "scheme"));
+			.concat(this.xcbuildProjectArgs(projectRoot, projectData, ProductArgs.scheme));
 
 		if (options && options.additionalArgs) {
 			args = args.concat(options.additionalArgs);
@@ -339,7 +345,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		return exportFile;
 	}
 
-	private xcbuildProjectArgs(projectRoot: string, projectData: IProjectData, product?: "scheme" | "target"): string[] {
+	private xcbuildProjectArgs(projectRoot: string, projectData: IProjectData, product?: ProductArgs): string[] {
 		const xcworkspacePath = path.join(projectRoot, projectData.projectName + ".xcworkspace");
 		if (this.$fs.exists(xcworkspacePath)) {
 			return ["-workspace", xcworkspacePath, product ? "-" + product : "-scheme", projectData.projectName];
@@ -413,8 +419,13 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 		args = args.concat((buildConfig && buildConfig.architectures) || this.getBuildArchitectures(projectData, buildConfig, ["armv7", "arm64"]));
 
+		if (!this.hasWatchApp(projectData)) {
+			args = args.concat([
+				"-sdk", DevicePlatformSdkName
+			]);
+		}
+
 		args = args.concat([
-			"-sdk", DevicePlatformSdkName,
 			"BUILD_DIR=" + path.join(projectRoot, constants.BUILD_DIR)
 		]);
 
@@ -502,7 +513,12 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			}
 
 			xcode.setAutomaticSigningStyle(projectData.projectName, teamId);
-			xcode.setAutomaticSigningStyleByTargetProductType("com.apple.product-type.app-extension", teamId);
+			xcode.setAutomaticSigningStyleByTargetProductTypesList([
+				IOSNativeTargetProductTypes.appExtension,
+				IOSNativeTargetProductTypes.watchApp,
+				IOSNativeTargetProductTypes.watchExtension
+			],
+			teamId);
 			xcode.save();
 
 			this.$logger.trace(`Set Automatic signing style and team id ${teamId}.`);
@@ -544,7 +560,12 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 					identity: mobileprovision.Type === "Development" ? "iPhone Developer" : "iPhone Distribution"
 				};
 				xcode.setManualSigningStyle(projectData.projectName, configuration);
-				xcode.setManualSigningStyleByTargetProductType("com.apple.product-type.app-extension", configuration);
+				xcode.setManualSigningStyleByTargetProductTypesList([
+					IOSNativeTargetProductTypes.appExtension,
+					IOSNativeTargetProductTypes.watchApp,
+					IOSNativeTargetProductTypes.watchExtension
+				],
+				configuration);
 				xcode.save();
 
 				// this.cache(uuid);
@@ -578,18 +599,25 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 	private async buildForSimulator(projectRoot: string, args: string[], projectData: IProjectData, buildConfig?: IBuildConfig): Promise<void> {
 		const architectures = this.getBuildArchitectures(projectData, buildConfig, ["i386", "x86_64"]);
+		let product = ProductArgs.target;
 
 		args = args
 			.concat(architectures)
 			.concat([
 				"build",
 				"-configuration", getConfigurationName(buildConfig.release),
-				"-sdk", SimulatorPlatformSdkName,
 				"ONLY_ACTIVE_ARCH=NO",
 				"BUILD_DIR=" + path.join(projectRoot, constants.BUILD_DIR),
-				"CODE_SIGN_IDENTITY=",
-			])
-			.concat(this.xcbuildProjectArgs(projectRoot, projectData));
+			]);
+
+			if (this.hasWatchApp(projectData)) {
+				product = ProductArgs.scheme;
+				args = args.concat(["-destination", "generic/platform=iOS Simulator", "CODE_SIGNING_ALLOWED=NO"]);
+			} else {
+				args = args.concat(["-sdk", SimulatorPlatformSdkName, "CODE_SIGN_IDENTITY="]);
+			}
+
+		args = args.concat(this.xcbuildProjectArgs(projectRoot, projectData, product));
 
 		await this.xcodebuild(args, projectRoot, buildConfig.buildOutputStdio);
 	}
@@ -745,6 +773,8 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 
 	public async prepareProject(projectData: IProjectData, platformSpecificData: IPlatformSpecificData): Promise<void> {
 		const projectRoot = path.join(projectData.platformsDir, "ios");
+		const platformData = this.getPlatformData(projectData);
+		const resourcesDirectoryPath = projectData.getAppResourcesDirectoryPath();
 
 		const provision = platformSpecificData && platformSpecificData.provision;
 		const teamId = platformSpecificData && platformSpecificData.teamId;
@@ -783,12 +813,19 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 			this.savePbxProj(project, projectData);
 
 			const resourcesNativeCodePath = path.join(
-				projectData.getAppResourcesDirectoryPath(),
-				this.getPlatformData(projectData).normalizedPlatformName,
+				resourcesDirectoryPath,
+				platformData.normalizedPlatformName,
 				constants.NATIVE_SOURCE_FOLDER
 			);
-
 			await this.prepareNativeSourceCode(constants.TNS_NATIVE_SOURCE_GROUP_NAME, resourcesNativeCodePath, projectData);
+		}
+
+		const pbxProjPath = this.getPbxProjPath(projectData);
+		this.$iOSWatchAppService.removeWatchApp({ pbxProjPath });
+		const addedWatchApp = await this.$iOSWatchAppService.addWatchAppFromPath({ watchAppFolderPath: path.join(resourcesDirectoryPath, platformData.normalizedPlatformName), projectData, platformData, pbxProjPath });
+
+		if (addedWatchApp) {
+			this.$logger.warn("The support for Apple Watch App is currently in Beta. For more information about the current development state and any known issues, please check the relevant GitHub issue: ISSUE LINK");
 		}
 
 	}
@@ -803,6 +840,8 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		// src folder should not be copied as the pbxproject will have references to its files
 		this.$fs.deleteDirectory(path.join(appResourcesDirectoryPath, this.getPlatformData(projectData).normalizedPlatformName, constants.NATIVE_SOURCE_FOLDER));
 		this.$fs.deleteDirectory(path.join(appResourcesDirectoryPath, this.getPlatformData(projectData).normalizedPlatformName, constants.NATIVE_EXTENSION_FOLDER));
+		this.$fs.deleteDirectory(path.join(appResourcesDirectoryPath, this.getPlatformData(projectData).normalizedPlatformName, "watchapp"));
+		this.$fs.deleteDirectory(path.join(appResourcesDirectoryPath, this.getPlatformData(projectData).normalizedPlatformName, "watchextension"));
 
 		this.$fs.deleteDirectory(this.getAppResourcesDestinationDirectoryPath(projectData));
 	}
@@ -1399,6 +1438,17 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 			"Distribution": "app-store",
 			"Enterprise": "enterprise"
 		}[provision.Type];
+	}
+
+	private hasWatchApp(projectData: IProjectData) {
+		const platformData = this.getPlatformData(projectData);
+		const watchAppPath = path.join(
+			projectData.getAppResourcesDirectoryPath(),
+			platformData.normalizedPlatformName,
+			constants.IOS_WATCHAPP_FOLDER
+		);
+
+		return this.$fs.exists(watchAppPath);
 	}
 }
 

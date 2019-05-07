@@ -49,6 +49,8 @@ export const TNS_NATIVE_SOURCE_GROUP_NAME = "TNSNativeSource";
 export const NATIVE_SOURCE_FOLDER = "src";
 export const APPLICATION_RESPONSE_TIMEOUT_SECONDS = 60;
 export const NATIVE_EXTENSION_FOLDER = "extensions";
+export const IOS_WATCHAPP_FOLDER = "watchapp";
+export const IOS_WATCHAPP_EXTENSION_FOLDER = "watchextension";
 
 export class PackageVersion {
 	static NEXT = "next";
@@ -280,3 +282,20 @@ export const LiveSyncEvents = {
 	liveSyncStarted: "liveSyncStarted",
 	liveSyncNotification: "notify"
 };
+
+export enum IOSDeviceTargets {
+	ios = "1,2",
+	watchos = 4
+}
+
+export enum IOSNativeTargetProductTypes {
+	watchApp = "com.apple.product-type.application.watchapp2",
+	watchExtension = "com.apple.product-type.watchkit2-extension",
+	appExtension = "com.apple.product-type.app-extension"
+}
+
+export enum IOSNativeTargetTypes {
+	watchApp = "watch_app",
+	watchExtension = "watch_extension",
+	appExtension = "app_extension"
+}

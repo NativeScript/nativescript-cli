@@ -13,6 +13,7 @@ $injector.require("androidProjectService", "./services/android-project-service")
 $injector.require("androidPluginBuildService", "./services/android-plugin-build-service");
 $injector.require("iOSEntitlementsService", "./services/ios-entitlements-service");
 $injector.require("iOSExtensionsService", "./services/ios-extensions-service");
+$injector.require("iOSWatchAppService", "./services/ios-watch-app-service");
 $injector.require("iOSProjectService", "./services/ios-project-service");
 $injector.require("iOSProvisionService", "./services/ios-provision-service");
 $injector.require("xcconfigService", "./services/xcconfig-service");
