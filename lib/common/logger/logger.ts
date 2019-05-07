@@ -91,10 +91,6 @@ export class Logger implements ILogger {
 		this.logMessage(encodedArgs, LoggerLevel.TRACE);
 	}
 
-	write(...args: any[]): void {
-		process.stdout.write(util.format.apply(null, args));
-	}
-
 	prepare(item: any): string {
 		if (typeof item === "undefined" || item === null) {
 			return "[no content]";
