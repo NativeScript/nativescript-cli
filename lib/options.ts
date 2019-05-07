@@ -206,15 +206,16 @@ export class Options {
 
 	public printMessagesForDeprecatedOptions($logger: ILogger) {
 		if (this.argv.platformTemplate) {
-			$logger.warn(`"--platformTemplate" option has been deprecated and will be removed in the upcoming NativeScript CLI v.6.0.0. More info can be found in this issue https://github.com/NativeScript/nativescript-cli/issues/4518.`);
+			$logger.warn(`"--platformTemplate" option has been deprecated and will be removed in the upcoming NativeScript CLI v6.0.0. More info can be found in this issue https://github.com/NativeScript/nativescript-cli/issues/4518.`);
 		}
 
 		if (this.argv.syncAllFiles) {
-			$logger.warn(`"--syncAllFiles" option has been deprecated and will be removed in the upcoming NativeScript CLI v.6.0.0. More info can be found in this issue https://github.com/NativeScript/nativescript-cli/issues/4518.`);
+			$logger.warn(`"--syncAllFiles" option has been deprecated and will be removed in the upcoming NativeScript CLI v6.0.0. More info can be found in this issue https://github.com/NativeScript/nativescript-cli/issues/4518.`);
 		}
 
 		if (this.argv.bundle) {
-			$logger.warn(`"--bundle" option has been deprecated and as of NativeScript CLI v.6.0.0 Webpack workflow will become the only way of building apps.`);
+			$logger.warn(`"--bundle" option has been deprecated and as of NativeScript CLI v6.0.0 Webpack workflow will become the only way of building apps.
+				More info about the reasons for this change and how to migrate your project can be found in the link below: <TODO: add link here>`);
 		}
 	}
 

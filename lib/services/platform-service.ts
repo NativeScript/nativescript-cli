@@ -321,7 +321,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		const platformData = this.$platformsData.getPlatformData(platform, projectData);
 		const frameworkVersion = this.getCurrentPlatformVersion(platform, projectData);
 		if (semver.lt(semver.coerce(frameworkVersion), semver.coerce('5.1.0'))) {
-			this.$logger.warn(`Runtime versions lower than 5.1.0 have been deprecated and will not be supported as of v.6.0.0 of NativeScript CLI. More info can be found in this issue https://github.com/NativeScript/nativescript-cli/issues/4518.`);
+			this.$logger.warn(`Runtime versions lower than 5.1.0 have been deprecated and will not be supported as of v6.0.0 of NativeScript CLI. More info can be found in this issue https://github.com/NativeScript/nativescript-cli/issues/4518.`);
 		}
 
 		const projectFilesConfig = helpers.getProjectFilesConfig({ isReleaseBuild: appFilesUpdaterOptions.release });

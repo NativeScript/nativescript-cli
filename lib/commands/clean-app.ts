@@ -17,7 +17,7 @@ export class CleanAppCommandBase extends ValidatePlatformCommandBase implements 
 	}
 
 	public async execute(args: string[]): Promise<void> {
-		this.$logger.warn(`"tns clean-app ${this.platform.toLowerCase()}" command has been deprecated and will be removed in the upcoming NativeScript CLI v.6.0.0. More info can be found in this issue https://github.com/NativeScript/nativescript-cli/issues/4518.`);
+		this.$logger.warn(`"tns clean-app ${this.platform.toLowerCase()}" command has been deprecated and will be removed in the upcoming NativeScript CLI v6.0.0. More info can be found in this issue https://github.com/NativeScript/nativescript-cli/issues/4518.`);
 
 		const appFilesUpdaterOptions: IAppFilesUpdaterOptions = {
 			bundle: !!this.$options.bundle,
