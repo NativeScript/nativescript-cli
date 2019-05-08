@@ -9,6 +9,32 @@ import { WorkflowDataService } from "../../lib/services/workflow/workflow-data-s
 
 let isBuildPlatformCalled = false;
 const appIdentifier = "org.nativescript.myCoolApp";
+const projectDir = "path/to/my/projectDir";
+const projectData = { projectDir, projectIdentifiers: { ios: appIdentifier, android: appIdentifier }};
+const buildOutputPath = `${projectDir}/platform/ios/build/myproject.app`;
+
+const iOSDevice = <any>{ deviceInfo: { identifier: "myiOSDevice", platform: "ios" } };
+const iOSDeviceDescriptor = { identifier: "myiOSDevice", buildAction: async () => buildOutputPath };
+const androidDevice = <any>{ deviceInfo: { identifier: "myAndroidDevice", platform: "android" } };
+const androidDeviceDescriptor = { identifier: "myAndroidDevice", buildAction: async () => buildOutputPath };
+
+const map: IDictionary<{device: Mobile.IDevice, descriptor: ILiveSyncDeviceInfo}> = {
+	ios: {
+		device: iOSDevice,
+		descriptor: iOSDeviceDescriptor
+	},
+	android: {
+		device: androidDevice,
+		descriptor: androidDeviceDescriptor
+	}
+};
+
+const liveSyncInfo = {
+	projectDir,
+	release: false,
+	useHotModuleReload: false,
+	env: {}
+};
 
 function getFullSyncResult(): ILiveSyncResultInfo {
 	return <any>{
@@ -74,33 +100,6 @@ function createTestInjector() {
 
 	return injector;
 }
-
-const projectDir = "path/to/my/projectDir";
-const projectData = { projectDir, projectIdentifiers: { ios: appIdentifier, android: appIdentifier }};
-const buildOutputPath = `${projectDir}/platform/ios/build/myproject.app`;
-
-const iOSDevice = <any>{ deviceInfo: { identifier: "myiOSDevice", platform: "ios" } };
-const iOSDeviceDescriptor = { identifier: "myiOSDevice", buildAction: async () => buildOutputPath };
-const androidDevice = <any>{ deviceInfo: { identifier: "myAndroidDevice", platform: "android" } };
-const androidDeviceDescriptor = { identifier: "myAndroidDevice", buildAction: async () => buildOutputPath };
-
-const map: IDictionary<{device: Mobile.IDevice, descriptor: ILiveSyncDeviceInfo}> = {
-	ios: {
-		device: iOSDevice,
-		descriptor: iOSDeviceDescriptor
-	},
-	android: {
-		device: androidDevice,
-		descriptor: androidDeviceDescriptor
-	}
-};
-
-const liveSyncInfo = {
-	projectDir,
-	release: false,
-	useHotModuleReload: false,
-	env: {}
-};
 
 describe("RunOnDevicesController", () => {
 	let injector: IInjector = null;

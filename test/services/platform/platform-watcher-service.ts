@@ -76,7 +76,7 @@ describe("PlatformWatcherService", () => {
 
 					const preparePlatformService = injector.resolve("preparePlatformService");
 					preparePlatformService.prepareNativePlatform = async () => {
-						const nativeFilesWatcher = (<any>platformWatcherService).watchersData[projectData.projectDir][platformData.platformNameLowerCase].nativeFilesWatcher;
+						const nativeFilesWatcher = (<any>platformWatcherService).watchersData[projectData.projectDir][platform.toLowerCase()].nativeFilesWatcher;
 						nativeFilesWatcher.emit("all", "change", "my/project/App_Resources/some/file");
 						isNativePrepareCalled = true;
 						return false;

@@ -157,7 +157,7 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 					envValue = [envValue];
 				}
 
-				envValue.map((value: any) => args.push(`--env.${item}=${value}`))
+				envValue.map((value: any) => args.push(`--env.${item}=${value}`));
 			}
 		});
 

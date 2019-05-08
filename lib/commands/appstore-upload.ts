@@ -63,7 +63,7 @@ export class PublishIOS implements ICommand {
 				ipaFilePath = await this.$buildPlatformService.buildPlatform(nativePlatformData, this.$projectData, buildPlatformData);
 			} else {
 				this.$logger.info("No .ipa, mobile provision or certificate set. Perfect! Now we'll build .xcarchive and let Xcode pick the distribution certificate and provisioning profile for you when exporting .ipa for AppStore submission.");
-				ipaFilePath = await this.$mainController.buildPlatform(platform, this.$projectData.projectDir, { ...this.$options, buildForAppStore: true })
+				ipaFilePath = await this.$mainController.buildPlatform(platform, this.$projectData.projectDir, { ...this.$options, buildForAppStore: true });
 				this.$logger.info(`Export at: ${ipaFilePath}`);
 			}
 		}
