@@ -599,7 +599,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 	private async buildForSimulator(projectRoot: string, args: string[], projectData: IProjectData, buildConfig?: IBuildConfig): Promise<void> {
 		const architectures = this.getBuildArchitectures(projectData, buildConfig, ["i386", "x86_64"]);
-		let product = ProductArgs.target;
+		let product;
 
 		args = args
 			.concat(architectures)
