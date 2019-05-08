@@ -48,6 +48,12 @@ export class Options {
 			this.argv.bundle = undefined;
 			this.argv.hmr = false;
 		}
+
+		if (this.argv.debugBrk) {
+			// we cannot use HMR along with debug-brk because we have to restart the app
+			// on each livesync in order to stop and allow debugging on app start
+			this.argv.hmr = false;
+		}
 	}
 
 	constructor(private $errors: IErrors,
