@@ -31,11 +31,13 @@ export class MainController extends EventEmitter {
 		private $workflowDataService: WorkflowDataService
 	) { super(); }
 
-	public async preparePlatform(platform: string, projectDir: string, options: IOptions): Promise<void> {
+	public async preparePlatform(platform: string, projectDir: string, options: IOptions): Promise<boolean> {
 		const { nativePlatformData, projectData, addPlatformData, preparePlatformData } = this.$workflowDataService.createWorkflowData(platform, projectDir, options);
 
 		await this.$addPlatformService.addPlatformIfNeeded(nativePlatformData, projectData, addPlatformData);
-		await this.$preparePlatformService.preparePlatform(nativePlatformData, projectData, preparePlatformData);
+		const result = await this.$preparePlatformService.preparePlatform(nativePlatformData, projectData, preparePlatformData);
+
+		return result;
 	}
 
 	public async buildPlatform(platform: string, projectDir: string, options: IOptions | any): Promise<string> {
@@ -74,34 +76,40 @@ export class MainController extends EventEmitter {
 			await this.$addPlatformService.addPlatformIfNeeded(nativePlatformData, projectData, addPlatformData);
 		}
 
-		// TODO: Consider to handle correctly the descriptors when livesync is executed for second time for the same projectDir
+		const currentRunOnDevicesData = this.$runOnDevicesDataService.getDataForProject(projectData.projectDir);
+		const isAlreadyLiveSyncing = currentRunOnDevicesData && !currentRunOnDevicesData.isStopped;
+		// Prevent cases where liveSync is called consecutive times with the same device, for example [ A, B, C ] and then [ A, B, D ] - we want to execute initialSync only for D.
+		const deviceDescriptorsForInitialSync = isAlreadyLiveSyncing ? _.differenceBy(deviceDescriptors, currentRunOnDevicesData.deviceDescriptors, "identifier") : deviceDescriptors;
 
-		this.$runOnDevicesDataService.persistData(projectDir, deviceDescriptors);
+		this.$runOnDevicesDataService.persistData(projectDir, deviceDescriptors, platforms);
 
 		const shouldStartWatcher = !liveSyncInfo.skipWatcher && (liveSyncInfo.syncToPreviewApp || this.$runOnDevicesDataService.hasDeviceDescriptors(projectDir));
 		if (shouldStartWatcher) {
-			this.handleRunOnDeviceEvents(projectDir);
+			this.handleRunOnDeviceError(projectDir);
 
 			this.$platformWatcherService.on(INITIAL_SYNC_EVENT_NAME, async (data: IInitialSyncEventData) => {
-				await this.$runOnDevicesController.syncInitialDataOnDevice(data, projectData, liveSyncInfo, deviceDescriptors);
+				await this.$runOnDevicesController.syncInitialDataOnDevices(data, projectData, liveSyncInfo, deviceDescriptorsForInitialSync);
 			});
 			this.$platformWatcherService.on(FILES_CHANGE_EVENT_NAME, async (data: IFilesChangeEventData) => {
-				await this.$runOnDevicesController.syncChangedDataOnDevice(data, projectData, liveSyncInfo, deviceDescriptors);
+				await this.$runOnDevicesController.syncChangedDataOnDevices(data, projectData, liveSyncInfo, deviceDescriptors);
 			});
 
 			for (const platform of platforms) {
 				const { nativePlatformData, preparePlatformData } = this.$workflowDataService.createWorkflowData(platform, projectDir, liveSyncInfo);
 				await this.$platformWatcherService.startWatchers(nativePlatformData, projectData, preparePlatformData);
 			}
+		} else {
+			for (const platform of platforms) {
+				const hasNativeChanges = await this.preparePlatform(platform, projectDir, <any>liveSyncInfo);
+				await this.$runOnDevicesController.syncInitialDataOnDevices({ platform, hasNativeChanges }, projectData, liveSyncInfo, deviceDescriptorsForInitialSync);
+			}
 		}
-
-		// TODO: Consider how to handle --justlaunch
 
 		this.attachDeviceLostHandler();
 	}
 
 	public async stopRunOnDevices(projectDir: string, deviceIdentifiers?: string[], stopOptions?: { shouldAwaitAllActions: boolean }): Promise<void> {
-		const liveSyncProcessInfo = this.$runOnDevicesDataService.getData(projectDir);
+		const liveSyncProcessInfo = this.$runOnDevicesDataService.getDataForProject(projectDir);
 		if (liveSyncProcessInfo && !liveSyncProcessInfo.isStopped) {
 			// In case we are coming from error during livesync, the current action is the one that erred (but we are still executing it),
 			// so we cannot await it as this will cause infinite loop.
@@ -112,15 +120,22 @@ export class MainController extends EventEmitter {
 			const removedDeviceIdentifiers = _.remove(liveSyncProcessInfo.deviceDescriptors, descriptor => _.includes(deviceIdentifiersToRemove, descriptor.identifier))
 				.map(descriptor => descriptor.identifier);
 
+			// Handle the case when no more devices left for any of the persisted platforms
+			_.each(liveSyncProcessInfo.platforms, platform => {
+				const devices = this.$devicesService.getDevicesForPlatform(platform);
+				if (!devices || !devices.length) {
+					this.$platformWatcherService.stopWatchers(projectDir, platform);
+				}
+			});
+
 			// In case deviceIdentifiers are not passed, we should stop the whole LiveSync.
 			if (!deviceIdentifiers || !deviceIdentifiers.length || !liveSyncProcessInfo.deviceDescriptors || !liveSyncProcessInfo.deviceDescriptors.length) {
 				if (liveSyncProcessInfo.timer) {
 					clearTimeout(liveSyncProcessInfo.timer);
 				}
 
-				_.each(liveSyncProcessInfo.deviceDescriptors, deviceDescriptor => {
-					const device = this.$devicesService.getDeviceByIdentifier(deviceDescriptor.identifier);
-					this.$platformWatcherService.stopWatchers(projectDir, device.deviceInfo.platform);
+				_.each(liveSyncProcessInfo.platforms, platform => {
+					this.$platformWatcherService.stopWatchers(projectDir, platform);
 				});
 
 				liveSyncProcessInfo.isStopped = true;
@@ -131,12 +146,6 @@ export class MainController extends EventEmitter {
 
 				liveSyncProcessInfo.deviceDescriptors = [];
 
-				if (liveSyncProcessInfo.syncToPreviewApp) {
-					// await this.$previewAppLiveSyncService.stopLiveSync();
-					// this.$previewAppLiveSyncService.removeAllListeners();
-				}
-
-				// Kill typescript watcher
 				const projectData = this.$projectDataService.getProjectData(projectDir);
 				await this.$hooksService.executeAfterHooks('watch', {
 					hookArgs: {
@@ -158,21 +167,11 @@ export class MainController extends EventEmitter {
 		return this.$runOnDevicesDataService.getDeviceDescriptors(projectDir);
 	}
 
-	private handleRunOnDeviceEvents(projectDir: string): void {
-		this.$runOnDevicesController.on(RunOnDeviceEvents.runOnDeviceError, async data => {
+	private handleRunOnDeviceError(projectDir: string): void {
+		this.$runOnDevicesEmitter.on(RunOnDeviceEvents.runOnDeviceError, async data => {
 			await this.stopRunOnDevices(projectDir, [data.deviceIdentifier], { shouldAwaitAllActions: false });
 		});
 	}
-
-	// TODO: expose previewOnDevice() method { }
-	// TODO: enableDebugging -> mainController
-	// TODO: disableDebugging -> mainController
-	// TODO: attachDebugger -> mainController
-	// mainController.runOnDevices(), runOnDevicesController.on("event", () => {})
-
-	// debugOnDevicesController.enableDebugging()
-	// debugOnDevicesController.disableDebugging()
-	// debugOnDevicesController.attachDebugger
 
 	private async initializeSetup(projectData: IProjectData): Promise<void> {
 		try {

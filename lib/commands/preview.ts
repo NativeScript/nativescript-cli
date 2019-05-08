@@ -26,7 +26,6 @@ export class PreviewCommand implements ICommand {
 
 		await this.$previewAppLiveSyncService.initialize({
 			projectDir: this.$projectData.projectDir,
-			bundle: !!this.$options.bundle,
 			useHotModuleReload: this.$options.hmr,
 			env: this.$options.env
 		});

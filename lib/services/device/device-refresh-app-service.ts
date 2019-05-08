@@ -11,7 +11,7 @@ export class DeviceRefreshAppService {
 	) { }
 
 	@performanceLog()
-	public async refreshApplicationWithoutDebug(projectData: IProjectData, liveSyncResultInfo: ILiveSyncResultInfo, deviceDescriptor: ILiveSyncDeviceInfo, settings?: IRefreshApplicationSettings): Promise<IRestartApplicationInfo> {
+	public async refreshApplication(projectData: IProjectData, liveSyncResultInfo: ILiveSyncResultInfo, deviceDescriptor: ILiveSyncDeviceInfo, settings?: IRefreshApplicationSettings): Promise<IRestartApplicationInfo> {
 		if (deviceDescriptor && deviceDescriptor.debuggingEnabled) {
 			liveSyncResultInfo.waitForDebugger = deviceDescriptor.debugOptions && deviceDescriptor.debugOptions.debugBrk;
 		}

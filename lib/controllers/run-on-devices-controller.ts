@@ -8,6 +8,7 @@ import { RunOnDevicesDataService } from "../services/run-on-devices-data-service
 import { RunOnDevicesEmitter } from "../run-on-devices-emitter";
 import { WorkflowDataService } from "../services/workflow/workflow-data-service";
 import { HmrConstants } from "../common/constants";
+import { PreparePlatformService } from "../services/platform/prepare-platform-service";
 
 export class RunOnDevicesController extends EventEmitter {
 	constructor(
@@ -20,19 +21,22 @@ export class RunOnDevicesController extends EventEmitter {
 		public $hooksService: IHooksService,
 		private $liveSyncServiceResolver: LiveSyncServiceResolver,
 		private $logger: ILogger,
+		private $preparePlatformService: PreparePlatformService,
 		private $runOnDevicesDataService: RunOnDevicesDataService,
 		private $runOnDevicesEmitter: RunOnDevicesEmitter,
 		private $workflowDataService: WorkflowDataService
 	) { super(); }
 
-	public async syncInitialDataOnDevice(data: IInitialSyncEventData, projectData: IProjectData, liveSyncInfo: ILiveSyncInfo, deviceDescriptors: ILiveSyncDeviceInfo[]): Promise<void> {
+	public async syncInitialDataOnDevices(data: IInitialSyncEventData, projectData: IProjectData, liveSyncInfo: ILiveSyncInfo, deviceDescriptors: ILiveSyncDeviceInfo[]): Promise<void> {
 		const deviceAction = async (device: Mobile.IDevice) => {
 			const deviceDescriptor = _.find(deviceDescriptors, dd => dd.identifier === device.deviceInfo.identifier);
 			const { nativePlatformData: platformData, buildPlatformData } = this.$workflowDataService.createWorkflowData(device.deviceInfo.platform, projectData.projectDir, liveSyncInfo);
 
 			try {
 				const outputPath = deviceDescriptor.outputPath || platformData.getBuildOutputPath(buildPlatformData);
-				const packageFilePath = await this.$buildPlatformService.buildPlatformIfNeeded(platformData, projectData, buildPlatformData, outputPath);
+				const packageFilePath = data.hasNativeChanges ?
+					await this.$buildPlatformService.buildPlatform(platformData, projectData, buildPlatformData) :
+					await this.$buildPlatformService.buildPlatformIfNeeded(platformData, projectData, buildPlatformData, outputPath);
 
 				await this.$deviceInstallAppService.installOnDeviceIfNeeded(device, platformData, projectData, buildPlatformData, packageFilePath, outputPath);
 
@@ -40,9 +44,9 @@ export class RunOnDevicesController extends EventEmitter {
 				const { force, useHotModuleReload, skipWatcher } = liveSyncInfo;
 				const liveSyncResultInfo = await platformLiveSyncService.fullSync({ force, useHotModuleReload, projectData, device, watch: !skipWatcher, liveSyncDeviceInfo: deviceDescriptor });
 
-				const refreshInfo = await this.$deviceRefreshAppService.refreshApplicationWithoutDebug(projectData, liveSyncResultInfo, deviceDescriptor);
+				const refreshInfo = await this.$deviceRefreshAppService.refreshApplication(projectData, liveSyncResultInfo, deviceDescriptor);
 
-				this.$runOnDevicesEmitter.emitRunOnDeviceExecutedEvent(projectData, liveSyncResultInfo.deviceAppData.device, {
+				this.$runOnDevicesEmitter.emitRunOnDeviceExecutedEvent(projectData, device, {
 					syncedFiles: liveSyncResultInfo.modifiedFilesData.map(m => m.getLocalPath()),
 					isFullSync: liveSyncResultInfo.isFullSync
 				});
@@ -58,22 +62,20 @@ export class RunOnDevicesController extends EventEmitter {
 				this.$logger.warn(`Unable to apply changes on device: ${device.deviceInfo.identifier}. Error is: ${err.message}.`);
 
 				this.$runOnDevicesEmitter.emitRunOnDeviceErrorEvent(projectData, device, err);
-
-				// TODO: Consider to call here directly stopRunOnDevices
 			}
 		};
 
 		await this.addActionToChain(projectData.projectDir, () => this.$devicesService.execute(deviceAction, (device: Mobile.IDevice) => device.deviceInfo.platform.toLowerCase() === data.platform.toLowerCase() && _.some(deviceDescriptors, deviceDescriptor => deviceDescriptor.identifier === device.deviceInfo.identifier)));
 	}
 
-	public async syncChangedDataOnDevice(data: IFilesChangeEventData, projectData: IProjectData, liveSyncInfo: ILiveSyncInfo, deviceDescriptors: ILiveSyncDeviceInfo[]): Promise<void> {
+	public async syncChangedDataOnDevices(data: IFilesChangeEventData, projectData: IProjectData, liveSyncInfo: ILiveSyncInfo, deviceDescriptors: ILiveSyncDeviceInfo[]): Promise<void> {
 		const deviceAction = async (device: Mobile.IDevice) => {
 			const deviceDescriptor = _.find(deviceDescriptors, dd => dd.identifier === device.deviceInfo.identifier);
-			const { nativePlatformData, buildPlatformData } = this.$workflowDataService.createWorkflowData(device.deviceInfo.platform, projectData.projectDir, liveSyncInfo);
+			const { nativePlatformData, preparePlatformData, buildPlatformData } = this.$workflowDataService.createWorkflowData(device.deviceInfo.platform, projectData.projectDir, liveSyncInfo);
 
 			try {
 				if (data.hasNativeChanges) {
-					// TODO: Consider to handle nativePluginsChange here (aar rebuilt)
+					await this.$preparePlatformService.prepareNativePlatform(nativePlatformData, projectData, preparePlatformData);
 					await this.$buildPlatformService.buildPlatform(nativePlatformData, projectData, buildPlatformData);
 				}
 
@@ -123,13 +125,13 @@ export class RunOnDevicesController extends EventEmitter {
 		};
 
 		await this.addActionToChain(projectData.projectDir, () => this.$devicesService.execute(deviceAction, (device: Mobile.IDevice) => {
-			const liveSyncProcessInfo = this.$runOnDevicesDataService.getData(projectData.projectDir);
+			const liveSyncProcessInfo = this.$runOnDevicesDataService.getDataForProject(projectData.projectDir);
 			return (data.platform.toLowerCase() === device.deviceInfo.platform.toLowerCase()) && liveSyncProcessInfo && _.some(liveSyncProcessInfo.deviceDescriptors, deviceDescriptor => deviceDescriptor.identifier === device.deviceInfo.identifier);
 		}));
 	}
 
 	private async refreshApplication(projectData: IProjectData, liveSyncResultInfo: ILiveSyncResultInfo, deviceDescriptor: ILiveSyncDeviceInfo) {
-		const refreshInfo = await this.$deviceRefreshAppService.refreshApplicationWithoutDebug(projectData, liveSyncResultInfo, deviceDescriptor);
+		const refreshInfo = await this.$deviceRefreshAppService.refreshApplication(projectData, liveSyncResultInfo, deviceDescriptor);
 
 		this.$runOnDevicesEmitter.emitRunOnDeviceExecutedEvent(projectData, liveSyncResultInfo.deviceAppData.device, {
 			syncedFiles: liveSyncResultInfo.modifiedFilesData.map(m => m.getLocalPath()),
@@ -142,7 +144,7 @@ export class RunOnDevicesController extends EventEmitter {
 	}
 
 	private async addActionToChain<T>(projectDir: string, action: () => Promise<T>): Promise<T> {
-		const liveSyncInfo = this.$runOnDevicesDataService.getData(projectDir);
+		const liveSyncInfo = this.$runOnDevicesDataService.getDataForProject(projectDir);
 		if (liveSyncInfo) {
 			liveSyncInfo.actionsChain = liveSyncInfo.actionsChain.then(async () => {
 				if (!liveSyncInfo.isStopped) {

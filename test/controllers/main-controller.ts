@@ -7,6 +7,9 @@ import { RunOnDevicesEmitter } from "../../lib/run-on-devices-emitter";
 import { WorkflowDataService } from "../../lib/services/workflow/workflow-data-service";
 import { RunOnDevicesDataService } from "../../lib/services/run-on-devices-data-service";
 import { PlatformWatcherService } from "../../lib/services/platform/platform-watcher-service";
+import { LiveSyncServiceResolver } from "../../lib/resolvers/livesync-service-resolver";
+import { MobileHelper } from "../../lib/common/mobile/mobile-helper";
+import { DevicePlatformsConstants } from "../../lib/common/mobile/device-platforms-constants";
 
 const deviceMap: IDictionary<any> = {
 	myiOSDevice: {
@@ -35,13 +38,13 @@ function createTestInjector(): IInjector {
 				.map(device => device.deviceInfo.platform)
 				.uniq()
 				.value();
-		}
+		},
+		getDevicesForPlatform: (platform: string) => <any>[]
 	}));
-	injector.register("deviceWorkflowService", ({}));
+	injector.register("devicePlatformsConstants", DevicePlatformsConstants);
 	injector.register("errors", ({
 		failWithoutHelp: () => ({})
 	}));
-	injector.register("liveSyncService", ({}));
 	injector.register("logger", ({
 		trace: () => ({})
 	}));
@@ -53,19 +56,23 @@ function createTestInjector(): IInjector {
 	injector.register("platformWatcherService", ({
 		on: () => ({}),
 		emit: () => ({}),
-		startWatchers: () => ({})
+		startWatchers: () => ({}),
+		stopWatchers: () => ({})
 	}));
 	injector.register("mainController", MainController);
-	injector.register("pluginsService", ({}));
+	injector.register("pluginsService", {
+		ensureAllDependenciesAreInstalled: () => ({})
+	});
 	injector.register("projectDataService", ({
 		getProjectData: () => ({
 			projectDir
 		})
 	}));
+	injector.register("addPlatformService", {
+		addPlatformIfNeeded: () => ({})
+	});
 	injector.register("buildArtefactsService", ({}));
-	injector.register("addPlatformService", {});
 	injector.register("buildPlatformService", ({}));
-	injector.register("preparePlatformService", ({}));
 	injector.register("deviceInstallAppService", {});
 	injector.register("deviceRefreshAppService", {});
 	injector.register("deviceDebugAppService", {});
@@ -73,9 +80,15 @@ function createTestInjector(): IInjector {
 	injector.register("hooksService", {
 		executeAfterHooks: () => ({})
 	});
+	injector.register("hmrStatusService", {});
+	injector.register("liveSyncServiceResolver", LiveSyncServiceResolver);
+	injector.register("mobileHelper", MobileHelper);
+	injector.register("preparePlatformService", {
+		preparePlatform: () => ({})
+	});
 	injector.register("projectChangesService", ({}));
 	injector.register("runOnDevicesController", {
-		on: () => ({})
+		syncInitialDataOnDevices: () => ({})
 	});
 	injector.register("runOnDevicesDataService", RunOnDevicesDataService);
 	injector.register("runOnDevicesEmitter", RunOnDevicesEmitter);
@@ -99,12 +112,36 @@ const liveSyncInfo = {
 
 describe("MainController", () => {
 	describe("runOnDevices", () => {
-		describe("when the run on device is called for second time for the same projectDir", () => {
+		describe("when runOnDevices() is called for second time for the same projectDir", () => {
 			it("should run only for new devies (for which the initial sync is still not executed)", async () => {
 				return;
 			});
 			it("shouldn't run for old devices (for which initial sync is already executed)", async () => {
 				return;
+			});
+		});
+		describe("no watch", () => {
+			it("shouldn't start the watcher when skipWatcher flag is provided", async () => {
+				const injector = createTestInjector();
+				let isStartWatchersCalled = false;
+				const platformWatcherService = injector.resolve("platformWatcherService");
+				platformWatcherService.startWatchers = async () => isStartWatchersCalled = true;
+
+				const mainController: MainController = injector.resolve("mainController");
+				await mainController.runOnDevices(projectDir, [iOSDeviceDescriptor], { ...liveSyncInfo, skipWatcher: true });
+
+				assert.isFalse(isStartWatchersCalled);
+			});
+			it("shouldn't start the watcher when no devices to sync", async () => {
+				const injector = createTestInjector();
+				let isStartWatchersCalled = false;
+				const platformWatcherService = injector.resolve("platformWatcherService");
+				platformWatcherService.startWatchers = async () => isStartWatchersCalled = true;
+
+				const mainController: MainController = injector.resolve("mainController");
+				await mainController.runOnDevices(projectDir, [], liveSyncInfo );
+
+				assert.isFalse(isStartWatchersCalled);
 			});
 		});
 		describe("when platform is still not added", () => {
@@ -163,7 +200,7 @@ describe("MainController", () => {
 				});
 			});
 		});
-		describe("on initialSyncEventData", () => {
+		describe("on initialSyncEvent", () => {
 			let injector: IInjector;
 			let isBuildPlatformCalled = false;
 			beforeEach(() => {
@@ -174,25 +211,13 @@ describe("MainController", () => {
 
 				const buildPlatformService = injector.resolve("buildPlatformService");
 				buildPlatformService.buildPlatform = async () => { isBuildPlatformCalled = true; return buildOutputPath; };
-			});
 
-			console.log("============== isBuildPlatformCalled ============= ", isBuildPlatformCalled);
+				console.log("========== isBuildPlatformCalled ============= ", isBuildPlatformCalled);
+			});
 
 			afterEach(() => {
 				isBuildPlatformCalled = false;
 			});
-
-			// _.each(["ios", "android"], platform => {
-			// 	it(`should build for ${platform} platform if there are native changes`, async () => {
-			// 		const platformWatcherService: IPlatformWatcherService = injector.resolve("platformWatcherService");
-			// 		platformWatcherService.emit(INITIAL_SYNC_EVENT_NAME, { platform, hasNativeChanges: true });
-
-			// 		const mainController: MainController = injector.resolve("mainController");
-			// 		await mainController.start(projectDir, [iOSDeviceDescriptor], liveSyncInfo);
-
-			// 		assert.isTrue(isBuildPlatformCalled);
-			// 	});
-			// });
 
 			it("shouldn't build for second android device", async () => { // shouldn't build for second iOS device or second iOS simulator
 				return;
@@ -210,16 +235,8 @@ describe("MainController", () => {
 				return;
 			});
 		});
-		describe("on filesChangeEventData", () => {
-			// TODO: add test cases heres
-		});
-		describe("no watch", () => {
-			it("shouldn't start the watcher when skipWatcher flag is provided", () => {
-				return;
-			});
-			it("shouldn't start the watcher when no devices to sync", () => {
-				return;
-			});
+		describe("on filesChangeEvent", () => {
+			// TODO: add test cases here
 		});
 	});
 	describe("stopRunOnDevices", () => {
@@ -260,7 +277,7 @@ describe("MainController", () => {
 				const mainController = testInjector.resolve("mainController");
 
 				const runOnDevicesDataService: RunOnDevicesDataService = testInjector.resolve("runOnDevicesDataService");
-				runOnDevicesDataService.persistData(projectDir, testCase.currentDeviceIdentifiers.map(identifier => (<any>{ identifier })));
+				runOnDevicesDataService.persistData(projectDir, testCase.currentDeviceIdentifiers.map(identifier => (<any>{ identifier })), ["ios"]);
 
 				const emittedDeviceIdentifiersForLiveSyncStoppedEvent: string[] = [];
 

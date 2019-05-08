@@ -433,10 +433,6 @@ interface IOpener {
 	open(target: string, appname: string): void;
 }
 
-interface IBundle {
-	bundle: boolean;
-}
-
 interface IBundleString {
 	bundle: string;
 }

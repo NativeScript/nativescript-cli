@@ -1,8 +1,6 @@
 import { BuildPlatformService } from "../services/platform/build-platform-service";
 import { MainController } from "../controllers/main-controller";
 
-// import { LiveSyncEvents } from "../constants";
-
 export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 	public static MIN_SUPPORTED_WEBPACK_VERSION_WITH_HMR = "0.17.0";
 

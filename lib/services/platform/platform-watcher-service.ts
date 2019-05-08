@@ -24,8 +24,6 @@ export class PlatformWatcherService extends EventEmitter {
 	) { super(); }
 
 	public async startWatchers(platformData: IPlatformData, projectData: IProjectData, preparePlatformData: PreparePlatformData): Promise<void> {
-		this.$logger.out("Starting watchers...");
-
 		if (!this.watchersData[projectData.projectDir]) {
 			this.watchersData[projectData.projectDir] = {};
 		}
@@ -43,7 +41,7 @@ export class PlatformWatcherService extends EventEmitter {
 		this.emitInitialSyncEvent({ platform: platformData.platformNameLowerCase, hasNativeChanges });
 	}
 
-	public async stopWatchers(projectDir: string, platform: string) {
+	public stopWatchers(projectDir: string, platform: string): void {
 		const platformLowerCase = platform.toLowerCase();
 
 		if (this.watchersData && this.watchersData[projectDir] && this.watchersData[projectDir][platformLowerCase] && this.watchersData[projectDir][platformLowerCase].nativeFilesWatcher) {
@@ -52,7 +50,7 @@ export class PlatformWatcherService extends EventEmitter {
 		}
 
 		if (this.watchersData && this.watchersData[projectDir] && this.watchersData[projectDir][platformLowerCase] && this.watchersData[projectDir][platformLowerCase].webpackCompilerProcess) {
-			this.$webpackCompilerService.stopWebpackCompile(platform);
+			this.$webpackCompilerService.stopWebpackCompiler(platform);
 			this.watchersData[projectDir][platformLowerCase].webpackCompilerProcess = null;
 		}
 	}

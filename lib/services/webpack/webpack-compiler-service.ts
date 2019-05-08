@@ -87,7 +87,7 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 		});
 	}
 
-	public stopWebpackCompile(platform: string) {
+	public stopWebpackCompiler(platform: string) {
 		if (platform) {
 			this.stopWebpackForPlatform(platform);
 		} else {

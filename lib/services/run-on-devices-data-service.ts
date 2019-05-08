@@ -1,7 +1,7 @@
 export class RunOnDevicesDataService {
 	private liveSyncProcessesInfo: IDictionary<ILiveSyncProcessInfo> = {};
 
-	public getData(projectDir: string): ILiveSyncProcessInfo {
+	public getDataForProject(projectDir: string): ILiveSyncProcessInfo {
 		return this.liveSyncProcessesInfo[projectDir];
 	}
 
@@ -19,11 +19,12 @@ export class RunOnDevicesDataService {
 		return this.liveSyncProcessesInfo[projectDir].deviceDescriptors.length;
 	}
 
-	public persistData(projectDir: string, deviceDescriptors: ILiveSyncDeviceInfo[]): void {
+	public persistData(projectDir: string, deviceDescriptors: ILiveSyncDeviceInfo[], platforms: string[]): void {
 		this.liveSyncProcessesInfo[projectDir] = this.liveSyncProcessesInfo[projectDir] || Object.create(null);
 		this.liveSyncProcessesInfo[projectDir].actionsChain = this.liveSyncProcessesInfo[projectDir].actionsChain || Promise.resolve();
 		this.liveSyncProcessesInfo[projectDir].currentSyncAction = this.liveSyncProcessesInfo[projectDir].actionsChain;
 		this.liveSyncProcessesInfo[projectDir].isStopped = false;
+		this.liveSyncProcessesInfo[projectDir].platforms = platforms;
 
 		const currentDeviceDescriptors = this.getDeviceDescriptors(projectDir);
 		this.liveSyncProcessesInfo[projectDir].deviceDescriptors = _.uniqBy(currentDeviceDescriptors.concat(deviceDescriptors), "identifier");

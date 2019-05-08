@@ -1,6 +1,7 @@
 import { Yok } from "../../../lib/common/yok";
 import { PlatformWatcherService } from "../../../lib/services/platform/platform-watcher-service";
 import { assert } from "chai";
+import { INITIAL_SYNC_EVENT_NAME } from "../../../lib/constants";
 
 const projectData = <any>{ projectDir: "myProjectDir", getAppResourcesRelativeDirectoryPath: () => "/my/app_resources/dir/path" };
 const preparePlatformData = <any>{ };
@@ -49,7 +50,7 @@ describe("PlatformWatcherService", () => {
 		emittedEventData = [];
 	});
 	describe("startWatcher", () => {
-		describe("initialSyncEventData event", () => {
+		describe("initialSyncEvent", () => {
 			_.each(["iOS", "Android"], platform => {
 				_.each([true, false], hasNativeChanges => {
 					it(`should emit after native prepare and webpack's compilation are done for ${platform} platform and hasNativeChanges is ${hasNativeChanges}`, async () => {
@@ -61,13 +62,12 @@ describe("PlatformWatcherService", () => {
 
 						assert.lengthOf(emittedEventNames, 1);
 						assert.lengthOf(emittedEventData, 1);
-						assert.deepEqual(emittedEventNames[0], "initialSyncEventData");
+						assert.deepEqual(emittedEventNames[0], INITIAL_SYNC_EVENT_NAME);
 						assert.deepEqual(emittedEventData[0], { platform: platform.toLowerCase(), hasNativeChanges });
 					});
 				});
 			});
 
-			// TODO: Consider to write similar test for JS part if appropriate
 			_.each(["iOS", "Android"], platform => {
 				it(`should respect native changes that are made before the initial preparation of the project had been done for ${platform}`, async () => {
 					const injector = createTestInjector({ hasNativeChanges: false });
@@ -87,14 +87,14 @@ describe("PlatformWatcherService", () => {
 
 					assert.lengthOf(emittedEventNames, 1);
 					assert.lengthOf(emittedEventData, 1);
-					assert.deepEqual(emittedEventNames[0], "initialSyncEventData");
+					assert.deepEqual(emittedEventNames[0], INITIAL_SYNC_EVENT_NAME);
 					assert.deepEqual(emittedEventData[0], { platform: platform.toLowerCase(), hasNativeChanges: true });
 				});
 			});
 		});
 		describe("filesChangeEventData event", () => {
 			_.each(["iOS", "Android"], platform => {
-				it(`shouldn't emit filesChangeEventData before initialSyncEventData if js code is changed before the initial preparation of project has been done for ${platform}`, async () => {
+				it(`shouldn't emit filesChangeEventData before initialSyncEvent if js code is changed before the initial preparation of project has been done for ${platform}`, async () => {
 					const injector = createTestInjector({ hasNativeChanges: false });
 					const hasNativeChanges = false;
 
@@ -112,10 +112,8 @@ describe("PlatformWatcherService", () => {
 
 					assert.lengthOf(emittedEventNames, 1);
 					assert.lengthOf(emittedEventData, 1);
-					assert.deepEqual(emittedEventNames[0], "initialSyncEventData");
+					assert.deepEqual(emittedEventNames[0], INITIAL_SYNC_EVENT_NAME);
 					assert.deepEqual(emittedEventData[0], { platform: platform.toLowerCase(), hasNativeChanges });
-
-					// TODO: assert /some/file/path is emitted
 				});
 			});
 		});

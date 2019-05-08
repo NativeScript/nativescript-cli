@@ -53,8 +53,15 @@ export class PreviewAppLiveSyncService extends EventEmitter implements IPreviewA
 					await this.onWebpackCompilationComplete(data, filesChangeData.hmrData, filesChangeData.files, device.platform);
 				});
 
-				// TODO: Stop native watcher here!!!! -> maybe with skipNativePrepare
 				const { nativePlatformData, projectData, preparePlatformData } = this.$workflowDataService.createWorkflowData(device.platform.toLowerCase(), data.projectDir, data);
+
+				// Setup externals
+				if (!preparePlatformData.env) { preparePlatformData.env = {}; }
+				preparePlatformData.env.externals = this.$previewAppPluginsService.getExternalPlugins(device);
+
+				// skipNativePrepare so no native watcher is started
+				preparePlatformData.nativePrepare = { skipNativePrepare: true };
+
 				await this.$platformWatcherService.startWatchers(nativePlatformData, projectData, preparePlatformData);
 
 				try {

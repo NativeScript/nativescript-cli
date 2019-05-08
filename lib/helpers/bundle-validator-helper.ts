@@ -15,19 +15,17 @@ export class BundleValidatorHelper extends VersionValidatorHelper implements IBu
 	}
 
 	public validate(minSupportedVersion?: string): void {
-		if (this.$options.bundle) {
-			const bundlePluginName = this.bundlersMap[this.$options.bundle];
-			const bundlerVersionInDependencies = this.$projectData.dependencies && this.$projectData.dependencies[bundlePluginName];
-			const bundlerVersionInDevDependencies = this.$projectData.devDependencies && this.$projectData.devDependencies[bundlePluginName];
-			if (!bundlePluginName || (!bundlerVersionInDependencies && !bundlerVersionInDevDependencies)) {
-				this.$errors.failWithoutHelp(BundleValidatorMessages.MissingBundlePlugin);
-			}
+		const bundlePluginName = this.bundlersMap["webpack"];
+		const bundlerVersionInDependencies = this.$projectData.dependencies && this.$projectData.dependencies[bundlePluginName];
+		const bundlerVersionInDevDependencies = this.$projectData.devDependencies && this.$projectData.devDependencies[bundlePluginName];
+		if (!bundlePluginName || (!bundlerVersionInDependencies && !bundlerVersionInDevDependencies)) {
+			this.$errors.failWithoutHelp(BundleValidatorMessages.MissingBundlePlugin);
+		}
 
-			const currentVersion = bundlerVersionInDependencies || bundlerVersionInDevDependencies;
-			const shouldThrowError = minSupportedVersion && this.isValidVersion(currentVersion) && this.isVersionLowerThan(currentVersion, minSupportedVersion);
-			if (shouldThrowError) {
-					this.$errors.failWithoutHelp(util.format(BundleValidatorMessages.NotSupportedVersion, minSupportedVersion));
-			}
+		const currentVersion = bundlerVersionInDependencies || bundlerVersionInDevDependencies;
+		const shouldThrowError = minSupportedVersion && this.isValidVersion(currentVersion) && this.isVersionLowerThan(currentVersion, minSupportedVersion);
+		if (shouldThrowError) {
+				this.$errors.failWithoutHelp(util.format(BundleValidatorMessages.NotSupportedVersion, minSupportedVersion));
 		}
 	}
 }

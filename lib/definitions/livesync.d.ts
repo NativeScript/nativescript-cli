@@ -8,6 +8,7 @@ declare global {
 		deviceDescriptors: ILiveSyncDeviceInfo[];
 		currentSyncAction: Promise<any>;
 		syncToPreviewApp: boolean;
+		platforms: string[];
 	}
 
 	interface IOptionalOutputPath {

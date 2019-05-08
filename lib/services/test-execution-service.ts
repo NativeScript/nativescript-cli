@@ -35,7 +35,7 @@ export class TestExecutionService implements ITestExecutionService {
 		await this.$pluginsService.ensureAllDependenciesAreInstalled(projectData);
 
 		const karmaConfig = this.getKarmaConfiguration(platform, projectData);
-			// In case you want to debug the unit test runner, add "--inspect-brk=<port>" as a first element in the array of args.
+		// In case you want to debug the unit test runner, add "--inspect-brk=<port>" as a first element in the array of args.
 		const karmaRunner = this.$childProcess.spawn(process.execPath, [path.join(__dirname, "karma-execution.js")], { stdio: ["inherit", "inherit", "inherit", "ipc"] });
 		const launchKarmaTests = async (karmaData: any) => {
 				this.$logger.trace("## Unit-testing: Parent process received message", karmaData);
@@ -132,7 +132,7 @@ export class TestExecutionService implements ITestExecutionService {
 					debugTransport: this.$options.debugTransport,
 					debugBrk: this.$options.debugBrk,
 					watch: !!this.$options.watch,
-					bundle: !!this.$options.bundle,
+					bundle: true,
 					appDirectoryRelativePath: projectData.getAppDirectoryRelativePath()
 				}
 			},
@@ -152,7 +152,7 @@ export class TestExecutionService implements ITestExecutionService {
 		}
 
 		karmaConfig.projectDir = projectData.projectDir;
-		karmaConfig.bundle = this.$options.bundle;
+		karmaConfig.bundle = true;
 		karmaConfig.platform = platform.toLowerCase();
 		this.$logger.debug(JSON.stringify(karmaConfig, null, 4));
 

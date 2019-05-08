@@ -241,7 +241,7 @@ function mapFiles(files: string[]): FilePayload[] {
 	return files.map(file => {
 		return {
 			event: "change",
-			file: path.join("..", "platforms", "app", file),
+			file,
 			fileContents: undefined,
 			binary: false
 		};
@@ -371,7 +371,7 @@ describe("previewAppLiveSyncService", () => {
 				testCases: noAppFilesTestCases
 			},
 			{
-				name: "should pass the hmr option to the hook",
+				name: "should pass the hmr option to the env",
 				testCases: hmrTestCases
 			}
 		];

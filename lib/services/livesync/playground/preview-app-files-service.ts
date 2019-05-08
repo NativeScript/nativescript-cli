@@ -85,13 +85,7 @@ export class PreviewAppFilesService implements IPreviewAppFilesService {
 	private getRootFilesDir(data: IPreviewAppLiveSyncData, platform: string): string {
 		const projectData = this.$projectDataService.getProjectData(data.projectDir);
 		const platformData = this.$platformsData.getPlatformData(platform, projectData);
-
-		let rootFilesDir = null;
-		if (data.bundle) {
-			rootFilesDir = path.join(platformData.appDestinationDirectoryPath, APP_FOLDER_NAME);
-		} else {
-			rootFilesDir = projectData.getAppDirectoryPath();
-		}
+		const rootFilesDir = path.join(platformData.appDestinationDirectoryPath, APP_FOLDER_NAME);
 
 		return rootFilesDir;
 	}

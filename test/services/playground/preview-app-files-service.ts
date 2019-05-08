@@ -48,12 +48,11 @@ function createTestInjector(data?: { files: string[] }) {
 }
 
 function getExpectedResult(data: IPreviewAppLiveSyncData, injector: IInjector, expectedFiles: string[], platform: string): FilesPayload {
-	const projectData = injector.resolve("projectDataService").getProjectData();
 	const platformData = injector.resolve("platformsData").getPlatformData(platform);
 	const files = _.map(expectedFiles, expectedFile => {
 		return {
 			event: 'change',
-			file: data.bundle ? path.relative(path.join(platformData.appDestinationDirectoryPath, "app"), expectedFile) : path.relative(projectData.appDirectoryPath(), expectedFile),
+			file: path.relative(path.join(platformData.appDestinationDirectoryPath, "app"), expectedFile),
 			binary: false,
 			fileContents: undefined
 		};
