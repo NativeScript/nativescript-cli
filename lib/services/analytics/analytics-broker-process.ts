@@ -29,7 +29,7 @@ const finishTracking = async (data?: ITrackingInformation) => {
 	analyticsLoggingService.logData({ message: `analytics-broker-process finish tracking started` });
 	await trackingQueue;
 	analyticsLoggingService.logData({ message: `analytics-broker-process tracking finished` });
-	process.disconnect();
+	$injector.dispose();
 	process.exit();
 };
 
