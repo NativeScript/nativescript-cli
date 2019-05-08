@@ -166,6 +166,8 @@ process.on("message", async (cleanupProcessMessage: ICleanupMessageBase) => {
 process.on("disconnect", async () => {
 	fileLogService.logData({ message: "cleanup-process received process.disconnect event" });
 	await executeCleanup();
+	$injector.dispose();
+	process.exit();
 });
 
 fileLogService.logData({ message: `cleanup-process will send ${DetachedProcessMessages.ProcessReadyToReceive} message` });
