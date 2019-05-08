@@ -825,7 +825,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		const addedWatchApp = await this.$iOSWatchAppService.addWatchAppFromPath({ watchAppFolderPath: path.join(resourcesDirectoryPath, platformData.normalizedPlatformName), projectData, platformData, pbxProjPath });
 
 		if (addedWatchApp) {
-			this.$logger.warn("The support for Apple Watch App is currently in Beta. For more information about the current development state and any known issues, please check the relevant GitHub issue: ISSUE LINK");
+			this.$logger.warn("The support for Apple Watch App is currently in Beta. For more information about the current development state and any known issues, please check the relevant GitHub issue: https://github.com/NativeScript/nativescript-cli/issues/4589");
 		}
 
 	}
