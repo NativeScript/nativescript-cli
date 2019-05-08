@@ -1525,7 +1525,7 @@ tns.cleanupService.setCleanupLogFile("/Users/username/cleanup-logs.txt");
 ```
 
 ## initializeService
-The `initializeService` is used to initialize CLI's configuration and the beginning and print all warnings related to current environment.
+The `initializeService` is used to initialize CLI's configuration at the beginning and print all warnings related to current environment.
 
 ### initialize
 This method inits CLI's logger and prints all system warnings.
