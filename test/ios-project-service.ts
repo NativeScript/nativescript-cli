@@ -409,14 +409,14 @@ describe("Cocoapods support", () => {
 			const expectedPlatformSection = [
 				`# NativeScriptPlatformSection ${basePodfilePath} with 8.1`,
 				"platform :ios, '8.1'",
-				"# End NativeScriptPlatformSection",
+				"# End NativeScriptPlatformSection\n"
 			].join("\n");
 			const expectedProjectPodfileContent = ["use_frameworks!\n",
 				`target "${projectName}" do`,
+				expectedPlatformSection,
 				`# Begin Podfile - ${basePodfilePath}`,
 				expectedPluginPodfileContent,
-				"# End Podfile\n",
-				expectedPlatformSection,
+				"# End Podfile",
 				"end"]
 				.join("\n");
 			assert.equal(actualProjectPodfileContent, expectedProjectPodfileContent);
@@ -487,14 +487,14 @@ describe("Cocoapods support", () => {
 			const expectedPlatformSection = [
 				`# NativeScriptPlatformSection ${pluginPodfilePath} with 8.1`,
 				"platform :ios, '8.1'",
-				"# End NativeScriptPlatformSection",
+				"# End NativeScriptPlatformSection\n",
 			].join("\n");
 			const expectedProjectPodfileContent = ["use_frameworks!\n",
 				`target "${projectName}" do`,
+				expectedPlatformSection,
 				`# Begin Podfile - ${pluginPodfilePath}`,
 				expectedPluginPodfileContent,
-				"# End Podfile\n",
-				expectedPlatformSection,
+				"# End Podfile",
 				"end"]
 				.join("\n");
 			assert.equal(actualProjectPodfileContent, expectedProjectPodfileContent);
@@ -569,14 +569,14 @@ describe("Cocoapods support", () => {
 			const expectedPlatformSection = [
 				`# NativeScriptPlatformSection ${pluginPodfilePath} with 8.1`,
 				"platform :ios, '8.1'",
-				"# End NativeScriptPlatformSection",
+				"# End NativeScriptPlatformSection\n",
 			].join("\n");
 			const expectedProjectPodfileContent = ["use_frameworks!\n",
 				`target "${projectName}" do`,
+				expectedPlatformSection,
 				`# Begin Podfile - ${pluginPodfilePath}`,
 				expectedPluginPodfileContent,
-				"# End Podfile\n",
-				expectedPlatformSection,
+				"# End Podfile",
 				"end"]
 				.join("\n");
 			assert.equal(actualProjectPodfileContent, expectedProjectPodfileContent);
@@ -1253,7 +1253,7 @@ describe("Merge Project XCConfig files", () => {
 		const destinationFilePaths = xcconfigService.getPluginsXcconfigFilePaths(projectRoot);
 
 		_.each(destinationFilePaths, destinationFilePath => {
-			assert.isTrue(fs.exists(destinationFilePath), `Target build xcconfig ${destinationFilePath} is missing.` );
+			assert.isTrue(fs.exists(destinationFilePath), `Target build xcconfig ${destinationFilePath} is missing.`);
 			const content = fs.readFile(destinationFilePath).toString();
 			assert.equal(content, "");
 		});
