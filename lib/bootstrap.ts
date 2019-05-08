@@ -1,5 +1,5 @@
 require("./common/bootstrap");
-$injector.require("logger", "./common/logger");
+$injector.requirePublicClass("logger", "./common/logger/logger");
 $injector.require("config", "./config");
 $injector.require("options", "./options");
 // note: order above is important!
@@ -109,7 +109,7 @@ $injector.require("xcprojService", "./services/xcproj-service");
 $injector.require("versionsService", "./services/versions-service");
 $injector.requireCommand("install", "./commands/install");
 
-$injector.require("initService", "./services/init-service");
+$injector.require("projectInitService", "./services/project-init-service");
 $injector.requireCommand("init", "./commands/init");
 
 $injector.require("infoService", "./services/info-service");
@@ -199,3 +199,5 @@ $injector.requirePublic("cleanupService", "./services/cleanup-service");
 $injector.require("applePortalSessionService", "./services/apple-portal/apple-portal-session-service");
 $injector.require("applePortalCookieService", "./services/apple-portal/apple-portal-cookie-service");
 $injector.require("applePortalApplicationService", "./services/apple-portal/apple-portal-application-service");
+
+$injector.requirePublicClass("initializeService", "./services/initialize-service");

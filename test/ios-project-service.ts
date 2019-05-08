@@ -9,7 +9,7 @@ import * as iOSProjectServiceLib from "../lib/services/ios-project-service";
 import { IOSProjectService } from "../lib/services/ios-project-service";
 import { IOSEntitlementsService } from "../lib/services/ios-entitlements-service";
 import { XcconfigService } from "../lib/services/xcconfig-service";
-import * as LoggerLib from "../lib/common/logger";
+import * as LoggerLib from "../lib/common/logger/logger";
 import * as OptionsLib from "../lib/options";
 import * as yok from "../lib/common/yok";
 import { DevicesService } from "../lib/common/mobile/mobile-core/devices-service";

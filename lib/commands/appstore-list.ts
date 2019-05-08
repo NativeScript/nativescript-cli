@@ -34,14 +34,14 @@ export class ListiOSApps implements ICommand {
 		const applications = await this.$applePortalApplicationService.getApplications({ username, password });
 
 		if (!applications || !applications.length) {
-			this.$logger.out("Seems you don't have any applications yet.");
+			this.$logger.info("Seems you don't have any applications yet.");
 		} else {
 			const table: any = createTable(["Application Name", "Bundle Identifier", "In Flight Version"], applications.map(application => {
 				const version = (application && application.versionSets && application.versionSets.length && application.versionSets[0].inFlightVersion &&  application.versionSets[0].inFlightVersion.version) || "";
 				return [application.name, application.bundleId, version];
 			}));
 
-			this.$logger.out(table.toString());
+			this.$logger.info(table.toString());
 		}
 	}
 }

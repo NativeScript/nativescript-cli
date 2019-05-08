@@ -1424,7 +1424,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		const mergedPlist = plist.parse(this.$fs.readText(mergedPlistPath));
 
 		if (infoPlist.CFBundleIdentifier && infoPlist.CFBundleIdentifier !== mergedPlist.CFBundleIdentifier) {
-			this.$logger.warnWithLabel("The CFBundleIdentifier key inside the 'Info.plist' will be overriden by the 'id' inside 'package.json'.");
+			this.$logger.warn("[WARNING]: The CFBundleIdentifier key inside the 'Info.plist' will be overriden by the 'id' inside 'package.json'.");
 		}
 	}
 

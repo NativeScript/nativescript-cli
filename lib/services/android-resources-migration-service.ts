@@ -27,14 +27,14 @@ export class AndroidResourcesMigrationService implements IAndroidResourcesMigrat
 
 		try {
 			await this.tryMigrate(originalAppResources, appResourcesDestination, appResourcesBackup);
-			this.$logger.out(`Successfully updated your project's application resources '/Android' directory structure.${EOL}The previous version of your Android application resources has been renamed to '/${AndroidResourcesMigrationService.ANDROID_DIR_OLD}'`);
+			this.$logger.info(`Successfully updated your project's application resources '/Android' directory structure.${EOL}The previous version of your Android application resources has been renamed to '/${AndroidResourcesMigrationService.ANDROID_DIR_OLD}'`);
 		} catch (error) {
 			try {
 				this.recover(originalAppResources, appResourcesDestination, appResourcesBackup);
-				this.$logger.out("Failed to update resources. They should be in their initial state.");
+				this.$logger.info("Failed to update resources. They should be in their initial state.");
 			} catch (err) {
 				this.$logger.trace(err);
-				this.$logger.out(`Failed to update resources.${EOL} Backup of original content is inside "${appResourcesBackup}".${EOL}If "${originalAppResources} is missing copy from backup folder."`);
+				this.$logger.info(`Failed to update resources.${EOL} Backup of original content is inside "${appResourcesBackup}".${EOL}If "${originalAppResources} is missing copy from backup folder."`);
 			} finally {
 				this.$errors.failWithoutHelp(error.message);
 			}

@@ -10,7 +10,7 @@ export class ProxyGetCommand extends ProxyCommandBase {
 	}
 
 	public async execute(args: string[]): Promise<void> {
-		this.$logger.out(await this.$proxyService.getInfo());
+		this.$logger.info(await this.$proxyService.getInfo());
 		await this.tryTrackUsage();
 	}
 }

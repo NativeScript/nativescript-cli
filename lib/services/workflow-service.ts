@@ -2,6 +2,7 @@ import * as helpers from "../common/helpers";
 import * as path from "path";
 import * as semver from "semver";
 import { EOL } from "os";
+import { LoggerConfigData } from "../constants";
 
 export class WorkflowService implements IWorkflowService {
 	private legacyWorkflowDeprecationMessage = `With the upcoming NativeScript 6.0 the Webpack workflow will become the only way of building apps.
@@ -70,16 +71,14 @@ __Improve your project by switching to the Webpack workflow.__
 
 	private showLegacyWorkflowWarning() {
 		const legacyWorkflowWarning = `You are using the Legacy Workflow.${EOL}${EOL}${this.legacyWorkflowDeprecationMessage}`;
-		const warningWithBorders = helpers.getMessageWithBorders(legacyWorkflowWarning);
 
-		this.$logger.warn(warningWithBorders);
+		this.$logger.warn(legacyWorkflowWarning, { [LoggerConfigData.wrapMessageWithBorders]: true });
 	}
 
 	private showNoBundleWarning() {
 		const legacyWorkflowWarning = `You are using the '--no-bundle' flag which is switching to the Legacy Workflow.${EOL}${EOL}${this.legacyWorkflowDeprecationMessage}`;
-		const warningWithBorders = helpers.getMessageWithBorders(legacyWorkflowWarning);
 
-		this.$logger.warn(warningWithBorders);
+		this.$logger.warn(legacyWorkflowWarning, { [LoggerConfigData.wrapMessageWithBorders]: true });
 	}
 
 	private async ensureWebpackPluginInstalled(projectData: IProjectData) {

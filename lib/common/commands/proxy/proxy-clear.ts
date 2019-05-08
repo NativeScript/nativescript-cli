@@ -10,7 +10,7 @@ export class ProxyClearCommand extends ProxyCommandBase {
 
 	public async execute(args: string[]): Promise<void> {
 		await this.$proxyService.clearCache();
-		this.$logger.out("Successfully cleared proxy.");
+		this.$logger.info("Successfully cleared proxy.");
 		await this.tryTrackUsage();
 	}
 }

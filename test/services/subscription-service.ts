@@ -135,7 +135,7 @@ describe("subscriptionService", () => {
 			subscriptionService.shouldAskForEmailResult = false;
 			const logger = testInjector.resolve<LoggerStub>("logger");
 			let loggerOutput = "";
-			logger.out = (...args: string[]): void => {
+			logger.info = (...args: string[]): void => {
 				loggerOutput += args.join(" ");
 			};
 
@@ -151,7 +151,7 @@ describe("subscriptionService", () => {
 			const logger = testInjector.resolve<LoggerStub>("logger");
 			let loggerOutput = "";
 
-			logger.out = (...args: string[]): void => {
+			logger.info = (...args: string[]): void => {
 				loggerOutput += args.join(" ");
 			};
 

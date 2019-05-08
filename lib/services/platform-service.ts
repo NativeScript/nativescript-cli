@@ -97,7 +97,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		this.$logger.trace("Package: %s", projectData.projectIdentifiers[platform]);
 		this.$logger.trace("Name: %s", projectData.projectName);
 
-		this.$logger.out("Copying template files...");
+		this.$logger.info("Copying template files...");
 
 		let packageToInstall = "";
 		if (frameworkPath) {
@@ -136,7 +136,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		}
 
 		this.$fs.ensureDirectoryExists(platformPath);
-		this.$logger.out(`Platform ${platform} successfully added. v${installedPlatformVersion}`);
+		this.$logger.info(`Platform ${platform} successfully added. v${installedPlatformVersion}`);
 	}
 
 	private async addPlatformCore(platformData: IPlatformData, frameworkDir: string, platformTemplate: string, projectData: IProjectData, config: IPlatformOptions, nativePrepare?: INativePrepare): Promise<string> {
@@ -249,7 +249,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 			);
 			this.$projectChangesService.savePrepareInfo(platformInfo.platform, platformInfo.projectData);
 		} else {
-			this.$logger.out("Skipping prepare.");
+			this.$logger.info("Skipping prepare.");
 		}
 
 		return true;
@@ -316,7 +316,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		filesToRemove?: string[],
 		nativePrepare?: INativePrepare): Promise<void> {
 
-		this.$logger.out("Preparing project...");
+		this.$logger.info("Preparing project...");
 
 		const platformData = this.$platformsData.getPlatformData(platform, projectData);
 		const frameworkVersion = this.getCurrentPlatformVersion(platform, projectData);
@@ -361,7 +361,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 
 		this.$projectFilesManager.processPlatformSpecificFiles(directoryPath, platform, projectFilesConfig, excludedDirs);
 
-		this.$logger.out(`Project successfully prepared (${platform})`);
+		this.$logger.info(`Project successfully prepared (${platform})`);
 	}
 
 	public async shouldBuild(platform: string, projectData: IProjectData, buildConfig: IBuildConfig, outputPath?: string): Promise<boolean> {
@@ -404,7 +404,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 
 	@performanceLog()
 	public async buildPlatform(platform: string, buildConfig: IBuildConfig, projectData: IProjectData): Promise<string> {
-		this.$logger.out("Building project...");
+		this.$logger.info("Building project...");
 
 		const action = constants.TrackActionNames.Build;
 		const isForDevice = this.$mobileHelper.isAndroidPlatform(platform) ? null : buildConfig && buildConfig.buildForDevice;
@@ -424,7 +424,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 
 		const handler = (data: any) => {
 			this.emit(constants.BUILD_OUTPUT_EVENT_NAME, data);
-			this.$logger.printInfoMessageOnSameLine(data.data.toString());
+			this.$logger.info(data.data.toString(), { [constants.LoggerConfigData.skipNewLine]: true });
 		};
 
 		await attachAwaitDetach(constants.BUILD_OUTPUT_EVENT_NAME, platformData.platformProjectService, handler, platformData.platformProjectService.buildProject(platformData.projectRoot, projectData, buildConfig));
@@ -432,7 +432,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		const buildInfoFilePath = this.getBuildOutputPath(platform, platformData, buildConfig);
 		this.saveBuildInfoFile(platform, projectData.projectDir, buildInfoFilePath);
 
-		this.$logger.out("Project successfully built.");
+		this.$logger.info("Project successfully built.");
 		return this.lastOutputPath(platform, buildConfig, projectData);
 	}
 
@@ -480,7 +480,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 	}
 
 	public async installApplication(device: Mobile.IDevice, buildConfig: IBuildConfig, projectData: IProjectData, packageFile?: string, outputFilePath?: string): Promise<void> {
-		this.$logger.out(`Installing on device ${device.deviceInfo.identifier}...`);
+		this.$logger.info(`Installing on device ${device.deviceInfo.identifier}...`);
 
 		await this.$analyticsService.trackEventActionInGoogleAnalytics({
 			action: constants.TrackActionNames.Deploy,
@@ -519,7 +519,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 			await device.fileSystem.putFile(path.join(buildInfoFilePath, buildInfoFileName), deviceFilePath, appIdentifier);
 		}
 
-		this.$logger.out(`Successfully installed on device with identifier '${device.deviceInfo.identifier}'.`);
+		this.$logger.info(`Successfully installed on device with identifier '${device.deviceInfo.identifier}'.`);
 	}
 
 	private async updateHashesOnDevice(data: { device: Mobile.IDevice, appIdentifier: string, outputFilePath: string, platformData: IPlatformData }): Promise<void> {
@@ -573,13 +573,13 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 			if (shouldBuild) {
 				installPackageFile = await deployInfo.buildPlatform(deployInfo.platform, buildConfig, deployInfo.projectData);
 			} else {
-				this.$logger.out("Skipping package build. No changes detected on the native side. This will be fast!");
+				this.$logger.info("Skipping package build. No changes detected on the native side. This will be fast!");
 			}
 
 			if (deployInfo.deployOptions.forceInstall || shouldBuild || (await this.shouldInstall(device, deployInfo.projectData, buildConfig))) {
 				await this.installApplication(device, buildConfig, deployInfo.projectData, installPackageFile, deployInfo.outputPath);
 			} else {
-				this.$logger.out("Skipping install.");
+				this.$logger.info("Skipping install.");
 			}
 
 		};
@@ -593,11 +593,11 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 	}
 
 	public async startApplication(platform: string, runOptions: IRunPlatformOptions, appData: Mobile.IStartApplicationData): Promise<void> {
-		this.$logger.out("Starting...");
+		this.$logger.info("Starting...");
 
 		const action = async (device: Mobile.IDevice) => {
 			await device.applicationManager.startApplication(appData);
-			this.$logger.out(`Successfully started on device with identifier '${device.deviceInfo.identifier}'.`);
+			this.$logger.info(`Successfully started on device with identifier '${device.deviceInfo.identifier}'.`);
 		};
 
 		await this.$devicesService.initialize({ platform: platform, deviceId: runOptions.device });
@@ -713,7 +713,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 				this.$fs.deleteDirectory(platformDir);
 				this.$projectDataService.removeNSProperty(projectData.projectDir, platformData.frameworkPackageName);
 
-				this.$logger.out(`Platform ${platform} successfully removed.`);
+				this.$logger.info(`Platform ${platform} successfully removed.`);
 			} catch (err) {
 				this.$logger.error(`Failed to remove ${platform} platform with errors:`);
 				if (gradleErrorMessage) {
@@ -948,7 +948,7 @@ export class PlatformService extends EventEmitter implements IPlatformService {
 		await this.removePlatforms([packageName], projectData);
 		packageName = updateOptions.newVersion ? `${packageName}@${updateOptions.newVersion}` : packageName;
 		await this.addPlatform(packageName, updateOptions.platformTemplate, projectData, config);
-		this.$logger.out("Successfully updated to version ", updateOptions.newVersion);
+		this.$logger.info("Successfully updated to version ", updateOptions.newVersion);
 	}
 
 	// TODO: Remove this method from here. It has nothing to do with platform

@@ -98,7 +98,7 @@ export class AutoCompletionService implements IAutoCompletionService {
 		this.removeObsoleteAutoCompletion();
 
 		if (this.scriptsOk && this.scriptsUpdated) {
-			this.$logger.out("Restart your shell to disable command auto-completion.");
+			this.$logger.info("Restart your shell to disable command auto-completion.");
 		}
 	}
 
@@ -108,7 +108,7 @@ export class AutoCompletionService implements IAutoCompletionService {
 		this.removeObsoleteAutoCompletion();
 
 		if (this.scriptsOk && this.scriptsUpdated) {
-			this.$logger.out("Restart your shell to enable command auto-completion.");
+			this.$logger.info("Restart your shell to enable command auto-completion.");
 		}
 	}
 
@@ -155,11 +155,11 @@ export class AutoCompletionService implements IAutoCompletionService {
 				this.scriptsUpdated = true;
 			}
 		} catch (err) {
-			this.$logger.out("Unable to update %s. Command-line completion might not work.", fileName);
+			this.$logger.info("Unable to update %s. Command-line completion might not work.", fileName);
 			// When npm is installed with sudo, in some cases the installation cannot write to shell profiles
 			// Advise the user how to enable autocompletion after the installation is completed.
 			if ((err.code === "EPERM" || err.code === "EACCES") && !this.$hostInfo.isWindows && process.env.SUDO_USER) {
-				this.$logger.out("To enable command-line completion, run '$ %s autocomplete enable'.", this.$staticConfig.CLIENT_NAME);
+				this.$logger.info("To enable command-line completion, run '$ %s autocomplete enable'.", this.$staticConfig.CLIENT_NAME);
 			}
 
 			this.$logger.trace(err);
@@ -179,8 +179,8 @@ export class AutoCompletionService implements IAutoCompletionService {
 		} catch (err) {
 			// If file does not exist, autocompletion was not working for it, so ignore this error.
 			if (err.code !== "ENOENT") {
-				this.$logger.out("Failed to update %s. Auto-completion may still work or work incorrectly. ", fileName);
-				this.$logger.out(err);
+				this.$logger.info("Failed to update %s. Auto-completion may still work or work incorrectly. ", fileName);
+				this.$logger.info(err);
 				this.scriptsOk = false;
 			}
 		}
@@ -211,7 +211,7 @@ export class AutoCompletionService implements IAutoCompletionService {
 				this.$fs.chmod(filePath, "0644");
 			}
 		} catch (err) {
-			this.$logger.out("Failed to update %s. Auto-completion may not work. ", filePath);
+			this.$logger.info("Failed to update %s. Auto-completion may not work. ", filePath);
 			this.$logger.trace(err);
 			this.scriptsOk = false;
 		}

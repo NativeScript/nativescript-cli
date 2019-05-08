@@ -135,7 +135,7 @@ class VersionsService implements IVersionsService {
 		}, () => this.getAllComponentsVersions());
 
 		if (!helpers.isInteractive()) {
-			versionsInformation.map(componentInformation => this.$logger.out(componentInformation.message));
+			versionsInformation.map(componentInformation => this.$logger.info(componentInformation.message));
 		}
 
 		_.forEach(versionsInformation, componentInformation => {

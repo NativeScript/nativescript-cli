@@ -1,6 +1,7 @@
 import { AndroidVirtualDevice } from "../../constants";
 import { getCurrentEpochTime, sleep } from "../../helpers";
 import { EOL } from "os";
+import { LoggerConfigData } from "../../../constants";
 
 export class AndroidEmulatorServices implements Mobile.IEmulatorPlatformService {
 	constructor(private $androidGenymotionService: Mobile.IAndroidVirtualDeviceService,
@@ -65,7 +66,7 @@ export class AndroidEmulatorServices implements Mobile.IEmulatorPlatformService 
 		this.$androidVirtualDeviceService.detach(deviceInfo);
 	}
 
-	private async startEmulatorCore(options: Mobile.IAndroidStartEmulatorOptions): Promise<{runningEmulator: Mobile.IDeviceInfo, errors: string[], endTimeEpoch: number}> {
+	private async startEmulatorCore(options: Mobile.IAndroidStartEmulatorOptions): Promise<{ runningEmulator: Mobile.IDeviceInfo, errors: string[], endTimeEpoch: number }> {
 		const timeout = options.timeout || AndroidVirtualDevice.TIMEOUT_SECONDS;
 		const endTimeEpoch = getCurrentEpochTime() + this.$utils.getMilliSecondsTimeout(timeout);
 
@@ -146,21 +147,21 @@ export class AndroidEmulatorServices implements Mobile.IEmulatorPlatformService 
 		return (best && best.version >= AndroidVirtualDevice.MIN_ANDROID_VERSION) ? best : null;
 	}
 
-	private async waitForEmulatorBootToComplete(emulator: Mobile.IDeviceInfo, endTimeEpoch: number, timeout: number): Promise<{runningEmulator: Mobile.IDeviceInfo, errors: string[]}> {
-		this.$logger.printInfoMessageOnSameLine("Waiting for emulator device initialization...");
+	private async waitForEmulatorBootToComplete(emulator: Mobile.IDeviceInfo, endTimeEpoch: number, timeout: number): Promise<{ runningEmulator: Mobile.IDeviceInfo, errors: string[] }> {
+		this.$logger.info("Waiting for emulator device initialization...", { [LoggerConfigData.skipNewLine]: true });
 
 		const isInfiniteWait = this.$utils.getMilliSecondsTimeout(timeout || AndroidVirtualDevice.TIMEOUT_SECONDS) === 0;
 		while (getCurrentEpochTime() < endTimeEpoch || isInfiniteWait) {
 			const isEmulatorBootCompleted = await this.isEmulatorBootCompleted(emulator.identifier);
 			if (isEmulatorBootCompleted) {
-				this.$logger.printInfoMessageOnSameLine(EOL);
+				this.$logger.info(EOL, { [LoggerConfigData.skipNewLine]: true });
 				return {
 					runningEmulator: emulator,
 					errors: []
 				};
 			}
 
-			this.$logger.printInfoMessageOnSameLine(".");
+			this.$logger.info(".", { [LoggerConfigData.skipNewLine]: true });
 			await sleep(10000);
 		}
 
