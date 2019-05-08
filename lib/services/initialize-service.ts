@@ -5,13 +5,25 @@ export class InitializeService implements IInitializeService {
 	// Injecting something may lead to logger initialization, but we want to initialize it from here.
 	constructor(private $injector: IInjector) { }
 
-	public async initialize(initOpts?: { loggerOptions?: ILoggerOptions }): Promise<void> {
+	public async initialize(initOpts?: IInitializeOptions): Promise<void> {
 		initOpts = initOpts || {};
 		const $logger = this.$injector.resolve<ILogger>("logger");
 		if (initOpts.loggerOptions) {
 			$logger.initialize(initOpts.loggerOptions);
 		} else {
 			$logger.initializeCliLogger();
+		}
+
+		if (initOpts.settingsServiceOptions) {
+			const $settingsService = this.$injector.resolve<ISettingsService>("settingsService");
+			$settingsService.setSettings(initOpts.settingsServiceOptions);
+		}
+
+		if (initOpts.extensibilityOptions) {
+			if (initOpts.extensibilityOptions.pathToExtensions) {
+				const $extensibilityService = this.$injector.resolve<IExtensibilityService>("extensibilityService");
+				$extensibilityService.pathToExtensions = initOpts.extensibilityOptions.pathToExtensions;
+			}
 		}
 
 		await this.showWarnings($logger);

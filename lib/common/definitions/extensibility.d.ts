@@ -130,6 +130,11 @@ interface IExtensibilityService {
 	 * @returns {IExtensionCommandInfo} Information about the extension and the registered command.
 	 */
 	getExtensionNameWhereCommandIsRegistered(inputOpts: IGetExtensionCommandInfoParams): Promise<IExtensionCommandInfo>;
+
+	/**
+	 * Defines the path where CLI will search for extensions.
+	 */
+	pathToExtensions: string;
 }
 
 /**

@@ -1528,20 +1528,41 @@ tns.cleanupService.setCleanupLogFile("/Users/username/cleanup-logs.txt");
 The `initializeService` is used to initialize CLI's configuration at the beginning and print all warnings related to current environment.
 
 ### initialize
-This method inits CLI's logger and prints all system warnings.
+This method executes initialization actions based on the passed parameters. In case `loggerOptions` are not passed, the default CLI logger will be used.
+After initialization, the method will print all system warnings.
 
 * Definition
 ```TypeScript
-initialize(initOpts?: { loggerOptions?: ILoggerOptions }): Promise<void>
+interface IInitializeOptions {
+	loggerOptions?: ILoggerOptions;
+	settingsServiceOptions?: IConfigurationSettings;
+	extensibilityOptions?: { pathToExtensions: string };
+}
+
+interface IInitializeService {
+	initialize(initOpts?: IInitializeOptions): Promise<void>;
+}
+
 ```
 
 > NOTE: For more information about loggerOptions, you can check `logger`.
 
 * Usage
-```JavaScript
-const tns = require("nativescript");
-tns.initializeService.initialize();
-```
+	* Initialization without passing any data - `logger` will be initialized with default CLI settings. Warnings will be printed if there are any.
+	```JavaScript
+	const tns = require("nativescript");
+	tns.initializeService.initialize();
+	```
+	* Initialize with custom settings service options:
+	```JavaScript
+	const tns = require("nativescript");
+	tns.initializeService.initialize({ settingsServiceOptions: { profileDir: "/Users/username/customDir", userAgentName: "MyApp" } });
+	```
+	* Initialize with custom extensibility path:
+	```JavaScript
+	const tns = require("nativescript");
+	tns.initializeService.initialize({ extensibilityOptions: { pathToExtensions: "/Users/username/customDir/extensions" } });
+	```
 
 ## logger
 

@@ -1,3 +1,9 @@
+interface IInitializeOptions {
+	loggerOptions?: ILoggerOptions;
+	settingsServiceOptions?: IConfigurationSettings;
+	extensibilityOptions?: { pathToExtensions: string };
+}
+
 interface IInitializeService {
-	initialize(initOpts?: { loggerOptions?: ILoggerOptions }): Promise<void>;
+	initialize(initOpts?: IInitializeOptions): Promise<void>;
 }
