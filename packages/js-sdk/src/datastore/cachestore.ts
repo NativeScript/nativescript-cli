@@ -74,7 +74,7 @@ export class CacheStore {
 
         if (autoSync) {
           const network = new NetworkStore(this.collectionName);
-          const count = await network.count(query, options).toPromise();
+          const count = await network.count(query, options);
           observer.next(count);
         }
 
@@ -96,7 +96,7 @@ export class CacheStore {
 
         if (autoSync) {
           const network = new NetworkStore(this.collectionName);
-          const networkResult = await network.group(aggregation, options).toPromise();
+          const networkResult = await network.group(aggregation, options);
           observer.next(networkResult);
         }
 
@@ -380,7 +380,7 @@ export class CacheStore {
       await cache.clear();
 
       // Get the total count of docs
-      const response = await network.count(query, Object.assign({}, options, { rawResponse: true })).toPromise();
+      const response = await network.count(query, Object.assign({}, options, { rawResponse: true }));
       const count = 'count' in response.data ? response.data.count : Number.MAX_SAFE_INTEGER;
 
       // Create the pages
@@ -395,7 +395,7 @@ export class CacheStore {
 
       // Process the pages
       const pagePromises = pageQueries.map((pageQuery) => {
-        return network.find(pageQuery, options).toPromise()
+        return network.find(pageQuery, options)
           .then((docs: {}) => cache.save(docs))
           .then((docs: { length: any; }) => docs.length);
       });
@@ -412,7 +412,7 @@ export class CacheStore {
     }
 
     // Find the docs on the backend
-    const response = await network.find(query, Object.assign({}, options, { rawResponse: true })).toPromise();
+    const response = await network.find(query, Object.assign({}, options, { rawResponse: true }));
     const docs = response.data;
 
     // Remove the docs matching the provided query
@@ -458,7 +458,7 @@ export class CacheStore {
 
     try {
       // Find the doc on the backend
-      const doc = await network.findById(id, options).toPromise();
+      const doc = await network.findById(id, options);
 
       // Update the doc in the cache
       await cache.save(doc);
