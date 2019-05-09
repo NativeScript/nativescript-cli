@@ -24,6 +24,7 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 
 			childProcess.on("message", (message: any) => {
 				if (message === "Webpack compilation complete.") {
+					this.$logger.info("Webpack build done!");
 					resolve(childProcess);
 				}
 
