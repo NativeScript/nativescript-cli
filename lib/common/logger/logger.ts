@@ -81,6 +81,15 @@ export class Logger implements ILogger {
 		this.logMessage(args, LoggerLevel.INFO);
 	}
 
+	/**
+	 * DEPRECATED
+	 * Present only for backwards compatibility as some plugins (nativescript-plugin-firebase)
+	 * use $logger.out in their hooks
+	 */
+	out(...args: any[]): void {
+		this.info(args);
+	}
+
 	debug(...args: any[]): void {
 		const encodedArgs: string[] = this.getPasswordEncodedArguments(args);
 		this.logMessage(encodedArgs, LoggerLevel.DEBUG);
@@ -159,7 +168,8 @@ export class Logger implements ILogger {
 		const result: any = {};
 		const cleanedData = _.cloneDeep(data);
 
-		const dataToCheck = data.filter(el => typeof el === "object");
+		// objects created with Object.create(null) do not have `hasOwnProperty` function
+		const dataToCheck = data.filter(el => typeof el === "object" && el.hasOwnProperty && typeof el.hasOwnProperty === "function");
 
 		for (const element of dataToCheck) {
 			if (opts.length === 0) {
