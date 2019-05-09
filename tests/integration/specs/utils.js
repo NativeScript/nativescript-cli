@@ -79,7 +79,7 @@ export function saveEntities(collectionName, entities) {
     .then(result => _.sortBy(deleteEntityMetadata(result), '_id'));
 }
 
-export function deleteUsers(userIds) {
+export function deleteUsers(userIds = []) {
   return Promise.all(userIds.map(userId => {
     return Kinvey.User.remove(userId, {
       hard: true
@@ -185,7 +185,7 @@ export function validateEntity(dataStoreType, collectionName, expectedEntity, se
 export function cleanUpCollectionData(collectionName) {
   const networkStore = Kinvey.DataStore.collection(collectionName, Kinvey.DataStoreType.Network);
   const syncStore = Kinvey.DataStore.collection(collectionName, Kinvey.DataStoreType.Sync);
-  return networkStore.find().toPromise()
+  return networkStore.find()
     .then((entities) => {
       if (entities && entities.length > 0) {
         const query = new Kinvey.Query();
@@ -203,7 +203,7 @@ export function cleanAndPopulateCollection(collectionName, entities) {
     .then(() => saveEntities(collectionName, entities));
 }
 
-export function cleanUpAppData(collectionName, createdUserIds) {
+export function cleanUpAppData(collectionName, createdUserIds = []) {
   let currentUserId;
   return Kinvey.User.logout()
     .then(() => {
