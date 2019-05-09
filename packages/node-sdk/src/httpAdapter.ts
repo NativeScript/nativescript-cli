@@ -1,5 +1,6 @@
 import axios from 'axios';
 import os from 'os';
+import { NetworkError } from 'kinvey-js-sdk/lib/errors/network';
 import { name, version } from '../package.json';
 
 function deviceInformation() {
@@ -51,11 +52,10 @@ export async function send(request: any) {
       timeout
     });
   } catch (error) {
-    if (error.response) {
-      response = error.response;
-    } else {
-      throw error;
+    if (!error.response) {
+      throw new NetworkError();
     }
+    response = error.response;
   }
 
   return {
