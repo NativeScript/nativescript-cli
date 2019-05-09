@@ -1,5 +1,5 @@
 import { Device, FilesPayload } from "nativescript-preview-sdk";
-import { APP_RESOURCES_FOLDER_NAME, TrackActionNames, FILES_CHANGE_EVENT_NAME } from "../../../constants";
+import { APP_RESOURCES_FOLDER_NAME, TrackActionNames, FILES_CHANGE_EVENT_NAME, INITIAL_SYNC_EVENT_NAME } from "../../../constants";
 import { PreviewAppLiveSyncEvents } from "./preview-app-constants";
 import { HmrConstants } from "../../../common/constants";
 import { stringify } from "../../../common/helpers";
@@ -47,10 +47,13 @@ export class PreviewAppLiveSyncService extends EventEmitter implements IPreviewA
 				}
 
 				await this.$previewAppPluginsService.comparePluginsOnDevice(data, device);
-				this.deviceInitializationPromise[device.id] = this.getInitialFilesForPlatformSafe(data, device.platform);
 
 				this.$platformWatcherService.on(FILES_CHANGE_EVENT_NAME, async (filesChangeData: IFilesChangeEventData) => {
 					await this.onWebpackCompilationComplete(data, filesChangeData.hmrData, filesChangeData.files, device.platform);
+				});
+
+				this.$platformWatcherService.on(INITIAL_SYNC_EVENT_NAME, async (initialSyncData: IInitialSyncEventData) => {
+					this.deviceInitializationPromise[device.id] = this.getInitialFilesForPlatformSafe(data, device.platform);
 				});
 
 				const { nativePlatformData, projectData, preparePlatformData } = this.$workflowDataService.createWorkflowData(device.platform.toLowerCase(), data.projectDir, data);

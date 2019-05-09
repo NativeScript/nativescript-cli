@@ -9,6 +9,7 @@ import { ProjectFilesManager } from "../../../lib/common/services/project-files-
 import { EventEmitter } from "events";
 import { PreviewAppFilesService } from "../../../lib/services/livesync/playground/preview-app-files-service";
 import { WorkflowDataService, PreparePlatformData } from "../../../lib/services/workflow/workflow-data-service";
+import { INITIAL_SYNC_EVENT_NAME } from "../../../lib/constants";
 
 interface ITestCase {
 	name: string;
@@ -96,6 +97,13 @@ class LoggerMock extends LoggerStub {
 	}
 }
 
+class PlatformWatcherServiceMock extends EventEmitter {
+	public startWatchers(platformData: IPlatformData, projectData: IProjectData, preparePlatformData: PreparePlatformData) {
+		isHMRPassedToEnv = preparePlatformData.env.hmr;
+		this.emit(INITIAL_SYNC_EVENT_NAME, {});
+	}
+}
+
 function createTestInjector(options?: {
 	projectFiles?: string[]
 }) {
@@ -157,12 +165,7 @@ function createTestInjector(options?: {
 	injector.register("analyticsService", {
 		trackEventActionInGoogleAnalytics: () => ({})
 	});
-	injector.register("platformWatcherService", {
-		startWatchers: (platformData: IPlatformData, projectData: IProjectData, preparePlatformData: PreparePlatformData) => {
-			isHMRPassedToEnv = preparePlatformData.env.hmr;
-		},
-		on: () => ({})
-	});
+	injector.register("platformWatcherService", PlatformWatcherServiceMock);
 	injector.register("workflowDataService", WorkflowDataService);
 
 	return injector;
