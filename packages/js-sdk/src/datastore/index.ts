@@ -1,5 +1,6 @@
 import isString from 'lodash/isString';
 import { KinveyError } from '../errors/kinvey';
+import { logger } from '../log';
 import { isValidTag } from './cache';
 import { NetworkStore } from './networkstore';
 import { CacheStore } from './cachestore';
@@ -25,8 +26,9 @@ export function collection(collectionName: string, type = DataStoreType.Auto, op
   }
 
   if (type === DataStoreType.Auto) {
-    datastore = new AutoStore(collectionName, options);
+    datastore = new AutoStore(collectionName, Object.assign({}, options, { autoSync: true }));
   } else if (type === DataStoreType.Cache) {
+    logger.warn('DataStoreType.Cache has been deprecated. Please use DataStoreType.Auto instead.');
     datastore = new CacheStore(collectionName, Object.assign({}, options, { autoSync: true }));
   } else if (type === DataStoreType.Network) {
     if (tagWasPassed) {
@@ -37,7 +39,7 @@ export function collection(collectionName: string, type = DataStoreType.Auto, op
   } else if (type === DataStoreType.Sync) {
     datastore = new CacheStore(collectionName, Object.assign({}, options, { autoSync: false }));
   } else {
-    throw new Error('Unknown data store type.');
+    throw new KinveyError('Unknown data store type.');
   }
 
   return datastore;
