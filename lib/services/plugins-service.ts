@@ -318,12 +318,12 @@ export class PluginsService implements IPluginsService {
 		const installedFrameworkVersion = this.getInstalledFrameworkVersion(platform, projectData);
 		const pluginPlatformsData = pluginData.platformsData;
 		if (pluginPlatformsData) {
-			const pluginVersion = (<any>pluginPlatformsData)[platform];
-			if (!pluginVersion) {
+			const versionRequiredByPlugin = (<any>pluginPlatformsData)[platform];
+			if (!versionRequiredByPlugin) {
 				this.$logger.warn(`${pluginData.name} is not supported for ${platform}.`);
 				isValid = false;
-			} else if (semver.gt(pluginVersion, installedFrameworkVersion)) {
-				this.$logger.warn(`${pluginData.name} ${pluginVersion} for ${platform} is not compatible with the currently installed framework version ${installedFrameworkVersion}.`);
+			} else if (semver.gt(versionRequiredByPlugin, installedFrameworkVersion)) {
+				this.$logger.warn(`${pluginData.name} requires at least version ${versionRequiredByPlugin} of platform ${platform}. Currently installed version is ${installedFrameworkVersion}.`);
 				isValid = false;
 			}
 		}
