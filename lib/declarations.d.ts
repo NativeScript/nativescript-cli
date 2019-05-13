@@ -493,6 +493,8 @@ interface IPort {
 interface IPluginSeedOptions {
 	username: string;
 	pluginName: string;
+	includeTypeScriptDemo: string;
+	includeAngularDemo: string;
 }
 
 interface IAndroidBundleOptions {
