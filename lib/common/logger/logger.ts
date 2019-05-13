@@ -81,15 +81,6 @@ export class Logger implements ILogger {
 		this.logMessage(args, LoggerLevel.INFO);
 	}
 
-	/**
-	 * DEPRECATED
-	 * Present only for backwards compatibility as some plugins (nativescript-plugin-firebase)
-	 * use $logger.out in their hooks
-	 */
-	out(...args: any[]): void {
-		this.info(args);
-	}
-
 	debug(...args: any[]): void {
 		const encodedArgs: string[] = this.getPasswordEncodedArguments(args);
 		this.logMessage(encodedArgs, LoggerLevel.DEBUG);
@@ -198,6 +189,37 @@ export class Logger implements ILogger {
 			}
 
 			return argument;
+		});
+	}
+
+	/*******************************************************************************************
+	 * Metods below are deprecated. Delete them in 6.0.0 release:                              *
+	 * Present only for backwards compatibility as some plugins (nativescript-plugin-firebase) *
+	 * use these methods in their hooks                                                          *
+	 *******************************************************************************************/
+
+	out(...args: any[]): void {
+		this.info(args);
+	}
+
+	write(...args: any[]): void {
+		this.info(args, { [LoggerConfigData.skipNewLine]: true });
+	}
+
+	printOnStderr(...args: string[]): void {
+		this.error(args);
+	}
+
+	printInfoMessageOnSameLine(message: string): void {
+		this.info(message, { [LoggerConfigData.skipNewLine]: true });
+	}
+
+	printMsgWithTimeout(message: string, timeout: number): Promise<void> {
+		return new Promise<void>((resolve, reject) => {
+			setTimeout(() => {
+				this.printInfoMessageOnSameLine(message);
+				resolve();
+			}, timeout);
 		});
 	}
 }
