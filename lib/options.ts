@@ -120,6 +120,8 @@ export class Options {
 			background: { type: OptionType.String, hasSensitiveValue: false },
 			username: { type: OptionType.String, hasSensitiveValue: true },
 			pluginName: { type: OptionType.String, hasSensitiveValue: false },
+			includeTypeScriptDemo: { type: OptionType.String, hasSensitiveValue: false },
+			includeAngularDemo: { type: OptionType.String, hasSensitiveValue: false },
 			hmr: { type: OptionType.Boolean, hasSensitiveValue: false },
 			collection: { type: OptionType.String, alias: "c", hasSensitiveValue: false },
 			json: { type: OptionType.Boolean, hasSensitiveValue: false },
