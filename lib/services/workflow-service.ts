@@ -7,7 +7,7 @@ import { LoggerConfigData } from "../constants";
 export class WorkflowService implements IWorkflowService {
 	private legacyWorkflowDeprecationMessage = `With the upcoming NativeScript 6.0 the Webpack workflow will become the only way of building apps.
 More info about the reasons for this change and how to migrate your project can be found in the link below:
-<TODO: add link here>`;
+https://www.nativescript.org/blog/the-future-of-building-nativescript-apps`;
 	private webpackWorkflowConfirmMessage = `Do you want to switch your app to the Webpack workflow?`;
 
 	constructor(private $bundleValidatorHelper: IBundleValidatorHelper,
