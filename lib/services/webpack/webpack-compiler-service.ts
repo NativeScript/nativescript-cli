@@ -1,18 +1,22 @@
 import * as path from "path";
 import * as child_process from "child_process";
 import { EventEmitter } from "events";
+import { performanceLog } from "../../common/decorators";
+import { hook } from "../../common/helpers";
+import { WEBPACK_COMPILATION_COMPLETE } from "../../constants";
 
 export class WebpackCompilerService extends EventEmitter implements IWebpackCompilerService {
 	private webpackProcesses: IDictionary<child_process.ChildProcess> = {};
 
 	constructor(
 		private $childProcess: IChildProcess,
+		public $hooksService: IHooksService,
 		private $logger: ILogger,
-		private $projectData: IProjectData
+		private $projectData: IProjectData,
 	) { super(); }
 
 	public async compileWithWatch(platformData: IPlatformData, projectData: IProjectData, config: IWebpackCompilerConfig): Promise<any> {
-		return new Promise((resolve, reject) => {
+		return new Promise(async (resolve, reject) => {
 			if (this.webpackProcesses[platformData.platformNameLowerCase]) {
 				resolve();
 				return;
@@ -20,7 +24,7 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 
 			let isFirstWebpackWatchCompilation = true;
 			config.watch = true;
-			const childProcess = this.startWebpackProcess(platformData, projectData, config);
+			const childProcess = await this.startWebpackProcess(platformData, projectData, config);
 
 			childProcess.on("message", (message: any) => {
 				if (message === "Webpack compilation complete.") {
@@ -34,11 +38,11 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 						return;
 					}
 
-					const files = message.emittedFiles
+					const result = this.getUpdatedEmittedFiles(message.emittedFiles);
+
+					const files = result.emittedFiles
 						.filter((file: string) => file.indexOf("App_Resources") === -1)
 						.map((file: string) => path.join(platformData.appDestinationDirectoryPath, "app", file));
-
-					const result = this.getUpdatedEmittedFiles(message.emittedFiles);
 
 					const data = {
 						files,
@@ -48,7 +52,7 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 						}
 					};
 
-					this.emit("webpackEmittedFiles", data);
+					this.emit(WEBPACK_COMPILATION_COMPLETE, data);
 				}
 			});
 
@@ -67,13 +71,13 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 	}
 
 	public async compileWithoutWatch(platformData: IPlatformData, projectData: IProjectData, config: IWebpackCompilerConfig): Promise<void> {
-		return new Promise((resolve, reject) => {
+		return new Promise(async (resolve, reject) => {
 			if (this.webpackProcesses[platformData.platformNameLowerCase]) {
 				resolve();
 				return;
 			}
 
-			const childProcess = this.startWebpackProcess(platformData, projectData, config);
+			const childProcess = await this.startWebpackProcess(platformData, projectData, config);
 			childProcess.on("close", (arg: any) => {
 				const exitCode = typeof arg === "number" ? arg : arg && arg.code;
 				console.log("=========== WEBPACK EXIT WITH CODE ========== ", exitCode);
@@ -96,9 +100,11 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 		}
 	}
 
-	private startWebpackProcess(platformData: IPlatformData, projectData: IProjectData, config: IWebpackCompilerConfig): child_process.ChildProcess {
+	@performanceLog()
+	@hook('prepareJSApp')
+	private async startWebpackProcess(platformData: IPlatformData, projectData: IProjectData, config: IWebpackCompilerConfig): Promise<child_process.ChildProcess> {
 		const envData = this.buildEnvData(platformData.platformNameLowerCase, config.env);
-		const envParams = this.buildEnvCommandLineParams(envData);
+		const envParams = this.buildEnvCommandLineParams(envData, platformData);
 
 		const args = [
 			path.join(projectData.projectDir, "node_modules", "webpack", "bin", "webpack.js"),
@@ -135,7 +141,7 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 		return envData;
 	}
 
-	private buildEnvCommandLineParams(envData: any) {
+	private buildEnvCommandLineParams(envData: any, platformData: IPlatformData) {
 		const envFlagNames = Object.keys(envData);
 		// const snapshotEnvIndex = envFlagNames.indexOf("snapshot");
 		// if (snapshotEnvIndex > -1 && !utils.shouldSnapshot(config)) {

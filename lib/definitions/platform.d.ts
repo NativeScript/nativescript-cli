@@ -14,21 +14,6 @@ interface IBuildPlatformAction {
 	buildPlatform(platform: string, buildConfig: IBuildConfig, projectData: IProjectData): Promise<string>;
 }
 
-/**
- * Platform specific data required for project preparation.
- */
-interface IPlatformSpecificData extends IProvision, ITeamIdentifier {
-	/**
-	 * Target SDK for Android.
-	 */
-	sdk: string;
-
-	/**
-	 * Data from mobileProvision.
-	 */
-	mobileProvisionData?: any;
-}
-
 interface IPlatformData {
 	frameworkPackageName: string;
 	platformProjectService: IPlatformProjectService;
@@ -53,7 +38,9 @@ interface IValidBuildOutputData {
 	regexes?: RegExp[];
 }
 
-interface IBuildOutputOptions extends Partial<IBuildForDevice>, IRelease, IHasAndroidBundle { }
+interface IBuildOutputOptions extends Partial<IBuildForDevice>, IRelease, IHasAndroidBundle {
+	outputPath?: string;
+}
 
 interface IPlatformsData {
 	availablePlatforms: any;

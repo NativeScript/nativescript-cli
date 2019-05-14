@@ -1,4 +1,5 @@
 export class RunOnDevicesDataService {
+	// TODO: Rename liveSyncProcessesInfo
 	private liveSyncProcessesInfo: IDictionary<ILiveSyncProcessInfo> = {};
 
 	public getDataForProject(projectDir: string): ILiveSyncProcessInfo {
@@ -15,8 +16,8 @@ export class RunOnDevicesDataService {
 		return currentDescriptors || [];
 	}
 
-	public hasDeviceDescriptors(projectDir: string) {
-		return this.liveSyncProcessesInfo[projectDir].deviceDescriptors.length;
+	public hasDeviceDescriptors(projectDir: string): boolean {
+		return !!this.liveSyncProcessesInfo[projectDir].deviceDescriptors.length;
 	}
 
 	public persistData(projectDir: string, deviceDescriptors: ILiveSyncDeviceInfo[], platforms: string[]): void {

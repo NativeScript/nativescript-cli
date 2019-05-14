@@ -1,89 +1,18 @@
-import { Device, FilesPayload } from "nativescript-preview-sdk";
-import { APP_RESOURCES_FOLDER_NAME, TrackActionNames, FILES_CHANGE_EVENT_NAME, INITIAL_SYNC_EVENT_NAME } from "../../../constants";
-import { PreviewAppLiveSyncEvents } from "./preview-app-constants";
-import { HmrConstants } from "../../../common/constants";
-import { stringify } from "../../../common/helpers";
+import { APP_RESOURCES_FOLDER_NAME } from "../../../constants";
 import { EventEmitter } from "events";
 import { performanceLog } from "../../../common/decorators";
-import { WorkflowDataService } from "../../workflow/workflow-data-service";
-import { PlatformWatcherService } from "../../platform/platform-watcher-service";
+import { PreviewAppEmitter } from "../../../preview-app-emitter";
 
 export class PreviewAppLiveSyncService extends EventEmitter implements IPreviewAppLiveSyncService {
 
-	private deviceInitializationPromise: IDictionary<Promise<FilesPayload>> = {};
-	private promise = Promise.resolve();
-
 	constructor(
-		private $analyticsService: IAnalyticsService,
-		private $errors: IErrors,
-		private $hmrStatusService: IHmrStatusService,
 		private $logger: ILogger,
-		private $platformWatcherService: PlatformWatcherService,
-		private $previewSdkService: IPreviewSdkService,
+		private $previewAppEmitter: PreviewAppEmitter,
 		private $previewAppFilesService: IPreviewAppFilesService,
 		private $previewAppPluginsService: IPreviewAppPluginsService,
 		private $previewDevicesService: IPreviewDevicesService,
-		private $workflowDataService: WorkflowDataService
+		private $previewSdkService: IPreviewSdkService,
 	) { super(); }
-
-	@performanceLog()
-	public async initialize(data: IPreviewAppLiveSyncData): Promise<void> {
-		await this.$previewSdkService.initialize(data.projectDir, async (device: Device) => {
-			try {
-				if (!device) {
-					this.$errors.failWithoutHelp("Sending initial preview files without a specified device is not supported.");
-				}
-
-				if (this.deviceInitializationPromise[device.id]) {
-					return this.deviceInitializationPromise[device.id];
-				}
-
-				if (device.uniqueId) {
-					await this.$analyticsService.trackEventActionInGoogleAnalytics({
-						action: TrackActionNames.PreviewAppData,
-						platform: device.platform,
-						additionalData: device.uniqueId
-					});
-				}
-
-				await this.$previewAppPluginsService.comparePluginsOnDevice(data, device);
-
-				this.$platformWatcherService.on(FILES_CHANGE_EVENT_NAME, async (filesChangeData: IFilesChangeEventData) => {
-					await this.onWebpackCompilationComplete(data, filesChangeData.hmrData, filesChangeData.files, device.platform);
-				});
-
-				this.$platformWatcherService.on(INITIAL_SYNC_EVENT_NAME, async (initialSyncData: IInitialSyncEventData) => {
-					this.deviceInitializationPromise[device.id] = this.getInitialFilesForPlatformSafe(data, device.platform);
-				});
-
-				const { nativePlatformData, projectData, preparePlatformData } = this.$workflowDataService.createWorkflowData(device.platform.toLowerCase(), data.projectDir, data);
-
-				// Setup externals
-				if (!preparePlatformData.env) { preparePlatformData.env = {}; }
-				preparePlatformData.env.externals = this.$previewAppPluginsService.getExternalPlugins(device);
-
-				// skipNativePrepare so no native watcher is started
-				preparePlatformData.nativePrepare = { skipNativePrepare: true };
-
-				await this.$platformWatcherService.startWatchers(nativePlatformData, projectData, preparePlatformData);
-
-				try {
-					const payloads = await this.deviceInitializationPromise[device.id];
-					return payloads;
-				} finally {
-					this.deviceInitializationPromise[device.id] = null;
-				}
-			} catch (error) {
-				this.$logger.trace(`Error while sending files on device ${device && device.id}. Error is`, error);
-				this.emit(PreviewAppLiveSyncEvents.PREVIEW_APP_LIVE_SYNC_ERROR, {
-					error,
-					data,
-					platform: device.platform,
-					deviceId: device.id
-				});
-			}
-		});
-	}
 
 	@performanceLog()
 	public async syncFiles(data: IPreviewAppLiveSyncData, filesToSync: string[], filesToRemove: string[]): Promise<void> {
@@ -104,24 +33,7 @@ export class PreviewAppLiveSyncService extends EventEmitter implements IPreviewA
 		}
 	}
 
-	public async stopLiveSync(): Promise<void> {
-		this.$previewSdkService.stop();
-		this.$previewDevicesService.updateConnectedDevices([]);
-	}
-
-	private async getInitialFilesForPlatformSafe(data: IPreviewAppLiveSyncData, platform: string): Promise<FilesPayload> {
-		this.$logger.info(`Start sending initial files for platform ${platform}.`);
-
-		try {
-			const payloads = this.$previewAppFilesService.getInitialFilesPayload(data, platform);
-			this.$logger.info(`Successfully sent initial files for platform ${platform}.`);
-			return payloads;
-		} catch (err) {
-			this.$logger.warn(`Unable to apply changes for platform ${platform}. Error is: ${err}, ${stringify(err)}`);
-		}
-	}
-
-	private async syncFilesForPlatformSafe(data: IPreviewAppLiveSyncData, filesData: IPreviewAppFilesData, platform: string, deviceId?: string): Promise<void> {
+	public async syncFilesForPlatformSafe(data: IPreviewAppLiveSyncData, filesData: IPreviewAppFilesData, platform: string, deviceId?: string): Promise<void> {
 		try {
 			const payloads = this.$previewAppFilesService.getFilesPayload(data, filesData, platform);
 			if (payloads && payloads.files && payloads.files.length) {
@@ -131,38 +43,8 @@ export class PreviewAppLiveSyncService extends EventEmitter implements IPreviewA
 			}
 		} catch (error) {
 			this.$logger.warn(`Unable to apply changes for platform ${platform}. Error is: ${error}, ${JSON.stringify(error, null, 2)}.`);
-			this.emit(PreviewAppLiveSyncEvents.PREVIEW_APP_LIVE_SYNC_ERROR, {
-				error,
-				data,
-				platform,
-				deviceId
-			});
+			this.$previewAppEmitter.emitPreviewAppLiveSyncError(data, deviceId, error);
 		}
-	}
-
-	@performanceLog()
-	private async onWebpackCompilationComplete(data: IPreviewAppLiveSyncData, hmrData: IPlatformHmrData, files: string[], platform: string) {
-		await this.promise
-			.then(async () => {
-				const platformHmrData = _.cloneDeep(hmrData);
-
-				this.promise = this.syncFilesForPlatformSafe(data, { filesToSync: files }, platform);
-				await this.promise;
-
-				if (data.useHotModuleReload && platformHmrData.hash) {
-					const devices = this.$previewDevicesService.getDevicesForPlatform(platform);
-
-					await Promise.all(_.map(devices, async (previewDevice: Device) => {
-						const status = await this.$hmrStatusService.getHmrStatus(previewDevice.id, platformHmrData.hash);
-						if (status === HmrConstants.HMR_ERROR_STATUS) {
-							const originalUseHotModuleReload = data.useHotModuleReload;
-							data.useHotModuleReload = false;
-							await this.syncFilesForPlatformSafe(data, { filesToSync: platformHmrData.fallbackFiles }, platform, previewDevice.id );
-							data.useHotModuleReload = originalUseHotModuleReload;
-						}
-					}));
-				}
-			});
 	}
 
 	private showWarningsForNativeFiles(files: string[]): void {

@@ -1,15 +1,21 @@
 import { ValidatePlatformCommandBase } from "./command-base";
-import { MainController } from "../controllers/main-controller";
+import { PrepareController } from "../controllers/prepare-controller";
+import { PrepareDataService } from "../services/prepare-data-service";
 
 export class PrepareCommand extends ValidatePlatformCommandBase implements ICommand {
 	public allowedParameters = [this.$platformCommandParameter];
 
+	public dashedOptions = {
+		watch: { type: OptionType.Boolean, default: false, hasSensitiveValue: false },
+	};
+
 	constructor($options: IOptions,
-		private $mainController: MainController,
+		private $prepareController: PrepareController,
 		$platformValidationService: IPlatformValidationService,
 		$projectData: IProjectData,
 		private $platformCommandParameter: ICommandParameter,
-		$platformsData: IPlatformsData) {
+		$platformsData: IPlatformsData,
+		private $prepareDataService: PrepareDataService) {
 			super($options, $platformsData, $platformValidationService, $projectData);
 			this.$projectData.initializeProjectData();
 	}
@@ -17,7 +23,8 @@ export class PrepareCommand extends ValidatePlatformCommandBase implements IComm
 	public async execute(args: string[]): Promise<void> {
 		const platform = args[0];
 
-		await this.$mainController.preparePlatform(platform, this.$projectData.projectDir, this.$options);
+		const prepareData = this.$prepareDataService.getPrepareData(this.$projectData.projectDir, platform, this.$options);
+		await this.$prepareController.preparePlatform(prepareData);
 	}
 
 	public async canExecute(args: string[]): Promise<boolean | ICanExecuteCommandOutput> {

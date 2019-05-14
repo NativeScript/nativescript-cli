@@ -8,7 +8,7 @@ const unitTestsPluginName = "nativescript-unit-test-runner";
 function getTestExecutionService(): ITestExecutionService {
 	const injector = new InjectorStub();
 	injector.register("testExecutionService", TestExecutionService);
-	injector.register("mainController", {});
+	injector.register("runOnDevicesController", {});
 
 	return injector.resolve("testExecutionService");
 }

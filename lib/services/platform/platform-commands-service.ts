@@ -2,12 +2,12 @@ import * as path from "path";
 import * as semver from "semver";
 import * as temp from "temp";
 import * as constants from "../../constants";
-import { AddPlatformService } from "./add-platform-service";
 import { PlatformValidationService } from "./platform-validation-service";
+import { AddPlatformController } from "../../controllers/add-platform-controller";
 
 export class PlatformCommandsService implements IPlatformCommandsService {
 	constructor(
-		private $addPlatformService: AddPlatformService,
+		private $addPlatformController: AddPlatformController,
 		private $fs: IFileSystem,
 		private $errors: IErrors,
 		private $logger: ILogger,
@@ -32,8 +32,11 @@ export class PlatformCommandsService implements IPlatformCommandsService {
 				this.$errors.failWithoutHelp(`Platform ${platform} already added`);
 			}
 
-			const addPlatformData = { platformParam: platform.toLowerCase(), frameworkPath };
-			await this.$addPlatformService.addPlatform(projectData, addPlatformData);
+			await this.$addPlatformController.addPlatform({
+				projectDir: projectData.projectDir,
+				platform,
+				frameworkPath,
+			});
 		}
 	}
 
@@ -85,7 +88,10 @@ export class PlatformCommandsService implements IPlatformCommandsService {
 			if (hasPlatformDirectory) {
 				await this.updatePlatform(platform, version, projectData);
 			} else {
-				await this.$addPlatformService.addPlatform(projectData, { platformParam });
+				await this.$addPlatformController.addPlatform({
+					projectDir: projectData.projectDir,
+					platform: platformParam,
+				});
 			}
 		}
 	}
@@ -168,8 +174,10 @@ export class PlatformCommandsService implements IPlatformCommandsService {
 		let packageName = platformData.normalizedPlatformName.toLowerCase();
 		await this.removePlatforms([packageName], projectData);
 		packageName = updateOptions.newVersion ? `${packageName}@${updateOptions.newVersion}` : packageName;
-		const addPlatformData = { platformParam: packageName, frameworkPath: <any>null, nativePrepare: <any>null};
-		await this.$addPlatformService.addPlatform(projectData, addPlatformData);
+		await this.$addPlatformController.addPlatform({
+			projectDir: projectData.projectDir,
+			platform: packageName
+		});
 		this.$logger.out("Successfully updated to version ", updateOptions.newVersion);
 	}
 

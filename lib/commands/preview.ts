@@ -1,4 +1,5 @@
 import { DEVICE_LOG_EVENT_NAME } from "../common/constants";
+import { PreviewAppController } from "../controllers/preview-app-controller";
 
 export class PreviewCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
@@ -8,7 +9,7 @@ export class PreviewCommand implements ICommand {
 		private $bundleValidatorHelper: IBundleValidatorHelper,
 		private $errors: IErrors,
 		private $logger: ILogger,
-		private $previewAppLiveSyncService: IPreviewAppLiveSyncService,
+		private $previewAppController: PreviewAppController,
 		private $networkConnectivityValidator: INetworkConnectivityValidator,
 		private $projectData: IProjectData,
 		private $options: IOptions,
@@ -24,7 +25,7 @@ export class PreviewCommand implements ICommand {
 			this.$logger.info(message);
 		});
 
-		await this.$previewAppLiveSyncService.initialize({
+		await this.$previewAppController.preview({
 			projectDir: this.$projectData.projectDir,
 			useHotModuleReload: this.$options.hmr,
 			env: this.$options.env

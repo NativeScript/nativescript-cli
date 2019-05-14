@@ -1,40 +1,29 @@
+
+import { hook } from "../../common/helpers";
 import { performanceLog } from "../../common/decorators";
-import { PreparePlatformData } from "../workflow/workflow-data-service";
 import * as path from "path";
 import { NativePlatformStatus, APP_FOLDER_NAME, APP_RESOURCES_FOLDER_NAME } from "../../constants";
+import { PrepareData } from "../../data/prepare-data";
 
-export class PreparePlatformService {
+export class PrepareNativePlatformService {
+
 	constructor(
 		private $androidResourcesMigrationService: IAndroidResourcesMigrationService,
 		private $fs: IFileSystem,
-		private $logger: ILogger,
+		public $hooksService: IHooksService,
 		private $nodeModulesBuilder: INodeModulesBuilder,
 		private $projectChangesService: IProjectChangesService,
-		private $webpackCompilerService: IWebpackCompilerService,
 	) { }
 
 	@performanceLog()
-	public async preparePlatform(platformData: IPlatformData, projectData: IProjectData, preparePlatformData: PreparePlatformData): Promise<boolean> {
-		this.$logger.out("Preparing project...");
-
-		await this.$webpackCompilerService.compileWithoutWatch(platformData, projectData, { watch: false, env: preparePlatformData.env });
-		await this.prepareNativePlatform(platformData, projectData, preparePlatformData);
-
-		this.$projectChangesService.savePrepareInfo(platformData);
-
-		this.$logger.out(`Project successfully prepared (${platformData.platformNameLowerCase})`);
-
-		return true;
-	}
-
-	@performanceLog()
-	public async prepareNativePlatform(platformData: IPlatformData, projectData: IProjectData, preparePlatformData: PreparePlatformData): Promise<boolean> {
-		const { nativePrepare, release } = preparePlatformData;
+	@hook('prepareNativeApp')
+	public async prepareNativePlatform(platformData: IPlatformData, projectData: IProjectData, prepareData: PrepareData): Promise<boolean> {
+		const { nativePrepare, release } = prepareData;
 		if (nativePrepare && nativePrepare.skipNativePrepare) {
 			return false;
 		}
 
-		const changesInfo = await this.$projectChangesService.checkForChanges(platformData, projectData, preparePlatformData);
+		const changesInfo = await this.$projectChangesService.checkForChanges(platformData, projectData, prepareData);
 
 		const hasModulesChange = !changesInfo || changesInfo.modulesChanged;
 		const hasConfigChange = !changesInfo || changesInfo.configChanged;
@@ -52,7 +41,7 @@ export class PreparePlatformService {
 		this.prepareAppResources(platformData, projectData);
 
 		if (hasChangesRequirePrepare) {
-			await platformData.platformProjectService.prepareProject(projectData, preparePlatformData);
+			await platformData.platformProjectService.prepareProject(projectData, prepareData);
 		}
 
 		if (hasModulesChange) {
@@ -64,7 +53,7 @@ export class PreparePlatformService {
 			await platformData.platformProjectService.handleNativeDependenciesChange(projectData, { release });
 		}
 
-		platformData.platformProjectService.interpolateConfigurationFile(projectData, preparePlatformData);
+		platformData.platformProjectService.interpolateConfigurationFile(projectData);
 		this.$projectChangesService.setNativePlatformStatus(platformData, { nativePlatformStatus: NativePlatformStatus.alreadyPrepared });
 
 		return hasChanges;
@@ -126,4 +115,4 @@ export class PreparePlatformService {
 		}
 	}
 }
-$injector.register("preparePlatformService", PreparePlatformService);
+$injector.register("prepareNativePlatformService", PrepareNativePlatformService);

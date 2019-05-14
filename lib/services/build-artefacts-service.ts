@@ -1,5 +1,4 @@
 import * as path from "path";
-import { BuildPlatformDataBase } from "./workflow/workflow-data-service";
 
 export class BuildArtefactsService {
 	constructor(
@@ -8,9 +7,9 @@ export class BuildArtefactsService {
 		private $logger: ILogger
 	) { }
 
-	public async getLatestApplicationPackagePath(platformData: IPlatformData, buildPlatformData: BuildPlatformDataBase, outputPath?: string): Promise<string> {
-		outputPath = outputPath || platformData.getBuildOutputPath(buildPlatformData);
-		const applicationPackage = this.getLatestApplicationPackage(outputPath, platformData.getValidBuildOutputData(buildPlatformData));
+	public async getLatestApplicationPackagePath(platformData: IPlatformData, buildOutputOptions: IBuildOutputOptions): Promise<string> {
+		const outputPath = buildOutputOptions.outputPath || platformData.getBuildOutputPath(buildOutputOptions);
+		const applicationPackage = this.getLatestApplicationPackage(outputPath, platformData.getValidBuildOutputData(buildOutputOptions));
 		const packageFile = applicationPackage.packageName;
 
 		if (!packageFile || !this.$fs.exists(packageFile)) {
@@ -39,6 +38,24 @@ export class BuildArtefactsService {
 		}
 
 		return [];
+	}
+
+	public copyLastOutput(targetPath: string, platformData: IPlatformData, buildOutputOptions: IBuildOutputOptions): void {
+		targetPath = path.resolve(targetPath);
+
+		const outputPath = buildOutputOptions.outputPath || platformData.getBuildOutputPath(buildOutputOptions);
+		const applicationPackage = this.getLatestApplicationPackage(outputPath, platformData.getValidBuildOutputData(buildOutputOptions));
+		const packageFile = applicationPackage.packageName;
+
+		this.$fs.ensureDirectoryExists(path.dirname(targetPath));
+
+		if (this.$fs.exists(targetPath) && this.$fs.getFsStats(targetPath).isDirectory()) {
+			const sourceFileName = path.basename(packageFile);
+			this.$logger.trace(`Specified target path: '${targetPath}' is directory. Same filename will be used: '${sourceFileName}'.`);
+			targetPath = path.join(targetPath, sourceFileName);
+		}
+		this.$fs.copyFile(packageFile, targetPath);
+		this.$logger.info(`Copied file '${packageFile}' to '${targetPath}'.`);
 	}
 
 	private getLatestApplicationPackage(buildOutputPath: string, validBuildOutputData: IValidBuildOutputData): IApplicationPackage {

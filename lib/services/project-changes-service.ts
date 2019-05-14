@@ -1,7 +1,7 @@
 import * as path from "path";
 import { NODE_MODULES_FOLDER_NAME, NativePlatformStatus, PACKAGE_JSON_FILE_NAME, APP_GRADLE_FILE_NAME, BUILD_XCCONFIG_FILE_NAME } from "../constants";
 import { getHash, hook } from "../common/helpers";
-import { PreparePlatformData } from "./workflow/workflow-data-service";
+import { PrepareData } from "../data/prepare-data";
 
 const prepareInfoFileName = ".nsprepareinfo";
 
@@ -55,9 +55,9 @@ export class ProjectChangesService implements IProjectChangesService {
 	}
 
 	@hook("checkForChanges")
-	public async checkForChanges(platformData: IPlatformData, projectData: IProjectData, preparePlatformData: PreparePlatformData): Promise<IProjectChangesInfo> {
+	public async checkForChanges(platformData: IPlatformData, projectData: IProjectData, prepareData: PrepareData): Promise<IProjectChangesInfo> {
 		this._changesInfo = new ProjectChangesInfo();
-		const isNewPrepareInfo = await this.ensurePrepareInfo(platformData, projectData, preparePlatformData);
+		const isNewPrepareInfo = await this.ensurePrepareInfo(platformData, projectData, prepareData);
 		if (!isNewPrepareInfo) {
 			this._newFiles = 0;
 
@@ -94,16 +94,16 @@ export class ProjectChangesService implements IProjectChangesService {
 			this.$logger.trace(`Set value of configChanged to ${this._changesInfo.configChanged}`);
 		}
 
-		if (!preparePlatformData.nativePrepare || !preparePlatformData.nativePrepare.skipNativePrepare) {
-			await platformData.platformProjectService.checkForChanges(this._changesInfo, preparePlatformData, projectData);
+		if (!prepareData.nativePrepare || !prepareData.nativePrepare.skipNativePrepare) {
+			await platformData.platformProjectService.checkForChanges(this._changesInfo, prepareData, projectData);
 		}
 
-		if (preparePlatformData.release !== this._prepareInfo.release) {
-			this.$logger.trace(`Setting all setting to true. Current options are: `, preparePlatformData, " old prepare info is: ", this._prepareInfo);
+		if (prepareData.release !== this._prepareInfo.release) {
+			this.$logger.trace(`Setting all setting to true. Current options are: `, prepareData, " old prepare info is: ", this._prepareInfo);
 			this._changesInfo.appResourcesChanged = true;
 			this._changesInfo.modulesChanged = true;
 			this._changesInfo.configChanged = true;
-			this._prepareInfo.release = preparePlatformData.release;
+			this._prepareInfo.release = prepareData.release;
 		}
 		if (this._changesInfo.packageChanged) {
 			this.$logger.trace("Set modulesChanged to true as packageChanged is true");
@@ -167,7 +167,7 @@ export class ProjectChangesService implements IProjectChangesService {
 		this.savePrepareInfo(platformData);
 	}
 
-	private async ensurePrepareInfo(platformData: IPlatformData, projectData: IProjectData, preparePlatformData: PreparePlatformData): Promise<boolean> {
+	private async ensurePrepareInfo(platformData: IPlatformData, projectData: IProjectData, prepareData: PrepareData): Promise<boolean> {
 		this._prepareInfo = this.getPrepareInfo(platformData);
 		if (this._prepareInfo) {
 			const prepareInfoFile = path.join(platformData.projectRoot, prepareInfoFileName);
@@ -176,12 +176,12 @@ export class ProjectChangesService implements IProjectChangesService {
 			return false;
 		}
 
-		const nativePlatformStatus = (!preparePlatformData.nativePrepare || !preparePlatformData.nativePrepare.skipNativePrepare) ?
+		const nativePlatformStatus = (!prepareData.nativePrepare || !prepareData.nativePrepare.skipNativePrepare) ?
 			NativePlatformStatus.requiresPrepare : NativePlatformStatus.requiresPlatformAdd;
 		this._prepareInfo = {
 			time: "",
 			nativePlatformStatus,
-			release: preparePlatformData.release,
+			release: prepareData.release,
 			changesRequireBuild: true,
 			projectFileHash: this.getProjectFileStrippedHash(projectData.projectDir, platformData),
 			changesRequireBuildTime: null

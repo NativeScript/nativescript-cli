@@ -1,6 +1,7 @@
 import { ANDROID_RELEASE_BUILD_ERROR_MESSAGE, AndroidAppBundleMessages } from "../constants";
 import { ValidatePlatformCommandBase } from "./command-base";
-import { MainController } from "../controllers/main-controller";
+import { BuildController } from "../controllers/build-controller";
+import { BuildDataService } from "../services/build-data-service";
 
 export abstract class BuildCommandBase extends ValidatePlatformCommandBase {
 	constructor($options: IOptions,
@@ -8,17 +9,23 @@ export abstract class BuildCommandBase extends ValidatePlatformCommandBase {
 		$projectData: IProjectData,
 		$platformsData: IPlatformsData,
 		protected $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-		protected $mainController: MainController,
+		protected $buildController: BuildController,
 		$platformValidationService: IPlatformValidationService,
 		private $bundleValidatorHelper: IBundleValidatorHelper,
+		private $buildDataService: BuildDataService,
 		protected $logger: ILogger) {
 			super($options, $platformsData, $platformValidationService, $projectData);
 			this.$projectData.initializeProjectData();
 	}
 
+	public dashedOptions = {
+		watch: { type: OptionType.Boolean, default: false, hasSensitiveValue: false },
+	};
+
 	public async executeCore(args: string[]): Promise<string> {
 		const platform = args[0].toLowerCase();
-		const outputPath = await this.$mainController.buildPlatform(platform, this.$projectData.projectDir, this.$options);
+		const buildData = this.$buildDataService.getBuildData(this.$projectData.projectDir, platform, this.$options);
+		const outputPath = await this.$buildController.prepareAndBuildPlatform(buildData);
 
 		return outputPath;
 	}
@@ -57,11 +64,12 @@ export class BuildIosCommand extends BuildCommandBase implements ICommand {
 		$projectData: IProjectData,
 		$platformsData: IPlatformsData,
 		$devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-		$mainController: MainController,
+		$buildController: BuildController,
 		$platformValidationService: IPlatformValidationService,
 		$bundleValidatorHelper: IBundleValidatorHelper,
-		$logger: ILogger) {
-			super($options, $errors, $projectData, $platformsData, $devicePlatformsConstants, $mainController, $platformValidationService, $bundleValidatorHelper, $logger);
+		$logger: ILogger,
+		$buildDataService: BuildDataService) {
+			super($options, $errors, $projectData, $platformsData, $devicePlatformsConstants, $buildController, $platformValidationService, $bundleValidatorHelper, $buildDataService, $logger);
 	}
 
 	public async execute(args: string[]): Promise<void> {
@@ -92,12 +100,13 @@ export class BuildAndroidCommand extends BuildCommandBase implements ICommand {
 		$projectData: IProjectData,
 		$platformsData: IPlatformsData,
 		$devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-		$mainController: MainController,
+		$buildController: BuildController,
 		$platformValidationService: IPlatformValidationService,
 		$bundleValidatorHelper: IBundleValidatorHelper,
 		protected $androidBundleValidatorHelper: IAndroidBundleValidatorHelper,
+		$buildDataService: BuildDataService,
 		protected $logger: ILogger) {
-			super($options, $errors, $projectData, $platformsData, $devicePlatformsConstants, $mainController, $platformValidationService, $bundleValidatorHelper, $logger);
+			super($options, $errors, $projectData, $platformsData, $devicePlatformsConstants, $buildController, $platformValidationService, $bundleValidatorHelper, $buildDataService, $logger);
 	}
 
 	public async execute(args: string[]): Promise<void> {

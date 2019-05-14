@@ -33,13 +33,11 @@ $injector.require("projectNameService", "./services/project-name-service");
 $injector.require("tnsModulesService", "./services/tns-modules-service");
 
 $injector.require("platformsData", "./platforms-data");
-$injector.require("platformService", "./services/platform-service");
 $injector.require("addPlatformService", "./services/platform/add-platform-service");
-$injector.require("buildPlatformService", "./services/platform/build-platform-service");
-$injector.require("preparePlatformService", "./services/platform/prepare-platform-service");
+$injector.require("buildInfoFileService", "./services/build-info-file-service");
+$injector.require("prepareNativePlatformService", "./services/platform/prepare-native-platform-service");
 $injector.require("platformValidationService", "./services/platform/platform-validation-service");
 $injector.require("platformCommandsService", "./services/platform/platform-commands-service");
-$injector.require("platformWatcherService", "./services/platform/platform-watcher-service");
 
 $injector.require("buildArtefactsService", "./services/build-artefacts-service");
 
@@ -47,12 +45,20 @@ $injector.require("deviceDebugAppService", "./services/device/device-debug-app-s
 $injector.require("deviceInstallAppService", "./services/device/device-install-app-service");
 $injector.require("deviceRefreshAppService", "./services/device/device-refresh-app-service");
 
-$injector.require("workflowDataService", "./services/workflow/workflow-data-service");
 $injector.require("runOnDevicesDataService", "./services/run-on-devices-data-service");
-$injector.require("runOnDevicesEmitter", "./run-on-devices-emitter");
 
-$injector.require("mainController", "./controllers/main-controller");
+$injector.require("runOnDevicesEmitter", "./run-on-devices-emitter");
+$injector.require("previewAppEmitter", "./preview-app-emitter");
+
+$injector.require("addPlatformController", "./controllers/add-platform-controller");
+$injector.require("prepareController", "./controllers/prepare-controller");
+$injector.require("buildController", "./controllers/build-controller");
+$injector.require("deployOnDevicesController", "./controllers/deploy-on-devices-controller");
 $injector.require("runOnDevicesController", "./controllers/run-on-devices-controller");
+$injector.require("previewAppController", "./controllers/preview-app-controller");
+
+$injector.require("prepareDataService", "./services/prepare-data-service");
+$injector.require("buildDataService", "./services/build-data-service");
 
 $injector.require("liveSyncServiceResolver", "./resolvers/livesync-service-resolver");
 

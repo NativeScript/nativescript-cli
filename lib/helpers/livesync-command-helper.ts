@@ -1,5 +1,5 @@
-import { BuildPlatformService } from "../services/platform/build-platform-service";
-import { MainController } from "../controllers/main-controller";
+import { RunOnDevicesController } from "../controllers/run-on-devices-controller";
+import { BuildController } from "../controllers/build-controller";
 
 export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 	public static MIN_SUPPORTED_WEBPACK_VERSION_WITH_HMR = "0.17.0";
@@ -7,12 +7,12 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 	constructor(
 		private $projectData: IProjectData,
 		private $options: IOptions,
-		private $mainController: MainController,
+		private $runOnDevicesController: RunOnDevicesController,
 		private $iosDeviceOperations: IIOSDeviceOperations,
 		private $mobileHelper: Mobile.IMobileHelper,
 		private $devicesService: Mobile.IDevicesService,
 		private $injector: IInjector,
-		private $buildPlatformService: BuildPlatformService,
+		private $buildController: BuildController,
 		private $analyticsService: IAnalyticsService,
 		private $bundleValidatorHelper: IBundleValidatorHelper,
 		private $errors: IErrors,
@@ -96,7 +96,7 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 
 				const buildAction = additionalOptions && additionalOptions.buildPlatform ?
 					additionalOptions.buildPlatform.bind(additionalOptions.buildPlatform, d.deviceInfo.platform, buildConfig, this.$projectData) :
-					this.$buildPlatformService.buildPlatform.bind(this.$buildPlatformService, d.deviceInfo.platform, buildConfig, this.$projectData);
+					this.$buildController.prepareAndBuildPlatform.bind(this.$buildController, d.deviceInfo.platform, buildConfig, this.$projectData);
 
 				const outputPath = additionalOptions && additionalOptions.getOutputDirectory && additionalOptions.getOutputDirectory({
 					platform: d.deviceInfo.platform,
@@ -150,7 +150,11 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 			// return;
 		// }
 
-		await this.$mainController.runOnDevices(this.$projectData.projectDir, deviceDescriptors, liveSyncInfo);
+		await this.$runOnDevicesController.runOnDevices({
+			projectDir: this.$projectData.projectDir,
+			liveSyncInfo,
+			deviceDescriptors
+		});
 
 		// const remainingDevicesToSync = devices.map(d => d.deviceInfo.identifier);
 		// this.$liveSyncService.on(LiveSyncEvents.liveSyncStopped, (data: { projectDir: string, deviceIdentifier: string }) => {

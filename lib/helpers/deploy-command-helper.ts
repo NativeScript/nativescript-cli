@@ -1,11 +1,11 @@
-import { BuildPlatformService } from "../services/platform/build-platform-service";
-import { MainController } from "../controllers/main-controller";
+import { DeployOnDevicesController } from "../controllers/deploy-on-devices-controller";
+import { BuildController } from "../controllers/build-controller";
 
 export class DeployCommandHelper {
 	constructor(
-		private $buildPlatformService: BuildPlatformService,
+		private $buildController: BuildController,
 		private $devicesService: Mobile.IDevicesService,
-		private $mainController: MainController,
+		private $deployOnDevicesController: DeployOnDevicesController,
 		private $options: IOptions,
 		private $projectData: IProjectData
 	) { }
@@ -42,7 +42,7 @@ export class DeployCommandHelper {
 
 				const buildAction = additionalOptions && additionalOptions.buildPlatform ?
 					additionalOptions.buildPlatform.bind(additionalOptions.buildPlatform, d.deviceInfo.platform, buildConfig, this.$projectData) :
-					this.$buildPlatformService.buildPlatform.bind(this.$buildPlatformService, d.deviceInfo.platform, buildConfig, this.$projectData);
+					this.$buildController.prepareAndBuildPlatform.bind(this.$buildController, d.deviceInfo.platform, buildConfig, this.$projectData);
 
 				const outputPath = additionalOptions && additionalOptions.getOutputDirectory && additionalOptions.getOutputDirectory({
 					platform: d.deviceInfo.platform,
@@ -74,7 +74,11 @@ export class DeployCommandHelper {
 			emulator: this.$options.emulator
 		};
 
-		await this.$mainController.deployOnDevices(this.$projectData.projectDir, deviceDescriptors, liveSyncInfo);
+		await this.$deployOnDevicesController.deployOnDevices({
+			projectDir: this.$projectData.projectDir,
+			liveSyncInfo,
+			deviceDescriptors
+		});
 	}
 }
 $injector.register("deployCommandHelper", DeployCommandHelper);

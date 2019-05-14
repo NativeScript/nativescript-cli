@@ -3,9 +3,8 @@ import { EventEmitter } from "events";
 
 declare global {
 	interface IPreviewAppLiveSyncService extends EventEmitter {
-		initialize(data: IPreviewAppLiveSyncData): void;
 		syncFiles(data: IPreviewAppLiveSyncData, filesToSync: string[], filesToRemove: string[]): Promise<void>;
-		stopLiveSync(): Promise<void>;
+		syncFilesForPlatformSafe(data: IPreviewAppLiveSyncData, filesData: IPreviewAppFilesData, platform: string, deviceId?: string): Promise<void>;
 	}
 
 	interface IPreviewAppFilesService {

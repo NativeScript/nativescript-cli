@@ -139,7 +139,7 @@ function createTestInjector() {
 	testInjector.register("devicePlatformsConstants", DevicePlatformsConstants);
 	testInjector.register("xmlValidator", XmlValidator);
 	testInjector.register("npm", {});
-	testInjector.register("preparePlatformService", {});
+	testInjector.register("prepareNativePlatformService", {});
 	testInjector.register("childProcess", ChildProcessLib.ChildProcess);
 	testInjector.register("projectChangesService", ProjectChangesLib.ProjectChangesService);
 	testInjector.register("analyticsService", {
@@ -185,6 +185,7 @@ function createTestInjector() {
 		setShouldDispose: (shouldDispose: boolean): void => undefined
 	});
 	testInjector.register("addPlatformService", {});
+	testInjector.register("addPlatformController", {});
 
 	return testInjector;
 }

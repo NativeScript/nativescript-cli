@@ -1,5 +1,6 @@
 import { EventEmitter } from "events";
-import { PreparePlatformData, BuildPlatformDataBase, WorkflowData } from "../workflow/workflow-data-service";
+import { BuildData } from "../../data/build-data";
+import { PrepareData } from "../../data/prepare-data";
 
 declare global {
 	interface IWebpackCompilerService extends EventEmitter {
@@ -17,7 +18,7 @@ declare global {
 	}
 
 	interface IProjectChangesService {
-		checkForChanges(platformData: IPlatformData, projectData: IProjectData, preparePlatformData: PreparePlatformData): Promise<IProjectChangesInfo>;
+		checkForChanges(platformData: IPlatformData, projectData: IProjectData, prepareData: PrepareData): Promise<IProjectChangesInfo>;
 		getPrepareInfoFilePath(platformData: IPlatformData): string;
 		getPrepareInfo(platformData: IPlatformData): IPrepareInfo;
 		savePrepareInfo(platformData: IPlatformData): void;
@@ -32,7 +33,7 @@ declare global {
 		hasNativeChanges: boolean;
 	}
 
-	interface IInitialSyncEventData {
+	interface IPrepareOutputData {
 		platform: string;
 		hasNativeChanges: boolean;
 	}
@@ -44,9 +45,9 @@ declare global {
 	interface IPlatformProjectService extends NodeJS.EventEmitter, IPlatformProjectServiceBase {
 		getPlatformData(projectData: IProjectData): IPlatformData;
 		validate(projectData: IProjectData, options: IOptions, notConfiguredEnvOptions?: INotConfiguredEnvOptions): Promise<IValidatePlatformOutput>;
-		createProject(frameworkDir: string, frameworkVersion: string, projectData: IProjectData, config: ICreateProjectOptions): Promise<void>;
-		interpolateData(projectData: IProjectData, platformSpecificData: IPlatformSpecificData): Promise<void>;
-		interpolateConfigurationFile<T extends PreparePlatformData>(projectData: IProjectData, preparePlatformData: PreparePlatformData): void;
+		createProject(frameworkDir: string, frameworkVersion: string, projectData: IProjectData): Promise<void>;
+		interpolateData(projectData: IProjectData): Promise<void>;
+		interpolateConfigurationFile(projectData: IProjectData): void;
 
 		/**
 		 * Executes additional actions after native project is created.
@@ -64,7 +65,7 @@ declare global {
 		 */
 		validateOptions(projectId?: string, provision?: true | string, teamId?: true | string): Promise<boolean>;
 
-		buildProject<T extends BuildPlatformDataBase>(projectRoot: string, projectData: IProjectData, buildConfig: T): Promise<void>;
+		buildProject<T extends BuildData>(projectRoot: string, projectData: IProjectData, buildConfig: T): Promise<void>;
 
 		/**
 		 * Prepares images in Native project (for iOS).
@@ -72,7 +73,7 @@ declare global {
 		 * @param {any} platformSpecificData Platform specific data required for project preparation.
 		 * @returns {void}
 		 */
-		prepareProject<T extends PreparePlatformData>(projectData: IProjectData, preparePlatformData: T): Promise<void>;
+		prepareProject<T extends PrepareData>(projectData: IProjectData, prepareData: T): Promise<void>;
 
 		/**
 		 * Prepares App_Resources in the native project by clearing data from other platform and applying platform specific rules.
@@ -148,7 +149,7 @@ declare global {
 		 * Check the current state of the project, and validate against the options.
 		 * If there are parts in the project that are inconsistent with the desired options, marks them in the changeset flags.
 		 */
-		checkForChanges<T extends PreparePlatformData>(changeset: IProjectChangesInfo, preparePlatformData: T, projectData: IProjectData): Promise<void>;
+		checkForChanges<T extends PrepareData>(changeset: IProjectChangesInfo, prepareData: T, projectData: IProjectData): Promise<void>;
 
 		/**
 		 * Get the deployment target's version

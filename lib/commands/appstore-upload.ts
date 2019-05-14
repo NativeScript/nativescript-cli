@@ -1,8 +1,7 @@
 import * as path from "path";
 import { StringCommandParameter } from "../common/command-params";
-import { BuildPlatformService } from "../services/platform/build-platform-service";
-import { WorkflowDataService } from "../services/workflow/workflow-data-service";
-import { MainController } from "../controllers/main-controller";
+import { BuildController } from "../controllers/build-controller";
+import { IOSBuildData } from "../data/build-data";
 
 export class PublishIOS implements ICommand {
 	public allowedParameters: ICommandParameter[] = [new StringCommandParameter(this.$injector), new StringCommandParameter(this.$injector),
@@ -16,10 +15,8 @@ export class PublishIOS implements ICommand {
 		private $options: IOptions,
 		private $prompter: IPrompter,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-		private $mainController: MainController,
-		private $platformValidationService: IPlatformValidationService,
-		private $buildPlatformService: BuildPlatformService,
-		private $workflowDataService: WorkflowDataService
+		private $buildController: BuildController,
+		private $platformValidationService: IPlatformValidationService
 	) {
 		this.$projectData.initializeProjectData();
 	}
@@ -59,11 +56,12 @@ export class PublishIOS implements ICommand {
 				// As we need to build the package for device
 				this.$options.forDevice = true;
 
-				const { nativePlatformData, buildPlatformData } = this.$workflowDataService.createWorkflowData(platform, this.$projectData.projectDir, this.$options);
-				ipaFilePath = await this.$buildPlatformService.buildPlatform(nativePlatformData, this.$projectData, buildPlatformData);
+				const buildData = new IOSBuildData(this.$projectData.projectDir, platform, this.$options);
+				ipaFilePath = await this.$buildController.prepareAndBuildPlatform(buildData);
 			} else {
 				this.$logger.info("No .ipa, mobile provision or certificate set. Perfect! Now we'll build .xcarchive and let Xcode pick the distribution certificate and provisioning profile for you when exporting .ipa for AppStore submission.");
-				ipaFilePath = await this.$mainController.buildPlatform(platform, this.$projectData.projectDir, { ...this.$options, buildForAppStore: true });
+				const buildData = new IOSBuildData(this.$projectData.projectDir, platform, { ...this.$options, buildForAppStore: true });
+				ipaFilePath = await this.$buildController.prepareAndBuildPlatform(buildData);
 				this.$logger.info(`Export at: ${ipaFilePath}`);
 			}
 		}

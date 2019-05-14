@@ -1,7 +1,7 @@
 import * as constants from "../constants";
 import * as path from 'path';
 import * as os from 'os';
-import { MainController } from "../controllers/main-controller";
+import { RunOnDevicesController } from "../controllers/run-on-devices-controller";
 
 interface IKarmaConfigOptions {
 	debugBrk: boolean;
@@ -13,7 +13,7 @@ export class TestExecutionService implements ITestExecutionService {
 	private static SOCKETIO_JS_FILE_NAME = `node_modules/${constants.TEST_RUNNER_NAME}/socket.io.js`;
 
 	constructor(
-		private $mainController: MainController,
+		private $runOnDevicesController: RunOnDevicesController,
 		private $httpClient: Server.IHttpClient,
 		private $config: IConfiguration,
 		private $logger: ILogger,
@@ -56,7 +56,11 @@ export class TestExecutionService implements ITestExecutionService {
 				// Prepare the project AFTER the TestExecutionService.CONFIG_FILE_NAME file is created in node_modules
 				// so it will be sent to device.
 
-				await this.$mainController.runOnDevices(liveSyncInfo.projectDir, deviceDescriptors, liveSyncInfo);
+				await this.$runOnDevicesController.runOnDevices({
+					projectDir: liveSyncInfo.projectDir,
+					liveSyncInfo,
+					deviceDescriptors
+				});
 			};
 
 		karmaRunner.on("message",  (karmaData: any) => {

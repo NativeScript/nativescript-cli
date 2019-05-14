@@ -6,7 +6,6 @@ import * as projectServiceBaseLib from "./platform-project-service-base";
 import { DeviceAndroidDebugBridge } from "../common/mobile/android/device-android-debug-bridge";
 import { Configurations, LiveSyncPaths } from "../common/constants";
 import { performanceLog } from ".././common/decorators";
-import { PreparePlatformData } from "./workflow/workflow-data-service";
 
 export class AndroidProjectService extends projectServiceBaseLib.PlatformProjectServiceBase {
 	private static VALUES_DIRNAME = "values";
@@ -51,8 +50,8 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 				appDestinationDirectoryPath: path.join(...appDestinationDirectoryArr),
 				platformProjectService: <any>this,
 				projectRoot: projectRoot,
-				getBuildOutputPath: (buildConfig: IBuildConfig) => {
-					if (buildConfig.androidBundle) {
+				getBuildOutputPath: (buildOptions: IBuildOutputOptions) => {
+					if (buildOptions.androidBundle) {
 						return path.join(projectRoot, constants.APP_FOLDER_NAME, constants.BUILD_DIR, constants.OUTPUTS_DIR, constants.BUNDLE_DIR);
 					}
 
@@ -130,7 +129,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		};
 	}
 
-	public async createProject(frameworkDir: string, frameworkVersion: string, projectData: IProjectData, config: ICreateProjectOptions): Promise<void> {
+	public async createProject(frameworkDir: string, frameworkVersion: string, projectData: IProjectData): Promise<void> {
 		if (semver.lt(frameworkVersion, AndroidProjectService.MIN_RUNTIME_VERSION_WITH_GRADLE)) {
 			this.$errors.failWithoutHelp(`The NativeScript CLI requires Android runtime ${AndroidProjectService.MIN_RUNTIME_VERSION_WITH_GRADLE} or later to work properly.`);
 		}
@@ -167,9 +166,9 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		_.map(directoriesToClean, dir => this.$fs.deleteDirectory(dir));
 	}
 
-	public async interpolateData(projectData: IProjectData, signingOptions: any): Promise<void> {
+	public async interpolateData(projectData: IProjectData): Promise<void> {
 		// Interpolate the apilevel and package
-		this.interpolateConfigurationFile(projectData, signingOptions);
+		this.interpolateConfigurationFile(projectData);
 		const appResourcesDirectoryPath = projectData.getAppResourcesDirectoryPath();
 
 		let stringsFilePath: string;
@@ -199,7 +198,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		}
 	}
 
-	public interpolateConfigurationFile(projectData: IProjectData, preparePlatformData: PreparePlatformData): void {
+	public interpolateConfigurationFile(projectData: IProjectData): void {
 		const manifestPath = this.getPlatformData(projectData).configurationFilePath;
 		shell.sed('-i', /__PACKAGE__/, projectData.projectIdentifiers.android, manifestPath);
 	}

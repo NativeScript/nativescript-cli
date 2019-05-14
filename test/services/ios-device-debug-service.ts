@@ -26,7 +26,6 @@ class IOSDeviceDebugServiceInheritor extends IOSDeviceDebugService {
 const createTestInjector = (): IInjector => {
 	const testInjector = new Yok();
 	testInjector.register("devicesService", {});
-	testInjector.register("platformService", {});
 	testInjector.register("iOSEmulatorServices", {});
 	testInjector.register("childProcess", {});
 

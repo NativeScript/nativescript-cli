@@ -1,11 +1,10 @@
 import { PublishIOS } from "../lib/commands/appstore-upload";
-import { PrompterStub, LoggerStub, ProjectDataStub } from "./stubs";
+import { PrompterStub, LoggerStub, ProjectDataStub, ProjectDataService } from "./stubs";
 import * as chai from "chai";
 import * as yok from "../lib/common/yok";
-import { BuildPlatformService } from "../lib/services/platform/build-platform-service";
-import { PreparePlatformService } from "../lib/services/platform/prepare-platform-service";
-import { MainController } from "../lib/controllers/main-controller";
-import { WorkflowDataService } from "../lib/services/workflow/workflow-data-service";
+import { PrepareNativePlatformService } from "../lib/services/platform/prepare-native-platform-service";
+import { BuildController } from "../lib/controllers/build-controller";
+import { IOSBuildData } from "../lib/data/build-data";
 
 class AppStore {
 	static itunesconnect = {
@@ -19,14 +18,12 @@ class AppStore {
 	options: any;
 	prompter: PrompterStub;
 	projectData: ProjectDataStub;
-	buildPlatformService: BuildPlatformService;
-	preparePlatformService: PreparePlatformService;
+	buildController: BuildController;
+	prepareNativePlatformService: PrepareNativePlatformService;
 	platformCommandsService: any;
 	platformValidationService: any;
-	mainController: MainController;
 	iOSPlatformData: any;
 	iOSProjectService: any;
-	workflowDataService: WorkflowDataService;
 	loggerService: LoggerStub;
 	itmsTransporterService: any;
 
@@ -59,13 +56,10 @@ class AppStore {
 				"devicePlatformsConstants": {
 					"iOS": "iOS"
 				},
-				"preparePlatformService": this.preparePlatformService = <any>{},
+				"prepareNativePlatformService": this.prepareNativePlatformService = <any>{},
 				"platformCommandsService": this.platformCommandsService = {},
 				"platformValidationService": this.platformValidationService = {},
-				"mainController": this.mainController = <any>{
-					buildPlatform: () => ({})
-				},
-				"buildPlatformService": this.buildPlatformService = <any>{
+				"buildController": this.buildController = <any>{
 					buildPlatform: async () => {
 						this.archiveCalls++;
 						return "/Users/person/git/MyProject/platforms/ios/archive/MyProject.ipa";
@@ -77,9 +71,9 @@ class AppStore {
 						return this.iOSPlatformData;
 					}
 				},
-				"workflowDataService": this.workflowDataService = <any>{},
 			}
 		});
+
 		this.projectData.initializeProjectData(this.iOSPlatformData.projectRoot);
 		this.command = this.injector.resolveCommand("appstore");
 	}
@@ -94,6 +88,8 @@ class AppStore {
 				this.injector.register(serv, services.services[serv]);
 			}
 		}
+
+		this.injector.register("projectDataService", ProjectDataService);
 	}
 
 	assert() {
@@ -111,10 +107,10 @@ class AppStore {
 
 	expectArchive() {
 		this.expectedArchiveCalls = 1;
-		this.mainController.buildPlatform = (platform: string, projectDir: string, options) => {
+		this.buildController.prepareAndBuildPlatform = (iOSBuildData: IOSBuildData) => {
 			this.archiveCalls++;
-			chai.assert.equal(projectDir, "/Users/person/git/MyProject");
-			chai.assert.isTrue(options.buildForAppStore);
+			chai.assert.equal(iOSBuildData.projectDir, "/Users/person/git/MyProject");
+			chai.assert.isTrue(iOSBuildData.buildForAppStore);
 			return Promise.resolve("/Users/person/git/MyProject/platforms/ios/archive/MyProject.ipa");
 		};
 	}

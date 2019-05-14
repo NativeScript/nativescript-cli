@@ -13,6 +13,10 @@ const projectData: any = {
 function createTestInjector() {
 	const injector = new InjectorStub();
 	injector.register("addPlatformService", {
+		addPlatform: () => ({})
+	});
+
+	injector.register("addPlatformController", {
 		addPlatform: () => isAddPlatformCalled = true
 	});
 

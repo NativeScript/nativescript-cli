@@ -9,7 +9,7 @@ import * as prompt from "inquirer";
 import { Yok } from "./../lib/common/yok";
 import { HostInfo } from "./../lib/common/host-info";
 import { DevicePlatformsConstants } from "./../lib/common/mobile/device-platforms-constants";
-import { PreparePlatformData } from "../lib/services/workflow/workflow-data-service";
+import { PrepareData } from "../lib/data/prepare-data";
 
 export class LoggerStub implements ILogger {
 	getLevel(): string { return undefined; }
@@ -517,6 +517,7 @@ export class ProjectDataService implements IProjectDataService {
 				ios: "org.nativescript.myiosApp",
 				android: "org.nativescript.myAndroidApp"
 			},
+			getAppResourcesRelativeDirectoryPath: () => "/path/to/my/projecDir/App_Resources"
 		};
 	}
 
@@ -741,7 +742,7 @@ export class ChildProcessStub extends EventEmitter {
 }
 
 export class ProjectChangesService implements IProjectChangesService {
-	public async checkForChanges(platformData: IPlatformData, projectData: IProjectData, preparePlatformData: PreparePlatformData): Promise<IProjectChangesInfo> {
+	public async checkForChanges(platformData: IPlatformData, projectData: IProjectData, prepareData: PrepareData): Promise<IProjectChangesInfo> {
 		return <IProjectChangesInfo>{};
 	}
 
@@ -811,6 +812,35 @@ export class PerformanceService implements IPerformanceService {
 	processExecutionData() { }
 }
 
+export class PacoteServiceStub implements IPacoteService {
+	public async manifest(packageName: string, options?: IPacoteManifestOptions): Promise<any> {
+		return "";
+	}
+	public async extractPackage(packageName: string, destinationDirectory: string, options?: IPacoteExtractOptions): Promise<void> { }
+}
+
+class TerminalSpinnerStub {
+	public text: string;
+	public start(text?: string): ITerminalSpinner { return this; }
+	public stop(): ITerminalSpinner { return this; }
+	public succeed(text?: string): ITerminalSpinner { return this; }
+	public fail(text?: string): ITerminalSpinner { return this; }
+	public warn(text?: string): ITerminalSpinner { return this; }
+	public info(text?: string): ITerminalSpinner { return this; }
+	public clear(): ITerminalSpinner { return this; }
+	public render(): ITerminalSpinner { return this; }
+	public frame(): ITerminalSpinner { return this; }
+}
+
+export class TerminalSpinnerServiceStub implements ITerminalSpinnerService {
+	public createSpinner(spinnerOptions?: ITerminalSpinnerOptions): ITerminalSpinner {
+		return new TerminalSpinnerStub();
+	}
+	public async execute<T>(spinnerOptions: ITerminalSpinnerOptions, action: () => Promise<T>): Promise<T> {
+		return null;
+	}
+}
+
 export class InjectorStub extends Yok implements IInjector {
 	constructor() {
 		super();
@@ -848,5 +878,6 @@ export class InjectorStub extends Yok implements IInjector {
 			getDevice: (): Mobile.IDevice => undefined,
 			getDeviceByIdentifier: (): Mobile.IDevice => undefined
 		});
+		this.register("terminalSpinnerService", TerminalSpinnerServiceStub);
 	}
 }

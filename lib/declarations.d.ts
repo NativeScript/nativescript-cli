@@ -465,10 +465,6 @@ interface INpmInstallConfigurationOptions extends INpmInstallConfigurationOption
 	disableNpmInstall: boolean;
 }
 
-interface ICreateProjectOptions extends INpmInstallConfigurationOptionsBase {
-	pathToTemplate?: string;
-}
-
 interface IGenerateOptions {
 	collection?: string;
 }

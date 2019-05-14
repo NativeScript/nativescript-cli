@@ -68,11 +68,6 @@ describe('androidPluginBuildService', () => {
 				return null;
 			}
 		});
-		testInjector.register('platformService', {
-			getCurrentPlatformVersion: (platform: string, projectData: IProjectData): string => {
-				return options.addProjectRuntime ? "1.0.0" : null;
-			}
-		});
 		testInjector.register('packageManager', setupNpm(options));
 		testInjector.register('filesHashService', <IFilesHashService>{
 			generateHashes: async (files: string[]): Promise<IStringDictionary> => ({}),

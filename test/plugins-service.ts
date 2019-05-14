@@ -37,7 +37,6 @@ import { PLUGINS_BUILD_DATA_FILENAME } from '../lib/constants';
 import { GradleCommandService } from '../lib/services/android/gradle-command-service';
 import { GradleBuildService } from '../lib/services/android/gradle-build-service';
 import { GradleBuildArgsService } from '../lib/services/android/gradle-build-args-service';
-import { PreparePlatformService } from '../lib/services/platform/prepare-platform-service';
 temp.track();
 
 let isErrorThrown = false;
@@ -57,7 +56,6 @@ function createTestInjector() {
 	testInjector.register("projectData", ProjectData);
 	testInjector.register("platforsmData", stubs.PlatformsDataStub);
 	testInjector.register("childProcess", ChildProcess);
-	testInjector.register("platformService", PreparePlatformService);
 	testInjector.register("platformsData", PlatformsData);
 	testInjector.register("androidEmulatorServices", {});
 	testInjector.register("androidToolsInfo", AndroidToolsInfo);

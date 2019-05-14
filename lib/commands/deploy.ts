@@ -21,7 +21,7 @@ export class DeployOnDeviceCommand extends ValidatePlatformCommandBase implement
 
 	public async execute(args: string[]): Promise<void> {
 		const platform = args[0].toLowerCase();
-		await this.$deployCommandHelper.deploy(platform, <any>{ release: true });
+		await this.$deployCommandHelper.deploy(platform);
 	}
 
 	public async canExecute(args: string[]): Promise<boolean | ICanExecuteCommandOutput> {

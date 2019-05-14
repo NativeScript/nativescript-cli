@@ -84,7 +84,7 @@ export class HooksService implements IHooksService {
 				results.push(await this.executeHooksInDirectory(hooksDirectory, hookName, hookArguments));
 			}
 		} catch (err) {
-			this.$logger.trace("Failed during hook execution.");
+			this.$logger.trace(`Failed during hook execution ${hookName}.`);
 			this.$errors.failWithoutHelp(err.message || err);
 		}
 
