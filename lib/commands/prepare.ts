@@ -14,9 +14,9 @@ export class PrepareCommand extends ValidatePlatformCommandBase implements IComm
 		$platformValidationService: IPlatformValidationService,
 		$projectData: IProjectData,
 		private $platformCommandParameter: ICommandParameter,
-		$platformsData: IPlatformsData,
+		$platformsDataService: IPlatformsDataService,
 		private $prepareDataService: PrepareDataService) {
-			super($options, $platformsData, $platformValidationService, $projectData);
+			super($options, $platformsDataService, $platformValidationService, $projectData);
 			this.$projectData.initializeProjectData();
 	}
 

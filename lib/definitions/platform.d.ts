@@ -42,7 +42,7 @@ interface IBuildOutputOptions extends Partial<IBuildForDevice>, IRelease, IHasAn
 	outputPath?: string;
 }
 
-interface IPlatformsData {
+interface IPlatformsDataService {
 	availablePlatforms: any;
 	platformsNames: string[];
 	getPlatformData(platform: string, projectData: IProjectData): IPlatformData;

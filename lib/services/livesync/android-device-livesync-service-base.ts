@@ -2,11 +2,11 @@ import { DeviceLiveSyncServiceBase } from './device-livesync-service-base';
 
 export abstract class AndroidDeviceLiveSyncServiceBase extends DeviceLiveSyncServiceBase {
 	constructor(protected $injector: IInjector,
-		protected $platformsData: IPlatformsData,
+		protected $platformsDataService: IPlatformsDataService,
 		protected $filesHashService: IFilesHashService,
 		protected $logger: ILogger,
 		protected device: Mobile.IAndroidDevice) {
-			super($platformsData, device);
+			super($platformsDataService, device);
 	}
 
 	public abstract async transferFilesOnDevice(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]): Promise<void>;

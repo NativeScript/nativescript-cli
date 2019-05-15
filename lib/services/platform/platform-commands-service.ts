@@ -13,7 +13,7 @@ export class PlatformCommandsService implements IPlatformCommandsService {
 		private $logger: ILogger,
 		private $packageInstallationManager: IPackageInstallationManager,
 		private $pacoteService: IPacoteService,
-		private $platformsData: IPlatformsData,
+		private $platformsDataService: IPlatformsDataService,
 		private $platformValidationService: PlatformValidationService,
 		private $projectChangesService: IProjectChangesService,
 		private $projectDataService: IProjectDataService
@@ -53,7 +53,7 @@ export class PlatformCommandsService implements IPlatformCommandsService {
 	public async removePlatforms(platforms: string[], projectData: IProjectData): Promise<void> {
 		for (const platform of platforms) {
 			this.$platformValidationService.validatePlatformInstalled(platform, projectData);
-			const platformData = this.$platformsData.getPlatformData(platform, projectData);
+			const platformData = this.$platformsDataService.getPlatformData(platform, projectData);
 			let errorMessage;
 
 			try {
@@ -102,22 +102,22 @@ export class PlatformCommandsService implements IPlatformCommandsService {
 		}
 
 		const subDirs = this.$fs.readDirectory(projectData.platformsDir);
-		return _.filter(subDirs, p => this.$platformsData.platformsNames.indexOf(p) > -1);
+		return _.filter(subDirs, p => this.$platformsDataService.platformsNames.indexOf(p) > -1);
 	}
 
 	public getAvailablePlatforms(projectData: IProjectData): string[] {
 		const installedPlatforms = this.getInstalledPlatforms(projectData);
-		return _.filter(this.$platformsData.platformsNames, p => {
+		return _.filter(this.$platformsDataService.platformsNames, p => {
 			return installedPlatforms.indexOf(p) < 0 && this.$platformValidationService.isPlatformSupportedForOS(p, projectData); // Only those not already installed
 		});
 	}
 
 	public getPreparedPlatforms(projectData: IProjectData): string[] {
-		return _.filter(this.$platformsData.platformsNames, p => { return this.isPlatformPrepared(p, projectData); });
+		return _.filter(this.$platformsDataService.platformsNames, p => { return this.isPlatformPrepared(p, projectData); });
 	}
 
 	public getCurrentPlatformVersion(platform: string, projectData: IProjectData): string {
-		const platformData = this.$platformsData.getPlatformData(platform, projectData);
+		const platformData = this.$platformsDataService.getPlatformData(platform, projectData);
 		const currentPlatformData: any = this.$projectDataService.getNSValue(projectData.projectDir, platformData.frameworkPackageName);
 		const version = currentPlatformData && currentPlatformData.version;
 
@@ -129,7 +129,7 @@ export class PlatformCommandsService implements IPlatformCommandsService {
 			return false;
 		}
 
-		const platformData = this.$platformsData.getPlatformData(platform, projectData);
+		const platformData = this.$platformsDataService.getPlatformData(platform, projectData);
 		const prepareInfo = this.$projectChangesService.getPrepareInfo(platformData);
 		if (!prepareInfo) {
 			return true;
@@ -139,7 +139,7 @@ export class PlatformCommandsService implements IPlatformCommandsService {
 	}
 
 	private async updatePlatform(platform: string, version: string, projectData: IProjectData): Promise<void> {
-		const platformData = this.$platformsData.getPlatformData(platform, projectData);
+		const platformData = this.$platformsDataService.getPlatformData(platform, projectData);
 
 		const data = this.$projectDataService.getNSValue(projectData.projectDir, platformData.frameworkPackageName);
 		const currentVersion = data && data.version ? data.version : "0.2.0";
@@ -182,7 +182,7 @@ export class PlatformCommandsService implements IPlatformCommandsService {
 	}
 
 	private isPlatformPrepared(platform: string, projectData: IProjectData): boolean {
-		const platformData = this.$platformsData.getPlatformData(platform, projectData);
+		const platformData = this.$platformsDataService.getPlatformData(platform, projectData);
 		return platformData.platformProjectService.isPlatformPrepared(platformData.projectRoot, projectData);
 	}
 }

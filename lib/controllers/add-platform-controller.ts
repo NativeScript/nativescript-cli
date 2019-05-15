@@ -11,14 +11,14 @@ export class AddPlatformController {
 		private $logger: ILogger,
 		private $packageInstallationManager: IPackageInstallationManager,
 		private $projectDataService: IProjectDataService,
-		private $platformsData: IPlatformsData,
+		private $platformsDataService: IPlatformsDataService,
 		private $projectChangesService: IProjectChangesService,
 	) { }
 
 	public async addPlatform(addPlatformData: AddPlatformData): Promise<void> {
 		const [ platform, version ] = addPlatformData.platform.toLowerCase().split("@");
 		const projectData = this.$projectDataService.getProjectData(addPlatformData.projectDir);
-		const platformData = this.$platformsData.getPlatformData(platform, projectData);
+		const platformData = this.$platformsDataService.getPlatformData(platform, projectData);
 
 		this.$logger.trace(`Creating NativeScript project for the ${platform} platform`);
 		this.$logger.trace(`Path: ${platformData.projectRoot}`);
@@ -38,7 +38,7 @@ export class AddPlatformController {
 	public async addPlatformIfNeeded(addPlatformData: AddPlatformData): Promise<void> {
 		const [ platform ] = addPlatformData.platform.toLowerCase().split("@");
 		const projectData = this.$projectDataService.getProjectData(addPlatformData.projectDir);
-		const platformData = this.$platformsData.getPlatformData(platform, projectData);
+		const platformData = this.$platformsDataService.getPlatformData(platform, projectData);
 
 		const shouldAddPlatform = this.shouldAddPlatform(platformData, projectData, addPlatformData.nativePrepare);
 		if (shouldAddPlatform) {

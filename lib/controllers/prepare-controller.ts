@@ -25,7 +25,7 @@ export class PrepareController extends EventEmitter {
 		private $addPlatformController: AddPlatformController,
 		public $hooksService: HooksService,
 		private $logger: ILogger,
-		private $platformsData: IPlatformsData,
+		private $platformsDataService: IPlatformsDataService,
 		private $prepareNativePlatformService: PrepareNativePlatformService,
 		private $projectChangesService: IProjectChangesService,
 		private $projectDataService: IProjectDataService,
@@ -41,7 +41,7 @@ export class PrepareController extends EventEmitter {
 		let result = null;
 
 		const projectData = this.$projectDataService.getProjectData(prepareData.projectDir);
-		const platformData = this.$platformsData.getPlatformData(prepareData.platform, projectData);
+		const platformData = this.$platformsDataService.getPlatformData(prepareData.platform, projectData);
 
 		if (prepareData.watch) {
 			result = await this.startWatchersWithPrepare(platformData, projectData, prepareData);

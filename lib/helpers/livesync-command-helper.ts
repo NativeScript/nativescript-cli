@@ -20,8 +20,8 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 		private $cleanupService: ICleanupService
 	) { }
 
-	private get $platformsData(): IPlatformsData {
-		return this.$injector.resolve("platformsData");
+	private get $platformsDataService(): IPlatformsDataService {
+		return this.$injector.resolve("platformsDataService");
 	}
 
 	public async getDeviceInstances(platform?: string): Promise<Mobile.IDevice[]> {
@@ -120,7 +120,7 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 	}
 
 	public getPlatformsForOperation(platform: string): string[] {
-		const availablePlatforms = platform ? [platform] : _.values<string>(this.$platformsData.availablePlatforms);
+		const availablePlatforms = platform ? [platform] : _.values<string>(this.$platformsDataService.availablePlatforms);
 		return availablePlatforms;
 	}
 
@@ -173,7 +173,7 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 
 		const availablePlatforms = this.getPlatformsForOperation(platform);
 		for (const availablePlatform of availablePlatforms) {
-			const platformData = this.$platformsData.getPlatformData(availablePlatform, this.$projectData);
+			const platformData = this.$platformsDataService.getPlatformData(availablePlatform, this.$projectData);
 			const platformProjectService = platformData.platformProjectService;
 			const validateOutput = await platformProjectService.validate(this.$projectData, this.$options);
 			result[availablePlatform.toLowerCase()] = validateOutput;

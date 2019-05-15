@@ -31,7 +31,7 @@ function createTestInjector(data?: { files: string[] }) {
 	injector.register("previewAppFilesService", PreviewAppFilesService);
 	injector.register("fs", FileSystemStub);
 	injector.register("logger", LoggerStub);
-	injector.register("platformsData", PlatformsDataMock);
+	injector.register("platformsDataService", PlatformsDataMock);
 	injector.register("projectDataService", ProjectDataServiceMock);
 	injector.register("projectFilesManager", {
 		getProjectFiles: () => data ? data.files : []
@@ -48,7 +48,7 @@ function createTestInjector(data?: { files: string[] }) {
 }
 
 function getExpectedResult(data: IPreviewAppLiveSyncData, injector: IInjector, expectedFiles: string[], platform: string): FilesPayload {
-	const platformData = injector.resolve("platformsData").getPlatformData(platform);
+	const platformData = injector.resolve("platformsDataService").getPlatformData(platform);
 	const files = _.map(expectedFiles, expectedFile => {
 		return {
 			event: 'change',

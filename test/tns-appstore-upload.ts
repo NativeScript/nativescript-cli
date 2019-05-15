@@ -65,7 +65,7 @@ class AppStore {
 						return "/Users/person/git/MyProject/platforms/ios/archive/MyProject.ipa";
 					}
 				},
-				"platformsData": {
+				"platformsDataService": {
 					getPlatformData: (platform: string) => {
 						chai.assert.equal(platform, "iOS");
 						return this.iOSPlatformData;

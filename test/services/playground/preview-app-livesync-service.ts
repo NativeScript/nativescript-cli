@@ -121,7 +121,7 @@ function createTestInjector(options?: {
 		attachToHmrStatusEvent: () => ({})
 	});
 	injector.register("errors", ErrorsStub);
-	injector.register("platformsData", {
+	injector.register("platformsDataService", {
 		getPlatformData: () => ({
 			appDestinationDirectoryPath: platformsDirPath,
 			normalizedPlatformName

@@ -43,7 +43,7 @@ export class DeviceDebugAppService {
 
 		const projectData = this.$projectDataService.getProjectData(settings.projectDir);
 		const debugData = this.$debugDataService.createDebugData(projectData, { device: settings.deviceIdentifier });
-		// const platformData = this.$platformsData.getPlatformData(settings.platform, projectData);
+		// const platformData = this.$platformsDataService.getPlatformData(settings.platform, projectData);
 
 		// Of the properties below only `buildForDevice` and `release` are currently used.
 		// Leaving the others with placeholder values so that they may not be forgotten in future implementations.

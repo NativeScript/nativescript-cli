@@ -21,8 +21,8 @@ export class BuildController extends EventEmitter {
 		private $prepareController: PrepareController,
 	) { super(); }
 
-	private get $platformsData(): IPlatformsData {
-		return this.$injector.resolve("platformsData");
+	private get $platformsDataService(): IPlatformsDataService {
+		return this.$injector.resolve("platformsDataService");
 	}
 
 	public async prepareAndBuildPlatform(buildData: BuildData): Promise<string> {
@@ -37,7 +37,7 @@ export class BuildController extends EventEmitter {
 
 		const platform = buildData.platform.toLowerCase();
 		const projectData = this.$projectDataService.getProjectData(buildData.projectDir);
-		const platformData = this.$platformsData.getPlatformData(platform, projectData);
+		const platformData = this.$platformsDataService.getPlatformData(platform, projectData);
 
 		const action = constants.TrackActionNames.Build;
 		const isForDevice = this.$mobileHelper.isAndroidPlatform(platform) ? null : buildData && buildData.buildForDevice;
@@ -81,7 +81,7 @@ export class BuildController extends EventEmitter {
 
 		const platform = buildData.platform.toLowerCase();
 		const projectData = this.$projectDataService.getProjectData(buildData.projectDir);
-		const platformData = this.$platformsData.getPlatformData(platform, projectData);
+		const platformData = this.$platformsDataService.getPlatformData(platform, projectData);
 
 		const outputPath = buildData.outputPath || platformData.getBuildOutputPath(buildData);
 		const shouldBuildPlatform = await this.shouldBuildPlatform(buildData, platformData, outputPath);

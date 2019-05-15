@@ -35,7 +35,7 @@ export class InitService implements IInitService {
 
 		if (!projectData[this.$staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE]) {
 			projectData[this.$staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE] = {};
-			this.$fs.writeJson(this.projectFilePath, projectData); // We need to create package.json file here in order to prevent "No project found at or above and neither was a --path specified." when resolving platformsData
+			this.$fs.writeJson(this.projectFilePath, projectData); // We need to create package.json file here in order to prevent "No project found at or above and neither was a --path specified." when resolving platformsDataService
 		}
 
 		try {
@@ -46,11 +46,11 @@ export class InitService implements IInitService {
 
 				projectData[this.$staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE][this.$options.frameworkName] = _.extend(currentPlatformData, this.buildVersionData(this.$options.frameworkVersion));
 			} else {
-				const $platformsData = this.$injector.resolve("platformsData");
+				const $platformsDataService = this.$injector.resolve("platformsDataService");
 				const $projectData = this.$injector.resolve("projectData");
 				$projectData.initializeProjectData(path.dirname(this.projectFilePath));
-				for (const platform of $platformsData.platformsNames) {
-					const platformData: IPlatformData = $platformsData.getPlatformData(platform, $projectData);
+				for (const platform of $platformsDataService.platformsNames) {
+					const platformData: IPlatformData = $platformsDataService.getPlatformData(platform, $projectData);
 					if (!platformData.targetedOS || (platformData.targetedOS && _.includes(platformData.targetedOS, process.platform))) {
 						const currentPlatformData = projectData[this.$staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE][platformData.frameworkPackageName] || {};
 

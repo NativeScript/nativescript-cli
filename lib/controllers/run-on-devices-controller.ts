@@ -29,7 +29,7 @@ export class RunOnDevicesController extends EventEmitter {
 		private $liveSyncServiceResolver: LiveSyncServiceResolver,
 		private $logger: ILogger,
 		private $pluginsService: IPluginsService,
-		private $platformsData: IPlatformsData,
+		private $platformsDataService: IPlatformsDataService,
 		private $prepareNativePlatformService: PrepareNativePlatformService,
 		private $prepareController: PrepareController,
 		private $prepareDataService: PrepareDataService,
@@ -165,7 +165,7 @@ export class RunOnDevicesController extends EventEmitter {
 	private async syncInitialDataOnDevices(data: IPrepareOutputData, projectData: IProjectData, liveSyncInfo: ILiveSyncInfo, deviceDescriptors: ILiveSyncDeviceInfo[]): Promise<void> {
 		const deviceAction = async (device: Mobile.IDevice) => {
 			const deviceDescriptor = _.find(deviceDescriptors, dd => dd.identifier === device.deviceInfo.identifier);
-			const platformData = this.$platformsData.getPlatformData(data.platform, projectData);
+			const platformData = this.$platformsDataService.getPlatformData(data.platform, projectData);
 			const buildData = this.$buildDataService.getBuildData(projectData.projectDir, data.platform, { ...liveSyncInfo, outputPath: deviceDescriptor.outputPath });
 
 			try {
@@ -206,7 +206,7 @@ export class RunOnDevicesController extends EventEmitter {
 	private async syncChangedDataOnDevices(data: IFilesChangeEventData, projectData: IProjectData, liveSyncInfo: ILiveSyncInfo, deviceDescriptors: ILiveSyncDeviceInfo[]): Promise<void> {
 		const deviceAction = async (device: Mobile.IDevice) => {
 			const deviceDescriptor = _.find(deviceDescriptors, dd => dd.identifier === device.deviceInfo.identifier);
-			const platformData = this.$platformsData.getPlatformData(data.platform, projectData);
+			const platformData = this.$platformsDataService.getPlatformData(data.platform, projectData);
 			const prepareData = this.$prepareDataService.getPrepareData(projectData.projectDir, data.platform, { ...liveSyncInfo, watch: !liveSyncInfo.skipWatcher });
 			const buildData = this.$buildDataService.getBuildData(projectData.projectDir, data.platform, { ...liveSyncInfo, outputPath: deviceDescriptor.outputPath });
 

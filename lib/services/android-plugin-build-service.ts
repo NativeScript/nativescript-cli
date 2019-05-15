@@ -4,8 +4,8 @@ import { getShortPluginName, hook } from "../common/helpers";
 import { Builder, parseString } from "xml2js";
 
 export class AndroidPluginBuildService implements IAndroidPluginBuildService {
-	private get $platformsData(): IPlatformsData {
-		return this.$injector.resolve("platformsData");
+	private get $platformsDataService(): IPlatformsDataService {
+		return this.$injector.resolve("platformsDataService");
 	}
 
 	constructor(
@@ -293,7 +293,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		let runtimeGradleVersions: IRuntimeGradleVersions = null;
 		if (projectDir) {
 			const projectData = this.$projectDataService.getProjectData(projectDir);
-			const platformData = this.$platformsData.getPlatformData(this.$devicePlatformsConstants.Android, projectData);
+			const platformData = this.$platformsDataService.getPlatformData(this.$devicePlatformsConstants.Android, projectData);
 			const projectRuntimeVersion = platformData.platformProjectService.getFrameworkVersion(projectData);
 			this.$logger.trace(`Got gradle versions ${JSON.stringify(runtimeGradleVersions)} from runtime v${projectRuntimeVersion}`);
 		}

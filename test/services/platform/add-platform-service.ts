@@ -42,7 +42,7 @@ describe("AddPlatformService", () => {
 				const pacoteService: PacoteService = injector.resolve("pacoteService");
 				pacoteService.extractPackage = async (): Promise<void> => { throw new Error(errorMessage); };
 
-				const platformData = injector.resolve("platformsData").getPlatformData(platform, projectData);
+				const platformData = injector.resolve("platformsDataService").getPlatformData(platform, projectData);
 
 				await assert.isRejected(addPlatformService.addPlatformSafe(projectData, platformData, "somePackage", nativePrepare), errorMessage);
 			});
@@ -51,10 +51,10 @@ describe("AddPlatformService", () => {
 				projectDataService.getNSValue = () => ({ version: "4.2.0" });
 
 				let isCreateNativeProjectCalled = false;
-				const platformsData = injector.resolve("platformsData");
-				const platformData = platformsData.getPlatformData(platform, injector.resolve("projectData"));
+				const platformsDataService = injector.resolve("platformsDataService");
+				const platformData = platformsDataService.getPlatformData(platform, injector.resolve("projectData"));
 				platformData.platformProjectService.createProject = () => isCreateNativeProjectCalled = true;
-				platformsData.getPlatformData = () => platformData;
+				platformsDataService.getPlatformData = () => platformData;
 
 				await addPlatformService.addPlatformSafe(projectData, platformData, platform, { skipNativePrepare: true } );
 				assert.isFalse(isCreateNativeProjectCalled);
@@ -64,10 +64,10 @@ describe("AddPlatformService", () => {
 				projectDataService.getNSValue = () => ({ version: "4.2.0" });
 
 				let isCreateNativeProjectCalled = false;
-				const platformsData = injector.resolve("platformsData");
-				const platformData = platformsData.getPlatformData(platform, injector.resolve("projectData"));
+				const platformsDataService = injector.resolve("platformsDataService");
+				const platformData = platformsDataService.getPlatformData(platform, injector.resolve("projectData"));
 				platformData.platformProjectService.createProject = () => isCreateNativeProjectCalled = true;
-				platformsData.getPlatformData = () => platformData;
+				platformsDataService.getPlatformData = () => platformData;
 
 				await addPlatformService.addPlatformSafe(projectData, platformData, platform, nativePrepare);
 				assert.isTrue(isCreateNativeProjectCalled);

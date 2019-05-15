@@ -80,7 +80,7 @@ class ErrorsNoFailStub implements IErrors {
 	validateYargsArguments(parsed: any, knownOpts: any, shorthands: any, clientName?: string): void { /* intentionally left blank */ }
 }
 
-class PlatformsData implements IPlatformsData {
+class PlatformsDataService implements IPlatformsDataService {
 	platformsNames = ["android", "ios"];
 	getPlatformData(platform: string): IPlatformData {
 		if (_.includes(this.platformsNames, platform)) {
@@ -108,7 +108,7 @@ function createTestInjector() {
 	testInjector.register('logger', stubs.LoggerStub);
 	testInjector.register('packageInstallationManager', stubs.PackageInstallationManagerStub);
 	testInjector.register('projectData', stubs.ProjectDataStub);
-	testInjector.register('platformsData', PlatformsData);
+	testInjector.register('platformsDataService', PlatformsDataService);
 	testInjector.register('devicesService', {});
 	testInjector.register('projectDataService', stubs.ProjectDataService);
 	testInjector.register('prompter', {});

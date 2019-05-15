@@ -11,9 +11,9 @@ export class IOSDeviceLiveSyncService extends DeviceLiveSyncServiceBase implemen
 
 	constructor(
 		private $logger: ILogger,
-		protected $platformsData: IPlatformsData,
+		protected $platformsDataService: IPlatformsDataService,
 		protected device: Mobile.IiOSDevice) {
-		super($platformsData, device);
+		super($platformsDataService, device);
 	}
 
 	private async setupSocketIfNeeded(projectData: IProjectData): Promise<boolean> {

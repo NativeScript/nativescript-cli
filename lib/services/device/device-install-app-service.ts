@@ -18,14 +18,14 @@ export class DeviceInstallAppService {
 		private $mobileHelper: MobileHelper,
 		private $buildInfoFileService: BuildInfoFileService,
 		private $projectDataService: IProjectDataService,
-		private $platformsData: IPlatformsData
+		private $platformsDataService: IPlatformsDataService
 	) { }
 
 	public async installOnDevice(device: Mobile.IDevice, buildData: BuildData, packageFile?: string): Promise<void> {
 		this.$logger.out(`Installing on device ${device.deviceInfo.identifier}...`);
 
 		const projectData = this.$projectDataService.getProjectData(buildData.projectDir);
-		const platformData = this.$platformsData.getPlatformData(device.deviceInfo.platform, projectData);
+		const platformData = this.$platformsDataService.getPlatformData(device.deviceInfo.platform, projectData);
 
 		await this.$analyticsService.trackEventActionInGoogleAnalytics({
 			action: TrackActionNames.Deploy,
@@ -98,7 +98,7 @@ export class DeviceInstallAppService {
 
 	private async shouldInstall(device: Mobile.IDevice, buildData: BuildData, outputPath?: string): Promise<boolean> {
 		const projectData = this.$projectDataService.getProjectData(buildData.projectDir);
-		const platformData = this.$platformsData.getPlatformData(device.deviceInfo.platform, projectData);
+		const platformData = this.$platformsDataService.getPlatformData(device.deviceInfo.platform, projectData);
 		const platform = device.deviceInfo.platform;
 		if (!(await device.applicationManager.isApplicationInstalled(projectData.projectIdentifiers[platform.toLowerCase()]))) {
 			return true;

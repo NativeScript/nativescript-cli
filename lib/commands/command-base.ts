@@ -1,6 +1,6 @@
 export abstract class ValidatePlatformCommandBase {
 	constructor(protected $options: IOptions,
-		protected $platformsData: IPlatformsData,
+		protected $platformsDataService: IPlatformsDataService,
 		protected $platformValidationService: IPlatformValidationService,
 		protected $projectData: IProjectData) { }
 
@@ -22,7 +22,7 @@ export abstract class ValidatePlatformCommandBase {
 	}
 
 	private async validatePlatformBase(platform: string, notConfiguredEnvOptions: INotConfiguredEnvOptions): Promise<IValidatePlatformOutput> {
-		const platformData = this.$platformsData.getPlatformData(platform, this.$projectData);
+		const platformData = this.$platformsDataService.getPlatformData(platform, this.$projectData);
 		const platformProjectService = platformData.platformProjectService;
 		const result = await platformProjectService.validate(this.$projectData, this.$options, notConfiguredEnvOptions);
 		return result;

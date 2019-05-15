@@ -2,7 +2,7 @@ import * as path from "path";
 import { BaseServiceTest } from "./base-service-test";
 import temp = require("temp");
 import { assert } from "chai";
-import { PlatformsData } from "../lib/platforms-data";
+import { PlatformsDataService } from "../lib/services/platforms-data-service";
 import { ProjectChangesService } from "../lib/services/project-changes-service";
 import * as Constants from "../lib/constants";
 import { FileSystem } from "../lib/common/file-system";
@@ -24,7 +24,7 @@ class ProjectChangesServiceTest extends BaseServiceTest {
 			projectDir: this.projectDir
 		});
 
-		this.injector.register("platformsData", PlatformsData);
+		this.injector.register("platformsDataService", PlatformsDataService);
 		this.injector.register("androidProjectService", {});
 		this.injector.register("iOSProjectService", {});
 		this.injector.register("fs", FileSystem);
@@ -54,8 +54,8 @@ class ProjectChangesServiceTest extends BaseServiceTest {
 		return this.injector.resolve("projectData");
 	}
 
-	get platformsData(): any {
-		return this.injector.resolve("platformsData");
+	get platformsDataService(): any {
+		return this.injector.resolve("platformsDataService");
 	}
 
 	getPlatformData(platform: string): IPlatformData {
@@ -80,7 +80,7 @@ describe("Project Changes Service Tests", () => {
 			Constants.PLATFORMS_DIR_NAME
 		);
 
-		serviceTest.platformsData.getPlatformData =
+		serviceTest.platformsDataService.getPlatformData =
 			(platform: string) => {
 				if (platform.toLowerCase() === "ios") {
 					return {

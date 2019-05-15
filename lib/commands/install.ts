@@ -5,7 +5,7 @@ export class InstallCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [this.$stringParameter];
 
 	constructor(private $options: IOptions,
-		private $platformsData: IPlatformsData,
+		private $platformsDataService: IPlatformsDataService,
 		private $platformCommandsService: IPlatformCommandsService,
 		private $projectData: IProjectData,
 		private $projectDataService: IProjectDataService,
@@ -26,8 +26,8 @@ export class InstallCommand implements ICommand {
 
 		await this.$pluginsService.ensureAllDependenciesAreInstalled(this.$projectData);
 
-		for (const platform of this.$platformsData.platformsNames) {
-			const platformData = this.$platformsData.getPlatformData(platform, this.$projectData);
+		for (const platform of this.$platformsDataService.platformsNames) {
+			const platformData = this.$platformsDataService.getPlatformData(platform, this.$projectData);
 			const frameworkPackageData = this.$projectDataService.getNSValue(this.$projectData.projectDir, platformData.frameworkPackageName);
 			if (frameworkPackageData && frameworkPackageData.version) {
 				try {

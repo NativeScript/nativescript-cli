@@ -11,7 +11,7 @@ export class PreviewAppFilesService implements IPreviewAppFilesService {
 	constructor(
 		private $fs: IFileSystem,
 		private $logger: ILogger,
-		private $platformsData: IPlatformsData,
+		private $platformsDataService: IPlatformsDataService,
 		private $projectDataService: IProjectDataService,
 		private $projectFilesManager: IProjectFilesManager,
 		private $projectFilesProvider: IProjectFilesProvider
@@ -84,7 +84,7 @@ export class PreviewAppFilesService implements IPreviewAppFilesService {
 
 	private getRootFilesDir(data: IPreviewAppLiveSyncData, platform: string): string {
 		const projectData = this.$projectDataService.getProjectData(data.projectDir);
-		const platformData = this.$platformsData.getPlatformData(platform, projectData);
+		const platformData = this.$platformsDataService.getPlatformData(platform, projectData);
 		const rootFilesDir = path.join(platformData.appDestinationDirectoryPath, APP_FOLDER_NAME);
 
 		return rootFilesDir;

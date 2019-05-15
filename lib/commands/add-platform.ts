@@ -7,9 +7,9 @@ export class AddPlatformCommand extends ValidatePlatformCommandBase implements I
 		private $platformCommandsService: IPlatformCommandsService,
 		$platformValidationService: IPlatformValidationService,
 		$projectData: IProjectData,
-		$platformsData: IPlatformsData,
+		$platformsDataService: IPlatformsDataService,
 		private $errors: IErrors) {
-			super($options, $platformsData, $platformValidationService, $projectData);
+			super($options, $platformsDataService, $platformValidationService, $projectData);
 			this.$projectData.initializeProjectData();
 	}
 

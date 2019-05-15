@@ -1,24 +1,25 @@
-export class PlatformsData implements IPlatformsData {
-	private platformsData: { [index: string]: any } = {};
+
+export class PlatformsDataService implements IPlatformsDataService {
+	private platformsDataService: { [index: string]: any } = {};
 
 	constructor($androidProjectService: IPlatformProjectService,
 		$iOSProjectService: IPlatformProjectService) {
 
-		this.platformsData = {
+		this.platformsDataService = {
 			ios: $iOSProjectService,
 			android: $androidProjectService
 		};
 	}
 
 	public get platformsNames() {
-		return Object.keys(this.platformsData);
+		return Object.keys(this.platformsDataService);
 	}
 
 	public getPlatformData(platform: string, projectData: IProjectData): IPlatformData {
 		const platformKey = platform && _.first(platform.toLowerCase().split("@"));
 		let platformData: IPlatformData;
 		if (platformKey) {
-			platformData = this.platformsData[platformKey] && this.platformsData[platformKey].getPlatformData(projectData);
+			platformData = this.platformsDataService[platformKey] && this.platformsDataService[platformKey].getPlatformData(projectData);
 		}
 
 		return platformData;
@@ -31,4 +32,4 @@ export class PlatformsData implements IPlatformsData {
 		};
 	}
 }
-$injector.register("platformsData", PlatformsData);
+$injector.register("platformsDataService", PlatformsDataService);

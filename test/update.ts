@@ -58,7 +58,7 @@ function createTestInjector(
 		addPlatforms: async (): Promise<void> => undefined,
 	});
 	testInjector.register("platformValidationService", {});
-	testInjector.register("platformsData", {
+	testInjector.register("platformsDataService", {
 		availablePlatforms: {
 			Android: "Android",
 			iOS: "iOS"

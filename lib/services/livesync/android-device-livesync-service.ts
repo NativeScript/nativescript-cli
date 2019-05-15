@@ -12,11 +12,11 @@ export class AndroidDeviceLiveSyncService extends AndroidDeviceLiveSyncServiceBa
 		private $devicePathProvider: IDevicePathProvider,
 		$injector: IInjector,
 		private $androidProcessService: Mobile.IAndroidProcessService,
-		protected $platformsData: IPlatformsData,
+		protected $platformsDataService: IPlatformsDataService,
 		protected device: Mobile.IAndroidDevice,
 		$filesHashService: IFilesHashService,
 		$logger: ILogger) {
-		super($injector, $platformsData, $filesHashService, $logger, device);
+		super($injector, $platformsDataService, $filesHashService, $logger, device);
 	}
 
 	public async transferFilesOnDevice(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]): Promise<void> {

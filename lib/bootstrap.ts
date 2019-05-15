@@ -32,7 +32,7 @@ $injector.require("projectTemplatesService", "./services/project-templates-servi
 $injector.require("projectNameService", "./services/project-name-service");
 $injector.require("tnsModulesService", "./services/tns-modules-service");
 
-$injector.require("platformsData", "./platforms-data");
+$injector.require("platformsDataService", "./services/platforms-data-service");
 $injector.require("addPlatformService", "./services/platform/add-platform-service");
 $injector.require("buildInfoFileService", "./services/build-info-file-service");
 $injector.require("prepareNativePlatformService", "./services/platform/prepare-native-platform-service");

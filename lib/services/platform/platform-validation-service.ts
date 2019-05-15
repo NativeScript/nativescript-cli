@@ -8,7 +8,7 @@ export class PlatformValidationService implements IPlatformValidationService {
 		private $fs: IFileSystem,
 		private $logger: ILogger,
 		private $mobileHelper: Mobile.IMobileHelper,
-		private $platformsData: IPlatformsData
+		private $platformsDataService: IPlatformsDataService
 	) { }
 
 	public validatePlatform(platform: string, projectData: IProjectData): void {
@@ -18,8 +18,8 @@ export class PlatformValidationService implements IPlatformValidationService {
 
 		platform = platform.split("@")[0].toLowerCase();
 
-		if (!this.$platformsData.getPlatformData(platform, projectData)) {
-			const platformNames = helpers.formatListOfNames(this.$platformsData.platformsNames);
+		if (!this.$platformsDataService.getPlatformData(platform, projectData)) {
+			const platformNames = helpers.formatListOfNames(this.$platformsDataService.platformsNames);
 			this.$errors.fail(`Invalid platform ${platform}. Valid platforms are ${platformNames}.`);
 		}
 	}
@@ -41,7 +41,7 @@ export class PlatformValidationService implements IPlatformValidationService {
 		if (platform) {
 			platform = this.$mobileHelper.normalizePlatformName(platform);
 			this.$logger.trace("Validate options for platform: " + platform);
-			const platformData = this.$platformsData.getPlatformData(platform, projectData);
+			const platformData = this.$platformsDataService.getPlatformData(platform, projectData);
 
 			const result = await platformData.platformProjectService.validateOptions(
 				projectData.projectIdentifiers[platform.toLowerCase()],
@@ -52,9 +52,9 @@ export class PlatformValidationService implements IPlatformValidationService {
 			return result;
 		} else {
 			let valid = true;
-			for (const availablePlatform in this.$platformsData.availablePlatforms) {
+			for (const availablePlatform in this.$platformsDataService.availablePlatforms) {
 				this.$logger.trace("Validate options for platform: " + availablePlatform);
-				const platformData = this.$platformsData.getPlatformData(availablePlatform, projectData);
+				const platformData = this.$platformsDataService.getPlatformData(availablePlatform, projectData);
 				valid = valid && await platformData.platformProjectService.validateOptions(
 					projectData.projectIdentifiers[availablePlatform.toLowerCase()],
 					provision,
@@ -67,7 +67,7 @@ export class PlatformValidationService implements IPlatformValidationService {
 	}
 
 	public isPlatformSupportedForOS(platform: string, projectData: IProjectData): boolean {
-		const targetedOS = this.$platformsData.getPlatformData(platform, projectData).targetedOS;
+		const targetedOS = this.$platformsDataService.getPlatformData(platform, projectData).targetedOS;
 		const res = !targetedOS || targetedOS.indexOf("*") >= 0 || targetedOS.indexOf(process.platform) >= 0;
 		return res;
 	}

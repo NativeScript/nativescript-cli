@@ -8,12 +8,12 @@ import { performanceLog } from "../../common/decorators";
 
 export class IOSLiveSyncService extends PlatformLiveSyncServiceBase implements IPlatformLiveSyncService {
 	constructor(protected $fs: IFileSystem,
-		protected $platformsData: IPlatformsData,
+		protected $platformsDataService: IPlatformsDataService,
 		protected $projectFilesManager: IProjectFilesManager,
 		private $injector: IInjector,
 		$devicePathProvider: IDevicePathProvider,
 		$logger: ILogger) {
-		super($fs, $logger, $platformsData, $projectFilesManager, $devicePathProvider);
+		super($fs, $logger, $platformsDataService, $projectFilesManager, $devicePathProvider);
 	}
 
 	@performanceLog()
@@ -24,7 +24,7 @@ export class IOSLiveSyncService extends PlatformLiveSyncServiceBase implements I
 			return super.fullSync(syncInfo);
 		}
 		const projectData = syncInfo.projectData;
-		const platformData = this.$platformsData.getPlatformData(device.deviceInfo.platform, projectData);
+		const platformData = this.$platformsDataService.getPlatformData(device.deviceInfo.platform, projectData);
 		const deviceAppData = await this.getAppData(syncInfo);
 		const projectFilesPath = path.join(platformData.appDestinationDirectoryPath, APP_FOLDER_NAME);
 

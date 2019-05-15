@@ -13,7 +13,7 @@ import { StaticConfig } from "../lib/config";
 import { HostInfo } from "../lib/common/host-info";
 import { Errors } from "../lib/common/errors";
 import { ProjectHelper } from "../lib/common/project-helper";
-import { PlatformsData } from "../lib/platforms-data";
+import { PlatformsDataService } from "../lib/services/platforms-data-service";
 import { ProjectDataService } from "../lib/services/project-data-service";
 import { ProjectFilesManager } from "../lib/common/services/project-files-manager";
 import { ResourceLoader } from "../lib/common/resource-loader";
@@ -56,7 +56,7 @@ function createTestInjector() {
 	testInjector.register("projectData", ProjectData);
 	testInjector.register("platforsmData", stubs.PlatformsDataStub);
 	testInjector.register("childProcess", ChildProcess);
-	testInjector.register("platformsData", PlatformsData);
+	testInjector.register("platformsDataService", PlatformsDataService);
 	testInjector.register("androidEmulatorServices", {});
 	testInjector.register("androidToolsInfo", AndroidToolsInfo);
 	testInjector.register("sysInfo", {});
@@ -320,9 +320,9 @@ describe("Plugins service", () => {
 					return <any[]>[{ name: "" }];
 				};
 
-				// Mock platformsData
-				const platformsData = testInjector.resolve("platformsData");
-				platformsData.getPlatformData = (platform: string) => {
+				// Mock platformsDataService
+				const platformsDataService = testInjector.resolve("platformsDataService");
+				platformsDataService.getPlatformData = (platform: string) => {
 					return {
 						appDestinationDirectoryPath: path.join(projectFolder, "platforms", "android"),
 						frameworkPackageName: "tns-android",
@@ -544,9 +544,9 @@ describe("Plugins service", () => {
 
 			const appDestinationDirectoryPath = path.join(projectFolder, "platforms", "android");
 
-			// Mock platformsData
-			const platformsData = testInjector.resolve("platformsData");
-			platformsData.getPlatformData = (platform: string) => {
+			// Mock platformsDataService
+			const platformsDataService = testInjector.resolve("platformsDataService");
+			platformsDataService.getPlatformData = (platform: string) => {
 				return {
 					appDestinationDirectoryPath: appDestinationDirectoryPath,
 					frameworkPackageName: "tns-android",
@@ -590,7 +590,7 @@ describe("Plugins service", () => {
 			};
 
 			const unitTestsInjector = new Yok();
-			unitTestsInjector.register("platformsData", {
+			unitTestsInjector.register("platformsDataService", {
 				getPlatformData: (_platform: string, pData: IProjectData) => ({
 					projectRoot: "projectRoot",
 					platformProjectService: {

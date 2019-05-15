@@ -10,13 +10,13 @@ export class UpdateCommand extends ValidatePlatformCommandBase implements IComma
 		private $logger: ILogger,
 		$options: IOptions,
 		private $platformCommandsService: IPlatformCommandsService,
-		$platformsData: IPlatformsData,
+		$platformsDataService: IPlatformsDataService,
 		$platformValidationService: IPlatformValidationService,
 		private $pluginsService: IPluginsService,
 		$projectData: IProjectData,
 		private $projectDataService: IProjectDataService,
 	) {
-		super($options, $platformsData, $platformValidationService, $projectData);
+		super($options, $platformsDataService, $platformValidationService, $projectData);
 		this.$projectData.initializeProjectData();
 	}
 
@@ -81,7 +81,7 @@ export class UpdateCommand extends ValidatePlatformCommandBase implements IComma
 		const platforms = this.getPlatforms();
 
 		for (const platform of _.xor(platforms.installed, platforms.packagePlatforms)) {
-			const platformData = this.$platformsData.getPlatformData(platform, this.$projectData);
+			const platformData = this.$platformsDataService.getPlatformData(platform, this.$projectData);
 			this.$projectDataService.removeNSProperty(this.$projectData.projectDir, platformData.frameworkPackageName);
 		}
 
@@ -115,7 +115,7 @@ export class UpdateCommand extends ValidatePlatformCommandBase implements IComma
 		const packagePlatforms: string[] = [];
 
 		for (const platform of availablePlatforms) {
-			const platformData = this.$platformsData.getPlatformData(platform, this.$projectData);
+			const platformData = this.$platformsDataService.getPlatformData(platform, this.$projectData);
 			const platformVersion = this.$projectDataService.getNSValue(this.$projectData.projectDir, platformData.frameworkPackageName);
 			if (platformVersion) {
 				packagePlatforms.push(platform);
