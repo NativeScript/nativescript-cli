@@ -571,13 +571,15 @@ export class PrompterStub implements IPrompter {
 	private passwords: IDictionary<string> = {};
 	private answers: IDictionary<string> = {};
 	private questionChoices: IDictionary<any[]> = {};
+	private confirmQuestions: IDictionary<boolean> = {};
 
-	expect(options?: { strings?: IDictionary<string>, passwords?: IDictionary<string>, answers?: IDictionary<string>, questionChoices?: IDictionary<any[]> }) {
+	expect(options?: { strings?: IDictionary<string>, passwords?: IDictionary<string>, answers?: IDictionary<string>, questionChoices?: IDictionary<any[]>, confirmQuestions?: IDictionary<boolean> }) {
 		if (options) {
 			this.strings = options.strings || this.strings;
 			this.passwords = options.passwords || this.passwords;
 			this.answers = options.answers || this.answers;
 			this.questionChoices = options.questionChoices || this.questionChoices;
+			this.confirmQuestions = options.confirmQuestions || this.confirmQuestions;
 		}
 	}
 
@@ -607,7 +609,10 @@ export class PrompterStub implements IPrompter {
 		return result;
 	}
 	async confirm(message: string, defaultAction?: () => boolean): Promise<boolean> {
-		throw unreachable();
+		chai.assert.ok(message in this.confirmQuestions, `PrompterStub didn't expect to be asked for: ${message}`);
+		const result = this.confirmQuestions[message];
+		delete this.confirmQuestions[message];
+		return result;
 	}
 	dispose(): void {
 		throw unreachable();
@@ -619,6 +624,9 @@ export class PrompterStub implements IPrompter {
 		}
 		for (const key in this.passwords) {
 			throw unexpected(`PrompterStub was instructed to reply with "${this.passwords[key]}" to a "${key}" password request, but was never asked!`);
+		}
+		for (const key in this.confirmQuestions) {
+			throw unexpected(`PrompterStub was instructed to reply with "${this.confirmQuestions[key]}" to a "${key}" confirm question, but was never asked!`);
 		}
 	}
 }

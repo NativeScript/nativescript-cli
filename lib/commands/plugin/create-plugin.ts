@@ -5,6 +5,8 @@ export class CreatePluginCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
 	public userMessage = "What is your GitHub username?\n(will be used to update the Github URLs in the plugin's package.json)";
 	public nameMessage = "What will be the name of your plugin?\n(use lowercase characters and dashes only)";
+	public includeTypeScriptDemoMessage = 'Do you want to include a "TypeScript NativeScript" application linked with your plugin to make development easier?';
+	public includeAngularDemoMessage = 'Do you want to include an "Angular NativeScript" application linked with your plugin to make development easier?';
 	public pathAlreadyExistsMessageTemplate = "Path already exists and is not empty %s";
 	constructor(private $options: IOptions,
 		private $errors: IErrors,
@@ -62,15 +64,25 @@ export class CreatePluginCommand implements ICommand {
 
 		const gitHubUsername = await this.getGitHubUsername(config.username);
 		const pluginNameSource = await this.getPluginNameSource(config.pluginName, pluginRepoName);
+		const includeTypescriptDemo = await this.getShouldIncludeDemoResult(config.includeTypeScriptDemo, this.includeTypeScriptDemoMessage);
+		const includeAngularDemo = await this.getShouldIncludeDemoResult(config.includeAngularDemo, this.includeAngularDemoMessage);
 
-		if (!isInteractive() && (!config.username || !config.pluginName)) {
-			this.$logger.printMarkdown("Using default values for Github user and/or plugin name since your shell is not interactive.");
+		if (!isInteractive() && (!config.username || !config.pluginName || !config.includeAngularDemo || !config.includeTypeScriptDemo)) {
+			this.$logger.printMarkdown("Using default values for plugin creation options since your shell is not interactive.");
 		}
 
 		// run postclone script manually and kill it if it takes more than 10 sec
 		const pathToPostCloneScript = path.join("scripts", "postclone");
-		const params = [pathToPostCloneScript, `gitHubUsername=${gitHubUsername}`, `pluginName=${pluginNameSource}`, "initGit=y"];
-		const outputScript = (await this.$childProcess.spawnFromEvent(process.execPath, params, "close", { cwd, timeout: 10000 }));
+		const params = [
+			pathToPostCloneScript,
+			`gitHubUsername=${gitHubUsername}`,
+			`pluginName=${pluginNameSource}`,
+			"initGit=y",
+			`includeTypeScriptDemo=${includeTypescriptDemo}`,
+			`includeAngularDemo=${includeAngularDemo}`
+		];
+
+		const outputScript = (await this.$childProcess.spawnFromEvent(process.execPath, params, "close", { stdio: "inherit", cwd, timeout: 10000 }));
 		if (outputScript && outputScript.stdout) {
 			this.$logger.printMarkdown(outputScript.stdout);
 		}
@@ -101,7 +113,7 @@ export class CreatePluginCommand implements ICommand {
 		}
 	}
 
-	private async getGitHubUsername(gitHubUsername: string) {
+	private async getGitHubUsername(gitHubUsername: string): Promise<string> {
 		if (!gitHubUsername) {
 			gitHubUsername = "NativeScriptDeveloper";
 			if (isInteractive()) {
@@ -112,7 +124,7 @@ export class CreatePluginCommand implements ICommand {
 		return gitHubUsername;
 	}
 
-	private async getPluginNameSource(pluginNameSource: string, pluginRepoName: string) {
+	private async getPluginNameSource(pluginNameSource: string, pluginRepoName: string): Promise<string> {
 		if (!pluginNameSource) {
 			// remove nativescript- prefix for naming plugin files
 			const prefix = 'nativescript-';
@@ -123,6 +135,15 @@ export class CreatePluginCommand implements ICommand {
 		}
 
 		return pluginNameSource;
+	}
+
+	private async getShouldIncludeDemoResult(includeDemoOption: string, message: string): Promise<string> {
+		let shouldIncludeDemo = !!includeDemoOption;
+		if (!includeDemoOption && isInteractive()) {
+			shouldIncludeDemo = await this.$prompter.confirm(message, () => { return true; });
+		}
+
+		return shouldIncludeDemo ? "y" : "n";
 	}
 }
 

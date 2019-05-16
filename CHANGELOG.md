@@ -1,6 +1,29 @@
 NativeScript CLI Changelog
 ================
 
+
+5.4.0 (2019, May 15)
+==
+
+### Implemented
+* [Implemented #3993](https://github.com/NativeScript/nativescript-cli/issues/3993): Improve `ctrl + c` handling.
+* [Implemented #4374](https://github.com/NativeScript/nativescript-cli/issues/4374): Add `iCloudContainerEnvironment` build option.
+* [Implemented #4394](https://github.com/NativeScript/nativescript-cli/issues/4394): Enable Using Hot Module Replacement by Default for New Projects
+* [Implemented #4518](https://github.com/NativeScript/nativescript-cli/issues/4518): Show deprecation messages for things that will be dropped for 6.0.0 release
+* [Implemented #4541](https://github.com/NativeScript/nativescript-cli/issues/4541): [Beta] Allow integration of Apple Watch application in NativeScript app
+* [Implemented #4548](https://github.com/NativeScript/nativescript-cli/issues/4548): Deprecate support for the Legacy Workflow
+* [Implemented #4602](https://github.com/NativeScript/nativescript-cli/issues/4602): Streamline CLI's logger
+
+
+### Fixed
+* [Fixed #4280](https://github.com/NativeScript/nativescript-cli/issues/4280): Incorrect message if you delete app's folder and run command with `--path` in it
+* [Fixed #4512](https://github.com/NativeScript/nativescript-cli/issues/4512): App's Podfile should be applied last
+* [Fixed #4573](https://github.com/NativeScript/nativescript-cli/pull/4573): logcat process is not restarted in some cases
+* [Fixed #4593](https://github.com/NativeScript/nativescript-cli/issues/4593): Node.js processes not killed after `tns create` on macOS when analytics are enabled
+* [Fixed #4598](https://github.com/NativeScript/nativescript-cli/issues/4598): app.css changes don't apply when debugging with --debug-brk
+* [Fixed #4606](https://github.com/NativeScript/nativescript-cli/issues/4606): Unable to build application for iOS with nativescript-bottombar
+* [Fixed #4616](https://github.com/NativeScript/nativescript-cli/issues/4616): `tns plugin create` command hangs
+
 5.3.4 (2019, April 24)
 ==
 
