@@ -272,7 +272,7 @@ describe("Plugins service", () => {
 			});
 			it("fails when the plugin does not support the installed framework", async () => {
 				let isWarningMessageShown = false;
-				const expectedWarningMessage = "mySamplePlugin 1.5.0 for android is not compatible with the currently installed framework version 1.4.0.";
+				const expectedWarningMessage = "mySamplePlugin requires at least version 1.5.0 of platform android. Currently installed version is 1.4.0.";
 
 				// Creates plugin in temp folder
 				const pluginName = "mySamplePlugin";
