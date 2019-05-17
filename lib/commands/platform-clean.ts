@@ -1,12 +1,10 @@
-import { PlatformCommandsService } from "../services/platform/platform-commands-service";
-
 export class CleanCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
 
 	constructor(
 		private $errors: IErrors,
 		private $options: IOptions,
-		private $platformCommandsService: PlatformCommandsService,
+		private $platformCommandHelper: IPlatformCommandHelper,
 		private $platformValidationService: IPlatformValidationService,
 		private $platformEnvironmentRequirements: IPlatformEnvironmentRequirements,
 		private $projectData: IProjectData
@@ -15,7 +13,7 @@ export class CleanCommand implements ICommand {
 	}
 
 	public async execute(args: string[]): Promise<void> {
-		await this.$platformCommandsService.cleanPlatforms(args, this.$projectData, this.$options.frameworkPath);
+		await this.$platformCommandHelper.cleanPlatforms(args, this.$projectData, this.$options.frameworkPath);
 	}
 
 	public async canExecute(args: string[]): Promise<boolean> {
@@ -30,7 +28,7 @@ export class CleanCommand implements ICommand {
 		for (const platform of args) {
 			this.$platformValidationService.validatePlatformInstalled(platform, this.$projectData);
 
-			const currentRuntimeVersion = this.$platformCommandsService.getCurrentPlatformVersion(platform, this.$projectData);
+			const currentRuntimeVersion = this.$platformCommandHelper.getCurrentPlatformVersion(platform, this.$projectData);
 			await this.$platformEnvironmentRequirements.checkEnvironmentRequirements({
 				platform,
 				projectDir: this.$projectData.projectDir,

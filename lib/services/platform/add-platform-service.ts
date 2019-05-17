@@ -3,7 +3,7 @@ import * as temp from "temp";
 import { PROJECT_FRAMEWORK_FOLDER_NAME, NativePlatformStatus } from "../../constants";
 import { performanceLog } from "../../common/decorators";
 
-export class AddPlatformService {
+export class AddPlatformService implements IAddPlatformService {
 	constructor(
 		private $fs: IFileSystem,
 		private $pacoteService: IPacoteService,

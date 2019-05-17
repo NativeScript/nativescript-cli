@@ -1,7 +1,5 @@
 import { ANDROID_RELEASE_BUILD_ERROR_MESSAGE, AndroidAppBundleMessages } from "../constants";
 import { ValidatePlatformCommandBase } from "./command-base";
-import { BuildController } from "../controllers/build-controller";
-import { BuildDataService } from "../services/build-data-service";
 
 export abstract class BuildCommandBase extends ValidatePlatformCommandBase {
 	constructor($options: IOptions,
@@ -9,10 +7,10 @@ export abstract class BuildCommandBase extends ValidatePlatformCommandBase {
 		$projectData: IProjectData,
 		$platformsDataService: IPlatformsDataService,
 		protected $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-		protected $buildController: BuildController,
+		protected $buildController: IBuildController,
 		$platformValidationService: IPlatformValidationService,
 		private $bundleValidatorHelper: IBundleValidatorHelper,
-		private $buildDataService: BuildDataService,
+		private $buildDataService: IBuildDataService,
 		protected $logger: ILogger) {
 			super($options, $platformsDataService, $platformValidationService, $projectData);
 			this.$projectData.initializeProjectData();
@@ -25,7 +23,7 @@ export abstract class BuildCommandBase extends ValidatePlatformCommandBase {
 	public async executeCore(args: string[]): Promise<string> {
 		const platform = args[0].toLowerCase();
 		const buildData = this.$buildDataService.getBuildData(this.$projectData.projectDir, platform, this.$options);
-		const outputPath = await this.$buildController.prepareAndBuildPlatform(buildData);
+		const outputPath = await this.$buildController.prepareAndBuild(buildData);
 
 		return outputPath;
 	}
@@ -64,16 +62,16 @@ export class BuildIosCommand extends BuildCommandBase implements ICommand {
 		$projectData: IProjectData,
 		$platformsDataService: IPlatformsDataService,
 		$devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-		$buildController: BuildController,
+		$buildController: IBuildController,
 		$platformValidationService: IPlatformValidationService,
 		$bundleValidatorHelper: IBundleValidatorHelper,
 		$logger: ILogger,
-		$buildDataService: BuildDataService) {
+		$buildDataService: IBuildDataService) {
 			super($options, $errors, $projectData, $platformsDataService, $devicePlatformsConstants, $buildController, $platformValidationService, $bundleValidatorHelper, $buildDataService, $logger);
 	}
 
 	public async execute(args: string[]): Promise<void> {
-		await this.executeCore([this.$platformsDataService.availablePlatforms.iOS]);
+		await this.executeCore([this.$devicePlatformsConstants.iOS.toLowerCase()]);
 	}
 
 	public async canExecute(args: string[]): Promise<boolean | ICanExecuteCommandOutput> {
@@ -98,19 +96,19 @@ export class BuildAndroidCommand extends BuildCommandBase implements ICommand {
 	constructor(protected $options: IOptions,
 		protected $errors: IErrors,
 		$projectData: IProjectData,
-		$platformsDataService: IPlatformsDataService,
+		platformsDataService: IPlatformsDataService,
 		$devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-		$buildController: BuildController,
+		$buildController: IBuildController,
 		$platformValidationService: IPlatformValidationService,
 		$bundleValidatorHelper: IBundleValidatorHelper,
 		protected $androidBundleValidatorHelper: IAndroidBundleValidatorHelper,
-		$buildDataService: BuildDataService,
+		$buildDataService: IBuildDataService,
 		protected $logger: ILogger) {
-			super($options, $errors, $projectData, $platformsDataService, $devicePlatformsConstants, $buildController, $platformValidationService, $bundleValidatorHelper, $buildDataService, $logger);
+			super($options, $errors, $projectData, platformsDataService, $devicePlatformsConstants, $buildController, $platformValidationService, $bundleValidatorHelper, $buildDataService, $logger);
 	}
 
 	public async execute(args: string[]): Promise<void> {
-		await this.executeCore([this.$platformsDataService.availablePlatforms.Android]);
+		await this.executeCore([this.$devicePlatformsConstants.Android.toLowerCase()]);
 
 		if (this.$options.aab) {
 			this.$logger.info(AndroidAppBundleMessages.ANDROID_APP_BUNDLE_DOCS_MESSAGE);

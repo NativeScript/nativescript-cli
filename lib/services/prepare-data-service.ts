@@ -1,6 +1,6 @@
 import { IOSPrepareData, AndroidPrepareData } from "../data/prepare-data";
 
-export class PrepareDataService {
+export class PrepareDataService implements IPrepareDataService {
 	constructor(private $mobileHelper: Mobile.IMobileHelper) { }
 
 	public getPrepareData(projectDir: string, platform: string, data: any) {

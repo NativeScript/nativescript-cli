@@ -1,6 +1,6 @@
-import { DataBase } from "./data-base";
+import { ControllerDataBase } from "./controller-data-base";
 
-export class AddPlatformData extends DataBase {
+export class AddPlatformData extends ControllerDataBase {
 	public frameworkPath?: string;
 
 	constructor(public projectDir: string, public platform: string, data: any) {

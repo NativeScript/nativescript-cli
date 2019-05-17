@@ -5,8 +5,9 @@ export class InstallCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [this.$stringParameter];
 
 	constructor(private $options: IOptions,
+		private $mobileHelper: Mobile.IMobileHelper,
 		private $platformsDataService: IPlatformsDataService,
-		private $platformCommandsService: IPlatformCommandsService,
+		private $platformCommandHelper: IPlatformCommandHelper,
 		private $projectData: IProjectData,
 		private $projectDataService: IProjectDataService,
 		private $pluginsService: IPluginsService,
@@ -26,7 +27,7 @@ export class InstallCommand implements ICommand {
 
 		await this.$pluginsService.ensureAllDependenciesAreInstalled(this.$projectData);
 
-		for (const platform of this.$platformsDataService.platformsNames) {
+		for (const platform of this.$mobileHelper.platformNames) {
 			const platformData = this.$platformsDataService.getPlatformData(platform, this.$projectData);
 			const frameworkPackageData = this.$projectDataService.getNSValue(this.$projectData.projectDir, platformData.frameworkPackageName);
 			if (frameworkPackageData && frameworkPackageData.version) {
@@ -34,7 +35,7 @@ export class InstallCommand implements ICommand {
 					const platformProjectService = platformData.platformProjectService;
 					await platformProjectService.validate(this.$projectData, this.$options);
 
-					await this.$platformCommandsService.addPlatforms([`${platform}@${frameworkPackageData.version}`], this.$projectData, this.$options.frameworkPath);
+					await this.$platformCommandHelper.addPlatforms([`${platform}@${frameworkPackageData.version}`], this.$projectData, this.$options.frameworkPath);
 				} catch (err) {
 					error = `${error}${EOL}${err}`;
 				}

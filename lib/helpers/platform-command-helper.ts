@@ -1,16 +1,17 @@
 import * as path from "path";
 import * as semver from "semver";
 import * as temp from "temp";
-import * as constants from "../../constants";
-import { PlatformValidationService } from "./platform-validation-service";
-import { AddPlatformController } from "../../controllers/add-platform-controller";
+import * as constants from "../constants";
+import { PlatformController } from "../controllers/platform-controller";
+import { PlatformValidationService } from "../services/platform/platform-validation-service";
 
-export class PlatformCommandsService implements IPlatformCommandsService {
+export class PlatformCommandHelper implements IPlatformCommandHelper {
 	constructor(
-		private $addPlatformController: AddPlatformController,
+		private $platformController: PlatformController,
 		private $fs: IFileSystem,
 		private $errors: IErrors,
 		private $logger: ILogger,
+		private $mobileHelper: Mobile.IMobileHelper,
 		private $packageInstallationManager: IPackageInstallationManager,
 		private $pacoteService: IPacoteService,
 		private $platformsDataService: IPlatformsDataService,
@@ -32,7 +33,7 @@ export class PlatformCommandsService implements IPlatformCommandsService {
 				this.$errors.failWithoutHelp(`Platform ${platform} already added`);
 			}
 
-			await this.$addPlatformController.addPlatform({
+			await this.$platformController.addPlatform({
 				projectDir: projectData.projectDir,
 				platform,
 				frameworkPath,
@@ -88,7 +89,7 @@ export class PlatformCommandsService implements IPlatformCommandsService {
 			if (hasPlatformDirectory) {
 				await this.updatePlatform(platform, version, projectData);
 			} else {
-				await this.$addPlatformController.addPlatform({
+				await this.$platformController.addPlatform({
 					projectDir: projectData.projectDir,
 					platform: platformParam,
 				});
@@ -102,18 +103,18 @@ export class PlatformCommandsService implements IPlatformCommandsService {
 		}
 
 		const subDirs = this.$fs.readDirectory(projectData.platformsDir);
-		return _.filter(subDirs, p => this.$platformsDataService.platformsNames.indexOf(p) > -1);
+		return _.filter(subDirs, p => this.$mobileHelper.platformNames.indexOf(p) > -1);
 	}
 
 	public getAvailablePlatforms(projectData: IProjectData): string[] {
 		const installedPlatforms = this.getInstalledPlatforms(projectData);
-		return _.filter(this.$platformsDataService.platformsNames, p => {
+		return _.filter(this.$mobileHelper.platformNames, p => {
 			return installedPlatforms.indexOf(p) < 0 && this.$platformValidationService.isPlatformSupportedForOS(p, projectData); // Only those not already installed
 		});
 	}
 
 	public getPreparedPlatforms(projectData: IProjectData): string[] {
-		return _.filter(this.$platformsDataService.platformsNames, p => { return this.isPlatformPrepared(p, projectData); });
+		return _.filter(this.$mobileHelper.platformNames, p => { return this.isPlatformPrepared(p, projectData); });
 	}
 
 	public getCurrentPlatformVersion(platform: string, projectData: IProjectData): string {
@@ -174,7 +175,7 @@ export class PlatformCommandsService implements IPlatformCommandsService {
 		let packageName = platformData.normalizedPlatformName.toLowerCase();
 		await this.removePlatforms([packageName], projectData);
 		packageName = updateOptions.newVersion ? `${packageName}@${updateOptions.newVersion}` : packageName;
-		await this.$addPlatformController.addPlatform({
+		await this.$platformController.addPlatform({
 			projectDir: projectData.projectDir,
 			platform: packageName
 		});
@@ -186,4 +187,4 @@ export class PlatformCommandsService implements IPlatformCommandsService {
 		return platformData.platformProjectService.isPlatformPrepared(platformData.projectRoot, projectData);
 	}
 }
-$injector.register("platformCommandsService", PlatformCommandsService);
+$injector.register("platformCommandHelper", PlatformCommandHelper);

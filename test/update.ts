@@ -47,7 +47,7 @@ function createTestInjector(
 			return "1.0.0";
 		}
 	});
-	testInjector.register("platformCommandsService", {
+	testInjector.register("platformCommandHelper", {
 		getInstalledPlatforms: function(): string[] {
 			return installedPlatforms;
 		},
@@ -142,17 +142,17 @@ describe("update command method tests", () => {
 			const testInjector = createTestInjector(installedPlatforms);
 			const fs = testInjector.resolve("fs");
 			const deleteDirectory: sinon.SinonStub = sandbox.stub(fs, "deleteDirectory");
-			const platformCommandsService = testInjector.resolve("platformCommandsService");
+			const platformCommandHelper = testInjector.resolve("platformCommandHelper");
 			sandbox.stub(fs, "copyFile").throws();
-			sandbox.spy(platformCommandsService, "addPlatforms");
-			sandbox.spy(platformCommandsService, "removePlatforms");
+			sandbox.spy(platformCommandHelper, "addPlatforms");
+			sandbox.spy(platformCommandHelper, "removePlatforms");
 			const updateCommand = testInjector.resolve<UpdateCommand>(UpdateCommand);
 
 			await updateCommand.execute(["3.3.0"]);
 
 			assert.isTrue(deleteDirectory.calledWith(path.join(projectFolder, UpdateCommand.tempFolder)));
-			assert.isFalse(platformCommandsService.removePlatforms.calledWith(installedPlatforms));
-			assert.isFalse(platformCommandsService.addPlatforms.calledWith(installedPlatforms));
+			assert.isFalse(platformCommandHelper.removePlatforms.calledWith(installedPlatforms));
+			assert.isFalse(platformCommandHelper.addPlatforms.calledWith(installedPlatforms));
 		});
 
 		it("calls copy to temp for package.json and folders(backup)", async () => {
@@ -171,7 +171,7 @@ describe("update command method tests", () => {
 
 		it("calls copy from temp for package.json and folders to project folder(restore)", async () => {
 			const testInjector = createTestInjector();
-			testInjector.resolve("platformCommandsService").removePlatforms = () => {
+			testInjector.resolve("platformCommandHelper").removePlatforms = () => {
 				throw new Error();
 			};
 			const fs = testInjector.resolve("fs");
@@ -205,29 +205,29 @@ describe("update command method tests", () => {
 		it("calls remove platforms and add platforms", async () => {
 			const installedPlatforms: string[] = ["android"];
 			const testInjector = createTestInjector(installedPlatforms);
-			const platformCommandsService = testInjector.resolve("platformCommandsService");
-			sandbox.spy(platformCommandsService, "addPlatforms");
-			sandbox.spy(platformCommandsService, "removePlatforms");
+			const platformCommandHelper = testInjector.resolve("platformCommandHelper");
+			sandbox.spy(platformCommandHelper, "addPlatforms");
+			sandbox.spy(platformCommandHelper, "removePlatforms");
 			const updateCommand = testInjector.resolve<UpdateCommand>(UpdateCommand);
 
 			await updateCommand.execute([]);
 
-			assert(platformCommandsService.removePlatforms.calledWith(installedPlatforms));
-			assert(platformCommandsService.addPlatforms.calledWith(installedPlatforms));
+			assert(platformCommandHelper.removePlatforms.calledWith(installedPlatforms));
+			assert(platformCommandHelper.addPlatforms.calledWith(installedPlatforms));
 		});
 
 		it("call add platforms with specific verison", async () => {
 			const version = "3.3.0";
 			const installedPlatforms: string[] = ["android"];
 			const testInjector = createTestInjector(installedPlatforms);
-			const platformCommandsService = testInjector.resolve("platformCommandsService");
-			sandbox.spy(platformCommandsService, "addPlatforms");
-			sandbox.spy(platformCommandsService, "removePlatforms");
+			const platformCommandHelper = testInjector.resolve("platformCommandHelper");
+			sandbox.spy(platformCommandHelper, "addPlatforms");
+			sandbox.spy(platformCommandHelper, "removePlatforms");
 
 			const updateCommand = testInjector.resolve<UpdateCommand>(UpdateCommand);
 			await updateCommand.execute([version]);
 
-			assert(platformCommandsService.addPlatforms.calledWith([`${installedPlatforms}@${version}`]));
+			assert(platformCommandHelper.addPlatforms.calledWith([`${installedPlatforms}@${version}`]));
 		});
 
 		it("calls remove and add of core modules and widgets", async () => {

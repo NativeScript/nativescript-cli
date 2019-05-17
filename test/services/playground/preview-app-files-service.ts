@@ -17,7 +17,7 @@ class ProjectDataServiceMock {
 	}
 }
 
-class PlatformsDataMock {
+class NativeProjectDataServiceMock {
 	public getPlatformData(platform: string) {
 		const appDestinationDirectoryPath = path.join(projectDir, "platforms", platform, "app");
 		return {
@@ -31,7 +31,7 @@ function createTestInjector(data?: { files: string[] }) {
 	injector.register("previewAppFilesService", PreviewAppFilesService);
 	injector.register("fs", FileSystemStub);
 	injector.register("logger", LoggerStub);
-	injector.register("platformsDataService", PlatformsDataMock);
+	injector.register("platformsDataService", NativeProjectDataServiceMock);
 	injector.register("projectDataService", ProjectDataServiceMock);
 	injector.register("projectFilesManager", {
 		getProjectFiles: () => data ? data.files : []

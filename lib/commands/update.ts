@@ -9,7 +9,7 @@ export class UpdateCommand extends ValidatePlatformCommandBase implements IComma
 		private $fs: IFileSystem,
 		private $logger: ILogger,
 		$options: IOptions,
-		private $platformCommandsService: IPlatformCommandsService,
+		private $platformCommandHelper: IPlatformCommandHelper,
 		$platformsDataService: IPlatformsDataService,
 		$platformValidationService: IPlatformValidationService,
 		private $pluginsService: IPluginsService,
@@ -85,7 +85,7 @@ export class UpdateCommand extends ValidatePlatformCommandBase implements IComma
 			this.$projectDataService.removeNSProperty(this.$projectData.projectDir, platformData.frameworkPackageName);
 		}
 
-		await this.$platformCommandsService.removePlatforms(platforms.installed, this.$projectData);
+		await this.$platformCommandHelper.removePlatforms(platforms.installed, this.$projectData);
 		await this.$pluginsService.remove(constants.TNS_CORE_MODULES_NAME, this.$projectData);
 		if (!!this.$projectData.dependencies[constants.TNS_CORE_MODULES_WIDGETS_NAME]) {
 			await this.$pluginsService.remove(constants.TNS_CORE_MODULES_WIDGETS_NAME, this.$projectData);
@@ -97,12 +97,12 @@ export class UpdateCommand extends ValidatePlatformCommandBase implements IComma
 
 		if (args.length === 1) {
 			for (const platform of platforms.packagePlatforms) {
-				await this.$platformCommandsService.addPlatforms([platform + "@" + args[0]], this.$projectData, this.$options.frameworkPath);
+				await this.$platformCommandHelper.addPlatforms([platform + "@" + args[0]], this.$projectData, this.$options.frameworkPath);
 			}
 
 			await this.$pluginsService.add(`${constants.TNS_CORE_MODULES_NAME}@${args[0]}`, this.$projectData);
 		} else {
-			await this.$platformCommandsService.addPlatforms(platforms.packagePlatforms, this.$projectData, this.$options.frameworkPath);
+			await this.$platformCommandHelper.addPlatforms(platforms.packagePlatforms, this.$projectData, this.$options.frameworkPath);
 			await this.$pluginsService.add(constants.TNS_CORE_MODULES_NAME, this.$projectData);
 		}
 
@@ -110,8 +110,8 @@ export class UpdateCommand extends ValidatePlatformCommandBase implements IComma
 	}
 
 	private getPlatforms(): { installed: string[], packagePlatforms: string[] } {
-		const installedPlatforms = this.$platformCommandsService.getInstalledPlatforms(this.$projectData);
-		const availablePlatforms = this.$platformCommandsService.getAvailablePlatforms(this.$projectData);
+		const installedPlatforms = this.$platformCommandHelper.getInstalledPlatforms(this.$projectData);
+		const availablePlatforms = this.$platformCommandHelper.getAvailablePlatforms(this.$projectData);
 		const packagePlatforms: string[] = [];
 
 		for (const platform of availablePlatforms) {

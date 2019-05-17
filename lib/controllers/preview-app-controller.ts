@@ -5,7 +5,7 @@ import { performanceLog } from "../common/decorators";
 import { stringify } from "../common/helpers";
 import { HmrConstants } from "../common/constants";
 import { EventEmitter } from "events";
-import { PreviewAppEmitter } from "../preview-app-emitter";
+import { PreviewAppEmitter } from "../emitters/preview-app-emitter";
 import { PrepareDataService } from "../services/prepare-data-service";
 
 export class PreviewAppController extends EventEmitter {
@@ -60,7 +60,7 @@ export class PreviewAppController extends EventEmitter {
 				data.env.externals = this.$previewAppPluginsService.getExternalPlugins(device);
 
 				const prepareData = this.$prepareDataService.getPrepareData(data.projectDir, device.platform.toLowerCase(),  { ...data, skipNativePrepare: true } );
-				await this.$prepareController.preparePlatform(prepareData);
+				await this.$prepareController.prepare(prepareData);
 
 				this.deviceInitializationPromise[device.id] = this.getInitialFilesForPlatformSafe(data, device.platform);
 

@@ -21,7 +21,7 @@ let emittedEventData: any[] = [];
 function createTestInjector(data: { hasNativeChanges: boolean }): IInjector {
 	const injector = new InjectorStub();
 
-	injector.register("addPlatformController", {
+	injector.register("platformController", {
 		addPlatformIfNeeded: () => ({})
 	});
 
@@ -75,7 +75,7 @@ describe("prepareController", () => {
 					const injector = createTestInjector({ hasNativeChanges });
 
 					const prepareController: PrepareController = injector.resolve("prepareController");
-					await prepareController.preparePlatform({ ...prepareData, platform });
+					await prepareController.prepare({ ...prepareData, platform });
 
 					assert.isTrue(isCompileWithWatchCalled);
 					assert.isTrue(isNativePrepareCalled);
@@ -94,7 +94,7 @@ describe("prepareController", () => {
 					return false;
 				};
 
-				await prepareController.preparePlatform({ ...prepareData, platform });
+				await prepareController.prepare({ ...prepareData, platform });
 
 				assert.lengthOf(emittedEventNames, 1);
 				assert.lengthOf(emittedEventData, 1);
@@ -110,7 +110,7 @@ describe("prepareController", () => {
 				const injector = createTestInjector({ hasNativeChanges: false });
 
 				const prepareController: PrepareController = injector.resolve("prepareController");
-				await prepareController.preparePlatform({ ...prepareData, watch: false, platform });
+				await prepareController.prepare({ ...prepareData, watch: false, platform });
 
 				assert.isTrue(isNativePrepareCalled);
 				assert.isTrue(isCompileWithoutWatchCalled);

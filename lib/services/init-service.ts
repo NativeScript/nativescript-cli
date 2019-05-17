@@ -46,10 +46,11 @@ export class InitService implements IInitService {
 
 				projectData[this.$staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE][this.$options.frameworkName] = _.extend(currentPlatformData, this.buildVersionData(this.$options.frameworkVersion));
 			} else {
+				const $mobileHelper: Mobile.IMobileHelper = this.$injector.resolve("mobileHelper");
 				const $platformsDataService = this.$injector.resolve("platformsDataService");
 				const $projectData = this.$injector.resolve("projectData");
 				$projectData.initializeProjectData(path.dirname(this.projectFilePath));
-				for (const platform of $platformsDataService.platformsNames) {
+				for (const platform of $mobileHelper.platformNames) {
 					const platformData: IPlatformData = $platformsDataService.getPlatformData(platform, $projectData);
 					if (!platformData.targetedOS || (platformData.targetedOS && _.includes(platformData.targetedOS, process.platform))) {
 						const currentPlatformData = projectData[this.$staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE][platformData.frameworkPackageName] || {};

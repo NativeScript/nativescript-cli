@@ -1,13 +1,13 @@
 import { performanceLog } from "../../common/decorators";
-import { RunOnDevicesEmitter } from "../../run-on-devices-emitter";
+import { RunEmitter } from "../../emitters/run-emitter";
 import { LiveSyncServiceResolver } from "../../resolvers/livesync-service-resolver";
 
-export class DeviceRefreshAppService {
+export class DeviceRefreshAppService implements IDeviceRefreshAppService {
 
 	constructor(
 		private $liveSyncServiceResolver: LiveSyncServiceResolver,
 		private $logger: ILogger,
-		private $runOnDevicesEmitter: RunOnDevicesEmitter
+		private $runEmitter: RunEmitter
 	) { }
 
 	@performanceLog()
@@ -28,7 +28,7 @@ export class DeviceRefreshAppService {
 			}
 
 			if (shouldRestart) {
-				this.$runOnDevicesEmitter.emitDebuggerDetachedEvent(liveSyncResultInfo.deviceAppData.device);
+				this.$runEmitter.emitDebuggerDetachedEvent(liveSyncResultInfo.deviceAppData.device);
 				await platformLiveSyncService.restartApplication(projectData, liveSyncResultInfo);
 				result.didRestart = true;
 			}
@@ -37,11 +37,11 @@ export class DeviceRefreshAppService {
 			const msg = `Unable to start application ${applicationIdentifier} on device ${liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier}. Try starting it manually.`;
 			this.$logger.warn(msg);
 			if (!settings || !settings.shouldSkipEmitLiveSyncNotification) {
-				this.$runOnDevicesEmitter.emitRunOnDeviceNotificationEvent(projectData, liveSyncResultInfo.deviceAppData.device, msg);
+				this.$runEmitter.emitRunNotificationEvent(projectData, liveSyncResultInfo.deviceAppData.device, msg);
 			}
 
 			if (settings && settings.shouldCheckDeveloperDiscImage && (err.message || err) === "Could not find developer disk image") {
-				this.$runOnDevicesEmitter.emitUserInteractionNeededEvent(projectData, liveSyncResultInfo.deviceAppData.device, deviceDescriptor);
+				this.$runEmitter.emitUserInteractionNeededEvent(projectData, liveSyncResultInfo.deviceAppData.device, deviceDescriptor);
 			}
 		}
 

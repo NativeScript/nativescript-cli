@@ -1,5 +1,5 @@
 import { performanceLog } from "../../common/decorators";
-import { RunOnDevicesEmitter } from "../../run-on-devices-emitter";
+import { RunEmitter } from "../../emitters/run-emitter";
 import { EOL } from "os";
 
 export class DeviceDebugAppService {
@@ -10,7 +10,7 @@ export class DeviceDebugAppService {
 		private $errors: IErrors,
 		private $logger: ILogger,
 		private $projectDataService: IProjectDataService,
-		private $runOnDevicesEmitter: RunOnDevicesEmitter
+		private $runEmitter: RunEmitter
 	) { }
 
 	@performanceLog()
@@ -47,7 +47,6 @@ export class DeviceDebugAppService {
 
 		// Of the properties below only `buildForDevice` and `release` are currently used.
 		// Leaving the others with placeholder values so that they may not be forgotten in future implementations.
-		// debugData.pathToAppPackage = this.$buildArtefactsService.getLastBuiltPackagePath(platformData, buildConfig, settings.outputPath);
 		const debugInfo = await this.$debugService.debug(debugData, settings.debugOptions);
 		const result = this.printDebugInformation(debugInfo, settings.debugOptions.forceDebuggerAttachedEvent);
 		return result;
@@ -56,7 +55,7 @@ export class DeviceDebugAppService {
 	public printDebugInformation(debugInformation: IDebugInformation, fireDebuggerAttachedEvent: boolean = true): IDebugInformation {
 		if (!!debugInformation.url) {
 			if (fireDebuggerAttachedEvent) {
-				this.$runOnDevicesEmitter.emitDebuggerAttachedEvent(debugInformation);
+				this.$runEmitter.emitDebuggerAttachedEvent(debugInformation);
 			}
 
 			this.$logger.info(`To start debugging, open the following URL in Chrome:${EOL}${debugInformation.url}${EOL}`.cyan);

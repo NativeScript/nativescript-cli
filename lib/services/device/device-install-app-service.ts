@@ -1,27 +1,23 @@
 import { TrackActionNames, HASHES_FILE_NAME } from "../../constants";
-import { BuildArtefactsService } from "../build-artefacts-service";
-import { BuildInfoFileService } from "../build-info-file-service";
-import { MobileHelper } from "../../common/mobile/mobile-helper";
 import * as helpers from "../../common/helpers";
 import * as path from "path";
-import { BuildData } from "../../data/build-data";
 
 const buildInfoFileName = ".nsbuildinfo";
 
 export class DeviceInstallAppService {
 	constructor(
 		private $analyticsService: IAnalyticsService,
-		private $buildArtefactsService: BuildArtefactsService,
+		private $buildArtefactsService: IBuildArtefactsService,
 		private $devicePathProvider: IDevicePathProvider,
 		private $fs: IFileSystem,
 		private $logger: ILogger,
-		private $mobileHelper: MobileHelper,
-		private $buildInfoFileService: BuildInfoFileService,
+		private $mobileHelper: Mobile.IMobileHelper,
+		private $buildInfoFileService: IBuildInfoFileService,
 		private $projectDataService: IProjectDataService,
 		private $platformsDataService: IPlatformsDataService
 	) { }
 
-	public async installOnDevice(device: Mobile.IDevice, buildData: BuildData, packageFile?: string): Promise<void> {
+	public async installOnDevice(device: Mobile.IDevice, buildData: IBuildData, packageFile?: string): Promise<void> {
 		this.$logger.out(`Installing on device ${device.deviceInfo.identifier}...`);
 
 		const projectData = this.$projectDataService.getProjectData(buildData.projectDir);
@@ -64,7 +60,7 @@ export class DeviceInstallAppService {
 		this.$logger.out(`Successfully installed on device with identifier '${device.deviceInfo.identifier}'.`);
 	}
 
-	public async installOnDeviceIfNeeded(device: Mobile.IDevice, buildData: BuildData, packageFile?: string): Promise<void> {
+	public async installOnDeviceIfNeeded(device: Mobile.IDevice, buildData: IBuildData, packageFile?: string): Promise<void> {
 		const shouldInstall = await this.shouldInstall(device, buildData);
 		if (shouldInstall) {
 			await this.installOnDevice(device, buildData, packageFile);
@@ -78,6 +74,20 @@ export class DeviceInstallAppService {
 			getDirname: true
 		});
 		return helpers.fromWindowsRelativePathToUnix(path.join(deviceRootPath, buildInfoFileName));
+	}
+
+	public async shouldInstall(device: Mobile.IDevice, buildData: IBuildData): Promise<boolean> {
+		const projectData = this.$projectDataService.getProjectData(buildData.projectDir);
+		const platformData = this.$platformsDataService.getPlatformData(device.deviceInfo.platform, projectData);
+		const platform = device.deviceInfo.platform;
+		if (!(await device.applicationManager.isApplicationInstalled(projectData.projectIdentifiers[platform.toLowerCase()]))) {
+			return true;
+		}
+
+		const deviceBuildInfo: IBuildInfo = await this.getDeviceBuildInfo(device, projectData);
+		const localBuildInfo = this.$buildInfoFileService.getBuildInfoFromFile(platformData, { ...buildData, buildForDevice: !device.isEmulator });
+
+		return !localBuildInfo || !deviceBuildInfo || deviceBuildInfo.buildTime !== localBuildInfo.buildTime;
 	}
 
 	private async updateHashesOnDevice(data: { device: Mobile.IDevice, appIdentifier: string, outputFilePath: string, platformData: IPlatformData }): Promise<void> {
@@ -94,20 +104,6 @@ export class DeviceInstallAppService {
 		}
 
 		await device.fileSystem.updateHashesOnDevice(hashes, appIdentifier);
-	}
-
-	private async shouldInstall(device: Mobile.IDevice, buildData: BuildData, outputPath?: string): Promise<boolean> {
-		const projectData = this.$projectDataService.getProjectData(buildData.projectDir);
-		const platformData = this.$platformsDataService.getPlatformData(device.deviceInfo.platform, projectData);
-		const platform = device.deviceInfo.platform;
-		if (!(await device.applicationManager.isApplicationInstalled(projectData.projectIdentifiers[platform.toLowerCase()]))) {
-			return true;
-		}
-
-		const deviceBuildInfo: IBuildInfo = await this.getDeviceBuildInfo(device, projectData);
-		const localBuildInfo = this.$buildInfoFileService.getBuildInfoFromFile(platformData, <any>{ buildForDevice: !device.isEmulator, release: buildData.release }, outputPath);
-
-		return !localBuildInfo || !deviceBuildInfo || deviceBuildInfo.buildTime !== localBuildInfo.buildTime;
 	}
 
 	private async getDeviceBuildInfo(device: Mobile.IDevice, projectData: IProjectData): Promise<IBuildInfo> {

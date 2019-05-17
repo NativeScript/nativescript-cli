@@ -54,7 +54,7 @@ function createTestInjector() {
 	testInjector.register("adb", {});
 	testInjector.register("androidDebugBridgeResultHandler", {});
 	testInjector.register("projectData", ProjectData);
-	testInjector.register("platforsmData", stubs.PlatformsDataStub);
+	testInjector.register("platforsmData", stubs.NativeProjectDataStub);
 	testInjector.register("childProcess", ChildProcess);
 	testInjector.register("platformsDataService", PlatformsDataService);
 	testInjector.register("androidEmulatorServices", {});
@@ -636,6 +636,8 @@ describe("Plugins service", () => {
 			unitTestsInjector.register("logger", {});
 			unitTestsInjector.register("errors", {});
 			unitTestsInjector.register("injector", unitTestsInjector);
+			unitTestsInjector.register("mobileHelper", MobileHelper);
+			unitTestsInjector.register("devicePlatformsConstants", DevicePlatformsConstants);
 
 			const pluginsService: PluginsService = unitTestsInjector.resolve(PluginsService);
 			testData.pluginsService = pluginsService;

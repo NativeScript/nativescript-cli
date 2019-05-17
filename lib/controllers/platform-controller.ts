@@ -1,11 +1,9 @@
-import { AddPlatformData } from "../data/add-platform-data";
-import { AddPlatformService } from "../services/platform/add-platform-service";
 import { NativePlatformStatus } from "../constants";
 import * as path from "path";
 
-export class AddPlatformController {
+export class PlatformController implements IPlatformController {
 	constructor(
-		private $addPlatformService: AddPlatformService,
+		private $addPlatformService: IAddPlatformService,
 		private $errors: IErrors,
 		private $fs: IFileSystem,
 		private $logger: ILogger,
@@ -15,7 +13,7 @@ export class AddPlatformController {
 		private $projectChangesService: IProjectChangesService,
 	) { }
 
-	public async addPlatform(addPlatformData: AddPlatformData): Promise<void> {
+	public async addPlatform(addPlatformData: IAddPlatformData): Promise<void> {
 		const [ platform, version ] = addPlatformData.platform.toLowerCase().split("@");
 		const projectData = this.$projectDataService.getProjectData(addPlatformData.projectDir);
 		const platformData = this.$platformsDataService.getPlatformData(platform, projectData);
@@ -35,7 +33,7 @@ export class AddPlatformController {
 		this.$logger.out(`Platform ${platform} successfully added. v${installedPlatformVersion}`);
 	}
 
-	public async addPlatformIfNeeded(addPlatformData: AddPlatformData): Promise<void> {
+	public async addPlatformIfNeeded(addPlatformData: IAddPlatformData): Promise<void> {
 		const [ platform ] = addPlatformData.platform.toLowerCase().split("@");
 		const projectData = this.$projectDataService.getProjectData(addPlatformData.projectDir);
 		const platformData = this.$platformsDataService.getPlatformData(platform, projectData);
@@ -77,4 +75,4 @@ export class AddPlatformController {
 		return !!result;
 	}
 }
-$injector.register("addPlatformController", AddPlatformController);
+$injector.register("platformController", PlatformController);

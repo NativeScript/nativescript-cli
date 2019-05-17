@@ -473,8 +473,8 @@ export class PlatformProjectServiceStub extends EventEmitter implements IPlatfor
 	}
 }
 
-export class PlatformsDataStub extends EventEmitter implements IPlatformsDataService {
-	public platformsNames: string[];
+export class NativeProjectDataStub extends EventEmitter implements IPlatformsDataService {
+	public platformNames: string[];
 
 	public getPlatformData(platform: string, projectData: IProjectData): IPlatformData {
 		return {
@@ -861,7 +861,7 @@ export class InjectorStub extends Yok implements IInjector {
 		this.register('childProcess', ChildProcessStub);
 		this.register("liveSyncService", LiveSyncServiceStub);
 		this.register("prompter", PrompterStub);
-		this.register('platformsDataService', PlatformsDataStub);
+		this.register('platformsDataService', NativeProjectDataStub);
 		this.register("androidPluginBuildService", AndroidPluginBuildServiceStub);
 		this.register('projectData', ProjectDataStub);
 		this.register('packageInstallationManager', PackageInstallationManagerStub);

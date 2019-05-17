@@ -14,7 +14,7 @@ export class AndroidDeviceSocketsLiveSyncService extends AndroidDeviceLiveSyncSe
 	constructor(
 		private data: IProjectData,
 		$injector: IInjector,
-		protected $platformsDataService: IPlatformsDataService,
+		protected platformsDataService: IPlatformsDataService,
 		protected $staticConfig: Config.IStaticConfig,
 		$logger: ILogger,
 		protected device: Mobile.IAndroidDevice,
@@ -23,7 +23,7 @@ export class AndroidDeviceSocketsLiveSyncService extends AndroidDeviceLiveSyncSe
 		private $fs: IFileSystem,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		$filesHashService: IFilesHashService) {
-		super($injector, $platformsDataService, $filesHashService, $logger, device);
+		super($injector, platformsDataService, $filesHashService, $logger, device);
 		this.livesyncTool = this.$injector.resolve(AndroidLivesyncTool);
 	}
 
@@ -147,7 +147,7 @@ export class AndroidDeviceSocketsLiveSyncService extends AndroidDeviceLiveSyncSe
 	}
 
 	private async connectLivesyncTool(appIdentifier: string, connectTimeout?: number) {
-		const platformData = this.$platformsDataService.getPlatformData(this.$devicePlatformsConstants.Android, this.data);
+		const platformData = this.platformsDataService.getPlatformData(this.$devicePlatformsConstants.Android, this.data);
 		const projectFilesPath = path.join(platformData.appDestinationDirectoryPath, APP_FOLDER_NAME);
 		if (!this.livesyncTool.hasConnection()) {
 			await this.livesyncTool.connect({

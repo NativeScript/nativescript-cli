@@ -1,6 +1,6 @@
 import * as path from "path";
 
-export class BuildArtefactsService {
+export class BuildArtefactsService implements IBuildArtefactsService {
 	constructor(
 		private $errors: IErrors,
 		private $fs: IFileSystem,

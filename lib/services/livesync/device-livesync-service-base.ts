@@ -6,7 +6,7 @@ export abstract class DeviceLiveSyncServiceBase {
 	private static FAST_SYNC_FILE_EXTENSIONS = [".css", ".xml", ".html"];
 
 	constructor(
-		protected $platformsDataService: IPlatformsDataService,
+		protected platformsDataService: IPlatformsDataService,
 		protected device: Mobile.IDevice
 	) { }
 
@@ -23,7 +23,7 @@ export abstract class DeviceLiveSyncServiceBase {
 
 	@cache()
 	private getFastLiveSyncFileExtensions(platform: string, projectData: IProjectData): string[] {
-		const platformData = this.$platformsDataService.getPlatformData(platform, projectData);
+		const platformData = this.platformsDataService.getPlatformData(platform, projectData);
 		const fastSyncFileExtensions = DeviceLiveSyncServiceBase.FAST_SYNC_FILE_EXTENSIONS.concat(platformData.fastLivesyncFileExtensions);
 		return fastSyncFileExtensions;
 	}

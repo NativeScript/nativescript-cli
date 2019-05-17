@@ -58,7 +58,6 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 
 			childProcess.on("close", (arg: any) => {
 				const exitCode = typeof arg === "number" ? arg : arg && arg.code;
-				console.log("=========== WEBPACK EXIT WITH CODE ========== ", exitCode);
 				if (exitCode === 0) {
 					resolve(childProcess);
 				} else {
@@ -80,7 +79,6 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 			const childProcess = await this.startWebpackProcess(platformData, projectData, config);
 			childProcess.on("close", (arg: any) => {
 				const exitCode = typeof arg === "number" ? arg : arg && arg.code;
-				console.log("=========== WEBPACK EXIT WITH CODE ========== ", exitCode);
 				if (exitCode === 0) {
 					resolve();
 				} else {
@@ -92,7 +90,7 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 		});
 	}
 
-	public stopWebpackCompiler(platform: string) {
+	public stopWebpackCompiler(platform: string): void {
 		if (platform) {
 			this.stopWebpackForPlatform(platform);
 		} else {

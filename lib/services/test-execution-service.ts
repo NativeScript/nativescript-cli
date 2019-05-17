@@ -1,7 +1,7 @@
 import * as constants from "../constants";
 import * as path from 'path';
 import * as os from 'os';
-import { RunOnDevicesController } from "../controllers/run-on-devices-controller";
+import { RunController } from "../controllers/run-controller";
 
 interface IKarmaConfigOptions {
 	debugBrk: boolean;
@@ -13,7 +13,7 @@ export class TestExecutionService implements ITestExecutionService {
 	private static SOCKETIO_JS_FILE_NAME = `node_modules/${constants.TEST_RUNNER_NAME}/socket.io.js`;
 
 	constructor(
-		private $runOnDevicesController: RunOnDevicesController,
+		private $runController: RunController,
 		private $httpClient: Server.IHttpClient,
 		private $config: IConfiguration,
 		private $logger: ILogger,
@@ -56,7 +56,7 @@ export class TestExecutionService implements ITestExecutionService {
 				// Prepare the project AFTER the TestExecutionService.CONFIG_FILE_NAME file is created in node_modules
 				// so it will be sent to device.
 
-				await this.$runOnDevicesController.runOnDevices({
+				await this.$runController.run({
 					projectDir: liveSyncInfo.projectDir,
 					liveSyncInfo,
 					deviceDescriptors

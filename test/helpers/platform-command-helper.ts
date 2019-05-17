@@ -1,6 +1,9 @@
-import { PlatformCommandsService } from "../../../lib/services/platform/platform-commands-service";
+
 import { assert } from "chai";
-import { InjectorStub } from "../../stubs";
+import { InjectorStub } from "../stubs";
+import { MobileHelper } from "../../lib/common/mobile/mobile-helper";
+import { DevicePlatformsConstants } from "../../lib/common/mobile/device-platforms-constants";
+import { PlatformCommandHelper } from "../../lib/helpers/platform-command-helper";
 
 let isAddPlatformCalled = false;
 
@@ -16,7 +19,7 @@ function createTestInjector() {
 		addPlatform: () => ({})
 	});
 
-	injector.register("addPlatformController", {
+	injector.register("platformController", {
 		addPlatform: () => isAddPlatformCalled = true
 	});
 
@@ -28,17 +31,20 @@ function createTestInjector() {
 		validatePlatformInstalled: () => ({})
 	});
 
-	injector.register("platformCommandsService", PlatformCommandsService);
+	injector.register("platformCommandHelper", PlatformCommandHelper);
+
+	injector.register("mobileHelper", MobileHelper);
+	injector.register("devicePlatformsConstants", DevicePlatformsConstants);
 
 	return injector;
 }
 
-describe("PlatformCommandsService", () => {
+describe("PlatformCommandHelper", () => {
 	let injector: IInjector = null;
-	let platformCommandsService: PlatformCommandsService = null;
+	let platformCommandHelper: IPlatformCommandHelper = null;
 	beforeEach(() => {
 		injector = createTestInjector();
-		platformCommandsService = injector.resolve("platformCommandsService");
+		platformCommandHelper = injector.resolve("platformCommandHelper");
 	});
 
 	describe("add platforms unit tests", () => {
@@ -51,16 +57,16 @@ describe("PlatformCommandsService", () => {
 				const fs = injector.resolve("fs");
 				fs.exists = () => false;
 
-				await platformCommandsService.addPlatforms([platform], projectData, null);
+				await platformCommandHelper.addPlatforms([platform], projectData, null);
 
 				assert.isTrue(isAddPlatformCalled);
 			});
 		});
 		_.each(["ios", "android"], platform => {
 			it(`should fail if ${platform} platform is already installed`, async () => {
-				(<any>platformCommandsService).isPlatformAdded = () => true;
+				(<any>platformCommandHelper).isPlatformAdded = () => true;
 
-				await assert.isRejected(platformCommandsService.addPlatforms([platform], projectData, ""), `Platform ${platform} already added`);
+				await assert.isRejected(platformCommandHelper.addPlatforms([platform], projectData, ""), `Platform ${platform} already added`);
 			});
 		});
 	});
@@ -73,9 +79,9 @@ describe("PlatformCommandsService", () => {
 				projectDataService.getNSValue = () => versionData;
 				projectDataService.removeNSProperty = () => { versionData = null; };
 
-				(<any>platformCommandsService).isPlatformAdded = () => false;
+				(<any>platformCommandHelper).isPlatformAdded = () => false;
 
-				await platformCommandsService.cleanPlatforms([platform], injector.resolve("projectData"), "");
+				await platformCommandHelper.cleanPlatforms([platform], injector.resolve("projectData"), "");
 			});
 		});
 	});
@@ -84,7 +90,7 @@ describe("PlatformCommandsService", () => {
 			const packageInstallationManager: IPackageInstallationManager = injector.resolve("packageInstallationManager");
 			packageInstallationManager.getLatestVersion = async () => "0.2.0";
 
-			await assert.isRejected(platformCommandsService.updatePlatforms(["android"], projectData), "Native Platform cannot be updated.");
+			await assert.isRejected(platformCommandHelper.updatePlatforms(["android"], projectData), "Native Platform cannot be updated.");
 		});
 	});
 });

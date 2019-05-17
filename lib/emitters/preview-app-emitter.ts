@@ -1,5 +1,5 @@
 import { EventEmitter } from "events";
-import { PreviewAppLiveSyncEvents } from "./services/livesync/playground/preview-app-constants";
+import { PreviewAppLiveSyncEvents } from "../services/livesync/playground/preview-app-constants";
 
 export class PreviewAppEmitter extends EventEmitter {
 	public emitPreviewAppLiveSyncError(data: IPreviewAppLiveSyncData, deviceId: string, error: Error, platform?: string) {

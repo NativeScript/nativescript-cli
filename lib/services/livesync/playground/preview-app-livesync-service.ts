@@ -1,7 +1,7 @@
 import { APP_RESOURCES_FOLDER_NAME } from "../../../constants";
 import { EventEmitter } from "events";
 import { performanceLog } from "../../../common/decorators";
-import { PreviewAppEmitter } from "../../../preview-app-emitter";
+import { PreviewAppEmitter } from "../../../emitters/preview-app-emitter";
 
 export class PreviewAppLiveSyncService extends EventEmitter implements IPreviewAppLiveSyncService {
 

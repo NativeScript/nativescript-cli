@@ -1029,7 +1029,7 @@ interface IPlatformValidationService {
 	isPlatformSupportedForOS(platform: string, projectData: IProjectData): boolean;
 }
 
-interface IPlatformCommandsService {
+interface IPlatformCommandHelper {
 	addPlatforms(platforms: string[], projectData: IProjectData, frameworkPath: string): Promise<void>;
 	cleanPlatforms(platforms: string[], projectData: IProjectData, framworkPath: string): Promise<void>;
 	removePlatforms(platforms: string[], projectData: IProjectData): Promise<void>;
@@ -1037,10 +1037,5 @@ interface IPlatformCommandsService {
 	getInstalledPlatforms(projectData: IProjectData): string[];
 	getAvailablePlatforms(projectData: IProjectData): string[];
 	getPreparedPlatforms(projectData: IProjectData): string[];
-}
-
-interface IAddPlatformData {
-	platformParam: string;
-	frameworkPath?: string;
-	nativePrepare?: INativePrepare;
+	getCurrentPlatformVersion(platform: string, projectData: IProjectData): string;
 }

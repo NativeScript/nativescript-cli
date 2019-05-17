@@ -42,9 +42,9 @@ describe("AddPlatformService", () => {
 				const pacoteService: PacoteService = injector.resolve("pacoteService");
 				pacoteService.extractPackage = async (): Promise<void> => { throw new Error(errorMessage); };
 
-				const platformData = injector.resolve("platformsDataService").getPlatformData(platform, projectData);
+				const platformsDataService = injector.resolve("platformsDataService").getPlatformData(platform, projectData);
 
-				await assert.isRejected(addPlatformService.addPlatformSafe(projectData, platformData, "somePackage", nativePrepare), errorMessage);
+				await assert.isRejected(addPlatformService.addPlatformSafe(projectData, platformsDataService, "somePackage", nativePrepare), errorMessage);
 			});
 			it(`shouldn't add native platform when skipNativePrepare is provided for ${platform}`, async () => {
 				const projectDataService = injector.resolve("projectDataService");

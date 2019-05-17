@@ -1,6 +1,6 @@
-import { DataBase } from "./data-base";
+import { ControllerDataBase } from "./controller-data-base";
 
-export class PrepareData extends DataBase {
+export class PrepareData extends ControllerDataBase {
 	public release: boolean;
 	public hmr: boolean;
 	public env: any;

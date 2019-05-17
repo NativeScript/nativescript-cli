@@ -1,7 +1,7 @@
 import { EventEmitter } from "events";
 
 declare global {
-	interface ILiveSyncProcessInfo {
+	interface IRunOnDeviceProcessInfo {
 		timer: NodeJS.Timer;
 		actionsChain: Promise<any>;
 		isStopped: boolean;

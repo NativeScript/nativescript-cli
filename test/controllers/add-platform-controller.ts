@@ -1,5 +1,5 @@
 import { InjectorStub, PacoteServiceStub } from "../stubs";
-import { AddPlatformController } from "../../lib/controllers/add-platform-controller";
+import { PlatformController } from "../../lib/controllers/platform-controller";
 import { AddPlatformService } from "../../lib/services/platform/add-platform-service";
 import { assert } from "chai";
 import { format } from "util";
@@ -13,7 +13,7 @@ function createInjector(data?: { latestFrameworkVersion: string }) {
 	const version = (data && data.latestFrameworkVersion) || latestFrameworkVersion;
 
 	const injector = new InjectorStub();
-	injector.register("addPlatformController", AddPlatformController);
+	injector.register("platformController", PlatformController);
 	injector.register("addPlatformService", AddPlatformService);
 	injector.register("pacoteService", PacoteServiceStub);
 
@@ -35,7 +35,7 @@ function createInjector(data?: { latestFrameworkVersion: string }) {
 
 const projectDir = "/my/test/dir";
 
-describe("AddPlatformController", () => {
+describe("PlatformController", () => {
 	const testCases = [
 		{
 			name: "should add the platform (tns platform add <platform>@4.2.1)",
@@ -63,8 +63,8 @@ describe("AddPlatformController", () => {
 				const injector = createInjector({ latestFrameworkVersion: testCase.latestFrameworkVersion });
 
 				const platformParam = testCase.getPlatformParam ? testCase.getPlatformParam(platform) : platform;
-				const addPlatformController: AddPlatformController = injector.resolve("addPlatformController");
-				await addPlatformController.addPlatform({ projectDir, platform: platformParam, frameworkPath: testCase.frameworkPath });
+				const platformController: PlatformController = injector.resolve("platformController");
+				await platformController.addPlatform({ projectDir, platform: platformParam, frameworkPath: testCase.frameworkPath });
 
 				const expectedMessage = `Platform ${platform} successfully added. v${testCase.latestFrameworkVersion}`;
 				assert.deepEqual(actualMessage, expectedMessage);
@@ -81,9 +81,9 @@ describe("AddPlatformController", () => {
 			const fs = injector.resolve("fs");
 			fs.exists = (filePath: string) => filePath !== frameworkPath;
 
-			const addPlatformController: AddPlatformController = injector.resolve("addPlatformController");
+			const platformController: PlatformController = injector.resolve("platformController");
 
-			await assert.isRejected(addPlatformController.addPlatform({ projectDir, platform, frameworkPath }), errorMessage);
+			await assert.isRejected(platformController.addPlatform({ projectDir, platform, frameworkPath }), errorMessage);
 		});
 		it(`should respect platform version in package.json's nativescript key for ${platform}`, async () => {
 			const version = "2.5.0";
@@ -93,8 +93,8 @@ describe("AddPlatformController", () => {
 			const projectDataService = injector.resolve("projectDataService");
 			projectDataService.getNSValue = () => ({ version });
 
-			const addPlatformController: AddPlatformController = injector.resolve("addPlatformController");
-			await addPlatformController.addPlatform({ projectDir, platform });
+			const platformController: PlatformController = injector.resolve("platformController");
+			await platformController.addPlatform({ projectDir, platform });
 
 			const expectedPackageToAdd = `tns-${platform}@${version}`;
 			assert.deepEqual(extractedPackageFromPacote, expectedPackageToAdd);
@@ -105,8 +105,8 @@ describe("AddPlatformController", () => {
 			const projectDataService = injector.resolve("projectDataService");
 			projectDataService.getNSValue = () => <any>null;
 
-			const addPlatformController: AddPlatformController = injector.resolve("addPlatformController");
-			await addPlatformController.addPlatform({ projectDir, platform });
+			const platformController: PlatformController = injector.resolve("platformController");
+			await platformController.addPlatform({ projectDir, platform });
 
 			const expectedPackageToAdd = `tns-${platform}@${latestFrameworkVersion}`;
 			assert.deepEqual(extractedPackageFromPacote, expectedPackageToAdd);

@@ -1,38 +1,34 @@
-import { PrepareController } from "./prepare-controller";
-import { BuildData } from "../data/build-data";
 import * as constants from "../constants";
-import { BuildArtefactsService } from "../services/build-artefacts-service";
 import { Configurations } from "../common/constants";
 import { EventEmitter } from "events";
 import { attachAwaitDetach } from "../common/helpers";
-import { BuildInfoFileService } from "../services/build-info-file-service";
 
-export class BuildController extends EventEmitter {
+export class BuildController extends EventEmitter implements IBuildController {
 	constructor(
 		private $analyticsService: IAnalyticsService,
-		private $buildArtefactsService: BuildArtefactsService,
-		private $buildInfoFileService: BuildInfoFileService,
+		private $buildArtefactsService: IBuildArtefactsService,
+		private $buildInfoFileService: IBuildInfoFileService,
 		private $fs: IFileSystem,
 		private $logger: ILogger,
 		private $injector: IInjector,
 		private $mobileHelper: Mobile.IMobileHelper,
 		private $projectDataService: IProjectDataService,
 		private $projectChangesService: IProjectChangesService,
-		private $prepareController: PrepareController,
+		private $prepareController: IPrepareController,
 	) { super(); }
 
 	private get $platformsDataService(): IPlatformsDataService {
 		return this.$injector.resolve("platformsDataService");
 	}
 
-	public async prepareAndBuildPlatform(buildData: BuildData): Promise<string> {
-		await this.$prepareController.preparePlatform(buildData);
-		const result = await this.buildPlatform(buildData);
+	public async prepareAndBuild(buildData: IBuildData): Promise<string> {
+		await this.$prepareController.prepare(buildData);
+		const result = await this.build(buildData);
 
 		return result;
 	}
 
-	public async buildPlatform(buildData: BuildData) {
+	public async build(buildData: IBuildData): Promise<string> {
 		this.$logger.out("Building project...");
 
 		const platform = buildData.platform.toLowerCase();
@@ -76,28 +72,28 @@ export class BuildController extends EventEmitter {
 		return result;
 	}
 
-	public async buildPlatformIfNeeded(buildData: BuildData): Promise<string> {
+	public async buildIfNeeded(buildData: IBuildData): Promise<string> {
 		let result = null;
 
-		const platform = buildData.platform.toLowerCase();
-		const projectData = this.$projectDataService.getProjectData(buildData.projectDir);
-		const platformData = this.$platformsDataService.getPlatformData(platform, projectData);
-
-		const outputPath = buildData.outputPath || platformData.getBuildOutputPath(buildData);
-		const shouldBuildPlatform = await this.shouldBuildPlatform(buildData, platformData, outputPath);
+		const shouldBuildPlatform = await this.shouldBuild(buildData);
 		if (shouldBuildPlatform) {
-			result = await this.buildPlatform(buildData);
+			result = await this.build(buildData);
 		}
 
 		return result;
 	}
 
-	private async shouldBuildPlatform(buildData: BuildData, platformData: IPlatformData, outputPath: string): Promise<boolean> {
+	public async shouldBuild(buildData: IBuildData): Promise<boolean> {
+		const projectData = this.$projectDataService.getProjectData(buildData.projectDir);
+		const platformData = this.$platformsDataService.getPlatformData(buildData.platform, projectData);
+		const outputPath = buildData.outputPath || platformData.getBuildOutputPath(buildData);
+
 		if (buildData.release && this.$projectChangesService.currentChanges.hasChanges) {
 			return true;
 		}
 
-		if (this.$projectChangesService.currentChanges.changesRequireBuild) {
+		const changesInfo = this.$projectChangesService.currentChanges || await this.$projectChangesService.checkForChanges(platformData, projectData, buildData);
+		if (changesInfo.changesRequireBuild) {
 			return true;
 		}
 
@@ -112,7 +108,7 @@ export class BuildController extends EventEmitter {
 		}
 
 		const prepareInfo = this.$projectChangesService.getPrepareInfo(platformData);
-		const buildInfo = this.$buildInfoFileService.getBuildInfoFromFile(platformData, buildData, outputPath);
+		const buildInfo = this.$buildInfoFileService.getBuildInfoFromFile(platformData, buildData);
 		if (!prepareInfo || !buildInfo) {
 			return true;
 		}

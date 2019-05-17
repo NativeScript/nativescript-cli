@@ -6,6 +6,7 @@ declare global {
 	interface IWebpackCompilerService extends EventEmitter {
 		compileWithWatch(platformData: IPlatformData, projectData: IProjectData, config: IWebpackCompilerConfig): Promise<any>;
 		compileWithoutWatch(platformData: IPlatformData, projectData: IProjectData, config: IWebpackCompilerConfig): Promise<void>;
+		stopWebpackCompiler(platform: string): void;
 	}
 
 	interface IWebpackCompilerConfig {
@@ -14,11 +15,12 @@ declare global {
 	}
 
 	interface IWebpackEnvOptions {
-
+		sourceMap?: boolean;
+		uglify?: boolean;
 	}
 
 	interface IProjectChangesService {
-		checkForChanges(platformData: IPlatformData, projectData: IProjectData, prepareData: PrepareData): Promise<IProjectChangesInfo>;
+		checkForChanges(platformData: IPlatformData, projectData: IProjectData, prepareData: IPrepareData): Promise<IProjectChangesInfo>;
 		getPrepareInfoFilePath(platformData: IPlatformData): string;
 		getPrepareInfo(platformData: IPlatformData): IPrepareInfo;
 		savePrepareInfo(platformData: IPlatformData): void;
@@ -30,11 +32,6 @@ declare global {
 		platform: string;
 		files: string[];
 		hmrData: IPlatformHmrData;
-		hasNativeChanges: boolean;
-	}
-
-	interface IPrepareOutputData {
-		platform: string;
 		hasNativeChanges: boolean;
 	}
 

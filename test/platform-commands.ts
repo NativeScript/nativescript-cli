@@ -19,8 +19,8 @@ import * as ChildProcessLib from "../lib/common/child-process";
 import ProjectChangesLib = require("../lib/services/project-changes-service");
 import { Messages } from "../lib/common/messages/messages";
 import { SettingsService } from "../lib/common/test/unit-tests/stubs";
-import { PlatformCommandsService } from "../lib/services/platform/platform-commands-service";
 import { PlatformValidationService } from "../lib/services/platform/platform-validation-service";
+import { PlatformCommandHelper } from "../lib/helpers/platform-command-helper";
 
 let isCommandExecuted = true;
 
@@ -81,9 +81,9 @@ class ErrorsNoFailStub implements IErrors {
 }
 
 class PlatformsDataService implements IPlatformsDataService {
-	platformsNames = ["android", "ios"];
+	platformNames = ["android", "ios"];
 	getPlatformData(platform: string): IPlatformData {
-		if (_.includes(this.platformsNames, platform)) {
+		if (_.includes(this.platformNames, platform)) {
 			return new PlatformData();
 		}
 
@@ -102,7 +102,7 @@ function createTestInjector() {
 	testInjector.register("hooksService", stubs.HooksServiceStub);
 	testInjector.register("staticConfig", StaticConfigLib.StaticConfig);
 	testInjector.register("nodeModulesDependenciesBuilder", {});
-	testInjector.register('platformCommandsService', PlatformCommandsService);
+	testInjector.register('platformCommandHelper', PlatformCommandHelper);
 	testInjector.register('platformValidationService', PlatformValidationService);
 	testInjector.register('errors', ErrorsNoFailStub);
 	testInjector.register('logger', stubs.LoggerStub);
@@ -185,20 +185,21 @@ function createTestInjector() {
 		setShouldDispose: (shouldDispose: boolean): void => undefined
 	});
 	testInjector.register("addPlatformService", {});
-	testInjector.register("addPlatformController", {});
+	testInjector.register("platformController", {});
+	testInjector.register("platformCommandHelper", PlatformCommandHelper);
 
 	return testInjector;
 }
 
 describe('Platform Service Tests', () => {
-	let platformCommandsService: IPlatformCommandsService, testInjector: IInjector;
+	let platformCommandHelper: IPlatformCommandHelper, testInjector: IInjector;
 	let commandsService: ICommandsService;
 	let fs: IFileSystem;
 	beforeEach(() => {
 		testInjector = createTestInjector();
 		testInjector.register("fs", stubs.FileSystemStub);
 		commandsService = testInjector.resolve("commands-service");
-		platformCommandsService = testInjector.resolve("platformCommandsService");
+		platformCommandHelper = testInjector.resolve("platformCommandHelper");
 		fs = testInjector.resolve("fs");
 	});
 
@@ -480,11 +481,11 @@ describe('Platform Service Tests', () => {
 				const platformActions: { action: string, platforms: string[] }[] = [];
 				const cleanCommand = testInjector.resolveCommand("platform|clean");
 
-				platformCommandsService.removePlatforms = async (platforms: string[]) => {
+				platformCommandHelper.removePlatforms = async (platforms: string[]) => {
 					platformActions.push({ action: "removePlatforms", platforms });
 				};
 
-				platformCommandsService.addPlatforms = async (platforms: string[]) => {
+				platformCommandHelper.addPlatforms = async (platforms: string[]) => {
 
 					platformActions.push({ action: "addPlatforms", platforms });
 

@@ -1,17 +1,17 @@
-import { RunOnDevicesController } from "../../lib/controllers/run-on-devices-controller";
+import { RunController } from "../../lib/controllers/run-controller";
 import { InjectorStub } from "../stubs";
 import { LiveSyncServiceResolver } from "../../lib/resolvers/livesync-service-resolver";
 import { MobileHelper } from "../../lib/common/mobile/mobile-helper";
 import { assert } from "chai";
-import { RunOnDevicesDataService } from "../../lib/services/run-on-devices-data-service";
-import { RunOnDevicesEmitter } from "../../lib/run-on-devices-emitter";
+import { RunEmitter } from "../../lib/emitters/run-emitter";
 import { RunOnDeviceEvents } from "../../lib/constants";
 import { PrepareData } from "../../lib/data/prepare-data";
 import { PrepareDataService } from "../../lib/services/prepare-data-service";
 import { BuildDataService } from "../../lib/services/build-data-service";
+import { PrepareController } from "../../lib/controllers/prepare-controller";
 
 let isAttachToHmrStatusCalled = false;
-let prepareData: PrepareData = null;
+let prepareData: IPrepareData = null;
 
 const appIdentifier = "org.nativescript.myCoolApp";
 const projectDir = "/path/to/my/projecDir";
@@ -98,7 +98,7 @@ function createTestInjector() {
 	injector.register("mobileHelper", MobileHelper);
 	injector.register("prepareController", {
 		stopWatchers: () => ({}),
-		preparePlatform: async (currentPrepareData: PrepareData) => {
+		prepare: async (currentPrepareData: PrepareData) => {
 			prepareData = currentPrepareData;
 			return { platform: prepareData.platform, hasNativeChanges: false };
 		},
@@ -106,11 +106,11 @@ function createTestInjector() {
 	});
 	injector.register("prepareNativePlatformService", {});
 	injector.register("projectChangesService", {});
-	injector.register("runOnDevicesController", RunOnDevicesController);
-	injector.register("runOnDevicesDataService", RunOnDevicesDataService);
-	injector.register("runOnDevicesEmitter", RunOnDevicesEmitter);
+	injector.register("runController", RunController);
+	injector.register("runEmitter", RunEmitter);
 	injector.register("prepareDataService", PrepareDataService);
 	injector.register("buildDataService", BuildDataService);
+	injector.register("analyticsService", ({}));
 
 	const devicesService = injector.resolve("devicesService");
 	devicesService.getDevicesForPlatform = () => <any>[{ identifier: "myTestDeviceId1" }];
@@ -120,20 +120,18 @@ function createTestInjector() {
 	return injector;
 }
 
-describe("RunOnDevicesController", () => {
+describe("RunController", () => {
 	let injector: IInjector = null;
-	let runOnDevicesController: RunOnDevicesController = null;
-	let runOnDevicesDataService: RunOnDevicesDataService = null;
-	let runOnDevicesEmitter: RunOnDevicesEmitter = null;
+	let runController: RunController = null;
+	let runEmitter: RunEmitter = null;
 
 	beforeEach(() => {
 		isAttachToHmrStatusCalled = false;
 		prepareData = null;
 
 		injector = createTestInjector();
-		runOnDevicesController = injector.resolve("runOnDevicesController");
-		runOnDevicesDataService = injector.resolve("runOnDevicesDataService");
-		runOnDevicesEmitter = injector.resolve("runOnDevicesEmitter");
+		runController = injector.resolve("runController");
+		runEmitter = injector.resolve("runEmitter");
 	});
 
 	describe("runOnDevices", () => {
@@ -141,7 +139,7 @@ describe("RunOnDevicesController", () => {
 			it("shouldn't start the watcher when skipWatcher flag is provided", async () => {
 				mockDevicesService(injector, [iOSDevice]);
 
-				await runOnDevicesController.runOnDevices({
+				await runController.run({
 					projectDir,
 					liveSyncInfo: { ...liveSyncInfo, skipWatcher: true },
 					deviceDescriptors: [iOSDeviceDescriptor]
@@ -152,7 +150,7 @@ describe("RunOnDevicesController", () => {
 			it("shouldn't attach to hmr status when skipWatcher flag is provided", async () => {
 				mockDevicesService(injector, [iOSDevice]);
 
-				await runOnDevicesController.runOnDevices({
+				await runController.run({
 					projectDir,
 					liveSyncInfo: { ...liveSyncInfo, skipWatcher: true, useHotModuleReload: true },
 					deviceDescriptors: [iOSDeviceDescriptor]
@@ -162,9 +160,8 @@ describe("RunOnDevicesController", () => {
 			});
 			it("shouldn't attach to hmr status when useHotModuleReload is false", async () => {
 				mockDevicesService(injector, [iOSDevice]);
-				runOnDevicesDataService.hasDeviceDescriptors = () => true;
 
-				await runOnDevicesController.runOnDevices({
+				await runController.run({
 					projectDir,
 					liveSyncInfo,
 					deviceDescriptors: [iOSDeviceDescriptor]
@@ -173,7 +170,9 @@ describe("RunOnDevicesController", () => {
 				assert.isFalse(isAttachToHmrStatusCalled);
 			});
 			it("shouldn't attach to hmr status when no deviceDescriptors are provided", async () => {
-				await runOnDevicesController.runOnDevices({
+				mockDevicesService(injector, [iOSDevice]);
+
+				await runController.run({
 					projectDir,
 					liveSyncInfo,
 					deviceDescriptors: []
@@ -206,13 +205,13 @@ describe("RunOnDevicesController", () => {
 					mockDevicesService(injector, testCase.connectedDevices.map(d => map[d.identifier].device));
 
 					const preparedPlatforms: string[] = [];
-					const prepareController = injector.resolve("prepareController");
-					prepareController.preparePlatform = (currentPrepareData: PrepareData) => {
+					const prepareController: PrepareController = injector.resolve("prepareController");
+					prepareController.prepare = async (currentPrepareData: PrepareData) => {
 						preparedPlatforms.push(currentPrepareData.platform);
 						return { platform: currentPrepareData.platform, hasNativeChanges: false };
 					};
 
-					await runOnDevicesController.runOnDevices({
+					await runController.run({
 						projectDir,
 						liveSyncInfo,
 						deviceDescriptors: testCase.connectedDevices
@@ -258,16 +257,16 @@ describe("RunOnDevicesController", () => {
 
 		for (const testCase of testCases) {
 			it(testCase.name, async () => {
-				runOnDevicesDataService.persistData(projectDir, testCase.currentDeviceIdentifiers.map(identifier => (<any>{ identifier })), ["ios"]);
+				(<any>runController).persistData(projectDir, testCase.currentDeviceIdentifiers.map(identifier => (<any>{ identifier })), ["ios"]);
 
 				const emittedDeviceIdentifiersForLiveSyncStoppedEvent: string[] = [];
 
-				runOnDevicesEmitter.on(RunOnDeviceEvents.runOnDeviceStopped, (data: any) => {
+				runEmitter.on(RunOnDeviceEvents.runOnDeviceStopped, (data: any) => {
 					assert.equal(data.projectDir, projectDir);
 					emittedDeviceIdentifiersForLiveSyncStoppedEvent.push(data.deviceIdentifier);
 				});
 
-				await runOnDevicesController.stopRunOnDevices(projectDir, testCase.deviceIdentifiersToBeStopped);
+				await runController.stop(projectDir, testCase.deviceIdentifiersToBeStopped);
 
 				assert.deepEqual(emittedDeviceIdentifiersForLiveSyncStoppedEvent, testCase.expectedDeviceIdentifiers);
 			});

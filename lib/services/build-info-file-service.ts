@@ -2,7 +2,7 @@ import * as path from "path";
 
 const buildInfoFileName = ".nsbuildinfo";
 
-export class BuildInfoFileService {
+export class BuildInfoFileService implements IBuildInfoFileService {
 	constructor(
 		private $fs: IFileSystem,
 		private $projectChangesService: IProjectChangesService
@@ -20,9 +20,9 @@ export class BuildInfoFileService {
 		this.$fs.writeJson(buildInfoFile, buildInfo);
 	}
 
-	public getBuildInfoFromFile(platformData: IPlatformData, buildOutputOptions: IBuildOutputOptions, buildOutputPath?: string): IBuildInfo {
-		buildOutputPath = buildOutputPath || platformData.getBuildOutputPath(buildOutputOptions);
-		const buildInfoFile = path.join(buildOutputPath, buildInfoFileName);
+	public getBuildInfoFromFile(platformData: IPlatformData, buildData: IBuildData): IBuildInfo {
+		const outputPath = buildData.outputPath || platformData.getBuildOutputPath(buildData);
+		const buildInfoFile = path.join(outputPath, buildInfoFileName);
 		if (this.$fs.exists(buildInfoFile)) {
 			try {
 				const buildInfo = this.$fs.readJson(buildInfoFile);

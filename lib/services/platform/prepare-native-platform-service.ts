@@ -3,9 +3,8 @@ import { hook } from "../../common/helpers";
 import { performanceLog } from "../../common/decorators";
 import * as path from "path";
 import { NativePlatformStatus, APP_FOLDER_NAME, APP_RESOURCES_FOLDER_NAME } from "../../constants";
-import { PrepareData } from "../../data/prepare-data";
 
-export class PrepareNativePlatformService {
+export class PrepareNativePlatformService implements IPrepareNativePlatformService {
 
 	constructor(
 		private $androidResourcesMigrationService: IAndroidResourcesMigrationService,
@@ -17,7 +16,7 @@ export class PrepareNativePlatformService {
 
 	@performanceLog()
 	@hook('prepareNativeApp')
-	public async prepareNativePlatform(platformData: IPlatformData, projectData: IProjectData, prepareData: PrepareData): Promise<boolean> {
+	public async prepareNativePlatform(platformData: IPlatformData, projectData: IProjectData, prepareData: IPrepareData): Promise<boolean> {
 		const { nativePrepare, release } = prepareData;
 		if (nativePrepare && nativePrepare.skipNativePrepare) {
 			return false;

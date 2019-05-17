@@ -1,4 +1,4 @@
-export class DataBase {
+export class ControllerDataBase implements IControllerDataBase {
 	public nativePrepare?: INativePrepare;
 
 	constructor(public projectDir: string, public platform: string, data: any) {

@@ -179,6 +179,10 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		return undefined;
 	}
 
+	public async cleanProject(projectRoot: string, projectData: IProjectData): Promise<void> {
+		return null;
+	}
+
 	public afterCreateProject(projectRoot: string, projectData: IProjectData): void {
 		this.$fs.rename(path.join(projectRoot, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER),
 			path.join(projectRoot, projectData.projectName));

@@ -54,7 +54,7 @@ class ProjectChangesServiceTest extends BaseServiceTest {
 		return this.injector.resolve("projectData");
 	}
 
-	get platformsDataService(): any {
+	get getNativeProjectDataService(): any {
 		return this.injector.resolve("platformsDataService");
 	}
 
@@ -80,7 +80,7 @@ describe("Project Changes Service Tests", () => {
 			Constants.PLATFORMS_DIR_NAME
 		);
 
-		serviceTest.platformsDataService.getPlatformData =
+		serviceTest.getNativeProjectDataService.getPlatformData =
 			(platform: string) => {
 				if (platform.toLowerCase() === "ios") {
 					return {

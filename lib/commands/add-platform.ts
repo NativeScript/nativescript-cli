@@ -4,7 +4,7 @@ export class AddPlatformCommand extends ValidatePlatformCommandBase implements I
 	public allowedParameters: ICommandParameter[] = [];
 
 	constructor($options: IOptions,
-		private $platformCommandsService: IPlatformCommandsService,
+		private $platformCommandHelper: IPlatformCommandHelper,
 		$platformValidationService: IPlatformValidationService,
 		$projectData: IProjectData,
 		$platformsDataService: IPlatformsDataService,
@@ -14,7 +14,7 @@ export class AddPlatformCommand extends ValidatePlatformCommandBase implements I
 	}
 
 	public async execute(args: string[]): Promise<void> {
-		await this.$platformCommandsService.addPlatforms(args, this.$projectData, this.$options.frameworkPath);
+		await this.$platformCommandHelper.addPlatforms(args, this.$projectData, this.$options.frameworkPath);
 	}
 
 	public async canExecute(args: string[]): Promise<ICanExecuteCommandOutput> {

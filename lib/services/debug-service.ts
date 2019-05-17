@@ -49,7 +49,7 @@ export class DebugService extends EventEmitter implements IDebugService {
 
 		// TODO: Consider to move this code to ios-device-debug-service
 		if (this.$mobileHelper.isiOSPlatform(device.deviceInfo.platform)) {
-			if (device.isEmulator && !debugData.pathToAppPackage && debugOptions.debugBrk) {
+			if (device.isEmulator && debugOptions.debugBrk) {
 				this.$errors.failWithoutHelp("To debug on iOS simulator you need to provide path to the app package.");
 			}
 

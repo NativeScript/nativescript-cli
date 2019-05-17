@@ -37,7 +37,6 @@ $injector.require("addPlatformService", "./services/platform/add-platform-servic
 $injector.require("buildInfoFileService", "./services/build-info-file-service");
 $injector.require("prepareNativePlatformService", "./services/platform/prepare-native-platform-service");
 $injector.require("platformValidationService", "./services/platform/platform-validation-service");
-$injector.require("platformCommandsService", "./services/platform/platform-commands-service");
 
 $injector.require("buildArtefactsService", "./services/build-artefacts-service");
 
@@ -45,16 +44,14 @@ $injector.require("deviceDebugAppService", "./services/device/device-debug-app-s
 $injector.require("deviceInstallAppService", "./services/device/device-install-app-service");
 $injector.require("deviceRefreshAppService", "./services/device/device-refresh-app-service");
 
-$injector.require("runOnDevicesDataService", "./services/run-on-devices-data-service");
+$injector.require("runEmitter", "./emitters/run-emitter");
+$injector.require("previewAppEmitter", "./emitters/preview-app-emitter");
 
-$injector.require("runOnDevicesEmitter", "./run-on-devices-emitter");
-$injector.require("previewAppEmitter", "./preview-app-emitter");
-
-$injector.require("addPlatformController", "./controllers/add-platform-controller");
+$injector.require("platformController", "./controllers/platform-controller");
 $injector.require("prepareController", "./controllers/prepare-controller");
 $injector.require("buildController", "./controllers/build-controller");
-$injector.require("deployOnDevicesController", "./controllers/deploy-on-devices-controller");
-$injector.require("runOnDevicesController", "./controllers/run-on-devices-controller");
+$injector.require("deployController", "./controllers/deploy-controller");
+$injector.require("runController", "./controllers/run-controller");
 $injector.require("previewAppController", "./controllers/preview-app-controller");
 
 $injector.require("prepareDataService", "./services/prepare-data-service");
@@ -155,6 +152,7 @@ $injector.require("bundleValidatorHelper", "./helpers/bundle-validator-helper");
 $injector.require("androidBundleValidatorHelper", "./helpers/android-bundle-validator-helper");
 $injector.require("liveSyncCommandHelper", "./helpers/livesync-command-helper");
 $injector.require("deployCommandHelper", "./helpers/deploy-command-helper");
+$injector.require("platformCommandHelper", "./helpers/platform-command-helper");
 $injector.require("optionsTracker", "./helpers/options-track-helper");
 
 $injector.requirePublicClass("localBuildService", "./services/local-build-service");

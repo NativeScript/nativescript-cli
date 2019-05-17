@@ -1,15 +1,10 @@
 import * as child_process from "child_process";
 import * as choki from "chokidar";
 import { hook } from "../common/helpers";
-import { PrepareNativePlatformService } from "../services/platform/prepare-native-platform-service";
 import { performanceLog } from "../common/decorators";
 import { EventEmitter } from "events";
 import * as path from "path";
-import { WebpackCompilerService } from "../services/webpack/webpack-compiler-service";
 import { PREPARE_READY_EVENT_NAME, WEBPACK_COMPILATION_COMPLETE } from "../constants";
-import { HooksService } from "../common/services/hooks-service";
-import { AddPlatformController } from "./add-platform-controller";
-import { PrepareData } from "../data/prepare-data";
 
 interface IPlatformWatcherData {
 	webpackCompilerProcess: child_process.ChildProcess;
@@ -22,20 +17,20 @@ export class PrepareController extends EventEmitter {
 	private persistedData: IFilesChangeEventData[] = [];
 
 	constructor(
-		private $addPlatformController: AddPlatformController,
-		public $hooksService: HooksService,
+		private $platformController: IPlatformController,
+		public $hooksService: IHooksService,
 		private $logger: ILogger,
 		private $platformsDataService: IPlatformsDataService,
-		private $prepareNativePlatformService: PrepareNativePlatformService,
+		private $prepareNativePlatformService: IPrepareNativePlatformService,
 		private $projectChangesService: IProjectChangesService,
 		private $projectDataService: IProjectDataService,
-		private $webpackCompilerService: WebpackCompilerService
+		private $webpackCompilerService: IWebpackCompilerService
 	) { super(); }
 
 	@performanceLog()
 	@hook("prepare")
-	public async preparePlatform(prepareData: PrepareData): Promise<IPrepareOutputData> {
-		await this.$addPlatformController.addPlatformIfNeeded(prepareData);
+	public async prepare(prepareData: IPrepareData): Promise<IPrepareResultData> {
+		await this.$platformController.addPlatformIfNeeded(prepareData);
 
 		this.$logger.out("Preparing project...");
 		let result = null;
@@ -72,7 +67,7 @@ export class PrepareController extends EventEmitter {
 	}
 
 	@hook("watch")
-	private async startWatchersWithPrepare(platformData: IPlatformData, projectData: IProjectData, prepareData: PrepareData): Promise<IPrepareOutputData> {
+	private async startWatchersWithPrepare(platformData: IPlatformData, projectData: IProjectData, prepareData: IPrepareData): Promise<IPrepareResultData> {
 		if (!this.watchersData[projectData.projectDir]) {
 			this.watchersData[projectData.projectDir] = {};
 		}
@@ -113,7 +108,7 @@ export class PrepareController extends EventEmitter {
 		}
 	}
 
-	private async startNativeWatcherWithPrepare(platformData: IPlatformData, projectData: IProjectData, prepareData: PrepareData): Promise<boolean> {
+	private async startNativeWatcherWithPrepare(platformData: IPlatformData, projectData: IProjectData, prepareData: IPrepareData): Promise<boolean> {
 		if ((prepareData.nativePrepare && prepareData.nativePrepare.skipNativePrepare) || this.watchersData[projectData.projectDir][platformData.platformNameLowerCase].nativeFilesWatcher) {
 			return false;
 		}
@@ -134,7 +129,7 @@ export class PrepareController extends EventEmitter {
 		const watcher = choki.watch(patterns, watcherOptions)
 			.on("all", async (event: string, filePath: string) => {
 				filePath = path.join(projectData.projectDir, filePath);
-				this.$logger.trace(`Chokidar raised event ${event} for ${filePath}.`);
+				this.$logger.info(`Chokidar raised event ${event} for ${filePath}.`);
 				this.emitPrepareEvent({ files: [], hmrData: null, hasNativeChanges: true, platform: platformData.platformNameLowerCase });
 			});
 

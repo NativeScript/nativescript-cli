@@ -17,7 +17,7 @@ describe("IOSEntitlements Service Tests", () => {
 	const createTestInjector = (): IInjector => {
 		const testInjector = new yok.Yok();
 
-		testInjector.register('platformsDataService', stubs.PlatformsDataStub);
+		testInjector.register('platformsDataService', stubs.NativeProjectDataStub);
 		testInjector.register('projectData', stubs.ProjectDataStub);
 		testInjector.register("logger", stubs.LoggerStub);
 		testInjector.register('iOSEntitlementsService', IOSEntitlementsService);

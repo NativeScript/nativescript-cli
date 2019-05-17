@@ -67,7 +67,6 @@ export class RunIosCommand implements ICommand {
 		private $errors: IErrors,
 		private $injector: IInjector,
 		private $options: IOptions,
-		private $platformsDataService: IPlatformsDataService,
 		private $platformValidationService: IPlatformValidationService,
 		private $projectDataService: IProjectDataService,
 	) {
@@ -84,7 +83,7 @@ export class RunIosCommand implements ICommand {
 			this.$errors.fail(`Applications for platform ${this.$devicePlatformsConstants.iOS} can not be built on this OS`);
 		}
 
-		const result = await this.runCommand.canExecute(args) && await this.$platformValidationService.validateOptions(this.$options.provision, this.$options.teamId, projectData, this.$platformsDataService.availablePlatforms.iOS);
+		const result = await this.runCommand.canExecute(args) && await this.$platformValidationService.validateOptions(this.$options.provision, this.$options.teamId, projectData, this.$devicePlatformsConstants.iOS.toLowerCase());
 		return result;
 	}
 }
@@ -110,7 +109,6 @@ export class RunAndroidCommand implements ICommand {
 		private $errors: IErrors,
 		private $injector: IInjector,
 		private $options: IOptions,
-		private $platformsDataService: IPlatformsDataService,
 		private $platformValidationService: IPlatformValidationService,
 		private $projectData: IProjectData,
 	) { }
@@ -130,7 +128,7 @@ export class RunAndroidCommand implements ICommand {
 			this.$errors.fail(ANDROID_RELEASE_BUILD_ERROR_MESSAGE);
 		}
 
-		return this.$platformValidationService.validateOptions(this.$options.provision, this.$options.teamId, this.$projectData, this.$platformsDataService.availablePlatforms.Android);
+		return this.$platformValidationService.validateOptions(this.$options.provision, this.$options.teamId, this.$projectData, this.$devicePlatformsConstants.Android.toLowerCase());
 	}
 }
 

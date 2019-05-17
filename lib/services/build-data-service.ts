@@ -1,6 +1,6 @@
 import { AndroidBuildData, IOSBuildData } from "../data/build-data";
 
-export class BuildDataService {
+export class BuildDataService implements IBuildDataService {
 	constructor(private $mobileHelper: Mobile.IMobileHelper) { }
 
 	public getBuildData(projectDir: string, platform: string, data: any) {

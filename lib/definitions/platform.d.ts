@@ -43,8 +43,6 @@ interface IBuildOutputOptions extends Partial<IBuildForDevice>, IRelease, IHasAn
 }
 
 interface IPlatformsDataService {
-	availablePlatforms: any;
-	platformsNames: string[];
 	getPlatformData(platform: string, projectData: IProjectData): IPlatformData;
 }
 
@@ -83,4 +81,17 @@ interface ICheckEnvironmentRequirementsInput {
 interface ICheckEnvironmentRequirementsOutput {
 	canExecute: boolean;
 	selectedOption: string;
+}
+
+interface IAddPlatformData extends IControllerDataBase {
+	frameworkPath?: string;
+}
+
+interface IPlatformController {
+	addPlatform(addPlatformData: IAddPlatformData): Promise<void>;
+	addPlatformIfNeeded(addPlatformData: IAddPlatformData): Promise<void>;
+}
+
+interface IAddPlatformService {
+	addPlatformSafe(projectData: IProjectData, platformData: IPlatformData, packageToInstall: string, nativePrepare: INativePrepare): Promise<string>;
 }

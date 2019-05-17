@@ -3,7 +3,7 @@ export class RemovePlatformCommand implements ICommand {
 
 	constructor(
 		private $errors: IErrors,
-		private $platformCommandsService: IPlatformCommandsService,
+		private $platformCommandHelper: IPlatformCommandHelper,
 		private $platformValidationService: IPlatformValidationService,
 		private $projectData: IProjectData
 		) {
@@ -11,7 +11,7 @@ export class RemovePlatformCommand implements ICommand {
 	}
 
 	public execute(args: string[]): Promise<void> {
-		return this.$platformCommandsService.removePlatforms(args, this.$projectData);
+		return this.$platformCommandHelper.removePlatforms(args, this.$projectData);
 	}
 
 	public async canExecute(args: string[]): Promise<boolean> {

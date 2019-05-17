@@ -31,7 +31,8 @@ export class PluginsService implements IPluginsService {
 		private $logger: ILogger,
 		private $errors: IErrors,
 		private $filesHashService: IFilesHashService,
-		private $injector: IInjector) { }
+		private $injector: IInjector,
+		private $mobileHelper: Mobile.IMobileHelper) { }
 
 	public async add(plugin: string, projectData: IProjectData): Promise<void> {
 		await this.ensure(projectData);
@@ -242,7 +243,7 @@ export class PluginsService implements IPluginsService {
 	}
 
 	private async executeForAllInstalledPlatforms(action: (_pluginDestinationPath: string, pl: string, _platformData: IPlatformData) => Promise<void>, projectData: IProjectData): Promise<void> {
-		const availablePlatforms = _.keys(this.$platformsDataService.availablePlatforms);
+		const availablePlatforms = this.$mobileHelper.platformNames.map(p => p.toLowerCase());
 		for (const platform of availablePlatforms) {
 			const isPlatformInstalled = this.$fs.exists(path.join(projectData.platformsDir, platform.toLowerCase()));
 			if (isPlatformInstalled) {

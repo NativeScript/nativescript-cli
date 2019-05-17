@@ -20,7 +20,7 @@ class AppStore {
 	projectData: ProjectDataStub;
 	buildController: BuildController;
 	prepareNativePlatformService: PrepareNativePlatformService;
-	platformCommandsService: any;
+	platformCommandHelper: any;
 	platformValidationService: any;
 	iOSPlatformData: any;
 	iOSProjectService: any;
@@ -57,7 +57,7 @@ class AppStore {
 					"iOS": "iOS"
 				},
 				"prepareNativePlatformService": this.prepareNativePlatformService = <any>{},
-				"platformCommandsService": this.platformCommandsService = {},
+				"platformCommandHelper": this.platformCommandHelper = {},
 				"platformValidationService": this.platformValidationService = {},
 				"buildController": this.buildController = <any>{
 					buildPlatform: async () => {
@@ -107,7 +107,7 @@ class AppStore {
 
 	expectArchive() {
 		this.expectedArchiveCalls = 1;
-		this.buildController.prepareAndBuildPlatform = (iOSBuildData: IOSBuildData) => {
+		this.buildController.prepareAndBuild = (iOSBuildData: IOSBuildData) => {
 			this.archiveCalls++;
 			chai.assert.equal(iOSBuildData.projectDir, "/Users/person/git/MyProject");
 			chai.assert.isTrue(iOSBuildData.buildForAppStore);

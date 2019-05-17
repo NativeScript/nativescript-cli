@@ -1,6 +1,6 @@
 import { PrepareData } from "./prepare-data";
 
-export class BuildData extends PrepareData {
+export class BuildData extends PrepareData implements IBuildData {
 	public device?: string;
 	public emulator?: boolean;
 	public clean: boolean;
@@ -22,7 +22,7 @@ export class BuildData extends PrepareData {
 	}
 }
 
-export class IOSBuildData extends BuildData {
+export class IOSBuildData extends BuildData implements IiOSBuildData {
 	public teamId: string;
 	public provision: string;
 	public mobileProvisionData: any;

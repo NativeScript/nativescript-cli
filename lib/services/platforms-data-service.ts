@@ -1,4 +1,3 @@
-
 export class PlatformsDataService implements IPlatformsDataService {
 	private platformsDataService: { [index: string]: any } = {};
 
@@ -11,10 +10,6 @@ export class PlatformsDataService implements IPlatformsDataService {
 		};
 	}
 
-	public get platformsNames() {
-		return Object.keys(this.platformsDataService);
-	}
-
 	public getPlatformData(platform: string, projectData: IProjectData): IPlatformData {
 		const platformKey = platform && _.first(platform.toLowerCase().split("@"));
 		let platformData: IPlatformData;
@@ -23,13 +18,6 @@ export class PlatformsDataService implements IPlatformsDataService {
 		}
 
 		return platformData;
-	}
-
-	public get availablePlatforms(): any {
-		return {
-			iOS: "ios",
-			Android: "android"
-		};
 	}
 }
 $injector.register("platformsDataService", PlatformsDataService);

@@ -19,7 +19,7 @@ export class PlatformValidationService implements IPlatformValidationService {
 		platform = platform.split("@")[0].toLowerCase();
 
 		if (!this.$platformsDataService.getPlatformData(platform, projectData)) {
-			const platformNames = helpers.formatListOfNames(this.$platformsDataService.platformsNames);
+			const platformNames = helpers.formatListOfNames(this.$mobileHelper.platformNames);
 			this.$errors.fail(`Invalid platform ${platform}. Valid platforms are ${platformNames}.`);
 		}
 	}
@@ -52,7 +52,8 @@ export class PlatformValidationService implements IPlatformValidationService {
 			return result;
 		} else {
 			let valid = true;
-			for (const availablePlatform in this.$platformsDataService.availablePlatforms) {
+			const platforms = this.$mobileHelper.platformNames.map(p => p.toLowerCase());
+			for (const availablePlatform of platforms) {
 				this.$logger.trace("Validate options for platform: " + availablePlatform);
 				const platformData = this.$platformsDataService.getPlatformData(availablePlatform, projectData);
 				valid = valid && await platformData.platformProjectService.validateOptions(

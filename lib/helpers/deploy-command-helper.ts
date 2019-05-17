@@ -1,11 +1,11 @@
-import { DeployOnDevicesController } from "../controllers/deploy-on-devices-controller";
+import { DeployController } from "../controllers/deploy-controller";
 import { BuildController } from "../controllers/build-controller";
 
 export class DeployCommandHelper {
 	constructor(
 		private $buildController: BuildController,
 		private $devicesService: Mobile.IDevicesService,
-		private $deployOnDevicesController: DeployOnDevicesController,
+		private $deployController: DeployController,
 		private $options: IOptions,
 		private $projectData: IProjectData
 	) { }
@@ -42,7 +42,7 @@ export class DeployCommandHelper {
 
 				const buildAction = additionalOptions && additionalOptions.buildPlatform ?
 					additionalOptions.buildPlatform.bind(additionalOptions.buildPlatform, d.deviceInfo.platform, buildConfig, this.$projectData) :
-					this.$buildController.prepareAndBuildPlatform.bind(this.$buildController, d.deviceInfo.platform, buildConfig, this.$projectData);
+					this.$buildController.prepareAndBuild.bind(this.$buildController, d.deviceInfo.platform, buildConfig, this.$projectData);
 
 				const outputPath = additionalOptions && additionalOptions.getOutputDirectory && additionalOptions.getOutputDirectory({
 					platform: d.deviceInfo.platform,
@@ -74,7 +74,7 @@ export class DeployCommandHelper {
 			emulator: this.$options.emulator
 		};
 
-		await this.$deployOnDevicesController.deployOnDevices({
+		await this.$deployController.deploy({
 			projectDir: this.$projectData.projectDir,
 			liveSyncInfo,
 			deviceDescriptors

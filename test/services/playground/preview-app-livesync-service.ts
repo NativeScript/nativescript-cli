@@ -10,7 +10,7 @@ import { PreviewAppFilesService } from "../../../lib/services/livesync/playgroun
 import { PREPARE_READY_EVENT_NAME } from "../../../lib/constants";
 import { PrepareData } from "../../../lib/data/prepare-data";
 import { PreviewAppController } from "../../../lib/controllers/preview-app-controller";
-import { PreviewAppEmitter } from "../../../lib/preview-app-emitter";
+import { PreviewAppEmitter } from "../../../lib/emitters/preview-app-emitter";
 import { PrepareDataService } from "../../../lib/services/prepare-data-service";
 import { MobileHelper } from "../../../lib/common/mobile/mobile-helper";
 import { DevicePlatformsConstants } from "../../../lib/common/mobile/device-platforms-constants";
@@ -104,7 +104,7 @@ class LoggerMock extends LoggerStub {
 }
 
 class PrepareControllerMock extends EventEmitter {
-	public preparePlatform(prepareData: PrepareData) {
+	public prepare(prepareData: PrepareData) {
 		isHMRPassedToEnv = prepareData.env.hmr;
 		this.emit(PREPARE_READY_EVENT_NAME, { hmrData: {}, files: [] });
 	}

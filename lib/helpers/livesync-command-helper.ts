@@ -1,13 +1,20 @@
-import { RunOnDevicesController } from "../controllers/run-on-devices-controller";
+import { RunController } from "../controllers/run-controller";
 import { BuildController } from "../controllers/build-controller";
+import { BuildDataService } from "../services/build-data-service";
+import { DeployController } from "../controllers/deploy-controller";
+import { RunOnDeviceEvents } from "../constants";
+import { RunEmitter } from "../emitters/run-emitter";
 
 export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 	public static MIN_SUPPORTED_WEBPACK_VERSION_WITH_HMR = "0.17.0";
 
 	constructor(
+		private $buildDataService: BuildDataService,
 		private $projectData: IProjectData,
 		private $options: IOptions,
-		private $runOnDevicesController: RunOnDevicesController,
+		private $runController: RunController,
+		private $runEmitter: RunEmitter,
+		private $deployController: DeployController,
 		private $iosDeviceOperations: IIOSDeviceOperations,
 		private $mobileHelper: Mobile.IMobileHelper,
 		private $devicesService: Mobile.IDevicesService,
@@ -94,9 +101,11 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 					keyStorePassword: this.$options.keyStorePassword
 				};
 
+				const buildData = this.$buildDataService.getBuildData(this.$projectData.projectDir, d.deviceInfo.platform, buildConfig);
+
 				const buildAction = additionalOptions && additionalOptions.buildPlatform ?
 					additionalOptions.buildPlatform.bind(additionalOptions.buildPlatform, d.deviceInfo.platform, buildConfig, this.$projectData) :
-					this.$buildController.prepareAndBuildPlatform.bind(this.$buildController, d.deviceInfo.platform, buildConfig, this.$projectData);
+					this.$buildController.prepareAndBuild.bind(this.$buildController, buildData);
 
 				const outputPath = additionalOptions && additionalOptions.getOutputDirectory && additionalOptions.getOutputDirectory({
 					platform: d.deviceInfo.platform,
@@ -120,7 +129,7 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 	}
 
 	public getPlatformsForOperation(platform: string): string[] {
-		const availablePlatforms = platform ? [platform] : _.values<string>(this.$platformsDataService.availablePlatforms);
+		const availablePlatforms = platform ? [platform] : _.values<string>(this.$mobileHelper.platformNames.map(p => p.toLowerCase()));
 		return availablePlatforms;
 	}
 
@@ -144,28 +153,43 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 			emulator: this.$options.emulator
 		};
 
-		// if (this.$options.release) {
-			// liveSyncInfo.skipWatcher = true;
-			// await this.$bundleWorkflowService.deployPlatform(this.$projectData.projectDir, deviceDescriptors, liveSyncInfo);
-			// return;
-		// }
+		if (this.$options.release) {
+			await this.$deployController.deploy({
+				projectDir: this.$projectData.projectDir,
+				liveSyncInfo: { ...liveSyncInfo, clean: true, skipWatcher: true },
+				deviceDescriptors
+			});
 
-		await this.$runOnDevicesController.runOnDevices({
+			await this.$devicesService.initialize({
+				platform,
+				deviceId: this.$options.device,
+				emulator: this.$options.emulator,
+				skipInferPlatform: !platform,
+				sdk: this.$options.sdk
+			});
+
+			for (const deviceDescriptor of deviceDescriptors) {
+				const device = this.$devicesService.getDeviceByIdentifier(deviceDescriptor.identifier);
+				await device.applicationManager.startApplication({ appId: this.$projectData.projectIdentifiers[device.deviceInfo.platform.toLowerCase()], projectName: this.$projectData.projectName });
+			}
+
+			return;
+		}
+
+		await this.$runController.run({
 			projectDir: this.$projectData.projectDir,
 			liveSyncInfo,
 			deviceDescriptors
 		});
 
-		// const remainingDevicesToSync = devices.map(d => d.deviceInfo.identifier);
-		// this.$liveSyncService.on(LiveSyncEvents.liveSyncStopped, (data: { projectDir: string, deviceIdentifier: string }) => {
-		// 	_.remove(remainingDevicesToSync, d => d === data.deviceIdentifier);
+		const remainingDevicesToSync = devices.map(d => d.deviceInfo.identifier);
+		this.$runEmitter.on(RunOnDeviceEvents.runOnDeviceStopped, (data: { projectDir: string, deviceIdentifier: string }) => {
+			_.remove(remainingDevicesToSync, d => d === data.deviceIdentifier);
 
-		// 	if (remainingDevicesToSync.length === 0) {
-		// 		process.exit(ErrorCodes.ALL_DEVICES_DISCONNECTED);
-		// 	}
-		// });
-
-		// await this.$liveSyncService.liveSync(deviceDescriptors, liveSyncInfo);
+			if (remainingDevicesToSync.length === 0) {
+				process.exit(ErrorCodes.ALL_DEVICES_DISCONNECTED);
+			}
+		});
 	}
 
 	public async validatePlatform(platform: string): Promise<IDictionary<IValidatePlatformOutput>> {
