@@ -5,7 +5,7 @@
   "version": "0.0.12",
   "scripts": {
     "pretest": "node scripts/test.js",
-    "test": "mocha --opts mocha.opts \"test/**/*.spec.js\""
+    "test": "mocha --opts mocha.opts \"test/common/autostore.spec.js\""
   },
   "dependencies": {
     "kinvey-node-sdk": "^4.0.0"
