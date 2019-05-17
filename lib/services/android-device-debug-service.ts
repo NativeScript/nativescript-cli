@@ -13,9 +13,11 @@ export class AndroidDeviceDebugService extends DebugServiceBase implements IDevi
 
 	constructor(protected device: Mobile.IAndroidDevice,
 		protected $devicesService: Mobile.IDevicesService,
+		protected $cleanupService: ICleanupService,
 		private $errors: IErrors,
 		private $logger: ILogger,
 		private $androidProcessService: Mobile.IAndroidProcessService,
+		private $staticConfig: IStaticConfig,
 		private $net: INet,
 		private $deviceLogProvider: Mobile.IDeviceLogProvider) {
 
@@ -69,8 +71,7 @@ export class AndroidDeviceDebugService extends DebugServiceBase implements IDevi
 			await this.unixSocketForward(port, `${unixSocketName}`);
 		}
 
-		// TODO: Uncomment for 6.0.0 release
-		// await this.$cleanupService.addCleanupCommand({ command: await this.$staticConfig.getAdbFilePath(), args: ["-s", deviceId, "forward", "--remove", `tcp:${port}`] });
+		await this.$cleanupService.addCleanupCommand({ command: await this.$staticConfig.getAdbFilePath(), args: ["-s", deviceId, "forward", "--remove", `tcp:${port}`] });
 
 		return port;
 	}

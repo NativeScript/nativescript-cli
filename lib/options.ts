@@ -21,32 +21,18 @@ export class Options {
 
 	public options: IDictionary<IDashedOption>;
 
-	public setupOptions(projectData: IProjectData): void {
+	public setupOptions(): void {
 		if (this.argv.release && this.argv.hmr) {
 			this.$errors.failWithoutHelp("The options --release and --hmr cannot be used simultaneously.");
 		}
 
-		// HACK: temporary solution for 5.3.0 release (until the webpack only feature)
+		this.argv.bundle = "webpack";
+
 		const parsed = require("yargs-parser")(process.argv.slice(2), { 'boolean-negation': false });
-		const noBundle = parsed && (parsed.bundle === false || parsed.bundle === 'false');
-		if (noBundle && this.argv.hmr) {
-			this.$errors.failWithoutHelp("The options --no-bundle and --hmr cannot be used simultaneously.");
-		}
-
-		if (projectData && projectData.useLegacyWorkflow === false) {
-			this.argv.bundle = this.argv.bundle !== undefined ? this.argv.bundle : "webpack";
-			this.argv.hmr = !this.argv.release;
-		}
-
 		// --no-hmr -> hmr: false or --hmr false -> hmr: 'false'
 		const noHmr = parsed && (parsed.hmr === false || parsed.hmr === 'false');
-		if (noHmr) {
-			this.argv.hmr = false;
-		}
-
-		if (noBundle) {
-			this.argv.bundle = undefined;
-			this.argv.hmr = false;
+		if (!noHmr) {
+			this.argv.hmr = !this.argv.release;
 		}
 
 		if (this.argv.debugBrk) {
@@ -205,16 +191,6 @@ export class Options {
 				}
 			}
 		});
-	}
-
-	public printMessagesForDeprecatedOptions($logger: ILogger) {
-		if (this.argv.platformTemplate) {
-			$logger.warn(`"--platformTemplate" option has been deprecated and will be removed in the upcoming NativeScript CLI v6.0.0. More info can be found in this issue https://github.com/NativeScript/nativescript-cli/issues/4518.`);
-		}
-
-		if (this.argv.syncAllFiles) {
-			$logger.warn(`"--syncAllFiles" option has been deprecated and will be removed in the upcoming NativeScript CLI v6.0.0. More info can be found in this issue https://github.com/NativeScript/nativescript-cli/issues/4518.`);
-		}
 	}
 
 	private getCorrectOptionName(optionName: string): string {

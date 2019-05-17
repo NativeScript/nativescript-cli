@@ -557,8 +557,7 @@ interface IOptions extends IRelease, IDeviceIdentifier, IJustLaunch, IAvd, IAvai
 	analyticsLogFile: string;
 	performance: Object;
 	cleanupLogFile: string;
-	setupOptions(projectData: IProjectData): void;
-	printMessagesForDeprecatedOptions(logger: ILogger): void;
+	setupOptions(): void;
 }
 
 interface IEnvOptions {

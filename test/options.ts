@@ -268,9 +268,9 @@ describe("options", () => {
 				name: "no options are provided",
 				args: [],
 				data: [
-					{ useLegacyWorkflow: undefined, expectedHmr: false, expectedBundle: false },
+					{ useLegacyWorkflow: undefined, expectedHmr: true, expectedBundle: true },
 					{ useLegacyWorkflow: false, expectedHmr: true, expectedBundle: true },
-					{ useLegacyWorkflow: true, expectedHmr: false, expectedBundle: false }
+					{ useLegacyWorkflow: true, expectedHmr: true, expectedBundle: true }
 				]
 			},
 			{
@@ -286,36 +286,27 @@ describe("options", () => {
 				name: " --no-hmr is provided",
 				args: ["--no-hmr"],
 				data: [
-					{ useLegacyWorkflow: undefined, expectedHmr: false, expectedBundle: false },
+					{ useLegacyWorkflow: undefined, expectedHmr: false, expectedBundle: true },
 					{ useLegacyWorkflow: false, expectedHmr: false, expectedBundle: true },
-					{ useLegacyWorkflow: true, expectedHmr: false, expectedBundle: false }
+					{ useLegacyWorkflow: true, expectedHmr: false, expectedBundle: true }
 				]
 			},
 			{
 				name: " --bundle is provided",
 				args: ["--bundle"],
 				data: [
-					{ useLegacyWorkflow: undefined, expectedHmr: false, expectedBundle: true },
+					{ useLegacyWorkflow: undefined, expectedHmr: true, expectedBundle: true },
 					{ useLegacyWorkflow: false, expectedHmr: true, expectedBundle: true },
-					{ useLegacyWorkflow: true, expectedHmr: false, expectedBundle: true }
-				]
-			},
-			{
-				name: " --no-bundle is provided",
-				args: ["--no-bundle"],
-				data: [
-					{ useLegacyWorkflow: undefined, expectedHmr: false, expectedBundle: false },
-					{ useLegacyWorkflow: false, expectedHmr: false, expectedBundle: false },
-					{ useLegacyWorkflow: true, expectedHmr: false, expectedBundle: false }
+					{ useLegacyWorkflow: true, expectedHmr: true, expectedBundle: true }
 				]
 			},
 			{
 				name: " --release is provided",
 				args: ["--release"],
 				data: [
-					{ useLegacyWorkflow: undefined, expectedHmr: false, expectedBundle: false },
+					{ useLegacyWorkflow: undefined, expectedHmr: false, expectedBundle: true },
 					{ useLegacyWorkflow: false, expectedHmr: false, expectedBundle: true },
-					{ useLegacyWorkflow: true, expectedHmr: false, expectedBundle: false }
+					{ useLegacyWorkflow: true, expectedHmr: false, expectedBundle: true }
 				]
 			}
 		];
@@ -326,8 +317,7 @@ describe("options", () => {
 					(testCase.args || []).forEach(arg => process.argv.push(arg));
 
 					const options = createOptions(testInjector);
-					const projectData = <IProjectData>{ useLegacyWorkflow };
-					options.setupOptions(projectData);
+					options.setupOptions();
 
 					(testCase.args || []).forEach(arg => process.argv.pop());
 
@@ -344,11 +334,6 @@ describe("options", () => {
 				name: "--release --hmr",
 				args: ["--release", "--hmr"],
 				expectedError: "The options --release and --hmr cannot be used simultaneously."
-			},
-			{
-				name: "--no-bundle --hmr",
-				args: ["--no-bundle", "--hmr"],
-				expectedError: "The options --no-bundle and --hmr cannot be used simultaneously."
 			}
 		];
 
@@ -360,7 +345,7 @@ describe("options", () => {
 				(testCase.args || []).forEach(arg => process.argv.push(arg));
 
 				const options = createOptions(testInjector);
-				options.setupOptions(null);
+				options.setupOptions();
 
 				(testCase.args || []).forEach(arg => process.argv.pop());
 

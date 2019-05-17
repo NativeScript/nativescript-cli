@@ -25,36 +25,6 @@ declare global {
 		trace(formatStr?: any, ...args: any[]): void;
 		printMarkdown(...args: any[]): void;
 		prepare(item: any): string;
-
-		/**
-		 * DEPRECATED
-		 * Do not use it.
-		 */
-		out(formatStr?: any, ...args: any[]): void;
-
-		/**
-		 * DEPRECATED
-		 * Do not use it.
-		 */
-		write(...args: any[]): void;
-
-		/**
-		 * DEPRECATED
-		 * Do not use it.
-		 */
-		printInfoMessageOnSameLine(message: string): void;
-
-		/**
-		 * DEPRECATED
-		 * Do not use it.
-		 */
-		printMsgWithTimeout(message: string, timeout: number): Promise<void>;
-
-		/**
-		 * DEPRECATED
-		 * Do not use it.
-		 */
-		printOnStderr(formatStr?: any, ...args: any[]): void;
 	}
 
 	interface Log4JSAppenderConfiguration extends Configuration {
