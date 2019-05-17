@@ -11,7 +11,7 @@ export class NativeScriptCloudExtensionService implements INativeScriptCloudExte
 			return this.$extensibilityService.installExtension(constants.NATIVESCRIPT_CLOUD_EXTENSION_NAME);
 		}
 
-		this.$logger.out(`Extension ${constants.NATIVESCRIPT_CLOUD_EXTENSION_NAME} is already installed.`);
+		this.$logger.info(`Extension ${constants.NATIVESCRIPT_CLOUD_EXTENSION_NAME} is already installed.`);
 	}
 
 	public isInstalled(): boolean {

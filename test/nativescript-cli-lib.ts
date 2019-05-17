@@ -23,8 +23,8 @@ describe("nativescript-cli-lib", () => {
 			"getIOSAssetsStructure",
 			"getAndroidAssetsStructure"
 		],
-		constants: ["CONFIG_NS_APP_RESOURCES_ENTRY", "CONFIG_NS_APP_ENTRY", "CONFIG_NS_FILE_NAME"],
 		// localBuildService: ["build"],
+		constants: ["CONFIG_NS_APP_RESOURCES_ENTRY", "CONFIG_NS_APP_ENTRY", "CONFIG_NS_FILE_NAME", "LoggerLevel", "LoggerAppenders"],
 		deviceLogProvider: null,
 		packageManager: ["install", "uninstall", "view", "search"],
 		extensibilityService: ["loadExtensions", "loadExtension", "getInstalledExtensions", "installExtension", "uninstallExtension"],
@@ -62,6 +62,14 @@ describe("nativescript-cli-lib", () => {
 		],
 		cleanupService: [
 			"setCleanupLogFile"
+		],
+		logger: [
+			"initialize",
+			"getLevel",
+			"info"
+		],
+		initializeService: [
+			"initialize"
 		]
 	};
 

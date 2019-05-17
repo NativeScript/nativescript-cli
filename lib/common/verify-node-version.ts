@@ -53,38 +53,43 @@ export function verifyNodeVersion(): void {
 	}
 }
 
+var isGetNodeWarningCalled = false;
 export function getNodeWarning(): ISystemWarning {
-	var verificationOpts = getNodeVersionOpts();
-	var cliName = verificationOpts.cliName;
-	var supportedVersionsRange = verificationOpts.supportedVersionsRange;
-	var deprecatedVersions = verificationOpts.deprecatedVersions;
-	var nodeVer = verificationOpts.nodeVer;
+	if (!isGetNodeWarningCalled) {
+		isGetNodeWarningCalled = true;
 
-	var warningMessage = "";
-	if (deprecatedVersions) {
-		deprecatedVersions.forEach(function (version) {
-			if (semver.satisfies(nodeVer, version)) {
-				warningMessage = "Support for Node.js " + version + " is deprecated and will be removed in one of the next releases of " + cliName +
-					". Please, upgrade to the latest Node.js LTS version. ";
-				return warningMessage;
-			}
-		});
-	}
+		var verificationOpts = getNodeVersionOpts();
+		var cliName = verificationOpts.cliName;
+		var supportedVersionsRange = verificationOpts.supportedVersionsRange;
+		var deprecatedVersions = verificationOpts.deprecatedVersions;
+		var nodeVer = verificationOpts.nodeVer;
 
-	if (!warningMessage) {
-		var checkSatisfied = semver.satisfies(nodeVer, supportedVersionsRange);
-		if (!checkSatisfied) {
-			warningMessage = "Support for Node.js " + nodeVer + " is not verified. " + cliName + " CLI might not install or run properly.";
+		var warningMessage = "";
+		if (deprecatedVersions) {
+			deprecatedVersions.forEach(function (version) {
+				if (semver.satisfies(nodeVer, version)) {
+					warningMessage = "Support for Node.js " + version + " is deprecated and will be removed in one of the next releases of " + cliName +
+						". Please, upgrade to the latest Node.js LTS version. ";
+					return warningMessage;
+				}
+			});
 		}
-	}
 
-	if (warningMessage) {
-		return {
-			message: warningMessage,
-			severity: SystemWarningsSeverity.medium
-		};
-	}
+		if (!warningMessage) {
+			var checkSatisfied = semver.satisfies(nodeVer, supportedVersionsRange);
+			if (!checkSatisfied) {
+				warningMessage = "Support for Node.js " + nodeVer + " is not verified. " + cliName + " CLI might not install or run properly.";
+			}
+		}
 
-	return null;
+		if (warningMessage) {
+			return {
+				message: warningMessage,
+				severity: SystemWarningsSeverity.medium
+			};
+		}
+
+		return null;
+	}
 }
 /* tslint:enable */

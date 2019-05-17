@@ -38,7 +38,7 @@ export class PostInstallCliCommand implements ICommand {
 		}
 
 		// Make sure the success message is separated with at least one line from all other messages.
-		this.$logger.out();
+		this.$logger.info();
 		this.$logger.printMarkdown("Installation successful. You are good to go. Connect with us on `http://twitter.com/NativeScript`.");
 
 		if (canExecutePostInstallTask) {

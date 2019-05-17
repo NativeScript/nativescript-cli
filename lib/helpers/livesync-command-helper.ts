@@ -204,7 +204,7 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 		}
 
 		const minSupportedWebpackVersion = this.$options.hmr ? LiveSyncCommandHelper.MIN_SUPPORTED_WEBPACK_VERSION_WITH_HMR : null;
-		this.$bundleValidatorHelper.validate(minSupportedWebpackVersion);
+		this.$bundleValidatorHelper.validate(this.$projectData, minSupportedWebpackVersion);
 
 		return result;
 	}

@@ -18,7 +18,7 @@ export class DeviceInstallAppService {
 	) { }
 
 	public async installOnDevice(device: Mobile.IDevice, buildData: IBuildData, packageFile?: string): Promise<void> {
-		this.$logger.out(`Installing on device ${device.deviceInfo.identifier}...`);
+		this.$logger.info(`Installing on device ${device.deviceInfo.identifier}...`);
 
 		const projectData = this.$projectDataService.getProjectData(buildData.projectDir);
 		const platformData = this.$platformsDataService.getPlatformData(device.deviceInfo.platform, projectData);
@@ -57,7 +57,7 @@ export class DeviceInstallAppService {
 			await device.fileSystem.putFile(path.join(buildInfoFilePath, buildInfoFileName), deviceFilePath, appIdentifier);
 		}
 
-		this.$logger.out(`Successfully installed on device with identifier '${device.deviceInfo.identifier}'.`);
+		this.$logger.info(`Successfully installed on device with identifier '${device.deviceInfo.identifier}'.`);
 	}
 
 	public async installOnDeviceIfNeeded(device: Mobile.IDevice, buildData: IBuildData, packageFile?: string): Promise<void> {

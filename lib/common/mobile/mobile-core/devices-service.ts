@@ -616,7 +616,7 @@ export class DevicesService extends EventEmitter implements Mobile.IDevicesServi
 			return;
 		}
 
-		this.$logger.out("Searching for devices...");
+		this.$logger.info("Searching for devices...");
 
 		deviceInitOpts = deviceInitOpts || {};
 		this._data = deviceInitOpts;

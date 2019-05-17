@@ -1,6 +1,7 @@
 import { EOL } from "os";
 import * as path from "path";
 import { PluginNativeDirNames, PODFILE_NAME, NS_BASE_PODFILE } from "../constants";
+import { regExpEscape } from "../common/helpers";
 
 export class CocoaPodsService implements ICocoaPodsService {
 	private static PODFILE_POST_INSTALL_SECTION_NAME = "post_install";
@@ -55,14 +56,16 @@ export class CocoaPodsService implements ICocoaPodsService {
 		return podInstallResult;
 	}
 
-	public async mergePodXcconfigFile(projectData: IProjectData, platformData: IPlatformData, opts: IRelease) {
+	public async mergePodXcconfigFile(projectData: IProjectData, platformData: IPlatformData): Promise<void> {
 		const podFilesRootDirName = path.join("Pods", "Target Support Files", `Pods-${projectData.projectName}`);
 		const podFolder = path.join(platformData.projectRoot, podFilesRootDirName);
 		if (this.$fs.exists(podFolder)) {
-			const podXcconfigFilePath = opts && opts.release ? path.join(podFolder, `Pods-${projectData.projectName}.release.xcconfig`)
-				: path.join(podFolder, `Pods-${projectData.projectName}.debug.xcconfig`);
-			const pluginsXcconfigFilePath = this.$xcconfigService.getPluginsXcconfigFilePath(platformData.projectRoot, opts);
-			await this.$xcconfigService.mergeFiles(podXcconfigFilePath, pluginsXcconfigFilePath);
+			const pluginsXcconfigFilePaths = this.$xcconfigService.getPluginsXcconfigFilePaths(platformData.projectRoot);
+			for (const configuration in pluginsXcconfigFilePaths) {
+				const pluginsXcconfigFilePath = pluginsXcconfigFilePaths[configuration];
+				const podXcconfigFilePath = path.join(podFolder, `Pods-${projectData.projectName}.${configuration}.xcconfig`);
+				await this.$xcconfigService.mergeFiles(podXcconfigFilePath, pluginsXcconfigFilePath);
+			}
 		}
 	}
 
@@ -98,7 +101,7 @@ export class CocoaPodsService implements ICocoaPodsService {
 				finalPodfileContent = this.$cocoaPodsPlatformManager.addPlatformSection(projectData, podfilePlatformData, finalPodfileContent);
 			}
 
-			finalPodfileContent = `${podfileContent}${EOL}${finalPodfileContent}`;
+			finalPodfileContent = `${finalPodfileContent.trim()}${EOL}${EOL}${podfileContent.trim()}${EOL}`;
 			this.saveProjectPodfile(projectData, finalPodfileContent, nativeProjectPath);
 		}
 	}
@@ -113,8 +116,8 @@ export class CocoaPodsService implements ICocoaPodsService {
 			projectPodFileContent = this.$cocoaPodsPlatformManager.removePlatformSection(moduleName, projectPodFileContent, podfilePath);
 
 			const defaultPodfileBeginning = this.getPodfileHeader(projectData.projectName);
-			const defaultContentWithPostInstallHook = `${defaultPodfileBeginning}${EOL}${this.getPostInstallHookHeader()}end${EOL}end`;
-			const defaultContentWithoutPostInstallHook = `${defaultPodfileBeginning}end`;
+			const defaultContentWithPostInstallHook = `${defaultPodfileBeginning}${this.getPostInstallHookHeader()}end${EOL}end`;
+			const defaultContentWithoutPostInstallHook = `${defaultPodfileBeginning}${EOL}end`;
 			const trimmedProjectPodFileContent = projectPodFileContent.trim();
 			if (!trimmedProjectPodFileContent || trimmedProjectPodFileContent === defaultContentWithPostInstallHook || trimmedProjectPodFileContent === defaultContentWithoutPostInstallHook) {
 				this.$fs.deleteFile(this.getProjectPodfilePath(projectRoot));
@@ -145,7 +148,9 @@ export class CocoaPodsService implements ICocoaPodsService {
 		if (postInstallHookContent) {
 			const index = finalPodfileContent.indexOf(postInstallHookStart);
 			if (index !== -1) {
-				finalPodfileContent = finalPodfileContent.replace(postInstallHookStart, `${postInstallHookStart}${postInstallHookContent}`);
+				const regExp = new RegExp(`(${regExpEscape(postInstallHookStart)}[\\s\\S]*?)(\\bend\\b)`, "m");
+				finalPodfileContent = finalPodfileContent.replace(regExp, `$1${postInstallHookContent.trimRight()}${EOL}$2`);
+
 			} else {
 				if (finalPodfileContent.length > 0) {
 					finalPodfileContent += `${EOL}${EOL}`;

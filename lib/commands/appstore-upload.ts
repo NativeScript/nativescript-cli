@@ -7,7 +7,7 @@ export class PublishIOS implements ICommand {
 	public allowedParameters: ICommandParameter[] = [new StringCommandParameter(this.$injector), new StringCommandParameter(this.$injector),
 	new StringCommandParameter(this.$injector), new StringCommandParameter(this.$injector)];
 
-	constructor(private $errors: IErrors,
+	constructor(
 		private $injector: IInjector,
 		private $itmsTransporterService: IITMSTransporterService,
 		private $logger: ILogger,
@@ -15,6 +15,8 @@ export class PublishIOS implements ICommand {
 		private $options: IOptions,
 		private $prompter: IPrompter,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
+		private $hostInfo: IHostInfo,
+		private $errors: IErrors,
 		private $buildController: BuildController,
 		private $platformValidationService: IPlatformValidationService
 	) {
@@ -70,11 +72,16 @@ export class PublishIOS implements ICommand {
 			username,
 			password,
 			ipaFilePath,
+			shouldExtractIpa: !!this.$options.ipa,
 			verboseLogging: this.$logger.getLevel() === "TRACE"
 		});
 	}
 
 	public async canExecute(args: string[]): Promise<boolean> {
+		if (!this.$hostInfo.isDarwin) {
+			this.$errors.failWithoutHelp("iOS publishing is only available on Mac OS X.");
+		}
+
 		if (!this.$platformValidationService.isPlatformSupportedForOS(this.$devicePlatformsConstants.iOS, this.$projectData)) {
 			this.$errors.fail(`Applications for platform ${this.$devicePlatformsConstants.iOS} can not be built on this OS`);
 		}

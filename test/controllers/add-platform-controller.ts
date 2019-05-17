@@ -22,7 +22,7 @@ function createInjector(data?: { latestFrameworkVersion: string }) {
 	});
 
 	const logger = injector.resolve("logger");
-	logger.out = (message: string) => actualMessage = message;
+	logger.info = (message: string) => actualMessage = message;
 
 	const packageInstallationManager = injector.resolve("packageInstallationManager");
 	packageInstallationManager.getLatestCompatibleVersion = async () => version;

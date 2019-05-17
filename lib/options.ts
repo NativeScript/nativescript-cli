@@ -48,6 +48,12 @@ export class Options {
 			this.argv.bundle = undefined;
 			this.argv.hmr = false;
 		}
+
+		if (this.argv.debugBrk) {
+			// we cannot use HMR along with debug-brk because we have to restart the app
+			// on each livesync in order to stop and allow debugging on app start
+			this.argv.hmr = false;
+		}
 	}
 
 	constructor(private $errors: IErrors,
@@ -112,6 +118,8 @@ export class Options {
 			background: { type: OptionType.String, hasSensitiveValue: false },
 			username: { type: OptionType.String, hasSensitiveValue: true },
 			pluginName: { type: OptionType.String, hasSensitiveValue: false },
+			includeTypeScriptDemo: { type: OptionType.String, hasSensitiveValue: false },
+			includeAngularDemo: { type: OptionType.String, hasSensitiveValue: false },
 			hmr: { type: OptionType.Boolean, hasSensitiveValue: false },
 			collection: { type: OptionType.String, alias: "c", hasSensitiveValue: false },
 			json: { type: OptionType.Boolean, hasSensitiveValue: false },
@@ -133,8 +141,6 @@ export class Options {
 			justlaunch: { type: OptionType.Boolean, hasSensitiveValue: false },
 			file: { type: OptionType.String, hasSensitiveValue: true },
 			force: { type: OptionType.Boolean, alias: "f", hasSensitiveValue: false },
-			// remove legacy
-			companion: { type: OptionType.Boolean, hasSensitiveValue: false },
 			emulator: { type: OptionType.Boolean, hasSensitiveValue: false },
 			sdk: { type: OptionType.String, hasSensitiveValue: false },
 			template: { type: OptionType.String, hasSensitiveValue: true },
@@ -199,6 +205,16 @@ export class Options {
 				}
 			}
 		});
+	}
+
+	public printMessagesForDeprecatedOptions($logger: ILogger) {
+		if (this.argv.platformTemplate) {
+			$logger.warn(`"--platformTemplate" option has been deprecated and will be removed in the upcoming NativeScript CLI v6.0.0. More info can be found in this issue https://github.com/NativeScript/nativescript-cli/issues/4518.`);
+		}
+
+		if (this.argv.syncAllFiles) {
+			$logger.warn(`"--syncAllFiles" option has been deprecated and will be removed in the upcoming NativeScript CLI v6.0.0. More info can be found in this issue https://github.com/NativeScript/nativescript-cli/issues/4518.`);
+		}
 	}
 
 	private getCorrectOptionName(optionName: string): string {

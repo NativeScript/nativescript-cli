@@ -19,7 +19,7 @@ export class ListApplicationsCommand implements ICommand {
 		};
 		await this.$devicesService.execute(action);
 
-		this.$logger.out(output.join(EOL));
+		this.$logger.info(output.join(EOL));
 	}
 }
 $injector.registerCommand(["device|list-applications", "devices|list-applications"], ListApplicationsCommand);

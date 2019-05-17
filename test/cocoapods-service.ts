@@ -119,6 +119,10 @@ end`,
 				output: `use_frameworks!
 
 target "projectName" do
+post_install do |installer|
+  post_installplugin1_with_special_symbols_0 installer
+end
+
 # Begin Podfile - pluginPlatformsFolderPath/Podfile
 
 target 'MyApp' do
@@ -135,10 +139,6 @@ def post_installplugin1_with_special_symbols_0 (installer)
 	end
 end
 # End Podfile
-
-post_install do |installer|
-  post_installplugin1_with_special_symbols_0 installer
-end
 end`,
 				projectPodfileContent: "",
 				pluginData: <any>{
@@ -165,6 +165,10 @@ end`,
 				output: `use_frameworks!
 
 target "projectName" do
+post_install do |installer|
+  post_installplugin1_with_special_symbols___and___underscore_0 installer
+end
+
 # Begin Podfile - pluginPlatformsFolderPath/Podfile
 
 target 'MyApp' do
@@ -181,10 +185,6 @@ def post_installplugin1_with_special_symbols___and___underscore_0 (installer)
 	end
 end
 # End Podfile
-
-post_install do |installer|
-  post_installplugin1_with_special_symbols___and___underscore_0 installer
-end
 end`,
 				projectPodfileContent: "",
 				pluginData: <any>{
@@ -207,6 +207,10 @@ end`,
 				output: `use_frameworks!
 
 target "projectName" do
+post_install do |installer|
+  post_installplugin1___plugin_0 installer
+end
+
 # Begin Podfile - pluginPlatformsFolderPath/Podfile
 
 target 'MyApp' do
@@ -219,14 +223,13 @@ def post_installplugin1___plugin_0 (installer)
 	end
 end
 # End Podfile
-
-post_install do |installer|
-  post_installplugin1___plugin_0 installer
-end
 end`,
 				projectPodfileContent: `use_frameworks!
 
 target "projectName" do
+post_install do |installer|
+  post_installplugin1___plugin_0 installer
+end
 # Begin Podfile - pluginPlatformsFolderPath/Podfile
 
 target 'MyApp' do
@@ -239,10 +242,6 @@ def post_installplugin1___plugin_0 (installer)
 	end
 end
 # End Podfile
-
-post_install do |installer|
-  post_installplugin1___plugin_0 installer
-end
 end`,
 				pluginData: <any>{
 					name: "plugin1_plugin",
@@ -268,6 +267,10 @@ end`,
 				output: `use_frameworks!
 
 target "projectName" do
+post_install do |installer|
+  post_installplugin1_0 installer
+end
+
 # Begin Podfile - pluginPlatformsFolderPath/Podfile
 
 target 'MyApp' do
@@ -284,14 +287,13 @@ def post_installplugin1_0 (installer)
 	end
 end
 # End Podfile
-
-post_install do |installer|
-  post_installplugin1_0 installer
-end
 end`,
 				projectPodfileContent: `use_frameworks!
 
 target "projectName" do
+post_install do |installer|
+	post_installplugin1_0 installer
+end
 # Begin Podfile - pluginPlatformsFolderPath/Podfile
 
 target 'MyApp' do
@@ -308,10 +310,6 @@ def post_installplugin1_0 (installer)
 	end
 end
 # End Podfile
-
-post_install do |installer|
-	post_installplugin1_0 installer
-end
 end`,
 			},
 			{
@@ -329,6 +327,14 @@ end`,
 				output: `use_frameworks!
 
 target "projectName" do
+# Begin Podfile - secondPluginPlatformsFolderPath/Podfile
+pod 'OCMock', '~> 2.0.1'
+# End Podfile
+
+post_install do |installer|
+  post_installplugin1_0 installer
+end
+
 # Begin Podfile - pluginPlatformsFolderPath/Podfile
 
 target 'MyApp' do
@@ -341,14 +347,6 @@ def post_installplugin1_0 (installer)
 	end
 end
 # End Podfile
-
-# Begin Podfile - secondPluginPlatformsFolderPath/Podfile
-pod 'OCMock', '~> 2.0.1'
-# End Podfile
-
-post_install do |installer|
-  post_installplugin1_0 installer
-end
 end`,
 				projectPodfileContent: `use_frameworks!
 
@@ -387,6 +385,12 @@ end`,
 				output: `use_frameworks!
 
 target "projectName" do
+post_install do |installer|
+  post_installplugin1_0 installer
+  post_installplugin1_1 installer
+  post_installplugin1_2 installer
+end
+
 # Begin Podfile - pluginPlatformsFolderPath/Podfile
 
 target 'MyApp' do
@@ -413,12 +417,6 @@ def post_installplugin1_2 (installer)
 	end
 end
 # End Podfile
-
-post_install do |installer|
-  post_installplugin1_0 installer
-  post_installplugin1_1 installer
-  post_installplugin1_2 installer
-end
 end`,
 			},
 			{
@@ -443,6 +441,11 @@ end`,
 				output: `use_frameworks!
 
 target "projectName" do
+post_install do |installer|
+  post_installplugin1_0 installer
+  post_installplugin1_1
+end
+
 # Begin Podfile - pluginPlatformsFolderPath/Podfile
 
 target 'MyApp' do
@@ -462,11 +465,6 @@ target 'MyApp' do
 	end
 end
 # End Podfile
-
-post_install do |installer|
-  post_installplugin1_0 installer
-  post_installplugin1_1
-end
 end`,
 			},
 			{
@@ -489,6 +487,10 @@ end`,
 				projectPodfileContent: `use_frameworks!
 
 target "projectName" do
+post_install do |installer|
+  post_installplugin1_0 installer
+end
+
 # Begin Podfile - pluginPlatformsFolderPath/Podfile
 
 target 'MyApp' do
@@ -505,10 +507,6 @@ def post_installplugin1_0 (installer)
 	end
 end
 # End Podfile
-
-post_install do |installer|
-  post_installplugin1_0 installer
-end
 end`,
 			}
 		];
@@ -540,6 +538,7 @@ target "projectName" do
 pod 'GoogleAnalytics', '~> 3.1'
 
 # End Podfile
+
 end`
 			},
 			{
@@ -562,6 +561,9 @@ end`,
 				projectPodfileContent: `use_frameworks!
 
 target "projectName" do
+post_install do |installer|
+post_installplugin1_0 installer
+end
 # Begin Podfile - pluginPlatformsFolderPath/Podfile
 
 target 'MyApp' do
@@ -578,10 +580,6 @@ def post_installplugin1_0 (installer)
 	end
 end
 # End Podfile
-
-post_install do |installer|
-post_installplugin1_0 installer
-end
 end`
 			},
 			{
@@ -614,6 +612,11 @@ end`,
 				projectPodfileContent: `use_frameworks!
 
 target "projectName" do
+post_install do |installer|
+	post_installplugin1_0 installer
+	post_installplugin1_1 installer
+	post_installplugin1_2 installer
+end
 # Begin Podfile - pluginPlatformsFolderPath/Podfile
 
 target 'MyApp' do
@@ -640,12 +643,6 @@ def post_installplugin1_2 (installer)
 	end
 end
 # End Podfile
-
-post_install do |installer|
-	post_installplugin1_0 installer
-	post_installplugin1_1 installer
-	post_installplugin1_2 installer
-end
 end`
 			},
 			{
@@ -667,6 +664,9 @@ end`,
 				output: `use_frameworks!
 
 target "projectName" do
+post_install do |installer|
+	post_installplugin2_0 installer
+end
 
 # Begin Podfile - pluginPlatformsFolderPath1/Podfile
 
@@ -678,14 +678,14 @@ def post_installplugin2_0 (installer)
 	end
 end
 # End Podfile
-
-post_install do |installer|
-post_installplugin2_0 installer
-end
 end`,
 				projectPodfileContent: `use_frameworks!
 
 target "projectName" do
+post_install do |installer|
+	post_installplugin1_0 installer
+	post_installplugin2_0 installer
+end
 # Begin Podfile - pluginPlatformsFolderPath/Podfile
 
 target 'MyApp' do
@@ -713,11 +713,6 @@ def post_installplugin2_0 (installer)
 	end
 end
 # End Podfile
-
-post_install do |installer|
-post_installplugin1_0 installer
-post_installplugin2_0 installer
-end
 end`
 			}
 		];
@@ -975,44 +970,45 @@ end`
 				expectedProjectPodfileContentAfterApply: `use_frameworks!
 
 target "projectName" do
-# Begin Podfile - my/full/path/to/app/App_Resources/iOS/Podfile
-# platform :ios, '8.0'
-# End Podfile
+# NativeScriptPlatformSection my/full/path/to/app/App_Resources/iOS/Podfile with 8.0
+platform :ios, '8.0'
+# End NativeScriptPlatformSection
 
-# Begin Podfile - node_modules/myFirstPluginWithPlatform/Podfile
-# platform :ios, '11.0'
+# Begin Podfile - node_modules/  mypath  with spaces/mySecondPluginWithPlatform/Podfile
+# platform :ios, '10.0'
 # End Podfile
 
 # Begin Podfile - node_modules/myPluginWithoutPlatform/Podfile
 pod 'myPod' ~> 0.3.4
 # End Podfile
 
-# Begin Podfile - node_modules/  mypath  with spaces/mySecondPluginWithPlatform/Podfile
-# platform :ios, '10.0'
+# Begin Podfile - node_modules/myFirstPluginWithPlatform/Podfile
+# platform :ios, '11.0'
 # End Podfile
 
-# NativeScriptPlatformSection my/full/path/to/app/App_Resources/iOS/Podfile with 8.0
-platform :ios, '8.0'
-# End NativeScriptPlatformSection
+# Begin Podfile - my/full/path/to/app/App_Resources/iOS/Podfile
+# platform :ios, '8.0'
+# End Podfile
 end`,
 				expectedProjectPodfileContentAfterRemove: `use_frameworks!
 
 target "projectName" do
+# NativeScriptPlatformSection node_modules/myFirstPluginWithPlatform/Podfile with 11.0
+platform :ios, '11.0'
+# End NativeScriptPlatformSection
 
-# Begin Podfile - node_modules/myFirstPluginWithPlatform/Podfile
-# platform :ios, '11.0'
+# Begin Podfile - node_modules/  mypath  with spaces/mySecondPluginWithPlatform/Podfile
+# platform :ios, '10.0'
 # End Podfile
 
 # Begin Podfile - node_modules/myPluginWithoutPlatform/Podfile
 pod 'myPod' ~> 0.3.4
 # End Podfile
 
-# Begin Podfile - node_modules/  mypath  with spaces/mySecondPluginWithPlatform/Podfile
-# platform :ios, '10.0'
+# Begin Podfile - node_modules/myFirstPluginWithPlatform/Podfile
+# platform :ios, '11.0'
 # End Podfile
-# NativeScriptPlatformSection node_modules/myFirstPluginWithPlatform/Podfile with 11.0
-platform :ios, '11.0'
-# End NativeScriptPlatformSection
+
 end`
 			}
 		];
@@ -1061,13 +1057,13 @@ end`
 				expectedProjectPodfileContent: `use_frameworks!
 
 target "projectName" do
-# Begin Podfile - path/to/my/plugin2/platforms/ios/Podfile
-# platform :ios, '9.0'
-# End Podfile
-
 # NativeScriptPlatformSection path/to/my/plugin2/platforms/ios/Podfile with 9.0
 platform :ios, '9.0'
 # End NativeScriptPlatformSection
+
+# Begin Podfile - path/to/my/plugin2/platforms/ios/Podfile
+# platform :ios, '9.0'
+# End Podfile
 end`
 			},
 			{
@@ -1088,21 +1084,21 @@ end`
 				expectedProjectPodfileContent: `use_frameworks!
 
 target "projectName" do
-# Begin Podfile - my/full/path/to/app/App_Resources/iOS/Podfile
-# platform :ios, '9.0'
+# NativeScriptPlatformSection my/full/path/to/app/App_Resources/iOS/Podfile with 9.0
+platform :ios, '9.0'
+# End NativeScriptPlatformSection
+
+# Begin Podfile - my/full/path/to/plugin1/platforms/ios/Podfile
+# platform :ios, '10.0'
 # End Podfile
 
 # Begin Podfile - my/full/path/to/plugin2/platforms/ios/Podfile
 pod 'myPod' ~> 0.3.4
 # End Podfile
 
-# Begin Podfile - my/full/path/to/plugin1/platforms/ios/Podfile
-# platform :ios, '10.0'
+# Begin Podfile - my/full/path/to/app/App_Resources/iOS/Podfile
+# platform :ios, '9.0'
 # End Podfile
-
-# NativeScriptPlatformSection my/full/path/to/app/App_Resources/iOS/Podfile with 9.0
-platform :ios, '9.0'
-# End NativeScriptPlatformSection
 end`
 			},
 			{
@@ -1123,21 +1119,21 @@ end`
 				expectedProjectPodfileContent: `use_frameworks!
 
 target "projectName" do
-# Begin Podfile - node_modules/myPluginWithoutPlatform/Podfile
-pod 'myPod' ~> 0.3.4
+# NativeScriptPlatformSection node_modules/mySecondPluginWithPlatform/Podfile with 10.0
+platform :ios, '10.0'
+# End NativeScriptPlatformSection
+
+# Begin Podfile - node_modules/myFirstPluginWithPlatform/Podfile
+# platform :ios, '9.0'
 # End Podfile
 
 # Begin Podfile - node_modules/mySecondPluginWithPlatform/Podfile
 # platform :ios, '10.0'
 # End Podfile
 
-# Begin Podfile - node_modules/myFirstPluginWithPlatform/Podfile
-# platform :ios, '9.0'
+# Begin Podfile - node_modules/myPluginWithoutPlatform/Podfile
+pod 'myPod' ~> 0.3.4
 # End Podfile
-
-# NativeScriptPlatformSection node_modules/mySecondPluginWithPlatform/Podfile with 10.0
-platform :ios, '10.0'
-# End NativeScriptPlatformSection
 end`
 			},
 			{
@@ -1158,19 +1154,21 @@ end`
 				expectedProjectPodfileContent: `use_frameworks!
 
 target "projectName" do
-# Begin Podfile - node_modules/myFirstPluginWithPlatform/Podfile
-# platform :ios
+# Begin Podfile - node_modules/myPluginWithoutPlatform/Podfile
+pod 'myPod' ~> 0.3.4
 # End Podfile
+
+# NativeScriptPlatformSection node_modules/myFirstPluginWithPlatform/Podfile with
+platform :ios
+# End NativeScriptPlatformSection
 
 # Begin Podfile - node_modules/mySecondPluginWithPlatform/Podfile
 # platform :ios, '10.0'
 # End Podfile
 
-# Begin Podfile - node_modules/myPluginWithoutPlatform/Podfile
-pod 'myPod' ~> 0.3.4
-# End Podfile# NativeScriptPlatformSection node_modules/myFirstPluginWithPlatform/Podfile with
-platform :ios
-# End NativeScriptPlatformSection
+# Begin Podfile - node_modules/myFirstPluginWithPlatform/Podfile
+# platform :ios
+# End Podfile
 end`
 			},
 			{
@@ -1191,19 +1189,21 @@ end`
 				expectedProjectPodfileContent: `use_frameworks!
 
 target "projectName" do
-# Begin Podfile - node_modules/mySecondPluginWithPlatform/Podfile
-# platform :ios, '10.0'
+# Begin Podfile - node_modules/myPluginWithoutPlatform/Podfile
+pod 'myPod' ~> 0.3.4
 # End Podfile
+
+# NativeScriptPlatformSection node_modules/myFirstPluginWithPlatform/Podfile with
+platform :ios
+# End NativeScriptPlatformSection
 
 # Begin Podfile - node_modules/myFirstPluginWithPlatform/Podfile
 # platform :ios
 # End Podfile
 
-# Begin Podfile - node_modules/myPluginWithoutPlatform/Podfile
-pod 'myPod' ~> 0.3.4
-# End Podfile# NativeScriptPlatformSection node_modules/myFirstPluginWithPlatform/Podfile with
-platform :ios
-# End NativeScriptPlatformSection
+# Begin Podfile - node_modules/mySecondPluginWithPlatform/Podfile
+# platform :ios, '10.0'
+# End Podfile
 end`
 			},
 			{
@@ -1228,26 +1228,26 @@ end`
 				expectedProjectPodfileContent: `use_frameworks!
 
 target "projectName" do
-# Begin Podfile - my/full/path/to/app/App_Resources/iOS/Podfile
-pod: 'mySecondPlatformPod' ~> 2.0.0
-pod: 'platformKit' ~> 1.0
-# End Podfile
+# NativeScriptPlatformSection node_modules/myFirstPluginWithPlatform/Podfile with 11.0
+platform :ios, '11.0'
+# End NativeScriptPlatformSection
 
-# Begin Podfile - node_modules/myFirstPluginWithPlatform/Podfile
-# platform :ios, '11.0'
+# Begin Podfile - node_modules/  mypath  with spaces/mySecondPluginWithPlatform/Podfile
+# platform :ios, '10.0'
 # End Podfile
 
 # Begin Podfile - node_modules/myPluginWithoutPlatform/Podfile
 pod 'myPod' ~> 0.3.4
 # End Podfile
 
-# Begin Podfile - node_modules/  mypath  with spaces/mySecondPluginWithPlatform/Podfile
-# platform :ios, '10.0'
+# Begin Podfile - node_modules/myFirstPluginWithPlatform/Podfile
+# platform :ios, '11.0'
 # End Podfile
 
-# NativeScriptPlatformSection node_modules/myFirstPluginWithPlatform/Podfile with 11.0
-platform :ios, '11.0'
-# End NativeScriptPlatformSection
+# Begin Podfile - my/full/path/to/app/App_Resources/iOS/Podfile
+pod: 'mySecondPlatformPod' ~> 2.0.0
+pod: 'platformKit' ~> 1.0
+# End Podfile
 end`
 			}
 		];

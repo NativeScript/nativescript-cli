@@ -68,7 +68,7 @@ export class PlatformCommandHelper implements IPlatformCommandHelper {
 				this.$fs.deleteDirectory(platformDir);
 				this.$projectDataService.removeNSProperty(projectData.projectDir, platformData.frameworkPackageName);
 
-				this.$logger.out(`Platform ${platform} successfully removed.`);
+				this.$logger.info(`Platform ${platform} successfully removed.`);
 			} catch (err) {
 				this.$logger.error(`Failed to remove ${platform} platform with errors:`);
 				if (errorMessage) {
@@ -179,7 +179,7 @@ export class PlatformCommandHelper implements IPlatformCommandHelper {
 			projectDir: projectData.projectDir,
 			platform: packageName
 		});
-		this.$logger.out("Successfully updated to version ", updateOptions.newVersion);
+		this.$logger.info("Successfully updated to version ", updateOptions.newVersion);
 	}
 
 	private isPlatformPrepared(platform: string, projectData: IProjectData): boolean {

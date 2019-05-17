@@ -27,12 +27,22 @@ export class CleanupService implements ICleanupService {
 
 	public async addCleanupDeleteAction(filePath: string): Promise<void> {
 		const cleanupProcess = await this.getCleanupProcess();
-		cleanupProcess.send(<IDeleteFileCleanupMessage>{ messageType: CleanupProcessMessage.AddDeleteFileAction, filePath });
+		cleanupProcess.send(<IFileCleanupMessage>{ messageType: CleanupProcessMessage.AddDeleteFileAction, filePath });
 	}
 
 	public async removeCleanupDeleteAction(filePath: string): Promise<void> {
 		const cleanupProcess = await this.getCleanupProcess();
-		cleanupProcess.send(<IDeleteFileCleanupMessage>{ messageType: CleanupProcessMessage.RemoveDeleteFileAction, filePath });
+		cleanupProcess.send(<IFileCleanupMessage>{ messageType: CleanupProcessMessage.RemoveDeleteFileAction, filePath });
+	}
+
+	public async addCleanupJS(jsCommand: IJSCommand): Promise<void> {
+		const cleanupProcess = await this.getCleanupProcess();
+		cleanupProcess.send(<IJSCleanupMessage>{ messageType: CleanupProcessMessage.AddJSFileToRequire, jsCommand });
+	}
+
+	public async removeCleanupJS(jsCommand: IJSCommand): Promise<void> {
+		const cleanupProcess = await this.getCleanupProcess();
+		cleanupProcess.send(<IJSCleanupMessage>{ messageType: CleanupProcessMessage.RemoveJSFileToRequire, jsCommand});
 	}
 
 	@exported("cleanupService")

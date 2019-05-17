@@ -90,17 +90,18 @@ describe("BundleValidatorHelper", () => {
 			]);
 		});
 
-		_.each(testCases, (testCase: any) => {
-			const deps = {
-				"nativescript-dev-webpack": testCase.currentWebpackVersion
-			};
+	_.each(testCases, (testCase: any) => {
+		const deps = {
+			"nativescript-dev-webpack": testCase.currentWebpackVersion
+		};
 
-			it(`${testCase.name}`, async () => {
-				const injector = createTestInjector({ dependencies: testCase.isDependency ? deps : null, devDependencies: !testCase.isDependency ? deps : null });
-				const bundleValidatorHelper = injector.resolve("bundleValidatorHelper");
-				bundleValidatorHelper.validate(testCase.minSupportedWebpackVersion);
+		it(`${testCase.name}`, async () => {
+			const injector = createTestInjector({ dependencies: testCase.isDependency ? deps : null, devDependencies: !testCase.isDependency ? deps : null });
+			const bundleValidatorHelper = injector.resolve("bundleValidatorHelper");
+			const projectData = injector.resolve("projectData");
+			bundleValidatorHelper.validate(projectData, testCase.minSupportedWebpackVersion);
 
-				assert.deepEqual(error, testCase.expectedError);
-			});
+			assert.deepEqual(error, testCase.expectedError);
 		});
+	});
 });

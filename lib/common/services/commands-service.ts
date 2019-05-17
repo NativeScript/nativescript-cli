@@ -37,6 +37,7 @@ export class CommandsService implements ICommandsService {
 			}
 
 			this.$options.setupOptions(projectData);
+			this.$options.printMessagesForDeprecatedOptions(this.$logger);
 	}
 
 	public allCommands(opts: { includeDevCommands: boolean }): string[] {

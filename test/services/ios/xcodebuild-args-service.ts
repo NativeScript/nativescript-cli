@@ -18,6 +18,9 @@ function createTestInjector(data: { logLevel: string, hasProjectWorkspace: boole
 		getLevel: () => data.logLevel
 	});
 	injector.register("xcodebuildArgsService", XcodebuildArgsService);
+	injector.register("iOSWatchAppService", {
+		hasWatchApp: () => false
+	});
 
 	return injector;
 }
@@ -66,9 +69,9 @@ describe("xcodebuildArgsService", () => {
 
 						const expectedArgs = [
 							"ONLY_ACTIVE_ARCH=NO",
+							"CODE_SIGN_IDENTITY=",
 							"build",
 							"-configuration", configuration,
-							"CODE_SIGN_IDENTITY=",
 							"-sdk", "iphonesimulator"
 						]
 							.concat(getCommonArgs())

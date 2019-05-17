@@ -16,9 +16,9 @@ export class PreviewCommand implements ICommand {
 		private $previewAppLogProvider: IPreviewAppLogProvider,
 		private $previewQrCodeService: IPreviewQrCodeService,
 		$cleanupService: ICleanupService) {
-			this.$analyticsService.setShouldDispose(false);
-			$cleanupService.setShouldDispose(false);
-		}
+		this.$analyticsService.setShouldDispose(false);
+		$cleanupService.setShouldDispose(false);
+	}
 
 	public async execute(): Promise<void> {
 		this.$previewAppLogProvider.on(DEVICE_LOG_EVENT_NAME, (deviceId: string, message: string) => {
@@ -44,7 +44,7 @@ export class PreviewCommand implements ICommand {
 		}
 
 		await this.$networkConnectivityValidator.validate();
-		this.$bundleValidatorHelper.validate(PreviewCommand.MIN_SUPPORTED_WEBPACK_VERSION);
+		this.$bundleValidatorHelper.validate(this.$projectData, PreviewCommand.MIN_SUPPORTED_WEBPACK_VERSION);
 		return true;
 	}
 }

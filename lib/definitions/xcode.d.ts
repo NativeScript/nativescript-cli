@@ -17,7 +17,7 @@ declare module "nativescript-dev-xcode" {
 
 		addFramework(filepath: string, options?: Options): void;
 		removeFramework(filePath: string, options?: Options): void;
-		
+	
 		addPbxGroup(filePathsArray: any[], name: string, path: string, sourceTree: string): void;
 		
 		removePbxGroup(groupName: string, path: string): void;
@@ -28,7 +28,7 @@ declare module "nativescript-dev-xcode" {
 
 		pbxXCBuildConfigurationSection(): any;
 
-		addTarget(targetName: string, targetType: string, targetPath?: string): target;
+		addTarget(targetName: string, targetType: string, targetPath?: string, parentTarget?: string): target;
 		addBuildPhase(filePathsArray: string[],
 			buildPhaseType: string,
 			comment: string,
@@ -46,7 +46,8 @@ declare module "nativescript-dev-xcode" {
 		): group;
 		addBuildProperty(prop: string, value: any, build_name?: string, productName?: string): void;
 		addToHeaderSearchPaths(file: string|Object, productName?: string): void;
-		removeTargetsByProductType(targetType: string): void
+		removeTargetsByProductType(targetType: string): void;
+		getFirstTarget(): {uuid: string};
 	}
 
 	class target {

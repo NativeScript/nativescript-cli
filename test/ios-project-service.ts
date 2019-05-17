@@ -9,7 +9,7 @@ import * as iOSProjectServiceLib from "../lib/services/ios-project-service";
 import { IOSProjectService } from "../lib/services/ios-project-service";
 import { IOSEntitlementsService } from "../lib/services/ios-entitlements-service";
 import { XcconfigService } from "../lib/services/xcconfig-service";
-import * as LoggerLib from "../lib/common/logger";
+import * as LoggerLib from "../lib/common/logger/logger";
 import * as OptionsLib from "../lib/options";
 import * as yok from "../lib/common/yok";
 import { DevicesService } from "../lib/common/mobile/mobile-core/devices-service";
@@ -166,6 +166,10 @@ function createTestInjector(projectPath: string, projectName: string, xCode?: IX
 	testInjector.register("xcodebuildArgsService", XcodebuildArgsService);
 	testInjector.register("exportOptionsPlistService", ExportOptionsPlistService);
 
+	testInjector.register("iOSWatchAppService", {
+		removeWatchApp: () => { /* */ },
+		addWatchAppFromPath: () => Promise.resolve()
+	});
 	return testInjector;
 }
 
@@ -240,14 +244,14 @@ describe("Cocoapods support", () => {
 			const expectedPlatformSection = [
 				`# NativeScriptPlatformSection ${basePodfilePath} with 8.1`,
 				"platform :ios, '8.1'",
-				"# End NativeScriptPlatformSection",
+				"# End NativeScriptPlatformSection\n"
 			].join("\n");
 			const expectedProjectPodfileContent = ["use_frameworks!\n",
 				`target "${projectName}" do`,
+				expectedPlatformSection,
 				`# Begin Podfile - ${basePodfilePath}`,
 				expectedPluginPodfileContent,
-				"# End Podfile\n",
-				expectedPlatformSection,
+				"# End Podfile",
 				"end"]
 				.join("\n");
 			assert.equal(actualProjectPodfileContent, expectedProjectPodfileContent);
@@ -318,14 +322,14 @@ describe("Cocoapods support", () => {
 			const expectedPlatformSection = [
 				`# NativeScriptPlatformSection ${pluginPodfilePath} with 8.1`,
 				"platform :ios, '8.1'",
-				"# End NativeScriptPlatformSection",
+				"# End NativeScriptPlatformSection\n",
 			].join("\n");
 			const expectedProjectPodfileContent = ["use_frameworks!\n",
 				`target "${projectName}" do`,
+				expectedPlatformSection,
 				`# Begin Podfile - ${pluginPodfilePath}`,
 				expectedPluginPodfileContent,
-				"# End Podfile\n",
-				expectedPlatformSection,
+				"# End Podfile",
 				"end"]
 				.join("\n");
 			assert.equal(actualProjectPodfileContent, expectedProjectPodfileContent);
@@ -400,14 +404,14 @@ describe("Cocoapods support", () => {
 			const expectedPlatformSection = [
 				`# NativeScriptPlatformSection ${pluginPodfilePath} with 8.1`,
 				"platform :ios, '8.1'",
-				"# End NativeScriptPlatformSection",
+				"# End NativeScriptPlatformSection\n",
 			].join("\n");
 			const expectedProjectPodfileContent = ["use_frameworks!\n",
 				`target "${projectName}" do`,
+				expectedPlatformSection,
 				`# Begin Podfile - ${pluginPodfilePath}`,
 				expectedPluginPodfileContent,
-				"# End Podfile\n",
-				expectedPlatformSection,
+				"# End Podfile",
 				"end"]
 				.join("\n");
 			assert.equal(actualProjectPodfileContent, expectedProjectPodfileContent);
@@ -710,158 +714,6 @@ describe("Relative paths", () => {
 	});
 });
 
-// describe("iOS Project Service Signing", () => {
-// 	let testInjector: IInjector;
-// 	let projectName: string;
-// 	let projectDirName: string;
-// 	let projectPath: string;
-// 	let files: any;
-// 	let iOSProvisionService: IOSProvisionService;
-
-// 	// beforeEach(() => {
-// 	// 	files = {};
-// 	// 	projectName = "TNSApp" + Math.ceil(Math.random() * 1000);
-// 	// 	projectDirName = projectName + "Dir";
-// 	// 	projectPath = temp.mkdirSync(projectDirName);
-// 	// 	testInjector = createTestInjector(projectPath, projectDirName);
-// 	// 	testInjector.register("fs", {
-// 	// 		files: {},
-// 	// 		readJson(path: string): any {
-// 	// 			if (this.exists(path)) {
-// 	// 				return JSON.stringify(files[path]);
-// 	// 			} else {
-// 	// 				return null;
-// 	// 			}
-// 	// 		},
-// 	// 		exists(path: string): boolean {
-// 	// 			return path in files;
-// 	// 		}
-// 	// 	});
-// 	// 	testInjector.register("pbxprojDomXcode", { Xcode: {} });
-// 	// 	pbxproj = join(projectPath, `platforms/ios/${projectDirName}.xcodeproj/project.pbxproj`);
-// 	// 	iOSProjectService = testInjector.resolve("iOSProjectService");
-// 	// 	iOSProvisionService = testInjector.resolve("iOSProvisionService");
-// 	// 	pbxprojDomXcode = testInjector.resolve("pbxprojDomXcode");
-// 	// 	projectData = testInjector.resolve("projectData");
-// 	// 	iOSProvisionService.pick = async (uuidOrName: string, projId: string) => {
-// 	// 		return (<any>{
-// 	// 			"NativeScriptDev": {
-// 	// 				Name: "NativeScriptDev",
-// 	// 				CreationDate: null,
-// 	// 				ExpirationDate: null,
-// 	// 				TeamName: "Telerik AD",
-// 	// 				TeamIdentifier: ["TKID101"],
-// 	// 				ProvisionedDevices: [],
-// 	// 				Entitlements: {
-// 	// 					"application-identifier": "*",
-// 	// 					"com.apple.developer.team-identifier": "ABC"
-// 	// 				},
-// 	// 				UUID: "12345",
-// 	// 				ProvisionsAllDevices: false,
-// 	// 				ApplicationIdentifierPrefix: null,
-// 	// 				DeveloperCertificates: null,
-// 	// 				Type: "Development"
-// 	// 			},
-// 	// 			"NativeScriptDist": {
-// 	// 				Name: "NativeScriptDist",
-// 	// 				CreationDate: null,
-// 	// 				ExpirationDate: null,
-// 	// 				TeamName: "Telerik AD",
-// 	// 				TeamIdentifier: ["TKID202"],
-// 	// 				ProvisionedDevices: [],
-// 	// 				Entitlements: {
-// 	// 					"application-identifier": "*",
-// 	// 					"com.apple.developer.team-identifier": "ABC"
-// 	// 				},
-// 	// 				UUID: "6789",
-// 	// 				ProvisionsAllDevices: true,
-// 	// 				ApplicationIdentifierPrefix: null,
-// 	// 				DeveloperCertificates: null,
-// 	// 				Type: "Distribution"
-// 	// 			},
-// 	// 			"NativeScriptAdHoc": {
-// 	// 				Name: "NativeScriptAdHoc",
-// 	// 				CreationDate: null,
-// 	// 				ExpirationDate: null,
-// 	// 				TeamName: "Telerik AD",
-// 	// 				TeamIdentifier: ["TKID303"],
-// 	// 				ProvisionedDevices: [],
-// 	// 				Entitlements: {
-// 	// 					"application-identifier": "*",
-// 	// 					"com.apple.developer.team-identifier": "ABC"
-// 	// 				},
-// 	// 				UUID: "1010",
-// 	// 				ProvisionsAllDevices: true,
-// 	// 				ApplicationIdentifierPrefix: null,
-// 	// 				DeveloperCertificates: null,
-// 	// 				Type: "Distribution"
-// 	// 			}
-// 	// 		})[uuidOrName];
-// 	// 	};
-// 	// });
-
-// 	// describe("Check for Changes", () => {
-// 	// 	it("sets signingChanged if no Xcode project exists", async () => {
-// 	// 		const changes = <IProjectChangesInfo>{};
-// 	// 		await iOSProjectService.checkForChanges(changes, { release: false, provision: "NativeScriptDev", teamId: undefined, useHotModuleReload: false }, projectData);
-// 	// 		assert.isTrue(!!changes.signingChanged);
-// 	// 	});
-// 	// 	it("sets signingChanged if the Xcode projects is configured with Automatic signing, but proivsion is specified", async () => {
-// 	// 		files[pbxproj] = "";
-// 	// 		pbxprojDomXcode.Xcode.open = <any>function (path: string) {
-// 	// 			assert.equal(path, pbxproj);
-// 	// 			return {
-// 	// 				getSigning(x: string) {
-// 	// 					return { style: "Automatic" };
-// 	// 				}
-// 	// 			};
-// 	// 		};
-// 	// 		const changes = <IProjectChangesInfo>{};
-// 	// 		await iOSProjectService.checkForChanges(changes, { release: false, provision: "NativeScriptDev", teamId: undefined, useHotModuleReload: false }, projectData);
-// 	// 		assert.isTrue(!!changes.signingChanged);
-// 	// 	});
-// 	// 	it("sets signingChanged if the Xcode projects is configured with Manual signing, but the proivsion specified differs the selected in the pbxproj", async () => {
-// 	// 		files[pbxproj] = "";
-// 	// 		pbxprojDomXcode.Xcode.open = <any>function (path: string) {
-// 	// 			assert.equal(path, pbxproj);
-// 	// 			return {
-// 	// 				getSigning() {
-// 	// 					return {
-// 	// 						style: "Manual", configurations: {
-// 	// 							Debug: { name: "NativeScriptDev2" },
-// 	// 							Release: { name: "NativeScriptDev2" }
-// 	// 						}
-// 	// 					};
-// 	// 				}
-// 	// 			};
-// 	// 		};
-// 	// 		const changes = <IProjectChangesInfo>{};
-// 	// 		await iOSProjectService.checkForChanges(changes, { release: false, provision: "NativeScriptDev", teamId: undefined, useHotModuleReload: false }, projectData);
-// 	// 		assert.isTrue(!!changes.signingChanged);
-// 	// 	});
-// 	// 	it("does not set signingChanged if the Xcode projects is configured with Manual signing and proivsion matches", async () => {
-// 	// 		files[pbxproj] = "";
-// 	// 		pbxprojDomXcode.Xcode.open = <any>function (path: string) {
-// 	// 			assert.equal(path, pbxproj);
-// 	// 			return {
-// 	// 				getSigning() {
-// 	// 					return {
-// 	// 						style: "Manual", configurations: {
-// 	// 							Debug: { name: "NativeScriptDev" },
-// 	// 							Release: { name: "NativeScriptDev" }
-// 	// 						}
-// 	// 					};
-// 	// 				}
-// 	// 			};
-// 	// 		};
-// 	// 		const changes = <IProjectChangesInfo>{};
-// 	// 		await iOSProjectService.checkForChanges(changes, { release: false, provision: "NativeScriptDev", teamId: undefined, useHotModuleReload: false }, projectData);
-// 	// 		console.log("CHANGES !!!! ", changes);
-// 	// 		assert.isFalse(!!changes.signingChanged);
-// 	// 	});
-// 	// });
-// });
-
 describe("Merge Project XCConfig files", () => {
 	if (require("os").platform() !== "darwin") {
 		console.log("Skipping 'Merge Project XCConfig files' tests. They can work only on macOS");
@@ -922,17 +774,19 @@ describe("Merge Project XCConfig files", () => {
 
 		// run merge for all release: debug|release
 		for (const release in [true, false]) {
-			await (<any>iOSProjectService).mergeProjectXcconfigFiles(projectData, { release });
+			await (<any>iOSProjectService).mergeProjectXcconfigFiles(projectData);
 
-			const destinationFilePath = xcconfigService.getPluginsXcconfigFilePath(projectRoot, { release: !!release });
+			const destinationFilePaths = xcconfigService.getPluginsXcconfigFilePaths(projectRoot);
 
-			assert.isTrue(fs.exists(destinationFilePath), 'Target build xcconfig is missing for release: ' + release);
-			const expected = {
-				'ASSETCATALOG_COMPILER_APPICON_NAME': 'AppIcon',
-				'ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME': 'LaunchImage',
-				'CODE_SIGN_IDENTITY': 'iPhone Distribution'
-			};
-			assertPropertyValues(expected, destinationFilePath, testInjector);
+			_.each(destinationFilePaths, destinationFilePath => {
+				assert.isTrue(fs.exists(destinationFilePath), 'Target build xcconfig is missing for release: ' + release);
+				const expected = {
+					'ASSETCATALOG_COMPILER_APPICON_NAME': 'AppIcon',
+					'ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME': 'LaunchImage',
+					'CODE_SIGN_IDENTITY': 'iPhone Distribution'
+				};
+				assertPropertyValues(expected, destinationFilePath, testInjector);
+			});
 		}
 	});
 
@@ -950,13 +804,15 @@ describe("Merge Project XCConfig files", () => {
 
 			await (<any>iOSProjectService).mergeProjectXcconfigFiles(projectData, { release });
 
-			const destinationFilePath = xcconfigService.getPluginsXcconfigFilePath(projectRoot, { release: !!release });
+			const destinationFilePaths = xcconfigService.getPluginsXcconfigFilePaths(projectRoot);
 
-			assert.isTrue(fs.exists(destinationFilePath), 'Target build xcconfig is missing for release: ' + release);
-			const expected = {
-				'CODE_SIGN_ENTITLEMENTS': iOSEntitlementsService.getPlatformsEntitlementsRelativePath(projectData)
-			};
-			assertPropertyValues(expected, destinationFilePath, testInjector);
+			_.each(destinationFilePaths, destinationFilePath => {
+				assert.isTrue(fs.exists(destinationFilePath), 'Target build xcconfig is missing for release: ' + release);
+				const expected = {
+					'CODE_SIGN_ENTITLEMENTS': iOSEntitlementsService.getPlatformsEntitlementsRelativePath(projectData)
+				};
+				assertPropertyValues(expected, destinationFilePath, testInjector);
+			});
 		}
 	});
 
@@ -966,13 +822,12 @@ describe("Merge Project XCConfig files", () => {
 		const xcconfigEntitlements = appResourceXCConfigContent + `${EOL}CODE_SIGN_ENTITLEMENTS = ${expectedEntitlementsFile}`;
 		fs.writeFile(appResourcesXcconfigPath, xcconfigEntitlements);
 
-		// run merge for all release: debug|release
-		for (const release in [true, false]) {
-			await (<any>iOSProjectService).mergeProjectXcconfigFiles(projectData, { release });
+		await (<any>iOSProjectService).mergeProjectXcconfigFiles(projectData);
 
-			const destinationFilePath = xcconfigService.getPluginsXcconfigFilePath(projectRoot, { release: !!release });
+		const destinationFilePaths = xcconfigService.getPluginsXcconfigFilePaths(projectRoot);
 
-			assert.isTrue(fs.exists(destinationFilePath), 'Target build xcconfig is missing for release: ' + release);
+		_.each(destinationFilePaths, destinationFilePath => {
+			assert.isTrue(fs.exists(destinationFilePath), `Target build xcconfig ${destinationFilePath} is missing.`);
 			const expected = {
 				'ASSETCATALOG_COMPILER_APPICON_NAME': 'AppIcon',
 				'ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME': 'LaunchImage',
@@ -980,20 +835,19 @@ describe("Merge Project XCConfig files", () => {
 				'CODE_SIGN_ENTITLEMENTS': expectedEntitlementsFile
 			};
 			assertPropertyValues(expected, destinationFilePath, testInjector);
-		}
+		});
 	});
 
 	it("creates empty plugins-<config>.xcconfig in case there are no build.xcconfig in App_Resources and in plugins", async () => {
-		// run merge for all release: debug|release
-		for (const release in [true, false]) {
-			await (<any>iOSProjectService).mergeProjectXcconfigFiles(projectData, { release });
+		await (<any>iOSProjectService).mergeProjectXcconfigFiles(projectData);
 
-			const destinationFilePath = xcconfigService.getPluginsXcconfigFilePath(projectRoot, { release: !!release });
+		const destinationFilePaths = xcconfigService.getPluginsXcconfigFilePaths(projectRoot);
 
-			assert.isTrue(fs.exists(destinationFilePath), 'Target build xcconfig is missing for release: ' + release);
+		_.each(destinationFilePaths, destinationFilePath => {
+			assert.isTrue(fs.exists(destinationFilePath), `Target build xcconfig ${destinationFilePath} is missing.`);
 			const content = fs.readFile(destinationFilePath).toString();
 			assert.equal(content, "");
-		}
+		});
 	});
 });
 

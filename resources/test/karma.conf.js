@@ -1,4 +1,4 @@
-module.exports = function(config) {
+module.exports = function (config) {
   const options = {
 
     // base path that will be used to resolve all patterns (eg. files, exclude)
@@ -11,7 +11,7 @@ module.exports = function(config) {
 
 
     // list of files / patterns to load in the browser
-    files: [ ${ testFiles } ],
+    files: [${ testFiles }],
 
 
     // list of files to exclude
@@ -75,7 +75,7 @@ module.exports = function(config) {
 
   setWebpackPreprocessor(config, options);
   setWebpack(config, options);
-  
+
   config.set(options);
 }
 
@@ -98,6 +98,7 @@ function setWebpack(config, options) {
   if (config && config.bundle) {
     const env = {};
     env[config.platform] = true;
+    env.sourceMap = config.debugBrk;
     options.webpack = require('./webpack.config')(env);
     delete options.webpack.entry;
     delete options.webpack.output.libraryTarget;

@@ -29,7 +29,7 @@ export class BuildController extends EventEmitter implements IBuildController {
 	}
 
 	public async build(buildData: IBuildData): Promise<string> {
-		this.$logger.out("Building project...");
+		this.$logger.info("Building project...");
 
 		const platform = buildData.platform.toLowerCase();
 		const projectData = this.$projectDataService.getProjectData(buildData.projectDir);
@@ -52,7 +52,7 @@ export class BuildController extends EventEmitter implements IBuildController {
 
 		const handler = (data: any) => {
 			this.emit(constants.BUILD_OUTPUT_EVENT_NAME, data);
-			this.$logger.printInfoMessageOnSameLine(data.data.toString());
+			this.$logger.info(data.data.toString(), { [constants.LoggerConfigData.skipNewLine]: true });
 		};
 
 		await attachAwaitDetach(constants.BUILD_OUTPUT_EVENT_NAME, platformData.platformProjectService, handler, platformData.platformProjectService.buildProject(platformData.projectRoot, projectData, buildData));
@@ -60,7 +60,7 @@ export class BuildController extends EventEmitter implements IBuildController {
 		const buildInfoFileDir = platformData.getBuildOutputPath(buildData);
 		this.$buildInfoFileService.saveBuildInfoFile(platformData, buildInfoFileDir);
 
-		this.$logger.out("Project successfully built.");
+		this.$logger.info("Project successfully built.");
 
 		const result = await this.$buildArtefactsService.getLatestApplicationPackagePath(platformData, buildData);
 

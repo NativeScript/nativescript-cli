@@ -40,4 +40,20 @@ interface ICleanupService extends IShouldDispose, IDisposable {
 	 * @returns {Promise<void>}
 	 */
 	removeCleanupDeleteAction(filePath: string): Promise<void>;
+
+	/**
+	 * Adds JS file to be required and executed during cleanup.
+	 * NOTE: The JS file will be required in a new child process, so you can pass timeout for the execution.
+	 * In the child process you can use all injected dependencies of CLI.
+	 * @param {IJSCommand} jsCommand Information about the JS file to be required and the data that should be passed to it.
+	 * @returns {Promise<void>}
+	 */
+	addCleanupJS(jsCommand: IJSCommand): Promise<void>;
+
+	/**
+	 * Removes JS file to be required and executed during cleanup.
+	 * @param {IJSCommand} filePath jsCommand Information about the JS file to be required and the data that should not be passed to it.
+	 * @returns {Promise<void>}
+	 */
+	removeCleanupJS(jsCommand: IJSCommand): Promise<void>;
 }

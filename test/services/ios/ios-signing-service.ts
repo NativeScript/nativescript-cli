@@ -6,9 +6,9 @@ import { Errors } from "../../../lib/common/errors";
 
 interface IXcodeMock {
 	isSetManualSigningStyleCalled: boolean;
-	isSetManualSigningStyleByTargetProductTypeCalled: boolean;
 	isSetAutomaticSigningStyleCalled: boolean;
-	isSetAutomaticSigningStyleByTargetProductTypeCalled: boolean;
+	isSetManualSigningStyleByTargetProductTypesListCalled: boolean;
+	isSetAutomaticSigningStyleByTargetProductTypesListCalled: boolean;
 	isSaveCalled: boolean;
 }
 
@@ -60,9 +60,9 @@ const NativeScriptAdHoc = {
 
 class XcodeMock implements IXcodeMock {
 	public isSetManualSigningStyleCalled = false;
-	public isSetManualSigningStyleByTargetProductTypeCalled = false;
 	public isSetAutomaticSigningStyleCalled = false;
-	public isSetAutomaticSigningStyleByTargetProductTypeCalled = false;
+	public isSetManualSigningStyleByTargetProductTypesListCalled = false;
+	public isSetAutomaticSigningStyleByTargetProductTypesListCalled = false;
 	public isSaveCalled = false;
 
 	constructor(private data: { signing: { style: string, team?: string } }) { }
@@ -75,16 +75,16 @@ class XcodeMock implements IXcodeMock {
 		this.isSetManualSigningStyleCalled = true;
 	}
 
-	public setManualSigningStyleByTargetProductType() {
-		this.isSetManualSigningStyleByTargetProductTypeCalled = true;
-	}
-
 	public setAutomaticSigningStyle() {
 		this.isSetAutomaticSigningStyleCalled = true;
 	}
 
-	public setAutomaticSigningStyleByTargetProductType() {
-		this.isSetAutomaticSigningStyleByTargetProductTypeCalled = true;
+	public setManualSigningStyleByTargetProductTypesList() {
+		this.isSetManualSigningStyleByTargetProductTypesListCalled = true;
+	}
+
+	public setAutomaticSigningStyleByTargetProductTypesList() {
+		this.isSetAutomaticSigningStyleByTargetProductTypesListCalled = true;
 	}
 
 	public save() {
@@ -174,7 +174,7 @@ describe("IOSSigningService", () => {
 				arrangeData: { hasXCConfigrovisioning: false, hasXCConfigDevelopmentTeam: true, signing: null },
 				assert: (xcodeMock: IXcodeMock) => {
 					assert.isTrue(xcodeMock.isSetAutomaticSigningStyleCalled);
-					assert.isTrue(xcodeMock.isSetAutomaticSigningStyleByTargetProductTypeCalled);
+					assert.isTrue(xcodeMock.isSetAutomaticSigningStyleByTargetProductTypesListCalled);
 					assert.isTrue(xcodeMock.isSaveCalled);
 				}
 			},
@@ -183,7 +183,7 @@ describe("IOSSigningService", () => {
 				arrangeData: { hasXCConfigrovisioning: false, hasXCConfigDevelopmentTeam: true, signing: { style: "Automatic" } },
 				assert: (xcodeMock: IXcodeMock) => {
 					assert.isTrue(xcodeMock.isSetAutomaticSigningStyleCalled);
-					assert.isTrue(xcodeMock.isSetAutomaticSigningStyleByTargetProductTypeCalled);
+					assert.isTrue(xcodeMock.isSetAutomaticSigningStyleByTargetProductTypesListCalled);
 					assert.isTrue(xcodeMock.isSaveCalled);
 				}
 			},
@@ -192,7 +192,7 @@ describe("IOSSigningService", () => {
 				arrangeData: { hasXCConfigrovisioning: false, hasXCConfigDevelopmentTeam: true, signing: { style: "Manual" } },
 				assert: (xcodeMock: IXcodeMock) => {
 					assert.isFalse(xcodeMock.isSetAutomaticSigningStyleCalled);
-					assert.isFalse(xcodeMock.isSetAutomaticSigningStyleByTargetProductTypeCalled);
+					assert.isFalse(xcodeMock.isSetAutomaticSigningStyleByTargetProductTypesListCalled);
 					assert.isFalse(xcodeMock.isSetManualSigningStyleCalled);
 					assert.isFalse(xcodeMock.isSaveCalled);
 				}
@@ -217,7 +217,7 @@ describe("IOSSigningService", () => {
 				arrangeData: <any>{ signing: null },
 				assert: (xcodeMock: IXcodeMock) => {
 					assert.isTrue(xcodeMock.isSetAutomaticSigningStyleCalled);
-					assert.isTrue(xcodeMock.isSetAutomaticSigningStyleByTargetProductTypeCalled);
+					assert.isTrue(xcodeMock.isSetAutomaticSigningStyleByTargetProductTypesListCalled);
 					assert.isTrue(xcodeMock.isSaveCalled);
 					assert.isFalse(xcodeMock.isSetManualSigningStyleCalled);
 				}
@@ -227,7 +227,7 @@ describe("IOSSigningService", () => {
 				arrangeData: { signing: { style: "Automatic" } },
 				assert: (xcodeMock: IXcodeMock) => {
 					assert.isTrue(xcodeMock.isSetAutomaticSigningStyleCalled);
-					assert.isTrue(xcodeMock.isSetAutomaticSigningStyleByTargetProductTypeCalled);
+					assert.isTrue(xcodeMock.isSetAutomaticSigningStyleByTargetProductTypesListCalled);
 					assert.isTrue(xcodeMock.isSaveCalled);
 					assert.isFalse(xcodeMock.isSetManualSigningStyleCalled);
 				}
@@ -237,7 +237,7 @@ describe("IOSSigningService", () => {
 				arrangeData: { signing: { style: "Automatic", team: teamId }},
 				assert: (xcodeMock: IXcodeMock) => {
 					assert.isFalse(xcodeMock.isSetAutomaticSigningStyleCalled);
-					assert.isFalse(xcodeMock.isSetAutomaticSigningStyleByTargetProductTypeCalled);
+					assert.isFalse(xcodeMock.isSetAutomaticSigningStyleByTargetProductTypesListCalled);
 					assert.isFalse(xcodeMock.isSaveCalled);
 					assert.isFalse(xcodeMock.isSetManualSigningStyleCalled);
 				}
@@ -247,7 +247,7 @@ describe("IOSSigningService", () => {
 				arrangeData: { signing: { style: "Automatic", team: "anotherTeamId" }, teamIdsForName: [ "anotherTeamId" ] },
 				assert: (xcodeMock: IXcodeMock) => {
 					assert.isFalse(xcodeMock.isSetAutomaticSigningStyleCalled);
-					assert.isFalse(xcodeMock.isSetAutomaticSigningStyleByTargetProductTypeCalled);
+					assert.isFalse(xcodeMock.isSetAutomaticSigningStyleByTargetProductTypesListCalled);
 					assert.isFalse(xcodeMock.isSaveCalled);
 					assert.isFalse(xcodeMock.isSetManualSigningStyleCalled);
 				}
@@ -257,7 +257,7 @@ describe("IOSSigningService", () => {
 				arrangeData: { signing: { style: "Manual" }},
 				assert: (xcodeMock: IXcodeMock) => {
 					assert.isTrue(xcodeMock.isSetAutomaticSigningStyleCalled);
-					assert.isTrue(xcodeMock.isSetAutomaticSigningStyleByTargetProductTypeCalled);
+					assert.isTrue(xcodeMock.isSetAutomaticSigningStyleByTargetProductTypesListCalled);
 					assert.isTrue(xcodeMock.isSaveCalled);
 					assert.isFalse(xcodeMock.isSetManualSigningStyleCalled);
 				}
@@ -282,7 +282,7 @@ describe("IOSSigningService", () => {
 				arrangeData: <any>{ signing: null },
 				assert: (xcodeMock: IXcodeMock) => {
 					assert.isTrue(xcodeMock.isSetManualSigningStyleCalled);
-					assert.isTrue(xcodeMock.isSetManualSigningStyleByTargetProductTypeCalled);
+					assert.isTrue(xcodeMock.isSetManualSigningStyleByTargetProductTypesListCalled);
 					assert.isTrue(xcodeMock.isSaveCalled);
 				}
 			},
@@ -291,7 +291,7 @@ describe("IOSSigningService", () => {
 				arrangeData: { signing: { style: "Automatic" } },
 				assert: (xcodeMock: IXcodeMock) => {
 					assert.isTrue(xcodeMock.isSetManualSigningStyleCalled);
-					assert.isTrue(xcodeMock.isSetManualSigningStyleByTargetProductTypeCalled);
+					assert.isTrue(xcodeMock.isSetManualSigningStyleByTargetProductTypesListCalled);
 					assert.isTrue(xcodeMock.isSaveCalled);
 				}
 			},
@@ -300,7 +300,7 @@ describe("IOSSigningService", () => {
 				arrangeData: { signing: { style: "Manual" } },
 				assert: (xcodeMock: IXcodeMock) => {
 					assert.isFalse(xcodeMock.isSetManualSigningStyleCalled);
-					assert.isFalse(xcodeMock.isSetManualSigningStyleByTargetProductTypeCalled);
+					assert.isFalse(xcodeMock.isSetManualSigningStyleByTargetProductTypesListCalled);
 					assert.isFalse(xcodeMock.isSaveCalled);
 				}
 			}

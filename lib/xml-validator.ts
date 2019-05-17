@@ -15,7 +15,7 @@ export class XmlValidator implements IXmlValidator {
 				xmlHasErrors = xmlHasErrors || hasErrors;
 				if (hasErrors) {
 					this.$logger.info(`${file} has syntax errors.`.red.bold);
-					this.$logger.out(errorOutput.yellow);
+					this.$logger.info(errorOutput.yellow);
 				}
 			});
 		return !xmlHasErrors;
