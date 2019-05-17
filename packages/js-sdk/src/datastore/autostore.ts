@@ -1,7 +1,8 @@
 import { Query } from '../query';
 import { NetworkError } from '../errors/network';
+import { KinveyError } from '../errors/kinvey';
 import { Aggregation } from '../aggregation';
-import { DataStoreCache } from './cache';
+import { DataStoreCache, QueryCache } from './cache';
 import { NetworkStore } from './networkstore';
 import { CacheStore } from './cachestore';
 
@@ -12,6 +13,10 @@ export class AutoStore extends CacheStore {
 
   async find(query?: Query, options: any = {}) {
     const cache = new DataStoreCache(this.collectionName, this.tag);
+
+    if (query && !(query instanceof Query)) {
+      throw new KinveyError('query is not an instance of the Query class.')
+    }
 
     try {
       await this.pull(query, options);
@@ -26,6 +31,10 @@ export class AutoStore extends CacheStore {
   }
 
   async count(query?: Query, options: any = {}) {
+    if (query && !(query instanceof Query)) {
+      throw new KinveyError('query is not an instance of the Query class.')
+    }
+
     try {
       const network = new NetworkStore(this.collectionName);
       const count = await network.count(query, options);
@@ -41,6 +50,10 @@ export class AutoStore extends CacheStore {
   }
 
   async group(aggregation: Aggregation, options: any = {}) {
+    if (!(aggregation instanceof Query)) {
+      throw new KinveyError('aggregation is not an instance of the Aggregation class.')
+    }
+
     try {
       const network = new NetworkStore(this.collectionName);
       const result = await network.group(aggregation, options);
