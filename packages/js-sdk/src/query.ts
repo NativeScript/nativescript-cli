@@ -6,6 +6,7 @@ import isEmpty from 'lodash/isEmpty';
 import isArray from 'lodash/isArray';
 import sift from 'sift';
 import { QueryError } from './errors/query';
+import { KinveyError } from './errors/kinvey';
 
 const UNSUPPORTED_CONDITIONS = ['$nearSphere'];
 const PROTECTED_FIELDS = ['_id', '_acl'];
@@ -28,8 +29,8 @@ function nested(obj: any, dotProperty: string, value?: any) {
 }
 
 export interface QueryObject {
-  fields?: string[];
   filter?: any;
+  fields?: string[];
   sort?: any;
   limit?: number;
   skip?: number;
@@ -37,8 +38,8 @@ export interface QueryObject {
 
 export class Query {
   private _parent?: Query;
-  private _fields?: string[];
   public filter: any;
+  private _fields?: string[];
   private _sort?: any;
   private _limit?: number;
   private _skip?: number;
@@ -57,6 +58,15 @@ export class Query {
     this.sort = config.sort;
     this.limit = config.limit;
     this.skip = config.skip;
+  }
+
+  get key() {
+    if ((this._skip && this._skip > 0) || (this._limit && this._limit < Number.MAX_SAFE_INTEGER)) {
+      return null;
+    }
+
+    const queryObject = this.toQueryObject();
+    return queryObject && !isEmpty(queryObject) ? JSON.stringify(queryObject) : '';
   }
 
   get fields() {
@@ -571,7 +581,7 @@ export class Query {
     // NOR is preceded by AND. Therefore, if this query is part of an AND-join,
     // apply the NOR onto the parent to make sure AND indeed precedes NOR.
     if (this._parent && Object.hasOwnProperty.call(this._parent.filter, '$and')) {
-      return this._parent.nor(...args);
+      return this._parent.nor.apply(this._parent, ...args);
     }
 
     return this.join('$nor', args);
@@ -590,7 +600,7 @@ export class Query {
     // apply the OR onto the parent to make sure OR has indeed the lowest
     // precedence.
     if (this._parent) {
-      return this._parent.or(...args);
+      return this._parent.or.apply(this._parent, ...args);
     }
 
     return this.join('$or', args);
@@ -602,30 +612,30 @@ export class Query {
    * @returns {Object} Query string object.
    */
   toQueryObject() {
+    const queryPlainObject = this.toPlainObject();
     const queryObject: any = {};
 
-    if (Object.keys(this.filter).length > 0) {
-      queryObject.query = this.filter;
+    if (Object.keys(queryPlainObject.filter).length > 0) {
+      queryObject.query = queryPlainObject.filter;
     }
 
-    if (this.fields && this.fields.length > 0) {
-      queryObject.fields = this.fields.join(',');
+    if (queryPlainObject.fields && queryPlainObject.fields.length > 0) {
+      queryObject.fields = queryPlainObject.fields.join(',');
     }
 
-    if (isNumber(this.limit) && this.limit < Number.MAX_SAFE_INTEGER) {
-      queryObject.limit = this.limit;
+    if (isNumber(queryPlainObject.limit) && queryPlainObject.limit < Number.MAX_SAFE_INTEGER) {
+      queryObject.limit = queryPlainObject.limit;
     }
 
-    if (isNumber(this.skip) && this.skip > 0) {
-      queryObject.skip = this.skip;
+    if (isNumber(queryPlainObject.skip) && queryPlainObject.skip > 0) {
+      queryObject.skip = queryPlainObject.skip;
     }
 
-    if (this.sort && Object.keys(this.sort).length > 0) {
-      queryObject.sort = this.sort;
+    if (queryPlainObject.sort && Object.keys(queryPlainObject.sort).length > 0) {
+      queryObject.sort = queryPlainObject.sort;
     }
 
-    const keys = Object.keys(queryObject);
-    keys.forEach((key) => {
+    Object.keys(queryObject).forEach((key) => {
       queryObject[key] = isString(queryObject[key]) ? queryObject[key] : JSON.stringify(queryObject[key]);
     });
 
@@ -711,28 +721,49 @@ export class Query {
    * @throws {Error} Queries must be an array of Query instances or objects.
    * @returns {Query} Query
    */
-  join(operator: string, queries: any) {
-    let that = this;
-    let filters = queries.map((query: { filter: any; }) => query.filter);
+  private join(operator: string, queries: any) {
+    // Cast, validate, and parse arguments. If `queries` are supplied, obtain
+    // the `filter` for joining. The eventual return function will be the
+    // current query.
+    let result = new Query(this);
+    let filters = queries.map((queryObject) => {
+      let query = queryObject;
+      if (!(queryObject instanceof Query)) {
+        if (isPlainObject(queryObject)) {
+          query = new Query(queryObject);
+        } else {
+          throw new KinveyError('query argument must be of type: Kinvey.Query[] or Object[].');
+        }
+      }
+      return query.toPlainObject().filter;
+    });
 
+    // If there are no `queries` supplied, create a new (empty) `Kinvey.Query`.
+    // This query is the right-hand side of the join expression, and will be
+    // returned to allow for a fluent interface.
     if (filters.length === 0) {
-      (that as any) = new Query();
-      filters = [that.filter];
-      that._parent = this; // Required for operator precedence
+      result = new Query();
+      filters = [ result.toPlainObject().filter ];
+      result._parent = new Query(this);
     }
 
+    // Join operators operate on the top-level of `_filter`. Since the `toJSON`
+    // magic requires `_filter` to be passed by reference, we cannot simply re-
+    // assign `_filter`. Instead, empty it without losing the reference.
     const currentFilter = Object.keys(this.filter).reduce((filter: any, key) => {
-      // eslint-disable-next-line no-param-reassign
       filter[key] = this.filter[key];
       delete this.filter[key];
       return filter;
     }, {});
 
+    // `currentFilter` is the left-hand side query. Join with `filters`.
     this.addFilter(operator, [currentFilter].concat(filters));
-    return that;
+    return result;
   }
 
   process(docs: object[] = []) {
+    const queryPlainObject = this.toPlainObject();
+
     if (!Array.isArray(docs)) {
       throw new Error('data argument must be of type: Array.');
     }
@@ -743,26 +774,27 @@ export class Query {
 
     if (docs.length > 0) {
       let processedDocs;
+      const filter = queryPlainObject.filter;
 
-      if (this.filter && !isEmpty(this.filter)) {
-        processedDocs = sift(this.filter, docs);
+      if (filter && !isEmpty(filter)) {
+        processedDocs = sift(filter, docs);
       } else {
         processedDocs = docs;
       }
 
-      if (!isEmpty(this.sort)) {
+      if (!isEmpty(queryPlainObject.sort)) {
         // eslint-disable-next-line arrow-body-style
         processedDocs.sort((a, b) => {
-          return Object.keys(this.sort)
+          return Object.keys(queryPlainObject.sort)
             .reduce((result: any, field) => {
               if (typeof result !== 'undefined' && result !== 0) {
                 return result;
               }
 
-              if (Object.prototype.hasOwnProperty.call(this.sort, field)) {
+              if (Object.prototype.hasOwnProperty.call(queryPlainObject.sort, field)) {
                 const aField = nested(a, field);
                 const bField = nested(b, field);
-                const modifier = this.sort[field]; // -1 (descending) or 1 (ascending)
+                const modifier = queryPlainObject.sort[field]; // -1 (descending) or 1 (ascending)
 
                 if ((aField !== null && typeof aField !== 'undefined')
                   && (bField === null || typeof bField === 'undefined')) {
@@ -784,21 +816,21 @@ export class Query {
         });
       }
 
-      if (isNumber(this.skip) && this.skip > 0) {
-        if (isNumber(this.limit) && this.limit < Number.MAX_SAFE_INTEGER) {
-          processedDocs = processedDocs.slice(this.skip, this.skip + this.limit);
+      if (isNumber(queryPlainObject.skip) && queryPlainObject.skip > 0) {
+        if (isNumber(queryPlainObject.limit) && queryPlainObject.limit < Number.MAX_SAFE_INTEGER) {
+          processedDocs = processedDocs.slice(queryPlainObject.skip, queryPlainObject.skip + queryPlainObject.limit);
         } else {
-          processedDocs = processedDocs.slice(this.skip);
+          processedDocs = processedDocs.slice(queryPlainObject.skip);
         }
-      } else if (isNumber(this.limit) && this.limit < Number.MAX_SAFE_INTEGER) {
-        processedDocs = processedDocs.slice(0, this.limit);
+      } else if (isNumber(queryPlainObject.limit) && queryPlainObject.limit < Number.MAX_SAFE_INTEGER) {
+        processedDocs = processedDocs.slice(0, queryPlainObject.limit);
       }
 
-      if (isArray(this.fields) && this.fields.length > 0) {
+      if (isArray(queryPlainObject.fields) && queryPlainObject.fields.length > 0) {
         processedDocs = processedDocs.map((doc) => {
           const modifiedDoc: any = doc;
           Object.keys(modifiedDoc).forEach((key) => {
-            if (this.fields && this.fields.indexOf(key) === -1 && PROTECTED_FIELDS.indexOf(key) === -1) {
+            if (queryPlainObject.fields && queryPlainObject.fields.indexOf(key) === -1 && PROTECTED_FIELDS.indexOf(key) === -1) {
               delete modifiedDoc[key];
             }
           });
