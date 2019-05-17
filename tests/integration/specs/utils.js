@@ -182,20 +182,35 @@ export function validateEntity(dataStoreType, collectionName, expectedEntity, se
     });
 }
 
-export function cleanUpCollectionData(collectionName) {
+export function createSampleCollectionData(collectionName, count = 1, propertyName = '') {
+  const docs = [];
+  const collection = Kinvey.DataStore.collection(collectionName, Kinvey.DataStoreType.Network);
+
+  for (let i = 0; i < count; i++) {
+    const doc = {};
+    if (propertyName !== '') {
+      doc[propertyName] = i;
+    }
+    docs.push(doc);
+  }
+
+  const promises = docs.map((doc) => collection.save(doc));
+  return Promise.all(promises);
+}
+
+export async function cleanUpCollectionData(collectionName) {
   const networkStore = Kinvey.DataStore.collection(collectionName, Kinvey.DataStoreType.Network);
   const syncStore = Kinvey.DataStore.collection(collectionName, Kinvey.DataStoreType.Sync);
-  return networkStore.find()
-    .then((entities) => {
-      if (entities && entities.length > 0) {
-        const query = new Kinvey.Query();
-        query.contains('_id', entities.map(a => a._id));
-        return networkStore.remove(query);
-      }
-      return Promise.resolve();
-    })
-    .then(() => syncStore.clearSync())
-    .then(() => syncStore.clear());
+  const entities = await networkStore.find();
+
+  if (entities && entities.length > 0) {
+    const query = new Kinvey.Query();
+    query.contains('_id', entities.map(a => a._id));
+    await networkStore.remove(query);
+  }
+
+  await syncStore.clearSync();
+  await syncStore.clear();
 }
 
 export function cleanAndPopulateCollection(collectionName, entities) {
