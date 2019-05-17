@@ -22,7 +22,8 @@
   "main": "lib/index.js",
   "scripts": {
     "prebuild": "del lib",
-    "build": "tsc -p tsconfig.json"
+    "build": "tsc -p tsconfig.json",
+    "test": "mocha --require ts-node/register src/**/*.spec.ts"
   },
   "dependencies": {
     "events": "3.0.0",
@@ -38,13 +39,18 @@
     "url-join": "4.0.0"
   },
   "devDependencies": {
+    "@types/chai": "~4.1.7",
     "@types/events": "~3.0.0",
     "@types/js-base64": "~2.3.1",
     "@types/lodash": "~4.14.123",
     "@types/loglevel": "~1.5.4",
+    "@types/mocha": "~5.2.6",
     "@types/node": "~11.11.6",
     "@types/url-join": "~4.0.0",
+    "chai": "~4.2.0",
     "del-cli": "~1.1.0",
+    "mocha": "~6.1.4",
+    "ts-node": "~8.1.0",
     "typescript": "~3.4.4"
   },
   "files": [
