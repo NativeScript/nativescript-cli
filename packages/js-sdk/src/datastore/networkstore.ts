@@ -95,7 +95,7 @@ export class NetworkStore {
       return response;
     }
 
-    return response.data;
+    return response.data.count;
   }
 
   async group(aggregation: Aggregation, options: any = {}) {
