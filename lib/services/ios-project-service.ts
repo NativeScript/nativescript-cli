@@ -12,6 +12,8 @@ import * as plist from "plist";
 import { IOSProvisionService } from "./ios-provision-service";
 import { IOSEntitlementsService } from "./ios-entitlements-service";
 import { BUILD_XCCONFIG_FILE_NAME, IosProjectConstants } from "../constants";
+import { IOSBuildData } from "../data/build-data";
+import { IOSPrepareData } from "../data/prepare-data";
 
 interface INativeSourceCodeGroup {
 	name: string;
@@ -25,7 +27,7 @@ const SimulatorPlatformSdkName = "iphonesimulator";
 const getPlatformSdkName = (forDevice: boolean): string => forDevice ? DevicePlatformSdkName : SimulatorPlatformSdkName;
 const getConfigurationName = (release: boolean): string => release ? Configurations.Release : Configurations.Debug;
 
-export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServiceBase implements IPlatformProjectService {
+export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServiceBase {
 	private static IOS_PROJECT_NAME_PLACEHOLDER = "__PROJECT_NAME__";
 	private static IOS_PLATFORM_NAME = "ios";
 
@@ -65,8 +67,9 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			this._platformData = {
 				frameworkPackageName: constants.TNS_IOS_RUNTIME_NAME,
 				normalizedPlatformName: "iOS",
+				platformNameLowerCase: "ios",
 				appDestinationDirectoryPath: path.join(projectRoot, projectData.projectName),
-				platformProjectService: this,
+				platformProjectService: <any>this,
 				projectRoot: projectRoot,
 				getBuildOutputPath: (options: IBuildOutputOptions): string => {
 					const config = getConfigurationName(!options || options.release);
@@ -137,23 +140,13 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		};
 	}
 
-	// TODO: Remove Promise, reason: readDirectory - unable until androidProjectService has async operations.
-	public async createProject(frameworkDir: string, frameworkVersion: string, projectData: IProjectData, config: ICreateProjectOptions): Promise<void> {
+	public async createProject(frameworkDir: string, frameworkVersion: string, projectData: IProjectData): Promise<void> {
 		this.$fs.ensureDirectoryExists(path.join(this.getPlatformData(projectData).projectRoot, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER));
-		if (config.pathToTemplate) {
-			// Copy everything except the template from the runtime
-			this.$fs.readDirectory(frameworkDir)
-				.filter(dirName => dirName.indexOf(IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER) === -1)
-				.forEach(dirName => shell.cp("-R", path.join(frameworkDir, dirName), this.getPlatformData(projectData).projectRoot));
-			shell.cp("-rf", path.join(config.pathToTemplate, "*"), this.getPlatformData(projectData).projectRoot);
-		} else {
-			shell.cp("-R", path.join(frameworkDir, "*"), this.getPlatformData(projectData).projectRoot);
-		}
-
+		shell.cp("-R", path.join(frameworkDir, "*"), this.getPlatformData(projectData).projectRoot);
 	}
 
 	//TODO: plamen5kov: revisit this method, might have unnecessary/obsolete logic
-	public async interpolateData(projectData: IProjectData, platformSpecificData: IPlatformSpecificData): Promise<void> {
+	public async interpolateData(projectData: IProjectData): Promise<void> {
 		const projectRootFilePath = path.join(this.getPlatformData(projectData).projectRoot, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER);
 		// Starting with NativeScript for iOS 1.6.0, the project Info.plist file resides not in the platform project,
 		// but in the hello-world app template as a platform specific resource.
@@ -182,8 +175,12 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		this.replaceFileContent(pbxprojFilePath, projectData);
 	}
 
-	public interpolateConfigurationFile(projectData: IProjectData, platformSpecificData: IPlatformSpecificData): void {
+	public interpolateConfigurationFile(projectData: IProjectData): void {
 		return undefined;
+	}
+
+	public async cleanProject(projectRoot: string, projectData: IProjectData): Promise<void> {
+		return null;
 	}
 
 	public afterCreateProject(projectRoot: string, projectData: IProjectData): void {
@@ -191,23 +188,28 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			path.join(projectRoot, projectData.projectName));
 	}
 
-	public async buildProject(projectRoot: string, projectData: IProjectData, buildConfig: IBuildConfig): Promise<void> {
+	public async buildProject(projectRoot: string, projectData: IProjectData, iOSBuildData: IOSBuildData): Promise<void> {
 		const platformData = this.getPlatformData(projectData);
 		const handler = (data: any) => {
 			this.emit(constants.BUILD_OUTPUT_EVENT_NAME, data);
 		};
 
-		if (buildConfig.buildForDevice) {
-			await this.$iOSSigningService.setupSigningForDevice(projectRoot, projectData, buildConfig);
+		if (iOSBuildData.buildForDevice) {
+			await this.$iOSSigningService.setupSigningForDevice(projectRoot, projectData, iOSBuildData);
 			await attachAwaitDetach(constants.BUILD_OUTPUT_EVENT_NAME,
 				this.$childProcess,
 				handler,
-				this.$xcodebuildService.buildForDevice(platformData, projectData, buildConfig));
+				this.$xcodebuildService.buildForDevice(platformData, projectData, <any>iOSBuildData));
+		} else if (iOSBuildData.buildForAppStore) {
+			await attachAwaitDetach(constants.BUILD_OUTPUT_EVENT_NAME,
+				this.$childProcess,
+				handler,
+				this.$xcodebuildService.buildForAppStore(platformData, projectData, <any>iOSBuildData));
 		} else {
 			await attachAwaitDetach(constants.BUILD_OUTPUT_EVENT_NAME,
 				this.$childProcess,
 				handler,
-				this.$xcodebuildService.buildForSimulator(platformData, projectData, buildConfig));
+				this.$xcodebuildService.buildForSimulator(platformData, projectData, <any>iOSBuildData));
 		}
 
 		this.validateApplicationIdentifier(projectData);
@@ -275,13 +277,13 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		return contentIsTheSame;
 	}
 
-	public async prepareProject(projectData: IProjectData, platformSpecificData: IPlatformSpecificData): Promise<void> {
+	public async prepareProject(projectData: IProjectData, prepareData: IOSPrepareData): Promise<void> {
 		const projectRoot = path.join(projectData.platformsDir, "ios");
 
-		const provision = platformSpecificData && platformSpecificData.provision;
-		const teamId = platformSpecificData && platformSpecificData.teamId;
+		const provision = prepareData && prepareData.provision;
+		const teamId = prepareData && prepareData.teamId;
 		if (provision) {
-			await this.$iOSSigningService.setupSigningFromProvision(projectRoot, projectData, provision, platformSpecificData.mobileProvisionData);
+			await this.$iOSSigningService.setupSigningFromProvision(projectRoot, projectData, provision, prepareData.mobileProvisionData);
 		}
 		if (teamId) {
 			await this.$iOSSigningService.setupSigningFromTeam(projectRoot, projectData, teamId);
@@ -506,7 +508,8 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		return Promise.resolve();
 	}
 
-	public async checkForChanges(changesInfo: IProjectChangesInfo, { provision, teamId }: IProjectChangesOptions, projectData: IProjectData): Promise<void> {
+	public async checkForChanges(changesInfo: IProjectChangesInfo, prepareData: IOSPrepareData, projectData: IProjectData): Promise<void> {
+		const { provision, teamId } = prepareData;
 		const hasProvision = provision !== undefined;
 		const hasTeamId = teamId !== undefined;
 		if (hasProvision || hasTeamId) {

@@ -27,7 +27,7 @@ describe("net", () => {
 			const childProcess = testInjector.resolve<IChildProcess>("childProcess");
 
 			childProcess.exec = async (command: string, options?: any, execOptions?: IExecOptions): Promise<any> => {
-				const platformsData: IDictionary<any> = {
+				const platformsDataService: IDictionary<any> = {
 					linux: {
 						data: `Active Internet connections (only servers)
 Proto Recv-Q Send-Q Local Address           Foreign Address         State
@@ -67,10 +67,10 @@ Active Connections
 
 				execCalledCount++;
 
-				let data = platformsData[platform].data;
+				let data = platformsDataService[platform].data;
 
 				if (port) {
-					data += `${EOL}${platformsData[platform].portData}`;
+					data += `${EOL}${platformsDataService[platform].portData}`;
 				}
 
 				if (iteration) {

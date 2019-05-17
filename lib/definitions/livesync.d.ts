@@ -1,75 +1,14 @@
 import { EventEmitter } from "events";
 
 declare global {
-	// This interface is a mashup of NodeJS' along with Chokidar's event watchers
-	interface IFSWatcher extends NodeJS.EventEmitter {
-		// from fs.FSWatcher
-		close(): void;
-
-		/**
-		 * events.EventEmitter
-		 *   1. change
-		 *   2. error
-		 */
-		addListener(event: string, listener: Function): this;
-		addListener(event: "change", listener: (eventType: string, filename: string | Buffer) => void): this;
-		addListener(event: "error", listener: (code: number, signal: string) => void): this;
-
-		on(event: string, listener: Function): this;
-		on(event: "change", listener: (eventType: string, filename: string | Buffer) => void): this;
-		on(event: "error", listener: (code: number, signal: string) => void): this;
-
-		once(event: string, listener: Function): this;
-		once(event: "change", listener: (eventType: string, filename: string | Buffer) => void): this;
-		once(event: "error", listener: (code: number, signal: string) => void): this;
-
-		prependListener(event: string, listener: Function): this;
-		prependListener(event: "change", listener: (eventType: string, filename: string | Buffer) => void): this;
-		prependListener(event: "error", listener: (code: number, signal: string) => void): this;
-
-		prependOnceListener(event: string, listener: Function): this;
-		prependOnceListener(event: "change", listener: (eventType: string, filename: string | Buffer) => void): this;
-		prependOnceListener(event: "error", listener: (code: number, signal: string) => void): this;
-
-		// From chokidar FSWatcher
-
-		/**
-		 * Add files, directories, or glob patterns for tracking. Takes an array of strings or just one
-		 * string.
-		 */
-		add(paths: string | string[]): void;
-
-		/**
-		 * Stop watching files, directories, or glob patterns. Takes an array of strings or just one
-		 * string.
-		 */
-		unwatch(paths: string | string[]): void;
-
-		/**
-		 * Returns an object representing all the paths on the file system being watched by this
-		 * `FSWatcher` instance. The object's keys are all the directories (using absolute paths unless
-		 * the `cwd` option was used), and the values are arrays of the names of the items contained in
-		 * each directory.
-		 */
-		getWatched(): IDictionary<string[]>;
-
-		/**
-		 * Removes all listeners from watched files.
-		 */
-		close(): void;
-	}
-
-	interface ILiveSyncProcessInfo {
+	interface IRunOnDeviceProcessInfo {
 		timer: NodeJS.Timer;
-		watcherInfo: {
-			watcher: IFSWatcher,
-			patterns: string[]
-		};
 		actionsChain: Promise<any>;
 		isStopped: boolean;
 		deviceDescriptors: ILiveSyncDeviceInfo[];
 		currentSyncAction: Promise<any>;
 		syncToPreviewApp: boolean;
+		platforms: string[];
 	}
 
 	interface IOptionalOutputPath {
@@ -128,31 +67,20 @@ declare global {
 		/**
 		 * Whether debugging has been enabled for this device or not
 		 */
-		debugggingEnabled?: boolean;
-
-		/**
-		 * Describes options specific for each platform, like provision for iOS, target sdk for Android, etc.
-		 */
-		platformSpecificOptions?: IPlatformOptions;
-	}
-
-	interface IOptionalSkipWatcher {
-		/**
-		 * Defines if the watcher should be skipped. If not passed, fs.Watcher will be started.
-		 */
-		skipWatcher?: boolean;
+		debuggingEnabled?: boolean;
 	}
 
 	/**
 	 * Describes a LiveSync operation.
 	 */
-	interface ILiveSyncInfo extends IProjectDir, IEnvOptions, IBundle, IRelease, IOptionalSkipWatcher, IHasUseHotModuleReloadOption, IHasSyncToPreviewAppOption {
-		/**
-		 * Defines if all project files should be watched for changes. In case it is not passed, only `app` dir of the project will be watched for changes.
-		 * In case it is set to true, the package.json of the project and node_modules directory will also be watched, so any change there will be transferred to device(s).
-		 */
-		watchAllFiles?: boolean;
+	interface ILiveSyncInfo extends IProjectDir, IEnvOptions, IRelease, IHasUseHotModuleReloadOption, IHasSyncToPreviewAppOption {
+		emulator?: boolean;
 
+		/**
+		 * Defines if the watcher should be skipped. If not passed, fs.Watcher will be started.
+		 */
+		skipWatcher?: boolean;
+		
 		/**
 		 * Forces a build before the initial livesync.
 		 */
@@ -170,6 +98,8 @@ declare global {
 		 * If not provided, defaults to 10seconds.
 		 */
 		timeout?: string;
+
+		nativePrepare?: INativePrepare;
 	}
 
 	interface IHasSyncToPreviewAppOption {
@@ -196,41 +126,12 @@ declare global {
 		isFullSync?: boolean
 	}
 
-	interface ILatestAppPackageInstalledSettings extends IDictionary<IDictionary<boolean>> { /* empty */ }
-
 	interface IIsEmulator {
 		isEmulator: boolean;
 	}
 
-	interface ILiveSyncBuildInfo extends IIsEmulator, IPlatform {
-		pathToBuildItem: string;
-	}
-
 	interface IProjectDataComposition {
 		projectData: IProjectData;
-	}
-
-	/**
-	 * Desribes object that can be passed to ensureLatestAppPackageIsInstalledOnDevice method.
-	 */
-	interface IEnsureLatestAppPackageIsInstalledOnDeviceOptions extends IProjectDataComposition, IEnvOptions, IBundle, IRelease, ISkipNativeCheckOptional, IOptionalFilesToRemove, IOptionalFilesToSync {
-		device: Mobile.IDevice;
-		preparedPlatforms: string[];
-		rebuiltInformation: ILiveSyncBuildInfo[];
-		deviceBuildInfoDescriptor: ILiveSyncDeviceInfo;
-		settings: ILatestAppPackageInstalledSettings;
-		liveSyncData?: ILiveSyncInfo;
-		modifiedFiles?: string[];
-	}
-
-	/**
-	 * Describes the action that has been executed during ensureLatestAppPackageIsInstalledOnDevice execution.
-	 */
-	interface IAppInstalledOnDeviceResult {
-		/**
-		 * Defines if the app has been installed on device from the ensureLatestAppPackageIsInstalledOnDevice method.
-		 */
-		appInstalled: boolean;
 	}
 
 	/**
@@ -269,50 +170,6 @@ declare global {
 		 * @returns {ILiveSyncDeviceInfo[]} Array of elements describing parameters used to start LiveSync on each device.
 		 */
 		getLiveSyncDeviceDescriptors(projectDir: string): ILiveSyncDeviceInfo[];
-	}
-
-	/**
-	 * Describes LiveSync operations while debuggging.
-	 */
-	interface IDebugLiveSyncService extends ILiveSyncService {
-		/**
-		 * Method used to retrieve the glob patterns which CLI will watch for file changes. Defaults to the whole app directory.
-		 * @param {ILiveSyncInfo} liveSyncData Information needed for livesync - for example if bundle is passed or if a release build should be performed.
-		 * @param  {IProjectData} projectData Project data.
-		 * @param  {string[]} platforms Platforms to start the watcher for.
-		 * @returns {Promise<string[]>} The glob patterns.
-		 */
-		getWatcherPatterns(liveSyncData: ILiveSyncInfo, projectData: IProjectData, platforms: string[]): Promise<string[]>;
-
-		/**
-		 * Prints debug information.
-		 * @param {IDebugInformation} debugInformation Information to be printed.
-		 * @returns {IDebugInformation} Full url and port where the frontend client can be connected.
-		 */
-		printDebugInformation(debugInformation: IDebugInformation): IDebugInformation;
-
-		/**
-		 * Enables debugging for the specified devices
-		 * @param {IEnableDebuggingDeviceOptions[]} deviceOpts Settings used for enabling debugging for each device.
-		 * @param {IDebuggingAdditionalOptions} enableDebuggingOptions Settings used for enabling debugging.
-		 * @returns {Promise<IDebugInformation>[]} Array of promises for each device.
-		 */
-		enableDebugging(deviceOpts: IEnableDebuggingDeviceOptions[], enableDebuggingOptions: IDebuggingAdditionalOptions): Promise<IDebugInformation>[];
-
-		/**
-		 * Disables debugging for the specified devices
-		 * @param {IDisableDebuggingDeviceOptions[]} deviceOptions Settings used for disabling debugging for each device.
-		 * @param {IDebuggingAdditionalOptions} debuggingAdditionalOptions Settings used for disabling debugging.
-		 * @returns {Promise<void>[]} Array of promises for each device.
-		 */
-		disableDebugging(deviceOptions: IDisableDebuggingDeviceOptions[], debuggingAdditionalOptions: IDebuggingAdditionalOptions): Promise<void>[];
-
-		/**
-		 * Attaches a debugger to the specified device.
-		 * @param {IAttachDebuggerOptions} settings Settings used for controling the attaching process.
-		 * @returns {Promise<IDebugInformation>} Full url and port where the frontend client can be connected.
-		 */
-		attachDebugger(settings: IAttachDebuggerOptions): Promise<IDebugInformation>;
 	}
 
 	/**
@@ -362,7 +219,6 @@ declare global {
 		filesToRemove: string[];
 		filesToSync: string[];
 		isReinstalled: boolean;
-		syncAllFiles: boolean;
 		liveSyncDeviceInfo: ILiveSyncDeviceInfo;
 		hmrData: IPlatformHmrData;
 		force?: boolean;
@@ -381,7 +237,6 @@ declare global {
 	interface IFullSyncInfo extends IProjectDataComposition, IHasUseHotModuleReloadOption, IConnectTimeoutOption {
 		device: Mobile.IDevice;
 		watch: boolean;
-		syncAllFiles: boolean;
 		liveSyncDeviceInfo: ILiveSyncDeviceInfo;
 		force?: boolean;
 	}
@@ -404,6 +259,7 @@ declare global {
 		shouldRestart(projectData: IProjectData, liveSyncInfo: ILiveSyncResultInfo): Promise<boolean>;
 		getDeviceLiveSyncService(device: Mobile.IDevice, projectData: IProjectData): INativeScriptDeviceLiveSyncService;
 	}
+
 	interface IRestartApplicationInfo {
 		didRestart: boolean;
 	}
@@ -578,7 +434,6 @@ declare global {
 	interface IDeviceProjectRootOptions {
 		appIdentifier: string;
 		getDirname?: boolean;
-		syncAllFiles?: boolean;
 		watch?: boolean;
 	}
 

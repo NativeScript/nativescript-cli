@@ -1,6 +1,7 @@
 import { cache } from "../common/decorators";
 import { ValidatePlatformCommandBase } from "./command-base";
 import { LiveSyncCommandHelper } from "../helpers/livesync-command-helper";
+import { DeviceDebugAppService } from "../services/device/device-debug-app-service";
 
 export class DebugPlatformCommand extends ValidatePlatformCommandBase implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
@@ -9,17 +10,17 @@ export class DebugPlatformCommand extends ValidatePlatformCommandBase implements
 		private $bundleValidatorHelper: IBundleValidatorHelper,
 		private $debugService: IDebugService,
 		protected $devicesService: Mobile.IDevicesService,
-		$platformService: IPlatformService,
+		$platformValidationService: IPlatformValidationService,
 		$projectData: IProjectData,
 		$options: IOptions,
-		$platformsData: IPlatformsData,
+		$platformsDataService: IPlatformsDataService,
 		protected $logger: ILogger,
 		protected $errors: IErrors,
 		private $debugDataService: IDebugDataService,
-		private $liveSyncService: IDebugLiveSyncService,
+		private $deviceDebugAppService: DeviceDebugAppService,
 		private $liveSyncCommandHelper: ILiveSyncCommandHelper,
 		private $androidBundleValidatorHelper: IAndroidBundleValidatorHelper) {
-		super($options, $platformsData, $platformService, $projectData);
+		super($options, $platformsDataService, $platformValidationService, $projectData);
 	}
 
 	public async execute(args: string[]): Promise<void> {
@@ -41,7 +42,7 @@ export class DebugPlatformCommand extends ValidatePlatformCommandBase implements
 		const debugData = this.$debugDataService.createDebugData(this.$projectData, { device: selectedDeviceForDebug.deviceInfo.identifier });
 
 		if (this.$options.start) {
-			await this.$liveSyncService.printDebugInformation(await this.$debugService.debug(debugData, debugOptions));
+			await this.$deviceDebugAppService.printDebugInformation(await this.$debugService.debug(debugData, debugOptions));
 			return;
 		}
 
@@ -58,7 +59,7 @@ export class DebugPlatformCommand extends ValidatePlatformCommandBase implements
 	public async canExecute(args: string[]): Promise<ICanExecuteCommandOutput> {
 		this.$androidBundleValidatorHelper.validateNoAab();
 
-		if (!this.$platformService.isPlatformSupportedForOS(this.platform, this.$projectData)) {
+		if (!this.$platformValidationService.isPlatformSupportedForOS(this.platform, this.$projectData)) {
 			this.$errors.fail(`Applications for platform ${this.platform} can not be built on this OS`);
 		}
 
@@ -85,7 +86,7 @@ export class DebugIOSCommand implements ICommand {
 
 	constructor(protected $errors: IErrors,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-		private $platformService: IPlatformService,
+		private $platformValidationService: IPlatformValidationService,
 		private $options: IOptions,
 		private $injector: IInjector,
 		private $sysInfo: ISysInfo,
@@ -108,7 +109,7 @@ export class DebugIOSCommand implements ICommand {
 	}
 
 	public async canExecute(args: string[]): Promise<ICanExecuteCommandOutput> {
-		if (!this.$platformService.isPlatformSupportedForOS(this.$devicePlatformsConstants.iOS, this.$projectData)) {
+		if (!this.$platformValidationService.isPlatformSupportedForOS(this.$devicePlatformsConstants.iOS, this.$projectData)) {
 			this.$errors.fail(`Applications for platform ${this.$devicePlatformsConstants.iOS} can not be built on this OS`);
 		}
 

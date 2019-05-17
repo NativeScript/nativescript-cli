@@ -1,15 +1,27 @@
-import { NpmPluginPrepare } from "./node-modules-dest-copy";
-
 export class NodeModulesBuilder implements INodeModulesBuilder {
 	constructor(
-		private $injector: IInjector,
-		private $nodeModulesDependenciesBuilder: INodeModulesDependenciesBuilder
+		private $logger: ILogger,
+		private $nodeModulesDependenciesBuilder: INodeModulesDependenciesBuilder,
+		private $pluginsService: IPluginsService
 	) { }
 
-	public async prepareNodeModules(opts: INodeModulesBuilderData): Promise<void> {
-		const productionDependencies = this.$nodeModulesDependenciesBuilder.getProductionDependencies(opts.nodeModulesData.projectData.projectDir);
-		const npmPluginPrepare: NpmPluginPrepare = this.$injector.resolve(NpmPluginPrepare);
-		await npmPluginPrepare.preparePlugins(productionDependencies, opts.nodeModulesData.platform, opts.nodeModulesData.projectData);
+	public async prepareNodeModules(platformData: IPlatformData, projectData: IProjectData): Promise<void> {
+		const dependencies = this.$nodeModulesDependenciesBuilder.getProductionDependencies(projectData.projectDir);
+		if (_.isEmpty(dependencies)) {
+			return;
+		}
+
+		await platformData.platformProjectService.beforePrepareAllPlugins(projectData, dependencies);
+
+		for (const dependencyKey in dependencies) {
+			const dependency = dependencies[dependencyKey];
+			const isPlugin = !!dependency.nativescript;
+			if (isPlugin) {
+				this.$logger.debug(`Successfully prepared plugin ${dependency.name} for ${platformData.normalizedPlatformName.toLowerCase()}.`);
+				const pluginData = this.$pluginsService.convertToPluginData(dependency, projectData.projectDir);
+				await this.$pluginsService.preparePluginNativeCode(pluginData, platformData.normalizedPlatformName.toLowerCase(), projectData);
+			}
+		}
 	}
 }
 

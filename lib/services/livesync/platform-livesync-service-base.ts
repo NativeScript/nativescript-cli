@@ -8,14 +8,13 @@ export abstract class PlatformLiveSyncServiceBase {
 
 	constructor(protected $fs: IFileSystem,
 		protected $logger: ILogger,
-		protected $platformsData: IPlatformsData,
+		protected $platformsDataService: IPlatformsDataService,
 		protected $projectFilesManager: IProjectFilesManager,
-		private $devicePathProvider: IDevicePathProvider,
-		private $projectFilesProvider: IProjectFilesProvider) { }
+		private $devicePathProvider: IDevicePathProvider) { }
 
 	public getDeviceLiveSyncService(device: Mobile.IDevice, projectData: IProjectData): INativeScriptDeviceLiveSyncService {
 		const platform = device.deviceInfo.platform.toLowerCase();
-		const platformData = this.$platformsData.getPlatformData(device.deviceInfo.platform, projectData);
+		const platformData = this.$platformsDataService.getPlatformData(device.deviceInfo.platform, projectData);
 		const frameworkVersion = platformData.platformProjectService.getFrameworkVersion(projectData);
 		const key = getHash(`${device.deviceInfo.identifier}${projectData.projectIdentifiers[platform]}${projectData.projectDir}${frameworkVersion}`);
 		if (!this._deviceLiveSyncServicesCache[key]) {
@@ -54,7 +53,7 @@ export abstract class PlatformLiveSyncServiceBase {
 		const projectData = syncInfo.projectData;
 		const device = syncInfo.device;
 		const deviceLiveSyncService = this.getDeviceLiveSyncService(device, syncInfo.projectData);
-		const platformData = this.$platformsData.getPlatformData(device.deviceInfo.platform, projectData);
+		const platformData = this.$platformsDataService.getPlatformData(device.deviceInfo.platform, projectData);
 		const deviceAppData = await this.getAppData(syncInfo);
 
 		if (deviceLiveSyncService.beforeLiveSyncAction) {
@@ -69,7 +68,7 @@ export abstract class PlatformLiveSyncServiceBase {
 			modifiedFilesData,
 			isFullSync: true,
 			deviceAppData,
-			useHotModuleReload: syncInfo.useHotModuleReload
+			useHotModuleReload: syncInfo.useHotModuleReload,
 		};
 	}
 
@@ -86,18 +85,18 @@ export abstract class PlatformLiveSyncServiceBase {
 		let modifiedLocalToDevicePaths: Mobile.ILocalToDevicePathData[] = [];
 		if (liveSyncInfo.filesToSync.length) {
 			const filesToSync = liveSyncInfo.filesToSync;
-			const mappedFiles = _.map(filesToSync, filePath => this.$projectFilesProvider.mapFilePath(filePath, device.deviceInfo.platform, projectData));
+			// const mappedFiles = _.map(filesToSync, filePath => this.$projectFilesProvider.mapFilePath(filePath, device.deviceInfo.platform, projectData));
 
 			// Some plugins modify platforms dir on afterPrepare (check nativescript-dev-sass) - we want to sync only existing file.
-			const existingFiles = mappedFiles.filter(m => m && this.$fs.exists(m));
+			const existingFiles = filesToSync.filter(m => m && this.$fs.exists(m));
 			this.$logger.trace("Will execute livesync for files: ", existingFiles);
-			const skippedFiles = _.difference(mappedFiles, existingFiles);
+			const skippedFiles = _.difference(filesToSync, existingFiles);
 			if (skippedFiles.length) {
 				this.$logger.trace("The following files will not be synced as they do not exist:", skippedFiles);
 			}
 
 			if (existingFiles.length) {
-				const platformData = this.$platformsData.getPlatformData(device.deviceInfo.platform, projectData);
+				const platformData = this.$platformsDataService.getPlatformData(device.deviceInfo.platform, projectData);
 				const projectFilesPath = path.join(platformData.appDestinationDirectoryPath, APP_FOLDER_NAME);
 				const localToDevicePaths = await this.$projectFilesManager.createLocalToDevicePaths(deviceAppData,
 					projectFilesPath, existingFiles, []);
@@ -108,10 +107,10 @@ export abstract class PlatformLiveSyncServiceBase {
 
 		if (liveSyncInfo.filesToRemove.length) {
 			const filePaths = liveSyncInfo.filesToRemove;
-			const platformData = this.$platformsData.getPlatformData(device.deviceInfo.platform, projectData);
+			const platformData = this.$platformsDataService.getPlatformData(device.deviceInfo.platform, projectData);
 
 			const mappedFiles = _(filePaths)
-				.map(filePath => this.$projectFilesProvider.mapFilePath(filePath, device.deviceInfo.platform, projectData))
+				// .map(filePath => this.$projectFilesProvider.mapFilePath(filePath, device.deviceInfo.platform, projectData))
 				.filter(filePath => !!filePath)
 				.value();
 			const projectFilesPath = path.join(platformData.appDestinationDirectoryPath, APP_FOLDER_NAME);

@@ -433,10 +433,6 @@ interface IOpener {
 	open(target: string, appname: string): void;
 }
 
-interface IBundle {
-	bundle: boolean;
-}
-
 interface IBundleString {
 	bundle: string;
 }
@@ -467,10 +463,6 @@ interface INpmInstallConfigurationOptionsBase {
 
 interface INpmInstallConfigurationOptions extends INpmInstallConfigurationOptionsBase {
 	disableNpmInstall: boolean;
-}
-
-interface ICreateProjectOptions extends INpmInstallConfigurationOptionsBase {
-	pathToTemplate?: string;
 }
 
 interface IGenerateOptions {
@@ -556,7 +548,6 @@ interface IOptions extends IRelease, IDeviceIdentifier, IJustLaunch, IAvd, IAvai
 	javascript: boolean;
 	androidTypings: boolean;
 	production: boolean; //npm flag
-	syncAllFiles: boolean;
 	chrome: boolean;
 	inspector: boolean; // the counterpart to --chrome
 	background: string;
@@ -578,9 +569,7 @@ interface IHasAndroidBundle {
 	androidBundle?: boolean;
 }
 
-interface IAppFilesUpdaterOptions extends IBundle, IRelease, IOptionalWatchAllFiles, IHasUseHotModuleReloadOption { }
-
-interface IPlatformBuildData extends IAppFilesUpdaterOptions, IBuildConfig, IEnvOptions { }
+interface IPlatformBuildData extends IRelease, IHasUseHotModuleReloadOption, IBuildConfig, IEnvOptions { }
 
 interface IDeviceEmulator extends IHasEmulatorOption, IDeviceIdentifier { }
 
@@ -913,18 +902,6 @@ interface IXcconfigService {
 }
 
 /**
- * Describes helper used during execution of deploy commands.
- */
-interface IDeployCommandHelper {
-	/**
-	 * Retrieves data needed to execute deploy command.
-	 * @param {string} platform platform to which to deploy - could be android or ios.
-	 * @return {IDeployPlatformInfo} data needed to execute deploy command.
-	 */
-	getDeployPlatformInfo(platform: string): IDeployPlatformInfo;
-}
-
-/**
  * Describes helper for validating bundling.
  */
 interface IBundleValidatorHelper {
@@ -1025,4 +1002,40 @@ interface IRuntimeGradleVersions {
 
 interface INetworkConnectivityValidator {
 	validate(): Promise<void>;
+}
+
+interface IPlatformValidationService {
+	/**
+	 * Ensures the passed platform is a valid one (from the supported ones)
+	 */
+	validatePlatform(platform: string, projectData: IProjectData): void;
+
+	/**
+	 * Gets first chance to validate the options provided as command line arguments.
+	 * If no platform is provided or a falsy (null, undefined, "", false...) platform is provided,
+	 * the options will be validated for all available platforms.
+	 */
+	validateOptions(provision: true | string, teamId: true | string, projectData: IProjectData, platform?: string): Promise<boolean>;
+
+
+	validatePlatformInstalled(platform: string, projectData: IProjectData): void;
+
+	/**
+	 * Checks whether passed platform can be built on the current OS
+	 * @param {string} platform The mobile platform.
+	 * @param {IProjectData} projectData DTO with information about the project.
+	 * @returns {boolean} Whether the platform is supported for current OS or not.
+	 */
+	isPlatformSupportedForOS(platform: string, projectData: IProjectData): boolean;
+}
+
+interface IPlatformCommandHelper {
+	addPlatforms(platforms: string[], projectData: IProjectData, frameworkPath: string): Promise<void>;
+	cleanPlatforms(platforms: string[], projectData: IProjectData, framworkPath: string): Promise<void>;
+	removePlatforms(platforms: string[], projectData: IProjectData): Promise<void>;
+	updatePlatforms(platforms: string[], projectData: IProjectData): Promise<void>;
+	getInstalledPlatforms(projectData: IProjectData): string[];
+	getAvailablePlatforms(projectData: IProjectData): string[];
+	getPreparedPlatforms(projectData: IProjectData): string[];
+	getCurrentPlatformVersion(platform: string, projectData: IProjectData): string;
 }

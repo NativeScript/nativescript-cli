@@ -32,11 +32,11 @@ const appIdentifier = "testAppIdentifier";
 
 class AndroidDeviceLiveSyncServiceBaseMock extends AndroidDeviceLiveSyncServiceBase {
 	constructor($injector: IInjector,
-		$platformsData: any,
+		$platformsDataService: any,
 		$filesHashService: any,
 		$logger: ILogger,
 		device: Mobile.IAndroidDevice) {
-		super($injector, $platformsData, $filesHashService, $logger, device);
+		super($injector, $platformsDataService, $filesHashService, $logger, device);
 	}
 
 	public async transferFilesOnDevice(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]): Promise<void> {

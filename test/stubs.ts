@@ -9,6 +9,7 @@ import * as prompt from "inquirer";
 import { Yok } from "./../lib/common/yok";
 import { HostInfo } from "./../lib/common/host-info";
 import { DevicePlatformsConstants } from "./../lib/common/mobile/device-platforms-constants";
+import { PrepareData } from "../lib/data/prepare-data";
 
 export class LoggerStub implements ILogger {
 	getLevel(): string { return undefined; }
@@ -300,13 +301,16 @@ export class ProjectDataStub implements IProjectData {
 	projectDir: string;
 	projectName: string;
 	get platformsDir(): string {
-		return this.plafromsDir || (this.projectDir && join(this.projectDir, "platforms")) || "";
+		return this.platformsDirCache || (this.projectDir && join(this.projectDir, "platforms")) || "";
 	}
 	set platformsDir(value) {
-		this.plafromsDir = value;
+		this.platformsDirCache = value;
 	}
 	projectFilePath: string;
-	projectIdentifiers: Mobile.IProjectIdentifier;
+	projectIdentifiers: Mobile.IProjectIdentifier = {
+		android: "org.nativescirpt.myiOSApp",
+		ios: "org.nativescript.myProjectApp"
+	};
 	projectId: string;
 	dependencies: any;
 	nsConfig: any;
@@ -314,7 +318,7 @@ export class ProjectDataStub implements IProjectData {
 	devDependencies: IStringDictionary;
 	projectType: string;
 	appResourcesDirectoryPath: string;
-	private plafromsDir: string = "";
+	private platformsDirCache: string = "";
 	public androidManifestPath: string;
 	public infoPlistPath: string;
 	public appGradlePath: string;
@@ -366,13 +370,18 @@ export class AndroidPluginBuildServiceStub implements IAndroidPluginBuildService
 }
 
 export class PlatformProjectServiceStub extends EventEmitter implements IPlatformProjectService {
+	constructor(private platform: string) {
+		super();
+	}
+
 	getPlatformData(projectData: IProjectData): IPlatformData {
 		return {
-			frameworkPackageName: "",
-			normalizedPlatformName: "",
+			frameworkPackageName: `tns-${this.platform.toLowerCase()}`,
+			normalizedPlatformName: this.platform.toLowerCase() === "ios" ? "iOS" : "Android",
+			platformNameLowerCase: this.platform.toLowerCase(),
 			platformProjectService: this,
 			projectRoot: "",
-			getBuildOutputPath: () => "",
+			getBuildOutputPath: (buildConfig: IBuildConfig) => "",
 			getValidBuildOutputData: (buildOptions: IBuildOutputOptions) => ({ packageNames: [] }),
 			frameworkFilesExtensions: [],
 			appDestinationDirectoryPath: "",
@@ -450,7 +459,7 @@ export class PlatformProjectServiceStub extends EventEmitter implements IPlatfor
 	async cleanProject(projectRoot: string, projectData: IProjectData): Promise<void> {
 		return Promise.resolve();
 	}
-	async checkForChanges(changesInfo: IProjectChangesInfo, options: IProjectChangesOptions, projectData: IProjectData): Promise<void> {
+	async checkForChanges(changesInfo: IProjectChangesInfo, options: any, projectData: IProjectData): Promise<void> {
 		// Nothing yet.
 	}
 	getFrameworkVersion(projectData: IProjectData): string {
@@ -464,15 +473,16 @@ export class PlatformProjectServiceStub extends EventEmitter implements IPlatfor
 	}
 }
 
-export class PlatformsDataStub extends EventEmitter implements IPlatformsData {
-	public platformsNames: string[];
+export class NativeProjectDataStub extends EventEmitter implements IPlatformsDataService {
+	public platformNames: string[];
 
 	public getPlatformData(platform: string, projectData: IProjectData): IPlatformData {
 		return {
-			frameworkPackageName: "",
-			platformProjectService: new PlatformProjectServiceStub(),
+			frameworkPackageName: `tns-${platform.toLowerCase()}`,
+			platformProjectService: new PlatformProjectServiceStub(platform),
+			platformNameLowerCase: platform.toLowerCase(),
 			projectRoot: "",
-			normalizedPlatformName: "",
+			normalizedPlatformName: platform.toLowerCase() === "ios" ? "iOS" : "Android",
 			appDestinationDirectoryPath: "",
 			getBuildOutputPath: () => "",
 			getValidBuildOutputData: (buildOptions: IBuildOutputOptions) => ({ packageNames: [] }),
@@ -498,7 +508,18 @@ export class ProjectDataService implements IProjectDataService {
 
 	removeDependency(dependencyName: string): void { }
 
-	getProjectData(projectDir: string): IProjectData { return null; }
+	getProjectData(projectDir: string): IProjectData {
+		return <any>{
+			projectDir: "/path/to/my/projecDir",
+			projectName: "myTestProjectName",
+			platformsDir: "/path/to/my/projecDir/platforms",
+			projectIdentifiers: {
+				ios: "org.nativescript.myiosApp",
+				android: "org.nativescript.myAndroidApp"
+			},
+			getAppResourcesRelativeDirectoryPath: () => "/path/to/my/projecDir/App_Resources"
+		};
+	}
 
 	async getAssetsStructure(opts: IProjectDir): Promise<IAssetsStructure> {
 		return null;
@@ -721,18 +742,18 @@ export class ChildProcessStub extends EventEmitter {
 }
 
 export class ProjectChangesService implements IProjectChangesService {
-	public async checkForChanges(checkForChangesOpts: ICheckForChangesOptions): Promise<IProjectChangesInfo> {
+	public async checkForChanges(platformData: IPlatformData, projectData: IProjectData, prepareData: PrepareData): Promise<IProjectChangesInfo> {
 		return <IProjectChangesInfo>{};
 	}
 
-	public getPrepareInfo(platform: string): IPrepareInfo {
+	public getPrepareInfo(platformData: IPlatformData): IPrepareInfo {
 		return null;
 	}
 
-	public savePrepareInfo(platform: string): void {
+	public savePrepareInfo(platformData: IPlatformData): void {
 	}
 
-	public getPrepareInfoFilePath(platform: string): string {
+	public getPrepareInfoFilePath(platformData: IPlatformData): string {
 		return "";
 	}
 
@@ -740,7 +761,7 @@ export class ProjectChangesService implements IProjectChangesService {
 		return <IProjectChangesInfo>{};
 	}
 
-	public setNativePlatformStatus(platform: string, projectData: IProjectData, nativePlatformStatus: IAddedNativePlatform): void {
+	public setNativePlatformStatus(platformData: IPlatformData, addedPlatform: IAddedNativePlatform): void {
 		return;
 	}
 }
@@ -761,119 +782,6 @@ export class CommandsService implements ICommandsService {
 
 	public completeCommand(): Promise<boolean> {
 		return Promise.resolve(true);
-	}
-}
-
-export class PlatformServiceStub extends EventEmitter implements IPlatformService {
-	public shouldPrepare(): Promise<boolean> {
-		return Promise.resolve(true);
-	}
-
-	public validateOptions(): Promise<boolean> {
-		return Promise.resolve(true);
-	}
-
-	public cleanPlatforms(platforms: string[]): Promise<void> {
-		return Promise.resolve();
-	}
-
-	public addPlatforms(platforms: string[]): Promise<void> {
-		return Promise.resolve();
-	}
-
-	public getInstalledPlatforms(): string[] {
-		return [];
-	}
-
-	public getAvailablePlatforms(): string[] {
-		return [];
-	}
-
-	public getPreparedPlatforms(): string[] {
-		return [];
-	}
-
-	public saveBuildInfoFile(platform: string, projectDir: string, buildInfoFileDirname: string): void {
-		return;
-	}
-
-	public async removePlatforms(platforms: string[]): Promise<void> {
-
-	}
-
-	public updatePlatforms(platforms: string[]): Promise<void> {
-		return Promise.resolve();
-	}
-
-	public preparePlatform(platformInfo: IPreparePlatformInfo): Promise<boolean> {
-		return Promise.resolve(true);
-	}
-
-	public shouldBuild(platform: string, projectData: IProjectData, buildConfig?: IBuildConfig): Promise<boolean> {
-		return Promise.resolve(true);
-	}
-
-	public buildPlatform(platform: string, buildConfig?: IBuildConfig): Promise<string> {
-		return Promise.resolve("");
-	}
-
-	public async shouldInstall(device: Mobile.IDevice): Promise<boolean> {
-		return true;
-	}
-
-	public async validateInstall(device: Mobile.IDevice): Promise<void> {
-		return;
-	}
-
-	public installApplication(device: Mobile.IDevice, options: IRelease): Promise<void> {
-		return Promise.resolve();
-	}
-
-	public deployPlatform(config: IDeployPlatformInfo): Promise<void> {
-		return Promise.resolve();
-	}
-
-	public startApplication(platform: string, runOptions: IRunPlatformOptions): Promise<void> {
-		return Promise.resolve();
-	}
-
-	public cleanDestinationApp(platformInfo: IPreparePlatformInfo): Promise<void> {
-		return Promise.resolve();
-	}
-
-	public validatePlatformInstalled(platform: string): void {
-
-	}
-
-	public validatePlatform(platform: string): void {
-
-	}
-
-	isPlatformSupportedForOS(platform: string, projectData: IProjectData): boolean {
-		return true;
-	}
-
-	public getLatestApplicationPackageForDevice(platformData: IPlatformData): IApplicationPackage {
-		return null;
-	}
-
-	public getLatestApplicationPackageForEmulator(platformData: IPlatformData, buildConfig: IBuildConfig): IApplicationPackage {
-		return null;
-	}
-
-	public copyLastOutput(platform: string, targetPath: string, buildConfig: IBuildConfig): void {
-	}
-
-	public lastOutputPath(platform: string, buildConfig: IBuildConfig): string {
-		return "";
-	}
-
-	public readFile(device: Mobile.IDevice, deviceFilePath: string): Promise<string> {
-		return Promise.resolve("");
-	}
-
-	public getCurrentPlatformVersion(platform: string, projectData: IProjectData): string {
-		return null;
 	}
 }
 
@@ -904,6 +812,35 @@ export class PerformanceService implements IPerformanceService {
 	processExecutionData() { }
 }
 
+export class PacoteServiceStub implements IPacoteService {
+	public async manifest(packageName: string, options?: IPacoteManifestOptions): Promise<any> {
+		return "";
+	}
+	public async extractPackage(packageName: string, destinationDirectory: string, options?: IPacoteExtractOptions): Promise<void> { }
+}
+
+class TerminalSpinnerStub {
+	public text: string;
+	public start(text?: string): ITerminalSpinner { return this; }
+	public stop(): ITerminalSpinner { return this; }
+	public succeed(text?: string): ITerminalSpinner { return this; }
+	public fail(text?: string): ITerminalSpinner { return this; }
+	public warn(text?: string): ITerminalSpinner { return this; }
+	public info(text?: string): ITerminalSpinner { return this; }
+	public clear(): ITerminalSpinner { return this; }
+	public render(): ITerminalSpinner { return this; }
+	public frame(): ITerminalSpinner { return this; }
+}
+
+export class TerminalSpinnerServiceStub implements ITerminalSpinnerService {
+	public createSpinner(spinnerOptions?: ITerminalSpinnerOptions): ITerminalSpinner {
+		return new TerminalSpinnerStub();
+	}
+	public async execute<T>(spinnerOptions: ITerminalSpinnerOptions, action: () => Promise<T>): Promise<T> {
+		return null;
+	}
+}
+
 export class InjectorStub extends Yok implements IInjector {
 	constructor() {
 		super();
@@ -919,13 +856,12 @@ export class InjectorStub extends Yok implements IInjector {
 		this.register('projectDataService', ProjectDataService);
 		this.register('devicePlatformsConstants', DevicePlatformsConstants);
 		this.register("androidResourcesMigrationService", AndroidResourcesMigrationServiceStub);
-		this.register("platformService", PlatformServiceStub);
 		this.register("commandsService", CommandsService);
 		this.register("projectChangesService", ProjectChangesService);
 		this.register('childProcess', ChildProcessStub);
 		this.register("liveSyncService", LiveSyncServiceStub);
 		this.register("prompter", PrompterStub);
-		this.register('platformsData', PlatformsDataStub);
+		this.register('platformsDataService', NativeProjectDataStub);
 		this.register("androidPluginBuildService", AndroidPluginBuildServiceStub);
 		this.register('projectData', ProjectDataStub);
 		this.register('packageInstallationManager', PackageInstallationManagerStub);
@@ -942,5 +878,6 @@ export class InjectorStub extends Yok implements IInjector {
 			getDevice: (): Mobile.IDevice => undefined,
 			getDeviceByIdentifier: (): Mobile.IDevice => undefined
 		});
+		this.register("terminalSpinnerService", TerminalSpinnerServiceStub);
 	}
 }

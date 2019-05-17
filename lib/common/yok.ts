@@ -6,11 +6,11 @@ import { CommandsDelimiters } from "./constants";
 let indent = "";
 function trace(formatStr: string, ...args: any[]) {
 	// uncomment following lines when debugging dependency injection
-	// var args = [];
-	// for (var _i = 1; _i < arguments.length; _i++) {
-	// 	args[_i - 1] = arguments[_i];
+	// const items: any[] = [];
+	// for (let _i = 1; _i < arguments.length; _i++) {
+	// 	items[_i - 1] = arguments[_i];
 	// }
-	// var util = require("util");
+	// const util = require("util");
 	// console.log(util.format.apply(util, [indent + formatStr].concat(args)));
 }
 

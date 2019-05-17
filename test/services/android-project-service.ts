@@ -94,7 +94,7 @@ describe("androidDeviceDebugService", () => {
 			const buildConfig = getDefautlBuildConfig();
 
 			//act
-			await androidProjectService.buildProject("local/local", projectData, buildConfig);
+			await androidProjectService.buildProject("local/local", projectData, <any>buildConfig);
 
 			//assert
 			assert.include(childProcess.lastCommandArgs, "assembleRelease");
@@ -106,7 +106,7 @@ describe("androidDeviceDebugService", () => {
 			buildConfig.release = false;
 
 			//act
-			await androidProjectService.buildProject("local/local", projectData, buildConfig);
+			await androidProjectService.buildProject("local/local", projectData, <any>buildConfig);
 
 			//assert
 			assert.include(childProcess.lastCommandArgs, "assembleDebug");
@@ -118,7 +118,7 @@ describe("androidDeviceDebugService", () => {
 			buildConfig.androidBundle = true;
 
 			//act
-			await androidProjectService.buildProject("local/local", projectData, buildConfig);
+			await androidProjectService.buildProject("local/local", projectData, <any>buildConfig);
 
 			//assert
 			assert.include(childProcess.lastCommandArgs, "bundleRelease");
@@ -131,7 +131,7 @@ describe("androidDeviceDebugService", () => {
 			buildConfig.release = false;
 
 			//act
-			await androidProjectService.buildProject("local/local", projectData, buildConfig);
+			await androidProjectService.buildProject("local/local", projectData, <any>buildConfig);
 
 			//assert
 			assert.include(childProcess.lastCommandArgs, "bundleDebug");

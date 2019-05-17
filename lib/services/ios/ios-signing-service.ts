@@ -3,6 +3,7 @@ import * as mobileProvisionFinder from "ios-mobileprovision-finder";
 import { BUILD_XCCONFIG_FILE_NAME, iOSAppResourcesFolderName } from "../../constants";
 import * as helpers from "../../common/helpers";
 import { IOSProvisionService } from "../ios-provision-service";
+import { IOSBuildData } from "../../data/build-data";
 
 export class IOSSigningService implements IiOSSigningService {
 	constructor(
@@ -16,7 +17,7 @@ export class IOSSigningService implements IiOSSigningService {
 		private $xcprojService: IXcprojService
 	) { }
 
-	public async setupSigningForDevice(projectRoot: string, projectData: IProjectData, buildConfig: IiOSBuildConfig): Promise<void> {
+	public async setupSigningForDevice(projectRoot: string, projectData: IProjectData, iOSBuildData: IOSBuildData): Promise<void> {
 		const xcode = this.$pbxprojDomXcode.Xcode.open(this.getPbxProjPath(projectData, projectRoot));
 		const signing = xcode.getSigning(projectData.projectName);
 
@@ -29,8 +30,8 @@ export class IOSSigningService implements IiOSSigningService {
 		if (hasProvisioningProfileInXCConfig && (!signing || signing.style !== "Manual")) {
 			xcode.setManualSigningStyle(projectData.projectName);
 			xcode.save();
-		} else if (!buildConfig.provision && !(signing && signing.style === "Manual" && !buildConfig.teamId)) {
-			const teamId = await this.getDevelopmentTeam(projectData, projectRoot, buildConfig.teamId);
+		} else if (!iOSBuildData.provision && !(signing && signing.style === "Manual" && !iOSBuildData.teamId)) {
+			const teamId = await this.getDevelopmentTeam(projectData, projectRoot, iOSBuildData.teamId);
 			await this.setupSigningFromTeam(projectRoot, projectData, teamId);
 		}
 	}

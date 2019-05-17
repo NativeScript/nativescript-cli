@@ -6,14 +6,13 @@ import * as semver from "semver";
 
 export class AndroidLiveSyncService extends PlatformLiveSyncServiceBase implements IPlatformLiveSyncService {
 	private static MIN_SOCKETS_LIVESYNC_RUNTIME_VERSION = "4.2.0-2018-07-20-02";
-	constructor(protected $platformsData: IPlatformsData,
+	constructor(protected $platformsDataService: IPlatformsDataService,
 		protected $projectFilesManager: IProjectFilesManager,
 		private $injector: IInjector,
 		$devicePathProvider: IDevicePathProvider,
 		$fs: IFileSystem,
-		$logger: ILogger,
-		$projectFilesProvider: IProjectFilesProvider) {
-		super($fs, $logger, $platformsData, $projectFilesManager, $devicePathProvider, $projectFilesProvider);
+		$logger: ILogger) {
+		super($fs, $logger, $platformsDataService, $projectFilesManager, $devicePathProvider);
 	}
 
 	protected _getDeviceLiveSyncService(device: Mobile.IDevice, data: IProjectDir, frameworkVersion: string): INativeScriptDeviceLiveSyncService {

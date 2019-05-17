@@ -17,7 +17,7 @@ class ProjectDataServiceMock {
 	}
 }
 
-class PlatformsDataMock {
+class NativeProjectDataServiceMock {
 	public getPlatformData(platform: string) {
 		const appDestinationDirectoryPath = path.join(projectDir, "platforms", platform, "app");
 		return {
@@ -31,7 +31,7 @@ function createTestInjector(data?: { files: string[] }) {
 	injector.register("previewAppFilesService", PreviewAppFilesService);
 	injector.register("fs", FileSystemStub);
 	injector.register("logger", LoggerStub);
-	injector.register("platformsData", PlatformsDataMock);
+	injector.register("platformsDataService", NativeProjectDataServiceMock);
 	injector.register("projectDataService", ProjectDataServiceMock);
 	injector.register("projectFilesManager", {
 		getProjectFiles: () => data ? data.files : []
@@ -48,12 +48,11 @@ function createTestInjector(data?: { files: string[] }) {
 }
 
 function getExpectedResult(data: IPreviewAppLiveSyncData, injector: IInjector, expectedFiles: string[], platform: string): FilesPayload {
-	const projectData = injector.resolve("projectDataService").getProjectData();
-	const platformData = injector.resolve("platformsData").getPlatformData(platform);
+	const platformData = injector.resolve("platformsDataService").getPlatformData(platform);
 	const files = _.map(expectedFiles, expectedFile => {
 		return {
 			event: 'change',
-			file: data.bundle ? path.relative(path.join(platformData.appDestinationDirectoryPath, "app"), expectedFile) : path.relative(projectData.appDirectoryPath(), expectedFile),
+			file: path.relative(path.join(platformData.appDestinationDirectoryPath, "app"), expectedFile),
 			binary: false,
 			fileContents: undefined
 		};

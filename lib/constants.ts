@@ -139,6 +139,11 @@ export const POST_INSTALL_COMMAND_NAME = "post-install-cli";
 export const ANDROID_RELEASE_BUILD_ERROR_MESSAGE = "When producing a release build, you need to specify all --key-store-* options.";
 export const CACACHE_DIRECTORY_NAME = "_cacache";
 
+export const FILES_CHANGE_EVENT_NAME = "filesChangeEvent";
+export const INITIAL_SYNC_EVENT_NAME = "initialSyncEvent";
+export const PREPARE_READY_EVENT_NAME = "prepareReadyEvent";
+export const WEBPACK_COMPILATION_COMPLETE = "webpackCompilationComplete";
+
 export class DebugCommandErrors {
 	public static UNABLE_TO_USE_FOR_DEVICE_AND_EMULATOR = "The options --for-device and --emulator cannot be used simultaneously. Please use only one of them.";
 	public static NO_DEVICES_EMULATORS_FOUND_FOR_OPTIONS = "Unable to find device or emulator for specified options.";
@@ -274,12 +279,12 @@ export class AndroidAppBundleMessages {
 	public static ANDROID_APP_BUNDLE_PUBLISH_DOCS_MESSAGE = "How to use Android App Bundle for publishing: https://docs.nativescript.org/tooling/publishing/publishing-android-apps#android-app-bundle";
 }
 
-export const LiveSyncEvents = {
-	liveSyncStopped: "liveSyncStopped",
+export const RunOnDeviceEvents = {
+	runOnDeviceStopped: "runOnDeviceStopped",
 	// In case we name it error, EventEmitter expects instance of Error to be raised and will also raise uncaught exception in case there's no handler
-	liveSyncError: "liveSyncError",
+	runOnDeviceError: "runOnDeviceError",
 	previewAppLiveSyncError: PreviewAppLiveSyncEvents.PREVIEW_APP_LIVE_SYNC_ERROR,
-	liveSyncExecuted: "liveSyncExecuted",
-	liveSyncStarted: "liveSyncStarted",
-	liveSyncNotification: "notify"
+	runOnDeviceExecuted: "runOnDeviceExecuted",
+	runOnDeviceStarted: "runOnDeviceStarted",
+	runOnDeviceNotification: "notify"
 };

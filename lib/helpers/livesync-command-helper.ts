@@ -1,43 +1,41 @@
-import { LiveSyncEvents } from "../constants";
+import { RunController } from "../controllers/run-controller";
+import { BuildController } from "../controllers/build-controller";
+import { BuildDataService } from "../services/build-data-service";
+import { DeployController } from "../controllers/deploy-controller";
+import { RunOnDeviceEvents } from "../constants";
+import { RunEmitter } from "../emitters/run-emitter";
 
 export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 	public static MIN_SUPPORTED_WEBPACK_VERSION_WITH_HMR = "0.17.0";
 
-	constructor(private $platformService: IPlatformService,
+	constructor(
+		private $buildDataService: BuildDataService,
 		private $projectData: IProjectData,
 		private $options: IOptions,
-		private $liveSyncService: ILiveSyncService,
+		private $runController: RunController,
+		private $runEmitter: RunEmitter,
+		private $deployController: DeployController,
 		private $iosDeviceOperations: IIOSDeviceOperations,
 		private $mobileHelper: Mobile.IMobileHelper,
 		private $devicesService: Mobile.IDevicesService,
-		private $platformsData: IPlatformsData,
+		private $injector: IInjector,
+		private $buildController: BuildController,
 		private $analyticsService: IAnalyticsService,
 		private $bundleValidatorHelper: IBundleValidatorHelper,
 		private $errors: IErrors,
 		private $iOSSimulatorLogProvider: Mobile.IiOSSimulatorLogProvider,
-		private $logger: ILogger,
-		private $cleanupService: ICleanupService) {
+		private $cleanupService: ICleanupService
+	) { }
+
+	private get $platformsDataService(): IPlatformsDataService {
+		return this.$injector.resolve("platformsDataService");
 	}
 
-	public getPlatformsForOperation(platform: string): string[] {
-		const availablePlatforms = platform ? [platform] : _.values<string>(this.$platformsData.availablePlatforms);
-		return availablePlatforms;
-	}
-
-	public async executeCommandLiveSync(platform?: string, additionalOptions?: ILiveSyncCommandHelperAdditionalOptions) {
-		if (additionalOptions && additionalOptions.syncToPreviewApp) {
-			return;
-		}
-
-		if (!this.$options.syncAllFiles) {
-			this.$logger.info("Skipping node_modules folder! Use the syncAllFiles option to sync files from this folder.");
-		}
-
-		const emulator = this.$options.emulator;
+	public async getDeviceInstances(platform?: string): Promise<Mobile.IDevice[]> {
 		await this.$devicesService.initialize({
-			deviceId: this.$options.device,
 			platform,
-			emulator,
+			deviceId: this.$options.device,
+			emulator: this.$options.emulator,
 			skipInferPlatform: !platform,
 			sdk: this.$options.sdk
 		});
@@ -45,10 +43,26 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 		const devices = this.$devicesService.getDeviceInstances()
 			.filter(d => !platform || d.deviceInfo.platform.toLowerCase() === platform.toLowerCase());
 
-		await this.executeLiveSyncOperation(devices, platform, additionalOptions);
+		return devices;
 	}
 
-	public async executeLiveSyncOperation(devices: Mobile.IDevice[], platform: string, additionalOptions?: ILiveSyncCommandHelperAdditionalOptions): Promise<void> {
+	public createLiveSyncInfo(): ILiveSyncInfo {
+		const liveSyncInfo: ILiveSyncInfo = {
+			projectDir: this.$projectData.projectDir,
+			skipWatcher: !this.$options.watch || this.$options.justlaunch,
+			clean: this.$options.clean,
+			release: this.$options.release,
+			env: this.$options.env,
+			timeout: this.$options.timeout,
+			useHotModuleReload: this.$options.hmr,
+			force: this.$options.force,
+			emulator: this.$options.emulator
+		};
+
+		return liveSyncInfo;
+	}
+
+	public async createDeviceDescriptors(devices: Mobile.IDevice[], platform: string, additionalOptions?: ILiveSyncCommandHelperAdditionalOptions): Promise<ILiveSyncDeviceInfo[]> {
 		if (!devices || !devices.length) {
 			if (platform) {
 				this.$errors.failWithoutHelp("Unable to find applicable devices to execute operation. Ensure connected devices are trusted and try again.");
@@ -69,16 +83,9 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 			}
 		}
 
-		if (this.$options.release) {
-			await this.runInReleaseMode(platform, additionalOptions);
-			return;
-		}
-
 		// Now let's take data for each device:
 		const deviceDescriptors: ILiveSyncDeviceInfo[] = devices
 			.map(d => {
-				let buildAction: IBuildAction;
-
 				const buildConfig: IBuildConfig = {
 					buildForDevice: !d.isEmulator,
 					iCloudContainerEnvironment: this.$options.iCloudContainerEnvironment,
@@ -94,50 +101,95 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 					keyStorePassword: this.$options.keyStorePassword
 				};
 
-				buildAction = additionalOptions && additionalOptions.buildPlatform ?
+				const buildData = this.$buildDataService.getBuildData(this.$projectData.projectDir, d.deviceInfo.platform, buildConfig);
+
+				const buildAction = additionalOptions && additionalOptions.buildPlatform ?
 					additionalOptions.buildPlatform.bind(additionalOptions.buildPlatform, d.deviceInfo.platform, buildConfig, this.$projectData) :
-					this.$platformService.buildPlatform.bind(this.$platformService, d.deviceInfo.platform, buildConfig, this.$projectData);
+					this.$buildController.prepareAndBuild.bind(this.$buildController, buildData);
+
+				const outputPath = additionalOptions && additionalOptions.getOutputDirectory && additionalOptions.getOutputDirectory({
+					platform: d.deviceInfo.platform,
+					emulator: d.isEmulator,
+					projectDir: this.$projectData.projectDir
+				});
 
 				const info: ILiveSyncDeviceInfo = {
 					identifier: d.deviceInfo.identifier,
-					platformSpecificOptions: this.$options,
 					buildAction,
-					debugggingEnabled: additionalOptions && additionalOptions.deviceDebugMap && additionalOptions.deviceDebugMap[d.deviceInfo.identifier],
+					debuggingEnabled: additionalOptions && additionalOptions.deviceDebugMap && additionalOptions.deviceDebugMap[d.deviceInfo.identifier],
 					debugOptions: this.$options,
-					outputPath: additionalOptions && additionalOptions.getOutputDirectory && additionalOptions.getOutputDirectory({
-						platform: d.deviceInfo.platform,
-						emulator: d.isEmulator,
-						projectDir: this.$projectData.projectDir
-					}),
+					outputPath,
 					skipNativePrepare: additionalOptions && additionalOptions.skipNativePrepare,
 				};
 
 				return info;
 			});
 
+			return deviceDescriptors;
+	}
+
+	public getPlatformsForOperation(platform: string): string[] {
+		const availablePlatforms = platform ? [platform] : _.values<string>(this.$mobileHelper.platformNames.map(p => p.toLowerCase()));
+		return availablePlatforms;
+	}
+
+	public async executeCommandLiveSync(platform?: string, additionalOptions?: ILiveSyncCommandHelperAdditionalOptions) {
+		const devices = await this.getDeviceInstances(platform);
+		await this.executeLiveSyncOperation(devices, platform, additionalOptions);
+	}
+
+	public async executeLiveSyncOperation(devices: Mobile.IDevice[], platform: string, additionalOptions?: ILiveSyncCommandHelperAdditionalOptions): Promise<void> {
+		const deviceDescriptors = await this.createDeviceDescriptors(devices, platform, additionalOptions);
+
 		const liveSyncInfo: ILiveSyncInfo = {
 			projectDir: this.$projectData.projectDir,
-			skipWatcher: !this.$options.watch,
-			watchAllFiles: this.$options.syncAllFiles,
+			skipWatcher: !this.$options.watch || this.$options.justlaunch,
 			clean: this.$options.clean,
-			bundle: !!this.$options.bundle,
 			release: this.$options.release,
 			env: this.$options.env,
 			timeout: this.$options.timeout,
 			useHotModuleReload: this.$options.hmr,
-			force: this.$options.force
+			force: this.$options.force,
+			emulator: this.$options.emulator
 		};
 
+		if (this.$options.release) {
+			await this.$deployController.deploy({
+				projectDir: this.$projectData.projectDir,
+				liveSyncInfo: { ...liveSyncInfo, clean: true, skipWatcher: true },
+				deviceDescriptors
+			});
+
+			await this.$devicesService.initialize({
+				platform,
+				deviceId: this.$options.device,
+				emulator: this.$options.emulator,
+				skipInferPlatform: !platform,
+				sdk: this.$options.sdk
+			});
+
+			for (const deviceDescriptor of deviceDescriptors) {
+				const device = this.$devicesService.getDeviceByIdentifier(deviceDescriptor.identifier);
+				await device.applicationManager.startApplication({ appId: this.$projectData.projectIdentifiers[device.deviceInfo.platform.toLowerCase()], projectName: this.$projectData.projectName });
+			}
+
+			return;
+		}
+
+		await this.$runController.run({
+			projectDir: this.$projectData.projectDir,
+			liveSyncInfo,
+			deviceDescriptors
+		});
+
 		const remainingDevicesToSync = devices.map(d => d.deviceInfo.identifier);
-		this.$liveSyncService.on(LiveSyncEvents.liveSyncStopped, (data: { projectDir: string, deviceIdentifier: string }) => {
+		this.$runEmitter.on(RunOnDeviceEvents.runOnDeviceStopped, (data: { projectDir: string, deviceIdentifier: string }) => {
 			_.remove(remainingDevicesToSync, d => d === data.deviceIdentifier);
 
 			if (remainingDevicesToSync.length === 0) {
 				process.exit(ErrorCodes.ALL_DEVICES_DISCONNECTED);
 			}
 		});
-
-		await this.$liveSyncService.liveSync(deviceDescriptors, liveSyncInfo);
 	}
 
 	public async validatePlatform(platform: string): Promise<IDictionary<IValidatePlatformOutput>> {
@@ -145,7 +197,7 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 
 		const availablePlatforms = this.getPlatformsForOperation(platform);
 		for (const availablePlatform of availablePlatforms) {
-			const platformData = this.$platformsData.getPlatformData(availablePlatform, this.$projectData);
+			const platformData = this.$platformsDataService.getPlatformData(availablePlatform, this.$projectData);
 			const platformProjectService = platformData.platformProjectService;
 			const validateOutput = await platformProjectService.validate(this.$projectData, this.$options);
 			result[availablePlatform.toLowerCase()] = validateOutput;
@@ -155,47 +207,6 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 		this.$bundleValidatorHelper.validate(minSupportedWebpackVersion);
 
 		return result;
-	}
-
-	private async runInReleaseMode(platform: string, additionalOptions?: ILiveSyncCommandHelperAdditionalOptions): Promise<void> {
-		const runPlatformOptions: IRunPlatformOptions = {
-			device: this.$options.device,
-			emulator: this.$options.emulator,
-			justlaunch: this.$options.justlaunch
-		};
-
-		const deployOptions = _.merge<IDeployPlatformOptions, IYargArgv>((<IDeployPlatformOptions>{
-			projectDir: this.$projectData.projectDir,
-			clean: true
-		}), this.$options.argv);
-
-		const availablePlatforms = this.getPlatformsForOperation(platform);
-		for (const currentPlatform of availablePlatforms) {
-			const deployPlatformInfo: IDeployPlatformInfo = {
-				platform: currentPlatform,
-				appFilesUpdaterOptions: {
-					bundle: !!this.$options.bundle,
-					release: this.$options.release,
-					useHotModuleReload: this.$options.hmr
-				},
-				deployOptions,
-				buildPlatform: this.$platformService.buildPlatform.bind(this.$platformService),
-				projectData: this.$projectData,
-				config: this.$options,
-				env: this.$options.env
-			};
-
-			await this.$platformService.deployPlatform(deployPlatformInfo);
-
-			await this.$platformService.startApplication(
-				currentPlatform,
-				runPlatformOptions,
-				{
-					appId: this.$projectData.projectIdentifiers[currentPlatform.toLowerCase()],
-					projectName: this.$projectData.projectName
-				}
-			);
-		}
 	}
 }
 

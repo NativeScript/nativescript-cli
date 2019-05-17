@@ -4,11 +4,11 @@ import { getShortPluginName, hook } from "../common/helpers";
 import { Builder, parseString } from "xml2js";
 
 export class AndroidPluginBuildService implements IAndroidPluginBuildService {
-	private get $platformService(): IPlatformService {
-		return this.$injector.resolve("platformService");
+	private get $platformsDataService(): IPlatformsDataService {
+		return this.$injector.resolve("platformsDataService");
 	}
 
-	constructor(private $injector: IInjector,
+	constructor(
 		private $fs: IFileSystem,
 		private $childProcess: IChildProcess,
 		private $hostInfo: IHostInfo,
@@ -19,7 +19,9 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $errors: IErrors,
 		private $filesHashService: IFilesHashService,
-		public $hooksService: IHooksService) { }
+		public $hooksService: IHooksService,
+		private $injector: IInjector
+	) { }
 
 	private static MANIFEST_ROOT = {
 		$: {
@@ -290,10 +292,9 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 	private async getRuntimeGradleVersions(projectDir: string): Promise<IRuntimeGradleVersions> {
 		let runtimeGradleVersions: IRuntimeGradleVersions = null;
 		if (projectDir) {
-			const projectRuntimeVersion = this.$platformService.getCurrentPlatformVersion(
-				this.$devicePlatformsConstants.Android,
-				this.$projectDataService.getProjectData(projectDir));
-			runtimeGradleVersions = await this.getGradleVersions(projectRuntimeVersion);
+			const projectData = this.$projectDataService.getProjectData(projectDir);
+			const platformData = this.$platformsDataService.getPlatformData(this.$devicePlatformsConstants.Android, projectData);
+			const projectRuntimeVersion = platformData.platformProjectService.getFrameworkVersion(projectData);
 			this.$logger.trace(`Got gradle versions ${JSON.stringify(runtimeGradleVersions)} from runtime v${projectRuntimeVersion}`);
 		}
 

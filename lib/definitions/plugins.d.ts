@@ -26,7 +26,7 @@ interface IBasePluginData {
 }
 
 interface IPluginData extends INodeModuleData {
-	platformsData: IPluginPlatformsData;
+	platformsDataService: IPluginPlatformsData;
 	/* Gets all plugin variables from plugin */
 	pluginVariables: IDictionary<IPluginVariableData>;
 	pluginPlatformsFolderPath(platform: string): string;

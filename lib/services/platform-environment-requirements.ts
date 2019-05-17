@@ -1,7 +1,6 @@
 import { NATIVESCRIPT_CLOUD_EXTENSION_NAME, TrackActionNames } from "../constants";
 import { isInteractive } from "../common/helpers";
 import { EOL } from "os";
-import { cache } from "../common/decorators";
 
 export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequirements {
 	constructor(private $commandsService: ICommandsService,
@@ -12,13 +11,8 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 		private $prompter: IPrompter,
 		private $staticConfig: IStaticConfig,
 		private $analyticsService: IAnalyticsService,
-		private $injector: IInjector,
+		// private $previewAppLiveSyncService: IPreviewAppLiveSyncService,
 		private $previewQrCodeService: IPreviewQrCodeService) { }
-
-	@cache()
-	private get $liveSyncService(): ILiveSyncService {
-		return this.$injector.resolve("liveSyncService");
-	}
 
 	public static CLOUD_SETUP_OPTION_NAME = "Configure for Cloud Builds";
 	public static LOCAL_SETUP_OPTION_NAME = "Configure for Local Builds";
@@ -181,18 +175,12 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 				this.$errors.failWithoutHelp(`No project found. In order to sync to playground you need to go to project directory or specify --path option.`);
 			}
 
-			await this.$liveSyncService.liveSync([], {
-				syncToPreviewApp: true,
-				projectDir,
-				skipWatcher: !options.watch,
-				watchAllFiles: options.syncAllFiles,
-				clean: options.clean,
-				bundle: !!options.bundle,
-				release: options.release,
-				env: options.env,
-				timeout: options.timeout,
-				useHotModuleReload: options.hmr
-			});
+			// await this.$previewAppLiveSyncService.initialize({
+			// 	projectDir,
+			// 	env: options.env,
+			// 	useHotModuleReload: options.hmr,
+			// 	bundle: true
+			// });
 
 			await this.$previewQrCodeService.printLiveSyncQrCode({ projectDir, useHotModuleReload: options.hmr, link: options.link });
 		}

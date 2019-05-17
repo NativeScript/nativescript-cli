@@ -3,9 +3,8 @@ import { EventEmitter } from "events";
 
 declare global {
 	interface IPreviewAppLiveSyncService extends EventEmitter {
-		initialize(data: IPreviewAppLiveSyncData): void;
 		syncFiles(data: IPreviewAppLiveSyncData, filesToSync: string[], filesToRemove: string[]): Promise<void>;
-		stopLiveSync(): Promise<void>;
+		syncFilesForPlatformSafe(data: IPreviewAppLiveSyncData, filesData: IPreviewAppFilesData, platform: string, deviceId?: string): Promise<void>;
 	}
 
 	interface IPreviewAppFilesService {
@@ -18,7 +17,7 @@ declare global {
 		filesToRemove?: string[];
 	}
 
-	interface IPreviewAppLiveSyncData extends IProjectDir, IHasUseHotModuleReloadOption, IBundle, IEnvOptions { }
+	interface IPreviewAppLiveSyncData extends IProjectDir, IHasUseHotModuleReloadOption, IEnvOptions { }
 
 	interface IPreviewSdkService extends EventEmitter {
 		getQrCodeUrl(options: IGetQrCodeUrlOptions): string;

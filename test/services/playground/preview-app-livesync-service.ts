@@ -2,12 +2,19 @@ import { Yok } from "../../../lib/common/yok";
 import * as _ from 'lodash';
 import { LoggerStub, ErrorsStub } from "../../stubs";
 import { FilePayload, Device, FilesPayload } from "nativescript-preview-sdk";
-import { PreviewAppLiveSyncService } from "../../../lib/services/livesync/playground/preview-app-livesync-service";
 import * as chai from "chai";
 import * as path from "path";
 import { ProjectFilesManager } from "../../../lib/common/services/project-files-manager";
 import { EventEmitter } from "events";
 import { PreviewAppFilesService } from "../../../lib/services/livesync/playground/preview-app-files-service";
+import { PREPARE_READY_EVENT_NAME } from "../../../lib/constants";
+import { PrepareData } from "../../../lib/data/prepare-data";
+import { PreviewAppController } from "../../../lib/controllers/preview-app-controller";
+import { PreviewAppEmitter } from "../../../lib/emitters/preview-app-emitter";
+import { PrepareDataService } from "../../../lib/services/prepare-data-service";
+import { MobileHelper } from "../../../lib/common/mobile/mobile-helper";
+import { DevicePlatformsConstants } from "../../../lib/common/mobile/device-platforms-constants";
+import { PrepareController } from "../../../lib/controllers/prepare-controller";
 
 interface ITestCase {
 	name: string;
@@ -30,14 +37,15 @@ interface IAssertOptions {
 }
 
 interface IActInput {
-	previewAppLiveSyncService?: IPreviewAppLiveSyncService;
+	previewAppController?: PreviewAppController;
 	previewSdkService?: PreviewSdkServiceMock;
+	prepareController?: PrepareController;
 	projectFiles?: string[];
 	actOptions?: IActOptions;
 }
 
 let isComparePluginsOnDeviceCalled = false;
-let isHookCalledWithHMR = false;
+let isHMRPassedToEnv = false;
 let applyChangesParams: FilePayload[] = [];
 let initialFiles: FilePayload[] = [];
 let readTextParams: string[] = [];
@@ -95,6 +103,13 @@ class LoggerMock extends LoggerStub {
 	}
 }
 
+class PrepareControllerMock extends EventEmitter {
+	public prepare(prepareData: PrepareData) {
+		isHMRPassedToEnv = prepareData.env.hmr;
+		this.emit(PREPARE_READY_EVENT_NAME, { hmrData: {}, files: [] });
+	}
+}
+
 function createTestInjector(options?: {
 	projectFiles?: string[]
 }) {
@@ -102,9 +117,11 @@ function createTestInjector(options?: {
 
 	const injector = new Yok();
 	injector.register("logger", LoggerMock);
-	injector.register("hmrStatusService", {});
+	injector.register("hmrStatusService", {
+		attachToHmrStatusEvent: () => ({})
+	});
 	injector.register("errors", ErrorsStub);
-	injector.register("platformsData", {
+	injector.register("platformsDataService", {
 		getPlatformData: () => ({
 			appDestinationDirectoryPath: platformsDirPath,
 			normalizedPlatformName
@@ -125,7 +142,15 @@ function createTestInjector(options?: {
 		getExternalPlugins: () => <string[]>[]
 	});
 	injector.register("projectFilesManager", ProjectFilesManager);
-	injector.register("previewAppLiveSyncService", PreviewAppLiveSyncService);
+	injector.register("previewAppLiveSyncService", {
+		syncFilesForPlatformSafe: () => ({})
+	});
+	injector.register("previewAppEmitter", PreviewAppEmitter);
+	injector.register("previewAppController", PreviewAppController);
+	injector.register("prepareController", PrepareControllerMock);
+	injector.register("prepareDataService", PrepareDataService);
+	injector.register("mobileHelper", MobileHelper);
+	injector.register("devicePlatformsConstants", DevicePlatformsConstants);
 	injector.register("fs", {
 		readText: (filePath: string) => {
 			readTextParams.push(filePath);
@@ -149,11 +174,6 @@ function createTestInjector(options?: {
 		},
 		mapFilePath: (filePath: string) => path.join(path.join(platformsDirPath, "app"), path.relative(path.join(projectDirPath, "app"), filePath))
 	});
-	injector.register("hooksService", {
-		executeBeforeHooks: (name: string, args: any) => {
-			isHookCalledWithHMR = args.hookArgs.config.appFilesUpdaterOptions.useHotModuleReload;
-		}
-	});
 	injector.register("previewDevicesService", {
 		getConnectedDevices: () => [deviceMockData]
 	});
@@ -169,22 +189,24 @@ function arrange(options?: { projectFiles?: string[] }) {
 	options = options || {};
 
 	const injector = createTestInjector({ projectFiles: options.projectFiles });
-	const previewAppLiveSyncService: IPreviewAppLiveSyncService = injector.resolve("previewAppLiveSyncService");
 	const previewSdkService: IPreviewSdkService = injector.resolve("previewSdkService");
+	const previewAppController: PreviewAppController = injector.resolve("previewAppController");
+	const prepareController: PrepareController = injector.resolve("prepareController");
 
 	return {
-		previewAppLiveSyncService,
-		previewSdkService
+		previewSdkService,
+		previewAppController,
+		prepareController,
 	};
 }
 
 async function initialSync(input?: IActInput) {
 	input = input || {};
 
-	const { previewAppLiveSyncService, previewSdkService, actOptions } = input;
+	const { previewAppController, previewSdkService, actOptions } = input;
 	const syncFilesData = _.cloneDeep(syncFilesMockData);
 	syncFilesData.useHotModuleReload = actOptions.hmr;
-	await previewAppLiveSyncService.initialize(syncFilesData);
+	await previewAppController.preview(syncFilesData);
 	if (actOptions.callGetInitialFiles) {
 		await previewSdkService.getInitialFiles(deviceMockData);
 	}
@@ -193,23 +215,23 @@ async function initialSync(input?: IActInput) {
 async function syncFiles(input?: IActInput) {
 	input = input || {};
 
-	const { previewAppLiveSyncService, previewSdkService, projectFiles, actOptions } = input;
+	const { previewAppController, previewSdkService, prepareController, projectFiles, actOptions } = input;
 
 	const syncFilesData = _.cloneDeep(syncFilesMockData);
 	syncFilesData.useHotModuleReload = actOptions.hmr;
-	await previewAppLiveSyncService.initialize(syncFilesData);
+	await previewAppController.preview(syncFilesData);
 	if (actOptions.callGetInitialFiles) {
 		await previewSdkService.getInitialFiles(deviceMockData);
 	}
 
-	await previewAppLiveSyncService.syncFiles(syncFilesMockData, projectFiles, []);
+	prepareController.emit(PREPARE_READY_EVENT_NAME, { files: projectFiles });
 }
 
 async function assert(expectedFiles: string[], options?: IAssertOptions) {
 	options = options || {};
 	const actualFiles = options.checkInitialFiles ? initialFiles : applyChangesParams;
 
-	chai.assert.equal(isHookCalledWithHMR, options.hmr || false);
+	chai.assert.equal(isHMRPassedToEnv, options.hmr || false);
 	chai.assert.deepEqual(actualFiles, mapFiles(expectedFiles));
 
 	if (options.checkWarnings) {
@@ -223,7 +245,7 @@ async function assert(expectedFiles: string[], options?: IAssertOptions) {
 
 function reset() {
 	isComparePluginsOnDeviceCalled = false;
-	isHookCalledWithHMR = false;
+	isHMRPassedToEnv = false;
 	applyChangesParams = [];
 	initialFiles = [];
 	readTextParams = [];
@@ -238,7 +260,7 @@ function mapFiles(files: string[]): FilePayload[] {
 	return files.map(file => {
 		return {
 			event: "change",
-			file: path.join("..", "platforms", "app", file),
+			file,
 			fileContents: undefined,
 			binary: false
 		};
@@ -267,14 +289,14 @@ function execute(options: {
 
 		it(`${testCase.name}`, async () => {
 			const projectFiles = testCase.appFiles ? testCase.appFiles.map(file => path.join(projectDirPath, "app", file)) : null;
-			const { previewAppLiveSyncService, previewSdkService } = arrange({ projectFiles });
-			await act.apply(null, [{ previewAppLiveSyncService, previewSdkService, projectFiles, actOptions: testCase.actOptions }]);
+			const { previewAppController, prepareController, previewSdkService } = arrange({ projectFiles });
+			await act.apply(null, [{ previewAppController, prepareController, previewSdkService, projectFiles, actOptions: testCase.actOptions }]);
 			await assert(testCase.expectedFiles, testCase.assertOptions);
 		});
 	});
 }
 
-describe("previewAppLiveSyncService", () => {
+describe("previewAppController", () => {
 	describe("initialSync", () => {
 		afterEach(() => reset());
 
@@ -294,29 +316,6 @@ describe("previewAppLiveSyncService", () => {
 
 	describe("syncFiles", () => {
 		afterEach(() => reset());
-
-		const nativeFilesTestCases: ITestCase[] = [
-			{
-				name: "Android manifest is changed",
-				appFiles: ["App_Resources/Android/src/main/AndroidManifest.xml"],
-				expectedFiles: []
-			},
-			{
-				name: "Android app.gradle is changed",
-				appFiles: ["App_Resources/Android/app.gradle"],
-				expectedFiles: []
-			},
-			{
-				name: "iOS Info.plist is changed",
-				appFiles: ["App_Resources/iOS/Info.plist"],
-				expectedFiles: []
-			},
-			{
-				name: "iOS build.xcconfig is changed",
-				appFiles: ["App_Resources/iOS/build.xcconfig"],
-				expectedFiles: []
-			}
-		];
 
 		const hmrTestCases: ITestCase[] = [
 			{
@@ -357,18 +356,11 @@ describe("previewAppLiveSyncService", () => {
 
 		const testCategories = [
 			{
-				name: "should show warning and not transfer native files when",
-				testCases: nativeFilesTestCases.map(testCase => {
-					testCase.assertOptions = { checkWarnings: true };
-					return testCase;
-				})
-			},
-			{
 				name: "should handle correctly when no files are provided",
 				testCases: noAppFilesTestCases
 			},
 			{
-				name: "should pass the hmr option to the hook",
+				name: "should pass the hmr option to the env",
 				testCases: hmrTestCases
 			}
 		];

@@ -7,7 +7,7 @@ import { DeviceAndroidDebugBridge } from "../common/mobile/android/device-androi
 import { Configurations, LiveSyncPaths } from "../common/constants";
 import { performanceLog } from ".././common/decorators";
 
-export class AndroidProjectService extends projectServiceBaseLib.PlatformProjectServiceBase implements IPlatformProjectService {
+export class AndroidProjectService extends projectServiceBaseLib.PlatformProjectServiceBase {
 	private static VALUES_DIRNAME = "values";
 	private static VALUES_VERSION_DIRNAME_PREFIX = AndroidProjectService.VALUES_DIRNAME + "-v";
 	private static ANDROID_PLATFORM_NAME = "android";
@@ -46,11 +46,17 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			this._platformData = {
 				frameworkPackageName: constants.TNS_ANDROID_RUNTIME_NAME,
 				normalizedPlatformName: "Android",
+				platformNameLowerCase: "android",
 				appDestinationDirectoryPath: path.join(...appDestinationDirectoryArr),
-				platformProjectService: this,
+				platformProjectService: <any>this,
 				projectRoot: projectRoot,
-				getBuildOutputPath: () =>  path.join(...deviceBuildOutputArr),
-				bundleBuildOutputPath: path.join(projectRoot, constants.APP_FOLDER_NAME, constants.BUILD_DIR, constants.OUTPUTS_DIR, constants.BUNDLE_DIR),
+				getBuildOutputPath: (buildOptions: IBuildOutputOptions) => {
+					if (buildOptions.androidBundle) {
+						return path.join(projectRoot, constants.APP_FOLDER_NAME, constants.BUILD_DIR, constants.OUTPUTS_DIR, constants.BUNDLE_DIR);
+					}
+
+					return path.join(...deviceBuildOutputArr);
+				},
 				getValidBuildOutputData: (buildOptions: IBuildOutputOptions): IValidBuildOutputData => {
 					const buildMode = buildOptions.release ? Configurations.Release.toLowerCase() : Configurations.Debug.toLowerCase();
 
@@ -123,7 +129,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		};
 	}
 
-	public async createProject(frameworkDir: string, frameworkVersion: string, projectData: IProjectData, config: ICreateProjectOptions): Promise<void> {
+	public async createProject(frameworkDir: string, frameworkVersion: string, projectData: IProjectData): Promise<void> {
 		if (semver.lt(frameworkVersion, AndroidProjectService.MIN_RUNTIME_VERSION_WITH_GRADLE)) {
 			this.$errors.failWithoutHelp(`The NativeScript CLI requires Android runtime ${AndroidProjectService.MIN_RUNTIME_VERSION_WITH_GRADLE} or later to work properly.`);
 		}
@@ -160,9 +166,9 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		_.map(directoriesToClean, dir => this.$fs.deleteDirectory(dir));
 	}
 
-	public async interpolateData(projectData: IProjectData, platformSpecificData: IPlatformSpecificData): Promise<void> {
+	public async interpolateData(projectData: IProjectData): Promise<void> {
 		// Interpolate the apilevel and package
-		this.interpolateConfigurationFile(projectData, platformSpecificData);
+		this.interpolateConfigurationFile(projectData);
 		const appResourcesDirectoryPath = projectData.getAppResourcesDirectoryPath();
 
 		let stringsFilePath: string;
@@ -192,13 +198,9 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		}
 	}
 
-	public interpolateConfigurationFile(projectData: IProjectData, platformSpecificData: IPlatformSpecificData): void {
+	public interpolateConfigurationFile(projectData: IProjectData): void {
 		const manifestPath = this.getPlatformData(projectData).configurationFilePath;
 		shell.sed('-i', /__PACKAGE__/, projectData.projectIdentifiers.android, manifestPath);
-		if (this.$androidToolsInfo.getToolsInfo().androidHomeEnvVar) {
-			const sdk = (platformSpecificData && platformSpecificData.sdk) || (this.$androidToolsInfo.getToolsInfo().compileSdkVersion || "").toString();
-			shell.sed('-i', /__APILEVEL__/, sdk, manifestPath);
-		}
 	}
 
 	private getProjectNameFromId(projectData: IProjectData): string {
@@ -235,7 +237,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		const platformData = this.getPlatformData(projectData);
 		await this.$gradleBuildService.buildProject(platformData.projectRoot, buildConfig);
 
-		const outputPath = buildConfig.androidBundle ? platformData.bundleBuildOutputPath : platformData.getBuildOutputPath(buildConfig);
+		const outputPath = platformData.getBuildOutputPath(buildConfig);
 		await this.$filesHashService.saveHashesForProject(this._platformData, outputPath);
 	}
 
@@ -368,7 +370,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		await adb.executeShellCommand(["rm", "-rf", deviceRootPath]);
 	}
 
-	public async checkForChanges(changesInfo: IProjectChangesInfo, options: IProjectChangesOptions, projectData: IProjectData): Promise<void> {
+	public async checkForChanges(): Promise<void> {
 		// Nothing android specific to check yet.
 	}
 

@@ -32,10 +32,32 @@ $injector.require("projectTemplatesService", "./services/project-templates-servi
 $injector.require("projectNameService", "./services/project-name-service");
 $injector.require("tnsModulesService", "./services/tns-modules-service");
 
-$injector.require("platformsData", "./platforms-data");
-$injector.require("platformService", "./services/platform-service");
-$injector.require("preparePlatformJSService", "./services/prepare-platform-js-service");
-$injector.require("preparePlatformNativeService", "./services/prepare-platform-native-service");
+$injector.require("platformsDataService", "./services/platforms-data-service");
+$injector.require("addPlatformService", "./services/platform/add-platform-service");
+$injector.require("buildInfoFileService", "./services/build-info-file-service");
+$injector.require("prepareNativePlatformService", "./services/platform/prepare-native-platform-service");
+$injector.require("platformValidationService", "./services/platform/platform-validation-service");
+
+$injector.require("buildArtefactsService", "./services/build-artefacts-service");
+
+$injector.require("deviceDebugAppService", "./services/device/device-debug-app-service");
+$injector.require("deviceInstallAppService", "./services/device/device-install-app-service");
+$injector.require("deviceRefreshAppService", "./services/device/device-refresh-app-service");
+
+$injector.require("runEmitter", "./emitters/run-emitter");
+$injector.require("previewAppEmitter", "./emitters/preview-app-emitter");
+
+$injector.require("platformController", "./controllers/platform-controller");
+$injector.require("prepareController", "./controllers/prepare-controller");
+$injector.require("buildController", "./controllers/build-controller");
+$injector.require("deployController", "./controllers/deploy-controller");
+$injector.require("runController", "./controllers/run-controller");
+$injector.require("previewAppController", "./controllers/preview-app-controller");
+
+$injector.require("prepareDataService", "./services/prepare-data-service");
+$injector.require("buildDataService", "./services/build-data-service");
+
+$injector.require("liveSyncServiceResolver", "./resolvers/livesync-service-resolver");
 
 $injector.require("debugDataService", "./services/debug-data-service");
 $injector.requirePublicClass("debugService", "./services/debug-service");
@@ -46,8 +68,6 @@ $injector.require("userSettingsService", "./services/user-settings-service");
 $injector.requirePublic("analyticsSettingsService", "./services/analytics-settings-service");
 $injector.require("analyticsService", "./services/analytics/analytics-service");
 $injector.require("googleAnalyticsProvider", "./services/analytics/google-analytics-provider");
-
-$injector.require("emulatorSettingsService", "./services/emulator-settings-service");
 
 $injector.require("platformCommandParameter", "./platform-command-param");
 $injector.requireCommand("create", "./commands/create-project");
@@ -66,8 +86,6 @@ $injector.requireCommand("debug|ios", "./commands/debug");
 $injector.requireCommand("debug|android", "./commands/debug");
 
 $injector.requireCommand("prepare", "./commands/prepare");
-$injector.requireCommand("clean-app|ios", "./commands/clean-app");
-$injector.requireCommand("clean-app|android", "./commands/clean-app");
 $injector.requireCommand("build|ios", "./commands/build");
 $injector.requireCommand("build|android", "./commands/build");
 $injector.requireCommand("deploy", "./commands/deploy");
@@ -134,10 +152,10 @@ $injector.require("bundleValidatorHelper", "./helpers/bundle-validator-helper");
 $injector.require("androidBundleValidatorHelper", "./helpers/android-bundle-validator-helper");
 $injector.require("liveSyncCommandHelper", "./helpers/livesync-command-helper");
 $injector.require("deployCommandHelper", "./helpers/deploy-command-helper");
+$injector.require("platformCommandHelper", "./helpers/platform-command-helper");
 $injector.require("optionsTracker", "./helpers/options-track-helper");
 
 $injector.requirePublicClass("localBuildService", "./services/local-build-service");
-$injector.requirePublicClass("liveSyncService", "./services/livesync/livesync-service");
 $injector.require("LiveSyncSocket", "./services/livesync/livesync-socket");
 $injector.requirePublicClass("androidLivesyncTool", "./services/livesync/android-livesync-tool");
 $injector.require("androidLiveSyncService", "./services/livesync/android-livesync-service");
@@ -201,3 +219,5 @@ $injector.require("testInitializationService", "./services/test-initialization-s
 
 $injector.require("networkConnectivityValidator", "./helpers/network-connectivity-validator");
 $injector.requirePublic("cleanupService", "./services/cleanup-service");
+
+$injector.require("webpackCompilerService", "./services/webpack/webpack-compiler-service");

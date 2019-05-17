@@ -69,15 +69,11 @@ export class PreviewAppPluginsService implements IPreviewAppPluginsService {
 	}
 
 	private getWarningForPlugin(data: IPreviewAppLiveSyncData, localPlugin: string, localPluginVersion: string, devicePluginVersion: string, device: Device): string {
-		if (data && data.bundle) {
-			const pluginPackageJsonPath = path.join(data.projectDir, NODE_MODULES_DIR_NAME, localPlugin, PACKAGE_JSON_FILE_NAME);
-			const isNativeScriptPlugin = this.$pluginsService.isNativeScriptPlugin(pluginPackageJsonPath);
-			if (!isNativeScriptPlugin || (isNativeScriptPlugin && !this.hasNativeCode(localPlugin, device.platform, data.projectDir))) {
-				return null;
-			}
-		}
+		const pluginPackageJsonPath = path.join(data.projectDir, NODE_MODULES_DIR_NAME, localPlugin, PACKAGE_JSON_FILE_NAME);
+		const isNativeScriptPlugin = this.$pluginsService.isNativeScriptPlugin(pluginPackageJsonPath);
+		const shouldCompare = isNativeScriptPlugin && this.hasNativeCode(localPlugin, device.platform, data.projectDir);
 
-		return this.getWarningForPluginCore(localPlugin, localPluginVersion, devicePluginVersion, device.id);
+		return shouldCompare ? this.getWarningForPluginCore(localPlugin, localPluginVersion, devicePluginVersion, device.id) : null;
 	}
 
 	private getWarningForPluginCore(localPlugin: string, localPluginVersion: string, devicePluginVersion: string, deviceId: string): string {
