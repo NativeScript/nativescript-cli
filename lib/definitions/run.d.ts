@@ -22,7 +22,6 @@ interface IRunEmitter {
 interface IDeviceInstallAppService {
 	installOnDevice(device: Mobile.IDevice, buildData: IBuildData, packageFile?: string): Promise<void>;
 	installOnDeviceIfNeeded(device: Mobile.IDevice, buildData: IBuildData, packageFile?: string): Promise<void>;
-	getDeviceBuildInfoFilePath(device: Mobile.IDevice, projectData: IProjectData): Promise<string>;
 	shouldInstall(device: Mobile.IDevice, buildData: IBuildData): Promise<boolean>;
 }
 

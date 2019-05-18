@@ -36,12 +36,14 @@ interface IBuildDataService {
 }
 
 interface IBuildArtefactsService {
-	getLatestApplicationPackagePath(platformData: IPlatformData, buildOutputOptions: IBuildOutputOptions): Promise<string>;
-	getAllApplicationPackages(buildOutputPath: string, validBuildOutputData: IValidBuildOutputData): IApplicationPackage[];
-	copyLastOutput(targetPath: string, platformData: IPlatformData, buildOutputOptions: IBuildOutputOptions): void;
+	getAllAppPackages(buildOutputPath: string, validBuildOutputData: IValidBuildOutputData): IApplicationPackage[];
+	getLatestAppPackagePath(platformData: IPlatformData, buildOutputOptions: IBuildOutputOptions): Promise<string>;
+	copyLatestAppPackage(targetPath: string, platformData: IPlatformData, buildOutputOptions: IBuildOutputOptions): void;
 }
 
 interface IBuildInfoFileService {
-	saveBuildInfoFile(platformData: IPlatformData, buildInfoFileDirname: string): void;
-	getBuildInfoFromFile(platformData: IPlatformData, buildData: IBuildData): IBuildInfo;
+	getLocalBuildInfo(platformData: IPlatformData, buildData: IBuildData): IBuildInfo;
+	getDeviceBuildInfo(device: Mobile.IDevice, projectData: IProjectData): Promise<IBuildInfo>;
+	saveLocalBuildInfo(platformData: IPlatformData, buildInfoFileDirname: string): void;
+	saveDeviceBuildInfo(device: Mobile.IDevice, projectData: IProjectData, outputFilePath: string): Promise<void>;
 }

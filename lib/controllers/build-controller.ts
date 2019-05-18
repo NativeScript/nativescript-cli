@@ -58,14 +58,14 @@ export class BuildController extends EventEmitter implements IBuildController {
 		await attachAwaitDetach(constants.BUILD_OUTPUT_EVENT_NAME, platformData.platformProjectService, handler, platformData.platformProjectService.buildProject(platformData.projectRoot, projectData, buildData));
 
 		const buildInfoFileDir = platformData.getBuildOutputPath(buildData);
-		this.$buildInfoFileService.saveBuildInfoFile(platformData, buildInfoFileDir);
+		this.$buildInfoFileService.saveLocalBuildInfo(platformData, buildInfoFileDir);
 
 		this.$logger.info("Project successfully built.");
 
-		const result = await this.$buildArtefactsService.getLatestApplicationPackagePath(platformData, buildData);
+		const result = await this.$buildArtefactsService.getLatestAppPackagePath(platformData, buildData);
 
 		if (buildData.copyTo) {
-			this.$buildArtefactsService.copyLastOutput(buildData.copyTo, platformData, buildData);
+			this.$buildArtefactsService.copyLatestAppPackage(buildData.copyTo, platformData, buildData);
 			this.$logger.info(`The build result is located at: ${buildInfoFileDir}`);
 		}
 
@@ -102,13 +102,13 @@ export class BuildController extends EventEmitter implements IBuildController {
 		}
 
 		const validBuildOutputData = platformData.getValidBuildOutputData(buildData);
-		const packages = this.$buildArtefactsService.getAllApplicationPackages(outputPath, validBuildOutputData);
+		const packages = this.$buildArtefactsService.getAllAppPackages(outputPath, validBuildOutputData);
 		if (packages.length === 0) {
 			return true;
 		}
 
 		const prepareInfo = this.$projectChangesService.getPrepareInfo(platformData);
-		const buildInfo = this.$buildInfoFileService.getBuildInfoFromFile(platformData, buildData);
+		const buildInfo = this.$buildInfoFileService.getLocalBuildInfo(platformData, buildData);
 		if (!prepareInfo || !buildInfo) {
 			return true;
 		}
