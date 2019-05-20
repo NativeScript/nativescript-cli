@@ -1,33 +1,29 @@
-import { EventEmitter } from "events";
-import { LiveSyncServiceResolver } from "../resolvers/livesync-service-resolver";
 import { HmrConstants, DeviceDiscoveryEventNames } from "../common/constants";
 import { PREPARE_READY_EVENT_NAME, TrackActionNames } from "../constants";
-import { cache } from "../common/decorators";
+import { cache, performanceLog } from "../common/decorators";
 
-export class RunController extends EventEmitter {
+export class RunController implements IRunController {
 	private processesInfo: IDictionary<IRunOnDeviceProcessInfo> = {};
 
 	constructor(
 		private $analyticsService: IAnalyticsService,
 		private $buildDataService: IBuildDataService,
 		private $buildController: IBuildController,
-		private $deviceDebugAppService: IDeviceDebugAppService,
 		private $deviceInstallAppService: IDeviceInstallAppService,
-		private $deviceRefreshAppService: IDeviceRefreshAppService,
-		private $devicesService: Mobile.IDevicesService,
-		private $errors: IErrors,
+		protected $devicesService: Mobile.IDevicesService,
+		protected $errors: IErrors,
 		private $hmrStatusService: IHmrStatusService,
 		public $hooksService: IHooksService,
-		private $liveSyncServiceResolver: LiveSyncServiceResolver,
-		private $logger: ILogger,
+		private $liveSyncServiceResolver: ILiveSyncServiceResolver,
+		protected $logger: ILogger,
 		private $platformsDataService: IPlatformsDataService,
 		private $pluginsService: IPluginsService,
 		private $prepareController: IPrepareController,
 		private $prepareDataService: IPrepareDataService,
 		private $prepareNativePlatformService: IPrepareNativePlatformService,
-		private $projectDataService: IProjectDataService,
-		private $runEmitter: IRunEmitter
-	) { super(); }
+		protected $projectDataService: IProjectDataService,
+		protected $runEmitter: IRunEmitter
+	) { }
 
 	public async run(runData: IRunData): Promise<void> {
 		const { projectDir, liveSyncInfo, deviceDescriptors } = runData;
@@ -115,6 +111,40 @@ export class RunController extends EventEmitter {
 		return currentDescriptors || [];
 	}
 
+	@performanceLog()
+	protected async refreshApplication(projectData: IProjectData, liveSyncResultInfo: ILiveSyncResultInfo, deviceDescriptor: ILiveSyncDeviceInfo, settings?: IRefreshApplicationSettings): Promise<IRestartApplicationInfo> {
+		const result = { didRestart: false };
+		const platform = liveSyncResultInfo.deviceAppData.platform;
+		const applicationIdentifier = projectData.projectIdentifiers[platform.toLowerCase()];
+		const platformLiveSyncService = this.$liveSyncServiceResolver.resolveLiveSyncService(platform);
+
+		try {
+			let shouldRestart = await platformLiveSyncService.shouldRestart(projectData, liveSyncResultInfo);
+			if (!shouldRestart) {
+				shouldRestart = !await platformLiveSyncService.tryRefreshApplication(projectData, liveSyncResultInfo);
+			}
+
+			if (shouldRestart) {
+				this.$runEmitter.emitDebuggerDetachedEvent(liveSyncResultInfo.deviceAppData.device);
+				await platformLiveSyncService.restartApplication(projectData, liveSyncResultInfo);
+				result.didRestart = true;
+			}
+		} catch (err) {
+			this.$logger.info(`Error while trying to start application ${applicationIdentifier} on device ${liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier}. Error is: ${err.message || err}`);
+			const msg = `Unable to start application ${applicationIdentifier} on device ${liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier}. Try starting it manually.`;
+			this.$logger.warn(msg);
+			if (!settings || !settings.shouldSkipEmitLiveSyncNotification) {
+				this.$runEmitter.emitRunNotificationEvent(projectData, liveSyncResultInfo.deviceAppData.device, msg);
+			}
+
+			if (settings && settings.shouldCheckDeveloperDiscImage && (err.message || err) === "Could not find developer disk image") {
+				this.$runEmitter.emitUserInteractionNeededEvent(projectData, liveSyncResultInfo.deviceAppData.device, deviceDescriptor);
+			}
+		}
+
+		return result;
+	}
+
 	private getDeviceDescriptorsForInitialSync(projectDir: string, deviceDescriptors: ILiveSyncDeviceInfo[]) {
 		const currentRunData = this.processesInfo[projectDir];
 		const isAlreadyLiveSyncing = currentRunData && !currentRunData.isStopped;
@@ -178,16 +208,12 @@ export class RunController extends EventEmitter {
 				const { force, useHotModuleReload, skipWatcher } = liveSyncInfo;
 				const liveSyncResultInfo = await platformLiveSyncService.fullSync({ force, useHotModuleReload, projectData, device, watch: !skipWatcher, liveSyncDeviceInfo: deviceDescriptor });
 
-				const refreshInfo = await this.$deviceRefreshAppService.refreshApplication(projectData, liveSyncResultInfo, deviceDescriptor);
+				await this.refreshApplication(projectData, liveSyncResultInfo, deviceDescriptor);
 
 				this.$runEmitter.emitRunExecutedEvent(projectData, device, {
 					syncedFiles: liveSyncResultInfo.modifiedFilesData.map(m => m.getLocalPath()),
 					isFullSync: liveSyncResultInfo.isFullSync
 				});
-
-				if (liveSyncResultInfo && deviceDescriptor.debuggingEnabled) {
-					await this.$deviceDebugAppService.enableDebugging(projectData, deviceDescriptor, refreshInfo);
-				}
 
 				this.$logger.info(`Successfully synced application ${liveSyncResultInfo.deviceAppData.appIdentifier} on device ${liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier}.`);
 
@@ -236,6 +262,11 @@ export class RunController extends EventEmitter {
 
 				await this.refreshApplication(projectData, liveSyncResultInfo, deviceDescriptor);
 
+				this.$runEmitter.emitRunExecutedEvent(projectData, liveSyncResultInfo.deviceAppData.device, {
+					syncedFiles: liveSyncResultInfo.modifiedFilesData.map(m => m.getLocalPath()),
+					isFullSync: liveSyncResultInfo.isFullSync
+				});
+
 				if (!liveSyncResultInfo.didRecover && isInHMRMode) {
 					const status = await this.$hmrStatusService.getHmrStatus(device.deviceInfo.identifier, data.hmrData.hash);
 					if (status === HmrConstants.HMR_ERROR_STATUS) {
@@ -244,6 +275,11 @@ export class RunController extends EventEmitter {
 						// We want to force a restart of the application.
 						liveSyncResultInfo.isFullSync = true;
 						await this.refreshApplication(projectData, liveSyncResultInfo, deviceDescriptor);
+
+						this.$runEmitter.emitRunExecutedEvent(projectData, liveSyncResultInfo.deviceAppData.device, {
+							syncedFiles: liveSyncResultInfo.modifiedFilesData.map(m => m.getLocalPath()),
+							isFullSync: liveSyncResultInfo.isFullSync
+						});
 					}
 				}
 
@@ -264,19 +300,6 @@ export class RunController extends EventEmitter {
 			const liveSyncProcessInfo = this.processesInfo[projectData.projectDir];
 			return (data.platform.toLowerCase() === device.deviceInfo.platform.toLowerCase()) && liveSyncProcessInfo && _.some(liveSyncProcessInfo.deviceDescriptors, deviceDescriptor => deviceDescriptor.identifier === device.deviceInfo.identifier);
 		}));
-	}
-
-	private async refreshApplication(projectData: IProjectData, liveSyncResultInfo: ILiveSyncResultInfo, deviceDescriptor: ILiveSyncDeviceInfo) {
-		const refreshInfo = await this.$deviceRefreshAppService.refreshApplication(projectData, liveSyncResultInfo, deviceDescriptor);
-
-		this.$runEmitter.emitRunExecutedEvent(projectData, liveSyncResultInfo.deviceAppData.device, {
-			syncedFiles: liveSyncResultInfo.modifiedFilesData.map(m => m.getLocalPath()),
-			isFullSync: liveSyncResultInfo.isFullSync
-		});
-
-		if (liveSyncResultInfo && deviceDescriptor.debuggingEnabled) {
-			await this.$deviceDebugAppService.enableDebugging(projectData, deviceDescriptor, refreshInfo);
-		}
 	}
 
 	private async addActionToChain<T>(projectDir: string, action: () => Promise<T>): Promise<T> {

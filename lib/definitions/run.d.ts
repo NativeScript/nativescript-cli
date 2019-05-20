@@ -5,7 +5,9 @@ interface IRunData {
 }
 
 interface IRunController {
-
+	run(runData: IRunData): Promise<void>;
+	stop(projectDir: string, deviceIdentifiers?: string[], stopOptions?: { shouldAwaitAllActions: boolean }): Promise<void>;
+	getDeviceDescriptors(projectDir: string): ILiveSyncDeviceInfo[];
 }
 
 interface IRunEmitter {
@@ -23,14 +25,4 @@ interface IDeviceInstallAppService {
 	installOnDevice(device: Mobile.IDevice, buildData: IBuildData, packageFile?: string): Promise<void>;
 	installOnDeviceIfNeeded(device: Mobile.IDevice, buildData: IBuildData, packageFile?: string): Promise<void>;
 	shouldInstall(device: Mobile.IDevice, buildData: IBuildData): Promise<boolean>;
-}
-
-interface IDeviceRefreshAppService {
-	refreshApplication(projectData: IProjectData, liveSyncResultInfo: ILiveSyncResultInfo, deviceDescriptor: ILiveSyncDeviceInfo, settings?: IRefreshApplicationSettings): Promise<IRestartApplicationInfo>;
-}
-
-interface IDeviceDebugAppService {
-	enableDebugging(projectData: IProjectData, deviceDescriptor: ILiveSyncDeviceInfo, refreshInfo: IRestartApplicationInfo): Promise<IDebugInformation>;
-	attachDebugger(settings: IAttachDebuggerOptions): Promise<IDebugInformation>;
-	printDebugInformation(debugInformation: IDebugInformation, fireDebuggerAttachedEvent: boolean): IDebugInformation;
 }

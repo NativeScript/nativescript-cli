@@ -41,9 +41,7 @@ $injector.require("platformValidationService", "./services/platform/platform-val
 
 $injector.require("buildArtefactsService", "./services/build-artefacts-service");
 
-$injector.require("deviceDebugAppService", "./services/device/device-debug-app-service");
 $injector.require("deviceInstallAppService", "./services/device/device-install-app-service");
-$injector.require("deviceRefreshAppService", "./services/device/device-refresh-app-service");
 
 $injector.require("runEmitter", "./emitters/run-emitter");
 $injector.require("previewAppEmitter", "./emitters/preview-app-emitter");
@@ -53,6 +51,7 @@ $injector.require("prepareController", "./controllers/prepare-controller");
 $injector.require("buildController", "./controllers/build-controller");
 $injector.require("deployController", "./controllers/deploy-controller");
 $injector.require("runController", "./controllers/run-controller");
+$injector.require("debugController", "./controllers/debug-controller");
 $injector.require("previewAppController", "./controllers/preview-app-controller");
 
 $injector.require("prepareDataService", "./services/prepare-data-service");

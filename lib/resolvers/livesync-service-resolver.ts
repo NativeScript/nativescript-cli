@@ -1,4 +1,4 @@
-export class LiveSyncServiceResolver {
+export class LiveSyncServiceResolver implements ILiveSyncServiceResolver {
 	constructor(
 		private $errors: IErrors,
 		private $injector: IInjector,

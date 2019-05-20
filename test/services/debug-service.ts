@@ -138,27 +138,11 @@ describe("debugService", () => {
 				await assertIsRejected(testData, "is not installed on device with identifier");
 			});
 
-			it("the OS is neither Windows or macOS and device is iOS", async () => {
-				const testData = getDefaultTestData();
-				testData.deviceInformation.deviceInfo.platform = "iOS";
-				testData.hostInfo.isDarwin = testData.hostInfo.isWindows = false;
-
-				await assertIsRejected(testData, "Debugging on iOS devices is not supported for");
-			});
-
 			it("device is neither iOS or Android", async () => {
 				const testData = getDefaultTestData();
 				testData.deviceInformation.deviceInfo.platform = "WP8";
 
 				await assertIsRejected(testData, DebugCommandErrors.UNSUPPORTED_DEVICE_OS_FOR_DEBUGGING);
-			});
-
-			it("when trying to debug on iOS Simulator on macOS, debug-brk is passed, but pathToAppPackage is not", async () => {
-				const testData = getDefaultTestData();
-				testData.deviceInformation.deviceInfo.platform = "iOS";
-				testData.deviceInformation.isEmulator = true;
-
-				await assertIsRejected(testData, "To debug on iOS simulator you need to provide path to the app package.", { debugBrk: true });
 			});
 
 			const assertIsRejectedWhenPlatformDebugServiceFails = async (platform: string): Promise<void> => {
