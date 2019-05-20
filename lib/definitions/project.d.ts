@@ -212,6 +212,7 @@ interface IAssetItem {
 	idiom: string;
 	resizeOperation?: string;
 	overlayImageScale?: number;
+	rgba?: boolean;
 }
 
 interface IAssetSubGroup {

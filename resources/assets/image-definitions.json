@@ -139,7 +139,8 @@
 				"height": 1024,
 				"directory": "Assets.xcassets/AppIcon.appiconset",
 				"filename": "icon-1024.png",
-				"scale": "1x"
+				"scale": "1x",
+				"rgba": false
 			}
 		],
 		"splashBackgrounds": [
