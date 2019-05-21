@@ -21,31 +21,23 @@ export class Options {
 
 	public options: IDictionary<IDashedOption>;
 
-	public setupOptions(projectData: IProjectData): void {
+	public setupOptions(): void {
 		if (this.argv.release && this.argv.hmr) {
 			this.$errors.failWithoutHelp("The options --release and --hmr cannot be used simultaneously.");
 		}
 
-		// HACK: temporary solution for 5.3.0 release (until the webpack only feature)
-		const parsed = require("yargs-parser")(process.argv.slice(2), { 'boolean-negation': false });
-		const noBundle = parsed && (parsed.bundle === false || parsed.bundle === 'false');
-		if (noBundle && this.argv.hmr) {
-			this.$errors.failWithoutHelp("The options --no-bundle and --hmr cannot be used simultaneously.");
-		}
+		this.argv.bundle = "webpack";
 
-		if (projectData && projectData.useLegacyWorkflow === false) {
-			this.argv.bundle = this.argv.bundle !== undefined ? this.argv.bundle : "webpack";
+		const parsed = require("yargs-parser")(process.argv.slice(2), { 'boolean-negation': false });
+		// --no-hmr -> hmr: false or --hmr false -> hmr: 'false'
+		const noHmr = parsed && (parsed.hmr === false || parsed.hmr === 'false');
+		if (!noHmr) {
 			this.argv.hmr = !this.argv.release;
 		}
 
-		// --no-hmr -> hmr: false or --hmr false -> hmr: 'false'
-		const noHmr = parsed && (parsed.hmr === false || parsed.hmr === 'false');
-		if (noHmr) {
-			this.argv.hmr = false;
-		}
-
-		if (noBundle) {
-			this.argv.bundle = undefined;
+		if (this.argv.debugBrk) {
+			// we cannot use HMR along with debug-brk because we have to restart the app
+			// on each livesync in order to stop and allow debugging on app start
 			this.argv.hmr = false;
 		}
 	}
@@ -112,6 +104,8 @@ export class Options {
 			background: { type: OptionType.String, hasSensitiveValue: false },
 			username: { type: OptionType.String, hasSensitiveValue: true },
 			pluginName: { type: OptionType.String, hasSensitiveValue: false },
+			includeTypeScriptDemo: { type: OptionType.String, hasSensitiveValue: false },
+			includeAngularDemo: { type: OptionType.String, hasSensitiveValue: false },
 			hmr: { type: OptionType.Boolean, hasSensitiveValue: false },
 			collection: { type: OptionType.String, alias: "c", hasSensitiveValue: false },
 			json: { type: OptionType.Boolean, hasSensitiveValue: false },
@@ -133,8 +127,6 @@ export class Options {
 			justlaunch: { type: OptionType.Boolean, hasSensitiveValue: false },
 			file: { type: OptionType.String, hasSensitiveValue: true },
 			force: { type: OptionType.Boolean, alias: "f", hasSensitiveValue: false },
-			// remove legacy
-			companion: { type: OptionType.Boolean, hasSensitiveValue: false },
 			emulator: { type: OptionType.Boolean, hasSensitiveValue: false },
 			sdk: { type: OptionType.String, hasSensitiveValue: false },
 			template: { type: OptionType.String, hasSensitiveValue: true },

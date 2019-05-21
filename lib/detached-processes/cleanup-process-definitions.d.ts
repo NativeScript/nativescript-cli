@@ -1,4 +1,18 @@
-interface ISpawnCommandInfo {
+interface ITimeout {
+	/**
+	 * Timeout to execute the action.
+	 */
+	timeout?: number;
+}
+
+interface IFilePath {
+	/**
+	* Path to file/directory to be deleted or required
+	*/
+	filePath: string;
+}
+
+interface ISpawnCommandInfo extends ITimeout {
 	/**
 	 * Executable to be started.
 	 */
@@ -8,11 +22,6 @@ interface ISpawnCommandInfo {
 	 * Arguments that will be passed to the child process
 	 */
 	args: string[];
-
-	/**
-	 * Timeout to execute the action.
-	 */
-	timeout?: number;
 }
 
 interface ICleanupMessageBase {
@@ -29,9 +38,12 @@ interface ISpawnCommandCleanupMessage extends ICleanupMessageBase {
 	commandInfo: ISpawnCommandInfo;
 }
 
-interface IDeleteFileCleanupMessage extends ICleanupMessageBase {
-	/**
-	 * Path to file/directory to be deleted.
-	 */
-	filePath: string;
+interface IFileCleanupMessage extends ICleanupMessageBase, IFilePath { }
+
+interface IJSCommand extends ITimeout, IFilePath {
+	data: IDictionary<any>;
 }
+
+interface IJSCleanupMessage extends ICleanupMessageBase {
+	jsCommand: IJSCommand;
+ }

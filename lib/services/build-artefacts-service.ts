@@ -7,7 +7,7 @@ export class BuildArtefactsService implements IBuildArtefactsService {
 		private $logger: ILogger
 	) { }
 
-	public async getLatestApplicationPackagePath(platformData: IPlatformData, buildOutputOptions: IBuildOutputOptions): Promise<string> {
+	public async getLatestAppPackagePath(platformData: IPlatformData, buildOutputOptions: IBuildOutputOptions): Promise<string> {
 		const outputPath = buildOutputOptions.outputPath || platformData.getBuildOutputPath(buildOutputOptions);
 		const applicationPackage = this.getLatestApplicationPackage(outputPath, platformData.getValidBuildOutputData(buildOutputOptions));
 		const packageFile = applicationPackage.packageName;
@@ -19,7 +19,7 @@ export class BuildArtefactsService implements IBuildArtefactsService {
 		return packageFile;
 	}
 
-	public getAllApplicationPackages(buildOutputPath: string, validBuildOutputData: IValidBuildOutputData): IApplicationPackage[] {
+	public getAllAppPackages(buildOutputPath: string, validBuildOutputData: IValidBuildOutputData): IApplicationPackage[] {
 		const rootFiles = this.$fs.readDirectory(buildOutputPath).map(filename => path.join(buildOutputPath, filename));
 		let result = this.getApplicationPackagesCore(rootFiles, validBuildOutputData.packageNames);
 		if (result) {
@@ -40,7 +40,7 @@ export class BuildArtefactsService implements IBuildArtefactsService {
 		return [];
 	}
 
-	public copyLastOutput(targetPath: string, platformData: IPlatformData, buildOutputOptions: IBuildOutputOptions): void {
+	public copyLatestAppPackage(targetPath: string, platformData: IPlatformData, buildOutputOptions: IBuildOutputOptions): void {
 		targetPath = path.resolve(targetPath);
 
 		const outputPath = buildOutputOptions.outputPath || platformData.getBuildOutputPath(buildOutputOptions);
@@ -59,7 +59,7 @@ export class BuildArtefactsService implements IBuildArtefactsService {
 	}
 
 	private getLatestApplicationPackage(buildOutputPath: string, validBuildOutputData: IValidBuildOutputData): IApplicationPackage {
-		let packages = this.getAllApplicationPackages(buildOutputPath, validBuildOutputData);
+		let packages = this.getAllAppPackages(buildOutputPath, validBuildOutputData);
 		const packageExtName = path.extname(validBuildOutputData.packageNames[0]);
 		if (packages.length === 0) {
 			this.$errors.fail(`No ${packageExtName} found in ${buildOutputPath} directory.`);

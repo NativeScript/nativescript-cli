@@ -107,7 +107,7 @@ interface IDebugDataService {
 	 * @param {IOptions} options The options based on which debugData will be created
 	 * @returns {IDebugData} Data describing the required information for starting debug process.
 	 */
-	createDebugData(projectData: IProjectData, options: IDeviceIdentifier): IDebugData;
+	 createDebugData(projectData: IProjectData, options: IDeviceIdentifier): IDebugData;
 }
 
 /**
@@ -153,4 +153,11 @@ interface IDeviceDebugService extends IPlatform, NodeJS.EventEmitter {
 
 interface IDebugResultInfo {
 	debugUrl: string;
+}
+
+interface IDebugController extends IRunController {
+	// TODO: add disableDebugging method
+	enableDebugging(projectData: IProjectData, deviceDescriptor: ILiveSyncDeviceInfo, refreshInfo: IRestartApplicationInfo): Promise<IDebugInformation>;
+	attachDebugger(settings: IAttachDebuggerOptions): Promise<IDebugInformation>;
+	printDebugInformation(debugInformation: IDebugInformation, fireDebuggerAttachedEvent?: boolean): IDebugInformation;
 }

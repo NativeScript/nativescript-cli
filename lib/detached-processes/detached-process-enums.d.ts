@@ -40,8 +40,17 @@ declare const enum CleanupProcessMessage {
 	AddDeleteFileAction = "AddDeleteFileAction",
 
 	/**
-	 * This type of message defines the cleanup procedure should not delete previously specified file.
+	 * This type of message defines that the cleanup procedure should not delete previously specified file.
 	 */
 	RemoveDeleteFileAction = "RemoveDeleteFileAction",
 
+	/**
+	 * This type of message defines that the cleanup procedure will require the specified JS file, which should execute some action.
+	 */
+	AddJSFileToRequire = "AddJSFileToRequire",
+
+	/**
+	 * This type of message defines that the cleanup procedure will not require the previously specified JS file.
+	 */
+	RemoveJSFileToRequire = "RemoveJSFileToRequire",
 }

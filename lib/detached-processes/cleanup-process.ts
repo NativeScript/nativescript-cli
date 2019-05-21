@@ -19,9 +19,29 @@ fileLogService.logData({ message: "Initializing Cleanup process." });
 
 const commandsInfos: ISpawnCommandInfo[] = [];
 const filesToDelete: string[] = [];
+const jsCommands: IJSCommand[] = [];
+
+const executeJSCleanup = async (jsCommand: IJSCommand) => {
+	const $childProcess = $injector.resolve<IChildProcess>("childProcess");
+
+	try {
+		fileLogService.logData({ message: `Start executing action for file: ${jsCommand.filePath} and data ${JSON.stringify(jsCommand.data)}` });
+
+		await $childProcess.trySpawnFromCloseEvent(process.execPath, [path.join(__dirname, "cleanup-js-subprocess.js"), pathToBootstrap, logFile, jsCommand.filePath, JSON.stringify(jsCommand.data)], {}, { throwError: true, timeout: jsCommand.timeout || 3000 });
+		fileLogService.logData({ message: `Finished xecuting action for file: ${jsCommand.filePath} and data ${JSON.stringify(jsCommand.data)}` });
+
+	} catch (err) {
+		fileLogService.logData({ message: `Unable to execute action for file ${jsCommand.filePath} with data ${JSON.stringify(jsCommand.data)}. Error is: ${err}.`, type: FileLogMessageType.Error });
+	}
+};
 
 const executeCleanup = async () => {
 	const $childProcess = $injector.resolve<IChildProcess>("childProcess");
+
+	for (const jsCommand of jsCommands) {
+		await executeJSCleanup(jsCommand);
+	}
+
 	for (const commandInfo of commandsInfos) {
 		try {
 			fileLogService.logData({ message: `Start executing command: ${JSON.stringify(commandInfo)}` });
@@ -29,13 +49,17 @@ const executeCleanup = async () => {
 			await $childProcess.trySpawnFromCloseEvent(commandInfo.command, commandInfo.args, {}, { throwError: true, timeout: commandInfo.timeout || 3000 });
 			fileLogService.logData({ message: `Successfully executed command: ${JSON.stringify(commandInfo)}` });
 		} catch (err) {
-			fileLogService.logData({ message: `Unable to execute command: ${JSON.stringify(commandInfo)}`, type: FileLogMessageType.Error });
+			fileLogService.logData({ message: `Unable to execute command: ${JSON.stringify(commandInfo)}. Error is: ${err}.`, type: FileLogMessageType.Error });
 		}
 	}
 
 	if (filesToDelete.length) {
-		fileLogService.logData({ message: `Deleting files ${filesToDelete.join(" ")}` });
-		shelljs.rm("-Rf", filesToDelete);
+		try {
+			fileLogService.logData({ message: `Deleting files ${filesToDelete.join(" ")}` });
+			shelljs.rm("-Rf", filesToDelete);
+		} catch (err) {
+			fileLogService.logData({ message: `Unable to delete files: ${JSON.stringify(filesToDelete)}. Error is: ${err}.`, type: FileLogMessageType.Error });
+		}
 	}
 
 	fileLogService.logData({ message: `cleanup-process finished` });
@@ -56,7 +80,7 @@ const removeCleanupAction = (commandInfo: ISpawnCommandInfo): void => {
 		_.remove(commandsInfos, currentCommandInfo => _.isEqual(currentCommandInfo, commandInfo));
 		fileLogService.logData({ message: `cleanup-process removed command for execution: ${JSON.stringify(commandInfo)}` });
 	} else {
-		fileLogService.logData({ message: `cleanup-process cannot remove command for execution as it has note been added before: ${JSON.stringify(commandInfo)}` });
+		fileLogService.logData({ message: `cleanup-process cannot remove command for execution as it has not been added before: ${JSON.stringify(commandInfo)}` });
 	}
 };
 
@@ -82,6 +106,32 @@ const removeDeleteAction = (filePath: string): void => {
 	}
 };
 
+const addJSFile = (jsCommand: IJSCommand): void => {
+	const fullPath = path.resolve(jsCommand.filePath);
+
+	jsCommand.filePath = fullPath;
+
+	if (_.some(jsCommands, currentJSCommand => _.isEqual(currentJSCommand, jsCommand))) {
+		fileLogService.logData({ message: `cleanup-process will not add JS file for execution as it has been added already: ${JSON.stringify(jsCommand)}` });
+	} else {
+		fileLogService.logData({ message: `cleanup-process added JS file for execution: ${JSON.stringify(jsCommand)}` });
+		jsCommands.push(jsCommand);
+	}
+};
+
+const removeJSFile = (jsCommand: IJSCommand): void => {
+	const fullPath = path.resolve(jsCommand.filePath);
+
+	jsCommand.filePath = fullPath;
+
+	if (_.some(jsCommands, currentJSCommand => _.isEqual(currentJSCommand, jsCommand))) {
+		_.remove(jsCommands, currentJSCommand => _.isEqual(currentJSCommand, jsCommand));
+		fileLogService.logData({ message: `cleanup-process removed JS action for execution: ${JSON.stringify(jsCommand)}` });
+	} else {
+		fileLogService.logData({ message: `cleanup-process cannot remove JS action for execution as it has not been added before: ${JSON.stringify(jsCommand)}` });
+	}
+};
+
 process.on("message", async (cleanupProcessMessage: ICleanupMessageBase) => {
 	fileLogService.logData({ message: `cleanup-process received message of type: ${JSON.stringify(cleanupProcessMessage)}` });
 
@@ -93,10 +143,18 @@ process.on("message", async (cleanupProcessMessage: ICleanupMessageBase) => {
 			removeCleanupAction((<ISpawnCommandCleanupMessage>cleanupProcessMessage).commandInfo);
 			break;
 		case CleanupProcessMessage.AddDeleteFileAction:
-			addDeleteAction((<IDeleteFileCleanupMessage>cleanupProcessMessage).filePath);
+			addDeleteAction((<IFileCleanupMessage>cleanupProcessMessage).filePath);
 			break;
 		case CleanupProcessMessage.RemoveDeleteFileAction:
-			removeDeleteAction((<IDeleteFileCleanupMessage>cleanupProcessMessage).filePath);
+			removeDeleteAction((<IFileCleanupMessage>cleanupProcessMessage).filePath);
+			break;
+		case CleanupProcessMessage.AddJSFileToRequire:
+			const jsCleanupMessage = <IJSCleanupMessage>cleanupProcessMessage;
+			addJSFile(jsCleanupMessage.jsCommand);
+			break;
+		case CleanupProcessMessage.RemoveJSFileToRequire:
+			const msgToRemove = <IJSCleanupMessage>cleanupProcessMessage;
+			removeJSFile(msgToRemove.jsCommand);
 			break;
 		default:
 			fileLogService.logData({ message: `Unable to handle message of type ${cleanupProcessMessage.messageType}. Full message is ${JSON.stringify(cleanupProcessMessage)}`, type: FileLogMessageType.Error });
@@ -108,6 +166,8 @@ process.on("message", async (cleanupProcessMessage: ICleanupMessageBase) => {
 process.on("disconnect", async () => {
 	fileLogService.logData({ message: "cleanup-process received process.disconnect event" });
 	await executeCleanup();
+	$injector.dispose();
+	process.exit();
 });
 
 fileLogService.logData({ message: `cleanup-process will send ${DetachedProcessMessages.ProcessReadyToReceive} message` });

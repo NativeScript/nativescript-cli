@@ -1,5 +1,6 @@
 require("colors");
 import { PreviewAppLiveSyncEvents } from "./services/livesync/playground/preview-app-constants";
+import { join } from "path";
 
 export const APP_FOLDER_NAME = "app";
 export const APP_RESOURCES_FOLDER_NAME = "App_Resources";
@@ -49,6 +50,8 @@ export const TNS_NATIVE_SOURCE_GROUP_NAME = "TNSNativeSource";
 export const NATIVE_SOURCE_FOLDER = "src";
 export const APPLICATION_RESPONSE_TIMEOUT_SECONDS = 60;
 export const NATIVE_EXTENSION_FOLDER = "extensions";
+export const IOS_WATCHAPP_FOLDER = "watchapp";
+export const IOS_WATCHAPP_EXTENSION_FOLDER = "watchextension";
 
 export class PackageVersion {
 	static NEXT = "next";
@@ -288,3 +291,92 @@ export const RunOnDeviceEvents = {
 	runOnDeviceStarted: "runOnDeviceStarted",
 	runOnDeviceNotification: "notify"
 };
+
+export enum IOSDeviceTargets {
+	ios = "1,2",
+	watchos = 4
+}
+
+export enum IOSNativeTargetProductTypes {
+	watchApp = "com.apple.product-type.application.watchapp2",
+	watchExtension = "com.apple.product-type.watchkit2-extension",
+	appExtension = "com.apple.product-type.app-extension"
+}
+
+export enum IOSNativeTargetTypes {
+	watchApp = "watch_app",
+	watchExtension = "watch_extension",
+	appExtension = "app_extension"
+}
+
+const pathToLoggerAppendersDir = join(__dirname, "common", "logger", "appenders");
+export const LoggerAppenders = {
+	emitAppender: join(pathToLoggerAppendersDir, "emit-appender"),
+	cliAppender: join(pathToLoggerAppendersDir, "cli-appender")
+};
+
+export enum LoggerLevel {
+	/**
+	 * Show all log messages.
+	 * Log levels are used to assign importance to log messages, with the integer value being used to sort them.
+	 * If you do not specify anything in your configuration, the default values are used (ALL < TRACE < DEBUG < INFO < WARN < ERROR < FATAL < MARK < OFF)
+	 */
+	ALL = "ALL",
+
+	/**
+	 * Log levels are used to assign importance to log messages, with the integer value being used to sort them.
+	 * If you do not specify anything in your configuration, the default values are used (ALL < TRACE < DEBUG < INFO < WARN < ERROR < FATAL < MARK < OFF)
+	 */
+	TRACE = "TRACE",
+
+	/**
+	 * Log levels are used to assign importance to log messages, with the integer value being used to sort them.
+	 * If you do not specify anything in your configuration, the default values are used (ALL < TRACE < DEBUG < INFO < WARN < ERROR < FATAL < MARK < OFF)
+	 */
+	DEBUG = "DEBUG",
+
+	/**
+	 * Log levels are used to assign importance to log messages, with the integer value being used to sort them.
+	 * If you do not specify anything in your configuration, the default values are used (ALL < TRACE < DEBUG < INFO < WARN < ERROR < FATAL < MARK < OFF)
+	 */
+	INFO = "INFO",
+
+	/**
+	 * Log levels are used to assign importance to log messages, with the integer value being used to sort them.
+	 * If you do not specify anything in your configuration, the default values are used (ALL < TRACE < DEBUG < INFO < WARN < ERROR < FATAL < MARK < OFF)
+	 */
+	WARN = "WARN",
+
+	/**
+	 * Log levels are used to assign importance to log messages, with the integer value being used to sort them.
+	 * If you do not specify anything in your configuration, the default values are used (ALL < TRACE < DEBUG < INFO < WARN < ERROR < FATAL < MARK < OFF)
+	 */
+	ERROR = "ERROR",
+
+	/**
+	 * Log levels are used to assign importance to log messages, with the integer value being used to sort them.
+	 * If you do not specify anything in your configuration, the default values are used (ALL < TRACE < DEBUG < INFO < WARN < ERROR < FATAL < MARK < OFF)
+	 */
+	FATAL = "FATAL",
+
+	/**
+	 * Log levels are used to assign importance to log messages, with the integer value being used to sort them.
+	 * If you do not specify anything in your configuration, the default values are used (ALL < TRACE < DEBUG < INFO < WARN < ERROR < FATAL < MARK < OFF)
+	 */
+	MARK = "MARK",
+
+	/**
+	 * Disable all logging.
+	 * Log levels are used to assign importance to log messages, with the integer value being used to sort them.
+	 * If you do not specify anything in your configuration, the default values are used (ALL < TRACE < DEBUG < INFO < WARN < ERROR < FATAL < MARK < OFF)
+	 */
+	OFF = "OFF"
+}
+
+export enum LoggerConfigData {
+	useStderr = "useStderr",
+	wrapMessageWithBorders = "wrapMessageWithBorders",
+	skipNewLine = "skipNewLine"
+}
+
+export const EMIT_APPENDER_EVENT_NAME = "logData";

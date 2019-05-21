@@ -63,7 +63,7 @@ export class TestExecutionService implements ITestExecutionService {
 				});
 			};
 
-		karmaRunner.on("message",  (karmaData: any) => {
+		karmaRunner.on("message", (karmaData: any) => {
 			this.$logger.trace(`The received message from karma is: `, karmaData);
 			if (!karmaData.launcherConfig && !karmaData.url) {
 				return;
@@ -157,6 +157,7 @@ export class TestExecutionService implements ITestExecutionService {
 
 		karmaConfig.projectDir = projectData.projectDir;
 		karmaConfig.bundle = true;
+		karmaConfig.debugBrk = this.$options.debugBrk;
 		karmaConfig.platform = platform.toLowerCase();
 		this.$logger.debug(JSON.stringify(karmaConfig, null, 4));
 

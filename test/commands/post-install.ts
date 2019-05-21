@@ -35,7 +35,7 @@ const createTestInjector = (): IInjector => {
 	});
 
 	testInjector.register("logger", {
-		out: (formatStr?: any, ...args: any[]): void => undefined,
+		info: (formatStr?: any, ...args: any[]): void => undefined,
 		printMarkdown: (...args: any[]): void => undefined
 	});
 

@@ -39,7 +39,8 @@ export class LogcatHelper implements Mobile.ILogcatHelper {
 
 			logcatStream.on("close", (code: number) => {
 				try {
-					this.stop(deviceIdentifier);
+					this.forceStop(deviceIdentifier);
+
 					if (code !== 0) {
 						this.$logger.trace("ADB process exited with code " + code.toString());
 					}
@@ -76,11 +77,15 @@ export class LogcatHelper implements Mobile.ILogcatHelper {
 	 */
 	public stop(deviceIdentifier: string): void {
 		if (this.mapDevicesLoggingData[deviceIdentifier] && !this.mapDevicesLoggingData[deviceIdentifier].keepSingleProcess) {
-			this.mapDevicesLoggingData[deviceIdentifier].loggingProcess.removeAllListeners();
-			this.mapDevicesLoggingData[deviceIdentifier].loggingProcess.kill("SIGINT");
-			this.mapDevicesLoggingData[deviceIdentifier].lineStream.removeAllListeners();
-			delete this.mapDevicesLoggingData[deviceIdentifier];
+			this.forceStop(deviceIdentifier);
 		}
+	}
+
+	private forceStop(deviceIdentifier: string): void {
+		this.mapDevicesLoggingData[deviceIdentifier].loggingProcess.removeAllListeners();
+		this.mapDevicesLoggingData[deviceIdentifier].loggingProcess.kill("SIGINT");
+		this.mapDevicesLoggingData[deviceIdentifier].lineStream.removeAllListeners();
+		delete this.mapDevicesLoggingData[deviceIdentifier];
 	}
 
 	private async getLogcatStream(deviceIdentifier: string, pid?: string) {

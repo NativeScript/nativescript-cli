@@ -19,6 +19,8 @@ const dummyProjectName = "dummyProjectName";
 const dummyArgs = [dummyProjectName];
 const dummyUser = "devUsername";
 const dummyName = "devPlugin";
+const createDemoProjectAnswer = true;
+const creteDemoProjectOption = "y";
 const dummyPacote: IPacoteOutput = { packageName: "", destinationDirectory: "" };
 
 function createTestInjector() {
@@ -104,48 +106,99 @@ describe("Plugin create command tests", () => {
 			await createPluginCommand.execute(dummyArgs);
 		});
 
-		it("should pass when only project name is set with prompts in interactive shell.", async () => {
+		it("should pass when all options are set with prompts in interactive shell.", async () => {
 			const prompter = testInjector.resolve("$prompter");
 			const strings: IDictionary<string> = {};
+			const confirmQuestions: IDictionary<boolean> = {};
 			strings[createPluginCommand.userMessage] = dummyUser;
 			strings[createPluginCommand.nameMessage] = dummyName;
+			confirmQuestions[createPluginCommand.includeTypeScriptDemoMessage] = createDemoProjectAnswer;
+			confirmQuestions[createPluginCommand.includeAngularDemoMessage] = createDemoProjectAnswer;
 
 			prompter.expect({
-				strings: strings
+				strings: strings,
+				confirmQuestions
 			});
 			await createPluginCommand.execute(dummyArgs);
 			prompter.assert();
 		});
 
-		it("should pass with project name and username set with one prompt in interactive shell.", async () => {
+		it("should pass when username is passed with command line option and all other options are populated with prompts in interactive shell.", async () => {
 			options.username = dummyUser;
 			const prompter = testInjector.resolve("$prompter");
 			const strings: IDictionary<string> = {};
+			const confirmQuestions: IDictionary<boolean> = {};
 			strings[createPluginCommand.nameMessage] = dummyName;
+			confirmQuestions[createPluginCommand.includeTypeScriptDemoMessage] = createDemoProjectAnswer;
+			confirmQuestions[createPluginCommand.includeAngularDemoMessage] = createDemoProjectAnswer;
 
 			prompter.expect({
-				strings: strings
+				strings: strings,
+				confirmQuestions
 			});
 			await createPluginCommand.execute(dummyArgs);
 			prompter.assert();
 		});
 
-		it("should pass with project name and pluginName set with one prompt in interactive shell.", async () => {
+		it("should pass when plugin name is passed with command line option and all other options are populated with prompts in interactive shell.", async () => {
 			options.pluginName = dummyName;
 			const prompter = testInjector.resolve("$prompter");
 			const strings: IDictionary<string> = {};
+			const confirmQuestions: IDictionary<boolean> = {};
+
 			strings[createPluginCommand.userMessage] = dummyUser;
+			confirmQuestions[createPluginCommand.includeTypeScriptDemoMessage] = createDemoProjectAnswer;
+			confirmQuestions[createPluginCommand.includeAngularDemoMessage] = createDemoProjectAnswer;
 
 			prompter.expect({
-				strings: strings
+				strings,
+				confirmQuestions
 			});
 			await createPluginCommand.execute(dummyArgs);
 			prompter.assert();
 		});
 
-		it("should pass with project name, username and pluginName set with no prompt in interactive shell.", async () => {
+		it("should pass when includeTypeScriptDemo is passed with command line option and all other options are populated with prompts in interactive shell.", async () => {
+			options.includeTypeScriptDemo = creteDemoProjectOption;
+			const prompter = testInjector.resolve("$prompter");
+			const strings: IDictionary<string> = {};
+			const confirmQuestions: IDictionary<boolean> = {};
+			strings[createPluginCommand.userMessage] = dummyUser;
+			strings[createPluginCommand.nameMessage] = dummyName;
+			confirmQuestions[createPluginCommand.includeAngularDemoMessage] = createDemoProjectAnswer;
+
+			prompter.expect({
+				strings: strings,
+				confirmQuestions
+			});
+			await createPluginCommand.execute(dummyArgs);
+			prompter.assert();
+		});
+
+		it("should pass when includeAngularDemo is passed with command line option and all other options are populated with prompts in interactive shell.", async () => {
+			options.includeAngularDemo = creteDemoProjectOption;
+			const prompter = testInjector.resolve("$prompter");
+			const strings: IDictionary<string> = {};
+			const confirmQuestions: IDictionary<boolean> = {};
+
+			strings[createPluginCommand.userMessage] = dummyUser;
+			strings[createPluginCommand.nameMessage] = dummyName;
+			confirmQuestions[createPluginCommand.includeTypeScriptDemoMessage] = createDemoProjectAnswer;
+
+			prompter.expect({
+				strings: strings,
+				confirmQuestions
+			});
+			await createPluginCommand.execute(dummyArgs);
+			prompter.assert();
+		});
+
+		it("should pass with all options passed through command line opts with no prompt in interactive shell.", async () => {
 			options.username = dummyUser;
 			options.pluginName = dummyName;
+			options.includeTypeScriptDemo = creteDemoProjectOption;
+			options.includeAngularDemo = creteDemoProjectOption;
+
 			await createPluginCommand.execute(dummyArgs);
 		});
 

@@ -83,7 +83,6 @@ class TestAndroidCommand extends TestCommandBase implements ICommand {
 		protected $devicesService: Mobile.IDevicesService) {
 		super();
 	}
-
 }
 
 class TestIosCommand extends TestCommandBase implements ICommand {

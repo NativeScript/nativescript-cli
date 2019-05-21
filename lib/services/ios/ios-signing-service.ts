@@ -1,6 +1,6 @@
 import * as path from "path";
 import * as mobileProvisionFinder from "ios-mobileprovision-finder";
-import { BUILD_XCCONFIG_FILE_NAME, iOSAppResourcesFolderName } from "../../constants";
+import { BUILD_XCCONFIG_FILE_NAME, iOSAppResourcesFolderName, IOSNativeTargetProductTypes } from "../../constants";
 import * as helpers from "../../common/helpers";
 import { IOSProvisionService } from "../ios-provision-service";
 import { IOSBuildData } from "../../data/build-data";
@@ -61,7 +61,12 @@ export class IOSSigningService implements IiOSSigningService {
 			}
 
 			xcode.setAutomaticSigningStyle(projectData.projectName, teamId);
-			xcode.setAutomaticSigningStyleByTargetProductType("com.apple.product-type.app-extension", teamId);
+			xcode.setAutomaticSigningStyleByTargetProductTypesList([
+				IOSNativeTargetProductTypes.appExtension,
+				IOSNativeTargetProductTypes.watchApp,
+				IOSNativeTargetProductTypes.watchExtension
+			],
+			teamId);
 			xcode.save();
 
 			this.$logger.trace(`Set Automatic signing style and team id ${teamId}.`);
@@ -107,7 +112,12 @@ export class IOSSigningService implements IiOSSigningService {
 				identity: mobileprovision.Type === "Development" ? "iPhone Developer" : "iPhone Distribution"
 			};
 			xcode.setManualSigningStyle(projectData.projectName, configuration);
-			xcode.setManualSigningStyleByTargetProductType("com.apple.product-type.app-extension", configuration);
+			xcode.setManualSigningStyleByTargetProductTypesList([
+				IOSNativeTargetProductTypes.appExtension,
+				IOSNativeTargetProductTypes.watchApp,
+				IOSNativeTargetProductTypes.watchExtension
+			],
+			configuration);
 			xcode.save();
 
 			// this.cache(uuid);

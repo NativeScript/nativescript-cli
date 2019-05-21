@@ -11,9 +11,9 @@ import * as temp from "temp";
 import * as plist from "plist";
 import { IOSProvisionService } from "./ios-provision-service";
 import { IOSEntitlementsService } from "./ios-entitlements-service";
-import { BUILD_XCCONFIG_FILE_NAME, IosProjectConstants } from "../constants";
 import { IOSBuildData } from "../data/build-data";
 import { IOSPrepareData } from "../data/prepare-data";
+import { BUILD_XCCONFIG_FILE_NAME, IosProjectConstants } from "../constants";
 
 interface INativeSourceCodeGroup {
 	name: string;
@@ -50,7 +50,8 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		private $plistParser: IPlistParser,
 		private $xcconfigService: IXcconfigService,
 		private $xcodebuildService: IXcodebuildService,
-		private $iOSExtensionsService: IIOSExtensionsService) {
+		private $iOSExtensionsService: IIOSExtensionsService,
+		private $iOSWatchAppService: IIOSWatchAppService) {
 		super($fs, $projectDataService);
 	}
 
@@ -190,6 +191,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 	public async buildProject(projectRoot: string, projectData: IProjectData, iOSBuildData: IOSBuildData): Promise<void> {
 		const platformData = this.getPlatformData(projectData);
+
 		const handler = (data: any) => {
 			this.emit(constants.BUILD_OUTPUT_EVENT_NAME, data);
 		};
@@ -279,6 +281,8 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 	public async prepareProject(projectData: IProjectData, prepareData: IOSPrepareData): Promise<void> {
 		const projectRoot = path.join(projectData.platformsDir, "ios");
+		const platformData = this.getPlatformData(projectData);
+		const resourcesDirectoryPath = projectData.getAppResourcesDirectoryPath();
 
 		const provision = prepareData && prepareData.provision;
 		const teamId = prepareData && prepareData.teamId;
@@ -315,12 +319,19 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			this.savePbxProj(project, projectData);
 
 			const resourcesNativeCodePath = path.join(
-				projectData.getAppResourcesDirectoryPath(),
-				this.getPlatformData(projectData).normalizedPlatformName,
+				resourcesDirectoryPath,
+				platformData.normalizedPlatformName,
 				constants.NATIVE_SOURCE_FOLDER
 			);
-
 			await this.prepareNativeSourceCode(constants.TNS_NATIVE_SOURCE_GROUP_NAME, resourcesNativeCodePath, projectData);
+		}
+
+		const pbxProjPath = this.getPbxProjPath(projectData);
+		this.$iOSWatchAppService.removeWatchApp({ pbxProjPath });
+		const addedWatchApp = await this.$iOSWatchAppService.addWatchAppFromPath({ watchAppFolderPath: path.join(resourcesDirectoryPath, platformData.normalizedPlatformName), projectData, platformData, pbxProjPath });
+
+		if (addedWatchApp) {
+			this.$logger.warn("The support for Apple Watch App is currently in Beta. For more information about the current development state and any known issues, please check the relevant GitHub issue: https://github.com/NativeScript/nativescript-cli/issues/4589");
 		}
 	}
 
@@ -334,6 +345,8 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		// src folder should not be copied as the pbxproject will have references to its files
 		this.$fs.deleteDirectory(path.join(appResourcesDirectoryPath, this.getPlatformData(projectData).normalizedPlatformName, constants.NATIVE_SOURCE_FOLDER));
 		this.$fs.deleteDirectory(path.join(appResourcesDirectoryPath, this.getPlatformData(projectData).normalizedPlatformName, constants.NATIVE_EXTENSION_FOLDER));
+		this.$fs.deleteDirectory(path.join(appResourcesDirectoryPath, this.getPlatformData(projectData).normalizedPlatformName, "watchapp"));
+		this.$fs.deleteDirectory(path.join(appResourcesDirectoryPath, this.getPlatformData(projectData).normalizedPlatformName, "watchextension"));
 
 		this.$fs.deleteDirectory(this.getAppResourcesDestinationDirectoryPath(projectData));
 	}
@@ -341,7 +354,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	public async processConfigurationFilesFromAppResources(projectData: IProjectData, opts: IRelease): Promise<void> {
 		await this.mergeInfoPlists(projectData, opts);
 		await this.$iOSEntitlementsService.merge(projectData);
-		await this.mergeProjectXcconfigFiles(projectData, opts);
+		await this.mergeProjectXcconfigFiles(projectData);
 	}
 
 	public ensureConfigurationFileInAppResources(): void {
@@ -724,10 +737,13 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		this.$fs.writeFile(path.join(headersFolderPath, "module.modulemap"), modulemap);
 	}
 
-	private async mergeProjectXcconfigFiles(projectData: IProjectData, opts: IRelease): Promise<void> {
+	private async mergeProjectXcconfigFiles(projectData: IProjectData): Promise<void> {
 		const platformData = this.getPlatformData(projectData);
-		const pluginsXcconfigFilePath = this.$xcconfigService.getPluginsXcconfigFilePath(platformData.projectRoot, opts);
-		this.$fs.deleteFile(pluginsXcconfigFilePath);
+		const pluginsXcconfigFilePaths = _.values(this.$xcconfigService.getPluginsXcconfigFilePaths(platformData.projectRoot));
+
+		for (const pluginsXcconfigFilePath of pluginsXcconfigFilePaths) {
+			this.$fs.deleteFile(pluginsXcconfigFilePath);
+		}
 
 		const pluginsService = <IPluginsService>this.$injector.resolve("pluginsService");
 		const allPlugins: IPluginData[] = await pluginsService.getAllInstalledPlugins(projectData);
@@ -735,32 +751,40 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			const pluginPlatformsFolderPath = plugin.pluginPlatformsFolderPath(IOSProjectService.IOS_PLATFORM_NAME);
 			const pluginXcconfigFilePath = path.join(pluginPlatformsFolderPath, BUILD_XCCONFIG_FILE_NAME);
 			if (this.$fs.exists(pluginXcconfigFilePath)) {
-				await this.$xcconfigService.mergeFiles(pluginXcconfigFilePath, pluginsXcconfigFilePath);
+				for (const pluginsXcconfigFilePath of pluginsXcconfigFilePaths) {
+					await this.$xcconfigService.mergeFiles(pluginXcconfigFilePath, pluginsXcconfigFilePath);
+				}
 			}
 		}
 
 		const appResourcesXcconfigPath = path.join(projectData.appResourcesDirectoryPath, this.getPlatformData(projectData).normalizedPlatformName, BUILD_XCCONFIG_FILE_NAME);
 		if (this.$fs.exists(appResourcesXcconfigPath)) {
-			await this.$xcconfigService.mergeFiles(appResourcesXcconfigPath, pluginsXcconfigFilePath);
+			for (const pluginsXcconfigFilePath of pluginsXcconfigFilePaths) {
+				await this.$xcconfigService.mergeFiles(appResourcesXcconfigPath, pluginsXcconfigFilePath);
+			}
 		}
 
-		if (!this.$fs.exists(pluginsXcconfigFilePath)) {
-			// We need the pluginsXcconfig file to exist in platforms dir as it is required in the native template:
-			// https://github.com/NativeScript/ios-runtime/blob/9c2b7b5f70b9bee8452b7a24aa6b646214c7d2be/build/project-template/__PROJECT_NAME__/build-debug.xcconfig#L3
-			// From Xcode 10 in case the file is missing, this include fails and the build itself fails (was a warning in previous Xcode versions).
-			this.$fs.writeFile(pluginsXcconfigFilePath, "");
+		for (const pluginsXcconfigFilePath of pluginsXcconfigFilePaths) {
+			if (!this.$fs.exists(pluginsXcconfigFilePath)) {
+				// We need the pluginsXcconfig file to exist in platforms dir as it is required in the native template:
+				// https://github.com/NativeScript/ios-runtime/blob/9c2b7b5f70b9bee8452b7a24aa6b646214c7d2be/build/project-template/__PROJECT_NAME__/build-debug.xcconfig#L3
+				// From Xcode 10 in case the file is missing, this include fails and the build itself fails (was a warning in previous Xcode versions).
+				this.$fs.writeFile(pluginsXcconfigFilePath, "");
+			}
 		}
 
-		// Set Entitlements Property to point to default file if not set explicitly by the user.
-		const entitlementsPropertyValue = this.$xcconfigService.readPropertyValue(pluginsXcconfigFilePath, constants.CODE_SIGN_ENTITLEMENTS);
-		if (entitlementsPropertyValue === null && this.$fs.exists(this.$iOSEntitlementsService.getPlatformsEntitlementsPath(projectData))) {
-			temp.track();
-			const tempEntitlementsDir = temp.mkdirSync("entitlements");
-			const tempEntitlementsFilePath = path.join(tempEntitlementsDir, "set-entitlements.xcconfig");
-			const entitlementsRelativePath = this.$iOSEntitlementsService.getPlatformsEntitlementsRelativePath(projectData);
-			this.$fs.writeFile(tempEntitlementsFilePath, `CODE_SIGN_ENTITLEMENTS = ${entitlementsRelativePath}${EOL}`);
+		for (const pluginsXcconfigFilePath of pluginsXcconfigFilePaths) {
+			// Set Entitlements Property to point to default file if not set explicitly by the user.
+			const entitlementsPropertyValue = this.$xcconfigService.readPropertyValue(pluginsXcconfigFilePath, constants.CODE_SIGN_ENTITLEMENTS);
+			if (entitlementsPropertyValue === null && this.$fs.exists(this.$iOSEntitlementsService.getPlatformsEntitlementsPath(projectData))) {
+				temp.track();
+				const tempEntitlementsDir = temp.mkdirSync("entitlements");
+				const tempEntitlementsFilePath = path.join(tempEntitlementsDir, "set-entitlements.xcconfig");
+				const entitlementsRelativePath = this.$iOSEntitlementsService.getPlatformsEntitlementsRelativePath(projectData);
+				this.$fs.writeFile(tempEntitlementsFilePath, `CODE_SIGN_ENTITLEMENTS = ${entitlementsRelativePath}${EOL}`);
 
-			await this.$xcconfigService.mergeFiles(tempEntitlementsFilePath, pluginsXcconfigFilePath);
+				await this.$xcconfigService.mergeFiles(tempEntitlementsFilePath, pluginsXcconfigFilePath);
+			}
 		}
 	}
 
@@ -782,7 +806,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		const mergedPlist = plist.parse(this.$fs.readText(mergedPlistPath));
 
 		if (infoPlist.CFBundleIdentifier && infoPlist.CFBundleIdentifier !== mergedPlist.CFBundleIdentifier) {
-			this.$logger.warnWithLabel("The CFBundleIdentifier key inside the 'Info.plist' will be overriden by the 'id' inside 'package.json'.");
+			this.$logger.warn("[WARNING]: The CFBundleIdentifier key inside the 'Info.plist' will be overriden by the 'id' inside 'package.json'.");
 		}
 	}
 }

@@ -13,7 +13,7 @@ export class RunCommandBase implements ICommand {
 		private $errors: IErrors,
 		private $hostInfo: IHostInfo,
 		private $liveSyncCommandHelper: ILiveSyncCommandHelper,
-		private $projectData: IProjectData,
+		private $projectData: IProjectData
 	) { }
 
 	public allowedParameters: ICommandParameter[] = [];

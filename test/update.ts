@@ -51,7 +51,7 @@ function createTestInjector(
 		getInstalledPlatforms: function(): string[] {
 			return installedPlatforms;
 		},
-		getAvailablePlatforms: function(): string[] {
+		getAvailablePlatforms: function (): string[] {
 			return availablePlatforms;
 		},
 		removePlatforms: async (): Promise<void> => undefined,
@@ -66,9 +66,9 @@ function createTestInjector(
 		getPlatformData: () => {
 			return {
 				platformProjectService: {
-						validate
-					}
-				};
+					validate
+				}
+			};
 		}
 	});
 	testInjector.register("settingsService", SettingsService);

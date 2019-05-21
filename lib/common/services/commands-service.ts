@@ -27,16 +27,8 @@ export class CommandsService implements ICommandsService {
 		private $staticConfig: Config.IStaticConfig,
 		private $helpService: IHelpService,
 		private $extensibilityService: IExtensibilityService,
-		private $optionsTracker: IOptionsTracker,
-		private $projectDataService: IProjectDataService) {
-			let projectData = null;
-			try {
-				projectData = this.$projectDataService.getProjectData();
-			} catch (err) {
-				this.$logger.trace(`Error while trying to get project data. More info: ${err}`);
-			}
-
-			this.$options.setupOptions(projectData);
+		private $optionsTracker: IOptionsTracker) {
+			this.$options.setupOptions();
 	}
 
 	public allCommands(opts: { includeDevCommands: boolean }): string[] {

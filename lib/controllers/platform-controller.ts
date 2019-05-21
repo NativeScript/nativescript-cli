@@ -23,14 +23,14 @@ export class PlatformController implements IPlatformController {
 		this.$logger.trace(`Package: ${projectData.projectIdentifiers[platform]}`);
 		this.$logger.trace(`Name: ${projectData.projectName}`);
 
-		this.$logger.out("Copying template files...");
+		this.$logger.info("Copying template files...");
 
 		const packageToInstall = await this.getPackageToInstall(platformData, projectData, addPlatformData.frameworkPath, version);
 
 		const installedPlatformVersion = await this.$addPlatformService.addPlatformSafe(projectData, platformData, packageToInstall, addPlatformData.nativePrepare);
 
 		this.$fs.ensureDirectoryExists(path.join(projectData.platformsDir, platform));
-		this.$logger.out(`Platform ${platform} successfully added. v${installedPlatformVersion}`);
+		this.$logger.info(`Platform ${platform} successfully added. v${installedPlatformVersion}`);
 	}
 
 	public async addPlatformIfNeeded(addPlatformData: IAddPlatformData): Promise<void> {

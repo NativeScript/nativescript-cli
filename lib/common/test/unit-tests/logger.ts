@@ -1,5 +1,5 @@
 import { Yok } from "../../yok";
-import { Logger } from "../../logger";
+import { Logger } from "../../logger/logger";
 import * as path from "path";
 import { assert } from "chai";
 import * as fileSystemFile from "../../file-system";
@@ -45,6 +45,8 @@ describe("logger", () => {
 			}
 		};
 
+		// Initialize the logger manually, so we can overwrite the log4jsLogger property
+		logger.initialize();
 		logger.log4jsLogger = log4jsLogger;
 	});
 

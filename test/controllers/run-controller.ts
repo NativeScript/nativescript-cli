@@ -77,12 +77,6 @@ function createTestInjector() {
 	injector.register("deviceInstallAppService", {
 		installOnDeviceIfNeeded: () => ({})
 	});
-	injector.register("deviceRefreshAppService", {
-		refreshApplication: () => ({})
-	});
-	injector.register("deviceDebugAppService", {
-		enableDebugging: () => ({})
-	});
 	injector.register("iOSLiveSyncService", {
 		fullSync: async () => getFullSyncResult(),
 		liveSyncWatchAction: () => ({})

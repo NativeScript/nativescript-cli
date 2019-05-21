@@ -188,4 +188,14 @@ describe("iOSDeviceDebugService", () => {
 		}
 
 	});
+	describe("validate", () => {
+		it("the OS is neither Windows or macOS and device is iOS", async () => {
+			const testInjector = createTestInjector();
+			const hostInfo = testInjector.resolve("hostInfo");
+			hostInfo.isDarwin = hostInfo.isWindows = false;
+
+			const iOSDeviceDebugService = testInjector.resolve<IOSDeviceDebugServiceInheritor>(IOSDeviceDebugServiceInheritor);
+			assert.isRejected(iOSDeviceDebugService.debug(null, null), "Debugging on iOS devices is not supported for");
+		});
+	});
 });

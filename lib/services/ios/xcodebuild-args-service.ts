@@ -4,6 +4,10 @@ import { Configurations } from "../../common/constants";
 
 const DevicePlatformSdkName = "iphoneos";
 const SimulatorPlatformSdkName = "iphonesimulator";
+enum ProductArgs {
+	target = "target",
+	scheme = "scheme"
+}
 
 export class XcodebuildArgsService implements IXcodebuildArgsService {
 
@@ -11,21 +15,29 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $devicesService: Mobile.IDevicesService,
 		private $fs: IFileSystem,
+		private $iOSWatchAppService: IIOSWatchAppService,
 		private $logger: ILogger
 	) { }
 
 	public async getBuildForSimulatorArgs(platformData: IPlatformData, projectData: IProjectData, buildConfig: IBuildConfig): Promise<string[]> {
 		let args = await this.getArchitecturesArgs(buildConfig);
 
+		let productType: ProductArgs;
+		if (this.$iOSWatchAppService.hasWatchApp(platformData, projectData)) {
+			productType = ProductArgs.scheme;
+			args = args.concat(["-destination", "generic/platform=iOS Simulator", "CODE_SIGNING_ALLOWED=NO"]);
+		} else {
+			args = args.concat(["CODE_SIGN_IDENTITY="]);
+		}
+
 		args = args
 			.concat([
 				"build",
-				"-configuration", buildConfig.release ? Configurations.Release : Configurations.Debug,
-				"CODE_SIGN_IDENTITY="
+				"-configuration", buildConfig.release ? Configurations.Release : Configurations.Debug
 			])
-			.concat(this.getBuildCommonArgs(platformData.projectRoot, SimulatorPlatformSdkName))
+			.concat(this.getBuildCommonArgs(platformData, projectData, SimulatorPlatformSdkName))
 			.concat(this.getBuildLoggingArgs())
-			.concat(this.getXcodeProjectArgs(platformData.projectRoot, projectData));
+			.concat(this.getXcodeProjectArgs(platformData.projectRoot, projectData, productType));
 
 		return args;
 	}
@@ -38,9 +50,9 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 			"-archivePath", archivePath,
 			"-configuration", buildConfig.release ? Configurations.Release : Configurations.Debug
 		]
-			.concat(this.getXcodeProjectArgs(platformData.projectRoot, projectData, "scheme"))
+			.concat(this.getXcodeProjectArgs(platformData.projectRoot, projectData, ProductArgs.scheme))
 			.concat(architectures)
-			.concat(this.getBuildCommonArgs(platformData.projectRoot, DevicePlatformSdkName))
+			.concat(this.getBuildCommonArgs(platformData, projectData, DevicePlatformSdkName))
 			.concat(this.getBuildLoggingArgs());
 
 		return args;
@@ -57,7 +69,7 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 		return args;
 	}
 
-	private getXcodeProjectArgs(projectRoot: string, projectData: IProjectData, product?: "scheme" | "target"): string[] {
+	private getXcodeProjectArgs(projectRoot: string, projectData: IProjectData, product?: ProductArgs): string[] {
 		const xcworkspacePath = path.join(projectRoot, `${projectData.projectName}.xcworkspace`);
 		if (this.$fs.exists(xcworkspacePath)) {
 			return [ "-workspace", xcworkspacePath, "-scheme", projectData.projectName ];
@@ -71,13 +83,18 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 		return this.$logger.getLevel() === "INFO" ? ["-quiet"] : [];
 	}
 
-	private getBuildCommonArgs(projectRoot: string, platformSdkName: string): string[] {
-		const args = [
-			"-sdk", platformSdkName,
-			"BUILD_DIR=" + path.join(projectRoot, constants.BUILD_DIR),
-			'SHARED_PRECOMPS_DIR=' + path.join(projectRoot, 'build', 'sharedpch'),
+	private getBuildCommonArgs(platformData: IPlatformData, projectData: IProjectData, platformSdkName: string): string[] {
+		let args: string[] = [];
+
+		if (!this.$iOSWatchAppService.hasWatchApp(platformData, projectData)) {
+			args = args.concat([ "-sdk", platformSdkName ]);
+		}
+
+		args = args.concat([
+			"BUILD_DIR=" + path.join(platformData.projectRoot, constants.BUILD_DIR),
+			'SHARED_PRECOMPS_DIR=' + path.join(platformData.projectRoot, 'build', 'sharedpch'),
 			'-allowProvisioningUpdates'
-		];
+		]);
 
 		return args;
 	}

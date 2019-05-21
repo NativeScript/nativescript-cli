@@ -1,7 +1,6 @@
 import { cache } from "../common/decorators";
 import { ValidatePlatformCommandBase } from "./command-base";
 import { LiveSyncCommandHelper } from "../helpers/livesync-command-helper";
-import { DeviceDebugAppService } from "../services/device/device-debug-app-service";
 
 export class DebugPlatformCommand extends ValidatePlatformCommandBase implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
@@ -17,7 +16,7 @@ export class DebugPlatformCommand extends ValidatePlatformCommandBase implements
 		protected $logger: ILogger,
 		protected $errors: IErrors,
 		private $debugDataService: IDebugDataService,
-		private $deviceDebugAppService: DeviceDebugAppService,
+		private $debugController: IDebugController,
 		private $liveSyncCommandHelper: ILiveSyncCommandHelper,
 		private $androidBundleValidatorHelper: IAndroidBundleValidatorHelper) {
 		super($options, $platformsDataService, $platformValidationService, $projectData);
@@ -31,8 +30,6 @@ export class DebugPlatformCommand extends ValidatePlatformCommandBase implements
 			skipDeviceDetectionInterval: true
 		});
 
-		const debugOptions = <IDebugOptions>_.cloneDeep(this.$options.argv);
-
 		const selectedDeviceForDebug = await this.$devicesService.pickSingleDevice({
 			onlyEmulators: this.$options.emulator,
 			onlyDevices: this.$options.forDevice,
@@ -42,11 +39,12 @@ export class DebugPlatformCommand extends ValidatePlatformCommandBase implements
 		const debugData = this.$debugDataService.createDebugData(this.$projectData, { device: selectedDeviceForDebug.deviceInfo.identifier });
 
 		if (this.$options.start) {
-			await this.$deviceDebugAppService.printDebugInformation(await this.$debugService.debug(debugData, debugOptions));
+			const debugOptions = <IDebugOptions>_.cloneDeep(this.$options.argv);
+			await this.$debugController.printDebugInformation(await this.$debugService.debug(debugData, debugOptions));
 			return;
 		}
 
-		await this.$liveSyncCommandHelper.executeLiveSyncOperation([selectedDeviceForDebug], this.platform, {
+		await this.$liveSyncCommandHelper.executeLiveSyncOperationWithDebug([selectedDeviceForDebug], this.platform, {
 			deviceDebugMap: {
 				[selectedDeviceForDebug.deviceInfo.identifier]: true
 			},
@@ -68,7 +66,7 @@ export class DebugPlatformCommand extends ValidatePlatformCommandBase implements
 		}
 
 		const minSupportedWebpackVersion = this.$options.hmr ? LiveSyncCommandHelper.MIN_SUPPORTED_WEBPACK_VERSION_WITH_HMR : null;
-		this.$bundleValidatorHelper.validate(minSupportedWebpackVersion);
+		this.$bundleValidatorHelper.validate(this.$projectData, minSupportedWebpackVersion);
 
 		const result = await super.canExecuteCommandBase(this.platform, { validateOptions: true, notConfiguredEnvOptions: { hideCloudBuildOption: true, hideSyncToPreviewAppOption: true } });
 		return result;

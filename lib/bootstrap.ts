@@ -1,5 +1,5 @@
 require("./common/bootstrap");
-$injector.require("logger", "./common/logger");
+$injector.requirePublicClass("logger", "./common/logger/logger");
 $injector.require("config", "./config");
 $injector.require("options", "./options");
 // note: order above is important!
@@ -16,6 +16,7 @@ $injector.require("gradleBuildService", "./services/android/gradle-build-service
 $injector.require("gradleBuildArgsService", "./services/android/gradle-build-args-service");
 $injector.require("iOSEntitlementsService", "./services/ios-entitlements-service");
 $injector.require("iOSExtensionsService", "./services/ios-extensions-service");
+$injector.require("iOSWatchAppService", "./services/ios-watch-app-service");
 $injector.require("iOSProjectService", "./services/ios-project-service");
 $injector.require("iOSProvisionService", "./services/ios-provision-service");
 $injector.require("xcconfigService", "./services/xcconfig-service");
@@ -40,9 +41,7 @@ $injector.require("platformValidationService", "./services/platform/platform-val
 
 $injector.require("buildArtefactsService", "./services/build-artefacts-service");
 
-$injector.require("deviceDebugAppService", "./services/device/device-debug-app-service");
 $injector.require("deviceInstallAppService", "./services/device/device-install-app-service");
-$injector.require("deviceRefreshAppService", "./services/device/device-refresh-app-service");
 
 $injector.require("runEmitter", "./emitters/run-emitter");
 $injector.require("previewAppEmitter", "./emitters/preview-app-emitter");
@@ -52,6 +51,7 @@ $injector.require("prepareController", "./controllers/prepare-controller");
 $injector.require("buildController", "./controllers/build-controller");
 $injector.require("deployController", "./controllers/deploy-controller");
 $injector.require("runController", "./controllers/run-controller");
+$injector.require("debugController", "./controllers/debug-controller");
 $injector.require("previewAppController", "./controllers/preview-app-controller");
 
 $injector.require("prepareDataService", "./services/prepare-data-service");
@@ -134,7 +134,7 @@ $injector.require("xcprojService", "./services/xcproj-service");
 $injector.require("versionsService", "./services/versions-service");
 $injector.requireCommand("install", "./commands/install");
 
-$injector.require("initService", "./services/init-service");
+$injector.require("projectInitService", "./services/project-init-service");
 $injector.requireCommand("init", "./commands/init");
 
 $injector.require("infoService", "./services/info-service");
@@ -221,3 +221,9 @@ $injector.require("networkConnectivityValidator", "./helpers/network-connectivit
 $injector.requirePublic("cleanupService", "./services/cleanup-service");
 
 $injector.require("webpackCompilerService", "./services/webpack/webpack-compiler-service");
+
+$injector.require("applePortalSessionService", "./services/apple-portal/apple-portal-session-service");
+$injector.require("applePortalCookieService", "./services/apple-portal/apple-portal-cookie-service");
+$injector.require("applePortalApplicationService", "./services/apple-portal/apple-portal-application-service");
+
+$injector.requirePublicClass("initializeService", "./services/initialize-service");

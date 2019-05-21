@@ -61,7 +61,7 @@ export class CommandDispatcher implements ICommandDispatcher {
 		if (json && json.buildVersion) {
 			version = `${version}-${json.buildVersion}`;
 		}
-		this.$logger.out(version);
+		this.$logger.info(version);
 	}
 }
 $injector.register("commandDispatcher", CommandDispatcher);

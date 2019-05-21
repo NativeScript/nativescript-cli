@@ -14,8 +14,7 @@ export class UpdateCommand extends ValidatePlatformCommandBase implements IComma
 		$platformValidationService: IPlatformValidationService,
 		private $pluginsService: IPluginsService,
 		$projectData: IProjectData,
-		private $projectDataService: IProjectDataService,
-	) {
+		private $projectDataService: IProjectDataService) {
 		super($options, $platformsDataService, $platformValidationService, $projectData);
 		this.$projectData.initializeProjectData();
 	}

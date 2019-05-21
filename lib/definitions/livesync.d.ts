@@ -468,6 +468,7 @@ declare global {
 		 * @returns {Promise<void>}
 		 */
 		executeLiveSyncOperation(devices: Mobile.IDevice[], platform: string, additionalOptions?: ILiveSyncCommandHelperAdditionalOptions): Promise<void>;
+		executeLiveSyncOperationWithDebug(devices: Mobile.IDevice[], platform: string, additionalOptions?: ILiveSyncCommandHelperAdditionalOptions): Promise<void>;
 		getPlatformsForOperation(platform: string): string[];
 
 		/**
@@ -486,4 +487,7 @@ declare global {
 		executeCommandLiveSync(platform?: string, additionalOptions?: ILiveSyncCommandHelperAdditionalOptions): Promise<void>;
 	}
 
+	interface ILiveSyncServiceResolver {
+		resolveLiveSyncService(platform: string): IPlatformLiveSyncService;
+	}
 }

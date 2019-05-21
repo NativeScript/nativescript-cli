@@ -33,7 +33,7 @@ export abstract class BuildCommandBase extends ValidatePlatformCommandBase {
 			this.$errors.fail(`Applications for platform ${platform} can not be built on this OS`);
 		}
 
-		this.$bundleValidatorHelper.validate();
+		this.$bundleValidatorHelper.validate(this.$projectData);
 	}
 
 	protected async validateArgs(args: string[], platform: string): Promise<ICanExecuteCommandOutput> {
@@ -79,7 +79,7 @@ export class BuildIosCommand extends BuildCommandBase implements ICommand {
 
 		super.validatePlatform(platform);
 
-		let result = await super.canExecuteCommandBase(platform, { notConfiguredEnvOptions: { hideSyncToPreviewAppOption: true }});
+		let result = await super.canExecuteCommandBase(platform, { notConfiguredEnvOptions: { hideSyncToPreviewAppOption: true } });
 		if (result.canExecute) {
 			result = await super.validateArgs(args, platform);
 		}
@@ -123,7 +123,7 @@ export class BuildAndroidCommand extends BuildCommandBase implements ICommand {
 		const platform = this.$devicePlatformsConstants.Android;
 		super.validatePlatform(platform);
 		this.$androidBundleValidatorHelper.validateRuntimeVersion(this.$projectData);
-		let result = await super.canExecuteCommandBase(platform, { notConfiguredEnvOptions: { hideSyncToPreviewAppOption: true }});
+		let result = await super.canExecuteCommandBase(platform, { notConfiguredEnvOptions: { hideSyncToPreviewAppOption: true } });
 		if (result.canExecute) {
 			if (this.$options.release && (!this.$options.keyStorePath || !this.$options.keyStorePassword || !this.$options.keyStoreAlias || !this.$options.keyStoreAliasPassword)) {
 				this.$errors.fail(ANDROID_RELEASE_BUILD_ERROR_MESSAGE);

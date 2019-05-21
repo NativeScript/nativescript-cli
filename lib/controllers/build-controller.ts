@@ -29,7 +29,7 @@ export class BuildController extends EventEmitter implements IBuildController {
 	}
 
 	public async build(buildData: IBuildData): Promise<string> {
-		this.$logger.out("Building project...");
+		this.$logger.info("Building project...");
 
 		const platform = buildData.platform.toLowerCase();
 		const projectData = this.$projectDataService.getProjectData(buildData.projectDir);
@@ -52,20 +52,20 @@ export class BuildController extends EventEmitter implements IBuildController {
 
 		const handler = (data: any) => {
 			this.emit(constants.BUILD_OUTPUT_EVENT_NAME, data);
-			this.$logger.printInfoMessageOnSameLine(data.data.toString());
+			this.$logger.info(data.data.toString(), { [constants.LoggerConfigData.skipNewLine]: true });
 		};
 
 		await attachAwaitDetach(constants.BUILD_OUTPUT_EVENT_NAME, platformData.platformProjectService, handler, platformData.platformProjectService.buildProject(platformData.projectRoot, projectData, buildData));
 
 		const buildInfoFileDir = platformData.getBuildOutputPath(buildData);
-		this.$buildInfoFileService.saveBuildInfoFile(platformData, buildInfoFileDir);
+		this.$buildInfoFileService.saveLocalBuildInfo(platformData, buildInfoFileDir);
 
-		this.$logger.out("Project successfully built.");
+		this.$logger.info("Project successfully built.");
 
-		const result = await this.$buildArtefactsService.getLatestApplicationPackagePath(platformData, buildData);
+		const result = await this.$buildArtefactsService.getLatestAppPackagePath(platformData, buildData);
 
 		if (buildData.copyTo) {
-			this.$buildArtefactsService.copyLastOutput(buildData.copyTo, platformData, buildData);
+			this.$buildArtefactsService.copyLatestAppPackage(buildData.copyTo, platformData, buildData);
 			this.$logger.info(`The build result is located at: ${buildInfoFileDir}`);
 		}
 
@@ -102,13 +102,13 @@ export class BuildController extends EventEmitter implements IBuildController {
 		}
 
 		const validBuildOutputData = platformData.getValidBuildOutputData(buildData);
-		const packages = this.$buildArtefactsService.getAllApplicationPackages(outputPath, validBuildOutputData);
+		const packages = this.$buildArtefactsService.getAllAppPackages(outputPath, validBuildOutputData);
 		if (packages.length === 0) {
 			return true;
 		}
 
 		const prepareInfo = this.$projectChangesService.getPrepareInfo(platformData);
-		const buildInfo = this.$buildInfoFileService.getBuildInfoFromFile(platformData, buildData);
+		const buildInfo = this.$buildInfoFileService.getLocalBuildInfo(platformData, buildData);
 		if (!prepareInfo || !buildInfo) {
 			return true;
 		}

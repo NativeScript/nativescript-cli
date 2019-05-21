@@ -13,7 +13,7 @@ export class ListExtensionsCommand implements ICommand {
 			});
 
 			const table = helpers.createTable(["Name", "Version"], data);
-			this.$logger.out(table.toString());
+			this.$logger.info(table.toString());
 		} else {
 			this.$logger.info("No extensions installed.");
 		}

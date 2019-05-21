@@ -455,16 +455,39 @@ interface IIOSExtensionsService {
 	removeExtensions(options: IRemoveExtensionsOptions): void;
 }
 
-interface IAddExtensionsFromPathOptions{
-	extensionsFolderPath: string;
+/**
+ * Describes a service used to add and remove iOS extension
+ */
+interface IIOSExtensionsService {
+	addExtensionsFromPath(options: IAddExtensionsFromPathOptions): Promise<boolean>;
+	removeExtensions(options: IRemoveExtensionsOptions): void;
+}
+
+interface IIOSWatchAppService {
+	addWatchAppFromPath(options: IAddWatchAppFromPathOptions): Promise<boolean>;
+	removeWatchApp(options: IRemoveWatchAppOptions): void;
+	hasWatchApp(platformData: IPlatformData, projectData: IProjectData): boolean;
+}
+
+interface IAddTargetFromPathOptions {
 	projectData: IProjectData;
 	platformData: IPlatformData;
 	pbxProjPath: string;
 }
 
+interface IAddExtensionsFromPathOptions extends IAddTargetFromPathOptions {
+	extensionsFolderPath: string;
+}
+
+interface IAddWatchAppFromPathOptions extends IAddTargetFromPathOptions {
+	watchAppFolderPath: string;
+}
+
 interface IRemoveExtensionsOptions {
 	pbxProjPath: string
 }
+
+interface IRemoveWatchAppOptions extends IRemoveExtensionsOptions{}
 
 interface IRubyFunction {
 	functionName: string;

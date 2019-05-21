@@ -3,7 +3,7 @@ import * as helpers from "../common/helpers";
 import * as path from "path";
 import * as semver from "semver";
 
-export class InitService implements IInitService {
+export class ProjectInitService implements IProjectInitService {
 	private static MIN_SUPPORTED_FRAMEWORK_VERSIONS: IStringDictionary = {
 		"tns-ios": "1.1.0",
 		"tns-android": "1.1.0",
@@ -75,7 +75,7 @@ export class InitService implements IInitService {
 			throw err;
 		}
 
-		this.$logger.out("Project successfully initialized.");
+		this.$logger.info("Project successfully initialized.");
 	}
 
 	private get projectFilePath(): string {
@@ -108,7 +108,7 @@ export class InitService implements IInitService {
 		}
 
 		const allVersions: any = await this.$packageManager.view(packageName, { "versions": true });
-		const versions = _.filter(allVersions, (v: string) => semver.gte(v, InitService.MIN_SUPPORTED_FRAMEWORK_VERSIONS[packageName]));
+		const versions = _.filter(allVersions, (v: string) => semver.gte(v, ProjectInitService.MIN_SUPPORTED_FRAMEWORK_VERSIONS[packageName]));
 		if (versions.length === 1) {
 			this.$logger.info(`Only ${versions[0]} version is available for ${packageName}.`);
 			return this.buildVersionData(versions[0]);
@@ -122,7 +122,7 @@ export class InitService implements IInitService {
 	private buildVersionData(version: string): IStringDictionary {
 		const result: IStringDictionary = {};
 
-		result[InitService.VERSION_KEY_NAME] = version;
+		result[ProjectInitService.VERSION_KEY_NAME] = version;
 
 		return result;
 	}
@@ -131,4 +131,4 @@ export class InitService implements IInitService {
 		return !helpers.isInteractive() || this.$options.force;
 	}
 }
-$injector.register("initService", InitService);
+$injector.register("projectInitService", ProjectInitService);

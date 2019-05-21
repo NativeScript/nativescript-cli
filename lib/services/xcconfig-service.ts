@@ -1,4 +1,5 @@
 import * as path from "path";
+import { Configurations } from "../common/constants";
 
 export class XcconfigService implements IXcconfigService {
 	constructor(
@@ -6,12 +7,11 @@ export class XcconfigService implements IXcconfigService {
 		private $fs: IFileSystem,
 		private $xcprojService: IXcprojService) { }
 
-	public getPluginsXcconfigFilePath(projectRoot: string, opts: IRelease): string {
-		if (opts && opts.release) {
-			return this.getPluginsReleaseXcconfigFilePath(projectRoot);
-		}
-
-		return this.getPluginsDebugXcconfigFilePath(projectRoot);
+	public getPluginsXcconfigFilePaths(projectRoot: string): IStringDictionary {
+		return {
+			[Configurations.Debug.toLowerCase()]: this.getPluginsDebugXcconfigFilePath(projectRoot),
+			[Configurations.Release.toLowerCase()]: this.getPluginsReleaseXcconfigFilePath(projectRoot)
+		};
 	}
 
 	private getPluginsDebugXcconfigFilePath(projectRoot: string): string {

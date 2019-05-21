@@ -32,7 +32,7 @@ export class PrepareController extends EventEmitter {
 	public async prepare(prepareData: IPrepareData): Promise<IPrepareResultData> {
 		await this.$platformController.addPlatformIfNeeded(prepareData);
 
-		this.$logger.out("Preparing project...");
+		this.$logger.info("Preparing project...");
 		let result = null;
 
 		const projectData = this.$projectDataService.getProjectData(prepareData.projectDir);
@@ -47,7 +47,7 @@ export class PrepareController extends EventEmitter {
 
 		this.$projectChangesService.savePrepareInfo(platformData);
 
-		this.$logger.out(`Project successfully prepared (${prepareData.platform.toLowerCase()})`);
+		this.$logger.info(`Project successfully prepared (${prepareData.platform.toLowerCase()})`);
 
 		return result;
 	}

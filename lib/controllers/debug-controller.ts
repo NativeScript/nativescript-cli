@@ -1,17 +1,50 @@
-import { performanceLog } from "../../common/decorators";
-import { RunEmitter } from "../../emitters/run-emitter";
+import { performanceLog } from "../common/decorators";
 import { EOL } from "os";
+import { RunController } from "./run-controller";
 
-export class DeviceDebugAppService {
+export class DebugController extends RunController implements IDebugController {
+
 	constructor(
+		$analyticsService: IAnalyticsService,
+		$buildDataService: IBuildDataService,
+		$buildController: IBuildController,
 		private $debugDataService: IDebugDataService,
 		private $debugService: IDebugService,
-		private $devicesService: Mobile.IDevicesService,
-		private $errors: IErrors,
-		private $logger: ILogger,
-		private $projectDataService: IProjectDataService,
-		private $runEmitter: RunEmitter
-	) { }
+		$deviceInstallAppService: IDeviceInstallAppService,
+		$devicesService: Mobile.IDevicesService,
+		$errors: IErrors,
+		$hmrStatusService: IHmrStatusService,
+		$hooksService: IHooksService,
+		$liveSyncServiceResolver: ILiveSyncServiceResolver,
+		$logger: ILogger,
+		$platformsDataService: IPlatformsDataService,
+		$pluginsService: IPluginsService,
+		$prepareController: IPrepareController,
+		$prepareDataService: IPrepareDataService,
+		$prepareNativePlatformService: IPrepareNativePlatformService,
+		$projectDataService: IProjectDataService,
+		$runEmitter: IRunEmitter
+	) {
+		super(
+			$analyticsService,
+			$buildDataService,
+			$buildController,
+			$deviceInstallAppService,
+			$devicesService,
+			$errors,
+			$hmrStatusService,
+			$hooksService,
+			$liveSyncServiceResolver,
+			$logger,
+			$platformsDataService,
+			$pluginsService,
+			$prepareController,
+			$prepareDataService,
+			$prepareNativePlatformService,
+			$projectDataService,
+			$runEmitter
+		);
+	}
 
 	@performanceLog()
 	public async enableDebugging(projectData: IProjectData, deviceDescriptor: ILiveSyncDeviceInfo, refreshInfo: IRestartApplicationInfo): Promise<IDebugInformation> {
@@ -64,6 +97,17 @@ export class DeviceDebugAppService {
 		return debugInformation;
 	}
 
+	// IMPORTANT: This method overrides the refresh logic of runController as enables debugging for provided deviceDescriptor
+	public async refreshApplication(projectData: IProjectData, liveSyncResultInfo: ILiveSyncResultInfo, deviceDescriptor: ILiveSyncDeviceInfo): Promise<IRestartApplicationInfo> {
+		liveSyncResultInfo.waitForDebugger = deviceDescriptor.debugOptions && deviceDescriptor.debugOptions.debugBrk;
+
+		const refreshInfo = await super.refreshApplication(projectData, liveSyncResultInfo, deviceDescriptor);
+
+		await this.enableDebugging(projectData, deviceDescriptor, refreshInfo);
+
+		return refreshInfo;
+	}
+
 	@performanceLog()
 	private async enableDebuggingCoreWithoutWaitingCurrentAction(deviceOption: IEnableDebuggingDeviceOptions, deviceDescriptor: ILiveSyncDeviceInfo, debuggingAdditionalOptions: IDebuggingAdditionalOptions): Promise<IDebugInformation> {
 		if (!deviceDescriptor) {
@@ -99,4 +143,4 @@ export class DeviceDebugAppService {
 		return debugInformation;
 	}
 }
-$injector.register("deviceDebugAppService", DeviceDebugAppService);
+$injector.register("debugController", DebugController);

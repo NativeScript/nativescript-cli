@@ -480,6 +480,8 @@ interface IPort {
 interface IPluginSeedOptions {
 	username: string;
 	pluginName: string;
+	includeTypeScriptDemo: string;
+	includeAngularDemo: string;
 }
 
 interface IAndroidBundleOptions {
@@ -515,7 +517,6 @@ interface IOptions extends IRelease, IDeviceIdentifier, IJustLaunch, IAvd, IAvai
 	file: string;
 	analyticsClient: string;
 	force: boolean;
-	companion: boolean;
 	sdk: string;
 	template: string;
 	certificate: string;
@@ -555,8 +556,8 @@ interface IOptions extends IRelease, IDeviceIdentifier, IJustLaunch, IAvd, IAvai
 	link: boolean;
 	analyticsLogFile: string;
 	performance: Object;
-	setupOptions(projectData: IProjectData): void;
 	cleanupLogFile: string;
+	setupOptions(): void;
 }
 
 interface IEnvOptions {
@@ -585,7 +586,7 @@ interface IUpdatePlatformOptions {
 	canUpdate: boolean;
 }
 
-interface IInitService {
+interface IProjectInitService {
 	initialize(): Promise<void>;
 }
 
@@ -608,6 +609,11 @@ interface IITMSData extends ICredentials {
 	 * @type {string}
 	 */
 	ipaFilePath: string;
+
+	/**
+	 * Specify if the service should extract the `.ipa` file into `temp` directory in order to get bundleIdentifier from info.plist
+	 */
+	shouldExtractIpa: boolean;
 	/**
 	 * Specifies whether the logging level of the itmstransporter command-line tool should be set to verbose.
 	 * @type {string}
@@ -625,12 +631,6 @@ interface IITMSTransporterService {
 	 * @return {Promise<void>}
 	 */
 	upload(data: IITMSData): Promise<void>;
-	/**
-	 * Queries Apple's content delivery API to get the user's registered iOS applications.
-	 * @param  {ICredentials}                               credentials Credentials for authentication with iTunes Connect.
-	 * @return {Promise<IItunesConnectApplication[]>}          The user's iOS applications.
-	 */
-	getiOSApplications(credentials: ICredentials): Promise<IiTunesConnectApplication[]>;
 }
 
 /**
@@ -877,12 +877,11 @@ interface IXcprojInfo {
 
 interface IXcconfigService {
 	/**
-	 * Returns the path to the xcconfig file
+	 * Returns the paths to the xcconfig files for build configuration (debug/release)
 	 * @param projectRoot The path to root folder of native project (platforms/ios)
-	 * @param opts
-	 * @returns {string}
+	 * @returns {IStringDictionary}
 	 */
-	getPluginsXcconfigFilePath(projectRoot: string, opts: IRelease): string;
+	getPluginsXcconfigFilePaths(projectRoot: string): IStringDictionary;
 
 	/**
 	 * Returns the value of a property from a xcconfig file.
@@ -911,7 +910,13 @@ interface IBundleValidatorHelper {
 	 * @param {string} minSupportedVersion the minimum supported version of nativescript-dev-webpack
 	 * @return {void}
 	 */
-	validate(minSupportedVersion?: string): void;
+	validate(projectData: IProjectData, minSupportedVersion?: string): void;
+
+	/**
+	 * Returns the installed bundler version.
+	 * @return {string}
+	 */
+	getBundlerDependencyVersion(projectData: IProjectData, bundlerName?: string): string;
 }
 
 
