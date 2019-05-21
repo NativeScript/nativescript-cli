@@ -279,10 +279,7 @@ export class Options {
 			this.argv.js = true;
 		}
 
-		// Default to "nativescript-dev-webpack" if only `--bundle` is passed
-		if (this.argv.bundle !== undefined || this.argv.hmr) {
-			this.argv.bundle = this.argv.bundle || "webpack";
-		}
+		this.argv.bundle = "webpack";
 
 		this.adjustDashedOptions();
 	}
