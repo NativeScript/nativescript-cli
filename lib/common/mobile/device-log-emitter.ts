@@ -4,7 +4,8 @@ import { DEVICE_LOG_EVENT_NAME } from "../constants";
 export class DeviceLogEmitter extends DeviceLogProviderBase {
 	constructor(protected $logFilter: Mobile.ILogFilter,
 		$logger: ILogger,
-		private $loggingLevels: Mobile.ILoggingLevels) {
+		private $loggingLevels: Mobile.ILoggingLevels,
+		private $logSourceMapService: Mobile.ILogSourceMapService) {
 		super($logFilter, $logger);
 	}
 
@@ -12,7 +13,8 @@ export class DeviceLogEmitter extends DeviceLogProviderBase {
 		this.setDefaultLogLevelForDevice(deviceIdentifier);
 
 		const loggingOptions = this.getDeviceLogOptionsForDevice(deviceIdentifier) || { logLevel: this.$loggingLevels.info };
-		const data = this.$logFilter.filterData(platform, line, loggingOptions);
+		let data = this.$logFilter.filterData(platform, line, loggingOptions);
+		data = this.$logSourceMapService.replaceWithOriginalFileLocations(platform, data);
 
 		if (data) {
 			this.emit('data', deviceIdentifier, data);

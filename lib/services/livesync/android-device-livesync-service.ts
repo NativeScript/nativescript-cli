@@ -2,6 +2,8 @@ import { AndroidDeviceLiveSyncServiceBase } from "./android-device-livesync-serv
 import { performanceLog } from "../../common/decorators";
 import * as helpers from "../../common/helpers";
 import { LiveSyncPaths } from "../../common/constants";
+import { ANDROID_DEVICE_APP_ROOT_TEMPLATE } from "../../constants";
+import * as util from "util"
 import * as path from "path";
 import * as net from "net";
 
@@ -28,7 +30,7 @@ export class AndroidDeviceLiveSyncService extends AndroidDeviceLiveSyncServiceBa
 	}
 
 	public async restartApplication(projectData: IProjectData, liveSyncInfo: ILiveSyncResultInfo): Promise<void> {
-		const devicePathRoot = `/data/data/${liveSyncInfo.deviceAppData.appIdentifier}/files`;
+		const devicePathRoot = util.format(ANDROID_DEVICE_APP_ROOT_TEMPLATE, liveSyncInfo.deviceAppData.appIdentifier);
 		const devicePath = this.$mobileHelper.buildDevicePath(devicePathRoot, "code_cache", "secondary_dexes", "proxyThumb");
 		await this.device.adb.executeShellCommand(["rm", "-rf", devicePath]);
 		await this.device.applicationManager.restartApplication({

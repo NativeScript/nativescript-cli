@@ -175,6 +175,7 @@ $injector.requireCommand("post-install-cli", "./commands/post-install");
 $injector.requireCommand("update", "./commands/update");
 
 $injector.require("iOSLogFilter", "./services/ios-log-filter");
+$injector.require("logSourceMapService", "./services/log-source-map-service");
 $injector.require("projectChangesService", "./services/project-changes-service");
 
 $injector.require("pbxprojDomXcode", "./node/pbxproj-dom-xcode");

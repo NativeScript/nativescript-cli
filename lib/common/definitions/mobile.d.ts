@@ -248,6 +248,13 @@ declare module Mobile {
 	}
 
 	/**
+	 * Replaces file paths in device log with their original location
+	 */
+	interface ILogSourceMapService {
+		replaceWithOriginalFileLocations(platform: string, messageData: string): string
+	}
+
+	/**
 	 * Describes filtering logic for specific platform (Android, iOS).
 	 */
 	interface IPlatformLogFilter {
