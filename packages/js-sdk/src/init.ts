@@ -16,6 +16,7 @@ import {
 import { Popup } from './user/mic/popup';
 import { StorageAdapter } from './storage';
 import { KinveyError } from './errors/kinvey';
+import { getDeviceId } from './device';
 
 export interface Config {
   kinveyConfig: KinveyConfig;
@@ -67,7 +68,8 @@ export function init(config: Config) {
     defaultTimeout: getDefaultTimeout(),
     encryptionKey: getEncryptionKey(),
     _appVersion: getAppVersion(),
-    appVersion: getAppVersion()
+    appVersion: getAppVersion(),
+    deviceId: getDeviceId()
   };
 }
 
