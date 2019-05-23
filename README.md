@@ -20,7 +20,7 @@
 
 Get it using: `npm install -g nativescript`
 
-
+t1
 * [What is NativeScript](#what-is-nativescript "Quick overview of NativeScript, the JavaScript framework for cross-platform development of native iOS and Android apps")
 * [How the NativeScript CLI works](#how-the-nativescript-cli-works "How the CLI works in more detail")
 * [Supported Platforms](#supported-platforms "The mobile platforms you can target with NativeScript")
