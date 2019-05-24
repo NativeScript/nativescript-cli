@@ -22,7 +22,7 @@ export function init(config: KinveyConfig) {
     storageAdapter: getStorageAdapter(config.storage),
     pubnub: PubNub
   })
-  return Object.assign({}, kinveyConfig, { storage: config.storage });
+  return Object.assign({}, kinveyConfig, { storage: config.storage, _storage: config.storage });
 }
 
 export function initialize(config: KinveyConfig) {
