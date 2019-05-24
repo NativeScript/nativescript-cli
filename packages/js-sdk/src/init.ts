@@ -74,5 +74,5 @@ export function init(config: Config) {
 }
 
 export function initialize(config: Config) {
-  return init(config);
+  throw new KinveyError('initialize() has been deprecated. Please use init().');
 }
