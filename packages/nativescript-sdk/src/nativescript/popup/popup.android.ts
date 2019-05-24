@@ -11,9 +11,10 @@ import { handleOpenURL, AppURL } from 'nativescript-urlhandler';
 const LOADED_EVENT = 'loaded';
 const CLOSED_EVENT = 'closed';
 const ERROR_EVENT = 'error';
+declare const global;
 
-const androidSupport: any = android.support;
-const customtabs = androidSupport.customtabs || {};
+const customtabsPackage: any = global.androidx && global.androidx.browser ? global.androidx.browser : android.support;
+const customtabs = customtabsPackage.customtabs || {};
 const CustomTabsCallback = customtabs.CustomTabsCallback;
 const CustomTabsServiceConnection = customtabs.CustomTabsServiceConnection;
 const CustomTabsIntent = customtabs.CustomTabsIntent;
