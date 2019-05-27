@@ -23,6 +23,10 @@ const expectedTemplateChoices = [
 	{ key: "SideDrawer", description: "An app with pre-built pages that uses a drawer for navigation" },
 	{ key: "Tabs", description: "An app with pre-built pages that uses tabs for navigation" }
 ];
+const expectedTemplateChoicesVue = [
+	{ key: "Blank", description: "A blank app" },
+	{ key: "SideDrawer", description: "An app with pre-built pages that uses a drawer for navigation" }
+];
 
 class ProjectServiceMock implements IProjectService {
 	async validateProjectName(opts: { projectName: string, force: boolean, pathToProject: string }): Promise<string> {
@@ -92,7 +96,7 @@ describe("Project commands tests", () => {
 		if (opts.templateAnswer) {
 			const templateQuestion = opts.projectNameAnswer ? "Finally" : "Next, which template would you like to start from:";
 			answers[templateQuestion] = opts.templateAnswer;
-			questionChoices[templateQuestion] = expectedTemplateChoices;
+			questionChoices[templateQuestion] = opts.flavorAnswer === constants.VueFlavorName ? expectedTemplateChoicesVue : expectedTemplateChoices;
 		}
 
 		prompterStub.expect({
@@ -207,12 +211,14 @@ describe("Project commands tests", () => {
 			assert.isTrue(createProjectCalledWithForce);
 		});
 
-		it("should select the default vue template when the vue flavor is selected.", async () => {
-			setupAnswers({ flavorAnswer: constants.VueFlavorName });
+		it("should ask for a template when vue flavor is selected.", async () => {
+			setupAnswers({ flavorAnswer: constants.VueFlavorName, templateAnswer:  "SideDrawer" });
 
 			await createProjectCommand.execute(dummyArgs);
 
-			assert.deepEqual(selectedTemplateName, "tns-template-blank-vue");
+			assert.deepEqual(selectedTemplateName, "tns-template-drawer-navigation-vue");
+			assert.equal(validateProjectCallsCount, 1);
+			assert.isTrue(createProjectCalledWithForce);
 		});
 	});
 });
