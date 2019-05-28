@@ -594,7 +594,7 @@ describe('AutoStore', function() {
       const sampleDocs = results.map((result) => result.entity);
 
       // Verify
-      const docs = await networkTypeCollection.find();
+      const docs = await networkTypeCollection.find().toPromise();
       expect(docs.length).to.equal(sampleDocs.length);
       docs.map((doc) => {
         const sampleDoc = sampleDocs.find((sampleDoc) => sampleDoc._id === doc._id);
@@ -620,7 +620,7 @@ describe('AutoStore', function() {
       const sampleDocs = results.map((result) => result.entity);
 
       // Verify
-      const docs = await networkTypeCollection.find();
+      const docs = await networkTypeCollection.find().toPromise();
       expect(docs.length).to.equal(sampleDocs.length);
       docs.map((doc) => {
         const sampleDoc = sampleDocs.find((sampleDoc) => sampleDoc._id === doc._id);
@@ -650,7 +650,7 @@ describe('AutoStore', function() {
       sampleDocs.push(results[0].entity);
 
       // Verify
-      const docs = await networkTypeCollection.find();
+      const docs = await networkTypeCollection.find().toPromise();
       expect(docs.length).to.equal(sampleDocs.length);
       docs.map((doc) => {
         const sampleDoc = sampleDocs.find((sampleDoc) => sampleDoc._id === doc._id);
@@ -681,7 +681,7 @@ describe('AutoStore', function() {
       await autoTypeCollection.push();
 
       // Verify
-      const docs = await networkTypeCollection.find();
+      const docs = await networkTypeCollection.find().toPromise();
       expect(docs.length).to.equal(sampleDocs.length);
       docs.map((doc) => {
         const sampleDoc = sampleDocs.find((sampleDoc) => sampleDoc._id === doc._id);
@@ -714,7 +714,7 @@ describe('AutoStore', function() {
       sampleDocs = results.map((result) => result.entity);
 
       // Verify
-      const docs = await networkTypeCollection.find();
+      const docs = await networkTypeCollection.find().toPromise();
       expect(docs.length).to.equal(sampleDocs.length);
       docs.map((doc) => {
         const sampleDoc = sampleDocs.find((sampleDoc) => sampleDoc._id === doc._id);
@@ -782,7 +782,7 @@ describe('AutoStore', function() {
       });
 
       // Find NetworkStore
-      const networkDocs = await networkTypeCollection.find();
+      const networkDocs = await networkTypeCollection.find().toPromise();
       expect(networkDocs.length).to.equal(sampleDocs.length);
       networkDocs.map((doc) => {
         const sampleDoc = sampleDocs.find((sampleDoc) => sampleDoc._id === doc._id);
@@ -859,7 +859,7 @@ describe('AutoStore', function() {
       expect(syncDocs.length).to.equal(0);
 
       // Find NetworkStore
-      const networkDocs = await networkTypeCollection.find();
+      const networkDocs = await networkTypeCollection.find().toPromise();
       expect(networkDocs.length).to.equal(sampleDocs.length);
       networkDocs.map((doc) => {
         const sampleDoc = sampleDocs.find((sampleDoc) => sampleDoc._id === doc._id);
@@ -885,7 +885,7 @@ describe('AutoStore', function() {
       const doc = await autoTypeCollection.create({});
 
       // Find with Network
-      expect(await networkTypeCollection.findById(doc._id)).to.deep.equal(doc);
+      expect(await networkTypeCollection.findById(doc._id).toPromise()).to.deep.equal(doc);
     });
 
     it('should create an item using _id provided', async function() {
@@ -896,7 +896,7 @@ describe('AutoStore', function() {
       const doc = await autoTypeCollection.create({ _id: randomString() });
 
       // Find with Network
-      expect(await networkTypeCollection.findById(doc._id)).to.deep.equal(doc);
+      expect(await networkTypeCollection.findById(doc._id).toPromise()).to.deep.equal(doc);
     });
 
     it.skip('should update an item with existing _id', async function() {
@@ -908,7 +908,7 @@ describe('AutoStore', function() {
       doc = await autoTypeCollection.create(Object.assign({}, doc, { foo: 'bar' }));
 
       // Find with Network
-      expect(await networkTypeCollection.findById(doc._id)).to.deep.equal(doc);
+      expect(await networkTypeCollection.findById(doc._id).toPromise()).to.deep.equal(doc);
     });
 
     it('should save locally the item if connectivity error occurs');
@@ -953,7 +953,7 @@ describe('AutoStore', function() {
       expect(await syncTypeCollection.findById(doc._id).toPromise()).to.deep.equal(doc);
 
       // Find with Network
-      expect(await networkTypeCollection.findById(doc._id)).to.deep.equal(doc);
+      expect(await networkTypeCollection.findById(doc._id).toPromise()).to.deep.equal(doc);
     });
 
     it('should update an item with existing _id', async function() {
@@ -990,7 +990,7 @@ describe('AutoStore', function() {
       doc = await taggedAutoTypeCollection.update(Object.assign({}, doc, { foo: 'bar' }));
 
       // Find with Network
-      expect(await networkTypeCollection.find()).to.deep.equal([doc]);
+      expect(await networkTypeCollection.find().toPromise()).to.deep.equal([doc]);
 
       // Find with tagged Sync
       expect(await taggedSyncTypeCollection.find().toPromise()).to.deep.equal([doc]);
@@ -1021,7 +1021,7 @@ describe('AutoStore', function() {
       expect(await autoTypeCollection.remove(query)).to.deep.equal({ count: 2 });
 
       // Find with Network
-      expect(await networkTypeCollection.find()).to.deep.equal([sampleDocs[2]]);
+      expect(await networkTypeCollection.find().toPromise()).to.deep.equal([sampleDocs[2]]);
 
       // Find with Sync
       expect(await syncTypeCollection.find().toPromise()).to.deep.equal([sampleDocs[2]]);
@@ -1050,7 +1050,7 @@ describe('AutoStore', function() {
 
       // Find with Network
       try {
-        await networkTypeCollection.findById(sampleDocs[0]._id);
+        await networkTypeCollection.findById(sampleDocs[0]._id).toPromise();
         throw new Error('This test should fail');
       } catch (error) {
         expect(error).to.be.instanceOf(Errors.NotFoundError);
@@ -1077,7 +1077,7 @@ describe('AutoStore', function() {
       expect(await autoTypeCollection.remove(query)).to.deep.equal({ count: 0 });
 
       // Find with Network
-      expect(await networkTypeCollection.find()).to.deep.equal(sampleDocs);
+      expect(await networkTypeCollection.find().toPromise()).to.deep.equal(sampleDocs);
 
       // Find with Sync
       expect(await syncTypeCollection.find().toPromise()).to.deep.equal(sampleDocs);
