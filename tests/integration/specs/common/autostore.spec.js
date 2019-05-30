@@ -790,7 +790,7 @@ describe('AutoStore', function() {
       });
     });
 
-    it.only('should push all items with a query and pull only the items conforming to that query', async function() {
+    it('should push all items with a query and pull only the items conforming to that query', async function() {
       const autoTypeCollection = DataStore.collection(collectionName, DataStoreType.Auto);
       const syncTypeCollection = DataStore.collection(collectionName, DataStoreType.Sync);
       const networkTypeCollection = DataStore.collection(collectionName, DataStoreType.Network);
