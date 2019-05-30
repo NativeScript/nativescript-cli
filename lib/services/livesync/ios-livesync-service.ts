@@ -62,7 +62,7 @@ export class IOSLiveSyncService extends PlatformLiveSyncServiceBase implements I
 			return this.fullSync({
 				projectData: liveSyncInfo.projectData,
 				device,
-				liveSyncDeviceInfo: liveSyncInfo.liveSyncDeviceInfo,
+				liveSyncDeviceData: liveSyncInfo.liveSyncDeviceData,
 				watch: true,
 				useHotModuleReload: liveSyncInfo.useHotModuleReload
 			});

@@ -29,7 +29,7 @@ export abstract class DeviceLiveSyncServiceBase {
 	}
 
 	@performanceLog()
-	public async transferFiles(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], projectFilesPath: string, projectData: IProjectData, liveSyncDeviceInfo: ILiveSyncDeviceInfo, options: ITransferFilesOptions): Promise<Mobile.ILocalToDevicePathData[]> {
+	public async transferFiles(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], projectFilesPath: string, projectData: IProjectData, liveSyncDeviceDescriptor: ILiveSyncDeviceDescriptor, options: ITransferFilesOptions): Promise<Mobile.ILocalToDevicePathData[]> {
 		let transferredFiles: Mobile.ILocalToDevicePathData[] = [];
 
 		if (options.isFullSync) {

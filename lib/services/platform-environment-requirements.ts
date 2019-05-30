@@ -11,8 +11,12 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 		private $prompter: IPrompter,
 		private $staticConfig: IStaticConfig,
 		private $analyticsService: IAnalyticsService,
-		// private $previewAppLiveSyncService: IPreviewAppLiveSyncService,
+		private $injector: IInjector,
 		private $previewQrCodeService: IPreviewQrCodeService) { }
+
+	public get $previewAppController(): IPreviewAppController {
+		return this.$injector.resolve("previewAppController");
+	}
 
 	public static CLOUD_SETUP_OPTION_NAME = "Configure for Cloud Builds";
 	public static LOCAL_SETUP_OPTION_NAME = "Configure for Local Builds";
@@ -175,12 +179,11 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 				this.$errors.failWithoutHelp(`No project found. In order to sync to playground you need to go to project directory or specify --path option.`);
 			}
 
-			// await this.$previewAppLiveSyncService.initialize({
-			// 	projectDir,
-			// 	env: options.env,
-			// 	useHotModuleReload: options.hmr,
-			// 	bundle: true
-			// });
+			await this.$previewAppController.startPreview({
+				projectDir,
+				env: options.env,
+				useHotModuleReload: options.hmr,
+			});
 
 			await this.$previewQrCodeService.printLiveSyncQrCode({ projectDir, useHotModuleReload: options.hmr, link: options.link });
 		}

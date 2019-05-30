@@ -8,10 +8,10 @@ export class DeployController {
 	) { }
 
 	public async deploy(data: IRunData): Promise<void> {
-		const { projectDir, liveSyncInfo, deviceDescriptors } = data;
+		const { liveSyncInfo, deviceDescriptors } = data;
 
 		const executeAction = async (device: Mobile.IDevice) => {
-			const buildData = this.$buildDataService.getBuildData(projectDir, device.deviceInfo.platform, liveSyncInfo);
+			const buildData = this.$buildDataService.getBuildData(liveSyncInfo.projectDir, device.deviceInfo.platform, liveSyncInfo);
 			await this.$buildController.prepareAndBuild(buildData);
 			await this.$deviceInstallAppService.installOnDevice(device, buildData);
 		};

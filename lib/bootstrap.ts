@@ -43,24 +43,21 @@ $injector.require("buildArtefactsService", "./services/build-artefacts-service")
 
 $injector.require("deviceInstallAppService", "./services/device/device-install-app-service");
 
-$injector.require("runEmitter", "./emitters/run-emitter");
-$injector.require("previewAppEmitter", "./emitters/preview-app-emitter");
-
 $injector.require("platformController", "./controllers/platform-controller");
 $injector.require("prepareController", "./controllers/prepare-controller");
-$injector.require("buildController", "./controllers/build-controller");
 $injector.require("deployController", "./controllers/deploy-controller");
-$injector.require("runController", "./controllers/run-controller");
-$injector.require("debugController", "./controllers/debug-controller");
-$injector.require("previewAppController", "./controllers/preview-app-controller");
+$injector.requirePublicClass("buildController", "./controllers/build-controller");
+$injector.requirePublicClass("runController", "./controllers/run-controller");
+$injector.requirePublicClass("debugController", "./controllers/debug-controller");
+$injector.requirePublicClass("previewAppController", "./controllers/preview-app-controller");
 
 $injector.require("prepareDataService", "./services/prepare-data-service");
 $injector.require("buildDataService", "./services/build-data-service");
 
 $injector.require("liveSyncServiceResolver", "./resolvers/livesync-service-resolver");
 
+$injector.require("liveSyncProcessDataService", "./services/livesync-process-data-service");
 $injector.require("debugDataService", "./services/debug-data-service");
-$injector.requirePublicClass("debugService", "./services/debug-service");
 $injector.require("iOSDeviceDebugService", "./services/ios-device-debug-service");
 $injector.require("androidDeviceDebugService", "./services/android-device-debug-service");
 
@@ -162,7 +159,6 @@ $injector.require("androidLiveSyncService", "./services/livesync/android-livesyn
 $injector.require("iOSLiveSyncService", "./services/livesync/ios-livesync-service");
 $injector.require("usbLiveSyncService", "./services/livesync/livesync-service"); // The name is used in https://github.com/NativeScript/nativescript-dev-typescript
 $injector.require("previewAppFilesService", "./services/livesync/playground/preview-app-files-service");
-$injector.require("previewAppLiveSyncService", "./services/livesync/playground/preview-app-livesync-service");
 $injector.require("previewAppLogProvider", "./services/livesync/playground/preview-app-log-provider");
 $injector.require("previewAppPluginsService", "./services/livesync/playground/preview-app-plugins-service");
 $injector.require("previewSdkService", "./services/livesync/playground/preview-sdk-service");
