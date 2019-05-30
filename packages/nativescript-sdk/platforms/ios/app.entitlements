@@ -6,7 +6,5 @@
     <array>
         <string>$(AppIdentifierPrefix)$(PRODUCT_BUNDLE_IDENTIFIER)</string>
     </array>
-    <key>aps-environment</key>
-	<string>development</string>
 </dict>
 </plist>
