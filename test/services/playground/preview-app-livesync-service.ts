@@ -10,7 +10,6 @@ import { PreviewAppFilesService } from "../../../lib/services/livesync/playgroun
 import { PREPARE_READY_EVENT_NAME } from "../../../lib/constants";
 import { PrepareData } from "../../../lib/data/prepare-data";
 import { PreviewAppController } from "../../../lib/controllers/preview-app-controller";
-import { PreviewAppEmitter } from "../../../lib/emitters/preview-app-emitter";
 import { PrepareDataService } from "../../../lib/services/prepare-data-service";
 import { MobileHelper } from "../../../lib/common/mobile/mobile-helper";
 import { DevicePlatformsConstants } from "../../../lib/common/mobile/device-platforms-constants";
@@ -142,10 +141,6 @@ function createTestInjector(options?: {
 		getExternalPlugins: () => <string[]>[]
 	});
 	injector.register("projectFilesManager", ProjectFilesManager);
-	injector.register("previewAppLiveSyncService", {
-		syncFilesForPlatformSafe: () => ({})
-	});
-	injector.register("previewAppEmitter", PreviewAppEmitter);
 	injector.register("previewAppController", PreviewAppController);
 	injector.register("prepareController", PrepareControllerMock);
 	injector.register("prepareDataService", PrepareDataService);
@@ -178,6 +173,10 @@ function createTestInjector(options?: {
 		getConnectedDevices: () => [deviceMockData]
 	});
 	injector.register("previewAppFilesService", PreviewAppFilesService);
+	injector.register("previewQrCodeService", {
+		getQrCodeUrl: () => ({}),
+		getLiveSyncQrCode: () => ({})
+	});
 	injector.register("analyticsService", {
 		trackEventActionInGoogleAnalytics: () => ({})
 	});
@@ -206,7 +205,7 @@ async function initialSync(input?: IActInput) {
 	const { previewAppController, previewSdkService, actOptions } = input;
 	const syncFilesData = _.cloneDeep(syncFilesMockData);
 	syncFilesData.useHotModuleReload = actOptions.hmr;
-	await previewAppController.preview(syncFilesData);
+	await previewAppController.startPreview(syncFilesData);
 	if (actOptions.callGetInitialFiles) {
 		await previewSdkService.getInitialFiles(deviceMockData);
 	}
@@ -219,7 +218,7 @@ async function syncFiles(input?: IActInput) {
 
 	const syncFilesData = _.cloneDeep(syncFilesMockData);
 	syncFilesData.useHotModuleReload = actOptions.hmr;
-	await previewAppController.preview(syncFilesData);
+	await previewAppController.startPreview(syncFilesData);
 	if (actOptions.callGetInitialFiles) {
 		await previewSdkService.getInitialFiles(deviceMockData);
 	}

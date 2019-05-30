@@ -23,13 +23,14 @@ describe("nativescript-cli-lib", () => {
 			"getIOSAssetsStructure",
 			"getAndroidAssetsStructure"
 		],
-		// localBuildService: ["build"],
+		buildController: ["build"],
 		constants: ["CONFIG_NS_APP_RESOURCES_ENTRY", "CONFIG_NS_APP_ENTRY", "CONFIG_NS_FILE_NAME", "LoggerLevel", "LoggerAppenders"],
 		deviceLogProvider: null,
 		packageManager: ["install", "uninstall", "view", "search"],
 		extensibilityService: ["loadExtensions", "loadExtension", "getInstalledExtensions", "installExtension", "uninstallExtension"],
-		// liveSyncService: ["liveSync", "stopLiveSync", "enableDebugging", "disableDebugging", "attachDebugger"],
-		debugService: ["debug"],
+		runController: ["run", "stop"],
+		debugController: ["enableDebugging", "disableDebugging", "attachDebugger"],
+		previewAppController: ["startPreview", "stopPreview"],
 		analyticsSettingsService: ["getClientId"],
 		devicesService: [
 			"addDeviceDiscovery",
