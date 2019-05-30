@@ -790,7 +790,7 @@ describe('AutoStore', function() {
       });
     });
 
-    it('should push all items with a query and pull only the items conforming to that query', async function() {
+    it.only('should push all items with a query and pull only the items conforming to that query', async function() {
       const autoTypeCollection = DataStore.collection(collectionName, DataStoreType.Auto);
       const syncTypeCollection = DataStore.collection(collectionName, DataStoreType.Sync);
       const networkTypeCollection = DataStore.collection(collectionName, DataStoreType.Network);
@@ -811,14 +811,15 @@ describe('AutoStore', function() {
       const { push, pull } = await autoTypeCollection.sync(query);
       expect(push.length).to.equal(syncSampleDocs.length);
       expect(pull).to.equal(3);
+      const sampleDocs = networkSampleDocs.concat(push.map((result) => result.entity));
 
-      // TODO: Find SyncStore
-      // const syncDocs = await syncTypeCollection.find(query);
-      // expect(syncDocs.length).to.equal(3);
-      // syncDocs.map((doc) => {
-      //   const sampleDoc = sampleDocs.find((sampleDoc) => sampleDoc._id === doc._id);
-      //   expect(doc).to.deep.equal(sampleDoc);
-      // });
+      // Find SyncStore
+      const syncDocs = await syncTypeCollection.find(query).toPromise();
+      expect(syncDocs.length).to.equal(3);
+      syncDocs.map((doc) => {
+        const sampleDoc = sampleDocs.find((sampleDoc) => sampleDoc._id === doc._id);
+        expect(doc).to.deep.equal(sampleDoc);
+      });
     });
 
     it('should return error if there is network connectivity for the push request and save the sync queue');
