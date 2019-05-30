@@ -201,7 +201,7 @@ export function createSampleCollectionData(collectionName, count = 1, propertyNa
 export async function cleanUpCollectionData(collectionName) {
   const networkStore = Kinvey.DataStore.collection(collectionName, Kinvey.DataStoreType.Network);
   const syncStore = Kinvey.DataStore.collection(collectionName, Kinvey.DataStoreType.Sync);
-  const entities = await networkStore.find();
+  const entities = await networkStore.find().toPromise();
 
   if (entities && entities.length > 0) {
     const query = new Kinvey.Query();

@@ -256,8 +256,12 @@ export class NetworkStore {
     return this.create(doc, options);
   }
 
-  async remove(query?: Query, options: any = {}) {
-    if (query && !(query instanceof Query)) {
+  async remove(query: Query, options: any = {}) {
+    if (!query) {
+      throw new KinveyError('A query must be provided to remove entities.');
+    }
+
+    if (!(query instanceof Query)) {
       throw new KinveyError('Invalid query. It must be an instance of the Query class.');
     }
 
@@ -268,7 +272,7 @@ export class NetworkStore {
       trace,
       skipBL
     } = options;
-    const queryObject = Object.assign({}, query ? query.toQueryObject() : {}, {});
+    const queryObject = Object.assign({}, query ? query.toQueryObject() : {});
     const url = formatKinveyBaasUrl(KinveyBaasNamespace.AppData, this.pathname, queryObject);
     const request = createRequest(HttpRequestMethod.DELETE, url);
     request.headers.setCustomRequestProperties(properties);

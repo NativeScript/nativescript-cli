@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import isArray from 'lodash/isArray';
 import { init, DataStore, DataStoreType, User, Query, Errors } from '__SDK__';
 import { collectionName, deltaCollectionName } from '../config';
-import { randomString, createSampleCollectionData, cleanUpCollectionData } from '../utils';
+import { randomString, createSampleCollectionData, cleanUpAppData } from '../utils';
 
 describe('AutoStore', function() {
   before(function() {
@@ -14,28 +14,29 @@ describe('AutoStore', function() {
     });
   });
 
-  before(function() {
+  beforeEach(function() {
     // Signup an anonymous user
     return User.signup();
   });
 
+  // afterEach(function () {
+  //   // Remove the active user
+  //   const activeUser = User.getActiveUser();
+  //   if (activeUser) {
+  //     return User.remove(activeUser._id, { hard: true });
+  //   }
+  //   return null;
+  // });
+
   afterEach(function() {
     // Clean up sample data
-    return cleanUpCollectionData(collectionName);
+    const activeUser = User.getActiveUser();
+    return cleanUpAppData(collectionName, [activeUser._id]);
   });
 
   afterEach(function () {
     // Clean up sample data
-    return cleanUpCollectionData(deltaCollectionName);
-  });
-
-  after(function() {
-    // Remove the active user
-    const activeUser = User.getActiveUser();
-    if (activeUser) {
-      return User.remove(activeUser._id, { hard: true });
-    }
-    return null;
+    return cleanUpAppData(deltaCollectionName);
   });
 
   describe('Find', function() {
@@ -525,7 +526,7 @@ describe('AutoStore', function() {
     });
 
     it('should use autopagination when turned on', async function() {
-      const autoTypeCollection = DataStore.collection(collectionName, DataStoreType.Auto, { useAutoPagination: true });
+      const autoTypeCollection = DataStore.collection(collectionName, DataStoreType.Auto, { useAutoPagination: { pageZie: 2 } });
       const syncTypeCollection = DataStore.collection(collectionName, DataStoreType.Sync);
 
       // Create sample data
@@ -533,7 +534,6 @@ describe('AutoStore', function() {
 
       // Create a query
       const query = new Query();
-      query.limit = 2;
 
       // Verify
       expect(await autoTypeCollection.pull(query)).to.equal(sampleDocs.length);
@@ -673,9 +673,9 @@ describe('AutoStore', function() {
 
       // Remove docs
       const removedDoc1 = sampleDocs.shift();
-      await networkTypeCollection.removeById(removedDoc1._id);
+      await syncTypeCollection.removeById(removedDoc1._id);
       const removedDoc2 = sampleDocs.shift();
-      await networkTypeCollection.removeById(removedDoc2._id);
+      await syncTypeCollection.removeById(removedDoc2._id);
 
       // Push
       await autoTypeCollection.push();
@@ -893,10 +893,11 @@ describe('AutoStore', function() {
       const networkTypeCollection = DataStore.collection(collectionName, DataStoreType.Network);
 
       // Create a doc
-      const doc = await autoTypeCollection.create({ _id: randomString() });
+      const id = randomString();
+      const doc = await autoTypeCollection.create({ _id: id });
 
       // Find with Network
-      expect(await networkTypeCollection.findById(doc._id).toPromise()).to.deep.equal(doc);
+      expect(await networkTypeCollection.findById(id).toPromise()).to.deep.equal(doc);
     });
 
     it.skip('should update an item with existing _id', async function() {
@@ -947,13 +948,14 @@ describe('AutoStore', function() {
       const networkTypeCollection = DataStore.collection(collectionName, DataStoreType.Network);
 
       // Update a doc
-      const doc = await autoTypeCollection.update({ _id: randomString() });
+      const id = randomString();
+      const doc = await autoTypeCollection.update({ _id: id });
 
       // Find with Sync
-      expect(await syncTypeCollection.findById(doc._id).toPromise()).to.deep.equal(doc);
+      expect(await syncTypeCollection.findById(id).toPromise()).to.deep.equal(doc);
 
       // Find with Network
-      expect(await networkTypeCollection.findById(doc._id).toPromise()).to.deep.equal(doc);
+      expect(await networkTypeCollection.findById(id).toPromise()).to.deep.equal(doc);
     });
 
     it('should update an item with existing _id', async function() {
@@ -969,7 +971,7 @@ describe('AutoStore', function() {
       expect(await syncTypeCollection.findById(doc._id).toPromise()).to.deep.equal(doc);
 
       // Find with Network
-      expect(await networkTypeCollection.findById(doc._id)).to.deep.equal(doc);
+      expect(await networkTypeCollection.findById(doc._id).toPromise()).to.deep.equal(doc);
     });
 
     it('should save locally the item if connectivity error occurs');
@@ -1117,7 +1119,7 @@ describe('AutoStore', function() {
       }
     });
 
-    it.skip('should delete items with tagged store', async function() {
+    it('should delete items with tagged store', async function() {
       const tag = randomString();
       const taggedAutoTypeCollection = DataStore.collection(collectionName, DataStoreType.Auto, { tag });
       const autoTypeCollection = DataStore.collection(collectionName, DataStoreType.Auto);
@@ -1129,17 +1131,18 @@ describe('AutoStore', function() {
       const taggedDoc = await taggedAutoTypeCollection.create({ [propertyName]: randomString() });
       const doc = await autoTypeCollection.create({ [propertyName]: randomString() });
 
-      // // Find with tagged Sync
-      // expect(await taggedSyncTypeCollection.find().toPromise()).to.deep.equal([taggedDoc]);
+      // Find with tagged Sync
+      expect(await taggedSyncTypeCollection.find().toPromise()).to.deep.equal([taggedDoc]);
 
       // Remove with Auto
-      expect(await taggedAutoTypeCollection.remove()).to.deep.equal({ count: 1 });
+      const query = new Query().equalTo('_id', taggedDoc._id);
+      expect(await taggedAutoTypeCollection.remove(query)).to.deep.equal({ count: 1 });
 
-      // // Find with tagged Sync
-      // expect(await taggedSyncTypeCollection.find().toPromise()).to.deep.equal([]);
+      // Find with tagged Sync
+      expect(await taggedSyncTypeCollection.find().toPromise()).to.deep.equal([]);
 
-      // // Find with Sync
-      // expect(await syncTypeCollection.find().toPromise()).to.deep.equal([doc]);
+      // Find with Sync
+      expect(await syncTypeCollection.find().toPromise()).to.deep.equal([doc]);
     });
   });
 

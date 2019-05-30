@@ -37,7 +37,7 @@ export class AutoStore extends CacheStore {
 
     try {
       const network = new NetworkStore(this.collectionName);
-      const count = await network.count(query, options);
+      const count = await network.count(query, options).toPromise();
       return count;
     } catch (error) {
       if (error instanceof NetworkError) {
@@ -56,7 +56,7 @@ export class AutoStore extends CacheStore {
 
     try {
       const network = new NetworkStore(this.collectionName);
-      const result = await network.group(aggregation, options);
+      const result = await network.group(aggregation, options).toPromise();
       return result;
     } catch (error) {
       if (error instanceof NetworkError) {
