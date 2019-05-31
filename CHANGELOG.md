@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [4.1.0](https://github.com/Kinvey/js-sdk/tree/v4.1.0) (2019-05-31)
+[Full Changelog](https://github.com/Kinvey/js-sdk/compare/v4.0.0...v4.1.0)<br/>
+
+#### Bugs
+- `init()` returns some missing properties that were returned in v3.x. [#411](https://github.com/Kinvey/js-sdk/pull/411)
+
+#### Enhancements
+- Add `Auto` datastore type. This new datastore type prioritzes using the network first. If a network connection is not available then it will fall back to using the local cache until a network connection is re-established. [#409](https://github.com/Kinvey/js-sdk/pull/409)
+
+#### Breaking Changes
+- We have removed the necessary configuration needed to make push notifications work on NativeScript iOS. This should be added manually on a as needed basis by following the [NativeScript Firebase plugin setup guide](https://github.com/EddyVerbruggen/nativescript-plugin-firebase/blob/master/docs/NON_FIREBASE_MESSAGING.md#setup). [#413](https://github.com/Kinvey/js-sdk/pull/413)
+
+#### Deprecations
+- We have deprecated the `Cache` datastore type. You should now use the `Auto` datastore type to instead.
+- We have deprecated the use of `initialize()` to initialize the SDK. You should use `init()` instead.
+
 ## [3.12.4](https://github.com/Kinvey/js-sdk/tree/v3.12.4) (2019-02-12)
 [Full Changelog](https://github.com/Kinvey/js-sdk/compare/v3.12.3...v3.12.4)<br/>
 
