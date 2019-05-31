@@ -83,7 +83,7 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 
 				const buildAction = additionalOptions && additionalOptions.buildPlatform ?
 					additionalOptions.buildPlatform.bind(additionalOptions.buildPlatform, d.deviceInfo.platform, buildConfig, this.$projectData) :
-					this.$buildController.prepareAndBuild.bind(this.$buildController, buildData);
+					this.$buildController.build.bind(this.$buildController, buildData);
 
 				const outputPath = additionalOptions && additionalOptions.getOutputDirectory && additionalOptions.getOutputDirectory({
 					platform: d.deviceInfo.platform,
