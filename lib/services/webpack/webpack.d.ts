@@ -35,10 +35,6 @@ declare global {
 		hasNativeChanges: boolean;
 	}
 
-	interface IDeviceRestartApplicationService {
-		restartOnDevice(deviceDescriptor: ILiveSyncDeviceInfo, projectData: IProjectData, liveSyncResultInfo: ILiveSyncResultInfo, platformLiveSyncService: IPlatformLiveSyncService): Promise<IRestartApplicationInfo | IDebugInformation>;
-	}
-
 	interface IPlatformProjectService extends NodeJS.EventEmitter, IPlatformProjectServiceBase {
 		getPlatformData(projectData: IProjectData): IPlatformData;
 		validate(projectData: IProjectData, options: IOptions, notConfiguredEnvOptions?: INotConfiguredEnvOptions): Promise<IValidatePlatformOutput>;

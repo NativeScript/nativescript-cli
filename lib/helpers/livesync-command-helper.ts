@@ -1,5 +1,4 @@
 import { RunOnDeviceEvents } from "../constants";
-import { RunEmitter } from "../emitters/run-emitter";
 import { DeployController } from "../controllers/deploy-controller";
 
 export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
@@ -9,7 +8,6 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 		private $buildDataService: IBuildDataService,
 		private $projectData: IProjectData,
 		private $options: IOptions,
-		private $runEmitter: RunEmitter,
 		private $deployController: DeployController,
 		private $iosDeviceOperations: IIOSDeviceOperations,
 		private $mobileHelper: Mobile.IMobileHelper,
@@ -21,12 +19,28 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 		private $errors: IErrors,
 		private $iOSSimulatorLogProvider: Mobile.IiOSSimulatorLogProvider,
 		private $cleanupService: ICleanupService,
-		private $debugController: IDebugController,
 		private $runController: IRunController
 	) { }
 
 	private get $platformsDataService(): IPlatformsDataService {
 		return this.$injector.resolve("platformsDataService");
+	}
+
+	// TODO: Remove this and replace it with buildData
+	public getLiveSyncData(projectDir: string): ILiveSyncInfo {
+		const liveSyncInfo: ILiveSyncInfo = {
+			projectDir,
+			skipWatcher: !this.$options.watch || this.$options.justlaunch,
+			clean: this.$options.clean,
+			release: this.$options.release,
+			env: this.$options.env,
+			timeout: this.$options.timeout,
+			useHotModuleReload: this.$options.hmr,
+			force: this.$options.force,
+			emulator: this.$options.emulator
+		};
+
+		return liveSyncInfo;
 	}
 
 	public async getDeviceInstances(platform?: string): Promise<Mobile.IDevice[]> {
@@ -44,25 +58,9 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 		return devices;
 	}
 
-	public createLiveSyncInfo(): ILiveSyncInfo {
-		const liveSyncInfo: ILiveSyncInfo = {
-			projectDir: this.$projectData.projectDir,
-			skipWatcher: !this.$options.watch || this.$options.justlaunch,
-			clean: this.$options.clean,
-			release: this.$options.release,
-			env: this.$options.env,
-			timeout: this.$options.timeout,
-			useHotModuleReload: this.$options.hmr,
-			force: this.$options.force,
-			emulator: this.$options.emulator
-		};
-
-		return liveSyncInfo;
-	}
-
-	public async createDeviceDescriptors(devices: Mobile.IDevice[], platform: string, additionalOptions?: ILiveSyncCommandHelperAdditionalOptions): Promise<ILiveSyncDeviceInfo[]> {
+	public async createDeviceDescriptors(devices: Mobile.IDevice[], platform: string, additionalOptions?: ILiveSyncCommandHelperAdditionalOptions): Promise<ILiveSyncDeviceDescriptor[]> {
 		// Now let's take data for each device:
-		const deviceDescriptors: ILiveSyncDeviceInfo[] = devices
+		const deviceDescriptors: ILiveSyncDeviceDescriptor[] = devices
 			.map(d => {
 				const buildConfig: IBuildConfig = {
 					buildForDevice: !d.isEmulator,
@@ -91,7 +89,7 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 					projectDir: this.$projectData.projectDir
 				});
 
-				const info: ILiveSyncDeviceInfo = {
+				const info: ILiveSyncDeviceDescriptor = {
 					identifier: d.deviceInfo.identifier,
 					buildAction,
 					debuggingEnabled: additionalOptions && additionalOptions.deviceDebugMap && additionalOptions.deviceDebugMap[d.deviceInfo.identifier],
@@ -120,13 +118,12 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 		const { liveSyncInfo, deviceDescriptors } = await this.executeLiveSyncOperationCore(devices, platform, additionalOptions);
 
 		await this.$runController.run({
-			projectDir: this.$projectData.projectDir,
 			liveSyncInfo,
 			deviceDescriptors
 		});
 
 		const remainingDevicesToSync = devices.map(d => d.deviceInfo.identifier);
-		this.$runEmitter.on(RunOnDeviceEvents.runOnDeviceStopped, (data: { projectDir: string, deviceIdentifier: string }) => {
+		this.$runController.on(RunOnDeviceEvents.runOnDeviceStopped, (data: { projectDir: string, deviceIdentifier: string }) => {
 			_.remove(remainingDevicesToSync, d => d === data.deviceIdentifier);
 
 			if (remainingDevicesToSync.length === 0) {
@@ -152,26 +149,7 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 		return result;
 	}
 
-	public async executeLiveSyncOperationWithDebug(devices: Mobile.IDevice[], platform: string, additionalOptions?: ILiveSyncCommandHelperAdditionalOptions): Promise<void> {
-		const { liveSyncInfo, deviceDescriptors } = await this.executeLiveSyncOperationCore(devices, platform, additionalOptions);
-
-		await this.$debugController.run({
-			projectDir: this.$projectData.projectDir,
-			liveSyncInfo,
-			deviceDescriptors
-		});
-
-		const remainingDevicesToSync = devices.map(d => d.deviceInfo.identifier);
-		this.$runEmitter.on(RunOnDeviceEvents.runOnDeviceStopped, (data: { projectDir: string, deviceIdentifier: string }) => {
-			_.remove(remainingDevicesToSync, d => d === data.deviceIdentifier);
-
-			if (remainingDevicesToSync.length === 0) {
-				process.exit(ErrorCodes.ALL_DEVICES_DISCONNECTED);
-			}
-		});
-	}
-
-	private async executeLiveSyncOperationCore(devices: Mobile.IDevice[], platform: string, additionalOptions?: ILiveSyncCommandHelperAdditionalOptions): Promise<{liveSyncInfo: ILiveSyncInfo, deviceDescriptors: ILiveSyncDeviceInfo[]}> {
+	private async executeLiveSyncOperationCore(devices: Mobile.IDevice[], platform: string, additionalOptions?: ILiveSyncCommandHelperAdditionalOptions): Promise<{liveSyncInfo: ILiveSyncInfo, deviceDescriptors: ILiveSyncDeviceDescriptor[]}> {
 		if (!devices || !devices.length) {
 			if (platform) {
 				this.$errors.failWithoutHelp("Unable to find applicable devices to execute operation. Ensure connected devices are trusted and try again.");
@@ -192,9 +170,8 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 			}
 		}
 
-		// Extract this to 2 separate services -> deviceDescriptorsService, liveSyncDataService -> getLiveSyncData()
 		const deviceDescriptors = await this.createDeviceDescriptors(devices, platform, additionalOptions);
-		const liveSyncInfo = this.createLiveSyncInfo();
+		const liveSyncInfo = this.getLiveSyncData(this.$projectData.projectDir);
 
 		if (this.$options.release) {
 			await this.runInRelease(platform, deviceDescriptors, liveSyncInfo);
@@ -204,7 +181,7 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 		return { liveSyncInfo, deviceDescriptors };
 	}
 
-	private async runInRelease(platform: string, deviceDescriptors: ILiveSyncDeviceInfo[], liveSyncInfo: ILiveSyncInfo): Promise<void> {
+	private async runInRelease(platform: string, deviceDescriptors: ILiveSyncDeviceDescriptor[], liveSyncInfo: ILiveSyncInfo): Promise<void> {
 		await this.$devicesService.initialize({
 			platform,
 			deviceId: this.$options.device,
@@ -214,7 +191,6 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 		});
 
 		await this.$deployController.deploy({
-			projectDir: this.$projectData.projectDir,
 			liveSyncInfo: { ...liveSyncInfo, clean: true, skipWatcher: true },
 			deviceDescriptors
 		});

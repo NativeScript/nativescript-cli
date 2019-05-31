@@ -669,7 +669,7 @@ export class LiveSyncServiceStub extends EventEmitter implements ILiveSyncServic
 		return;
 	}
 
-	public async liveSync(deviceDescriptors: ILiveSyncDeviceInfo[], liveSyncData: ILiveSyncInfo): Promise<void> {
+	public async liveSync(deviceDescriptors: ILiveSyncDeviceDescriptor[], liveSyncData: ILiveSyncInfo): Promise<void> {
 		return;
 	}
 
@@ -677,7 +677,7 @@ export class LiveSyncServiceStub extends EventEmitter implements ILiveSyncServic
 		return;
 	}
 
-	public getLiveSyncDeviceDescriptors(projectDir: string): ILiveSyncDeviceInfo[] {
+	public getLiveSyncDeviceDescriptors(projectDir: string): ILiveSyncDeviceDescriptor[] {
 		return [];
 	}
 }

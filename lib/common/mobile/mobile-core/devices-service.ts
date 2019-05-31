@@ -601,7 +601,7 @@ export class DevicesService extends EventEmitter implements Mobile.IDevicesServi
 		}
 	}
 
-	public getPlatformsFromDeviceDescriptors(deviceDescriptors: ILiveSyncDeviceInfo[]): string[] {
+	public getPlatformsFromDeviceDescriptors(deviceDescriptors: ILiveSyncDeviceDescriptor[]): string[] {
 		const platforms = _(deviceDescriptors)
 			.map(device => this.getDeviceByIdentifier(device.identifier))
 			.map(device => device.deviceInfo.platform.toLowerCase())

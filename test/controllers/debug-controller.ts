@@ -1,10 +1,18 @@
-import { DebugService } from "../../lib/services/debug-service";
 import { Yok } from "../../lib/common/yok";
 import * as stubs from "../stubs";
 import { assert } from "chai";
 import { EventEmitter } from "events";
 import * as constants from "../../lib/common/constants";
 import { CONNECTION_ERROR_EVENT_NAME, DebugCommandErrors, TrackActionNames, DebugTools } from "../../lib/constants";
+import { DebugController } from "../../lib/controllers/debug-controller";
+import { BuildDataService } from "../../lib/services/build-data-service";
+import { DebugDataService } from "../../lib/services/debug-data-service";
+import { LiveSyncServiceResolver } from "../../lib/resolvers/livesync-service-resolver";
+import { PrepareDataService } from "../../lib/services/prepare-data-service";
+import { ProjectDataService } from "../../lib/services/project-data-service";
+import { StaticConfig } from "../../lib/config";
+import { DevicePlatformsConstants } from "../../lib/common/mobile/device-platforms-constants";
+import { LiveSyncProcessDataService } from "../../lib/services/livesync-process-data-service";
 
 const fakeChromeDebugPort = 123;
 const fakeChromeDebugUrl = `fakeChromeDebugUrl?experiments=true&ws=localhost:${fakeChromeDebugPort}`;
@@ -56,7 +64,7 @@ const getDefaultTestData = (platform?: string): IDebugTestData => ({
 	}
 });
 
-describe("debugService", () => {
+describe("debugController", () => {
 	const getTestInjectorForTestConfiguration = (testData: IDebugTestData): IInjector => {
 		const testInjector = new Yok();
 		testInjector.register("devicesService", {
@@ -97,24 +105,45 @@ describe("debugService", () => {
 			trackEventActionInGoogleAnalytics: (data: IEventActionData) => Promise.resolve()
 		});
 
+		testInjector.register("buildDataService", BuildDataService);
+		testInjector.register("buildController", {});
+
+		testInjector.register("debugDataService", DebugDataService);
+		testInjector.register("deviceInstallAppService", {});
+		testInjector.register("hmrStatusService", {});
+		testInjector.register("hooksService", {});
+		testInjector.register("liveSyncServiceResolver", LiveSyncServiceResolver);
+		testInjector.register("platformsDataService", {});
+		testInjector.register("pluginsService", {});
+		testInjector.register("prepareController", {});
+		testInjector.register("prepareDataService", PrepareDataService);
+		testInjector.register("prepareNativePlatformService", {});
+		testInjector.register("projectDataService", ProjectDataService);
+		testInjector.register("fs", {});
+		testInjector.register("staticConfig", StaticConfig);
+		testInjector.register("devicePlatformsConstants", DevicePlatformsConstants);
+		testInjector.register("androidResourcesMigrationService", {});
+		testInjector.register("liveSyncProcessDataService", LiveSyncProcessDataService);
+
 		return testInjector;
 	};
 
 	describe("debug", () => {
-		const getDebugData = (deviceIdentifier?: string): IDebugData => ({
-			deviceIdentifier: deviceIdentifier || defaultDeviceIdentifier,
+		const getDebugData = (debugOptions?: IDebugOptions): IDebugData => ({
+			deviceIdentifier: defaultDeviceIdentifier,
 			applicationIdentifier: "org.nativescript.app1",
 			projectDir: "/Users/user/app1",
-			projectName: "app1"
+			projectName: "app1",
+			debugOptions: debugOptions || {}
 		});
 
 		describe("rejects the result promise when", () => {
 			const assertIsRejected = async (testData: IDebugTestData, expectedError: string, userSpecifiedOptions?: IDebugOptions): Promise<void> => {
 				const testInjector = getTestInjectorForTestConfiguration(testData);
-				const debugService = testInjector.resolve<IDebugServiceBase>(DebugService);
+				const debugController = testInjector.resolve(DebugController);
 
 				const debugData = getDebugData();
-				await assert.isRejected(debugService.debug(debugData, userSpecifiedOptions), expectedError);
+				await assert.isRejected(debugController.startDebug(debugData, userSpecifiedOptions), expectedError);
 			};
 
 			it("there's no attached device as the specified identifier", async () => {
@@ -156,10 +185,10 @@ describe("debugService", () => {
 					throw new Error(expectedErrorMessage);
 				};
 
-				const debugService = testInjector.resolve<IDebugServiceBase>(DebugService);
+				const debugController = testInjector.resolve(DebugController);
 
 				const debugData = getDebugData();
-				await assert.isRejected(debugService.debug(debugData, null), expectedErrorMessage);
+				await assert.isRejected(debugController.startDebug(debugData, null), expectedErrorMessage);
 			};
 
 			it("androidDeviceDebugService's debug method fails", async () => {
@@ -178,14 +207,14 @@ describe("debugService", () => {
 					testData.deviceInformation.deviceInfo.platform = platform;
 
 					const testInjector = getTestInjectorForTestConfiguration(testData);
-					const debugService = testInjector.resolve<IDebugServiceBase>(DebugService);
+					const debugController = testInjector.resolve(DebugController);
 					let dataRaisedForConnectionError: any = null;
-					debugService.on(CONNECTION_ERROR_EVENT_NAME, (data: any) => {
+					debugController.on(CONNECTION_ERROR_EVENT_NAME, (data: any) => {
 						dataRaisedForConnectionError = data;
 					});
 
 					const debugData = getDebugData();
-					await assert.isFulfilled(debugService.debug(debugData, null));
+					await assert.isFulfilled(debugController.startDebug(debugData, null));
 
 					const expectedErrorData = { deviceIdentifier: "deviceId", message: "my message", code: 2048 };
 					const platformDebugService = testInjector.resolve<IDeviceDebugService>(`${platform}DeviceDebugService`);
@@ -202,10 +231,10 @@ describe("debugService", () => {
 					testData.deviceInformation.deviceInfo.platform = platform;
 
 					const testInjector = getTestInjectorForTestConfiguration(testData);
-					const debugService = testInjector.resolve<IDebugServiceBase>(DebugService);
+					const debugController = testInjector.resolve(DebugController);
 
 					const debugData = getDebugData();
-					const debugInfo = await debugService.debug(debugData, null);
+					const debugInfo = await debugController.startDebug(debugData, null);
 
 					assert.deepEqual(debugInfo, {
 						url: fakeChromeDebugUrl,
@@ -245,9 +274,9 @@ describe("debugService", () => {
 							dataTrackedToGA = data;
 						};
 
-						const debugService = testInjector.resolve<IDebugServiceBase>(DebugService);
-						const debugData = getDebugData();
-						await debugService.debug(debugData, testCase.debugOptions);
+						const debugController = testInjector.resolve(DebugController);
+						const debugData = getDebugData(testCase.debugOptions);
+						await debugController.startDebug(debugData);
 						const devicesService = testInjector.resolve<Mobile.IDevicesService>("devicesService");
 						const device = devicesService.getDeviceByIdentifier(testData.deviceInformation.deviceInfo.identifier);
 

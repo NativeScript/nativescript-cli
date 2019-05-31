@@ -62,7 +62,7 @@ export abstract class PlatformLiveSyncServiceBase {
 
 		const projectFilesPath = path.join(platformData.appDestinationDirectoryPath, APP_FOLDER_NAME);
 		const localToDevicePaths = await this.$projectFilesManager.createLocalToDevicePaths(deviceAppData, projectFilesPath, null, []);
-		const modifiedFilesData = await this.transferFiles(deviceAppData, localToDevicePaths, projectFilesPath, projectData, syncInfo.liveSyncDeviceInfo, { isFullSync: true, force: syncInfo.force });
+		const modifiedFilesData = await this.transferFiles(deviceAppData, localToDevicePaths, projectFilesPath, projectData, syncInfo.liveSyncDeviceData, { isFullSync: true, force: syncInfo.force });
 
 		return {
 			modifiedFilesData,
@@ -101,7 +101,7 @@ export abstract class PlatformLiveSyncServiceBase {
 				const localToDevicePaths = await this.$projectFilesManager.createLocalToDevicePaths(deviceAppData,
 					projectFilesPath, existingFiles, []);
 				modifiedLocalToDevicePaths.push(...localToDevicePaths);
-				modifiedLocalToDevicePaths = await this.transferFiles(deviceAppData, localToDevicePaths, projectFilesPath, projectData, liveSyncInfo.liveSyncDeviceInfo, { isFullSync: false, force: liveSyncInfo.force });
+				modifiedLocalToDevicePaths = await this.transferFiles(deviceAppData, localToDevicePaths, projectFilesPath, projectData, liveSyncInfo.liveSyncDeviceData, { isFullSync: false, force: liveSyncInfo.force });
 			}
 		}
 
@@ -128,11 +128,11 @@ export abstract class PlatformLiveSyncServiceBase {
 		};
 	}
 
-	protected async transferFiles(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], projectFilesPath: string, projectData: IProjectData, liveSyncDeviceInfo: ILiveSyncDeviceInfo, options: ITransferFilesOptions): Promise<Mobile.ILocalToDevicePathData[]> {
+	protected async transferFiles(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], projectFilesPath: string, projectData: IProjectData, liveSyncDeviceData: ILiveSyncDeviceDescriptor, options: ITransferFilesOptions): Promise<Mobile.ILocalToDevicePathData[]> {
 		let transferredFiles: Mobile.ILocalToDevicePathData[] = [];
 		const deviceLiveSyncService = this.getDeviceLiveSyncService(deviceAppData.device, projectData);
 
-		transferredFiles = await deviceLiveSyncService.transferFiles(deviceAppData, localToDevicePaths, projectFilesPath, projectData, liveSyncDeviceInfo, options);
+		transferredFiles = await deviceLiveSyncService.transferFiles(deviceAppData, localToDevicePaths, projectFilesPath, projectData, liveSyncDeviceData, options);
 
 		this.logFilesSyncInformation(transferredFiles, "Successfully transferred %s on device %s.", this.$logger.info, deviceAppData.device.deviceInfo.identifier);
 

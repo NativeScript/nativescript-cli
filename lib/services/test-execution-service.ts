@@ -25,7 +25,7 @@ export class TestExecutionService implements ITestExecutionService {
 
 	public platform: string;
 
-	public async startKarmaServer(platform: string, liveSyncInfo: ILiveSyncInfo, deviceDescriptors: ILiveSyncDeviceInfo[]): Promise<void> {
+	public async startKarmaServer(platform: string, liveSyncInfo: ILiveSyncInfo, deviceDescriptors: ILiveSyncDeviceDescriptor[]): Promise<void> {
 		platform = platform.toLowerCase();
 		this.platform = platform;
 
@@ -57,7 +57,6 @@ export class TestExecutionService implements ITestExecutionService {
 				// so it will be sent to device.
 
 				await this.$runController.run({
-					projectDir: liveSyncInfo.projectDir,
 					liveSyncInfo,
 					deviceDescriptors
 				});

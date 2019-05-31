@@ -7,7 +7,6 @@ export class DebugPlatformCommand extends ValidatePlatformCommandBase implements
 
 	constructor(private platform: string,
 		private $bundleValidatorHelper: IBundleValidatorHelper,
-		private $debugService: IDebugService,
 		protected $devicesService: Mobile.IDevicesService,
 		$platformValidationService: IPlatformValidationService,
 		$projectData: IProjectData,
@@ -36,19 +35,17 @@ export class DebugPlatformCommand extends ValidatePlatformCommandBase implements
 			deviceId: this.$options.device
 		});
 
-		const debugData = this.$debugDataService.createDebugData(this.$projectData, { device: selectedDeviceForDebug.deviceInfo.identifier });
-
 		if (this.$options.start) {
 			const debugOptions = <IDebugOptions>_.cloneDeep(this.$options.argv);
-			await this.$debugController.printDebugInformation(await this.$debugService.debug(debugData, debugOptions));
+			const debugData = this.$debugDataService.getDebugData(selectedDeviceForDebug.deviceInfo.identifier, this.$projectData, debugOptions);
+			await this.$debugController.printDebugInformation(await this.$debugController.startDebug(debugData));
 			return;
 		}
 
-		await this.$liveSyncCommandHelper.executeLiveSyncOperationWithDebug([selectedDeviceForDebug], this.platform, {
+		await this.$liveSyncCommandHelper.executeLiveSyncOperation([selectedDeviceForDebug], this.platform, {
 			deviceDebugMap: {
 				[selectedDeviceForDebug.deviceInfo.identifier]: true
 			},
-			// This will default in the liveSyncCommandHelper
 			buildPlatform: undefined,
 			skipNativePrepare: false
 		});

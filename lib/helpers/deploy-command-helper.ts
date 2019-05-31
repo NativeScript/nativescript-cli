@@ -23,7 +23,7 @@ export class DeployCommandHelper {
 		const devices = this.$devicesService.getDeviceInstances()
 			.filter(d => !platform || d.deviceInfo.platform.toLowerCase() === platform.toLowerCase());
 
-		const deviceDescriptors: ILiveSyncDeviceInfo[] = devices
+		const deviceDescriptors: ILiveSyncDeviceDescriptor[] = devices
 			.map(d => {
 				const buildConfig: IBuildConfig = {
 					buildForDevice: !d.isEmulator,
@@ -50,7 +50,7 @@ export class DeployCommandHelper {
 					projectDir: this.$projectData.projectDir
 				});
 
-				const info: ILiveSyncDeviceInfo = {
+				const info: ILiveSyncDeviceDescriptor = {
 					identifier: d.deviceInfo.identifier,
 					buildAction,
 					debuggingEnabled: additionalOptions && additionalOptions.deviceDebugMap && additionalOptions.deviceDebugMap[d.deviceInfo.identifier],
@@ -75,7 +75,6 @@ export class DeployCommandHelper {
 		};
 
 		await this.$deployController.deploy({
-			projectDir: this.$projectData.projectDir,
 			liveSyncInfo,
 			deviceDescriptors
 		});

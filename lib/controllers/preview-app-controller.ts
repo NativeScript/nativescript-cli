@@ -5,10 +5,10 @@ import { performanceLog } from "../common/decorators";
 import { stringify } from "../common/helpers";
 import { HmrConstants } from "../common/constants";
 import { EventEmitter } from "events";
-import { PreviewAppEmitter } from "../emitters/preview-app-emitter";
 import { PrepareDataService } from "../services/prepare-data-service";
+import { PreviewAppLiveSyncEvents } from "../services/livesync/playground/preview-app-constants";
 
-export class PreviewAppController extends EventEmitter {
+export class PreviewAppController extends EventEmitter implements IPreviewAppController {
 	private deviceInitializationPromise: IDictionary<Promise<FilesPayload>> = {};
 	private promise = Promise.resolve();
 
@@ -18,16 +18,29 @@ export class PreviewAppController extends EventEmitter {
 		private $hmrStatusService: IHmrStatusService,
 		private $logger: ILogger,
 		private $prepareController: PrepareController,
-		private $previewAppEmitter: PreviewAppEmitter,
 		private $previewAppFilesService: IPreviewAppFilesService,
-		private $previewAppLiveSyncService: IPreviewAppLiveSyncService,
 		private $previewAppPluginsService: IPreviewAppPluginsService,
 		private $previewDevicesService: IPreviewDevicesService,
+		private $previewQrCodeService: IPreviewQrCodeService,
 		private $previewSdkService: IPreviewSdkService,
 		private $prepareDataService: PrepareDataService
 	) { super(); }
 
-	public async preview(data: IPreviewAppLiveSyncData): Promise<void> {
+	public async startPreview(data: IPreviewAppLiveSyncData): Promise<IQrCodeImageData> {
+		await this.previewCore(data);
+
+		const url = this.$previewSdkService.getQrCodeUrl({ projectDir: data.projectDir, useHotModuleReload: data.useHotModuleReload });
+		const result = await this.$previewQrCodeService.getLiveSyncQrCode(url);
+
+		return result;
+	}
+
+	public async stopPreview(): Promise<void> {
+		this.$previewSdkService.stop();
+		this.$previewDevicesService.updateConnectedDevices([]);
+	}
+
+	private async previewCore(data: IPreviewAppLiveSyncData): Promise<void> {
 		await this.$previewSdkService.initialize(data.projectDir, async (device: Device) => {
 			try {
 				if (!device) {
@@ -72,15 +85,15 @@ export class PreviewAppController extends EventEmitter {
 				}
 			} catch (error) {
 				this.$logger.trace(`Error while sending files on device ${device && device.id}. Error is`, error);
-				this.$previewAppEmitter.emitPreviewAppLiveSyncError(data, device.id, error, device.platform);
+				this.emit(PreviewAppLiveSyncEvents.PREVIEW_APP_LIVE_SYNC_ERROR, {
+					error,
+					data,
+					platform: device.platform,
+					deviceId: device.id
+				});
 			}
 		});
 		return null;
-	}
-
-	public async stopPreview(): Promise<void> {
-		this.$previewSdkService.stop();
-		this.$previewDevicesService.updateConnectedDevices([]);
 	}
 
 	@performanceLog()
@@ -89,7 +102,7 @@ export class PreviewAppController extends EventEmitter {
 			.then(async () => {
 				const platformHmrData = _.cloneDeep(hmrData);
 
-				this.promise = this.$previewAppLiveSyncService.syncFilesForPlatformSafe(data, { filesToSync: files }, platform);
+				this.promise = this.syncFilesForPlatformSafe(data, { filesToSync: files }, platform);
 				await this.promise;
 
 				if (data.useHotModuleReload && platformHmrData.hash) {
@@ -100,7 +113,7 @@ export class PreviewAppController extends EventEmitter {
 						if (status === HmrConstants.HMR_ERROR_STATUS) {
 							const originalUseHotModuleReload = data.useHotModuleReload;
 							data.useHotModuleReload = false;
-							await this.$previewAppLiveSyncService.syncFilesForPlatformSafe(data, { filesToSync: platformHmrData.fallbackFiles }, platform, previewDevice.id );
+							await this.syncFilesForPlatformSafe(data, { filesToSync: platformHmrData.fallbackFiles }, platform, previewDevice.id );
 							data.useHotModuleReload = originalUseHotModuleReload;
 						}
 					}));
@@ -117,6 +130,24 @@ export class PreviewAppController extends EventEmitter {
 			return payloads;
 		} catch (err) {
 			this.$logger.warn(`Unable to apply changes for platform ${platform}. Error is: ${err}, ${stringify(err)}`);
+		}
+	}
+
+	private async syncFilesForPlatformSafe(data: IPreviewAppLiveSyncData, filesData: IPreviewAppFilesData, platform: string, deviceId?: string): Promise<void> {
+		try {
+			const payloads = this.$previewAppFilesService.getFilesPayload(data, filesData, platform);
+			if (payloads && payloads.files && payloads.files.length) {
+				this.$logger.info(`Start syncing changes for platform ${platform}.`);
+				await this.$previewSdkService.applyChanges(payloads);
+				this.$logger.info(`Successfully synced ${payloads.files.map(filePayload => filePayload.file.yellow)} for platform ${platform}.`);
+			}
+		} catch (error) {
+			this.$logger.warn(`Unable to apply changes for platform ${platform}. Error is: ${error}, ${JSON.stringify(error, null, 2)}.`);
+			this.emit(PreviewAppLiveSyncEvents.PREVIEW_APP_LIVE_SYNC_ERROR, {
+				error,
+				data,
+				deviceId
+			});
 		}
 	}
 }

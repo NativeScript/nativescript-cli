@@ -3,12 +3,12 @@ import { InjectorStub } from "../stubs";
 import { LiveSyncServiceResolver } from "../../lib/resolvers/livesync-service-resolver";
 import { MobileHelper } from "../../lib/common/mobile/mobile-helper";
 import { assert } from "chai";
-import { RunEmitter } from "../../lib/emitters/run-emitter";
 import { RunOnDeviceEvents } from "../../lib/constants";
 import { PrepareData } from "../../lib/data/prepare-data";
 import { PrepareDataService } from "../../lib/services/prepare-data-service";
 import { BuildDataService } from "../../lib/services/build-data-service";
 import { PrepareController } from "../../lib/controllers/prepare-controller";
+import { LiveSyncProcessDataService } from "../../lib/services/livesync-process-data-service";
 
 let isAttachToHmrStatusCalled = false;
 let prepareData: IPrepareData = null;
@@ -22,7 +22,7 @@ const iOSDeviceDescriptor = { identifier: "myiOSDevice", buildAction: async () =
 const androidDevice = <any>{ deviceInfo: { identifier: "myAndroidDevice", platform: "android" } };
 const androidDeviceDescriptor = { identifier: "myAndroidDevice", buildAction: async () => buildOutputPath };
 
-const map: IDictionary<{ device: Mobile.IDevice, descriptor: ILiveSyncDeviceInfo }> = {
+const map: IDictionary<{ device: Mobile.IDevice, descriptor: ILiveSyncDeviceDescriptor }> = {
 	myiOSDevice: {
 		device: iOSDevice,
 		descriptor: iOSDeviceDescriptor
@@ -101,14 +101,15 @@ function createTestInjector() {
 	injector.register("prepareNativePlatformService", {});
 	injector.register("projectChangesService", {});
 	injector.register("runController", RunController);
-	injector.register("runEmitter", RunEmitter);
 	injector.register("prepareDataService", PrepareDataService);
 	injector.register("buildDataService", BuildDataService);
 	injector.register("analyticsService", ({}));
+	injector.register("debugController", {});
+	injector.register("liveSyncProcessDataService", LiveSyncProcessDataService);
 
 	const devicesService = injector.resolve("devicesService");
 	devicesService.getDevicesForPlatform = () => <any>[{ identifier: "myTestDeviceId1" }];
-	devicesService.getPlatformsFromDeviceDescriptors = (devices: ILiveSyncDeviceInfo[]) => devices.map(d => map[d.identifier].device.deviceInfo.platform);
+	devicesService.getPlatformsFromDeviceDescriptors = (devices: ILiveSyncDeviceDescriptor[]) => devices.map(d => map[d.identifier].device.deviceInfo.platform);
 	devicesService.on = () => ({});
 
 	return injector;
@@ -117,7 +118,6 @@ function createTestInjector() {
 describe("RunController", () => {
 	let injector: IInjector = null;
 	let runController: RunController = null;
-	let runEmitter: RunEmitter = null;
 
 	beforeEach(() => {
 		isAttachToHmrStatusCalled = false;
@@ -125,7 +125,6 @@ describe("RunController", () => {
 
 		injector = createTestInjector();
 		runController = injector.resolve("runController");
-		runEmitter = injector.resolve("runEmitter");
 	});
 
 	describe("runOnDevices", () => {
@@ -134,7 +133,6 @@ describe("RunController", () => {
 				mockDevicesService(injector, [iOSDevice]);
 
 				await runController.run({
-					projectDir,
 					liveSyncInfo: { ...liveSyncInfo, skipWatcher: true },
 					deviceDescriptors: [iOSDeviceDescriptor]
 				});
@@ -145,7 +143,6 @@ describe("RunController", () => {
 				mockDevicesService(injector, [iOSDevice]);
 
 				await runController.run({
-					projectDir,
 					liveSyncInfo: { ...liveSyncInfo, skipWatcher: true, useHotModuleReload: true },
 					deviceDescriptors: [iOSDeviceDescriptor]
 				});
@@ -156,7 +153,6 @@ describe("RunController", () => {
 				mockDevicesService(injector, [iOSDevice]);
 
 				await runController.run({
-					projectDir,
 					liveSyncInfo,
 					deviceDescriptors: [iOSDeviceDescriptor]
 				});
@@ -167,7 +163,6 @@ describe("RunController", () => {
 				mockDevicesService(injector, [iOSDevice]);
 
 				await runController.run({
-					projectDir,
 					liveSyncInfo,
 					deviceDescriptors: []
 				});
@@ -206,7 +201,6 @@ describe("RunController", () => {
 					};
 
 					await runController.run({
-						projectDir,
 						liveSyncInfo,
 						deviceDescriptors: testCase.connectedDevices
 					});
@@ -251,16 +245,17 @@ describe("RunController", () => {
 
 		for (const testCase of testCases) {
 			it(testCase.name, async () => {
-				(<any>runController).persistData(projectDir, testCase.currentDeviceIdentifiers.map(identifier => (<any>{ identifier })), ["ios"]);
+				const liveSyncProcessDataService = injector.resolve("liveSyncProcessDataService");
+				(<any>liveSyncProcessDataService).persistData(projectDir, testCase.currentDeviceIdentifiers.map(identifier => (<any>{ identifier })), ["ios"]);
 
 				const emittedDeviceIdentifiersForLiveSyncStoppedEvent: string[] = [];
 
-				runEmitter.on(RunOnDeviceEvents.runOnDeviceStopped, (data: any) => {
+				runController.on(RunOnDeviceEvents.runOnDeviceStopped, (data: any) => {
 					assert.equal(data.projectDir, projectDir);
 					emittedDeviceIdentifiersForLiveSyncStoppedEvent.push(data.deviceIdentifier);
 				});
 
-				await runController.stop(projectDir, testCase.deviceIdentifiersToBeStopped);
+				await runController.stop({ projectDir, deviceIdentifiers: testCase.deviceIdentifiersToBeStopped });
 
 				assert.deepEqual(emittedDeviceIdentifiersForLiveSyncStoppedEvent, testCase.expectedDeviceIdentifiers);
 			});

@@ -497,7 +497,7 @@ declare module Mobile {
 		 */
 		pickSingleDevice(options: IPickSingleDeviceOptions): Promise<Mobile.IDevice>;
 
-		getPlatformsFromDeviceDescriptors(deviceDescriptors: ILiveSyncDeviceInfo[]): string[];
+		getPlatformsFromDeviceDescriptors(deviceDescriptors: ILiveSyncDeviceDescriptor[]): string[];
 	}
 
 	interface IPickSingleDeviceOptions {

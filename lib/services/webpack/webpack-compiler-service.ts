@@ -11,8 +11,7 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 	constructor(
 		private $childProcess: IChildProcess,
 		public $hooksService: IHooksService,
-		private $logger: ILogger,
-		private $projectData: IProjectData,
+		private $logger: ILogger
 	) { super(); }
 
 	public async compileWithWatch(platformData: IPlatformData, projectData: IProjectData, config: IWebpackCompilerConfig): Promise<any> {
@@ -101,7 +100,7 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 	@performanceLog()
 	@hook('prepareJSApp')
 	private async startWebpackProcess(platformData: IPlatformData, projectData: IProjectData, config: IWebpackCompilerConfig): Promise<child_process.ChildProcess> {
-		const envData = this.buildEnvData(platformData.platformNameLowerCase, config.env);
+		const envData = this.buildEnvData(platformData.platformNameLowerCase, config.env, projectData);
 		const envParams = this.buildEnvCommandLineParams(envData, platformData);
 
 		const args = [
@@ -123,14 +122,15 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 		return childProcess;
 	}
 
-	private buildEnvData(platform: string, env: any) {
+	private buildEnvData(platform: string, env: any, projectData: IProjectData) {
 		const envData = Object.assign({},
 			env,
 			{ [platform.toLowerCase()]: true }
 		);
 
-		const appPath = this.$projectData.getAppDirectoryRelativePath();
-		const appResourcesPath = this.$projectData.getAppResourcesRelativeDirectoryPath();
+		const appPath = projectData.getAppDirectoryRelativePath();
+		const appResourcesPath = projectData.getAppResourcesRelativeDirectoryPath();
+
 		Object.assign(envData,
 			appPath && { appPath },
 			appResourcesPath && { appResourcesPath },
