@@ -18,6 +18,7 @@ export abstract class BuildCommandBase extends ValidatePlatformCommandBase {
 
 	public dashedOptions = {
 		watch: { type: OptionType.Boolean, default: false, hasSensitiveValue: false },
+		hmr: { type: OptionType.Boolean, default: false, hasSensitiveValue: false },
 	};
 
 	public async executeCore(args: string[]): Promise<string> {
