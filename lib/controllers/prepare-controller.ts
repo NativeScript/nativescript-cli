@@ -41,7 +41,7 @@ export class PrepareController extends EventEmitter {
 		if (prepareData.watch) {
 			result = await this.startWatchersWithPrepare(platformData, projectData, prepareData);
 		} else {
-			await this.$webpackCompilerService.compileWithoutWatch(platformData, projectData, { watch: false, env: prepareData.env });
+			await this.$webpackCompilerService.compileWithoutWatch(platformData, projectData, prepareData);
 			await this.$prepareNativePlatformService.prepareNativePlatform(platformData, projectData, prepareData);
 		}
 
@@ -79,7 +79,7 @@ export class PrepareController extends EventEmitter {
 			};
 		}
 
-		await this.startJSWatcherWithPrepare(platformData, projectData, { env: prepareData.env }); // -> start watcher + initial compilation
+		await this.startJSWatcherWithPrepare(platformData, projectData, prepareData); // -> start watcher + initial compilation
 		const hasNativeChanges = await this.startNativeWatcherWithPrepare(platformData, projectData, prepareData); // -> start watcher + initial prepare
 
 		const result = { platform: platformData.platformNameLowerCase, hasNativeChanges };
@@ -97,13 +97,13 @@ export class PrepareController extends EventEmitter {
 		return result;
 	}
 
-	private async startJSWatcherWithPrepare(platformData: IPlatformData, projectData: IProjectData, config: IWebpackCompilerConfig): Promise<void> {
+	private async startJSWatcherWithPrepare(platformData: IPlatformData, projectData: IProjectData, prepareData: IPrepareData): Promise<void> {
 		if (!this.watchersData[projectData.projectDir][platformData.platformNameLowerCase].webpackCompilerProcess) {
 			this.$webpackCompilerService.on(WEBPACK_COMPILATION_COMPLETE, data => {
 				this.emitPrepareEvent({ ...data, hasNativeChanges: false, platform: platformData.platformNameLowerCase });
 			});
 
-			const childProcess = await this.$webpackCompilerService.compileWithWatch(platformData, projectData, config);
+			const childProcess = await this.$webpackCompilerService.compileWithWatch(platformData, projectData, prepareData);
 			this.watchersData[projectData.projectDir][platformData.platformNameLowerCase].webpackCompilerProcess = childProcess;
 		}
 	}
