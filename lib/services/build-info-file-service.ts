@@ -50,7 +50,7 @@ export class BuildInfoFileService implements IBuildInfoFileService {
 
 	public async saveDeviceBuildInfo(device: Mobile.IDevice, projectData: IProjectData, outputFilePath: string): Promise<void> {
 		const deviceFilePath = await this.getDeviceBuildInfoFilePath(device, projectData);
-		const appIdentifier = projectData.projectIdentifiers[device.deviceInfo.platform];
+		const appIdentifier = projectData.projectIdentifiers[device.deviceInfo.platform.toLowerCase()];
 
 		await device.fileSystem.putFile(path.join(outputFilePath, buildInfoFileName), deviceFilePath, appIdentifier);
 	}

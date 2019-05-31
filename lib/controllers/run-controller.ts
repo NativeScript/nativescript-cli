@@ -186,7 +186,7 @@ export class RunController implements IRunController {
 			const deviceDescriptor = _.find(deviceDescriptors, dd => dd.identifier === device.deviceInfo.identifier);
 			const platformData = this.$platformsDataService.getPlatformData(device.deviceInfo.platform, projectData);
 			const prepareData = this.$prepareDataService.getPrepareData(liveSyncInfo.projectDir, device.deviceInfo.platform, { ...liveSyncInfo, watch: !liveSyncInfo.skipWatcher, nativePrepare: { skipNativePrepare: !!deviceDescriptor.skipNativePrepare } });
-			const buildData = this.$buildDataService.getBuildData(projectData.projectDir, device.deviceInfo.platform, { ...liveSyncInfo, outputPath: deviceDescriptor.outputPath });
+			const buildData = this.$buildDataService.getBuildData(projectData.projectDir, device.deviceInfo.platform, { ...liveSyncInfo, outputPath: deviceDescriptor.outputPath, buildForDevice: !device.isEmulator });
 			const prepareResultData = await this.$prepareController.prepare(prepareData);
 
 			try {
