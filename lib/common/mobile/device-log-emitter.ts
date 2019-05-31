@@ -12,9 +12,9 @@ export class DeviceLogEmitter extends DeviceLogProviderBase {
 	public logData(line: string, platform: string, deviceIdentifier: string): void {
 		this.setDefaultLogLevelForDevice(deviceIdentifier);
 
-		const loggingOptions = this.getDeviceLogOptionsForDevice(deviceIdentifier) || { logLevel: this.$loggingLevels.info };
+		const loggingOptions = this.getDeviceLogOptionsForDevice(deviceIdentifier) || { logLevel: this.$loggingLevels.info, projectDir: null };
 		let data = this.$logFilter.filterData(platform, line, loggingOptions);
-		data = this.$logSourceMapService.replaceWithOriginalFileLocations(platform, data);
+		data = this.$logSourceMapService.replaceWithOriginalFileLocations(platform, data, loggingOptions);
 
 		if (data) {
 			this.emit('data', deviceIdentifier, data);

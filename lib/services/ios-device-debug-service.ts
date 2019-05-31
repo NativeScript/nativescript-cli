@@ -87,7 +87,7 @@ export class IOSDeviceDebugService extends DebugServiceBase implements IDeviceDe
 			this.$logger.info("'--chrome' is the default behavior. Use --inspector to debug iOS applications using the Safari Web Inspector.");
 		}
 		const projectName = this.getProjectName(debugData);
-		const webSocketProxy = await this.$appDebugSocketProxyFactory.ensureWebSocketProxy(this.device, debugData.applicationIdentifier, projectName);
+		const webSocketProxy = await this.$appDebugSocketProxyFactory.ensureWebSocketProxy(this.device, debugData.applicationIdentifier, projectName, debugData.projectDir);
 
 		return this.getChromeDebugUrl(debugOptions, webSocketProxy.options.port);
 	}
@@ -95,7 +95,7 @@ export class IOSDeviceDebugService extends DebugServiceBase implements IDeviceDe
 	private async setupTcpAppDebugProxy(debugData: IDebugData, debugOptions: IDebugOptions): Promise<string> {
 		const projectName = this.getProjectName(debugData);
 		const existingTcpProxy = this.$appDebugSocketProxyFactory.getTCPSocketProxy(this.deviceIdentifier, debugData.applicationIdentifier);
-		const tcpSocketProxy = existingTcpProxy || await this.$appDebugSocketProxyFactory.addTCPSocketProxy(this.device, debugData.applicationIdentifier, projectName);
+		const tcpSocketProxy = existingTcpProxy || await this.$appDebugSocketProxyFactory.addTCPSocketProxy(this.device, debugData.applicationIdentifier, projectName, debugData.projectDir);
 		if (!existingTcpProxy) {
 			const inspectorProcess = await this.openAppInspector(tcpSocketProxy.address(), debugData, debugOptions);
 			if (inspectorProcess) {

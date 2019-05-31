@@ -162,6 +162,7 @@ export class DeviceLogProviderStub extends EventEmitter implements Mobile.IDevic
 	public logger = new CommonLoggerStub();
 	public currentDevicePids: IStringDictionary = {};
 	public currentDeviceProjectNames: IStringDictionary = {};
+	public currentDeviceProjectDirs: IStringDictionary = {};
 
 	logData(line: string, platform: string, deviceIdentifier: string): void {
 		this.logger.info(line, platform, deviceIdentifier, { [LoggerConfigData.skipNewLine]: true });
@@ -176,5 +177,9 @@ export class DeviceLogProviderStub extends EventEmitter implements Mobile.IDevic
 
 	setProjectNameForDevice(deviceIdentifier: string, projectName: string): void {
 		this.currentDeviceProjectNames[deviceIdentifier] = projectName;
+	}
+
+	setProjectDirForDevice(deviceIdentifier: string, projectDir: string): void {
+		this.currentDeviceProjectDirs[deviceIdentifier] = projectDir;
 	}
 }

@@ -87,6 +87,7 @@ export class AndroidApplicationManager extends ApplicationManagerBase {
 			const processIdentifier = await this.getAppProcessId(deviceIdentifier, appIdentifier);
 			if (processIdentifier) {
 				this.$deviceLogProvider.setApplicationPidForDevice(deviceIdentifier, processIdentifier);
+				this.$deviceLogProvider.setProjectDirForDevice(deviceIdentifier, appData.projectDir);
 				await this.$logcatHelper.start({
 					deviceIdentifier: this.identifier,
 					pid: processIdentifier
@@ -118,6 +119,7 @@ export class AndroidApplicationManager extends ApplicationManagerBase {
 	public stopApplication(appData: Mobile.IApplicationData): Promise<void> {
 		this.$logcatHelper.stop(this.identifier);
 		this.$deviceLogProvider.setApplicationPidForDevice(this.identifier, null);
+		this.$deviceLogProvider.setProjectDirForDevice(this.identifier, null);
 		return this.adb.executeShellCommand(["am", "force-stop", `${appData.appId}`]);
 	}
 

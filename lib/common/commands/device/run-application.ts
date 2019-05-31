@@ -15,7 +15,7 @@ export class RunApplicationOnDeviceCommand implements ICommand {
 			this.$errors.failWithoutHelp("More than one device found. Specify device explicitly with --device option. To discover device ID, use $%s device command.", this.$staticConfig.CLIENT_NAME.toLowerCase());
 		}
 
-		await this.$devicesService.execute(async (device: Mobile.IDevice) => await device.applicationManager.startApplication({ appId: args[0], projectName: args[1] }));
+		await this.$devicesService.execute(async (device: Mobile.IDevice) => await device.applicationManager.startApplication({ appId: args[0], projectName: args[1], projectDir: null }));
 	}
 }
 

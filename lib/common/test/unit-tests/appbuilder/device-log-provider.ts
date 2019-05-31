@@ -15,6 +15,9 @@ function createTestInjector(loggingLevel: string, emptyFilteredData?: boolean) {
 
 	testInjector.register("logger", CommonLoggerStub);
 	testInjector.register("loggingLevels", LoggingLevels);
+	testInjector.register("logSourceMapService", {
+		replaceWithOriginalFileLocations: (platform: string, message: string) => message
+	});
 	return testInjector;
 }
 

@@ -35,6 +35,7 @@ export class AndroidDeviceDebugService extends DebugServiceBase implements IDevi
 			const pid = await this.$androidProcessService.getAppProcessId(this.deviceIdentifier, debugData.applicationIdentifier);
 			if (pid) {
 				this.$deviceLogProvider.setApplicationPidForDevice(this.deviceIdentifier, pid);
+				this.$deviceLogProvider.setProjectDirForDevice(this.device.deviceInfo.identifier, debugData.projectDir);
 				const device = await this.$devicesService.getDevice(this.deviceIdentifier);
 				await device.openDeviceLogStream();
 			}

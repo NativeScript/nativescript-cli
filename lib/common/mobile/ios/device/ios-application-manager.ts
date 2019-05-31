@@ -95,6 +95,7 @@ export class IOSApplicationManager extends ApplicationManagerBase {
 
 	private async setDeviceLogData(appData: Mobile.IApplicationData): Promise<void> {
 		this.$deviceLogProvider.setProjectNameForDevice(this.device.deviceInfo.identifier, appData.projectName);
+		this.$deviceLogProvider.setProjectDirForDevice(this.device.deviceInfo.identifier, appData.projectDir);
 		if (!this.$options.justlaunch) {
 			await this.startDeviceLog();
 		}

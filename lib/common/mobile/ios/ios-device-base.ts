@@ -14,16 +14,16 @@ export abstract class IOSDeviceBase implements Mobile.IiOSDevice {
 	abstract openDeviceLogStream(options?: Mobile.IiOSLogStreamOptions): Promise<void>;
 
 	@performanceLog()
-	public async getDebugSocket(appId: string, projectName: string, ensureAppStarted: boolean = false): Promise<net.Socket> {
+	public async getDebugSocket(appId: string, projectName: string, projectDir: string, ensureAppStarted: boolean = false): Promise<net.Socket> {
 		return this.$lockService.executeActionWithLock(
 			async () => {
 				if (this.cachedSockets[appId]) {
 					return this.cachedSockets[appId];
 				}
 
-				await this.attachToDebuggerFoundEvent(appId, projectName);
+				await this.attachToDebuggerFoundEvent(appId, projectName, projectDir);
 				if (ensureAppStarted) {
-					await this.applicationManager.startApplication({ appId, projectName });
+					await this.applicationManager.startApplication({ appId, projectName, projectDir });
 				}
 
 				this.cachedSockets[appId] = await this.getDebugSocketCore(appId);
@@ -42,8 +42,8 @@ export abstract class IOSDeviceBase implements Mobile.IiOSDevice {
 
 	protected abstract async getDebugSocketCore(appId: string): Promise<net.Socket>;
 
-	protected async attachToDebuggerFoundEvent(appId: string, projectName: string): Promise<void> {
-		await this.startDeviceLogProcess(projectName);
+	protected async attachToDebuggerFoundEvent(appId: string, projectName: string, projectDir: string): Promise<void> {
+		await this.startDeviceLogProcess(projectName, projectDir);
 		await this.$iOSDebuggerPortService.attachToDebuggerPortFoundEvent(appId);
 	}
 
@@ -78,9 +78,10 @@ export abstract class IOSDeviceBase implements Mobile.IiOSDevice {
 		}
 	}
 
-	private async startDeviceLogProcess(projectName: string): Promise<void> {
+	private async startDeviceLogProcess(projectName: string, projectDir: string): Promise<void> {
 		if (projectName) {
 			this.$deviceLogProvider.setProjectNameForDevice(this.deviceInfo.identifier, projectName);
+			this.$deviceLogProvider.setProjectDirForDevice(this.deviceInfo.identifier, projectDir);
 		}
 
 		await this.openDeviceLogStream();

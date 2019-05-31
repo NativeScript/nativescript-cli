@@ -113,7 +113,7 @@ describe("iOSLogFilter", () => {
 		const testInjector = new Yok();
 		testInjector.register("loggingLevels", LoggingLevels);
 		const iOSLogFilter = <Mobile.IPlatformLogFilter>testInjector.resolve(IOSLogFilter);
-		const filteredData = iOSLogFilter.filterData(inputData, { logLevel: _logLevel, applicationPid: _pid });
+		const filteredData = iOSLogFilter.filterData(inputData, { logLevel: _logLevel, applicationPid: _pid, projectDir: null });
 		assert.deepEqual(filteredData, expectedOutput, `The actual result '${filteredData}' did NOT match expected output '${expectedOutput}'.`);
 	};
 

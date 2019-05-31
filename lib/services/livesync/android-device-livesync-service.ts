@@ -3,7 +3,7 @@ import { performanceLog } from "../../common/decorators";
 import * as helpers from "../../common/helpers";
 import { LiveSyncPaths } from "../../common/constants";
 import { ANDROID_DEVICE_APP_ROOT_TEMPLATE } from "../../constants";
-import * as util from "util"
+import * as util from "util";
 import * as path from "path";
 import * as net from "net";
 
@@ -36,7 +36,8 @@ export class AndroidDeviceLiveSyncService extends AndroidDeviceLiveSyncServiceBa
 		await this.device.applicationManager.restartApplication({
 			appId: liveSyncInfo.deviceAppData.appIdentifier,
 			projectName: projectData.projectName,
-			waitForDebugger: liveSyncInfo.waitForDebugger
+			waitForDebugger: liveSyncInfo.waitForDebugger,
+			projectDir: projectData.projectDir
 		});
 	}
 

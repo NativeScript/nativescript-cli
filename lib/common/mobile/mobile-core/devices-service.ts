@@ -189,9 +189,9 @@ export class DevicesService extends EventEmitter implements Mobile.IDevicesServi
 	/* tslint:enable:no-unused-variable */
 
 	@exported("devicesService")
-	public isAppInstalledOnDevices(deviceIdentifiers: string[], appId: string, projectName: string): Promise<IAppInstalledInfo>[] {
+	public isAppInstalledOnDevices(deviceIdentifiers: string[], appId: string, projectName: string, projectDir: string): Promise<IAppInstalledInfo>[] {
 		this.$logger.trace(`Called isInstalledOnDevices for identifiers ${deviceIdentifiers}. AppIdentifier is ${appId}.`);
-		return _.map(deviceIdentifiers, deviceIdentifier => this.isApplicationInstalledOnDevice(deviceIdentifier, { appId, projectName }));
+		return _.map(deviceIdentifiers, deviceIdentifier => this.isApplicationInstalledOnDevice(deviceIdentifier, { appId, projectName, projectDir }));
 	}
 
 	public getDeviceInstances(): Mobile.IDevice[] {
@@ -463,7 +463,7 @@ export class DevicesService extends EventEmitter implements Mobile.IDevicesServi
 	}
 
 	@exported("devicesService")
-	public deployOnDevices(deviceIdentifiers: string[], packagePath: string, appId: string | Mobile.IProjectIdentifier, projectName: string): Promise<void>[] {
+	public deployOnDevices(deviceIdentifiers: string[], packagePath: string, appId: string | Mobile.IProjectIdentifier, projectName: string, projectDir: string): Promise<void>[] {
 		this.$logger.trace(`Called deployOnDevices for identifiers ${deviceIdentifiers} for packageFile: ${packagePath}. Application identifier is ${appId}. Project Name is: ${projectName}`);
 		return _.map(deviceIdentifiers, async deviceIdentifier => {
 			const device = this.getDeviceByIdentifier(deviceIdentifier);
@@ -475,7 +475,7 @@ export class DevicesService extends EventEmitter implements Mobile.IDevicesServi
 				identifier = appId[device.deviceInfo.platform.toLowerCase()];
 			}
 
-			return this.deployOnDevice(device, { packagePath, appId: identifier, projectName });
+			return this.deployOnDevice(device, { packagePath, appId: identifier, projectName, projectDir});
 		});
 	}
 

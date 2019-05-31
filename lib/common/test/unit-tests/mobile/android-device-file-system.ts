@@ -84,7 +84,8 @@ function createDeviceAppData(androidVersion?: string): Mobile.IDeviceAppData {
 				version: androidVersion || "8.1.2"
 			}
 		},
-		platform: "Android"
+		platform: "Android",
+		projectDir: ""
 	};
 }
 
