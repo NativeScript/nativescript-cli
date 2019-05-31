@@ -1,14 +1,11 @@
 
 import { hook } from "../../common/helpers";
 import { performanceLog } from "../../common/decorators";
-import * as path from "path";
-import { NativePlatformStatus, APP_FOLDER_NAME, APP_RESOURCES_FOLDER_NAME } from "../../constants";
+import { NativePlatformStatus } from "../../constants";
 
 export class PrepareNativePlatformService implements IPrepareNativePlatformService {
 
 	constructor(
-		private $androidResourcesMigrationService: IAndroidResourcesMigrationService,
-		private $fs: IFileSystem,
 		public $hooksService: IHooksService,
 		private $nodeModulesBuilder: INodeModulesBuilder,
 		private $projectChangesService: IProjectChangesService,
@@ -34,10 +31,7 @@ export class PrepareNativePlatformService implements IPrepareNativePlatformServi
 			await this.cleanProject(platformData, projectData, { release });
 		}
 
-		// Move the native application resources from platforms/.../app/App_Resources
-		// to the right places in the native project,
-		// because webpack copies them on every build (not every change).
-		this.prepareAppResources(platformData, projectData);
+		platformData.platformProjectService.prepareAppResources(projectData);
 
 		if (hasChangesRequirePrepare) {
 			await platformData.platformProjectService.prepareProject(projectData, prepareData);
@@ -56,43 +50,6 @@ export class PrepareNativePlatformService implements IPrepareNativePlatformServi
 		this.$projectChangesService.setNativePlatformStatus(platformData, { nativePlatformStatus: NativePlatformStatus.alreadyPrepared });
 
 		return hasChanges;
-	}
-
-	private prepareAppResources(platformData: IPlatformData, projectData: IProjectData): void {
-		const appDestinationDirectoryPath = path.join(platformData.appDestinationDirectoryPath, APP_FOLDER_NAME);
-		const appResourcesDestinationDirectoryPath = path.join(appDestinationDirectoryPath, APP_RESOURCES_FOLDER_NAME);
-
-		if (this.$fs.exists(appResourcesDestinationDirectoryPath)) {
-			platformData.platformProjectService.prepareAppResources(appResourcesDestinationDirectoryPath, projectData);
-			const appResourcesDestination = platformData.platformProjectService.getAppResourcesDestinationDirectoryPath(projectData);
-			this.$fs.ensureDirectoryExists(appResourcesDestination);
-
-			if (platformData.normalizedPlatformName.toLowerCase() === "android") {
-				const appResourcesDirectoryPath = projectData.getAppResourcesDirectoryPath();
-				const appResourcesDirStructureHasMigrated = this.$androidResourcesMigrationService.hasMigrated(appResourcesDirectoryPath);
-				const appResourcesAndroid = path.join(appResourcesDirectoryPath, platformData.normalizedPlatformName);
-
-				if (appResourcesDirStructureHasMigrated) {
-					this.$fs.copyFile(path.join(appResourcesAndroid, "src", "*"), appResourcesDestination);
-
-					this.$fs.deleteDirectory(appResourcesDestinationDirectoryPath);
-					return;
-				}
-
-				// https://github.com/NativeScript/android-runtime/issues/899
-				// App_Resources/Android/libs is reserved to user's aars and jars, but they should not be copied as resources
-				this.$fs.copyFile(path.join(appResourcesDestinationDirectoryPath, platformData.normalizedPlatformName, "*"), appResourcesDestination);
-				this.$fs.deleteDirectory(path.join(appResourcesDestination, "libs"));
-
-				this.$fs.deleteDirectory(appResourcesDestinationDirectoryPath);
-
-				return;
-			}
-
-			this.$fs.copyFile(path.join(appResourcesDestinationDirectoryPath, platformData.normalizedPlatformName, "*"), appResourcesDestination);
-
-			this.$fs.deleteDirectory(appResourcesDestinationDirectoryPath);
-		}
 	}
 
 	private async cleanProject(platformData: IPlatformData, projectData: IProjectData, options: { release: boolean }): Promise<void> {

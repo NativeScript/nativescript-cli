@@ -280,8 +280,24 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		}
 	}
 
-	public prepareAppResources(appResourcesDirectoryPath: string, projectData: IProjectData): void {
-		this.cleanUpPreparedResources(appResourcesDirectoryPath, projectData);
+	public prepareAppResources(projectData: IProjectData): void {
+		const platformData = this.getPlatformData(projectData);
+		const projectAppResourcesPath = projectData.getAppResourcesDirectoryPath(projectData.projectDir);
+		const platformsAppResourcesPath = this.getAppResourcesDestinationDirectoryPath(projectData);
+
+		this.cleanUpPreparedResources(projectAppResourcesPath, projectData);
+
+		this.$fs.ensureDirectoryExists(platformsAppResourcesPath);
+
+		this.$fs.copyFile(path.join(projectAppResourcesPath, platformData.normalizedPlatformName, "*"), platformsAppResourcesPath);
+			const appResourcesDirStructureHasMigrated = this.$androidResourcesMigrationService.hasMigrated(projectAppResourcesPath);
+		if (appResourcesDirStructureHasMigrated) {
+			this.$fs.copyFile(path.join(projectAppResourcesPath, platformData.normalizedPlatformName, "src", "*"), platformsAppResourcesPath);
+		} else {
+			// https://github.com/NativeScript/android-runtime/issues/899
+			// App_Resources/Android/libs is reserved to user's aars and jars, but they should not be copied as resources
+			this.$fs.deleteDirectory(path.join(platformsAppResourcesPath, "libs"));
+		}
 	}
 
 	public async preparePluginNativeCode(pluginData: IPluginData, projectData: IProjectData): Promise<void> {

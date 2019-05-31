@@ -425,7 +425,7 @@ export class PlatformProjectServiceStub extends EventEmitter implements IPlatfor
 	async updatePlatform(currentVersion: string, newVersion: string, canUpdate: boolean): Promise<boolean> {
 		return Promise.resolve(true);
 	}
-	prepareAppResources(appResourcesDirectoryPath: string): void { }
+	prepareAppResources(projectData: IProjectData): void { }
 
 	async preparePluginNativeCode(pluginData: IPluginData): Promise<void> {
 		return Promise.resolve();

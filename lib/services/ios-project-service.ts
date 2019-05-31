@@ -335,20 +335,23 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		}
 	}
 
-	public prepareAppResources(appResourcesDirectoryPath: string, projectData: IProjectData): void {
-		const platformFolder = path.join(appResourcesDirectoryPath, this.getPlatformData(projectData).normalizedPlatformName);
-		const filterFile = (filename: string) => this.$fs.deleteFile(path.join(platformFolder, filename));
+	public prepareAppResources(projectData: IProjectData): void {
+		const platformData = this.getPlatformData(projectData);
+		const projectAppResourcesPath = projectData.getAppResourcesDirectoryPath(projectData.projectDir);
+		const platformsAppResourcesPath = this.getAppResourcesDestinationDirectoryPath(projectData);
 
-		filterFile(this.getPlatformData(projectData).configurationFileName);
-		filterFile(constants.PODFILE_NAME);
+		this.$fs.deleteDirectory(platformsAppResourcesPath);
+		this.$fs.ensureDirectoryExists(platformsAppResourcesPath);
 
-		// src folder should not be copied as the pbxproject will have references to its files
-		this.$fs.deleteDirectory(path.join(appResourcesDirectoryPath, this.getPlatformData(projectData).normalizedPlatformName, constants.NATIVE_SOURCE_FOLDER));
-		this.$fs.deleteDirectory(path.join(appResourcesDirectoryPath, this.getPlatformData(projectData).normalizedPlatformName, constants.NATIVE_EXTENSION_FOLDER));
-		this.$fs.deleteDirectory(path.join(appResourcesDirectoryPath, this.getPlatformData(projectData).normalizedPlatformName, "watchapp"));
-		this.$fs.deleteDirectory(path.join(appResourcesDirectoryPath, this.getPlatformData(projectData).normalizedPlatformName, "watchextension"));
+		this.$fs.copyFile(path.join(projectAppResourcesPath, platformData.normalizedPlatformName, "*"), platformsAppResourcesPath);
 
-		this.$fs.deleteDirectory(this.getAppResourcesDestinationDirectoryPath(projectData));
+		this.$fs.deleteFile(path.join(platformsAppResourcesPath, platformData.configurationFileName));
+		this.$fs.deleteFile(path.join(platformsAppResourcesPath, constants.PODFILE_NAME));
+
+		this.$fs.deleteDirectory(path.join(platformsAppResourcesPath, constants.NATIVE_SOURCE_FOLDER));
+		this.$fs.deleteDirectory(path.join(platformsAppResourcesPath, constants.NATIVE_EXTENSION_FOLDER));
+		this.$fs.deleteDirectory(path.join(platformsAppResourcesPath, "watchapp"));
+		this.$fs.deleteDirectory(path.join(platformsAppResourcesPath, "watchextension"));
 	}
 
 	public async processConfigurationFilesFromAppResources(projectData: IProjectData, opts: IRelease): Promise<void> {

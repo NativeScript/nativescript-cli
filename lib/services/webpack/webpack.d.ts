@@ -78,7 +78,7 @@ declare global {
 		 * @param {IProjectData} projectData DTO with information about the project.
 		 * @returns {void}
 		 */
-		prepareAppResources(appResourcesDirectoryPath: string, projectData: IProjectData): void;
+		prepareAppResources(projectData: IProjectData): void;
 
 		/**
 		 * Defines if current platform is prepared (i.e. if <project dir>/platforms/<platform> dir exists).
