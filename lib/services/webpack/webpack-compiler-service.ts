@@ -14,7 +14,7 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 		private $logger: ILogger
 	) { super(); }
 
-	public async compileWithWatch(platformData: IPlatformData, projectData: IProjectData, config: IWebpackCompilerConfig): Promise<any> {
+	public async compileWithWatch(platformData: IPlatformData, projectData: IProjectData, prepareData: IPrepareData): Promise<any> {
 		return new Promise(async (resolve, reject) => {
 			if (this.webpackProcesses[platformData.platformNameLowerCase]) {
 				resolve();
@@ -22,8 +22,8 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 			}
 
 			let isFirstWebpackWatchCompilation = true;
-			config.watch = true;
-			const childProcess = await this.startWebpackProcess(platformData, projectData, config);
+			prepareData.watch = true;
+			const childProcess = await this.startWebpackProcess(platformData, projectData, prepareData);
 
 			childProcess.on("message", (message: any) => {
 				if (message === "Webpack compilation complete.") {
@@ -68,14 +68,14 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 		});
 	}
 
-	public async compileWithoutWatch(platformData: IPlatformData, projectData: IProjectData, config: IWebpackCompilerConfig): Promise<void> {
+	public async compileWithoutWatch(platformData: IPlatformData, projectData: IProjectData, prepareData: IPrepareData): Promise<void> {
 		return new Promise(async (resolve, reject) => {
 			if (this.webpackProcesses[platformData.platformNameLowerCase]) {
 				resolve();
 				return;
 			}
 
-			const childProcess = await this.startWebpackProcess(platformData, projectData, config);
+			const childProcess = await this.startWebpackProcess(platformData, projectData, prepareData);
 			childProcess.on("close", (arg: any) => {
 				const exitCode = typeof arg === "number" ? arg : arg && arg.code;
 				if (exitCode === 0) {
@@ -99,8 +99,8 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 
 	@performanceLog()
 	@hook('prepareJSApp')
-	private async startWebpackProcess(platformData: IPlatformData, projectData: IProjectData, config: IWebpackCompilerConfig): Promise<child_process.ChildProcess> {
-		const envData = this.buildEnvData(platformData.platformNameLowerCase, config.env, projectData);
+	private async startWebpackProcess(platformData: IPlatformData, projectData: IProjectData, prepareData: IPrepareData): Promise<child_process.ChildProcess> {
+		const envData = this.buildEnvData(platformData.platformNameLowerCase, projectData, prepareData);
 		const envParams = this.buildEnvCommandLineParams(envData, platformData);
 
 		const args = [
@@ -110,11 +110,11 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 			...envParams
 		];
 
-		if (config.watch) {
+		if (prepareData.watch) {
 			args.push("--watch");
 		}
 
-		const stdio = config.watch ? ["inherit", "inherit", "inherit", "ipc"] : "inherit";
+		const stdio = prepareData.watch ? ["inherit", "inherit", "inherit", "ipc"] : "inherit";
 		const childProcess = this.$childProcess.spawn("node", args, { cwd: projectData.projectDir, stdio });
 
 		this.webpackProcesses[platformData.platformNameLowerCase] = childProcess;
@@ -122,7 +122,8 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 		return childProcess;
 	}
 
-	private buildEnvData(platform: string, env: any, projectData: IProjectData) {
+	private buildEnvData(platform: string, projectData: IProjectData, prepareData: IPrepareData) {
+		const { env } = prepareData;
 		const envData = Object.assign({},
 			env,
 			{ [platform.toLowerCase()]: true }
@@ -137,6 +138,7 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 		);
 
 		envData.verbose = this.$logger.isVerbose();
+		envData.production = prepareData.release;
 
 		return envData;
 	}

@@ -4,19 +4,15 @@ import { PrepareData } from "../../data/prepare-data";
 
 declare global {
 	interface IWebpackCompilerService extends EventEmitter {
-		compileWithWatch(platformData: IPlatformData, projectData: IProjectData, config: IWebpackCompilerConfig): Promise<any>;
-		compileWithoutWatch(platformData: IPlatformData, projectData: IProjectData, config: IWebpackCompilerConfig): Promise<void>;
+		compileWithWatch(platformData: IPlatformData, projectData: IProjectData, prepareData: IPrepareData): Promise<any>;
+		compileWithoutWatch(platformData: IPlatformData, projectData: IProjectData, prepareData: IPrepareData): Promise<void>;
 		stopWebpackCompiler(platform: string): void;
-	}
-
-	interface IWebpackCompilerConfig {
-		env: IWebpackEnvOptions;
-		watch?: boolean;
 	}
 
 	interface IWebpackEnvOptions {
 		sourceMap?: boolean;
 		uglify?: boolean;
+		production?: boolean;
 	}
 
 	interface IProjectChangesService {
