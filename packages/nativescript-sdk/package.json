@@ -30,7 +30,7 @@
   },
   "dependencies": {
     "events": "3.0.0",
-    "kinvey-js-sdk": "^4.0.0",
+    "kinvey-js-sdk": "^4.1.0",
     "lodash": "4.17.11",
     "nativescript-background-http": "3.4.0",
     "nativescript-hook": "0.2.5",
