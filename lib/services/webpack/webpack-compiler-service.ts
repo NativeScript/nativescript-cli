@@ -133,8 +133,10 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 		const appResourcesPath = this.$projectData.getAppResourcesRelativeDirectoryPath();
 		Object.assign(envData,
 			appPath && { appPath },
-			appResourcesPath && { appResourcesPath }
+			appResourcesPath && { appResourcesPath },
 		);
+
+		envData.verbose = this.$logger.isVerbose();
 
 		return envData;
 	}

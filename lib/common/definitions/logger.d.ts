@@ -25,6 +25,7 @@ declare global {
 		trace(formatStr?: any, ...args: any[]): void;
 		printMarkdown(...args: any[]): void;
 		prepare(item: any): string;
+		isVerbose(): boolean;
 	}
 
 	interface Log4JSAppenderConfiguration extends Configuration {
