@@ -1,6 +1,6 @@
 import { Yok } from "../../../lib/common/yok";
 import * as _ from 'lodash';
-import { LoggerStub, ErrorsStub } from "../../stubs";
+import { LoggerStub, ErrorsStub, WorkflowServiceStub } from "../../stubs";
 import { FilePayload, Device, FilesPayload } from "nativescript-preview-sdk";
 import { PreviewAppLiveSyncService } from "../../../lib/services/livesync/playground/preview-app-livesync-service";
 import * as chai from "chai";
@@ -73,7 +73,7 @@ class PreviewSdkServiceMock extends EventEmitter implements IPreviewSdkService {
 		return "my_cool_qr_code_url";
 	}
 
-	public initialize(getInitialFiles: (device: Device) => Promise<FilesPayload>) {
+	public initialize(projectDir: string, getInitialFiles: (device: Device) => Promise<FilesPayload>) {
 		this.getInitialFiles = async (device) => {
 			const filesPayload = await getInitialFiles(device);
 			initialFiles.push(...filesPayload.files);
@@ -101,6 +101,7 @@ function createTestInjector(options?: {
 	options = options || {};
 
 	const injector = new Yok();
+	injector.register("workflowService", WorkflowServiceStub);
 	injector.register("logger", LoggerMock);
 	injector.register("hmrStatusService", {});
 	injector.register("errors", ErrorsStub);

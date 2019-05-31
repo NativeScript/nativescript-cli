@@ -35,7 +35,7 @@ const createTestInjector = (): IInjector => {
 	});
 
 	testInjector.register("logger", {
-		out: (formatStr?: any, ...args: any[]): void => undefined,
+		info: (formatStr?: any, ...args: any[]): void => undefined,
 		printMarkdown: (...args: any[]): void => undefined
 	});
 
@@ -49,6 +49,14 @@ const createTestInjector = (): IInjector => {
 };
 
 describe("post-install command", () => {
+	const originalNpmArgv = process.env.npm_config_argv;
+	const originalSudoUser = process.env.SUDO_USER;
+
+	afterEach(() => {
+		process.env.npm_config_argv = originalNpmArgv;
+		process.env.SUDO_USER = originalSudoUser;
+	});
+
 	it("calls subscriptionService.subscribeForNewsletter method", async () => {
 		const testInjector = createTestInjector();
 		const subscriptionService = testInjector.resolve<ISubscriptionService>("subscriptionService");
@@ -60,5 +68,63 @@ describe("post-install command", () => {
 
 		await postInstallCommand.execute([]);
 		assert.isTrue(isSubscribeForNewsletterCalled, "post-install-cli command must call subscriptionService.subscribeForNewsletter");
+	});
+
+	const verifyResult = async (opts: { shouldCallMethod: boolean }): Promise<void> => {
+		const testInjector = createTestInjector();
+		const subscriptionService = testInjector.resolve<ISubscriptionService>("subscriptionService");
+		let isSubscribeForNewsletterCalled = false;
+		subscriptionService.subscribeForNewsletter = async (): Promise<void> => {
+			isSubscribeForNewsletterCalled = true;
+		};
+
+		const helpService = testInjector.resolve<IHelpService>("helpService");
+		let isGenerateHtmlPagesCalled = false;
+		helpService.generateHtmlPages = async (): Promise<void> => {
+			isGenerateHtmlPagesCalled = true;
+		};
+
+		const analyticsService = testInjector.resolve<IAnalyticsService>("analyticsService");
+		let isCheckConsentCalled = false;
+		analyticsService.checkConsent = async (): Promise<void> => {
+			isCheckConsentCalled = true;
+		};
+
+		const commandsService = testInjector.resolve<ICommandsService>("commandsService");
+		let isTryExecuteCommandCalled = false;
+		commandsService.tryExecuteCommand = async (): Promise<void> => {
+			isTryExecuteCommandCalled = true;
+		};
+
+		const postInstallCommand = testInjector.resolveCommand("post-install-cli");
+		await postInstallCommand.execute([]);
+
+		process.env.npm_config_argv = originalNpmArgv;
+		process.env.SUDO_USER = originalSudoUser;
+
+		const hasNotInMsg = opts.shouldCallMethod ? "" : "NOT";
+
+		assert.equal(isSubscribeForNewsletterCalled, opts.shouldCallMethod, `post-install-cli command must ${hasNotInMsg} call subscriptionService.subscribeForNewsletter`);
+		assert.equal(isGenerateHtmlPagesCalled, opts.shouldCallMethod, `post-install-cli command must ${hasNotInMsg} call helpService.generateHtmlPages`);
+		assert.equal(isCheckConsentCalled, opts.shouldCallMethod, `post-install-cli command must ${hasNotInMsg} call analyticsService.checkConsent`);
+		assert.equal(isTryExecuteCommandCalled, opts.shouldCallMethod, `post-install-cli command must ${hasNotInMsg} call commandsService.tryExecuteCommand`);
+	};
+
+	it("does not call specific methods when CLI is installed with sudo without `--unsafe-perm`", () => {
+		process.env.npm_config_argv = JSON.stringify({});
+		process.env.SUDO_USER = "user1";
+		return verifyResult({ shouldCallMethod: false });
+	});
+
+	it("calls specific methods when CLI is installed with sudo with `--unsafe-perm`", async () => {
+		process.env.npm_config_argv = JSON.stringify({ original: ["--unsafe-perm"] });
+		process.env.SUDO_USER = "user1";
+		return verifyResult({ shouldCallMethod: true });
+	});
+
+	it("calls specific methods when CLI is installed without sudo", async () => {
+		process.env.npm_config_argv = JSON.stringify({});
+		delete process.env.SUDO_USER;
+		return verifyResult({ shouldCallMethod: true });
 	});
 });

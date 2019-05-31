@@ -33,7 +33,13 @@ Start a default emulator if none are running, or run application on all connecte
 * `--key-store-alias-password` - Provides the password for the alias specified with `--key-store-alias-password`. You can use the `--key-store-*` options along with `--release` to produce a signed release build. You need to specify all `--key-store-*` options.
 * `--bundle` - Specifies that the `webpack` bundler will be used to bundle the application.
 * `--hmr` - (Beta) Enables the hot module replacement (HMR) feature. HMR depends on `webpack` and adding the `--hmr` flag to the command will automatically enable the `--bundle` option as well. <% if(isConsole) { %> The HMR feature is currently in Beta. For more information about the current development state and any known issues, please check the relevant GitHub issue: https://github.com/NativeScript/NativeScript/issues/6398.<% } %>
-* `--env.*` - Specifies additional flags that the bundler may process. May be passed multiple times. For example: `--env.uglify --env.snapshot`.
+* `--env.*` - Specifies additional flags that the bundler may process. May be passed multiple times. 
+    *   `--env.aot` - creates Ahead-Of-Time build (Angular only).
+    *   `--env.snapshot`- creates [Snapshot](https://docs.nativescript.org/performance-optimizations/bundling-with-webpack#v8-heap-snapshot) (only for release builds on Mac OS & for Android).
+    *   `--env.uglify` - provides basic obfuscation and smaller app size.
+    *   `--env.report` - creates a Webpack report inside a `report` folder in the root folder.
+    *   `--env.sourceMap` - creates inline source maps (useful for debbuging bundled app).
+    *   `--env.hiddenSourceMap` - creates sources maps in the root folder (useful for Crashlytics usage with bundled app in release).
 * `--syncAllFiles` - Watches all production dependencies inside node_modules for changes. Triggers project rebuild if necessary!
 
 <% if(isHtml) { %>

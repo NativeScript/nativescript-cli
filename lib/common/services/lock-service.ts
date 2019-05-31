@@ -4,7 +4,6 @@ import { cache } from "../decorators";
 import { getHash } from "../helpers";
 
 export class LockService implements ILockService {
-	private currentlyLockedFiles: string[] = [];
 
 	@cache()
 	private get defaultLockFilePath(): string {
@@ -28,14 +27,7 @@ export class LockService implements ILockService {
 
 	constructor(private $fs: IFileSystem,
 		private $settingsService: ISettingsService,
-		private $processService: IProcessService) {
-		this.$processService.attachToProcessExitSignals(this, () => {
-			const locksToRemove = _.clone(this.currentlyLockedFiles);
-			for (const lockToRemove of locksToRemove) {
-				lockfile.unlockSync(lockToRemove);
-				this.cleanLock(lockToRemove);
-			}
-		});
+		private $cleanupService: ICleanupService) {
 	}
 
 	public async executeActionWithLock<T>(action: () => Promise<T>, lockFilePath?: string, lockOpts?: ILockOptions): Promise<T> {
@@ -51,29 +43,44 @@ export class LockService implements ILockService {
 
 	public async lock(lockFilePath?: string, lockOpts?: ILockOptions): Promise<() => void> {
 		const { filePath, fileOpts } = this.getLockFileSettings(lockFilePath, lockOpts);
-		this.currentlyLockedFiles.push(filePath);
+
+		for (const pathToClean of this.getPathsForCleanupAction(filePath)) {
+			await this.$cleanupService.addCleanupDeleteAction(pathToClean);
+		}
+
 		this.$fs.writeFile(filePath, "");
 
 		try {
 			const releaseFunc = await lockfile.lock(filePath, fileOpts);
 			return async () => {
 				await releaseFunc();
-				this.cleanLock(filePath);
+				await this.cleanLock(filePath);
 			};
 		} catch (err) {
 			throw new Error(`Timeout while waiting for lock "${filePath}"`);
 		}
 	}
 
-	public unlock(lockFilePath?: string): void {
+	public async unlock(lockFilePath?: string): Promise<void> {
 		const { filePath } = this.getLockFileSettings(lockFilePath);
 		lockfile.unlockSync(filePath);
-		this.cleanLock(filePath);
+		await this.cleanLock(filePath);
 	}
 
-	private cleanLock(lockPath: string): void {
-		_.remove(this.currentlyLockedFiles, e => e === lockPath);
+	private async cleanLock(lockPath: string): Promise<void> {
 		this.$fs.deleteFile(lockPath);
+		for (const filePath of this.getPathsForCleanupAction(lockPath)) {
+			await this.$cleanupService.removeCleanupDeleteAction(filePath);
+		}
+	}
+
+	private getPathsForCleanupAction(lockPath: string): string[] {
+		// The proper-lockfile creates directory with the passed name and `.lock` at the end.
+		// Ensure we will take care of it as well.
+		return [
+			lockPath,
+			`${lockPath}.lock`
+		];
 	}
 
 	private getLockFileSettings(filePath?: string, fileOpts?: ILockOptions): { filePath: string, fileOpts: ILockOptions } {

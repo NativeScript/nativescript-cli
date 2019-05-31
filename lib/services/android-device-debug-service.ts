@@ -50,6 +50,7 @@ export class AndroidDeviceDebugService extends DebugServiceBase implements IDevi
 		return this.device.adb.executeCommand(["forward", "--remove", `tcp:${port}`]);
 	}
 
+	// TODO: Remove this method and reuse logic from androidProcessService
 	private async getForwardedDebugPort(deviceId: string, packageName: string): Promise<number> {
 		let port = -1;
 		const forwardsResult = await this.device.adb.executeCommand(["forward", "--list"]);
@@ -68,11 +69,15 @@ export class AndroidDeviceDebugService extends DebugServiceBase implements IDevi
 			await this.unixSocketForward(port, `${unixSocketName}`);
 		}
 
+		// TODO: Uncomment for 6.0.0 release
+		// await this.$cleanupService.addCleanupCommand({ command: await this.$staticConfig.getAdbFilePath(), args: ["-s", deviceId, "forward", "--remove", `tcp:${port}`] });
+
 		return port;
 	}
 
+	// TODO: Remove this method and reuse logic from androidProcessService
 	private async unixSocketForward(local: number, remote: string): Promise<void> {
-		return this.device.adb.executeCommand(["forward", `tcp:${local}`, `localabstract:${remote}`]);
+		await this.device.adb.executeCommand(["forward", `tcp:${local}`, `localabstract:${remote}`]);
 	}
 
 	@performanceLog()

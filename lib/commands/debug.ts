@@ -18,11 +18,13 @@ export class DebugPlatformCommand extends ValidatePlatformCommandBase implements
 		private $debugDataService: IDebugDataService,
 		private $liveSyncService: IDebugLiveSyncService,
 		private $liveSyncCommandHelper: ILiveSyncCommandHelper,
-		private $androidBundleValidatorHelper: IAndroidBundleValidatorHelper) {
+		private $androidBundleValidatorHelper: IAndroidBundleValidatorHelper,
+		private $workflowService: IWorkflowService) {
 		super($options, $platformsData, $platformService, $projectData);
 	}
 
 	public async execute(args: string[]): Promise<void> {
+		await this.$workflowService.handleLegacyWorkflow({ projectDir: this.$projectData.projectDir, settings: this.$options, skipWarnings: true });
 		await this.$devicesService.initialize({
 			platform: this.platform,
 			deviceId: this.$options.device,
@@ -67,7 +69,7 @@ export class DebugPlatformCommand extends ValidatePlatformCommandBase implements
 		}
 
 		const minSupportedWebpackVersion = this.$options.hmr ? LiveSyncCommandHelper.MIN_SUPPORTED_WEBPACK_VERSION_WITH_HMR : null;
-		this.$bundleValidatorHelper.validate(minSupportedWebpackVersion);
+		this.$bundleValidatorHelper.validate(this.$projectData, minSupportedWebpackVersion);
 
 		const result = await super.canExecuteCommandBase(this.platform, { validateOptions: true, notConfiguredEnvOptions: { hideCloudBuildOption: true, hideSyncToPreviewAppOption: true } });
 		return result;
@@ -91,7 +93,8 @@ export class DebugIOSCommand implements ICommand {
 		private $sysInfo: ISysInfo,
 		private $projectData: IProjectData,
 		$iosDeviceOperations: IIOSDeviceOperations,
-		$iOSSimulatorLogProvider: Mobile.IiOSSimulatorLogProvider) {
+		$iOSSimulatorLogProvider: Mobile.IiOSSimulatorLogProvider,
+		$cleanupService: ICleanupService) {
 		this.$projectData.initializeProjectData();
 		// Do not dispose ios-device-lib, so the process will remain alive and the debug application (NativeScript Inspector or Chrome DevTools) will be able to connect to the socket.
 		// In case we dispose ios-device-lib, the socket will be closed and the code will fail when the debug application tries to read/send data to device socket.
@@ -99,6 +102,7 @@ export class DebugIOSCommand implements ICommand {
 		// In case we do not set it to false, the dispose will be called once the command finishes its execution, which will prevent the debugging.
 		$iosDeviceOperations.setShouldDispose(false);
 		$iOSSimulatorLogProvider.setShouldDispose(false);
+		$cleanupService.setShouldDispose(false);
 	}
 
 	public execute(args: string[]): Promise<void> {

@@ -91,7 +91,7 @@ export class PackageInstallationManager implements IPackageInstallationManager {
 			await this.$childProcess.exec(`npm install ${inspectorNpmPackageName}@${version} --prefix ${cachePath}`, { maxBuffer: 250 * 1024 });
 		}
 
-		this.$logger.out("Using inspector from cache.");
+		this.$logger.info("Using inspector from cache.");
 		return pathToPackageInCache;
 	}
 
@@ -139,7 +139,7 @@ export class PackageInstallationManager implements IPackageInstallationManager {
 	}
 
 	private async npmInstall(packageName: string, pathToSave: string, version: string, dependencyType: string): Promise<INpmInstallResultInfo> {
-		this.$logger.out(`Installing ${packageName}`);
+		this.$logger.info(`Installing ${packageName}`);
 
 		packageName = packageName + (version ? `@${version}` : "");
 

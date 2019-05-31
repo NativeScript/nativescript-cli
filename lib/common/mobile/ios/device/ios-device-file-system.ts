@@ -19,7 +19,7 @@ export class IOSDeviceFileSystem implements Mobile.IDeviceFileSystem {
 		let children: string[] = [];
 		const result = await this.$iosDeviceOperations.listDirectory([{ deviceId: deviceIdentifier, path: devicePath, appId: appIdentifier }]);
 		children = result[deviceIdentifier][0].response;
-		this.$logger.out(children.join(EOL));
+		this.$logger.info(children.join(EOL));
 	}
 
 	public async getFile(deviceFilePath: string, appIdentifier: string, outputFilePath?: string): Promise<void> {
@@ -29,7 +29,7 @@ export class IOSDeviceFileSystem implements Mobile.IDeviceFileSystem {
 		}
 
 		const fileContent = await this.getFileContent(deviceFilePath, appIdentifier);
-		this.$logger.out(fileContent);
+		this.$logger.info(fileContent);
 	}
 
 	public async getFileContent(deviceFilePath: string, appIdentifier: string): Promise<string> {

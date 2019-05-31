@@ -89,10 +89,6 @@ function createTestInjector(testScenario: ITestScenario): IInjector {
 		return testScenario.isInteractive;
 	};
 
-	testInjector.register("processService", {
-		attachToProcessExitSignals: (context: any, callback: () => void): void => (undefined)
-	});
-
 	testInjector.register("childProcess", {});
 	testInjector.register("projectDataService", {});
 	testInjector.register("mobileHelper", {});

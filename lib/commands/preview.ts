@@ -13,11 +13,15 @@ export class PreviewCommand implements ICommand {
 		private $projectData: IProjectData,
 		private $options: IOptions,
 		private $previewAppLogProvider: IPreviewAppLogProvider,
-		private $previewQrCodeService: IPreviewQrCodeService) {
-			this.$analyticsService.setShouldDispose(this.$options.justlaunch || !this.$options.watch);
-		}
+		private $previewQrCodeService: IPreviewQrCodeService,
+		protected $workflowService: IWorkflowService,
+		$cleanupService: ICleanupService) {
+		this.$analyticsService.setShouldDispose(false);
+		$cleanupService.setShouldDispose(false);
+	}
 
 	public async execute(): Promise<void> {
+		await this.$workflowService.handleLegacyWorkflow({ projectDir: this.$projectData.projectDir, settings: this.$options, skipWarnings: true });
 		this.$previewAppLogProvider.on(DEVICE_LOG_EVENT_NAME, (deviceId: string, message: string) => {
 			this.$logger.info(message);
 		});
@@ -42,7 +46,7 @@ export class PreviewCommand implements ICommand {
 		}
 
 		await this.$networkConnectivityValidator.validate();
-		this.$bundleValidatorHelper.validate(PreviewCommand.MIN_SUPPORTED_WEBPACK_VERSION);
+		this.$bundleValidatorHelper.validate(this.$projectData, PreviewCommand.MIN_SUPPORTED_WEBPACK_VERSION);
 		return true;
 	}
 }

@@ -11,12 +11,16 @@ import { HostInfo } from "./../lib/common/host-info";
 import { DevicePlatformsConstants } from "./../lib/common/mobile/device-platforms-constants";
 
 export class LoggerStub implements ILogger {
+	initialize(opts?: ILoggerOptions): void { }
+	initializeCliLogger(): void { }
 	getLevel(): string { return undefined; }
 	fatal(...args: string[]): void { }
 	error(...args: string[]): void { }
 	warn(...args: string[]): void { }
-	warnWithLabel(...args: string[]): void { }
-	info(...args: string[]): void { }
+	info(...args: string[]): void {
+		this.output += util.format.apply(null, args) + "\n";
+	}
+
 	debug(...args: string[]): void { }
 	trace(...args: string[]): void {
 		this.traceOutput += util.format.apply(null, args) + "\n";
@@ -25,34 +29,17 @@ export class LoggerStub implements ILogger {
 	public output = "";
 	public traceOutput = "";
 
-	out(...args: string[]): void {
-		this.output += util.format.apply(null, args) + "\n";
-	}
-
-	write(...args: string[]): void { }
-
 	prepare(item: any): string {
 		return "";
 	}
 
-	printInfoMessageOnSameLine(message: string): void { }
-	async printMsgWithTimeout(message: string, timeout: number): Promise<void> {
-		return null;
-	}
-
 	printMarkdown(message: string): void { }
 
-	printOnStderr(...args: string[]): void {
-		// nothing to do here
-	}
-}
-
-export class ProcessServiceStub implements IProcessService {
-	public listenersCount: number;
-
-	public attachToProcessExitSignals(context: any, callback: () => void): void {
-		return undefined;
-	}
+	out(formatStr?: any, ...args: any[]): void { }
+	write(...args: any[]): void { }
+	printInfoMessageOnSameLine(message: string): void { }
+	async printMsgWithTimeout(message: string, timeout: number): Promise<void> { }
+	printOnStderr(formatStr?: any, ...args: any[]): void { }
 }
 
 export class FileSystemStub implements IFileSystem {
@@ -505,6 +492,9 @@ export class PlatformsDataStub extends EventEmitter implements IPlatformsData {
 }
 
 export class ProjectDataService implements IProjectDataService {
+	setUseLegacyWorkflow(projectDir: string, value: any): Promise<void> {
+		return;
+	}
 	getNSValue(propertyName: string): any {
 		return {};
 	}
@@ -581,13 +571,15 @@ export class PrompterStub implements IPrompter {
 	private passwords: IDictionary<string> = {};
 	private answers: IDictionary<string> = {};
 	private questionChoices: IDictionary<any[]> = {};
+	private confirmQuestions: IDictionary<boolean> = {};
 
-	expect(options?: { strings?: IDictionary<string>, passwords?: IDictionary<string>, answers?: IDictionary<string>, questionChoices?: IDictionary<any[]> }) {
+	expect(options?: { strings?: IDictionary<string>, passwords?: IDictionary<string>, answers?: IDictionary<string>, questionChoices?: IDictionary<any[]>, confirmQuestions?: IDictionary<boolean> }) {
 		if (options) {
 			this.strings = options.strings || this.strings;
 			this.passwords = options.passwords || this.passwords;
 			this.answers = options.answers || this.answers;
 			this.questionChoices = options.questionChoices || this.questionChoices;
+			this.confirmQuestions = options.confirmQuestions || this.confirmQuestions;
 		}
 	}
 
@@ -617,7 +609,10 @@ export class PrompterStub implements IPrompter {
 		return result;
 	}
 	async confirm(message: string, defaultAction?: () => boolean): Promise<boolean> {
-		throw unreachable();
+		chai.assert.ok(message in this.confirmQuestions, `PrompterStub didn't expect to be asked for: ${message}`);
+		const result = this.confirmQuestions[message];
+		delete this.confirmQuestions[message];
+		return result;
 	}
 	dispose(): void {
 		throw unreachable();
@@ -629,6 +624,9 @@ export class PrompterStub implements IPrompter {
 		}
 		for (const key in this.passwords) {
 			throw unexpected(`PrompterStub was instructed to reply with "${this.passwords[key]}" to a "${key}" password request, but was never asked!`);
+		}
+		for (const key in this.confirmQuestions) {
+			throw unexpected(`PrompterStub was instructed to reply with "${this.confirmQuestions[key]}" to a "${key}" confirm question, but was never asked!`);
 		}
 	}
 }
@@ -921,6 +919,12 @@ export class PerformanceService implements IPerformanceService {
 	processExecutionData() { }
 }
 
+export class WorkflowServiceStub implements IWorkflowService {
+	handleLegacyWorkflow(options: IHandleLegacyWorkflowOptions): Promise<void> {
+		return;
+	}
+}
+
 export class InjectorStub extends Yok implements IInjector {
 	constructor() {
 		super();
@@ -959,5 +963,6 @@ export class InjectorStub extends Yok implements IInjector {
 			getDevice: (): Mobile.IDevice => undefined,
 			getDeviceByIdentifier: (): Mobile.IDevice => undefined
 		});
+		this.register("workflowService", WorkflowServiceStub);
 	}
 }

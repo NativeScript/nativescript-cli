@@ -3,7 +3,7 @@ import * as ConfigLib from "../lib/config";
 import * as ErrorsLib from "../lib/common/errors";
 import * as FsLib from "../lib/common/file-system";
 import * as HostInfoLib from "../lib/common/host-info";
-import * as LoggerLib from "../lib/common/logger";
+import * as LoggerLib from "../lib/common/logger/logger";
 import * as NpmLib from "../lib/node-package-manager";
 import * as YarnLib from "../lib/yarn-package-manager";
 import * as PackageManagerLib from "../lib/package-manager";
@@ -14,10 +14,13 @@ import * as yok from "../lib/common/yok";
 import ChildProcessLib = require("../lib/common/child-process");
 import { SettingsService } from "../lib/common/test/unit-tests/stubs";
 import { ProjectDataService } from "../lib/services/project-data-service";
+import { WorkflowServiceStub, ProjectDataStub } from "./stubs";
 
 function createTestInjector(): IInjector {
 	const testInjector = new yok.Yok();
 
+	testInjector.register("workflowService", WorkflowServiceStub);
+	testInjector.register("projectData", ProjectDataStub);
 	testInjector.register("config", ConfigLib.Configuration);
 	testInjector.register("logger", LoggerLib.Logger);
 	testInjector.register("errors", ErrorsLib.Errors);

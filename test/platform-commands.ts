@@ -20,6 +20,7 @@ import * as ChildProcessLib from "../lib/common/child-process";
 import ProjectChangesLib = require("../lib/services/project-changes-service");
 import { Messages } from "../lib/common/messages/messages";
 import { SettingsService } from "../lib/common/test/unit-tests/stubs";
+import { WorkflowServiceStub } from "./stubs";
 
 let isCommandExecuted = true;
 
@@ -97,6 +98,7 @@ function createTestInjector() {
 	const testInjector = new yok.Yok();
 
 	testInjector.register("injector", testInjector);
+	testInjector.register("workflowService", WorkflowServiceStub);
 	testInjector.register("hooksService", stubs.HooksServiceStub);
 	testInjector.register("staticConfig", StaticConfigLib.StaticConfig);
 	testInjector.register("nodeModulesDependenciesBuilder", {});
@@ -178,6 +180,9 @@ function createTestInjector() {
 	testInjector.register("usbLiveSyncService", ({}));
 	testInjector.register("doctorService", {
 		checkForDeprecatedShortImportsInAppDir: (projectDir: string): void => undefined
+	});
+	testInjector.register("cleanupService", {
+		setShouldDispose: (shouldDispose: boolean): void => undefined
 	});
 
 	return testInjector;

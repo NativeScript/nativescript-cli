@@ -107,13 +107,6 @@ function createTestInjector() {
 		showCommandLineHelp: async (): Promise<void> => (undefined)
 	});
 	testInjector.register("settingsService", SettingsService);
-	testInjector.register("progressIndicator", {
-		getSpinner: (msg: string) => ({
-			start: (): void => undefined,
-			stop: (): void => undefined,
-			message: (): void => undefined
-		})
-	});
 	testInjector.register("httpClient", {});
 	testInjector.register("extensibilityService", {});
 	testInjector.register("androidPluginBuildService", stubs.AndroidPluginBuildServiceStub);
@@ -150,6 +143,11 @@ function createTestInjector() {
 		},
 		extractPackage: async (packageName: string, destinationDirectory: string, options?: IPacoteExtractOptions): Promise<void> => undefined
 	});
+
+	testInjector.register("cleanupService", {
+		setShouldDispose: (shouldDispose: boolean): void => undefined
+	});
+
 	return testInjector;
 }
 
@@ -274,7 +272,7 @@ describe("Plugins service", () => {
 			});
 			it("fails when the plugin does not support the installed framework", async () => {
 				let isWarningMessageShown = false;
-				const expectedWarningMessage = "mySamplePlugin 1.5.0 for android is not compatible with the currently installed framework version 1.4.0.";
+				const expectedWarningMessage = "mySamplePlugin requires at least version 1.5.0 of platform android. Currently installed version is 1.4.0.";
 
 				// Creates plugin in temp folder
 				const pluginName = "mySamplePlugin";

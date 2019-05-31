@@ -1,7 +1,7 @@
 import { Yok } from "../../lib/common/yok";
 import { assert } from "chai";
 import { ProjectDataService } from "../../lib/services/project-data-service";
-import { LoggerStub } from "../stubs";
+import { LoggerStub, WorkflowServiceStub, ProjectDataStub } from "../stubs";
 import { NATIVESCRIPT_PROPS_INTERNAL_DELIMITER, PACKAGE_JSON_FILE_NAME, AssetConstants, ProjectTypes } from '../../lib/constants';
 import { DevicePlatformsConstants } from "../../lib/common/mobile/device-platforms-constants";
 import { basename, join } from "path";
@@ -43,6 +43,8 @@ const testData: any = [
 
 const createTestInjector = (readTextData?: string): IInjector => {
 	const testInjector = new Yok();
+	testInjector.register("workflowService", WorkflowServiceStub);
+	testInjector.register("projectData", ProjectDataStub);
 	testInjector.register("staticConfig", {
 		CLIENT_NAME_KEY_IN_PROJECT_FILE: CLIENT_NAME_KEY_IN_PROJECT_FILE,
 		PROJECT_FILE_NAME: "package.json"

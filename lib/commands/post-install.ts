@@ -1,3 +1,5 @@
+import { doesCurrentNpmCommandMatch } from "../common/helpers";
+
 export class PostInstallCliCommand implements ICommand {
 	constructor(private $fs: IFileSystem,
 		private $subscriptionService: ISubscriptionService,
@@ -13,24 +15,35 @@ export class PostInstallCliCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
 
 	public async execute(args: string[]): Promise<void> {
+		const isRunningWithSudoUser = !!process.env.SUDO_USER;
+
 		if (!this.$hostInfo.isWindows) {
 			// when running under 'sudo' we create a working dir with wrong owner (root) and
 			// it is no longer accessible for the user initiating the installation
 			// patch the owner here
-			if (process.env.SUDO_USER) {
+			if (isRunningWithSudoUser) {
 				// TODO: Check if this is the correct place, probably we should set this at the end of the command.
 				await this.$fs.setCurrentUserAsOwner(this.$settingsService.getProfileDir(), process.env.SUDO_USER);
 			}
 		}
 
-		await this.$helpService.generateHtmlPages();
-		// Explicitly ask for confirmation of usage-reporting:
-		await this.$analyticsService.checkConsent();
-		await this.$commandsService.tryExecuteCommand("autocomplete", []);
+		const canExecutePostInstallTask = !isRunningWithSudoUser || doesCurrentNpmCommandMatch([/^--unsafe-perm$/]);
+
+		if (canExecutePostInstallTask) {
+			await this.$helpService.generateHtmlPages();
+
+			// Explicitly ask for confirmation of usage-reporting:
+			await this.$analyticsService.checkConsent();
+			await this.$commandsService.tryExecuteCommand("autocomplete", []);
+		}
+
 		// Make sure the success message is separated with at least one line from all other messages.
-		this.$logger.out();
+		this.$logger.info();
 		this.$logger.printMarkdown("Installation successful. You are good to go. Connect with us on `http://twitter.com/NativeScript`.");
-		await this.$subscriptionService.subscribeForNewsletter();
+
+		if (canExecutePostInstallTask) {
+			await this.$subscriptionService.subscribeForNewsletter();
+		}
 	}
 
 	public async postCommandAction(args: string[]): Promise<void> {

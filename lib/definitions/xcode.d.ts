@@ -28,7 +28,7 @@ declare module "nativescript-dev-xcode" {
 
         pbxXCBuildConfigurationSection(): any;
 
-        addTarget(targetName: string, targetType: string, targetPath?: string): target;
+        addTarget(targetName: string, targetType: string, targetPath?: string, parentTarget?: string): target;
         addBuildPhase(filePathsArray: string[],
             buildPhaseType: string,
             comment: string,
@@ -47,6 +47,7 @@ declare module "nativescript-dev-xcode" {
         addBuildProperty(prop: string, value: any, build_name?: string, productName?: string): void;
         addToHeaderSearchPaths(file: string|Object, productName?: string): void;
         removeTargetsByProductType(targetType: string): void
+        getFirstTarget(): {uuid: string}
     }
 
     class target {

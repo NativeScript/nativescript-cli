@@ -13,12 +13,17 @@ import * as plist from "plist";
 import { IOSProvisionService } from "./ios-provision-service";
 import { IOSEntitlementsService } from "./ios-entitlements-service";
 import * as mobileProvisionFinder from "ios-mobileprovision-finder";
-import { BUILD_XCCONFIG_FILE_NAME, IosProjectConstants } from "../constants";
+import { BUILD_XCCONFIG_FILE_NAME, IosProjectConstants, IOSNativeTargetProductTypes } from "../constants";
 
 interface INativeSourceCodeGroup {
 	name: string;
 	path: string;
 	files: string[];
+}
+
+enum ProductArgs {
+	target = "target",
+	scheme = "scheme"
 }
 
 const DevicePlatformSdkName = "iphoneos";
@@ -53,7 +58,8 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		private $plistParser: IPlistParser,
 		private $sysInfo: ISysInfo,
 		private $xcconfigService: IXcconfigService,
-		private $iOSExtensionsService: IIOSExtensionsService) {
+		private $iOSExtensionsService: IIOSExtensionsService,
+		private $iOSWatchAppService: IIOSWatchAppService) {
 		super($fs, $projectDataService);
 	}
 
@@ -214,7 +220,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		const archivePath = options && options.archivePath ? path.resolve(options.archivePath) : path.join(platformData.getBuildOutputPath(buildConfig), projectData.projectName + ".xcarchive");
 		let args = ["archive", "-archivePath", archivePath, "-configuration",
 			getConfigurationName(!buildConfig || buildConfig.release)]
-			.concat(this.xcbuildProjectArgs(projectRoot, projectData, "scheme"));
+			.concat(this.xcbuildProjectArgs(projectRoot, projectData, ProductArgs.scheme));
 
 		if (options && options.additionalArgs) {
 			args = args.concat(options.additionalArgs);
@@ -279,6 +285,10 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		return exportFile;
 	}
 
+	private iCloudContainerEnvironment(buildConfig: IBuildConfig): string {
+		return buildConfig && buildConfig.iCloudContainerEnvironment ? buildConfig.iCloudContainerEnvironment : null;
+	}
+
 	/**
 	 * Exports .xcarchive for a development device.
 	 */
@@ -287,6 +297,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		const projectRoot = platformData.projectRoot;
 		const archivePath = options.archivePath;
 		const exportOptionsMethod = await this.getExportOptionsMethod(projectData, archivePath);
+		const iCloudContainerEnvironment = this.iCloudContainerEnvironment(buildConfig);
 		let plistTemplate = `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -304,7 +315,13 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
     <key>uploadBitcode</key>
     <false/>
     <key>compileBitcode</key>
-    <false/>
+    <false/>`;
+		if (iCloudContainerEnvironment) {
+			plistTemplate += `
+    <key>iCloudContainerEnvironment</key>
+    <string>${iCloudContainerEnvironment}</string>`;
+		}
+		plistTemplate += `
 </dict>
 </plist>`;
 
@@ -328,7 +345,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		return exportFile;
 	}
 
-	private xcbuildProjectArgs(projectRoot: string, projectData: IProjectData, product?: "scheme" | "target"): string[] {
+	private xcbuildProjectArgs(projectRoot: string, projectData: IProjectData, product?: ProductArgs): string[] {
 		const xcworkspacePath = path.join(projectRoot, projectData.projectName + ".xcworkspace");
 		if (this.$fs.exists(xcworkspacePath)) {
 			return ["-workspace", xcworkspacePath, product ? "-" + product : "-scheme", projectData.projectName];
@@ -402,8 +419,13 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 		args = args.concat((buildConfig && buildConfig.architectures) || this.getBuildArchitectures(projectData, buildConfig, ["armv7", "arm64"]));
 
+		if (!this.hasWatchApp(projectData)) {
+			args = args.concat([
+				"-sdk", DevicePlatformSdkName
+			]);
+		}
+
 		args = args.concat([
-			"-sdk", DevicePlatformSdkName,
 			"BUILD_DIR=" + path.join(projectRoot, constants.BUILD_DIR)
 		]);
 
@@ -491,7 +513,12 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			}
 
 			xcode.setAutomaticSigningStyle(projectData.projectName, teamId);
-			xcode.setAutomaticSigningStyleByTargetProductType("com.apple.product-type.app-extension", teamId);
+			xcode.setAutomaticSigningStyleByTargetProductTypesList([
+				IOSNativeTargetProductTypes.appExtension,
+				IOSNativeTargetProductTypes.watchApp,
+				IOSNativeTargetProductTypes.watchExtension
+			],
+			teamId);
 			xcode.save();
 
 			this.$logger.trace(`Set Automatic signing style and team id ${teamId}.`);
@@ -533,7 +560,12 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 					identity: mobileprovision.Type === "Development" ? "iPhone Developer" : "iPhone Distribution"
 				};
 				xcode.setManualSigningStyle(projectData.projectName, configuration);
-				xcode.setManualSigningStyleByTargetProductType("com.apple.product-type.app-extension", configuration);
+				xcode.setManualSigningStyleByTargetProductTypesList([
+					IOSNativeTargetProductTypes.appExtension,
+					IOSNativeTargetProductTypes.watchApp,
+					IOSNativeTargetProductTypes.watchExtension
+				],
+				configuration);
 				xcode.save();
 
 				// this.cache(uuid);
@@ -567,18 +599,25 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 	private async buildForSimulator(projectRoot: string, args: string[], projectData: IProjectData, buildConfig?: IBuildConfig): Promise<void> {
 		const architectures = this.getBuildArchitectures(projectData, buildConfig, ["i386", "x86_64"]);
+		let product;
 
 		args = args
 			.concat(architectures)
 			.concat([
 				"build",
 				"-configuration", getConfigurationName(buildConfig.release),
-				"-sdk", SimulatorPlatformSdkName,
 				"ONLY_ACTIVE_ARCH=NO",
 				"BUILD_DIR=" + path.join(projectRoot, constants.BUILD_DIR),
-				"CODE_SIGN_IDENTITY=",
-			])
-			.concat(this.xcbuildProjectArgs(projectRoot, projectData));
+			]);
+
+			if (this.hasWatchApp(projectData)) {
+				product = ProductArgs.scheme;
+				args = args.concat(["-destination", "generic/platform=iOS Simulator", "CODE_SIGNING_ALLOWED=NO"]);
+			} else {
+				args = args.concat(["-sdk", SimulatorPlatformSdkName, "CODE_SIGN_IDENTITY="]);
+			}
+
+		args = args.concat(this.xcbuildProjectArgs(projectRoot, projectData, product));
 
 		await this.xcodebuild(args, projectRoot, buildConfig.buildOutputStdio);
 	}
@@ -734,6 +773,8 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 
 	public async prepareProject(projectData: IProjectData, platformSpecificData: IPlatformSpecificData): Promise<void> {
 		const projectRoot = path.join(projectData.platformsDir, "ios");
+		const platformData = this.getPlatformData(projectData);
+		const resourcesDirectoryPath = projectData.getAppResourcesDirectoryPath();
 
 		const provision = platformSpecificData && platformSpecificData.provision;
 		const teamId = platformSpecificData && platformSpecificData.teamId;
@@ -772,12 +813,19 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 			this.savePbxProj(project, projectData);
 
 			const resourcesNativeCodePath = path.join(
-				projectData.getAppResourcesDirectoryPath(),
-				this.getPlatformData(projectData).normalizedPlatformName,
+				resourcesDirectoryPath,
+				platformData.normalizedPlatformName,
 				constants.NATIVE_SOURCE_FOLDER
 			);
-
 			await this.prepareNativeSourceCode(constants.TNS_NATIVE_SOURCE_GROUP_NAME, resourcesNativeCodePath, projectData);
+		}
+
+		const pbxProjPath = this.getPbxProjPath(projectData);
+		this.$iOSWatchAppService.removeWatchApp({ pbxProjPath });
+		const addedWatchApp = await this.$iOSWatchAppService.addWatchAppFromPath({ watchAppFolderPath: path.join(resourcesDirectoryPath, platformData.normalizedPlatformName), projectData, platformData, pbxProjPath });
+
+		if (addedWatchApp) {
+			this.$logger.warn("The support for Apple Watch App is currently in Beta. For more information about the current development state and any known issues, please check the relevant GitHub issue: https://github.com/NativeScript/nativescript-cli/issues/4589");
 		}
 
 	}
@@ -792,6 +840,8 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		// src folder should not be copied as the pbxproject will have references to its files
 		this.$fs.deleteDirectory(path.join(appResourcesDirectoryPath, this.getPlatformData(projectData).normalizedPlatformName, constants.NATIVE_SOURCE_FOLDER));
 		this.$fs.deleteDirectory(path.join(appResourcesDirectoryPath, this.getPlatformData(projectData).normalizedPlatformName, constants.NATIVE_EXTENSION_FOLDER));
+		this.$fs.deleteDirectory(path.join(appResourcesDirectoryPath, this.getPlatformData(projectData).normalizedPlatformName, "watchapp"));
+		this.$fs.deleteDirectory(path.join(appResourcesDirectoryPath, this.getPlatformData(projectData).normalizedPlatformName, "watchextension"));
 
 		this.$fs.deleteDirectory(this.getAppResourcesDestinationDirectoryPath(projectData));
 	}
@@ -799,7 +849,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 	public async processConfigurationFilesFromAppResources(projectData: IProjectData, opts: IRelease): Promise<void> {
 		await this.mergeInfoPlists(projectData, opts);
 		await this.$iOSEntitlementsService.merge(projectData);
-		await this.mergeProjectXcconfigFiles(projectData, opts);
+		await this.mergeProjectXcconfigFiles(projectData);
 		for (const pluginData of await this.getAllInstalledPlugins(projectData)) {
 			await this.$pluginVariablesService.interpolatePluginVariables(pluginData, this.getPlatformData(projectData).configurationFilePath, projectData.projectDir);
 		}
@@ -1216,10 +1266,13 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		this.$fs.writeFile(path.join(headersFolderPath, "module.modulemap"), modulemap);
 	}
 
-	private async mergeProjectXcconfigFiles(projectData: IProjectData, opts: IRelease): Promise<void> {
+	private async mergeProjectXcconfigFiles(projectData: IProjectData): Promise<void> {
 		const platformData = this.getPlatformData(projectData);
-		const pluginsXcconfigFilePath = this.$xcconfigService.getPluginsXcconfigFilePath(platformData.projectRoot, opts);
-		this.$fs.deleteFile(pluginsXcconfigFilePath);
+		const pluginsXcconfigFilePaths = _.values(this.$xcconfigService.getPluginsXcconfigFilePaths(platformData.projectRoot));
+
+		for (const pluginsXcconfigFilePath of pluginsXcconfigFilePaths) {
+			this.$fs.deleteFile(pluginsXcconfigFilePath);
+		}
 
 		const pluginsService = <IPluginsService>this.$injector.resolve("pluginsService");
 		const allPlugins: IPluginData[] = await pluginsService.getAllInstalledPlugins(projectData);
@@ -1227,32 +1280,40 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 			const pluginPlatformsFolderPath = plugin.pluginPlatformsFolderPath(IOSProjectService.IOS_PLATFORM_NAME);
 			const pluginXcconfigFilePath = path.join(pluginPlatformsFolderPath, BUILD_XCCONFIG_FILE_NAME);
 			if (this.$fs.exists(pluginXcconfigFilePath)) {
-				await this.$xcconfigService.mergeFiles(pluginXcconfigFilePath, pluginsXcconfigFilePath);
+				for (const pluginsXcconfigFilePath of pluginsXcconfigFilePaths) {
+					await this.$xcconfigService.mergeFiles(pluginXcconfigFilePath, pluginsXcconfigFilePath);
+				}
 			}
 		}
 
 		const appResourcesXcconfigPath = path.join(projectData.appResourcesDirectoryPath, this.getPlatformData(projectData).normalizedPlatformName, BUILD_XCCONFIG_FILE_NAME);
 		if (this.$fs.exists(appResourcesXcconfigPath)) {
-			await this.$xcconfigService.mergeFiles(appResourcesXcconfigPath, pluginsXcconfigFilePath);
+			for (const pluginsXcconfigFilePath of pluginsXcconfigFilePaths) {
+				await this.$xcconfigService.mergeFiles(appResourcesXcconfigPath, pluginsXcconfigFilePath);
+			}
 		}
 
-		if (!this.$fs.exists(pluginsXcconfigFilePath)) {
-			// We need the pluginsXcconfig file to exist in platforms dir as it is required in the native template:
-			// https://github.com/NativeScript/ios-runtime/blob/9c2b7b5f70b9bee8452b7a24aa6b646214c7d2be/build/project-template/__PROJECT_NAME__/build-debug.xcconfig#L3
-			// From Xcode 10 in case the file is missing, this include fails and the build itself fails (was a warning in previous Xcode versions).
-			this.$fs.writeFile(pluginsXcconfigFilePath, "");
+		for (const pluginsXcconfigFilePath of pluginsXcconfigFilePaths) {
+			if (!this.$fs.exists(pluginsXcconfigFilePath)) {
+				// We need the pluginsXcconfig file to exist in platforms dir as it is required in the native template:
+				// https://github.com/NativeScript/ios-runtime/blob/9c2b7b5f70b9bee8452b7a24aa6b646214c7d2be/build/project-template/__PROJECT_NAME__/build-debug.xcconfig#L3
+				// From Xcode 10 in case the file is missing, this include fails and the build itself fails (was a warning in previous Xcode versions).
+				this.$fs.writeFile(pluginsXcconfigFilePath, "");
+			}
 		}
 
-		// Set Entitlements Property to point to default file if not set explicitly by the user.
-		const entitlementsPropertyValue = this.$xcconfigService.readPropertyValue(pluginsXcconfigFilePath, constants.CODE_SIGN_ENTITLEMENTS);
-		if (entitlementsPropertyValue === null && this.$fs.exists(this.$iOSEntitlementsService.getPlatformsEntitlementsPath(projectData))) {
-			temp.track();
-			const tempEntitlementsDir = temp.mkdirSync("entitlements");
-			const tempEntitlementsFilePath = path.join(tempEntitlementsDir, "set-entitlements.xcconfig");
-			const entitlementsRelativePath = this.$iOSEntitlementsService.getPlatformsEntitlementsRelativePath(projectData);
-			this.$fs.writeFile(tempEntitlementsFilePath, `CODE_SIGN_ENTITLEMENTS = ${entitlementsRelativePath}${EOL}`);
+		for (const pluginsXcconfigFilePath of pluginsXcconfigFilePaths) {
+			// Set Entitlements Property to point to default file if not set explicitly by the user.
+			const entitlementsPropertyValue = this.$xcconfigService.readPropertyValue(pluginsXcconfigFilePath, constants.CODE_SIGN_ENTITLEMENTS);
+			if (entitlementsPropertyValue === null && this.$fs.exists(this.$iOSEntitlementsService.getPlatformsEntitlementsPath(projectData))) {
+				temp.track();
+				const tempEntitlementsDir = temp.mkdirSync("entitlements");
+				const tempEntitlementsFilePath = path.join(tempEntitlementsDir, "set-entitlements.xcconfig");
+				const entitlementsRelativePath = this.$iOSEntitlementsService.getPlatformsEntitlementsRelativePath(projectData);
+				this.$fs.writeFile(tempEntitlementsFilePath, `CODE_SIGN_ENTITLEMENTS = ${entitlementsRelativePath}${EOL}`);
 
-			await this.$xcconfigService.mergeFiles(tempEntitlementsFilePath, pluginsXcconfigFilePath);
+				await this.$xcconfigService.mergeFiles(tempEntitlementsFilePath, pluginsXcconfigFilePath);
+			}
 		}
 	}
 
@@ -1363,7 +1424,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 		const mergedPlist = plist.parse(this.$fs.readText(mergedPlistPath));
 
 		if (infoPlist.CFBundleIdentifier && infoPlist.CFBundleIdentifier !== mergedPlist.CFBundleIdentifier) {
-			this.$logger.warnWithLabel("The CFBundleIdentifier key inside the 'Info.plist' will be overriden by the 'id' inside 'package.json'.");
+			this.$logger.warn("[WARNING]: The CFBundleIdentifier key inside the 'Info.plist' will be overriden by the 'id' inside 'package.json'.");
 		}
 	}
 
@@ -1377,6 +1438,17 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 			"Distribution": "app-store",
 			"Enterprise": "enterprise"
 		}[provision.Type];
+	}
+
+	private hasWatchApp(projectData: IProjectData) {
+		const platformData = this.getPlatformData(projectData);
+		const watchAppPath = path.join(
+			projectData.getAppResourcesDirectoryPath(),
+			platformData.normalizedPlatformName,
+			constants.IOS_WATCHAPP_FOLDER
+		);
+
+		return this.$fs.exists(watchAppPath);
 	}
 }
 

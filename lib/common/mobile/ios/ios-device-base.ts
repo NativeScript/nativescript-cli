@@ -6,7 +6,6 @@ export abstract class IOSDeviceBase implements Mobile.IiOSDevice {
 	protected abstract $errors: IErrors;
 	protected abstract $deviceLogProvider: Mobile.IDeviceLogProvider;
 	protected abstract $iOSDebuggerPortService: IIOSDebuggerPortService;
-	protected abstract $processService: IProcessService;
 	protected abstract $lockService: ILockService;
 	abstract deviceInfo: Mobile.IDeviceInfo;
 	abstract applicationManager: Mobile.IDeviceApplicationManager;
@@ -33,8 +32,6 @@ export abstract class IOSDeviceBase implements Mobile.IiOSDevice {
 					this.cachedSockets[appId].on("close", async () => {
 						await this.destroyDebugSocket(appId);
 					});
-
-					this.$processService.attachToProcessExitSignals(this, () => this.destroyDebugSocket(appId));
 				}
 
 				return this.cachedSockets[appId];

@@ -22,9 +22,22 @@ Usage | Synopsis
 
 <% if(isHtml) { %>
 
-### Command Limitations
+### Options
 
-* You can run the `$ tns build ios` command only on macOS systems.
+* `--justlaunch` - If set, does not print the application output in the console.
+* `--release` - If set, produces a release build. Otherwise, produces a debug build.
+* `--device` - Specifies a connected device/emulator to start and run the app. `<Device ID>` is the index or `Device Identifier` of the target device as listed by the `$ tns device <Platform> --available-devices` command.
+* `--bundle` - Specifies that the `webpack` bundler will be used to bundle the application.
+* `--hmr` - (Beta) Enables the hot module replacement (HMR) feature. HMR depends on `webpack` and adding the `--hmr` flag to the command will automatically enable the `--bundle` option as well. <% if(isConsole) { %> The HMR feature is currently in Beta. For more information about the current development state and any known issues, please check the relevant GitHub issue: https://github.com/NativeScript/NativeScript/issues/6398.<% } %>
+* `--env.*` - Specifies additional flags that the bundler may process. May be passed multiple times. Supported additional flags:
+    *   `--env.aot` - creates Ahead-Of-Time build (Angular only).
+    *   `--env.snapshot`- creates [Snapshot](https://docs.nativescript.org/performance-optimizations/bundling-with-webpack#v8-heap-snapshot) (only for release builds on Mac OS & for Android).
+    *   `--env.uglify` - provides basic obfuscation and smaller app size.
+    *   `--env.report` - creates a Webpack report inside a `report` folder in the root folder.
+    *   `--env.sourceMap` - creates inline source maps (useful for debbuging bundled app).
+    *   `--env.hiddenSourceMap` - creates sources maps in the root folder (useful for Crashlytics usage with bundled app in release).
+* `--syncAllFiles` - Watches all production dependencies inside node_modules for changes. Triggers project rebuild if necessary!
+
 
 ### Related Commands
 

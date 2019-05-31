@@ -13,10 +13,13 @@ export class RunCommandBase implements ICommand {
 		private $errors: IErrors,
 		private $hostInfo: IHostInfo,
 		private $liveSyncCommandHelper: ILiveSyncCommandHelper,
-		private $androidBundleValidatorHelper: IAndroidBundleValidatorHelper) { }
+		private $androidBundleValidatorHelper: IAndroidBundleValidatorHelper,
+		private $options: IOptions,
+		private $workflowService: IWorkflowService) { }
 
 	public allowedParameters: ICommandParameter[] = [];
 	public async execute(args: string[]): Promise<void> {
+		await this.$workflowService.handleLegacyWorkflow({ projectDir: this.$projectData.projectDir, settings: this.$options, skipWarnings: true });
 		await this.$analyticsService.trackPreviewAppData(this.platform, this.$projectData.projectDir);
 		return this.$liveSyncCommandHelper.executeCommandLiveSync(this.platform, this.liveSyncCommandHelperAdditionalOptions);
 	}
@@ -66,7 +69,7 @@ export class RunIosCommand implements ICommand {
 		private $errors: IErrors,
 		private $injector: IInjector,
 		private $platformService: IPlatformService,
-		private $projectData: IProjectData,
+		private $projectDataService: IProjectDataService,
 		private $options: IOptions) {
 	}
 
@@ -75,11 +78,13 @@ export class RunIosCommand implements ICommand {
 	}
 
 	public async canExecute(args: string[]): Promise<boolean> {
-		if (!this.$platformService.isPlatformSupportedForOS(this.$devicePlatformsConstants.iOS, this.$projectData)) {
+		const projectData = this.$projectDataService.getProjectData();
+
+		if (!this.$platformService.isPlatformSupportedForOS(this.$devicePlatformsConstants.iOS, projectData)) {
 			this.$errors.fail(`Applications for platform ${this.$devicePlatformsConstants.iOS} can not be built on this OS`);
 		}
 
-		const result = await this.runCommand.canExecute(args) && await this.$platformService.validateOptions(this.$options.provision, this.$options.teamId, this.$projectData, this.$platformsData.availablePlatforms.iOS);
+		const result = await this.runCommand.canExecute(args) && await this.$platformService.validateOptions(this.$options.provision, this.$options.teamId, projectData, this.$platformsData.availablePlatforms.iOS);
 		return result;
 	}
 }

@@ -1,6 +1,5 @@
 import * as util from "util";
 import { EOL } from "os";
-import { PlaygroundStoreUrls } from "./preview-app-constants";
 import { exported } from "../../../common/decorators";
 
 export class PreviewQrCodeService implements IPreviewQrCodeService {
@@ -10,20 +9,22 @@ export class PreviewQrCodeService implements IPreviewQrCodeService {
 		private $logger: ILogger,
 		private $mobileHelper: Mobile.IMobileHelper,
 		private $previewSdkService: IPreviewSdkService,
+		private $previewSchemaService: IPreviewSchemaService,
 		private $qrCodeTerminalService: IQrCodeTerminalService,
 		private $qr: IQrCodeGenerator
 	) { }
 
 	@exported("previewQrCodeService")
 	public async getPlaygroundAppQrCode(options?: IPlaygroundAppQrCodeOptions): Promise<IDictionary<IQrCodeImageData>> {
+		const { projectDir } = options || <any>{ };
 		const result = Object.create(null);
 
 		if (!options || !options.platform || this.$mobileHelper.isAndroidPlatform(options.platform)) {
-			result.android = await this.getLiveSyncQrCode(PlaygroundStoreUrls.GOOGLE_PLAY_URL);
+			result.android = await this.getLiveSyncQrCode(this.getGooglePlayUrl(projectDir));
 		}
 
 		if (!options || !options.platform || this.$mobileHelper.isiOSPlatform(options.platform)) {
-			result.ios = await this.getLiveSyncQrCode(PlaygroundStoreUrls.APP_STORE_URL);
+			result.ios = await this.getLiveSyncQrCode(this.getAppStoreUrl(projectDir));
 		}
 
 		return result;
@@ -56,8 +57,8 @@ export class PreviewQrCodeService implements IPreviewQrCodeService {
 			this.$logger.printMarkdown(`# Use \`NativeScript Playground app\` and scan the \`QR code\` above to preview the application on your device.`);
 			this.$logger.printMarkdown(`
 To scan the QR code and deploy your app on a device, you need to have the \`NativeScript Playground app\`:
-	App Store (iOS): ${PlaygroundStoreUrls.APP_STORE_URL}
-	Google Play (Android): ${PlaygroundStoreUrls.GOOGLE_PLAY_URL}`);
+	App Store (iOS): ${this.getAppStoreUrl(options.projectDir)}
+	Google Play (Android): ${this.getGooglePlayUrl(options.projectDir)}`);
 		}
 	}
 
@@ -72,6 +73,16 @@ To scan the QR code and deploy your app on a device, you need to have the \`Nati
 		}
 
 		return url;
+	}
+
+	private getGooglePlayUrl(projectDir: string): string {
+		const schema = this.$previewSchemaService.getSchemaData(projectDir);
+		return `https://play.google.com/store/apps/details?id=${schema.scannerAppId}`;
+	}
+
+	private getAppStoreUrl(projectDir: string): string {
+		const schema = this.$previewSchemaService.getSchemaData(projectDir);
+		return `https://itunes.apple.com/us/app/nativescript-playground/id${schema.scannerAppStoreId}?mt=8&ls=1`;
 	}
 }
 $injector.register("previewQrCodeService", PreviewQrCodeService);

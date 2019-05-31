@@ -207,11 +207,6 @@ declare const enum TrackingTypes {
 	 * Defines that the broker process should get and track the data from preview app to Google Analytics
 	 */
 	PreviewAppData = "PreviewAppData",
-
-	/**
-	 * Defines that all information has been sent and no more data will be tracked in current session.
-	 */
-	Finish = "finish"
 }
 
 /**
@@ -653,7 +648,8 @@ interface ISpawnFromEventOptions {
 	throwError: boolean;
 	emitOptions?: {
 		eventName: string;
-	}
+	},
+	timeout?: number;
 }
 
 interface IProjectDir {
@@ -1286,20 +1282,6 @@ interface IServiceContractGenerator {
 }
 
 /**
- * Used to show indication that a process is running
- */
-interface IProgressIndicator {
-	/**
-	 * Prints indication that a process is running
-	 * @param  {Promise<T>}	promise		process
-	 * @param  {number}			timeout		time interval for printing indication
-	 * @param  {boolean}		options		whether to surpress the trailing new line printed after the process ends
-	 * @return {Promise<T>}
-	 */
-	showProgressIndicator<T>(promise: Promise<T>, timeout: number, options?: { surpressTrailingNewLine?: boolean }): Promise<T>;
-}
-
-/**
  * Describes project file that should be livesynced
  */
 interface IProjectFileInfo {
@@ -1471,14 +1453,10 @@ interface INet {
 	waitForPortToListen(waitForPortListenData: IWaitForPortListenData): Promise<boolean>;
 }
 
-interface IProcessService {
-	listenersCount: number;
-	attachToProcessExitSignals(context: any, callback: () => void): void;
-}
-
 interface IDependencyInformation {
 	name: string;
 	version?: string;
+	projectType?: string;
 	excludedPeerDependencies?: string[];
 }
 

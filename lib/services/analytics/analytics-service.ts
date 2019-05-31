@@ -13,7 +13,6 @@ export class AnalyticsService implements IAnalyticsService, IDisposable {
 
 	constructor(private $logger: ILogger,
 		private $options: IOptions,
-		private $processService: IProcessService,
 		private $staticConfig: Config.IStaticConfig,
 		private $prompter: IPrompter,
 		private $userSettingsService: UserSettings.IUserSettingsService,
@@ -34,7 +33,7 @@ export class AnalyticsService implements IAnalyticsService, IDisposable {
 			let trackFeatureUsage = initialTrackFeatureUsageStatus === AnalyticsStatus.enabled;
 
 			if (await this.isNotConfirmed(this.$staticConfig.TRACK_FEATURE_USAGE_SETTING_NAME) && isInteractive()) {
-				this.$logger.out("Do you want to help us improve "
+				this.$logger.info("Do you want to help us improve "
 					+ this.$analyticsSettingsService.getClientName()
 					+ " by automatically sending anonymous usage statistics? We will not use this information to identify or contact you."
 					+ " You can read our official Privacy Policy at");
@@ -223,20 +222,12 @@ export class AnalyticsService implements IAnalyticsService, IDisposable {
 			});
 
 			broker.on("message", (data: any) => {
-				if (data === AnalyticsMessages.BrokerReadyToReceive) {
+				if (data === DetachedProcessMessages.ProcessReadyToReceive) {
 					clearTimeout(timeoutId);
 
 					if (!isSettled) {
 						isSettled = true;
-
-						this.$processService.attachToProcessExitSignals(this, () => {
-							broker.send({
-								type: TrackingTypes.Finish
-							});
-						});
-
 						this.brokerProcess = broker;
-
 						resolve(broker);
 					}
 				}

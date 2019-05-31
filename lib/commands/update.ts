@@ -12,7 +12,8 @@ export class UpdateCommand extends ValidatePlatformCommandBase implements IComma
 		private $pluginsService: IPluginsService,
 		private $projectDataService: IProjectDataService,
 		private $fs: IFileSystem,
-		private $logger: ILogger) {
+		private $logger: ILogger,
+		private $workflowService: IWorkflowService) {
 		super($options, $platformsData, $platformService, $projectData);
 		this.$projectData.initializeProjectData();
 	}
@@ -28,6 +29,11 @@ export class UpdateCommand extends ValidatePlatformCommandBase implements IComma
 	static readonly backupFailMessage: string = "Could not backup project folders!";
 
 	public async execute(args: string[]): Promise<void> {
+		if (this.$options.workflow) {
+			await this.$workflowService.handleLegacyWorkflow({ projectDir: this.$projectData.projectDir, settings: this.$options, force: true });
+			return;
+		}
+
 		const tmpDir = path.join(this.$projectData.projectDir, UpdateCommand.tempFolder);
 
 		try {

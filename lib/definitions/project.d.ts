@@ -143,6 +143,14 @@ interface IProjectDataService {
 	setNSValue(projectDir: string, key: string, value: any): void;
 
 	/**
+	 * Sets a value in the `useLegacyWorkflow` key in a project's nsconfig.json.
+	 * @param {string} projectDir The project directory - the place where the root package.json is located.
+	 * @param {any} value Value of the key to be set to `useLegacyWorkflow` key in project's nsconfig.json.
+	 * @returns {void}
+	 */
+	setUseLegacyWorkflow(projectDir: string, value: any): void;
+
+	/**
 	 * Removes a property from `nativescript` key in project's package.json.
 	 * @param {string} projectDir The project directory - the place where the root package.json is located.
 	 * @param {string} propertyName The name of the property to be removed from `nativescript` key.
@@ -304,6 +312,10 @@ interface IBuildForDevice {
 	buildForDevice: boolean;
 }
 
+interface IiCloudContainerEnvironment {
+	iCloudContainerEnvironment: string;
+}
+
 interface INativePrepare {
 	skipNativePrepare: boolean;
 }
@@ -317,7 +329,7 @@ interface IBuildConfig extends IAndroidBuildOptionsSettings, IiOSBuildConfig, IP
 /**
  * Describes iOS-specific build configuration properties
  */
-interface IiOSBuildConfig extends IBuildForDevice, IDeviceIdentifier, IProvision, ITeamIdentifier, IRelease {
+interface IiOSBuildConfig extends IBuildForDevice, IiCloudContainerEnvironment, IDeviceIdentifier, IProvision, ITeamIdentifier, IRelease {
 	/**
 	 * Identifier of the mobile provision which will be used for the build. If not set a provision will be selected automatically if possible.
 	 */
@@ -580,16 +592,38 @@ interface IIOSExtensionsService {
 	removeExtensions(options: IRemoveExtensionsOptions): void;
 }
 
-interface IAddExtensionsFromPathOptions{
-	extensionsFolderPath: string;
+/**
+ * Describes a service used to add and remove iOS extension
+ */
+interface IIOSExtensionsService {
+	addExtensionsFromPath(options: IAddExtensionsFromPathOptions): Promise<boolean>;
+	removeExtensions(options: IRemoveExtensionsOptions): void;
+}
+
+interface IIOSWatchAppService {
+	addWatchAppFromPath(options: IAddWatchAppFromPathOptions): Promise<boolean>;
+	removeWatchApp(options: IRemoveWatchAppOptions): void;
+}
+
+interface IAddTargetFromPathOptions {
 	projectData: IProjectData;
 	platformData: IPlatformData;
 	pbxProjPath: string;
 }
 
+interface IAddExtensionsFromPathOptions extends IAddTargetFromPathOptions {
+	extensionsFolderPath: string;
+}
+
+interface IAddWatchAppFromPathOptions extends IAddTargetFromPathOptions {
+	watchAppFolderPath: string;
+}
+
 interface IRemoveExtensionsOptions {
 	pbxProjPath: string
 }
+
+interface IRemoveWatchAppOptions extends IRemoveExtensionsOptions{}
 
 interface IRubyFunction {
 	functionName: string;

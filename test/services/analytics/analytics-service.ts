@@ -36,9 +36,6 @@ const createTestInjector = (opts?: { projectHelperErrorMsg?: string, projectDir?
 	});
 	testInjector.register("osInfo", {});
 	testInjector.register("childProcess", {});
-	testInjector.register("processService", {
-		attachToProcessExitSignals: (context: any, callback: () => void): void => undefined
-	});
 	testInjector.register("projectDataService", {
 		getProjectData: (projectDir?: string): IProjectData => {
 			return <any>{
@@ -194,7 +191,7 @@ describe("analyticsService", () => {
 
 					spawnedProcess.connected = false;
 					spawnedProcess.send = (): void => undefined;
-					setTimeout(() => spawnedProcess.emit("message", AnalyticsMessages.BrokerReadyToReceive), 1);
+					setTimeout(() => spawnedProcess.emit("message", DetachedProcessMessages.ProcessReadyToReceive), 1);
 					return spawnedProcess;
 				};
 
@@ -213,7 +210,7 @@ describe("analyticsService", () => {
 						throw new Error("Failed to sent data.");
 					};
 
-					setTimeout(() => spawnedProcess.emit("message", AnalyticsMessages.BrokerReadyToReceive), 1);
+					setTimeout(() => spawnedProcess.emit("message", DetachedProcessMessages.ProcessReadyToReceive), 1);
 					return spawnedProcess;
 				};
 
@@ -233,7 +230,7 @@ describe("analyticsService", () => {
 						action();
 					};
 
-					setTimeout(() => spawnedProcess.emit("message", AnalyticsMessages.BrokerReadyToReceive), 1);
+					setTimeout(() => spawnedProcess.emit("message", DetachedProcessMessages.ProcessReadyToReceive), 1);
 					return spawnedProcess;
 				};
 
@@ -264,7 +261,7 @@ describe("analyticsService", () => {
 						action();
 					};
 
-					setTimeout(() => spawnedProcess.emit("message", AnalyticsMessages.BrokerReadyToReceive), 1);
+					setTimeout(() => spawnedProcess.emit("message", DetachedProcessMessages.ProcessReadyToReceive), 1);
 
 					return spawnedProcess;
 				};

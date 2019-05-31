@@ -1,7 +1,7 @@
 import { Yok } from "../../../lib/common/yok";
 import { assert } from "chai";
 import * as sinon from "sinon";
-import { LoggerStub, ProcessServiceStub } from "../../stubs";
+import { LoggerStub } from "../../stubs";
 import { AndroidLivesyncTool } from "../../../lib/services/livesync/android-livesync-tool";
 import { LiveSyncSocket } from "../../../lib/services/livesync/livesync-socket";
 import { MobileHelper } from "../../../lib/common/mobile/mobile-helper";
@@ -67,7 +67,6 @@ const createTestInjector = (socket: INetSocket, fileStreams: IDictionary<NodeJS.
 
 	testInjector.register("fs", FileSystem);
 	testInjector.register("logger", LoggerStub);
-	testInjector.register("processService", ProcessServiceStub);
 	testInjector.register("injector", testInjector);
 	testInjector.register("mobileHelper", MobileHelper);
 	testInjector.register("androidProcessService", {

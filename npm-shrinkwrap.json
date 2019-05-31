@@ -1,6 +1,6 @@
 {
   "name": "nativescript",
-  "version": "5.4.0",
+  "version": "6.0.0",
   "lockfileVersion": 1,
   "requires": true,
   "dependencies": {
@@ -141,8 +141,7 @@
     "@types/node": {
       "version": "8.10.30",
       "resolved": "https://registry.npmjs.org/@types/node/-/node-8.10.30.tgz",
-      "integrity": "sha512-Le8HGMI5gjFSBqcCuKP/wfHC19oURzkU2D+ERIescUoJd+CmNEMYBib9LQ4zj1HHEZOJQWhw2ZTnbD8weASh/Q==",
-      "dev": true
+      "integrity": "sha512-Le8HGMI5gjFSBqcCuKP/wfHC19oURzkU2D+ERIescUoJd+CmNEMYBib9LQ4zj1HHEZOJQWhw2ZTnbD8weASh/Q=="
     },
     "@types/ora": {
       "version": "1.3.3",
@@ -1453,13 +1452,6 @@
       "integrity": "sha512-YbKCNLPPP4inc0E5If4OaalBc7gpaM2MRv77Pv2VThVComLKfbGYtJcdDCViDyp1Wd4SebhHLz94vp91zbK6bw==",
       "requires": {
         "@types/node": "^8.0.7"
-      },
-      "dependencies": {
-        "@types/node": {
-          "version": "8.10.45",
-          "resolved": "https://registry.npmjs.org/@types/node/-/node-8.10.45.tgz",
-          "integrity": "sha512-tGVTbA+i3qfXsLbq9rEq/hezaHY55QxQLeXQL2ejNgFAxxrgu8eMmYIOsRcl7hN1uTLVsKOOYacV/rcJM3sfgQ=="
-        }
       }
     },
     "date-format": {
@@ -5324,9 +5316,9 @@
       }
     },
     "nativescript-dev-xcode": {
-      "version": "0.1.0",
-      "resolved": "https://registry.npmjs.org/nativescript-dev-xcode/-/nativescript-dev-xcode-0.1.0.tgz",
-      "integrity": "sha512-auQd2/qVdOwD/8v+rHKLflYE8jpT4o1wMwtEFkFGp7sewLkBQz7y9pH79oNM7ztyw0gnL/cFAhLT/ViGLWdw6w==",
+      "version": "0.2.0",
+      "resolved": "https://registry.npmjs.org/nativescript-dev-xcode/-/nativescript-dev-xcode-0.2.0.tgz",
+      "integrity": "sha512-UKX+AS3rF/HNQ7777GunT9SaVQJXmcYnol9yKxVXWM1uRNXiQUgLaUmhjYUkHw7voqNN+FCqqRZQlB8mHUPA9g==",
       "requires": {
         "simple-plist": "^1.0.0",
         "uuid": "^3.3.2"
@@ -5378,9 +5370,9 @@
       }
     },
     "nativescript-doctor": {
-      "version": "1.9.1",
-      "resolved": "https://registry.npmjs.org/nativescript-doctor/-/nativescript-doctor-1.9.1.tgz",
-      "integrity": "sha512-qdluBILhzAQhnIg8Y83syyjy63rTt5pvx0SFpbtwj7kE+LsXJJRhHNa+1KEtznxh7jcTfdLEZjxxWDTIAIK5oA==",
+      "version": "1.9.2",
+      "resolved": "https://registry.npmjs.org/nativescript-doctor/-/nativescript-doctor-1.9.2.tgz",
+      "integrity": "sha512-HEBQS7eqycO3TzY3He94dM0AgPCQy3YMT6ZdHSVGDfxA5DhnhMgB0OWOvHPwR3TyL0BJhtLJnjrW4/hJjUw2SQ==",
       "requires": {
         "osenv": "0.1.3",
         "semver": "5.5.1",
@@ -5402,9 +5394,9 @@
       }
     },
     "nativescript-preview-sdk": {
-      "version": "0.3.3",
-      "resolved": "https://registry.npmjs.org/nativescript-preview-sdk/-/nativescript-preview-sdk-0.3.3.tgz",
-      "integrity": "sha512-QHi4SbDblN+dSZCIztx1xVdrB4cP911OXV92REIVOqDHXyAFYUZeWu5DH0/3IHdC9fnMgXMeJ0WZEpgGgieqtQ==",
+      "version": "0.3.4",
+      "resolved": "https://registry.npmjs.org/nativescript-preview-sdk/-/nativescript-preview-sdk-0.3.4.tgz",
+      "integrity": "sha512-Dw4Nn6MXbZMW8dkQIf1NfXSSNtu3rDOw0z1KE159lwPEVMM8F7qxrqqT57XTiQP5pnqXMARhoQvkgW55qTVx6Q==",
       "requires": {
         "@types/axios": "0.14.0",
         "@types/pubnub": "4.0.2",
@@ -6074,9 +6066,9 @@
       "dev": true
     },
     "pbxproj-dom": {
-      "version": "1.1.0",
-      "resolved": "https://registry.npmjs.org/pbxproj-dom/-/pbxproj-dom-1.1.0.tgz",
-      "integrity": "sha512-ti2ZuXEptfYbkkUweP6sBtLBlRjTcWkxWG450lbJ+PwNMk8nvhhAtV7lIuQPHR29h7hPUHOIvUBAIljIx8ygxg=="
+      "version": "1.2.0",
+      "resolved": "https://registry.npmjs.org/pbxproj-dom/-/pbxproj-dom-1.2.0.tgz",
+      "integrity": "sha512-K2czrWqA68AR0q1UXz5EBi/zoxcljrkO4RSJX0jPnVn3iyE0HYnYOzaEEDYMpueczkT/Vtdm3SCc3NM+12kMaQ=="
     },
     "pend": {
       "version": "1.2.0",

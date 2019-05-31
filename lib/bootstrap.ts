@@ -1,5 +1,5 @@
 require("./common/bootstrap");
-$injector.require("logger", "./common/logger");
+$injector.requirePublicClass("logger", "./common/logger/logger");
 $injector.require("config", "./config");
 $injector.require("options", "./options");
 // note: order above is important!
@@ -13,6 +13,7 @@ $injector.require("androidProjectService", "./services/android-project-service")
 $injector.require("androidPluginBuildService", "./services/android-plugin-build-service");
 $injector.require("iOSEntitlementsService", "./services/ios-entitlements-service");
 $injector.require("iOSExtensionsService", "./services/ios-extensions-service");
+$injector.require("iOSWatchAppService", "./services/ios-watch-app-service");
 $injector.require("iOSProjectService", "./services/ios-project-service");
 $injector.require("iOSProvisionService", "./services/ios-provision-service");
 $injector.require("xcconfigService", "./services/xcconfig-service");
@@ -108,7 +109,7 @@ $injector.require("xcprojService", "./services/xcproj-service");
 $injector.require("versionsService", "./services/versions-service");
 $injector.requireCommand("install", "./commands/install");
 
-$injector.require("initService", "./services/init-service");
+$injector.require("projectInitService", "./services/project-init-service");
 $injector.requireCommand("init", "./commands/init");
 
 $injector.require("infoService", "./services/info-service");
@@ -140,6 +141,7 @@ $injector.require("previewAppLiveSyncService", "./services/livesync/playground/p
 $injector.require("previewAppLogProvider", "./services/livesync/playground/preview-app-log-provider");
 $injector.require("previewAppPluginsService", "./services/livesync/playground/preview-app-plugins-service");
 $injector.require("previewSdkService", "./services/livesync/playground/preview-sdk-service");
+$injector.require("previewSchemaService", "./services/livesync/playground/preview-schema-service");
 $injector.requirePublicClass("previewDevicesService", "./services/livesync/playground/devices/preview-devices-service");
 $injector.requirePublic("previewQrCodeService", "./services/livesync/playground/preview-qr-code-service");
 $injector.requirePublic("sysInfo", "./sys-info");
@@ -189,5 +191,13 @@ $injector.require("hmrStatusService", "./services/hmr-status-service");
 $injector.require("pacoteService", "./services/pacote-service");
 $injector.require("qrCodeTerminalService", "./services/qr-code-terminal-service");
 $injector.require("testInitializationService", "./services/test-initialization-service");
+$injector.require("workflowService", "./services/workflow-service");
 
 $injector.require("networkConnectivityValidator", "./helpers/network-connectivity-validator");
+$injector.requirePublic("cleanupService", "./services/cleanup-service");
+
+$injector.require("applePortalSessionService", "./services/apple-portal/apple-portal-session-service");
+$injector.require("applePortalCookieService", "./services/apple-portal/apple-portal-cookie-service");
+$injector.require("applePortalApplicationService", "./services/apple-portal/apple-portal-application-service");
+
+$injector.requirePublicClass("initializeService", "./services/initialize-service");

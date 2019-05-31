@@ -45,9 +45,6 @@ function createTestInjector() {
 		iOSSim: () => ({})
 	});
 	injector.register("logger", LoggerStub);
-	injector.register("processService", {
-		attachToProcessExitSignals: () => ({})
-	});
 	injector.register("projectDataService", {
 		getProjectData: (projectDir: string) => ({
 			projectName: "test",

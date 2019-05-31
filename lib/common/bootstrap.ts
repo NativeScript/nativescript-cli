@@ -6,7 +6,6 @@ $injector.require("errors", "./errors");
 $injector.requirePublic("fs", "./file-system");
 $injector.require("hostInfo", "./host-info");
 $injector.require("osInfo", "./os-info");
-$injector.require("timers", "./timers");
 
 $injector.require("dispatcher", "./dispatchers");
 $injector.require("commandDispatcher", "./dispatchers");
@@ -28,7 +27,6 @@ $injector.require("childProcess", "./child-process");
 $injector.require("prompter", "./prompter");
 $injector.require("projectHelper", "./project-helper");
 $injector.require("pluginVariablesHelper", "./plugin-variables-helper");
-$injector.require("progressIndicator", "./progress-indicator");
 
 $injector.requireCommand(["help", "/?"], "./commands/help");
 $injector.requireCommand("usage-reporting", "./commands/analytics");
@@ -85,7 +83,6 @@ $injector.require("iOSEmulatorServices", "./mobile/ios/simulator/ios-emulator-se
 $injector.require("wp8EmulatorServices", "./mobile/wp8/wp8-emulator-services");
 
 $injector.require("autoCompletionService", "./services/auto-completion-service");
-$injector.require("processService", "./services/process-service");
 $injector.requirePublic("settingsService", "./services/settings-service");
 $injector.require("opener", "./opener");
 $injector.require("microTemplateService", "./services/micro-templating-service");

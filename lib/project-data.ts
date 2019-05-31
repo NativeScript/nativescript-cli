@@ -260,7 +260,7 @@ export class ProjectData implements IProjectData {
 
 	@cache()
 	private warnProjectId(): void {
-		this.$logger.warnWithLabel("IProjectData.projectId is deprecated. Please use IProjectData.projectIdentifiers[platform].");
+		this.$logger.warn("[WARNING]: IProjectData.projectId is deprecated. Please use IProjectData.projectIdentifiers[platform].");
 	}
 }
-$injector.register("projectData", ProjectData);
+$injector.register("projectData", ProjectData, true);

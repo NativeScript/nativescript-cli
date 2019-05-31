@@ -10,14 +10,18 @@ abstract class TestCommandBase {
 	protected abstract $options: IOptions;
 	protected abstract $platformEnvironmentRequirements: IPlatformEnvironmentRequirements;
 	protected abstract $errors: IErrors;
+	protected abstract $cleanupService: ICleanupService;
+	protected abstract $workflowService: IWorkflowService;
 
 	async execute(args: string[]): Promise<void> {
+		await this.$workflowService.handleLegacyWorkflow({ projectDir: this.$projectData.projectDir, settings: this.$options, skipWarnings: true });
 		await this.$testExecutionService.startKarmaServer(this.platform, this.$projectData, this.projectFilesConfig);
 	}
 
 	async canExecute(args: string[]): Promise<boolean | ICanExecuteCommandOutput> {
 		this.$projectData.initializeProjectData();
 		this.$analyticsService.setShouldDispose(this.$options.justlaunch || !this.$options.watch);
+		this.$cleanupService.setShouldDispose(this.$options.justlaunch || !this.$options.watch);
 		this.projectFilesConfig = helpers.getProjectFilesConfig({ isReleaseBuild: this.$options.release });
 
 		const output = await this.$platformEnvironmentRequirements.checkEnvironmentRequirements({
@@ -51,7 +55,9 @@ class TestAndroidCommand extends TestCommandBase implements ICommand {
 		protected $analyticsService: IAnalyticsService,
 		protected $options: IOptions,
 		protected $platformEnvironmentRequirements: IPlatformEnvironmentRequirements,
-		protected $errors: IErrors) {
+		protected $errors: IErrors,
+		protected $cleanupService: ICleanupService,
+		protected $workflowService: IWorkflowService) {
 		super();
 	}
 
@@ -65,7 +71,9 @@ class TestIosCommand extends TestCommandBase implements ICommand {
 		protected $analyticsService: IAnalyticsService,
 		protected $options: IOptions,
 		protected $platformEnvironmentRequirements: IPlatformEnvironmentRequirements,
-		protected $errors: IErrors) {
+		protected $errors: IErrors,
+		protected $cleanupService: ICleanupService,
+		protected $workflowService: IWorkflowService) {
 		super();
 	}
 

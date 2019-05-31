@@ -16,18 +16,18 @@ export class ListPluginsCommand implements ICommand {
 		const dependenciesData: string[][] = this.createTableCells(installedPlugins.dependencies);
 
 		const dependenciesTable: any = createTable(headers, dependenciesData);
-		this.$logger.out("Dependencies:");
-		this.$logger.out(dependenciesTable.toString());
+		this.$logger.info("Dependencies:");
+		this.$logger.info(dependenciesTable.toString());
 
 		if (installedPlugins.devDependencies && installedPlugins.devDependencies.length) {
 			const devDependenciesData: string[][] = this.createTableCells(installedPlugins.devDependencies);
 
 			const devDependenciesTable: any = createTable(headers, devDependenciesData);
 
-			this.$logger.out("Dev Dependencies:");
-			this.$logger.out(devDependenciesTable.toString());
+			this.$logger.info("Dev Dependencies:");
+			this.$logger.info(devDependenciesTable.toString());
 		} else {
-			this.$logger.out("There are no dev dependencies.");
+			this.$logger.info("There are no dev dependencies.");
 		}
 
 		const viewDependenciesCommand: string = "npm view <pluginName> grep dependencies".cyan.toString();

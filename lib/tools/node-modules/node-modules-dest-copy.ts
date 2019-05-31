@@ -184,7 +184,7 @@ export class NpmPluginPrepare {
 				if (appFolderExists) {
 					this.$pluginsService.preparePluginScripts(pluginData, platform, projectData, projectFilesConfig);
 					// Show message
-					this.$logger.out(`Successfully prepared plugin ${pluginData.name} for ${platform}.`);
+					this.$logger.info(`Successfully prepared plugin ${pluginData.name} for ${platform}.`);
 				}
 			}
 		}
