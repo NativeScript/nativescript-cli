@@ -1,7 +1,6 @@
 import isString from 'lodash/isString';
 import isEmpty from 'lodash/isEmpty';
 import { Storage, Entity } from '../storage';
-import { KinveyHttpHeaders, HttpResponse } from '../http';
 import { Query } from '../query';
 import { getAppKey } from '../kinvey';
 
@@ -40,19 +39,6 @@ export interface QueryEntity extends Entity {
 export class QueryCache extends DataStoreCache<QueryEntity> {
   constructor(tag?: string) {
     super(QUERY_CACHE_TAG, tag);
-  }
-
-  serializeQuery(query?: Query) {
-    if (!query) {
-      return '';
-    }
-
-    if ((query.skip && query.skip > 0) || (query.limit && query.limit < Number.MAX_SAFE_INTEGER)) {
-      return null;
-    }
-
-    const queryObject = query.toQueryObject();
-    return queryObject && !isEmpty(queryObject) ? JSON.stringify(queryObject) : '';
   }
 }
 

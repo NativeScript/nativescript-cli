@@ -2,6 +2,7 @@ import isFunction from 'lodash/isFunction';
 import isEmpty from 'lodash/isEmpty';
 import isArray from 'lodash/isArray';
 import { Base64 } from 'js-base64';
+import { KinveyError } from '../errors/kinvey';
 import { getAppKey, getAppSecret, getMasterSecret } from '../kinvey';
 import { getSession } from './session';
 
@@ -150,18 +151,27 @@ export class KinveyHttpHeaders extends HttpHeaders {
   }
 
   setAuthorization(auth: KinveyHttpAuth): void {
+    const appKey = getAppKey();
+    const appSecret = getAppSecret();
+    const masterSecret = getMasterSecret();
+    const session = getSession();
     let value = '';
 
     if (auth === KinveyHttpAuth.App) {
-      const credentials = Base64.encode(`${getAppKey()}:${getAppSecret()}`);
+      if (!appKey || !appSecret) {
+        throw new KinveyError('Missing appKey and/or appSecret to authorize the request.');
+      }
+      const credentials = Base64.encode(`${appKey}:${appSecret}`);
       value = `Basic ${credentials}`;
     } else if (auth === KinveyHttpAuth.Master) {
-      const credentials = Base64.encode(`${getAppKey()}:${getMasterSecret()}`);
+      if (!appKey || !masterSecret) {
+        throw new KinveyError('Missing appKey and/or masterSecret to authorize the request.');
+      }
+      const credentials = Base64.encode(`${appKey}:${masterSecret}`);
       value = `Basic ${credentials}`;
     } else if (auth === KinveyHttpAuth.Session) {
-      let session = getSession();
       if (!session || !session._kmd || !session._kmd.authtoken) {
-        throw new Error('There is no active user to authorize the request. Please login and retry the request.');
+        throw new KinveyError('There is no active user to authorize the request.');
       }
       value = `Kinvey ${session._kmd.authtoken}`;
     } else if (auth === KinveyHttpAuth.All) {

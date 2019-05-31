@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { NetworkError } from 'kinvey-js-sdk/lib/errors/network';
 import { name, version } from '../package.json';
 
 // Helper function to detect the browser name and version.
@@ -67,12 +68,15 @@ export async function send(request: any) {
       timeout
     });
   } catch (error) {
-    if (error.response) {
-      response = error.response;
-    } else {
-      throw error;
+    console.log(error);
+    if (!error.response) {
+      console.log('Network Error');
+      throw new NetworkError();
     }
+    response = error.response;
   }
+
+  console.log(response);
 
   return {
     statusCode: response.status,

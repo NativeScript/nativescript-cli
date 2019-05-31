@@ -1,6 +1,5 @@
 import isArray from 'lodash/isArray';
 import times from 'lodash/times';
-import without from 'lodash/without';
 import { Observable } from 'rxjs';
 import { Query } from '../query';
 import { KinveyError } from '../errors/kinvey';
@@ -303,7 +302,8 @@ export class CacheStore {
     return sync.push(undefined, options);
   }
 
-  async pull(query?: Query, options: any = {}) {
+  async pull(query: Query = new Query(), options: any = {}) {
+    const pullQuery = new Query({ filter: query.filter });
     const network = new NetworkStore(this.collectionName);
     const cache = new DataStoreCache(this.collectionName, this.tag);
     const queryCache = new QueryCache(this.tag);
@@ -311,10 +311,8 @@ export class CacheStore {
     const useAutoPagination = options.useAutoPagination === true || options.autoPagination || this.useAutoPagination;
 
     // Retrieve existing queryCacheDoc
-    const queryKey = queryCache.serializeQuery(query);
-    const findQueryCacheQuery = new Query().equalTo('query', queryKey).equalTo('collectionName', this.collectionName);
-    const queryCacheDocs = await queryCache.find(findQueryCacheQuery);
-    const queryCacheDoc = queryCacheDocs.shift() || { collectionName: this.collectionName, query: queryKey, lastRequest: null };
+    const queryCacheDocs = await queryCache.find(new Query().equalTo('query', pullQuery.key).equalTo('collectionName', this.collectionName));
+    const queryCacheDoc = queryCacheDocs.shift() || { collectionName: this.collectionName, query: pullQuery.key, lastRequest: null };
 
     // Push sync queue
     const count = await this.pendingSyncCount();
@@ -335,13 +333,9 @@ export class CacheStore {
     }
 
     // Delta set
-    if (useDeltaSet && queryCacheDoc && queryCacheDoc.lastRequest) {
+    if (useDeltaSet && queryCacheDoc.lastRequest) {
       try {
-        let queryObject = { since: queryCacheDoc.lastRequest };
-
-        if (query) {
-          queryObject = Object.assign({}, query.toQueryObject(), queryObject);
-        }
+        const queryObject = Object.assign({ since: queryCacheDoc.lastRequest }, pullQuery.toQueryObject());
 
         // Delta Set request
         const url = formatKinveyBaasUrl(KinveyBaasNamespace.AppData, `/${this.collectionName}/_deltaset`, queryObject);
@@ -380,14 +374,14 @@ export class CacheStore {
       await cache.clear();
 
       // Get the total count of docs
-      const response = await network.count(query, Object.assign({}, options, { rawResponse: true })).toPromise();
+      const response = await network.count(pullQuery, Object.assign({}, options, { rawResponse: true })).toPromise();
       const count = 'count' in response.data ? response.data.count : Number.MAX_SAFE_INTEGER;
 
       // Create the pages
       const pageSize = options.autoPaginationPageSize || (options.autoPagination && options.autoPagination.pageSize) || PAGE_LIMIT;
       const pageCount = Math.ceil(count / pageSize);
       const pageQueries = times(pageCount, (i) => {
-        const pageQuery = new Query(query);
+        const pageQuery = new Query(pullQuery);
         pageQuery.skip = i * pageSize;
         pageQuery.limit = Math.min(count - (i * pageSize), pageSize);
         return pageQuery;
@@ -412,12 +406,12 @@ export class CacheStore {
     }
 
     // Find the docs on the backend
-    const response = await network.find(query, Object.assign({}, options, { rawResponse: true })).toPromise();
+    const response = await network.find(pullQuery, Object.assign({}, options, { rawResponse: true })).toPromise();
     const docs = response.data;
 
     // Remove the docs matching the provided query
-    if (query) {
-      await cache.remove(query);
+    if (pullQuery) {
+      await cache.remove(pullQuery);
     } else {
       await cache.clear();
     }

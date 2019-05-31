@@ -23,7 +23,7 @@ export * from './missingQuery';
 export * from './missingRequestHeader';
 export * from './missingRequestParameter';
 export * from './mobileIdentityConnect';
-export * from './networkConnection';
+export * from './network';
 export * from './noActiveUser';
 export * from './noResponse';
 export * from './notFound';

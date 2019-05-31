@@ -79,7 +79,7 @@ export function saveEntities(collectionName, entities) {
     .then(result => _.sortBy(deleteEntityMetadata(result), '_id'));
 }
 
-export function deleteUsers(userIds) {
+export function deleteUsers(userIds = []) {
   return Promise.all(userIds.map(userId => {
     return Kinvey.User.remove(userId, {
       hard: true
@@ -182,20 +182,35 @@ export function validateEntity(dataStoreType, collectionName, expectedEntity, se
     });
 }
 
-export function cleanUpCollectionData(collectionName) {
+export function createSampleCollectionData(collectionName, count = 1, propertyName = '') {
+  const docs = [];
+  const collection = Kinvey.DataStore.collection(collectionName, Kinvey.DataStoreType.Network);
+
+  for (let i = 0; i < count; i++) {
+    const doc = {};
+    if (propertyName !== '') {
+      doc[propertyName] = i;
+    }
+    docs.push(doc);
+  }
+
+  const promises = docs.map((doc) => collection.save(doc));
+  return Promise.all(promises);
+}
+
+export async function cleanUpCollectionData(collectionName) {
   const networkStore = Kinvey.DataStore.collection(collectionName, Kinvey.DataStoreType.Network);
   const syncStore = Kinvey.DataStore.collection(collectionName, Kinvey.DataStoreType.Sync);
-  return networkStore.find().toPromise()
-    .then((entities) => {
-      if (entities && entities.length > 0) {
-        const query = new Kinvey.Query();
-        query.contains('_id', entities.map(a => a._id));
-        return networkStore.remove(query);
-      }
-      return Promise.resolve();
-    })
-    .then(() => syncStore.clearSync())
-    .then(() => syncStore.clear());
+  const entities = await networkStore.find().toPromise();
+
+  if (entities && entities.length > 0) {
+    const query = new Kinvey.Query();
+    query.contains('_id', entities.map(a => a._id));
+    await networkStore.remove(query);
+  }
+
+  await syncStore.clearSync();
+  await syncStore.clear();
 }
 
 export function cleanAndPopulateCollection(collectionName, entities) {
@@ -203,7 +218,7 @@ export function cleanAndPopulateCollection(collectionName, entities) {
     .then(() => saveEntities(collectionName, entities));
 }
 
-export function cleanUpAppData(collectionName, createdUserIds) {
+export function cleanUpAppData(collectionName, createdUserIds = []) {
   let currentUserId;
   return Kinvey.User.logout()
     .then(() => {
