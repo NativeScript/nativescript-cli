@@ -14,7 +14,7 @@ export enum DataStoreType {
   Sync = 'Sync'
 };
 
-export function collection(collectionName: string, type = DataStoreType.Auto, options: any = {}) {
+export function collection(collectionName: string, type = DataStoreType.Cache, options: any = {}) {
   let datastore;
   const tagWasPassed = options && ('tag' in options);
 
@@ -28,7 +28,7 @@ export function collection(collectionName: string, type = DataStoreType.Auto, op
   if (type === DataStoreType.Auto) {
     datastore = new AutoStore(collectionName, Object.assign({}, options, { autoSync: true }));
   } else if (type === DataStoreType.Cache) {
-    logger.warn('DataStoreType.Cache has been deprecated. Please use DataStoreType.Auto instead.');
+    // logger.warn('DataStoreType.Cache will be deprecated soon. Please use DataStoreType.Auto instead.');
     datastore = new CacheStore(collectionName, Object.assign({}, options, { autoSync: true }));
   } else if (type === DataStoreType.Network) {
     if (tagWasPassed) {
