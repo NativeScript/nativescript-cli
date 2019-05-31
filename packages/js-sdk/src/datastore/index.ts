@@ -28,7 +28,7 @@ export function collection(collectionName: string, type = DataStoreType.Cache, o
   if (type === DataStoreType.Auto) {
     datastore = new AutoStore(collectionName, Object.assign({}, options, { autoSync: true }));
   } else if (type === DataStoreType.Cache) {
-    // logger.warn('DataStoreType.Cache will be deprecated soon. Please use DataStoreType.Auto instead.');
+    logger.warn('DataStoreType.Cache will be deprecated soon. Please use DataStoreType.Auto instead.');
     datastore = new CacheStore(collectionName, Object.assign({}, options, { autoSync: true }));
   } else if (type === DataStoreType.Network) {
     if (tagWasPassed) {
