@@ -135,6 +135,10 @@ export class Logger implements ILogger {
 		this.info(formattedMessage, { [LoggerConfigData.skipNewLine]: true });
 	}
 
+	public isVerbose(): boolean {
+		return log4js.levels.DEBUG.isGreaterThanOrEqualTo(this.getLevel());
+	}
+
 	private logMessage(inputData: any[], logMethod: string): void {
 		this.initialize();
 
