@@ -5,6 +5,10 @@ import { DeployCommandHelper } from "../helpers/deploy-command-helper";
 export class DeployOnDeviceCommand extends ValidatePlatformCommandBase implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
 
+	public dashedOptions = {
+		hmr: { type: OptionType.Boolean, default: false, hasSensitiveValue: false },
+	};
+
 	constructor($platformValidationService: IPlatformValidationService,
 		private $platformCommandParameter: ICommandParameter,
 		$options: IOptions,

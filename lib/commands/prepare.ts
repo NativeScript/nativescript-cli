@@ -7,6 +7,7 @@ export class PrepareCommand extends ValidatePlatformCommandBase implements IComm
 
 	public dashedOptions = {
 		watch: { type: OptionType.Boolean, default: false, hasSensitiveValue: false },
+		hmr: { type: OptionType.Boolean, default: false, hasSensitiveValue: false },
 	};
 
 	constructor($options: IOptions,

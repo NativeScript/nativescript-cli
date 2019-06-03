@@ -11,7 +11,8 @@ export class DeployController {
 		const { liveSyncInfo, deviceDescriptors } = data;
 
 		const executeAction = async (device: Mobile.IDevice) => {
-			const buildData = this.$buildDataService.getBuildData(liveSyncInfo.projectDir, device.deviceInfo.platform, liveSyncInfo);
+			const options = { ...liveSyncInfo, buildForDevice: !device.isEmulator };
+			const buildData = this.$buildDataService.getBuildData(liveSyncInfo.projectDir, device.deviceInfo.platform, options);
 			await this.$buildController.prepareAndBuild(buildData);
 			await this.$deviceInstallAppService.installOnDevice(device, buildData);
 		};
