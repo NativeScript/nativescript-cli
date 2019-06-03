@@ -1,5 +1,5 @@
 import * as path from "path";
-import { NODE_MODULES_FOLDER_NAME, NativePlatformStatus, PACKAGE_JSON_FILE_NAME, APP_GRADLE_FILE_NAME, BUILD_XCCONFIG_FILE_NAME } from "../constants";
+import { NativePlatformStatus, PACKAGE_JSON_FILE_NAME, APP_GRADLE_FILE_NAME, BUILD_XCCONFIG_FILE_NAME } from "../constants";
 import { getHash, hook } from "../common/helpers";
 import { PrepareData } from "../data/prepare-data";
 
@@ -37,7 +37,6 @@ export class ProjectChangesService implements IProjectChangesService {
 
 	private _changesInfo: IProjectChangesInfo;
 	private _prepareInfo: IPrepareInfo;
-	private _newFiles: number = 0;
 	private _outputProjectMtime: number;
 	private _outputProjectCTime: number;
 
@@ -58,8 +57,6 @@ export class ProjectChangesService implements IProjectChangesService {
 		this._changesInfo = new ProjectChangesInfo();
 		const isNewPrepareInfo = await this.ensurePrepareInfo(platformData, projectData, prepareData);
 		if (!isNewPrepareInfo) {
-			this._newFiles = 0;
-
 			this._changesInfo.packageChanged = this.isProjectFileChanged(projectData.projectDir, platformData);
 
 			const platformResourcesDir = path.join(projectData.appResourcesDirectoryPath, platformData.normalizedPlatformName);
@@ -68,10 +65,8 @@ export class ProjectChangesService implements IProjectChangesService {
 			this.$nodeModulesDependenciesBuilder.getProductionDependencies(projectData.projectDir)
 				.filter(dep => dep.nativescript && this.$fs.exists(path.join(dep.directory, "platforms", platformData.platformNameLowerCase)))
 				.map(dep => {
-					this._changesInfo.nativeChanged = this._changesInfo.nativeChanged || this.containsNewerFiles(
-						path.join(dep.directory, "platforms", platformData.platformNameLowerCase),
-						projectData,
-						this.fileChangeRequiresBuild);
+					this._changesInfo.nativeChanged = this._changesInfo.nativeChanged ||
+						this.containsNewerFiles(path.join(dep.directory, "platforms", platformData.platformNameLowerCase), projectData);
 				});
 
 			this.$logger.trace(`Set nativeChanged to ${this._changesInfo.nativeChanged}.`);
@@ -220,7 +215,7 @@ export class ProjectChangesService implements IProjectChangesService {
 		return false;
 	}
 
-	private containsNewerFiles(dir: string, projectData: IProjectData, processFunc?: (filePath: string, projectData: IProjectData) => boolean): boolean {
+	private containsNewerFiles(dir: string, projectData: IProjectData): boolean {
 		const dirName = path.basename(dir);
 		this.$logger.trace(`containsNewerFiles will check ${dir}`);
 		if (_.startsWith(dirName, '.')) {
@@ -242,23 +237,12 @@ export class ProjectChangesService implements IProjectChangesService {
 			const changed = this.isFileModified(fileStats, filePath);
 
 			if (changed) {
-				this.$logger.trace(`File ${filePath} has been changed.`);
-				if (processFunc) {
-					this._newFiles++;
-					this.$logger.trace(`Incremented the newFiles counter. Current value is ${this._newFiles}`);
-					const filePathRelative = path.relative(projectData.projectDir, filePath);
-					if (processFunc.call(this, filePathRelative, projectData)) {
-						this.$logger.trace(`containsNewerFiles returns true for ${dir}. The modified file is ${filePath}`);
-						return true;
-					}
-				} else {
-					this.$logger.trace(`containsNewerFiles returns true for ${dir}. The modified file is ${filePath}`);
-					return true;
-				}
+				this.$logger.trace(`containsNewerFiles returns true for ${dir}. The modified file is ${filePath}`);
+				return true;
 			}
 
 			if (fileStats.isDirectory()) {
-				if (this.containsNewerFiles(filePath, projectData, processFunc)) {
+				if (this.containsNewerFiles(filePath, projectData)) {
 					this.$logger.trace(`containsNewerFiles returns true for ${dir}.`);
 					return true;
 				}
@@ -280,30 +264,6 @@ export class ProjectChangesService implements IProjectChangesService {
 		}
 
 		return changed;
-	}
-
-	private fileChangeRequiresBuild(file: string, projectData: IProjectData) {
-		if (path.basename(file) === PACKAGE_JSON_FILE_NAME) {
-			return true;
-		}
-		const projectDir = projectData.projectDir;
-		if (_.startsWith(path.join(projectDir, file), projectData.appResourcesDirectoryPath)) {
-			return true;
-		}
-		if (_.startsWith(file, NODE_MODULES_FOLDER_NAME)) {
-			let filePath = file;
-			while (filePath !== NODE_MODULES_FOLDER_NAME) {
-				filePath = path.dirname(filePath);
-				const fullFilePath = path.join(projectDir, path.join(filePath, PACKAGE_JSON_FILE_NAME));
-				if (this.$fs.exists(fullFilePath)) {
-					const json = this.$fs.readJson(fullFilePath);
-					if (json["nativescript"] && _.startsWith(file, path.join(filePath, "platforms"))) {
-						return true;
-					}
-				}
-			}
-		}
-		return false;
 	}
 }
 $injector.register("projectChangesService", ProjectChangesService);
