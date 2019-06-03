@@ -199,15 +199,15 @@ export class Logger implements ILogger {
 	 *******************************************************************************************/
 
 	out(...args: any[]): void {
-		this.info(args);
+		this.info(...args);
 	}
 
 	write(...args: any[]): void {
-		this.info(args, { [LoggerConfigData.skipNewLine]: true });
+		this.info(...args, { [LoggerConfigData.skipNewLine]: true });
 	}
 
 	printOnStderr(...args: string[]): void {
-		this.error(args);
+		this.error(...args);
 	}
 
 	printInfoMessageOnSameLine(message: string): void {
