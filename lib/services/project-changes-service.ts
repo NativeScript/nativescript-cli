@@ -47,7 +47,8 @@ export class ProjectChangesService implements IProjectChangesService {
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $fs: IFileSystem,
 		private $logger: ILogger,
-		public $hooksService: IHooksService) {
+		public $hooksService: IHooksService,
+		private $nodeModulesDependenciesBuilder: INodeModulesDependenciesBuilder) {
 	}
 
 	public get currentChanges(): IProjectChangesInfo {
@@ -64,13 +65,16 @@ export class ProjectChangesService implements IProjectChangesService {
 			this._changesInfo.packageChanged = this.isProjectFileChanged(projectData.projectDir, platformData);
 
 			const platformResourcesDir = path.join(projectData.appResourcesDirectoryPath, platformData.normalizedPlatformName);
-			this._changesInfo.appResourcesChanged = this.containsNewerFiles(platformResourcesDir, null, projectData);
-			/*done because currently all node_modules are traversed, a possible improvement could be traversing only the production dependencies*/
-			this._changesInfo.nativeChanged = this.containsNewerFiles(
-				path.join(projectData.projectDir, NODE_MODULES_FOLDER_NAME),
-				path.join(projectData.projectDir, NODE_MODULES_FOLDER_NAME, "tns-ios-inspector"),
-				projectData,
-				this.fileChangeRequiresBuild);
+			this._changesInfo.appResourcesChanged = this.containsNewerFiles(platformResourcesDir, projectData);
+
+			this.$nodeModulesDependenciesBuilder.getProductionDependencies(projectData.projectDir)
+				.filter(dep => dep.nativescript && this.$fs.exists(path.join(dep.directory, "platforms", platformData.platformNameLowerCase)))
+				.map(dep => {
+					this._changesInfo.nativeChanged = this.containsNewerFiles(
+						path.join(dep.directory, "platforms", platformData.platformNameLowerCase),
+						projectData,
+						this.fileChangeRequiresBuild);
+				});
 
 			this.$logger.trace(`Set nativeChanged to ${this._changesInfo.nativeChanged}.`);
 
@@ -229,7 +233,7 @@ export class ProjectChangesService implements IProjectChangesService {
 		return false;
 	}
 
-	private containsNewerFiles(dir: string, skipDir: string, projectData: IProjectData, processFunc?: (filePath: string, projectData: IProjectData) => boolean): boolean {
+	private containsNewerFiles(dir: string, projectData: IProjectData, processFunc?: (filePath: string, projectData: IProjectData) => boolean): boolean {
 		const dirName = path.basename(dir);
 		this.$logger.trace(`containsNewerFiles will check ${dir}`);
 		if (_.startsWith(dirName, '.')) {
@@ -246,9 +250,6 @@ export class ProjectChangesService implements IProjectChangesService {
 		const files = this.$fs.readDirectory(dir);
 		for (const file of files) {
 			const filePath = path.join(dir, file);
-			if (filePath === skipDir) {
-				continue;
-			}
 
 			const fileStats = this.$fs.getFsStats(filePath);
 			const changed = this.isFileModified(fileStats, filePath);
@@ -270,7 +271,7 @@ export class ProjectChangesService implements IProjectChangesService {
 			}
 
 			if (fileStats.isDirectory()) {
-				if (this.containsNewerFiles(filePath, skipDir, projectData, processFunc)) {
+				if (this.containsNewerFiles(filePath, projectData, processFunc)) {
 					this.$logger.trace(`containsNewerFiles returns true for ${dir}.`);
 					return true;
 				}

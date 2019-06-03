@@ -36,6 +36,7 @@ class ProjectChangesServiceTest extends BaseServiceTest {
 		});
 		this.injector.register("logger", LoggerStub);
 		this.injector.register("hooksService", HooksServiceStub);
+		this.injector.register("nodeModulesDependenciesBuilder", {});
 
 		const fs = this.injector.resolve<IFileSystem>("fs");
 		fs.writeJson(path.join(this.projectDir, Constants.PACKAGE_JSON_FILE_NAME), {
