@@ -21,11 +21,12 @@ export class PrepareNativePlatformService implements IPrepareNativePlatformServi
 
 		const changesInfo = await this.$projectChangesService.checkForChanges(platformData, projectData, prepareData);
 
-		const hasModulesChange = !changesInfo || changesInfo.modulesChanged;
+		const hasNativeModulesChange = !changesInfo || changesInfo.nativeChanged;
+		const hasPackageChange = !changesInfo || changesInfo.packageChanged;
 		const hasConfigChange = !changesInfo || changesInfo.configChanged;
 		const hasChangesRequirePrepare = !changesInfo || changesInfo.changesRequirePrepare;
 
-		const hasChanges = hasModulesChange || hasConfigChange || hasChangesRequirePrepare;
+		const hasChanges = hasNativeModulesChange || hasPackageChange || hasConfigChange || hasChangesRequirePrepare;
 
 		if (changesInfo.hasChanges) {
 			await this.cleanProject(platformData, { release });
@@ -37,11 +38,11 @@ export class PrepareNativePlatformService implements IPrepareNativePlatformServi
 			await platformData.platformProjectService.prepareProject(projectData, prepareData);
 		}
 
-		if (hasModulesChange) {
+		if (hasNativeModulesChange || hasPackageChange) {
 			await this.$nodeModulesBuilder.prepareNodeModules(platformData, projectData);
 		}
 
-		if (hasModulesChange || hasConfigChange) {
+		if (hasNativeModulesChange || hasPackageChange || hasConfigChange) {
 			await platformData.platformProjectService.processConfigurationFilesFromAppResources(projectData, { release });
 			await platformData.platformProjectService.handleNativeDependenciesChange(projectData, { release });
 		}

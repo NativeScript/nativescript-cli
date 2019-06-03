@@ -8,7 +8,6 @@ const prepareInfoFileName = ".nsprepareinfo";
 class ProjectChangesInfo implements IProjectChangesInfo {
 
 	public appResourcesChanged: boolean;
-	public modulesChanged: boolean;
 	public configChanged: boolean;
 	public packageChanged: boolean;
 	public nativeChanged: boolean;
@@ -18,7 +17,6 @@ class ProjectChangesInfo implements IProjectChangesInfo {
 	public get hasChanges(): boolean {
 		return this.packageChanged ||
 			this.appResourcesChanged ||
-			this.modulesChanged ||
 			this.configChanged ||
 			this.signingChanged;
 	}
@@ -78,11 +76,6 @@ export class ProjectChangesService implements IProjectChangesService {
 
 			this.$logger.trace(`Set nativeChanged to ${this._changesInfo.nativeChanged}.`);
 
-			if (this._newFiles > 0 || this._changesInfo.nativeChanged) {
-				this.$logger.trace(`Setting modulesChanged to true, newFiles: ${this._newFiles}, nativeChanged: ${this._changesInfo.nativeChanged}`);
-				this._changesInfo.modulesChanged = true;
-			}
-
 			if (platformData.platformNameLowerCase === this.$devicePlatformsConstants.iOS.toLowerCase()) {
 				this._changesInfo.configChanged = this.filesChanged([path.join(platformResourcesDir, platformData.configurationFileName),
 				path.join(platformResourcesDir, "LaunchScreen.storyboard"),
@@ -105,16 +98,11 @@ export class ProjectChangesService implements IProjectChangesService {
 		if (prepareData.release !== this._prepareInfo.release) {
 			this.$logger.trace(`Setting all setting to true. Current options are: `, prepareData, " old prepare info is: ", this._prepareInfo);
 			this._changesInfo.appResourcesChanged = true;
-			this._changesInfo.modulesChanged = true;
 			this._changesInfo.configChanged = true;
 			this._prepareInfo.release = prepareData.release;
 		}
-		if (this._changesInfo.packageChanged) {
-			this.$logger.trace("Set modulesChanged to true as packageChanged is true");
-			this._changesInfo.modulesChanged = true;
-		}
-		if (this._changesInfo.modulesChanged || this._changesInfo.appResourcesChanged) {
-			this.$logger.trace(`Set configChanged to true, current value of moduleChanged is: ${this._changesInfo.modulesChanged}, appResourcesChanged is: ${this._changesInfo.appResourcesChanged}`);
+		if (this._changesInfo.appResourcesChanged) {
+			this.$logger.trace(`Set configChanged to true, appResourcesChanged is: ${this._changesInfo.appResourcesChanged}`);
 			this._changesInfo.configChanged = true;
 		}
 		if (this._changesInfo.hasChanges) {
@@ -195,7 +183,6 @@ export class ProjectChangesService implements IProjectChangesService {
 		this._outputProjectCTime = 0;
 		this._changesInfo = this._changesInfo || new ProjectChangesInfo();
 		this._changesInfo.appResourcesChanged = true;
-		this._changesInfo.modulesChanged = true;
 		this._changesInfo.configChanged = true;
 		return true;
 	}

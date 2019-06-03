@@ -14,7 +14,6 @@ interface IPrepareInfo extends IAddedNativePlatform, IAppFilesHashes {
 
 interface IProjectChangesInfo extends IAddedNativePlatform {
 	appResourcesChanged: boolean;
-	modulesChanged: boolean;
 	configChanged: boolean;
 	packageChanged: boolean;
 	nativeChanged: boolean;
