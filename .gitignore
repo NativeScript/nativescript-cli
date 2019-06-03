@@ -40,6 +40,7 @@ docs/html
 docs-cli
 
 !test-scripts/*.js
+!test/files/**/*.js
 
 # From previous submodule
 lib/common/*.js

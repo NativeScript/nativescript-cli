@@ -114,6 +114,7 @@ module.exports = function (grunt) {
 
 		clean: {
 			src: ["test/**/*.js*",
+				"!test/files/**/*.js*",
 				"lib/**/*.js*",
 				"!test-scripts/**/*",
 				"!lib/common/vendor/*.js",
