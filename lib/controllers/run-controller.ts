@@ -299,12 +299,11 @@ export class RunController extends EventEmitter implements IRunController {
 			const deviceDescriptor = _.find(deviceDescriptors, dd => dd.identifier === device.deviceInfo.identifier);
 			const platformData = this.$platformsDataService.getPlatformData(data.platform, projectData);
 			const prepareData = this.$prepareDataService.getPrepareData(projectData.projectDir, data.platform, { ...liveSyncInfo, watch: !liveSyncInfo.skipWatcher });
-			const buildData = this.$buildDataService.getBuildData(projectData.projectDir, data.platform, { ...liveSyncInfo, outputPath: deviceDescriptor.outputPath });
 
 			try {
 				if (data.hasNativeChanges) {
 					await this.$prepareNativePlatformService.prepareNativePlatform(platformData, projectData, prepareData);
-					await this.$buildController.build(buildData);
+					await deviceDescriptor.buildAction();
 				}
 
 				const isInHMRMode = liveSyncInfo.useHotModuleReload && data.hmrData && data.hmrData.hash;

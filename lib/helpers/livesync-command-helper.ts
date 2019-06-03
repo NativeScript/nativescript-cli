@@ -77,17 +77,17 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 					keyStorePassword: this.$options.keyStorePassword
 				};
 
-				const buildData = this.$buildDataService.getBuildData(this.$projectData.projectDir, d.deviceInfo.platform, buildConfig);
-
-				const buildAction = additionalOptions && additionalOptions.buildPlatform ?
-					additionalOptions.buildPlatform.bind(additionalOptions.buildPlatform, d.deviceInfo.platform, buildConfig, this.$projectData) :
-					this.$buildController.build.bind(this.$buildController, buildData);
-
 				const outputPath = additionalOptions && additionalOptions.getOutputDirectory && additionalOptions.getOutputDirectory({
 					platform: d.deviceInfo.platform,
 					emulator: d.isEmulator,
 					projectDir: this.$projectData.projectDir
 				});
+
+				const buildData = this.$buildDataService.getBuildData(this.$projectData.projectDir, d.deviceInfo.platform, { ...buildConfig, outputPath });
+
+				const buildAction = additionalOptions && additionalOptions.buildPlatform ?
+					additionalOptions.buildPlatform.bind(additionalOptions.buildPlatform, d.deviceInfo.platform, buildConfig, this.$projectData) :
+					this.$buildController.build.bind(this.$buildController, buildData);
 
 				const info: ILiveSyncDeviceDescriptor = {
 					identifier: d.deviceInfo.identifier,
