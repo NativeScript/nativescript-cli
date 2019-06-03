@@ -68,7 +68,7 @@ export class ProjectChangesService implements IProjectChangesService {
 			this.$nodeModulesDependenciesBuilder.getProductionDependencies(projectData.projectDir)
 				.filter(dep => dep.nativescript && this.$fs.exists(path.join(dep.directory, "platforms", platformData.platformNameLowerCase)))
 				.map(dep => {
-					this._changesInfo.nativeChanged = this.containsNewerFiles(
+					this._changesInfo.nativeChanged = this._changesInfo.nativeChanged || this.containsNewerFiles(
 						path.join(dep.directory, "platforms", platformData.platformNameLowerCase),
 						projectData,
 						this.fileChangeRequiresBuild);
