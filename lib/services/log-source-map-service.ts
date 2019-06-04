@@ -3,6 +3,7 @@ import * as path from "path";
 const sourceMapConverter = require("convert-source-map");
 import { ANDROID_DEVICE_APP_ROOT_TEMPLATE, APP_FOLDER_NAME, NODE_MODULES_FOLDER_NAME } from "../constants";
 import * as util from "util";
+import { stringReplaceAll } from "../common/helpers";
 
 interface IParsedMessage {
 	filePath?: string;
@@ -71,7 +72,7 @@ export class LogSourceMapService implements Mobile.ILogSourceMapService {
 						if (!_.startsWith(sourceFile, NODE_MODULES_FOLDER_NAME)) {
 							sourceFile = path.join(projectData.getAppDirectoryRelativePath(), sourceFile);
 						}
-
+						sourceFile = stringReplaceAll(sourceFile, "/", path.sep);
 						return { sourceFile, line: originalPosition.line, column: originalPosition.column};
 					}
 				}
