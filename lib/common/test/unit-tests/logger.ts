@@ -1,8 +1,10 @@
 import { Yok } from "../../yok";
 import { Logger } from "../../logger/logger";
 import * as path from "path";
+import * as util from "util";
 import { assert } from "chai";
 import * as fileSystemFile from "../../file-system";
+import { LoggerConfigData } from "../../../constants";
 
 const passwordReplacement = "*******";
 const debugTrace = ["debug", "trace"];
@@ -33,7 +35,11 @@ describe("logger", () => {
 		fs = testInjector.resolve("fs");
 		outputs = {
 			debug: "",
-			trace: ""
+			trace: "",
+			info: "",
+			error: "",
+			context: {},
+			removedContext: {}
 		};
 
 		const log4jsLogger = {
@@ -42,6 +48,18 @@ describe("logger", () => {
 			},
 			trace: (...args: string[]) => {
 				outputs.trace += args.join("");
+			},
+			info: (...args: string[]) => {
+				outputs.info += util.format.apply(null, args);
+			},
+			error: (...args: string[]) => {
+				outputs.error += util.format.apply(null, args);
+			},
+			addContext(key: string, value: any): void {
+				outputs.context[key] = value;
+			},
+			removeContext(key: string): void {
+				outputs.removedContext[key] = true;
 			}
 		};
 
@@ -137,6 +155,69 @@ describe("logger", () => {
 			logger.trace(request, requestBody);
 
 			assert.deepEqual(outputs.trace, `${request}${requestBody}`, "logger.trace should not obfuscate body of request unless it is towards api/itmstransporter");
+		});
+	});
+
+	describe("info", () => {
+		[undefined, null, false, "string value", 42, { obj: 1 }, ["string value 1", "string value 2"]].forEach(value => {
+			it(`handles formatted message with '${value}' value in one of the args`, () => {
+				logger.info("test %s", value);
+				assert.equal(outputs.info, `test ${value}`);
+				assert.deepEqual(outputs.context, {}, "Nothing should be added to logger context.");
+				assert.deepEqual(outputs.removedContext, {}, "Removed context should be empty.");
+			});
+
+			it(`handles formatted message with '${value}' value in one of the args and additional values passed to context`, () => {
+				logger.info("test %s", value, { [LoggerConfigData.skipNewLine]: true });
+				assert.equal(outputs.info, `test ${value}`);
+				assert.deepEqual(outputs.context, { [LoggerConfigData.skipNewLine]: true }, `${LoggerConfigData.skipNewLine} should be set with value true.`);
+				assert.deepEqual(outputs.removedContext, { [LoggerConfigData.skipNewLine]: true }, `Removed context should contain ${LoggerConfigData.skipNewLine}`);
+			});
+		});
+
+		it("sets correct context when multiple logger options are passed in one object", () => {
+			logger.info("test", { [LoggerConfigData.skipNewLine]: true, [LoggerConfigData.useStderr]: true });
+			assert.equal(outputs.info, "test");
+			assert.deepEqual(outputs.context, { [LoggerConfigData.skipNewLine]: true, [LoggerConfigData.useStderr]: true });
+			assert.deepEqual(outputs.removedContext, { [LoggerConfigData.skipNewLine]: true, [LoggerConfigData.useStderr]: true });
+		});
+
+		it("sets correct context when multiple logger options are passed in multiple objects", () => {
+			logger.info({ [LoggerConfigData.useStderr]: true }, "test", { [LoggerConfigData.skipNewLine]: true });
+			assert.equal(outputs.info, "test");
+			assert.deepEqual(outputs.context, { [LoggerConfigData.skipNewLine]: true, [LoggerConfigData.useStderr]: true });
+			assert.deepEqual(outputs.removedContext, { [LoggerConfigData.skipNewLine]: true, [LoggerConfigData.useStderr]: true });
+		});
+	});
+
+	describe("printMarkdown", () => {
+		it(`passes markdown formatted text to log4js.info method`, () => {
+			logger.printMarkdown("header text\n==");
+			assert.isTrue(outputs.info.indexOf("# header text") !== -1);
+		});
+
+		it(`passes skipNewLine to log4js context`, () => {
+			logger.printMarkdown("`coloured` text");
+			assert.isTrue(outputs.info.indexOf("coloured") !== -1);
+			assert.deepEqual(outputs.context, { [LoggerConfigData.skipNewLine]: true }, `${LoggerConfigData.skipNewLine} should be set with value true.`);
+			assert.deepEqual(outputs.removedContext, { [LoggerConfigData.skipNewLine]: true }, `Removed context should contain ${LoggerConfigData.skipNewLine}`);
+		});
+	});
+
+	describe("error", () => {
+		const errorMessage = "this is error message";
+		it(`passes useStderr to log4js context`, () => {
+			logger.error(errorMessage);
+			assert.equal(outputs.error, errorMessage);
+			assert.deepEqual(outputs.context, { [LoggerConfigData.useStderr]: true }, `${LoggerConfigData.useStderr} should be set with value true.`);
+			assert.deepEqual(outputs.removedContext, { [LoggerConfigData.useStderr]: true }, `Removed context should contain ${LoggerConfigData.useStderr}`);
+		});
+
+		it(`allows overwrite of useStderr`, () => {
+			logger.error(errorMessage, { [LoggerConfigData.useStderr]: false });
+			assert.equal(outputs.error, errorMessage);
+			assert.deepEqual(outputs.context, { [LoggerConfigData.useStderr]: false }, `${LoggerConfigData.useStderr} should be set with value false.`);
+			assert.deepEqual(outputs.removedContext, { [LoggerConfigData.useStderr]: true }, `Removed context should contain ${LoggerConfigData.useStderr}`);
 		});
 	});
 });
