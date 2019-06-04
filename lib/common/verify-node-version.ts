@@ -10,7 +10,7 @@ var util = require("util");
 // These versions cannot be used with CLI due to bugs in the node itself.
 // We are absolutely sure we cannot work with them, so inform the user if he is trying to use any of them and exit the process.
 var versionsCausingFailure = ["0.10.34", "4.0.0", "4.2.0", "5.0.0"];
-var minimumRequiredVersion = "6.0.0";
+var minimumRequiredVersion = "8.0.0";
 
 interface INodeVersionOpts {
 	supportedVersionsRange: string;
@@ -22,7 +22,7 @@ interface INodeVersionOpts {
 function getNodeVersionOpts(): INodeVersionOpts {
 	var supportedVersionsRange = require("../../package.json").engines.node;
 	var cliName = "NativeScript";
-	var deprecatedVersions = ["^6.0.0", "^7.0.0"];
+	var deprecatedVersions = ["^8.0.0", "^9.0.0"];
 	var nodeVer = process.version.substr(1);
 	return {
 		supportedVersionsRange: supportedVersionsRange,
@@ -53,11 +53,10 @@ export function verifyNodeVersion(): void {
 	}
 }
 
-var isGetNodeWarningCalled = false;
+var nodeWarn: ISystemWarning = undefined;
 export function getNodeWarning(): ISystemWarning {
-	if (!isGetNodeWarningCalled) {
-		isGetNodeWarningCalled = true;
-
+	if (nodeWarn === undefined) {
+		nodeWarn = null;
 		var verificationOpts = getNodeVersionOpts();
 		var cliName = verificationOpts.cliName;
 		var supportedVersionsRange = verificationOpts.supportedVersionsRange;
@@ -83,13 +82,13 @@ export function getNodeWarning(): ISystemWarning {
 		}
 
 		if (warningMessage) {
-			return {
+			nodeWarn = {
 				message: warningMessage,
 				severity: SystemWarningsSeverity.medium
 			};
 		}
-
-		return null;
 	}
+
+	return nodeWarn;
 }
 /* tslint:enable */
