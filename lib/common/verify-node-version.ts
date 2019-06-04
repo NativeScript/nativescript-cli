@@ -49,7 +49,7 @@ export function verifyNodeVersion(): void {
 
 	var nodeWarning = getNodeWarning();
 	if (nodeWarning && nodeWarning.message) {
-		console.warn((`${os.EOL}${nodeWarning.message}${os.EOL}`).yellow.bold);
+		console.warn((os.EOL + nodeWarning.message + os.EOL).yellow.bold);
 	}
 }
 
