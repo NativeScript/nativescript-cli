@@ -3,7 +3,7 @@ import isEmpty from 'lodash/isEmpty';
 import isArray from 'lodash/isArray';
 import { Base64 } from 'js-base64';
 import { KinveyError } from '../errors/kinvey';
-import { getAppKey, getAppSecret, getMasterSecret } from '../kinvey';
+import { getAppKey, getAppSecret, getMasterSecret, getApiVersion } from '../kinvey';
 import { getSession } from './session';
 
 function byteCount(str: string): number {
@@ -43,6 +43,10 @@ export class HttpHeaders {
 
   get contentType() {
     return this.get('Content-Type');
+  }
+
+  set contentType(value: string) {
+    this.set('Content-Type', value);
   }
 
   has(name: string): boolean {
@@ -139,7 +143,7 @@ export class KinveyHttpHeaders extends HttpHeaders {
 
     // Add the X-Kinvey-API-Version header
     if (!this.has('X-Kinvey-Api-Version')) {
-      this.set('X-Kinvey-Api-Version', '4');
+      this.set('X-Kinvey-Api-Version', String(getApiVersion()));
     }
 
     // Add global Kinvey headers
