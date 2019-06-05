@@ -5,8 +5,9 @@ import { Aggregation } from '../aggregation';
 import { Query } from '../query';
 import { KinveyError } from '../errors/kinvey';
 import { getSession, formatKinveyBaasUrl, HttpRequestMethod, KinveyHttpRequest, KinveyBaasNamespace, KinveyHttpAuth } from '../http';
-import { getAppKey } from '../kinvey';
+import { getAppKey, getApiVersion } from '../kinvey';
 import { subscribeToChannel, unsubscribeFromChannel, LiveServiceReceiver } from '../live';
+import { create } from '../files';
 
 export function createRequest(method: HttpRequestMethod, url: string, body?: any) {
   return new KinveyHttpRequest({
@@ -192,8 +193,12 @@ export class NetworkStore {
     return stream;
   }
 
-  async create(doc: any, options: any = {}) {
-    if (isArray(doc)) {
+  create(doc: any, options: any)
+  create(docs: any[], options: any)
+  async create(docs: any, options: any = {}) {
+    const apiVersion = getApiVersion();
+
+    if (apiVersion !== 5 && isArray(docs)) {
       throw new KinveyError('Unable to create an array of entities. Please create entities one by one.');
     }
 
@@ -206,7 +211,7 @@ export class NetworkStore {
     } = options;
     const queryObject = {};
     const url = formatKinveyBaasUrl(KinveyBaasNamespace.AppData, this.pathname, queryObject);
-    const request = createRequest(HttpRequestMethod.POST, url, doc);
+    const request = createRequest(HttpRequestMethod.POST, url, docs);
     request.headers.setCustomRequestProperties(properties);
     request.timeout = timeout;
     const response = await request.execute();
