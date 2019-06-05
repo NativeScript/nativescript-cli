@@ -72,7 +72,7 @@ export class PreviewAppController extends EventEmitter implements IPreviewAppCon
 				if (!data.env) { data.env = { }; }
 				data.env.externals = this.$previewAppPluginsService.getExternalPlugins(device);
 
-				const prepareData = this.$prepareDataService.getPrepareData(data.projectDir, device.platform.toLowerCase(),  { ...data, skipNativePrepare: true } );
+				const prepareData = this.$prepareDataService.getPrepareData(data.projectDir, device.platform.toLowerCase(),  { ...data, nativePrepare: { skipNativePrepare: true }, watch: true });
 				await this.$prepareController.prepare(prepareData);
 
 				this.deviceInitializationPromise[device.id] = this.getInitialFilesForPlatformSafe(data, device.platform);
