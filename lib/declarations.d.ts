@@ -586,10 +586,6 @@ interface IUpdatePlatformOptions {
 	canUpdate: boolean;
 }
 
-interface IProjectInitService {
-	initialize(): Promise<void>;
-}
-
 interface IInfoService {
 	printComponentsInfo(): Promise<void>;
 }

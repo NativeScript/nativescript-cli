@@ -131,9 +131,6 @@ $injector.require("xcprojService", "./services/xcproj-service");
 $injector.require("versionsService", "./services/versions-service");
 $injector.requireCommand("install", "./commands/install");
 
-$injector.require("projectInitService", "./services/project-init-service");
-$injector.requireCommand("init", "./commands/init");
-
 $injector.require("infoService", "./services/info-service");
 $injector.requireCommand("info", "./commands/info");
 
