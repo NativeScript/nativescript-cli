@@ -7,6 +7,11 @@ declare global {
 		deviceDescriptors: ILiveSyncDeviceDescriptor[];
 	}
 
+	interface IDeployData {
+		buildData: IBuildData;
+		deviceDescriptors: ILiveSyncDeviceDescriptor[];
+	}
+
 	interface IStopRunData {
 		projectDir: string;
 		deviceIdentifiers?: string[];
