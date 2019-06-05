@@ -18,7 +18,7 @@ function createTestInjector(): IInjector {
 	return injector;
 }
 
-function executeTests(testCases: any[], testFunction: (gradleBuildArgsService: IGradleBuildArgsService, buildConfig: IAndroidBuildConfig) => string[]) {
+function executeTests(testCases: any[], testFunction: (gradleBuildArgsService: IGradleBuildArgsService, buildData: IAndroidBuildData) => string[]) {
 	_.each(testCases, testCase => {
 		it(testCase.name, () => {
 			const injector = createTestInjector();
@@ -102,7 +102,7 @@ describe("GradleBuildArgsService", () => {
 			}
 		];
 
-		executeTests(testCases, (gradleBuildArgsService: IGradleBuildArgsService, buildConfig: IAndroidBuildConfig) => gradleBuildArgsService.getBuildTaskArgs(buildConfig));
+		executeTests(testCases, (gradleBuildArgsService: IGradleBuildArgsService, buildData: IAndroidBuildData) => gradleBuildArgsService.getBuildTaskArgs(buildData));
 	});
 
 	describe("getCleanTaskArgs", () => {
@@ -157,6 +157,6 @@ describe("GradleBuildArgsService", () => {
 			}
 		];
 
-		executeTests(testCases, (gradleBuildArgsService: IGradleBuildArgsService, buildConfig: IAndroidBuildConfig) => gradleBuildArgsService.getCleanTaskArgs(buildConfig));
+		executeTests(testCases, (gradleBuildArgsService: IGradleBuildArgsService, buildData: IAndroidBuildData) => gradleBuildArgsService.getCleanTaskArgs(buildData));
 	});
 });

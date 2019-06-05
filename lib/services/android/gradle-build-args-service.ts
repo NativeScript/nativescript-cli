@@ -5,21 +5,21 @@ export class GradleBuildArgsService implements IGradleBuildArgsService {
 	constructor(private $androidToolsInfo: IAndroidToolsInfo,
 		private $logger: ILogger) { }
 
-	public getBuildTaskArgs(buildConfig: IAndroidBuildConfig): string[] {
-		const args = this.getBaseTaskArgs(buildConfig);
-		args.unshift(this.getBuildTaskName(buildConfig));
+	public getBuildTaskArgs(buildData: IAndroidBuildData): string[] {
+		const args = this.getBaseTaskArgs(buildData);
+		args.unshift(this.getBuildTaskName(buildData));
 
 		return args;
 	}
 
-	public getCleanTaskArgs(buildConfig: IAndroidBuildConfig): string[] {
-		const args = this.getBaseTaskArgs(buildConfig);
+	public getCleanTaskArgs(buildData: IAndroidBuildData): string[] {
+		const args = this.getBaseTaskArgs(buildData);
 		args.unshift("clean");
 
 		return args;
 	}
 
-	private getBaseTaskArgs(buildConfig: IAndroidBuildConfig): string[] {
+	private getBaseTaskArgs(buildData: IAndroidBuildData): string[] {
 		const args = this.getBuildLoggingArgs();
 
 		const toolsInfo = this.$androidToolsInfo.getToolsInfo();
@@ -30,13 +30,13 @@ export class GradleBuildArgsService implements IGradleBuildArgsService {
 			`-PgenerateTypings=${toolsInfo.generateTypings}`
 		);
 
-		if (buildConfig.release) {
+		if (buildData.release) {
 			args.push(
 				"-Prelease",
-				`-PksPath=${path.resolve(buildConfig.keyStorePath)}`,
-				`-Palias=${buildConfig.keyStoreAlias}`,
-				`-Ppassword=${buildConfig.keyStoreAliasPassword}`,
-				`-PksPassword=${buildConfig.keyStorePassword}`
+				`-PksPath=${path.resolve(buildData.keyStorePath)}`,
+				`-Palias=${buildData.keyStoreAlias}`,
+				`-Ppassword=${buildData.keyStoreAliasPassword}`,
+				`-PksPassword=${buildData.keyStorePassword}`
 			);
 		}
 
@@ -56,9 +56,9 @@ export class GradleBuildArgsService implements IGradleBuildArgsService {
 		return args;
 	}
 
-	private getBuildTaskName(buildConfig: IAndroidBuildConfig): string {
-		const baseTaskName = buildConfig.androidBundle ? "bundle" : "assemble";
-		const buildTaskName = buildConfig.release ? `${baseTaskName}${Configurations.Release}` : `${baseTaskName}${Configurations.Debug}`;
+	private getBuildTaskName(buildData: IAndroidBuildData): string {
+		const baseTaskName = buildData.androidBundle ? "bundle" : "assemble";
+		const buildTaskName = buildData.release ? `${baseTaskName}${Configurations.Release}` : `${baseTaskName}${Configurations.Debug}`;
 
 		return buildTaskName;
 	}

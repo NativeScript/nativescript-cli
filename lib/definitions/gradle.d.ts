@@ -9,16 +9,12 @@ interface IGradleCommandOptions {
 	spawnOptions?: ISpawnFromEventOptions;
 }
 
-interface IAndroidBuildConfig extends IRelease, IAndroidReleaseOptions, IHasAndroidBundle {
-	buildOutputStdio?: string;
-}
-
 interface IGradleBuildService {
-	buildProject(projectRoot: string, buildConfig: IAndroidBuildConfig): Promise<void>;
-	cleanProject(projectRoot: string, buildConfig: IAndroidBuildConfig): Promise<void>;
+	buildProject(projectRoot: string, buildData: IAndroidBuildData): Promise<void>;
+	cleanProject(projectRoot: string, buildData: IAndroidBuildData): Promise<void>;
 }
 
 interface IGradleBuildArgsService {
-	getBuildTaskArgs(buildConfig: IAndroidBuildConfig): string[];
-	getCleanTaskArgs(buildConfig: IAndroidBuildConfig): string[];
+	getBuildTaskArgs(buildData: IAndroidBuildData): string[];
+	getCleanTaskArgs(buildData: IAndroidBuildData): string[];
 }

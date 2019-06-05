@@ -453,7 +453,7 @@ export class PlatformProjectServiceStub extends EventEmitter implements IPlatfor
 	async stopServices(): Promise<ISpawnResult> {
 		return Promise.resolve({ stderr: "", stdout: "", exitCode: 0 });
 	}
-	async cleanProject(projectRoot: string, projectData: IProjectData): Promise<void> {
+	async cleanProject(projectRoot: string): Promise<void> {
 		return Promise.resolve();
 	}
 	async checkForChanges(changesInfo: IProjectChangesInfo, options: any, projectData: IProjectData): Promise<void> {
