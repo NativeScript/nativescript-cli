@@ -233,16 +233,16 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	}
 
 	@performanceLog()
-	public async buildProject(projectRoot: string, projectData: IProjectData, buildConfig: IBuildConfig): Promise<void> {
+	public async buildProject(projectRoot: string, projectData: IProjectData, buildData: IAndroidBuildData): Promise<void> {
 		const platformData = this.getPlatformData(projectData);
-		await this.$gradleBuildService.buildProject(platformData.projectRoot, buildConfig);
+		await this.$gradleBuildService.buildProject(platformData.projectRoot, buildData);
 
-		const outputPath = platformData.getBuildOutputPath(buildConfig);
+		const outputPath = platformData.getBuildOutputPath(buildData);
 		await this.$filesHashService.saveHashesForProject(this._platformData, outputPath);
 	}
 
-	public async buildForDeploy(projectRoot: string, projectData: IProjectData, buildConfig?: IBuildConfig): Promise<void> {
-		return this.buildProject(projectRoot, projectData, buildConfig);
+	public async buildForDeploy(projectRoot: string, projectData: IProjectData, buildData?: IAndroidBuildData): Promise<void> {
+		return this.buildProject(projectRoot, projectData, buildData);
 	}
 
 	public isPlatformPrepared(projectRoot: string, projectData: IProjectData): boolean {
@@ -376,8 +376,8 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		return result;
 	}
 
-	public async cleanProject(projectRoot: string, projectData: IProjectData): Promise<void> {
-		await this.$gradleBuildService.cleanProject(projectRoot, { release: false });
+	public async cleanProject(projectRoot: string): Promise<void> {
+		await this.$gradleBuildService.cleanProject(projectRoot, <any>{ release: false });
 	}
 
 	public async cleanDeviceTempFolder(deviceIdentifier: string, projectData: IProjectData): Promise<void> {

@@ -47,7 +47,7 @@ export class BuildController extends EventEmitter implements IBuildController {
 		});
 
 		if (buildData.clean) {
-			await platformData.platformProjectService.cleanProject(platformData.projectRoot, projectData);
+			await platformData.platformProjectService.cleanProject(platformData.projectRoot);
 		}
 
 		const handler = (data: any) => {

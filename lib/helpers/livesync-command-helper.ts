@@ -62,31 +62,16 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 		// Now let's take data for each device:
 		const deviceDescriptors: ILiveSyncDeviceDescriptor[] = devices
 			.map(d => {
-				const buildConfig: IBuildConfig = {
-					buildForDevice: !d.isEmulator,
-					iCloudContainerEnvironment: this.$options.iCloudContainerEnvironment,
-					projectDir: this.$options.path,
-					clean: this.$options.clean,
-					teamId: this.$options.teamId,
-					device: this.$options.device,
-					provision: this.$options.provision,
-					release: this.$options.release,
-					keyStoreAlias: this.$options.keyStoreAlias,
-					keyStorePath: this.$options.keyStorePath,
-					keyStoreAliasPassword: this.$options.keyStoreAliasPassword,
-					keyStorePassword: this.$options.keyStorePassword
-				};
-
 				const outputPath = additionalOptions && additionalOptions.getOutputDirectory && additionalOptions.getOutputDirectory({
 					platform: d.deviceInfo.platform,
 					emulator: d.isEmulator,
 					projectDir: this.$projectData.projectDir
 				});
 
-				const buildData = this.$buildDataService.getBuildData(this.$projectData.projectDir, d.deviceInfo.platform, { ...buildConfig, outputPath });
+				const buildData = this.$buildDataService.getBuildData(this.$projectData.projectDir, d.deviceInfo.platform, { ...this.$options, outputPath, buildForDevice: !d.isEmulator });
 
 				const buildAction = additionalOptions && additionalOptions.buildPlatform ?
-					additionalOptions.buildPlatform.bind(additionalOptions.buildPlatform, d.deviceInfo.platform, buildConfig, this.$projectData) :
+					additionalOptions.buildPlatform.bind(additionalOptions.buildPlatform, d.deviceInfo.platform, buildData, this.$projectData) :
 					this.$buildController.build.bind(this.$buildController, buildData);
 
 				const info: ILiveSyncDeviceDescriptor = {
@@ -116,6 +101,11 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 
 	public async executeLiveSyncOperation(devices: Mobile.IDevice[], platform: string, additionalOptions?: ILiveSyncCommandHelperAdditionalOptions): Promise<void> {
 		const { liveSyncInfo, deviceDescriptors } = await this.executeLiveSyncOperationCore(devices, platform, additionalOptions);
+
+		if (this.$options.release) {
+			await this.runInRelease(platform, deviceDescriptors, liveSyncInfo);
+			return;
+		}
 
 		await this.$runController.run({
 			liveSyncInfo,
@@ -173,11 +163,6 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 		const deviceDescriptors = await this.createDeviceDescriptors(devices, platform, additionalOptions);
 		const liveSyncInfo = this.getLiveSyncData(this.$projectData.projectDir);
 
-		if (this.$options.release) {
-			await this.runInRelease(platform, deviceDescriptors, liveSyncInfo);
-			return;
-		}
-
 		return { liveSyncInfo, deviceDescriptors };
 	}
 
@@ -190,8 +175,10 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 			sdk: this.$options.sdk
 		});
 
+		const buildData = this.$buildDataService.getBuildData(liveSyncInfo.projectDir, platform, { ...this.$options, clean: true, skipWatcher: true });
+
 		await this.$deployController.deploy({
-			liveSyncInfo: { ...liveSyncInfo, clean: true, skipWatcher: true },
+			buildData,
 			deviceDescriptors
 		});
 

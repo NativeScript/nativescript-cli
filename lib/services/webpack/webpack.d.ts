@@ -129,10 +129,9 @@ declare global {
 		/**
 		 * Removes build artifacts specific to the platform
 		 * @param {string} projectRoot The root directory of the native project.
-		 * @param {IProjectData} projectData DTO with information about the project.
 		 * @returns {void}
 		 */
-		cleanProject?(projectRoot: string, projectData: IProjectData): Promise<void>
+		cleanProject?(projectRoot: string): Promise<void>
 
 		/**
 		 * Check the current state of the project, and validate against the options.

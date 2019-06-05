@@ -3,6 +3,7 @@ import { BuildController } from "../controllers/build-controller";
 
 export class DeployCommandHelper {
 	constructor(
+		private $buildDataService: IBuildDataService,
 		private $buildController: BuildController,
 		private $devicesService: Mobile.IDevicesService,
 		private $deployController: DeployController,
@@ -25,30 +26,17 @@ export class DeployCommandHelper {
 
 		const deviceDescriptors: ILiveSyncDeviceDescriptor[] = devices
 			.map(d => {
-				const buildConfig: IBuildConfig = {
-					buildForDevice: !d.isEmulator,
-					iCloudContainerEnvironment: this.$options.iCloudContainerEnvironment,
-					projectDir: this.$options.path,
-					clean: this.$options.clean,
-					teamId: this.$options.teamId,
-					device: this.$options.device,
-					provision: this.$options.provision,
-					release: this.$options.release,
-					keyStoreAlias: this.$options.keyStoreAlias,
-					keyStorePath: this.$options.keyStorePath,
-					keyStoreAliasPassword: this.$options.keyStoreAliasPassword,
-					keyStorePassword: this.$options.keyStorePassword
-				};
-
-				const buildAction = additionalOptions && additionalOptions.buildPlatform ?
-					additionalOptions.buildPlatform.bind(additionalOptions.buildPlatform, d.deviceInfo.platform, buildConfig, this.$projectData) :
-					this.$buildController.prepareAndBuild.bind(this.$buildController, d.deviceInfo.platform, buildConfig, this.$projectData);
-
 				const outputPath = additionalOptions && additionalOptions.getOutputDirectory && additionalOptions.getOutputDirectory({
 					platform: d.deviceInfo.platform,
 					emulator: d.isEmulator,
 					projectDir: this.$projectData.projectDir
 				});
+
+				const buildData = this.$buildDataService.getBuildData(this.$projectData.projectDir, d.deviceInfo.platform, { ...this.$options, outputPath, buildForDevice: !d.isEmulator });
+
+				const buildAction = additionalOptions && additionalOptions.buildPlatform ?
+					additionalOptions.buildPlatform.bind(additionalOptions.buildPlatform, d.deviceInfo.platform, buildData, this.$projectData) :
+					this.$buildController.prepareAndBuild.bind(this.$buildController, d.deviceInfo.platform, buildData, this.$projectData);
 
 				const info: ILiveSyncDeviceDescriptor = {
 					identifier: d.deviceInfo.identifier,
@@ -62,20 +50,8 @@ export class DeployCommandHelper {
 				return info;
 			});
 
-		const liveSyncInfo: ILiveSyncInfo = {
-			projectDir: this.$projectData.projectDir,
-			skipWatcher: !this.$options.watch,
-			clean: this.$options.clean,
-			release: this.$options.release,
-			env: this.$options.env,
-			timeout: this.$options.timeout,
-			useHotModuleReload: this.$options.hmr,
-			force: this.$options.force,
-			emulator: this.$options.emulator
-		};
-
 		await this.$deployController.deploy({
-			liveSyncInfo,
+			buildData: this.$buildDataService.getBuildData(this.$projectData.projectDir, platform, { ...this.$options, skipWatcher: !this.$options.watch }),
 			deviceDescriptors
 		});
 	}

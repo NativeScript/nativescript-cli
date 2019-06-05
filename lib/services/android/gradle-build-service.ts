@@ -9,10 +9,10 @@ export class GradleBuildService extends EventEmitter implements IGradleBuildServ
 		private $gradleCommandService: IGradleCommandService,
 	) { super(); }
 
-	public async buildProject(projectRoot: string, buildConfig: IAndroidBuildConfig): Promise<void> {
-		const buildTaskArgs = this.$gradleBuildArgsService.getBuildTaskArgs(buildConfig);
+	public async buildProject(projectRoot: string, buildData: IAndroidBuildData): Promise<void> {
+		const buildTaskArgs = this.$gradleBuildArgsService.getBuildTaskArgs(buildData);
 		const spawnOptions = { emitOptions: { eventName: constants.BUILD_OUTPUT_EVENT_NAME }, throwError: true };
-		const gradleCommandOptions = { cwd: projectRoot, message: "Gradle build...", stdio: buildConfig.buildOutputStdio, spawnOptions };
+		const gradleCommandOptions = { cwd: projectRoot, message: "Gradle build...", stdio: buildData.buildOutputStdio, spawnOptions };
 
 		await attachAwaitDetach(constants.BUILD_OUTPUT_EVENT_NAME,
 			this.$childProcess,
@@ -21,8 +21,8 @@ export class GradleBuildService extends EventEmitter implements IGradleBuildServ
 		);
 	}
 
-	public async cleanProject(projectRoot: string, buildConfig: IAndroidBuildConfig): Promise<void> {
-		const cleanTaskArgs = this.$gradleBuildArgsService.getCleanTaskArgs(buildConfig);
+	public async cleanProject(projectRoot: string, buildData: IAndroidBuildData): Promise<void> {
+		const cleanTaskArgs = this.$gradleBuildArgsService.getCleanTaskArgs(buildData);
 		const gradleCommandOptions = { cwd: projectRoot, message: "Gradle clean..." };
 		await this.$gradleCommandService.executeCommand(cleanTaskArgs, gradleCommandOptions);
 	}

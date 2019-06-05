@@ -28,7 +28,7 @@ export class PrepareNativePlatformService implements IPrepareNativePlatformServi
 		const hasChanges = hasModulesChange || hasConfigChange || hasChangesRequirePrepare;
 
 		if (changesInfo.hasChanges) {
-			await this.cleanProject(platformData, projectData, { release });
+			await this.cleanProject(platformData, { release });
 		}
 
 		platformData.platformProjectService.prepareAppResources(projectData);
@@ -52,7 +52,7 @@ export class PrepareNativePlatformService implements IPrepareNativePlatformServi
 		return hasChanges;
 	}
 
-	private async cleanProject(platformData: IPlatformData, projectData: IProjectData, options: { release: boolean }): Promise<void> {
+	private async cleanProject(platformData: IPlatformData, options: { release: boolean }): Promise<void> {
 		// android build artifacts need to be cleaned up
 		// when switching between debug, release and webpack builds
 		if (platformData.platformNameLowerCase !== "android") {
@@ -67,7 +67,7 @@ export class PrepareNativePlatformService implements IPrepareNativePlatformServi
 		const { release: previousWasRelease } = previousPrepareInfo;
 		const { release: currentIsRelease } = options;
 		if (previousWasRelease !== currentIsRelease) {
-			await platformData.platformProjectService.cleanProject(platformData.projectRoot, projectData);
+			await platformData.platformProjectService.cleanProject(platformData.projectRoot);
 		}
 	}
 }
