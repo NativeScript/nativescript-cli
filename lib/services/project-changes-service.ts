@@ -1,5 +1,5 @@
 import * as path from "path";
-import { NativePlatformStatus, PACKAGE_JSON_FILE_NAME, APP_GRADLE_FILE_NAME, BUILD_XCCONFIG_FILE_NAME } from "../constants";
+import { NativePlatformStatus, PACKAGE_JSON_FILE_NAME, APP_GRADLE_FILE_NAME, BUILD_XCCONFIG_FILE_NAME, PLATFORMS_DIR_NAME } from "../constants";
 import { getHash, hook } from "../common/helpers";
 import { PrepareData } from "../data/prepare-data";
 
@@ -9,21 +9,19 @@ class ProjectChangesInfo implements IProjectChangesInfo {
 
 	public appResourcesChanged: boolean;
 	public configChanged: boolean;
-	public packageChanged: boolean;
 	public nativeChanged: boolean;
 	public signingChanged: boolean;
 	public nativePlatformStatus: NativePlatformStatus;
 
 	public get hasChanges(): boolean {
-		return this.packageChanged ||
+		return this.nativeChanged ||
 			this.appResourcesChanged ||
 			this.configChanged ||
 			this.signingChanged;
 	}
 
 	public get changesRequireBuild(): boolean {
-		return this.packageChanged ||
-			this.appResourcesChanged ||
+		return this.appResourcesChanged ||
 			this.nativeChanged;
 	}
 
@@ -57,17 +55,22 @@ export class ProjectChangesService implements IProjectChangesService {
 		this._changesInfo = new ProjectChangesInfo();
 		const isNewPrepareInfo = await this.ensurePrepareInfo(platformData, projectData, prepareData);
 		if (!isNewPrepareInfo) {
-			this._changesInfo.packageChanged = this.isProjectFileChanged(projectData.projectDir, platformData);
-
 			const platformResourcesDir = path.join(projectData.appResourcesDirectoryPath, platformData.normalizedPlatformName);
 			this._changesInfo.appResourcesChanged = this.containsNewerFiles(platformResourcesDir, projectData);
 
 			this.$nodeModulesDependenciesBuilder.getProductionDependencies(projectData.projectDir)
-				.filter(dep => dep.nativescript && this.$fs.exists(path.join(dep.directory, "platforms", platformData.platformNameLowerCase)))
+				.filter(dep => dep.nativescript && this.$fs.exists(path.join(dep.directory, PLATFORMS_DIR_NAME, platformData.platformNameLowerCase)))
 				.map(dep => {
 					this._changesInfo.nativeChanged = this._changesInfo.nativeChanged ||
-						this.containsNewerFiles(path.join(dep.directory, "platforms", platformData.platformNameLowerCase), projectData);
+						this.containsNewerFiles(path.join(dep.directory, PLATFORMS_DIR_NAME, platformData.platformNameLowerCase), projectData) ||
+						this.isFileModified(path.join(dep.directory, PACKAGE_JSON_FILE_NAME));
 				});
+
+			if (!this._changesInfo.nativeChanged) {
+				const packageJsonChanged = this.isProjectFileChanged(projectData.projectDir, platformData);
+				this._prepareInfo.projectFileHash = this.getProjectFileStrippedHash(projectData.projectDir, platformData);
+				this._changesInfo.nativeChanged = packageJsonChanged;
+			}
 
 			this.$logger.trace(`Set nativeChanged to ${this._changesInfo.nativeChanged}.`);
 
@@ -106,8 +109,6 @@ export class ProjectChangesService implements IProjectChangesService {
 			if (this._prepareInfo.changesRequireBuild) {
 				this._prepareInfo.changesRequireBuildTime = this._prepareInfo.time;
 			}
-
-			this._prepareInfo.projectFileHash = this.getProjectFileStrippedHash(projectData.projectDir, platformData);
 		}
 
 		this._changesInfo.nativePlatformStatus = this._prepareInfo.nativePlatformStatus;
@@ -223,8 +224,7 @@ export class ProjectChangesService implements IProjectChangesService {
 			return false;
 		}
 
-		const dirFileStat = this.$fs.getFsStats(dir);
-		if (this.isFileModified(dirFileStat, dir)) {
+		if (this.isFileModified(dir)) {
 			this.$logger.trace(`containsNewerFiles returns true for ${dir} as the dir itself has been modified.`);
 			return true;
 		}
@@ -234,7 +234,7 @@ export class ProjectChangesService implements IProjectChangesService {
 			const filePath = path.join(dir, file);
 
 			const fileStats = this.$fs.getFsStats(filePath);
-			const changed = this.isFileModified(fileStats, filePath);
+			const changed = this.isFileModified(filePath, fileStats);
 
 			if (changed) {
 				this.$logger.trace(`containsNewerFiles returns true for ${dir}. The modified file is ${filePath}`);
@@ -253,9 +253,10 @@ export class ProjectChangesService implements IProjectChangesService {
 		return false;
 	}
 
-	private isFileModified(filePathStat: IFsStats, filePath: string): boolean {
-		let changed = filePathStat.mtime.getTime() >= this._outputProjectMtime ||
-			filePathStat.ctime.getTime() >= this._outputProjectCTime;
+	private isFileModified(filePath: string, filePathStats?: IFsStats): boolean {
+		filePathStats = filePathStats || this.$fs.getFsStats(filePath);
+		let changed = filePathStats.mtime.getTime() >= this._outputProjectMtime ||
+			filePathStats.ctime.getTime() >= this._outputProjectCTime;
 
 		if (!changed) {
 			const lFileStats = this.$fs.getLsStats(filePath);

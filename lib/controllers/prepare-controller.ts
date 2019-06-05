@@ -4,7 +4,7 @@ import { hook } from "../common/helpers";
 import { performanceLog } from "../common/decorators";
 import { EventEmitter } from "events";
 import * as path from "path";
-import { PREPARE_READY_EVENT_NAME, WEBPACK_COMPILATION_COMPLETE } from "../constants";
+import { PREPARE_READY_EVENT_NAME, WEBPACK_COMPILATION_COMPLETE, PACKAGE_JSON_FILE_NAME } from "../constants";
 
 interface IPlatformWatcherData {
 	webpackCompilerProcess: child_process.ChildProcess;
@@ -115,6 +115,8 @@ export class PrepareController extends EventEmitter {
 		}
 
 		const patterns = [
+			path.join(projectData.projectDir, PACKAGE_JSON_FILE_NAME),
+			path.join(projectData.getAppDirectoryPath(), PACKAGE_JSON_FILE_NAME),
 			path.join(projectData.getAppResourcesRelativeDirectoryPath(), platformData.normalizedPlatformName),
 			`node_modules/**/platforms/${platformData.platformNameLowerCase}/`
 		];

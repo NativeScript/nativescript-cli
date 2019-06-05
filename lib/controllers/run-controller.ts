@@ -302,8 +302,9 @@ export class RunController extends EventEmitter implements IRunController {
 
 			try {
 				if (data.hasNativeChanges) {
-					await this.$prepareNativePlatformService.prepareNativePlatform(platformData, projectData, prepareData);
-					await deviceDescriptor.buildAction();
+					if (await this.$prepareNativePlatformService.prepareNativePlatform(platformData, projectData, prepareData)) {
+						await deviceDescriptor.buildAction();
+					}
 				}
 
 				const isInHMRMode = liveSyncInfo.useHotModuleReload && data.hmrData && data.hmrData.hash;

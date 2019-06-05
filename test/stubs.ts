@@ -506,16 +506,10 @@ export class ProjectDataService implements IProjectDataService {
 	removeDependency(dependencyName: string): void { }
 
 	getProjectData(projectDir: string): IProjectData {
-		return <any>{
-			projectDir: "/path/to/my/projecDir",
-			projectName: "myTestProjectName",
-			platformsDir: "/path/to/my/projecDir/platforms",
-			projectIdentifiers: {
-				ios: "org.nativescript.myiosApp",
-				android: "org.nativescript.myAndroidApp"
-			},
-			getAppResourcesRelativeDirectoryPath: () => "/path/to/my/projecDir/App_Resources"
-		};
+		const projectData = new ProjectDataStub();
+		projectData.initializeProjectData(projectDir);
+
+		return projectData;
 	}
 
 	async getAssetsStructure(opts: IProjectDir): Promise<IAssetsStructure> {
