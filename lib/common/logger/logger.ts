@@ -154,31 +154,40 @@ export class Logger implements ILogger {
 	}
 
 	private getLogOptionsForMessage(data: any[]): { data: any[], [key: string]: any } {
-		const opts = _.keys(LoggerConfigData);
+		const loggerOptionKeys = _.keys(LoggerConfigData);
+		const dataToCheck = data.filter(el => {
+			// objects created with Object.create(null) do not have `hasOwnProperty` function
+			if (!!el && typeof el === "object" && el.hasOwnProperty && typeof el.hasOwnProperty === "function") {
+				for (const key of loggerOptionKeys) {
+					if (el.hasOwnProperty(key)) {
+						// include only the elements which have one of the keys we've specified as logger options
+						return true;
+					}
+				}
+			}
 
-		const result: any = {};
-		const cleanedData = _.cloneDeep(data);
+			return false;
+		});
 
-		// objects created with Object.create(null) do not have `hasOwnProperty` function
-		const dataToCheck = data.filter(el => typeof el === "object" && el.hasOwnProperty && typeof el.hasOwnProperty === "function");
+		const result: any = {
+			data: _.difference(data, dataToCheck)
+		};
 
 		for (const element of dataToCheck) {
-			if (opts.length === 0) {
+			if (loggerOptionKeys.length === 0) {
 				break;
 			}
 
-			const remainingOpts = _.cloneDeep(opts);
+			const remainingOpts = _.cloneDeep(loggerOptionKeys);
 			for (const prop of remainingOpts) {
 				const hasProp = element && element.hasOwnProperty(prop);
 				if (hasProp) {
-					opts.splice(opts.indexOf(prop), 1);
+					loggerOptionKeys.splice(loggerOptionKeys.indexOf(prop), 1);
 					result[prop] = element[prop];
-					cleanedData.splice(cleanedData.indexOf(element), 1);
 				}
 			}
 		}
 
-		result.data = cleanedData;
 		return result;
 	}
 
@@ -195,7 +204,7 @@ export class Logger implements ILogger {
 	/*******************************************************************************************
 	 * Metods below are deprecated. Delete them in 6.0.0 release:                              *
 	 * Present only for backwards compatibility as some plugins (nativescript-plugin-firebase) *
-	 * use these methods in their hooks                                                          *
+	 * use these methods in their hooks                                                        *
 	 *******************************************************************************************/
 
 	out(...args: any[]): void {
