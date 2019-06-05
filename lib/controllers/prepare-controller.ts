@@ -42,7 +42,8 @@ export class PrepareController extends EventEmitter {
 			result = await this.startWatchersWithPrepare(platformData, projectData, prepareData);
 		} else {
 			await this.$webpackCompilerService.compileWithoutWatch(platformData, projectData, prepareData);
-			await this.$prepareNativePlatformService.prepareNativePlatform(platformData, projectData, prepareData);
+			const hasNativeChanges = await this.$prepareNativePlatformService.prepareNativePlatform(platformData, projectData, prepareData);
+			result = { hasNativeChanges, platform: prepareData.platform.toLowerCase() };
 		}
 
 		this.$projectChangesService.savePrepareInfo(platformData);
