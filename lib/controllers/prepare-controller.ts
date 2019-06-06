@@ -132,7 +132,7 @@ export class PrepareController extends EventEmitter {
 		const watcher = choki.watch(patterns, watcherOptions)
 			.on("all", async (event: string, filePath: string) => {
 				filePath = path.join(projectData.projectDir, filePath);
-				this.$logger.info(`Chokidar raised event ${event} for ${filePath}.`);
+				this.$logger.trace(`Chokidar raised event ${event} for ${filePath}.`);
 				this.emitPrepareEvent({ files: [], hmrData: null, hasNativeChanges: true, platform: platformData.platformNameLowerCase });
 			});
 

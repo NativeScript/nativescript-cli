@@ -60,16 +60,15 @@ export class ProjectChangesService implements IProjectChangesService {
 
 			this.$nodeModulesDependenciesBuilder.getProductionDependencies(projectData.projectDir)
 				.filter(dep => dep.nativescript && this.$fs.exists(path.join(dep.directory, PLATFORMS_DIR_NAME, platformData.platformNameLowerCase)))
-				.map(dep => {
+				.forEach(dep => {
 					this._changesInfo.nativeChanged = this._changesInfo.nativeChanged ||
 						this.containsNewerFiles(path.join(dep.directory, PLATFORMS_DIR_NAME, platformData.platformNameLowerCase), projectData) ||
 						this.isFileModified(path.join(dep.directory, PACKAGE_JSON_FILE_NAME));
 				});
 
 			if (!this._changesInfo.nativeChanged) {
-				const packageJsonChanged = this.isProjectFileChanged(projectData.projectDir, platformData);
 				this._prepareInfo.projectFileHash = this.getProjectFileStrippedHash(projectData.projectDir, platformData);
-				this._changesInfo.nativeChanged = packageJsonChanged;
+				this._changesInfo.nativeChanged = this.isProjectFileChanged(projectData.projectDir, platformData);
 			}
 
 			this.$logger.trace(`Set nativeChanged to ${this._changesInfo.nativeChanged}.`);
