@@ -21,7 +21,12 @@ export class Options {
 
 	public options: IDictionary<IDashedOption>;
 
-	public setupOptions(): void {
+	public setupOptions(projectData: IProjectData, commandSpecificDashedOptions?: IDictionary<IDashedOption>): void {
+		if (commandSpecificDashedOptions) {
+			_.extend(this.options, commandSpecificDashedOptions);
+			this.setArgv();
+		}
+
 		if (this.argv.release && this.argv.hmr) {
 			this.$errors.failWithoutHelp("The options --release and --hmr cannot be used simultaneously.");
 		}
@@ -154,12 +159,8 @@ export class Options {
 		return this.argv[optionName];
 	}
 
-	public validateOptions(commandSpecificDashedOptions?: IDictionary<IDashedOption>): void {
-		if (commandSpecificDashedOptions) {
-			_.extend(this.options, commandSpecificDashedOptions);
-			this.setArgv();
-		}
-
+	public validateOptions(commandSpecificDashedOptions?: IDictionary<IDashedOption>, projectData?: IProjectData): void {
+		this.setupOptions(projectData, commandSpecificDashedOptions);
 		const parsed = Object.create(null);
 		// DO NOT REMOVE { } as when they are missing and some of the option values is false, the each stops as it thinks we have set "return false".
 		_.each(_.keys(this.argv), optionName => {

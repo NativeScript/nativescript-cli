@@ -71,24 +71,30 @@ export class AssetsGenerationService implements IAssetsGenerationService {
 			const outputPath = assetItem.path;
 			const width = assetItem.width * scale;
 			const height = assetItem.height * scale;
-
+			let image: Jimp;
 			switch (operation) {
 				case Operations.OverlayWith:
 					const overlayImageScale = assetItem.overlayImageScale || AssetConstants.defaultOverlayImageScale;
 					const imageResize = Math.round(Math.min(width, height) * overlayImageScale);
-					const image = await this.resize(generationData.imagePath, imageResize, imageResize);
-					await this.generateImage(generationData.background, width, height, outputPath, image);
+					image = await this.resize(generationData.imagePath, imageResize, imageResize);
+					image = this.generateImage(generationData.background, width, height, outputPath, image);
 					break;
 				case Operations.Blank:
-					await this.generateImage(generationData.background, width, height, outputPath);
+					image = this.generateImage(generationData.background, width, height, outputPath);
 					break;
 				case Operations.Resize:
-					const resizedImage = await this.resize(generationData.imagePath, width, height);
-					resizedImage.write(outputPath);
+					image = await this.resize(generationData.imagePath, width, height);
 					break;
 				default:
 					throw new Error(`Invalid image generation operation: ${operation}`);
 			}
+
+			// This code disables the alpha chanel, as some images for the Apple App Store must not have transparency.
+			if (assetItem.rgba === false) {
+				image = image.rgba(false);
+			}
+
+			image.write(outputPath);
 		}
 	}
 
@@ -97,7 +103,7 @@ export class AssetsGenerationService implements IAssetsGenerationService {
 		return image.scaleToFit(width, height);
 	}
 
-	private generateImage(background: string, width: number, height: number, outputPath: string, overlayImage?: Jimp): void {
+	private generateImage(background: string, width: number, height: number, outputPath: string, overlayImage?: Jimp): Jimp {
 		// Typescript declarations for Jimp are not updated to define the constructor with backgroundColor so we workaround it by casting it to <any> for this case only.
 		const J = <any>Jimp;
 		const backgroundColor = this.getRgbaNumber(background);
@@ -109,7 +115,7 @@ export class AssetsGenerationService implements IAssetsGenerationService {
 			image = image.composite(overlayImage, centeredWidth, centeredHeight);
 		}
 
-		image.write(outputPath);
+		return image;
 	}
 
 	private getRgbaNumber(colorString: string): number {

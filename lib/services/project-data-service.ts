@@ -217,6 +217,7 @@ export class ProjectDataService implements IProjectDataService {
 					image.resizeOperation = image.resizeOperation || assetItem.resizeOperation;
 					image.overlayImageScale = image.overlayImageScale || assetItem.overlayImageScale;
 					image.scale = image.scale || assetItem.scale;
+					image.rgba = assetItem.rgba;
 					// break each
 					return false;
 				}
