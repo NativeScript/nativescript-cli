@@ -37,7 +37,7 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 						return;
 					}
 
-					const result = this.getUpdatedEmittedFiles(message.emittedFiles);
+					const result = this.getUpdatedEmittedFiles(message.emittedFiles, message.webpackRuntimeFiles);
 
 					const files = result.emittedFiles
 						.filter((file: string) => file.indexOf("App_Resources") === -1)
@@ -173,7 +173,7 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 		return args;
 	}
 
-	private getUpdatedEmittedFiles(emittedFiles: string[]) {
+	private getUpdatedEmittedFiles(emittedFiles: string[], webpackRuntimeFiles: string[]) {
 		let fallbackFiles: string[] = [];
 		let hotHash;
 		if (emittedFiles.some(x => x.endsWith('.hot-update.json'))) {
@@ -184,6 +184,10 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 				hotHash = hash;
 				// remove bundle/vendor.js files if there's a bundle.XXX.hot-update.js or vendor.XXX.hot-update.js
 				result = result.filter(file => file !== `${name}.js`);
+				if (webpackRuntimeFiles && webpackRuntimeFiles.length) {
+					// remove files containing only the Webpack runtime (e.g. runtime.js)
+					result = result.filter(file => webpackRuntimeFiles.indexOf(file) === -1);
+				}
 			});
 			//if applying of hot update fails, we must fallback to the full files
 			fallbackFiles = emittedFiles.filter(file => result.indexOf(file) === -1);
