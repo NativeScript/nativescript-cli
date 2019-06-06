@@ -325,7 +325,7 @@ describe("options", () => {
 				it(`should pass correctly when ${testCase.name} and useLegacyWorkflow is ${useLegacyWorkflow}`, () => {
 					(testCase.args || []).forEach(arg => process.argv.push(arg));
 
-					const options = createOptions(testInjector);
+					const options: any = createOptions(testInjector);
 					const projectData = <IProjectData>{ useLegacyWorkflow };
 					options.setupOptions(projectData);
 
@@ -359,7 +359,7 @@ describe("options", () => {
 				errors.failWithoutHelp = (error: string) => actualError = error;
 				(testCase.args || []).forEach(arg => process.argv.push(arg));
 
-				const options = createOptions(testInjector);
+				const options: any = createOptions(testInjector);
 				options.setupOptions(null);
 
 				(testCase.args || []).forEach(arg => process.argv.pop());
