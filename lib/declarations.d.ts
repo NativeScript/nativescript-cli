@@ -490,7 +490,7 @@ interface IAndroidBundleOptions {
 
 interface IOptions extends IRelease, IDeviceIdentifier, IJustLaunch, IAvd, IAvailableDevices, IProfileDir, IHasEmulatorOption, IBundleString, IHasEmulatorOption, IClean, IProvision, ITeamIdentifier, IAndroidReleaseOptions, IAndroidBundleOptions, INpmInstallConfigurationOptions, IPort, IEnvOptions, IPluginSeedOptions, IGenerateOptions {
 	argv: IYargArgv;
-	validateOptions(commandSpecificDashedOptions?: IDictionary<IDashedOption>): void;
+	validateOptions(commandSpecificDashedOptions?: IDictionary<IDashedOption>, projectData?: IProjectData): void;
 	options: IDictionary<IDashedOption>;
 	shorthands: string[];
 	/**
@@ -557,7 +557,6 @@ interface IOptions extends IRelease, IDeviceIdentifier, IJustLaunch, IAvd, IAvai
 	analyticsLogFile: string;
 	performance: Object;
 	cleanupLogFile: string;
-	setupOptions(): void;
 }
 
 interface IEnvOptions {

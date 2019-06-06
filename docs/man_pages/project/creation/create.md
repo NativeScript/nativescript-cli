@@ -51,7 +51,8 @@ Template | Command
 `Angular - Hello World`, `--ng`, `--angular` | tns create tns-template-hello-world-ng
 `Angular - SideDrawer` | tns create tns-template-drawer-navigation-ng
 `Angular - Tabs` | tns create tns-template-tab-navigation-ng
-`Vue.js`, `--vue`, `--vuejs` | tns create tns-template-blank-vue
+`Vue.js - Blank`, `--vue`, `--vuejs` | tns create tns-template-blank-vue
+`Vue.js - SideDrawer`, | tns create tns-template-drawer-navigation-vue
 
 ### Related Commands
 

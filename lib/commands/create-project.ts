@@ -5,6 +5,8 @@ import { isInteractive } from "../common/helpers";
 export class CreateProjectCommand implements ICommand {
 	public enableHooks = false;
 	public allowedParameters: ICommandParameter[] = [this.$stringParameter];
+	private static BlankTemplateKey = "Blank";
+	private static BlankTemplateDescription = "A blank app";
 	private static HelloWorldTemplateKey = "Hello World";
 	private static HelloWorldTemplateDescription = "A Hello World app";
 	private static DrawerTemplateKey = "SideDrawer";
@@ -109,11 +111,11 @@ or --js flags.)
 		let selectedTemplate: string;
 		switch (flavorSelection) {
 			case constants.NgFlavorName: {
-				selectedFlavorTemplates.push(...this.getNgFlavors());
+				selectedFlavorTemplates.push(...this.getNgTemplates());
 				break;
 			}
 			case constants.VueFlavorName: {
-				selectedFlavorTemplates.push({ value: "tns-template-blank-vue" });
+				selectedFlavorTemplates.push(...this.getVueTemplates());
 				break;
 			}
 			case constants.TsFlavorName: {
@@ -178,7 +180,7 @@ or --js flags.)
 		return templates;
 	}
 
-	private getNgFlavors() {
+	private getNgTemplates() {
 		const templates = [{
 			key: CreateProjectCommand.HelloWorldTemplateKey,
 			value: constants.RESERVED_TEMPLATE_NAMES.angular,
@@ -193,6 +195,21 @@ or --js flags.)
 			key: CreateProjectCommand.TabsTemplateKey,
 			value: "tns-template-tab-navigation-ng",
 			description: CreateProjectCommand.TabsTemplateDescription
+		}];
+
+		return templates;
+	}
+
+	private getVueTemplates() {
+		const templates = [{
+			key: CreateProjectCommand.BlankTemplateKey,
+			value: "tns-template-blank-vue",
+			description: CreateProjectCommand.BlankTemplateDescription
+		},
+		{
+			key: CreateProjectCommand.DrawerTemplateKey,
+			value: "tns-template-drawer-navigation-vue",
+			description: CreateProjectCommand.DrawerTemplateDescription
 		}];
 
 		return templates;
