@@ -1,15 +1,15 @@
+/// <reference types="mocha" />
+
 import { expect } from 'chai';
-import axios from 'axios';
 import nock from 'nock';
 import { URL } from 'url';
-import { formatKinveyBaasUrl, KinveyBaasNamespace, KinveyHttpRequest, HttpRequestMethod, KinveyHttpAuth, KinveyHttpHeaders } from '../src/http';
-import { init } from '../src/init';
-import { collection, DataStoreType } from '../src/datastore';
-import { setSession, removeSession } from '../src/http/session';
-import { Storage } from '../src/storage';
-import * as httpAdapter from './http';
-import * as memoryStorageAdapter from './memory';
-import * as sessionStore from './sessionStore';
+import { formatKinveyBaasUrl, KinveyBaasNamespace, KinveyHttpRequest, HttpRequestMethod, KinveyHttpAuth, KinveyHttpHeaders } from '../../src/http';
+import { init } from '../../src/init';
+import { collection, DataStoreType } from '../../src/datastore';
+import { setSession, removeSession } from '../../src/http/session';
+import * as httpAdapter from '../http';
+import * as memoryStorageAdapter from '../memory';
+import * as sessionStore from '../sessionStore';
 
 const APP_KEY = 'appKey';
 const APP_SECRET = 'appSecret';
