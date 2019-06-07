@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [4.2.0](https://github.com/Kinvey/js-sdk/tree/v4.2.0) (2019-06-07)
+[Full Changelog](https://github.com/Kinvey/js-sdk/compare/v4.1.0...v4.2.0)<br/>
+
+#### Bugs
+- Changed the error timeout message to match the message from v3.x.
+
+#### Enhancements
+- Added support for multi-insert to the `Network` datastore type. [#414](https://github.com/Kinvey/js-sdk/pull/414)
+
 ## [4.1.0](https://github.com/Kinvey/js-sdk/tree/v4.1.0) (2019-05-31)
 [Full Changelog](https://github.com/Kinvey/js-sdk/compare/v4.0.0...v4.1.0)<br/>
 
