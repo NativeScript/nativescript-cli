@@ -1,4 +1,5 @@
 import isArray from 'lodash/isArray';
+import cloneDeep from 'lodash/cloneDeep';
 import { Observable } from 'rxjs';
 import { getDeviceId } from '../device';
 import { Aggregation } from '../aggregation';
@@ -7,7 +8,7 @@ import { KinveyError } from '../errors/kinvey';
 import { getSession, formatKinveyBaasUrl, HttpRequestMethod, KinveyHttpRequest, KinveyBaasNamespace, KinveyHttpAuth } from '../http';
 import { getAppKey, getApiVersion } from '../kinvey';
 import { subscribeToChannel, unsubscribeFromChannel, LiveServiceReceiver } from '../live';
-import { create } from '../files';
+import { Kmd } from '../kmd';
 
 export function createRequest(method: HttpRequestMethod, url: string, body?: any) {
   return new KinveyHttpRequest({
@@ -193,8 +194,6 @@ export class NetworkStore {
     return stream;
   }
 
-  create(doc: any, options: any)
-  create(docs: any[], options: any)
   async create(docs: any, options: any = {}) {
     const apiVersion = getApiVersion();
 
@@ -253,12 +252,16 @@ export class NetworkStore {
     return response.data;
   }
 
-  save(doc: any, options?: any) {
-    if (doc._id) {
-      return this.update(doc, options);
+  save(docs: any, options?: any) {
+    if (!isArray(docs)) {
+      const kmd = new Kmd(cloneDeep(docs));
+
+      if (docs._id && !kmd.isLocal()) {
+        return this.update(docs, options);
+      }
     }
 
-    return this.create(doc, options);
+    return this.create(docs, options);
   }
 
   async remove(query: Query, options: any = {}) {
