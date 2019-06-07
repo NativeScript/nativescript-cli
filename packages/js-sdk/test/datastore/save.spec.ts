@@ -15,6 +15,7 @@ import * as sessionStore from '../sessionStore';
 const APP_KEY = 'appKey';
 const APP_SECRET = 'appSecret';
 const COLLECTION_NAME = 'testCollection'
+const BATCH_SIZE = 100;
 
 describe('save()', function () {
   before(function () {
@@ -111,7 +112,7 @@ describe('save()', function () {
     });
 
     describe('with an array of docs', function () {
-      it('should send a multi insert request if saving an', async function () {
+      it('should send a multi insert request', async function () {
         const docs = [{}, {}];
         const store = collection(COLLECTION_NAME, DataStoreType.Network);
         const url = new URL(formatKinveyBaasUrl(KinveyBaasNamespace.AppData, store.pathname));
@@ -120,6 +121,26 @@ describe('save()', function () {
           .reply(207, docs);
         expect(await store.save(docs)).to.deep.equal(docs);
         expect(scope.isDone()).to.equal(true);
+      });
+
+      it('should send 2 multi insert requests if the length of the array is 150', async function () {
+        const docs = [];
+
+        for(let i = 0; i < 150; i++) {
+          docs.push({});
+        }
+
+        const store = collection(COLLECTION_NAME, DataStoreType.Network);
+        const url = new URL(formatKinveyBaasUrl(KinveyBaasNamespace.AppData, store.pathname));
+        const scope1 = nock(url.origin)
+          .post(url.pathname)
+          .reply(207, docs.slice(0, BATCH_SIZE));
+        const scope2 = nock(url.origin)
+          .post(url.pathname)
+          .reply(207, docs.slice(BATCH_SIZE, docs.length));
+        expect(await store.save(docs)).to.deep.equal(docs);
+        expect(scope1.isDone()).to.equal(true);
+        expect(scope2.isDone()).to.equal(true);
       });
     });
 

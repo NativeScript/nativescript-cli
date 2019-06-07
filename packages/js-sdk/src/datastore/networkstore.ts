@@ -195,10 +195,28 @@ export class NetworkStore {
   }
 
   async create(docs: any, options: any = {}) {
+    const batchSize = 100;
     const apiVersion = getApiVersion();
 
     if (apiVersion !== 5 && isArray(docs)) {
       throw new KinveyError('Unable to create an array of entities. Please create entities one by one.');
+    }
+
+    if (isArray(docs) && docs.length > batchSize) {
+      let i = 0;
+
+      const batchCreate = async (createResults: any = []): Promise<any> => {
+        if (i >= docs.length) {
+          return createResults;
+        }
+
+        const batch = docs.slice(i, i + batchSize);
+        i += batchSize;
+        const result = await this.create(batch, options);
+        return batchCreate(createResults.concat(result));
+      };
+
+      return batchCreate();
     }
 
     const {
