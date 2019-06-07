@@ -9,6 +9,7 @@ export interface KinveyConfig {
   instanceId?: string;
   defaultTimeout?: number;
   encryptionKey?: string;
+  apiVersion?: number;
 }
 
 export function getAppKey() {
@@ -70,4 +71,12 @@ export function getDefaultTimeout() {
 export function getEncryptionKey() {
   const config = getConfig<KinveyConfig>(ConfigKey.KinveyConfig);
   return config.encryptionKey;
+}
+
+export function getApiVersion(): number {
+  const config = getConfig<KinveyConfig>(ConfigKey.KinveyConfig);
+  if (isNumber(config.apiVersion) && config.apiVersion >= 3) {
+    return config.apiVersion;
+  }
+  return 4;
 }

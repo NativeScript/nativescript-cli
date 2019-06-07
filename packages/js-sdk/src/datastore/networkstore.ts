@@ -1,12 +1,14 @@
 import isArray from 'lodash/isArray';
+import cloneDeep from 'lodash/cloneDeep';
 import { Observable } from 'rxjs';
 import { getDeviceId } from '../device';
 import { Aggregation } from '../aggregation';
 import { Query } from '../query';
 import { KinveyError } from '../errors/kinvey';
 import { getSession, formatKinveyBaasUrl, HttpRequestMethod, KinveyHttpRequest, KinveyBaasNamespace, KinveyHttpAuth } from '../http';
-import { getAppKey } from '../kinvey';
+import { getAppKey, getApiVersion } from '../kinvey';
 import { subscribeToChannel, unsubscribeFromChannel, LiveServiceReceiver } from '../live';
+import { Kmd } from '../kmd';
 
 export function createRequest(method: HttpRequestMethod, url: string, body?: any) {
   return new KinveyHttpRequest({
@@ -192,9 +194,29 @@ export class NetworkStore {
     return stream;
   }
 
-  async create(doc: any, options: any = {}) {
-    if (isArray(doc)) {
+  async create(docs: any, options: any = {}) {
+    const batchSize = 100;
+    const apiVersion = getApiVersion();
+
+    if (apiVersion !== 5 && isArray(docs)) {
       throw new KinveyError('Unable to create an array of entities. Please create entities one by one.');
+    }
+
+    if (isArray(docs) && docs.length > batchSize) {
+      let i = 0;
+
+      const batchCreate = async (createResults: any = []): Promise<any> => {
+        if (i >= docs.length) {
+          return createResults;
+        }
+
+        const batch = docs.slice(i, i + batchSize);
+        i += batchSize;
+        const result = await this.create(batch, options);
+        return batchCreate(createResults.concat(result));
+      };
+
+      return batchCreate();
     }
 
     const {
@@ -206,7 +228,7 @@ export class NetworkStore {
     } = options;
     const queryObject = {};
     const url = formatKinveyBaasUrl(KinveyBaasNamespace.AppData, this.pathname, queryObject);
-    const request = createRequest(HttpRequestMethod.POST, url, doc);
+    const request = createRequest(HttpRequestMethod.POST, url, docs);
     request.headers.setCustomRequestProperties(properties);
     request.timeout = timeout;
     const response = await request.execute();
@@ -248,12 +270,16 @@ export class NetworkStore {
     return response.data;
   }
 
-  save(doc: any, options?: any) {
-    if (doc._id) {
-      return this.update(doc, options);
+  save(docs: any, options?: any) {
+    if (!isArray(docs)) {
+      const kmd = new Kmd(cloneDeep(docs));
+
+      if (docs._id && !kmd.isLocal()) {
+        return this.update(docs, options);
+      }
     }
 
-    return this.create(doc, options);
+    return this.create(docs, options);
   }
 
   async remove(query: Query, options: any = {}) {
