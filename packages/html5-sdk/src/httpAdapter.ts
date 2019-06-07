@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { NetworkError } from 'kinvey-js-sdk/lib/errors/network';
+import { TimeoutError } from 'kinvey-js-sdk/lib/errors/timeout';
 import { name, version } from '../package.json';
 
 // Helper function to detect the browser name and version.
@@ -68,15 +69,19 @@ export async function send(request: any) {
       timeout
     });
   } catch (error) {
-    console.log(error);
-    if (!error.response) {
-      console.log('Network Error');
+    if (error.code === 'ESOCKETTIMEDOUT'
+      || error.code === 'ETIMEDOUT'
+      || error.code === 'ECONNABORTED') {
+      throw new TimeoutError('The network request timed out.');
+    }
+
+    if (error.code === 'ENOENT'
+      || !error.response) {
       throw new NetworkError();
     }
+
     response = error.response;
   }
-
-  console.log(response);
 
   return {
     statusCode: response.status,
