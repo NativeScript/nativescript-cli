@@ -3,7 +3,6 @@ import { EventEmitter } from "events";
 const pako = require("pako");
 
 export class PreviewSdkService extends EventEmitter implements IPreviewSdkService {
-	private static MAX_FILES_UPLOAD_BYTE_LENGTH = 15 * 1024 * 1024; // In MBs
 	private messagingService: MessagingService = null;
 	private instanceId: string = null;
 
@@ -13,13 +12,14 @@ export class PreviewSdkService extends EventEmitter implements IPreviewSdkServic
 		private $previewDevicesService: IPreviewDevicesService,
 		private $previewAppLogProvider: IPreviewAppLogProvider,
 		private $previewSchemaService: IPreviewSchemaService) {
-			super();
+		super();
 	}
 
 	public getQrCodeUrl(options: IGetQrCodeUrlOptions): string {
 		const { projectDir, useHotModuleReload } = options;
 		const schema = this.$previewSchemaService.getSchemaData(projectDir);
 		const hmrValue = useHotModuleReload ? "1" : "0";
+
 		const result = `${schema.name}://boot?instanceId=${this.instanceId}&pKey=${schema.publishKey}&sKey=${schema.subscribeKey}&template=play-ng&hmr=${hmrValue}`;
 		return result;
 	}
@@ -57,7 +57,8 @@ export class PreviewSdkService extends EventEmitter implements IPreviewSdkServic
 			callbacks: this.getCallbacks(),
 			getInitialFiles,
 			previewAppStoreId: schema.previewAppStoreId,
-			previewAppGooglePlayId: schema.previewAppId
+			previewAppGooglePlayId: schema.previewAppId,
+			largeFilesProtocol: MessagingService.LARGE_SESSIONS_PROTOCOL
 		};
 	}
 
@@ -79,15 +80,9 @@ export class PreviewSdkService extends EventEmitter implements IPreviewSdkServic
 			onDeviceConnectedMessage: (deviceConnectedMessage: DeviceConnectedMessage) => ({}),
 			onDeviceConnected: (device: Device) => ({}),
 			onDevicesPresence: (devices: Device[]) => this.$previewDevicesService.updateConnectedDevices(devices),
-			onSendingChange: (sending: boolean) => ({ }),
-			onBiggerFilesUpload: async (filesContent, callback) => {
+			onSendingChange: (sending: boolean) => ({}),
+			onBiggerFilesUpload: async (filesContent: Uint8Array, callback) => {
 				const gzippedContent = Buffer.from(pako.gzip(filesContent));
-				const byteLength = filesContent.length;
-
-				if (byteLength > PreviewSdkService.MAX_FILES_UPLOAD_BYTE_LENGTH) {
-					this.$logger.warn("The files to upload exceed the maximum allowed size of 15MB. Your app might not work as expected.");
-				}
-
 				const playgroundUploadResponse = await this.$httpClient.httpRequest({
 					url: this.$config.UPLOAD_PLAYGROUND_FILES_ENDPOINT,
 					method: "POST",
