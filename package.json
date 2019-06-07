@@ -96,6 +96,7 @@
     "@types/chai-as-promised": "0.0.31",
     "@types/chokidar": "1.6.0",
     "@types/color": "3.0.0",
+    "@types/convert-source-map": "^1.5.1",
     "@types/inquirer": "0.0.43",
     "@types/lodash": "4.14.123",
     "@types/node": "8.10.30",

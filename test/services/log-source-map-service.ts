@@ -41,26 +41,38 @@ function toPlatformSep(filePath: string) {
 
 const testCases: IDictionary<Array<{caseName: string, message: string, expected: string}>> = {
 	"android": [{
-			caseName: "trace massage",
+			caseName: "trace message",
 			message: "JS: at module.exports.push../main-view-model.ts.HelloWorldModel.onTap (file:///data/data/org.nativescript.sourceMap/files/app/bundle.js:303:17)",
 			expected: `JS: at module.exports.push../main-view-model.ts.HelloWorldModel.onTap file:///${toPlatformSep("src/main-view-model.ts")}:30:16\n`
 		}, {
-			caseName: "error massage",
+			caseName: "error message",
 			message: "System.err: 	Frame: function:'module.exports.push../main-view-model.ts.HelloWorldModel.onTap', file:'file:///data/data/org.nativescript.sourceMap/files/app/bundle.js', line: 304, column: 15",
 			expected: `System.err: 	Frame: function:'module.exports.push../main-view-model.ts.HelloWorldModel.onTap', file:' file:///${toPlatformSep("src/main-view-model.ts")}:31:14\n`
+		}, {
+			caseName: "error message no match",
+			message: "System.err: 	Frame: function:'module.exports.push../main-view-model.ts.HelloWorldModel.onTap', file:'file:///data/data/org.nativescript.sourceMap/files/app/bundle.js', line: 400, column: 15",
+			expected: "System.err: 	Frame: function:'module.exports.push../main-view-model.ts.HelloWorldModel.onTap', file:'file:///data/data/org.nativescript.sourceMap/files/app/bundle.js', line: 400, column: 15\n"
+		}, {
+			caseName: "no file match",
+			message: "System.err: 	at com.tns.Runtime.dispatchCallJSMethodNative(Runtime.java:1203)",
+			expected: "System.err: 	at com.tns.Runtime.dispatchCallJSMethodNative(Runtime.java:1203)\n"
 		}],
 	"ios": [{
-			caseName: "console massage",
+			caseName: "console message",
 			message: "CONSOLE LOG file:///app/bundle.js:294:20: Test.",
 			expected: `CONSOLE LOG Test. file:///${toPlatformSep("src/main-view-model.ts")}:29:20\n`
 		}, {
-			caseName: "trace massage",
+			caseName: "trace message",
 			message: "CONSOLE TRACE file:///app/bundle.js:295:22: Test",
 			expected: `CONSOLE TRACE Test file:///${toPlatformSep("src/main-view-model.ts")}:30:22\n`
 		}, {
-			caseName: "error massage",
+			caseName: "error message",
 			message: "file:///app/bundle.js:296:32: JS ERROR Error: Test",
 			expected: `JS ERROR Error Test file:///${toPlatformSep("src/main-view-model.ts")}:31:31\n`
+		}, {
+			caseName: "error message no match",
+			message: "file:///app/bundle.js:400:32: JS ERROR Error: Test",
+			expected: "file:///app/bundle.js:400:32: JS ERROR Error: Test\n"
 		}]
 };
 

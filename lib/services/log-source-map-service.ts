@@ -1,9 +1,9 @@
-const sourcemap = require("source-map");
 import * as path from "path";
-const sourceMapConverter = require("convert-source-map");
-import { ANDROID_DEVICE_APP_ROOT_TEMPLATE, APP_FOLDER_NAME, NODE_MODULES_FOLDER_NAME } from "../constants";
 import * as util from "util";
+import * as sourcemap from "source-map";
+import * as sourceMapConverter from "convert-source-map";
 import { stringReplaceAll } from "../common/helpers";
+import { ANDROID_DEVICE_APP_ROOT_TEMPLATE, APP_FOLDER_NAME, NODE_MODULES_FOLDER_NAME } from "../constants";
 
 interface IParsedMessage {
 	filePath?: string;
