@@ -23,7 +23,8 @@
   "scripts": {
     "prebuild": "del lib",
     "build": "tsc -p tsconfig.json",
-    "test": "mocha --require ts-node/register test/**/*.spec.ts"
+    "test": "mocha --require ts-node/register test/**/*.spec.ts",
+    "test:watch": "mocha --require ts-node/register test/**/*.spec.ts --watch --watch-extensions ts"
   },
   "dependencies": {
     "events": "3.0.0",
