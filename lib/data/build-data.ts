@@ -15,7 +15,7 @@ export class BuildData extends PrepareData implements IBuildData {
 		this.device = data.device;
 		this.emulator = data.emulator;
 		this.clean = data.clean;
-		this.buildForDevice = data.buildForDevice;
+		this.buildForDevice = data.buildForDevice || data.forDevice;
 		this.buildOutputStdio = data.buildOutputStdio;
 		this.outputPath = data.outputPath;
 		this.copyTo = data.copyTo;
