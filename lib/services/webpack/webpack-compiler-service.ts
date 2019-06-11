@@ -11,7 +11,8 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 	constructor(
 		private $childProcess: IChildProcess,
 		public $hooksService: IHooksService,
-		private $logger: ILogger
+		private $logger: ILogger,
+		private $pluginsService: IPluginsService
 	) { super(); }
 
 	public async compileWithWatch(platformData: IPlatformData, projectData: IProjectData, prepareData: IPrepareData): Promise<any> {
@@ -101,6 +102,8 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 	private async startWebpackProcess(platformData: IPlatformData, projectData: IProjectData, prepareData: IPrepareData): Promise<child_process.ChildProcess> {
 		const envData = this.buildEnvData(platformData.platformNameLowerCase, projectData, prepareData);
 		const envParams = this.buildEnvCommandLineParams(envData, platformData);
+
+		await this.$pluginsService.ensureAllDependenciesAreInstalled(projectData);
 
 		const args = [
 			path.join(projectData.projectDir, "node_modules", "webpack", "bin", "webpack.js"),
