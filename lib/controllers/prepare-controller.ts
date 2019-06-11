@@ -20,6 +20,7 @@ export class PrepareController extends EventEmitter {
 		private $platformController: IPlatformController,
 		public $hooksService: IHooksService,
 		private $logger: ILogger,
+		private $nodeModulesDependenciesBuilder: INodeModulesDependenciesBuilder,
 		private $platformsDataService: IPlatformsDataService,
 		private $prepareNativePlatformService: IPrepareNativePlatformService,
 		private $projectChangesService: IProjectChangesService,
@@ -141,12 +142,15 @@ export class PrepareController extends EventEmitter {
 
 	@hook('watchPatterns')
 	public async getWatcherPatterns(platformData: IPlatformData, projectData: IProjectData): Promise<string[]> {
+		const pluginsNativeDirectories = this.$nodeModulesDependenciesBuilder.getProductionDependencies(projectData.projectDir)
+			.filter(dep => dep.nativescript)
+			.map(dep => path.join(dep.directory, "platforms", "ios"));
+
 		const patterns = [
 			path.join(projectData.projectDir, PACKAGE_JSON_FILE_NAME),
 			path.join(projectData.getAppDirectoryPath(), PACKAGE_JSON_FILE_NAME),
 			path.join(projectData.getAppResourcesRelativeDirectoryPath(), platformData.normalizedPlatformName),
-			`node_modules/**/platforms/${platformData.platformNameLowerCase}/`
-		];
+		].concat(pluginsNativeDirectories);
 
 		return patterns;
 	}
