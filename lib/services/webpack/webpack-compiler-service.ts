@@ -139,6 +139,11 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 
 		envData.verbose = this.$logger.isVerbose();
 		envData.production = prepareData.release;
+		if (prepareData.env.sourceMap === false || prepareData.env.sourceMap === 'false') {
+			delete envData.sourceMap;
+		} else if (!prepareData.release) {
+			envData.sourceMap = true;
+		}
 
 		return envData;
 	}
