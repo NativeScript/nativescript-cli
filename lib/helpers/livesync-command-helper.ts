@@ -68,7 +68,7 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 					projectDir: this.$projectData.projectDir
 				});
 
-				const buildData = this.$buildDataService.getBuildData(this.$projectData.projectDir, d.deviceInfo.platform, { ...this.$options, outputPath, buildForDevice: !d.isEmulator });
+				const buildData = this.$buildDataService.getBuildData(this.$projectData.projectDir, d.deviceInfo.platform, { ...this.$options.argv, outputPath, buildForDevice: !d.isEmulator });
 
 				const buildAction = additionalOptions && additionalOptions.buildPlatform ?
 					additionalOptions.buildPlatform.bind(additionalOptions.buildPlatform, d.deviceInfo.platform, buildData, this.$projectData) :
@@ -175,7 +175,7 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 			sdk: this.$options.sdk
 		});
 
-		const buildData = this.$buildDataService.getBuildData(liveSyncInfo.projectDir, platform, { ...this.$options, clean: true, skipWatcher: true });
+		const buildData = this.$buildDataService.getBuildData(liveSyncInfo.projectDir, platform, { ...this.$options.argv, clean: true, skipWatcher: true });
 
 		await this.$deployController.deploy({
 			buildData,
