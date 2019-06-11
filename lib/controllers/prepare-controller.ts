@@ -114,12 +114,8 @@ export class PrepareController extends EventEmitter {
 			return false;
 		}
 
-		const patterns = [
-			path.join(projectData.projectDir, PACKAGE_JSON_FILE_NAME),
-			path.join(projectData.getAppDirectoryPath(), PACKAGE_JSON_FILE_NAME),
-			path.join(projectData.getAppResourcesRelativeDirectoryPath(), platformData.normalizedPlatformName),
-			`node_modules/**/platforms/${platformData.platformNameLowerCase}/`
-		];
+		const patterns = await this.getWatcherPatterns(platformData, projectData);
+
 		const watcherOptions: choki.WatchOptions = {
 			ignoreInitial: true,
 			cwd: projectData.projectDir,
@@ -141,6 +137,18 @@ export class PrepareController extends EventEmitter {
 		const hasNativeChanges = await this.$prepareNativePlatformService.prepareNativePlatform(platformData, projectData, prepareData);
 
 		return hasNativeChanges;
+	}
+
+	@hook('watchPatterns')
+	public async getWatcherPatterns(platformData: IPlatformData, projectData: IProjectData): Promise<string[]> {
+		const patterns = [
+			path.join(projectData.projectDir, PACKAGE_JSON_FILE_NAME),
+			path.join(projectData.getAppDirectoryPath(), PACKAGE_JSON_FILE_NAME),
+			path.join(projectData.getAppResourcesRelativeDirectoryPath(), platformData.normalizedPlatformName),
+			`node_modules/**/platforms/${platformData.platformNameLowerCase}/`
+		];
+
+		return patterns;
 	}
 
 	private emitPrepareEvent(filesChangeEventData: IFilesChangeEventData) {
