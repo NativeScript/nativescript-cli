@@ -2,7 +2,7 @@ import { Device, FilesPayload } from "nativescript-preview-sdk";
 import { TrackActionNames, PREPARE_READY_EVENT_NAME } from "../constants";
 import { PrepareController } from "./prepare-controller";
 import { performanceLog } from "../common/decorators";
-import { stringify } from "../common/helpers";
+import { stringify, hook } from "../common/helpers";
 import { HmrConstants } from "../common/constants";
 import { EventEmitter } from "events";
 import { PrepareDataService } from "../services/prepare-data-service";
@@ -17,6 +17,7 @@ export class PreviewAppController extends EventEmitter implements IPreviewAppCon
 		private $errors: IErrors,
 		private $hmrStatusService: IHmrStatusService,
 		private $logger: ILogger,
+		public $hooksService: IHooksService,
 		private $prepareController: PrepareController,
 		private $previewAppFilesService: IPreviewAppFilesService,
 		private $previewAppPluginsService: IPreviewAppPluginsService,
@@ -26,6 +27,7 @@ export class PreviewAppController extends EventEmitter implements IPreviewAppCon
 		private $prepareDataService: PrepareDataService
 	) { super(); }
 
+	@hook("preview-sync")
 	public async startPreview(data: IPreviewAppLiveSyncData): Promise<IQrCodeImageData> {
 		await this.previewCore(data);
 
