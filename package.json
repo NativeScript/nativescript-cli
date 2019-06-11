@@ -44,7 +44,7 @@
     "esprima": "2.7.0",
     "iconv-lite": "0.4.11",
     "inquirer": "6.2.0",
-    "ios-device-lib": "0.5.1",
+    "ios-device-lib": "0.5.2",
     "ios-mobileprovision-finder": "1.0.10",
     "ios-sim-portable": "4.0.9",
     "istextorbinary": "2.2.1",
