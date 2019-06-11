@@ -37,10 +37,9 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 						return;
 					}
 
-					const result = this.getUpdatedEmittedFiles(message.emittedFiles, message.webpackRuntimeFiles);
+					const result = this.getUpdatedEmittedFiles(message.emittedFiles, message.webpackRuntimeFiles, message.entryPointFiles);
 
 					const files = result.emittedFiles
-						.filter((file: string) => file.indexOf("App_Resources") === -1)
 						.map((file: string) => path.join(platformData.appDestinationDirectoryPath, "app", file));
 
 					const data = {
@@ -178,23 +177,25 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 		return args;
 	}
 
-	private getUpdatedEmittedFiles(emittedFiles: string[], webpackRuntimeFiles: string[]) {
+	private getUpdatedEmittedFiles(emittedFiles: string[], webpackRuntimeFiles: string[], entryPointFiles: string[]) {
 		let fallbackFiles: string[] = [];
 		let hotHash;
 		if (emittedFiles.some(x => x.endsWith('.hot-update.json'))) {
 			let result = emittedFiles.slice();
 			const hotUpdateScripts = emittedFiles.filter(x => x.endsWith('.hot-update.js'));
+			if (webpackRuntimeFiles && webpackRuntimeFiles.length) {
+				result = result.filter(file => webpackRuntimeFiles.indexOf(file) === -1);
+			}
+			if (entryPointFiles && entryPointFiles.length) {
+				result = result.filter(file => entryPointFiles.indexOf(file) === -1);
+			}
 			hotUpdateScripts.forEach(hotUpdateScript => {
 				const { name, hash } = this.parseHotUpdateChunkName(hotUpdateScript);
 				hotHash = hash;
 				// remove bundle/vendor.js files if there's a bundle.XXX.hot-update.js or vendor.XXX.hot-update.js
 				result = result.filter(file => file !== `${name}.js`);
-				if (webpackRuntimeFiles && webpackRuntimeFiles.length) {
-					// remove files containing only the Webpack runtime (e.g. runtime.js)
-					result = result.filter(file => webpackRuntimeFiles.indexOf(file) === -1);
-				}
 			});
-			//if applying of hot update fails, we must fallback to the full files
+			// if applying of hot update fails, we must fallback to the full files
 			fallbackFiles = emittedFiles.filter(file => result.indexOf(file) === -1);
 			return { emittedFiles: result, fallbackFiles, hash: hotHash };
 		}
