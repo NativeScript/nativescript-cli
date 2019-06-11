@@ -180,6 +180,10 @@ function createTestInjector(options?: {
 	injector.register("analyticsService", {
 		trackEventActionInGoogleAnalytics: () => ({})
 	});
+	injector.register("hooksService", {
+		executeBeforeHooks: () => ({}),
+		executeAfterHooks: () => ({})
+	});
 
 	return injector;
 }
