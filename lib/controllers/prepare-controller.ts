@@ -4,7 +4,7 @@ import { hook } from "../common/helpers";
 import { performanceLog } from "../common/decorators";
 import { EventEmitter } from "events";
 import * as path from "path";
-import { PREPARE_READY_EVENT_NAME, WEBPACK_COMPILATION_COMPLETE, PACKAGE_JSON_FILE_NAME } from "../constants";
+import { PREPARE_READY_EVENT_NAME, WEBPACK_COMPILATION_COMPLETE, PACKAGE_JSON_FILE_NAME, PLATFORMS_DIR_NAME } from "../constants";
 
 interface IPlatformWatcherData {
 	webpackCompilerProcess: child_process.ChildProcess;
@@ -144,7 +144,7 @@ export class PrepareController extends EventEmitter {
 	public async getWatcherPatterns(platformData: IPlatformData, projectData: IProjectData): Promise<string[]> {
 		const pluginsNativeDirectories = this.$nodeModulesDependenciesBuilder.getProductionDependencies(projectData.projectDir)
 			.filter(dep => dep.nativescript)
-			.map(dep => path.join(dep.directory, "platforms", "ios"));
+			.map(dep => path.join(dep.directory, PLATFORMS_DIR_NAME, platformData.platformNameLowerCase));
 
 		const patterns = [
 			path.join(projectData.projectDir, PACKAGE_JSON_FILE_NAME),
