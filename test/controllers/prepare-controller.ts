@@ -45,6 +45,10 @@ function createTestInjector(data: { hasNativeChanges: boolean }): IInjector {
 
 	injector.register("prepareController", PrepareController);
 
+	injector.register("nodeModulesDependenciesBuilder", {
+		getProductionDependencies: () => (<any>[])
+	});
+
 	const prepareController: PrepareController = injector.resolve("prepareController");
 	prepareController.emit = (eventName: string, eventData: any) => {
 		emittedEventNames.push(eventName);
