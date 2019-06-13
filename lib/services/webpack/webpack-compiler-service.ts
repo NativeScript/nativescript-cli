@@ -107,6 +107,7 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 
 		const args = [
 			path.join(projectData.projectDir, "node_modules", "webpack", "bin", "webpack.js"),
+			"--max_old_space_size=4096",
 			"--preserve-symlinks",
 			`--config=${path.join(projectData.projectDir, "webpack.config.js")}`,
 			...envParams
