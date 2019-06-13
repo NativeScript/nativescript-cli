@@ -88,6 +88,7 @@ interface IPackageInstallationManager {
 	getLatestVersion(packageName: string): Promise<string>;
 	getNextVersion(packageName: string): Promise<string>;
 	getLatestCompatibleVersion(packageName: string, referenceVersion?: string): Promise<string>;
+	maxSatisfyingVersion(packageName: string, versionRange: string): Promise<string>;
 	getLatestCompatibleVersionSafe(packageName: string, referenceVersion?: string): Promise<string>;
 	getInspectorFromCache(inspectorNpmPackageName: string, projectDir: string): Promise<string>;
 	clearInspectorCache(): void;
@@ -1030,7 +1031,7 @@ interface IPlatformValidationService {
 }
 
 interface IPlatformCommandHelper {
-	addPlatforms(platforms: string[], projectData: IProjectData, frameworkPath: string): Promise<void>;
+	addPlatforms(platforms: string[], projectData: IProjectData, frameworkPath?: string): Promise<void>;
 	cleanPlatforms(platforms: string[], projectData: IProjectData, framworkPath: string): Promise<void>;
 	removePlatforms(platforms: string[], projectData: IProjectData): Promise<void>;
 	updatePlatforms(platforms: string[], projectData: IProjectData): Promise<void>;

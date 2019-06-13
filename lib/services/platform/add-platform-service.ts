@@ -22,7 +22,7 @@ export class AddPlatformService implements IAddPlatformService {
 			const frameworkPackageJsonContent = this.$fs.readJson(path.join(frameworkDirPath, "..", "package.json"));
 			const frameworkVersion = frameworkPackageJsonContent.version;
 
-			await this.addJSPlatform(platformData, projectData, frameworkDirPath, frameworkVersion);
+			await this.setPlatformVersion(platformData, projectData, frameworkVersion);
 
 			if (!nativePrepare || !nativePrepare.skipNativePrepare) {
 				await this.addNativePlatform(platformData, projectData, frameworkDirPath, frameworkVersion);
@@ -38,6 +38,11 @@ export class AddPlatformService implements IAddPlatformService {
 		}
 	}
 
+	public async setPlatformVersion(platformData: IPlatformData, projectData: IProjectData, frameworkVersion: string): Promise<void> {
+		const frameworkPackageNameData = { version: frameworkVersion };
+		this.$projectDataService.setNSValue(projectData.projectDir, platformData.frameworkPackageName, frameworkPackageNameData);
+	}
+
 	private async extractPackage(pkg: string): Promise<string> {
 		temp.track();
 		const downloadedPackagePath = temp.mkdirSync("runtimeDir");
@@ -45,11 +50,6 @@ export class AddPlatformService implements IAddPlatformService {
 		const frameworkDir = path.join(downloadedPackagePath, PROJECT_FRAMEWORK_FOLDER_NAME);
 
 		return path.resolve(frameworkDir);
-	}
-
-	private async addJSPlatform(platformData: IPlatformData, projectData: IProjectData, frameworkDirPath: string, frameworkVersion: string): Promise<void> {
-		const frameworkPackageNameData = { version: frameworkVersion };
-		this.$projectDataService.setNSValue(projectData.projectDir, platformData.frameworkPackageName, frameworkPackageNameData);
 	}
 
 	@performanceLog()
