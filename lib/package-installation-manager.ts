@@ -33,10 +33,14 @@ export class PackageInstallationManager implements IPackageInstallationManager {
 			return latestVersion;
 		}
 
+		return await this.maxSatisfyingVersion(packageName, compatibleVersionRange) || latestVersion;
+	}
+
+	public async maxSatisfyingVersion(packageName: string, versionRange: string): Promise<string> {
 		const data = await this.$packageManager.view(packageName, { "versions": true });
 
-		const maxSatisfying = semver.maxSatisfying(data, compatibleVersionRange);
-		return maxSatisfying || latestVersion;
+		const maxSatisfying = semver.maxSatisfying(data, versionRange);
+		return maxSatisfying ;
 	}
 
 	public async getLatestCompatibleVersionSafe(packageName: string, referenceVersion?: string): Promise<string> {

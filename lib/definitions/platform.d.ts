@@ -94,4 +94,5 @@ interface IPlatformController {
 
 interface IAddPlatformService {
 	addPlatformSafe(projectData: IProjectData, platformData: IPlatformData, packageToInstall: string, nativePrepare: INativePrepare): Promise<string>;
+	setPlatformVersion(platformData: IPlatformData, projectData: IProjectData, frameworkVersion: string): Promise<void>
 }

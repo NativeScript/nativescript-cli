@@ -10,10 +10,12 @@ export const NATIVESCRIPT_KEY_NAME = "nativescript";
 export const NODE_MODULES_FOLDER_NAME = "node_modules";
 export const TNS_MODULES_FOLDER_NAME = "tns_modules";
 export const TNS_CORE_MODULES_NAME = "tns-core-modules";
+export const WEBPACK_PLUGIN_NAME = "nativescript-dev-webpack";
 export const TNS_CORE_MODULES_WIDGETS_NAME = "tns-core-modules-widgets";
 export const TNS_ANDROID_RUNTIME_NAME = "tns-android";
 export const TNS_IOS_RUNTIME_NAME = "tns-ios";
 export const PACKAGE_JSON_FILE_NAME = "package.json";
+export const PACKAGE_LOCK_JSON_FILE_NAME = "package-lock.json";
 export const NODE_MODULE_CACHE_PATH_KEY_NAME = "node-modules-cache-path";
 export const DEFAULT_APP_IDENTIFIER_PREFIX = "org.nativescript";
 export const LIVESYNC_EXCLUDED_DIRECTORIES = ["app_resources"];
@@ -23,6 +25,8 @@ export const LIVESYNC_EXCLUDED_FILE_PATTERNS = ["**/*.js.map", "**/*.ts"];
 export const XML_FILE_EXTENSION = ".xml";
 export const PLATFORMS_DIR_NAME = "platforms";
 export const HOOKS_DIR_NAME = "hooks";
+export const WEBPACK_CONFIG_NAME = "webpack.config.js";
+export const TSCCONFIG_TNS_JSON_NAME = "tsconfig.tns.json";
 export const LIB_DIR_NAME = "lib";
 export const CODE_SIGN_ENTITLEMENTS = "CODE_SIGN_ENTITLEMENTS";
 export const AWAIT_NOTIFICATION_TIMEOUT_SECONDS = 9;
@@ -259,6 +263,11 @@ export class PluginNativeDirNames {
 	public static iOS = "ios";
 	public static Android = "android";
 }
+
+export const DEVICE_PLATFORMS: IDictionary<string> = {
+	iOS: "iOS",
+	Android: "Android"
+};
 
 export const PODFILE_NAME = "Podfile";
 
