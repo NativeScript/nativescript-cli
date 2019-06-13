@@ -128,9 +128,6 @@ export class DevicesService extends EventEmitter implements Mobile.IDevicesServi
 		const availableEmulatorsOutput = await this.getEmulatorImages({ platform: options.platform });
 		const emulators = this.$emulatorHelper.getEmulatorsFromAvailableEmulatorsOutput(availableEmulatorsOutput);
 		const errors = this.$emulatorHelper.getErrorsFromAvailableEmulatorsOutput(availableEmulatorsOutput);
-		if (errors.length) {
-			return errors;
-		}
 
 		let emulator = null;
 		if (options.imageIdentifier) {
@@ -140,7 +137,8 @@ export class DevicesService extends EventEmitter implements Mobile.IDevicesServi
 		}
 
 		if (!emulator) {
-			return [`Unable to find emulator with provided options: ${options}`];
+			const additionalErrors = errors && errors.length ? errors : [];
+			return [`Unable to find emulator with provided options: ${options}`, ...additionalErrors];
 		}
 
 		// emulator is already running
