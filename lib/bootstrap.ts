@@ -50,6 +50,7 @@ $injector.requirePublicClass("buildController", "./controllers/build-controller"
 $injector.requirePublicClass("runController", "./controllers/run-controller");
 $injector.requirePublicClass("debugController", "./controllers/debug-controller");
 $injector.requirePublicClass("previewAppController", "./controllers/preview-app-controller");
+$injector.requirePublicClass("updateController", "./controllers/update-controller");
 $injector.requirePublicClass("migrateController", "./controllers/migrate-controller");
 
 $injector.require("prepareDataService", "./services/prepare-data-service");

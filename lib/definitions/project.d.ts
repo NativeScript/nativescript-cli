@@ -191,6 +191,14 @@ interface IProjectDataService {
 	 * @returns {string[]} Array of paths to `.js` or `.ts` files.
 	 */
 	getAppExecutableFiles(projectDir: string): string[];
+
+		/**
+	 * Returns a value from `nativescript` key in project's package.json.
+	 * @param {string} jsonData The project directory - the place where the root package.json is located.
+	 * @param {string} propertyName The name of the property to be checked in `nativescript` key.
+	 * @returns {any} The value of the property.
+	 */
+	getNSValueFromContent(jsonData: Object, propertyName: string): any;
 }
 
 interface IAssetItem {

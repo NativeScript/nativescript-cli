@@ -2,6 +2,7 @@ import * as path from "path";
 import * as stubs from "./stubs";
 import * as yok from "../lib/common/yok";
 import { UpdateCommand } from "../lib/commands/update";
+import { UpdateController } from "../lib/controllers/update-controller";
 import { assert } from "chai";
 import * as sinon from 'sinon';
 import { Options } from "../lib/options";
@@ -106,7 +107,7 @@ describe("update command method tests", () => {
 			const updateCommand = testInjector.resolve<UpdateCommand>(UpdateCommand);
 			const canExecuteOutput = await updateCommand.canExecute(["333", "111", "444"]);
 
-			return assert.equal(canExecuteOutput.canExecute, false);
+			return assert.equal(canExecuteOutput, false);
 		});
 
 		it("returns false when projectDir is an empty string", async () => {
@@ -114,7 +115,7 @@ describe("update command method tests", () => {
 			const updateCommand = testInjector.resolve<UpdateCommand>(UpdateCommand);
 			const canExecuteOutput = await updateCommand.canExecute([]);
 
-			return assert.equal(canExecuteOutput.canExecute, false);
+			return assert.equal(canExecuteOutput, false);
 		});
 
 		it("returns true when the setup is correct", async () => {
@@ -122,7 +123,7 @@ describe("update command method tests", () => {
 			const updateCommand = testInjector.resolve<UpdateCommand>(UpdateCommand);
 			const canExecuteOutput = await updateCommand.canExecute(["3.3.0"]);
 
-			return assert.equal(canExecuteOutput.canExecute, true);
+			return assert.equal(canExecuteOutput, true);
 		});
 	});
 
@@ -150,7 +151,7 @@ describe("update command method tests", () => {
 
 			await updateCommand.execute(["3.3.0"]);
 
-			assert.isTrue(deleteDirectory.calledWith(path.join(projectFolder, UpdateCommand.tempFolder)));
+			assert.isTrue(deleteDirectory.calledWith(path.join(projectFolder, UpdateController.tempFolder)));
 			assert.isFalse(platformCommandHelper.removePlatforms.calledWith(installedPlatforms));
 			assert.isFalse(platformCommandHelper.addPlatforms.calledWith(installedPlatforms));
 		});
@@ -164,7 +165,7 @@ describe("update command method tests", () => {
 			await updateCommand.execute(["3.3.0"]);
 
 			assert.isTrue(copyFileStub.calledWith(path.join(projectFolder, "package.json")));
-			for (const folder of UpdateCommand.folders) {
+			for (const folder of UpdateController.folders) {
 				assert.isTrue(copyFileStub.calledWith(path.join(projectFolder, folder)));
 			}
 		});
@@ -178,12 +179,12 @@ describe("update command method tests", () => {
 			const deleteDirectoryStub: sinon.SinonStub = sandbox.stub(fs, "deleteDirectory");
 			const copyFileStub = sandbox.stub(fs, "copyFile");
 			const updateCommand = testInjector.resolve<UpdateCommand>(UpdateCommand);
-			const tempDir = path.join(projectFolder, UpdateCommand.tempFolder);
+			const tempDir = path.join(projectFolder, UpdateController.tempFolder);
 
 			await updateCommand.execute(["3.3.0"]);
 
 			assert.isTrue(copyFileStub.calledWith(path.join(tempDir, "package.json"), projectFolder));
-			for (const folder of UpdateCommand.folders) {
+			for (const folder of UpdateController.folders) {
 				assert.isTrue(deleteDirectoryStub.calledWith(path.join(projectFolder, folder)));
 				assert.isTrue(copyFileStub.calledWith(path.join(tempDir, folder), projectFolder));
 			}
@@ -197,7 +198,7 @@ describe("update command method tests", () => {
 
 			await updateCommand.execute([]);
 
-			for (const folder of UpdateCommand.folders) {
+			for (const folder of UpdateController.folders) {
 				assert.isTrue(deleteDirectory.calledWith(path.join(projectFolder, folder)));
 			}
 		});

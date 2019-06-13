@@ -531,6 +531,8 @@ export class ProjectDataService implements IProjectDataService {
 	getAppExecutableFiles(projectDir: string): string[] {
 		return [];
 	}
+
+	getNSValueFromContent(): any {}
 }
 
 export class ProjectHelperStub implements IProjectHelper {

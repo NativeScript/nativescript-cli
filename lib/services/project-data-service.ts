@@ -42,6 +42,16 @@ export class ProjectDataService implements IProjectDataService {
 		return this.getValue(projectDir, this.getNativeScriptPropertyName(propertyName));
 	}
 
+	public getNSValueFromContent(jsonData: Object, propertyName: string): any {
+		try {
+			return this.getPropertyValueFromJson(jsonData, this.getNativeScriptPropertyName(propertyName));
+		} catch (e) {
+			this.$logger.trace("Failed to get NS property value from JSON project data.");
+		}
+
+		return null;
+	}
+
 	public setNSValue(projectDir: string, key: string, value: any): void {
 		this.setValue(projectDir, this.getNativeScriptPropertyName(key), value);
 	}
