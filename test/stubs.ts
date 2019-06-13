@@ -749,7 +749,7 @@ export class ProjectChangesService implements IProjectChangesService {
 		return null;
 	}
 
-	public savePrepareInfo(platformData: IPlatformData): void {
+	public async savePrepareInfo(platformData: IPlatformData, projectData: IProjectData, prepareData: IPrepareData): Promise<void> {
 	}
 
 	public getPrepareInfoFilePath(platformData: IPlatformData): string {
@@ -760,7 +760,7 @@ export class ProjectChangesService implements IProjectChangesService {
 		return <IProjectChangesInfo>{};
 	}
 
-	public setNativePlatformStatus(platformData: IPlatformData, addedPlatform: IAddedNativePlatform): void {
+	public async setNativePlatformStatus(platformData: IPlatformData, projectData: IProjectData, addedPlatform: IAddedNativePlatform): Promise<void> {
 		return;
 	}
 }
