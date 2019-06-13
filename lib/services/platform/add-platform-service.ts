@@ -61,7 +61,7 @@ export class AddPlatformService implements IAddPlatformService {
 		platformData.platformProjectService.ensureConfigurationFileInAppResources(projectData);
 		await platformData.platformProjectService.interpolateData(projectData);
 		platformData.platformProjectService.afterCreateProject(platformData.projectRoot, projectData);
-		this.$projectChangesService.setNativePlatformStatus(platformData, { nativePlatformStatus: NativePlatformStatus.requiresPrepare });
+		await this.$projectChangesService.setNativePlatformStatus(platformData, projectData, { nativePlatformStatus: NativePlatformStatus.requiresPrepare });
 	}
 }
 $injector.register("addPlatformService", AddPlatformService);

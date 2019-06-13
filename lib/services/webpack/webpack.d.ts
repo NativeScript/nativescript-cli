@@ -19,8 +19,8 @@ declare global {
 		checkForChanges(platformData: IPlatformData, projectData: IProjectData, prepareData: IPrepareData): Promise<IProjectChangesInfo>;
 		getPrepareInfoFilePath(platformData: IPlatformData): string;
 		getPrepareInfo(platformData: IPlatformData): IPrepareInfo;
-		savePrepareInfo(platformData: IPlatformData): void;
-		setNativePlatformStatus(platformData: IPlatformData, addedPlatform: IAddedNativePlatform): void;
+		savePrepareInfo(platformData: IPlatformData, projectData: IProjectData, prepareData: IPrepareData): Promise<void>;
+		setNativePlatformStatus(platformData: IPlatformData, projectData: IProjectData, addedPlatform: IAddedNativePlatform): void;
 		currentChanges: IProjectChangesInfo;
 	}
 

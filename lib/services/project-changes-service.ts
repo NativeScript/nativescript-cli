@@ -136,12 +136,16 @@ export class ProjectChangesService implements IProjectChangesService {
 		return prepareInfo;
 	}
 
-	public savePrepareInfo(platformData: IPlatformData): void {
+	public async savePrepareInfo(platformData: IPlatformData, projectData: IProjectData, prepareData: IPrepareData): Promise<void> {
+		if (!this._prepareInfo) {
+			await this.ensurePrepareInfo(platformData, projectData, prepareData);
+		}
+
 		const prepareInfoFilePath = this.getPrepareInfoFilePath(platformData);
 		this.$fs.writeJson(prepareInfoFilePath, this._prepareInfo);
 	}
 
-	public setNativePlatformStatus(platformData: IPlatformData, addedPlatform: IAddedNativePlatform): void {
+	public async setNativePlatformStatus(platformData: IPlatformData, projectData: IProjectData, addedPlatform: IAddedNativePlatform): Promise<void> {
 		this._prepareInfo = this._prepareInfo || this.getPrepareInfo(platformData);
 		if (this._prepareInfo && addedPlatform.nativePlatformStatus === NativePlatformStatus.alreadyPrepared) {
 			this._prepareInfo.nativePlatformStatus = addedPlatform.nativePlatformStatus;
@@ -151,7 +155,7 @@ export class ProjectChangesService implements IProjectChangesService {
 			};
 		}
 
-		this.savePrepareInfo(platformData);
+		await this.savePrepareInfo(platformData, projectData, null);
 	}
 
 	private async ensurePrepareInfo(platformData: IPlatformData, projectData: IProjectData, prepareData: PrepareData): Promise<boolean> {

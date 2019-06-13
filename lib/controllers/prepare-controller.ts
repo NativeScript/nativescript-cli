@@ -47,7 +47,7 @@ export class PrepareController extends EventEmitter {
 			result = { hasNativeChanges, platform: prepareData.platform.toLowerCase() };
 		}
 
-		this.$projectChangesService.savePrepareInfo(platformData);
+		await this.$projectChangesService.savePrepareInfo(platformData, projectData, prepareData);
 
 		this.$logger.info(`Project successfully prepared (${prepareData.platform.toLowerCase()})`);
 
