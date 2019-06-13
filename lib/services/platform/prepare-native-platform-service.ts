@@ -47,7 +47,7 @@ export class PrepareNativePlatformService implements IPrepareNativePlatformServi
 		}
 
 		platformData.platformProjectService.interpolateConfigurationFile(projectData);
-		this.$projectChangesService.setNativePlatformStatus(platformData, { nativePlatformStatus: NativePlatformStatus.alreadyPrepared });
+		await this.$projectChangesService.setNativePlatformStatus(platformData, projectData, { nativePlatformStatus: NativePlatformStatus.alreadyPrepared });
 
 		return hasChanges;
 	}
