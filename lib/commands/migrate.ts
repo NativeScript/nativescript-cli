@@ -3,7 +3,8 @@ export class MigrateCommand implements ICommand {
 
 	constructor(
 		private $migrateController: IMigrateController,
-		private $projectData: IProjectData) {
+		private $projectData: IProjectData,
+		private $errors: IErrors) {
 		this.$projectData.initializeProjectData();
 	}
 
@@ -13,7 +14,7 @@ export class MigrateCommand implements ICommand {
 
 	public async canExecute(args: string[]): Promise<boolean> {
 		if (!await this.$migrateController.shouldMigrate({ projectDir: this.$projectData.projectDir })) {
-			throw new Error('Project is already migrated. To get the latest NativesScript packages execute "tns update".');
+			this.$errors.failWithoutHelp('Project is already compatible with NativeScript "v6.0.0". To get the latest NativesScript packages execute "tns update".');
 		}
 
 		return true;
