@@ -6,7 +6,8 @@ branches:
 env:
   global:
   - DATE=$(date +%Y-%m-%d)
-  - PACKAGE_VERSION=$DATE-$TRAVIS_BUILD_NUMBER
+  - TIME=$(date +%H%M%S)
+  - PACKAGE_VERSION=$DATE-$TIME-$TRAVIS_BUILD_NUMBER
   - NATIVESCRIPT_SKIP_POSTINSTALL_TASKS=1
 language: node_js
 node_js:
