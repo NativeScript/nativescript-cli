@@ -107,11 +107,14 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 
 		const args = [
 			path.join(projectData.projectDir, "node_modules", "webpack", "bin", "webpack.js"),
-			"--max_old_space_size=4096",
 			"--preserve-symlinks",
 			`--config=${path.join(projectData.projectDir, "webpack.config.js")}`,
 			...envParams
 		];
+
+		if (process.arch === "x64") {
+			args.push("--max_old_space_size=4096");
+		}
 
 		if (prepareData.watch) {
 			args.push("--watch");
