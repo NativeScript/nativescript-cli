@@ -42,12 +42,14 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 
 					const files = result.emittedFiles
 						.map((file: string) => path.join(platformData.appDestinationDirectoryPath, "app", file));
+					const fallbackFiles = result.fallbackFiles
+						.map((file: string) => path.join(platformData.appDestinationDirectoryPath, "app", file));
 
 					const data = {
 						files,
 						hmrData: {
 							hash: result.hash,
-							fallbackFiles: result.fallbackFiles
+							fallbackFiles
 						}
 					};
 
