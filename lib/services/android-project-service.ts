@@ -289,8 +289,8 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 		this.$fs.ensureDirectoryExists(platformsAppResourcesPath);
 
-		this.$fs.copyFile(path.join(projectAppResourcesPath, platformData.normalizedPlatformName, "*"), platformsAppResourcesPath);
-			const appResourcesDirStructureHasMigrated = this.$androidResourcesMigrationService.hasMigrated(projectAppResourcesPath);
+		this.$fs.copyFile(path.join(projectAppResourcesPath, platformData.normalizedPlatformName, "*"), path.dirname(platformsAppResourcesPath));
+		const appResourcesDirStructureHasMigrated = this.$androidResourcesMigrationService.hasMigrated(projectAppResourcesPath);
 		if (appResourcesDirStructureHasMigrated) {
 			this.$fs.copyFile(path.join(projectAppResourcesPath, platformData.normalizedPlatformName, "src", "*"), platformsAppResourcesPath);
 		} else {
