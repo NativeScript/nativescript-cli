@@ -4,6 +4,7 @@ import { cache, performanceLog } from "../common/decorators";
 import { EventEmitter } from "events";
 
 export class RunController extends EventEmitter implements IRunController {
+	private rebuiltInformation: IDictionary<any> = {};
 
 	constructor(
 		protected $analyticsService: IAnalyticsService,
@@ -236,6 +237,8 @@ export class RunController extends EventEmitter implements IRunController {
 	}
 
 	private async syncInitialDataOnDevices(projectData: IProjectData, liveSyncInfo: ILiveSyncInfo, deviceDescriptors: ILiveSyncDeviceDescriptor[]): Promise<void> {
+		this.rebuiltInformation = {};
+
 		const deviceAction = async (device: Mobile.IDevice) => {
 			const deviceDescriptor = _.find(deviceDescriptors, dd => dd.identifier === device.deviceInfo.identifier);
 			const platformData = this.$platformsDataService.getPlatformData(device.deviceInfo.platform, projectData);
@@ -245,18 +248,27 @@ export class RunController extends EventEmitter implements IRunController {
 
 			try {
 				let packageFilePath: string = null;
-				const shouldBuild = prepareResultData.hasNativeChanges || await this.$buildController.shouldBuild(buildData);
-				if (shouldBuild) {
-					packageFilePath = await deviceDescriptor.buildAction();
-				} else {
-					await this.$analyticsService.trackEventActionInGoogleAnalytics({
-						action: TrackActionNames.LiveSync,
-						device,
-						projectDir: projectData.projectDir
-					});
-				}
 
-				await this.$deviceInstallAppService.installOnDeviceIfNeeded(device, buildData, packageFilePath);
+				// Case where we have three devices attached, a change that requires build is found,
+				// we'll rebuild the app only for the first device, but we should install new package on all three devices.
+				if (this.rebuiltInformation[platformData.platformNameLowerCase] && (this.$mobileHelper.isAndroidPlatform(platformData.platformNameLowerCase) || this.rebuiltInformation[platformData.platformNameLowerCase].isEmulator === device.isEmulator)) {
+					packageFilePath = this.rebuiltInformation[platformData.platformNameLowerCase].packageFilePath;
+					await this.$deviceInstallAppService.installOnDevice(device, buildData, packageFilePath);
+				} else {
+					const shouldBuild = prepareResultData.hasNativeChanges || await this.$buildController.shouldBuild(buildData);
+					if (shouldBuild) {
+						packageFilePath = await deviceDescriptor.buildAction();
+						this.rebuiltInformation[platformData.platformNameLowerCase] = { isEmulator: device.isEmulator, platform: platformData.platformNameLowerCase, packageFilePath };
+					} else {
+						await this.$analyticsService.trackEventActionInGoogleAnalytics({
+							action: TrackActionNames.LiveSync,
+							device,
+							projectDir: projectData.projectDir
+						});
+					}
+
+					await this.$deviceInstallAppService.installOnDeviceIfNeeded(device, buildData, packageFilePath);
+				}
 
 				const platformLiveSyncService = this.$liveSyncServiceResolver.resolveLiveSyncService(platformData.platformNameLowerCase);
 				const { force, useHotModuleReload, skipWatcher } = liveSyncInfo;
@@ -295,15 +307,19 @@ export class RunController extends EventEmitter implements IRunController {
 	}
 
 	private async syncChangedDataOnDevices(data: IFilesChangeEventData, projectData: IProjectData, liveSyncInfo: ILiveSyncInfo, deviceDescriptors: ILiveSyncDeviceDescriptor[]): Promise<void> {
+		this.rebuiltInformation = {};
+
 		const deviceAction = async (device: Mobile.IDevice) => {
 			const deviceDescriptor = _.find(deviceDescriptors, dd => dd.identifier === device.deviceInfo.identifier);
 			const platformData = this.$platformsDataService.getPlatformData(data.platform, projectData);
 			const prepareData = this.$prepareDataService.getPrepareData(projectData.projectDir, data.platform, { ...liveSyncInfo, watch: !liveSyncInfo.skipWatcher });
 
 			try {
-				if (data.hasNativeChanges) {
+				const rebuiltInfo = this.rebuiltInformation[platformData.platformNameLowerCase] && (this.$mobileHelper.isAndroidPlatform(platformData.platformNameLowerCase) || this.rebuiltInformation[platformData.platformNameLowerCase].isEmulator === device.isEmulator);
+				if (data.hasNativeChanges && !rebuiltInfo) {
 					await this.$prepareNativePlatformService.prepareNativePlatform(platformData, projectData, prepareData);
 					await deviceDescriptor.buildAction();
+					this.rebuiltInformation[platformData.platformNameLowerCase] = { isEmulator: device.isEmulator, platform: platformData.platformNameLowerCase, packageFilePath: null };
 				}
 
 				const isInHMRMode = liveSyncInfo.useHotModuleReload && data.hmrData && data.hmrData.hash;
