@@ -104,7 +104,8 @@ export class PlatformCommandHelper implements IPlatformCommandHelper {
 		}
 
 		const subDirs = this.$fs.readDirectory(projectData.platformsDir);
-		return _.filter(subDirs, p => this.$mobileHelper.platformNames.indexOf(p) > -1);
+		const platforms = this.$mobileHelper.platformNames.map(p => p.toLowerCase());
+		return _.filter(subDirs, p => platforms.indexOf(p) > -1);
 	}
 
 	public getAvailablePlatforms(projectData: IProjectData): string[] {
