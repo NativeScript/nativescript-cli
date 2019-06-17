@@ -1,6 +1,18 @@
 NativeScript CLI Changelog
 ================
 
+5.4.1 (2019, June 17)
+==
+
+### Fixed
+* [Fixed #4226](https://github.com/NativeScript/nativescript-cli/issues/4226): Slowly attaching to debugger on real iOS device with bundle
+* [Fixed #4584](https://github.com/NativeScript/nativescript-cli/issues/4584): Invalid App Store Icon Error, while uploading an iOS app with CLI generated icons
+* [Fixed #4608](https://github.com/NativeScript/nativescript-cli/issues/4608): Misleading message for min runtime version
+* [Fixed #4664](https://github.com/NativeScript/nativescript-cli/pull/4664): `tns cloud run...` command does not respect useLegacyWorkflow flag
+* [Fixed #4665](https://github.com/NativeScript/nativescript-cli/issues/4665): Incorrect error is shown when unsupported Node.js version is used
+* [Fixed #4664](https://github.com/NativeScript/nativescript-cli/pull/4679): `$logger` fails to print null objects
+* [Fixed #4665](https://github.com/NativeScript/nativescript-cli/issues/4701): Deprecate support for `tns init` command
+
 
 5.4.0 (2019, May 15)
 ==
