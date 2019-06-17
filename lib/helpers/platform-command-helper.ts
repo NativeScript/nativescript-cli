@@ -43,9 +43,10 @@ export class PlatformCommandHelper implements IPlatformCommandHelper {
 
 	public async cleanPlatforms(platforms: string[], projectData: IProjectData, framworkPath: string): Promise<void> {
 		for (const platform of platforms) {
+			const version: string = this.getCurrentPlatformVersion(platform, projectData);
+
 			await this.removePlatforms([platform], projectData);
 
-			const version: string = this.getCurrentPlatformVersion(platform, projectData);
 			const platformParam = version ? `${platform}@${version}` : platform;
 			await this.addPlatforms([platformParam], projectData, framworkPath);
 		}
