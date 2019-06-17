@@ -1,7 +1,7 @@
 
 import { cache, exported, invokeInit } from './common/decorators';
 import { performanceLog } from "./common/decorators";
-export class PackageManager implements INodePackageManager {
+export class PackageManager implements IPackageManager {
 	private packageManager: INodePackageManager;
 
 	constructor(
@@ -9,6 +9,7 @@ export class PackageManager implements INodePackageManager {
 		private $npm: INodePackageManager,
 		private $options: IOptions,
 		private $yarn: INodePackageManager,
+		private $logger: ILogger,
 		private $userSettingsService: IUserSettingsService
 	) { }
 
@@ -67,6 +68,21 @@ export class PackageManager implements INodePackageManager {
 	@invokeInit()
 	public getCachePath(): Promise<string> {
 		return this.packageManager.getCachePath();
+	}
+
+	public async getTagVersion(packageName: string, tag: string): Promise<string> {
+		let version: string = null;
+
+		try {
+			const result = await this.view(packageName, { "dist-tags": true });
+			version = result[tag];
+		} catch (err) {
+			this.$logger.trace(`Error while getting tag version from view command: ${err}`);
+			const registryData = await this.getRegistryPackageData(packageName);
+			version = registryData["dist-tags"][tag];
+		}
+
+		return version;
 	}
 
 	private async _determinePackageManager(): Promise<INodePackageManager> {

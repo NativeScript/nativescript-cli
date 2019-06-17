@@ -75,6 +75,16 @@ interface INodePackageManager {
 	getCachePath(): Promise<string>;
 }
 
+interface IPackageManager extends INodePackageManager {
+	/**
+	 * Gets the version corresponding to the tag for the package
+	 * @param {string} packageName The name of the package.
+	 * @param {string} tag The tag which we need the version of.
+	 * @returns {string} The version corresponding to the tag
+	 */
+	getTagVersion(packageName: string, tag: string): Promise<string>
+}
+
 interface IPerformanceService {
 	// Will process the data based on the command opitons (--performance flag and user-reporting setting)
 	processExecutionData(methodInfo: string, startTime: number, endTime: number, args: any[]): void;
