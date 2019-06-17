@@ -14,7 +14,7 @@ export class Constants {
 	public static NATIVESCRIPT_KEY = "nativescript";
 	public static ANDROID_RUNTIME = "tns-android";
 	public static VERSION_PROPERTY_NAME = "version";
-	public static XCODE_MIN_REQUIRED_VERSION = 9;
+	public static XCODE_MIN_REQUIRED_VERSION = 10;
 	public static JAVAC_EXECUTABLE_NAME = "javac";
 	public static JAVA_EXECUTABLE_NAME = "java";
 }
