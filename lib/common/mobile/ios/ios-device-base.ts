@@ -7,6 +7,7 @@ export abstract class IOSDeviceBase implements Mobile.IiOSDevice {
 	protected abstract $deviceLogProvider: Mobile.IDeviceLogProvider;
 	protected abstract $iOSDebuggerPortService: IIOSDebuggerPortService;
 	protected abstract $lockService: ILockService;
+	protected abstract $logger: ILogger;
 	abstract deviceInfo: Mobile.IDeviceInfo;
 	abstract applicationManager: Mobile.IDeviceApplicationManager;
 	abstract fileSystem: Mobile.IDeviceFileSystem;
@@ -22,8 +23,12 @@ export abstract class IOSDeviceBase implements Mobile.IiOSDevice {
 				}
 
 				await this.attachToDebuggerFoundEvent(appId, projectName);
-				if (ensureAppStarted) {
-					await this.applicationManager.startApplication({ appId, projectName });
+				try {
+					if (ensureAppStarted) {
+						await this.applicationManager.startApplication({ appId, projectName });
+					}
+				} catch (err) {
+					this.$logger.trace(`Unable to start application ${appId} on device ${this.deviceInfo.identifier} in getDebugSocket method. Error is: ${err}`);
 				}
 
 				this.cachedSockets[appId] = await this.getDebugSocketCore(appId);
