@@ -3,30 +3,18 @@ import * as semver from "semver";
 import * as constants from "../constants";
 import { BaseUpdateController } from "./base-update-controller";
 
-interface IDependency {
-	packageName: string;
-	isDev?: boolean;
-}
-
-interface IMigrationDependency extends IDependency {
-	mustRemove?: boolean;
-	replaceWith?: string;
-	verifiedVersion?: string;
-	shouldAdd?: boolean;
-}
-
 export class MigrateController extends BaseUpdateController implements IMigrateController {
 	constructor(
 		protected $fs: IFileSystem,
+		protected $platformCommandHelper: IPlatformCommandHelper,
+		protected $platformsDataService: IPlatformsDataService,
+		protected $packageInstallationManager: IPackageInstallationManager,
+		protected $packageManager: IPackageManager,
 		private $logger: ILogger,
-		private $platformCommandHelper: IPlatformCommandHelper,
-		private $platformsDataService: IPlatformsDataService,
 		private $addPlatformService: IAddPlatformService,
 		private $pluginsService: IPluginsService,
-		private $projectDataService: IProjectDataService,
-		private $packageManager: INodePackageManager,
-		private $packageInstallationManager: IPackageInstallationManager) {
-			super($fs);
+		private $projectDataService: IProjectDataService) {
+			super($fs, $platformCommandHelper, $platformsDataService, $packageInstallationManager, $packageManager);
 	}
 
 	static readonly folders: string[] = [
@@ -111,12 +99,12 @@ export class MigrateController extends BaseUpdateController implements IMigrateC
 				return true;
 			}
 
-			if (!this.shouldSkipDependency(dependency, projectData) && await this.shouldMigrateDependencyVersion(dependency, projectData)) {
+			if (!this.shouldSkipMigrationDependency(dependency, projectData) && await this.shouldMigrateDependencyVersion(dependency, projectData)) {
 				return true;
 			}
 		}
 		for (const platform in constants.DEVICE_PLATFORMS) {
-			if (await this.shouldMigrateRuntimeVersion(platform, projectData)) {
+			if (await this.shouldUpdateRuntimeVersion({ targetVersion: MigrateController.verifiedPlatformVersions[platform.toLowerCase()], platform, projectData, shouldAdd: true})) {
 				return true;
 			}
 		}
@@ -137,7 +125,7 @@ export class MigrateController extends BaseUpdateController implements IMigrateC
 		this.$logger.info("Start migrating dependencies.");
 		for (let i = 0; i < MigrateController.migrationDependencies.length; i++) {
 			const dependency = MigrateController.migrationDependencies[i];
-			if (this.shouldSkipDependency(dependency, projectData)) {
+			if (this.shouldSkipMigrationDependency(dependency, projectData)) {
 				continue;
 			}
 
@@ -153,8 +141,8 @@ export class MigrateController extends BaseUpdateController implements IMigrateC
 		}
 
 		for (const platform in constants.DEVICE_PLATFORMS) {
-			if (await this.shouldMigrateRuntimeVersion(platform, projectData)) {
-				const lowercasePlatform = platform.toLowerCase();
+			const lowercasePlatform = platform.toLowerCase();
+			if (await this.shouldUpdateRuntimeVersion({targetVersion: MigrateController.verifiedPlatformVersions[lowercasePlatform], platform, projectData, shouldAdd: true})) {
 				const verifiedPlatformVersion = MigrateController.verifiedPlatformVersions[lowercasePlatform];
 				const platformData = this.$platformsDataService.getPlatformData(lowercasePlatform, projectData);
 				this.$logger.info(`Updating ${platform} platform to version '${verifiedPlatformVersion}'.`);
@@ -177,52 +165,35 @@ export class MigrateController extends BaseUpdateController implements IMigrateC
 		const collection = dependency.isDev ? projectData.devDependencies : projectData.dependencies;
 		if (
 			collection &&
-			collection[dependency.packageName] &&
-			(semver.valid(collection[dependency.packageName]) || semver.validRange(collection[dependency.packageName]))
+			collection[dependency.packageName]
 		) {
-			const maxSatisfyingVersion = await this.$packageInstallationManager.maxSatisfyingVersion(dependency.packageName, collection[dependency.packageName]) || collection[dependency.packageName];
-			const isPrereleaseVersion = semver.prerelease(maxSatisfyingVersion);
-			const coerceMaxSatisfying = semver.coerce(maxSatisfyingVersion).version;
-			const coerceVerifiedVersion = semver.coerce(dependency.verifiedVersion).version;
-			//This makes sure that if the user has a prerelease 6.0.0-next-2019-06-10-092158-01 version we will update it to 6.0.0
-			if (isPrereleaseVersion) {
-				if (semver.gt(coerceMaxSatisfying, coerceVerifiedVersion)) {
-					return false;
-				}
+			const maxSatisfyingVersion = await this.getMaxDependencyVersion(dependency.packageName, collection[dependency.packageName]);
+			if (maxSatisfyingVersion) {
+				const isPrereleaseVersion = semver.prerelease(maxSatisfyingVersion);
+				const coerceMaxSatisfying = semver.coerce(maxSatisfyingVersion).version;
+				const coerceVerifiedVersion = semver.coerce(dependency.verifiedVersion).version;
+				//This makes sure that if the user has a prerelease 6.0.0-next-2019-06-10-092158-01 version we will update it to 6.0.0
+				if (isPrereleaseVersion) {
+					if (semver.gt(coerceMaxSatisfying, coerceVerifiedVersion)) {
+						return false;
+					}
 
-				//TODO This should be removed once we update the verified versions to no prerelease versions
-				if (isPrereleaseVersion && semver.eq(maxSatisfyingVersion, dependency.verifiedVersion)) {
+					//TODO This should be removed once we update the verified versions to no prerelease versions
+					if (semver.eq(maxSatisfyingVersion, dependency.verifiedVersion)) {
+						return false;
+					}
+				} else if (semver.gte(coerceMaxSatisfying, coerceVerifiedVersion)) {
 					return false;
 				}
-			} else if (semver.gte(coerceMaxSatisfying, coerceVerifiedVersion)) {
-				return false;
 			}
 		}
 
 		return true;
 	}
 
-	private async shouldMigrateRuntimeVersion(platform: string, projectData: IProjectData) {
-		const lowercasePlatform = platform.toLowerCase();
-		const currentPlatformVersion = this.$platformCommandHelper.getCurrentPlatformVersion(lowercasePlatform, projectData);
-		const verifiedPlatformVersion = MigrateController.verifiedPlatformVersions[lowercasePlatform];
-		const platformData = this.$platformsDataService.getPlatformData(lowercasePlatform, projectData);
-		if (currentPlatformVersion) {
-			const maxPlatformSatisfyingVersion = await this.$packageInstallationManager.maxSatisfyingVersion(platformData.frameworkPackageName, currentPlatformVersion) || currentPlatformVersion;
-			if (semver.gte(maxPlatformSatisfyingVersion, verifiedPlatformVersion)) {
-				return false;
-			}
-		}
-
-		return true;
-	}
-
-	private shouldSkipDependency(dependency: IMigrationDependency, projectData: IProjectData): boolean {
+	private shouldSkipMigrationDependency(dependency: IMigrationDependency, projectData: IProjectData) {
 		if (!dependency.shouldAdd) {
-			const collection = dependency.isDev ? projectData.devDependencies : projectData.dependencies;
-			if (!collection[dependency.packageName]) {
-				return true;
-			}
+			return this.shouldSkipDependency(dependency, projectData);
 		}
 	}
 }

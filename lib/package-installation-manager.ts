@@ -39,8 +39,7 @@ export class PackageInstallationManager implements IPackageInstallationManager {
 	public async maxSatisfyingVersion(packageName: string, versionRange: string): Promise<string> {
 		const data = await this.$packageManager.view(packageName, { "versions": true });
 
-		const maxSatisfying = semver.maxSatisfying(data, versionRange);
-		return maxSatisfying ;
+		return semver.maxSatisfying(data, versionRange);
 	}
 
 	public async getLatestCompatibleVersionSafe(packageName: string, referenceVersion?: string): Promise<string> {
