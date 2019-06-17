@@ -18,6 +18,7 @@ export class IOSDevice extends IOSDeviceBase {
 		private $injector: IInjector,
 		protected $iOSDebuggerPortService: IIOSDebuggerPortService,
 		protected $deviceLogProvider: Mobile.IDeviceLogProvider,
+		protected $logger: ILogger,
 		protected $lockService: ILockService,
 		private $iOSSocketRequestExecutor: IiOSSocketRequestExecutor,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
