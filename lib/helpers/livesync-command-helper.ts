@@ -175,7 +175,7 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 			sdk: this.$options.sdk
 		});
 
-		const buildData = this.$buildDataService.getBuildData(liveSyncInfo.projectDir, platform, { ...this.$options.argv, clean: true, skipWatcher: true });
+		const buildData = this.$buildDataService.getBuildData(liveSyncInfo.projectDir, platform, { ...this.$options.argv, clean: true, watch: false });
 
 		await this.$deployController.deploy({
 			buildData,
