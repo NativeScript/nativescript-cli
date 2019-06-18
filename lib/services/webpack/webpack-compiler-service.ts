@@ -1,6 +1,5 @@
 import * as path from "path";
 import * as child_process from "child_process";
-import * as os from "os";
 import { EventEmitter } from "events";
 import { performanceLog } from "../../common/decorators";
 import { hook } from "../../common/helpers";
@@ -12,6 +11,7 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 	constructor(
 		private $childProcess: IChildProcess,
 		public $hooksService: IHooksService,
+		public $hostInfo: IHostInfo,
 		private $logger: ILogger,
 		private $pluginsService: IPluginsService,
 		private $mobileHelper: Mobile.IMobileHelper
@@ -160,13 +160,12 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 
 	private buildEnvCommandLineParams(envData: any, platformData: IPlatformData, prepareData: IPrepareData) {
 		const envFlagNames = Object.keys(envData);
-		const snapshotEnvIndex = envFlagNames.indexOf("snapshot");
-		const shouldSnapshot = prepareData.release && os.type() !== "Windows_NT" && this.$mobileHelper.isAndroidPlatform(platformData.normalizedPlatformName);
-		if (snapshotEnvIndex > -1 && !shouldSnapshot) {
+		const shouldSnapshot = prepareData.release && !this.$hostInfo.isWindows && this.$mobileHelper.isAndroidPlatform(platformData.normalizedPlatformName);
+		if (envData && envData.snapshot && !shouldSnapshot) {
 			this.$logger.warn("Stripping the snapshot flag. " +
 				"Bear in mind that snapshot is only available in release builds and " +
 				"is NOT available on Windows systems.");
-			envFlagNames.splice(snapshotEnvIndex, 1);
+			envFlagNames.splice(envFlagNames.indexOf("snapshot"), 1);
 		}
 
 		const args: any[] = [];
