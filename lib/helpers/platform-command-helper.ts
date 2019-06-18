@@ -43,9 +43,10 @@ export class PlatformCommandHelper implements IPlatformCommandHelper {
 
 	public async cleanPlatforms(platforms: string[], projectData: IProjectData, framworkPath: string): Promise<void> {
 		for (const platform of platforms) {
+			const version: string = this.getCurrentPlatformVersion(platform, projectData);
+
 			await this.removePlatforms([platform], projectData);
 
-			const version: string = this.getCurrentPlatformVersion(platform, projectData);
 			const platformParam = version ? `${platform}@${version}` : platform;
 			await this.addPlatforms([platformParam], projectData, framworkPath);
 		}
@@ -103,7 +104,8 @@ export class PlatformCommandHelper implements IPlatformCommandHelper {
 		}
 
 		const subDirs = this.$fs.readDirectory(projectData.platformsDir);
-		return _.filter(subDirs, p => this.$mobileHelper.platformNames.indexOf(p) > -1);
+		const platforms = this.$mobileHelper.platformNames.map(p => p.toLowerCase());
+		return _.filter(subDirs, p => platforms.indexOf(p) > -1);
 	}
 
 	public getAvailablePlatforms(projectData: IProjectData): string[] {
