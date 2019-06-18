@@ -21,17 +21,11 @@ export class MobileHelper implements Mobile.IMobileHelper {
 		return !!(platform && (this.$devicePlatformsConstants.iOS.toLowerCase() === platform.toLowerCase()));
 	}
 
-	public isWP8Platform(platform: string): boolean {
-		return !!(platform && (this.$devicePlatformsConstants.WP8.toLowerCase() === platform.toLowerCase()));
-	}
-
 	public normalizePlatformName(platform: string): string {
 		if (this.isAndroidPlatform(platform)) {
 			return "Android";
 		} else if (this.isiOSPlatform(platform)) {
 			return "iOS";
-		} else if (this.isWP8Platform(platform)) {
-			return "WP8";
 		}
 
 		return undefined;
