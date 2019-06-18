@@ -289,11 +289,11 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 		this.$fs.ensureDirectoryExists(platformsAppResourcesPath);
 
-		this.$fs.copyFile(path.join(projectAppResourcesPath, platformData.normalizedPlatformName, "*"), platformsAppResourcesPath);
-			const appResourcesDirStructureHasMigrated = this.$androidResourcesMigrationService.hasMigrated(projectAppResourcesPath);
+		const appResourcesDirStructureHasMigrated = this.$androidResourcesMigrationService.hasMigrated(projectAppResourcesPath);
 		if (appResourcesDirStructureHasMigrated) {
-			this.$fs.copyFile(path.join(projectAppResourcesPath, platformData.normalizedPlatformName, "src", "*"), platformsAppResourcesPath);
+			this.$fs.copyFile(path.join(projectAppResourcesPath, platformData.normalizedPlatformName, constants.SRC_DIR, "*"), platformsAppResourcesPath);
 		} else {
+			this.$fs.copyFile(path.join(projectAppResourcesPath, platformData.normalizedPlatformName, "*"), platformsAppResourcesPath);
 			// https://github.com/NativeScript/android-runtime/issues/899
 			// App_Resources/Android/libs is reserved to user's aars and jars, but they should not be copied as resources
 			this.$fs.deleteDirectory(path.join(platformsAppResourcesPath, "libs"));
