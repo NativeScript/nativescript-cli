@@ -2,7 +2,7 @@ import { Device, FilesPayload } from "nativescript-preview-sdk";
 import { TrackActionNames, PREPARE_READY_EVENT_NAME } from "../constants";
 import { PrepareController } from "./prepare-controller";
 import { performanceLog } from "../common/decorators";
-import { stringify, hook } from "../common/helpers";
+import { stringify } from "../common/helpers";
 import { HmrConstants } from "../common/constants";
 import { EventEmitter } from "events";
 import { PrepareDataService } from "../services/prepare-data-service";
@@ -27,7 +27,6 @@ export class PreviewAppController extends EventEmitter implements IPreviewAppCon
 		private $prepareDataService: PrepareDataService
 	) { super(); }
 
-	@hook("preview-sync")
 	public async startPreview(data: IPreviewAppLiveSyncData): Promise<IQrCodeImageData> {
 		await this.previewCore(data);
 
@@ -60,6 +59,8 @@ export class PreviewAppController extends EventEmitter implements IPreviewAppCon
 						additionalData: device.uniqueId
 					});
 				}
+
+				await this.$hooksService.executeBeforeHooks("preview-sync", { ...data, platform: device.platform });
 
 				if (data.useHotModuleReload) {
 					this.$hmrStatusService.attachToHmrStatusEvent();
