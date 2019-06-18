@@ -183,6 +183,7 @@ export class ProjectChangesService implements IProjectChangesService {
 		this._changesInfo = this._changesInfo || new ProjectChangesInfo();
 		this._changesInfo.appResourcesChanged = true;
 		this._changesInfo.configChanged = true;
+		this._changesInfo.nativeChanged = true;
 		return true;
 	}
 
