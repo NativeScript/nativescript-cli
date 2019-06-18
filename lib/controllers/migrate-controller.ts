@@ -10,6 +10,7 @@ export class MigrateController extends BaseUpdateController implements IMigrateC
 		protected $platformsDataService: IPlatformsDataService,
 		protected $packageInstallationManager: IPackageInstallationManager,
 		protected $packageManager: IPackageManager,
+		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $logger: ILogger,
 		private $addPlatformService: IAddPlatformService,
 		private $pluginsService: IPluginsService,
@@ -58,14 +59,16 @@ export class MigrateController extends BaseUpdateController implements IMigrateC
 		{ packageName: "nativescript-cardview", verifiedVersion: "3.2.0"}
 	];
 
-	static readonly verifiedPlatformVersions: IDictionary<string> = {
-		[constants.DEVICE_PLATFORMS.Android.toLowerCase()]: "6.0.0-2019-06-11-172137-01",
-		[constants.DEVICE_PLATFORMS.iOS.toLowerCase()]: "6.0.0-2019-06-10-154118-03"
-	};
-
 	static readonly tempFolder: string = ".migration_backup";
-	static readonly updateFailMessage: string = "Could not migrate the project!";
+	static readonly migrateFailMessage: string = "Could not migrate the project!";
 	static readonly backupFailMessage: string = "Could not backup project folders!";
+
+	get verifiedPlatformVersions(): IDictionary<string> {
+		return {
+			[this.$devicePlatformsConstants.Android.toLowerCase()]: "6.0.0-2019-06-11-172137-01",
+			[this.$devicePlatformsConstants.iOS.toLowerCase()]: "6.0.0-2019-06-10-154118-03"
+		};
+	}
 
 	public async migrate({projectDir}: {projectDir: string}): Promise<void> {
 		const projectData = this.$projectDataService.getProjectData(projectDir);
@@ -86,7 +89,7 @@ export class MigrateController extends BaseUpdateController implements IMigrateC
 			await this.migrateDependencies(projectData);
 		} catch (error) {
 			this.restoreBackup(MigrateController.folders, tmpDir, projectData);
-			this.$logger.error(MigrateController.updateFailMessage);
+			this.$logger.error(MigrateController.migrateFailMessage);
 		}
 	}
 
@@ -103,8 +106,8 @@ export class MigrateController extends BaseUpdateController implements IMigrateC
 				return true;
 			}
 		}
-		for (const platform in constants.DEVICE_PLATFORMS) {
-			if (await this.shouldUpdateRuntimeVersion({ targetVersion: MigrateController.verifiedPlatformVersions[platform.toLowerCase()], platform, projectData, shouldAdd: true})) {
+		for (const platform in this.$devicePlatformsConstants) {
+			if (await this.shouldUpdateRuntimeVersion({ targetVersion: this.verifiedPlatformVersions[platform.toLowerCase()], platform, projectData, shouldAdd: true})) {
 				return true;
 			}
 		}
@@ -140,10 +143,10 @@ export class MigrateController extends BaseUpdateController implements IMigrateC
 			}
 		}
 
-		for (const platform in constants.DEVICE_PLATFORMS) {
+		for (const platform in this.$devicePlatformsConstants) {
 			const lowercasePlatform = platform.toLowerCase();
-			if (await this.shouldUpdateRuntimeVersion({targetVersion: MigrateController.verifiedPlatformVersions[lowercasePlatform], platform, projectData, shouldAdd: true})) {
-				const verifiedPlatformVersion = MigrateController.verifiedPlatformVersions[lowercasePlatform];
+			if (await this.shouldUpdateRuntimeVersion({targetVersion: this.verifiedPlatformVersions[lowercasePlatform], platform, projectData, shouldAdd: true})) {
+				const verifiedPlatformVersion = this.verifiedPlatformVersions[lowercasePlatform];
 				const platformData = this.$platformsDataService.getPlatformData(lowercasePlatform, projectData);
 				this.$logger.info(`Updating ${platform} platform to version '${verifiedPlatformVersion}'.`);
 				await this.$addPlatformService.setPlatformVersion(platformData, projectData, verifiedPlatformVersion);

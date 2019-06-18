@@ -264,11 +264,6 @@ export class PluginNativeDirNames {
 	public static Android = "android";
 }
 
-export const DEVICE_PLATFORMS: IDictionary<string> = {
-	iOS: "iOS",
-	Android: "Android"
-};
-
 export const PODFILE_NAME = "Podfile";
 
 export class IosProjectConstants {

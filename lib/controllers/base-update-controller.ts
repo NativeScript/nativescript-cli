@@ -44,7 +44,7 @@ export class BaseUpdateController {
 		const currentPlatformVersion = this.$platformCommandHelper.getCurrentPlatformVersion(lowercasePlatform, projectData);
 		const platformData = this.$platformsDataService.getPlatformData(lowercasePlatform, projectData);
 		if (currentPlatformVersion) {
-			const maxPlatformSatisfyingVersion = await this.$packageInstallationManager.maxSatisfyingVersion(platformData.frameworkPackageName, currentPlatformVersion) || currentPlatformVersion;
+			const maxPlatformSatisfyingVersion = await this.getMaxDependencyVersion(platformData.frameworkPackageName, currentPlatformVersion) || currentPlatformVersion;
 			if (semver.gte(maxPlatformSatisfyingVersion, targetVersion)) {
 				return false;
 			}

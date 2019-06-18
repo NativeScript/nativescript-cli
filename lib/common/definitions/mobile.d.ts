@@ -979,7 +979,6 @@ declare module Mobile {
 		platformNames: string[];
 		isAndroidPlatform(platform: string): boolean;
 		isiOSPlatform(platform: string): boolean;
-		isWP8Platform(platform: string): boolean;
 		normalizePlatformName(platform: string): string;
 		validatePlatformName(platform: string): string;
 		buildDevicePath(...args: string[]): string;
@@ -1002,7 +1001,6 @@ declare module Mobile {
 	interface IDevicePlatformsConstants {
 		iOS: string;
 		Android: string;
-		WP8: string;
 	}
 
 	interface IDeviceApplication {
