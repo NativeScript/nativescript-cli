@@ -48,7 +48,7 @@ declare global {
 	/**
 	 * Describes information for LiveSync on a device.
 	 */
-	interface ILiveSyncDeviceDescriptor extends IOptionalOutputPath, IOptionalDebuggingOptions {
+	interface ILiveSyncDeviceDescriptor extends IOptionalDebuggingOptions {
 		/**
 		 * Device identifier.
 		 */
@@ -68,6 +68,11 @@ declare global {
 		 * Whether debugging has been enabled for this device or not
 		 */
 		debuggingEnabled?: boolean;
+
+		/**
+		 * Describes the data used for building the application
+		 */
+		buildData: IBuildData;
 	}
 
 	/**
@@ -80,7 +85,7 @@ declare global {
 		 * Defines if the watcher should be skipped. If not passed, fs.Watcher will be started.
 		 */
 		skipWatcher?: boolean;
-		
+
 		/**
 		 * Forces a build before the initial livesync.
 		 */

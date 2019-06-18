@@ -18,9 +18,9 @@ const projectDir = "/path/to/my/projecDir";
 const buildOutputPath = `${projectDir}/platform/ios/build/myproject.app`;
 
 const iOSDevice = <any>{ deviceInfo: { identifier: "myiOSDevice", platform: "ios" } };
-const iOSDeviceDescriptor = { identifier: "myiOSDevice", buildAction: async () => buildOutputPath };
+const iOSDeviceDescriptor = { identifier: "myiOSDevice", buildAction: async () => buildOutputPath, buildData: <any>{} };
 const androidDevice = <any>{ deviceInfo: { identifier: "myAndroidDevice", platform: "android" } };
-const androidDeviceDescriptor = { identifier: "myAndroidDevice", buildAction: async () => buildOutputPath };
+const androidDeviceDescriptor = { identifier: "myAndroidDevice", buildAction: async () => buildOutputPath, buildData: <any>{} };
 
 const map: IDictionary<{ device: Mobile.IDevice, descriptor: ILiveSyncDeviceDescriptor }> = {
 	myiOSDevice: {
