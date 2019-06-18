@@ -11,8 +11,10 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 	constructor(
 		private $childProcess: IChildProcess,
 		public $hooksService: IHooksService,
+		public $hostInfo: IHostInfo,
 		private $logger: ILogger,
-		private $pluginsService: IPluginsService
+		private $pluginsService: IPluginsService,
+		private $mobileHelper: Mobile.IMobileHelper
 	) { super(); }
 
 	public async compileWithWatch(platformData: IPlatformData, projectData: IProjectData, prepareData: IPrepareData): Promise<any> {
@@ -103,7 +105,7 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 	@hook('prepareJSApp')
 	private async startWebpackProcess(platformData: IPlatformData, projectData: IProjectData, prepareData: IPrepareData): Promise<child_process.ChildProcess> {
 		const envData = this.buildEnvData(platformData.platformNameLowerCase, projectData, prepareData);
-		const envParams = this.buildEnvCommandLineParams(envData, platformData);
+		const envParams = this.buildEnvCommandLineParams(envData, platformData, prepareData);
 
 		await this.$pluginsService.ensureAllDependenciesAreInstalled(projectData);
 
@@ -156,13 +158,15 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 		return envData;
 	}
 
-	private buildEnvCommandLineParams(envData: any, platformData: IPlatformData) {
+	private buildEnvCommandLineParams(envData: any, platformData: IPlatformData, prepareData: IPrepareData) {
 		const envFlagNames = Object.keys(envData);
-		// const snapshotEnvIndex = envFlagNames.indexOf("snapshot");
-		// if (snapshotEnvIndex > -1 && !utils.shouldSnapshot(config)) {
-		// 	logSnapshotWarningMessage($logger);
-		// 	envFlagNames.splice(snapshotEnvIndex, 1);
-		// }
+		const shouldSnapshot = prepareData.release && !this.$hostInfo.isWindows && this.$mobileHelper.isAndroidPlatform(platformData.normalizedPlatformName);
+		if (envData && envData.snapshot && !shouldSnapshot) {
+			this.$logger.warn("Stripping the snapshot flag. " +
+				"Bear in mind that snapshot is only available in release builds and " +
+				"is NOT available on Windows systems.");
+			envFlagNames.splice(envFlagNames.indexOf("snapshot"), 1);
+		}
 
 		const args: any[] = [];
 		envFlagNames.map(item => {
