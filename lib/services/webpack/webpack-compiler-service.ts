@@ -1,5 +1,6 @@
 import * as path from "path";
 import * as child_process from "child_process";
+import * as os from "os";
 import { EventEmitter } from "events";
 import { performanceLog } from "../../common/decorators";
 import { hook } from "../../common/helpers";
@@ -12,7 +13,8 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 		private $childProcess: IChildProcess,
 		public $hooksService: IHooksService,
 		private $logger: ILogger,
-		private $pluginsService: IPluginsService
+		private $pluginsService: IPluginsService,
+		private $mobileHelper: Mobile.IMobileHelper
 	) { super(); }
 
 	public async compileWithWatch(platformData: IPlatformData, projectData: IProjectData, prepareData: IPrepareData): Promise<any> {
@@ -103,7 +105,7 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 	@hook('prepareJSApp')
 	private async startWebpackProcess(platformData: IPlatformData, projectData: IProjectData, prepareData: IPrepareData): Promise<child_process.ChildProcess> {
 		const envData = this.buildEnvData(platformData.platformNameLowerCase, projectData, prepareData);
-		const envParams = this.buildEnvCommandLineParams(envData, platformData);
+		const envParams = this.buildEnvCommandLineParams(envData, platformData, prepareData);
 
 		await this.$pluginsService.ensureAllDependenciesAreInstalled(projectData);
 
@@ -156,13 +158,16 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 		return envData;
 	}
 
-	private buildEnvCommandLineParams(envData: any, platformData: IPlatformData) {
+	private buildEnvCommandLineParams(envData: any, platformData: IPlatformData, prepareData: IPrepareData) {
 		const envFlagNames = Object.keys(envData);
-		// const snapshotEnvIndex = envFlagNames.indexOf("snapshot");
-		// if (snapshotEnvIndex > -1 && !utils.shouldSnapshot(config)) {
-		// 	logSnapshotWarningMessage($logger);
-		// 	envFlagNames.splice(snapshotEnvIndex, 1);
-		// }
+		const snapshotEnvIndex = envFlagNames.indexOf("snapshot");
+		const shouldSnapshot = prepareData.release && os.type() !== "Windows_NT" && this.$mobileHelper.isAndroidPlatform(platformData.normalizedPlatformName);
+		if (snapshotEnvIndex > -1 && !shouldSnapshot) {
+			this.$logger.warn("Stripping the snapshot flag. " +
+				"Bear in mind that snapshot is only available in release builds and " +
+				"is NOT available on Windows systems.");
+			envFlagNames.splice(snapshotEnvIndex, 1);
+		}
 
 		const args: any[] = [];
 		envFlagNames.map(item => {
