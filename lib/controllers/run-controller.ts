@@ -244,9 +244,9 @@ export class RunController extends EventEmitter implements IRunController {
 			const prepareData = this.$prepareDataService.getPrepareData(liveSyncInfo.projectDir, device.deviceInfo.platform,
 				{
 					...liveSyncInfo,
-					watch: !liveSyncInfo.skipWatcher,
-					nativePrepare: { skipNativePrepare: !!deviceDescriptor.skipNativePrepare },
 					...deviceDescriptor.buildData,
+					nativePrepare: { skipNativePrepare: !!deviceDescriptor.skipNativePrepare },
+					watch: !liveSyncInfo.skipWatcher,
 				});
 
 			const prepareResultData = await this.$prepareController.prepare(prepareData);
@@ -321,9 +321,9 @@ export class RunController extends EventEmitter implements IRunController {
 			const prepareData = this.$prepareDataService.getPrepareData(liveSyncInfo.projectDir, device.deviceInfo.platform,
 				{
 					...liveSyncInfo,
-					watch: !liveSyncInfo.skipWatcher,
-					nativePrepare: { skipNativePrepare: !!deviceDescriptor.skipNativePrepare },
 					...deviceDescriptor.buildData,
+					nativePrepare: { skipNativePrepare: !!deviceDescriptor.skipNativePrepare },
+					watch: !liveSyncInfo.skipWatcher,
 				});
 
 			try {
