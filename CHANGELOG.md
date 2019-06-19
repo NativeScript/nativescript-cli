@@ -1,6 +1,13 @@
 NativeScript CLI Changelog
 ================
 
+5.4.2 (2019, June 19)
+==
+
+### Fixed
+* [Fixed #4732](https://github.com/NativeScript/nativescript-cli/pull/4732): HMR does not work with `tns cloud run ios ...` on Windows
+
+
 5.4.1 (2019, June 17)
 ==
 
