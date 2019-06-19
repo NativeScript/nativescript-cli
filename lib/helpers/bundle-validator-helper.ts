@@ -13,16 +13,14 @@ export class BundleValidatorHelper extends VersionValidatorHelper implements IBu
 	}
 
 	public validate(projectData: IProjectData, minSupportedVersion?: string): void {
-		if (this.$options.bundle) {
-			const currentVersion = this.getBundlerDependencyVersion(projectData);
-			if (!currentVersion) {
-				this.$errors.failWithoutHelp(BundleValidatorMessages.MissingBundlePlugin);
-			}
+		const currentVersion = this.getBundlerDependencyVersion(projectData);
+		if (!currentVersion) {
+			this.$errors.failWithoutHelp(BundleValidatorMessages.MissingBundlePlugin);
+		}
 
-			const shouldThrowError = minSupportedVersion && this.isValidVersion(currentVersion) && this.isVersionLowerThan(currentVersion, minSupportedVersion);
-			if (shouldThrowError) {
-				this.$errors.failWithoutHelp(util.format(BundleValidatorMessages.NotSupportedVersion, minSupportedVersion));
-			}
+		const shouldThrowError = minSupportedVersion && this.isValidVersion(currentVersion) && this.isVersionLowerThan(currentVersion, minSupportedVersion);
+		if (shouldThrowError) {
+			this.$errors.failWithoutHelp(util.format(BundleValidatorMessages.NotSupportedVersion, minSupportedVersion));
 		}
 	}
 

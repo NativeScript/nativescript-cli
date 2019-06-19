@@ -14,12 +14,11 @@ import * as yok from "../lib/common/yok";
 import ChildProcessLib = require("../lib/common/child-process");
 import { SettingsService } from "../lib/common/test/unit-tests/stubs";
 import { ProjectDataService } from "../lib/services/project-data-service";
-import { WorkflowServiceStub, ProjectDataStub } from "./stubs";
+import { ProjectDataStub } from "./stubs";
 
 function createTestInjector(): IInjector {
 	const testInjector = new yok.Yok();
 
-	testInjector.register("workflowService", WorkflowServiceStub);
 	testInjector.register("projectData", ProjectDataStub);
 	testInjector.register("config", ConfigLib.Configuration);
 	testInjector.register("logger", LoggerLib.Logger);

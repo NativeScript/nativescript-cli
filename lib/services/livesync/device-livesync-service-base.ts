@@ -6,7 +6,7 @@ export abstract class DeviceLiveSyncServiceBase {
 	private static FAST_SYNC_FILE_EXTENSIONS = [".css", ".xml", ".html"];
 
 	constructor(
-		protected $platformsData: IPlatformsData,
+		protected platformsDataService: IPlatformsDataService,
 		protected device: Mobile.IDevice
 	) { }
 
@@ -23,13 +23,13 @@ export abstract class DeviceLiveSyncServiceBase {
 
 	@cache()
 	private getFastLiveSyncFileExtensions(platform: string, projectData: IProjectData): string[] {
-		const platformData = this.$platformsData.getPlatformData(platform, projectData);
+		const platformData = this.platformsDataService.getPlatformData(platform, projectData);
 		const fastSyncFileExtensions = DeviceLiveSyncServiceBase.FAST_SYNC_FILE_EXTENSIONS.concat(platformData.fastLivesyncFileExtensions);
 		return fastSyncFileExtensions;
 	}
 
 	@performanceLog()
-	public async transferFiles(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], projectFilesPath: string, projectData: IProjectData, liveSyncDeviceInfo: ILiveSyncDeviceInfo, options: ITransferFilesOptions): Promise<Mobile.ILocalToDevicePathData[]> {
+	public async transferFiles(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], projectFilesPath: string, projectData: IProjectData, liveSyncDeviceDescriptor: ILiveSyncDeviceDescriptor, options: ITransferFilesOptions): Promise<Mobile.ILocalToDevicePathData[]> {
 		let transferredFiles: Mobile.ILocalToDevicePathData[] = [];
 
 		if (options.isFullSync) {

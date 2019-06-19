@@ -7,12 +7,14 @@ const expectedDevToolsCommitSha = "02e6bde1bbe34e43b309d4ef774b1168d25fd024";
 
 class AndroidDeviceDebugServiceInheritor extends AndroidDeviceDebugService {
 	constructor(protected $devicesService: Mobile.IDevicesService,
+		$cleanupService: ICleanupService,
 		$errors: IErrors,
 		$logger: ILogger,
 		$androidProcessService: Mobile.IAndroidProcessService,
+		$staticConfig: IStaticConfig,
 		$net: INet,
 		$deviceLogProvider: Mobile.IDeviceLogProvider) {
-		super(<any>{ deviceInfo: { identifier: "123" } }, $devicesService, $errors, $logger, $androidProcessService, $net, $deviceLogProvider);
+		super(<any>{ deviceInfo: { identifier: "123" } }, $devicesService, $cleanupService, $errors, $logger, $androidProcessService, $staticConfig, $net, $deviceLogProvider);
 	}
 
 	public getChromeDebugUrl(debugOptions: IDebugOptions, port: number): string {

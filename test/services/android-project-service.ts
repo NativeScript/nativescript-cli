@@ -3,6 +3,9 @@ import { Yok } from "../../lib/common/yok";
 import * as stubs from "../stubs";
 import { assert } from "chai";
 import * as sinon from "sinon";
+import { GradleCommandService } from "../../lib/services/android/gradle-command-service";
+import { GradleBuildService } from "../../lib/services/android/gradle-build-service";
+import { GradleBuildArgsService } from "../../lib/services/android/gradle-build-args-service";
 
 const createTestInjector = (): IInjector => {
 	const testInjector = new Yok();
@@ -35,6 +38,9 @@ const createTestInjector = (): IInjector => {
 			return true;
 		}
 	});
+	testInjector.register("gradleCommandService", GradleCommandService);
+	testInjector.register("gradleBuildService", GradleBuildService);
+	testInjector.register("gradleBuildArgsService", GradleBuildArgsService);
 
 	return testInjector;
 };
@@ -88,7 +94,7 @@ describe("androidDeviceDebugService", () => {
 			const buildConfig = getDefautlBuildConfig();
 
 			//act
-			await androidProjectService.buildProject("local/local", projectData, buildConfig);
+			await androidProjectService.buildProject("local/local", projectData, <any>buildConfig);
 
 			//assert
 			assert.include(childProcess.lastCommandArgs, "assembleRelease");
@@ -100,7 +106,7 @@ describe("androidDeviceDebugService", () => {
 			buildConfig.release = false;
 
 			//act
-			await androidProjectService.buildProject("local/local", projectData, buildConfig);
+			await androidProjectService.buildProject("local/local", projectData, <any>buildConfig);
 
 			//assert
 			assert.include(childProcess.lastCommandArgs, "assembleDebug");
@@ -112,7 +118,7 @@ describe("androidDeviceDebugService", () => {
 			buildConfig.androidBundle = true;
 
 			//act
-			await androidProjectService.buildProject("local/local", projectData, buildConfig);
+			await androidProjectService.buildProject("local/local", projectData, <any>buildConfig);
 
 			//assert
 			assert.include(childProcess.lastCommandArgs, "bundleRelease");
@@ -125,7 +131,7 @@ describe("androidDeviceDebugService", () => {
 			buildConfig.release = false;
 
 			//act
-			await androidProjectService.buildProject("local/local", projectData, buildConfig);
+			await androidProjectService.buildProject("local/local", projectData, <any>buildConfig);
 
 			//assert
 			assert.include(childProcess.lastCommandArgs, "bundleDebug");

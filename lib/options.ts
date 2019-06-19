@@ -31,27 +31,13 @@ export class Options {
 			this.$errors.failWithoutHelp("The options --release and --hmr cannot be used simultaneously.");
 		}
 
-		// HACK: temporary solution for 5.3.0 release (until the webpack only feature)
+		this.argv.bundle = "webpack";
+
 		const parsed = require("yargs-parser")(process.argv.slice(2), { 'boolean-negation': false });
-		const noBundle = parsed && (parsed.bundle === false || parsed.bundle === 'false');
-		if (noBundle && this.argv.hmr) {
-			this.$errors.failWithoutHelp("The options --no-bundle and --hmr cannot be used simultaneously.");
-		}
-
-		if (projectData && projectData.useLegacyWorkflow === false) {
-			this.argv.bundle = this.argv.bundle !== undefined ? this.argv.bundle : "webpack";
-			this.argv.hmr = !this.argv.release;
-		}
-
 		// --no-hmr -> hmr: false or --hmr false -> hmr: 'false'
 		const noHmr = parsed && (parsed.hmr === false || parsed.hmr === 'false');
-		if (noHmr) {
-			this.argv.hmr = false;
-		}
-
-		if (noBundle) {
-			this.argv.bundle = undefined;
-			this.argv.hmr = false;
+		if (!noHmr) {
+			this.argv.hmr = !this.argv.release;
 		}
 
 		if (this.argv.debugBrk) {
@@ -102,7 +88,6 @@ export class Options {
 			compileSdk: { type: OptionType.Number, hasSensitiveValue: false },
 			port: { type: OptionType.Number, hasSensitiveValue: false },
 			copyTo: { type: OptionType.String, hasSensitiveValue: true },
-			platformTemplate: { type: OptionType.String, hasSensitiveValue: true },
 			js: { type: OptionType.Boolean, hasSensitiveValue: false },
 			javascript: { type: OptionType.Boolean, hasSensitiveValue: false },
 			ng: { type: OptionType.Boolean, hasSensitiveValue: false },
@@ -117,7 +102,6 @@ export class Options {
 			bundle: { type: OptionType.String, hasSensitiveValue: false },
 			all: { type: OptionType.Boolean, hasSensitiveValue: false },
 			teamId: { type: OptionType.Object, hasSensitiveValue: true },
-			syncAllFiles: { type: OptionType.Boolean, default: false, hasSensitiveValue: false },
 			chrome: { type: OptionType.Boolean, hasSensitiveValue: false },
 			inspector: { type: OptionType.Boolean, hasSensitiveValue: false },
 			clean: { type: OptionType.Boolean, hasSensitiveValue: false },
@@ -148,9 +132,6 @@ export class Options {
 			justlaunch: { type: OptionType.Boolean, hasSensitiveValue: false },
 			file: { type: OptionType.String, hasSensitiveValue: true },
 			force: { type: OptionType.Boolean, alias: "f", hasSensitiveValue: false },
-			// remove legacy
-			workflow: { type: OptionType.Boolean, hasSensitiveValue: false },
-			companion: { type: OptionType.Boolean, hasSensitiveValue: false },
 			emulator: { type: OptionType.Boolean, hasSensitiveValue: false },
 			sdk: { type: OptionType.String, hasSensitiveValue: false },
 			template: { type: OptionType.String, hasSensitiveValue: true },
@@ -211,16 +192,6 @@ export class Options {
 				}
 			}
 		});
-	}
-
-	public printMessagesForDeprecatedOptions($logger: ILogger) {
-		if (this.argv.platformTemplate) {
-			$logger.warn(`"--platformTemplate" option has been deprecated and will be removed in the upcoming NativeScript CLI v6.0.0. More info can be found in this issue https://github.com/NativeScript/nativescript-cli/issues/4518.`);
-		}
-
-		if (this.argv.syncAllFiles) {
-			$logger.warn(`"--syncAllFiles" option has been deprecated and will be removed in the upcoming NativeScript CLI v6.0.0. More info can be found in this issue https://github.com/NativeScript/nativescript-cli/issues/4518.`);
-		}
 	}
 
 	private getCorrectOptionName(optionName: string): string {
@@ -309,10 +280,7 @@ export class Options {
 			this.argv.js = true;
 		}
 
-		// Default to "nativescript-dev-webpack" if only `--bundle` is passed
-		if (this.argv.bundle !== undefined || this.argv.hmr) {
-			this.argv.bundle = this.argv.bundle || "webpack";
-		}
+		this.argv.bundle = "webpack";
 
 		this.adjustDashedOptions();
 	}

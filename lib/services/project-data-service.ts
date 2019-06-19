@@ -1,5 +1,4 @@
 import * as path from "path";
-import * as constants from "../constants";
 import { ProjectData } from "../project-data";
 import { exported } from "../common/decorators";
 import {
@@ -139,13 +138,6 @@ export class ProjectDataService implements IProjectDataService {
 		};
 	}
 
-	public setUseLegacyWorkflow(projectDir: string, value: any): void {
-		this.$logger.trace(`useLegacyWorkflow will be set to ${value}`);
-		this.updateNsConfigValue(projectDir, { useLegacyWorkflow: value });
-		this.refreshProjectData(projectDir);
-		this.$logger.trace(`useLegacyWorkflow was set to ${value}`);
-	}
-
 	public getAppExecutableFiles(projectDir: string): string[] {
 		const projectData = this.getProjectData(projectDir);
 
@@ -177,33 +169,6 @@ export class ProjectDataService implements IProjectDataService {
 		);
 
 		return files;
-	}
-
-	private refreshProjectData(projectDir: string) {
-		if (this.projectDataCache[projectDir]) {
-			this.projectDataCache[projectDir].initializeProjectData(projectDir);
-		}
-	}
-
-	private updateNsConfigValue(projectDir: string, updateObject: INsConfig): void {
-		const nsConfigPath = path.join(projectDir, constants.CONFIG_NS_FILE_NAME);
-		const currentNsConfig = this.getNsConfig(nsConfigPath);
-		const newNsConfig = Object.assign(currentNsConfig, updateObject);
-
-		this.$fs.writeJson(nsConfigPath, newNsConfig);
-	}
-
-	private getNsConfig(nsConfigPath: string): INsConfig {
-		let result = this.getNsConfigDefaultObject();
-		if (this.$fs.exists(nsConfigPath)) {
-			try {
-				result = <INsConfig>this.$fs.readJson(nsConfigPath);
-			} catch (e) {
-				// default
-			}
-		}
-
-		return result;
 	}
 
 	private getImageDefinitions(): IImageDefinitionsStructure {

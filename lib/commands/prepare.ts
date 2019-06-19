@@ -1,40 +1,37 @@
 import { ValidatePlatformCommandBase } from "./command-base";
+import { PrepareController } from "../controllers/prepare-controller";
+import { PrepareDataService } from "../services/prepare-data-service";
 
 export class PrepareCommand extends ValidatePlatformCommandBase implements ICommand {
 	public allowedParameters = [this.$platformCommandParameter];
 
+	public dashedOptions = {
+		watch: { type: OptionType.Boolean, default: false, hasSensitiveValue: false },
+		hmr: { type: OptionType.Boolean, default: false, hasSensitiveValue: false },
+	};
+
 	constructor($options: IOptions,
-		$platformService: IPlatformService,
+		private $prepareController: PrepareController,
+		$platformValidationService: IPlatformValidationService,
 		$projectData: IProjectData,
 		private $platformCommandParameter: ICommandParameter,
-		$platformsData: IPlatformsData,
-		private $workflowService: IWorkflowService) {
-		super($options, $platformsData, $platformService, $projectData);
-		this.$projectData.initializeProjectData();
+		$platformsDataService: IPlatformsDataService,
+		private $prepareDataService: PrepareDataService) {
+			super($options, $platformsDataService, $platformValidationService, $projectData);
+			this.$projectData.initializeProjectData();
 	}
 
 	public async execute(args: string[]): Promise<void> {
-		await this.$workflowService.handleLegacyWorkflow({ projectDir: this.$projectData.projectDir, settings: this.$options, skipWarnings: true });
-		const appFilesUpdaterOptions: IAppFilesUpdaterOptions = {
-			bundle: !!this.$options.bundle,
-			release: this.$options.release,
-			useHotModuleReload: this.$options.hmr
-		};
-		const platformInfo: IPreparePlatformInfo = {
-			platform: args[0],
-			appFilesUpdaterOptions,
-			platformTemplate: this.$options.platformTemplate,
-			projectData: this.$projectData,
-			config: this.$options,
-			env: this.$options.env
-		};
+		const platform = args[0];
 
-		await this.$platformService.preparePlatform(platformInfo);
+		const prepareData = this.$prepareDataService.getPrepareData(this.$projectData.projectDir, platform, this.$options);
+		await this.$prepareController.prepare(prepareData);
 	}
 
 	public async canExecute(args: string[]): Promise<boolean | ICanExecuteCommandOutput> {
 		const platform = args[0];
-		const result = await this.$platformCommandParameter.validate(platform) && await this.$platformService.validateOptions(this.$options.provision, this.$options.teamId, this.$projectData, platform);
+		const result = await this.$platformCommandParameter.validate(platform) &&
+			await this.$platformValidationService.validateOptions(this.$options.provision, this.$options.teamId, this.$projectData, platform);
 		if (!result) {
 			return false;
 		}

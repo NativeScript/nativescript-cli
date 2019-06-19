@@ -495,7 +495,9 @@ declare module Mobile {
 		 * Returns a single device based on the specified options. If more than one devices are matching,
 		 * prompts the user for a manual choice or returns the first one for non interactive terminals.
 		 */
-		pickSingleDevice(options: IPickSingleDeviceOptions): Promise<Mobile.IDevice>
+		pickSingleDevice(options: IPickSingleDeviceOptions): Promise<Mobile.IDevice>;
+
+		getPlatformsFromDeviceDescriptors(deviceDescriptors: ILiveSyncDeviceDescriptor[]): string[];
 	}
 
 	interface IPickSingleDeviceOptions {
@@ -897,16 +899,6 @@ declare module Mobile {
 		connectToPort(connectToPortData: IConnectToPortData): Promise<any>;
 	}
 
-	interface IEmulatorSettingsService {
-		/**
-		 * Gives information if current project can be started in emulator.
-		 * @param {string} platform The mobile platform of the emulator (android, ios, wp8).
-		 * @returns {boolean} true in case the project can be started in emulator. In case not, the method will throw error.
-		 */
-		canStart(platform: string): boolean;
-		minVersion: number;
-	}
-
 	interface IRunApplicationOnEmulatorOptions {
 		/**
 		 * The identifier of the application that will be started on device.
@@ -993,6 +985,7 @@ declare module Mobile {
 		buildDevicePath(...args: string[]): string;
 		correctDevicePath(filePath: string): string;
 		isiOSTablet(deviceName: string): boolean;
+		getDeviceFileContent(device: Mobile.IDevice, deviceFilePath: string, projectData: IProjectData): Promise<string>;
 	}
 
 	interface IEmulatorHelper {

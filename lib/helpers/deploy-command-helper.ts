@@ -1,46 +1,59 @@
-export class DeployCommandHelper implements IDeployCommandHelper {
+import { DeployController } from "../controllers/deploy-controller";
+import { BuildController } from "../controllers/build-controller";
 
-	constructor(private $options: IOptions,
-		private $platformService: IPlatformService,
-		private $projectData: IProjectData) {
-		this.$projectData.initializeProjectData();
-	}
+export class DeployCommandHelper {
+	constructor(
+		private $buildDataService: IBuildDataService,
+		private $buildController: BuildController,
+		private $devicesService: Mobile.IDevicesService,
+		private $deployController: DeployController,
+		private $options: IOptions,
+		private $projectData: IProjectData
+	) { }
 
-	public getDeployPlatformInfo(platform: string): IDeployPlatformInfo {
-		const appFilesUpdaterOptions: IAppFilesUpdaterOptions = {
-			bundle: !!this.$options.bundle,
-			release: this.$options.release,
-			useHotModuleReload: this.$options.hmr
-		};
-		const deployOptions: IDeployPlatformOptions = {
-			clean: this.$options.clean,
-			device: this.$options.device,
-			projectDir: this.$projectData.projectDir,
-			emulator: this.$options.emulator,
-			platformTemplate: this.$options.platformTemplate,
-			release: this.$options.release,
-			forceInstall: true,
-			provision: this.$options.provision,
-			teamId: this.$options.teamId,
-			keyStoreAlias: this.$options.keyStoreAlias,
-			keyStoreAliasPassword: this.$options.keyStoreAliasPassword,
-			keyStorePassword: this.$options.keyStorePassword,
-			keyStorePath: this.$options.keyStorePath
-		};
-
-		const deployPlatformInfo: IDeployPlatformInfo = {
+	public async deploy(platform: string, additionalOptions?: ILiveSyncCommandHelperAdditionalOptions) {
+		const emulator = this.$options.emulator;
+		await this.$devicesService.initialize({
+			deviceId: this.$options.device,
 			platform,
-			appFilesUpdaterOptions,
-			deployOptions,
-			projectData: this.$projectData,
-			buildPlatform: this.$platformService.buildPlatform.bind(this.$platformService),
-			config: this.$options,
-			env: this.$options.env,
+			emulator,
+			skipInferPlatform: !platform,
+			sdk: this.$options.sdk
+		});
 
-		};
+		const devices = this.$devicesService.getDeviceInstances()
+			.filter(d => !platform || d.deviceInfo.platform.toLowerCase() === platform.toLowerCase());
 
-		return deployPlatformInfo;
+		const deviceDescriptors: ILiveSyncDeviceDescriptor[] = devices
+			.map(d => {
+				const outputPath = additionalOptions && additionalOptions.getOutputDirectory && additionalOptions.getOutputDirectory({
+					platform: d.deviceInfo.platform,
+					emulator: d.isEmulator,
+					projectDir: this.$projectData.projectDir
+				});
+
+				const buildData = this.$buildDataService.getBuildData(this.$projectData.projectDir, d.deviceInfo.platform, { ...this.$options, outputPath, buildForDevice: !d.isEmulator });
+
+				const buildAction = additionalOptions && additionalOptions.buildPlatform ?
+					additionalOptions.buildPlatform.bind(additionalOptions.buildPlatform, d.deviceInfo.platform, buildData, this.$projectData) :
+					this.$buildController.prepareAndBuild.bind(this.$buildController, d.deviceInfo.platform, buildData, this.$projectData);
+
+				const info: ILiveSyncDeviceDescriptor = {
+					identifier: d.deviceInfo.identifier,
+					buildAction,
+					debuggingEnabled: additionalOptions && additionalOptions.deviceDebugMap && additionalOptions.deviceDebugMap[d.deviceInfo.identifier],
+					debugOptions: this.$options,
+					skipNativePrepare: additionalOptions && additionalOptions.skipNativePrepare,
+					buildData
+				};
+
+				return info;
+			});
+
+		await this.$deployController.deploy({
+			buildData: this.$buildDataService.getBuildData(this.$projectData.projectDir, platform, { ...this.$options, skipWatcher: !this.$options.watch }),
+			deviceDescriptors
+		});
 	}
 }
-
 $injector.register("deployCommandHelper", DeployCommandHelper);

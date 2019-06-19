@@ -7,14 +7,13 @@ import { YarnPackageManager } from "../lib/yarn-package-manager";
 import { FileSystem } from "../lib/common/file-system";
 import { ProjectData } from "../lib/project-data";
 import { ChildProcess } from "../lib/common/child-process";
-import { PlatformService } from '../lib/services/platform-service';
 import { Options } from "../lib/options";
 import { CommandsService } from "../lib/common/services/commands-service";
 import { StaticConfig } from "../lib/config";
 import { HostInfo } from "../lib/common/host-info";
 import { Errors } from "../lib/common/errors";
 import { ProjectHelper } from "../lib/common/project-helper";
-import { PlatformsData } from "../lib/platforms-data";
+import { PlatformsDataService } from "../lib/services/platforms-data-service";
 import { ProjectDataService } from "../lib/services/project-data-service";
 import { ProjectFilesManager } from "../lib/common/services/project-files-manager";
 import { ResourceLoader } from "../lib/common/resource-loader";
@@ -35,6 +34,9 @@ import StaticConfigLib = require("../lib/config");
 import * as path from "path";
 import * as temp from "temp";
 import { PLUGINS_BUILD_DATA_FILENAME } from '../lib/constants';
+import { GradleCommandService } from '../lib/services/android/gradle-command-service';
+import { GradleBuildService } from '../lib/services/android/gradle-build-service';
+import { GradleBuildArgsService } from '../lib/services/android/gradle-build-args-service';
 temp.track();
 
 let isErrorThrown = false;
@@ -52,10 +54,9 @@ function createTestInjector() {
 	testInjector.register("adb", {});
 	testInjector.register("androidDebugBridgeResultHandler", {});
 	testInjector.register("projectData", ProjectData);
-	testInjector.register("platforsmData", stubs.PlatformsDataStub);
+	testInjector.register("platforsmData", stubs.NativeProjectDataStub);
 	testInjector.register("childProcess", ChildProcess);
-	testInjector.register("platformService", PlatformService);
-	testInjector.register("platformsData", PlatformsData);
+	testInjector.register("platformsDataService", PlatformsDataService);
 	testInjector.register("androidEmulatorServices", {});
 	testInjector.register("androidToolsInfo", AndroidToolsInfo);
 	testInjector.register("sysInfo", {});
@@ -143,7 +144,9 @@ function createTestInjector() {
 		},
 		extractPackage: async (packageName: string, destinationDirectory: string, options?: IPacoteExtractOptions): Promise<void> => undefined
 	});
-
+	testInjector.register("gradleCommandService", GradleCommandService);
+	testInjector.register("gradleBuildService", GradleBuildService);
+	testInjector.register("gradleBuildArgsService", GradleBuildArgsService);
 	testInjector.register("cleanupService", {
 		setShouldDispose: (shouldDispose: boolean): void => undefined
 	});
@@ -310,9 +313,9 @@ describe("Plugins service", () => {
 					return <any[]>[{ name: "" }];
 				};
 
-				// Mock platformsData
-				const platformsData = testInjector.resolve("platformsData");
-				platformsData.getPlatformData = (platform: string) => {
+				// Mock platformsDataService
+				const platformsDataService = testInjector.resolve("platformsDataService");
+				platformsDataService.getPlatformData = (platform: string) => {
 					return {
 						appDestinationDirectoryPath: path.join(projectFolder, "platforms", "android"),
 						frameworkPackageName: "tns-android",
@@ -534,9 +537,9 @@ describe("Plugins service", () => {
 
 			const appDestinationDirectoryPath = path.join(projectFolder, "platforms", "android");
 
-			// Mock platformsData
-			const platformsData = testInjector.resolve("platformsData");
-			platformsData.getPlatformData = (platform: string) => {
+			// Mock platformsDataService
+			const platformsDataService = testInjector.resolve("platformsDataService");
+			platformsDataService.getPlatformData = (platform: string) => {
 				return {
 					appDestinationDirectoryPath: appDestinationDirectoryPath,
 					frameworkPackageName: "tns-android",
@@ -567,7 +570,7 @@ describe("Plugins service", () => {
 				`\n@#[line:1,col:39].` +
 				`\n@#[line:1,col:39].`;
 			mockBeginCommand(testInjector, expectedErrorMessage);
-			await pluginsService.prepare(pluginJsonData, "android", projectData, {});
+			await pluginsService.preparePluginNativeCode(pluginsService.convertToPluginData(pluginJsonData, projectData.projectDir), "android", projectData);
 		});
 	});
 
@@ -580,7 +583,7 @@ describe("Plugins service", () => {
 			};
 
 			const unitTestsInjector = new Yok();
-			unitTestsInjector.register("platformsData", {
+			unitTestsInjector.register("platformsDataService", {
 				getPlatformData: (_platform: string, pData: IProjectData) => ({
 					projectRoot: "projectRoot",
 					platformProjectService: {
@@ -626,6 +629,8 @@ describe("Plugins service", () => {
 			unitTestsInjector.register("logger", {});
 			unitTestsInjector.register("errors", {});
 			unitTestsInjector.register("injector", unitTestsInjector);
+			unitTestsInjector.register("mobileHelper", MobileHelper);
+			unitTestsInjector.register("devicePlatformsConstants", DevicePlatformsConstants);
 
 			const pluginsService: PluginsService = unitTestsInjector.resolve(PluginsService);
 			testData.pluginsService = pluginsService;

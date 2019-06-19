@@ -14,8 +14,8 @@ class XcprojService implements IXcprojService {
 		private $xcodeSelectService: IXcodeSelectService) {
 	}
 
-	public getXcodeprojPath(projectData: IProjectData, platformData: IPlatformData): string {
-		return path.join(platformData.projectRoot, projectData.projectName + IosProjectConstants.XcodeProjExtName);
+	public getXcodeprojPath(projectData: IProjectData, projectRoot: string): string {
+		return path.join(projectRoot, projectData.projectName + IosProjectConstants.XcodeProjExtName);
 	}
 
 	public async verifyXcproj(opts: IVerifyXcprojOptions): Promise<boolean> {

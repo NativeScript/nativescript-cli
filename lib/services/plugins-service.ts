@@ -9,17 +9,11 @@ export class PluginsService implements IPluginsService {
 	private static NPM_CONFIG = {
 		save: true
 	};
-	private get $platformsData(): IPlatformsData {
-		return this.$injector.resolve("platformsData");
-	}
-	private get $pluginVariablesService(): IPluginVariablesService {
-		return this.$injector.resolve("pluginVariablesService");
+	private get $platformsDataService(): IPlatformsDataService {
+		return this.$injector.resolve("platformsDataService");
 	}
 	private get $projectDataService(): IProjectDataService {
 		return this.$injector.resolve("projectDataService");
-	}
-	private get $projectFilesManager(): IProjectFilesManager {
-		return this.$injector.resolve("projectFilesManager");
 	}
 
 	private get npmInstallOptions(): INodePackageManagerInstallOptions {
@@ -37,7 +31,8 @@ export class PluginsService implements IPluginsService {
 		private $logger: ILogger,
 		private $errors: IErrors,
 		private $filesHashService: IFilesHashService,
-		private $injector: IInjector) { }
+		private $injector: IInjector,
+		private $mobileHelper: Mobile.IMobileHelper) { }
 
 	public async add(plugin: string, projectData: IProjectData): Promise<void> {
 		await this.ensure(projectData);
@@ -60,16 +55,6 @@ export class PluginsService implements IPluginsService {
 
 			await this.executeForAllInstalledPlatforms(action, projectData);
 
-			try {
-				await this.$pluginVariablesService.savePluginVariablesInProjectFile(pluginData, projectData.projectDir);
-			} catch (err) {
-				// Revert package.json
-				this.$projectDataService.removeNSProperty(projectData.projectDir, this.$pluginVariablesService.getPluginVariablePropertyName(pluginData.name));
-				await this.$packageManager.uninstall(plugin, PluginsService.NPM_CONFIG, projectData.projectDir);
-
-				throw err;
-			}
-
 			this.$logger.info(`Successfully installed plugin ${realNpmPackageJson.name}.`);
 		} else {
 			await this.$packageManager.uninstall(realNpmPackageJson.name, { save: true }, projectData.projectDir);
@@ -84,7 +69,6 @@ export class PluginsService implements IPluginsService {
 			await platformData.platformProjectService.removePluginNativeCode(pluginData, projectData);
 		};
 
-		this.$pluginVariablesService.removePluginVariablesFromProjectFile(pluginName.toLowerCase(), projectData.projectDir);
 		await this.executeForAllInstalledPlatforms(removePluginNativeCodeAction, projectData);
 
 		await this.executeNpmCommand(PluginsService.UNINSTALL_COMMAND_NAME, pluginName, projectData);
@@ -104,44 +88,8 @@ export class PluginsService implements IPluginsService {
 		}
 	}
 
-	public async validate(platformData: IPlatformData, projectData: IProjectData): Promise<void> {
-		return await platformData.platformProjectService.validatePlugins(projectData);
-	}
-
-	public async prepare(dependencyData: IDependencyData, platform: string, projectData: IProjectData, projectFilesConfig: IProjectFilesConfig): Promise<void> {
-		platform = platform.toLowerCase();
-		const platformData = this.$platformsData.getPlatformData(platform, projectData);
-		const pluginData = this.convertToPluginData(dependencyData, projectData.projectDir);
-
-		const appFolderExists = this.$fs.exists(path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME));
-		if (appFolderExists) {
-			this.preparePluginScripts(pluginData, platform, projectData, projectFilesConfig);
-			await this.preparePluginNativeCode(pluginData, platform, projectData);
-
-			// Show message
-			this.$logger.info(`Successfully prepared plugin ${pluginData.name} for ${platform}.`);
-		}
-	}
-
-	public preparePluginScripts(pluginData: IPluginData, platform: string, projectData: IProjectData, projectFilesConfig: IProjectFilesConfig): void {
-		const platformData = this.$platformsData.getPlatformData(platform, projectData);
-		const pluginScriptsDestinationPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME, "tns_modules");
-		const scriptsDestinationExists = this.$fs.exists(pluginScriptsDestinationPath);
-		if (!scriptsDestinationExists) {
-			//tns_modules/<plugin> doesn't exist. Assuming we're running a bundled prepare.
-			return;
-		}
-
-		if (!this.isPluginDataValidForPlatform(pluginData, platform, projectData)) {
-			return;
-		}
-
-		//prepare platform speciffic files, .map and .ts files
-		this.$projectFilesManager.processPlatformSpecificFiles(pluginScriptsDestinationPath, platform, projectFilesConfig);
-	}
-
 	public async preparePluginNativeCode(pluginData: IPluginData, platform: string, projectData: IProjectData): Promise<void> {
-		const platformData = this.$platformsData.getPlatformData(platform, projectData);
+		const platformData = this.$platformsDataService.getPlatformData(platform, projectData);
 		pluginData.pluginPlatformsFolderPath = (_platform: string) => path.join(pluginData.fullPath, "platforms", _platform.toLowerCase());
 
 		const pluginPlatformsFolderPath = pluginData.pluginPlatformsFolderPath(platform);
@@ -261,7 +209,7 @@ export class PluginsService implements IPluginsService {
 		const data = cacheData.nativescript || cacheData.moduleInfo;
 
 		if (pluginData.isPlugin) {
-			pluginData.platformsData = data.platforms;
+			pluginData.platformsDataService = data.platforms;
 			pluginData.pluginVariables = data.variables;
 		}
 
@@ -295,11 +243,11 @@ export class PluginsService implements IPluginsService {
 	}
 
 	private async executeForAllInstalledPlatforms(action: (_pluginDestinationPath: string, pl: string, _platformData: IPlatformData) => Promise<void>, projectData: IProjectData): Promise<void> {
-		const availablePlatforms = _.keys(this.$platformsData.availablePlatforms);
+		const availablePlatforms = this.$mobileHelper.platformNames.map(p => p.toLowerCase());
 		for (const platform of availablePlatforms) {
 			const isPlatformInstalled = this.$fs.exists(path.join(projectData.platformsDir, platform.toLowerCase()));
 			if (isPlatformInstalled) {
-				const platformData = this.$platformsData.getPlatformData(platform.toLowerCase(), projectData);
+				const platformData = this.$platformsDataService.getPlatformData(platform.toLowerCase(), projectData);
 				const pluginDestinationPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME, "tns_modules");
 				await action(pluginDestinationPath, platform.toLowerCase(), platformData);
 			}
@@ -307,7 +255,7 @@ export class PluginsService implements IPluginsService {
 	}
 
 	private getInstalledFrameworkVersion(platform: string, projectData: IProjectData): string {
-		const platformData = this.$platformsData.getPlatformData(platform, projectData);
+		const platformData = this.$platformsDataService.getPlatformData(platform, projectData);
 		const frameworkData = this.$projectDataService.getNSValue(projectData.projectDir, platformData.frameworkPackageName);
 		return frameworkData.version;
 	}
@@ -316,7 +264,7 @@ export class PluginsService implements IPluginsService {
 		let isValid = true;
 
 		const installedFrameworkVersion = this.getInstalledFrameworkVersion(platform, projectData);
-		const pluginPlatformsData = pluginData.platformsData;
+		const pluginPlatformsData = pluginData.platformsDataService;
 		if (pluginPlatformsData) {
 			const versionRequiredByPlugin = (<any>pluginPlatformsData)[platform];
 			if (!versionRequiredByPlugin) {

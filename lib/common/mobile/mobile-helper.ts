@@ -1,9 +1,12 @@
 import * as helpers from "../helpers";
+import * as shell from "shelljs";
+import * as temp from "temp";
 
 export class MobileHelper implements Mobile.IMobileHelper {
 	private static DEVICE_PATH_SEPARATOR = "/";
 
 	constructor(private $errors: IErrors,
+		private $fs: IFileSystem,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants) { }
 
 	public get platformNames(): string[] {
@@ -57,6 +60,25 @@ export class MobileHelper implements Mobile.IMobileHelper {
 
 	public isiOSTablet(deviceName: string): boolean {
 		return deviceName && deviceName.toLowerCase().indexOf("ipad") !== -1;
+	}
+
+	public async getDeviceFileContent(device: Mobile.IDevice, deviceFilePath: string, projectData: IProjectData): Promise<string> {
+		temp.track();
+		const uniqueFilePath = temp.path({ suffix: ".tmp" });
+		const platform = device.deviceInfo.platform.toLowerCase();
+		try {
+			await device.fileSystem.getFile(deviceFilePath, projectData.projectIdentifiers[platform], uniqueFilePath);
+		} catch (e) {
+			return null;
+		}
+
+		if (this.$fs.exists(uniqueFilePath)) {
+			const text = this.$fs.readText(uniqueFilePath);
+			shell.rm(uniqueFilePath);
+			return text;
+		}
+
+		return null;
 	}
 }
 $injector.register("mobileHelper", MobileHelper);

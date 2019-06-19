@@ -9,14 +9,14 @@ export class ListiOSApps implements ICommand {
 		private $logger: ILogger,
 		private $projectData: IProjectData,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-		private $platformService: IPlatformService,
+		private $platformValidationService: IPlatformValidationService,
 		private $errors: IErrors,
 		private $prompter: IPrompter) {
 		this.$projectData.initializeProjectData();
 	}
 
 	public async execute(args: string[]): Promise<void> {
-		if (!this.$platformService.isPlatformSupportedForOS(this.$devicePlatformsConstants.iOS, this.$projectData)) {
+		if (!this.$platformValidationService.isPlatformSupportedForOS(this.$devicePlatformsConstants.iOS, this.$projectData)) {
 			this.$errors.fail(`Applications for platform ${this.$devicePlatformsConstants.iOS} can not be built on this OS`);
 		}
 

@@ -51,6 +51,7 @@ export class CommonLoggerStub implements ILogger {
 	printInfoMessageOnSameLine(message: string): void { }
 	async printMsgWithTimeout(message: string, timeout: number): Promise<void> { }
 	printOnStderr(formatStr?: any, ...args: any[]): void { }
+	isVerbose(): boolean { return false; }
 }
 
 export class ErrorsStub implements IErrors {

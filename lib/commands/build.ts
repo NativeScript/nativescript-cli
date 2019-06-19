@@ -5,63 +5,32 @@ export abstract class BuildCommandBase extends ValidatePlatformCommandBase {
 	constructor($options: IOptions,
 		protected $errors: IErrors,
 		$projectData: IProjectData,
-		$platformsData: IPlatformsData,
+		$platformsDataService: IPlatformsDataService,
 		protected $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-		$platformService: IPlatformService,
+		protected $buildController: IBuildController,
+		$platformValidationService: IPlatformValidationService,
 		private $bundleValidatorHelper: IBundleValidatorHelper,
-		protected $logger: ILogger,
-		protected $workflowService: IWorkflowService) {
-		super($options, $platformsData, $platformService, $projectData);
-		this.$projectData.initializeProjectData();
+		private $buildDataService: IBuildDataService,
+		protected $logger: ILogger) {
+			super($options, $platformsDataService, $platformValidationService, $projectData);
+			this.$projectData.initializeProjectData();
 	}
 
+	public dashedOptions = {
+		watch: { type: OptionType.Boolean, default: false, hasSensitiveValue: false },
+		hmr: { type: OptionType.Boolean, default: false, hasSensitiveValue: false },
+	};
+
 	public async executeCore(args: string[]): Promise<string> {
-		await this.$workflowService.handleLegacyWorkflow({ projectDir: this.$projectData.projectDir, settings: this.$options, skipWarnings: true });
 		const platform = args[0].toLowerCase();
-		const appFilesUpdaterOptions: IAppFilesUpdaterOptions = {
-			bundle: !!this.$options.bundle,
-			release: this.$options.release,
-			useHotModuleReload: this.$options.hmr
-		};
-		const platformInfo: IPreparePlatformInfo = {
-			platform,
-			appFilesUpdaterOptions,
-			platformTemplate: this.$options.platformTemplate,
-			projectData: this.$projectData,
-			config: this.$options,
-			env: this.$options.env
-		};
-
-		await this.$platformService.preparePlatform(platformInfo);
-		const buildConfig: IBuildConfig = {
-			buildForDevice: this.$options.forDevice,
-			iCloudContainerEnvironment: this.$options.iCloudContainerEnvironment,
-			projectDir: this.$options.path,
-			clean: this.$options.clean,
-			teamId: this.$options.teamId,
-			device: this.$options.device,
-			provision: this.$options.provision,
-			release: this.$options.release,
-			keyStoreAlias: this.$options.keyStoreAlias,
-			keyStorePath: this.$options.keyStorePath,
-			keyStoreAliasPassword: this.$options.keyStoreAliasPassword,
-			keyStorePassword: this.$options.keyStorePassword,
-			androidBundle: this.$options.aab
-		};
-
-		const outputPath = await this.$platformService.buildPlatform(platform, buildConfig, this.$projectData);
-
-		if (this.$options.copyTo) {
-			this.$platformService.copyLastOutput(platform, this.$options.copyTo, buildConfig, this.$projectData);
-		} else {
-			this.$logger.info(`The build result is located at: ${outputPath}`);
-		}
+		const buildData = this.$buildDataService.getBuildData(this.$projectData.projectDir, platform, this.$options);
+		const outputPath = await this.$buildController.prepareAndBuild(buildData);
 
 		return outputPath;
 	}
 
 	protected validatePlatform(platform: string): void {
-		if (!this.$platformService.isPlatformSupportedForOS(platform, this.$projectData)) {
+		if (!this.$platformValidationService.isPlatformSupportedForOS(platform, this.$projectData)) {
 			this.$errors.fail(`Applications for platform ${platform} can not be built on this OS`);
 		}
 
@@ -81,7 +50,7 @@ export abstract class BuildCommandBase extends ValidatePlatformCommandBase {
 			return false;
 		}
 
-		const result = await this.$platformService.validateOptions(this.$options.provision, this.$options.teamId, this.$projectData, platform);
+		const result = await this.$platformValidationService.validateOptions(this.$options.provision, this.$options.teamId, this.$projectData, platform);
 		return result;
 	}
 }
@@ -92,17 +61,18 @@ export class BuildIosCommand extends BuildCommandBase implements ICommand {
 	constructor(protected $options: IOptions,
 		$errors: IErrors,
 		$projectData: IProjectData,
-		$platformsData: IPlatformsData,
+		$platformsDataService: IPlatformsDataService,
 		$devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-		$platformService: IPlatformService,
+		$buildController: IBuildController,
+		$platformValidationService: IPlatformValidationService,
 		$bundleValidatorHelper: IBundleValidatorHelper,
 		$logger: ILogger,
-		$workflowService: IWorkflowService) {
-		super($options, $errors, $projectData, $platformsData, $devicePlatformsConstants, $platformService, $bundleValidatorHelper, $logger, $workflowService);
+		$buildDataService: IBuildDataService) {
+			super($options, $errors, $projectData, $platformsDataService, $devicePlatformsConstants, $buildController, $platformValidationService, $bundleValidatorHelper, $buildDataService, $logger);
 	}
 
 	public async execute(args: string[]): Promise<void> {
-		await this.executeCore([this.$platformsData.availablePlatforms.iOS]);
+		await this.executeCore([this.$devicePlatformsConstants.iOS.toLowerCase()]);
 	}
 
 	public async canExecute(args: string[]): Promise<boolean | ICanExecuteCommandOutput> {
@@ -127,18 +97,19 @@ export class BuildAndroidCommand extends BuildCommandBase implements ICommand {
 	constructor(protected $options: IOptions,
 		protected $errors: IErrors,
 		$projectData: IProjectData,
-		$platformsData: IPlatformsData,
+		platformsDataService: IPlatformsDataService,
 		$devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-		$platformService: IPlatformService,
+		$buildController: IBuildController,
+		$platformValidationService: IPlatformValidationService,
 		$bundleValidatorHelper: IBundleValidatorHelper,
 		protected $androidBundleValidatorHelper: IAndroidBundleValidatorHelper,
-		protected $logger: ILogger,
-		$workflowService: IWorkflowService) {
-		super($options, $errors, $projectData, $platformsData, $devicePlatformsConstants, $platformService, $bundleValidatorHelper, $logger, $workflowService);
+		$buildDataService: IBuildDataService,
+		protected $logger: ILogger) {
+			super($options, $errors, $projectData, platformsDataService, $devicePlatformsConstants, $buildController, $platformValidationService, $bundleValidatorHelper, $buildDataService, $logger);
 	}
 
 	public async execute(args: string[]): Promise<void> {
-		await this.executeCore([this.$platformsData.availablePlatforms.Android]);
+		await this.executeCore([this.$devicePlatformsConstants.Android.toLowerCase()]);
 
 		if (this.$options.aab) {
 			this.$logger.info(AndroidAppBundleMessages.ANDROID_APP_BUNDLE_DOCS_MESSAGE);

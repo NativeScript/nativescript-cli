@@ -2,12 +2,6 @@ import { FilePayload, Device, FilesPayload } from "nativescript-preview-sdk";
 import { EventEmitter } from "events";
 
 declare global {
-	interface IPreviewAppLiveSyncService extends EventEmitter {
-		initialize(data: IPreviewAppLiveSyncData): void;
-		syncFiles(data: IPreviewAppLiveSyncData, filesToSync: string[], filesToRemove: string[]): Promise<void>;
-		stopLiveSync(): Promise<void>;
-	}
-
 	interface IPreviewAppFilesService {
 		getInitialFilesPayload(liveSyncData: IPreviewAppLiveSyncData, platform: string, deviceId?: string): FilesPayload;
 		getFilesPayload(liveSyncData: IPreviewAppLiveSyncData, filesData: IPreviewAppFilesData, platform: string, deviceId?: string): FilesPayload;
@@ -18,7 +12,7 @@ declare global {
 		filesToRemove?: string[];
 	}
 
-	interface IPreviewAppLiveSyncData extends IProjectDir, IHasUseHotModuleReloadOption, IBundle, IEnvOptions { }
+	interface IPreviewAppLiveSyncData extends IProjectDir, IHasUseHotModuleReloadOption, IEnvOptions { }
 
 	interface IPreviewSdkService extends EventEmitter {
 		getQrCodeUrl(options: IGetQrCodeUrlOptions): string;
@@ -79,5 +73,10 @@ declare global {
 		publishKey: string;
 		subscribeKey: string;
 		default?: boolean;
+	}
+
+	interface IPreviewAppController {
+		startPreview(data: IPreviewAppLiveSyncData): Promise<IQrCodeImageData>;
+		stopPreview(): Promise<void>;
 	}
 }

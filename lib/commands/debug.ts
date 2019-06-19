@@ -7,24 +7,21 @@ export class DebugPlatformCommand extends ValidatePlatformCommandBase implements
 
 	constructor(private platform: string,
 		private $bundleValidatorHelper: IBundleValidatorHelper,
-		private $debugService: IDebugService,
 		protected $devicesService: Mobile.IDevicesService,
-		$platformService: IPlatformService,
+		$platformValidationService: IPlatformValidationService,
 		$projectData: IProjectData,
 		$options: IOptions,
-		$platformsData: IPlatformsData,
+		$platformsDataService: IPlatformsDataService,
 		protected $logger: ILogger,
 		protected $errors: IErrors,
 		private $debugDataService: IDebugDataService,
-		private $liveSyncService: IDebugLiveSyncService,
+		private $debugController: IDebugController,
 		private $liveSyncCommandHelper: ILiveSyncCommandHelper,
-		private $androidBundleValidatorHelper: IAndroidBundleValidatorHelper,
-		private $workflowService: IWorkflowService) {
-		super($options, $platformsData, $platformService, $projectData);
+		private $androidBundleValidatorHelper: IAndroidBundleValidatorHelper) {
+		super($options, $platformsDataService, $platformValidationService, $projectData);
 	}
 
 	public async execute(args: string[]): Promise<void> {
-		await this.$workflowService.handleLegacyWorkflow({ projectDir: this.$projectData.projectDir, settings: this.$options, skipWarnings: true });
 		await this.$devicesService.initialize({
 			platform: this.platform,
 			deviceId: this.$options.device,
@@ -32,18 +29,16 @@ export class DebugPlatformCommand extends ValidatePlatformCommandBase implements
 			skipDeviceDetectionInterval: true
 		});
 
-		const debugOptions = <IDebugOptions>_.cloneDeep(this.$options.argv);
-
 		const selectedDeviceForDebug = await this.$devicesService.pickSingleDevice({
 			onlyEmulators: this.$options.emulator,
 			onlyDevices: this.$options.forDevice,
 			deviceId: this.$options.device
 		});
 
-		const debugData = this.$debugDataService.createDebugData(this.$projectData, { device: selectedDeviceForDebug.deviceInfo.identifier });
-
 		if (this.$options.start) {
-			await this.$liveSyncService.printDebugInformation(await this.$debugService.debug(debugData, debugOptions));
+			const debugOptions = <IDebugOptions>_.cloneDeep(this.$options.argv);
+			const debugData = this.$debugDataService.getDebugData(selectedDeviceForDebug.deviceInfo.identifier, this.$projectData, debugOptions);
+			await this.$debugController.printDebugInformation(await this.$debugController.startDebug(debugData));
 			return;
 		}
 
@@ -51,7 +46,6 @@ export class DebugPlatformCommand extends ValidatePlatformCommandBase implements
 			deviceDebugMap: {
 				[selectedDeviceForDebug.deviceInfo.identifier]: true
 			},
-			// This will default in the liveSyncCommandHelper
 			buildPlatform: undefined,
 			skipNativePrepare: false
 		});
@@ -60,7 +54,7 @@ export class DebugPlatformCommand extends ValidatePlatformCommandBase implements
 	public async canExecute(args: string[]): Promise<ICanExecuteCommandOutput> {
 		this.$androidBundleValidatorHelper.validateNoAab();
 
-		if (!this.$platformService.isPlatformSupportedForOS(this.platform, this.$projectData)) {
+		if (!this.$platformValidationService.isPlatformSupportedForOS(this.platform, this.$projectData)) {
 			this.$errors.fail(`Applications for platform ${this.platform} can not be built on this OS`);
 		}
 
@@ -87,7 +81,7 @@ export class DebugIOSCommand implements ICommand {
 
 	constructor(protected $errors: IErrors,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-		private $platformService: IPlatformService,
+		private $platformValidationService: IPlatformValidationService,
 		private $options: IOptions,
 		private $injector: IInjector,
 		private $sysInfo: ISysInfo,
@@ -110,7 +104,7 @@ export class DebugIOSCommand implements ICommand {
 	}
 
 	public async canExecute(args: string[]): Promise<ICanExecuteCommandOutput> {
-		if (!this.$platformService.isPlatformSupportedForOS(this.$devicePlatformsConstants.iOS, this.$projectData)) {
+		if (!this.$platformValidationService.isPlatformSupportedForOS(this.$devicePlatformsConstants.iOS, this.$projectData)) {
 			this.$errors.fail(`Applications for platform ${this.$devicePlatformsConstants.iOS} can not be built on this OS`);
 		}
 

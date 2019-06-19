@@ -97,12 +97,6 @@ export function regExpEscape(input: string): string {
 	return input.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-export function isRecommendedAarFile(foundAarFile: string, packageJsonPluginName: string): boolean {
-	const filename = foundAarFile.replace(/^.*[\\\/]/, '');
-	packageJsonPluginName = getShortPluginName(packageJsonPluginName);
-	return `${packageJsonPluginName}.aar` === filename;
-}
-
 export function getShortPluginName(pluginName: string): string {
 	return sanitizePluginName(pluginName).replace(/[\-]/g, "_");
 }
@@ -136,10 +130,12 @@ export function deferPromise<T>(): IDeferPromise<T> {
 	let isResolved = false;
 	let isRejected = false;
 	let promise: Promise<T>;
+	let result: T | PromiseLike<T>;
 
 	promise = new Promise<T>((innerResolve, innerReject) => {
 		resolve = (value?: T | PromiseLike<T>) => {
 			isResolved = true;
+			result = value;
 
 			return innerResolve(value);
 		};
@@ -157,7 +153,8 @@ export function deferPromise<T>(): IDeferPromise<T> {
 		reject,
 		isResolved: () => isResolved,
 		isRejected: () => isRejected,
-		isPending: () => !isResolved && !isRejected
+		isPending: () => !isResolved && !isRejected,
+		getResult: () => result
 	};
 }
 

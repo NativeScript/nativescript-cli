@@ -1,27 +1,31 @@
 import { ANDROID_RELEASE_BUILD_ERROR_MESSAGE } from "../constants";
 import { ValidatePlatformCommandBase } from "./command-base";
+import { DeployCommandHelper } from "../helpers/deploy-command-helper";
 
 export class DeployOnDeviceCommand extends ValidatePlatformCommandBase implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
 
-	constructor($platformService: IPlatformService,
+	public dashedOptions = {
+		hmr: { type: OptionType.Boolean, default: false, hasSensitiveValue: false },
+	};
+
+	constructor($platformValidationService: IPlatformValidationService,
 		private $platformCommandParameter: ICommandParameter,
 		$options: IOptions,
 		$projectData: IProjectData,
-		private $deployCommandHelper: IDeployCommandHelper,
 		private $errors: IErrors,
 		private $mobileHelper: Mobile.IMobileHelper,
-		$platformsData: IPlatformsData,
+		$platformsDataService: IPlatformsDataService,
 		private $bundleValidatorHelper: IBundleValidatorHelper,
+		private $deployCommandHelper: DeployCommandHelper,
 		private $androidBundleValidatorHelper: IAndroidBundleValidatorHelper) {
-		super($options, $platformsData, $platformService, $projectData);
-		this.$projectData.initializeProjectData();
+			super($options, $platformsDataService, $platformValidationService, $projectData);
+			this.$projectData.initializeProjectData();
 	}
 
 	public async execute(args: string[]): Promise<void> {
-		const deployPlatformInfo = this.$deployCommandHelper.getDeployPlatformInfo(args[0]);
-
-		return this.$platformService.deployPlatform(deployPlatformInfo);
+		const platform = args[0].toLowerCase();
+		await this.$deployCommandHelper.deploy(platform);
 	}
 
 	public async canExecute(args: string[]): Promise<boolean | ICanExecuteCommandOutput> {

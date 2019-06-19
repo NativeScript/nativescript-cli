@@ -135,6 +135,10 @@ export class Logger implements ILogger {
 		this.info(formattedMessage, { [LoggerConfigData.skipNewLine]: true });
 	}
 
+	public isVerbose(): boolean {
+		return log4js.levels.DEBUG.isGreaterThanOrEqualTo(this.getLevel());
+	}
+
 	private logMessage(inputData: any[], logMethod: string): void {
 		this.initialize();
 
@@ -198,37 +202,6 @@ export class Logger implements ILogger {
 			}
 
 			return argument;
-		});
-	}
-
-	/*******************************************************************************************
-	 * Metods below are deprecated. Delete them in 6.0.0 release:                              *
-	 * Present only for backwards compatibility as some plugins (nativescript-plugin-firebase) *
-	 * use these methods in their hooks                                                        *
-	 *******************************************************************************************/
-
-	out(...args: any[]): void {
-		this.info(...args);
-	}
-
-	write(...args: any[]): void {
-		this.info(...args, { [LoggerConfigData.skipNewLine]: true });
-	}
-
-	printOnStderr(...args: string[]): void {
-		this.error(...args);
-	}
-
-	printInfoMessageOnSameLine(message: string): void {
-		this.info(message, { [LoggerConfigData.skipNewLine]: true });
-	}
-
-	printMsgWithTimeout(message: string, timeout: number): Promise<void> {
-		return new Promise<void>((resolve, reject) => {
-			setTimeout(() => {
-				this.printInfoMessageOnSameLine(message);
-				resolve();
-			}, timeout);
 		});
 	}
 }

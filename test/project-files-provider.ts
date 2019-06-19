@@ -17,7 +17,7 @@ function createTestInjector(): IInjector {
 
 	testInjector.register('projectData', stubs.ProjectDataStub);
 
-	testInjector.register("platformsData", {
+	testInjector.register("platformsDataService", {
 		getPlatformData: (platform: string) => {
 			return {
 				appDestinationDirectoryPath: appDestinationDirectoryPath,

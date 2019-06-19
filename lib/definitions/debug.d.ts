@@ -1,26 +1,5 @@
-/**
- * Describes information for starting debug process.
- */
-interface IDebugData extends IAppDebugData, Mobile.IDeviceIdentifier {
-}
-
-/**
- * Describes information for application that will be debugged.
- */
-interface IAppDebugData extends IProjectDir {
-	/**
-	 * Application identifier of the app that it will be debugged.
-	 */
+interface IDebugData extends IProjectDir, Mobile.IDeviceIdentifier, IOptionalDebuggingOptions {
 	applicationIdentifier: string;
-
-	/**
-	 * Path to .app built for iOS Simulator.
-	 */
-	pathToAppPackage?: string;
-
-	/**
-	 * The name of the application, for example `MyProject`.
-	 */
 	projectName?: string;
 }
 
@@ -108,33 +87,12 @@ interface IDebugOptions {
 interface IDebugDataService {
 	/**
 	 * Creates the debug data based on specified options.
+	 * @param {string} deviceIdentifier The identifier of the device
 	 * @param {IProjectData} projectData The data describing project that will be debugged.
-	 * @param {IOptions} options The options based on which debugData will be created
+	 * @param {IDebugOptions} debugOptions The debug options
 	 * @returns {IDebugData} Data describing the required information for starting debug process.
 	 */
-	createDebugData(projectData: IProjectData, options: IDeviceIdentifier): IDebugData;
-}
-
-/**
- * Describes methods for debug operation.
- */
-interface IDebugServiceBase extends NodeJS.EventEmitter {
-	/**
-	 * Starts debug operation based on the specified debug data.
-	 * @param {IDebugData} debugData Describes information for device and application that will be debugged.
-	 * @param {IDebugOptions} debugOptions Describe possible options to modify the behaivor of the debug operation, for example stop on the first line.
-	 * @returns {Promise<IDebugInformation>} Device Identifier, full url and port where the frontend client can be connected.
-	 */
-	debug(debugData: IDebugData, debugOptions: IDebugOptions): Promise<IDebugInformation>;
-}
-
-interface IDebugService extends IDebugServiceBase {
-	/**
-	 * Stops debug operation for a specific device.
-	 * @param {string} deviceIdentifier Identifier of the device fo which debugging will be stopped.
-	 * @returns {Promise<void>}
-	 */
-	debugStop(deviceIdentifier: string): Promise<void>;
+	 getDebugData(deviceIdentifier: string, projectData: IProjectData, debugOptions: IDebugOptions): IDebugData;
 }
 
 /**
@@ -158,4 +116,26 @@ interface IDeviceDebugService extends IPlatform, NodeJS.EventEmitter {
 
 interface IDebugResultInfo {
 	debugUrl: string;
+}
+
+interface IAppDebugData extends IProjectDir {
+	/**
+	 * Application identifier of the app that it will be debugged.
+	 */
+	applicationIdentifier: string;
+
+	/**
+	 * The name of the application, for example `MyProject`.
+	 */
+	projectName?: string;
+}
+
+interface IDebugController {
+	startDebug(debugData: IDebugData): Promise<IDebugInformation>;
+	stopDebug(deviceIdentifier: string): Promise<void>;
+	printDebugInformation(debugInformation: IDebugInformation, fireDebuggerAttachedEvent?: boolean): IDebugInformation;
+	enableDebuggingCoreWithoutWaitingCurrentAction(projectDir: string, deviceIdentifier: string, debugOptions: IDebugOptions): Promise<IDebugInformation>;
+	enableDebugging(enableDebuggingData: IEnableDebuggingData): Promise<IDebugInformation>[];
+	disableDebugging(disableDebuggingData: IDisableDebuggingData): Promise<void>;
+	attachDebugger(attachDebuggerData: IAttachDebuggerData): Promise<IDebugInformation>;
 }

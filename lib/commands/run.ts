@@ -8,18 +8,16 @@ export class RunCommandBase implements ICommand {
 	public platform: string;
 	constructor(
 		private $analyticsService: IAnalyticsService,
-		private $projectData: IProjectData,
+		private $androidBundleValidatorHelper: IAndroidBundleValidatorHelper,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $errors: IErrors,
 		private $hostInfo: IHostInfo,
 		private $liveSyncCommandHelper: ILiveSyncCommandHelper,
-		private $androidBundleValidatorHelper: IAndroidBundleValidatorHelper,
-		private $options: IOptions,
-		private $workflowService: IWorkflowService) { }
+		private $projectData: IProjectData
+	) { }
 
 	public allowedParameters: ICommandParameter[] = [];
 	public async execute(args: string[]): Promise<void> {
-		await this.$workflowService.handleLegacyWorkflow({ projectDir: this.$projectData.projectDir, settings: this.$options, skipWarnings: true });
 		await this.$analyticsService.trackPreviewAppData(this.platform, this.$projectData.projectDir);
 		return this.$liveSyncCommandHelper.executeCommandLiveSync(this.platform, this.liveSyncCommandHelperAdditionalOptions);
 	}
@@ -38,12 +36,8 @@ export class RunCommandBase implements ICommand {
 			this.platform = this.$devicePlatformsConstants.Android;
 		}
 
-		const validatePlatformOutput = await this.$liveSyncCommandHelper.validatePlatform(this.platform);
+		await this.$liveSyncCommandHelper.validatePlatform(this.platform);
 
-		if (this.platform && validatePlatformOutput && validatePlatformOutput[this.platform.toLowerCase()]) {
-			const checkEnvironmentRequirementsOutput = validatePlatformOutput[this.platform.toLowerCase()].checkEnvironmentRequirementsOutput;
-			this.liveSyncCommandHelperAdditionalOptions.syncToPreviewApp = checkEnvironmentRequirementsOutput && checkEnvironmentRequirementsOutput.selectedOption === "Sync to Playground";
-		}
 		return true;
 	}
 }
@@ -64,13 +58,14 @@ export class RunIosCommand implements ICommand {
 		return this.$devicePlatformsConstants.iOS;
 	}
 
-	constructor(private $platformsData: IPlatformsData,
+	constructor(
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $errors: IErrors,
 		private $injector: IInjector,
-		private $platformService: IPlatformService,
+		private $options: IOptions,
+		private $platformValidationService: IPlatformValidationService,
 		private $projectDataService: IProjectDataService,
-		private $options: IOptions) {
+	) {
 	}
 
 	public async execute(args: string[]): Promise<void> {
@@ -80,11 +75,11 @@ export class RunIosCommand implements ICommand {
 	public async canExecute(args: string[]): Promise<boolean> {
 		const projectData = this.$projectDataService.getProjectData();
 
-		if (!this.$platformService.isPlatformSupportedForOS(this.$devicePlatformsConstants.iOS, projectData)) {
+		if (!this.$platformValidationService.isPlatformSupportedForOS(this.$devicePlatformsConstants.iOS, projectData)) {
 			this.$errors.fail(`Applications for platform ${this.$devicePlatformsConstants.iOS} can not be built on this OS`);
 		}
 
-		const result = await this.runCommand.canExecute(args) && await this.$platformService.validateOptions(this.$options.provision, this.$options.teamId, projectData, this.$platformsData.availablePlatforms.iOS);
+		const result = await this.runCommand.canExecute(args) && await this.$platformValidationService.validateOptions(this.$options.provision, this.$options.teamId, projectData, this.$devicePlatformsConstants.iOS.toLowerCase());
 		return result;
 	}
 }
@@ -105,13 +100,14 @@ export class RunAndroidCommand implements ICommand {
 		return this.$devicePlatformsConstants.Android;
 	}
 
-	constructor(private $platformsData: IPlatformsData,
+	constructor(
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $errors: IErrors,
 		private $injector: IInjector,
-		private $platformService: IPlatformService,
+		private $options: IOptions,
+		private $platformValidationService: IPlatformValidationService,
 		private $projectData: IProjectData,
-		private $options: IOptions) { }
+	) { }
 
 	public execute(args: string[]): Promise<void> {
 		return this.runCommand.execute(args);
@@ -120,7 +116,7 @@ export class RunAndroidCommand implements ICommand {
 	public async canExecute(args: string[]): Promise<boolean> {
 		await this.runCommand.canExecute(args);
 
-		if (!this.$platformService.isPlatformSupportedForOS(this.$devicePlatformsConstants.Android, this.$projectData)) {
+		if (!this.$platformValidationService.isPlatformSupportedForOS(this.$devicePlatformsConstants.Android, this.$projectData)) {
 			this.$errors.fail(`Applications for platform ${this.$devicePlatformsConstants.Android} can not be built on this OS`);
 		}
 
@@ -128,7 +124,7 @@ export class RunAndroidCommand implements ICommand {
 			this.$errors.fail(ANDROID_RELEASE_BUILD_ERROR_MESSAGE);
 		}
 
-		return this.$platformService.validateOptions(this.$options.provision, this.$options.teamId, this.$projectData, this.$platformsData.availablePlatforms.Android);
+		return this.$platformValidationService.validateOptions(this.$options.provision, this.$options.teamId, this.$projectData, this.$devicePlatformsConstants.Android.toLowerCase());
 	}
 }
 

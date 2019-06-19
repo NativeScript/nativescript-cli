@@ -4,7 +4,7 @@ import * as path from "path";
 import { ProjectFilesProviderBase } from "../common/services/project-files-provider-base";
 
 export class ProjectFilesProvider extends ProjectFilesProviderBase {
-	constructor(private $platformsData: IPlatformsData,
+	constructor(private $platformsDataService: IPlatformsDataService,
 		$mobileHelper: Mobile.IMobileHelper,
 		$options: IOptions) {
 		super($mobileHelper, $options);
@@ -13,7 +13,7 @@ export class ProjectFilesProvider extends ProjectFilesProviderBase {
 	private static INTERNAL_NONPROJECT_FILES = ["**/*.ts"];
 
 	public mapFilePath(filePath: string, platform: string, projectData: IProjectData, projectFilesConfig: IProjectFilesConfig): string {
-		const platformData = this.$platformsData.getPlatformData(platform.toLowerCase(), projectData);
+		const platformData = this.$platformsDataService.getPlatformData(platform.toLowerCase(), projectData);
 		const parsedFilePath = this.getPreparedFilePath(filePath, projectFilesConfig);
 		let mappedFilePath = "";
 		let relativePath;

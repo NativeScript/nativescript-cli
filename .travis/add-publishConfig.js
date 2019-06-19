@@ -26,6 +26,9 @@ switch (branch) {
 	case "master":
 		packageDef.publishConfig.tag = "next";
 		break;
+	case "feature/webpack-only":
+		packageDef.publishConfig.tag = "webpack";
+		break;
 	default:
 		throw new Error(`Unable to publish as the branch ${branch} does not have corresponding tag. Supported branches are master (next tag), release (rc tag) and release-patch (patch tag)`);
 }

@@ -1,16 +1,19 @@
 export class CleanCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
 
-	constructor(private $options: IOptions,
-		private $projectData: IProjectData,
-		private $platformService: IPlatformService,
+	constructor(
 		private $errors: IErrors,
-		private $platformEnvironmentRequirements: IPlatformEnvironmentRequirements) {
+		private $options: IOptions,
+		private $platformCommandHelper: IPlatformCommandHelper,
+		private $platformValidationService: IPlatformValidationService,
+		private $platformEnvironmentRequirements: IPlatformEnvironmentRequirements,
+		private $projectData: IProjectData
+	) {
 		this.$projectData.initializeProjectData();
 	}
 
 	public async execute(args: string[]): Promise<void> {
-		await this.$platformService.cleanPlatforms(args, this.$options.platformTemplate, this.$projectData, this.$options);
+		await this.$platformCommandHelper.cleanPlatforms(args, this.$projectData, this.$options.frameworkPath);
 	}
 
 	public async canExecute(args: string[]): Promise<boolean> {
@@ -19,13 +22,13 @@ export class CleanCommand implements ICommand {
 		}
 
 		_.each(args, platform => {
-			this.$platformService.validatePlatform(platform, this.$projectData);
+			this.$platformValidationService.validatePlatform(platform, this.$projectData);
 		});
 
 		for (const platform of args) {
-			this.$platformService.validatePlatformInstalled(platform, this.$projectData);
+			this.$platformValidationService.validatePlatformInstalled(platform, this.$projectData);
 
-			const currentRuntimeVersion = this.$platformService.getCurrentPlatformVersion(platform, this.$projectData);
+			const currentRuntimeVersion = this.$platformCommandHelper.getCurrentPlatformVersion(platform, this.$projectData);
 			await this.$platformEnvironmentRequirements.checkEnvironmentRequirements({
 				platform,
 				projectDir: this.$projectData.projectDir,

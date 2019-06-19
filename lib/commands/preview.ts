@@ -7,29 +7,26 @@ export class PreviewCommand implements ICommand {
 	constructor(private $analyticsService: IAnalyticsService,
 		private $bundleValidatorHelper: IBundleValidatorHelper,
 		private $errors: IErrors,
-		private $liveSyncService: ILiveSyncService,
 		private $logger: ILogger,
+		private $previewAppController: IPreviewAppController,
 		private $networkConnectivityValidator: INetworkConnectivityValidator,
 		private $projectData: IProjectData,
 		private $options: IOptions,
 		private $previewAppLogProvider: IPreviewAppLogProvider,
 		private $previewQrCodeService: IPreviewQrCodeService,
-		protected $workflowService: IWorkflowService,
 		$cleanupService: ICleanupService) {
 		this.$analyticsService.setShouldDispose(false);
 		$cleanupService.setShouldDispose(false);
 	}
 
 	public async execute(): Promise<void> {
-		await this.$workflowService.handleLegacyWorkflow({ projectDir: this.$projectData.projectDir, settings: this.$options, skipWarnings: true });
 		this.$previewAppLogProvider.on(DEVICE_LOG_EVENT_NAME, (deviceId: string, message: string) => {
 			this.$logger.info(message);
 		});
 
-		await this.$liveSyncService.liveSyncToPreviewApp({
-			bundle: !!this.$options.bundle,
-			useHotModuleReload: this.$options.hmr,
+		await this.$previewAppController.startPreview({
 			projectDir: this.$projectData.projectDir,
+			useHotModuleReload: this.$options.hmr,
 			env: this.$options.env
 		});
 

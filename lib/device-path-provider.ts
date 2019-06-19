@@ -25,7 +25,7 @@ export class DevicePathProvider implements IDevicePathProvider {
 			projectRoot = `${LiveSyncPaths.ANDROID_TMP_DIR_NAME}/${options.appIdentifier}`;
 			if (!options.getDirname) {
 				const hashService = (<Mobile.IAndroidDevice>device).fileSystem.getDeviceHashService(options.appIdentifier);
-				const hashFile = options.syncAllFiles ? null : await hashService.doesShasumFileExistsOnDevice();
+				const hashFile = await hashService.doesShasumFileExistsOnDevice();
 				const syncFolderName = options.watch || hashFile ? LiveSyncPaths.SYNC_DIR_NAME : LiveSyncPaths.FULLSYNC_DIR_NAME;
 				projectRoot = path.join(projectRoot, syncFolderName);
 			}

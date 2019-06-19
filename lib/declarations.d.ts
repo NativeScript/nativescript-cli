@@ -433,18 +433,9 @@ interface IOpener {
 	open(target: string, appname: string): void;
 }
 
-interface IBundle {
-	bundle: boolean;
-}
-
 interface IBundleString {
 	bundle: string;
 }
-
-interface IPlatformTemplate {
-	platformTemplate: string;
-}
-
 
 interface IClean {
 	clean: boolean;
@@ -474,10 +465,6 @@ interface INpmInstallConfigurationOptions extends INpmInstallConfigurationOption
 	disableNpmInstall: boolean;
 }
 
-interface ICreateProjectOptions extends INpmInstallConfigurationOptionsBase {
-	pathToTemplate?: string;
-}
-
 interface IGenerateOptions {
 	collection?: string;
 }
@@ -501,7 +488,7 @@ interface IAndroidBundleOptions {
 	aab: boolean;
 }
 
-interface IOptions extends IRelease, IDeviceIdentifier, IJustLaunch, IAvd, IAvailableDevices, IProfileDir, IHasEmulatorOption, IBundleString, IPlatformTemplate, IHasEmulatorOption, IClean, IProvision, ITeamIdentifier, IAndroidReleaseOptions, IAndroidBundleOptions, INpmInstallConfigurationOptions, IPort, IEnvOptions, IPluginSeedOptions, IGenerateOptions {
+interface IOptions extends IRelease, IDeviceIdentifier, IJustLaunch, IAvd, IAvailableDevices, IProfileDir, IHasEmulatorOption, IBundleString, IHasEmulatorOption, IClean, IProvision, ITeamIdentifier, IAndroidReleaseOptions, IAndroidBundleOptions, INpmInstallConfigurationOptions, IPort, IEnvOptions, IPluginSeedOptions, IGenerateOptions {
 	argv: IYargArgv;
 	validateOptions(commandSpecificDashedOptions?: IDictionary<IDashedOption>, projectData?: IProjectData): void;
 	options: IDictionary<IDashedOption>;
@@ -530,7 +517,6 @@ interface IOptions extends IRelease, IDeviceIdentifier, IJustLaunch, IAvd, IAvai
 	file: string;
 	analyticsClient: string;
 	force: boolean;
-	companion: boolean;
 	sdk: string;
 	template: string;
 	certificate: string;
@@ -563,7 +549,6 @@ interface IOptions extends IRelease, IDeviceIdentifier, IJustLaunch, IAvd, IAvai
 	javascript: boolean;
 	androidTypings: boolean;
 	production: boolean; //npm flag
-	syncAllFiles: boolean;
 	chrome: boolean;
 	inspector: boolean; // the counterpart to --chrome
 	background: string;
@@ -572,8 +557,6 @@ interface IOptions extends IRelease, IDeviceIdentifier, IJustLaunch, IAvd, IAvai
 	analyticsLogFile: string;
 	performance: Object;
 	cleanupLogFile: string;
-	workflow: any;
-	printMessagesForDeprecatedOptions(logger: ILogger): void;
 }
 
 interface IEnvOptions {
@@ -586,26 +569,20 @@ interface IHasAndroidBundle {
 	androidBundle?: boolean;
 }
 
-interface IAppFilesUpdaterOptions extends IBundle, IRelease, IOptionalWatchAllFiles, IHasUseHotModuleReloadOption { }
-
-interface IPlatformBuildData extends IAppFilesUpdaterOptions, IBuildConfig, IEnvOptions { }
+interface IPlatformBuildData extends IRelease, IHasUseHotModuleReloadOption, IBuildConfig, IEnvOptions { }
 
 interface IDeviceEmulator extends IHasEmulatorOption, IDeviceIdentifier { }
 
 interface IRunPlatformOptions extends IJustLaunch, IDeviceEmulator { }
 
-interface IDeployPlatformOptions extends IAndroidReleaseOptions, IPlatformTemplate, IRelease, IClean, IDeviceEmulator, IProvision, ITeamIdentifier, IProjectDir {
+interface IDeployPlatformOptions extends IAndroidReleaseOptions, IRelease, IClean, IDeviceEmulator, IProvision, ITeamIdentifier, IProjectDir {
 	forceInstall?: boolean;
 }
 
-interface IUpdatePlatformOptions extends IPlatformTemplate {
+interface IUpdatePlatformOptions {
 	currentVersion: string;
 	newVersion: string;
 	canUpdate: boolean;
-}
-
-interface IProjectInitService {
-	initialize(): Promise<void>;
 }
 
 interface IInfoService {
@@ -848,10 +825,10 @@ interface IXcprojService {
 	/**
 	 * Returns the path to the xcodeproj file
 	 * @param projectData Information about the project.
-	 * @param platformData Information about the platform.
+	 * @param projectRoot The root folder of native project.
 	 * @return {string} The full path to the xcodeproj
 	 */
-	getXcodeprojPath(projectData: IProjectData, platformData: IPlatformData): string;
+	getXcodeprojPath(projectData: IProjectData, projectRoot: string): string;
 	/**
 	 * Checks whether the system needs xcproj to execute ios builds successfully.
 	 * In case the system does need xcproj but does not have it, prints an error message.
@@ -916,18 +893,6 @@ interface IXcconfigService {
 	 * @returns {Promise<void>}
 	 */
 	mergeFiles(sourceFile: string, destinationFile: string): Promise<void>;
-}
-
-/**
- * Describes helper used during execution of deploy commands.
- */
-interface IDeployCommandHelper {
-	/**
-	 * Retrieves data needed to execute deploy command.
-	 * @param {string} platform platform to which to deploy - could be android or ios.
-	 * @return {IDeployPlatformInfo} data needed to execute deploy command.
-	 */
-	getDeployPlatformInfo(platform: string): IDeployPlatformInfo;
 }
 
 /**
@@ -1037,4 +1002,40 @@ interface IRuntimeGradleVersions {
 
 interface INetworkConnectivityValidator {
 	validate(): Promise<void>;
+}
+
+interface IPlatformValidationService {
+	/**
+	 * Ensures the passed platform is a valid one (from the supported ones)
+	 */
+	validatePlatform(platform: string, projectData: IProjectData): void;
+
+	/**
+	 * Gets first chance to validate the options provided as command line arguments.
+	 * If no platform is provided or a falsy (null, undefined, "", false...) platform is provided,
+	 * the options will be validated for all available platforms.
+	 */
+	validateOptions(provision: true | string, teamId: true | string, projectData: IProjectData, platform?: string): Promise<boolean>;
+
+
+	validatePlatformInstalled(platform: string, projectData: IProjectData): void;
+
+	/**
+	 * Checks whether passed platform can be built on the current OS
+	 * @param {string} platform The mobile platform.
+	 * @param {IProjectData} projectData DTO with information about the project.
+	 * @returns {boolean} Whether the platform is supported for current OS or not.
+	 */
+	isPlatformSupportedForOS(platform: string, projectData: IProjectData): boolean;
+}
+
+interface IPlatformCommandHelper {
+	addPlatforms(platforms: string[], projectData: IProjectData, frameworkPath: string): Promise<void>;
+	cleanPlatforms(platforms: string[], projectData: IProjectData, framworkPath: string): Promise<void>;
+	removePlatforms(platforms: string[], projectData: IProjectData): Promise<void>;
+	updatePlatforms(platforms: string[], projectData: IProjectData): Promise<void>;
+	getInstalledPlatforms(projectData: IProjectData): string[];
+	getAvailablePlatforms(projectData: IProjectData): string[];
+	getPreparedPlatforms(projectData: IProjectData): string[];
+	getCurrentPlatformVersion(platform: string, projectData: IProjectData): string;
 }

@@ -667,11 +667,6 @@ interface IDebugData {
 	applicationIdentifier: string;
 
 	/**
-	 * Path to .app built for iOS Simulator.
-	 */
-	pathToAppPackage?: string;
-
-	/**
 	 * The name of the application, for example `MyProject`.
 	 */
 	projectName?: string;

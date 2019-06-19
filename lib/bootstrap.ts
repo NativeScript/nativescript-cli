@@ -11,12 +11,20 @@ $injector.require("performanceService", "./services/performance-service");
 $injector.requirePublic("projectService", "./services/project-service");
 $injector.require("androidProjectService", "./services/android-project-service");
 $injector.require("androidPluginBuildService", "./services/android-plugin-build-service");
+$injector.require("gradleCommandService", "./services/android/gradle-command-service");
+$injector.require("gradleBuildService", "./services/android/gradle-build-service");
+$injector.require("gradleBuildArgsService", "./services/android/gradle-build-args-service");
 $injector.require("iOSEntitlementsService", "./services/ios-entitlements-service");
 $injector.require("iOSExtensionsService", "./services/ios-extensions-service");
 $injector.require("iOSWatchAppService", "./services/ios-watch-app-service");
 $injector.require("iOSProjectService", "./services/ios-project-service");
 $injector.require("iOSProvisionService", "./services/ios-provision-service");
 $injector.require("xcconfigService", "./services/xcconfig-service");
+$injector.require("iOSSigningService", "./services/ios/ios-signing-service");
+$injector.require("xcodebuildArgsService", "./services/ios/xcodebuild-args-service");
+$injector.require("xcodebuildCommandService", "./services/ios/xcodebuild-command-service");
+$injector.require("xcodebuildService", "./services/ios/xcodebuild-service");
+$injector.require("exportOptionsPlistService", "./services/ios/export-options-plist-service");
 
 $injector.require("cocoapodsService", "./services/cocoapods-service");
 $injector.require("cocoaPodsPlatformManager", "./services/cocoapods-platform-manager");
@@ -25,13 +33,31 @@ $injector.require("projectTemplatesService", "./services/project-templates-servi
 $injector.require("projectNameService", "./services/project-name-service");
 $injector.require("tnsModulesService", "./services/tns-modules-service");
 
-$injector.require("platformsData", "./platforms-data");
-$injector.require("platformService", "./services/platform-service");
-$injector.require("preparePlatformJSService", "./services/prepare-platform-js-service");
-$injector.require("preparePlatformNativeService", "./services/prepare-platform-native-service");
+$injector.require("platformsDataService", "./services/platforms-data-service");
+$injector.require("addPlatformService", "./services/platform/add-platform-service");
+$injector.require("buildInfoFileService", "./services/build-info-file-service");
+$injector.require("prepareNativePlatformService", "./services/platform/prepare-native-platform-service");
+$injector.require("platformValidationService", "./services/platform/platform-validation-service");
 
+$injector.require("buildArtefactsService", "./services/build-artefacts-service");
+
+$injector.require("deviceInstallAppService", "./services/device/device-install-app-service");
+
+$injector.require("platformController", "./controllers/platform-controller");
+$injector.require("prepareController", "./controllers/prepare-controller");
+$injector.require("deployController", "./controllers/deploy-controller");
+$injector.requirePublicClass("buildController", "./controllers/build-controller");
+$injector.requirePublicClass("runController", "./controllers/run-controller");
+$injector.requirePublicClass("debugController", "./controllers/debug-controller");
+$injector.requirePublicClass("previewAppController", "./controllers/preview-app-controller");
+
+$injector.require("prepareDataService", "./services/prepare-data-service");
+$injector.require("buildDataService", "./services/build-data-service");
+
+$injector.require("liveSyncServiceResolver", "./resolvers/livesync-service-resolver");
+
+$injector.require("liveSyncProcessDataService", "./services/livesync-process-data-service");
 $injector.require("debugDataService", "./services/debug-data-service");
-$injector.requirePublicClass("debugService", "./services/debug-service");
 $injector.require("iOSDeviceDebugService", "./services/ios-device-debug-service");
 $injector.require("androidDeviceDebugService", "./services/android-device-debug-service");
 
@@ -39,8 +65,6 @@ $injector.require("userSettingsService", "./services/user-settings-service");
 $injector.requirePublic("analyticsSettingsService", "./services/analytics-settings-service");
 $injector.require("analyticsService", "./services/analytics/analytics-service");
 $injector.require("googleAnalyticsProvider", "./services/analytics/google-analytics-provider");
-
-$injector.require("emulatorSettingsService", "./services/emulator-settings-service");
 
 $injector.require("platformCommandParameter", "./platform-command-param");
 $injector.requireCommand("create", "./commands/create-project");
@@ -59,8 +83,6 @@ $injector.requireCommand("debug|ios", "./commands/debug");
 $injector.requireCommand("debug|android", "./commands/debug");
 
 $injector.requireCommand("prepare", "./commands/prepare");
-$injector.requireCommand("clean-app|ios", "./commands/clean-app");
-$injector.requireCommand("clean-app|android", "./commands/clean-app");
 $injector.requireCommand("build|ios", "./commands/build");
 $injector.requireCommand("build|android", "./commands/build");
 $injector.requireCommand("deploy", "./commands/deploy");
@@ -109,9 +131,6 @@ $injector.require("xcprojService", "./services/xcproj-service");
 $injector.require("versionsService", "./services/versions-service");
 $injector.requireCommand("install", "./commands/install");
 
-$injector.require("projectInitService", "./services/project-init-service");
-$injector.requireCommand("init", "./commands/init");
-
 $injector.require("infoService", "./services/info-service");
 $injector.requireCommand("info", "./commands/info");
 
@@ -127,17 +146,16 @@ $injector.require("bundleValidatorHelper", "./helpers/bundle-validator-helper");
 $injector.require("androidBundleValidatorHelper", "./helpers/android-bundle-validator-helper");
 $injector.require("liveSyncCommandHelper", "./helpers/livesync-command-helper");
 $injector.require("deployCommandHelper", "./helpers/deploy-command-helper");
+$injector.require("platformCommandHelper", "./helpers/platform-command-helper");
 $injector.require("optionsTracker", "./helpers/options-track-helper");
 
 $injector.requirePublicClass("localBuildService", "./services/local-build-service");
-$injector.requirePublicClass("liveSyncService", "./services/livesync/livesync-service");
 $injector.require("LiveSyncSocket", "./services/livesync/livesync-socket");
 $injector.requirePublicClass("androidLivesyncTool", "./services/livesync/android-livesync-tool");
 $injector.require("androidLiveSyncService", "./services/livesync/android-livesync-service");
 $injector.require("iOSLiveSyncService", "./services/livesync/ios-livesync-service");
 $injector.require("usbLiveSyncService", "./services/livesync/livesync-service"); // The name is used in https://github.com/NativeScript/nativescript-dev-typescript
 $injector.require("previewAppFilesService", "./services/livesync/playground/preview-app-files-service");
-$injector.require("previewAppLiveSyncService", "./services/livesync/playground/preview-app-livesync-service");
 $injector.require("previewAppLogProvider", "./services/livesync/playground/preview-app-log-provider");
 $injector.require("previewAppPluginsService", "./services/livesync/playground/preview-app-plugins-service");
 $injector.require("previewSdkService", "./services/livesync/playground/preview-sdk-service");
@@ -191,10 +209,11 @@ $injector.require("hmrStatusService", "./services/hmr-status-service");
 $injector.require("pacoteService", "./services/pacote-service");
 $injector.require("qrCodeTerminalService", "./services/qr-code-terminal-service");
 $injector.require("testInitializationService", "./services/test-initialization-service");
-$injector.require("workflowService", "./services/workflow-service");
 
 $injector.require("networkConnectivityValidator", "./helpers/network-connectivity-validator");
 $injector.requirePublic("cleanupService", "./services/cleanup-service");
+
+$injector.require("webpackCompilerService", "./services/webpack/webpack-compiler-service");
 
 $injector.require("applePortalSessionService", "./services/apple-portal/apple-portal-session-service");
 $injector.require("applePortalCookieService", "./services/apple-portal/apple-portal-cookie-service");

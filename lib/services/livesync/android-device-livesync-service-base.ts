@@ -2,17 +2,17 @@ import { DeviceLiveSyncServiceBase } from './device-livesync-service-base';
 
 export abstract class AndroidDeviceLiveSyncServiceBase extends DeviceLiveSyncServiceBase {
 	constructor(protected $injector: IInjector,
-		protected $platformsData: IPlatformsData,
+		protected $platformsDataService: IPlatformsDataService,
 		protected $filesHashService: IFilesHashService,
 		protected $logger: ILogger,
 		protected device: Mobile.IAndroidDevice) {
-			super($platformsData, device);
+			super($platformsDataService, device);
 	}
 
 	public abstract async transferFilesOnDevice(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]): Promise<void>;
 	public abstract async transferDirectoryOnDevice(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], projectFilesPath: string): Promise<void>;
 
-	public async transferFiles(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], projectFilesPath: string, projectData: IProjectData, liveSyncDeviceInfo: ILiveSyncDeviceInfo, options: ITransferFilesOptions): Promise<Mobile.ILocalToDevicePathData[]> {
+	public async transferFiles(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], projectFilesPath: string, projectData: IProjectData, liveSyncDeviceDescriptor: ILiveSyncDeviceDescriptor, options: ITransferFilesOptions): Promise<Mobile.ILocalToDevicePathData[]> {
 		const deviceHashService = this.device.fileSystem.getDeviceHashService(deviceAppData.appIdentifier);
 		const currentHashes = await deviceHashService.generateHashesFromLocalToDevicePaths(localToDevicePaths);
 		const transferredFiles = await this.transferFilesCore(deviceAppData, localToDevicePaths, projectFilesPath, currentHashes, options);

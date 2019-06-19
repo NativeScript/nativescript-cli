@@ -115,7 +115,6 @@ export class CommandsService implements ICommandsService {
 
 			const dashedOptions = command ? command.dashedOptions : null;
 			this.$options.validateOptions(dashedOptions, projectData);
-			this.$options.printMessagesForDeprecatedOptions(this.$logger);
 		}
 
 		return this.canExecuteCommand(commandName, commandArguments);

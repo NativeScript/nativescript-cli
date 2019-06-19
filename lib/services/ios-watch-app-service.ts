@@ -61,6 +61,16 @@ export class IOSWatchAppService extends NativeTargetServiceBase implements IIOSW
 		this.$fs.writeFile(pbxProjPath, project.writeSync({omitEmptyValues: true}));
 	}
 
+	public hasWatchApp(platformData: IPlatformData, projectData: IProjectData): boolean {
+		const watchAppPath = path.join(
+			projectData.getAppResourcesDirectoryPath(),
+			platformData.normalizedPlatformName,
+			IOS_WATCHAPP_FOLDER
+		);
+
+		return this.$fs.exists(watchAppPath);
+	}
+
 	private configureTarget(targetName: string, targetPath: string, identifier: string, configurationFileName: string, target: IXcode.target, project: IXcode.project) {
 		const targetConfigurationJsonPath = path.join(targetPath, configurationFileName);
 

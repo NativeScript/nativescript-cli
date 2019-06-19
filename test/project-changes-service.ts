@@ -2,7 +2,7 @@ import * as path from "path";
 import { BaseServiceTest } from "./base-service-test";
 import temp = require("temp");
 import { assert } from "chai";
-import { PlatformsData } from "../lib/platforms-data";
+import { PlatformsDataService } from "../lib/services/platforms-data-service";
 import { ProjectChangesService } from "../lib/services/project-changes-service";
 import * as Constants from "../lib/constants";
 import { FileSystem } from "../lib/common/file-system";
@@ -24,7 +24,7 @@ class ProjectChangesServiceTest extends BaseServiceTest {
 			projectDir: this.projectDir
 		});
 
-		this.injector.register("platformsData", PlatformsData);
+		this.injector.register("platformsDataService", PlatformsDataService);
 		this.injector.register("androidProjectService", {});
 		this.injector.register("iOSProjectService", {});
 		this.injector.register("fs", FileSystem);
@@ -36,6 +36,7 @@ class ProjectChangesServiceTest extends BaseServiceTest {
 		});
 		this.injector.register("logger", LoggerStub);
 		this.injector.register("hooksService", HooksServiceStub);
+		this.injector.register("nodeModulesDependenciesBuilder", {});
 
 		const fs = this.injector.resolve<IFileSystem>("fs");
 		fs.writeJson(path.join(this.projectDir, Constants.PACKAGE_JSON_FILE_NAME), {
@@ -54,8 +55,19 @@ class ProjectChangesServiceTest extends BaseServiceTest {
 		return this.injector.resolve("projectData");
 	}
 
-	get platformsData(): any {
-		return this.injector.resolve("platformsData");
+	get getNativeProjectDataService(): any {
+		return this.injector.resolve("platformsDataService");
+	}
+
+	getPlatformData(platform: string): IPlatformData {
+		return <any>{
+			projectRoot: path.join(this.projectDir, "platforms", platform.toLowerCase()),
+			platformProjectService: {
+				checkForChanges: async (changesInfo: IProjectChangesInfo) => {
+					changesInfo.signingChanged = true;
+				}
+			}
+		};
 	}
 }
 
@@ -69,14 +81,14 @@ describe("Project Changes Service Tests", () => {
 			Constants.PLATFORMS_DIR_NAME
 		);
 
-		serviceTest.platformsData.getPlatformData =
+		serviceTest.getNativeProjectDataService.getPlatformData =
 			(platform: string) => {
 				if (platform.toLowerCase() === "ios") {
 					return {
 						projectRoot: path.join(platformsDir, platform),
 						get platformProjectService(): any {
 							return {
-								checkForChanges(changesInfo: IProjectChangesInfo, options: IProjectChangesOptions, projectData: IProjectData): void {
+								checkForChanges(changesInfo: IProjectChangesInfo): void {
 									changesInfo.signingChanged = true;
 								}
 							};
@@ -87,7 +99,7 @@ describe("Project Changes Service Tests", () => {
 						projectRoot: path.join(platformsDir, platform),
 						get platformProjectService(): any {
 							return {
-								checkForChanges(changesInfo: IProjectChangesInfo, options: IProjectChangesOptions, projectData: IProjectData): void { /* no android changes */ }
+								checkForChanges(changesInfo: IProjectChangesInfo): void { /* no android changes */ }
 							};
 						}
 					};
@@ -99,7 +111,7 @@ describe("Project Changes Service Tests", () => {
 		it("Gets the correct Prepare Info path for ios/android", () => {
 			for (const platform of ["ios", "android"]) {
 				const actualPrepareInfoPath = serviceTest.projectChangesService
-					.getPrepareInfoFilePath(platform, this.projectData);
+					.getPrepareInfoFilePath(serviceTest.getPlatformData(platform));
 
 				const expectedPrepareInfoPath = path.join(serviceTest.projectDir,
 					Constants.PLATFORMS_DIR_NAME,
@@ -113,7 +125,7 @@ describe("Project Changes Service Tests", () => {
 	describe("Get Prepare Info", () => {
 		it("Returns empty if file path doesn't exists", () => {
 			for (const platform of ["ios", "android"]) {
-				const projectInfo = serviceTest.projectChangesService.getPrepareInfo(platform, this.projectData);
+				const projectInfo = serviceTest.projectChangesService.getPrepareInfo(serviceTest.getPlatformData(platform));
 
 				assert.isNull(projectInfo);
 			}
@@ -139,7 +151,7 @@ describe("Project Changes Service Tests", () => {
 				fs.writeJson(prepareInfoPath, expectedPrepareInfo);
 
 				// act
-				const actualPrepareInfo = serviceTest.projectChangesService.getPrepareInfo(platform, this.projectData);
+				const actualPrepareInfo = serviceTest.projectChangesService.getPrepareInfo(serviceTest.getPlatformData(platform));
 
 				// assert
 				assert.deepEqual(actualPrepareInfo, expectedPrepareInfo);
@@ -149,40 +161,20 @@ describe("Project Changes Service Tests", () => {
 
 	describe("Accumulates Changes From Project Services", () => {
 		it("accumulates changes from the project service", async () => {
-			const iOSChanges = await serviceTest.projectChangesService.checkForChanges({
-				platform: "ios",
-				projectData: serviceTest.projectData,
-				projectChangesOptions: {
-					bundle: false,
-					release: false,
-					provision: undefined,
-					teamId: undefined,
-					useHotModuleReload: false
-				}
+			const iOSChanges = await serviceTest.projectChangesService.checkForChanges(serviceTest.getPlatformData("ios"), serviceTest.projectData, <any>{
+				provision: undefined,
+				teamId: undefined
 			});
 			assert.isTrue(!!iOSChanges.signingChanged, "iOS signingChanged expected to be true");
-
-			const androidChanges = await serviceTest.projectChangesService.checkForChanges({
-				platform: "android",
-				projectData: serviceTest.projectData,
-				projectChangesOptions: {
-					bundle: false,
-					release: false,
-					provision: undefined,
-					teamId: undefined,
-					useHotModuleReload: false
-				}
-			});
-			assert.isFalse(!!androidChanges.signingChanged, "Android signingChanged expected to be false");
 		});
 	});
 
 	describe("setNativePlatformStatus", () => {
-		it("creates prepare info and sets only the native platform status when there isn't an existing prepare info", () => {
+		it("creates prepare info and sets only the native platform status when there isn't an existing prepare info", async () => {
 			for (const platform of ["ios", "android"]) {
-				serviceTest.projectChangesService.setNativePlatformStatus(platform, serviceTest.projectData, { nativePlatformStatus: Constants.NativePlatformStatus.requiresPrepare });
+				await serviceTest.projectChangesService.setNativePlatformStatus(serviceTest.getPlatformData(platform), serviceTest.projectData, { nativePlatformStatus: Constants.NativePlatformStatus.requiresPrepare });
 
-				const actualPrepareInfo = serviceTest.projectChangesService.getPrepareInfo(platform, serviceTest.projectData);
+				const actualPrepareInfo = serviceTest.projectChangesService.getPrepareInfo(serviceTest.getPlatformData(platform));
 
 				assert.deepEqual(actualPrepareInfo, { nativePlatformStatus: Constants.NativePlatformStatus.requiresPrepare });
 			}
@@ -190,23 +182,13 @@ describe("Project Changes Service Tests", () => {
 
 		it(`shouldn't reset prepare info when native platform status is ${Constants.NativePlatformStatus.alreadyPrepared} and there is existing prepare info`, async () => {
 			for (const platform of ["ios", "android"]) {
-				await serviceTest.projectChangesService.checkForChanges({
-					platform,
-					projectData: serviceTest.projectData,
-					projectChangesOptions: {
-						bundle: false,
-						release: false,
-						provision: undefined,
-						teamId: undefined,
-						useHotModuleReload: false
-					}
-				});
-				serviceTest.projectChangesService.savePrepareInfo(platform, serviceTest.projectData);
-				const prepareInfo = serviceTest.projectChangesService.getPrepareInfo(platform, serviceTest.projectData);
+				await serviceTest.projectChangesService.checkForChanges(serviceTest.getPlatformData(platform), serviceTest.projectData, <any>{});
+				await serviceTest.projectChangesService.savePrepareInfo(serviceTest.getPlatformData(platform), serviceTest.projectData, null);
+				const prepareInfo = serviceTest.projectChangesService.getPrepareInfo(serviceTest.getPlatformData(platform));
 
-				serviceTest.projectChangesService.setNativePlatformStatus(platform, serviceTest.projectData, { nativePlatformStatus: Constants.NativePlatformStatus.alreadyPrepared });
+				await serviceTest.projectChangesService.setNativePlatformStatus(serviceTest.getPlatformData(platform), serviceTest.projectData, { nativePlatformStatus: Constants.NativePlatformStatus.alreadyPrepared });
 
-				const actualPrepareInfo = serviceTest.projectChangesService.getPrepareInfo(platform, serviceTest.projectData);
+				const actualPrepareInfo = serviceTest.projectChangesService.getPrepareInfo(serviceTest.getPlatformData(platform));
 				prepareInfo.nativePlatformStatus = Constants.NativePlatformStatus.alreadyPrepared;
 				assert.deepEqual(actualPrepareInfo, prepareInfo);
 			}
@@ -215,20 +197,10 @@ describe("Project Changes Service Tests", () => {
 		_.each([Constants.NativePlatformStatus.requiresPlatformAdd, Constants.NativePlatformStatus.requiresPrepare], nativePlatformStatus => {
 			it(`should reset prepare info when native platform status is ${nativePlatformStatus} and there is existing prepare info`, async () => {
 				for (const platform of ["ios", "android"]) {
-					await serviceTest.projectChangesService.checkForChanges({
-						platform,
-						projectData: serviceTest.projectData,
-						projectChangesOptions: {
-							bundle: false,
-							release: false,
-							provision: undefined,
-							teamId: undefined,
-							useHotModuleReload: false
-						}
-					});
-					serviceTest.projectChangesService.setNativePlatformStatus(platform, serviceTest.projectData, { nativePlatformStatus: nativePlatformStatus });
+					await serviceTest.projectChangesService.checkForChanges(serviceTest.getPlatformData(platform), serviceTest.projectData, <any>{});
+					await serviceTest.projectChangesService.setNativePlatformStatus(serviceTest.getPlatformData(platform), serviceTest.projectData, { nativePlatformStatus: nativePlatformStatus });
 
-					const actualPrepareInfo = serviceTest.projectChangesService.getPrepareInfo(platform, serviceTest.projectData);
+					const actualPrepareInfo = serviceTest.projectChangesService.getPrepareInfo(serviceTest.getPlatformData(platform));
 					assert.deepEqual(actualPrepareInfo, { nativePlatformStatus: nativePlatformStatus });
 				}
 			});
