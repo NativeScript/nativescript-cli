@@ -103,7 +103,7 @@ describe("prepareController", () => {
 				assert.lengthOf(emittedEventNames, 1);
 				assert.lengthOf(emittedEventData, 1);
 				assert.deepEqual(emittedEventNames[0], PREPARE_READY_EVENT_NAME);
-				assert.deepEqual(emittedEventData[0], { files: [], hasNativeChanges: true, hmrData: null, platform: platform.toLowerCase() });
+				assert.deepEqual(emittedEventData[0], { files: [], hasNativeChanges: true, hasOnlyHotUpdateFiles: false, hmrData: null, platform: platform.toLowerCase() });
 			});
 		});
 	});

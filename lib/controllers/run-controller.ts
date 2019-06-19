@@ -152,7 +152,7 @@ export class RunController extends EventEmitter implements IRunController {
 		const platformLiveSyncService = this.$liveSyncServiceResolver.resolveLiveSyncService(platform);
 
 		try {
-			let shouldRestart = filesChangeEventData && filesChangeEventData.hasNativeChanges;
+			let shouldRestart = filesChangeEventData && (filesChangeEventData.hasNativeChanges || !filesChangeEventData.hasOnlyHotUpdateFiles);
 			if (!shouldRestart) {
 				shouldRestart = await platformLiveSyncService.shouldRestart(projectData, liveSyncResultInfo);
 			}
