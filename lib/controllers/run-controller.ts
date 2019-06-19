@@ -335,7 +335,7 @@ export class RunController extends EventEmitter implements IRunController {
 						this.rebuiltInformation[platformData.platformNameLowerCase] = { isEmulator: device.isEmulator, platform: platformData.platformNameLowerCase, packageFilePath: null };
 					}
 
-					this.$deviceInstallAppService.installOnDevice(device, deviceDescriptor.buildData, this.rebuiltInformation[platformData.platformNameLowerCase].packageFilePath);
+					await this.$deviceInstallAppService.installOnDevice(device, deviceDescriptor.buildData, this.rebuiltInformation[platformData.platformNameLowerCase].packageFilePath);
 				}
 
 				const isInHMRMode = liveSyncInfo.useHotModuleReload && data.hmrData && data.hmrData.hash;
