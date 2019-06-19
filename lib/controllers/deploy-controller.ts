@@ -10,8 +10,8 @@ export class DeployController {
 		const { buildData, deviceDescriptors } = data;
 
 		const executeAction = async (device: Mobile.IDevice) => {
-			await this.$buildController.prepareAndBuild({ ...buildData, buildForDevice: !device.isEmulator });
-			await this.$deviceInstallAppService.installOnDevice(device, buildData);
+			const packageFilePath = await this.$buildController.prepareAndBuild({ ...buildData, buildForDevice: !device.isEmulator });
+			await this.$deviceInstallAppService.installOnDevice(device, { ...buildData, buildForDevice: !device.isEmulator }, packageFilePath);
 		};
 
 		await this.$devicesService.execute(executeAction, (device: Mobile.IDevice) => _.some(deviceDescriptors, deviceDescriptor => deviceDescriptor.identifier === device.deviceInfo.identifier));
