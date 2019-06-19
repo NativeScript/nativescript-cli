@@ -4,11 +4,10 @@ import { cache, performanceLog } from "../common/decorators";
 import { EventEmitter } from "events";
 
 export class RunController extends EventEmitter implements IRunController {
-	private rebuiltInformation: IDictionary<any> = {};
+	private rebuiltInformation: IDictionary<{ packageFilePath: string, platform: string, isEmulator: boolean }> = { };
 
 	constructor(
 		protected $analyticsService: IAnalyticsService,
-		private $buildDataService: IBuildDataService,
 		private $buildController: IBuildController,
 		private $debugController: IDebugController,
 		private $deviceInstallAppService: IDeviceInstallAppService,
@@ -191,7 +190,7 @@ export class RunController extends EventEmitter implements IRunController {
 					projectDir: projectData.projectDir,
 					deviceIdentifier,
 					debugOptions: deviceDescriptor.debugOptions,
-					outputPath: deviceDescriptor.outputPath
+					outputPath: deviceDescriptor.buildData.outputPath
 				};
 				this.emit(USER_INTERACTION_NEEDED_EVENT_NAME, attachDebuggerOptions);
 			}
@@ -242,9 +241,16 @@ export class RunController extends EventEmitter implements IRunController {
 		const deviceAction = async (device: Mobile.IDevice) => {
 			const deviceDescriptor = _.find(deviceDescriptors, dd => dd.identifier === device.deviceInfo.identifier);
 			const platformData = this.$platformsDataService.getPlatformData(device.deviceInfo.platform, projectData);
-			const prepareData = this.$prepareDataService.getPrepareData(liveSyncInfo.projectDir, device.deviceInfo.platform, { ...liveSyncInfo, watch: !liveSyncInfo.skipWatcher, nativePrepare: { skipNativePrepare: !!deviceDescriptor.skipNativePrepare } });
-			const buildData = this.$buildDataService.getBuildData(projectData.projectDir, device.deviceInfo.platform, { ...liveSyncInfo, outputPath: deviceDescriptor.outputPath, buildForDevice: !device.isEmulator });
+			const prepareData = this.$prepareDataService.getPrepareData(liveSyncInfo.projectDir, device.deviceInfo.platform,
+				{
+					...liveSyncInfo,
+					...deviceDescriptor.buildData,
+					nativePrepare: { skipNativePrepare: !!deviceDescriptor.skipNativePrepare },
+					watch: !liveSyncInfo.skipWatcher,
+				});
+
 			const prepareResultData = await this.$prepareController.prepare(prepareData);
+			const buildData = { ...deviceDescriptor.buildData, buildForDevice: !device.isEmulator };
 
 			try {
 				let packageFilePath: string = null;
@@ -312,14 +318,24 @@ export class RunController extends EventEmitter implements IRunController {
 		const deviceAction = async (device: Mobile.IDevice) => {
 			const deviceDescriptor = _.find(deviceDescriptors, dd => dd.identifier === device.deviceInfo.identifier);
 			const platformData = this.$platformsDataService.getPlatformData(data.platform, projectData);
-			const prepareData = this.$prepareDataService.getPrepareData(projectData.projectDir, data.platform, { ...liveSyncInfo, watch: !liveSyncInfo.skipWatcher });
+			const prepareData = this.$prepareDataService.getPrepareData(liveSyncInfo.projectDir, device.deviceInfo.platform,
+				{
+					...liveSyncInfo,
+					...deviceDescriptor.buildData,
+					nativePrepare: { skipNativePrepare: !!deviceDescriptor.skipNativePrepare },
+					watch: !liveSyncInfo.skipWatcher,
+				});
 
 			try {
-				const rebuiltInfo = this.rebuiltInformation[platformData.platformNameLowerCase] && (this.$mobileHelper.isAndroidPlatform(platformData.platformNameLowerCase) || this.rebuiltInformation[platformData.platformNameLowerCase].isEmulator === device.isEmulator);
-				if (data.hasNativeChanges && !rebuiltInfo) {
-					await this.$prepareNativePlatformService.prepareNativePlatform(platformData, projectData, prepareData);
-					await deviceDescriptor.buildAction();
-					this.rebuiltInformation[platformData.platformNameLowerCase] = { isEmulator: device.isEmulator, platform: platformData.platformNameLowerCase, packageFilePath: null };
+				if (data.hasNativeChanges) {
+					const rebuiltInfo = this.rebuiltInformation[platformData.platformNameLowerCase] && (this.$mobileHelper.isAndroidPlatform(platformData.platformNameLowerCase) || this.rebuiltInformation[platformData.platformNameLowerCase].isEmulator === device.isEmulator);
+					if (!rebuiltInfo) {
+						await this.$prepareNativePlatformService.prepareNativePlatform(platformData, projectData, prepareData);
+						await deviceDescriptor.buildAction();
+						this.rebuiltInformation[platformData.platformNameLowerCase] = { isEmulator: device.isEmulator, platform: platformData.platformNameLowerCase, packageFilePath: null };
+					}
+
+					await this.$deviceInstallAppService.installOnDevice(device, deviceDescriptor.buildData, this.rebuiltInformation[platformData.platformNameLowerCase].packageFilePath);
 				}
 
 				const isInHMRMode = liveSyncInfo.useHotModuleReload && data.hmrData && data.hmrData.hash;

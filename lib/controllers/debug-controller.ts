@@ -128,7 +128,7 @@ export class DebugController extends EventEmitter implements IDebugController {
 		const attachDebuggerData: IAttachDebuggerData = {
 			deviceIdentifier,
 			isEmulator: currentDeviceInstance.isEmulator,
-			outputPath: deviceDescriptor.outputPath,
+			outputPath: deviceDescriptor.buildData.outputPath,
 			platform: currentDeviceInstance.deviceInfo.platform,
 			projectDir,
 			debugOptions

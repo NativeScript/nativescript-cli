@@ -9,13 +9,13 @@ declare global {
 		watch?: boolean;
 	}
 
-	interface IiOSPrepareData extends IPrepareData {
+	interface IiOSCodeSigningData {
 		teamId: string;
 		provision: string;
 		mobileProvisionData: any;
 	}
 
-	interface IAndroidPrepareData extends IPrepareData { }
+	interface IiOSPrepareData extends IPrepareData, IiOSCodeSigningData { }
 
 	interface IPrepareDataService {
 		getPrepareData(projectDir: string, platform: string, data: any): IPrepareData;

@@ -43,8 +43,8 @@ export class DeployCommandHelper {
 					buildAction,
 					debuggingEnabled: additionalOptions && additionalOptions.deviceDebugMap && additionalOptions.deviceDebugMap[d.deviceInfo.identifier],
 					debugOptions: this.$options,
-					outputPath,
 					skipNativePrepare: additionalOptions && additionalOptions.skipNativePrepare,
+					buildData
 				};
 
 				return info;
