@@ -4,7 +4,7 @@ import { cache, performanceLog } from "../common/decorators";
 import { EventEmitter } from "events";
 
 export class RunController extends EventEmitter implements IRunController {
-	private rebuiltInformation: IDictionary<any> = {};
+	private rebuiltInformation: IDictionary<{ packageFilePath: string, platform: string, isEmulator: boolean }> = { };
 
 	constructor(
 		protected $analyticsService: IAnalyticsService,
@@ -327,11 +327,15 @@ export class RunController extends EventEmitter implements IRunController {
 				});
 
 			try {
-				const rebuiltInfo = this.rebuiltInformation[platformData.platformNameLowerCase] && (this.$mobileHelper.isAndroidPlatform(platformData.platformNameLowerCase) || this.rebuiltInformation[platformData.platformNameLowerCase].isEmulator === device.isEmulator);
-				if (data.hasNativeChanges && !rebuiltInfo) {
-					await this.$prepareNativePlatformService.prepareNativePlatform(platformData, projectData, prepareData);
-					await deviceDescriptor.buildAction();
-					this.rebuiltInformation[platformData.platformNameLowerCase] = { isEmulator: device.isEmulator, platform: platformData.platformNameLowerCase, packageFilePath: null };
+				if (data.hasNativeChanges) {
+					const rebuiltInfo = this.rebuiltInformation[platformData.platformNameLowerCase] && (this.$mobileHelper.isAndroidPlatform(platformData.platformNameLowerCase) || this.rebuiltInformation[platformData.platformNameLowerCase].isEmulator === device.isEmulator);
+					if (!rebuiltInfo) {
+						await this.$prepareNativePlatformService.prepareNativePlatform(platformData, projectData, prepareData);
+						await deviceDescriptor.buildAction();
+						this.rebuiltInformation[platformData.platformNameLowerCase] = { isEmulator: device.isEmulator, platform: platformData.platformNameLowerCase, packageFilePath: null };
+					}
+
+					this.$deviceInstallAppService.installOnDevice(device, deviceDescriptor.buildData, this.rebuiltInformation[platformData.platformNameLowerCase].packageFilePath);
 				}
 
 				const isInHMRMode = liveSyncInfo.useHotModuleReload && data.hmrData && data.hmrData.hash;
