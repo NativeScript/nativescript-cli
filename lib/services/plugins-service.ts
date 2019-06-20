@@ -88,10 +88,10 @@ export class PluginsService implements IPluginsService {
 		}
 	}
 
-	public addToPackageJson(plugin: string, version: string, dev: boolean, projectDir: string) {
+	public addToPackageJson(plugin: string, version: string, isDev: boolean, projectDir: string) {
 		const packageJsonPath = this.getPackageJsonFilePath(projectDir);
 		const packageJsonContent = this.$fs.readJson(packageJsonPath);
-		const collectionKey = dev ? "devDependencies" : "dependencies";
+		const collectionKey = isDev ? "devDependencies" : "dependencies";
 
 		packageJsonContent[collectionKey] = packageJsonContent[collectionKey] || {};
 		packageJsonContent[collectionKey][plugin] = version;
@@ -99,10 +99,10 @@ export class PluginsService implements IPluginsService {
 		this.$fs.writeJson(packageJsonPath, packageJsonContent);
 	}
 
-	public removeFromPackageJson(plugin: string, dev: boolean, projectDir: string) {
+	public removeFromPackageJson(plugin: string, isDev: boolean, projectDir: string) {
 		const packageJsonPath = this.getPackageJsonFilePath(projectDir);
 		const packageJsonContent = this.$fs.readJson(packageJsonPath);
-		const collection = dev ? packageJsonContent.devDependencies : packageJsonContent.dependencies;
+		const collection = isDev ? packageJsonContent.devDependencies : packageJsonContent.dependencies;
 
 		if (collection && collection[plugin]) {
 			delete collection[plugin];
