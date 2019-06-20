@@ -1,9 +1,9 @@
 import * as path from "path";
 import * as semver from "semver";
 import * as constants from "../constants";
-import { BaseUpdateController } from "./base-update-controller";
+import { UpdateControllerBase } from "./update-controller-base";
 
-export class UpdateController extends BaseUpdateController implements IUpdateController {
+export class UpdateController extends UpdateControllerBase implements IUpdateController {
 	constructor(
 		protected $fs: IFileSystem,
 		protected $platformsDataService: IPlatformsDataService,
@@ -25,34 +25,32 @@ export class UpdateController extends BaseUpdateController implements IUpdateCon
 	static readonly folders: string[] = [
 		constants.LIB_DIR_NAME,
 		constants.HOOKS_DIR_NAME,
-		//constants.PLATFORMS_DIR_NAME,
-		//constants.NODE_MODULES_FOLDER_NAME,
 		constants.WEBPACK_CONFIG_NAME,
 		constants.PACKAGE_JSON_FILE_NAME,
 		constants.PACKAGE_LOCK_JSON_FILE_NAME
 	];
 
-	static readonly tempFolder: string = ".update_backup";
+	static readonly backupFolder: string = ".update_backup";
 	static readonly updateFailMessage: string = "Could not update the project!";
 	static readonly backupFailMessage: string = "Could not backup project folders!";
 
-	public async update(projectDir: string, version?: string): Promise<void> {
-		const projectData = this.$projectDataService.getProjectData(projectDir);
-		const tmpDir = path.join(projectDir, UpdateController.tempFolder);
+	public async update(updateOptions: IUpdateOptions): Promise<void> {
+		const projectData = this.$projectDataService.getProjectData(updateOptions.projectDir);
+		const backupDir = path.join(updateOptions.projectDir, UpdateController.backupFolder);
 
 		try {
-			this.backup(UpdateController.folders, tmpDir, projectData);
+			this.backup(UpdateController.folders, backupDir, projectData.projectDir);
 		} catch (error) {
 			this.$logger.error(UpdateController.backupFailMessage);
-			this.$fs.deleteDirectory(tmpDir);
+			this.$fs.deleteDirectory(backupDir);
 			return;
 		}
 
 		try {
 			await this.cleanUpProject(projectData);
-			await this.updateProject(projectData, version);
+			await this.updateProject(projectData, updateOptions.version);
 		} catch (error) {
-			this.restoreBackup(UpdateController.folders, tmpDir, projectData);
+			this.restoreBackup(UpdateController.folders, backupDir, projectData.projectDir);
 			this.$logger.error(UpdateController.updateFailMessage);
 		}
 	}
@@ -74,9 +72,9 @@ export class UpdateController extends BaseUpdateController implements IUpdateCon
 		for (const platform in this.$devicePlatformsConstants) {
 			const lowercasePlatform = platform.toLowerCase();
 			const platformData = this.$platformsDataService.getPlatformData(lowercasePlatform, projectData);
-			const currentPlatformData = this.$projectDataService.getNSValueFromContent(templateManifest, platformData.frameworkPackageName);
-			const runtimeVersion = currentPlatformData && currentPlatformData.version;
-			if (runtimeVersion && await this.shouldUpdateRuntimeVersion({targetVersion: runtimeVersion, platform, projectData, shouldAdd: false})) {
+			const templatePlatformData = this.$projectDataService.getNSValueFromContent(templateManifest, platformData.frameworkPackageName);
+			const templateRuntimeVersion = templatePlatformData && templatePlatformData.version;
+			if (templateRuntimeVersion && await this.shouldUpdateRuntimeVersion(templateRuntimeVersion, platformData.frameworkPackageName, platform, projectData)) {
 				return true;
 			}
 		}
@@ -119,7 +117,7 @@ export class UpdateController extends BaseUpdateController implements IUpdateCon
 	private async updateDependencies( {dependencies, areDev, projectData} : {dependencies: IDictionary<string>, areDev: boolean, projectData: IProjectData}) {
 		for (const dependency in dependencies) {
 			const templateVersion = dependencies[dependency];
-			if (this.shouldSkipDependency({ packageName: dependency, isDev: areDev }, projectData)) {
+			if (!this.hasDependency({ packageName: dependency, isDev: areDev }, projectData)) {
 				continue;
 			}
 
@@ -133,18 +131,16 @@ export class UpdateController extends BaseUpdateController implements IUpdateCon
 	private async shouldUpdateDependency(dependency: string, targetVersion: string, isDev: boolean, projectData: IProjectData) {
 		const collection = isDev ? projectData.devDependencies : projectData.dependencies;
 		const projectVersion = collection[dependency];
-		const maxSatisfyingTargetVersion = await this.$packageInstallationManager.maxSatisfyingVersion(dependency, targetVersion);
+		const maxSatisfyingTargetVersion = await this.getMaxDependencyVersion(dependency, targetVersion);
 		const maxSatisfyingProjectVersion = await this.getMaxDependencyVersion(dependency, projectVersion);
 
-		if (maxSatisfyingProjectVersion && semver.gt(maxSatisfyingTargetVersion, maxSatisfyingProjectVersion)) {
-			return true;
-		}
+		return maxSatisfyingProjectVersion && maxSatisfyingTargetVersion && semver.gt(maxSatisfyingTargetVersion, maxSatisfyingProjectVersion);
 	}
 
 	private async hasDependenciesToUpdate({dependencies, areDev, projectData}: {dependencies: IDictionary<string>, areDev: boolean, projectData:IProjectData}) {
 		for (const dependency in dependencies) {
 			const templateVersion = dependencies[dependency];
-			if (this.shouldSkipDependency({ packageName: dependency, isDev: areDev }, projectData)) {
+			if (!this.hasDependency({ packageName: dependency, isDev: areDev }, projectData)) {
 				continue;
 			}
 
@@ -154,17 +150,30 @@ export class UpdateController extends BaseUpdateController implements IUpdateCon
 		}
 	}
 
-	private async updateRuntimes(templateData: Object, projectData: IProjectData) {
+	private async updateRuntimes(templateManifest: Object, projectData: IProjectData) {
 		for (const platform in this.$devicePlatformsConstants) {
 			const lowercasePlatform = platform.toLowerCase();
 			const platformData = this.$platformsDataService.getPlatformData(lowercasePlatform, projectData);
-			const currentPlatformData = this.$projectDataService.getNSValueFromContent(templateData, platformData.frameworkPackageName);
-			const runtimeVersion = currentPlatformData && currentPlatformData.version;
-			if (runtimeVersion && await this.shouldUpdateRuntimeVersion({targetVersion: runtimeVersion, platform, projectData, shouldAdd: false})) {
-				this.$logger.info(`Updating ${platform} platform to version '${runtimeVersion}'.`);
-				await this.$addPlatformService.setPlatformVersion(platformData, projectData, runtimeVersion);
+			const templatePlatformData = this.$projectDataService.getNSValueFromContent(templateManifest, platformData.frameworkPackageName);
+			const templateRuntimeVersion = templatePlatformData && templatePlatformData.version;
+			if (templateRuntimeVersion && await this.shouldUpdateRuntimeVersion(templateRuntimeVersion, platformData.frameworkPackageName, platform, projectData)) {
+				this.$logger.info(`Updating ${platform} platform to version '${templateRuntimeVersion}'.`);
+				await this.$addPlatformService.setPlatformVersion(platformData, projectData, templateRuntimeVersion);
 			}
 		}
+	}
+
+	private async shouldUpdateRuntimeVersion(templateRuntimeVersion: string, frameworkPackageName: string, platform: string, projectData: IProjectData): Promise<boolean> {
+		const hasRuntimeDependency = this.hasRuntimeDependency({platform, projectData});
+
+		if (!hasRuntimeDependency) {
+			return false;
+		}
+
+		const maxTemplateRuntimeVersion = await this.getMaxDependencyVersion(frameworkPackageName, templateRuntimeVersion);
+		const maxRuntimeVersion = await this.getMaxRuntimeVersion({platform, projectData});
+
+		return maxTemplateRuntimeVersion && maxRuntimeVersion && semver.gt(maxTemplateRuntimeVersion, maxRuntimeVersion);
 	}
 
 	private async _getTemplateManifest(templateName: string, version: string) {

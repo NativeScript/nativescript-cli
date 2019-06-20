@@ -13,7 +13,7 @@ export class UpdateCommand implements ICommand {
 	}
 
 	public async execute(args: string[]): Promise<void> {
-		await this.$updateController.update(this.$projectData.projectDir, args[0], this.$options.frameworkPath);
+		await this.$updateController.update({projectDir: this.$projectData.projectDir, version: args[0], frameworkPath: this.$options.frameworkPath});
 	}
 
 	public async canExecute(args: string[]): Promise<boolean> {

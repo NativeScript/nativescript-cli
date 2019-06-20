@@ -78,9 +78,9 @@ describe("update controller method tests", () => {
 		sandbox.stub(fs, "copyFile").throws();
 		const updateController = testInjector.resolve("updateController");
 
-		await updateController.update(projectFolder, ["3.3.0"]);
+		await updateController.update({projectDir: projectFolder, version: "3.3.0"});
 
-		assert.isTrue(deleteDirectory.calledWith(path.join(projectFolder, UpdateController.tempFolder)));
+		assert.isTrue(deleteDirectory.calledWith(path.join(projectFolder, UpdateController.backupFolder)));
 		assert.isFalse(deleteDirectory.calledWith(path.join(projectFolder, "platforms")));
 	});
 
@@ -90,7 +90,7 @@ describe("update controller method tests", () => {
 		const copyFileStub = sandbox.stub(fs, "copyFile");
 		const updateController = testInjector.resolve("updateController");
 
-		await updateController.update(projectFolder, ["3.3.0"]);
+		await updateController.update({projectDir: projectFolder, version: "3.3.0"});
 
 		assert.isTrue(copyFileStub.calledWith(path.join(projectFolder, "package.json")));
 		for (const folder of UpdateController.folders) {
@@ -106,9 +106,9 @@ describe("update controller method tests", () => {
 		const fs = testInjector.resolve("fs");
 		const copyFileStub = sandbox.stub(fs, "copyFile");
 		const updateController = testInjector.resolve("updateController");
-		const tempDir = path.join(projectFolder, UpdateController.tempFolder);
+		const tempDir = path.join(projectFolder, UpdateController.backupFolder);
 
-		await updateController.update(projectFolder, ["3.3.0"]);
+		await updateController.update({projectDir: projectFolder, version: "3.3.0"});
 
 		assert.isTrue(copyFileStub.calledWith(path.join(tempDir, "package.json"), projectFolder));
 		for (const folder of UpdateController.folders) {
