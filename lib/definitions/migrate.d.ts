@@ -9,8 +9,8 @@ interface IDependency {
 }
 
 interface IMigrationDependency extends IDependency {
-	mustRemove?: boolean;
+	shouldRemove?: boolean;
 	replaceWith?: string;
 	verifiedVersion?: string;
-	shouldAdd?: boolean;
+	shouldAddIfMissing?: boolean;
 }
