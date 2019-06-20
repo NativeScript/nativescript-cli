@@ -510,7 +510,7 @@ describe("devicesService", () => {
 		it("returns true for each device on which the app is installed", async () => {
 			const deviceIdentifiers = [androidDevice.deviceInfo.identifier, iOSDevice.deviceInfo.identifier],
 				appId = "com.telerik.unitTest1";
-			const results = await devicesService.isAppInstalledOnDevices(deviceIdentifiers, appId, "cordova");
+			const results = await devicesService.isAppInstalledOnDevices(deviceIdentifiers, appId, "cordova", "");
 			assert.isTrue(results.length > 0);
 
 			for (let index = 0; index < results.length; index++) {
@@ -522,14 +522,14 @@ describe("devicesService", () => {
 		});
 
 		it("returns false for each device on which the app is not installed", async () => {
-			const results = devicesService.isAppInstalledOnDevices([androidDevice.deviceInfo.identifier, iOSDevice.deviceInfo.identifier], "com.telerik.unitTest3", "cordova");
+			const results = devicesService.isAppInstalledOnDevices([androidDevice.deviceInfo.identifier, iOSDevice.deviceInfo.identifier], "com.telerik.unitTest3", "cordova", "");
 			assert.isTrue(results.length > 0);
 			const isInstalledOnDevices = (await Promise.all(results)).map(r => r.isInstalled);
 			assert.deepEqual(isInstalledOnDevices, [true, false]);
 		});
 
 		it("throws error when invalid identifier is passed", async () => {
-			const results = devicesService.isAppInstalledOnDevices(["invalidDeviceId", iOSDevice.deviceInfo.identifier], "com.telerik.unitTest1", "cordova");
+			const results = devicesService.isAppInstalledOnDevices(["invalidDeviceId", iOSDevice.deviceInfo.identifier], "com.telerik.unitTest1", "cordova", "");
 
 			const expectedErrorMessage = getErrorMessage(testInjector, "NotFoundDeviceByIdentifierErrorMessageWithIdentifier", "invalidDeviceId");
 
@@ -1019,7 +1019,7 @@ describe("devicesService", () => {
 		});
 
 		it("returns undefined for each device on which the app is installed", async () => {
-			const results = devicesService.deployOnDevices([androidDevice.deviceInfo.identifier, iOSDevice.deviceInfo.identifier], "path", "packageName", "cordova");
+			const results = devicesService.deployOnDevices([androidDevice.deviceInfo.identifier, iOSDevice.deviceInfo.identifier], "path", "packageName", "cordova", "");
 			assert.isTrue(results.length > 0);
 			_.each(await Promise.all(results), deployOnDevicesResult => {
 				const realResult = deployOnDevicesResult;
@@ -1028,7 +1028,7 @@ describe("devicesService", () => {
 		});
 
 		it("throws error when invalid identifier is passed", async () => {
-			const results = devicesService.deployOnDevices(["invalidDeviceId", iOSDevice.deviceInfo.identifier], "path", "packageName", "cordova");
+			const results = devicesService.deployOnDevices(["invalidDeviceId", iOSDevice.deviceInfo.identifier], "path", "packageName", "cordova", "");
 			const expectedErrorMessage = getErrorMessage(testInjector, "NotFoundDeviceByIdentifierErrorMessageWithIdentifier", "invalidDeviceId");
 			await assert.isRejected(Promise.all(results), expectedErrorMessage);
 			const realResults = await getPromisesResults(results);

@@ -1,7 +1,3 @@
-const sourcemap = require("source-map");
-import * as path from "path";
-import { cache } from "../common/decorators";
-
 export class IOSLogFilter implements Mobile.IPlatformLogFilter {
 	// Used to recognize output related to the current project
 	// This looks for artifacts like: AppName[22432] or AppName(SomeTextHere)[23123]
@@ -18,9 +14,7 @@ export class IOSLogFilter implements Mobile.IPlatformLogFilter {
 	private partialLine: string = null;
 
 	constructor(private $logger: ILogger,
-		private $loggingLevels: Mobile.ILoggingLevels,
-		private $fs: IFileSystem,
-		private $projectData: IProjectData) {
+		private $loggingLevels: Mobile.ILoggingLevels) {
 	}
 
 	public filterData(data: string, loggingOptions: Mobile.IDeviceLogOptions = <any>{}): string {
@@ -72,7 +66,7 @@ export class IOSLogFilter implements Mobile.IPlatformLogFilter {
 			}
 
 			currentLine = currentLine.trim();
-			output += this.getOriginalFileLocation(currentLine) + '\n';
+			output += currentLine + '\n';
 		}
 
 		return output.length === 0 ? null : output;
@@ -83,48 +77,6 @@ export class IOSLogFilter implements Mobile.IPlatformLogFilter {
 			currentLine.indexOf("SecTaskCopyDebugDescription") !== -1 ||
 			currentLine.indexOf("NativeScript loaded bundle") !== -1 ||
 			(currentLine.indexOf("assertion failed:") !== -1 && data.indexOf("libxpc.dylib") !== -1);
-	}
-
-	private getOriginalFileLocation(data: string): string {
-		const fileString = "file:///";
-		const fileIndex = data.indexOf(fileString);
-		const projectDir = this.getProjectDir();
-
-		if (fileIndex >= 0 && projectDir) {
-			const parts = data.substring(fileIndex + fileString.length).split(":");
-			if (parts.length >= 4) {
-				const file = parts[0];
-				const sourceMapFile = path.join(projectDir, file + ".map");
-				const row = parseInt(parts[1]);
-				const column = parseInt(parts[2]);
-				if (this.$fs.exists(sourceMapFile)) {
-					const sourceMap = this.$fs.readText(sourceMapFile);
-					const smc = new sourcemap.SourceMapConsumer(sourceMap);
-					const originalPosition = smc.originalPositionFor({ line: row, column: column });
-					const sourceFile = smc.sources.length > 0 ? file.replace(smc.file, smc.sources[0]) : file;
-					data = data.substring(0, fileIndex + fileString.length)
-						+ sourceFile + ":"
-						+ originalPosition.line + ":"
-						+ originalPosition.column;
-
-					for (let i = 3; i < parts.length; i++) {
-						data += ":" + parts[i];
-					}
-				}
-			}
-		}
-
-		return data;
-	}
-
-	@cache()
-	private getProjectDir(): string {
-		try {
-			this.$projectData.initializeProjectData();
-			return this.$projectData.projectDir;
-		} catch (err) {
-			return null;
-		}
 	}
 }
 

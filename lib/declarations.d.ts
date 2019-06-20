@@ -725,9 +725,9 @@ interface IAndroidToolsInfoValidateInput extends IAndroidToolsInfoOptions {
 
 interface IAppDebugSocketProxyFactory extends NodeJS.EventEmitter {
 	getTCPSocketProxy(deviceIdentifier: string, appId: string): any;
-	addTCPSocketProxy(device: Mobile.IiOSDevice, appId: string, projectName: string): Promise<any>;
+	addTCPSocketProxy(device: Mobile.IiOSDevice, appId: string, projectName: string, projectDir: string): Promise<any>;
 
-	ensureWebSocketProxy(device: Mobile.IiOSDevice, appId: string, projectName: string): Promise<any>;
+	ensureWebSocketProxy(device: Mobile.IiOSDevice, appId: string, projectName: string, projectDir: string): Promise<any>;
 
 	removeAllProxies(): void;
 }

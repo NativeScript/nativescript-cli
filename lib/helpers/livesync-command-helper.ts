@@ -184,7 +184,7 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 
 		for (const deviceDescriptor of deviceDescriptors) {
 			const device = this.$devicesService.getDeviceByIdentifier(deviceDescriptor.identifier);
-			await device.applicationManager.startApplication({ appId: this.$projectData.projectIdentifiers[device.deviceInfo.platform.toLowerCase()], projectName: this.$projectData.projectName });
+			await device.applicationManager.startApplication({ appId: this.$projectData.projectIdentifiers[device.deviceInfo.platform.toLowerCase()], projectName: this.$projectData.projectName, projectDir: this.$projectData.projectDir });
 		}
 	}
 }

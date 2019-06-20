@@ -21,6 +21,10 @@ export abstract class DeviceLogProviderBase extends EventEmitter implements Mobi
 		this.setDeviceLogOptionsProperty(deviceIdentifier, (deviceLogOptions: Mobile.IDeviceLogOptions) => deviceLogOptions.projectName, projectName);
 	}
 
+	public setProjectDirForDevice(deviceIdentifier: string, projectDir: string): void {
+		this.setDeviceLogOptionsProperty(deviceIdentifier, (deviceLogOptions: Mobile.IDeviceLogOptions) => deviceLogOptions.projectDir, projectDir);
+	}
+
 	protected setDefaultLogLevelForDevice(deviceIdentifier: string): void {
 		const logLevel = (this.devicesLogOptions[deviceIdentifier] && this.devicesLogOptions[deviceIdentifier].logLevel) || this.$logFilter.loggingLevel;
 		this.setLogLevel(logLevel, deviceIdentifier);

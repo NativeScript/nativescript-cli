@@ -106,7 +106,7 @@ declare module Mobile {
 	}
 
 	interface IiOSDevice extends IDevice {
-		getDebugSocket(appId: string, projectName: string, ensureAppStarted?: boolean): Promise<any>;
+		getDebugSocket(appId: string, projectName: string, projectDir: string, ensureAppStarted?: boolean): Promise<any>;
 		destroyDebugSocket(appId: string): Promise<void>;
 		openDeviceLogStream(options?: IiOSLogStreamOptions): Promise<void>;
 		destroyAllSockets(): Promise<void>;
@@ -145,6 +145,7 @@ declare module Mobile {
 		device: Mobile.IDevice;
 		getDeviceProjectRootPath(): Promise<string>;
 		deviceSyncZipPath?: string;
+		projectDir: string
 	}
 
 	interface ILogcatStartOptions {
@@ -192,12 +193,19 @@ declare module Mobile {
 		 * @param {string} projectName The project name of the currently running application for which we need the logs.
 		 */
 		setProjectNameForDevice(deviceIdentifier: string, projectName: string): void;
+
+		/**
+		 * Sets the project name of the application on the specified device.
+		 * @param {string} deviceIdentifier The unique identifier of the device.
+		 * @param {string} projectDir The project dir of the currently running application for which we need the logs.
+		 */
+		setProjectDirForDevice(deviceIdentifier: string, projectDir: string): void;
 	}
 
 	/**
 	 * Describes different options for filtering device logs.
 	 */
-	interface IDeviceLogOptions extends IDictionary<string | boolean> {
+	interface IDeviceLogOptions extends IDictionary<string | boolean>, Partial<IProjectDir> {
 		/**
 		 * Process id of the application on the device.
 		 */
@@ -212,7 +220,6 @@ declare module Mobile {
 		 * The project name.
 		 */
 		projectName?: string;
-
 	}
 
 	/**
@@ -248,6 +255,13 @@ declare module Mobile {
 	}
 
 	/**
+	 * Replaces file paths in device log with their original location
+	 */
+	interface ILogSourceMapService {
+		replaceWithOriginalFileLocations(platform: string, messageData: string, loggingOptions: Mobile.IDeviceLogOptions): string
+	}
+
+	/**
 	 * Describes filtering logic for specific platform (Android, iOS).
 	 */
 	interface IPlatformLogFilter {
@@ -266,7 +280,7 @@ declare module Mobile {
 		full: string;
 	}
 
-	interface IApplicationData {
+	interface IApplicationData extends IProjectDir {
 		appId: string;
 		projectName: string;
 		justLaunch?: boolean;
@@ -462,9 +476,9 @@ declare module Mobile {
 		isiOSDevice(device: Mobile.IDevice): boolean;
 		isiOSSimulator(device: Mobile.IDevice): boolean;
 		isOnlyiOSSimultorRunning(): boolean;
-		isAppInstalledOnDevices(deviceIdentifiers: string[], appIdentifier: string, framework: string): Promise<IAppInstalledInfo>[];
+		isAppInstalledOnDevices(deviceIdentifiers: string[], appIdentifier: string, framework: string, projectDir: string): Promise<IAppInstalledInfo>[];
 		setLogLevel(logLevel: string, deviceIdentifier?: string): void;
-		deployOnDevices(deviceIdentifiers: string[], packageFile: string, packageName: string, framework: string): Promise<void>[];
+		deployOnDevices(deviceIdentifiers: string[], packageFile: string, packageName: string, framework: string, projectDir: string): Promise<void>[];
 		getDeviceByIdentifier(identifier: string): Mobile.IDevice;
 		mapAbstractToTcpPort(deviceIdentifier: string, appIdentifier: string, framework: string): Promise<string>;
 		getDebuggableApps(deviceIdentifiers: string[]): Promise<Mobile.IDeviceApplicationInformation[]>[];

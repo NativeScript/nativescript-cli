@@ -83,7 +83,8 @@ describe("ApplicationManagerBase", () => {
 	let testInjector: IInjector;
 	const applicationData = {
 		appId: "appId",
-		projectName: "appName"
+		projectName: "appName",
+		projectDir: ""
 	};
 
 	beforeEach(() => {
@@ -661,7 +662,7 @@ describe("ApplicationManagerBase", () => {
 			await applicationManager.tryStartApplication(applicationData);
 			assert.deepEqual(passedApplicationData, applicationData);
 
-			const secondApplicationData = { appId: "appId2", projectName: "appName2" };
+			const secondApplicationData = { appId: "appId2", projectName: "appName2", projectDir: "" };
 			await applicationManager.tryStartApplication(secondApplicationData);
 			assert.deepEqual(passedApplicationData, secondApplicationData);
 

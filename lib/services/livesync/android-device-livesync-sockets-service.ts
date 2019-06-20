@@ -33,7 +33,7 @@ export class AndroidDeviceSocketsLiveSyncService extends AndroidDeviceLiveSyncSe
 				const pathToLiveSyncFile = temp.path({ prefix: "livesync" });
 				this.$fs.writeFile(pathToLiveSyncFile, "");
 				await this.device.fileSystem.putFile(pathToLiveSyncFile, this.getPathToLiveSyncFileOnDevice(deviceAppData.appIdentifier), deviceAppData.appIdentifier);
-				await this.device.applicationManager.startApplication({ appId: deviceAppData.appIdentifier, projectName: this.data.projectName, justLaunch: true, waitForDebugger: false });
+				await this.device.applicationManager.startApplication({ appId: deviceAppData.appIdentifier, projectName: this.data.projectName, justLaunch: true, waitForDebugger: false, projectDir: deviceAppData.projectDir  });
 				await this.connectLivesyncTool(this.data.projectIdentifiers.android, deviceAppData.connectTimeout);
 			} catch (err) {
 				await this.device.fileSystem.deleteFile(this.getPathToLiveSyncFileOnDevice(deviceAppData.appIdentifier), deviceAppData.appIdentifier);
@@ -107,7 +107,7 @@ export class AndroidDeviceSocketsLiveSyncService extends AndroidDeviceLiveSyncSe
 	}
 
 	public async restartApplication(projectData: IProjectData, liveSyncInfo: ILiveSyncResultInfo): Promise<void> {
-		await this.device.applicationManager.restartApplication({ appId: liveSyncInfo.deviceAppData.appIdentifier, projectName: projectData.projectName, waitForDebugger: liveSyncInfo.waitForDebugger });
+		await this.device.applicationManager.restartApplication({ appId: liveSyncInfo.deviceAppData.appIdentifier, projectName: projectData.projectName, waitForDebugger: liveSyncInfo.waitForDebugger, projectDir: projectData.projectDir });
 		if (!this.$options.justlaunch && !liveSyncInfo.waitForDebugger && this.livesyncTool.protocolVersion && semver.gte(this.livesyncTool.protocolVersion, AndroidDeviceSocketsLiveSyncService.MINIMAL_VERSION_LONG_LIVING_CONNECTION)) {
 			try {
 				await this.connectLivesyncTool(liveSyncInfo.deviceAppData.appIdentifier);

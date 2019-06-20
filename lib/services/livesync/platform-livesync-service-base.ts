@@ -149,7 +149,8 @@ export abstract class PlatformLiveSyncServiceBase {
 			platform: syncInfo.device.deviceInfo.platform,
 			getDeviceProjectRootPath: () => this.$devicePathProvider.getDeviceProjectRootPath(syncInfo.device, deviceProjectRootOptions),
 			deviceSyncZipPath: this.$devicePathProvider.getDeviceSyncZipPath(syncInfo.device),
-			connectTimeout: syncInfo.connectTimeout
+			connectTimeout: syncInfo.connectTimeout,
+			projectDir: syncInfo.projectData.projectDir
 		};
 	}
 

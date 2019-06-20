@@ -4,13 +4,15 @@ import { LoggerConfigData } from "../../constants";
 
 export class DeviceLogProvider extends DeviceLogProviderBase {
 	constructor(protected $logFilter: Mobile.ILogFilter,
-		protected $logger: ILogger) {
+		protected $logger: ILogger,
+		private $logSourceMapService: Mobile.ILogSourceMapService) {
 		super($logFilter, $logger);
 	}
 
 	public logData(lineText: string, platform: string, deviceIdentifier: string): void {
 		const loggingOptions = this.getDeviceLogOptionsForDevice(deviceIdentifier);
-		const data = this.$logFilter.filterData(platform, lineText, loggingOptions);
+		let data = this.$logFilter.filterData(platform, lineText, loggingOptions);
+		data = this.$logSourceMapService.replaceWithOriginalFileLocations(platform, data, loggingOptions);
 		if (data) {
 			this.logDataCore(data);
 			this.emit(DEVICE_LOG_EVENT_NAME, lineText, deviceIdentifier, platform);

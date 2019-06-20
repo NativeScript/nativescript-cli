@@ -170,6 +170,10 @@ function createTestInjector(projectPath: string, projectName: string, xCode?: IX
 		removeWatchApp: () => { /* */ },
 		addWatchAppFromPath: () => Promise.resolve()
 	});
+
+	testInjector.register("logSourceMapService", {
+		replaceWithOriginalFileLocations: (platform: string, message: string) => message
+	});
 	return testInjector;
 }
 

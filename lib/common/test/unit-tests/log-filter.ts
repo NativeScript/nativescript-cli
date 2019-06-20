@@ -67,22 +67,22 @@ describe("logFilter", () => {
 	describe("filterData", () => {
 		describe("when logLevel is not specified and default log level is not changed", () => {
 			it("returns same data when platform is not correct", () => {
-				const actualData = logFilter.filterData("invalidPlatform", testData, { logLevel });
+				const actualData = logFilter.filterData("invalidPlatform", testData, { logLevel, projectDir: null });
 				assert.deepEqual(actualData, testData);
 			});
 
 			it("returns same data when platform is not passed", () => {
-				const actualData = logFilter.filterData(null, testData, { logLevel });
+				const actualData = logFilter.filterData(null, testData, { logLevel, projectDir: null });
 				assert.deepEqual(actualData, testData);
 			});
 
 			it("returns correct data when platform is android", () => {
-				const actualData = logFilter.filterData("android", testData, { logLevel });
+				const actualData = logFilter.filterData("android", testData, { logLevel, projectDir: null });
 				assert.deepEqual(actualData, androidInfoTestData);
 			});
 
 			it("returns correct data when platform is ios", () => {
-				const actualData = logFilter.filterData("ios", testData, { logLevel });
+				const actualData = logFilter.filterData("ios", testData, { logLevel, projectDir: null });
 				assert.deepEqual(actualData, iosInfoTestData);
 			});
 		});

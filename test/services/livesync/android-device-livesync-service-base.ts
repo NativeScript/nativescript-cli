@@ -113,7 +113,8 @@ function createDeviceAppData(deviceHashService: Mobile.IAndroidDeviceHashService
 		getDeviceProjectRootPath: async () => `${LiveSyncPaths.ANDROID_TMP_DIR_NAME}/${LiveSyncPaths.SYNC_DIR_NAME}`,
 		appIdentifier,
 		device: mockDevice(deviceHashService),
-		platform: "Android"
+		platform: "Android",
+		projectDir: ""
 	};
 }
 
