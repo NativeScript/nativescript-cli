@@ -1,10 +1,11 @@
 import * as util from "util";
 import { BundleValidatorMessages } from "../constants";
 import { VersionValidatorHelper } from "./version-validator-helper";
+import { WEBPACK_PLUGIN_NAME } from "../constants";
 
 export class BundleValidatorHelper extends VersionValidatorHelper implements IBundleValidatorHelper {
 	private bundlersMap: IStringDictionary = {
-		webpack: "nativescript-dev-webpack"
+		webpack: WEBPACK_PLUGIN_NAME
 	};
 
 	constructor(protected $errors: IErrors,

@@ -50,6 +50,8 @@ $injector.requirePublicClass("buildController", "./controllers/build-controller"
 $injector.requirePublicClass("runController", "./controllers/run-controller");
 $injector.requirePublicClass("debugController", "./controllers/debug-controller");
 $injector.requirePublicClass("previewAppController", "./controllers/preview-app-controller");
+$injector.requirePublicClass("updateController", "./controllers/update-controller");
+$injector.requirePublicClass("migrateController", "./controllers/migrate-controller");
 
 $injector.require("prepareDataService", "./services/prepare-data-service");
 $injector.require("buildDataService", "./services/build-data-service");
@@ -172,6 +174,7 @@ $injector.require("messages", "./common/messages/messages");
 $injector.require("xmlValidator", "./xml-validator");
 
 $injector.requireCommand("post-install-cli", "./commands/post-install");
+$injector.requireCommand("migrate", "./commands/migrate");
 $injector.requireCommand("update", "./commands/update");
 
 $injector.require("iOSLogFilter", "./services/ios-log-filter");

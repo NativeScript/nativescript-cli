@@ -1,13 +1,13 @@
 <% if (isJekyll) { %>---
-title: tns platform update
+title: tns update
 position: 8
 ---<% } %>
 
-# tns platform update
+# tns update
 
 ### Description
 
-Updates a NativeScript project to the latest (or specified) version.
+Updates a NativeScript to the latest compatible combination of NativeScript dependencies. The combination of dependencies is taken from the latest(or specified) version of the template for the type of the target project (Angular, Vue.js and etc.).
 
 ### Commands
 

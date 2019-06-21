@@ -88,6 +88,28 @@ export class PluginsService implements IPluginsService {
 		}
 	}
 
+	public addToPackageJson(plugin: string, version: string, isDev: boolean, projectDir: string) {
+		const packageJsonPath = this.getPackageJsonFilePath(projectDir);
+		const packageJsonContent = this.$fs.readJson(packageJsonPath);
+		const collectionKey = isDev ? "devDependencies" : "dependencies";
+
+		packageJsonContent[collectionKey] = packageJsonContent[collectionKey] || {};
+		packageJsonContent[collectionKey][plugin] = version;
+
+		this.$fs.writeJson(packageJsonPath, packageJsonContent);
+	}
+
+	public removeFromPackageJson(plugin: string, isDev: boolean, projectDir: string) {
+		const packageJsonPath = this.getPackageJsonFilePath(projectDir);
+		const packageJsonContent = this.$fs.readJson(packageJsonPath);
+		const collection = isDev ? packageJsonContent.devDependencies : packageJsonContent.dependencies;
+
+		if (collection && collection[plugin]) {
+			delete collection[plugin];
+			this.$fs.writeJson(packageJsonPath, packageJsonContent);
+		}
+	}
+
 	public async preparePluginNativeCode(pluginData: IPluginData, platform: string, projectData: IProjectData): Promise<void> {
 		const platformData = this.$platformsDataService.getPlatformData(platform, projectData);
 		pluginData.pluginPlatformsFolderPath = (_platform: string) => path.join(pluginData.fullPath, "platforms", _platform.toLowerCase());
@@ -160,6 +182,23 @@ export class PluginsService implements IPluginsService {
 		return pluginPackageJsonContent && pluginPackageJsonContent.nativescript;
 	}
 
+	public convertToPluginData(cacheData: any, projectDir: string): IPluginData {
+		const pluginData: any = {};
+		pluginData.name = cacheData.name;
+		pluginData.version = cacheData.version;
+		pluginData.fullPath = cacheData.directory || path.dirname(this.getPackageJsonFilePathForModule(cacheData.name, projectDir));
+		pluginData.isPlugin = !!cacheData.nativescript || !!cacheData.moduleInfo;
+		pluginData.pluginPlatformsFolderPath = (platform: string) => path.join(pluginData.fullPath, "platforms", platform);
+		const data = cacheData.nativescript || cacheData.moduleInfo;
+
+		if (pluginData.isPlugin) {
+			pluginData.platformsDataService = data.platforms;
+			pluginData.pluginVariables = data.variables;
+		}
+
+		return pluginData;
+	}
+
 	private getBasicPluginInformation(dependencies: any): IBasePluginData[] {
 		return _.map(dependencies, (version: string, key: string) => ({
 			name: key,
@@ -197,23 +236,6 @@ export class PluginsService implements IPluginsService {
 			isPlugin: data.nativescript !== undefined,
 			moduleInfo: data.nativescript
 		};
-	}
-
-	public convertToPluginData(cacheData: any, projectDir: string): IPluginData {
-		const pluginData: any = {};
-		pluginData.name = cacheData.name;
-		pluginData.version = cacheData.version;
-		pluginData.fullPath = cacheData.directory || path.dirname(this.getPackageJsonFilePathForModule(cacheData.name, projectDir));
-		pluginData.isPlugin = !!cacheData.nativescript || !!cacheData.moduleInfo;
-		pluginData.pluginPlatformsFolderPath = (platform: string) => path.join(pluginData.fullPath, "platforms", platform);
-		const data = cacheData.nativescript || cacheData.moduleInfo;
-
-		if (pluginData.isPlugin) {
-			pluginData.platformsDataService = data.platforms;
-			pluginData.pluginVariables = data.variables;
-		}
-
-		return pluginData;
 	}
 
 	private async ensure(projectData: IProjectData): Promise<void> {

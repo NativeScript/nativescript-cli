@@ -245,6 +245,10 @@ export class PackageInstallationManagerStub implements IPackageInstallationManag
 	async getInspectorFromCache(name: string, projectDir: string): Promise<string> {
 		return Promise.resolve("");
 	}
+
+	async maxSatisfyingVersion(): Promise<string> {
+		return "";
+	}
 }
 
 export class NodePackageManagerStub implements INodePackageManager {
@@ -527,6 +531,8 @@ export class ProjectDataService implements IProjectDataService {
 	getAppExecutableFiles(projectDir: string): string[] {
 		return [];
 	}
+
+	getNSValueFromContent(): any {}
 }
 
 export class ProjectHelperStub implements IProjectHelper {

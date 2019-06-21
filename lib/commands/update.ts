@@ -1,155 +1,31 @@
-import * as path from "path";
-import * as constants from "../constants";
-import { ValidatePlatformCommandBase } from "./command-base";
-
-export class UpdateCommand extends ValidatePlatformCommandBase implements ICommand {
+export class UpdateCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
+	public static readonly SHOULD_MIGRATE_PROJECT_MESSAGE = 'This project is not compatible with the current NativeScript version and cannot be updated. Use "tns migrate" to make your project compatible.';
+	public static readonly PROJECT_UP_TO_DATE_MESSAGE = 'This project is up to date.';
 
 	constructor(
-		private $fs: IFileSystem,
-		private $logger: ILogger,
-		$options: IOptions,
-		private $platformCommandHelper: IPlatformCommandHelper,
-		$platformsDataService: IPlatformsDataService,
-		$platformValidationService: IPlatformValidationService,
-		private $pluginsService: IPluginsService,
-		$projectData: IProjectData,
-		private $projectDataService: IProjectDataService) {
-		super($options, $platformsDataService, $platformValidationService, $projectData);
+		private $updateController: IUpdateController,
+		private $migrateController: IMigrateController,
+		private $options: IOptions,
+		private $errors: IErrors,
+		private $projectData: IProjectData) {
 		this.$projectData.initializeProjectData();
 	}
 
-	static readonly folders: string[] = [
-		constants.LIB_DIR_NAME,
-		constants.HOOKS_DIR_NAME,
-		constants.PLATFORMS_DIR_NAME,
-		constants.NODE_MODULES_FOLDER_NAME
-	];
-	static readonly tempFolder: string = ".tmp_backup";
-	static readonly updateFailMessage: string = "Could not update the project!";
-	static readonly backupFailMessage: string = "Could not backup project folders!";
-
 	public async execute(args: string[]): Promise<void> {
-		const tmpDir = path.join(this.$projectData.projectDir, UpdateCommand.tempFolder);
-
-		try {
-			this.backup(tmpDir);
-		} catch (error) {
-			this.$logger.error(UpdateCommand.backupFailMessage);
-			this.$fs.deleteDirectory(tmpDir);
-			return;
-		}
-
-		try {
-			await this.executeCore(args);
-		} catch (error) {
-			this.restoreBackup(tmpDir);
-			this.$logger.error(UpdateCommand.updateFailMessage);
-		} finally {
-			this.$fs.deleteDirectory(tmpDir);
-		}
+		await this.$updateController.update({projectDir: this.$projectData.projectDir, version: args[0], frameworkPath: this.$options.frameworkPath});
 	}
 
-	public async canExecute(args: string[]): Promise<ICanExecuteCommandOutput> {
-		const platforms = this.getPlatforms();
-
-		let canExecute = true;
-		for (const platform of platforms.packagePlatforms) {
-			const output = await super.canExecuteCommandBase(platform);
-			canExecute = canExecute && output.canExecute;
+	public async canExecute(args: string[]): Promise<boolean> {
+		if (await this.$migrateController.shouldMigrate({projectDir: this.$projectData.projectDir})) {
+			this.$errors.failWithoutHelp(UpdateCommand.SHOULD_MIGRATE_PROJECT_MESSAGE);
 		}
 
-		let result = null;
-
-		if (canExecute) {
-			result = {
-				canExecute: args.length < 2 && this.$projectData.projectDir !== "",
-				suppressCommandHelp: false
-			};
-		} else {
-			result = {
-				canExecute: false,
-				suppressCommandHelp: true
-			};
+		if (!await this.$updateController.shouldUpdate({projectDir:this.$projectData.projectDir, version: args[0]})) {
+			this.$errors.failWithoutHelp(UpdateCommand.PROJECT_UP_TO_DATE_MESSAGE);
 		}
 
-		return result;
-	}
-
-	private async executeCore(args: string[]): Promise<void> {
-		const platforms = this.getPlatforms();
-
-		for (const platform of _.xor(platforms.installed, platforms.packagePlatforms)) {
-			const platformData = this.$platformsDataService.getPlatformData(platform, this.$projectData);
-			this.$projectDataService.removeNSProperty(this.$projectData.projectDir, platformData.frameworkPackageName);
-		}
-
-		await this.$platformCommandHelper.removePlatforms(platforms.installed, this.$projectData);
-		await this.$pluginsService.remove(constants.TNS_CORE_MODULES_NAME, this.$projectData);
-		if (!!this.$projectData.dependencies[constants.TNS_CORE_MODULES_WIDGETS_NAME]) {
-			await this.$pluginsService.remove(constants.TNS_CORE_MODULES_WIDGETS_NAME, this.$projectData);
-		}
-
-		for (const folder of UpdateCommand.folders) {
-			this.$fs.deleteDirectory(path.join(this.$projectData.projectDir, folder));
-		}
-
-		if (args.length === 1) {
-			for (const platform of platforms.packagePlatforms) {
-				await this.$platformCommandHelper.addPlatforms([platform + "@" + args[0]], this.$projectData, this.$options.frameworkPath);
-			}
-
-			await this.$pluginsService.add(`${constants.TNS_CORE_MODULES_NAME}@${args[0]}`, this.$projectData);
-		} else {
-			await this.$platformCommandHelper.addPlatforms(platforms.packagePlatforms, this.$projectData, this.$options.frameworkPath);
-			await this.$pluginsService.add(constants.TNS_CORE_MODULES_NAME, this.$projectData);
-		}
-
-		await this.$pluginsService.ensureAllDependenciesAreInstalled(this.$projectData);
-	}
-
-	private getPlatforms(): { installed: string[], packagePlatforms: string[] } {
-		const installedPlatforms = this.$platformCommandHelper.getInstalledPlatforms(this.$projectData);
-		const availablePlatforms = this.$platformCommandHelper.getAvailablePlatforms(this.$projectData);
-		const packagePlatforms: string[] = [];
-
-		for (const platform of availablePlatforms) {
-			const platformData = this.$platformsDataService.getPlatformData(platform, this.$projectData);
-			const platformVersion = this.$projectDataService.getNSValue(this.$projectData.projectDir, platformData.frameworkPackageName);
-			if (platformVersion) {
-				packagePlatforms.push(platform);
-			}
-		}
-
-		return {
-			installed: installedPlatforms,
-			packagePlatforms: installedPlatforms.concat(packagePlatforms)
-		};
-	}
-
-	private restoreBackup(tmpDir: string): void {
-		this.$fs.copyFile(path.join(tmpDir, constants.PACKAGE_JSON_FILE_NAME), this.$projectData.projectDir);
-		for (const folder of UpdateCommand.folders) {
-			this.$fs.deleteDirectory(path.join(this.$projectData.projectDir, folder));
-
-			const folderToCopy = path.join(tmpDir, folder);
-
-			if (this.$fs.exists(folderToCopy)) {
-				this.$fs.copyFile(folderToCopy, this.$projectData.projectDir);
-			}
-		}
-	}
-
-	private backup(tmpDir: string): void {
-		this.$fs.deleteDirectory(tmpDir);
-		this.$fs.createDirectory(tmpDir);
-		this.$fs.copyFile(path.join(this.$projectData.projectDir, constants.PACKAGE_JSON_FILE_NAME), tmpDir);
-		for (const folder of UpdateCommand.folders) {
-			const folderToCopy = path.join(this.$projectData.projectDir, folder);
-			if (this.$fs.exists(folderToCopy)) {
-				this.$fs.copyFile(folderToCopy, tmpDir);
-			}
-		}
+		return args.length < 2 && this.$projectData.projectDir !== "";
 	}
 }
 
