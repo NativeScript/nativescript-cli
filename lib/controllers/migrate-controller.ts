@@ -16,7 +16,7 @@ export class MigrateController extends UpdateControllerBase implements IMigrateC
 		private $addPlatformService: IAddPlatformService,
 		private $pluginsService: IPluginsService,
 		private $projectDataService: IProjectDataService) {
-			super($fs, $platformCommandHelper, $platformsDataService, $packageInstallationManager, $packageManager);
+		super($fs, $platformCommandHelper, $platformsDataService, $packageInstallationManager, $packageManager);
 	}
 
 	static readonly folders: string[] = [
@@ -28,36 +28,36 @@ export class MigrateController extends UpdateControllerBase implements IMigrateC
 		constants.TSCCONFIG_TNS_JSON_NAME
 	];
 
-	static readonly migrationDependencies : IMigrationDependency[] = [
-		{ packageName: constants.TNS_CORE_MODULES_NAME, verifiedVersion: "6.0.0-next-2019-06-10-092158-01"},
-		{ packageName: constants.TNS_CORE_MODULES_WIDGETS_NAME, verifiedVersion: "6.0.0-next-2019-06-10-092158-01"},
-		{ packageName: "node-sass", isDev: true, verifiedVersion: "4.12.0"},
-		{ packageName: "typescript", isDev: true, verifiedVersion: "3.4.1"},
-		{ packageName: "less", isDev: true, verifiedVersion: "3.9.0"},
-		{ packageName: "nativescript-dev-sass", isDev: true, replaceWith: "node-sass"},
-		{ packageName: "nativescript-dev-typescript", isDev: true, replaceWith: "typescript"},
-		{ packageName: "nativescript-dev-less", isDev: true, replaceWith: "less"},
-		{ packageName: constants.WEBPACK_PLUGIN_NAME, isDev: true, shouldAddIfMissing: true, verifiedVersion: "0.25.0-webpack-2019-06-11-105349-01"},
-		{ packageName: "nativescript-camera", verifiedVersion: "4.5.0"},
-		{ packageName: "nativescript-geolocation", verifiedVersion: "5.1.0"},
-		{ packageName: "nativescript-imagepicker", verifiedVersion: "6.2.0"},
-		{ packageName: "nativescript-social-share", verifiedVersion: "1.5.2"},
-		{ packageName: "nativescript-ui-chart", verifiedVersion: "5.0.0-androidx-110619"},
-		{ packageName: "nativescript-ui-dataform", verifiedVersion: "5.0.0-androidx-110619"},
-		{ packageName: "nativescript-ui-gauge", verifiedVersion: "5.0.0-androidx"},
-		{ packageName: "nativescript-ui-listview", verifiedVersion: "7.0.0-androidx-110619"},
-		{ packageName: "nativescript-ui-sidedrawer", verifiedVersion: "7.0.0-androidx-110619"},
-		{ packageName: "nativescript-ui-calendar", verifiedVersion: "5.0.0-androidx-110619-2"},
-		{ packageName: "nativescript-ui-autocomplete", verifiedVersion: "5.0.0-androidx-110619"},
-		{ packageName: "nativescript-datetimepicker", verifiedVersion: "1.1.0"},
+	static readonly migrationDependencies: IMigrationDependency[] = [
+		{ packageName: constants.TNS_CORE_MODULES_NAME, verifiedVersion: "6.0.0-next-2019-06-20-155941-01" },
+		{ packageName: constants.TNS_CORE_MODULES_WIDGETS_NAME, verifiedVersion: "6.0.0-next-2019-06-20-155941-01" },
+		{ packageName: "node-sass", isDev: true, verifiedVersion: "4.12.0" },
+		{ packageName: "typescript", isDev: true, verifiedVersion: "3.4.1" },
+		{ packageName: "less", isDev: true, verifiedVersion: "3.9.0" },
+		{ packageName: "nativescript-dev-sass", isDev: true, replaceWith: "node-sass" },
+		{ packageName: "nativescript-dev-typescript", isDev: true, replaceWith: "typescript" },
+		{ packageName: "nativescript-dev-less", isDev: true, replaceWith: "less" },
+		{ packageName: constants.WEBPACK_PLUGIN_NAME, isDev: true, shouldAddIfMissing: true, verifiedVersion: "0.25.0-next-2019-06-21-150426-03" },
+		{ packageName: "nativescript-camera", verifiedVersion: "4.5.0" },
+		{ packageName: "nativescript-geolocation", verifiedVersion: "5.1.0" },
+		{ packageName: "nativescript-imagepicker", verifiedVersion: "6.2.0" },
+		{ packageName: "nativescript-social-share", verifiedVersion: "1.5.2" },
+		{ packageName: "nativescript-ui-chart", verifiedVersion: "5.0.0-androidx-110619" },
+		{ packageName: "nativescript-ui-dataform", verifiedVersion: "5.0.0-androidx-110619" },
+		{ packageName: "nativescript-ui-gauge", verifiedVersion: "5.0.0-androidx" },
+		{ packageName: "nativescript-ui-listview", verifiedVersion: "7.0.0-androidx-110619" },
+		{ packageName: "nativescript-ui-sidedrawer", verifiedVersion: "7.0.0-androidx-110619" },
+		{ packageName: "nativescript-ui-calendar", verifiedVersion: "5.0.0-androidx-110619-2" },
+		{ packageName: "nativescript-ui-autocomplete", verifiedVersion: "5.0.0-androidx-110619" },
+		{ packageName: "nativescript-datetimepicker", verifiedVersion: "1.1.0" },
 		//TODO update with compatible with webpack only hooks
-		{ packageName: "kinvey-nativescript-sdk", verifiedVersion: "4.2.1"},
+		{ packageName: "kinvey-nativescript-sdk", verifiedVersion: "4.2.1" },
 		//TODO update with compatible with webpack only hooks
-		{ packageName: "nativescript-plugin-firebase", verifiedVersion: "9.0.1"},
+		{ packageName: "nativescript-plugin-firebase", verifiedVersion: "9.0.1" },
 		//TODO update with no prerelease version compatible with webpack only hooks
-		{ packageName: "nativescript-vue", verifiedVersion: "2.3.0-rc.0"},
-		{ packageName: "nativescript-permissions", verifiedVersion: "1.3.0"},
-		{ packageName: "nativescript-cardview", verifiedVersion: "3.2.0"}
+		{ packageName: "nativescript-vue", verifiedVersion: "2.3.0-rc.0" },
+		{ packageName: "nativescript-permissions", verifiedVersion: "1.3.0" },
+		{ packageName: "nativescript-cardview", verifiedVersion: "3.2.0" }
 	];
 
 	static readonly backupFolder: string = ".migration_backup";
@@ -71,7 +71,7 @@ export class MigrateController extends UpdateControllerBase implements IMigrateC
 		};
 	}
 
-	public async migrate({projectDir}: {projectDir: string}): Promise<void> {
+	public async migrate({ projectDir }: { projectDir: string }): Promise<void> {
 		const projectData = this.$projectDataService.getProjectData(projectDir);
 		const backupDir = path.join(projectDir, MigrateController.backupFolder);
 
@@ -94,7 +94,7 @@ export class MigrateController extends UpdateControllerBase implements IMigrateC
 		}
 	}
 
-	public async shouldMigrate({projectDir}: IProjectDir): Promise<boolean> {
+	public async shouldMigrate({ projectDir }: IProjectDir): Promise<boolean> {
 		const projectData = this.$projectDataService.getProjectData(projectDir);
 
 		for (let i = 0; i < MigrateController.migrationDependencies.length; i++) {
@@ -115,8 +115,8 @@ export class MigrateController extends UpdateControllerBase implements IMigrateC
 		}
 
 		for (const platform in this.$devicePlatformsConstants) {
-			const hasRuntimeDependency = this.hasRuntimeDependency({platform, projectData});
-			if (!hasRuntimeDependency || await this.shouldUpdateRuntimeVersion({ targetVersion: this.verifiedPlatformVersions[platform.toLowerCase()], platform, projectData})) {
+			const hasRuntimeDependency = this.hasRuntimeDependency({ platform, projectData });
+			if (!hasRuntimeDependency || await this.shouldUpdateRuntimeVersion({ targetVersion: this.verifiedPlatformVersions[platform.toLowerCase()], platform, projectData })) {
 				return true;
 			}
 		}
@@ -145,7 +145,7 @@ export class MigrateController extends UpdateControllerBase implements IMigrateC
 				if (!replacementDep) {
 					this.$errors.failWithoutHelp("Failed to find replacement dependency.");
 				}
-				this.$logger.info(`Replacing '${dependency.packageName}' with '${replacementDep.packageName}'.`, );
+				this.$logger.info(`Replacing '${dependency.packageName}' with '${replacementDep.packageName}'.`);
 				this.$pluginsService.addToPackageJson(replacementDep.packageName, replacementDep.verifiedVersion, replacementDep.isDev, projectData.projectDir);
 				continue;
 			}
@@ -165,8 +165,8 @@ export class MigrateController extends UpdateControllerBase implements IMigrateC
 
 		for (const platform in this.$devicePlatformsConstants) {
 			const lowercasePlatform = platform.toLowerCase();
-			const hasRuntimeDependency = this.hasRuntimeDependency({platform, projectData});
-			if (!hasRuntimeDependency || await this.shouldUpdateRuntimeVersion({targetVersion: this.verifiedPlatformVersions[lowercasePlatform], platform, projectData})) {
+			const hasRuntimeDependency = this.hasRuntimeDependency({ platform, projectData });
+			if (!hasRuntimeDependency || await this.shouldUpdateRuntimeVersion({ targetVersion: this.verifiedPlatformVersions[lowercasePlatform], platform, projectData })) {
 				const verifiedPlatformVersion = this.verifiedPlatformVersions[lowercasePlatform];
 				const platformData = this.$platformsDataService.getPlatformData(lowercasePlatform, projectData);
 				this.$logger.info(`Updating ${platform} platform to version '${verifiedPlatformVersion}'.`);
@@ -192,8 +192,8 @@ export class MigrateController extends UpdateControllerBase implements IMigrateC
 		return !(maxSatisfyingVersion && semver.gte(maxSatisfyingVersion, dependency.verifiedVersion));
 	}
 
-	protected async shouldUpdateRuntimeVersion({targetVersion, platform, projectData}: {targetVersion: string, platform: string, projectData: IProjectData}): Promise<boolean> {
-		const maxRuntimeVersion = await this.getMaxRuntimeVersion({platform, projectData});
+	protected async shouldUpdateRuntimeVersion({ targetVersion, platform, projectData }: { targetVersion: string, platform: string, projectData: IProjectData }): Promise<boolean> {
+		const maxRuntimeVersion = await this.getMaxRuntimeVersion({ platform, projectData });
 
 		return !(maxRuntimeVersion && semver.gte(maxRuntimeVersion, targetVersion));
 	}
