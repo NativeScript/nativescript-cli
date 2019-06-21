@@ -117,7 +117,7 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 		];
 
 		if (process.arch === "x64") {
-			args.push("--max_old_space_size=4096");
+			args.unshift("--max_old_space_size=4096");
 		}
 
 		if (prepareData.watch) {
