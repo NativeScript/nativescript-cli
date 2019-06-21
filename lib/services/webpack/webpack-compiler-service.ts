@@ -28,19 +28,26 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 			prepareData.watch = true;
 			const childProcess = await this.startWebpackProcess(platformData, projectData, prepareData);
 
-			childProcess.on("message", (message: any) => {
+			childProcess.on("message", (message: string | IWebpackEmitMessage) => {
 				if (message === "Webpack compilation complete.") {
 					this.$logger.info("Webpack build done!");
 					resolve(childProcess);
 				}
 
+				message = message as IWebpackEmitMessage;
 				if (message.emittedFiles) {
 					if (isFirstWebpackWatchCompilation) {
 						isFirstWebpackWatchCompilation = false;
 						return;
 					}
 
-					const result = this.getUpdatedEmittedFiles(message.emittedFiles, message.webpackRuntimeFiles, message.entryPointFiles);
+					let result;
+
+					if (prepareData.hmr) {
+						result = this.getUpdatedEmittedFiles(message.emittedFiles, message.webpackRuntimeFiles, message.entryPointFiles);
+					} else {
+						result = { emittedFiles: message.emittedFiles, fallbackFiles: <string[]>[], hash: "" };
+					}
 
 					const files = result.emittedFiles
 						.map((file: string) => path.join(platformData.appDestinationDirectoryPath, "app", file));
@@ -49,13 +56,16 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 
 					const data = {
 						files,
+						hasOnlyHotUpdateFiles: files.every(f => f.indexOf("hot-update") > -1),
 						hmrData: {
 							hash: result.hash,
 							fallbackFiles
 						}
 					};
 
-					this.emit(WEBPACK_COMPILATION_COMPLETE, data);
+					if (data.files.length) {
+						this.emit(WEBPACK_COMPILATION_COMPLETE, data);
+					}
 				}
 			});
 
@@ -193,27 +203,24 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 	private getUpdatedEmittedFiles(emittedFiles: string[], webpackRuntimeFiles: string[], entryPointFiles: string[]) {
 		let fallbackFiles: string[] = [];
 		let hotHash;
-		if (emittedFiles.some(x => x.endsWith('.hot-update.json'))) {
-			let result = emittedFiles.slice();
-			const hotUpdateScripts = emittedFiles.filter(x => x.endsWith('.hot-update.js'));
-			if (webpackRuntimeFiles && webpackRuntimeFiles.length) {
-				result = result.filter(file => webpackRuntimeFiles.indexOf(file) === -1);
-			}
-			if (entryPointFiles && entryPointFiles.length) {
-				result = result.filter(file => entryPointFiles.indexOf(file) === -1);
-			}
-			hotUpdateScripts.forEach(hotUpdateScript => {
-				const { name, hash } = this.parseHotUpdateChunkName(hotUpdateScript);
-				hotHash = hash;
-				// remove bundle/vendor.js files if there's a bundle.XXX.hot-update.js or vendor.XXX.hot-update.js
-				result = result.filter(file => file !== `${name}.js`);
-			});
-			// if applying of hot update fails, we must fallback to the full files
-			fallbackFiles = emittedFiles.filter(file => result.indexOf(file) === -1);
-			return { emittedFiles: result, fallbackFiles, hash: hotHash };
+		let result = emittedFiles.slice();
+		const hotUpdateScripts = emittedFiles.filter(x => x.endsWith('.hot-update.js'));
+		if (webpackRuntimeFiles && webpackRuntimeFiles.length) {
+			result = result.filter(file => webpackRuntimeFiles.indexOf(file) === -1);
 		}
+		if (entryPointFiles && entryPointFiles.length) {
+			result = result.filter(file => entryPointFiles.indexOf(file) === -1);
+		}
+		hotUpdateScripts.forEach(hotUpdateScript => {
+			const { name, hash } = this.parseHotUpdateChunkName(hotUpdateScript);
+			hotHash = hash;
+			// remove bundle/vendor.js files if there's a bundle.XXX.hot-update.js or vendor.XXX.hot-update.js
+			result = result.filter(file => file !== `${name}.js`);
+		});
+		// if applying of hot update fails, we must fallback to the full files
+		fallbackFiles = emittedFiles.filter(file => hotUpdateScripts.indexOf(file) === -1);
 
-		return { emittedFiles, fallbackFiles };
+		return { emittedFiles: result, fallbackFiles, hash: hotHash };
 	}
 
 	private parseHotUpdateChunkName(name: string) {

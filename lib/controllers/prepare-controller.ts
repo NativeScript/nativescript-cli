@@ -93,7 +93,7 @@ export class PrepareController extends EventEmitter {
 		this.isInitialPrepareReady = true;
 
 		if (this.persistedData && this.persistedData.length) {
-			this.emitPrepareEvent({ files: [], hasNativeChanges: result.hasNativeChanges, hmrData: null, platform: platformData.platformNameLowerCase });
+			this.emitPrepareEvent({ files: [], hasOnlyHotUpdateFiles: false, hasNativeChanges: result.hasNativeChanges, hmrData: null, platform: platformData.platformNameLowerCase });
 		}
 
 		return result;
@@ -130,7 +130,7 @@ export class PrepareController extends EventEmitter {
 			.on("all", async (event: string, filePath: string) => {
 				filePath = path.join(projectData.projectDir, filePath);
 				this.$logger.trace(`Chokidar raised event ${event} for ${filePath}.`);
-				this.emitPrepareEvent({ files: [], hmrData: null, hasNativeChanges: true, platform: platformData.platformNameLowerCase });
+				this.emitPrepareEvent({ files: [], hasOnlyHotUpdateFiles: false, hmrData: null, hasNativeChanges: true, platform: platformData.platformNameLowerCase });
 			});
 
 		this.watchersData[projectData.projectDir][platformData.platformNameLowerCase].nativeFilesWatcher = watcher;

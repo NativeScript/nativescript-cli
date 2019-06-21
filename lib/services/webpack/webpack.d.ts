@@ -28,7 +28,14 @@ declare global {
 		platform: string;
 		files: string[];
 		hmrData: IPlatformHmrData;
+		hasOnlyHotUpdateFiles: boolean;
 		hasNativeChanges: boolean;
+	}
+
+	interface IWebpackEmitMessage {
+		emittedFiles: string[];
+		webpackRuntimeFiles: string[];
+		entryPointFiles: string[];
 	}
 
 	interface IPlatformProjectService extends NodeJS.EventEmitter, IPlatformProjectServiceBase {
