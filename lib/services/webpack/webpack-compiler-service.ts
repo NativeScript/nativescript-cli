@@ -60,7 +60,8 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 						hmrData: {
 							hash: result.hash,
 							fallbackFiles
-						}
+						},
+						platform: platformData.platformNameLowerCase
 					};
 
 					if (data.files.length) {
