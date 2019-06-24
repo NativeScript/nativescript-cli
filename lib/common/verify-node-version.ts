@@ -46,11 +46,6 @@ export function verifyNodeVersion(): void {
 			os.EOL, nodeVer, cliName, supportedVersionsRange, os.EOL).red.bold);
 		process.exit(1);
 	}
-
-	var nodeWarning = getNodeWarning();
-	if (nodeWarning && nodeWarning.message) {
-		console.warn((os.EOL + nodeWarning.message + os.EOL).yellow.bold);
-	}
 }
 
 var nodeWarn: ISystemWarning = undefined;
