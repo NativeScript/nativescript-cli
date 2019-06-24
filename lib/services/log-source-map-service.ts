@@ -86,12 +86,13 @@ export class LogSourceMapService implements Mobile.ILogSourceMapService {
 		const fileIndex = rawMessage.lastIndexOf(LogSourceMapService.FILE_PREFIX);
 		const deviceProjectPath = util.format(ANDROID_DEVICE_APP_ROOT_TEMPLATE, projectData.projectIdentifiers.android);
 		let message = rawMessage;
+		let separator = ",";
 		let parts, filePath, line, column;
 
 		if (fileIndex >= 0) {
 			const fileSubstring = rawMessage.substring(fileIndex + LogSourceMapService.FILE_PREFIX.length);
 			//"data/data/org.nativescript.sourceMap/files/app/bundle.js, line: 304, column: 8"
-			parts = fileSubstring.split(",");
+			parts = fileSubstring.split(separator);
 			if (parts.length >= 3) {
 				// "data/data/org.nativescript.sourceMap/files/app/bundle.js"
 				parts[0] = parts[0].replace("'", "");
@@ -101,7 +102,8 @@ export class LogSourceMapService implements Mobile.ILogSourceMapService {
 				parts[2] = parts[2].replace(" column: ", "");
 			} else {
 				// "data/data/org.nativescript.sourceMap/files/app/bundle.js:303:17)"
-				parts = fileSubstring.split(":");
+				separator = ":";
+				parts = fileSubstring.split(separator);
 			}
 
 			if (parts.length >= 3) {
@@ -113,7 +115,7 @@ export class LogSourceMapService implements Mobile.ILogSourceMapService {
 				column = parseInt(parts[2]);
 				message = rawMessage.substring(0, fileIndex);
 				for (let i = 3; i < parts.length; i++) {
-					message += parts[i];
+					message += `${parts[i]}${i === (parts.length - 1) ? "" : separator}`;
 				}
 				// "JS: at module.exports.push../main-view-model.ts.HelloWorldModel.onTap ("
 				message = _.trimEnd(message, "(");
@@ -146,7 +148,7 @@ export class LogSourceMapService implements Mobile.ILogSourceMapService {
 
 				message = rawMessage.substring(0, fileIndex).trim();
 				for (let i = 3; i < parts.length; i++) {
-					message += parts[i];
+					message += `${parts[i]}${i === (parts.length - 1) ? "" : ":"}`;
 				}
 				message = message.trim();
 			}
