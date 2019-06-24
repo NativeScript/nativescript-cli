@@ -47,7 +47,7 @@ const testCases: IDictionary<Array<{caseName: string, message: string, expected:
 		}, {
 			caseName: "error message",
 			message: "System.err: 	Frame: function:'module.exports.push../main-view-model.ts.HelloWorldModel.onTap', file:'file:///data/data/org.nativescript.sourceMap/files/app/bundle.js', line: 304, column: 15",
-			expected: `System.err: 	Frame: function:'module.exports.push../main-view-model.ts.HelloWorldModel.onTap', file:' file:///${toPlatformSep("src/main-view-model.ts")}:31:14\n`
+			expected: `System.err: 	Frame: function:'module.exports.push../main-view-model.ts.HelloWorldModel.onTap', file:'file:///${toPlatformSep("src/main-view-model.ts")}:31:14\n`
 		}, {
 			caseName: "error message no match",
 			message: "System.err: 	Frame: function:'module.exports.push../main-view-model.ts.HelloWorldModel.onTap', file:'file:///data/data/org.nativescript.sourceMap/files/app/bundle.js', line: 400, column: 15",
@@ -60,15 +60,19 @@ const testCases: IDictionary<Array<{caseName: string, message: string, expected:
 	"ios": [{
 			caseName: "console message",
 			message: "CONSOLE LOG file:///app/bundle.js:294:20: Test.",
-			expected: `CONSOLE LOG Test. file:///${toPlatformSep("src/main-view-model.ts")}:29:20\n`
+			expected: `CONSOLE LOG file:///${toPlatformSep("src/main-view-model.ts")}:29:20 Test.\n`
 		}, {
 			caseName: "trace message",
 			message: "CONSOLE TRACE file:///app/bundle.js:295:22: Test",
-			expected: `CONSOLE TRACE Test file:///${toPlatformSep("src/main-view-model.ts")}:30:22\n`
+			expected: `CONSOLE TRACE file:///${toPlatformSep("src/main-view-model.ts")}:30:22 Test\n`
 		}, {
 			caseName: "error message",
 			message: "file:///app/bundle.js:296:32: JS ERROR Error: Test",
-			expected: `JS ERROR Error Test file:///${toPlatformSep("src/main-view-model.ts")}:31:31\n`
+			expected: `file:///${toPlatformSep("src/main-view-model.ts")}:31:31 JS ERROR Error: Test\n`
+		}, {
+			caseName: "error stack tracew",
+			message: "onTap@file:///app/bundle.js:296:32",
+			expected: `onTap@file:///${toPlatformSep("src/main-view-model.ts")}:31:31\n`
 		}, {
 			caseName: "error message no match",
 			message: "file:///app/bundle.js:400:32: JS ERROR Error: Test",
