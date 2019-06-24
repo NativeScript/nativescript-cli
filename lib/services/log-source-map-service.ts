@@ -9,7 +9,8 @@ interface IParsedMessage {
 	filePath?: string;
 	line?: number;
 	column?: number;
-	message: string;
+	messagePrefix: string;
+	messageSuffix: string;
 }
 
 interface IFileLocation {
@@ -46,7 +47,7 @@ export class LogSourceMapService implements Mobile.ILogSourceMapService {
 
 			if (originalLocation && originalLocation.sourceFile) {
 				const {sourceFile, line, column} = originalLocation;
-				outputData = `${outputData}${parsedLine.message} ${LogSourceMapService.FILE_PREFIX}${sourceFile}:${line}:${column}\n`;
+				outputData = `${outputData}${parsedLine.messagePrefix}${LogSourceMapService.FILE_PREFIX}${sourceFile}:${line}:${column}${parsedLine.messageSuffix}\n`;
 			} else if (rawLine !== "") {
 				outputData = `${outputData}${rawLine}\n`;
 			}
@@ -85,13 +86,14 @@ export class LogSourceMapService implements Mobile.ILogSourceMapService {
 		// "System.err: File: "file:///data/data/org.nativescript.sourceMap/files/app/bundle.js, line: 304, column: 8"
 		const fileIndex = rawMessage.lastIndexOf(LogSourceMapService.FILE_PREFIX);
 		const deviceProjectPath = util.format(ANDROID_DEVICE_APP_ROOT_TEMPLATE, projectData.projectIdentifiers.android);
-		let message = rawMessage;
-		let parts, filePath, line, column;
+		let separator = ",";
+		let messageSuffix = "";
+		let parts, filePath, line, column, messagePrefix;
 
 		if (fileIndex >= 0) {
 			const fileSubstring = rawMessage.substring(fileIndex + LogSourceMapService.FILE_PREFIX.length);
 			//"data/data/org.nativescript.sourceMap/files/app/bundle.js, line: 304, column: 8"
-			parts = fileSubstring.split(",");
+			parts = fileSubstring.split(separator);
 			if (parts.length >= 3) {
 				// "data/data/org.nativescript.sourceMap/files/app/bundle.js"
 				parts[0] = parts[0].replace("'", "");
@@ -101,7 +103,8 @@ export class LogSourceMapService implements Mobile.ILogSourceMapService {
 				parts[2] = parts[2].replace(" column: ", "");
 			} else {
 				// "data/data/org.nativescript.sourceMap/files/app/bundle.js:303:17)"
-				parts = fileSubstring.split(":");
+				separator = ":";
+				parts = fileSubstring.split(separator);
 			}
 
 			if (parts.length >= 3) {
@@ -111,24 +114,23 @@ export class LogSourceMapService implements Mobile.ILogSourceMapService {
 				filePath =  path.relative(devicePath, `${"/"}${parts[0]}`);
 				line = parseInt(parts[1]);
 				column = parseInt(parts[2]);
-				message = rawMessage.substring(0, fileIndex);
+				messagePrefix = rawMessage.substring(0, fileIndex);
 				for (let i = 3; i < parts.length; i++) {
-					message += parts[i];
+					messageSuffix += `${parts[i]}${i === (parts.length - 1) ? "" : separator}`;
 				}
 				// "JS: at module.exports.push../main-view-model.ts.HelloWorldModel.onTap ("
-				message = _.trimEnd(message, "(");
-				message = message.trim();
+				messagePrefix = _.trimEnd(messagePrefix, "(");
 			}
 		}
 
-		return { filePath, line, column, message };
+		return { filePath, line, column, messagePrefix, messageSuffix};
 	}
 
 	private parseIosLog(rawMessage: string): IParsedMessage {
 		// "CONSOLE INFO file:///app/vendor.js:131:36: HMR: Hot Module Replacement Enabled. Waiting for signal."
 		const fileIndex = rawMessage.lastIndexOf(LogSourceMapService.FILE_PREFIX);
-		let message = rawMessage;
-		let parts, filePath, line, column;
+		let messageSuffix = "";
+		let parts, filePath, line, column, messagePrefix;
 
 		if (fileIndex >= 0) {
 			// "app/vendor.js:131:36: HMR: Hot Module Replacement Enabled. Waiting for signal."
@@ -144,15 +146,14 @@ export class LogSourceMapService implements Mobile.ILogSourceMapService {
 				line = parseInt(parts[1]);
 				column = parseInt(parts[2]);
 
-				message = rawMessage.substring(0, fileIndex).trim();
+				messagePrefix = rawMessage.substring(0, fileIndex);
 				for (let i = 3; i < parts.length; i++) {
-					message += parts[i];
+					messageSuffix += `${parts[i]}${i === (parts.length - 1) ? "" : ":"}`;
 				}
-				message = message.trim();
 			}
 		}
 
-		return { filePath, line, column, message };
+		return { filePath, line, column, messagePrefix, messageSuffix };
 	}
 
 	private getFilesLocation(platform: string, projectData: IProjectData): string {
