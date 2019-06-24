@@ -102,7 +102,9 @@ export class PrepareController extends EventEmitter {
 	private async startJSWatcherWithPrepare(platformData: IPlatformData, projectData: IProjectData, prepareData: IPrepareData): Promise<void> {
 		if (!this.watchersData[projectData.projectDir][platformData.platformNameLowerCase].webpackCompilerProcess) {
 			this.$webpackCompilerService.on(WEBPACK_COMPILATION_COMPLETE, data => {
-				this.emitPrepareEvent({ ...data, hasNativeChanges: false, platform: platformData.platformNameLowerCase });
+				if (data.platform.toLowerCase() === platformData.platformNameLowerCase) {
+					this.emitPrepareEvent({ ...data, hasNativeChanges: false });
+				}
 			});
 
 			const childProcess = await this.$webpackCompilerService.compileWithWatch(platformData, projectData, prepareData);
