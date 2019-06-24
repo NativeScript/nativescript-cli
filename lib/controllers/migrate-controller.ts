@@ -2,6 +2,7 @@ import * as path from "path";
 import * as semver from "semver";
 import * as constants from "../constants";
 import { UpdateControllerBase } from "./update-controller-base";
+import { fromWindowsRelativePathToUnix } from "../common/helpers";
 
 export class MigrateController extends UpdateControllerBase implements IMigrateController {
 	constructor(
@@ -15,9 +16,14 @@ export class MigrateController extends UpdateControllerBase implements IMigrateC
 		private $errors: IErrors,
 		private $addPlatformService: IAddPlatformService,
 		private $pluginsService: IPluginsService,
-		private $projectDataService: IProjectDataService) {
+		private $projectDataService: IProjectDataService,
+		private $resources: IResourceLoader) {
 		super($fs, $platformCommandHelper, $platformsDataService, $packageInstallationManager, $packageManager);
 	}
+
+	static readonly backupFolder: string = ".migration_backup";
+	static readonly migrateFailMessage: string = "Could not migrate the project!";
+	static readonly backupFailMessage: string = "Could not backup project folders!";
 
 	static readonly folders: string[] = [
 		constants.LIB_DIR_NAME,
@@ -25,10 +31,11 @@ export class MigrateController extends UpdateControllerBase implements IMigrateC
 		constants.WEBPACK_CONFIG_NAME,
 		constants.PACKAGE_JSON_FILE_NAME,
 		constants.PACKAGE_LOCK_JSON_FILE_NAME,
-		constants.TSCCONFIG_TNS_JSON_NAME
+		constants.TSCCONFIG_TNS_JSON_NAME,
+		constants.KARMA_CONFIG_NAME
 	];
 
-	static readonly migrationDependencies: IMigrationDependency[] = [
+	private migrationDependencies: IMigrationDependency[] = [
 		{ packageName: constants.TNS_CORE_MODULES_NAME, verifiedVersion: "6.0.0-next-2019-06-20-155941-01" },
 		{ packageName: constants.TNS_CORE_MODULES_WIDGETS_NAME, verifiedVersion: "6.0.0-next-2019-06-20-155941-01" },
 		{ packageName: "node-sass", isDev: true, verifiedVersion: "4.12.0" },
@@ -57,12 +64,12 @@ export class MigrateController extends UpdateControllerBase implements IMigrateC
 		//TODO update with no prerelease version compatible with webpack only hooks
 		{ packageName: "nativescript-vue", verifiedVersion: "2.3.0-rc.0" },
 		{ packageName: "nativescript-permissions", verifiedVersion: "1.3.0" },
-		{ packageName: "nativescript-cardview", verifiedVersion: "3.2.0" }
+		{ packageName: "nativescript-cardview", verifiedVersion: "3.2.0" },
+		{ packageName: "nativescript-unit-test-runner", verifiedVersion: "0.6.3",
+			shouldMigrateAction: (projectData: IProjectData) => this.hasDependency({ packageName: "nativescript-unit-test-runner", isDev: false }, projectData),
+			migrateAction: this.migrateUnitTestRunner.bind(this)
+		}
 	];
-
-	static readonly backupFolder: string = ".migration_backup";
-	static readonly migrateFailMessage: string = "Could not migrate the project!";
-	static readonly backupFailMessage: string = "Could not backup project folders!";
 
 	get verifiedPlatformVersions(): IDictionary<string> {
 		return {
@@ -97,9 +104,13 @@ export class MigrateController extends UpdateControllerBase implements IMigrateC
 	public async shouldMigrate({ projectDir }: IProjectDir): Promise<boolean> {
 		const projectData = this.$projectDataService.getProjectData(projectDir);
 
-		for (let i = 0; i < MigrateController.migrationDependencies.length; i++) {
-			const dependency = MigrateController.migrationDependencies[i];
+		for (let i = 0; i < this.migrationDependencies.length; i++) {
+			const dependency = this.migrationDependencies[i];
 			const hasDependency = this.hasDependency(dependency, projectData);
+
+			if (hasDependency && dependency.shouldMigrateAction && dependency.shouldMigrateAction(projectData)) {
+				return true;
+			}
 
 			if (hasDependency && dependency.replaceWith) {
 				return true;
@@ -135,32 +146,18 @@ export class MigrateController extends UpdateControllerBase implements IMigrateC
 
 	private async migrateDependencies(projectData: IProjectData): Promise<void> {
 		this.$logger.info("Start dependencies migration.");
-		for (let i = 0; i < MigrateController.migrationDependencies.length; i++) {
-			const dependency = MigrateController.migrationDependencies[i];
+		for (let i = 0; i < this.migrationDependencies.length; i++) {
+			const dependency = this.migrationDependencies[i];
 			const hasDependency = this.hasDependency(dependency, projectData);
 
-			if (hasDependency && dependency.replaceWith) {
-				this.$pluginsService.removeFromPackageJson(dependency.packageName, dependency.isDev, projectData.projectDir);
-				const replacementDep = _.find(MigrateController.migrationDependencies, migrationPackage => migrationPackage.packageName === dependency.replaceWith);
-				if (!replacementDep) {
-					this.$errors.failWithoutHelp("Failed to find replacement dependency.");
+			if (hasDependency && dependency.migrateAction && dependency.shouldMigrateAction(projectData)) {
+				const newDependencies = await dependency.migrateAction(projectData, path.join(projectData.projectDir, MigrateController.backupFolder));
+				for (const newDependency of newDependencies) {
+					await this.migrateDependency(newDependency, projectData);
 				}
-				this.$logger.info(`Replacing '${dependency.packageName}' with '${replacementDep.packageName}'.`);
-				this.$pluginsService.addToPackageJson(replacementDep.packageName, replacementDep.verifiedVersion, replacementDep.isDev, projectData.projectDir);
-				continue;
 			}
 
-			if (hasDependency && await this.shouldMigrateDependencyVersion(dependency, projectData)) {
-				this.$logger.info(`Updating '${dependency.packageName}' to compatible version '${dependency.verifiedVersion}'`);
-				this.$pluginsService.addToPackageJson(dependency.packageName, dependency.verifiedVersion, dependency.isDev, projectData.projectDir);
-				continue;
-			}
-
-			if (!hasDependency && dependency.shouldAddIfMissing) {
-				this.$logger.info(`Adding '${dependency.packageName}' with version '${dependency.verifiedVersion}'`);
-				this.$pluginsService.addToPackageJson(dependency.packageName, dependency.verifiedVersion, dependency.isDev, projectData.projectDir);
-				continue;
-			}
+			await this.migrateDependency(dependency, projectData);
 		}
 
 		for (const platform in this.$devicePlatformsConstants) {
@@ -185,6 +182,32 @@ export class MigrateController extends UpdateControllerBase implements IMigrateC
 		this.$logger.info("Migration complete.");
 	}
 
+	private async migrateDependency(dependency: IMigrationDependency, projectData: IProjectData): Promise<void> {
+		const hasDependency = this.hasDependency(dependency, projectData);
+
+		if (hasDependency && dependency.replaceWith) {
+			this.$pluginsService.removeFromPackageJson(dependency.packageName, dependency.isDev, projectData.projectDir);
+			const replacementDep = _.find(this.migrationDependencies, migrationPackage => migrationPackage.packageName === dependency.replaceWith);
+			if (!replacementDep) {
+				this.$errors.failWithoutHelp("Failed to find replacement dependency.");
+			}
+			this.$logger.info(`Replacing '${dependency.packageName}' with '${replacementDep.packageName}'.`);
+			this.$pluginsService.addToPackageJson(replacementDep.packageName, replacementDep.verifiedVersion, replacementDep.isDev, projectData.projectDir);
+			return;
+		}
+
+		if (hasDependency && await this.shouldMigrateDependencyVersion(dependency, projectData)) {
+			this.$logger.info(`Updating '${dependency.packageName}' to compatible version '${dependency.verifiedVersion}'`);
+			this.$pluginsService.addToPackageJson(dependency.packageName, dependency.verifiedVersion, dependency.isDev, projectData.projectDir);
+			return;
+		}
+
+		if (!hasDependency && dependency.shouldAddIfMissing) {
+			this.$logger.info(`Adding '${dependency.packageName}' with version '${dependency.verifiedVersion}'`);
+			this.$pluginsService.addToPackageJson(dependency.packageName, dependency.verifiedVersion, dependency.isDev, projectData.projectDir);
+		}
+	}
+
 	private async shouldMigrateDependencyVersion(dependency: IMigrationDependency, projectData: IProjectData): Promise<boolean> {
 		const collection = dependency.isDev ? projectData.devDependencies : projectData.dependencies;
 		const maxSatisfyingVersion = await this.getMaxDependencyVersion(dependency.packageName, collection[dependency.packageName]);
@@ -196,6 +219,35 @@ export class MigrateController extends UpdateControllerBase implements IMigrateC
 		const maxRuntimeVersion = await this.getMaxRuntimeVersion({ platform, projectData });
 
 		return !(maxRuntimeVersion && semver.gte(maxRuntimeVersion, targetVersion));
+	}
+
+	private async migrateUnitTestRunner(projectData: IProjectData, migrationBackupDirPath: string): Promise<IMigrationDependency[]> {
+		// Migrate karma.conf.js
+		const oldKarmaContent = this.$fs.readText(path.join(migrationBackupDirPath, constants.KARMA_CONFIG_NAME));
+
+		const regExp = /frameworks:\s+\[(\S+)\]\,/g;
+		const matches = regExp.exec(oldKarmaContent);
+		const frameworks = (matches && matches[1]) || '["jasmine"]';
+
+		const testsDir = path.join(projectData.appDirectoryPath, 'tests');
+		const relativeTestsDir = path.relative(projectData.projectDir, testsDir);
+		const testFiles = `'${fromWindowsRelativePathToUnix(relativeTestsDir)}/**/*.*'`;
+
+		const karmaConfTemplate = this.$resources.readText('test/karma.conf.js');
+		const karmaConf = _.template(karmaConfTemplate)({ frameworks, testFiles });
+		this.$fs.writeFile(path.join(projectData.projectDir, constants.KARMA_CONFIG_NAME), karmaConf);
+
+		// Dependencies to migrate
+		const dependencies = [
+			{ packageName: "karma-webpack", verifiedVersion: "3.0.5", isDev: true, shouldAddIfMissing: !this.hasDependency({ packageName: "karma-webpack", isDev: true }, projectData) },
+			{ packageName: "karma-jasmine", verifiedVersion: "2.0.1", isDev: true },
+			{ packageName: "karma-mocha", verifiedVersion: "1.3.0", isDev: true },
+			{ packageName: "karma-chai", verifiedVersion: "0.1.0", isDev: true },
+			{ packageName: "karma-qunit", verifiedVersion: "3.1.2", isDev: true },
+			{ packageName: "karma", verifiedVersion: "4.1.0", isDev: true },
+		];
+
+		return dependencies;
 	}
 }
 

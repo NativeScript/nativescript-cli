@@ -34,18 +34,13 @@ export class UpdateControllerBase {
 
 	protected hasDependency(dependency: IDependency, projectData: IProjectData): boolean {
 		const collection = dependency.isDev ? projectData.devDependencies : projectData.dependencies;
-		if (collection && collection[dependency.packageName]) {
-			return true;
-		}
+		return collection && collection[dependency.packageName];
 	}
 
 	protected hasRuntimeDependency({platform, projectData}: {platform: string, projectData: IProjectData}): boolean {
 		const lowercasePlatform = platform.toLowerCase();
 		const currentPlatformVersion = this.$platformCommandHelper.getCurrentPlatformVersion(lowercasePlatform, projectData);
-
-		if (currentPlatformVersion) {
-			return true;
-		}
+		return !!currentPlatformVersion;
 	}
 
 	protected async getMaxRuntimeVersion({platform, projectData}: {platform: string, projectData: IProjectData}) {
