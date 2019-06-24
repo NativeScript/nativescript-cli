@@ -22,12 +22,34 @@ interface IFileLocation {
 export class LogSourceMapService implements Mobile.ILogSourceMapService {
 	private static FILE_PREFIX = "file:///";
 	private getProjectData: Function;
+	private cache: IDictionary<sourcemap.SourceMapConsumer> = {};
+
 	constructor(
 		private $fs: IFileSystem,
 		private $projectDataService: IProjectDataService,
 		private $injector: IInjector,
-		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants) {
-			this.getProjectData = _.memoize(this.$projectDataService.getProjectData.bind(this.$projectDataService));
+		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
+		private $logger: ILogger) {
+		this.getProjectData = _.memoize(this.$projectDataService.getProjectData.bind(this.$projectDataService));
+	}
+
+	public async setSourceMapConsumerForFile(filePath: string): Promise<void> {
+		try {
+			if (!this.$fs.getFsStats(filePath).isDirectory()) {
+				const source = this.$fs.readText(filePath);
+				const sourceMapRaw = sourceMapConverter.fromSource(source);
+				let smc: sourcemap.SourceMapConsumer = null;
+				if (sourceMapRaw && sourceMapRaw.sourcemap) {
+					const sourceMap = sourceMapRaw.sourcemap;
+					smc = new sourcemap.SourceMapConsumer(sourceMap);
+				}
+
+				this.cache[filePath] = smc;
+			}
+		} catch (err) {
+			this.$logger.trace(`Unable to set sourceMapConsumer for file ${filePath}. Error is: ${err}`);
+		}
+
 	}
 
 	public replaceWithOriginalFileLocations(platform: string, messageData: string, loggingOptions: Mobile.IDeviceLogOptions): string {
@@ -46,7 +68,7 @@ export class LogSourceMapService implements Mobile.ILogSourceMapService {
 			const originalLocation = this.getOriginalFileLocation(platform, parsedLine, projectData);
 
 			if (originalLocation && originalLocation.sourceFile) {
-				const {sourceFile, line, column} = originalLocation;
+				const { sourceFile, line, column } = originalLocation;
 				outputData = `${outputData}${parsedLine.messagePrefix}${LogSourceMapService.FILE_PREFIX}${sourceFile}:${line}:${column}${parsedLine.messageSuffix}\n`;
 			} else if (rawLine !== "") {
 				outputData = `${outputData}${rawLine}\n`;
@@ -57,25 +79,21 @@ export class LogSourceMapService implements Mobile.ILogSourceMapService {
 	}
 
 	private getOriginalFileLocation(platform: string, parsedLine: IParsedMessage, projectData: IProjectData): IFileLocation {
-		const fileLoaction = path.join(this.getFilesLocation(platform, projectData), APP_FOLDER_NAME);
+		const fileLocation = path.join(this.getFilesLocation(platform, projectData), APP_FOLDER_NAME);
 
 		if (parsedLine && parsedLine.filePath) {
-			const sourceMapFile = path.join(fileLoaction, parsedLine.filePath);
-			if (this.$fs.exists(sourceMapFile)) {
-				const source = this.$fs.readText(sourceMapFile);
-				const sourceMapRaw = sourceMapConverter.fromSource(source);
-				if (sourceMapRaw && sourceMapRaw.sourcemap) {
-					const sourceMap = sourceMapRaw.sourcemap;
-					const smc = new sourcemap.SourceMapConsumer(sourceMap);
-					const originalPosition = smc.originalPositionFor({ line: parsedLine.line, column: parsedLine.column });
-					let sourceFile = originalPosition.source && originalPosition.source.replace("webpack:///", "");
-					if (sourceFile) {
-						if (!_.startsWith(sourceFile, NODE_MODULES_FOLDER_NAME)) {
-							sourceFile = path.join(projectData.getAppDirectoryRelativePath(), sourceFile);
-						}
-						sourceFile = stringReplaceAll(sourceFile, "/", path.sep);
-						return { sourceFile, line: originalPosition.line, column: originalPosition.column};
+			const sourceMapFile = path.join(fileLocation, parsedLine.filePath);
+			const smc = this.cache[sourceMapFile];
+			if (smc) {
+				const originalPosition = smc.originalPositionFor({ line: parsedLine.line, column: parsedLine.column });
+				let sourceFile = originalPosition.source && originalPosition.source.replace("webpack:///", "");
+				if (sourceFile) {
+					if (!_.startsWith(sourceFile, NODE_MODULES_FOLDER_NAME)) {
+						sourceFile = path.join(projectData.getAppDirectoryRelativePath(), sourceFile);
 					}
+
+					sourceFile = stringReplaceAll(sourceFile, "/", path.sep);
+					return { sourceFile, line: originalPosition.line, column: originalPosition.column };
 				}
 			}
 		}
@@ -111,7 +129,7 @@ export class LogSourceMapService implements Mobile.ILogSourceMapService {
 				// "/data/data/org.nativescript.sourceMap/files/app/"
 				const devicePath = `${deviceProjectPath}/${APP_FOLDER_NAME}/`;
 				// "bundle.js"
-				filePath =  path.relative(devicePath, `${"/"}${parts[0]}`);
+				filePath = path.relative(devicePath, `${"/"}${parts[0]}`);
 				line = parseInt(parts[1]);
 				column = parseInt(parts[2]);
 				messagePrefix = rawMessage.substring(0, fileIndex);
@@ -123,7 +141,7 @@ export class LogSourceMapService implements Mobile.ILogSourceMapService {
 			}
 		}
 
-		return { filePath, line, column, messagePrefix, messageSuffix};
+		return { filePath, line, column, messagePrefix, messageSuffix };
 	}
 
 	private parseIosLog(rawMessage: string): IParsedMessage {
@@ -138,10 +156,10 @@ export class LogSourceMapService implements Mobile.ILogSourceMapService {
 			parts = fileSubstring.split(":");
 
 			if (parts && parts.length >= 3) {
-				filePath =  parts[0];
+				filePath = parts[0];
 				// "app/vendor.js"
 				if (_.startsWith(filePath, APP_FOLDER_NAME)) {
-					filePath = path.relative(APP_FOLDER_NAME , parts[0]);
+					filePath = path.relative(APP_FOLDER_NAME, parts[0]);
 				}
 				line = parseInt(parts[1]);
 				column = parseInt(parts[2]);

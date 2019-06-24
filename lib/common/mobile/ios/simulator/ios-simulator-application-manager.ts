@@ -15,10 +15,10 @@ export class IOSSimulatorApplicationManager extends ApplicationManagerBase {
 		private device: Mobile.IiOSDevice,
 		private $options: IOptions,
 		private $fs: IFileSystem,
-		private $deviceLogProvider: Mobile.IDeviceLogProvider,
+		protected $deviceLogProvider: Mobile.IDeviceLogProvider,
 		$logger: ILogger,
 		$hooksService: IHooksService) {
-		super($logger, $hooksService);
+		super($logger, $hooksService, $deviceLogProvider);
 	}
 
 	public async getInstalledApplications(): Promise<string[]> {

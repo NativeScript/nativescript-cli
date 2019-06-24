@@ -5,8 +5,8 @@ import { LoggerConfigData } from "../../constants";
 export class DeviceLogProvider extends DeviceLogProviderBase {
 	constructor(protected $logFilter: Mobile.ILogFilter,
 		protected $logger: ILogger,
-		private $logSourceMapService: Mobile.ILogSourceMapService) {
-		super($logFilter, $logger);
+		protected $logSourceMapService: Mobile.ILogSourceMapService) {
+		super($logFilter, $logger, $logSourceMapService);
 	}
 
 	public logData(lineText: string, platform: string, deviceIdentifier: string): void {

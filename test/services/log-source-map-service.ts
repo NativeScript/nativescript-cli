@@ -5,6 +5,7 @@ import { LogSourceMapService } from "../../lib/services/log-source-map-service";
 import { DevicePlatformsConstants } from "../../lib/common/mobile/device-platforms-constants";
 import { FileSystem } from "../../lib/common/file-system";
 import { stringReplaceAll } from "../../lib/common/helpers";
+import { LoggerStub } from "../stubs";
 
 function createTestInjector(): IInjector {
 	const testInjector = new Yok();
@@ -30,6 +31,7 @@ function createTestInjector(): IInjector {
 	});
 	testInjector.register("fs", FileSystem);
 	testInjector.register("devicePlatformsConstants", DevicePlatformsConstants);
+	testInjector.register("logger", LoggerStub);
 	testInjector.register("logSourceMapService", LogSourceMapService);
 
 	return testInjector;
@@ -83,9 +85,15 @@ const testCases: IDictionary<Array<{caseName: string, message: string, expected:
 describe("log-source-map-service", () => {
 	describe("replaceWithOriginalFileLocations", () => {
 		let logSourceMapService: Mobile.ILogSourceMapService;
-		before(() => {
+		before(async () => {
 			const testInjector = createTestInjector();
 			logSourceMapService = testInjector.resolve("logSourceMapService");
+			const originalFilesLocation = path.join(__dirname, ".." , "files", "sourceMapBundle");
+			const fs = testInjector.resolve<IFileSystem>("fs");
+			const files = fs.enumerateFilesInDirectorySync(originalFilesLocation);
+			for (const file of files) {
+				await logSourceMapService.setSourceMapConsumerForFile(file);
+			}
 		});
 
 		_.forEach(testCases, ( cases, platform ) => {

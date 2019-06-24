@@ -1,6 +1,6 @@
 import { Yok } from "../../../yok";
 import { assert } from "chai";
-import { CommonLoggerStub, HooksServiceStub } from "../stubs";
+import { CommonLoggerStub, HooksServiceStub, DeviceLogProviderStub } from "../stubs";
 import { ApplicationManagerBase } from "../../../mobile/application-manager-base";
 
 let currentlyAvailableAppsForDebugging: Mobile.IDeviceApplicationInformation[];
@@ -8,8 +8,8 @@ let currentlyInstalledApps: string[];
 let currentlyAvailableAppWebViewsForDebugging: IDictionary<Mobile.IDebugWebViewInfo[]>;
 
 class ApplicationManager extends ApplicationManagerBase {
-	constructor($logger: ILogger, $hooksService: IHooksService) {
-		super($logger, $hooksService);
+	constructor($logger: ILogger, $hooksService: IHooksService, $deviceLogProvider: Mobile.IDeviceLogProvider) {
+		super($logger, $hooksService, $deviceLogProvider);
 	}
 
 	public async installApplication(packageFilePath: string): Promise<void> {
@@ -46,6 +46,7 @@ function createTestInjector(): IInjector {
 	testInjector.register("logger", CommonLoggerStub);
 	testInjector.register("hooksService", HooksServiceStub);
 	testInjector.register("applicationManager", ApplicationManager);
+	testInjector.register("deviceLogProvider", DeviceLogProviderStub);
 	return testInjector;
 }
 

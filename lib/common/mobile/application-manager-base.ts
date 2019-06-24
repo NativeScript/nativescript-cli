@@ -7,8 +7,15 @@ export abstract class ApplicationManagerBase extends EventEmitter implements Mob
 	private lastAvailableDebuggableAppViews: IDictionary<Mobile.IDebugWebViewInfo[]> = {};
 
 	constructor(protected $logger: ILogger,
-		protected $hooksService: IHooksService) {
+		protected $hooksService: IHooksService,
+		protected $deviceLogProvider: Mobile.IDeviceLogProvider) {
 		super();
+	}
+
+	public async setTransferredAppFiles(files: string[]): Promise<void> {
+		for (const file of files) {
+			await this.$deviceLogProvider.setSourceFileLocation(file);
+		}
 	}
 
 	public async reinstallApplication(appIdentifier: string, packageFilePath: string): Promise<void> {
