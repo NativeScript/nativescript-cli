@@ -28,6 +28,7 @@ export const PLATFORMS_DIR_NAME = "platforms";
 export const HOOKS_DIR_NAME = "hooks";
 export const WEBPACK_CONFIG_NAME = "webpack.config.js";
 export const TSCCONFIG_TNS_JSON_NAME = "tsconfig.tns.json";
+export const KARMA_CONFIG_NAME = "karma.conf.js";
 export const LIB_DIR_NAME = "lib";
 export const CODE_SIGN_ENTITLEMENTS = "CODE_SIGN_ENTITLEMENTS";
 export const AWAIT_NOTIFICATION_TIMEOUT_SECONDS = 9;
