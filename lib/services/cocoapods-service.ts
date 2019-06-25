@@ -84,7 +84,7 @@ export class CocoaPodsService implements ICocoaPodsService {
 			return;
 		}
 
-		const { podfileContent, replacedFunctions, podfilePlatformData } = this.buildPodfileContent(podfilePath, moduleName);
+		const { podfileContent, replacedFunctions, podfilePlatformData } = this.buildPodfileContent(podfilePath, moduleName, projectData.projectName);
 		const pathToProjectPodfile = this.getProjectPodfilePath(nativeProjectPath);
 		const projectPodfileContent = this.$fs.exists(pathToProjectPodfile) ? this.$fs.readText(pathToProjectPodfile).trim() : "";
 
@@ -237,9 +237,10 @@ export class CocoaPodsService implements ICocoaPodsService {
 		return `${CocoaPodsService.PODFILE_POST_INSTALL_SECTION_NAME} do |${CocoaPodsService.INSTALLER_BLOCK_PARAMETER_NAME}|${EOL}`;
 	}
 
-	private buildPodfileContent(pluginPodFilePath: string, pluginName: string): { podfileContent: string, replacedFunctions: IRubyFunction[], podfilePlatformData: IPodfilePlatformData } {
+	private buildPodfileContent(pluginPodFilePath: string, pluginName: string, target: string): { podfileContent: string, replacedFunctions: IRubyFunction[], podfilePlatformData: IPodfilePlatformData } {
 		const pluginPodfileContent = this.$fs.readText(pluginPodFilePath);
-		const data = this.replaceHookContent(CocoaPodsService.PODFILE_POST_INSTALL_SECTION_NAME, pluginPodfileContent, pluginName);
+		const strippedContent = this.stripTargetFromPodfileContent(pluginPodfileContent, target);
+		const data = this.replaceHookContent(CocoaPodsService.PODFILE_POST_INSTALL_SECTION_NAME, strippedContent, pluginName);
 		const { replacedContent, podfilePlatformData } = this.$cocoaPodsPlatformManager.replacePlatformRow(data.replacedContent, pluginPodFilePath);
 
 		return {
@@ -249,6 +250,13 @@ export class CocoaPodsService implements ICocoaPodsService {
 		};
 	}
 
+	private stripTargetFromPodfileContent(content: string, target: string): string {
+		const regExp = new RegExp(`([\\s\\S])target\\s+?['"]${target}['"][\\s]\+do([\\s\\S]+)end`, "gm");
+
+		const r =  content.replace(regExp, "$1$2");
+		console.log("input content", content, "replaced with", r);
+		return r;
+	}
 }
 
 $injector.register("cocoapodsService", CocoaPodsService);
