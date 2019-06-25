@@ -225,9 +225,9 @@ export class MigrateController extends UpdateControllerBase implements IMigrateC
 		// Migrate karma.conf.js
 		const oldKarmaContent = this.$fs.readText(path.join(migrationBackupDirPath, constants.KARMA_CONFIG_NAME));
 
-		const regExp = /frameworks:\s+\[(\S+)\]\,/g;
+		const regExp = /frameworks:\s+\[([\S\s]*?)\]/g;
 		const matches = regExp.exec(oldKarmaContent);
-		const frameworks = (matches && matches[1]) || '["jasmine"]';
+		const frameworks = (matches && matches[1] && matches[1].trim()) || '["jasmine"]';
 
 		const testsDir = path.join(projectData.appDirectoryPath, 'tests');
 		const relativeTestsDir = path.relative(projectData.projectDir, testsDir);
