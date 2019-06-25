@@ -165,6 +165,14 @@ declare module Mobile {
 	 */
 	interface IDeviceLogProvider extends NodeJS.EventEmitter {
 		/**
+		 * Sets the path to source file from which the logs are produced,
+		 * i.e. the original file location of the file running on device.
+		 * @param {string} pathToSourceFile Path to the source file.
+		 * @returns {Promise<void>}
+		 */
+		setSourceFileLocation(pathToSourceFile: string): Promise<void>;
+
+		/**
 		 * Logs data in the specific way for the consumer.
 		 * @param {string} line String from the device logs.
 		 * @param {string} platform The platform of the device (for example iOS or Android).
@@ -258,6 +266,12 @@ declare module Mobile {
 	 * Replaces file paths in device log with their original location
 	 */
 	interface ILogSourceMapService {
+		/**
+		 * Sets the sourceMapConsumer instance for specified file.
+		 * @param {string} filePath Full path to a local file containing both content and inline source map.
+		 * @return {Promise<void>}
+		 */
+		setSourceMapConsumerForFile(filePath: string): Promise<void>;
 		replaceWithOriginalFileLocations(platform: string, messageData: string, loggingOptions: Mobile.IDeviceLogOptions): string
 	}
 
@@ -307,6 +321,12 @@ declare module Mobile {
 		tryStartApplication(appData: IApplicationData): Promise<void>;
 		getDebuggableApps(): Promise<Mobile.IDeviceApplicationInformation[]>;
 		getDebuggableAppViews(appIdentifiers: string[]): Promise<IDictionary<Mobile.IDebugWebViewInfo[]>>;
+		/**
+		 * Sets the files transferred on device.
+		 * @param {string[]} files Local paths to files transferred on device.
+		 * @returns {Promise<void>}
+		 */
+		setTransferredAppFiles(files: string[]): Promise<void>;
 	}
 
 	/**

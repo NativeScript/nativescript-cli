@@ -13,8 +13,8 @@ export class IOSApplicationManager extends ApplicationManagerBase {
 		private $iOSNotificationService: IiOSNotificationService,
 		private $iosDeviceOperations: IIOSDeviceOperations,
 		private $options: IOptions,
-		private $deviceLogProvider: Mobile.IDeviceLogProvider) {
-		super($logger, $hooksService);
+		protected $deviceLogProvider: Mobile.IDeviceLogProvider) {
+		super($logger, $hooksService, $deviceLogProvider);
 	}
 
 	public async getInstalledApplications(): Promise<string[]> {

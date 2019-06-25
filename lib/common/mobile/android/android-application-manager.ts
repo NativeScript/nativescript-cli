@@ -14,11 +14,11 @@ export class AndroidApplicationManager extends ApplicationManagerBase {
 		private $logcatHelper: Mobile.ILogcatHelper,
 		private $androidProcessService: Mobile.IAndroidProcessService,
 		private $httpClient: Server.IHttpClient,
-		private $deviceLogProvider: Mobile.IDeviceLogProvider,
+		protected $deviceLogProvider: Mobile.IDeviceLogProvider,
 		private $errors: IErrors,
 		$logger: ILogger,
 		$hooksService: IHooksService) {
-		super($logger, $hooksService);
+		super($logger, $hooksService, $deviceLogProvider);
 	}
 
 	public async getInstalledApplications(): Promise<string[]> {

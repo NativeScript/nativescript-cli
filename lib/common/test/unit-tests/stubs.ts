@@ -164,6 +164,9 @@ export class DeviceLogProviderStub extends EventEmitter implements Mobile.IDevic
 	public currentDeviceProjectNames: IStringDictionary = {};
 	public currentDeviceProjectDirs: IStringDictionary = {};
 
+	async setSourceFileLocation(pathToSourceFile: string): Promise<void> {
+	}
+
 	logData(line: string, platform: string, deviceIdentifier: string): void {
 		this.logger.info(line, platform, deviceIdentifier, { [LoggerConfigData.skipNewLine]: true });
 	}

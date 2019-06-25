@@ -5,8 +5,17 @@ export abstract class DeviceLogProviderBase extends EventEmitter implements Mobi
 	protected devicesLogOptions: IDictionary<Mobile.IDeviceLogOptions> = {};
 
 	constructor(protected $logFilter: Mobile.ILogFilter,
-		protected $logger: ILogger) {
+		protected $logger: ILogger,
+		protected $logSourceMapService: Mobile.ILogSourceMapService) {
 		super();
+	}
+
+	public async setSourceFileLocation(pathToOriginalFile: string): Promise<void> {
+		try {
+			await this.$logSourceMapService.setSourceMapConsumerForFile(pathToOriginalFile);
+		} catch (err) {
+			this.$logger.trace("Error while trying to set source map file", err);
+		}
 	}
 
 	public abstract logData(lineText: string, platform: string, deviceIdentifier: string): void;

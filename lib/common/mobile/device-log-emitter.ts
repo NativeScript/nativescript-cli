@@ -5,8 +5,8 @@ export class DeviceLogEmitter extends DeviceLogProviderBase {
 	constructor(protected $logFilter: Mobile.ILogFilter,
 		$logger: ILogger,
 		private $loggingLevels: Mobile.ILoggingLevels,
-		private $logSourceMapService: Mobile.ILogSourceMapService) {
-		super($logFilter, $logger);
+		protected $logSourceMapService: Mobile.ILogSourceMapService) {
+		super($logFilter, $logger, $logSourceMapService);
 	}
 
 	public logData(line: string, platform: string, deviceIdentifier: string): void {
