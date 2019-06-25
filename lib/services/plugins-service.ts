@@ -42,7 +42,7 @@ export class PluginsService implements IPluginsService {
 		}
 
 		const name = (await this.$packageManager.install(plugin, projectData.projectDir, this.npmInstallOptions)).name;
-		const pathToRealNpmPackageJson = path.join(projectData.projectDir, "node_modules", name, "package.json");
+		const pathToRealNpmPackageJson = this.getPackageJsonFilePathForModule(name, projectData.projectDir);
 		const realNpmPackageJson = this.$fs.readJson(pathToRealNpmPackageJson);
 
 		if (realNpmPackageJson.nativescript) {
@@ -215,7 +215,10 @@ export class PluginsService implements IPluginsService {
 	}
 
 	private getPackageJsonFilePathForModule(moduleName: string, projectDir: string): string {
-		return path.join(this.getNodeModulesPath(projectDir), moduleName, "package.json");
+		const pathToJsonFile = require.resolve(`${moduleName}/package.json`, {
+				paths: [projectDir]
+		});
+		return pathToJsonFile;
 	}
 
 	private getDependencies(projectDir: string): string[] {
