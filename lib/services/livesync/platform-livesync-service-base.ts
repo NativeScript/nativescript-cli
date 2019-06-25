@@ -141,7 +141,7 @@ export abstract class PlatformLiveSyncServiceBase {
 		return transferredFiles;
 	}
 
-	protected async getAppData(syncInfo: IFullSyncInfo): Promise<Mobile.IDeviceAppData> {
+	public async getAppData(syncInfo: IFullSyncInfo): Promise<Mobile.IDeviceAppData> {
 		const platform = syncInfo.device.deviceInfo.platform.toLowerCase();
 		const appIdentifier = syncInfo.projectData.projectIdentifiers[platform];
 		const deviceProjectRootOptions: IDeviceProjectRootOptions = _.assign({ appIdentifier }, syncInfo);

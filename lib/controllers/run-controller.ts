@@ -124,6 +124,16 @@ export class RunController extends EventEmitter implements IRunController {
 			await this.refreshApplicationWithDebug(projectData, liveSyncResultInfo, filesChangeEventData, deviceDescriptor, settings) :
 			await this.refreshApplicationWithoutDebug(projectData, liveSyncResultInfo, filesChangeEventData, deviceDescriptor, settings);
 
+		const device = liveSyncResultInfo.deviceAppData.device;
+
+		this.emitCore(RunOnDeviceEvents.runOnDeviceExecuted, {
+			projectDir: projectData.projectDir,
+			deviceIdentifier: device.deviceInfo.identifier,
+			applicationIdentifier: projectData.projectIdentifiers[device.deviceInfo.platform.toLowerCase()],
+			syncedFiles: liveSyncResultInfo.modifiedFilesData.map(m => m.getLocalPath()),
+			isFullSync: liveSyncResultInfo.isFullSync
+		});
+
 		return result;
 	}
 
@@ -282,14 +292,6 @@ export class RunController extends EventEmitter implements IRunController {
 
 				await this.refreshApplication(projectData, liveSyncResultInfo, null, deviceDescriptor);
 
-				this.emitCore(RunOnDeviceEvents.runOnDeviceExecuted, {
-					projectDir: projectData.projectDir,
-					deviceIdentifier: device.deviceInfo.identifier,
-					applicationIdentifier: projectData.projectIdentifiers[device.deviceInfo.platform.toLowerCase()],
-					syncedFiles: liveSyncResultInfo.modifiedFilesData.map(m => m.getLocalPath()),
-					isFullSync: liveSyncResultInfo.isFullSync
-				});
-
 				this.$logger.info(`Successfully synced application ${liveSyncResultInfo.deviceAppData.appIdentifier} on device ${liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier}.`);
 
 				this.emitCore(RunOnDeviceEvents.runOnDeviceStarted, {
@@ -327,22 +329,6 @@ export class RunController extends EventEmitter implements IRunController {
 				});
 
 			try {
-				if (data.hasNativeChanges) {
-					const rebuiltInfo = this.rebuiltInformation[platformData.platformNameLowerCase] && (this.$mobileHelper.isAndroidPlatform(platformData.platformNameLowerCase) || this.rebuiltInformation[platformData.platformNameLowerCase].isEmulator === device.isEmulator);
-					if (!rebuiltInfo) {
-						await this.$prepareNativePlatformService.prepareNativePlatform(platformData, projectData, prepareData);
-						await deviceDescriptor.buildAction();
-						this.rebuiltInformation[platformData.platformNameLowerCase] = { isEmulator: device.isEmulator, platform: platformData.platformNameLowerCase, packageFilePath: null };
-					}
-
-					await this.$deviceInstallAppService.installOnDevice(device, deviceDescriptor.buildData, this.rebuiltInformation[platformData.platformNameLowerCase].packageFilePath);
-				}
-
-				const isInHMRMode = liveSyncInfo.useHotModuleReload && data.hmrData && data.hmrData.hash;
-				if (isInHMRMode) {
-					this.$hmrStatusService.watchHmrStatus(device.deviceInfo.identifier, data.hmrData.hash);
-				}
-
 				const platformLiveSyncService = this.$liveSyncServiceResolver.resolveLiveSyncService(device.deviceInfo.platform);
 				const watchInfo = {
 					liveSyncDeviceData: deviceDescriptor,
@@ -355,53 +341,52 @@ export class RunController extends EventEmitter implements IRunController {
 					force: liveSyncInfo.force,
 					connectTimeout: 1000
 				};
-				let liveSyncResultInfo = await platformLiveSyncService.liveSyncWatchAction(device, watchInfo);
+				const deviceAppData = await platformLiveSyncService.getAppData(_.merge({ device, watch: true }, watchInfo));
 
-				await this.refreshApplication(projectData, liveSyncResultInfo, data, deviceDescriptor);
+				if (data.hasNativeChanges) {
+					const rebuiltInfo = this.rebuiltInformation[platformData.platformNameLowerCase] && (this.$mobileHelper.isAndroidPlatform(platformData.platformNameLowerCase) || this.rebuiltInformation[platformData.platformNameLowerCase].isEmulator === device.isEmulator);
+					if (!rebuiltInfo) {
+						await this.$prepareNativePlatformService.prepareNativePlatform(platformData, projectData, prepareData);
+						await deviceDescriptor.buildAction();
+						this.rebuiltInformation[platformData.platformNameLowerCase] = { isEmulator: device.isEmulator, platform: platformData.platformNameLowerCase, packageFilePath: null };
+					}
 
-				this.emitCore(RunOnDeviceEvents.runOnDeviceExecuted, {
+					await this.$deviceInstallAppService.installOnDevice(device, deviceDescriptor.buildData, this.rebuiltInformation[platformData.platformNameLowerCase].packageFilePath);
+					await platformLiveSyncService.restartApplication(projectData, { deviceAppData, modifiedFilesData: [], isFullSync: false, useHotModuleReload: liveSyncInfo.useHotModuleReload });
+				} else {
+					const isInHMRMode = liveSyncInfo.useHotModuleReload && data.hmrData && data.hmrData.hash;
+					if (isInHMRMode) {
+						this.$hmrStatusService.watchHmrStatus(device.deviceInfo.identifier, data.hmrData.hash);
+					}
+
+					let liveSyncResultInfo = await platformLiveSyncService.liveSyncWatchAction(device, watchInfo);
+
+					if (!liveSyncResultInfo.didRecover && isInHMRMode) {
+						const status = await this.$hmrStatusService.getHmrStatus(device.deviceInfo.identifier, data.hmrData.hash);
+						if (status === HmrConstants.HMR_ERROR_STATUS) {
+							watchInfo.filesToSync = data.hmrData.fallbackFiles;
+							liveSyncResultInfo = await platformLiveSyncService.liveSyncWatchAction(device, watchInfo);
+							// We want to force a restart of the application.
+							liveSyncResultInfo.isFullSync = true;
+							await this.refreshApplication(projectData, liveSyncResultInfo, data, deviceDescriptor);
+						}
+					}
+
+					await this.refreshApplication(projectData, liveSyncResultInfo, data, deviceDescriptor);
+				}
+
+				this.$logger.info(`Successfully synced application ${deviceAppData.appIdentifier} on device ${device.deviceInfo.identifier}.`);
+			} catch (err) {
+				this.$logger.warn(`Unable to apply changes for device: ${device.deviceInfo.identifier}. Error is: ${err && err.message}.`);
+
+				this.emitCore(RunOnDeviceEvents.runOnDeviceError, {
 					projectDir: projectData.projectDir,
 					deviceIdentifier: device.deviceInfo.identifier,
 					applicationIdentifier: projectData.projectIdentifiers[device.deviceInfo.platform.toLowerCase()],
-					syncedFiles: liveSyncResultInfo.modifiedFilesData.map(m => m.getLocalPath()),
-					isFullSync: liveSyncResultInfo.isFullSync
+					error: err,
 				});
 
-				if (!liveSyncResultInfo.didRecover && isInHMRMode) {
-					const status = await this.$hmrStatusService.getHmrStatus(device.deviceInfo.identifier, data.hmrData.hash);
-					if (status === HmrConstants.HMR_ERROR_STATUS) {
-						watchInfo.filesToSync = data.hmrData.fallbackFiles;
-						liveSyncResultInfo = await platformLiveSyncService.liveSyncWatchAction(device, watchInfo);
-						// We want to force a restart of the application.
-						liveSyncResultInfo.isFullSync = true;
-						await this.refreshApplication(projectData, liveSyncResultInfo, data, deviceDescriptor);
-
-						this.emitCore(RunOnDeviceEvents.runOnDeviceExecuted, {
-							projectDir: projectData.projectDir,
-							deviceIdentifier: device.deviceInfo.identifier,
-							applicationIdentifier: projectData.projectIdentifiers[device.deviceInfo.platform.toLowerCase()],
-							syncedFiles: liveSyncResultInfo.modifiedFilesData.map(m => m.getLocalPath()),
-							isFullSync: liveSyncResultInfo.isFullSync
-						});
-					}
-				}
-
-				this.$logger.info(`Successfully synced application ${liveSyncResultInfo.deviceAppData.appIdentifier} on device ${liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier}.`);
-			} catch (err) {
-				const allErrors = (<Mobile.IDevicesOperationError>err).allErrors;
-
-				if (allErrors && _.isArray(allErrors)) {
-					for (const deviceError of allErrors) {
-						this.$logger.warn(`Unable to apply changes for device: ${deviceError.deviceIdentifier}. Error is: ${deviceError.message}.`);
-
-						this.emitCore(RunOnDeviceEvents.runOnDeviceError, {
-							projectDir: projectData.projectDir,
-							deviceIdentifier: device.deviceInfo.identifier,
-							applicationIdentifier: projectData.projectIdentifiers[device.deviceInfo.platform.toLowerCase()],
-							error: err,
-						});
-					}
-				}
+				await this.stop({ projectDir: projectData.projectDir, deviceIdentifiers: [device.deviceInfo.identifier] });
 			}
 		};
 
