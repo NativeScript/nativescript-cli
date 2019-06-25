@@ -121,16 +121,17 @@ export class UpdateController extends UpdateControllerBase implements IUpdateCon
 				continue;
 			}
 
-			if (await this.shouldUpdateDependency(dependency, templateVersion, areDev, projectData)) {
+			if (await this.shouldUpdateDependency(dependency, templateVersion, projectData)) {
 				this.$logger.info(`Updating '${dependency}' to version '${templateVersion}'.`);
 				this.$pluginsService.addToPackageJson(dependency, templateVersion, areDev, projectData.projectDir);
 			}
 		}
 	}
 
-	private async shouldUpdateDependency(dependency: string, targetVersion: string, isDev: boolean, projectData: IProjectData) {
-		const collection = isDev ? projectData.devDependencies : projectData.dependencies;
-		const projectVersion = collection[dependency];
+	private async shouldUpdateDependency(dependency: string, targetVersion: string, projectData: IProjectData) {
+		const devDependencies = projectData.devDependencies || {};
+		const dependencies = projectData.dependencies || {};
+		const projectVersion = dependencies[dependency] || devDependencies[dependency];
 		const maxSatisfyingTargetVersion = await this.getMaxDependencyVersion(dependency, targetVersion);
 		const maxSatisfyingProjectVersion = await this.getMaxDependencyVersion(dependency, projectVersion);
 
@@ -144,7 +145,7 @@ export class UpdateController extends UpdateControllerBase implements IUpdateCon
 				continue;
 			}
 
-			if (await this.shouldUpdateDependency(dependency, templateVersion, areDev, projectData)) {
+			if (await this.shouldUpdateDependency(dependency, templateVersion, projectData)) {
 				return true;
 			}
 		}

@@ -189,7 +189,7 @@ export class MigrateController extends UpdateControllerBase implements IMigrateC
 		const hasDependency = this.hasDependency(dependency, projectData);
 
 		if (hasDependency && dependency.replaceWith) {
-			this.$pluginsService.removeFromPackageJson(dependency.packageName, dependency.isDev, projectData.projectDir);
+			this.$pluginsService.removeFromPackageJson(dependency.packageName, projectData.projectDir);
 			const replacementDep = _.find(this.migrationDependencies, migrationPackage => migrationPackage.packageName === dependency.replaceWith);
 			if (!replacementDep) {
 				this.$errors.failWithoutHelp("Failed to find replacement dependency.");
@@ -212,8 +212,11 @@ export class MigrateController extends UpdateControllerBase implements IMigrateC
 	}
 
 	private async shouldMigrateDependencyVersion(dependency: IMigrationDependency, projectData: IProjectData): Promise<boolean> {
-		const collection = dependency.isDev ? projectData.devDependencies : projectData.dependencies;
-		const maxSatisfyingVersion = await this.getMaxDependencyVersion(dependency.packageName, collection[dependency.packageName]);
+		const devDependencies = projectData.devDependencies || {};
+		const dependencies = projectData.dependencies || {};
+		const packageName = dependency.packageName;
+		const version = dependencies[packageName] || devDependencies[packageName];
+		const maxSatisfyingVersion = await this.getMaxDependencyVersion(dependency.packageName, version);
 
 		return !(maxSatisfyingVersion && semver.gte(maxSatisfyingVersion, dependency.verifiedVersion));
 	}
