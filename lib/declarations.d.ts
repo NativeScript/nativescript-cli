@@ -1050,3 +1050,9 @@ interface IPlatformCommandHelper {
 	getPreparedPlatforms(projectData: IProjectData): string[];
 	getCurrentPlatformVersion(platform: string, projectData: IProjectData): string;
 }
+
+interface IWatchIgnoreListService {
+	addFileToIgnoreList(filePath: string): void;
+	removeFileFromIgnoreList(filePath: string): void;
+	isFileInIgnoreList(filePath: string): boolean;
+}

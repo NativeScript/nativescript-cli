@@ -20,7 +20,8 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		private $errors: IErrors,
 		private $filesHashService: IFilesHashService,
 		public $hooksService: IHooksService,
-		private $injector: IInjector
+		private $injector: IInjector,
+		private $watchIgnoreListService: IWatchIgnoreListService
 	) { }
 
 	private static MANIFEST_ROOT = {
@@ -189,6 +190,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			this.copySourceSetDirectories(androidSourceDirectories, pluginTempMainSrcDir);
 			await this.setupGradle(pluginTempDir, options.platformsAndroidDirPath, options.projectDir);
 			await this.buildPlugin({ pluginDir: pluginTempDir, pluginName: options.pluginName });
+			this.$watchIgnoreListService.addFileToIgnoreList(path.join(options.aarOutputDir, `${shortPluginName}.aar`));
 			this.copyAar(shortPluginName, pluginTempDir, options.aarOutputDir);
 			this.writePluginHashInfo(pluginSourceFileHashesInfo, pluginTempDir);
 		}

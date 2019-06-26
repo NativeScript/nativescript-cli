@@ -223,4 +223,6 @@ $injector.require("applePortalSessionService", "./services/apple-portal/apple-po
 $injector.require("applePortalCookieService", "./services/apple-portal/apple-portal-cookie-service");
 $injector.require("applePortalApplicationService", "./services/apple-portal/apple-portal-application-service");
 
+$injector.require("watchIgnoreListService", "./services/watch-ignore-list-service");
+
 $injector.requirePublicClass("initializeService", "./services/initialize-service");
