@@ -126,7 +126,7 @@ export abstract class PlatformLiveSyncServiceBase {
 
 		return {
 			modifiedFilesData: modifiedLocalToDevicePaths,
-			isFullSync: liveSyncInfo.isReinstalled,
+			isFullSync: false,
 			deviceAppData,
 			useHotModuleReload: liveSyncInfo.useHotModuleReload
 		};

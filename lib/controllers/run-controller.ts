@@ -335,7 +335,6 @@ export class RunController extends EventEmitter implements IRunController {
 					projectData,
 					filesToRemove: <any>[],
 					filesToSync: data.files,
-					isReinstalled: false,
 					hmrData: data.hmrData,
 					useHotModuleReload: liveSyncInfo.useHotModuleReload,
 					force: liveSyncInfo.force,

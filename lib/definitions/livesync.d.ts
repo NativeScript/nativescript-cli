@@ -210,7 +210,6 @@ declare global {
 	interface ILiveSyncWatchInfo extends IProjectDataComposition, IHasUseHotModuleReloadOption, IConnectTimeoutOption {
 		filesToRemove: string[];
 		filesToSync: string[];
-		isReinstalled: boolean;
 		liveSyncDeviceData: ILiveSyncDeviceDescriptor;
 		hmrData: IPlatformHmrData;
 		force?: boolean;
