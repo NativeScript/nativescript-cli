@@ -210,7 +210,6 @@ declare global {
 	interface ILiveSyncWatchInfo extends IProjectDataComposition, IHasUseHotModuleReloadOption, IConnectTimeoutOption {
 		filesToRemove: string[];
 		filesToSync: string[];
-		isReinstalled: boolean;
 		liveSyncDeviceData: ILiveSyncDeviceDescriptor;
 		hmrData: IPlatformHmrData;
 		force?: boolean;
@@ -250,6 +249,8 @@ declare global {
 		restartApplication(projectData: IProjectData, liveSyncInfo: ILiveSyncResultInfo): Promise<void>;
 		shouldRestart(projectData: IProjectData, liveSyncInfo: ILiveSyncResultInfo): Promise<boolean>;
 		getDeviceLiveSyncService(device: Mobile.IDevice, projectData: IProjectData): INativeScriptDeviceLiveSyncService;
+		getAppData(syncInfo: IFullSyncInfo): Promise<Mobile.IDeviceAppData>;
+		syncAfterInstall(device: Mobile.IDevice, liveSyncInfo: ILiveSyncWatchInfo): Promise<void>;
 	}
 
 	interface IRestartApplicationInfo {
