@@ -14,6 +14,14 @@ abstract class TestCommandBase {
 	async execute(args: string[]): Promise<void> {
 		let devices = [];
 		if (this.$options.debugBrk) {
+			await this.$devicesService.initialize({
+				platform: this.platform,
+				deviceId: this.$options.device,
+				emulator: this.$options.emulator,
+				skipInferPlatform: !this.platform,
+				sdk: this.$options.sdk
+			});
+
 			const selectedDeviceForDebug = await this.$devicesService.pickSingleDevice({
 				onlyEmulators: this.$options.emulator,
 				onlyDevices: this.$options.forDevice,
