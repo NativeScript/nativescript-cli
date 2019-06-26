@@ -33,8 +33,10 @@ export class UpdateControllerBase {
 	}
 
 	protected hasDependency(dependency: IDependency, projectData: IProjectData): boolean {
-		const collection = dependency.isDev ? projectData.devDependencies : projectData.dependencies;
-		return collection && collection[dependency.packageName];
+		const devDependencies = projectData.devDependencies;
+		const dependencies = projectData.dependencies;
+
+		return (dependencies && dependencies[dependency.packageName]) || (devDependencies && devDependencies[dependency.packageName]);
 	}
 
 	protected hasRuntimeDependency({platform, projectData}: {platform: string, projectData: IProjectData}): boolean {

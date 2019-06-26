@@ -90,8 +90,13 @@ export class PluginsService implements IPluginsService {
 
 	public addToPackageJson(plugin: string, version: string, isDev: boolean, projectDir: string) {
 		const packageJsonPath = this.getPackageJsonFilePath(projectDir);
-		const packageJsonContent = this.$fs.readJson(packageJsonPath);
+		let packageJsonContent = this.$fs.readJson(packageJsonPath);
 		const collectionKey = isDev ? "devDependencies" : "dependencies";
+		const oppositeCollectionKey = isDev ? "dependencies" : "devDependencies";
+		if (packageJsonContent[oppositeCollectionKey] && packageJsonContent[oppositeCollectionKey][plugin]) {
+			const result = this.removeDependencyFromPackageJsonContent(plugin, packageJsonContent);
+			packageJsonContent = result.packageJsonContent;
+		}
 
 		packageJsonContent[collectionKey] = packageJsonContent[collectionKey] || {};
 		packageJsonContent[collectionKey][plugin] = version;
@@ -99,14 +104,13 @@ export class PluginsService implements IPluginsService {
 		this.$fs.writeJson(packageJsonPath, packageJsonContent);
 	}
 
-	public removeFromPackageJson(plugin: string, isDev: boolean, projectDir: string) {
+	public removeFromPackageJson(plugin: string, projectDir: string) {
 		const packageJsonPath = this.getPackageJsonFilePath(projectDir);
 		const packageJsonContent = this.$fs.readJson(packageJsonPath);
-		const collection = isDev ? packageJsonContent.devDependencies : packageJsonContent.dependencies;
+		const result = this.removeDependencyFromPackageJsonContent(plugin, packageJsonContent);
 
-		if (collection && collection[plugin]) {
-			delete collection[plugin];
-			this.$fs.writeJson(packageJsonPath, packageJsonContent);
+		if (result.hasModifiedPackageJson) {
+			this.$fs.writeJson(packageJsonPath, result.packageJsonContent);
 		}
 	}
 
@@ -197,6 +201,25 @@ export class PluginsService implements IPluginsService {
 		}
 
 		return pluginData;
+	}
+
+	private removeDependencyFromPackageJsonContent(dependency: string, packageJsonContent: Object): {hasModifiedPackageJson: boolean, packageJsonContent: Object} {
+		let hasModifiedPackageJson = false;
+
+		if (packageJsonContent.devDependencies && packageJsonContent.devDependencies[dependency]) {
+			delete packageJsonContent.devDependencies[dependency];
+			hasModifiedPackageJson = true;
+		}
+
+		if (packageJsonContent.dependencies && packageJsonContent.dependencies[dependency]) {
+			delete packageJsonContent.dependencies[dependency];
+			hasModifiedPackageJson = true;
+		}
+
+		return {
+			hasModifiedPackageJson,
+			packageJsonContent
+		};
 	}
 
 	private getBasicPluginInformation(dependencies: any): IBasePluginData[] {
