@@ -72,12 +72,12 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				appDestinationDirectoryPath: path.join(projectRoot, projectData.projectName),
 				platformProjectService: <any>this,
 				projectRoot: projectRoot,
-				getBuildOutputPath: (options: IBuildOutputOptions): string => {
+				getBuildOutputPath: (options: IBuildData): string => {
 					const config = getConfigurationName(!options || options.release);
-					return path.join(projectRoot, constants.BUILD_DIR, `${config}-${getPlatformSdkName(!options || options.buildForDevice)}`);
+					return path.join(projectRoot, constants.BUILD_DIR, `${config}-${getPlatformSdkName(!options || options.buildForDevice || options.buildForAppStore)}`);
 				},
-				getValidBuildOutputData: (buildOptions: IBuildOutputOptions): IValidBuildOutputData => {
-					const forDevice = !buildOptions || !!buildOptions.buildForDevice;
+				getValidBuildOutputData: (buildOptions: IBuildData): IValidBuildOutputData => {
+					const forDevice = !buildOptions || !!buildOptions.buildForDevice || !!buildOptions.buildForAppStore;
 					if (forDevice) {
 						return {
 							packageNames: [`${projectData.projectName}.ipa`]
