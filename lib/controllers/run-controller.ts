@@ -70,12 +70,13 @@ export class RunController extends EventEmitter implements IRunController {
 				.map(descriptor => descriptor.identifier);
 
 			// Handle the case when no more devices left for any of the persisted platforms
-			_.each(liveSyncProcessInfo.platforms, platform => {
+			for (let i = 0; i < liveSyncProcessInfo.platforms.length; i++) {
+				const platform = liveSyncProcessInfo.platforms[i];
 				const devices = this.$devicesService.getDevicesForPlatform(platform);
 				if (!devices || !devices.length) {
-					this.$prepareController.stopWatchers(projectDir, platform);
+					await this.$prepareController.stopWatchers(projectDir, platform);
 				}
-			});
+			}
 
 			// In case deviceIdentifiers are not passed, we should stop the whole LiveSync.
 			if (!deviceIdentifiers || !deviceIdentifiers.length || !liveSyncProcessInfo.deviceDescriptors || !liveSyncProcessInfo.deviceDescriptors.length) {
@@ -83,9 +84,9 @@ export class RunController extends EventEmitter implements IRunController {
 					clearTimeout(liveSyncProcessInfo.timer);
 				}
 
-				_.each(liveSyncProcessInfo.platforms, platform => {
-					this.$prepareController.stopWatchers(projectDir, platform);
-				});
+				for (let k = 0; k < liveSyncProcessInfo.platforms.length; k++) {
+					await this.$prepareController.stopWatchers(projectDir, liveSyncProcessInfo.platforms[k]);
+				}
 
 				liveSyncProcessInfo.isStopped = true;
 

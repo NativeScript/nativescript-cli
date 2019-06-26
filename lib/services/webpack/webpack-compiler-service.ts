@@ -14,7 +14,8 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 		public $hostInfo: IHostInfo,
 		private $logger: ILogger,
 		private $pluginsService: IPluginsService,
-		private $mobileHelper: Mobile.IMobileHelper
+		private $mobileHelper: Mobile.IMobileHelper,
+		private $cleanupService: ICleanupService
 	) { super(); }
 
 	public async compileWithWatch(platformData: IPlatformData, projectData: IProjectData, prepareData: IPrepareData): Promise<any> {
@@ -104,11 +105,15 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 		});
 	}
 
-	public stopWebpackCompiler(platform: string): void {
+	public async stopWebpackCompiler(platform: string): Promise<void> {
 		if (platform) {
-			this.stopWebpackForPlatform(platform);
+			await this.stopWebpackForPlatform(platform);
 		} else {
-			Object.keys(this.webpackProcesses).forEach(pl => this.stopWebpackForPlatform(pl));
+			const webpackedPlatforms = Object.keys(this.webpackProcesses);
+
+			for (let i = 0; i < webpackedPlatforms.length; i++) {
+				await this.stopWebpackForPlatform(webpackedPlatforms[i]);
+			}
 		}
 	}
 
@@ -139,6 +144,7 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 		const childProcess = this.$childProcess.spawn("node", args, { cwd: projectData.projectDir, stdio });
 
 		this.webpackProcesses[platformData.platformNameLowerCase] = childProcess;
+		await this.$cleanupService.addKillProcess(childProcess.pid.toString());
 
 		return childProcess;
 	}
@@ -233,9 +239,10 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 		};
 	}
 
-	private stopWebpackForPlatform(platform: string) {
+	private async stopWebpackForPlatform(platform: string) {
 		this.$logger.trace(`Stopping webpack watch for platform ${platform}.`);
 		const webpackProcess = this.webpackProcesses[platform];
+		await this.$cleanupService.removeKillProcess(webpackProcess.pid.toString());
 		if (webpackProcess) {
 			webpackProcess.kill("SIGINT");
 			delete this.webpackProcesses[platform];
