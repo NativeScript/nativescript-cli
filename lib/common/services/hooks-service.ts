@@ -121,7 +121,7 @@ export class HooksService implements IHooksService {
 
 				if (invalidArguments.length) {
 					this.$logger.warn(`${hookName} will NOT be executed because it has invalid arguments - ${invalidArguments.join(", ").grey}.`);
-					return;
+					continue;
 				}
 
 				// HACK for backwards compatibility:
