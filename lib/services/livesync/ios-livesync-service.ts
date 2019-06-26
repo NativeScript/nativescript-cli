@@ -55,19 +55,16 @@ export class IOSLiveSyncService extends PlatformLiveSyncServiceBase implements I
 		};
 	}
 
-	@performanceLog()
-	public liveSyncWatchAction(device: Mobile.IDevice, liveSyncInfo: ILiveSyncWatchInfo): Promise<ILiveSyncResultInfo> {
-		if (liveSyncInfo.isReinstalled) {
+	public async syncAfterInstall(device: Mobile.IDevice, liveSyncInfo: ILiveSyncWatchInfo): Promise<void> {
+		if (!device.isEmulator) {
 			// In this case we should execute fullsync because iOS Runtime requires the full content of app dir to be extracted in the root of sync dir.
-			return this.fullSync({
+			await this.fullSync({
 				projectData: liveSyncInfo.projectData,
 				device,
 				liveSyncDeviceData: liveSyncInfo.liveSyncDeviceData,
 				watch: true,
 				useHotModuleReload: liveSyncInfo.useHotModuleReload
 			});
-		} else {
-			return super.liveSyncWatchAction(device, liveSyncInfo);
 		}
 	}
 

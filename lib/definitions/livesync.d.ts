@@ -251,6 +251,7 @@ declare global {
 		shouldRestart(projectData: IProjectData, liveSyncInfo: ILiveSyncResultInfo): Promise<boolean>;
 		getDeviceLiveSyncService(device: Mobile.IDevice, projectData: IProjectData): INativeScriptDeviceLiveSyncService;
 		getAppData(syncInfo: IFullSyncInfo): Promise<Mobile.IDeviceAppData>;
+		syncAfterInstall(device: Mobile.IDevice, liveSyncInfo: ILiveSyncWatchInfo): Promise<void>;
 	}
 
 	interface IRestartApplicationInfo {

@@ -352,6 +352,7 @@ export class RunController extends EventEmitter implements IRunController {
 					}
 
 					await this.$deviceInstallAppService.installOnDevice(device, deviceDescriptor.buildData, this.rebuiltInformation[platformData.platformNameLowerCase].packageFilePath);
+					await platformLiveSyncService.syncAfterInstall(device, watchInfo);
 					await platformLiveSyncService.restartApplication(projectData, { deviceAppData, modifiedFilesData: [], isFullSync: false, useHotModuleReload: liveSyncInfo.useHotModuleReload });
 				} else {
 					const isInHMRMode = liveSyncInfo.useHotModuleReload && data.hmrData && data.hmrData.hash;

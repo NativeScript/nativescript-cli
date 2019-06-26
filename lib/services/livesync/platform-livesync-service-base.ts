@@ -2,6 +2,7 @@ import * as path from "path";
 import * as util from "util";
 import { APP_FOLDER_NAME } from "../../constants";
 import { getHash } from "../../common/helpers";
+import { performanceLog } from "../../common/decorators";
 
 export abstract class PlatformLiveSyncServiceBase {
 	private _deviceLiveSyncServicesCache: IDictionary<INativeScriptDeviceLiveSyncService> = {};
@@ -31,6 +32,8 @@ export abstract class PlatformLiveSyncServiceBase {
 		const shouldRestart = await deviceLiveSyncService.shouldRestart(projectData, liveSyncInfo);
 		return shouldRestart;
 	}
+
+	public async syncAfterInstall(device: Mobile.IDevice, liveSyncInfo: ILiveSyncWatchInfo): Promise<void> { /* intentionally left blank */ }
 
 	public async restartApplication(projectData: IProjectData, liveSyncInfo: ILiveSyncResultInfo): Promise<void> {
 		const deviceLiveSyncService = this.getDeviceLiveSyncService(liveSyncInfo.deviceAppData.device, projectData);
@@ -72,6 +75,7 @@ export abstract class PlatformLiveSyncServiceBase {
 		};
 	}
 
+	@performanceLog()
 	public async liveSyncWatchAction(device: Mobile.IDevice, liveSyncInfo: ILiveSyncWatchInfo): Promise<ILiveSyncResultInfo> {
 		const projectData = liveSyncInfo.projectData;
 		const deviceLiveSyncService = this.getDeviceLiveSyncService(device, projectData);
