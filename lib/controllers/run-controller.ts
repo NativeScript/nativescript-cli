@@ -358,6 +358,7 @@ export class RunController extends EventEmitter implements IRunController {
 					}
 
 					let liveSyncResultInfo = await platformLiveSyncService.liveSyncWatchAction(device, watchInfo);
+					await this.refreshApplication(projectData, liveSyncResultInfo, data, deviceDescriptor);
 
 					if (!liveSyncResultInfo.didRecover && isInHMRMode) {
 						const status = await this.$hmrStatusService.getHmrStatus(device.deviceInfo.identifier, data.hmrData.hash);
@@ -369,8 +370,6 @@ export class RunController extends EventEmitter implements IRunController {
 							await this.refreshApplication(projectData, liveSyncResultInfo, data, deviceDescriptor);
 						}
 					}
-
-					await this.refreshApplication(projectData, liveSyncResultInfo, data, deviceDescriptor);
 				}
 
 				this.$logger.info(`Successfully synced application ${deviceAppData.appIdentifier} on device ${device.deviceInfo.identifier}.`);
