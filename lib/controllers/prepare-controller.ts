@@ -25,7 +25,8 @@ export class PrepareController extends EventEmitter {
 		private $prepareNativePlatformService: IPrepareNativePlatformService,
 		private $projectChangesService: IProjectChangesService,
 		private $projectDataService: IProjectDataService,
-		private $webpackCompilerService: IWebpackCompilerService
+		private $webpackCompilerService: IWebpackCompilerService,
+		private $watchIgnoreListService: IWatchIgnoreListService
 	) { super(); }
 
 	@performanceLog()
@@ -131,8 +132,12 @@ export class PrepareController extends EventEmitter {
 		const watcher = choki.watch(patterns, watcherOptions)
 			.on("all", async (event: string, filePath: string) => {
 				filePath = path.join(projectData.projectDir, filePath);
-				this.$logger.trace(`Chokidar raised event ${event} for ${filePath}.`);
-				this.emitPrepareEvent({ files: [], hasOnlyHotUpdateFiles: false, hmrData: null, hasNativeChanges: true, platform: platformData.platformNameLowerCase });
+				if (this.$watchIgnoreListService.isFileInIgnoreList(filePath)) {
+					this.$watchIgnoreListService.removeFileFromIgnoreList(filePath);
+				} else {
+					this.$logger.info(`Chokidar raised event ${event} for ${filePath}.`);
+					this.emitPrepareEvent({ files: [], hasOnlyHotUpdateFiles: false, hmrData: null, hasNativeChanges: true, platform: platformData.platformNameLowerCase });
+				}
 			});
 
 		this.watchersData[projectData.projectDir][platformData.platformNameLowerCase].nativeFilesWatcher = watcher;
