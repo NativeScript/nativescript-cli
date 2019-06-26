@@ -120,7 +120,7 @@ export class HooksService implements IHooksService {
 				const invalidArguments = this.validateHookArguments(hookEntryPoint);
 
 				if (invalidArguments.length) {
-					this.$logger.warn(`${hookName} will NOT be executed because it has invalid arguments - ${invalidArguments.join(", ").grey}.`);
+					this.$logger.warn(`${hook.fullPath} will NOT be executed because it has invalid arguments - ${invalidArguments.join(", ").grey}.`);
 					continue;
 				}
 
