@@ -75,6 +75,10 @@ describe('androidPluginBuildService', () => {
 			hasChangesInShasums: (oldHashes: IStringDictionary, newHashes: IStringDictionary): boolean => !!options.hasChangesInShasums
 		});
 
+		testInjector.register("watchIgnoreListService", {
+			addFileToIgnoreList: () => ({})
+		});
+
 		fs = testInjector.resolve("fs");
 		androidBuildPluginService = testInjector.resolve<AndroidPluginBuildService>(AndroidPluginBuildService);
 	}

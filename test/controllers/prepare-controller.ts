@@ -49,6 +49,11 @@ function createTestInjector(data: { hasNativeChanges: boolean }): IInjector {
 		getProductionDependencies: () => (<any>[])
 	});
 
+	injector.register("watchIgnoreListService", {
+		addFileToIgnoreList: () => ({}),
+		isFileInIgnoreList: () => false
+	});
+
 	const prepareController: PrepareController = injector.resolve("prepareController");
 	prepareController.emit = (eventName: string, eventData: any) => {
 		emittedEventNames.push(eventName);
