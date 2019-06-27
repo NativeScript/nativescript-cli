@@ -39,6 +39,7 @@ export class MigrateController extends UpdateControllerBase implements IMigrateC
 	private migrationDependencies: IMigrationDependency[] = [
 		{ packageName: constants.TNS_CORE_MODULES_NAME, verifiedVersion: "6.0.0-next-2019-06-20-155941-01" },
 		{ packageName: constants.TNS_CORE_MODULES_WIDGETS_NAME, verifiedVersion: "6.0.0-next-2019-06-20-155941-01" },
+		{ packageName: "tns-platform-declarations", verifiedVersion: "6.0.0-next-2019-06-27-082418-01" },
 		{ packageName: "node-sass", isDev: true, verifiedVersion: "4.12.0" },
 		{ packageName: "typescript", isDev: true, verifiedVersion: "3.4.1" },
 		{ packageName: "less", isDev: true, verifiedVersion: "3.9.0" },
