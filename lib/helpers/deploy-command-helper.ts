@@ -51,7 +51,7 @@ export class DeployCommandHelper {
 			});
 
 		await this.$deployController.deploy({
-			buildData: this.$buildDataService.getBuildData(this.$projectData.projectDir, platform, { ...this.$options, skipWatcher: !this.$options.watch }),
+			buildData: this.$buildDataService.getBuildData(this.$projectData.projectDir, platform, { ...this.$options.argv, skipWatcher: !this.$options.watch }),
 			deviceDescriptors
 		});
 	}
