@@ -53,7 +53,7 @@ export class LogSourceMapService implements Mobile.ILogSourceMapService {
 	}
 
 	public replaceWithOriginalFileLocations(platform: string, messageData: string, loggingOptions: Mobile.IDeviceLogOptions): string {
-		if (!messageData || !loggingOptions.projectDir) {
+		if (!messageData || !loggingOptions || !loggingOptions.projectDir) {
 			return messageData;
 		}
 
