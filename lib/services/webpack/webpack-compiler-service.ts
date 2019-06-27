@@ -71,7 +71,7 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 				}
 			});
 
-			childProcess.on("close", (arg: any) => {
+			childProcess.on("close", async (arg: any) => {
 				const exitCode = typeof arg === "number" ? arg : arg && arg.code;
 				if (exitCode === 0) {
 					resolve(childProcess);
@@ -80,6 +80,8 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 					error.code = exitCode;
 					reject(error);
 				}
+
+				await this.$cleanupService.removeKillProcess(childProcess.pid.toString());
 			});
 		});
 	}
@@ -92,7 +94,7 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 			}
 
 			const childProcess = await this.startWebpackProcess(platformData, projectData, prepareData);
-			childProcess.on("close", (arg: any) => {
+			childProcess.on("close", async (arg: any) => {
 				const exitCode = typeof arg === "number" ? arg : arg && arg.code;
 				if (exitCode === 0) {
 					resolve();
@@ -101,6 +103,8 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 					error.code = exitCode;
 					reject(error);
 				}
+
+				await this.$cleanupService.removeKillProcess(childProcess.pid.toString());
 			});
 		});
 	}
