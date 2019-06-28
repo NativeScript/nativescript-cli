@@ -71,17 +71,19 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 				}
 			});
 
-			childProcess.on("close", async (arg: any) => {
-				const exitCode = typeof arg === "number" ? arg : arg && arg.code;
-				if (exitCode === 0) {
-					resolve(childProcess);
-				} else {
-					const error = new Error(`Executing webpack failed with exit code ${exitCode}.`);
-					error.code = exitCode;
-					reject(error);
-				}
+			childProcess.on("error", (err) => {
+				this.$logger.trace(`Unable to start webpack process in watch mode. Error is: ${err}`);
+				reject(err);
+			});
 
+			childProcess.on("close", async (arg: any) => {
 				await this.$cleanupService.removeKillProcess(childProcess.pid.toString());
+
+				const exitCode = typeof arg === "number" ? arg : arg && arg.code;
+				this.$logger.trace(`Webpack process exited with code ${exitCode} when we expected it to be long living with watch.`);
+				const error = new Error(`Executing webpack failed with exit code ${exitCode}.`);
+				error.code = exitCode;
+				reject(error);
 			});
 		});
 	}
@@ -94,7 +96,14 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 			}
 
 			const childProcess = await this.startWebpackProcess(platformData, projectData, prepareData);
+			childProcess.on("error", (err) => {
+				this.$logger.trace(`Unable to start webpack process in non-watch mode. Error is: ${err}`);
+				reject(err);
+			});
+
 			childProcess.on("close", async (arg: any) => {
+				await this.$cleanupService.removeKillProcess(childProcess.pid.toString());
+
 				const exitCode = typeof arg === "number" ? arg : arg && arg.code;
 				if (exitCode === 0) {
 					resolve();
@@ -103,8 +112,6 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 					error.code = exitCode;
 					reject(error);
 				}
-
-				await this.$cleanupService.removeKillProcess(childProcess.pid.toString());
 			});
 		});
 	}
@@ -145,7 +152,7 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 		}
 
 		const stdio = prepareData.watch ? ["inherit", "inherit", "inherit", "ipc"] : "inherit";
-		const childProcess = this.$childProcess.spawn("node", args, { cwd: projectData.projectDir, stdio });
+		const childProcess = this.$childProcess.spawn(process.execPath, args, { cwd: projectData.projectDir, stdio });
 
 		this.webpackProcesses[platformData.platformNameLowerCase] = childProcess;
 		await this.$cleanupService.addKillProcess(childProcess.pid.toString());
