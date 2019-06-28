@@ -3,7 +3,7 @@ import * as temp from "temp";
 
 import { IOSDeviceLiveSyncService } from "./ios-device-livesync-service";
 import { PlatformLiveSyncServiceBase } from "./platform-livesync-service-base";
-import { APP_FOLDER_NAME, TNS_MODULES_FOLDER_NAME } from "../../constants";
+import { APP_FOLDER_NAME } from "../../constants";
 import { performanceLog } from "../../common/decorators";
 
 export class IOSLiveSyncService extends PlatformLiveSyncServiceBase implements IPlatformLiveSyncService {
@@ -30,14 +30,10 @@ export class IOSLiveSyncService extends PlatformLiveSyncServiceBase implements I
 
 		temp.track();
 		const tempZip = temp.path({ prefix: "sync", suffix: ".zip" });
-		const tempApp = temp.mkdirSync("app");
 		this.$logger.trace("Creating zip file: " + tempZip);
-		this.$fs.copyFile(path.join(path.dirname(projectFilesPath), `${APP_FOLDER_NAME}/*`), tempApp);
 
-		this.$fs.deleteDirectory(path.join(tempApp, TNS_MODULES_FOLDER_NAME));
-
-		await this.$fs.zipFiles(tempZip, this.$fs.enumerateFilesInDirectorySync(tempApp), (res) => {
-			return path.join(APP_FOLDER_NAME, path.relative(tempApp, res));
+		await this.$fs.zipFiles(tempZip, this.$fs.enumerateFilesInDirectorySync(projectFilesPath), (res) => {
+			return path.join(APP_FOLDER_NAME, path.relative(projectFilesPath, res));
 		});
 
 		await device.fileSystem.transferFiles(deviceAppData, [{
