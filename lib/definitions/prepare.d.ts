@@ -23,7 +23,7 @@ declare global {
 
 	interface IPrepareController extends EventEmitter {
 		prepare(prepareData: IPrepareData): Promise<IPrepareResultData>;
-		stopWatchers(projectDir: string, platform: string): void;
+		stopWatchers(projectDir: string, platform: string): Promise<void>;
 	}
 
 	interface IPrepareResultData {

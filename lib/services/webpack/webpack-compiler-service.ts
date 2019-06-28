@@ -14,7 +14,8 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 		public $hostInfo: IHostInfo,
 		private $logger: ILogger,
 		private $pluginsService: IPluginsService,
-		private $mobileHelper: Mobile.IMobileHelper
+		private $mobileHelper: Mobile.IMobileHelper,
+		private $cleanupService: ICleanupService
 	) { super(); }
 
 	public async compileWithWatch(platformData: IPlatformData, projectData: IProjectData, prepareData: IPrepareData): Promise<any> {
@@ -70,15 +71,19 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 				}
 			});
 
-			childProcess.on("close", (arg: any) => {
+			childProcess.on("error", (err) => {
+				this.$logger.trace(`Unable to start webpack process in watch mode. Error is: ${err}`);
+				reject(err);
+			});
+
+			childProcess.on("close", async (arg: any) => {
+				await this.$cleanupService.removeKillProcess(childProcess.pid.toString());
+
 				const exitCode = typeof arg === "number" ? arg : arg && arg.code;
-				if (exitCode === 0) {
-					resolve(childProcess);
-				} else {
-					const error = new Error(`Executing webpack failed with exit code ${exitCode}.`);
-					error.code = exitCode;
-					reject(error);
-				}
+				this.$logger.trace(`Webpack process exited with code ${exitCode} when we expected it to be long living with watch.`);
+				const error = new Error(`Executing webpack failed with exit code ${exitCode}.`);
+				error.code = exitCode;
+				reject(error);
 			});
 		});
 	}
@@ -91,7 +96,14 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 			}
 
 			const childProcess = await this.startWebpackProcess(platformData, projectData, prepareData);
-			childProcess.on("close", (arg: any) => {
+			childProcess.on("error", (err) => {
+				this.$logger.trace(`Unable to start webpack process in non-watch mode. Error is: ${err}`);
+				reject(err);
+			});
+
+			childProcess.on("close", async (arg: any) => {
+				await this.$cleanupService.removeKillProcess(childProcess.pid.toString());
+
 				const exitCode = typeof arg === "number" ? arg : arg && arg.code;
 				if (exitCode === 0) {
 					resolve();
@@ -104,11 +116,15 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 		});
 	}
 
-	public stopWebpackCompiler(platform: string): void {
+	public async stopWebpackCompiler(platform: string): Promise<void> {
 		if (platform) {
-			this.stopWebpackForPlatform(platform);
+			await this.stopWebpackForPlatform(platform);
 		} else {
-			Object.keys(this.webpackProcesses).forEach(pl => this.stopWebpackForPlatform(pl));
+			const webpackedPlatforms = Object.keys(this.webpackProcesses);
+
+			for (let i = 0; i < webpackedPlatforms.length; i++) {
+				await this.stopWebpackForPlatform(webpackedPlatforms[i]);
+			}
 		}
 	}
 
@@ -136,9 +152,10 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 		}
 
 		const stdio = prepareData.watch ? ["inherit", "inherit", "inherit", "ipc"] : "inherit";
-		const childProcess = this.$childProcess.spawn("node", args, { cwd: projectData.projectDir, stdio });
+		const childProcess = this.$childProcess.spawn(process.execPath, args, { cwd: projectData.projectDir, stdio });
 
 		this.webpackProcesses[platformData.platformNameLowerCase] = childProcess;
+		await this.$cleanupService.addKillProcess(childProcess.pid.toString());
 
 		return childProcess;
 	}
@@ -233,9 +250,10 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 		};
 	}
 
-	private stopWebpackForPlatform(platform: string) {
+	private async stopWebpackForPlatform(platform: string) {
 		this.$logger.trace(`Stopping webpack watch for platform ${platform}.`);
 		const webpackProcess = this.webpackProcesses[platform];
+		await this.$cleanupService.removeKillProcess(webpackProcess.pid.toString());
 		if (webpackProcess) {
 			webpackProcess.kill("SIGINT");
 			delete this.webpackProcesses[platform];

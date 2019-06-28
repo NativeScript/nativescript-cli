@@ -55,7 +55,7 @@ export class PrepareController extends EventEmitter {
 		return result;
 	}
 
-	public stopWatchers(projectDir: string, platform: string): void {
+	public async stopWatchers(projectDir: string, platform: string): Promise<void> {
 		const platformLowerCase = platform.toLowerCase();
 
 		if (this.watchersData && this.watchersData[projectDir] && this.watchersData[projectDir][platformLowerCase] && this.watchersData[projectDir][platformLowerCase].nativeFilesWatcher) {
@@ -64,7 +64,7 @@ export class PrepareController extends EventEmitter {
 		}
 
 		if (this.watchersData && this.watchersData[projectDir] && this.watchersData[projectDir][platformLowerCase] && this.watchersData[projectDir][platformLowerCase].webpackCompilerProcess) {
-			this.$webpackCompilerService.stopWebpackCompiler(platform);
+			await this.$webpackCompilerService.stopWebpackCompiler(platform);
 			this.watchersData[projectDir][platformLowerCase].webpackCompilerProcess = null;
 		}
 	}

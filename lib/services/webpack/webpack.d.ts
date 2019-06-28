@@ -6,7 +6,7 @@ declare global {
 	interface IWebpackCompilerService extends EventEmitter {
 		compileWithWatch(platformData: IPlatformData, projectData: IProjectData, prepareData: IPrepareData): Promise<any>;
 		compileWithoutWatch(platformData: IPlatformData, projectData: IProjectData, prepareData: IPrepareData): Promise<void>;
-		stopWebpackCompiler(platform: string): void;
+		stopWebpackCompiler(platform: string): Promise<void>;
 	}
 
 	interface IWebpackEnvOptions {

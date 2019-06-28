@@ -56,4 +56,18 @@ interface ICleanupService extends IShouldDispose, IDisposable {
 	 * @returns {Promise<void>}
 	 */
 	removeCleanupJS(jsCommand: IJSCommand): Promise<void>;
+
+	/**
+	 * Adds a kill action for the process
+	 * @param pid the pid of the process to be killed
+	 * @returns {Promise<void>}
+	 */
+	addKillProcess(pid: string): Promise<void>;
+
+	/**
+	 * Removes the kill action for the process
+	 * @param pid the pid of the process to be killed
+	 * @returns {Promise<void>}
+	 */
+	removeKillProcess(pid: string): Promise<void>;
 }

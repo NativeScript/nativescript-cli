@@ -45,6 +45,16 @@ export class CleanupService implements ICleanupService {
 		cleanupProcess.send(<IJSCleanupMessage>{ messageType: CleanupProcessMessage.RemoveJSFileToRequire, jsCommand});
 	}
 
+	public async addKillProcess(pid: string): Promise<void> {
+		const killSpawnCommandInfo = this.getKillProcesSpawnInfo(pid);
+		await this.addCleanupCommand(killSpawnCommandInfo);
+	}
+
+	public async removeKillProcess(pid: string): Promise<void> {
+		const killSpawnCommandInfo = this.getKillProcesSpawnInfo(pid);
+		await this.removeCleanupCommand(killSpawnCommandInfo);
+	}
+
 	@exported("cleanupService")
 	public setCleanupLogFile(filePath: string): void {
 		this.pathToCleanupLogFile = filePath;
@@ -120,6 +130,27 @@ export class CleanupService implements ICleanupService {
 		}
 
 		return cleanupProcessArgs;
+	}
+
+	private getKillProcesSpawnInfo(pid: string): ISpawnCommandInfo {
+		let command;
+		let args;
+		switch (process.platform) {
+			case 'win32':
+				command = "taskkill";
+				args = ["/pid", pid, "/T", "/F"];
+				break;
+
+			default:
+				command = path.join(__dirname, '../bash-scripts/terminateProcess.sh');
+				args = [pid];
+				break;
+		}
+
+		return {
+			command,
+			args
+		};
 	}
 }
 
