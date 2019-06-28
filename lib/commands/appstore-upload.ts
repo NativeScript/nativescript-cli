@@ -58,11 +58,11 @@ export class PublishIOS implements ICommand {
 				// As we need to build the package for device
 				this.$options.forDevice = true;
 
-				const buildData = new IOSBuildData(this.$projectData.projectDir, platform, this.$options);
+				const buildData = new IOSBuildData(this.$projectData.projectDir, platform, { ...this.$options.argv, watch: false });
 				ipaFilePath = await this.$buildController.prepareAndBuild(buildData);
 			} else {
 				this.$logger.info("No .ipa, mobile provision or certificate set. Perfect! Now we'll build .xcarchive and let Xcode pick the distribution certificate and provisioning profile for you when exporting .ipa for AppStore submission.");
-				const buildData = new IOSBuildData(this.$projectData.projectDir, platform, { ...this.$options.argv, buildForAppStore: true });
+				const buildData = new IOSBuildData(this.$projectData.projectDir, platform, { ...this.$options.argv, buildForAppStore: true, watch: false });
 				ipaFilePath = await this.$buildController.prepareAndBuild(buildData);
 				this.$logger.info(`Export at: ${ipaFilePath}`);
 			}
