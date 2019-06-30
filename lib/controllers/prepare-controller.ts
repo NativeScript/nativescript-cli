@@ -149,15 +149,19 @@ export class PrepareController extends EventEmitter {
 
 	@hook('watchPatterns')
 	public async getWatcherPatterns(platformData: IPlatformData, projectData: IProjectData): Promise<string[]> {
-		const pluginsNativeDirectories = this.$nodeModulesDependenciesBuilder.getProductionDependencies(projectData.projectDir)
-			.filter(dep => dep.nativescript)
+		const dependencies = this.$nodeModulesDependenciesBuilder.getProductionDependencies(projectData.projectDir)
+			.filter(dep => dep.nativescript);
+		const pluginsNativeDirectories = dependencies
 			.map(dep => path.join(dep.directory, PLATFORMS_DIR_NAME, platformData.platformNameLowerCase));
+		const pluginsPackageJsonFiles = dependencies.map(dep => path.join(dep.directory, PACKAGE_JSON_FILE_NAME));
 
 		const patterns = [
 			path.join(projectData.projectDir, PACKAGE_JSON_FILE_NAME),
 			path.join(projectData.getAppDirectoryPath(), PACKAGE_JSON_FILE_NAME),
 			path.join(projectData.getAppResourcesRelativeDirectoryPath(), platformData.normalizedPlatformName),
-		].concat(pluginsNativeDirectories);
+		]
+		.concat(pluginsNativeDirectories)
+		.concat(pluginsPackageJsonFiles);
 
 		return patterns;
 	}
