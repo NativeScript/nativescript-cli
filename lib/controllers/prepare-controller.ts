@@ -80,24 +80,24 @@ export class PrepareController extends EventEmitter {
 				nativeFilesWatcher: null,
 				webpackCompilerProcess: null
 			};
+			await this.startJSWatcherWithPrepare(platformData, projectData, prepareData); // -> start watcher + initial compilation
+			const hasNativeChanges = await this.startNativeWatcherWithPrepare(platformData, projectData, prepareData); // -> start watcher + initial prepare
+			const result = { platform: platformData.platformNameLowerCase, hasNativeChanges };
+
+			const hasPersistedDataWithNativeChanges = this.persistedData.find(data => data.platform === result.platform && data.hasNativeChanges);
+			if (hasPersistedDataWithNativeChanges) {
+				result.hasNativeChanges = true;
+			}
+
+			// TODO: Do not persist this in `this` context. Also it should be per platform.
+			this.isInitialPrepareReady = true;
+
+			if (this.persistedData && this.persistedData.length) {
+				this.emitPrepareEvent({ files: [], hasOnlyHotUpdateFiles: false, hasNativeChanges: result.hasNativeChanges, hmrData: null, platform: platformData.platformNameLowerCase });
+			}
+
+			return result;
 		}
-
-		await this.startJSWatcherWithPrepare(platformData, projectData, prepareData); // -> start watcher + initial compilation
-		const hasNativeChanges = await this.startNativeWatcherWithPrepare(platformData, projectData, prepareData); // -> start watcher + initial prepare
-
-		const result = { platform: platformData.platformNameLowerCase, hasNativeChanges };
-		const hasPersistedDataWithNativeChanges = this.persistedData.find(data => data.platform === result.platform && data.hasNativeChanges);
-		if (hasPersistedDataWithNativeChanges) {
-			result.hasNativeChanges = true;
-		}
-
-		this.isInitialPrepareReady = true;
-
-		if (this.persistedData && this.persistedData.length) {
-			this.emitPrepareEvent({ files: [], hasOnlyHotUpdateFiles: false, hasNativeChanges: result.hasNativeChanges, hmrData: null, platform: platformData.platformNameLowerCase });
-		}
-
-		return result;
 	}
 
 	private async startJSWatcherWithPrepare(platformData: IPlatformData, projectData: IProjectData, prepareData: IPrepareData): Promise<void> {
