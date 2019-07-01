@@ -178,6 +178,13 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 		const pbxprojFilePath = this.getPbxProjPath(projectData);
 		this.replaceFileContent(pbxprojFilePath, projectData);
+
+		const internalDirPath = path.join(projectRootFilePath, "..", "internal");
+		const xcframeworksFilePath = path.join(internalDirPath, "XCFrameworks.zip");
+		if (this.$fs.exists(xcframeworksFilePath)) {
+			await this.$fs.unzip(xcframeworksFilePath, internalDirPath);
+			this.$fs.deleteFile(xcframeworksFilePath);
+		}
 	}
 
 	public interpolateConfigurationFile(projectData: IProjectData): void {
