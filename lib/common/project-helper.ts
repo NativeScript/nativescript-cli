@@ -59,7 +59,7 @@ export class ProjectHelper implements IProjectHelper {
 		if (this.$staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE) {
 			try {
 				const fileContent = this.$fs.readJson(projectFilePath);
-				const clientSpecificData = fileContent[this.$staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE];
+				const clientSpecificData = fileContent[this.$staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE] && fileContent[this.$staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE].id;
 				return !!clientSpecificData;
 			} catch (err) {
 				this.$errors.failWithoutHelp("The project file is corrupted. Additional technical information: %s", err);
