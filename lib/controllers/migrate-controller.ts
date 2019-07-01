@@ -37,16 +37,16 @@ export class MigrateController extends UpdateControllerBase implements IMigrateC
 	];
 
 	private migrationDependencies: IMigrationDependency[] = [
-		{ packageName: constants.TNS_CORE_MODULES_NAME, verifiedVersion: "6.0.0-next-2019-06-20-155941-01" },
-		{ packageName: constants.TNS_CORE_MODULES_WIDGETS_NAME, verifiedVersion: "6.0.0-next-2019-06-20-155941-01" },
-		{ packageName: "tns-platform-declarations", verifiedVersion: "6.0.0-next-2019-06-27-082418-01" },
+		{ packageName: constants.TNS_CORE_MODULES_NAME, verifiedVersion: "6.0.0-rc-2019-06-28-175837-02" },
+		{ packageName: constants.TNS_CORE_MODULES_WIDGETS_NAME, verifiedVersion: "6.0.0" },
+		{ packageName: "tns-platform-declarations", isDev: true, verifiedVersion: "6.0.0-rc-2019-06-28-175837-02" },
 		{ packageName: "node-sass", isDev: true, verifiedVersion: "4.12.0" },
 		{ packageName: "typescript", isDev: true, verifiedVersion: "3.4.1" },
 		{ packageName: "less", isDev: true, verifiedVersion: "3.9.0" },
 		{ packageName: "nativescript-dev-sass", isDev: true, replaceWith: "node-sass" },
 		{ packageName: "nativescript-dev-typescript", isDev: true, replaceWith: "typescript" },
 		{ packageName: "nativescript-dev-less", isDev: true, replaceWith: "less" },
-		{ packageName: constants.WEBPACK_PLUGIN_NAME, isDev: true, shouldAddIfMissing: true, verifiedVersion: "0.25.0-next-2019-06-21-150426-03" },
+		{ packageName: constants.WEBPACK_PLUGIN_NAME, isDev: true, shouldAddIfMissing: true, verifiedVersion: "1.0.0-rc-2019-06-28-134050-01" },
 		{ packageName: "nativescript-camera", verifiedVersion: "4.5.0" },
 		{ packageName: "nativescript-geolocation", verifiedVersion: "5.1.0" },
 		{ packageName: "nativescript-imagepicker", verifiedVersion: "6.2.0" },
@@ -76,8 +76,8 @@ export class MigrateController extends UpdateControllerBase implements IMigrateC
 
 	get verifiedPlatformVersions(): IDictionary<string> {
 		return {
-			[this.$devicePlatformsConstants.Android.toLowerCase()]: "6.0.0-2019-06-11-172137-01",
-			[this.$devicePlatformsConstants.iOS.toLowerCase()]: "6.0.0-2019-06-10-154118-03"
+			[this.$devicePlatformsConstants.Android.toLowerCase()]: "6.0.0-rc-2019-06-27-172817-03",
+			[this.$devicePlatformsConstants.iOS.toLowerCase()]: "6.0.0-rc-2019-06-28-105002-01"
 		};
 	}
 
