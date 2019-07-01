@@ -89,7 +89,6 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 						packageNames: [`${projectData.projectName}.app`, `${projectData.projectName}.zip`]
 					};
 				},
-				frameworkFilesExtensions: [".a", ".framework", ".bin"],
 				frameworkDirectoriesExtensions: FRAMEWORK_EXTENSIONS,
 				frameworkDirectoriesNames: ["Metadata", "metadataGenerator", "NativeScript", "internal"],
 				targetedOS: ['darwin'],

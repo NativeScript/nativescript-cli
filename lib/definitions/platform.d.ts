@@ -23,7 +23,6 @@ interface IPlatformData {
 	appDestinationDirectoryPath: string;
 	getBuildOutputPath(options: IBuildOutputOptions): string;
 	getValidBuildOutputData(buildOptions: IBuildOutputOptions): IValidBuildOutputData;
-	frameworkFilesExtensions: string[];
 	frameworkDirectoriesExtensions?: string[];
 	frameworkDirectoriesNames?: string[];
 	targetedOS?: string[];
