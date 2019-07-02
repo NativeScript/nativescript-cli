@@ -240,6 +240,12 @@ describe("RunController", () => {
 				currentDeviceIdentifiers: ["device1", "device2", "device3"],
 				expectedDeviceIdentifiers: ["device1"],
 				deviceIdentifiersToBeStopped: ["device1", "device4"]
+			},
+			{
+				name: "stops LiveSync operation for all devices when stop method is called with empty array",
+				currentDeviceIdentifiers: ["device1", "device2", "device3"],
+				expectedDeviceIdentifiers: ["device1", "device2", "device3"],
+				deviceIdentifiersToBeStopped: []
 			}
 		];
 
