@@ -9,7 +9,8 @@ import { PrepareDataService } from "../services/prepare-data-service";
 import { PreviewAppLiveSyncEvents } from "../services/livesync/playground/preview-app-constants";
 
 export class PreviewAppController extends EventEmitter implements IPreviewAppController {
-	private deviceInitializationPromise: IDictionary<Promise<FilesPayload>> = {};
+	private deviceInitializationPromise: IDictionary<boolean> = {};
+	private platformPrepareHandlers: IDictionary<boolean> = {};
 	private promise = Promise.resolve();
 
 	constructor(
@@ -49,8 +50,13 @@ export class PreviewAppController extends EventEmitter implements IPreviewAppCon
 				}
 
 				if (this.deviceInitializationPromise[device.id]) {
-					return this.deviceInitializationPromise[device.id];
+					// In some cases devices are reported several times during initialization.
+					// In case we are already preparing the sending of initial files, disregard consecutive requests for initial files
+					// until we send the files we are currently preparing.
+					return null;
 				}
+
+				this.deviceInitializationPromise[device.id] = true;
 
 				if (device.uniqueId) {
 					await this.$analyticsService.trackEventActionInGoogleAnalytics({
@@ -68,20 +74,25 @@ export class PreviewAppController extends EventEmitter implements IPreviewAppCon
 
 				await this.$previewAppPluginsService.comparePluginsOnDevice(data, device);
 
-				this.$prepareController.on(PREPARE_READY_EVENT_NAME, async currentPrepareData => {
-					await this.handlePrepareReadyEvent(data, currentPrepareData.hmrData, currentPrepareData.files, device.platform);
-				});
+				if (!this.platformPrepareHandlers[device.platform]) {
+					// TODO: Unset this property once the preview operation for this platform is stopped
+					this.platformPrepareHandlers[device.platform] = true;
 
-				if (!data.env) { data.env = { }; }
+					// TODO: Remove the handler once the preview operation for this platform is stopped
+					this.$prepareController.on(PREPARE_READY_EVENT_NAME, async currentPrepareData => {
+						await this.handlePrepareReadyEvent(data, currentPrepareData.hmrData, currentPrepareData.files, device.platform);
+					});
+
+				}
+
+				data.env = data.env || {};
 				data.env.externals = this.$previewAppPluginsService.getExternalPlugins(device);
 
-				const prepareData = this.$prepareDataService.getPrepareData(data.projectDir, device.platform.toLowerCase(),  { ...data, nativePrepare: { skipNativePrepare: true }, watch: true });
+				const prepareData = this.$prepareDataService.getPrepareData(data.projectDir, device.platform.toLowerCase(), { ...data, nativePrepare: { skipNativePrepare: true }, watch: true });
 				await this.$prepareController.prepare(prepareData);
 
-				this.deviceInitializationPromise[device.id] = this.getInitialFilesForPlatformSafe(data, device.platform);
-
 				try {
-					const payloads = await this.deviceInitializationPromise[device.id];
+					const payloads = await this.getInitialFilesForPlatformSafe(data, device.platform);
 					return payloads;
 				} finally {
 					this.deviceInitializationPromise[device.id] = null;
@@ -116,7 +127,7 @@ export class PreviewAppController extends EventEmitter implements IPreviewAppCon
 						if (status === HmrConstants.HMR_ERROR_STATUS) {
 							const originalUseHotModuleReload = data.useHotModuleReload;
 							data.useHotModuleReload = false;
-							await this.syncFilesForPlatformSafe(data, { filesToSync: platformHmrData.fallbackFiles }, platform, previewDevice.id );
+							await this.syncFilesForPlatformSafe(data, { filesToSync: platformHmrData.fallbackFiles }, platform, previewDevice.id);
 							data.useHotModuleReload = originalUseHotModuleReload;
 						}
 					}));
