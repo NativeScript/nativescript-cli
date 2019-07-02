@@ -45,7 +45,7 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 					let result;
 
 					if (prepareData.hmr) {
-						result = this.getUpdatedEmittedFiles(message.emittedFiles, message.webpackRuntimeFiles, message.entryPointFiles);
+						result = this.getUpdatedEmittedFiles(message.emittedFiles, message.chunkFiles);
 					} else {
 						result = { emittedFiles: message.emittedFiles, fallbackFiles: <string[]>[], hash: "" };
 					}
@@ -218,16 +218,13 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 		return args;
 	}
 
-	private getUpdatedEmittedFiles(emittedFiles: string[], webpackRuntimeFiles: string[], entryPointFiles: string[]) {
+	private getUpdatedEmittedFiles(emittedFiles: string[], chunkFiles: string[]) {
 		let fallbackFiles: string[] = [];
 		let hotHash;
 		let result = emittedFiles.slice();
 		const hotUpdateScripts = emittedFiles.filter(x => x.endsWith('.hot-update.js'));
-		if (webpackRuntimeFiles && webpackRuntimeFiles.length) {
-			result = result.filter(file => webpackRuntimeFiles.indexOf(file) === -1);
-		}
-		if (entryPointFiles && entryPointFiles.length) {
-			result = result.filter(file => entryPointFiles.indexOf(file) === -1);
+		if (chunkFiles && chunkFiles.length) {
+			result = result.filter(file => chunkFiles.indexOf(file) === -1);
 		}
 		hotUpdateScripts.forEach(hotUpdateScript => {
 			const { name, hash } = this.parseHotUpdateChunkName(hotUpdateScript);
