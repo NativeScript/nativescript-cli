@@ -64,7 +64,7 @@ export class MigrateController extends UpdateControllerBase implements IMigrateC
 		//TODO update with compatible with webpack only hooks
 		{ packageName: "nativescript-plugin-firebase", verifiedVersion: "9.0.1" },
 		//TODO update with no prerelease version compatible with webpack only hooks
-		{ packageName: "nativescript-vue", verifiedVersion: "2.3.0-rc.0" },
+		{ packageName: "nativescript-vue", verifiedVersion: "2.3.0-rc.1" },
 		{ packageName: "nativescript-permissions", verifiedVersion: "1.3.0" },
 		{ packageName: "nativescript-cardview", verifiedVersion: "3.2.0" },
 		{
