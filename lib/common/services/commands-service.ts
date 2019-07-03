@@ -28,8 +28,7 @@ export class CommandsService implements ICommandsService {
 		private $helpService: IHelpService,
 		private $extensibilityService: IExtensibilityService,
 		private $optionsTracker: IOptionsTracker,
-		private $projectDataService: IProjectDataService,
-		private $bundleValidatorHelper: IBundleValidatorHelper) {
+		private $projectDataService: IProjectDataService) {
 	}
 
 	public allCommands(opts: { includeDevCommands: boolean }): string[] {
@@ -116,8 +115,6 @@ export class CommandsService implements ICommandsService {
 
 			const dashedOptions = command ? command.dashedOptions : null;
 			this.$options.validateOptions(dashedOptions, projectData);
-
-			this.$bundleValidatorHelper.validate(projectData, "1.0.0");
 		}
 
 		return this.canExecuteCommand(commandName, commandArguments);

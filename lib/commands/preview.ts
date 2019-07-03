@@ -4,6 +4,7 @@ export class PreviewCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
 
 	constructor(private $analyticsService: IAnalyticsService,
+		private $bundleValidatorHelper: IBundleValidatorHelper,
 		private $errors: IErrors,
 		private $logger: ILogger,
 		private $previewAppController: IPreviewAppController,
@@ -41,6 +42,7 @@ export class PreviewCommand implements ICommand {
 		}
 
 		await this.$networkConnectivityValidator.validate();
+		this.$bundleValidatorHelper.validate(this.$projectData, "1.0.0");
 		return true;
 	}
 }
