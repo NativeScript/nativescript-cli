@@ -444,6 +444,7 @@ export class DevicesService extends EventEmitter implements Mobile.IDevicesServi
 				}
 			} catch (err) {
 				err.deviceIdentifier = device.deviceInfo.identifier;
+				this.$logger.trace(`Error while executing action on device ${device.deviceInfo.identifier}. The error is ${err}`);
 				errors.push(err);
 			}
 		}
@@ -454,9 +455,9 @@ export class DevicesService extends EventEmitter implements Mobile.IDevicesServi
 				preErrorMsg = "Multiple errors were thrown:" + EOL;
 			}
 
-			const singleError = <Mobile.IDevicesOperationError>(new Error(`${preErrorMsg}${errors.map(e => e.message || e).join(EOL)}`));
-			singleError.allErrors = errors;
-			throw singleError;
+			const errorMessage = `${preErrorMsg}${errors.map(e => e.message || e).join(EOL)}`;
+			const suppressCommandHelp = _.some(errors, (e: any) => e.suppressCommandHelp);
+			this.$errors.fail({ formatStr: errorMessage, suppressCommandHelp });
 		}
 
 		return result;
