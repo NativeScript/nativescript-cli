@@ -150,6 +150,9 @@ function createTestInjector() {
 	testInjector.register("cleanupService", {
 		setShouldDispose: (shouldDispose: boolean): void => undefined
 	});
+	testInjector.register("bundleValidatorHelper", {
+		validate: () => ({})
+	});
 
 	return testInjector;
 }
