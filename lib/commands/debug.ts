@@ -1,12 +1,10 @@
 import { cache } from "../common/decorators";
 import { ValidatePlatformCommandBase } from "./command-base";
-import { LiveSyncCommandHelper } from "../helpers/livesync-command-helper";
 
 export class DebugPlatformCommand extends ValidatePlatformCommandBase implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
 
 	constructor(private platform: string,
-		private $bundleValidatorHelper: IBundleValidatorHelper,
 		protected $devicesService: Mobile.IDevicesService,
 		$platformValidationService: IPlatformValidationService,
 		$projectData: IProjectData,
@@ -63,9 +61,6 @@ export class DebugPlatformCommand extends ValidatePlatformCommandBase implements
 		if (this.$options.release) {
 			this.$errors.fail("--release flag is not applicable to this command");
 		}
-
-		const minSupportedWebpackVersion = this.$options.hmr ? LiveSyncCommandHelper.MIN_SUPPORTED_WEBPACK_VERSION_WITH_HMR : null;
-		this.$bundleValidatorHelper.validate(this.$projectData, minSupportedWebpackVersion);
 
 		const result = await super.canExecuteCommandBase(this.platform, { validateOptions: true, notConfiguredEnvOptions: { hideCloudBuildOption: true, hideSyncToPreviewAppOption: true } });
 		return result;

@@ -2,10 +2,8 @@ import { DEVICE_LOG_EVENT_NAME } from "../common/constants";
 
 export class PreviewCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
-	private static MIN_SUPPORTED_WEBPACK_VERSION = "0.17.0";
 
 	constructor(private $analyticsService: IAnalyticsService,
-		private $bundleValidatorHelper: IBundleValidatorHelper,
 		private $errors: IErrors,
 		private $logger: ILogger,
 		private $previewAppController: IPreviewAppController,
@@ -43,7 +41,6 @@ export class PreviewCommand implements ICommand {
 		}
 
 		await this.$networkConnectivityValidator.validate();
-		this.$bundleValidatorHelper.validate(this.$projectData, PreviewCommand.MIN_SUPPORTED_WEBPACK_VERSION);
 		return true;
 	}
 }
