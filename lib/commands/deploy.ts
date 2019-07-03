@@ -6,6 +6,7 @@ export class DeployOnDeviceCommand extends ValidatePlatformCommandBase implement
 	public allowedParameters: ICommandParameter[] = [];
 
 	public dashedOptions = {
+		watch: { type: OptionType.Boolean, default: false, hasSensitiveValue: false },
 		hmr: { type: OptionType.Boolean, default: false, hasSensitiveValue: false },
 	};
 

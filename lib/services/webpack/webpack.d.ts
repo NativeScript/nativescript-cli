@@ -34,8 +34,7 @@ declare global {
 
 	interface IWebpackEmitMessage {
 		emittedFiles: string[];
-		webpackRuntimeFiles: string[];
-		entryPointFiles: string[];
+		chunkFiles: string[];
 	}
 
 	interface IPlatformProjectService extends NodeJS.EventEmitter, IPlatformProjectServiceBase {

@@ -80,24 +80,24 @@ export class PrepareController extends EventEmitter {
 				nativeFilesWatcher: null,
 				webpackCompilerProcess: null
 			};
+			await this.startJSWatcherWithPrepare(platformData, projectData, prepareData); // -> start watcher + initial compilation
+			const hasNativeChanges = await this.startNativeWatcherWithPrepare(platformData, projectData, prepareData); // -> start watcher + initial prepare
+			const result = { platform: platformData.platformNameLowerCase, hasNativeChanges };
+
+			const hasPersistedDataWithNativeChanges = this.persistedData.find(data => data.platform === result.platform && data.hasNativeChanges);
+			if (hasPersistedDataWithNativeChanges) {
+				result.hasNativeChanges = true;
+			}
+
+			// TODO: Do not persist this in `this` context. Also it should be per platform.
+			this.isInitialPrepareReady = true;
+
+			if (this.persistedData && this.persistedData.length) {
+				this.emitPrepareEvent({ files: [], hasOnlyHotUpdateFiles: false, hasNativeChanges: result.hasNativeChanges, hmrData: null, platform: platformData.platformNameLowerCase });
+			}
+
+			return result;
 		}
-
-		await this.startJSWatcherWithPrepare(platformData, projectData, prepareData); // -> start watcher + initial compilation
-		const hasNativeChanges = await this.startNativeWatcherWithPrepare(platformData, projectData, prepareData); // -> start watcher + initial prepare
-
-		const result = { platform: platformData.platformNameLowerCase, hasNativeChanges };
-		const hasPersistedDataWithNativeChanges = this.persistedData.find(data => data.platform === result.platform && data.hasNativeChanges);
-		if (hasPersistedDataWithNativeChanges) {
-			result.hasNativeChanges = true;
-		}
-
-		this.isInitialPrepareReady = true;
-
-		if (this.persistedData && this.persistedData.length) {
-			this.emitPrepareEvent({ files: [], hasOnlyHotUpdateFiles: false, hasNativeChanges: result.hasNativeChanges, hmrData: null, platform: platformData.platformNameLowerCase });
-		}
-
-		return result;
 	}
 
 	private async startJSWatcherWithPrepare(platformData: IPlatformData, projectData: IProjectData, prepareData: IPrepareData): Promise<void> {
@@ -149,15 +149,19 @@ export class PrepareController extends EventEmitter {
 
 	@hook('watchPatterns')
 	public async getWatcherPatterns(platformData: IPlatformData, projectData: IProjectData): Promise<string[]> {
-		const pluginsNativeDirectories = this.$nodeModulesDependenciesBuilder.getProductionDependencies(projectData.projectDir)
-			.filter(dep => dep.nativescript)
+		const dependencies = this.$nodeModulesDependenciesBuilder.getProductionDependencies(projectData.projectDir)
+			.filter(dep => dep.nativescript);
+		const pluginsNativeDirectories = dependencies
 			.map(dep => path.join(dep.directory, PLATFORMS_DIR_NAME, platformData.platformNameLowerCase));
+		const pluginsPackageJsonFiles = dependencies.map(dep => path.join(dep.directory, PACKAGE_JSON_FILE_NAME));
 
 		const patterns = [
 			path.join(projectData.projectDir, PACKAGE_JSON_FILE_NAME),
 			path.join(projectData.getAppDirectoryPath(), PACKAGE_JSON_FILE_NAME),
 			path.join(projectData.getAppResourcesRelativeDirectoryPath(), platformData.normalizedPlatformName),
-		].concat(pluginsNativeDirectories);
+		]
+		.concat(pluginsNativeDirectories)
+		.concat(pluginsPackageJsonFiles);
 
 		return patterns;
 	}

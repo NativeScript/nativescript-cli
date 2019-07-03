@@ -62,7 +62,7 @@ export class RunController extends EventEmitter implements IRunController {
 			// so we cannot await it as this will cause infinite loop.
 			const shouldAwaitPendingOperation = !stopOptions || stopOptions.shouldAwaitAllActions;
 
-			const deviceIdentifiersToRemove = deviceIdentifiers || _.map(liveSyncProcessInfo.deviceDescriptors, d => d.identifier);
+			const deviceIdentifiersToRemove = (deviceIdentifiers && deviceIdentifiers.length) ? deviceIdentifiers : _.map(liveSyncProcessInfo.deviceDescriptors, d => d.identifier);
 
 			const removedDeviceIdentifiers = _.remove(liveSyncProcessInfo.deviceDescriptors, descriptor => _.includes(deviceIdentifiersToRemove, descriptor.identifier))
 				.map(descriptor => descriptor.identifier);

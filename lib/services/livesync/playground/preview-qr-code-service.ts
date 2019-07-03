@@ -44,8 +44,6 @@ export class PreviewQrCodeService implements IPreviewQrCodeService {
 		const qrCodeUrl = this.$previewSdkService.getQrCodeUrl(options);
 		const url = await this.getShortenUrl(qrCodeUrl);
 
-		this.$logger.info("======== qrCodeUrl ======== ", qrCodeUrl);
-
 		this.$logger.info();
 		const message = `${EOL} Generating qrcode for url ${url}.`;
 		this.$logger.trace(message);
