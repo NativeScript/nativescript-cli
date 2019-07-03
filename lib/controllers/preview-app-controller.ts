@@ -79,8 +79,10 @@ export class PreviewAppController extends EventEmitter implements IPreviewAppCon
 					this.platformPrepareHandlers[device.platform] = true;
 
 					// TODO: Remove the handler once the preview operation for this platform is stopped
-					this.$prepareController.on(PREPARE_READY_EVENT_NAME, async currentPrepareData => {
-						await this.handlePrepareReadyEvent(data, currentPrepareData.hmrData, currentPrepareData.files, device.platform);
+					this.$prepareController.on(PREPARE_READY_EVENT_NAME, async (currentPrepareData: IFilesChangeEventData) => {
+						if (currentPrepareData.platform.toLowerCase() === device.platform.toLowerCase()) {
+							await this.handlePrepareReadyEvent(data, currentPrepareData.hmrData, currentPrepareData.files, device.platform);
+						}
 					});
 
 				}
