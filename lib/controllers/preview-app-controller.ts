@@ -25,7 +25,8 @@ export class PreviewAppController extends EventEmitter implements IPreviewAppCon
 		private $previewDevicesService: IPreviewDevicesService,
 		private $previewQrCodeService: IPreviewQrCodeService,
 		private $previewSdkService: IPreviewSdkService,
-		private $prepareDataService: PrepareDataService
+		private $prepareDataService: PrepareDataService,
+		private $projectDataService: IProjectDataService
 	) { super(); }
 
 	public async startPreview(data: IPreviewAppLiveSyncData): Promise<IQrCodeImageData> {
@@ -66,7 +67,8 @@ export class PreviewAppController extends EventEmitter implements IPreviewAppCon
 					});
 				}
 
-				await this.$hooksService.executeBeforeHooks("preview-sync", { ...data, platform: device.platform });
+				const projectData = this.$projectDataService.getProjectData(data.projectDir);
+				await this.$hooksService.executeBeforeHooks("preview-sync", { hookArgs: { ...data, platform: device.platform, projectData } });
 
 				if (data.useHotModuleReload) {
 					this.$hmrStatusService.attachToHmrStatusEvent();
