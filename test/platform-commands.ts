@@ -187,9 +187,6 @@ function createTestInjector() {
 	testInjector.register("addPlatformService", {});
 	testInjector.register("platformController", {});
 	testInjector.register("platformCommandHelper", PlatformCommandHelper);
-	testInjector.register("bundleValidatorHelper", {
-		validate: () => ({})
-	});
 
 	return testInjector;
 }
