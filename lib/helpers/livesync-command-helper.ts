@@ -2,8 +2,6 @@ import { RunOnDeviceEvents } from "../constants";
 import { DeployController } from "../controllers/deploy-controller";
 
 export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
-	public static MIN_SUPPORTED_WEBPACK_VERSION_WITH_HMR = "0.17.0";
-
 	constructor(
 		private $buildDataService: IBuildDataService,
 		private $projectData: IProjectData,
@@ -15,7 +13,6 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 		private $injector: IInjector,
 		private $buildController: IBuildController,
 		private $analyticsService: IAnalyticsService,
-		private $bundleValidatorHelper: IBundleValidatorHelper,
 		private $errors: IErrors,
 		private $iOSSimulatorLogProvider: Mobile.IiOSSimulatorLogProvider,
 		private $cleanupService: ICleanupService,
@@ -132,9 +129,6 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 			const validateOutput = await platformProjectService.validate(this.$projectData, this.$options);
 			result[availablePlatform.toLowerCase()] = validateOutput;
 		}
-
-		const minSupportedWebpackVersion = this.$options.hmr ? LiveSyncCommandHelper.MIN_SUPPORTED_WEBPACK_VERSION_WITH_HMR : null;
-		this.$bundleValidatorHelper.validate(this.$projectData, minSupportedWebpackVersion);
 
 		return result;
 	}

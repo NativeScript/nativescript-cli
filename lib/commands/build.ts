@@ -9,7 +9,6 @@ export abstract class BuildCommandBase extends ValidatePlatformCommandBase {
 		protected $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		protected $buildController: IBuildController,
 		$platformValidationService: IPlatformValidationService,
-		private $bundleValidatorHelper: IBundleValidatorHelper,
 		private $buildDataService: IBuildDataService,
 		protected $logger: ILogger) {
 			super($options, $platformsDataService, $platformValidationService, $projectData);
@@ -33,8 +32,6 @@ export abstract class BuildCommandBase extends ValidatePlatformCommandBase {
 		if (!this.$platformValidationService.isPlatformSupportedForOS(platform, this.$projectData)) {
 			this.$errors.fail(`Applications for platform ${platform} can not be built on this OS`);
 		}
-
-		this.$bundleValidatorHelper.validate(this.$projectData);
 	}
 
 	protected async validateArgs(args: string[], platform: string): Promise<ICanExecuteCommandOutput> {
@@ -65,10 +62,9 @@ export class BuildIosCommand extends BuildCommandBase implements ICommand {
 		$devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		$buildController: IBuildController,
 		$platformValidationService: IPlatformValidationService,
-		$bundleValidatorHelper: IBundleValidatorHelper,
 		$logger: ILogger,
 		$buildDataService: IBuildDataService) {
-			super($options, $errors, $projectData, $platformsDataService, $devicePlatformsConstants, $buildController, $platformValidationService, $bundleValidatorHelper, $buildDataService, $logger);
+			super($options, $errors, $projectData, $platformsDataService, $devicePlatformsConstants, $buildController, $platformValidationService, $buildDataService, $logger);
 	}
 
 	public async execute(args: string[]): Promise<void> {
@@ -101,11 +97,10 @@ export class BuildAndroidCommand extends BuildCommandBase implements ICommand {
 		$devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		$buildController: IBuildController,
 		$platformValidationService: IPlatformValidationService,
-		$bundleValidatorHelper: IBundleValidatorHelper,
 		protected $androidBundleValidatorHelper: IAndroidBundleValidatorHelper,
 		$buildDataService: IBuildDataService,
 		protected $logger: ILogger) {
-			super($options, $errors, $projectData, platformsDataService, $devicePlatformsConstants, $buildController, $platformValidationService, $bundleValidatorHelper, $buildDataService, $logger);
+			super($options, $errors, $projectData, platformsDataService, $devicePlatformsConstants, $buildController, $platformValidationService, $buildDataService, $logger);
 	}
 
 	public async execute(args: string[]): Promise<void> {
@@ -122,7 +117,6 @@ export class BuildAndroidCommand extends BuildCommandBase implements ICommand {
 
 	public async canExecute(args: string[]): Promise<boolean | ICanExecuteCommandOutput> {
 		const platform = this.$devicePlatformsConstants.Android;
-		super.validatePlatform(platform);
 		this.$androidBundleValidatorHelper.validateRuntimeVersion(this.$projectData);
 		let result = await super.canExecuteCommandBase(platform, { notConfiguredEnvOptions: { hideSyncToPreviewAppOption: true } });
 		if (result.canExecute) {
