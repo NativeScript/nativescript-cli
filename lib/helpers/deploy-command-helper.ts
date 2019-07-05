@@ -36,7 +36,7 @@ export class DeployCommandHelper {
 
 				const buildAction = additionalOptions && additionalOptions.buildPlatform ?
 					additionalOptions.buildPlatform.bind(additionalOptions.buildPlatform, d.deviceInfo.platform, buildData, this.$projectData) :
-					this.$buildController.prepareAndBuild.bind(this.$buildController, d.deviceInfo.platform, buildData, this.$projectData);
+					this.$buildController.build.bind(this.$buildController, d.deviceInfo.platform, buildData, this.$projectData);
 
 				const info: ILiveSyncDeviceDescriptor = {
 					identifier: d.deviceInfo.identifier,
