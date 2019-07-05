@@ -32,7 +32,9 @@ export class IOSLiveSyncService extends PlatformLiveSyncServiceBase implements I
 		const tempZip = temp.path({ prefix: "sync", suffix: ".zip" });
 		this.$logger.trace("Creating zip file: " + tempZip);
 
-		await this.$fs.zipFiles(tempZip, this.$fs.enumerateFilesInDirectorySync(projectFilesPath), (res) => {
+		const filesToTransfer = this.$fs.enumerateFilesInDirectorySync(projectFilesPath);
+
+		await this.$fs.zipFiles(tempZip, filesToTransfer, (res) => {
 			return path.join(APP_FOLDER_NAME, path.relative(projectFilesPath, res));
 		});
 
@@ -42,6 +44,8 @@ export class IOSLiveSyncService extends PlatformLiveSyncServiceBase implements I
 			getRelativeToProjectBasePath: () => "../sync.zip",
 			deviceProjectRootPath: await deviceAppData.getDeviceProjectRootPath()
 		}]);
+
+		await deviceAppData.device.applicationManager.setTransferredAppFiles(filesToTransfer);
 
 		return {
 			deviceAppData,
