@@ -108,7 +108,7 @@ export class MigrateController extends UpdateControllerBase implements IMigrateC
 			await this.migrateDependencies(projectData);
 		} catch (error) {
 			this.restoreBackup(MigrateController.folders, backupDir, projectData.projectDir);
-			this.$logger.error(MigrateController.migrateFailMessage);
+			this.$errors.failWithoutHelp(`${MigrateController.migrateFailMessage} The error is: ${error}`);
 		}
 	}
 
