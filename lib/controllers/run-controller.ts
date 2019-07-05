@@ -25,6 +25,7 @@ export class RunController extends EventEmitter implements IRunController {
 		private $prepareController: IPrepareController,
 		private $prepareDataService: IPrepareDataService,
 		private $prepareNativePlatformService: IPrepareNativePlatformService,
+		private $projectChangesService: IProjectChangesService,
 		protected $projectDataService: IProjectDataService
 	) {
 		super();
@@ -48,7 +49,18 @@ export class RunController extends EventEmitter implements IRunController {
 		}
 
 		if (!this.prepareReadyEventHandler) {
-			this.prepareReadyEventHandler = async (data: any) => await this.syncChangedDataOnDevices(data, projectData, liveSyncInfo);
+			this.prepareReadyEventHandler = async (data: IFilesChangeEventData) => {
+				if (data.hasNativeChanges) {
+					const platformData = this.$platformsDataService.getPlatformData(data.platform, projectData);
+					const prepareData = this.$prepareDataService.getPrepareData(liveSyncInfo.projectDir, data.platform, { ...liveSyncInfo, watch: !liveSyncInfo.skipWatcher });
+					const changesInfo = await this.$projectChangesService.checkForChanges(platformData, projectData, prepareData);
+					if (changesInfo.hasChanges) {
+						await this.syncChangedDataOnDevices(data, projectData, liveSyncInfo);
+					}
+				} else {
+					await this.syncChangedDataOnDevices(data, projectData, liveSyncInfo);
+				}
+			};
 			this.$prepareController.on(PREPARE_READY_EVENT_NAME, this.prepareReadyEventHandler.bind(this));
 		}
 
