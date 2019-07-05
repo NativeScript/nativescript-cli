@@ -117,7 +117,7 @@ export class HooksService implements IHooksService {
 
 				this.$logger.trace(`Validating ${hookName} arguments.`);
 
-				const invalidArguments = this.validateHookArguments(hookEntryPoint);
+				const invalidArguments = this.validateHookArguments(hookEntryPoint, hook.fullPath);
 
 				if (invalidArguments.length) {
 					this.$logger.warn(`${hook.fullPath} will NOT be executed because it has invalid arguments - ${invalidArguments.join(", ").grey}.`);
@@ -144,6 +144,8 @@ export class HooksService implements IHooksService {
 						if (err && _.isBoolean(err.stopExecution) && err.errorAsWarning === true) {
 							this.$logger.warn(err.message || err);
 						} else {
+							// Print the actual error with its callstack, so it is easy to find out which hooks is causing troubles.
+							this.$logger.error(err);
 							throw err || new Error(`Failed to execute hook: ${hook.fullPath}.`);
 						}
 					}
@@ -266,7 +268,7 @@ export class HooksService implements IHooksService {
 		}
 	}
 
-	private validateHookArguments(hookConstructor: Function): string[] {
+	private validateHookArguments(hookConstructor: Function, hookFullPath: string): string[] {
 		const invalidArguments: string[] = [];
 
 		// We need to annotate the hook in order to have the arguments of the constructor.
@@ -278,7 +280,7 @@ export class HooksService implements IHooksService {
 					this.$injector.resolve(argument);
 				}
 			} catch (err) {
-				this.$logger.trace(`Cannot resolve ${argument}, reason: ${err}`);
+				this.$logger.trace(`Cannot resolve ${argument} of hook ${hookFullPath}, reason: ${err}`);
 				invalidArguments.push(argument);
 			}
 		});
