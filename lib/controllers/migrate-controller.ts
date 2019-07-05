@@ -286,23 +286,26 @@ export class MigrateController extends UpdateControllerBase implements IMigrateC
 
 	private async migrateUnitTestRunner(projectData: IProjectData, migrationBackupDirPath: string): Promise<IMigrationDependency[]> {
 		// Migrate karma.conf.js
-		const oldKarmaContent = this.$fs.readText(path.join(migrationBackupDirPath, constants.KARMA_CONFIG_NAME));
+		const pathToKarmaConfig = path.join(migrationBackupDirPath, constants.KARMA_CONFIG_NAME);
+		if (this.$fs.exists(pathToKarmaConfig)) {
+			const oldKarmaContent = this.$fs.readText(pathToKarmaConfig);
 
-		const regExp = /frameworks:\s+\[([\S\s]*?)\]/g;
-		const matches = regExp.exec(oldKarmaContent);
-		const frameworks = (matches && matches[1] && matches[1].trim()) || '["jasmine"]';
+			const regExp = /frameworks:\s+\[([\S\s]*?)\]/g;
+			const matches = regExp.exec(oldKarmaContent);
+			const frameworks = (matches && matches[1] && matches[1].trim()) || '["jasmine"]';
 
-		const testsDir = path.join(projectData.appDirectoryPath, 'tests');
-		const relativeTestsDir = path.relative(projectData.projectDir, testsDir);
-		const testFiles = `'${fromWindowsRelativePathToUnix(relativeTestsDir)}/**/*.*'`;
+			const testsDir = path.join(projectData.appDirectoryPath, 'tests');
+			const relativeTestsDir = path.relative(projectData.projectDir, testsDir);
+			const testFiles = `'${fromWindowsRelativePathToUnix(relativeTestsDir)}/**/*.*'`;
 
-		const karmaConfTemplate = this.$resources.readText('test/karma.conf.js');
-		const karmaConf = _.template(karmaConfTemplate)({ frameworks, testFiles });
-		this.$fs.writeFile(path.join(projectData.projectDir, constants.KARMA_CONFIG_NAME), karmaConf);
+			const karmaConfTemplate = this.$resources.readText('test/karma.conf.js');
+			const karmaConf = _.template(karmaConfTemplate)({ frameworks, testFiles });
+			this.$fs.writeFile(path.join(projectData.projectDir, constants.KARMA_CONFIG_NAME), karmaConf);
+		}
 
 		// Dependencies to migrate
 		const dependencies = [
-			{ packageName: "karma-webpack", verifiedVersion: "3.0.5", isDev: true, shouldAddIfMissing: !this.hasDependency({ packageName: "karma-webpack", isDev: true }, projectData) },
+			{ packageName: "karma-webpack", verifiedVersion: "3.0.5", isDev: true, shouldAddIfMissing: true },
 			{ packageName: "karma-jasmine", verifiedVersion: "2.0.1", isDev: true },
 			{ packageName: "karma-mocha", verifiedVersion: "1.3.0", isDev: true },
 			{ packageName: "karma-chai", verifiedVersion: "0.1.0", isDev: true },
