@@ -73,10 +73,6 @@ export class RunController extends EventEmitter implements IRunController {
 		const { projectDir, deviceIdentifiers, stopOptions } = data;
 		const liveSyncProcessInfo = this.$liveSyncProcessDataService.getPersistedData(projectDir);
 		if (liveSyncProcessInfo && !liveSyncProcessInfo.isStopped) {
-			if (this.prepareReadyEventHandler) {
-				this.removeListener(PREPARE_READY_EVENT_NAME, this.prepareReadyEventHandler);
-				this.prepareReadyEventHandler = null;
-			}
 
 			// In case we are coming from error during livesync, the current action is the one that erred (but we are still executing it),
 			// so we cannot await it as this will cause infinite loop.
@@ -113,6 +109,11 @@ export class RunController extends EventEmitter implements IRunController {
 				}
 
 				liveSyncProcessInfo.deviceDescriptors = [];
+
+				if (this.prepareReadyEventHandler) {
+					this.removeListener(PREPARE_READY_EVENT_NAME, this.prepareReadyEventHandler);
+					this.prepareReadyEventHandler = null;
+				}
 
 				const projectData = this.$projectDataService.getProjectData(projectDir);
 				await this.$hooksService.executeAfterHooks('watch', {
