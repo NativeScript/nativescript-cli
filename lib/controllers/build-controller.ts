@@ -89,10 +89,6 @@ export class BuildController extends EventEmitter implements IBuildController {
 		const outputPath = buildData.outputPath || platformData.getBuildOutputPath(buildData);
 		const changesInfo = this.$projectChangesService.currentChanges || await this.$projectChangesService.checkForChanges(platformData, projectData, buildData);
 
-		if (buildData.release && changesInfo.hasChanges) {
-			return true;
-		}
-
 		if (changesInfo.changesRequireBuild) {
 			return true;
 		}
