@@ -72,6 +72,9 @@ export class PackageManager implements IPackageManager {
 
 	public async getTagVersion(packageName: string, tag: string): Promise<string> {
 		let version: string = null;
+		if (!tag) {
+			return null;
+		}
 
 		try {
 			const result = await this.view(packageName, { "dist-tags": true });
