@@ -38,7 +38,7 @@ export class MigrateController extends UpdateControllerBase implements IMigrateC
 	];
 
 	private migrationDependencies: IMigrationDependency[] = [
-		{ packageName: constants.TNS_CORE_MODULES_NAME, verifiedVersion: "6.0.0-rc-2019-06-28-175837-02" },
+		{ packageName: constants.TNS_CORE_MODULES_NAME, verifiedVersion: "6.0.0-rc-2019-07-08-111131-01" },
 		{ packageName: constants.TNS_CORE_MODULES_WIDGETS_NAME, verifiedVersion: "6.0.0" },
 		{ packageName: "tns-platform-declarations", isDev: true, verifiedVersion: "6.0.0-rc-2019-06-28-175837-02" },
 		{ packageName: "node-sass", isDev: true, verifiedVersion: "4.12.0" },
@@ -46,7 +46,7 @@ export class MigrateController extends UpdateControllerBase implements IMigrateC
 		{ packageName: "nativescript-dev-sass", isDev: true, replaceWith: "node-sass" },
 		{ packageName: "nativescript-dev-typescript", isDev: true, replaceWith: "typescript" },
 		{ packageName: "nativescript-dev-less", isDev: true, shouldRemove: true, warning: "LESS CSS is not supported out of the box. In order to enable it, follow the steps in this feature request: https://github.com/NativeScript/nativescript-dev-webpack/issues/967" },
-		{ packageName: constants.WEBPACK_PLUGIN_NAME, isDev: true, shouldAddIfMissing: true, verifiedVersion: "1.0.0-rc-2019-07-02-161545-02" },
+		{ packageName: constants.WEBPACK_PLUGIN_NAME, isDev: true, shouldAddIfMissing: true, verifiedVersion: "1.0.0-rc-2019-07-08-114453-02" },
 		{ packageName: "nativescript-camera", verifiedVersion: "4.5.0" },
 		{ packageName: "nativescript-geolocation", verifiedVersion: "5.1.0" },
 		{ packageName: "nativescript-imagepicker", verifiedVersion: "6.2.0" },
@@ -68,7 +68,7 @@ export class MigrateController extends UpdateControllerBase implements IMigrateC
 		{ packageName: "nativescript-permissions", verifiedVersion: "1.3.0" },
 		{ packageName: "nativescript-cardview", verifiedVersion: "3.2.0" },
 		{
-			packageName: "nativescript-unit-test-runner", verifiedVersion: "0.6.3",
+			packageName: "nativescript-unit-test-runner", verifiedVersion: "0.6.4",
 			shouldMigrateAction: (projectData: IProjectData) => this.hasDependency({ packageName: "nativescript-unit-test-runner", isDev: false }, projectData),
 			migrateAction: this.migrateUnitTestRunner.bind(this)
 		}
