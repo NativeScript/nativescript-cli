@@ -506,7 +506,7 @@ export class ProjectDataService implements IProjectDataService {
 
 	removeNSProperty(propertyName: string): void { }
 
-	removeNsConfigProperty(projectDir: string, propertyName: string): void { }
+	removeNSConfigProperty(projectDir: string, propertyName: string): void { }
 
 	removeDependency(dependencyName: string): void { }
 

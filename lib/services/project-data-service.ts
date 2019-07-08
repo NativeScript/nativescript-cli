@@ -127,7 +127,7 @@ export class ProjectDataService implements IProjectDataService {
 		};
 	}
 
-	public removeNsConfigProperty(projectDir: string, propertyName: string): void {
+	public removeNSConfigProperty(projectDir: string, propertyName: string): void {
 		this.$logger.trace(`Removing "${propertyName}" property from nsconfig.`);
 		this.updateNsConfigValue(projectDir, null, [propertyName]);
 		this.$logger.trace(`"${propertyName}" property successfully removed.`);
@@ -219,7 +219,7 @@ export class ProjectDataService implements IProjectDataService {
 			try {
 				result = <INsConfig>parseJson(nsConfigContent);
 			} catch (e) {
-				// invalid nsconfig => null
+				this.$logger.trace("The `nsconfig` content is not a valid JSON. Parse error: ", e);
 			}
 		}
 

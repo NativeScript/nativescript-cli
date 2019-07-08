@@ -150,7 +150,7 @@ interface IProjectDataService {
 	 * @param {string} propertyName The name of the property to be removed.
 	 * @returns {void}
 	 */
-	removeNsConfigProperty(projectDir: string, propertyName: string): void;
+	removeNSConfigProperty(projectDir: string, propertyName: string): void;
 
 	/**
 	 * Removes dependency from package.json
