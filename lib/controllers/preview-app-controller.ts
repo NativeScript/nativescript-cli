@@ -9,8 +9,8 @@ import { PrepareDataService } from "../services/prepare-data-service";
 import { PreviewAppLiveSyncEvents } from "../services/livesync/playground/preview-app-constants";
 
 export class PreviewAppController extends EventEmitter implements IPreviewAppController {
+	private prepareReadyEventHandler: any = null;
 	private deviceInitializationPromise: IDictionary<boolean> = {};
-	private platformPrepareHandlers: IDictionary<boolean> = {};
 	private promise = Promise.resolve();
 
 	constructor(
@@ -41,6 +41,10 @@ export class PreviewAppController extends EventEmitter implements IPreviewAppCon
 	public async stopPreview(): Promise<void> {
 		this.$previewSdkService.stop();
 		this.$previewDevicesService.updateConnectedDevices([]);
+		if (this.prepareReadyEventHandler) {
+			this.removeListener(PREPARE_READY_EVENT_NAME, this.prepareReadyEventHandler);
+			this.prepareReadyEventHandler = null;
+		}
 	}
 
 	private async previewCore(data: IPreviewAppLiveSyncData): Promise<void> {
@@ -76,17 +80,11 @@ export class PreviewAppController extends EventEmitter implements IPreviewAppCon
 
 				await this.$previewAppPluginsService.comparePluginsOnDevice(data, device);
 
-				if (!this.platformPrepareHandlers[device.platform]) {
-					// TODO: Unset this property once the preview operation for this platform is stopped
-					this.platformPrepareHandlers[device.platform] = true;
-
-					// TODO: Remove the handler once the preview operation for this platform is stopped
-					this.$prepareController.on(PREPARE_READY_EVENT_NAME, async (currentPrepareData: IFilesChangeEventData) => {
-						if (currentPrepareData.platform.toLowerCase() === device.platform.toLowerCase()) {
-							await this.handlePrepareReadyEvent(data, currentPrepareData.hmrData, currentPrepareData.files, device.platform);
-						}
-					});
-
+				if (!this.prepareReadyEventHandler) {
+					this.prepareReadyEventHandler = async (currentPrepareData: IFilesChangeEventData) => {
+						await this.handlePrepareReadyEvent(data, currentPrepareData);
+					};
+					this.$prepareController.on(PREPARE_READY_EVENT_NAME, this.prepareReadyEventHandler.bind(this));
 				}
 
 				data.env = data.env || {};
@@ -115,9 +113,10 @@ export class PreviewAppController extends EventEmitter implements IPreviewAppCon
 	}
 
 	@performanceLog()
-	private async handlePrepareReadyEvent(data: IPreviewAppLiveSyncData, hmrData: IPlatformHmrData, files: string[], platform: string) {
+	private async handlePrepareReadyEvent(data: IPreviewAppLiveSyncData, currentPrepareData: IFilesChangeEventData) {
 		await this.promise
 			.then(async () => {
+				const { hmrData, files, platform } = currentPrepareData;
 				const platformHmrData = _.cloneDeep(hmrData);
 
 				this.promise = this.syncFilesForPlatformSafe(data, { filesToSync: files }, platform);
