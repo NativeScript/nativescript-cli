@@ -444,7 +444,7 @@ export class DevicesService extends EventEmitter implements Mobile.IDevicesServi
 				}
 			} catch (err) {
 				err.deviceIdentifier = device.deviceInfo.identifier;
-				this.$logger.trace(`Error while executing action on device ${device.deviceInfo.identifier}. The error is ${err}`);
+				this.$logger.trace(`Error while executing action on device ${device.deviceInfo.identifier}. The error is`, err);
 				errors.push(err);
 			}
 		}
