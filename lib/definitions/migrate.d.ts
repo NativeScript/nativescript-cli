@@ -11,6 +11,7 @@ interface IDependency {
 interface IMigrationDependency extends IDependency {
 	shouldRemove?: boolean;
 	replaceWith?: string;
+	warning?: string;
 	verifiedVersion?: string;
 	shouldAddIfMissing?: boolean;
 	shouldMigrateAction?: (projectData: IProjectData) => boolean;

@@ -12,6 +12,7 @@ export class MigrateController extends UpdateControllerBase implements IMigrateC
 		protected $platformsDataService: IPlatformsDataService,
 		protected $packageInstallationManager: IPackageInstallationManager,
 		protected $packageManager: IPackageManager,
+		private $androidResourcesMigrationService: IAndroidResourcesMigrationService,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $logger: ILogger,
 		private $errors: IErrors,
@@ -37,16 +38,15 @@ export class MigrateController extends UpdateControllerBase implements IMigrateC
 	];
 
 	private migrationDependencies: IMigrationDependency[] = [
-		{ packageName: constants.TNS_CORE_MODULES_NAME, verifiedVersion: "6.0.0-rc-2019-06-28-175837-02" },
+		{ packageName: constants.TNS_CORE_MODULES_NAME, verifiedVersion: "6.0.0-rc-2019-07-08-111131-01" },
 		{ packageName: constants.TNS_CORE_MODULES_WIDGETS_NAME, verifiedVersion: "6.0.0" },
 		{ packageName: "tns-platform-declarations", isDev: true, verifiedVersion: "6.0.0-rc-2019-06-28-175837-02" },
 		{ packageName: "node-sass", isDev: true, verifiedVersion: "4.12.0" },
 		{ packageName: "typescript", isDev: true, verifiedVersion: "3.4.1" },
-		{ packageName: "less", isDev: true, verifiedVersion: "3.9.0" },
 		{ packageName: "nativescript-dev-sass", isDev: true, replaceWith: "node-sass" },
 		{ packageName: "nativescript-dev-typescript", isDev: true, replaceWith: "typescript" },
-		{ packageName: "nativescript-dev-less", isDev: true, replaceWith: "less" },
-		{ packageName: constants.WEBPACK_PLUGIN_NAME, isDev: true, shouldAddIfMissing: true, verifiedVersion: "1.0.0-rc-2019-07-02-161545-02" },
+		{ packageName: "nativescript-dev-less", isDev: true, shouldRemove: true, warning: "LESS CSS is not supported out of the box. In order to enable it, follow the steps in this feature request: https://github.com/NativeScript/nativescript-dev-webpack/issues/967" },
+		{ packageName: constants.WEBPACK_PLUGIN_NAME, isDev: true, shouldAddIfMissing: true, verifiedVersion: "1.0.0-rc-2019-07-08-135456-03" },
 		{ packageName: "nativescript-camera", verifiedVersion: "4.5.0" },
 		{ packageName: "nativescript-geolocation", verifiedVersion: "5.1.0" },
 		{ packageName: "nativescript-imagepicker", verifiedVersion: "6.2.0" },
@@ -68,7 +68,7 @@ export class MigrateController extends UpdateControllerBase implements IMigrateC
 		{ packageName: "nativescript-permissions", verifiedVersion: "1.3.0" },
 		{ packageName: "nativescript-cardview", verifiedVersion: "3.2.0" },
 		{
-			packageName: "nativescript-unit-test-runner", verifiedVersion: "0.6.3",
+			packageName: "nativescript-unit-test-runner", verifiedVersion: "0.6.4",
 			shouldMigrateAction: (projectData: IProjectData) => this.hasDependency({ packageName: "nativescript-unit-test-runner", isDev: false }, projectData),
 			migrateAction: this.migrateUnitTestRunner.bind(this)
 		}
@@ -103,12 +103,22 @@ export class MigrateController extends UpdateControllerBase implements IMigrateC
 			this.$logger.trace(`Error during auto-generated files handling. ${(error && error.message) || error}`);
 		}
 
+		await this.migrateOldAndroidAppResources(projectData);
+
 		try {
 			await this.cleanUpProject(projectData);
 			await this.migrateDependencies(projectData);
 		} catch (error) {
 			this.restoreBackup(MigrateController.folders, backupDir, projectData.projectDir);
 			this.$errors.failWithoutHelp(`${MigrateController.migrateFailMessage} The error is: ${error}`);
+		}
+	}
+
+	private async migrateOldAndroidAppResources(projectData: IProjectData) {
+		const appResourcesPath = projectData.getAppResourcesDirectoryPath();
+		if (!this.$androidResourcesMigrationService.hasMigrated(appResourcesPath)) {
+			this.$logger.info("Migrate old Android App_Resources structure.");
+			await this.$androidResourcesMigrationService.migrate(appResourcesPath);
 		}
 	}
 
@@ -123,7 +133,7 @@ export class MigrateController extends UpdateControllerBase implements IMigrateC
 				return true;
 			}
 
-			if (hasDependency && dependency.replaceWith) {
+			if (hasDependency && (dependency.replaceWith || dependency.shouldRemove)) {
 				return true;
 			}
 
@@ -132,6 +142,10 @@ export class MigrateController extends UpdateControllerBase implements IMigrateC
 			}
 
 			if (!hasDependency && dependency.shouldAddIfMissing) {
+				return true;
+			}
+
+			if (!this.$androidResourcesMigrationService.hasMigrated(projectData.getAppResourcesDirectoryPath())) {
 				return true;
 			}
 		}
@@ -146,6 +160,7 @@ export class MigrateController extends UpdateControllerBase implements IMigrateC
 
 	private async cleanUpProject(projectData: IProjectData): Promise<void> {
 		this.$logger.info("Clean old project artefacts.");
+		this.$projectDataService.removeNSConfigProperty(projectData.projectDir, "useLegacyWorkflow");
 		this.$fs.deleteDirectory(path.join(projectData.projectDir, constants.HOOKS_DIR_NAME));
 		this.$fs.deleteDirectory(path.join(projectData.projectDir, constants.PLATFORMS_DIR_NAME));
 		this.$fs.deleteDirectory(path.join(projectData.projectDir, constants.NODE_MODULES_FOLDER_NAME));
@@ -244,15 +259,21 @@ export class MigrateController extends UpdateControllerBase implements IMigrateC
 
 	private async migrateDependency(dependency: IMigrationDependency, projectData: IProjectData): Promise<void> {
 		const hasDependency = this.hasDependency(dependency, projectData);
+		if (dependency.warning) {
+			this.$logger.warn(dependency.warning);
+		}
 
-		if (hasDependency && dependency.replaceWith) {
+		if (hasDependency && (dependency.replaceWith || dependency.shouldRemove)) {
 			this.$pluginsService.removeFromPackageJson(dependency.packageName, projectData.projectDir);
-			const replacementDep = _.find(this.migrationDependencies, migrationPackage => migrationPackage.packageName === dependency.replaceWith);
-			if (!replacementDep) {
-				this.$errors.failWithoutHelp("Failed to find replacement dependency.");
+			if (dependency.replaceWith) {
+				const replacementDep = _.find(this.migrationDependencies, migrationPackage => migrationPackage.packageName === dependency.replaceWith);
+				if (!replacementDep) {
+					this.$errors.failWithoutHelp("Failed to find replacement dependency.");
+				}
+				this.$logger.info(`Replacing '${dependency.packageName}' with '${replacementDep.packageName}'.`);
+				this.$pluginsService.addToPackageJson(replacementDep.packageName, replacementDep.verifiedVersion, replacementDep.isDev, projectData.projectDir);
 			}
-			this.$logger.info(`Replacing '${dependency.packageName}' with '${replacementDep.packageName}'.`);
-			this.$pluginsService.addToPackageJson(replacementDep.packageName, replacementDep.verifiedVersion, replacementDep.isDev, projectData.projectDir);
+
 			return;
 		}
 
