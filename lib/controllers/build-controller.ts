@@ -66,7 +66,8 @@ export class BuildController extends EventEmitter implements IBuildController {
 
 		if (buildData.copyTo) {
 			this.$buildArtefactsService.copyLatestAppPackage(buildData.copyTo, platformData, buildData);
-			this.$logger.info(`The build result is located at: ${buildInfoFileDir}`);
+		} else {
+			this.$logger.info(`The build result is located at: ${result}`);
 		}
 
 		return result;
