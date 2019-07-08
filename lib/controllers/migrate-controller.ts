@@ -43,10 +43,9 @@ export class MigrateController extends UpdateControllerBase implements IMigrateC
 		{ packageName: "tns-platform-declarations", isDev: true, verifiedVersion: "6.0.0-rc-2019-06-28-175837-02" },
 		{ packageName: "node-sass", isDev: true, verifiedVersion: "4.12.0" },
 		{ packageName: "typescript", isDev: true, verifiedVersion: "3.4.1" },
-		{ packageName: "less", isDev: true, verifiedVersion: "3.9.0" },
 		{ packageName: "nativescript-dev-sass", isDev: true, replaceWith: "node-sass" },
 		{ packageName: "nativescript-dev-typescript", isDev: true, replaceWith: "typescript" },
-		{ packageName: "nativescript-dev-less", isDev: true, replaceWith: "less" },
+		{ packageName: "nativescript-dev-less", isDev: true, remove: true, warning: "LESS CSS is not supported out of the box. In order to enable it, follow the steps in this feature request: https://github.com/NativeScript/nativescript-dev-webpack/issues/967" },
 		{ packageName: constants.WEBPACK_PLUGIN_NAME, isDev: true, shouldAddIfMissing: true, verifiedVersion: "1.0.0-rc-2019-07-02-161545-02" },
 		{ packageName: "nativescript-camera", verifiedVersion: "4.5.0" },
 		{ packageName: "nativescript-geolocation", verifiedVersion: "5.1.0" },
@@ -134,7 +133,7 @@ export class MigrateController extends UpdateControllerBase implements IMigrateC
 				return true;
 			}
 
-			if (hasDependency && dependency.replaceWith) {
+			if (hasDependency && (dependency.replaceWith || dependency.remove)) {
 				return true;
 			}
 
@@ -259,15 +258,21 @@ export class MigrateController extends UpdateControllerBase implements IMigrateC
 
 	private async migrateDependency(dependency: IMigrationDependency, projectData: IProjectData): Promise<void> {
 		const hasDependency = this.hasDependency(dependency, projectData);
+		if (dependency.warning) {
+			this.$logger.warn(dependency.warning);
+		}
 
-		if (hasDependency && dependency.replaceWith) {
+		if (hasDependency && (dependency.replaceWith || dependency.remove)) {
 			this.$pluginsService.removeFromPackageJson(dependency.packageName, projectData.projectDir);
-			const replacementDep = _.find(this.migrationDependencies, migrationPackage => migrationPackage.packageName === dependency.replaceWith);
-			if (!replacementDep) {
-				this.$errors.failWithoutHelp("Failed to find replacement dependency.");
+			if (dependency.replaceWith) {
+				const replacementDep = _.find(this.migrationDependencies, migrationPackage => migrationPackage.packageName === dependency.replaceWith);
+				if (!replacementDep) {
+					this.$errors.failWithoutHelp("Failed to find replacement dependency.");
+				}
+				this.$logger.info(`Replacing '${dependency.packageName}' with '${replacementDep.packageName}'.`);
+				this.$pluginsService.addToPackageJson(replacementDep.packageName, replacementDep.verifiedVersion, replacementDep.isDev, projectData.projectDir);
 			}
-			this.$logger.info(`Replacing '${dependency.packageName}' with '${replacementDep.packageName}'.`);
-			this.$pluginsService.addToPackageJson(replacementDep.packageName, replacementDep.verifiedVersion, replacementDep.isDev, projectData.projectDir);
+
 			return;
 		}
 
