@@ -12,6 +12,7 @@ export class MigrateController extends UpdateControllerBase implements IMigrateC
 		protected $platformsDataService: IPlatformsDataService,
 		protected $packageInstallationManager: IPackageInstallationManager,
 		protected $packageManager: IPackageManager,
+		private $androidResourcesMigrationService: IAndroidResourcesMigrationService,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $logger: ILogger,
 		private $errors: IErrors,
@@ -103,12 +104,22 @@ export class MigrateController extends UpdateControllerBase implements IMigrateC
 			this.$logger.trace(`Error during auto-generated files handling. ${(error && error.message) || error}`);
 		}
 
+		await this.migrateOldAndroidAppResources(projectData);
+
 		try {
 			await this.cleanUpProject(projectData);
 			await this.migrateDependencies(projectData);
 		} catch (error) {
 			this.restoreBackup(MigrateController.folders, backupDir, projectData.projectDir);
 			this.$errors.failWithoutHelp(`${MigrateController.migrateFailMessage} The error is: ${error}`);
+		}
+	}
+
+	private async migrateOldAndroidAppResources(projectData: IProjectData) {
+		const appResourcesPath = projectData.getAppResourcesDirectoryPath();
+		if (!this.$androidResourcesMigrationService.hasMigrated(appResourcesPath)) {
+			this.$logger.info("Migrate old Android App_Resources structure.");
+			await this.$androidResourcesMigrationService.migrate(appResourcesPath);
 		}
 	}
 
@@ -132,6 +143,10 @@ export class MigrateController extends UpdateControllerBase implements IMigrateC
 			}
 
 			if (!hasDependency && dependency.shouldAddIfMissing) {
+				return true;
+			}
+
+			if (!this.$androidResourcesMigrationService.hasMigrated(projectData.getAppResourcesDirectoryPath())) {
 				return true;
 			}
 		}
