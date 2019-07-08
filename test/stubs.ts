@@ -327,7 +327,6 @@ export class ProjectDataStub implements IProjectData {
 	public buildXcconfigPath: string;
 	public podfilePath: string;
 	public isShared: boolean;
-	public useLegacyWorkflow: boolean;
 	public previewAppSchema: string;
 
 	public initializeProjectData(projectDir?: string): void {
@@ -507,6 +506,8 @@ export class ProjectDataService implements IProjectDataService {
 
 	removeNSProperty(propertyName: string): void { }
 
+	removeNsConfigProperty(projectDir: string, propertyName: string): void { }
+
 	removeDependency(dependencyName: string): void { }
 
 	getProjectData(projectDir: string): IProjectData {
@@ -532,7 +533,7 @@ export class ProjectDataService implements IProjectDataService {
 		return [];
 	}
 
-	getNSValueFromContent(): any {}
+	getNSValueFromContent(): any { }
 }
 
 export class ProjectHelperStub implements IProjectHelper {

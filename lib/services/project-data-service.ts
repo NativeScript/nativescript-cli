@@ -1,5 +1,7 @@
 import * as path from "path";
 import { ProjectData } from "../project-data";
+import * as constants from "../constants";
+import { parseJson } from "../common/helpers";
 import { exported } from "../common/decorators";
 import {
 	NATIVESCRIPT_PROPS_INTERNAL_DELIMITER,
@@ -125,6 +127,12 @@ export class ProjectDataService implements IProjectDataService {
 		};
 	}
 
+	public removeNsConfigProperty(projectDir: string, propertyName: string): void {
+		this.$logger.trace(`Removing "${propertyName}" property from nsconfig.`);
+		this.updateNsConfigValue(projectDir, null, [propertyName]);
+		this.$logger.trace(`"${propertyName}" property successfully removed.`);
+	}
+
 	@exported("projectDataService")
 	public async getAndroidAssetsStructure(opts: IProjectDir): Promise<IAssetGroup> {
 		// TODO: Use image-size package to get the width and height of an image.
@@ -179,6 +187,43 @@ export class ProjectDataService implements IProjectDataService {
 		);
 
 		return files;
+	}
+	private refreshProjectData(projectDir: string) {
+		if (this.projectDataCache[projectDir]) {
+			this.projectDataCache[projectDir].initializeProjectData(projectDir);
+		}
+	}
+
+	private updateNsConfigValue(projectDir: string, updateObject?: INsConfig, propertiesToRemove?: string[]): void {
+		const nsConfigPath = path.join(projectDir, constants.CONFIG_NS_FILE_NAME);
+		const currentNsConfig = this.getNsConfig(nsConfigPath);
+		let newNsConfig = currentNsConfig;
+		if (updateObject) {
+			newNsConfig = _.assign(newNsConfig || this.getNsConfigDefaultObject(), updateObject);
+		}
+
+		if (newNsConfig && propertiesToRemove && propertiesToRemove.length) {
+			newNsConfig = _.omit(newNsConfig, propertiesToRemove);
+		}
+
+		if (newNsConfig) {
+			this.$fs.writeJson(nsConfigPath, newNsConfig);
+			this.refreshProjectData(projectDir);
+		}
+	}
+
+	private getNsConfig(nsConfigPath: string): INsConfig {
+		let result: INsConfig = null;
+		if (this.$fs.exists(nsConfigPath)) {
+			const nsConfigContent = this.$fs.readText(nsConfigPath);
+			try {
+				result = <INsConfig>parseJson(nsConfigContent);
+			} catch (e) {
+				// invalid nsconfig => null
+			}
+		}
+
+		return result;
 	}
 
 	private getImageDefinitions(): IImageDefinitionsStructure {
@@ -334,7 +379,7 @@ export class ProjectDataService implements IProjectDataService {
 	}
 
 	private getNsConfigDefaultObject(data?: Object): INsConfig {
-		const config: INsConfig = { useLegacyWorkflow: false };
+		const config: INsConfig = {};
 		Object.assign(config, data);
 
 		return config;
