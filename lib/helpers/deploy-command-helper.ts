@@ -32,7 +32,7 @@ export class DeployCommandHelper {
 					projectDir: this.$projectData.projectDir
 				});
 
-				const buildData = this.$buildDataService.getBuildData(this.$projectData.projectDir, d.deviceInfo.platform, { ...this.$options, outputPath, buildForDevice: !d.isEmulator });
+				const buildData = this.$buildDataService.getBuildData(this.$projectData.projectDir, d.deviceInfo.platform, { ...this.$options.argv, outputPath, buildForDevice: !d.isEmulator, skipWatcher: !this.$options.watch });
 
 				const buildAction = additionalOptions && additionalOptions.buildPlatform ?
 					additionalOptions.buildPlatform.bind(additionalOptions.buildPlatform, d.deviceInfo.platform, buildData, this.$projectData) :
@@ -50,10 +50,7 @@ export class DeployCommandHelper {
 				return info;
 			});
 
-		await this.$deployController.deploy({
-			buildData: this.$buildDataService.getBuildData(this.$projectData.projectDir, platform, { ...this.$options.argv, skipWatcher: !this.$options.watch }),
-			deviceDescriptors
-		});
+		await this.$deployController.deploy({ deviceDescriptors });
 	}
 }
 $injector.register("deployCommandHelper", DeployCommandHelper);

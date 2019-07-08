@@ -8,7 +8,6 @@ declare global {
 	}
 
 	interface IDeployData {
-		buildData: IBuildData;
 		deviceDescriptors: ILiveSyncDeviceDescriptor[];
 	}
 

@@ -100,7 +100,7 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 		const { liveSyncInfo, deviceDescriptors } = await this.executeLiveSyncOperationCore(devices, platform, additionalOptions);
 
 		if (this.$options.release) {
-			await this.runInRelease(platform, deviceDescriptors, liveSyncInfo);
+			await this.runInRelease(platform, deviceDescriptors);
 			return;
 		}
 
@@ -160,7 +160,7 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 		return { liveSyncInfo, deviceDescriptors };
 	}
 
-	private async runInRelease(platform: string, deviceDescriptors: ILiveSyncDeviceDescriptor[], liveSyncInfo: ILiveSyncInfo): Promise<void> {
+	private async runInRelease(platform: string, deviceDescriptors: ILiveSyncDeviceDescriptor[]): Promise<void> {
 		await this.$devicesService.initialize({
 			platform,
 			deviceId: this.$options.device,
@@ -169,12 +169,7 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 			sdk: this.$options.sdk
 		});
 
-		const buildData = this.$buildDataService.getBuildData(liveSyncInfo.projectDir, platform, { ...this.$options.argv, clean: true, watch: false });
-
-		await this.$deployController.deploy({
-			buildData,
-			deviceDescriptors
-		});
+		await this.$deployController.deploy({ deviceDescriptors });
 
 		for (const deviceDescriptor of deviceDescriptors) {
 			const device = this.$devicesService.getDeviceByIdentifier(deviceDescriptor.identifier);
