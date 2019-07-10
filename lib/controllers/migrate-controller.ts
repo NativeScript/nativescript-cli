@@ -160,7 +160,7 @@ for more information, refer to the instructions in the following blog post: <lin
 
 		for (const platform in this.$devicePlatformsConstants) {
 			const hasRuntimeDependency = this.hasRuntimeDependency({ platform, projectData });
-			if (!hasRuntimeDependency || await this.shouldUpdateRuntimeVersion({ targetVersion: this.verifiedPlatformVersions[platform.toLowerCase()], platform, projectData })) {
+			if (hasRuntimeDependency && await this.shouldUpdateRuntimeVersion({ targetVersion: this.verifiedPlatformVersions[platform.toLowerCase()], platform, projectData })) {
 				return true;
 			}
 		}
@@ -290,7 +290,7 @@ for more information, refer to the instructions in the following blog post: <lin
 		for (const platform in this.$devicePlatformsConstants) {
 			const lowercasePlatform = platform.toLowerCase();
 			const hasRuntimeDependency = this.hasRuntimeDependency({ platform, projectData });
-			if (!hasRuntimeDependency || await this.shouldUpdateRuntimeVersion({ targetVersion: this.verifiedPlatformVersions[lowercasePlatform], platform, projectData })) {
+			if (hasRuntimeDependency && await this.shouldUpdateRuntimeVersion({ targetVersion: this.verifiedPlatformVersions[lowercasePlatform], platform, projectData })) {
 				const verifiedPlatformVersion = this.verifiedPlatformVersions[lowercasePlatform];
 				const platformData = this.$platformsDataService.getPlatformData(lowercasePlatform, projectData);
 				this.$logger.info(`Updating ${platform} platform to version '${verifiedPlatformVersion}'.`);
