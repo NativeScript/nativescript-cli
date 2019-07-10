@@ -32,7 +32,14 @@ export class DeployCommandHelper {
 					projectDir: this.$projectData.projectDir
 				});
 
-				const buildData = this.$buildDataService.getBuildData(this.$projectData.projectDir, d.deviceInfo.platform, { ...this.$options.argv, outputPath, buildForDevice: !d.isEmulator, skipWatcher: !this.$options.watch });
+				const buildData = this.$buildDataService.getBuildData(this.$projectData.projectDir, d.deviceInfo.platform,
+					{
+						...this.$options.argv,
+						outputPath,
+						buildForDevice: !d.isEmulator,
+						skipWatcher: !this.$options.watch,
+						nativePrepare: { skipNativePrepare: additionalOptions && additionalOptions.skipNativePrepare }
+					});
 
 				const buildAction = additionalOptions && additionalOptions.buildPlatform ?
 					additionalOptions.buildPlatform.bind(additionalOptions.buildPlatform, d.deviceInfo.platform, buildData, this.$projectData) :
