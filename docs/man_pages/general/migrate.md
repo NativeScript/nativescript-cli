@@ -43,7 +43,7 @@ The following dependencies will be updated if needed:
 * karma-mocha
 * karma-chai
 * karma-qunit
-* karma"
+* karma
 
 
 ### Commands
