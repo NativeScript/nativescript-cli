@@ -16,7 +16,8 @@ export class DebugPlatformCommand extends ValidatePlatformCommandBase implements
 		private $debugDataService: IDebugDataService,
 		private $debugController: IDebugController,
 		private $liveSyncCommandHelper: ILiveSyncCommandHelper,
-		private $androidBundleValidatorHelper: IAndroidBundleValidatorHelper) {
+		private $androidBundleValidatorHelper: IAndroidBundleValidatorHelper,
+		private $migrateController: IMigrateController) {
 		super($options, $platformsDataService, $platformValidationService, $projectData);
 		$cleanupService.setShouldDispose(false);
 	}
@@ -52,6 +53,8 @@ export class DebugPlatformCommand extends ValidatePlatformCommandBase implements
 	}
 
 	public async canExecute(args: string[]): Promise<ICanExecuteCommandOutput> {
+		await this.$migrateController.validate({ projectDir: this.$projectData.projectDir });
+
 		this.$androidBundleValidatorHelper.validateNoAab();
 
 		if (!this.$platformValidationService.isPlatformSupportedForOS(this.platform, this.$projectData)) {

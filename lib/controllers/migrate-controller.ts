@@ -6,6 +6,13 @@ import { UpdateControllerBase } from "./update-controller-base";
 import { fromWindowsRelativePathToUnix } from "../common/helpers";
 
 export class MigrateController extends UpdateControllerBase implements IMigrateController {
+	// TODO: Update the links to blog post when it is available
+	private static COMMON_MIGRATE_MESSAGE = "not affect the codebase of the application and you might need to do additional changes manually – for more information, refer to the instructions in the following blog post: <link to blog post>.";
+	private static UNABLE_TO_MIGRATE_APP_ERROR = `The current application is not compatible with NativeScript CLI 6.0.
+Use the \`tns migrate\` command to migrate the app dependencies to a form compatible with NativeScript 6.0.
+Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
+	private static MIGRATE_FINISH_MESSAGE = `The \`tns migrate\` command does ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
+
 	constructor(
 		protected $fs: IFileSystem,
 		protected $platformCommandHelper: IPlatformCommandHelper,
@@ -68,10 +75,17 @@ export class MigrateController extends UpdateControllerBase implements IMigrateC
 		{ packageName: "nativescript-cardview", verifiedVersion: "3.2.0" },
 		{
 			packageName: "nativescript-unit-test-runner", verifiedVersion: "0.6.4",
-			shouldMigrateAction: (projectData: IProjectData) => this.hasDependency({ packageName: "nativescript-unit-test-runner", isDev: false }, projectData),
+			shouldMigrateAction: async (projectData: IProjectData) => {
+				const dependency = { packageName: "nativescript-unit-test-runner", verifiedVersion: "0.6.4", isDev: false };
+				const result = this.hasDependency(dependency, projectData) && await this.shouldMigrateDependencyVersion(dependency, projectData);
+				return result;
+			},
 			migrateAction: this.migrateUnitTestRunner.bind(this)
 		},
-		{ packageName: MigrateController.typescriptPackageName, isDev: true, getVerifiedVersion: this.getAngularTypeScriptVersion.bind(this) }
+		{ packageName: MigrateController.typescriptPackageName, isDev: true, getVerifiedVersion: this.getAngularTypeScriptVersion.bind(this) },
+		{ packageName: "nativescript-localize", verifiedVersion: "4.2.0" },
+		{ packageName: "nativescript-dev-babel", verifiedVersion: "0.2.1" },
+		{ packageName: "nativescript-nfc", verifiedVersion: "4.0.1" }
 	];
 
 	get verifiedPlatformVersions(): IDictionary<string> {
@@ -112,6 +126,8 @@ export class MigrateController extends UpdateControllerBase implements IMigrateC
 			this.restoreBackup(MigrateController.folders, backupDir, projectData.projectDir);
 			this.$errors.failWithoutHelp(`${MigrateController.migrateFailMessage} The error is: ${error}`);
 		}
+
+		this.$logger.info(MigrateController.MIGRATE_FINISH_MESSAGE);
 	}
 
 	public async shouldMigrate({ projectDir }: IProjectDir): Promise<boolean> {
@@ -121,7 +137,7 @@ export class MigrateController extends UpdateControllerBase implements IMigrateC
 			const dependency = this.migrationDependencies[i];
 			const hasDependency = this.hasDependency(dependency, projectData);
 
-			if (hasDependency && dependency.shouldMigrateAction && dependency.shouldMigrateAction(projectData)) {
+			if (hasDependency && dependency.shouldMigrateAction && await dependency.shouldMigrateAction(projectData)) {
 				return true;
 			}
 
@@ -136,17 +152,24 @@ export class MigrateController extends UpdateControllerBase implements IMigrateC
 			if (!hasDependency && dependency.shouldAddIfMissing) {
 				return true;
 			}
+		}
 
-			if (!this.$androidResourcesMigrationService.hasMigrated(projectData.getAppResourcesDirectoryPath())) {
-				return true;
-			}
+		if (!this.$androidResourcesMigrationService.hasMigrated(projectData.getAppResourcesDirectoryPath())) {
+			return true;
 		}
 
 		for (const platform in this.$devicePlatformsConstants) {
 			const hasRuntimeDependency = this.hasRuntimeDependency({ platform, projectData });
-			if (!hasRuntimeDependency || await this.shouldUpdateRuntimeVersion({ targetVersion: this.verifiedPlatformVersions[platform.toLowerCase()], platform, projectData })) {
+			if (hasRuntimeDependency && await this.shouldUpdateRuntimeVersion({ targetVersion: this.verifiedPlatformVersions[platform.toLowerCase()], platform, projectData })) {
 				return true;
 			}
+		}
+	}
+
+	public async validate({ projectDir }: IProjectDir): Promise<void> {
+		const shouldMigrate = await this.shouldMigrate({ projectDir });
+		if (shouldMigrate) {
+			this.$errors.failWithoutHelp(MigrateController.UNABLE_TO_MIGRATE_APP_ERROR);
 		}
 	}
 
@@ -254,7 +277,7 @@ export class MigrateController extends UpdateControllerBase implements IMigrateC
 			const dependency = this.migrationDependencies[i];
 			const hasDependency = this.hasDependency(dependency, projectData);
 
-			if (hasDependency && dependency.migrateAction && dependency.shouldMigrateAction(projectData)) {
+			if (hasDependency && dependency.migrateAction && await dependency.shouldMigrateAction(projectData)) {
 				const newDependencies = await dependency.migrateAction(projectData, path.join(projectData.projectDir, MigrateController.backupFolder));
 				for (const newDependency of newDependencies) {
 					await this.migrateDependency(newDependency, projectData);
@@ -267,7 +290,7 @@ export class MigrateController extends UpdateControllerBase implements IMigrateC
 		for (const platform in this.$devicePlatformsConstants) {
 			const lowercasePlatform = platform.toLowerCase();
 			const hasRuntimeDependency = this.hasRuntimeDependency({ platform, projectData });
-			if (!hasRuntimeDependency || await this.shouldUpdateRuntimeVersion({ targetVersion: this.verifiedPlatformVersions[lowercasePlatform], platform, projectData })) {
+			if (hasRuntimeDependency && await this.shouldUpdateRuntimeVersion({ targetVersion: this.verifiedPlatformVersions[lowercasePlatform], platform, projectData })) {
 				const verifiedPlatformVersion = this.verifiedPlatformVersions[lowercasePlatform];
 				const platformData = this.$platformsDataService.getPlatformData(lowercasePlatform, projectData);
 				this.$logger.info(`Updating ${platform} platform to version '${verifiedPlatformVersion}'.`);
