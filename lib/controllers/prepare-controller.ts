@@ -22,6 +22,7 @@ export class PrepareController extends EventEmitter {
 		private $logger: ILogger,
 		private $nodeModulesDependenciesBuilder: INodeModulesDependenciesBuilder,
 		private $platformsDataService: IPlatformsDataService,
+		private $pluginsService: IPluginsService,
 		private $prepareNativePlatformService: IPrepareNativePlatformService,
 		private $projectChangesService: IProjectChangesService,
 		private $projectDataService: IProjectDataService,
@@ -29,10 +30,31 @@ export class PrepareController extends EventEmitter {
 		private $watchIgnoreListService: IWatchIgnoreListService
 	) { super(); }
 
-	@performanceLog()
-	@hook("prepare")
 	public async prepare(prepareData: IPrepareData): Promise<IPrepareResultData> {
 		const projectData = this.$projectDataService.getProjectData(prepareData.projectDir);
+
+		await this.$pluginsService.ensureAllDependenciesAreInstalled(projectData);
+
+		return this.prepareCore(prepareData, projectData);
+	}
+
+	public async stopWatchers(projectDir: string, platform: string): Promise<void> {
+		const platformLowerCase = platform.toLowerCase();
+
+		if (this.watchersData && this.watchersData[projectDir] && this.watchersData[projectDir][platformLowerCase] && this.watchersData[projectDir][platformLowerCase].nativeFilesWatcher) {
+			this.watchersData[projectDir][platformLowerCase].nativeFilesWatcher.close();
+			this.watchersData[projectDir][platformLowerCase].nativeFilesWatcher = null;
+		}
+
+		if (this.watchersData && this.watchersData[projectDir] && this.watchersData[projectDir][platformLowerCase] && this.watchersData[projectDir][platformLowerCase].hasWebpackCompilerProcess) {
+			await this.$webpackCompilerService.stopWebpackCompiler(platform);
+			this.watchersData[projectDir][platformLowerCase].hasWebpackCompilerProcess = false;
+		}
+	}
+
+	@performanceLog()
+	@hook("prepare")
+	private async prepareCore(prepareData: IPrepareData, projectData: IProjectData): Promise<IPrepareResultData> {
 		this.$bundleValidatorHelper.validate(projectData, "1.0.0");
 
 		await this.$platformController.addPlatformIfNeeded(prepareData);
@@ -55,20 +77,6 @@ export class PrepareController extends EventEmitter {
 		this.$logger.info(`Project successfully prepared (${prepareData.platform.toLowerCase()})`);
 
 		return result;
-	}
-
-	public async stopWatchers(projectDir: string, platform: string): Promise<void> {
-		const platformLowerCase = platform.toLowerCase();
-
-		if (this.watchersData && this.watchersData[projectDir] && this.watchersData[projectDir][platformLowerCase] && this.watchersData[projectDir][platformLowerCase].nativeFilesWatcher) {
-			this.watchersData[projectDir][platformLowerCase].nativeFilesWatcher.close();
-			this.watchersData[projectDir][platformLowerCase].nativeFilesWatcher = null;
-		}
-
-		if (this.watchersData && this.watchersData[projectDir] && this.watchersData[projectDir][platformLowerCase] && this.watchersData[projectDir][platformLowerCase].hasWebpackCompilerProcess) {
-			await this.$webpackCompilerService.stopWebpackCompiler(platform);
-			this.watchersData[projectDir][platformLowerCase].hasWebpackCompilerProcess = false;
-		}
 	}
 
 	@hook("watch")
