@@ -311,7 +311,7 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 
 	private async migrateDependency(dependency: IMigrationDependency, projectData: IProjectData): Promise<void> {
 		const hasDependency = this.hasDependency(dependency, projectData);
-		if (dependency.warning) {
+		if (hasDependency && dependency.warning) {
 			this.$logger.warn(dependency.warning);
 		}
 
