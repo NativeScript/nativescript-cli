@@ -59,7 +59,7 @@ export class UpdateController extends UpdateControllerBase implements IUpdateCon
 	public async shouldUpdate({ projectDir, version }: { projectDir: string, version?: string }): Promise<boolean> {
 		const projectData = this.$projectDataService.getProjectData(projectDir);
 		const templateName = this.getTemplateName(projectData);
-		const templateManifest = await this.getTemplateManifest(templateName, version);
+		const templateManifest = await this.getPackageManifest(templateName, version);
 		const dependencies = this.getUpdatableDependencies(templateManifest.dependencies);
 		const devDependencies = this.getUpdatableDependencies(templateManifest.devDependencies);
 
@@ -93,7 +93,7 @@ export class UpdateController extends UpdateControllerBase implements IUpdateCon
 
 	private async updateProject(projectData: IProjectData, version: string): Promise<void> {
 		const templateName = this.getTemplateName(projectData);
-		const templateManifest = await this.getTemplateManifest(templateName, version);
+		const templateManifest = await this.getPackageManifest(templateName, version);
 		const dependencies = this.getUpdatableDependencies(templateManifest.dependencies);
 		const devDependencies = this.getUpdatableDependencies(templateManifest.devDependencies);
 

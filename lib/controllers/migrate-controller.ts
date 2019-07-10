@@ -159,7 +159,7 @@ export class MigrateController extends UpdateControllerBase implements IMigrateC
 			if (ngcVersion) {
 				// e.g. 8.0.3
 				ngcVersion = await this.$packageInstallationManager.maxSatisfyingVersion(ngcPackageName, ngcVersion);
-				const ngcManifest = await this.getTemplateManifest(ngcPackageName, ngcVersion);
+				const ngcManifest = await this.getPackageManifest(ngcPackageName, ngcVersion);
 				// e.g. >=3.4 <3.5
 				verifiedVersion = (ngcManifest && ngcManifest.peerDependencies &&
 					ngcManifest.peerDependencies[MigrateController.typescriptPackageName]) || verifiedVersion;
@@ -288,7 +288,6 @@ export class MigrateController extends UpdateControllerBase implements IMigrateC
 
 	private async migrateDependency(dependency: IMigrationDependency, projectData: IProjectData): Promise<void> {
 		const hasDependency = this.hasDependency(dependency, projectData);
-		const dependencyVersion = await this.getDependencyVerifiedVersion(dependency, projectData);
 		if (dependency.warning) {
 			this.$logger.warn(dependency.warning);
 		}
@@ -309,6 +308,7 @@ export class MigrateController extends UpdateControllerBase implements IMigrateC
 			return;
 		}
 
+		const dependencyVersion = await this.getDependencyVerifiedVersion(dependency, projectData);
 		if (hasDependency && await this.shouldMigrateDependencyVersion(dependency, projectData)) {
 			this.$logger.info(`Updating '${dependency.packageName}' to compatible version '${dependencyVersion}'`);
 			this.$pluginsService.addToPackageJson(dependency.packageName, dependencyVersion, dependency.isDev, projectData.projectDir);
@@ -322,10 +322,11 @@ export class MigrateController extends UpdateControllerBase implements IMigrateC
 	}
 
 	private async getDependencyVerifiedVersion(dependency: IMigrationDependency, projectData: IProjectData): Promise<string> {
-		const verifiedVersion = dependency.getVerifiedVersion ?
-			await dependency.getVerifiedVersion(projectData) : dependency.verifiedVersion;
+		if (!dependency.verifiedVersion && dependency.getVerifiedVersion) {
+			dependency.verifiedVersion = await dependency.getVerifiedVersion(projectData);
+		}
 
-		return verifiedVersion;
+		return dependency.verifiedVersion;
 	}
 
 	private async shouldMigrateDependencyVersion(dependency: IMigrationDependency, projectData: IProjectData): Promise<boolean> {

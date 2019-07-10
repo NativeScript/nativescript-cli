@@ -2,7 +2,7 @@ import * as path from "path";
 import * as semver from "semver";
 
 export class UpdateControllerBase {
-	protected getTemplateManifest: Function;
+	protected getPackageManifest: Function;
 
 	constructor(protected $fs: IFileSystem,
 		protected $platformCommandHelper: IPlatformCommandHelper,
@@ -10,7 +10,7 @@ export class UpdateControllerBase {
 		protected $packageInstallationManager: IPackageInstallationManager,
 		protected $packageManager: IPackageManager,
 		protected $pacoteService: IPacoteService) {
-		this.getTemplateManifest = _.memoize(this._getTemplateManifest, (...args) => {
+		this.getPackageManifest = _.memoize(this._getManifestManifest, (...args) => {
 			return args.join("@");
 		});
 	}
@@ -73,7 +73,7 @@ export class UpdateControllerBase {
 		return maxDependencyVersion;
 	}
 
-	private async _getTemplateManifest(templateName: string, version?: string) {
+	private async _getManifestManifest(templateName: string, version?: string) {
 		const packageVersion = semver.valid(version) ||
 			await this.$packageManager.getTagVersion(templateName, version) ||
 			await this.$packageInstallationManager.getLatestCompatibleVersionSafe(templateName);
