@@ -2,11 +2,17 @@ import * as path from "path";
 import * as semver from "semver";
 
 export class UpdateControllerBase {
+	protected getTemplateManifest: Function;
+
 	constructor(protected $fs: IFileSystem,
 		protected $platformCommandHelper: IPlatformCommandHelper,
 		protected $platformsDataService: IPlatformsDataService,
 		protected $packageInstallationManager: IPackageInstallationManager,
-		protected $packageManager: IPackageManager) {
+		protected $packageManager: IPackageManager,
+		protected $pacoteService: IPacoteService) {
+		this.getTemplateManifest = _.memoize(this._getTemplateManifest, (...args) => {
+			return args.join("@");
+		});
 	}
 
 	protected restoreBackup(folders: string[], backupDir: string, projectDir: string): void {
@@ -39,13 +45,13 @@ export class UpdateControllerBase {
 		return (dependencies && dependencies[dependency.packageName]) || (devDependencies && devDependencies[dependency.packageName]);
 	}
 
-	protected hasRuntimeDependency({platform, projectData}: {platform: string, projectData: IProjectData}): boolean {
+	protected hasRuntimeDependency({ platform, projectData }: { platform: string, projectData: IProjectData }): boolean {
 		const lowercasePlatform = platform.toLowerCase();
 		const currentPlatformVersion = this.$platformCommandHelper.getCurrentPlatformVersion(lowercasePlatform, projectData);
 		return !!currentPlatformVersion;
 	}
 
-	protected async getMaxRuntimeVersion({platform, projectData}: {platform: string, projectData: IProjectData}) {
+	protected async getMaxRuntimeVersion({ platform, projectData }: { platform: string, projectData: IProjectData }) {
 		const lowercasePlatform = platform.toLowerCase();
 		const currentPlatformVersion = this.$platformCommandHelper.getCurrentPlatformVersion(lowercasePlatform, projectData);
 		const platformData = this.$platformsDataService.getPlatformData(lowercasePlatform, projectData);
@@ -65,5 +71,13 @@ export class UpdateControllerBase {
 		}
 
 		return maxDependencyVersion;
+	}
+
+	private async _getTemplateManifest(templateName: string, version?: string) {
+		const packageVersion = semver.valid(version) ||
+			await this.$packageManager.getTagVersion(templateName, version) ||
+			await this.$packageInstallationManager.getLatestCompatibleVersionSafe(templateName);
+
+		return await this.$pacoteService.manifest(`${templateName}@${packageVersion}`, { fullMetadata: true });
 	}
 }

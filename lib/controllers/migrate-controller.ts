@@ -12,6 +12,7 @@ export class MigrateController extends UpdateControllerBase implements IMigrateC
 		protected $platformsDataService: IPlatformsDataService,
 		protected $packageInstallationManager: IPackageInstallationManager,
 		protected $packageManager: IPackageManager,
+		protected $pacoteService: IPacoteService,
 		private $androidResourcesMigrationService: IAndroidResourcesMigrationService,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $logger: ILogger,
@@ -20,9 +21,10 @@ export class MigrateController extends UpdateControllerBase implements IMigrateC
 		private $pluginsService: IPluginsService,
 		private $projectDataService: IProjectDataService,
 		private $resources: IResourceLoader) {
-		super($fs, $platformCommandHelper, $platformsDataService, $packageInstallationManager, $packageManager);
+		super($fs, $platformCommandHelper, $platformsDataService, $packageInstallationManager, $packageManager, $pacoteService);
 	}
 
+	static readonly typescriptPackageName: string = "typescript";
 	static readonly backupFolder: string = ".migration_backup";
 	static readonly migrateFailMessage: string = "Could not migrate the project!";
 	static readonly backupFailMessage: string = "Could not backup project folders!";
@@ -42,9 +44,34 @@ export class MigrateController extends UpdateControllerBase implements IMigrateC
 		{ packageName: constants.TNS_CORE_MODULES_WIDGETS_NAME, verifiedVersion: "6.0.0" },
 		{ packageName: "tns-platform-declarations", isDev: true, verifiedVersion: "6.0.0-rc-2019-07-09-183845-06" },
 		{ packageName: "node-sass", isDev: true, verifiedVersion: "4.12.0" },
-		{ packageName: "typescript", isDev: true, verifiedVersion: "3.4.1" },
+		{
+			packageName: MigrateController.typescriptPackageName, isDev: true, getVerifiedVersion: async (projectData: IProjectData) => {
+				let verifiedVersion = "3.4.1";
+				try {
+					const ngcPackageName = "@angular/compiler-cli";
+					// e.g. ~8.0.0
+					let ngcVersion = projectData.dependencies[ngcPackageName] || projectData.devDependencies[ngcPackageName];
+					if (ngcVersion) {
+						// e.g. ~8.0.3
+						ngcVersion = await this.$packageInstallationManager.maxSatisfyingVersion(ngcPackageName, ngcVersion);
+						const ngcManifest = await this.getTemplateManifest(ngcPackageName, ngcVersion);
+						// e.g. >=3.4 <3.5
+						verifiedVersion = (ngcManifest && ngcManifest.peerDependencies &&
+							ngcManifest.peerDependencies[MigrateController.typescriptPackageName]) || verifiedVersion;
+
+						// e.g. 3.4.4
+						verifiedVersion = await this.$packageInstallationManager.maxSatisfyingVersion(
+							MigrateController.typescriptPackageName, verifiedVersion);
+					}
+				} catch (error) {
+					this.$logger.warn(`Unable to determine the TypeScript version based on the Angular packages. Error is: '${error}'.`);
+				}
+
+				return verifiedVersion;
+			}
+		},
 		{ packageName: "nativescript-dev-sass", isDev: true, replaceWith: "node-sass" },
-		{ packageName: "nativescript-dev-typescript", isDev: true, replaceWith: "typescript" },
+		{ packageName: "nativescript-dev-typescript", isDev: true, replaceWith: MigrateController.typescriptPackageName },
 		{ packageName: "nativescript-dev-less", isDev: true, shouldRemove: true, warning: "LESS CSS is not supported out of the box. In order to enable it, follow the steps in this feature request: https://github.com/NativeScript/nativescript-dev-webpack/issues/967" },
 		{ packageName: constants.WEBPACK_PLUGIN_NAME, isDev: true, shouldAddIfMissing: true, verifiedVersion: "1.0.0-rc-2019-07-10-002255-01" },
 		{ packageName: "nativescript-camera", verifiedVersion: "4.5.0" },
@@ -112,18 +139,6 @@ export class MigrateController extends UpdateControllerBase implements IMigrateC
 		}
 	}
 
-	private async migrateOldAndroidAppResources(projectData: IProjectData) {
-		const appResourcesPath = projectData.getAppResourcesDirectoryPath();
-		if (!this.$androidResourcesMigrationService.hasMigrated(appResourcesPath)) {
-			this.$logger.info("Migrate old Android App_Resources structure.");
-			try {
-				await this.$androidResourcesMigrationService.migrate(appResourcesPath);
-			} catch (error) {
-				this.$logger.warn("Migrate old Android App_Resources structure failed: ", error.message);
-			}
-		}
-	}
-
 	public async shouldMigrate({ projectDir }: IProjectDir): Promise<boolean> {
 		const projectData = this.$projectDataService.getProjectData(projectDir);
 
@@ -156,6 +171,18 @@ export class MigrateController extends UpdateControllerBase implements IMigrateC
 			const hasRuntimeDependency = this.hasRuntimeDependency({ platform, projectData });
 			if (!hasRuntimeDependency || await this.shouldUpdateRuntimeVersion({ targetVersion: this.verifiedPlatformVersions[platform.toLowerCase()], platform, projectData })) {
 				return true;
+			}
+		}
+	}
+
+	private async migrateOldAndroidAppResources(projectData: IProjectData) {
+		const appResourcesPath = projectData.getAppResourcesDirectoryPath();
+		if (!this.$androidResourcesMigrationService.hasMigrated(appResourcesPath)) {
+			this.$logger.info("Migrate old Android App_Resources structure.");
+			try {
+				await this.$androidResourcesMigrationService.migrate(appResourcesPath);
+			} catch (error) {
+				this.$logger.warn("Migrate old Android App_Resources structure failed: ", error.message);
 			}
 		}
 	}
@@ -261,6 +288,7 @@ export class MigrateController extends UpdateControllerBase implements IMigrateC
 
 	private async migrateDependency(dependency: IMigrationDependency, projectData: IProjectData): Promise<void> {
 		const hasDependency = this.hasDependency(dependency, projectData);
+		const dependencyVersion = await this.getDependencyVerifiedVersion(dependency, projectData);
 		if (dependency.warning) {
 			this.$logger.warn(dependency.warning);
 		}
@@ -272,23 +300,32 @@ export class MigrateController extends UpdateControllerBase implements IMigrateC
 				if (!replacementDep) {
 					this.$errors.failWithoutHelp("Failed to find replacement dependency.");
 				}
+
+				const replacementDepVersion = await this.getDependencyVerifiedVersion(replacementDep, projectData);
 				this.$logger.info(`Replacing '${dependency.packageName}' with '${replacementDep.packageName}'.`);
-				this.$pluginsService.addToPackageJson(replacementDep.packageName, replacementDep.verifiedVersion, replacementDep.isDev, projectData.projectDir);
+				this.$pluginsService.addToPackageJson(replacementDep.packageName, replacementDepVersion, replacementDep.isDev, projectData.projectDir);
 			}
 
 			return;
 		}
 
 		if (hasDependency && await this.shouldMigrateDependencyVersion(dependency, projectData)) {
-			this.$logger.info(`Updating '${dependency.packageName}' to compatible version '${dependency.verifiedVersion}'`);
-			this.$pluginsService.addToPackageJson(dependency.packageName, dependency.verifiedVersion, dependency.isDev, projectData.projectDir);
+			this.$logger.info(`Updating '${dependency.packageName}' to compatible version '${dependencyVersion}'`);
+			this.$pluginsService.addToPackageJson(dependency.packageName, dependencyVersion, dependency.isDev, projectData.projectDir);
 			return;
 		}
 
 		if (!hasDependency && dependency.shouldAddIfMissing) {
-			this.$logger.info(`Adding '${dependency.packageName}' with version '${dependency.verifiedVersion}'`);
-			this.$pluginsService.addToPackageJson(dependency.packageName, dependency.verifiedVersion, dependency.isDev, projectData.projectDir);
+			this.$logger.info(`Adding '${dependency.packageName}' with version '${dependencyVersion}'`);
+			this.$pluginsService.addToPackageJson(dependency.packageName, dependencyVersion, dependency.isDev, projectData.projectDir);
 		}
+	}
+
+	private async getDependencyVerifiedVersion(dependency: IMigrationDependency, projectData: IProjectData): Promise<string> {
+		const verifiedVersion = dependency.getVerifiedVersion ?
+			await dependency.getVerifiedVersion(projectData) : dependency.verifiedVersion;
+
+		return verifiedVersion;
 	}
 
 	private async shouldMigrateDependencyVersion(dependency: IMigrationDependency, projectData: IProjectData): Promise<boolean> {
@@ -297,8 +334,9 @@ export class MigrateController extends UpdateControllerBase implements IMigrateC
 		const packageName = dependency.packageName;
 		const version = dependencies[packageName] || devDependencies[packageName];
 		const maxSatisfyingVersion = await this.getMaxDependencyVersion(dependency.packageName, version);
+		const dependencyVersion = await this.getDependencyVerifiedVersion(dependency, projectData);
 
-		return !(maxSatisfyingVersion && semver.gte(maxSatisfyingVersion, dependency.verifiedVersion));
+		return !(maxSatisfyingVersion && semver.gte(maxSatisfyingVersion, dependencyVersion));
 	}
 
 	protected async shouldUpdateRuntimeVersion({ targetVersion, platform, projectData }: { targetVersion: string, platform: string, projectData: IProjectData }): Promise<boolean> {
