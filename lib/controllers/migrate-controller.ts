@@ -116,7 +116,11 @@ export class MigrateController extends UpdateControllerBase implements IMigrateC
 		const appResourcesPath = projectData.getAppResourcesDirectoryPath();
 		if (!this.$androidResourcesMigrationService.hasMigrated(appResourcesPath)) {
 			this.$logger.info("Migrate old Android App_Resources structure.");
-			await this.$androidResourcesMigrationService.migrate(appResourcesPath);
+			try {
+				await this.$androidResourcesMigrationService.migrate(appResourcesPath);
+			} catch (error) {
+				this.$logger.warn("Migrate old Android App_Resources structure failed: ", error.message);
+			}
 		}
 	}
 
