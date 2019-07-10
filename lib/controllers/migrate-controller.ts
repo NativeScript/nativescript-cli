@@ -38,15 +38,15 @@ export class MigrateController extends UpdateControllerBase implements IMigrateC
 	];
 
 	private migrationDependencies: IMigrationDependency[] = [
-		{ packageName: constants.TNS_CORE_MODULES_NAME, verifiedVersion: "6.0.0-rc-2019-07-08-111131-01" },
+		{ packageName: constants.TNS_CORE_MODULES_NAME, verifiedVersion: "6.0.0-rc-2019-07-09-183845-06" },
 		{ packageName: constants.TNS_CORE_MODULES_WIDGETS_NAME, verifiedVersion: "6.0.0" },
-		{ packageName: "tns-platform-declarations", isDev: true, verifiedVersion: "6.0.0-rc-2019-06-28-175837-02" },
+		{ packageName: "tns-platform-declarations", isDev: true, verifiedVersion: "6.0.0-rc-2019-07-09-183845-06" },
 		{ packageName: "node-sass", isDev: true, verifiedVersion: "4.12.0" },
 		{ packageName: "typescript", isDev: true, verifiedVersion: "3.4.1" },
 		{ packageName: "nativescript-dev-sass", isDev: true, replaceWith: "node-sass" },
 		{ packageName: "nativescript-dev-typescript", isDev: true, replaceWith: "typescript" },
 		{ packageName: "nativescript-dev-less", isDev: true, shouldRemove: true, warning: "LESS CSS is not supported out of the box. In order to enable it, follow the steps in this feature request: https://github.com/NativeScript/nativescript-dev-webpack/issues/967" },
-		{ packageName: constants.WEBPACK_PLUGIN_NAME, isDev: true, shouldAddIfMissing: true, verifiedVersion: "1.0.0-rc-2019-07-08-135456-03" },
+		{ packageName: constants.WEBPACK_PLUGIN_NAME, isDev: true, shouldAddIfMissing: true, verifiedVersion: "1.0.0-rc-2019-07-10-002255-01" },
 		{ packageName: "nativescript-camera", verifiedVersion: "4.5.0" },
 		{ packageName: "nativescript-geolocation", verifiedVersion: "5.1.0" },
 		{ packageName: "nativescript-imagepicker", verifiedVersion: "6.2.0" },
@@ -59,12 +59,10 @@ export class MigrateController extends UpdateControllerBase implements IMigrateC
 		{ packageName: "nativescript-ui-calendar", verifiedVersion: "5.0.0-androidx-110619-2" },
 		{ packageName: "nativescript-ui-autocomplete", verifiedVersion: "5.0.0-androidx-110619" },
 		{ packageName: "nativescript-datetimepicker", verifiedVersion: "1.1.0" },
-		//TODO update with compatible with webpack only hooks
 		{ packageName: "kinvey-nativescript-sdk", verifiedVersion: "4.2.1" },
-		//TODO update with compatible with webpack only hooks
-		{ packageName: "nativescript-plugin-firebase", verifiedVersion: "9.0.1" },
-		//TODO update with no prerelease version compatible with webpack only hooks
-		{ packageName: "nativescript-vue", verifiedVersion: "2.3.0-rc.1" },
+		{ packageName: "nativescript-plugin-firebase", verifiedVersion: "9.0.2" },
+		// TODO: update with no prerelease version compatible with webpack only hooks
+		{ packageName: "nativescript-vue", verifiedVersion: "2.3.0-rc.2" },
 		{ packageName: "nativescript-permissions", verifiedVersion: "1.3.0" },
 		{ packageName: "nativescript-cardview", verifiedVersion: "3.2.0" },
 		{
