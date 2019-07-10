@@ -75,7 +75,11 @@ for more information, refer to the instructions in the following blog post: <lin
 		{ packageName: "nativescript-cardview", verifiedVersion: "3.2.0" },
 		{
 			packageName: "nativescript-unit-test-runner", verifiedVersion: "0.6.4",
-			shouldMigrateAction: (projectData: IProjectData) => this.hasDependency({ packageName: "nativescript-unit-test-runner", isDev: false }, projectData),
+			shouldMigrateAction: async (projectData: IProjectData) => {
+				const dependency = { packageName: "nativescript-unit-test-runner", verifiedVersion: "0.6.4", isDev: false };
+				const result = this.hasDependency(dependency, projectData) && await this.shouldMigrateDependencyVersion(dependency, projectData);
+				return result;
+			},
 			migrateAction: this.migrateUnitTestRunner.bind(this)
 		},
 		{ packageName: MigrateController.typescriptPackageName, isDev: true, getVerifiedVersion: this.getAngularTypeScriptVersion.bind(this) },
@@ -133,7 +137,7 @@ for more information, refer to the instructions in the following blog post: <lin
 			const dependency = this.migrationDependencies[i];
 			const hasDependency = this.hasDependency(dependency, projectData);
 
-			if (hasDependency && dependency.shouldMigrateAction && dependency.shouldMigrateAction(projectData)) {
+			if (hasDependency && dependency.shouldMigrateAction && await dependency.shouldMigrateAction(projectData)) {
 				return true;
 			}
 
@@ -273,7 +277,7 @@ for more information, refer to the instructions in the following blog post: <lin
 			const dependency = this.migrationDependencies[i];
 			const hasDependency = this.hasDependency(dependency, projectData);
 
-			if (hasDependency && dependency.migrateAction && dependency.shouldMigrateAction(projectData)) {
+			if (hasDependency && dependency.migrateAction && await dependency.shouldMigrateAction(projectData)) {
 				const newDependencies = await dependency.migrateAction(projectData, path.join(projectData.projectDir, MigrateController.backupFolder));
 				for (const newDependency of newDependencies) {
 					await this.migrateDependency(newDependency, projectData);
