@@ -16,7 +16,8 @@ export class PrepareCommand extends ValidatePlatformCommandBase implements IComm
 		$projectData: IProjectData,
 		private $platformCommandParameter: ICommandParameter,
 		$platformsDataService: IPlatformsDataService,
-		private $prepareDataService: PrepareDataService) {
+		private $prepareDataService: PrepareDataService,
+		private $migrateController: IMigrateController) {
 			super($options, $platformsDataService, $platformValidationService, $projectData);
 			this.$projectData.initializeProjectData();
 	}
@@ -29,6 +30,7 @@ export class PrepareCommand extends ValidatePlatformCommandBase implements IComm
 	}
 
 	public async canExecute(args: string[]): Promise<boolean | ICanExecuteCommandOutput> {
+		await this.$migrateController.validate({ projectDir: this.$projectData.projectDir });
 		const platform = args[0];
 		const result = await this.$platformCommandParameter.validate(platform) &&
 			await this.$platformValidationService.validateOptions(this.$options.provision, this.$options.teamId, this.$projectData, platform);

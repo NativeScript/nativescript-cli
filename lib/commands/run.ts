@@ -13,6 +13,7 @@ export class RunCommandBase implements ICommand {
 		private $errors: IErrors,
 		private $hostInfo: IHostInfo,
 		private $liveSyncCommandHelper: ILiveSyncCommandHelper,
+		private $migrateController: IMigrateController,
 		private $projectData: IProjectData
 	) { }
 
@@ -26,6 +27,8 @@ export class RunCommandBase implements ICommand {
 		if (args.length) {
 			this.$errors.fail(ERROR_NO_VALID_SUBCOMMAND_FORMAT, "run");
 		}
+
+		await this.$migrateController.validate({ projectDir: this.$projectData.projectDir });
 
 		this.$androidBundleValidatorHelper.validateNoAab();
 

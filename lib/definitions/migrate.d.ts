@@ -1,6 +1,7 @@
 interface IMigrateController {
 	migrate(migrateData: IProjectDir): Promise<void>;
 	shouldMigrate(data: IProjectDir): Promise<boolean>;
+	validate(data: IProjectDir): Promise<void>;
 }
 
 interface IDependency {

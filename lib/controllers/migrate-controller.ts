@@ -6,6 +6,10 @@ import { UpdateControllerBase } from "./update-controller-base";
 import { fromWindowsRelativePathToUnix } from "../common/helpers";
 
 export class MigrateController extends UpdateControllerBase implements IMigrateController {
+	// TODO: Improve the messages here
+	public UNABLE_TO_MIGRATE_APP_ERROR = "The project is not compatible with NativeScript 6.0";
+	public MIGRATE_MESSAGE = "";
+
 	constructor(
 		protected $fs: IFileSystem,
 		protected $platformCommandHelper: IPlatformCommandHelper,
@@ -71,7 +75,10 @@ export class MigrateController extends UpdateControllerBase implements IMigrateC
 			shouldMigrateAction: (projectData: IProjectData) => this.hasDependency({ packageName: "nativescript-unit-test-runner", isDev: false }, projectData),
 			migrateAction: this.migrateUnitTestRunner.bind(this)
 		},
-		{ packageName: MigrateController.typescriptPackageName, isDev: true, getVerifiedVersion: this.getAngularTypeScriptVersion.bind(this) }
+		{ packageName: MigrateController.typescriptPackageName, isDev: true, getVerifiedVersion: this.getAngularTypeScriptVersion.bind(this) },
+		{ packageName: "nativescript-localize", verifiedVersion: "4.2.0" },
+		{ packageName: "nativescript-dev-babel", verifiedVersion: "0.2.1" },
+		{ packageName: "nativescript-nfc", verifiedVersion: "4.0.1" }
 	];
 
 	get verifiedPlatformVersions(): IDictionary<string> {
@@ -112,6 +119,8 @@ export class MigrateController extends UpdateControllerBase implements IMigrateC
 			this.restoreBackup(MigrateController.folders, backupDir, projectData.projectDir);
 			this.$errors.failWithoutHelp(`${MigrateController.migrateFailMessage} The error is: ${error}`);
 		}
+
+		this.$logger.info(this.MIGRATE_MESSAGE);
 	}
 
 	public async shouldMigrate({ projectDir }: IProjectDir): Promise<boolean> {
@@ -136,10 +145,10 @@ export class MigrateController extends UpdateControllerBase implements IMigrateC
 			if (!hasDependency && dependency.shouldAddIfMissing) {
 				return true;
 			}
+		}
 
-			if (!this.$androidResourcesMigrationService.hasMigrated(projectData.getAppResourcesDirectoryPath())) {
-				return true;
-			}
+		if (!this.$androidResourcesMigrationService.hasMigrated(projectData.getAppResourcesDirectoryPath())) {
+			return true;
 		}
 
 		for (const platform in this.$devicePlatformsConstants) {
@@ -147,6 +156,13 @@ export class MigrateController extends UpdateControllerBase implements IMigrateC
 			if (!hasRuntimeDependency || await this.shouldUpdateRuntimeVersion({ targetVersion: this.verifiedPlatformVersions[platform.toLowerCase()], platform, projectData })) {
 				return true;
 			}
+		}
+	}
+
+	public async validate({ projectDir }: IProjectDir): Promise<void> {
+		const shouldMigrate = await this.shouldMigrate({ projectDir });
+		if (shouldMigrate) {
+			this.$errors.failWithoutHelp(this.UNABLE_TO_MIGRATE_APP_ERROR);
 		}
 	}
 

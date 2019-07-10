@@ -16,7 +16,6 @@ export class PrepareController extends EventEmitter {
 	private persistedData: IFilesChangeEventData[] = [];
 
 	constructor(
-		private $bundleValidatorHelper: IBundleValidatorHelper,
 		private $platformController: IPlatformController,
 		public $hooksService: IHooksService,
 		private $logger: ILogger,
@@ -55,8 +54,6 @@ export class PrepareController extends EventEmitter {
 	@performanceLog()
 	@hook("prepare")
 	private async prepareCore(prepareData: IPrepareData, projectData: IProjectData): Promise<IPrepareResultData> {
-		this.$bundleValidatorHelper.validate(projectData, "1.0.0");
-
 		await this.$platformController.addPlatformIfNeeded(prepareData);
 
 		this.$logger.info("Preparing project...");

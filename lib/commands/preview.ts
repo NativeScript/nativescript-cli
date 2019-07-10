@@ -4,9 +4,9 @@ export class PreviewCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
 
 	constructor(private $analyticsService: IAnalyticsService,
-		private $bundleValidatorHelper: IBundleValidatorHelper,
 		private $errors: IErrors,
 		private $logger: ILogger,
+		private $migrateController: IMigrateController,
 		private $previewAppController: IPreviewAppController,
 		private $networkConnectivityValidator: INetworkConnectivityValidator,
 		private $projectData: IProjectData,
@@ -41,8 +41,9 @@ export class PreviewCommand implements ICommand {
 			this.$errors.fail(`The arguments '${args.join(" ")}' are not valid for the preview command.`);
 		}
 
+		await this.$migrateController.validate({ projectDir: this.$projectData.projectDir });
+
 		await this.$networkConnectivityValidator.validate();
-		this.$bundleValidatorHelper.validate(this.$projectData, "1.0.0");
 		return true;
 	}
 }
