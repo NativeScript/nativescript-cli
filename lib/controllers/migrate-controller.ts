@@ -383,7 +383,7 @@ export class MigrateController extends UpdateControllerBase implements IMigrateC
 
 		// Dependencies to migrate
 		const dependencies = [
-			{ packageName: "karma-webpack", verifiedVersion: "3.0.5", isDev: true, shouldAddIfMissing: true },
+			{ packageName: "karma-webpack", verifiedVersion: "3.0.5", isDev: true, shouldAddIfMissing: !this.hasDependency({ packageName: "karma-webpack", isDev: true }, projectData) },
 			{ packageName: "karma-jasmine", verifiedVersion: "2.0.1", isDev: true },
 			{ packageName: "karma-mocha", verifiedVersion: "1.3.0", isDev: true },
 			{ packageName: "karma-chai", verifiedVersion: "0.1.0", isDev: true },
