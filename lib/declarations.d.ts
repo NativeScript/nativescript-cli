@@ -603,7 +603,7 @@ interface IInfoService {
 interface IAndroidResourcesMigrationService {
 	canMigrate(platformString: string): boolean;
 	hasMigrated(appResourcesDir: string): boolean;
-	migrate(appResourcesDir: string): Promise<void>;
+	migrate(appResourcesDir: string, backupLocation?: string): Promise<void>;
 }
 
 /**

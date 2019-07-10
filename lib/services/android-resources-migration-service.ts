@@ -20,10 +20,10 @@ export class AndroidResourcesMigrationService implements IAndroidResourcesMigrat
 		return this.$fs.exists(path.join(appResourcesDir, AndroidResourcesMigrationService.ANDROID_DIR, constants.SRC_DIR, constants.MAIN_DIR));
 	}
 
-	public async migrate(appResourcesDir: string): Promise<void> {
+	public async migrate(appResourcesDir: string, backupLocation?: string): Promise<void> {
 		const originalAppResources = path.join(appResourcesDir, AndroidResourcesMigrationService.ANDROID_DIR);
 		const appResourcesDestination = path.join(appResourcesDir, AndroidResourcesMigrationService.ANDROID_DIR_TEMP);
-		const appResourcesBackup = path.join(appResourcesDir, AndroidResourcesMigrationService.ANDROID_DIR_OLD);
+		const appResourcesBackup = path.join(backupLocation || appResourcesDir, AndroidResourcesMigrationService.ANDROID_DIR_OLD);
 
 		try {
 			await this.tryMigrate(originalAppResources, appResourcesDestination, appResourcesBackup);

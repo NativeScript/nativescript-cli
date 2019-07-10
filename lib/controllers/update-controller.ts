@@ -4,8 +4,10 @@ import * as constants from "../constants";
 import { UpdateControllerBase } from "./update-controller-base";
 
 export class UpdateController extends UpdateControllerBase implements IUpdateController {
-	private getTemplateManifest: Function;
-	static readonly updatableDependencies: string[] = [constants.TNS_CORE_MODULES_NAME, constants.TNS_CORE_MODULES_WIDGETS_NAME];
+	static readonly updatableDependencies: string[] = [
+		constants.TNS_CORE_MODULES_NAME,
+		constants.TNS_CORE_MODULES_WIDGETS_NAME,
+		constants.WEBPACK_PLUGIN_NAME];
 	static readonly folders: string[] = [
 		constants.LIB_DIR_NAME,
 		constants.HOOKS_DIR_NAME,
@@ -28,12 +30,9 @@ export class UpdateController extends UpdateControllerBase implements IUpdateCon
 		private $addPlatformService: IAddPlatformService,
 		private $logger: ILogger,
 		private $pluginsService: IPluginsService,
-		private $pacoteService: IPacoteService,
+		protected $pacoteService: IPacoteService,
 		private $projectDataService: IProjectDataService) {
-		super($fs, $platformCommandHelper, $platformsDataService, $packageInstallationManager, $packageManager);
-		this.getTemplateManifest = _.memoize(this._getTemplateManifest, (...args) => {
-			return args.join("@");
-		});
+		super($fs, $platformCommandHelper, $platformsDataService, $packageInstallationManager, $packageManager, $pacoteService);
 	}
 
 	public async update(updateOptions: IUpdateOptions): Promise<void> {
@@ -60,7 +59,7 @@ export class UpdateController extends UpdateControllerBase implements IUpdateCon
 	public async shouldUpdate({ projectDir, version }: { projectDir: string, version?: string }): Promise<boolean> {
 		const projectData = this.$projectDataService.getProjectData(projectDir);
 		const templateName = this.getTemplateName(projectData);
-		const templateManifest = await this.getTemplateManifest(templateName, version);
+		const templateManifest = await this.getPackageManifest(templateName, version);
 		const dependencies = this.getUpdatableDependencies(templateManifest.dependencies);
 		const devDependencies = this.getUpdatableDependencies(templateManifest.devDependencies);
 
@@ -94,7 +93,7 @@ export class UpdateController extends UpdateControllerBase implements IUpdateCon
 
 	private async updateProject(projectData: IProjectData, version: string): Promise<void> {
 		const templateName = this.getTemplateName(projectData);
-		const templateManifest = await this.getTemplateManifest(templateName, version);
+		const templateManifest = await this.getPackageManifest(templateName, version);
 		const dependencies = this.getUpdatableDependencies(templateManifest.dependencies);
 		const devDependencies = this.getUpdatableDependencies(templateManifest.devDependencies);
 
@@ -178,14 +177,6 @@ export class UpdateController extends UpdateControllerBase implements IUpdateCon
 		const maxRuntimeVersion = await this.getMaxRuntimeVersion({ platform, projectData });
 
 		return maxTemplateRuntimeVersion && maxRuntimeVersion && semver.gt(maxTemplateRuntimeVersion, maxRuntimeVersion);
-	}
-
-	private async _getTemplateManifest(templateName: string, version?: string) {
-		const packageVersion = semver.valid(version) ||
-			await this.$packageManager.getTagVersion(templateName, version) ||
-			await this.$packageInstallationManager.getLatestCompatibleVersionSafe(templateName);
-
-		return await this.$pacoteService.manifest(`${templateName}@${packageVersion}`, { fullMetadata: true });
 	}
 
 	private getUpdatableDependencies(dependencies: IDictionary<string>): IDictionary<string> {
