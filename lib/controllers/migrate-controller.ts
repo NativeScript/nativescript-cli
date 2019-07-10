@@ -7,11 +7,11 @@ import { fromWindowsRelativePathToUnix } from "../common/helpers";
 
 export class MigrateController extends UpdateControllerBase implements IMigrateController {
 	// TODO: Update the links to blog post when it is available
+	private static COMMON_MIGRATE_MESSAGE = "not affect the codebase of the application and you might need to do additional changes manually – for more information, refer to the instructions in the following blog post: <link to blog post>.";
 	private static UNABLE_TO_MIGRATE_APP_ERROR = `The current application is not compatible with NativeScript CLI 6.0.
 Use the \`tns migrate\` command to migrate the app dependencies to a form compatible with NativeScript 6.0.
-Running this command will not affect the codebase of the application and you might need to do additional changes manually –
-for more information, refer to the instructions in the following blog post: <link to blog post>.`;
-	private static MIGRATE_FINISH_MESSAGE = "The `tns migrate` command does not affect the codebase of the application and you might need to do additional changes manually – for more information, refer to the instructions in the following blog post: <link to blog post>.";
+Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
+	private static MIGRATE_FINISH_MESSAGE = `The \`tns migrate\` command does ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 
 	constructor(
 		protected $fs: IFileSystem,
@@ -390,7 +390,7 @@ for more information, refer to the instructions in the following blog post: <lin
 
 		// Dependencies to migrate
 		const dependencies = [
-			{ packageName: "karma-webpack", verifiedVersion: "3.0.5", isDev: true, shouldAddIfMissing: !this.hasDependency({ packageName: "karma-webpack", isDev: true }, projectData) },
+			{ packageName: "karma-webpack", verifiedVersion: "3.0.5", isDev: true, shouldAddIfMissing: true },
 			{ packageName: "karma-jasmine", verifiedVersion: "2.0.1", isDev: true },
 			{ packageName: "karma-mocha", verifiedVersion: "1.3.0", isDev: true },
 			{ packageName: "karma-chai", verifiedVersion: "0.1.0", isDev: true },
