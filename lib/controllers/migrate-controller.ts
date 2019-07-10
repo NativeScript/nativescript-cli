@@ -6,9 +6,12 @@ import { UpdateControllerBase } from "./update-controller-base";
 import { fromWindowsRelativePathToUnix } from "../common/helpers";
 
 export class MigrateController extends UpdateControllerBase implements IMigrateController {
-	// TODO: Improve the messages here
-	public UNABLE_TO_MIGRATE_APP_ERROR = "The project is not compatible with NativeScript 6.0";
-	public MIGRATE_MESSAGE = "";
+	// TODO: Update the links to blog post when it is available
+	private static UNABLE_TO_MIGRATE_APP_ERROR = `The current application is not compatible with NativeScript CLI 6.0.
+Use the \`tns migrate\` command to migrate the app dependencies to a form compatible with NativeScript 6.0.
+Running this command will not affect the codebase of the application and you might need to do additional changes manually –
+for more information, refer to the instructions in the following blog post: <link to blog post>.`;
+	private static MIGRATE_FINISH_MESSAGE = "The `tns migrate` command does not affect the codebase of the application and you might need to do additional changes manually – for more information, refer to the instructions in the following blog post: <link to blog post>.";
 
 	constructor(
 		protected $fs: IFileSystem,
@@ -120,7 +123,7 @@ export class MigrateController extends UpdateControllerBase implements IMigrateC
 			this.$errors.failWithoutHelp(`${MigrateController.migrateFailMessage} The error is: ${error}`);
 		}
 
-		this.$logger.info(this.MIGRATE_MESSAGE);
+		this.$logger.info(MigrateController.MIGRATE_FINISH_MESSAGE);
 	}
 
 	public async shouldMigrate({ projectDir }: IProjectDir): Promise<boolean> {
@@ -162,7 +165,7 @@ export class MigrateController extends UpdateControllerBase implements IMigrateC
 	public async validate({ projectDir }: IProjectDir): Promise<void> {
 		const shouldMigrate = await this.shouldMigrate({ projectDir });
 		if (shouldMigrate) {
-			this.$errors.failWithoutHelp(this.UNABLE_TO_MIGRATE_APP_ERROR);
+			this.$errors.failWithoutHelp(MigrateController.UNABLE_TO_MIGRATE_APP_ERROR);
 		}
 	}
 
