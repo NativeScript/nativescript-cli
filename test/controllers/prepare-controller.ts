@@ -54,10 +54,6 @@ function createTestInjector(data: { hasNativeChanges: boolean }): IInjector {
 		isFileInIgnoreList: () => false
 	});
 
-	injector.register("bundleValidatorHelper", {
-		validate: () => ({})
-	});
-
 	const prepareController: PrepareController = injector.resolve("prepareController");
 	prepareController.emit = (eventName: string, eventData: any) => {
 		emittedEventNames.push(eventName);
