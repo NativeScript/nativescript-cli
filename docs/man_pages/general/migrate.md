@@ -45,7 +45,6 @@ The following dependencies will be updated if needed:
 * karma-qunit
 * karma
 
-
 ### Commands
 
 Usage | Synopsis
