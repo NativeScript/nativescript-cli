@@ -5,7 +5,10 @@ import { UpdateControllerBase } from "./update-controller-base";
 
 export class UpdateController extends UpdateControllerBase implements IUpdateController {
 	private getTemplateManifest: Function;
-	static readonly updatableDependencies: string[] = [constants.TNS_CORE_MODULES_NAME, constants.TNS_CORE_MODULES_WIDGETS_NAME];
+	static readonly updatableDependencies: string[] = [
+		constants.TNS_CORE_MODULES_NAME,
+		constants.TNS_CORE_MODULES_WIDGETS_NAME,
+		constants.WEBPACK_PLUGIN_NAME];
 	static readonly folders: string[] = [
 		constants.LIB_DIR_NAME,
 		constants.HOOKS_DIR_NAME,
