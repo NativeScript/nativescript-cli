@@ -103,7 +103,7 @@ export class MigrateController extends UpdateControllerBase implements IMigrateC
 			this.$logger.trace(`Error during auto-generated files handling. ${(error && error.message) || error}`);
 		}
 
-		await this.migrateOldAndroidAppResources(projectData);
+		await this.migrateOldAndroidAppResources(projectData, backupDir);
 
 		try {
 			await this.cleanUpProject(projectData);
@@ -180,7 +180,7 @@ export class MigrateController extends UpdateControllerBase implements IMigrateC
 		if (!this.$androidResourcesMigrationService.hasMigrated(appResourcesPath)) {
 			this.$logger.info("Migrate old Android App_Resources structure.");
 			try {
-				await this.$androidResourcesMigrationService.migrate(appResourcesPath);
+				await this.$androidResourcesMigrationService.migrate(appResourcesPath, backupDir);
 			} catch (error) {
 				this.$logger.warn("Migrate old Android App_Resources structure failed: ", error.message);
 			}
