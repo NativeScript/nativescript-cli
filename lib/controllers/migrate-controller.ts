@@ -44,32 +44,6 @@ export class MigrateController extends UpdateControllerBase implements IMigrateC
 		{ packageName: constants.TNS_CORE_MODULES_WIDGETS_NAME, verifiedVersion: "6.0.0" },
 		{ packageName: "tns-platform-declarations", isDev: true, verifiedVersion: "6.0.0-rc-2019-07-09-183845-06" },
 		{ packageName: "node-sass", isDev: true, verifiedVersion: "4.12.0" },
-		{
-			packageName: MigrateController.typescriptPackageName, isDev: true, getVerifiedVersion: async (projectData: IProjectData) => {
-				let verifiedVersion = "3.4.1";
-				try {
-					const ngcPackageName = "@angular/compiler-cli";
-					// e.g. ~8.0.0
-					let ngcVersion = projectData.dependencies[ngcPackageName] || projectData.devDependencies[ngcPackageName];
-					if (ngcVersion) {
-						// e.g. ~8.0.3
-						ngcVersion = await this.$packageInstallationManager.maxSatisfyingVersion(ngcPackageName, ngcVersion);
-						const ngcManifest = await this.getTemplateManifest(ngcPackageName, ngcVersion);
-						// e.g. >=3.4 <3.5
-						verifiedVersion = (ngcManifest && ngcManifest.peerDependencies &&
-							ngcManifest.peerDependencies[MigrateController.typescriptPackageName]) || verifiedVersion;
-
-						// e.g. 3.4.4
-						verifiedVersion = await this.$packageInstallationManager.maxSatisfyingVersion(
-							MigrateController.typescriptPackageName, verifiedVersion);
-					}
-				} catch (error) {
-					this.$logger.warn(`Unable to determine the TypeScript version based on the Angular packages. Error is: '${error}'.`);
-				}
-
-				return verifiedVersion;
-			}
-		},
 		{ packageName: "nativescript-dev-sass", isDev: true, replaceWith: "node-sass" },
 		{ packageName: "nativescript-dev-typescript", isDev: true, replaceWith: MigrateController.typescriptPackageName },
 		{ packageName: "nativescript-dev-less", isDev: true, shouldRemove: true, warning: "LESS CSS is not supported out of the box. In order to enable it, follow the steps in this feature request: https://github.com/NativeScript/nativescript-dev-webpack/issues/967" },
@@ -96,7 +70,8 @@ export class MigrateController extends UpdateControllerBase implements IMigrateC
 			packageName: "nativescript-unit-test-runner", verifiedVersion: "0.6.4",
 			shouldMigrateAction: (projectData: IProjectData) => this.hasDependency({ packageName: "nativescript-unit-test-runner", isDev: false }, projectData),
 			migrateAction: this.migrateUnitTestRunner.bind(this)
-		}
+		},
+		{ packageName: MigrateController.typescriptPackageName, isDev: true, getVerifiedVersion: this.getAngularTypeScriptVersion.bind(this) }
 	];
 
 	get verifiedPlatformVersions(): IDictionary<string> {
@@ -175,7 +150,32 @@ export class MigrateController extends UpdateControllerBase implements IMigrateC
 		}
 	}
 
-	private async migrateOldAndroidAppResources(projectData: IProjectData) {
+	private async getAngularTypeScriptVersion(projectData: IProjectData): Promise<string> {
+		let verifiedVersion = "3.4.1";
+		try {
+			const ngcPackageName = "@angular/compiler-cli";
+			// e.g. ~8.0.0
+			let ngcVersion = projectData.dependencies[ngcPackageName] || projectData.devDependencies[ngcPackageName];
+			if (ngcVersion) {
+				// e.g. 8.0.3
+				ngcVersion = await this.$packageInstallationManager.maxSatisfyingVersion(ngcPackageName, ngcVersion);
+				const ngcManifest = await this.getTemplateManifest(ngcPackageName, ngcVersion);
+				// e.g. >=3.4 <3.5
+				verifiedVersion = (ngcManifest && ngcManifest.peerDependencies &&
+					ngcManifest.peerDependencies[MigrateController.typescriptPackageName]) || verifiedVersion;
+
+				// e.g. 3.4.4
+				verifiedVersion = await this.$packageInstallationManager.maxSatisfyingVersion(
+					MigrateController.typescriptPackageName, verifiedVersion);
+			}
+		} catch (error) {
+			this.$logger.warn(`Unable to determine the TypeScript version based on the Angular packages. Error is: '${error}'.`);
+		}
+
+		return verifiedVersion;
+	}
+
+	private async migrateOldAndroidAppResources(projectData: IProjectData, backupDir: string) {
 		const appResourcesPath = projectData.getAppResourcesDirectoryPath();
 		if (!this.$androidResourcesMigrationService.hasMigrated(appResourcesPath)) {
 			this.$logger.info("Migrate old Android App_Resources structure.");
