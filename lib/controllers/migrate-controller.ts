@@ -154,10 +154,6 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 			}
 		}
 
-		if (!this.$androidResourcesMigrationService.hasMigrated(projectData.getAppResourcesDirectoryPath())) {
-			return true;
-		}
-
 		for (const platform in this.$devicePlatformsConstants) {
 			const hasRuntimeDependency = this.hasRuntimeDependency({ platform, projectData });
 			if (hasRuntimeDependency && await this.shouldUpdateRuntimeVersion({ targetVersion: this.verifiedPlatformVersions[platform.toLowerCase()], platform, projectData })) {
