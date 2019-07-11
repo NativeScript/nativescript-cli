@@ -65,7 +65,7 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 					projectDir: this.$projectData.projectDir
 				});
 
-				const buildData = this.$buildDataService.getBuildData(this.$projectData.projectDir, d.deviceInfo.platform, { ...this.$options.argv, outputPath, buildForDevice: !d.isEmulator });
+				const buildData = this.$buildDataService.getBuildData(this.$projectData.projectDir, d.deviceInfo.platform, { ...this.$options.argv, outputPath, buildForDevice: !d.isEmulator, watch: !this.$options.release && this.$options.watch });
 
 				const buildAction = additionalOptions && additionalOptions.buildPlatform ?
 					additionalOptions.buildPlatform.bind(additionalOptions.buildPlatform, d.deviceInfo.platform, buildData, this.$projectData) :
@@ -83,7 +83,7 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 				return info;
 			});
 
-			return deviceDescriptors;
+		return deviceDescriptors;
 	}
 
 	public getPlatformsForOperation(platform: string): string[] {
@@ -133,7 +133,7 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 		return result;
 	}
 
-	private async executeLiveSyncOperationCore(devices: Mobile.IDevice[], platform: string, additionalOptions?: ILiveSyncCommandHelperAdditionalOptions): Promise<{liveSyncInfo: ILiveSyncInfo, deviceDescriptors: ILiveSyncDeviceDescriptor[]}> {
+	private async executeLiveSyncOperationCore(devices: Mobile.IDevice[], platform: string, additionalOptions?: ILiveSyncCommandHelperAdditionalOptions): Promise<{ liveSyncInfo: ILiveSyncInfo, deviceDescriptors: ILiveSyncDeviceDescriptor[] }> {
 		if (!devices || !devices.length) {
 			if (platform) {
 				this.$errors.failWithoutHelp("Unable to find applicable devices to execute operation. Ensure connected devices are trusted and try again.");
