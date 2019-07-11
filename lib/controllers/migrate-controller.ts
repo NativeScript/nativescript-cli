@@ -356,11 +356,11 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 		const devDependencies = projectData.devDependencies || {};
 		const dependencies = projectData.dependencies || {};
 		const packageName = dependency.packageName;
-		const version = dependencies[packageName] || devDependencies[packageName];
-		const maxSatisfyingVersion = await this.getMaxDependencyVersion(dependency.packageName, version);
-		const dependencyVersion = await this.getDependencyVerifiedVersion(dependency, projectData);
+		const referencedVersion = dependencies[packageName] || devDependencies[packageName];
+		const installedVersion = await this.getMaxDependencyVersion(dependency.packageName, referencedVersion);
+		const requiredVersion = await this.getDependencyVerifiedVersion(dependency, projectData);
 
-		return !(maxSatisfyingVersion && semver.gte(maxSatisfyingVersion, dependencyVersion));
+		return !!installedVersion && semver.lt(installedVersion, requiredVersion);
 	}
 
 	protected async shouldUpdateRuntimeVersion({ targetVersion, platform, projectData }: { targetVersion: string, platform: string, projectData: IProjectData }): Promise<boolean> {
