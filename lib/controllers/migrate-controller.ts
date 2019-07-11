@@ -46,30 +46,29 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 	];
 
 	private migrationDependencies: IMigrationDependency[] = [
-		{ packageName: constants.TNS_CORE_MODULES_NAME, verifiedVersion: "6.0.0-rc-2019-07-09-183845-06" },
-		{ packageName: constants.TNS_CORE_MODULES_WIDGETS_NAME, verifiedVersion: "6.0.0" },
-		{ packageName: "tns-platform-declarations", isDev: true, verifiedVersion: "6.0.0-rc-2019-07-09-183845-06" },
+		{ packageName: constants.TNS_CORE_MODULES_NAME, verifiedVersion: "6.0.1" },
+		{ packageName: constants.TNS_CORE_MODULES_WIDGETS_NAME, verifiedVersion: "6.0.1" },
+		{ packageName: "tns-platform-declarations", isDev: true, verifiedVersion: "6.0.1" },
 		{ packageName: "node-sass", isDev: true, verifiedVersion: "4.12.0" },
 		{ packageName: "nativescript-dev-sass", isDev: true, replaceWith: "node-sass" },
 		{ packageName: "nativescript-dev-typescript", isDev: true, replaceWith: MigrateController.typescriptPackageName },
 		{ packageName: "nativescript-dev-less", isDev: true, shouldRemove: true, warning: "LESS CSS is not supported out of the box. In order to enable it, follow the steps in this feature request: https://github.com/NativeScript/nativescript-dev-webpack/issues/967" },
-		{ packageName: constants.WEBPACK_PLUGIN_NAME, isDev: true, shouldAddIfMissing: true, verifiedVersion: "1.0.0-rc-2019-07-10-002255-01" },
+		{ packageName: constants.WEBPACK_PLUGIN_NAME, isDev: true, shouldAddIfMissing: true, verifiedVersion: "1.0.0" },
 		{ packageName: "nativescript-camera", verifiedVersion: "4.5.0" },
 		{ packageName: "nativescript-geolocation", verifiedVersion: "5.1.0" },
 		{ packageName: "nativescript-imagepicker", verifiedVersion: "6.2.0" },
 		{ packageName: "nativescript-social-share", verifiedVersion: "1.5.2" },
-		{ packageName: "nativescript-ui-chart", verifiedVersion: "5.0.0-androidx-110619" },
-		{ packageName: "nativescript-ui-dataform", verifiedVersion: "5.0.0-androidx-110619" },
-		{ packageName: "nativescript-ui-gauge", verifiedVersion: "5.0.0-androidx" },
-		{ packageName: "nativescript-ui-listview", verifiedVersion: "7.0.0-androidx-110619" },
-		{ packageName: "nativescript-ui-sidedrawer", verifiedVersion: "7.0.0-androidx-110619" },
-		{ packageName: "nativescript-ui-calendar", verifiedVersion: "5.0.0-androidx-110619-2" },
-		{ packageName: "nativescript-ui-autocomplete", verifiedVersion: "5.0.0-androidx-110619" },
+		{ packageName: "nativescript-ui-chart", verifiedVersion: "5.0.0" },
+		{ packageName: "nativescript-ui-dataform", verifiedVersion: "5.0.0" },
+		{ packageName: "nativescript-ui-gauge", verifiedVersion: "5.0.0" },
+		{ packageName: "nativescript-ui-listview", verifiedVersion: "7.0.0" },
+		{ packageName: "nativescript-ui-sidedrawer", verifiedVersion: "7.0.0" },
+		{ packageName: "nativescript-ui-calendar", verifiedVersion: "5.0.0" },
+		{ packageName: "nativescript-ui-autocomplete", verifiedVersion: "5.0.0" },
 		{ packageName: "nativescript-datetimepicker", verifiedVersion: "1.1.0" },
 		{ packageName: "kinvey-nativescript-sdk", verifiedVersion: "4.2.1" },
 		{ packageName: "nativescript-plugin-firebase", verifiedVersion: "9.0.2" },
-		// TODO: update with no prerelease version compatible with webpack only hooks
-		{ packageName: "nativescript-vue", verifiedVersion: "2.3.0-rc.2" },
+		{ packageName: "nativescript-vue", verifiedVersion: "2.3.0" },
 		{ packageName: "nativescript-permissions", verifiedVersion: "1.3.0" },
 		{ packageName: "nativescript-cardview", verifiedVersion: "3.2.0" },
 		{
@@ -89,8 +88,8 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 
 	get verifiedPlatformVersions(): IDictionary<string> {
 		return {
-			[this.$devicePlatformsConstants.Android.toLowerCase()]: "6.0.0-rc-2019-06-27-172817-03",
-			[this.$devicePlatformsConstants.iOS.toLowerCase()]: "6.0.0-rc-2019-06-28-105002-01"
+			[this.$devicePlatformsConstants.Android.toLowerCase()]: "6.0.0",
+			[this.$devicePlatformsConstants.iOS.toLowerCase()]: "6.0.0"
 		};
 	}
 
