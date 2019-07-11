@@ -5,6 +5,7 @@ import { assert } from "chai";
 import { Options } from "../lib/options";
 import { StaticConfig } from "../lib/config";
 import { SettingsService } from "../lib/common/test/unit-tests/stubs";
+import { DevicePlatformsConstants } from "../lib/common/mobile/device-platforms-constants";
 const projectFolder = "test";
 
 function createTestInjector(
@@ -26,6 +27,7 @@ function createTestInjector(
 		dependencies: {}
 	});
 	testInjector.register("settingsService", SettingsService);
+	testInjector.register("devicePlatformsConstants", DevicePlatformsConstants);
 	testInjector.register("migrateController", {
 		shouldMigrate: () => { return false; },
 	});
