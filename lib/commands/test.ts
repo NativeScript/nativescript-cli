@@ -35,7 +35,7 @@ abstract class TestCommandBase {
 			devices = await this.$liveSyncCommandHelper.getDeviceInstances(this.platform);
 		}
 
-		if (!this.$options.env) { this.$options.env = { }; }
+		if (!this.$options.env) { this.$options.env = {}; }
 		this.$options.env.unitTesting = true;
 
 		const liveSyncInfo = this.$liveSyncCommandHelper.getLiveSyncData(this.$projectData.projectDir);
@@ -49,7 +49,7 @@ abstract class TestCommandBase {
 	}
 
 	async canExecute(args: string[]): Promise<boolean | ICanExecuteCommandOutput> {
-		await this.$migrateController.validate({ projectDir: this.$projectData.projectDir });
+		await this.$migrateController.validate({ projectDir: this.$projectData.projectDir, platforms: [this.platform] });
 
 		this.$projectData.initializeProjectData();
 		this.$analyticsService.setShouldDispose(this.$options.justlaunch || !this.$options.watch);

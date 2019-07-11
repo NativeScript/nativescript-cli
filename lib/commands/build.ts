@@ -11,8 +11,8 @@ export abstract class BuildCommandBase extends ValidatePlatformCommandBase {
 		$platformValidationService: IPlatformValidationService,
 		private $buildDataService: IBuildDataService,
 		protected $logger: ILogger) {
-			super($options, $platformsDataService, $platformValidationService, $projectData);
-			this.$projectData.initializeProjectData();
+		super($options, $platformsDataService, $platformValidationService, $projectData);
+		this.$projectData.initializeProjectData();
 	}
 
 	public dashedOptions = {
@@ -65,7 +65,7 @@ export class BuildIosCommand extends BuildCommandBase implements ICommand {
 		$logger: ILogger,
 		$buildDataService: IBuildDataService,
 		private $migrateController: IMigrateController) {
-			super($options, $errors, $projectData, $platformsDataService, $devicePlatformsConstants, $buildController, $platformValidationService, $buildDataService, $logger);
+		super($options, $errors, $projectData, $platformsDataService, $devicePlatformsConstants, $buildController, $platformValidationService, $buildDataService, $logger);
 	}
 
 	public async execute(args: string[]): Promise<void> {
@@ -73,8 +73,8 @@ export class BuildIosCommand extends BuildCommandBase implements ICommand {
 	}
 
 	public async canExecute(args: string[]): Promise<boolean | ICanExecuteCommandOutput> {
-		await this.$migrateController.validate({ projectDir: this.$projectData.projectDir });
 		const platform = this.$devicePlatformsConstants.iOS;
+		await this.$migrateController.validate({ projectDir: this.$projectData.projectDir, platforms: [platform] });
 
 		super.validatePlatform(platform);
 
@@ -103,7 +103,7 @@ export class BuildAndroidCommand extends BuildCommandBase implements ICommand {
 		$buildDataService: IBuildDataService,
 		protected $logger: ILogger,
 		private $migrateController: IMigrateController) {
-			super($options, $errors, $projectData, platformsDataService, $devicePlatformsConstants, $buildController, $platformValidationService, $buildDataService, $logger);
+		super($options, $errors, $projectData, platformsDataService, $devicePlatformsConstants, $buildController, $platformValidationService, $buildDataService, $logger);
 	}
 
 	public async execute(args: string[]): Promise<void> {
@@ -119,8 +119,8 @@ export class BuildAndroidCommand extends BuildCommandBase implements ICommand {
 	}
 
 	public async canExecute(args: string[]): Promise<boolean | ICanExecuteCommandOutput> {
-		await this.$migrateController.validate({ projectDir: this.$projectData.projectDir });
 		const platform = this.$devicePlatformsConstants.Android;
+		await this.$migrateController.validate({ projectDir: this.$projectData.projectDir, platforms: [platform] });
 		this.$androidBundleValidatorHelper.validateRuntimeVersion(this.$projectData);
 		let result = await super.canExecuteCommandBase(platform, { notConfiguredEnvOptions: { hideSyncToPreviewAppOption: true } });
 		if (result.canExecute) {

@@ -4,6 +4,7 @@ export class UpdateCommand implements ICommand {
 	public static readonly PROJECT_UP_TO_DATE_MESSAGE = 'This project is up to date.';
 
 	constructor(
+		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $updateController: IUpdateController,
 		private $migrateController: IMigrateController,
 		private $options: IOptions,
@@ -13,15 +14,20 @@ export class UpdateCommand implements ICommand {
 	}
 
 	public async execute(args: string[]): Promise<void> {
-		await this.$updateController.update({projectDir: this.$projectData.projectDir, version: args[0], frameworkPath: this.$options.frameworkPath});
+		await this.$updateController.update({ projectDir: this.$projectData.projectDir, version: args[0], frameworkPath: this.$options.frameworkPath });
 	}
 
 	public async canExecute(args: string[]): Promise<boolean> {
-		if (await this.$migrateController.shouldMigrate({projectDir: this.$projectData.projectDir})) {
+		const shouldMigrate = await this.$migrateController.shouldMigrate({
+			projectDir: this.$projectData.projectDir,
+			platforms: [this.$devicePlatformsConstants.Android, this.$devicePlatformsConstants.iOS]
+		});
+
+		if (shouldMigrate) {
 			this.$errors.failWithoutHelp(UpdateCommand.SHOULD_MIGRATE_PROJECT_MESSAGE);
 		}
 
-		if (!await this.$updateController.shouldUpdate({projectDir:this.$projectData.projectDir, version: args[0]})) {
+		if (!await this.$updateController.shouldUpdate({ projectDir: this.$projectData.projectDir, version: args[0] })) {
 			this.$errors.failWithoutHelp(UpdateCommand.PROJECT_UP_TO_DATE_MESSAGE);
 		}
 

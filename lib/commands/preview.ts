@@ -41,7 +41,7 @@ export class PreviewCommand implements ICommand {
 			this.$errors.fail(`The arguments '${args.join(" ")}' are not valid for the preview command.`);
 		}
 
-		await this.$migrateController.validate({ projectDir: this.$projectData.projectDir });
+		await this.$migrateController.validate({ projectDir: this.$projectData.projectDir, platforms: [] });
 
 		await this.$networkConnectivityValidator.validate();
 		return true;

@@ -75,9 +75,9 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 		{ packageName: "nativescript-cardview", verifiedVersion: "3.2.0" },
 		{
 			packageName: "nativescript-unit-test-runner", verifiedVersion: "0.6.4",
-			shouldMigrateAction: async (projectData: IProjectData) => {
+			shouldMigrateAction: async (projectData: IProjectData, allowInvalidVersions: boolean) => {
 				const dependency = { packageName: "nativescript-unit-test-runner", verifiedVersion: "0.6.4", isDev: false };
-				const result = this.hasDependency(dependency, projectData) && await this.shouldMigrateDependencyVersion(dependency, projectData);
+				const result = this.hasDependency(dependency, projectData) && await this.shouldMigrateDependencyVersion(dependency, projectData, allowInvalidVersions);
 				return result;
 			},
 			migrateAction: this.migrateUnitTestRunner.bind(this)
@@ -95,7 +95,7 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 		};
 	}
 
-	public async migrate({ projectDir }: { projectDir: string }): Promise<void> {
+	public async migrate({ projectDir, platforms, allowInvalidVersions = false }: IMigrationData): Promise<void> {
 		const projectData = this.$projectDataService.getProjectData(projectDir);
 		const backupDir = path.join(projectDir, MigrateController.backupFolder);
 
@@ -121,7 +121,7 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 
 		try {
 			await this.cleanUpProject(projectData);
-			await this.migrateDependencies(projectData);
+			await this.migrateDependencies(projectData, platforms, allowInvalidVersions);
 		} catch (error) {
 			this.restoreBackup(MigrateController.folders, backupDir, projectData.projectDir);
 			this.$errors.failWithoutHelp(`${MigrateController.migrateFailMessage} The error is: ${error}`);
@@ -130,44 +130,48 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 		this.$logger.info(MigrateController.MIGRATE_FINISH_MESSAGE);
 	}
 
-	public async shouldMigrate({ projectDir }: IProjectDir): Promise<boolean> {
+	public async shouldMigrate({ projectDir, platforms, allowInvalidVersions = false }: IMigrationData): Promise<boolean> {
 		const projectData = this.$projectDataService.getProjectData(projectDir);
+		const shouldMigrateCommonMessage = "The app is not compatible with this CLI version and it should be migrated. Reason: ";
 
 		for (let i = 0; i < this.migrationDependencies.length; i++) {
 			const dependency = this.migrationDependencies[i];
 			const hasDependency = this.hasDependency(dependency, projectData);
 
-			if (hasDependency && dependency.shouldMigrateAction && await dependency.shouldMigrateAction(projectData)) {
+			if (hasDependency && dependency.shouldMigrateAction && await dependency.shouldMigrateAction(projectData, allowInvalidVersions)) {
+				this.$logger.trace(`${shouldMigrateCommonMessage}'${dependency.packageName}' requires an update.`);
 				return true;
 			}
 
 			if (hasDependency && (dependency.replaceWith || dependency.shouldRemove)) {
+				this.$logger.trace(`${shouldMigrateCommonMessage}'${dependency.packageName}' is deprecated.`);
 				return true;
 			}
 
-			if (hasDependency && await this.shouldMigrateDependencyVersion(dependency, projectData)) {
+			if (hasDependency && await this.shouldMigrateDependencyVersion(dependency, projectData, allowInvalidVersions)) {
+				this.$logger.trace(`${shouldMigrateCommonMessage}'${dependency.packageName}' should be updated.`);
 				return true;
 			}
 
 			if (!hasDependency && dependency.shouldAddIfMissing) {
+				this.$logger.trace(`${shouldMigrateCommonMessage}'${dependency.packageName}' is missing.`);
 				return true;
 			}
 		}
 
-		if (!this.$androidResourcesMigrationService.hasMigrated(projectData.getAppResourcesDirectoryPath())) {
-			return true;
-		}
+		for (let platform of platforms) {
+			platform = platform && platform.toLowerCase();
 
-		for (const platform in this.$devicePlatformsConstants) {
 			const hasRuntimeDependency = this.hasRuntimeDependency({ platform, projectData });
-			if (hasRuntimeDependency && await this.shouldUpdateRuntimeVersion({ targetVersion: this.verifiedPlatformVersions[platform.toLowerCase()], platform, projectData })) {
+			if (hasRuntimeDependency && await this.shouldUpdateRuntimeVersion(this.verifiedPlatformVersions[platform.toLowerCase()], platform, projectData, allowInvalidVersions)) {
+				this.$logger.trace(`${shouldMigrateCommonMessage}Platform '${platform}' should be updated.`);
 				return true;
 			}
 		}
 	}
 
-	public async validate({ projectDir }: IProjectDir): Promise<void> {
-		const shouldMigrate = await this.shouldMigrate({ projectDir });
+	public async validate({ projectDir, platforms, allowInvalidVersions = true }: IMigrationData): Promise<void> {
+		const shouldMigrate = await this.shouldMigrate({ projectDir, platforms, allowInvalidVersions });
 		if (shouldMigrate) {
 			this.$errors.failWithoutHelp(MigrateController.UNABLE_TO_MIGRATE_APP_ERROR);
 		}
@@ -271,26 +275,26 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 		return autoGeneratedFiles;
 	}
 
-	private async migrateDependencies(projectData: IProjectData): Promise<void> {
+	private async migrateDependencies(projectData: IProjectData, platforms: string[], allowInvalidVersions: boolean): Promise<void> {
 		this.$logger.info("Start dependencies migration.");
 		for (let i = 0; i < this.migrationDependencies.length; i++) {
 			const dependency = this.migrationDependencies[i];
 			const hasDependency = this.hasDependency(dependency, projectData);
 
-			if (hasDependency && dependency.migrateAction && await dependency.shouldMigrateAction(projectData)) {
+			if (hasDependency && dependency.migrateAction && await dependency.shouldMigrateAction(projectData, allowInvalidVersions)) {
 				const newDependencies = await dependency.migrateAction(projectData, path.join(projectData.projectDir, MigrateController.backupFolder));
 				for (const newDependency of newDependencies) {
-					await this.migrateDependency(newDependency, projectData);
+					await this.migrateDependency(newDependency, projectData, allowInvalidVersions);
 				}
 			}
 
-			await this.migrateDependency(dependency, projectData);
+			await this.migrateDependency(dependency, projectData, allowInvalidVersions);
 		}
 
-		for (const platform in this.$devicePlatformsConstants) {
+		for (const platform of platforms) {
 			const lowercasePlatform = platform.toLowerCase();
 			const hasRuntimeDependency = this.hasRuntimeDependency({ platform, projectData });
-			if (hasRuntimeDependency && await this.shouldUpdateRuntimeVersion({ targetVersion: this.verifiedPlatformVersions[lowercasePlatform], platform, projectData })) {
+			if (hasRuntimeDependency && await this.shouldUpdateRuntimeVersion(this.verifiedPlatformVersions[lowercasePlatform], platform, projectData, allowInvalidVersions)) {
 				const verifiedPlatformVersion = this.verifiedPlatformVersions[lowercasePlatform];
 				const platformData = this.$platformsDataService.getPlatformData(lowercasePlatform, projectData);
 				this.$logger.info(`Updating ${platform} platform to version '${verifiedPlatformVersion}'.`);
@@ -309,7 +313,7 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 		this.$logger.info("Migration complete.");
 	}
 
-	private async migrateDependency(dependency: IMigrationDependency, projectData: IProjectData): Promise<void> {
+	private async migrateDependency(dependency: IMigrationDependency, projectData: IProjectData, allowInvalidVersions: boolean): Promise<void> {
 		const hasDependency = this.hasDependency(dependency, projectData);
 		if (hasDependency && dependency.warning) {
 			this.$logger.warn(dependency.warning);
@@ -332,7 +336,7 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 		}
 
 		const dependencyVersion = await this.getDependencyVerifiedVersion(dependency, projectData);
-		if (hasDependency && await this.shouldMigrateDependencyVersion(dependency, projectData)) {
+		if (hasDependency && await this.shouldMigrateDependencyVersion(dependency, projectData, allowInvalidVersions)) {
 			this.$logger.info(`Updating '${dependency.packageName}' to compatible version '${dependencyVersion}'`);
 			this.$pluginsService.addToPackageJson(dependency.packageName, dependencyVersion, dependency.isDev, projectData.projectDir);
 			return;
@@ -352,21 +356,25 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 		return dependency.verifiedVersion;
 	}
 
-	private async shouldMigrateDependencyVersion(dependency: IMigrationDependency, projectData: IProjectData): Promise<boolean> {
+	private async shouldMigrateDependencyVersion(dependency: IMigrationDependency, projectData: IProjectData, allowInvalidVersions: boolean): Promise<boolean> {
 		const devDependencies = projectData.devDependencies || {};
 		const dependencies = projectData.dependencies || {};
 		const packageName = dependency.packageName;
-		const version = dependencies[packageName] || devDependencies[packageName];
-		const maxSatisfyingVersion = await this.getMaxDependencyVersion(dependency.packageName, version);
-		const dependencyVersion = await this.getDependencyVerifiedVersion(dependency, projectData);
+		const referencedVersion = dependencies[packageName] || devDependencies[packageName];
+		const installedVersion = await this.getMaxDependencyVersion(dependency.packageName, referencedVersion);
+		const requiredVersion = await this.getDependencyVerifiedVersion(dependency, projectData);
 
-		return !(maxSatisfyingVersion && semver.gte(maxSatisfyingVersion, dependencyVersion));
+		return this.isOutdatedVersion(installedVersion, requiredVersion, allowInvalidVersions);
 	}
 
-	protected async shouldUpdateRuntimeVersion({ targetVersion, platform, projectData }: { targetVersion: string, platform: string, projectData: IProjectData }): Promise<boolean> {
-		const maxRuntimeVersion = await this.getMaxRuntimeVersion({ platform, projectData });
+	private async shouldUpdateRuntimeVersion(targetVersion: string, platform: string, projectData: IProjectData, allowInvalidVersions: boolean): Promise<boolean> {
+		const installedVersion = await this.getMaxRuntimeVersion({ platform, projectData });
 
-		return !(maxRuntimeVersion && semver.gte(maxRuntimeVersion, targetVersion));
+		return this.isOutdatedVersion(installedVersion, targetVersion, allowInvalidVersions);
+	}
+
+	private isOutdatedVersion(version: string, targetVersion: string, allowInvalidVersions: boolean): boolean {
+		return !!version ? semver.lt(version, targetVersion) : !allowInvalidVersions;
 	}
 
 	private async migrateUnitTestRunner(projectData: IProjectData, migrationBackupDirPath: string): Promise<IMigrationDependency[]> {

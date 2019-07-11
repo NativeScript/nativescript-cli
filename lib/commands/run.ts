@@ -28,17 +28,15 @@ export class RunCommandBase implements ICommand {
 			this.$errors.fail(ERROR_NO_VALID_SUBCOMMAND_FORMAT, "run");
 		}
 
-		await this.$migrateController.validate({ projectDir: this.$projectData.projectDir });
-
-		this.$androidBundleValidatorHelper.validateNoAab();
-
-		this.$projectData.initializeProjectData();
 		this.platform = args[0] || this.platform;
-
 		if (!this.platform && !this.$hostInfo.isDarwin) {
 			this.platform = this.$devicePlatformsConstants.Android;
 		}
 
+		this.$androidBundleValidatorHelper.validateNoAab();
+		this.$projectData.initializeProjectData();
+		const platforms = this.platform ? [this.platform] : [this.$devicePlatformsConstants.Android, this.$devicePlatformsConstants.iOS];
+		await this.$migrateController.validate({ projectDir: this.$projectData.projectDir, platforms });
 		await this.$liveSyncCommandHelper.validatePlatform(this.platform);
 
 		return true;
