@@ -132,24 +132,29 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 
 	public async shouldMigrate({ projectDir }: IProjectDir): Promise<boolean> {
 		const projectData = this.$projectDataService.getProjectData(projectDir);
+		const shouldMigrateCommonMessage = "The app is not compatible with this CLI version and it should be migrated. Reason: ";
 
 		for (let i = 0; i < this.migrationDependencies.length; i++) {
 			const dependency = this.migrationDependencies[i];
 			const hasDependency = this.hasDependency(dependency, projectData);
 
 			if (hasDependency && dependency.shouldMigrateAction && await dependency.shouldMigrateAction(projectData)) {
+				this.$logger.trace(`${shouldMigrateCommonMessage}'${dependency.packageName}' requires an update.`);
 				return true;
 			}
 
 			if (hasDependency && (dependency.replaceWith || dependency.shouldRemove)) {
+				this.$logger.trace(`${shouldMigrateCommonMessage}'${dependency.packageName}' is deprecated.`);
 				return true;
 			}
 
 			if (hasDependency && await this.shouldMigrateDependencyVersion(dependency, projectData)) {
+				this.$logger.trace(`${shouldMigrateCommonMessage}'${dependency.packageName}' should be updated.`);
 				return true;
 			}
 
 			if (!hasDependency && dependency.shouldAddIfMissing) {
+				this.$logger.trace(`${shouldMigrateCommonMessage}'${dependency.packageName}' is missing.`);
 				return true;
 			}
 		}
@@ -157,6 +162,7 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 		for (const platform in this.$devicePlatformsConstants) {
 			const hasRuntimeDependency = this.hasRuntimeDependency({ platform, projectData });
 			if (hasRuntimeDependency && await this.shouldUpdateRuntimeVersion({ targetVersion: this.verifiedPlatformVersions[platform.toLowerCase()], platform, projectData })) {
+				this.$logger.trace(`${shouldMigrateCommonMessage}Platform '${platform}' should be updated.`);
 				return true;
 			}
 		}
