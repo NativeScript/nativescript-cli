@@ -6,7 +6,7 @@ import { UpdateControllerBase } from "./update-controller-base";
 import { fromWindowsRelativePathToUnix } from "../common/helpers";
 
 export class MigrateController extends UpdateControllerBase implements IMigrateController {
-	private static COMMON_MIGRATE_MESSAGE = "not affect the codebase of the application and you might need to do additional changes manually – for more information, refer to the instructions in the following blog post: https://www.nativescript.org/blog/nativescript-6.0-application-migration.";
+	private static COMMON_MIGRATE_MESSAGE = "not affect the codebase of the application and you might need to do additional changes manually – for more information, refer to the instructions in the following blog post: https://www.nativescript.org/blog/nativescript-6.0-application-migration";
 	private static UNABLE_TO_MIGRATE_APP_ERROR = `The current application is not compatible with NativeScript CLI 6.0.
 Use the \`tns migrate\` command to migrate the app dependencies to a form compatible with NativeScript 6.0.
 Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
