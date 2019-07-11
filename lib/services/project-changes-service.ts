@@ -91,7 +91,7 @@ export class ProjectChangesService implements IProjectChangesService {
 			await platformData.platformProjectService.checkForChanges(this._changesInfo, prepareData, projectData);
 		}
 
-		if (prepareData.release !== this._prepareInfo.release) {
+		if (!!prepareData.release !== !!this._prepareInfo.release) {
 			this.$logger.trace(`Setting all setting to true. Current options are: `, prepareData, " old prepare info is: ", this._prepareInfo);
 			this._changesInfo.appResourcesChanged = true;
 			this._changesInfo.configChanged = true;
