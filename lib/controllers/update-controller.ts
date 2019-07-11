@@ -19,6 +19,7 @@ export class UpdateController extends UpdateControllerBase implements IUpdateCon
 	static readonly backupFolder: string = ".update_backup";
 	static readonly updateFailMessage: string = "Could not update the project!";
 	static readonly backupFailMessage: string = "Could not backup project folders!";
+	static readonly failedToGetTemplateManifestMessage = "Failed to get template information for the specified version. Original error: %s";
 
 	constructor(
 		protected $fs: IFileSystem,
@@ -29,6 +30,7 @@ export class UpdateController extends UpdateControllerBase implements IUpdateCon
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $addPlatformService: IAddPlatformService,
 		private $logger: ILogger,
+		private $errors: IErrors,
 		private $pluginsService: IPluginsService,
 		protected $pacoteService: IPacoteService,
 		private $projectDataService: IProjectDataService) {
@@ -58,8 +60,7 @@ export class UpdateController extends UpdateControllerBase implements IUpdateCon
 
 	public async shouldUpdate({ projectDir, version }: { projectDir: string, version?: string }): Promise<boolean> {
 		const projectData = this.$projectDataService.getProjectData(projectDir);
-		const templateName = this.getTemplateName(projectData);
-		const templateManifest = await this.getPackageManifest(templateName, version);
+		const templateManifest = await this.getTemplateManifest(projectData, version);
 		const dependencies = this.getUpdatableDependencies(templateManifest.dependencies);
 		const devDependencies = this.getUpdatableDependencies(templateManifest.devDependencies);
 
@@ -92,8 +93,7 @@ export class UpdateController extends UpdateControllerBase implements IUpdateCon
 	}
 
 	private async updateProject(projectData: IProjectData, version: string): Promise<void> {
-		const templateName = this.getTemplateName(projectData);
-		const templateManifest = await this.getPackageManifest(templateName, version);
+		const templateManifest = await this.getTemplateManifest(projectData, version);
 		const dependencies = this.getUpdatableDependencies(templateManifest.dependencies);
 		const devDependencies = this.getUpdatableDependencies(templateManifest.devDependencies);
 
@@ -207,6 +207,19 @@ export class UpdateController extends UpdateControllerBase implements IUpdateCon
 		}
 
 		return template;
+	}
+
+	private async getTemplateManifest(projectData: IProjectData, version: string): Promise<any> {
+		let templateManifest;
+		const templateName = this.getTemplateName(projectData);
+		version = version || await this.$packageInstallationManager.getLatestCompatibleVersionSafe(templateName);
+		try {
+			templateManifest = await this.getPackageManifest(templateName, version);
+		} catch (err) {
+			this.$errors.fail(UpdateController.failedToGetTemplateManifestMessage, err.message);
+		}
+
+		return templateManifest;
 	}
 }
 

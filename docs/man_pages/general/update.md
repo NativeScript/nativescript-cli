@@ -14,6 +14,8 @@ In order to get the latest development release instead, pass `next` as argument:
 You can also switch to specific version by passing it to the command:
 `tns update 5.0.0`
 
+**NOTE:** The provided version should be an existing version of the project template for this project type.
+
 ### Commands
 
 Usage | Synopsis

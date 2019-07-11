@@ -10,7 +10,7 @@ export class UpdateControllerBase {
 		protected $packageInstallationManager: IPackageInstallationManager,
 		protected $packageManager: IPackageManager,
 		protected $pacoteService: IPacoteService) {
-		this.getPackageManifest = _.memoize(this._getManifestManifest, (...args) => {
+		this.getPackageManifest = _.memoize(this._getPackageManifest, (...args) => {
 			return args.join("@");
 		});
 	}
@@ -73,11 +73,13 @@ export class UpdateControllerBase {
 		return maxDependencyVersion;
 	}
 
-	private async _getManifestManifest(templateName: string, version?: string) {
-		const packageVersion = semver.valid(version) ||
-			await this.$packageManager.getTagVersion(templateName, version) ||
-			await this.$packageInstallationManager.getLatestCompatibleVersionSafe(templateName);
+	private async _getPackageManifest(templateName: string, version: string): Promise<any> {
+		const packageVersion = semver.valid(version) || await this.$packageManager.getTagVersion(templateName, version);
 
-		return await this.$pacoteService.manifest(`${templateName}@${packageVersion}`, { fullMetadata: true });
+		if (packageVersion && semver.valid(packageVersion)) {
+			return await this.$pacoteService.manifest(`${templateName}@${packageVersion}`, { fullMetadata: true });
+		} else {
+			throw new Error(`Failed to get information for package: ${templateName}@${version}`);
+		}
 	}
 }
