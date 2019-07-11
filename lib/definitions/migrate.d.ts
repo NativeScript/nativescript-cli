@@ -6,6 +6,7 @@ interface IMigrateController {
 
 interface IMigrationData extends IProjectDir {
 	platforms: string[];
+	allowInvalidVersions?: boolean;
 }
 
 interface IDependency {
@@ -20,6 +21,6 @@ interface IMigrationDependency extends IDependency {
 	verifiedVersion?: string;
 	getVerifiedVersion?: (projectData: IProjectData) => Promise<string>;
 	shouldAddIfMissing?: boolean;
-	shouldMigrateAction?: (projectData: IProjectData) => Promise<boolean>;
+	shouldMigrateAction?: (projectData: IProjectData, allowInvalidVersions: boolean) => Promise<boolean>;
 	migrateAction?: (projectData: IProjectData, migrationBackupDirPath: string) => Promise<IMigrationDependency[]>;
 }
