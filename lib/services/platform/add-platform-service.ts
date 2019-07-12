@@ -1,13 +1,12 @@
 import * as path from "path";
 import * as temp from "temp";
-import { PROJECT_FRAMEWORK_FOLDER_NAME, NativePlatformStatus } from "../../constants";
+import { PROJECT_FRAMEWORK_FOLDER_NAME } from "../../constants";
 import { performanceLog } from "../../common/decorators";
 
 export class AddPlatformService implements IAddPlatformService {
 	constructor(
 		private $fs: IFileSystem,
 		private $pacoteService: IPacoteService,
-		private $projectChangesService: IProjectChangesService,
 		private $projectDataService: IProjectDataService,
 		private $terminalSpinnerService: ITerminalSpinnerService
 	) { }
@@ -61,7 +60,6 @@ export class AddPlatformService implements IAddPlatformService {
 		platformData.platformProjectService.ensureConfigurationFileInAppResources(projectData);
 		await platformData.platformProjectService.interpolateData(projectData);
 		platformData.platformProjectService.afterCreateProject(platformData.projectRoot, projectData);
-		await this.$projectChangesService.setNativePlatformStatus(platformData, projectData, { nativePlatformStatus: NativePlatformStatus.requiresPrepare });
 	}
 }
 $injector.register("addPlatformService", AddPlatformService);
