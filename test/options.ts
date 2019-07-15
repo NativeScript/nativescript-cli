@@ -286,6 +286,44 @@ describe("options", () => {
 				assert.deepEqual(actualError, testCase.expectedError);
 			});
 		});
+
+		describe("hmr option", () => {
+			const testCases = [{
+				name: "should set hmr to true by default",
+				expectedHmrValue: true
+			}, {
+				name: "set set hmr to false when --no-hmr is provided",
+				args: ["--no-hmr"],
+				expectedHmrValue: false
+			}, {
+				name: "should set hmr to false when provided through dashed options from command",
+				commandSpecificDashedOptions: {
+					hmr: { type: OptionType.Boolean, default: false, hasSensitiveValue: false },
+				},
+				expectedHmrValue: false
+			}, {
+				name: "should set hmr to false by default when --release option is provided",
+				args: ["--release"],
+				expectedHmrValue: false
+			}, {
+				name: "should set hmr to false by default when --debug-brk option is provided",
+				args: ["--debugBrk"],
+				expectedHmrValue: false
+			}];
+
+			_.each(testCases, testCase => {
+				it(testCase.name, () => {
+					(testCase.args || []).forEach(arg => process.argv.push(arg));
+
+					const options: any = createOptions(testInjector);
+					options.setupOptions(testCase.commandSpecificDashedOptions);
+
+					assert.equal(testCase.expectedHmrValue, options.argv.hmr);
+
+					(testCase.args || []).forEach(arg => process.argv.pop());
+				});
+			});
+		});
 	});
 });
 
