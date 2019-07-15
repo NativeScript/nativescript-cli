@@ -11,14 +11,25 @@ export class PlatformValidationService implements IPlatformValidationService {
 		private $platformsDataService: IPlatformsDataService
 	) { }
 
+	public isValidPlatform(platform: string, projectData: IProjectData): boolean {
+		if (!platform) {
+			return false;
+		}
+
+		platform = platform.split("@")[0].toLowerCase();
+		if (!this.$platformsDataService.getPlatformData(platform, projectData)) {
+			return false;
+		}
+
+		return true;
+	}
+
 	public validatePlatform(platform: string, projectData: IProjectData): void {
 		if (!platform) {
 			this.$errors.fail("No platform specified.");
 		}
 
-		platform = platform.split("@")[0].toLowerCase();
-
-		if (!this.$platformsDataService.getPlatformData(platform, projectData)) {
+		if (!this.isValidPlatform(platform, projectData)) {
 			const platformNames = helpers.formatListOfNames(this.$mobileHelper.platformNames);
 			this.$errors.fail(`Invalid platform ${platform}. Valid platforms are ${platformNames}.`);
 		}
