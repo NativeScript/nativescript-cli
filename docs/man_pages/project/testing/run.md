@@ -11,6 +11,20 @@ Runs your project on all connected devices or in native emulators for the select
 
 <% if(isHtml) { %>
 When running this command without passing `--release` flag, the HMR (Hot Module Replacement) is enabled by default. In case you want to disable HMR, you can pass `--no-hmr` flag. When `--release` is passed, CLI disables HMR.
+
+#### How file changes are handled
+With HMR (Hot Module Replacement):
+* Changes in `.js`, `.ts`, `.less`, `.sass` and other file types that are accepted will cause a refresh of the application.
+* Changes in `App_Resources` will cause a rebuild of the application.
+* Changes in `node_modules/somePlugin` if accepted will cause a refresh of the application.
+* Changes in `node_modules/somePlugin/platforms` will cause a rebuild of the application.
+* Changes that are not accepted and HMR fails will cause a restart of the native application.
+
+With **no** HMR:
+* Changes in `.js`, `.ts`, `.less`, `.sass` and other file types will cause a restart of the native application.
+* Changes in `App_Resources` will cause a rebuild of the application.
+* Changes in `node_modules/somePlugin` will cause a restart of the native application.
+* Changes in `node_modules/somePlugin/platforms` will cause a rebuild of the application.
 <% } %>
 
 ### Commands
@@ -19,7 +33,7 @@ Usage | Synopsis
 ---|---
 Run on all connected devices | `$ tns run [--release] [--justlaunch]`
 Run on a selected connected device or running emulator. Will start emulator with specified `Device Identifier`, if not already running. | `$ tns run --device <Device ID> [--release] [--justlaunch]`
-<% if((isConsole && isMacOS) || isHtml) { %>Run on all connected devices of the speficied `Platform` | `$ tns run <Platform> [--release] [--justlaunch]`<% } %>
+<% if((isConsole && isMacOS) || isHtml) { %>Run on all connected devices of the specified `Platform` | `$ tns run <Platform> [--release] [--justlaunch]`<% } %>
 
 ### Options
 

@@ -9,6 +9,14 @@ position: 23
 
 Runs unit tests on the selected mobile platform.<% if(isConsole) { %> Your project must already be configured for unit testing by running `$ tns test init`.<% } %>
 
+<% if(isHtml) { %>
+#### How file changes are handled
+* Changes in `.js`, `.ts`, `.less`, `.sass` and other file types will cause a restart of the native application.
+* Changes in `App_Resources` will cause a rebuild of the application.
+* Changes in `node_modules/somePlugin` will cause a restart of the native application.
+* Changes in `node_modules/somePlugin/platforms` will cause a rebuild of the application.
+<% } %>
+
 ### Commands
 
 Usage | Synopsis
