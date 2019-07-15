@@ -33,7 +33,11 @@ export class PrepareCommand extends ValidatePlatformCommandBase implements IComm
 		const platform = args[0];
 		const result = await this.$platformCommandParameter.validate(platform) &&
 			await this.$platformValidationService.validateOptions(this.$options.provision, this.$options.teamId, this.$projectData, platform);
-		await this.$migrateController.validate({ projectDir: this.$projectData.projectDir, platforms: [platform] });
+
+		if (!this.$options.force) {
+			await this.$migrateController.validate({ projectDir: this.$projectData.projectDir, platforms: [platform] });
+		}
+
 		if (!result) {
 			return false;
 		}

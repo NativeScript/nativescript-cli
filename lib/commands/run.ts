@@ -14,6 +14,7 @@ export class RunCommandBase implements ICommand {
 		private $hostInfo: IHostInfo,
 		private $liveSyncCommandHelper: ILiveSyncCommandHelper,
 		private $migrateController: IMigrateController,
+		private $options: IOptions,
 		private $projectData: IProjectData
 	) { }
 
@@ -36,7 +37,11 @@ export class RunCommandBase implements ICommand {
 		this.$androidBundleValidatorHelper.validateNoAab();
 		this.$projectData.initializeProjectData();
 		const platforms = this.platform ? [this.platform] : [this.$devicePlatformsConstants.Android, this.$devicePlatformsConstants.iOS];
-		await this.$migrateController.validate({ projectDir: this.$projectData.projectDir, platforms });
+
+		if (!this.$options.force) {
+			await this.$migrateController.validate({ projectDir: this.$projectData.projectDir, platforms });
+		}
+
 		await this.$liveSyncCommandHelper.validatePlatform(this.platform);
 
 		return true;

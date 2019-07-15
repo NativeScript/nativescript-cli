@@ -74,7 +74,9 @@ export class BuildIosCommand extends BuildCommandBase implements ICommand {
 
 	public async canExecute(args: string[]): Promise<boolean | ICanExecuteCommandOutput> {
 		const platform = this.$devicePlatformsConstants.iOS;
-		await this.$migrateController.validate({ projectDir: this.$projectData.projectDir, platforms: [platform] });
+		if (!this.$options.force) {
+			await this.$migrateController.validate({ projectDir: this.$projectData.projectDir, platforms: [platform] });
+		}
 
 		super.validatePlatform(platform);
 
@@ -120,7 +122,9 @@ export class BuildAndroidCommand extends BuildCommandBase implements ICommand {
 
 	public async canExecute(args: string[]): Promise<boolean | ICanExecuteCommandOutput> {
 		const platform = this.$devicePlatformsConstants.Android;
-		await this.$migrateController.validate({ projectDir: this.$projectData.projectDir, platforms: [platform] });
+		if (!this.$options.force) {
+			await this.$migrateController.validate({ projectDir: this.$projectData.projectDir, platforms: [platform] });
+		}
 		this.$androidBundleValidatorHelper.validateRuntimeVersion(this.$projectData);
 		let result = await super.canExecuteCommandBase(platform, { notConfiguredEnvOptions: { hideSyncToPreviewAppOption: true } });
 		if (result.canExecute) {

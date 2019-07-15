@@ -53,7 +53,9 @@ export class DebugPlatformCommand extends ValidatePlatformCommandBase implements
 	}
 
 	public async canExecute(args: string[]): Promise<ICanExecuteCommandOutput> {
-		await this.$migrateController.validate({ projectDir: this.$projectData.projectDir, platforms: [this.platform] });
+		if (!this.$options.force) {
+			await this.$migrateController.validate({ projectDir: this.$projectData.projectDir, platforms: [this.platform] });
+		}
 
 		this.$androidBundleValidatorHelper.validateNoAab();
 
