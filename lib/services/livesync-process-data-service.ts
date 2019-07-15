@@ -6,7 +6,7 @@ export class LiveSyncProcessDataService implements ILiveSyncProcessDataService {
 		this.processes[projectDir].actionsChain = this.processes[projectDir].actionsChain || Promise.resolve();
 		this.processes[projectDir].currentSyncAction = this.processes[projectDir].actionsChain;
 		this.processes[projectDir].isStopped = false;
-		this.processes[projectDir].platforms = platforms;
+		this.processes[projectDir].platforms =  platforms;
 
 		const currentDeviceDescriptors = this.getDeviceDescriptors(projectDir);
 		this.processes[projectDir].deviceDescriptors = _.uniqBy(currentDeviceDescriptors.concat(deviceDescriptors), "identifier");
@@ -29,6 +29,12 @@ export class LiveSyncProcessDataService implements ILiveSyncProcessDataService {
 
 	public getAllPersistedData() {
 		return this.processes;
+	}
+
+	public getPlatforms(projectDir: string): string[] {
+		const liveSyncProcessesInfo = this.processes[projectDir] || <ILiveSyncProcessData>{};
+		const currentPlatforms = liveSyncProcessesInfo.platforms;
+		return currentPlatforms || [];
 	}
 }
 $injector.register("liveSyncProcessDataService", LiveSyncProcessDataService);

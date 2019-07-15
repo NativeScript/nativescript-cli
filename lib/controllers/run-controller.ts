@@ -38,8 +38,10 @@ export class RunController extends EventEmitter implements IRunController {
 		const projectData = this.$projectDataService.getProjectData(projectDir);
 		await this.initializeSetup(projectData);
 
-		const platforms = this.$devicesService.getPlatformsFromDeviceDescriptors(deviceDescriptors);
 		const deviceDescriptorsForInitialSync = this.getDeviceDescriptorsForInitialSync(projectDir, deviceDescriptors);
+		const newPlatforms = this.$devicesService.getPlatformsFromDeviceDescriptors(deviceDescriptors);
+		const oldPlatforms = this.$liveSyncProcessDataService.getPlatforms(projectDir);
+		const platforms = _.uniq(_.concat(newPlatforms, oldPlatforms));
 
 		this.$liveSyncProcessDataService.persistData(projectDir, deviceDescriptors, platforms);
 
