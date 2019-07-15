@@ -1,6 +1,12 @@
 interface IMigrateController {
-	migrate(migrateData: IProjectDir): Promise<void>;
-	shouldMigrate(data: IProjectDir): Promise<boolean>;
+	migrate(data: IMigrationData): Promise<void>;
+	shouldMigrate(data: IMigrationData): Promise<boolean>;
+	validate(data: IMigrationData): Promise<void>;
+}
+
+interface IMigrationData extends IProjectDir {
+	platforms: string[];
+	allowInvalidVersions?: boolean;
 }
 
 interface IDependency {
@@ -11,8 +17,10 @@ interface IDependency {
 interface IMigrationDependency extends IDependency {
 	shouldRemove?: boolean;
 	replaceWith?: string;
+	warning?: string;
 	verifiedVersion?: string;
+	getVerifiedVersion?: (projectData: IProjectData) => Promise<string>;
 	shouldAddIfMissing?: boolean;
-	shouldMigrateAction?: (projectData: IProjectData) => boolean;
+	shouldMigrateAction?: (projectData: IProjectData, allowInvalidVersions: boolean) => Promise<boolean>;
 	migrateAction?: (projectData: IProjectData, migrationBackupDirPath: string) => Promise<IMigrationDependency[]>;
 }

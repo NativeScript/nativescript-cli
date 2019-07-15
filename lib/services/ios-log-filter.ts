@@ -13,13 +13,11 @@ export class IOSLogFilter implements Mobile.IPlatformLogFilter {
 
 	private partialLine: string = null;
 
-	constructor(private $logger: ILogger,
-		private $loggingLevels: Mobile.ILoggingLevels) {
+	constructor(private $loggingLevels: Mobile.ILoggingLevels) {
 	}
 
 	public filterData(data: string, loggingOptions: Mobile.IDeviceLogOptions = <any>{}): string {
 		const specifiedLogLevel = (loggingOptions.logLevel || '').toUpperCase();
-		this.$logger.trace("Logging options", loggingOptions);
 
 		if (specifiedLogLevel !== this.$loggingLevels.info || !data) {
 			return data;

@@ -15,11 +15,10 @@ export class PrepareNativePlatformService implements IPrepareNativePlatformServi
 	@hook('prepareNativeApp')
 	public async prepareNativePlatform(platformData: IPlatformData, projectData: IProjectData, prepareData: IPrepareData): Promise<boolean> {
 		const { nativePrepare, release } = prepareData;
-		if (nativePrepare && nativePrepare.skipNativePrepare) {
-			return false;
-		}
-
 		const changesInfo = await this.$projectChangesService.checkForChanges(platformData, projectData, prepareData);
+		if (nativePrepare && nativePrepare.skipNativePrepare) {
+			return changesInfo.hasChanges;
+		}
 
 		const hasNativeModulesChange = !changesInfo || changesInfo.nativeChanged;
 		const hasConfigChange = !changesInfo || changesInfo.configChanged;

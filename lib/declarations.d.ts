@@ -603,7 +603,7 @@ interface IInfoService {
 interface IAndroidResourcesMigrationService {
 	canMigrate(platformString: string): boolean;
 	hasMigrated(appResourcesDir: string): boolean;
-	migrate(appResourcesDir: string): Promise<void>;
+	migrate(appResourcesDir: string, backupLocation?: string): Promise<void>;
 }
 
 /**
@@ -1020,6 +1020,11 @@ interface IPlatformValidationService {
 	 * Ensures the passed platform is a valid one (from the supported ones)
 	 */
 	validatePlatform(platform: string, projectData: IProjectData): void;
+
+	/**
+	 * Returns whether the passed platform is a valid one (from the supported ones)
+	 */
+	isValidPlatform(platform: string, projectData: IProjectData): boolean;
 
 	/**
 	 * Gets first chance to validate the options provided as command line arguments.

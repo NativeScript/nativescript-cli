@@ -30,5 +30,11 @@ export class LiveSyncProcessDataService implements ILiveSyncProcessDataService {
 	public getAllPersistedData() {
 		return this.processes;
 	}
+
+	public getPlatforms(projectDir: string): string[] {
+		const liveSyncProcessesInfo = this.processes[projectDir] || <ILiveSyncProcessData>{};
+		const currentPlatforms = liveSyncProcessesInfo.platforms;
+		return currentPlatforms || [];
+	}
 }
 $injector.register("liveSyncProcessDataService", LiveSyncProcessDataService);

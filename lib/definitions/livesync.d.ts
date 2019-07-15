@@ -492,5 +492,6 @@ declare global {
 		getAllPersistedData(): IDictionary<ILiveSyncProcessData>;
 		persistData(projectDir: string, deviceDescriptors: ILiveSyncDeviceDescriptor[], platforms: string[]): void;
 		hasDeviceDescriptors(projectDir: string): boolean;
+		getPlatforms(projectDir: string): string[];
 	}
 }

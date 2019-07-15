@@ -10,6 +10,7 @@ abstract class TestCommandBase {
 	protected abstract $cleanupService: ICleanupService;
 	protected abstract $liveSyncCommandHelper: ILiveSyncCommandHelper;
 	protected abstract $devicesService: Mobile.IDevicesService;
+	protected abstract $migrateController: IMigrateController;
 
 	async execute(args: string[]): Promise<void> {
 		let devices = [];
@@ -34,7 +35,7 @@ abstract class TestCommandBase {
 			devices = await this.$liveSyncCommandHelper.getDeviceInstances(this.platform);
 		}
 
-		if (!this.$options.env) { this.$options.env = { }; }
+		if (!this.$options.env) { this.$options.env = {}; }
 		this.$options.env.unitTesting = true;
 
 		const liveSyncInfo = this.$liveSyncCommandHelper.getLiveSyncData(this.$projectData.projectDir);
@@ -48,6 +49,10 @@ abstract class TestCommandBase {
 	}
 
 	async canExecute(args: string[]): Promise<boolean | ICanExecuteCommandOutput> {
+		if (!this.$options.force) {
+			await this.$migrateController.validate({ projectDir: this.$projectData.projectDir, platforms: [this.platform] });
+		}
+
 		this.$projectData.initializeProjectData();
 		this.$analyticsService.setShouldDispose(this.$options.justlaunch || !this.$options.watch);
 		this.$cleanupService.setShouldDispose(this.$options.justlaunch || !this.$options.watch);
@@ -86,7 +91,8 @@ class TestAndroidCommand extends TestCommandBase implements ICommand {
 		protected $errors: IErrors,
 		protected $cleanupService: ICleanupService,
 		protected $liveSyncCommandHelper: ILiveSyncCommandHelper,
-		protected $devicesService: Mobile.IDevicesService) {
+		protected $devicesService: Mobile.IDevicesService,
+		protected $migrateController: IMigrateController) {
 		super();
 	}
 }
@@ -102,7 +108,8 @@ class TestIosCommand extends TestCommandBase implements ICommand {
 		protected $errors: IErrors,
 		protected $cleanupService: ICleanupService,
 		protected $liveSyncCommandHelper: ILiveSyncCommandHelper,
-		protected $devicesService: Mobile.IDevicesService) {
+		protected $devicesService: Mobile.IDevicesService,
+		protected $migrateController: IMigrateController) {
 		super();
 	}
 

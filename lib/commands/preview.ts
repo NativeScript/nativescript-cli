@@ -2,12 +2,11 @@ import { DEVICE_LOG_EVENT_NAME } from "../common/constants";
 
 export class PreviewCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
-	private static MIN_SUPPORTED_WEBPACK_VERSION = "0.17.0";
 
 	constructor(private $analyticsService: IAnalyticsService,
-		private $bundleValidatorHelper: IBundleValidatorHelper,
 		private $errors: IErrors,
 		private $logger: ILogger,
+		private $migrateController: IMigrateController,
 		private $previewAppController: IPreviewAppController,
 		private $networkConnectivityValidator: INetworkConnectivityValidator,
 		private $projectData: IProjectData,
@@ -42,8 +41,11 @@ export class PreviewCommand implements ICommand {
 			this.$errors.fail(`The arguments '${args.join(" ")}' are not valid for the preview command.`);
 		}
 
+		if (!this.$options.force) {
+			await this.$migrateController.validate({ projectDir: this.$projectData.projectDir, platforms: [] });
+		}
+
 		await this.$networkConnectivityValidator.validate();
-		this.$bundleValidatorHelper.validate(this.$projectData, PreviewCommand.MIN_SUPPORTED_WEBPACK_VERSION);
 		return true;
 	}
 }

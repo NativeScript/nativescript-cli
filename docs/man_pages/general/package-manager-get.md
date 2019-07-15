@@ -1,6 +1,6 @@
 <% if (isJekyll) { %>---
 title: tns package-manager get
-position: 18
+position: 19
 ---<% } %>
 
 # tns package-manager get

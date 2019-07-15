@@ -74,7 +74,6 @@ interface INsConfig {
 	appPath?: string;
 	appResourcesPath?: string;
 	shared?: boolean;
-	useLegacyWorkflow?: boolean;
 	previewAppSchema?: string;
 }
 
@@ -100,11 +99,6 @@ interface IProjectData extends ICreateProjectData {
 	 * Value is true when project has nsconfig.json and it has `shared: true` in it.
 	 */
 	isShared: boolean;
-
-	/**
-	 * Defines if the project has hmr enabled by default
-	 */
-	useLegacyWorkflow: boolean;
 
 	/**
 	 * Defines the schema for the preview app
@@ -151,6 +145,14 @@ interface IProjectDataService {
 	removeNSProperty(projectDir: string, propertyName: string): void;
 
 	/**
+	 * Removes a property from `nsconfig.json`.
+	 * @param {string} projectDir The project directory - the place where the `nsconfig.json` is located.
+	 * @param {string} propertyName The name of the property to be removed.
+	 * @returns {void}
+	 */
+	removeNSConfigProperty(projectDir: string, propertyName: string): void;
+
+	/**
 	 * Removes dependency from package.json
 	 * @param {string} projectDir The project directory - the place where the root package.json is located.
 	 * @param {string} dependencyName Name of the dependency that has to be removed.
@@ -192,12 +194,12 @@ interface IProjectDataService {
 	 */
 	getAppExecutableFiles(projectDir: string): string[];
 
-		/**
-	 * Returns a value from `nativescript` key in project's package.json.
-	 * @param {string} jsonData The project directory - the place where the root package.json is located.
-	 * @param {string} propertyName The name of the property to be checked in `nativescript` key.
-	 * @returns {any} The value of the property.
-	 */
+	/**
+ * Returns a value from `nativescript` key in project's package.json.
+ * @param {string} jsonData The project directory - the place where the root package.json is located.
+ * @param {string} propertyName The name of the property to be checked in `nativescript` key.
+ * @returns {any} The value of the property.
+ */
 	getNSValueFromContent(jsonData: Object, propertyName: string): any;
 }
 
@@ -496,7 +498,7 @@ interface IRemoveExtensionsOptions {
 	pbxProjPath: string
 }
 
-interface IRemoveWatchAppOptions extends IRemoveExtensionsOptions{}
+interface IRemoveWatchAppOptions extends IRemoveExtensionsOptions { }
 
 interface IRubyFunction {
 	functionName: string;
