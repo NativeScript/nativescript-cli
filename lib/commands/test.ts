@@ -49,7 +49,9 @@ abstract class TestCommandBase {
 	}
 
 	async canExecute(args: string[]): Promise<boolean | ICanExecuteCommandOutput> {
-		await this.$migrateController.validate({ projectDir: this.$projectData.projectDir, platforms: [this.platform] });
+		if (!this.$options.force) {
+			await this.$migrateController.validate({ projectDir: this.$projectData.projectDir, platforms: [this.platform] });
+		}
 
 		this.$projectData.initializeProjectData();
 		this.$analyticsService.setShouldDispose(this.$options.justlaunch || !this.$options.watch);

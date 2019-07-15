@@ -1022,6 +1022,11 @@ interface IPlatformValidationService {
 	validatePlatform(platform: string, projectData: IProjectData): void;
 
 	/**
+	 * Returns whether the passed platform is a valid one (from the supported ones)
+	 */
+	isValidPlatform(platform: string, projectData: IProjectData): boolean;
+
+	/**
 	 * Gets first chance to validate the options provided as command line arguments.
 	 * If no platform is provided or a falsy (null, undefined, "", false...) platform is provided,
 	 * the options will be validated for all available platforms.

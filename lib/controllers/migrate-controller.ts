@@ -26,6 +26,7 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 		private $addPlatformService: IAddPlatformService,
 		private $pluginsService: IPluginsService,
 		private $projectDataService: IProjectDataService,
+		private $platformValidationService: IPlatformValidationService,
 		private $resources: IResourceLoader) {
 		super($fs, $platformCommandHelper, $platformsDataService, $packageInstallationManager, $packageManager, $pacoteService);
 	}
@@ -159,6 +160,9 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 
 		for (let platform of platforms) {
 			platform = platform && platform.toLowerCase();
+			if (!this.$platformValidationService.isValidPlatform(platform, projectData)) {
+				continue;
+			}
 
 			const hasRuntimeDependency = this.hasRuntimeDependency({ platform, projectData });
 			if (hasRuntimeDependency && await this.shouldUpdateRuntimeVersion(this.verifiedPlatformVersions[platform.toLowerCase()], platform, projectData, allowInvalidVersions)) {
