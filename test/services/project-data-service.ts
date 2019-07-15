@@ -2,10 +2,11 @@ import { Yok } from "../../lib/common/yok";
 import { assert } from "chai";
 import { ProjectDataService } from "../../lib/services/project-data-service";
 import { LoggerStub, ProjectDataStub } from "../stubs";
-import { NATIVESCRIPT_PROPS_INTERNAL_DELIMITER, PACKAGE_JSON_FILE_NAME, AssetConstants, ProjectTypes } from '../../lib/constants';
+import { NATIVESCRIPT_PROPS_INTERNAL_DELIMITER, PACKAGE_JSON_FILE_NAME, CONFIG_NS_FILE_NAME, AssetConstants, ProjectTypes } from '../../lib/constants';
 import { DevicePlatformsConstants } from "../../lib/common/mobile/device-platforms-constants";
 import { basename, join } from "path";
 import { FileSystem } from "../../lib/common/file-system";
+import { regExpEscape } from "../../lib/common/helpers";
 
 const CLIENT_NAME_KEY_IN_PROJECT_FILE = "nativescript";
 
@@ -41,7 +42,7 @@ const testData: any = [
 	}
 ];
 
-const createTestInjector = (readTextData?: string): IInjector => {
+const createTestInjector = (packageJsonContent?: string, nsConfigContent?: string): IInjector => {
 	const testInjector = new Yok();
 	testInjector.register("projectData", ProjectDataStub);
 	testInjector.register("staticConfig", {
@@ -55,10 +56,14 @@ const createTestInjector = (readTextData?: string): IInjector => {
 		},
 
 		readText: (filename: string, encoding?: IReadFileOptions | string): string => {
-			return readTextData;
+			if (filename.indexOf("package.json") > -1) {
+				return packageJsonContent;
+			} else if (filename.indexOf("nsconfig.json") > -1) {
+				return nsConfigContent;
+			}
 		},
 
-		exists: (filePath: string): boolean => basename(filePath) === PACKAGE_JSON_FILE_NAME,
+		exists: (filePath: string): boolean => (basename(filePath) === PACKAGE_JSON_FILE_NAME || basename(filePath) === CONFIG_NS_FILE_NAME),
 
 		readJson: (filePath: string): any => null,
 
@@ -218,6 +223,66 @@ describe("projectDataService", () => {
 
 				assert.deepEqual(dataPassedToWriteJson, generateExpectedDataFromTestData(currentTestData));
 				assert.isTrue(!!dataPassedToWriteJson[CLIENT_NAME_KEY_IN_PROJECT_FILE], "Data passed to write JSON must contain nativescript key.");
+			});
+
+		});
+
+		it("removes only the selected property", () => {
+			const initialData: any = {};
+			initialData[CLIENT_NAME_KEY_IN_PROJECT_FILE] = {
+				"root": {
+					"id": "1",
+					"constantItem": "myValue"
+				}
+			};
+
+			const testInjector = createTestInjector(JSON.stringify(initialData));
+			const fs: IFileSystem = testInjector.resolve("fs");
+
+			let dataPassedToWriteJson: any = null;
+			fs.writeJson = (filename: string, data: any, space?: string, encoding?: string): void => {
+				dataPassedToWriteJson = data;
+			};
+
+			const projectDataService: IProjectDataService = testInjector.resolve("projectDataService");
+			projectDataService.removeNSProperty("projectDir", getPropertyName(["root", "id"]));
+			assert.deepEqual(dataPassedToWriteJson, { nativescript: { root: { constantItem: "myValue" } } });
+		});
+	});
+
+	describe("removeNSConfigProperty", () => {
+
+		const generateExpectedDataFromTestData = (currentTestData: any) => {
+			const props = currentTestData.propertyName.split(NATIVESCRIPT_PROPS_INTERNAL_DELIMITER);
+			props.splice(props.length - 1, 1);
+
+			const data: any = {};
+			let currentData: any = data;
+
+			_.each(props, (prop) => {
+				currentData = currentData[prop] = {};
+			});
+
+			return data;
+		};
+
+		_.each(testData, currentTestData => {
+
+			it(currentTestData.description, () => {
+				const testInjector = createTestInjector(null, generateFileContentFromTestData(currentTestData, true));
+				const fs: IFileSystem = testInjector.resolve("fs");
+
+				let dataPassedToWriteJson: any = null;
+				fs.writeJson = (filename: string, data: any, space?: string, encoding?: string): void => {
+					dataPassedToWriteJson = data;
+				};
+
+				const projectDataService: IProjectDataService = testInjector.resolve("projectDataService");
+				const propDelimiterRegExp = new RegExp(regExpEscape(NATIVESCRIPT_PROPS_INTERNAL_DELIMITER), "g");
+				const propertySelector = currentTestData.propertyName.replace(propDelimiterRegExp, ".");
+				projectDataService.removeNSConfigProperty("projectDir", propertySelector);
+
+				assert.deepEqual(dataPassedToWriteJson, generateExpectedDataFromTestData(currentTestData));
 			});
 
 		});

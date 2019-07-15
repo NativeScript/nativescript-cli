@@ -2,8 +2,6 @@ import { RunOnDeviceEvents } from "../constants";
 import { DeployController } from "../controllers/deploy-controller";
 
 export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
-	public static MIN_SUPPORTED_WEBPACK_VERSION_WITH_HMR = "0.17.0";
-
 	constructor(
 		private $buildDataService: IBuildDataService,
 		private $projectData: IProjectData,
@@ -15,7 +13,6 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 		private $injector: IInjector,
 		private $buildController: IBuildController,
 		private $analyticsService: IAnalyticsService,
-		private $bundleValidatorHelper: IBundleValidatorHelper,
 		private $errors: IErrors,
 		private $iOSSimulatorLogProvider: Mobile.IiOSSimulatorLogProvider,
 		private $cleanupService: ICleanupService,
@@ -68,7 +65,7 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 					projectDir: this.$projectData.projectDir
 				});
 
-				const buildData = this.$buildDataService.getBuildData(this.$projectData.projectDir, d.deviceInfo.platform, { ...this.$options.argv, outputPath, buildForDevice: !d.isEmulator });
+				const buildData = this.$buildDataService.getBuildData(this.$projectData.projectDir, d.deviceInfo.platform, { ...this.$options.argv, outputPath, buildForDevice: !d.isEmulator, watch: !this.$options.release && this.$options.watch });
 
 				const buildAction = additionalOptions && additionalOptions.buildPlatform ?
 					additionalOptions.buildPlatform.bind(additionalOptions.buildPlatform, d.deviceInfo.platform, buildData, this.$projectData) :
@@ -86,7 +83,7 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 				return info;
 			});
 
-			return deviceDescriptors;
+		return deviceDescriptors;
 	}
 
 	public getPlatformsForOperation(platform: string): string[] {
@@ -103,7 +100,7 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 		const { liveSyncInfo, deviceDescriptors } = await this.executeLiveSyncOperationCore(devices, platform, additionalOptions);
 
 		if (this.$options.release) {
-			await this.runInRelease(platform, deviceDescriptors, liveSyncInfo);
+			await this.runInRelease(platform, deviceDescriptors);
 			return;
 		}
 
@@ -133,13 +130,10 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 			result[availablePlatform.toLowerCase()] = validateOutput;
 		}
 
-		const minSupportedWebpackVersion = this.$options.hmr ? LiveSyncCommandHelper.MIN_SUPPORTED_WEBPACK_VERSION_WITH_HMR : null;
-		this.$bundleValidatorHelper.validate(this.$projectData, minSupportedWebpackVersion);
-
 		return result;
 	}
 
-	private async executeLiveSyncOperationCore(devices: Mobile.IDevice[], platform: string, additionalOptions?: ILiveSyncCommandHelperAdditionalOptions): Promise<{liveSyncInfo: ILiveSyncInfo, deviceDescriptors: ILiveSyncDeviceDescriptor[]}> {
+	private async executeLiveSyncOperationCore(devices: Mobile.IDevice[], platform: string, additionalOptions?: ILiveSyncCommandHelperAdditionalOptions): Promise<{ liveSyncInfo: ILiveSyncInfo, deviceDescriptors: ILiveSyncDeviceDescriptor[] }> {
 		if (!devices || !devices.length) {
 			if (platform) {
 				this.$errors.failWithoutHelp("Unable to find applicable devices to execute operation. Ensure connected devices are trusted and try again.");
@@ -166,7 +160,7 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 		return { liveSyncInfo, deviceDescriptors };
 	}
 
-	private async runInRelease(platform: string, deviceDescriptors: ILiveSyncDeviceDescriptor[], liveSyncInfo: ILiveSyncInfo): Promise<void> {
+	private async runInRelease(platform: string, deviceDescriptors: ILiveSyncDeviceDescriptor[]): Promise<void> {
 		await this.$devicesService.initialize({
 			platform,
 			deviceId: this.$options.device,
@@ -175,12 +169,7 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 			sdk: this.$options.sdk
 		});
 
-		const buildData = this.$buildDataService.getBuildData(liveSyncInfo.projectDir, platform, { ...this.$options.argv, clean: true, watch: false });
-
-		await this.$deployController.deploy({
-			buildData,
-			deviceDescriptors
-		});
+		await this.$deployController.deploy({ deviceDescriptors });
 
 		for (const deviceDescriptor of deviceDescriptors) {
 			const device = this.$devicesService.getDeviceByIdentifier(deviceDescriptor.identifier);

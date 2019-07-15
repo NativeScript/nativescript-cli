@@ -1,7 +1,6 @@
 import * as path from "path";
 import { NativePlatformStatus, PACKAGE_JSON_FILE_NAME, APP_GRADLE_FILE_NAME, BUILD_XCCONFIG_FILE_NAME, PLATFORMS_DIR_NAME } from "../constants";
 import { getHash, hook } from "../common/helpers";
-import { PrepareData } from "../data/prepare-data";
 
 const prepareInfoFileName = ".nsprepareinfo";
 
@@ -51,7 +50,7 @@ export class ProjectChangesService implements IProjectChangesService {
 	}
 
 	@hook("checkForChanges")
-	public async checkForChanges(platformData: IPlatformData, projectData: IProjectData, prepareData: PrepareData): Promise<IProjectChangesInfo> {
+	public async checkForChanges(platformData: IPlatformData, projectData: IProjectData, prepareData: IPrepareData): Promise<IProjectChangesInfo> {
 		this._changesInfo = new ProjectChangesInfo();
 		const isNewPrepareInfo = await this.ensurePrepareInfo(platformData, projectData, prepareData);
 		if (!isNewPrepareInfo) {
@@ -92,7 +91,7 @@ export class ProjectChangesService implements IProjectChangesService {
 			await platformData.platformProjectService.checkForChanges(this._changesInfo, prepareData, projectData);
 		}
 
-		if (prepareData.release !== this._prepareInfo.release) {
+		if (!!prepareData.release !== !!this._prepareInfo.release) {
 			this.$logger.trace(`Setting all setting to true. Current options are: `, prepareData, " old prepare info is: ", this._prepareInfo);
 			this._changesInfo.appResourcesChanged = true;
 			this._changesInfo.configChanged = true;
@@ -158,7 +157,7 @@ export class ProjectChangesService implements IProjectChangesService {
 		await this.savePrepareInfo(platformData, projectData, null);
 	}
 
-	private async ensurePrepareInfo(platformData: IPlatformData, projectData: IProjectData, prepareData: PrepareData): Promise<boolean> {
+	private async ensurePrepareInfo(platformData: IPlatformData, projectData: IProjectData, prepareData: IPrepareData): Promise<boolean> {
 		this._prepareInfo = this.getPrepareInfo(platformData);
 		if (this._prepareInfo) {
 			const prepareInfoFile = path.join(platformData.projectRoot, prepareInfoFileName);

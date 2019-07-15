@@ -2,7 +2,6 @@ import * as path from "path";
 import * as child_process from "child_process";
 import { EventEmitter } from "events";
 import { performanceLog } from "../../common/decorators";
-import { hook } from "../../common/helpers";
 import { WEBPACK_COMPILATION_COMPLETE } from "../../constants";
 
 export class WebpackCompilerService extends EventEmitter implements IWebpackCompilerService {
@@ -13,7 +12,6 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 		public $hooksService: IHooksService,
 		public $hostInfo: IHostInfo,
 		private $logger: ILogger,
-		private $pluginsService: IPluginsService,
 		private $mobileHelper: Mobile.IMobileHelper,
 		private $cleanupService: ICleanupService
 	) { super(); }
@@ -129,12 +127,9 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 	}
 
 	@performanceLog()
-	@hook('prepareJSApp')
 	private async startWebpackProcess(platformData: IPlatformData, projectData: IProjectData, prepareData: IPrepareData): Promise<child_process.ChildProcess> {
 		const envData = this.buildEnvData(platformData.platformNameLowerCase, projectData, prepareData);
 		const envParams = this.buildEnvCommandLineParams(envData, platformData, prepareData);
-
-		await this.$pluginsService.ensureAllDependenciesAreInstalled(projectData);
 
 		const args = [
 			path.join(projectData.projectDir, "node_modules", "webpack", "bin", "webpack.js"),

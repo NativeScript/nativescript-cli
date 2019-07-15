@@ -1,4 +1,3 @@
-import * as child_process from "child_process";
 import * as choki from "chokidar";
 import { hook } from "../common/helpers";
 import { performanceLog } from "../common/decorators";
@@ -7,7 +6,7 @@ import * as path from "path";
 import { PREPARE_READY_EVENT_NAME, WEBPACK_COMPILATION_COMPLETE, PACKAGE_JSON_FILE_NAME, PLATFORMS_DIR_NAME } from "../constants";
 
 interface IPlatformWatcherData {
-	webpackCompilerProcess: child_process.ChildProcess;
+	hasWebpackCompilerProcess: boolean;
 	nativeFilesWatcher: choki.FSWatcher;
 }
 
@@ -22,6 +21,7 @@ export class PrepareController extends EventEmitter {
 		private $logger: ILogger,
 		private $nodeModulesDependenciesBuilder: INodeModulesDependenciesBuilder,
 		private $platformsDataService: IPlatformsDataService,
+		private $pluginsService: IPluginsService,
 		private $prepareNativePlatformService: IPrepareNativePlatformService,
 		private $projectChangesService: IProjectChangesService,
 		private $projectDataService: IProjectDataService,
@@ -29,15 +29,36 @@ export class PrepareController extends EventEmitter {
 		private $watchIgnoreListService: IWatchIgnoreListService
 	) { super(); }
 
+	public async prepare(prepareData: IPrepareData): Promise<IPrepareResultData> {
+		const projectData = this.$projectDataService.getProjectData(prepareData.projectDir);
+
+		await this.$pluginsService.ensureAllDependenciesAreInstalled(projectData);
+
+		return this.prepareCore(prepareData, projectData);
+	}
+
+	public async stopWatchers(projectDir: string, platform: string): Promise<void> {
+		const platformLowerCase = platform.toLowerCase();
+
+		if (this.watchersData && this.watchersData[projectDir] && this.watchersData[projectDir][platformLowerCase] && this.watchersData[projectDir][platformLowerCase].nativeFilesWatcher) {
+			this.watchersData[projectDir][platformLowerCase].nativeFilesWatcher.close();
+			this.watchersData[projectDir][platformLowerCase].nativeFilesWatcher = null;
+		}
+
+		if (this.watchersData && this.watchersData[projectDir] && this.watchersData[projectDir][platformLowerCase] && this.watchersData[projectDir][platformLowerCase].hasWebpackCompilerProcess) {
+			await this.$webpackCompilerService.stopWebpackCompiler(platform);
+			this.watchersData[projectDir][platformLowerCase].hasWebpackCompilerProcess = false;
+		}
+	}
+
 	@performanceLog()
 	@hook("prepare")
-	public async prepare(prepareData: IPrepareData): Promise<IPrepareResultData> {
+	private async prepareCore(prepareData: IPrepareData, projectData: IProjectData): Promise<IPrepareResultData> {
 		await this.$platformController.addPlatformIfNeeded(prepareData);
 
 		this.$logger.info("Preparing project...");
 		let result = null;
 
-		const projectData = this.$projectDataService.getProjectData(prepareData.projectDir);
 		const platformData = this.$platformsDataService.getPlatformData(prepareData.platform, projectData);
 
 		if (prepareData.watch) {
@@ -55,20 +76,6 @@ export class PrepareController extends EventEmitter {
 		return result;
 	}
 
-	public async stopWatchers(projectDir: string, platform: string): Promise<void> {
-		const platformLowerCase = platform.toLowerCase();
-
-		if (this.watchersData && this.watchersData[projectDir] && this.watchersData[projectDir][platformLowerCase] && this.watchersData[projectDir][platformLowerCase].nativeFilesWatcher) {
-			this.watchersData[projectDir][platformLowerCase].nativeFilesWatcher.close();
-			this.watchersData[projectDir][platformLowerCase].nativeFilesWatcher = null;
-		}
-
-		if (this.watchersData && this.watchersData[projectDir] && this.watchersData[projectDir][platformLowerCase] && this.watchersData[projectDir][platformLowerCase].webpackCompilerProcess) {
-			await this.$webpackCompilerService.stopWebpackCompiler(platform);
-			this.watchersData[projectDir][platformLowerCase].webpackCompilerProcess = null;
-		}
-	}
-
 	@hook("watch")
 	private async startWatchersWithPrepare(platformData: IPlatformData, projectData: IProjectData, prepareData: IPrepareData): Promise<IPrepareResultData> {
 		if (!this.watchersData[projectData.projectDir]) {
@@ -78,38 +85,39 @@ export class PrepareController extends EventEmitter {
 		if (!this.watchersData[projectData.projectDir][platformData.platformNameLowerCase]) {
 			this.watchersData[projectData.projectDir][platformData.platformNameLowerCase] = {
 				nativeFilesWatcher: null,
-				webpackCompilerProcess: null
+				hasWebpackCompilerProcess: false
 			};
-			await this.startJSWatcherWithPrepare(platformData, projectData, prepareData); // -> start watcher + initial compilation
-			const hasNativeChanges = await this.startNativeWatcherWithPrepare(platformData, projectData, prepareData); // -> start watcher + initial prepare
-			const result = { platform: platformData.platformNameLowerCase, hasNativeChanges };
-
-			const hasPersistedDataWithNativeChanges = this.persistedData.find(data => data.platform === result.platform && data.hasNativeChanges);
-			if (hasPersistedDataWithNativeChanges) {
-				result.hasNativeChanges = true;
-			}
-
-			// TODO: Do not persist this in `this` context. Also it should be per platform.
-			this.isInitialPrepareReady = true;
-
-			if (this.persistedData && this.persistedData.length) {
-				this.emitPrepareEvent({ files: [], hasOnlyHotUpdateFiles: false, hasNativeChanges: result.hasNativeChanges, hmrData: null, platform: platformData.platformNameLowerCase });
-			}
-
-			return result;
 		}
+
+		await this.startJSWatcherWithPrepare(platformData, projectData, prepareData); // -> start watcher + initial compilation
+		const hasNativeChanges = await this.startNativeWatcherWithPrepare(platformData, projectData, prepareData); // -> start watcher + initial prepare
+		const result = { platform: platformData.platformNameLowerCase, hasNativeChanges };
+
+		const hasPersistedDataWithNativeChanges = this.persistedData.find(data => data.platform === result.platform && data.hasNativeChanges);
+		if (hasPersistedDataWithNativeChanges) {
+			result.hasNativeChanges = true;
+		}
+
+		// TODO: Do not persist this in `this` context. Also it should be per platform.
+		this.isInitialPrepareReady = true;
+
+		if (this.persistedData && this.persistedData.length) {
+			this.emitPrepareEvent({ files: [], hasOnlyHotUpdateFiles: false, hasNativeChanges: result.hasNativeChanges, hmrData: null, platform: platformData.platformNameLowerCase });
+		}
+
+		return result;
 	}
 
 	private async startJSWatcherWithPrepare(platformData: IPlatformData, projectData: IProjectData, prepareData: IPrepareData): Promise<void> {
-		if (!this.watchersData[projectData.projectDir][platformData.platformNameLowerCase].webpackCompilerProcess) {
+		if (!this.watchersData[projectData.projectDir][platformData.platformNameLowerCase].hasWebpackCompilerProcess) {
 			this.$webpackCompilerService.on(WEBPACK_COMPILATION_COMPLETE, data => {
 				if (data.platform.toLowerCase() === platformData.platformNameLowerCase) {
 					this.emitPrepareEvent({ ...data, hasNativeChanges: false });
 				}
 			});
 
-			const childProcess = await this.$webpackCompilerService.compileWithWatch(platformData, projectData, prepareData);
-			this.watchersData[projectData.projectDir][platformData.platformNameLowerCase].webpackCompilerProcess = childProcess;
+			this.watchersData[projectData.projectDir][platformData.platformNameLowerCase].hasWebpackCompilerProcess = true;
+			await this.$webpackCompilerService.compileWithWatch(platformData, projectData, prepareData);
 		}
 	}
 

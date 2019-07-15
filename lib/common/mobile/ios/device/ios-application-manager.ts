@@ -102,7 +102,7 @@ export class IOSApplicationManager extends ApplicationManagerBase {
 	}
 
 	private async runApplicationCore(appData: Mobile.IStartApplicationData): Promise<void> {
-		const waitForDebugger = appData.waitForDebugger && appData.waitForDebugger.toString();
+		const waitForDebugger = (!!appData.waitForDebugger).toString();
 		await this.$iosDeviceOperations.start([{ deviceId: this.device.deviceInfo.identifier, appId: appData.appId, ddi: this.$options.ddi, waitForDebugger }]);
 	}
 

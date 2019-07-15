@@ -4,6 +4,8 @@ import { cache, performanceLog } from "../common/decorators";
 import { EventEmitter } from "events";
 
 export class RunController extends EventEmitter implements IRunController {
+	private prepareReadyEventHandler: any = null;
+
 	constructor(
 		protected $analyticsService: IAnalyticsService,
 		private $buildController: IBuildController,
@@ -23,6 +25,7 @@ export class RunController extends EventEmitter implements IRunController {
 		private $prepareController: IPrepareController,
 		private $prepareDataService: IPrepareDataService,
 		private $prepareNativePlatformService: IPrepareNativePlatformService,
+		private $projectChangesService: IProjectChangesService,
 		protected $projectDataService: IProjectDataService
 	) {
 		super();
@@ -35,8 +38,10 @@ export class RunController extends EventEmitter implements IRunController {
 		const projectData = this.$projectDataService.getProjectData(projectDir);
 		await this.initializeSetup(projectData);
 
-		const platforms = this.$devicesService.getPlatformsFromDeviceDescriptors(deviceDescriptors);
 		const deviceDescriptorsForInitialSync = this.getDeviceDescriptorsForInitialSync(projectDir, deviceDescriptors);
+		const newPlatforms = this.$devicesService.getPlatformsFromDeviceDescriptors(deviceDescriptors);
+		const oldPlatforms = this.$liveSyncProcessDataService.getPlatforms(projectDir);
+		const platforms = _.uniq(_.concat(newPlatforms, oldPlatforms));
 
 		this.$liveSyncProcessDataService.persistData(projectDir, deviceDescriptors, platforms);
 
@@ -45,9 +50,21 @@ export class RunController extends EventEmitter implements IRunController {
 			this.$hmrStatusService.attachToHmrStatusEvent();
 		}
 
-		this.$prepareController.on(PREPARE_READY_EVENT_NAME, async data => {
-			await this.syncChangedDataOnDevices(data, projectData, liveSyncInfo, deviceDescriptors);
-		});
+		if (!this.prepareReadyEventHandler) {
+			this.prepareReadyEventHandler = async (data: IFilesChangeEventData) => {
+				if (data.hasNativeChanges) {
+					const platformData = this.$platformsDataService.getPlatformData(data.platform, projectData);
+					const prepareData = this.$prepareDataService.getPrepareData(liveSyncInfo.projectDir, data.platform, { ...liveSyncInfo, watch: !liveSyncInfo.skipWatcher });
+					const changesInfo = await this.$projectChangesService.checkForChanges(platformData, projectData, prepareData);
+					if (changesInfo.hasChanges) {
+						await this.syncChangedDataOnDevices(data, projectData, liveSyncInfo);
+					}
+				} else {
+					await this.syncChangedDataOnDevices(data, projectData, liveSyncInfo);
+				}
+			};
+			this.$prepareController.on(PREPARE_READY_EVENT_NAME, this.prepareReadyEventHandler.bind(this));
+		}
 
 		await this.syncInitialDataOnDevices(projectData, liveSyncInfo, deviceDescriptorsForInitialSync);
 
@@ -58,6 +75,7 @@ export class RunController extends EventEmitter implements IRunController {
 		const { projectDir, deviceIdentifiers, stopOptions } = data;
 		const liveSyncProcessInfo = this.$liveSyncProcessDataService.getPersistedData(projectDir);
 		if (liveSyncProcessInfo && !liveSyncProcessInfo.isStopped) {
+
 			// In case we are coming from error during livesync, the current action is the one that erred (but we are still executing it),
 			// so we cannot await it as this will cause infinite loop.
 			const shouldAwaitPendingOperation = !stopOptions || stopOptions.shouldAwaitAllActions;
@@ -93,6 +111,11 @@ export class RunController extends EventEmitter implements IRunController {
 				}
 
 				liveSyncProcessInfo.deviceDescriptors = [];
+
+				if (this.prepareReadyEventHandler) {
+					this.removeListener(PREPARE_READY_EVENT_NAME, this.prepareReadyEventHandler);
+					this.prepareReadyEventHandler = null;
+				}
 
 				const projectData = this.$projectDataService.getProjectData(projectDir);
 				await this.$hooksService.executeAfterHooks('watch', {
@@ -313,10 +336,11 @@ export class RunController extends EventEmitter implements IRunController {
 		await this.addActionToChain(projectData.projectDir, () => this.$devicesService.execute(deviceAction, (device: Mobile.IDevice) => _.some(deviceDescriptors, deviceDescriptor => deviceDescriptor.identifier === device.deviceInfo.identifier)));
 	}
 
-	private async syncChangedDataOnDevices(data: IFilesChangeEventData, projectData: IProjectData, liveSyncInfo: ILiveSyncInfo, deviceDescriptors: ILiveSyncDeviceDescriptor[]): Promise<void> {
+	private async syncChangedDataOnDevices(data: IFilesChangeEventData, projectData: IProjectData, liveSyncInfo: ILiveSyncInfo): Promise<void> {
 		const rebuiltInformation: IDictionary<{ packageFilePath: string, platform: string, isEmulator: boolean }> = { };
 
 		const deviceAction = async (device: Mobile.IDevice) => {
+			const deviceDescriptors = this.$liveSyncProcessDataService.getDeviceDescriptors(projectData.projectDir);
 			const deviceDescriptor = _.find(deviceDescriptors, dd => dd.identifier === device.deviceInfo.identifier);
 			const platformData = this.$platformsDataService.getPlatformData(data.platform, projectData);
 			const prepareData = this.$prepareDataService.getPrepareData(liveSyncInfo.projectDir, device.deviceInfo.platform,

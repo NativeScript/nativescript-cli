@@ -17,7 +17,6 @@ export class DeployOnDeviceCommand extends ValidatePlatformCommandBase implement
 		private $errors: IErrors,
 		private $mobileHelper: Mobile.IMobileHelper,
 		$platformsDataService: IPlatformsDataService,
-		private $bundleValidatorHelper: IBundleValidatorHelper,
 		private $deployCommandHelper: DeployCommandHelper,
 		private $androidBundleValidatorHelper: IAndroidBundleValidatorHelper) {
 			super($options, $platformsDataService, $platformValidationService, $projectData);
@@ -31,7 +30,6 @@ export class DeployOnDeviceCommand extends ValidatePlatformCommandBase implement
 
 	public async canExecute(args: string[]): Promise<boolean | ICanExecuteCommandOutput> {
 		this.$androidBundleValidatorHelper.validateNoAab();
-		this.$bundleValidatorHelper.validate(this.$projectData);
 		if (!args || !args.length || args.length > 1) {
 			return false;
 		}
