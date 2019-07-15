@@ -13,8 +13,6 @@ Initiates a debugging session for your project on a connected iOS device or in t
 <% if((isConsole && isMacOS) || isHtml) { %>
 <% if(isHtml) { %>> <% } %>IMPORTANT: Before building for iOS device, verify that you have configured a valid pair of certificate and provisioning profile on your macOS system. <% if(isHtml) { %>For more information, see the [Code Signing](https://developer.apple.com/support/code-signing/) and [Maintain Signing Assets](https://help.apple.com/xcode/mac/current/#/dev3a05256b8) sections from the Apple Developer documentation.<% } %>
 
-To enable Hot Module Replacement (HMR) in Angular projects, follow the steps outlined in this wiki: https://github.com/NativeScript/nativescript-angular/wiki/HMR.
-
 ### Commands
 
 Usage | Synopsis
@@ -35,16 +33,12 @@ Attach the debug tools to a running app in the iOS simulator | `$ tns debug ios 
 * `--timeout` - Sets the number of seconds that NativeScript CLI will wait to find the inspector socket port from device's logs. If not set, the default timeout is 10 seconds.
 * `--no-watch` - If set, changes in your code will not be reflected during the execution of this command.
 * `--clean` - If set, forces the complete rebuild of the native application.
-* `--bundle` - Specifies that the `webpack` bundler will be used to bundle the application.
-* `--hmr` - (Beta) Enables the hot module replacement (HMR) feature. HMR depends on `webpack` and adding the `--hmr` flag to the command will automatically enable the `--bundle` option as well. <% if(isConsole) { %> The HMR feature is currently in Beta. For more information about the current development state and any known issues, please check the relevant GitHub issue: https://github.com/NativeScript/NativeScript/issues/6398.<% } %>
+* `--no-hmr` - Disables Hot Module Replacement (HMR). In this case, when a change in the code is applied, CLI will transfer the modified files and restart the application.
 * `--chrome` - Deprecated - default behavior uses '--chrome' implicitly. Allows debugging in Chrome Developer Tools. If set, Safari Web Inspector is not started and debugging is attached to Chrome Developer Tools.
 * `--inspector` - If set, the developer tools in the Safari Web Inspector are used for debugging the application.
-* `--syncAllFiles` - Watches all production dependencies inside node_modules for changes. Triggers project rebuild if necessary!
 
 <% } %>
 <% if(isHtml) { %>
-
->Note: Hot Module Replacement (HMR) is currently in Beta. For more information about the current development state and any known issues, please check the relevant GitHub issue: https://github.com/NativeScript/NativeScript/issues/6398.
 
 ### Command Limitations
 

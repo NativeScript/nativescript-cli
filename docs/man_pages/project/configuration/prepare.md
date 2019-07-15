@@ -10,6 +10,12 @@ position: 7
 Copies common and relevant platform-specific content from the `app` directory to the subdirectory for the selected target platform
 in the `platforms` directory. This lets you build the project with the SDK for the selected platform. <% if(isMacOS) { %>You must specify the target platform for which you want to prepare your project.<% } %>
 
+When running this command the HMR (Hot Module Replacement) is not enabled by default. In case you want to enable HMR, you can pass `--hmr` flag.
+
+<% if(isHtml) { %>
+> NOTE: When passing `--release` CLI will disable HMR.
+<% } %>
+
 ### Commands
 
 Usage | Synopsis
@@ -20,6 +26,10 @@ Usage | Synopsis
 `<Platform>` is the target mobile platform for which you want to prepare your project. You can set the following target platforms.
 * `android` - Prepares your project for an Android build.
 * `ios` - Prepares your project for an iOS build.<% } %>
+
+### Options
+
+* `--hmr` - Enables the hot module replacement (HMR) feature.
 
 <% if(isHtml) { %>
 
