@@ -36,6 +36,7 @@ Attach the debug tools to a running app in the iOS simulator | `$ tns debug ios 
 * `--no-hmr` - Disables Hot Module Replacement (HMR). In this case, when a change in the code is applied, CLI will transfer the modified files and restart the application.
 * `--chrome` - Deprecated - default behavior uses '--chrome' implicitly. Allows debugging in Chrome Developer Tools. If set, Safari Web Inspector is not started and debugging is attached to Chrome Developer Tools.
 * `--inspector` - If set, the developer tools in the Safari Web Inspector are used for debugging the application.
+* `--force` - If set, skips the application compatibility checks and forces `npm i` to ensure all dependencies are installed. Otherwise, the command will check the application compatibility with the current CLI version and could fail requiring `tns migrate`.
 
 <% } %>
 <% if(isHtml) { %>

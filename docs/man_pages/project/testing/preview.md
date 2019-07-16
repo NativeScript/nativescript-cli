@@ -24,6 +24,7 @@ Generates a QR code that can be scanned by the NativeScript PlayGround app | `tn
 ### Options
 
 * `--no-hmr` - Disables Hot Module Replacement (HMR). In this case, when a change in the code is applied, CLI will transfer the modified files and restart the application.
+* `--force` - If set, skips the application compatibility checks and forces `npm i` to ensure all dependencies are installed. Otherwise, the command will check the application compatibility with the current CLI version and could fail requiring `tns migrate`.
 
 <% if(isHtml) { %>
 

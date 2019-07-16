@@ -29,6 +29,7 @@ Attach the debug tools to a running app in the native emulator | `$ tns debug an
 * `--no-watch` - If set, changes in your code will not be reflected during the execution of this command.
 * `--clean` - If set, forces the complete rebuild of the native application.
 * `--no-hmr` - Disables Hot Module Replacement (HMR). In this case, when a change in the code is applied, CLI will transfer the modified files and restart the application.
+* `--force` - If set, skips the application compatibility checks and forces `npm i` to ensure all dependencies are installed. Otherwise, the command will check the application compatibility with the current CLI version and could fail requiring `tns migrate`.
 
 <% if(isHtml) { %>
 
