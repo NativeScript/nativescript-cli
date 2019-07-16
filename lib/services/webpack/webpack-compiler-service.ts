@@ -1,5 +1,6 @@
 import * as path from "path";
 import * as child_process from "child_process";
+import * as semver from "semver";
 import { EventEmitter } from "events";
 import { performanceLog } from "../../common/decorators";
 import { WEBPACK_COMPILATION_COMPLETE } from "../../constants";
@@ -130,8 +131,10 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 	private async startWebpackProcess(platformData: IPlatformData, projectData: IProjectData, prepareData: IPrepareData): Promise<child_process.ChildProcess> {
 		const envData = this.buildEnvData(platformData.platformNameLowerCase, projectData, prepareData);
 		const envParams = this.buildEnvCommandLineParams(envData, platformData, prepareData);
+		const additionalNodeArgs = semver.major(process.version) <= 8 ? ["--harmony"] : [];
 
 		const args = [
+			...additionalNodeArgs,
 			path.join(projectData.projectDir, "node_modules", "webpack", "bin", "webpack.js"),
 			"--preserve-symlinks",
 			`--config=${path.join(projectData.projectDir, "webpack.config.js")}`,
