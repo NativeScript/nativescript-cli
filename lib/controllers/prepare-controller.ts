@@ -122,7 +122,7 @@ export class PrepareController extends EventEmitter {
 	}
 
 	private async startNativeWatcherWithPrepare(platformData: IPlatformData, projectData: IProjectData, prepareData: IPrepareData): Promise<boolean> {
-		if ((prepareData.nativePrepare && prepareData.nativePrepare.skipNativePrepare) || this.watchersData[projectData.projectDir][platformData.platformNameLowerCase].nativeFilesWatcher) {
+		if (this.watchersData[projectData.projectDir][platformData.platformNameLowerCase].nativeFilesWatcher) {
 			return false;
 		}
 
