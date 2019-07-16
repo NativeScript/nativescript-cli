@@ -13,7 +13,7 @@ Builds the project for Android and produces an APK that you can manually deploy 
 
 Usage | Synopsis
 ---|---
-General | `$ tns build android [--compileSdk <API Level>] [--key-store-path <File Path> --key-store-password <Password> --key-store-alias <Name> --key-store-alias-password <Password>] [--release] [--static-bindings] [--copy-to <File Path>] [--bundle [<value>] [--env.*]] [--aab]`
+General | `$ tns build android [--compileSdk <API Level>] [--key-store-path <File Path> --key-store-password <Password> --key-store-alias <Name> --key-store-alias-password <Password>] [--release] [--static-bindings] [--copy-to <File Path>] [--env.*]] [--aab]`
 
 ### Options
 
@@ -25,7 +25,6 @@ General | `$ tns build android [--compileSdk <API Level>] [--key-store-path <Fil
 * `--key-store-alias` - Provides the alias for the keystore file specified with `--key-store-path`. You can use the `--key-store-*` options along with `--release` to produce a signed release build. You need to specify all `--key-store-*` options.
 * `--key-store-alias-password` - Provides the password for the alias specified with `--key-store-alias-password`. You can use the `--key-store-*` options along with `--release` to produce a signed release build. You need to specify all `--key-store-*` options.
 * `--copy-to` - Specifies the file path where the built `.apk` will be copied. If it points to a non-existent directory path, it will be created. If the specified value is existing directory, the original file name will be used.
-* `--bundle` - Specifies that the `webpack` bundler will be used to bundle the application.
 * `--env.*` - Specifies additional flags that the bundler may process. May be passed multiple times. Supported additional flags:
     *   `--env.aot` - creates Ahead-Of-Time build (Angular only).
     *   `--env.snapshot`- creates [Snapshot](https://docs.nativescript.org/performance-optimizations/bundling-with-webpack#v8-heap-snapshot) (only for release builds on Mac OS & for Android).

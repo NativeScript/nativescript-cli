@@ -17,7 +17,7 @@ Builds the project for iOS and produces an `APP` or `IPA` that you can manually 
 
 Usage | Synopsis
 ---|---
-General | `$ tns build ios [--for-device] [--release] [--copy-to <File Path>] [--provision [<UUID/name>]] [--bundle [<value>] [--env.*]]`
+General | `$ tns build ios [--for-device] [--release] [--copy-to <File Path>] [--provision [<UUID/name>]] [--env.*]]`
 
 ### Options
 
@@ -27,7 +27,6 @@ General | `$ tns build ios [--for-device] [--release] [--copy-to <File Path>] [-
 * `--copy-to` - Specifies the file path where the built `.ipa` will be copied. If it points to a non-existent directory path, it will be created. If the specified value is existing directory, the original file name will be used.
 * `--team-id` - If used without parameter, lists all team names and ids. If used with team name or id, it will switch to automatic signing mode and configure the .xcodeproj file of your app. In this case .xcconfig should not contain any provisioning/team id flags. This team id will be further used for codesigning the app. For Xcode 9.0+, xcodebuild will be allowed to update and modify automatically managed provisioning profiles.
 * `--provision` - If used without parameter, lists all eligible provisioning profiles. If used with UUID or name of your provisioning profile, it will switch to manual signing mode and configure the .xcodeproj file of your app. In this case xcconfig should not contain any provisioning/team id flags. This provisioning profile will be further used for codesigning the app.
-* `--bundle` - Specifies that the `webpack` bundler will be used to bundle the application.
 * `--env.*` - Specifies additional flags that the bundler may process. May be passed multiple times. Supported additional flags:
     *   `--env.aot` - creates Ahead-Of-Time build (Angular only).
     *   `--env.snapshot`- creates [Snapshot](https://docs.nativescript.org/performance-optimizations/bundling-with-webpack#v8-heap-snapshot) (only for release builds on Mac OS & for Android).
