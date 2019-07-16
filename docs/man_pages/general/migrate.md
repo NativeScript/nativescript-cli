@@ -37,6 +37,17 @@ The following dependencies will be updated if needed:
 * kinvey-nativescript-sdk
 * nativescript-plugin-firebase
 * nativescript-vue
+* nativescript-angular
+* @angular/platform-browser-dynamic
+* @angular/common
+* @angular/compiler
+* @angular/core
+* @angular/forms
+* @angular/http
+* @angular/platform-browser
+* @angular/router
+* rxjs
+* zone.js
 * nativescript-unit-test-runner
 * karma-webpack
 * karma-jasmine
