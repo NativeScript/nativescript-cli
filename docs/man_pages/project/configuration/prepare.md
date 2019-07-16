@@ -30,6 +30,7 @@ Usage | Synopsis
 ### Options
 
 * `--hmr` - Enables the hot module replacement (HMR) feature.
+* `--force` - If set, skips the application compatibility checks and forces `npm i` to ensure all dependencies are installed. Otherwise, the command will check the application compatibility with the current CLI version and could fail requiring `tns migrate`.
 
 <% if(isHtml) { %>
 

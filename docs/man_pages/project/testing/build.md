@@ -39,6 +39,7 @@ Usage | Synopsis
     *   `--env.report` - creates a Webpack report inside a `report` folder in the root folder.
     *   `--env.sourceMap` - creates inline source maps (useful for debbuging bundled app).
     *   `--env.hiddenSourceMap` - creates sources maps in the root folder (useful for Crashlytics usage with bundled app in release).
+* `--force` - If set, skips the application compatibility checks and forces `npm i` to ensure all dependencies are installed. Otherwise, the command will check the application compatibility with the current CLI version and could fail requiring `tns migrate`.
 
 <% if(isHtml) { %>
 
