@@ -14,17 +14,21 @@ Initiates a debugging session for your project on a connected device or native e
 With HMR (Hot Module Replacement):
 * Changes in `.js`, `.ts`, `.less`, `.sass` and other file types that are accepted will cause a refresh of the application.
 * Changes in `App_Resources` will cause a rebuild of the application.
+* Changes in any `package.json` file inside the project will cause a rebuild of the application.
 * Changes in `node_modules/somePlugin` if accepted will cause a refresh of the application.
 * Changes in `node_modules/somePlugin/platforms` will cause a rebuild of the application.
+* Changes in `node_modules/somePlugin/package.json` file will cause a rebuild of the application.
 * Changes that are not accepted and HMR fails will cause a restart of the native application.
 
 With **no** HMR:
 * Changes in `.js`, `.ts`, `.less`, `.sass` and other file types will cause a restart of the native application.
 * Changes in `App_Resources` will cause a rebuild of the application.
+* Changes in any `package.json` file inside the project will cause a rebuild of the application.
 * Changes in `node_modules/somePlugin` will cause a restart of the native application.
 * Changes in `node_modules/somePlugin/platforms` will cause a rebuild of the application.
+* Changes in `node_modules/somePlugin/package.json` file will cause a rebuild of the application.
 
-When running this command with `--debug-brk` any file change will cause a restart of the native application. Changes in `App_Resources` and `node_modules/somePlugin/platforms` will cause a rebuild of the application.
+When running this command with `--debug-brk` any file change will cause a restart of the native application (HMR is disabled). Changes in `App_Resources` and `node_modules/somePlugin/platforms` will cause a rebuild of the application.
 <% } %>
 
 ### Commands
