@@ -173,8 +173,9 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 			appResourcesPath && { appResourcesPath },
 		);
 
-		envData.verbose = this.$logger.isVerbose();
-		envData.production = prepareData.release;
+		envData.verbose = envData.verbose || this.$logger.isVerbose();
+		envData.production = envData.production || prepareData.release;
+
 		if (prepareData.env && (prepareData.env.sourceMap === false || prepareData.env.sourceMap === 'false')) {
 			delete envData.sourceMap;
 		} else if (!prepareData.release) {
