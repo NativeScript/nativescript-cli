@@ -184,6 +184,9 @@ function createTestInjector(options?: {
 		executeBeforeHooks: () => ({}),
 		executeAfterHooks: () => ({})
 	});
+	injector.register("pluginsService", {
+		ensureAllDependenciesAreInstalled: () => { return Promise.resolve(); }
+	});
 
 	return injector;
 }
