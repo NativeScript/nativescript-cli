@@ -8,7 +8,7 @@ position: 4
 ### Description
 
 <% if(isConsole) { %>Uninstalls a plugin by its name.<% } %>
-<% if(isHtml) { %>Removes the specified plugin and its dependencies from the local `node_modules` folder and the `dependencies` section in `package.json`. This operation does not remove the plugin from the installed platforms and you need to run `$ tns prepare` to finish uninstalling the plugin. For more information about working with plugins, see [NativeScript Plugins](https://github.com/NativeScript/nativescript-cli/blob/master/PLUGINS.md).<% } %>
+<% if(isHtml) { %>Removes the specified plugin and its dependencies from the local `node_modules` folder and the `dependencies` section in `package.json`. This operation does not remove the plugin from the installed platforms and you need to run `$ tns prepare` to finish uninstalling the plugin.<% } %>
 
 ### Commands
 

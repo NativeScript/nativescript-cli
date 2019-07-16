@@ -17,7 +17,7 @@ General | `$ tns build android [--compileSdk <API Level>] [--key-store-path <Fil
 
 ### Options
 
-* `--compileSdk` - Sets the Android SDK that will be used to build the project. `<API Level>` is a valid Android API level. For example: 22, 23.<% if(isHtml) { %> For a complete list of the Android API levels and their corresponding Android versions, click [here](http://developer.android.com/guide/topics/manifest/uses-sdk-element.html#platform).<% } %>
+* `--compileSdk` - Sets the Android SDK that will be used to build the project. `<API Level>` is a valid Android API level. For example: 28, 29. The minimum supported SDK is 28. <% if(isHtml) { %> For a complete list of the Android API levels and their corresponding Android versions, click [here](http://developer.android.com/guide/topics/manifest/uses-sdk-element.html#platform).<% } %>
 * `--clean` - If set, forces the complete rebuild of the native application.
 * `--release` - If set, produces a release build. Otherwise, produces a debug build. When set, you must also specify the `--key-store-*` options.
 * `--key-store-path` - Specifies the file path to the keystore file (P12) which you want to use to code sign your APK. You can use the `--key-store-*` options along with `--release` to produce a signed release build. You need to specify all `--key-store-*` options.
