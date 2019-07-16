@@ -19,6 +19,7 @@ export class PreviewAppController extends EventEmitter implements IPreviewAppCon
 		private $hmrStatusService: IHmrStatusService,
 		private $logger: ILogger,
 		public $hooksService: IHooksService,
+		private $pluginsService: IPluginsService,
 		private $prepareController: PrepareController,
 		private $previewAppFilesService: IPreviewAppFilesService,
 		private $previewAppPluginsService: IPreviewAppPluginsService,
@@ -48,6 +49,8 @@ export class PreviewAppController extends EventEmitter implements IPreviewAppCon
 	}
 
 	private async previewCore(data: IPreviewAppLiveSyncData): Promise<void> {
+		const projectData = this.$projectDataService.getProjectData(data.projectDir);
+		await this.$pluginsService.ensureAllDependenciesAreInstalled(projectData);
 		await this.$previewSdkService.initialize(data.projectDir, async (device: Device) => {
 			try {
 				if (!device) {
@@ -71,7 +74,6 @@ export class PreviewAppController extends EventEmitter implements IPreviewAppCon
 					});
 				}
 
-				const projectData = this.$projectDataService.getProjectData(data.projectDir);
 				await this.$hooksService.executeBeforeHooks("preview-sync", { hookArgs: { ...data, platform: device.platform, projectData } });
 
 				if (data.useHotModuleReload) {
