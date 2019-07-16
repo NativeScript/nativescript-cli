@@ -8,7 +8,7 @@ position: 7
 ### Description
 
 <% if(isConsole) { %>Uninstalls and installs the specified plugin(s) and any packages that it depends on.<% } %>
-<% if(isHtml) { %>Uninstalls and installs the specified plugin(s) and its dependencies in the local `node_modules` folder, adds it to the `dependencies` section in `package.json`, and prepares the plugin(s) for all installed platforms. If you have not configured any platforms for the project, the NativeScript CLI will prepare the plugin(s) when you add a platform. For more information about working with plugins, see [NativeScript Plugins](https://github.com/NativeScript/nativescript-cli/blob/master/PLUGINS.md).<% } %>
+<% if(isHtml) { %>Uninstalls and installs the specified plugin(s) and its dependencies in the local `node_modules` folder, adds it to the `dependencies` section in `package.json`, and prepares the plugin(s) for all installed platforms. If you have not configured any platforms for the project, the NativeScript CLI will prepare the plugin(s) when you add a platform.<% } %>
 
 ### Commands
 
