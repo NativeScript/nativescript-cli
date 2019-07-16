@@ -13,8 +13,8 @@ Configures the current project to target the selected platform. <% if(isHtml) { 
 
 Usage | Synopsis
 ------|-------
-Android latest runtime | `$ tns platform add android [--framework-path <File Path>] [--sdk <API Level>] [--platform-template <Platform Template>]`
-Android selected runtime | `$ tns platform add android[@<Version>] [--framework-path <File Path>] [--sdk <API Level>] [--platform-template <Platform Template>]`
+Android latest runtime | `$ tns platform add android [--framework-path <File Path>] [--platform-template <Platform Template>]`
+Android selected runtime | `$ tns platform add android[@<Version>] [--framework-path <File Path>] [--platform-template <Platform Template>]`
 <% if (isMacOS) { %>iOS latest runtime | `$ tns platform add ios [--framework-path <File Path>]`
 iOS selected runtime | `$ tns platform add ios[@<Version>] [--framework-path <File Path>] [--platform-template <Platform Template>]`<% } %>
 
