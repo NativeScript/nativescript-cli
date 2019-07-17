@@ -141,10 +141,10 @@ export class RunController extends EventEmitter implements IRunController {
 		return this.$liveSyncProcessDataService.getDeviceDescriptors(data.projectDir);
 	}
 
-	protected async refreshApplication(projectData: IProjectData, liveSyncResultInfo: ILiveSyncResultInfo, filesChangeEventData: IFilesChangeEventData, deviceDescriptor: ILiveSyncDeviceDescriptor, settings?: IRefreshApplicationSettings): Promise<IRestartApplicationInfo> {
+	protected async refreshApplication(projectData: IProjectData, liveSyncResultInfo: ILiveSyncResultInfo, filesChangeEventData: IFilesChangeEventData, deviceDescriptor: ILiveSyncDeviceDescriptor): Promise<IRestartApplicationInfo> {
 		const result = deviceDescriptor.debuggingEnabled ?
-			await this.refreshApplicationWithDebug(projectData, liveSyncResultInfo, filesChangeEventData, deviceDescriptor, settings) :
-			await this.refreshApplicationWithoutDebug(projectData, liveSyncResultInfo, filesChangeEventData, deviceDescriptor, settings);
+			await this.refreshApplicationWithDebug(projectData, liveSyncResultInfo, filesChangeEventData, deviceDescriptor) :
+			await this.refreshApplicationWithoutDebug(projectData, liveSyncResultInfo, filesChangeEventData, deviceDescriptor);
 
 		const device = liveSyncResultInfo.deviceAppData.device;
 
@@ -159,12 +159,12 @@ export class RunController extends EventEmitter implements IRunController {
 		return result;
 	}
 
-	protected async refreshApplicationWithDebug(projectData: IProjectData, liveSyncResultInfo: ILiveSyncResultInfo, filesChangeEventData: IFilesChangeEventData, deviceDescriptor: ILiveSyncDeviceDescriptor, settings?: IRefreshApplicationSettings): Promise<IRestartApplicationInfo> {
+	protected async refreshApplicationWithDebug(projectData: IProjectData, liveSyncResultInfo: ILiveSyncResultInfo, filesChangeEventData: IFilesChangeEventData, deviceDescriptor: ILiveSyncDeviceDescriptor): Promise<IRestartApplicationInfo> {
 		const debugOptions = deviceDescriptor.debugOptions || {};
 
 		liveSyncResultInfo.waitForDebugger = !!debugOptions.debugBrk;
 
-		const refreshInfo = await this.refreshApplicationWithoutDebug(projectData, liveSyncResultInfo, filesChangeEventData, deviceDescriptor, settings);
+		const refreshInfo = await this.refreshApplicationWithoutDebug(projectData, liveSyncResultInfo, filesChangeEventData, deviceDescriptor, { shouldSkipEmitLiveSyncNotification: true, shouldCheckDeveloperDiscImage: true });
 
 		// we do not stop the application when debugBrk is false, so we need to attach, instead of launch
 		// if we try to send the launch request, the debugger port will not be printed and the command will timeout
