@@ -330,6 +330,8 @@ export class RunController extends EventEmitter implements IRunController {
 					applicationIdentifier: projectData.projectIdentifiers[device.deviceInfo.platform.toLowerCase()],
 					error: err,
 				});
+
+				await this.stop({ projectDir: projectData.projectDir, deviceIdentifiers: [device.deviceInfo.identifier], stopOptions: { shouldAwaitAllActions: false }});
 			}
 		};
 
@@ -408,7 +410,7 @@ export class RunController extends EventEmitter implements IRunController {
 					error: err,
 				});
 
-				await this.stop({ projectDir: projectData.projectDir, deviceIdentifiers: [device.deviceInfo.identifier] });
+				await this.stop({ projectDir: projectData.projectDir, deviceIdentifiers: [device.deviceInfo.identifier], stopOptions: { shouldAwaitAllActions: false } });
 			}
 		};
 
