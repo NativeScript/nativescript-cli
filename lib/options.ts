@@ -6,7 +6,7 @@ export class Options {
 	private static NONDASHED_OPTION_REGEX = /(.+?)[-]([a-zA-Z])(.*)/;
 
 	private optionsWhiteList = ["ui", "recursive", "reporter", "require", "timeout", "_", "$0"]; // These options shouldn't be validated
-	public argv: IYargArgv;
+	private yargsArgv: yargs.Argv;
 	private globalOptions: IDictionary<IDashedOption> = {
 		log: { type: OptionType.String, hasSensitiveValue: false },
 		verbose: { type: OptionType.Boolean, alias: "v", hasSensitiveValue: false },
@@ -19,24 +19,23 @@ export class Options {
 		_: { type: OptionType.String, hasSensitiveValue: false }
 	};
 
+	public argv: yargs.Arguments;
 	public options: IDictionary<IDashedOption>;
 
-	public setupOptions(projectData: IProjectData, commandSpecificDashedOptions?: IDictionary<IDashedOption>): void {
+	public setupOptions(commandSpecificDashedOptions?: IDictionary<IDashedOption>): void {
 		if (commandSpecificDashedOptions) {
 			_.extend(this.options, commandSpecificDashedOptions);
 			this.setArgv();
 		}
 
-		if (this.argv.release && this.argv.hmr) {
+		this.argv.bundle = "webpack";
+
+		// Check if the user has explicitly provide --hmr and --release options from command line
+		if (this.yargsArgv.argv.release && this.yargsArgv.argv.hmr) {
 			this.$errors.failWithoutHelp("The options --release and --hmr cannot be used simultaneously.");
 		}
 
-		this.argv.bundle = "webpack";
-
-		const parsed = require("yargs-parser")(process.argv.slice(2), { 'boolean-negation': false });
-		// --no-hmr -> hmr: false or --hmr false -> hmr: 'false'
-		const noHmr = parsed && (parsed.hmr === false || parsed.hmr === 'false');
-		if (!noHmr) {
+		if (this.argv.hmr) {
 			this.argv.hmr = !this.argv.release;
 		}
 
@@ -111,7 +110,7 @@ export class Options {
 			pluginName: { type: OptionType.String, hasSensitiveValue: false },
 			includeTypeScriptDemo: { type: OptionType.String, hasSensitiveValue: false },
 			includeAngularDemo: { type: OptionType.String, hasSensitiveValue: false },
-			hmr: { type: OptionType.Boolean, hasSensitiveValue: false },
+			hmr: { type: OptionType.Boolean, hasSensitiveValue: false, default: true },
 			collection: { type: OptionType.String, alias: "c", hasSensitiveValue: false },
 			json: { type: OptionType.Boolean, hasSensitiveValue: false },
 			avd: { type: OptionType.String, hasSensitiveValue: true },
@@ -159,8 +158,8 @@ export class Options {
 		return this.argv[optionName];
 	}
 
-	public validateOptions(commandSpecificDashedOptions?: IDictionary<IDashedOption>, projectData?: IProjectData): void {
-		this.setupOptions(projectData, commandSpecificDashedOptions);
+	public validateOptions(commandSpecificDashedOptions?: IDictionary<IDashedOption>): void {
+		this.setupOptions(commandSpecificDashedOptions);
 		const parsed = Object.create(null);
 		// DO NOT REMOVE { } as when they are missing and some of the option values is false, the each stops as it thinks we have set "return false".
 		_.each(_.keys(this.argv), optionName => {
@@ -251,12 +250,13 @@ export class Options {
 			opts[this.getDashedOptionName(key)] = value;
 		});
 
-		this.argv = yargs(process.argv.slice(2)).options(opts).argv;
+		this.yargsArgv = yargs(process.argv.slice(2));
+		this.argv = this.yargsArgv.options(<any>opts).argv;
 
 		// For backwards compatibility
 		// Previously profileDir had a default option and calling `this.$options.profileDir` always returned valid result.
 		// Now the profileDir should be used from $settingsService, but ensure the `this.$options.profileDir` returns the same value.
-		this.$settingsService.setSettings({ profileDir: this.argv.profileDir });
+		this.$settingsService.setSettings({ profileDir: <string>this.argv.profileDir });
 		this.argv.profileDir = this.argv["profile-dir"] = this.$settingsService.getProfileDir();
 
 		// if justlaunch is set, it takes precedence over the --watch flag and the default true value

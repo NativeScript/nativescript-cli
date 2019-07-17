@@ -27,8 +27,7 @@ export class CommandsService implements ICommandsService {
 		private $staticConfig: Config.IStaticConfig,
 		private $helpService: IHelpService,
 		private $extensibilityService: IExtensibilityService,
-		private $optionsTracker: IOptionsTracker,
-		private $projectDataService: IProjectDataService) {
+		private $optionsTracker: IOptionsTracker) {
 	}
 
 	public allCommands(opts: { includeDevCommands: boolean }): string[] {
@@ -106,15 +105,8 @@ export class CommandsService implements ICommandsService {
 	private async tryExecuteCommandAction(commandName: string, commandArguments: string[]): Promise<boolean | ICanExecuteCommandOutput> {
 		const command = this.$injector.resolveCommand(commandName);
 		if (!command || !command.isHierarchicalCommand) {
-			let projectData = null;
-			try {
-				projectData = this.$projectDataService.getProjectData();
-			} catch (err) {
-				this.$logger.trace(`Error while trying to get project data. More info: ${err}`);
-			}
-
 			const dashedOptions = command ? command.dashedOptions : null;
-			this.$options.validateOptions(dashedOptions, projectData);
+			this.$options.validateOptions(dashedOptions);
 		}
 
 		return this.canExecuteCommand(commandName, commandArguments);
