@@ -69,7 +69,15 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 		{ packageName: "nativescript-datetimepicker", verifiedVersion: "1.1.0" },
 		{ packageName: "kinvey-nativescript-sdk", verifiedVersion: "4.2.1" },
 		{ packageName: "nativescript-plugin-firebase", verifiedVersion: "9.0.2" },
-		{ packageName: "nativescript-vue", verifiedVersion: "2.3.0" },
+		{
+			packageName: "nativescript-vue", verifiedVersion: "2.3.0",
+			shouldMigrateAction: async (projectData: IProjectData, allowInvalidVersions: boolean) => {
+				const dependency = { packageName: "nativescript-vue", verifiedVersion: "2.3.0", isDev: false };
+				const result = this.hasDependency(dependency, projectData) && await this.shouldMigrateDependencyVersion(dependency, projectData, allowInvalidVersions);
+				return result;
+			},
+			migrateAction: this.migrateNativeScriptVue.bind(this)
+		},
 		{
 			packageName: "nativescript-angular", verifiedVersion: "8.0.2",
 			shouldMigrateAction: async (projectData: IProjectData, allowInvalidVersions: boolean) => {
@@ -396,7 +404,18 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 			{ packageName: "@angular/platform-browser", verifiedVersion: "8.0.0", shouldAddIfMissing: true },
 			{ packageName: "@angular/router", verifiedVersion: "8.0.0", shouldAddIfMissing: true },
 			{ packageName: "rxjs", verifiedVersion: "6.3.3", shouldAddIfMissing: true },
-			{ packageName: "zone.js", verifiedVersion: "0.9.1", shouldAddIfMissing: true }
+			{ packageName: "zone.js", verifiedVersion: "0.9.1", shouldAddIfMissing: true },
+			{ packageName: "@angular/animations", verifiedVersion: "8.0.0" },
+			{ packageName: "@angular/compiler-cli", verifiedVersion: "8.0.0", isDev: true },
+			{ packageName: "@ngtools/webpack", verifiedVersion: "8.0.0", isDev: true }
+		];
+
+		return dependencies;
+	}
+
+	private async migrateNativeScriptVue(): Promise<IMigrationDependency[]> {
+		const dependencies = [
+			{ packageName: "nativescript-vue-template-compiler", verifiedVersion: "2.3.0", isDev: true }
 		];
 
 		return dependencies;
