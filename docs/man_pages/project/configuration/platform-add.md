@@ -13,15 +13,14 @@ Configures the current project to target the selected platform. <% if(isHtml) { 
 
 Usage | Synopsis
 ------|-------
-Android latest runtime | `$ tns platform add android [--framework-path <File Path>] [--platform-template <Platform Template>]`
-Android selected runtime | `$ tns platform add android[@<Version>] [--framework-path <File Path>] [--platform-template <Platform Template>]`
+Android latest runtime | `$ tns platform add android [--framework-path <File Path>]`
+Android selected runtime | `$ tns platform add android[@<Version>] [--framework-path <File Path>] `
 <% if (isMacOS) { %>iOS latest runtime | `$ tns platform add ios [--framework-path <File Path>]`
-iOS selected runtime | `$ tns platform add ios[@<Version>] [--framework-path <File Path>] [--platform-template <Platform Template>]`<% } %>
+iOS selected runtime | `$ tns platform add ios[@<Version>] [--framework-path <File Path>] `<% } %>
 
 ### Options
 
 * `--framework-path` - Sets the path to a NativeScript runtime for the specified platform that you want to use instead of the default runtime. `<File Path>` must point to a valid npm package.
-* `--platform-template` - Sets the platform template that will be used for the native application. `<Platform Template>` is a valid npm package, path to directory, .tgz or GitHub URL that contains a native Android or iOS template.
 
 ### Arguments
 
