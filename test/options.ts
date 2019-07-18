@@ -292,7 +292,7 @@ describe("options", () => {
 				name: "should set hmr to true by default",
 				expectedHmrValue: true
 			}, {
-				name: "set set hmr to false when --no-hmr is provided",
+				name: "should set hmr to false when --no-hmr is provided",
 				args: ["--no-hmr"],
 				expectedHmrValue: false
 			}, {
@@ -319,6 +319,7 @@ describe("options", () => {
 					options.setupOptions(testCase.commandSpecificDashedOptions);
 
 					assert.equal(testCase.expectedHmrValue, options.argv.hmr);
+					assert.isFalse(isExecutionStopped);
 
 					(testCase.args || []).forEach(arg => process.argv.pop());
 				});

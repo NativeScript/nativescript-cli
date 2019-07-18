@@ -6,7 +6,6 @@ export class Options {
 	private static NONDASHED_OPTION_REGEX = /(.+?)[-]([a-zA-Z])(.*)/;
 
 	private optionsWhiteList = ["ui", "recursive", "reporter", "require", "timeout", "_", "$0"]; // These options shouldn't be validated
-	private yargsArgv: yargs.Argv;
 	private globalOptions: IDictionary<IDashedOption> = {
 		log: { type: OptionType.String, hasSensitiveValue: false },
 		verbose: { type: OptionType.Boolean, alias: "v", hasSensitiveValue: false },
@@ -19,6 +18,7 @@ export class Options {
 		_: { type: OptionType.String, hasSensitiveValue: false }
 	};
 
+	private initialArgv: yargs.Arguments;
 	public argv: yargs.Arguments;
 	public options: IDictionary<IDashedOption>;
 
@@ -31,7 +31,7 @@ export class Options {
 		this.argv.bundle = "webpack";
 
 		// Check if the user has explicitly provide --hmr and --release options from command line
-		if (this.yargsArgv.argv.release && this.yargsArgv.argv.hmr) {
+		if (this.initialArgv.release && this.initialArgv.hmr) {
 			this.$errors.failWithoutHelp("The options --release and --hmr cannot be used simultaneously.");
 		}
 
@@ -250,8 +250,9 @@ export class Options {
 			opts[this.getDashedOptionName(key)] = value;
 		});
 
-		this.yargsArgv = yargs(process.argv.slice(2));
-		this.argv = this.yargsArgv.options(<any>opts).argv;
+		const parsed = yargs(process.argv.slice(2));
+		this.initialArgv = parsed.argv;
+		this.argv = parsed.options(<any>opts).argv;
 
 		// For backwards compatibility
 		// Previously profileDir had a default option and calling `this.$options.profileDir` always returned valid result.
