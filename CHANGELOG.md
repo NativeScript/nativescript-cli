@@ -1,6 +1,18 @@
 NativeScript CLI Changelog
 ================
 
+6.0.1 (2019, July 18)
+==
+* [Fixed #4814](https://github.com/NativeScript/nativescript-cli/issues/4814): Missing `yargs-parser` dependency
+* [Fixed #4846](https://github.com/NativeScript/nativescript-cli/issues/4846): Xcode running on devices crashes with error `Unable to create file *.hot-update.json`
+* [Fixed #4871](https://github.com/NativeScript/nativescript-cli/pull/4871): Issues when stopping the LiveSync process
+* [Fixed #4872](https://github.com/NativeScript/nativescript-cli/pull/4872): Sidekick: debug operation fails on iOS when Developer Disk Image is not installed on device
+* [Fixed #4873](https://github.com/NativeScript/nativescript-cli/issues/4873): `tns migrate` should update `nativescript-vue-template-compiler`
+* [Fixed #4874](https://github.com/NativeScript/nativescript-cli/issues/4874): After `tns migrate` preview/build/run commands fail with `ERROR in The Angular Compiler requires TypeScript >=3.1.1 and <3.3.0 but 3.4.5 was found instead.`
+* [Fixed #4876](https://github.com/NativeScript/nativescript-cli/issues/4876):`tns migrate` does not update @ngtools/webpack
+* [Fixed #4878](https://github.com/NativeScript/nativescript-cli/issues/4878): `tns migrate` does not update @angular/animations
+* [Fixed #4879](https://github.com/NativeScript/nativescript-cli/issues/4879): `--platform-template` option is still shown in CLI's help
+
 6.0.0 (2019, July 17)
 ==
 
