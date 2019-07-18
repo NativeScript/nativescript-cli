@@ -199,7 +199,7 @@ export class RunController extends EventEmitter implements IRunController {
 				result.didRestart = true;
 			}
 		} catch (err) {
-			this.$logger.info(`Error while trying to start application ${applicationIdentifier} on device ${liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier}. Error is: ${err.message || err}`);
+			this.$logger.trace(`Error while trying to start application ${applicationIdentifier} on device ${liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier}. Error is: ${err.message || err}`);
 			const msg = `Unable to start application ${applicationIdentifier} on device ${liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier}. Try starting it manually.`;
 			this.$logger.warn(msg);
 
@@ -377,7 +377,7 @@ export class RunController extends EventEmitter implements IRunController {
 
 					await this.$deviceInstallAppService.installOnDevice(device, deviceDescriptor.buildData, rebuiltInformation[platformData.platformNameLowerCase].packageFilePath);
 					await platformLiveSyncService.syncAfterInstall(device, watchInfo);
-					await platformLiveSyncService.restartApplication(projectData, { deviceAppData, modifiedFilesData: [], isFullSync: false, useHotModuleReload: liveSyncInfo.useHotModuleReload });
+					await this.refreshApplication(projectData, { deviceAppData, modifiedFilesData: [], isFullSync: false, useHotModuleReload: liveSyncInfo.useHotModuleReload }, data, deviceDescriptor);
 				} else {
 					const isInHMRMode = liveSyncInfo.useHotModuleReload && data.hmrData && data.hmrData.hash;
 					if (isInHMRMode) {
