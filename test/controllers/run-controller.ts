@@ -96,7 +96,8 @@ function createTestInjector() {
 			prepareData = currentPrepareData;
 			return { platform: prepareData.platform, hasNativeChanges: false };
 		},
-		on: () => ({})
+		on: () => ({}),
+		removeListener: (): void => undefined
 	});
 	injector.register("prepareNativePlatformService", {});
 	injector.register("projectChangesService", {});

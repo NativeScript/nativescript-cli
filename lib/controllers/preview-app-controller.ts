@@ -15,6 +15,7 @@ export class PreviewAppController extends EventEmitter implements IPreviewAppCon
 
 	constructor(
 		private $analyticsService: IAnalyticsService,
+		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $errors: IErrors,
 		private $hmrStatusService: IHmrStatusService,
 		private $logger: ILogger,
@@ -39,11 +40,15 @@ export class PreviewAppController extends EventEmitter implements IPreviewAppCon
 		return result;
 	}
 
-	public async stopPreview(): Promise<void> {
+	public async stopPreview(data: IProjectDir): Promise<void> {
 		this.$previewSdkService.stop();
 		this.$previewDevicesService.updateConnectedDevices([]);
+
+		await this.$prepareController.stopWatchers(data.projectDir, this.$devicePlatformsConstants.Android);
+		await this.$prepareController.stopWatchers(data.projectDir, this.$devicePlatformsConstants.iOS);
+
 		if (this.prepareReadyEventHandler) {
-			this.removeListener(PREPARE_READY_EVENT_NAME, this.prepareReadyEventHandler);
+			this.$prepareController.removeListener(PREPARE_READY_EVENT_NAME, this.prepareReadyEventHandler);
 			this.prepareReadyEventHandler = null;
 		}
 	}
@@ -83,10 +88,12 @@ export class PreviewAppController extends EventEmitter implements IPreviewAppCon
 				await this.$previewAppPluginsService.comparePluginsOnDevice(data, device);
 
 				if (!this.prepareReadyEventHandler) {
-					this.prepareReadyEventHandler = async (currentPrepareData: IFilesChangeEventData) => {
+					const handler = async (currentPrepareData: IFilesChangeEventData) => {
 						await this.handlePrepareReadyEvent(data, currentPrepareData);
 					};
-					this.$prepareController.on(PREPARE_READY_EVENT_NAME, this.prepareReadyEventHandler.bind(this));
+
+					this.prepareReadyEventHandler = handler.bind(this);
+					this.$prepareController.on(PREPARE_READY_EVENT_NAME, this.prepareReadyEventHandler);
 				}
 
 				data.env = data.env || {};
