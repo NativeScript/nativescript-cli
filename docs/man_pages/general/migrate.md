@@ -50,6 +50,7 @@ The following dependencies will be updated if needed:
 * @angular/platform-browser
 * @angular/router
 * @ngtools/webpack
+* @angular-devkit/build-angular
 * rxjs
 * zone.js
 * nativescript-unit-test-runner
