@@ -72,6 +72,7 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 
 			childProcess.on("error", (err) => {
 				this.$logger.trace(`Unable to start webpack process in watch mode. Error is: ${err}`);
+				delete this.webpackProcesses[platformData.platformNameLowerCase];
 				reject(err);
 			});
 
@@ -82,6 +83,7 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 				this.$logger.trace(`Webpack process exited with code ${exitCode} when we expected it to be long living with watch.`);
 				const error = new Error(`Executing webpack failed with exit code ${exitCode}.`);
 				error.code = exitCode;
+				delete this.webpackProcesses[platformData.platformNameLowerCase];
 				reject(error);
 			});
 		});
@@ -97,12 +99,14 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 			const childProcess = await this.startWebpackProcess(platformData, projectData, prepareData);
 			childProcess.on("error", (err) => {
 				this.$logger.trace(`Unable to start webpack process in non-watch mode. Error is: ${err}`);
+				delete this.webpackProcesses[platformData.platformNameLowerCase];
 				reject(err);
 			});
 
 			childProcess.on("close", async (arg: any) => {
 				await this.$cleanupService.removeKillProcess(childProcess.pid.toString());
 
+				delete this.webpackProcesses[platformData.platformNameLowerCase];
 				const exitCode = typeof arg === "number" ? arg : arg && arg.code;
 				if (exitCode === 0) {
 					resolve();
