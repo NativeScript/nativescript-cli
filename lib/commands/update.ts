@@ -9,11 +9,17 @@ export class UpdateCommand implements ICommand {
 		private $migrateController: IMigrateController,
 		private $options: IOptions,
 		private $errors: IErrors,
+		private $logger: ILogger,
 		private $projectData: IProjectData) {
 		this.$projectData.initializeProjectData();
 	}
 
 	public async execute(args: string[]): Promise<void> {
+		if (!await this.$updateController.shouldUpdate({ projectDir: this.$projectData.projectDir, version: args[0] })) {
+			this.$logger.printMarkdown(`__${UpdateCommand.PROJECT_UP_TO_DATE_MESSAGE}__`);
+			return;
+		}
+
 		await this.$updateController.update({ projectDir: this.$projectData.projectDir, version: args[0], frameworkPath: this.$options.frameworkPath });
 	}
 
@@ -25,10 +31,6 @@ export class UpdateCommand implements ICommand {
 
 		if (shouldMigrate) {
 			this.$errors.failWithoutHelp(UpdateCommand.SHOULD_MIGRATE_PROJECT_MESSAGE);
-		}
-
-		if (!await this.$updateController.shouldUpdate({ projectDir: this.$projectData.projectDir, version: args[0] })) {
-			this.$errors.failWithoutHelp(UpdateCommand.PROJECT_UP_TO_DATE_MESSAGE);
 		}
 
 		return args.length < 2 && this.$projectData.projectDir !== "";
