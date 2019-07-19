@@ -51,7 +51,7 @@ export class RunController extends EventEmitter implements IRunController {
 		}
 
 		if (!this.prepareReadyEventHandler) {
-			this.prepareReadyEventHandler = async (data: IFilesChangeEventData) => {
+			const handler = async (data: IFilesChangeEventData) => {
 				if (data.hasNativeChanges) {
 					const platformData = this.$platformsDataService.getPlatformData(data.platform, projectData);
 					const prepareData = this.$prepareDataService.getPrepareData(liveSyncInfo.projectDir, data.platform, { ...liveSyncInfo, watch: !liveSyncInfo.skipWatcher });
@@ -63,7 +63,9 @@ export class RunController extends EventEmitter implements IRunController {
 					await this.syncChangedDataOnDevices(data, projectData, liveSyncInfo);
 				}
 			};
-			this.$prepareController.on(PREPARE_READY_EVENT_NAME, this.prepareReadyEventHandler.bind(this));
+
+			this.prepareReadyEventHandler = handler.bind(this);
+			this.$prepareController.on(PREPARE_READY_EVENT_NAME, this.prepareReadyEventHandler);
 		}
 
 		await this.syncInitialDataOnDevices(projectData, liveSyncInfo, deviceDescriptorsForInitialSync);
@@ -113,7 +115,7 @@ export class RunController extends EventEmitter implements IRunController {
 				liveSyncProcessInfo.deviceDescriptors = [];
 
 				if (this.prepareReadyEventHandler) {
-					this.removeListener(PREPARE_READY_EVENT_NAME, this.prepareReadyEventHandler);
+					this.$prepareController.removeListener(PREPARE_READY_EVENT_NAME, this.prepareReadyEventHandler);
 					this.prepareReadyEventHandler = null;
 				}
 
@@ -199,7 +201,7 @@ export class RunController extends EventEmitter implements IRunController {
 				result.didRestart = true;
 			}
 		} catch (err) {
-			this.$logger.trace(`Error while trying to start application ${applicationIdentifier} on device ${liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier}. Error is: ${err.message || err}`);
+			this.$logger.info(`Error while trying to start application ${applicationIdentifier} on device ${liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier}. Error is: ${err.message || err}`);
 			const msg = `Unable to start application ${applicationIdentifier} on device ${liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier}. Try starting it manually.`;
 			this.$logger.warn(msg);
 
