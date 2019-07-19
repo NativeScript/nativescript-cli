@@ -15,6 +15,7 @@ export class PreviewAppController extends EventEmitter implements IPreviewAppCon
 
 	constructor(
 		private $analyticsService: IAnalyticsService,
+		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $errors: IErrors,
 		private $hmrStatusService: IHmrStatusService,
 		private $logger: ILogger,
@@ -39,9 +40,13 @@ export class PreviewAppController extends EventEmitter implements IPreviewAppCon
 		return result;
 	}
 
-	public async stopPreview(): Promise<void> {
+	public async stopPreview(data: IProjectDir): Promise<void> {
 		this.$previewSdkService.stop();
 		this.$previewDevicesService.updateConnectedDevices([]);
+
+		await this.$prepareController.stopWatchers(data.projectDir, this.$devicePlatformsConstants.Android);
+		await this.$prepareController.stopWatchers(data.projectDir, this.$devicePlatformsConstants.iOS);
+
 		if (this.prepareReadyEventHandler) {
 			this.$prepareController.removeListener(PREPARE_READY_EVENT_NAME, this.prepareReadyEventHandler);
 			this.prepareReadyEventHandler = null;
