@@ -14,6 +14,7 @@ export class PrepareController extends EventEmitter {
 	private watchersData: IDictionary<IDictionary<IPlatformWatcherData>> = {};
 	private isInitialPrepareReady = false;
 	private persistedData: IFilesChangeEventData[] = [];
+	private webpackCompilerHandler: any = null;
 
 	constructor(
 		private $platformController: IPlatformController,
@@ -46,7 +47,8 @@ export class PrepareController extends EventEmitter {
 		}
 
 		if (this.watchersData && this.watchersData[projectDir] && this.watchersData[projectDir][platformLowerCase] && this.watchersData[projectDir][platformLowerCase].hasWebpackCompilerProcess) {
-			await this.$webpackCompilerService.stopWebpackCompiler(platform);
+			await this.$webpackCompilerService.stopWebpackCompiler(platformLowerCase);
+			this.$webpackCompilerService.removeListener(WEBPACK_COMPILATION_COMPLETE, this.webpackCompilerHandler);
 			this.watchersData[projectDir][platformLowerCase].hasWebpackCompilerProcess = false;
 		}
 	}
@@ -110,11 +112,14 @@ export class PrepareController extends EventEmitter {
 
 	private async startJSWatcherWithPrepare(platformData: IPlatformData, projectData: IProjectData, prepareData: IPrepareData): Promise<void> {
 		if (!this.watchersData[projectData.projectDir][platformData.platformNameLowerCase].hasWebpackCompilerProcess) {
-			this.$webpackCompilerService.on(WEBPACK_COMPILATION_COMPLETE, data => {
+			const handler = (data: any) => {
 				if (data.platform.toLowerCase() === platformData.platformNameLowerCase) {
 					this.emitPrepareEvent({ ...data, hasNativeChanges: false });
 				}
-			});
+			};
+
+			this.webpackCompilerHandler = handler.bind(this);
+			this.$webpackCompilerService.on(WEBPACK_COMPILATION_COMPLETE, this.webpackCompilerHandler);
 
 			this.watchersData[projectData.projectDir][platformData.platformNameLowerCase].hasWebpackCompilerProcess = true;
 			await this.$webpackCompilerService.compileWithWatch(platformData, projectData, prepareData);
