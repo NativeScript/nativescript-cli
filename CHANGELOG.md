@@ -1,6 +1,12 @@
 NativeScript CLI Changelog
 ================
 
+6.0.2 (2019, July 22)
+==
+* [Fixed #4885](https://github.com/NativeScript/nativescript-cli/issues/4885): `migrate` and `update` commands are failing where everything is up-to-date
+* [Fixed #4887](https://github.com/NativeScript/nativescript-cli/pull/4887): Include forgotten Angular dependency from the code-sharing apps
+* [Fixed #4888](https://github.com/NativeScript/nativescript-cli/pull/4888): Sidekick: multiple errors in Sidekick
+
 6.0.1 (2019, July 18)
 ==
 * [Fixed #4814](https://github.com/NativeScript/nativescript-cli/issues/4814): Missing `yargs-parser` dependency
