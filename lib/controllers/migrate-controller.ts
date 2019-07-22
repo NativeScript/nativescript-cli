@@ -407,7 +407,8 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 			{ packageName: "zone.js", verifiedVersion: "0.9.1", shouldAddIfMissing: true },
 			{ packageName: "@angular/animations", verifiedVersion: "8.0.0" },
 			{ packageName: "@angular/compiler-cli", verifiedVersion: "8.0.0", isDev: true },
-			{ packageName: "@ngtools/webpack", verifiedVersion: "8.0.0", isDev: true }
+			{ packageName: "@ngtools/webpack", verifiedVersion: "8.0.0", isDev: true },
+			{ packageName: "@angular-devkit/build-angular", verifiedVersion: "0.800.3", isDev: true }
 		];
 
 		return dependencies;
