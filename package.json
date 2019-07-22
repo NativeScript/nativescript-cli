@@ -1,7 +1,7 @@
 {
   "name": "nativescript",
   "preferGlobal": true,
-  "version": "6.0.2",
+  "version": "6.1.0",
   "author": "Telerik <support@telerik.com>",
   "description": "Command-line interface for building NativeScript projects",
   "bin": {
