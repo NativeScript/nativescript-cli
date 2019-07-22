@@ -54,7 +54,7 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 		{ packageName: "nativescript-dev-sass", isDev: true, replaceWith: "node-sass" },
 		{ packageName: "nativescript-dev-typescript", isDev: true, replaceWith: MigrateController.typescriptPackageName },
 		{ packageName: "nativescript-dev-less", isDev: true, shouldRemove: true, warning: "LESS CSS is not supported out of the box. In order to enable it, follow the steps in this feature request: https://github.com/NativeScript/nativescript-dev-webpack/issues/967" },
-		{ packageName: constants.WEBPACK_PLUGIN_NAME, isDev: true, shouldAddIfMissing: true, verifiedVersion: "1.0.0" },
+		{ packageName: constants.WEBPACK_PLUGIN_NAME, isDev: true, shouldAddIfMissing: true, verifiedVersion: "1.0.1" },
 		{ packageName: "nativescript-camera", verifiedVersion: "4.5.0" },
 		{ packageName: "nativescript-geolocation", verifiedVersion: "5.1.0" },
 		{ packageName: "nativescript-imagepicker", verifiedVersion: "6.2.0" },
@@ -69,19 +69,36 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 		{ packageName: "nativescript-datetimepicker", verifiedVersion: "1.1.0" },
 		{ packageName: "kinvey-nativescript-sdk", verifiedVersion: "4.2.1" },
 		{ packageName: "nativescript-plugin-firebase", verifiedVersion: "9.0.2" },
-		{ packageName: "nativescript-vue", verifiedVersion: "2.3.0" },
+		{
+			packageName: "nativescript-vue", verifiedVersion: "2.3.0",
+			shouldMigrateAction: async (projectData: IProjectData, allowInvalidVersions: boolean) => {
+				const dependency = { packageName: "nativescript-vue", verifiedVersion: "2.3.0", isDev: false };
+				const result = this.hasDependency(dependency, projectData) && await this.shouldMigrateDependencyVersion(dependency, projectData, allowInvalidVersions);
+				return result;
+			},
+			migrateAction: this.migrateNativeScriptVue.bind(this)
+		},
+		{
+			packageName: "nativescript-angular", verifiedVersion: "8.0.2",
+			shouldMigrateAction: async (projectData: IProjectData, allowInvalidVersions: boolean) => {
+				const dependency = { packageName: "nativescript-angular", verifiedVersion: "8.0.2", isDev: false };
+				const result = this.hasDependency(dependency, projectData) && await this.shouldMigrateDependencyVersion(dependency, projectData, allowInvalidVersions);
+				return result;
+			},
+			migrateAction: this.migrateNativeScriptAngular.bind(this)
+		},
 		{ packageName: "nativescript-permissions", verifiedVersion: "1.3.0" },
 		{ packageName: "nativescript-cardview", verifiedVersion: "3.2.0" },
 		{
-			packageName: "nativescript-unit-test-runner", verifiedVersion: "0.6.4",
+			packageName: "nativescript-unit-test-runner", verifiedVersion: "0.7.0",
 			shouldMigrateAction: async (projectData: IProjectData, allowInvalidVersions: boolean) => {
-				const dependency = { packageName: "nativescript-unit-test-runner", verifiedVersion: "0.6.4", isDev: false };
+				const dependency = { packageName: "nativescript-unit-test-runner", verifiedVersion: "0.7.0", isDev: false };
 				const result = this.hasDependency(dependency, projectData) && await this.shouldMigrateDependencyVersion(dependency, projectData, allowInvalidVersions);
 				return result;
 			},
 			migrateAction: this.migrateUnitTestRunner.bind(this)
 		},
-		{ packageName: MigrateController.typescriptPackageName, isDev: true, getVerifiedVersion: this.getAngularTypeScriptVersion.bind(this) },
+		{ packageName: MigrateController.typescriptPackageName, isDev: true, verifiedVersion: "3.4.5" },
 		{ packageName: "nativescript-localize", verifiedVersion: "4.2.0" },
 		{ packageName: "nativescript-dev-babel", verifiedVersion: "0.2.1" },
 		{ packageName: "nativescript-nfc", verifiedVersion: "4.0.1" }
@@ -90,7 +107,7 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 	get verifiedPlatformVersions(): IDictionary<string> {
 		return {
 			[this.$devicePlatformsConstants.Android.toLowerCase()]: "6.0.0",
-			[this.$devicePlatformsConstants.iOS.toLowerCase()]: "6.0.0"
+			[this.$devicePlatformsConstants.iOS.toLowerCase()]: "6.0.1"
 		};
 	}
 
@@ -177,31 +194,6 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 		if (shouldMigrate) {
 			this.$errors.failWithoutHelp(MigrateController.UNABLE_TO_MIGRATE_APP_ERROR);
 		}
-	}
-
-	private async getAngularTypeScriptVersion(projectData: IProjectData): Promise<string> {
-		let verifiedVersion = "3.4.1";
-		try {
-			const ngcPackageName = "@angular/compiler-cli";
-			// e.g. ~8.0.0
-			let ngcVersion = projectData.dependencies[ngcPackageName] || projectData.devDependencies[ngcPackageName];
-			if (ngcVersion) {
-				// e.g. 8.0.3
-				ngcVersion = await this.$packageInstallationManager.maxSatisfyingVersion(ngcPackageName, ngcVersion);
-				const ngcManifest = await this.getPackageManifest(ngcPackageName, ngcVersion);
-				// e.g. >=3.4 <3.5
-				verifiedVersion = (ngcManifest && ngcManifest.peerDependencies &&
-					ngcManifest.peerDependencies[MigrateController.typescriptPackageName]) || verifiedVersion;
-
-				// e.g. 3.4.4
-				verifiedVersion = await this.$packageInstallationManager.maxSatisfyingVersion(
-					MigrateController.typescriptPackageName, verifiedVersion);
-			}
-		} catch (error) {
-			this.$logger.warn(`Unable to determine the TypeScript version based on the Angular packages. Error is: '${error}'.`);
-		}
-
-		return verifiedVersion;
 	}
 
 	private async migrateOldAndroidAppResources(projectData: IProjectData, backupDir: string) {
@@ -329,33 +321,23 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 					this.$errors.failWithoutHelp("Failed to find replacement dependency.");
 				}
 
-				const replacementDepVersion = await this.getDependencyVerifiedVersion(replacementDep, projectData);
 				this.$logger.info(`Replacing '${dependency.packageName}' with '${replacementDep.packageName}'.`);
-				this.$pluginsService.addToPackageJson(replacementDep.packageName, replacementDepVersion, replacementDep.isDev, projectData.projectDir);
+				this.$pluginsService.addToPackageJson(replacementDep.packageName, replacementDep.verifiedVersion, replacementDep.isDev, projectData.projectDir);
 			}
 
 			return;
 		}
 
-		const dependencyVersion = await this.getDependencyVerifiedVersion(dependency, projectData);
 		if (hasDependency && await this.shouldMigrateDependencyVersion(dependency, projectData, allowInvalidVersions)) {
-			this.$logger.info(`Updating '${dependency.packageName}' to compatible version '${dependencyVersion}'`);
-			this.$pluginsService.addToPackageJson(dependency.packageName, dependencyVersion, dependency.isDev, projectData.projectDir);
+			this.$logger.info(`Updating '${dependency.packageName}' to compatible version '${dependency.verifiedVersion}'`);
+			this.$pluginsService.addToPackageJson(dependency.packageName, dependency.verifiedVersion, dependency.isDev, projectData.projectDir);
 			return;
 		}
 
 		if (!hasDependency && dependency.shouldAddIfMissing) {
-			this.$logger.info(`Adding '${dependency.packageName}' with version '${dependencyVersion}'`);
-			this.$pluginsService.addToPackageJson(dependency.packageName, dependencyVersion, dependency.isDev, projectData.projectDir);
+			this.$logger.info(`Adding '${dependency.packageName}' with version '${dependency.verifiedVersion}'`);
+			this.$pluginsService.addToPackageJson(dependency.packageName, dependency.verifiedVersion, dependency.isDev, projectData.projectDir);
 		}
-	}
-
-	private async getDependencyVerifiedVersion(dependency: IMigrationDependency, projectData: IProjectData): Promise<string> {
-		if (!dependency.verifiedVersion && dependency.getVerifiedVersion) {
-			dependency.verifiedVersion = await dependency.getVerifiedVersion(projectData);
-		}
-
-		return dependency.verifiedVersion;
 	}
 
 	private async shouldMigrateDependencyVersion(dependency: IMigrationDependency, projectData: IProjectData, allowInvalidVersions: boolean): Promise<boolean> {
@@ -364,7 +346,7 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 		const packageName = dependency.packageName;
 		const referencedVersion = dependencies[packageName] || devDependencies[packageName];
 		const installedVersion = await this.getMaxDependencyVersion(dependency.packageName, referencedVersion);
-		const requiredVersion = await this.getDependencyVerifiedVersion(dependency, projectData);
+		const requiredVersion = dependency.verifiedVersion;
 
 		return this.isOutdatedVersion(installedVersion, requiredVersion, allowInvalidVersions);
 	}
@@ -406,6 +388,35 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 			{ packageName: "karma-chai", verifiedVersion: "0.1.0", isDev: true },
 			{ packageName: "karma-qunit", verifiedVersion: "3.1.2", isDev: true },
 			{ packageName: "karma", verifiedVersion: "4.1.0", isDev: true },
+		];
+
+		return dependencies;
+	}
+
+	private async migrateNativeScriptAngular(): Promise<IMigrationDependency[]> {
+		const dependencies = [
+			{ packageName: "@angular/platform-browser-dynamic", verifiedVersion: "8.0.0", shouldAddIfMissing: true },
+			{ packageName: "@angular/common", verifiedVersion: "8.0.0", shouldAddIfMissing: true },
+			{ packageName: "@angular/compiler", verifiedVersion: "8.0.0", shouldAddIfMissing: true },
+			{ packageName: "@angular/core", verifiedVersion: "8.0.0", shouldAddIfMissing: true },
+			{ packageName: "@angular/forms", verifiedVersion: "8.0.0", shouldAddIfMissing: true },
+			{ packageName: "@angular/http", verifiedVersion: "8.0.0-beta.10", shouldAddIfMissing: true },
+			{ packageName: "@angular/platform-browser", verifiedVersion: "8.0.0", shouldAddIfMissing: true },
+			{ packageName: "@angular/router", verifiedVersion: "8.0.0", shouldAddIfMissing: true },
+			{ packageName: "rxjs", verifiedVersion: "6.3.3", shouldAddIfMissing: true },
+			{ packageName: "zone.js", verifiedVersion: "0.9.1", shouldAddIfMissing: true },
+			{ packageName: "@angular/animations", verifiedVersion: "8.0.0" },
+			{ packageName: "@angular/compiler-cli", verifiedVersion: "8.0.0", isDev: true },
+			{ packageName: "@ngtools/webpack", verifiedVersion: "8.0.0", isDev: true },
+			{ packageName: "@angular-devkit/build-angular", verifiedVersion: "0.800.3", isDev: true }
+		];
+
+		return dependencies;
+	}
+
+	private async migrateNativeScriptVue(): Promise<IMigrationDependency[]> {
+		const dependencies = [
+			{ packageName: "nativescript-vue-template-compiler", verifiedVersion: "2.3.0", isDev: true }
 		];
 
 		return dependencies;

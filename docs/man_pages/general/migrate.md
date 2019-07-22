@@ -15,7 +15,7 @@ The following folders will be removed: **"hooks"**, **"platforms"** and **"node_
 The **"nativescript-dev-sass"** and **"nativescript-dev-typescript"** dependencies will be replaced with **"node-sass"** and **"typescript"** respectively.
 The **"nativescript-dev-less"** dependency will be removed, but to enable LESS CSS support the user should follow the steps in this<% if(isConsole) { %> feature request: https://github.com/NativeScript/nativescript-dev-webpack/issues/967.<% } %><% if(isHtml) { %> [feature request](https://github.com/NativeScript/nativescript-dev-webpack/issues/967).<% } %>
 
-The following dependencies will be updated if needed: 
+The following dependencies will be updated if needed:
 * tns-core-modules
 * tns-core-modules-widgets
 * tns-platform-declarations
@@ -37,6 +37,22 @@ The following dependencies will be updated if needed:
 * kinvey-nativescript-sdk
 * nativescript-plugin-firebase
 * nativescript-vue
+* nativescript-vue-template-compiler
+* nativescript-angular
+* @angular/animiations
+* @angular/platform-browser-dynamic
+* @angular/common
+* @angular/compiler
+* @angular/compiler-cli
+* @angular/core
+* @angular/forms
+* @angular/http
+* @angular/platform-browser
+* @angular/router
+* @ngtools/webpack
+* @angular-devkit/build-angular
+* rxjs
+* zone.js
 * nativescript-unit-test-runner
 * karma-webpack
 * karma-jasmine

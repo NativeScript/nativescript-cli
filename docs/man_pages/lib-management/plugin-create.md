@@ -10,8 +10,11 @@ position: 1
 Creates a new project for NativeScript plugin development. The project uses the [NativeScript Plugin Seed](https://github.com/NativeScript/nativescript-plugin-seed) as a base and contains the following directories:
 
 * `src` - source code of the plugin
-* `demo` - simple NativeScript application used to test and show plugin features
 * `publish` - shell scripts used to build and pack the plugin source code and publish it in [NPM](https://www.npmjs.com/)
+
+The command will also propose you to setup demo applications and if you accept them, it will create the following additional directories: 
+* `demo` - simple NativeScript application used to test and show plugin features
+* `demo-angular` - simple Angular application used to test and show plugin features
 
 The project is setup for easy commit in Github, which is why the command will ask you for your Github username.
 <% if(isHtml) { %>Before starting to code your first plugin, you can visit the NativeScript documentation page for [building plugins](https://docs.nativescript.org/plugins/building-plugins#step-2-set-up-a-development-workflow) or the [plugin seed repository](https://github.com/NativeScript/nativescript-plugin-seed/blob/master/README.md).<% } %>

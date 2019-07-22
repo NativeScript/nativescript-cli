@@ -51,7 +51,7 @@ export class RunController extends EventEmitter implements IRunController {
 		}
 
 		if (!this.prepareReadyEventHandler) {
-			this.prepareReadyEventHandler = async (data: IFilesChangeEventData) => {
+			const handler = async (data: IFilesChangeEventData) => {
 				if (data.hasNativeChanges) {
 					const platformData = this.$platformsDataService.getPlatformData(data.platform, projectData);
 					const prepareData = this.$prepareDataService.getPrepareData(liveSyncInfo.projectDir, data.platform, { ...liveSyncInfo, watch: !liveSyncInfo.skipWatcher });
@@ -63,7 +63,9 @@ export class RunController extends EventEmitter implements IRunController {
 					await this.syncChangedDataOnDevices(data, projectData, liveSyncInfo);
 				}
 			};
-			this.$prepareController.on(PREPARE_READY_EVENT_NAME, this.prepareReadyEventHandler.bind(this));
+
+			this.prepareReadyEventHandler = handler.bind(this);
+			this.$prepareController.on(PREPARE_READY_EVENT_NAME, this.prepareReadyEventHandler);
 		}
 
 		await this.syncInitialDataOnDevices(projectData, liveSyncInfo, deviceDescriptorsForInitialSync);
@@ -113,7 +115,7 @@ export class RunController extends EventEmitter implements IRunController {
 				liveSyncProcessInfo.deviceDescriptors = [];
 
 				if (this.prepareReadyEventHandler) {
-					this.removeListener(PREPARE_READY_EVENT_NAME, this.prepareReadyEventHandler);
+					this.$prepareController.removeListener(PREPARE_READY_EVENT_NAME, this.prepareReadyEventHandler);
 					this.prepareReadyEventHandler = null;
 				}
 
@@ -141,10 +143,10 @@ export class RunController extends EventEmitter implements IRunController {
 		return this.$liveSyncProcessDataService.getDeviceDescriptors(data.projectDir);
 	}
 
-	protected async refreshApplication(projectData: IProjectData, liveSyncResultInfo: ILiveSyncResultInfo, filesChangeEventData: IFilesChangeEventData, deviceDescriptor: ILiveSyncDeviceDescriptor, settings?: IRefreshApplicationSettings): Promise<IRestartApplicationInfo> {
+	protected async refreshApplication(projectData: IProjectData, liveSyncResultInfo: ILiveSyncResultInfo, filesChangeEventData: IFilesChangeEventData, deviceDescriptor: ILiveSyncDeviceDescriptor): Promise<IRestartApplicationInfo> {
 		const result = deviceDescriptor.debuggingEnabled ?
-			await this.refreshApplicationWithDebug(projectData, liveSyncResultInfo, filesChangeEventData, deviceDescriptor, settings) :
-			await this.refreshApplicationWithoutDebug(projectData, liveSyncResultInfo, filesChangeEventData, deviceDescriptor, settings);
+			await this.refreshApplicationWithDebug(projectData, liveSyncResultInfo, filesChangeEventData, deviceDescriptor) :
+			await this.refreshApplicationWithoutDebug(projectData, liveSyncResultInfo, filesChangeEventData, deviceDescriptor);
 
 		const device = liveSyncResultInfo.deviceAppData.device;
 
@@ -159,12 +161,12 @@ export class RunController extends EventEmitter implements IRunController {
 		return result;
 	}
 
-	protected async refreshApplicationWithDebug(projectData: IProjectData, liveSyncResultInfo: ILiveSyncResultInfo, filesChangeEventData: IFilesChangeEventData, deviceDescriptor: ILiveSyncDeviceDescriptor, settings?: IRefreshApplicationSettings): Promise<IRestartApplicationInfo> {
+	protected async refreshApplicationWithDebug(projectData: IProjectData, liveSyncResultInfo: ILiveSyncResultInfo, filesChangeEventData: IFilesChangeEventData, deviceDescriptor: ILiveSyncDeviceDescriptor): Promise<IRestartApplicationInfo> {
 		const debugOptions = deviceDescriptor.debugOptions || {};
 
 		liveSyncResultInfo.waitForDebugger = !!debugOptions.debugBrk;
 
-		const refreshInfo = await this.refreshApplicationWithoutDebug(projectData, liveSyncResultInfo, filesChangeEventData, deviceDescriptor, settings);
+		const refreshInfo = await this.refreshApplicationWithoutDebug(projectData, liveSyncResultInfo, filesChangeEventData, deviceDescriptor, { shouldSkipEmitLiveSyncNotification: true, shouldCheckDeveloperDiscImage: true });
 
 		// we do not stop the application when debugBrk is false, so we need to attach, instead of launch
 		// if we try to send the launch request, the debugger port will not be printed and the command will timeout
@@ -330,6 +332,8 @@ export class RunController extends EventEmitter implements IRunController {
 					applicationIdentifier: projectData.projectIdentifiers[device.deviceInfo.platform.toLowerCase()],
 					error: err,
 				});
+
+				await this.stop({ projectDir: projectData.projectDir, deviceIdentifiers: [device.deviceInfo.identifier], stopOptions: { shouldAwaitAllActions: false }});
 			}
 		};
 
@@ -375,7 +379,7 @@ export class RunController extends EventEmitter implements IRunController {
 
 					await this.$deviceInstallAppService.installOnDevice(device, deviceDescriptor.buildData, rebuiltInformation[platformData.platformNameLowerCase].packageFilePath);
 					await platformLiveSyncService.syncAfterInstall(device, watchInfo);
-					await platformLiveSyncService.restartApplication(projectData, { deviceAppData, modifiedFilesData: [], isFullSync: false, useHotModuleReload: liveSyncInfo.useHotModuleReload });
+					await this.refreshApplication(projectData, { deviceAppData, modifiedFilesData: [], isFullSync: false, useHotModuleReload: liveSyncInfo.useHotModuleReload }, data, deviceDescriptor);
 				} else {
 					const isInHMRMode = liveSyncInfo.useHotModuleReload && data.hmrData && data.hmrData.hash;
 					if (isInHMRMode) {
@@ -408,7 +412,7 @@ export class RunController extends EventEmitter implements IRunController {
 					error: err,
 				});
 
-				await this.stop({ projectDir: projectData.projectDir, deviceIdentifiers: [device.deviceInfo.identifier] });
+				await this.stop({ projectDir: projectData.projectDir, deviceIdentifiers: [device.deviceInfo.identifier], stopOptions: { shouldAwaitAllActions: false } });
 			}
 		};
 

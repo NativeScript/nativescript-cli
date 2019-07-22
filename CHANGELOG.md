@@ -1,6 +1,84 @@
 NativeScript CLI Changelog
 ================
 
+6.0.2 (2019, July 22)
+==
+* [Fixed #4885](https://github.com/NativeScript/nativescript-cli/issues/4885): `migrate` and `update` commands are failing where everything is up-to-date
+* [Fixed #4887](https://github.com/NativeScript/nativescript-cli/pull/4887): Include forgotten Angular dependency from the code-sharing apps
+* [Fixed #4888](https://github.com/NativeScript/nativescript-cli/pull/4888): Sidekick: multiple errors in Sidekick
+
+6.0.1 (2019, July 18)
+==
+* [Fixed #4814](https://github.com/NativeScript/nativescript-cli/issues/4814): Missing `yargs-parser` dependency
+* [Fixed #4846](https://github.com/NativeScript/nativescript-cli/issues/4846): Xcode running on devices crashes with error `Unable to create file *.hot-update.json`
+* [Fixed #4871](https://github.com/NativeScript/nativescript-cli/pull/4871): Issues when stopping the LiveSync process
+* [Fixed #4872](https://github.com/NativeScript/nativescript-cli/pull/4872): Sidekick: debug operation fails on iOS when Developer Disk Image is not installed on device
+* [Fixed #4873](https://github.com/NativeScript/nativescript-cli/issues/4873): `tns migrate` should update `nativescript-vue-template-compiler`
+* [Fixed #4874](https://github.com/NativeScript/nativescript-cli/issues/4874): After `tns migrate` preview/build/run commands fail with `ERROR in The Angular Compiler requires TypeScript >=3.1.1 and <3.3.0 but 3.4.5 was found instead.`
+* [Fixed #4876](https://github.com/NativeScript/nativescript-cli/issues/4876):`tns migrate` does not update @ngtools/webpack
+* [Fixed #4878](https://github.com/NativeScript/nativescript-cli/issues/4878): `tns migrate` does not update @angular/animations
+* [Fixed #4879](https://github.com/NativeScript/nativescript-cli/issues/4879): `--platform-template` option is still shown in CLI's help
+
+6.0.0 (2019, July 17)
+==
+
+### Breaking changes
+
+* Applications can be build only with bundle workflow - in previous versions there were two ways to build your application - `bundle` and `legacy` workflow. With this release CLI allows building your app only in case you are using the bundle workflow. More information is available [in this blopost](https://www.nativescript.org/blog/the-future-of-building-nativescript-apps)
+* With older CLI versions you were able to run `tns debug android` and continue debugging after the command exits. In this release, when CLI exits, it clears all used resources, so you will not be able to continue the debug session. More information is available in [this issue](https://github.com/NativeScript/nativescript-cli/issues/4219) for more information.
+* `--syncAllFiles` option is not supported anymore - this option was added to force CLI to watch all files in `node_modules`. In 6.0 this is the default and only behavior - webpack watches all required files and CLI watches the `platforms` directories and `package.json` files of the plugins added as dependencies of the application.
+* Drop support for Xcode versions below 10 - new features for iOS require the latest Xcode versions, so we decided to require at least Xcode 10 for building the applications
+* Drop support for Node.js below 8 - Node.js 8 does not support [these version anymore](https://github.com/nodejs/Release) and so does our CLI. In case you are using such Node.js version, CLI will not allow you to execute any command, so you should upgrade to latest LTS version.
+* `--platformTemplate` option has been deleted. More information can be found in [this issue](https://github.com/NativeScript/nativescript-cli/issues/4867).
+* `tns init` command has been deleted
+* `tns clean app` command has been deleted
+* Improved plugin development workflow may require changes in your daily work when creating plugins. More information can be found in [this issue](https://github.com/NativeScript/nativescript-cli/issues/4865)
+* When you pass `--release`, CLI will switch webpack in production mode. More information can be found in [this issue](https://github.com/NativeScript/nativescript-cli/issues/4497)
+* CLI now forces sourceMap generation by default when building in debug mode. You can disable them by passing `--env.sourceMap false`. souceMaps are disabled by default in release builds, you can enable them by passing `--env.sourceMap`.
+
+### New
+* [Implemented #2368](https://github.com/NativeScript/nativescript-cli/issues/2368): Compiling in other path (dist), no in same path (src/app)
+* [Implemented #2417](https://github.com/NativeScript/nativescript-cli/issues/2417): Show TypeScript line numbers in stack traces
+* [Implemented #2776](https://github.com/NativeScript/nativescript-cli/issues/2776): Add ability to ignore files from final package when build in release
+* [Implemented #3378](https://github.com/NativeScript/nativescript-cli/issues/3378): Running app with locally installed plugin should transpile the plugin's TypeScript files
+* [Implemented #4497](https://github.com/NativeScript/nativescript-cli/issues/4497): Ability to detect within webpack if app is being built for release
+* [Implemented #4604](https://github.com/NativeScript/nativescript-cli/issues/4604): Logs and errors from devices always point to bundle/vendor files
+* [Implemented #4646](https://github.com/NativeScript/nativescript-cli/issues/4646): Introduce command (`tns migrate`) to migrate old project to 6.0.0 requirements
+* [Implemented #4648](https://github.com/NativeScript/nativescript-cli/issues/4648): Drop support for Node.js < 8
+* [Implemented #4649](https://github.com/NativeScript/nativescript-cli/issues/4649): Deprecate support for Node.js < 10
+* [Implemented #4650](https://github.com/NativeScript/nativescript-cli/issues/4650): Add official support for Node.js 12
+* [Implemented #4651](https://github.com/NativeScript/nativescript-cli/issues/4651): Add drawer navigation prompt when vue flavor is selected on `tns create`
+* [Implemented #4667](https://github.com/NativeScript/nativescript-cli/issues/4667): Support yarn hoisted packages in a workspace context
+* [Implemented #4692](https://github.com/NativeScript/nativescript-cli/issues/4692): CLI should watch package.json files in the application
+* [Implemented #4731](https://github.com/NativeScript/nativescript-cli/issues/4731): Drop support for Xcode < 10
+* [Implemented #4863](https://github.com/NativeScript/nativescript-cli/issues/4863): Delete `tns init` command
+* [Implemented #4863](https://github.com/NativeScript/nativescript-cli/issues/4863): Delete `tns clean app` command
+* [Implemented #4865](https://github.com/NativeScript/nativescript-cli/issues/4865): Improve plugin development workflow
+* [Implemented #4867](https://github.com/NativeScript/nativescript-cli/issues/4867): Delete `--platformTemplate` option
+
+### Fixed
+* [Fixed #2739](https://github.com/NativeScript/nativescript-cli/issues/2739): Unit test runner do not work in --watch mode
+* [Fixed #2963](https://github.com/NativeScript/nativescript-cli/issues/2963): Confusing messages on preparing plugin
+* [Fixed #3028](https://github.com/NativeScript/nativescript-cli/issues/3028): Local dependency brakes build
+* [Fixed #3146](https://github.com/NativeScript/nativescript-cli/issues/3146): `tns run ios` shows "No reachable hosts" after running unit tests
+* [Fixed #3351](https://github.com/NativeScript/nativescript-cli/issues/3351): If you delete the whole css data or the css file itself the changes are not going to be applied to the app
+* [Fixed #3546](https://github.com/NativeScript/nativescript-cli/issues/3546): Your project have installed babel-traverse version null but Android platform requires version ^6.4.5
+* [Fixed #3568](https://github.com/NativeScript/nativescript-cli/issues/3568): EXPORT FAILED fse.node has conflicting provisioning settings
+* [Fixed #3630](https://github.com/NativeScript/nativescript-cli/issues/3630): cp: copyFileSync: could not write to dest file (code=EPERM)
+* [Fixed #3767](https://github.com/NativeScript/nativescript-cli/issues/3767): Exception when delete a file from `<plugin>/platforms/android`
+* [Fixed #3849](https://github.com/NativeScript/nativescript-cli/issues/3849): The livesync check if a file has modifications doesn't work as expected
+* [Fixed #4219](https://github.com/NativeScript/nativescript-cli/issues/4219): Android debugging is leaking the debug session
+* [Fixed #4239](https://github.com/NativeScript/nativescript-cli/issues/4239): Copy `App_Resources` directly to `platforms/.../res` (Android) or `platforms/.../Resources` (iOS) instead of copying them with Webpack
+* [Fixed #4264 ](https://github.com/NativeScript/nativescript-cli/issues/4264 ): When using `--syncAllFiles` on Android frequently crashes with error
+* [Fixed #4480](https://github.com/NativeScript/nativescript-cli/issues/4480): [TypeScript & Vue project] When using `--bundle` changes made to a platform specific file in `node_modules` does not start a new build process
+* [Fixed #4500](https://github.com/NativeScript/nativescript-cli/issues/4500): Changes to `.js` files located in `node_modules` causes the `livesync` to take upto 30 sec
+* [Fixed #4513](https://github.com/NativeScript/nativescript-cli/issues/4513): Error when building for Android and using `bcryptjs`
+* [Fixed #4607](https://github.com/NativeScript/nativescript-cli/issues/4607): Image replacement is not respected during tns run with hmr
+* [Fixed #4647](https://github.com/NativeScript/nativescript-cli/issues/4647): CLI's checkForChanges method should not check all `node_modules`
+* [Fixed #4658](https://github.com/NativeScript/nativescript-cli/issues/4658): [iOS] tns preview is including tns-core-modules in vendor.js
+* [Fixed #4770](https://github.com/NativeScript/nativescript-cli/issues/4770): Incorrect execution of hooks where there is unresolved injected dependency
+
+
 5.4.2 (2019, June 19)
 ==
 
