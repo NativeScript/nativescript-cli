@@ -1,5 +1,6 @@
 import * as path from "path";
 import * as child_process from "child_process";
+import * as semver from "semver";
 import { EventEmitter } from "events";
 import { performanceLog } from "../../common/decorators";
 import { WEBPACK_COMPILATION_COMPLETE } from "../../constants";
@@ -71,6 +72,7 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 
 			childProcess.on("error", (err) => {
 				this.$logger.trace(`Unable to start webpack process in watch mode. Error is: ${err}`);
+				delete this.webpackProcesses[platformData.platformNameLowerCase];
 				reject(err);
 			});
 
@@ -81,6 +83,7 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 				this.$logger.trace(`Webpack process exited with code ${exitCode} when we expected it to be long living with watch.`);
 				const error = new Error(`Executing webpack failed with exit code ${exitCode}.`);
 				error.code = exitCode;
+				delete this.webpackProcesses[platformData.platformNameLowerCase];
 				reject(error);
 			});
 		});
@@ -96,12 +99,14 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 			const childProcess = await this.startWebpackProcess(platformData, projectData, prepareData);
 			childProcess.on("error", (err) => {
 				this.$logger.trace(`Unable to start webpack process in non-watch mode. Error is: ${err}`);
+				delete this.webpackProcesses[platformData.platformNameLowerCase];
 				reject(err);
 			});
 
 			childProcess.on("close", async (arg: any) => {
 				await this.$cleanupService.removeKillProcess(childProcess.pid.toString());
 
+				delete this.webpackProcesses[platformData.platformNameLowerCase];
 				const exitCode = typeof arg === "number" ? arg : arg && arg.code;
 				if (exitCode === 0) {
 					resolve();
@@ -130,8 +135,10 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 	private async startWebpackProcess(platformData: IPlatformData, projectData: IProjectData, prepareData: IPrepareData): Promise<child_process.ChildProcess> {
 		const envData = this.buildEnvData(platformData.platformNameLowerCase, projectData, prepareData);
 		const envParams = this.buildEnvCommandLineParams(envData, platformData, prepareData);
+		const additionalNodeArgs = semver.major(process.version) <= 8 ? ["--harmony"] : [];
 
 		const args = [
+			...additionalNodeArgs,
 			path.join(projectData.projectDir, "node_modules", "webpack", "bin", "webpack.js"),
 			"--preserve-symlinks",
 			`--config=${path.join(projectData.projectDir, "webpack.config.js")}`,
@@ -170,8 +177,9 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 			appResourcesPath && { appResourcesPath },
 		);
 
-		envData.verbose = this.$logger.isVerbose();
-		envData.production = prepareData.release;
+		envData.verbose = envData.verbose || this.$logger.isVerbose();
+		envData.production = envData.production || prepareData.release;
+
 		if (prepareData.env && (prepareData.env.sourceMap === false || prepareData.env.sourceMap === 'false')) {
 			delete envData.sourceMap;
 		} else if (!prepareData.release) {

@@ -77,6 +77,6 @@ declare global {
 
 	interface IPreviewAppController {
 		startPreview(data: IPreviewAppLiveSyncData): Promise<IQrCodeImageData>;
-		stopPreview(): Promise<void>;
+		stopPreview(data: IProjectDir): Promise<void>;
 	}
 }

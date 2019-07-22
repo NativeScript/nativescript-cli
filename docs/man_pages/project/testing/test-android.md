@@ -21,6 +21,7 @@ Run tests on a selected device | `$ tns test android --device <Device ID> [--wat
 * `--watch` - If set, when you save changes to the project, changes are automatically synchronized to the connected device and tests are re-run.
 * `--device` - Specifies the serial number or the index of the connected device on which to run the tests. To list all connected devices, grouped by platform, run `$ tns device`. `<Device ID>` is the device index or identifier as listed by the `$ tns device` command.
 * `--debug-brk` - Runs the tests under the debugger. The debugger will break just before your tests are executed, so you have a chance to place breakpoints.
+* `--force` - If set, skips the application compatibility checks and forces `npm i` to ensure all dependencies are installed. Otherwise, the command will check the application compatibility with the current CLI version and could fail requiring `tns migrate`.
 
 <% if(isHtml) { %>
 

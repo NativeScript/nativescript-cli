@@ -15,10 +15,12 @@ export class PreviewAppController extends EventEmitter implements IPreviewAppCon
 
 	constructor(
 		private $analyticsService: IAnalyticsService,
+		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $errors: IErrors,
 		private $hmrStatusService: IHmrStatusService,
 		private $logger: ILogger,
 		public $hooksService: IHooksService,
+		private $pluginsService: IPluginsService,
 		private $prepareController: PrepareController,
 		private $previewAppFilesService: IPreviewAppFilesService,
 		private $previewAppPluginsService: IPreviewAppPluginsService,
@@ -38,16 +40,22 @@ export class PreviewAppController extends EventEmitter implements IPreviewAppCon
 		return result;
 	}
 
-	public async stopPreview(): Promise<void> {
+	public async stopPreview(data: IProjectDir): Promise<void> {
 		this.$previewSdkService.stop();
 		this.$previewDevicesService.updateConnectedDevices([]);
+
+		await this.$prepareController.stopWatchers(data.projectDir, this.$devicePlatformsConstants.Android);
+		await this.$prepareController.stopWatchers(data.projectDir, this.$devicePlatformsConstants.iOS);
+
 		if (this.prepareReadyEventHandler) {
-			this.removeListener(PREPARE_READY_EVENT_NAME, this.prepareReadyEventHandler);
+			this.$prepareController.removeListener(PREPARE_READY_EVENT_NAME, this.prepareReadyEventHandler);
 			this.prepareReadyEventHandler = null;
 		}
 	}
 
 	private async previewCore(data: IPreviewAppLiveSyncData): Promise<void> {
+		const projectData = this.$projectDataService.getProjectData(data.projectDir);
+		await this.$pluginsService.ensureAllDependenciesAreInstalled(projectData);
 		await this.$previewSdkService.initialize(data.projectDir, async (device: Device) => {
 			try {
 				if (!device) {
@@ -71,7 +79,6 @@ export class PreviewAppController extends EventEmitter implements IPreviewAppCon
 					});
 				}
 
-				const projectData = this.$projectDataService.getProjectData(data.projectDir);
 				await this.$hooksService.executeBeforeHooks("preview-sync", { hookArgs: { ...data, platform: device.platform, projectData } });
 
 				if (data.useHotModuleReload) {
@@ -81,10 +88,12 @@ export class PreviewAppController extends EventEmitter implements IPreviewAppCon
 				await this.$previewAppPluginsService.comparePluginsOnDevice(data, device);
 
 				if (!this.prepareReadyEventHandler) {
-					this.prepareReadyEventHandler = async (currentPrepareData: IFilesChangeEventData) => {
+					const handler = async (currentPrepareData: IFilesChangeEventData) => {
 						await this.handlePrepareReadyEvent(data, currentPrepareData);
 					};
-					this.$prepareController.on(PREPARE_READY_EVENT_NAME, this.prepareReadyEventHandler.bind(this));
+
+					this.prepareReadyEventHandler = handler.bind(this);
+					this.$prepareController.on(PREPARE_READY_EVENT_NAME, this.prepareReadyEventHandler);
 				}
 
 				data.env = data.env || {};

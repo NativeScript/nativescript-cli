@@ -15,8 +15,6 @@ To scan the QR code and deploy your app on a device, you need to have the Native
 
 After scanning the QR code with the scanner provided in the NativeScript Playground app, your app will be launched on your device through the Preview app. Additionally, any changes made to your project will be automatically synchronized with the deployed app.
 
-To enable Hot Module Replacement (HMR) in Angular projects, follow the steps outlined in this wiki: https://github.com/NativeScript/nativescript-angular/wiki/HMR.
-
 ### Commands
 
 Usage | Synopsis
@@ -25,14 +23,10 @@ Generates a QR code that can be scanned by the NativeScript PlayGround app | `tn
 
 ### Options
 
-* `--bundle` - (Beta) Specifies that the `webpack` bundler will be used to bundle the application.<% if(isConsole) { %> The support for webpack in preview is currently in Beta. Please, do not hesitate to report any problems that you experience with the feature by opening a new issue in the NativeScript CLI repository: https://github.com/NativeScript/nativescript-cli/issues/new/choose.<% } %>
-* `--hmr` - (Beta) Enables the hot module replacement (HMR) feature. HMR depends on `webpack` and adding the `--hmr` flag to the command will automatically enable the `--bundle` option as well.<% if(isConsole) { %> The HMR feature is currently in Beta. For more information about the current development state and any known issues, please check the relevant GitHub issue: https://github.com/NativeScript/NativeScript/issues/6398.<% } %>
+* `--no-hmr` - Disables Hot Module Replacement (HMR). In this case, when a change in the code is applied, CLI will transfer the modified files and restart the application.
+* `--force` - If set, skips the application compatibility checks and forces `npm i` to ensure all dependencies are installed. Otherwise, the command will check the application compatibility with the current CLI version and could fail requiring `tns migrate`.
 
 <% if(isHtml) { %>
-
->Note: Hot Module Replacement (HMR) is currently in Beta. For more information about the current development state and any known issues, please check the relevant GitHub issue: https://github.com/NativeScript/NativeScript/issues/6398.
-
->Note: Webpack support for the `tns preview` command is currently in Beta. Please, do not hesitate to report any problems that you experience with the feature by opening a new issue in the NativeScript CLI repository: https://github.com/NativeScript/nativescript-cli/issues/new/choose.
 
 ### Command Limitations
 

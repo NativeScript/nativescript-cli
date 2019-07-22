@@ -9,8 +9,6 @@ position: 4
 
 Initiates a debugging session for your project on a connected Android device or Android emulator. When necessary, the command will prepare, build, deploy and launch the app before starting the debug session. While debugging, the output from the application is printed in the console and any changes made to your code are synchronizes with the deployed app.
 
-To enable Hot Module Replacement (HMR) in Angular projects, follow the steps outlined in [the HMR documentation section](https://docs.nativescript.org/performance-optimizations/bundling-with-webpack#hot-module-replacement).
-
 ### Commands
 
 Usage | Synopsis
@@ -30,13 +28,10 @@ Attach the debug tools to a running app in the native emulator | `$ tns debug an
 * `--timeout` - Sets the number of seconds that the NativeScript CLI will wait for the emulator/device to boot. If not set, the default timeout is 90 seconds.
 * `--no-watch` - If set, changes in your code will not be reflected during the execution of this command.
 * `--clean` - If set, forces the complete rebuild of the native application.
-* `--bundle` - Specifies that the `webpack` bundler will be used to bundle the application.
-* `--hmr` - Enables the hot module replacement (HMR) feature. HMR depends on `webpack` and adding the `--hmr` flag to the command will automatically enable the `--bundle` option as well.<% if(isConsole) { %> For more information about the current development state and any known issues, please check the relevant GitHub issue: https://github.com/NativeScript/NativeScript/issues/6398.<% } %>
-* `--syncAllFiles` - Watches all production dependencies inside node_modules for changes. Triggers project rebuild if necessary!
+* `--no-hmr` - Disables Hot Module Replacement (HMR). In this case, when a change in the code is applied, CLI will transfer the modified files and restart the application.
+* `--force` - If set, skips the application compatibility checks and forces `npm i` to ensure all dependencies are installed. Otherwise, the command will check the application compatibility with the current CLI version and could fail requiring `tns migrate`.
 
 <% if(isHtml) { %>
-
->Note: For more information about HMR, the current development state and any known issues, please check the relevant GitHub issue: https://github.com/NativeScript/NativeScript/issues/6398.
 
 ### Command Limitations
 

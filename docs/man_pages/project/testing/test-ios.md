@@ -27,6 +27,7 @@ Run tests in the iOS Simulator | `$ tns test ios --emulator [--watch] [--debug-b
 * `--device` - Specifies the serial number or the index of the connected device on which you want to run tests. To list all connected devices, grouped by platform, run `$ tns device`. You cannot set `--device` and `--emulator` simultaneously. `<Device ID>` is the device index or identifier as listed by the `$ tns device` command.
 * `--emulator` - Runs tests on the iOS Simulator. You cannot set `--device` and `--emulator` simultaneously.
 * `--debug-brk` - Runs the tests under the debugger. The debugger will break just before your tests are executed, so you have a chance to place breakpoints.
+* `--force` - If set, skips the application compatibility checks and forces `npm i` to ensure all dependencies are installed. Otherwise, the command will check the application compatibility with the current CLI version and could fail requiring `tns migrate`.
 
 <% } %>
 

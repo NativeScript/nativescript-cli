@@ -1,7 +1,7 @@
 {
   "name": "nativescript",
   "preferGlobal": true,
-  "version": "6.0.0",
+  "version": "6.1.0",
   "author": "Telerik <support@telerik.com>",
   "description": "Command-line interface for building NativeScript projects",
   "bin": {
@@ -115,6 +115,7 @@
     "@types/universal-analytics": "0.4.1",
     "@types/ws": "4.0.1",
     "@types/xml2js": "0.4.3",
+    "@types/yargs": "13.0.0",
     "chai": "4.0.2",
     "chai-as-promised": "7.0.0",
     "grunt": "1.0.1",
