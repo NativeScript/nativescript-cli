@@ -125,20 +125,18 @@ export class Errors implements IErrors {
 
 	public fail(optsOrFormatStr: string | IFailOptions, ...args: any[]): never {
 		const opts = this.getFailOptions(optsOrFormatStr);
-		opts.suppressCommandHelp = true;
-		return this.failWithOptions(opts, args);
+		return this.failWithOptions(opts, false, args);
 	}
 
 	// DEPRECATED: use .fail instead
 	public failWithoutHelp(optsOrFormatStr: string | IFailOptions, ...args: any[]): never {
-		return this.failWithoutHelp(optsOrFormatStr, args);
+		return this.fail(optsOrFormatStr, args);
 	}
 
 	public failWithHelp(optsOrFormatStr: string | IFailOptions, ...args: any[]): never {
 		const opts = this.getFailOptions(optsOrFormatStr);
-		opts.suppressCommandHelp = false;
 
-		return this.failWithOptions(opts, args);
+		return this.failWithOptions(opts, true, args);
 	}
 
 	private getFailOptions(optsOrFormatStr: string | IFailOptions): IFailOptions {
@@ -150,7 +148,7 @@ export class Errors implements IErrors {
 		return opts;
 	}
 
-	private failWithOptions(opts: IFailOptions, ...args: any[]): never {
+	private failWithOptions(opts: IFailOptions, suggestCommandHelp: boolean, ...args: any[]): never {
 		const argsArray = args || [];
 		const exception: any = new (<any>Exception)();
 		exception.name = opts.name || "Exception";
@@ -164,7 +162,7 @@ export class Errors implements IErrors {
 
 		exception.stack = (new Error(exception.message)).stack;
 		exception.errorCode = opts.errorCode || ErrorCodes.UNKNOWN;
-		exception.suppressCommandHelp = opts.suppressCommandHelp;
+		exception.suggestCommandHelp = suggestCommandHelp;
 		exception.proxyAuthenticationRequired = !!opts.proxyAuthenticationRequired;
 		exception.printOnStdout = opts.printOnStdout;
 		this.$injector.resolve("logger").trace(opts.formatStr);
@@ -172,7 +170,7 @@ export class Errors implements IErrors {
 		throw exception;
 	}
 
-	public async beginCommand(action: () => Promise<boolean>, printCommandHelp: () => Promise<void>): Promise<boolean> {
+	public async beginCommand(action: () => Promise<boolean>, printCommandHelpSuggestion: () => Promise<void>): Promise<boolean> {
 		try {
 			return await action();
 		} catch (ex) {
@@ -186,8 +184,8 @@ export class Errors implements IErrors {
 				console.error(message);
 			}
 
-			if (!ex.suppressCommandHelp) {
-				await printCommandHelp();
+			if (ex.suggestCommandHelp) {
+				await printCommandHelpSuggestion();
 			}
 
 			await tryTrackException(ex, this.$injector);

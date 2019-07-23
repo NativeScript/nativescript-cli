@@ -48,7 +48,7 @@ abstract class TestCommandBase {
 		await this.$testExecutionService.startKarmaServer(this.platform, liveSyncInfo, deviceDescriptors);
 	}
 
-	async canExecute(args: string[]): Promise<boolean | ICanExecuteCommandOutput> {
+	async canExecute(args: string[]): Promise<boolean> {
 		if (!this.$options.force) {
 			await this.$migrateController.validate({ projectDir: this.$projectData.projectDir, platforms: [this.platform] });
 		}

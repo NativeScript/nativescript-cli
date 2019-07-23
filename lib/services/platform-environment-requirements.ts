@@ -204,7 +204,7 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 	}
 
 	private fail(message: string): void {
-		this.$errors.fail({ formatStr: message, suppressCommandHelp: true, printOnStdout: true });
+		this.$errors.fail({ formatStr: message, printOnStdout: true });
 	}
 
 	private getNonInteractiveConsoleMessage(platform: string) {

@@ -52,7 +52,7 @@ export class DebugPlatformCommand extends ValidatePlatformCommandBase implements
 		});
 	}
 
-	public async canExecute(args: string[]): Promise<ICanExecuteCommandOutput> {
+	public async canExecute(args: string[]): Promise<boolean> {
 		if (!this.$options.force) {
 			await this.$migrateController.validate({ projectDir: this.$projectData.projectDir, platforms: [this.platform] });
 		}
@@ -103,7 +103,7 @@ export class DebugIOSCommand implements ICommand {
 		return this.debugPlatformCommand.execute(args);
 	}
 
-	public async canExecute(args: string[]): Promise<ICanExecuteCommandOutput> {
+	public async canExecute(args: string[]): Promise<boolean> {
 		if (!this.$platformValidationService.isPlatformSupportedForOS(this.$devicePlatformsConstants.iOS, this.$projectData)) {
 			this.$errors.fail(`Applications for platform ${this.$devicePlatformsConstants.iOS} can not be built on this OS`);
 		}
@@ -164,7 +164,7 @@ export class DebugAndroidCommand implements ICommand {
 	public execute(args: string[]): Promise<void> {
 		return this.debugPlatformCommand.execute(args);
 	}
-	public async canExecute(args: string[]): Promise<ICanExecuteCommandOutput> {
+	public async canExecute(args: string[]): Promise<boolean> {
 		const result = await this.debugPlatformCommand.canExecute(args);
 		return result;
 	}

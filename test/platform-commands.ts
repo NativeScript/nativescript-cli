@@ -51,11 +51,16 @@ class ErrorsNoFailStub implements IErrors {
 	printCallStack: boolean = false;
 
 	fail(formatStr: string, ...args: any[]): never;
-	fail(opts: { formatStr?: string; errorCode?: number; suppressCommandHelp?: boolean }, ...args: any[]): never;
+	fail(opts: IFailOptions, ...args: any[]): never;
 
 	fail(...args: any[]): never { throw new Error(); }
-	failWithoutHelp(message: string, ...args: any[]): never {
-		throw new Error();
+
+	failWithoutHelp(opts: string | IFailOptions, ...args: any[]): never {
+		return this.fail(<any>opts, args);
+	}
+
+	failWithHelp(opts: string | IFailOptions, ...args: any[]): never {
+		return this.fail(<any>opts, args);
 	}
 
 	async beginCommand(action: () => Promise<boolean>, printHelpCommand: () => Promise<void>): Promise<boolean> {

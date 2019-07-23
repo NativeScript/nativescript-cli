@@ -7,15 +7,14 @@ export abstract class ValidatePlatformCommandBase {
 	abstract allowedParameters: ICommandParameter[];
 	abstract execute(args: string[]): Promise<void>;
 
-	public async canExecuteCommandBase(platform: string, options?: ICanExecuteCommandOptions): Promise<ICanExecuteCommandOutput> {
+	public async canExecuteCommandBase(platform: string, options?: ICanExecuteCommandOptions): Promise<boolean> {
 		options = options || {};
 		const validatePlatformOutput = await this.validatePlatformBase(platform, options.notConfiguredEnvOptions);
 		const canExecute = this.canExecuteCommand(validatePlatformOutput);
-		let result = { canExecute, suppressCommandHelp: !canExecute };
+		let result = canExecute;
 
 		if (canExecute && options.validateOptions) {
-			const validateOptionsOutput = await this.$platformValidationService.validateOptions(this.$options.provision, this.$options.teamId, this.$projectData, platform);
-			result = { canExecute: validateOptionsOutput, suppressCommandHelp: false };
+			result = await this.$platformValidationService.validateOptions(this.$options.provision, this.$options.teamId, this.$projectData, platform);
 		}
 
 		return result;

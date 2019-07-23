@@ -17,7 +17,7 @@ export class AddPlatformCommand extends ValidatePlatformCommandBase implements I
 		await this.$platformCommandHelper.addPlatforms(args, this.$projectData, this.$options.frameworkPath);
 	}
 
-	public async canExecute(args: string[]): Promise<ICanExecuteCommandOutput> {
+	public async canExecute(args: string[]): Promise<boolean> {
 		if (!args || args.length === 0) {
 			this.$errors.failWithHelp("No platform specified. Please specify a platform to add.");
 		}
@@ -30,14 +30,10 @@ export class AddPlatformCommand extends ValidatePlatformCommandBase implements I
 				this.$errors.fail(`Applications for platform ${arg} can not be built on this OS`);
 			}
 
-			const output = await super.canExecuteCommandBase(arg);
-			canExecute = canExecute && output.canExecute;
+			canExecute = await super.canExecuteCommandBase(arg);
 		}
 
-		return {
-			canExecute,
-			suppressCommandHelp: !canExecute
-		};
+		return canExecute;
 	}
 }
 

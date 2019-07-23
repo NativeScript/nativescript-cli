@@ -25,7 +25,6 @@ export class CommandsService implements ICommandsService {
 		private $logger: ILogger,
 		private $options: IOptions,
 		private $staticConfig: Config.IStaticConfig,
-		private $helpService: IHelpService,
 		private $extensibilityService: IExtensibilityService,
 		private $optionsTracker: IOptionsTracker) {
 	}
@@ -92,21 +91,19 @@ export class CommandsService implements ICommandsService {
 		return false;
 	}
 
-	private printHelp(commandName: string, commandArguments: string[]): Promise<void> {
-		try {
-			return this.$helpService.showCommandLineHelp({ commandName: this.beautifyCommandName(commandName), commandArguments });
-		} catch (printHelpException) {
-			console.error("Failed to display command help", printHelpException);
-		}
+	private printHelpSuggestion(commandName: string, commandArguments: string[]): Promise<void> {
+		const commandHelp = `tns ${helpers.stringReplaceAll(this.beautifyCommandName(commandName), "|", " ")} --help`;
+		this.$logger.printMarkdown(`Run \`${commandHelp}\` for more information.`);
+		return;
 	}
 
-	private async executeCommandAction(commandName: string, commandArguments: string[], action: (_commandName: string, _commandArguments: string[]) => Promise<boolean | ICanExecuteCommandOutput>): Promise<boolean> {
+	private async executeCommandAction(commandName: string, commandArguments: string[], action: (_commandName: string, _commandArguments: string[]) => Promise<boolean>): Promise<boolean> {
 		return this.$errors.beginCommand(
 			() => action.apply(this, [commandName, commandArguments]),
-			() => this.printHelp(commandName, commandArguments));
+			() => this.printHelpSuggestion(commandName, commandArguments));
 	}
 
-	private async tryExecuteCommandAction(commandName: string, commandArguments: string[]): Promise<boolean | ICanExecuteCommandOutput> {
+	private async tryExecuteCommandAction(commandName: string, commandArguments: string[]): Promise<boolean> {
 		const command = this.$injector.resolveCommand(commandName);
 		if (!command || !command.isHierarchicalCommand) {
 			const dashedOptions = command ? command.dashedOptions : null;
@@ -119,7 +116,6 @@ export class CommandsService implements ICommandsService {
 	public async tryExecuteCommand(commandName: string, commandArguments: string[]): Promise<void> {
 		const canExecuteResult: any = await this.executeCommandAction(commandName, commandArguments, this.tryExecuteCommandAction);
 		const canExecute = typeof canExecuteResult === "object" ? canExecuteResult.canExecute : canExecuteResult;
-		const suppressCommandHelp = typeof canExecuteResult === "object" ? canExecuteResult.suppressCommandHelp : false;
 
 		if (canExecute) {
 			await this.executeCommandAction(commandName, commandArguments, this.executeCommandUnchecked);
@@ -127,15 +123,13 @@ export class CommandsService implements ICommandsService {
 			// If canExecuteCommand returns false, the command cannot be executed or there's no such command at all.
 			const command = this.$injector.resolveCommand(commandName);
 			if (command) {
-				if (!suppressCommandHelp) {
-					// If command cannot be executed we should print its help.
-					await this.printHelp(commandName, commandArguments);
-				}
+				this.$logger.error(`Command '${commandName} ${commandArguments}' cannot be executed.`);
+				await this.printHelpSuggestion(commandName, commandArguments);
 			}
 		}
 	}
 
-	private async canExecuteCommand(commandName: string, commandArguments: string[], isDynamicCommand?: boolean): Promise<boolean | ICanExecuteCommandOutput> {
+	private async canExecuteCommand(commandName: string, commandArguments: string[], isDynamicCommand?: boolean): Promise<boolean> {
 		const command = this.$injector.resolveCommand(commandName);
 		const beautifiedName = helpers.stringReplaceAll(commandName, "|", " ");
 		if (command) {

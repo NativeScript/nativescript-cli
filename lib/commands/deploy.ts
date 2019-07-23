@@ -28,7 +28,7 @@ export class DeployOnDeviceCommand extends ValidatePlatformCommandBase implement
 		await this.$deployCommandHelper.deploy(platform);
 	}
 
-	public async canExecute(args: string[]): Promise<boolean | ICanExecuteCommandOutput> {
+	public async canExecute(args: string[]): Promise<boolean> {
 		this.$androidBundleValidatorHelper.validateNoAab();
 		if (!args || !args.length || args.length > 1) {
 			return false;

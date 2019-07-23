@@ -579,7 +579,6 @@ interface IFailOptions {
 	name?: string;
 	formatStr?: string;
 	errorCode?: number;
-	suppressCommandHelp?: boolean;
 	proxyAuthenticationRequired?: boolean;
 	printOnStdout?: boolean;
 }

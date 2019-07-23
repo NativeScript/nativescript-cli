@@ -34,20 +34,17 @@ export abstract class BuildCommandBase extends ValidatePlatformCommandBase {
 		}
 	}
 
-	protected async validateArgs(args: string[], platform: string): Promise<ICanExecuteCommandOutput> {
-		const canExecute = await this.validateArgsCore(args, platform);
-		return {
-			canExecute,
-			suppressCommandHelp: false
-		};
+	protected async validateArgs(args: string[], platform: string): Promise<boolean> {
+		return await this.validateArgsCore(args, platform);
 	}
 
 	private async validateArgsCore(args: string[], platform: string): Promise<boolean> {
 		if (args.length !== 0) {
-			return false;
+			this.$errors.failWithHelp(`The arguments '${args.join(" ")}' are not valid for the current command.`);
 		}
 
 		const result = await this.$platformValidationService.validateOptions(this.$options.provision, this.$options.teamId, this.$projectData, platform);
+
 		return result;
 	}
 }
@@ -72,7 +69,7 @@ export class BuildIosCommand extends BuildCommandBase implements ICommand {
 		await this.executeCore([this.$devicePlatformsConstants.iOS.toLowerCase()]);
 	}
 
-	public async canExecute(args: string[]): Promise<boolean | ICanExecuteCommandOutput> {
+	public async canExecute(args: string[]): Promise<boolean> {
 		const platform = this.$devicePlatformsConstants.iOS;
 		if (!this.$options.force) {
 			await this.$migrateController.validate({ projectDir: this.$projectData.projectDir, platforms: [platform] });
@@ -80,12 +77,12 @@ export class BuildIosCommand extends BuildCommandBase implements ICommand {
 
 		super.validatePlatform(platform);
 
-		let result = await super.canExecuteCommandBase(platform, { notConfiguredEnvOptions: { hideSyncToPreviewAppOption: true } });
-		if (result.canExecute) {
-			result = await super.validateArgs(args, platform);
+		let canExecute = await super.canExecuteCommandBase(platform, { notConfiguredEnvOptions: { hideSyncToPreviewAppOption: true } });
+		if (canExecute) {
+			canExecute = await super.validateArgs(args, platform);
 		}
 
-		return result;
+		return canExecute;
 	}
 }
 
@@ -120,22 +117,22 @@ export class BuildAndroidCommand extends BuildCommandBase implements ICommand {
 		}
 	}
 
-	public async canExecute(args: string[]): Promise<boolean | ICanExecuteCommandOutput> {
+	public async canExecute(args: string[]): Promise<boolean> {
 		const platform = this.$devicePlatformsConstants.Android;
 		if (!this.$options.force) {
 			await this.$migrateController.validate({ projectDir: this.$projectData.projectDir, platforms: [platform] });
 		}
 		this.$androidBundleValidatorHelper.validateRuntimeVersion(this.$projectData);
-		let result = await super.canExecuteCommandBase(platform, { notConfiguredEnvOptions: { hideSyncToPreviewAppOption: true } });
-		if (result.canExecute) {
+		let canExecute = await super.canExecuteCommandBase(platform, { notConfiguredEnvOptions: { hideSyncToPreviewAppOption: true } });
+		if (canExecute) {
 			if (this.$options.release && (!this.$options.keyStorePath || !this.$options.keyStorePassword || !this.$options.keyStoreAlias || !this.$options.keyStoreAliasPassword)) {
 				this.$errors.failWithHelp(ANDROID_RELEASE_BUILD_ERROR_MESSAGE);
 			}
 
-			result = await super.validateArgs(args, platform);
+			canExecute = await super.validateArgs(args, platform);
 		}
 
-		return result;
+		return canExecute;
 	}
 }
 

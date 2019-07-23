@@ -456,8 +456,7 @@ export class DevicesService extends EventEmitter implements Mobile.IDevicesServi
 			}
 
 			const errorMessage = `${preErrorMsg}${errors.map(e => e.message || e).join(EOL)}`;
-			const suppressCommandHelp = _.some(errors, (e: any) => e.suppressCommandHelp);
-			this.$errors.fail({ formatStr: errorMessage, suppressCommandHelp });
+			this.$errors.fail(errorMessage);
 		}
 
 		return result;
@@ -678,7 +677,7 @@ export class DevicesService extends EventEmitter implements Mobile.IDevicesServi
 				if (platforms.length === 1) {
 					this._platform = platforms[0];
 				} else if (platforms.length === 0) {
-					this.$errors.fail({ formatStr: constants.ERROR_NO_DEVICES, suppressCommandHelp: true });
+					this.$errors.fail(constants.ERROR_NO_DEVICES);
 				} else {
 					this.$errors.failWithHelp("Multiple device platforms detected (%s). Specify platform or device on command line.",
 						helpers.formatListOfNames(platforms, "and"));

@@ -23,7 +23,9 @@ function createTestInjector(config: { xcodeSelectStdout: string, isDarwin: boole
 		}
 	});
 	testInjector.register("errors", {
-		failWithoutHelp: (message: string, ...args: any[]): void => { executionStopped = true; }
+		failWithHelp: (): void => { executionStopped = true; },
+		failWithoutHelp: (): void => { executionStopped = true; },
+		fail: (): void => { executionStopped = true; }
 	});
 
 	testInjector.register("hostInfo", {

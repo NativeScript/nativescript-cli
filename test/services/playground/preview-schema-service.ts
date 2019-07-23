@@ -75,7 +75,7 @@ describe("PreviewSchemaService", () => {
 			let actualError = null;
 			if (testCase.expectedToThrow) {
 				const errors = injector.resolve("errors");
-				errors.failWithoutHelp = (err: string) => actualError = err;
+				errors.fail = (err: string) => actualError = err;
 			}
 
 			const schemaData = previewSchemaService.getSchemaData("someTestProjectDir");
