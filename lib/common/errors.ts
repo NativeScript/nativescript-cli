@@ -123,14 +123,34 @@ export class Errors implements IErrors {
 
 	public printCallStack: boolean = false;
 
-	public fail(optsOrFormatStr: any, ...args: any[]): never {
-		const argsArray = args || [];
+	public fail(optsOrFormatStr: string | IFailOptions, ...args: any[]): never {
+		return this.failWithoutHelp(optsOrFormatStr, args);
+	}
 
+	public failWithoutHelp(optsOrFormatStr: string | IFailOptions, ...args: any[]): never {
+		const opts = this.getFailOptions(optsOrFormatStr);
+		opts.suppressCommandHelp = true;
+		return this.failWithOptions(opts, args);
+	}
+
+	public failWithHelp(optsOrFormatStr: string | IFailOptions, ...args: any[]): never {
+		const opts = this.getFailOptions(optsOrFormatStr);
+		opts.suppressCommandHelp = false;
+
+		return this.failWithOptions(opts, args);
+	}
+
+	private getFailOptions(optsOrFormatStr: string | IFailOptions): IFailOptions {
 		let opts = optsOrFormatStr;
 		if (_.isString(opts)) {
 			opts = { formatStr: opts };
 		}
 
+		return opts;
+	}
+
+	private failWithOptions(opts: IFailOptions, ...args: any[]): never {
+		const argsArray = args || [];
 		const exception: any = new (<any>Exception)();
 		exception.name = opts.name || "Exception";
 		exception.message = util.format.apply(null, [opts.formatStr].concat(argsArray));
@@ -140,18 +160,15 @@ export class Errors implements IErrors {
 		} catch (err) {
 			// Ignore
 		}
+
 		exception.stack = (new Error(exception.message)).stack;
 		exception.errorCode = opts.errorCode || ErrorCodes.UNKNOWN;
 		exception.suppressCommandHelp = opts.suppressCommandHelp;
 		exception.proxyAuthenticationRequired = !!opts.proxyAuthenticationRequired;
 		exception.printOnStdout = opts.printOnStdout;
 		this.$injector.resolve("logger").trace(opts.formatStr);
-		throw exception;
-	}
 
-	public failWithoutHelp(message: string, ...args: any[]): never {
-		args.unshift(message);
-		return this.fail({ formatStr: util.format.apply(null, args), suppressCommandHelp: true });
+		throw exception;
 	}
 
 	public async beginCommand(action: () => Promise<boolean>, printCommandHelp: () => Promise<void>): Promise<boolean> {
@@ -169,11 +186,7 @@ export class Errors implements IErrors {
 			}
 
 			if (!ex.suppressCommandHelp) {
-				try {
-					await printCommandHelp();
-				} catch (printHelpException) {
-					console.error("Failed to display command help", printHelpException);
-				}
+				await printCommandHelp();
 			}
 
 			await tryTrackException(ex, this.$injector);

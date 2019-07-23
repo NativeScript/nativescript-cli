@@ -26,7 +26,7 @@ export class RunCommandBase implements ICommand {
 
 	public async canExecute(args: string[]): Promise<boolean> {
 		if (args.length) {
-			this.$errors.fail(ERROR_NO_VALID_SUBCOMMAND_FORMAT, "run");
+			this.$errors.failWithHelp(ERROR_NO_VALID_SUBCOMMAND_FORMAT, "run");
 		}
 
 		this.platform = args[0] || this.platform;
@@ -82,7 +82,7 @@ export class RunIosCommand implements ICommand {
 		const projectData = this.$projectDataService.getProjectData();
 
 		if (!this.$platformValidationService.isPlatformSupportedForOS(this.$devicePlatformsConstants.iOS, projectData)) {
-			this.$errors.fail(`Applications for platform ${this.$devicePlatformsConstants.iOS} can not be built on this OS`);
+			this.$errors.failWithoutHelp(`Applications for platform ${this.$devicePlatformsConstants.iOS} can not be built on this OS`);
 		}
 
 		const result = await this.runCommand.canExecute(args) && await this.$platformValidationService.validateOptions(this.$options.provision, this.$options.teamId, projectData, this.$devicePlatformsConstants.iOS.toLowerCase());
@@ -123,11 +123,11 @@ export class RunAndroidCommand implements ICommand {
 		await this.runCommand.canExecute(args);
 
 		if (!this.$platformValidationService.isPlatformSupportedForOS(this.$devicePlatformsConstants.Android, this.$projectData)) {
-			this.$errors.fail(`Applications for platform ${this.$devicePlatformsConstants.Android} can not be built on this OS`);
+			this.$errors.failWithoutHelp(`Applications for platform ${this.$devicePlatformsConstants.Android} can not be built on this OS`);
 		}
 
 		if (this.$options.release && (!this.$options.keyStorePath || !this.$options.keyStorePassword || !this.$options.keyStoreAlias || !this.$options.keyStoreAliasPassword)) {
-			this.$errors.fail(ANDROID_RELEASE_BUILD_ERROR_MESSAGE);
+			this.$errors.failWithHelp(ANDROID_RELEASE_BUILD_ERROR_MESSAGE);
 		}
 
 		return this.$platformValidationService.validateOptions(this.$options.provision, this.$options.teamId, this.$projectData, this.$devicePlatformsConstants.Android.toLowerCase());

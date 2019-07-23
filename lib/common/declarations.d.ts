@@ -559,11 +559,23 @@ interface IOpener {
 
 interface IErrors {
 	fail(formatStr: string, ...args: any[]): never;
-	fail(opts: { formatStr?: string; errorCode?: number; suppressCommandHelp?: boolean, proxyAuthenticationRequired?: boolean, printOnStdout?: boolean }, ...args: any[]): never;
+	fail(opts: IFailOptions, ...args: any[]): never;
 	failWithoutHelp(message: string, ...args: any[]): never;
+	failWithoutHelp(opts: IFailOptions, ...args: any[]): never;
+	failWithHelp(formatStr: string, ...args: any[]): never;
+	failWithHelp(opts: IFailOptions, ...args: any[]): never;
 	beginCommand(action: () => Promise<boolean>, printCommandHelp: () => Promise<void>): Promise<boolean>;
 	verifyHeap(message: string): void;
 	printCallStack: boolean;
+}
+
+interface IFailOptions {
+	name?: string;
+	formatStr?: string;
+	errorCode?: number;
+	suppressCommandHelp?: boolean;
+	proxyAuthenticationRequired?: boolean;
+	printOnStdout?: boolean;
 }
 
 /**

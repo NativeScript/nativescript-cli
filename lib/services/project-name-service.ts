@@ -19,7 +19,7 @@ export class ProjectNameService implements IProjectNameService {
 
 		if (!this.checkIfNameStartsWithLetter(projectName)) {
 			if (!userCanInteract) {
-				this.$errors.fail("The project name does not start with letter and will fail to build for Android. If You want to create project with this name add --force to the create command.");
+				this.$errors.failWithoutHelp("The project name does not start with letter and will fail to build for Android. If You want to create project with this name add --force to the create command.");
 			}
 
 			return await this.promptForNewName("The project name does not start with letter and will fail to build for Android.", projectName, validateOptions);
@@ -27,7 +27,7 @@ export class ProjectNameService implements IProjectNameService {
 
 		if (projectName.toUpperCase() === "APP") {
 			if (!userCanInteract) {
-				this.$errors.fail("You cannot build applications named 'app' in Xcode. Consider creating a project with different name. If You want to create project with this name add --force to the create command.");
+				this.$errors.failWithoutHelp("You cannot build applications named 'app' in Xcode. Consider creating a project with different name. If You want to create project with this name add --force to the create command.");
 			}
 
 			return await this.promptForNewName("You cannot build applications named 'app' in Xcode. Consider creating a project with different name.", projectName, validateOptions);

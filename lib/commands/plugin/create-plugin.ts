@@ -42,7 +42,7 @@ export class CreatePluginCommand implements ICommand {
 
 	public async canExecute(args: string[]): Promise<boolean> {
 		if (!args[0]) {
-			this.$errors.fail("You must specify the plugin repository name.");
+			this.$errors.failWithHelp("You must specify the plugin repository name.");
 		}
 
 		return true;
@@ -92,7 +92,7 @@ export class CreatePluginCommand implements ICommand {
 		this.$fs.createDirectory(projectDir);
 
 		if (this.$fs.exists(projectDir) && !this.$fs.isEmptyDir(projectDir)) {
-			this.$errors.fail(this.pathAlreadyExistsMessageTemplate, projectDir);
+			this.$errors.failWithoutHelp(this.pathAlreadyExistsMessageTemplate, projectDir);
 		}
 	}
 

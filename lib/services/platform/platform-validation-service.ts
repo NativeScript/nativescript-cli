@@ -26,12 +26,12 @@ export class PlatformValidationService implements IPlatformValidationService {
 
 	public validatePlatform(platform: string, projectData: IProjectData): void {
 		if (!platform) {
-			this.$errors.fail("No platform specified.");
+			this.$errors.failWithHelp("No platform specified.");
 		}
 
 		if (!this.isValidPlatform(platform, projectData)) {
 			const platformNames = helpers.formatListOfNames(this.$mobileHelper.platformNames);
-			this.$errors.fail(`Invalid platform ${platform}. Valid platforms are ${platformNames}.`);
+			this.$errors.failWithHelp(`Invalid platform ${platform}. Valid platforms are ${platformNames}.`);
 		}
 	}
 
@@ -40,7 +40,7 @@ export class PlatformValidationService implements IPlatformValidationService {
 
 		const hasPlatformDirectory = this.$fs.exists(path.join(projectData.platformsDir, platform.toLowerCase()));
 		if (!hasPlatformDirectory) {
-			this.$errors.fail("The platform %s is not added to this project. Please use 'tns platform add <platform>'", platform);
+			this.$errors.failWithoutHelp("The platform %s is not added to this project. Please use 'tns platform add <platform>'", platform);
 		}
 	}
 

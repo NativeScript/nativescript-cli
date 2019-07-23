@@ -42,7 +42,7 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 	public async checkEnvironmentRequirements(input: ICheckEnvironmentRequirementsInput): Promise<ICheckEnvironmentRequirementsOutput> {
 		const { platform, projectDir, runtimeVersion } = input;
 		const notConfiguredEnvOptions = input.notConfiguredEnvOptions || {};
-		const options = input.options || <IOptions>{ };
+		const options = input.options || <IOptions>{};
 
 		let selectedOption = null;
 
@@ -167,7 +167,7 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 		}
 	}
 
-	private processManuallySetupIfNeeded(selectedOption: string,	 platform?: string) {
+	private processManuallySetupIfNeeded(selectedOption: string, platform?: string) {
 		if (selectedOption === PlatformEnvironmentRequirements.MANUALLY_SETUP_OPTION_NAME) {
 			this.processManuallySetup(platform);
 		}
@@ -204,7 +204,7 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 	}
 
 	private fail(message: string): void {
-		this.$errors.fail({ formatStr: message, suppressCommandHelp: true, printOnStdout: true });
+		// this.$errors.failWithoutHelp({ formatStr: message, suppressCommandHelp: true, printOnStdout: true });
 	}
 
 	private getNonInteractiveConsoleMessage(platform: string) {
@@ -234,11 +234,11 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 			`Select "Configure for Local Builds" to run the setup script and automatically configure your environment for local builds.`,
 			`Select "Skip Step and Configure Manually" to disregard this option and install any required components manually.`
 		] : [
-			`Select "Configure for Cloud Builds" to install the ${NATIVESCRIPT_CLOUD_EXTENSION_NAME} extension and automatically configure your environment for cloud builds.`,
-			`Select "Configure for Local Builds" to run the setup script and automatically configure your environment for local builds.`,
-			`Select "Configure for Both Local and Cloud Builds" to automatically configure your environment for both options.`,
-			`Select "Configure for Both Local and Cloud Builds" to automatically configure your environment for both options.`
-		];
+				`Select "Configure for Cloud Builds" to install the ${NATIVESCRIPT_CLOUD_EXTENSION_NAME} extension and automatically configure your environment for cloud builds.`,
+				`Select "Configure for Local Builds" to run the setup script and automatically configure your environment for local builds.`,
+				`Select "Configure for Both Local and Cloud Builds" to automatically configure your environment for both options.`,
+				`Select "Configure for Both Local and Cloud Builds" to automatically configure your environment for both options.`
+			];
 
 		if (!options.hideSyncToPreviewAppOption) {
 			choices.unshift(PlatformEnvironmentRequirements.SYNC_TO_PREVIEW_APP_MESSAGE);
@@ -249,7 +249,7 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 		return result;
 	}
 
-	private async promptForChoice(opts: { infoMessage: string, choices: string[],  }): Promise<string> {
+	private async promptForChoice(opts: { infoMessage: string, choices: string[], }): Promise<string> {
 		this.$logger.info(opts.infoMessage);
 
 		await this.$analyticsService.trackEventActionInGoogleAnalytics({
@@ -279,7 +279,7 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 		const choices: string[] = [];
 		if (this.$nativeScriptCloudExtensionService.isInstalled()) {
 			choices.push(...[PlatformEnvironmentRequirements.LOCAL_SETUP_OPTION_NAME,
-				PlatformEnvironmentRequirements.MANUALLY_SETUP_OPTION_NAME]);
+			PlatformEnvironmentRequirements.MANUALLY_SETUP_OPTION_NAME]);
 
 			if (!options.hideCloudBuildOption) {
 				choices.unshift(PlatformEnvironmentRequirements.TRY_CLOUD_OPERATION_OPTION_NAME);

@@ -62,7 +62,7 @@ export class BuildArtefactsService implements IBuildArtefactsService {
 		let packages = this.getAllAppPackages(buildOutputPath, validBuildOutputData);
 		const packageExtName = path.extname(validBuildOutputData.packageNames[0]);
 		if (packages.length === 0) {
-			this.$errors.fail(`No ${packageExtName} found in ${buildOutputPath} directory.`);
+			this.$errors.failWithoutHelp(`No ${packageExtName} found in ${buildOutputPath} directory.`);
 		}
 
 		if (packages.length > 1) {

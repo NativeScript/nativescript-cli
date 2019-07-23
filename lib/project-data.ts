@@ -157,7 +157,7 @@ export class ProjectData implements IProjectData {
 		this.$logger.trace(`Unable to find project. projectDir: ${projectDir}, options.path: ${this.$options.path}, ${currentDir}`);
 
 		// This is the case when no project file found
-		this.$errors.fail("No project found at or above '%s' and neither was a --path specified.", projectDir || this.$options.path || currentDir);
+		this.$errors.failWithoutHelp("No project found at or above '%s' and neither was a --path specified.", projectDir || this.$options.path || currentDir);
 	}
 
 	private getProjectFilePath(projectDir: string): string {

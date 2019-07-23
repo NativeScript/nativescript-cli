@@ -216,7 +216,7 @@ export class UpdateController extends UpdateControllerBase implements IUpdateCon
 		try {
 			templateManifest = await this.getPackageManifest(templateName, version);
 		} catch (err) {
-			this.$errors.fail(UpdateController.failedToGetTemplateManifestMessage, err.message);
+			this.$errors.failWithoutHelp(UpdateController.failedToGetTemplateManifestMessage, err.message);
 		}
 
 		return templateManifest;

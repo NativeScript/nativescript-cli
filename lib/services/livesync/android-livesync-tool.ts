@@ -42,22 +42,22 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 		private $logger: ILogger,
 		private $mobileHelper: Mobile.IMobileHelper,
 		private $injector: IInjector) {
-			this.operationPromises = Object.create(null);
-			this.socketError = null;
-			this.socketConnection = null;
+		this.operationPromises = Object.create(null);
+		this.socketError = null;
+		this.socketConnection = null;
 	}
 
 	public async connect(configuration: IAndroidLivesyncToolConfiguration): Promise<void> {
 		if (!configuration.appIdentifier) {
-			this.$errors.fail(AndroidLivesyncTool.APP_IDENTIFIER_MISSING_ERROR);
+			this.$errors.failWithoutHelp(AndroidLivesyncTool.APP_IDENTIFIER_MISSING_ERROR);
 		}
 
 		if (!configuration.appPlatformsPath) {
-			this.$errors.fail(AndroidLivesyncTool.APP_PLATFORMS_PATH_MISSING_ERROR);
+			this.$errors.failWithoutHelp(AndroidLivesyncTool.APP_PLATFORMS_PATH_MISSING_ERROR);
 		}
 
 		if (this.socketConnection) {
-			this.$errors.fail(AndroidLivesyncTool.SOCKET_CONNECTION_ALREADY_EXISTS_ERROR);
+			this.$errors.failWithoutHelp(AndroidLivesyncTool.SOCKET_CONNECTION_ALREADY_EXISTS_ERROR);
 		}
 
 		if (!configuration.localHostAddress) {
@@ -88,7 +88,7 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 		for (const filePath of filePaths) {
 			if (this.$fs.getLsStats(filePath).isFile()) {
 				if (!this.$fs.exists(filePath)) {
-					this.$errors.fail(`${filePath} doesn't exist.`);
+					this.$errors.failWithoutHelp(`${filePath} doesn't exist.`);
 				}
 
 				await this.sendFile(filePath);
@@ -135,7 +135,7 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 
 	public sendDoSyncOperation(options?: IDoSyncOperationOptions): Promise<IAndroidLivesyncSyncOperationResult> {
 		options = _.assign({ doRefresh: true, timeout: SYNC_OPERATION_TIMEOUT }, options);
-		const { doRefresh , timeout, operationId } = options;
+		const { doRefresh, timeout, operationId } = options;
 		const id = operationId || this.generateOperationIdentifier();
 		const operationPromise: Promise<IAndroidLivesyncSyncOperationResult> = new Promise((resolve, reject) => {
 			if (!this.verifyActiveConnection(reject)) {
@@ -190,36 +190,36 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 	}
 
 	private async sendFileHeader(filePath: string): Promise<void> {
-			this.verifyActiveConnection();
-			const filePathData = this.getFilePathData(filePath);
-			const stats = this.$fs.getFsStats(filePathData.filePath);
-			const fileContentLengthBytes = stats.size;
-			const fileContentLengthString = fileContentLengthBytes.toString();
-			const fileContentLengthSize = Buffer.byteLength(fileContentLengthString);
-			const headerBuffer = Buffer.alloc(PROTOCOL_OPERATION_LENGTH_SIZE +
-					SIZE_BYTE_LENGTH +
-					filePathData.filePathLengthSize +
-					filePathData.filePathLengthBytes +
-					SIZE_BYTE_LENGTH +
-					fileContentLengthSize);
+		this.verifyActiveConnection();
+		const filePathData = this.getFilePathData(filePath);
+		const stats = this.$fs.getFsStats(filePathData.filePath);
+		const fileContentLengthBytes = stats.size;
+		const fileContentLengthString = fileContentLengthBytes.toString();
+		const fileContentLengthSize = Buffer.byteLength(fileContentLengthString);
+		const headerBuffer = Buffer.alloc(PROTOCOL_OPERATION_LENGTH_SIZE +
+			SIZE_BYTE_LENGTH +
+			filePathData.filePathLengthSize +
+			filePathData.filePathLengthBytes +
+			SIZE_BYTE_LENGTH +
+			fileContentLengthSize);
 
-			if (filePathData.filePathLengthSize > 255) {
-				this.$errors.failWithoutHelp("File name size is longer that 255 digits.");
-			} else if (fileContentLengthSize > 255) {
-				this.$errors.failWithoutHelp("File name size is longer that 255 digits.");
-			}
+		if (filePathData.filePathLengthSize > 255) {
+			this.$errors.failWithoutHelp("File name size is longer that 255 digits.");
+		} else if (fileContentLengthSize > 255) {
+			this.$errors.failWithoutHelp("File name size is longer that 255 digits.");
+		}
 
-			let offset = 0;
-			offset += headerBuffer.write(AndroidLivesyncTool.CREATE_FILE_OPERATION.toString(), offset, PROTOCOL_OPERATION_LENGTH_SIZE);
-			offset = headerBuffer.writeUInt8(filePathData.filePathLengthSize, offset);
-			offset += headerBuffer.write(filePathData.filePathLengthString, offset, filePathData.filePathLengthSize);
-			offset += headerBuffer.write(filePathData.relativeFilePath, offset, filePathData.filePathLengthBytes);
-			offset = headerBuffer.writeUInt8(fileContentLengthSize, offset);
-			headerBuffer.write(fileContentLengthString, offset, fileContentLengthSize);
-			const hash = crypto.createHash("md5").update(headerBuffer).digest();
+		let offset = 0;
+		offset += headerBuffer.write(AndroidLivesyncTool.CREATE_FILE_OPERATION.toString(), offset, PROTOCOL_OPERATION_LENGTH_SIZE);
+		offset = headerBuffer.writeUInt8(filePathData.filePathLengthSize, offset);
+		offset += headerBuffer.write(filePathData.filePathLengthString, offset, filePathData.filePathLengthSize);
+		offset += headerBuffer.write(filePathData.relativeFilePath, offset, filePathData.filePathLengthBytes);
+		offset = headerBuffer.writeUInt8(fileContentLengthSize, offset);
+		headerBuffer.write(fileContentLengthString, offset, fileContentLengthSize);
+		const hash = crypto.createHash("md5").update(headerBuffer).digest();
 
-			await this.writeToSocket(headerBuffer);
-			await this.writeToSocket(hash);
+		await this.writeToSocket(headerBuffer);
+		await this.writeToSocket(hash);
 	}
 
 	private sendFileContent(filePath: string): Promise<boolean> {
@@ -299,7 +299,7 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 		});
 	}
 
-	private connectEventuallyUntilTimeout(factory: () => ILiveSyncSocket, timeout: number): Promise<{socket: ILiveSyncSocket, data: NodeBuffer | string}> {
+	private connectEventuallyUntilTimeout(factory: () => ILiveSyncSocket, timeout: number): Promise<{ socket: ILiveSyncSocket, data: NodeBuffer | string }> {
 		return new Promise((resolve, reject) => {
 			let lastKnownError: Error | string,
 				isConnected = false;
@@ -364,19 +364,19 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 			const errorMessage = infoBuffer.toString();
 			this.handleSocketError(socketId, errorMessage);
 		} else if (reportType === AndroidLivesyncTool.OPERATION_END_REPORT) {
-			this.handleSyncEnd({data: infoBuffer, didRefresh: true});
+			this.handleSyncEnd({ data: infoBuffer, didRefresh: true });
 		} else if (reportType === AndroidLivesyncTool.OPERATION_END_NO_REFRESH_REPORT_CODE) {
-			this.handleSyncEnd({data: infoBuffer, didRefresh: false});
+			this.handleSyncEnd({ data: infoBuffer, didRefresh: false });
 		}
 	}
 
-	private handleSyncEnd({data, didRefresh}: {data: any, didRefresh: boolean}) {
+	private handleSyncEnd({ data, didRefresh }: { data: any, didRefresh: boolean }) {
 		const operationId = data.toString();
 		const promiseHandler = this.operationPromises[operationId];
 
 		if (promiseHandler) {
 			clearTimeout(promiseHandler.timeoutId);
-			promiseHandler.resolve({operationId, didRefresh});
+			promiseHandler.resolve({ operationId, didRefresh });
 			delete this.operationPromises[operationId];
 		}
 	}

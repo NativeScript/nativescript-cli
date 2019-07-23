@@ -17,7 +17,7 @@ export class ListiOSApps implements ICommand {
 
 	public async execute(args: string[]): Promise<void> {
 		if (!this.$platformValidationService.isPlatformSupportedForOS(this.$devicePlatformsConstants.iOS, this.$projectData)) {
-			this.$errors.fail(`Applications for platform ${this.$devicePlatformsConstants.iOS} can not be built on this OS`);
+			this.$errors.failWithoutHelp(`Applications for platform ${this.$devicePlatformsConstants.iOS} can not be built on this OS`);
 		}
 
 		let username = args[0];
@@ -37,7 +37,7 @@ export class ListiOSApps implements ICommand {
 			this.$logger.info("Seems you don't have any applications yet.");
 		} else {
 			const table: any = createTable(["Application Name", "Bundle Identifier", "In Flight Version"], applications.map(application => {
-				const version = (application && application.versionSets && application.versionSets.length && application.versionSets[0].inFlightVersion &&  application.versionSets[0].inFlightVersion.version) || "";
+				const version = (application && application.versionSets && application.versionSets.length && application.versionSets[0].inFlightVersion && application.versionSets[0].inFlightVersion.version) || "";
 				return [application.name, application.bundleId, version];
 			}));
 

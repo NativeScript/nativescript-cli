@@ -38,7 +38,7 @@ export class PreviewCommand implements ICommand {
 
 	public async canExecute(args: string[]): Promise<boolean> {
 		if (args && args.length) {
-			this.$errors.fail(`The arguments '${args.join(" ")}' are not valid for the preview command.`);
+			this.$errors.failWithHelp(`The arguments '${args.join(" ")}' are not valid for the preview command.`);
 		}
 
 		if (!this.$options.force) {

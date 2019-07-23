@@ -165,12 +165,13 @@ export class ChildProcess extends EventEmitter implements IChildProcess {
 		}
 	}
 
+	// TODO: remove?
 	public async tryExecuteApplication(command: string, args: string[], event: string,
 		errorMessage: string, condition: (_childProcess: any) => boolean): Promise<any> {
 		const childProcess = await this.tryExecuteApplicationCore(command, args, event, errorMessage);
 
 		if (condition && condition(childProcess)) {
-			this.$errors.fail(errorMessage);
+			this.$errors.failWithoutHelp(errorMessage);
 		}
 	}
 

@@ -52,7 +52,7 @@ export class DevicesService extends EventEmitter implements Mobile.IDevicesServi
 	@performanceLog()
 	public async pickSingleDevice(options: Mobile.IPickSingleDeviceOptions): Promise<Mobile.IDevice> {
 		if (options.onlyDevices && options.onlyEmulators) {
-			this.$errors.fail(DebugCommandErrors.UNABLE_TO_USE_FOR_DEVICE_AND_EMULATOR);
+			this.$errors.failWithHelp(DebugCommandErrors.UNABLE_TO_USE_FOR_DEVICE_AND_EMULATOR);
 		}
 
 		if (options.deviceId) {
@@ -357,7 +357,7 @@ export class DevicesService extends EventEmitter implements Mobile.IDevicesServi
 			return device.deviceInfo.identifier === identifier;
 		});
 		if (!searchedDevice) {
-			this.$errors.fail(this.$messages.Devices.NotFoundDeviceByIdentifierErrorMessageWithIdentifier, identifier, this.$staticConfig.CLIENT_NAME.toLowerCase());
+			this.$errors.failWithoutHelp(this.$messages.Devices.NotFoundDeviceByIdentifierErrorMessageWithIdentifier, identifier, this.$staticConfig.CLIENT_NAME.toLowerCase());
 		}
 
 		return searchedDevice;
@@ -409,7 +409,7 @@ export class DevicesService extends EventEmitter implements Mobile.IDevicesServi
 		}
 
 		if (!device) {
-			this.$errors.fail(this.$messages.Devices.NotFoundDeviceByIdentifierErrorMessageWithIdentifier, deviceOption, this.$staticConfig.CLIENT_NAME.toLowerCase());
+			this.$errors.failWithoutHelp(this.$messages.Devices.NotFoundDeviceByIdentifierErrorMessageWithIdentifier, deviceOption, this.$staticConfig.CLIENT_NAME.toLowerCase());
 		}
 
 		return device;
@@ -457,7 +457,7 @@ export class DevicesService extends EventEmitter implements Mobile.IDevicesServi
 
 			const errorMessage = `${preErrorMsg}${errors.map(e => e.message || e).join(EOL)}`;
 			const suppressCommandHelp = _.some(errors, (e: any) => e.suppressCommandHelp);
-			this.$errors.fail({ formatStr: errorMessage, suppressCommandHelp });
+			this.$errors.failWithoutHelp({ formatStr: errorMessage, suppressCommandHelp });
 		}
 
 		return result;
@@ -476,7 +476,7 @@ export class DevicesService extends EventEmitter implements Mobile.IDevicesServi
 				identifier = appId[device.deviceInfo.platform.toLowerCase()];
 			}
 
-			return this.deployOnDevice(device, { packagePath, appId: identifier, projectName, projectDir});
+			return this.deployOnDevice(device, { packagePath, appId: identifier, projectName, projectDir });
 		});
 	}
 
@@ -639,7 +639,7 @@ export class DevicesService extends EventEmitter implements Mobile.IDevicesServi
 			await this.startLookingForDevices(deviceLookingOptions);
 			this._device = await this.getDevice(deviceOption);
 			if (this._device.deviceInfo.platform !== this._platform) {
-				this.$errors.fail(constants.ERROR_CANNOT_RESOLVE_DEVICE);
+				this.$errors.failWithoutHelp(constants.ERROR_CANNOT_RESOLVE_DEVICE);
 			}
 			this.$logger.warn("Your application will be deployed only on the device specified by the provided index or identifier.");
 		} else if (!platform && deviceOption) {
@@ -678,9 +678,9 @@ export class DevicesService extends EventEmitter implements Mobile.IDevicesServi
 				if (platforms.length === 1) {
 					this._platform = platforms[0];
 				} else if (platforms.length === 0) {
-					this.$errors.fail({ formatStr: constants.ERROR_NO_DEVICES, suppressCommandHelp: true });
+					// this.$errors.failWithoutHelp({ formatStr: constants.ERROR_NO_DEVICES, suppressCommandHelp: true });
 				} else {
-					this.$errors.fail("Multiple device platforms detected (%s). Specify platform or device on command line.",
+					this.$errors.failWithHelp("Multiple device platforms detected (%s). Specify platform or device on command line.",
 						helpers.formatListOfNames(platforms, "and"));
 				}
 			}

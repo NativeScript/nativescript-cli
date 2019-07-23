@@ -9,12 +9,12 @@ export class AndroidBundleValidatorHelper extends VersionValidatorHelper impleme
 		protected $errors: IErrors,
 		protected $options: IOptions,
 		protected $projectDataService: IProjectDataService) {
-			super();
+		super();
 	}
 
 	public validateNoAab(): void {
 		if (this.$options.aab) {
-			this.$errors.fail(AndroidBundleValidatorMessages.AAB_NOT_SUPPORTED_BY_COMMNAND_MESSAGE);
+			this.$errors.failWithHelp(AndroidBundleValidatorMessages.AAB_NOT_SUPPORTED_BY_COMMNAND_MESSAGE);
 		}
 	}
 

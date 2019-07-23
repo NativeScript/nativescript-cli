@@ -18,7 +18,7 @@ export const ERROR_NO_DEVICES = "Cannot find connected devices. Reconnect any co
 export const ERROR_CANT_USE_SIMULATOR = "You can use iOS simulator only on OS X.";
 export const ERROR_NO_DEVICES_CANT_USE_IOS_SIMULATOR = "Cannot find connected devices and cannot start iOS simulator on this OS.";
 export const ERROR_CANNOT_RESOLVE_DEVICE = "Cannot resolve the specified connected device. The provided platform does not match the provided index or identifier. To list currently connected devices and verify that the specified pair of platform and index or identifier exists, run 'device'.";
-export const ERROR_NO_VALID_SUBCOMMAND_FORMAT = "The input is not valid sub-command for '%s' command";
+export const ERROR_NO_VALID_SUBCOMMAND_FORMAT = "The input is not valid sub-command for '%s' command.";
 
 export const UNREACHABLE_STATUS = "Unreachable";
 export const CONNECTED_STATUS = "Connected";

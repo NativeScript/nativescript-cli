@@ -31,7 +31,7 @@ export class CreateProjectCommand implements ICommand {
 		};
 
 		if ((this.$options.tsc || this.$options.ng || this.$options.vue || this.$options.js) && this.$options.template) {
-			this.$errors.fail("You cannot use a flavor option like --ng, --vue, --tsc and --js together with --template.");
+			this.$errors.failWithHelp("You cannot use a flavor option like --ng, --vue, --tsc and --js together with --template.");
 		}
 
 		let projectName = args[0];

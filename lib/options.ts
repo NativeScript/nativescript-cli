@@ -183,7 +183,7 @@ export class Options {
 					optionValue = parsed[optionName];
 
 				if (_.isArray(optionValue) && optionType !== OptionType.Array) {
-					this.$errors.fail("You have set the %s option multiple times. Check the correct command syntax below and try again.", originalOptionName);
+					this.$errors.failWithoutHelp("You have set the %s option multiple times. Check the correct command syntax below and try again.", originalOptionName);
 				} else if (optionType === OptionType.String && helpers.isNullOrWhitespace(optionValue)) {
 					this.$errors.failWithoutHelp("The option '%s' requires non-empty value.", originalOptionName);
 				} else if (optionType === OptionType.Array && optionValue.length === 0) {

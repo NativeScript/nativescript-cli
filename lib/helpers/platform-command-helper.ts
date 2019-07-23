@@ -158,15 +158,15 @@ export class PlatformCommandHelper implements IPlatformCommandHelper {
 		const canUpdate = platformData.platformProjectService.canUpdatePlatform(installedModuleDir, projectData);
 		if (canUpdate) {
 			if (!semver.valid(newVersion)) {
-				this.$errors.fail("The version %s is not valid. The version should consists from 3 parts separated by dot.", newVersion);
+				this.$errors.failWithoutHelp("The version %s is not valid. The version should consists from 3 parts separated by dot.", newVersion);
 			}
 
 			if (!semver.gt(currentVersion, newVersion)) {
 				await this.updatePlatformCore(platformData, { currentVersion, newVersion, canUpdate }, projectData);
 			} else if (semver.eq(currentVersion, newVersion)) {
-				this.$errors.fail("Current and new version are the same.");
+				this.$errors.failWithoutHelp("Current and new version are the same.");
 			} else {
-				this.$errors.fail(`Your current version: ${currentVersion} is higher than the one you're trying to install ${newVersion}.`);
+				this.$errors.failWithoutHelp(`Your current version: ${currentVersion} is higher than the one you're trying to install ${newVersion}.`);
 			}
 		} else {
 			this.$errors.failWithoutHelp("Native Platform cannot be updated.");

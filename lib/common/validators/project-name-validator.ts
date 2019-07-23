@@ -54,7 +54,7 @@ export class ProjectNameValidator implements IProjectNameValidator {
 		const isSuccessful = validationResult.isSuccessful;
 
 		if (!isSuccessful) {
-			this.$errors.fail(validationResult.error);
+			this.$errors.failWithHelp(validationResult.error);
 		}
 
 		return isSuccessful;

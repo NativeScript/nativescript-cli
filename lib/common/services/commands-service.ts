@@ -93,7 +93,11 @@ export class CommandsService implements ICommandsService {
 	}
 
 	private printHelp(commandName: string, commandArguments: string[]): Promise<void> {
-		return this.$helpService.showCommandLineHelp({ commandName: this.beautifyCommandName(commandName), commandArguments });
+		try {
+			return this.$helpService.showCommandLineHelp({ commandName: this.beautifyCommandName(commandName), commandArguments });
+		} catch (printHelpException) {
+			console.error("Failed to display command help", printHelpException);
+		}
 	}
 
 	private async executeCommandAction(commandName: string, commandArguments: string[], action: (_commandName: string, _commandArguments: string[]) => Promise<boolean | ICanExecuteCommandOutput>): Promise<boolean> {
@@ -113,6 +117,7 @@ export class CommandsService implements ICommandsService {
 	}
 
 	public async tryExecuteCommand(commandName: string, commandArguments: string[]): Promise<void> {
+		// TODO: try check here?
 		const canExecuteResult: any = await this.executeCommandAction(commandName, commandArguments, this.tryExecuteCommandAction);
 		const canExecute = typeof canExecuteResult === "object" ? canExecuteResult.canExecute : canExecuteResult;
 		const suppressCommandHelp = typeof canExecuteResult === "object" ? canExecuteResult.suppressCommandHelp : false;
@@ -125,7 +130,11 @@ export class CommandsService implements ICommandsService {
 			if (command) {
 				if (!suppressCommandHelp) {
 					// If command cannot be executed we should print its help.
-					await this.printHelp(commandName, commandArguments);
+					try {
+						await this.printHelp(commandName, commandArguments);
+					} catch (printHelpException) {
+						console.error("Failed to display command help", printHelpException);
+					}
 				}
 			}
 		}
@@ -154,7 +163,7 @@ export class CommandsService implements ICommandsService {
 				return true;
 			}
 
-			this.$errors.fail("Unable to execute command '%s'. Use '$ %s %s --help' for help.", beautifiedName, this.$staticConfig.CLIENT_NAME.toLowerCase(), beautifiedName);
+			this.$errors.failWithHelp("Unable to execute command '%s'. Use '$ %s %s --help' for help.", beautifiedName, this.$staticConfig.CLIENT_NAME.toLowerCase(), beautifiedName);
 			return false;
 		}
 
@@ -184,7 +193,7 @@ export class CommandsService implements ICommandsService {
 			if (mandatoryParams.length > commandArguments.length) {
 				const customErrorMessages = _.map(mandatoryParams, mp => mp.errorMessage);
 				customErrorMessages.splice(0, 0, "You need to provide all the required parameters.");
-				this.$errors.fail(customErrorMessages.join(EOL));
+				this.$errors.failWithHelp(customErrorMessages.join(EOL));
 			}
 
 			// If we reach here, the commandArguments are at least as much as mandatoryParams. Now we should verify that we have each of them.
@@ -202,7 +211,7 @@ export class CommandsService implements ICommandsService {
 				if (argument) {
 					helpers.remove(commandArgsHelper.remainingArguments, arg => arg === argument);
 				} else {
-					this.$errors.fail("Missing mandatory parameter.");
+					this.$errors.failWithHelp("Missing mandatory parameter.");
 				}
 			}
 		}
@@ -220,7 +229,7 @@ export class CommandsService implements ICommandsService {
 		// Command doesn't have any allowedParameters
 		if (!command.allowedParameters || command.allowedParameters.length === 0) {
 			if (commandArguments.length > 0) {
-				this.$errors.fail("This command doesn't accept parameters.");
+				this.$errors.failWithHelp("This command doesn't accept parameters.");
 			}
 		} else {
 			// Exclude mandatory params, we've already checked them
@@ -242,7 +251,7 @@ export class CommandsService implements ICommandsService {
 					// Remove the matched parameter from unverifiedAllowedParams collection, so it will not be used to verify another argument.
 					unverifiedAllowedParams.splice(index, 1);
 				} else {
-					this.$errors.fail(`The parameter ${argument} is not valid for this command.`);
+					this.$errors.failWithHelp(`The parameter ${argument} is not valid for this command.`);
 				}
 			}
 		}

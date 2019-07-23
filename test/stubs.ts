@@ -198,8 +198,12 @@ export class ErrorsStub implements IErrors {
 		throw new Error(require("util").format.apply(null, args || []));
 	}
 
-	failWithoutHelp(message: string, ...args: any[]): never {
-		throw new Error(message);
+	failWithoutHelp(opts: string | IFailOptions, ...args: any[]): never {
+		return this.fail(<any>opts);
+	}
+
+	failWithHelp(opts: string | IFailOptions, ...args: any[]): never {
+		return this.fail(<any>opts);
 	}
 
 	async beginCommand(action: () => Promise<boolean>, printHelpCommand: () => Promise<void>): Promise<boolean> {

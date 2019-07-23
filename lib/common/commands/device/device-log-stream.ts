@@ -9,9 +9,9 @@ export class OpenDeviceLogStreamCommand implements ICommand {
 		private $loggingLevels: Mobile.ILoggingLevels,
 		$iOSSimulatorLogProvider: Mobile.IiOSSimulatorLogProvider,
 		$cleanupService: ICleanupService) {
-			$iOSSimulatorLogProvider.setShouldDispose(false);
-			$cleanupService.setShouldDispose(false);
-		}
+		$iOSSimulatorLogProvider.setShouldDispose(false);
+		$cleanupService.setShouldDispose(false);
+	}
 
 	allowedParameters: ICommandParameter[] = [];
 
@@ -22,7 +22,7 @@ export class OpenDeviceLogStreamCommand implements ICommand {
 
 		if (this.$devicesService.deviceCount > 1) {
 			await this.$commandsService.tryExecuteCommand("device", []);
-			this.$errors.fail(OpenDeviceLogStreamCommand.NOT_SPECIFIED_DEVICE_ERROR_MESSAGE);
+			this.$errors.failWithHelp(OpenDeviceLogStreamCommand.NOT_SPECIFIED_DEVICE_ERROR_MESSAGE);
 		}
 
 		const action = (device: Mobile.IiOSDevice) => device.openDeviceLogStream();

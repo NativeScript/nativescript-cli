@@ -30,7 +30,7 @@ export abstract class BuildCommandBase extends ValidatePlatformCommandBase {
 
 	protected validatePlatform(platform: string): void {
 		if (!this.$platformValidationService.isPlatformSupportedForOS(platform, this.$projectData)) {
-			this.$errors.fail(`Applications for platform ${platform} can not be built on this OS`);
+			this.$errors.failWithoutHelp(`Applications for platform ${platform} can not be built on this OS`);
 		}
 	}
 
@@ -129,7 +129,7 @@ export class BuildAndroidCommand extends BuildCommandBase implements ICommand {
 		let result = await super.canExecuteCommandBase(platform, { notConfiguredEnvOptions: { hideSyncToPreviewAppOption: true } });
 		if (result.canExecute) {
 			if (this.$options.release && (!this.$options.keyStorePath || !this.$options.keyStorePassword || !this.$options.keyStoreAlias || !this.$options.keyStoreAliasPassword)) {
-				this.$errors.fail(ANDROID_RELEASE_BUILD_ERROR_MESSAGE);
+				this.$errors.failWithHelp(ANDROID_RELEASE_BUILD_ERROR_MESSAGE);
 			}
 
 			result = await super.validateArgs(args, platform);

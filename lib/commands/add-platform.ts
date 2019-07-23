@@ -9,8 +9,8 @@ export class AddPlatformCommand extends ValidatePlatformCommandBase implements I
 		$projectData: IProjectData,
 		$platformsDataService: IPlatformsDataService,
 		private $errors: IErrors) {
-			super($options, $platformsDataService, $platformValidationService, $projectData);
-			this.$projectData.initializeProjectData();
+		super($options, $platformsDataService, $platformValidationService, $projectData);
+		this.$projectData.initializeProjectData();
 	}
 
 	public async execute(args: string[]): Promise<void> {
@@ -19,7 +19,7 @@ export class AddPlatformCommand extends ValidatePlatformCommandBase implements I
 
 	public async canExecute(args: string[]): Promise<ICanExecuteCommandOutput> {
 		if (!args || args.length === 0) {
-			this.$errors.fail("No platform specified. Please specify a platform to add");
+			this.$errors.failWithHelp("No platform specified. Please specify a platform to add.");
 		}
 
 		let canExecute = true;
@@ -27,7 +27,7 @@ export class AddPlatformCommand extends ValidatePlatformCommandBase implements I
 			this.$platformValidationService.validatePlatform(arg, this.$projectData);
 
 			if (!this.$platformValidationService.isPlatformSupportedForOS(arg, this.$projectData)) {
-				this.$errors.fail(`Applications for platform ${arg} can not be built on this OS`);
+				this.$errors.failWithoutHelp(`Applications for platform ${arg} can not be built on this OS`);
 			}
 
 			const output = await super.canExecuteCommandBase(arg);

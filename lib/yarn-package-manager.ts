@@ -71,7 +71,7 @@ export class YarnPackageManager extends BasePackageManager {
 
 	@exported("yarn")
 	public search(filter: string[], config: IDictionary<string | boolean>): Promise<string> {
-		this.$errors.fail("Method not implemented. Yarn does not support searching for packages in the registry.");
+		this.$errors.failWithoutHelp("Method not implemented. Yarn does not support searching for packages in the registry.");
 		return null;
 	}
 

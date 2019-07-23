@@ -25,13 +25,13 @@ export class ProjectService implements IProjectService {
 	public async validateProjectName(opts: { projectName: string, force: boolean, pathToProject: string }): Promise<string> {
 		let projectName = opts.projectName;
 		if (!projectName) {
-			this.$errors.fail("You must specify <App name> when creating a new project.");
+			this.$errors.failWithHelp("You must specify <App name> when creating a new project.");
 		}
 
 		projectName = await this.$projectNameService.ensureValidName(projectName, { force: opts.force });
 		const projectDir = this.getValidProjectDir(opts.pathToProject, projectName);
 		if (this.$fs.exists(projectDir) && !this.$fs.isEmptyDir(projectDir)) {
-			this.$errors.fail("Path already exists and is not empty %s", projectDir);
+			this.$errors.failWithoutHelp("Path already exists and is not empty %s", projectDir);
 		}
 
 		return projectName;
