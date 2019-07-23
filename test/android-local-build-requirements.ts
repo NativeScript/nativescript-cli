@@ -13,12 +13,16 @@ describe("androidLocalBuildRequirements", () => {
 	describe("checkRequirements", () => {
 		const setupTestCase = (results: ITestCaseData): AndroidLocalBuildRequirements => {
 			const androidToolsInfo: NativeScriptDoctor.IAndroidToolsInfo = {
+				ANDROID_TARGET_PREFIX: "",
+				androidHome: "",
 				validateInfo: (): NativeScriptDoctor.IWarning[] => results.validateInfo || [],
 				validateAndroidHomeEnvVariable: (): NativeScriptDoctor.IWarning[] => [],
 				getToolsInfo: (): NativeScriptDoctor.IAndroidToolsInfoData => null,
 				validateJavacVersion: (installedJavaVersion: string, projectDir?: string, runtimeVersion?: string): NativeScriptDoctor.IWarning[] => results.validateJavacVersion || [],
 				getPathToAdbFromAndroidHome: async (): Promise<string> => undefined,
-				getPathToEmulatorExecutable: (): string => undefined
+				getPathToEmulatorExecutable: (): string => undefined,
+				validateMinSupportedTargetSdk: (): NativeScriptDoctor.IWarning[] => [],
+				validataMaxSupportedTargetSdk: (): NativeScriptDoctor.IWarning[] => []
 			};
 
 			const sysInfo: NativeScriptDoctor.ISysInfo = {

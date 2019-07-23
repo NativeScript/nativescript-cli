@@ -57,6 +57,8 @@ interface IFileSystemMockOptions {
 }
 
 const androidToolsInfo: NativeScriptDoctor.IAndroidToolsInfo = {
+	ANDROID_TARGET_PREFIX: "",
+	androidHome: "",
 	getPathToAdbFromAndroidHome: async () => {
 		return "adb";
 	},
@@ -74,7 +76,9 @@ const androidToolsInfo: NativeScriptDoctor.IAndroidToolsInfo = {
 	},
 	validateJavacVersion: (): any[] => {
 		return [];
-	}
+	},
+	validateMinSupportedTargetSdk: (): NativeScriptDoctor.IWarning[] => [],
+	validataMaxSupportedTargetSdk: (): NativeScriptDoctor.IWarning[] => []
 };
 
 function createChildProcessResults(childProcessResult: IChildProcessResults): IDictionary<IChildProcessResultDescription> {

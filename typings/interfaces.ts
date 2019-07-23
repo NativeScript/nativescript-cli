@@ -453,6 +453,9 @@ declare module NativeScriptDoctor {
 	 * Describes methods for getting and validating Android tools.
 	 */
 	interface IAndroidToolsInfo {
+		ANDROID_TARGET_PREFIX: string;
+		androidHome: string;
+
 		/**
 		 * Returns the Android tools info.
 		 * @return {NativeScriptDoctor.IAndroidToolsInfoData} returns the Android tools info.
@@ -487,6 +490,9 @@ declare module NativeScriptDoctor {
 		 */
 		validateAndroidHomeEnvVariable(): NativeScriptDoctor.IWarning[];
 
+		validateMinSupportedTargetSdk(targetSdk: number): NativeScriptDoctor.IWarning[];
+		validataMaxSupportedTargetSdk(targetSdk: number): NativeScriptDoctor.IWarning[];
+
 		/**
 		 * Returns the path to the emulator executable.
 		 * @return {string} The path to the emulator executable.
@@ -512,5 +518,9 @@ declare module NativeScriptDoctor {
 		 * The latest installed version of Android SDK that satisfies CLI's requirements.
 		 */
 		compileSdkVersion: number;
+
+		installedTargets: string[];
+		maxSupportedSdkVersion: number;
+		latestValidAndroidTarget: string;
 	}
 }
