@@ -5462,9 +5462,9 @@
       }
     },
     "nativescript-doctor": {
-      "version": "1.10.0",
-      "resolved": "https://registry.npmjs.org/nativescript-doctor/-/nativescript-doctor-1.10.0.tgz",
-      "integrity": "sha512-v0xBisRfibxLZ8EU/O98IbLf3Y9DJhevFQWHZ86V0rGo2ImI3Rzu5Xz61oULIVQvO9N0dIpvIFHCiTxoKIhNMQ==",
+      "version": "1.11.0-rc.0",
+      "resolved": "https://registry.npmjs.org/nativescript-doctor/-/nativescript-doctor-1.11.0-rc.0.tgz",
+      "integrity": "sha512-4qIyiXm9AZXtW3uk7uT+RzHcULpK74GaaKiSXcQguyyN4VEh7eCgT8K8nWeF4oA2gsNz736xTw+Pe/tbOMA0JQ==",
       "requires": {
         "osenv": "0.1.3",
         "semver": "5.5.1",

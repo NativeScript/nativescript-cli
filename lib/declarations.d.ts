@@ -689,7 +689,7 @@ interface IAndroidToolsInfo {
 /**
  * Describes information about installed Android tools and SDKs.
  */
-interface IAndroidToolsInfoData {
+interface IAndroidToolsInfoData extends NativeScriptDoctor.IAndroidToolsInfoData {
 	/**
 	 * The value of ANDROID_HOME environment variable.
 	 */
