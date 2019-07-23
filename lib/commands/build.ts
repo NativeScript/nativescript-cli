@@ -30,7 +30,7 @@ export abstract class BuildCommandBase extends ValidatePlatformCommandBase {
 
 	protected validatePlatform(platform: string): void {
 		if (!this.$platformValidationService.isPlatformSupportedForOS(platform, this.$projectData)) {
-			this.$errors.failWithoutHelp(`Applications for platform ${platform} can not be built on this OS`);
+			this.$errors.fail(`Applications for platform ${platform} can not be built on this OS`);
 		}
 	}
 

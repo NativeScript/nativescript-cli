@@ -92,7 +92,7 @@ export class CreatePluginCommand implements ICommand {
 		this.$fs.createDirectory(projectDir);
 
 		if (this.$fs.exists(projectDir) && !this.$fs.isEmptyDir(projectDir)) {
-			this.$errors.failWithoutHelp(this.pathAlreadyExistsMessageTemplate, projectDir);
+			this.$errors.fail(this.pathAlreadyExistsMessageTemplate, projectDir);
 		}
 	}
 

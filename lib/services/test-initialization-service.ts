@@ -20,7 +20,7 @@ export class TestInitializationService implements ITestInitializationService {
 			.map(dependency => {
 				const dependencyVersion = dependenciesVersions[dependency.name];
 				if (!dependencyVersion) {
-					this.$errors.failWithoutHelp(`'${dependency}' is not a registered dependency.`);
+					this.$errors.fail(`'${dependency}' is not a registered dependency.`);
 				}
 				return { ...dependency, version: dependencyVersion };
 			});

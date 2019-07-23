@@ -62,7 +62,7 @@ export class ProjectTemplatesService implements IProjectTemplatesService {
 			this.$logger.trace(`The template ${templateName} has version ${templateVersionFromPackageJson}.`);
 
 			if (_.values(constants.TemplateVersions).indexOf(templateVersionFromPackageJson) === -1) {
-				this.$errors.failWithoutHelp(format(constants.ProjectTemplateErrors.InvalidTemplateVersionStringFormat, templateName, templateVersionFromPackageJson));
+				this.$errors.fail(format(constants.ProjectTemplateErrors.InvalidTemplateVersionStringFormat, templateName, templateVersionFromPackageJson));
 			}
 
 			return templateVersionFromPackageJson;

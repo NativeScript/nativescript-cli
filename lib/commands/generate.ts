@@ -12,7 +12,7 @@ export class GenerateCommand implements ICommand {
 		try {
 			await run(this.executionOptions);
 		} catch (error) {
-			this.$errors.failWithoutHelp(error.message);
+			this.$errors.fail(error.message);
 		}
 	}
 

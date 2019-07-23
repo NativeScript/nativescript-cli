@@ -18,7 +18,7 @@ export class GetFileCommand implements ICommand {
 				// ignore the error
 			}
 			if (!this.$projectData.projectIdentifiers) {
-				this.$errors.failWithoutHelp("Please enter application identifier or execute this command in project.");
+				this.$errors.fail("Please enter application identifier or execute this command in project.");
 			}
 		}
 

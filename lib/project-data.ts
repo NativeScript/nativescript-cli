@@ -104,7 +104,7 @@ export class ProjectData implements IProjectData {
 			packageJsonData = parseJson(packageJsonContent);
 			nsData = packageJsonData[this.$staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE];
 		} catch (err) {
-			this.$errors.failWithoutHelp(`The project file ${this.projectFilePath} is corrupted. ${EOL}` +
+			this.$errors.fail(`The project file ${this.projectFilePath} is corrupted. ${EOL}` +
 				`Consider restoring an earlier version from your source control or backup.${EOL}` +
 				`Additional technical info: ${err.toString()}`);
 		}
@@ -112,7 +112,7 @@ export class ProjectData implements IProjectData {
 		try {
 			nsConfig = nsconfigContent ? <INsConfig>parseJson(nsconfigContent) : null;
 		} catch (err) {
-			this.$errors.failWithoutHelp(`The NativeScript configuration file ${constants.CONFIG_NS_FILE_NAME} is corrupted. ${EOL}` +
+			this.$errors.fail(`The NativeScript configuration file ${constants.CONFIG_NS_FILE_NAME} is corrupted. ${EOL}` +
 				`Consider restoring an earlier version from your source control or backup.${EOL}` +
 				`Additional technical info: ${err.toString()}`);
 		}
@@ -157,7 +157,7 @@ export class ProjectData implements IProjectData {
 		this.$logger.trace(`Unable to find project. projectDir: ${projectDir}, options.path: ${this.$options.path}, ${currentDir}`);
 
 		// This is the case when no project file found
-		this.$errors.failWithoutHelp("No project found at or above '%s' and neither was a --path specified.", projectDir || this.$options.path || currentDir);
+		this.$errors.fail("No project found at or above '%s' and neither was a --path specified.", projectDir || this.$options.path || currentDir);
 	}
 
 	private getProjectFilePath(projectDir: string): string {

@@ -176,7 +176,7 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 	private async processSyncToPreviewAppIfNeeded(selectedOption: string, projectDir: string, options: IOptions) {
 		if (selectedOption === PlatformEnvironmentRequirements.SYNC_TO_PREVIEW_APP_OPTION_NAME) {
 			if (!projectDir) {
-				this.$errors.failWithoutHelp(`No project found. In order to sync to playground you need to go to project directory or specify --path option.`);
+				this.$errors.fail(`No project found. In order to sync to playground you need to go to project directory or specify --path option.`);
 			}
 
 			await this.$previewAppController.startPreview({
@@ -204,7 +204,7 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 	}
 
 	private fail(message: string): void {
-		// this.$errors.failWithoutHelp({ formatStr: message, suppressCommandHelp: true, printOnStdout: true });
+		this.$errors.fail({ formatStr: message, suppressCommandHelp: true, printOnStdout: true });
 	}
 
 	private getNonInteractiveConsoleMessage(platform: string) {

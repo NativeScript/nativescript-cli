@@ -117,7 +117,6 @@ export class CommandsService implements ICommandsService {
 	}
 
 	public async tryExecuteCommand(commandName: string, commandArguments: string[]): Promise<void> {
-		// TODO: try check here?
 		const canExecuteResult: any = await this.executeCommandAction(commandName, commandArguments, this.tryExecuteCommandAction);
 		const canExecute = typeof canExecuteResult === "object" ? canExecuteResult.canExecute : canExecuteResult;
 		const suppressCommandHelp = typeof canExecuteResult === "object" ? canExecuteResult.suppressCommandHelp : false;
@@ -130,11 +129,7 @@ export class CommandsService implements ICommandsService {
 			if (command) {
 				if (!suppressCommandHelp) {
 					// If command cannot be executed we should print its help.
-					try {
-						await this.printHelp(commandName, commandArguments);
-					} catch (printHelpException) {
-						console.error("Failed to display command help", printHelpException);
-					}
+					await this.printHelp(commandName, commandArguments);
 				}
 			}
 		}
@@ -146,7 +141,7 @@ export class CommandsService implements ICommandsService {
 		if (command) {
 			// Verify command is enabled
 			if (command.isDisabled) {
-				this.$errors.failWithoutHelp("This command is not applicable to your environment.");
+				this.$errors.fail("This command is not applicable to your environment.");
 			}
 
 			// If command wants to handle canExecute logic on its own.

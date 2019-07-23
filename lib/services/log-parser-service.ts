@@ -13,7 +13,7 @@ export class LogParserService extends EventEmitter implements ILogParserService 
 
 	public addParseRule(rule: ILogParseRule): void {
 		if (this.parseRules[rule.name]) {
-			this.$errors.failWithoutHelp("Log parse rule already exists.");
+			this.$errors.fail("Log parse rule already exists.");
 		}
 
 		this.parseRules[rule.name] = rule;

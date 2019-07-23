@@ -28,14 +28,14 @@ export class AndroidProcessService implements Mobile.IAndroidProcessService {
 		const applicationNotStartedErrorMessage = `The application is not started on the device with identifier ${deviceIdentifier}.`;
 
 		if (!processId) {
-			this.$errors.failWithoutHelp(applicationNotStartedErrorMessage);
+			this.$errors.fail(applicationNotStartedErrorMessage);
 		}
 
 		const abstractPortsInformation = await this.getAbstractPortsInformation(adb);
 		const abstractPort = await this.getAbstractPortForApplication(adb, processId, appIdentifier, abstractPortsInformation, framework);
 
 		if (!abstractPort) {
-			this.$errors.failWithoutHelp(applicationNotStartedErrorMessage);
+			this.$errors.fail(applicationNotStartedErrorMessage);
 		}
 
 		const forwardedTcpPort = await this.forwardPort({ deviceIdentifier, appIdentifier, abstractPort: `localabstract:${abstractPort}` }, adb);

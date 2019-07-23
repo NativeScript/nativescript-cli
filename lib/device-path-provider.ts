@@ -15,7 +15,7 @@ export class DevicePathProvider implements IDevicePathProvider {
 			projectRoot = device.isEmulator ? await this.$iOSSimResolver.iOSSim.getApplicationPath(device.deviceInfo.identifier, options.appIdentifier) : LiveSyncPaths.IOS_DEVICE_PROJECT_ROOT_PATH;
 
 			if (!projectRoot) {
-				this.$errors.failWithoutHelp("Unable to get application path on device.");
+				this.$errors.fail("Unable to get application path on device.");
 			}
 
 			if (!options.getDirname) {

@@ -101,7 +101,7 @@ export class DevicesService extends EventEmitter implements Mobile.IDevicesServi
 			return _.head(selectedDevices);
 		}
 
-		this.$errors.failWithoutHelp(DebugCommandErrors.NO_DEVICES_EMULATORS_FOUND_FOR_OPTIONS);
+		this.$errors.fail(DebugCommandErrors.NO_DEVICES_EMULATORS_FOUND_FOR_OPTIONS);
 	}
 
 	@exported("devicesService")
@@ -357,7 +357,7 @@ export class DevicesService extends EventEmitter implements Mobile.IDevicesServi
 			return device.deviceInfo.identifier === identifier;
 		});
 		if (!searchedDevice) {
-			this.$errors.failWithoutHelp(this.$messages.Devices.NotFoundDeviceByIdentifierErrorMessageWithIdentifier, identifier, this.$staticConfig.CLIENT_NAME.toLowerCase());
+			this.$errors.fail(this.$messages.Devices.NotFoundDeviceByIdentifierErrorMessageWithIdentifier, identifier, this.$staticConfig.CLIENT_NAME.toLowerCase());
 		}
 
 		return searchedDevice;
@@ -409,7 +409,7 @@ export class DevicesService extends EventEmitter implements Mobile.IDevicesServi
 		}
 
 		if (!device) {
-			this.$errors.failWithoutHelp(this.$messages.Devices.NotFoundDeviceByIdentifierErrorMessageWithIdentifier, deviceOption, this.$staticConfig.CLIENT_NAME.toLowerCase());
+			this.$errors.fail(this.$messages.Devices.NotFoundDeviceByIdentifierErrorMessageWithIdentifier, deviceOption, this.$staticConfig.CLIENT_NAME.toLowerCase());
 		}
 
 		return device;
@@ -457,7 +457,7 @@ export class DevicesService extends EventEmitter implements Mobile.IDevicesServi
 
 			const errorMessage = `${preErrorMsg}${errors.map(e => e.message || e).join(EOL)}`;
 			const suppressCommandHelp = _.some(errors, (e: any) => e.suppressCommandHelp);
-			this.$errors.failWithoutHelp({ formatStr: errorMessage, suppressCommandHelp });
+			this.$errors.fail({ formatStr: errorMessage, suppressCommandHelp });
 		}
 
 		return result;
@@ -505,7 +505,7 @@ export class DevicesService extends EventEmitter implements Mobile.IDevicesServi
 				this.$logger.info(message);
 			} else {
 				if (!this.$hostInfo.isDarwin && this._platform && this.$mobileHelper.isiOSPlatform(this._platform)) {
-					this.$errors.failWithoutHelp(message);
+					this.$errors.fail(message);
 				} else {
 					return this.executeCore(action, canExecute);
 				}
@@ -520,7 +520,7 @@ export class DevicesService extends EventEmitter implements Mobile.IDevicesServi
 	 */
 	protected async startEmulatorIfNecessary(deviceInitOpts?: Mobile.IDevicesServicesInitializationOptions): Promise<void> {
 		if (deviceInitOpts && deviceInitOpts.deviceId && deviceInitOpts.emulator) {
-			this.$errors.failWithoutHelp(`--device and --emulator are incompatible options.
+			this.$errors.fail(`--device and --emulator are incompatible options.
 			If you are trying to run on specific emulator, use "${this.$staticConfig.CLIENT_NAME} run --device <DeviceID>`);
 		}
 
@@ -536,7 +536,7 @@ export class DevicesService extends EventEmitter implements Mobile.IDevicesServi
 
 			if (!deviceInitOpts.deviceId && _.isEmpty(deviceInstances)) {
 				if (!this.$hostInfo.isDarwin && this.$mobileHelper.isiOSPlatform(deviceInitOpts.platform)) {
-					this.$errors.failWithoutHelp(constants.ERROR_NO_DEVICES_CANT_USE_IOS_SIMULATOR);
+					this.$errors.fail(constants.ERROR_NO_DEVICES_CANT_USE_IOS_SIMULATOR);
 				}
 			}
 
@@ -545,7 +545,7 @@ export class DevicesService extends EventEmitter implements Mobile.IDevicesServi
 			} catch (err) {
 				const errorMessage = this.getEmulatorError(err, deviceInitOpts.platform);
 
-				this.$errors.failWithoutHelp(errorMessage);
+				this.$errors.fail(errorMessage);
 			}
 		}
 	}
@@ -639,7 +639,7 @@ export class DevicesService extends EventEmitter implements Mobile.IDevicesServi
 			await this.startLookingForDevices(deviceLookingOptions);
 			this._device = await this.getDevice(deviceOption);
 			if (this._device.deviceInfo.platform !== this._platform) {
-				this.$errors.failWithoutHelp(constants.ERROR_CANNOT_RESOLVE_DEVICE);
+				this.$errors.fail(constants.ERROR_CANNOT_RESOLVE_DEVICE);
 			}
 			this.$logger.warn("Your application will be deployed only on the device specified by the provided index or identifier.");
 		} else if (!platform && deviceOption) {
@@ -678,7 +678,7 @@ export class DevicesService extends EventEmitter implements Mobile.IDevicesServi
 				if (platforms.length === 1) {
 					this._platform = platforms[0];
 				} else if (platforms.length === 0) {
-					// this.$errors.failWithoutHelp({ formatStr: constants.ERROR_NO_DEVICES, suppressCommandHelp: true });
+					this.$errors.fail({ formatStr: constants.ERROR_NO_DEVICES, suppressCommandHelp: true });
 				} else {
 					this.$errors.failWithHelp("Multiple device platforms detected (%s). Specify platform or device on command line.",
 						helpers.formatListOfNames(platforms, "and"));
@@ -687,7 +687,7 @@ export class DevicesService extends EventEmitter implements Mobile.IDevicesServi
 		}
 
 		if (!this.$hostInfo.isDarwin && this._platform && this.$mobileHelper.isiOSPlatform(this._platform) && this.$options.emulator) {
-			this.$errors.failWithoutHelp(constants.ERROR_CANT_USE_SIMULATOR);
+			this.$errors.fail(constants.ERROR_CANT_USE_SIMULATOR);
 		}
 		this._isInitialized = true;
 	}
@@ -777,12 +777,12 @@ export class DevicesService extends EventEmitter implements Mobile.IDevicesServi
 		const platform = deviceInitOpts.platform || this._platform;
 		const emulatorServices = this.resolveEmulatorServices(platform);
 		if (!emulatorServices) {
-			this.$errors.failWithoutHelp("Unable to detect platform for which to start emulator.");
+			this.$errors.fail("Unable to detect platform for which to start emulator.");
 		}
 
 		const result = await emulatorServices.startEmulator({ emulatorIdOrName: deviceId, imageIdentifier: deviceId, platform: platform, sdk: this._data && this._data.sdk });
 		if (result && result.errors && result.errors.length) {
-			this.$errors.failWithoutHelp(result.errors.join("\n"));
+			this.$errors.fail(result.errors.join("\n"));
 		}
 
 		const deviceLookingOptions = this.getDeviceLookingOptions(deviceInitOpts);

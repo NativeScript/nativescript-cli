@@ -62,7 +62,7 @@ export class ProjectHelper implements IProjectHelper {
 				const clientSpecificData = fileContent[this.$staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE] && fileContent[this.$staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE].id;
 				return !!clientSpecificData;
 			} catch (err) {
-				this.$errors.failWithoutHelp("The project file is corrupted. Additional technical information: %s", err);
+				this.$errors.fail("The project file is corrupted. Additional technical information: %s", err);
 			}
 		}
 

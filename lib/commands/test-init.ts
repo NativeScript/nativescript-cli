@@ -37,7 +37,7 @@ class TestInitCommand implements ICommand {
 		try {
 			modulesToInstall = this.$testInitializationService.getDependencies(frameworkToInstall);
 		} catch (err) {
-			this.$errors.failWithoutHelp(`Unable to install the unit testing dependencies. Error: '${err.message}'`);
+			this.$errors.fail(`Unable to install the unit testing dependencies. Error: '${err.message}'`);
 		}
 
 		modulesToInstall = modulesToInstall.filter(moduleToInstall => !moduleToInstall.projectType || moduleToInstall.projectType === projectFilesExtension);

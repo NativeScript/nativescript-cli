@@ -17,7 +17,7 @@ export class ListiOSApps implements ICommand {
 
 	public async execute(args: string[]): Promise<void> {
 		if (!this.$platformValidationService.isPlatformSupportedForOS(this.$devicePlatformsConstants.iOS, this.$projectData)) {
-			this.$errors.failWithoutHelp(`Applications for platform ${this.$devicePlatformsConstants.iOS} can not be built on this OS`);
+			this.$errors.fail(`Applications for platform ${this.$devicePlatformsConstants.iOS} can not be built on this OS`);
 		}
 
 		let username = args[0];

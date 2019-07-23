@@ -560,7 +560,13 @@ interface IOpener {
 interface IErrors {
 	fail(formatStr: string, ...args: any[]): never;
 	fail(opts: IFailOptions, ...args: any[]): never;
+	/**
+	 * DEPRECATED: use `fail` instead
+	 */
 	failWithoutHelp(message: string, ...args: any[]): never;
+	/**
+	 * DEPRECATED: use `fail` instead
+	 */
 	failWithoutHelp(opts: IFailOptions, ...args: any[]): never;
 	failWithHelp(formatStr: string, ...args: any[]): never;
 	failWithHelp(opts: IFailOptions, ...args: any[]): never;

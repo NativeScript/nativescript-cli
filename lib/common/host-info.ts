@@ -108,7 +108,7 @@ export class HostInfo implements IHostInfo {
 				await this.dotNetVersion();
 				return true;
 			} catch (e) {
-				this.$errors.failWithoutHelp(message || "An error occurred while reading the registry.");
+				this.$errors.fail(message || "An error occurred while reading the registry.");
 			}
 		} else {
 			return false;

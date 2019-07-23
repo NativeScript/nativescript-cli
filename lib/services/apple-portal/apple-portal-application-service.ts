@@ -39,13 +39,13 @@ export class ApplePortalApplicationService implements IApplePortalApplicationSer
 	public async getApplicationByBundleId(credentials: ICredentials, bundleId: string): Promise<IApplePortalApplicationSummary> {
 		const applications = await this.getApplications(credentials);
 		if (!applications || !applications.length) {
-			this.$errors.failWithoutHelp(`Cannot find any registered applications for Apple ID ${credentials.username} in iTunes Connect.`);
+			this.$errors.fail(`Cannot find any registered applications for Apple ID ${credentials.username} in iTunes Connect.`);
 		}
 
 		const application = _.find(applications, app => app.bundleId === bundleId);
 
 		if (!application) {
-			this.$errors.failWithoutHelp(`Cannot find registered applications that match the specified identifier ${bundleId} in iTunes Connect.`);
+			this.$errors.fail(`Cannot find registered applications that match the specified identifier ${bundleId} in iTunes Connect.`);
 		}
 
 		return application;

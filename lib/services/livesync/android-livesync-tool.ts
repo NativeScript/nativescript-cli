@@ -49,15 +49,15 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 
 	public async connect(configuration: IAndroidLivesyncToolConfiguration): Promise<void> {
 		if (!configuration.appIdentifier) {
-			this.$errors.failWithoutHelp(AndroidLivesyncTool.APP_IDENTIFIER_MISSING_ERROR);
+			this.$errors.fail(AndroidLivesyncTool.APP_IDENTIFIER_MISSING_ERROR);
 		}
 
 		if (!configuration.appPlatformsPath) {
-			this.$errors.failWithoutHelp(AndroidLivesyncTool.APP_PLATFORMS_PATH_MISSING_ERROR);
+			this.$errors.fail(AndroidLivesyncTool.APP_PLATFORMS_PATH_MISSING_ERROR);
 		}
 
 		if (this.socketConnection) {
-			this.$errors.failWithoutHelp(AndroidLivesyncTool.SOCKET_CONNECTION_ALREADY_EXISTS_ERROR);
+			this.$errors.fail(AndroidLivesyncTool.SOCKET_CONNECTION_ALREADY_EXISTS_ERROR);
 		}
 
 		if (!configuration.localHostAddress) {
@@ -88,7 +88,7 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 		for (const filePath of filePaths) {
 			if (this.$fs.getLsStats(filePath).isFile()) {
 				if (!this.$fs.exists(filePath)) {
-					this.$errors.failWithoutHelp(`${filePath} doesn't exist.`);
+					this.$errors.fail(`${filePath} doesn't exist.`);
 				}
 
 				await this.sendFile(filePath);
@@ -204,9 +204,9 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 			fileContentLengthSize);
 
 		if (filePathData.filePathLengthSize > 255) {
-			this.$errors.failWithoutHelp("File name size is longer that 255 digits.");
+			this.$errors.fail("File name size is longer that 255 digits.");
 		} else if (fileContentLengthSize > 255) {
-			this.$errors.failWithoutHelp("File name size is longer that 255 digits.");
+			this.$errors.fail("File name size is longer that 255 digits.");
 		}
 
 		let offset = 0;
@@ -268,7 +268,7 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 		}
 
 		if (error && !rejectHandler) {
-			this.$errors.failWithoutHelp(error.toString());
+			this.$errors.fail(error.toString());
 		}
 
 		return true;

@@ -73,7 +73,7 @@ class FutureDispatcher implements IFutureDispatcher {
 
 	public async run(): Promise<void> {
 		if (this.actions) {
-			this.$errors.failWithoutHelp("You cannot run a running future dispatcher.");
+			this.$errors.fail("You cannot run a running future dispatcher.");
 		}
 		this.actions = new queue.Queue<any>();
 

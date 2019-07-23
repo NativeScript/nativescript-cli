@@ -130,7 +130,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 	public async createProject(frameworkDir: string, frameworkVersion: string, projectData: IProjectData): Promise<void> {
 		if (semver.lt(frameworkVersion, AndroidProjectService.MIN_RUNTIME_VERSION_WITH_GRADLE)) {
-			this.$errors.failWithoutHelp(`The NativeScript CLI requires Android runtime ${AndroidProjectService.MIN_RUNTIME_VERSION_WITH_GRADLE} or later to work properly.`);
+			this.$errors.fail(`The NativeScript CLI requires Android runtime ${AndroidProjectService.MIN_RUNTIME_VERSION_WITH_GRADLE} or later to work properly.`);
 		}
 
 		this.$fs.ensureDirectoryExists(this.getPlatformData(projectData).projectRoot);
@@ -400,23 +400,23 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		//Make the package conform to Java package types
 		//Enforce underscore limitation
 		if (!/^[a-zA-Z]+(\.[a-zA-Z0-9][a-zA-Z0-9_]*)+$/.test(packageName)) {
-			this.$errors.failWithoutHelp("Package name must look like: com.company.Name");
+			this.$errors.fail("Package name must look like: com.company.Name");
 		}
 
 		//Class is a reserved word
 		if (/\b[Cc]lass\b/.test(packageName)) {
-			this.$errors.failWithoutHelp("class is a reserved word");
+			this.$errors.fail("class is a reserved word");
 		}
 	}
 
 	private validateProjectName(projectName: string): void {
 		if (projectName === '') {
-			this.$errors.failWithoutHelp("Project name cannot be empty");
+			this.$errors.fail("Project name cannot be empty");
 		}
 
 		//Classes in Java don't begin with numbers
 		if (/^[0-9]/.test(projectName)) {
-			this.$errors.failWithoutHelp("Project name must not begin with a number");
+			this.$errors.fail("Project name must not begin with a number");
 		}
 	}
 

@@ -82,7 +82,7 @@ export class RunIosCommand implements ICommand {
 		const projectData = this.$projectDataService.getProjectData();
 
 		if (!this.$platformValidationService.isPlatformSupportedForOS(this.$devicePlatformsConstants.iOS, projectData)) {
-			this.$errors.failWithoutHelp(`Applications for platform ${this.$devicePlatformsConstants.iOS} can not be built on this OS`);
+			this.$errors.fail(`Applications for platform ${this.$devicePlatformsConstants.iOS} can not be built on this OS`);
 		}
 
 		const result = await this.runCommand.canExecute(args) && await this.$platformValidationService.validateOptions(this.$options.provision, this.$options.teamId, projectData, this.$devicePlatformsConstants.iOS.toLowerCase());
@@ -123,7 +123,7 @@ export class RunAndroidCommand implements ICommand {
 		await this.runCommand.canExecute(args);
 
 		if (!this.$platformValidationService.isPlatformSupportedForOS(this.$devicePlatformsConstants.Android, this.$projectData)) {
-			this.$errors.failWithoutHelp(`Applications for platform ${this.$devicePlatformsConstants.Android} can not be built on this OS`);
+			this.$errors.fail(`Applications for platform ${this.$devicePlatformsConstants.Android} can not be built on this OS`);
 		}
 
 		if (this.$options.release && (!this.$options.keyStorePath || !this.$options.keyStorePassword || !this.$options.keyStoreAlias || !this.$options.keyStoreAliasPassword)) {

@@ -29,7 +29,7 @@ export class IOSApplicationManager extends ApplicationManagerBase {
 	@hook('install')
 	public async installApplication(packageFilePath: string): Promise<void> {
 		await this.$iosDeviceOperations.install(packageFilePath, [this.device.deviceInfo.identifier], (err: IOSDeviceLib.IDeviceError) => {
-			this.$errors.failWithoutHelp(`Failed to install ${packageFilePath} on device with identifier ${err.deviceId}. Error is: ${err.message}`);
+			this.$errors.fail(`Failed to install ${packageFilePath} on device with identifier ${err.deviceId}. Error is: ${err.message}`);
 		});
 	}
 
@@ -58,7 +58,7 @@ export class IOSApplicationManager extends ApplicationManagerBase {
 
 	public async startApplication(appData: Mobile.IStartApplicationData): Promise<void> {
 		if (!await this.isApplicationInstalled(appData.appId)) {
-			this.$errors.failWithoutHelp("Invalid application id: %s. All available application ids are: %s%s ", appData.appId, EOL, this.applicationsLiveSyncInfos.join(EOL));
+			this.$errors.fail("Invalid application id: %s. All available application ids are: %s%s ", appData.appId, EOL, this.applicationsLiveSyncInfos.join(EOL));
 		}
 
 		await this.setDeviceLogData(appData);

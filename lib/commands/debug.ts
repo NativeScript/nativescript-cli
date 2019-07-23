@@ -60,7 +60,7 @@ export class DebugPlatformCommand extends ValidatePlatformCommandBase implements
 		this.$androidBundleValidatorHelper.validateNoAab();
 
 		if (!this.$platformValidationService.isPlatformSupportedForOS(this.platform, this.$projectData)) {
-			this.$errors.failWithoutHelp(`Applications for platform ${this.platform} can not be built on this OS`);
+			this.$errors.fail(`Applications for platform ${this.platform} can not be built on this OS`);
 		}
 
 		if (this.$options.release) {
@@ -105,18 +105,18 @@ export class DebugIOSCommand implements ICommand {
 
 	public async canExecute(args: string[]): Promise<ICanExecuteCommandOutput> {
 		if (!this.$platformValidationService.isPlatformSupportedForOS(this.$devicePlatformsConstants.iOS, this.$projectData)) {
-			this.$errors.failWithoutHelp(`Applications for platform ${this.$devicePlatformsConstants.iOS} can not be built on this OS`);
+			this.$errors.fail(`Applications for platform ${this.$devicePlatformsConstants.iOS} can not be built on this OS`);
 		}
 
 		const isValidTimeoutOption = this.isValidTimeoutOption();
 		if (!isValidTimeoutOption) {
-			this.$errors.failWithoutHelp(`Timeout option must be a number.`);
+			this.$errors.fail(`Timeout option specifies the seconds NativeScript CLI will wait to find the inspector socket port from device's logs. Must be a number.`);
 		}
 
 		if (this.$options.inspector) {
 			const macOSWarning = await this.$sysInfo.getMacOSWarningMessage();
 			if (macOSWarning && macOSWarning.severity === SystemWarningsSeverity.high) {
-				this.$errors.failWithoutHelp(`You cannot use NativeScript Inspector on this OS. To use it, please update your OS.`);
+				this.$errors.fail(`You cannot use NativeScript Inspector on this OS. To use it, please update your OS.`);
 			}
 		}
 		const result = await this.debugPlatformCommand.canExecute(args);

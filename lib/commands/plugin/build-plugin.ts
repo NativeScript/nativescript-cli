@@ -54,7 +54,7 @@ export class BuildPluginCommand implements ICommand {
 
 	public async canExecute(args: string[]): Promise<boolean> {
 		if (!this.$fs.exists(path.join(this.pluginProjectPath, constants.PLATFORMS_DIR_NAME, "android"))) {
-			this.$errors.failWithoutHelp("No plugin found at the current directory, or the plugin does not need to have its platforms/android components built into an `.aar`.");
+			this.$errors.fail("No plugin found at the current directory, or the plugin does not need to have its platforms/android components built into an `.aar`.");
 		}
 
 		return true;

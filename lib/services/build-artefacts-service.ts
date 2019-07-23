@@ -13,7 +13,7 @@ export class BuildArtefactsService implements IBuildArtefactsService {
 		const packageFile = applicationPackage.packageName;
 
 		if (!packageFile || !this.$fs.exists(packageFile)) {
-			this.$errors.failWithoutHelp(`Unable to find built application. Try 'tns build ${platformData.platformNameLowerCase}'.`);
+			this.$errors.fail(`Unable to find built application. Try 'tns build ${platformData.platformNameLowerCase}'.`);
 		}
 
 		return packageFile;
@@ -62,7 +62,7 @@ export class BuildArtefactsService implements IBuildArtefactsService {
 		let packages = this.getAllAppPackages(buildOutputPath, validBuildOutputData);
 		const packageExtName = path.extname(validBuildOutputData.packageNames[0]);
 		if (packages.length === 0) {
-			this.$errors.failWithoutHelp(`No ${packageExtName} found in ${buildOutputPath} directory.`);
+			this.$errors.fail(`No ${packageExtName} found in ${buildOutputPath} directory.`);
 		}
 
 		if (packages.length > 1) {

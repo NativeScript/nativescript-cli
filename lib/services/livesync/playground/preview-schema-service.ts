@@ -36,7 +36,7 @@ export class PreviewSchemaService implements IPreviewSchemaService {
 
 		const result = this.previewSchemas[schemaName];
 		if (!result) {
-			this.$errors.failWithoutHelp(`Invalid schema. The valid schemas are ${_.keys(this.previewSchemas)}.`);
+			this.$errors.fail(`Invalid schema. The valid schemas are ${_.keys(this.previewSchemas)}.`);
 		}
 
 		return result;

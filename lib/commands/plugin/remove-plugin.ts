@@ -29,7 +29,7 @@ export class RemovePluginCommand implements ICommand {
 
 		const pluginName = args[0].toLowerCase();
 		if (!_.some(pluginNames, name => name.toLowerCase() === pluginName)) {
-			this.$errors.failWithoutHelp(`Plugin "${pluginName}" is not installed.`);
+			this.$errors.fail(`Plugin "${pluginName}" is not installed.`);
 		}
 
 		return true;

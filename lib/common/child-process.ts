@@ -165,13 +165,12 @@ export class ChildProcess extends EventEmitter implements IChildProcess {
 		}
 	}
 
-	// TODO: remove?
 	public async tryExecuteApplication(command: string, args: string[], event: string,
 		errorMessage: string, condition: (_childProcess: any) => boolean): Promise<any> {
 		const childProcess = await this.tryExecuteApplicationCore(command, args, event, errorMessage);
 
 		if (condition && condition(childProcess)) {
-			this.$errors.failWithoutHelp(errorMessage);
+			this.$errors.fail(errorMessage);
 		}
 	}
 
@@ -180,7 +179,7 @@ export class ChildProcess extends EventEmitter implements IChildProcess {
 			return this.spawnFromEvent(command, args, event, undefined, { throwError: false });
 		} catch (e) {
 			const message = (e.code === "ENOENT") ? errorMessage : e.message;
-			this.$errors.failWithoutHelp(message);
+			this.$errors.fail(message);
 		}
 	}
 

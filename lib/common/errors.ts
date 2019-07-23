@@ -124,13 +124,14 @@ export class Errors implements IErrors {
 	public printCallStack: boolean = false;
 
 	public fail(optsOrFormatStr: string | IFailOptions, ...args: any[]): never {
-		return this.failWithoutHelp(optsOrFormatStr, args);
-	}
-
-	public failWithoutHelp(optsOrFormatStr: string | IFailOptions, ...args: any[]): never {
 		const opts = this.getFailOptions(optsOrFormatStr);
 		opts.suppressCommandHelp = true;
 		return this.failWithOptions(opts, args);
+	}
+
+	// DEPRECATED: use .fail instead
+	public failWithoutHelp(optsOrFormatStr: string | IFailOptions, ...args: any[]): never {
+		return this.failWithoutHelp(optsOrFormatStr, args);
 	}
 
 	public failWithHelp(optsOrFormatStr: string | IFailOptions, ...args: any[]): never {

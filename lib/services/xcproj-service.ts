@@ -23,7 +23,7 @@ class XcprojService implements IXcprojService {
 		if (xcprojInfo.shouldUseXcproj && !xcprojInfo.xcprojAvailable) {
 			const errorMessage = `You are using CocoaPods version ${xcprojInfo.cocoapodVer} which does not support Xcode ${xcprojInfo.xcodeVersion.major}.${xcprojInfo.xcodeVersion.minor} yet.${EOL}${EOL}You can update your cocoapods by running $sudo gem install cocoapods from a terminal.${EOL}${EOL}In order for the NativeScript CLI to be able to work correctly with this setup you need to install xcproj command line tool and add it to your PATH. Xcproj can be installed with homebrew by running $ brew install xcproj from the terminal`;
 			if (opts.shouldFail) {
-				this.$errors.failWithoutHelp(errorMessage);
+				this.$errors.fail(errorMessage);
 			} else {
 				this.$logger.warn(errorMessage);
 			}
@@ -74,7 +74,7 @@ class XcprojService implements IXcprojService {
 		if (xcprojInfo.shouldUseXcproj && !xcprojInfo.xcprojAvailable) {
 			const errorMessage = `You are using CocoaPods version ${xcprojInfo.cocoapodVer} which does not support Xcode ${xcprojInfo.xcodeVersion.major}.${xcprojInfo.xcodeVersion.minor} yet.${EOL}${EOL}You can update your cocoapods by running $sudo gem install cocoapods from a terminal.${EOL}${EOL}In order for the NativeScript CLI to be able to work correctly with this setup you need to install xcproj command line tool and add it to your PATH. Xcproj can be installed with homebrew by running $ brew install xcproj from the terminal`;
 
-			this.$errors.failWithoutHelp(errorMessage);
+			this.$errors.fail(errorMessage);
 
 			return true;
 		}

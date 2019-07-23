@@ -36,7 +36,7 @@ export class AndroidResourcesMigrationService implements IAndroidResourcesMigrat
 				this.$logger.trace(err);
 				this.$logger.info(`Failed to update resources.${EOL} Backup of original content is inside "${appResourcesBackup}".${EOL}If "${originalAppResources} is missing copy from backup folder."`);
 			} finally {
-				this.$errors.failWithoutHelp(error.message);
+				this.$errors.fail(error.message);
 			}
 		}
 	}

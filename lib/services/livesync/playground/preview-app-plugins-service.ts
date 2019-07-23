@@ -14,11 +14,11 @@ export class PreviewAppPluginsService implements IPreviewAppPluginsService {
 
 	public getPluginsUsageWarnings(data: IPreviewAppLiveSyncData, device: Device): string[] {
 		if (!device) {
-			this.$errors.failWithoutHelp("No device provided.");
+			this.$errors.fail("No device provided.");
 		}
 
 		if (!device.previewAppVersion) {
-			this.$errors.failWithoutHelp("No version of preview app provided.");
+			this.$errors.fail("No version of preview app provided.");
 		}
 
 		const devicePlugins = this.getDevicePlugins(device);

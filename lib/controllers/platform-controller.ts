@@ -48,7 +48,7 @@ export class PlatformController implements IPlatformController {
 		let result = null;
 		if (frameworkPath) {
 			if (!this.$fs.exists(frameworkPath)) {
-				this.$errors.failWithoutHelp(`Invalid frameworkPath: ${frameworkPath}. Please ensure the specified frameworkPath exists.`);
+				this.$errors.fail(`Invalid frameworkPath: ${frameworkPath}. Please ensure the specified frameworkPath exists.`);
 			}
 			result = path.resolve(frameworkPath);
 		} else {

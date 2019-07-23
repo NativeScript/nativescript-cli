@@ -55,7 +55,7 @@ export abstract class IOSDeviceBase implements Mobile.IiOSDevice {
 	protected async getDebuggerPort(appId: string): Promise<number> {
 		const port = await this.$iOSDebuggerPortService.getPort({ deviceId: this.deviceInfo.identifier, appId });
 		if (!port) {
-			this.$errors.failWithoutHelp("Device socket port cannot be found.");
+			this.$errors.fail("Device socket port cannot be found.");
 		}
 
 		return port;

@@ -24,7 +24,7 @@ export class GradleCommandService implements IGradleCommandService {
 
 			return result;
 		} catch (err) {
-			this.$errors.failWithoutHelp(err.message);
+			this.$errors.fail(err.message);
 		}
 	}
 }

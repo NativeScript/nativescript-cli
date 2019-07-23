@@ -65,7 +65,7 @@ export class ProxySetCommand extends ProxyCommandBase {
 
 		if (!isInteractive()) {
 			if (noPort) {
-				this.$errors.failWithoutHelp(`The port you have specified (${port || "none"}) is not valid.`);
+				this.$errors.failWithHelp(`The port you have specified (${port || "none"}) is not valid.`);
 			} else if (this.isPasswordRequired(username, password)) {
 				this.$errors.failWithHelp("Console is not interactive - you need to supply all command parameters.");
 			}

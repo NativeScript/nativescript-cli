@@ -253,7 +253,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			try {
 				androidManifestContent = this.$fs.readText(manifestFilePath);
 			} catch (err) {
-				this.$errors.failWithoutHelp(`Failed to fs.readFileSync the manifest file located at ${manifestFilePath}. Error is: ${err.toString()}`);
+				this.$errors.fail(`Failed to fs.readFileSync the manifest file located at ${manifestFilePath}. Error is: ${err.toString()}`);
 			}
 
 			updatedManifestContent = await this.updateManifestContent(androidManifestContent, defaultPackageName);
@@ -265,7 +265,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		try {
 			this.$fs.writeFile(pathToTempAndroidManifest, updatedManifestContent);
 		} catch (e) {
-			this.$errors.failWithoutHelp(`Failed to write the updated AndroidManifest in the new location - ${pathToTempAndroidManifest}. Error is: ${e.toString()}`);
+			this.$errors.fail(`Failed to write the updated AndroidManifest in the new location - ${pathToTempAndroidManifest}. Error is: ${e.toString()}`);
 		}
 	}
 
@@ -396,10 +396,10 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 					this.$fs.copyFile(pathToBuiltAar, path.join(aarOutputDir, `${shortPluginName}.aar`));
 				}
 			} catch (e) {
-				this.$errors.failWithoutHelp(`Failed to copy built aar to destination. ${e.message}`);
+				this.$errors.fail(`Failed to copy built aar to destination. ${e.message}`);
 			}
 		} else {
-			this.$errors.failWithoutHelp(`No built aar found at ${pathToBuiltAar}`);
+			this.$errors.fail(`No built aar found at ${pathToBuiltAar}`);
 		}
 	}
 
@@ -417,7 +417,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			try {
 				includeGradleFileContent = this.$fs.readFile(includeGradleFilePath).toString();
 			} catch (err) {
-				this.$errors.failWithoutHelp(`Failed to fs.readFileSync the include.gradle file located at ${includeGradleFilePath}. Error is: ${err.toString()}`);
+				this.$errors.fail(`Failed to fs.readFileSync the include.gradle file located at ${includeGradleFilePath}. Error is: ${err.toString()}`);
 			}
 
 			const productFlavorsScope = this.getScope("productFlavors", includeGradleFileContent);
@@ -428,7 +428,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 
 					return true;
 				} catch (e) {
-					this.$errors.failWithoutHelp(`Failed to write the updated include.gradle ` +
+					this.$errors.fail(`Failed to write the updated include.gradle ` +
 						`in - ${includeGradleFilePath}. Error is: ${e.toString()}`);
 				}
 			}
@@ -461,13 +461,13 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		try {
 			await this.$childProcess.spawnFromEvent(gradlew, localArgs, "close", { cwd: pluginBuildSettings.pluginDir, stdio: "inherit" });
 		} catch (err) {
-			this.$errors.failWithoutHelp(`Failed to build plugin ${pluginBuildSettings.pluginName} : \n${err}`);
+			this.$errors.fail(`Failed to build plugin ${pluginBuildSettings.pluginName} : \n${err}`);
 		}
 	}
 
 	private validateOptions(options: IPluginBuildOptions): void {
 		if (!options) {
-			this.$errors.failWithoutHelp("Android plugin cannot be built without passing an 'options' object.");
+			this.$errors.fail("Android plugin cannot be built without passing an 'options' object.");
 		}
 
 		if (!options.pluginName) {
@@ -479,7 +479,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		}
 
 		if (!options.tempPluginDirPath) {
-			this.$errors.failWithoutHelp("Android plugin cannot be built without passing the path to a directory where the temporary project should be built.");
+			this.$errors.fail("Android plugin cannot be built without passing the path to a directory where the temporary project should be built.");
 		}
 
 		this.validatePlatformsAndroidDirPathOption(options);
@@ -487,11 +487,11 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 
 	private validatePlatformsAndroidDirPathOption(options: IPluginBuildOptions): void {
 		if (!options) {
-			this.$errors.failWithoutHelp("Android plugin cannot be built without passing an 'options' object.");
+			this.$errors.fail("Android plugin cannot be built without passing an 'options' object.");
 		}
 
 		if (!options.platformsAndroidDirPath) {
-			this.$errors.failWithoutHelp("Android plugin cannot be built without passing the path to the platforms/android dir.");
+			this.$errors.fail("Android plugin cannot be built without passing the path to the platforms/android dir.");
 		}
 	}
 

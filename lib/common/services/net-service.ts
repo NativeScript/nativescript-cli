@@ -71,7 +71,7 @@ export class Net implements INet {
 		while (!(await this.isPortAvailable(startPort))) {
 			startPort++;
 			if (startPort > endPort) {
-				this.$errors.failWithoutHelp("Unable to find free local port.");
+				this.$errors.fail("Unable to find free local port.");
 			}
 		}
 
@@ -80,7 +80,7 @@ export class Net implements INet {
 
 	public async waitForPortToListen(waitForPortListenData: IWaitForPortListenData): Promise<boolean> {
 		if (!waitForPortListenData) {
-			this.$errors.failWithoutHelp("You must pass port and timeout for check.");
+			this.$errors.fail("You must pass port and timeout for check.");
 		}
 
 		const { timeout, port } = waitForPortListenData;
@@ -105,7 +105,7 @@ export class Net implements INet {
 		const platform = this.$osInfo.platform();
 		const currentPlatformData = platformData[platform];
 		if (!currentPlatformData) {
-			this.$errors.failWithoutHelp(`Unable to check for free ports on ${platform}. Supported platforms are: ${_.keys(platformData).join(", ")}`);
+			this.$errors.fail(`Unable to check for free ports on ${platform}. Supported platforms are: ${_.keys(platformData).join(", ")}`);
 		}
 
 		while (true) {

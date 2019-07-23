@@ -93,7 +93,7 @@ export class PackageManager implements IPackageManager {
 		try {
 			pm = await this.$userSettingsService.getSettingValue('packageManager');
 		} catch (err) {
-			this.$errors.failWithoutHelp(`Unable to read package manager config from user settings ${err}`);
+			this.$errors.fail(`Unable to read package manager config from user settings ${err}`);
 		}
 
 		if (pm === 'yarn' || this.$options.yarn) {

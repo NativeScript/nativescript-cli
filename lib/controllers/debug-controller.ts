@@ -28,11 +28,11 @@ export class DebugController extends EventEmitter implements IDebugController {
 		const device = this.$devicesService.getDeviceByIdentifier(debugData.deviceIdentifier);
 
 		if (!device) {
-			this.$errors.failWithoutHelp(`Cannot find device with identifier ${debugData.deviceIdentifier}.`);
+			this.$errors.fail(`Cannot find device with identifier ${debugData.deviceIdentifier}.`);
 		}
 
 		if (device.deviceInfo.status !== CONNECTED_STATUS) {
-			this.$errors.failWithoutHelp(`The device with identifier ${debugData.deviceIdentifier} is unreachable. Make sure it is Trusted and try again.`);
+			this.$errors.fail(`The device with identifier ${debugData.deviceIdentifier} is unreachable. Make sure it is Trusted and try again.`);
 		}
 
 		await this.$analyticsService.trackEventActionInGoogleAnalytics({
@@ -43,12 +43,12 @@ export class DebugController extends EventEmitter implements IDebugController {
 		});
 
 		if (!(await device.applicationManager.isApplicationInstalled(debugData.applicationIdentifier))) {
-			this.$errors.failWithoutHelp(`The application ${debugData.applicationIdentifier} is not installed on device with identifier ${debugData.deviceIdentifier}.`);
+			this.$errors.fail(`The application ${debugData.applicationIdentifier} is not installed on device with identifier ${debugData.deviceIdentifier}.`);
 		}
 
 		const debugService = this.getDeviceDebugService(device);
 		if (!debugService) {
-			this.$errors.failWithoutHelp(`Unsupported device OS: ${device.deviceInfo.platform}. You can debug your applications only on iOS or Android.`);
+			this.$errors.fail(`Unsupported device OS: ${device.deviceInfo.platform}. You can debug your applications only on iOS or Android.`);
 		}
 
 		const debugOptions: IDebugOptions = _.cloneDeep(options);
@@ -77,12 +77,12 @@ export class DebugController extends EventEmitter implements IDebugController {
 			if (currentDeviceDescriptor) {
 				currentDeviceDescriptor.debuggingEnabled = false;
 			} else {
-				this.$errors.failWithoutHelp(`Couldn't disable debugging for ${deviceIdentifier}`);
+				this.$errors.fail(`Couldn't disable debugging for ${deviceIdentifier}`);
 			}
 
 			const currentDevice = this.$devicesService.getDeviceByIdentifier(currentDeviceDescriptor.identifier);
 			if (!currentDevice) {
-				this.$errors.failWithoutHelp(`Couldn't disable debugging for ${deviceIdentifier}. Could not find device.`);
+				this.$errors.fail(`Couldn't disable debugging for ${deviceIdentifier}. Could not find device.`);
 			}
 
 			await this.stopDebug(currentDevice.deviceInfo.identifier);
@@ -118,7 +118,7 @@ export class DebugController extends EventEmitter implements IDebugController {
 	public async enableDebuggingCoreWithoutWaitingCurrentAction(projectDir: string, deviceIdentifier: string, debugOptions: IDebugOptions): Promise<IDebugInformation> {
 		const deviceDescriptor = this.getDeviceDescriptor(projectDir, deviceIdentifier);
 		if (!deviceDescriptor) {
-			this.$errors.failWithoutHelp(`Couldn't enable debugging for ${deviceIdentifier}`);
+			this.$errors.fail(`Couldn't enable debugging for ${deviceIdentifier}`);
 		}
 
 		deviceDescriptor.debuggingEnabled = true;
@@ -184,7 +184,7 @@ export class DebugController extends EventEmitter implements IDebugController {
 			} else if (this.$mobileHelper.isAndroidPlatform(devicePlatform)) {
 				this._platformDebugServices[device.deviceInfo.identifier] = this.$injector.resolve("androidDeviceDebugService", { device });
 			} else {
-				this.$errors.failWithoutHelp(DebugCommandErrors.UNSUPPORTED_DEVICE_OS_FOR_DEBUGGING);
+				this.$errors.fail(DebugCommandErrors.UNSUPPORTED_DEVICE_OS_FOR_DEBUGGING);
 			}
 
 			this.attachConnectionErrorHandlers(this._platformDebugServices[device.deviceInfo.identifier]);

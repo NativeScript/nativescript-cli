@@ -11,7 +11,7 @@ export class NetworkConnectivityValidator implements INetworkConnectivityValidat
 	public async validate(): Promise<void> {
 		const isConnected = await this.isConnected();
 		if (!isConnected) {
-			this.$errors.failWithoutHelp(NetworkConnectivityValidator.NO_INTERNET_ERROR_MESSAGE);
+			this.$errors.fail(NetworkConnectivityValidator.NO_INTERNET_ERROR_MESSAGE);
 		}
 	}
 

@@ -15,7 +15,7 @@ export class IOSSocketRequestExecutor implements IiOSSocketRequestExecutor {
 			await this.$iOSNotificationService.postNotification(deviceIdentifier, this.$iOSNotification.getAttachRequest(projectId, deviceIdentifier));
 			await readyForAttachPromise;
 		} catch (e) {
-			this.$errors.failWithoutHelp(`The application ${projectId} does not appear to be running on ${deviceIdentifier} or is not built with debugging enabled. Try starting the application manually.`);
+			this.$errors.fail(`The application ${projectId} does not appear to be running on ${deviceIdentifier} or is not built with debugging enabled. Try starting the application manually.`);
 		}
 	}
 }

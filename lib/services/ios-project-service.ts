@@ -104,17 +104,17 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 	public async validateOptions(projectId: string, provision: true | string, teamId: true | string): Promise<boolean> {
 		if (provision && teamId) {
-			this.$errors.failWithoutHelp("The options --provision and --teamId are mutually exclusive.");
+			this.$errors.fail("The options --provision and --teamId are mutually exclusive.");
 		}
 
 		if (provision === true) {
 			await this.$iOSProvisionService.listProvisions(projectId);
-			this.$errors.failWithoutHelp("Please provide provisioning profile uuid or name with the --provision option.");
+			this.$errors.fail("Please provide provisioning profile uuid or name with the --provision option.");
 		}
 
 		if (teamId === true) {
 			await this.$iOSProvisionService.listTeams();
-			this.$errors.failWithoutHelp("Please provide team id or team name with the --teamId options.");
+			this.$errors.fail("Please provide team id or team name with the --teamId options.");
 		}
 
 		return true;
@@ -619,14 +619,14 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	private validateFramework(libraryPath: string): void {
 		const infoPlistPath = path.join(libraryPath, constants.INFO_PLIST_FILE_NAME);
 		if (!this.$fs.exists(infoPlistPath)) {
-			this.$errors.failWithoutHelp("The bundle at %s does not contain an Info.plist file.", libraryPath);
+			this.$errors.fail("The bundle at %s does not contain an Info.plist file.", libraryPath);
 		}
 
 		const plistJson = this.$plistParser.parseFileSync(infoPlistPath);
 		const packageType = plistJson["CFBundlePackageType"];
 
 		if (packageType !== "FMWK" && packageType !== "XFWK") {
-			this.$errors.failWithoutHelp("The bundle at %s does not appear to be a dynamic framework.", libraryPath);
+			this.$errors.fail("The bundle at %s does not appear to be a dynamic framework.", libraryPath);
 		}
 	}
 

@@ -31,7 +31,7 @@ export class ProjectService implements IProjectService {
 		projectName = await this.$projectNameService.ensureValidName(projectName, { force: opts.force });
 		const projectDir = this.getValidProjectDir(opts.pathToProject, projectName);
 		if (this.$fs.exists(projectDir) && !this.$fs.isEmptyDir(projectDir)) {
-			this.$errors.failWithoutHelp("Path already exists and is not empty %s", projectDir);
+			this.$errors.fail("Path already exists and is not empty %s", projectDir);
 		}
 
 		return projectName;
@@ -140,7 +140,7 @@ export class ProjectService implements IProjectService {
 				await this.$pacoteService.extractPackage(fullTemplateName, projectDir);
 				break;
 			default:
-				this.$errors.failWithoutHelp(format(constants.ProjectTemplateErrors.InvalidTemplateVersionStringFormat, templateData.templateName, templateData.templateVersion));
+				this.$errors.fail(format(constants.ProjectTemplateErrors.InvalidTemplateVersionStringFormat, templateData.templateName, templateData.templateVersion));
 				break;
 		}
 	}
@@ -189,7 +189,7 @@ export class ProjectService implements IProjectService {
 			this.$logger.trace("New project package.json data: ", projectPackageJsonData);
 			this.$fs.writeJson(projectPackageJsonPath, projectPackageJsonData);
 		} else {
-			this.$errors.failWithoutHelp(`Couldn't find package.json data in installed template`);
+			this.$errors.fail(`Couldn't find package.json data in installed template`);
 		}
 	}
 

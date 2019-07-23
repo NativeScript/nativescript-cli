@@ -27,7 +27,7 @@ export class AndroidBundleValidatorHelper extends VersionValidatorHelper impleme
 				this.isVersionLowerThan(androidRuntimeVersion, AndroidBundleValidatorHelper.MIN_RUNTIME_VERSION);
 
 			if (shouldThrowError) {
-				this.$errors.failWithoutHelp(util.format(AndroidBundleValidatorMessages.NOT_SUPPORTED_RUNTIME_VERSION, AndroidBundleValidatorHelper.MIN_RUNTIME_VERSION));
+				this.$errors.fail(util.format(AndroidBundleValidatorMessages.NOT_SUPPORTED_RUNTIME_VERSION, AndroidBundleValidatorHelper.MIN_RUNTIME_VERSION));
 			}
 		}
 	}

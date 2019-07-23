@@ -69,11 +69,10 @@ abstract class TestCommandBase {
 
 		const canStartKarmaServer = await this.$testExecutionService.canStartKarmaServer(this.$projectData);
 		if (!canStartKarmaServer) {
-			// this.$errors.failWithoutHelp({
-			// 	formatStr: "Error: In order to run unit tests, your project must already be configured by running $ tns test init.",
-			// 	suppressCommandHelp: true,
-			// 	errorCode: ErrorCodes.TESTS_INIT_REQUIRED
-			// });
+			this.$errors.fail({
+				formatStr: "Error: In order to run unit tests, your project must already be configured by running $ tns test init.",
+				errorCode: ErrorCodes.TESTS_INIT_REQUIRED
+			});
 		}
 
 		return output.canExecute && canStartKarmaServer;

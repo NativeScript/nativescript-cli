@@ -69,7 +69,7 @@ export class HelpService implements IHelpService {
 			this.$logger.trace("Required HTML file '%s' is missing. Let's try generating HTML files and see if we'll find it.", htmlPage);
 			await this.generateHtmlPages();
 			if (!this.tryOpeningSelectedPage(htmlPage)) {
-				this.$errors.failWithoutHelp("Unable to find help for '%s'", commandName);
+				this.$errors.fail("Unable to find help for '%s'", commandName);
 			}
 		}
 	}
@@ -208,10 +208,10 @@ export class HelpService implements IHelpService {
 
 		const extensionData = await this.$extensibilityService.getExtensionNameWhereCommandIsRegistered(commandInfo);
 		if (extensionData) {
-			this.$errors.failWithoutHelp(extensionData.installationMessage);
+			this.$errors.fail(extensionData.installationMessage);
 		}
 
-		this.$errors.failWithoutHelp("Unknown command '%s'. Try '$ %s help' for a full list of supported commands.", commandName, this.$staticConfig.CLIENT_NAME.toLowerCase());
+		this.$errors.fail("Unknown command '%s'. Try '$ %s help' for a full list of supported commands.", commandName, this.$staticConfig.CLIENT_NAME.toLowerCase());
 	}
 	private static getHtmlDirFullPath(docsDir: string): string {
 		return path.join(path.dirname(docsDir), "html");

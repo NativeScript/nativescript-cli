@@ -40,13 +40,13 @@ export class PlatformValidationService implements IPlatformValidationService {
 
 		const hasPlatformDirectory = this.$fs.exists(path.join(projectData.platformsDir, platform.toLowerCase()));
 		if (!hasPlatformDirectory) {
-			this.$errors.failWithoutHelp("The platform %s is not added to this project. Please use 'tns platform add <platform>'", platform);
+			this.$errors.fail("The platform %s is not added to this project. Please use 'tns platform add <platform>'", platform);
 		}
 	}
 
 	public async validateOptions(provision: true | string, teamId: true | string, projectData: IProjectData, platform?: string, aab?: boolean): Promise<boolean> {
 		if (platform && !this.$mobileHelper.isAndroidPlatform(platform) && aab) {
-			this.$errors.failWithoutHelp("The --aab option is supported only for the Android platform.");
+			this.$errors.fail("The --aab option is supported only for the Android platform.");
 		}
 
 		if (platform) {
