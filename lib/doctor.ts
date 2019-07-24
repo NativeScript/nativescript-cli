@@ -149,7 +149,7 @@ export class Doctor implements NativeScriptDoctor.IDoctor {
 			);
 
 			if (sysInfoData.xcodeVer && sysInfoData.cocoaPodsVer) {
-				let isCocoaPodsWorkingCorrectly = await this.sysInfo.isCocoaPodsWorkingCorrectly();
+				const isCocoaPodsWorkingCorrectly = await this.sysInfo.isCocoaPodsWorkingCorrectly();
 				result = result.concat(
 					this.processSysInfoItem({
 						item: isCocoaPodsWorkingCorrectly,

@@ -265,7 +265,7 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 				const xcodeProjectDir = path.join(tempDirectory, "cocoapods");
 
 				try {
-					let spawnResult = await this.childProcess.spawnFromEvent("pod", ["install"], "exit", { spawnOptions: { cwd: xcodeProjectDir } });
+					const spawnResult = await this.childProcess.spawnFromEvent("pod", ["install"], "exit", { spawnOptions: { cwd: xcodeProjectDir } });
 					if (spawnResult.exitCode) {
 						return false;
 					} else {
@@ -333,7 +333,7 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 
 	public isCocoaPodsUpdateRequired(): Promise<boolean> {
 		return this.getValueForProperty(() => this.isCocoaPodsUpdateRequiredCache, async (): Promise<boolean> => {
-			let xcprojInfo = await this.getXcprojInfo();
+			const xcprojInfo = await this.getXcprojInfo();
 			if (xcprojInfo.shouldUseXcproj && !xcprojInfo.xcprojAvailable) {
 				return true;
 			} else {

@@ -57,7 +57,7 @@ describe("iOSLocalBuildRequirements", () => {
 		testCases.forEach(testCase => {
 			it(testCase.testName, async () => {
 				const iOSLocalBuildRequirements = setupTestCase(testCase);
-				let originalXcodeVersion = Constants.XCODE_MIN_REQUIRED_VERSION;
+				const originalXcodeVersion = Constants.XCODE_MIN_REQUIRED_VERSION;
 				Constants.XCODE_MIN_REQUIRED_VERSION = testCase.minRequiredXcodeVersion || Constants.XCODE_MIN_REQUIRED_VERSION;
 
 				const isXcodeVersionValid = await iOSLocalBuildRequirements.isXcodeVersionValid();
@@ -110,7 +110,7 @@ describe("iOSLocalBuildRequirements", () => {
 		testCases.forEach(testCase => {
 			it(testCase.testName, async () => {
 				const iOSLocalBuildRequirements = setupTestCase(testCase);
-				let originalXcodeVersion = Constants.XCODE_MIN_REQUIRED_VERSION;
+				const originalXcodeVersion = Constants.XCODE_MIN_REQUIRED_VERSION;
 				Constants.XCODE_MIN_REQUIRED_VERSION = testCase.minRequiredXcodeVersion || Constants.XCODE_MIN_REQUIRED_VERSION;
 
 				const isXcodeVersionValid = await iOSLocalBuildRequirements.checkRequirements();

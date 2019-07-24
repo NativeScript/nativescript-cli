@@ -352,7 +352,7 @@ Java HotSpot(TM) 64-Bit Server VM (build 25.202-b08, mixed mode)`)
 		});
 
 		describe("returns correct results when everything is installed", () => {
-			let assertCommonValues = (result: NativeScriptDoctor.ISysInfoData) => {
+			const assertCommonValues = (result: NativeScriptDoctor.ISysInfoData) => {
 				assert.deepEqual(result.npmVer, childProcessResult.npmV.result.stdout);
 				assert.deepEqual(result.nodeVer, "6.0.0");
 				assert.deepEqual(result.javacVersion, "1.8.0_60");
@@ -565,7 +565,7 @@ ${expectedCliVersion}`;
 			});
 
 			describe("when all of calls throw", () => {
-				let assertAllValuesAreNull = async () => {
+				const assertAllValuesAreNull = async () => {
 					const result = await sysInfo.getSysInfo();
 					assert.deepEqual(result.npmVer, null);
 					assert.deepEqual(result.javacVersion, null);

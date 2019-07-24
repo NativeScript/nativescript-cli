@@ -5,7 +5,7 @@ export class Helpers {
 
 	public getPropertyName(method: Function): string {
 		if (method) {
-			let match = method.toString().match(/(?:return\s+?.*\.(.+);)|(?:=>\s*?.*\.(.+)\b)/);
+			const match = method.toString().match(/(?:return\s+?.*\.(.+);)|(?:=>\s*?.*\.(.+)\b)/);
 			if (match) {
 				return (match[1] || match[2]).trim();
 			}
