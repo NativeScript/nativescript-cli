@@ -520,7 +520,5 @@ declare module NativeScriptDoctor {
 		compileSdkVersion: number;
 
 		installedTargets: string[];
-		maxSupportedSdkVersion: number;
-		latestValidAndroidTarget: string;
 	}
 }

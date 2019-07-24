@@ -44,10 +44,8 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 			const infoData: NativeScriptDoctor.IAndroidToolsInfoData = Object.create(null);
 			infoData.androidHomeEnvVar = this.androidHome;
 			infoData.installedTargets = this.getInstalledTargets();
-			infoData.latestValidAndroidTarget = this.getLatestValidAndroidTarget(infoData.installedTargets);
-			infoData.compileSdkVersion = this.getCompileSdk(infoData.latestValidAndroidTarget);
+			infoData.compileSdkVersion = this.getCompileSdk(infoData.installedTargets);
 			infoData.buildToolsVersion = this.getBuildToolsVersion();
-			infoData.maxSupportedSdkVersion = this.getMaxSupportedVersion();
 
 			this.toolsInfo = infoData;
 		}
@@ -265,7 +263,8 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 		return sdkManagementToolPath;
 	}
 
-	private getCompileSdk(latestValidAndroidTarget: string): number {
+	private getCompileSdk(installedTargets: string[]): number {
+		const latestValidAndroidTarget = this.getLatestValidAndroidTarget(installedTargets);
 		if (latestValidAndroidTarget) {
 			const integerVersion = this.parseAndroidSdkString(latestValidAndroidTarget);
 
