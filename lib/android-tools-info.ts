@@ -22,6 +22,7 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 		"android-26",
 		"android-27",
 		"android-28",
+		"android-29"
 	];
 	public readonly MIN_REQUIRED_COMPILE_TARGET = 28;
 	public readonly REQUIRED_BUILD_TOOLS_RANGE_PREFIX = ">=23";
