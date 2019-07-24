@@ -490,7 +490,18 @@ declare module NativeScriptDoctor {
 		 */
 		validateAndroidHomeEnvVariable(): NativeScriptDoctor.IWarning[];
 
+		/**
+		 * Validates if the provided targetSdk is greater that the minimum supported target SDK.
+		 * @param {number} targetSdk The targetSdk to be validated.
+		 * @return {NativeScriptDoctor.IWarning[]} An array of errors from the validation checks. If there are no errors will return [].
+		 */
 		validateMinSupportedTargetSdk(targetSdk: number): NativeScriptDoctor.IWarning[];
+
+		/**
+		 * Validates if the provided targetSdk is lower that the maximum supported target SDK.
+		 * @param {number} targetSdk The targetSdk to be validated.
+		 * @return {NativeScriptDoctor.IWarning[]} An array of errors from the validation checks. If there are no errors will return [].
+		 */
 		validataMaxSupportedTargetSdk(targetSdk: number): NativeScriptDoctor.IWarning[];
 
 		/**
@@ -519,6 +530,9 @@ declare module NativeScriptDoctor {
 		 */
 		compileSdkVersion: number;
 
+		/**
+		 * A list of the installed Android SDKs.
+		 */
 		installedTargets: string[];
 	}
 }
