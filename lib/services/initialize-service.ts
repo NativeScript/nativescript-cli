@@ -1,4 +1,5 @@
 import { EOL } from "os";
+import { LoggerLevel } from "../constants";
 
 export class InitializeService implements IInitializeService {
 	// NOTE: Do not inject anything here, use $injector.resolve in the code
@@ -11,7 +12,9 @@ export class InitializeService implements IInitializeService {
 		if (initOpts.loggerOptions) {
 			$logger.initialize(initOpts.loggerOptions);
 		} else {
-			$logger.initializeCliLogger();
+			const $options = this.$injector.resolve<IOptions>("options");
+			const loggerLevel = $options.log && LoggerLevel[$options.log.toUpperCase() as keyof typeof LoggerLevel];
+			$logger.initializeCliLogger({ level: loggerLevel });
 		}
 
 		if (initOpts.settingsServiceOptions) {

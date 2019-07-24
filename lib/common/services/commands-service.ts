@@ -91,16 +91,17 @@ export class CommandsService implements ICommandsService {
 		return false;
 	}
 
-	private printHelpSuggestion(commandName: string, commandArguments: string[]): Promise<void> {
-		const commandHelp = `tns ${helpers.stringReplaceAll(this.beautifyCommandName(commandName), "|", " ")} --help`;
-		this.$logger.printMarkdown(`Run \`${commandHelp}\` for more information.`);
+	private printHelpSuggestion(commandName?: string): Promise<void> {
+		const command = commandName ? helpers.stringReplaceAll(this.beautifyCommandName(commandName), "|", " ") + " " : "";
+		const commandHelp = `tns ${command}--help`;
+		this.$logger.printMarkdown(`\`Run '${commandHelp}' for more information.\``);
 		return;
 	}
 
 	private async executeCommandAction(commandName: string, commandArguments: string[], action: (_commandName: string, _commandArguments: string[]) => Promise<boolean>): Promise<boolean> {
 		return this.$errors.beginCommand(
 			() => action.apply(this, [commandName, commandArguments]),
-			() => this.printHelpSuggestion(commandName, commandArguments));
+			() => this.printHelpSuggestion(commandName));
 	}
 
 	private async tryExecuteCommandAction(commandName: string, commandArguments: string[]): Promise<boolean> {
@@ -124,7 +125,7 @@ export class CommandsService implements ICommandsService {
 			const command = this.$injector.resolveCommand(commandName);
 			if (command) {
 				this.$logger.error(`Command '${commandName} ${commandArguments}' cannot be executed.`);
-				await this.printHelpSuggestion(commandName, commandArguments);
+				await this.printHelpSuggestion(commandName);
 			}
 		}
 	}
@@ -167,7 +168,8 @@ export class CommandsService implements ICommandsService {
 		if (extensionData) {
 			this.$logger.warn(extensionData.installationMessage);
 		} else {
-			this.$logger.fatal("Unknown command '%s'. Use '%s help' for help.", beautifiedName, this.$staticConfig.CLIENT_NAME.toLowerCase());
+			this.$logger.error("Unknown command '%s'.", beautifiedName);
+			await this.printHelpSuggestion();
 			this.tryMatchCommand(commandName);
 		}
 

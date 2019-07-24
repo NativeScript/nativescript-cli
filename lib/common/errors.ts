@@ -2,6 +2,7 @@ import * as util from "util";
 import * as path from "path";
 import { SourceMapConsumer } from "source-map";
 import { isInteractive } from "./helpers";
+import { deprecated } from "./decorators";
 
 // we need this to overwrite .stack property (read-only in Error)
 function Exception() {
@@ -128,7 +129,7 @@ export class Errors implements IErrors {
 		return this.failWithOptions(opts, false, args);
 	}
 
-	// DEPRECATED: use .fail instead
+	@deprecated("Use `fail` instead.")
 	public failWithoutHelp(optsOrFormatStr: string | IFailOptions, ...args: any[]): never {
 		return this.fail(optsOrFormatStr, args);
 	}

@@ -15,7 +15,7 @@ declare global {
 
 	interface ILogger {
 		initialize(opts?: ILoggerOptions): void;
-		initializeCliLogger(): void;
+		initializeCliLogger(opts?: ILoggerOptions): void;
 		getLevel(): string;
 		fatal(formatStr?: any, ...args: any[]): void;
 		error(formatStr?: any, ...args: any[]): void;

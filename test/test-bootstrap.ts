@@ -22,7 +22,8 @@ $injector.register("analyticsService", {
 	}
 });
 
-import { PerformanceService } from "./stubs";
+import { PerformanceService, LoggerStub } from "./stubs";
+$injector.register("logger", LoggerStub);
 $injector.register("performanceService", PerformanceService);
 
 // Converts the js callstack to typescript

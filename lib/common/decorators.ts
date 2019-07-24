@@ -107,14 +107,14 @@ export function performanceLog(injector?: IInjector): any {
 					performanceService.processExecutionData(trackName, start, end, args);
 				} else {
 					resolvedPromise
-					.then(() => {
-						end = performanceService.now();
-						performanceService.processExecutionData(trackName, start, end, args);
-					})
-					.catch((err) => {
-						end = performanceService.now();
-						performanceService.processExecutionData(trackName, start, end, args);
-					});
+						.then(() => {
+							end = performanceService.now();
+							performanceService.processExecutionData(trackName, start, end, args);
+						})
+						.catch((err) => {
+							end = performanceService.now();
+							performanceService.processExecutionData(trackName, start, end, args);
+						});
 				}
 
 				return result;
@@ -128,5 +128,55 @@ export function performanceLog(injector?: IInjector): any {
 		};
 
 		return descriptor;
+	};
+}
+
+// inspired by https://github.com/NativeScript/NativeScript/blob/55dfe25938569edbec89255008e5ad9804901305/tns-core-modules/globals/globals.ts#L121-L137
+export function deprecated(additionalInfo?: string, injector?: IInjector): any {
+	const isDeprecatedMessage = " is deprecated.";
+	return (target: Object, key: string, descriptor: TypedPropertyDescriptor<any>): TypedPropertyDescriptor<any> => {
+		injector = injector || $injector;
+		additionalInfo = additionalInfo || "";
+		const $logger = <ILogger>injector.resolve("logger");
+		if (descriptor) {
+			if (descriptor.value) {
+				// method
+				const originalMethod = descriptor.value;
+
+				descriptor.value = function (...args: any[]) {
+					$logger.warn(`${key.toString()}${isDeprecatedMessage} ${additionalInfo}`);
+
+					return originalMethod.apply(this, args);
+				};
+
+				return descriptor;
+			} else {
+				// property
+				if (descriptor.set) {
+					const originalSetter = descriptor.set;
+					descriptor.set = function (...args: any[]) {
+						$logger.warn(`${key.toString()}${isDeprecatedMessage} ${additionalInfo}`);
+
+						originalSetter.apply(this, args);
+					};
+				}
+
+				if (descriptor.get) {
+					const originalGetter = descriptor.get;
+					descriptor.get = function (...args: any[]) {
+						$logger.warn(`${key.toString()}${isDeprecatedMessage} ${additionalInfo}`);
+
+						return originalGetter.apply(this, args);
+					};
+				}
+
+				return descriptor;
+			}
+		} else {
+			// class
+			$logger.warn(`${((target && ((<any>target).name || ((<any>target).constructor && (<any>target).constructor.name))) || target)}${isDeprecatedMessage} ${additionalInfo}`);
+
+			return target;
+		}
 	};
 }

@@ -58,14 +58,14 @@ describe("decorators", () => {
 				generatePublicApiFromExportedDecorator();
 				const actualResult: any = $injector.publicApi.__modules__[moduleName][propertyName]();
 				assert.deepEqual(actualResult, expectedResult);
-		});
+			});
 
 			it(`passes correct arguments to original function, when argument type is: ${_.isArray(expectedResult) ? "array" : typeof (expectedResult)}`, () => {
 				$injector.register(moduleName, { propertyName: (arg: any) => arg });
 				generatePublicApiFromExportedDecorator();
 				const actualResult: any = $injector.publicApi.__modules__[moduleName][propertyName](expectedResult);
 				assert.deepEqual(actualResult, expectedResult);
-		});
+			});
 		});
 
 		it("returns Promise, which is resolved to correct value (function without arguments)", (done: mocha.Done) => {
@@ -202,7 +202,7 @@ describe("decorators", () => {
 			generatePublicApiFromExportedDecorator();
 			assert.throws(() => $injector.publicApi.__modules__[moduleName][propertyName](), errorMessage);
 		});
-		});
+	});
 
 	describe("cache", () => {
 		it("executes implementation of method only once and returns the same result each time whent it is called (number return type)", () => {
@@ -433,12 +433,12 @@ describe("decorators", () => {
 		});
 
 		_.each(expectedResults, (expectedResult: any) => {
-			it("returns proper result",  () => {
+			it("returns proper result", () => {
 				const actualResult = testInstance.testMethod(expectedResult);
 				assert.deepEqual(actualResult, expectedResult);
 			});
 
-			it("returns proper result when async",  () => {
+			it("returns proper result when async", () => {
 				const promise = testInstance.testAsyncMehtod(expectedResult);
 
 				assert.notDeepEqual(promise.then, undefined);
@@ -449,20 +449,20 @@ describe("decorators", () => {
 			});
 		});
 
-		it("method has same toString",  () => {
+		it("method has same toString", () => {
 			assert.equal(testInstance.testMethod.toString(), undecoratedTestInstance.testMethod.toString());
 		});
 
-		it("method has same name",  () => {
+		it("method has same name", () => {
 			assert.equal(testInstance.testMethod.name, undecoratedTestInstance.testMethod.name);
 		});
 
-		it("does not eat errors",  () => {
+		it("does not eat errors", () => {
 			assert.throws(testInstance.throwMethod, testErrorMessage);
 			assert.isRejected(testInstance.rejectMethod(), testErrorMessage);
 		});
 
-		it("calls performance service on method call",  async () => {
+		it("calls performance service on method call", async () => {
 			const performanceService = testInjector.resolve("performanceService");
 			const processExecutionDataStub: sinon.SinonStub = sinon.stub(performanceService, "processExecutionData");
 
@@ -484,6 +484,130 @@ describe("decorators", () => {
 
 			checkSubCall(processExecutionDataStub.firstCall, "TestClass__testMethod");
 			checkSubCall(processExecutionDataStub.secondCall, "TestClass__testAsyncMehtod");
+		});
+	});
+
+	describe("deprecated", () => {
+		const testDepMessage = "Just stop using this!";
+		const warnings: string[] = [];
+		let testInjector: IInjector;
+		interface ITestInterface {
+			testField: string;
+			testProp: string;
+			depMethodWithParam(arg: any): any;
+			depMethodWithoutParam(): void;
+			depAsyncMethod(arg: any): Promise<any>;
+			nonDepMethod(): any;
+		}
+		let testInstance: ITestInterface;
+
+		function createTestInjector(): IInjector {
+			testInjector = new Yok();
+			testInjector.register("config", {});
+			testInjector.register("options", {});
+			testInjector.register("logger", {
+				warn: (message: string) => {
+					warnings.push(message);
+				}
+			});
+
+			return testInjector;
+		}
+
+		beforeEach(() => {
+			warnings.splice(0, warnings.length);
+			testInjector = createTestInjector();
+
+			class TestClass implements ITestInterface {
+				public testField: string = "test";
+
+				@decoratorsLib.deprecated(testDepMessage, testInjector)
+				public get testProp(): string {
+					return "hi";
+				}
+
+				public set testProp(value: string) {
+					return;
+				}
+
+				@decoratorsLib.deprecated(testDepMessage, testInjector)
+				depMethodWithParam(arg: any) {
+					return arg;
+				}
+
+				@decoratorsLib.deprecated(testDepMessage, testInjector)
+				depMethodWithoutParam() {
+					return;
+				}
+
+				@decoratorsLib.deprecated(testDepMessage, testInjector)
+				async depAsyncMethod(arg: any) {
+					return Promise.resolve(arg);
+				}
+
+				nonDepMethod() {
+					return;
+				}
+			}
+
+			testInstance = new TestClass();
+		});
+
+		it("method without params", () => {
+			testInstance.depMethodWithoutParam();
+			assert.equal(warnings.length, 1);
+			assert.equal(warnings[0], `depMethodWithoutParam is deprecated. ${testDepMessage}`);
+		});
+
+		it("method with params", () => {
+			const param = 5;
+			const result = testInstance.depMethodWithParam(param);
+			assert.equal(result, param);
+			assert.equal(warnings.length, 1);
+			assert.equal(warnings[0], `depMethodWithParam is deprecated. ${testDepMessage}`);
+		});
+
+		it("async method with params", async () => {
+			const param = 5;
+			const result = await testInstance.depAsyncMethod(param);
+			assert.equal(result, param);
+			assert.equal(warnings.length, 1);
+			assert.equal(warnings[0], `depAsyncMethod is deprecated. ${testDepMessage}`);
+		});
+
+		it("property getter", async () => {
+			const result = testInstance.testProp;
+			assert.equal(result, "hi");
+			assert.equal(warnings.length, 1);
+			assert.equal(warnings[0], `testProp is deprecated. ${testDepMessage}`);
+		});
+
+		it("property setter", async () => {
+			testInstance.testProp = "newValue";
+			assert.equal(warnings.length, 1);
+			assert.equal(warnings[0], `testProp is deprecated. ${testDepMessage}`);
+		});
+
+		it("non deprecated field", async () => {
+			const result = testInstance.testField;
+			assert.equal(result, "test");
+			assert.equal(warnings.length, 0);
+		});
+
+		it("non deprecated method", () => {
+			testInstance.nonDepMethod();
+			assert.equal(warnings.length, 0);
+		});
+
+		it("class", async () => {
+			@decoratorsLib.deprecated(testDepMessage, testInjector)
+			class TestClassDeprecated {
+			}
+
+			const depClass = new TestClassDeprecated();
+			assert.isNotNull(depClass);
+			assert.equal(warnings.length, 1);
+			assert.equal(warnings[0], `TestClassDeprecated is deprecated. ${testDepMessage}`);
 		});
 	});
 });

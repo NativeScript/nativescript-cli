@@ -12,9 +12,10 @@ export class Logger implements ILogger {
 	private log4jsLogger: log4js.Logger = null;
 	private passwordRegex = /(password=).*?(['&,]|$)|(password["']?\s*:\s*["']).*?(["'])/i;
 	private passwordReplacement = "$1$3*******$2$4";
+	private defaultLogLevel: LoggerLevel;
 
-	constructor(private $config: Config.IConfig,
-		private $options: IOptions) {
+	constructor(private $config: Config.IConfig) {
+		this.defaultLogLevel = this.$config.DEBUG ? LoggerLevel.TRACE : LoggerLevel.INFO;
 	}
 
 	@cache()
@@ -40,7 +41,7 @@ export class Logger implements ILogger {
 		const categories: IDictionary<{ appenders: string[]; level: string; }> = {
 			default: {
 				appenders: ['out'],
-				level: level || (this.$config.DEBUG ? "TRACE" : "INFO")
+				level: level || this.defaultLogLevel
 			}
 		};
 
@@ -49,12 +50,12 @@ export class Logger implements ILogger {
 		this.log4jsLogger = log4js.getLogger();
 	}
 
-	public initializeCliLogger(): void {
+	public initializeCliLogger(opts?: ILoggerOptions): void {
 		log4js.addLayout("cli", layout);
 
 		this.initialize({
 			appenderOptions: { type: LoggerAppenders.cliAppender, layout: { type: "cli" } },
-			level: <any>this.$options.log
+			level: opts.level || this.defaultLogLevel
 		});
 	}
 
