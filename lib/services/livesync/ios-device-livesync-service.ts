@@ -117,7 +117,7 @@ export class IOSDeviceLiveSyncService extends DeviceLiveSyncServiceBase implemen
 			this.$logger.trace(`Socket error received: ${error}`);
 		});
 
-		this.socket.on("data", (data: NodeBuffer | string) => {
+		this.socket.on("data", (data: Buffer | string) => {
 			this.$logger.trace(`Socket sent data: ${data.toString()}`);
 		});
 	}

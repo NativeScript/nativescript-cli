@@ -274,11 +274,11 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 		return true;
 	}
 
-	private handleConnection({ socket, data }: { socket: ILiveSyncSocket, data: NodeBuffer | string }) {
+	private handleConnection({ socket, data }: { socket: ILiveSyncSocket, data: Buffer | string }) {
 		this.socketConnection = socket;
 		this.socketConnection.uid = this.generateOperationIdentifier();
 
-		const versionLength = (<NodeBuffer>data).readUInt8(0);
+		const versionLength = (<Buffer>data).readUInt8(0);
 		const versionBuffer = data.slice(PROTOCOL_VERSION_LENGTH_SIZE, versionLength + PROTOCOL_VERSION_LENGTH_SIZE);
 		const appIdentifierBuffer = data.slice(versionLength + PROTOCOL_VERSION_LENGTH_SIZE, data.length);
 
@@ -287,7 +287,7 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 		this.$logger.trace(`Handle socket connection for app identifier: ${appIdentifier} with protocol version: ${protocolVersion}.`);
 		this.protocolVersion = protocolVersion;
 
-		this.socketConnection.on("data", (connectionData: NodeBuffer) => this.handleData(socket.uid, connectionData));
+		this.socketConnection.on("data", (connectionData: Buffer) => this.handleData(socket.uid, connectionData));
 		this.socketConnection.on("close", (hasError: boolean) => this.handleSocketClose(socket.uid, hasError));
 		this.socketConnection.on("error", (err: Error) => {
 			const error = new Error(`Socket Error:\n${err}`);
@@ -299,7 +299,7 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 		});
 	}
 
-	private connectEventuallyUntilTimeout(factory: () => ILiveSyncSocket, timeout: number): Promise<{ socket: ILiveSyncSocket, data: NodeBuffer | string }> {
+	private connectEventuallyUntilTimeout(factory: () => ILiveSyncSocket, timeout: number): Promise<{ socket: ILiveSyncSocket, data: Buffer | string }> {
 		return new Promise((resolve, reject) => {
 			let lastKnownError: Error | string,
 				isConnected = false;

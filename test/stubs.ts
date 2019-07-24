@@ -85,7 +85,7 @@ export class FileSystemStub implements IFileSystem {
 		return undefined;
 	}
 
-	readFile(filename: string): NodeBuffer | string {
+	readFile(filename: string): Buffer | string {
 		return undefined;
 	}
 

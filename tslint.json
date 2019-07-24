@@ -1,6 +1,7 @@
 {
 	"rulesDirectory": "node_modules/tslint-microsoft-contrib",
 	"rules": {
+		"deprecation": true,
 		"class-name": true,
 		"curly": true,
 		"eofline": true,

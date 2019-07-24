@@ -33,7 +33,7 @@ export class LogcatHelper implements Mobile.ILogcatHelper {
 			const lineStream = byline(logcatStream.stdout);
 			this.mapDevicesLoggingData[deviceIdentifier].loggingProcess = logcatStream;
 			this.mapDevicesLoggingData[deviceIdentifier].lineStream = lineStream;
-			logcatStream.stderr.on("data", (data: NodeBuffer) => {
+			logcatStream.stderr.on("data", (data: Buffer) => {
 				this.$logger.trace("ADB logcat stderr: " + data.toString());
 			});
 
@@ -49,7 +49,7 @@ export class LogcatHelper implements Mobile.ILogcatHelper {
 				}
 			});
 
-			lineStream.on('data', (line: NodeBuffer) => {
+			lineStream.on('data', (line: Buffer) => {
 				const lineText = line.toString();
 				this.$deviceLogProvider.logData(lineText, this.$devicePlatformsConstants.Android, deviceIdentifier);
 			});
@@ -61,7 +61,7 @@ export class LogcatHelper implements Mobile.ILogcatHelper {
 		const logcatDumpStream = await adb.executeCommand(["logcat", "-d"], { returnChildProcess: true });
 
 		const lineStream = byline(logcatDumpStream.stdout);
-		lineStream.on('data', (line: NodeBuffer) => {
+		lineStream.on('data', (line: Buffer) => {
 			const lineText = line.toString();
 			this.$logger.trace(lineText);
 		});
