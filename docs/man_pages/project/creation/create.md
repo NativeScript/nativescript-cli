@@ -43,16 +43,16 @@ Below you can see a list of the recommended NativeScript starting templates and 
 Template | Command
 ---------|----------
 `JavaScript - Hello World`, `--js`, `--javascript` | tns create --template tns-template-hello-world
-`JavaScript - SideDrawer` | tns create tns-template-drawer-navigation
-`JavaScript - Tabs` | tns create tns-template-tab-navigation
-`TypeScript - Hello World`, `--ts`, `--tsc`, `--typescript` | tns create tns-template-hello-world-ts
-`TypeScript - SideDrawer` | tns create tns-template-drawer-navigation-ts
-`TypeScript - Tabs` | tns create tns-template-tab-navigation-ts
-`Angular - Hello World`, `--ng`, `--angular` | tns create tns-template-hello-world-ng
-`Angular - SideDrawer` | tns create tns-template-drawer-navigation-ng
-`Angular - Tabs` | tns create tns-template-tab-navigation-ng
-`Vue.js - Blank`, `--vue`, `--vuejs` | tns create tns-template-blank-vue
-`Vue.js - SideDrawer`, | tns create tns-template-drawer-navigation-vue
+`JavaScript - SideDrawer` | tns create --template tns-template-drawer-navigation
+`JavaScript - Tabs` | tns create --template tns-template-tab-navigation
+`TypeScript - Hello World`, `--ts`, `--tsc`, `--typescript` | tns create --template tns-template-hello-world-ts
+`TypeScript - SideDrawer` | tns create --template tns-template-drawer-navigation-ts
+`TypeScript - Tabs` | tns create --template tns-template-tab-navigation-ts
+`Angular - Hello World`, `--ng`, `--angular` | tns create --template tns-template-hello-world-ng
+`Angular - SideDrawer` | tns create --template tns-template-drawer-navigation-ng
+`Angular - Tabs` | tns create --template tns-template-tab-navigation-ng
+`Vue.js - Blank`, `--vue`, `--vuejs` | tns create --template tns-template-blank-vue
+`Vue.js - SideDrawer`, | tns create --template tns-template-drawer-navigation-vue
 
 ### Related Commands
 
