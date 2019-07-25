@@ -255,7 +255,9 @@ private defaultUserAgent: string;
 			this.$logger.error(`You can run ${EOL}\t${clientNameLowerCase} proxy set <url> <username> <password>.${EOL}In order to supply ${clientNameLowerCase} with the credentials needed.`);
 			return "Your proxy requires authentication.";
 		} else if (statusCode === HttpStatusCodes.PAYMENT_REQUIRED) {
-			return util.format("Your subscription has expired.");
+			return "Your subscription has expired.";
+		} else if (statusCode === HttpStatusCodes.CONFLICTING_RESOURCE) {
+			return "The request conflicts with the current state of the server.";
 		} else {
 			this.$logger.trace("Request was unsuccessful. Server returned: ", body);
 			try {

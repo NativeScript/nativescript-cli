@@ -8,6 +8,7 @@ export class PublishIOS implements ICommand {
 	new StringCommandParameter(this.$injector), new StringCommandParameter(this.$injector)];
 
 	constructor(
+		private $applePortalSessionService: IApplePortalSessionService,
 		private $injector: IInjector,
 		private $itmsTransporterService: IITMSTransporterService,
 		private $logger: ILogger,
@@ -36,6 +37,15 @@ export class PublishIOS implements ICommand {
 
 		if (!password) {
 			password = await this.$prompter.getPassword("Apple ID password");
+		}
+
+		const user = await this.$applePortalSessionService.createUserSession({ username, password }, {
+			applicationSpecificPassword:  this.$options.appleApplicationSpecificPassword,
+			sessionBase64: this.$options.appleSessionBase64,
+			ensureConsoleIsInteractive: true
+		});
+		if (!user.areCredentialsValid) {
+			this.$errors.failWithoutHelp(`Invalid username and password combination. Used '${username}' as the username.`);
 		}
 
 		if (!mobileProvisionIdentifier && !ipaFilePath) {
@@ -69,8 +79,9 @@ export class PublishIOS implements ICommand {
 		}
 
 		await this.$itmsTransporterService.upload({
-			username,
-			password,
+			credentials: { username, password },
+			user,
+			applicationSpecificPassword: this.$options.appleApplicationSpecificPassword,
 			ipaFilePath,
 			shouldExtractIpa: !!this.$options.ipa,
 			verboseLogging: this.$logger.getLevel() === "TRACE"

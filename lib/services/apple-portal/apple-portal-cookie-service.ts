@@ -1,6 +1,6 @@
 export class ApplePortalCookieService implements IApplePortalCookieService {
 	private userSessionCookies: IStringDictionary = {};
-	private validUserSessionCookieNames = ["myacinfo", "dqsid", "itctx", "itcdq", "acn01"];
+	private validUserSessionCookieNames = ["myacinfo", "dqsid", "itctx", "itcdq", "acn01", "DES"];
 	private validWebSessionCookieNames = ["wosid", "woinst", "itctx"];
 
 	public getWebSessionCookie(cookiesData: string[]): string {
@@ -29,7 +29,7 @@ export class ApplePortalCookieService implements IApplePortalCookieService {
 			for (const cookie of parts) {
 				const trimmedCookie = cookie.trim();
 				const [cookieKey, cookieValue] = trimmedCookie.split("=");
-				if (_.includes(validCookieNames, cookieKey)) {
+				if (_.includes(validCookieNames, cookieKey) || _.some(validCookieNames, validCookieName => cookieKey.startsWith(validCookieName))) {
 					result[cookieKey] = { key: cookieKey, value: cookieValue, cookie: trimmedCookie };
 				}
 			}

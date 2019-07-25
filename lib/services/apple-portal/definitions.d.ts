@@ -1,6 +1,6 @@
 interface IApplePortalSessionService {
-	createUserSession(credentials: ICredentials): Promise<IApplePortalUserDetail>;
 	createWebSession(contentProviderId: number, dsId: string): Promise<string>;
+	createUserSession(credentials: ICredentials, opts?: IAppleCreateUserSessionOptions): Promise<IApplePortalUserDetail>;
 }
 
 interface IApplePortalCookieService {
@@ -10,12 +10,25 @@ interface IApplePortalCookieService {
 }
 
 interface IApplePortalApplicationService {
-	getApplications(credentials: ICredentials): Promise<IApplePortalApplicationSummary[]>
+	getApplications(user: IApplePortalUserDetail): Promise<IApplePortalApplicationSummary[]>
 	getApplicationsByProvider(contentProviderId: number, dsId: string): Promise<IApplePortalApplication>;
-	getApplicationByBundleId(credentials: ICredentials, bundleId: string): Promise<IApplePortalApplicationSummary>;
+	getApplicationByBundleId(user: IApplePortalUserDetail, bundleId: string): Promise<IApplePortalApplicationSummary>;
 }
 
-interface IApplePortalUserDetail {
+interface IAppleCreateUserSessionOptions {
+	applicationSpecificPassword: string;
+	sessionBase64: string;
+	ensureConsoleIsInteractive: boolean;
+}
+
+interface IAppleLoginResult {
+	scnt: string;
+	xAppleIdSessionId: string;
+	isTwoFactorAuthenticationEnabled: boolean;
+	areCredentialsValid: boolean;
+}
+
+interface IApplePortalUserDetail extends IAppleLoginResult {
 	associatedAccounts: IApplePortalAssociatedAccountData[];
 	sessionToken: {
 		dsId: string;
@@ -29,8 +42,10 @@ interface IApplePortalUserDetail {
 	userName: string;
 	userId: string;
 	contentProvider: string;
+	authServiceKey: string;
 	visibility: boolean;
 	DYCVisibility: boolean;
+	userSessionCookie: string;
 }
 
 interface IApplePortalAssociatedAccountData {

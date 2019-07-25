@@ -568,6 +568,8 @@ interface IOptions extends IRelease, IDeviceIdentifier, IJustLaunch, IAvd, IAvai
 	analyticsLogFile: string;
 	performance: Object;
 	cleanupLogFile: string;
+	appleApplicationSpecificPassword: string;
+	appleSessionBase64: string;
 }
 
 interface IEnvOptions {
@@ -609,7 +611,13 @@ interface IAndroidResourcesMigrationService {
 /**
  * Describes properties needed for uploading a package to iTunes Connect
  */
-interface IITMSData extends ICredentials {
+interface IITMSData {
+	credentials: ICredentials;
+
+	user: IApplePortalUserDetail;
+
+	applicationSpecificPassword: string;
+		
 	/**
 	 * Path to a .ipa file which will be uploaded.
 	 * @type {string}

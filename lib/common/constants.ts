@@ -95,6 +95,7 @@ export class HttpStatusCodes {
 	static NOT_MODIFIED = 304;
 	static PAYMENT_REQUIRED = 402;
 	static PROXY_AUTHENTICATION_REQUIRED = 407;
+	static CONFLICTING_RESOURCE = 409;
 }
 
 export const HttpProtocolToPort: IDictionary<number> = {
