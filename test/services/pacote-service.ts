@@ -4,6 +4,8 @@ import { PacoteService } from '../../lib/services/pacote-service';
 import { LoggerStub } from "../stubs";
 import { sandbox, SinonSandbox, SinonStub } from "sinon";
 import { EventEmitter } from "events";
+
+const npmconfig = require("libnpmconfig");
 const pacote = require("pacote");
 const tar = require("tar");
 const path = require("path");
@@ -12,7 +14,7 @@ const npmCachePath = "npmCachePath";
 const packageName = "testPackage";
 const fullPath = `/Users/username/${packageName}`;
 const destinationDir = "destinationDir";
-const defaultPacoteOpts: IPacoteBaseOptions = { cache: npmCachePath };
+const defaultPacoteOpts: IPacoteBaseOptions = createPacoteOptions({ cache: npmCachePath });
 const errorMessage = "error message";
 const proxySettings: IProxySettings = {
 	hostname: "hostname",
@@ -34,6 +36,14 @@ interface ITestCase extends ITestSetup {
 	additionalExtractOpts?: IPacoteExtractOptions;
 	name: string;
 	expectedArgs: any[];
+}
+
+function createPacoteOptions(options: Object): Object {
+		npmconfig.read().forEach((value: any, key: string) => {
+			// replace env ${VARS} in strings with the process.env value
+			options[key] = typeof value !== 'string' ? value :  value.replace(/\${([^}]+)}/, (_, envVar) => process.env[envVar] );
+		});
+	return options;
 }
 
 const createTestInjector = (opts?: ITestSetup): IInjector => {
