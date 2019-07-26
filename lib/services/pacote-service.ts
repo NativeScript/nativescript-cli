@@ -11,10 +11,10 @@ export class PacoteService implements IPacoteService {
 		private $injector: IInjector,
 		private $logger: ILogger,
 		private $proxyService: IProxyService) {
-	    npmconfig.read().forEach((value: any, key: string) => {
-		// replace env ${VARS} in strings with the process.env value
-		this.npmConfig[key] = typeof value !== 'string' ? value :  value.replace(/\${([^}]+)}/, (_, envVar) => process.env[envVar] );
-	    });
+		npmconfig.read().forEach((value: any, key: string) => {
+			// replace env ${VARS} in strings with the process.env value
+			this.npmConfig[key] = typeof value !== 'string' ? value :  value.replace(/\${([^}]+)}/, (_, envVar) => process.env[envVar] );
+		});
 	}
 
 	@cache()
