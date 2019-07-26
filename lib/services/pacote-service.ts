@@ -2,12 +2,20 @@ import * as pacote from "pacote";
 import * as tar from "tar";
 import * as path from "path";
 import { cache } from "../common/decorators";
+import * as npmconfig from "libnpmconfig";
 
 export class PacoteService implements IPacoteService {
+	private npmConfig: { [index: string]: any } = {};
+
 	constructor(private $fs: IFileSystem,
 		private $injector: IInjector,
 		private $logger: ILogger,
-		private $proxyService: IProxyService) { }
+		private $proxyService: IProxyService) { 
+	  npmconfig.read().forEach((value: any, key: string) => {
+            // replace env ${VARS} in strings with the process.env value
+            this.npmConfig[key] = typeof value !== 'string' ? value :  value.replace(/\${([^}]+)}/, (_, envVar) => process.env[envVar] );
+          });
+        }
 
 	@cache()
 	public get $packageManager(): INodePackageManager {
@@ -18,6 +26,10 @@ export class PacoteService implements IPacoteService {
 	public async manifest(packageName: string, options?: IPacoteManifestOptions): Promise<any> {
 		this.$logger.trace(`Calling pacoteService.manifest for packageName: '${packageName}' and options: ${options}`);
 		const manifestOptions: IPacoteBaseOptions = await this.getPacoteBaseOptions();
+
+		// Add NPM Configuration to our Manifest options
+		_.extend(manifestOptions, this.npmConfig);
+
 		if (options) {
 			_.extend(manifestOptions, options);
 		}
