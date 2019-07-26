@@ -24,7 +24,9 @@ Upload package | `$ tns publish ios [<Apple ID> [<Password>]] --ipa <Ipa File Pa
 
 * `--ipa` - If set, will use provided .ipa file instead of building the project.
 * `--team-id` - Specified the team id for which Xcode will try to find distribution certificate and provisioning profile when exporting for AppStore submission.
-
+* `--appleApplicationSpecificPassword` - Specified the password for your Apple ID that let you sign in to your account and securely access the information you stores from iTunes Transporter application.
+* `--appleSessionBase64` - The session that will be reused instead of triggering a new login each time NativeScript CLI communicates with Apple's APIs.
+ 
 ### Arguments
 
 * `<Apple ID>` and `<Password>` are your credentials for logging into iTunes Connect.

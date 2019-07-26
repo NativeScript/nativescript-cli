@@ -22,6 +22,8 @@ Upload package | `$ tns appstore upload [<Apple ID> [<Password>]] --ipa <Ipa Fil
 ### Options
 
 * `--ipa` - If set, will use provided .ipa file instead of building the project.
+* `--appleApplicationSpecificPassword` - Specified the password for your Apple ID that let you sign in to your account and securely access the information you stores from iTunes Transporter application.
+* `--appleSessionBase64` - The session that will be reused instead of triggering a new login each time NativeScript CLI communicates with Apple's APIs.
 
 ### Arguments
 
