@@ -39,15 +39,15 @@ interface ITestCase extends ITestSetup {
 }
 
 function createPacoteOptions(source: Object): Object {
-		let options: { [index: string]: any } = {};
+		const options: { [index: string]: any } = {};
 		npmconfig.read().forEach((value: any, key: string) => {
 			// replace env ${VARS} in strings with the process.env value
 			options[key] = typeof value !== 'string' ? value :  value.replace(/\${([^}]+)}/, (_, envVar) => process.env[envVar] );
 		});
 
 		// Copy any original source keys over our defaults
-		for (let key in source) {
-		    options[key] = source[key];
+		for (const key in source) {
+			options[key] = source[key];
 		}
 	return options;
 }
@@ -121,13 +121,13 @@ describe("pacoteService", () => {
 		const testInjector = createTestInjector(opts);
 
 		if (opts.isLocalPackage) {
-		    const oldPath = path.resolve;
-		    sandboxInstance.stub(path, "resolve").callsFake((value:string) => {
-			if (value === packageName) {
-			    return fullPath;
-			}
-			return oldPath(value);
-		    });
+			const oldPath = path.resolve;
+			sandboxInstance.stub(path, "resolve").callsFake((value:string) => {
+				if (value === packageName) {
+					return fullPath;
+				}
+				return oldPath(value);
+			});
 		}
 
 		return testInjector.resolve<IPacoteService>("pacoteService");
