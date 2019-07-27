@@ -10,11 +10,11 @@ const pacote = require("pacote");
 const tar = require("tar");
 const path = require("path");
 
-const npmCachePath = "npmCachePath";
+const defaultPacoteOpts: IPacoteBaseOptions = createPacoteOptions({});
+const npmCachePath = defaultPacoteOpts['cache'];
 const packageName = "testPackage";
 const fullPath = `/Users/username/${packageName}`;
 const destinationDir = "destinationDir";
-const defaultPacoteOpts: IPacoteBaseOptions = createPacoteOptions({ cache: npmCachePath });
 const errorMessage = "error message";
 const proxySettings: IProxySettings = {
 	hostname: "hostname",
@@ -38,11 +38,17 @@ interface ITestCase extends ITestSetup {
 	expectedArgs: any[];
 }
 
-function createPacoteOptions(options: Object): Object {
+function createPacoteOptions(source: Object): Object {
+		let options: { [index: string]: any } = {};
 		npmconfig.read().forEach((value: any, key: string) => {
 			// replace env ${VARS} in strings with the process.env value
 			options[key] = typeof value !== 'string' ? value :  value.replace(/\${([^}]+)}/, (_, envVar) => process.env[envVar] );
 		});
+
+		// Copy any original source keys over our defaults
+		for (let key in source) {
+		    options[key] = source[key];
+		}
 	return options;
 }
 
@@ -113,8 +119,15 @@ describe("pacoteService", () => {
 	const setupTest = (opts?: ITestSetup): IPacoteService => {
 		opts = opts || {};
 		const testInjector = createTestInjector(opts);
+
 		if (opts.isLocalPackage) {
-			sandboxInstance.stub(path, "resolve").withArgs(packageName).returns(fullPath);
+		    const oldPath = path.resolve;
+		    sandboxInstance.stub(path, "resolve").callsFake((value:string) => {
+			if (value === packageName) {
+			    return fullPath;
+			}
+			return oldPath(value);
+		    });
 		}
 
 		return testInjector.resolve<IPacoteService>("pacoteService");
@@ -126,7 +139,7 @@ describe("pacoteService", () => {
 			const testData: ITestCase[] = [
 				{
 					name: "with 'cache' only when no opts are passed",
-					expectedArgs: [packageName, defaultPacoteOpts]
+					expectedArgs: [packageName, _.extend({}, defaultPacoteOpts)]
 				},
 				{
 					name: "with 'cache' and passed options",
@@ -147,7 +160,7 @@ describe("pacoteService", () => {
 				{
 					name: "with full path to file when it is local one",
 					isLocalPackage: true,
-					expectedArgs: [fullPath, defaultPacoteOpts]
+					expectedArgs: [fullPath, _.extend({}, defaultPacoteOpts)]
 				},
 				{
 					name: "with full path to file, 'cache' and passed options when local path is passed",
