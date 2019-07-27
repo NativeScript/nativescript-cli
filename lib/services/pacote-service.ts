@@ -27,8 +27,6 @@ export class PacoteService implements IPacoteService {
 		this.$logger.trace(`Calling pacoteService.manifest for packageName: '${packageName}' and options: ${options}`);
 		const manifestOptions: IPacoteBaseOptions = await this.getPacoteBaseOptions();
 
-		// Add NPM Configuration to our Manifest options
-		_.extend(manifestOptions, this.npmConfig);
 
 		if (options) {
 			_.extend(manifestOptions, options);
@@ -79,7 +77,9 @@ export class PacoteService implements IPacoteService {
 	private async getPacoteBaseOptions(): Promise<IPacoteBaseOptions> {
 		// In case `tns create myapp --template https://github.com/NativeScript/template-hello-world.git` command is executed, pacote module throws an error if cache option is not provided.
 		const cachePath = await this.$packageManager.getCachePath();
-		const pacoteOptions = { cache: cachePath };
+
+		// Add NPM Configuration to our Manifest options
+		const pacoteOptions = _.extend( this.npmConfig, {cache: cachePath });
 		const proxySettings = await this.$proxyService.getCache();
 		if (proxySettings) {
 			_.extend(pacoteOptions, proxySettings);
