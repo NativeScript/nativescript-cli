@@ -27,7 +27,6 @@ export class PacoteService implements IPacoteService {
 		this.$logger.trace(`Calling pacoteService.manifest for packageName: '${packageName}' and options: ${options}`);
 		const manifestOptions: IPacoteBaseOptions = await this.getPacoteBaseOptions();
 
-
 		if (options) {
 			_.extend(manifestOptions, options);
 		}
