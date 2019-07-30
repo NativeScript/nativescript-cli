@@ -100,6 +100,7 @@ $injector.requireCommand("dev-generate-help", "./commands/generate-help");
 $injector.requireCommand("appstore|*list", "./commands/appstore-list");
 $injector.requireCommand("appstore|upload", "./commands/appstore-upload");
 $injector.requireCommand("publish|ios", "./commands/appstore-upload");
+$injector.requireCommand("apple-login", "./commands/apple-login");
 $injector.require("itmsTransporterService", "./services/itmstransporter-service");
 
 $injector.requireCommand("setup|*", "./commands/setup");

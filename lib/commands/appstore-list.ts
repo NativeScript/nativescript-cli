@@ -6,12 +6,14 @@ export class ListiOSApps implements ICommand {
 
 	constructor(private $injector: IInjector,
 		private $applePortalApplicationService: IApplePortalApplicationService,
+		private $applePortalSessionService: IApplePortalSessionService,
 		private $logger: ILogger,
 		private $projectData: IProjectData,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $platformValidationService: IPlatformValidationService,
 		private $errors: IErrors,
-		private $prompter: IPrompter) {
+		private $prompter: IPrompter,
+		private $options: IOptions) {
 		this.$projectData.initializeProjectData();
 	}
 
@@ -31,7 +33,14 @@ export class ListiOSApps implements ICommand {
 			password = await this.$prompter.getPassword("Apple ID password");
 		}
 
-		const applications = await this.$applePortalApplicationService.getApplications({ username, password });
+		const user = await this.$applePortalSessionService.createUserSession({ username, password }, {
+			sessionBase64: this.$options.appleSessionBase64,
+		});
+		if (!user.areCredentialsValid) {
+			this.$errors.failWithoutHelp(`Invalid username and password combination. Used '${username}' as the username.`);
+		}
+
+		const applications = await this.$applePortalApplicationService.getApplications(user);
 
 		if (!applications || !applications.length) {
 			this.$logger.info("Seems you don't have any applications yet.");
