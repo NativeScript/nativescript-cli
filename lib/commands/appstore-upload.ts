@@ -42,7 +42,8 @@ export class PublishIOS implements ICommand {
 		const user = await this.$applePortalSessionService.createUserSession({ username, password }, {
 			applicationSpecificPassword:  this.$options.appleApplicationSpecificPassword,
 			sessionBase64: this.$options.appleSessionBase64,
-			requireInteractiveConsole: true
+			requireInteractiveConsole: true,
+			requireApplicationSpecificPassword: true
 		});
 		if (!user.areCredentialsValid) {
 			this.$errors.failWithoutHelp(`Invalid username and password combination. Used '${username}' as the username.`);

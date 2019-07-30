@@ -96,7 +96,8 @@ export class ApplePortalSessionService implements IApplePortalSessionService {
 				const statusCode = err && err.response && err.response.statusCode;
 				result.areCredentialsValid = statusCode !== 401 && statusCode !== 403;
 				result.isTwoFactorAuthenticationEnabled = statusCode === 409;
-				if (result.isTwoFactorAuthenticationEnabled && opts && !opts.applicationSpecificPassword) {
+
+				if (result.isTwoFactorAuthenticationEnabled && opts && opts.requireApplicationSpecificPassword && !opts.applicationSpecificPassword) {
 					this.$errors.failWithoutHelp(`Your account has two-factor authentication enabled but --appleApplicationSpecificPassword option is not provided.
 To generate an application-specific password, please go to https://appleid.apple.com/account/manage.
 This password will be used for the iTunes Transporter, which is used to upload your application.`);
