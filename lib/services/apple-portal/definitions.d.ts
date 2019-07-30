@@ -19,6 +19,7 @@ interface IAppleCreateUserSessionOptions {
 	applicationSpecificPassword?: string;
 	sessionBase64: string;
 	requireInteractiveConsole?: boolean;
+	requireApplicationSpecificPassword?: boolean;
 }
 
 interface IAppleLoginResult {
