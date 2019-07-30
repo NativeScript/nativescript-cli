@@ -102,7 +102,7 @@ To generate an application-specific password, please go to https://appleid.apple
 This password will be used for the iTunes Transporter, which is used to upload your application.`);
 				}
 
-				if (result.isTwoFactorAuthenticationEnabled && opts && opts.ensureConsoleIsInteractive && !isInteractive()) {
+				if (result.isTwoFactorAuthenticationEnabled && opts && opts.requireInteractiveConsole && !isInteractive()) {
 					this.$errors.failWithoutHelp(`Your account has two-factor authentication enabled, but your console is not interactive.
 For more details how to set up your environment, please execute "tns publish ios --help".`);
 				}

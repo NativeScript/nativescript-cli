@@ -8,6 +8,7 @@ position: 1
 ### Description
 
 Uploads project to iTunes Connect. The command either issues a production build and uploads it to iTunes Connect, or uses an already built package to upload.
+The user will be prompted interactively for verification code when two-factor authentication enabled account is used. As on non-interactive console (CI), you will not be prompt for verification code. In this case, you need to generate a login session for your apple's account in advance using `tns apple-login` command. The generated value must be provided via the `--appleSessionBase64` option and is only valid for up to a month. Meaning you'll need to create a new session every month.
 
 <% if(isConsole && (isLinux || isWindows)) { %>WARNING: You can run this command only on macOS systems. To view the complete help for this command, run `$ tns help appstore upload`<% } %>
 <% if((isConsole && isMacOS) || isHtml) { %>
@@ -22,8 +23,8 @@ Upload package | `$ tns appstore upload [<Apple ID> [<Password>]] --ipa <Ipa Fil
 ### Options
 
 * `--ipa` - If set, will use provided .ipa file instead of building the project.
-* `--appleApplicationSpecificPassword` - Specified the password for your Apple ID that let you sign in to your account and securely access the information you stores from iTunes Transporter application.
-* `--appleSessionBase64` - The session that will be reused instead of triggering a new login each time NativeScript CLI communicates with Apple's APIs.
+* `--appleApplicationSpecificPassword` - Specifies the password for accessing the information you store in iTunes Transporter application.
+* `--appleSessionBase64` - The session that will be used instead of triggering a new login each time NativeScript CLI communicates with Apple's APIs.
 
 ### Arguments
 

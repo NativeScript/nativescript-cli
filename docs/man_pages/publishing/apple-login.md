@@ -1,5 +1,5 @@
 <% if (isJekyll) { %>---
-title: tns appstore
+title: tns apple-login
 position: 5
 ---<% } %>
 
@@ -15,15 +15,11 @@ Usage | Synopsis
 ---|---
 General | `$ tns apple-login [<Apple ID>] [<Password>]`
 
-<% if((isConsole && isMacOS) || isHtml) { %>
-
-### Options
-
 ### Arguments
 
 * `<Apple ID>` and `<Password>` are your credentials for logging into iTunes Connect.
 
-### Command Limitations
+<% if(isHtml) { %>s
 
 ### Related Commands
 

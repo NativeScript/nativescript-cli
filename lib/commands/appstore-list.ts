@@ -12,7 +12,8 @@ export class ListiOSApps implements ICommand {
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $platformValidationService: IPlatformValidationService,
 		private $errors: IErrors,
-		private $prompter: IPrompter) {
+		private $prompter: IPrompter,
+		private $options: IOptions) {
 		this.$projectData.initializeProjectData();
 	}
 
@@ -32,7 +33,9 @@ export class ListiOSApps implements ICommand {
 			password = await this.$prompter.getPassword("Apple ID password");
 		}
 
-		const user = await this.$applePortalSessionService.createUserSession({ username, password });
+		const user = await this.$applePortalSessionService.createUserSession({ username, password }, {
+			sessionBase64: this.$options.appleSessionBase64,
+		});
 		if (!user.areCredentialsValid) {
 			this.$errors.failWithoutHelp(`Invalid username and password combination. Used '${username}' as the username.`);
 		}

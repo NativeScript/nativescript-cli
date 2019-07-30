@@ -16,9 +16,9 @@ interface IApplePortalApplicationService {
 }
 
 interface IAppleCreateUserSessionOptions {
-	applicationSpecificPassword: string;
+	applicationSpecificPassword?: string;
 	sessionBase64: string;
-	ensureConsoleIsInteractive: boolean;
+	requireInteractiveConsole?: boolean;
 }
 
 interface IAppleLoginResult {
