@@ -202,7 +202,7 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 			}
 		}
 
-		return [];
+		return errors;
 	}
 
 	public validataMaxSupportedTargetSdk(targetSdk: number): NativeScriptDoctor.IWarning[] {
