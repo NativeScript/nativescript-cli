@@ -15,10 +15,13 @@ interface ITestData {
 }
 
 describe("androidToolsInfo", () => {
+	const originalAndroidHome = process.env["ANDROID_HOME"];
 	const defaultAdditionalInformation = "You will not be able to build your projects for Android." + EOL
 		+ "To be able to build for Android, verify that you have installed The Java Development Kit (JDK) and configured it according to system requirements as" + EOL +
 		" described in " + Constants.SYSTEM_REQUIREMENTS_LINKS[process.platform];
-
+	before(() => {
+		process.env["ANDROID_HOME"] = "test";
+	});
 	const getAndroidToolsInfo = (runtimeVersion?: string): AndroidToolsInfo => {
 		const childProcess: ChildProcess = <any>{};
 		const fs: FileSystem = <any>{
@@ -32,12 +35,45 @@ describe("androidToolsInfo", () => {
 						}
 					}
 				} : null;
+			},
+			readDirectory: (path: string) => {
+				if (path.indexOf("build-tools") >= 0) {
+					return [
+						"20.0.0",
+						"27.0.3",
+						"28.0.3",
+						"29.0.1"
+					];
+				} else {
+					return [
+						"android-16",
+						"android-27",
+						"android-28",
+						"android-29"
+					];
+				}
 			}
 		};
 		const hostInfo: HostInfo = <any>{};
 		const helpers: Helpers = new Helpers(<any>{});
 		return new AndroidToolsInfo(childProcess, fs, hostInfo, helpers);
 	};
+
+	describe("getToolsInfo", () => {
+		it("runtime 6.0.0", () => {
+			const androidToolsInfo = getAndroidToolsInfo("6.0.0");
+			const toolsInfo = androidToolsInfo.getToolsInfo({projectDir: "test"});
+
+			assert.equal(toolsInfo.compileSdkVersion, 28);
+		});
+
+		it("runtime 6.0.0", () => {
+			const androidToolsInfo = getAndroidToolsInfo("6.1.0");
+			const toolsInfo = androidToolsInfo.getToolsInfo({projectDir: "test"});
+
+			assert.equal(toolsInfo.compileSdkVersion, 29);
+		});
+	});
 
 	describe("validateJavacVersion", () => {
 		const testData: ITestData[] = [
@@ -196,5 +232,9 @@ describe("androidToolsInfo", () => {
 				assert.equal(execSyncCommand, "npm view tns-android dist-tags --json");
 			});
 		});
+	});
+
+	after(() => {
+		process.env["ANDROID_HOME"] = originalAndroidHome;
 	});
 });

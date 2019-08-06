@@ -460,13 +460,13 @@ declare module NativeScriptDoctor {
 		 * Returns the Android tools info.
 		 * @return {NativeScriptDoctor.IAndroidToolsInfoData} returns the Android tools info.
 		 */
-		getToolsInfo(): NativeScriptDoctor.IAndroidToolsInfoData;
+		getToolsInfo(config: IProjectDir): NativeScriptDoctor.IAndroidToolsInfoData;
 
 		/**
 		 * Checks if the Android tools are valid.
 		 * @return {NativeScriptDoctor.IWarning[]} An array of errors from the validation checks. If there are no errors will return [].
 		 */
-		validateInfo(): NativeScriptDoctor.IWarning[];
+		validateInfo(config: IProjectDir): NativeScriptDoctor.IWarning[];
 
 		/**
 		 * Checks if the current javac version is valid.
@@ -492,23 +492,30 @@ declare module NativeScriptDoctor {
 
 		/**
 		 * Validates if the provided targetSdk is greater that the minimum supported target SDK.
-		 * @param {number} targetSdk The targetSdk to be validated.
+		 * @param {ITargetValidationOptions} options The targetSdk to be validated and the project directory - used to determine the Android Runtime version.
 		 * @return {NativeScriptDoctor.IWarning[]} An array of errors from the validation checks. If there are no errors will return [].
 		 */
-		validateMinSupportedTargetSdk(targetSdk: number): NativeScriptDoctor.IWarning[];
+		validateMinSupportedTargetSdk(options: ITargetValidationOptions): NativeScriptDoctor.IWarning[];
 
 		/**
 		 * Validates if the provided targetSdk is lower that the maximum supported target SDK.
-		 * @param {number} targetSdk The targetSdk to be validated.
+		 * @param {ITargetValidationOptions} options The targetSdk to be validated and the project directory - used to determine the Android Runtime version.
 		 * @return {NativeScriptDoctor.IWarning[]} An array of errors from the validation checks. If there are no errors will return [].
 		 */
-		validataMaxSupportedTargetSdk(targetSdk: number): NativeScriptDoctor.IWarning[];
+		validataMaxSupportedTargetSdk(options: ITargetValidationOptions): NativeScriptDoctor.IWarning[];
 
 		/**
 		 * Returns the path to the emulator executable.
 		 * @return {string} The path to the emulator executable.
 		 */
 		getPathToEmulatorExecutable(): string;
+	}
+
+	/**
+	 * The targetSdk to be validated.
+	 */
+	interface ITargetValidationOptions extends Partial<IProjectDir> {
+		targetSdk: number;
 	}
 
 	/**
@@ -534,5 +541,12 @@ declare module NativeScriptDoctor {
 		 * A list of the installed Android SDKs.
 		 */
 		installedTargets: string[];
+	}
+
+	/**
+	 * Object with a single property - projectDir. This is the root directory where NativeScript project is located.
+	 */
+	interface IProjectDir {
+		projectDir: string;
 	}
 }

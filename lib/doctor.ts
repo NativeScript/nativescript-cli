@@ -87,7 +87,7 @@ export class Doctor implements NativeScriptDoctor.IDoctor {
 				platforms: [Constants.ANDROID_PLATFORM_NAME]
 			}),
 			this.processValidationErrors({
-				warnings: this.androidToolsInfo.validateInfo(),
+				warnings: this.androidToolsInfo.validateInfo({projectDir}),
 				infoMessage: "A compatible Android SDK for compilation is found.",
 				platforms: [Constants.ANDROID_PLATFORM_NAME]
 			}),
