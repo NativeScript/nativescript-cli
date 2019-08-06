@@ -19,7 +19,7 @@ interface IAndroidPluginBuildService {
  * Describes data required for building plugin for Android.
  * The data can be consumed in the buildAndroidPlugin hook.
  */
-interface IBuildAndroidPluginData {
+interface IBuildAndroidPluginData extends Partial<IProjectDir> {
 	/**
 	 * Directory where the plugin will be build.
 	 * Usually this is the `<project dir>/platforms/tempPlugin/<plugin name>` dir.

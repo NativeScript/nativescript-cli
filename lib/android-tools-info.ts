@@ -10,8 +10,8 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 	}
 
 	@cache()
-	public getToolsInfo(): IAndroidToolsInfoData {
-		const infoData: IAndroidToolsInfoData = <IAndroidToolsInfoData>(androidToolsInfo.getToolsInfo());
+	public getToolsInfo(config: IProjectDir): IAndroidToolsInfoData {
+		const infoData: IAndroidToolsInfoData = <IAndroidToolsInfoData>(androidToolsInfo.getToolsInfo({projectDir: config.projectDir}));
 
 		infoData.androidHomeEnvVar = androidToolsInfo.androidHome;
 		infoData.compileSdkVersion = this.getCompileSdkVersion(infoData.installedTargets, infoData.compileSdkVersion);
@@ -29,7 +29,7 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 		const showWarningsAsErrors = options && options.showWarningsAsErrors;
 		const isAndroidHomeValid = this.validateAndroidHomeEnvVariable(options);
 
-		detectedErrors = androidToolsInfo.validateInfo().map(warning => this.printMessage(warning.warning, showWarningsAsErrors)).length > 0;
+		detectedErrors = androidToolsInfo.validateInfo({projectDir: options.projectDir}).map(warning => this.printMessage(warning.warning, showWarningsAsErrors)).length > 0;
 
 		if (options && options.validateTargetSdk) {
 			detectedErrors = this.validateTargetSdk(options);
@@ -38,17 +38,16 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 		return detectedErrors || !isAndroidHomeValid;
 	}
 
-	public validateTargetSdk(options?: IAndroidToolsInfoOptions): boolean {
+	public validateTargetSdk(options: IAndroidToolsInfoOptions): boolean {
 		let detectedErrors = false;
-		const showWarningsAsErrors = options && options.showWarningsAsErrors;
 
-		const toolsInfoData = this.getToolsInfo();
+		const toolsInfoData = this.getToolsInfo({ projectDir: options.projectDir});
 		const targetSdk = toolsInfoData.targetSdkVersion;
 
-		detectedErrors = androidToolsInfo.validateMinSupportedTargetSdk(targetSdk).map(warning => this.printMessage(warning.warning, showWarningsAsErrors)).length > 0;
+		detectedErrors = androidToolsInfo.validateMinSupportedTargetSdk({targetSdk, projectDir: options.projectDir}).map(warning => this.printMessage(warning.warning, options.showWarningsAsErrors)).length > 0;
 
 		if (!detectedErrors) {
-			androidToolsInfo.validataMaxSupportedTargetSdk(targetSdk).map(warning => this.$logger.warn(warning.warning));
+			androidToolsInfo.validataMaxSupportedTargetSdk({targetSdk, projectDir: options.projectDir}).map(warning => this.$logger.warn(warning.warning));
 		}
 
 		return detectedErrors;

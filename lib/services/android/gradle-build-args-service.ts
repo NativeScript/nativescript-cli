@@ -22,7 +22,7 @@ export class GradleBuildArgsService implements IGradleBuildArgsService {
 	private getBaseTaskArgs(buildData: IAndroidBuildData): string[] {
 		const args = this.getBuildLoggingArgs();
 
-		const toolsInfo = this.$androidToolsInfo.getToolsInfo();
+		const toolsInfo = this.$androidToolsInfo.getToolsInfo({projectDir: buildData.projectDir});
 		args.push(
 			`-PcompileSdk=android-${toolsInfo.compileSdkVersion}`,
 			`-PtargetSdk=${toolsInfo.targetSdkVersion}`,
