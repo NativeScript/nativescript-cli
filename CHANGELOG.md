@@ -1,6 +1,12 @@
 NativeScript CLI Changelog
 ================
 
+6.0.3 (2019, August 05)
+==
+* [Fixed #4914](https://github.com/NativeScript/nativescript-cli/issues/4914): livesync not working with command tns test android
+* [Fixed #4746](https://github.com/NativeScript/nativescript-cli/issues/4746): Unable to work with `karma-webpack@4.0.2` on test command
+* [Fixed #4586](https://github.com/NativeScript/nativescript-cli/issues/4586): publish ios fails because of hsa2
+
 6.0.2 (2019, July 22)
 ==
 * [Fixed #4885](https://github.com/NativeScript/nativescript-cli/issues/4885): `migrate` and `update` commands are failing where everything is up-to-date
