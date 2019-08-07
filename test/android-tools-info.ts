@@ -67,7 +67,7 @@ describe("androidToolsInfo", () => {
 			assert.equal(toolsInfo.compileSdkVersion, 28);
 		});
 
-		it("runtime 6.0.0", () => {
+		it("runtime 6.1.0", () => {
 			const androidToolsInfo = getAndroidToolsInfo("6.1.0");
 			const toolsInfo = androidToolsInfo.getToolsInfo({projectDir: "test"});
 
