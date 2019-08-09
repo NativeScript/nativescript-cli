@@ -64,5 +64,5 @@ test-reports.xml
 *.js
 *.js.map
 /lib/.d.ts
-
+.d.ts
 !/*.js

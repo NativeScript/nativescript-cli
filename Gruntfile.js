@@ -29,7 +29,8 @@ module.exports = function (grunt) {
 					src: ["lib/**/*.ts", "test/**/*.ts", "typings/**/*.ts", "!**/*.d.ts"]
 				},
 				options: {
-					configuration: grunt.file.readJSON("./tslint.json")
+					configuration: grunt.file.readJSON("./tslint.json"),
+					project: "tsconfig.json"
 				}
 			}
 		},

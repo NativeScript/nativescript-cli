@@ -7,8 +7,8 @@ const access = util.promisify(fs.access);
 const mkdir = util.promisify(fs.mkdir);
 
 export class FileSystem {
-	public exists(path: string): boolean {
-		return fs.existsSync(path);
+	public exists(filePath: string): boolean {
+		return fs.existsSync(filePath);
 	}
 
 	public extractZip(pathToZip: string, outputDir: string): Promise<void> {
@@ -25,9 +25,9 @@ export class FileSystem {
 					}
 
 					zipFile.openReadStream(entry, (openStreamError, stream) => {
-						if(openStreamError) {
+						if (openStreamError) {
 							return reject(openStreamError);
-						};
+						}
 
 						const filePath = `${outputDir}/${fn}`;
 
@@ -50,12 +50,12 @@ export class FileSystem {
 		});
 	}
 
-	public readDirectory(path: string): string[] {
-		return fs.readdirSync(path);
+	public readDirectory(directoryPath: string): string[] {
+		return fs.readdirSync(directoryPath);
 	}
 
-	public readJson<T>(path: string, options?: { encoding?: null; flag?: string; }): T {
-		const content = fs.readFileSync(path, options);
+	public readJson<T>(filePath: string, options?: { encoding?: null; flag?: string; }): T {
+		const content = fs.readFileSync(filePath, options);
 		return JSON.parse(content.toString());
 	}
 }
