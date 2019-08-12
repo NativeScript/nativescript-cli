@@ -23,6 +23,7 @@ interface INativeSourceCodeGroup {
 
 const DevicePlatformSdkName = "iphoneos";
 const SimulatorPlatformSdkName = "iphonesimulator";
+const FRAMEWORK_EXTENSIONS = [".framework", ".xcframework"];
 
 const getPlatformSdkName = (forDevice: boolean): string => forDevice ? DevicePlatformSdkName : SimulatorPlatformSdkName;
 const getConfigurationName = (release: boolean): string => release ? Configurations.Release : Configurations.Debug;
@@ -88,8 +89,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 						packageNames: [`${projectData.projectName}.app`, `${projectData.projectName}.zip`]
 					};
 				},
-				frameworkFilesExtensions: [".a", ".framework", ".bin"],
-				frameworkDirectoriesExtensions: [".framework"],
+				frameworkDirectoriesExtensions: FRAMEWORK_EXTENSIONS,
 				frameworkDirectoriesNames: ["Metadata", "metadataGenerator", "NativeScript", "internal"],
 				targetedOS: ['darwin'],
 				configurationFileName: constants.INFO_PLIST_FILE_NAME,
@@ -155,6 +155,9 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			this.replaceFileName("-Info.plist", projectRootFilePath, projectData);
 		}
 		this.replaceFileName("-Prefix.pch", projectRootFilePath, projectData);
+		if (this.$fs.exists(path.join(projectRootFilePath, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER + ".entitlements"))) {
+			this.replaceFileName(".entitlements", projectRootFilePath, projectData);
+		}
 
 		const xcschemeDirPath = path.join(this.getPlatformData(projectData).projectRoot, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER + IosProjectConstants.XcodeProjExtName, "xcshareddata/xcschemes");
 		const xcschemeFilePath = path.join(xcschemeDirPath, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER + IosProjectConstants.XcodeSchemeExtName);
@@ -225,17 +228,38 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		return Promise.resolve();
 	}
 
+	private async isDynamicFramework(frameworkPath: string): Promise<boolean> {
+		const frameworkName = path.basename(frameworkPath, path.extname(frameworkPath));
+		const isDynamicFrameworkBundle = async (bundlePath: string) => {
+			const frameworkBinaryPath = path.join(bundlePath, frameworkName);
+
+			return _.includes((await this.$childProcess.spawnFromEvent("file", [frameworkBinaryPath], "close")).stdout, "dynamically linked");
+		};
+
+		if (path.extname(frameworkPath) === ".xcframework") {
+			let isDynamic = true;
+			const subDirs = this.$fs.readDirectory(frameworkPath).filter(entry => this.$fs.getFsStats(entry).isDirectory());
+			for (const subDir of subDirs) {
+				const singlePlatformFramework = path.join(subDir, frameworkName + ".framework");
+				if (this.$fs.exists(singlePlatformFramework)) {
+					isDynamic = await isDynamicFrameworkBundle(singlePlatformFramework);
+					break;
+				}
+			}
+
+			return isDynamic;
+		} else {
+			return await isDynamicFrameworkBundle(frameworkName);
+		}
+	}
+
 	private async addFramework(frameworkPath: string, projectData: IProjectData): Promise<void> {
 		if (!this.$hostInfo.isWindows) {
 			this.validateFramework(frameworkPath);
 
 			const project = this.createPbxProj(projectData);
-			const frameworkName = path.basename(frameworkPath, path.extname(frameworkPath));
-			const frameworkBinaryPath = path.join(frameworkPath, frameworkName);
-			const isDynamic = _.includes((await this.$childProcess.spawnFromEvent("file", [frameworkBinaryPath], "close")).stdout, "dynamically linked");
 			const frameworkAddOptions: IXcode.Options = { customFramework: true };
-
-			if (isDynamic) {
+			if (this.isDynamicFramework(frameworkPath)) {
 				frameworkAddOptions["embed"] = true;
 			}
 
@@ -577,8 +601,10 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		return target;
 	}
 
-	private getAllLibsForPluginWithFileExtension(pluginData: IPluginData, fileExtension: string): string[] {
-		const filterCallback = (fileName: string, pluginPlatformsFolderPath: string) => path.extname(fileName) === fileExtension;
+	private getAllLibsForPluginWithFileExtension(pluginData: IPluginData, fileExtension: string | string[]): string[] {
+		const fileExtensions = _.isArray(fileExtension) ? fileExtension : [fileExtension];
+		const filterCallback = (fileName: string, pluginPlatformsFolderPath: string) =>
+		fileExtensions.indexOf(path.extname(fileName)) !== -1;
 		return this.getAllNativeLibrariesForPlugin(pluginData, IOSProjectService.IOS_PLATFORM_NAME, filterCallback);
 	}
 
@@ -599,7 +625,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		const plistJson = this.$plistParser.parseFileSync(infoPlistPath);
 		const packageType = plistJson["CFBundlePackageType"];
 
-		if (packageType !== "FMWK") {
+		if (packageType !== "FMWK" && packageType !== "XFWK") {
 			this.$errors.failWithoutHelp("The bundle at %s does not appear to be a dynamic framework.", libraryPath);
 		}
 	}
@@ -679,7 +705,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		this.savePbxProj(project, projectData);
 	}
 	private async prepareFrameworks(pluginPlatformsFolderPath: string, pluginData: IPluginData, projectData: IProjectData): Promise<void> {
-		for (const fileName of this.getAllLibsForPluginWithFileExtension(pluginData, ".framework")) {
+		for (const fileName of this.getAllLibsForPluginWithFileExtension(pluginData, FRAMEWORK_EXTENSIONS)) {
 			await this.addFramework(path.join(pluginPlatformsFolderPath, fileName), projectData);
 		}
 	}
@@ -700,7 +726,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 	private removeFrameworks(pluginPlatformsFolderPath: string, pluginData: IPluginData, projectData: IProjectData): void {
 		const project = this.createPbxProj(projectData);
-		_.each(this.getAllLibsForPluginWithFileExtension(pluginData, ".framework"), fileName => {
+		_.each(this.getAllLibsForPluginWithFileExtension(pluginData, FRAMEWORK_EXTENSIONS), fileName => {
 			const relativeFrameworkPath = this.getLibSubpathRelativeToProjectPath(fileName, projectData);
 			project.removeFramework(relativeFrameworkPath, { customFramework: true, embed: true });
 		});

@@ -79,7 +79,6 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 						regexes: [new RegExp(`${constants.APP_FOLDER_NAME}-.*-(${Configurations.Debug}|${Configurations.Release})${constants.APK_EXTENSION_NAME}`, "i"), new RegExp(`${packageName}-.*-(${Configurations.Debug}|${Configurations.Release})${constants.APK_EXTENSION_NAME}`, "i")]
 					};
 				},
-				frameworkFilesExtensions: [".jar", ".dat", ".so"],
 				configurationFileName: constants.MANIFEST_FILE_NAME,
 				configurationFilePath: path.join(...configurationsDirectoryArr),
 				relativeToFrameworkConfigurationFilePath: path.join(constants.SRC_DIR, constants.MAIN_DIR, constants.MANIFEST_FILE_NAME),
