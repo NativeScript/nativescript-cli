@@ -126,18 +126,18 @@ export class Errors implements IErrors {
 
 	public fail(optsOrFormatStr: string | IFailOptions, ...args: any[]): never {
 		const opts = this.getFailOptions(optsOrFormatStr);
-		return this.failWithOptions(opts, false, args);
+		return this.failWithOptions(opts, false, ...args);
 	}
 
 	@deprecated("Use `fail` instead.")
 	public failWithoutHelp(optsOrFormatStr: string | IFailOptions, ...args: any[]): never {
-		return this.fail(optsOrFormatStr, args);
+		return this.fail(optsOrFormatStr, ...args);
 	}
 
 	public failWithHelp(optsOrFormatStr: string | IFailOptions, ...args: any[]): never {
 		const opts = this.getFailOptions(optsOrFormatStr);
 
-		return this.failWithOptions(opts, true, args);
+		return this.failWithOptions(opts, true, ...args);
 	}
 
 	private getFailOptions(optsOrFormatStr: string | IFailOptions): IFailOptions {

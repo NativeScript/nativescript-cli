@@ -31,7 +31,7 @@ export class PlatformValidationService implements IPlatformValidationService {
 
 		if (!this.isValidPlatform(platform, projectData)) {
 			const platformNames = helpers.formatListOfNames(this.$mobileHelper.platformNames);
-			this.$errors.failWithHelp(`Invalid platform ${platform}. Valid platforms are ${platformNames}.`);
+			this.$errors.fail(`Invalid platform ${platform}. Valid platforms are ${platformNames}.`);
 		}
 	}
 

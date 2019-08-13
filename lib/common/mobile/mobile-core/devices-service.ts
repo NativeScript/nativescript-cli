@@ -52,7 +52,7 @@ export class DevicesService extends EventEmitter implements Mobile.IDevicesServi
 	@performanceLog()
 	public async pickSingleDevice(options: Mobile.IPickSingleDeviceOptions): Promise<Mobile.IDevice> {
 		if (options.onlyDevices && options.onlyEmulators) {
-			this.$errors.failWithHelp(DebugCommandErrors.UNABLE_TO_USE_FOR_DEVICE_AND_EMULATOR);
+			this.$errors.fail(DebugCommandErrors.UNABLE_TO_USE_FOR_DEVICE_AND_EMULATOR);
 		}
 
 		if (options.deviceId) {
@@ -679,7 +679,7 @@ export class DevicesService extends EventEmitter implements Mobile.IDevicesServi
 				} else if (platforms.length === 0) {
 					this.$errors.fail(constants.ERROR_NO_DEVICES);
 				} else {
-					this.$errors.failWithHelp("Multiple device platforms detected (%s). Specify platform or device on command line.",
+					this.$errors.fail("Multiple device platforms detected (%s). Specify platform or device on command line.",
 						helpers.formatListOfNames(platforms, "and"));
 				}
 			}

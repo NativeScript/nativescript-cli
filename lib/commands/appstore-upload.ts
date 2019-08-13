@@ -79,7 +79,7 @@ export class PublishIOS implements ICommand {
 
 	public async canExecute(args: string[]): Promise<boolean> {
 		if (!this.$hostInfo.isDarwin) {
-			this.$errors.fail("iOS publishing is only available on Mac OS X.");
+			this.$errors.fail("iOS publishing is only available on macOS.");
 		}
 
 		if (!this.$platformValidationService.isPlatformSupportedForOS(this.$devicePlatformsConstants.iOS, this.$projectData)) {

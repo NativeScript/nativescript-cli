@@ -104,17 +104,17 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 	public async validateOptions(projectId: string, provision: true | string, teamId: true | string): Promise<boolean> {
 		if (provision && teamId) {
-			this.$errors.failWithHelp("The options --provision and --teamId are mutually exclusive.");
+			this.$errors.fail("The options --provision and --teamId are mutually exclusive.");
 		}
 
 		if (provision === true) {
 			await this.$iOSProvisionService.listProvisions(projectId);
-			this.$errors.failWithHelp("Please provide provisioning profile uuid or name with the --provision option.");
+			this.$errors.fail("Please provide provisioning profile uuid or name with the --provision option.");
 		}
 
 		if (teamId === true) {
 			await this.$iOSProvisionService.listTeams();
-			this.$errors.failWithHelp("Please provide team id or team name with the --teamId options.");
+			this.$errors.fail("Please provide team id or team name with the --teamId options.");
 		}
 
 		return true;

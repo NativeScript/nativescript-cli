@@ -35,10 +35,6 @@ export abstract class BuildCommandBase extends ValidatePlatformCommandBase {
 	}
 
 	protected async validateArgs(args: string[], platform: string): Promise<boolean> {
-		return await this.validateArgsCore(args, platform);
-	}
-
-	private async validateArgsCore(args: string[], platform: string): Promise<boolean> {
 		if (args.length !== 0) {
 			this.$errors.failWithHelp(`The arguments '${args.join(" ")}' are not valid for the current command.`);
 		}

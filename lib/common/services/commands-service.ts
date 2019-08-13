@@ -124,7 +124,11 @@ export class CommandsService implements ICommandsService {
 			// If canExecuteCommand returns false, the command cannot be executed or there's no such command at all.
 			const command = this.$injector.resolveCommand(commandName);
 			if (command) {
-				this.$logger.error(`Command '${commandName} ${commandArguments}' cannot be executed.`);
+				let commandWithArgs = commandName;
+				if (commandArguments && commandArguments.length) {
+					commandWithArgs += ` ${commandArguments.join(" ")}`;
+				}
+				this.$logger.error(`Command '${commandWithArgs}' cannot be executed.`);
 				await this.printHelpSuggestion(commandName);
 			}
 		}
@@ -153,7 +157,7 @@ export class CommandsService implements ICommandsService {
 				return true;
 			}
 
-			this.$errors.failWithHelp("Unable to execute command '%s'. Use '$ %s %s --help' for help.", beautifiedName, this.$staticConfig.CLIENT_NAME.toLowerCase(), beautifiedName);
+			this.$errors.fail(`Unable to execute command '${beautifiedName}'.`);
 			return false;
 		}
 
