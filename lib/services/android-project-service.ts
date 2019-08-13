@@ -121,7 +121,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			notConfiguredEnvOptions
 		});
 
-		this.$androidToolsInfo.validateTargetSdk({ showWarningsAsErrors: true });
+		this.$androidToolsInfo.validateTargetSdk({ showWarningsAsErrors: true, projectDir: projectData.projectDir });
 
 		return {
 			checkEnvironmentRequirementsOutput
@@ -134,7 +134,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		}
 
 		this.$fs.ensureDirectoryExists(this.getPlatformData(projectData).projectRoot);
-		const androidToolsInfo = this.$androidToolsInfo.getToolsInfo();
+		const androidToolsInfo = this.$androidToolsInfo.getToolsInfo({ projectDir: projectData.projectDir});
 		const targetSdkVersion = androidToolsInfo && androidToolsInfo.targetSdkVersion;
 		this.$logger.trace(`Using Android SDK '${targetSdkVersion}'.`);
 

@@ -189,7 +189,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			await this.updateManifest(manifestFilePath, pluginTempMainSrcDir, shortPluginName);
 			this.copySourceSetDirectories(androidSourceDirectories, pluginTempMainSrcDir);
 			await this.setupGradle(pluginTempDir, options.platformsAndroidDirPath, options.projectDir);
-			await this.buildPlugin({ pluginDir: pluginTempDir, pluginName: options.pluginName });
+			await this.buildPlugin({ pluginDir: pluginTempDir, pluginName: options.pluginName, projectDir: options.projectDir });
 			this.$watchIgnoreListService.addFileToIgnoreList(path.join(options.aarOutputDir, `${shortPluginName}.aar`));
 			this.copyAar(shortPluginName, pluginTempDir, options.aarOutputDir);
 			this.writePluginHashInfo(pluginSourceFileHashesInfo, pluginTempDir);
@@ -440,8 +440,8 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 	@hook("buildAndroidPlugin")
 	private async buildPlugin(pluginBuildSettings: IBuildAndroidPluginData): Promise<void> {
 		if (!pluginBuildSettings.androidToolsInfo) {
-			this.$androidToolsInfo.validateInfo({ showWarningsAsErrors: true, validateTargetSdk: true });
-			pluginBuildSettings.androidToolsInfo = this.$androidToolsInfo.getToolsInfo();
+			this.$androidToolsInfo.validateInfo({ showWarningsAsErrors: true, validateTargetSdk: true, projectDir: pluginBuildSettings.projectDir });
+			pluginBuildSettings.androidToolsInfo = this.$androidToolsInfo.getToolsInfo({ projectDir: pluginBuildSettings.projectDir });
 		}
 
 		const gradlew = this.$hostInfo.isWindows ? "gradlew.bat" : "./gradlew";

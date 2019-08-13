@@ -646,9 +646,10 @@ interface IAndroidToolsInfo {
 	/**
 	 * Provides information about installed Android SDKs, Build Tools, Support Library
 	 * and ANDROID_HOME environement variable.
+	 * @param {IProjectDir} config Object with a single property - projectDir. This is the root directory where NativeScript project is located.
 	 * @return {IAndroidToolsInfoData} Information about installed Android Tools and SDKs.
 	 */
-	getToolsInfo(): IAndroidToolsInfoData;
+	getToolsInfo(config?: IProjectDir): IAndroidToolsInfoData;
 
 	/**
 	 * Validates the information about required Android tools and SDK versions.
@@ -689,7 +690,7 @@ interface IAndroidToolsInfo {
 /**
  * Describes information about installed Android tools and SDKs.
  */
-interface IAndroidToolsInfoData {
+interface IAndroidToolsInfoData extends NativeScriptDoctor.IAndroidToolsInfoData {
 	/**
 	 * The value of ANDROID_HOME environment variable.
 	 */
@@ -720,11 +721,11 @@ interface IAndroidToolsInfoData {
 /**
  * Describes options that can be passed to methods from IAndroidToolsInfo interface
  */
-interface IAndroidToolsInfoOptions {
+interface IAndroidToolsInfoOptions extends Partial<IProjectDir> {
 	/**
 	 * Defines if the warning messages should treated as error.
 	 */
-	showWarningsAsErrors: boolean;
+	showWarningsAsErrors?: boolean;
 }
 
 interface IAndroidToolsInfoValidateInput extends IAndroidToolsInfoOptions {
