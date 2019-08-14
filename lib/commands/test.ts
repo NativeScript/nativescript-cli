@@ -1,5 +1,9 @@
 abstract class TestCommandBase {
 	public allowedParameters: ICommandParameter[] = [];
+	public dashedOptions = {
+		hmr: { type: OptionType.Boolean, default: false, hasSensitiveValue: false },
+	};
+
 	protected abstract platform: string;
 	protected abstract $projectData: IProjectData;
 	protected abstract $testExecutionService: ITestExecutionService;
@@ -50,6 +54,13 @@ abstract class TestCommandBase {
 
 	async canExecute(args: string[]): Promise<boolean> {
 		if (!this.$options.force) {
+			if (this.$options.hmr) {
+				// With HMR we are not restarting after LiveSync which is causing a 30 seconds app start on Android
+				// because the Runtime does not watch for the `/data/local/tmp<appId>-livesync-in-progress` file deletion.
+				// The App is closing itself after each test execution and the bug will be reproducible on each LiveSync.
+				this.$errors.fail("The `--hmr` option is not supported for this command.");
+			}
+
 			await this.$migrateController.validate({ projectDir: this.$projectData.projectDir, platforms: [this.platform] });
 		}
 

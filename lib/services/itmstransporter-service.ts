@@ -28,7 +28,7 @@ export class ITMSTransporterService implements IITMSTransporterService {
 		const ipaFileLocation = path.join(innerDirectory, ipaFileName);
 		const loggingLevel = data.verboseLogging ? ITMSConstants.VerboseLoggingLevels.Verbose : ITMSConstants.VerboseLoggingLevels.Informational;
 		const bundleId = await this.getBundleIdentifier(data);
-		const application = await this.$applePortalApplicationService.getApplicationByBundleId(data, bundleId);
+		const application = await this.$applePortalApplicationService.getApplicationByBundleId(data.user, bundleId);
 
 		this.$fs.createDirectory(innerDirectory);
 
@@ -40,7 +40,16 @@ export class ITMSTransporterService implements IITMSTransporterService {
 
 		this.$fs.writeFile(path.join(innerDirectory, ITMSConstants.ApplicationMetadataFile), metadata);
 
-		await this.$childProcess.spawnFromEvent(itmsTransporterPath, ["-m", "upload", "-f", itmsDirectory, "-u", quoteString(data.username), "-p", quoteString(data.password), "-v", loggingLevel], "close", { stdio: "inherit" });
+		const password = data.user.isTwoFactorAuthenticationEnabled ? data.applicationSpecificPassword : data.credentials.password;
+		await this.$childProcess.spawnFromEvent(itmsTransporterPath,
+			[
+				"-m", "upload",
+				"-f", itmsDirectory,
+				"-u", quoteString(data.credentials.username),
+				"-p", quoteString(password),
+				"-v", loggingLevel
+			],
+			"close", { stdio: "inherit" });
 	}
 
 	private async getBundleIdentifier(data: IITMSData): Promise<string> {

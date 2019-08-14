@@ -5,10 +5,9 @@ export class ApplePortalApplicationService implements IApplePortalApplicationSer
 		private $httpClient: Server.IHttpClient
 	) { }
 
-	public async getApplications(credentials: ICredentials): Promise<IApplePortalApplicationSummary[]> {
+	public async getApplications(user: IApplePortalUserDetail): Promise<IApplePortalApplicationSummary[]> {
 		let result: IApplePortalApplicationSummary[] = [];
 
-		const user = await this.$applePortalSessionService.createUserSession(credentials);
 		for (const account of user.associatedAccounts) {
 			const contentProviderId = account.contentProvider.contentProviderId;
 			const dsId = user.sessionToken.dsId;
@@ -36,10 +35,10 @@ export class ApplePortalApplicationService implements IApplePortalApplicationSer
 		return JSON.parse(response.body).data;
 	}
 
-	public async getApplicationByBundleId(credentials: ICredentials, bundleId: string): Promise<IApplePortalApplicationSummary> {
-		const applications = await this.getApplications(credentials);
+	public async getApplicationByBundleId(user: IApplePortalUserDetail, bundleId: string): Promise<IApplePortalApplicationSummary> {
+		const applications = await this.getApplications(user);
 		if (!applications || !applications.length) {
-			this.$errors.fail(`Cannot find any registered applications for Apple ID ${credentials.username} in iTunes Connect.`);
+			this.$errors.fail(`Cannot find any registered applications for Apple ID ${user.userName} in iTunes Connect.`);
 		}
 
 		const application = _.find(applications, app => app.bundleId === bundleId);

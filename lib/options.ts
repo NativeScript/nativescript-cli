@@ -144,7 +144,9 @@ export class Options {
 			hooks: { type: OptionType.Boolean, default: true, hasSensitiveValue: false },
 			link: { type: OptionType.Boolean, default: false, hasSensitiveValue: false },
 			aab: { type: OptionType.Boolean, hasSensitiveValue: false },
-			performance: { type: OptionType.Object, hasSensitiveValue: true }
+			performance: { type: OptionType.Object, hasSensitiveValue: true },
+			appleApplicationSpecificPassword: { type: OptionType.String, hasSensitiveValue: true },
+			appleSessionBase64: { type: OptionType.String, hasSensitiveValue: true },
 		};
 	}
 

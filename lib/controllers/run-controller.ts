@@ -2,6 +2,7 @@ import { HmrConstants, DeviceDiscoveryEventNames } from "../common/constants";
 import { PREPARE_READY_EVENT_NAME, TrackActionNames, DEBUGGER_DETACHED_EVENT_NAME, RunOnDeviceEvents, USER_INTERACTION_NEEDED_EVENT_NAME } from "../constants";
 import { cache, performanceLog } from "../common/decorators";
 import { EventEmitter } from "events";
+import * as util from "util";
 
 export class RunController extends EventEmitter implements IRunController {
 	private prepareReadyEventHandler: any = null;
@@ -270,7 +271,7 @@ export class RunController extends EventEmitter implements IRunController {
 	}
 
 	private async syncInitialDataOnDevices(projectData: IProjectData, liveSyncInfo: ILiveSyncInfo, deviceDescriptors: ILiveSyncDeviceDescriptor[]): Promise<void> {
-		const rebuiltInformation: IDictionary<{ packageFilePath: string, platform: string, isEmulator: boolean }> = { };
+		const rebuiltInformation: IDictionary<{ packageFilePath: string, platform: string, isEmulator: boolean }> = {};
 
 		const deviceAction = async (device: Mobile.IDevice) => {
 			const deviceDescriptor = _.find(deviceDescriptors, dd => dd.identifier === device.deviceInfo.identifier);
@@ -333,7 +334,7 @@ export class RunController extends EventEmitter implements IRunController {
 					error: err,
 				});
 
-				await this.stop({ projectDir: projectData.projectDir, deviceIdentifiers: [device.deviceInfo.identifier], stopOptions: { shouldAwaitAllActions: false }});
+				await this.stop({ projectDir: projectData.projectDir, deviceIdentifiers: [device.deviceInfo.identifier], stopOptions: { shouldAwaitAllActions: false } });
 			}
 		};
 
@@ -341,7 +342,8 @@ export class RunController extends EventEmitter implements IRunController {
 	}
 
 	private async syncChangedDataOnDevices(data: IFilesChangeEventData, projectData: IProjectData, liveSyncInfo: ILiveSyncInfo): Promise<void> {
-		const rebuiltInformation: IDictionary<{ packageFilePath: string, platform: string, isEmulator: boolean }> = { };
+		const successfullySyncedMessageFormat = `Successfully synced application %s on device %s.`;
+		const rebuiltInformation: IDictionary<{ packageFilePath: string, platform: string, isEmulator: boolean }> = {};
 
 		const deviceAction = async (device: Mobile.IDevice) => {
 			const deviceDescriptors = this.$liveSyncProcessDataService.getDeviceDescriptors(projectData.projectDir);
@@ -380,28 +382,47 @@ export class RunController extends EventEmitter implements IRunController {
 					await this.$deviceInstallAppService.installOnDevice(device, deviceDescriptor.buildData, rebuiltInformation[platformData.platformNameLowerCase].packageFilePath);
 					await platformLiveSyncService.syncAfterInstall(device, watchInfo);
 					await this.refreshApplication(projectData, { deviceAppData, modifiedFilesData: [], isFullSync: false, useHotModuleReload: liveSyncInfo.useHotModuleReload }, data, deviceDescriptor);
+					this.$logger.info(util.format(successfullySyncedMessageFormat, deviceAppData.appIdentifier, device.deviceInfo.identifier));
 				} else {
 					const isInHMRMode = liveSyncInfo.useHotModuleReload && data.hmrData && data.hmrData.hash;
 					if (isInHMRMode) {
 						this.$hmrStatusService.watchHmrStatus(device.deviceInfo.identifier, data.hmrData.hash);
 					}
 
-					let liveSyncResultInfo = await platformLiveSyncService.liveSyncWatchAction(device, watchInfo);
-					await this.refreshApplication(projectData, liveSyncResultInfo, data, deviceDescriptor);
+					const watchAction = async (): Promise<void> => {
+						let liveSyncResultInfo = await platformLiveSyncService.liveSyncWatchAction(device, watchInfo);
+						await this.refreshApplication(projectData, liveSyncResultInfo, data, deviceDescriptor);
 
-					if (!liveSyncResultInfo.didRecover && isInHMRMode) {
-						const status = await this.$hmrStatusService.getHmrStatus(device.deviceInfo.identifier, data.hmrData.hash);
-						if (status === HmrConstants.HMR_ERROR_STATUS) {
-							watchInfo.filesToSync = data.hmrData.fallbackFiles;
-							liveSyncResultInfo = await platformLiveSyncService.liveSyncWatchAction(device, watchInfo);
-							// We want to force a restart of the application.
-							liveSyncResultInfo.isFullSync = true;
-							await this.refreshApplication(projectData, liveSyncResultInfo, data, deviceDescriptor);
+						if (!liveSyncResultInfo.didRecover && isInHMRMode) {
+							const status = await this.$hmrStatusService.getHmrStatus(device.deviceInfo.identifier, data.hmrData.hash);
+							if (status === HmrConstants.HMR_ERROR_STATUS) {
+								watchInfo.filesToSync = data.hmrData.fallbackFiles;
+								liveSyncResultInfo = await platformLiveSyncService.liveSyncWatchAction(device, watchInfo);
+								// We want to force a restart of the application.
+								liveSyncResultInfo.isFullSync = true;
+								await this.refreshApplication(projectData, liveSyncResultInfo, data, deviceDescriptor);
+							}
+						}
+
+						this.$logger.info(util.format(successfullySyncedMessageFormat, deviceAppData.appIdentifier, device.deviceInfo.identifier));
+					};
+
+					if (liveSyncInfo.useHotModuleReload) {
+						try {
+							this.$logger.trace("Try executing watch action without any preparation of files.");
+							await watchAction();
+							this.$logger.trace("Successfully executed watch action without any preparation of files.");
+							return;
+						} catch (err) {
+							this.$logger.trace(`Error while trying to execute fast sync. Now we'll check the state of the app and we'll try to resurrect from the error. The error is: ${err}`);
 						}
 					}
+
+					await this.$deviceInstallAppService.installOnDeviceIfNeeded(device, deviceDescriptor.buildData);
+					watchInfo.connectTimeout = null;
+					await watchAction();
 				}
 
-				this.$logger.info(`Successfully synced application ${deviceAppData.appIdentifier} on device ${device.deviceInfo.identifier}.`);
 			} catch (err) {
 				this.$logger.warn(`Unable to apply changes for device: ${device.deviceInfo.identifier}. Error is: ${err && err.message}.`);
 

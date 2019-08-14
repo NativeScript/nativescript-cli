@@ -8,6 +8,7 @@ position: 3
 ### Description
 
 Uploads project to iTunes Connect. The command either issues a production build and uploads it to iTunes Connect, or uses an already built package to upload.
+The user will be prompted interactively for verification code when two-factor authentication enabled account is used. As on non-interactive console (CI), you will not be prompt for verification code. In this case, you need to generate a login session for your apple's account in advance using `tns apple-login` command. The generated value must be provided via the `--appleSessionBase64` option and is only valid for up to a month. Meaning you'll need to create a new session every month.
 
 <% if(isConsole && (isLinux || isWindows)) { %>WARNING: You can run this command only on macOS systems. To view the complete help for this command, run `$ tns help publish ios`<% } %>
 
@@ -24,7 +25,9 @@ Upload package | `$ tns publish ios [<Apple ID> [<Password>]] --ipa <Ipa File Pa
 
 * `--ipa` - If set, will use provided .ipa file instead of building the project.
 * `--team-id` - Specified the team id for which Xcode will try to find distribution certificate and provisioning profile when exporting for AppStore submission.
-
+* `--appleApplicationSpecificPassword` - Specifies the password for accessing the information you store in iTunes Transporter application.
+* `--appleSessionBase64` - The session that will be used instead of triggering a new login each time NativeScript CLI communicates with Apple's APIs.
+ 
 ### Arguments
 
 * `<Apple ID>` and `<Password>` are your credentials for logging into iTunes Connect.
