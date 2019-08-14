@@ -10,14 +10,14 @@ export class XcodeSelectService implements IXcodeSelectService {
 
 	public async getDeveloperDirectoryPath(): Promise<string> {
 		if (!this.$hostInfo.isDarwin) {
-			this.$errors.failWithoutHelp("xcode-select is only available on Mac OS X.");
+			this.$errors.fail("xcode-select is only available on Mac OS X.");
 		}
 
 		const childProcess = await this.$childProcess.spawnFromEvent("xcode-select", ["-print-path"], "close", {}, { throwError: false }),
 			result = childProcess.stdout.trim();
 
 		if (!result) {
-			this.$errors.failWithoutHelp("Cannot find path to Xcode.app - make sure you've installed Xcode correctly.");
+			this.$errors.fail("Cannot find path to Xcode.app - make sure you've installed Xcode correctly.");
 		}
 
 		return result;
@@ -32,7 +32,7 @@ export class XcodeSelectService implements IXcodeSelectService {
 		const sysInfo = this.$injector.resolve<ISysInfo>("sysInfo");
 		const xcodeVer = await sysInfo.getXcodeVersion();
 		if (!xcodeVer) {
-			this.$errors.failWithoutHelp("xcodebuild execution failed. Make sure that you have latest Xcode and tools installed.");
+			this.$errors.fail("xcodebuild execution failed. Make sure that you have latest Xcode and tools installed.");
 		}
 
 		const xcodeVersionMatch = xcodeVer.match(/Xcode (.*)/),

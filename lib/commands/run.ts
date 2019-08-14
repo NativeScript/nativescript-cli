@@ -26,7 +26,7 @@ export class RunCommandBase implements ICommand {
 
 	public async canExecute(args: string[]): Promise<boolean> {
 		if (args.length) {
-			this.$errors.fail(ERROR_NO_VALID_SUBCOMMAND_FORMAT, "run");
+			this.$errors.failWithHelp(ERROR_NO_VALID_SUBCOMMAND_FORMAT, "run");
 		}
 
 		this.platform = args[0] || this.platform;
@@ -127,7 +127,7 @@ export class RunAndroidCommand implements ICommand {
 		}
 
 		if (this.$options.release && (!this.$options.keyStorePath || !this.$options.keyStorePassword || !this.$options.keyStoreAlias || !this.$options.keyStoreAliasPassword)) {
-			this.$errors.fail(ANDROID_RELEASE_BUILD_ERROR_MESSAGE);
+			this.$errors.failWithHelp(ANDROID_RELEASE_BUILD_ERROR_MESSAGE);
 		}
 
 		return this.$platformValidationService.validateOptions(this.$options.provision, this.$options.teamId, this.$projectData, this.$devicePlatformsConstants.Android.toLowerCase());

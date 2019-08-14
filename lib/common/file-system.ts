@@ -177,7 +177,7 @@ export class FileSystem implements IFileSystem {
 		return fs.readdirSync(path);
 	}
 
-	public readFile(filename: string, options?: IReadFileOptions): string | NodeBuffer {
+	public readFile(filename: string, options?: IReadFileOptions): string | Buffer {
 		return fs.readFileSync(filename, options);
 	}
 
@@ -203,7 +203,7 @@ export class FileSystem implements IFileSystem {
 		return null;
 	}
 
-	public writeFile(filename: string, data: string | NodeBuffer, encoding?: string): void {
+	public writeFile(filename: string, data: string | Buffer, encoding?: string): void {
 		this.createDirectory(dirname(filename));
 		fs.writeFileSync(filename, data, { encoding: encoding });
 	}
@@ -390,7 +390,7 @@ export class FileSystem implements IFileSystem {
 			const logger: ILogger = this.$injector.resolve("$logger");
 			const shasumData = crypto.createHash(algorithm);
 			const fileStream = this.createReadStream(fileName);
-			fileStream.on("data", (data: NodeBuffer | string) => {
+			fileStream.on("data", (data: Buffer | string) => {
 				shasumData.update(data);
 			});
 

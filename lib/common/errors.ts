@@ -2,6 +2,7 @@ import * as util from "util";
 import * as path from "path";
 import { SourceMapConsumer } from "source-map";
 import { isInteractive } from "./helpers";
+import { deprecated } from "./decorators";
 
 // we need this to overwrite .stack property (read-only in Error)
 function Exception() {
@@ -123,14 +124,33 @@ export class Errors implements IErrors {
 
 	public printCallStack: boolean = false;
 
-	public fail(optsOrFormatStr: any, ...args: any[]): never {
-		const argsArray = args || [];
+	public fail(optsOrFormatStr: string | IFailOptions, ...args: any[]): never {
+		const opts = this.getFailOptions(optsOrFormatStr);
+		return this.failWithOptions(opts, false, ...args);
+	}
 
+	@deprecated("Use `fail` instead.")
+	public failWithoutHelp(optsOrFormatStr: string | IFailOptions, ...args: any[]): never {
+		return this.fail(optsOrFormatStr, ...args);
+	}
+
+	public failWithHelp(optsOrFormatStr: string | IFailOptions, ...args: any[]): never {
+		const opts = this.getFailOptions(optsOrFormatStr);
+
+		return this.failWithOptions(opts, true, ...args);
+	}
+
+	private getFailOptions(optsOrFormatStr: string | IFailOptions): IFailOptions {
 		let opts = optsOrFormatStr;
 		if (_.isString(opts)) {
 			opts = { formatStr: opts };
 		}
 
+		return opts;
+	}
+
+	private failWithOptions(opts: IFailOptions, suggestCommandHelp: boolean, ...args: any[]): never {
+		const argsArray = args || [];
 		const exception: any = new (<any>Exception)();
 		exception.name = opts.name || "Exception";
 		exception.message = util.format.apply(null, [opts.formatStr].concat(argsArray));
@@ -140,21 +160,18 @@ export class Errors implements IErrors {
 		} catch (err) {
 			// Ignore
 		}
+
 		exception.stack = (new Error(exception.message)).stack;
 		exception.errorCode = opts.errorCode || ErrorCodes.UNKNOWN;
-		exception.suppressCommandHelp = opts.suppressCommandHelp;
+		exception.suggestCommandHelp = suggestCommandHelp;
 		exception.proxyAuthenticationRequired = !!opts.proxyAuthenticationRequired;
 		exception.printOnStdout = opts.printOnStdout;
 		this.$injector.resolve("logger").trace(opts.formatStr);
+
 		throw exception;
 	}
 
-	public failWithoutHelp(message: string, ...args: any[]): never {
-		args.unshift(message);
-		return this.fail({ formatStr: util.format.apply(null, args), suppressCommandHelp: true });
-	}
-
-	public async beginCommand(action: () => Promise<boolean>, printCommandHelp: () => Promise<void>): Promise<boolean> {
+	public async beginCommand(action: () => Promise<boolean>, printCommandHelpSuggestion: () => Promise<void>): Promise<boolean> {
 		try {
 			return await action();
 		} catch (ex) {
@@ -168,12 +185,8 @@ export class Errors implements IErrors {
 				console.error(message);
 			}
 
-			if (!ex.suppressCommandHelp) {
-				try {
-					await printCommandHelp();
-				} catch (printHelpException) {
-					console.error("Failed to display command help", printHelpException);
-				}
+			if (ex.suggestCommandHelp) {
+				await printCommandHelpSuggestion();
 			}
 
 			await tryTrackException(ex, this.$injector);

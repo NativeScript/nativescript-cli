@@ -36,7 +36,7 @@ export class ProxySetCommand extends ProxyCommandBase {
 		const noUrl = !urlString;
 		if (noUrl) {
 			if (!isInteractive()) {
-				this.$errors.fail("Console is not interactive - you need to supply all command parameters.");
+				this.$errors.failWithHelp("Console is not interactive - you need to supply all command parameters.");
 			} else {
 				urlString = await this.$prompter.getString("Url", { allowEmpty: false });
 			}
@@ -65,9 +65,9 @@ export class ProxySetCommand extends ProxyCommandBase {
 
 		if (!isInteractive()) {
 			if (noPort) {
-				this.$errors.failWithoutHelp(`The port you have specified (${port || "none"}) is not valid.`);
+				this.$errors.fail(`The port you have specified (${port || "none"}) is not valid.`);
 			} else if (this.isPasswordRequired(username, password)) {
-				this.$errors.fail("Console is not interactive - you need to supply all command parameters.");
+				this.$errors.failWithHelp("Console is not interactive - you need to supply all command parameters.");
 			}
 		}
 

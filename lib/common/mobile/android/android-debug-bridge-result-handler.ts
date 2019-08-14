@@ -267,7 +267,7 @@ export class AndroidDebugBridgeResultHandler implements Mobile.IAndroidDebugBrid
 		if (treatErrorsAsWarnings) {
 			this.$logger.warn(errorMessages);
 		} else {
-			this.$errors.failWithoutHelp(errorMessages);
+			this.$errors.fail(errorMessages);
 		}
 	}
 }

@@ -258,7 +258,7 @@ export class Yok implements IInjector {
 					// there isn't a valid command or default with those arguments
 
 					const errors = $injector.resolve("errors");
-					errors.fail(ERROR_NO_VALID_SUBCOMMAND_FORMAT, commandName);
+					errors.failWithHelp(ERROR_NO_VALID_SUBCOMMAND_FORMAT, commandName);
 				}
 
 				return true;

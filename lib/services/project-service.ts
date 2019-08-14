@@ -25,7 +25,7 @@ export class ProjectService implements IProjectService {
 	public async validateProjectName(opts: { projectName: string, force: boolean, pathToProject: string }): Promise<string> {
 		let projectName = opts.projectName;
 		if (!projectName) {
-			this.$errors.fail("You must specify <App name> when creating a new project.");
+			this.$errors.failWithHelp("You must specify <App name> when creating a new project.");
 		}
 
 		projectName = await this.$projectNameService.ensureValidName(projectName, { force: opts.force });
@@ -140,7 +140,7 @@ export class ProjectService implements IProjectService {
 				await this.$pacoteService.extractPackage(fullTemplateName, projectDir);
 				break;
 			default:
-				this.$errors.failWithoutHelp(format(constants.ProjectTemplateErrors.InvalidTemplateVersionStringFormat, templateData.templateName, templateData.templateVersion));
+				this.$errors.fail(format(constants.ProjectTemplateErrors.InvalidTemplateVersionStringFormat, templateData.templateName, templateData.templateVersion));
 				break;
 		}
 	}
@@ -189,7 +189,7 @@ export class ProjectService implements IProjectService {
 			this.$logger.trace("New project package.json data: ", projectPackageJsonData);
 			this.$fs.writeJson(projectPackageJsonPath, projectPackageJsonData);
 		} else {
-			this.$errors.failWithoutHelp(`Couldn't find package.json data in installed template`);
+			this.$errors.fail(`Couldn't find package.json data in installed template`);
 		}
 	}
 

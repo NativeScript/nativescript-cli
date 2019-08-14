@@ -33,7 +33,7 @@ export class MobileHelper implements Mobile.IMobileHelper {
 
 	public validatePlatformName(platform: string): string {
 		if (!platform) {
-			this.$errors.fail("No device platform specified.");
+			this.$errors.failWithHelp("No device platform specified.");
 		}
 
 		const normalizedPlatform = this.normalizePlatformName(platform);
@@ -41,6 +41,7 @@ export class MobileHelper implements Mobile.IMobileHelper {
 			this.$errors.fail("'%s' is not a valid device platform. Valid platforms are %s.",
 				platform, helpers.formatListOfNames(this.platformNames));
 		}
+
 		return normalizedPlatform;
 	}
 

@@ -25,7 +25,6 @@ export class CommandsService implements ICommandsService {
 		private $logger: ILogger,
 		private $options: IOptions,
 		private $staticConfig: Config.IStaticConfig,
-		private $helpService: IHelpService,
 		private $extensibilityService: IExtensibilityService,
 		private $optionsTracker: IOptionsTracker) {
 	}
@@ -92,17 +91,20 @@ export class CommandsService implements ICommandsService {
 		return false;
 	}
 
-	private printHelp(commandName: string, commandArguments: string[]): Promise<void> {
-		return this.$helpService.showCommandLineHelp({ commandName: this.beautifyCommandName(commandName), commandArguments });
+	private printHelpSuggestion(commandName?: string): Promise<void> {
+		const command = commandName ? helpers.stringReplaceAll(this.beautifyCommandName(commandName), "|", " ") + " " : "";
+		const commandHelp = `tns ${command}--help`;
+		this.$logger.printMarkdown(`\`Run '${commandHelp}' for more information.\``);
+		return;
 	}
 
-	private async executeCommandAction(commandName: string, commandArguments: string[], action: (_commandName: string, _commandArguments: string[]) => Promise<boolean | ICanExecuteCommandOutput>): Promise<boolean> {
+	private async executeCommandAction(commandName: string, commandArguments: string[], action: (_commandName: string, _commandArguments: string[]) => Promise<boolean>): Promise<boolean> {
 		return this.$errors.beginCommand(
 			() => action.apply(this, [commandName, commandArguments]),
-			() => this.printHelp(commandName, commandArguments));
+			() => this.printHelpSuggestion(commandName));
 	}
 
-	private async tryExecuteCommandAction(commandName: string, commandArguments: string[]): Promise<boolean | ICanExecuteCommandOutput> {
+	private async tryExecuteCommandAction(commandName: string, commandArguments: string[]): Promise<boolean> {
 		const command = this.$injector.resolveCommand(commandName);
 		if (!command || !command.isHierarchicalCommand) {
 			const dashedOptions = command ? command.dashedOptions : null;
@@ -115,7 +117,6 @@ export class CommandsService implements ICommandsService {
 	public async tryExecuteCommand(commandName: string, commandArguments: string[]): Promise<void> {
 		const canExecuteResult: any = await this.executeCommandAction(commandName, commandArguments, this.tryExecuteCommandAction);
 		const canExecute = typeof canExecuteResult === "object" ? canExecuteResult.canExecute : canExecuteResult;
-		const suppressCommandHelp = typeof canExecuteResult === "object" ? canExecuteResult.suppressCommandHelp : false;
 
 		if (canExecute) {
 			await this.executeCommandAction(commandName, commandArguments, this.executeCommandUnchecked);
@@ -123,21 +124,23 @@ export class CommandsService implements ICommandsService {
 			// If canExecuteCommand returns false, the command cannot be executed or there's no such command at all.
 			const command = this.$injector.resolveCommand(commandName);
 			if (command) {
-				if (!suppressCommandHelp) {
-					// If command cannot be executed we should print its help.
-					await this.printHelp(commandName, commandArguments);
+				let commandWithArgs = commandName;
+				if (commandArguments && commandArguments.length) {
+					commandWithArgs += ` ${commandArguments.join(" ")}`;
 				}
+				this.$logger.error(`Command '${commandWithArgs}' cannot be executed.`);
+				await this.printHelpSuggestion(commandName);
 			}
 		}
 	}
 
-	private async canExecuteCommand(commandName: string, commandArguments: string[], isDynamicCommand?: boolean): Promise<boolean | ICanExecuteCommandOutput> {
+	private async canExecuteCommand(commandName: string, commandArguments: string[], isDynamicCommand?: boolean): Promise<boolean> {
 		const command = this.$injector.resolveCommand(commandName);
 		const beautifiedName = helpers.stringReplaceAll(commandName, "|", " ");
 		if (command) {
 			// Verify command is enabled
 			if (command.isDisabled) {
-				this.$errors.failWithoutHelp("This command is not applicable to your environment.");
+				this.$errors.fail("This command is not applicable to your environment.");
 			}
 
 			// If command wants to handle canExecute logic on its own.
@@ -154,7 +157,7 @@ export class CommandsService implements ICommandsService {
 				return true;
 			}
 
-			this.$errors.fail("Unable to execute command '%s'. Use '$ %s %s --help' for help.", beautifiedName, this.$staticConfig.CLIENT_NAME.toLowerCase(), beautifiedName);
+			this.$errors.fail(`Unable to execute command '${beautifiedName}'.`);
 			return false;
 		}
 
@@ -169,7 +172,8 @@ export class CommandsService implements ICommandsService {
 		if (extensionData) {
 			this.$logger.warn(extensionData.installationMessage);
 		} else {
-			this.$logger.fatal("Unknown command '%s'. Use '%s help' for help.", beautifiedName, this.$staticConfig.CLIENT_NAME.toLowerCase());
+			this.$logger.error("Unknown command '%s'.", beautifiedName);
+			await this.printHelpSuggestion();
 			this.tryMatchCommand(commandName);
 		}
 
@@ -184,7 +188,7 @@ export class CommandsService implements ICommandsService {
 			if (mandatoryParams.length > commandArguments.length) {
 				const customErrorMessages = _.map(mandatoryParams, mp => mp.errorMessage);
 				customErrorMessages.splice(0, 0, "You need to provide all the required parameters.");
-				this.$errors.fail(customErrorMessages.join(EOL));
+				this.$errors.failWithHelp(customErrorMessages.join(EOL));
 			}
 
 			// If we reach here, the commandArguments are at least as much as mandatoryParams. Now we should verify that we have each of them.
@@ -202,7 +206,7 @@ export class CommandsService implements ICommandsService {
 				if (argument) {
 					helpers.remove(commandArgsHelper.remainingArguments, arg => arg === argument);
 				} else {
-					this.$errors.fail("Missing mandatory parameter.");
+					this.$errors.failWithHelp("Missing mandatory parameter.");
 				}
 			}
 		}
@@ -220,7 +224,7 @@ export class CommandsService implements ICommandsService {
 		// Command doesn't have any allowedParameters
 		if (!command.allowedParameters || command.allowedParameters.length === 0) {
 			if (commandArguments.length > 0) {
-				this.$errors.fail("This command doesn't accept parameters.");
+				this.$errors.failWithHelp("This command doesn't accept parameters.");
 			}
 		} else {
 			// Exclude mandatory params, we've already checked them
@@ -242,7 +246,7 @@ export class CommandsService implements ICommandsService {
 					// Remove the matched parameter from unverifiedAllowedParams collection, so it will not be used to verify another argument.
 					unverifiedAllowedParams.splice(index, 1);
 				} else {
-					this.$errors.fail(`The parameter ${argument} is not valid for this command.`);
+					this.$errors.failWithHelp(`The parameter ${argument} is not valid for this command.`);
 				}
 			}
 		}

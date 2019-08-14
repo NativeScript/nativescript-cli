@@ -103,7 +103,7 @@ export class IOSSigningService implements IiOSSigningService {
 			const pickEnd = Date.now();
 			this.$logger.trace("Searched and " + (mobileprovision ? "found" : "failed to find ") + " matching provisioning profile. (" + (pickEnd - pickStart) + "ms.)");
 			if (!mobileprovision) {
-				this.$errors.failWithoutHelp("Failed to find mobile provision with UUID or Name: " + provision);
+				this.$errors.fail("Failed to find mobile provision with UUID or Name: " + provision);
 			}
 			const configuration = {
 				team: mobileprovision.TeamIdentifier && mobileprovision.TeamIdentifier.length > 0 ? mobileprovision.TeamIdentifier[0] : undefined,
@@ -147,7 +147,7 @@ export class IOSSigningService implements IiOSSigningService {
 				this.$logger.warn("Found and using the following development team installed on your system: " + teams[0].name + " (" + teams[0].id + ")");
 			} else if (teams.length > 0) {
 				if (!helpers.isInteractive()) {
-					this.$errors.failWithoutHelp(`Unable to determine default development team. Available development teams are: ${_.map(teams, team => team.id)}. Specify team in app/App_Resources/iOS/build.xcconfig file in the following way: DEVELOPMENT_TEAM = <team id>`);
+					this.$errors.fail(`Unable to determine default development team. Available development teams are: ${_.map(teams, team => team.id)}. Specify team in app/App_Resources/iOS/build.xcconfig file in the following way: DEVELOPMENT_TEAM = <team id>`);
 				}
 
 				const choices: string[] = [];

@@ -26,7 +26,7 @@ export class PlatformValidationService implements IPlatformValidationService {
 
 	public validatePlatform(platform: string, projectData: IProjectData): void {
 		if (!platform) {
-			this.$errors.fail("No platform specified.");
+			this.$errors.failWithHelp("No platform specified.");
 		}
 
 		if (!this.isValidPlatform(platform, projectData)) {
@@ -46,7 +46,7 @@ export class PlatformValidationService implements IPlatformValidationService {
 
 	public async validateOptions(provision: true | string, teamId: true | string, projectData: IProjectData, platform?: string, aab?: boolean): Promise<boolean> {
 		if (platform && !this.$mobileHelper.isAndroidPlatform(platform) && aab) {
-			this.$errors.failWithoutHelp("The --aab option is supported only for the Android platform.");
+			this.$errors.fail("The --aab option is supported only for the Android platform.");
 		}
 
 		if (platform) {

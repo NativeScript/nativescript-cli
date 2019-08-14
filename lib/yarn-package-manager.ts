@@ -62,7 +62,7 @@ export class YarnPackageManager extends BasePackageManager {
 		try {
 			viewResult = await this.$childProcess.exec(`yarn info ${packageName} ${flags}`);
 		} catch (e) {
-			this.$errors.failWithoutHelp(e.message);
+			this.$errors.fail(e.message);
 		}
 
 		const result = JSON.parse(viewResult);

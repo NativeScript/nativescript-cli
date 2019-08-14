@@ -30,7 +30,7 @@ export class UpdateCommand implements ICommand {
 		});
 
 		if (shouldMigrate) {
-			this.$errors.failWithoutHelp(UpdateCommand.SHOULD_MIGRATE_PROJECT_MESSAGE);
+			this.$errors.fail(UpdateCommand.SHOULD_MIGRATE_PROJECT_MESSAGE);
 		}
 
 		return args.length < 2 && this.$projectData.projectDir !== "";

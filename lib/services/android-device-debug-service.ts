@@ -110,7 +110,7 @@ export class AndroidDeviceDebugService extends DebugServiceBase implements IDevi
 	// TODO: extract this logic outside the debug service
 	private async validateRunningApp(deviceId: string, packageName: string): Promise<void> {
 		if (!(await this.isAppRunning(packageName, deviceId))) {
-			this.$errors.failWithoutHelp(`The application ${packageName} does not appear to be running on ${deviceId} or is not built with debugging enabled. Try starting the application manually.`);
+			this.$errors.fail(`The application ${packageName} does not appear to be running on ${deviceId} or is not built with debugging enabled. Try starting the application manually.`);
 		}
 	}
 

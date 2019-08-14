@@ -4,8 +4,8 @@ export class AddPluginCommand implements ICommand {
 	constructor(private $pluginsService: IPluginsService,
 		private $projectData: IProjectData,
 		private $errors: IErrors) {
-			this.$projectData.initializeProjectData();
-		}
+		this.$projectData.initializeProjectData();
+	}
 
 	public async execute(args: string[]): Promise<void> {
 		return this.$pluginsService.add(args[0], this.$projectData);
@@ -13,13 +13,13 @@ export class AddPluginCommand implements ICommand {
 
 	public async canExecute(args: string[]): Promise<boolean> {
 		if (!args[0]) {
-			this.$errors.fail("You must specify plugin name.");
+			this.$errors.failWithHelp("You must specify plugin name.");
 		}
 
 		const installedPlugins = await this.$pluginsService.getAllInstalledPlugins(this.$projectData);
 		const pluginName = args[0].toLowerCase();
 		if (_.some(installedPlugins, (plugin: IPluginData) => plugin.name.toLowerCase() === pluginName)) {
-			this.$errors.failWithoutHelp(`Plugin "${pluginName}" is already installed.`);
+			this.$errors.fail(`Plugin "${pluginName}" is already installed.`);
 		}
 
 		return true;

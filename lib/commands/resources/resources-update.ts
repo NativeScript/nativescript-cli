@@ -19,11 +19,11 @@ export class ResourcesUpdateCommand implements ICommand {
 
 		for (const platform of args) {
 			if (!this.$androidResourcesMigrationService.canMigrate(platform)) {
-				this.$errors.failWithoutHelp(`The ${platform} does not need to have its resources updated.`);
+				this.$errors.fail(`The ${platform} does not need to have its resources updated.`);
 			}
 
 			if (this.$androidResourcesMigrationService.hasMigrated(this.$projectData.getAppResourcesDirectoryPath())) {
-				this.$errors.failWithoutHelp("The App_Resources have already been updated for the Android platform.");
+				this.$errors.fail("The App_Resources have already been updated for the Android platform.");
 			}
 		}
 

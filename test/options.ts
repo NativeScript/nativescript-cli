@@ -30,7 +30,7 @@ describe("options", () => {
 		testInjector = createTestInjector();
 
 		const errors = new Errors(testInjector);
-		errors.failWithoutHelp = <any>((message: string, ...args: any[]): void => {
+		errors.failWithHelp = <any>((message: string, ...args: any[]): void => {
 			isExecutionStopped = true;
 		});
 		errors.fail = <any>((message: string, ...args: any[]): void => {
@@ -275,7 +275,8 @@ describe("options", () => {
 			it(`should fail when ${testCase.name}`, () => {
 				let actualError = null;
 				const errors = testInjector.resolve("errors");
-				errors.failWithoutHelp = (error: string) => actualError = error;
+				errors.fail = (error: string) => actualError = error;
+				errors.failWithHelp = (error: string) => actualError = error;
 				(testCase.args || []).forEach(arg => process.argv.push(arg));
 
 				const options: any = createOptions(testInjector);

@@ -22,7 +22,7 @@ export class XcodebuildCommandService implements IXcodebuildCommandService {
 
 			return commandResult;
 		} catch (err) {
-			this.$errors.failWithoutHelp(err.message);
+			this.$errors.fail(err.message);
 		}
 	}
 }

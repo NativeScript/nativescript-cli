@@ -18,7 +18,7 @@ export class CleanCommand implements ICommand {
 
 	public async canExecute(args: string[]): Promise<boolean> {
 		if (!args || args.length === 0) {
-			this.$errors.fail("No platform specified. Please specify a platform to clean");
+			this.$errors.failWithHelp("No platform specified. Please specify a platform to clean.");
 		}
 
 		_.each(args, platform => {

@@ -130,7 +130,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 	public async createProject(frameworkDir: string, frameworkVersion: string, projectData: IProjectData): Promise<void> {
 		if (semver.lt(frameworkVersion, AndroidProjectService.MIN_RUNTIME_VERSION_WITH_GRADLE)) {
-			this.$errors.failWithoutHelp(`The NativeScript CLI requires Android runtime ${AndroidProjectService.MIN_RUNTIME_VERSION_WITH_GRADLE} or later to work properly.`);
+			this.$errors.fail(`The NativeScript CLI requires Android runtime ${AndroidProjectService.MIN_RUNTIME_VERSION_WITH_GRADLE} or later to work properly.`);
 		}
 
 		this.$fs.ensureDirectoryExists(this.getPlatformData(projectData).projectRoot);

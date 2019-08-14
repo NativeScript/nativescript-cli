@@ -11,7 +11,7 @@ export class PackageManagerGetCommand implements ICommand {
 
 	public async execute(args: string[]): Promise<void> {
 		if (args && args.length) {
-			this.$errors.fail(`The arguments '${args.join(" ")}' are not valid for the 'package-manager get' command.`);
+			this.$errors.failWithHelp(`The arguments '${args.join(" ")}' are not valid for the 'package-manager get' command.`);
 		}
 
 		const result = await this.$userSettingsService.getSettingValue("packageManager");

@@ -38,29 +38,29 @@ export class TestExecutionService implements ITestExecutionService {
 		// In case you want to debug the unit test runner, add "--inspect-brk=<port>" as a first element in the array of args.
 		const karmaRunner = this.$childProcess.spawn(process.execPath, [path.join(__dirname, "karma-execution.js")], { stdio: ["inherit", "inherit", "inherit", "ipc"] });
 		const launchKarmaTests = async (karmaData: any) => {
-				this.$logger.trace("## Unit-testing: Parent process received message", karmaData);
-				let port: string;
-				if (karmaData.url) {
-					port = karmaData.url.port;
-					const socketIoJsUrl = `http://${karmaData.url.host}/socket.io/socket.io.js`;
-					const socketIoJs = (await this.$httpClient.httpRequest(socketIoJsUrl)).body;
-					this.$fs.writeFile(path.join(liveSyncInfo.projectDir, TestExecutionService.SOCKETIO_JS_FILE_NAME), socketIoJs);
-				}
+			this.$logger.trace("## Unit-testing: Parent process received message", karmaData);
+			let port: string;
+			if (karmaData.url) {
+				port = karmaData.url.port;
+				const socketIoJsUrl = `http://${karmaData.url.host}/socket.io/socket.io.js`;
+				const socketIoJs = (await this.$httpClient.httpRequest(socketIoJsUrl)).body;
+				this.$fs.writeFile(path.join(liveSyncInfo.projectDir, TestExecutionService.SOCKETIO_JS_FILE_NAME), socketIoJs);
+			}
 
-				if (karmaData.launcherConfig) {
-					const configOptions: IKarmaConfigOptions = JSON.parse(karmaData.launcherConfig);
-					const configJs = this.generateConfig(port, configOptions);
-					this.$fs.writeFile(path.join(liveSyncInfo.projectDir, TestExecutionService.CONFIG_FILE_NAME), configJs);
-				}
+			if (karmaData.launcherConfig) {
+				const configOptions: IKarmaConfigOptions = JSON.parse(karmaData.launcherConfig);
+				const configJs = this.generateConfig(port, configOptions);
+				this.$fs.writeFile(path.join(liveSyncInfo.projectDir, TestExecutionService.CONFIG_FILE_NAME), configJs);
+			}
 
-				// Prepare the project AFTER the TestExecutionService.CONFIG_FILE_NAME file is created in node_modules
-				// so it will be sent to device.
+			// Prepare the project AFTER the TestExecutionService.CONFIG_FILE_NAME file is created in node_modules
+			// so it will be sent to device.
 
-				await this.$runController.run({
-					liveSyncInfo,
-					deviceDescriptors
-				});
-			};
+			await this.$runController.run({
+				liveSyncInfo,
+				deviceDescriptors
+			});
+		};
 
 		karmaRunner.on("message", (karmaData: any) => {
 			this.$logger.trace(`The received message from karma is: `, karmaData);
@@ -80,7 +80,6 @@ export class TestExecutionService implements ITestExecutionService {
 				if (exitCode !== 0) {
 					//End our process with a non-zero exit code
 					const testError = <any>new Error("Test run failed.");
-					testError.suppressCommandHelp = true;
 					reject(testError);
 				} else {
 					resolve();

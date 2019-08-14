@@ -29,7 +29,7 @@ export class PrepareCommand extends ValidatePlatformCommandBase implements IComm
 		await this.$prepareController.prepare(prepareData);
 	}
 
-	public async canExecute(args: string[]): Promise<boolean | ICanExecuteCommandOutput> {
+	public async canExecute(args: string[]): Promise<boolean> {
 		const platform = args[0];
 		const result = await this.$platformCommandParameter.validate(platform) &&
 			await this.$platformValidationService.validateOptions(this.$options.provision, this.$options.teamId, this.$projectData, platform);

@@ -10,9 +10,9 @@ export class IOSSimulatorLogProvider extends EventEmitter implements Mobile.IiOS
 		private $logger: ILogger,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $deviceLogProvider: Mobile.IDeviceLogProvider) {
-			super();
-			this.shouldDispose = true;
-		}
+		super();
+		this.shouldDispose = true;
+	}
 
 	public setShouldDispose(shouldDispose: boolean) {
 		this.shouldDispose = shouldDispose;
@@ -22,7 +22,7 @@ export class IOSSimulatorLogProvider extends EventEmitter implements Mobile.IiOS
 		if (!this.simulatorsLoggingEnabled[deviceId]) {
 			const deviceLogChildProcess: ChildProcess = await this.$iOSSimResolver.iOSSim.getDeviceLogProcess(deviceId, options ? options.predicate : null);
 
-			const action = (data: NodeBuffer | string) => {
+			const action = (data: Buffer | string) => {
 				const message = data.toString();
 				this.$deviceLogProvider.logData(message, this.$devicePlatformsConstants.iOS, deviceId);
 			};

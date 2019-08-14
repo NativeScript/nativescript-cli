@@ -28,7 +28,7 @@ class TestInitCommand implements ICommand {
 		const frameworkToInstall = this.$options.framework ||
 			await this.$prompter.promptForChoice('Select testing framework:', TESTING_FRAMEWORKS);
 		if (TESTING_FRAMEWORKS.indexOf(frameworkToInstall) === -1) {
-			this.$errors.fail(`Unknown or unsupported unit testing framework: ${frameworkToInstall}`);
+			this.$errors.failWithHelp(`Unknown or unsupported unit testing framework: ${frameworkToInstall}.`);
 		}
 
 		const projectFilesExtension = this.$projectData.projectType === ProjectTypes.TsFlavorName || this.$projectData.projectType === ProjectTypes.NgFlavorName ? ".ts" : ".js";
@@ -37,7 +37,7 @@ class TestInitCommand implements ICommand {
 		try {
 			modulesToInstall = this.$testInitializationService.getDependencies(frameworkToInstall);
 		} catch (err) {
-			this.$errors.failWithoutHelp(`Unable to install the unit testing dependencies. Error: '${err.message}'`);
+			this.$errors.fail(`Unable to install the unit testing dependencies. Error: '${err.message}'`);
 		}
 
 		modulesToInstall = modulesToInstall.filter(moduleToInstall => !moduleToInstall.projectType || moduleToInstall.projectType === projectFilesExtension);

@@ -25,7 +25,7 @@ export class AppDebugSocketProxyFactory extends EventEmitter implements IAppDebu
 		const cacheKey = `${device.deviceInfo.identifier}-${appId}`;
 		const existingServer = this.deviceTcpServers[cacheKey];
 		if (existingServer) {
-			this.$errors.failWithoutHelp(`TCP socket proxy is already running for device '${device.deviceInfo.identifier}' and app '${appId}'`);
+			this.$errors.fail(`TCP socket proxy is already running for device '${device.deviceInfo.identifier}' and app '${appId}'`);
 		}
 
 		this.$logger.info("\nSetting up proxy...\nPress Ctrl + C to terminate, or disconnect.\n");
@@ -96,7 +96,7 @@ export class AppDebugSocketProxyFactory extends EventEmitter implements IAppDebu
 		const cacheKey = `${device.deviceInfo.identifier}-${appId}`;
 		const existingServer = this.deviceWebServers[cacheKey];
 		if (existingServer) {
-			this.$errors.failWithoutHelp(`Web socket proxy is already running for device '${device.deviceInfo.identifier}' and app '${appId}'`);
+			this.$errors.fail(`Web socket proxy is already running for device '${device.deviceInfo.identifier}' and app '${appId}'`);
 		}
 
 		// NOTE: We will try to provide command line options to select ports, at least on the localhost.

@@ -28,7 +28,7 @@ export class DeviceAndroidDebugBridge extends AndroidDebugBridge implements Mobi
 			return +match[1];
 		}
 
-		this.$errors.failWithoutHelp("Unable to broadcast to android device:\n%s", result);
+		this.$errors.fail("Unable to broadcast to android device:\n%s", result);
 	}
 
 	protected async composeCommand(params: string[]): Promise<IComposeCommandResult> {

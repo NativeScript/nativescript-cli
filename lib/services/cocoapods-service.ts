@@ -35,7 +35,7 @@ export class CocoaPodsService implements ICocoaPodsService {
 			await this.$childProcess.exec("which pod");
 			await this.$childProcess.exec("which xcodeproj");
 		} catch (e) {
-			this.$errors.failWithoutHelp("CocoaPods or ruby gem 'xcodeproj' is not installed. Run `sudo gem install cocoapods` and try again.");
+			this.$errors.fail("CocoaPods or ruby gem 'xcodeproj' is not installed. Run `sudo gem install cocoapods` and try again.");
 		}
 
 		await this.$xcprojService.verifyXcproj({ shouldFail: true });
@@ -46,7 +46,7 @@ export class CocoaPodsService implements ICocoaPodsService {
 		const podInstallResult = await this.$childProcess.spawnFromEvent(podTool, ["install"], "close", { cwd: projectRoot, stdio: ['pipe', process.stdout, process.stdout] }, { throwError: false });
 
 		if (podInstallResult.exitCode !== 0) {
-			this.$errors.failWithoutHelp(`'${podTool} install' command failed.${podInstallResult.stderr ? " Error is: " + podInstallResult.stderr : ""}`);
+			this.$errors.fail(`'${podTool} install' command failed.${podInstallResult.stderr ? " Error is: " + podInstallResult.stderr : ""}`);
 		}
 
 		if ((await this.$xcprojService.getXcprojInfo()).shouldUseXcproj) {

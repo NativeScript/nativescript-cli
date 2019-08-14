@@ -66,11 +66,11 @@ export class AndroidDebugBridge implements Mobile.IAndroidDebugBridge {
 			let errorData = "";
 			let isSettled = false;
 
-			result.stdout.on("data", (data: NodeBuffer) => {
+			result.stdout.on("data", (data: Buffer) => {
 				adbData += data.toString();
 			});
 
-			result.stderr.on("data", (data: NodeBuffer) => {
+			result.stderr.on("data", (data: Buffer) => {
 				errorData += (data || "").toString();
 			});
 

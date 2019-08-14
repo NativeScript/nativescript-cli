@@ -8,9 +8,9 @@ export class PackageManagerCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [this.$stringParameter];
 
 	public execute(args: string[]): Promise<void> {
-		if (args[0] === 'yarn' ) {
+		if (args[0] === 'yarn') {
 			return this.$userSettingsService.saveSetting("packageManager", "yarn");
-		} else if ( args[0] === 'npm') {
+		} else if (args[0] === 'npm') {
 			return this.$userSettingsService.saveSetting("packageManager", "npm");
 		}
 		return this.$errors.fail(`${args[0]} is not a valid package manager. Only yarn or npm are supported.`);

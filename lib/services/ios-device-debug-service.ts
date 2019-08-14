@@ -46,11 +46,11 @@ export class IOSDeviceDebugService extends DebugServiceBase implements IDeviceDe
 
 	private validateOptions(debugOptions: IDebugOptions) {
 		if (!this.$hostInfo.isWindows && !this.$hostInfo.isDarwin) {
-			this.$errors.failWithoutHelp(`Debugging on iOS devices is not supported for ${platform()} yet.`);
+			this.$errors.fail(`Debugging on iOS devices is not supported for ${platform()} yet.`);
 		}
 
 		if (debugOptions.debugBrk && debugOptions.start) {
-			this.$errors.failWithoutHelp("Expected exactly one of the --debug-brk or --start options.");
+			this.$errors.fail("Expected exactly one of the --debug-brk or --start options.");
 		}
 	}
 

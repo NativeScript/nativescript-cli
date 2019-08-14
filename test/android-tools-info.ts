@@ -2,6 +2,7 @@ import { Yok } from "../lib/common/yok";
 import { AndroidToolsInfo } from "../lib/android-tools-info";
 import { format } from "util";
 import { assert } from "chai";
+import { ErrorsStub } from "./stubs";
 
 describe("androidToolsInfo", () => {
 	let loggedWarnings: string[] = [];
@@ -16,12 +17,8 @@ describe("androidToolsInfo", () => {
 	const createTestInjector = (): IInjector => {
 		const testInjector = new Yok();
 		testInjector.register("childProcess", {});
-		testInjector.register("errors", {
-			failWithoutHelp: (message: string, ...args: any[]): any => {
-				const loggedError = format(message, args);
-				throw new Error(loggedError);
-			}
-		});
+
+		testInjector.register("errors", ErrorsStub);
 		testInjector.register("fs", {});
 		testInjector.register("hostInfo", {});
 		testInjector.register("logger", {

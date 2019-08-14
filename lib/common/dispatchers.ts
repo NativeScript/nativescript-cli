@@ -17,7 +17,7 @@ export class CommandDispatcher implements ICommandDispatcher {
 
 		if (this.$logger.getLevel() === "TRACE") {
 			// CommandDispatcher is called from external CLI's only, so pass the path to their package.json
-			const sysInfo = await this.$sysInfo.getSysInfo({pathToNativeScriptCliPackageJson: path.join(__dirname, "..", "..", "package.json")});
+			const sysInfo = await this.$sysInfo.getSysInfo({ pathToNativeScriptCliPackageJson: path.join(__dirname, "..", "..", "package.json") });
 			this.$logger.trace("System information:");
 			this.$logger.trace(sysInfo);
 		}

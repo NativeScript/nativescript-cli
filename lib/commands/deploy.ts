@@ -19,8 +19,8 @@ export class DeployOnDeviceCommand extends ValidatePlatformCommandBase implement
 		$platformsDataService: IPlatformsDataService,
 		private $deployCommandHelper: DeployCommandHelper,
 		private $androidBundleValidatorHelper: IAndroidBundleValidatorHelper) {
-			super($options, $platformsDataService, $platformValidationService, $projectData);
-			this.$projectData.initializeProjectData();
+		super($options, $platformsDataService, $platformValidationService, $projectData);
+		this.$projectData.initializeProjectData();
 	}
 
 	public async execute(args: string[]): Promise<void> {
@@ -28,7 +28,7 @@ export class DeployOnDeviceCommand extends ValidatePlatformCommandBase implement
 		await this.$deployCommandHelper.deploy(platform);
 	}
 
-	public async canExecute(args: string[]): Promise<boolean | ICanExecuteCommandOutput> {
+	public async canExecute(args: string[]): Promise<boolean> {
 		this.$androidBundleValidatorHelper.validateNoAab();
 		if (!args || !args.length || args.length > 1) {
 			return false;
@@ -39,7 +39,7 @@ export class DeployOnDeviceCommand extends ValidatePlatformCommandBase implement
 		}
 
 		if (this.$mobileHelper.isAndroidPlatform(args[0]) && this.$options.release && (!this.$options.keyStorePath || !this.$options.keyStorePassword || !this.$options.keyStoreAlias || !this.$options.keyStoreAliasPassword)) {
-			this.$errors.fail(ANDROID_RELEASE_BUILD_ERROR_MESSAGE);
+			this.$errors.failWithHelp(ANDROID_RELEASE_BUILD_ERROR_MESSAGE);
 		}
 
 		const result = await super.canExecuteCommandBase(args[0], { validateOptions: true });

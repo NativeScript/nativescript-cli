@@ -30,7 +30,7 @@ export class PlatformCommandHelper implements IPlatformCommandHelper {
 
 			const isPlatformAdded = this.isPlatformAdded(platform, platformPath, projectData);
 			if (isPlatformAdded) {
-				this.$errors.failWithoutHelp(`Platform ${platform} already added`);
+				this.$errors.fail(`Platform ${platform} already added`);
 			}
 
 			await this.$platformController.addPlatform({
@@ -75,7 +75,7 @@ export class PlatformCommandHelper implements IPlatformCommandHelper {
 				if (errorMessage) {
 					this.$logger.error(errorMessage);
 				}
-				this.$errors.failWithoutHelp(err.message);
+				this.$errors.fail(err.message);
 			}
 		}
 	}
@@ -169,7 +169,7 @@ export class PlatformCommandHelper implements IPlatformCommandHelper {
 				this.$errors.fail(`Your current version: ${currentVersion} is higher than the one you're trying to install ${newVersion}.`);
 			}
 		} else {
-			this.$errors.failWithoutHelp("Native Platform cannot be updated.");
+			this.$errors.fail("Native Platform cannot be updated.");
 		}
 	}
 

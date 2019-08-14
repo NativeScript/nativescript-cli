@@ -5,8 +5,8 @@ export class RemovePluginCommand implements ICommand {
 		private $errors: IErrors,
 		private $logger: ILogger,
 		private $projectData: IProjectData) {
-			this.$projectData.initializeProjectData();
-		}
+		this.$projectData.initializeProjectData();
+	}
 
 	public async execute(args: string[]): Promise<void> {
 		return this.$pluginsService.remove(args[0], this.$projectData);
@@ -14,7 +14,7 @@ export class RemovePluginCommand implements ICommand {
 
 	public async canExecute(args: string[]): Promise<boolean> {
 		if (!args[0]) {
-			this.$errors.fail("You must specify plugin name.");
+			this.$errors.failWithHelp("You must specify plugin name.");
 		}
 
 		let pluginNames: string[] = [];
@@ -29,7 +29,7 @@ export class RemovePluginCommand implements ICommand {
 
 		const pluginName = args[0].toLowerCase();
 		if (!_.some(pluginNames, name => name.toLowerCase() === pluginName)) {
-			this.$errors.failWithoutHelp(`Plugin "${pluginName}" is not installed.`);
+			this.$errors.fail(`Plugin "${pluginName}" is not installed.`);
 		}
 
 		return true;

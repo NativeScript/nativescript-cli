@@ -14,7 +14,7 @@ export class PlatformController implements IPlatformController {
 	) { }
 
 	public async addPlatform(addPlatformData: IAddPlatformData): Promise<void> {
-		const [ platform, version ] = addPlatformData.platform.toLowerCase().split("@");
+		const [platform, version] = addPlatformData.platform.toLowerCase().split("@");
 		const projectData = this.$projectDataService.getProjectData(addPlatformData.projectDir);
 		const platformData = this.$platformsDataService.getPlatformData(platform, projectData);
 
@@ -34,7 +34,7 @@ export class PlatformController implements IPlatformController {
 	}
 
 	public async addPlatformIfNeeded(addPlatformData: IAddPlatformData): Promise<void> {
-		const [ platform ] = addPlatformData.platform.toLowerCase().split("@");
+		const [platform] = addPlatformData.platform.toLowerCase().split("@");
 		const projectData = this.$projectDataService.getProjectData(addPlatformData.projectDir);
 		const platformData = this.$platformsDataService.getPlatformData(platform, projectData);
 

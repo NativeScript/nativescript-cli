@@ -59,7 +59,7 @@ export class PreviewAppController extends EventEmitter implements IPreviewAppCon
 		await this.$previewSdkService.initialize(data.projectDir, async (device: Device) => {
 			try {
 				if (!device) {
-					this.$errors.failWithoutHelp("Sending initial preview files without a specified device is not supported.");
+					this.$errors.fail("Sending initial preview files without a specified device is not supported.");
 				}
 
 				if (this.deviceInitializationPromise[device.id]) {

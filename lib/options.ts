@@ -32,7 +32,7 @@ export class Options {
 
 		// Check if the user has explicitly provide --hmr and --release options from command line
 		if (this.initialArgv.release && this.initialArgv.hmr) {
-			this.$errors.failWithoutHelp("The options --release and --hmr cannot be used simultaneously.");
+			this.$errors.fail("The options --release and --hmr cannot be used simultaneously.");
 		}
 
 		if (this.argv.hmr) {
@@ -47,7 +47,6 @@ export class Options {
 	}
 
 	constructor(private $errors: IErrors,
-		private $staticConfig: Config.IStaticConfig,
 		private $settingsService: ISettingsService) {
 
 		this.options = _.extend({}, this.commonOptions, this.globalOptions);
@@ -176,18 +175,18 @@ export class Options {
 
 			if (!_.includes(this.optionsWhiteList, optionName)) {
 				if (!this.isOptionSupported(optionName)) {
-					this.$errors.failWithoutHelp(`The option '${originalOptionName}' is not supported. To see command's options, use '$ ${this.$staticConfig.CLIENT_NAME.toLowerCase()} help ${process.argv[2]}'. To see all commands use '$ ${this.$staticConfig.CLIENT_NAME.toLowerCase()} help'.`);
+					this.$errors.failWithHelp(`The option '${originalOptionName}' is not supported.`);
 				}
 
 				const optionType = this.getOptionType(optionName),
 					optionValue = parsed[optionName];
 
 				if (_.isArray(optionValue) && optionType !== OptionType.Array) {
-					this.$errors.fail("You have set the %s option multiple times. Check the correct command syntax below and try again.", originalOptionName);
+					this.$errors.failWithHelp("The '%s' option requires a single value.", originalOptionName);
 				} else if (optionType === OptionType.String && helpers.isNullOrWhitespace(optionValue)) {
-					this.$errors.failWithoutHelp("The option '%s' requires non-empty value.", originalOptionName);
+					this.$errors.failWithHelp("The option '%s' requires non-empty value.", originalOptionName);
 				} else if (optionType === OptionType.Array && optionValue.length === 0) {
-					this.$errors.failWithoutHelp(`The option '${originalOptionName}' requires one or more values, separated by a space.`);
+					this.$errors.failWithHelp(`The option '${originalOptionName}' requires one or more values, separated by a space.`);
 				}
 			}
 		});

@@ -18,7 +18,7 @@ export class UpdatePlatformCommand implements ICommand {
 
 	public async canExecute(args: string[]): Promise<boolean> {
 		if (!args || args.length === 0) {
-			this.$errors.fail("No platform specified. Please specify platforms to update.");
+			this.$errors.failWithHelp("No platform specified. Please specify platforms to update.");
 		}
 
 		_.each(args, arg => {
@@ -27,7 +27,7 @@ export class UpdatePlatformCommand implements ICommand {
 		});
 
 		for (const arg of args) {
-			const [ platform, versionToBeInstalled ] = arg.split("@");
+			const [platform, versionToBeInstalled] = arg.split("@");
 			const checkEnvironmentRequirementsInput: ICheckEnvironmentRequirementsInput = { platform, options: this.$options };
 			// If version is not specified, we know the command will install the latest compatible Android runtime.
 			// The latest compatible Android runtime supports Java version, so we do not need to pass it here.

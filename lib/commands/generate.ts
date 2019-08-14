@@ -12,7 +12,7 @@ export class GenerateCommand implements ICommand {
 		try {
 			await run(this.executionOptions);
 		} catch (error) {
-			this.$errors.failWithoutHelp(error.message);
+			this.$errors.fail(error.message);
 		}
 	}
 
@@ -25,7 +25,7 @@ export class GenerateCommand implements ICommand {
 
 	private validateExecutionOptions() {
 		if (!this.executionOptions.schematic) {
-			this.$errors.fail(`The generate command requires a schematic name to be specified.`);
+			this.$errors.failWithHelp(`The generate command requires a schematic name to be specified.`);
 		}
 	}
 

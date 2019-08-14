@@ -247,7 +247,7 @@ export class RunController extends EventEmitter implements IRunController {
 			await this.$pluginsService.ensureAllDependenciesAreInstalled(projectData);
 		} catch (err) {
 			this.$logger.trace(err);
-			this.$errors.failWithoutHelp(`Unable to install dependencies. Make sure your package.json is valid and all dependencies are correct. Error is: ${err.message}`);
+			this.$errors.fail(`Unable to install dependencies. Make sure your package.json is valid and all dependencies are correct. Error is: ${err.message}`);
 		}
 	}
 

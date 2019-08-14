@@ -94,7 +94,7 @@ export class AndroidApplicationManager extends ApplicationManagerBase {
 				});
 			} else {
 				await this.$logcatHelper.dump(this.identifier);
-				this.$errors.failWithoutHelp(`Unable to find running "${appIdentifier}" application on device "${deviceIdentifier}".`);
+				this.$errors.fail(`Unable to find running "${appIdentifier}" application on device "${deviceIdentifier}".`);
 			}
 		}
 	}

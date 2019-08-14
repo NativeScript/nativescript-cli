@@ -37,7 +37,7 @@ export class ListiOSApps implements ICommand {
 			this.$logger.info("Seems you don't have any applications yet.");
 		} else {
 			const table: any = createTable(["Application Name", "Bundle Identifier", "In Flight Version"], applications.map(application => {
-				const version = (application && application.versionSets && application.versionSets.length && application.versionSets[0].inFlightVersion &&  application.versionSets[0].inFlightVersion.version) || "";
+				const version = (application && application.versionSets && application.versionSets.length && application.versionSets[0].inFlightVersion && application.versionSets[0].inFlightVersion.version) || "";
 				return [application.name, application.bundleId, version];
 			}));
 

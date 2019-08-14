@@ -16,7 +16,7 @@ const protocolVersion = "0.2.0";
 
 class TestSocket extends LiveSyncSocket {
 	public accomulatedData: Buffer[] = [];
-	public connect () {
+	public connect() {
 		return this;
 	}
 
@@ -75,6 +75,9 @@ const createTestInjector = (socket: INetSocket, fileStreams: IDictionary<NodeJS.
 	testInjector.register("LiveSyncSocket", () => socket);
 	testInjector.register("devicePlatformsConstants", DevicePlatformsConstants);
 	testInjector.register("errors", {
+		failWithHelp: (message: string): void => {
+			throw new Error(message);
+		},
 		fail: (message: string) => {
 			throw new Error(message);
 		},
@@ -102,18 +105,18 @@ const getFileContentSize = (buffer: Buffer, offset: number) => {
 	const fileContentSizeEnd = fileContentSizeBegin + fileContentSizeLength;
 	const fileContentSize = Number(buffer.toString("utf8", fileContentSizeBegin, fileContentSizeEnd));
 
-	return {fileContentSize, fileContentSizeEnd};
+	return { fileContentSize, fileContentSizeEnd };
 };
 
 const getFileContent = (buffer: Buffer, offset: number, contentLength: number) => {
 	const fileContentEnd = offset + Number(contentLength);
 	const fileContent = buffer.toString("utf8", offset, fileContentEnd);
 
-	return {fileContent, fileContentEnd};
+	return { fileContent, fileContentEnd };
 };
 
 const getOperation = (buffer: Buffer) => {
-	const operation = buffer.toString("utf8", 0 , 1);
+	const operation = buffer.toString("utf8", 0, 1);
 
 	return Number(operation);
 };
@@ -136,10 +139,10 @@ const getSendFileData = (buffers: Buffer[]) => {
 	const { fileContentSize, fileContentSizeEnd } = getFileContentSize(buffer, fileNameEnd);
 	const headerHashMatch = compareHash(buffer, 0, fileContentSizeEnd, fileContentSizeEnd);
 	const headerHashEnd = fileContentSizeEnd + 16;
-	const {fileContent, fileContentEnd} = getFileContent(buffer, headerHashEnd, fileContentSize);
+	const { fileContent, fileContentEnd } = getFileContent(buffer, headerHashEnd, fileContentSize);
 	const fileHashMatch = compareHash(buffer, headerHashEnd, fileContentEnd, fileContentEnd);
 
-	return {operation, fileName, fileContent, headerHashMatch, fileHashMatch};
+	return { operation, fileName, fileContent, headerHashMatch, fileHashMatch };
 };
 
 const getRemoveFileData = (buffers: Buffer[]) => {
@@ -148,7 +151,7 @@ const getRemoveFileData = (buffers: Buffer[]) => {
 	const { fileName, fileNameEnd } = getFileName(buffer);
 	const headerHashMatch = compareHash(buffer, 0, fileNameEnd, fileNameEnd);
 
-	return { operation, fileName, headerHashMatch};
+	return { operation, fileName, headerHashMatch };
 };
 
 const getSyncData = (buffers: Buffer[]) => {
@@ -157,7 +160,7 @@ const getSyncData = (buffers: Buffer[]) => {
 	const operationUid = buffer.toString("utf8", 1, 33);
 	const doRefresh = buffer.readUInt8(33);
 
-	return {operationUid, doRefresh, operation};
+	return { operationUid, doRefresh, operation };
 };
 
 const getSyncResponse = (reportCode: number, message: string) => {
@@ -180,11 +183,11 @@ const getHandshakeBuffer = () => {
 	return handshakeBuffer;
 };
 
-const stubSocketEventAttach = (socket: any, sandbox: sinon.SinonSandbox, attachMethod: string, eventName: string, data: any, attachCountForAction: number, emitEvent?: string ) => {
+const stubSocketEventAttach = (socket: any, sandbox: sinon.SinonSandbox, attachMethod: string, eventName: string, data: any, attachCountForAction: number, emitEvent?: string) => {
 	const originalMethod = socket[attachMethod];
 	let attachCount = 0;
 	emitEvent = emitEvent || eventName;
-	sandbox.stub(socket, attachMethod).callsFake(function(event: string) {
+	sandbox.stub(socket, attachMethod).callsFake(function (event: string) {
 		originalMethod.apply(this, arguments);
 		if (eventName === event) {
 			attachCount++;

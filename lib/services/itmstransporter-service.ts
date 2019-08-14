@@ -48,7 +48,7 @@ export class ITMSTransporterService implements IITMSTransporterService {
 
 		if (shouldExtractIpa) {
 			if (!this.$fs.exists(ipaFilePath) || path.extname(ipaFilePath) !== ".ipa") {
-				this.$errors.failWithoutHelp(`Cannot use specified ipa file ${ipaFilePath}. File either does not exist or is not an ipa file.`);
+				this.$errors.fail(`Cannot use specified ipa file ${ipaFilePath}. File either does not exist or is not an ipa file.`);
 			}
 
 			this.$logger.trace("--ipa set - extracting .ipa file to get app's bundle identifier");
@@ -64,16 +64,16 @@ export class ITMSTransporterService implements IITMSTransporterService {
 
 			allFiles = allFiles.filter(f => path.extname(f).toLowerCase() === ".app");
 			if (allFiles.length > 1) {
-				this.$errors.failWithoutHelp("In the .ipa the ITMSTransporter is uploading there is more than one .app file. We don't know which one to upload.");
+				this.$errors.fail("In the .ipa the ITMSTransporter is uploading there is more than one .app file. We don't know which one to upload.");
 			} else if (allFiles.length <= 0) {
-				this.$errors.failWithoutHelp("In the .ipa the ITMSTransporter is uploading there must be at least one .app file.");
+				this.$errors.fail("In the .ipa the ITMSTransporter is uploading there must be at least one .app file.");
 			}
 			const appFile = path.join(payloadDir, allFiles[0]);
 
 			const plistObject = await this.$plistParser.parseFile(path.join(appFile, INFO_PLIST_FILE_NAME));
 			const bundleId = plistObject && plistObject.CFBundleIdentifier;
 			if (!bundleId) {
-				this.$errors.failWithoutHelp(`Unable to determine bundle identifier from ${ipaFilePath}.`);
+				this.$errors.fail(`Unable to determine bundle identifier from ${ipaFilePath}.`);
 			}
 
 			this.$logger.trace(`bundle identifier determined to be ${bundleId}`);
@@ -91,7 +91,7 @@ export class ITMSTransporterService implements IITMSTransporterService {
 		const itmsTransporterPath = path.join(loaderAppContentsPath, ITMSConstants.iTMSDirectoryName, "bin", ITMSConstants.iTMSExecutableName);
 
 		if (!this.$fs.exists(itmsTransporterPath)) {
-			this.$errors.failWithoutHelp('iTMS Transporter not found on this machine - make sure your Xcode installation is not damaged.');
+			this.$errors.fail('iTMS Transporter not found on this machine - make sure your Xcode installation is not damaged.');
 		}
 
 		return itmsTransporterPath;

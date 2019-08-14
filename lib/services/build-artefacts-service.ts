@@ -13,7 +13,7 @@ export class BuildArtefactsService implements IBuildArtefactsService {
 		const packageFile = applicationPackage.packageName;
 
 		if (!packageFile || !this.$fs.exists(packageFile)) {
-			this.$errors.failWithoutHelp(`Unable to find built application. Try 'tns build ${platformData.platformNameLowerCase}'.`);
+			this.$errors.fail(`Unable to find built application. Try 'tns build ${platformData.platformNameLowerCase}'.`);
 		}
 
 		return packageFile;

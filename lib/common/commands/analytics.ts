@@ -10,7 +10,7 @@ export class AnalyticsCommandParameter implements ICommandParameter {
 			case "":
 				return true;
 			default:
-				this.$errors.fail(`The value '${validationValue}' is not valid. Valid values are 'enable', 'disable' and 'status'.`);
+				this.$errors.failWithHelp(`The value '${validationValue}' is not valid. Valid values are 'enable', 'disable' and 'status'.`);
 		}
 	}
 }

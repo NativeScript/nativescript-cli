@@ -140,7 +140,7 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 			await this.migrateDependencies(projectData, platforms, allowInvalidVersions);
 		} catch (error) {
 			this.restoreBackup(MigrateController.folders, backupDir, projectData.projectDir);
-			this.$errors.failWithoutHelp(`${MigrateController.migrateFailMessage} The error is: ${error}`);
+			this.$errors.fail(`${MigrateController.migrateFailMessage} The error is: ${error}`);
 		}
 
 		this.$logger.info(MigrateController.MIGRATE_FINISH_MESSAGE);
@@ -192,7 +192,7 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 	public async validate({ projectDir, platforms, allowInvalidVersions = true }: IMigrationData): Promise<void> {
 		const shouldMigrate = await this.shouldMigrate({ projectDir, platforms, allowInvalidVersions });
 		if (shouldMigrate) {
-			this.$errors.failWithoutHelp(MigrateController.UNABLE_TO_MIGRATE_APP_ERROR);
+			this.$errors.fail(MigrateController.UNABLE_TO_MIGRATE_APP_ERROR);
 		}
 	}
 
@@ -318,7 +318,7 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 			if (dependency.replaceWith) {
 				const replacementDep = _.find(this.migrationDependencies, migrationPackage => migrationPackage.packageName === dependency.replaceWith);
 				if (!replacementDep) {
-					this.$errors.failWithoutHelp("Failed to find replacement dependency.");
+					this.$errors.fail("Failed to find replacement dependency.");
 				}
 
 				this.$logger.info(`Replacing '${dependency.packageName}' with '${replacementDep.packageName}'.`);
