@@ -24,7 +24,7 @@ export class AppleLogin implements ICommand {
 
 		const user = await this.$applePortalSessionService.createUserSession({ username, password });
 		if (!user.areCredentialsValid) {
-			this.$errors.failWithoutHelp(`Invalid username and password combination. Used '${username}' as the username.`);
+			this.$errors.fail(`Invalid username and password combination. Used '${username}' as the username.`);
 		}
 
 		const output = Buffer.from(user.userSessionCookie).toString("base64");

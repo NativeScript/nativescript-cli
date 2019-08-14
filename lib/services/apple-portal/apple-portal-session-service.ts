@@ -98,13 +98,13 @@ export class ApplePortalSessionService implements IApplePortalSessionService {
 				result.isTwoFactorAuthenticationEnabled = statusCode === 409;
 
 				if (result.isTwoFactorAuthenticationEnabled && opts && opts.requireApplicationSpecificPassword && !opts.applicationSpecificPassword) {
-					this.$errors.failWithoutHelp(`Your account has two-factor authentication enabled but --appleApplicationSpecificPassword option is not provided.
+					this.$errors.fail(`Your account has two-factor authentication enabled but --appleApplicationSpecificPassword option is not provided.
 To generate an application-specific password, please go to https://appleid.apple.com/account/manage.
 This password will be used for the iTunes Transporter, which is used to upload your application.`);
 				}
 
 				if (result.isTwoFactorAuthenticationEnabled && opts && opts.requireInteractiveConsole && !isInteractive()) {
-					this.$errors.failWithoutHelp(`Your account has two-factor authentication enabled, but your console is not interactive.
+					this.$errors.fail(`Your account has two-factor authentication enabled, but your console is not interactive.
 For more details how to set up your environment, please execute "tns publish ios --help".`);
 				}
 
@@ -192,7 +192,7 @@ For more details how to set up your environment, please execute "tns publish ios
 
 			this.$applePortalCookieService.updateUserSessionCookie(authTrustResponse.headers["set-cookie"]);
 		} else {
-			this.$errors.failWithoutHelp(`Although response from Apple indicated activated Two-step Verification or Two-factor Authentication, NativeScript CLI don't know how to handle this response: ${data}`);
+			this.$errors.fail(`Although response from Apple indicated activated Two-step Verification or Two-factor Authentication, NativeScript CLI don't know how to handle this response: ${data}`);
 		}
 	}
 }

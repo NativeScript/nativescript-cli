@@ -37,7 +37,7 @@ export class ListiOSApps implements ICommand {
 			sessionBase64: this.$options.appleSessionBase64,
 		});
 		if (!user.areCredentialsValid) {
-			this.$errors.failWithoutHelp(`Invalid username and password combination. Used '${username}' as the username.`);
+			this.$errors.fail(`Invalid username and password combination. Used '${username}' as the username.`);
 		}
 
 		const applications = await this.$applePortalApplicationService.getApplications(user);

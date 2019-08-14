@@ -46,7 +46,7 @@ export class PublishIOS implements ICommand {
 			requireApplicationSpecificPassword: true
 		});
 		if (!user.areCredentialsValid) {
-			this.$errors.failWithoutHelp(`Invalid username and password combination. Used '${username}' as the username.`);
+			this.$errors.fail(`Invalid username and password combination. Used '${username}' as the username.`);
 		}
 
 		if (!mobileProvisionIdentifier && !ipaFilePath) {
