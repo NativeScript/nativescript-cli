@@ -71,6 +71,13 @@ class AppStore {
 						return this.iOSPlatformData;
 					}
 				},
+				"applePortalSessionService": {
+					createUserSession: () => {
+						return {
+							areCredentialsValid: true
+						};
+					}
+				}
 			}
 		});
 
@@ -120,8 +127,8 @@ class AppStore {
 		this.itmsTransporterService.upload = (options: IITMSData) => {
 			this.itmsTransporterServiceUploadCalls++;
 			chai.assert.equal(options.ipaFilePath, "/Users/person/git/MyProject/platforms/ios/archive/MyProject.ipa");
-			chai.assert.equal(options.username, AppStore.itunesconnect.user);
-			chai.assert.equal(options.password, AppStore.itunesconnect.pass);
+			chai.assert.equal(options.credentials.username, AppStore.itunesconnect.user);
+			chai.assert.equal(options.credentials.password, AppStore.itunesconnect.pass);
 			chai.assert.equal(options.verboseLogging, false);
 			return Promise.resolve();
 		};
