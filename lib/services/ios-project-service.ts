@@ -238,7 +238,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 		if (path.extname(frameworkPath) === ".xcframework") {
 			let isDynamic = true;
-			const subDirs = this.$fs.readDirectory(frameworkPath).filter(entry => this.$fs.getFsStats(entry).isDirectory());
+			const subDirs = this.$fs.readDirectory(frameworkPath).filter(entry => this.$fs.getFsStats(path.join(frameworkPath, entry)).isDirectory());
 			for (const subDir of subDirs) {
 				const singlePlatformFramework = path.join(subDir, frameworkName + ".framework");
 				if (this.$fs.exists(singlePlatformFramework)) {
