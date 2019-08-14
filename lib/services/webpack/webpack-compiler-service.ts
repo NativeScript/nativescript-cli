@@ -221,33 +221,25 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 		return args;
 	}
 
-	private getUpdatedEmittedFiles(emittedFiles: string[], chunkFiles: string[]) {
-		let fallbackFiles: string[] = [];
-		let hotHash;
-		let result = emittedFiles.slice();
-		const hotUpdateScripts = emittedFiles.filter(x => x.endsWith('.hot-update.js'));
-		if (chunkFiles && chunkFiles.length) {
-			result = result.filter(file => chunkFiles.indexOf(file) === -1);
-		}
-		hotUpdateScripts.forEach(hotUpdateScript => {
-			const { name, hash } = this.parseHotUpdateChunkName(hotUpdateScript);
-			hotHash = hash;
-			// remove bundle/vendor.js files if there's a bundle.XXX.hot-update.js or vendor.XXX.hot-update.js
-			result = result.filter(file => file !== `${name}.js`);
-		});
-		// if applying of hot update fails, we must fallback to the full files
-		fallbackFiles = emittedFiles.filter(file => hotUpdateScripts.indexOf(file) === -1);
+	private getUpdatedEmittedFiles(allEmittedFiles: string[], chunkFiles: string[]) {
+		const hotHash = this.getCurrentHotUpdateHash(allEmittedFiles);
+		const emittedHotUpdateFiles = _.difference(allEmittedFiles, chunkFiles);
 
-		return { emittedFiles: result, fallbackFiles, hash: hotHash };
+		return { emittedFiles: emittedHotUpdateFiles, fallbackFiles: chunkFiles, hash: hotHash };
 	}
 
-	private parseHotUpdateChunkName(name: string) {
-		const matcher = /^(.+)\.(.+)\.hot-update/gm;
-		const matches = matcher.exec(name);
-		return {
-			name: matches[1] || "",
-			hash: matches[2] || "",
-		};
+	private getCurrentHotUpdateHash(emittedFiles: string[]) {
+		let hotHash;
+		const hotUpdateScripts = emittedFiles.filter(x => x.endsWith('.hot-update.js'));
+		if (hotUpdateScripts && hotUpdateScripts.length) {
+			// the hash is the same for each hot update in the current compilation
+			const hotUpdateName = hotUpdateScripts[0];
+			const matcher = /^(.+)\.(.+)\.hot-update/gm;
+			const matches = matcher.exec(hotUpdateName);
+			hotHash = matches[2];
+		}
+
+		return hotHash || "";
 	}
 
 	private async stopWebpackForPlatform(platform: string) {
