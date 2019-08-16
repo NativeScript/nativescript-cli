@@ -6,6 +6,7 @@ import { EmulatorHelper } from "../../../../mobile/emulator-helper";
 import { assert } from "chai";
 import { NOT_RUNNING_EMULATOR_STATUS, RUNNING_EMULATOR_STATUS, AndroidVirtualDevice } from '../../../../constants';
 import { CommonLoggerStub } from "../../stubs";
+import { DeviceConnectionType } from "../../../../../constants";
 
 const error = "some test error";
 const enumerateGuestPropertiesOutput = `Name: hardware_opengl, value: 1, timestamp: 1519225339826058000, flags:
@@ -223,6 +224,7 @@ function getAvailableEmulatorData(data: { displayName: string, imageIdentifier: 
 		platform: "android",
 		status: NOT_RUNNING_EMULATOR_STATUS,
 		type: "Emulator",
+		connectionTypes: [DeviceConnectionType.Local],
 		vendor: "Genymotion",
 		version: data.version
 	};
@@ -240,6 +242,7 @@ function getRunningEmulatorData(data: { displayName: string, imageIdentifier: st
 		errorHelp: null,
 		isTablet: false,
 		type: 'Device',
+		connectionTypes: [DeviceConnectionType.Local],
 		platform: 'android'
 	};
 }

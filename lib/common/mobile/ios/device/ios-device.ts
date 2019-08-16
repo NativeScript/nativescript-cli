@@ -43,8 +43,16 @@ export class IOSDevice extends IOSDeviceBase {
 			model: this.$iOSDeviceProductNameMapper.resolveProductName(productType),
 			version: deviceActionInfo.productVersion,
 			color: deviceActionInfo.deviceColor,
-			activeArchitecture: this.getActiveArchitecture(productType)
+			activeArchitecture: this.getActiveArchitecture(productType),
+			connectionTypes: []
 		};
+
+		if (deviceActionInfo.isUSBConnected) {
+			this.deviceInfo.connectionTypes.push(constants.DeviceConnectionType.USB);
+		}
+		if (deviceActionInfo.isWiFiConnected) {
+			this.deviceInfo.connectionTypes.push(constants.DeviceConnectionType.Wifi);
+		}
 	}
 
 	public get isEmulator(): boolean {

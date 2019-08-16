@@ -4022,19 +4022,12 @@
       "integrity": "sha1-EEqOSqym09jNFXqO+L+rLXo//bY="
     },
     "ios-device-lib": {
-      "version": "0.6.0",
-      "resolved": "https://registry.npmjs.org/ios-device-lib/-/ios-device-lib-0.6.0.tgz",
-      "integrity": "sha512-9mafW1q9a2oPWtyK+I1v+njvq+8VQy1kRB13i3lIBQZyVd9F9c95+PhfLZ0lz2NXwW5n04zXAA9uNib6YnZVTg==",
+      "version": "0.7.0",
+      "resolved": "https://registry.npmjs.org/ios-device-lib/-/ios-device-lib-0.7.0.tgz",
+      "integrity": "sha512-Ni6fDoV4TOlzLpg59OfDm23BN/EO0XMtDCLD5xQGp4Squ8qomStRxymx7f/rZgkhviARHSHuLmbQCvYr0uq4ag==",
       "requires": {
         "bufferpack": "0.0.6",
         "node-uuid": "1.4.7"
-      },
-      "dependencies": {
-        "node-uuid": {
-          "version": "1.4.7",
-          "resolved": "https://registry.npmjs.org/node-uuid/-/node-uuid-1.4.7.tgz",
-          "integrity": "sha1-baWhdmjEs91ZYjvaEc9/pMH2Cm8="
-        }
       }
     },
     "ios-mobileprovision-finder": {
@@ -5099,6 +5092,19 @@
             "supports-color": "^5.3.0"
           }
         },
+        "cli-table": {
+          "version": "0.3.1",
+          "resolved": "https://registry.npmjs.org/cli-table/-/cli-table-0.3.1.tgz",
+          "integrity": "sha1-9TsFJmqLGguTSz0IIebi3FkUriM=",
+          "requires": {
+            "colors": "1.0.3"
+          }
+        },
+        "colors": {
+          "version": "1.0.3",
+          "resolved": "https://registry.npmjs.org/colors/-/colors-1.0.3.tgz",
+          "integrity": "sha1-BDP0TYCWgP3rYO0mDxsMJi6CpAs="
+        },
         "supports-color": {
           "version": "5.5.0",
           "resolved": "https://registry.npmjs.org/supports-color/-/supports-color-5.5.0.tgz",
@@ -5619,6 +5625,11 @@
         "json-parse-better-errors": "^1.0.0",
         "safe-buffer": "^5.1.1"
       }
+    },
+    "node-uuid": {
+      "version": "1.4.7",
+      "resolved": "https://registry.npmjs.org/node-uuid/-/node-uuid-1.4.7.tgz",
+      "integrity": "sha1-baWhdmjEs91ZYjvaEc9/pMH2Cm8="
     },
     "nopt": {
       "version": "3.0.6",

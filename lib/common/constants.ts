@@ -44,6 +44,7 @@ export class HmrConstants {
 
 export class DeviceDiscoveryEventNames {
 	static DEVICE_FOUND = "deviceFound";
+	static DEVICE_UPDATED = "deviceUpdated";
 	static DEVICE_LOST = "deviceLost";
 }
 

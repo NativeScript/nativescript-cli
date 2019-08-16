@@ -753,12 +753,14 @@ interface IAppDebugSocketProxyFactory extends NodeJS.EventEmitter {
 }
 
 interface IiOSNotification extends NodeJS.EventEmitter {
-	getAttachRequest(projectId: string, deviceId: string): string;
-	getReadyForAttach(projectId: string): string;
+	getAttachRequest(appId: string, deviceId: string): string;
+	getReadyForAttach(appId: string): string;
+	getRefreshRequest(appId: string): string;
 }
 
 interface IiOSSocketRequestExecutor {
 	executeAttachRequest(device: Mobile.IiOSDevice, timeout: number, projectId: string): Promise<void>;
+	executeRefreshRequest(device: Mobile.IiOSDevice, appId: string): Promise<void>;
 }
 
 /**

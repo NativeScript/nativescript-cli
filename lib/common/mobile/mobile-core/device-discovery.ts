@@ -4,12 +4,32 @@ import { DeviceDiscoveryEventNames } from "../../constants";
 export class DeviceDiscovery extends EventEmitter implements Mobile.IDeviceDiscovery {
 	private devices: IDictionary<Mobile.IDevice> = {};
 
-	public addDevice(device: Mobile.IDevice) {
+	public async startLookingForDevices(): Promise<void> {
+		return;
+	}
+
+	protected getDevice(deviceIdentifier: string) {
+		const device = this.devices[deviceIdentifier];
+		return device;
+	}
+
+	protected addDevice(device: Mobile.IDevice) {
 		this.devices[device.deviceInfo.identifier] = device;
 		this.raiseOnDeviceFound(device);
 	}
 
-	public removeDevice(deviceIdentifier: string) {
+	protected updateDeviceInfo(device: Mobile.IDevice) {
+		const existingDevice = this.devices[device.deviceInfo.identifier];
+		if (existingDevice) {
+			_.assign(existingDevice.deviceInfo, device.deviceInfo);
+		} else {
+			this.devices[device.deviceInfo.identifier] = device;
+		}
+
+		this.raiseOnDeviceUpdated(device);
+	}
+
+	protected removeDevice(deviceIdentifier: string) {
 		const device = this.devices[deviceIdentifier];
 		if (!device) {
 			return;
@@ -18,12 +38,12 @@ export class DeviceDiscovery extends EventEmitter implements Mobile.IDeviceDisco
 		this.raiseOnDeviceLost(device);
 	}
 
-	public async startLookingForDevices(): Promise<void> {
-		return;
-	}
-
 	private raiseOnDeviceFound(device: Mobile.IDevice) {
 		this.emit(DeviceDiscoveryEventNames.DEVICE_FOUND, device);
+	}
+
+	private raiseOnDeviceUpdated(device: Mobile.IDevice) {
+		this.emit(DeviceDiscoveryEventNames.DEVICE_UPDATED, device);
 	}
 
 	private raiseOnDeviceLost(device: Mobile.IDevice) {

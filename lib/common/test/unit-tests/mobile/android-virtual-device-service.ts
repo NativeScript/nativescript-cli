@@ -5,6 +5,7 @@ import { Yok } from "../../../yok";
 import { assert } from "chai";
 import * as path from "path";
 import { AndroidVirtualDevice, NOT_RUNNING_EMULATOR_STATUS, RUNNING_EMULATOR_STATUS } from '../../../constants';
+import { DeviceConnectionType } from "../../../../constants";
 
 const avdManagerOutput = `Parsing /Users/havaluova/Library/Android/sdk/build-tools/27.0.3/package.xmlParsing /Users/havaluova/Library/Android/sdk/build-tools/28.0.0/package.xmlParsing /Users/havaluova/Library/Android/sdk/emulator/package.xmlParsing /Users/havaluova/Library/Android/sdk/extras/android/m2repository/package.xmlParsing /Users/havaluova/Library/Android/sdk/extras/google/google_play_services/package.xmlParsing /Users/havaluova/Library/Android/sdk/extras/google/m2repository/package.xmlParsing /Users/havaluova/Library/Android/sdk/extras/intel/Hardware_Accelerated_Execution_Manager/package.xmlParsing /Users/havaluova/Library/Android/sdk/extras/m2repository/com/android/support/constraint/constraint-layout-solver/1.0.2/package.xmlParsing /Users/havaluova/Library/Android/sdk/extras/m2repository/com/android/support/constraint/constraint-layout/1.0.2/package.xmlParsing /Users/havaluova/Library/Android/sdk/patcher/v4/package.xmlParsing /Users/havaluova/Library/Android/sdk/platform-tools/package.xmlParsing /Users/havaluova/Library/Android/sdk/platforms/android-27/package.xmlParsing /Users/havaluova/Library/Android/sdk/platforms/android-28/package.xmlParsing /Users/havaluova/Library/Android/sdk/sources/android-27/package.xmlParsing /Users/havaluova/Library/Android/sdk/system-images/android-27/google_apis_playstore/x86/package.xmlParsing /Users/havaluova/Library/Android/sdk/system-images/android-28/google_apis/x86/package.xmlParsing /Users/havaluova/Library/Android/sdk/system-images/android-28/google_apis_playstore/x86/package.xmlParsing /Users/havaluova/Library/Android/sdk/tools/package.xmlAvailable Android Virtual Devices:
 	Name: Nexus_5_API_27
@@ -95,6 +96,7 @@ function getAvailableEmulatorData(data: { displayName: string, imageIdentifier: 
 		platform: "android",
 		status: NOT_RUNNING_EMULATOR_STATUS,
 		type: "Emulator",
+		connectionTypes: [DeviceConnectionType.Local],
 		vendor: "Avd",
 		version: data.version
 	};
@@ -112,6 +114,7 @@ function getRunningEmulatorData(data: { displayName: string, imageIdentifier: st
 		errorHelp: null,
 		isTablet: false,
 		type: 'Device',
+		connectionTypes: [DeviceConnectionType.Local],
 		platform: 'android'
 	};
 }

@@ -6,6 +6,7 @@ import { DeviceDiscoveryEventNames, CONNECTED_STATUS } from "../../../constants"
 import { DevicePlatformsConstants } from "../../../mobile/device-platforms-constants";
 import { ErrorsStub, CommonLoggerStub, HooksServiceStub, LockServiceStub } from "../stubs";
 import { FileSystemStub, ChildProcessStub } from "../../../../../test/stubs";
+import { DeviceConnectionType } from "../../../../constants";
 
 let currentlyRunningSimulators: Mobile.IiSimDevice[];
 
@@ -60,7 +61,8 @@ function getDeviceInfo(simulator: Mobile.IiSimDevice): Mobile.IDeviceInfo {
 		status: CONNECTED_STATUS,
 		errorHelp: null,
 		isTablet: false,
-		type: 'Emulator'
+		type: 'Emulator',
+		connectionTypes: [DeviceConnectionType.Local]
 	};
 }
 
@@ -126,7 +128,8 @@ describe("ios-simulator-discovery", () => {
 			status: CONNECTED_STATUS,
 			errorHelp: null,
 			isTablet: false,
-			type: 'Emulator'
+			type: 'Emulator',
+			connectionTypes: [DeviceConnectionType.Local]
 		};
 
 		defaultRunningSimulator = {

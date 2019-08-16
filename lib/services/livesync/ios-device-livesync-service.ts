@@ -1,19 +1,41 @@
 import * as constants from "../../constants";
 import * as minimatch from "minimatch";
+import { cache } from "../../common/decorators";
+import { IOS_APP_CRASH_LOG_REG_EXP } from "../../common/constants";
 import * as net from "net";
 import { DeviceLiveSyncServiceBase } from "./device-livesync-service-base";
 import { performanceLog } from "../../common/decorators";
+import * as semver from "semver";
 
 let currentPageReloadId = 0;
 
 export class IOSDeviceLiveSyncService extends DeviceLiveSyncServiceBase implements INativeScriptDeviceLiveSyncService {
+	public static SUCCESS_LIVESYNC_LOG_REGEX = /Successfully refreshed the application with RefreshRequest./;
+	public static FAIL_LIVESYNC_LOG_REGEX = /Failed to refresh the application with RefreshRequest./;
+	private static MIN_RUNTIME_VERSION_WITH_REFRESH_NOTIFICATION = "6.1.0";
+	private _isLiveSyncSuccessful: boolean = null;
+
 	private socket: net.Socket;
 
 	constructor(
 		private $logger: ILogger,
+		private $iOSSocketRequestExecutor: IiOSSocketRequestExecutor,
+		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
+		private $lockService: ILockService,
+		private $logParserService: ILogParserService,
 		protected platformsDataService: IPlatformsDataService,
+		private $platformCommandHelper: IPlatformCommandHelper,
 		protected device: Mobile.IiOSDevice) {
 		super(platformsDataService, device);
+
+	}
+
+	private canRefreshWithNotification(projectData: IProjectData): boolean {
+		const currentRuntimeVersion = this.$platformCommandHelper.getCurrentPlatformVersion(this.$devicePlatformsConstants.iOS, projectData);
+		const canRefresh = semver.gte(
+			semver.coerce(currentRuntimeVersion), IOSDeviceLiveSyncService.MIN_RUNTIME_VERSION_WITH_REFRESH_NOTIFICATION);
+
+		return canRefresh;
 	}
 
 	private async setupSocketIfNeeded(projectData: IProjectData): Promise<boolean> {
@@ -53,7 +75,8 @@ export class IOSDeviceLiveSyncService extends DeviceLiveSyncServiceBase implemen
 			shouldRestart = true;
 		} else {
 			const canExecuteFastSync = this.canExecuteFastSyncForPaths(liveSyncInfo, localToDevicePaths, projectData, deviceAppData.platform);
-			if (!canExecuteFastSync || !await this.setupSocketIfNeeded(projectData)) {
+			const isRefreshConnectionSetup = this.canRefreshWithNotification(projectData) || await this.setupSocketIfNeeded(projectData);
+			if (!canExecuteFastSync || !isRefreshConnectionSetup) {
 				shouldRestart = true;
 			}
 		}
@@ -72,14 +95,44 @@ export class IOSDeviceLiveSyncService extends DeviceLiveSyncServiceBase implemen
 		const otherFiles = _.difference(localToDevicePaths, _.concat(scriptFiles, scriptRelatedFiles));
 
 		try {
-			if (await this.setupSocketIfNeeded(projectData)) {
-				await this.reloadPage(otherFiles);
-			} else {
-				didRefresh = false;
+			if (otherFiles.length) {
+				didRefresh = await this.refreshApplicationCore(projectData);
 			}
 		} catch (e) {
 			didRefresh = false;
 		}
+
+		return didRefresh;
+	}
+
+	private async refreshApplicationCore(projectData: IProjectData) {
+		let didRefresh = true;
+		if (this.canRefreshWithNotification(projectData)) {
+			didRefresh = await this.refreshWithNotification(projectData, didRefresh);
+		} else {
+			if (await this.setupSocketIfNeeded(projectData)) {
+				await this.reloadPage();
+			} else {
+				didRefresh = false;
+			}
+		}
+
+		return didRefresh;
+	}
+
+	private async refreshWithNotification(projectData: IProjectData, didRefresh: boolean) {
+		await this.$lockService.executeActionWithLock(async () => {
+			this._isLiveSyncSuccessful = null;
+			this.attachToLiveSyncLogs();
+			// TODO: start the application only when needed when we know the app state
+			await this.device.applicationManager.startApplication({
+				appId: projectData.projectIdentifiers.ios,
+				projectName: projectData.projectName,
+				projectDir: projectData.projectDir
+			});
+			await this.$iOSSocketRequestExecutor.executeRefreshRequest(this.device, projectData.projectIdentifiers.ios);
+			didRefresh = await this.isLiveSyncSuccessful();
+		}, `ios-device-livesync-${this.device.deviceInfo.identifier}-${projectData.projectIdentifiers.ios}.lock`);
 
 		return didRefresh;
 	}
@@ -93,18 +146,65 @@ export class IOSDeviceLiveSyncService extends DeviceLiveSyncServiceBase implemen
 		});
 	}
 
-	private async reloadPage(localToDevicePaths: Mobile.ILocalToDevicePathData[]): Promise<void> {
-		if (localToDevicePaths.length) {
-			const message = JSON.stringify({
-				method: "Page.reload",
-				params: {
-					ignoreCache: false
-				},
-				id: ++currentPageReloadId
-			});
+	@cache()
+	private attachToLiveSyncLogs(): void {
+		this.$logParserService.addParseRule({
+			regex: IOSDeviceLiveSyncService.SUCCESS_LIVESYNC_LOG_REGEX,
+			handler: this.onSuccessfulLiveSync.bind(this),
+			name: "successfulLiveSync",
+			platform: this.$devicePlatformsConstants.iOS.toLowerCase()
+		});
+		this.$logParserService.addParseRule({
+			regex: IOSDeviceLiveSyncService.FAIL_LIVESYNC_LOG_REGEX,
+			handler: this.onFailedLiveSync.bind(this),
+			name: "failedLiveSync",
+			platform: this.$devicePlatformsConstants.iOS.toLowerCase()
+		});
+		this.$logParserService.addParseRule({
+			regex: IOS_APP_CRASH_LOG_REG_EXP,
+			handler: this.onFailedLiveSync.bind(this),
+			name: "liveSyncCrash",
+			platform: this.$devicePlatformsConstants.iOS.toLowerCase()
+		});
+	}
 
-			await this.sendMessage(message);
-		}
+	private onSuccessfulLiveSync(): void {
+		this._isLiveSyncSuccessful = true;
+	}
+
+	private onFailedLiveSync(): void {
+		this._isLiveSyncSuccessful = false;
+	}
+
+	private async isLiveSyncSuccessful(): Promise<boolean> {
+		return new Promise<boolean>((resolve, reject) => {
+			const retryInterval = 500;
+			let retryCount = 60 * 1000 / retryInterval;
+
+			const interval = setInterval(() => {
+				if (this._isLiveSyncSuccessful !== null) {
+					clearInterval(interval);
+					resolve(this._isLiveSyncSuccessful);
+				} else if (retryCount === 0) {
+					clearInterval(interval);
+					resolve(false);
+				} else {
+					retryCount--;
+				}
+			}, retryInterval);
+		});
+	}
+
+	private async reloadPage(): Promise<void> {
+		const message = JSON.stringify({
+			method: "Page.reload",
+			params: {
+				ignoreCache: false
+			},
+			id: ++currentPageReloadId
+		});
+
+		await this.sendMessage(message);
 	}
 
 	private attachEventHandlers(): void {

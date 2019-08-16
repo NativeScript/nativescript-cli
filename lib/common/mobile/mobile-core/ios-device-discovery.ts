@@ -33,16 +33,26 @@ export class IOSDeviceDiscovery extends DeviceDiscovery {
 
 		if (this.validateiTunes()) {
 			await this.$iosDeviceOperations.startLookingForDevices((deviceInfo: IOSDeviceLib.IDeviceActionInfo) => {
-				this.createAndAddDevice(deviceInfo);
+				const device = this.createDevice(deviceInfo);
+				this.addDevice(device);
+			}, (deviceInfo: IOSDeviceLib.IDeviceActionInfo) => {
+				const currentDevice = this.getDevice(deviceInfo.deviceId);
+				if (currentDevice) {
+					const device = this.createDevice(deviceInfo);
+					this.updateDeviceInfo(device);
+				} else {
+					const device = this.createDevice(deviceInfo);
+					this.addDevice(device);
+				}
 			}, (deviceInfo: IOSDeviceLib.IDeviceActionInfo) => {
 				this.removeDevice(deviceInfo.deviceId);
 			}, options);
 		}
 	}
 
-	private createAndAddDevice(deviceActionInfo: IOSDeviceLib.IDeviceActionInfo): void {
+	private createDevice(deviceActionInfo: IOSDeviceLib.IDeviceActionInfo): IOSDevice {
 		const device = this.$injector.resolve(IOSDevice, { deviceActionInfo: deviceActionInfo });
-		this.addDevice(device);
+		return device;
 	}
 }
 

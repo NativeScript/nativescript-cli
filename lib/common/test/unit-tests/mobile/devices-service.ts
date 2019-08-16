@@ -1,7 +1,7 @@
 import { DevicesService } from "../../../mobile/mobile-core/devices-service";
 import { Yok } from "../../../yok";
 import { EmulatorDiscoveryNames, DeviceDiscoveryEventNames, CONNECTED_STATUS, UNREACHABLE_STATUS } from "../../../constants";
-import { DebugCommandErrors } from "../../../../constants";
+import { DebugCommandErrors, DeviceConnectionType } from "../../../../constants";
 
 import { EventEmitter } from "events";
 import { assert, use } from "chai";
@@ -330,6 +330,7 @@ describe("devicesService", () => {
 			errorHelp: null,
 			isTablet: false,
 			type: "type",
+			connectionTypes: [DeviceConnectionType.Local],
 			platform: "android"
 		};
 
