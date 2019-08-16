@@ -4022,9 +4022,9 @@
       "integrity": "sha1-EEqOSqym09jNFXqO+L+rLXo//bY="
     },
     "ios-device-lib": {
-      "version": "0.5.2",
-      "resolved": "https://registry.npmjs.org/ios-device-lib/-/ios-device-lib-0.5.2.tgz",
-      "integrity": "sha512-OSUcEkyS5AnoLs9g+oONIyPUOFHJNaSR93aep9QeLN6xkaY+fNqfUIIj45AQZDaFUpDcWiqiWr7gMOImqNcoYQ==",
+      "version": "0.6.0",
+      "resolved": "https://registry.npmjs.org/ios-device-lib/-/ios-device-lib-0.6.0.tgz",
+      "integrity": "sha512-9mafW1q9a2oPWtyK+I1v+njvq+8VQy1kRB13i3lIBQZyVd9F9c95+PhfLZ0lz2NXwW5n04zXAA9uNib6YnZVTg==",
       "requires": {
         "bufferpack": "0.0.6",
         "node-uuid": "1.4.7"
