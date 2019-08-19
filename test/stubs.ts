@@ -36,7 +36,6 @@ export class LoggerStub implements ILogger {
 
 	printMarkdown(message: string): void { }
 
-	out(formatStr?: any, ...args: any[]): void { }
 	write(...args: any[]): void { }
 	printInfoMessageOnSameLine(message: string): void { }
 	async printMsgWithTimeout(message: string, timeout: number): Promise<void> { }

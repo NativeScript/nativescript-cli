@@ -19,11 +19,14 @@ export class LockServiceStub implements ILockService {
 }
 
 export class CommonLoggerStub implements ILogger {
+	loggerLevel: string = "";
 	initialize(opts?: ILoggerOptions): void { }
 	initializeCliLogger(): void { }
-	getLevel(): string { return undefined; }
+	getLevel(): string { return this.loggerLevel; }
 	fatal(...args: any[]): void { }
-	error(...args: any[]): void { }
+	error(...args: any[]): void {
+		this.errorOutput += util.format.apply(null, args) + "\n";
+	}
 	warn(...args: any[]): void {
 		this.output += util.format.apply(null, args) + "\n";
 	}
@@ -37,6 +40,7 @@ export class CommonLoggerStub implements ILogger {
 
 	public output = "";
 	public traceOutput = "";
+	public errorOutput = "";
 
 	prepare(item: any): string {
 		return "";
@@ -46,7 +50,6 @@ export class CommonLoggerStub implements ILogger {
 		this.output += message;
 	}
 
-	out(formatStr?: any, ...args: any[]): void { }
 	write(...args: any[]): void { }
 	printInfoMessageOnSameLine(message: string): void { }
 	async printMsgWithTimeout(message: string, timeout: number): Promise<void> { }
