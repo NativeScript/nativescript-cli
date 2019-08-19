@@ -259,7 +259,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 			const project = this.createPbxProj(projectData);
 			const frameworkAddOptions: IXcode.Options = { customFramework: true };
-			if (this.isDynamicFramework(frameworkPath)) {
+			if (await this.isDynamicFramework(frameworkPath)) {
 				frameworkAddOptions["embed"] = true;
 			}
 
