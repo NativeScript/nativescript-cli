@@ -195,7 +195,7 @@ export class HelpService implements IHelpService {
 			await this.throwMissingCommandError(commandData);
 		}
 
-		return (commandName && commandName.replace(/\|/g, "-")) || "index";
+		return (commandName && commandName.replace(/\|/g, "-")) || "start";
 	}
 
 	private async throwMissingCommandError(commandData: ICommandData): Promise<void> {

@@ -422,7 +422,7 @@ and another one`
 			it("shows index help when command is not specified", async () => {
 				const injector = createTestInjector();
 				injector.register("fs", {
-					enumerateFilesInDirectorySync: (path: string) => ["index.md"],
+					enumerateFilesInDirectorySync: (path: string) => ["start.md"],
 					readText: () => "index data is read"
 				});
 
