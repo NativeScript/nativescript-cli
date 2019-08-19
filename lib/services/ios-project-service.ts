@@ -233,7 +233,9 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		const isDynamicFrameworkBundle = async (bundlePath: string) => {
 			const frameworkBinaryPath = path.join(bundlePath, frameworkName);
 
-			return _.includes((await this.$childProcess.spawnFromEvent("file", [frameworkBinaryPath], "close")).stdout, "dynamically linked");
+			const fileResult = (await this.$childProcess.spawnFromEvent("file", [frameworkBinaryPath], "close")).stdout;
+			const isDynamicallyLinked =  _.includes(fileResult, "dynamically linked");
+			return isDynamicallyLinked;
 		};
 
 		if (path.extname(frameworkPath) === ".xcframework") {
@@ -249,7 +251,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 			return isDynamic;
 		} else {
-			return await isDynamicFrameworkBundle(frameworkName);
+			return await isDynamicFrameworkBundle(frameworkPath);
 		}
 	}
 
@@ -259,7 +261,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 			const project = this.createPbxProj(projectData);
 			const frameworkAddOptions: IXcode.Options = { customFramework: true };
-			if (this.isDynamicFramework(frameworkPath)) {
+			if (await this.isDynamicFramework(frameworkPath)) {
 				frameworkAddOptions["embed"] = true;
 			}
 
