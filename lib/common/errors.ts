@@ -175,14 +175,15 @@ export class Errors implements IErrors {
 		try {
 			return await action();
 		} catch (ex) {
-			const loggerLevel: string = $injector.resolve("logger").getLevel().toUpperCase();
+			const logger = this.$injector.resolve("logger");
+			const loggerLevel: string = logger.getLevel().toUpperCase();
 			const printCallStack = this.printCallStack || loggerLevel === "TRACE" || loggerLevel === "DEBUG";
 			const message = printCallStack ? resolveCallStack(ex) : isInteractive() ? `\x1B[31;1m${ex.message}\x1B[0m` : ex.message;
 
 			if (ex.printOnStdout) {
-				this.$injector.resolve("logger").out(message);
+				logger.info(message);
 			} else {
-				console.error(message);
+				logger.error(message);
 			}
 
 			if (ex.suggestCommandHelp) {
