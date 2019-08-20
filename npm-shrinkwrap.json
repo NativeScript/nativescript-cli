@@ -4038,9 +4038,9 @@
       }
     },
     "ios-mobileprovision-finder": {
-      "version": "1.0.10",
-      "resolved": "https://registry.npmjs.org/ios-mobileprovision-finder/-/ios-mobileprovision-finder-1.0.10.tgz",
-      "integrity": "sha1-UaXn+TzUCwN/fI8+JwXjSI11VgE=",
+      "version": "1.0.11",
+      "resolved": "https://registry.npmjs.org/ios-mobileprovision-finder/-/ios-mobileprovision-finder-1.0.11.tgz",
+      "integrity": "sha512-abq25CblgdjIAD2t6YkYoE7SvK8eN9OWKLH4Bspi8mzpGhZEBhwkWr5HT9nTy+9BA8Zyz1bMuvUyC5pBPDVFlg==",
       "requires": {
         "chalk": "^1.1.3",
         "plist": "^2.0.1",

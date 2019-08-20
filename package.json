@@ -47,7 +47,7 @@
     "iconv-lite": "0.4.11",
     "inquirer": "6.2.0",
     "ios-device-lib": "0.6.0",
-    "ios-mobileprovision-finder": "1.0.10",
+    "ios-mobileprovision-finder": "1.0.11",
     "ios-sim-portable": "4.0.9",
     "istextorbinary": "2.2.1",
     "jimp": "0.2.28",
