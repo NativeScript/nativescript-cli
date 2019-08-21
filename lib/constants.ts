@@ -136,6 +136,8 @@ export class ProjectTypes {
 	public static VueFlavorName = VueFlavorName;
 	public static TsFlavorName = "Pure TypeScript";
 	public static JsFlavorName = "Pure JavaScript";
+	public static ReactFlavorName = "React";
+	public static SvelteFlavorName = "Svelte";
 }
 export const BUILD_OUTPUT_EVENT_NAME = "buildOutput";
 export const CONNECTION_ERROR_EVENT_NAME = "connectionError";

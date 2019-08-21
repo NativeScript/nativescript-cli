@@ -28,6 +28,14 @@ export class ProjectData implements IProjectData {
 			requiredDependencies: ["nativescript-vue"]
 		},
 		{
+			type: constants.ProjectTypes.ReactFlavorName,
+			requiredDependencies: ["react-nativescript"]
+		},
+		{
+			type: constants.ProjectTypes.SvelteFlavorName,
+			requiredDependencies: ["svelte-native"]
+		},
+		{
 			type: constants.ProjectTypes.TsFlavorName,
 			requiredDependencies: ["typescript", "nativescript-dev-typescript"]
 		}

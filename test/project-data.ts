@@ -100,6 +100,14 @@ describe("projectData", () => {
 			assertProjectType({ "nativescript-vue": "*" }, { "typescript": "*" }, "Vue.js");
 		});
 
+		it("detects project as React when react-nativescript exists as dependency and typescript is devDependency", () => {
+			assertProjectType({ "react-nativescript": "*" }, null, "React");
+		});
+
+		it("detects project as Svelte when react-nativescript exists as dependency and typescript is devDependency", () => {
+			assertProjectType({ "svelte-native": "*" }, null, "Svelte");
+		});
+
 		it("detects project as TypeScript when nativescript-dev-typescript exists as dependency", () => {
 			assertProjectType(null, { "nativescript-dev-typescript": "*" }, "Pure TypeScript");
 		});

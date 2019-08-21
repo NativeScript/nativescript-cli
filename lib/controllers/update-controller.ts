@@ -204,6 +204,10 @@ export class UpdateController extends UpdateControllerBase implements IUpdateCon
 				template = constants.RESERVED_TEMPLATE_NAMES.javascript;
 				break;
 			}
+			default: {
+				template = constants.RESERVED_TEMPLATE_NAMES.javascript;
+				break;
+			}
 		}
 
 		return template;
