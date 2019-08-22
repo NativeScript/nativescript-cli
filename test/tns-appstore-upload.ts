@@ -124,6 +124,7 @@ class AppStore {
 
 	expectITMSTransporterUpload() {
 		this.expectedItmsTransporterServiceUploadCalls = 1;
+		this.itmsTransporterService.validate = () => Promise.resolve();
 		this.itmsTransporterService.upload = (options: IITMSData) => {
 			this.itmsTransporterServiceUploadCalls++;
 			chai.assert.equal(options.ipaFilePath, "/Users/person/git/MyProject/platforms/ios/archive/MyProject.ipa");

@@ -639,6 +639,7 @@ interface IITMSData {
  * Used for communicating with Xcode's iTMS Transporter tool.
  */
 interface IITMSTransporterService {
+	validate(): Promise<void>;
 	/**
 	 * Uploads an .ipa package to iTunes Connect.
 	 * @param  {IITMSData}     data Data needed to upload the package

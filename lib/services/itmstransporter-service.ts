@@ -19,6 +19,13 @@ export class ITMSTransporterService implements IITMSTransporterService {
 		return this.$injector.resolve("projectData");
 	}
 
+	public async validate(): Promise<void> {
+		const itmsTransporterPath = await this.getITMSTransporterPath();
+		if (!this.$fs.exists(itmsTransporterPath)) {
+			this.$errors.fail('iTMS Transporter not found on this machine - make sure your Xcode installation is not damaged.');
+		}
+	}
+
 	public async upload(data: IITMSData): Promise<void> {
 		temp.track();
 		const itmsTransporterPath = await this.getITMSTransporterPath();
@@ -96,11 +103,12 @@ export class ITMSTransporterService implements IITMSTransporterService {
 	@cache()
 	private async getITMSTransporterPath(): Promise<string> {
 		const xcodePath = await this.$xcodeSelectService.getContentsDirectoryPath();
-		const loaderAppContentsPath = path.join(xcodePath, "Applications", "Application Loader.app", "Contents");
-		const itmsTransporterPath = path.join(loaderAppContentsPath, ITMSConstants.iTMSDirectoryName, "bin", ITMSConstants.iTMSExecutableName);
+		let itmsTransporterPath = path.join(xcodePath, "..", "Contents", "SharedFrameworks", "ContentDeliveryServices.framework", "Versions", "A", "itms", "bin", ITMSConstants.iTMSExecutableName);
 
-		if (!this.$fs.exists(itmsTransporterPath)) {
-			this.$errors.fail('iTMS Transporter not found on this machine - make sure your Xcode installation is not damaged.');
+		const xcodeVersionData = await this.$xcodeSelectService.getXcodeVersion();
+		if (+xcodeVersionData.major < 11) {
+			const loaderAppContentsPath = path.join(xcodePath, "Applications", "Application Loader.app", "Contents");
+			itmsTransporterPath = path.join(loaderAppContentsPath, ITMSConstants.iTMSDirectoryName, "bin", ITMSConstants.iTMSExecutableName);
 		}
 
 		return itmsTransporterPath;
