@@ -2,6 +2,7 @@ import * as path from "path";
 import * as util from "util";
 import * as sourcemap from "source-map";
 import * as sourceMapConverter from "convert-source-map";
+import * as semver from "semver";
 import { stringReplaceAll } from "../common/helpers";
 import { ANDROID_DEVICE_APP_ROOT_TEMPLATE, APP_FOLDER_NAME, NODE_MODULES_FOLDER_NAME } from "../constants";
 
@@ -21,7 +22,8 @@ interface IFileLocation {
 
 export class LogSourceMapService implements Mobile.ILogSourceMapService {
 	private static FILE_PREFIX = "file:///";
-	private getProjectData: Function;
+	private getProjectData: (projectDir: string) => IProjectData;
+	private getNSValue: (projectDir: string, propertyName: string) => any;
 	private cache: IDictionary<sourcemap.SourceMapConsumer> = {};
 
 	constructor(
@@ -31,6 +33,7 @@ export class LogSourceMapService implements Mobile.ILogSourceMapService {
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $logger: ILogger) {
 		this.getProjectData = _.memoize(this.$projectDataService.getProjectData.bind(this.$projectDataService));
+		this.getNSValue = _.memoize(this.$projectDataService.getNSValue.bind(this.$projectDataService));
 	}
 
 	public async setSourceMapConsumerForFile(filePath: string): Promise<void> {
@@ -68,8 +71,14 @@ export class LogSourceMapService implements Mobile.ILogSourceMapService {
 			const originalLocation = this.getOriginalFileLocation(platform, parsedLine, projectData);
 
 			if (originalLocation && originalLocation.sourceFile) {
+				const runtimeData = this.getNSValue(loggingOptions.projectDir, `tns-${platform.toLowerCase()}`);
+				const runtimeVersion = runtimeData && runtimeData.version;
 				const { sourceFile, line, column } = originalLocation;
-				outputData = `${outputData}${parsedLine.messagePrefix}${LogSourceMapService.FILE_PREFIX}${sourceFile}:${line}:${column}${parsedLine.messageSuffix}\n`;
+				if (semver.valid(runtimeVersion) && semver.gte(semver.coerce(runtimeVersion), "6.1.0")) {
+					outputData += rawLine.replace(/file:\/\/\/.*?:\d+:\d+/, `file:///${sourceFile}:${line}:${column}`) + '\n';
+				} else {
+					outputData = `${outputData}${parsedLine.messagePrefix}${LogSourceMapService.FILE_PREFIX}${sourceFile}:${line}:${column}${parsedLine.messageSuffix}\n`;
+				}
 			} else if (rawLine !== "") {
 				outputData = `${outputData}${rawLine}\n`;
 			}

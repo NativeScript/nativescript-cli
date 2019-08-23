@@ -49,9 +49,11 @@ export class LogcatHelper implements Mobile.ILogcatHelper {
 				}
 			});
 
-			lineStream.on('data', (line: Buffer) => {
-				const lineText = line.toString();
-				this.$deviceLogProvider.logData(lineText, this.$devicePlatformsConstants.Android, deviceIdentifier);
+			lineStream.on('data', (lineBuffer: Buffer) => {
+				const lines = (lineBuffer.toString() || '').split("\n");
+				for (const line of lines) {
+					this.$deviceLogProvider.logData(line, this.$devicePlatformsConstants.Android, deviceIdentifier);
+				}
 			});
 		}
 	}

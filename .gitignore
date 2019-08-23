@@ -5,6 +5,8 @@
 !bin/nativescript.js
 !vendor/*.js
 !resources/**
+!lib/common/test/resources/**/*
+lib/common/test/resources/.DS_Store
 *.js.map
 !.travis/**/*
 coverage
