@@ -7,5 +7,10 @@ declare const enum GoogleAnalyticsCustomDimensions {
 	nodeVersion = "cd6",
 	playgroundId = "cd7",
 	usedTutorial = "cd8",
-	isShared = "cd9"
+	isShared = "cd9",
+	companyName = "cd10",
+	companyCountry = "cd11",
+	companyRevenue = "cd12",
+	companyIndustries = "cd13",
+	companyEmployeeCount = "cd14",
 }

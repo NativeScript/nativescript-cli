@@ -12,6 +12,7 @@ export class GoogleAnalyticsProvider implements IGoogleAnalyticsProvider {
 		private $logger: ILogger,
 		private $proxyService: IProxyService,
 		private $config: IConfiguration,
+		private $companyInsightsService: ICompanyInsightsService,
 		private analyticsLoggingService: IFileLogService) {
 	}
 
@@ -78,6 +79,15 @@ export class GoogleAnalyticsProvider implements IGoogleAnalyticsProvider {
 		if (playgrounInfo && playgrounInfo.id) {
 			defaultValues[GoogleAnalyticsCustomDimensions.playgroundId] = playgrounInfo.id;
 			defaultValues[GoogleAnalyticsCustomDimensions.usedTutorial] = playgrounInfo.usedTutorial.toString();
+		}
+
+		const companyData = await this.$companyInsightsService.getCompanyData();
+		if (companyData) {
+			defaultValues[GoogleAnalyticsCustomDimensions.companyName] = companyData.name;
+			defaultValues[GoogleAnalyticsCustomDimensions.companyCountry] = companyData.country;
+			defaultValues[GoogleAnalyticsCustomDimensions.companyRevenue] = companyData.revenue;
+			defaultValues[GoogleAnalyticsCustomDimensions.companyIndustries] = companyData.industries;
+			defaultValues[GoogleAnalyticsCustomDimensions.companyEmployeeCount] = companyData.employeeCount;
 		}
 
 		customDimensions = _.merge(defaultValues, customDimensions);
