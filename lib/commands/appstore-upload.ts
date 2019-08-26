@@ -25,19 +25,12 @@ export class PublishIOS implements ICommand {
 	}
 
 	public async execute(args: string[]): Promise<void> {
-		let username = args[0];
-		let password = args[1];
+		await this.$itmsTransporterService.validate();
+
+		const username = args[0] || await this.$prompter.getString("Apple ID", { allowEmpty: false });
+		const password = args[1] || await this.$prompter.getPassword("Apple ID password");
 		const mobileProvisionIdentifier = args[2];
 		const codeSignIdentity = args[3];
-		let ipaFilePath = this.$options.ipa ? path.resolve(this.$options.ipa) : null;
-
-		if (!username) {
-			username = await this.$prompter.getString("Apple ID", { allowEmpty: false });
-		}
-
-		if (!password) {
-			password = await this.$prompter.getPassword("Apple ID password");
-		}
 
 		const user = await this.$applePortalSessionService.createUserSession({ username, password }, {
 			applicationSpecificPassword:  this.$options.appleApplicationSpecificPassword,
@@ -49,6 +42,8 @@ export class PublishIOS implements ICommand {
 			this.$errors.fail(`Invalid username and password combination. Used '${username}' as the username.`);
 		}
 
+		let ipaFilePath = this.$options.ipa ? path.resolve(this.$options.ipa) : null;
+
 		if (!mobileProvisionIdentifier && !ipaFilePath) {
 			this.$logger.warn("No mobile provision identifier set. A default mobile provision will be used. You can set one in app/App_Resources/iOS/build.xcconfig");
 		}
@@ -58,9 +53,9 @@ export class PublishIOS implements ICommand {
 		}
 
 		this.$options.release = true;
-		const platform = this.$devicePlatformsConstants.iOS.toLowerCase();
 
 		if (!ipaFilePath) {
+			const platform = this.$devicePlatformsConstants.iOS.toLowerCase();
 			// No .ipa path provided, build .ipa on out own.
 			if (mobileProvisionIdentifier || codeSignIdentity) {
 				// This is not very correct as if we build multiple targets we will try to sign all of them using the signing identity here.
