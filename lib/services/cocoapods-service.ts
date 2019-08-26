@@ -12,7 +12,6 @@ export class CocoaPodsService implements ICocoaPodsService {
 		private $fs: IFileSystem,
 		private $childProcess: IChildProcess,
 		private $errors: IErrors,
-		private $xcprojService: IXcprojService,
 		private $logger: ILogger,
 		private $config: IConfiguration,
 		private $xcconfigService: IXcconfigService) { }
@@ -30,16 +29,6 @@ export class CocoaPodsService implements ICocoaPodsService {
 	}
 
 	public async executePodInstall(projectRoot: string, xcodeProjPath: string): Promise<ISpawnResult> {
-		// Check availability
-		try {
-			await this.$childProcess.exec("which pod");
-			await this.$childProcess.exec("which xcodeproj");
-		} catch (e) {
-			this.$errors.fail("CocoaPods or ruby gem 'xcodeproj' is not installed. Run `sudo gem install cocoapods` and try again.");
-		}
-
-		await this.$xcprojService.verifyXcproj({ shouldFail: true });
-
 		this.$logger.info("Installing pods...");
 		const podTool = this.$config.USE_POD_SANDBOX ? "sandbox-pod" : "pod";
 		// cocoapods print a lot of non-error information on stderr. Pipe the `stderr` to `stdout`, so we won't polute CLI's stderr output.
@@ -47,10 +36,6 @@ export class CocoaPodsService implements ICocoaPodsService {
 
 		if (podInstallResult.exitCode !== 0) {
 			this.$errors.fail(`'${podTool} install' command failed.${podInstallResult.stderr ? " Error is: " + podInstallResult.stderr : ""}`);
-		}
-
-		if ((await this.$xcprojService.getXcprojInfo()).shouldUseXcproj) {
-			await this.$childProcess.spawnFromEvent("xcproj", ["--project", xcodeProjPath, "touch"], "close");
 		}
 
 		return podInstallResult;

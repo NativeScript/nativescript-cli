@@ -4,8 +4,7 @@ import { Configurations } from "../common/constants";
 export class XcconfigService implements IXcconfigService {
 	constructor(
 		private $childProcess: IChildProcess,
-		private $fs: IFileSystem,
-		private $xcprojService: IXcprojService) { }
+		private $fs: IFileSystem) { }
 
 	public getPluginsXcconfigFilePaths(projectRoot: string): IStringDictionary {
 		return {
@@ -26,9 +25,6 @@ export class XcconfigService implements IXcconfigService {
 		if (!this.$fs.exists(destinationFile)) {
 			this.$fs.writeFile(destinationFile, "");
 		}
-
-		// TODO: Consider to remove this method
-		await this.$xcprojService.checkIfXcodeprojIsRequired();
 
 		const escapedDestinationFile = destinationFile.replace(/'/g, "\\'");
 		const escapedSourceFile = sourceFile.replace(/'/g, "\\'");
