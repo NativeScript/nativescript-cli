@@ -9,6 +9,7 @@ export class Configuration implements IConfiguration { // User specific config
 	UPLOAD_PLAYGROUND_FILES_ENDPOINT: string = null;
 	SHORTEN_URL_ENDPOINT: string = null;
 	INSIGHTS_URL_ENDPOINT: string = null;
+	WHOAMI_URL_ENDPOINT: string = null;
 	PREVIEW_APP_ENVIRONMENT: string = null;
 	GA_TRACKING_ID: string = null;
 	DISABLE_HOOKS: boolean = false;

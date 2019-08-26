@@ -432,6 +432,7 @@ interface IConfiguration extends Config.IConfig {
 	UPLOAD_PLAYGROUND_FILES_ENDPOINT: string;
 	SHORTEN_URL_ENDPOINT: string;
 	INSIGHTS_URL_ENDPOINT: string;
+	WHOAMI_URL_ENDPOINT: string;
 	PREVIEW_APP_ENVIRONMENT: string;
 	GA_TRACKING_ID: string;
 }

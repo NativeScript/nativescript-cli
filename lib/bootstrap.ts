@@ -229,3 +229,4 @@ $injector.require("watchIgnoreListService", "./services/watch-ignore-list-servic
 $injector.requirePublicClass("initializeService", "./services/initialize-service");
 
 $injector.require("npmConfigService", "./services/npm-config-service");
+$injector.require("ipService", "./services/ip-service");
