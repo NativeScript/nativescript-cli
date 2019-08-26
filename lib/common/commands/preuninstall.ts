@@ -1,28 +1,44 @@
 ﻿import * as path from "path";
-import { doesCurrentNpmCommandMatch } from "../helpers";
+import { doesCurrentNpmCommandMatch, isInteractive } from "../helpers";
+import { TrackActionNames, AnalyticsEventLabelDelimiter } from "../../constants";
 
 export class PreUninstallCommand implements ICommand {
-	public disableAnalytics = true;
+	private static FEEDBACK_FORM_URL = "https://www.nativescript.org/uninstall-feedback";
 
 	public allowedParameters: ICommandParameter[] = [];
 
-	constructor(private $extensibilityService: IExtensibilityService,
+	constructor(private $analyticsService: IAnalyticsService,
+		private $extensibilityService: IExtensibilityService,
 		private $fs: IFileSystem,
+		private $opener: IOpener,
 		private $packageInstallationManager: IPackageInstallationManager,
 		private $settingsService: ISettingsService) { }
 
 	public async execute(args: string[]): Promise<void> {
 		const isIntentionalUninstall = doesCurrentNpmCommandMatch([/^uninstall$/, /^remove$/, /^rm$/, /^r$/, /^un$/, /^unlink$/]);
+
+		await this.$analyticsService.trackEventActionInGoogleAnalytics({
+			action: TrackActionNames.UninstallCLI,
+			additionalData: `isIntentionalUninstall${AnalyticsEventLabelDelimiter}${isIntentionalUninstall}${AnalyticsEventLabelDelimiter}isInteractive${AnalyticsEventLabelDelimiter}${!!isInteractive()}`
+		});
+
 		if (isIntentionalUninstall) {
-			this.handleIntentionalUninstall();
+			await this.handleIntentionalUninstall();
 		}
 
 		this.$fs.deleteFile(path.join(this.$settingsService.getProfileDir(), "KillSwitches", "cli"));
 	}
 
-	private handleIntentionalUninstall(): void {
+	private async handleIntentionalUninstall(): Promise<void> {
 		this.$extensibilityService.removeAllExtensions();
 		this.$packageInstallationManager.clearInspectorCache();
+		await this.handleFeedbackForm();
+	}
+
+	private async handleFeedbackForm(): Promise<void> {
+		if (isInteractive()) {
+			this.$opener.open(PreUninstallCommand.FEEDBACK_FORM_URL);
+		}
 	}
 }
 

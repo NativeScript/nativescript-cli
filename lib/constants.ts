@@ -185,7 +185,8 @@ export const enum TrackActionNames {
 	Options = "Options",
 	AcceptTracking = "Accept Tracking",
 	Performance = "Performance",
-	PreviewAppData = "Preview App Data"
+	PreviewAppData = "Preview App Data",
+	UninstallCLI = "Uninstall CLI"
 }
 
 export const AnalyticsEventLabelDelimiter = "__";
