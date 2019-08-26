@@ -108,7 +108,7 @@ export class IOSDeviceLiveSyncService extends DeviceLiveSyncServiceBase implemen
 	private async refreshApplicationCore(projectData: IProjectData) {
 		let didRefresh = true;
 		if (this.canRefreshWithNotification(projectData)) {
-			didRefresh = await this.refreshWithNotification(projectData, didRefresh);
+			didRefresh = await this.refreshWithNotification(projectData);
 		} else {
 			if (await this.setupSocketIfNeeded(projectData)) {
 				await this.reloadPage();
@@ -120,7 +120,8 @@ export class IOSDeviceLiveSyncService extends DeviceLiveSyncServiceBase implemen
 		return didRefresh;
 	}
 
-	private async refreshWithNotification(projectData: IProjectData, didRefresh: boolean) {
+	private async refreshWithNotification(projectData: IProjectData) {
+		let didRefresh = false;
 		await this.$lockService.executeActionWithLock(async () => {
 			this._isLiveSyncSuccessful = null;
 			this.attachToLiveSyncLogs();
