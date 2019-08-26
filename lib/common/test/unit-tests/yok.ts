@@ -227,6 +227,30 @@ describe("yok", () => {
 			assert.isTrue(thing.disposed);
 		});
 
+		it("disposes all instances", () => {
+			const injector = new Yok();
+
+			function Thing(arg: string) { this.arg = arg; /* intentionally left blank */ }
+
+			Thing.prototype.dispose = function () {
+				this.disposed = true;
+			};
+
+			injector.register("thing", Thing, false);
+			const thing1 = injector.resolve("thing", { arg: "thing1"});
+			const thing2 = injector.resolve("thing", { arg: "thing2"});
+			const thing3 = injector.resolve("thing", { arg: "thing3"});
+
+			assert.equal(thing1.arg, "thing1");
+			assert.equal(thing2.arg, "thing2");
+			assert.equal(thing3.arg, "thing3");
+			injector.dispose();
+
+			assert.isTrue(thing1.disposed);
+			assert.isTrue(thing2.disposed);
+			assert.isTrue(thing3.disposed);
+		});
+
 	});
 
 	describe("classes", () => {

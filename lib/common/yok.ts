@@ -40,7 +40,7 @@ export function register(...rest: any[]) {
 export interface IDependency {
 	require?: string;
 	resolver?: () => any;
-	instance?: any;
+	instances?: any[];
 	shared?: boolean;
 }
 
@@ -128,7 +128,7 @@ export class Yok implements IInjector {
 	}
 
 	private resolveInstance(name: string): any {
-		let classInstance = this.modules[name].instance;
+		let classInstance = _.first(this.modules[name].instances);
 		if (!classInstance) {
 			classInstance = this.resolve(name);
 		}
@@ -282,7 +282,12 @@ export class Yok implements IInjector {
 		if (_.isFunction(resolver)) {
 			dependency.resolver = resolver;
 		} else {
-			dependency.instance = resolver;
+			dependency.instances = dependency.instances || [];
+			if (shared) {
+				dependency.instances[0] = resolver;
+			} else {
+				dependency.instances.push(resolver);
+			}
 		}
 
 		this.modules[name] = dependency;
@@ -370,6 +375,7 @@ export class Yok implements IInjector {
 		pushIndent();
 
 		let dependency: IDependency;
+		let instance: any;
 		try {
 			dependency = this.resolveDependency(name);
 
@@ -377,19 +383,24 @@ export class Yok implements IInjector {
 				throw new Error("unable to resolve " + name);
 			}
 
-			if (!dependency.instance || !dependency.shared) {
+			if (!dependency.instances || !dependency.instances.length || !dependency.shared) {
 				if (!dependency.resolver) {
 					throw new Error("no resolver registered for " + name);
 				}
 
-				dependency.instance = this.resolveConstructor(dependency.resolver, ctorArguments);
+				dependency.instances = dependency.instances || [];
+
+				instance = this.resolveConstructor(dependency.resolver, ctorArguments);
+				dependency.instances.push(instance);
+			} else {
+				instance = _.first(dependency.instances);
 			}
 		} finally {
 			popIndent();
 			delete this.resolutionProgress[name];
 		}
 
-		return dependency.instance;
+		return instance;
 	}
 
 	private resolveDependency(name: string): IDependency {
@@ -424,10 +435,12 @@ export class Yok implements IInjector {
 
 	public dispose(): void {
 		Object.keys(this.modules).forEach((moduleName) => {
-			const instance = this.modules[moduleName].instance;
-			if (instance && instance.dispose && instance !== this) {
-				instance.dispose();
-			}
+			const instances = this.modules[moduleName].instances;
+			_.forEach(instances, instance => {
+				if (instance && instance.dispose && instance !== this) {
+					instance.dispose();
+				}
+			});
 		});
 	}
 }
