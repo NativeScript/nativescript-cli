@@ -52,7 +52,7 @@ export class SubscriptionService implements ISubscriptionService {
 	private async sendEmail(email: string): Promise<void> {
 		if (email) {
 			const postData = queryString.stringify({
-				'elqFormName': "dev_uins_cli",
+				'elqFormName': "NativeScript_IncludeinEmail",
 				'elqSiteID': '1325',
 				'emailAddress': email,
 				'elqCookieWrite': '0'

@@ -249,7 +249,7 @@ describe("subscriptionService", () => {
 			const email = "abc@def.gh";
 
 			const postData = stringify({
-				'elqFormName': "dev_uins_cli",
+				'elqFormName': "NativeScript_IncludeinEmail",
 				'elqSiteID': '1325',
 				'emailAddress': email,
 				'elqCookieWrite': '0'
