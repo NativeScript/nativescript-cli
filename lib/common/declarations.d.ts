@@ -1229,9 +1229,8 @@ interface IPlistParser {
 	parseFileSync(plistFilePath: string): any;
 }
 
-interface IUserSettingsService extends UserSettings.IUserSettingsService {
-	loadUserSettingsFile(): Promise<void>;
-	saveSettings(data: IDictionary<{}>): Promise<void>;
+interface IUserSettingsService extends IJsonFileSettingsService {
+	// keep for backwards compatibility
 }
 
 /**
