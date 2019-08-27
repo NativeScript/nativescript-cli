@@ -87,7 +87,11 @@ export class UpdateController extends UpdateControllerBase implements IUpdateCon
 		this.$fs.deleteDirectory(path.join(projectData.projectDir, constants.HOOKS_DIR_NAME));
 		this.$fs.deleteDirectory(path.join(projectData.projectDir, constants.PLATFORMS_DIR_NAME));
 		this.$fs.deleteDirectory(path.join(projectData.projectDir, constants.NODE_MODULES_FOLDER_NAME));
-		this.$fs.deleteFile(path.join(projectData.projectDir, constants.WEBPACK_CONFIG_NAME));
+		if (projectData.projectType === constants.ProjectTypes.ReactFlavorName || projectData.projectType === constants.ProjectTypes.SvelteFlavorName) {
+			this.$logger.warn(`As this project is of type ${projectData.projectType}, CLI will not update its ${constants.WEBPACK_CONFIG_NAME} file. Consider updating it manually.`);
+		} else {
+			this.$fs.deleteFile(path.join(projectData.projectDir, constants.WEBPACK_CONFIG_NAME));
+		}
 		this.$fs.deleteFile(path.join(projectData.projectDir, constants.PACKAGE_LOCK_JSON_FILE_NAME));
 		this.$logger.info("Clean old project artefacts complete.");
 	}
