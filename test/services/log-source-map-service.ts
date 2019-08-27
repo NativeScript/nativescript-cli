@@ -31,7 +31,8 @@ function createTestInjector(): IInjector {
 	testInjector.register("platformsDataService", {
 		getPlatformData: (platform: string) => {
 			return {
-				appDestinationDirectoryPath: path.join(__dirname, "..", "files", "sourceMapBundle", platform.toLowerCase())
+				appDestinationDirectoryPath: path.join(__dirname, "..", "files", "sourceMapBundle", platform.toLowerCase()),
+				frameworkPackageName: `tns-${platform.toLowerCase()}`
 			};
 		}
 	});
