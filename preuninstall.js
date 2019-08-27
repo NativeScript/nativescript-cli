@@ -1,14 +1,11 @@
 "use strict";
 
+var path = require("path");
 var child_process = require("child_process");
-var commandArgs = ["bin/tns", "dev-preuninstall"];
+var commandArgs = [path.join(__dirname, "bin", "tns"), "dev-preuninstall"];
 
-var child = child_process.exec("node " + commandArgs.join(" "), function (error) {
-	if (error) {
-		// Some npm versions (3.0, 3.5.1, 3.7.3) remove the NativeScript node_modules before the preuninstall script is executed and the script can't find them (the preuninstall script is like postinstall script).
-		// The issue is described in the npm repository https://github.com/npm/npm/issues/8806 and it is not fixed in version 3.1.1 as commented in the conversation.
-		console.error("Failed to complete all pre-uninstall steps.");
-	}
+var childProcess = child_process.spawn(process.execPath, commandArgs, { stdio: "inherit"})
+
+childProcess.on("error", (err) => {
+	console.error(`Failed to complete all pre-uninstall steps. Error is ${err.message}`);
 });
-
-child.stdout.pipe(process.stdout);
