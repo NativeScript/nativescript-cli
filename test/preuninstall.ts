@@ -6,6 +6,7 @@ const childProcess = require("child_process");
 import { SpawnOptions, ChildProcess } from "child_process";
 import * as path from "path";
 import { EventEmitter } from "events";
+import { readFileSync } from "fs";
 
 describe("preuninstall.js", () => {
 	let isSpawnCalled = false;
@@ -46,16 +47,32 @@ describe("preuninstall.js", () => {
 
 		const expectedPathToCliExecutable = path.join(__dirname, "..", "bin", "tns");
 
-		assert.isTrue(argsPassedToSpawn.indexOf(expectedPathToCliExecutable) !== -1, `The spawned args must contain path to TNS.
-				Expected path is: ${expectedPathToCliExecutable}, current args are: ${argsPassedToSpawn}.`);
-		assert.isTrue(argsPassedToSpawn.indexOf("dev-preuninstall") !== -1, `The spawned args must contain the name of the preuninstall command.
-				Expected path is: ${expectedPathToCliExecutable}, current args are: ${argsPassedToSpawn}.`);
+		assert.deepEqual(argsPassedToSpawn, [expectedPathToCliExecutable, "dev-preuninstall"]);
 		assert.deepEqual(optionsPassedToSpawn, [{ stdio: "inherit" }], "The stdio must be inherit as this way CLI's command can determine correctly if terminal is in interactive mode.");
 		assert.deepEqual(dataPassedToConsoleError, []);
 
 		const errMsg = "this is error message";
 		eventEmitter.emit("error", new Error(errMsg));
 		assert.deepEqual(dataPassedToConsoleError, [`Failed to complete all pre-uninstall steps. Error is ${errMsg}`]);
+	});
+
+	it("passes --analyticsLogFile option when NS_CLI_PREUNINSTALL_ANALYTICS_LOG_FILE is set", () => {
+		const content = readFileSync(path.join(__dirname, "..", "preuninstall.js")).toString();
+		const originalEnvValue = process.env.NS_CLI_PREUNINSTALL_ANALYTICS_LOG_FILE;
+		process.env.NS_CLI_PREUNINSTALL_ANALYTICS_LOG_FILE = "value from env analyticsLog.txt";
+		/* tslint:disable:no-eval */
+		eval(content);
+		/* tslint:enable:no-eval */
+		process.env.NS_CLI_PREUNINSTALL_ANALYTICS_LOG_FILE = originalEnvValue;
+		assert.isTrue(isSpawnCalled, "child_process.spawn must be called from preuninstall.js");
+
+		// NOTE: As the script is eval'd, the `__dirname` in it is resolved to current file's location,
+		// so the expectedPathToCliExecutable should be set as it is located in current dir.
+		const expectedPathToCliExecutable = path.join(__dirname, "bin", "tns");
+
+		assert.deepEqual(argsPassedToSpawn, [expectedPathToCliExecutable, "dev-preuninstall", "--analyticsLogFile", "value from env analyticsLog.txt"]);
+		assert.deepEqual(optionsPassedToSpawn, [{ stdio: "inherit" }], "The stdio must be inherit as this way CLI's command can determine correctly if terminal is in interactive mode.");
+		assert.deepEqual(dataPassedToConsoleError, []);
 	});
 
 	it("ensure package.json has correct preuninstall script", () => {
