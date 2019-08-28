@@ -740,45 +740,6 @@ end`
 				stderr: "",
 				exitCode: 0
 			});
-
-			const xcprojService = testInjector.resolve<IXcprojService>("xcprojService");
-			xcprojService.verifyXcproj = async (opts: IVerifyXcprojOptions): Promise<boolean> => false;
-			xcprojService.getXcprojInfo = async (): Promise<IXcprojInfo> => (<any>{});
-		});
-
-		it("fails when pod executable is not found", async () => {
-			const childProcess = testInjector.resolve<IChildProcess>("childProcess");
-			childProcess.exec = async (command: string, options?: any, execOptions?: IExecOptions): Promise<any> => {
-				assert.equal(command, "which pod");
-				throw new Error("Missing pod executable");
-			};
-
-			await assert.isRejected(cocoapodsService.executePodInstall(projectRoot, xcodeProjPath), "CocoaPods or ruby gem 'xcodeproj' is not installed. Run `sudo gem install cocoapods` and try again.");
-		});
-
-		it("fails when xcodeproj executable is not found", async () => {
-			const childProcess = testInjector.resolve<IChildProcess>("childProcess");
-			childProcess.exec = async (command: string, options?: any, execOptions?: IExecOptions): Promise<any> => {
-				if (command === "which pod") {
-					return;
-				}
-
-				assert.equal(command, "which xcodeproj");
-				throw new Error("Missing xcodeproj executable");
-
-			};
-
-			await assert.isRejected(cocoapodsService.executePodInstall(projectRoot, xcodeProjPath), "CocoaPods or ruby gem 'xcodeproj' is not installed. Run `sudo gem install cocoapods` and try again.");
-		});
-
-		it("fails with correct error when xcprojService.verifyXcproj throws", async () => {
-			const expectedError = new Error("err");
-			const xcprojService = testInjector.resolve<IXcprojService>("xcprojService");
-			xcprojService.verifyXcproj = async (opts: IVerifyXcprojOptions): Promise<boolean> => {
-				throw expectedError;
-			};
-
-			await assert.isRejected(cocoapodsService.executePodInstall(projectRoot, xcodeProjPath), expectedError);
 		});
 
 		["pod", "sandbox-pod"].forEach(podExecutable => {
@@ -799,18 +760,6 @@ end`
 				await cocoapodsService.executePodInstall(projectRoot, xcodeProjPath);
 				assert.equal(commandCalled, podExecutable);
 			});
-		});
-
-		it("calls xcprojService.verifyXcproj with correct arguments", async () => {
-			const xcprojService = testInjector.resolve<IXcprojService>("xcprojService");
-			let optsPassedToVerifyXcproj: any = null;
-			xcprojService.verifyXcproj = async (opts: IVerifyXcprojOptions): Promise<boolean> => {
-				optsPassedToVerifyXcproj = opts;
-				return false;
-			};
-
-			await cocoapodsService.executePodInstall(projectRoot, xcodeProjPath);
-			assert.deepEqual(optsPassedToVerifyXcproj, { shouldFail: true });
 		});
 
 		it("calls pod install spawnFromEvent with correct arguments", async () => {
@@ -846,7 +795,7 @@ end`
 			await assert.isRejected(cocoapodsService.executePodInstall(projectRoot, xcodeProjPath), "'pod install' command failed.");
 		});
 
-		it("returns the result of the pod install spawnFromEvent methdo", async () => {
+		it("returns the result of the pod install spawnFromEvent method", async () => {
 			const childProcess = testInjector.resolve<IChildProcess>("childProcess");
 			const expectedResult = {
 				stdout: "pod install finished",
@@ -859,49 +808,6 @@ end`
 
 			const result = await cocoapodsService.executePodInstall(projectRoot, xcodeProjPath);
 			assert.deepEqual(result, expectedResult);
-		});
-
-		it("executes xcproj command with correct arguments when is true", async () => {
-			const xcprojService = testInjector.resolve<IXcprojService>("xcprojService");
-			xcprojService.getXcprojInfo = async (): Promise<IXcprojInfo> => (<any>{
-				shouldUseXcproj: true
-			});
-
-			const spawnFromEventCalls: any[] = [];
-			const childProcess = testInjector.resolve<IChildProcess>("childProcess");
-			childProcess.spawnFromEvent = async (command: string, args: string[], event: string, options?: any, spawnFromEventOptions?: ISpawnFromEventOptions): Promise<ISpawnResult> => {
-				spawnFromEventCalls.push({
-					command,
-					args,
-					event,
-					options,
-					spawnFromEventOptions
-				});
-				return {
-					stdout: "",
-					stderr: "",
-					exitCode: 0
-				};
-			};
-
-			await cocoapodsService.executePodInstall(projectRoot, xcodeProjPath);
-			assert.deepEqual(spawnFromEventCalls, [
-				{
-					command: "pod",
-					args: ["install"],
-					event: "close",
-					options: { cwd: projectRoot, stdio: ['pipe', process.stdout, process.stdout] },
-					spawnFromEventOptions: { throwError: false }
-				},
-				{
-					command: "xcproj",
-					args: ["--project", xcodeProjPath, "touch"],
-					event: "close",
-					options: undefined,
-					spawnFromEventOptions: undefined
-				}
-			]);
-
 		});
 	});
 

@@ -850,23 +850,6 @@ interface IXcprojService {
 	 * @return {string} The full path to the xcodeproj
 	 */
 	getXcodeprojPath(projectData: IProjectData, projectRoot: string): string;
-	/**
-	 * Checks whether the system needs xcproj to execute ios builds successfully.
-	 * In case the system does need xcproj but does not have it, prints an error message.
-	 * @param {IVerifyXcprojOptions} opts whether to fail with error message or not
-	 * @return {Promise<boolean>} whether an error occurred or not.
-	 */
-	verifyXcproj(opts: IVerifyXcprojOptions): Promise<boolean>;
-	/**
-	 * Collects information about xcproj.
-	 * @return {Promise<XcprojInfo>} collected info about xcproj.
-	 */
-	getXcprojInfo(): Promise<IXcprojInfo>;
-	/**
-	 * Checks if xcproj is available and throws an error in case when it is not available.
-	 * @return {Promise<boolean>}
-	 */
-	checkIfXcodeprojIsRequired(): Promise<boolean>;
 }
 
 /**

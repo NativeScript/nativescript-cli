@@ -273,38 +273,6 @@ export function getRelativeToRootPath(rootPath: string, filePath: string): strin
 	return relativeToRootPath;
 }
 
-function getVersionArray(version: string | IVersionData): number[] {
-	let result: number[] = [];
-	const parseLambda = (x: string) => parseInt(x, 10);
-	const filterLambda = (x: number) => !isNaN(x);
-
-	if (typeof version === "string") {
-		const versionString = <string>version.split("-")[0];
-		result = _.map(versionString.split("."), parseLambda);
-	} else {
-		result = _(version).map(parseLambda).filter(filterLambda).value();
-	}
-
-	return result;
-}
-
-export function versionCompare(version1: string | IVersionData, version2: string | IVersionData): number {
-	const v1array = getVersionArray(version1),
-		v2array = getVersionArray(version2);
-
-	if (v1array.length !== v2array.length) {
-		throw new Error("Version strings are not in the same format");
-	}
-
-	for (let i = 0; i < v1array.length; ++i) {
-		if (v1array[i] !== v2array[i]) {
-			return v1array[i] > v2array[i] ? 1 : -1;
-		}
-	}
-
-	return 0;
-}
-
 export function isInteractive(): boolean {
 	const result = isRunningInTTY() && !isCIEnvironment();
 	return result;
