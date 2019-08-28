@@ -2,6 +2,7 @@ import * as path from "path";
 import * as util from "util";
 import * as sourcemap from "source-map";
 import * as sourceMapConverter from "convert-source-map";
+import * as semver from "semver";
 import { stringReplaceAll } from "../common/helpers";
 import { ANDROID_DEVICE_APP_ROOT_TEMPLATE, APP_FOLDER_NAME, NODE_MODULES_FOLDER_NAME } from "../constants";
 
@@ -21,9 +22,14 @@ interface IFileLocation {
 
 export class LogSourceMapService implements Mobile.ILogSourceMapService {
 	private static FILE_PREFIX = "file:///";
-	private getProjectData: Function;
+	private static MEMOIZE_FUNCTION_RANDOM_KEY_FOR_JOIN = "__some_random_value__";
+	private getProjectData: (projectDir: string) => IProjectData;
+	private getRuntimeVersion: (projectDir: string, platform: string) => string;
 	private cache: IDictionary<sourcemap.SourceMapConsumer> = {};
 
+	private get $platformsDataService(): IPlatformsDataService {
+		return this.$injector.resolve<IPlatformsDataService>("platformsDataService");
+	}
 	constructor(
 		private $fs: IFileSystem,
 		private $projectDataService: IProjectDataService,
@@ -31,6 +37,7 @@ export class LogSourceMapService implements Mobile.ILogSourceMapService {
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $logger: ILogger) {
 		this.getProjectData = _.memoize(this.$projectDataService.getProjectData.bind(this.$projectDataService));
+		this.getRuntimeVersion = _.memoize(this.getRuntimeVersionCore, (...args) => args.join(LogSourceMapService.MEMOIZE_FUNCTION_RANDOM_KEY_FOR_JOIN));
 	}
 
 	public async setSourceMapConsumerForFile(filePath: string): Promise<void> {
@@ -68,14 +75,36 @@ export class LogSourceMapService implements Mobile.ILogSourceMapService {
 			const originalLocation = this.getOriginalFileLocation(platform, parsedLine, projectData);
 
 			if (originalLocation && originalLocation.sourceFile) {
+				const runtimeVersion = this.getRuntimeVersion(loggingOptions.projectDir, platform);
 				const { sourceFile, line, column } = originalLocation;
-				outputData = `${outputData}${parsedLine.messagePrefix}${LogSourceMapService.FILE_PREFIX}${sourceFile}:${line}:${column}${parsedLine.messageSuffix}\n`;
+				if (semver.valid(runtimeVersion) && semver.gte(semver.coerce(runtimeVersion), "6.1.0")) {
+					const lastIndexOfFile = rawLine.lastIndexOf(LogSourceMapService.FILE_PREFIX);
+					const firstPart = rawLine.substr(0, lastIndexOfFile);
+
+					outputData += firstPart + rawLine.substr(lastIndexOfFile).replace(/file:\/\/\/.+?:\d+:\d+/, `${LogSourceMapService.FILE_PREFIX}${sourceFile}:${line}:${column}`) + '\n';
+				} else {
+					outputData = `${outputData}${parsedLine.messagePrefix}${LogSourceMapService.FILE_PREFIX}${sourceFile}:${line}:${column}${parsedLine.messageSuffix}\n`;
+				}
 			} else if (rawLine !== "") {
 				outputData = `${outputData}${rawLine}\n`;
 			}
 		});
 
 		return outputData;
+	}
+
+	private getRuntimeVersionCore(projectDir: string, platform: string): string {
+		let runtimeVersion: string = null;
+		try {
+			const projectData = this.getProjectData(projectDir);
+			const platformData = this.$platformsDataService.getPlatformData(platform, projectData);
+			const runtimeVersionData = this.$projectDataService.getNSValue(projectData.projectDir, platformData.frameworkPackageName);
+			runtimeVersion = runtimeVersionData && runtimeVersionData.version;
+		} catch (err) {
+			this.$logger.trace(`Unable to get runtime version for project directory: ${projectDir} and platform ${platform}. Error is: `, err);
+		}
+
+		return runtimeVersion;
 	}
 
 	private getOriginalFileLocation(platform: string, parsedLine: IParsedMessage, projectData: IProjectData): IFileLocation {
@@ -176,7 +205,7 @@ export class LogSourceMapService implements Mobile.ILogSourceMapService {
 
 	private getFilesLocation(platform: string, projectData: IProjectData): string {
 		try {
-			const platformsData = this.$injector.resolve("platformsDataService").getPlatformData(platform.toLowerCase(), projectData);
+			const platformsData = this.$platformsDataService.getPlatformData(platform.toLowerCase(), projectData);
 			return platformsData.appDestinationDirectoryPath;
 		} catch (err) {
 			return "";

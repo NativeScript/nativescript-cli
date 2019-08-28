@@ -125,6 +125,7 @@ module.exports = function (grunt) {
 				"!lib/common/bin/*.js",
 				"!lib/common/test-scripts/**/*",
 				"!lib/common/scripts/**/*",
+				"!lib/common/test/resources/**/*",
 				"*.tgz"]
 		},
 		template: {
