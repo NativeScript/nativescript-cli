@@ -14,9 +14,7 @@ describe("jsonFileSettingsService", () => {
 
 	const createTestInjector = (): IInjector => {
 		const testInjector = new Yok();
-		/**
-		 * constructor(jsonFileSettingsPath: string,	}
-		 */
+
 		testInjector.register("fs", {
 			exists: (filePath: string): boolean => true,
 			writeFile: (filename: string, data: string, encoding?: string): void => {
