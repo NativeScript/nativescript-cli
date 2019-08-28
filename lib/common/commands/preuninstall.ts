@@ -27,6 +27,7 @@ export class PreUninstallCommand implements ICommand {
 		}
 
 		this.$fs.deleteFile(path.join(this.$settingsService.getProfileDir(), "KillSwitches", "cli"));
+		await this.$analyticsService.finishTracking();
 	}
 
 	private async handleIntentionalUninstall(): Promise<void> {
