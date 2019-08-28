@@ -67,7 +67,7 @@ $injector.require("userSettingsService", "./services/user-settings-service");
 $injector.requirePublic("analyticsSettingsService", "./services/analytics-settings-service");
 $injector.require("analyticsService", "./services/analytics/analytics-service");
 $injector.require("googleAnalyticsProvider", "./services/analytics/google-analytics-provider");
-$injector.requirePublicClass("companyInsightsService", "./services/company-insights-service");
+$injector.requirePublicClass("companyInsightsController", "./controllers/company-insights-controller");
 
 $injector.require("platformCommandParameter", "./platform-command-param");
 $injector.requireCommand("create", "./commands/create-project");

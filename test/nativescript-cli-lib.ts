@@ -71,6 +71,9 @@ describe("nativescript-cli-lib", () => {
 		],
 		initializeService: [
 			"initialize"
+		],
+		companyInsightsController: [
+			"getCompanyData"
 		]
 	};
 

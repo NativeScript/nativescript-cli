@@ -50,7 +50,7 @@ interface IPlaygroundInsightsEndpointData {
 /**
  * Describes the service that can be used to get insights about the company using the CLI.
  */
-interface ICompanyInsightsService {
+interface ICompanyInsightsController {
 	/**
 	 * Describes information about the company.
 	 * @returns {Promise<ICompanyData>}
