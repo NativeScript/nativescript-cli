@@ -58,9 +58,9 @@ export class IOSDeviceDebugService extends DebugServiceBase implements IDeviceDe
 
 	private async validateUSBConnectedDevice() {
 		const device = await this.$devicesService.getDevice(this.deviceIdentifier);
-		if (device.deviceInfo.connectionTypes.indexOf(DeviceConnectionType.USB) === -1) {
+		if (device.deviceInfo.connectionTypes.indexOf(DeviceConnectionType.USB) === -1 && device.deviceInfo.connectionTypes.indexOf(DeviceConnectionType.Local) === -1) {
 			const deviceConnectionTypes = device.deviceInfo.connectionTypes.map(type => DeviceConnectionType[type]).join(", ");
-			this.$errors.fail(`Debugging application requires a USB connection while the target device "${this.deviceIdentifier}" has connection type "${deviceConnectionTypes}".`);
+			this.$errors.fail(`Debugging application requires a USB or LOCAL connection while the target device "${this.deviceIdentifier}" has connection type "${deviceConnectionTypes}".`);
 		}
 	}
 
