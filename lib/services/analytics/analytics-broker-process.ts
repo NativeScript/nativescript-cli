@@ -29,6 +29,10 @@ const finishTracking = async (data?: ITrackingInformation) => {
 	analyticsLoggingService.logData({ message: `analytics-broker-process finish tracking started` });
 	await trackingQueue;
 	analyticsLoggingService.logData({ message: `analytics-broker-process tracking finished` });
+
+};
+
+const killCurrentProcessGracefully = () => {
 	$injector.dispose();
 	process.exit();
 };
@@ -68,12 +72,27 @@ process.on("message", async (data: ITrackingInformation) => {
 		return;
 	}
 
+	if (data.type === TrackingTypes.FinishTracking) {
+		await finishTracking();
+
+		if (process.connected) {
+			analyticsLoggingService.logData({ message: `analytics-broker-process will send ${DetachedProcessMessages.ProcessFinishedTasks} message` });
+			process.send(DetachedProcessMessages.ProcessFinishedTasks, () => {
+				analyticsLoggingService.logData({ message: `analytics-broker-process sent ${DetachedProcessMessages.ProcessFinishedTasks} message and will exit gracefully now` });
+				killCurrentProcessGracefully();
+			});
+		}
+
+		return;
+	}
+
 	await sendDataForTracking(data);
 });
 
 process.on("disconnect", async () => {
 	analyticsLoggingService.logData({ message: "analytics-broker-process received process.disconnect event" });
 	await finishTracking();
+	killCurrentProcessGracefully();
 });
 
 analyticsLoggingService.logData({ message: `analytics-broker-process will send ${DetachedProcessMessages.ProcessReadyToReceive} message` });
