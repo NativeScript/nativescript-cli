@@ -12,24 +12,23 @@ export class IOSSocketRequestExecutor implements IiOSSocketRequestExecutor {
 		await this.executeRequest(mainRequestName, readyRequestName, appId, deviceId, timeout);
 	}
 
-	public async executeRefreshRequest(device: Mobile.IiOSDevice, appId: string): Promise<boolean> {
+	public async executeRefreshRequest(device: Mobile.IiOSDevice, timeout: number, appId: string): Promise<boolean> {
 		const deviceId = device.deviceInfo.identifier;
 		const mainRequestName = this.$iOSNotification.getRefreshRequest(appId);
-		const readyRequestName = this.$iOSNotification.getAppRefreshStarted(appId);
-		const timeout = 5;
+		const refreshRequestStartedName = this.$iOSNotification.getAppRefreshStarted(appId);
 
-		const result = await this.executeRequest(mainRequestName, readyRequestName, appId, deviceId, timeout);
+		const result = await this.executeRequest(mainRequestName, refreshRequestStartedName, appId, deviceId, timeout);
 
 		return result;
 	}
 
-	private async executeRequest(mainRequestName: string, readyRequestName: string, appId: string, deviceId: string, timeout: number): Promise<boolean> {
+	private async executeRequest(mainRequestName: string, successfulyExecutedNotificationName: string, appId: string, deviceId: string, timeout: number): Promise<boolean> {
 		let isSuccessful = false;
 
 		try {
 			// We should create this promise here because we need to send the ObserveNotification on the device
 			// before we send the PostNotification.
-			const socket = await this.$iOSNotificationService.postNotification(deviceId, readyRequestName, constants.IOS_OBSERVE_NOTIFICATION_COMMAND_TYPE);
+			const socket = await this.$iOSNotificationService.postNotification(deviceId, successfulyExecutedNotificationName, constants.IOS_OBSERVE_NOTIFICATION_COMMAND_TYPE);
 			const notificationPromise = this.$iOSNotificationService.awaitNotification(deviceId, +socket, timeout);
 			await this.$iOSNotificationService.postNotification(deviceId, mainRequestName);
 			await notificationPromise;

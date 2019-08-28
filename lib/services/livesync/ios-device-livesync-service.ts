@@ -116,7 +116,7 @@ export class IOSDeviceLiveSyncService extends DeviceLiveSyncServiceBase implemen
 	private async refreshWithNotification(projectData: IProjectData) {
 		let didRefresh = false;
 		await this.$lockService.executeActionWithLock(async () => {
-			didRefresh = await this.$iOSSocketRequestExecutor.executeRefreshRequest(this.device, projectData.projectIdentifiers.ios);
+			didRefresh = await this.$iOSSocketRequestExecutor.executeRefreshRequest(this.device, 5, projectData.projectIdentifiers.ios);
 		}, `ios-device-livesync-${this.device.deviceInfo.identifier}-${projectData.projectIdentifiers.ios}.lock`);
 
 		return didRefresh;
