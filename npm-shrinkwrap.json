@@ -5481,9 +5481,9 @@
       }
     },
     "nativescript-doctor": {
-      "version": "1.11.0",
-      "resolved": "https://registry.npmjs.org/nativescript-doctor/-/nativescript-doctor-1.11.0.tgz",
-      "integrity": "sha512-TlR8b1+R6ARXWe9InUvSkiLDhXW30wVP8skgp38KKNXBXPPNE+vZHULFc0AkwMbR12y+vBqxvBwA8x2f7Mahzw==",
+      "version": "1.11.1",
+      "resolved": "https://registry.npmjs.org/nativescript-doctor/-/nativescript-doctor-1.11.1.tgz",
+      "integrity": "sha512-ugGmAWD7PqmShSgmmO43AMj44pocMs3P/zkV42dWO+DB0geB6N089JgUPlzJBLNLywIX/7ZYJ0Ig3QyqedgOwA==",
       "requires": {
         "lodash": "4.17.15",
         "osenv": "0.1.3",
