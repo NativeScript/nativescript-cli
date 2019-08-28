@@ -1,7 +1,5 @@
 import * as constants from "../../constants";
 import * as minimatch from "minimatch";
-import { cache } from "../../common/decorators";
-import { IOS_APP_CRASH_LOG_REG_EXP } from "../../common/constants";
 import * as net from "net";
 import { DeviceLiveSyncServiceBase } from "./device-livesync-service-base";
 import { performanceLog } from "../../common/decorators";
@@ -10,10 +8,7 @@ import * as semver from "semver";
 let currentPageReloadId = 0;
 
 export class IOSDeviceLiveSyncService extends DeviceLiveSyncServiceBase implements INativeScriptDeviceLiveSyncService {
-	public static SUCCESS_LIVESYNC_LOG_REGEX = /Successfully refreshed the application with RefreshRequest./;
-	public static FAIL_LIVESYNC_LOG_REGEX = /Failed to refresh the application with RefreshRequest./;
 	private static MIN_RUNTIME_VERSION_WITH_REFRESH_NOTIFICATION = "6.1.0";
-	private _isLiveSyncSuccessful: boolean = null;
 
 	private socket: net.Socket;
 
@@ -22,12 +17,10 @@ export class IOSDeviceLiveSyncService extends DeviceLiveSyncServiceBase implemen
 		private $iOSSocketRequestExecutor: IiOSSocketRequestExecutor,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $lockService: ILockService,
-		private $logParserService: ILogParserService,
 		protected platformsDataService: IPlatformsDataService,
 		private $platformCommandHelper: IPlatformCommandHelper,
 		protected device: Mobile.IiOSDevice) {
 		super(platformsDataService, device);
-
 	}
 
 	private canRefreshWithNotification(projectData: IProjectData): boolean {
@@ -123,16 +116,7 @@ export class IOSDeviceLiveSyncService extends DeviceLiveSyncServiceBase implemen
 	private async refreshWithNotification(projectData: IProjectData) {
 		let didRefresh = false;
 		await this.$lockService.executeActionWithLock(async () => {
-			this._isLiveSyncSuccessful = null;
-			this.attachToLiveSyncLogs();
-			// TODO: start the application only when needed when we know the app state
-			await this.device.applicationManager.startApplication({
-				appId: projectData.projectIdentifiers.ios,
-				projectName: projectData.projectName,
-				projectDir: projectData.projectDir
-			});
-			await this.$iOSSocketRequestExecutor.executeRefreshRequest(this.device, projectData.projectIdentifiers.ios);
-			didRefresh = await this.isLiveSyncSuccessful();
+			didRefresh = await this.$iOSSocketRequestExecutor.executeRefreshRequest(this.device, projectData.projectIdentifiers.ios);
 		}, `ios-device-livesync-${this.device.deviceInfo.identifier}-${projectData.projectIdentifiers.ios}.lock`);
 
 		return didRefresh;
@@ -144,55 +128,6 @@ export class IOSDeviceLiveSyncService extends DeviceLiveSyncServiceBase implemen
 			projectName: projectData.projectName,
 			waitForDebugger: liveSyncInfo.waitForDebugger,
 			projectDir: projectData.projectDir
-		});
-	}
-
-	@cache()
-	private attachToLiveSyncLogs(): void {
-		this.$logParserService.addParseRule({
-			regex: IOSDeviceLiveSyncService.SUCCESS_LIVESYNC_LOG_REGEX,
-			handler: this.onSuccessfulLiveSync.bind(this),
-			name: "successfulLiveSync",
-			platform: this.$devicePlatformsConstants.iOS.toLowerCase()
-		});
-		this.$logParserService.addParseRule({
-			regex: IOSDeviceLiveSyncService.FAIL_LIVESYNC_LOG_REGEX,
-			handler: this.onFailedLiveSync.bind(this),
-			name: "failedLiveSync",
-			platform: this.$devicePlatformsConstants.iOS.toLowerCase()
-		});
-		this.$logParserService.addParseRule({
-			regex: IOS_APP_CRASH_LOG_REG_EXP,
-			handler: this.onFailedLiveSync.bind(this),
-			name: "liveSyncCrash",
-			platform: this.$devicePlatformsConstants.iOS.toLowerCase()
-		});
-	}
-
-	private onSuccessfulLiveSync(): void {
-		this._isLiveSyncSuccessful = true;
-	}
-
-	private onFailedLiveSync(): void {
-		this._isLiveSyncSuccessful = false;
-	}
-
-	private async isLiveSyncSuccessful(): Promise<boolean> {
-		return new Promise<boolean>((resolve, reject) => {
-			const retryInterval = 500;
-			let retryCount = 60 * 1000 / retryInterval;
-
-			const interval = setInterval(() => {
-				if (this._isLiveSyncSuccessful !== null) {
-					clearInterval(interval);
-					resolve(this._isLiveSyncSuccessful);
-				} else if (retryCount === 0) {
-					clearInterval(interval);
-					resolve(false);
-				} else {
-					retryCount--;
-				}
-			}, retryInterval);
 		});
 	}
 

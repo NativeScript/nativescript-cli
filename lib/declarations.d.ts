@@ -756,11 +756,12 @@ interface IiOSNotification extends NodeJS.EventEmitter {
 	getAttachRequest(appId: string, deviceId: string): string;
 	getReadyForAttach(appId: string): string;
 	getRefreshRequest(appId: string): string;
+	getAppRefreshStarted(appId: string): string;
 }
 
 interface IiOSSocketRequestExecutor {
 	executeAttachRequest(device: Mobile.IiOSDevice, timeout: number, projectId: string): Promise<void>;
-	executeRefreshRequest(device: Mobile.IiOSDevice, appId: string): Promise<void>;
+	executeRefreshRequest(device: Mobile.IiOSDevice, appId: string): Promise<boolean>;
 }
 
 /**

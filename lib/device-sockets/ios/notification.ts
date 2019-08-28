@@ -3,6 +3,7 @@ import { ATTACH_REQUEST_EVENT_NAME } from "../../common/constants";
 
 export class IOSNotification extends EventEmitter implements IiOSNotification {
 	private static REFRESH_REQUEST_NOTIFICATION_NAME = "RefreshRequest";
+	private static APP_REFRESH_STARTED_NOTIFICATION_NAME = "AppRefreshStarted";
 	private static ATTACH_REQUEST_NOTIFICATION_NAME = "AttachRequest";
 	private static READY_FOR_ATTACH_NOTIFICATION_NAME = "ReadyForAttach";
 
@@ -19,6 +20,10 @@ export class IOSNotification extends EventEmitter implements IiOSNotification {
 
 	public getRefreshRequest(appId: string): string {
 		return this.formatNotification(IOSNotification.REFRESH_REQUEST_NOTIFICATION_NAME, appId);
+	}
+
+	public getAppRefreshStarted(appId: string): string {
+		return this.formatNotification(IOSNotification.APP_REFRESH_STARTED_NOTIFICATION_NAME, appId);
 	}
 
 	private formatNotification(notification: string, appId: string) {

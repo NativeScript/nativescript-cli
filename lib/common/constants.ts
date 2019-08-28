@@ -56,6 +56,7 @@ export class EmulatorDiscoveryNames {
 export const DEVICE_LOG_EVENT_NAME = "deviceLogData";
 export const IOS_LOG_PREDICATE = 'senderImagePath contains "NativeScript" || eventMessage contains[c] "NativeScript"';
 export const IOS_APP_CRASH_LOG_REG_EXP = /Fatal JavaScript exception \- application has been terminated/;
+export const FAIL_LIVESYNC_LOG_REGEX = /Failed to refresh the application with RefreshRequest./;
 
 export const TARGET_FRAMEWORK_IDENTIFIERS = {
 	Cordova: "Cordova",
