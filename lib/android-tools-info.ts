@@ -69,9 +69,11 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 		const errors: NativeScriptDoctor.IWarning[] = [];
 		const toolsInfoData = this.getToolsInfo(config);
 		const isAndroidHomeValid = this.isAndroidHomeValid();
+		const runtimeVersion = this.getRuntimeVersion(config);
+		const supportsOnlyMinRequiredCompileTarget = this.getMaxSupportedCompileVersion(runtimeVersion) === AndroidToolsInfo.MIN_REQUIRED_COMPILE_TARGET;
 		if (!toolsInfoData.compileSdkVersion) {
 			errors.push({
-				warning: `Cannot find a compatible Android SDK for compilation. To be able to build for Android, install Android SDK ${AndroidToolsInfo.MIN_REQUIRED_COMPILE_TARGET} or later.`,
+				warning: `Cannot find a compatible Android SDK for compilation. To be able to build for Android, install Android SDK ${AndroidToolsInfo.MIN_REQUIRED_COMPILE_TARGET}${supportsOnlyMinRequiredCompileTarget ? "" : " or later"}.`,
 				additionalInformation: `Run \`\$ ${this.getPathToSdkManagementTool()}\` to manage your Android SDK versions.`,
 				platforms: [Constants.ANDROID_PLATFORM_NAME]
 			});
@@ -397,5 +399,13 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 		}
 
 		return runtimeVersion;
+	}
+
+	private getMaxSupportedCompileVersion(runtimeVersion: string): number {
+		if (runtimeVersion && semver.lt(semver.coerce(runtimeVersion), "6.1.0")) {
+			return 28;
+		}
+
+		return this.parseAndroidSdkString(_.last(this.getSupportedTargets(runtimeVersion).sort()));
 	}
 }
