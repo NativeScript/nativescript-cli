@@ -63,7 +63,8 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 					if (buildOptions.androidBundle) {
 						return {
 							packageNames: [
-								`${constants.APP_FOLDER_NAME}${constants.AAB_EXTENSION_NAME}`
+								`${constants.APP_FOLDER_NAME}${constants.AAB_EXTENSION_NAME}`,
+								`${constants.APP_FOLDER_NAME}-${buildMode}${constants.AAB_EXTENSION_NAME}`
 							]
 						};
 					}
