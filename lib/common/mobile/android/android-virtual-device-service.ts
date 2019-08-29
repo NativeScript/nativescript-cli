@@ -5,6 +5,7 @@ import * as osenv from "osenv";
 import { AndroidVirtualDevice, DeviceTypes, NOT_RUNNING_EMULATOR_STATUS } from "../../constants";
 import { cache } from "../../decorators";
 import { settlePromises } from "../../helpers";
+import { DeviceConnectionType } from "../../../constants";
 
 export class AndroidVirtualDeviceService implements Mobile.IAndroidVirtualDeviceService {
 	private androidHome: string;
@@ -343,6 +344,7 @@ export class AndroidVirtualDeviceService implements Mobile.IAndroidVirtualDevice
 			errorHelp: this.getConfigurationError(),
 			isTablet: false,
 			type: DeviceTypes.Emulator,
+			connectionTypes: [DeviceConnectionType.Local],
 			platform: this.$devicePlatformsConstants.Android
 		};
 	}

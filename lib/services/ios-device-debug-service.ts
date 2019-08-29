@@ -1,7 +1,7 @@
 import * as path from "path";
 import { ChildProcess } from "child_process";
 import { DebugServiceBase } from "./debug-service-base";
-import { CONNECTION_ERROR_EVENT_NAME } from "../constants";
+import { CONNECTION_ERROR_EVENT_NAME, DeviceConnectionType } from "../constants";
 const inspectorAppName = "NativeScript Inspector.app";
 const inspectorNpmPackageName = "tns-ios-inspector";
 const inspectorUiDir = "WebInspectorUI/";
@@ -33,7 +33,7 @@ export class IOSDeviceDebugService extends DebugServiceBase implements IDeviceDe
 	@performanceLog()
 	public async debug(debugData: IDebugData, debugOptions: IDebugOptions): Promise<IDebugResultInfo> {
 		const result: IDebugResultInfo = { debugUrl: null };
-		this.validateOptions(debugOptions);
+		await this.validateOptions(debugOptions);
 
 		result.debugUrl = await this.wireDebuggerClient(debugData, debugOptions);
 
@@ -44,13 +44,23 @@ export class IOSDeviceDebugService extends DebugServiceBase implements IDeviceDe
 		this.$appDebugSocketProxyFactory.removeAllProxies();
 	}
 
-	private validateOptions(debugOptions: IDebugOptions) {
+	private async validateOptions(debugOptions: IDebugOptions) {
 		if (!this.$hostInfo.isWindows && !this.$hostInfo.isDarwin) {
 			this.$errors.fail(`Debugging on iOS devices is not supported for ${platform()} yet.`);
 		}
 
 		if (debugOptions.debugBrk && debugOptions.start) {
 			this.$errors.fail("Expected exactly one of the --debug-brk or --start options.");
+		}
+
+		await this.validateUSBConnectedDevice();
+	}
+
+	private async validateUSBConnectedDevice() {
+		const device = await this.$devicesService.getDevice(this.deviceIdentifier);
+		if (device.deviceInfo.connectionTypes.indexOf(DeviceConnectionType.USB) === -1 && device.deviceInfo.connectionTypes.indexOf(DeviceConnectionType.Local) === -1) {
+			const deviceConnectionTypes = device.deviceInfo.connectionTypes.map(type => DeviceConnectionType[type]).join(", ");
+			this.$errors.fail(`Debugging application requires a USB or LOCAL connection while the target device "${this.deviceIdentifier}" has connection type "${deviceConnectionTypes}".`);
 		}
 	}
 

@@ -1,4 +1,5 @@
 import { createTable, formatListOfNames } from "../../helpers";
+import { DeviceConnectionType } from "../../../constants";
 
 export class ListDevicesCommand implements ICommand {
 	constructor(private $devicesService: Mobile.IDevicesService,
@@ -25,9 +26,9 @@ export class ListDevicesCommand implements ICommand {
 
 		this.$logger.info("\nConnected devices & emulators");
 		let index = 1;
-		await this.$devicesService.initialize({ platform: args[0], deviceId: null, skipInferPlatform: true, skipDeviceDetectionInterval: true, skipEmulatorStart: true });
+		await this.$devicesService.initialize({ platform: args[0], deviceId: null, skipInferPlatform: true, skipDeviceDetectionInterval: true, skipEmulatorStart: true, fullDiscovery: true });
 
-		const table: any = createTable(["#", "Device Name", "Platform", "Device Identifier", "Type", "Status"], []);
+		const table: any = createTable(["#", "Device Name", "Platform", "Device Identifier", "Type", "Status", "Connection Type"], []);
 		let action: (_device: Mobile.IDevice) => Promise<void>;
 		if (this.$options.json) {
 			action = async (device) => {
@@ -37,7 +38,8 @@ export class ListDevicesCommand implements ICommand {
 			action = async (device) => {
 				table.push([(index++).toString(), device.deviceInfo.displayName || '',
 				device.deviceInfo.platform || '', device.deviceInfo.identifier || '',
-				device.deviceInfo.type || '', device.deviceInfo.status || '']);
+				device.deviceInfo.type || '', device.deviceInfo.status || '',
+				device.deviceInfo.connectionTypes.map(type => DeviceConnectionType[type]).join(", ")]);
 			};
 		}
 

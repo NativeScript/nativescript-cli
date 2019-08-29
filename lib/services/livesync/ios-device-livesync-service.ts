@@ -3,17 +3,36 @@ import * as minimatch from "minimatch";
 import * as net from "net";
 import { DeviceLiveSyncServiceBase } from "./device-livesync-service-base";
 import { performanceLog } from "../../common/decorators";
+import * as semver from "semver";
 
 let currentPageReloadId = 0;
 
 export class IOSDeviceLiveSyncService extends DeviceLiveSyncServiceBase implements INativeScriptDeviceLiveSyncService {
+	private static MIN_RUNTIME_VERSION_WITH_REFRESH_NOTIFICATION = "6.1.0";
+
 	private socket: net.Socket;
 
 	constructor(
 		private $logger: ILogger,
+		private $iOSSocketRequestExecutor: IiOSSocketRequestExecutor,
+		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
+		private $lockService: ILockService,
 		protected platformsDataService: IPlatformsDataService,
+		private $platformCommandHelper: IPlatformCommandHelper,
 		protected device: Mobile.IiOSDevice) {
 		super(platformsDataService, device);
+	}
+
+	private canRefreshWithNotification(projectData: IProjectData): boolean {
+		if (this.device.isEmulator) {
+			return false;
+		}
+
+		const currentRuntimeVersion = this.$platformCommandHelper.getCurrentPlatformVersion(this.$devicePlatformsConstants.iOS, projectData);
+		const canRefresh = semver.gte(
+			semver.coerce(currentRuntimeVersion), IOSDeviceLiveSyncService.MIN_RUNTIME_VERSION_WITH_REFRESH_NOTIFICATION);
+
+		return canRefresh;
 	}
 
 	private async setupSocketIfNeeded(projectData: IProjectData): Promise<boolean> {
@@ -53,7 +72,8 @@ export class IOSDeviceLiveSyncService extends DeviceLiveSyncServiceBase implemen
 			shouldRestart = true;
 		} else {
 			const canExecuteFastSync = this.canExecuteFastSyncForPaths(liveSyncInfo, localToDevicePaths, projectData, deviceAppData.platform);
-			if (!canExecuteFastSync || !await this.setupSocketIfNeeded(projectData)) {
+			const isRefreshConnectionSetup = this.canRefreshWithNotification(projectData) || (!this.device.isOnlyWiFiConnected && await this.setupSocketIfNeeded(projectData));
+			if (!canExecuteFastSync || !isRefreshConnectionSetup) {
 				shouldRestart = true;
 			}
 		}
@@ -72,14 +92,36 @@ export class IOSDeviceLiveSyncService extends DeviceLiveSyncServiceBase implemen
 		const otherFiles = _.difference(localToDevicePaths, _.concat(scriptFiles, scriptRelatedFiles));
 
 		try {
-			if (await this.setupSocketIfNeeded(projectData)) {
-				await this.reloadPage(otherFiles);
-			} else {
-				didRefresh = false;
+			if (otherFiles.length) {
+				didRefresh = await this.refreshApplicationCore(projectData);
 			}
 		} catch (e) {
 			didRefresh = false;
 		}
+
+		return didRefresh;
+	}
+
+	private async refreshApplicationCore(projectData: IProjectData) {
+		let didRefresh = true;
+		if (this.canRefreshWithNotification(projectData)) {
+			didRefresh = await this.refreshWithNotification(projectData);
+		} else {
+			if (await this.setupSocketIfNeeded(projectData)) {
+				await this.reloadPage();
+			} else {
+				didRefresh = false;
+			}
+		}
+
+		return didRefresh;
+	}
+
+	private async refreshWithNotification(projectData: IProjectData) {
+		let didRefresh = false;
+		await this.$lockService.executeActionWithLock(async () => {
+			didRefresh = await this.$iOSSocketRequestExecutor.executeRefreshRequest(this.device, 5, projectData.projectIdentifiers.ios);
+		}, `ios-device-livesync-${this.device.deviceInfo.identifier}-${projectData.projectIdentifiers.ios}.lock`);
 
 		return didRefresh;
 	}
@@ -93,18 +135,16 @@ export class IOSDeviceLiveSyncService extends DeviceLiveSyncServiceBase implemen
 		});
 	}
 
-	private async reloadPage(localToDevicePaths: Mobile.ILocalToDevicePathData[]): Promise<void> {
-		if (localToDevicePaths.length) {
-			const message = JSON.stringify({
-				method: "Page.reload",
-				params: {
-					ignoreCache: false
-				},
-				id: ++currentPageReloadId
-			});
+	private async reloadPage(): Promise<void> {
+		const message = JSON.stringify({
+			method: "Page.reload",
+			params: {
+				ignoreCache: false
+			},
+			id: ++currentPageReloadId
+		});
 
-			await this.sendMessage(message);
-		}
+		await this.sendMessage(message);
 	}
 
 	private attachEventHandlers(): void {

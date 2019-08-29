@@ -24,6 +24,10 @@ export class DeviceEmitter extends EventEmitter {
 			this.emit(DeviceDiscoveryEventNames.DEVICE_LOST, device.deviceInfo);
 		});
 
+		this.$devicesService.on(DeviceDiscoveryEventNames.DEVICE_UPDATED, (device: Mobile.IDevice) => {
+			this.emit(DeviceDiscoveryEventNames.DEVICE_UPDATED, device.deviceInfo);
+		});
+
 		this.$deviceLogProvider.on("data", (identifier: string, data: any) => {
 			this.emit(DEVICE_LOG_EVENT_NAME, identifier, data.toString());
 		});

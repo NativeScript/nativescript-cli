@@ -224,6 +224,7 @@ export class DevicesService extends EventEmitter implements Mobile.IDevicesServi
 
 	private attachToDeviceDiscoveryEvents(deviceDiscovery: Mobile.IDeviceDiscovery): void {
 		deviceDiscovery.on(constants.DeviceDiscoveryEventNames.DEVICE_FOUND, (device: Mobile.IDevice) => this.onDeviceFound(device));
+		deviceDiscovery.on(constants.DeviceDiscoveryEventNames.DEVICE_UPDATED, (device: Mobile.IDevice) => this.onDeviceUpdated(device));
 		deviceDiscovery.on(constants.DeviceDiscoveryEventNames.DEVICE_LOST, (device: Mobile.IDevice) => this.onDeviceLost(device));
 	}
 
@@ -231,6 +232,12 @@ export class DevicesService extends EventEmitter implements Mobile.IDevicesServi
 		this.$logger.trace(`Found device with identifier '${device.deviceInfo.identifier}'`);
 		this._devices[device.deviceInfo.identifier] = device;
 		this.emit(constants.DeviceDiscoveryEventNames.DEVICE_FOUND, device);
+	}
+
+	private onDeviceUpdated(device: Mobile.IDevice): void {
+		this.$logger.trace(`Updated device with identifier '${device.deviceInfo.identifier}'`);
+		this._devices[device.deviceInfo.identifier] = device;
+		this.emit(constants.DeviceDiscoveryEventNames.DEVICE_UPDATED, device);
 	}
 
 	private onDeviceLost(device: Mobile.IDevice): void {
@@ -630,7 +637,8 @@ export class DevicesService extends EventEmitter implements Mobile.IDevicesServi
 			emulator: deviceInitOpts.emulator,
 			platform: deviceInitOpts.platform,
 			shouldReturnImmediateResult: deviceInitOpts.shouldReturnImmediateResult,
-			detectionInterval: deviceInitOpts.detectionInterval
+			detectionInterval: deviceInitOpts.detectionInterval,
+			fullDiscovery: deviceInitOpts.fullDiscovery
 		};
 
 		if (platform && deviceOption) {
@@ -822,7 +830,7 @@ export class DevicesService extends EventEmitter implements Mobile.IDevicesServi
 		const { shouldReturnImmediateResult, emulator } = deviceInitOpts;
 		const platform = deviceInitOpts.platform || this._platform;
 
-		return { platform, shouldReturnImmediateResult: !!shouldReturnImmediateResult, emulator: !!emulator };
+		return { platform, shouldReturnImmediateResult: !!shouldReturnImmediateResult, emulator: !!emulator, fullDiscovery: deviceInitOpts.fullDiscovery };
 	}
 
 	private getEmulatorError(error: Error, platform: string): string {

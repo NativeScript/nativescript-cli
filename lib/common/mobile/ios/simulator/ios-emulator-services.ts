@@ -1,5 +1,6 @@
 import * as net from "net";
 import { APPLE_VENDOR_NAME, DeviceTypes, RUNNING_EMULATOR_STATUS, NOT_RUNNING_EMULATOR_STATUS } from "../../../constants";
+import { DeviceConnectionType } from "../../../../constants";
 
 class IosEmulatorServices implements Mobile.IiOSSimulatorService {
 	constructor(private $logger: ILogger,
@@ -102,6 +103,7 @@ class IosEmulatorServices implements Mobile.IiOSSimulatorService {
 			errorHelp: null,
 			isTablet: this.$mobileHelper.isiOSTablet(simDevice.name),
 			type: DeviceTypes.Emulator,
+			connectionTypes: [DeviceConnectionType.Local],
 			platform: this.$devicePlatformsConstants.iOS
 		};
 	}

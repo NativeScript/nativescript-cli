@@ -4,6 +4,7 @@ import { LiveSyncPaths } from "../../../lib/common/constants";
 import { assert } from "chai";
 import * as path from "path";
 import { AndroidDeviceHashService } from "../../../lib/common/mobile/android/android-device-hash-service";
+import { DeviceConnectionType } from "../../../lib/constants";
 
 interface ITestSetupInput {
 	existsHashesFile?: boolean;
@@ -86,6 +87,7 @@ function mockDevice(deviceHashService: Mobile.IAndroidDeviceHashService): Mobile
 		applicationManager: mockDeviceApplicationManager(),
 		fileSystem: mockDeviceFileSystem(deviceHashService),
 		isEmulator: true,
+		isOnlyWiFiConnected: false,
 		openDeviceLogStream: () => Promise.resolve(),
 		init: () => Promise.resolve()
 	};
@@ -104,6 +106,7 @@ function mockDeviceInfo(): Mobile.IDeviceInfo {
 		errorHelp: null,
 		isTablet: true,
 		type: "Device",
+		connectionTypes: [DeviceConnectionType.USB],
 		platform: "Android"
 	};
 }
@@ -119,7 +122,7 @@ function createDeviceAppData(deviceHashService: Mobile.IAndroidDeviceHashService
 }
 
 function mockAdb(): Mobile.IDeviceAndroidDebugBridge {
-	return <Mobile.IDeviceAndroidDebugBridge> {
+	return <Mobile.IDeviceAndroidDebugBridge>{
 		pushFile: async (filePath: string) => {
 			pushFileParams.push({ filePath });
 		},
@@ -138,7 +141,7 @@ function mockDeviceApplicationManager(): Mobile.IDeviceApplicationManager {
 }
 
 function mockDeviceFileSystem(deviceHashService: Mobile.IAndroidDeviceHashService): Mobile.IAndroidDeviceFileSystem {
-	return <any> {
+	return <any>{
 		deleteFile: async (deviceFilePath: string, appId: string) => {
 			deleteFileParams.push({ deviceFilePath, appId });
 		},
@@ -213,7 +216,7 @@ function setup(options?: ITestSetupInput): ITestSetupOutput {
 	};
 }
 
-async function transferFiles(testSetup: ITestSetupOutput, options: { force: boolean, isFullSync: boolean}): Promise<Mobile.ILocalToDevicePathData[]> {
+async function transferFiles(testSetup: ITestSetupOutput, options: { force: boolean, isFullSync: boolean }): Promise<Mobile.ILocalToDevicePathData[]> {
 	const androidDeviceLiveSyncServiceBase = testSetup.androidDeviceLiveSyncServiceBase;
 	const transferredFiles = await androidDeviceLiveSyncServiceBase.transferFiles(
 		testSetup.deviceAppData,

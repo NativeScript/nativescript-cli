@@ -1,5 +1,5 @@
 import { cache } from "../common/decorators";
-import { HmrConstants, IOS_APP_CRASH_LOG_REG_EXP } from "../common/constants";
+import { HmrConstants, IOS_APP_CRASH_LOG_REG_EXP, FAIL_LIVESYNC_LOG_REGEX } from "../common/constants";
 
 export class HmrStatusService implements IHmrStatusService {
 	public static HMR_STATUS_LOG_REGEX = /([a-z A-Z]*) hmr hash ([a-z0-9]*)\./;
@@ -47,6 +47,12 @@ export class HmrStatusService implements IHmrStatusService {
 			regex: IOS_APP_CRASH_LOG_REG_EXP,
 			handler: this.handleAppCrash.bind(this),
 			name: "appCrashHmr",
+			platform: this.$devicePlatformsConstants.iOS.toLowerCase()
+		});
+		this.$logParserService.addParseRule({
+			regex: FAIL_LIVESYNC_LOG_REGEX,
+			handler: this.handleAppCrash.bind(this),
+			name: "failedLiveSync",
 			platform: this.$devicePlatformsConstants.iOS.toLowerCase()
 		});
 	}

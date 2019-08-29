@@ -29,7 +29,7 @@ export class IOSDeviceOperations extends EventEmitter implements IIOSDeviceOpera
 	}
 
 	@cache()
-	public async startLookingForDevices(deviceFoundCallback: DeviceInfoCallback, deviceLostCallback: DeviceInfoCallback, options?: Mobile.IDeviceLookingOptions): Promise<void> {
+	public async startLookingForDevices(deviceFoundCallback: DeviceInfoCallback, deviceUpdatedCallback: DeviceInfoCallback, deviceLostCallback: DeviceInfoCallback, options?: Mobile.IDeviceLookingOptions): Promise<void> {
 		this.$logger.trace("Starting to look for iOS devices.");
 		this.isInitialized = true;
 		if (!this.deviceLib) {
@@ -40,7 +40,7 @@ export class IOSDeviceOperations extends EventEmitter implements IIOSDeviceOpera
 				return deviceFoundCallback(deviceInfo);
 			};
 
-			this.deviceLib = new IOSDeviceLibModule(wrappedDeviceFoundCallback, deviceLostCallback);
+			this.deviceLib = new IOSDeviceLibModule(wrappedDeviceFoundCallback, deviceUpdatedCallback, deviceLostCallback);
 			if (options && options.shouldReturnImmediateResult) {
 				return;
 			}
@@ -51,7 +51,7 @@ export class IOSDeviceOperations extends EventEmitter implements IIOSDeviceOpera
 				const maxIterationsCount = 3;
 
 				const intervalHandle: NodeJS.Timer = setInterval(() => {
-					if (foundDevice) {
+					if (foundDevice && !options.fullDiscovery) {
 						resolve();
 						return clearInterval(intervalHandle);
 					}

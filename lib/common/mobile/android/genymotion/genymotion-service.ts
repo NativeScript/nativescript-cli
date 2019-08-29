@@ -4,6 +4,7 @@ import { EOL } from "os";
 import * as path from "path";
 import * as osenv from "osenv";
 import { cache } from "../../../decorators";
+import { DeviceConnectionType } from "../../../../constants";
 
 export class AndroidGenymotionService implements Mobile.IAndroidVirtualDeviceService {
 	constructor(private $adb: Mobile.IAndroidDebugBridge,
@@ -139,6 +140,7 @@ export class AndroidGenymotionService implements Mobile.IAndroidVirtualDeviceSer
 			errorHelp: [configurationError, error].filter(item => !!item).join(EOL) || null,
 			isTablet: false, //TODO: Consider how to populate this correctly when the device is not running
 			type: DeviceTypes.Emulator,
+			connectionTypes: [DeviceConnectionType.Local],
 			platform: this.$devicePlatformsConstants.Android
 		};
 	}

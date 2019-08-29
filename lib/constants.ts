@@ -323,6 +323,13 @@ export const LoggerAppenders = {
 	cliAppender: join(pathToLoggerAppendersDir, "cli-appender")
 };
 
+export enum DeviceConnectionType {
+	Unknown = 0,
+	USB = 1,
+	Wifi = 2,
+	Local = 10
+}
+
 export enum LoggerLevel {
 	/**
 	 * Show all log messages.

@@ -3,6 +3,7 @@ import * as applicationManagerPath from "./android-application-manager";
 import * as fileSystemPath from "./android-device-file-system";
 import * as constants from "../../constants";
 import { cache } from "../../decorators";
+import { DeviceConnectionType } from "../../../constants";
 
 interface IAndroidDeviceDetails {
 	model: string;
@@ -86,8 +87,11 @@ export class AndroidDevice implements Mobile.IAndroidDevice {
 			status: adbStatusInfo ? adbStatusInfo.deviceStatus : this.status,
 			errorHelp: adbStatusInfo ? adbStatusInfo.errorHelp : "Unknown status",
 			isTablet: this.getIsTablet(details),
-			type
+			type,
+			connectionTypes: [DeviceConnectionType.Local]
 		};
+
+		this.deviceInfo.connectionTypes = this.isEmulator ? [DeviceConnectionType.Local] : [DeviceConnectionType.USB];
 
 		if (this.isEmulator) {
 			this.deviceInfo.displayName = await this.$androidEmulatorServices.getRunningEmulatorName(this.identifier);
@@ -99,6 +103,10 @@ export class AndroidDevice implements Mobile.IAndroidDevice {
 
 	public get isEmulator(): boolean {
 		return this.deviceInfo.type === constants.DeviceTypes.Emulator;
+	}
+
+	public get isOnlyWiFiConnected(): boolean {
+		return false;
 	}
 
 	public async openDeviceLogStream(): Promise<void> {

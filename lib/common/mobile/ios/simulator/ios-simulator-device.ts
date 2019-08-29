@@ -5,6 +5,7 @@ import * as net from "net";
 import { cache } from "../../../decorators";
 import * as helpers from "../../../../common/helpers";
 import { IOSDeviceBase } from "../ios-device-base";
+import { DeviceConnectionType } from "../../../../constants";
 
 export class IOSSimulator extends IOSDeviceBase implements Mobile.IiOSDevice {
 	public applicationManager: Mobile.IDeviceApplicationManager;
@@ -37,12 +38,17 @@ export class IOSSimulator extends IOSDeviceBase implements Mobile.IiOSDevice {
 			status: constants.CONNECTED_STATUS,
 			errorHelp: null,
 			isTablet: this.simulator.fullId.toLowerCase().indexOf("ipad") !== -1,
-			type: constants.DeviceTypes.Emulator
+			type: constants.DeviceTypes.Emulator,
+			connectionTypes: [DeviceConnectionType.Local]
 		};
 	}
 
 	public get isEmulator(): boolean {
 		return true;
+	}
+
+	public get isOnlyWiFiConnected(): boolean {
+		return false;
 	}
 
 	@cache()
