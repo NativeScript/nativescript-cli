@@ -15,7 +15,7 @@ export class AnalyticsService implements IAnalyticsService, IDisposable {
 		private $options: IOptions,
 		private $staticConfig: Config.IStaticConfig,
 		private $prompter: IPrompter,
-		private $userSettingsService: UserSettings.IUserSettingsService,
+		private $userSettingsService: IUserSettingsService,
 		private $analyticsSettingsService: IAnalyticsSettingsService,
 		private $childProcess: IChildProcess,
 		private $projectDataService: IProjectDataService,

@@ -431,6 +431,8 @@ interface IConfiguration extends Config.IConfig {
 	USE_POD_SANDBOX: boolean;
 	UPLOAD_PLAYGROUND_FILES_ENDPOINT: string;
 	SHORTEN_URL_ENDPOINT: string;
+	INSIGHTS_URL_ENDPOINT: string;
+	WHOAMI_URL_ENDPOINT: string;
 	PREVIEW_APP_ENVIRONMENT: string;
 	GA_TRACKING_ID: string;
 }
@@ -617,7 +619,6 @@ interface IITMSData {
 	user: IApplePortalUserDetail;
 
 	applicationSpecificPassword: string;
-		
 	/**
 	 * Path to a .ipa file which will be uploaded.
 	 * @type {string}

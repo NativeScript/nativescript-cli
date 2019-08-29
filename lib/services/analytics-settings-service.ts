@@ -4,7 +4,7 @@ import { exported } from "../common/decorators";
 class AnalyticsSettingsService implements IAnalyticsSettingsService {
 	private static SESSIONS_STARTED_KEY_PREFIX = "SESSIONS_STARTED_";
 
-	constructor(private $userSettingsService: UserSettings.IUserSettingsService,
+	constructor(private $userSettingsService: IUserSettingsService,
 		private $staticConfig: IStaticConfig,
 		private $hostInfo: IHostInfo,
 		private $osInfo: IOsInfo,
