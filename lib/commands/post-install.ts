@@ -37,31 +37,20 @@ export class PostInstallCliCommand implements ICommand {
 			await this.$commandsService.tryExecuteCommand("autocomplete", []);
 		}
 
-		// Make sure the success message is separated with at least one line from all other messages.
-		this.$logger.info();
-		this.$logger.printMarkdown("Installation successful. You are good to go. Connect with us on `http://twitter.com/NativeScript`.");
-
 		if (canExecutePostInstallTask) {
 			await this.$subscriptionService.subscribeForNewsletter();
 		}
 	}
 
 	public async postCommandAction(args: string[]): Promise<void> {
-		this.$logger.info("You have successfully installed the NativeScript CLI!");
-		this.$logger.info("To create a new project, you use:".green);
-		this.$logger.printMarkdown("`tns create <app name>`");
-		this.$logger.info("To build your project locally you use:".green);
-		this.$logger.printMarkdown("`tns build <platform>`");
-		this.$logger.printMarkdown("NOTE: Local builds require additional setup of your environment. You can find more information here: `https://docs.nativescript.org/start/quick-setup`");
-
-		// Add a new line just to ensure separation between local builds and cloud builds info.
 		this.$logger.info("");
-		this.$logger.info("To build your project in the cloud you can use:".green);
-		this.$logger.printMarkdown("`tns cloud build <platform>`");
-		this.$logger.printMarkdown("NOTE: Cloud builds require Telerik account. You can find more information here: `https://docs.nativescript.org/sidekick/intro/requirements`");
+		this.$logger.info("You have successfully installed the NativeScript CLI!".green.bold);
+		this.$logger.info("");
+		this.$logger.info("Your next step is to create a new project:");
+		this.$logger.info("tns create".green.bold);
 
 		this.$logger.info("");
-		this.$logger.printMarkdown("If you want to experiment with NativeScript in your browser, try the Playground: `https://play.nativescript.org`");
+		this.$logger.printMarkdown("New to NativeScript?".bold + " Try the tutorials in NativeScript Playground: `https://play.nativescript.org`");
 
 		this.$logger.info("");
 		this.$logger.printMarkdown("If you have any questions, check Stack Overflow: `https://stackoverflow.com/questions/tagged/nativescript` and our public Slack channel: `https://nativescriptcommunity.slack.com/`");
