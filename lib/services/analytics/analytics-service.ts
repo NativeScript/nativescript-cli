@@ -146,6 +146,34 @@ export class AnalyticsService implements IAnalyticsService, IDisposable {
 		await this.trackInGoogleAnalytics(eventActionData);
 	}
 
+	public async finishTracking(): Promise<void> {
+		return new Promise((resolve, reject) => {
+			if (this.brokerProcess && this.brokerProcess.connected) {
+				let timer: NodeJS.Timer;
+
+				const handler = (data: string) => {
+					if (data === DetachedProcessMessages.ProcessFinishedTasks) {
+						this.brokerProcess.removeListener("message", handler);
+						clearTimeout(timer);
+						resolve();
+					}
+				};
+
+				timer = setTimeout(() => {
+					this.brokerProcess.removeListener("message", handler);
+					resolve();
+				}, 3000);
+
+				this.brokerProcess.on("message", handler);
+
+				const msg = { type: TrackingTypes.FinishTracking };
+				this.brokerProcess.send(msg, (err: Error) => this.$logger.trace(`Error while sending ${JSON.stringify(msg)}`));
+			} else {
+				resolve();
+			}
+		});
+	}
+
 	private forcefullyTrackInGoogleAnalytics(gaSettings: IGoogleAnalyticsData): Promise<void> {
 		gaSettings.customDimensions = gaSettings.customDimensions || {};
 		gaSettings.customDimensions[GoogleAnalyticsCustomDimensions.client] = this.$options.analyticsClient || (isInteractive() ? AnalyticsClients.Cli : AnalyticsClients.Unknown);

@@ -5,7 +5,12 @@ declare const enum DetachedProcessMessages {
 	/**
 	 * The detached process is initialized and is ready to receive information for tracking.
 	 */
-	ProcessReadyToReceive = "ProcessReadyToReceive"
+	ProcessReadyToReceive = "ProcessReadyToReceive",
+
+	/**
+	 * The detached process finished its tasks and will now exit.
+	 */
+	ProcessFinishedTasks = "ProcessFinishedTasks"
 }
 
 /**

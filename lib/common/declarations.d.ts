@@ -207,6 +207,12 @@ declare const enum TrackingTypes {
 	 * Defines that the broker process should get and track the data from preview app to Google Analytics
 	 */
 	PreviewAppData = "PreviewAppData",
+
+	/**
+	 * Defines that the broker process should send all the pending information to Analytics.
+	 * After that the process should send information it has finished tracking and die gracefully.
+	 */
+	FinishTracking = "FinishTracking",
 }
 
 /**
@@ -688,6 +694,7 @@ interface IAnalyticsService {
 	setStatus(settingName: string, enabled: boolean): Promise<void>;
 	getStatusMessage(settingName: string, jsonFormat: boolean, readableSettingName: string): Promise<string>;
 	isEnabled(settingName: string): Promise<boolean>;
+	finishTracking(): Promise<void>;
 
 	/**
 	 * Tracks the answer of question if user allows to be tracked.

@@ -30,7 +30,8 @@ describe("preuninstall", () => {
 		});
 
 		testInjector.register("analyticsService", {
-			trackEventActionInGoogleAnalytics: async (data: IEventActionData): Promise<void> => undefined
+			trackEventActionInGoogleAnalytics: async (data: IEventActionData): Promise<void> => undefined,
+			finishTracking: async(): Promise<void> => undefined
 		});
 
 		testInjector.registerCommand("dev-preuninstall", PreUninstallCommand);
@@ -83,15 +84,22 @@ describe("preuninstall", () => {
 			trackedData.push(data);
 		};
 
+		let isFinishTrackingCalled = false;
+		analyticsService.finishTracking = async (): Promise<void> => {
+			isFinishTrackingCalled = true;
+		};
+
 		const preUninstallCommand: ICommand = testInjector.resolveCommand("dev-preuninstall");
 		for (const testCase of testData) {
 			helpers.isInteractive = () => testCase.isInteractive;
 			helpers.doesCurrentNpmCommandMatch = () => testCase.isIntentionalUninstall;
+			isFinishTrackingCalled = false;
 			await preUninstallCommand.execute([]);
 			assert.deepEqual(trackedData, [{
 				action: "Uninstall CLI",
 				additionalData: testCase.expecteEventLabelData
 			}]);
+			assert.isTrue(isFinishTrackingCalled, "At the end of the command, finishTracking must be called");
 			trackedData = [];
 		}
 	});
