@@ -24,6 +24,10 @@ export class IOSDeviceLiveSyncService extends DeviceLiveSyncServiceBase implemen
 	}
 
 	private canRefreshWithNotification(projectData: IProjectData): boolean {
+		if (this.device.isEmulator) {
+			return false;
+		}
+
 		const currentRuntimeVersion = this.$platformCommandHelper.getCurrentPlatformVersion(this.$devicePlatformsConstants.iOS, projectData);
 		const canRefresh = semver.gte(
 			semver.coerce(currentRuntimeVersion), IOSDeviceLiveSyncService.MIN_RUNTIME_VERSION_WITH_REFRESH_NOTIFICATION);
