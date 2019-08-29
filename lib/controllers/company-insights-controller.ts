@@ -1,9 +1,11 @@
+
 import { AnalyticsEventLabelDelimiter } from "../constants";
 import { cache } from "../common/decorators";
 import * as path from "path";
+import * as util from "util";
 
 export class CompanyInsightsController implements ICompanyInsightsController {
-	private static CACHE_TIMEOUT = 48 * 60 * 60 * 1000; // 2 days in milliseconds
+	private static CACHE_TIMEOUT = 30 * 24 * 60 * 60 * 1000; // 30 days in milliseconds
 	private get $jsonFileSettingsService(): IJsonFileSettingsService {
 		return this.$injector.resolve<IJsonFileSettingsService>("jsonFileSettingsService", {
 			jsonFileSettingsPath: path.join(this.$settingsService.getProfileDir(), "company-insights-data.json")
@@ -23,8 +25,8 @@ export class CompanyInsightsController implements ICompanyInsightsController {
 
 		companyData = await this.getCompanyDataFromCache(cacheKey);
 
-		if (!companyData) {
-			companyData = await this.getCompanyDataFromPlaygroundInsightsEndpoint();
+		if (!companyData && currentPublicIP) {
+			companyData = await this.getCompanyDataFromPlaygroundInsightsEndpoint(currentPublicIP);
 			if (companyData && currentPublicIP) {
 				await this.$jsonFileSettingsService.saveSetting<ICompanyData>(cacheKey, companyData, { useCaching: true });
 			}
@@ -62,11 +64,12 @@ export class CompanyInsightsController implements ICompanyInsightsController {
 	}
 
 	@cache()
-	private async getCompanyDataFromPlaygroundInsightsEndpoint(): Promise<ICompanyData> {
+	private async getCompanyDataFromPlaygroundInsightsEndpoint(ipAddress: string): Promise<ICompanyData> {
 		let companyData: ICompanyData = null;
 
 		try {
-			const response = await this.$httpClient.httpRequest(this.$config.INSIGHTS_URL_ENDPOINT);
+			const url = util.format(this.$config.INSIGHTS_URL_ENDPOINT, encodeURIComponent(ipAddress));
+			const response = await this.$httpClient.httpRequest(url);
 			const data = <IPlaygroundInsightsEndpointData>(JSON.parse(response.body));
 			if (data.company) {
 				const industries = _.isArray(data.company.industries) ? data.company.industries.join(AnalyticsEventLabelDelimiter) : null;

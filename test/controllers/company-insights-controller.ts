@@ -4,10 +4,10 @@ import { LoggerStub } from "../stubs";
 import { CompanyInsightsController } from "../../lib/controllers/company-insights-controller";
 
 describe("companyInsightsController", () => {
-	const insightsUrlEndpoint = "/api/insights";
+	const insightsUrlEndpoint = "/api/insights?ipAddress=%s";
 	const currentIp = "8.8.8.8";
 	const profileDir = "profileDir";
-	const cacheTimeout = 48 * 60 * 60 * 1000; // 2 days in milliseconds
+	const cacheTimeout = 30 * 24 * 60 * 60 * 1000; // 2 days in milliseconds
 	const defaultCompanyData = {
 		company: {
 			name: "Progress",
@@ -138,6 +138,17 @@ describe("companyInsightsController", () => {
 				const companyData = await companyInsightsController.getCompanyData();
 				assert.deepEqual(companyData, null);
 			});
+
+			it("unable to get current ip address", async () => {
+				const ipService = testInjector.resolve<IIPService>("ipService");
+				ipService.getCurrentIPv4Address = async (): Promise<string> => { throw new Error("Unable to get current ip addreess"); };
+
+				const companyData = await companyInsightsController.getCompanyData();
+				assert.deepEqual(companyData, null);
+				assert.equal(httpRequestCounter, 0, "We should not have any http request");
+				assert.deepEqual(dataPassedToGetSettingValue, [], "When we are unable to get IP, we should not try to get value from the cache.");
+				assert.deepEqual(dataPassedToSaveSettingValue, [], "When we are unable to get IP, we should not persist anything.");
+			});
 		});
 
 		describe("returns correct data when", () => {
@@ -154,17 +165,6 @@ describe("companyInsightsController", () => {
 			});
 
 			describe("data for current ip does not exist in the cache and", () => {
-
-				it("unable to get current ip address, but still can get company information", async () => {
-					const ipService = testInjector.resolve<IIPService>("ipService");
-					ipService.getCurrentIPv4Address = async (): Promise<string> => { throw new Error("Unable to get current ip addreess"); };
-
-					const companyData = await companyInsightsController.getCompanyData();
-					assert.deepEqual(companyData, defaultExpectedCompanyData);
-					assert.equal(httpRequestCounter, 1, "We should have only one http request");
-					assert.deepEqual(dataPassedToGetSettingValue, [], "When we are unable to get IP, we should not try to get value from the cache.");
-					assert.deepEqual(dataPassedToSaveSettingValue, [], "When we are unable to get IP, we should not persist anything.");
-				});
 
 				it("response contains company property", async () => {
 					const companyData = await companyInsightsController.getCompanyData();
