@@ -2,19 +2,13 @@ import * as pacote from "pacote";
 import * as tar from "tar";
 import * as path from "path";
 import { cache } from "../common/decorators";
-import * as npmconfig from "libnpmconfig";
 
 export class PacoteService implements IPacoteService {
-	private npmConfig: { [index: string]: any } = {};
-
 	constructor(private $fs: IFileSystem,
 		private $injector: IInjector,
 		private $logger: ILogger,
+		private $npmConfigService: INpmConfigService,
 		private $proxyService: IProxyService) {
-		npmconfig.read().forEach((value: any, key: string) => {
-			// replace env ${VARS} in strings with the process.env value
-			this.npmConfig[key] = typeof value !== 'string' ? value :  value.replace(/\${([^}]+)}/, (_, envVar) => process.env[envVar] );
-		});
 	}
 
 	@cache()
@@ -33,7 +27,9 @@ export class PacoteService implements IPacoteService {
 
 		packageName = this.getRealPackageName(packageName);
 		this.$logger.trace(`Calling pacote.manifest for packageName: ${packageName} and options: ${JSON.stringify(manifestOptions, null, 2)}`);
-		return pacote.manifest(packageName, manifestOptions);
+		const result = pacote.manifest(packageName, manifestOptions);
+
+		return result;
 	}
 
 	public async extractPackage(packageName: string, destinationDirectory: string, options?: IPacoteExtractOptions): Promise<void> {
@@ -78,7 +74,8 @@ export class PacoteService implements IPacoteService {
 		const cachePath = await this.$packageManager.getCachePath();
 
 		// Add NPM Configuration to our Manifest options
-		const pacoteOptions = _.extend( this.npmConfig, {cache: cachePath });
+		const npmConfig = this.$npmConfigService.getConfig();
+		const pacoteOptions = _.extend(npmConfig, { cache: cachePath });
 		const proxySettings = await this.$proxyService.getCache();
 		if (proxySettings) {
 			_.extend(pacoteOptions, proxySettings);

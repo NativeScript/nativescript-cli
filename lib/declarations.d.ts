@@ -1054,3 +1054,7 @@ interface IWatchIgnoreListService {
 	removeFileFromIgnoreList(filePath: string): void;
 	isFileInIgnoreList(filePath: string): boolean;
 }
+
+interface INpmConfigService {
+	getConfig(): IDictionary<any>;
+}

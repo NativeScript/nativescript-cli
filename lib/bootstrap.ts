@@ -226,3 +226,5 @@ $injector.require("applePortalApplicationService", "./services/apple-portal/appl
 $injector.require("watchIgnoreListService", "./services/watch-ignore-list-service");
 
 $injector.requirePublicClass("initializeService", "./services/initialize-service");
+
+$injector.require("npmConfigService", "./services/npm-config-service");
