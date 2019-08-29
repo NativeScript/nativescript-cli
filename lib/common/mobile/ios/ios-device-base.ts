@@ -12,6 +12,7 @@ export abstract class IOSDeviceBase implements Mobile.IiOSDevice {
 	abstract applicationManager: Mobile.IDeviceApplicationManager;
 	abstract fileSystem: Mobile.IDeviceFileSystem;
 	abstract isEmulator: boolean;
+	abstract isOnlyWiFiConnected: boolean;
 	abstract openDeviceLogStream(options?: Mobile.IiOSLogStreamOptions): Promise<void>;
 
 	@performanceLog()

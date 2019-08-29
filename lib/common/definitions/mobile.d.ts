@@ -105,6 +105,7 @@ declare global {
 			applicationManager: Mobile.IDeviceApplicationManager;
 			fileSystem: Mobile.IDeviceFileSystem;
 			isEmulator: boolean;
+			isOnlyWiFiConnected: boolean;
 			openDeviceLogStream(): Promise<void>;
 
 			/**

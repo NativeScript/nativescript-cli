@@ -105,6 +105,10 @@ export class AndroidDevice implements Mobile.IAndroidDevice {
 		return this.deviceInfo.type === constants.DeviceTypes.Emulator;
 	}
 
+	public get isOnlyWiFiConnected(): boolean {
+		return false;
+	}
+
 	public async openDeviceLogStream(): Promise<void> {
 		if (this.deviceInfo.status === constants.CONNECTED_STATUS) {
 			await this.$logcatHelper.start({

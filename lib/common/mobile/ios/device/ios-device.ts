@@ -59,6 +59,11 @@ export class IOSDevice extends IOSDeviceBase {
 		return false;
 	}
 
+	public get isOnlyWiFiConnected(): boolean {
+		const result = this.deviceInfo.connectionTypes.every(connectionType => connectionType === constants.DeviceConnectionType.Wifi);
+		return result;
+	}
+
 	@cache()
 	public async openDeviceLogStream(): Promise<void> {
 		if (this.deviceInfo.status !== commonConstants.UNREACHABLE_STATUS) {

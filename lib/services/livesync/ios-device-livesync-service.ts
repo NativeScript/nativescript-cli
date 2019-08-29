@@ -72,7 +72,7 @@ export class IOSDeviceLiveSyncService extends DeviceLiveSyncServiceBase implemen
 			shouldRestart = true;
 		} else {
 			const canExecuteFastSync = this.canExecuteFastSyncForPaths(liveSyncInfo, localToDevicePaths, projectData, deviceAppData.platform);
-			const isRefreshConnectionSetup = this.canRefreshWithNotification(projectData) || await this.setupSocketIfNeeded(projectData);
+			const isRefreshConnectionSetup = this.canRefreshWithNotification(projectData) || (!this.device.isOnlyWiFiConnected && await this.setupSocketIfNeeded(projectData));
 			if (!canExecuteFastSync || !isRefreshConnectionSetup) {
 				shouldRestart = true;
 			}

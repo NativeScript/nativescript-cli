@@ -47,6 +47,10 @@ export class IOSSimulator extends IOSDeviceBase implements Mobile.IiOSDevice {
 		return true;
 	}
 
+	public get isOnlyWiFiConnected(): boolean {
+		return false;
+	}
+
 	@cache()
 	public async openDeviceLogStream(options?: Mobile.IiOSLogStreamOptions): Promise<void> {
 		options = options || {};

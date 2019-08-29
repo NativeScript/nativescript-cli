@@ -87,6 +87,7 @@ function mockDevice(deviceHashService: Mobile.IAndroidDeviceHashService): Mobile
 		applicationManager: mockDeviceApplicationManager(),
 		fileSystem: mockDeviceFileSystem(deviceHashService),
 		isEmulator: true,
+		isOnlyWiFiConnected: false,
 		openDeviceLogStream: () => Promise.resolve(),
 		init: () => Promise.resolve()
 	};
