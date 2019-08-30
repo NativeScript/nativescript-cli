@@ -6,8 +6,6 @@ import { CompanyInsightsController } from "../../lib/controllers/company-insight
 describe("companyInsightsController", () => {
 	const insightsUrlEndpoint = "/api/insights?ipAddress=%s";
 	const currentIp = "8.8.8.8";
-	const profileDir = "profileDir";
-	const cacheTimeout = 30 * 24 * 60 * 60 * 1000; // 2 days in milliseconds
 	const defaultCompanyData = {
 		company: {
 			name: "Progress",
@@ -29,26 +27,6 @@ describe("companyInsightsController", () => {
 		employeeCount: "500"
 	};
 
-	const defaultExpectedDataPassedToGetSetting: any[] = [{ settingName: `companyInformation_${currentIp}`, cacheOpts: { cacheTimeout } }];
-	const defaultExpectedDataPassedToSaveSetting: any[] = [
-		{
-			cacheOpts: {
-				useCaching: true
-			},
-			key: "companyInformation_8.8.8.8",
-			value: {
-				country: "Bulgaria",
-				employeeCount: "500",
-				industries: "Software__Software 2",
-				name: "Progress",
-				revenue: "123131"
-			}
-		}
-	];
-
-	let dataPassedToGetSettingValue: { settingName: string, cacheOpts?: ICacheTimeoutOpts }[] = [];
-	let dataPassedToSaveSettingValue: { key: string, value: any, cacheOpts?: IUseCacheOpts }[] = [];
-	let getSettingValueResult: IDictionary<any> = null;
 	let httpRequestCounter = 0;
 	let httpRequestResult: any = null;
 	let testInjector: IInjector = null;
@@ -68,24 +46,8 @@ describe("companyInsightsController", () => {
 		});
 
 		injector.register("logger", LoggerStub);
-		injector.register("injector", injector);
 		injector.register("ipService", {
 			getCurrentIPv4Address: async (): Promise<string> => currentIp
-		});
-
-		injector.register("settingsService", {
-			getProfileDir: (): string => profileDir
-		});
-
-		injector.register("jsonFileSettingsService", {
-			getSettingValue: async (settingName: string, cacheOpts?: ICacheTimeoutOpts): Promise<any> => {
-				dataPassedToGetSettingValue.push({ settingName, cacheOpts });
-				return getSettingValueResult;
-			},
-
-			saveSetting: async (key: string, value: any, cacheOpts?: IUseCacheOpts): Promise<void> => {
-				dataPassedToSaveSettingValue.push({ key, value, cacheOpts });
-			}
 		});
 
 		injector.register("companyInsightsController", CompanyInsightsController);
@@ -94,9 +56,6 @@ describe("companyInsightsController", () => {
 	};
 
 	beforeEach(() => {
-		dataPassedToGetSettingValue = [];
-		dataPassedToSaveSettingValue = [];
-		getSettingValueResult = null;
 		httpRequestCounter = 0;
 		httpRequestResult = defaultCompanyData;
 		testInjector = createTestInjector();
@@ -104,7 +63,7 @@ describe("companyInsightsController", () => {
 	});
 
 	describe("getCompanyData", () => {
-		describe("returns null when data does not exist in the cache and", () => {
+		describe("returns null when", () => {
 			it("the http client fails to get data", async () => {
 				const httpClient = testInjector.resolve<Server.IHttpClient>("httpClient");
 				const errMsg = "custom error";
@@ -146,31 +105,13 @@ describe("companyInsightsController", () => {
 				const companyData = await companyInsightsController.getCompanyData();
 				assert.deepEqual(companyData, null);
 				assert.equal(httpRequestCounter, 0, "We should not have any http request");
-				assert.deepEqual(dataPassedToGetSettingValue, [], "When we are unable to get IP, we should not try to get value from the cache.");
-				assert.deepEqual(dataPassedToSaveSettingValue, [], "When we are unable to get IP, we should not persist anything.");
 			});
 		});
 
 		describe("returns correct data when", () => {
-			it("data for current ip exist in the cache", async () => {
-				httpRequestResult = null;
-
-				getSettingValueResult = defaultExpectedCompanyData; // data in the file should be in the already parsed format
-				const companyData = await companyInsightsController.getCompanyData();
-				assert.deepEqual(companyData, defaultExpectedCompanyData);
-
-				assert.equal(httpRequestCounter, 0, "In case we have data for the company in our cache, we should not make any http requests");
-				assert.deepEqual(dataPassedToGetSettingValue, defaultExpectedDataPassedToGetSetting);
-				assert.deepEqual(dataPassedToSaveSettingValue, []);
-			});
-
-			describe("data for current ip does not exist in the cache and", () => {
-
 				it("response contains company property", async () => {
 					const companyData = await companyInsightsController.getCompanyData();
 					assert.deepEqual(companyData, defaultExpectedCompanyData);
-					assert.deepEqual(dataPassedToGetSettingValue, defaultExpectedDataPassedToGetSetting);
-					assert.deepEqual(dataPassedToSaveSettingValue, defaultExpectedDataPassedToSaveSetting);
 				});
 
 				it("response contains company property and industries in it are not populated", async () => {
@@ -191,26 +132,8 @@ describe("companyInsightsController", () => {
 						industries: null,
 						employeeCount: "500"
 					});
-
-					assert.deepEqual(dataPassedToGetSettingValue, defaultExpectedDataPassedToGetSetting);
-					assert.deepEqual(dataPassedToSaveSettingValue, [
-						{
-							cacheOpts: {
-								useCaching: true
-							},
-							key: "companyInformation_8.8.8.8",
-							value: {
-								country: "Bulgaria",
-								employeeCount: "500",
-								industries: null,
-								name: "Progress",
-								revenue: "123131"
-							}
-						}
-					]);
 				});
 
-			});
 		});
 
 		it("is called only once per process", async () => {
