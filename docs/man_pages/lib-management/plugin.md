@@ -35,5 +35,5 @@ Command | Description
 [plugin remove](plugin-remove.html) | Uninstalls the specified plugin and its dependencies.
 [plugin update](plugin-update.html) | Updates the specified plugin(s) and its dependencies.
 [plugin build](plugin-build.html) | Builds the Android project of a NativeScript plugin, and updates the `include.gradle`.
-[plugin create](plugin-create.html) | Builds the Android project of a NativeScript plugin, and updates the `include.gradle`.
+[plugin create](plugin-create.html) | Creates a new project for NativeScript plugin development.
 <% } %>
