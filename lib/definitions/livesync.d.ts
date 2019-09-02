@@ -220,7 +220,8 @@ declare global {
 		isFullSync: boolean;
 		waitForDebugger?: boolean;
 		deviceAppData: Mobile.IDeviceAppData;
-		didRecover?: boolean
+		didRecover?: boolean;
+		forceRefreshWithSocket?: boolean;
 	}
 
 	interface IAndroidLiveSyncResultInfo extends ILiveSyncResultInfo, IAndroidLivesyncSyncOperationResult { }

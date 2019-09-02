@@ -166,6 +166,7 @@ export class RunController extends EventEmitter implements IRunController {
 		const debugOptions = deviceDescriptor.debugOptions || {};
 
 		liveSyncResultInfo.waitForDebugger = !!debugOptions.debugBrk;
+		liveSyncResultInfo.forceRefreshWithSocket = true;
 
 		const refreshInfo = await this.refreshApplicationWithoutDebug(projectData, liveSyncResultInfo, filesChangeEventData, deviceDescriptor, { shouldSkipEmitLiveSyncNotification: true, shouldCheckDeveloperDiscImage: true });
 
