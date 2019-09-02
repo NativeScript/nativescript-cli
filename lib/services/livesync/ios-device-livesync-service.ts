@@ -23,7 +23,11 @@ export class IOSDeviceLiveSyncService extends DeviceLiveSyncServiceBase implemen
 		super(platformsDataService, device);
 	}
 
-	private canRefreshWithNotification(projectData: IProjectData): boolean {
+	private canRefreshWithNotification(projectData: IProjectData, liveSyncInfo?: ILiveSyncResultInfo): boolean {
+		if (liveSyncInfo && liveSyncInfo.forceRefreshWithSocket) {
+			return false;
+		}
+
 		if (this.device.isEmulator) {
 			return false;
 		}
@@ -72,7 +76,7 @@ export class IOSDeviceLiveSyncService extends DeviceLiveSyncServiceBase implemen
 			shouldRestart = true;
 		} else {
 			const canExecuteFastSync = this.canExecuteFastSyncForPaths(liveSyncInfo, localToDevicePaths, projectData, deviceAppData.platform);
-			const isRefreshConnectionSetup = this.canRefreshWithNotification(projectData) || (!this.device.isOnlyWiFiConnected && await this.setupSocketIfNeeded(projectData));
+			const isRefreshConnectionSetup = this.canRefreshWithNotification(projectData, liveSyncInfo) || (!this.device.isOnlyWiFiConnected && await this.setupSocketIfNeeded(projectData));
 			if (!canExecuteFastSync || !isRefreshConnectionSetup) {
 				shouldRestart = true;
 			}
@@ -93,7 +97,7 @@ export class IOSDeviceLiveSyncService extends DeviceLiveSyncServiceBase implemen
 
 		try {
 			if (otherFiles.length) {
-				didRefresh = await this.refreshApplicationCore(projectData);
+				didRefresh = await this.refreshApplicationCore(projectData, liveSyncInfo);
 			}
 		} catch (e) {
 			didRefresh = false;
@@ -102,9 +106,9 @@ export class IOSDeviceLiveSyncService extends DeviceLiveSyncServiceBase implemen
 		return didRefresh;
 	}
 
-	private async refreshApplicationCore(projectData: IProjectData) {
+	private async refreshApplicationCore(projectData: IProjectData, liveSyncInfo: ILiveSyncResultInfo) {
 		let didRefresh = true;
-		if (this.canRefreshWithNotification(projectData)) {
+		if (this.canRefreshWithNotification(projectData, liveSyncInfo)) {
 			didRefresh = await this.refreshWithNotification(projectData);
 		} else {
 			if (await this.setupSocketIfNeeded(projectData)) {
