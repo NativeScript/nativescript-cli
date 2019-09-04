@@ -1,6 +1,27 @@
 NativeScript CLI Changelog
 ================
 
+6.1.0 (2019, September 04)
+==
+
+### New
+
+* [Implemented #4229](https://github.com/NativeScript/nativescript-cli/issues/4229): Do not display command usage help after execution is started
+* [Implemented #4909](https://github.com/NativeScript/nativescript-cli/issues/4909): Support for Xcode 11 and iOS 13
+* [Implemented #4926](https://github.com/NativeScript/nativescript-cli/issues/4926): Android SDK 29 support
+* [Implemented #4947](https://github.com/NativeScript/nativescript-cli/issues/4947): Add tracking for both React NativeScript and Svelte Native projects
+* [Implemented #4966](https://github.com/NativeScript/nativescript-cli/issues/4966): Support LiveSync to iOS Wi-Fi devices
+* [Implemented #4974](https://github.com/NativeScript/nativescript-cli/issues/4974): Ask the users why they've uninstalled NativeScript CLI
+* [Implemented #4976](https://github.com/NativeScript/nativescript-cli/issues/4976): Handle changes in iOS and Android Runtime 6.1.0 logging
+* [Implemented #4980](https://github.com/NativeScript/nativescript-cli/issues/4980): Update message for subscribing to NativeScript newsletter
+* [Implemented #4992](https://github.com/NativeScript/nativescript-cli/pull/4992): Allow tns to be able to use npm configuration properly
+
+### Fixed
+
+* [Fixed #4936](https://github.com/NativeScript/nativescript-cli/issues/4936): HMR not recovering after exception in Angular lazy routes
+* [Fixed #4958](https://github.com/NativeScript/nativescript-cli/issues/4958): `tns doctor` fails when setup is not correct and user selects to fix it manually
+* [Fixed #4971](https://github.com/NativeScript/nativescript-cli/issues/4971): Not needed checks are executed on `pod install`
+
 6.0.3 (2019, August 05)
 ==
 * [Fixed #4914](https://github.com/NativeScript/nativescript-cli/issues/4914): livesync not working with command tns test android
