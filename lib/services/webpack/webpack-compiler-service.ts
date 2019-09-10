@@ -139,8 +139,8 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 
 		const args = [
 			...additionalNodeArgs,
-			path.join(projectData.projectDir, "node_modules", "webpack", "bin", "webpack.js"),
 			"--preserve-symlinks",
+			path.join(projectData.projectDir, "node_modules", "webpack", "bin", "webpack.js"),
 			`--config=${path.join(projectData.projectDir, "webpack.config.js")}`,
 			...envParams
 		];
