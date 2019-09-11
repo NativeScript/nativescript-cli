@@ -7,6 +7,7 @@ declare global {
 		hmr: boolean;
 		env: any;
 		watch?: boolean;
+		watchNative: boolean
 	}
 
 	interface IiOSCodeSigningData {

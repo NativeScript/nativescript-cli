@@ -9,7 +9,8 @@ const prepareData = {
 	release: false,
 	hmr: false,
 	env: {},
-	watch: true
+	watch: true,
+	watchNative: true
 };
 
 let isCompileWithWatchCalled = false;
