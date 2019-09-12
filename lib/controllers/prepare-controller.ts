@@ -127,14 +127,14 @@ export class PrepareController extends EventEmitter {
 	}
 
 	private async startNativeWatcherWithPrepare(platformData: IPlatformData, projectData: IProjectData, prepareData: IPrepareData): Promise<boolean> {
-		let newWatchStarted = false;
+		let newNativeWatchStarted = false;
 		let hasNativeChanges = false;
 
 		if (prepareData.watchNative) {
-			newWatchStarted = await this.startNativeWatcher(platformData, projectData);
+			newNativeWatchStarted = await this.startNativeWatcher(platformData, projectData);
 		}
 
-		if (newWatchStarted) {
+		if (newNativeWatchStarted) {
 			hasNativeChanges = await this.$prepareNativePlatformService.prepareNativePlatform(platformData, projectData, prepareData);
 		}
 

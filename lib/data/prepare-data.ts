@@ -20,7 +20,6 @@ export class PrepareData extends ControllerDataBase {
 		if (_.isBoolean(data.watchNative)) {
 			this.watchNative = data.watchNative;
 		}
-		this.watch = data.watch;
 	}
 }
 
