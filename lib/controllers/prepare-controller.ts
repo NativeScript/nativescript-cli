@@ -127,6 +127,21 @@ export class PrepareController extends EventEmitter {
 	}
 
 	private async startNativeWatcherWithPrepare(platformData: IPlatformData, projectData: IProjectData, prepareData: IPrepareData): Promise<boolean> {
+		let newNativeWatchStarted = false;
+		let hasNativeChanges = false;
+
+		if (prepareData.watchNative) {
+			newNativeWatchStarted = await this.startNativeWatcher(platformData, projectData);
+		}
+
+		if (newNativeWatchStarted) {
+			hasNativeChanges = await this.$prepareNativePlatformService.prepareNativePlatform(platformData, projectData, prepareData);
+		}
+
+		return hasNativeChanges;
+	}
+
+	private async startNativeWatcher(platformData: IPlatformData, projectData: IProjectData): Promise<boolean> {
 		if (this.watchersData[projectData.projectDir][platformData.platformNameLowerCase].nativeFilesWatcher) {
 			return false;
 		}
@@ -155,9 +170,7 @@ export class PrepareController extends EventEmitter {
 
 		this.watchersData[projectData.projectDir][platformData.platformNameLowerCase].nativeFilesWatcher = watcher;
 
-		const hasNativeChanges = await this.$prepareNativePlatformService.prepareNativePlatform(platformData, projectData, prepareData);
-
-		return hasNativeChanges;
+		return true;
 	}
 
 	@hook('watchPatterns')
