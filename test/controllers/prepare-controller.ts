@@ -55,6 +55,10 @@ function createTestInjector(data: { hasNativeChanges: boolean }): IInjector {
 		isFileInIgnoreList: () => false
 	});
 
+	injector.register("analyticsService", {
+		trackEventActionInGoogleAnalytics: () => ({})
+	});
+
 	const prepareController: PrepareController = injector.resolve("prepareController");
 	prepareController.emit = (eventName: string, eventData: any) => {
 		emittedEventNames.push(eventName);

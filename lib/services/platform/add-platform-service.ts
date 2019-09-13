@@ -1,6 +1,6 @@
 import * as path from "path";
 import * as temp from "temp";
-import { PROJECT_FRAMEWORK_FOLDER_NAME } from "../../constants";
+import { PROJECT_FRAMEWORK_FOLDER_NAME, TrackActionNames, AnalyticsEventLabelDelimiter } from "../../constants";
 import { performanceLog } from "../../common/decorators";
 
 export class AddPlatformService implements IAddPlatformService {
@@ -8,7 +8,8 @@ export class AddPlatformService implements IAddPlatformService {
 		private $fs: IFileSystem,
 		private $pacoteService: IPacoteService,
 		private $projectDataService: IProjectDataService,
-		private $terminalSpinnerService: ITerminalSpinnerService
+		private $terminalSpinnerService: ITerminalSpinnerService,
+		private $analyticsService: IAnalyticsService
 	) { }
 
 	public async addPlatformSafe(projectData: IProjectData, platformData: IPlatformData, packageToInstall: string, nativePrepare: INativePrepare): Promise<string> {
@@ -22,6 +23,7 @@ export class AddPlatformService implements IAddPlatformService {
 			const frameworkVersion = frameworkPackageJsonContent.version;
 
 			await this.setPlatformVersion(platformData, projectData, frameworkVersion);
+			await this.trackPlatformVersion(frameworkVersion, platformData);
 
 			if (!nativePrepare || !nativePrepare.skipNativePrepare) {
 				await this.addNativePlatform(platformData, projectData, frameworkDirPath, frameworkVersion);
@@ -60,6 +62,13 @@ export class AddPlatformService implements IAddPlatformService {
 		platformData.platformProjectService.ensureConfigurationFileInAppResources(projectData);
 		await platformData.platformProjectService.interpolateData(projectData);
 		platformData.platformProjectService.afterCreateProject(platformData.projectRoot, projectData);
+	}
+
+	private async trackPlatformVersion(frameworkVersion: string, platformData: IPlatformData): Promise<void> {
+		await this.$analyticsService.trackEventActionInGoogleAnalytics({
+			action: TrackActionNames.AddPlatform,
+			additionalData: `${platformData.platformNameLowerCase}${AnalyticsEventLabelDelimiter}${frameworkVersion}`
+		});
 	}
 }
 $injector.register("addPlatformService", AddPlatformService);
