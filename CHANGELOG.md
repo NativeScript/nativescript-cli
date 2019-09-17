@@ -1,6 +1,13 @@
 NativeScript CLI Changelog
 ================
 
+6.1.2 (2019, September 18)
+==
+
+### Fixed
+* [Fixed #5018](https://github.com/NativeScript/nativescript-cli/issues/5018): Track runtime versions on add and on build, run, deploy
+
+
 6.1.1 (2019, September 17)
 ==
 
