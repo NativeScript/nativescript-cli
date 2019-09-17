@@ -1,6 +1,15 @@
 NativeScript CLI Changelog
 ================
 
+6.1.1 (2019, September 17)
+==
+
+### Fixed
+
+* [Fixed #5015](https://github.com/NativeScript/nativescript-cli/pull/5015): CLI passes `--preserve-symlinks` to the webpack itself, not to the Node.js
+* [Fixed #4893](https://github.com/NativeScript/nativescript-cli/issues/4893): `tns preview` crashes when scanning on devices with different platforms
+* [Fixed #4939](https://github.com/NativeScript/nativescript-cli/issues/4939): Xcode 11 warning: `CFBundleIdentifier value must be the same as PRODUCT_BUNDLE_IDENTIFIER`
+
 6.1.0 (2019, September 04)
 ==
 
