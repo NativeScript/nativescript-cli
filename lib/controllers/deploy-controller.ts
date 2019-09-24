@@ -11,7 +11,11 @@ export class DeployController {
 
 		const executeAction = async (device: Mobile.IDevice) => {
 			const deviceDescriptor = _.find(deviceDescriptors, dd => dd.identifier === device.deviceInfo.identifier);
-			await this.$prepareController.prepare(deviceDescriptor.buildData);
+			const prepareData = {
+				...deviceDescriptor.buildData,
+				nativePrepare: { skipNativePrepare: !!deviceDescriptor.skipNativePrepare }
+			};
+			await this.$prepareController.prepare(prepareData);
 			const packageFilePath = await deviceDescriptor.buildAction();
 			await this.$deviceInstallAppService.installOnDevice(device, { ...deviceDescriptor.buildData, buildForDevice: !device.isEmulator }, packageFilePath);
 		};
