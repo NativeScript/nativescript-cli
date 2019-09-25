@@ -18,15 +18,14 @@ const expectedFlavorChoices = [
 	{ key: "Plain TypeScript", description: "Learn more at https://nativescript.org/typescript" },
 	{ key: "Plain JavaScript", description: "Use NativeScript without any framework" }
 ];
-const expectedTemplateChoices = [
-	{ key: "Hello World", description: "A Hello World app" },
-	{ key: "SideDrawer", description: "An app with pre-built pages that uses a drawer for navigation" },
-	{ key: "Tabs", description: "An app with pre-built pages that uses tabs for navigation" }
-];
-const expectedTemplateChoicesVue = [
-	{ key: "Blank", description: "A blank app" },
-	{ key: "SideDrawer", description: "An app with pre-built pages that uses a drawer for navigation" }
-];
+const templateChoises = {
+	helloWorld: { key: "Hello World", description: "A Hello World app" },
+	blank: { key: "Blank", description: "A blank app" },
+	sideDrawer: { key: "SideDrawer", description: "An app with pre-built pages that uses a drawer for navigation" },
+	tabs: { key: "Tabs", description: "An app with pre-built pages that uses tabs for navigation" }
+};
+const expectedTemplateChoices = [templateChoises.helloWorld, templateChoises.sideDrawer, templateChoises.tabs];
+const expectedTemplateChoicesVue = [templateChoises.blank, templateChoises.sideDrawer, templateChoises.tabs];
 
 class ProjectServiceMock implements IProjectService {
 	async validateProjectName(opts: { projectName: string, force: boolean, pathToProject: string }): Promise<string> {
