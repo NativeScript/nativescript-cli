@@ -36,6 +36,11 @@ describe("ExportOptionsPlistService", () => {
 				name: "should create export options plist with mobileProvisionIdentifier",
 				buildConfig: { mobileProvisionIdentifier: "myTestProvision" },
 				expectedPlist: "<key>provisioningProfiles</key> <dict> 	<key>org.nativescript.myTestApp</key> 	<string>myTestProvision</string> </dict>"
+			},
+			{
+				name: "should create export options plist with Production iCloudContainerEnvironment",
+				buildConfig: { iCloudContainerEnvironment: "Production" },
+				expectedPlist: "<key>iCloudContainerEnvironment</key>     <string>Production</string>"
 			}
 		];
 

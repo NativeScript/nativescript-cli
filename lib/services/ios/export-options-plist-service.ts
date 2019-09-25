@@ -8,6 +8,7 @@ export class ExportOptionsPlistService implements IExportOptionsPlistService {
 	public createDevelopmentExportOptionsPlist(archivePath: string, projectData: IProjectData, buildConfig: IBuildConfig): IExportOptionsPlistOutput {
 		const exportOptionsMethod = this.getExportOptionsMethod(projectData, archivePath);
 		const provision = buildConfig.provision || buildConfig.mobileProvisionIdentifier;
+		const iCloudContainerEnvironment = buildConfig.iCloudContainerEnvironment;
 		let plistTemplate = `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -25,7 +26,13 @@ export class ExportOptionsPlistService implements IExportOptionsPlistService {
     <key>uploadBitcode</key>
     <false/>
     <key>compileBitcode</key>
-    <false/>
+    <false/>`;
+		if (iCloudContainerEnvironment) {
+			plistTemplate += `
+    <key>iCloudContainerEnvironment</key>
+    <string>${iCloudContainerEnvironment}</string>`;
+		}
+		plistTemplate += `
 </dict>
 </plist>`;
 
