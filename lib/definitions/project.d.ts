@@ -458,12 +458,26 @@ interface ICocoaPodsPlatformManager {
 	replacePlatformRow(podfileContent: string, podfilePath: string): { replacedContent: string, podfilePlatformData: IPodfilePlatformData };
 }
 
+declare const enum BuildNames {
+	debug = "Debug",
+	release = "Release"
+}
+
+interface IXcodeTargetBuildConfigurationProperty {
+	name: string;
+	value: any;
+	buildNames?: BuildNames[];
+}
+
 /**
  * Describes a service used to add and remove iOS extension
  */
-interface IIOSExtensionsService {
-	addExtensionsFromPath(options: IAddExtensionsFromPathOptions): Promise<boolean>;
-	removeExtensions(options: IRemoveExtensionsOptions): void;
+interface IIOSNativeTargetService {
+	addTargetToProject(targetRootPath: string, targetFolder: string, targetType: string, project: IXcode.project, platformData: IPlatformData, parentTarget?: string): IXcode.target;
+	prepareSigning(targetUuids: string[], projectData:IProjectData, projectPath: string): void;
+	getTargetDirectories(folderPath: string): string[];
+	setXcodeTargetBuildConfigurationProperties(properties: IXcodeTargetBuildConfigurationProperty[], targetName: string, project: IXcode.project): void
+	setConfigurationsFromJsonFile(jsonPath: string, targetUuid: string, targetName: string, project: IXcode.project): void
 }
 
 /**

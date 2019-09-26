@@ -1,39 +1,27 @@
 import * as path from "path";
 
-export enum BuildNames {
-	debug = "Debug",
-	release = "Release"
-}
-
-export interface IXcodeTargetBuildConfigurationProperty {
-	name: string;
-	value: any;
-	buildNames?: BuildNames[];
-}
-
-export abstract class NativeTargetServiceBase {
+export class IOSNativeTargetService implements IIOSNativeTargetService {
 	constructor(protected $fs: IFileSystem,
-		protected $pbxprojDomXcode: IPbxprojDomXcode,
-		protected $xcode: IXcode) {
+		protected $pbxprojDomXcode: IPbxprojDomXcode) {
 	}
 
-	protected addTargetToProject(extensionsFolderPath: string, extensionFolder: string, targetType: string, project: IXcode.project, platformData: IPlatformData, parentTarget?: string): IXcode.target {
-		const extensionPath = path.join(extensionsFolderPath, extensionFolder);
-		const extensionRelativePath = path.relative(platformData.projectRoot, extensionPath);
-		const files = this.$fs.readDirectory(extensionPath)
+	public addTargetToProject(targetRootPath: string, targetFolder: string, targetType: string, project: IXcode.project, platformData: IPlatformData, parentTarget?: string): IXcode.target {
+		const targetPath = path.join(targetRootPath, targetFolder);
+		const targetRelativePath = path.relative(platformData.projectRoot, targetPath);
+		const files = this.$fs.readDirectory(targetPath)
 				.filter(filePath => !filePath.startsWith("."))
-				.map(filePath => path.join(extensionPath, filePath));
-		const target = project.addTarget(extensionFolder, targetType, extensionRelativePath, parentTarget);
+				.map(filePath => path.join(targetPath, filePath));
+		const target = project.addTarget(targetFolder, targetType, targetRelativePath, parentTarget);
 		project.addBuildPhase([], 'PBXSourcesBuildPhase', 'Sources', target.uuid);
 		project.addBuildPhase([], 'PBXResourcesBuildPhase', 'Resources', target.uuid);
 		project.addBuildPhase([], 'PBXFrameworksBuildPhase', 'Frameworks', target.uuid);
 
-		project.addPbxGroup(files, extensionFolder, extensionPath, null, { isMain: true, target: target.uuid, filesRelativeToProject: true });
-		project.addToHeaderSearchPaths(extensionPath, target.pbxNativeTarget.productName);
+		project.addPbxGroup(files, targetFolder, targetPath, null, { isMain: true, target: target.uuid, filesRelativeToProject: true });
+		project.addToHeaderSearchPaths(targetPath, target.pbxNativeTarget.productName);
 		return target;
 	}
 
-	protected prepareSigning(targetUuids: string[], projectData:IProjectData, projectPath: string) {
+	public prepareSigning(targetUuids: string[], projectData: IProjectData, projectPath: string): void {
 		const xcode = this.$pbxprojDomXcode.Xcode.open(projectPath);
 		const signing = xcode.getSigning(projectData.projectName);
 		if (signing !== undefined) {
@@ -52,7 +40,7 @@ export abstract class NativeTargetServiceBase {
 		xcode.save();
 	}
 
-	protected getTargetDirectories(folderPath: string): string[] {
+	public getTargetDirectories(folderPath: string): string[] {
 		return this.$fs.readDirectory(folderPath)
 			.filter(fileName => {
 				const filePath = path.join(folderPath, fileName);
@@ -62,7 +50,7 @@ export abstract class NativeTargetServiceBase {
 			});
 	}
 
-	protected setXcodeTargetBuildConfigurationProperties(properties: IXcodeTargetBuildConfigurationProperty[], targetName: string, project: IXcode.project): void {
+	public setXcodeTargetBuildConfigurationProperties(properties: IXcodeTargetBuildConfigurationProperty[], targetName: string, project: IXcode.project): void {
 		properties.forEach(property => {
 			const buildNames = property.buildNames || [BuildNames.debug, BuildNames.release];
 			buildNames.forEach((buildName) => {
@@ -71,7 +59,7 @@ export abstract class NativeTargetServiceBase {
 		});
 	}
 
-	protected setConfigurationsFromJsonFile(jsonPath: string, targetUuid: string, targetName: string, project: IXcode.project) {
+	public setConfigurationsFromJsonFile(jsonPath: string, targetUuid: string, targetName: string, project: IXcode.project): void {
 		if (this.$fs.exists(jsonPath)) {
 			const configurationJson = this.$fs.readJson(jsonPath) || {};
 
@@ -94,3 +82,5 @@ export abstract class NativeTargetServiceBase {
 		}
 	}
 }
+
+$injector.register("iOSNativeTargetService", IOSNativeTargetService);

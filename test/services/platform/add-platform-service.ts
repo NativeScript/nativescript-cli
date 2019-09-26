@@ -19,6 +19,9 @@ function createTestInjector() {
 		}
 	});
 	injector.register("addPlatformService", AddPlatformService);
+	injector.register("analyticsService", {
+		trackEventActionInGoogleAnalytics: () => ({})
+	});
 
 	const fs = injector.resolve("fs");
 	fs.exists = () => false;

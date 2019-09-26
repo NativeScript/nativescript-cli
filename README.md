@@ -143,9 +143,10 @@ The <code>--insecure</code> flag allows you to perform insecure SSL connections 
 #### Limitations
 
 * You can provide the `<Username>` and `<Password>` attributes only on Windows systems.
-* Proxy settings for the npm and the Android Gradle need to be configured separately. For more information, see the following articles:
+* Proxy settings for the npm, the Android Gradle and (optional) Docker need to be configured separately. For more information, see the following articles:
 	* [Configure the npm proxy](https://docs.npmjs.com/misc/config#https-proxy)
 	* [Configure the Android Gradle proxy](https://docs.gradle.org/3.3/userguide/build_environment.html#sec:accessing_the_web_via_a_proxy)
+    * [Configure the Docker proxy](https://docs.docker.com/network/proxy/)
 
 ### Display Current Proxy Settings
 

@@ -16,6 +16,9 @@ function createInjector(data?: { latestFrameworkVersion: string }) {
 	injector.register("platformController", PlatformController);
 	injector.register("addPlatformService", AddPlatformService);
 	injector.register("pacoteService", PacoteServiceStub);
+	injector.register("analyticsService", {
+		trackEventActionInGoogleAnalytics: () => ({})
+	});
 
 	injector.register("pacoteService", {
 		extractPackage: async (name: string): Promise<void> => { extractedPackageFromPacote = name; }

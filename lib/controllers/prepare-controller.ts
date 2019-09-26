@@ -1,10 +1,9 @@
 import * as choki from "chokidar";
 import { hook } from "../common/helpers";
-import { performanceLog } from "../common/decorators";
+import { performanceLog, cache } from "../common/decorators";
 import { EventEmitter } from "events";
 import * as path from "path";
-import { PREPARE_READY_EVENT_NAME, WEBPACK_COMPILATION_COMPLETE, PACKAGE_JSON_FILE_NAME, PLATFORMS_DIR_NAME } from "../constants";
-
+import { PREPARE_READY_EVENT_NAME, WEBPACK_COMPILATION_COMPLETE, PACKAGE_JSON_FILE_NAME, PLATFORMS_DIR_NAME, TrackActionNames, AnalyticsEventLabelDelimiter } from "../constants";
 interface IPlatformWatcherData {
 	hasWebpackCompilerProcess: boolean;
 	nativeFilesWatcher: choki.FSWatcher;
@@ -27,12 +26,14 @@ export class PrepareController extends EventEmitter {
 		private $projectChangesService: IProjectChangesService,
 		private $projectDataService: IProjectDataService,
 		private $webpackCompilerService: IWebpackCompilerService,
-		private $watchIgnoreListService: IWatchIgnoreListService
+		private $watchIgnoreListService: IWatchIgnoreListService,
+		private $analyticsService: IAnalyticsService
 	) { super(); }
 
 	public async prepare(prepareData: IPrepareData): Promise<IPrepareResultData> {
 		const projectData = this.$projectDataService.getProjectData(prepareData.projectDir);
 
+		await this.trackRuntimeVersion(prepareData.platform, projectData);
 		await this.$pluginsService.ensureAllDependenciesAreInstalled(projectData);
 
 		return this.prepareCore(prepareData, projectData);
@@ -127,6 +128,21 @@ export class PrepareController extends EventEmitter {
 	}
 
 	private async startNativeWatcherWithPrepare(platformData: IPlatformData, projectData: IProjectData, prepareData: IPrepareData): Promise<boolean> {
+		let newNativeWatchStarted = false;
+		let hasNativeChanges = false;
+
+		if (prepareData.watchNative) {
+			newNativeWatchStarted = await this.startNativeWatcher(platformData, projectData);
+		}
+
+		if (newNativeWatchStarted) {
+			hasNativeChanges = await this.$prepareNativePlatformService.prepareNativePlatform(platformData, projectData, prepareData);
+		}
+
+		return hasNativeChanges;
+	}
+
+	private async startNativeWatcher(platformData: IPlatformData, projectData: IProjectData): Promise<boolean> {
 		if (this.watchersData[projectData.projectDir][platformData.platformNameLowerCase].nativeFilesWatcher) {
 			return false;
 		}
@@ -155,9 +171,7 @@ export class PrepareController extends EventEmitter {
 
 		this.watchersData[projectData.projectDir][platformData.platformNameLowerCase].nativeFilesWatcher = watcher;
 
-		const hasNativeChanges = await this.$prepareNativePlatformService.prepareNativePlatform(platformData, projectData, prepareData);
-
-		return hasNativeChanges;
+		return true;
 	}
 
 	@hook('watchPatterns')
@@ -184,6 +198,25 @@ export class PrepareController extends EventEmitter {
 			this.emit(PREPARE_READY_EVENT_NAME, filesChangeEventData);
 		} else {
 			this.persistedData.push(filesChangeEventData);
+		}
+	}
+
+	@cache()
+	private async trackRuntimeVersion(platform: string, projectData: IProjectData): Promise<void> {
+		let runtimeVersion: string = null;
+		try {
+			const platformData = this.$platformsDataService.getPlatformData(platform, projectData);
+			const runtimeVersionData = this.$projectDataService.getNSValue(projectData.projectDir, platformData.frameworkPackageName);
+			runtimeVersion = runtimeVersionData && runtimeVersionData.version;
+		} catch (err) {
+			this.$logger.trace(`Unable to get runtime version for project directory: ${projectData.projectDir} and platform ${platform}. Error is: `, err);
+		}
+
+		if (runtimeVersion) {
+			await this.$analyticsService.trackEventActionInGoogleAnalytics({
+				action: TrackActionNames.UsingRuntimeVersion,
+				additionalData: `${platform.toLowerCase()}${AnalyticsEventLabelDelimiter}${runtimeVersion}`
+			});
 		}
 	}
 }

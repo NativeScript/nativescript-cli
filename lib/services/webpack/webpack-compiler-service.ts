@@ -139,8 +139,8 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 
 		const args = [
 			...additionalNodeArgs,
-			path.join(projectData.projectDir, "node_modules", "webpack", "bin", "webpack.js"),
 			"--preserve-symlinks",
+			path.join(projectData.projectDir, "node_modules", "webpack", "bin", "webpack.js"),
 			`--config=${path.join(projectData.projectDir, "webpack.config.js")}`,
 			...envParams
 		];
@@ -174,11 +174,18 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 
 		Object.assign(envData,
 			appPath && { appPath },
-			appResourcesPath && { appResourcesPath },
+			appResourcesPath && { appResourcesPath }
 		);
 
 		envData.verbose = envData.verbose || this.$logger.isVerbose();
 		envData.production = envData.production || prepareData.release;
+		// The snapshot generation is wrongly located in the Webpack plugin.
+		// It should be moved in the Native Prepare of the CLI or a Gradle task in the Runtime.
+		// As a workaround, we skip the mksnapshot, xxd and android-ndk calls based on skipNativePrepare.
+		// In this way the plugin will prepare only the snapshot JS entry without any native prepare and
+		// we will able to execute cloud builds with snapshot without having any local snapshot or Docker setup.
+		// TODO: Remove this flag when we remove the native part from the plugin.
+		envData.skipSnapshotTools = prepareData.nativePrepare && prepareData.nativePrepare.skipNativePrepare;
 
 		if (prepareData.env && (prepareData.env.sourceMap === false || prepareData.env.sourceMap === 'false')) {
 			delete envData.sourceMap;
