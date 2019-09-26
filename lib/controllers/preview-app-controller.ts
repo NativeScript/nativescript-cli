@@ -99,7 +99,7 @@ export class PreviewAppController extends EventEmitter implements IPreviewAppCon
 				data.env = data.env || {};
 				data.env.externals = this.$previewAppPluginsService.getExternalPlugins(device);
 
-				const prepareData = this.$prepareDataService.getPrepareData(data.projectDir, device.platform.toLowerCase(), { ...data, nativePrepare: { skipNativePrepare: true }, watch: true });
+				const prepareData = this.$prepareDataService.getPrepareData(data.projectDir, device.platform.toLowerCase(), { ...data, nativePrepare: { skipNativePrepare: true }, watch: true, watchNative: false });
 				await this.$prepareController.prepare(prepareData);
 
 				try {

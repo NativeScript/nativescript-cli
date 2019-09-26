@@ -174,6 +174,9 @@ function createTestInjector(projectPath: string, projectName: string, xCode?: IX
 	testInjector.register("logSourceMapService", {
 		replaceWithOriginalFileLocations: (platform: string, message: string) => message
 	});
+	testInjector.register("iOSNativeTargetService", {
+		setXcodeTargetBuildConfigurationProperties: () => { /* */ }
+	});
 	return testInjector;
 }
 

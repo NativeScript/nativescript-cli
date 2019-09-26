@@ -52,7 +52,8 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		private $xcconfigService: IXcconfigService,
 		private $xcodebuildService: IXcodebuildService,
 		private $iOSExtensionsService: IIOSExtensionsService,
-		private $iOSWatchAppService: IIOSWatchAppService) {
+		private $iOSWatchAppService: IIOSWatchAppService,
+		private $iOSNativeTargetService: IIOSNativeTargetService) {
 		super($fs, $projectDataService);
 	}
 
@@ -432,7 +433,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 						<plist version="1.0">
 						<dict>
 							<key>CFBundleIdentifier</key>
-							<string>${projectData.projectIdentifiers.ios}</string>
+							<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 						</dict>
 						</plist>`
 			});
@@ -529,6 +530,8 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 	public async handleNativeDependenciesChange(projectData: IProjectData, opts: IRelease): Promise<void> {
 		const platformData = this.getPlatformData(projectData);
+
+		this.setProductBundleIdentifier(projectData);
 		await this.$cocoapodsService.applyPodfileFromAppResources(projectData, platformData);
 
 		const projectPodfilePath = this.$cocoapodsService.getProjectPodfilePath(platformData.projectRoot);
@@ -601,6 +604,17 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	public getDeploymentTarget(projectData: IProjectData): string {
 		const target = this.$xcconfigService.readPropertyValue(this.getBuildXCConfigFilePath(projectData), "IPHONEOS_DEPLOYMENT_TARGET");
 		return target;
+	}
+
+	private setProductBundleIdentifier(projectData: IProjectData): void {
+		const project = this.createPbxProj(projectData);
+		this.$iOSNativeTargetService.setXcodeTargetBuildConfigurationProperties([
+			{
+				name: "PRODUCT_BUNDLE_IDENTIFIER",
+				value: `"${projectData.projectIdentifiers.ios}"`
+			}
+		], projectData.projectName, project);
+		this.savePbxProj(project, projectData);
 	}
 
 	private getAllLibsForPluginWithFileExtension(pluginData: IPluginData, fileExtension: string | string[]): string[] {

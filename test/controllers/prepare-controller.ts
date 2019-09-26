@@ -9,7 +9,8 @@ const prepareData = {
 	release: false,
 	hmr: false,
 	env: {},
-	watch: true
+	watch: true,
+	watchNative: true
 };
 
 let isCompileWithWatchCalled = false;
@@ -52,6 +53,10 @@ function createTestInjector(data: { hasNativeChanges: boolean }): IInjector {
 	injector.register("watchIgnoreListService", {
 		addFileToIgnoreList: () => ({}),
 		isFileInIgnoreList: () => false
+	});
+
+	injector.register("analyticsService", {
+		trackEventActionInGoogleAnalytics: () => ({})
 	});
 
 	const prepareController: PrepareController = injector.resolve("prepareController");
