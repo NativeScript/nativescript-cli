@@ -53,6 +53,7 @@ Template | Command
 `Angular - Tabs` | tns create --template tns-template-tab-navigation-ng
 `Vue.js - Blank`, `--vue`, `--vuejs` | tns create --template tns-template-blank-vue
 `Vue.js - SideDrawer`, | tns create --template tns-template-drawer-navigation-vue
+`Vue.js - Tabs` | tns create --template tns-template-tab-navigation-vue
 
 ### Related Commands
 
