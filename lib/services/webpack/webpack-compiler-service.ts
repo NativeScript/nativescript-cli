@@ -200,11 +200,10 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 
 	private buildEnvCommandLineParams(envData: any, platformData: IPlatformData, prepareData: IPrepareData) {
 		const envFlagNames = Object.keys(envData);
-		const shouldSnapshot = prepareData.release && !this.$hostInfo.isWindows && this.$mobileHelper.isAndroidPlatform(platformData.normalizedPlatformName);
-		if (envData && envData.snapshot && !shouldSnapshot) {
+		const canSnapshot = prepareData.release && this.$mobileHelper.isAndroidPlatform(platformData.normalizedPlatformName);
+		if (envData && envData.snapshot && !canSnapshot) {
 			this.$logger.warn("Stripping the snapshot flag. " +
-				"Bear in mind that snapshot is only available in release builds and " +
-				"is NOT available on Windows systems.");
+				"Bear in mind that snapshot is only available in Android release builds.");
 			envFlagNames.splice(envFlagNames.indexOf("snapshot"), 1);
 		}
 
