@@ -162,14 +162,14 @@ describe("logger", () => {
 		[undefined, null, false, "string value", 42, { obj: 1 }, ["string value 1", "string value 2"]].forEach(value => {
 			it(`handles formatted message with '${value}' value in one of the args`, () => {
 				logger.info("test %s", value);
-				assert.equal(outputs.info, `test ${value}`);
+				assert.equal(outputs.info, util.format("test %s", value));
 				assert.deepEqual(outputs.context, {}, "Nothing should be added to logger context.");
 				assert.deepEqual(outputs.removedContext, {}, "Removed context should be empty.");
 			});
 
 			it(`handles formatted message with '${value}' value in one of the args and additional values passed to context`, () => {
 				logger.info("test %s", value, { [LoggerConfigData.skipNewLine]: true });
-				assert.equal(outputs.info, `test ${value}`);
+				assert.equal(outputs.info, util.format("test %s", value));
 				assert.deepEqual(outputs.context, { [LoggerConfigData.skipNewLine]: true }, `${LoggerConfigData.skipNewLine} should be set with value true.`);
 				assert.deepEqual(outputs.removedContext, { [LoggerConfigData.skipNewLine]: true }, `Removed context should contain ${LoggerConfigData.skipNewLine}`);
 			});
