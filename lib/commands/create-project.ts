@@ -210,6 +210,11 @@ or --js flags.)
 			key: CreateProjectCommand.DrawerTemplateKey,
 			value: "tns-template-drawer-navigation-vue",
 			description: CreateProjectCommand.DrawerTemplateDescription
+		},
+		{
+			key: CreateProjectCommand.TabsTemplateKey,
+			value: "tns-template-tab-navigation-vue",
+			description: CreateProjectCommand.TabsTemplateDescription
 		}];
 
 		return templates;
