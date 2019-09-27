@@ -56,7 +56,7 @@ export class UpdateControllerBase {
 		const currentPlatformVersion = this.$platformCommandHelper.getCurrentPlatformVersion(lowercasePlatform, projectData);
 		const platformData = this.$platformsDataService.getPlatformData(lowercasePlatform, projectData);
 		if (currentPlatformVersion) {
-			return await this.$packageInstallationManager.maxSatisfyingVersionSafe(platformData.frameworkPackageName, currentPlatformVersion) || currentPlatformVersion;
+			return await this.$packageInstallationManager.getMaxSatisfyingVersionSafe(platformData.frameworkPackageName, currentPlatformVersion) || currentPlatformVersion;
 		}
 	}
 

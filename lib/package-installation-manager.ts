@@ -33,21 +33,21 @@ export class PackageInstallationManager implements IPackageInstallationManager {
 			return latestVersion;
 		}
 
-		return await this.maxSatisfyingVersion(packageName, compatibleVersionRange) || latestVersion;
+		return await this.getMaxSatisfyingVersion(packageName, compatibleVersionRange) || latestVersion;
 	}
 
-	public async maxSatisfyingVersion(packageName: string, versionRange: string): Promise<string> {
+	public async getMaxSatisfyingVersion(packageName: string, versionRange: string): Promise<string> {
 		const data = await this.$packageManager.view(packageName, { "versions": true });
 
 		return semver.maxSatisfying(data, versionRange);
 	}
 
-	public async maxSatisfyingVersionSafe(packageName: string, versionIdentifier: string): Promise<string> {
+	public async getMaxSatisfyingVersionSafe(packageName: string, versionIdentifier: string): Promise<string> {
 		let maxDependencyVersion;
 		if (semver.valid(versionIdentifier)) {
 			maxDependencyVersion = versionIdentifier;
 		} else if (semver.validRange(versionIdentifier)) {
-			maxDependencyVersion = await this.maxSatisfyingVersion(packageName, versionIdentifier);
+			maxDependencyVersion = await this.getMaxSatisfyingVersion(packageName, versionIdentifier);
 		} else {
 			maxDependencyVersion = await this.$packageManager.getTagVersion(packageName, versionIdentifier);
 		}
@@ -60,7 +60,7 @@ export class PackageInstallationManager implements IPackageInstallationManager {
 		const devDependencies = projectData.devDependencies || {};
 		const dependencies = projectData.dependencies || {};
 		const referencedVersion = dependencies[packageName] || devDependencies[packageName];
-		const installedVersion = await this.maxSatisfyingVersionSafe(packageName, referencedVersion);
+		const installedVersion = await this.getMaxSatisfyingVersionSafe(packageName, referencedVersion);
 
 		return installedVersion;
 	}
