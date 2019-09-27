@@ -252,6 +252,14 @@ export class PackageInstallationManagerStub implements IPackageInstallationManag
 	async maxSatisfyingVersion(): Promise<string> {
 		return "";
 	}
+
+	async getInstalledDependencyVersion(packageName: string, projectDir?: string): Promise<string> {
+		return Promise.resolve("");
+	}
+
+	async maxSatisfyingVersionSafe(packageName: string, versionIdentifier: string): Promise<string> {
+		return Promise.resolve(versionIdentifier);
+	}
 }
 
 export class NodePackageManagerStub implements INodePackageManager {

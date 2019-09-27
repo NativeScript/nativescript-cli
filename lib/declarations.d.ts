@@ -102,6 +102,8 @@ interface IPackageInstallationManager {
 	getLatestCompatibleVersionSafe(packageName: string, referenceVersion?: string): Promise<string>;
 	getInspectorFromCache(inspectorNpmPackageName: string, projectDir: string): Promise<string>;
 	clearInspectorCache(): void;
+	getInstalledDependencyVersion(packageName: string, projectDir?: string): Promise<string>;
+	maxSatisfyingVersionSafe(packageName: string, versionIdentifier: string): Promise<string>;
 }
 
 /**

@@ -3,19 +3,21 @@ import * as child_process from "child_process";
 import * as semver from "semver";
 import { EventEmitter } from "events";
 import { performanceLog } from "../../common/decorators";
-import { WEBPACK_COMPILATION_COMPLETE } from "../../constants";
+import { WEBPACK_COMPILATION_COMPLETE, WEBPACK_PLUGIN_NAME } from "../../constants";
 
 export class WebpackCompilerService extends EventEmitter implements IWebpackCompilerService {
 	private webpackProcesses: IDictionary<child_process.ChildProcess> = {};
 	private expectedHash: string = null;
 
 	constructor(
+		private $errors: IErrors,
 		private $childProcess: IChildProcess,
 		public $hooksService: IHooksService,
 		public $hostInfo: IHostInfo,
 		private $logger: ILogger,
 		private $mobileHelper: Mobile.IMobileHelper,
-		private $cleanupService: ICleanupService
+		private $cleanupService: ICleanupService,
+		private $packageInstallationManager: IPackageInstallationManager
 	) { super(); }
 
 	public async compileWithWatch(platformData: IPlatformData, projectData: IProjectData, prepareData: IPrepareData): Promise<any> {
@@ -27,67 +29,71 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 
 			let isFirstWebpackWatchCompilation = true;
 			prepareData.watch = true;
-			const childProcess = await this.startWebpackProcess(platformData, projectData, prepareData);
+			try {
+				const childProcess = await this.startWebpackProcess(platformData, projectData, prepareData);
 
-			childProcess.on("message", (message: string | IWebpackEmitMessage) => {
-				if (message === "Webpack compilation complete.") {
-					this.$logger.info("Webpack build done!");
-					resolve(childProcess);
-				}
+				childProcess.on("message", (message: string | IWebpackEmitMessage) => {
+					if (message === "Webpack compilation complete.") {
+						this.$logger.info("Webpack build done!");
+						resolve(childProcess);
+					}
 
-				message = message as IWebpackEmitMessage;
-				if (message.emittedFiles) {
-					if (isFirstWebpackWatchCompilation) {
-						isFirstWebpackWatchCompilation = false;
+					message = message as IWebpackEmitMessage;
+					if (message.emittedFiles) {
+						if (isFirstWebpackWatchCompilation) {
+							isFirstWebpackWatchCompilation = false;
 						this.expectedHash = message.hash;
-						return;
-					}
+							return;
+						}
 
-					let result;
+						let result;
 
-					if (prepareData.hmr) {
+						if (prepareData.hmr) {
 						result = this.getUpdatedEmittedFiles(message.emittedFiles, message.chunkFiles, message.hash);
-					} else {
-						result = { emittedFiles: message.emittedFiles, fallbackFiles: <string[]>[], hash: "" };
+						} else {
+							result = { emittedFiles: message.emittedFiles, fallbackFiles: <string[]>[], hash: "" };
+						}
+
+						const files = result.emittedFiles
+							.map((file: string) => path.join(platformData.appDestinationDirectoryPath, "app", file));
+						const fallbackFiles = result.fallbackFiles
+							.map((file: string) => path.join(platformData.appDestinationDirectoryPath, "app", file));
+
+						const data = {
+							files,
+							hasOnlyHotUpdateFiles: files.every(f => f.indexOf("hot-update") > -1),
+							hmrData: {
+								hash: result.hash,
+								fallbackFiles
+							},
+							platform: platformData.platformNameLowerCase
+						};
+
+						if (data.files.length) {
+							this.emit(WEBPACK_COMPILATION_COMPLETE, data);
+						}
 					}
+				});
 
-					const files = result.emittedFiles
-						.map((file: string) => path.join(platformData.appDestinationDirectoryPath, "app", file));
-					const fallbackFiles = result.fallbackFiles
-						.map((file: string) => path.join(platformData.appDestinationDirectoryPath, "app", file));
+				childProcess.on("error", (err) => {
+					this.$logger.trace(`Unable to start webpack process in watch mode. Error is: ${err}`);
+					delete this.webpackProcesses[platformData.platformNameLowerCase];
+					reject(err);
+				});
 
-					const data = {
-						files,
-						hasOnlyHotUpdateFiles: files.every(f => f.indexOf("hot-update") > -1),
-						hmrData: {
-							hash: result.hash,
-							fallbackFiles
-						},
-						platform: platformData.platformNameLowerCase
-					};
+				childProcess.on("close", async (arg: any) => {
+					await this.$cleanupService.removeKillProcess(childProcess.pid.toString());
 
-					if (data.files.length) {
-						this.emit(WEBPACK_COMPILATION_COMPLETE, data);
-					}
-				}
-			});
-
-			childProcess.on("error", (err) => {
-				this.$logger.trace(`Unable to start webpack process in watch mode. Error is: ${err}`);
-				delete this.webpackProcesses[platformData.platformNameLowerCase];
+					const exitCode = typeof arg === "number" ? arg : arg && arg.code;
+					this.$logger.trace(`Webpack process exited with code ${exitCode} when we expected it to be long living with watch.`);
+					const error = new Error(`Executing webpack failed with exit code ${exitCode}.`);
+					error.code = exitCode;
+					delete this.webpackProcesses[platformData.platformNameLowerCase];
+					reject(error);
+				});
+			} catch (err) {
 				reject(err);
-			});
-
-			childProcess.on("close", async (arg: any) => {
-				await this.$cleanupService.removeKillProcess(childProcess.pid.toString());
-
-				const exitCode = typeof arg === "number" ? arg : arg && arg.code;
-				this.$logger.trace(`Webpack process exited with code ${exitCode} when we expected it to be long living with watch.`);
-				const error = new Error(`Executing webpack failed with exit code ${exitCode}.`);
-				error.code = exitCode;
-				delete this.webpackProcesses[platformData.platformNameLowerCase];
-				reject(error);
-			});
+			}
 		});
 	}
 
@@ -98,26 +104,30 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 				return;
 			}
 
-			const childProcess = await this.startWebpackProcess(platformData, projectData, prepareData);
-			childProcess.on("error", (err) => {
-				this.$logger.trace(`Unable to start webpack process in non-watch mode. Error is: ${err}`);
-				delete this.webpackProcesses[platformData.platformNameLowerCase];
+			try {
+				const childProcess = await this.startWebpackProcess(platformData, projectData, prepareData);
+				childProcess.on("error", (err) => {
+					this.$logger.trace(`Unable to start webpack process in non-watch mode. Error is: ${err}`);
+					delete this.webpackProcesses[platformData.platformNameLowerCase];
+					reject(err);
+				});
+
+				childProcess.on("close", async (arg: any) => {
+					await this.$cleanupService.removeKillProcess(childProcess.pid.toString());
+
+					delete this.webpackProcesses[platformData.platformNameLowerCase];
+					const exitCode = typeof arg === "number" ? arg : arg && arg.code;
+					if (exitCode === 0) {
+						resolve();
+					} else {
+						const error = new Error(`Executing webpack failed with exit code ${exitCode}.`);
+						error.code = exitCode;
+						reject(error);
+					}
+				});
+			} catch (err) {
 				reject(err);
-			});
-
-			childProcess.on("close", async (arg: any) => {
-				await this.$cleanupService.removeKillProcess(childProcess.pid.toString());
-
-				delete this.webpackProcesses[platformData.platformNameLowerCase];
-				const exitCode = typeof arg === "number" ? arg : arg && arg.code;
-				if (exitCode === 0) {
-					resolve();
-				} else {
-					const error = new Error(`Executing webpack failed with exit code ${exitCode}.`);
-					error.code = exitCode;
-					reject(error);
-				}
-			});
+			}
 		});
 	}
 
@@ -136,7 +146,7 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 	@performanceLog()
 	private async startWebpackProcess(platformData: IPlatformData, projectData: IProjectData, prepareData: IPrepareData): Promise<child_process.ChildProcess> {
 		const envData = this.buildEnvData(platformData.platformNameLowerCase, projectData, prepareData);
-		const envParams = this.buildEnvCommandLineParams(envData, platformData, prepareData);
+		const envParams = await this.buildEnvCommandLineParams(envData, platformData, projectData, prepareData);
 		const additionalNodeArgs = semver.major(process.version) <= 8 ? ["--harmony"] : [];
 
 		const args = [
@@ -198,13 +208,22 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 		return envData;
 	}
 
-	private buildEnvCommandLineParams(envData: any, platformData: IPlatformData, prepareData: IPrepareData) {
+	private async buildEnvCommandLineParams(envData: any, platformData: IPlatformData, projectData: IProjectData, prepareData: IPrepareData) {
 		const envFlagNames = Object.keys(envData);
 		const canSnapshot = prepareData.release && this.$mobileHelper.isAndroidPlatform(platformData.normalizedPlatformName);
-		if (envData && envData.snapshot && !canSnapshot) {
-			this.$logger.warn("Stripping the snapshot flag. " +
-				"Bear in mind that snapshot is only available in Android release builds.");
-			envFlagNames.splice(envFlagNames.indexOf("snapshot"), 1);
+		if (envData && envData.snapshot) {
+			if (!canSnapshot) {
+				this.$logger.warn("Stripping the snapshot flag. " +
+					"Bear in mind that snapshot is only available in Android release builds.");
+				envFlagNames.splice(envFlagNames.indexOf("snapshot"), 1);
+			} else if (this.$hostInfo.isWindows) {
+				const minWebpackPluginWithWinSnapshotsVersion = "1.3.0";
+				const installedWebpackPluginVersion = await this.$packageInstallationManager.getInstalledDependencyVersion(WEBPACK_PLUGIN_NAME, projectData.projectDir);
+				const hasWebpackPluginWithWinSnapshotsSupport = !!installedWebpackPluginVersion ? semver.gte(installedWebpackPluginVersion, minWebpackPluginWithWinSnapshotsVersion) : true;
+				if (!hasWebpackPluginWithWinSnapshotsSupport) {
+					this.$errors.fail(`In order to generate Snapshots on Windows, please upgrade your Webpack plugin version (npm i nativescript-dev-webpack@latest).`);
+				}
+			}
 		}
 
 		const args: any[] = [];

@@ -139,8 +139,8 @@ export class UpdateController extends UpdateControllerBase implements IUpdateCon
 		const devDependencies = projectData.devDependencies || {};
 		const dependencies = projectData.dependencies || {};
 		const projectVersion = dependencies[dependency] || devDependencies[dependency];
-		const maxSatisfyingTargetVersion = await this.getMaxDependencyVersion(dependency, targetVersion);
-		const maxSatisfyingProjectVersion = await this.getMaxDependencyVersion(dependency, projectVersion);
+		const maxSatisfyingTargetVersion = await this.$packageInstallationManager.maxSatisfyingVersionSafe(dependency, targetVersion);
+		const maxSatisfyingProjectVersion = await this.$packageInstallationManager.maxSatisfyingVersionSafe(dependency, projectVersion);
 		return maxSatisfyingProjectVersion && maxSatisfyingTargetVersion && semver.gt(maxSatisfyingTargetVersion, maxSatisfyingProjectVersion);
 	}
 
@@ -177,7 +177,7 @@ export class UpdateController extends UpdateControllerBase implements IUpdateCon
 			return false;
 		}
 
-		const maxTemplateRuntimeVersion = await this.getMaxDependencyVersion(frameworkPackageName, templateRuntimeVersion);
+		const maxTemplateRuntimeVersion = await this.$packageInstallationManager.maxSatisfyingVersionSafe(frameworkPackageName, templateRuntimeVersion);
 		const maxRuntimeVersion = await this.getMaxRuntimeVersion({ platform, projectData });
 
 		return maxTemplateRuntimeVersion && maxRuntimeVersion && semver.gt(maxTemplateRuntimeVersion, maxRuntimeVersion);
