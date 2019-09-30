@@ -10,11 +10,17 @@ export class UpdateCommand implements ICommand {
 		private $options: IOptions,
 		private $errors: IErrors,
 		private $logger: ILogger,
-		private $projectData: IProjectData) {
+		private $projectData: IProjectData,
+		private $markingModeService: IMarkingModeService) {
 		this.$projectData.initializeProjectData();
 	}
 
 	public async execute(args: string[]): Promise<void> {
+		if (this.$options.markingMode) {
+			await this.$markingModeService.handleMarkingModeFullDeprecation({ projectDir: this.$projectData.projectDir, forceSwitch: true });
+			return;
+		}
+
 		if (!await this.$updateController.shouldUpdate({ projectDir: this.$projectData.projectDir, version: args[0] })) {
 			this.$logger.printMarkdown(`__${UpdateCommand.PROJECT_UP_TO_DATE_MESSAGE}__`);
 			return;

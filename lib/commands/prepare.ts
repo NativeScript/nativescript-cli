@@ -17,13 +17,18 @@ export class PrepareCommand extends ValidatePlatformCommandBase implements IComm
 		private $platformCommandParameter: ICommandParameter,
 		$platformsDataService: IPlatformsDataService,
 		private $prepareDataService: PrepareDataService,
-		private $migrateController: IMigrateController) {
+		private $migrateController: IMigrateController,
+		private $markingModeService: IMarkingModeService,
+		private $mobileHelper: Mobile.IMobileHelper) {
 		super($options, $platformsDataService, $platformValidationService, $projectData);
 		this.$projectData.initializeProjectData();
 	}
 
 	public async execute(args: string[]): Promise<void> {
 		const platform = args[0];
+		if (this.$mobileHelper.isAndroidPlatform(platform)) {
+			await this.$markingModeService.handleMarkingModeFullDeprecation({ projectDir: this.$projectData.projectDir, skipWarnings: true });
+		}
 
 		const prepareData = this.$prepareDataService.getPrepareData(this.$projectData.projectDir, platform, this.$options);
 		await this.$prepareController.prepare(prepareData);

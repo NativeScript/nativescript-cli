@@ -16,7 +16,7 @@ abstract class TestCommandBase {
 	protected abstract $devicesService: Mobile.IDevicesService;
 	protected abstract $migrateController: IMigrateController;
 
-	async execute(args: string[]): Promise<void> {
+	public async execute(args: string[]): Promise<void> {
 		let devices = [];
 		if (this.$options.debugBrk) {
 			await this.$devicesService.initialize({
@@ -102,8 +102,14 @@ class TestAndroidCommand extends TestCommandBase implements ICommand {
 		protected $cleanupService: ICleanupService,
 		protected $liveSyncCommandHelper: ILiveSyncCommandHelper,
 		protected $devicesService: Mobile.IDevicesService,
-		protected $migrateController: IMigrateController) {
+		protected $migrateController: IMigrateController,
+		protected $markingModeService: IMarkingModeService) {
 		super();
+	}
+
+	public async execute(args: string[]): Promise<void> {
+		await this.$markingModeService.handleMarkingModeFullDeprecation({ projectDir: this.$projectData.projectDir, skipWarnings: true });
+		await super.execute(args);
 	}
 }
 

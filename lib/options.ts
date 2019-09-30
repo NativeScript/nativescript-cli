@@ -136,6 +136,7 @@ export class Options {
 			certificate: { type: OptionType.String, hasSensitiveValue: true },
 			certificatePassword: { type: OptionType.String, hasSensitiveValue: true },
 			release: { type: OptionType.Boolean, alias: "r", hasSensitiveValue: false },
+			markingMode: { type: OptionType.Boolean, hasSensitiveValue: false },
 			var: { type: OptionType.Object, hasSensitiveValue: true },
 			default: { type: OptionType.Boolean, hasSensitiveValue: false },
 			count: { type: OptionType.Number, hasSensitiveValue: false },

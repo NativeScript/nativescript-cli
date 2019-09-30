@@ -848,6 +848,12 @@ export class TerminalSpinnerServiceStub implements ITerminalSpinnerService {
 	}
 }
 
+export class MarkingModeServiceStub implements IMarkingModeService {
+	handleMarkingModeFullDeprecation(options: IMarkingModeFullDeprecationOptions): Promise<void> {
+		return;
+	}
+}
+
 export class InjectorStub extends Yok implements IInjector {
 	constructor() {
 		super();
@@ -873,6 +879,7 @@ export class InjectorStub extends Yok implements IInjector {
 		this.register('projectData', ProjectDataStub);
 		this.register('packageInstallationManager', PackageInstallationManagerStub);
 		this.register('packageInstallationManager', PackageInstallationManagerStub);
+		this.register("markingModeService", MarkingModeServiceStub);
 		this.register("httpClient", {
 			httpRequest: async (options: any, proxySettings?: IProxySettings): Promise<Server.IResponse> => undefined
 		});

@@ -97,11 +97,13 @@ export class BuildAndroidCommand extends BuildCommandBase implements ICommand {
 		protected $androidBundleValidatorHelper: IAndroidBundleValidatorHelper,
 		$buildDataService: IBuildDataService,
 		protected $logger: ILogger,
-		private $migrateController: IMigrateController) {
+		private $migrateController: IMigrateController,
+		private $markingModeService: IMarkingModeService) {
 		super($options, $errors, $projectData, platformsDataService, $devicePlatformsConstants, $buildController, $platformValidationService, $buildDataService, $logger);
 	}
 
 	public async execute(args: string[]): Promise<void> {
+		await this.$markingModeService.handleMarkingModeFullDeprecation({ projectDir: this.$projectData.projectDir, skipWarnings: true });
 		await this.executeCore([this.$devicePlatformsConstants.Android.toLowerCase()]);
 
 		if (this.$options.aab) {

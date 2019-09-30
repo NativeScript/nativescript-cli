@@ -18,31 +18,42 @@ export class DeployOnDeviceCommand extends ValidatePlatformCommandBase implement
 		private $mobileHelper: Mobile.IMobileHelper,
 		$platformsDataService: IPlatformsDataService,
 		private $deployCommandHelper: DeployCommandHelper,
-		private $androidBundleValidatorHelper: IAndroidBundleValidatorHelper) {
+		private $androidBundleValidatorHelper: IAndroidBundleValidatorHelper,
+		private $markingModeService: IMarkingModeService,
+		private $migrateController: IMigrateController) {
 		super($options, $platformsDataService, $platformValidationService, $projectData);
 		this.$projectData.initializeProjectData();
 	}
 
 	public async execute(args: string[]): Promise<void> {
-		const platform = args[0].toLowerCase();
+		const platform = args[0];
+		if (this.$mobileHelper.isAndroidPlatform(platform)) {
+			await this.$markingModeService.handleMarkingModeFullDeprecation({ projectDir: this.$projectData.projectDir, skipWarnings: true });
+		}
+
 		await this.$deployCommandHelper.deploy(platform);
 	}
 
 	public async canExecute(args: string[]): Promise<boolean> {
+		const platform = args[0];
+		if (!this.$options.force) {
+			await this.$migrateController.validate({ projectDir: this.$projectData.projectDir, platforms: [platform] });
+		}
+
 		this.$androidBundleValidatorHelper.validateNoAab();
 		if (!args || !args.length || args.length > 1) {
 			return false;
 		}
 
-		if (!(await this.$platformCommandParameter.validate(args[0]))) {
+		if (!(await this.$platformCommandParameter.validate(platform))) {
 			return false;
 		}
 
-		if (this.$mobileHelper.isAndroidPlatform(args[0]) && this.$options.release && (!this.$options.keyStorePath || !this.$options.keyStorePassword || !this.$options.keyStoreAlias || !this.$options.keyStoreAliasPassword)) {
+		if (this.$mobileHelper.isAndroidPlatform(platform) && this.$options.release && (!this.$options.keyStorePath || !this.$options.keyStorePassword || !this.$options.keyStoreAlias || !this.$options.keyStoreAliasPassword)) {
 			this.$errors.failWithHelp(ANDROID_RELEASE_BUILD_ERROR_MESSAGE);
 		}
 
-		const result = await super.canExecuteCommandBase(args[0], { validateOptions: true });
+		const result = await super.canExecuteCommandBase(platform, { validateOptions: true });
 		return result;
 	}
 }
