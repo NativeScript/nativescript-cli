@@ -15,6 +15,8 @@ function createTestInjector(): IInjector {
 	testInjector.register("hooksService", {});
 	testInjector.register("hostInfo", {});
 	testInjector.register("logger", {});
+	testInjector.register("errors", {});
+	testInjector.register("packageInstallationManager", {});
 	testInjector.register("mobileHelper", {});
 	testInjector.register("cleanupService", {});
 

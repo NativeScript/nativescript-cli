@@ -4,7 +4,7 @@ import * as constants from "./constants";
 
 export class PackageInstallationManager implements IPackageInstallationManager {
 	constructor(
-		private $packageManager: INodePackageManager,
+		private $packageManager: IPackageManager,
 		private $childProcess: IChildProcess,
 		private $logger: ILogger,
 		private $settingsService: ISettingsService,
@@ -33,13 +33,36 @@ export class PackageInstallationManager implements IPackageInstallationManager {
 			return latestVersion;
 		}
 
-		return await this.maxSatisfyingVersion(packageName, compatibleVersionRange) || latestVersion;
+		return await this.getMaxSatisfyingVersion(packageName, compatibleVersionRange) || latestVersion;
 	}
 
-	public async maxSatisfyingVersion(packageName: string, versionRange: string): Promise<string> {
+	public async getMaxSatisfyingVersion(packageName: string, versionRange: string): Promise<string> {
 		const data = await this.$packageManager.view(packageName, { "versions": true });
 
 		return semver.maxSatisfying(data, versionRange);
+	}
+
+	public async getMaxSatisfyingVersionSafe(packageName: string, versionIdentifier: string): Promise<string> {
+		let maxDependencyVersion;
+		if (semver.valid(versionIdentifier)) {
+			maxDependencyVersion = versionIdentifier;
+		} else if (semver.validRange(versionIdentifier)) {
+			maxDependencyVersion = await this.getMaxSatisfyingVersion(packageName, versionIdentifier);
+		} else {
+			maxDependencyVersion = await this.$packageManager.getTagVersion(packageName, versionIdentifier);
+		}
+
+		return maxDependencyVersion;
+	}
+
+	public async getInstalledDependencyVersion(packageName: string, projectDir?: string): Promise<string> {
+		const projectData = this.$projectDataService.getProjectData(projectDir);
+		const devDependencies = projectData.devDependencies || {};
+		const dependencies = projectData.dependencies || {};
+		const referencedVersion = dependencies[packageName] || devDependencies[packageName];
+		const installedVersion = await this.getMaxSatisfyingVersionSafe(packageName, referencedVersion);
+
+		return installedVersion;
 	}
 
 	public async getLatestCompatibleVersionSafe(packageName: string, referenceVersion?: string): Promise<string> {

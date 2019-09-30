@@ -98,10 +98,12 @@ interface IPackageInstallationManager {
 	getLatestVersion(packageName: string): Promise<string>;
 	getNextVersion(packageName: string): Promise<string>;
 	getLatestCompatibleVersion(packageName: string, referenceVersion?: string): Promise<string>;
-	maxSatisfyingVersion(packageName: string, versionRange: string): Promise<string>;
+	getMaxSatisfyingVersion(packageName: string, versionRange: string): Promise<string>;
 	getLatestCompatibleVersionSafe(packageName: string, referenceVersion?: string): Promise<string>;
 	getInspectorFromCache(inspectorNpmPackageName: string, projectDir: string): Promise<string>;
 	clearInspectorCache(): void;
+	getInstalledDependencyVersion(packageName: string, projectDir?: string): Promise<string>;
+	getMaxSatisfyingVersionSafe(packageName: string, versionIdentifier: string): Promise<string>;
 }
 
 /**

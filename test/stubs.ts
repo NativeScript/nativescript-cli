@@ -249,8 +249,16 @@ export class PackageInstallationManagerStub implements IPackageInstallationManag
 		return Promise.resolve("");
 	}
 
-	async maxSatisfyingVersion(): Promise<string> {
+	async getMaxSatisfyingVersion(): Promise<string> {
 		return "";
+	}
+
+	async getInstalledDependencyVersion(packageName: string, projectDir?: string): Promise<string> {
+		return Promise.resolve("");
+	}
+
+	async getMaxSatisfyingVersionSafe(packageName: string, versionIdentifier: string): Promise<string> {
+		return Promise.resolve(versionIdentifier);
 	}
 }
 

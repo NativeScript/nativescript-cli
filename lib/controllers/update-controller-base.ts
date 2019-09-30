@@ -56,21 +56,8 @@ export class UpdateControllerBase {
 		const currentPlatformVersion = this.$platformCommandHelper.getCurrentPlatformVersion(lowercasePlatform, projectData);
 		const platformData = this.$platformsDataService.getPlatformData(lowercasePlatform, projectData);
 		if (currentPlatformVersion) {
-			return await this.getMaxDependencyVersion(platformData.frameworkPackageName, currentPlatformVersion) || currentPlatformVersion;
+			return await this.$packageInstallationManager.getMaxSatisfyingVersionSafe(platformData.frameworkPackageName, currentPlatformVersion) || currentPlatformVersion;
 		}
-	}
-
-	protected async getMaxDependencyVersion(dependency: string, version: string): Promise<string> {
-		let maxDependencyVersion;
-		if (semver.valid(version)) {
-			maxDependencyVersion = version;
-		} else if (semver.validRange(version)) {
-			maxDependencyVersion = await this.$packageInstallationManager.maxSatisfyingVersion(dependency, version);
-		} else {
-			maxDependencyVersion = await this.$packageManager.getTagVersion(dependency, version);
-		}
-
-		return maxDependencyVersion;
 	}
 
 	private async _getPackageManifest(templateName: string, version: string): Promise<any> {

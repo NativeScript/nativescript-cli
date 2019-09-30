@@ -341,11 +341,7 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 	}
 
 	private async shouldMigrateDependencyVersion(dependency: IMigrationDependency, projectData: IProjectData, allowInvalidVersions: boolean): Promise<boolean> {
-		const devDependencies = projectData.devDependencies || {};
-		const dependencies = projectData.dependencies || {};
-		const packageName = dependency.packageName;
-		const referencedVersion = dependencies[packageName] || devDependencies[packageName];
-		const installedVersion = await this.getMaxDependencyVersion(dependency.packageName, referencedVersion);
+		const installedVersion = await this.$packageInstallationManager.getInstalledDependencyVersion(dependency.packageName, projectData.projectDir);
 		const requiredVersion = dependency.verifiedVersion;
 
 		return this.isOutdatedVersion(installedVersion, requiredVersion, allowInvalidVersions);
