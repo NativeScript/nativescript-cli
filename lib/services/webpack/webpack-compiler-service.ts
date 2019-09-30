@@ -7,6 +7,7 @@ import { WEBPACK_COMPILATION_COMPLETE } from "../../constants";
 
 export class WebpackCompilerService extends EventEmitter implements IWebpackCompilerService {
 	private webpackProcesses: IDictionary<child_process.ChildProcess> = {};
+	private expectedHash: string = null;
 
 	constructor(
 		private $childProcess: IChildProcess,
@@ -38,13 +39,14 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 				if (message.emittedFiles) {
 					if (isFirstWebpackWatchCompilation) {
 						isFirstWebpackWatchCompilation = false;
+						this.expectedHash = message.hash;
 						return;
 					}
 
 					let result;
 
 					if (prepareData.hmr) {
-						result = this.getUpdatedEmittedFiles(message.emittedFiles, message.chunkFiles);
+						result = this.getUpdatedEmittedFiles(message.emittedFiles, message.chunkFiles, message.hash);
 					} else {
 						result = { emittedFiles: message.emittedFiles, fallbackFiles: <string[]>[], hash: "" };
 					}
@@ -228,11 +230,24 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 		return args;
 	}
 
-	private getUpdatedEmittedFiles(allEmittedFiles: string[], chunkFiles: string[]) {
-		const hotHash = this.getCurrentHotUpdateHash(allEmittedFiles);
-		const emittedHotUpdateFiles = _.difference(allEmittedFiles, chunkFiles);
+	public getUpdatedEmittedFiles(allEmittedFiles: string[], chunkFiles: string[], nextHash: string) {
+		const currentHash = this.getCurrentHotUpdateHash(allEmittedFiles);
 
-		return { emittedFiles: emittedHotUpdateFiles, fallbackFiles: chunkFiles, hash: hotHash };
+		// This logic is needed as there are already cases when webpack doesn't emit any files physically.
+		// We've set noEmitOnErrors in webpack.config.js based on noEmitOnError from tsconfig.json,
+		// so webpack doesn't emit any files when noEmitOnErrors: true is set in webpack.config.js and
+		// there is a compilation error in the source code. On the other side, hmr generates new hot-update files
+		// on every change and the hash of the next hmr update is written inside hot-update.json file.
+		// Although webpack doesn't emit any files, hmr hash is still generated. The hash is generated per compilation no matter
+		// if files will be emitted or not. This way, the first successful compilation after fixing the compilation error generates
+		// a hash that is not the same as the one expected in the latest emitted hot-update.json file.
+		// As a result, the hmr chain is broken and the changes are not applied.
+		const isHashValid = nextHash ? this.expectedHash === currentHash : true;
+		this.expectedHash = nextHash;
+
+		const emittedHotUpdatesAndAssets = isHashValid ? _.difference(allEmittedFiles, chunkFiles) : allEmittedFiles;
+
+		return { emittedFiles: emittedHotUpdatesAndAssets, fallbackFiles: chunkFiles, hash: currentHash };
 	}
 
 	private getCurrentHotUpdateHash(emittedFiles: string[]) {
