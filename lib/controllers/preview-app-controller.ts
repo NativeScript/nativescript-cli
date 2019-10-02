@@ -28,7 +28,8 @@ export class PreviewAppController extends EventEmitter implements IPreviewAppCon
 		private $previewQrCodeService: IPreviewQrCodeService,
 		private $previewSdkService: IPreviewSdkService,
 		private $prepareDataService: PrepareDataService,
-		private $projectDataService: IProjectDataService
+		private $projectDataService: IProjectDataService,
+		private $markingModeService: IMarkingModeService
 	) { super(); }
 
 	public async startPreview(data: IPreviewAppLiveSyncData): Promise<IQrCodeImageData> {
@@ -57,6 +58,7 @@ export class PreviewAppController extends EventEmitter implements IPreviewAppCon
 		const projectData = this.$projectDataService.getProjectData(data.projectDir);
 		await this.$pluginsService.ensureAllDependenciesAreInstalled(projectData);
 		await this.$previewSdkService.initialize(data.projectDir, async (device: Device) => {
+			await this.$markingModeService.handleMarkingModeFullDeprecation({ projectDir: projectData.projectDir });
 			try {
 				if (!device) {
 					this.$errors.fail("Sending initial preview files without a specified device is not supported.");

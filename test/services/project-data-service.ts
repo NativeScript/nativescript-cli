@@ -1,7 +1,7 @@
 import { Yok } from "../../lib/common/yok";
 import { assert } from "chai";
 import { ProjectDataService } from "../../lib/services/project-data-service";
-import { LoggerStub, ProjectDataStub } from "../stubs";
+import { LoggerStub, ProjectDataStub, MarkingModeServiceStub } from "../stubs";
 import { NATIVESCRIPT_PROPS_INTERNAL_DELIMITER, PACKAGE_JSON_FILE_NAME, CONFIG_NS_FILE_NAME, AssetConstants, ProjectTypes } from '../../lib/constants';
 import { DevicePlatformsConstants } from "../../lib/common/mobile/device-platforms-constants";
 import { basename, join } from "path";
@@ -74,6 +74,7 @@ const createTestInjector = (packageJsonContent?: string, nsConfigContent?: strin
 	});
 
 	testInjector.register("logger", LoggerStub);
+	testInjector.register("markingModeService", MarkingModeServiceStub);
 
 	testInjector.register("projectDataService", ProjectDataService);
 

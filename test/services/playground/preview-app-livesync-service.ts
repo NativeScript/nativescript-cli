@@ -1,6 +1,6 @@
 import { Yok } from "../../../lib/common/yok";
 import * as _ from 'lodash';
-import { LoggerStub, ErrorsStub } from "../../stubs";
+import { LoggerStub, ErrorsStub, MarkingModeServiceStub } from "../../stubs";
 import { FilePayload, Device, FilesPayload } from "nativescript-preview-sdk";
 import * as chai from "chai";
 import * as path from "path";
@@ -116,6 +116,7 @@ function createTestInjector(options?: {
 
 	const injector = new Yok();
 	injector.register("logger", LoggerMock);
+	injector.register("markingModeService", MarkingModeServiceStub);
 	injector.register("hmrStatusService", {
 		attachToHmrStatusEvent: () => ({})
 	});

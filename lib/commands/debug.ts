@@ -157,11 +157,13 @@ export class DebugAndroidCommand implements ICommand {
 	constructor(protected $errors: IErrors,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $injector: IInjector,
-		private $projectData: IProjectData) {
+		private $projectData: IProjectData,
+		private $markingModeService: IMarkingModeService) {
 		this.$projectData.initializeProjectData();
 	}
 
-	public execute(args: string[]): Promise<void> {
+	public async execute(args: string[]): Promise<void> {
+		await this.$markingModeService.handleMarkingModeFullDeprecation({ projectDir: this.$projectData.projectDir, skipWarnings: true });
 		return this.debugPlatformCommand.execute(args);
 	}
 	public async canExecute(args: string[]): Promise<boolean> {

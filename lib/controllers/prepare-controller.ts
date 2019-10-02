@@ -27,11 +27,13 @@ export class PrepareController extends EventEmitter {
 		private $projectDataService: IProjectDataService,
 		private $webpackCompilerService: IWebpackCompilerService,
 		private $watchIgnoreListService: IWatchIgnoreListService,
-		private $analyticsService: IAnalyticsService
+		private $analyticsService: IAnalyticsService,
+		private $markingModeService: IMarkingModeService
 	) { super(); }
 
 	public async prepare(prepareData: IPrepareData): Promise<IPrepareResultData> {
 		const projectData = this.$projectDataService.getProjectData(prepareData.projectDir);
+		await this.$markingModeService.handleMarkingModeFullDeprecation({ projectDir: projectData.projectDir });
 
 		await this.trackRuntimeVersion(prepareData.platform, projectData);
 		await this.$pluginsService.ensureAllDependenciesAreInstalled(projectData);
@@ -187,8 +189,8 @@ export class PrepareController extends EventEmitter {
 			path.join(projectData.getAppDirectoryPath(), PACKAGE_JSON_FILE_NAME),
 			path.join(projectData.getAppResourcesRelativeDirectoryPath(), platformData.normalizedPlatformName),
 		]
-		.concat(pluginsNativeDirectories)
-		.concat(pluginsPackageJsonFiles);
+			.concat(pluginsNativeDirectories)
+			.concat(pluginsPackageJsonFiles);
 
 		return patterns;
 	}
