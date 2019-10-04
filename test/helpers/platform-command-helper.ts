@@ -73,7 +73,7 @@ describe("PlatformCommandHelper", () => {
 	describe("clean platforms unit tests", () => {
 		_.each(["ios", "anroid"], platform => {
 			it(`should preserve the specified in the project nativescript version for ${platform}`, async () => {
-				let  versionData = { version: "5.3.1" };
+				let versionData = { version: "5.3.1" };
 
 				const projectDataService = injector.resolve("projectDataService");
 				projectDataService.getNSValue = () => versionData;
@@ -83,14 +83,6 @@ describe("PlatformCommandHelper", () => {
 
 				await platformCommandHelper.cleanPlatforms([platform], injector.resolve("projectData"), "");
 			});
-		});
-	});
-	describe("update platforms unit tests", () => {
-		it("should fail when tha native platform cannot be updated", async () => {
-			const packageInstallationManager: IPackageInstallationManager = injector.resolve("packageInstallationManager");
-			packageInstallationManager.getLatestVersion = async () => "0.2.0";
-
-			await assert.isRejected(platformCommandHelper.updatePlatforms(["android"], projectData), "Native Platform cannot be updated.");
 		});
 	});
 });

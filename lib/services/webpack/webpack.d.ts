@@ -87,14 +87,6 @@ declare global {
 		 */
 		isPlatformPrepared(projectRoot: string, projectData: IProjectData): boolean;
 
-		/**
-		 * Checks if current platform can be updated to a newer versions.
-		 * @param {string} newInstalledModuleDir Path to the native project.
-		 * @param {IProjectData} projectData DTO with information about the project.
-		 * @return {boolean} True if platform can be updated. false otherwise.
-		 */
-		canUpdatePlatform(newInstalledModuleDir: string, projectData: IProjectData): boolean;
-
 		preparePluginNativeCode(pluginData: IPluginData, options?: any): Promise<void>;
 
 		/**

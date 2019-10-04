@@ -235,7 +235,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			const frameworkBinaryPath = path.join(bundlePath, frameworkName);
 
 			const fileResult = (await this.$childProcess.spawnFromEvent("file", [frameworkBinaryPath], "close")).stdout;
-			const isDynamicallyLinked =  _.includes(fileResult, "dynamically linked");
+			const isDynamicallyLinked = _.includes(fileResult, "dynamically linked");
 			return isDynamicallyLinked;
 		};
 
@@ -287,23 +287,6 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 		this.generateModulemap(headersSubpath, libraryName);
 		this.savePbxProj(project, projectData);
-	}
-
-	public canUpdatePlatform(installedModuleDir: string, projectData: IProjectData): boolean {
-		const currentXcodeProjectFile = this.buildPathToCurrentXcodeProjectFile(projectData);
-		const currentXcodeProjectFileContent = this.$fs.readFile(currentXcodeProjectFile);
-
-		const newXcodeProjectFile = this.buildPathToNewXcodeProjectFile(installedModuleDir);
-		this.replaceFileContent(newXcodeProjectFile, projectData);
-		const newXcodeProjectFileContent = this.$fs.readFile(newXcodeProjectFile);
-
-		const contentIsTheSame = currentXcodeProjectFileContent.toString() === newXcodeProjectFileContent.toString();
-
-		if (!contentIsTheSame) {
-			this.$logger.warn(`The content of the current project file: ${currentXcodeProjectFile} and the new project file: ${newXcodeProjectFile} is different.`);
-		}
-
-		return contentIsTheSame;
 	}
 
 	public async prepareProject(projectData: IProjectData, prepareData: IOSPrepareData): Promise<void> {
@@ -620,16 +603,8 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	private getAllLibsForPluginWithFileExtension(pluginData: IPluginData, fileExtension: string | string[]): string[] {
 		const fileExtensions = _.isArray(fileExtension) ? fileExtension : [fileExtension];
 		const filterCallback = (fileName: string, pluginPlatformsFolderPath: string) =>
-		fileExtensions.indexOf(path.extname(fileName)) !== -1;
+			fileExtensions.indexOf(path.extname(fileName)) !== -1;
 		return this.getAllNativeLibrariesForPlugin(pluginData, IOSProjectService.IOS_PLATFORM_NAME, filterCallback);
-	}
-
-	private buildPathToCurrentXcodeProjectFile(projectData: IProjectData): string {
-		return path.join(projectData.platformsDir, "ios", `${projectData.projectName}.xcodeproj`, "project.pbxproj");
-	}
-
-	private buildPathToNewXcodeProjectFile(newModulesDir: string): string {
-		return path.join(newModulesDir, constants.PROJECT_FRAMEWORK_FOLDER_NAME, `${IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER}.xcodeproj`, "project.pbxproj");
 	}
 
 	private validateFramework(libraryPath: string): void {

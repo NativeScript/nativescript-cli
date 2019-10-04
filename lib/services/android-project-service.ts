@@ -135,7 +135,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		}
 
 		this.$fs.ensureDirectoryExists(this.getPlatformData(projectData).projectRoot);
-		const androidToolsInfo = this.$androidToolsInfo.getToolsInfo({ projectDir: projectData.projectDir});
+		const androidToolsInfo = this.$androidToolsInfo.getToolsInfo({ projectDir: projectData.projectDir });
 		const targetSdkVersion = androidToolsInfo && androidToolsInfo.targetSdkVersion;
 		this.$logger.trace(`Using Android SDK '${targetSdkVersion}'.`);
 
@@ -215,10 +215,6 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 	public afterCreateProject(projectRoot: string): void {
 		return null;
-	}
-
-	public canUpdatePlatform(newInstalledModuleDir: string, projectData: IProjectData): boolean {
-		return true;
 	}
 
 	public async updatePlatform(currentVersion: string, newVersion: string, canUpdate: boolean, projectData: IProjectData, addPlatform?: Function, removePlatforms?: (platforms: string[]) => Promise<void>): Promise<boolean> {
