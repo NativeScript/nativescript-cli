@@ -19,6 +19,7 @@ export class PrepareController extends EventEmitter {
 		private $platformController: IPlatformController,
 		public $hooksService: IHooksService,
 		private $logger: ILogger,
+		private $mobileHelper: Mobile.IMobileHelper,
 		private $nodeModulesDependenciesBuilder: INodeModulesDependenciesBuilder,
 		private $platformsDataService: IPlatformsDataService,
 		private $pluginsService: IPluginsService,
@@ -33,7 +34,9 @@ export class PrepareController extends EventEmitter {
 
 	public async prepare(prepareData: IPrepareData): Promise<IPrepareResultData> {
 		const projectData = this.$projectDataService.getProjectData(prepareData.projectDir);
-		await this.$markingModeService.handleMarkingModeFullDeprecation({ projectDir: projectData.projectDir });
+		if (this.$mobileHelper.isAndroidPlatform(prepareData.platform)) {
+			await this.$markingModeService.handleMarkingModeFullDeprecation({ projectDir: projectData.projectDir });
+		}
 
 		await this.trackRuntimeVersion(prepareData.platform, projectData);
 		await this.$pluginsService.ensureAllDependenciesAreInstalled(projectData);
