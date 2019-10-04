@@ -75,6 +75,7 @@ interface INsConfig {
 	appResourcesPath?: string;
 	shared?: boolean;
 	previewAppSchema?: string;
+	overridePods?: string
 }
 
 interface IProjectData extends ICreateProjectData {
@@ -406,10 +407,10 @@ interface ICocoaPodsService {
 	 * @param {string} moduleName The module which the Podfile is from.
 	 * @param {string} podfilePath The path to the podfile.
 	 * @param {IProjectData} projectData Information about the project.
-	 * @param {string} nativeProjectPath Path to the native Xcode project.
+	 * @param {IPlatformData} platformData Information about the platform.
 	 * @returns {Promise<void>}
 	 */
-	applyPodfileToProject(moduleName: string, podfilePath: string, projectData: IProjectData, nativeProjectPath: string): Promise<void>;
+	applyPodfileToProject(moduleName: string, podfilePath: string, projectData: IProjectData, platformData: IPlatformData): Promise<void>;
 
 	/**
 	 * Gives the path to the plugin's Podfile.

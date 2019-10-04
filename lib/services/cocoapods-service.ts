@@ -1,12 +1,12 @@
 import { EOL } from "os";
 import * as path from "path";
 import { PluginNativeDirNames, PODFILE_NAME, NS_BASE_PODFILE } from "../constants";
-import { regExpEscape } from "../common/helpers";
+import { regExpEscape, getHash } from "../common/helpers";
 
 export class CocoaPodsService implements ICocoaPodsService {
 	private static PODFILE_POST_INSTALL_SECTION_NAME = "post_install";
 	private static INSTALLER_BLOCK_PARAMETER_NAME = "installer";
-
+	private getCocoaPodsFromPodfile: Function;
 	constructor(
 		private $cocoaPodsPlatformManager: ICocoaPodsPlatformManager,
 		private $fs: IFileSystem,
@@ -14,7 +14,9 @@ export class CocoaPodsService implements ICocoaPodsService {
 		private $errors: IErrors,
 		private $logger: ILogger,
 		private $config: IConfiguration,
-		private $xcconfigService: IXcconfigService) { }
+		private $xcconfigService: IXcconfigService) {
+			this.getCocoaPodsFromPodfile = _.memoize(this._getCocoaPodsFromPodfile, getHash);
+		}
 
 	public getPodfileHeader(targetName: string): string {
 		return `use_frameworks!${EOL}${EOL}target "${targetName}" do${EOL}`;
@@ -35,7 +37,11 @@ export class CocoaPodsService implements ICocoaPodsService {
 		const podInstallResult = await this.$childProcess.spawnFromEvent(podTool, ["install"], "close", { cwd: projectRoot, stdio: ['pipe', process.stdout, process.stdout] }, { throwError: false });
 
 		if (podInstallResult.exitCode !== 0) {
-			this.$errors.fail(`'${podTool} install' command failed.${podInstallResult.stderr ? " Error is: " + podInstallResult.stderr : ""}`);
+			// https://github.com/CocoaPods/CocoaPods/blob/92aaf0f1120d32f3487960b485fb69fcaf61486c/lib/cocoapods/resolver.rb#L498
+			// TODO add article
+			const versionResolutionHint = podInstallResult.exitCode === 31 ? `For more information on resolving CocoaPod issues in NativeScript read.` : "";
+			this.$errors.fail(`'${podTool} install' command failed.${podInstallResult.stderr ? " Error is: " + podInstallResult.stderr : ""}
+${versionResolutionHint}`);
 		}
 
 		return podInstallResult;
@@ -59,17 +65,18 @@ export class CocoaPodsService implements ICocoaPodsService {
 		const mainPodfilePath = path.join(projectData.appResourcesDirectoryPath, normalizedPlatformName, PODFILE_NAME);
 		const projectPodfilePath = this.getProjectPodfilePath(projectRoot);
 		if (this.$fs.exists(projectPodfilePath) || this.$fs.exists(mainPodfilePath)) {
-			await this.applyPodfileToProject(NS_BASE_PODFILE, mainPodfilePath, projectData, projectRoot);
+			await this.applyPodfileToProject(NS_BASE_PODFILE, mainPodfilePath, projectData, platformData);
 		}
 	}
 
-	public async applyPodfileToProject(moduleName: string, podfilePath: string, projectData: IProjectData, nativeProjectPath: string): Promise<void> {
+	public async applyPodfileToProject(moduleName: string, podfilePath: string, projectData: IProjectData, platformData: IPlatformData): Promise<void> {
+		const nativeProjectPath = platformData.projectRoot;
 		if (!this.$fs.exists(podfilePath)) {
 			this.removePodfileFromProject(moduleName, podfilePath, projectData, nativeProjectPath);
 			return;
 		}
 
-		const { podfileContent, replacedFunctions, podfilePlatformData } = this.buildPodfileContent(podfilePath, moduleName);
+		const { podfileContent, replacedFunctions, podfilePlatformData } = this.buildPodfileContent(podfilePath, moduleName, projectData, platformData);
 		const pathToProjectPodfile = this.getProjectPodfilePath(nativeProjectPath);
 		const projectPodfileContent = this.$fs.exists(pathToProjectPodfile) ? this.$fs.readText(pathToProjectPodfile).trim() : "";
 
@@ -84,6 +91,10 @@ export class CocoaPodsService implements ICocoaPodsService {
 
 			if (podfilePlatformData) {
 				finalPodfileContent = this.$cocoaPodsPlatformManager.addPlatformSection(projectData, podfilePlatformData, finalPodfileContent);
+			}
+
+			if (this.isMainPodFile(podfilePath, projectData, platformData) && projectData.nsConfig && projectData.nsConfig.overridePods) {
+				finalPodfileContent = this.overridePodsFromFile(finalPodfileContent, projectData, platformData);
 			}
 
 			finalPodfileContent = `${finalPodfileContent.trim()}${EOL}${EOL}${podfileContent.trim()}${EOL}`;
@@ -222,10 +233,17 @@ export class CocoaPodsService implements ICocoaPodsService {
 		return `${CocoaPodsService.PODFILE_POST_INSTALL_SECTION_NAME} do |${CocoaPodsService.INSTALLER_BLOCK_PARAMETER_NAME}|${EOL}`;
 	}
 
-	private buildPodfileContent(pluginPodFilePath: string, pluginName: string): { podfileContent: string, replacedFunctions: IRubyFunction[], podfilePlatformData: IPodfilePlatformData } {
+	private buildPodfileContent(pluginPodFilePath: string, pluginName: string, projectData: IProjectData, platformData: IPlatformData): { podfileContent: string, replacedFunctions: IRubyFunction[], podfilePlatformData: IPodfilePlatformData } {
+		const mainPodfilePath = this.getMainPodFilePath(projectData, platformData);
 		const pluginPodfileContent = this.$fs.readText(pluginPodFilePath);
 		const data = this.replaceHookContent(CocoaPodsService.PODFILE_POST_INSTALL_SECTION_NAME, pluginPodfileContent, pluginName);
-		const { replacedContent, podfilePlatformData } = this.$cocoaPodsPlatformManager.replacePlatformRow(data.replacedContent, pluginPodFilePath);
+		const cocoapodsData = this.$cocoaPodsPlatformManager.replacePlatformRow(data.replacedContent, pluginPodFilePath);
+		const podfilePlatformData  = cocoapodsData.podfilePlatformData;
+		let replacedContent = cocoapodsData.replacedContent;
+
+		if (projectData.nsConfig && projectData.nsConfig.overridePods && mainPodfilePath !== pluginPodFilePath) {
+			replacedContent = this.overridePodsFromFile(replacedContent, projectData, platformData);
+		}
 
 		return {
 			podfileContent: `${this.getPluginPodfileHeader(pluginPodFilePath)}${EOL}${replacedContent}${EOL}${this.getPluginPodfileEnd()}`,
@@ -234,6 +252,43 @@ export class CocoaPodsService implements ICocoaPodsService {
 		};
 	}
 
+	private getMainPodFilePath(projectData: IProjectData, platformData: IPlatformData): string {
+		return path.join(projectData.appResourcesDirectoryPath, platformData.normalizedPlatformName, PODFILE_NAME);
+	}
+
+	private isMainPodFile(podFilePath: string, projectData: IProjectData, platformData: IPlatformData): boolean {
+		const mainPodfilePath = this.getMainPodFilePath(projectData, platformData);
+
+		return podFilePath === mainPodfilePath;
+	}
+
+	private overridePodsFromFile(podfileContent: string, projectData: IProjectData, platformData: IPlatformData): string {
+		const mainPodfilePath = this.getMainPodFilePath(projectData, platformData);
+		const mainPodfileContent = this.$fs.readText(mainPodfilePath);
+		const pods = this.getCocoaPodsFromPodfile(mainPodfileContent);
+		_.forEach(pods, pod => {
+			podfileContent = podfileContent.replace(new RegExp(`^[ ]*pod\\s*["']${pod}['"].*$`, "gm"), '#$&');
+		});
+
+		return podfileContent;
+	}
+
+	private _getCocoaPodsFromPodfile(podfileContent: string): Array<string> {
+		const pods = [];
+		const podsRegex = /^\s*pod\s*["'](.*?)['"].*$/gm;
+
+		let match = podsRegex.exec(podfileContent);
+		while (match != null) {
+			const podName: string = match[1];
+			if (podName) {
+				pods.push(podName);
+			}
+
+			match = podsRegex.exec(podfileContent);
+		}
+
+		return pods;
+	}
 }
 
 $injector.register("cocoapodsService", CocoaPodsService);

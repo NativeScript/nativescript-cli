@@ -12,9 +12,16 @@ interface IPluginsService {
 	 * @returns {IPackageJsonDepedenciesResult}
 	 */
 	getDependenciesFromPackageJson(projectDir: string): IPackageJsonDepedenciesResult;
-	preparePluginNativeCode(pluginData: IPluginData, platform: string, projectData: IProjectData): Promise<void>;
+	preparePluginNativeCode(preparePluginNativeCodeData: IPreparePluginNativeCodeData): Promise<void>;
 	convertToPluginData(cacheData: any, projectDir: string): IPluginData;
 	isNativeScriptPlugin(pluginPackageJsonPath: string): boolean;
+}
+
+interface IPreparePluginNativeCodeData {
+	pluginData: IPluginData;
+	platform: string;
+	projectData: IProjectData;
+	forcePluginNativePrepare: boolean;
 }
 
 interface IPackageJsonDepedenciesResult {

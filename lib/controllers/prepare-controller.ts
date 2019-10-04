@@ -3,7 +3,7 @@ import { hook } from "../common/helpers";
 import { performanceLog, cache } from "../common/decorators";
 import { EventEmitter } from "events";
 import * as path from "path";
-import { PREPARE_READY_EVENT_NAME, WEBPACK_COMPILATION_COMPLETE, PACKAGE_JSON_FILE_NAME, PLATFORMS_DIR_NAME, TrackActionNames, AnalyticsEventLabelDelimiter } from "../constants";
+import { PREPARE_READY_EVENT_NAME, WEBPACK_COMPILATION_COMPLETE, PACKAGE_JSON_FILE_NAME, PLATFORMS_DIR_NAME, TrackActionNames, AnalyticsEventLabelDelimiter, CONFIG_NS_FILE_NAME } from "../constants";
 interface IPlatformWatcherData {
 	hasWebpackCompilerProcess: boolean;
 	nativeFilesWatcher: choki.FSWatcher;
@@ -189,6 +189,7 @@ export class PrepareController extends EventEmitter {
 
 		const patterns = [
 			path.join(projectData.projectDir, PACKAGE_JSON_FILE_NAME),
+			path.join(projectData.projectDir, CONFIG_NS_FILE_NAME),
 			path.join(projectData.getAppDirectoryPath(), PACKAGE_JSON_FILE_NAME),
 			path.join(projectData.getAppResourcesRelativeDirectoryPath(), platformData.normalizedPlatformName),
 		]
