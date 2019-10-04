@@ -42,14 +42,14 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 					if (message.emittedFiles) {
 						if (isFirstWebpackWatchCompilation) {
 							isFirstWebpackWatchCompilation = false;
-						this.expectedHash = message.hash;
+							this.expectedHash = message.hash;
 							return;
 						}
 
 						let result;
 
 						if (prepareData.hmr) {
-						result = this.getUpdatedEmittedFiles(message.emittedFiles, message.chunkFiles, message.hash);
+							result = this.getUpdatedEmittedFiles(message.emittedFiles, message.chunkFiles, message.hash);
 						} else {
 							result = { emittedFiles: message.emittedFiles, fallbackFiles: <string[]>[], hash: "" };
 						}
@@ -219,7 +219,7 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 			} else if (this.$hostInfo.isWindows) {
 				const minWebpackPluginWithWinSnapshotsVersion = "1.3.0";
 				const installedWebpackPluginVersion = await this.$packageInstallationManager.getInstalledDependencyVersion(WEBPACK_PLUGIN_NAME, projectData.projectDir);
-				const hasWebpackPluginWithWinSnapshotsSupport = !!installedWebpackPluginVersion ? semver.gte(installedWebpackPluginVersion, minWebpackPluginWithWinSnapshotsVersion) : true;
+				const hasWebpackPluginWithWinSnapshotsSupport = !!installedWebpackPluginVersion ? semver.gte(semver.coerce(installedWebpackPluginVersion), minWebpackPluginWithWinSnapshotsVersion) : true;
 				if (!hasWebpackPluginWithWinSnapshotsSupport) {
 					this.$errors.fail(`In order to generate Snapshots on Windows, please upgrade your Webpack plugin version (npm i nativescript-dev-webpack@latest).`);
 				}
