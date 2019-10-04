@@ -434,9 +434,6 @@ export class PlatformProjectServiceStub extends EventEmitter implements IPlatfor
 	isPlatformPrepared(projectRoot: string): boolean {
 		return false;
 	}
-	canUpdatePlatform(installedModulePath: string): boolean {
-		return false;
-	}
 	async updatePlatform(currentVersion: string, newVersion: string, canUpdate: boolean): Promise<boolean> {
 		return Promise.resolve(true);
 	}

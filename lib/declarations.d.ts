@@ -600,7 +600,6 @@ interface IDeployPlatformOptions extends IAndroidReleaseOptions, IRelease, IClea
 interface IUpdatePlatformOptions {
 	currentVersion: string;
 	newVersion: string;
-	canUpdate: boolean;
 }
 
 interface IInfoService {
