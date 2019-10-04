@@ -46,7 +46,13 @@ interface IPlatformsDataService {
 }
 
 interface INodeModulesBuilder {
-	prepareNodeModules(platformData: IPlatformData, projectData: IProjectData): Promise<void>;
+	prepareNodeModules(prepareNodeModulesData: IPrepareNodeModulesData): Promise<void>;
+}
+
+interface IPrepareNodeModulesData {
+	platformData: IPlatformData;
+	projectData: IProjectData;
+	forcePluginNativePrepare: boolean;
 }
 
 interface INodeModulesDependenciesBuilder {

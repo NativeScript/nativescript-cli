@@ -114,7 +114,7 @@ export class PluginsService implements IPluginsService {
 		}
 	}
 
-	public async preparePluginNativeCode(pluginData: IPluginData, platform: string, projectData: IProjectData): Promise<void> {
+	public async preparePluginNativeCode({pluginData, platform, projectData, forcePluginNativePrepare}: IPreparePluginNativeCodeData): Promise<void> {
 		const platformData = this.$platformsDataService.getPlatformData(platform, projectData);
 		pluginData.pluginPlatformsFolderPath = (_platform: string) => path.join(pluginData.fullPath, "platforms", _platform.toLowerCase());
 
@@ -126,7 +126,7 @@ export class PluginsService implements IPluginsService {
 			const oldPluginNativeHashes = allPluginsNativeHashes[pluginData.name];
 			const currentPluginNativeHashes = await this.getPluginNativeHashes(pluginPlatformsFolderPath);
 
-			if (!oldPluginNativeHashes || this.$filesHashService.hasChangesInShasums(oldPluginNativeHashes, currentPluginNativeHashes)) {
+			if (forcePluginNativePrepare || !oldPluginNativeHashes || this.$filesHashService.hasChangesInShasums(oldPluginNativeHashes, currentPluginNativeHashes)) {
 				await platformData.platformProjectService.preparePluginNativeCode(pluginData, projectData);
 				this.setPluginNativeHashes({
 					pathToPluginsBuildFile,

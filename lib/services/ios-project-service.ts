@@ -512,9 +512,8 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		await this.prepareResources(pluginPlatformsFolderPath, pluginData, projectData);
 		await this.prepareFrameworks(pluginPlatformsFolderPath, pluginData, projectData);
 		await this.prepareStaticLibs(pluginPlatformsFolderPath, pluginData, projectData);
-
-		const projectRoot = this.getPlatformData(projectData).projectRoot;
-		await this.$cocoapodsService.applyPodfileToProject(pluginData.name, this.$cocoapodsService.getPluginPodfilePath(pluginData), projectData, projectRoot);
+		const platformData = this.getPlatformData(projectData);
+		await this.$cocoapodsService.applyPodfileToProject(pluginData.name, this.$cocoapodsService.getPluginPodfilePath(pluginData), projectData, platformData);
 	}
 
 	public async removePluginNativeCode(pluginData: IPluginData, projectData: IProjectData): Promise<void> {

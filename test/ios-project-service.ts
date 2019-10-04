@@ -79,7 +79,10 @@ function createTestInjector(projectPath: string, projectName: string, xCode?: IX
 		projectDir: "",
 		appDirectoryPath: "",
 		appResourcesDirectoryPath: "",
-		getAppResourcesDirectoryPath: () => ""
+		getAppResourcesDirectoryPath: () => "",
+		nsConfig: {
+			overridePods: false
+		}
 	});
 	projectData.projectDir = temp.mkdirSync("projectDir");
 	projectData.appDirectoryPath = join(projectData.projectDir, "app");
@@ -241,7 +244,7 @@ describe("Cocoapods support", () => {
 
 			projectData.podfilePath = basePodfilePath;
 
-			await cocoapodsService.applyPodfileToProject(basePodfileModuleName, basePodfilePath, projectData, iOSProjectService.getPlatformData(projectData).projectRoot);
+			await cocoapodsService.applyPodfileToProject(basePodfileModuleName, basePodfilePath, projectData, iOSProjectService.getPlatformData(projectData));
 
 			const projectPodfilePath = join(platformsFolderPath, "Podfile");
 			assert.isTrue(fs.exists(projectPodfilePath), `File ${projectPodfilePath} must exist as we have already applied Podfile to it.`);
@@ -265,7 +268,7 @@ describe("Cocoapods support", () => {
 
 			fs.deleteFile(basePodfilePath);
 
-			await cocoapodsService.applyPodfileToProject(basePodfileModuleName, basePodfilePath, projectData, iOSProjectService.getPlatformData(projectData).projectRoot);
+			await cocoapodsService.applyPodfileToProject(basePodfileModuleName, basePodfilePath, projectData, iOSProjectService.getPlatformData(projectData));
 			assert.isFalse(fs.exists(projectPodfilePath), `The projectPodfilePath (${projectPodfilePath}) must not exist when all Podfiles have been deleted and project is prepared again. (i.e. CLI should delete the project Podfile in this case)`);
 		});
 
