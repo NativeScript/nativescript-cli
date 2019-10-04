@@ -1,5 +1,6 @@
 import { assert } from "chai";
 import { PrepareController } from "../../lib/controllers/prepare-controller";
+import { MobileHelper } from "../../lib/common/mobile/mobile-helper";
 import { InjectorStub } from "../stubs";
 import { PREPARE_READY_EVENT_NAME } from "../../lib/constants";
 
@@ -43,6 +44,8 @@ function createTestInjector(data: { hasNativeChanges: boolean }): IInjector {
 			isCompileWithoutWatchCalled = true;
 		}
 	}));
+
+	injector.register("mobileHelper", MobileHelper);
 
 	injector.register("prepareController", PrepareController);
 

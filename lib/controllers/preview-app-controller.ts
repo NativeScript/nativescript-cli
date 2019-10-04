@@ -20,6 +20,7 @@ export class PreviewAppController extends EventEmitter implements IPreviewAppCon
 		private $hmrStatusService: IHmrStatusService,
 		private $logger: ILogger,
 		public $hooksService: IHooksService,
+		private $mobileHelper: Mobile.IMobileHelper,
 		private $pluginsService: IPluginsService,
 		private $prepareController: PrepareController,
 		private $previewAppFilesService: IPreviewAppFilesService,
@@ -58,7 +59,10 @@ export class PreviewAppController extends EventEmitter implements IPreviewAppCon
 		const projectData = this.$projectDataService.getProjectData(data.projectDir);
 		await this.$pluginsService.ensureAllDependenciesAreInstalled(projectData);
 		await this.$previewSdkService.initialize(data.projectDir, async (device: Device) => {
-			await this.$markingModeService.handleMarkingModeFullDeprecation({ projectDir: projectData.projectDir });
+			if (this.$mobileHelper.isAndroidPlatform(device.platform)) {
+				await this.$markingModeService.handleMarkingModeFullDeprecation({ projectDir: projectData.projectDir });
+			}
+
 			try {
 				if (!device) {
 					this.$errors.fail("Sending initial preview files without a specified device is not supported.");
