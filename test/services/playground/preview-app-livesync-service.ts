@@ -59,12 +59,12 @@ const deviceMockData = <Device>{
 	platform: normalizedPlatformName
 };
 const defaultProjectFiles = [
-	"my/test/file1.js",
-	"my/test/file2.js",
-	"my/test/file3.js",
-	"my/test/nested/file1.js",
-	"my/test/nested/file2.js",
-	"my/test/nested/file3.js"
+	path.join("my", "test", "file1.js"),
+	path.join("my", "test", "file2.js"),
+	path.join("my", "test", "file3.js"),
+	path.join("my", "test", "nested", "file1.js"),
+	path.join("my", "test", "nested", "file2.js"),
+	path.join("my", "test", "nested", "file3.js")
 ];
 const syncFilesMockData = {
 	projectDir: projectDirPath,

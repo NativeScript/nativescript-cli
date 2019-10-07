@@ -41,7 +41,8 @@ const createTestInjector = (): IInjector => {
 	testInjector.register("gradleCommandService", GradleCommandService);
 	testInjector.register("gradleBuildService", GradleBuildService);
 	testInjector.register("gradleBuildArgsService", GradleBuildArgsService);
-
+	testInjector.register("analyticsService", stubs.AnalyticsService);
+	testInjector.register("staticConfig", {TRACK_FEATURE_USAGE_SETTING_NAME: "TrackFeatureUsage"});
 	return testInjector;
 };
 

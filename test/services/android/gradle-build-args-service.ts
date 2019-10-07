@@ -1,6 +1,9 @@
 import { Yok } from "../../../lib/common/yok";
 import { GradleBuildArgsService } from "../../../lib/services/android/gradle-build-args-service";
+import * as stubs from "../../stubs";
 import { assert } from "chai";
+import * as temp from "temp";
+temp.track();
 
 function createTestInjector(): IInjector {
 	const injector = new Yok();
@@ -14,13 +17,15 @@ function createTestInjector(): IInjector {
 	});
 	injector.register("logger", {});
 	injector.register("gradleBuildArgsService", GradleBuildArgsService);
+	injector.register("analyticsService", stubs.AnalyticsService);
+	injector.register("staticConfig", {TRACK_FEATURE_USAGE_SETTING_NAME: "TrackFeatureUsage"});
 
 	return injector;
 }
 
-function executeTests(testCases: any[], testFunction: (gradleBuildArgsService: IGradleBuildArgsService, buildData: IAndroidBuildData) => string[]) {
-	_.each(testCases, testCase => {
-		it(testCase.name, () => {
+async function executeTests(testCases: any[], testFunction: (gradleBuildArgsService: IGradleBuildArgsService, buildData: IAndroidBuildData) => Promise<string[]>) {
+	for (const testCase of testCases) {
+		it(testCase.name, async () => {
 			const injector = createTestInjector();
 			if (testCase.logLevel) {
 				const logger = injector.resolve("logger");
@@ -28,29 +33,29 @@ function executeTests(testCases: any[], testFunction: (gradleBuildArgsService: I
 			}
 
 			const gradleBuildArgsService = injector.resolve("gradleBuildArgsService");
-			const args = testFunction(gradleBuildArgsService, testCase.buildConfig);
+			const args = await testFunction(gradleBuildArgsService, testCase.buildConfig);
 
 			assert.deepEqual(args, testCase.expectedResult);
 		});
-	});
+	}
 }
-
+const ksPath = temp.path({ prefix: "ksPath" });
 const expectedInfoLoggingArgs = ["--quiet"];
 const expectedTraceLoggingArgs = ["--stacktrace", "--debug"];
 const expectedDebugBuildArgs = ["-PcompileSdk=android-28", "-PtargetSdk=26", "-PbuildToolsVersion=my-build-tools-version", "-PgenerateTypings=true"];
-const expectedReleaseBuildArgs = expectedDebugBuildArgs.concat(["-Prelease", "-PksPath=/my/key/store/path",
+const expectedReleaseBuildArgs = expectedDebugBuildArgs.concat(["-Prelease", `-PksPath=${ksPath}`,
 	"-Palias=keyStoreAlias", "-Ppassword=keyStoreAliasPassword", "-PksPassword=keyStorePassword"]);
 
 const releaseBuildConfig = {
 	release: true,
-	keyStorePath: "/my/key/store/path",
+	keyStorePath: ksPath,
 	keyStoreAlias: "keyStoreAlias",
 	keyStoreAliasPassword: "keyStoreAliasPassword",
 	keyStorePassword: "keyStorePassword"
 };
 
 describe("GradleBuildArgsService", () => {
-	describe("getBuildTaskArgs", () => {
+	describe("getBuildTaskArgs", async () => {
 		const testCases = [
 			{
 				name: "should return correct args for debug build with info log",
@@ -102,10 +107,10 @@ describe("GradleBuildArgsService", () => {
 			}
 		];
 
-		executeTests(testCases, (gradleBuildArgsService: IGradleBuildArgsService, buildData: IAndroidBuildData) => gradleBuildArgsService.getBuildTaskArgs(buildData));
+		await executeTests(testCases, (gradleBuildArgsService: IGradleBuildArgsService, buildData: IAndroidBuildData) => gradleBuildArgsService.getBuildTaskArgs(buildData));
 	});
 
-	describe("getCleanTaskArgs", () => {
+	describe("getCleanTaskArgs", async () => {
 		const testCases = [
 			{
 				name: "should return correct args for debug clean build with info log",
@@ -157,6 +162,6 @@ describe("GradleBuildArgsService", () => {
 			}
 		];
 
-		executeTests(testCases, (gradleBuildArgsService: IGradleBuildArgsService, buildData: IAndroidBuildData) => gradleBuildArgsService.getCleanTaskArgs(buildData));
+		await executeTests(testCases, (gradleBuildArgsService: IGradleBuildArgsService, buildData: IAndroidBuildData) => Promise.resolve(gradleBuildArgsService.getCleanTaskArgs(buildData)));
 	});
 });

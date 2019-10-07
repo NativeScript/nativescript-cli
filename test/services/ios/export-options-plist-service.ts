@@ -1,7 +1,6 @@
 import { Yok } from "../../../lib/common/yok";
 import { ExportOptionsPlistService } from "../../../lib/services/ios/export-options-plist-service";
 import { assert } from "chai";
-import { EOL } from "os";
 
 let actualPlistTemplate: string = null;
 const projectName = "myProjectName";
@@ -54,7 +53,7 @@ describe("ExportOptionsPlistService", () => {
 					const projectData = { projectName, projectIdentifiers: { ios: "org.nativescript.myTestApp" }};
 					exportOptionsPlistService.createDevelopmentExportOptionsPlist(archivePath, projectData, testCase.buildConfig);
 
-					const template = actualPlistTemplate.split(EOL).join(" ");
+					const template = actualPlistTemplate.split("\n").join(" ");
 					assert.isTrue(template.indexOf(`<key>method</key> 	<string>${provisionType}</string>`) > 0);
 					assert.isTrue(template.indexOf("<key>uploadBitcode</key>     <false/>") > 0);
 					assert.isTrue(template.indexOf("<key>compileBitcode</key>     <false/>") > 0);
@@ -97,7 +96,7 @@ describe("ExportOptionsPlistService", () => {
 				const projectData = { projectName, projectIdentifiers: { ios: "org.nativescript.myTestApp" }};
 				exportOptionsPlistService.createDistributionExportOptionsPlist(projectRoot, projectData, testCase.buildConfig);
 
-				const template = actualPlistTemplate.split(EOL).join(" ");
+				const template = actualPlistTemplate.split("\n").join(" ");
 				assert.isTrue(template.indexOf("<key>method</key>     <string>app-store</string>") > 0);
 				assert.isTrue(template.indexOf("<key>uploadBitcode</key>     <false/>") > 0);
 				assert.isTrue(template.indexOf("<key>compileBitcode</key>     <false/>") > 0);
