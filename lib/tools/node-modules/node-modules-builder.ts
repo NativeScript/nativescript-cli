@@ -5,7 +5,7 @@ export class NodeModulesBuilder implements INodeModulesBuilder {
 		private $pluginsService: IPluginsService
 	) { }
 
-	public async prepareNodeModules({platformData , projectData, forcePluginNativePrepare}: IPrepareNodeModulesData): Promise<void> {
+	public async prepareNodeModules({platformData , projectData}: IPrepareNodeModulesData): Promise<void> {
 		const dependencies = this.$nodeModulesDependenciesBuilder.getProductionDependencies(projectData.projectDir);
 		if (_.isEmpty(dependencies)) {
 			return;
@@ -19,7 +19,7 @@ export class NodeModulesBuilder implements INodeModulesBuilder {
 			if (isPlugin) {
 				this.$logger.debug(`Successfully prepared plugin ${dependency.name} for ${platformData.normalizedPlatformName.toLowerCase()}.`);
 				const pluginData = this.$pluginsService.convertToPluginData(dependency, projectData.projectDir);
-				await this.$pluginsService.preparePluginNativeCode({pluginData, platform: platformData.normalizedPlatformName.toLowerCase(), projectData, forcePluginNativePrepare});
+				await this.$pluginsService.preparePluginNativeCode({pluginData, platform: platformData.normalizedPlatformName.toLowerCase(), projectData});
 			}
 		}
 	}

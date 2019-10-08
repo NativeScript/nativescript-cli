@@ -570,7 +570,7 @@ describe("Plugins service", () => {
 				`\n@#[line:1,col:39].` +
 				`\n@#[line:1,col:39].`;
 			mockBeginCommand(testInjector, expectedErrorMessage);
-			await pluginsService.preparePluginNativeCode({pluginData: pluginsService.convertToPluginData(pluginJsonData, projectData.projectDir), platform: "android", projectData, forcePluginNativePrepare: false});
+			await pluginsService.preparePluginNativeCode({pluginData: pluginsService.convertToPluginData(pluginJsonData, projectData.projectDir), platform: "android", projectData});
 		});
 	});
 

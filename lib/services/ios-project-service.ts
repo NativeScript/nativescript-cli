@@ -495,8 +495,6 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		await this.prepareResources(pluginPlatformsFolderPath, pluginData, projectData);
 		await this.prepareFrameworks(pluginPlatformsFolderPath, pluginData, projectData);
 		await this.prepareStaticLibs(pluginPlatformsFolderPath, pluginData, projectData);
-		const platformData = this.getPlatformData(projectData);
-		await this.$cocoapodsService.applyPodfileToProject(pluginData.name, this.$cocoapodsService.getPluginPodfilePath(pluginData), projectData, platformData);
 	}
 
 	public async removePluginNativeCode(pluginData: IPluginData, projectData: IProjectData): Promise<void> {
@@ -512,8 +510,10 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 	public async handleNativeDependenciesChange(projectData: IProjectData, opts: IRelease): Promise<void> {
 		const platformData = this.getPlatformData(projectData);
-
+		const pluginsData = await this.getAllInstalledPlugins(projectData);
 		this.setProductBundleIdentifier(projectData);
+
+		await this.applyPluginsCocoaPods(pluginsData, projectData, platformData);
 		await this.$cocoapodsService.applyPodfileFromAppResources(projectData, platformData);
 
 		const projectPodfilePath = this.$cocoapodsService.getProjectPodfilePath(platformData.projectRoot);
@@ -528,7 +528,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 		const pbxProjPath = this.getPbxProjPath(projectData);
 		this.$iOSExtensionsService.removeExtensions({ pbxProjPath });
-		await this.addExtensions(projectData);
+		await this.addExtensions(projectData, pluginsData);
 	}
 
 	public beforePrepareAllPlugins(): Promise<void> {
@@ -641,7 +641,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		this.savePbxProj(project, projectData);
 	}
 
-	private async addExtensions(projectData: IProjectData): Promise<void> {
+	private async addExtensions(projectData: IProjectData, pluginsData: IPluginData[]): Promise<void> {
 		const resorcesExtensionsPath = path.join(
 			projectData.getAppResourcesDirectoryPath(),
 			this.getPlatformData(projectData).normalizedPlatformName, constants.NATIVE_EXTENSION_FOLDER
@@ -649,10 +649,9 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		const platformData = this.getPlatformData(projectData);
 		const pbxProjPath = this.getPbxProjPath(projectData);
 		const addedExtensionsFromResources = await this.$iOSExtensionsService.addExtensionsFromPath({ extensionsFolderPath: resorcesExtensionsPath, projectData, platformData, pbxProjPath });
-		const plugins = await this.getAllInstalledPlugins(projectData);
 		let addedExtensionsFromPlugins = false;
-		for (const pluginIndex in plugins) {
-			const pluginData = plugins[pluginIndex];
+		for (const pluginIndex in pluginsData) {
+			const pluginData = pluginsData[pluginIndex];
 			const pluginPlatformsFolderPath = pluginData.pluginPlatformsFolderPath(IOSProjectService.IOS_PLATFORM_NAME);
 
 			const extensionPath = path.join(pluginPlatformsFolderPath, constants.NATIVE_EXTENSION_FOLDER);
@@ -826,6 +825,15 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 		if (infoPlist.CFBundleIdentifier && infoPlist.CFBundleIdentifier !== mergedPlist.CFBundleIdentifier) {
 			this.$logger.warn("[WARNING]: The CFBundleIdentifier key inside the 'Info.plist' will be overriden by the 'id' inside 'package.json'.");
+		}
+	}
+
+	private async applyPluginsCocoaPods(pluginsData: IPluginData[], projectData: IProjectData, platformData: IPlatformData) {
+		for (const pluginIndex in pluginsData) {
+			const pluginData = pluginsData[pluginIndex];
+			if (this.$fs.exists(pluginData.pluginPlatformsFolderPath(platformData.normalizedPlatformName))) {
+				await this.$cocoapodsService.applyPodfileToProject(pluginData.name, this.$cocoapodsService.getPluginPodfilePath(pluginData), projectData, platformData);
+			}
 		}
 	}
 }

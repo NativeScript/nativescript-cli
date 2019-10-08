@@ -318,11 +318,18 @@ describe("Cocoapods support", () => {
 			const samplePluginData = {
 				pluginPlatformsFolderPath(platform: string): string {
 					return samplePluginPlatformsFolderPath;
-				}
+				},
+				name: "somePlugin"
 			};
 			const projectData: IProjectData = testInjector.resolve("projectData");
+			const pluginsService = testInjector.resolve("pluginsService");
+			pluginsService.getAllInstalledPlugins = () => {
+				return [samplePluginData];
+			};
+			const cocoapodsService = testInjector.resolve("cocoapodsService");
+			cocoapodsService.executePodInstall = async () => { /* */ };
 
-			await iOSProjectService.preparePluginNativeCode(samplePluginData, projectData);
+			await iOSProjectService.handleNativeDependenciesChange(projectData);
 
 			const projectPodfilePath = join(platformsFolderPath, "Podfile");
 			assert.isTrue(fs.exists(projectPodfilePath));
@@ -403,8 +410,14 @@ describe("Cocoapods support", () => {
 				fullPath: "fullPath"
 			};
 			const projectData: IProjectData = testInjector.resolve("projectData");
+			const pluginsService = testInjector.resolve("pluginsService");
+			pluginsService.getAllInstalledPlugins = () => {
+				return [samplePluginData];
+			};
+			const cocoapodsService = testInjector.resolve("cocoapodsService");
+			cocoapodsService.executePodInstall = async () => { /* */ };
 
-			await iOSProjectService.preparePluginNativeCode(samplePluginData, projectData);
+			await iOSProjectService.handleNativeDependenciesChange(projectData);
 
 			const projectPodfilePath = join(platformsFolderPath, "Podfile");
 			assert.isTrue(fs.exists(projectPodfilePath));

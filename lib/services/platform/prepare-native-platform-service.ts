@@ -24,7 +24,7 @@ export class PrepareNativePlatformService implements IPrepareNativePlatformServi
 		const hasConfigChange = !changesInfo || changesInfo.configChanged;
 		const hasChangesRequirePrepare = !changesInfo || changesInfo.changesRequirePrepare;
 
-		const hasChanges = hasNativeModulesChange || hasConfigChange || hasChangesRequirePrepare || changesInfo.nsConfigChanged;
+		const hasChanges = hasNativeModulesChange || hasConfigChange || hasChangesRequirePrepare;
 
 		if (changesInfo.hasChanges) {
 			await this.cleanProject(platformData, { release });
@@ -36,8 +36,8 @@ export class PrepareNativePlatformService implements IPrepareNativePlatformServi
 			await platformData.platformProjectService.prepareProject(projectData, prepareData);
 		}
 
-		if (hasNativeModulesChange || changesInfo.nsConfigChanged) {
-			await this.$nodeModulesBuilder.prepareNodeModules({platformData, projectData, forcePluginNativePrepare: changesInfo.nsConfigChanged});
+		if (hasNativeModulesChange) {
+			await this.$nodeModulesBuilder.prepareNodeModules({platformData, projectData});
 		}
 
 		if (hasNativeModulesChange || hasConfigChange) {

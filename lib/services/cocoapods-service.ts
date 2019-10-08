@@ -93,10 +93,6 @@ ${versionResolutionHint}`);
 				finalPodfileContent = this.$cocoaPodsPlatformManager.addPlatformSection(projectData, podfilePlatformData, finalPodfileContent);
 			}
 
-			if (this.isMainPodFile(podfilePath, projectData, platformData) && projectData.nsConfig && projectData.nsConfig.overridePods) {
-				finalPodfileContent = this.overridePodsFromFile(finalPodfileContent, projectData, platformData);
-			}
-
 			finalPodfileContent = `${finalPodfileContent.trim()}${EOL}${EOL}${podfileContent.trim()}${EOL}`;
 			this.saveProjectPodfile(projectData, finalPodfileContent, nativeProjectPath);
 		}
@@ -234,14 +230,13 @@ ${versionResolutionHint}`);
 	}
 
 	private buildPodfileContent(pluginPodFilePath: string, pluginName: string, projectData: IProjectData, platformData: IPlatformData): { podfileContent: string, replacedFunctions: IRubyFunction[], podfilePlatformData: IPodfilePlatformData } {
-		const mainPodfilePath = this.getMainPodFilePath(projectData, platformData);
 		const pluginPodfileContent = this.$fs.readText(pluginPodFilePath);
 		const data = this.replaceHookContent(CocoaPodsService.PODFILE_POST_INSTALL_SECTION_NAME, pluginPodfileContent, pluginName);
 		const cocoapodsData = this.$cocoaPodsPlatformManager.replacePlatformRow(data.replacedContent, pluginPodFilePath);
 		const podfilePlatformData  = cocoapodsData.podfilePlatformData;
 		let replacedContent = cocoapodsData.replacedContent;
 
-		if (projectData.nsConfig && projectData.nsConfig.overridePods && mainPodfilePath !== pluginPodFilePath) {
+		if (projectData.nsConfig && projectData.nsConfig.overridePods && !this.isMainPodFile(pluginPodFilePath, projectData, platformData)) {
 			replacedContent = this.overridePodsFromFile(replacedContent, projectData, platformData);
 		}
 

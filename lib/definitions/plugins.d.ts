@@ -21,7 +21,6 @@ interface IPreparePluginNativeCodeData {
 	pluginData: IPluginData;
 	platform: string;
 	projectData: IProjectData;
-	forcePluginNativePrepare: boolean;
 }
 
 interface IPackageJsonDepedenciesResult {

@@ -52,7 +52,6 @@ interface INodeModulesBuilder {
 interface IPrepareNodeModulesData {
 	platformData: IPlatformData;
 	projectData: IProjectData;
-	forcePluginNativePrepare: boolean;
 }
 
 interface INodeModulesDependenciesBuilder {
