@@ -40,6 +40,10 @@ function changeNewLineCharacter(input: string): string {
 }
 
 describe("Cocoapods service", () => {
+	if (require("os").platform() === "win32") {
+		console.log("Skipping 'Cocoapods service' tests. They can work only on macOS and Linux");
+		return;
+	}
 	const nativeProjectPath = "nativeProjectPath";
 	const mockPluginData: any = {
 		name: "plugin1",

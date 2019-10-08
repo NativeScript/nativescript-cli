@@ -10,7 +10,7 @@ export class GradleBuildService extends EventEmitter implements IGradleBuildServ
 	) { super(); }
 
 	public async buildProject(projectRoot: string, buildData: IAndroidBuildData): Promise<void> {
-		const buildTaskArgs = this.$gradleBuildArgsService.getBuildTaskArgs(buildData);
+		const buildTaskArgs = await this.$gradleBuildArgsService.getBuildTaskArgs(buildData);
 		const spawnOptions = { emitOptions: { eventName: constants.BUILD_OUTPUT_EVENT_NAME }, throwError: true };
 		const gradleCommandOptions = { cwd: projectRoot, message: "Gradle build...", stdio: buildData.buildOutputStdio, spawnOptions };
 

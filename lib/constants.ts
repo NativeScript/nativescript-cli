@@ -35,6 +35,8 @@ export const AWAIT_NOTIFICATION_TIMEOUT_SECONDS = 9;
 export const SRC_DIR = "src";
 export const MAIN_DIR = "main";
 export const ASSETS_DIR = "assets";
+export const ANDROID_ANALYTICS_DATA_DIR = "analytics";
+export const ANDROID_ANALYTICS_DATA_FILE = "build-statistics.json";
 export const MANIFEST_FILE_NAME = "AndroidManifest.xml";
 export const APP_GRADLE_FILE_NAME = "app.gradle";
 export const INFO_PLIST_FILE_NAME = "Info.plist";
@@ -188,7 +190,8 @@ export const enum TrackActionNames {
 	PreviewAppData = "Preview App Data",
 	UninstallCLI = "Uninstall CLI",
 	UsingRuntimeVersion = "Using Runtime Version",
-	AddPlatform = "Add Platform"
+	AddPlatform = "Add Platform",
+	UsingKotlin = "Using Kotlin"
 }
 
 export const AnalyticsEventLabelDelimiter = "__";

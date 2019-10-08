@@ -3,11 +3,17 @@ import { Configurations } from "../../common/constants";
 
 export class GradleBuildArgsService implements IGradleBuildArgsService {
 	constructor(private $androidToolsInfo: IAndroidToolsInfo,
+		private $analyticsService: IAnalyticsService,
+		private $staticConfig: Config.IStaticConfig,
 		private $logger: ILogger) { }
 
-	public getBuildTaskArgs(buildData: IAndroidBuildData): string[] {
+	public async getBuildTaskArgs(buildData: IAndroidBuildData): Promise<string[]> {
 		const args = this.getBaseTaskArgs(buildData);
 		args.unshift(this.getBuildTaskName(buildData));
+
+		if (await this.$analyticsService.isEnabled(this.$staticConfig.TRACK_FEATURE_USAGE_SETTING_NAME)) {
+			args.push("-PgatherAnalyticsData=true");
+		}
 
 		return args;
 	}

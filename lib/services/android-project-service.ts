@@ -25,7 +25,8 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		private $androidResourcesMigrationService: IAndroidResourcesMigrationService,
 		private $filesHashService: IFilesHashService,
 		private $gradleCommandService: IGradleCommandService,
-		private $gradleBuildService: IGradleBuildService) {
+		private $gradleBuildService: IGradleBuildService,
+		private $analyticsService: IAnalyticsService) {
 		super($fs, $projectDataService);
 	}
 
@@ -235,6 +236,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 		const outputPath = platformData.getBuildOutputPath(buildData);
 		await this.$filesHashService.saveHashesForProject(this._platformData, outputPath);
+		await this.trackKotlinUsage(projectRoot);
 	}
 
 	public async buildForDeploy(projectRoot: string, projectData: IProjectData, buildData?: IAndroidBuildData): Promise<void> {
@@ -443,6 +445,39 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 				this.$fs.deleteDirectory(path.join(appResourcesDestinationDirectoryPath, resourceDir));
 			});
 		}
+	}
+
+	private async trackKotlinUsage(projectRoot: string): Promise<void> {
+		const buildStatistics = this.tryGetAndroidBuildStatistics(projectRoot);
+
+		try {
+			if (buildStatistics && buildStatistics.kotlinUsage) {
+				const analyticsDelimiter = constants.AnalyticsEventLabelDelimiter;
+				const hasUseKotlinPropertyInAppData = `hasUseKotlinPropertyInApp${analyticsDelimiter}${buildStatistics.kotlinUsage.hasUseKotlinPropertyInApp}`;
+				const hasKotlinRuntimeClassesData = `hasKotlinRuntimeClasses${analyticsDelimiter}${buildStatistics.kotlinUsage.hasKotlinRuntimeClasses}`;
+				await this.$analyticsService.trackEventActionInGoogleAnalytics({
+					action: constants.TrackActionNames.UsingKotlin,
+					additionalData: `${hasUseKotlinPropertyInAppData}${analyticsDelimiter}${hasKotlinRuntimeClassesData}`
+				});
+			}
+		} catch (e) {
+			this.$logger.trace(`Failed to track android build statistics. Error is: ${e.message}`);
+		}
+	}
+
+	private tryGetAndroidBuildStatistics(projectRoot: string): Object {
+		const staticsFilePath = path.join(projectRoot, constants.ANDROID_ANALYTICS_DATA_DIR, constants.ANDROID_ANALYTICS_DATA_FILE);
+		let buildStatistics;
+
+		if (this.$fs.exists(staticsFilePath)) {
+			try {
+				buildStatistics = this.$fs.readJson(staticsFilePath);
+			} catch (e) {
+				this.$logger.trace(`Unable to read android build statistics file. Error is ${e.message}`);
+			}
+		}
+
+		return buildStatistics;
 	}
 }
 

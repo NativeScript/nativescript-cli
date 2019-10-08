@@ -859,6 +859,22 @@ export class MarkingModeServiceStub implements IMarkingModeService {
 	}
 }
 
+export class AnalyticsService implements IAnalyticsService {
+	async checkConsent(): Promise<void> { return ; }
+	async trackFeature(featureName: string): Promise<void> { return ; }
+	async trackException(exception: any, message: string): Promise<void> { return ; }
+	async setStatus(settingName: string, enabled: boolean): Promise<void> { return ; }
+	async getStatusMessage(settingName: string, jsonFormat: boolean, readableSettingName: string): Promise<string> { return "Fake message"; }
+	async isEnabled(settingName: string): Promise<boolean> { return false; }
+	async track(featureName: string, featureValue: string): Promise<void> { return ; }
+	async trackEventActionInGoogleAnalytics(data: IEventActionData) { return Promise.resolve(); }
+	async trackInGoogleAnalytics(data: IGoogleAnalyticsData) { return Promise.resolve(); }
+	async trackAcceptFeatureUsage(settings: { acceptTrackFeatureUsage: boolean }) { return Promise.resolve(); }
+	async trackPreviewAppData() { return Promise.resolve(); }
+	async finishTracking() { return Promise.resolve(); }
+	setShouldDispose() {}
+}
+
 export class InjectorStub extends Yok implements IInjector {
 	constructor() {
 		super();
