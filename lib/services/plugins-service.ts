@@ -114,7 +114,7 @@ export class PluginsService implements IPluginsService {
 		}
 	}
 
-	public async preparePluginNativeCode(pluginData: IPluginData, platform: string, projectData: IProjectData): Promise<void> {
+	public async preparePluginNativeCode({pluginData, platform, projectData}: IPreparePluginNativeCodeData): Promise<void> {
 		const platformData = this.$platformsDataService.getPlatformData(platform, projectData);
 		pluginData.pluginPlatformsFolderPath = (_platform: string) => path.join(pluginData.fullPath, "platforms", _platform.toLowerCase());
 

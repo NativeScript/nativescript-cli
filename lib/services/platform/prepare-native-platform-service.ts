@@ -37,7 +37,7 @@ export class PrepareNativePlatformService implements IPrepareNativePlatformServi
 		}
 
 		if (hasNativeModulesChange) {
-			await this.$nodeModulesBuilder.prepareNodeModules(platformData, projectData);
+			await this.$nodeModulesBuilder.prepareNodeModules({platformData, projectData});
 		}
 
 		if (hasNativeModulesChange || hasConfigChange) {

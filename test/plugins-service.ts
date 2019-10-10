@@ -570,7 +570,7 @@ describe("Plugins service", () => {
 				`\n@#[line:1,col:39].` +
 				`\n@#[line:1,col:39].`;
 			mockBeginCommand(testInjector, expectedErrorMessage);
-			await pluginsService.preparePluginNativeCode(pluginsService.convertToPluginData(pluginJsonData, projectData.projectDir), "android", projectData);
+			await pluginsService.preparePluginNativeCode({pluginData: pluginsService.convertToPluginData(pluginJsonData, projectData.projectDir), platform: "android", projectData});
 		});
 	});
 
@@ -590,7 +590,8 @@ describe("Plugins service", () => {
 						preparePluginNativeCode: async (pluginData: IPluginData, projData: IProjectData) => {
 							testData.isPreparePluginNativeCodeCalled = true;
 						}
-					}
+					},
+					normalizedPlatformName: "iOS"
 				})
 			});
 
@@ -643,21 +644,21 @@ describe("Plugins service", () => {
 
 		it("does not prepare the files when plugin does not have platforms dir", async () => {
 			const testData = setupTest({ hasPluginPlatformsDir: false });
-			await testData.pluginsService.preparePluginNativeCode(testData.pluginData, platform, projectData);
+			await testData.pluginsService.preparePluginNativeCode({pluginData: testData.pluginData, platform, projectData});
 			assert.isFalse(testData.isPreparePluginNativeCodeCalled);
 		});
 
 		it("prepares the files when plugin has platforms dir and has not been built before", async () => {
 			const newPluginHashes = { "file": "hash" };
 			const testData = setupTest({ newPluginHashes, hasPluginPlatformsDir: true });
-			await testData.pluginsService.preparePluginNativeCode(testData.pluginData, platform, projectData);
+			await testData.pluginsService.preparePluginNativeCode({pluginData: testData.pluginData, platform, projectData});
 			assert.isTrue(testData.isPreparePluginNativeCodeCalled);
 			assert.deepEqual(testData.dataPassedToWriteJson, { [testData.pluginData.name]: newPluginHashes });
 		});
 
 		it("does not prepare the files when plugin has platforms dir and files have not changed since then", async () => {
 			const testData = setupTest({ hasChangesInShasums: false, buildDataFileExists: true, hasPluginPlatformsDir: true });
-			await testData.pluginsService.preparePluginNativeCode(testData.pluginData, platform, projectData);
+			await testData.pluginsService.preparePluginNativeCode({pluginData: testData.pluginData, platform, projectData});
 			assert.isFalse(testData.isPreparePluginNativeCodeCalled);
 		});
 	});

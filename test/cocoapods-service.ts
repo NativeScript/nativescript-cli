@@ -51,20 +51,33 @@ describe("Cocoapods service", () => {
 	};
 	const mockProjectData: any = {
 		projectDir: "projectDir",
-		projectName: "projectName"
+		projectName: "projectName",
+		appResourcesDirectoryPath: "my/full/path/to/app/App_Resources",
+		nsConfig: {
+			overridePods: false
+		}
+	};
+
+	const mockPlatformData: any = {
+		projectRoot: "nativeProjectRoot",
+		normalizedPlatformName: "iOS"
 	};
 
 	let testInjector: IInjector;
 	let cocoapodsService: ICocoaPodsService;
 	let newPodfileContent = "";
 
-	const mockFileSystem = (injector: IInjector, podfileContent: string, projectPodfileContent?: string): void => {
+	const mockFileSystem = (injector: IInjector, podfileContent: string, projectPodfileContent?: string, appResourcesPodfileContent?: string): void => {
 		const fs: IFileSystem = injector.resolve("fs");
 
 		fs.exists = () => true;
 		fs.readText = (file: string) => {
 			if (file.indexOf("pluginPlatformsFolderPath") !== -1) {
 				return podfileContent;
+			}
+
+			if (file.indexOf("App_Resources") !== -1) {
+				return appResourcesPodfileContent;
 			}
 
 			return newPodfileContent || projectPodfileContent || "";
@@ -519,7 +532,7 @@ end`,
 			it(testCase.testCaseDescription, async () => {
 				mockFileSystem(testInjector, testCase.input, testCase.projectPodfileContent);
 
-				await cocoapodsService.applyPodfileToProject(testCase.pluginData ? testCase.pluginData.name : mockPluginData.name, cocoapodsService.getPluginPodfilePath(testCase.pluginData || mockPluginData), mockProjectData, nativeProjectPath);
+				await cocoapodsService.applyPodfileToProject(testCase.pluginData ? testCase.pluginData.name : mockPluginData.name, cocoapodsService.getPluginPodfilePath(testCase.pluginData || mockPluginData), mockProjectData, mockPlatformData);
 
 				assert.deepEqual(changeNewLineCharacter(newPodfileContent), changeNewLineCharacter(testCase.output));
 			});
@@ -825,11 +838,15 @@ end`
 			projectPodfileContent = "";
 		});
 
-		function setupMocks(pods: any[]): { projectData: IProjectData } {
+		function setupMocks(pods: any[]): { projectData: IProjectData, platformData: any } {
 			const podsPaths = pods.map(p => p.path);
 			const projectData = testInjector.resolve("projectData");
 			projectData.getAppResourcesDirectoryPath = () => "my/full/path/to/app/App_Resources";
+			projectData.appResourcesDirectoryPath = "my/full/path/to/app/App_Resources";
 			projectData.projectName = "projectName";
+			projectData.nsConfig = {
+				overridePods: false
+			};
 
 			const fs = testInjector.resolve("fs");
 			fs.exists = (filePath: string) => projectPodfilePath === filePath || _.includes(podsPaths, filePath);
@@ -850,7 +867,9 @@ end`
 			};
 			fs.deleteFile = () => ({});
 
-			return { projectData };
+			const platformData = { normalizedPlatformName: "iOS", projectRoot };
+
+			return { projectData, platformData };
 		}
 
 		const testCasesWithApplyAndRemove = [
@@ -925,10 +944,10 @@ end`
 
 		_.each(testCasesWithApplyAndRemove, testCase => {
 			it(testCase.name, async () => {
-				const { projectData } = setupMocks(testCase.pods);
+				const { projectData, platformData } = setupMocks(testCase.pods);
 
 				for (const pod of testCase.pods) {
-					await cocoapodsService.applyPodfileToProject(pod.name, pod.path, projectData, projectPodfilePath);
+					await cocoapodsService.applyPodfileToProject(pod.name, pod.path, projectData, platformData);
 				}
 
 				assert.deepEqual(projectPodfileContent, testCase.expectedProjectPodfileContentAfterApply);
@@ -1164,11 +1183,11 @@ end`
 
 		_.each(testCases, testCase => {
 			it(testCase.name, async () => {
-				const { projectData } = setupMocks(testCase.pods);
+				const { projectData, platformData } = setupMocks(testCase.pods);
 				cocoapodsService.removePodfileFromProject = () => ({});
 
 				for (const pod of testCase.pods) {
-					await cocoapodsService.applyPodfileToProject(pod.name, pod.path, projectData, projectPodfilePath);
+					await cocoapodsService.applyPodfileToProject(pod.name, pod.path, projectData, platformData);
 				}
 
 				assert.deepEqual(projectPodfileContent, testCase.expectedProjectPodfileContent);

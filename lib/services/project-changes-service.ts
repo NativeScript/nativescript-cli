@@ -1,5 +1,5 @@
 import * as path from "path";
-import { NativePlatformStatus, PACKAGE_JSON_FILE_NAME, APP_GRADLE_FILE_NAME, BUILD_XCCONFIG_FILE_NAME, PLATFORMS_DIR_NAME } from "../constants";
+import { NativePlatformStatus, PACKAGE_JSON_FILE_NAME, APP_GRADLE_FILE_NAME, BUILD_XCCONFIG_FILE_NAME, PLATFORMS_DIR_NAME, CONFIG_NS_FILE_NAME } from "../constants";
 import { getHash, hook } from "../common/helpers";
 
 const prepareInfoFileName = ".nsprepareinfo";
@@ -8,6 +8,7 @@ class ProjectChangesInfo implements IProjectChangesInfo {
 
 	public appResourcesChanged: boolean;
 	public configChanged: boolean;
+	public nsConfigChanged: boolean;
 	public nativeChanged: boolean;
 	public signingChanged: boolean;
 	public nativePlatformStatus: NativePlatformStatus;
@@ -69,6 +70,10 @@ export class ProjectChangesService implements IProjectChangesService {
 				this._prepareInfo.projectFileHash = this.getProjectFileStrippedHash(projectData.projectDir, platformData);
 				this._changesInfo.nativeChanged = this.isProjectFileChanged(projectData.projectDir, platformData);
 			}
+
+			// If this causes too much rebuilds of the plugins or uncecessary builds for Android, move overrideCocoapods to prepareInfo.
+			this._changesInfo.nsConfigChanged = this.filesChanged([path.join(projectData.projectDir, CONFIG_NS_FILE_NAME)]);
+			this._changesInfo.nativeChanged = this._changesInfo.nativeChanged || this._changesInfo.nsConfigChanged;
 
 			this.$logger.trace(`Set nativeChanged to ${this._changesInfo.nativeChanged}.`);
 
@@ -183,6 +188,7 @@ export class ProjectChangesService implements IProjectChangesService {
 		this._changesInfo.appResourcesChanged = true;
 		this._changesInfo.configChanged = true;
 		this._changesInfo.nativeChanged = true;
+		this._changesInfo.nsConfigChanged = true;
 		return true;
 	}
 
