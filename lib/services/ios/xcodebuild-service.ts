@@ -16,7 +16,10 @@ export class XcodebuildService implements IXcodebuildService {
 
 	public async buildForSimulator(platformData: IPlatformData, projectData: IProjectData, buildConfig: IBuildConfig): Promise<void> {
 		const args = await this.$xcodebuildArgsService.getBuildForSimulatorArgs(platformData, projectData, buildConfig);
-		await this.$xcodebuildCommandService.executeCommand(args, { cwd: platformData.projectRoot, stdio: buildConfig.buildOutputStdio });
+		const environment: IStringDictionary = {};
+		environment["PRODUCT_BUNDLE_IDENTIFIER"] = projectData.projectIdentifiers.ios;
+		const env = _.extend({}, process.env, environment);
+		await this.$xcodebuildCommandService.executeCommand(args, { cwd: platformData.projectRoot, stdio: buildConfig.buildOutputStdio, env });
 	}
 
 	public async buildForAppStore(platformData: IPlatformData, projectData: IProjectData, buildConfig: IBuildConfig): Promise<string> {

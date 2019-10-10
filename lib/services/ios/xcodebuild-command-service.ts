@@ -7,11 +7,11 @@ export class XcodebuildCommandService implements IXcodebuildCommandService {
 		private $logger: ILogger
 	) { }
 
-	public async executeCommand(args: string[], options: { cwd: string, stdio: string, message?: string, spawnOptions?: any }): Promise<ISpawnResult> {
-		const { message, cwd, stdio, spawnOptions } = options;
+	public async executeCommand(args: string[], options: IXcodebuildCommandOptions): Promise<ISpawnResult> {
+		const { message, cwd, stdio, env, spawnOptions } = options;
 		this.$logger.info(message || "Xcode build...");
 
-		const childProcessOptions = { cwd, stdio: stdio || "inherit" };
+		const childProcessOptions = { cwd, stdio: stdio || "inherit", env };
 
 		try {
 			const commandResult = await this.$childProcess.spawnFromEvent("xcodebuild",

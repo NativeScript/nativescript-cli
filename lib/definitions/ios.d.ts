@@ -26,6 +26,7 @@ declare global {
 		message?: string;
 		cwd: string;
 		stdio?: string;
+		env?: IStringDictionary;
 		spawnOptions?: any;
 	}
 
