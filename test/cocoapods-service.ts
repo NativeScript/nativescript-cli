@@ -1194,4 +1194,169 @@ end`
 			});
 		});
 	});
+
+	describe("override pods", () => {
+
+		it("should override pods", async () => {
+			const projectDataMock = _.assign({}, mockProjectData, {nsConfig: {
+				overridePods: true
+			}});
+
+			const testCase = {
+				pluginPodContent: `pod 'MaterialComponents/Tabs', '< 84.4'`,
+				appResourcesPodContent: `pod 'MaterialComponents/Tabs', '~> 84.4'`,
+				projectPodfileContent: "",
+				expectedOutput:
+`use_frameworks!
+
+target "projectName" do
+# Begin Podfile - pluginPlatformsFolderPath/Podfile
+#pod 'MaterialComponents/Tabs', '< 84.4'
+# End Podfile
+end`,
+			expectedFinalOutput:
+`use_frameworks!
+
+target "projectName" do
+# Begin Podfile - pluginPlatformsFolderPath/Podfile
+#pod 'MaterialComponents/Tabs', '< 84.4'
+# End Podfile
+
+# Begin Podfile - my/full/path/to/app/App_Resources/iOS/Podfile
+pod 'MaterialComponents/Tabs', '~> 84.4'
+# End Podfile
+end`
+			};
+
+			mockFileSystem(testInjector, testCase.pluginPodContent, testCase.projectPodfileContent, testCase.appResourcesPodContent);
+			await cocoapodsService.applyPodfileToProject(mockPluginData.name, cocoapodsService.getPluginPodfilePath(mockPluginData), projectDataMock, mockPlatformData);
+
+			assert.deepEqual(changeNewLineCharacter(newPodfileContent), changeNewLineCharacter(testCase.expectedOutput));
+			await cocoapodsService.applyPodfileFromAppResources(projectDataMock, mockPlatformData);
+
+			assert.deepEqual(changeNewLineCharacter(newPodfileContent), changeNewLineCharacter(testCase.expectedFinalOutput));
+		});
+
+		it("should override pods and undo if app resources podfile doesn't include the pod", async () => {
+		const testCase = {
+			pluginPodContent: `pod 'MaterialComponents/Tabs', '< 84.4'`,
+			appResourcesPodContent:
+`pod 'MaterialComponents/Tabs', '~> 84.4'
+pod 'Mapbox-iOS-SDK', '~> 4.4.1'`,
+			updatedAppResourcesPodContent:`pod 'Mapbox-iOS-SDK', '~> 4.4.1'`,
+			projectPodfileContent: "",
+			expectedOutput:
+`use_frameworks!
+
+target "projectName" do
+# Begin Podfile - pluginPlatformsFolderPath/Podfile
+#pod 'MaterialComponents/Tabs', '< 84.4'
+# End Podfile
+end`,
+			expectedIntermidiatOutput:
+`use_frameworks!
+
+target "projectName" do
+# Begin Podfile - pluginPlatformsFolderPath/Podfile
+#pod 'MaterialComponents/Tabs', '< 84.4'
+# End Podfile
+
+# Begin Podfile - my/full/path/to/app/App_Resources/iOS/Podfile
+pod 'MaterialComponents/Tabs', '~> 84.4'
+pod 'Mapbox-iOS-SDK', '~> 4.4.1'
+# End Podfile
+end`,
+			expectedFinalOutput:
+`use_frameworks!
+
+target "projectName" do
+# Begin Podfile - pluginPlatformsFolderPath/Podfile
+pod 'MaterialComponents/Tabs', '< 84.4'
+# End Podfile
+
+# Begin Podfile - my/full/path/to/app/App_Resources/iOS/Podfile
+pod 'Mapbox-iOS-SDK', '~> 4.4.1'
+# End Podfile
+end`
+		};
+			const projectDataMock = _.assign({}, mockProjectData, {nsConfig: {
+				overridePods: true
+			}});
+
+			mockFileSystem(testInjector, testCase.pluginPodContent, testCase.projectPodfileContent, testCase.appResourcesPodContent);
+			await cocoapodsService.applyPodfileToProject(mockPluginData.name, cocoapodsService.getPluginPodfilePath(mockPluginData), projectDataMock, mockPlatformData);
+
+			assert.deepEqual(changeNewLineCharacter(newPodfileContent), changeNewLineCharacter(testCase.expectedOutput));
+			await cocoapodsService.applyPodfileFromAppResources(projectDataMock, mockPlatformData);
+
+			assert.deepEqual(changeNewLineCharacter(newPodfileContent), changeNewLineCharacter(testCase.expectedIntermidiatOutput));
+
+			mockFileSystem(testInjector, testCase.pluginPodContent, testCase.projectPodfileContent, testCase.updatedAppResourcesPodContent);
+			await cocoapodsService.applyPodfileToProject(mockPluginData.name, cocoapodsService.getPluginPodfilePath(mockPluginData), projectDataMock, mockPlatformData);
+			await cocoapodsService.applyPodfileFromAppResources(projectDataMock, mockPlatformData);
+
+			assert.deepEqual(changeNewLineCharacter(newPodfileContent), changeNewLineCharacter(testCase.expectedFinalOutput));
+		});
+
+		it("should not override if not in app resources podfile and the override when added", async () => {
+			const testCase = {
+				pluginPodContent: `pod 'MaterialComponents/Tabs', '< 84.4'`,
+				appResourcesPodContent: `pod 'Mapbox-iOS-SDK', '~> 4.4.1'`,
+				updatedAppResourcesPodContent:
+`pod 'MaterialComponents/Tabs', '~> 84.4'
+pod 'Mapbox-iOS-SDK', '~> 4.4.1'`,
+				projectPodfileContent: "",
+				expectedOutput:
+`use_frameworks!
+
+target "projectName" do
+# Begin Podfile - pluginPlatformsFolderPath/Podfile
+pod 'MaterialComponents/Tabs', '< 84.4'
+# End Podfile
+end`,
+				expectedIntermidiatOutput:
+`use_frameworks!
+
+target "projectName" do
+# Begin Podfile - pluginPlatformsFolderPath/Podfile
+pod 'MaterialComponents/Tabs', '< 84.4'
+# End Podfile
+
+# Begin Podfile - my/full/path/to/app/App_Resources/iOS/Podfile
+pod 'Mapbox-iOS-SDK', '~> 4.4.1'
+# End Podfile
+end`,
+				expectedFinalOutput:
+`use_frameworks!
+
+target "projectName" do
+# Begin Podfile - pluginPlatformsFolderPath/Podfile
+#pod 'MaterialComponents/Tabs', '< 84.4'
+# End Podfile
+
+# Begin Podfile - my/full/path/to/app/App_Resources/iOS/Podfile
+pod 'MaterialComponents/Tabs', '~> 84.4'
+pod 'Mapbox-iOS-SDK', '~> 4.4.1'
+# End Podfile
+end`
+			};
+				const projectDataMock = _.assign({}, mockProjectData, {nsConfig: {
+					overridePods: true
+				}});
+
+				mockFileSystem(testInjector, testCase.pluginPodContent, testCase.projectPodfileContent, testCase.appResourcesPodContent);
+				await cocoapodsService.applyPodfileToProject(mockPluginData.name, cocoapodsService.getPluginPodfilePath(mockPluginData), projectDataMock, mockPlatformData);
+
+				assert.deepEqual(changeNewLineCharacter(newPodfileContent), changeNewLineCharacter(testCase.expectedOutput));
+				await cocoapodsService.applyPodfileFromAppResources(projectDataMock, mockPlatformData);
+
+				assert.deepEqual(changeNewLineCharacter(newPodfileContent), changeNewLineCharacter(testCase.expectedIntermidiatOutput));
+
+				mockFileSystem(testInjector, testCase.pluginPodContent, testCase.projectPodfileContent, testCase.updatedAppResourcesPodContent);
+				await cocoapodsService.applyPodfileToProject(mockPluginData.name, cocoapodsService.getPluginPodfilePath(mockPluginData), projectDataMock, mockPlatformData);
+				await cocoapodsService.applyPodfileFromAppResources(projectDataMock, mockPlatformData);
+
+				assert.deepEqual(changeNewLineCharacter(newPodfileContent), changeNewLineCharacter(testCase.expectedFinalOutput));
+			});
+	});
 });
