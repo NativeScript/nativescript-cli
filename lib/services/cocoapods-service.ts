@@ -259,11 +259,14 @@ ${versionResolutionHint}`);
 
 	private overridePodsFromFile(podfileContent: string, projectData: IProjectData, platformData: IPlatformData): string {
 		const mainPodfilePath = this.getMainPodFilePath(projectData, platformData);
-		const mainPodfileContent = this.$fs.readText(mainPodfilePath);
-		const pods = this.getCocoaPodsFromPodfile(mainPodfileContent);
-		_.forEach(pods, pod => {
-			podfileContent = podfileContent.replace(new RegExp(`^[ ]*pod\\s*["']${pod}['"].*$`, "gm"), '#$&');
-		});
+
+		if (this.$fs.exists(mainPodfilePath)) {
+			const mainPodfileContent = this.$fs.readText(mainPodfilePath);
+			const pods = this.getCocoaPodsFromPodfile(mainPodfileContent);
+			_.forEach(pods, pod => {
+				podfileContent = podfileContent.replace(new RegExp(`^[ ]*pod\\s*["']${pod}['"].*$`, "gm"), '#$&');
+			});
+		}
 
 		return podfileContent;
 	}
