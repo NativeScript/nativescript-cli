@@ -170,7 +170,7 @@ export class PluginsService implements IPluginsService {
 		return _.filter(nodeModules, nodeModuleData => nodeModuleData && nodeModuleData.isPlugin);
 	}
 
-	//This method will travers all non dev dependencies (not only the root/installed ones) and filter the plugins.
+	//This method will traverse all non dev dependencies (not only the root/installed ones) and filter the plugins.
 	public getAllProductionPlugins(projectData: IProjectData, dependencies?: IDependencyData[]): IPluginData[] {
 		const allProductionPlugins: IPluginData[] = [];
 		dependencies = dependencies || this.$nodeModulesDependenciesBuilder.getProductionDependencies(projectData.projectDir);
