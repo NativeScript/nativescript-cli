@@ -399,7 +399,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			});
 		};
 
-		const allPlugins = await this.getAllInstalledPlugins(projectData);
+		const allPlugins = this.getAllProductionPlugins(projectData);
 		for (const plugin of allPlugins) {
 			const pluginInfoPlistPath = path.join(plugin.pluginPlatformsFolderPath(IOSProjectService.IOS_PLATFORM_NAME), this.getPlatformData(projectData).configurationFileName);
 			makePatch(pluginInfoPlistPath);
@@ -452,8 +452,8 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		this.$fs.writeFile(this.getPlatformData(projectData).configurationFilePath, plistContent);
 	}
 
-	private getAllInstalledPlugins(projectData: IProjectData): Promise<IPluginData[]> {
-		return (<IPluginsService>this.$injector.resolve("pluginsService")).getAllInstalledPlugins(projectData);
+	private getAllProductionPlugins(projectData: IProjectData): IPluginData[] {
+		return (<IPluginsService>this.$injector.resolve("pluginsService")).getAllProductionPlugins(projectData);
 	}
 
 	private replace(name: string): string {
@@ -510,7 +510,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 	public async handleNativeDependenciesChange(projectData: IProjectData, opts: IRelease): Promise<void> {
 		const platformData = this.getPlatformData(projectData);
-		const pluginsData = await this.getAllInstalledPlugins(projectData);
+		const pluginsData = this.getAllProductionPlugins(projectData);
 		this.setProductBundleIdentifier(projectData);
 
 		await this.applyPluginsCocoaPods(pluginsData, projectData, platformData);
@@ -763,8 +763,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			this.$fs.deleteFile(pluginsXcconfigFilePath);
 		}
 
-		const pluginsService = <IPluginsService>this.$injector.resolve("pluginsService");
-		const allPlugins: IPluginData[] = await pluginsService.getAllInstalledPlugins(projectData);
+		const allPlugins: IPluginData[] = this.getAllProductionPlugins(projectData);
 		for (const plugin of allPlugins) {
 			const pluginPlatformsFolderPath = plugin.pluginPlatformsFolderPath(IOSProjectService.IOS_PLATFORM_NAME);
 			const pluginXcconfigFilePath = path.join(pluginPlatformsFolderPath, BUILD_XCCONFIG_FILE_NAME);
