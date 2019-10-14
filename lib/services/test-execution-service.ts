@@ -6,6 +6,7 @@ import { RunController } from "../controllers/run-controller";
 interface IKarmaConfigOptions {
 	debugBrk: boolean;
 	debugTransport: boolean;
+	appPath: string;
 }
 
 export class TestExecutionService implements ITestExecutionService {
@@ -156,6 +157,7 @@ export class TestExecutionService implements ITestExecutionService {
 		karmaConfig.projectDir = projectData.projectDir;
 		karmaConfig.bundle = true;
 		karmaConfig.debugBrk = this.$options.debugBrk;
+		karmaConfig.appPath = projectData.getAppDirectoryRelativePath();
 		karmaConfig.platform = platform.toLowerCase();
 		this.$logger.debug(JSON.stringify(karmaConfig, null, 4));
 
