@@ -232,9 +232,9 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 	private async getCachedShouldMigrate(projectDir: string, platform: string): Promise<boolean> {
 		let cachedShouldMigrateValue = null;
 
-		const cashedHash = await this.$jsonFileSettingsService.getSettingValue(getHash(`${projectDir}${platform.toLowerCase()}`));
-		const packageJsonShasum = await this.getPachageJsonHash(projectDir);
-		if (cashedHash === packageJsonShasum) {
+		const cachedHash = await this.$jsonFileSettingsService.getSettingValue(getHash(`${projectDir}${platform.toLowerCase()}`));
+		const packageJsonHash = await this.getPachageJsonHash(projectDir);
+		if (cachedHash === packageJsonHash) {
 			cachedShouldMigrateValue = false;
 		}
 
@@ -242,8 +242,8 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 	}
 
 	private async setCachedShouldMigrate(projectDir: string, platform: string): Promise<void> {
-		const packageJsonShasum = await this.getPachageJsonHash(projectDir);
-		await this.$jsonFileSettingsService.saveSetting(getHash(`${projectDir}${platform.toLowerCase()}`), packageJsonShasum);
+		const packageJsonHash = await this.getPachageJsonHash(projectDir);
+		await this.$jsonFileSettingsService.saveSetting(getHash(`${projectDir}${platform.toLowerCase()}`), packageJsonHash);
 	}
 
 	private async getPachageJsonHash(projectDir: string) {
