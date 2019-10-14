@@ -119,7 +119,8 @@ function createTestInjector(projectPath: string, projectName: string, xCode?: IX
 	});
 	testInjector.register("iosDeviceOperations", {});
 	testInjector.register("pluginsService", {
-		getAllInstalledPlugins: (): string[] => []
+		getAllInstalledPlugins: (): string[] => [],
+		getAllProductionPlugins: (): string[] => [],
 	});
 	testInjector.register("androidProcessService", {});
 	testInjector.register("sysInfo", {
@@ -323,7 +324,7 @@ describe("Cocoapods support", () => {
 			};
 			const projectData: IProjectData = testInjector.resolve("projectData");
 			const pluginsService = testInjector.resolve("pluginsService");
-			pluginsService.getAllInstalledPlugins = () => {
+			pluginsService.getAllProductionPlugins = () => {
 				return [samplePluginData];
 			};
 			const cocoapodsService = testInjector.resolve("cocoapodsService");
@@ -411,7 +412,7 @@ describe("Cocoapods support", () => {
 			};
 			const projectData: IProjectData = testInjector.resolve("projectData");
 			const pluginsService = testInjector.resolve("pluginsService");
-			pluginsService.getAllInstalledPlugins = () => {
+			pluginsService.getAllProductionPlugins = () => {
 				return [samplePluginData];
 			};
 			const cocoapodsService = testInjector.resolve("cocoapodsService");

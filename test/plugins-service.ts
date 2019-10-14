@@ -150,6 +150,7 @@ function createTestInjector() {
 	testInjector.register("cleanupService", {
 		setShouldDispose: (shouldDispose: boolean): void => undefined
 	});
+	testInjector.register("nodeModulesDependenciesBuilder", {});
 
 	return testInjector;
 }
@@ -632,6 +633,7 @@ describe("Plugins service", () => {
 			unitTestsInjector.register("injector", unitTestsInjector);
 			unitTestsInjector.register("mobileHelper", MobileHelper);
 			unitTestsInjector.register("devicePlatformsConstants", DevicePlatformsConstants);
+			unitTestsInjector.register("nodeModulesDependenciesBuilder", {});
 
 			const pluginsService: PluginsService = unitTestsInjector.resolve(PluginsService);
 			testData.pluginsService = pluginsService;
