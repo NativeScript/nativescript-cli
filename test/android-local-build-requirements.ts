@@ -30,6 +30,7 @@ describe("androidLocalBuildRequirements", () => {
 				getJavaVersion: async (): Promise<string> => results.hasOwnProperty("getJavaVersion") ? results.getJavaCompilerVersion : "8.0.0",
 				getJavaVersionFromJavaHome: async (): Promise<string> => results.hasOwnProperty("getJavaVersionFromJavaHome") ? results.getJavaCompilerVersion : "8.0.0",
 				getJavaVersionFromPath: async (): Promise<string> => results.hasOwnProperty("getJavaVersionFromPath") ? results.getJavaCompilerVersion : "8.0.0",
+				getJavaPath: async (): Promise<string> => undefined,
 				getAdbVersion: async (pathToAdb?: string): Promise<string> => results.hasOwnProperty("getAdbVersion") ? results.getAdbVersion : "1.0.39",
 				getXcodeVersion: async (): Promise<string> => undefined,
 				getNodeVersion: async (): Promise<string> => undefined,
