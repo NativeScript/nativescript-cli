@@ -23,6 +23,7 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 	private monoVerRegExp = /version (\d+[.]\d+[.]\d+) /gm;
 
 	private javaCompilerVerCache: string;
+	private javaPathCache: string;
 	private javaVerCache: string;
 	private javaVerJavaHomeCache: string;
 	private javaVerPathCache: string;
@@ -72,6 +73,13 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 		return this.getValueForProperty(() => this.javaVerCache, async (): Promise<string> => {
 			const javaVersion = (await this.getJavaVersionFromJavaHome()) || (await this.getJavaVersionFromPath());
 			return javaVersion;
+		});
+	}
+
+	public getJavaPath(): Promise<string> {
+		return this.getValueForProperty(() => this.javaPathCache, async (): Promise<string> => {
+			const javaPath = (await this.getJavaExecutablePathFromJavaHome(Constants.JAVA_EXECUTABLE_NAME)) || (await this.getJavaExecutablePathFromPath(Constants.JAVA_EXECUTABLE_NAME));
+			return javaPath;
 		});
 	}
 
@@ -509,6 +517,7 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 			result.dotNetVer = await this.hostInfo.dotNetVersion();
 			result.javacVersion = await this.getJavaCompilerVersion();
 			result.javaVersion = await this.getJavaVersion();
+			result.javaPath = await this.getJavaPath();
 			result.adbVer = await this.getAdbVersion(config && config.androidToolsInfo && config.androidToolsInfo.pathToAdb);
 			result.androidInstalled = await this.isAndroidInstalled();
 			result.monoVer = await this.getMonoVersion();
@@ -521,6 +530,16 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 
 	private async getVersionOfJavaExecutableFromJavaHome(javaExecutableName: string, regExp: RegExp): Promise<string> {
 		let javaExecutableVersion: string = null;
+		const javaExecutablePath = this.getJavaExecutablePathFromJavaHome(javaExecutableName);
+		if (javaExecutablePath) {
+			javaExecutableVersion = await this.getVersionOfJavaExecutable(javaExecutablePath, regExp);
+		}
+
+		return javaExecutableVersion;
+	}
+
+	private getJavaExecutablePathFromJavaHome(javaExecutableName: string): string {
+		let javaExecutablePath: string = null;
 
 		try {
 			const javaHome = process.env["JAVA_HOME"];
@@ -529,25 +548,36 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 			if (javaHome) {
 				const pathToJavaExecutable = path.join(javaHome, "bin", javaExecutableFile);
 				if (this.fileSystem.exists(pathToJavaExecutable)) {
-					javaExecutableVersion = await this.getVersionOfJavaExecutable(pathToJavaExecutable, regExp);
+					javaExecutablePath = pathToJavaExecutable;
 				}
 			}
 		} catch (err) { /* intentionally left blank */ }
 
-		return javaExecutableVersion;
+		return javaExecutablePath;
 	}
 
 	private async getVersionOfJavaExecutableFromPath(javaExecutableName: string, regExp: RegExp): Promise<string> {
 		let javaExecutableVersion: string = null;
 
+		const javaExecutablePath = await this.getJavaExecutablePathFromPath(javaExecutableName);
+		if (javaExecutablePath) {
+			javaExecutableVersion = await this.getVersionOfJavaExecutable(javaExecutablePath, regExp);
+		}
+
+		return javaExecutableVersion;
+	}
+
+	private async getJavaExecutablePathFromPath(javaExecutableName: string): Promise<string> {
+		let javaExecutablePath: string = null;
+
 		try {
 			const detectionCommand = this.hostInfo.isWindows ? "where" : "which";
 			// if this command succeeds, we have javac in the PATH. In case it is not there, it will throw an error.
 			await this.childProcess.exec(`${detectionCommand} ${javaExecutableName}`);
-			javaExecutableVersion = await this.getVersionOfJavaExecutable(javaExecutableName, regExp);
+			javaExecutablePath = javaExecutableName;
 		} catch (err) { /* intentionally left blank */ }
 
-		return javaExecutableVersion;
+		return javaExecutablePath;
 	}
 
 	private async getVersionOfJavaExecutable(executable: string, regExp: RegExp): Promise<string> {

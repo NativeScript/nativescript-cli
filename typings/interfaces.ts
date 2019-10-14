@@ -16,6 +16,12 @@ declare module NativeScriptDoctor {
 		getJavaVersion(): Promise<string>;
 
 		/**
+		 * Returns the currently installed Java path based on JAVA_HOME and PATH..
+		 * @return {Promise<string>} The currently installed Java path.
+		 */
+		getJavaPath(): Promise<string>;
+
+		/**
 		 * Gets JAVA version based on the executable in PATH.
 		 * @return {Promise<string>}
 		 */
@@ -340,6 +346,11 @@ declare module NativeScriptDoctor {
 		 * @type {string}
 		 */
 		javaVersion: string;
+		/**
+		 * java path based on JAVA_HOME and PATH.
+		 * @type {string}
+		 */
+		javaPath: string;
 		/**
 		 * true if the Android SDK Tools are installed and configured correctly.
 		 * @type {boolean}
