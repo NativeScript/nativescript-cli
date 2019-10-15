@@ -14,6 +14,7 @@ $injector.require("androidPluginBuildService", "./services/android-plugin-build-
 $injector.require("gradleCommandService", "./services/android/gradle-command-service");
 $injector.require("gradleBuildService", "./services/android/gradle-build-service");
 $injector.require("gradleBuildArgsService", "./services/android/gradle-build-args-service");
+$injector.require("androidBundleToolService", "./services/android/android-bundle-tool-service");
 $injector.require("iOSEntitlementsService", "./services/ios-entitlements-service");
 $injector.require("iOSNativeTargetService", "./services/ios-native-target-service");
 $injector.require("iOSExtensionsService", "./services/ios-extensions-service");

@@ -1,0 +1,1 @@
+Downloaded from https://github.com/google/bundletool/releases/tag/0.10.3

@@ -193,3 +193,17 @@ export class DeviceLogProviderStub extends EventEmitter implements Mobile.IDevic
 		this.currentDeviceProjectDirs[deviceIdentifier] = projectDir;
 	}
 }
+
+export class AndroidBundleToolServiceStub implements IAndroidBundleToolService {
+	public isInstallApksCalled = false;
+	public isBuildApksCalled = false;
+
+	buildApks(options: IBuildApksOptions): Promise<void> {
+		this.isBuildApksCalled = true;
+		return;
+	}
+	installApks(options: IInstallApksOptions): Promise<void> {
+		this.isInstallApksCalled = true;
+		return;
+	}
+}

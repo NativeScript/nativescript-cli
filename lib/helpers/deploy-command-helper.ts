@@ -3,6 +3,7 @@ import { BuildController } from "../controllers/build-controller";
 
 export class DeployCommandHelper {
 	constructor(
+		private $androidBundleValidatorHelper: IAndroidBundleValidatorHelper,
 		private $buildDataService: IBuildDataService,
 		private $buildController: BuildController,
 		private $devicesService: Mobile.IDevicesService,
@@ -41,6 +42,7 @@ export class DeployCommandHelper {
 						nativePrepare: { skipNativePrepare: additionalOptions && additionalOptions.skipNativePrepare }
 					});
 
+				this.$androidBundleValidatorHelper.validateDeviceApiLevel(d, buildData);
 				const buildAction = additionalOptions && additionalOptions.buildPlatform ?
 					additionalOptions.buildPlatform.bind(additionalOptions.buildPlatform, d.deviceInfo.platform, buildData, this.$projectData) :
 					this.$buildController.build.bind(this.$buildController, buildData);

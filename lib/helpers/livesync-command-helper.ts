@@ -3,6 +3,7 @@ import { DeployController } from "../controllers/deploy-controller";
 
 export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 	constructor(
+		private $androidBundleValidatorHelper: IAndroidBundleValidatorHelper,
 		private $buildDataService: IBuildDataService,
 		private $projectData: IProjectData,
 		private $options: IOptions,
@@ -66,6 +67,7 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 				});
 
 				const buildData = this.$buildDataService.getBuildData(this.$projectData.projectDir, d.deviceInfo.platform, { ...this.$options.argv, outputPath, buildForDevice: !d.isEmulator, watch: !this.$options.release && this.$options.watch });
+				this.$androidBundleValidatorHelper.validateDeviceApiLevel(d, buildData);
 
 				const buildAction = additionalOptions && additionalOptions.buildPlatform ?
 					additionalOptions.buildPlatform.bind(additionalOptions.buildPlatform, d.deviceInfo.platform, buildData, this.$projectData) :

@@ -1002,6 +1002,11 @@ interface ISysInfo {
  	 */
 	getXcodeVersion(): Promise<string>;
 	/**
+	 * Returns the currently installed Java path based on JAVA_HOME and PATH..
+	 * @return {Promise<string>} The currently installed Java path.
+	 */
+	getJavaPath(): Promise<string>;
+	/**
 	 * Returns the currently installed Cocoapods version.
 	 * @return {Promise<string>} Returns the currently installed Cocoapods version. It will return null if Cocoapods is not installed.
 	 */

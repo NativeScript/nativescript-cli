@@ -35,7 +35,7 @@ export class DeviceInstallAppService {
 		const appIdentifier = projectData.projectIdentifiers[platform];
 		const outputFilePath = buildData.outputPath || platformData.getBuildOutputPath(buildData);
 
-		await device.applicationManager.reinstallApplication(appIdentifier, packageFile);
+		await device.applicationManager.reinstallApplication(appIdentifier, packageFile, buildData);
 
 		await this.updateHashesOnDevice({
 			device,

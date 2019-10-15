@@ -18,7 +18,6 @@ export class DeployOnDeviceCommand extends ValidatePlatformCommandBase implement
 		private $mobileHelper: Mobile.IMobileHelper,
 		$platformsDataService: IPlatformsDataService,
 		private $deployCommandHelper: DeployCommandHelper,
-		private $androidBundleValidatorHelper: IAndroidBundleValidatorHelper,
 		private $markingModeService: IMarkingModeService,
 		private $migrateController: IMigrateController) {
 		super($options, $platformsDataService, $platformValidationService, $projectData);
@@ -40,7 +39,6 @@ export class DeployOnDeviceCommand extends ValidatePlatformCommandBase implement
 			await this.$migrateController.validate({ projectDir: this.$projectData.projectDir, platforms: [platform] });
 		}
 
-		this.$androidBundleValidatorHelper.validateNoAab();
 		if (!args || !args.length || args.length > 1) {
 			return false;
 		}

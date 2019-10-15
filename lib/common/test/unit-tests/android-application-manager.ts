@@ -1,13 +1,16 @@
 import { AndroidApplicationManager } from "../../mobile/android/android-application-manager";
 import { Yok } from "../../yok";
 import { assert } from "chai";
-import { CommonLoggerStub, LogcatHelperStub, AndroidProcessServiceStub, DeviceLogProviderStub, ErrorsStub } from "./stubs";
+import { AndroidBundleToolServiceStub, CommonLoggerStub, HooksServiceStub, LogcatHelperStub, AndroidProcessServiceStub, DeviceLogProviderStub, ErrorsStub } from "./stubs";
+import { FileSystemStub } from "../../../../test/stubs";
 const invalidIdentifier = "invalid.identifier";
 const validDeviceIdentifier = "device.identifier";
 const validIdentifier = "org.nativescript.testApp";
 const validStartOptions = { appId: validIdentifier, projectName: "", projectDir: "" };
+const validSigning: any = { keyStoreAlias: "string", keyStorePath: "string", keyStoreAliasPassword: "string", keyStorePassword: "string" };
 
 class AndroidDebugBridgeStub {
+	public calledInstallApplication = false;
 	public calledStopApplication = false;
 	public startedWithActivityManager = false;
 	public validIdentifierPassed = false;
@@ -41,6 +44,12 @@ class AndroidDebugBridgeStub {
 			Intent { act=android.intent.action.MAIN cat=[android.intent.category.LAUNCHER] flg=0x10200000 cmp=org.nativescript.testApp/com.tns.NativeScriptActivity } \
 			frontOfTask=true task=TaskRecord{fe592ac #449 A=org.nativescript.testApp U=0 StackId=1 sz=1}"
 	];
+
+	public async executeCommand(args: string[], options?: any): Promise<any> {
+		if (args[0] === "install") {
+			this.calledInstallApplication = true;
+		}
+	}
 
 	public async executeShellCommand(args: string[]): Promise<any> {
 		if (args && args.length > 0) {
@@ -111,9 +120,11 @@ function createTestInjector(options?: {
 	testInjector.register("identifier", validDeviceIdentifier);
 	testInjector.register("logcatHelper", LogcatHelperStub);
 	testInjector.register("androidProcessService", AndroidProcessServiceStub);
+	testInjector.register("androidBundleToolService", AndroidBundleToolServiceStub);
+	testInjector.register("fs", FileSystemStub);
 	testInjector.register("httpClient", {});
 	testInjector.register("deviceLogProvider", DeviceLogProviderStub);
-	testInjector.register("hooksService", {});
+	testInjector.register("hooksService", HooksServiceStub);
 	return testInjector;
 }
 
@@ -140,6 +151,7 @@ describe("android-application-manager", () => {
 	}
 
 	describe("startApplication", () => {
+
 		it("fires up the right application", async () => {
 			setup();
 			for (let i = 0; i < androidDebugBridge.getInputLength(); i++) {
@@ -241,6 +253,55 @@ describe("android-application-manager", () => {
 			});
 
 			return assert.isRejected(startApplicationPromise, `Unable to find running "${validIdentifier}" application on device `);
+		});
+	});
+
+	describe("installApplication", () => {
+		afterEach(function () {
+			androidDebugBridge.calledInstallApplication = false;
+			const bundleToolService = testInjector.resolve<AndroidBundleToolServiceStub>("androidBundleToolService");
+			bundleToolService.isBuildApksCalled = false;
+			bundleToolService.isInstallApksCalled = false;
+		});
+
+		it("should install apk using adb", async () => {
+			const bundleToolService = testInjector.resolve<AndroidBundleToolServiceStub>("androidBundleToolService");
+
+			await androidApplicationManager.installApplication("myApp.apk");
+
+			assert.isFalse(bundleToolService.isBuildApksCalled);
+			assert.isFalse(bundleToolService.isInstallApksCalled);
+			assert.isTrue(androidDebugBridge.calledInstallApplication);
+		});
+
+		it("should install aab using bundletool", async () => {
+			const bundleToolService = testInjector.resolve<AndroidBundleToolServiceStub>("androidBundleToolService");
+
+			await androidApplicationManager.installApplication("myApp.aab");
+
+			assert.isTrue(bundleToolService.isBuildApksCalled);
+			assert.isTrue(bundleToolService.isInstallApksCalled);
+			assert.isFalse(androidDebugBridge.calledInstallApplication);
+		});
+
+		it("should skip aab build when already built", async () => {
+			const fsStub = testInjector.resolve<FileSystemStub>("fs");
+			const bundleToolService = testInjector.resolve<AndroidBundleToolServiceStub>("androidBundleToolService");
+
+			await androidApplicationManager.installApplication("myApp.aab", "my.app", validSigning);
+
+			assert.isTrue(bundleToolService.isBuildApksCalled);
+			assert.isTrue(bundleToolService.isInstallApksCalled);
+			assert.isFalse(androidDebugBridge.calledInstallApplication);
+
+			fsStub.fsStatCache["myApp.aab"] = fsStub.fsStatCache["myApp.apks"];
+			bundleToolService.isBuildApksCalled = false;
+			bundleToolService.isInstallApksCalled = false;
+			await androidApplicationManager.installApplication("myApp.aab", "my.app", validSigning);
+
+			assert.isFalse(bundleToolService.isBuildApksCalled);
+			assert.isTrue(bundleToolService.isInstallApksCalled);
+			assert.isFalse(androidDebugBridge.calledInstallApplication);
 		});
 	});
 

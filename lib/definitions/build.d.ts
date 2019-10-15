@@ -17,12 +17,14 @@ interface IiOSBuildData extends IBuildData {
 	iCloudContainerEnvironment: string;
 }
 
-interface IAndroidBuildData extends IBuildData {
+interface IAndroidBuildData extends IBuildData, IAndroidSigningData, IHasAndroidBundle {
+}
+
+interface IAndroidSigningData {
 	keyStoreAlias: string;
 	keyStorePath: string;
 	keyStoreAliasPassword: string;
 	keyStorePassword: string;
-	androidBundle: boolean;
 }
 
 interface IBuildController {
