@@ -48,7 +48,8 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 		const args = [
 			"archive",
 			"-archivePath", archivePath,
-			"-configuration", buildConfig.release ? Configurations.Release : Configurations.Debug
+			"-configuration", buildConfig.release ? Configurations.Release : Configurations.Debug,
+			'-allowProvisioningUpdates'
 		]
 			.concat(this.getXcodeProjectArgs(platformData.projectRoot, projectData, ProductArgs.scheme))
 			.concat(architectures)
@@ -92,8 +93,7 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 
 		args = args.concat([
 			"BUILD_DIR=" + path.join(platformData.projectRoot, constants.BUILD_DIR),
-			'SHARED_PRECOMPS_DIR=' + path.join(platformData.projectRoot, 'build', 'sharedpch'),
-			'-allowProvisioningUpdates'
+			'SHARED_PRECOMPS_DIR=' + path.join(platformData.projectRoot, constants.BUILD_DIR, 'sharedpch')
 		]);
 
 		return args;
