@@ -30,6 +30,10 @@ export class SysInfo implements ISysInfo {
 		return sysInfo.getCocoaPodsVersion();
 	}
 
+	public getJavaPath(): Promise<string> {
+		return sysInfo.getJavaPath();
+	}
+
 	public getJavaCompilerVersion(): Promise<string> {
 		return sysInfo.getJavaCompilerVersion();
 	}
@@ -47,13 +51,13 @@ export class SysInfo implements ISysInfo {
 		const warnings: ISystemWarning[] = [];
 		const macOSWarningMessage = await this.getMacOSWarningMessage();
 		if (macOSWarningMessage) {
-			macOSWarningMessage.toString = function() { return this.message; };
+			macOSWarningMessage.toString = function () { return this.message; };
 			warnings.push(macOSWarningMessage);
 		}
 
 		const nodeWarning = getNodeWarning();
 		if (nodeWarning) {
-			nodeWarning.toString = function() { return this.message; };
+			nodeWarning.toString = function () { return this.message; };
 			warnings.push(nodeWarning);
 		}
 

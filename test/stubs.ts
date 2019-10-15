@@ -45,6 +45,7 @@ export class LoggerStub implements ILogger {
 }
 
 export class FileSystemStub implements IFileSystem {
+	public fsStatCache: IDictionary<IFsStats> = {};
 	deleteDirectorySafe(directory: string): void {
 		return this.deleteDirectory(directory);
 	}
@@ -131,7 +132,22 @@ export class FileSystemStub implements IFileSystem {
 	}
 
 	getFsStats(path: string): IFsStats {
-		return undefined;
+		if (!this.fsStatCache[path]) {
+			this.fsStatCache[path] = <any>{
+				ctime: this.getIncrementalDate()
+			};
+		}
+
+		return this.fsStatCache[path];
+	}
+
+	private dateCounter = 0;
+	private getIncrementalDate(): Date {
+		const date = new Date();
+		date.setDate(date.getDate() + this.dateCounter);
+		this.dateCounter++;
+
+		return date;
 	}
 
 	getLsStats(path: string): IFsStats {
@@ -810,6 +826,9 @@ export class AndroidResourcesMigrationServiceStub implements IAndroidResourcesMi
 }
 
 export class AndroidBundleValidatorHelper implements IAndroidBundleValidatorHelper {
+	validateDeviceApiLevel(device: Mobile.IDevice, buildData: IBuildData): void {
+		return;
+	}
 	validateNoAab() {
 		return true;
 	}
@@ -860,19 +879,19 @@ export class MarkingModeServiceStub implements IMarkingModeService {
 }
 
 export class AnalyticsService implements IAnalyticsService {
-	async checkConsent(): Promise<void> { return ; }
-	async trackFeature(featureName: string): Promise<void> { return ; }
-	async trackException(exception: any, message: string): Promise<void> { return ; }
-	async setStatus(settingName: string, enabled: boolean): Promise<void> { return ; }
+	async checkConsent(): Promise<void> { return; }
+	async trackFeature(featureName: string): Promise<void> { return; }
+	async trackException(exception: any, message: string): Promise<void> { return; }
+	async setStatus(settingName: string, enabled: boolean): Promise<void> { return; }
 	async getStatusMessage(settingName: string, jsonFormat: boolean, readableSettingName: string): Promise<string> { return "Fake message"; }
 	async isEnabled(settingName: string): Promise<boolean> { return false; }
-	async track(featureName: string, featureValue: string): Promise<void> { return ; }
+	async track(featureName: string, featureValue: string): Promise<void> { return; }
 	async trackEventActionInGoogleAnalytics(data: IEventActionData) { return Promise.resolve(); }
 	async trackInGoogleAnalytics(data: IGoogleAnalyticsData) { return Promise.resolve(); }
 	async trackAcceptFeatureUsage(settings: { acceptTrackFeatureUsage: boolean }) { return Promise.resolve(); }
 	async trackPreviewAppData() { return Promise.resolve(); }
 	async finishTracking() { return Promise.resolve(); }
-	setShouldDispose() {}
+	setShouldDispose() { }
 }
 
 export class InjectorStub extends Yok implements IInjector {

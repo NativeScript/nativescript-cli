@@ -37,7 +37,7 @@ interface IValidBuildOutputData {
 	regexes?: RegExp[];
 }
 
-interface IBuildOutputOptions extends Partial<IBuildForDevice>, IRelease, IHasAndroidBundle {
+interface IBuildOutputOptions extends Partial<IBuildForDevice>, IRelease, Partial<IHasAndroidBundle> {
 	outputPath?: string;
 }
 

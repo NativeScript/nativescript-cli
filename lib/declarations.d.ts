@@ -581,10 +581,10 @@ interface IEnvOptions {
 	env: Object;
 }
 
-interface IAndroidBuildOptionsSettings extends IAndroidReleaseOptions, IRelease, IHasAndroidBundle { }
+interface IAndroidBuildOptionsSettings extends IAndroidReleaseOptions, IRelease, Partial<IHasAndroidBundle> { }
 
 interface IHasAndroidBundle {
-	androidBundle?: boolean;
+	androidBundle: boolean;
 }
 
 interface IPlatformBuildData extends IRelease, IHasUseHotModuleReloadOption, IBuildConfig, IEnvOptions { }
@@ -939,6 +939,14 @@ interface IAndroidBundleValidatorHelper {
 	 * @return {void}
 	 */
 	validateRuntimeVersion(projectData: IProjectData): void
+
+	/**
+	 * Validates that the specified device supports aab.
+	 * @param {Mobile.IDevice} device The device to be validated.
+	 * @param {IBuildData} buildData The current build data.
+	 * @return {void}
+	 */
+	validateDeviceApiLevel(device: Mobile.IDevice, buildData: IBuildData): void
 }
 
 interface IOptionsTracker {

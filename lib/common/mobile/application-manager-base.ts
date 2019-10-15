@@ -18,14 +18,14 @@ export abstract class ApplicationManagerBase extends EventEmitter implements Mob
 		}
 	}
 
-	public async reinstallApplication(appIdentifier: string, packageFilePath: string): Promise<void> {
+	public async reinstallApplication(appIdentifier: string, packageFilePath: string, buildData?: IBuildData): Promise<void> {
 		const isApplicationInstalled = await this.isApplicationInstalled(appIdentifier);
 
 		if (isApplicationInstalled) {
 			await this.uninstallApplication(appIdentifier);
 		}
 
-		await this.installApplication(packageFilePath, appIdentifier);
+		await this.installApplication(packageFilePath, appIdentifier, buildData);
 	}
 
 	public async restartApplication(appData: Mobile.IApplicationData): Promise<void> {
@@ -83,7 +83,7 @@ export abstract class ApplicationManagerBase extends EventEmitter implements Mob
 		}
 	}
 
-	public abstract async installApplication(packageFilePath: string, appIdentifier?: string): Promise<void>;
+	public abstract async installApplication(packageFilePath: string, appIdentifier?: string, buildData?: IBuildData): Promise<void>;
 	public abstract async uninstallApplication(appIdentifier: string): Promise<void>;
 	public abstract async startApplication(appData: Mobile.IApplicationData): Promise<void>;
 	public abstract async stopApplication(appData: Mobile.IApplicationData): Promise<void>;

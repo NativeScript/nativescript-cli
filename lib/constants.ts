@@ -53,6 +53,7 @@ export const CONFIG_NS_APP_ENTRY = "appPath";
 export const DEPENDENCIES_JSON_NAME = "dependencies.json";
 export const APK_EXTENSION_NAME = ".apk";
 export const AAB_EXTENSION_NAME = ".aab";
+export const APKS_EXTENSION_NAME = ".apks";
 export const HASHES_FILE_NAME = ".nshashes";
 export const TNS_NATIVE_SOURCE_GROUP_NAME = "TNSNativeSource";
 export const NATIVE_SOURCE_FOLDER = "src";
@@ -288,6 +289,7 @@ export class BundleValidatorMessages {
 export class AndroidBundleValidatorMessages {
 	public static AAB_NOT_SUPPORTED_BY_COMMNAND_MESSAGE = "This command does not support --aab (Android App Bundle) parameter.";
 	public static NOT_SUPPORTED_RUNTIME_VERSION = "Android App Bundle (--aab) option requires NativeScript Android Runtime (tns-android) version %s and above.";
+	public static NOT_SUPPORTED_ANDROID_VERSION = "Cannot use the Android App Bundle (--aab) option on device '%s' with Android '%s'. The --aab options is supported on Android '%s' and above.";
 }
 
 export class AndroidAppBundleMessages {

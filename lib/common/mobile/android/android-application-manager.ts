@@ -3,6 +3,8 @@ import { ApplicationManagerBase } from "../application-manager-base";
 import { TARGET_FRAMEWORK_IDENTIFIERS, LiveSyncPaths } from "../../constants";
 import { hook, sleep, regExpEscape } from "../../helpers";
 import { cache } from "../../decorators";
+import { parse, join } from "path";
+import { AAB_EXTENSION_NAME, APKS_EXTENSION_NAME } from "../../../constants";
 
 export class AndroidApplicationManager extends ApplicationManagerBase {
 	public PID_CHECK_INTERVAL = 100;
@@ -10,6 +12,8 @@ export class AndroidApplicationManager extends ApplicationManagerBase {
 
 	constructor(private adb: Mobile.IDeviceAndroidDebugBridge,
 		private identifier: string,
+		private $androidBundleToolService: IAndroidBundleToolService,
+		private $fs: IFileSystem,
 		private $options: IOptions,
 		private $logcatHelper: Mobile.ILogcatHelper,
 		private $androidProcessService: Mobile.IAndroidProcessService,
@@ -33,13 +37,29 @@ export class AndroidApplicationManager extends ApplicationManagerBase {
 	}
 
 	@hook('install')
-	public async installApplication(packageFilePath: string, appIdentifier?: string): Promise<void> {
+	public async installApplication(packageFilePath: string, appIdentifier?: string, buildData?: IAndroidBuildData): Promise<void> {
 		if (appIdentifier) {
 			const deviceRootPath = `${LiveSyncPaths.ANDROID_TMP_DIR_NAME}/${appIdentifier}`;
 			await this.adb.executeShellCommand(["rm", "-rf", deviceRootPath]);
 		}
 
-		return this.adb.executeCommand(["install", "-r", `${packageFilePath}`]);
+		const { dir, name, ext } = parse(packageFilePath);
+		if (ext === AAB_EXTENSION_NAME) {
+			const apksOutputPath = join(dir, name) + APKS_EXTENSION_NAME;
+			if (!this.hasValidApksFile(packageFilePath, apksOutputPath)) {
+				await this.$androidBundleToolService.buildApks({
+					aabFilePath: packageFilePath,
+					apksOutputPath,
+					signingData: <IAndroidSigningData>buildData
+				});
+			}
+			await this.$androidBundleToolService.installApks({
+				apksFilePath: apksOutputPath,
+				deviceId: this.identifier
+			});
+		} else {
+			return this.adb.executeCommand(["install", "-r", `${packageFilePath}`]);
+		}
 	}
 
 	public uninstallApplication(appIdentifier: string): Promise<void> {
@@ -154,5 +174,16 @@ export class AndroidApplicationManager extends ApplicationManagerBase {
 		const fullJavaClassName = "([a-zA-Z_0-9]*\\.)*[A-Z_$]($[A-Z_$]|[$_\\w_])*";
 
 		return new RegExp(`${regExpEscape(appIdentifier)}${packageActivitySeparator}${fullJavaClassName}`, `m`);
+	}
+
+	private hasValidApksFile(aabFilaPath: string, apksFilePath: string): boolean {
+		let isValid = false;
+		if (this.$fs.exists(apksFilePath)) {
+			const lastUpdatedApks = this.$fs.getFsStats(apksFilePath).ctime.getTime();
+			const lastUpdatedAab = this.$fs.getFsStats(aabFilaPath).ctime.getTime();
+			isValid = lastUpdatedApks >= lastUpdatedAab;
+		}
+
+		return isValid;
 	}
 }

@@ -8,7 +8,6 @@ export class RunCommandBase implements ICommand {
 	public platform: string;
 	constructor(
 		private $analyticsService: IAnalyticsService,
-		private $androidBundleValidatorHelper: IAndroidBundleValidatorHelper,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $errors: IErrors,
 		private $hostInfo: IHostInfo,
@@ -34,7 +33,6 @@ export class RunCommandBase implements ICommand {
 			this.platform = this.$devicePlatformsConstants.Android;
 		}
 
-		this.$androidBundleValidatorHelper.validateNoAab();
 		this.$projectData.initializeProjectData();
 		const platforms = this.platform ? [this.platform] : [this.$devicePlatformsConstants.Android, this.$devicePlatformsConstants.iOS];
 

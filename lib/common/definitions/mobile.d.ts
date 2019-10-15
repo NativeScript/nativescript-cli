@@ -321,9 +321,9 @@ declare global {
 		interface IDeviceApplicationManager extends NodeJS.EventEmitter {
 			getInstalledApplications(): Promise<string[]>;
 			isApplicationInstalled(appIdentifier: string): Promise<boolean>;
-			installApplication(packageFilePath: string, appIdentifier?: string): Promise<void>;
+			installApplication(packageFilePath: string, appIdentifier?: string, buildData?: IBuildData): Promise<void>;
 			uninstallApplication(appIdentifier: string): Promise<void>;
-			reinstallApplication(appIdentifier: string, packageFilePath: string): Promise<void>;
+			reinstallApplication(appIdentifier: string, packageFilePath: string, buildData?: IBuildData): Promise<void>;
 			startApplication(appData: IStartApplicationData): Promise<void>;
 			stopApplication(appData: IApplicationData): Promise<void>;
 			restartApplication(appData: IStartApplicationData): Promise<void>;
