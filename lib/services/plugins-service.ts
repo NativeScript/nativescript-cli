@@ -32,7 +32,8 @@ export class PluginsService implements IPluginsService {
 		private $errors: IErrors,
 		private $filesHashService: IFilesHashService,
 		private $injector: IInjector,
-		private $mobileHelper: Mobile.IMobileHelper) { }
+		private $mobileHelper: Mobile.IMobileHelper,
+		private $nodeModulesDependenciesBuilder: INodeModulesDependenciesBuilder) { }
 
 	public async add(plugin: string, projectData: IProjectData): Promise<void> {
 		await this.ensure(projectData);
@@ -167,6 +168,26 @@ export class PluginsService implements IPluginsService {
 	public async getAllInstalledPlugins(projectData: IProjectData): Promise<IPluginData[]> {
 		const nodeModules = (await this.getAllInstalledModules(projectData)).map(nodeModuleData => this.convertToPluginData(nodeModuleData, projectData.projectDir));
 		return _.filter(nodeModules, nodeModuleData => nodeModuleData && nodeModuleData.isPlugin);
+	}
+
+	//This method will traverse all non dev dependencies (not only the root/installed ones) and filter the plugins.
+	public getAllProductionPlugins(projectData: IProjectData, dependencies?: IDependencyData[]): IPluginData[] {
+		const allProductionPlugins: IPluginData[] = [];
+		dependencies = dependencies || this.$nodeModulesDependenciesBuilder.getProductionDependencies(projectData.projectDir);
+
+		if (_.isEmpty(dependencies)) {
+			return allProductionPlugins;
+		}
+
+		_.forEach(dependencies, dependency => {
+			const isPlugin = !!dependency.nativescript;
+			if (isPlugin) {
+				const pluginData = this.convertToPluginData(dependency, projectData.projectDir);
+				allProductionPlugins.push(pluginData);
+			}
+		});
+
+		return allProductionPlugins;
 	}
 
 	public getDependenciesFromPackageJson(projectDir: string): IPackageJsonDepedenciesResult {

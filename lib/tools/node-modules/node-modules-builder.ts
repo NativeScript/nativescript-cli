@@ -7,20 +7,18 @@ export class NodeModulesBuilder implements INodeModulesBuilder {
 
 	public async prepareNodeModules({platformData , projectData}: IPrepareNodeModulesData): Promise<void> {
 		const dependencies = this.$nodeModulesDependenciesBuilder.getProductionDependencies(projectData.projectDir);
-		if (_.isEmpty(dependencies)) {
+		await platformData.platformProjectService.beforePrepareAllPlugins(projectData, dependencies);
+
+		const pluginsData = this.$pluginsService.getAllProductionPlugins(projectData, dependencies);
+		if (_.isEmpty(pluginsData)) {
 			return;
 		}
 
-		await platformData.platformProjectService.beforePrepareAllPlugins(projectData, dependencies);
+		for (let i = 0; i < pluginsData.length; i++) {
+			const pluginData = pluginsData[i];
 
-		for (const dependencyKey in dependencies) {
-			const dependency = dependencies[dependencyKey];
-			const isPlugin = !!dependency.nativescript;
-			if (isPlugin) {
-				this.$logger.debug(`Successfully prepared plugin ${dependency.name} for ${platformData.normalizedPlatformName.toLowerCase()}.`);
-				const pluginData = this.$pluginsService.convertToPluginData(dependency, projectData.projectDir);
-				await this.$pluginsService.preparePluginNativeCode({pluginData, platform: platformData.normalizedPlatformName.toLowerCase(), projectData});
-			}
+			await this.$pluginsService.preparePluginNativeCode({pluginData, platform: platformData.normalizedPlatformName.toLowerCase(), projectData});
+			this.$logger.debug(`Successfully prepared plugin ${pluginData.name} for ${platformData.normalizedPlatformName.toLowerCase()}.`);
 		}
 	}
 }

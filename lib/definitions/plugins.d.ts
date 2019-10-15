@@ -4,6 +4,7 @@ interface IPluginsService {
 	addToPackageJson(plugin: string, version: string, isDev: boolean, projectDir: string): void;
 	removeFromPackageJson(plugin: string, projectDir: string): void;
 	getAllInstalledPlugins(projectData: IProjectData): Promise<IPluginData[]>;
+	getAllProductionPlugins(projectData: IProjectData, dependencies?: IDependencyData[]): IPluginData[];
 	ensureAllDependenciesAreInstalled(projectData: IProjectData): Promise<void>;
 
 	/**
