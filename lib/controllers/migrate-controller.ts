@@ -3,7 +3,7 @@ import * as semver from "semver";
 import * as constants from "../constants";
 import * as glob from "glob";
 import { UpdateControllerBase } from "./update-controller-base";
-import { fromWindowsRelativePathToUnix } from "../common/helpers";
+import { fromWindowsRelativePathToUnix, getHash } from "../common/helpers";
 
 export class MigrateController extends UpdateControllerBase implements IMigrateController {
 	private static COMMON_MIGRATE_MESSAGE = "not affect the codebase of the application and you might need to do additional changes manually – for more information, refer to the instructions in the following blog post: https://www.nativescript.org/blog/nativescript-6.0-application-migration";
@@ -27,7 +27,10 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 		private $pluginsService: IPluginsService,
 		private $projectDataService: IProjectDataService,
 		private $platformValidationService: IPlatformValidationService,
-		private $resources: IResourceLoader) {
+		private $resources: IResourceLoader,
+		private $injector: IInjector,
+		private $settingsService: ISettingsService,
+		private $staticConfig: Config.IStaticConfig) {
 		super($fs, $platformCommandHelper, $platformsDataService, $packageInstallationManager, $packageManager, $pacoteService);
 	}
 
@@ -45,6 +48,12 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 		constants.TSCCONFIG_TNS_JSON_NAME,
 		constants.KARMA_CONFIG_NAME
 	];
+
+	private get $jsonFileSettingsService(): IJsonFileSettingsService {
+		const cliVersion = semver.coerce(this.$staticConfig.version);
+		const shouldMigrateCacheFilePath = path.join(this.$settingsService.getProfileDir(), `should-migrate-cache-${cliVersion}.json`);
+		return this.$injector.resolve("jsonFileSettingsService", { jsonFileSettingsPath: shouldMigrateCacheFilePath });
+	}
 
 	private migrationDependencies: IMigrationDependency[] = [
 		{ packageName: constants.TNS_CORE_MODULES_NAME, verifiedVersion: "6.0.1" },
@@ -147,6 +156,30 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 	}
 
 	public async shouldMigrate({ projectDir, platforms, allowInvalidVersions = false }: IMigrationData): Promise<boolean> {
+		const remainingPlatforms = [];
+		let shouldMigrate = false;
+
+		for (const platform of platforms) {
+			const cachedResult = await this.getCachedShouldMigrate(projectDir, platform);
+			if (cachedResult !== false) {
+				remainingPlatforms.push(platform);
+			}
+		}
+
+		if (remainingPlatforms.length > 0) {
+			shouldMigrate = await this._shouldMigrate({ projectDir, platforms: remainingPlatforms, allowInvalidVersions });
+
+			if (!shouldMigrate) {
+				for (const remainingPlatform of remainingPlatforms) {
+					await this.setCachedShouldMigrate(projectDir, remainingPlatform);
+				}
+			}
+		}
+
+		return shouldMigrate;
+	}
+
+	private async _shouldMigrate({ projectDir, platforms, allowInvalidVersions }: IMigrationData): Promise<boolean> {
 		const projectData = this.$projectDataService.getProjectData(projectDir);
 		const shouldMigrateCommonMessage = "The app is not compatible with this CLI version and it should be migrated. Reason: ";
 
@@ -194,6 +227,28 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 		if (shouldMigrate) {
 			this.$errors.fail(MigrateController.UNABLE_TO_MIGRATE_APP_ERROR);
 		}
+	}
+
+	private async getCachedShouldMigrate(projectDir: string, platform: string): Promise<boolean> {
+		let cachedShouldMigrateValue = null;
+
+		const cachedHash = await this.$jsonFileSettingsService.getSettingValue(getHash(`${projectDir}${platform.toLowerCase()}`));
+		const packageJsonHash = await this.getPachageJsonHash(projectDir);
+		if (cachedHash === packageJsonHash) {
+			cachedShouldMigrateValue = false;
+		}
+
+		return cachedShouldMigrateValue;
+	}
+
+	private async setCachedShouldMigrate(projectDir: string, platform: string): Promise<void> {
+		const packageJsonHash = await this.getPachageJsonHash(projectDir);
+		await this.$jsonFileSettingsService.saveSetting(getHash(`${projectDir}${platform.toLowerCase()}`), packageJsonHash);
+	}
+
+	private async getPachageJsonHash(projectDir: string) {
+		const projectPackageJsonFilePath = path.join(projectDir, constants.PACKAGE_JSON_FILE_NAME);
+		return await this.$fs.getFileShasum(projectPackageJsonFilePath);
 	}
 
 	private async migrateOldAndroidAppResources(projectData: IProjectData, backupDir: string) {
