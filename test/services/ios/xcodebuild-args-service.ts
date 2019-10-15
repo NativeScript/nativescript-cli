@@ -33,7 +33,6 @@ function getCommonArgs() {
 	return [
 		"BUILD_DIR=" + path.join(projectRoot, "build"),
 		"SHARED_PRECOMPS_DIR=" + path.join(projectRoot, 'build', 'sharedpch'),
-		"-allowProvisioningUpdates"
 	];
 }
 
@@ -119,7 +118,8 @@ describe("xcodebuildArgsService", () => {
 							const expectedArgs = [
 								"archive",
 								"-archivePath", path.join(buildOutputPath, `${projectName}.xcarchive`),
-								"-configuration", configuration
+								"-configuration", configuration,
+								"-allowProvisioningUpdates"
 							]
 							.concat(getXcodeProjectArgs({ hasProjectWorkspace }))
 							.concat(testCase.expectedArgs)
