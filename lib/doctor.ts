@@ -87,7 +87,7 @@ export class Doctor implements NativeScriptDoctor.IDoctor {
 				platforms: [Constants.ANDROID_PLATFORM_NAME]
 			}),
 			this.processValidationErrors({
-				warnings: this.androidToolsInfo.validateInfo({projectDir}),
+				warnings: this.androidToolsInfo.validateInfo({ projectDir }),
 				infoMessage: "A compatible Android SDK for compilation is found.",
 				platforms: [Constants.ANDROID_PLATFORM_NAME]
 			}),
@@ -136,7 +136,7 @@ export class Doctor implements NativeScriptDoctor.IDoctor {
 					infoMessage: "CocoaPods are installed.",
 					warningMessage: "CocoaPods is not installed or is not configured properly.",
 					additionalInformation: "You will not be able to build your projects for iOS if they contain plugin with CocoaPod file." + EOL
-						+ "To be able to build such projects, verify that you have installed CocoaPods.",
+						+ "To be able to build such projects, verify that you have installed CocoaPods (`sudo gem install cocoapods`).",
 					platforms: [Constants.IOS_PLATFORM_NAME]
 				}),
 				this.processSysInfoItem({
