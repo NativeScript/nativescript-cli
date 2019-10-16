@@ -736,4 +736,19 @@ export function annotate(fn: any) {
 	return $inject;
 }
 
+/**
+ * Returns true if all Android signing options are provided, false otherwise.
+ * @param {IAndroidSigningData} signingData The signing data to be validated.
+ * @return {void}
+ */
+export function hasValidAndroidSigning(signingData: Partial<IAndroidSigningData>): boolean {
+	const isValid = signingData &&
+		signingData.keyStorePath &&
+		signingData.keyStorePassword &&
+		signingData.keyStoreAlias &&
+		signingData.keyStoreAliasPassword;
+
+	return !!isValid;
+}
+
 //--- end part copied from AngularJS

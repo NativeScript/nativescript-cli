@@ -1,3 +1,6 @@
+import { hasValidAndroidSigning } from "../common/helpers";
+import { ANDROID_RELEASE_BUILD_ERROR_MESSAGE, ANDROID_APP_BUNDLE_SIGNING_ERROR_MESSAGE } from "../constants";
+
 abstract class TestCommandBase {
 	public allowedParameters: ICommandParameter[] = [];
 	public dashedOptions = {
@@ -110,6 +113,21 @@ class TestAndroidCommand extends TestCommandBase implements ICommand {
 	public async execute(args: string[]): Promise<void> {
 		await this.$markingModeService.handleMarkingModeFullDeprecation({ projectDir: this.$projectData.projectDir, skipWarnings: true });
 		await super.execute(args);
+	}
+
+	async canExecute(args: string[]): Promise<boolean> {
+		const canExecuteBase = await super.canExecute(args);
+		if (canExecuteBase) {
+			if ((this.$options.release || this.$options.aab) && !hasValidAndroidSigning(this.$options)) {
+				if (this.$options.release) {
+					this.$errors.failWithHelp(ANDROID_RELEASE_BUILD_ERROR_MESSAGE);
+				} else {
+					this.$errors.failWithHelp(ANDROID_APP_BUNDLE_SIGNING_ERROR_MESSAGE);
+				}
+			}
+		}
+
+		return canExecuteBase;
 	}
 }
 
