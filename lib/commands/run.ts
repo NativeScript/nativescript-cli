@@ -1,6 +1,7 @@
 import { ERROR_NO_VALID_SUBCOMMAND_FORMAT } from "../common/constants";
-import { ANDROID_RELEASE_BUILD_ERROR_MESSAGE } from "../constants";
+import { ANDROID_RELEASE_BUILD_ERROR_MESSAGE, ANDROID_APP_BUNDLE_SIGNING_ERROR_MESSAGE } from "../constants";
 import { cache } from "../common/decorators";
+import { hasValidAndroidSigning } from "../common/helpers";
 
 export class RunCommandBase implements ICommand {
 	private liveSyncCommandHelperAdditionalOptions: ILiveSyncCommandHelperAdditionalOptions = <ILiveSyncCommandHelperAdditionalOptions>{};
@@ -126,8 +127,12 @@ export class RunAndroidCommand implements ICommand {
 			this.$errors.fail(`Applications for platform ${this.$devicePlatformsConstants.Android} can not be built on this OS`);
 		}
 
-		if (this.$options.release && (!this.$options.keyStorePath || !this.$options.keyStorePassword || !this.$options.keyStoreAlias || !this.$options.keyStoreAliasPassword)) {
-			this.$errors.failWithHelp(ANDROID_RELEASE_BUILD_ERROR_MESSAGE);
+		if ((this.$options.release || this.$options.aab) && !hasValidAndroidSigning(this.$options)) {
+			if (this.$options.release) {
+				this.$errors.failWithHelp(ANDROID_RELEASE_BUILD_ERROR_MESSAGE);
+			} else {
+				this.$errors.failWithHelp(ANDROID_APP_BUNDLE_SIGNING_ERROR_MESSAGE);
+			}
 		}
 
 		return this.$platformValidationService.validateOptions(this.$options.provision, this.$options.teamId, this.$projectData, this.$devicePlatformsConstants.Android.toLowerCase());

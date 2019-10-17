@@ -150,7 +150,9 @@ export const DEBUGGER_DETACHED_EVENT_NAME = "debuggerDetached";
 export const VERSION_STRING = "version";
 export const INSPECTOR_CACHE_DIRNAME = "ios-inspector";
 export const POST_INSTALL_COMMAND_NAME = "post-install-cli";
-export const ANDROID_RELEASE_BUILD_ERROR_MESSAGE = "When producing a release build, you need to specify all --key-store-* options.";
+const ANDROID_SIGNING_REQUIRED_MESSAGE = "you need to specify all --key-store-* options.";
+export const ANDROID_RELEASE_BUILD_ERROR_MESSAGE = `When producing a release build, ${ANDROID_SIGNING_REQUIRED_MESSAGE}`;
+export const ANDROID_APP_BUNDLE_SIGNING_ERROR_MESSAGE = `When producing Android App Bundle, ${ANDROID_SIGNING_REQUIRED_MESSAGE}`;
 export const CACACHE_DIRECTORY_NAME = "_cacache";
 
 export const FILES_CHANGE_EVENT_NAME = "filesChangeEvent";

@@ -1,4 +1,5 @@
 import { resolve, join } from "path";
+import { hasValidAndroidSigning } from "../../common/helpers";
 
 export class AndroidBundleToolService implements IAndroidBundleToolService {
 	private javaPath: string;
@@ -12,8 +13,8 @@ export class AndroidBundleToolService implements IAndroidBundleToolService {
 	}
 
 	public async buildApks(options: IBuildApksOptions): Promise<void> {
-		if (!options.signingData) {
-			this.$errors.fail(`Unable to build "apks" without a signing information.`);
+		if (!hasValidAndroidSigning(options.signingData)) {
+			this.$errors.fail(`Unable to build "apks" without a full signing information.`);
 		}
 
 		const aabToolResult = await this.execBundleTool([

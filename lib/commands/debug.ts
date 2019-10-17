@@ -1,5 +1,7 @@
 import { cache } from "../common/decorators";
 import { ValidatePlatformCommandBase } from "./command-base";
+import { hasValidAndroidSigning } from "../common/helpers";
+import { ANDROID_APP_BUNDLE_SIGNING_ERROR_MESSAGE } from "../constants";
 
 export class DebugPlatformCommand extends ValidatePlatformCommandBase implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
@@ -155,7 +157,8 @@ export class DebugAndroidCommand implements ICommand {
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $injector: IInjector,
 		private $projectData: IProjectData,
-		private $markingModeService: IMarkingModeService) {
+		private $markingModeService: IMarkingModeService,
+		private $options: IOptions) {
 		this.$projectData.initializeProjectData();
 	}
 
@@ -164,8 +167,14 @@ export class DebugAndroidCommand implements ICommand {
 		return this.debugPlatformCommand.execute(args);
 	}
 	public async canExecute(args: string[]): Promise<boolean> {
-		const result = await this.debugPlatformCommand.canExecute(args);
-		return result;
+		const canExecuteBase = await this.debugPlatformCommand.canExecute(args);
+		if (canExecuteBase) {
+			if (this.$options.aab && !hasValidAndroidSigning(this.$options)) {
+				this.$errors.failWithHelp(ANDROID_APP_BUNDLE_SIGNING_ERROR_MESSAGE);
+			}
+		}
+
+		return canExecuteBase;
 	}
 
 	public platform = this.$devicePlatformsConstants.Android;
