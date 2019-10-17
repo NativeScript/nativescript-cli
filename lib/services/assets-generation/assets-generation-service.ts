@@ -71,6 +71,12 @@ export class AssetsGenerationService implements IAssetsGenerationService {
 			const outputPath = assetItem.path;
 			const width = assetItem.width * scale;
 			const height = assetItem.height * scale;
+
+			if (!width || !height) {
+				this.$logger.warn(`Image ${assetItem.filename} is skipped as its width and height are invalid.`);
+				continue;
+			}
+
 			let image: Jimp;
 			switch (operation) {
 				case Operations.OverlayWith:

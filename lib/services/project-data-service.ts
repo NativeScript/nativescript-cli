@@ -236,15 +236,26 @@ export class ProjectDataService implements IProjectDataService {
 	private async getIOSAssetSubGroup(dirPath: string): Promise<IAssetSubGroup> {
 		const pathToContentJson = path.join(dirPath, AssetConstants.iOSResourcesFileName);
 		const content = this.$fs.exists(pathToContentJson) && <IAssetSubGroup>this.$fs.readJson(pathToContentJson) || { images: [] };
+		const finalContent: IAssetSubGroup = { images: [] };
 
 		const imageDefinitions = this.getImageDefinitions().ios;
 
 		_.each(content && content.images, image => {
+			let foundMatchingDefinition = false;
 			// In some cases the image may not be available, it will just be described.
 			// When this happens, the filename will be empty.
 			// So we'll keep the path empty as well.
 			if (image.filename) {
 				image.path = path.join(dirPath, image.filename);
+			}
+
+			if (image.size) {
+				// size is basically <width>x<height>
+				const [width, height] = image.size.toString().split(AssetConstants.sizeDelimiter);
+				if (width && height) {
+					image.width = +width;
+					image.height = +height;
+				}
 			}
 
 			// Find the image size based on the hardcoded values in the image-definitions.json
@@ -253,16 +264,8 @@ export class ProjectDataService implements IProjectDataService {
 					assetElement.filename === image.filename && path.basename(assetElement.directory) === path.basename(dirPath)
 				);
 
-				if (image.size) {
-					// size is basically <width>x<height>
-					const [width, height] = image.size.toString().split(AssetConstants.sizeDelimiter);
-					if (width && height) {
-						image.width = +width;
-						image.height = +height;
-					}
-				}
-
 				if (assetItem) {
+					foundMatchingDefinition = true;
 					if (!image.width || !image.height) {
 						image.width = assetItem.width;
 						image.height = assetItem.height;
@@ -273,13 +276,18 @@ export class ProjectDataService implements IProjectDataService {
 					image.overlayImageScale = image.overlayImageScale || assetItem.overlayImageScale;
 					image.scale = image.scale || assetItem.scale;
 					image.rgba = assetItem.rgba;
+					finalContent.images.push(image);
 					// break each
 					return false;
 				}
 			});
+
+			if (!foundMatchingDefinition && image.filename) {
+				this.$logger.warn(`Didn't find a matching image definition for file ${path.join(path.basename(dirPath), image.filename)}. This file will be skipped from reources generation.`);
+			}
 		});
 
-		return content;
+		return finalContent;
 	}
 
 	private getAndroidAssetSubGroup(assetItems: IAssetItem[], realPaths: string[]): IAssetSubGroup {
