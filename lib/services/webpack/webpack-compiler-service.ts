@@ -7,7 +7,7 @@ import { WEBPACK_COMPILATION_COMPLETE, WEBPACK_PLUGIN_NAME } from "../../constan
 
 export class WebpackCompilerService extends EventEmitter implements IWebpackCompilerService {
 	private webpackProcesses: IDictionary<child_process.ChildProcess> = {};
-	private expectedHash: string = null;
+	private expectedHashes: IStringDictionary = {};
 
 	constructor(
 		private $errors: IErrors,
@@ -42,14 +42,14 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 					if (message.emittedFiles) {
 						if (isFirstWebpackWatchCompilation) {
 							isFirstWebpackWatchCompilation = false;
-							this.expectedHash = message.hash;
+							this.expectedHashes[platformData.platformNameLowerCase] = message.hash;
 							return;
 						}
 
 						let result;
 
 						if (prepareData.hmr) {
-							result = this.getUpdatedEmittedFiles(message.emittedFiles, message.chunkFiles, message.hash);
+							result = this.getUpdatedEmittedFiles(message.emittedFiles, message.chunkFiles, message.hash, platformData.platformNameLowerCase);
 						} else {
 							result = { emittedFiles: message.emittedFiles, fallbackFiles: <string[]>[], hash: "" };
 						}
@@ -248,7 +248,7 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 		return args;
 	}
 
-	public getUpdatedEmittedFiles(allEmittedFiles: string[], chunkFiles: string[], nextHash: string) {
+	public getUpdatedEmittedFiles(allEmittedFiles: string[], chunkFiles: string[], nextHash: string, platform: string) {
 		const currentHash = this.getCurrentHotUpdateHash(allEmittedFiles);
 
 		// This logic is needed as there are already cases when webpack doesn't emit any files physically.
@@ -260,8 +260,8 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 		// if files will be emitted or not. This way, the first successful compilation after fixing the compilation error generates
 		// a hash that is not the same as the one expected in the latest emitted hot-update.json file.
 		// As a result, the hmr chain is broken and the changes are not applied.
-		const isHashValid = nextHash ? this.expectedHash === currentHash : true;
-		this.expectedHash = nextHash;
+		const isHashValid = nextHash ? this.expectedHashes[platform] === currentHash : true;
+		this.expectedHashes[platform] = nextHash;
 
 		const emittedHotUpdatesAndAssets = isHashValid ? _.difference(allEmittedFiles, chunkFiles) : allEmittedFiles;
 
