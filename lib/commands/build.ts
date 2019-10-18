@@ -1,4 +1,4 @@
-import { ANDROID_RELEASE_BUILD_ERROR_MESSAGE, AndroidAppBundleMessages, ANDROID_APP_BUNDLE_SIGNING_ERROR_MESSAGE } from "../constants";
+import { ANDROID_RELEASE_BUILD_ERROR_MESSAGE, AndroidAppBundleMessages } from "../constants";
 import { ValidatePlatformCommandBase } from "./command-base";
 import { hasValidAndroidSigning } from "../common/helpers";
 
@@ -124,12 +124,8 @@ export class BuildAndroidCommand extends BuildCommandBase implements ICommand {
 		this.$androidBundleValidatorHelper.validateRuntimeVersion(this.$projectData);
 		let canExecute = await super.canExecuteCommandBase(platform, { notConfiguredEnvOptions: { hideSyncToPreviewAppOption: true } });
 		if (canExecute) {
-			if ((this.$options.release || this.$options.aab) && !hasValidAndroidSigning(this.$options)) {
-				if (this.$options.release) {
-					this.$errors.failWithHelp(ANDROID_RELEASE_BUILD_ERROR_MESSAGE);
-				} else {
-					this.$errors.failWithHelp(ANDROID_APP_BUNDLE_SIGNING_ERROR_MESSAGE);
-				}
+			if (this.$options.release && !hasValidAndroidSigning(this.$options)) {
+				this.$errors.failWithHelp(ANDROID_RELEASE_BUILD_ERROR_MESSAGE);
 			}
 
 			canExecute = await super.validateArgs(args, platform);
