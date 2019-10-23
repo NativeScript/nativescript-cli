@@ -163,11 +163,14 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 			const cachedResult = await this.getCachedShouldMigrate(projectDir, platform);
 			if (cachedResult !== false) {
 				remainingPlatforms.push(platform);
+			} else {
+				this.$logger.trace(`Got cached result for shouldMigrate for platform: ${platform}`);
 			}
 		}
 
 		if (remainingPlatforms.length > 0) {
 			shouldMigrate = await this._shouldMigrate({ projectDir, platforms: remainingPlatforms, allowInvalidVersions });
+			this.$logger.trace(`Executed shouldMigrate for platforms: ${remainingPlatforms}. Result is: ${shouldMigrate}`);
 
 			if (!shouldMigrate) {
 				for (const remainingPlatform of remainingPlatforms) {
