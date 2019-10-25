@@ -14,7 +14,7 @@ declare global {
 
 	interface IPreviewAppLiveSyncData extends IProjectDir, IHasUseHotModuleReloadOption, IEnvOptions { }
 
-	interface IPreviewSdkService extends EventEmitter {
+	interface IPreviewSdkService {
 		getQrCodeUrl(options: IGetQrCodeUrlOptions): string;
 		initialize(projectDir: string, getInitialFiles: (device: Device) => Promise<FilesPayload>): void;
 		applyChanges(filesPayload: FilesPayload): Promise<void>;
