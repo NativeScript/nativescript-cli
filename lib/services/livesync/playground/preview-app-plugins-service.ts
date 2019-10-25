@@ -4,7 +4,7 @@ import * as util from "util";
 import { Device } from "nativescript-preview-sdk";
 import { PluginComparisonMessages } from "./preview-app-constants";
 import { NODE_MODULES_DIR_NAME } from "../../../common/constants";
-import { PLATFORMS_DIR_NAME, PACKAGE_JSON_FILE_NAME } from "../../../constants";
+import { PLATFORMS_DIR_NAME, PACKAGE_JSON_FILE_NAME, TNS_CORE_THEME_NAME, SCOPED_TNS_CORE_THEME_NAME } from "../../../constants";
 
 export class PreviewAppPluginsService implements IPreviewAppPluginsService {
 	constructor(private $errors: IErrors,
@@ -41,10 +41,11 @@ export class PreviewAppPluginsService implements IPreviewAppPluginsService {
 
 	public getExternalPlugins(device: Device): string[] {
 		const devicePlugins = this.getDevicePlugins(device);
+		const themeNamesArray = [TNS_CORE_THEME_NAME, SCOPED_TNS_CORE_THEME_NAME];
 		const result = _.keys(devicePlugins)
 			// The core theme links are custom and
 			// should be handled by webpack during build.
-			.filter(plugin => plugin !== "nativescript-theme-core");
+			.filter(plugin => themeNamesArray.indexOf(plugin) === -1);
 
 		return result;
 	}
