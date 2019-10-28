@@ -39,10 +39,9 @@ Start an emulator with specified device identifier and sdk | `$ tns run ios [--d
 * `--no-hmr` - Disables Hot Module Replacement (HMR). In this case, when a change in the code is applied, CLI will transfer the modified files and restart the application.
 * `--env.*` - Specifies additional flags that the bundler may process. May be passed multiple times. 
     *   `--env.aot` - creates Ahead-Of-Time build (Angular only).
-    *   `--env.snapshot`- creates [Snapshot](https://docs.nativescript.org/performance-optimizations/bundling-with-webpack#v8-heap-snapshot) (only for release builds on Mac OS & for Android).
     *   `--env.uglify` - provides basic obfuscation and smaller app size.
     *   `--env.report` - creates a Webpack report inside a `report` folder in the root folder.
-    *   `--env.sourceMap` - creates inline source maps (useful for debbuging bundled app).
+    *   `--env.sourceMap` - creates inline source maps.
     *   `--env.hiddenSourceMap` - creates sources maps in the root folder (useful for Crashlytics usage with bundled app in release).
 * `--force` - If set, skips the application compatibility checks and forces `npm i` to ensure all dependencies are installed. Otherwise, the command will check the application compatibility with the current CLI version and could fail requiring `tns migrate`.
 
