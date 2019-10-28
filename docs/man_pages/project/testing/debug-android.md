@@ -13,11 +13,11 @@ Initiates a debugging session for your project on a connected Android device or 
 
 Usage | Synopsis
 ---|---
-Deploy on device/emulator, run the app and generate a Chrome DevTools link for debugging | `$ tns debug android`
-Deploy on device/emulator, run the app and stop at the first code statement | `$ tns debug android --debug-brk [--device <Device ID>] [--timeout <timeout>]`
-Deploy in the native emulator, run the app and stop at the first code statement | `$ tns debug android --debug-brk --emulator [--timeout <timeout>]`
-Attach the debug tools to a running app on device/emulator | `$ tns debug android --start [--device <Device ID>] [--timeout <timeout>]`
-Attach the debug tools to a running app in the native emulator | `$ tns debug android --start --emulator [--timeout <timeout>]`
+Deploy on device/emulator, run the app and generate a Chrome DevTools link for debugging | `$ tns debug android [--device <Device ID>] [--timeout <timeout>] [--aab]`
+Deploy on device/emulator, run the app and stop at the first code statement | `$ tns debug android --debug-brk [--device <Device ID>] [--timeout <timeout>] [--aab]`
+Deploy in the native emulator, run the app and stop at the first code statement | `$ tns debug android --debug-brk --emulator [--timeout <timeout>] [--aab]`
+Attach the debug tools to a running app on device/emulator | `$ tns debug android --start [--device <Device ID>] [--timeout <timeout>] [--aab]`
+Attach the debug tools to a running app in the native emulator | `$ tns debug android --start --emulator [--timeout <timeout>] [--aab]`
 
 ### Options
 
@@ -29,6 +29,7 @@ Attach the debug tools to a running app in the native emulator | `$ tns debug an
 * `--no-watch` - If set, changes in your code will not be reflected during the execution of this command.
 * `--clean` - If set, forces the complete rebuild of the native application.
 * `--no-hmr` - Disables Hot Module Replacement (HMR). In this case, when a change in the code is applied, CLI will transfer the modified files and restart the application.
+* `--aab` - Specifies that the command will produce and deploy an Android App Bundle.
 * `--force` - If set, skips the application compatibility checks and forces `npm i` to ensure all dependencies are installed. Otherwise, the command will check the application compatibility with the current CLI version and could fail requiring `tns migrate`.
 
 <% if(isHtml) { %>

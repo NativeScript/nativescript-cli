@@ -16,7 +16,7 @@ Prepares, builds and deploys the project to a connected device or native emulato
 
 Usage | Synopsis
 ---|---
-Deploy on Android | `$ tns deploy android [--device <Device ID>] [--key-store-path <File Path> --key-store-password <Password> --key-store-alias <Name> --key-store-alias-password <Password>] [--release]`
+Deploy on Android | `$ tns deploy android [--device <Device ID>] [--key-store-path <File Path> --key-store-password <Password> --key-store-alias <Name> --key-store-alias-password <Password>] [--release] [--aab]`
 <% if(isMacOS) { %>Deploy on iOS | `$ tns deploy ios [--device <Device ID>] [--release]`<% } %>
 
 ### Options for iOS
@@ -33,6 +33,8 @@ Deploy on Android | `$ tns deploy android [--device <Device ID>] [--key-store-pa
 * `--key-store-password` - Provides the password for the keystore file specified with `--key-store-path`. You can use the `--key-store-*` options along with `--release` to produce a signed release build. You need to specify all `--key-store-*` options.
 * `--key-store-alias` - Provides the alias for the keystore file specified with `--key-store-path`. You can use the `--key-store-*` options along with `--release` to produce a signed release build. You need to specify all `--key-store-*` options.
 * `--key-store-alias-password` - Provides the password for the alias specified with `--key-store-alias-password`. You can use the `--key-store-*` options along with `--release` to produce a signed release build. You need to specify all `--key-store-*` options.
+* `--aab` - Specifies that the command will produce and deploy an Android App Bundle.
+* `--force` - If set, skips the application compatibility checks and forces `npm i` to ensure all dependencies are installed. Otherwise, the command will check the application compatibility with the current CLI version and could fail requiring `tns migrate`.
 
 <% if(isHtml) { %>
 

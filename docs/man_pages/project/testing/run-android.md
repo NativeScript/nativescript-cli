@@ -17,9 +17,9 @@ When running this command without passing `--release` flag, the HMR (Hot Module 
 
 Usage | Synopsis
 ---|---
-Run on all connected devices and running emulators | `$ tns run android [--key-store-path <File Path> --key-store-password <Password> --key-store-alias <Name> --key-store-alias-password <Password>] [--release] [--justlaunch] [--env.*]]`
-Run on a selected connected device or running emulator. Will start emulator with specified `Device Identifier`, if not already running. | `$ tns run android --device <Device ID> [--key-store-path <File Path> --key-store-password <Password> --key-store-alias <Name> --key-store-alias-password <Password>] [--release] [--justlaunch] [--env.*]]`
-Start a default emulator if none are running, or run application on all connected emulators. | `$ tns run android --emulator [--key-store-path <File Path> --key-store-password <Password> --key-store-alias <Name> --key-store-alias-password <Password>] [--release] [--justlaunch] [--env.*]]`
+Run on all connected devices and running emulators | `$ tns run android [--key-store-path <File Path> --key-store-password <Password> --key-store-alias <Name> --key-store-alias-password <Password>] [--release] [--justlaunch] [--env.*]] [--aab]`
+Run on a selected connected device or running emulator. Will start emulator with specified `Device Identifier`, if not already running. | `$ tns run android --device <Device ID> [--key-store-path <File Path> --key-store-password <Password> --key-store-alias <Name> --key-store-alias-password <Password>] [--release] [--justlaunch] [--env.*]] [--aab]`
+Start a default emulator if none are running, or run application on all connected emulators. | `$ tns run android --emulator [--key-store-path <File Path> --key-store-password <Password> --key-store-alias <Name> --key-store-alias-password <Password>] [--release] [--justlaunch] [--env.*]] [--aab]`
 
 ### Options
 
@@ -41,6 +41,7 @@ Start a default emulator if none are running, or run application on all connecte
     *   `--env.report` - creates a Webpack report inside a `report` folder in the root folder.
     *   `--env.sourceMap` - creates inline source maps (useful for debbuging bundled app).
     *   `--env.hiddenSourceMap` - creates sources maps in the root folder (useful for Crashlytics usage with bundled app in release).
+* `--aab` - Specifies that the command will produce and deploy an Android App Bundle.
 * `--force` - If set, skips the application compatibility checks and forces `npm i` to ensure all dependencies are installed. Otherwise, the command will check the application compatibility with the current CLI version and could fail requiring `tns migrate`.
 
 <% if(isHtml) { %>
