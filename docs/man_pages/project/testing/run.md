@@ -45,10 +45,10 @@ Run on a selected connected device or running emulator. Will start emulator with
 * `--release` - If set, produces a release build by running webpack in production mode and native build in release mode. Otherwise, produces a debug build.
 * `--device` - Specifies a connected device/emulator to start and run the app. `<Device ID>` is the index or `Device Identifier` of the target device as listed by the `$ tns device <Platform> --available-devices` command.
 * `--no-hmr` - Disables Hot Module Replacement (HMR). In this case, when a change in the code is applied, CLI will transfer the modified files and restart the application.
-* `--env.*` - Specifies additional flags that the bundler may process. May be passed multiple times. Supported additional flags:
+* `--env.*` - Specifies additional flags that the bundler may process. Can be passed multiple times. Supported additional flags:
     *   `--env.aot` - creates Ahead-Of-Time build (Angular only).
     *   `--env.snapshot`- creates [a V8 Snapshot](https://docs.nativescript.org/performance-optimizations/bundling-with-webpack#v8-heap-snapshot) decreasing the app start time (only for release builds for Android).
-    *   `--env.compileSnapshot`- compiles the static assets produced by `--env.snapshot` into `.so` files allowing the native build to split them per architecture. In this way, the app size will be reduced when using the `--aab` option. 
+    *   `--env.compileSnapshot`- compiles the static assets produced by `--env.snapshot` into `.so` files allowing the native build to split them per architecture. This will reduce the app size when using the `--aab` option. 
     *   `--env.uglify` - provides basic obfuscation and smaller app size.
     *   `--env.report` - creates a Webpack report inside a `report` folder in the root folder.
     *   `--env.sourceMap` - creates inline source maps.

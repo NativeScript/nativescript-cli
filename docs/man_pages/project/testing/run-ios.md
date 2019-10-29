@@ -37,7 +37,7 @@ Start an emulator with specified device identifier and sdk | `$ tns run ios [--d
 * `--no-watch` - If set, changes in your code will not be reflected during the execution of this command.
 * `--release` - If set, produces a release build by running webpack in production mode and native build in release mode. Otherwise, produces a debug build.
 * `--no-hmr` - Disables Hot Module Replacement (HMR). In this case, when a change in the code is applied, CLI will transfer the modified files and restart the application.
-* `--env.*` - Specifies additional flags that the bundler may process. May be passed multiple times. 
+* `--env.*` - Specifies additional flags that the bundler may process. Can be passed multiple times. 
     *   `--env.aot` - creates Ahead-Of-Time build (Angular only).
     *   `--env.uglify` - provides basic obfuscation and smaller app size.
     *   `--env.report` - creates a Webpack report inside a `report` folder in the root folder.
