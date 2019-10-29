@@ -32,13 +32,15 @@ Usage | Synopsis
 * `--release` -If set, produces a release build by running webpack in production mode and native build in release mode. Otherwise, produces a debug build.
 * `--device` - Specifies a connected device/emulator to start and run the app. `<Device ID>` is the index or `Device Identifier` of the target device as listed by the `$ tns device <Platform> --available-devices` command.
 * `--hmr` - Enables the hot module replacement (HMR) feature.
-* `--env.*` - Specifies additional flags that the bundler may process. May be passed multiple times. Supported additional flags:
+* `--env.*` - Specifies additional flags that the bundler may process. Can be passed multiple times. Supported additional flags:
     *   `--env.aot` - creates Ahead-Of-Time build (Angular only).
-    *   `--env.snapshot`- creates [Snapshot](https://docs.nativescript.org/performance-optimizations/bundling-with-webpack#v8-heap-snapshot) (only for release builds on Mac OS & for Android).
+    *   `--env.snapshot`- creates [a V8 Snapshot](https://docs.nativescript.org/performance-optimizations/bundling-with-webpack#v8-heap-snapshot) decreasing the app start time (only for release builds for Android).
+    *   `--env.compileSnapshot`- compiles the static assets produced by `--env.snapshot` into `.so` files allowing the native build to split them per architecture. This will reduce the app size when using the `--aab` option. 
     *   `--env.uglify` - provides basic obfuscation and smaller app size.
     *   `--env.report` - creates a Webpack report inside a `report` folder in the root folder.
-    *   `--env.sourceMap` - creates inline source maps (useful for debbuging bundled app).
+    *   `--env.sourceMap` - creates inline source maps.
     *   `--env.hiddenSourceMap` - creates sources maps in the root folder (useful for Crashlytics usage with bundled app in release).
+* `--aab` - Specifies that the command will produce and deploy an Android App Bundle.
 * `--force` - If set, skips the application compatibility checks and forces `npm i` to ensure all dependencies are installed. Otherwise, the command will check the application compatibility with the current CLI version and could fail requiring `tns migrate`.
 
 <% if(isHtml) { %>
