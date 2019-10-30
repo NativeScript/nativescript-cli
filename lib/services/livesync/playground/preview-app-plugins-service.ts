@@ -10,9 +10,10 @@ export class PreviewAppPluginsService implements IPreviewAppPluginsService {
 	constructor(private $errors: IErrors,
 		private $fs: IFileSystem,
 		private $logger: ILogger,
+		private $packageInstallationManager: IPackageInstallationManager,
 		private $pluginsService: IPluginsService) { }
 
-	public getPluginsUsageWarnings(data: IPreviewAppLiveSyncData, device: Device): string[] {
+	public async getPluginsUsageWarnings(data: IPreviewAppLiveSyncData, device: Device): Promise<string[]> {
 		if (!device) {
 			this.$errors.fail("No device provided.");
 		}
@@ -23,19 +24,21 @@ export class PreviewAppPluginsService implements IPreviewAppPluginsService {
 
 		const devicePlugins = this.getDevicePlugins(device);
 		const localPlugins = this.getLocalPlugins(data.projectDir);
-		const warnings = _.keys(localPlugins)
-			.map(localPlugin => {
-				const localPluginVersion = localPlugins[localPlugin];
-				const devicePluginVersion = devicePlugins[localPlugin];
-				return this.getWarningForPlugin(data, localPlugin, localPluginVersion, devicePluginVersion, device);
-			})
-			.filter(item => !!item);
+		const warnings: string[] = [];
+		for (const pluginName in localPlugins) {
+			const localPluginVersion = localPlugins[pluginName];
+			const devicePluginVersion = devicePlugins[pluginName];
+			const pluginWarnings = await this.getWarningForPlugin(data, pluginName, localPluginVersion, devicePluginVersion, device);
+			if (pluginWarnings) {
+				warnings.push(pluginWarnings);
+			}
+		}
 
 		return warnings;
 	}
 
 	public async comparePluginsOnDevice(data: IPreviewAppLiveSyncData, device: Device): Promise<void> {
-		const warnings = this.getPluginsUsageWarnings(data, device);
+		const warnings = await this.getPluginsUsageWarnings(data, device);
 		_.map(warnings, warning => this.$logger.warn(warning));
 	}
 
@@ -69,19 +72,23 @@ export class PreviewAppPluginsService implements IPreviewAppPluginsService {
 		}
 	}
 
-	private getWarningForPlugin(data: IPreviewAppLiveSyncData, localPlugin: string, localPluginVersion: string, devicePluginVersion: string, device: Device): string {
+	private async getWarningForPlugin(data: IPreviewAppLiveSyncData, localPlugin: string, localPluginVersion: string, devicePluginVersion: string, device: Device): Promise<string> {
 		const pluginPackageJsonPath = path.join(data.projectDir, NODE_MODULES_DIR_NAME, localPlugin, PACKAGE_JSON_FILE_NAME);
 		const isNativeScriptPlugin = this.$pluginsService.isNativeScriptPlugin(pluginPackageJsonPath);
 		const shouldCompare = isNativeScriptPlugin && this.hasNativeCode(localPlugin, device.platform, data.projectDir);
+		let warning = null;
+		if (shouldCompare) {
+			warning = await this.getWarningForPluginCore(localPlugin, localPluginVersion, devicePluginVersion, device.id);
+		}
 
-		return shouldCompare ? this.getWarningForPluginCore(localPlugin, localPluginVersion, devicePluginVersion, device.id) : null;
+		return warning;
 	}
 
-	private getWarningForPluginCore(localPlugin: string, localPluginVersion: string, devicePluginVersion: string, deviceId: string): string {
-		this.$logger.trace(`Comparing plugin ${localPlugin} with localPluginVersion ${localPluginVersion} and devicePluginVersion ${devicePluginVersion}`);
+	private async getWarningForPluginCore(pluginName: string, localPluginVersion: string, devicePluginVersion: string, deviceId: string): Promise<string> {
+		this.$logger.trace(`Comparing plugin ${pluginName} with localPluginVersion ${localPluginVersion} and devicePluginVersion ${devicePluginVersion}`);
 
 		if (!devicePluginVersion) {
-			return util.format(PluginComparisonMessages.PLUGIN_NOT_INCLUDED_IN_PREVIEW_APP, localPlugin, deviceId);
+			return util.format(PluginComparisonMessages.PLUGIN_NOT_INCLUDED_IN_PREVIEW_APP, pluginName, deviceId);
 		}
 
 		const shouldSkipCheck = !semver.valid(localPluginVersion) && !semver.validRange(localPluginVersion);
@@ -89,13 +96,16 @@ export class PreviewAppPluginsService implements IPreviewAppPluginsService {
 			return null;
 		}
 
-		const localPluginVersionData = semver.coerce(localPluginVersion);
-		const devicePluginVersionData = semver.coerce(devicePluginVersion);
+		const localPluginVersionData = await this.$packageInstallationManager.getMaxSatisfyingVersionSafe(pluginName, localPluginVersion);
+		const devicePluginVersionData = await this.$packageInstallationManager.getMaxSatisfyingVersionSafe(pluginName, devicePluginVersion);
 
-		if (localPluginVersionData.major !== devicePluginVersionData.major) {
-			return util.format(PluginComparisonMessages.LOCAL_PLUGIN_WITH_DIFFERENCE_IN_MAJOR_VERSION, localPlugin, localPluginVersion, devicePluginVersion);
-		} else if (localPluginVersionData.minor > devicePluginVersionData.minor) {
-			return util.format(PluginComparisonMessages.LOCAL_PLUGIN_WITH_GREATHER_MINOR_VERSION, localPlugin, localPluginVersion, devicePluginVersion);
+		if (semver.valid(localPluginVersionData) && semver.valid(devicePluginVersionData)) {
+			if (semver.major(localPluginVersionData) !== semver.major(devicePluginVersionData)) {
+				return util.format(PluginComparisonMessages.LOCAL_PLUGIN_WITH_DIFFERENCE_IN_MAJOR_VERSION, pluginName, localPluginVersion, devicePluginVersion);
+			} else if (semver.minor(localPluginVersionData) > semver.minor(devicePluginVersionData)) {
+				return util.format(PluginComparisonMessages.LOCAL_PLUGIN_WITH_GREATHER_MINOR_VERSION, pluginName, localPluginVersion, devicePluginVersion);
+			}
+
 		}
 
 		return null;

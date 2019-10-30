@@ -35,7 +35,7 @@ export class PreviewDevicesService extends EventEmitter implements IPreviewDevic
 		return _.filter(this.connectedDevices, { platform: platform.toLowerCase() });
 	}
 
-	public getPluginsUsageWarnings(data: IPreviewAppLiveSyncData, device: Device): string[] {
+	public getPluginsUsageWarnings(data: IPreviewAppLiveSyncData, device: Device): Promise<string[]> {
 		return this.$previewAppPluginsService.getPluginsUsageWarnings(data, device);
 	}
 
