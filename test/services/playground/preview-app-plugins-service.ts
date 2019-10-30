@@ -4,13 +4,13 @@ import { Device } from "nativescript-preview-sdk";
 import { assert } from "chai";
 import * as util from "util";
 import { PluginComparisonMessages } from "../../../lib/services/livesync/playground/preview-app-constants";
-import { ErrorsStub } from "../../stubs";
+import { ErrorsStub, PackageInstallationManagerStub } from "../../stubs";
 
 let readJsonParams: string[] = [];
 let warnParams: string[] = [];
 
 const deviceId = "myTestDeviceId";
-const projectDir =  "testProjectDir";
+const projectDir = "testProjectDir";
 
 function createTestInjector(localPlugins: IStringDictionary, options?: { isNativeScriptPlugin?: boolean, hasPluginNativeCode?: boolean }): IInjector {
 	options = options || {};
@@ -42,8 +42,10 @@ function createTestInjector(localPlugins: IStringDictionary, options?: { isNativ
 	});
 	injector.register("logger", {
 		trace: () => ({}),
-		warn: (message: string) =>  warnParams.push(message)
+		warn: (message: string) => warnParams.push(message)
 	});
+
+	injector.register("packageInstallationManager", PackageInstallationManagerStub);
 	injector.register("errors", ErrorsStub);
 	injector.register("previewAppPluginsService", PreviewAppPluginsService);
 	return injector;
