@@ -176,9 +176,7 @@ export class PreviewAppController extends EventEmitter implements IPreviewAppCon
 					const status = await this.$hmrStatusService.getHmrStatus(device.id, hmrHash);
 					if (!status) {
 						this.devicesCanExecuteHmr[device.id] = false;
-						const noStatusWarning = this.getDeviceMsg(device.name,
-							"Unable to get LiveSync status from the Preview app. Ensure the app is running in order to sync changes.");
-						this.$logger.warn(noStatusWarning);
+						this.$logger.warn(`Unable to get LiveSync status from the Preview app for device ${this.getDeviceDisplayName(device)}. Ensure the app is running in order to sync changes.`);
 					} else {
 						this.devicesCanExecuteHmr[device.id] = status === HmrConstants.HMR_SUCCESS_STATUS;
 					}
@@ -194,20 +192,20 @@ export class PreviewAppController extends EventEmitter implements IPreviewAppCon
 		}));
 	}
 
-	private getDeviceMsg(deviceId: string, message: string) {
-		return `[${deviceId}] ${message}`;
+	private getDeviceDisplayName(device: Device) {
+		return `${device.name} (${device.id})`.cyan;
 	}
 
 	private async getInitialFilesForDeviceSafe(data: IPreviewAppLiveSyncData, device: Device): Promise<FilesPayload> {
 		const platform = device.platform;
-		this.$logger.info(`Start sending initial files for device '${device.name}'.`);
+		this.$logger.info(`Start sending initial files for device ${this.getDeviceDisplayName(device)}.`);
 
 		try {
 			const payloads = this.$previewAppFilesService.getInitialFilesPayload(data, platform);
-			this.$logger.info(`Successfully sent initial files for device '${device.name}'.`);
+			this.$logger.info(`Successfully sent initial files for device ${this.getDeviceDisplayName(device)}.`);
 			return payloads;
 		} catch (err) {
-			this.$logger.warn(`Unable to apply changes for device '${device.name}'. Error is: ${err}, ${stringify(err)}`);
+			this.$logger.warn(`Unable to apply changes for device ${this.getDeviceDisplayName(device)}. Error is: ${err}, ${stringify(err)}`);
 		}
 	}
 
@@ -218,12 +216,12 @@ export class PreviewAppController extends EventEmitter implements IPreviewAppCon
 			const payloads = this.$previewAppFilesService.getFilesPayload(data, filesData, platform);
 			payloads.deviceId = deviceId;
 			if (payloads && payloads.files && payloads.files.length) {
-				this.$logger.info(`Start syncing changes for device '${device.name}'.`);
+				this.$logger.info(`Start syncing changes for device ${this.getDeviceDisplayName(device)}.`);
 				await this.$previewSdkService.applyChanges(payloads);
-				this.$logger.info(`Successfully synced '${payloads.files.map(filePayload => filePayload.file.yellow)}' for device '${device.name}'.`);
+				this.$logger.info(`Successfully synced '${payloads.files.map(filePayload => filePayload.file.yellow)}' for device ${this.getDeviceDisplayName(device)}.`);
 			}
 		} catch (error) {
-			this.$logger.warn(`Unable to apply changes for device '${device.name}'. Error is: ${error}, ${JSON.stringify(error, null, 2)}.`);
+			this.$logger.warn(`Unable to apply changes for device ${this.getDeviceDisplayName(device)}. Error is: ${error}, ${JSON.stringify(error, null, 2)}.`);
 			this.emit(PreviewAppLiveSyncEvents.PREVIEW_APP_LIVE_SYNC_ERROR, {
 				error,
 				data,
