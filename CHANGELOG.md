@@ -1,6 +1,33 @@
 NativeScript CLI Changelog
 ================
 
+6.2.0 (2019, November 1)
+==
+
+### New
+* [Implemented #5038](https://github.com/NativeScript/nativescript-cli/issues/5038): Deprecate support for markingMode:full
+* [Implemented #5049](https://github.com/NativeScript/nativescript-cli/issues/5049): Android App Bundle Improvements
+* [Implemented #5060](https://github.com/NativeScript/nativescript-cli/issues/5060): Kotlin usage tracking in android builds
+* [Implemented #5096](https://github.com/NativeScript/nativescript-cli/issues/5096): Reduce the npm requests when checking if the project should be migrated
+* [Implemented #5104](https://github.com/NativeScript/nativescript-cli/pull/5104): Allow tag and range versions in the preview app plugin versions validation
+* [Implemented #5107](https://github.com/NativeScript/nativescript-cli/issues/5107): Support V8 Snapshots on Windows
+
+### Fixed
+* [Fixed #3785](https://github.com/NativeScript/nativescript-cli/issues/3785): NativeScript CLI doesn't pause on webpack compilation errors
+* [Fixed #4681](https://github.com/NativeScript/nativescript-cli/issues/4681): `tns update ios` is not working
+* [Fixed #4963](https://github.com/NativeScript/nativescript-cli/issues/4963): Difference in hookArgs.prepareData.platform on prepare and run command
+* [Fixed #4995](https://github.com/NativeScript/nativescript-cli/issues/4995): Building plugin and running demo app fails if plugins has a surrounding gradle build
+* [Fixed #5005](https://github.com/NativeScript/nativescript-cli/issues/5005): Apple Watch extension with space in the name of `.entitlements` file is not working
+* [Fixed #5020](https://github.com/NativeScript/nativescript-cli/issues/5020): Stuck at "Restarting application on device" on Windows 10, iPad mini 2, compiled with NativeScript Sidekick cloud service.
+* [Fixed #5030](https://github.com/NativeScript/nativescript-cli/issues/5030): The `tns devices` command lists appletv as iOS platform
+* [Fixed #5034](https://github.com/NativeScript/nativescript-cli/issues/5034): Broken build when passing --i-cloud-container-environment
+* [Fixed #5056](https://github.com/NativeScript/nativescript-cli/issues/5056): Unable to process native iOS files and frameworks from scoped packages
+* [Fixed #5061](https://github.com/NativeScript/nativescript-cli/issues/5061): Unable to resolve cocoapods version conflicts
+* [Fixed #5063](https://github.com/NativeScript/nativescript-cli/issues/5063): Splash Screen asset generation fails for iOS
+* [Fixed #5070](https://github.com/NativeScript/nativescript-cli/issues/5070): The `tns test` command cannot work if the source code is not in `src` or `app` folder
+* [Fixed #5077](https://github.com/NativeScript/nativescript-cli/pull/5077): Pass allowProvisioningUpdates to xcodebuild only when building for device
+* [Fixed #5094](https://github.com/NativeScript/nativescript-cli/issues/5094): Add Theme v2 name to non-extenal modules when starting webpack
+
 6.1.2 (2019, September 18)
 ==
 
