@@ -2855,10 +2855,10 @@ invert-kv@^1.0.0:
   resolved "https://registry.yarnpkg.com/invert-kv/-/invert-kv-1.0.0.tgz#104a8e4aaca6d3d8cd157a8ef8bfab2d7a3ffdb6"
   integrity sha1-EEqOSqym09jNFXqO+L+rLXo//bY=
 
-ios-device-lib@0.7.2:
-  version "0.7.2"
-  resolved "https://registry.yarnpkg.com/ios-device-lib/-/ios-device-lib-0.7.2.tgz#9cacc743faa713f8b0a4caf050e383c03a67a7d3"
-  integrity sha512-7elReKXpeVMy7f5F+sIYzMpm087mHWtdwj5tHwSp9j6RJH0ffhkUd+aSC9DnTAEfyqf1l6z0iM2Tx5qFeMkMxA==
+ios-device-lib@0.7.3:
+  version "0.7.3"
+  resolved "https://registry.yarnpkg.com/ios-device-lib/-/ios-device-lib-0.7.3.tgz#f8c13c210930f1ff3d3ec8c68d2aaa9e3fc771a5"
+  integrity sha512-K9hg7JBAh7K/xtL5y9oblxXoatLr+MQbDPvqhaDL22JlbGx1zc8YaEG+UOfWSEfJN5uyrmQS475YQ9YvkPHe4A==
   dependencies:
     bufferpack "0.0.6"
     node-uuid "1.4.7"
@@ -3524,10 +3524,10 @@ lodash@3.6.0:
   resolved "https://registry.yarnpkg.com/lodash/-/lodash-3.6.0.tgz#5266a8f49dd989be4f9f681b6f2a0c55285d0d9a"
   integrity sha1-Umao9J3Zib5Pn2gbbyoMVShdDZo=
 
-lodash@4.17.11:
-  version "4.17.11"
-  resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.11.tgz#b39ea6229ef607ecd89e2c8df12536891cac9b8d"
-  integrity sha512-cQKh8igo5QUhZ7lg38DYWAxMvjSAKG0A8wGSVimP07SIUEK2UO+arSRKbRZWtelMtN5V0Hkwh5ryOto/SshYIg==
+lodash@4.17.13:
+  version "4.17.13"
+  resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.13.tgz#0bdc3a6adc873d2f4e0c4bac285df91b64fc7b93"
+  integrity sha512-vm3/XWXfWtRua0FkUyEHBZy8kCPjErNBT9fJx8Zvs+U6zjqPbTUOpkaoum3O5uiA8sm+yNMHXfYkTUHFoMxFNA==
 
 lodash@4.17.15, lodash@^4.0.0, lodash@^4.17.10, lodash@^4.17.14, lodash@^4.17.15, lodash@^4.17.4, lodash@^4.3.0, lodash@~4.17.10, lodash@~4.17.5:
   version "4.17.15"
@@ -3895,10 +3895,10 @@ nanomatch@^1.2.9:
     snapdragon "^0.8.1"
     to-regex "^3.0.1"
 
-nativescript-dev-xcode@0.2.0:
-  version "0.2.0"
-  resolved "https://registry.yarnpkg.com/nativescript-dev-xcode/-/nativescript-dev-xcode-0.2.0.tgz#454cdb04811d9199ac7b69a92ba5b90d733bfe64"
-  integrity sha512-UKX+AS3rF/HNQ7777GunT9SaVQJXmcYnol9yKxVXWM1uRNXiQUgLaUmhjYUkHw7voqNN+FCqqRZQlB8mHUPA9g==
+nativescript-dev-xcode@0.2.1:
+  version "0.2.1"
+  resolved "https://registry.yarnpkg.com/nativescript-dev-xcode/-/nativescript-dev-xcode-0.2.1.tgz#3ca8d208efc6f8faf34ea53dadcab751aad0c65e"
+  integrity sha512-uzqkcUnEx0YIi6jkz/EvdhkCBoOmv6XL40qoNYnPQpSAHmbHIOduZC2sg3TQJs4nq1vnKz+J6myq7Pmyocm6tw==
   dependencies:
     simple-plist "^1.0.0"
     uuid "^3.3.2"
