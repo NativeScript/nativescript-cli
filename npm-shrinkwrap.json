@@ -115,6 +115,15 @@
       "integrity": "sha512-rr+OQyAjxze7GgWrSaJwydHStIhHq2lvY3BOC2Mj7KnzI7XK0Uw1TOOdI9lDoajEbSWLiYgoo4f1R51erQfhPQ==",
       "dev": true
     },
+    "@types/colors": {
+      "version": "1.2.1",
+      "resolved": "https://registry.npmjs.org/@types/colors/-/colors-1.2.1.tgz",
+      "integrity": "sha512-7jNkpfN2lVO07nJ1RWzyMnNhH/I5N9iWuMPx9pedptxJ4MODf8rRV0lbJi6RakQ4sKQk231Fw4e2W9n3D7gZ3w==",
+      "dev": true,
+      "requires": {
+        "colors": "*"
+      }
+    },
     "@types/convert-source-map": {
       "version": "1.5.1",
       "resolved": "https://registry.npmjs.org/@types/convert-source-map/-/convert-source-map-1.5.1.tgz",
@@ -1386,9 +1395,9 @@
       }
     },
     "colors": {
-      "version": "1.1.2",
-      "resolved": "https://registry.npmjs.org/colors/-/colors-1.1.2.tgz",
-      "integrity": "sha1-FopHAXVran9RoSzgyXv6KMCE7WM="
+      "version": "1.4.0",
+      "resolved": "https://registry.npmjs.org/colors/-/colors-1.4.0.tgz",
+      "integrity": "sha512-a+UqTh4kgZg/SlGvfbzDHpgRu7AAQOmmqRHJnxhRZICKFUT91brVhNNt58CMWU9PsBbv3PDCZUHbVxuDiH2mtA=="
     },
     "combined-stream": {
       "version": "1.0.8",
@@ -3526,6 +3535,14 @@
         "grunt-legacy-log-utils": "~1.0.0",
         "hooker": "~0.2.3",
         "lodash": "~4.17.5"
+      },
+      "dependencies": {
+        "colors": {
+          "version": "1.1.2",
+          "resolved": "https://registry.npmjs.org/colors/-/colors-1.1.2.tgz",
+          "integrity": "sha1-FopHAXVran9RoSzgyXv6KMCE7WM=",
+          "dev": true
+        }
       }
     },
     "grunt-legacy-log-utils": {
