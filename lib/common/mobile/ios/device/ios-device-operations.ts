@@ -208,13 +208,27 @@ export class IOSDeviceOperations extends EventEmitter implements IIOSDeviceOpera
 		for (const promise of promises) {
 			if (errorHandler) {
 				try {
-					result.push(await promise);
+					const res: any = await promise;
+					if (res.result && res.errors) {
+						result.push(...res.result);
+						res.errors.forEach((err: any) => {
+							this.$logger.trace(`Error while executing ios device operation: ${err.message} with code: ${err.code}`);
+							errorHandler(err);
+						});
+					} else {
+						result.push(res);
+					}
 				} catch (err) {
 					this.$logger.trace(`Error while executing ios device operation: ${err.message} with code: ${err.code}`);
 					errorHandler(err);
 				}
 			} else {
-				result.push(await promise);
+				const res: any = await promise;
+				if (res.result && res.errors) {
+					result.push(...res.result);
+				} else {
+					result.push(res);
+				}
 			}
 		}
 

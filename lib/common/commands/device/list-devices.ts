@@ -26,7 +26,7 @@ export class ListDevicesCommand implements ICommand {
 
 		this.$logger.info("\nConnected devices & emulators");
 		let index = 1;
-		await this.$devicesService.initialize({ platform: args[0], deviceId: null, skipInferPlatform: true, skipDeviceDetectionInterval: true, skipEmulatorStart: true, fullDiscovery: true });
+		await this.$devicesService.initialize({ platform: args[0], deviceId: null, skipInferPlatform: true, skipDeviceDetectionInterval: true, skipEmulatorStart: true, fullDiscovery: false });
 
 		const table: any = createTable(["#", "Device Name", "Platform", "Device Identifier", "Type", "Status", "Connection Type"], []);
 		let action: (_device: Mobile.IDevice) => Promise<void>;
