@@ -1,4 +1,5 @@
-import { IOSDeviceLib as IOSDeviceLibModule } from "ios-device-lib";
+// import { IOSDeviceLib as IOSDeviceLibModule } from "ios-device-lib";
+import { IOSDeviceLib as IOSDeviceLibModule } from "nativescript-cli-server";
 import { cache } from "../../../decorators";
 import { DEVICE_LOG_EVENT_NAME } from "../../../constants";
 import assert = require("assert");
