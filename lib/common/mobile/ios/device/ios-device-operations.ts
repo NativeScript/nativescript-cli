@@ -34,35 +34,39 @@ export class IOSDeviceOperations extends EventEmitter implements IIOSDeviceOpera
 		this.$logger.trace("Starting to look for iOS devices.");
 		this.isInitialized = true;
 		if (!this.deviceLib) {
-			let foundDevice = false;
-			const wrappedDeviceFoundCallback = (deviceInfo: IOSDeviceLib.IDeviceActionInfo) => {
-				foundDevice = true;
+			let resolveDiscovery: (value?: unknown) => void = null;
+			let discoveryTimeout: NodeJS.Timer = null;
+			const wrappedDeviceFoundCallback = (deviceInfo: IOSDeviceLib.IDeviceActionInfo | IOSDeviceLib.IDeviceActionInfo[]) => {
+				if (Array.isArray(deviceInfo)) {
+					deviceInfo.forEach(foundDevice => deviceFoundCallback(foundDevice));
+				} else {
+					deviceFoundCallback(deviceInfo);
+				}
 
-				return deviceFoundCallback(deviceInfo);
+				if (resolveDiscovery) {
+					resolveDiscovery();
+					resolveDiscovery = null;
+				}
+
+				if (discoveryTimeout) {
+					clearTimeout(discoveryTimeout);
+					discoveryTimeout = null;
+				}
 			};
-
-			this.deviceLib = new IOSDeviceLibModule(wrappedDeviceFoundCallback, deviceUpdatedCallback, deviceLostCallback);
-			if (options && options.shouldReturnImmediateResult) {
-				return;
-			}
 
 			// We need this because we need to make sure that we have devices.
 			await new Promise((resolve, reject) => {
-				let iterationsCount = 0;
-				const maxIterationsCount = 3;
+				resolveDiscovery = resolve;
+				this.deviceLib = new IOSDeviceLibModule(wrappedDeviceFoundCallback, deviceUpdatedCallback, deviceLostCallback);
+				if (options && options.shouldReturnImmediateResult) {
+					return resolve();
+				}
 
-				const intervalHandle: NodeJS.Timer = setInterval(() => {
-					if (foundDevice && !options.fullDiscovery) {
-						resolve();
-						return clearInterval(intervalHandle);
+				discoveryTimeout = setTimeout(() => {
+					if (resolveDiscovery) {
+						resolveDiscovery();
 					}
-
-					iterationsCount++;
-					if (iterationsCount >= maxIterationsCount) {
-						clearInterval(intervalHandle);
-						return resolve();
-					}
-				}, 2000);
+				}, 10000);
 			});
 		}
 	}
