@@ -1,6 +1,7 @@
 ﻿import * as path from "path";
 import { doesCurrentNpmCommandMatch, isInteractive } from "../helpers";
 import { TrackActionNames, AnalyticsEventLabelDelimiter } from "../../constants";
+import { killServer } from "nativescript-cli-server";
 
 export class PreUninstallCommand implements ICommand {
 	private static FEEDBACK_FORM_URL = "https://www.nativescript.org/uninstall-feedback";
@@ -26,6 +27,7 @@ export class PreUninstallCommand implements ICommand {
 			await this.handleIntentionalUninstall();
 		}
 
+		await killServer();
 		this.$fs.deleteFile(path.join(this.$settingsService.getProfileDir(), "KillSwitches", "cli"));
 		await this.$analyticsService.finishTracking();
 	}

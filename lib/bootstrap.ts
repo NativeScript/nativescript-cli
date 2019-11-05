@@ -140,6 +140,9 @@ $injector.requireCommand("install", "./commands/install");
 $injector.require("infoService", "./services/info-service");
 $injector.requireCommand("info", "./commands/info");
 
+$injector.requireCommand("kill-cli-server", "./commands/server");
+$injector.requireCommand("start-cli-server", "./commands/server");
+
 $injector.require("androidResourcesMigrationService", "./services/android-resources-migration-service");
 $injector.requireCommand("resources|update", "./commands/resources/resources-update");
 
