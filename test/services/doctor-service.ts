@@ -13,8 +13,9 @@ class DoctorServiceInheritor extends DoctorService {
 		$projectDataService: IProjectDataService,
 		$fs: IFileSystem,
 		$terminalSpinnerService: ITerminalSpinnerService,
-		$versionsService: IVersionsService) {
-		super($analyticsService, $hostInfo, $logger, $childProcess, $injector, $projectDataService, $fs, $terminalSpinnerService, $versionsService);
+		$versionsService: IVersionsService,
+		$settingsService: ISettingsService) {
+		super($analyticsService, $hostInfo, $logger, $childProcess, $injector, $projectDataService, $fs, $terminalSpinnerService, $versionsService, $settingsService);
 	}
 
 	public getDeprecatedShortImportsInFiles(files: string[], projectDir: string): { file: string, line: string }[] {
@@ -34,6 +35,13 @@ describe("doctorService", () => {
 		testInjector.register("fs", {});
 		testInjector.register("terminalSpinnerService", {});
 		testInjector.register("versionsService", {});
+		testInjector.register("settingsService", {
+			getProfileDir: (): string => ""
+		});
+		testInjector.register("jsonFileSettingsService", {
+			getSettingValue: async (settingName: string, cacheOpts?: ICacheTimeoutOpts): Promise<any> => undefined,
+			saveSetting: async (key: string, value: any, cacheOpts?: IUseCacheOpts): Promise<void> => undefined
+		});
 
 		return testInjector;
 	};

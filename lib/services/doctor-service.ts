@@ -9,6 +9,11 @@ export class DoctorService implements IDoctorService {
 	private static WindowsSetupScriptExecutable = "powershell.exe";
 	private static WindowsSetupScriptArguments = ["start-process", "-FilePath", "PowerShell.exe", "-NoNewWindow", "-Wait", "-ArgumentList", '"-NoProfile -ExecutionPolicy Bypass -Command iex ((new-object net.webclient).DownloadString(\'https://www.nativescript.org/setup/win\'))"'];
 
+	private get $jsonFileSettingsService(): IJsonFileSettingsService {
+		const jsonFileSettingsPath = path.join(this.$settingsService.getProfileDir(), "doctor-cache.json");
+		return this.$injector.resolve<IJsonFileSettingsService>("jsonFileSettingsService", { jsonFileSettingsPath });
+	}
+
 	constructor(private $analyticsService: IAnalyticsService,
 		private $hostInfo: IHostInfo,
 		private $logger: ILogger,
@@ -17,12 +22,14 @@ export class DoctorService implements IDoctorService {
 		private $projectDataService: IProjectDataService,
 		private $fs: IFileSystem,
 		private $terminalSpinnerService: ITerminalSpinnerService,
-		private $versionsService: IVersionsService) { }
+		private $versionsService: IVersionsService,
+		private $settingsService: ISettingsService) { }
 
 	public async printWarnings(configOptions?: { trackResult: boolean, projectDir?: string, runtimeVersion?: string, options?: IOptions }): Promise<void> {
+		const getInfosData: any = { projectDir: configOptions && configOptions.projectDir, androidRuntimeVersion: configOptions && configOptions.runtimeVersion };
 		const infos = await this.$terminalSpinnerService.execute<NativeScriptDoctor.IInfo[]>({
 			text: `Getting environment information ${EOL}`
-		}, () => doctor.getInfos({ projectDir: configOptions && configOptions.projectDir, androidRuntimeVersion: configOptions && configOptions.runtimeVersion }));
+		}, () => this.getInfos(getInfosData));
 
 		const warnings = infos.filter(info => info.type === constants.WARNING_TYPE_NAME);
 		const hasWarnings = warnings.length > 0;
@@ -41,6 +48,7 @@ export class DoctorService implements IDoctorService {
 			this.$logger.info("There seem to be issues with your configuration.");
 		} else {
 			this.$logger.info("No issues were detected.".bold);
+			await this.$jsonFileSettingsService.saveSetting(this.getKeyForConfiguration(getInfosData), infos);
 			this.printInfosCore(infos);
 		}
 
@@ -95,8 +103,8 @@ export class DoctorService implements IDoctorService {
 			action: TrackActionNames.CheckLocalBuildSetup,
 			additionalData: "Starting",
 		});
-		const infos = await doctor.getInfos({ platform, projectDir, androidRuntimeVersion: runtimeVersion });
-
+		const sysInfoConfig: NativeScriptDoctor.ISysInfoConfig = { platform, projectDir, androidRuntimeVersion: runtimeVersion };
+		const infos = await this.getInfos(sysInfoConfig);
 		const warnings = this.filterInfosByType(infos, constants.WARNING_TYPE_NAME);
 		const hasWarnings = warnings.length > 0;
 		if (hasWarnings) {
@@ -107,6 +115,7 @@ export class DoctorService implements IDoctorService {
 			this.printInfosCore(infos);
 		} else {
 			infos.map(info => this.$logger.trace(info.message));
+			await this.$jsonFileSettingsService.saveSetting(this.getKeyForConfiguration(sysInfoConfig), infos);
 		}
 
 		await this.$analyticsService.trackEventActionInGoogleAnalytics({
@@ -220,6 +229,36 @@ export class DoctorService implements IDoctorService {
 
 	private filterInfosByType(infos: NativeScriptDoctor.IInfo[], type: string): NativeScriptDoctor.IInfo[] {
 		return infos.filter(info => info.type === type);
+	}
+
+	private getKeyForConfiguration(sysInfoConfig?: NativeScriptDoctor.ISysInfoConfig): string {
+		const nativeScriptData = sysInfoConfig && sysInfoConfig.projectDir && JSON.stringify(this.$fs.readJson(path.join(sysInfoConfig.projectDir, "package.json")).nativescript);
+		const delimiter = "__";
+		const key = [
+			JSON.stringify(sysInfoConfig),
+			process.env.ANDROID_HOME,
+			process.env.JAVA_HOME,
+			process.env["CommonProgramFiles(x86)"],
+			process.env["CommonProgramFiles"],
+			process.env.PROCESSOR_ARCHITEW6432,
+			process.env.ProgramFiles,
+			process.env["ProgramFiles(x86)"],
+			nativeScriptData
+		]
+			.filter(a => !!a)
+			.join(delimiter);
+
+		const data = helpers.getHash(key, { algorithm: "md5" });
+		return data;
+	}
+
+	private async getInfos(sysInfoConfig?: NativeScriptDoctor.ISysInfoConfig): Promise<NativeScriptDoctor.IInfo[]> {
+		const key = this.getKeyForConfiguration(sysInfoConfig);
+		// check if we already have cache for the results here
+		const infosFromCache = await this.$jsonFileSettingsService.getSettingValue<NativeScriptDoctor.IInfo[]>(key);
+		const infos = infosFromCache || await doctor.getInfos(sysInfoConfig);
+
+		return infos;
 	}
 }
 $injector.register("doctorService", DoctorService);
