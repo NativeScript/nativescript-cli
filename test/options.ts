@@ -56,8 +56,8 @@ describe("options", () => {
 			process.argv.push('--path');
 			// If you do not pass value to an option, it's automatically set as true.
 			const options = createOptions(testInjector);
-			process.argv.pop();
 			options.validateOptions();
+			process.argv.pop();
 			assert.isTrue(isExecutionStopped);
 		});
 
@@ -65,8 +65,8 @@ describe("options", () => {
 			process.argv.push('--keyStorePath');
 			// If you do not pass value to a string option, it's automatically set to "".
 			const options = createOptions(testInjector);
-			process.argv.pop();
 			options.validateOptions();
+			process.argv.pop();
 			assert.isTrue(isExecutionStopped);
 		});
 
@@ -74,8 +74,8 @@ describe("options", () => {
 			process.argv.push('--key-store-path');
 			// If you do not pass value to an option, it's automatically set as true.
 			const options = createOptions(testInjector);
-			process.argv.pop();
 			options.validateOptions();
+			process.argv.pop();
 			assert.isTrue(isExecutionStopped);
 		});
 

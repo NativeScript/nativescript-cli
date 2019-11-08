@@ -52,7 +52,9 @@ var nodeWarn: ISystemWarning = undefined;
 export function getNodeWarning(): ISystemWarning {
 	if (nodeWarn === undefined) {
 		nodeWarn = null;
+		console.time("node version");
 		var verificationOpts = getNodeVersionOpts();
+		console.timeEnd("node version");
 		var cliName = verificationOpts.cliName;
 		var supportedVersionsRange = verificationOpts.supportedVersionsRange;
 		var deprecatedVersions = verificationOpts.deprecatedVersions;

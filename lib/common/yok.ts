@@ -121,7 +121,11 @@ export class Yok implements IInjector {
 	private resolvePublicApi(name: string, file: string): void {
 		Object.defineProperty(this.publicApi, name, {
 			get: () => {
-				this.resolveInstance(name);
+				const proxy = this.resolveInstance(name);
+				if (proxy && proxy.__load) {
+					proxy.__load();
+				}
+
 				return this.publicApi.__modules__[name];
 			}
 		});
@@ -203,7 +207,7 @@ export class Yok implements IInjector {
 				disableAnalytics: true,
 				isHierarchicalCommand: true,
 				execute: async (args: string[]): Promise<void> => {
-					const commandsService = $injector.resolve("commandsService");
+					const commandsService = this.resolve("commandsService");
 					let commandName: string = null;
 					const defaultCommand = this.getDefaultCommand(name, args);
 					let commandArguments: ICommandArgument[] = [];
@@ -241,7 +245,7 @@ export class Yok implements IInjector {
 			};
 		};
 
-		$injector.registerCommand(name, factory);
+		this.registerCommand(name, factory);
 	}
 
 	private getHierarchicalCommandName(parentCommandName: string, subCommandName: string) {
@@ -257,7 +261,7 @@ export class Yok implements IInjector {
 					// In case buildHierarchicalCommand doesn't find a valid command
 					// there isn't a valid command or default with those arguments
 
-					const errors = $injector.resolve("errors");
+					const errors = this.resolve("errors");
 					errors.failWithHelp(ERROR_NO_VALID_SUBCOMMAND_FORMAT, commandName);
 				}
 
@@ -304,12 +308,101 @@ export class Yok implements IInjector {
 		return command;
 	}
 
+	private proxiesCache: IDictionary<any> = {};
+
 	public resolve(param: any, ctorArguments?: IDictionary<any>): any {
-		if (_.isFunction(param)) {
-			return this.resolveConstructor(<Function>param, ctorArguments);
-		} else {
-			return this.resolveByName(<string>param, ctorArguments);
+		const yok = this;
+		let isByName = !_.isFunction(param);
+		if (isByName && this.proxiesCache[param]) {
+			return this.proxiesCache[param];
 		}
+
+		if (!isByName) {
+			isByName = false;
+		}
+
+		// based on: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy
+		// TODO: add unit tests for each proxy method
+		const proxy = new Proxy({
+			__load: function () {
+				const inst: any = this.cache || yok.resolveCore(param, ctorArguments);
+				this.cache = inst;
+			}
+		},
+			{
+				get: function (obj: any, prop: any) {
+					const loadObj = obj.__load.bind(obj);
+					if (prop === "__load") {
+						return loadObj;
+					}
+
+					loadObj();
+					let result = obj.cache && obj.cache[prop];
+					if (typeof result === 'function') {
+						result = result.bind(obj.cache);
+					}
+
+					return result;
+				},
+				set: function (obj, sKey, vValue) {
+					obj.__load.bind(obj)();
+					return (obj.cache && (obj.cache[sKey] = vValue)) || true;
+				},
+				deleteProperty: function (obj, sKey) {
+					obj.__load.bind(obj)();
+					return obj.cache && delete obj.cache[sKey];
+				},
+				enumerate: function (obj) {
+					obj.__load.bind(obj)();
+					return obj.cache && Object.keys(obj.cache);
+				},
+				ownKeys: function (obj) {
+					obj.__load.bind(obj)();
+					return obj.cache && Object.keys(obj.cache);
+				},
+				has: function (obj, sKey) {
+					obj.__load.bind(obj)();
+					return obj.cache && typeof obj.cache[Symbol.iterator] === 'function' && sKey in obj.cache;
+				},
+				defineProperty: function (obj, sKey, oDesc) {
+					obj.__load.bind(obj)();
+					if ((oDesc && 'value' in oDesc) && obj.cache) {
+						obj.cache[sKey] = oDesc.value;
+					}
+
+					return obj;
+				},
+				getOwnPropertyDescriptor: function (obj, sKey) {
+					obj.__load.bind(obj)();
+					const vValue = obj.cache && obj.cache[sKey];
+					return vValue ? {
+						value: vValue,
+						writable: true,
+						enumerable: true,
+						configurable: true
+					} : undefined;
+				}
+			});
+
+		if (isByName) {
+			this.proxiesCache[param] = proxy;
+		}
+
+		return proxy;
+	}
+
+	private resolveCore(param: any, ctorArguments?: IDictionary<any>): any {
+		let instance = null;
+		if (_.isFunction(param)) {
+			// console.time(indent + "resolving ctr" + param.name);
+			instance = this.resolveConstructor(<Function>param, ctorArguments);
+			// console.timeEnd(indent + "resolving ctr" + param.name);
+		} else {
+			// console.time(indent + "resolving " + param);
+			instance = this.resolveByName(<string>param, ctorArguments);
+			// console.timeEnd(indent + "resolving " + param);
+		}
+		return instance;
 	}
 
 	/* Regex to match dynamic calls in the following format:

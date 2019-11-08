@@ -87,16 +87,16 @@ export function exported(moduleName: string): any {
 }
 
 export function performanceLog(injector?: IInjector): any {
-	injector = injector || $injector;
 	return function (target: any, propertyKey: string, descriptor: PropertyDescriptor): any {
 		const originalMethod = descriptor.value;
 		const className = target.constructor.name;
 		const trackName = `${className}${AnalyticsEventLabelDelimiter}${propertyKey}`;
-		const performanceService: IPerformanceService = injector.resolve("performanceService");
 
 		//needed for the returned function to have the same name as the original - used in hooks decorator
 		const functionWrapper = {
 			[originalMethod.name]: function (...args: Array<any>) {
+				injector = injector || $injector;
+				const performanceService: IPerformanceService = injector.resolve("performanceService");
 				const start = performanceService.now();
 				const result = originalMethod.apply(this, args);
 				const resolvedPromise = Promise.resolve(result);

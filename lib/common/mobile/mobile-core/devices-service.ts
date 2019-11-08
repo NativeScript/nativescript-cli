@@ -377,7 +377,8 @@ export class DevicesService extends EventEmitter implements Mobile.IDevicesServi
 		this.$logger.trace("startLookingForDevices; platform is %s", this._platform);
 
 		if (this._platform) {
-			return this.detectCurrentlyAttachedDevices(deviceInitOpts);
+			await this.detectCurrentlyAttachedDevices(deviceInitOpts);
+			return;
 		}
 
 		await this.detectCurrentlyAttachedDevices(deviceInitOpts);

@@ -6,8 +6,13 @@ import * as zlib from "zlib";
 import * as util from "util";
 import { HttpStatusCodes } from "./constants";
 import * as request from "request";
+import { cache } from "./decorators";
 
 export class HttpClient implements Server.IHttpClient {
+	@cache()
+	private get requestModule(): request.RequestAPI<request.Request, request.CoreOptions, request.RequiredUriUrl> {
+		return require("request");
+	}
 	private static STATUS_CODE_REGEX = /statuscode=(\d+)/i;
 	private static STUCK_REQUEST_ERROR_MESSAGE = "The request can't receive any response.";
 	private static STUCK_RESPONSE_ERROR_MESSAGE = "Can't receive all parts of the response.";
@@ -15,7 +20,7 @@ export class HttpClient implements Server.IHttpClient {
 	// We receive multiple response packets every ms but we don't need to be very aggressive here.
 	private static STUCK_RESPONSE_CHECK_INTERVAL = 10000;
 
-private defaultUserAgent: string;
+	private defaultUserAgent: string;
 
 	constructor(private $logger: ILogger,
 		private $proxyService: IProxyService,
@@ -120,7 +125,7 @@ private defaultUserAgent: string;
 			clonedOptions.followAllRedirects = true;
 
 			this.$logger.trace("httpRequest: %s", util.inspect(clonedOptions));
-			const requestObj = request(clonedOptions);
+			const requestObj = this.requestModule(clonedOptions);
 			cleanupRequestData.req = requestObj;
 
 			requestObj

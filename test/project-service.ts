@@ -67,7 +67,7 @@ describe("projectService", () => {
 				downloadAndExtract: () => Promise.resolve(),
 				extractPackage: () => Promise.resolve()
 			});
-
+			(<ICliGlobal>global).$injector = testInjector;
 			return testInjector;
 		};
 		/* tslint:enable:no-empty */

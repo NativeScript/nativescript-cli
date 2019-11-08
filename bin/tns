@@ -1,12 +1,16 @@
 #!/usr/bin/env node
 
 "use strict";
+console.time = () => ({});
+console.timeEnd = () => ({});
+console.log("IN TNS");
 var path = require("path"),
 	pathToLib = path.join(__dirname, "..", "lib"),
 	pathToCommon = path.join(pathToLib, "common");
 
+console.log("verify node");
 require(path.join(pathToCommon, "verify-node-version")).verifyNodeVersion();
-
+console.log("verify node done");
 var pathToCliExecutable = path.join(pathToLib, "nativescript-cli.js");
 
 require(pathToCliExecutable);

@@ -1,9 +1,18 @@
-import * as pacote from "pacote";
-import * as tar from "tar";
+
 import * as path from "path";
 import { cache } from "../common/decorators";
 
 export class PacoteService implements IPacoteService {
+	@cache()
+	private get pacoteModule(): any {
+		return require("pacote");
+	}
+
+	@cache()
+	private get tarModule(): any {
+		return require("tar");
+	}
+
 	constructor(private $fs: IFileSystem,
 		private $injector: IInjector,
 		private $logger: ILogger,
@@ -27,7 +36,7 @@ export class PacoteService implements IPacoteService {
 
 		packageName = this.getRealPackageName(packageName);
 		this.$logger.trace(`Calling pacote.manifest for packageName: ${packageName} and options: ${JSON.stringify(manifestOptions, null, 2)}`);
-		const result = pacote.manifest(packageName, manifestOptions);
+		const result = this.pacoteModule.manifest(packageName, manifestOptions);
 
 		return result;
 	}
@@ -47,14 +56,14 @@ export class PacoteService implements IPacoteService {
 		return new Promise<void>((resolve, reject) => {
 			this.$logger.trace(`Calling pacoteService.extractPackage for packageName: '${packageName}', destinationDir: '${destinationDirectory}' and options: ${options}`);
 
-			const source = pacote.tarball.stream(packageName, pacoteOptions);
+			const source = this.pacoteModule.tarball.stream(packageName, pacoteOptions);
 			source.on("error", (err: Error) => {
 				this.$logger.trace(`Error in source while trying to extract stream from ${packageName}. Error is ${err}`);
 				reject(err);
 			});
 
 			this.$logger.trace(`Creating extract tar stream with options: ${JSON.stringify(extractOptions, null, 2)}`);
-			const destination = tar.x(extractOptions);
+			const destination = this.tarModule.x(extractOptions);
 			source.pipe(destination);
 
 			destination.on("error", (err: Error) => {

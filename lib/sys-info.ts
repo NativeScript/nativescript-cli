@@ -72,7 +72,9 @@ export class SysInfo implements ISysInfo {
 	}
 
 	public async getMacOSWarningMessage(): Promise<ISystemWarning> {
+		console.time("getMacOsVersion");
 		const macOSVersion = await this.$hostInfo.getMacOSVersion();
+		console.timeEnd("getMacOsVersion");
 		if (macOSVersion && macOSVersion < MacOSVersions.HighSierra) {
 			return {
 				message: format(MacOSDeprecationStringFormat, macOSVersion),

@@ -20,29 +20,49 @@ process.on = (event: string, listener: any): any => {
 
 /* tslint:disable:no-floating-promises */
 (async () => {
+	console.time("-cli start");
 	const config: Config.IConfig = $injector.resolve("$config");
+	console.timeEnd("-cli start");
+	console.time("-cli start 1");
 	const err: IErrors = $injector.resolve("$errors");
+	console.timeEnd("-cli start 1");
+	console.time("-cli start 2");
 	err.printCallStack = config.DEBUG;
 
 	const $initializeService = $injector.resolve<IInitializeService>("initializeService");
+	console.timeEnd("-cli start 2");
+	console.time("-cli start 3");
 	await $initializeService.initialize();
+	console.timeEnd("-cli start 3");
+	console.time("-cli start 4");
 
 	const extensibilityService: IExtensibilityService = $injector.resolve("extensibilityService");
+	console.timeEnd("-cli start 4");
+	console.time("-cli start 5");
 	try {
 		await settlePromises<IExtensionData>(extensibilityService.loadExtensions());
+		console.timeEnd("-cli start 5");
+		console.time("-cli start 6");
 	} catch (err) {
 		logger.trace("Unable to load extensions. Error is: ", err);
 	}
 
 	const commandDispatcher: ICommandDispatcher = $injector.resolve("commandDispatcher");
 
+	console.timeEnd("-cli start 6");
+	console.time("-cli start 7");
 	const messages: IMessagesService = $injector.resolve("$messagesService");
+	console.timeEnd("-cli start 7");
+	console.time("-cli start 8");
 	messages.pathsToMessageJsonFiles = [/* Place client-specific json message file paths here */];
 
 	if (process.argv[2] === "completion") {
 		await commandDispatcher.completeCommand();
 	} else {
+		console.timeEnd("-cli start 8");
+		console.time("-cli start 9");
 		await commandDispatcher.dispatchCommand();
+		console.timeEnd("-cli start 9");
 	}
 
 	$injector.dispose();

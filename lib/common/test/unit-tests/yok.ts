@@ -237,9 +237,9 @@ describe("yok", () => {
 			};
 
 			injector.register("thing", Thing, false);
-			const thing1 = injector.resolve("thing", { arg: "thing1"});
-			const thing2 = injector.resolve("thing", { arg: "thing2"});
-			const thing3 = injector.resolve("thing", { arg: "thing3"});
+			const thing1 = injector.resolve("thing", { arg: "thing1" });
+			const thing2 = injector.resolve("thing", { arg: "thing2" });
+			const thing3 = injector.resolve("thing", { arg: "thing3" });
 
 			assert.equal(thing1.arg, "thing1");
 			assert.equal(thing2.arg, "thing2");
@@ -389,7 +389,7 @@ describe("yok", () => {
 			assert.strictEqual(obj, result.foo);
 		});
 
-		it("inject into TS constructor", () => {
+		it.only("inject into TS constructor", () => {
 			const injector = new Yok();
 
 			injector.register("x", "foo");

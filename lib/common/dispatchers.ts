@@ -35,6 +35,7 @@ export class CommandDispatcher implements ICommandDispatcher {
 			commandName = "help";
 		}
 
+		// TODO: dynamic resolve
 		await this.$cancellation.begin("cli");
 
 		await this.$commandsService.tryExecuteCommand(commandName, commandArguments);
