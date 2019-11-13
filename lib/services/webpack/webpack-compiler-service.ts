@@ -46,6 +46,11 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 							return;
 						}
 
+						// the hash of the compilation is the same as the previous one
+						if (this.expectedHashes[platformData.platformNameLowerCase] === message.hash) {
+							return;
+						}
+
 						let result;
 
 						if (prepareData.hmr) {
