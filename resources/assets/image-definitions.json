@@ -2,6 +2,27 @@
 	"ios": {
 		"icons": [
 			{
+				"width": 20,
+				"height": 20,
+				"directory": "Assets.xcassets/AppIcon.appiconset",
+				"filename": "icon-20@3x.png",
+				"scale": "3x"
+			},
+			{
+				"width": 20,
+				"height": 20,
+				"directory": "Assets.xcassets/AppIcon.appiconset",
+				"filename": "icon-20@2x.png",
+				"scale": "2x"
+			},
+			{
+				"width": 20,
+				"height": 20,
+				"directory": "Assets.xcassets/AppIcon.appiconset",
+				"filename": "icon-20.png",
+				"scale": "1x"
+			},
+			{
 				"width": 60,
 				"height": 60,
 				"directory": "Assets.xcassets/AppIcon.appiconset",
