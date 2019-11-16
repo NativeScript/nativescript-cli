@@ -9,7 +9,7 @@ const enum MarkingMode {
 }
 
 const MARKING_MODE_PROP = "markingMode";
-const MARKING_MODE_FULL_DEPRECATION_MSG = `With the upcoming NativeScript 7.0 the "${MARKING_MODE_PROP}:${MarkingMode.None}" will become the only marking mode supported by the Android Runtime.`;
+const MARKING_MODE_FULL_DEPRECATION_MSG = `With the upcoming NativeScript 7.0 the "${MARKING_MODE_PROP}:${MarkingMode.None}" will become the only marking mode supported by the Runtimes.`;
 const MARKING_MODE_NONE_CONFIRM_MSG = `Do you want to switch your app to the recommended "${MARKING_MODE_PROP}:${MarkingMode.None}"?
 More info about the reasons for this change can be found in the link below:
 https://www.nativescript.org/blog/markingmode-none-is-official-boost-android-performance-while-avoiding-memory-issues`;
