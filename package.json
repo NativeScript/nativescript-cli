@@ -54,7 +54,7 @@
     "libnpmconfig": "1.2.1",
     "lodash": "4.17.11",
     "log4js": "4.1.0",
-    "marked": "0.5.1",
+    "marked": "0.6.1",
     "marked-terminal": "3.1.1",
     "minimatch": "3.0.2",
     "mkdirp": "0.5.1",
