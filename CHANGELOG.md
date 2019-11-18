@@ -1,6 +1,13 @@
 NativeScript CLI Changelog
 ================
 
+6.2.1 (2019, November 18)
+==
+
+### Fixed
+* [Fixed #5120](https://github.com/NativeScript/nativescript-cli/issues/5120): Android resource directories are not prepared correctly
+* [Fixed #5105](https://github.com/NativeScript/nativescript-cli/issues/5105): App restarts when changing platform specific scss
+
 6.2.0 (2019, November 1)
 ==
 
