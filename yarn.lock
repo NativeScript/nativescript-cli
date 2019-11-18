@@ -2855,10 +2855,10 @@ invert-kv@^1.0.0:
   resolved "https://registry.yarnpkg.com/invert-kv/-/invert-kv-1.0.0.tgz#104a8e4aaca6d3d8cd157a8ef8bfab2d7a3ffdb6"
   integrity sha1-EEqOSqym09jNFXqO+L+rLXo//bY=
 
-ios-device-lib@0.7.2:
-  version "0.7.2"
-  resolved "https://registry.yarnpkg.com/ios-device-lib/-/ios-device-lib-0.7.2.tgz#9cacc743faa713f8b0a4caf050e383c03a67a7d3"
-  integrity sha512-7elReKXpeVMy7f5F+sIYzMpm087mHWtdwj5tHwSp9j6RJH0ffhkUd+aSC9DnTAEfyqf1l6z0iM2Tx5qFeMkMxA==
+ios-device-lib@0.7.3:
+  version "0.7.3"
+  resolved "https://registry.yarnpkg.com/ios-device-lib/-/ios-device-lib-0.7.3.tgz#f8c13c210930f1ff3d3ec8c68d2aaa9e3fc771a5"
+  integrity sha512-K9hg7JBAh7K/xtL5y9oblxXoatLr+MQbDPvqhaDL22JlbGx1zc8YaEG+UOfWSEfJN5uyrmQS475YQ9YvkPHe4A==
   dependencies:
     bufferpack "0.0.6"
     node-uuid "1.4.7"
@@ -3121,6 +3121,11 @@ is-windows@^1.0.2:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/is-windows/-/is-windows-1.0.2.tgz#d1850eb9791ecd18e6182ce12a30f396634bb19d"
   integrity sha512-eXK1UInq2bPmjyX6e3VHIzMLobc4J94i4AWn+Hpq3OU5KkrRC96OAcR3PRJ/pGu6m8TRnBHP9dkXQVsT/COVIA==
+
+is-wsl@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/is-wsl/-/is-wsl-1.1.0.tgz#1f16e4aa22b04d1336b66188a66af3c600c3a66d"
+  integrity sha1-HxbkqiKwTRM2tmGIpmrzxgDDpm0=
 
 isarray@0.0.1:
   version "0.0.1"
@@ -3895,10 +3900,10 @@ nanomatch@^1.2.9:
     snapdragon "^0.8.1"
     to-regex "^3.0.1"
 
-nativescript-dev-xcode@0.2.0:
-  version "0.2.0"
-  resolved "https://registry.yarnpkg.com/nativescript-dev-xcode/-/nativescript-dev-xcode-0.2.0.tgz#454cdb04811d9199ac7b69a92ba5b90d733bfe64"
-  integrity sha512-UKX+AS3rF/HNQ7777GunT9SaVQJXmcYnol9yKxVXWM1uRNXiQUgLaUmhjYUkHw7voqNN+FCqqRZQlB8mHUPA9g==
+nativescript-dev-xcode@0.2.1:
+  version "0.2.1"
+  resolved "https://registry.yarnpkg.com/nativescript-dev-xcode/-/nativescript-dev-xcode-0.2.1.tgz#3ca8d208efc6f8faf34ea53dadcab751aad0c65e"
+  integrity sha512-uzqkcUnEx0YIi6jkz/EvdhkCBoOmv6XL40qoNYnPQpSAHmbHIOduZC2sg3TQJs4nq1vnKz+J6myq7Pmyocm6tw==
   dependencies:
     simple-plist "^1.0.0"
     uuid "^3.3.2"
@@ -4206,10 +4211,12 @@ onetime@^2.0.0:
   dependencies:
     mimic-fn "^1.0.0"
 
-open@0.0.5:
-  version "0.0.5"
-  resolved "https://registry.yarnpkg.com/open/-/open-0.0.5.tgz#42c3e18ec95466b6bf0dc42f3a2945c3f0cad8fc"
-  integrity sha1-QsPhjslUZra/DcQvOilFw/DK2Pw=
+open@6.0.0:
+  version "6.0.0"
+  resolved "https://registry.yarnpkg.com/open/-/open-6.0.0.tgz#cae5e2c1a3a1bfaee0d0acc8c4b7609374750346"
+  integrity sha512-/yb5mVZBz7mHLySMiSj2DcLtMBbFPJk5JBKEkHVZFxZAPzeg3L026O0T+lbdz1B2nyDnkClRSwRQJdeVUIF7zw==
+  dependencies:
+    is-wsl "^1.1.0"
 
 optimist@^0.6.1:
   version "0.6.1"
