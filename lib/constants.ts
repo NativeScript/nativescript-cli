@@ -10,6 +10,7 @@ export const NATIVESCRIPT_KEY_NAME = "nativescript";
 export const NODE_MODULES_FOLDER_NAME = "node_modules";
 export const TNS_MODULES_FOLDER_NAME = "tns_modules";
 export const TNS_CORE_MODULES_NAME = "tns-core-modules";
+export const SCOPED_TNS_CORE_MODULES = "@nativescript/core";
 export const TNS_CORE_THEME_NAME = "nativescript-theme-core";
 export const SCOPED_TNS_CORE_THEME_NAME = "@nativescript/theme";
 export const WEBPACK_PLUGIN_NAME = "nativescript-dev-webpack";
