@@ -3,11 +3,17 @@ import * as semver from "semver";
 import * as constants from "../constants";
 import { UpdateControllerBase } from "./update-controller-base";
 
+interface IPackage {
+	name: string;
+	alias?: string;
+}
+
 export class UpdateController extends UpdateControllerBase implements IUpdateController {
-	static readonly updatableDependencies: string[] = [
-		constants.TNS_CORE_MODULES_NAME,
-		constants.TNS_CORE_MODULES_WIDGETS_NAME,
-		constants.WEBPACK_PLUGIN_NAME];
+	static readonly updatableDependencies: IPackage[] = [
+		{ name: constants.SCOPED_TNS_CORE_MODULES, alias: constants.TNS_CORE_MODULES_NAME },
+		{ name: constants.TNS_CORE_MODULES_NAME },
+		{ name: constants.TNS_CORE_MODULES_WIDGETS_NAME },
+		{ name: constants.WEBPACK_PLUGIN_NAME }];
 	static readonly folders: string[] = [
 		constants.LIB_DIR_NAME,
 		constants.HOOKS_DIR_NAME,
@@ -184,9 +190,17 @@ export class UpdateController extends UpdateControllerBase implements IUpdateCon
 	}
 
 	private getUpdatableDependencies(dependencies: IDictionary<string>): IDictionary<string> {
-		return _.pickBy(dependencies, (value, key) => {
-			return UpdateController.updatableDependencies.indexOf(key) > -1;
+		const updatableDependencies: IDictionary<string> = {};
+
+		UpdateController.updatableDependencies.forEach(updatableDependency => {
+			if (dependencies[updatableDependency.name]) {
+				updatableDependencies[updatableDependency.name] = dependencies[updatableDependency.name];
+			} else if (updatableDependency.alias && dependencies[updatableDependency.alias]) {
+				updatableDependencies[updatableDependency.name] = dependencies[updatableDependency.alias];
+			}
 		});
+
+		return updatableDependencies;
 	}
 
 	private getTemplateName(projectData: IProjectData) {
