@@ -15,6 +15,8 @@ export class PreviewAppController extends EventEmitter implements IPreviewAppCon
 	private devicesCanExecuteHmr: IDictionary<boolean> = {};
 	// holds HMR files per device in order to execute batch upload on fast updates
 	private devicesHmrFiles: IDictionary<string[]> = {};
+	// holds app files per device in order to execute batch upload on fast updates on failed HMR or --no-hmr
+	private devicesAppFiles: IDictionary<string[]> = {};
 	// holds the current HMR hash per device in order to watch the proper hash status on fast updates
 	private devicesCurrentHmrHash: IDictionary<string> = {};
 
@@ -148,30 +150,38 @@ export class PreviewAppController extends EventEmitter implements IPreviewAppCon
 			const currentSyncDeferPromise = deferPromise<void>();
 			this.devicesLiveSyncChain[device.id] = currentSyncDeferPromise.promise;
 			this.devicesCurrentHmrHash[device.id] = this.devicesCurrentHmrHash[device.id] || platformHmrData.hash;
-			this.devicesHmrFiles[device.id] = this.devicesHmrFiles[device.id] || [];
-			this.devicesHmrFiles[device.id].push(...files);
-			await previousSync;
-			if (!this.devicesHmrFiles[device.id] || !this.devicesHmrFiles[device.id].length) {
-				this.$logger.info("Skipping files sync. The changes are already batch transferred in a previous sync.");
-				currentSyncDeferPromise.resolve();
-				return;
+			if (data.useHotModuleReload) {
+				this.devicesHmrFiles[device.id] = this.devicesHmrFiles[device.id] || [];
+				this.devicesHmrFiles[device.id].push(...files);
+				this.devicesAppFiles[device.id] = platformHmrData.fallbackFiles;
+			} else {
+				this.devicesHmrFiles[device.id] = [];
+				this.devicesAppFiles[device.id] = files;
 			}
 
-			try {
+			await previousSync;
 
-				let executeHmrSync = false;
+			try {
+				let canExecuteHmrSync = false;
 				const hmrHash = this.devicesCurrentHmrHash[device.id];
 				this.devicesCurrentHmrHash[device.id] = null;
 				if (data.useHotModuleReload && hmrHash) {
 					if (this.devicesCanExecuteHmr[device.id]) {
-						executeHmrSync = true;
-						this.$hmrStatusService.watchHmrStatus(device.id, hmrHash);
+						canExecuteHmrSync = true;
 					}
 				}
 
-				const filesToSync = executeHmrSync ? this.devicesHmrFiles[device.id] : platformHmrData.fallbackFiles;
+				const filesToSync = canExecuteHmrSync ? this.devicesHmrFiles[device.id] : this.devicesAppFiles[device.id];
+				if (!filesToSync || !filesToSync.length) {
+					this.$logger.info(`Skipping files sync for device ${this.getDeviceDisplayName(device)}. The changes are already batch transferred in a previous sync.`);
+					currentSyncDeferPromise.resolve();
+					return;
+				}
+
 				this.devicesHmrFiles[device.id] = [];
-				if (executeHmrSync) {
+				this.devicesAppFiles[device.id] = [];
+				if (canExecuteHmrSync) {
+					this.$hmrStatusService.watchHmrStatus(device.id, hmrHash);
 					await this.syncFilesForPlatformSafe(data, { filesToSync }, platform, device);
 					const status = await this.$hmrStatusService.getHmrStatus(device.id, hmrHash);
 					if (!status) {
