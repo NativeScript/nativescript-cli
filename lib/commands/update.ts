@@ -32,7 +32,8 @@ export class UpdateCommand implements ICommand {
 	public async canExecute(args: string[]): Promise<boolean> {
 		const shouldMigrate = await this.$migrateController.shouldMigrate({
 			projectDir: this.$projectData.projectDir,
-			platforms: [this.$devicePlatformsConstants.Android, this.$devicePlatformsConstants.iOS]
+			platforms: [this.$devicePlatformsConstants.Android, this.$devicePlatformsConstants.iOS],
+			allowInvalidVersions: true
 		});
 
 		if (shouldMigrate) {
