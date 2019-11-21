@@ -1,4 +1,5 @@
 import * as path from "path";
+import * as fs from "fs";
 import { cache } from "../common/decorators";
 
 export class TestInitializationService implements ITestInitializationService {
@@ -26,6 +27,21 @@ export class TestInitializationService implements ITestInitializationService {
 			});
 
 		return targetFrameworkDependencies;
+	}
+
+	/**
+	 * This method is used from test-init.md file so it is not allowed to use "this" inside the method's body.
+	 */
+	@cache()
+	public getFrameworkNames(): string[] {
+		const configsPath = path.join(__dirname, "..", "..", "config");
+		const dependenciesPath = path.join(configsPath, "test-dependencies.json");
+		const allDependencies: { name: string, framework?: string }[] = JSON.parse(fs.readFileSync(dependenciesPath, { encoding: 'utf-8'}));
+		const frameworks = _.uniqBy(allDependencies, "framework")
+			.map(item => item && item.framework)
+			.filter(item => item);
+
+		return frameworks;
 	}
 }
 

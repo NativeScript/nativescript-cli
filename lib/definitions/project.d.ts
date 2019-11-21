@@ -376,6 +376,7 @@ interface ITestExecutionService {
 
 interface ITestInitializationService {
 	getDependencies(framework: string): IDependencyInformation[];
+	getFrameworkNames(): string[];
 }
 
 /**
