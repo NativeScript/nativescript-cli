@@ -20,6 +20,7 @@ class DeveiceLogProviderMock extends EventEmitter {
 
 function createTestInjector() {
 	const injector = new Yok();
+	injector.register("previewAppLogProvider", { on: () => ({}) });
 	injector.register("deviceLogProvider", DeveiceLogProviderMock);
 	injector.register("previewSdkService", {
 		on: () => ({})

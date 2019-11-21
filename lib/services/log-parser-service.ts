@@ -7,7 +7,7 @@ export class LogParserService extends EventEmitter implements ILogParserService 
 
 	constructor(private $deviceLogProvider: Mobile.IDeviceLogProvider,
 		private $errors: IErrors,
-		private $previewSdkService: IPreviewSdkService) {
+		private $previewAppLogProvider: IPreviewAppLogProvider) {
 		super();
 	}
 
@@ -23,10 +23,12 @@ export class LogParserService extends EventEmitter implements ILogParserService 
 	@cache()
 	private startParsingLogCore(): void {
 		this.$deviceLogProvider.on(DEVICE_LOG_EVENT_NAME, this.processDeviceLogResponse.bind(this));
-		this.$previewSdkService.on(DEVICE_LOG_EVENT_NAME, this.processDeviceLogResponse.bind(this));
+		this.$previewAppLogProvider.on(DEVICE_LOG_EVENT_NAME, (deviceId: string, message: string) => {
+			this.processDeviceLogResponse(message, deviceId);
+		});
 	}
 
-	private processDeviceLogResponse(message: string, deviceIdentifier: string, devicePlatform: string) {
+	private processDeviceLogResponse(message: string, deviceIdentifier: string, devicePlatform?: string) {
 		const lines = message.split("\n");
 		_.forEach(lines, line => {
 			_.forEach(this.parseRules, parseRule => {

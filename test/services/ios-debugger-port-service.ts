@@ -30,6 +30,7 @@ const device = <Mobile.IDevice>{
 function createTestInjector() {
 	const injector = new Yok();
 
+	injector.register("previewAppLogProvider", { on: () => ({}) });
 	injector.register("devicePlatformsConstants", DevicePlatformsConstants);
 	injector.register("deviceLogProvider", DeveiceLogProviderMock);
 	injector.register("errors", ErrorsStub);

@@ -1,8 +1,7 @@
 import { MessagingService, Config, Device, DeviceConnectedMessage, SdkCallbacks, ConnectedDevices, FilesPayload } from "nativescript-preview-sdk";
-import { EventEmitter } from "events";
 const pako = require("pako");
 
-export class PreviewSdkService extends EventEmitter implements IPreviewSdkService {
+export class PreviewSdkService implements IPreviewSdkService {
 	private static MAX_FILES_UPLOAD_BYTE_LENGTH = 15 * 1024 * 1024; // In MBs
 	private messagingService: MessagingService = null;
 	private instanceId: string = null;
@@ -13,7 +12,6 @@ export class PreviewSdkService extends EventEmitter implements IPreviewSdkServic
 		private $previewDevicesService: IPreviewDevicesService,
 		private $previewAppLogProvider: IPreviewAppLogProvider,
 		private $previewSchemaService: IPreviewSchemaService) {
-			super();
 	}
 
 	public getQrCodeUrl(options: IGetQrCodeUrlOptions): string {

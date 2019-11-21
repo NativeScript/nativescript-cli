@@ -1,8 +1,8 @@
-import { Device, FilesPayload } from "nativescript-preview-sdk";
 import { TrackActionNames, PREPARE_READY_EVENT_NAME } from "../constants";
 import { PrepareController } from "./prepare-controller";
+import { Device, FilesPayload } from "nativescript-preview-sdk";
 import { performanceLog } from "../common/decorators";
-import { stringify } from "../common/helpers";
+import { stringify, deferPromise } from "../common/helpers";
 import { HmrConstants } from "../common/constants";
 import { EventEmitter } from "events";
 import { PrepareDataService } from "../services/prepare-data-service";
@@ -11,7 +11,14 @@ import { PreviewAppLiveSyncEvents } from "../services/livesync/playground/previe
 export class PreviewAppController extends EventEmitter implements IPreviewAppController {
 	private prepareReadyEventHandler: any = null;
 	private deviceInitializationPromise: IDictionary<boolean> = {};
-	private promise = Promise.resolve();
+	private devicesLiveSyncChain: IDictionary<Promise<void>> = {};
+	private devicesCanExecuteHmr: IDictionary<boolean> = {};
+	// holds HMR files per device in order to execute batch upload on fast updates
+	private devicesHmrFiles: IDictionary<string[]> = {};
+	// holds app files per device in order to execute batch upload on fast updates on failed HMR or --no-hmr
+	private devicesAppFiles: IDictionary<string[]> = {};
+	// holds the current HMR hash per device in order to watch the proper hash status on fast updates
+	private devicesCurrentHmrHash: IDictionary<string> = {};
 
 	constructor(
 		private $analyticsService: IAnalyticsService,
@@ -89,6 +96,7 @@ export class PreviewAppController extends EventEmitter implements IPreviewAppCon
 
 				if (data.useHotModuleReload) {
 					this.$hmrStatusService.attachToHmrStatusEvent();
+					this.devicesCanExecuteHmr[device.id] = true;
 				}
 
 				await this.$previewAppPluginsService.comparePluginsOnDevice(data, device);
@@ -109,13 +117,13 @@ export class PreviewAppController extends EventEmitter implements IPreviewAppCon
 				await this.$prepareController.prepare(prepareData);
 
 				try {
-					const payloads = await this.getInitialFilesForPlatformSafe(data, device.platform);
+					const payloads = await this.getInitialFilesForDeviceSafe(data, device);
 					return payloads;
 				} finally {
 					this.deviceInitializationPromise[device.id] = null;
 				}
 			} catch (error) {
-				this.$logger.trace(`Error while sending files on device ${device && device.id}. Error is`, error);
+				this.$logger.trace(`Error while sending files on device '${device && device.id}'. Error is`, error);
 				this.emit(PreviewAppLiveSyncEvents.PREVIEW_APP_LIVE_SYNC_ERROR, {
 					error,
 					data,
@@ -129,52 +137,101 @@ export class PreviewAppController extends EventEmitter implements IPreviewAppCon
 
 	@performanceLog()
 	private async handlePrepareReadyEvent(data: IPreviewAppLiveSyncData, currentPrepareData: IFilesChangeEventData) {
-		await this.promise
-			.then(async () => {
-				const { hmrData, files, platform } = currentPrepareData;
-				const platformHmrData = _.cloneDeep(hmrData);
+		const { hmrData, files, platform } = currentPrepareData;
+		const platformHmrData = _.cloneDeep(hmrData);
+		const connectedDevices = this.$previewDevicesService.getDevicesForPlatform(platform);
+		if (!connectedDevices || !connectedDevices.length) {
+			this.$logger.warn(`Unable to find any connected devices for platform '${platform}'. In order to execute live sync, open your Preview app and optionally re-scan the QR code using the Playground app.`);
+			return;
+		}
 
-				this.promise = this.syncFilesForPlatformSafe(data, { filesToSync: files }, platform);
-				await this.promise;
+		await Promise.all(_.map(connectedDevices, async (device) => {
+			const previousSync = this.devicesLiveSyncChain[device.id] || Promise.resolve();
+			const currentSyncDeferPromise = deferPromise<void>();
+			this.devicesLiveSyncChain[device.id] = currentSyncDeferPromise.promise;
+			this.devicesCurrentHmrHash[device.id] = this.devicesCurrentHmrHash[device.id] || platformHmrData.hash;
+			if (data.useHotModuleReload) {
+				this.devicesHmrFiles[device.id] = this.devicesHmrFiles[device.id] || [];
+				this.devicesHmrFiles[device.id].push(...files);
+				this.devicesAppFiles[device.id] = platformHmrData.fallbackFiles;
+			} else {
+				this.devicesHmrFiles[device.id] = [];
+				this.devicesAppFiles[device.id] = files;
+			}
 
-				if (data.useHotModuleReload && platformHmrData.hash) {
-					const devices = this.$previewDevicesService.getDevicesForPlatform(platform);
+			await previousSync;
 
-					await Promise.all(_.map(devices, async (previewDevice: Device) => {
-						const status = await this.$hmrStatusService.getHmrStatus(previewDevice.id, platformHmrData.hash);
-						if (status === HmrConstants.HMR_ERROR_STATUS) {
-							const originalUseHotModuleReload = data.useHotModuleReload;
-							data.useHotModuleReload = false;
-							await this.syncFilesForPlatformSafe(data, { filesToSync: platformHmrData.fallbackFiles }, platform, previewDevice.id);
-							data.useHotModuleReload = originalUseHotModuleReload;
-						}
-					}));
+			try {
+				let canExecuteHmrSync = false;
+				const hmrHash = this.devicesCurrentHmrHash[device.id];
+				this.devicesCurrentHmrHash[device.id] = null;
+				if (data.useHotModuleReload && hmrHash) {
+					if (this.devicesCanExecuteHmr[device.id]) {
+						canExecuteHmrSync = true;
+					}
 				}
-			});
+
+				const filesToSync = canExecuteHmrSync ? this.devicesHmrFiles[device.id] : this.devicesAppFiles[device.id];
+				if (!filesToSync || !filesToSync.length) {
+					this.$logger.info(`Skipping files sync for device ${this.getDeviceDisplayName(device)}. The changes are already batch transferred in a previous sync.`);
+					currentSyncDeferPromise.resolve();
+					return;
+				}
+
+				this.devicesHmrFiles[device.id] = [];
+				this.devicesAppFiles[device.id] = [];
+				if (canExecuteHmrSync) {
+					this.$hmrStatusService.watchHmrStatus(device.id, hmrHash);
+					await this.syncFilesForPlatformSafe(data, { filesToSync }, platform, device);
+					const status = await this.$hmrStatusService.getHmrStatus(device.id, hmrHash);
+					if (!status) {
+						this.devicesCanExecuteHmr[device.id] = false;
+						this.$logger.warn(`Unable to get LiveSync status from the Preview app for device ${this.getDeviceDisplayName(device)}. Ensure the app is running in order to sync changes.`);
+					} else {
+						this.devicesCanExecuteHmr[device.id] = status === HmrConstants.HMR_SUCCESS_STATUS;
+					}
+				} else {
+					const noHmrData = _.assign({}, data, { useHotModuleReload: false });
+					await this.syncFilesForPlatformSafe(noHmrData, { filesToSync }, platform, device);
+					this.devicesCanExecuteHmr[device.id] = true;
+				}
+				currentSyncDeferPromise.resolve();
+			} catch (e) {
+				currentSyncDeferPromise.resolve();
+			}
+		}));
 	}
 
-	private async getInitialFilesForPlatformSafe(data: IPreviewAppLiveSyncData, platform: string): Promise<FilesPayload> {
-		this.$logger.info(`Start sending initial files for platform ${platform}.`);
+	private getDeviceDisplayName(device: Device) {
+		return `${device.name} (${device.id})`.cyan;
+	}
+
+	private async getInitialFilesForDeviceSafe(data: IPreviewAppLiveSyncData, device: Device): Promise<FilesPayload> {
+		const platform = device.platform;
+		this.$logger.info(`Start sending initial files for device ${this.getDeviceDisplayName(device)}.`);
 
 		try {
 			const payloads = this.$previewAppFilesService.getInitialFilesPayload(data, platform);
-			this.$logger.info(`Successfully sent initial files for platform ${platform}.`);
+			this.$logger.info(`Successfully sent initial files for device ${this.getDeviceDisplayName(device)}.`);
 			return payloads;
 		} catch (err) {
-			this.$logger.warn(`Unable to apply changes for platform ${platform}. Error is: ${err}, ${stringify(err)}`);
+			this.$logger.warn(`Unable to apply changes for device ${this.getDeviceDisplayName(device)}. Error is: ${err}, ${stringify(err)}`);
 		}
 	}
 
-	private async syncFilesForPlatformSafe(data: IPreviewAppLiveSyncData, filesData: IPreviewAppFilesData, platform: string, deviceId?: string): Promise<void> {
+	private async syncFilesForPlatformSafe(data: IPreviewAppLiveSyncData, filesData: IPreviewAppFilesData, platform: string, device: Device): Promise<void> {
+		const deviceId = device && device.id || "";
+
 		try {
 			const payloads = this.$previewAppFilesService.getFilesPayload(data, filesData, platform);
+			payloads.deviceId = deviceId;
 			if (payloads && payloads.files && payloads.files.length) {
-				this.$logger.info(`Start syncing changes for platform ${platform}.`);
+				this.$logger.info(`Start syncing changes for device ${this.getDeviceDisplayName(device)}.`);
 				await this.$previewSdkService.applyChanges(payloads);
-				this.$logger.info(`Successfully synced ${payloads.files.map(filePayload => filePayload.file.yellow)} for platform ${platform}.`);
+				this.$logger.info(`Successfully synced '${payloads.files.map(filePayload => filePayload.file.yellow)}' for device ${this.getDeviceDisplayName(device)}.`);
 			}
 		} catch (error) {
-			this.$logger.warn(`Unable to apply changes for platform ${platform}. Error is: ${error}, ${JSON.stringify(error, null, 2)}.`);
+			this.$logger.warn(`Unable to apply changes for device ${this.getDeviceDisplayName(device)}. Error is: ${error}, ${JSON.stringify(error, null, 2)}.`);
 			this.emit(PreviewAppLiveSyncEvents.PREVIEW_APP_LIVE_SYNC_ERROR, {
 				error,
 				data,

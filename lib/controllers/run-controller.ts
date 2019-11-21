@@ -396,7 +396,8 @@ export class RunController extends EventEmitter implements IRunController {
 
 						if (!liveSyncResultInfo.didRecover && isInHMRMode) {
 							const status = await this.$hmrStatusService.getHmrStatus(device.deviceInfo.identifier, data.hmrData.hash);
-							if (status === HmrConstants.HMR_ERROR_STATUS) {
+							// error or timeout
+							if (status !== HmrConstants.HMR_SUCCESS_STATUS) {
 								watchInfo.filesToSync = data.hmrData.fallbackFiles;
 								liveSyncResultInfo = await platformLiveSyncService.liveSyncWatchAction(device, watchInfo);
 								// We want to force a restart of the application.
