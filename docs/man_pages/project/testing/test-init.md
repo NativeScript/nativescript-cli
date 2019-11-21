@@ -17,7 +17,7 @@ General | `$ tns test init [--framework <Framework>]`
 
 ### Options
 
-* `--framework <Framework>` - Sets the unit testing framework to install. The following frameworks are available: <%= formatListOfNames(constants.TESTING_FRAMEWORKS, 'and') %>.
+* `--framework <Framework>` - Sets the unit testing framework to install. The following frameworks are available: <%= formatListOfNames(getUnitTestingFrameworkNames(), 'and') %>.
 
 <% if(isHtml) { %>
 

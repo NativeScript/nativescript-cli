@@ -34,6 +34,8 @@ const createTestInjector = (opts?: { isProjectTypeResult: boolean; isPlatformRes
 		getInstalledExtensionsData: (): IExtensionData[] => []
 	});
 
+	injector.register("testInitializationService", {});
+
 	injector.registerCommand("foo", {});
 
 	const microTemplateService: any = injector.resolve("microTemplateService");
