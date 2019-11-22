@@ -1,5 +1,10 @@
 NativeScript CLI Changelog
 ================
+6.2.2 (2019, November 22)
+==
+
+### Fixed
+* [Fixed #5126](https://github.com/NativeScript/nativescript-cli/issues/5126): CLI does not generate all icons
 
 6.2.1 (2019, November 18)
 ==
