@@ -4,7 +4,7 @@ import * as util from "util";
 import { Device } from "nativescript-preview-sdk";
 import { PluginComparisonMessages } from "./preview-app-constants";
 import { NODE_MODULES_DIR_NAME } from "../../../common/constants";
-import { PLATFORMS_DIR_NAME, PACKAGE_JSON_FILE_NAME, TNS_CORE_THEME_NAME, SCOPED_TNS_CORE_THEME_NAME } from "../../../constants";
+import { PLATFORMS_DIR_NAME, PACKAGE_JSON_FILE_NAME, TNS_CORE_THEME_NAME, SCOPED_TNS_CORE_THEME_NAME, LoggerConfigData } from "../../../constants";
 
 export class PreviewAppPluginsService implements IPreviewAppPluginsService {
 	constructor(private $errors: IErrors,
@@ -40,6 +40,11 @@ export class PreviewAppPluginsService implements IPreviewAppPluginsService {
 	public async comparePluginsOnDevice(data: IPreviewAppLiveSyncData, device: Device): Promise<void> {
 		const warnings = await this.getPluginsUsageWarnings(data, device);
 		_.map(warnings, warning => this.$logger.warn(warning));
+
+		if (warnings && warnings.length) {
+			this.$logger.warn(`In the app are used one or more NativeScript plugins with native dependencies.
+Those plugins will not work while building the project via \`$ tns preview\`. Please, use \`$ tns run <platform>\` command instead.`, { [LoggerConfigData.wrapMessageWithBorders]: true });
+		}
 	}
 
 	public getExternalPlugins(device: Device): string[] {
