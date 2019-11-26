@@ -42,7 +42,11 @@ function createTestInjector(localPlugins: IStringDictionary, options?: { isNativ
 	});
 	injector.register("logger", {
 		trace: () => ({}),
-		warn: (message: string) => warnParams.push(message)
+		warn: (message: string, opts: any) => {
+			if (!opts || !opts.wrapMessageWithBorders) {
+				warnParams.push(message);
+			}
+		}
 	});
 
 	injector.register("packageInstallationManager", PackageInstallationManagerStub);
