@@ -264,8 +264,9 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 		this.expectedHashes[platform] = nextHash;
 
 		const emittedHotUpdatesAndAssets = isHashValid ? _.difference(allEmittedFiles, chunkFiles) : allEmittedFiles;
+		const fallbackFiles = chunkFiles.concat(emittedHotUpdatesAndAssets.filter(f => f.indexOf("hot-update") === -1));
 
-		return { emittedFiles: emittedHotUpdatesAndAssets, fallbackFiles: chunkFiles, hash: currentHash };
+		return { emittedFiles: emittedHotUpdatesAndAssets, fallbackFiles, hash: currentHash };
 	}
 
 	private getCurrentHotUpdateHash(emittedFiles: string[]) {
