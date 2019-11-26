@@ -32,3 +32,4 @@ docs/html/
 dev/
 
 .travis/**/*
+generate_changelog.js
