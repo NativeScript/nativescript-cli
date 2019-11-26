@@ -142,11 +142,23 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 		this.copy(this.getPlatformData(projectData).projectRoot, frameworkDir, "*", "-R");
 
+		// TODO: Check if we actually need this and if it should be targetSdk or compileSdk
 		this.cleanResValues(targetSdkVersion, projectData);
 	}
 
+	private getResDestinationDir(projectData: IProjectData): string {
+		const appResourcesDirStructureHasMigrated = this.$androidResourcesMigrationService.hasMigrated(projectData.getAppResourcesDirectoryPath());
+
+		if (appResourcesDirStructureHasMigrated) {
+			const appResourcesDestinationPath = this.getUpdatedAppResourcesDestinationDirPath(projectData);
+			return path.join(appResourcesDestinationPath, constants.MAIN_DIR, constants.RESOURCES_DIR);
+		} else {
+			return this.getLegacyAppResourcesDestinationDirPath(projectData);
+		}
+	}
+
 	private cleanResValues(targetSdkVersion: number, projectData: IProjectData): void {
-		const resDestinationDir = this.getAppResourcesDestinationDirectoryPath(projectData);
+		const resDestinationDir = this.getResDestinationDir(projectData);
 		const directoriesInResFolder = this.$fs.readDirectory(resDestinationDir);
 		const directoriesToClean = directoriesInResFolder
 			.map(dir => {
@@ -283,7 +295,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		const projectAppResourcesPath = projectData.getAppResourcesDirectoryPath(projectData.projectDir);
 		const platformsAppResourcesPath = this.getAppResourcesDestinationDirectoryPath(projectData);
 
-		this.cleanUpPreparedResources(projectAppResourcesPath, projectData);
+		this.cleanUpPreparedResources(projectData);
 
 		this.$fs.ensureDirectoryExists(platformsAppResourcesPath);
 
@@ -296,6 +308,10 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			// App_Resources/Android/libs is reserved to user's aars and jars, but they should not be copied as resources
 			this.$fs.deleteDirectory(path.join(platformsAppResourcesPath, "libs"));
 		}
+
+		const androidToolsInfo = this.$androidToolsInfo.getToolsInfo({ projectDir: projectData.projectDir });
+		const compileSdkVersion = androidToolsInfo && androidToolsInfo.compileSdkVersion;
+		this.cleanResValues(compileSdkVersion, projectData);
 	}
 
 	public async preparePluginNativeCode(pluginData: IPluginData, projectData: IProjectData): Promise<void> {
@@ -431,18 +447,31 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		return path.join(this.getPlatformData(projectData).projectRoot, ...resourcePath);
 	}
 
-	private cleanUpPreparedResources(appResourcesDirectoryPath: string, projectData: IProjectData): void {
-		let resourcesDirPath = path.join(appResourcesDirectoryPath, this.getPlatformData(projectData).normalizedPlatformName);
+	/**
+	 * The purpose of this method is to delete the previously prepared user resources.
+	 * The content of the `<platforms>/android/.../res` directory is based on user's resources and gradle project template from android-runtime.
+	 * During preparation of the `<path to user's App_Resources>/Android` we want to clean all the users files from previous preparation,
+	 * but keep the ones that were introduced during `platform add` of the android-runtime.
+	 * Currently the Gradle project template contains resources only in values and values-v21 directories.
+	 * So the current logic of the method is cleaning al resources from `<platforms>/android/.../res` that are not in `values.*` directories
+	 * and that exist in the `<path to user's App_Resources>/Android/.../res` directory
+	 * This means that if user has a resource file in values-v29 for example, builds the project and then deletes this resource,
+	 * it will be kept in platforms directory. Reference issue: `https://github.com/NativeScript/nativescript-cli/issues/5083`
+	 * Same is valid for files in `drawable-<resolution>` directories - in case in user's resources there's drawable-hdpi directory,
+	 * which is deleted after the first build of app, it will remain in platforms directory.
+	 */
+	private cleanUpPreparedResources(projectData: IProjectData): void {
+		let resourcesDirPath = path.join(projectData.appResourcesDirectoryPath, this.getPlatformData(projectData).normalizedPlatformName);
 		if (this.$androidResourcesMigrationService.hasMigrated(projectData.appResourcesDirectoryPath)) {
-			resourcesDirPath = path.join(resourcesDirPath, constants.MAIN_DIR, constants.RESOURCES_DIR);
+			resourcesDirPath = path.join(resourcesDirPath, constants.SRC_DIR, constants.MAIN_DIR, constants.RESOURCES_DIR);
 		}
 
 		const valuesDirRegExp = /^values/;
 		if (this.$fs.exists(resourcesDirPath)) {
 			const resourcesDirs = this.$fs.readDirectory(resourcesDirPath).filter(resDir => !resDir.match(valuesDirRegExp));
-			const appResourcesDestinationDirectoryPath = this.getAppResourcesDestinationDirectoryPath(projectData);
-			_.each(resourcesDirs, resourceDir => {
-				this.$fs.deleteDirectory(path.join(appResourcesDestinationDirectoryPath, resourceDir));
+			const resDestinationDir = this.getResDestinationDir(projectData);
+			_.each(resourcesDirs, currentResource => {
+				this.$fs.deleteDirectory(path.join(resDestinationDir, currentResource));
 			});
 		}
 	}

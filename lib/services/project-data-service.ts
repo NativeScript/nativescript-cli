@@ -282,8 +282,15 @@ export class ProjectDataService implements IProjectDataService {
 				}
 			});
 
-			if (!foundMatchingDefinition && image.filename) {
-				this.$logger.warn(`Didn't find a matching image definition for file ${path.join(path.basename(dirPath), image.filename)}. This file will be skipped from reources generation.`);
+			if (!foundMatchingDefinition) {
+				if (image.height && image.width) {
+					this.$logger.trace("Missing data for image", image, " in CLI's resource file, but we will try to generate images based on the size from Contents.json");
+					finalContent.images.push(image);
+				} else if (image.filename) {
+					this.$logger.warn(`Didn't find a matching image definition for file ${path.join(path.basename(dirPath), image.filename)}. This file will be skipped from resources generation.`);
+				} else {
+					this.$logger.trace(`Unable to detect data for image generation of image`, image);
+				}
 			}
 		});
 

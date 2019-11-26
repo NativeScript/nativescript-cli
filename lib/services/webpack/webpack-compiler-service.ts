@@ -42,7 +42,12 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 					if (message.emittedFiles) {
 						if (isFirstWebpackWatchCompilation) {
 							isFirstWebpackWatchCompilation = false;
-							this.expectedHashes[platformData.platformNameLowerCase] = message.hash;
+							this.expectedHashes[platformData.platformNameLowerCase] = prepareData.hmr ? message.hash : "";
+							return;
+						}
+
+						// the hash of the compilation is the same as the previous one
+						if (this.expectedHashes[platformData.platformNameLowerCase] === message.hash) {
 							return;
 						}
 

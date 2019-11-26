@@ -366,6 +366,103 @@ describe("projectDataService", () => {
 
 			assert.deepEqual(assetStructure, { ios: emptyAssetStructure, android: _.merge(_.cloneDeep(emptyAssetStructure), { splashImages: null }) });
 		});
+
+		it("generates iOS resources for files, which are not declared in image-definitions.json, but we have their size from resource's Contents.json", async () => {
+			const defaultEmptyData: any = {};
+			defaultEmptyData[CLIENT_NAME_KEY_IN_PROJECT_FILE] = {};
+			const testInjector = createTestInjector(JSON.stringify(defaultEmptyData));
+			const fs = testInjector.resolve<IFileSystem>("fs");
+			fs.exists = () => true;
+			fs.readJson = (filePath: string): any => {
+				if (basename(filePath) === AssetConstants.imageDefinitionsFileName) {
+					return {
+						android: {},
+						ios: {
+							"icons": [
+								{
+									"width": 20,
+									"height": 20,
+									"directory": "Assets.xcassets/AppIcon.appiconset",
+									"filename": "icon-20@3x.png",
+									"scale": "3x"
+								}]
+						}
+					};
+				}
+
+				if (basename(filePath) === AssetConstants.iOSResourcesFileName && filePath.indexOf(AssetConstants.iOSIconsDirName) !== -1) {
+					return {
+						"images": [
+							{
+								"size": "20x20",
+								"idiom": "iphone",
+								"filename": "icon-20@2x.png",
+								"scale": "2x"
+							},
+							{
+								"size": "20x20",
+								"idiom": "iphone",
+								"filename": "icon-20@3x.png",
+								"scale": "3x"
+							}
+						]
+					};
+				}
+			};
+
+			const projectDataService = testInjector.resolve<IProjectDataService>("projectDataService");
+			const assetStructure = await projectDataService.getAssetsStructure({ projectDir: "." });
+			const emptyAssetStructure: IAssetGroup = {
+				icons: {
+					images: []
+				},
+				splashBackgrounds: {
+					images: []
+				},
+				splashCenterImages: {
+					images: []
+				},
+				splashImages: {
+					images: []
+				}
+			};
+
+			const expectedIOSStructure = _.merge({}, emptyAssetStructure, {
+				icons: {
+					"images": [
+						{
+							"filename": "icon-20@2x.png",
+							"height": 20,
+							"idiom": "iphone",
+							"scale": "2x",
+							"size": "20x20",
+							"width": 20
+						},
+						{
+							"filename": "icon-20@3x.png",
+							"height": 20,
+							"idiom": "iphone",
+							"overlayImageScale": undefined,
+							"resizeOperation": undefined,
+							"rgba": undefined,
+							"scale": "3x",
+							"size": "20x20",
+							"width": 20
+						}
+					]
+				}
+			});
+
+			_.each(assetStructure.ios.icons.images, icon => {
+				// as path is generated from the current directory, skip it from the validation
+				delete icon.path;
+			});
+
+			assert.deepEqual(assetStructure, {
+				ios: expectedIOSStructure,
+				android: _.merge(_.cloneDeep(emptyAssetStructure), { splashImages: null })
+			});
+		});
 	});
 
 	describe("getAppExecutableFiles", () => {
