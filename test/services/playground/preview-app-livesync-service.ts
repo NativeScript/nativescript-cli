@@ -171,7 +171,8 @@ function createTestInjector(options?: {
 		mapFilePath: (filePath: string) => path.join(path.join(platformsDirPath, "app"), path.relative(path.join(projectDirPath, "app"), filePath))
 	});
 	injector.register("previewDevicesService", {
-		getConnectedDevices: () => [deviceMockData]
+		getConnectedDevices: () => [deviceMockData],
+		getDevicesForPlatform: (platform: string): Device[] => [deviceMockData]
 	});
 	injector.register("previewAppFilesService", PreviewAppFilesService);
 	injector.register("previewQrCodeService", {
