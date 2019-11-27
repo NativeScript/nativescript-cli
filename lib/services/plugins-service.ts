@@ -115,9 +115,8 @@ export class PluginsService implements IPluginsService {
 		}
 	}
 
-	public async preparePluginNativeCode({pluginData, platform, projectData}: IPreparePluginNativeCodeData): Promise<void> {
+	public async preparePluginNativeCode({ pluginData, platform, projectData }: IPreparePluginNativeCodeData): Promise<void> {
 		const platformData = this.$platformsDataService.getPlatformData(platform, projectData);
-		pluginData.pluginPlatformsFolderPath = (_platform: string) => path.join(pluginData.fullPath, "platforms", _platform.toLowerCase());
 
 		const pluginPlatformsFolderPath = pluginData.pluginPlatformsFolderPath(platform);
 		if (this.$fs.exists(pluginPlatformsFolderPath)) {
@@ -213,18 +212,18 @@ export class PluginsService implements IPluginsService {
 		pluginData.version = cacheData.version;
 		pluginData.fullPath = cacheData.directory || path.dirname(this.getPackageJsonFilePathForModule(cacheData.name, projectDir));
 		pluginData.isPlugin = !!cacheData.nativescript || !!cacheData.moduleInfo;
-		pluginData.pluginPlatformsFolderPath = (platform: string) => path.join(pluginData.fullPath, "platforms", platform);
+		pluginData.pluginPlatformsFolderPath = (platform: string) => path.join(pluginData.fullPath, "platforms", platform.toLowerCase());
 		const data = cacheData.nativescript || cacheData.moduleInfo;
 
 		if (pluginData.isPlugin) {
-			pluginData.platformsDataService = data.platforms;
+			pluginData.platformsData = data.platforms;
 			pluginData.pluginVariables = data.variables;
 		}
 
 		return pluginData;
 	}
 
-	private removeDependencyFromPackageJsonContent(dependency: string, packageJsonContent: Object): {hasModifiedPackageJson: boolean, packageJsonContent: Object} {
+	private removeDependencyFromPackageJsonContent(dependency: string, packageJsonContent: Object): { hasModifiedPackageJson: boolean, packageJsonContent: Object } {
 		let hasModifiedPackageJson = false;
 
 		if (packageJsonContent.devDependencies && packageJsonContent.devDependencies[dependency]) {
@@ -260,7 +259,7 @@ export class PluginsService implements IPluginsService {
 
 	private getPackageJsonFilePathForModule(moduleName: string, projectDir: string): string {
 		const pathToJsonFile = require.resolve(`${moduleName}/package.json`, {
-				paths: [projectDir]
+			paths: [projectDir]
 		});
 		return pathToJsonFile;
 	}
@@ -333,7 +332,7 @@ export class PluginsService implements IPluginsService {
 		let isValid = true;
 
 		const installedFrameworkVersion = this.getInstalledFrameworkVersion(platform, projectData);
-		const pluginPlatformsData = pluginData.platformsDataService;
+		const pluginPlatformsData = pluginData.platformsData;
 		if (pluginPlatformsData) {
 			const versionRequiredByPlugin = (<any>pluginPlatformsData)[platform];
 			if (!versionRequiredByPlugin) {

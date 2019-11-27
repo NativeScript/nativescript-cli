@@ -207,31 +207,6 @@ async function addPluginWhenExpectingToFail(testInjector: IInjector, plugin: str
 	assert.isTrue(isErrorThrown);
 }
 
-function createAndroidManifestFile(projectFolder: string, fs: IFileSystem): void {
-	const manifest = `
-        <?xml version="1.0" encoding="UTF-8"?>
-		<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example.android.basiccontactables" android:versionCode="1" android:versionName="1.0" >
-            <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
-            <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
-            <uses-permission android:name="android.permission.INTERNET"/>
-            <application android:allowBackup="true" android:icon="@drawable/ic_launcher" android:label="@string/app_name" android:theme="@style/Theme.Sample" >
-                <activity android:name="com.example.android.basiccontactables.MainActivity" android:label="@string/app_name" android:launchMode="singleTop">
-                    <meta-data android:name="android.app.searchable" android:resource="@xml/searchable" />
-                    <intent-filter>
-                        <action android:name="android.intent.action.SEARCH" />
-                    </intent-filter>
-                    <intent-filter>
-                        <action android:name="android.intent.action.MAIN" />
-                    </intent-filter>
-                </activity>
-            </application>
-		</manifest>`;
-
-	fs.createDirectory(path.join(projectFolder, "platforms"));
-	fs.createDirectory(path.join(projectFolder, "platforms", "android"));
-	fs.writeFile(path.join(projectFolder, "platforms", "android", "AndroidManifest.xml"), manifest);
-}
-
 describe("Plugins service", () => {
 	let testInjector: IInjector;
 	const commands = ["add", "install"];
@@ -505,76 +480,6 @@ describe("Plugins service", () => {
 		});
 	});
 
-	describe("merge xmls tests", () => {
-		beforeEach(() => {
-			testInjector = createTestInjector();
-			testInjector.registerCommand("plugin|add", AddPluginCommand);
-		});
-		it("fails if the plugin contains incorrect xml", async () => {
-			const pluginName = "mySamplePlugin";
-			const projectFolder = createProjectFile(testInjector);
-			const pluginFolderPath = path.join(projectFolder, pluginName);
-			const pluginJsonData: IDependencyData = {
-				name: pluginName,
-				nativescript: {
-					platforms: {
-						android: "0.10.0"
-					}
-				},
-				depth: 0,
-				directory: "some dir"
-			};
-			const fs = testInjector.resolve("fs");
-			fs.writeJson(path.join(pluginFolderPath, "package.json"), pluginJsonData);
-
-			// Adds AndroidManifest.xml file in platforms/android folder
-			createAndroidManifestFile(projectFolder, fs);
-
-			// Mock plugins service
-			const pluginsService: IPluginsService = testInjector.resolve("pluginsService");
-			pluginsService.getAllInstalledPlugins = async (pData: IProjectData) => {
-				return <any[]>[{ name: "" }];
-			};
-
-			const appDestinationDirectoryPath = path.join(projectFolder, "platforms", "android");
-
-			// Mock platformsDataService
-			const platformsDataService = testInjector.resolve("platformsDataService");
-			platformsDataService.getPlatformData = (platform: string) => {
-				return {
-					appDestinationDirectoryPath: appDestinationDirectoryPath,
-					frameworkPackageName: "tns-android",
-					configurationFileName: "AndroidManifest.xml",
-					normalizedPlatformName: "Android",
-					platformProjectService: {
-						preparePluginNativeCode: (pluginData: IPluginData) => Promise.resolve()
-					}
-				};
-			};
-
-			// Ensure the pluginDestinationPath folder exists
-			const pluginPlatformsDirPath = path.join(projectFolder, "node_modules", pluginName, "platforms", "android");
-			const projectData: IProjectData = testInjector.resolve("projectData");
-			projectData.initializeProjectData();
-			fs.ensureDirectoryExists(pluginPlatformsDirPath);
-
-			// Creates invalid plugin's AndroidManifest.xml file
-			const xml = '<?xml version="1.0" encoding="UTF-8"?>' +
-				'<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example.android.basiccontactables" android:versionCode="1" android:versionName="1.0" >' +
-				'<uses-permission android:name="android.permission.READ_CONTACTS"/>';
-			const pluginConfigurationFilePath = path.join(pluginPlatformsDirPath, "AndroidManifest.xml");
-			fs.writeFile(pluginConfigurationFilePath, xml);
-
-			// Expected error message. The assertion happens in mockBeginCommand
-			const expectedErrorMessage = `Exception: Invalid xml file ${pluginConfigurationFilePath}. Additional technical information: element parse error: Exception: Invalid xml file ` +
-				`${pluginConfigurationFilePath}. Additional technical information: unclosed xml attribute` +
-				`\n@#[line:1,col:39].` +
-				`\n@#[line:1,col:39].`;
-			mockBeginCommand(testInjector, expectedErrorMessage);
-			await pluginsService.preparePluginNativeCode({pluginData: pluginsService.convertToPluginData(pluginJsonData, projectData.projectDir), platform: "android", projectData});
-		});
-	});
-
 	describe("preparePluginNativeCode", () => {
 		const setupTest = (opts: { hasChangesInShasums?: boolean, newPluginHashes?: IStringDictionary, buildDataFileExists?: boolean, hasPluginPlatformsDir?: boolean }): any => {
 			const testData: any = {
@@ -599,7 +504,8 @@ describe("Plugins service", () => {
 			const pluginHashes = opts.newPluginHashes || { "file1": "hash1" };
 			const samplePluginData: IPluginData = <any>{
 				fullPath: "plugin_full_path",
-				name: "plugin_name"
+				name: "plugin_name",
+				pluginPlatformsFolderPath: (_platform: string) => path.join("plugin_dir", "platforms", _platform.toLowerCase())
 			};
 
 			unitTestsInjector.register("filesHashService", {
@@ -646,22 +552,85 @@ describe("Plugins service", () => {
 
 		it("does not prepare the files when plugin does not have platforms dir", async () => {
 			const testData = setupTest({ hasPluginPlatformsDir: false });
-			await testData.pluginsService.preparePluginNativeCode({pluginData: testData.pluginData, platform, projectData});
+			await testData.pluginsService.preparePluginNativeCode({ pluginData: testData.pluginData, platform, projectData });
 			assert.isFalse(testData.isPreparePluginNativeCodeCalled);
 		});
 
 		it("prepares the files when plugin has platforms dir and has not been built before", async () => {
 			const newPluginHashes = { "file": "hash" };
 			const testData = setupTest({ newPluginHashes, hasPluginPlatformsDir: true });
-			await testData.pluginsService.preparePluginNativeCode({pluginData: testData.pluginData, platform, projectData});
+			await testData.pluginsService.preparePluginNativeCode({ pluginData: testData.pluginData, platform, projectData });
 			assert.isTrue(testData.isPreparePluginNativeCodeCalled);
 			assert.deepEqual(testData.dataPassedToWriteJson, { [testData.pluginData.name]: newPluginHashes });
 		});
 
 		it("does not prepare the files when plugin has platforms dir and files have not changed since then", async () => {
 			const testData = setupTest({ hasChangesInShasums: false, buildDataFileExists: true, hasPluginPlatformsDir: true });
-			await testData.pluginsService.preparePluginNativeCode({pluginData: testData.pluginData, platform, projectData});
+			await testData.pluginsService.preparePluginNativeCode({ pluginData: testData.pluginData, platform, projectData });
 			assert.isFalse(testData.isPreparePluginNativeCodeCalled);
+		});
+	});
+
+	describe("convertToPluginData", () => {
+		const createUnitTestsInjector = () => {
+			const unitTestsInjector = new Yok();
+			unitTestsInjector.register("platformsDataService", {});
+			unitTestsInjector.register("filesHashService", {});
+			unitTestsInjector.register("fs", {});
+			unitTestsInjector.register("packageManager", {});
+			unitTestsInjector.register("options", {});
+			unitTestsInjector.register("logger", {});
+			unitTestsInjector.register("errors", {});
+			unitTestsInjector.register("injector", unitTestsInjector);
+			unitTestsInjector.register("mobileHelper", MobileHelper);
+			unitTestsInjector.register("devicePlatformsConstants", DevicePlatformsConstants);
+			unitTestsInjector.register("nodeModulesDependenciesBuilder", {});
+			return unitTestsInjector;
+		};
+
+		const pluginDir = "pluginDir";
+		const dataFromPluginPackageJson = {
+			name: "name",
+			version: "1.0.0",
+			directory: pluginDir,
+			nativescript: {
+				platforms: {
+					ios: "6.0.0",
+					android: "6.0.0"
+				}
+			}
+		};
+
+		it("returns correct pluginData", () => {
+			const unitTestsInjector = createUnitTestsInjector();
+			const pluginsService: PluginsService = unitTestsInjector.resolve(PluginsService);
+			const pluginData = pluginsService.convertToPluginData(dataFromPluginPackageJson, "my project dir");
+			// Remove the comparison of a function
+			delete pluginData["pluginPlatformsFolderPath"];
+			assert.deepEqual(pluginData, <any>{
+				name: "name",
+				version: "1.0.0",
+				fullPath: pluginDir,
+				isPlugin: true,
+				platformsData: { android: "6.0.0", ios: "6.0.0" },
+				pluginVariables: undefined
+			});
+		});
+
+		it("always returns lowercased platform in the path to plugins dir", () => {
+			const unitTestsInjector = createUnitTestsInjector();
+			const pluginsService: PluginsService = unitTestsInjector.resolve(PluginsService);
+			const pluginData = pluginsService.convertToPluginData(dataFromPluginPackageJson, "my project dir");
+
+			const expectediOSPath = path.join(pluginDir, "platforms", "ios");
+			const expectedAndroidPath = path.join(pluginDir, "platforms", "android");
+			assert.equal(pluginData.pluginPlatformsFolderPath("iOS"), expectediOSPath);
+			assert.equal(pluginData.pluginPlatformsFolderPath("ios"), expectediOSPath);
+			assert.equal(pluginData.pluginPlatformsFolderPath("IOS"), expectediOSPath);
+
+			assert.equal(pluginData.pluginPlatformsFolderPath("Android"), expectedAndroidPath);
+			assert.equal(pluginData.pluginPlatformsFolderPath("android"), expectedAndroidPath);
+			assert.equal(pluginData.pluginPlatformsFolderPath("ANDROID"), expectedAndroidPath);
 		});
 	});
 });
