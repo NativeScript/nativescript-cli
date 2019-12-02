@@ -879,8 +879,9 @@ describe("handleNativeDependenciesChange", () => {
 	it("ensure the correct order of pod install and merging pod's xcconfig file", async () => {
 		const executedCocoapodsMethods: string[] = [];
 		const projectPodfilePath = "my/test/project/platforms/ios/Podfile";
+		const dir = temp.mkdirSync("myTestProjectPath");
 
-		const testInjector = createTestInjector("myTestProjectPath", "myTestProjectName");
+		const testInjector = createTestInjector(dir, "myTestProjectName");
 		const iOSProjectService = testInjector.resolve("iOSProjectService");
 		const projectData = testInjector.resolve("projectData");
 

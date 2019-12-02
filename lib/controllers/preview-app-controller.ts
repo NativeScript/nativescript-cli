@@ -138,7 +138,7 @@ export class PreviewAppController extends EventEmitter implements IPreviewAppCon
 	@performanceLog()
 	private async handlePrepareReadyEvent(data: IPreviewAppLiveSyncData, currentPrepareData: IFilesChangeEventData) {
 		const { hmrData, files, platform } = currentPrepareData;
-		const platformHmrData = _.cloneDeep(hmrData);
+		const platformHmrData = _.cloneDeep(hmrData) || <IPlatformHmrData>{};
 		const connectedDevices = this.$previewDevicesService.getDevicesForPlatform(platform);
 		if (!connectedDevices || !connectedDevices.length) {
 			this.$logger.warn(`Unable to find any connected devices for platform '${platform}'. In order to execute live sync, open your Preview app and optionally re-scan the QR code using the Playground app.`);
