@@ -229,7 +229,6 @@ export class ProjectChangesService implements IProjectChangesService {
 		const dirName = path.basename(dir);
 		this.$logger.trace(`containsNewerFiles will check ${dir}`);
 		if (_.startsWith(dirName, '.')) {
-			this.$logger.trace(`containsNewerFiles returns false for ${dir} as its name starts with dot (.) .`);
 			return false;
 		}
 
@@ -258,7 +257,6 @@ export class ProjectChangesService implements IProjectChangesService {
 			}
 		}
 
-		this.$logger.trace(`containsNewerFiles returns false for ${dir}.`);
 		return false;
 	}
 

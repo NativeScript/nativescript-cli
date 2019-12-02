@@ -33,6 +33,8 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 				const childProcess = await this.startWebpackProcess(platformData, projectData, prepareData);
 
 				childProcess.on("message", (message: string | IWebpackEmitMessage) => {
+					this.$logger.trace("Message from webpack", message);
+
 					if (message === "Webpack compilation complete.") {
 						this.$logger.info("Webpack build done!");
 						resolve(childProcess);
@@ -74,6 +76,7 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 							platform: platformData.platformNameLowerCase
 						};
 
+						this.$logger.trace("Generated data from webpack message:", data);
 						if (data.files.length) {
 							this.emit(WEBPACK_COMPILATION_COMPLETE, data);
 						}

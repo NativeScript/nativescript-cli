@@ -12,7 +12,10 @@ const originalProcessOn = process.on;
 
 process.on = (event: string, listener: any): any => {
 	if (event === "SIGINT") {
-		logger.trace(new Error(`Trying to handle SIGINT event. CLI overrides this behavior and does not allow handling SIGINT as this causes issues with Ctrl + C in terminal`).stack);
+		logger.trace(`Trying to handle SIGINT event. CLI overrides this behavior and does not allow handling SIGINT as this causes issues with Ctrl + C in terminal.`);
+		const msg = "The stackTrace of the location trying to handle SIGINT is:";
+		const stackTrace = new Error(msg).stack || '';
+		logger.trace(stackTrace.replace(`Error: ${msg}`, msg));
 	} else {
 		return originalProcessOn.apply(process, [event, listener]);
 	}
