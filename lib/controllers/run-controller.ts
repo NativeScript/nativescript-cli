@@ -412,8 +412,8 @@ export class RunController extends EventEmitter implements IRunController {
 
 						if (!liveSyncResultInfo.didRecover && isInHMRMode) {
 							const status = await this.$hmrStatusService.getHmrStatus(device.deviceInfo.identifier, data.hmrData.hash);
-							// error or timeout
-							if (status !== HmrConstants.HMR_SUCCESS_STATUS) {
+							// the timeout is assumed OK as the app could be blocked on a breakpoint
+							if (status === HmrConstants.HMR_ERROR_STATUS) {
 								await fullSyncAction();
 								liveSyncResultInfo.isFullSync = true;
 								await this.refreshApplication(projectData, liveSyncResultInfo, data, deviceDescriptor);
