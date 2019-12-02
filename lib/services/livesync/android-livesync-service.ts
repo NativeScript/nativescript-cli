@@ -25,21 +25,6 @@ export class AndroidLiveSyncService extends PlatformLiveSyncServiceBase implemen
 
 	@performanceLog()
 	public async liveSyncWatchAction(device: Mobile.IDevice, liveSyncInfo: ILiveSyncWatchInfo): Promise<IAndroidLiveSyncResultInfo> {
-		let result = await this.liveSyncWatchActionCore(device, liveSyncInfo);
-
-		// When we use hmr, there is only one case when result.didRefresh is false.
-		// This is the case when the app has crashed and is in ErrorActivity.
-		// As the app might not have time to apply the patches, we will send the whole bundle.js(fallbackFiles)
-		if (liveSyncInfo.useHotModuleReload && !result.didRefresh && liveSyncInfo.hmrData && liveSyncInfo.hmrData.hash) {
-			liveSyncInfo.filesToSync = liveSyncInfo.hmrData.fallbackFiles;
-			result = await this.liveSyncWatchActionCore(device, liveSyncInfo);
-			result.didRecover = true;
-		}
-
-		return result;
-	}
-
-	private async liveSyncWatchActionCore(device: Mobile.IDevice, liveSyncInfo: ILiveSyncWatchInfo): Promise<IAndroidLiveSyncResultInfo> {
 		const liveSyncResult = await super.liveSyncWatchAction(device, liveSyncInfo);
 		const result = await this.finalizeSync(device, liveSyncInfo.projectData, liveSyncResult);
 

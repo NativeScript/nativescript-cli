@@ -76,7 +76,7 @@ export class IOSDeviceLiveSyncService extends DeviceLiveSyncServiceBase implemen
 			shouldRestart = true;
 		} else {
 			const canExecuteFastSync = this.canExecuteFastSyncForPaths(liveSyncInfo, localToDevicePaths, projectData, deviceAppData.platform);
-			const isRefreshConnectionSetup = this.canRefreshWithNotification(projectData, liveSyncInfo) || (!this.device.isOnlyWiFiConnected && await this.setupSocketIfNeeded(projectData));
+			const isRefreshConnectionSetup = this.canRefreshWithNotification(projectData, liveSyncInfo) || (!this.device.isOnlyWiFiConnected && this.socket);
 			if (!canExecuteFastSync || !isRefreshConnectionSetup) {
 				shouldRestart = true;
 			}
@@ -137,6 +137,8 @@ export class IOSDeviceLiveSyncService extends DeviceLiveSyncServiceBase implemen
 			waitForDebugger: liveSyncInfo.waitForDebugger,
 			projectDir: projectData.projectDir
 		});
+		// enable HOT updates
+		await this.setupSocketIfNeeded(projectData);
 	}
 
 	private async reloadPage(): Promise<void> {
