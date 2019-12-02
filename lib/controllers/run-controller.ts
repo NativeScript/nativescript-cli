@@ -367,7 +367,8 @@ export class RunController extends EventEmitter implements IRunController {
 
 			try {
 				const platformLiveSyncService = this.$liveSyncServiceResolver.resolveLiveSyncService(device.deviceInfo.platform);
-				const allAppFiles = (data.hmrData && data.hmrData.fallbackFiles) || data.files;
+				const allAppFiles = (data.hmrData && data.hmrData.fallbackFiles && data.hmrData.fallbackFiles.length) ?
+					data.hmrData.fallbackFiles : data.files;
 				const filesToSync = data.hasOnlyHotUpdateFiles ? data.files : allAppFiles;
 				const watchInfo = {
 					liveSyncDeviceData: deviceDescriptor,
