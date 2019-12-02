@@ -19,7 +19,8 @@ export class CommandDispatcher implements ICommandDispatcher {
 			// CommandDispatcher is called from external CLI's only, so pass the path to their package.json
 			const sysInfo = await this.$sysInfo.getSysInfo({ pathToNativeScriptCliPackageJson: path.join(__dirname, "..", "..", "package.json") });
 			this.$logger.trace("System information:");
-			this.$logger.trace(sysInfo);
+			this.$logger.trace(JSON.stringify(sysInfo, null, 2));
+			this.$logger.trace("Current CLI version: ", this.$staticConfig.version);
 		}
 
 		let commandName = this.getCommandName();
