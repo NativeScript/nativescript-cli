@@ -137,8 +137,11 @@ export class IOSDeviceLiveSyncService extends DeviceLiveSyncServiceBase implemen
 			waitForDebugger: liveSyncInfo.waitForDebugger,
 			projectDir: projectData.projectDir
 		});
-		// enable HOT updates
-		await this.setupSocketIfNeeded(projectData);
+
+		if (liveSyncInfo.useHotModuleReload) {
+			// enable HOT updates
+			await this.setupSocketIfNeeded(projectData);
+		}
 	}
 
 	private async reloadPage(): Promise<void> {
