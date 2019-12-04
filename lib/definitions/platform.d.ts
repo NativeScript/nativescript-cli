@@ -80,6 +80,7 @@ interface ICheckEnvironmentRequirementsInput {
 	runtimeVersion?: string;
 	options?: IOptions;
 	notConfiguredEnvOptions?: INotConfiguredEnvOptions;
+	forceCheck?: boolean;
 }
 
 interface ICheckEnvironmentRequirementsOutput {

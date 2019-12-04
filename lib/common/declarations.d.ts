@@ -1195,7 +1195,7 @@ interface IDoctorService {
 	 * @param configOptions: defines if the result should be tracked by Analytics
 	 * @returns {Promise<void>}
 	 */
-	printWarnings(configOptions?: { trackResult: boolean, projectDir?: string, runtimeVersion?: string, options?: IOptions }): Promise<void>;
+	printWarnings(configOptions?: { trackResult?: boolean, projectDir?: string, runtimeVersion?: string, options?: IOptions, forceCheck?: boolean }): Promise<void>;
 	/**
 	 * Runs the setup script on host machine
 	 * @returns {Promise<ISpawnResult>}
@@ -1206,7 +1206,7 @@ interface IDoctorService {
 	 * @param platform @optional The current platform
 	 * @returns {Promise<boolean>} true if the environment is properly configured for local builds
 	 */
-	canExecuteLocalBuild(platform?: string, projectDir?: string, runtimeVersion?: string): Promise<boolean>;
+	canExecuteLocalBuild(configuration?: { platform?: string, projectDir?: string, runtimeVersion?: string, forceCheck?: boolean }): Promise<boolean>;
 
 	/**
 	 * Checks and notifies users for deprecated short imports in their applications.

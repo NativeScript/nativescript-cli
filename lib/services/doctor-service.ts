@@ -1,6 +1,7 @@
 import { EOL } from "os";
 import * as path from "path";
 import * as helpers from "../common/helpers";
+import { cache } from "../common/decorators";
 import { TrackActionNames, NODE_MODULES_FOLDER_NAME, TNS_CORE_MODULES_NAME } from "../constants";
 import { doctor, constants } from "nativescript-doctor";
 
@@ -9,9 +10,14 @@ export class DoctorService implements IDoctorService {
 	private static WindowsSetupScriptExecutable = "powershell.exe";
 	private static WindowsSetupScriptArguments = ["start-process", "-FilePath", "PowerShell.exe", "-NoNewWindow", "-Wait", "-ArgumentList", '"-NoProfile -ExecutionPolicy Bypass -Command iex ((new-object net.webclient).DownloadString(\'https://www.nativescript.org/setup/win\'))"'];
 
+	@cache()
+	private get jsonFileSettingsPath(): string {
+		return path.join(this.$settingsService.getProfileDir(), "doctor-cache.json");
+	}
+
+	@cache()
 	private get $jsonFileSettingsService(): IJsonFileSettingsService {
-		const jsonFileSettingsPath = path.join(this.$settingsService.getProfileDir(), "doctor-cache.json");
-		return this.$injector.resolve<IJsonFileSettingsService>("jsonFileSettingsService", { jsonFileSettingsPath });
+		return this.$injector.resolve<IJsonFileSettingsService>("jsonFileSettingsService", { jsonFileSettingsPath: this.jsonFileSettingsPath });
 	}
 
 	constructor(private $analyticsService: IAnalyticsService,
@@ -25,11 +31,12 @@ export class DoctorService implements IDoctorService {
 		private $versionsService: IVersionsService,
 		private $settingsService: ISettingsService) { }
 
-	public async printWarnings(configOptions?: { trackResult: boolean, projectDir?: string, runtimeVersion?: string, options?: IOptions }): Promise<void> {
-		const getInfosData: any = { projectDir: configOptions && configOptions.projectDir, androidRuntimeVersion: configOptions && configOptions.runtimeVersion };
+	public async printWarnings(configOptions?: { trackResult: boolean, projectDir?: string, runtimeVersion?: string, options?: IOptions, forceCheck?: boolean }): Promise<void> {
+		configOptions = configOptions || <any>{};
+		const getInfosData: any = { projectDir: configOptions.projectDir, androidRuntimeVersion: configOptions.runtimeVersion };
 		const infos = await this.$terminalSpinnerService.execute<NativeScriptDoctor.IInfo[]>({
 			text: `Getting environment information ${EOL}`
-		}, () => this.getInfos(getInfosData));
+		}, () => this.getInfos({ forceCheck: configOptions.forceCheck }, getInfosData));
 
 		const warnings = infos.filter(info => info.type === constants.WARNING_TYPE_NAME);
 		const hasWarnings = warnings.length > 0;
@@ -46,6 +53,9 @@ export class DoctorService implements IDoctorService {
 
 		if (hasWarnings) {
 			this.$logger.info("There seem to be issues with your configuration.");
+			// cleanup the cache file as there seems to be issues with the current config
+			// all projects need to be rechecked
+			this.$fs.deleteFile(this.jsonFileSettingsPath);
 		} else {
 			this.$logger.info("No issues were detected.".bold);
 			await this.$jsonFileSettingsService.saveSetting(this.getKeyForConfiguration(getInfosData), infos);
@@ -62,9 +72,9 @@ export class DoctorService implements IDoctorService {
 
 		await this.$injector.resolve<IPlatformEnvironmentRequirements>("platformEnvironmentRequirements").checkEnvironmentRequirements({
 			platform: null,
-			projectDir: configOptions && configOptions.projectDir,
-			runtimeVersion: configOptions && configOptions.runtimeVersion,
-			options: configOptions && configOptions.options
+			projectDir: configOptions.projectDir,
+			runtimeVersion: configOptions.runtimeVersion,
+			options: configOptions.options
 		});
 	}
 
@@ -98,16 +108,19 @@ export class DoctorService implements IDoctorService {
 		});
 	}
 
-	public async canExecuteLocalBuild(platform?: string, projectDir?: string, runtimeVersion?: string): Promise<boolean> {
+	public async canExecuteLocalBuild(configuration?: { platform?: string, projectDir?: string, runtimeVersion?: string, forceCheck?: boolean }): Promise<boolean> {
 		await this.$analyticsService.trackEventActionInGoogleAnalytics({
 			action: TrackActionNames.CheckLocalBuildSetup,
 			additionalData: "Starting",
 		});
-		const sysInfoConfig: NativeScriptDoctor.ISysInfoConfig = { platform, projectDir, androidRuntimeVersion: runtimeVersion };
-		const infos = await this.getInfos(sysInfoConfig);
+		const sysInfoConfig: NativeScriptDoctor.ISysInfoConfig = { platform: configuration.platform, projectDir: configuration.projectDir, androidRuntimeVersion: configuration.runtimeVersion };
+		const infos = await this.getInfos({ forceCheck: configuration && configuration.forceCheck }, sysInfoConfig);
 		const warnings = this.filterInfosByType(infos, constants.WARNING_TYPE_NAME);
 		const hasWarnings = warnings.length > 0;
 		if (hasWarnings) {
+			// cleanup the cache file as there seems to be issues with the current config
+			// all projects need to be rechecked
+			this.$fs.deleteFile(this.jsonFileSettingsPath);
 			await this.$analyticsService.trackEventActionInGoogleAnalytics({
 				action: TrackActionNames.CheckLocalBuildSetup,
 				additionalData: `Warnings:${warnings.map(w => w.message).join("__")}`,
@@ -252,10 +265,15 @@ export class DoctorService implements IDoctorService {
 		return data;
 	}
 
-	private async getInfos(sysInfoConfig?: NativeScriptDoctor.ISysInfoConfig): Promise<NativeScriptDoctor.IInfo[]> {
+	private async getInfos(cacheConfig: { forceCheck: boolean }, sysInfoConfig?: NativeScriptDoctor.ISysInfoConfig): Promise<NativeScriptDoctor.IInfo[]> {
 		const key = this.getKeyForConfiguration(sysInfoConfig);
-		// check if we already have cache for the results here
-		const infosFromCache = await this.$jsonFileSettingsService.getSettingValue<NativeScriptDoctor.IInfo[]>(key);
+
+		const infosFromCache = cacheConfig.forceCheck ?
+			null :
+			await this.$jsonFileSettingsService.getSettingValue<NativeScriptDoctor.IInfo[]>(key);
+
+		this.$logger.trace(`getInfos cacheConfig options:`, cacheConfig, " current info from cache: ", infosFromCache);
+
 		const infos = infosFromCache || await doctor.getInfos(sysInfoConfig);
 
 		return infos;

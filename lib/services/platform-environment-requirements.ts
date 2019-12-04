@@ -57,7 +57,8 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 			};
 		}
 
-		const canExecute = await this.$doctorService.canExecuteLocalBuild(platform, projectDir, runtimeVersion);
+		const canExecute = await this.$doctorService.canExecuteLocalBuild({ platform, projectDir, runtimeVersion, forceCheck: input.forceCheck });
+
 		if (!canExecute) {
 			if (!isInteractive()) {
 				await this.$analyticsService.trackEventActionInGoogleAnalytics({
@@ -80,7 +81,7 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 			if (selectedOption === PlatformEnvironmentRequirements.LOCAL_SETUP_OPTION_NAME) {
 				await this.$doctorService.runSetupScript();
 
-				if (await this.$doctorService.canExecuteLocalBuild(platform, projectDir, runtimeVersion)) {
+				if (await this.$doctorService.canExecuteLocalBuild({ platform, projectDir, runtimeVersion, forceCheck: input.forceCheck })) {
 					return {
 						canExecute: true,
 						selectedOption
@@ -114,7 +115,7 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 
 			if (selectedOption === PlatformEnvironmentRequirements.BOTH_CLOUD_SETUP_AND_LOCAL_SETUP_OPTION_NAME) {
 				await this.processBothCloudBuildsAndSetupScript();
-				if (await this.$doctorService.canExecuteLocalBuild(platform, projectDir, runtimeVersion)) {
+				if (await this.$doctorService.canExecuteLocalBuild({ platform, projectDir, runtimeVersion, forceCheck: input.forceCheck })) {
 					return {
 						canExecute: true,
 						selectedOption

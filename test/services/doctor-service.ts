@@ -1,8 +1,10 @@
 import { DoctorService } from "../../lib/services/doctor-service";
 import { Yok } from "../../lib/common/yok";
-import { LoggerStub } from "../stubs";
+import { LoggerStub, FileSystemStub } from "../stubs";
 import { assert } from "chai";
 import * as path from "path";
+import * as sinon from "sinon";
+const nativescriptDoctor = require("nativescript-doctor");
 
 class DoctorServiceInheritor extends DoctorService {
 	constructor($analyticsService: IAnalyticsService,
@@ -32,8 +34,15 @@ describe("doctorService", () => {
 		testInjector.register("logger", LoggerStub);
 		testInjector.register("childProcess", {});
 		testInjector.register("projectDataService", {});
-		testInjector.register("fs", {});
-		testInjector.register("terminalSpinnerService", {});
+		testInjector.register("fs", FileSystemStub);
+		testInjector.register("terminalSpinnerService", {
+			execute: (spinnerOptions: ITerminalSpinnerOptions, action: () => Promise<any>): Promise<any> => action(),
+			createSpinner: (spinnerOptions?: ITerminalSpinnerOptions): ITerminalSpinner => (<any>{
+				text: '',
+				succeed: (): any => undefined,
+				fail: (): any => undefined
+			})
+		});
 		testInjector.register("versionsService", {});
 		testInjector.register("settingsService", {
 			getProfileDir: (): string => ""
@@ -41,6 +50,9 @@ describe("doctorService", () => {
 		testInjector.register("jsonFileSettingsService", {
 			getSettingValue: async (settingName: string, cacheOpts?: ICacheTimeoutOpts): Promise<any> => undefined,
 			saveSetting: async (key: string, value: any, cacheOpts?: IUseCacheOpts): Promise<void> => undefined
+		});
+		testInjector.register("platformEnvironmentRequirements", {
+			checkEnvironmentRequirements: async (input: ICheckEnvironmentRequirementsInput): Promise<ICheckEnvironmentRequirementsOutput> => (<any>{})
 		});
 
 		return testInjector;
@@ -260,6 +272,138 @@ const Observable = require("tns-core-modules-widgets/data/observable").Observabl
 				const shortImports = doctorService.getDeprecatedShortImportsInFiles(_.keys(filesContents), "projectDir");
 				assert.deepEqual(shortImports, expectedShortImports);
 			});
+		});
+	});
+
+	describe("printWarnings", () => {
+		let sandbox: sinon.SinonSandbox;
+
+		beforeEach(() => {
+			sandbox = sinon.sandbox.create();
+		});
+
+		afterEach(() => {
+			sandbox.restore();
+		});
+		const successGetInfosResult = [{
+			message:
+				'Your ANDROID_HOME environment variable is set and points to correct directory.',
+			platforms: ['Android'],
+			type: 'info'
+		},
+		{
+			message: 'Xcode is installed and is configured properly.',
+			platforms: ['iOS'],
+			type: 'info'
+		}];
+
+		const failedGetInfosResult = [{
+			message:
+				'The ANDROID_HOME environment variable is not set or it points to a non-existent directory. You will not be able to perform any build-related operations for Android.',
+			additionalInformation:
+				'To be able to perform Android build-related operations, set the `ANDROID_HOME` variable to point to the root of your Android SDK installation directory.',
+			platforms: ['Android'],
+			type: 'warning'
+		},
+		{
+			message:
+				'WARNING: adb from the Android SDK is not installed or is not configured properly. ',
+			additionalInformation:
+				'For Android-related operations, the NativeScript CLI will use a built-in version of adb.\nTo avoid possible issues with the native Android emulator, Genymotion or connected\nAndroid devices, verify that you have installed the latest Android SDK and\nits dependencies as described in http://developer.android.com/sdk/index.html#Requirements',
+			platforms: ['Android'],
+			type: 'warning'
+		},
+		{
+			message: 'Xcode is installed and is configured properly.',
+			platforms: ['iOS'],
+			type: 'info'
+		}];
+
+		it("prints correct message when no issues are detected", async () => {
+			const nsDoctorStub = sandbox.stub(nativescriptDoctor.doctor, "getInfos");
+			nsDoctorStub.returns(successGetInfosResult);
+			const testInjector = createTestInjector();
+			const doctorService = testInjector.resolve<IDoctorService>("doctorService");
+			const logger = testInjector.resolve<LoggerStub>("logger");
+			await doctorService.printWarnings();
+			assert.isTrue(logger.output.indexOf("No issues were detected.") !== -1);
+		});
+
+		it("prints correct message when issues are detected", async () => {
+			const nsDoctorStub = sandbox.stub(nativescriptDoctor.doctor, "getInfos");
+			nsDoctorStub.returns(failedGetInfosResult);
+			const testInjector = createTestInjector();
+			const doctorService = testInjector.resolve<IDoctorService>("doctorService");
+			const logger = testInjector.resolve<LoggerStub>("logger");
+			await doctorService.printWarnings();
+			assert.isTrue(logger.output.indexOf("There seem to be issues with your configuration.") !== -1);
+		});
+
+		it("returns result from cached file when they exist and the forceCheck is not passed", async () => {
+			const nsDoctorStub = sandbox.stub(nativescriptDoctor.doctor, "getInfos");
+			nsDoctorStub.throws(new Error("We should not call nativescript-doctor package when we have results in the file."));
+
+			const testInjector = createTestInjector();
+			const doctorService = testInjector.resolve<IDoctorService>("doctorService");
+			const jsonFileSettingsService = testInjector.resolve<IJsonFileSettingsService>("jsonFileSettingsService");
+			jsonFileSettingsService.getSettingValue = async (settingName: string, cacheOpts?: ICacheTimeoutOpts): Promise<any> => successGetInfosResult;
+			let saveSettingValue: any = null;
+			jsonFileSettingsService.saveSetting = async (key: string, value: any, cacheOpts?: IUseCacheOpts): Promise<void> => saveSettingValue = value;
+			const logger = testInjector.resolve<LoggerStub>("logger");
+			await doctorService.printWarnings();
+			assert.isTrue(logger.output.indexOf("No issues were detected.") !== -1);
+			assert.deepEqual(saveSettingValue, successGetInfosResult);
+		});
+
+		it("saves results in cache when there are no warnings", async () => {
+			const nsDoctorStub = sandbox.stub(nativescriptDoctor.doctor, "getInfos");
+			nsDoctorStub.returns(successGetInfosResult);
+
+			const testInjector = createTestInjector();
+			const doctorService = testInjector.resolve<IDoctorService>("doctorService");
+			const jsonFileSettingsService = testInjector.resolve<IJsonFileSettingsService>("jsonFileSettingsService");
+			let saveSettingValue: any = null;
+			jsonFileSettingsService.saveSetting = async (key: string, value: any, cacheOpts?: IUseCacheOpts): Promise<void> => saveSettingValue = value;
+			const logger = testInjector.resolve<LoggerStub>("logger");
+			await doctorService.printWarnings();
+			assert.isTrue(logger.output.indexOf("No issues were detected.") !== -1);
+			assert.deepEqual(saveSettingValue, successGetInfosResult);
+		});
+
+		it("returns result from nativescript-doctor and saves them in cache when the forceCheck is passed", async () => {
+			const nsDoctorStub = sandbox.stub(nativescriptDoctor.doctor, "getInfos");
+			nsDoctorStub.returns(successGetInfosResult);
+
+			const testInjector = createTestInjector();
+			const doctorService = testInjector.resolve<IDoctorService>("doctorService");
+			const jsonFileSettingsService = testInjector.resolve<IJsonFileSettingsService>("jsonFileSettingsService");
+			let saveSettingValue: any = null;
+			let isGetSettingValueCalled = false;
+			jsonFileSettingsService.getSettingValue = async (settingName: string, cacheOpts?: ICacheTimeoutOpts): Promise<any> => {
+				isGetSettingValueCalled = true;
+				return null;
+			};
+			jsonFileSettingsService.saveSetting = async (key: string, value: any, cacheOpts?: IUseCacheOpts): Promise<void> => saveSettingValue = value;
+			const logger = testInjector.resolve<LoggerStub>("logger");
+			await doctorService.printWarnings({ forceCheck: true });
+			assert.isTrue(logger.output.indexOf("No issues were detected.") !== -1);
+			assert.deepEqual(saveSettingValue, successGetInfosResult);
+			assert.isTrue(nsDoctorStub.calledOnce);
+			assert.isFalse(isGetSettingValueCalled, "When forceCheck is passed, we should not read the cache file.");
+		});
+
+		it("deletes the cache file when issues are detected", async () => {
+			const nsDoctorStub = sandbox.stub(nativescriptDoctor.doctor, "getInfos");
+			nsDoctorStub.returns(failedGetInfosResult);
+			const testInjector = createTestInjector();
+			const doctorService = testInjector.resolve<IDoctorService>("doctorService");
+			const fs = testInjector.resolve<IFileSystem>("fs");
+			let deletedPath = "";
+			fs.deleteFile = (filePath: string): void => {deletedPath = filePath; };
+			const logger = testInjector.resolve<LoggerStub>("logger");
+			await doctorService.printWarnings();
+			assert.isTrue(logger.output.indexOf("There seem to be issues with your configuration.") !== -1);
+			assert.isTrue(deletedPath.indexOf("doctor-cache.json") !== -1);
 		});
 	});
 });
