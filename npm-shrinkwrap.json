@@ -4109,9 +4109,9 @@
       }
     },
     "ios-sim-portable": {
-      "version": "4.0.9",
-      "resolved": "https://registry.npmjs.org/ios-sim-portable/-/ios-sim-portable-4.0.9.tgz",
-      "integrity": "sha512-hnHhQY5IrqE6XikmgG6JrL7/gYViifEZCGylvUstAfm56v0vXSwGDmtlg7vWcVCNgs46AB8WUgGT+WZ8tDcMzA==",
+      "version": "4.1.0",
+      "resolved": "https://registry.npmjs.org/ios-sim-portable/-/ios-sim-portable-4.1.0.tgz",
+      "integrity": "sha512-9cbikKJvwBFsCzzy3X6e3IlkNCYdKNGZPG8fUVHMfyD3PcAmRlN2rerGZO5l8BjKDWkdiYHcFCJ6HenLv0HVQQ==",
       "requires": {
         "bplist-parser": "https://github.com/telerik/node-bplist-parser/tarball/master",
         "colors": "0.6.2",
@@ -4434,6 +4434,11 @@
       "version": "1.0.2",
       "resolved": "https://registry.npmjs.org/is-windows/-/is-windows-1.0.2.tgz",
       "integrity": "sha512-eXK1UInq2bPmjyX6e3VHIzMLobc4J94i4AWn+Hpq3OU5KkrRC96OAcR3PRJ/pGu6m8TRnBHP9dkXQVsT/COVIA=="
+    },
+    "is-wsl": {
+      "version": "1.1.0",
+      "resolved": "https://registry.npmjs.org/is-wsl/-/is-wsl-1.1.0.tgz",
+      "integrity": "sha1-HxbkqiKwTRM2tmGIpmrzxgDDpm0="
     },
     "isarray": {
       "version": "1.0.0",
@@ -4842,9 +4847,9 @@
       }
     },
     "lodash": {
-      "version": "4.17.11",
-      "resolved": "https://registry.npmjs.org/lodash/-/lodash-4.17.11.tgz",
-      "integrity": "sha512-cQKh8igo5QUhZ7lg38DYWAxMvjSAKG0A8wGSVimP07SIUEK2UO+arSRKbRZWtelMtN5V0Hkwh5ryOto/SshYIg=="
+      "version": "4.17.15",
+      "resolved": "https://registry.npmjs.org/lodash/-/lodash-4.17.15.tgz",
+      "integrity": "sha512-8xOcRHvCjnocdS5cpwXQXVzmmh5e5+saE2QGoeQmbKmRS6J3VQppPOIt0MnmE+4xlZoumy0GPG0D0MVIQbNA1A=="
     },
     "lodash-node": {
       "version": "2.4.1",
@@ -5118,18 +5123,17 @@
       }
     },
     "marked": {
-      "version": "0.5.1",
-      "resolved": "https://registry.npmjs.org/marked/-/marked-0.5.1.tgz",
-      "integrity": "sha512-iUkBZegCZou4AdwbKTwSW/lNDcz5OuRSl3qdcl31Ia0B2QPG0Jn+tKblh/9/eP9/6+4h27vpoh8wel/vQOV0vw=="
+      "version": "0.7.0",
+      "resolved": "https://registry.npmjs.org/marked/-/marked-0.7.0.tgz",
+      "integrity": "sha512-c+yYdCZJQrsRjTPhUx7VKkApw9bwDkNbHUKo1ovgcfDjb2kc8rLuRbIFyXL5WOEUwzSSKo3IXpph2K6DqB/KZg=="
     },
     "marked-terminal": {
-      "version": "3.1.1",
-      "resolved": "https://registry.npmjs.org/marked-terminal/-/marked-terminal-3.1.1.tgz",
-      "integrity": "sha512-7UBFww1rdx0w9HehLMCVYa8/AxXaiDigDfMsJcj82/wgLQG9cj+oiMAVlJpeWD57VFJY2OYY+bKeEVIjIlxi+w==",
+      "version": "https://github.com/NativeScript/marked-terminal/tarball/v3.1.1n",
+      "integrity": "sha512-u6ohADNIqv+ptDbniFWCuBuOpX0WxM2xtImX58NWqH7DW4ioWW1XQUwMe4WnO+0ZAEz+iUwzJH9rdQ/r9mvfDg==",
       "requires": {
         "cardinal": "^2.1.1",
         "chalk": "^2.4.1",
-        "cli-table": "^0.3.1",
+        "cli-table": "*",
         "lodash.assign": "^4.2.0",
         "node-emoji": "^1.4.1"
       },
@@ -5901,9 +5905,12 @@
       }
     },
     "open": {
-      "version": "0.0.5",
-      "resolved": "https://registry.npmjs.org/open/-/open-0.0.5.tgz",
-      "integrity": "sha1-QsPhjslUZra/DcQvOilFw/DK2Pw="
+      "version": "6.0.0",
+      "resolved": "https://registry.npmjs.org/open/-/open-6.0.0.tgz",
+      "integrity": "sha512-/yb5mVZBz7mHLySMiSj2DcLtMBbFPJk5JBKEkHVZFxZAPzeg3L026O0T+lbdz1B2nyDnkClRSwRQJdeVUIF7zw==",
+      "requires": {
+        "is-wsl": "^1.1.0"
+      }
     },
     "optimist": {
       "version": "0.6.1",
