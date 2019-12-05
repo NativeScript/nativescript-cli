@@ -6,7 +6,7 @@ export class DoctorCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
 
 	public execute(args: string[]): Promise<void> {
-		return this.$doctorService.printWarnings({ trackResult: false, projectDir: this.$projectHelper.projectDir });
+		return this.$doctorService.printWarnings({ trackResult: false, projectDir: this.$projectHelper.projectDir, forceCheck: true });
 	}
 }
 
