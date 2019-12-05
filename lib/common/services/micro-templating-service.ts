@@ -1,13 +1,11 @@
 import * as util from "util";
 import * as os from "os";
 import * as constants from "../../constants";
-import { formatListOfNames } from '../helpers';
 
 export class MicroTemplateService implements IMicroTemplateService {
 	private dynamicCallRegex: RegExp;
 
-	constructor(private $injector: IInjector,
-		private $testInitializationService: ITestInitializationService) {
+	constructor(private $injector: IInjector) {
 		// Injector's dynamicCallRegex doesn't have 'g' option, which we need here.
 		// Use ( ) in order to use $1 to get whole expression later
 		this.dynamicCallRegex = new RegExp(util.format("(%s)", this.$injector.dynamicCallRegex.source), "g");
@@ -37,8 +35,6 @@ export class MicroTemplateService implements IMicroTemplateService {
 		localVariables["isMacOS"] = isHtml || this.isPlatform("darwin");
 		localVariables["isConsole"] = !isHtml;
 		localVariables["isHtml"] = isHtml;
-		localVariables["formatListOfNames"] = formatListOfNames;
-		localVariables["getUnitTestingFrameworkNames"] = this.$testInitializationService.getFrameworkNames;
 		localVariables["isJekyll"] = false;
 
 		return localVariables;

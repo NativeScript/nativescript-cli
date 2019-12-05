@@ -144,10 +144,10 @@ export class RunController extends EventEmitter implements IRunController {
 		return this.$liveSyncProcessDataService.getDeviceDescriptors(data.projectDir);
 	}
 
-	protected async refreshApplication(projectData: IProjectData, liveSyncResultInfo: ILiveSyncResultInfo, filesChangeEventData: IFilesChangeEventData, deviceDescriptor: ILiveSyncDeviceDescriptor): Promise<IRestartApplicationInfo> {
+	protected async refreshApplication(projectData: IProjectData, liveSyncResultInfo: ILiveSyncResultInfo, filesChangeEventData: IFilesChangeEventData, deviceDescriptor: ILiveSyncDeviceDescriptor, fullSyncAction?: () => Promise<void>): Promise<IRestartApplicationInfo> {
 		const result = deviceDescriptor.debuggingEnabled ?
 			await this.refreshApplicationWithDebug(projectData, liveSyncResultInfo, filesChangeEventData, deviceDescriptor) :
-			await this.refreshApplicationWithoutDebug(projectData, liveSyncResultInfo, filesChangeEventData, deviceDescriptor);
+			await this.refreshApplicationWithoutDebug(projectData, liveSyncResultInfo, filesChangeEventData, deviceDescriptor, undefined, fullSyncAction);
 
 		const device = liveSyncResultInfo.deviceAppData.device;
 
@@ -181,20 +181,27 @@ export class RunController extends EventEmitter implements IRunController {
 	}
 
 	@performanceLog()
-	protected async refreshApplicationWithoutDebug(projectData: IProjectData, liveSyncResultInfo: ILiveSyncResultInfo, filesChangeEventData: IFilesChangeEventData, deviceDescriptor: ILiveSyncDeviceDescriptor, settings?: IRefreshApplicationSettings): Promise<IRestartApplicationInfo> {
+	protected async refreshApplicationWithoutDebug(projectData: IProjectData, liveSyncResultInfo: ILiveSyncResultInfo, filesChangeEventData: IFilesChangeEventData, deviceDescriptor: ILiveSyncDeviceDescriptor, settings?: IRefreshApplicationSettings, fullSyncAction?: () => Promise<void>): Promise<IRestartApplicationInfo> {
 		const result = { didRestart: false };
 		const platform = liveSyncResultInfo.deviceAppData.platform;
 		const applicationIdentifier = projectData.projectIdentifiers[platform.toLowerCase()];
 		const platformLiveSyncService = this.$liveSyncServiceResolver.resolveLiveSyncService(platform);
 
 		try {
-			let shouldRestart = filesChangeEventData && (filesChangeEventData.hasNativeChanges || !filesChangeEventData.hasOnlyHotUpdateFiles);
+			const isFullSync = filesChangeEventData && (filesChangeEventData.hasNativeChanges || !filesChangeEventData.hasOnlyHotUpdateFiles);
+			let shouldRestart = isFullSync;
 			if (!shouldRestart) {
 				shouldRestart = await platformLiveSyncService.shouldRestart(projectData, liveSyncResultInfo);
 			}
 
 			if (!shouldRestart) {
 				shouldRestart = !await platformLiveSyncService.tryRefreshApplication(projectData, liveSyncResultInfo);
+			}
+
+			if (!isFullSync && shouldRestart && fullSyncAction) {
+				this.$logger.trace(`Syncing all files as the current app state does not support hot updates.`);
+				liveSyncResultInfo.didRecover = true;
+				await fullSyncAction();
 			}
 
 			if (shouldRestart) {
@@ -360,11 +367,14 @@ export class RunController extends EventEmitter implements IRunController {
 
 			try {
 				const platformLiveSyncService = this.$liveSyncServiceResolver.resolveLiveSyncService(device.deviceInfo.platform);
+				const allAppFiles = (data.hmrData && data.hmrData.fallbackFiles && data.hmrData.fallbackFiles.length) ?
+					data.hmrData.fallbackFiles : data.files;
+				const filesToSync = data.hasOnlyHotUpdateFiles ? data.files : allAppFiles;
 				const watchInfo = {
 					liveSyncDeviceData: deviceDescriptor,
 					projectData,
 					filesToRemove: <any>[],
-					filesToSync: data.files,
+					filesToSync,
 					hmrData: data.hmrData,
 					useHotModuleReload: liveSyncInfo.useHotModuleReload,
 					force: liveSyncInfo.force,
@@ -391,16 +401,21 @@ export class RunController extends EventEmitter implements IRunController {
 					}
 
 					const watchAction = async (): Promise<void> => {
-						let liveSyncResultInfo = await platformLiveSyncService.liveSyncWatchAction(device, watchInfo);
-						await this.refreshApplication(projectData, liveSyncResultInfo, data, deviceDescriptor);
+						const liveSyncResultInfo = await platformLiveSyncService.liveSyncWatchAction(device, watchInfo);
+						const fullSyncAction = async () => {
+							watchInfo.filesToSync = allAppFiles;
+							const fullLiveSyncResultInfo = await platformLiveSyncService.liveSyncWatchAction(device, watchInfo);
+							// IMPORTANT: keep the same instance as we rely on side effects
+							_.assign(liveSyncResultInfo, fullLiveSyncResultInfo);
+						};
+
+						await this.refreshApplication(projectData, liveSyncResultInfo, data, deviceDescriptor, fullSyncAction);
 
 						if (!liveSyncResultInfo.didRecover && isInHMRMode) {
 							const status = await this.$hmrStatusService.getHmrStatus(device.deviceInfo.identifier, data.hmrData.hash);
-							// error or timeout
-							if (status !== HmrConstants.HMR_SUCCESS_STATUS) {
-								watchInfo.filesToSync = data.hmrData.fallbackFiles;
-								liveSyncResultInfo = await platformLiveSyncService.liveSyncWatchAction(device, watchInfo);
-								// We want to force a restart of the application.
+							// the timeout is assumed OK as the app could be blocked on a breakpoint
+							if (status === HmrConstants.HMR_ERROR_STATUS) {
+								await fullSyncAction();
 								liveSyncResultInfo.isFullSync = true;
 								await this.refreshApplication(projectData, liveSyncResultInfo, data, deviceDescriptor);
 							}

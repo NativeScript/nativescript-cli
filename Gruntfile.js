@@ -138,7 +138,6 @@ module.exports = function (grunt) {
 						"isWindows": true,
 						"isMacOS": true,
 						"isLinux": true,
-						"formatListOfNames": () => { },
 						"constants": ""
 					}
 				},

@@ -44,6 +44,10 @@ export class Options {
 			// on each livesync in order to stop and allow debugging on app start
 			this.argv.hmr = false;
 		}
+
+		if (this.argv.justlaunch) {
+			this.argv.hmr = false;
+		}
 	}
 
 	constructor(private $errors: IErrors,
