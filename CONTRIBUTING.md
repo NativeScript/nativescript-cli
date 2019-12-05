@@ -3,8 +3,6 @@ Contribute to the Telerik NativeScript Command-Line Interface
 
 *Help us improve the Telerik NativeScript CLI* 
 
-The Telerik NativeScript CLI lets you create, build, and deploy NativeScript-based projects on iOS and Android devices.
-
 * [Report an Issue](#report-an-issue "Learn how to report an issue")
 * [Request a Feature](#request-a-feature "Learn how to submit a feature or improvement request")
 * [Contribute to the Code Base](#contribute-to-the-code-base "Learn how to submit your own improvements to the code")
@@ -14,21 +12,13 @@ Report an Issue
 ===
 If you find a bug in the source code or a mistake in the documentation, you can submit an issue to our [GitHub Repository][2].
 Before you submit your issue, search the archive to check if a similar issues has been logged or addressed. This will let us focus on fixing issues and adding new features.
-If your issue appears to be a bug, and hasn't been reported, open a new issue. To help us investigate your issue and respond in a timely manner, you can provide is with the following details.
-
-* **Overview of the issue:** Provide a short description of the visible symptoms. If applicable, include error messages, screen shots, and stack traces.
-* **Motivation for or use case:** Let us know how this particular issue affects your work.
-* **Telerik NativeScript version(s):** List the current version and build number of the CLI interface. You can get it by running `tns --version`. Let us know if you have not observed this behavior in earlier versions and if you consider it a regression.
-* **System configuration:** Provide us with relevant system configuration information such as operating system, network connection, proxy usage, etc. Let us know if you have been able to reproduce the issue on multiple setups.
-* **Steps to reproduce:** If applicable, submit a step-by-step walkthrough of how to reproduce the issue.
-* **Related issues:** If you discover a similar issue in our archive, give us a heads up - it might help us identify the culprit.
-* **Suggest a fix:** You are welcome to suggest a bug fix or pinpoint the line of code or the commit that you believe has introduced the issue.
+If your issue appears to be a bug, and hasn't been reported, open a new issue and select the `Bug report` option. To help us investigate your issue and respond in a timely manner, please follow the recommended bug report template.
 
 [Back to Top][1]
 
 Request a Feature
 ===
-You can request a new feature by submitting an issue with the *feature* label to our [GitHub Repository][2].
+You can request a new feature by opening a new issue, selecting the `Feature request` option and following the recommended feature request template.
 If you want to implement a new feature yourself, consider submitting it to the [GitHub Repository][2] as a Pull Request.
 
 [Back to Top][1]
