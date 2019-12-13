@@ -2,6 +2,7 @@ import { AndroidVirtualDevice } from "../../constants";
 import { getCurrentEpochTime, sleep } from "../../helpers";
 import { EOL } from "os";
 import { LoggerConfigData } from "../../../constants";
+import * as semver from "semver";
 
 export class AndroidEmulatorServices implements Mobile.IEmulatorPlatformService {
 	constructor(private $androidGenymotionService: Mobile.IAndroidVirtualDeviceService,
@@ -144,7 +145,10 @@ export class AndroidEmulatorServices implements Mobile.IEmulatorPlatformService 
 
 	private getBestFit(emulators: Mobile.IDeviceInfo[]) {
 		const best = _(emulators).maxBy(emulator => emulator.version);
-		return (best && best.version >= AndroidVirtualDevice.MIN_ANDROID_VERSION) ? best : null;
+		const minVersion = semver.coerce(AndroidVirtualDevice.MIN_ANDROID_VERSION);
+		const bestVersion = best && best.version && semver.coerce(best.version);
+
+		return (bestVersion && semver.gte(bestVersion, minVersion)) ? best : null;
 	}
 
 	private async waitForEmulatorBootToComplete(emulator: Mobile.IDeviceInfo, endTimeEpoch: number, timeout: number): Promise<{ runningEmulator: Mobile.IDeviceInfo, errors: string[] }> {
