@@ -178,6 +178,13 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 		const pbxprojFilePath = this.getPbxProjPath(projectData);
 		this.replaceFileContent(pbxprojFilePath, projectData);
+
+		const internalDirPath = path.join(projectRootFilePath, "..", "internal");
+		const xcframeworksFilePath = path.join(internalDirPath, "XCFrameworks.zip");
+		if (this.$fs.exists(xcframeworksFilePath)) {
+			await this.$fs.unzip(xcframeworksFilePath, internalDirPath);
+			this.$fs.deleteFile(xcframeworksFilePath);
+		}
 	}
 
 	public interpolateConfigurationFile(projectData: IProjectData): void {
@@ -264,6 +271,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			const frameworkAddOptions: IXcode.Options = { customFramework: true };
 			if (await this.isDynamicFramework(frameworkPath)) {
 				frameworkAddOptions["embed"] = true;
+				frameworkAddOptions["sign"] = true;
 			}
 
 			const frameworkRelativePath = '$(SRCROOT)/' + this.getLibSubpathRelativeToProjectPath(frameworkPath, projectData);
