@@ -1,5 +1,25 @@
 NativeScript CLI Changelog
 ================
+
+6.3.0 (2019, December 17)
+===
+
+### New
+
+* [Implemented #5128](https://github.com/NativeScript/nativescript-cli/issues/5128): Support for node v13
+* [Implemented #5155](https://github.com/NativeScript/nativescript-cli/issues/5155): Improve transition from tns preview to tns run
+* [Implemented #5180](https://github.com/NativeScript/nativescript-cli/issues/5180): Cache the result of environment checks
+
+### Fixed
+
+* [Fixed #4982](https://github.com/NativeScript/nativescript-cli/issues/4982): `tns deploy` does not verify if the project should be migrated
+* [Fixed #5069](https://github.com/NativeScript/nativescript-cli/issues/5069): Android API 29 emulator error
+* [Fixed #5113](https://github.com/NativeScript/nativescript-cli/issues/5113): tns test init page does not list frameworks properly.
+* [Fixed #5115](https://github.com/NativeScript/nativescript-cli/issues/5115): tns update command doesn't work in some plugins' demo apps
+* [Fixed #5149](https://github.com/NativeScript/nativescript-cli/issues/5149): `tns update` should handle scoped packages
+* [Fixed #5159](https://github.com/NativeScript/nativescript-cli/issues/5159): applyPluginsCocoaPods fails on case sensitive volumes
+* [Fixed #5173](https://github.com/NativeScript/nativescript-cli/issues/5173): `--justlaunch` flag enables HMR
+
 6.2.2 (2019, November 22)
 ==
 
