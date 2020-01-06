@@ -798,10 +798,10 @@ interface IVersionsService {
 	getNativescriptCliVersion(): Promise<IVersionInformation>;
 
 	/**
-	 * Gets version information about tns-core-modules.
-	 * @return {Promise<IVersionInformation>} The version information.
+	 * Gets version information about tns-core-modules and @nativescript/core packages.
+	 * @return {Promise<IVersionInformation[]>} The version information.
 	 */
-	getTnsCoreModulesVersion(): Promise<IVersionInformation>;
+	getTnsCoreModulesVersion(): Promise<IVersionInformation[]>;
 
 	/**
 	 * Gets versions information about nativescript runtimes.
