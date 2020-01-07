@@ -1,6 +1,14 @@
 NativeScript CLI Changelog
 ================
 
+6.3.1 (2020, January 7)
+===
+
+### Fixed
+
+* [Fixed #5192](https://github.com/NativeScript/nativescript-cli/issues/5192): `tns info` command does not work with @nativescript/core
+
+
 6.3.0 (2019, December 17)
 ===
 
