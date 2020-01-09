@@ -1,6 +1,14 @@
 NativeScript CLI Changelog
 ================
 
+6.3.2 (2020, January 9)
+===
+
+### Fixed
+
+* [Fixed #5200](https://github.com/NativeScript/nativescript-cli/issues/5200): api29 emulator is not recognized as latest
+
+
 6.3.1 (2020, January 7)
 ===
 
