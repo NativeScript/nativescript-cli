@@ -144,7 +144,15 @@ export class AndroidEmulatorServices implements Mobile.IEmulatorPlatformService 
 	}
 
 	private getBestFit(emulators: Mobile.IDeviceInfo[]) {
-		const best = _(emulators).maxBy(emulator => emulator.version);
+		let best: Mobile.IDeviceInfo = null;
+		for (const emulator of emulators) {
+			const currentVersion = emulator.version && semver.coerce(emulator.version);
+			const currentBestVersion = best && best.version && semver.coerce(best.version);
+			if (!best || (currentVersion && currentBestVersion && semver.gt(currentVersion, currentBestVersion))) {
+				best = emulator;
+			}
+		}
+
 		const minVersion = semver.coerce(AndroidVirtualDevice.MIN_ANDROID_VERSION);
 		const bestVersion = best && best.version && semver.coerce(best.version);
 
