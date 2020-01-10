@@ -75,7 +75,7 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 			abstractPort: `localabstract:${configuration.appIdentifier}-livesync`
 		});
 
-		const connectionResult = await this.connectEventuallyUntilTimeout(this.createSocket.bind(this, port), connectTimeout);
+		const connectionResult = await this.connectEventuallyUntilTimeout(this.createSocket.bind(this, port), connectTimeout, configuration);
 		this.handleConnection(connectionResult);
 	}
 
@@ -299,19 +299,33 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 		});
 	}
 
-	private connectEventuallyUntilTimeout(factory: () => ILiveSyncSocket, timeout: number): Promise<{ socket: ILiveSyncSocket, data: Buffer | string }> {
+	private connectEventuallyUntilTimeout(factory: () => ILiveSyncSocket, timeout: number, configuration: IAndroidLivesyncToolConfiguration): Promise<{ socket: ILiveSyncSocket, data: Buffer | string }> {
 		return new Promise((resolve, reject) => {
 			let lastKnownError: Error | string,
 				isConnected = false;
 
-			const connectionTimer = setTimeout(() => {
+			const connectionTimer = setTimeout(async () => {
 				if (!isConnected) {
 					isConnected = true;
 					if (this.pendingConnectionData && this.pendingConnectionData.socketTimer) {
 						clearTimeout(this.pendingConnectionData.socketTimer);
 					}
 
-					reject(lastKnownError || new Error(AndroidLivesyncTool.SOCKET_CONNECTION_TIMED_OUT_ERROR));
+					const applicationPid = await this.$androidProcessService.getAppProcessId(configuration.deviceIdentifier, configuration.appIdentifier);
+					if (!applicationPid) {
+						this.$logger.trace("In Android LiveSync tool, lastKnownError is: ", lastKnownError);
+						this.$logger.info(`Application ${configuration.appIdentifier} is not running on device ${configuration.deviceIdentifier}.`.yellow);
+						this.$logger.info(
+							`This issue may be caused by:
+	* crash at startup (try \`tns debug android --debug-brk\` to check why it crashes)
+	* different application identifier in your package.json and in your gradle files (check your identifier in \`package.json\` and in all *.gradle files in your App_Resources directory)
+	* device is locked
+	* manual closing of the application`.cyan);
+						reject(new Error(`Application ${configuration.appIdentifier} is not running`));
+					} else {
+						reject(lastKnownError || new Error(AndroidLivesyncTool.SOCKET_CONNECTION_TIMED_OUT_ERROR));
+					}
+
 					this.pendingConnectionData = null;
 				}
 			}, timeout);
