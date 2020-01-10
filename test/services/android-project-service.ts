@@ -11,6 +11,7 @@ import { GradleBuildArgsService } from "../../lib/services/android/gradle-build-
 const createTestInjector = (): IInjector => {
 	const testInjector = new Yok();
 	testInjector.register("androidProjectService", AndroidProjectService);
+	testInjector.register("hooksService", stubs.HooksServiceStub);
 	testInjector.register("childProcess", stubs.ChildProcessStub);
 	testInjector.register("hostInfo", {});
 	testInjector.register("projectDataService", stubs.ProjectDataService);

@@ -14,6 +14,7 @@ import { IOSEntitlementsService } from "./ios-entitlements-service";
 import { IOSBuildData } from "../data/build-data";
 import { IOSPrepareData } from "../data/prepare-data";
 import { BUILD_XCCONFIG_FILE_NAME, IosProjectConstants } from "../constants";
+import { hook } from "../common/helpers";
 
 interface INativeSourceCodeGroup {
 	name: string;
@@ -200,6 +201,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			path.join(projectRoot, projectData.projectName));
 	}
 
+	@hook('buildIOS')
 	public async buildProject(projectRoot: string, projectData: IProjectData, iOSBuildData: IOSBuildData): Promise<void> {
 		const platformData = this.getPlatformData(projectData);
 

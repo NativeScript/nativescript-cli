@@ -129,7 +129,7 @@ describe("jsonFileSettingsService", () => {
 			const result = await new Promise((resolve, reject) => {
 				setTimeout(() => {
 					jsonFileSettingsService.getSettingValue<number>("prop1", { cacheTimeout: 1 }).then(resolve, reject);
-				}, 2);
+				}, 10);
 			});
 
 			assert.equal(result, null);
