@@ -5,6 +5,7 @@ import * as semver from "semver";
 import * as projectServiceBaseLib from "./platform-project-service-base";
 import { DeviceAndroidDebugBridge } from "../common/mobile/android/device-android-debug-bridge";
 import { Configurations, LiveSyncPaths } from "../common/constants";
+import { hook } from "../common/helpers";
 import { performanceLog } from ".././common/decorators";
 
 export class AndroidProjectService extends projectServiceBaseLib.PlatformProjectServiceBase {
@@ -242,6 +243,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	}
 
 	@performanceLog()
+	@hook('buildAndroid')
 	public async buildProject(projectRoot: string, projectData: IProjectData, buildData: IAndroidBuildData): Promise<void> {
 		const platformData = this.getPlatformData(projectData);
 		await this.$gradleBuildService.buildProject(platformData.projectRoot, buildData);
