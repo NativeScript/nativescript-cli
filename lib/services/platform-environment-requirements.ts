@@ -1,5 +1,5 @@
 import { NATIVESCRIPT_CLOUD_EXTENSION_NAME, TrackActionNames } from "../constants";
-import { isInteractive } from "../common/helpers";
+import { isInteractive, hook } from "../common/helpers";
 import { EOL } from "os";
 
 export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequirements {
@@ -39,6 +39,7 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 		"deploy": "tns cloud deploy"
 	};
 
+	@hook("checkEnvironment")
 	public async checkEnvironmentRequirements(input: ICheckEnvironmentRequirementsInput): Promise<ICheckEnvironmentRequirementsOutput> {
 		const { platform, projectDir, runtimeVersion } = input;
 		const notConfiguredEnvOptions = input.notConfiguredEnvOptions || {};

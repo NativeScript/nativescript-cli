@@ -1,6 +1,19 @@
 NativeScript CLI Changelog
 ================
 
+6.3.3 (2020, January 13)
+===
+
+### New
+
+* [Implemented #5205](https://github.com/NativeScript/nativescript-cli/issues/5205): Support build hooks
+* [Implemented #5210](https://github.com/NativeScript/nativescript-cli/issues/5210): Support environment check hooks 
+
+### Fixed
+
+* [Fixed #3818](https://github.com/NativeScript/nativescript-cli/issues/3818): Cannot set property 'socket' of null
+
+
 6.3.2 (2020, January 9)
 ===
 
