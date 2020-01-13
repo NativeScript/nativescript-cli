@@ -70,7 +70,8 @@ const createTestInjector = (socket: INetSocket, fileStreams: IDictionary<NodeJS.
 	testInjector.register("injector", testInjector);
 	testInjector.register("mobileHelper", MobileHelper);
 	testInjector.register("androidProcessService", {
-		forwardFreeTcpToAbstractPort: () => Promise.resolve("")
+		forwardFreeTcpToAbstractPort: () => Promise.resolve(""),
+		getAppProcessId: () => Promise.resolve("1234")
 	});
 	testInjector.register("LiveSyncSocket", () => socket);
 	testInjector.register("devicePlatformsConstants", DevicePlatformsConstants);
