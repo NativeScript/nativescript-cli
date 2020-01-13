@@ -6,6 +6,7 @@ import { UpdateControllerBase } from "./update-controller-base";
 interface IPackage {
 	name: string;
 	alias?: string;
+	isDev?: boolean;
 }
 
 export class UpdateController extends UpdateControllerBase implements IUpdateController {
@@ -13,7 +14,7 @@ export class UpdateController extends UpdateControllerBase implements IUpdateCon
 		{ name: constants.SCOPED_TNS_CORE_MODULES, alias: constants.TNS_CORE_MODULES_NAME },
 		{ name: constants.TNS_CORE_MODULES_NAME },
 		{ name: constants.TNS_CORE_MODULES_WIDGETS_NAME },
-		{ name: constants.WEBPACK_PLUGIN_NAME }];
+		{ name: constants.WEBPACK_PLUGIN_NAME, isDev: true }];
 	static readonly folders: string[] = [
 		constants.LIB_DIR_NAME,
 		constants.HOOKS_DIR_NAME,
@@ -60,11 +61,16 @@ export class UpdateController extends UpdateControllerBase implements IUpdateCon
 			await this.updateProject(projectData, updateOptions.version);
 		} catch (error) {
 			this.restoreBackup(UpdateController.folders, backupDir, projectData.projectDir);
-			this.$logger.error(UpdateController.updateFailMessage);
+			this.$logger.error(`${UpdateController.updateFailMessage} Reason is: ${error.message}`);
 		}
 	}
 
 	public async shouldUpdate({ projectDir, version }: { projectDir: string, version?: string }): Promise<boolean> {
+		if (version && !semver.valid(version) && !semver.validRange(version)) {
+			// probably npm tag here
+			return true;
+		}
+
 		const projectData = this.$projectDataService.getProjectData(projectDir);
 		const templateManifest = await this.getTemplateManifest(projectData, version);
 		const dependencies = this.getUpdatableDependencies(templateManifest.dependencies);
@@ -103,7 +109,14 @@ export class UpdateController extends UpdateControllerBase implements IUpdateCon
 	}
 
 	private async updateProject(projectData: IProjectData, version: string): Promise<void> {
-		const templateManifest = await this.getTemplateManifest(projectData, version);
+		let templateManifest: any = {};
+
+		if (!version || semver.valid(version) || semver.validRange(version)) {
+			templateManifest = await this.getTemplateManifest(projectData, version);
+		} else {
+			templateManifest = await this.constructTemplateManifestForTag(version);
+		}
+
 		const dependencies = this.getUpdatableDependencies(templateManifest.dependencies);
 		const devDependencies = this.getUpdatableDependencies(templateManifest.devDependencies);
 
@@ -125,6 +138,49 @@ export class UpdateController extends UpdateControllerBase implements IUpdateCon
 			ignoreScripts: false,
 			path: projectData.projectDir
 		});
+	}
+
+	private async constructTemplateManifestForTag(tag: string): Promise<any> {
+		this.$logger.trace(`Will construct manually template manifest for tag ${tag}`);
+
+		const templateManifest: any = {};
+		templateManifest.dependencies = {};
+		templateManifest.devDependencies = {};
+		for (const updatableDependency of UpdateController.updatableDependencies) {
+			const version = await this.getVersionFromTag(updatableDependency.name, tag);
+			if (!version) {
+				this.$errors.fail(`Unable to execute update as package '${updatableDependency.name}' does not have version or tag '${tag}'`);
+			}
+
+			const dictionaryToModify = updatableDependency.isDev ? templateManifest.devDependencies : templateManifest.dependencies;
+			dictionaryToModify[updatableDependency.name] = version;
+			if (updatableDependency.alias) {
+				const aliasVersion = await this.getVersionFromTag(updatableDependency.name, tag);
+				dictionaryToModify[updatableDependency.alias] = aliasVersion;
+			}
+		}
+
+		templateManifest.nativescript = {
+			[constants.TNS_ANDROID_RUNTIME_NAME]: {
+				version: await this.getVersionFromTag(constants.TNS_ANDROID_RUNTIME_NAME, tag)
+			},
+			[constants.TNS_IOS_RUNTIME_NAME]: {
+				version: await this.$packageManager.getTagVersion(constants.TNS_IOS_RUNTIME_NAME, tag)
+			}
+		};
+
+		this.$logger.trace(`Manually constructed template manifest for tag ${tag}. Content is: ${JSON.stringify(templateManifest, null, 2)}`);
+
+		return templateManifest;
+	}
+
+	private async getVersionFromTag(packageName: string, tag: string): Promise<string> {
+		const version = await this.$packageManager.getTagVersion(packageName, tag);
+		if (!version) {
+			this.$errors.fail(`Unable to execute update as package ${packageName} does not have version/tag ${tag}. Please enter valid version or npm tag.`);
+		}
+
+		return version;
 	}
 
 	private async updateDependencies({ dependencies, areDev, projectData }: { dependencies: IDictionary<string>, areDev: boolean, projectData: IProjectData }) {
