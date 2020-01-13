@@ -7,6 +7,7 @@ NativeScript CLI Changelog
 ### New
 
 * [Implemented #5205](https://github.com/NativeScript/nativescript-cli/issues/5205): Support build hooks
+* [Implemented #5210](https://github.com/NativeScript/nativescript-cli/issues/5210): Support environment check hooks 
 
 ### Fixed
 
