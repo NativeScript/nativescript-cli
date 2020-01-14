@@ -10,6 +10,8 @@ export class PackageManagerCommand implements ICommand {
 	public execute(args: string[]): Promise<void> {
 		if (args[0] === 'yarn') {
 			return this.$userSettingsService.saveSetting("packageManager", "yarn");
+		} else if (args[0] === 'pnpm') {
+			return this.$userSettingsService.saveSetting("packageManager", "pnpm");
 		} else if (args[0] === 'npm') {
 			return this.$userSettingsService.saveSetting("packageManager", "npm");
 		}

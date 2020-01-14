@@ -100,6 +100,7 @@ export class Options {
 			ts: { type: OptionType.Boolean, hasSensitiveValue: false },
 			typescript: { type: OptionType.Boolean, hasSensitiveValue: false },
 			yarn: { type: OptionType.Boolean, hasSensitiveValue: false },
+			pnpm: { type: OptionType.Boolean, hasSensitiveValue: false },
 			androidTypings: { type: OptionType.Boolean, hasSensitiveValue: false },
 			bundle: { type: OptionType.String, hasSensitiveValue: false },
 			all: { type: OptionType.Boolean, hasSensitiveValue: false },

@@ -9,6 +9,7 @@ export class PackageManager implements IPackageManager {
 		private $npm: INodePackageManager,
 		private $options: IOptions,
 		private $yarn: INodePackageManager,
+		private $pnpm: INodePackageManager,
 		private $logger: ILogger,
 		private $userSettingsService: IUserSettingsService
 	) { }
@@ -98,7 +99,9 @@ export class PackageManager implements IPackageManager {
 
 		if (pm === 'yarn' || this.$options.yarn) {
 			return this.$yarn;
-		} else {
+		} else  if (pm === 'pnpm' || this.$options.pnpm) {
+			return this.$pnpm;
+		} else{
 			return this.$npm;
 		}
 	}
