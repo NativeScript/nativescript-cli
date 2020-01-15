@@ -1,6 +1,7 @@
 import * as path from "path";
 import { BasePackageManager } from "./base-package-manager";
 import { exported } from './common/decorators';
+import { CACACHE_DIRECTORY_NAME } from "./constants";
 
 export class PnpmPackageManager extends BasePackageManager {
 
@@ -29,10 +30,11 @@ export class PnpmPackageManager extends BasePackageManager {
 		const jsonContentBefore = this.$fs.readJson(packageJsonPath);
 
 		const flags = this.getFlagsString(config, true);
-		let params = [];
+		// With pnpm we need to install as "flat" or some imports wont be found
+		let params = ['i', '--shamefully-hoist'];
 		const isInstallingAllDependencies = packageName === pathToSave;
 		if (!isInstallingAllDependencies) {
-			params.push('i', packageName);
+			params.push(packageName);
 		}
 
 		params = params.concat(flags);
@@ -64,15 +66,14 @@ export class PnpmPackageManager extends BasePackageManager {
 		} catch (e) {
 			this.$errors.fail(e.message);
 		}
-
 		const result = JSON.parse(viewResult);
-		return result.data;
+		return result;
 	}
 
 	@exported("pnpm")
 	public search(filter: string[], config: IDictionary<string | boolean>): Promise<string> {
-		this.$errors.fail("Method not implemented. pnpm does not support searching for packages in the registry.");
-		return null;
+		const flags = this.getFlagsString(config, false);
+		return this.$childProcess.exec(`pnpm search ${filter.join(" ")} ${flags}`);
 	}
 
 	public async searchNpms(keyword: string): Promise<INpmsResult> {
@@ -95,8 +96,8 @@ export class PnpmPackageManager extends BasePackageManager {
 
 	@exported("pnpm")
 	public async getCachePath(): Promise<string> {
-		const result = await this.$childProcess.exec(`pnpm cache dir`);
-		return result.toString().trim();
+		const cachePath = await this.$childProcess.exec(`pnpm config get cache`);
+		return path.join(cachePath.trim(), CACACHE_DIRECTORY_NAME);
 	}
 }
 
