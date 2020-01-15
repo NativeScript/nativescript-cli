@@ -4,6 +4,7 @@ import { PackageManager } from "../lib/package-manager";
 import { PackageInstallationManager } from "../lib/package-installation-manager";
 import { NodePackageManager } from "../lib/node-package-manager";
 import { YarnPackageManager } from "../lib/yarn-package-manager";
+import { PnpmPackageManager } from "../lib/pnpm-package-manager";
 import { FileSystem } from "../lib/common/file-system";
 import { ProjectData } from "../lib/project-data";
 import { ChildProcess } from "../lib/common/child-process";
@@ -50,6 +51,7 @@ function createTestInjector() {
 	testInjector.register("packageManager", PackageManager);
 	testInjector.register("npm", NodePackageManager);
 	testInjector.register("yarn", YarnPackageManager);
+	testInjector.register("pnpm", PnpmPackageManager);
 	testInjector.register("fs", FileSystem);
 	testInjector.register("adb", {});
 	testInjector.register("androidDebugBridgeResultHandler", {});
