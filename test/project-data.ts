@@ -42,7 +42,8 @@ describe("projectData", () => {
 		return testInjector;
 	};
 
-	const prepareTest = (opts?: { packageJsonData?: { dependencies?: IStringDictionary, devDependencies: IStringDictionary }, nsconfigData?: { shared: boolean } }): IProjectData => {
+	const projectDir = "projectDir";
+	const prepareTest = (opts?: { packageJsonData?: { dependencies?: IStringDictionary, devDependencies: IStringDictionary }, nsconfigData?: { shared?: boolean, webpackConfigPath?: string } }): IProjectData => {
 		const testInjector = createTestInjector();
 		const fs = testInjector.resolve("fs");
 		fs.exists = (filePath: string) => filePath && (path.basename(filePath) === "package.json" || (path.basename(filePath) === "nsconfig.json" && opts && opts.nsconfigData));
@@ -64,7 +65,7 @@ describe("projectData", () => {
 		};
 
 		const projectHelper: IProjectHelper = testInjector.resolve("projectHelper");
-		projectHelper.projectDir = "projectDir";
+		projectHelper.projectDir = projectDir;
 
 		const projectData: IProjectData = testInjector.resolve("projectData");
 		projectData.initializeProjectData();
@@ -140,6 +141,25 @@ describe("projectData", () => {
 		it("is true when nsconfig.json exists and shared value is true", () => {
 			const projectData = prepareTest({ nsconfigData: { shared: true } });
 			assert.isTrue(projectData.isShared);
+		});
+	});
+
+	describe("webpackConfigPath", () => {
+		it("default path to webpack.config.js is set when nsconfig.json does not set value", () => {
+			const projectData = prepareTest();
+			assert.equal(projectData.webpackConfigPath, path.join(projectDir, "webpack.config.js"));
+		});
+
+		it("returns correct path when full path is set in nsconfig.json", () => {
+			const pathToConfig = path.resolve(path.join("/testDir", "innerDir", "mywebpack.config.js"));
+			const projectData = prepareTest({ nsconfigData: { webpackConfigPath: pathToConfig } });
+			assert.equal(projectData.webpackConfigPath, pathToConfig);
+		});
+
+		it("returns correct path when relative path is set in nsconfig.json", () => {
+			const pathToConfig = path.resolve(path.join("projectDir", "innerDir", "mywebpack.config.js"));
+			const projectData = prepareTest({ nsconfigData: { webpackConfigPath: path.join("./innerDir", "mywebpack.config.js") } });
+			assert.equal(projectData.webpackConfigPath, pathToConfig);
 		});
 	});
 });

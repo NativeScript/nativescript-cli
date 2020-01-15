@@ -328,6 +328,7 @@ export class NodePackageManagerStub implements INodePackageManager {
 export class ProjectDataStub implements IProjectData {
 	projectDir: string;
 	projectName: string;
+	webpackConfigPath: string;
 	get platformsDir(): string {
 		return this.platformsDirCache || (this.projectDir && join(this.projectDir, "platforms")) || "";
 	}

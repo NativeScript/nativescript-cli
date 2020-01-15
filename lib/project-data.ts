@@ -70,6 +70,7 @@ export class ProjectData implements IProjectData {
 	public podfilePath: string;
 	public isShared: boolean;
 	public previewAppSchema: string;
+	public webpackConfigPath: string;
 
 	constructor(private $fs: IFileSystem,
 		private $errors: IErrors,
@@ -145,6 +146,7 @@ export class ProjectData implements IProjectData {
 			this.podfilePath = path.join(this.appResourcesDirectoryPath, this.$devicePlatformsConstants.iOS, constants.PODFILE_NAME);
 			this.isShared = !!(this.nsConfig && this.nsConfig.shared);
 			this.previewAppSchema = this.nsConfig && this.nsConfig.previewAppSchema;
+			this.webpackConfigPath = (this.nsConfig && this.nsConfig.webpackConfigPath) ? path.resolve(this.projectDir, this.nsConfig.webpackConfigPath) : path.join(this.projectDir, "webpack.config.js");
 			return;
 		}
 
