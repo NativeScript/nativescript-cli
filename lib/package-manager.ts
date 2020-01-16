@@ -101,7 +101,7 @@ export class PackageManager implements IPackageManager {
 			return this.$yarn;
 		} else  if (pm === 'pnpm' || this.$options.pnpm) {
 			return this.$pnpm;
-		} else{
+		} else {
 			return this.$npm;
 		}
 	}
