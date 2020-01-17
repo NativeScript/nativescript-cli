@@ -12,6 +12,7 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 	constructor(
 		private $errors: IErrors,
 		private $childProcess: IChildProcess,
+		public $fs: IFileSystem,
 		public $hooksService: IHooksService,
 		public $hostInfo: IHostInfo,
 		private $logger: ILogger,
@@ -153,15 +154,18 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 
 	@performanceLog()
 	private async startWebpackProcess(platformData: IPlatformData, projectData: IProjectData, prepareData: IPrepareData): Promise<child_process.ChildProcess> {
+		if (!this.$fs.exists(projectData.webpackConfigPath)) {
+			this.$errors.fail(`The webpack configuration file ${projectData.webpackConfigPath} does not exist. Ensure you have such file or set correct path in nsconfig.json`);
+		}
+
 		const envData = this.buildEnvData(platformData.platformNameLowerCase, projectData, prepareData);
 		const envParams = await this.buildEnvCommandLineParams(envData, platformData, projectData, prepareData);
 		const additionalNodeArgs = semver.major(process.version) <= 8 ? ["--harmony"] : [];
-
 		const args = [
 			...additionalNodeArgs,
 			"--preserve-symlinks",
 			path.join(projectData.projectDir, "node_modules", "webpack", "bin", "webpack.js"),
-			`--config=${path.join(projectData.projectDir, "webpack.config.js")}`,
+			`--config=${projectData.webpackConfigPath}`,
 			...envParams
 		];
 

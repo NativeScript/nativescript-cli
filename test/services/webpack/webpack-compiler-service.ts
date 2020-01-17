@@ -1,6 +1,7 @@
 import { Yok } from "../../../lib/common/yok";
 import { WebpackCompilerService } from "../../../lib/services/webpack/webpack-compiler-service";
 import { assert } from "chai";
+import { ErrorsStub } from "../../stubs";
 
 const iOSPlatformName = "ios";
 const androidPlatformName = "android";
@@ -17,10 +18,13 @@ function createTestInjector(): IInjector {
 	testInjector.register("hooksService", {});
 	testInjector.register("hostInfo", {});
 	testInjector.register("logger", {});
-	testInjector.register("errors", {});
+	testInjector.register("errors", ErrorsStub);
 	testInjector.register("packageInstallationManager", {});
 	testInjector.register("mobileHelper", {});
 	testInjector.register("cleanupService", {});
+	testInjector.register("fs", {
+		exists: (filePath: string) => true
+	});
 
 	return testInjector;
 }
@@ -85,6 +89,24 @@ describe("WebpackCompilerService", () => {
 
 			const androidResult = webpackCompilerService.getUpdatedEmittedFiles(getAllEmittedFiles("hash6"), chunkFiles, "hash8", androidPlatformName);
 			assert.deepEqual(androidResult.emittedFiles, ["bundle.hash6.hot-update.js", "hash6.hot-update.json"]);
+		});
+	});
+
+	describe("compileWithWatch", () => {
+		it("fails when the value set for webpackConfigPath is not existant file", async () => {
+			const webpackConfigPath = "some path.js";
+			testInjector.resolve("fs").exists = (filePath: string) => filePath !== webpackConfigPath;
+			await assert.isRejected(webpackCompilerService.compileWithWatch(<any>{ platformNameLowerCase: "android" }, <any>{ webpackConfigPath }, <any>{}),
+				`The webpack configuration file ${webpackConfigPath} does not exist. Ensure you have such file or set correct path in nsconfig.json`);
+		});
+	});
+
+	describe("compileWithoutWatch", () => {
+		it("fails when the value set for webpackConfigPath is not existant file", async () => {
+			const webpackConfigPath = "some path.js";
+			testInjector.resolve("fs").exists = (filePath: string) => filePath !== webpackConfigPath;
+			await assert.isRejected(webpackCompilerService.compileWithoutWatch(<any>{ platformNameLowerCase: "android" }, <any>{ webpackConfigPath }, <any>{}),
+				`The webpack configuration file ${webpackConfigPath} does not exist. Ensure you have such file or set correct path in nsconfig.json`);
 		});
 	});
 });

@@ -75,7 +75,8 @@ interface INsConfig {
 	appResourcesPath?: string;
 	shared?: boolean;
 	previewAppSchema?: string;
-	overridePods?: string
+	overridePods?: string;
+	webpackConfigPath?: string;
 }
 
 interface IProjectData extends ICreateProjectData {
@@ -105,6 +106,13 @@ interface IProjectData extends ICreateProjectData {
 	 * Defines the schema for the preview app
 	 */
 	previewAppSchema: string;
+
+	/**
+	 * Defines the path to the configuration file passed to webpack process.
+	 * By default this is the webpack.config.js at the root of the application.
+	 * The value can be changed by setting `webpackConfigPath` in nsconfig.json.
+	 */
+	webpackConfigPath: string;
 
 	/**
 	 * Initializes project data with the given project directory. If none supplied defaults to --path option or cwd.
