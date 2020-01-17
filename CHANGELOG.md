@@ -7,11 +7,12 @@ NativeScript CLI Changelog
 ### New
 
 * [Implemented #5205](https://github.com/NativeScript/nativescript-cli/issues/5205): Support build hooks
-* [Implemented #5210](https://github.com/NativeScript/nativescript-cli/issues/5210): Support environment check hooks 
+* [Implemented #5210](https://github.com/NativeScript/nativescript-cli/issues/5210): Support environment check hooks
 
 ### Fixed
 
 * [Fixed #3818](https://github.com/NativeScript/nativescript-cli/issues/3818): Cannot set property 'socket' of null
+* [Fixed #5072](https://github.com/NativeScript/nativescript-cli/issues/5072):`tns update next` doesn't work with CLI 6+
 
 
 6.3.2 (2020, January 9)
