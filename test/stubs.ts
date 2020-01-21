@@ -17,7 +17,9 @@ export class LoggerStub implements ILogger {
 	getLevel(): string { return undefined; }
 	fatal(...args: string[]): void { }
 	error(...args: string[]): void { }
-	warn(...args: string[]): void { }
+	warn(...args: string[]): void {
+		this.warnOutput += util.format.apply(null, args) + "\n";
+	}
 	info(...args: string[]): void {
 		this.output += util.format.apply(null, args) + "\n";
 	}
@@ -29,6 +31,7 @@ export class LoggerStub implements ILogger {
 
 	public output = "";
 	public traceOutput = "";
+	public warnOutput = "";
 
 	prepare(item: any): string {
 		return "";

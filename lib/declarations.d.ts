@@ -368,6 +368,8 @@ interface IDependencyData {
 	 * Dependencies of the current module.
 	 */
 	dependencies?: string[];
+
+	version: string;
 }
 
 interface INpmsResult {

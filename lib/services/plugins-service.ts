@@ -9,6 +9,9 @@ export class PluginsService implements IPluginsService {
 	private static NPM_CONFIG = {
 		save: true
 	};
+
+	private static LOCK_FILES = ["package-lock.json", "npm-shrinkwrap.json", "yarn.lock", "pnpm-lock.yaml"];
+
 	private get $platformsDataService(): IPlatformsDataService {
 		return this.$injector.resolve("platformsDataService");
 	}
@@ -169,24 +172,17 @@ export class PluginsService implements IPluginsService {
 		return _.filter(nodeModules, nodeModuleData => nodeModuleData && nodeModuleData.isPlugin);
 	}
 
-	//This method will traverse all non dev dependencies (not only the root/installed ones) and filter the plugins.
 	public getAllProductionPlugins(projectData: IProjectData, dependencies?: IDependencyData[]): IPluginData[] {
-		const allProductionPlugins: IPluginData[] = [];
 		dependencies = dependencies || this.$nodeModulesDependenciesBuilder.getProductionDependencies(projectData.projectDir);
 
 		if (_.isEmpty(dependencies)) {
-			return allProductionPlugins;
+			return [];
 		}
 
-		_.forEach(dependencies, dependency => {
-			const isPlugin = !!dependency.nativescript;
-			if (isPlugin) {
-				const pluginData = this.convertToPluginData(dependency, projectData.projectDir);
-				allProductionPlugins.push(pluginData);
-			}
-		});
-
-		return allProductionPlugins;
+		let productionPlugins: IDependencyData[] = dependencies.filter(d => !!d.nativescript);
+		productionPlugins = this.ensureValidProductionPlugins(productionPlugins, projectData.projectDir);
+		const pluginData = productionPlugins.map(plugin => this.convertToPluginData(plugin, projectData.projectDir));
+		return pluginData;
 	}
 
 	public getDependenciesFromPackageJson(projectDir: string): IPackageJsonDepedenciesResult {
@@ -206,14 +202,71 @@ export class PluginsService implements IPluginsService {
 		return pluginPackageJsonContent && pluginPackageJsonContent.nativescript;
 	}
 
-	public convertToPluginData(cacheData: any, projectDir: string): IPluginData {
+	private ensureValidProductionPlugins = _.memoize<(productionDependencies: IDependencyData[], projectDir: string) => IDependencyData[]>(this._ensureValidProductionPlugins, (productionDependencies: IDependencyData[], projectDir: string) => {
+		let key = _.sortBy(productionDependencies, p => p.directory).map(d => JSON.stringify(d, null, 2)).join("\n");
+		key += projectDir;
+		return key;
+	});
+
+	private _ensureValidProductionPlugins(productionDependencies: IDependencyData[], projectDir: string): IDependencyData[] {
+		const clonedProductionDependencies = _.cloneDeep(productionDependencies);
+		const dependenciesGroupedByName = _.groupBy(clonedProductionDependencies, p => p.name);
+		_.each(dependenciesGroupedByName, (dependencyOccurrences, dependencyName) => {
+			if (dependencyOccurrences.length > 1) {
+				// the dependency exists multiple times in node_modules
+				const dependencyOccurrencesGroupedByVersion = _.groupBy(dependencyOccurrences, g => g.version);
+				const versions = _.keys(dependencyOccurrencesGroupedByVersion);
+				if (versions.length === 1) {
+					// all dependencies with this name have the same version
+					this.$logger.warn(`Detected same versions (${_.first(versions)}) of the ${dependencyName} installed at locations: ${_.map(dependencyOccurrences, d => d.directory).join(", ")}`);
+					const selectedPackage = _.minBy(dependencyOccurrences, d => d.depth);
+					this.$logger.info(`CLI will use only the native code from '${selectedPackage.directory}'.`.green);
+					_.each(dependencyOccurrences, dependency => {
+						if (dependency !== selectedPackage) {
+							clonedProductionDependencies.splice(clonedProductionDependencies.indexOf(dependency), 1);
+						}
+					});
+				} else {
+					const message = this.getFailureMessageForDifferentDependencyVersions(dependencyName, dependencyOccurrencesGroupedByVersion, projectDir);
+					this.$errors.fail(message);
+				}
+			}
+		});
+
+		return clonedProductionDependencies;
+	}
+
+	private getFailureMessageForDifferentDependencyVersions(dependencyName: string, dependencyOccurrencesGroupedByVersion: IDictionary<IDependencyData[]>, projectDir: string): string {
+		let message = `Cannot use different versions of a NativeScript plugin in your application.
+${dependencyName} plugin occurs multiple times in node_modules:\n`;
+		_.each(dependencyOccurrencesGroupedByVersion, (dependencies, version) => {
+			message += dependencies.map(d => `* Path: ${d.directory}, version: ${d.version}\n`);
+		});
+
+		const existingLockFiles: string[] = [];
+		PluginsService.LOCK_FILES.forEach(lockFile => {
+			if (this.$fs.exists(path.join(projectDir, lockFile))) {
+				existingLockFiles.push(lockFile);
+			}
+		});
+
+		let msgForLockFiles: string = "";
+		if (existingLockFiles.length) {
+			msgForLockFiles += ` and ${existingLockFiles.join(", ")}`;
+		}
+
+		message += `Probably you need to update your dependencies, remove node_modules${msgForLockFiles} and try again.`;
+		return message;
+	}
+
+	private convertToPluginData(cacheData: IDependencyData | INodeModuleData, projectDir: string): IPluginData {
 		const pluginData: any = {};
 		pluginData.name = cacheData.name;
 		pluginData.version = cacheData.version;
-		pluginData.fullPath = cacheData.directory || path.dirname(this.getPackageJsonFilePathForModule(cacheData.name, projectDir));
-		pluginData.isPlugin = !!cacheData.nativescript || !!cacheData.moduleInfo;
+		pluginData.fullPath = (<IDependencyData>cacheData).directory || path.dirname(this.getPackageJsonFilePathForModule(cacheData.name, projectDir));
+		pluginData.isPlugin = !!cacheData.nativescript;
 		pluginData.pluginPlatformsFolderPath = (platform: string) => path.join(pluginData.fullPath, "platforms", platform.toLowerCase());
-		const data = cacheData.nativescript || cacheData.moduleInfo;
+		const data = cacheData.nativescript;
 
 		if (pluginData.isPlugin) {
 			pluginData.platformsData = data.platforms;
@@ -280,7 +333,7 @@ export class PluginsService implements IPluginsService {
 			version: data.version,
 			fullPath: path.dirname(module),
 			isPlugin: data.nativescript !== undefined,
-			moduleInfo: data.nativescript
+			nativescript: data.nativescript
 		};
 	}
 

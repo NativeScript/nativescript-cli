@@ -59,13 +59,14 @@ describe("nodeModulesDependenciesBuilder", () => {
 				return path.join(parentDir || pathToProject, constants.NODE_MODULES_FOLDER_NAME, dependencyName);
 			};
 
-			const getNodeModuleInfoForExpecteDependency = (dir: string, depth: number, nativescript?: any, dependencies?: string[], name?: string): IDependencyData => {
+			const getNodeModuleInfoForExpecteDependency = (dir: string, depth: number, nativescript?: any, dependencies?: string[], name?: string, version?: string): IDependencyData => {
 				const packageName = name || path.basename(dir);
 				const result: IDependencyData = {
 					name: packageName,
 					directory: getPathToDependencyInNodeModules(dir),
 					depth,
-					dependencies: dependencies || []
+					dependencies: dependencies || [],
+					version: version
 				};
 
 				if (nativescript) {
@@ -79,7 +80,7 @@ describe("nodeModulesDependenciesBuilder", () => {
 				return path.join(getPathToDependencyInNodeModules(dependencyName, parentDir), constants.PACKAGE_JSON_FILE_NAME);
 			};
 
-			const getDependenciesObjectFromDependencyInfo = (depInfos: IDependencyInfo[], nativescript: any): { dependencies: IStringDictionary, nativescript?: any, devDependencies: IStringDictionary } => {
+			const getDependenciesObjectFromDependencyInfo = (depInfos: IDependencyInfo[], nativescript: any, version: string): { dependencies: IStringDictionary, nativescript?: any, devDependencies: IStringDictionary, version: string } => {
 				const dependencies: any = {};
 				const devDepdencies: any = {};
 				_.each(depInfos, innerDependency => {
@@ -99,6 +100,10 @@ describe("nodeModulesDependenciesBuilder", () => {
 					result.nativescript = nativescript;
 				}
 
+				if (version)  {
+					result.version = version;
+				}
+
 				return result;
 			};
 
@@ -107,7 +112,7 @@ describe("nodeModulesDependenciesBuilder", () => {
 				for (const dependencyInfo of deps) {
 					const pathToPackageJson = getPathToPackageJsonOfDependency(dependencyInfo.name, parentDir);
 					if (filename === pathToPackageJson) {
-						return getDependenciesObjectFromDependencyInfo(dependencyInfo.dependencies, dependencyInfo.nativescript);
+						return getDependenciesObjectFromDependencyInfo(dependencyInfo.dependencies, dependencyInfo.nativescript, dependencyInfo.version);
 					}
 
 					if (dependencyInfo.dependencies) {
@@ -128,7 +133,7 @@ describe("nodeModulesDependenciesBuilder", () => {
 
 				fs.readJson = (filename: string, encoding?: string): any => {
 					const innerDependency = getDependenciesObject(filename, rootDeps, pathToProject);
-					return innerDependency || getDependenciesObjectFromDependencyInfo(rootDeps, null);
+					return innerDependency || getDependenciesObjectFromDependencyInfo(rootDeps, null, null);
 				};
 
 				const isDirectory = (searchedPath: string, currentRootPath: string, deps: IDependencyInfo[], currentDepthLevel: number): boolean => {
@@ -221,8 +226,8 @@ describe("nodeModulesDependenciesBuilder", () => {
 				const actualResult = await nodeModulesDependenciesBuilder.getProductionDependencies(pathToProject);
 
 				const expectedResult: IDependencyData[] = [
-					getNodeModuleInfoForExpecteDependency(firstPackage, 0),
-					getNodeModuleInfoForExpecteDependency(secondPackage, 0)
+					getNodeModuleInfoForExpecteDependency(firstPackage, 0, null, null, null, "1.0.0"),
+					getNodeModuleInfoForExpecteDependency(secondPackage, 0, null, null, null, "1.1.0")
 				];
 
 				assert.deepEqual(actualResult, expectedResult);
@@ -241,7 +246,7 @@ describe("nodeModulesDependenciesBuilder", () => {
 				];
 
 				const expectedResult: IDependencyData[] = [
-					getNodeModuleInfoForExpecteDependency(secondPackage, 0),
+					getNodeModuleInfoForExpecteDependency(secondPackage, 0, null, null, null, "1.1.0"),
 				];
 
 				const nodeModulesDependenciesBuilder = generateTest(rootDeps);
@@ -264,9 +269,9 @@ describe("nodeModulesDependenciesBuilder", () => {
 				];
 
 				const expectedResult: IDependencyData[] = [
-					getNodeModuleInfoForExpecteDependency(scopedPackageName, 0, null, [secondPackage], scopedPackageName),
-					getNodeModuleInfoForExpecteDependency(secondPackage, 0),
-					getNodeModuleInfoForExpecteDependency(path.join(scopedPackageName, constants.NODE_MODULES_FOLDER_NAME, secondPackage), 1)
+					getNodeModuleInfoForExpecteDependency(scopedPackageName, 0, null, [secondPackage], scopedPackageName, "1.0.0"),
+					getNodeModuleInfoForExpecteDependency(secondPackage, 0, null, null, null, "1.1.0"),
+					getNodeModuleInfoForExpecteDependency(path.join(scopedPackageName, constants.NODE_MODULES_FOLDER_NAME, secondPackage), 1, null, null, null, "1.2.0")
 				];
 
 				const nodeModulesDependenciesBuilder = generateTest(rootDeps);
@@ -288,9 +293,9 @@ describe("nodeModulesDependenciesBuilder", () => {
 				];
 
 				const expectedResult: IDependencyData[] = [
-					getNodeModuleInfoForExpecteDependency(firstPackage, 0, null, [scopedPackageName]),
-					getNodeModuleInfoForExpecteDependency(thirdPackage, 0),
-					getNodeModuleInfoForExpecteDependency(path.join(firstPackage, constants.NODE_MODULES_FOLDER_NAME, scopedPackageName), 1, null, null, scopedPackageName)
+					getNodeModuleInfoForExpecteDependency(firstPackage, 0, null, [scopedPackageName], null, "1.0.0"),
+					getNodeModuleInfoForExpecteDependency(thirdPackage, 0, null, null, null, "1.1.0"),
+					getNodeModuleInfoForExpecteDependency(path.join(firstPackage, constants.NODE_MODULES_FOLDER_NAME, scopedPackageName), 1, null, null, scopedPackageName, "1.2.0")
 				];
 
 				const nodeModulesDependenciesBuilder = generateTest(rootDeps);
@@ -315,9 +320,9 @@ describe("nodeModulesDependenciesBuilder", () => {
 				const actualResult = await nodeModulesDependenciesBuilder.getProductionDependencies(pathToProject);
 
 				const expectedResult: IDependencyData[] = [
-					getNodeModuleInfoForExpecteDependency(firstPackage, 0),
-					getNodeModuleInfoForExpecteDependency(secondPackage, 0),
-					getNodeModuleInfoForExpecteDependency(thirdPackage, 0)
+					getNodeModuleInfoForExpecteDependency(firstPackage, 0, null, null, null, "1.0.0"),
+					getNodeModuleInfoForExpecteDependency(secondPackage, 0, null, null, null, "1.1.0"),
+					getNodeModuleInfoForExpecteDependency(thirdPackage, 0, null, null, null, "1.2.0")
 				];
 
 				assert.deepEqual(actualResult, expectedResult);
@@ -336,9 +341,9 @@ describe("nodeModulesDependenciesBuilder", () => {
 				];
 
 				const expectedResult: IDependencyData[] = [
-					getNodeModuleInfoForExpecteDependency(firstPackage, 0, null, [secondPackage]),
-					getNodeModuleInfoForExpecteDependency(secondPackage, 0),
-					getNodeModuleInfoForExpecteDependency(path.join(firstPackage, constants.NODE_MODULES_FOLDER_NAME, secondPackage), 1)
+					getNodeModuleInfoForExpecteDependency(firstPackage, 0, null, [secondPackage], null, "1.0.0"),
+					getNodeModuleInfoForExpecteDependency(secondPackage, 0, null, null, null, "1.1.0"),
+					getNodeModuleInfoForExpecteDependency(path.join(firstPackage, constants.NODE_MODULES_FOLDER_NAME, secondPackage), 1, null, null, null, "1.2.0")
 				];
 
 				const nodeModulesDependenciesBuilder = generateTest(rootDeps);
@@ -369,12 +374,12 @@ describe("nodeModulesDependenciesBuilder", () => {
 
 				const pathToSecondPackageInsideFirstPackage = path.join(firstPackage, constants.NODE_MODULES_FOLDER_NAME, secondPackage);
 				const expectedResult: IDependencyData[] = [
-					getNodeModuleInfoForExpecteDependency(firstPackage, 0, null, [secondPackage, thirdPackage]),
-					getNodeModuleInfoForExpecteDependency(secondPackage, 0),
-					getNodeModuleInfoForExpecteDependency(thirdPackage, 0),
-					getNodeModuleInfoForExpecteDependency(pathToSecondPackageInsideFirstPackage, 1, null, [thirdPackage]),
-					getNodeModuleInfoForExpecteDependency(path.join(firstPackage, constants.NODE_MODULES_FOLDER_NAME, thirdPackage), 1),
-					getNodeModuleInfoForExpecteDependency(path.join(pathToSecondPackageInsideFirstPackage, constants.NODE_MODULES_FOLDER_NAME, thirdPackage), 2),
+					getNodeModuleInfoForExpecteDependency(firstPackage, 0, null, [secondPackage, thirdPackage], null, "1.0.0"),
+					getNodeModuleInfoForExpecteDependency(secondPackage, 0, null, null, null, "1.0.0"),
+					getNodeModuleInfoForExpecteDependency(thirdPackage, 0, null, null, null, "1.0.0"),
+					getNodeModuleInfoForExpecteDependency(pathToSecondPackageInsideFirstPackage, 1, null, [thirdPackage], null, "1.1.0"),
+					getNodeModuleInfoForExpecteDependency(path.join(firstPackage, constants.NODE_MODULES_FOLDER_NAME, thirdPackage), 1, null, null, null, "1.1.0"),
+					getNodeModuleInfoForExpecteDependency(path.join(pathToSecondPackageInsideFirstPackage, constants.NODE_MODULES_FOLDER_NAME, thirdPackage), 2, null, null, null, "1.2.0"),
 				];
 
 				const nodeModulesDependenciesBuilder = generateTest(rootDeps);
@@ -410,9 +415,9 @@ describe("nodeModulesDependenciesBuilder", () => {
 				const actualResult = await nodeModulesDependenciesBuilder.getProductionDependencies(pathToProject);
 
 				const expectedResult: IDependencyData[] = [
-					getNodeModuleInfoForExpecteDependency(firstPackage, 0, getNativeScriptDataForPlugin(firstPackage)),
-					getNodeModuleInfoForExpecteDependency(secondPackage, 0, getNativeScriptDataForPlugin(secondPackage)),
-					getNodeModuleInfoForExpecteDependency(thirdPackage, 0, getNativeScriptDataForPlugin(thirdPackage))
+					getNodeModuleInfoForExpecteDependency(firstPackage, 0, getNativeScriptDataForPlugin(firstPackage), null, null, "1.0.0"),
+					getNodeModuleInfoForExpecteDependency(secondPackage, 0, getNativeScriptDataForPlugin(secondPackage), null, null, "1.1.0"),
+					getNodeModuleInfoForExpecteDependency(thirdPackage, 0, getNativeScriptDataForPlugin(thirdPackage), null, null, "1.2.0")
 				];
 
 				assert.deepEqual(actualResult, expectedResult);

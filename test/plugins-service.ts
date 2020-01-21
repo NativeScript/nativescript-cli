@@ -37,9 +37,17 @@ import { PLUGINS_BUILD_DATA_FILENAME } from '../lib/constants';
 import { GradleCommandService } from '../lib/services/android/gradle-command-service';
 import { GradleBuildService } from '../lib/services/android/gradle-build-service';
 import { GradleBuildArgsService } from '../lib/services/android/gradle-build-args-service';
+import * as util from "util";
 temp.track();
 
 let isErrorThrown = false;
+
+interface ITestCase {
+	testName: string;
+	inputDependencies: any[];
+	expectedOutput: any[] | Error;
+	expectedWarning?: string;
+}
 
 function createTestInjector() {
 	const testInjector = new Yok();
@@ -571,23 +579,25 @@ describe("Plugins service", () => {
 		});
 	});
 
-	describe("convertToPluginData", () => {
-		const createUnitTestsInjector = () => {
-			const unitTestsInjector = new Yok();
-			unitTestsInjector.register("platformsDataService", {});
-			unitTestsInjector.register("filesHashService", {});
-			unitTestsInjector.register("fs", {});
-			unitTestsInjector.register("packageManager", {});
-			unitTestsInjector.register("options", {});
-			unitTestsInjector.register("logger", {});
-			unitTestsInjector.register("errors", {});
-			unitTestsInjector.register("injector", unitTestsInjector);
-			unitTestsInjector.register("mobileHelper", MobileHelper);
-			unitTestsInjector.register("devicePlatformsConstants", DevicePlatformsConstants);
-			unitTestsInjector.register("nodeModulesDependenciesBuilder", {});
-			return unitTestsInjector;
-		};
+	const createUnitTestsInjector = () => {
+		const unitTestsInjector = new Yok();
+		unitTestsInjector.register("platformsDataService", {});
+		unitTestsInjector.register("filesHashService", {});
+		unitTestsInjector.register("fs", {
+			exists: (filePath: string) => false
+		});
+		unitTestsInjector.register("packageManager", {});
+		unitTestsInjector.register("options", {});
+		unitTestsInjector.register("logger", stubs.LoggerStub);
+		unitTestsInjector.register("errors", stubs.ErrorsStub);
+		unitTestsInjector.register("injector", unitTestsInjector);
+		unitTestsInjector.register("mobileHelper", MobileHelper);
+		unitTestsInjector.register("devicePlatformsConstants", DevicePlatformsConstants);
+		unitTestsInjector.register("nodeModulesDependenciesBuilder", {});
+		return unitTestsInjector;
+	};
 
+	describe("convertToPluginData", () => {
 		const pluginDir = "pluginDir";
 		const dataFromPluginPackageJson = {
 			name: "name",
@@ -604,7 +614,7 @@ describe("Plugins service", () => {
 		it("returns correct pluginData", () => {
 			const unitTestsInjector = createUnitTestsInjector();
 			const pluginsService: PluginsService = unitTestsInjector.resolve(PluginsService);
-			const pluginData = pluginsService.convertToPluginData(dataFromPluginPackageJson, "my project dir");
+			const pluginData = (<any>pluginsService).convertToPluginData(dataFromPluginPackageJson, "my project dir");
 			// Remove the comparison of a function
 			delete pluginData["pluginPlatformsFolderPath"];
 			assert.deepEqual(pluginData, <any>{
@@ -620,7 +630,7 @@ describe("Plugins service", () => {
 		it("always returns lowercased platform in the path to plugins dir", () => {
 			const unitTestsInjector = createUnitTestsInjector();
 			const pluginsService: PluginsService = unitTestsInjector.resolve(PluginsService);
-			const pluginData = pluginsService.convertToPluginData(dataFromPluginPackageJson, "my project dir");
+			const pluginData = (<any>pluginsService).convertToPluginData(dataFromPluginPackageJson, "my project dir");
 
 			const expectediOSPath = path.join(pluginDir, "platforms", "ios");
 			const expectedAndroidPath = path.join(pluginDir, "platforms", "android");
@@ -631,6 +641,290 @@ describe("Plugins service", () => {
 			assert.equal(pluginData.pluginPlatformsFolderPath("Android"), expectedAndroidPath);
 			assert.equal(pluginData.pluginPlatformsFolderPath("android"), expectedAndroidPath);
 			assert.equal(pluginData.pluginPlatformsFolderPath("ANDROID"), expectedAndroidPath);
+		});
+	});
+
+	describe("getAllProductionPlugins", () => {
+		const testCases: ITestCase[] = [
+			{
+				testName: "returns empty array when none of the dependencies is nativescript plugin",
+				inputDependencies: [
+					{
+						"name": "css-tree",
+						"directory": "/Users/username/projectDir/node_modules/css-tree",
+						"depth": 0,
+						"version": "1.0.0-alpha.39",
+						"dependencies": [
+							"mdn-data",
+							"source-map"
+						]
+					},
+					{
+						"name": "nativescript-hook",
+						"directory": "/Users/username/projectDir/node_modules/nativescript-hook",
+						"depth": 0,
+						"version": "0.2.5",
+						"dependencies": [
+							"glob",
+							"mkdirp"
+						]
+					}
+				],
+				expectedOutput: <any[]>[]
+			},
+			{
+				testName: "returns correct data when there's no duplication of plugins",
+				inputDependencies: [
+					{
+						"name": "tns-core-modules",
+						"directory": "/Users/username/projectDir/node_modules/tns-core-modules",
+						"depth": 0,
+						"version": "6.3.2",
+						"nativescript": {
+							"platforms": {
+								"ios": "5.0.0",
+								"android": "5.0.0"
+							}
+						},
+						"dependencies": [
+							"@nativescript/core"
+						]
+					},
+					{
+						"name": "@nativescript/theme",
+						"directory": "/Users/username/projectDir/node_modules/@nativescript/theme",
+						"depth": 0,
+						"version": "2.2.1",
+						"nativescript": {
+							"platforms": {
+								"android": "6.2.0",
+								"ios": "6.2.0"
+							}
+						},
+						"dependencies": []
+					},
+				],
+				expectedOutput: [
+					{
+						"fullPath": "/Users/username/projectDir/node_modules/tns-core-modules",
+						"isPlugin": true,
+						"name": "tns-core-modules",
+						"platformsData": {
+							"android": "5.0.0",
+							"ios": "5.0.0",
+						},
+						"version": "6.3.2",
+					},
+					{
+						"fullPath": "/Users/username/projectDir/node_modules/@nativescript/theme",
+						"isPlugin": true,
+						"name": "@nativescript/theme",
+						"platformsData": {
+							"android": "6.2.0",
+							"ios": "6.2.0",
+						},
+						"version": "2.2.1",
+					}
+				]
+			},
+			{
+				testName: "prints warning when same version of plugin is installed multiple times",
+				inputDependencies: [
+					{
+						"name": "nativescript-ui-listview",
+						"directory": "/Users/username/projectDir/node_modules/nativescript-ui-listview",
+						"depth": 0,
+						"version": "8.0.1",
+						"nativescript": {
+							"platforms": {
+								"android": "6.0.0",
+								"ios": "6.0.0"
+							}
+						},
+						"dependencies": [
+							"nativescript-ui-core"
+						]
+					},
+					{
+						"name": "nativescript-ui-core",
+						"directory": "/Users/username/projectDir/node_modules/nativescript-ui-core",
+						"depth": 0,
+						"version": "4.0.0",
+						"nativescript": {
+							"platforms": {
+								"android": "6.0.0",
+								"ios": "6.0.0"
+							}
+						},
+						"dependencies": []
+					},
+					{
+						"name": "nativescript-ui-core",
+						"directory": "/Users/username/projectDir/node_modules/nativescript-ui-listview/node_modules/nativescript-ui-core",
+						"depth": 1,
+						"version": "4.0.0",
+						"nativescript": {
+							"platforms": {
+								"android": "6.0.0",
+								"ios": "6.0.0"
+							}
+						},
+						"dependencies": []
+					},
+				],
+				expectedOutput: [
+					{
+						"fullPath": "/Users/username/projectDir/node_modules/nativescript-ui-listview",
+						"isPlugin": true,
+						"name": "nativescript-ui-listview",
+						"platformsData": {
+							"android": "6.0.0",
+							"ios": "6.0.0",
+						},
+						"version": "8.0.1",
+					},
+					{
+						"fullPath": "/Users/username/projectDir/node_modules/nativescript-ui-core",
+						"isPlugin": true,
+						"name": "nativescript-ui-core",
+						"platformsData": {
+							"android": "6.0.0",
+							"ios": "6.0.0",
+						},
+						"version": "4.0.0",
+					}
+				],
+				expectedWarning: "Detected same versions (4.0.0) of the nativescript-ui-core installed at locations: /Users/username/projectDir/node_modules/nativescript-ui-core, " +
+					"/Users/username/projectDir/node_modules/nativescript-ui-listview/node_modules/nativescript-ui-core"
+			},
+			{
+				testName: "fails when different versions of the same plugin are detected",
+				inputDependencies: [
+					{
+						"name": "nativescript-ui-listview",
+						"directory": "/Users/username/projectDir/node_modules/nativescript-ui-listview",
+						"depth": 0,
+						"version": "8.0.1",
+						"nativescript": {
+							"platforms": {
+								"android": "6.0.0",
+								"ios": "6.0.0"
+							}
+						},
+						"dependencies": [
+							"nativescript-ui-core"
+						]
+					},
+					{
+						"name": "nativescript-ui-core",
+						"directory": "/Users/username/projectDir/node_modules/nativescript-ui-core",
+						"depth": 0,
+						"version": "3.0.0",
+						"nativescript": {
+							"platforms": {
+								"android": "6.0.0",
+								"ios": "6.0.0"
+							}
+						},
+						"dependencies": []
+					},
+					{
+						"name": "nativescript-ui-core",
+						"directory": "/Users/username/projectDir/node_modules/nativescript-ui-listview/node_modules/nativescript-ui-core",
+						"depth": 1,
+						"version": "4.0.0",
+						"nativescript": {
+							"platforms": {
+								"android": "6.0.0",
+								"ios": "6.0.0"
+							}
+						},
+						"dependencies": []
+					},
+				],
+				expectedOutput: new Error(`Cannot use different versions of a NativeScript plugin in your application.
+nativescript-ui-core plugin occurs multiple times in node_modules:\n` +
+					"* Path: /Users/username/projectDir/node_modules/nativescript-ui-core, version: 3.0.0\n" +
+					"* Path: /Users/username/projectDir/node_modules/nativescript-ui-listview/node_modules/nativescript-ui-core, version: 4.0.0\n" +
+					`Probably you need to update your dependencies, remove node_modules and try again.`),
+			}
+		];
+
+		for (const testCase of testCases) {
+			it(testCase.testName, () => {
+				const unitTestsInjector: IInjector = createUnitTestsInjector();
+				const pluginsService: IPluginsService = unitTestsInjector.resolve(PluginsService);
+
+				if (testCase.expectedOutput instanceof Error) {
+					assert.throws(() => pluginsService.getAllProductionPlugins(<any>{ projectDir: "projectDir" }, testCase.inputDependencies), testCase.expectedOutput.message);
+				} else {
+					const plugins = pluginsService.getAllProductionPlugins(<any>{ projectDir: "projectDir" }, testCase.inputDependencies);
+
+					if (testCase.expectedWarning) {
+						const logger = unitTestsInjector.resolve<stubs.LoggerStub>("logger");
+						assert.equal(testCase.expectedWarning + '\n', logger.warnOutput);
+					}
+
+					for (const plugin of plugins) {
+						// deepEqual does not compare functions
+						delete plugin.pluginPlatformsFolderPath;
+						// pluginVariables is a legacy feature and out of the scope for current tests
+						delete plugin.pluginVariables;
+					}
+
+					assert.deepEqual(plugins, testCase.expectedOutput);
+				}
+			});
+		}
+
+		it(`caches result based on dependencies`, () => {
+			const unitTestsInjector: IInjector = createUnitTestsInjector();
+			const pluginsService: IPluginsService = unitTestsInjector.resolve(PluginsService);
+			const inputDependencies = [
+				{
+					"name": "tns-core-modules",
+					"directory": "/Users/username/projectDir/node_modules/tns-core-modules",
+					"depth": 0,
+					"version": "6.3.0",
+					"nativescript": {
+						"platforms": {
+							"ios": "5.0.0",
+							"android": "5.0.0"
+						}
+					},
+					"dependencies": [
+						"@nativescript/core"
+					]
+				},
+				{
+					"name": "tns-core-modules",
+					"directory": "/Users/username/projectDir/node_modules/some-package/tns-core-modules",
+					"depth": 1,
+					"version": "6.3.0",
+					"nativescript": {
+						"platforms": {
+							"ios": "5.0.0",
+							"android": "5.0.0"
+						}
+					},
+					"dependencies": [
+						"@nativescript/core"
+					]
+				},
+			];
+
+			_.range(3).forEach(() => {
+				pluginsService.getAllProductionPlugins(<any>{ projectDir: "projectDir" }, inputDependencies);
+			});
+
+			const logger = unitTestsInjector.resolve<stubs.LoggerStub>("logger");
+
+			const expectedWarnMessage = "Detected same versions (%s) of the tns-core-modules installed at locations: /Users/username/projectDir/node_modules/tns-core-modules, /Users/username/projectDir/node_modules/some-package/tns-core-modules\n";
+			assert.equal(logger.warnOutput, util.format(expectedWarnMessage, "6.3.0"), "The warn message must be shown only once - the result of the private method must be cached as input dependencies have not changed");
+			inputDependencies[0].version = "1.0.0";
+			inputDependencies[1].version = "1.0.0";
+			pluginsService.getAllProductionPlugins(<any>{ projectDir: "projectDir" }, inputDependencies);
+			assert.equal(logger.warnOutput, util.format(expectedWarnMessage, "6.3.0") + util.format(expectedWarnMessage, "1.0.0"), "When something in input dependencies change, the cached value shouldn't be taken into account");
 		});
 	});
 });
