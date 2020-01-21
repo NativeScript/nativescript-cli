@@ -343,6 +343,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				platformData.normalizedPlatformName,
 				constants.NATIVE_SOURCE_FOLDER
 			);
+
 			await this.prepareNativeSourceCode(constants.TNS_NATIVE_SOURCE_GROUP_NAME, resourcesNativeCodePath, projectData);
 		}
 
@@ -498,9 +499,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		const pluginPlatformsFolderPath = pluginData.pluginPlatformsFolderPath(IOSProjectService.IOS_PLATFORM_NAME);
 
 		const sourcePath = path.join(pluginPlatformsFolderPath, "src");
-		if (this.$fs.exists(pluginPlatformsFolderPath) && this.$fs.exists(sourcePath)) {
-			await this.prepareNativeSourceCode(pluginData.name, sourcePath, projectData);
-		}
+		await this.prepareNativeSourceCode(pluginData.name, sourcePath, projectData);
 
 		await this.prepareResources(pluginPlatformsFolderPath, pluginData, projectData);
 		await this.prepareFrameworks(pluginPlatformsFolderPath, pluginData, projectData);
@@ -644,14 +643,16 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	}
 
 	private async prepareNativeSourceCode(groupName: string, sourceFolderPath: string, projectData: IProjectData): Promise<void> {
-		const project = this.createPbxProj(projectData);
-		const group = this.getRootGroup(groupName, sourceFolderPath);
-		project.addPbxGroup(group.files, group.name, group.path, null, { isMain: true, filesRelativeToProject: true });
-		project.addToHeaderSearchPaths(group.path);
-		if (!this.$fs.exists(path.join(sourceFolderPath, "module.modulemap"))) {
-			this.$logger.warn(`warning: Directory ${sourceFolderPath} with native iOS source code doesn't contain a modulemap file. Metadata for it will not be generated and it will not be accessible from JavaScript. To learn more see https://docs.nativescript.org/guides/ios-source-code`);
+		if (this.$fs.exists(sourceFolderPath)) {
+			const project = this.createPbxProj(projectData);
+			const group = this.getRootGroup(groupName, sourceFolderPath);
+			project.addPbxGroup(group.files, group.name, group.path, null, { isMain: true, filesRelativeToProject: true });
+			project.addToHeaderSearchPaths(group.path);
+			if (!this.$fs.exists(path.join(sourceFolderPath, "module.modulemap"))) {
+				this.$logger.warn(`warning: Directory ${sourceFolderPath} with native iOS source code doesn't contain a modulemap file. Metadata for it will not be generated and it will not be accessible from JavaScript. To learn more see https://docs.nativescript.org/guides/ios-source-code`);
+			}
+			this.savePbxProj(project, projectData);
 		}
-		this.savePbxProj(project, projectData);
 	}
 
 	private async addExtensions(projectData: IProjectData, pluginsData: IPluginData[]): Promise<void> {
