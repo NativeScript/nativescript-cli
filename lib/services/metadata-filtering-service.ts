@@ -29,16 +29,28 @@ export class MetadataFilteringService implements IMetadataFilteringService {
 					const pathToPluginsMetadataConfig = path.join(pathToPlatformsDir, MetadataFilteringConstants.NATIVE_API_USAGE_FILE_NAME);
 					if (this.$fs.exists(pathToPluginsMetadataConfig)) {
 						const pluginConfig: INativeApiUsagePluginConfiguration = this.$fs.readJson(pathToPluginsMetadataConfig) || {};
-						this.$logger.trace(`Adding content of ${pathToPluginsMetadataConfig} to whitelisted items of metadata filtering.`);
-						whitelistedItems.push(...(pluginConfig.uses || []));
+						this.$logger.trace(`Adding content of ${pathToPluginsMetadataConfig} to whitelisted items of metadata filtering: ${JSON.stringify(pluginConfig, null, 2)}`);
+						const itemsToAdd = pluginConfig.uses || [];
+						if (itemsToAdd.length) {
+							whitelistedItems.push(`// Added from: ${pathToPluginsMetadataConfig}`);
+							whitelistedItems.push(...itemsToAdd);
+							whitelistedItems.push(`// Finished part from ${pathToPluginsMetadataConfig}${os.EOL}`);
+						}
 					}
 				}
 			}
 
-			whitelistedItems.push(...(nativeApiConfiguration.whitelist || []));
+			const applicationWhitelistedItems = nativeApiConfiguration.whitelist || [];
+			if (applicationWhitelistedItems.length) {
+				this.$logger.trace(`Adding content from application to whitelisted items of metadata filtering: ${JSON.stringify(applicationWhitelistedItems, null, 2)}`);
+
+				whitelistedItems.push(`// Added from application`);
+				whitelistedItems.push(...applicationWhitelistedItems);
+				whitelistedItems.push(`// Finished part from application${os.EOL}`);
+			}
 
 			if (whitelistedItems.length) {
-				this.$fs.writeFile(pathToWhitelistFile, _.uniq(whitelistedItems).sort().join(os.EOL));
+				this.$fs.writeFile(pathToWhitelistFile, whitelistedItems.join(os.EOL));
 			}
 		}
 	}
@@ -53,7 +65,7 @@ export class MetadataFilteringService implements IMetadataFilteringService {
 			const blacklistedItems: string[] = nativeApiConfiguration.blacklist || [];
 
 			if (blacklistedItems.length) {
-				this.$fs.writeFile(pathToBlacklistFile, _.uniq(blacklistedItems).sort().join(os.EOL));
+				this.$fs.writeFile(pathToBlacklistFile, blacklistedItems.join(os.EOL));
 			}
 		} else {
 			this.$logger.trace(`There's no application configuration for metadata filtering for platform ${platform}. Full metadata will be generated.`);

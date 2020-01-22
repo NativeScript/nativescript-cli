@@ -1,5 +1,5 @@
 /**
- * Describes the content of the native-api-usage.json file located in `<path to project's App_Resources>/<platform> directory.
+ * Describes service used to generate necessary files to filter the native metadata generation.
  */
 interface INativeApiUsageConfiguartion {
 	/**

@@ -18,7 +18,7 @@ describe("metadataFilteringService", () => {
 	const appResourcesNativeApiUsageFilePath = path.join(projectData.appResourcesDirectoryPath, platform, MetadataFilteringConstants.NATIVE_API_USAGE_FILE_NAME);
 	const pluginPlatformsDir = path.join("pluginDir", platform);
 	const pluginNativeApiUsageFilePath = path.join(pluginPlatformsDir, MetadataFilteringConstants.NATIVE_API_USAGE_FILE_NAME);
-	const pluginsUses: string[] = ["whitelisted1", "pluginUses1", "pluginUses2"];
+	const pluginsUses: string[] = ["pluginUses1", "pluginUses2"];
 
 	const createTestInjector = (input?: { hasPlugins: boolean }): IInjector => {
 		const testInjector = new Yok();
@@ -98,6 +98,23 @@ describe("metadataFilteringService", () => {
 			assert.deepEqual(dataWritten, { [path.join(projectRoot, MetadataFilteringConstants.BLACKLIST_FILE_NAME)]: blacklistArray.join(EOL) });
 		});
 
+		const getExpectedWhitelistContent = (input: { applicationWhitelist?: string[], pluginWhitelist?: string[] }): string => {
+			let finalContent = "";
+			if (input.pluginWhitelist) {
+				finalContent += `// Added from: ${pluginNativeApiUsageFilePath}${EOL}${input.pluginWhitelist.join(EOL)}${EOL}// Finished part from ${pluginNativeApiUsageFilePath}${EOL}`;
+			}
+
+			if (input.applicationWhitelist) {
+				if (finalContent !== "") {
+					finalContent += EOL;
+				}
+
+				finalContent += `// Added from application${EOL}${input.applicationWhitelist.join(EOL)}${EOL}// Finished part from application${EOL}`;
+			}
+
+			return finalContent;
+		};
+
 		it(`generates ${MetadataFilteringConstants.WHITELIST_FILE_NAME} when the file ${MetadataFilteringConstants.NATIVE_API_USAGE_FILE_NAME} exists in App_Resources/<platform>`, () => {
 			const testInjector = createTestInjector();
 			const metadataFilteringService: IMetadataFilteringService = testInjector.resolve(MetadataFilteringService);
@@ -108,7 +125,7 @@ describe("metadataFilteringService", () => {
 			});
 
 			metadataFilteringService.generateMetadataFilters(projectData, platform);
-			assert.deepEqual(dataWritten, { [path.join(projectRoot, MetadataFilteringConstants.WHITELIST_FILE_NAME)]: whitelistArray.join(EOL) });
+			assert.deepEqual(dataWritten, { [path.join(projectRoot, MetadataFilteringConstants.WHITELIST_FILE_NAME)]: getExpectedWhitelistContent({ applicationWhitelist: whitelistArray }) });
 		});
 
 		it(`generates ${MetadataFilteringConstants.WHITELIST_FILE_NAME} with content from plugins when the file ${MetadataFilteringConstants.NATIVE_API_USAGE_FILE_NAME} exists in App_Resources/<platform> and whitelist-plugins-usages is true`, () => {
@@ -124,7 +141,7 @@ describe("metadataFilteringService", () => {
 			});
 
 			metadataFilteringService.generateMetadataFilters(projectData, platform);
-			assert.deepEqual(dataWritten, { [path.join(projectRoot, MetadataFilteringConstants.WHITELIST_FILE_NAME)]: whitelistArray.join(EOL) });
+			assert.deepEqual(dataWritten, { [path.join(projectRoot, MetadataFilteringConstants.WHITELIST_FILE_NAME)]: getExpectedWhitelistContent({ pluginWhitelist: whitelistArray }) });
 		});
 
 		it(`generates all files when both plugins and applications filters are included`, () => {
@@ -144,11 +161,7 @@ describe("metadataFilteringService", () => {
 			});
 
 			metadataFilteringService.generateMetadataFilters(projectData, platform);
-			const expectedWhitelist = [
-				"pluginUses1",
-				"pluginUses2",
-				...whitelistArray
-			].join(EOL);
+			const expectedWhitelist = getExpectedWhitelistContent({ pluginWhitelist: pluginsUses, applicationWhitelist: whitelistArray });
 
 			assert.deepEqual(dataWritten, {
 				[path.join(projectRoot, MetadataFilteringConstants.WHITELIST_FILE_NAME)]: expectedWhitelist,
@@ -173,9 +186,7 @@ describe("metadataFilteringService", () => {
 			});
 
 			metadataFilteringService.generateMetadataFilters(projectData, "platform");
-			const expectedWhitelist = [
-				...whitelistArray
-			].join(EOL);
+			const expectedWhitelist = getExpectedWhitelistContent({ applicationWhitelist: whitelistArray });
 
 			assert.deepEqual(dataWritten, {
 				[path.join(projectRoot, MetadataFilteringConstants.WHITELIST_FILE_NAME)]: expectedWhitelist,
