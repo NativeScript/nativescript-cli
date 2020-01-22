@@ -14,7 +14,6 @@ interface IPluginsService {
 	 */
 	getDependenciesFromPackageJson(projectDir: string): IPackageJsonDepedenciesResult;
 	preparePluginNativeCode(preparePluginNativeCodeData: IPreparePluginNativeCodeData): Promise<void>;
-	convertToPluginData(cacheData: any, projectDir: string): IPluginData;
 	isNativeScriptPlugin(pluginPackageJsonPath: string): boolean;
 }
 
@@ -44,7 +43,7 @@ interface IPluginData extends INodeModuleData {
 interface INodeModuleData extends IBasePluginData {
 	fullPath: string;
 	isPlugin: boolean;
-	moduleInfo: any;
+	nativescript: any;
 }
 
 interface IPluginPlatformsData {

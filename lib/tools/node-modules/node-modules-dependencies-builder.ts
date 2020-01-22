@@ -93,7 +93,8 @@ export class NodeModulesDependenciesBuilder implements INodeModulesDependenciesB
 		const dependency: IDependencyData = {
 			name,
 			directory,
-			depth
+			depth,
+			version: null
 		};
 
 		const packageJsonPath = path.join(directory, PACKAGE_JSON_FILE_NAME);
@@ -102,6 +103,7 @@ export class NodeModulesDependenciesBuilder implements INodeModulesDependenciesB
 		if (packageJsonExists) {
 			const packageJsonContents = this.$fs.readJson(packageJsonPath);
 
+			dependency.version = packageJsonContents.version;
 			if (!!packageJsonContents.nativescript) {
 				// add `nativescript` property, necessary for resolving plugins
 				dependency.nativescript = packageJsonContents.nativescript;
