@@ -46,6 +46,7 @@ export class LoggerStub implements ILogger {
 
 export class FileSystemStub implements IFileSystem {
 	public fsStatCache: IDictionary<IFsStats> = {};
+	public deletedFiles: string[] = [];
 	deleteDirectorySafe(directory: string): void {
 		return this.deleteDirectory(directory);
 	}
@@ -62,10 +63,12 @@ export class FileSystemStub implements IFileSystem {
 	}
 
 	deleteFile(path: string): void {
+		this.deletedFiles.push(path);
 		return undefined;
 	}
 
 	deleteDirectory(directory: string): void {
+		this.deletedFiles.push(directory);
 		return undefined;
 	}
 

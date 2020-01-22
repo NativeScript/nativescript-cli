@@ -9,6 +9,7 @@ export class PrepareNativePlatformService implements IPrepareNativePlatformServi
 		public $hooksService: IHooksService,
 		private $nodeModulesBuilder: INodeModulesBuilder,
 		private $projectChangesService: IProjectChangesService,
+		private $metadataFilteringService: IMetadataFilteringService
 	) { }
 
 	@performanceLog()
@@ -37,12 +38,13 @@ export class PrepareNativePlatformService implements IPrepareNativePlatformServi
 		}
 
 		if (hasNativeModulesChange) {
-			await this.$nodeModulesBuilder.prepareNodeModules({platformData, projectData});
+			await this.$nodeModulesBuilder.prepareNodeModules({ platformData, projectData });
 		}
 
 		if (hasNativeModulesChange || hasConfigChange) {
 			await platformData.platformProjectService.processConfigurationFilesFromAppResources(projectData, { release });
 			await platformData.platformProjectService.handleNativeDependenciesChange(projectData, { release });
+			this.$metadataFilteringService.generateMetadataFilters(projectData, platformData.platformNameLowerCase);
 		}
 
 		platformData.platformProjectService.interpolateConfigurationFile(projectData);

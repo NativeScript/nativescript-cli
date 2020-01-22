@@ -64,6 +64,11 @@ export const APPLICATION_RESPONSE_TIMEOUT_SECONDS = 60;
 export const NATIVE_EXTENSION_FOLDER = "extensions";
 export const IOS_WATCHAPP_FOLDER = "watchapp";
 export const IOS_WATCHAPP_EXTENSION_FOLDER = "watchextension";
+export class MetadataFilteringConstants {
+	static NATIVE_API_USAGE_FILE_NAME = "native-api-usage.json";
+	static WHITELIST_FILE_NAME = "whitelist.mdg";
+	static BLACKLIST_FILE_NAME = "blacklist.mdg";
+}
 
 export class PackageVersion {
 	static NEXT = "next";
