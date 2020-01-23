@@ -554,6 +554,7 @@ interface IOptions extends IRelease, IDeviceIdentifier, IJustLaunch, IAvd, IAvai
 	frameworkName: string;
 	frameworkVersion: string;
 	yarn: string,
+	pnpm: string,
 	ipa: string;
 	tsc: boolean;
 	ts: boolean;

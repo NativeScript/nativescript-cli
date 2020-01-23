@@ -5,6 +5,7 @@ import { assert } from "chai";
 import { NodePackageManager } from "../../lib/node-package-manager";
 import { PackageManager } from "../../lib/package-manager";
 import { YarnPackageManager } from "../../lib/yarn-package-manager";
+import { PnpmPackageManager } from "../../lib/pnpm-package-manager";
 import * as constants from "../../lib/constants";
 import { ChildProcess } from "../../lib/common/child-process";
 import { CommandsDelimiters } from "../../lib/common/constants";
@@ -58,6 +59,7 @@ describe("extensibilityService", () => {
 		});
 		testInjector.register("npm", NodePackageManager);
 		testInjector.register("yarn", YarnPackageManager);
+		testInjector.register("pnpm", PnpmPackageManager);
 		testInjector.register("settingsService", SettingsService);
 		testInjector.register("requireService", {
 			require: (pathToRequire: string): any => undefined
