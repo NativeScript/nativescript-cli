@@ -51,6 +51,8 @@ export class PnpmPackageManager extends BasePackageManager {
 
 	@exported("pnpm")
 	public uninstall(packageName: string, config?: IDictionary<string | boolean>, cwd?: string): Promise<string> {
+		// pnpm does not want save option in remove. It saves it by default
+		delete config['save'];
 		const flags = this.getFlagsString(config, false);
 		return this.$childProcess.exec(`pnpm remove ${packageName} ${flags}`, { cwd });
 	}
