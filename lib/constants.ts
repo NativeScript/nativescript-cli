@@ -242,9 +242,12 @@ export class MacOSVersions {
 	public static Sierra = "10.12";
 	public static HighSierra = "10.13";
 	public static Mojave = "10.14";
+	public static Catalina = "10.15";
 }
 
 export const MacOSDeprecationStringFormat = "NativeScript does not support macOS %s and some functionality may not work. Please, upgrade to the latest macOS version.";
+export const XcodeDeprecationStringFormat = "The current Xcode version %s will not be supported in the next release of NativeScript. Consider updating your Xcode to latest official version.";
+
 export const PROGRESS_PRIVACY_POLICY_URL = "https://www.progress.com/legal/privacy-policy";
 export class SubscribeForNewsletterMessages {
 	public static AgreeToReceiveEmailMsg = "I agree".green.bold + " to receive email communications from Progress Software in the form of the NativeScript Newsletter. Consent may be withdrawn at any time.";

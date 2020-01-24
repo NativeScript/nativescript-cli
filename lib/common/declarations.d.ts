@@ -1046,6 +1046,12 @@ interface ISysInfo {
 	 * @return {string} The range of supported Node.js versions.
 	 */
 	getSupportedNodeVersionRange(): string;
+
+	/**
+	 * Gets warning message in case the currently installed Xcode will not be supported in next versions
+	 * @returns {string}
+	 */
+	getXcodeWarning(): Promise<string>;
 }
 
 interface IHostInfo {

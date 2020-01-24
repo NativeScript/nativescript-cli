@@ -54,7 +54,8 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		private $xcodebuildService: IXcodebuildService,
 		private $iOSExtensionsService: IIOSExtensionsService,
 		private $iOSWatchAppService: IIOSWatchAppService,
-		private $iOSNativeTargetService: IIOSNativeTargetService) {
+		private $iOSNativeTargetService: IIOSNativeTargetService,
+		private $sysInfo: ISysInfo) {
 		super($fs, $projectDataService);
 	}
 
@@ -138,6 +139,12 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			notConfiguredEnvOptions
 		});
 
+		if (checkEnvironmentRequirementsOutput && checkEnvironmentRequirementsOutput.canExecute) {
+			const xcodeWarning = await this.$sysInfo.getXcodeWarning();
+			if (xcodeWarning ) {
+				this.$logger.warn(xcodeWarning);
+			}
+		}
 		return {
 			checkEnvironmentRequirementsOutput
 		};
