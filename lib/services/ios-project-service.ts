@@ -141,7 +141,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 		if (checkEnvironmentRequirementsOutput && checkEnvironmentRequirementsOutput.canExecute) {
 			const xcodeWarning = await this.$sysInfo.getXcodeWarning();
-			if (xcodeWarning ) {
+			if (xcodeWarning) {
 				this.$logger.warn(xcodeWarning);
 			}
 		}
