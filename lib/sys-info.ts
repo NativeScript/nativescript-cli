@@ -1,9 +1,10 @@
 import * as path from "path";
 import { format } from "util";
 import { sysInfo } from "nativescript-doctor";
-import { MacOSVersions, MacOSDeprecationStringFormat } from "./constants";
+import { MacOSVersions, MacOSDeprecationStringFormat, XcodeDeprecationStringFormat } from "./constants";
 import { getNodeWarning } from "./common/verify-node-version";
 import { exported } from "./common/decorators";
+import * as semver from "semver";
 
 export class SysInfo implements ISysInfo {
 	private sysInfo: ISysInfoData = null;
@@ -78,6 +79,16 @@ export class SysInfo implements ISysInfo {
 				message: format(MacOSDeprecationStringFormat, macOSVersion),
 				severity: SystemWarningsSeverity.high
 			};
+		}
+
+		return null;
+	}
+
+	public async getXcodeWarning(): Promise<string> {
+		const xcodeVersion = await this.getXcodeVersion();
+		if (xcodeVersion && semver.lt(semver.coerce(xcodeVersion), "11.0.0")) {
+			const message = format(XcodeDeprecationStringFormat, xcodeVersion);
+			return message;
 		}
 
 		return null;
