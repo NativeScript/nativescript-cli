@@ -1,8 +1,11 @@
 import * as queue from "./queue";
 import * as path from "path";
+import { hook } from "./helpers";
 
 export class CommandDispatcher implements ICommandDispatcher {
 	constructor(private $logger: ILogger,
+		// required by the hooksService
+		protected $injector: IInjector,
 		private $cancellation: ICancellationService,
 		private $commandsService: ICommandsService,
 		private $staticConfig: Config.IStaticConfig,
@@ -24,7 +27,7 @@ export class CommandDispatcher implements ICommandDispatcher {
 		}
 
 		let commandName = this.getCommandName();
-		const commandArguments = this.$options.argv._.slice(1);
+		let commandArguments = this.$options.argv._.slice(1);
 		const lastArgument: string = _.last(commandArguments);
 
 		if (this.$options.help) {
@@ -36,6 +39,8 @@ export class CommandDispatcher implements ICommandDispatcher {
 			commandName = "help";
 		}
 
+		({ commandName, commandArguments, argv: process.argv } = await this.resolveCommand(commandName, commandArguments, process.argv));
+
 		await this.$cancellation.begin("cli");
 
 		await this.$commandsService.tryExecuteCommand(commandName, commandArguments);
@@ -43,6 +48,12 @@ export class CommandDispatcher implements ICommandDispatcher {
 
 	public async completeCommand(): Promise<boolean> {
 		return this.$commandsService.completeCommand();
+	}
+
+	@hook("resolveCommand")
+	private async resolveCommand(commandName: string, commandArguments: string[], argv: string[]) {
+		// just a hook point
+		return { commandName, commandArguments, argv };
 	}
 
 	private getCommandName(): string {
