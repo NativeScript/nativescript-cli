@@ -1,6 +1,23 @@
 NativeScript CLI Changelog
 ================
 
+6.4.0 (2020, February 11)
+===
+
+### New
+
+* [Implemented #4654](https://github.com/NativeScript/nativescript-cli/issues/4654): Add support for pkg manager `pnpm`
+* [Implemented #5214](https://github.com/NativeScript/nativescript-cli/issues/5214): Same dependencies installed multiple times in `node_modules` cause build failure
+* [Implemented #5218](https://github.com/NativeScript/nativescript-cli/issues/5218): Allow configuring path/name to webpack.config.js
+* [Implemented #5220](https://github.com/NativeScript/nativescript-cli/issues/5220): Native metadata filtering for iOS and Android
+* [Implemented #5230](https://github.com/NativeScript/nativescript-cli/issues/5230): Obsolete support for Xcode 10
+* [Implemented #5233](https://github.com/NativeScript/nativescript-cli/issues/5233): Support command level hooks
+
+### Fixed
+
+* [Fixed #5187](https://github.com/NativeScript/nativescript-cli/issues/5187): Inaccessible native source code without modulemap
+
+
 6.3.3 (2020, January 13)
 ===
 
