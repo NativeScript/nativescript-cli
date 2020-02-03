@@ -471,7 +471,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	}
 
 	private getAllProductionPlugins(projectData: IProjectData): IPluginData[] {
-		return (<IPluginsService>this.$injector.resolve("pluginsService")).getAllProductionPlugins(projectData);
+		return (<IPluginsService>this.$injector.resolve("pluginsService")).getAllProductionPlugins(projectData, this.getPlatformData(projectData).platformNameLowerCase);
 	}
 
 	private replace(name: string): string {

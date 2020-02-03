@@ -9,7 +9,7 @@ export class NodeModulesBuilder implements INodeModulesBuilder {
 		const dependencies = this.$nodeModulesDependenciesBuilder.getProductionDependencies(projectData.projectDir);
 		await platformData.platformProjectService.beforePrepareAllPlugins(projectData, dependencies);
 
-		const pluginsData = this.$pluginsService.getAllProductionPlugins(projectData, dependencies);
+		const pluginsData = this.$pluginsService.getAllProductionPlugins(projectData, platformData.platformNameLowerCase, dependencies);
 		if (_.isEmpty(pluginsData)) {
 			return;
 		}

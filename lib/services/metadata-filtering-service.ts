@@ -23,7 +23,7 @@ export class MetadataFilteringService implements IMetadataFilteringService {
 		if (nativeApiConfiguration) {
 			const whitelistedItems: string[] = [];
 			if (nativeApiConfiguration["whitelist-plugins-usages"]) {
-				const plugins = this.$pluginsService.getAllProductionPlugins(projectData);
+				const plugins = this.$pluginsService.getAllProductionPlugins(projectData, platform);
 				for (const pluginData of plugins) {
 					const pathToPlatformsDir = pluginData.pluginPlatformsFolderPath(platform);
 					const pathToPluginsMetadataConfig = path.join(pathToPlatformsDir, MetadataFilteringConstants.NATIVE_API_USAGE_FILE_NAME);
