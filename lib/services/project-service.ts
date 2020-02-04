@@ -4,7 +4,6 @@ import * as shelljs from "shelljs";
 import { format } from "util";
 import { exported } from "../common/decorators";
 import { Hooks, TemplatesV2PackageJsonKeysToRemove } from "../constants";
-import * as temp from "temp";
 import { performanceLog } from "../common/decorators";
 
 export class ProjectService implements IProjectService {
@@ -20,7 +19,8 @@ export class ProjectService implements IProjectService {
 		private $projectNameService: IProjectNameService,
 		private $projectTemplatesService: IProjectTemplatesService,
 		private $staticConfig: IStaticConfig,
-		private $packageInstallationManager: IPackageInstallationManager) { }
+		private $packageInstallationManager: IPackageInstallationManager,
+		private $tempService: ITempService) { }
 
 	public async validateProjectName(opts: { projectName: string, force: boolean, pathToProject: string }): Promise<string> {
 		let projectName = opts.projectName;
@@ -152,7 +152,7 @@ export class ProjectService implements IProjectService {
 
 		if (!this.$fs.exists(appResourcesDestinationPath)) {
 			this.$fs.createDirectory(appResourcesDestinationPath);
-			const tempDir = temp.mkdirSync("ns-default-template");
+			const tempDir = await this.$tempService.mkdirSync("ns-default-template");
 			// the template installed doesn't have App_Resources -> get from a default template
 			await this.$pacoteService.extractPackage(constants.RESERVED_TEMPLATE_NAMES["default"], tempDir);
 			const templateProjectData = this.$projectDataService.getProjectData(tempDir);

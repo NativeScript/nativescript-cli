@@ -1,5 +1,4 @@
 import * as path from "path";
-import * as temp from "temp";
 import { cache } from "../../decorators";
 import { executeActionByChunks } from "../../helpers";
 import { DEFAULT_CHUNK_SIZE, LiveSyncPaths } from "../../constants";
@@ -10,7 +9,8 @@ export class AndroidDeviceHashService implements Mobile.IAndroidDeviceHashServic
 	constructor(private adb: Mobile.IDeviceAndroidDebugBridge,
 		private appIdentifier: string,
 		private $fs: IFileSystem,
-		private $mobileHelper: Mobile.IMobileHelper) {
+		private $mobileHelper: Mobile.IMobileHelper,
+		private $tempService: ITempService) {
 	}
 
 	@cache()
@@ -34,8 +34,9 @@ export class AndroidDeviceHashService implements Mobile.IAndroidDeviceHashServic
 	}
 
 	public async uploadHashFileToDevice(data: IStringDictionary): Promise<void> {
-		this.$fs.writeJson(this.hashFileLocalPath, data);
-		await this.adb.pushFile(this.hashFileLocalPath, this.hashFileDevicePath);
+		const hashFileLocalPath = await this.getHashFileLocalPath();
+		this.$fs.writeJson(hashFileLocalPath, data);
+		await this.adb.pushFile(hashFileLocalPath, this.hashFileDevicePath);
 	}
 
 	public async updateHashes(localToDevicePaths: Mobile.ILocalToDevicePathData[]): Promise<void> {
@@ -86,20 +87,20 @@ export class AndroidDeviceHashService implements Mobile.IAndroidDeviceHashServic
 	}
 
 	@cache()
-	private get hashFileLocalPath(): string {
-		return path.join(this.tempDir, AndroidDeviceHashService.HASH_FILE_NAME);
+	private async getHashFileLocalPath(): Promise<string> {
+		return path.join(await this.getTempDir(), AndroidDeviceHashService.HASH_FILE_NAME);
 	}
 
 	@cache()
-	private get tempDir(): string {
-		temp.track();
-		return temp.mkdirSync(`android-device-hash-service-${this.appIdentifier}`);
+	private getTempDir(): Promise<string> {
+		return this.$tempService.mkdirSync(`android-device-hash-service-${this.appIdentifier}`);
 	}
 
 	private async downloadHashFileFromDevice(): Promise<string> {
-		if (!this.$fs.exists(this.hashFileLocalPath)) {
-			await this.adb.executeCommand(["pull", this.hashFileDevicePath, this.tempDir]);
+		const hashFileLocalPath = await this.getHashFileLocalPath();
+		if (!this.$fs.exists(hashFileLocalPath)) {
+			await this.adb.executeCommand(["pull", this.hashFileDevicePath, await this.getTempDir()]);
 		}
-		return this.hashFileLocalPath;
+		return hashFileLocalPath;
 	}
 }

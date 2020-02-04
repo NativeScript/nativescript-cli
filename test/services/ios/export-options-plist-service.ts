@@ -1,6 +1,7 @@
 import { Yok } from "../../../lib/common/yok";
 import { ExportOptionsPlistService } from "../../../lib/services/ios/export-options-plist-service";
 import { assert } from "chai";
+import { TempServiceStub } from "../../stubs";
 
 let actualPlistTemplate: string = null;
 const projectName = "myProjectName";
@@ -15,6 +16,7 @@ function createTestInjector() {
 		}
 	});
 	injector.register("exportOptionsPlistService", ExportOptionsPlistService);
+	injector.register("tempService", TempServiceStub);
 
 	return injector;
 }
@@ -45,13 +47,13 @@ describe("ExportOptionsPlistService", () => {
 
 		_.each(testCases, testCase => {
 			_.each(["Development", "AdHoc", "Distribution", "Enterprise"], provisionType => {
-				it(testCase.name, () => {
+				it(testCase.name, async () => {
 					const injector = createTestInjector();
 					const exportOptionsPlistService = injector.resolve("exportOptionsPlistService");
 					exportOptionsPlistService.getExportOptionsMethod = () => provisionType;
 
 					const projectData = { projectName, projectIdentifiers: { ios: "org.nativescript.myTestApp" }};
-					exportOptionsPlistService.createDevelopmentExportOptionsPlist(archivePath, projectData, testCase.buildConfig);
+					await exportOptionsPlistService.createDevelopmentExportOptionsPlist(archivePath, projectData, testCase.buildConfig);
 
 					const template = actualPlistTemplate.split("\n").join(" ");
 					assert.isTrue(template.indexOf(`<key>method</key> 	<string>${provisionType}</string>`) > 0);
@@ -88,13 +90,13 @@ describe("ExportOptionsPlistService", () => {
 		];
 
 		_.each(testCases, testCase => {
-			it(testCase.name, () => {
+			it(testCase.name, async () => {
 				const injector = createTestInjector();
 				const exportOptionsPlistService = injector.resolve("exportOptionsPlistService");
 				exportOptionsPlistService.getExportOptionsMethod = () => "app-store";
 
 				const projectData = { projectName, projectIdentifiers: { ios: "org.nativescript.myTestApp" }};
-				exportOptionsPlistService.createDistributionExportOptionsPlist(projectRoot, projectData, testCase.buildConfig);
+				await exportOptionsPlistService.createDistributionExportOptionsPlist(projectRoot, projectData, testCase.buildConfig);
 
 				const template = actualPlistTemplate.split("\n").join(" ");
 				assert.isTrue(template.indexOf("<key>method</key>     <string>app-store</string>") > 0);

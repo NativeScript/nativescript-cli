@@ -1,6 +1,5 @@
 import * as path from "path";
 import * as semver from "semver";
-import * as temp from "temp";
 import { AndroidDeviceHashService } from "./android-device-hash-service";
 import { executeActionByChunks } from "../../helpers";
 import { DEFAULT_CHUNK_SIZE } from '../../constants';
@@ -12,6 +11,7 @@ export class AndroidDeviceFileSystem implements Mobile.IDeviceFileSystem {
 		private $fs: IFileSystem,
 		private $logger: ILogger,
 		private $mobileHelper: Mobile.IMobileHelper,
+		private $tempService: ITempService,
 		private $injector: IInjector) { }
 
 	public async listFiles(devicePath: string, appIdentifier?: string): Promise<any> {
@@ -27,8 +27,7 @@ export class AndroidDeviceFileSystem implements Mobile.IDeviceFileSystem {
 		const stdout = !outputPath;
 
 		if (stdout) {
-			temp.track();
-			outputPath = temp.path({ prefix: "sync", suffix: ".tmp" });
+			outputPath = await this.$tempService.path({ prefix: "sync", suffix: ".tmp" });
 		}
 
 		await this.adb.executeCommand(["pull", deviceFilePath, outputPath]);
@@ -134,7 +133,7 @@ export class AndroidDeviceFileSystem implements Mobile.IDeviceFileSystem {
 	}
 
 	public async createFileOnDevice(deviceFilePath: string, fileContent: string): Promise<void> {
-		const hostTmpDir = this.getTempDir();
+		const hostTmpDir = await this.$tempService.mkdirSync("application-");
 		const commandsFileHostPath = path.join(hostTmpDir, "temp.commands.file");
 		this.$fs.writeFile(commandsFileHostPath, fileContent);
 
@@ -158,10 +157,5 @@ export class AndroidDeviceFileSystem implements Mobile.IDeviceFileSystem {
 		}
 
 		return this._deviceHashServices[appIdentifier];
-	}
-
-	private getTempDir(): string {
-		temp.track();
-		return temp.mkdirSync("application-");
 	}
 }

@@ -1,4 +1,4 @@
-import { InjectorStub, PacoteServiceStub } from "../stubs";
+import { InjectorStub, PacoteServiceStub, TempServiceStub } from "../stubs";
 import { PlatformController } from "../../lib/controllers/platform-controller";
 import { AddPlatformService } from "../../lib/services/platform/add-platform-service";
 import { assert } from "chai";
@@ -23,6 +23,7 @@ function createInjector(data?: { latestFrameworkVersion: string }) {
 	injector.register("pacoteService", {
 		extractPackage: async (name: string): Promise<void> => { extractedPackageFromPacote = name; }
 	});
+	injector.register("tempService", TempServiceStub);
 
 	const logger = injector.resolve("logger");
 	logger.info = (message: string) => actualMessage = message;

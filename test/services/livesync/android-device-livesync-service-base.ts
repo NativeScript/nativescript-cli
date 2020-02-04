@@ -186,7 +186,7 @@ function setup(options?: ITestSetupInput): ITestSetupOutput {
 
 	const injector = createTestInjector();
 	const fs = injector.resolve("fs");
-	const deviceHashService = new AndroidDeviceHashService(mockAdb(), appIdentifier, fs, injector.resolve("mobileHelper"));
+	const deviceHashService = new AndroidDeviceHashService(mockAdb(), appIdentifier, fs, injector.resolve("mobileHelper"), <any> { mkdirSync: async () => "" });
 	const localToDevicePaths = _.keys(filesToShasums).map(file => injector.resolve(LocalToDevicePathDataMock, { filePath: file }));
 	const deviceAppData = createDeviceAppData(deviceHashService);
 	const androidDeviceLiveSyncServiceBase = new AndroidDeviceLiveSyncServiceBaseMock(injector, mockPlatformsData(), mockFilesHashService(), mockLogger(), mockDevice(deviceHashService));

@@ -161,6 +161,7 @@ function createTestInjector() {
 		setShouldDispose: (shouldDispose: boolean): void => undefined
 	});
 	testInjector.register("nodeModulesDependenciesBuilder", {});
+	testInjector.register("tempService", stubs.TempServiceStub);
 
 	return testInjector;
 }
@@ -550,6 +551,7 @@ describe("Plugins service", () => {
 			unitTestsInjector.register("mobileHelper", MobileHelper);
 			unitTestsInjector.register("devicePlatformsConstants", DevicePlatformsConstants);
 			unitTestsInjector.register("nodeModulesDependenciesBuilder", {});
+			unitTestsInjector.register("tempService", stubs.TempServiceStub);
 
 			const pluginsService: PluginsService = unitTestsInjector.resolve(PluginsService);
 			testData.pluginsService = pluginsService;
@@ -597,6 +599,7 @@ describe("Plugins service", () => {
 		unitTestsInjector.register("mobileHelper", MobileHelper);
 		unitTestsInjector.register("devicePlatformsConstants", DevicePlatformsConstants);
 		unitTestsInjector.register("nodeModulesDependenciesBuilder", {});
+		unitTestsInjector.register("tempService", stubs.TempServiceStub);
 		return unitTestsInjector;
 	};
 

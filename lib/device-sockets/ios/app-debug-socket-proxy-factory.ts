@@ -2,7 +2,6 @@ import { EventEmitter } from "events";
 import { CONNECTION_ERROR_EVENT_NAME } from "../../constants";
 import * as net from "net";
 import * as ws from "ws";
-import temp = require("temp");
 import { MessageUnpackStream } from "ios-device-lib";
 
 export class AppDebugSocketProxyFactory extends EventEmitter implements IAppDebugSocketProxyFactory {
@@ -13,6 +12,7 @@ export class AppDebugSocketProxyFactory extends EventEmitter implements IAppDebu
 		private $errors: IErrors,
 		private $lockService: ILockService,
 		private $options: IOptions,
+		private $tempService: ITempService,
 		private $net: INet) {
 		super();
 	}
@@ -72,7 +72,7 @@ export class AppDebugSocketProxyFactory extends EventEmitter implements IAppDebu
 			frontendSocket.resume();
 		});
 
-		const socketFileLocation = temp.path({ suffix: ".sock" });
+		const socketFileLocation = await this.$tempService.path({ suffix: ".sock" });
 		server.listen(socketFileLocation);
 		if (!this.$options.client) {
 			this.$logger.info("socket-file-location: " + socketFileLocation);

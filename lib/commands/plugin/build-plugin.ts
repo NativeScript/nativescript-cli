@@ -1,7 +1,7 @@
 import { EOL } from "os";
 import * as path from "path";
 import * as constants from "../../constants";
-import * as temp from "temp";
+
 export class BuildPluginCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
 	public pluginProjectPath: string;
@@ -10,7 +10,8 @@ export class BuildPluginCommand implements ICommand {
 		private $errors: IErrors,
 		private $logger: ILogger,
 		private $fs: IFileSystem,
-		private $options: IOptions) {
+		private $options: IOptions,
+		private $tempService: ITempService) {
 
 		this.pluginProjectPath = path.resolve(this.$options.path || ".");
 	}
@@ -29,8 +30,7 @@ export class BuildPluginCommand implements ICommand {
 			}
 		}
 
-		temp.track();
-		const tempAndroidProject = temp.mkdirSync("android-project");
+		const tempAndroidProject = await this.$tempService.mkdirSync("android-project");
 
 		const options: IPluginBuildOptions = {
 			aarOutputDir: platformsAndroidPath,

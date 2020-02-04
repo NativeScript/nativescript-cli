@@ -1,7 +1,7 @@
 import { Yok } from "../../../lib/common/yok";
 import { assert } from "chai";
 import * as sinon from "sinon";
-import { LoggerStub } from "../../stubs";
+import { LoggerStub, TempServiceStub } from "../../stubs";
 import { AndroidLivesyncTool } from "../../../lib/services/livesync/android-livesync-tool";
 import { LiveSyncSocket } from "../../../lib/services/livesync/livesync-socket";
 import { MobileHelper } from "../../../lib/common/mobile/mobile-helper";
@@ -86,6 +86,7 @@ const createTestInjector = (socket: INetSocket, fileStreams: IDictionary<NodeJS.
 			throw new Error(message);
 		}
 	});
+	testInjector.register("tempService", TempServiceStub);
 
 	return testInjector;
 };

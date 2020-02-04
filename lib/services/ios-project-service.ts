@@ -7,7 +7,6 @@ import { attachAwaitDetach } from "../common/helpers";
 import * as projectServiceBaseLib from "./platform-project-service-base";
 import { PlistSession, Reporter } from "plist-merge-patch";
 import { EOL } from "os";
-import * as temp from "temp";
 import * as plist from "plist";
 import { IOSProvisionService } from "./ios-provision-service";
 import { IOSEntitlementsService } from "./ios-entitlements-service";
@@ -55,7 +54,8 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		private $iOSExtensionsService: IIOSExtensionsService,
 		private $iOSWatchAppService: IIOSWatchAppService,
 		private $iOSNativeTargetService: IIOSNativeTargetService,
-		private $sysInfo: ISysInfo) {
+		private $sysInfo: ISysInfo,
+		private $tempService: ITempService) {
 		super($fs, $projectDataService);
 	}
 
@@ -814,8 +814,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			// Set Entitlements Property to point to default file if not set explicitly by the user.
 			const entitlementsPropertyValue = this.$xcconfigService.readPropertyValue(pluginsXcconfigFilePath, constants.CODE_SIGN_ENTITLEMENTS);
 			if (entitlementsPropertyValue === null && this.$fs.exists(this.$iOSEntitlementsService.getPlatformsEntitlementsPath(projectData))) {
-				temp.track();
-				const tempEntitlementsDir = temp.mkdirSync("entitlements");
+				const tempEntitlementsDir = await this.$tempService.mkdirSync("entitlements");
 				const tempEntitlementsFilePath = path.join(tempEntitlementsDir, "set-entitlements.xcconfig");
 				const entitlementsRelativePath = this.$iOSEntitlementsService.getPlatformsEntitlementsRelativePath(projectData);
 				this.$fs.writeFile(tempEntitlementsFilePath, `CODE_SIGN_ENTITLEMENTS = ${entitlementsRelativePath}${EOL}`);

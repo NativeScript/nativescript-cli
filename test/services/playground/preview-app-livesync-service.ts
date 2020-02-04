@@ -1,6 +1,6 @@
 import { Yok } from "../../../lib/common/yok";
 import * as _ from 'lodash';
-import { LoggerStub, ErrorsStub, MarkingModeServiceStub } from "../../stubs";
+import { LoggerStub, ErrorsStub, MarkingModeServiceStub, TempServiceStub } from "../../stubs";
 import { FilePayload, Device, FilesPayload } from "nativescript-preview-sdk";
 import * as chai from "chai";
 import * as path from "path";
@@ -189,6 +189,7 @@ function createTestInjector(options?: {
 	injector.register("pluginsService", {
 		ensureAllDependenciesAreInstalled: () => { return Promise.resolve(); }
 	});
+	injector.register("tempService", TempServiceStub);
 
 	return injector;
 }

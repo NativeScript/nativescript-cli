@@ -3,7 +3,7 @@ import * as constants from "../lib/constants";
 import * as ProjectServiceLib from "../lib/services/project-service";
 import { assert } from "chai";
 import { SettingsService } from "../lib/common/test/unit-tests/stubs";
-import { LoggerStub, ErrorsStub } from "./stubs";
+import { LoggerStub, ErrorsStub, TempServiceStub } from "./stubs";
 import * as path from "path";
 
 describe("projectService", () => {
@@ -67,6 +67,7 @@ describe("projectService", () => {
 				downloadAndExtract: () => Promise.resolve(),
 				extractPackage: () => Promise.resolve()
 			});
+			testInjector.register("tempService", TempServiceStub);
 
 			return testInjector;
 		};
@@ -126,6 +127,7 @@ describe("projectService", () => {
 				manifest: () => Promise.resolve(),
 				downloadAndExtract: () => Promise.resolve()
 			});
+			testInjector.register("tempService", TempServiceStub);
 
 			return testInjector;
 		};

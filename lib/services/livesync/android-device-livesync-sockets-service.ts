@@ -3,7 +3,6 @@ import { APP_FOLDER_NAME } from "../../constants";
 import { LiveSyncPaths } from "../../common/constants";
 import { AndroidLivesyncTool } from "./android-livesync-tool";
 import * as path from "path";
-import * as temp from "temp";
 import * as semver from "semver";
 
 export class AndroidDeviceSocketsLiveSyncService extends AndroidDeviceLiveSyncServiceBase implements IAndroidNativeScriptDeviceLiveSyncService, INativeScriptDeviceLiveSyncService {
@@ -22,6 +21,7 @@ export class AndroidDeviceSocketsLiveSyncService extends AndroidDeviceLiveSyncSe
 		private $cleanupService: ICleanupService,
 		private $fs: IFileSystem,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
+		private $tempService: ITempService,
 		$filesHashService: IFilesHashService) {
 		super($injector, platformsDataService, $filesHashService, $logger, device);
 		this.livesyncTool = this.$injector.resolve(AndroidLivesyncTool);
@@ -30,7 +30,7 @@ export class AndroidDeviceSocketsLiveSyncService extends AndroidDeviceLiveSyncSe
 	public async beforeLiveSyncAction(deviceAppData: Mobile.IDeviceAppData): Promise<void> {
 		if (!this.livesyncTool.hasConnection()) {
 			try {
-				const pathToLiveSyncFile = temp.path({ prefix: "livesync" });
+				const pathToLiveSyncFile = await this.$tempService.path({ prefix: "livesync" });
 				this.$fs.writeFile(pathToLiveSyncFile, "");
 				await this.device.fileSystem.putFile(pathToLiveSyncFile, this.getPathToLiveSyncFileOnDevice(deviceAppData.appIdentifier), deviceAppData.appIdentifier);
 				await this.device.applicationManager.startApplication({ appId: deviceAppData.appIdentifier, projectName: this.data.projectName, justLaunch: true, waitForDebugger: false, projectDir: deviceAppData.projectDir  });

@@ -1,13 +1,13 @@
 import * as helpers from "../helpers";
 import * as shell from "shelljs";
-import * as temp from "temp";
 
 export class MobileHelper implements Mobile.IMobileHelper {
 	private static DEVICE_PATH_SEPARATOR = "/";
 
 	constructor(private $errors: IErrors,
 		private $fs: IFileSystem,
-		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants) { }
+		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
+		private $tempService: ITempService) { }
 
 	public get platformNames(): string[] {
 		return [this.$devicePlatformsConstants.iOS, this.$devicePlatformsConstants.Android];
@@ -58,8 +58,7 @@ export class MobileHelper implements Mobile.IMobileHelper {
 	}
 
 	public async getDeviceFileContent(device: Mobile.IDevice, deviceFilePath: string, projectData: IProjectData): Promise<string> {
-		temp.track();
-		const uniqueFilePath = temp.path({ suffix: ".tmp" });
+		const uniqueFilePath = await this.$tempService.path({ suffix: ".tmp" });
 		const platform = device.deviceInfo.platform.toLowerCase();
 		try {
 			await device.fileSystem.getFile(deviceFilePath, projectData.projectIdentifiers[platform], uniqueFilePath);
