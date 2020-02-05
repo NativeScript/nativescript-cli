@@ -275,11 +275,15 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 				try {
 					const spawnResult = await this.childProcess.spawnFromEvent("pod", ["install"], "exit", { spawnOptions: { cwd: xcodeProjectDir } });
 					if (spawnResult.exitCode) {
+						this.fileSystem.deleteEntry(tempDirectory);
 						return false;
 					} else {
-						return this.fileSystem.exists(path.join(xcodeProjectDir, "cocoapods.xcworkspace"));
+						const exists = this.fileSystem.exists(path.join(xcodeProjectDir, "cocoapods.xcworkspace"));
+						this.fileSystem.deleteEntry(tempDirectory);
+						return exists;
 					}
 				} catch (err) {
+					this.fileSystem.deleteEntry(tempDirectory);
 					return null;
 				}
 			} else {
