@@ -2,6 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as yauzl from "yauzl";
 import * as util from "util";
+import * as shelljs from "shelljs";
 
 const access = util.promisify(fs.access);
 const mkdir = util.promisify(fs.mkdir);
@@ -57,6 +58,10 @@ export class FileSystem {
 	public readJson<T>(filePath: string, options?: { encoding?: null; flag?: string; }): T {
 		const content = fs.readFileSync(filePath, options);
 		return JSON.parse(content.toString());
+	}
+
+	public deleteEntry(filePath: string): void {
+		shelljs.rm("-rf", filePath);
 	}
 }
 
