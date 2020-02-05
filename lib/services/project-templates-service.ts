@@ -1,9 +1,7 @@
 import * as path from "path";
-import * as temp from "temp";
 import * as constants from "../constants";
 import { format } from "util";
 import { performanceLog } from "../common/decorators";
-temp.track();
 
 export class ProjectTemplatesService implements IProjectTemplatesService {
 	private templatePackageContents: IDictionary<any> = {};

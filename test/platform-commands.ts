@@ -192,6 +192,7 @@ function createTestInjector() {
 	});
 	testInjector.register("addPlatformService", {});
 	testInjector.register("platformController", {});
+	testInjector.register("tempService", stubs.TempServiceStub);
 	testInjector.register("platformCommandHelper", PlatformCommandHelper);
 
 	return testInjector;

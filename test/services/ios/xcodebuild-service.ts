@@ -17,8 +17,8 @@ let actualBuildOptions:IXcodebuildCommandOptions = null;
 function createTestInjector(): IInjector {
 	const injector = new Yok();
 	injector.register("exportOptionsPlistService", {
-		createDevelopmentExportOptionsPlist: () => exportOptionsPlistOutput,
-		createDistributionExportOptionsPlist: () => exportOptionsPlistOutput
+		createDevelopmentExportOptionsPlist: async () => exportOptionsPlistOutput,
+		createDistributionExportOptionsPlist: async () => exportOptionsPlistOutput
 	});
 	injector.register("xcodebuildArgsService", {
 		getBuildForDeviceArgs: async () => <string[]>[],

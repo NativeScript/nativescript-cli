@@ -31,6 +31,8 @@ describe("IOSEntitlements Service Tests", () => {
 			getAllInstalledPlugins: async (): Promise<any[]> => []
 		});
 
+		testInjector.register("tempService", stubs.TempServiceStub);
+
 		return testInjector;
 	};
 

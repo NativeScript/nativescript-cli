@@ -1,6 +1,5 @@
 import * as path from "path";
 import * as semver from "semver";
-import * as temp from "temp";
 import * as constants from "../constants";
 import { PlatformController } from "../controllers/platform-controller";
 import { PlatformValidationService } from "../services/platform/platform-validation-service";
@@ -17,7 +16,8 @@ export class PlatformCommandHelper implements IPlatformCommandHelper {
 		private $platformsDataService: IPlatformsDataService,
 		private $platformValidationService: PlatformValidationService,
 		private $projectChangesService: IProjectChangesService,
-		private $projectDataService: IProjectDataService
+		private $projectDataService: IProjectDataService,
+		private $tempService: ITempService
 	) { }
 
 	public async addPlatforms(platforms: string[], projectData: IProjectData, frameworkPath: string): Promise<void> {
@@ -147,7 +147,7 @@ export class PlatformCommandHelper implements IPlatformCommandHelper {
 		const data = this.$projectDataService.getNSValue(projectData.projectDir, platformData.frameworkPackageName);
 		const currentVersion = data && data.version ? data.version : "0.2.0";
 
-		const installedModuleDir = temp.mkdirSync("runtime-to-update");
+		const installedModuleDir = await this.$tempService.mkdirSync("runtime-to-update");
 		let newVersion = version === constants.PackageVersion.NEXT ?
 			await this.$packageInstallationManager.getNextVersion(platformData.frameworkPackageName) :
 			version || await this.$packageInstallationManager.getLatestCompatibleVersion(platformData.frameworkPackageName);

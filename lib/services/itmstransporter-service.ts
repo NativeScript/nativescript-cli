@@ -1,5 +1,4 @@
 import * as path from "path";
-import * as temp from "temp";
 import { ITMSConstants, INFO_PLIST_FILE_NAME } from "../constants";
 import { quoteString } from "../common/helpers";
 import { cache } from "../common/decorators";
@@ -13,7 +12,8 @@ export class ITMSTransporterService implements IITMSTransporterService {
 		private $injector: IInjector,
 		private $logger: ILogger,
 		private $plistParser: IPlistParser,
-		private $xcodeSelectService: IXcodeSelectService) { }
+		private $xcodeSelectService: IXcodeSelectService,
+		private $tempService: ITempService) { }
 
 	private get $projectData(): IProjectData {
 		return this.$injector.resolve("projectData");
@@ -27,10 +27,9 @@ export class ITMSTransporterService implements IITMSTransporterService {
 	}
 
 	public async upload(data: IITMSData): Promise<void> {
-		temp.track();
 		const itmsTransporterPath = await this.getITMSTransporterPath();
 		const ipaFileName = "app.ipa";
-		const itmsDirectory = temp.mkdirSync("itms-");
+		const itmsDirectory = await this.$tempService.mkdirSync("itms-");
 		const innerDirectory = path.join(itmsDirectory, "mybundle.itmsp");
 		const ipaFileLocation = path.join(innerDirectory, ipaFileName);
 		const loggingLevel = data.verboseLogging ? ITMSConstants.VerboseLoggingLevels.Verbose : ITMSConstants.VerboseLoggingLevels.Informational;
@@ -68,8 +67,7 @@ export class ITMSTransporterService implements IITMSTransporterService {
 			}
 
 			this.$logger.trace("--ipa set - extracting .ipa file to get app's bundle identifier");
-			temp.track();
-			const destinationDir = temp.mkdirSync("ipa-");
+			const destinationDir = await this.$tempService.mkdirSync("ipa-");
 			await this.$fs.unzip(ipaFilePath, destinationDir);
 
 			const payloadDir = path.join(destinationDir, "Payload");

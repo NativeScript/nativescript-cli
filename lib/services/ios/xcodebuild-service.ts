@@ -28,7 +28,7 @@ export class XcodebuildService implements IXcodebuildService {
 
 	private async createDevelopmentArchive(platformData: IPlatformData, projectData: IProjectData, buildConfig: IBuildConfig): Promise<string> {
 		const archivePath = path.join(platformData.getBuildOutputPath(buildConfig), projectData.projectName + ".xcarchive");
-		const output = this.$exportOptionsPlistService.createDevelopmentExportOptionsPlist(archivePath, projectData, buildConfig);
+		const output = await this.$exportOptionsPlistService.createDevelopmentExportOptionsPlist(archivePath, projectData, buildConfig);
 		const args = [
 			"-exportArchive",
 			"-archivePath", archivePath,
@@ -42,7 +42,7 @@ export class XcodebuildService implements IXcodebuildService {
 
 	private async createDistributionArchive(platformData: IPlatformData, projectData: IProjectData, buildConfig: IBuildConfig): Promise<string> {
 		const archivePath = path.join(platformData.getBuildOutputPath(buildConfig), projectData.projectName + ".xcarchive");
-		const output = this.$exportOptionsPlistService.createDistributionExportOptionsPlist(archivePath, projectData, buildConfig);
+		const output = await this.$exportOptionsPlistService.createDistributionExportOptionsPlist(archivePath, projectData, buildConfig);
 		const args = [
 			"-exportArchive",
 			"-archivePath", archivePath,

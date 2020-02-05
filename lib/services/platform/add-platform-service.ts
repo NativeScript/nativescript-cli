@@ -1,5 +1,4 @@
 import * as path from "path";
-import * as temp from "temp";
 import { PROJECT_FRAMEWORK_FOLDER_NAME, TrackActionNames, AnalyticsEventLabelDelimiter } from "../../constants";
 import { performanceLog } from "../../common/decorators";
 
@@ -9,7 +8,8 @@ export class AddPlatformService implements IAddPlatformService {
 		private $pacoteService: IPacoteService,
 		private $projectDataService: IProjectDataService,
 		private $terminalSpinnerService: ITerminalSpinnerService,
-		private $analyticsService: IAnalyticsService
+		private $analyticsService: IAnalyticsService,
+		private $tempService: ITempService
 	) { }
 
 	public async addPlatformSafe(projectData: IProjectData, platformData: IPlatformData, packageToInstall: string, nativePrepare: INativePrepare): Promise<string> {
@@ -45,11 +45,9 @@ export class AddPlatformService implements IAddPlatformService {
 	}
 
 	private async extractPackage(pkg: string): Promise<string> {
-		temp.track();
-		const downloadedPackagePath = temp.mkdirSync("runtimeDir");
+		const downloadedPackagePath = await this.$tempService.mkdirSync("runtimeDir");
 		await this.$pacoteService.extractPackage(pkg, downloadedPackagePath);
 		const frameworkDir = path.join(downloadedPackagePath, PROJECT_FRAMEWORK_FOLDER_NAME);
-
 		return path.resolve(frameworkDir);
 	}
 
