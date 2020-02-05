@@ -39,6 +39,7 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 	private static REQUIRED_BUILD_TOOLS_RANGE_PREFIX = ">=23";
 	private static VERSION_REGEX = /((\d+\.){2}\d+)/;
 	private static MIN_JAVA_VERSION = "1.8.0";
+	private static MAX_JAVA_VERSION = "13.0.0";
 
 	private toolsInfo: NativeScriptDoctor.IAndroidToolsInfoData;
 	public get androidHome(): string {
@@ -120,8 +121,8 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 				"^10.0.0": "4.1.0-2018.5.18.1"
 			};
 
-			if (semver.lt(installedJavaCompilerSemverVersion, AndroidToolsInfo.MIN_JAVA_VERSION)) {
-				warning = `Javac version ${installedJavaCompilerVersion} is not supported. You have to install at least ${AndroidToolsInfo.MIN_JAVA_VERSION}.`;
+			if (semver.lt(installedJavaCompilerSemverVersion, AndroidToolsInfo.MIN_JAVA_VERSION) || semver.gte(installedJavaCompilerSemverVersion, AndroidToolsInfo.MAX_JAVA_VERSION)) {
+				warning = `Javac version ${installedJavaCompilerVersion} is not supported. You have to install at least ${AndroidToolsInfo.MIN_JAVA_VERSION} and below ${AndroidToolsInfo.MAX_JAVA_VERSION}.`;
 			} else {
 				runtimeVersion = this.getRuntimeVersion({runtimeVersion, projectDir});
 				if (runtimeVersion) {
