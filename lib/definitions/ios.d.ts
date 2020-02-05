@@ -30,8 +30,8 @@ declare global {
 	}
 
 	interface IExportOptionsPlistService {
-		createDevelopmentExportOptionsPlist(archivePath: string, projectData: IProjectData, buildConfig: IBuildConfig): IExportOptionsPlistOutput;
-		createDistributionExportOptionsPlist(projectRoot: string, projectData: IProjectData, buildConfig: IBuildConfig): IExportOptionsPlistOutput;
+		createDevelopmentExportOptionsPlist(archivePath: string, projectData: IProjectData, buildConfig: IBuildConfig): Promise<IExportOptionsPlistOutput>;
+		createDistributionExportOptionsPlist(projectRoot: string, projectData: IProjectData, buildConfig: IBuildConfig): Promise<IExportOptionsPlistOutput>;
 	}
 
 	interface IExportOptionsPlistOutput {

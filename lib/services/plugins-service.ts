@@ -172,7 +172,7 @@ export class PluginsService implements IPluginsService {
 		return _.filter(nodeModules, nodeModuleData => nodeModuleData && nodeModuleData.isPlugin);
 	}
 
-	public getAllProductionPlugins(projectData: IProjectData, dependencies?: IDependencyData[]): IPluginData[] {
+	public getAllProductionPlugins(projectData: IProjectData, platform: string, dependencies?: IDependencyData[]): IPluginData[] {
 		dependencies = dependencies || this.$nodeModulesDependenciesBuilder.getProductionDependencies(projectData.projectDir);
 
 		if (_.isEmpty(dependencies)) {
@@ -180,7 +180,7 @@ export class PluginsService implements IPluginsService {
 		}
 
 		let productionPlugins: IDependencyData[] = dependencies.filter(d => !!d.nativescript);
-		productionPlugins = this.ensureValidProductionPlugins(productionPlugins, projectData.projectDir);
+		productionPlugins = this.ensureValidProductionPlugins(productionPlugins, projectData.projectDir, platform);
 		const pluginData = productionPlugins.map(plugin => this.convertToPluginData(plugin, projectData.projectDir));
 		return pluginData;
 	}
@@ -202,15 +202,27 @@ export class PluginsService implements IPluginsService {
 		return pluginPackageJsonContent && pluginPackageJsonContent.nativescript;
 	}
 
-	private ensureValidProductionPlugins = _.memoize<(productionDependencies: IDependencyData[], projectDir: string) => IDependencyData[]>(this._ensureValidProductionPlugins, (productionDependencies: IDependencyData[], projectDir: string) => {
+	private ensureValidProductionPlugins = _.memoize<(productionDependencies: IDependencyData[], projectDir: string, platform: string) => IDependencyData[]>(this._ensureValidProductionPlugins, (productionDependencies: IDependencyData[], projectDir: string, platform: string) => {
 		let key = _.sortBy(productionDependencies, p => p.directory).map(d => JSON.stringify(d, null, 2)).join("\n");
-		key += projectDir;
+		key += projectDir + platform;
 		return key;
 	});
 
-	private _ensureValidProductionPlugins(productionDependencies: IDependencyData[], projectDir: string): IDependencyData[] {
-		const clonedProductionDependencies = _.cloneDeep(productionDependencies);
-		const dependenciesGroupedByName = _.groupBy(clonedProductionDependencies, p => p.name);
+	private _ensureValidProductionPlugins(productionDependencies: IDependencyData[], projectDir: string, platform: string): IDependencyData[] {
+		let clonedProductionDependencies = _.cloneDeep(productionDependencies);
+		platform = platform.toLowerCase();
+
+		if (this.$mobileHelper.isAndroidPlatform(platform)) {
+			this.ensureValidProductionPluginsForAndroid(clonedProductionDependencies);
+		} else if (this.$mobileHelper.isiOSPlatform(platform)) {
+			clonedProductionDependencies = this.ensureValidProductionPluginsForIOS(clonedProductionDependencies, projectDir, platform);
+		}
+
+		return clonedProductionDependencies;
+	}
+
+	private ensureValidProductionPluginsForAndroid(productionDependencies: IDependencyData[]): void {
+		const dependenciesGroupedByName = _.groupBy(productionDependencies, p => p.name);
 		_.each(dependenciesGroupedByName, (dependencyOccurrences, dependencyName) => {
 			if (dependencyOccurrences.length > 1) {
 				// the dependency exists multiple times in node_modules
@@ -218,31 +230,79 @@ export class PluginsService implements IPluginsService {
 				const versions = _.keys(dependencyOccurrencesGroupedByVersion);
 				if (versions.length === 1) {
 					// all dependencies with this name have the same version
-					this.$logger.warn(`Detected same versions (${_.first(versions)}) of the ${dependencyName} installed at locations: ${_.map(dependencyOccurrences, d => d.directory).join(", ")}`);
-					const selectedPackage = _.minBy(dependencyOccurrences, d => d.depth);
-					this.$logger.info(`CLI will use only the native code from '${selectedPackage.directory}'.`.green);
-					_.each(dependencyOccurrences, dependency => {
-						if (dependency !== selectedPackage) {
-							clonedProductionDependencies.splice(clonedProductionDependencies.indexOf(dependency), 1);
-						}
-					});
+					this.$logger.debug(`Detected same versions (${_.first(versions)}) of the ${dependencyName} installed at locations: ${_.map(dependencyOccurrences, d => d.directory).join(", ")}`);
 				} else {
-					const message = this.getFailureMessageForDifferentDependencyVersions(dependencyName, dependencyOccurrencesGroupedByVersion, projectDir);
-					this.$errors.fail(message);
+					this.$logger.debug(`Detected different versions of the ${dependencyName} installed at locations: ${_.map(dependencyOccurrences, d => d.directory).join(", ")}\nThis can cause build failures.`);
 				}
 			}
 		});
-
-		return clonedProductionDependencies;
 	}
 
-	private getFailureMessageForDifferentDependencyVersions(dependencyName: string, dependencyOccurrencesGroupedByVersion: IDictionary<IDependencyData[]>, projectDir: string): string {
-		let message = `Cannot use different versions of a NativeScript plugin in your application.
-${dependencyName} plugin occurs multiple times in node_modules:\n`;
+	private ensureValidProductionPluginsForIOS(productionDependencies: IDependencyData[], projectDir: string, platform: string): IDependencyData[] {
+		const dependenciesWithFrameworks: any[] = [];
+		_.each(productionDependencies, d => {
+			const pathToPlatforms = path.join(d.directory, "platforms", platform);
+			if (this.$fs.exists(pathToPlatforms)) {
+				const contents = this.$fs.readDirectory(pathToPlatforms);
+				_.each(contents, file => {
+					if (path.extname(file) === ".framework") {
+						dependenciesWithFrameworks.push({ ...d, frameworkName: path.basename(file), frameworkLocation: path.join(pathToPlatforms, file) });
+					}
+				});
+			}
+		});
+
+		if (dependenciesWithFrameworks.length > 0) {
+			const dependenciesGroupedByFrameworkName = _.groupBy(dependenciesWithFrameworks, d => d.frameworkName);
+			_.each(dependenciesGroupedByFrameworkName, (dependencyOccurrences, frameworkName) => {
+				if (dependencyOccurrences.length > 1) {
+					// A framework exists multiple times in node_modules
+					const groupedByName = _.groupBy(dependencyOccurrences, d => d.name);
+					const pluginsNames = _.keys(groupedByName);
+					if (pluginsNames.length > 1) {
+						// fail - the same framework is installed by different dependencies.
+						const locations = dependencyOccurrences.map(d => d.frameworkLocation);
+						let msg = `Detected the framework ${frameworkName} is installed from multiple plugins at locations:\n${locations.join("\n")}\n`;
+						msg += this.getHelpMessage(projectDir);
+						this.$errors.fail(msg);
+					}
+
+					const dependencyName = _.first(pluginsNames);
+					const dependencyOccurrencesGroupedByVersion = _.groupBy(dependencyOccurrences, g => g.version);
+					const versions = _.keys(dependencyOccurrencesGroupedByVersion);
+					if (versions.length === 1) {
+						// all dependencies with this name have the same version
+						this.$logger.warn(`Detected the framework ${frameworkName} is installed multiple times from the same versions of plugin (${_.first(versions)}) at locations: ${_.map(dependencyOccurrences, d => d.directory).join(", ")}`);
+						const selectedPackage = _.minBy(dependencyOccurrences, d => d.depth);
+						this.$logger.info(`CLI will use only the native code from '${selectedPackage.directory}'.`.green);
+						_.each(dependencyOccurrences, dependency => {
+							if (dependency !== selectedPackage) {
+								productionDependencies.splice(productionDependencies.indexOf(dependency), 1);
+							}
+						});
+					} else {
+						const message = this.getFailureMessageForDifferentDependencyVersions(dependencyName, frameworkName, dependencyOccurrencesGroupedByVersion, projectDir);
+						this.$errors.fail(message);
+					}
+				}
+			});
+		}
+
+		return productionDependencies;
+	}
+
+	private getFailureMessageForDifferentDependencyVersions(dependencyName: string, frameworkName: string, dependencyOccurrencesGroupedByVersion: IDictionary<IDependencyData[]>, projectDir: string): string {
+		let message = `Cannot use the same framework ${frameworkName} multiple times in your application.
+This framework comes from ${dependencyName} plugin, which is installed multiple times in node_modules:\n`;
 		_.each(dependencyOccurrencesGroupedByVersion, (dependencies, version) => {
 			message += dependencies.map(d => `* Path: ${d.directory}, version: ${d.version}\n`);
 		});
 
+		message += this.getHelpMessage(projectDir);
+		return message;
+	}
+
+	private getHelpMessage(projectDir: string): string {
 		const existingLockFiles: string[] = [];
 		PluginsService.LOCK_FILES.forEach(lockFile => {
 			if (this.$fs.exists(path.join(projectDir, lockFile))) {
@@ -255,8 +315,7 @@ ${dependencyName} plugin occurs multiple times in node_modules:\n`;
 			msgForLockFiles += ` and ${existingLockFiles.join(", ")}`;
 		}
 
-		message += `Probably you need to update your dependencies, remove node_modules${msgForLockFiles} and try again.`;
-		return message;
+		return `\nProbably you need to update your dependencies, remove node_modules${msgForLockFiles} and try again.`;
 	}
 
 	private convertToPluginData(cacheData: IDependencyData | INodeModuleData, projectDir: string): IPluginData {

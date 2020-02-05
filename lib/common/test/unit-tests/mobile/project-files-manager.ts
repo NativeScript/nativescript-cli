@@ -14,6 +14,7 @@ import { ProjectFilesProviderBase } from "../../../services/project-files-provid
 
 import temp = require("temp");
 import { LiveSyncPaths } from "../../../constants";
+import { TempServiceStub } from "../../../../../test/stubs";
 temp.track();
 
 const testedApplicationIdentifier = "com.telerik.myApp";
@@ -49,6 +50,7 @@ function createTestInjector(): IInjector {
 	});
 	testInjector.register("logger", Logger);
 	testInjector.register("config", {});
+	testInjector.register("tempService", TempServiceStub);
 	return testInjector;
 }
 

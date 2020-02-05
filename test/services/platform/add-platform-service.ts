@@ -1,4 +1,4 @@
-import { InjectorStub } from "../../stubs";
+import { InjectorStub, TempServiceStub } from "../../stubs";
 import { AddPlatformService } from "../../../lib/services/platform/add-platform-service";
 import { PacoteService } from "../../../lib/services/pacote-service";
 import { assert } from "chai";
@@ -22,6 +22,7 @@ function createTestInjector() {
 	injector.register("analyticsService", {
 		trackEventActionInGoogleAnalytics: () => ({})
 	});
+	injector.register("tempService", TempServiceStub);
 
 	const fs = injector.resolve("fs");
 	fs.exists = () => false;

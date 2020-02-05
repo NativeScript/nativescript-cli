@@ -1,7 +1,7 @@
 import { assert } from "chai";
 import { PrepareController } from "../../lib/controllers/prepare-controller";
 import { MobileHelper } from "../../lib/common/mobile/mobile-helper";
-import { InjectorStub } from "../stubs";
+import { InjectorStub, TempServiceStub } from "../stubs";
 import { PREPARE_READY_EVENT_NAME } from "../../lib/constants";
 
 const projectDir = "/path/to/my/projecDir";
@@ -61,6 +61,8 @@ function createTestInjector(data: { hasNativeChanges: boolean }): IInjector {
 	injector.register("analyticsService", {
 		trackEventActionInGoogleAnalytics: () => ({})
 	});
+
+	injector.register("tempService", TempServiceStub);
 
 	const prepareController: PrepareController = injector.resolve("prepareController");
 	prepareController.emit = (eventName: string, eventData: any) => {

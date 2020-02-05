@@ -8,6 +8,7 @@ import { DevicePlatformsConstants } from "../../../mobile/device-platforms-const
 import * as path from "path";
 import { assert } from "chai";
 import { LiveSyncPaths } from "../../../constants";
+import { TempServiceStub } from "../../../../../test/stubs";
 
 const myTestAppIdentifier = "org.nativescript.myApp";
 let isAdbPushExecuted = false;
@@ -64,7 +65,7 @@ function createTestInjector(): IInjector {
 	injector.register("errors", Errors);
 	injector.register("devicePlatformsConstants", DevicePlatformsConstants);
 	injector.register("projectFilesManager", {});
-
+	injector.register("tempService", TempServiceStub);
 	return injector;
 }
 

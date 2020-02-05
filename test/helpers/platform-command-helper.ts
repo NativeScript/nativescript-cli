@@ -1,6 +1,6 @@
 
 import { assert } from "chai";
-import { InjectorStub } from "../stubs";
+import { InjectorStub, TempServiceStub } from "../stubs";
 import { MobileHelper } from "../../lib/common/mobile/mobile-helper";
 import { DevicePlatformsConstants } from "../../lib/common/mobile/device-platforms-constants";
 import { PlatformCommandHelper } from "../../lib/helpers/platform-command-helper";
@@ -35,6 +35,7 @@ function createTestInjector() {
 
 	injector.register("mobileHelper", MobileHelper);
 	injector.register("devicePlatformsConstants", DevicePlatformsConstants);
+	injector.register("tempService", TempServiceStub);
 
 	return injector;
 }

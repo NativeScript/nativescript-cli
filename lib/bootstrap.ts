@@ -236,3 +236,4 @@ $injector.require("ipService", "./services/ip-service");
 $injector.require("jsonFileSettingsService", "./common/services/json-file-settings-service");
 $injector.require("markingModeService", "./services/marking-mode-service");
 $injector.require("metadataFilteringService", "./services/metadata-filtering-service");
+$injector.require("tempService", "./services/temp-service");

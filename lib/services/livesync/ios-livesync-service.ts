@@ -1,5 +1,4 @@
 import * as path from "path";
-import * as temp from "temp";
 
 import { IOSDeviceLiveSyncService } from "./ios-device-livesync-service";
 import { PlatformLiveSyncServiceBase } from "./platform-livesync-service-base";
@@ -11,6 +10,7 @@ export class IOSLiveSyncService extends PlatformLiveSyncServiceBase implements I
 		protected $platformsDataService: IPlatformsDataService,
 		protected $projectFilesManager: IProjectFilesManager,
 		private $injector: IInjector,
+		private $tempService: ITempService,
 		$devicePathProvider: IDevicePathProvider,
 		$logger: ILogger) {
 		super($fs, $logger, $platformsDataService, $projectFilesManager, $devicePathProvider);
@@ -28,8 +28,7 @@ export class IOSLiveSyncService extends PlatformLiveSyncServiceBase implements I
 		const deviceAppData = await this.getAppData(syncInfo);
 		const projectFilesPath = path.join(platformData.appDestinationDirectoryPath, APP_FOLDER_NAME);
 
-		temp.track();
-		const tempZip = temp.path({ prefix: "sync", suffix: ".zip" });
+		const tempZip = await this.$tempService.path({ prefix: "sync", suffix: ".zip" });
 		this.$logger.trace("Creating zip file: " + tempZip);
 
 		const filesToTransfer = this.$fs.enumerateFilesInDirectorySync(projectFilesPath);

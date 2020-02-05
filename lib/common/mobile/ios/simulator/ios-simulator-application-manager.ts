@@ -4,7 +4,6 @@ import { hook, getPidFromiOSSimulatorLogs } from "../../../helpers";
 import { cache } from "../../../decorators";
 import { IOS_LOG_PREDICATE } from "../../../constants";
 import * as path from "path";
-import * as temp from "temp";
 import * as log4js from "log4js";
 
 export class IOSSimulatorApplicationManager extends ApplicationManagerBase {
@@ -16,6 +15,7 @@ export class IOSSimulatorApplicationManager extends ApplicationManagerBase {
 		private $options: IOptions,
 		private $fs: IFileSystem,
 		protected $deviceLogProvider: Mobile.IDeviceLogProvider,
+		private $tempService: ITempService,
 		$logger: ILogger,
 		$hooksService: IHooksService) {
 		super($logger, $hooksService, $deviceLogProvider);
@@ -28,8 +28,7 @@ export class IOSSimulatorApplicationManager extends ApplicationManagerBase {
 	@hook('install')
 	public async installApplication(packageFilePath: string): Promise<void> {
 		if (this.$fs.exists(packageFilePath) && path.extname(packageFilePath) === ".zip") {
-			temp.track();
-			const dir = temp.mkdirSync("simulatorPackage");
+			const dir = await this.$tempService.mkdirSync("simulatorPackage");
 			await this.$fs.unzip(packageFilePath, dir);
 			const app = _.find(this.$fs.readDirectory(dir), directory => path.extname(directory) === ".app");
 			if (app) {

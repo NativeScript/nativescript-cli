@@ -30,7 +30,7 @@ import { YarnPackageManager } from "../lib/yarn-package-manager";
 import { assert } from "chai";
 import { SettingsService } from "../lib/common/test/unit-tests/stubs";
 import { BUILD_XCCONFIG_FILE_NAME } from "../lib/constants";
-import { ProjectDataStub } from "./stubs";
+import { ProjectDataStub, TempServiceStub } from "./stubs";
 import { xcode } from "../lib/node/xcode";
 import temp = require("temp");
 import { CocoaPodsPlatformManager } from "../lib/services/cocoapods-platform-manager";
@@ -181,6 +181,8 @@ function createTestInjector(projectPath: string, projectName: string, xCode?: IX
 	testInjector.register("iOSNativeTargetService", {
 		setXcodeTargetBuildConfigurationProperties: () => { /* */ }
 	});
+	testInjector.register("tempService", TempServiceStub);
+
 	return testInjector;
 }
 

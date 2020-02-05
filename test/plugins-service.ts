@@ -161,6 +161,7 @@ function createTestInjector() {
 		setShouldDispose: (shouldDispose: boolean): void => undefined
 	});
 	testInjector.register("nodeModulesDependenciesBuilder", {});
+	testInjector.register("tempService", stubs.TempServiceStub);
 
 	return testInjector;
 }
@@ -550,6 +551,7 @@ describe("Plugins service", () => {
 			unitTestsInjector.register("mobileHelper", MobileHelper);
 			unitTestsInjector.register("devicePlatformsConstants", DevicePlatformsConstants);
 			unitTestsInjector.register("nodeModulesDependenciesBuilder", {});
+			unitTestsInjector.register("tempService", stubs.TempServiceStub);
 
 			const pluginsService: PluginsService = unitTestsInjector.resolve(PluginsService);
 			testData.pluginsService = pluginsService;
@@ -586,7 +588,8 @@ describe("Plugins service", () => {
 		unitTestsInjector.register("platformsDataService", {});
 		unitTestsInjector.register("filesHashService", {});
 		unitTestsInjector.register("fs", {
-			exists: (filePath: string) => false
+			exists: (filePath: string) => filePath.indexOf("ios") !== -1,
+			readDirectory: (dir: string) => dir.indexOf("nativescript-ui-core") !== -1 ? ["a.framework"] : []
 		});
 		unitTestsInjector.register("packageManager", {});
 		unitTestsInjector.register("options", {});
@@ -596,6 +599,7 @@ describe("Plugins service", () => {
 		unitTestsInjector.register("mobileHelper", MobileHelper);
 		unitTestsInjector.register("devicePlatformsConstants", DevicePlatformsConstants);
 		unitTestsInjector.register("nodeModulesDependenciesBuilder", {});
+		unitTestsInjector.register("tempService", stubs.TempServiceStub);
 		return unitTestsInjector;
 	};
 
@@ -796,7 +800,7 @@ describe("Plugins service", () => {
 						"version": "4.0.0",
 					}
 				],
-				expectedWarning: "Detected same versions (4.0.0) of the nativescript-ui-core installed at locations: /Users/username/projectDir/node_modules/nativescript-ui-core, " +
+				expectedWarning: "Detected the framework a.framework is installed multiple times from the same versions of plugin (4.0.0) at locations: /Users/username/projectDir/node_modules/nativescript-ui-core, " +
 					"/Users/username/projectDir/node_modules/nativescript-ui-listview/node_modules/nativescript-ui-core"
 			},
 			{
@@ -844,10 +848,45 @@ describe("Plugins service", () => {
 						"dependencies": []
 					},
 				],
-				expectedOutput: new Error(`Cannot use different versions of a NativeScript plugin in your application.
-nativescript-ui-core plugin occurs multiple times in node_modules:\n` +
+				expectedOutput: new Error(`Cannot use the same framework a.framework multiple times in your application.
+This framework comes from nativescript-ui-core plugin, which is installed multiple times in node_modules:\n` +
 					"* Path: /Users/username/projectDir/node_modules/nativescript-ui-core, version: 3.0.0\n" +
-					"* Path: /Users/username/projectDir/node_modules/nativescript-ui-listview/node_modules/nativescript-ui-core, version: 4.0.0\n" +
+					"* Path: /Users/username/projectDir/node_modules/nativescript-ui-listview/node_modules/nativescript-ui-core, version: 4.0.0\n\n" +
+					`Probably you need to update your dependencies, remove node_modules and try again.`),
+			},
+			{
+				testName: "fails when same framework is installed from multiple plugins",
+				inputDependencies: [
+					{
+						"name": "nativescript-ui-core-forked",
+						"directory": "/Users/username/projectDir/node_modules/nativescript-ui-core-forked",
+						"depth": 0,
+						"version": "3.0.0",
+						"nativescript": {
+							"platforms": {
+								"android": "6.0.0",
+								"ios": "6.0.0"
+							}
+						},
+						"dependencies": []
+					},
+					{
+						"name": "nativescript-ui-core",
+						"directory": "/Users/username/projectDir/node_modules/nativescript-ui-core",
+						"depth": 0,
+						"version": "3.0.0",
+						"nativescript": {
+							"platforms": {
+								"android": "6.0.0",
+								"ios": "6.0.0"
+							}
+						},
+						"dependencies": []
+					},
+				],
+				expectedOutput: new Error(`Detected the framework a.framework is installed from multiple plugins at locations:\n` +
+					"/Users/username/projectDir/node_modules/nativescript-ui-core-forked/platforms/ios/a.framework\n" +
+					"/Users/username/projectDir/node_modules/nativescript-ui-core/platforms/ios/a.framework\n\n" +
 					`Probably you need to update your dependencies, remove node_modules and try again.`),
 			}
 		];
@@ -858,9 +897,9 @@ nativescript-ui-core plugin occurs multiple times in node_modules:\n` +
 				const pluginsService: IPluginsService = unitTestsInjector.resolve(PluginsService);
 
 				if (testCase.expectedOutput instanceof Error) {
-					assert.throws(() => pluginsService.getAllProductionPlugins(<any>{ projectDir: "projectDir" }, testCase.inputDependencies), testCase.expectedOutput.message);
+					assert.throws(() => pluginsService.getAllProductionPlugins(<any>{ projectDir: "projectDir" }, "ios", testCase.inputDependencies), testCase.expectedOutput.message);
 				} else {
-					const plugins = pluginsService.getAllProductionPlugins(<any>{ projectDir: "projectDir" }, testCase.inputDependencies);
+					const plugins = pluginsService.getAllProductionPlugins(<any>{ projectDir: "projectDir" }, "ios", testCase.inputDependencies);
 
 					if (testCase.expectedWarning) {
 						const logger = unitTestsInjector.resolve<stubs.LoggerStub>("logger");
@@ -884,8 +923,8 @@ nativescript-ui-core plugin occurs multiple times in node_modules:\n` +
 			const pluginsService: IPluginsService = unitTestsInjector.resolve(PluginsService);
 			const inputDependencies = [
 				{
-					"name": "tns-core-modules",
-					"directory": "/Users/username/projectDir/node_modules/tns-core-modules",
+					"name": "nativescript-ui-core",
+					"directory": "/Users/username/projectDir/node_modules/nativescript-ui-core",
 					"depth": 0,
 					"version": "6.3.0",
 					"nativescript": {
@@ -899,8 +938,8 @@ nativescript-ui-core plugin occurs multiple times in node_modules:\n` +
 					]
 				},
 				{
-					"name": "tns-core-modules",
-					"directory": "/Users/username/projectDir/node_modules/some-package/tns-core-modules",
+					"name": "nativescript-ui-core",
+					"directory": "/Users/username/projectDir/node_modules/some-package/nativescript-ui-core",
 					"depth": 1,
 					"version": "6.3.0",
 					"nativescript": {
@@ -916,16 +955,16 @@ nativescript-ui-core plugin occurs multiple times in node_modules:\n` +
 			];
 
 			_.range(3).forEach(() => {
-				pluginsService.getAllProductionPlugins(<any>{ projectDir: "projectDir" }, inputDependencies);
+				pluginsService.getAllProductionPlugins(<any>{ projectDir: "projectDir" }, "ios", inputDependencies);
 			});
 
 			const logger = unitTestsInjector.resolve<stubs.LoggerStub>("logger");
 
-			const expectedWarnMessage = "Detected same versions (%s) of the tns-core-modules installed at locations: /Users/username/projectDir/node_modules/tns-core-modules, /Users/username/projectDir/node_modules/some-package/tns-core-modules\n";
+			const expectedWarnMessage = "Detected the framework a.framework is installed multiple times from the same versions of plugin (%s) at locations: /Users/username/projectDir/node_modules/nativescript-ui-core, /Users/username/projectDir/node_modules/some-package/nativescript-ui-core\n";
 			assert.equal(logger.warnOutput, util.format(expectedWarnMessage, "6.3.0"), "The warn message must be shown only once - the result of the private method must be cached as input dependencies have not changed");
 			inputDependencies[0].version = "1.0.0";
 			inputDependencies[1].version = "1.0.0";
-			pluginsService.getAllProductionPlugins(<any>{ projectDir: "projectDir" }, inputDependencies);
+			pluginsService.getAllProductionPlugins(<any>{ projectDir: "projectDir" }, "ios", inputDependencies);
 			assert.equal(logger.warnOutput, util.format(expectedWarnMessage, "6.3.0") + util.format(expectedWarnMessage, "1.0.0"), "When something in input dependencies change, the cached value shouldn't be taken into account");
 		});
 	});

@@ -10,6 +10,8 @@ import { Yok } from "./../lib/common/yok";
 import { HostInfo } from "./../lib/common/host-info";
 import { DevicePlatformsConstants } from "./../lib/common/mobile/device-platforms-constants";
 import { PrepareData } from "../lib/data/prepare-data";
+import * as temp from "temp";
+temp.track();
 
 export class LoggerStub implements ILogger {
 	initialize(opts?: ILoggerOptions): void { }
@@ -940,5 +942,15 @@ export class InjectorStub extends Yok implements IInjector {
 			getDeviceByIdentifier: (): Mobile.IDevice => undefined
 		});
 		this.register("terminalSpinnerService", TerminalSpinnerServiceStub);
+	}
+}
+
+export class TempServiceStub implements ITempService {
+	public async mkdirSync(affixes: string): Promise<string> {
+		return temp.mkdirSync(affixes);
+	}
+
+	public async path(options: ITempPathOptions): Promise<string> {
+		return temp.path(options);
 	}
 }

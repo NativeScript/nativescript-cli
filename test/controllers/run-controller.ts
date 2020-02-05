@@ -1,5 +1,5 @@
 import { RunController } from "../../lib/controllers/run-controller";
-import { InjectorStub } from "../stubs";
+import { InjectorStub, TempServiceStub } from "../stubs";
 import { LiveSyncServiceResolver } from "../../lib/resolvers/livesync-service-resolver";
 import { MobileHelper } from "../../lib/common/mobile/mobile-helper";
 import { assert } from "chai";
@@ -107,6 +107,7 @@ function createTestInjector() {
 	injector.register("analyticsService", ({}));
 	injector.register("debugController", {});
 	injector.register("liveSyncProcessDataService", LiveSyncProcessDataService);
+	injector.register("tempService", TempServiceStub);
 
 	const devicesService = injector.resolve("devicesService");
 	devicesService.getDevicesForPlatform = () => <any>[{ identifier: "myTestDeviceId1" }];

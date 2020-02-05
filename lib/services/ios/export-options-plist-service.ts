@@ -1,11 +1,11 @@
 import * as path from "path";
-import * as temp from "temp";
 import * as mobileProvisionFinder from "ios-mobileprovision-finder";
 
 export class ExportOptionsPlistService implements IExportOptionsPlistService {
-	constructor(private $fs: IFileSystem) { }
+	constructor(private $fs: IFileSystem,
+		private $tempService: ITempService) { }
 
-	public createDevelopmentExportOptionsPlist(archivePath: string, projectData: IProjectData, buildConfig: IBuildConfig): IExportOptionsPlistOutput {
+	public async createDevelopmentExportOptionsPlist(archivePath: string, projectData: IProjectData, buildConfig: IBuildConfig): Promise<IExportOptionsPlistOutput> {
 		const exportOptionsMethod = this.getExportOptionsMethod(projectData, archivePath);
 		const provision = buildConfig.provision || buildConfig.mobileProvisionIdentifier;
 		const iCloudContainerEnvironment = buildConfig.iCloudContainerEnvironment;
@@ -37,8 +37,7 @@ export class ExportOptionsPlistService implements IExportOptionsPlistService {
 </plist>`;
 
 		// Save the options...
-		temp.track();
-		const exportOptionsPlistFilePath = temp.path({ prefix: "export-", suffix: ".plist" });
+		const exportOptionsPlistFilePath = await this.$tempService.path({ prefix: "export-", suffix: ".plist" });
 		this.$fs.writeFile(exportOptionsPlistFilePath, plistTemplate);
 
 		// The xcodebuild exportPath expects directory and writes the <project-name>.ipa at that directory.
@@ -48,7 +47,7 @@ export class ExportOptionsPlistService implements IExportOptionsPlistService {
 		return { exportFileDir, exportFilePath, exportOptionsPlistFilePath };
 	}
 
-	public createDistributionExportOptionsPlist(archivePath: string, projectData: IProjectData, buildConfig: IBuildConfig): IExportOptionsPlistOutput {
+	public async createDistributionExportOptionsPlist(archivePath: string, projectData: IProjectData, buildConfig: IBuildConfig): Promise<IExportOptionsPlistOutput> {
 		const provision = buildConfig.provision || buildConfig.mobileProvisionIdentifier;
 		const teamId = buildConfig.teamId;
 		let plistTemplate = `<?xml version="1.0" encoding="UTF-8"?>
@@ -80,8 +79,7 @@ export class ExportOptionsPlistService implements IExportOptionsPlistService {
 </plist>`;
 
 		// Save the options...
-		temp.track();
-		const exportOptionsPlistFilePath = temp.path({ prefix: "export-", suffix: ".plist" });
+		const exportOptionsPlistFilePath = await this.$tempService.path({ prefix: "export-", suffix: ".plist" });
 		this.$fs.writeFile(exportOptionsPlistFilePath, plistTemplate);
 
 		const exportFileDir = path.resolve(path.dirname(archivePath));
