@@ -17,6 +17,7 @@ NativeScript CLI Changelog
 
 * [Fixed #5187](https://github.com/NativeScript/nativescript-cli/issues/5187): Inaccessible native source code without modulemap
 * [Fixed #5239](https://github.com/NativeScript/nativescript-cli/issues/5239): Temporary files created by CLI are not deleted in some cases
+* [Fixed #5242](https://github.com/NativeScript/nativescript-cli/issues/5242): Java 13 is not supported, but doctor does not detect it
 
 
 6.3.3 (2020, January 13)
