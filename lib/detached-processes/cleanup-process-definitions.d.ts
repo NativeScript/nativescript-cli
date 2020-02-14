@@ -22,6 +22,18 @@ interface ISpawnCommandInfo extends ITimeout {
 	 * Arguments that will be passed to the child process
 	 */
 	args: string[];
+
+	/**
+	 * Options to be passed to the child process
+	 */
+	options?: any;
+}
+
+interface IRequestInfo extends ITimeout {
+	url: string,
+	method: string,
+	body: any,
+	headers: any
 }
 
 interface ICleanupMessageBase {
@@ -38,6 +50,13 @@ interface ISpawnCommandCleanupMessage extends ICleanupMessageBase {
 	commandInfo: ISpawnCommandInfo;
 }
 
+interface IRequestCleanupMessage extends ICleanupMessageBase {
+	/**
+	 * Describes the request that must be executed
+	 */
+	requestInfo: IRequestInfo;
+}
+
 interface IFileCleanupMessage extends ICleanupMessageBase, IFilePath { }
 
 interface IJSCommand extends ITimeout, IFilePath {
@@ -46,4 +65,4 @@ interface IJSCommand extends ITimeout, IFilePath {
 
 interface IJSCleanupMessage extends ICleanupMessageBase {
 	jsCommand: IJSCommand;
- }
+}

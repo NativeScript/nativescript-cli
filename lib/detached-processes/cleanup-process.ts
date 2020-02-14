@@ -20,6 +20,24 @@ fileLogService.logData({ message: "Initializing Cleanup process." });
 const commandsInfos: ISpawnCommandInfo[] = [];
 const filesToDelete: string[] = [];
 const jsCommands: IJSCommand[] = [];
+const requests: IRequestInfo[] = [];
+
+const executeRequest = async (request: IRequestInfo) => {
+	const $httpClient = $injector.resolve<Server.IHttpClient>("httpClient");
+	try {
+		fileLogService.logData({ message: `Start executing request: ${request.method} ${request.url}` });
+		const response = await $httpClient.httpRequest({
+			url: request.url,
+			method: request.method,
+			headers: request.headers,
+			body: request.body
+		});
+		const responseStatus = response && response.response && response.response.statusCode;
+		fileLogService.logData({ message: `Finished executing request: ${request.method} ${request.url} and got status ${responseStatus}` });
+	} catch (e) {
+		fileLogService.logData({ message: `Unable to execute request: ${request.method} ${request.url}` });
+	}
+};
 
 const executeJSCleanup = async (jsCommand: IJSCommand) => {
 	const $childProcess = $injector.resolve<IChildProcess>("childProcess");
@@ -28,7 +46,7 @@ const executeJSCleanup = async (jsCommand: IJSCommand) => {
 		fileLogService.logData({ message: `Start executing action for file: ${jsCommand.filePath} and data ${JSON.stringify(jsCommand.data)}` });
 
 		await $childProcess.trySpawnFromCloseEvent(process.execPath, [path.join(__dirname, "cleanup-js-subprocess.js"), pathToBootstrap, logFile, jsCommand.filePath, JSON.stringify(jsCommand.data)], {}, { throwError: true, timeout: jsCommand.timeout || 3000 });
-		fileLogService.logData({ message: `Finished xecuting action for file: ${jsCommand.filePath} and data ${JSON.stringify(jsCommand.data)}` });
+		fileLogService.logData({ message: `Finished executing action for file: ${jsCommand.filePath} and data ${JSON.stringify(jsCommand.data)}` });
 
 	} catch (err) {
 		fileLogService.logData({ message: `Unable to execute action for file ${jsCommand.filePath} with data ${JSON.stringify(jsCommand.data)}. Error is: ${err}.`, type: FileLogMessageType.Error });
@@ -38,6 +56,10 @@ const executeJSCleanup = async (jsCommand: IJSCommand) => {
 const executeCleanup = async () => {
 	const $childProcess = $injector.resolve<IChildProcess>("childProcess");
 
+	for (const request of requests) {
+		await executeRequest(request);
+	}
+
 	for (const jsCommand of jsCommands) {
 		await executeJSCleanup(jsCommand);
 	}
@@ -46,7 +68,7 @@ const executeCleanup = async () => {
 		try {
 			fileLogService.logData({ message: `Start executing command: ${JSON.stringify(commandInfo)}` });
 
-			await $childProcess.trySpawnFromCloseEvent(commandInfo.command, commandInfo.args, {}, { throwError: true, timeout: commandInfo.timeout || 3000 });
+			await $childProcess.trySpawnFromCloseEvent(commandInfo.command, commandInfo.args, commandInfo.options || {}, { throwError: true, timeout: commandInfo.timeout || 3000 });
 			fileLogService.logData({ message: `Successfully executed command: ${JSON.stringify(commandInfo)}` });
 		} catch (err) {
 			fileLogService.logData({ message: `Unable to execute command: ${JSON.stringify(commandInfo)}. Error is: ${err}.`, type: FileLogMessageType.Error });
@@ -81,6 +103,24 @@ const removeCleanupAction = (commandInfo: ISpawnCommandInfo): void => {
 		fileLogService.logData({ message: `cleanup-process removed command for execution: ${JSON.stringify(commandInfo)}` });
 	} else {
 		fileLogService.logData({ message: `cleanup-process cannot remove command for execution as it has not been added before: ${JSON.stringify(commandInfo)}` });
+	}
+};
+
+const addRequest = (requestInfo: IRequestInfo): void => {
+	if (_.some(requests, currentRequestInfo => _.isEqual(currentRequestInfo, requestInfo))) {
+		fileLogService.logData({ message: `cleanup-process will not add request for execution as it has been added already: ${JSON.stringify(requestInfo)}` });
+	} else {
+		fileLogService.logData({ message: `cleanup-process added request for execution: ${JSON.stringify(requestInfo)}` });
+		requests.push(requestInfo);
+	}
+};
+
+const removeRequest = (requestInfo: IRequestInfo): void => {
+	if (_.some(requests, currentRequestInfo => _.isEqual(currentRequestInfo, currentRequestInfo))) {
+		_.remove(requests, currentRequestInfo => _.isEqual(currentRequestInfo, requestInfo));
+		fileLogService.logData({ message: `cleanup-process removed request for execution: ${JSON.stringify(requestInfo)}` });
+	} else {
+		fileLogService.logData({ message: `cleanup-process cannot remove request for execution as it has not been added before: ${JSON.stringify(requestInfo)}` });
 	}
 };
 
@@ -141,6 +181,12 @@ process.on("message", async (cleanupProcessMessage: ICleanupMessageBase) => {
 			break;
 		case CleanupProcessMessage.RemoveCleanCommand:
 			removeCleanupAction((<ISpawnCommandCleanupMessage>cleanupProcessMessage).commandInfo);
+			break;
+		case CleanupProcessMessage.AddRequest:
+			addRequest((<IRequestCleanupMessage>cleanupProcessMessage).requestInfo);
+			break;
+		case CleanupProcessMessage.RemoveRequest:
+			removeRequest((<IRequestCleanupMessage>cleanupProcessMessage).requestInfo);
 			break;
 		case CleanupProcessMessage.AddDeleteFileAction:
 			addDeleteAction((<IFileCleanupMessage>cleanupProcessMessage).filePath);

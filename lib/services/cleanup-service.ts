@@ -25,6 +25,16 @@ export class CleanupService implements ICleanupService {
 		cleanupProcess.send(<ISpawnCommandCleanupMessage>{ messageType: CleanupProcessMessage.RemoveCleanCommand, commandInfo });
 	}
 
+	public async addRequest(requestInfo: IRequestInfo): Promise<void> {
+		const cleanupProcess = await this.getCleanupProcess();
+		cleanupProcess.send(<IRequestCleanupMessage>{ messageType: CleanupProcessMessage.AddRequest, requestInfo });
+	}
+
+	public async removeRequest(requestInfo: IRequestInfo): Promise<void> {
+		const cleanupProcess = await this.getCleanupProcess();
+		cleanupProcess.send(<IRequestCleanupMessage>{ messageType: CleanupProcessMessage.RemoveRequest, requestInfo });
+	}
+
 	public async addCleanupDeleteAction(filePath: string): Promise<void> {
 		const cleanupProcess = await this.getCleanupProcess();
 		cleanupProcess.send(<IFileCleanupMessage>{ messageType: CleanupProcessMessage.AddDeleteFileAction, filePath });
@@ -42,7 +52,7 @@ export class CleanupService implements ICleanupService {
 
 	public async removeCleanupJS(jsCommand: IJSCommand): Promise<void> {
 		const cleanupProcess = await this.getCleanupProcess();
-		cleanupProcess.send(<IJSCleanupMessage>{ messageType: CleanupProcessMessage.RemoveJSFileToRequire, jsCommand});
+		cleanupProcess.send(<IJSCleanupMessage>{ messageType: CleanupProcessMessage.RemoveJSFileToRequire, jsCommand });
 	}
 
 	public async addKillProcess(pid: string): Promise<void> {

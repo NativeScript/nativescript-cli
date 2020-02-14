@@ -209,29 +209,29 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	}
 
 	@hook('buildIOS')
-	public async buildProject(projectRoot: string, projectData: IProjectData, iOSBuildData: IOSBuildData): Promise<void> {
+	public async buildProject(projectRoot: string, projectData: IProjectData, buildData: IOSBuildData): Promise<void> {
 		const platformData = this.getPlatformData(projectData);
 
 		const handler = (data: any) => {
 			this.emit(constants.BUILD_OUTPUT_EVENT_NAME, data);
 		};
 
-		if (iOSBuildData.buildForDevice) {
-			await this.$iOSSigningService.setupSigningForDevice(projectRoot, projectData, iOSBuildData);
+		if (buildData.buildForDevice) {
+			await this.$iOSSigningService.setupSigningForDevice(projectRoot, projectData, buildData);
 			await attachAwaitDetach(constants.BUILD_OUTPUT_EVENT_NAME,
 				this.$childProcess,
 				handler,
-				this.$xcodebuildService.buildForDevice(platformData, projectData, <any>iOSBuildData));
-		} else if (iOSBuildData.buildForAppStore) {
+				this.$xcodebuildService.buildForDevice(platformData, projectData, <any>buildData));
+		} else if (buildData.buildForAppStore) {
 			await attachAwaitDetach(constants.BUILD_OUTPUT_EVENT_NAME,
 				this.$childProcess,
 				handler,
-				this.$xcodebuildService.buildForAppStore(platformData, projectData, <any>iOSBuildData));
+				this.$xcodebuildService.buildForAppStore(platformData, projectData, <any>buildData));
 		} else {
 			await attachAwaitDetach(constants.BUILD_OUTPUT_EVENT_NAME,
 				this.$childProcess,
 				handler,
-				this.$xcodebuildService.buildForSimulator(platformData, projectData, <any>iOSBuildData));
+				this.$xcodebuildService.buildForSimulator(platformData, projectData, <any>buildData));
 		}
 
 		this.validateApplicationIdentifier(projectData);
