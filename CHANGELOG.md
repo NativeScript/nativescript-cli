@@ -1,6 +1,14 @@
 NativeScript CLI Changelog
 ================
 
+6.4.1 (2020, February 19)
+===
+
+### Fixed
+
+* [Fixed #5251](https://github.com/NativeScript/nativescript-cli/issues/5251): External files are not livesynced
+
+
 6.4.0 (2020, February 11)
 ===
 
