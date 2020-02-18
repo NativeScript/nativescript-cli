@@ -49,11 +49,8 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 							return;
 						}
 
-						// the hash of the compilation is the same as the previous one
-						if (this.expectedHashes[platformData.platformNameLowerCase] === message.hash) {
-							return;
-						}
-
+						// Persist the previousHash value before calling `this.getUpdatedEmittedFiles` as it will modify the expectedHashes object with the current hash
+						const previousHash = this.expectedHashes[platformData.platformNameLowerCase];
 						let result;
 
 						if (prepareData.hmr) {
@@ -78,6 +75,12 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 						};
 
 						this.$logger.trace("Generated data from webpack message:", data);
+
+						// the hash of the compilation is the same as the previous one and there are only hot updates produced
+						if (data.hasOnlyHotUpdateFiles && previousHash === message.hash) {
+							return;
+						}
+
 						if (data.files.length) {
 							this.emit(WEBPACK_COMPILATION_COMPLETE, data);
 						}
