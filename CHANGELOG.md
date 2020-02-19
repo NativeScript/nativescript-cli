@@ -6,7 +6,9 @@ NativeScript CLI Changelog
 
 ### Fixed
 
+* [Fixed #5236](https://github.com/NativeScript/nativescript-cli/issues/5236): File paths from device logs are not clickable
 * [Fixed #5251](https://github.com/NativeScript/nativescript-cli/issues/5251): External files are not livesynced
+* [Fixed #5252](https://github.com/NativeScript/nativescript-cli/issues/5252): Logs from platform specific files point to incorrect file
 
 
 6.4.0 (2020, February 11)
