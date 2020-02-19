@@ -27,6 +27,7 @@ export class LogSourceMapService implements Mobile.ILogSourceMapService {
 	private getProjectData: (projectDir: string) => IProjectData;
 	private getRuntimeVersion: (projectDir: string, platform: string) => string;
 	private cache: IDictionary<sourcemap.SourceMapConsumer> = {};
+	private originalFilesLocationCache: IStringDictionary = {};
 
 	private get $platformsDataService(): IPlatformsDataService {
 		return this.$injector.resolve<IPlatformsDataService>("platformsDataService");
@@ -123,7 +124,18 @@ export class LogSourceMapService implements Mobile.ILogSourceMapService {
 					}
 
 					sourceFile = stringReplaceAll(sourceFile, "/", path.sep);
-					return { sourceFile, line: originalPosition.line, column: originalPosition.column };
+					if (!this.originalFilesLocationCache[sourceFile]) {
+						const { dir, ext, name } = path.parse(sourceFile);
+						const platformSpecificName = `${name}.${platform.toLowerCase()}`;
+						const platformSpecificFile = path.format({ dir, ext, name: platformSpecificName });
+						if (this.$fs.exists(platformSpecificFile)) {
+							this.originalFilesLocationCache[sourceFile] = platformSpecificFile;
+						} else {
+							this.originalFilesLocationCache[sourceFile] = sourceFile;
+						}
+					}
+
+					return { sourceFile: this.originalFilesLocationCache[sourceFile], line: originalPosition.line, column: originalPosition.column };
 				}
 			}
 		}
