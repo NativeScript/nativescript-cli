@@ -38,6 +38,15 @@ declare const enum CleanupProcessMessage {
 	 * This type of message defines that cleanup procedure should not execute previously defined cleanup command.
 	 */
 	RemoveCleanCommand = "RemoveCleanCommand",
+	/**
+	 * This type of message defines that cleanup procedure should execute specific request.
+	 */
+	AddRequest = "AddRequest",
+
+	/**
+	 * This type of message defines that cleanup procedure should not execute previously defined request.
+	 */
+	RemoveRequest = "RemoveRequest",
 
 	/**
 	 * This type of message defines that cleanup procedure should delete specified files.
