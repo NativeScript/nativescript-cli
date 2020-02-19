@@ -22,6 +22,7 @@ interface IFileLocation {
 
 export class LogSourceMapService implements Mobile.ILogSourceMapService {
 	private static FILE_PREFIX = "file:///";
+	private static FILE_PREFIX_REPLACEMENT = "file: ";
 	private static MEMOIZE_FUNCTION_RANDOM_KEY_FOR_JOIN = "__some_random_value__";
 	private getProjectData: (projectDir: string) => IProjectData;
 	private getRuntimeVersion: (projectDir: string, platform: string) => string;
@@ -81,9 +82,9 @@ export class LogSourceMapService implements Mobile.ILogSourceMapService {
 					const lastIndexOfFile = rawLine.lastIndexOf(LogSourceMapService.FILE_PREFIX);
 					const firstPart = rawLine.substr(0, lastIndexOfFile);
 
-					outputData += firstPart + rawLine.substr(lastIndexOfFile).replace(/file:\/\/\/.+?:\d+:\d+/, `${LogSourceMapService.FILE_PREFIX}${sourceFile}:${line}:${column}`) + '\n';
+					outputData += firstPart + rawLine.substr(lastIndexOfFile).replace(/file:\/\/\/.+?:\d+:\d+/, `${LogSourceMapService.FILE_PREFIX_REPLACEMENT}${sourceFile}:${line}:${column}`) + '\n';
 				} else {
-					outputData = `${outputData}${parsedLine.messagePrefix}${LogSourceMapService.FILE_PREFIX}${sourceFile}:${line}:${column}${parsedLine.messageSuffix}\n`;
+					outputData = `${outputData}${parsedLine.messagePrefix}${LogSourceMapService.FILE_PREFIX_REPLACEMENT}${sourceFile}:${line}:${column}${parsedLine.messageSuffix}\n`;
 				}
 			} else if (rawLine !== "") {
 				outputData = `${outputData}${rawLine}\n`;
