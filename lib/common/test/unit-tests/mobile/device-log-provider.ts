@@ -172,10 +172,10 @@ JS:         console.log\n`);
 08-22 15:32:03.145 25038 25038 E JS      : at push.../node_modules/tns-core-modules/data/observable/observable.js.Observable._emit (file:///data/data/org.nativescript.appTestLogs/files/app/vendor.js:3724:18)
 08-22 15:32:03.145 25038 25038 E JS      : at ClickListenerImpl.onClick (file:///data/data/org.nativescript.appTestLogs/files/app/vendor.js:14608:23)`);
 						assertData(logger.output, `JS: Trace: console.trace onTap
-JS: at viewModel.onTap file:///app/main-view-model.js:39:0
-JS: at push.../node_modules/tns-core-modules/data/observable/observable.js.Observable.notify file:///node_modules/tns-core-modules/data/observable/observable.js:107:0
-JS: at push.../node_modules/tns-core-modules/data/observable/observable.js.Observable._emit file:///node_modules/tns-core-modules/data/observable/observable.js:127:0
-JS: at ClickListenerImpl.onClick file:///node_modules/tns-core-modules/ui/button/button.js:29:0\n`);
+JS: at viewModel.onTap file: app/main-view-model.js:39:0
+JS: at push.../node_modules/tns-core-modules/data/observable/observable.js.Observable.notify file: node_modules/tns-core-modules/data/observable/observable.js:107:0
+JS: at push.../node_modules/tns-core-modules/data/observable/observable.js.Observable._emit file: node_modules/tns-core-modules/data/observable/observable.js:127:0
+JS: at ClickListenerImpl.onClick file: node_modules/tns-core-modules/ui/button/button.js:29:0\n`);
 					});
 
 					it("console.time(timeEnd) statement", () => {
@@ -240,10 +240,10 @@ System.err: Calling js method onClick failed
 System.err: Error: Error in onTap
 System.err: ` + `
 System.err: StackTrace:
-System.err: 	Frame: function:'viewModel.onTap', file:'file:///app/main-view-model.js:43:0
-System.err: 	Frame: function:'push.../node_modules/tns-core-modules/data/observable/observable.js.Observable.notify', file:'file:///node_modules/tns-core-modules/data/observable/observable.js:107:0
-System.err: 	Frame: function:'push.../node_modules/tns-core-modules/data/observable/observable.js.Observable._emit', file:'file:///node_modules/tns-core-modules/data/observable/observable.js:127:0
-System.err: 	Frame: function:'ClickListenerImpl.onClick', file:'file:///node_modules/tns-core-modules/ui/button/button.js:29:0
+System.err: 	Frame: function:'viewModel.onTap', file:'file: app/main-view-model.js:43:0
+System.err: 	Frame: function:'push.../node_modules/tns-core-modules/data/observable/observable.js.Observable.notify', file:'file: node_modules/tns-core-modules/data/observable/observable.js:107:0
+System.err: 	Frame: function:'push.../node_modules/tns-core-modules/data/observable/observable.js.Observable._emit', file:'file: node_modules/tns-core-modules/data/observable/observable.js:127:0
+System.err: 	Frame: function:'ClickListenerImpl.onClick', file:'file: node_modules/tns-core-modules/ui/button/button.js:29:0
 System.err: 	at com.tns.Runtime.callJSMethodNative(Native Method)
 System.err: 	at com.tns.Runtime.dispatchCallJSMethodNative(Runtime.java:1242)
 System.err: 	at com.tns.Runtime.callJSMethodImpl(Runtime.java:1122)
@@ -325,10 +325,10 @@ JS:         console.log\n`);
 08-23 16:16:06.571 25038 25038 E JS      : at push.../node_modules/tns-core-modules/data/observable/observable.js.Observable._emit (file:///data/data/org.nativescript.appTestLogs/files/app/vendor.js:3724:18)
 08-23 16:16:06.571 25038 25038 E JS      : at ClickListenerImpl.onClick (file:///data/data/org.nativescript.appTestLogs/files/app/vendor.js:14608:23)`);
 						assertData(logger.output, `JS: Trace: console.trace onTap
-JS: at viewModel.onTap (file:///app/main-view-model.js:39:0)
-JS: at push.../node_modules/tns-core-modules/data/observable/observable.js.Observable.notify (file:///node_modules/tns-core-modules/data/observable/observable.js:107:0)
-JS: at push.../node_modules/tns-core-modules/data/observable/observable.js.Observable._emit (file:///node_modules/tns-core-modules/data/observable/observable.js:127:0)
-JS: at ClickListenerImpl.onClick (file:///node_modules/tns-core-modules/ui/button/button.js:29:0)\n`);
+JS: at viewModel.onTap (file: app/main-view-model.js:39:0)
+JS: at push.../node_modules/tns-core-modules/data/observable/observable.js.Observable.notify (file: node_modules/tns-core-modules/data/observable/observable.js:107:0)
+JS: at push.../node_modules/tns-core-modules/data/observable/observable.js.Observable._emit (file: node_modules/tns-core-modules/data/observable/observable.js:127:0)
+JS: at ClickListenerImpl.onClick (file: node_modules/tns-core-modules/ui/button/button.js:29:0)\n`);
 					});
 
 					it("console.time(timeEnd) statement", () => {
@@ -393,10 +393,10 @@ System.err: Calling js method onClick failed
 System.err: Error: Error in onTap
 System.err: ` + `
 System.err: StackTrace:
-System.err: 	viewModel.onTap(file:///app/main-view-model.js:43:0)
-System.err: 	at push.../node_modules/tns-core-modules/data/observable/observable.js.Observable.notify(file:///node_modules/tns-core-modules/data/observable/observable.js:107:0)
-System.err: 	at push.../node_modules/tns-core-modules/data/observable/observable.js.Observable._emit(file:///node_modules/tns-core-modules/data/observable/observable.js:127:0)
-System.err: 	at ClickListenerImpl.onClick(file:///node_modules/tns-core-modules/ui/button/button.js:29:0)
+System.err: 	viewModel.onTap(file: app/main-view-model.js:43:0)
+System.err: 	at push.../node_modules/tns-core-modules/data/observable/observable.js.Observable.notify(file: node_modules/tns-core-modules/data/observable/observable.js:107:0)
+System.err: 	at push.../node_modules/tns-core-modules/data/observable/observable.js.Observable._emit(file: node_modules/tns-core-modules/data/observable/observable.js:127:0)
+System.err: 	at ClickListenerImpl.onClick(file: node_modules/tns-core-modules/ui/button/button.js:29:0)
 System.err: 	at com.tns.Runtime.callJSMethodNative(Native Method)
 System.err: 	at com.tns.Runtime.dispatchCallJSMethodNative(Runtime.java:1209)
 System.err: 	at com.tns.Runtime.callJSMethodImpl(Runtime.java:1096)
@@ -441,7 +441,7 @@ System.err: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:858)\n`)
 						it("console.log", () => {
 							logDataForiOS("Aug 23 14:38:54 mcsofvladimirov appTestLogs[8455]: CONSOLE INFO file:///app/vendor.js:168:36: HMR: Hot Module Replacement Enabled. Waiting for signal.");
 
-							assertData(logger.output, "CONSOLE INFO file:///node_modules/nativescript-dev-webpack/hot.js:3:0 HMR: Hot Module Replacement Enabled. Waiting for signal.\n");
+							assertData(logger.output, "CONSOLE INFO file: node_modules/nativescript-dev-webpack/hot.js:3:0 HMR: Hot Module Replacement Enabled. Waiting for signal.\n");
 						});
 
 						it("console.dir", () => {
@@ -459,7 +459,7 @@ System.err: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:858)\n`)
 	  "level1_0": "value3"
 	}
 	==== object dump end ====`);
-							assertData(logger.output, `CONSOLE LOG file:///app/main-view-model.js:20:0
+							assertData(logger.output, `CONSOLE LOG file: app/main-view-model.js:20:0
 ==== object dump start ====
 level0_0: {
 "level1_0": {
@@ -480,7 +480,7 @@ level0_1: {
 	        message
 	        from
 	        console.log`);
-							assertData(logger.output, `CONSOLE LOG file:///app/main-view-model.js:34:0 multiline
+							assertData(logger.output, `CONSOLE LOG file: app/main-view-model.js:34:0 multiline
 message
 from
 console.log\n`);
@@ -504,19 +504,19 @@ console.log\n`);
 	14  evaluate@[native code]
 	15  moduleEvaluation@:1:11
 	16  promiseReactionJob@:1:11`);
-							assertData(logger.output, `CONSOLE TRACE file:///app/main-view-model.js:39:0 console.trace onTap
-1   onTap@file:///app/main-view-model.js:39:0
-2   notify@file:///node_modules/tns-core-modules/data/observable/observable.js:107:0
-3   _emit@file:///node_modules/tns-core-modules/data/observable/observable.js:127:0
-4   tap@file:///node_modules/tns-core-modules/ui/button/button.js:216:0
+							assertData(logger.output, `CONSOLE TRACE file: app/main-view-model.js:39:0 console.trace onTap
+1   onTap@file: app/main-view-model.js:39:0
+2   notify@file: node_modules/tns-core-modules/data/observable/observable.js:107:0
+3   _emit@file: node_modules/tns-core-modules/data/observable/observable.js:127:0
+4   tap@file: node_modules/tns-core-modules/ui/button/button.js:216:0
 5   UIApplicationMain@[native code]
-6   _start@file:///node_modules/tns-core-modules/application/application.js:277:0
-7   run@file:///node_modules/tns-core-modules/application/application.js:305:0
-8   @file:///app/app.js:46:0
+6   _start@file: node_modules/tns-core-modules/application/application.js:277:0
+7   run@file: node_modules/tns-core-modules/application/application.js:305:0
+8   @file: app/app.js:46:0
 9   ./app.js@file:///app/bundle.js:172:34
-10  __webpack_require__@file:///app/webpack/bootstrap:750:0
-11  checkDeferredModules@file:///app/webpack/bootstrap:43:0
-12  webpackJsonpCallback@file:///app/webpack/bootstrap:30:0
+10  __webpack_require__@file: app/webpack/bootstrap:750:0
+11  checkDeferredModules@file: app/webpack/bootstrap:43:0
+12  webpackJsonpCallback@file: app/webpack/bootstrap:30:0
 13  anonymous@file:///app/bundle.js:2:61
 14  evaluate@[native code]
 15  moduleEvaluation@:1:11
@@ -633,24 +633,24 @@ Native stack trace:
 18  0x10240863d ffi_call_unix64
 19  0x10fc91100
 JavaScript stack trace:
-1   onTap@file:///app/main-view-model.js:43:0
-2   notify@file:///node_modules/tns-core-modules/data/observable/observable.js:107:0
-3   _emit@file:///node_modules/tns-core-modules/data/observable/observable.js:127:0
-4   tap@file:///node_modules/tns-core-modules/ui/button/button.js:216:0
+1   onTap@file: app/main-view-model.js:43:0
+2   notify@file: node_modules/tns-core-modules/data/observable/observable.js:107:0
+3   _emit@file: node_modules/tns-core-modules/data/observable/observable.js:127:0
+4   tap@file: node_modules/tns-core-modules/ui/button/button.js:216:0
 5   UIApplicationMain@[native code]
-6   _start@file:///node_modules/tns-core-modules/application/application.js:277:0
-7   run@file:///node_modules/tns-core-modules/application/application.js:305:0
-8   @file:///app/app.js:46:0
+6   _start@file: node_modules/tns-core-modules/application/application.js:277:0
+7   run@file: node_modules/tns-core-modules/application/application.js:305:0
+8   @file: app/app.js:46:0
 9   ./app.js@file:///app/bundle.js:172:34
-10  __webpack_require__@file:///app/webpack/bootstrap:750:0
-11  checkDeferredModules@file:///app/webpack/bootstrap:43:0
-12  webpackJsonpCallback@file:///app/webpack/bootstrap:30:0
+10  __webpack_require__@file: app/webpack/bootstrap:750:0
+11  checkDeferredModules@file: app/webpack/bootstrap:43:0
+12  webpackJsonpCallback@file: app/webpack/bootstrap:30:0
 13  anonymous@file:///app/bundle.js:2:61
 14  evaluate@[native code]
 15  moduleEvaluation@[native code]
 16  promiseReactionJob@[native code]
 JavaScript error:
-file:///app/main-view-model.js:43:0 JS ERROR Error: Error in onTap
+file: app/main-view-model.js:43:0 JS ERROR Error: Error in onTap
 NativeScript caught signal 11.
 Native Stack:
 1   0x101a7384f sig_handler(int)
@@ -681,13 +681,13 @@ Native Stack:
 26  0x10fc91100
 JS Stack:
 1   UIApplicationMain@[native code]
-2   _start@file:///node_modules/tns-core-modules/application/application.js:277:0
-3   run@file:///node_modules/tns-core-modules/application/application.js:305:0
-4   @file:///app/app.js:46:0
+2   _start@file: node_modules/tns-core-modules/application/application.js:277:0
+3   run@file: node_modules/tns-core-modules/application/application.js:305:0
+4   @file: app/app.js:46:0
 5   ./app.js@file:///app/bundle.js:172:34
-6   __webpack_require__@file:///app/webpack/bootstrap:750:0
-7   checkDeferredModules@file:///app/webpack/bootstrap:43:0
-8   webpackJsonpCallback@file:///app/webpack/bootstrap:30:0
+6   __webpack_require__@file: app/webpack/bootstrap:750:0
+7   checkDeferredModules@file: app/webpack/bootstrap:43:0
+8   webpackJsonpCallback@file: app/webpack/bootstrap:30:0
 9   anonymous@file:///app/bundle.js:2:61
 10  evaluate@[native code]
 11  moduleEvaluation@:1:11
@@ -701,7 +701,7 @@ JS Stack:
 						it("console.log", () => {
 							logDataForiOS("2019-08-22 18:21:24.066975+0300  localhost appTestLogs[55619]: (NativeScript) CONSOLE INFO file:///app/vendor.js:168:36: HMR: Hot Module Replacement Enabled. Waiting for signal.");
 
-							assertData(logger.output, "CONSOLE INFO file:///node_modules/nativescript-dev-webpack/hot.js:3:0 HMR: Hot Module Replacement Enabled. Waiting for signal.\n");
+							assertData(logger.output, "CONSOLE INFO file: node_modules/nativescript-dev-webpack/hot.js:3:0 HMR: Hot Module Replacement Enabled. Waiting for signal.\n");
 						});
 
 						it("console.dir", () => {
@@ -719,7 +719,7 @@ level0_1: {
   "level1_0": "value3"
 }
 ==== object dump end ====`);
-							assertData(logger.output, `CONSOLE LOG file:///app/main-view-model.js:20:0
+							assertData(logger.output, `CONSOLE LOG file: app/main-view-model.js:20:0
 ==== object dump start ====
 level0_0: {
 "level1_0": {
@@ -740,7 +740,7 @@ level0_1: {
         message
         from
         console.log`);
-							assertData(logger.output, `CONSOLE LOG file:///app/main-view-model.js:34:0 multiline
+							assertData(logger.output, `CONSOLE LOG file: app/main-view-model.js:34:0 multiline
 message
 from
 console.log\n`);
@@ -764,19 +764,19 @@ console.log\n`);
 14  evaluate@[native code]
 15  moduleEvaluation@:1:11
 16  promiseReactionJob@:1:11`);
-							assertData(logger.output, `CONSOLE TRACE file:///app/main-view-model.js:39:0 console.trace onTap
-1   onTap@file:///app/main-view-model.js:39:0
-2   notify@file:///node_modules/tns-core-modules/data/observable/observable.js:107:0
-3   _emit@file:///node_modules/tns-core-modules/data/observable/observable.js:127:0
-4   tap@file:///node_modules/tns-core-modules/ui/button/button.js:216:0
+							assertData(logger.output, `CONSOLE TRACE file: app/main-view-model.js:39:0 console.trace onTap
+1   onTap@file: app/main-view-model.js:39:0
+2   notify@file: node_modules/tns-core-modules/data/observable/observable.js:107:0
+3   _emit@file: node_modules/tns-core-modules/data/observable/observable.js:127:0
+4   tap@file: node_modules/tns-core-modules/ui/button/button.js:216:0
 5   UIApplicationMain@[native code]
-6   _start@file:///node_modules/tns-core-modules/application/application.js:277:0
-7   run@file:///node_modules/tns-core-modules/application/application.js:305:0
-8   @file:///app/app.js:46:0
+6   _start@file: node_modules/tns-core-modules/application/application.js:277:0
+7   run@file: node_modules/tns-core-modules/application/application.js:305:0
+8   @file: app/app.js:46:0
 9   ./app.js@file:///app/bundle.js:172:34
-10  __webpack_require__@file:///app/webpack/bootstrap:750:0
-11  checkDeferredModules@file:///app/webpack/bootstrap:43:0
-12  webpackJsonpCallback@file:///app/webpack/bootstrap:30:0
+10  __webpack_require__@file: app/webpack/bootstrap:750:0
+11  checkDeferredModules@file: app/webpack/bootstrap:43:0
+12  webpackJsonpCallback@file: app/webpack/bootstrap:30:0
 13  anonymous@file:///app/bundle.js:2:61
 14  evaluate@[native code]
 15  moduleEvaluation@:1:11
@@ -785,7 +785,7 @@ console.log\n`);
 
 						it("console.time(timeEnd) statement", () => {
 							logDataForiOS(`2019-08-22 18:21:26.133972+0300  localhost appTestLogs[55619]: (NativeScript) file:///app/bundle.js:291:24: CONSOLE INFO console.time: 1988.737ms`);
-							assertData(logger.output, "file:///app/main-view-model.js:41:0 CONSOLE INFO console.time: 1988.737ms\n");
+							assertData(logger.output, "file: app/main-view-model.js:41:0 CONSOLE INFO console.time: 1988.737ms\n");
 						});
 
 						it("when an error is thrown, correct callstack is printed", async () => {
@@ -898,24 +898,24 @@ Native stack trace:
 19  0x10d1fe63d ffi_call_unix64
 20  0x123da2c60
 JavaScript stack trace:
-1   onTap@file:///app/main-view-model.js:43:0
-2   notify@file:///node_modules/tns-core-modules/data/observable/observable.js:107:0
-3   _emit@file:///node_modules/tns-core-modules/data/observable/observable.js:127:0
-4   tap@file:///node_modules/tns-core-modules/ui/button/button.js:216:0
+1   onTap@file: app/main-view-model.js:43:0
+2   notify@file: node_modules/tns-core-modules/data/observable/observable.js:107:0
+3   _emit@file: node_modules/tns-core-modules/data/observable/observable.js:127:0
+4   tap@file: node_modules/tns-core-modules/ui/button/button.js:216:0
 5   UIApplicationMain@[native code]
-6   _start@file:///node_modules/tns-core-modules/application/application.js:277:0
-7   run@file:///node_modules/tns-core-modules/application/application.js:305:0
-8   @file:///app/app.js:46:0
+6   _start@file: node_modules/tns-core-modules/application/application.js:277:0
+7   run@file: node_modules/tns-core-modules/application/application.js:305:0
+8   @file: app/app.js:46:0
 9   ./app.js@file:///app/bundle.js:172:34
-10  __webpack_require__@file:///app/webpack/bootstrap:750:0
-11  checkDeferredModules@file:///app/webpack/bootstrap:43:0
-12  webpackJsonpCallback@file:///app/webpack/bootstrap:30:0
+10  __webpack_require__@file: app/webpack/bootstrap:750:0
+11  checkDeferredModules@file: app/webpack/bootstrap:43:0
+12  webpackJsonpCallback@file: app/webpack/bootstrap:30:0
 13  anonymous@file:///app/bundle.js:2:61
 14  evaluate@[native code]
 15  moduleEvaluation@[native code]
 16  promiseReactionJob@[native code]
 JavaScript error:
-file:///app/main-view-model.js:43:0 JS ERROR Error: Error in onTap
+file: app/main-view-model.js:43:0 JS ERROR Error: Error in onTap
 NativeScript caught signal 11.
 Native Stack:
 1   0x10c86984f sig_handler(int)
@@ -947,13 +947,13 @@ Native Stack:
 27  0x123da2c60
 JS Stack:
 1   UIApplicationMain@[native code]
-2   _start@file:///node_modules/tns-core-modules/application/application.js:277:0
-3   run@file:///node_modules/tns-core-modules/application/application.js:305:0
-4   @file:///app/app.js:46:0
+2   _start@file: node_modules/tns-core-modules/application/application.js:277:0
+3   run@file: node_modules/tns-core-modules/application/application.js:305:0
+4   @file: app/app.js:46:0
 5   ./app.js@file:///app/bundle.js:172:34
-6   __webpack_require__@file:///app/webpack/bootstrap:750:0
-7   checkDeferredModules@file:///app/webpack/bootstrap:43:0
-8   webpackJsonpCallback@file:///app/webpack/bootstrap:30:0
+6   __webpack_require__@file: app/webpack/bootstrap:750:0
+7   checkDeferredModules@file: app/webpack/bootstrap:43:0
+8   webpackJsonpCallback@file: app/webpack/bootstrap:30:0
 9   anonymous@file:///app/bundle.js:2:61
 10  evaluate@[native code]
 11  moduleEvaluation@:1:11
@@ -975,7 +975,7 @@ JS Stack:
 						it("console.log", () => {
 							logDataForiOS("Aug 23 18:12:39 mcsofvladimirov appTestLogs[29554]: (NativeScript) CONSOLE INFO file:///app/vendor.js:168:36: HMR: Hot Module Replacement Enabled. Waiting for signal.");
 
-							assertData(logger.output, "CONSOLE INFO file:///node_modules/nativescript-dev-webpack/hot.js:3:0: HMR: Hot Module Replacement Enabled. Waiting for signal.\n");
+							assertData(logger.output, "CONSOLE INFO file: node_modules/nativescript-dev-webpack/hot.js:3:0: HMR: Hot Module Replacement Enabled. Waiting for signal.\n");
 						});
 
 						it("console.dir", () => {
@@ -993,7 +993,7 @@ JS Stack:
 	  "level1_0": "value3"
 	}
 	==== object dump end ====`);
-							assertData(logger.output, `CONSOLE LOG file:///app/main-view-model.js:20:0:
+							assertData(logger.output, `CONSOLE LOG file: app/main-view-model.js:20:0:
 ==== object dump start ====
 level0_0: {
 "level1_0": {
@@ -1014,7 +1014,7 @@ level0_1: {
 	        message
 	        from
 	        console.log`);
-							assertData(logger.output, `CONSOLE LOG file:///app/main-view-model.js:34:0: multiline
+							assertData(logger.output, `CONSOLE LOG file: app/main-view-model.js:34:0: multiline
 message
 from
 console.log\n`);
@@ -1038,19 +1038,19 @@ console.log\n`);
 	at evaluate([native code])
 	at moduleEvaluation
 	at promiseReactionJob`);
-							assertData(logger.output, `CONSOLE TRACE file:///app/main-view-model.js:39:0: console.trace onTap
-onTap(file:///app/main-view-model.js:39:0)
-at notify(file:///node_modules/tns-core-modules/data/observable/observable.js:107:0)
-at _emit(file:///node_modules/tns-core-modules/data/observable/observable.js:127:0)
-at tap(file:///node_modules/tns-core-modules/ui/button/button.js:216:0)
+							assertData(logger.output, `CONSOLE TRACE file: app/main-view-model.js:39:0: console.trace onTap
+onTap(file: app/main-view-model.js:39:0)
+at notify(file: node_modules/tns-core-modules/data/observable/observable.js:107:0)
+at _emit(file: node_modules/tns-core-modules/data/observable/observable.js:127:0)
+at tap(file: node_modules/tns-core-modules/ui/button/button.js:216:0)
 at UIApplicationMain([native code])
-at _start(file:///node_modules/tns-core-modules/application/application.js:277:0)
-at run(file:///node_modules/tns-core-modules/application/application.js:305:0)
-at file:///app/app.js:46:0
+at _start(file: node_modules/tns-core-modules/application/application.js:277:0)
+at run(file: node_modules/tns-core-modules/application/application.js:305:0)
+at file: app/app.js:46:0
 at ./app.js(file:///app/bundle.js:172:34)
-at __webpack_require__(file:///app/webpack/bootstrap:750:0)
-at checkDeferredModules(file:///app/webpack/bootstrap:43:0)
-at webpackJsonpCallback(file:///app/webpack/bootstrap:30:0)
+at __webpack_require__(file: app/webpack/bootstrap:750:0)
+at checkDeferredModules(file: app/webpack/bootstrap:43:0)
+at webpackJsonpCallback(file: app/webpack/bootstrap:30:0)
 at anonymous(file:///app/bundle.js:2:61)
 at evaluate([native code])
 at moduleEvaluation
@@ -1059,7 +1059,7 @@ at promiseReactionJob\n`);
 
 						it("console.time(timeEnd) statement", () => {
 							logDataForiOS(`Aug 23 18:12:39 mcsofvladimirov appTestLogs[29554]: file:///app/bundle.js:291:24: CONSOLE INFO console.time: 27523.877ms`);
-							assertData(logger.output, "file:///app/main-view-model.js:41:0: CONSOLE INFO console.time: 27523.877ms\n");
+							assertData(logger.output, "file: app/main-view-model.js:41:0: CONSOLE INFO console.time: 27523.877ms\n");
 						});
 
 						it("when an error is thrown, correct callstack is printed", async () => {
@@ -1167,24 +1167,24 @@ Native stack trace:
 18  0x10502d20d ffi_call_unix64
 19  0x11085f1e0
 JavaScript stack trace:
-onTap(file:///app/main-view-model.js:43:0)
-at notify(file:///node_modules/tns-core-modules/data/observable/observable.js:107:0)
-at _emit(file:///node_modules/tns-core-modules/data/observable/observable.js:127:0)
-at tap(file:///node_modules/tns-core-modules/ui/button/button.js:216:0)
+onTap(file: app/main-view-model.js:43:0)
+at notify(file: node_modules/tns-core-modules/data/observable/observable.js:107:0)
+at _emit(file: node_modules/tns-core-modules/data/observable/observable.js:127:0)
+at tap(file: node_modules/tns-core-modules/ui/button/button.js:216:0)
 at UIApplicationMain([native code])
-at _start(file:///node_modules/tns-core-modules/application/application.js:277:0)
-at run(file:///node_modules/tns-core-modules/application/application.js:305:0)
-at file:///app/app.js:46:0
+at _start(file: node_modules/tns-core-modules/application/application.js:277:0)
+at run(file: node_modules/tns-core-modules/application/application.js:305:0)
+at file: app/app.js:46:0
 at ./app.js(file:///app/bundle.js:172:34)
-at __webpack_require__(file:///app/webpack/bootstrap:750:0)
-at checkDeferredModules(file:///app/webpack/bootstrap:43:0)
-at webpackJsonpCallback(file:///app/webpack/bootstrap:30:0)
+at __webpack_require__(file: app/webpack/bootstrap:750:0)
+at checkDeferredModules(file: app/webpack/bootstrap:43:0)
+at webpackJsonpCallback(file: app/webpack/bootstrap:30:0)
 at anonymous(file:///app/bundle.js:2:61)
 at evaluate([native code])
 at moduleEvaluation([native code])
 at promiseReactionJob([native code])
 JavaScript error:
-file:///app/main-view-model.js:43:0: JS ERROR Error: Error in onTap
+file: app/main-view-model.js:43:0: JS ERROR Error: Error in onTap
 NativeScript caught signal 11.
 Native Stack:
 1   0x1046941df sig_handler(int)
@@ -1215,13 +1215,13 @@ Native Stack:
 26  0x11085f1e0
 JS Stack:
 UIApplicationMain([native code])
-at _start(file:///node_modules/tns-core-modules/application/application.js:277:0)
-at run(file:///node_modules/tns-core-modules/application/application.js:305:0)
-at file:///app/app.js:46:0
+at _start(file: node_modules/tns-core-modules/application/application.js:277:0)
+at run(file: node_modules/tns-core-modules/application/application.js:305:0)
+at file: app/app.js:46:0
 at ./app.js(file:///app/bundle.js:172:34)
-at __webpack_require__(file:///app/webpack/bootstrap:750:0)
-at checkDeferredModules(file:///app/webpack/bootstrap:43:0)
-at webpackJsonpCallback(file:///app/webpack/bootstrap:30:0)
+at __webpack_require__(file: app/webpack/bootstrap:750:0)
+at checkDeferredModules(file: app/webpack/bootstrap:43:0)
+at webpackJsonpCallback(file: app/webpack/bootstrap:30:0)
 at anonymous(file:///app/bundle.js:2:61)
 at evaluate([native code])
 at moduleEvaluation
@@ -1235,7 +1235,7 @@ at promiseReactionJob\n`);
 						it("console.log", () => {
 							logDataForiOS("2019-08-23 17:08:38.860441+0300  localhost appTestLogs[21053]: (NativeScript) CONSOLE INFO file:///app/vendor.js:168:36: HMR: Hot Module Replacement Enabled. Waiting for signal.");
 
-							assertData(logger.output, "CONSOLE INFO file:///node_modules/nativescript-dev-webpack/hot.js:3:0: HMR: Hot Module Replacement Enabled. Waiting for signal.\n");
+							assertData(logger.output, "CONSOLE INFO file: node_modules/nativescript-dev-webpack/hot.js:3:0: HMR: Hot Module Replacement Enabled. Waiting for signal.\n");
 						});
 
 						it("console.dir", () => {
@@ -1253,7 +1253,7 @@ level0_1: {
   "level1_0": "value3"
 }
 ==== object dump end ====`);
-							assertData(logger.output, `CONSOLE LOG file:///app/main-view-model.js:20:0:
+							assertData(logger.output, `CONSOLE LOG file: app/main-view-model.js:20:0:
 ==== object dump start ====
 level0_0: {
 "level1_0": {
@@ -1274,7 +1274,7 @@ level0_1: {
         message
         from
         console.log`);
-							assertData(logger.output, `CONSOLE LOG file:///app/main-view-model.js:34:0: multiline
+							assertData(logger.output, `CONSOLE LOG file: app/main-view-model.js:34:0: multiline
 message
 from
 console.log\n`);
@@ -1298,19 +1298,19 @@ at anonymous(file:///app/bundle.js:2:61)
 at evaluate([native code])
 at moduleEvaluation
 at promiseReactionJob`);
-							assertData(logger.output, `CONSOLE TRACE file:///app/main-view-model.js:39:0: console.trace onTap
-onTap(file:///app/main-view-model.js:39:0)
-at notify(file:///node_modules/tns-core-modules/data/observable/observable.js:107:0)
-at _emit(file:///node_modules/tns-core-modules/data/observable/observable.js:127:0)
-at tap(file:///node_modules/tns-core-modules/ui/button/button.js:216:0)
+							assertData(logger.output, `CONSOLE TRACE file: app/main-view-model.js:39:0: console.trace onTap
+onTap(file: app/main-view-model.js:39:0)
+at notify(file: node_modules/tns-core-modules/data/observable/observable.js:107:0)
+at _emit(file: node_modules/tns-core-modules/data/observable/observable.js:127:0)
+at tap(file: node_modules/tns-core-modules/ui/button/button.js:216:0)
 at UIApplicationMain([native code])
-at _start(file:///node_modules/tns-core-modules/application/application.js:277:0)
-at run(file:///node_modules/tns-core-modules/application/application.js:305:0)
-at file:///app/app.js:46:0
+at _start(file: node_modules/tns-core-modules/application/application.js:277:0)
+at run(file: node_modules/tns-core-modules/application/application.js:305:0)
+at file: app/app.js:46:0
 at ./app.js(file:///app/bundle.js:172:34)
-at __webpack_require__(file:///app/webpack/bootstrap:750:0)
-at checkDeferredModules(file:///app/webpack/bootstrap:43:0)
-at webpackJsonpCallback(file:///app/webpack/bootstrap:30:0)
+at __webpack_require__(file: app/webpack/bootstrap:750:0)
+at checkDeferredModules(file: app/webpack/bootstrap:43:0)
+at webpackJsonpCallback(file: app/webpack/bootstrap:30:0)
 at anonymous(file:///app/bundle.js:2:61)
 at evaluate([native code])
 at moduleEvaluation
@@ -1319,7 +1319,7 @@ at promiseReactionJob\n`);
 
 						it("console.time(timeEnd) statement", () => {
 							logDataForiOS(`2019-08-23 17:08:45.219341+0300  localhost appTestLogs[21053]: (NativeScript) file:///app/bundle.js:291:24: CONSOLE INFO console.time: 6285.199ms`);
-							assertData(logger.output, "file:///app/main-view-model.js:41:0: CONSOLE INFO console.time: 6285.199ms\n");
+							assertData(logger.output, "file: app/main-view-model.js:41:0: CONSOLE INFO console.time: 6285.199ms\n");
 						});
 
 						it("when an error is thrown, correct callstack is printed", async () => {
@@ -1431,24 +1431,24 @@ Native stack trace:
 19  0x10bb6d20d ffi_call_unix64
 20  0x12278db10
 JavaScript stack trace:
-onTap(file:///app/main-view-model.js:43:0)
-at notify(file:///node_modules/tns-core-modules/data/observable/observable.js:107:0)
-at _emit(file:///node_modules/tns-core-modules/data/observable/observable.js:127:0)
-at tap(file:///node_modules/tns-core-modules/ui/button/button.js:216:0)
+onTap(file: app/main-view-model.js:43:0)
+at notify(file: node_modules/tns-core-modules/data/observable/observable.js:107:0)
+at _emit(file: node_modules/tns-core-modules/data/observable/observable.js:127:0)
+at tap(file: node_modules/tns-core-modules/ui/button/button.js:216:0)
 at UIApplicationMain([native code])
-at _start(file:///node_modules/tns-core-modules/application/application.js:277:0)
-at run(file:///node_modules/tns-core-modules/application/application.js:305:0)
-at file:///app/app.js:46:0
+at _start(file: node_modules/tns-core-modules/application/application.js:277:0)
+at run(file: node_modules/tns-core-modules/application/application.js:305:0)
+at file: app/app.js:46:0
 at ./app.js(file:///app/bundle.js:172:34)
-at __webpack_require__(file:///app/webpack/bootstrap:750:0)
-at checkDeferredModules(file:///app/webpack/bootstrap:43:0)
-at webpackJsonpCallback(file:///app/webpack/bootstrap:30:0)
+at __webpack_require__(file: app/webpack/bootstrap:750:0)
+at checkDeferredModules(file: app/webpack/bootstrap:43:0)
+at webpackJsonpCallback(file: app/webpack/bootstrap:30:0)
 at anonymous(file:///app/bundle.js:2:61)
 at evaluate([native code])
 at moduleEvaluation([native code])
 at promiseReactionJob([native code])
 JavaScript error:
-file:///app/main-view-model.js:43:0: JS ERROR Error: Error in onTap
+file: app/main-view-model.js:43:0: JS ERROR Error: Error in onTap
 NativeScript caught signal 11.
 Native Stack:
 1   0x10b1d41df sig_handler(int)
@@ -1480,13 +1480,13 @@ Native Stack:
 27  0x12278db10
 JS Stack:
 UIApplicationMain([native code])
-at _start(file:///node_modules/tns-core-modules/application/application.js:277:0)
-at run(file:///node_modules/tns-core-modules/application/application.js:305:0)
-at file:///app/app.js:46:0
+at _start(file: node_modules/tns-core-modules/application/application.js:277:0)
+at run(file: node_modules/tns-core-modules/application/application.js:305:0)
+at file: app/app.js:46:0
 at ./app.js(file:///app/bundle.js:172:34)
-at __webpack_require__(file:///app/webpack/bootstrap:750:0)
-at checkDeferredModules(file:///app/webpack/bootstrap:43:0)
-at webpackJsonpCallback(file:///app/webpack/bootstrap:30:0)
+at __webpack_require__(file: app/webpack/bootstrap:750:0)
+at checkDeferredModules(file: app/webpack/bootstrap:43:0)
+at webpackJsonpCallback(file: app/webpack/bootstrap:30:0)
 at anonymous(file:///app/bundle.js:2:61)
 at evaluate([native code])
 at moduleEvaluation
