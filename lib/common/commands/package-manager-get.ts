@@ -15,8 +15,8 @@ export class PackageManagerGetCommand implements ICommand {
 		}
 
 		const result = await this.$userSettingsService.getSettingValue("packageManager");
-		this.$logger.info(`Your current package manager is ${result || "npm"}.`);
+		this.$logger.printMarkdown(`Your current package manager is \`${result || "npm"}\`.`);
 	}
 }
 
-$injector.registerCommand("package-manager|get", PackageManagerGetCommand);
+$injector.registerCommand("package-manager|*get", PackageManagerGetCommand);
