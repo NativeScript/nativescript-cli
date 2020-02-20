@@ -48,6 +48,9 @@ export class Logger implements ILogger {
 		log4js.configure({ appenders, categories });
 
 		this.log4jsLogger = log4js.getLogger();
+		if (level === LoggerLevel.TRACE || level === LoggerLevel.ALL) {
+			this.warn(`The "${level}" log level might print some sensitive data like secrets or access tokens in request URLs. Be careful when you share this output.`, { wrapMessageWithBorders: true });
+		}
 	}
 
 	public initializeCliLogger(opts?: ILoggerOptions): void {
