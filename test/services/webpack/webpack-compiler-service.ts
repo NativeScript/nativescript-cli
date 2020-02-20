@@ -13,6 +13,9 @@ function getAllEmittedFiles(hash: string) {
 
 function createTestInjector(): IInjector {
 	const testInjector = new Yok();
+	testInjector.register("packageManager", {
+		getPackageManagerName: async () => "npm"
+	});
 	testInjector.register("webpackCompilerService", WebpackCompilerService);
 	testInjector.register("childProcess", {});
 	testInjector.register("hooksService", {});
