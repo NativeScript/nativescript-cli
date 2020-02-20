@@ -1,21 +1,24 @@
+import { PackageManagers } from "../../constants";
 
 export class PackageManagerCommand implements ICommand {
 
 	constructor(private $userSettingsService: IUserSettingsService,
 		private $errors: IErrors,
+		private $logger: ILogger,
 		private $stringParameter: ICommandParameter) { }
 
 	public allowedParameters: ICommandParameter[] = [this.$stringParameter];
 
-	public execute(args: string[]): Promise<void> {
-		if (args[0] === 'yarn') {
-			return this.$userSettingsService.saveSetting("packageManager", "yarn");
-		} else if (args[0] === 'pnpm') {
-			return this.$userSettingsService.saveSetting("packageManager", "pnpm");
-		} else if (args[0] === 'npm') {
-			return this.$userSettingsService.saveSetting("packageManager", "npm");
+	public async execute(args: string[]): Promise<void> {
+		const packageManagerName = args[0];
+		const supportedPackageManagers = Object.keys(PackageManagers);
+		if (supportedPackageManagers.indexOf(packageManagerName) === -1) {
+			this.$errors.fail(`${packageManagerName} is not a valid package manager. Supported values are: ${supportedPackageManagers.join(", ")}.`);
 		}
-		return this.$errors.fail(`${args[0]} is not a valid package manager. Only yarn or npm are supported.`);
+
+		await this.$userSettingsService.saveSetting("packageManager", packageManagerName);
+
+		this.$logger.printMarkdown(`You've successfully set \`${packageManagerName}\` as your package manager.`);
 	}
 }
 
