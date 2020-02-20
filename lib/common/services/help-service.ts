@@ -183,7 +183,7 @@ export class HelpService implements IHelpService {
 
 	private async convertCommandNameToFileName(commandData: ICommandData): Promise<string> {
 		let { commandName } = commandData;
-		const defaultCommandMatch = commandName && commandName.match(/(\w+?)\|\*/);
+		const defaultCommandMatch = commandName && commandName.match(/([\w-]+?)\|\*/);
 		if (defaultCommandMatch) {
 			this.$logger.trace("Default command found. Replace current command name '%s' with '%s'.", commandName, defaultCommandMatch[1]);
 			commandName = defaultCommandMatch[1];
