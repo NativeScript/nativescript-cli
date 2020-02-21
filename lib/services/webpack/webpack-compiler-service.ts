@@ -156,7 +156,7 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 		}
 	}
 
-	private async shouldUsePreserveSymlinksOption(projectData: IProjectData): Promise<boolean> {
+	private async shouldUsePreserveSymlinksOption(): Promise<boolean> {
 		// pnpm does not require symlink (https://github.com/nodejs/node-eps/issues/46#issuecomment-277373566)
 		// and it also does not work in some cases.
 		// Check https://github.com/NativeScript/nativescript-cli/issues/5259 for more information
@@ -175,7 +175,7 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 		const envParams = await this.buildEnvCommandLineParams(envData, platformData, projectData, prepareData);
 		const additionalNodeArgs = semver.major(process.version) <= 8 ? ["--harmony"] : [];
 
-		if (await this.shouldUsePreserveSymlinksOption(projectData)) {
+		if (await this.shouldUsePreserveSymlinksOption()) {
 			additionalNodeArgs.push("--preserve-symlinks");
 		}
 
