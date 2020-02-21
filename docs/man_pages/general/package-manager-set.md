@@ -17,7 +17,7 @@ General | `$ tns package-manager set <PackageManager>`
 
 ### Arguments
 
-* `<PackageManager>` is the name of the package manager. Supported values are npm and yarn.
+* `<PackageManager>` is the name of the package manager. Supported values are npm, yarn and pnpm.
 
 <% if(isHtml) { %>
 
