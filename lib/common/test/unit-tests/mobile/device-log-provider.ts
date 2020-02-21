@@ -39,7 +39,8 @@ const createTestInjector = (): IInjector => {
 				projectIdentifiers: {
 					android: "org.nativescript.appTestLogs",
 					ios: "org.nativescript.appTestLogs"
-				}
+				},
+				projectDir: "projectDir"
 			};
 		},
 		getNSValue: (projectDir: string, propertyName: string): any => {
