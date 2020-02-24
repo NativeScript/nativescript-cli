@@ -18,6 +18,7 @@ export class PackageManagerCommand implements ICommand {
 
 		await this.$userSettingsService.saveSetting("packageManager", packageManagerName);
 
+		this.$logger.printMarkdown(`Please ensure you have the directory containing \`${packageManagerName}\` executable available in your PATH.`);
 		this.$logger.printMarkdown(`You've successfully set \`${packageManagerName}\` as your package manager.`);
 	}
 }

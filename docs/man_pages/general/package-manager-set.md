@@ -7,7 +7,7 @@ position: 18
 
 ### Description
 
-Enables the specified package manager for the NativeScript CLI. Supported values are npm and yarn.
+Enables the specified package manager for the NativeScript CLI. Supported values are npm, yarn and pnpm.
 
 ### Commands
 
