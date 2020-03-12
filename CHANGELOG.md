@@ -1,14 +1,24 @@
 NativeScript CLI Changelog
 ================
 
-6.4.1 (2020, February 19)
+6.4.1 (2020, February 21)
 ===
+
+### New
+
+* [Implemented #5255](https://github.com/NativeScript/nativescript-cli/issues/5255): Warn if the CLI might print sensitive data to the output
 
 ### Fixed
 
 * [Fixed #5236](https://github.com/NativeScript/nativescript-cli/issues/5236): File paths from device logs are not clickable
 * [Fixed #5251](https://github.com/NativeScript/nativescript-cli/issues/5251): External files are not livesynced
 * [Fixed #5252](https://github.com/NativeScript/nativescript-cli/issues/5252): Logs from platform specific files point to incorrect file
+* [Fixed #5259](https://github.com/NativeScript/nativescript-cli/issues/5259): Unable to use pnpm on macOS and Linux
+* [Fixed #5260](https://github.com/NativeScript/nativescript-cli/issues/5260): `tns package-manager set invalid_value` does not say pnpm is supported
+* [Fixed #5261](https://github.com/NativeScript/nativescript-cli/issues/5261): `tns package-manager set <valid value>` does not give any output
+* [Fixed #5262](https://github.com/NativeScript/nativescript-cli/issues/5262): `tns package-manager` fails with error
+* [Fixed #5263](https://github.com/NativeScript/nativescript-cli/issues/5263): `tns package-manager` docs does not list pnpm as supported value
+* [Fixed #5264](https://github.com/NativeScript/nativescript-cli/issues/5264): `tns package-manager --help` fails with error
 
 
 6.4.0 (2020, February 11)

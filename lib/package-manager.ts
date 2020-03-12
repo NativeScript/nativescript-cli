@@ -1,8 +1,10 @@
 
 import { cache, exported, invokeInit } from './common/decorators';
 import { performanceLog } from "./common/decorators";
+import { PackageManagers } from './constants';
 export class PackageManager implements IPackageManager {
 	private packageManager: INodePackageManager;
+	private _packageManagerName: string;
 
 	constructor(
 		private $errors: IErrors,
@@ -17,6 +19,11 @@ export class PackageManager implements IPackageManager {
 	@cache()
 	protected async init(): Promise<void> {
 		this.packageManager = await this._determinePackageManager();
+	}
+
+	@invokeInit()
+	public async getPackageManagerName(): Promise<string> {
+		return this._packageManagerName;
 	}
 
 	@exported("packageManager")
@@ -97,11 +104,14 @@ export class PackageManager implements IPackageManager {
 			this.$errors.fail(`Unable to read package manager config from user settings ${err}`);
 		}
 
-		if (pm === 'yarn' || this.$options.yarn) {
+		if (pm === PackageManagers.yarn || this.$options.yarn) {
+			this._packageManagerName = PackageManagers.yarn;
 			return this.$yarn;
-		} else  if (pm === 'pnpm' || this.$options.pnpm) {
+		} else if (pm === PackageManagers.pnpm || this.$options.pnpm) {
+			this._packageManagerName = PackageManagers.pnpm;
 			return this.$pnpm;
 		} else {
+			this._packageManagerName = PackageManagers.npm;
 			return this.$npm;
 		}
 	}

@@ -77,6 +77,12 @@ interface INodePackageManager {
 
 interface IPackageManager extends INodePackageManager {
 	/**
+	 * Gets the name of the package manager used for the current process.
+	 * It can be read from the user settings or by passing -- option.
+	 */
+	getPackageManagerName(): Promise<string>;
+
+	/**
 	 * Gets the version corresponding to the tag for the package
 	 * @param {string} packageName The name of the package.
 	 * @param {string} tag The tag which we need the version of.

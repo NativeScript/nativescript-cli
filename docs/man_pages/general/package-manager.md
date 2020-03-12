@@ -22,5 +22,4 @@ General | `$ tns package-manager get`
 Command | Description
 ----------|----------
 [package-manager-set](package-manager-set.html) | Enables the specified package manager for the NativeScript CLI. Supported values are npm, yarn and pnpm.
-[package-manager-get](package-manager-get.html) | Prints the value of the current package manager.
 <% } %>

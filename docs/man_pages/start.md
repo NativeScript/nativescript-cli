@@ -23,6 +23,7 @@ Command | Description
 [proxy](general/proxy.html) | Displays proxy settings.
 [migrate](general/migrate.html) | Migrates the app dependencies to a form compatible with NativeScript 6.0.
 [update](general/update.html) | Updates the project with the latest versions of iOS/Android runtimes and cross-platform modules.
+[package-manager](general/package-manager.html) | Prints the value of the current package manager.
 
 ## Project Development Commands
 Command | Description

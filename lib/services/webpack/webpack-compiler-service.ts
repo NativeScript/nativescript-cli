@@ -3,7 +3,7 @@ import * as child_process from "child_process";
 import * as semver from "semver";
 import { EventEmitter } from "events";
 import { performanceLog } from "../../common/decorators";
-import { WEBPACK_COMPILATION_COMPLETE, WEBPACK_PLUGIN_NAME } from "../../constants";
+import { WEBPACK_COMPILATION_COMPLETE, WEBPACK_PLUGIN_NAME, PackageManagers } from "../../constants";
 
 export class WebpackCompilerService extends EventEmitter implements IWebpackCompilerService {
 	private webpackProcesses: IDictionary<child_process.ChildProcess> = {};
@@ -18,6 +18,7 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 		private $logger: ILogger,
 		private $mobileHelper: Mobile.IMobileHelper,
 		private $cleanupService: ICleanupService,
+		private $packageManager: IPackageManager,
 		private $packageInstallationManager: IPackageInstallationManager
 	) { super(); }
 
@@ -155,6 +156,15 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 		}
 	}
 
+	private async shouldUsePreserveSymlinksOption(): Promise<boolean> {
+		// pnpm does not require symlink (https://github.com/nodejs/node-eps/issues/46#issuecomment-277373566)
+		// and it also does not work in some cases.
+		// Check https://github.com/NativeScript/nativescript-cli/issues/5259 for more information
+		const currentPackageManager = await this.$packageManager.getPackageManagerName();
+		const res = currentPackageManager !== PackageManagers.pnpm;
+		return res;
+	}
+
 	@performanceLog()
 	private async startWebpackProcess(platformData: IPlatformData, projectData: IProjectData, prepareData: IPrepareData): Promise<child_process.ChildProcess> {
 		if (!this.$fs.exists(projectData.webpackConfigPath)) {
@@ -164,17 +174,21 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 		const envData = this.buildEnvData(platformData.platformNameLowerCase, projectData, prepareData);
 		const envParams = await this.buildEnvCommandLineParams(envData, platformData, projectData, prepareData);
 		const additionalNodeArgs = semver.major(process.version) <= 8 ? ["--harmony"] : [];
+
+		if (await this.shouldUsePreserveSymlinksOption()) {
+			additionalNodeArgs.push("--preserve-symlinks");
+		}
+
+		if (process.arch === "x64") {
+			additionalNodeArgs.unshift("--max_old_space_size=4096");
+		}
+
 		const args = [
 			...additionalNodeArgs,
-			"--preserve-symlinks",
 			path.join(projectData.projectDir, "node_modules", "webpack", "bin", "webpack.js"),
 			`--config=${projectData.webpackConfigPath}`,
 			...envParams
 		];
-
-		if (process.arch === "x64") {
-			args.unshift("--max_old_space_size=4096");
-		}
 
 		if (prepareData.watch) {
 			args.push("--watch");

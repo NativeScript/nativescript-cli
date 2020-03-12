@@ -415,3 +415,9 @@ export enum LoggerConfigData {
 }
 
 export const EMIT_APPENDER_EVENT_NAME = "logData";
+
+export enum PackageManagers {
+	npm = "npm",
+	pnpm = "pnpm",
+	yarn = "yarn"
+}
