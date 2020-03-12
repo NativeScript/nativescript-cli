@@ -7,7 +7,7 @@ position: 18
 
 ### Description
 
-Enables the specified package manager for the NativeScript CLI. Supported values are npm and yarn.
+Enables the specified package manager for the NativeScript CLI. Supported values are npm, yarn and pnpm.
 
 ### Commands
 
@@ -17,7 +17,7 @@ General | `$ tns package-manager set <PackageManager>`
 
 ### Arguments
 
-* `<PackageManager>` is the name of the package manager. Supported values are npm and yarn.
+* `<PackageManager>` is the name of the package manager. Supported values are npm, yarn and pnpm.
 
 <% if(isHtml) { %>
 

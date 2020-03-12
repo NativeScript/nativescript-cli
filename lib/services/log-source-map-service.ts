@@ -128,7 +128,7 @@ export class LogSourceMapService implements Mobile.ILogSourceMapService {
 						const { dir, ext, name } = path.parse(sourceFile);
 						const platformSpecificName = `${name}.${platform.toLowerCase()}`;
 						const platformSpecificFile = path.format({ dir, ext, name: platformSpecificName });
-						if (this.$fs.exists(platformSpecificFile)) {
+						if (this.$fs.exists(path.join(projectData.projectDir, platformSpecificFile))) {
 							this.originalFilesLocationCache[sourceFile] = platformSpecificFile;
 						} else {
 							this.originalFilesLocationCache[sourceFile] = sourceFile;

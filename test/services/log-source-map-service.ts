@@ -19,7 +19,8 @@ function createTestInjector(): IInjector {
 				projectIdentifiers: {
 					android: "org.nativescript.sourceMap",
 					ios: "org.nativescript.sourceMap"
-				}
+				},
+				projectDir: "projectDir"
 			};
 		},
 		getNSValue: (projectDir: string, propertyName: string): any => {
