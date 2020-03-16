@@ -6,12 +6,18 @@ export class NativeScriptCloudExtensionService implements INativeScriptCloudExte
 		private $logger: ILogger,
 		private $packageInstallationManager: IPackageInstallationManager) { }
 
-	public install(): Promise<IExtensionData> {
+	public async install(): Promise<IExtensionData> {
+		let extensionData: IExtensionData;
+
 		if (!this.isInstalled()) {
-			return this.$extensibilityService.installExtension(constants.NATIVESCRIPT_CLOUD_EXTENSION_NAME);
+			extensionData = await this.$extensibilityService.installExtension(constants.NATIVESCRIPT_CLOUD_EXTENSION_NAME);
+		} else {
+			this.$logger.info(`Extension ${constants.NATIVESCRIPT_CLOUD_EXTENSION_NAME} is already installed.`);
 		}
 
-		this.$logger.info(`Extension ${constants.NATIVESCRIPT_CLOUD_EXTENSION_NAME} is already installed.`);
+		this.$logger.warn(`Free cloud builds will be stopped on <date>. Paid cloud builds will be stopped on <date>. For more information check this blogpost: <url>`);
+
+		return extensionData;
 	}
 
 	public isInstalled(): boolean {
