@@ -1,5 +1,6 @@
 import * as helpers from "./common/helpers";
 import * as yargs from "yargs";
+import nsConfigHelper from "./helpers/nsconfig-helper";
 
 export class Options {
 	private static DASHED_OPTION_REGEX = /(.+?)([A-Z])(.*)/;
@@ -26,6 +27,10 @@ export class Options {
 		if (commandSpecificDashedOptions) {
 			_.extend(this.options, commandSpecificDashedOptions);
 			this.setArgv();
+		}
+
+		if (this.argv.nsconfig) {
+			this.argv = nsConfigHelper.mergedOptions(this.initialArgv, this.argv);
 		}
 
 		this.argv.bundle = "webpack";
@@ -118,6 +123,7 @@ export class Options {
 			collection: { type: OptionType.String, alias: "c", hasSensitiveValue: false },
 			json: { type: OptionType.Boolean, hasSensitiveValue: false },
 			avd: { type: OptionType.String, hasSensitiveValue: true },
+			nsconfig: { type: OptionType.Boolean, hasSensitiveValue: false },
 			// check not used
 			config: { type: OptionType.Array, hasSensitiveValue: false },
 			insecure: { type: OptionType.Boolean, alias: "k", hasSensitiveValue: false },
