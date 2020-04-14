@@ -17,6 +17,7 @@ General | `$ tns build android [--compileSdk <API Level>] [--key-store-path <Fil
 
 ### Options
 
+* `--nsconfig` - If set, all the options below can be defined in the [nsconfig.json file](https://docs.nativescript.org/core-concepts/project-structure-app#the-nsconfigjson-file) at the root of your project. In the `nsconfig.json` file, you need to add the `tnsOptions` key with the `android` subkey.
 * `--compileSdk` - Sets the Android SDK that will be used to build the project. `<API Level>` is a valid Android API level. For example: 28, 29. The minimum supported SDK is 28. <% if(isHtml) { %> For a complete list of the Android API levels and their corresponding Android versions, click [here](http://developer.android.com/guide/topics/manifest/uses-sdk-element.html#platform).<% } %>
 * `--clean` - If set, forces the complete rebuild of the native application.
 * `--release` - If set, produces a release build. Otherwise, produces a debug build. When set, you must also specify the `--key-store-*` options.

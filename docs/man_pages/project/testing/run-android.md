@@ -23,6 +23,7 @@ Start a default emulator if none are running, or run application on all connecte
 
 ### Options
 
+* `--nsconfig` - If set, all the options below can be defined in the [nsconfig.json file](https://docs.nativescript.org/core-concepts/project-structure-app#the-nsconfigjson-file) at the root of your project. In the `nsconfig.json` file, you need to add the `tnsOptions` key with the `android` subkey.
 * `--device` - Specifies a connected device or emulator to start and run the app. `<Device ID>` is the index or `Device Identifier` of the target device as listed by the `$ tns device android --available-devices` command.
 * `--emulator` - If set, runs the app in all available and configured Android emulators. It will start an emulator if none are already running.
 * `--justlaunch` - If set, does not print the application output in the console.

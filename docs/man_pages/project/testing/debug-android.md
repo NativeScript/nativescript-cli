@@ -21,6 +21,7 @@ Attach the debug tools to a running app in the native emulator | `$ tns debug an
 
 ### Options
 
+* `--nsconfig` - If set, all the options below can be defined in the [nsconfig.json file](https://docs.nativescript.org/core-concepts/project-structure-app#the-nsconfigjson-file) at the root of your project. In the `nsconfig.json` file, you need to add the `tnsOptions` key with the `android` subkey.
 * `--device` - Specifies a connected device/emulator on which to debug the app. `<Device ID>` is the device identifier or name of the target device as listed by the `$ tns device android` command.
 * `--emulator` - Specifies that you want to debug the app in the native Android emulator.
 * `--debug-brk` - Prepares, builds and deploys the application package on a device/emulator, generates a link for Chrome Developer Tools and stops at the first code statement.
