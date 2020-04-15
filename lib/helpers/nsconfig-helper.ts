@@ -3,12 +3,18 @@ import { existsSync, readFileSync } from "fs";
 import { sep } from "path";
 
 export default class NsConfigHelper  {
-	public static mergedOptions(initialArgv: any, argv: any): any {
+	public static getMergedOptions(initialArgv: any, argv: any): any {
 		const underdash: Array<string> = initialArgv._ || argv._ || [];
 		const projectDir = this._getProjectDir(argv.path);
 		const platformName = this._getPlatformName(underdash);
 		const platformOptions = this._getPlatformOptions(projectDir, platformName);
 		const formattedPlatformOptions = this._getFormattedPlatformOptions(platformOptions);
+		const formattedPlatformEnvOptions = this._getEnvOptions(formattedPlatformOptions);
+		const initialArgvEnvOptions = this._getEnvOptions(initialArgv);
+		const argvEnvOptions = this._getEnvOptions(argv);
+		const envOptions = { ...argvEnvOptions, ...formattedPlatformEnvOptions, ...initialArgvEnvOptions };
+
+		initialArgv["env"] = envOptions;
 
 		return { ...argv, ...formattedPlatformOptions, ...initialArgv };
 	}
@@ -18,10 +24,11 @@ export default class NsConfigHelper  {
 
 		for (const optionName in platformOptions) {
 			const optionNameVariant: string = this._getOptionNameVariant(optionName);
-			const optionValue: any = platformOptions[optionName];
+			const optionValue = platformOptions[optionName];
 
 			if (typeof optionValue === "object" && optionValue !== null) {
-				this._getFormattedPlatformOptions(optionValue);
+				formattedPlatformOptions[optionName] = this._getFormattedPlatformOptions(optionValue);
+				continue;
 			}
 
 			if (optionNameVariant) {
@@ -85,6 +92,10 @@ export default class NsConfigHelper  {
 
 	private static _getProjectDir(path?: string): string {
 		return path || process.cwd() || "";
+	}
+
+	private static _getEnvOptions(data: any): any {
+		return data.env || {};
 	}
 
 	private static _getPlatformOptions(projectDir: string, platformName: string): any {

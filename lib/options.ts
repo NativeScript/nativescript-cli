@@ -30,7 +30,7 @@ export class Options {
 		}
 
 		if (this.argv.nsconfig) {
-			this.argv = nsConfigHelper.mergedOptions(this.initialArgv, this.argv);
+			this.argv = nsConfigHelper.getMergedOptions(this.initialArgv, this.argv);
 		}
 
 		this.argv.bundle = "webpack";
