@@ -3,6 +3,7 @@ import { Configurations } from "../../common/constants";
 
 export class GradleBuildArgsService implements IGradleBuildArgsService {
 	constructor(private $androidToolsInfo: IAndroidToolsInfo,
+		private $hooksService: IHooksService,
 		private $analyticsService: IAnalyticsService,
 		private $staticConfig: Config.IStaticConfig,
 		private $logger: ILogger) { }
@@ -14,6 +15,9 @@ export class GradleBuildArgsService implements IGradleBuildArgsService {
 		if (await this.$analyticsService.isEnabled(this.$staticConfig.TRACK_FEATURE_USAGE_SETTING_NAME)) {
 			args.push("-PgatherAnalyticsData=true");
 		}
+
+		// allow modifying gradle args from a `before-build-task-args` hook
+		await this.$hooksService.executeBeforeHooks('build-task-args', { hookArgs: { args } });
 
 		return args;
 	}
