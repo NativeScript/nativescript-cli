@@ -16,6 +16,7 @@ function createTestInjector(): IInjector {
 		})
 	});
 	injector.register("logger", {});
+	injector.register("hooksService", stubs.HooksServiceStub);
 	injector.register("gradleBuildArgsService", GradleBuildArgsService);
 	injector.register("analyticsService", stubs.AnalyticsService);
 	injector.register("staticConfig", {TRACK_FEATURE_USAGE_SETTING_NAME: "TrackFeatureUsage"});
