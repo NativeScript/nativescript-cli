@@ -6,6 +6,7 @@ import { Configurations } from "./constants";
 import { EventEmitter } from "events";
 import * as crypto from "crypto";
 import * as _ from "lodash";
+import { SCOPED_ANDROID_RUNTIME_NAME, TNS_ANDROID_RUNTIME_NAME, TNS_IOS_RUNTIME_NAME, SCOPED_IOS_RUNTIME_NAME } from "../constants";
 
 const Table = require("cli-table");
 const STRIP_COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/mg;
@@ -104,6 +105,14 @@ export function getShortPluginName(pluginName: string): string {
 function sanitizePluginName(pluginName: string): string {
 	// avoid long plugin names, exclude the npm module scope (@scope/nativescript-plugin) from the android plugin name
 	return pluginName.split("/").pop();
+}
+
+export function getAndroidRuntimePackageName(projectData: IProjectData) {
+  return projectData.isLegacy ? TNS_ANDROID_RUNTIME_NAME : SCOPED_ANDROID_RUNTIME_NAME;
+}
+
+export function getIOSRuntimePackageName(projectData: IProjectData) {
+  return projectData.isLegacy ? TNS_IOS_RUNTIME_NAME : SCOPED_IOS_RUNTIME_NAME;
 }
 
 export async function executeActionByChunks<T>(initialData: T[] | IDictionary<T>, chunkSize: number, elementAction: (element: T, key?: string | number) => Promise<any>): Promise<void> {

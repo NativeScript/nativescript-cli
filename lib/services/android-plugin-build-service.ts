@@ -1,6 +1,6 @@
 import * as path from "path";
-import { MANIFEST_FILE_NAME, INCLUDE_GRADLE_NAME, ASSETS_DIR, RESOURCES_DIR, TNS_ANDROID_RUNTIME_NAME, AndroidBuildDefaults, PLUGIN_BUILD_DATA_FILENAME } from "../constants";
-import { getShortPluginName, hook } from "../common/helpers";
+import { MANIFEST_FILE_NAME, INCLUDE_GRADLE_NAME, ASSETS_DIR, RESOURCES_DIR, AndroidBuildDefaults, PLUGIN_BUILD_DATA_FILENAME } from "../constants";
+import { getShortPluginName, hook, getAndroidRuntimePackageName } from "../common/helpers";
 import { Builder, parseString } from "xml2js";
 
 export class AndroidPluginBuildService implements IAndroidPluginBuildService {
@@ -292,47 +292,49 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 	}
 
 	private async getRuntimeGradleVersions(projectDir: string): Promise<IRuntimeGradleVersions> {
-		let runtimeGradleVersions: IRuntimeGradleVersions = null;
+    let runtimeGradleVersions: IRuntimeGradleVersions = null;
+    const projectData: IProjectData = this.$projectDataService.getProjectData(projectDir);
 		if (projectDir) {
-			const projectData = this.$projectDataService.getProjectData(projectDir);
 			const platformData = this.$platformsDataService.getPlatformData(this.$devicePlatformsConstants.Android, projectData);
 			const projectRuntimeVersion = platformData.platformProjectService.getFrameworkVersion(projectData);
 			this.$logger.trace(`Got gradle versions ${JSON.stringify(runtimeGradleVersions)} from runtime v${projectRuntimeVersion}`);
 		}
 
 		if (!runtimeGradleVersions) {
-			const latestRuntimeVersion = await this.getLatestRuntimeVersion();
-			runtimeGradleVersions = await this.getGradleVersions(latestRuntimeVersion);
+			const latestRuntimeVersion = await this.getLatestRuntimeVersion(projectData);
+			runtimeGradleVersions = await this.getGradleVersions(projectData, latestRuntimeVersion);
 			this.$logger.trace(`Got gradle versions ${JSON.stringify(runtimeGradleVersions)} from the latest runtime v${latestRuntimeVersion}`);
 		}
 
 		return runtimeGradleVersions || {};
 	}
 
-	private async getLatestRuntimeVersion(): Promise<string> {
-		let runtimeVersion: string = null;
+	private async getLatestRuntimeVersion(projectData: IProjectData): Promise<string> {
+    let runtimeVersion: string = null;
+    const packageName = getAndroidRuntimePackageName(projectData);
 
 		try {
-			const result = await this.$packageManager.view(TNS_ANDROID_RUNTIME_NAME, { "dist-tags": true });
-			runtimeVersion = result.latest;
+      const result = await this.$packageManager.view(packageName, { "dist-tags": true });
+      runtimeVersion = result.latest;
 		} catch (err) {
 			this.$logger.trace(`Error while getting latest android runtime version from view command: ${err}`);
-			const registryData = await this.$packageManager.getRegistryPackageData(TNS_ANDROID_RUNTIME_NAME);
+			const registryData = await this.$packageManager.getRegistryPackageData(packageName);
 			runtimeVersion = registryData["dist-tags"].latest;
 		}
 
 		return runtimeVersion;
 	}
 
-	private async getGradleVersions(runtimeVersion: string): Promise<IRuntimeGradleVersions> {
-		let runtimeGradleVersions: { gradle: { version: string, android: string } } = null;
+	private async getGradleVersions(projectData: IProjectData, runtimeVersion: string): Promise<IRuntimeGradleVersions> {
+    let runtimeGradleVersions: { gradle: { version: string, android: string } } = null;
+    const packageName = getAndroidRuntimePackageName(projectData);
 
 		try {
-			const output = await this.$packageManager.view(`${TNS_ANDROID_RUNTIME_NAME}@${runtimeVersion}`, { gradle: true });
+			const output = await this.$packageManager.view(`${packageName}@${runtimeVersion}`, { gradle: true });
 			runtimeGradleVersions = { gradle: output };
 		} catch (err) {
 			this.$logger.trace(`Error while getting gradle data for android runtime from view command: ${err}`);
-			const registryData = await this.$packageManager.getRegistryPackageData(TNS_ANDROID_RUNTIME_NAME);
+			const registryData = await this.$packageManager.getRegistryPackageData(packageName);
 			runtimeGradleVersions = registryData.versions[runtimeVersion];
 		}
 

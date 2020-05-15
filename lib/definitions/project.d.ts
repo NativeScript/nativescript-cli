@@ -71,6 +71,12 @@ interface IProjectService {
 }
 
 interface INsConfig {
+  // matching bundle id for both ios and android
+  id?: string;
+  // if unique ios bundle id is needed
+  iosId?: string;
+  // if unique android bundle id is needed
+  androidId?: string;
 	appPath?: string;
 	appResourcesPath?: string;
 	shared?: boolean;
@@ -112,7 +118,12 @@ interface IProjectData extends ICreateProjectData {
 	 * By default this is the webpack.config.js at the root of the application.
 	 * The value can be changed by setting `webpackConfigPath` in nsconfig.json.
 	 */
-	webpackConfigPath: string;
+  webpackConfigPath: string;
+  
+  /**
+   * Whether the project uses legacy project configuration
+   */
+  isLegacy?: boolean;
 
 	/**
 	 * Initializes project data with the given project directory. If none supplied defaults to --path option or cwd.
@@ -209,7 +220,21 @@ interface IProjectDataService {
  * @param {string} propertyName The name of the property to be checked in `nativescript` key.
  * @returns {any} The value of the property.
  */
-	getNSValueFromContent(jsonData: Object, propertyName: string): any;
+  getNSValueFromContent(jsonData: Object, propertyName: string): any;
+  
+  /**
+   * Returns a version from `dependencies` in project's package.json
+   * @param projectDir Path to application.
+   * @param propertyName The name of the package to be retrieved from dependencies.
+   */
+  getDependencyValue(projectDir: string, propertyName: string): any;
+  
+  /**
+   * Returns a version from `devDependencies` in project's package.json
+   * @param projectDir Path to application.
+   * @param propertyName The name of the package to be retrieved from devDependencies.
+   */
+  getDevDependencyValue(projectDir: string, propertyName: string): any;
 }
 
 interface IAssetItem {

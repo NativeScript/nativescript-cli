@@ -2,6 +2,7 @@ import * as path from "path";
 import * as semver from "semver";
 import * as constants from "../constants";
 import { UpdateControllerBase } from "./update-controller-base";
+import { getAndroidRuntimePackageName, getIOSRuntimePackageName } from "../common/helpers";
 
 interface IPackage {
 	name: string;
@@ -114,7 +115,7 @@ export class UpdateController extends UpdateControllerBase implements IUpdateCon
 		if (!version || semver.valid(version) || semver.validRange(version)) {
 			templateManifest = await this.getTemplateManifest(projectData, version);
 		} else {
-			templateManifest = await this.constructTemplateManifestForTag(version);
+			templateManifest = await this.constructTemplateManifestForTag(projectData, version);
 		}
 
 		const dependencies = this.getUpdatableDependencies(templateManifest.dependencies);
@@ -140,7 +141,7 @@ export class UpdateController extends UpdateControllerBase implements IUpdateCon
 		});
 	}
 
-	private async constructTemplateManifestForTag(tag: string): Promise<any> {
+	private async constructTemplateManifestForTag(projectData: IProjectData, tag: string): Promise<any> {
 		this.$logger.trace(`Will construct manually template manifest for tag ${tag}`);
 
 		const templateManifest: any = {};
@@ -158,16 +159,24 @@ export class UpdateController extends UpdateControllerBase implements IUpdateCon
 				const aliasVersion = await this.getVersionFromTag(updatableDependency.name, tag);
 				dictionaryToModify[updatableDependency.alias] = aliasVersion;
 			}
-		}
+    }
+    
+    const androidRuntime = getAndroidRuntimePackageName(projectData);
+    const iosRuntime = getIOSRuntimePackageName(projectData);
 
-		templateManifest.nativescript = {
-			[constants.TNS_ANDROID_RUNTIME_NAME]: {
-				version: await this.getVersionFromTag(constants.TNS_ANDROID_RUNTIME_NAME, tag)
-			},
-			[constants.TNS_IOS_RUNTIME_NAME]: {
-				version: await this.$packageManager.getTagVersion(constants.TNS_IOS_RUNTIME_NAME, tag)
-			}
-		};
+    if (projectData.isLegacy) {
+      templateManifest.nativescript = {
+        [androidRuntime]: {
+          version: await this.getVersionFromTag(androidRuntime, tag)
+        },
+        [iosRuntime]: {
+          version: await this.$packageManager.getTagVersion(iosRuntime, tag)
+        }
+      };
+    } else {
+      templateManifest.devDependencies[androidRuntime] = await this.getVersionFromTag(androidRuntime, tag);
+      templateManifest.devDependencies[iosRuntime] = await this.getVersionFromTag(iosRuntime, tag);
+    }
 
 		this.$logger.trace(`Manually constructed template manifest for tag ${tag}. Content is: ${JSON.stringify(templateManifest, null, 2)}`);
 

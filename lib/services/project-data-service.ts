@@ -52,7 +52,23 @@ export class ProjectDataService implements IProjectDataService {
 		}
 
 		return null;
-	}
+  }
+
+  public getDependencyValue(projectDir: string, propertyName: string): any {
+    const deps = this.getValue(projectDir, 'dependencies');
+    if (deps) {
+      return deps[propertyName];
+    }
+    return null;
+  }
+  
+  public getDevDependencyValue(projectDir: string, propertyName: string): any {
+    const devDeps = this.getValue(projectDir, 'devDependencies');
+    if (devDeps) {
+      return devDeps[propertyName];
+    }
+    return null;
+  }
 
 	public setNSValue(projectDir: string, key: string, value: any): void {
 		this.setValue(projectDir, this.getNativeScriptPropertyName(key), value);

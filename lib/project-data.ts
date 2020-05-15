@@ -70,7 +70,8 @@ export class ProjectData implements IProjectData {
 	public podfilePath: string;
 	public isShared: boolean;
 	public previewAppSchema: string;
-	public webpackConfigPath: string;
+  public webpackConfigPath: string;
+  public isLegacy: boolean;
 
 	constructor(private $fs: IFileSystem,
 		private $errors: IErrors,
@@ -130,8 +131,8 @@ export class ProjectData implements IProjectData {
 			this.projectDir = projectDir;
 			this.projectName = this.$projectHelper.sanitizeName(path.basename(projectDir));
 			this.platformsDir = path.join(projectDir, constants.PLATFORMS_DIR_NAME);
-			this.projectFilePath = projectFilePath;
-			this.projectIdentifiers = this.initializeProjectIdentifiers(nsData.id);
+      this.projectFilePath = projectFilePath;
+			this.projectIdentifiers = this.initializeProjectIdentifiers(nsData, nsConfig);
 			this.dependencies = packageJsonData.dependencies;
 			this.devDependencies = packageJsonData.devDependencies;
 			this.projectType = this.getProjectType();
@@ -232,16 +233,32 @@ export class ProjectData implements IProjectData {
 		return path.resolve(projectDir, pathToResolve);
 	}
 
-	private initializeProjectIdentifiers(data: string | Mobile.IProjectIdentifier): Mobile.IProjectIdentifier {
+	private initializeProjectIdentifiers(nsData: any, nsConfig?: INsConfig): Mobile.IProjectIdentifier {
 		let identifier: Mobile.IProjectIdentifier;
-		data = data || "";
-
-		if (typeof data === "string") {
+    const data = nsData.id || "";
+    
+    if (nsConfig && nsConfig.id) {
+      // using latest nsconfig driven project data
+      identifier = {
+        android: nsConfig.id,
+        ios: nsConfig.id
+      };
+    } else if (nsConfig.iosId || nsConfig.androidId) {
+      // project uses different bundle id's between ios and android apps
+      identifier = {
+        android: nsConfig.androidId,
+        ios: nsConfig.iosId
+      };
+    } else if (typeof data === "string") {
+      // legacy "nativescript" key in package.json with embedded id
+      this.isLegacy = true;
 			identifier = {
 				android: data,
 				ios: data
 			};
 		} else {
+      // legacy 
+      this.isLegacy = true;
 			identifier = {
 				android: data.android || "",
 				ios: data.ios || ""

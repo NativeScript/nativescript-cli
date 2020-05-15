@@ -46,7 +46,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			const packageName = this.getProjectNameFromId(projectData);
 
 			this._platformData = {
-				frameworkPackageName: constants.TNS_ANDROID_RUNTIME_NAME,
+				frameworkPackageName: projectData.isLegacy ? constants.TNS_ANDROID_RUNTIME_NAME : constants.SCOPED_ANDROID_RUNTIME_NAME,
 				normalizedPlatformName: "Android",
 				platformNameLowerCase: "android",
 				appDestinationDirectoryPath: path.join(...appDestinationDirectoryArr),

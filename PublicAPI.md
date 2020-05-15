@@ -195,6 +195,12 @@ interface IProjectDir {
 }
 
 interface INsConfig {
+  // bundle id for both ios and android
+  id?: string;
+  // if unique ios bundle id is needed
+  iosId?: string;
+  // if unique android bundle id is needed
+  androidId?: string;
 	appPath?: string;
 	appResourcesPath?:string;
 }

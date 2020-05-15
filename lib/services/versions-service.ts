@@ -85,15 +85,24 @@ class VersionsService implements IVersionsService {
 	}
 
 	public async getRuntimesVersions(): Promise<IVersionInformation[]> {
-		const runtimes: string[] = [
-			constants.TNS_ANDROID_RUNTIME_NAME,
-			constants.TNS_IOS_RUNTIME_NAME
-		];
+		let runtimes: string[];
 
 		let projectConfig: any;
 
 		if (this.projectData) {
-			projectConfig = this.$fs.readJson(this.projectData.projectFilePath);
+      projectConfig = this.$fs.readJson(this.projectData.projectFilePath);
+      
+      if (this.projectData.isLegacy) {
+        runtimes = [
+          constants.TNS_ANDROID_RUNTIME_NAME,
+          constants.TNS_IOS_RUNTIME_NAME
+        ];
+      } else {
+        runtimes = [
+          constants.SCOPED_ANDROID_RUNTIME_NAME,
+          constants.SCOPED_IOS_RUNTIME_NAME
+        ];
+      }
 		}
 
 		const runtimesVersions: IVersionInformation[] = await Promise.all(runtimes.map(async (runtime: string) => {

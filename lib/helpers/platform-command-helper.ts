@@ -3,6 +3,7 @@ import * as semver from "semver";
 import * as constants from "../constants";
 import { PlatformController } from "../controllers/platform-controller";
 import { PlatformValidationService } from "../services/platform/platform-validation-service";
+import { project } from "nativescript-dev-xcode";
 
 export class PlatformCommandHelper implements IPlatformCommandHelper {
 	constructor(
@@ -150,7 +151,8 @@ export class PlatformCommandHelper implements IPlatformCommandHelper {
 		const installedModuleDir = await this.$tempService.mkdirSync("runtime-to-update");
 		let newVersion = version === constants.PackageVersion.NEXT ?
 			await this.$packageInstallationManager.getNextVersion(platformData.frameworkPackageName) :
-			version || await this.$packageInstallationManager.getLatestCompatibleVersion(platformData.frameworkPackageName);
+      version || await this.$packageInstallationManager.getLatestCompatibleVersion(platformData.frameworkPackageName);
+    if (projectData.id)
 		await this.$pacoteService.extractPackage(`${platformData.frameworkPackageName}@${newVersion}`, installedModuleDir);
 		const cachedPackageData = this.$fs.readJson(path.join(installedModuleDir, "package.json"));
 		newVersion = (cachedPackageData && cachedPackageData.version) || newVersion;

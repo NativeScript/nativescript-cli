@@ -55,7 +55,7 @@ const createTestInjector = (): IInjector => {
 		getPlatformData: (pl: string) => {
 			return {
 				appDestinationDirectoryPath: path.join(__dirname, "..", "..", "resources", "device-log-provider-integration-tests", pl.toLowerCase()),
-				frameworkPackageName: `tns-${platform.toLowerCase()}`
+				frameworkPackageName: `@nativescript/${platform.toLowerCase()}`
 			};
 		}
 	});
