@@ -2,7 +2,6 @@ import { doesCurrentNpmCommandMatch } from "../common/helpers";
 
 export class PostInstallCliCommand implements ICommand {
 	constructor(private $fs: IFileSystem,
-		private $subscriptionService: ISubscriptionService,
 		private $commandsService: ICommandsService,
 		private $helpService: IHelpService,
 		private $settingsService: ISettingsService,
@@ -35,10 +34,6 @@ export class PostInstallCliCommand implements ICommand {
 			// Explicitly ask for confirmation of usage-reporting:
 			await this.$analyticsService.checkConsent();
 			await this.$commandsService.tryExecuteCommand("autocomplete", []);
-		}
-
-		if (canExecutePostInstallTask) {
-			await this.$subscriptionService.subscribeForNewsletter();
 		}
 	}
 

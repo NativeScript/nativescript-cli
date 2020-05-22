@@ -197,7 +197,6 @@ $injector.requireCommand("extension|uninstall", "./commands/extensibility/uninst
 $injector.requirePublicClass("extensibilityService", "./services/extensibility-service");
 
 $injector.require("nodeModulesDependenciesBuilder", "./tools/node-modules/node-modules-dependencies-builder");
-$injector.require("subscriptionService", "./services/subscription-service");
 $injector.require("terminalSpinnerService", "./services/terminal-spinner-service");
 
 $injector.require('playgroundService', './services/playground-service');
