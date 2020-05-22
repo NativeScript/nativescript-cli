@@ -216,7 +216,7 @@ export class Yok implements IInjector {
 						} else {
 							commandName = defaultCommand ? this.getHierarchicalCommandName(name, defaultCommand) : "help";
 							// If we'll execute the default command, but it's full name had been written by the user
-							// for example "appbuilder cloud list", we have to remove the "list" option from the arguments that we'll pass to the command.
+							// for example "tns run ios", we have to remove the "ios" option from the arguments that we'll pass to the command.
 							if (_.includes(this.hierarchicalCommands[name], CommandsDelimiters.DefaultCommandSymbol + args[0])) {
 								commandArguments = _.tail(args);
 							} else {
