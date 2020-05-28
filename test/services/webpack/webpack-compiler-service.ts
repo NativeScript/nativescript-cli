@@ -100,7 +100,7 @@ describe("WebpackCompilerService", () => {
 			const webpackConfigPath = "some path.js";
 			testInjector.resolve("fs").exists = (filePath: string) => filePath !== webpackConfigPath;
 			await assert.isRejected(webpackCompilerService.compileWithWatch(<any>{ platformNameLowerCase: "android" }, <any>{ webpackConfigPath }, <any>{}),
-				`The webpack configuration file ${webpackConfigPath} does not exist. Ensure you have such file or set correct path in nsconfig.json`);
+				`The webpack configuration file ${webpackConfigPath} does not exist. Ensure you have such file or set correct path in nativescript.config.json`);
 		});
 	});
 
@@ -109,7 +109,7 @@ describe("WebpackCompilerService", () => {
 			const webpackConfigPath = "some path.js";
 			testInjector.resolve("fs").exists = (filePath: string) => filePath !== webpackConfigPath;
 			await assert.isRejected(webpackCompilerService.compileWithoutWatch(<any>{ platformNameLowerCase: "android" }, <any>{ webpackConfigPath }, <any>{}),
-				`The webpack configuration file ${webpackConfigPath} does not exist. Ensure you have such file or set correct path in nsconfig.json`);
+				`The webpack configuration file ${webpackConfigPath} does not exist. Ensure you have such file or set correct path in nativescript.config.json`);
 		});
 	});
 });

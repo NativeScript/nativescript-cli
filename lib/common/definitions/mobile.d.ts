@@ -472,8 +472,8 @@ declare global {
 		 * Describes a projectIdentifier for both platforms.
 		 */
 		interface IProjectIdentifier {
-			ios: string;
-			android: string;
+			ios?: string;
+			android?: string;
 			[platform: string]: string;
 		}
 

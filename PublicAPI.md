@@ -177,7 +177,7 @@ interface IProjectData extends IProjectDir {
 	 */
 	initializeProjectData(projectDir?: string): void;
 	/**
-	 * Initializes project data with the given package.json, nsconfig.json content and project directory. If none supplied defaults to cwd.
+	 * Initializes project data with the given package.json, nativescript.config.json content and project directory. If none supplied defaults to cwd.
 	 * @param {string} packageJsonContent: string
 	 * @param {string} nsconfigContent: string
 	 * @param {string} projectDir Project root directory.
@@ -194,15 +194,23 @@ interface IProjectDir {
 	projectDir: string;
 }
 
-interface INsConfig {
-  // bundle id for both ios and android
+interface IPlatformConfig {
   id?: string;
-  // if unique ios bundle id is needed
-  iosId?: string;
-  // if unique android bundle id is needed
-  androidId?: string;
-	appPath?: string;
-	appResourcesPath?:string;
+}
+
+interface INsConfig {
+  // matching bundle id for both ios and android
+  id?: string;
+  // custom platform configurations
+  ios?: IPlatformConfig;
+  android?: IPlatformConfig;
+  // general app configurations
+  appPath?: string;
+  appResourcesPath?: string;
+  shared?: boolean;
+  previewAppSchema?: string;
+  overridePods?: string;
+  webpackConfigPath?: string;
 }
 ```
 
@@ -220,14 +228,14 @@ getProjectData(projectDir: string): IProjectData
 ```
 
 ### getProjectDataFromContent
-Returns an IProjectData object that is initialized with the provided package.json content, nsconfig.json content and `projectDir`.
+Returns an IProjectData object that is initialized with the provided package.json content, nativescript.config.json content and `projectDir`.
 
 * Definition:
 ```TypeScript
 /**
  * Returns an initialized IProjectData object containing data about the NativeScript project in the provided projectDir
  * @param {string} packageJsonContent The content of the project.json file in the root of the project
- * @param {string} nsconfigContent The content of the nsconfig.json file in the root of the project
+ * @param {string} nsconfigContent The content of the nativescript.config.json file in the root of the project
  * @param {string} projectDir The path to the project
  * @returns {IProjectData} Information about the NativeScript project
  */
@@ -235,11 +243,11 @@ getProjectDataFromContent(packageJsonContent: string, nsconfigContent: string, p
 ```
 
 ### getNsConfigDefaultContent
-Returns the default content of "nsconfig.json" merged with the properties provided by the the `data` argument.
+Returns the default content of "nativescript.config.json" merged with the properties provided by the the `data` argument.
 * Definition:
 ```TypeScript
 /**
- * Returns the default content of "nsconfig.json" merged with the properties provided by the "data" argument.
+ * Returns the default content of "nativescript.config.json" merged with the properties provided by the "data" argument.
  * @param {Object} data Properties that should not be defaulted.
  */
  getNsConfigDefaultContent(data?: Object): string

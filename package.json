@@ -10,6 +10,7 @@
   },
   "main": "./lib/nativescript-cli-lib.js",
   "scripts": {
+    "grunt": "grunt",
     "setup": "npm i --ignore-scripts && ./node_modules/.bin/grunt",
     "test": "istanbul cover ./node_modules/mocha/bin/_mocha",
     "postinstall": "node postinstall.js",

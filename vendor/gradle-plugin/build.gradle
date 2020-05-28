@@ -67,7 +67,7 @@ def getAppResourcesPath() {
     def relativePathToAppResources
     def absolutePathToAppResources
     def projectRoot = "$rootDir/../../.."
-    def nsConfigFile = file("$projectRoot/nsconfig.json")
+    def nsConfigFile = file("$projectRoot/nativescript.config.json")
     def nsConfig
 
     if (nsConfigFile.exists()) {

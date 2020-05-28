@@ -168,7 +168,7 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 	@performanceLog()
 	private async startWebpackProcess(platformData: IPlatformData, projectData: IProjectData, prepareData: IPrepareData): Promise<child_process.ChildProcess> {
 		if (!this.$fs.exists(projectData.webpackConfigPath)) {
-			this.$errors.fail(`The webpack configuration file ${projectData.webpackConfigPath} does not exist. Ensure you have such file or set correct path in nsconfig.json`);
+			this.$errors.fail(`The webpack configuration file ${projectData.webpackConfigPath} does not exist. Ensure you have such file or set correct path in nativescript.config.json`);
 		}
 
 		const envData = this.buildEnvData(platformData.platformNameLowerCase, projectData, prepareData);

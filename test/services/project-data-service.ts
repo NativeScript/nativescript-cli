@@ -58,7 +58,7 @@ const createTestInjector = (packageJsonContent?: string, nsConfigContent?: strin
 		readText: (filename: string, encoding?: IReadFileOptions | string): string => {
 			if (filename.indexOf("package.json") > -1) {
 				return packageJsonContent;
-			} else if (filename.indexOf("nsconfig.json") > -1) {
+			} else if (filename.indexOf("nativescript.config.json") > -1) {
 				return nsConfigContent;
 			}
 		},

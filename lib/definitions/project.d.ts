@@ -70,13 +70,18 @@ interface IProjectService {
 	isValidNativeScriptProject(pathToProject?: string): boolean;
 }
 
+interface IPlatformConfig {
+  id?: string;
+  // TODO: define other custom platform configurations
+}
+
 interface INsConfig {
   // matching bundle id for both ios and android
   id?: string;
-  // if unique ios bundle id is needed
-  iosId?: string;
-  // if unique android bundle id is needed
-  androidId?: string;
+  // custom platform configurations
+  ios?: IPlatformConfig;
+  android?: IPlatformConfig;
+  // general app configurations
 	appPath?: string;
 	appResourcesPath?: string;
 	shared?: boolean;
@@ -104,7 +109,7 @@ interface IProjectData extends ICreateProjectData {
 	podfilePath: string;
 	/**
 	 * Defines if the project is a code sharing one.
-	 * Value is true when project has nsconfig.json and it has `shared: true` in it.
+	 * Value is true when project has nativescript.config.json and it has `shared: true` in it.
 	 */
 	isShared: boolean;
 
@@ -116,7 +121,7 @@ interface IProjectData extends ICreateProjectData {
 	/**
 	 * Defines the path to the configuration file passed to webpack process.
 	 * By default this is the webpack.config.js at the root of the application.
-	 * The value can be changed by setting `webpackConfigPath` in nsconfig.json.
+	 * The value can be changed by setting `webpackConfigPath` in nativescript.config.json.
 	 */
   webpackConfigPath: string;
   
@@ -165,8 +170,8 @@ interface IProjectDataService {
 	removeNSProperty(projectDir: string, propertyName: string): void;
 
 	/**
-	 * Removes a property from `nsconfig.json`.
-	 * @param {string} projectDir The project directory - the place where the `nsconfig.json` is located.
+	 * Removes a property from `nativescript.config.json`.
+	 * @param {string} projectDir The project directory - the place where the `nativescript.config.json` is located.
 	 * @param {string} propertyName The name of the property to be removed.
 	 * @returns {void}
 	 */

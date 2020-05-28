@@ -234,7 +234,7 @@ export class ProjectData implements IProjectData {
 	}
 
 	private initializeProjectIdentifiers(nsData: any, nsConfig?: INsConfig): Mobile.IProjectIdentifier {
-		let identifier: Mobile.IProjectIdentifier;
+		let identifier: Mobile.IProjectIdentifier = {};
     const data = nsData.id || "";
     
     if (nsConfig && nsConfig.id) {
@@ -242,12 +242,6 @@ export class ProjectData implements IProjectData {
       identifier = {
         android: nsConfig.id,
         ios: nsConfig.id
-      };
-    } else if (nsConfig.iosId || nsConfig.androidId) {
-      // project uses different bundle id's between ios and android apps
-      identifier = {
-        android: nsConfig.androidId,
-        ios: nsConfig.iosId
       };
     } else if (typeof data === "string") {
       // legacy "nativescript" key in package.json with embedded id
@@ -263,7 +257,17 @@ export class ProjectData implements IProjectData {
 				android: data.android || "",
 				ios: data.ios || ""
 			};
-		}
+    }
+    
+    if (nsConfig) {
+      // platform overrides (which can define separate and distinct bundle ids if needed)
+      if (nsConfig.ios && nsConfig.ios.id) {
+        identifier.ios = nsConfig.ios.id;
+      }
+      if (nsConfig.android && nsConfig.android.id) {
+        identifier.android = nsConfig.android.id;
+      }
+    }
 
 		return identifier;
 	}

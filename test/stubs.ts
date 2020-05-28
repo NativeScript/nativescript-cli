@@ -564,7 +564,11 @@ export class ProjectDataService implements IProjectDataService {
 		return [];
 	}
 
-	getNSValueFromContent(): any { }
+  getNSValueFromContent(): any { }
+  
+  getDependencyValue(projectDir: string, propertyName: string): any { }
+  
+  getDevDependencyValue(projectDir: string, propertyName: string): any { }
 }
 
 export class ProjectHelperStub implements IProjectHelper {
