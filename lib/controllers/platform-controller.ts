@@ -1,4 +1,4 @@
-import { NativePlatformStatus } from "../constants";
+import { NativePlatformStatus, SCOPED_IOS_RUNTIME_NAME, SCOPED_ANDROID_RUNTIME_NAME } from "../constants";
 import * as path from "path";
 
 export class PlatformController implements IPlatformController {
@@ -53,8 +53,18 @@ export class PlatformController implements IPlatformController {
 			result = path.resolve(frameworkPath);
 		} else {
 			if (!version) {
-				const currentPlatformData = this.$projectDataService.getNSValue(projectData.projectDir, platformData.frameworkPackageName);
-				version = (currentPlatformData && currentPlatformData.version) ||
+        let currentPlatformVersion: any;
+        if (projectData.isLegacy) {
+          currentPlatformVersion = this.$projectDataService.getNSValue(projectData.projectDir, platformData.frameworkPackageName);
+          if (currentPlatformVersion) {
+            currentPlatformVersion = currentPlatformVersion.version;
+          }
+        } else {
+          const platformName = platformData.platformNameLowerCase;
+          currentPlatformVersion = this.$projectDataService.getDevDependencyValue(projectData.projectDir, platformName === 'ios' ? SCOPED_IOS_RUNTIME_NAME : SCOPED_ANDROID_RUNTIME_NAME);
+        }
+        
+				version = currentPlatformVersion ||
 					await this.$packageInstallationManager.getLatestCompatibleVersion(platformData.frameworkPackageName);
 			}
 

@@ -28,14 +28,22 @@ export class InstallCommand implements ICommand {
 		await this.$pluginsService.ensureAllDependenciesAreInstalled(this.$projectData);
 
 		for (const platform of this.$mobileHelper.platformNames) {
-			const platformData = this.$platformsDataService.getPlatformData(platform, this.$projectData);
-			const frameworkPackageData = this.$projectDataService.getNSValue(this.$projectData.projectDir, platformData.frameworkPackageName);
-			if (frameworkPackageData && frameworkPackageData.version) {
+      const platformData = this.$platformsDataService.getPlatformData(platform, this.$projectData);
+      let runtimeVersion: any;
+      if (this.$projectData.isLegacy) {
+        runtimeVersion = this.$projectDataService.getNSValue(this.$projectData.projectDir, platformData.frameworkPackageName);
+        if (runtimeVersion) {
+          runtimeVersion = runtimeVersion.version;
+        }
+      } else {
+        runtimeVersion = this.$projectDataService.getDevDependencyValue(this.$projectData.projectDir, platformData.frameworkPackageName);
+      }
+			if (runtimeVersion) {
 				try {
 					const platformProjectService = platformData.platformProjectService;
 					await platformProjectService.validate(this.$projectData, this.$options);
 
-					await this.$platformCommandHelper.addPlatforms([`${platform}@${frameworkPackageData.version}`], this.$projectData, this.$options.frameworkPath);
+					await this.$platformCommandHelper.addPlatforms([`${platform}@${runtimeVersion}`], this.$projectData, this.$options.frameworkPath);
 				} catch (err) {
 					error = `${error}${EOL}${err}`;
 				}

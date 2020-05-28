@@ -6,7 +6,7 @@ interface INodePackageManager {
 	 * @param  {INodePackageManagerInstallOptions} config      Additional options that can be passed to manipulate installation.
 	 * @return {Promise<INpmInstallResultInfo>}                Information about installed package.
 	 */
-	install(packageName: string, pathToSave: string, config: INodePackageManagerInstallOptions): Promise<INpmInstallResultInfo>;
+	install(packageName: string, pathToSave: string, config?: INodePackageManagerInstallOptions): Promise<INpmInstallResultInfo>;
 
 	/**
 	 * Uninstalls a dependency
@@ -121,7 +121,12 @@ interface INodePackageManagerInstallOptions extends INpmInstallConfigurationOpti
 	 * @type {string}
 	 * @optional
 	 */
-	path?: string;
+  path?: string;
+  
+  /**
+   * Save to devDependencies
+   */
+  'save-dev'?: boolean;
 }
 
 /**
@@ -480,12 +485,12 @@ interface IAndroidReleaseOptions {
 }
 
 interface INpmInstallConfigurationOptionsBase {
-	frameworkPath: string;
-	ignoreScripts: boolean; //npm flag
+	frameworkPath?: string;
+	ignoreScripts?: boolean; //npm flag
 }
 
 interface INpmInstallConfigurationOptions extends INpmInstallConfigurationOptionsBase {
-	disableNpmInstall: boolean;
+	disableNpmInstall?: boolean;
 }
 
 interface IGenerateOptions {

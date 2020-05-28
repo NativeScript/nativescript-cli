@@ -412,7 +412,7 @@ export class PlatformProjectServiceStub extends EventEmitter implements IPlatfor
 
 	getPlatformData(projectData: IProjectData): IPlatformData {
 		return {
-			frameworkPackageName: `tns-${this.platform.toLowerCase()}`,
+			frameworkPackageName: `@nativescript/${this.platform.toLowerCase()}`,
 			normalizedPlatformName: this.platform.toLowerCase() === "ios" ? "iOS" : "Android",
 			platformNameLowerCase: this.platform.toLowerCase(),
 			platformProjectService: this,
@@ -510,7 +510,7 @@ export class NativeProjectDataStub extends EventEmitter implements IPlatformsDat
 
 	public getPlatformData(platform: string, projectData: IProjectData): IPlatformData {
 		return {
-			frameworkPackageName: `tns-${platform.toLowerCase()}`,
+			frameworkPackageName: `@nativescript/${platform.toLowerCase()}`,
 			platformProjectService: new PlatformProjectServiceStub(platform),
 			platformNameLowerCase: platform.toLowerCase(),
 			projectRoot: "",

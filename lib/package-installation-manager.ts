@@ -99,8 +99,9 @@ export class PackageInstallationManager implements IPackageInstallationManager {
 
 		const cachePath = this.getInspectorCachePath();
 		this.prepareCacheDir(cachePath);
-		const pathToPackageInCache = path.join(cachePath, constants.NODE_MODULES_FOLDER_NAME, inspectorNpmPackageName);
-		const iOSFrameworkNSValue = this.$projectDataService.getNSValue(projectDir, constants.TNS_IOS_RUNTIME_NAME);
+    const pathToPackageInCache = path.join(cachePath, constants.NODE_MODULES_FOLDER_NAME, inspectorNpmPackageName);
+    // TODO: may need to handle backwards compatible tns runtime here
+		const iOSFrameworkNSValue = this.$projectDataService.getNSValue(projectDir, constants.SCOPED_IOS_RUNTIME_NAME);
 		const version = await this.getLatestCompatibleVersion(inspectorNpmPackageName, iOSFrameworkNSValue.version);
 		let shouldInstall = !this.$fs.exists(pathToPackageInCache);
 

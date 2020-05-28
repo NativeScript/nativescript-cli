@@ -43,7 +43,7 @@ describe("projectData", () => {
 	};
 
 	const projectDir = "projectDir";
-	const prepareTest = (opts?: { packageJsonData?: { dependencies?: IStringDictionary, devDependencies: IStringDictionary }, nsconfigData?: { shared?: boolean, webpackConfigPath?: string }, isLegacy?: boolean }): IProjectData => {
+	const prepareTest = (opts?: { packageJsonData?: { dependencies?: IStringDictionary, devDependencies: IStringDictionary }, nsconfigData?: INsConfig, isLegacy?: boolean }): IProjectData => {
 		const testInjector = createTestInjector();
 		const fs = testInjector.resolve("fs");
 		fs.exists = (filePath: string) => filePath && (path.basename(filePath) === "package.json" || (path.basename(filePath) === "nativescript.config.json" && opts && opts.nsconfigData));
@@ -75,12 +75,18 @@ describe("projectData", () => {
 
 	describe("projectType", () => {
 
-		const assertProjectType = (dependencies: any, devDependencies: any, expectedProjecType: string) => {
+		const assertProjectType = (dependencies: any, devDependencies: any, expectedProjecType: string, isLegacy?: boolean) => {
 			const projectData = prepareTest({
 				packageJsonData: {
 					dependencies,
 					devDependencies
-				}
+        },
+        ...(isLegacy ? {} : {
+          nsconfigData: {
+            id: 'org.nativescript.org'
+          }
+        }),
+        isLegacy
 			});
 			assert.deepEqual(projectData.projectType, expectedProjecType);
 		};

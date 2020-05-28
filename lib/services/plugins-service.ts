@@ -435,9 +435,17 @@ This framework comes from ${dependencyName} plugin, which is installed multiple 
 	}
 
 	private getInstalledFrameworkVersion(platform: string, projectData: IProjectData): string {
-		const platformData = this.$platformsDataService.getPlatformData(platform, projectData);
-		const frameworkData = this.$projectDataService.getNSValue(projectData.projectDir, platformData.frameworkPackageName);
-		return frameworkData.version;
+    const platformData = this.$platformsDataService.getPlatformData(platform, projectData);
+    let runtimeVersion: any;
+    if (projectData.isLegacy) {
+      runtimeVersion = this.$projectDataService.getNSValue(projectData.projectDir, platformData.frameworkPackageName);
+      if (runtimeVersion) {
+        runtimeVersion = runtimeVersion.version;
+      }
+    } else {
+      runtimeVersion = this.$projectDataService.getDevDependencyValue(projectData.projectDir, platformData.frameworkPackageName);
+    }
+		return runtimeVersion;
 	}
 
 	private isPluginDataValidForPlatform(pluginData: IPluginData, platform: string, projectData: IProjectData): boolean {

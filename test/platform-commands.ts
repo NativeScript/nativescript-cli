@@ -26,7 +26,7 @@ import { MarkingModeServiceStub } from "./stubs";
 let isCommandExecuted = true;
 
 class PlatformData implements IPlatformData {
-	frameworkPackageName = "tns-android";
+	frameworkPackageName = "@nativescript/android";
 	normalizedPlatformName = "Android";
 	platformNameLowerCase = "android";
 	platformProjectService: IPlatformProjectService = <any>{

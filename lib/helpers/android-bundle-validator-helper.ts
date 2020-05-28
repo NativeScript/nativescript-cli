@@ -23,13 +23,15 @@ export class AndroidBundleValidatorHelper extends VersionValidatorHelper impleme
 
 	public validateRuntimeVersion(projectData: IProjectData): void {
 		if (this.$options.aab) {
-      let androidRuntimeInfo: any;
+      let androidRuntimeVersion: any = "";
       if (projectData.isLegacy) {
-        androidRuntimeInfo = this.$projectDataService.getNSValue(projectData.projectDir, TNS_ANDROID_RUNTIME_NAME);
+        androidRuntimeVersion = this.$projectDataService.getNSValue(projectData.projectDir, TNS_ANDROID_RUNTIME_NAME);
+        if (androidRuntimeVersion) {
+          androidRuntimeVersion = androidRuntimeVersion.version;
+        }
       } else {
-        androidRuntimeInfo = this.$projectDataService.getDevDependencyValue(projectData.projectDir, SCOPED_ANDROID_RUNTIME_NAME);
+        androidRuntimeVersion = this.$projectDataService.getDevDependencyValue(projectData.projectDir, SCOPED_ANDROID_RUNTIME_NAME);
       }
-			const androidRuntimeVersion = androidRuntimeInfo ? androidRuntimeInfo.version : "";
 			const shouldThrowError = androidRuntimeVersion &&
 				this.isValidVersion(androidRuntimeVersion) &&
 				this.isVersionLowerThan(androidRuntimeVersion, AndroidBundleValidatorHelper.MIN_RUNTIME_VERSION);

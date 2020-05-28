@@ -121,8 +121,17 @@ export class PlatformCommandHelper implements IPlatformCommandHelper {
 
 	public getCurrentPlatformVersion(platform: string, projectData: IProjectData): string {
 		const platformData = this.$platformsDataService.getPlatformData(platform, projectData);
-		const currentPlatformData: any = this.$projectDataService.getNSValue(projectData.projectDir, platformData.frameworkPackageName);
-		const version = currentPlatformData && currentPlatformData.version;
+    
+    let version: any;
+    if (projectData.isLegacy) {
+      version = this.$projectDataService.getNSValue(projectData.projectDir, platformData.frameworkPackageName);
+      if (version) {
+        version = version.version;
+      }
+    } else {
+      const platformName = platformData.platformNameLowerCase;
+      version = this.$projectDataService.getDevDependencyValue(projectData.projectDir, platformName === 'ios' ? constants.SCOPED_IOS_RUNTIME_NAME : constants.SCOPED_ANDROID_RUNTIME_NAME);
+    }
 
 		return version;
 	}
@@ -144,8 +153,16 @@ export class PlatformCommandHelper implements IPlatformCommandHelper {
 	private async updatePlatform(platform: string, version: string, projectData: IProjectData): Promise<void> {
 		const platformData = this.$platformsDataService.getPlatformData(platform, projectData);
 
-		const data = this.$projectDataService.getNSValue(projectData.projectDir, platformData.frameworkPackageName);
-		const currentVersion = data && data.version ? data.version : "0.2.0";
+    let currentVersion: any = "0.2.0";
+    if (projectData.isLegacy) {
+      currentVersion = this.$projectDataService.getNSValue(projectData.projectDir, platformData.frameworkPackageName);
+      if (currentVersion) {
+        currentVersion = currentVersion.version;
+      }
+    } else {
+      const platformName = platformData.platformNameLowerCase;
+      currentVersion = this.$projectDataService.getDevDependencyValue(projectData.projectDir, platformName === 'ios' ? constants.SCOPED_IOS_RUNTIME_NAME : constants.SCOPED_ANDROID_RUNTIME_NAME);
+    }
 
 		const installedModuleDir = await this.$tempService.mkdirSync("runtime-to-update");
 		let newVersion = version === constants.PackageVersion.NEXT ?

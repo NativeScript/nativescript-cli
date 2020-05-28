@@ -4,7 +4,7 @@ import * as sourcemap from "source-map";
 import * as sourceMapConverter from "convert-source-map";
 import * as semver from "semver";
 import { stringReplaceAll } from "../common/helpers";
-import { ANDROID_DEVICE_APP_ROOT_TEMPLATE, APP_FOLDER_NAME, NODE_MODULES_FOLDER_NAME } from "../constants";
+import { ANDROID_DEVICE_APP_ROOT_TEMPLATE, APP_FOLDER_NAME, NODE_MODULES_FOLDER_NAME, SCOPED_IOS_RUNTIME_NAME, SCOPED_ANDROID_RUNTIME_NAME } from "../constants";
 
 interface IParsedMessage {
 	filePath?: string;
@@ -99,9 +99,18 @@ export class LogSourceMapService implements Mobile.ILogSourceMapService {
 		let runtimeVersion: string = null;
 		try {
 			const projectData = this.getProjectData(projectDir);
-			const platformData = this.$platformsDataService.getPlatformData(platform, projectData);
-			const runtimeVersionData = this.$projectDataService.getNSValue(projectData.projectDir, platformData.frameworkPackageName);
-			runtimeVersion = runtimeVersionData && runtimeVersionData.version;
+      const platformData = this.$platformsDataService.getPlatformData(platform, projectData);
+      let currentVersion: any;
+      if (projectData.isLegacy) {
+        currentVersion = this.$projectDataService.getNSValue(projectData.projectDir, platformData.frameworkPackageName);
+        if (currentVersion) {
+          currentVersion = currentVersion.version;
+        }
+      } else {
+        const platformName = platformData.platformNameLowerCase;
+        currentVersion = this.$projectDataService.getDevDependencyValue(projectData.projectDir, platformName === 'ios' ? SCOPED_IOS_RUNTIME_NAME : SCOPED_ANDROID_RUNTIME_NAME);
+      }
+			runtimeVersion = currentVersion;
 		} catch (err) {
 			this.$logger.trace(`Unable to get runtime version for project directory: ${projectDir} and platform ${platform}. Error is: `, err);
 		}

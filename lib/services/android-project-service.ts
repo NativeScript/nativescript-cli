@@ -94,9 +94,18 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	}
 
 	public getCurrentPlatformVersion(platformData: IPlatformData, projectData: IProjectData): string {
-		const currentPlatformData: IDictionary<any> = this.$projectDataService.getNSValue(projectData.projectDir, platformData.frameworkPackageName);
+    let currentVersion: any;
+    if (projectData.isLegacy) {
+      currentVersion = this.$projectDataService.getNSValue(projectData.projectDir, platformData.frameworkPackageName);
+      if (currentVersion) {
+        currentVersion = currentVersion.version;
+      }
+    } else {
+      const platformName = platformData.platformNameLowerCase;
+      currentVersion = this.$projectDataService.getDevDependencyValue(projectData.projectDir, platformName === 'ios' ? constants.SCOPED_IOS_RUNTIME_NAME : constants.SCOPED_ANDROID_RUNTIME_NAME);
+    }
 
-		return currentPlatformData && currentPlatformData[constants.VERSION_STRING];
+		return currentVersion;
 	}
 
 	public async validateOptions(): Promise<boolean> {

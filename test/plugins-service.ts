@@ -305,7 +305,7 @@ describe("Plugins service", () => {
 				platformsDataService.getPlatformData = (platform: string) => {
 					return {
 						appDestinationDirectoryPath: path.join(projectFolder, "platforms", "android"),
-						frameworkPackageName: "tns-android",
+						frameworkPackageName: "@nativescript/android",
 						normalizedPlatformName: "Android"
 					};
 				};

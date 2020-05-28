@@ -112,7 +112,10 @@ export class ProjectData implements IProjectData {
 
 		try {
 			packageJsonData = parseJson(packageJsonContent);
-			nsData = packageJsonData[this.$staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE];
+      nsData = packageJsonData[this.$staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE];
+      if (nsData) {
+        this.isLegacy = true;
+      }
 		} catch (err) {
 			this.$errors.fail(`The project file ${this.projectFilePath} is corrupted. ${EOL}` +
 				`Consider restoring an earlier version from your source control or backup.${EOL}` +
@@ -127,29 +130,29 @@ export class ProjectData implements IProjectData {
 				`Additional technical info: ${err.toString()}`);
 		}
 
-		if (nsData) {
-			this.projectDir = projectDir;
-			this.projectName = this.$projectHelper.sanitizeName(path.basename(projectDir));
-			this.platformsDir = path.join(projectDir, constants.PLATFORMS_DIR_NAME);
+    if (nsData && nsData.id || nsConfig) {
+      this.projectDir = projectDir;
+      this.projectName = this.$projectHelper.sanitizeName(path.basename(projectDir));
+      this.platformsDir = path.join(projectDir, constants.PLATFORMS_DIR_NAME);
       this.projectFilePath = projectFilePath;
-			this.projectIdentifiers = this.initializeProjectIdentifiers(nsData, nsConfig);
-			this.dependencies = packageJsonData.dependencies;
-			this.devDependencies = packageJsonData.devDependencies;
-			this.projectType = this.getProjectType();
-			this.nsConfig = nsConfig;
-			this.appDirectoryPath = this.getAppDirectoryPath();
-			this.appResourcesDirectoryPath = this.getAppResourcesDirectoryPath();
-			this.androidManifestPath = this.getPathToAndroidManifest(this.appResourcesDirectoryPath);
-			this.gradleFilesDirectoryPath = path.join(this.appResourcesDirectoryPath, this.$devicePlatformsConstants.Android);
-			this.appGradlePath = path.join(this.gradleFilesDirectoryPath, constants.APP_GRADLE_FILE_NAME);
-			this.infoPlistPath = path.join(this.appResourcesDirectoryPath, this.$devicePlatformsConstants.iOS, constants.INFO_PLIST_FILE_NAME);
-			this.buildXcconfigPath = path.join(this.appResourcesDirectoryPath, this.$devicePlatformsConstants.iOS, constants.BUILD_XCCONFIG_FILE_NAME);
-			this.podfilePath = path.join(this.appResourcesDirectoryPath, this.$devicePlatformsConstants.iOS, constants.PODFILE_NAME);
-			this.isShared = !!(this.nsConfig && this.nsConfig.shared);
-			this.previewAppSchema = this.nsConfig && this.nsConfig.previewAppSchema;
-			this.webpackConfigPath = (this.nsConfig && this.nsConfig.webpackConfigPath) ? path.resolve(this.projectDir, this.nsConfig.webpackConfigPath) : path.join(this.projectDir, "webpack.config.js");
-			return;
-		}
+      this.projectIdentifiers = this.initializeProjectIdentifiers(nsData, nsConfig);
+      this.dependencies = packageJsonData.dependencies;
+      this.devDependencies = packageJsonData.devDependencies;
+      this.projectType = this.getProjectType();
+      this.nsConfig = nsConfig;
+      this.appDirectoryPath = this.getAppDirectoryPath();
+      this.appResourcesDirectoryPath = this.getAppResourcesDirectoryPath();
+      this.androidManifestPath = this.getPathToAndroidManifest(this.appResourcesDirectoryPath);
+      this.gradleFilesDirectoryPath = path.join(this.appResourcesDirectoryPath, this.$devicePlatformsConstants.Android);
+      this.appGradlePath = path.join(this.gradleFilesDirectoryPath, constants.APP_GRADLE_FILE_NAME);
+      this.infoPlistPath = path.join(this.appResourcesDirectoryPath, this.$devicePlatformsConstants.iOS, constants.INFO_PLIST_FILE_NAME);
+      this.buildXcconfigPath = path.join(this.appResourcesDirectoryPath, this.$devicePlatformsConstants.iOS, constants.BUILD_XCCONFIG_FILE_NAME);
+      this.podfilePath = path.join(this.appResourcesDirectoryPath, this.$devicePlatformsConstants.iOS, constants.PODFILE_NAME);
+      this.isShared = !!(this.nsConfig && this.nsConfig.shared);
+      this.previewAppSchema = this.nsConfig && this.nsConfig.previewAppSchema;
+      this.webpackConfigPath = (this.nsConfig && this.nsConfig.webpackConfigPath) ? path.resolve(this.projectDir, this.nsConfig.webpackConfigPath) : path.join(this.projectDir, "webpack.config.js");
+      return;
+    }
 
 		this.errorInvalidProject(projectDir);
 	}
@@ -235,7 +238,7 @@ export class ProjectData implements IProjectData {
 
 	private initializeProjectIdentifiers(nsData: any, nsConfig?: INsConfig): Mobile.IProjectIdentifier {
 		let identifier: Mobile.IProjectIdentifier = {};
-    const data = nsData.id || "";
+    const data = nsData ? nsData.id : "";
     
     if (nsConfig && nsConfig.id) {
       // using latest nsconfig driven project data

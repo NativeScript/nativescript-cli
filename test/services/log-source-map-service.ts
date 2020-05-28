@@ -33,7 +33,7 @@ function createTestInjector(): IInjector {
 		getPlatformData: (platform: string) => {
 			return {
 				appDestinationDirectoryPath: path.join(__dirname, "..", "files", "sourceMapBundle", platform.toLowerCase()),
-				frameworkPackageName: `tns-${platform.toLowerCase()}`
+				frameworkPackageName: `@nativescript/${platform.toLowerCase()}`
 			};
 		}
 	});

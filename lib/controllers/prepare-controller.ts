@@ -3,7 +3,7 @@ import { hook } from "../common/helpers";
 import { performanceLog, cache } from "../common/decorators";
 import { EventEmitter } from "events";
 import * as path from "path";
-import { PREPARE_READY_EVENT_NAME, WEBPACK_COMPILATION_COMPLETE, PACKAGE_JSON_FILE_NAME, PLATFORMS_DIR_NAME, TrackActionNames, AnalyticsEventLabelDelimiter, CONFIG_NS_FILE_NAME } from "../constants";
+import { PREPARE_READY_EVENT_NAME, WEBPACK_COMPILATION_COMPLETE, PACKAGE_JSON_FILE_NAME, PLATFORMS_DIR_NAME, TrackActionNames, AnalyticsEventLabelDelimiter, CONFIG_NS_FILE_NAME, SCOPED_IOS_RUNTIME_NAME, SCOPED_ANDROID_RUNTIME_NAME } from "../constants";
 interface IPlatformWatcherData {
 	hasWebpackCompilerProcess: boolean;
 	nativeFilesWatcher: choki.FSWatcher;
@@ -209,11 +209,18 @@ export class PrepareController extends EventEmitter {
 
 	@cache()
 	private async trackRuntimeVersion(platform: string, projectData: IProjectData): Promise<void> {
-		let runtimeVersion: string = null;
+		let runtimeVersion: any = null;
 		try {
-			const platformData = this.$platformsDataService.getPlatformData(platform, projectData);
-			const runtimeVersionData = this.$projectDataService.getNSValue(projectData.projectDir, platformData.frameworkPackageName);
-			runtimeVersion = runtimeVersionData && runtimeVersionData.version;
+      const platformData = this.$platformsDataService.getPlatformData(platform, projectData);
+      if (projectData.isLegacy) {
+        runtimeVersion = this.$projectDataService.getNSValue(projectData.projectDir, platformData.frameworkPackageName);
+        if (runtimeVersion) {
+          runtimeVersion = runtimeVersion.version;
+        }
+      } else {
+        const platformName = platformData.platformNameLowerCase;
+        runtimeVersion = this.$projectDataService.getDevDependencyValue(projectData.projectDir, platformName === 'ios' ? SCOPED_IOS_RUNTIME_NAME : SCOPED_ANDROID_RUNTIME_NAME);
+      }
 		} catch (err) {
 			this.$logger.trace(`Unable to get runtime version for project directory: ${projectData.projectDir} and platform ${platform}. Error is: `, err);
 		}
