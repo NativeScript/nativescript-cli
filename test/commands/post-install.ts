@@ -9,10 +9,6 @@ const createTestInjector = (): IInjector => {
 		setCurrentUserAsOwner: async (path: string, owner: string): Promise<void> => undefined
 	});
 
-	testInjector.register("subscriptionService", {
-		subscribeForNewsletter: async (): Promise<void> => undefined
-	});
-
 	testInjector.register("staticConfig", {});
 
 	testInjector.register("commandsService", {
@@ -57,26 +53,8 @@ describe("post-install command", () => {
 		process.env.SUDO_USER = originalSudoUser;
 	});
 
-	it("calls subscriptionService.subscribeForNewsletter method", async () => {
-		const testInjector = createTestInjector();
-		const subscriptionService = testInjector.resolve<ISubscriptionService>("subscriptionService");
-		let isSubscribeForNewsletterCalled = false;
-		subscriptionService.subscribeForNewsletter = async (): Promise<void> => {
-			isSubscribeForNewsletterCalled = true;
-		};
-		const postInstallCommand = testInjector.resolveCommand("post-install-cli");
-
-		await postInstallCommand.execute([]);
-		assert.isTrue(isSubscribeForNewsletterCalled, "post-install-cli command must call subscriptionService.subscribeForNewsletter");
-	});
-
 	const verifyResult = async (opts: { shouldCallMethod: boolean }): Promise<void> => {
 		const testInjector = createTestInjector();
-		const subscriptionService = testInjector.resolve<ISubscriptionService>("subscriptionService");
-		let isSubscribeForNewsletterCalled = false;
-		subscriptionService.subscribeForNewsletter = async (): Promise<void> => {
-			isSubscribeForNewsletterCalled = true;
-		};
 
 		const helpService = testInjector.resolve<IHelpService>("helpService");
 		let isGenerateHtmlPagesCalled = false;
@@ -104,7 +82,6 @@ describe("post-install command", () => {
 
 		const hasNotInMsg = opts.shouldCallMethod ? "" : "NOT";
 
-		assert.equal(isSubscribeForNewsletterCalled, opts.shouldCallMethod, `post-install-cli command must ${hasNotInMsg} call subscriptionService.subscribeForNewsletter`);
 		assert.equal(isGenerateHtmlPagesCalled, opts.shouldCallMethod, `post-install-cli command must ${hasNotInMsg} call helpService.generateHtmlPages`);
 		assert.equal(isCheckConsentCalled, opts.shouldCallMethod, `post-install-cli command must ${hasNotInMsg} call analyticsService.checkConsent`);
 		assert.equal(isTryExecuteCommandCalled, opts.shouldCallMethod, `post-install-cli command must ${hasNotInMsg} call commandsService.tryExecuteCommand`);
