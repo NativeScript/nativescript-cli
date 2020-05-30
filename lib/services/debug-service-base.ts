@@ -39,17 +39,18 @@ export abstract class DebugServiceBase extends EventEmitter implements IDeviceDe
 		// Using the actual commit will result in 404 error in the remote serve.
 		const commitSHA = debugOptions.devToolsCommit || "02e6bde1bbe34e43b309d4ef774b1168d25fd024";
 
-		let chromeDevToolsPrefix = `chrome-devtools://devtools/remote/serve_file/@${commitSHA}`;
+		const devToolsProtocol = `devtools`;
+		let chromeDevToolsPrefix = `${devToolsProtocol}://devtools/remote/serve_file/@${commitSHA}`;
 
 		if (debugOptions.useBundledDevTools === undefined || debugOptions.useBundledDevTools) {
-			chromeDevToolsPrefix = "chrome-devtools://devtools/bundled";
+			chromeDevToolsPrefix = `${devToolsProtocol}://devtools/bundled`;
 		}
 
 		if (debugOptions.useHttpUrl) {
 			chromeDevToolsPrefix = `https://chrome-devtools-frontend.appspot.com/serve_file/@${commitSHA}`;
 		}
 
-		const chromeUrl = `${chromeDevToolsPrefix}/inspector.html?experiments=true&ws=localhost:${port}`;
+		const chromeUrl = `${chromeDevToolsPrefix}/inspector.html?ws=localhost:${port}`;
 		return chromeUrl;
 	}
 }

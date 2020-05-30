@@ -32,8 +32,8 @@ export class IOSDeviceDebugService extends DebugServiceBase implements IDeviceDe
 
 	@performanceLog()
 	public async debug(debugData: IDebugData, debugOptions: IDebugOptions): Promise<IDebugResultInfo> {
-		const result: IDebugResultInfo = { debugUrl: null };
 		await this.validateOptions(debugOptions);
+		const result: IDebugResultInfo = { debugUrl: null };
 
 		result.debugUrl = await this.wireDebuggerClient(debugData, debugOptions);
 
