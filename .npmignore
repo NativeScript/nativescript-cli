@@ -24,6 +24,7 @@ test/
 test-scripts/
 .vscode
 lib/common/test/
+lib/common/docs/fonts
 coverage/
 scratch/
 *.suo

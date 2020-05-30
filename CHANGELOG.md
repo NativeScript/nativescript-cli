@@ -1,3 +1,13 @@
+## [6.7.4](https://github.com/NativeScript/nativescript-cli/compare/v6.7.0...v6.7.4) (2020-05-30)
+
+
+### Bug Fixes
+
+* **chrome:** new debug url with chrome ([#5319](https://github.com/NativeScript/nativescript-cli/issues/5319)) ([788ac88](https://github.com/NativeScript/nativescript-cli/commit/788ac8895981eb8a60d117effa73e4dd8e115a16))
+* **node:** full node 14 support ([4c005ca](https://github.com/NativeScript/nativescript-cli/commit/4c005caf2731d1ba489aa6a854bca3d3d5d7e154))
+
+
+
 # [6.7.0](https://github.com/NativeScript/nativescript-cli/compare/v6.5.1...v6.7.0) (2020-05-30)
 
 
