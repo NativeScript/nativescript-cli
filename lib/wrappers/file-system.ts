@@ -9,7 +9,7 @@ const mkdir = util.promisify(fs.mkdir);
 
 export class FileSystem {
 	public exists(filePath: string): boolean {
-		return fs.existsSync(filePath);
+		return fs.existsSync(path.resolve(filePath));
 	}
 
 	public extractZip(pathToZip: string, outputDir: string): Promise<void> {
