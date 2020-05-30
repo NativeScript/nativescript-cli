@@ -133,7 +133,7 @@ function createTestInjector(projectPath: string, projectName: string, xCode?: IX
 			parseSync() { /* */ }
 			pbxGroupByName() { /* */ }
 			removeTargetsByProductType() { /* */ }
-			writeSync() { /* */ }
+			writeSync() { return ''; }
 		}
 	});
 	testInjector.register("userSettingsService", {
