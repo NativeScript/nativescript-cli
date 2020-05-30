@@ -494,6 +494,7 @@ interface IGenerateOptions {
 
 interface IDebugInformation extends IPort, Mobile.IDeviceIdentifier {
 	url: string;
+	legacyUrl?: string;
 }
 
 interface IPort {

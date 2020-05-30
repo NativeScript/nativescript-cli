@@ -32,12 +32,9 @@ export class IOSDeviceDebugService extends DebugServiceBase implements IDeviceDe
 
 	@performanceLog()
 	public async debug(debugData: IDebugData, debugOptions: IDebugOptions): Promise<IDebugResultInfo> {
-		const result: IDebugResultInfo = { debugUrl: null };
 		await this.validateOptions(debugOptions);
 
-		result.debugUrl = await this.wireDebuggerClient(debugData, debugOptions);
-
-		return result;
+		return await this.wireDebuggerClient(debugData, debugOptions);
 	}
 
 	public async debugStop(): Promise<void> {
@@ -84,7 +81,7 @@ export class IOSDeviceDebugService extends DebugServiceBase implements IDeviceDe
 	}
 
 	@performanceLog()
-	private async wireDebuggerClient(debugData: IDebugData, debugOptions: IDebugOptions): Promise<string> {
+	private async wireDebuggerClient(debugData: IDebugData, debugOptions: IDebugOptions): Promise<IDebugResultInfo> {
 		if ((debugOptions.inspector || !debugOptions.client) && this.$hostInfo.isDarwin) {
 			return await this.setupTcpAppDebugProxy(debugData, debugOptions);
 		} else {
@@ -92,17 +89,20 @@ export class IOSDeviceDebugService extends DebugServiceBase implements IDeviceDe
 		}
 	}
 
-	private async setupWebAppDebugProxy(debugOptions: IDebugOptions, debugData: IDebugData): Promise<string> {
+	private async setupWebAppDebugProxy(debugOptions: IDebugOptions, debugData: IDebugData): Promise<IDebugResultInfo> {
 		if (debugOptions.chrome) {
 			this.$logger.info("'--chrome' is the default behavior. Use --inspector to debug iOS applications using the Safari Web Inspector.");
 		}
 		const projectName = this.getProjectName(debugData);
 		const webSocketProxy = await this.$appDebugSocketProxyFactory.ensureWebSocketProxy(this.device, debugData.applicationIdentifier, projectName, debugData.projectDir);
 
-		return this.getChromeDebugUrl(debugOptions, webSocketProxy.options.port);
+		return {
+			debugUrl: this.getChromeDebugUrl(debugOptions, webSocketProxy.options.port),
+			legacyDebugUrl: this.getChromeDebugUrl(debugOptions, webSocketProxy.options.port, true)
+		};
 	}
 
-	private async setupTcpAppDebugProxy(debugData: IDebugData, debugOptions: IDebugOptions): Promise<string> {
+	private async setupTcpAppDebugProxy(debugData: IDebugData, debugOptions: IDebugOptions): Promise<IDebugResultInfo> {
 		const projectName = this.getProjectName(debugData);
 		const existingTcpProxy = this.$appDebugSocketProxyFactory.getTCPSocketProxy(this.deviceIdentifier, debugData.applicationIdentifier);
 		const tcpSocketProxy = existingTcpProxy || await this.$appDebugSocketProxyFactory.addTCPSocketProxy(this.device, debugData.applicationIdentifier, projectName, debugData.projectDir);

@@ -116,6 +116,7 @@ interface IDeviceDebugService extends IPlatform, NodeJS.EventEmitter {
 
 interface IDebugResultInfo {
 	debugUrl: string;
+	legacyDebugUrl?: string;
 }
 
 interface IAppDebugData extends IProjectDir {

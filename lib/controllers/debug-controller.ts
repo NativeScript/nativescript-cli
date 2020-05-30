@@ -157,7 +157,9 @@ export class DebugController extends EventEmitter implements IDebugController {
 				this.emit(DEBUGGER_ATTACHED_EVENT_NAME, debugInformation);
 			}
 
-			this.$logger.info(`To start debugging, open the following URL in Chrome:${EOL}${debugInformation.url}${EOL}`.cyan);
+			this.$logger.info(`To start debugging, open the following URL in Chrome:${EOL}${debugInformation.url}${EOL}`.green);
+
+			this.$logger.info(`If you're using an older Chrome version 82 and below, use this instead:${EOL}${debugInformation.legacyUrl}${EOL}`.cyan);
 		}
 
 		return debugInformation;

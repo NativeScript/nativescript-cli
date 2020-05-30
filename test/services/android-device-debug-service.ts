@@ -17,8 +17,8 @@ class AndroidDeviceDebugServiceInheritor extends AndroidDeviceDebugService {
 		super(<any>{ deviceInfo: { identifier: "123" } }, $devicesService, $cleanupService, $errors, $logger, $androidProcessService, $staticConfig, $net, $deviceLogProvider);
 	}
 
-	public getChromeDebugUrl(debugOptions: IDebugOptions, port: number): string {
-		return super.getChromeDebugUrl(debugOptions, port);
+	public getChromeDebugUrl(debugOptions: IDebugOptions, port: number, legacy?: boolean): string {
+		return super.getChromeDebugUrl(debugOptions, port, legacy);
 	}
 }
 
@@ -43,6 +43,7 @@ interface IChromeUrlTestCase {
 	debugOptions: IDebugOptions;
 	expectedChromeUrl: string;
 	scenarioName: string;
+	legacy?: boolean;
 }
 
 describe("androidDeviceDebugService", () => {
@@ -55,7 +56,14 @@ describe("androidDeviceDebugService", () => {
 			{
 				scenarioName: "useBundledDevTools and useHttpUrl are not passed",
 				debugOptions: {},
-				expectedChromeUrl: `chrome-devtools://devtools/bundled/inspector.html?experiments=true&ws=localhost:${expectedPort}`,
+				expectedChromeUrl: `devtools://devtools/bundled/inspector.html?ws=localhost:${expectedPort}`,
+			},
+			// legacy chrome debug url
+			{
+				scenarioName: "useBundledDevTools and useHttpUrl are not passed and using legacy chrome debug url",
+				debugOptions: {},
+				expectedChromeUrl: `chrome-devtools://devtools/bundled/inspector.html?ws=localhost:${expectedPort}&experiments=true`,
+				legacy: true
 			},
 
 			// When useBundledDevTools is true
@@ -64,7 +72,7 @@ describe("androidDeviceDebugService", () => {
 				debugOptions: {
 					useBundledDevTools: true
 				},
-				expectedChromeUrl: `chrome-devtools://devtools/bundled/inspector.html?experiments=true&ws=localhost:${expectedPort}`,
+				expectedChromeUrl: `devtools://devtools/bundled/inspector.html?ws=localhost:${expectedPort}`,
 			},
 			{
 				scenarioName: "useBundledDevTools is true and useHttpUrl is false",
@@ -72,7 +80,7 @@ describe("androidDeviceDebugService", () => {
 					useBundledDevTools: true,
 					useHttpUrl: false
 				},
-				expectedChromeUrl: `chrome-devtools://devtools/bundled/inspector.html?experiments=true&ws=localhost:${expectedPort}`,
+				expectedChromeUrl: `devtools://devtools/bundled/inspector.html?ws=localhost:${expectedPort}`,
 			},
 			{
 				scenarioName: "useBundledDevTools is true and useHttpUrl is true",
@@ -80,7 +88,7 @@ describe("androidDeviceDebugService", () => {
 					useBundledDevTools: true,
 					useHttpUrl: true
 				},
-				expectedChromeUrl: `https://chrome-devtools-frontend.appspot.com/serve_file/@${expectedDevToolsCommitSha}/inspector.html?experiments=true&ws=localhost:${expectedPort}`,
+				expectedChromeUrl: `https://chrome-devtools-frontend.appspot.com/serve_file/@${expectedDevToolsCommitSha}/inspector.html?ws=localhost:${expectedPort}`,
 			},
 
 			// When useBundledDevTools is false
@@ -89,7 +97,7 @@ describe("androidDeviceDebugService", () => {
 				debugOptions: {
 					useBundledDevTools: false
 				},
-				expectedChromeUrl: `chrome-devtools://devtools/remote/serve_file/@${expectedDevToolsCommitSha}/inspector.html?experiments=true&ws=localhost:${expectedPort}`,
+				expectedChromeUrl: `devtools://devtools/remote/serve_file/@${expectedDevToolsCommitSha}/inspector.html?ws=localhost:${expectedPort}`,
 			},
 			{
 				scenarioName: "useBundledDevTools is false and useHttpUrl is false",
@@ -97,7 +105,7 @@ describe("androidDeviceDebugService", () => {
 					useBundledDevTools: false,
 					useHttpUrl: false
 				},
-				expectedChromeUrl: `chrome-devtools://devtools/remote/serve_file/@${expectedDevToolsCommitSha}/inspector.html?experiments=true&ws=localhost:${expectedPort}`,
+				expectedChromeUrl: `devtools://devtools/remote/serve_file/@${expectedDevToolsCommitSha}/inspector.html?ws=localhost:${expectedPort}`,
 			},
 			{
 				scenarioName: "useBundledDevTools is false and useHttpUrl is true",
@@ -105,7 +113,7 @@ describe("androidDeviceDebugService", () => {
 					useBundledDevTools: false,
 					useHttpUrl: true
 				},
-				expectedChromeUrl: `https://chrome-devtools-frontend.appspot.com/serve_file/@${expectedDevToolsCommitSha}/inspector.html?experiments=true&ws=localhost:${expectedPort}`,
+				expectedChromeUrl: `https://chrome-devtools-frontend.appspot.com/serve_file/@${expectedDevToolsCommitSha}/inspector.html?ws=localhost:${expectedPort}`,
 			},
 
 			// When useBundledDevTools is not passed
@@ -114,14 +122,14 @@ describe("androidDeviceDebugService", () => {
 				debugOptions: {
 					useHttpUrl: false
 				},
-				expectedChromeUrl: `chrome-devtools://devtools/bundled/inspector.html?experiments=true&ws=localhost:${expectedPort}`,
+				expectedChromeUrl: `devtools://devtools/bundled/inspector.html?ws=localhost:${expectedPort}`,
 			},
 			{
 				scenarioName: "useBundledDevTools is not passed and useHttpUrl is true",
 				debugOptions: {
 					useHttpUrl: true
 				},
-				expectedChromeUrl: `https://chrome-devtools-frontend.appspot.com/serve_file/@${expectedDevToolsCommitSha}/inspector.html?experiments=true&ws=localhost:${expectedPort}`,
+				expectedChromeUrl: `https://chrome-devtools-frontend.appspot.com/serve_file/@${expectedDevToolsCommitSha}/inspector.html?ws=localhost:${expectedPort}`,
 			},
 
 			// devToolsCommit tests
@@ -130,12 +138,12 @@ describe("androidDeviceDebugService", () => {
 				debugOptions: {
 					useBundledDevTools: false
 				},
-				expectedChromeUrl: `chrome-devtools://devtools/remote/serve_file/@${expectedDevToolsCommitSha}/inspector.html?experiments=true&ws=localhost:${expectedPort}`,
+				expectedChromeUrl: `devtools://devtools/remote/serve_file/@${expectedDevToolsCommitSha}/inspector.html?ws=localhost:${expectedPort}`,
 			},
 			{
 				scenarioName: "devToolsCommit is disregarded when useBundledDevTools is not passed",
 				debugOptions: {},
-				expectedChromeUrl: `chrome-devtools://devtools/bundled/inspector.html?experiments=true&ws=localhost:${expectedPort}`,
+				expectedChromeUrl: `devtools://devtools/bundled/inspector.html?ws=localhost:${expectedPort}`,
 			},
 			{
 				scenarioName: "devToolsCommit is set to passed value when useBundledDevTools is set to false",
@@ -143,7 +151,7 @@ describe("androidDeviceDebugService", () => {
 					useBundledDevTools: false,
 					devToolsCommit: customDevToolsCommit
 				},
-				expectedChromeUrl: `chrome-devtools://devtools/remote/serve_file/@${customDevToolsCommit}/inspector.html?experiments=true&ws=localhost:${expectedPort}`,
+				expectedChromeUrl: `devtools://devtools/remote/serve_file/@${customDevToolsCommit}/inspector.html?ws=localhost:${expectedPort}`,
 			},
 			{
 				scenarioName: "devToolsCommit is set to passed value when useHttpUrl is set to true",
@@ -151,7 +159,7 @@ describe("androidDeviceDebugService", () => {
 					useHttpUrl: true,
 					devToolsCommit: customDevToolsCommit
 				},
-				expectedChromeUrl: `https://chrome-devtools-frontend.appspot.com/serve_file/@${customDevToolsCommit}/inspector.html?experiments=true&ws=localhost:${expectedPort}`,
+				expectedChromeUrl: `https://chrome-devtools-frontend.appspot.com/serve_file/@${customDevToolsCommit}/inspector.html?ws=localhost:${expectedPort}`,
 			}
 		];
 
@@ -159,7 +167,7 @@ describe("androidDeviceDebugService", () => {
 			it(`returns correct url when ${testCase.scenarioName}`, () => {
 				const testInjector = createTestInjector();
 				const androidDeviceDebugService = testInjector.resolve<AndroidDeviceDebugServiceInheritor>(AndroidDeviceDebugServiceInheritor);
-				const actualChromeUrl = androidDeviceDebugService.getChromeDebugUrl(testCase.debugOptions, expectedPort);
+				const actualChromeUrl = androidDeviceDebugService.getChromeDebugUrl(testCase.debugOptions, expectedPort, testCase.legacy);
 				assert.equal(actualChromeUrl, testCase.expectedChromeUrl);
 			});
 		}
