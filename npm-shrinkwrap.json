@@ -1,6 +1,6 @@
 {
   "name": "nativescript",
-  "version": "6.6.0",
+  "version": "6.7.0",
   "lockfileVersion": 1,
   "requires": true,
   "dependencies": {
@@ -5471,13 +5471,14 @@
       }
     },
     "nativescript-doctor": {
-      "version": "1.13.0",
-      "resolved": "https://registry.npmjs.org/nativescript-doctor/-/nativescript-doctor-1.13.0.tgz",
-      "integrity": "sha512-JvxXeFE+E4s9ia7qh9KO5rPUY0TzQoT5XAf23vOdn2ELZAb5yRjUdw68WvzwxCogt+vRcnr7KSRybPx3YBeEGw==",
+      "version": "1.14.1",
+      "resolved": "https://registry.npmjs.org/nativescript-doctor/-/nativescript-doctor-1.14.1.tgz",
+      "integrity": "sha512-rgZRnanPf5sQeRU6Ll7lpwLJINxUvHN2GiJXjc+njKxQ5HA60JIOJwLuJHo1Bm316ur81GzPSR7KFB+d7HAYFg==",
       "requires": {
         "lodash": "4.17.15",
         "osenv": "0.1.3",
         "semver": "5.5.1",
+        "shelljs": "~0.8.4",
         "temp": "0.8.3",
         "winreg": "1.2.2",
         "yauzl": "2.10.0"
