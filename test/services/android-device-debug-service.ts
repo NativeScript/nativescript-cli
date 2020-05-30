@@ -17,8 +17,8 @@ class AndroidDeviceDebugServiceInheritor extends AndroidDeviceDebugService {
 		super(<any>{ deviceInfo: { identifier: "123" } }, $devicesService, $cleanupService, $errors, $logger, $androidProcessService, $staticConfig, $net, $deviceLogProvider);
 	}
 
-	public getChromeDebugUrl(debugOptions: IDebugOptions, port: number, legacy?: boolean): string {
-		return super.getChromeDebugUrl(debugOptions, port, legacy);
+	public getChromeDebugUrl(debugOptions: IDebugOptions, port: number): string {
+		return super.getChromeDebugUrl(debugOptions, port);
 	}
 }
 
@@ -43,7 +43,6 @@ interface IChromeUrlTestCase {
 	debugOptions: IDebugOptions;
 	expectedChromeUrl: string;
 	scenarioName: string;
-	legacy?: boolean;
 }
 
 describe("androidDeviceDebugService", () => {
@@ -57,13 +56,6 @@ describe("androidDeviceDebugService", () => {
 				scenarioName: "useBundledDevTools and useHttpUrl are not passed",
 				debugOptions: {},
 				expectedChromeUrl: `devtools://devtools/bundled/inspector.html?ws=localhost:${expectedPort}`,
-			},
-			// legacy chrome debug url
-			{
-				scenarioName: "useBundledDevTools and useHttpUrl are not passed and using legacy chrome debug url",
-				debugOptions: {},
-				expectedChromeUrl: `chrome-devtools://devtools/bundled/inspector.html?ws=localhost:${expectedPort}&experiments=true`,
-				legacy: true
 			},
 
 			// When useBundledDevTools is true
@@ -167,7 +159,7 @@ describe("androidDeviceDebugService", () => {
 			it(`returns correct url when ${testCase.scenarioName}`, () => {
 				const testInjector = createTestInjector();
 				const androidDeviceDebugService = testInjector.resolve<AndroidDeviceDebugServiceInheritor>(AndroidDeviceDebugServiceInheritor);
-				const actualChromeUrl = androidDeviceDebugService.getChromeDebugUrl(testCase.debugOptions, expectedPort, testCase.legacy);
+				const actualChromeUrl = androidDeviceDebugService.getChromeDebugUrl(testCase.debugOptions, expectedPort);
 				assert.equal(actualChromeUrl, testCase.expectedChromeUrl);
 			});
 		}

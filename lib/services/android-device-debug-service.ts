@@ -99,7 +99,6 @@ export class AndroidDeviceDebugService extends DebugServiceBase implements IDevi
 		await this.printDebugPort(this.deviceIdentifier, debugPort);
 
 		result.debugUrl = this.getChromeDebugUrl(debugOptions, debugPort);
-		result.legacyDebugUrl = this.getChromeDebugUrl(debugOptions, debugPort, true);
 
 		return result;
 	}
