@@ -205,6 +205,11 @@ export class FileSystem implements IFileSystem {
 
 	public writeFile(filename: string, data: string | Buffer, encoding?: string): void {
 		this.createDirectory(dirname(filename));
+		if (!data) {
+			// node 14 will no longer coerce unsupported input to strings anymore.
+			// clean any null or undefined data
+			data = '';
+		}
 		fs.writeFileSync(filename, data, { encoding: encoding });
 	}
 

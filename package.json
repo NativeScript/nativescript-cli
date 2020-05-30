@@ -1,7 +1,7 @@
 {
   "name": "nativescript",
   "preferGlobal": true,
-  "version": "6.7.0",
+  "version": "6.7.2",
   "author": "Telerik <support@telerik.com>",
   "description": "Command-line interface for building NativeScript projects",
   "bin": {
@@ -50,7 +50,7 @@
     "inquirer": "6.2.0",
     "ios-device-lib": "0.7.3",
     "ios-mobileprovision-finder": "1.0.11",
-    "ios-sim-portable": "4.1.0",
+    "ios-sim-portable": "^4.2.0",
     "istextorbinary": "2.2.1",
     "jimp": "0.2.28",
     "libnpmconfig": "1.2.1",
