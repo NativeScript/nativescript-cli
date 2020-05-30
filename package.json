@@ -21,7 +21,8 @@
     "tsc": "tsc",
     "tslint": "tslint -p tsconfig.json",
     "test-watch": "node ./dev/tsc-to-mocha-watch.js",
-    "tslint-fix": "tslint -p tsconfig.json --fix"
+    "tslint-fix": "tslint -p tsconfig.json --fix",
+    "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s"
   },
   "repository": {
     "type": "git",
@@ -121,6 +122,7 @@
     "@types/yargs": "13.0.0",
     "chai": "4.0.2",
     "chai-as-promised": "7.0.0",
+    "conventional-changelog-cli": "^2.0.34",
     "grunt": "1.0.1",
     "grunt-contrib-clean": "1.0.0",
     "grunt-contrib-copy": "1.0.0",

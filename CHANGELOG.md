@@ -1,3 +1,13 @@
+# [6.7.0](https://github.com/NativeScript/nativescript-cli/compare/v6.5.1...v6.7.0) (2020-05-30)
+
+
+### Features
+
+* **android:** allow modifying gradlew args in hooks ([#5301](https://github.com/NativeScript/nativescript-cli/issues/5301)) ([6684a3e](https://github.com/NativeScript/nativescript-cli/commit/6684a3e80d56cf6bb89a0250b5c28ae790e860f4))
+* **node:** version 14 support ([#5316](https://github.com/NativeScript/nativescript-cli/issues/5316)) ([5414b77](https://github.com/NativeScript/nativescript-cli/commit/5414b77b7981bbf109d521a2c9ae7573fe69ab12))
+
+
+
 NativeScript CLI Changelog
 ================
 
