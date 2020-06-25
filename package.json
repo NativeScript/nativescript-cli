@@ -1,11 +1,16 @@
 {
   "name": "nativescript-doctor",
-  "version": "1.14.1",
+  "version": "1.14.2",
   "description": "Library that helps identifying if the environment can be used for development of {N} apps.",
   "main": "lib/index.js",
   "types": "./typings/nativescript-doctor.d.ts",
   "scripts": {
-    "test": "node_modules/.bin/istanbul cover ./node_modules/mocha/bin/_mocha -- --recursive"
+    "clean": "npx rimraf node_modules package-lock.json && npm i && ./node_modules/.bin/grunt clean",
+    "build": "./node_modules/.bin/grunt",
+    "build.all": "./node_modules/.bin/grunt ts:devall",
+    "pack": "./node_modules/.bin/grunt pack",
+    "test": "node_modules/.bin/istanbul cover ./node_modules/mocha/bin/_mocha -- --recursive",
+    "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s"
   },
   "repository": {
     "type": "git",
@@ -33,6 +38,7 @@
     "@types/winreg": "1.2.30",
     "@types/yauzl": "2.9.0",
     "chai": "4.1.2",
+    "conventional-changelog-cli": "^2.0.34",
     "grunt": "1.0.3",
     "grunt-contrib-clean": "1.0.0",
     "grunt-contrib-watch": "1.1.0",
@@ -44,7 +50,7 @@
     "rimraf": "2.5.4",
     "tslint": "5.14.0",
     "tslint-microsoft-contrib": "6.1.0",
-    "typescript": "3.3.4000"
+    "typescript": "~3.8.3"
   },
   "dependencies": {
     "lodash": "4.17.15",

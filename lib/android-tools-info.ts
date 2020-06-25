@@ -10,12 +10,13 @@ import * as _ from "lodash";
 
 export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 	public readonly ANDROID_TARGET_PREFIX = "android";
-	private getSupportedTargets(projectDir: string) {
+	public getSupportedTargets(projectDir: string) {
 		const runtimeVersion = this.getRuntimeVersion({projectDir});
 		let baseTargets = [
 			"android-17",
 			"android-18",
 			"android-19",
+			"android-20",
 			"android-21",
 			"android-22",
 			"android-23",
@@ -24,7 +25,8 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 			"android-26",
 			"android-27",
 			"android-28",
-			"android-29"
+			"android-29",
+			"android-30"
 		];
 
 		if (runtimeVersion && semver.lt(semver.coerce(runtimeVersion), "6.1.0")) {
