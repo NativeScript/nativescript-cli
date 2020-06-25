@@ -3,14 +3,15 @@ import { doesCurrentNpmCommandMatch, isInteractive } from "../helpers";
 import { TrackActionNames, AnalyticsEventLabelDelimiter } from "../../constants";
 
 export class PreUninstallCommand implements ICommand {
-	private static FEEDBACK_FORM_URL = "https://www.nativescript.org/uninstall-feedback";
+  // disabled for now (6/24/2020)
+	// private static FEEDBACK_FORM_URL = "https://www.nativescript.org/uninstall-feedback";
 
 	public allowedParameters: ICommandParameter[] = [];
 
 	constructor(private $analyticsService: IAnalyticsService,
 		private $extensibilityService: IExtensibilityService,
 		private $fs: IFileSystem,
-		private $opener: IOpener,
+		// private $opener: IOpener,
 		private $packageInstallationManager: IPackageInstallationManager,
 		private $settingsService: ISettingsService) { }
 
@@ -37,9 +38,11 @@ export class PreUninstallCommand implements ICommand {
 	}
 
 	private async handleFeedbackForm(): Promise<void> {
-		if (isInteractive()) {
-			this.$opener.open(PreUninstallCommand.FEEDBACK_FORM_URL);
-		}
+    // disabled for now (6/24/2020)
+		// if (isInteractive()) {
+		// 	this.$opener.open(PreUninstallCommand.FEEDBACK_FORM_URL);
+    // }
+    return Promise.resolve();
 	}
 }
 

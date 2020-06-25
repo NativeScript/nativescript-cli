@@ -135,19 +135,20 @@ describe("preuninstall", () => {
 		assert.isTrue(isClearInspectorCacheCalled, "When uninstall is called, `clearInspectorCache` method must be called");
 	});
 
-	it("opens the uninstall feedback form when terminal is interactive and uninstall is called", async () => {
-		helpers.doesCurrentNpmCommandMatch = () => true;
-		helpers.isInteractive = () => true;
+  // disabled (6/24/2020)
+	// it("opens the uninstall feedback form when terminal is interactive and uninstall is called", async () => {
+	// 	helpers.doesCurrentNpmCommandMatch = () => true;
+	// 	helpers.isInteractive = () => true;
 
-		const testInjector = createTestInjector();
-		const opener = testInjector.resolve<IOpener>("opener");
-		const openParams: any[] = [];
-		opener.open = (filename: string, appname?: string) => {
-			openParams.push({ filename, appname });
-		};
+	// 	const testInjector = createTestInjector();
+	// 	const opener = testInjector.resolve<IOpener>("opener");
+	// 	const openParams: any[] = [];
+	// 	opener.open = (filename: string, appname?: string) => {
+	// 		openParams.push({ filename, appname });
+	// 	};
 
-		const preUninstallCommand: ICommand = testInjector.resolveCommand("dev-preuninstall");
-		await preUninstallCommand.execute([]);
-		assert.deepEqual(openParams, [{ filename: "https://www.nativescript.org/uninstall-feedback", appname: undefined }]);
-	});
+	// 	const preUninstallCommand: ICommand = testInjector.resolveCommand("dev-preuninstall");
+	// 	await preUninstallCommand.execute([]);
+	// 	assert.deepEqual(openParams, [{ filename: "https://www.nativescript.org/uninstall-feedback", appname: undefined }]);
+	// });
 });
