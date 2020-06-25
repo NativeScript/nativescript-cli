@@ -1,3 +1,12 @@
+## [6.7.5](https://github.com/NativeScript/nativescript-cli/compare/v6.7.4...v6.7.5) (2020-06-25)
+
+
+### Features
+
+* **android:** doctor support for android 30 ([#5332](https://github.com/NativeScript/nativescript-cli/issues/5332)) ([c5930e4](https://github.com/NativeScript/nativescript-cli/commit/c5930e41562d49d004edc28a88c6d192c59288c9))
+
+
+
 ## [6.7.4](https://github.com/NativeScript/nativescript-cli/compare/v6.7.0...v6.7.4) (2020-05-30)
 
 
