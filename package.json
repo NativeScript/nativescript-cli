@@ -2,7 +2,7 @@
   "name": "nativescript",
   "preferGlobal": true,
   "version": "6.7.5",
-  "author": "Telerik <support@telerik.com>",
+  "author": "NativeScript <support@nativescript.org>",
   "description": "Command-line interface for building NativeScript projects",
   "bin": {
     "tns": "./bin/tns",
