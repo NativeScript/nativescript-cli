@@ -94,6 +94,8 @@ export class Options {
 			javascript: { type: OptionType.Boolean, hasSensitiveValue: false },
 			ng: { type: OptionType.Boolean, hasSensitiveValue: false },
 			angular: { type: OptionType.Boolean, hasSensitiveValue: false },
+			react: { type: OptionType.Boolean, hasSensitiveValue: false },
+			reactjs: { type: OptionType.Boolean, hasSensitiveValue: false },
 			vue: { type: OptionType.Boolean, hasSensitiveValue: false },
 			vuejs: { type: OptionType.Boolean, hasSensitiveValue: false },
 			tsc: { type: OptionType.Boolean, hasSensitiveValue: false },
