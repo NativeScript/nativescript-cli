@@ -1,3 +1,12 @@
+## [6.7.8](https://github.com/NativeScript/nativescript-cli/compare/v6.7.7...v6.7.8) (2020-06-27)
+
+
+### Bug Fixes
+
+* **react:** tns options ([1ad7bda](https://github.com/NativeScript/nativescript-cli/commit/1ad7bdad9cf1de588293288d18aa6b88c4f6ef94))
+
+
+
 ## [6.7.7](https://github.com/NativeScript/nativescript-cli/compare/v6.7.6...v6.7.7) (2020-06-27)
 
 
