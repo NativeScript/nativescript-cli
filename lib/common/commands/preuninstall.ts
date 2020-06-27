@@ -3,7 +3,7 @@ import { doesCurrentNpmCommandMatch, isInteractive } from "../helpers";
 import { TrackActionNames, AnalyticsEventLabelDelimiter } from "../../constants";
 
 export class PreUninstallCommand implements ICommand {
-  // disabled for now (6/24/2020)
+	// disabled for now (6/24/2020)
 	// private static FEEDBACK_FORM_URL = "https://www.nativescript.org/uninstall-feedback";
 
 	public allowedParameters: ICommandParameter[] = [];
@@ -38,11 +38,11 @@ export class PreUninstallCommand implements ICommand {
 	}
 
 	private async handleFeedbackForm(): Promise<void> {
-    // disabled for now (6/24/2020)
+		// disabled for now (6/24/2020)
 		// if (isInteractive()) {
 		// 	this.$opener.open(PreUninstallCommand.FEEDBACK_FORM_URL);
-    // }
-    return Promise.resolve();
+		// }
+		return Promise.resolve();
 	}
 }
 

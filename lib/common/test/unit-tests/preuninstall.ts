@@ -135,7 +135,7 @@ describe("preuninstall", () => {
 		assert.isTrue(isClearInspectorCacheCalled, "When uninstall is called, `clearInspectorCache` method must be called");
 	});
 
-  // disabled (6/24/2020)
+	// disabled (6/24/2020)
 	// it("opens the uninstall feedback form when terminal is interactive and uninstall is called", async () => {
 	// 	helpers.doesCurrentNpmCommandMatch = () => true;
 	// 	helpers.isInteractive = () => true;
