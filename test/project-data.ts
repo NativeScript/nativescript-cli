@@ -105,7 +105,7 @@ describe("projectData", () => {
 			assertProjectType({ "react-nativescript": "*" }, null, "React");
 		});
 
-		it("detects project as Svelte when react-nativescript exists as dependency and typescript is devDependency", () => {
+		it("detects project as Svelte when svelte-native exists as dependency and typescript is devDependency", () => {
 			assertProjectType({ "svelte-native": "*" }, null, "Svelte");
 		});
 

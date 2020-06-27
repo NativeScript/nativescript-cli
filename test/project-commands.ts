@@ -14,6 +14,7 @@ let validateProjectCallsCount: number;
 const dummyArgs = ["dummyArgsString"];
 const expectedFlavorChoices = [
 	{ key: "Angular", description: "Learn more at https://nativescript.org/angular" },
+	{ key: "React", description: "Learn more at https://github.com/shirakaba/react-nativescript" },
 	{ key: "Vue.js", description: "Learn more at https://nativescript.org/vue" },
 	{ key: "Plain TypeScript", description: "Learn more at https://nativescript.org/typescript" },
 	{ key: "Plain JavaScript", description: "Use NativeScript without any framework" }
@@ -126,6 +127,16 @@ describe("Project commands tests", () => {
 			assert.isTrue(createProjectCalledWithForce);
 		});
 
+		it("should not fail when using only --react.", async () => {
+			options.react = true;
+
+			await createProjectCommand.execute(dummyArgs);
+
+			assert.isTrue(isProjectCreated);
+			assert.equal(validateProjectCallsCount, 1);
+			assert.isTrue(createProjectCalledWithForce);
+		});
+
 		it("should not fail when using only --tsc.", async () => {
 			options.tsc = true;
 
@@ -152,6 +163,16 @@ describe("Project commands tests", () => {
 			await createProjectCommand.execute(dummyArgs);
 
 			assert.deepEqual(selectedTemplateName, constants.ANGULAR_NAME);
+			assert.equal(validateProjectCallsCount, 1);
+			assert.isTrue(createProjectCalledWithForce);
+		});
+
+		it("should set the template name correctly when used --react.", async () => {
+			options.react = true;
+
+			await createProjectCommand.execute(dummyArgs);
+
+			assert.deepEqual(selectedTemplateName, constants.REACT_NAME);
 			assert.equal(validateProjectCallsCount, 1);
 			assert.isTrue(createProjectCalledWithForce);
 		});
@@ -216,6 +237,16 @@ describe("Project commands tests", () => {
 			await createProjectCommand.execute(dummyArgs);
 
 			assert.deepEqual(selectedTemplateName, "tns-template-drawer-navigation-vue");
+			assert.equal(validateProjectCallsCount, 1);
+			assert.isTrue(createProjectCalledWithForce);
+		});
+
+		it("should ask for a template when react flavor is selected.", async () => {
+			setupAnswers({ flavorAnswer: constants.ReactFlavorName, templateAnswer:  "Hello World" });
+
+			await createProjectCommand.execute(dummyArgs);
+
+			assert.deepEqual(selectedTemplateName, "tns-template-blank-react");
 			assert.equal(validateProjectCallsCount, 1);
 			assert.isTrue(createProjectCalledWithForce);
 		});

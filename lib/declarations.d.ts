@@ -567,6 +567,7 @@ interface IOptions extends IRelease, IDeviceIdentifier, IJustLaunch, IAvd, IAvai
 	typescript: boolean;
 	ng: boolean;
 	angular: boolean;
+	react: boolean;
 	vue: boolean;
 	vuejs: boolean;
 	js: boolean;

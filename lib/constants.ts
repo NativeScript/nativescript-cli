@@ -110,7 +110,9 @@ export const RESERVED_TEMPLATE_NAMES: IStringDictionary = {
 	"vue": "tns-template-blank-vue",
 	"typescript": "tns-template-hello-world-ts",
 	"ng": "tns-template-hello-world-ng",
-	"angular": "tns-template-hello-world-ng"
+	"angular": "tns-template-hello-world-ng",
+	"react": "tns-template-blank-react",
+	"reactjs": "tns-template-blank-react"
 };
 
 export const ANALYTICS_LOCAL_TEMPLATE_PREFIX = "localTemplate_";
@@ -138,8 +140,10 @@ export const VUE_NAME = "vue";
 export const ANGULAR_NAME = "angular";
 export const JAVASCRIPT_NAME = "javascript";
 export const TYPESCRIPT_NAME = "typescript";
+export const REACT_NAME = "react";
 export const NgFlavorName = "Angular";
 export const VueFlavorName = "Vue.js";
+export const ReactFlavorName = "React";
 export const TsFlavorName = "Plain TypeScript";
 export const JsFlavorName = "Plain JavaScript";
 export class ProjectTypes {
