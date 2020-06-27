@@ -44,6 +44,8 @@ export class CreateProjectCommand implements ICommand {
 			selectedTemplate = constants.ANGULAR_NAME;
 		} else if (this.$options.vue) {
 			selectedTemplate = constants.VUE_NAME;
+		} else if (this.$options.react) {
+			selectedTemplate = constants.REACT_NAME;
 		} else {
 			selectedTemplate = this.$options.template;
 		}
@@ -82,6 +84,7 @@ export class CreateProjectCommand implements ICommand {
 	private async interactiveFlavorSelection(adverb: string) {
 		const flavorSelection = await this.$prompter.promptForDetailedChoice(`${adverb}, which style of NativeScript project would you like to use:`, [
 			{ key: constants.NgFlavorName, description: "Learn more at https://nativescript.org/angular" },
+			{ key: constants.ReactFlavorName, description: "Learn more at https://github.com/shirakaba/react-nativescript" },
 			{ key: constants.VueFlavorName, description: "Learn more at https://nativescript.org/vue" },
 			{ key: constants.TsFlavorName, description: "Learn more at https://nativescript.org/typescript" },
 			{ key: constants.JsFlavorName, description: "Use NativeScript without any framework" },
@@ -96,8 +99,7 @@ export class CreateProjectCommand implements ICommand {
 			this.$logger.printMarkdown(`# Let’s create a NativeScript app!`);
 			this.$logger.printMarkdown(`
 Answer the following questions to help us build the right app for you. (Note: you
-can skip this prompt next time using the --template option, or the --ng, --vue, --ts,
-or --js flags.)
+can skip this prompt next time using the --template option, or the --ng, --react, --vue, --ts, or --js flags.)
 `);
 		}
 	}
@@ -112,6 +114,10 @@ or --js flags.)
 		switch (flavorSelection) {
 			case constants.NgFlavorName: {
 				selectedFlavorTemplates.push(...this.getNgTemplates());
+				break;
+			}
+			case constants.ReactFlavorName: {
+				selectedFlavorTemplates.push(...this.getReactTemplates());
 				break;
 			}
 			case constants.VueFlavorName: {
@@ -195,6 +201,16 @@ or --js flags.)
 			key: CreateProjectCommand.TabsTemplateKey,
 			value: "tns-template-tab-navigation-ng",
 			description: CreateProjectCommand.TabsTemplateDescription
+		}];
+
+		return templates;
+	}
+
+	private getReactTemplates() {
+		const templates = [{
+			key: CreateProjectCommand.HelloWorldTemplateKey,
+			value: constants.RESERVED_TEMPLATE_NAMES.react,
+			description: CreateProjectCommand.HelloWorldTemplateDescription
 		}];
 
 		return templates;
