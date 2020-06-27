@@ -1,3 +1,12 @@
+## [6.7.7](https://github.com/NativeScript/nativescript-cli/compare/v6.7.6...v6.7.7) (2020-06-27)
+
+
+### Features
+
+* **react:** official quick create for --react app ([#5336](https://github.com/NativeScript/nativescript-cli/issues/5336)) ([5d3f3a4](https://github.com/NativeScript/nativescript-cli/commit/5d3f3a4336e6aeb6b2fc78b19ace1c9eea51ae20))
+
+
+
 ## [6.7.5](https://github.com/NativeScript/nativescript-cli/compare/v6.7.4...v6.7.5) (2020-06-25)
 
 
