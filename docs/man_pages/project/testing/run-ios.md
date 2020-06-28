@@ -29,6 +29,7 @@ Start an emulator with specified device identifier and sdk | `$ tns run ios [--d
 
 ### Options
 
+* `--nsconfig` - If set, all the options below can be defined in the [nsconfig.json file](https://docs.nativescript.org/core-concepts/project-structure-app#the-nsconfigjson-file) at the root of your project. In the `nsconfig.json` file, you need to add the `tnsOptions` key with the `ios` subkey.
 * `--device` - Specifies a connected device/simulator to start and run the app. `<Device ID>` is the index or `Device Identifier` of the target device as listed by the `$ tns device ios --available-devices` command.
 * `--emulator` - If set, runs the app in all available and configured ios simulators. It will start a simulator if none are already running.
 * `--sdk` - Specifies the target simulator's sdk.

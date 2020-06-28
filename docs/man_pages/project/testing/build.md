@@ -28,6 +28,7 @@ Usage | Synopsis
 
 ### Options
 
+* `--nsconfig` - If set, all the options below can be defined in the [nsconfig.json file](https://docs.nativescript.org/core-concepts/project-structure-app#the-nsconfigjson-file) at the root of your project. In the `nsconfig.json` file, you need to add the `tnsOptions` key with `android` and `ios` subkeys.
 * `--justlaunch` - If set, does not print the application output in the console.
 * `--release` -If set, produces a release build by running webpack in production mode and native build in release mode. Otherwise, produces a debug build.
 * `--device` - Specifies a connected device/emulator to start and run the app. `<Device ID>` is the index or `Device Identifier` of the target device as listed by the `$ tns device <Platform> --available-devices` command.

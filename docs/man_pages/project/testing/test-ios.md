@@ -23,6 +23,7 @@ Run tests in the iOS Simulator | `$ tns test ios --emulator [--watch] [--debug-b
 
 ### Options
 
+* `--nsconfig` - If set, all the options below can be defined in the [nsconfig.json file](https://docs.nativescript.org/core-concepts/project-structure-app#the-nsconfigjson-file) at the root of your project. In the `nsconfig.json` file, you need to add the `tnsOptions` key with the `ios` subkey.
 * `--watch` - If set, when you save changes to the project, changes are automatically synchronized to the connected device and tests are re-ran.
 * `--device` - Specifies the serial number or the index of the connected device on which you want to run tests. To list all connected devices, grouped by platform, run `$ tns device`. You cannot set `--device` and `--emulator` simultaneously. `<Device ID>` is the device index or identifier as listed by the `$ tns device` command.
 * `--emulator` - Runs tests on the iOS Simulator. You cannot set `--device` and `--emulator` simultaneously.

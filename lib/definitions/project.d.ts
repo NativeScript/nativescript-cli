@@ -70,6 +70,11 @@ interface IProjectService {
 	isValidNativeScriptProject(pathToProject?: string): boolean;
 }
 
+interface ITnsOptions {
+	android?: IAndroidBuildData;
+	ios?: IiOSBuildData;
+}
+
 interface INsConfig {
 	appPath?: string;
 	appResourcesPath?: string;
@@ -77,6 +82,7 @@ interface INsConfig {
 	previewAppSchema?: string;
 	overridePods?: string;
 	webpackConfigPath?: string;
+	tnsOptions?: ITnsOptions;
 }
 
 interface IProjectData extends ICreateProjectData {

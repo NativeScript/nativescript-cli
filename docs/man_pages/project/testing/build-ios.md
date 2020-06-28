@@ -21,6 +21,7 @@ General | `$ tns build ios [--for-device] [--release] [--copy-to <File Path>] [-
 
 ### Options
 
+* `--nsconfig` - If set, all the options below can be defined in the [nsconfig.json file](https://docs.nativescript.org/core-concepts/project-structure-app#the-nsconfigjson-file) at the root of your project. In the `nsconfig.json` file, you need to add the `tnsOptions` key with the `ios` subkey.
 * `--release` - If set, produces a release build. Otherwise, produces a debug build.
 * `--for-device` - If set, produces an application package that you can deploy on device. Otherwise, produces a build that you can run only in the native iOS Simulator.
 * `--i-cloud-container-environment` - If set, adds the passed `iCloudContainerEnvironment` when exporting an application package with the `--for-device` option.

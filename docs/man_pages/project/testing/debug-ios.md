@@ -25,6 +25,7 @@ Attach the debug tools to a running app in the iOS simulator | `$ tns debug ios 
 
 ### Options
 
+* `--nsconfig` - If set, all the options below can be defined in the [nsconfig.json file](https://docs.nativescript.org/core-concepts/project-structure-app#the-nsconfigjson-file) at the root of your project. In the `nsconfig.json` file, you need to add the `tnsOptions` key with the `ios` subkey.
 * `--device` - Specifies a connected device or iOS simulator on which to run the app. `<Device ID>` is the device identifier of the target device as listed by the `$ tns device ios` command.
 * `--emulator` - Indicates that you want to debug your app in the iOS simulator.
 * `--debug-brk` - Prepares, builds and deploys the application package on a device or in a simulator, runs the app, launches the developer tools of your Safari browser and stops at the first code statement.

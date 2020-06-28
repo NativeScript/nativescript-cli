@@ -585,6 +585,7 @@ interface IOptions extends IRelease, IDeviceIdentifier, IJustLaunch, IAvd, IAvai
 	appleApplicationSpecificPassword: string;
 	appleSessionBase64: string;
 	markingMode: boolean;
+	nsconfig: boolean;
 }
 
 interface IEnvOptions {

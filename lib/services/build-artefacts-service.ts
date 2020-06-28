@@ -46,8 +46,9 @@ export class BuildArtefactsService implements IBuildArtefactsService {
 		const outputPath = buildOutputOptions.outputPath || platformData.getBuildOutputPath(buildOutputOptions);
 		const applicationPackage = this.getLatestApplicationPackage(outputPath, platformData.getValidBuildOutputData(buildOutputOptions));
 		const packageFile = applicationPackage.packageName;
+		const directoryPath = path.extname(targetPath).length !== 0 ? path.dirname(targetPath) : targetPath;
 
-		this.$fs.ensureDirectoryExists(path.dirname(targetPath));
+		this.$fs.ensureDirectoryExists(directoryPath);
 
 		if (this.$fs.exists(targetPath) && this.$fs.getFsStats(targetPath).isDirectory()) {
 			const sourceFileName = path.basename(packageFile);
