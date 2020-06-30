@@ -76,7 +76,8 @@ abstract class TestCommandBase {
 			projectDir: this.$projectData.projectDir,
 			options: this.$options,
 			notConfiguredEnvOptions: {
-				hideSyncToPreviewAppOption: true
+        hideSyncToPreviewAppOption: true,
+        hideCloudBuildOption: true
 			}
 		});
 

@@ -216,6 +216,8 @@ export const enum BuildStates {
 	Incremental = "Incremental"
 }
 
+export const NATIVESCRIPT_CLOUD_EXTENSION_NAME = "@nativescript/cloud";
+
 /**
  * Used in ProjectDataService to concatenate the names of the properties inside nativescript key of package.json.
  */

@@ -19,4 +19,4 @@ Run the setup script | `$ tns setup`
 
 Command | Description
 ----------|----------
-[setup cloud](setup-cloud.html) | Install the nativescript-cloud extension to configure your environment for cloud builds.
+[setup cloud](setup-cloud.html) | Install the @nativescript/cloud extension to configure your environment for cloud builds.
