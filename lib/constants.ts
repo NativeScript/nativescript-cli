@@ -13,7 +13,7 @@ export const TNS_CORE_MODULES_NAME = "tns-core-modules";
 export const SCOPED_TNS_CORE_MODULES = "@nativescript/core";
 export const TNS_CORE_THEME_NAME = "nativescript-theme-core";
 export const SCOPED_TNS_CORE_THEME_NAME = "@nativescript/theme";
-export const WEBPACK_PLUGIN_NAME = "nativescript-dev-webpack";
+export const WEBPACK_PLUGIN_NAME = "@nativescript/webpack";
 export const TNS_CORE_MODULES_WIDGETS_NAME = "tns-core-modules-widgets";
 export const TNS_ANDROID_RUNTIME_NAME = "tns-android";
 export const TNS_IOS_RUNTIME_NAME = "tns-ios";
@@ -298,7 +298,7 @@ export class IosProjectConstants {
 
 export class BundleValidatorMessages {
 	public static MissingBundlePlugin = "Passing --bundle requires a bundling plugin. No bundling plugin found or the specified bundling plugin is invalid.";
-	public static NotSupportedVersion = `The NativeScript CLI requires nativescript-dev-webpack %s or later to work properly. After updating nativescript-dev-webpack you need to ensure "webpack.config.js" file is up to date with the one in the new version of nativescript-dev-webpack. You can automatically update it using "./node_modules/.bin/update-ns-webpack --configs" command.`;
+	public static NotSupportedVersion = `The NativeScript CLI requires @nativescript/webpack %s or later to work properly. After updating @nativescript/webpack you need to ensure "webpack.config.js" file is up to date with the one in the new version of @nativescript/webpack. You can automatically update it using "./node_modules/.bin/update-ns-webpack --configs" command.`;
 }
 
 export class AndroidBundleValidatorMessages {

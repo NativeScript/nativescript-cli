@@ -137,7 +137,7 @@ describe("update controller method tests", () => {
 						"tns-core-modules": "0.1.0",
 					},
 					devDependencies: {
-						"nativescript-dev-webpack": "1.1.3"
+						"@nativescript/webpack": "1.1.3"
 					}
 				};
 			};
@@ -162,7 +162,7 @@ describe("update controller method tests", () => {
 					},
 					devDependencies: {
 						"devDep1": "1.2.0",
-						"nativescript-dev-webpack": "1.3.0"
+						"@nativescript/webpack": "1.3.0"
 					},
 					name: "template1"
 				};
@@ -193,7 +193,7 @@ describe("update controller method tests", () => {
 					"tns-core-modules": "1.0.0",
 				},
 				devDependencies: {
-					"nativescript-dev-webpack": "1.3.0"
+					"@nativescript/webpack": "1.3.0"
 				}
 			});
 		});

@@ -7,7 +7,7 @@ position: 16
 
 ### Description
 
-Updates the project with the latest versions of iOS/Android runtimes, cross-platform modules and "nativescript-dev-webpack".
+Updates the project with the latest versions of iOS/Android runtimes, cross-platform modules and "@nativescript/webpack".
 In order to get the latest development release instead, pass `next` as argument:
 `tns update next`
 

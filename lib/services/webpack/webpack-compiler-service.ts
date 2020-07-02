@@ -250,7 +250,7 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 				const installedWebpackPluginVersion = await this.$packageInstallationManager.getInstalledDependencyVersion(WEBPACK_PLUGIN_NAME, projectData.projectDir);
 				const hasWebpackPluginWithWinSnapshotsSupport = !!installedWebpackPluginVersion ? semver.gte(semver.coerce(installedWebpackPluginVersion), minWebpackPluginWithWinSnapshotsVersion) : true;
 				if (!hasWebpackPluginWithWinSnapshotsSupport) {
-					this.$errors.fail(`In order to generate Snapshots on Windows, please upgrade your Webpack plugin version (npm i nativescript-dev-webpack@latest).`);
+					this.$errors.fail(`In order to generate Snapshots on Windows, please upgrade your Webpack plugin version (npm i ${WEBPACK_PLUGIN_NAME}@latest).`);
 				}
 			}
 		}
