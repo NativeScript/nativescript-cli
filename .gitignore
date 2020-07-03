@@ -3,6 +3,7 @@
 *.js
 !/*.js
 !bin/nativescript.js
+!bin/nsc.js
 !vendor/*.js
 !resources/**
 !lib/common/test/resources/**/*

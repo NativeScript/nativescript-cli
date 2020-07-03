@@ -8,8 +8,8 @@ export class Options {
 	private optionsWhiteList = ["ui", "recursive", "reporter", "require", "timeout", "_", "$0"]; // These options shouldn't be validated
 	private globalOptions: IDictionary<IDashedOption> = {
 		log: { type: OptionType.String, hasSensitiveValue: false },
-		verbose: { type: OptionType.Boolean, alias: "v", hasSensitiveValue: false },
-		version: { type: OptionType.Boolean, hasSensitiveValue: false },
+		verbose: { type: OptionType.Boolean, hasSensitiveValue: false },
+		version: { type: OptionType.Boolean, alias: "v", hasSensitiveValue: false },
 		help: { type: OptionType.Boolean, alias: "h", hasSensitiveValue: false },
 		profileDir: { type: OptionType.String, hasSensitiveValue: true },
 		analyticsClient: { type: OptionType.String, hasSensitiveValue: false },
