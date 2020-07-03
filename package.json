@@ -1,12 +1,13 @@
 {
   "name": "nativescript",
   "preferGlobal": true,
-  "version": "6.8.0-alpha.0",
+  "version": "6.8.0-rc.2",
   "author": "NativeScript <support@nativescript.org>",
   "description": "Command-line interface for building NativeScript projects",
   "bin": {
     "tns": "./bin/tns",
-    "nativescript": "./bin/tns"
+    "nativescript": "./bin/tns",
+    "nsc": "./bin/tns"
   },
   "main": "./lib/nativescript-cli-lib.js",
   "scripts": {

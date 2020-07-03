@@ -123,7 +123,7 @@ describe("options", () => {
 			options.validateOptions();
 			process.argv.pop();
 			assert.isFalse(isExecutionStopped);
-			assert.isTrue(options.verbose);
+			assert.isTrue(options.version);
 		});
 
 		// all numbers are changed to strings before calling validateOptions
