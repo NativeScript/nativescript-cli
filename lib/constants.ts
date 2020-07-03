@@ -298,7 +298,6 @@ export class IosProjectConstants {
 
 export class BundleValidatorMessages {
 	public static MissingBundlePlugin = "Passing --bundle requires a bundling plugin. No bundling plugin found or the specified bundling plugin is invalid.";
-	public static NotSupportedVersion = `The NativeScript CLI requires @nativescript/webpack %s or later to work properly. After updating @nativescript/webpack you need to ensure "webpack.config.js" file is up to date with the one in the new version of @nativescript/webpack. You can automatically update it using "./node_modules/.bin/update-ns-webpack --configs" command.`;
 }
 
 export class AndroidBundleValidatorMessages {
