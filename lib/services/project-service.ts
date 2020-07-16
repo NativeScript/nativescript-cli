@@ -19,7 +19,6 @@ export class ProjectService implements IProjectService {
 		private $projectNameService: IProjectNameService,
 		private $projectTemplatesService: IProjectTemplatesService,
 		private $staticConfig: IStaticConfig,
-		private $packageInstallationManager: IPackageInstallationManager,
 		private $tempService: ITempService) { }
 
 	public async validateProjectName(opts: { projectName: string, force: boolean, pathToProject: string }): Promise<string> {
@@ -90,10 +89,6 @@ export class ProjectService implements IProjectService {
 			}
 
 			await this.ensureAppResourcesExist(projectDir);
-
-			if (!(templatePackageJsonContent && templatePackageJsonContent.dependencies && templatePackageJsonContent.dependencies[constants.TNS_CORE_MODULES_NAME])) {
-				await this.addTnsCoreModules(projectDir);
-			}
 
 			if (templateVersion === constants.TemplateVersions.v1) {
 				this.mergeProjectAndTemplateProperties(projectDir, templatePackageJsonContent); // merging dependencies from template (dev && prod)
@@ -245,17 +240,6 @@ export class ProjectService implements IProjectService {
 
 	private setAppId(projectDir: string, projectId: string): void {
 		this.$projectDataService.setNSValue(projectDir, "id", projectId);
-	}
-
-	@performanceLog()
-	private async addTnsCoreModules(projectDir: string): Promise<void> {
-		const projectFilePath = path.join(projectDir, this.$staticConfig.PROJECT_FILE_NAME);
-		const packageJsonData = this.$fs.readJson(projectFilePath);
-
-		const version = await this.$packageInstallationManager.getLatestCompatibleVersion(constants.TNS_CORE_MODULES_NAME);
-		packageJsonData.dependencies[constants.TNS_CORE_MODULES_NAME] = version;
-
-		this.$fs.writeJson(projectFilePath, packageJsonData);
 	}
 }
 $injector.register("projectService", ProjectService);
