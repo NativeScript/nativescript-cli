@@ -66,7 +66,7 @@ export class DebugPlatformCommand extends ValidatePlatformCommandBase implements
 			this.$errors.failWithHelp("--release flag is not applicable to this command.");
 		}
 
-		const result = await super.canExecuteCommandBase(this.platform, { validateOptions: true, notConfiguredEnvOptions: { hideSyncToPreviewAppOption: true } });
+		const result = await super.canExecuteCommandBase(this.platform, { hideCloudBuildOption: true, validateOptions: true, notConfiguredEnvOptions: { hideSyncToPreviewAppOption: true } });
 		return result;
 	}
 }

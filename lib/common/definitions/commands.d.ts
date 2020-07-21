@@ -25,7 +25,8 @@ interface ICommand extends ICommandOptions {
 
 interface ICanExecuteCommandOptions {
 	validateOptions?: boolean;
-	notConfiguredEnvOptions?: INotConfiguredEnvOptions;
+  notConfiguredEnvOptions?: INotConfiguredEnvOptions;
+  hideCloudBuildOption?: boolean;
 }
 
 interface INotConfiguredEnvOptions {

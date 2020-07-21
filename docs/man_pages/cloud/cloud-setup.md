@@ -7,13 +7,13 @@ position: 5
 
 ### Description
 
-Install the `nativescript-cloud extension` to configure your environment for cloud builds.
+Install the `@nativescript/cloud extension` to configure your environment for cloud builds.
 
 ### Commands
 
 Usage | Synopsis
 ------|-------
-Install the `nativescript-cloud extension` | `$ tns cloud setup`
+Install the `@nativescript/cloud extension` | `$ tns cloud setup`
 Log in for cloud builds (will open browser login form) | `$ tns login`
 Log in for cloud builds (through the CLI) | `$ tns dev-login <username> <password>`
 Accept EULA agreement | `$ tns accept eula`
