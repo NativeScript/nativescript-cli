@@ -184,9 +184,14 @@ export class ExtensibilityService implements IExtensibilityService {
 
 	private async assertExtensionIsInstalled(extensionName: string): Promise<void> {
 		this.$logger.trace(`Asserting extension ${extensionName} is installed.`);
-		const installedExtensions = this.$fs.readDirectory(path.join(this.pathToExtensions, constants.NODE_MODULES_FOLDER_NAME));
 
-		if (installedExtensions.indexOf(extensionName) === -1) {
+		try {
+			require.resolve(extensionName, {
+				paths: [
+					path.join(this.pathToExtensions)
+				]
+			});
+		} catch (err) {
 			this.$logger.trace(`Extension ${extensionName} is not installed, starting installation.`);
 			await this.installExtension(extensionName);
 		}
