@@ -183,9 +183,15 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 			additionalNodeArgs.unshift("--max_old_space_size=4096");
 		}
 
+		const webpackBinPath = require.resolve('webpack/bin/webpack.js', {
+			paths: [
+				prepareData.projectDir
+			]
+		});
+
 		const args = [
 			...additionalNodeArgs,
-			path.join(projectData.projectDir, "node_modules", "webpack", "bin", "webpack.js"),
+			webpackBinPath,
 			`--config=${projectData.webpackConfigPath}`,
 			...envParams
 		];
