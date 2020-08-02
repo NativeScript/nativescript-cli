@@ -85,7 +85,7 @@ class TestInitCommand implements ICommand {
 			}
 		}
 
-		await this.$pluginsService.add('nativescript-unit-test-runner', this.$projectData);
+		await this.$pluginsService.add('@nativescript/unit-test-runner', this.$projectData);
 
 		const testsDir = path.join(this.$projectData.appDirectoryPath, 'tests');
 		const relativeTestsDir = path.relative(this.$projectData.projectDir, testsDir);

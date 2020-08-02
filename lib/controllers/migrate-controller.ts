@@ -81,9 +81,9 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 		{ packageName: "nativescript-permissions", verifiedVersion: "1.3.0" },
 		{ packageName: "nativescript-cardview", verifiedVersion: "3.2.0" },
 		{
-			packageName: "nativescript-unit-test-runner", verifiedVersion: "0.7.0",
+			packageName: "@nativescript/unit-test-runner", verifiedVersion: "1.0.0",
 			shouldMigrateAction: async (projectData: IProjectData, allowInvalidVersions: boolean) => {
-				const dependency = { packageName: "nativescript-unit-test-runner", verifiedVersion: "0.7.0", isDev: false };
+				const dependency = { packageName: "@nativescript/unit-test-runner", verifiedVersion: "1.0.0", isDev: false };
 				const result = this.hasDependency(dependency, projectData) && await this.shouldMigrateDependencyVersion(dependency, projectData, allowInvalidVersions);
 				return result;
 			},

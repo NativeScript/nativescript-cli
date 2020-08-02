@@ -53,7 +53,7 @@ The following dependencies will be updated if needed:
 * @angular-devkit/build-angular
 * rxjs
 * zone.js
-* nativescript-unit-test-runner
+* @nativescript/unit-test-runner
 * karma-webpack
 * karma-jasmine
 * karma-mocha

@@ -7,7 +7,7 @@ position: 21
 
 ### Description
 
-Configures your project for unit testing with a selected framework. This operation installs the nativescript-unit-test-runner npm module and its dependencies and creates a `tests` folder in the `app` directory.
+Configures your project for unit testing with a selected framework. This operation installs the @nativescript/unit-test-runner npm module and its dependencies and creates a `tests` folder in the `app` directory.
 
 ### Commands
 

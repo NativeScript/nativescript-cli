@@ -3,7 +3,7 @@ import { TestExecutionService } from "../../lib/services/test-execution-service"
 import { assert } from "chai";
 
 const karmaPluginName = "karma";
-const unitTestsPluginName = "nativescript-unit-test-runner";
+const unitTestsPluginName = "@nativescript/unit-test-runner";
 
 function getTestExecutionService(): ITestExecutionService {
 	const injector = new InjectorStub();

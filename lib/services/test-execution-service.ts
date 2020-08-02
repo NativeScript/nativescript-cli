@@ -93,7 +93,7 @@ export class TestExecutionService implements ITestExecutionService {
 
 	public async canStartKarmaServer(projectData: IProjectData): Promise<boolean> {
 		let canStartKarmaServer = true;
-		const requiredDependencies = ["karma", "nativescript-unit-test-runner"];
+		const requiredDependencies = ["karma", "@nativescript/unit-test-runner"];
 		_.each(requiredDependencies, (dep) => {
 			if (!projectData.dependencies[dep] && !projectData.devDependencies[dep]) {
 				canStartKarmaServer = false;
