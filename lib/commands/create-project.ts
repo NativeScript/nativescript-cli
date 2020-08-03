@@ -240,7 +240,7 @@ can skip this prompt next time using the --template option, or the --ng, --react
 		const { projectDir } = this.createdProjectData;
 		const relativePath = path.relative(process.cwd(), projectDir);
 		this.$logger.printMarkdown(`Now you can navigate to your project with \`$ cd ${relativePath}\``);
-		this.$logger.printMarkdown(`After that you can preview it on device by executing \`$ tns preview\``);
+		this.$logger.printMarkdown(`After that you can preview it on device by executing \`$ ns preview\``);
 	}
 }
 

@@ -115,7 +115,7 @@ class TestInitCommand implements ICommand {
 			this.$logger.info(`\nPlace your test files under ${relativeTestsDir}`.yellow);
 		}
 
-		this.$logger.info('Run your tests using the "$ tns test <platform>" command.'.yellow);
+		this.$logger.info('Run your tests using the "$ ns test <platform>" command.'.yellow);
 	}
 }
 
