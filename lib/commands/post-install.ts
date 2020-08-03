@@ -42,7 +42,7 @@ export class PostInstallCliCommand implements ICommand {
 		this.$logger.info("You have successfully installed the NativeScript CLI!".green.bold);
 		this.$logger.info("");
 		this.$logger.info("Your next step is to create a new project:");
-		this.$logger.info("tns create".green.bold);
+		this.$logger.info("ns create".green.bold);
 
 		this.$logger.info("");
 		this.$logger.printMarkdown("New to NativeScript?".bold + " Try the tutorials in NativeScript Playground: `https://play.nativescript.org`");

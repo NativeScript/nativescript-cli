@@ -24,7 +24,7 @@ export class ListPlatformsCommand implements ICommand {
 		} else {
 			const formattedPlatformsList = helpers.formatListOfNames(this.$platformCommandHelper.getAvailablePlatforms(this.$projectData), "and");
 			this.$logger.info("Available platforms for this OS: ", formattedPlatformsList);
-			this.$logger.info("No installed platforms found. Use $ tns platform add");
+			this.$logger.info("No installed platforms found. Use $ ns platform add");
 		}
 	}
 }

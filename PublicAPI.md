@@ -4,7 +4,7 @@ Public API
 This document describes all methods that can be invoked when NativeScript CLI is required as library, i.e.
 
 ```JavaScript
-const tns = require("nativescript");
+const ns = require("nativescript");
 ```
 
 # Contents
