@@ -1,12 +1,15 @@
 {
 	"compilerOptions": {
-		"target": "es6",
-		"module": "commonjs",
+		"target": "es2020",
+    "module": "esnext",
+    "moduleResolution": "node",
+    "lib": ["es2017"],
 		"sourceMap": true,
 		"declaration": false,
 		"removeComments": false,
 		"noImplicitAny": true,
-		"experimentalDecorators": true,
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
 		"alwaysStrict": true,
 		"noUnusedLocals": true
 	},

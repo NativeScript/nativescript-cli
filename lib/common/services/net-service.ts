@@ -15,7 +15,7 @@ export class Net implements INet {
 		return new Promise<number>((resolve, reject) => {
 			let isResolved = false;
 			server.listen(0, () => {
-				const portUsed = server.address().port;
+				const portUsed = (<net.AddressInfo>server.address()).port;
 				server.close();
 
 				if (!isResolved) {

@@ -93,7 +93,7 @@ export class LockService implements ILockService {
 
 		fileOpts.retriesObj = fileOpts.retriesObj || {};
 		if (fileOpts.retries) {
-			fileOpts.retriesObj.retries = fileOpts.retries;
+			fileOpts.retriesObj.retries = <number>fileOpts.retries;
 		}
 
 		if (fileOpts.retryWait) {

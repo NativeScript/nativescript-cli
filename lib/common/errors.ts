@@ -11,7 +11,7 @@ function Exception() {
 
 Exception.prototype = new Error();
 
-function resolveCallStack(error: Error): string {
+async function resolveCallStack(error: Error): Promise<string> {
 	const stackLines: string[] = error.stack.split("\n");
 	const parsed = _.map(stackLines, (line: string): any => {
 		let match = line.match(/^\s*at ([^(]*) \((.*?):([0-9]+):([0-9]+)\)$/);
@@ -28,9 +28,9 @@ function resolveCallStack(error: Error): string {
 		return line;
 	});
 
-	const fs = require("fs");
+  const fs = require("fs");
 
-	const remapped = _.map(parsed, (parsedLine) => {
+	const remapped = await Promise.all(_.map(parsed, async (parsedLine) => {
 		if (_.isString(parsedLine)) {
 			return parsedLine;
 		}
@@ -47,15 +47,16 @@ function resolveCallStack(error: Error): string {
 
 		const mapData = JSON.parse(fs.readFileSync(mapFileName).toString());
 
-		const consumer = new SourceMapConsumer(mapData);
-		const sourcePos = consumer.originalPositionFor({ line: line, column: column });
-		if (sourcePos && sourcePos.source) {
-			const source = path.join(path.dirname(fileName), sourcePos.source);
-			return util.format("    at %s (%s:%s:%s)", functionName, source, sourcePos.line, sourcePos.column);
-		}
-
-		return util.format("    at %s (%s:%s:%s)", functionName, fileName, line, column);
-	});
+		return await SourceMapConsumer.with(mapData, mapFileName, (consumer) => {
+      const sourcePos = consumer.originalPositionFor({ line: line, column: column });
+      if (sourcePos && sourcePos.source) {
+        const source = path.join(path.dirname(fileName), sourcePos.source);
+        return util.format("    at %s (%s:%s:%s)", functionName, source, sourcePos.line, sourcePos.column);
+      }
+  
+      return util.format("    at %s (%s:%s:%s)", functionName, fileName, line, column);
+    });
+	}));
 
 	let outputMessage = remapped.join("\n");
 
@@ -73,7 +74,7 @@ export function installUncaughtExceptionListener(actionOnException?: () => void)
 			let callstack = err.stack;
 			if (callstack) {
 				try {
-					callstack = resolveCallStack(err);
+					callstack = await resolveCallStack(err);
 				} catch (err) {
 					console.error("Error while resolving callStack:", err);
 				}
@@ -178,7 +179,7 @@ export class Errors implements IErrors {
 			const logger = this.$injector.resolve("logger");
 			const loggerLevel: string = logger.getLevel().toUpperCase();
 			const printCallStack = this.printCallStack || loggerLevel === "TRACE" || loggerLevel === "DEBUG";
-			const message = printCallStack ? resolveCallStack(ex) : isInteractive() ? `\x1B[31;1m${ex.message}\x1B[0m` : ex.message;
+			const message = printCallStack ? await resolveCallStack(ex) : isInteractive() ? `\x1B[31;1m${ex.message}\x1B[0m` : ex.message;
 
 			if (ex.printOnStdout) {
 				logger.info(message);

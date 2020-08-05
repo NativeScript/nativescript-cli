@@ -1,6 +1,6 @@
 import { Yok } from "../../yok";
 import * as path from "path";
-import temp = require("temp");
+import temp from "temp";
 import * as hostInfoLib from "../../host-info";
 import { assert, use } from "chai";
 import * as fileSystemFile from "../../file-system";

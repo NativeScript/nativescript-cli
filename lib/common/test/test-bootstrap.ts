@@ -1,5 +1,5 @@
-(<ICliGlobal>global)._ = require("lodash");
-(<ICliGlobal>global).$injector = require("../yok").injector;
+(<ICliGlobal><unknown>global)._ = require("lodash");
+(<ICliGlobal><unknown>global).$injector = require("../yok").injector;
 $injector.require("hostInfo", "../host-info");
 $injector.register("config", {});
 
@@ -15,5 +15,5 @@ $injector.register("analyticsService", {
 });
 
 // Converts the js callstack to typescript
-import errors = require("../errors");
-errors.installUncaughtExceptionListener();
+import { installUncaughtExceptionListener } from "../errors";
+installUncaughtExceptionListener();

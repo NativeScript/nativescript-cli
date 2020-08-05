@@ -101,7 +101,7 @@ export class AndroidProcessService implements Mobile.IAndroidProcessService {
 			.filter(deviceAppInfo => !!deviceAppInfo)
 			.groupBy(element => element.framework)
 			.map((group: Mobile.IDeviceApplicationInformation[]) => _.uniqBy(group, g => g.appIdentifier))
-			.flatten<Mobile.IDeviceApplicationInformation>()
+			.flatten()
 			.value();
 	}
 

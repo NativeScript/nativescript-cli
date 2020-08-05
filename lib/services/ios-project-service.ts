@@ -38,7 +38,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		private $errors: IErrors,
 		private $logger: ILogger,
 		private $injector: IInjector,
-		$projectDataService: IProjectDataService,
+    $projectDataService: IProjectDataService,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $hostInfo: IHostInfo,
 		private $xcprojService: IXcprojService,
@@ -67,10 +67,11 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		}
 
 		if (projectData && projectData.platformsDir && this._platformsDirCache !== projectData.platformsDir) {
-			const projectRoot = path.join(projectData.platformsDir, this.$devicePlatformsConstants.iOS.toLowerCase());
+      const projectRoot = path.join(projectData.platformsDir, this.$devicePlatformsConstants.iOS.toLowerCase());
+      const runtimePackage = this.$projectDataService.getRuntimePackage(projectData.projectDir, Platforms.ios);
 
 			this._platformData = {
-				frameworkPackageName: constants.TNS_IOS_RUNTIME_NAME,
+				frameworkPackageName: runtimePackage.name,
 				normalizedPlatformName: "iOS",
 				platformNameLowerCase: "ios",
 				appDestinationDirectoryPath: path.join(projectRoot, projectData.projectName),

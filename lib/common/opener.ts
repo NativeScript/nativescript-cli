@@ -1,4 +1,4 @@
-import xopen = require("open");
+import xopen from "open";
 
 export class Opener implements IOpener {
 

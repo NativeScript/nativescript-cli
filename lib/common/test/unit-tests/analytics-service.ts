@@ -1,12 +1,11 @@
 import { CommonLoggerStub, ErrorsStub } from "./stubs";
 import { Yok } from "../../yok";
 import { AnalyticsService } from '../../../services/analytics/analytics-service';
-import helpersLib = require("../../helpers");
+import { setIsInteractive } from "../../helpers";
 import { HostInfo } from "../../host-info";
 import { OsInfo } from "../../os-info";
 const assert = require("chai").assert;
 
-const originalIsInteractive = helpersLib.isInteractive;
 let savedSettingNamesAndValues = "";
 
 class UserSettingsServiceStub {
@@ -84,11 +83,10 @@ function createTestInjector(testScenario: ITestScenario): IInjector {
 	});
 	testInjector.register("hostInfo", HostInfo);
 	testInjector.register("osInfo", OsInfo);
-	testInjector.register("userSettingsService", new UserSettingsServiceStub(testScenario.featureTracking, testScenario.exceptionsTracking, testInjector));
-	helpersLib.isInteractive = () => {
+  testInjector.register("userSettingsService", new UserSettingsServiceStub(testScenario.featureTracking, testScenario.exceptionsTracking, testInjector));
+  setIsInteractive(() => {
 		return testScenario.isInteractive;
-	};
-
+	});
 	testInjector.register("childProcess", {});
 	testInjector.register("projectDataService", {});
 	testInjector.register("mobileHelper", {});
@@ -119,7 +117,7 @@ describe("analytics-service", () => {
 	});
 
 	after(() => {
-		helpersLib.isInteractive = originalIsInteractive;
+    setIsInteractive(null);
 	});
 
 	describe("isEnabled", () => {

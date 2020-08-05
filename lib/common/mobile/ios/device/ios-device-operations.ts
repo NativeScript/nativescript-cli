@@ -1,7 +1,7 @@
 import { IOSDeviceLib as IOSDeviceLibModule } from "ios-device-lib";
 import { cache } from "../../../decorators";
 import { DEVICE_LOG_EVENT_NAME } from "../../../constants";
-import assert = require("assert");
+import assert from "assert";
 import { EventEmitter } from "events";
 
 export class IOSDeviceOperations extends EventEmitter implements IIOSDeviceOperations, IDisposable, IShouldDispose {

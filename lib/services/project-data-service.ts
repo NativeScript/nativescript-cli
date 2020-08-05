@@ -27,7 +27,8 @@ export class ProjectDataService implements IProjectDataService {
 		private $staticConfig: IStaticConfig,
 		private $logger: ILogger,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-		private $androidResourcesMigrationService: IAndroidResourcesMigrationService,
+    private $androidResourcesMigrationService: IAndroidResourcesMigrationService,
+    private $pluginService: IPluginsService,
 		private $injector: IInjector) {
 		try {
 			// add the ProjectData of the default projectDir to the projectData cache
@@ -398,7 +399,17 @@ export class ProjectDataService implements IProjectDataService {
 		Object.assign(config, data);
 
 		return config;
-	}
+  }
+  
+  public getRuntimePackage(projectDir: string, platform: SupportedPlatform): IBasePluginData {
+    return this.$pluginService.getDependenciesFromPackageJson(projectDir).devDependencies.find(d => {
+      if (platform === Platforms.ios) {
+        return [constants.SCOPED_IOS_RUNTIME_NAME, constants.TNS_IOS_RUNTIME_NAME].includes(d.name);
+      } else if (platform === Platforms.android) {
+        return [constants.SCOPED_ANDROID_RUNTIME_NAME, d.name === constants.TNS_ANDROID_RUNTIME_NAME].includes(d.name);
+      }
+    });
+  }
 
 	@exported("projectDataService")
 	public getNsConfigDefaultContent(data?: Object): string {
