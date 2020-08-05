@@ -43,10 +43,11 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			const configurationsDirectoryArr = [projectRoot, constants.APP_FOLDER_NAME, constants.SRC_DIR, constants.MAIN_DIR, constants.MANIFEST_FILE_NAME];
 			const deviceBuildOutputArr = [projectRoot, constants.APP_FOLDER_NAME, constants.BUILD_DIR, constants.OUTPUTS_DIR, constants.APK_DIR];
 
-			const packageName = this.getProjectNameFromId(projectData);
+      const packageName = this.getProjectNameFromId(projectData);
+      const runtimePackage = this.$projectDataService.getRuntimePackage(projectData.projectDir, Platforms.android);
 
 			this._platformData = {
-				frameworkPackageName: constants.TNS_ANDROID_RUNTIME_NAME,
+				frameworkPackageName: runtimePackage.name,
 				normalizedPlatformName: "Android",
 				platformNameLowerCase: "android",
 				appDestinationDirectoryPath: path.join(...appDestinationDirectoryArr),

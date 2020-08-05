@@ -4,6 +4,12 @@ interface Object {
 
 interface IStringDictionary extends IDictionary<string> { }
 
+declare enum Platforms {
+  ios = 'ios',
+  android = 'android'
+}
+type SupportedPlatform = Platforms.ios | Platforms.android;
+
 /**
  * Describes iTunes Connect application types
  */
@@ -268,7 +274,7 @@ interface IReadFileOptions {
 	/**
 	 * Defines the encoding. Defaults to null.
 	 */
-	encoding: string;
+	encoding?: BufferEncoding | null;
 
 	/**
 	 * Defines file flags. Defaults to "r".
@@ -344,9 +350,9 @@ interface IFileSystem {
 	 * Reads the entire contents of a file.
 	 * @param {string} filename Path to the file that has to be read.
 	 * @param {string} @optional options Options used for reading the file - encoding and flags.
-	 * @returns {string|NodeBuffer} Content of the file as buffer. In case encoding is specified, the content is returned as string.
+	 * @returns {string|Buffer} Content of the file as buffer. In case encoding is specified, the content is returned as string.
 	 */
-	readFile(filename: string, options?: IReadFileOptions): string | NodeBuffer;
+	readFile(filename: string, options?: IReadFileOptions): string | Buffer;
 
 	/**
 	 * Reads the entire contents of a file and returns the result as string.
@@ -369,20 +375,20 @@ interface IFileSystem {
 	/**
 	 * Writes data to a file, replacing the file if it already exists. data can be a string or a buffer.
 	 * @param {string} filename Path to file to be created.
-	 * @param {string | NodeBuffer} data Data to be written to file.
+	 * @param {string | Buffer} data Data to be written to file.
 	 * @param {string} encoding @optional File encoding, defaults to utf8.
 	 * @returns {void}
 	 */
-	writeFile(filename: string, data: string | NodeBuffer, encoding?: string): void;
+	writeFile(filename: string, data: string | Buffer, encoding?: string): void;
 
 	/**
 	 * Appends data to a file, creating the file if it does not yet exist. Data can be a string or a buffer.
 	 * @param {string} filename Path to file to be created.
-	 * @param {string | NodeBuffer} data Data to be appended to file.
+	 * @param {string | Buffer} data Data to be appended to file.
 	 * @param {string} encoding @optional File encoding, defaults to utf8.
 	 * @returns {void}
 	 */
-	appendFile(filename: string, data: string | NodeBuffer, encoding?: string): void;
+	appendFile(filename: string, data: string | Buffer, encoding?: string): void;
 
 	/**
 	 * Writes JSON data to file.

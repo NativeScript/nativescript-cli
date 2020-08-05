@@ -14,7 +14,7 @@ function emitAppender(layout: Function, emitter: EventEmitter) {
 	return appender;
 }
 
-function configure(config: Log4JSEmitAppenderConfiguration, layouts: any) {
+export function configure(config: Log4JSEmitAppenderConfiguration, layouts: any) {
 	if (!config.emitter) {
 		throw new Error("Emitter must be passed to emit-appender");
 	}
@@ -34,5 +34,3 @@ function configure(config: Log4JSEmitAppenderConfiguration, layouts: any) {
 	// create a new appender instance
 	return emitAppender(layout, config.emitter);
 }
-
-exports.configure = configure;

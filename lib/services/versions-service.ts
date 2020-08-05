@@ -21,7 +21,8 @@ class VersionsService implements IVersionsService {
 		private $injector: IInjector,
 		private $logger: ILogger,
 		private $staticConfig: Config.IStaticConfig,
-		private $pluginsService: IPluginsService,
+    private $pluginsService: IPluginsService,
+    private $projectDataService: IProjectDataService,
 		private $terminalSpinnerService: ITerminalSpinnerService) {
 		this.projectData = this.getProjectData();
 	}
@@ -85,31 +86,20 @@ class VersionsService implements IVersionsService {
 	}
 
 	public async getRuntimesVersions(): Promise<IVersionInformation[]> {
-		const runtimes: string[] = [
-			constants.TNS_ANDROID_RUNTIME_NAME,
-			constants.TNS_IOS_RUNTIME_NAME
+    const iosRuntime = this.$projectDataService.getRuntimePackage(this.projectData.projectDir, Platforms.ios);
+    const androidRuntime = this.$projectDataService.getRuntimePackage(this.projectData.projectDir, Platforms.android);
+		const runtimes: IBasePluginData[] = [
+			iosRuntime,
+			androidRuntime
 		];
-
-		let projectConfig: any;
-
-		if (this.projectData) {
-			projectConfig = this.$fs.readJson(this.projectData.projectFilePath);
-		}
-
-		const runtimesVersions: IVersionInformation[] = await Promise.all(runtimes.map(async (runtime: string) => {
-			const latestRuntimeVersion = await this.$packageInstallationManager.getLatestVersion(runtime);
+    
+		const runtimesVersions: IVersionInformation[] = await Promise.all(runtimes.map(async (runtime: IBasePluginData) => {
+			const latestVersion = await this.$packageInstallationManager.getLatestVersion(runtime.name);
 			const runtimeInformation: IVersionInformation = {
-				componentName: runtime,
-				latestVersion: latestRuntimeVersion
+				componentName: runtime.name,
+        currentVersion: runtime.version,
+        latestVersion,
 			};
-
-			if (projectConfig) {
-				const projectRuntimeInformation = projectConfig.nativescript && projectConfig.nativescript[runtime];
-				if (projectRuntimeInformation) {
-					const runtimeVersionInProject = projectRuntimeInformation.version;
-					runtimeInformation.currentVersion = runtimeVersionInProject;
-				}
-			}
 
 			return runtimeInformation;
 		}));

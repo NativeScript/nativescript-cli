@@ -273,7 +273,16 @@ export function getRelativeToRootPath(rootPath: string, filePath: string): strin
 	return relativeToRootPath;
 }
 
+let customIsInteractive: any;
+
+export function setIsInteractive(override?: () => boolean) {
+  customIsInteractive = override;
+}
+
 export function isInteractive(): boolean {
+  if (customIsInteractive) {
+    return customIsInteractive();
+  }
 	const result = isRunningInTTY() && !isCIEnvironment();
 	return result;
 }
@@ -406,12 +415,12 @@ export function parseJson(data: string): any {
 }
 
 // TODO: Use generic for predicatе predicate: (element: T|T[]) when TypeScript support this.
-export async function getFuturesResults<T>(promises: Promise<T | T[]>[], predicate: (element: any) => boolean): Promise<T[]> {
+export async function getFuturesResults<T>(promises: Promise<T | T[] | T[][]>[], predicate: (element: any) => boolean): Promise<T[] | T[][]> {
 	const results = await Promise.all(promises);
 
 	return _(results)
 		.filter(predicate)
-		.flatten<T>()
+		.flatten()
 		.value();
 }
 

@@ -7,8 +7,8 @@ import * as shelljs from "shelljs";
 import { parseJson } from "./helpers";
 import { PACKAGE_JSON_FILE_NAME } from "../constants";
 import { EOL } from "os";
-import stringifyPackage = require("stringify-package");
-import detectNewline = require("detect-newline");
+import stringifyPackage from "stringify-package";
+import detectNewline from "detect-newline";
 
 // TODO: Add .d.ts for mkdirp module (or use it from @types repo).
 const mkdirp = require("mkdirp");
@@ -185,7 +185,7 @@ export class FileSystem implements IFileSystem {
 		options = options || { encoding: "utf8" };
 
 		if (_.isString(options)) {
-			options = { encoding: options };
+			options = { encoding: <BufferEncoding>options };
 		}
 
 		if (!options.encoding) {
@@ -210,11 +210,11 @@ export class FileSystem implements IFileSystem {
 			// clean any null or undefined data
 			data = '';
 		}
-		fs.writeFileSync(filename, data, { encoding: encoding });
+		fs.writeFileSync(filename, data, { encoding: <BufferEncoding>encoding });
 	}
 
 	public appendFile(filename: string, data: any, encoding?: string): void {
-		fs.appendFileSync(filename, data, { encoding: encoding });
+		fs.appendFileSync(filename, data, { encoding: <BufferEncoding>encoding });
 	}
 
 	public writeJson(filename: string, data: any, space?: string, encoding?: string): void {
@@ -257,18 +257,27 @@ export class FileSystem implements IFileSystem {
 
 	public createReadStream(path: string, options?: {
 		flags?: string;
-		encoding?: string;
-		fd?: number;
-		mode?: number;
-		bufferSize?: number;
+    encoding?: BufferEncoding;
+    fd?: number;
+    mode?: number;
+    autoClose?: boolean;
+    emitClose?: boolean;
+    start?: number;
+    end?: number;
+    highWaterMark?: number;
 	}): NodeJS.ReadableStream {
 		return fs.createReadStream(path, options);
 	}
 
 	public createWriteStream(path: string, options?: {
 		flags?: string;
-		encoding?: string;
-		string?: string;
+    encoding?: BufferEncoding;
+    fd?: number;
+    mode?: number;
+    autoClose?: boolean;
+    emitClose?: boolean;
+    start?: number;
+    highWaterMark?: number;
 	}): any {
 		return fs.createWriteStream(path, options);
 	}

@@ -78,11 +78,11 @@ export class Prompter implements IPrompter {
 	}
 
 	public async promptForChoice(promptMessage: string, choices: string[]): Promise<string> {
-		const schema: prompt.Question = {
+		const schema: prompt.Answers = {
 			message: promptMessage,
 			type: "list",
 			name: "userAnswer",
-			choices: choices
+			choices
 		};
 
 		const result = await this.get([schema]);

@@ -5,7 +5,7 @@ import * as path from "path";
 import * as childProcess from "child_process";
 import * as fileSystem from "fs";
 import { EventEmitter } from "events";
-import stream = require("stream");
+import stream from "stream";
 
 class ChildProcessMockInstance extends EventEmitter {
 	public stdout: stream.Readable;

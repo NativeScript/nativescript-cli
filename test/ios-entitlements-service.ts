@@ -1,4 +1,4 @@
-import temp = require("temp");
+import temp from "temp";
 import { EOL } from "os";
 import { assert } from "chai";
 import { IOSEntitlementsService } from "../lib/services/ios-entitlements-service";

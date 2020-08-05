@@ -203,6 +203,13 @@ interface IProjectDataService {
 	 */
 	getAppExecutableFiles(projectDir: string): string[];
 
+  /**
+   * Retruns package details for runtime
+   * @param {string} projectDir Path to application.
+   * @param {string} platform Platform key
+   */
+  getRuntimePackage(projectDir: string, platform: SupportedPlatform): IBasePluginData;
+
 	/**
  * Returns a value from `nativescript` key in project's package.json.
  * @param {string} jsonData The project directory - the place where the root package.json is located.

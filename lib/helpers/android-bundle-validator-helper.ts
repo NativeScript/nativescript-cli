@@ -1,5 +1,5 @@
 import * as util from "util";
-import { AndroidBundleValidatorMessages, TNS_ANDROID_RUNTIME_NAME } from "../constants";
+import { AndroidBundleValidatorMessages } from "../constants";
 import { VersionValidatorHelper } from "./version-validator-helper";
 import * as semver from "semver";
 
@@ -23,8 +23,8 @@ export class AndroidBundleValidatorHelper extends VersionValidatorHelper impleme
 
 	public validateRuntimeVersion(projectData: IProjectData): void {
 		if (this.$options.aab) {
-			const androidRuntimeInfo = this.$projectDataService.getNSValue(projectData.projectDir, TNS_ANDROID_RUNTIME_NAME);
-			const androidRuntimeVersion = androidRuntimeInfo ? androidRuntimeInfo.version : "";
+      const runtimePackage = this.$projectDataService.getRuntimePackage(projectData.projectDir, Platforms.android);
+			const androidRuntimeVersion = runtimePackage ? runtimePackage.version : "";
 			const shouldThrowError = androidRuntimeVersion &&
 				this.isValidVersion(androidRuntimeVersion) &&
 				this.isVersionLowerThan(androidRuntimeVersion, AndroidBundleValidatorHelper.MIN_RUNTIME_VERSION);
