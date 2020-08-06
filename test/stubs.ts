@@ -564,7 +564,11 @@ export class ProjectDataService implements IProjectDataService {
 		return [];
 	}
 
-	getNSValueFromContent(): any { }
+  getNSValueFromContent(): any { }
+  
+  getRuntimePackage(projectDir: string, platform: SupportedPlatform): IBasePluginData {
+    return null;
+  }
 }
 
 export class ProjectHelperStub implements IProjectHelper {

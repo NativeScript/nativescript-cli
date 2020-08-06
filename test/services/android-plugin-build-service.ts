@@ -5,7 +5,7 @@ import { getShortPluginName } from "../../lib/common/helpers";
 import * as FsLib from "../../lib/common/file-system";
 import * as path from "path";
 import * as stubs from "../stubs";
-import temp = require("temp");
+import temp from "temp";
 
 temp.track();
 

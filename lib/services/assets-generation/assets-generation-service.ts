@@ -48,9 +48,9 @@ export class AssetsGenerationService implements IAssetsGenerationService {
 					assetSubGroup && propertiesToEnumerate.indexOf(imageTypeKey) !== -1
 				)
 			)
-			.flatten<IAssetSubGroup>()
+			.flatten()
 			.map(assetSubGroup => assetSubGroup.images)
-			.flatten<IAssetItem>()
+			.flatten()
 			.filter(assetItem => !!assetItem.filename)
 			.value();
 

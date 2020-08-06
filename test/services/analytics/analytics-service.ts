@@ -5,8 +5,7 @@ import { assert } from "chai";
 import { EventEmitter } from "events";
 import { AnalyticsClients } from "../../../lib/common/constants";
 
-const helpers = require("../../../lib/common/helpers");
-const originalIsInteractive = helpers.isInteractive;
+import * as helpers from "../../../lib/common/helpers";
 
 const trackFeatureUsage = "TrackFeatureUsage";
 const sampleProjectType = "SampleProjectType";
@@ -52,7 +51,7 @@ const createTestInjector = (opts?: { projectHelperErrorMsg?: string, projectDir?
 
 describe("analyticsService", () => {
 	afterEach(() => {
-		helpers.isInteractive = originalIsInteractive;
+    helpers.setIsInteractive(null);
 	});
 
 	describe("trackInGoogleAnalytics", () => {
@@ -173,7 +172,7 @@ describe("analyticsService", () => {
 				const originalSetTimeout = setTimeout;
 				childProcess.spawn = (command: string, args?: string[], options?: any): any => {
 					opts.isChildProcessSpawned = true;
-					global.setTimeout = (callback: (...args: any[]) => void, ms: number, ...otherArgs: any[]) => originalSetTimeout(callback, 1);
+					(<any>global).setTimeout = (callback: (...args: any[]) => void, ms: number, ...otherArgs: any[]) => originalSetTimeout(callback, 1);
 					return getSpawnedProcess();
 				};
 
@@ -240,7 +239,7 @@ describe("analyticsService", () => {
 
 		describe("sends correct message to broker", () => {
 			const setupTest = (expectedResult: any, dataToSend: any, terminalOpts?: { isInteractive: boolean }, projectHelperOpts?: { projectDir: string }): { testInjector: IInjector, opts: any } => {
-				helpers.isInteractive = () => terminalOpts ? terminalOpts.isInteractive : true;
+        helpers.setIsInteractive(() => terminalOpts ? terminalOpts.isInteractive : true)
 
 				const testInjector = createTestInjector(projectHelperOpts);
 				const opts = {

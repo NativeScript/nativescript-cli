@@ -2,9 +2,9 @@ import { Yok } from "../lib/common/yok";
 import * as stubs from "./stubs";
 import { CreatePluginCommand } from "../lib/commands/plugin/create-plugin";
 import { assert } from "chai";
-import helpers = require("../lib/common/helpers");
+import * as helpers from "../lib/common/helpers";
 import * as sinon from "sinon";
-import temp = require("temp");
+import temp from "temp";
 import * as path from "path";
 import * as util from "util";
 temp.track();
@@ -14,7 +14,6 @@ interface IPacoteOutput {
 	destinationDirectory: string;
 }
 
-const originalIsInteractive = helpers.isInteractive;
 const dummyProjectName = "dummyProjectName";
 const dummyArgs = [dummyProjectName];
 const dummyUser = "devUsername";
@@ -68,14 +67,14 @@ describe("Plugin create command tests", () => {
 	let createPluginCommand: CreatePluginCommand;
 
 	beforeEach(() => {
-		helpers.isInteractive = () => true;
+    helpers.setIsInteractive(() => true);
 		testInjector = createTestInjector();
 		options = testInjector.resolve("$options");
 		createPluginCommand = testInjector.resolve("$createCommand");
 	});
 
 	afterEach(() => {
-		helpers.isInteractive = originalIsInteractive;
+    helpers.setIsInteractive(null);
 	});
 
 	describe("#CreatePluginCommand", () => {
@@ -84,7 +83,7 @@ describe("Plugin create command tests", () => {
 		});
 
 		it("should use correct directory when path parameter is passed", async () => {
-			helpers.isInteractive = () => false;
+      helpers.setIsInteractive(() => false);
 			const dummyPath = "dummyPath";
 			options.path = dummyPath;
 			dummyPacote.destinationDirectory = "";
@@ -93,7 +92,7 @@ describe("Plugin create command tests", () => {
 		});
 
 		it("should use correct download path when template parameter is passed", async () => {
-			helpers.isInteractive = () => false;
+      helpers.setIsInteractive(() => false);
 			const dummyTemplate = "dummyTemplate";
 			options.template = dummyTemplate;
 			dummyPacote.packageName = "";
@@ -102,7 +101,7 @@ describe("Plugin create command tests", () => {
 		});
 
 		it("should pass when only project name is set in non-interactive shell.", async () => {
-			helpers.isInteractive = () => false;
+      helpers.setIsInteractive(() => false);
 			await createPluginCommand.execute(dummyArgs);
 		});
 

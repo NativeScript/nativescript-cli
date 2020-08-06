@@ -16,7 +16,7 @@ import { ProjectFilesProvider } from "../lib/providers/project-files-provider";
 import { DevicePlatformsConstants } from "../lib/common/mobile/device-platforms-constants";
 import { XmlValidator } from "../lib/xml-validator";
 import * as ChildProcessLib from "../lib/common/child-process";
-import ProjectChangesLib = require("../lib/services/project-changes-service");
+import * as ProjectChangesLib from "../lib/services/project-changes-service";
 import { Messages } from "../lib/common/messages/messages";
 import { SettingsService } from "../lib/common/test/unit-tests/stubs";
 import { PlatformValidationService } from "../lib/services/platform/platform-validation-service";

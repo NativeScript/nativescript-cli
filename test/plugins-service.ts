@@ -31,7 +31,7 @@ import { ProjectFilesProvider } from "../lib/providers/project-files-provider";
 import { DevicePlatformsConstants } from "../lib/common/mobile/device-platforms-constants";
 import { XmlValidator } from "../lib/xml-validator";
 import { SettingsService } from "../lib/common/test/unit-tests/stubs";
-import StaticConfigLib = require("../lib/config");
+import * as StaticConfigLib from "../lib/config";
 import * as path from "path";
 import * as temp from "temp";
 import { PLUGINS_BUILD_DATA_FILENAME } from '../lib/constants';

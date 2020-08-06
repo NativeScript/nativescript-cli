@@ -228,7 +228,7 @@ function mockSetInterval(testCaseCallback?: Function): void {
 		execution();
 		/* tslint:enable:no-floating-promises */
 
-		return nodeJsTimer;
+		return <any>nodeJsTimer;
 	};
 }
 
@@ -1230,7 +1230,7 @@ describe("devicesService", () => {
 				execution();
 				/* tslint:enable:no-floating-promises */
 
-				return {
+				return <any>{
 					ref: () => { /* no implementation required */ },
 					unref: () => {
 						setIntervalsCalledCount++;

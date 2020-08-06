@@ -8,7 +8,7 @@ import { MobileHelper } from "../../../lib/common/mobile/mobile-helper";
 import { FileSystem } from "../../../lib/common/file-system";
 import { DevicePlatformsConstants } from "../../../lib/common/mobile/device-platforms-constants";
 import * as path from "path";
-import temp = require("temp");
+import temp from "temp";
 import * as crypto from "crypto";
 
 temp.track();
@@ -371,7 +371,7 @@ describe("AndroidLivesyncTool", () => {
 					await livesyncTool.sendFile(filePath);
 					sandbox.stub(testSocket, "writeAsync").callsFake((data) => {
 						testSocket.emit('data', getSyncResponse(AndroidLivesyncTool.ERROR_REPORT, errorMessage));
-						return Promise.resolve();
+						return Promise.resolve(false);
 					});
 
 					//act

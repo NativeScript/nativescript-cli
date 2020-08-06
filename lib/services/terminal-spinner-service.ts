@@ -3,7 +3,7 @@ import * as ora from 'ora';
 export class TerminalSpinnerService implements ITerminalSpinnerService {
 	public createSpinner(spinnerOptions: ITerminalSpinnerOptions = {}): ITerminalSpinner {
 		spinnerOptions.stream = spinnerOptions.stream || process.stdout;
-		return new ora(spinnerOptions);
+		return new (ora as any)(spinnerOptions);
 	}
 
 	public async execute<T>(spinnerOptions: ITerminalSpinnerOptions, action: () => Promise<T>): Promise<T> {
