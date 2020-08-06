@@ -1,5 +1,6 @@
 --recursive
 --reporter spec-xunit-file
+--require ts-node/register
 --require test/test-bootstrap.js
 --timeout 3000
 test/unit-tests

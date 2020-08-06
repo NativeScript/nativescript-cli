@@ -7,7 +7,6 @@ shelljs.config.fatal = true;
 const cliGlobal = <ICliGlobal><any>global;
 
 import * as _ from 'lodash';
-console.log('bootstrap _:', _)
 cliGlobal._ = _;
 import { injector } from '../lib/common/yok';
 cliGlobal.$injector = injector;

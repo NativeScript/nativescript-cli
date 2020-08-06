@@ -1,4 +1,4 @@
-import temp from "temp";
+import * as temp from "temp";
 import { assert } from "chai";
 import { XcconfigService } from "../lib/services/xcconfig-service";
 import * as yok from "../lib/common/yok";

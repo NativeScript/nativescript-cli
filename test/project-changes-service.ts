@@ -1,6 +1,6 @@
 import * as path from "path";
 import { BaseServiceTest } from "./base-service-test";
-import temp from "temp";
+import * as temp from "temp";
 import { assert } from "chai";
 import { PlatformsDataService } from "../lib/services/platforms-data-service";
 import { ProjectChangesService } from "../lib/services/project-changes-service";

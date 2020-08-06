@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
-    "target": "es2020",
-    "module": "esnext",
+    "target": "es5",
+    "module": "commonjs",
     "moduleResolution": "node",
     "lib": [
       "es2017"
@@ -15,6 +15,10 @@
     "alwaysStrict": true,
     "noUnusedLocals": true
   },
+  "include": [
+    "lib/**/*",
+    "test/**/*"
+  ],
   "exclude": [
     "node_modules",
     "lib/common/node_modules",

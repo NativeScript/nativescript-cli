@@ -32,7 +32,7 @@ import { SettingsService } from "../lib/common/test/unit-tests/stubs";
 import { BUILD_XCCONFIG_FILE_NAME } from "../lib/constants";
 import { ProjectDataStub, TempServiceStub } from "./stubs";
 import { xcode } from "../lib/node/xcode";
-import temp from "temp";
+import * as temp from "temp";
 import { CocoaPodsPlatformManager } from "../lib/services/cocoapods-platform-manager";
 import { XcodebuildService } from "../lib/services/ios/xcodebuild-service";
 import { XcodebuildCommandService } from "../lib/services/ios/xcodebuild-command-service";

@@ -4,7 +4,7 @@ import { CreatePluginCommand } from "../lib/commands/plugin/create-plugin";
 import { assert } from "chai";
 import * as helpers from "../lib/common/helpers";
 import * as sinon from "sinon";
-import temp from "temp";
+import * as temp from "temp";
 import * as path from "path";
 import * as util from "util";
 temp.track();

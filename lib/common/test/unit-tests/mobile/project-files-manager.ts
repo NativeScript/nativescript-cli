@@ -12,7 +12,7 @@ import * as path from "path";
 import { Yok } from "../../../yok";
 import { ProjectFilesProviderBase } from "../../../services/project-files-provider-base";
 
-import temp from "temp";
+import * as temp from "temp";
 import { LiveSyncPaths } from "../../../constants";
 import { TempServiceStub } from "../../../../../test/stubs";
 temp.track();

@@ -15,8 +15,8 @@
     "clean": "npx rimraf node_modules package-lock.json",
     "build": "grunt",
     "build.all": "grunt test",
-    "setup": "npm i --ignore-scripts && ./node_modules/.bin/grunt",
-    "test": "nyc mocha",
+    "setup": "npm i --ignore-scripts && npm run build",
+    "test": "cross-env TS_NODE_PROJECT='./tsconfig.test.json' TS_NODE_FILES=true nyc mocha",
     "postinstall": "node postinstall.js",
     "preuninstall": "node preuninstall.js",
     "prepack": "grunt prepare",
@@ -117,6 +117,7 @@
     "@types/request": "2.48.5",
     "@types/retry": "0.12.0",
     "@types/semver": "7.3.1",
+    "@types/shelljs": "^0.8.8",
     "@types/sinon": "9.0.4",
     "@types/source-map": "0.5.7",
     "@types/tar": "4.0.3",
@@ -127,6 +128,7 @@
     "chai": "4.2.0",
     "chai-as-promised": "7.1.1",
     "conventional-changelog-cli": "^2.0.34",
+    "cross-env": "^7.0.2",
     "grunt": "1.2.1",
     "grunt-contrib-clean": "2.0.0",
     "grunt-contrib-copy": "1.0.0",
@@ -149,5 +151,19 @@
   "license": "Apache-2.0",
   "engines": {
     "node": ">=10.0.0"
+  },
+  "mocha": {
+    "recursive": true,
+    "__reporter": "spec-xunit-file",
+    "require": [
+      "source-map-support/register",
+      "ts-node/register",
+      "test/test-bootstrap.ts"
+    ],
+    "timeout": 15000,
+    "spec": [
+      "test/**/*.ts"
+    ],
+    "extension": ["ts"]
   }
 }
