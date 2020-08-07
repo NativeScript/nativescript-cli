@@ -1,7 +1,7 @@
 import * as path from "path";
 import * as shell from "shelljs";
 import * as constants from "../constants";
-import { Configurations } from "../common/constants";
+import { Configurations, Platforms } from "../common/constants";
 import * as helpers from "../common/helpers";
 import { attachAwaitDetach } from "../common/helpers";
 import * as projectServiceBaseLib from "./platform-project-service-base";
@@ -14,6 +14,7 @@ import { IOSBuildData } from "../data/build-data";
 import { IOSPrepareData } from "../data/prepare-data";
 import { BUILD_XCCONFIG_FILE_NAME, IosProjectConstants } from "../constants";
 import { hook } from "../common/helpers";
+import { ICocoaPodsService, IProjectDataService, IIOSExtensionsService, IIOSWatchAppService, IIOSNativeTargetService, IProjectData, IValidatePlatformOutput } from "../definitions/project";
 
 interface INativeSourceCodeGroup {
 	name: string;

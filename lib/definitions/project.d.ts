@@ -1,3 +1,5 @@
+import { SupportedPlatform } from "../common/constants";
+
 interface IProjectName {
 	/**
 	 * Name of the newly created application.

@@ -12,6 +12,12 @@ export class DeviceTypes {
 	static Device = "Device";
 }
 
+export const enum Platforms {
+  ios = 'ios',
+  android = 'android'
+}
+export type SupportedPlatform = Platforms.ios | Platforms.android;
+
 export const APP_RESOURCES_FOLDER_NAME = "App_Resources";
 
 export const ERROR_NO_DEVICES = "Cannot find connected devices. Reconnect any connected devices, verify that your system recognizes them, and run this command again.";
