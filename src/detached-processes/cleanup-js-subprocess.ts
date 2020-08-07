@@ -6,6 +6,7 @@ import * as fs from "fs";
 import * as uuid from "uuid";
 import { FileLogService } from "./file-log-service";
 
+
 const pathToBootstrap = process.argv[2];
 if (!pathToBootstrap || !fs.existsSync(pathToBootstrap)) {
 	throw new Error("Invalid path to bootstrap.");

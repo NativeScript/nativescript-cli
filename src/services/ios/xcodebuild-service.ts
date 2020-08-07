@@ -1,4 +1,7 @@
 import * as path from "path";
+import { IBuildConfig, IProjectData } from "../../definitions/project";
+
+import { IPlatformData } from "../../definitions/platform";
 
 export class XcodebuildService implements IXcodebuildService {
 	constructor(

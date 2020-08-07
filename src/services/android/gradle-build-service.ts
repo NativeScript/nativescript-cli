@@ -1,6 +1,10 @@
 import { attachAwaitDetach } from "../../common/helpers";
 import * as constants from "../../constants";
 import { EventEmitter } from "events";
+import { IAndroidBuildData } from "../../definitions/build";
+
+import { IChildProcess } from "../../common/declarations";
+import { IGradleBuildArgsService, IGradleBuildService, IGradleCommandService } from "../../definitions/gradle";
 
 export class GradleBuildService extends EventEmitter implements IGradleBuildService {
 	constructor(

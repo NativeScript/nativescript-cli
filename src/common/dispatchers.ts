@@ -1,11 +1,22 @@
 import * as queue from "./queue";
 import * as path from "path";
 import { hook } from "./helpers";
+import {
+	ICancellationService,
+	ICommandDispatcher, IErrors,
+	IFileSystem,
+	IFutureDispatcher,
+	IQueue,
+	ISysInfo
+} from "./declarations";
+import { IOptions } from "../declarations";
+import { IInjector } from "./definitions/yok";
+import * as _ from "lodash";
 
 export class CommandDispatcher implements ICommandDispatcher {
 	constructor(private $logger: ILogger,
 		// required by the hooksService
-		protected $injector: IInjector,
+		protected $_injector: IInjector,
 		private $cancellation: ICancellationService,
 		private $commandsService: ICommandsService,
 		private $staticConfig: Config.IStaticConfig,

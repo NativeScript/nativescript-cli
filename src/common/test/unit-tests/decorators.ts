@@ -7,6 +7,8 @@ import { isPromise } from "../../helpers";
 import * as stubs from "../../../../__tests__/stubs";
 import * as sinon from "sinon";
 import { PerformanceService } from "../../../services/performance-service";
+import { IInjector } from "../../definitions/yok";
+import * as _ from "lodash";
 
 describe("decorators", () => {
 	const moduleName = "moduleName"; // This is the name of the injected dependency that will be resolved, for example fs, devicesService, etc.
@@ -22,7 +24,7 @@ describe("decorators", () => {
 	];
 
 	beforeEach(() => {
-		$injector = new Yok();
+		(global as any).$injector = new Yok();
 		$injector.register("performanceService", stubs.PerformanceService);
 	});
 

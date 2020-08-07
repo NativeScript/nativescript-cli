@@ -2,6 +2,11 @@ import { EOL } from "os";
 import { DeviceAndroidDebugBridge } from "../android/device-android-debug-bridge";
 import { TARGET_FRAMEWORK_IDENTIFIERS } from "../../constants";
 import { exported } from "../../decorators";
+import { IStaticConfig } from "../../../declarations";
+import { IDictionary, IErrors, INet } from "../../declarations";
+import { ICleanupService } from "../../../definitions/cleanup-service";
+
+import * as _ from "lodash";
 
 export class AndroidProcessService implements Mobile.IAndroidProcessService {
 	private _devicesAdbs: IDictionary<Mobile.IDeviceAndroidDebugBridge>;
@@ -9,7 +14,6 @@ export class AndroidProcessService implements Mobile.IAndroidProcessService {
 
 	constructor(private $errors: IErrors,
 		private $cleanupService: ICleanupService,
-		private $injector: IInjector,
 		private $net: INet,
 		private $staticConfig: IStaticConfig) {
 		this._devicesAdbs = {};
@@ -246,7 +250,7 @@ export class AndroidProcessService implements Mobile.IAndroidProcessService {
 
 	private getAdb(deviceIdentifier: string): Mobile.IDeviceAndroidDebugBridge {
 		if (!this._devicesAdbs[deviceIdentifier]) {
-			this._devicesAdbs[deviceIdentifier] = this.$injector.resolve(DeviceAndroidDebugBridge, { identifier: deviceIdentifier });
+			this._devicesAdbs[deviceIdentifier] = $injector.resolve(DeviceAndroidDebugBridge, { identifier: deviceIdentifier });
 		}
 
 		return this._devicesAdbs[deviceIdentifier];

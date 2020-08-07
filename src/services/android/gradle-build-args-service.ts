@@ -1,5 +1,9 @@
 import * as path from "path";
 import { Configurations } from "../../common/constants";
+import { IAndroidToolsInfo } from "../../declarations";
+import { IAnalyticsService, IHooksService } from "../../common/declarations";
+import { IAndroidBuildData } from "../../definitions/build";
+import { IGradleBuildArgsService } from "../../definitions/gradle";
 
 export class GradleBuildArgsService implements IGradleBuildArgsService {
 	constructor(private $androidToolsInfo: IAndroidToolsInfo,

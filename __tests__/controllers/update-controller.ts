@@ -8,6 +8,13 @@ import { Options } from "../../src/options";
 import { StaticConfig } from "../../src/config";
 import { SettingsService } from "../../src/common/test/unit-tests/stubs";
 import { DevicePlatformsConstants } from "../../src/common/mobile/device-platforms-constants";
+import { IProjectDataService } from "../../src/definitions/project";
+import { IPackageInstallationManager } from "../../src/declarations";
+import { IInjector } from "../../src/common/definitions/yok";
+import { IPluginsService } from "../../src/definitions/plugins";
+import { IDictionary } from "../../src/common/declarations";
+import * as _ from "lodash";
+
 const projectFolder = "test";
 
 function createTestInjector(

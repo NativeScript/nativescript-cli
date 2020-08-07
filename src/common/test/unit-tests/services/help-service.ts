@@ -5,6 +5,10 @@ import { assert } from "chai";
 import { EOL } from "os";
 import { Yok } from '../../../yok';
 import { join } from "path";
+import { IExtensibilityService, IExtensionData } from "../../../definitions/extensibility";
+import { IDictionary, IHelpService } from "../../../declarations";
+import { IInjector } from "../../../definitions/yok";
+import * as _ from "lodash";
 
 interface ITestData {
 	input: string;
@@ -155,7 +159,7 @@ and another one`
 
 			injector.register("fs", {
 				enumerateFilesInDirectorySync: (path: string) => ["foo.md"],
-				readText: () => `some text<br>more text</br></ br>and more<br/>and again<br />and final line`
+				readText: () => `some text<br>more text</br></br>and more<br/>and again<br />and final line`
 			});
 
 			const helpService = injector.resolve<IHelpService>("helpService");

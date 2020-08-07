@@ -1,30 +1,35 @@
 import { EOL } from "os";
 import { LoggerLevel } from "../constants";
 
+import { IOptions } from "../declarations";
+import { ISettingsService, ISysInfo } from "../common/declarations";
+import { IInitializeOptions, IInitializeService } from "../definitions/initialize-service";
+import { IExtensibilityService } from "../common/definitions/extensibility";
+import * as _ from "lodash";
+
 export class InitializeService implements IInitializeService {
-	// NOTE: Do not inject anything here, use $injector.resolve in the code
+	// NOTE: Do not inject anything in the constructor, use $injector.resolve in the code
 	// Injecting something may lead to logger initialization, but we want to initialize it from here.
-	constructor(private $injector: IInjector) { }
 
 	public async initialize(initOpts?: IInitializeOptions): Promise<void> {
 		initOpts = initOpts || {};
-		const $logger = this.$injector.resolve<ILogger>("logger");
+		const $logger = $injector.resolve<ILogger>("logger");
 		if (initOpts.loggerOptions) {
 			$logger.initialize(initOpts.loggerOptions);
 		} else {
-			const $options = this.$injector.resolve<IOptions>("options");
+			const $options = $injector.resolve<IOptions>("options");
 			const loggerLevel = $options.log && LoggerLevel[$options.log.toUpperCase() as keyof typeof LoggerLevel];
-			$logger.initializeCliLogger({ level: loggerLevel });
+			$logger.initializeCliLogger({level: loggerLevel});
 		}
 
 		if (initOpts.settingsServiceOptions) {
-			const $settingsService = this.$injector.resolve<ISettingsService>("settingsService");
+			const $settingsService = $injector.resolve<ISettingsService>("settingsService");
 			$settingsService.setSettings(initOpts.settingsServiceOptions);
 		}
 
 		if (initOpts.extensibilityOptions) {
 			if (initOpts.extensibilityOptions.pathToExtensions) {
-				const $extensibilityService = this.$injector.resolve<IExtensibilityService>("extensibilityService");
+				const $extensibilityService = $injector.resolve<IExtensibilityService>("extensibilityService");
 				$extensibilityService.pathToExtensions = initOpts.extensibilityOptions.pathToExtensions;
 			}
 		}

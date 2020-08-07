@@ -6,6 +6,11 @@ import * as helpers from "../src/common/helpers";
 import * as constants from "../src/constants";
 import { assert } from "chai";
 import { PrompterStub } from "./stubs";
+import { ICreateProjectData, IProjectService, IProjectSettings } from "../src/definitions/project";
+import { IInjector } from "../src/common/definitions/yok";
+import { IOptions } from "../src/declarations";
+import { IDictionary } from "../src/common/declarations";
+import { ICommand } from "../src/common/definitions/commands";
 
 let selectedTemplateName: string;
 let isProjectCreated: boolean;

@@ -7,6 +7,11 @@ import { ProjectChangesService } from "../src/services/project-changes-service";
 import * as Constants from "../src/constants";
 import { FileSystem } from "../src/common/file-system";
 import { HooksServiceStub, LoggerStub } from "./stubs";
+import { IProjectData } from "../src/definitions/project";
+import { IPrepareInfo, IProjectChangesInfo } from "../src/definitions/project-changes";
+import { IFileSystem } from "../src/common/declarations";
+import { IPlatformData } from "../src/definitions/platform";
+import * as _ from "lodash";
 
 // start tracking temporary folders/files
 temp.track();

@@ -1,3 +1,8 @@
+import { IOptions } from "../../declarations";
+import { IAnalyticsService, IErrors } from "../declarations";
+
+import { ICommand, ICommandParameter } from "../definitions/commands";
+
 export class AnalyticsCommandParameter implements ICommandParameter {
 	constructor(private $errors: IErrors) { }
 	mandatory = false;

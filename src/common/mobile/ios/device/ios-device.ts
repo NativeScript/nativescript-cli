@@ -6,6 +6,10 @@ import * as net from "net";
 import { cache } from "../../../decorators";
 import * as helpers from "../../../../common/helpers";
 import { IOSDeviceBase } from "../ios-device-base";
+import { IiOSSocketRequestExecutor } from "../../../../declarations";
+import { IErrors } from "../../../declarations";
+
+import * as _ from "lodash";
 
 export class IOSDevice extends IOSDeviceBase {
 	public applicationManager: Mobile.IDeviceApplicationManager;
@@ -15,7 +19,6 @@ export class IOSDevice extends IOSDeviceBase {
 
 	constructor(private deviceActionInfo: IOSDeviceLib.IDeviceActionInfo,
 		protected $errors: IErrors,
-		private $injector: IInjector,
 		protected $iOSDebuggerPortService: IIOSDebuggerPortService,
 		protected $deviceLogProvider: Mobile.IDeviceLogProvider,
 		protected $logger: ILogger,
@@ -26,8 +29,8 @@ export class IOSDevice extends IOSDeviceBase {
 		private $iosDeviceOperations: IIOSDeviceOperations,
 		private $mobileHelper: Mobile.IMobileHelper) {
 		super();
-		this.applicationManager = this.$injector.resolve(applicationManagerPath.IOSApplicationManager, { device: this, devicePointer: this.deviceActionInfo });
-		this.fileSystem = this.$injector.resolve(fileSystemPath.IOSDeviceFileSystem, { device: this, devicePointer: this.deviceActionInfo });
+		this.applicationManager = $injector.resolve(applicationManagerPath.IOSApplicationManager, { device: this, devicePointer: this.deviceActionInfo });
+		this.fileSystem = $injector.resolve(fileSystemPath.IOSDeviceFileSystem, { device: this, devicePointer: this.deviceActionInfo });
 		const productType = deviceActionInfo.productType;
 		const isTablet = this.$mobileHelper.isiOSTablet(productType);
 		const deviceStatus = deviceActionInfo.status || commonConstants.UNREACHABLE_STATUS;

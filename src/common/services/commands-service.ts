@@ -1,7 +1,21 @@
+import { IOptions, IOptionsTracker } from "../../declarations";
+
 const jaroWinklerDistance = require("../vendor/jaro-winkler_distance");
 import * as helpers from "../helpers";
 import { CommandsDelimiters } from "../constants";
 import { EOL } from "os";
+import {
+	GoogleAnalyticsDataType,
+	IAnalyticsService,
+	IAnalyticsSettingsService,
+	IErrors,
+	IHooksService
+} from "../declarations";
+
+import { IExtensibilityService } from "../definitions/extensibility";
+import { IGoogleAnalyticsPageviewData } from "../definitions/google-analytics";
+import { ICommand, ICommandParameter, ISimilarCommand } from "../definitions/commands";
+import * as _ from "lodash";
 
 class CommandArgumentsValidationHelper {
 	constructor(public isValid: boolean, _remainingArguments: string[]) {
@@ -19,27 +33,26 @@ export class CommandsService implements ICommandsService {
 	private commands: ICommandData[] = [];
 
 	constructor(private $analyticsSettingsService: IAnalyticsSettingsService,
-		private $errors: IErrors,
-		private $hooksService: IHooksService,
-		private $injector: IInjector,
-		private $logger: ILogger,
-		private $options: IOptions,
-		private $staticConfig: Config.IStaticConfig,
-		private $extensibilityService: IExtensibilityService,
-		private $optionsTracker: IOptionsTracker) {
+				private $errors: IErrors,
+				private $hooksService: IHooksService,
+				private $logger: ILogger,
+				private $options: IOptions,
+				private $staticConfig: Config.IStaticConfig,
+				private $extensibilityService: IExtensibilityService,
+				private $optionsTracker: IOptionsTracker) {
 	}
 
 	public allCommands(opts: { includeDevCommands: boolean }): string[] {
-		const commands = this.$injector.getRegisteredCommandsNames(opts.includeDevCommands);
+		const commands = $injector.getRegisteredCommandsNames(opts.includeDevCommands);
 		return _.reject(commands, (command) => _.includes(command, '|'));
 	}
 
 	public async executeCommandUnchecked(commandName: string, commandArguments: string[]): Promise<boolean> {
-		this.commands.push({ commandName, commandArguments });
-		const command = this.$injector.resolveCommand(commandName);
+		this.commands.push({commandName, commandArguments});
+		const command = $injector.resolveCommand(commandName);
 		if (command) {
 			if (!this.$staticConfig.disableAnalytics && !command.disableAnalytics) {
-				const analyticsService = this.$injector.resolve<IAnalyticsService>("analyticsService"); // This should be resolved here due to cyclic dependency
+				const analyticsService = $injector.resolve<IAnalyticsService>("analyticsService"); // This should be resolved here due to cyclic dependency
 				await analyticsService.checkConsent();
 
 				const beautifiedCommandName = this.beautifyCommandName(commandName).replace(/\|/g, " ");
@@ -65,7 +78,7 @@ export class CommandsService implements ICommandsService {
 			const shouldExecuteHooks = !this.$staticConfig.disableCommandHooks && (command.enableHooks === undefined || command.enableHooks === true);
 			if (shouldExecuteHooks) {
 				// Handle correctly hierarchical commands
-				const hierarchicalCommandName = this.$injector.buildHierarchicalCommand(commandName, commandArguments);
+				const hierarchicalCommandName = $injector.buildHierarchicalCommand(commandName, commandArguments);
 				if (hierarchicalCommandName) {
 					commandName = helpers.stringReplaceAll(hierarchicalCommandName.commandName, CommandsDelimiters.DefaultHierarchicalCommand, CommandsDelimiters.HooksCommand);
 					commandName = helpers.stringReplaceAll(commandName, CommandsDelimiters.HierarchicalCommand, CommandsDelimiters.HooksCommand);
@@ -105,7 +118,7 @@ export class CommandsService implements ICommandsService {
 	}
 
 	private async tryExecuteCommandAction(commandName: string, commandArguments: string[]): Promise<boolean> {
-		const command = this.$injector.resolveCommand(commandName);
+		const command = $injector.resolveCommand(commandName);
 		if (!command || !command.isHierarchicalCommand) {
 			const dashedOptions = command ? command.dashedOptions : null;
 			this.$options.validateOptions(dashedOptions);
@@ -122,7 +135,7 @@ export class CommandsService implements ICommandsService {
 			await this.executeCommandAction(commandName, commandArguments, this.executeCommandUnchecked);
 		} else {
 			// If canExecuteCommand returns false, the command cannot be executed or there's no such command at all.
-			const command = this.$injector.resolveCommand(commandName);
+			const command = $injector.resolveCommand(commandName);
 			if (command) {
 				let commandWithArgs = commandName;
 				if (commandArguments && commandArguments.length) {
@@ -135,7 +148,7 @@ export class CommandsService implements ICommandsService {
 	}
 
 	private async canExecuteCommand(commandName: string, commandArguments: string[], isDynamicCommand?: boolean): Promise<boolean> {
-		const command = this.$injector.resolveCommand(commandName);
+		const command = $injector.resolveCommand(commandName);
 		const beautifiedName = helpers.stringReplaceAll(commandName, "|", " ");
 		if (command) {
 			// Verify command is enabled
@@ -149,7 +162,7 @@ export class CommandsService implements ICommandsService {
 			}
 
 			// First part of hierarchical commands should be validated in specific way.
-			if (await this.$injector.isValidHierarchicalCommand(commandName, commandArguments)) {
+			if (await $injector.isValidHierarchicalCommand(commandName, commandArguments)) {
 				return true;
 			}
 
@@ -255,16 +268,16 @@ export class CommandsService implements ICommandsService {
 	}
 
 	private tryMatchCommand(commandName: string): void {
-		const allCommands = this.allCommands({ includeDevCommands: false });
+		const allCommands = this.allCommands({includeDevCommands: false});
 		let similarCommands: ISimilarCommand[] = [];
 		_.each(allCommands, (command) => {
-			if (!this.$injector.isDefaultCommand(command)) {
+			if (!$injector.isDefaultCommand(command)) {
 				command = helpers.stringReplaceAll(command, "|", " ");
 				const distance = jaroWinklerDistance(commandName, command);
 				if (commandName.length > 3 && command.indexOf(commandName) !== -1) {
-					similarCommands.push({ rating: 1, name: command });
+					similarCommands.push({rating: 1, name: command});
 				} else if (distance >= 0.65) {
-					similarCommands.push({ rating: distance, name: command });
+					similarCommands.push({rating: distance, name: command});
 				}
 			}
 		});
@@ -290,12 +303,12 @@ export class CommandsService implements ICommandsService {
 				return;
 			}
 
-			const commands = this.$injector.getRegisteredCommandsNames(false);
+			const commands = $injector.getRegisteredCommandsNames(false);
 			const splittedLine = data.line.split(/[ ]+/);
 			const line = _.filter(splittedLine, (w) => w !== "");
 			let commandName = <string>(line[line.length - 2]);
 
-			const childrenCommands = this.$injector.getChildrenCommandsNames(commandName);
+			const childrenCommands = $injector.getChildrenCommandsNames(commandName);
 
 			if (data.last && _.startsWith(data.last, "--")) {
 				return tabtab.log(_.keys(this.$options.options), data, "--");
@@ -306,7 +319,7 @@ export class CommandsService implements ICommandsService {
 			}
 
 			if (data.words === 1) {
-				const allCommands = this.allCommands({ includeDevCommands: false });
+				const allCommands = this.allCommands({includeDevCommands: false});
 				return tabtab.log(allCommands, data);
 			}
 
@@ -318,7 +331,7 @@ export class CommandsService implements ICommandsService {
 				}
 			}
 
-			const command = this.$injector.resolveCommand(commandName);
+			const command = $injector.resolveCommand(commandName);
 			if (command) {
 				const completionData = command.completionData;
 				if (completionData) {
@@ -380,4 +393,5 @@ export class CommandsService implements ICommandsService {
 		return tabtab.log(matchingCommands, data);
 	}
 }
+
 $injector.register("commandsService", CommandsService);

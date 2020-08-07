@@ -9,6 +9,9 @@ import { PrepareDataService } from "../../src/services/prepare-data-service";
 import { BuildDataService } from "../../src/services/build-data-service";
 import { PrepareController } from "../../src/controllers/prepare-controller";
 import { LiveSyncProcessDataService } from "../../src/services/livesync-process-data-service";
+import { IDictionary } from "../../src/common/declarations";
+import { IInjector } from "../../src/common/definitions/yok";
+import * as _ from "lodash";
 
 let isAttachToHmrStatusCalled = false;
 let prepareData: IPrepareData = null;

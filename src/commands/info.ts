@@ -1,3 +1,7 @@
+import { IInfoService } from "../declarations";
+
+import { ICommand, ICommandParameter } from "../common/definitions/commands";
+
 export class InfoCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
 

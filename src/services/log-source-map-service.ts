@@ -5,6 +5,10 @@ import * as sourceMapConverter from "convert-source-map";
 import * as semver from "semver";
 import { stringReplaceAll } from "../common/helpers";
 import { ANDROID_DEVICE_APP_ROOT_TEMPLATE, APP_FOLDER_NAME, NODE_MODULES_FOLDER_NAME } from "../constants";
+import { IProjectData, IProjectDataService } from "../definitions/project";
+import { IDictionary, IFileSystem, IStringDictionary } from "../common/declarations";
+import { IPlatformsDataService } from "../definitions/platform";
+import * as _ from "lodash";
 
 interface IParsedMessage {
 	filePath?: string;
@@ -30,12 +34,12 @@ export class LogSourceMapService implements Mobile.ILogSourceMapService {
 	private originalFilesLocationCache: IStringDictionary = {};
 
 	private get $platformsDataService(): IPlatformsDataService {
-		return this.$injector.resolve<IPlatformsDataService>("platformsDataService");
+		return $injector.resolve<IPlatformsDataService>("platformsDataService");
 	}
+
 	constructor(
 		private $fs: IFileSystem,
 		private $projectDataService: IProjectDataService,
-		private $injector: IInjector,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $logger: ILogger) {
 		this.getProjectData = _.memoize(this.$projectDataService.getProjectData.bind(this.$projectDataService));
@@ -50,9 +54,9 @@ export class LogSourceMapService implements Mobile.ILogSourceMapService {
 				let smc: sourcemap.SourceMapConsumer = null;
 				if (sourceMapRaw && sourceMapRaw.sourcemap) {
 					const sourceMap = sourceMapRaw.sourcemap;
-          smc = await sourcemap.SourceMapConsumer.with(sourceMap, filePath, (consumer) => {
-            return consumer
-          });
+					smc = await sourcemap.SourceMapConsumer.with(sourceMap, filePath, (consumer) => {
+						return consumer;
+					});
 				}
 
 				this.cache[filePath] = smc;
@@ -80,7 +84,7 @@ export class LogSourceMapService implements Mobile.ILogSourceMapService {
 
 			if (originalLocation && originalLocation.sourceFile) {
 				const runtimeVersion = this.getRuntimeVersion(loggingOptions.projectDir, platform);
-				const { sourceFile, line, column } = originalLocation;
+				const {sourceFile, line, column} = originalLocation;
 				if (semver.valid(runtimeVersion) && semver.gte(semver.coerce(runtimeVersion), "6.1.0")) {
 					const lastIndexOfFile = rawLine.lastIndexOf(LogSourceMapService.FILE_PREFIX);
 					const firstPart = rawLine.substr(0, lastIndexOfFile);
@@ -118,7 +122,7 @@ export class LogSourceMapService implements Mobile.ILogSourceMapService {
 			const sourceMapFile = path.join(fileLocation, parsedLine.filePath);
 			const smc = this.cache[sourceMapFile];
 			if (smc) {
-				const originalPosition = smc.originalPositionFor({ line: parsedLine.line, column: parsedLine.column });
+				const originalPosition = smc.originalPositionFor({line: parsedLine.line, column: parsedLine.column});
 				let sourceFile = originalPosition.source && originalPosition.source.replace("webpack:///", "");
 				if (sourceFile) {
 					if (!_.startsWith(sourceFile, NODE_MODULES_FOLDER_NAME)) {
@@ -127,9 +131,9 @@ export class LogSourceMapService implements Mobile.ILogSourceMapService {
 
 					sourceFile = stringReplaceAll(sourceFile, "/", path.sep);
 					if (!this.originalFilesLocationCache[sourceFile]) {
-						const { dir, ext, name } = path.parse(sourceFile);
+						const {dir, ext, name} = path.parse(sourceFile);
 						const platformSpecificName = `${name}.${platform.toLowerCase()}`;
-						const platformSpecificFile = path.format({ dir, ext, name: platformSpecificName });
+						const platformSpecificFile = path.format({dir, ext, name: platformSpecificName});
 						if (this.$fs.exists(path.join(projectData.projectDir, platformSpecificFile))) {
 							this.originalFilesLocationCache[sourceFile] = platformSpecificFile;
 						} else {
@@ -137,7 +141,11 @@ export class LogSourceMapService implements Mobile.ILogSourceMapService {
 						}
 					}
 
-					return { sourceFile: this.originalFilesLocationCache[sourceFile], line: originalPosition.line, column: originalPosition.column };
+					return {
+						sourceFile: this.originalFilesLocationCache[sourceFile],
+						line: originalPosition.line,
+						column: originalPosition.column
+					};
 				}
 			}
 		}
@@ -185,7 +193,7 @@ export class LogSourceMapService implements Mobile.ILogSourceMapService {
 			}
 		}
 
-		return { filePath, line, column, messagePrefix, messageSuffix };
+		return {filePath, line, column, messagePrefix, messageSuffix};
 	}
 
 	private parseIosLog(rawMessage: string): IParsedMessage {
@@ -215,7 +223,7 @@ export class LogSourceMapService implements Mobile.ILogSourceMapService {
 			}
 		}
 
-		return { filePath, line, column, messagePrefix, messageSuffix };
+		return {filePath, line, column, messagePrefix, messageSuffix};
 	}
 
 	private getFilesLocation(platform: string, projectData: IProjectData): string {

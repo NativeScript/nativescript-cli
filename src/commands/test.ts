@@ -1,5 +1,13 @@
 import { hasValidAndroidSigning } from "../common/helpers";
 import { ANDROID_RELEASE_BUILD_ERROR_MESSAGE, ANDROID_APP_BUNDLE_SIGNING_ERROR_MESSAGE } from "../constants";
+import { IProjectData, ITestExecutionService } from "../definitions/project";
+import { IOptions } from "../declarations";
+import { ErrorCodes, IAnalyticsService, IDictionary, IErrors, OptionType } from "../common/declarations";
+import { IPlatformEnvironmentRequirements } from "../definitions/platform";
+import { ICleanupService } from "../definitions/cleanup-service";
+import { IMigrateController } from "../definitions/migrate";
+
+import { ICommand, ICommandParameter } from "../common/definitions/commands";
 
 abstract class TestCommandBase {
 	public allowedParameters: ICommandParameter[] = [];

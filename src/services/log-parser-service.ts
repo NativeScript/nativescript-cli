@@ -1,6 +1,8 @@
 import { DEVICE_LOG_EVENT_NAME } from "../common/constants";
 import { cache } from "../common/decorators";
 import { EventEmitter } from "events";
+import { IDictionary, IErrors } from "../common/declarations";
+import * as _ from "lodash";
 
 export class LogParserService extends EventEmitter implements ILogParserService {
 	private parseRules: IDictionary<ILogParseRule> = {};

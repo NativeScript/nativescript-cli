@@ -1,17 +1,24 @@
+import { ICredentials } from "../../common/declarations";
+
 interface IApplePortalSessionService {
 	createWebSession(contentProviderId: number, dsId: string): Promise<string>;
+
 	createUserSession(credentials: ICredentials, opts?: IAppleCreateUserSessionOptions): Promise<IApplePortalUserDetail>;
 }
 
 interface IApplePortalCookieService {
 	getWebSessionCookie(cookiesData: string[]): string;
+
 	getUserSessionCookie(): string;
+
 	updateUserSessionCookie(cookie: string[]): void;
 }
 
 interface IApplePortalApplicationService {
-	getApplications(user: IApplePortalUserDetail): Promise<IApplePortalApplicationSummary[]>
+	getApplications(user: IApplePortalUserDetail): Promise<IApplePortalApplicationSummary[]>;
+
 	getApplicationsByProvider(contentProviderId: number, dsId: string): Promise<IApplePortalApplication>;
+
 	getApplicationByBundleId(user: IApplePortalUserDetail, bundleId: string): Promise<IApplePortalApplicationSummary>;
 }
 
@@ -35,7 +42,7 @@ interface IApplePortalUserDetail extends IAppleLoginResult {
 		dsId: string;
 		contentProviderId: number;
 		ipAddress: string;
-	}
+	};
 	contentProviderFeatures: string[];
 	contentProviderId: number;
 	firstname: string;

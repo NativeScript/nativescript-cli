@@ -1,4 +1,6 @@
 import * as constants from "../../constants";
+import { IChildProcess, IErrors, ISpawnResult } from "../../common/declarations";
+
 
 export class XcodebuildCommandService implements IXcodebuildCommandService {
 	constructor(

@@ -2,6 +2,10 @@ import * as Jimp from "jimp";
 import * as Color from "color";
 import { exported } from "../../common/decorators";
 import { AssetConstants } from '../../constants';
+import { IAssetsGenerationService, IResourceGenerationData, ISplashesGenerationData } from "../../declarations";
+import { IDictionary } from "../../common/declarations";
+import { IAssetGroup, IAssetSubGroup, IProjectDataService } from "../../definitions/project";
+import * as _ from "lodash";
 
 export const enum Operations {
 	OverlayWith = "overlayWith",

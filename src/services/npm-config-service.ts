@@ -1,4 +1,7 @@
 import * as npmconfig from "libnpmconfig";
+import { INpmConfigService } from "../declarations";
+import { IDictionary } from "../common/declarations";
+
 
 export class NpmConfigService implements INpmConfigService {
 	private config: IDictionary<any> = { };

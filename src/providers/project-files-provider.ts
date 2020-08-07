@@ -2,6 +2,11 @@ import minimatch from "minimatch";
 import * as constants from "../constants";
 import * as path from "path";
 import { ProjectFilesProviderBase } from "../common/services/project-files-provider-base";
+import { IPlatformsDataService } from "../definitions/platform";
+import { IOptions } from "../declarations";
+import { IProjectData } from "../definitions/project";
+import { IProjectFilesConfig } from "../common/declarations";
+import * as _ from "lodash";
 
 export class ProjectFilesProvider extends ProjectFilesProviderBase {
 	constructor(private $platformsDataService: IPlatformsDataService,

@@ -2,6 +2,7 @@ import { DeviceLogProviderBase } from "./device-log-provider-base";
 import { DEVICE_LOG_EVENT_NAME } from "../constants";
 import { LoggerConfigData } from "../../constants";
 
+
 export class DeviceLogProvider extends DeviceLogProviderBase {
 	constructor(protected $logFilter: Mobile.ILogFilter,
 		protected $logger: ILogger,

@@ -1,4 +1,13 @@
 import * as path from "path";
+import {
+	BuildNames,
+	IIOSNativeTargetService,
+	IProjectData,
+	IXcodeTargetBuildConfigurationProperty
+} from "../definitions/project";
+import { IFileSystem } from "../common/declarations";
+import { IPlatformData } from "../definitions/platform";
+import * as _ from "lodash";
 
 export class IOSNativeTargetService implements IIOSNativeTargetService {
 	constructor(protected $fs: IFileSystem,

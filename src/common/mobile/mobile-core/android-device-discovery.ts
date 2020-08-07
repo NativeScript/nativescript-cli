@@ -1,6 +1,8 @@
 import { DeviceDiscovery } from "./device-discovery";
 import { AndroidDevice } from "../android/android-device";
 
+import * as _ from "lodash";
+
 interface IAdbAndroidDeviceInfo {
 	identifier: string;
 	status: string;
@@ -10,15 +12,14 @@ export class AndroidDeviceDiscovery extends DeviceDiscovery implements Mobile.IA
 	private _devices: IAdbAndroidDeviceInfo[] = [];
 	private isStarted: boolean;
 
-	constructor(private $injector: IInjector,
-		private $adb: Mobile.IAndroidDebugBridge,
+	constructor(private $adb: Mobile.IAndroidDebugBridge,
 		private $mobileHelper: Mobile.IMobileHelper) {
 		super();
 	}
 
 	private async createAndAddDevice(adbDeviceInfo: IAdbAndroidDeviceInfo): Promise<void> {
 		this._devices.push(adbDeviceInfo);
-		const device: Mobile.IAndroidDevice = this.$injector.resolve(AndroidDevice, { identifier: adbDeviceInfo.identifier, status: adbDeviceInfo.status });
+		const device: Mobile.IAndroidDevice = $injector.resolve(AndroidDevice, { identifier: adbDeviceInfo.identifier, status: adbDeviceInfo.status });
 		await device.init();
 		this.addDevice(device);
 	}

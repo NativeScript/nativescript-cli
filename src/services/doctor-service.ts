@@ -4,6 +4,20 @@ import * as helpers from "../common/helpers";
 import { cache } from "../common/decorators";
 import { TrackActionNames, NODE_MODULES_FOLDER_NAME, TNS_CORE_MODULES_NAME } from "../constants";
 import { doctor, constants } from "nativescript-doctor";
+import {
+	IAnalyticsService,
+	IChildProcess,
+	IDoctorService,
+	IFileSystem,
+	IHostInfo,
+	ISettingsService, ISpawnResult
+} from "../common/declarations";
+
+import { IProjectDataService } from "../definitions/project";
+import { IOptions, IVersionsService } from "../declarations";
+import { IPlatformEnvironmentRequirements } from "../definitions/platform";
+import { IJsonFileSettingsService } from "../common/definitions/json-file-settings-service";
+import * as _ from "lodash";
 
 export class DoctorService implements IDoctorService {
 	private static DarwinSetupScriptLocation = path.join(__dirname, "..", "..", "setup", "mac-startup-shell-script.sh");
@@ -17,26 +31,29 @@ export class DoctorService implements IDoctorService {
 
 	@cache()
 	private get $jsonFileSettingsService(): IJsonFileSettingsService {
-		return this.$injector.resolve<IJsonFileSettingsService>("jsonFileSettingsService", { jsonFileSettingsPath: this.jsonFileSettingsPath });
+		return $injector.resolve<IJsonFileSettingsService>("jsonFileSettingsService", {jsonFileSettingsPath: this.jsonFileSettingsPath});
 	}
 
 	constructor(private $analyticsService: IAnalyticsService,
-		private $hostInfo: IHostInfo,
-		private $logger: ILogger,
-		private $childProcess: IChildProcess,
-		private $injector: IInjector,
-		private $projectDataService: IProjectDataService,
-		private $fs: IFileSystem,
-		private $terminalSpinnerService: ITerminalSpinnerService,
-		private $versionsService: IVersionsService,
-		private $settingsService: ISettingsService) { }
+				private $hostInfo: IHostInfo,
+				private $logger: ILogger,
+				private $childProcess: IChildProcess,
+				private $projectDataService: IProjectDataService,
+				private $fs: IFileSystem,
+				private $terminalSpinnerService: ITerminalSpinnerService,
+				private $versionsService: IVersionsService,
+				private $settingsService: ISettingsService) {
+	}
 
 	public async printWarnings(configOptions?: { trackResult: boolean, projectDir?: string, runtimeVersion?: string, options?: IOptions, forceCheck?: boolean }): Promise<void> {
 		configOptions = configOptions || <any>{};
-		const getInfosData: any = { projectDir: configOptions.projectDir, androidRuntimeVersion: configOptions.runtimeVersion };
+		const getInfosData: any = {
+			projectDir: configOptions.projectDir,
+			androidRuntimeVersion: configOptions.runtimeVersion
+		};
 		const infos = await this.$terminalSpinnerService.execute<NativeScriptDoctor.IInfo[]>({
 			text: `Getting environment information ${EOL}`
-		}, () => this.getInfos({ forceCheck: configOptions.forceCheck }, getInfosData));
+		}, () => this.getInfos({forceCheck: configOptions.forceCheck}, getInfosData));
 
 		const warnings = infos.filter(info => info.type === constants.WARNING_TYPE_NAME);
 		const hasWarnings = warnings.length > 0;
@@ -70,7 +87,7 @@ export class DoctorService implements IDoctorService {
 
 		this.checkForDeprecatedShortImportsInAppDir(configOptions.projectDir);
 
-		await this.$injector.resolve<IPlatformEnvironmentRequirements>("platformEnvironmentRequirements").checkEnvironmentRequirements({
+		await $injector.resolve<IPlatformEnvironmentRequirements>("platformEnvironmentRequirements").checkEnvironmentRequirements({
 			platform: null,
 			projectDir: configOptions.projectDir,
 			runtimeVersion: configOptions.runtimeVersion,
@@ -113,8 +130,12 @@ export class DoctorService implements IDoctorService {
 			action: TrackActionNames.CheckLocalBuildSetup,
 			additionalData: "Starting",
 		});
-		const sysInfoConfig: NativeScriptDoctor.ISysInfoConfig = { platform: configuration.platform, projectDir: configuration.projectDir, androidRuntimeVersion: configuration.runtimeVersion };
-		const infos = await this.getInfos({ forceCheck: configuration && configuration.forceCheck }, sysInfoConfig);
+		const sysInfoConfig: NativeScriptDoctor.ISysInfoConfig = {
+			platform: configuration.platform,
+			projectDir: configuration.projectDir,
+			androidRuntimeVersion: configuration.runtimeVersion
+		};
+		const infos = await this.getInfos({forceCheck: configuration && configuration.forceCheck}, sysInfoConfig);
 		const warnings = this.filterInfosByType(infos, constants.WARNING_TYPE_NAME);
 		const hasWarnings = warnings.length > 0;
 		if (hasWarnings) {
@@ -174,7 +195,7 @@ export class DoctorService implements IDoctorService {
 				const matches = line.match(shortImportRegExp);
 
 				if (matches && matches.length) {
-					shortImports.push({ file, line });
+					shortImports.push({file, line});
 				}
 			}
 		}
@@ -203,7 +224,7 @@ export class DoctorService implements IDoctorService {
 	}
 
 	private async runSetupScriptCore(executablePath: string, setupScriptArgs: string[]): Promise<ISpawnResult> {
-		return this.$childProcess.spawnFromEvent(executablePath, setupScriptArgs, "close", { stdio: "inherit" });
+		return this.$childProcess.spawnFromEvent(executablePath, setupScriptArgs, "close", {stdio: "inherit"});
 	}
 
 	private printPackageManagerTip() {
@@ -261,7 +282,7 @@ export class DoctorService implements IDoctorService {
 			.filter(a => !!a)
 			.join(delimiter);
 
-		const data = helpers.getHash(key, { algorithm: "md5" });
+		const data = helpers.getHash(key, {algorithm: "md5"});
 		return data;
 	}
 
@@ -279,4 +300,5 @@ export class DoctorService implements IDoctorService {
 		return infos;
 	}
 }
+
 $injector.register("doctorService", DoctorService);

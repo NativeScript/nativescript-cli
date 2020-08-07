@@ -5,6 +5,9 @@ import * as path from "path";
 import * as osenv from "osenv";
 import { cache } from "../../../decorators";
 import { DeviceConnectionType } from "../../../../constants";
+import { IChildProcess, IDictionary, IFileSystem } from "../../../declarations";
+import * as _ from "lodash";
+
 
 export class AndroidGenymotionService implements Mobile.IAndroidVirtualDeviceService {
 	constructor(private $adb: Mobile.IAndroidDebugBridge,

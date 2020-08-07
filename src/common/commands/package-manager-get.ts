@@ -1,3 +1,6 @@
+import { IErrors, IUserSettingsService } from "../declarations";
+
+import { ICommand, ICommandParameter } from "../definitions/commands";
 
 export class PackageManagerGetCommand implements ICommand {
 

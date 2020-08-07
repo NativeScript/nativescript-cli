@@ -6,6 +6,9 @@ import { AndroidVirtualDevice, DeviceTypes, NOT_RUNNING_EMULATOR_STATUS } from "
 import { cache } from "../../decorators";
 import { settlePromises } from "../../helpers";
 import { DeviceConnectionType } from "../../../constants";
+import { IChildProcess, IFileSystem, IHostInfo, ISpawnResult, IStringDictionary, ISysInfo } from "../../declarations";
+
+import * as _ from "lodash";
 
 export class AndroidVirtualDeviceService implements Mobile.IAndroidVirtualDeviceService {
 	private androidHome: string;

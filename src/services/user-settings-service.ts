@@ -1,13 +1,18 @@
 import * as path from "path";
+import { IDictionary, ISettingsService, IUserSettingsService } from "../common/declarations";
+import {
+	ICacheTimeoutOpts,
+	IJsonFileSettingsService,
+	IUseCacheOpts
+} from "../common/definitions/json-file-settings-service";
 
 export class UserSettingsService implements IUserSettingsService {
 	private get $jsonFileSettingsService(): IJsonFileSettingsService {
 		const userSettingsFilePath = path.join(this.$settingsService.getProfileDir(), "user-settings.json");
-		return this.$injector.resolve("jsonFileSettingsService", { jsonFileSettingsPath: userSettingsFilePath });
+		return $injector.resolve("jsonFileSettingsService", { jsonFileSettingsPath: userSettingsFilePath });
 	}
 
-	constructor(private $injector: IInjector,
-		private $settingsService: ISettingsService) {
+	constructor(private $settingsService: ISettingsService) {
 	}
 
 	public getSettingValue<T>(settingName: string, cacheOpts?: ICacheTimeoutOpts): Promise<T> {

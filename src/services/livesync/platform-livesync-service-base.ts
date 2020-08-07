@@ -3,6 +3,10 @@ import * as util from "util";
 import { APP_FOLDER_NAME } from "../../constants";
 import { getHash } from "../../common/helpers";
 import { performanceLog } from "../../common/decorators";
+import { IDictionary, IFileSystem, IProjectFilesManager } from "../../common/declarations";
+import { IProjectData } from "../../definitions/project";
+import { IPlatformsDataService } from "../../definitions/platform";
+import * as _ from "lodash";
 
 export abstract class PlatformLiveSyncServiceBase {
 	private _deviceLiveSyncServicesCache: IDictionary<INativeScriptDeviceLiveSyncService> = {};

@@ -39,6 +39,13 @@ import { XcodebuildCommandService } from "../src/services/ios/xcodebuild-command
 import { XcodebuildArgsService } from "../src/services/ios/xcodebuild-args-service";
 import { ExportOptionsPlistService } from "../src/services/ios/export-options-plist-service";
 import { IOSSigningService } from "../src/services/ios/ios-signing-service";
+import { IProjectData } from "../src/definitions/project";
+import { IXcconfigService } from "../src/declarations";
+import { IInjector } from "../src/common/definitions/yok";
+import { IFileSystem, IStringDictionary } from "../src/common/declarations";
+import { IPluginData } from "../src/definitions/plugins";
+import * as _ from "lodash";
+
 temp.track();
 
 class IOSSimulatorDiscoveryMock extends DeviceDiscovery {

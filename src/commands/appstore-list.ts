@@ -1,19 +1,24 @@
 import { createTable } from "../common/helpers";
 import { StringCommandParameter } from "../common/command-params";
+import { IProjectData } from "../definitions/project";
+import { IOptions, IPlatformValidationService } from "../declarations";
+import { IApplePortalApplicationService, IApplePortalSessionService } from "../services/apple-portal/definitions";
+import { IErrors } from "../common/declarations";
+
+import { ICommand, ICommandParameter } from "../common/definitions/commands";
 
 export class ListiOSApps implements ICommand {
-	public allowedParameters: ICommandParameter[] = [new StringCommandParameter(this.$injector), new StringCommandParameter(this.$injector)];
+	public allowedParameters: ICommandParameter[] = [new StringCommandParameter(), new StringCommandParameter()];
 
-	constructor(private $injector: IInjector,
-		private $applePortalApplicationService: IApplePortalApplicationService,
-		private $applePortalSessionService: IApplePortalSessionService,
-		private $logger: ILogger,
-		private $projectData: IProjectData,
-		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-		private $platformValidationService: IPlatformValidationService,
-		private $errors: IErrors,
-		private $prompter: IPrompter,
-		private $options: IOptions) {
+	constructor(private $applePortalApplicationService: IApplePortalApplicationService,
+				private $applePortalSessionService: IApplePortalSessionService,
+				private $logger: ILogger,
+				private $projectData: IProjectData,
+				private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
+				private $platformValidationService: IPlatformValidationService,
+				private $errors: IErrors,
+				private $prompter: IPrompter,
+				private $options: IOptions) {
 		this.$projectData.initializeProjectData();
 	}
 
@@ -26,14 +31,14 @@ export class ListiOSApps implements ICommand {
 		let password = args[1];
 
 		if (!username) {
-			username = await this.$prompter.getString("Apple ID", { allowEmpty: false });
+			username = await this.$prompter.getString("Apple ID", {allowEmpty: false});
 		}
 
 		if (!password) {
 			password = await this.$prompter.getPassword("Apple ID password");
 		}
 
-		const user = await this.$applePortalSessionService.createUserSession({ username, password }, {
+		const user = await this.$applePortalSessionService.createUserSession({username, password}, {
 			sessionBase64: this.$options.appleSessionBase64,
 		});
 		if (!user.areCredentialsValid) {

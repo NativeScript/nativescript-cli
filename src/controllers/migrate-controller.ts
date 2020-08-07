@@ -4,6 +4,20 @@ import * as constants from "../constants";
 import * as glob from "glob";
 import { UpdateControllerBase } from "./update-controller-base";
 import { fromWindowsRelativePathToUnix, getHash } from "../common/helpers";
+import { IDictionary, IErrors, IFileSystem, IResourceLoader, ISettingsService } from "../common/declarations";
+import {
+	IAndroidResourcesMigrationService,
+	IPackageInstallationManager,
+	IPackageManager,
+	IPlatformCommandHelper, IPlatformValidationService
+} from "../declarations";
+import { IAddPlatformService, IPlatformsDataService } from "../definitions/platform";
+import { IPluginsService } from "../definitions/plugins";
+import { IProjectData, IProjectDataService } from "../definitions/project";
+
+import { IMigrateController, IMigrationData, IMigrationDependency } from "../definitions/migrate";
+import { IJsonFileSettingsService } from "../common/definitions/json-file-settings-service";
+import * as _ from "lodash";
 
 export class MigrateController extends UpdateControllerBase implements IMigrateController {
 	private static COMMON_MIGRATE_MESSAGE = "not affect the codebase of the application and you might need to do additional changes manually – for more information, refer to the instructions in the following blog post: https://www.nativescript.org/blog/nativescript-6.0-application-migration";
@@ -28,7 +42,6 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 		private $projectDataService: IProjectDataService,
 		private $platformValidationService: IPlatformValidationService,
 		private $resources: IResourceLoader,
-		private $injector: IInjector,
 		private $settingsService: ISettingsService,
 		private $staticConfig: Config.IStaticConfig) {
 		super($fs, $platformCommandHelper, $platformsDataService, $packageInstallationManager, $packageManager, $pacoteService);
@@ -52,7 +65,7 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 	private get $jsonFileSettingsService(): IJsonFileSettingsService {
 		const cliVersion = semver.coerce(this.$staticConfig.version);
 		const shouldMigrateCacheFilePath = path.join(this.$settingsService.getProfileDir(), `should-migrate-cache-${cliVersion}.json`);
-		return this.$injector.resolve("jsonFileSettingsService", { jsonFileSettingsPath: shouldMigrateCacheFilePath });
+		return $injector.resolve("jsonFileSettingsService", { jsonFileSettingsPath: shouldMigrateCacheFilePath });
 	}
 
 	private migrationDependencies: IMigrationDependency[] = [

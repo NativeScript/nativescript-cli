@@ -1,5 +1,8 @@
 import * as path from "path";
 import { Configurations } from "../common/constants";
+import { IXcconfigService } from "../declarations";
+import { IChildProcess, IFileSystem, IStringDictionary } from "../common/declarations";
+
 
 export class XcconfigService implements IXcconfigService {
 	constructor(

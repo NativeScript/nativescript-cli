@@ -13,6 +13,11 @@ import { ProjectDataService } from "../../src/services/project-data-service";
 import { StaticConfig } from "../../src/config";
 import { DevicePlatformsConstants } from "../../src/common/mobile/device-platforms-constants";
 import { LiveSyncProcessDataService } from "../../src/services/livesync-process-data-service";
+import { IDebugData, IDebugOptions, IDebugResultInfo, IDeviceDebugService } from "../../src/definitions/debug";
+import { IInjector } from "../../src/common/definitions/yok";
+import { IAnalyticsService } from "../../src/common/declarations";
+import { IEventActionData } from "../../src/common/definitions/google-analytics";
+import * as _ from "lodash";
 
 const fakeChromeDebugPort = 123;
 const fakeChromeDebugUrl = `fakeChromeDebugUrl?experiments=true&ws=localhost:${fakeChromeDebugPort}`;

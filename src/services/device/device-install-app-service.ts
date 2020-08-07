@@ -1,5 +1,9 @@
 import { TrackActionNames, HASHES_FILE_NAME } from "../../constants";
 import * as path from "path";
+import { IAnalyticsService, IFileSystem } from "../../common/declarations";
+import { IBuildArtefactsService, IBuildData, IBuildInfoFileService } from "../../definitions/build";
+import { IProjectDataService } from "../../definitions/project";
+import { IBuildInfo, IPlatformData, IPlatformsDataService } from "../../definitions/platform";
 
 export class DeviceInstallAppService {
 	constructor(

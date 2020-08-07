@@ -1,3 +1,5 @@
+import { IiTunesConnectApplicationType, IStringDictionary } from "./common/declarations";
+
 require("colors");
 import { PreviewAppLiveSyncEvents } from "./services/livesync/playground/preview-app-constants";
 import { join } from "path";

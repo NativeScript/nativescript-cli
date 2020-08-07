@@ -1,5 +1,7 @@
 import { imageSync } from "qr-image";
 import { escape } from "querystring";
+import { IQrCodeGenerator } from "../declarations";
+
 
 export class QrCodeGenerator implements IQrCodeGenerator {
 	constructor(private $staticConfig: Config.IStaticConfig,

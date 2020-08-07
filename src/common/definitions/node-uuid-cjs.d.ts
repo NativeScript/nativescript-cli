@@ -10,6 +10,6 @@
  * For use in node environment or browser environment (using webpack or other module loaders)
  */
 declare module "uuid" {
-    var uuid: __NodeUUID.UUID;
-    export = uuid;
+	let uuid: __NodeUUID.UUID;
+	export = uuid;
 }

@@ -3,6 +3,7 @@ import { LoggingLevels } from "../../mobile/logging-levels";
 import { Yok } from "../../yok";
 import * as assert from "assert";
 import { EOL } from "os";
+import * as _ from "lodash";
 
 const androidApiLevel23TestData = [
 	{ input: '12-28 10:14:15.977    99    99 D Genymotion: Received Set Clipboard', output: null },

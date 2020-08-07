@@ -1,5 +1,8 @@
 import { EventEmitter } from "events";
 import { DeviceDiscoveryEventNames } from "../../constants";
+import { IDictionary } from "../../declarations";
+
+import * as _ from "lodash";
 
 export class DeviceDiscovery extends EventEmitter implements Mobile.IDeviceDiscovery {
 	private devices: IDictionary<Mobile.IDevice> = {};

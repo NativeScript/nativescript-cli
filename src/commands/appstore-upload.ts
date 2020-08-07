@@ -2,14 +2,19 @@ import * as path from "path";
 import { StringCommandParameter } from "../common/command-params";
 import { BuildController } from "../controllers/build-controller";
 import { IOSBuildData } from "../data/build-data";
+import { IITMSTransporterService, IOptions, IPlatformValidationService } from "../declarations";
+import { IProjectData } from "../definitions/project";
+import { IApplePortalSessionService } from "../services/apple-portal/definitions";
+import { IErrors, IHostInfo } from "../common/declarations";
+
+import { ICommand, ICommandParameter } from "../common/definitions/commands";
 
 export class PublishIOS implements ICommand {
-	public allowedParameters: ICommandParameter[] = [new StringCommandParameter(this.$injector), new StringCommandParameter(this.$injector),
-	new StringCommandParameter(this.$injector), new StringCommandParameter(this.$injector)];
+	public allowedParameters: ICommandParameter[] = [new StringCommandParameter(), new StringCommandParameter(),
+	new StringCommandParameter(), new StringCommandParameter()];
 
 	constructor(
 		private $applePortalSessionService: IApplePortalSessionService,
-		private $injector: IInjector,
 		private $itmsTransporterService: IITMSTransporterService,
 		private $logger: ILogger,
 		private $projectData: IProjectData,

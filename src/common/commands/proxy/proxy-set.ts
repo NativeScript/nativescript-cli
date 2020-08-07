@@ -5,19 +5,21 @@ import { HttpProtocolToPort } from "../../constants";
 import { parse } from "url";
 import { platform, EOL } from "os";
 import * as prompt from "inquirer";
+import { IOptions } from "../../../declarations";
+import { IAnalyticsService, IErrors, IHostInfo, IProxyLibSettings, IProxyService } from "../../declarations";
+
 const { getCredentialsFromAuth } = require("proxy-lib/lib/utils");
 
 const proxySetCommandName = "proxy|set";
 
 export class ProxySetCommand extends ProxyCommandBase {
 	public allowedParameters = [
-		new commandParams.StringCommandParameter(this.$injector),
-		new commandParams.StringCommandParameter(this.$injector),
-		new commandParams.StringCommandParameter(this.$injector)
+		new commandParams.StringCommandParameter(),
+		new commandParams.StringCommandParameter(),
+		new commandParams.StringCommandParameter()
 	];
 
 	constructor(private $errors: IErrors,
-		private $injector: IInjector,
 		private $prompter: IPrompter,
 		private $hostInfo: IHostInfo,
 		private $staticConfig: Config.IStaticConfig,

@@ -2,15 +2,17 @@
 // This function must be separate to avoid dependencies on C++ modules - it must execute precisely when other functions cannot
 
 // Use only ES5 code here - pure JavaScript can be executed with any Node.js version (even 0.10, 0.12).
-/* tslint:disable:no-var-keyword no-var-requires prefer-const*/
-var os = require("os");
-var semver = require("semver");
-var util = require("util");
+/* tslint:disable:no-const-keyword no-const-requires prefer-const*/
+import { ISystemWarning } from "./declarations";
+
+const os = require("os");
+const semver = require("semver");
+const util = require("util");
 
 // These versions cannot be used with CLI due to bugs in the node itself.
 // We are absolutely sure we cannot work with them, so inform the user if he is trying to use any of them and exit the process.
-var versionsCausingFailure = ["0.10.34", "4.0.0", "4.2.0", "5.0.0"];
-var minimumRequiredVersion = "8.0.0";
+const versionsCausingFailure = ["0.10.34", "4.0.0", "4.2.0", "5.0.0"];
+const minimumRequiredVersion = "8.0.0";
 
 interface INodeVersionOpts {
 	supportedVersionsRange: string;
@@ -20,10 +22,10 @@ interface INodeVersionOpts {
 }
 
 function getNodeVersionOpts(): INodeVersionOpts {
-	var supportedVersionsRange = require("../../package.json").engines.node;
-	var cliName = "NativeScript";
-	var deprecatedVersions = ["^8.0.0", "^9.0.0"];
-	var nodeVer = process.version.substr(1);
+	const supportedVersionsRange = require("../../package.json").engines.node;
+	const cliName = "NativeScript";
+	const deprecatedVersions = ["^8.0.0", "^9.0.0"];
+	const nodeVer = process.version.substr(1);
 	return {
 		supportedVersionsRange: supportedVersionsRange,
 		cliName: cliName,
@@ -33,12 +35,12 @@ function getNodeVersionOpts(): INodeVersionOpts {
 }
 
 export function verifyNodeVersion(): void {
-	var verificationOpts = getNodeVersionOpts();
-	var cliName = verificationOpts.cliName;
-	var supportedVersionsRange = verificationOpts.supportedVersionsRange;
-	var nodeVer = verificationOpts.nodeVer;
+	const verificationOpts = getNodeVersionOpts();
+	const cliName = verificationOpts.cliName;
+	const supportedVersionsRange = verificationOpts.supportedVersionsRange;
+	const nodeVer = verificationOpts.nodeVer;
 
-	// The colors module should not be assigned to variable because the lint task will fail for not used variable.
+	// The colors module should not be assigned to constiable because the lint task will fail for not used constiable.
 	require("colors");
 
 	if (versionsCausingFailure.indexOf(nodeVer) !== -1 || !semver.valid(nodeVer) || semver.lt(nodeVer, minimumRequiredVersion)) {
@@ -48,17 +50,17 @@ export function verifyNodeVersion(): void {
 	}
 }
 
-var nodeWarn: ISystemWarning = undefined;
+let nodeWarn: ISystemWarning = undefined;
 export function getNodeWarning(): ISystemWarning {
 	if (nodeWarn === undefined) {
 		nodeWarn = null;
-		var verificationOpts = getNodeVersionOpts();
-		var cliName = verificationOpts.cliName;
-		var supportedVersionsRange = verificationOpts.supportedVersionsRange;
-		var deprecatedVersions = verificationOpts.deprecatedVersions;
-		var nodeVer = verificationOpts.nodeVer;
+		const verificationOpts = getNodeVersionOpts();
+		const cliName = verificationOpts.cliName;
+		const supportedVersionsRange = verificationOpts.supportedVersionsRange;
+		const deprecatedVersions = verificationOpts.deprecatedVersions;
+		const nodeVer = verificationOpts.nodeVer;
 
-		var warningMessage = "";
+		let warningMessage = "";
 		if (deprecatedVersions) {
 			deprecatedVersions.forEach(function (version) {
 				if (semver.satisfies(nodeVer, version)) {
@@ -70,7 +72,7 @@ export function getNodeWarning(): ISystemWarning {
 		}
 
 		if (!warningMessage) {
-			var checkSatisfied = semver.satisfies(nodeVer, supportedVersionsRange);
+			const checkSatisfied = semver.satisfies(nodeVer, supportedVersionsRange);
 			if (!checkSatisfied) {
 				warningMessage = "Support for Node.js " + nodeVer + " is not verified. " + cliName + " CLI might not install or run properly.";
 			}

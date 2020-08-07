@@ -1,5 +1,7 @@
 import { EventEmitter } from "events";
 import { ATTACH_REQUEST_EVENT_NAME } from "../../common/constants";
+import { IiOSNotification } from "../../declarations";
+
 
 export class IOSNotification extends EventEmitter implements IiOSNotification {
 	private static REFRESH_REQUEST_NOTIFICATION_NAME = "RefreshRequest";

@@ -4,6 +4,17 @@ import { performanceLog, cache } from "../common/decorators";
 import { EventEmitter } from "events";
 import * as path from "path";
 import { PREPARE_READY_EVENT_NAME, WEBPACK_COMPILATION_COMPLETE, PACKAGE_JSON_FILE_NAME, PLATFORMS_DIR_NAME, TrackActionNames, AnalyticsEventLabelDelimiter, CONFIG_NS_FILE_NAME } from "../constants";
+import { IAnalyticsService, IDictionary, IHooksService } from "../common/declarations";
+import {
+	INodeModulesDependenciesBuilder,
+	IPlatformController,
+	IPlatformData,
+	IPlatformsDataService
+} from "../definitions/platform";
+import { IPluginsService } from "../definitions/plugins";
+import { IProjectData, IProjectDataService } from "../definitions/project";
+import { IWatchIgnoreListService } from "../declarations";
+
 interface IPlatformWatcherData {
 	hasWebpackCompilerProcess: boolean;
 	nativeFilesWatcher: choki.FSWatcher;

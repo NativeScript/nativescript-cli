@@ -1,6 +1,11 @@
 import * as path from "path";
 import { NativePlatformStatus, PACKAGE_JSON_FILE_NAME, APP_GRADLE_FILE_NAME, BUILD_XCCONFIG_FILE_NAME, PLATFORMS_DIR_NAME, CONFIG_NS_FILE_NAME } from "../constants";
 import { getHash, hook } from "../common/helpers";
+import { IFileSystem, IFsStats, IHooksService } from "../common/declarations";
+import { INodeModulesDependenciesBuilder, IPlatformData } from "../definitions/platform";
+import { IProjectData } from "../definitions/project";
+import { IAddedNativePlatform, IPrepareInfo, IProjectChangesInfo } from "../definitions/project-changes";
+import * as _ from "lodash";
 
 const prepareInfoFileName = ".nsprepareinfo";
 

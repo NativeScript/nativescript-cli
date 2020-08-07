@@ -1,5 +1,8 @@
 import * as util from "util";
 import { join } from "path";
+import { IFileSystem, IMessagesService } from "../declarations";
+
+import * as _ from "lodash";
 
 export class MessagesService implements IMessagesService {
 	private _pathsToMessageJsonFiles: string[] = null;

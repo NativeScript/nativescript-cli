@@ -8,8 +8,9 @@ shelljs.config.fatal = true;
 const cliGlobal = <ICliGlobal><any>global;
 
 import * as _ from 'lodash';
-cliGlobal._ = _;
 import { injector } from '../src/common/yok';
+
+cliGlobal._ = _;
 cliGlobal.$injector = injector;
 
 // Requiring colors will modify the prototype of String
@@ -31,4 +32,5 @@ cliGlobal.$injector.register("performanceService", PerformanceService);
 
 // Converts the js callstack to typescript
 import { installUncaughtExceptionListener } from "../src/common/errors";
+import { ICliGlobal } from "../src/common/definitions/cli-global";
 installUncaughtExceptionListener();

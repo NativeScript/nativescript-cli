@@ -3,6 +3,11 @@ import * as semver from "semver";
 import * as constants from "../constants";
 import { PlatformController } from "../controllers/platform-controller";
 import { PlatformValidationService } from "../services/platform/platform-validation-service";
+import { IPackageInstallationManager, IPlatformCommandHelper, IUpdatePlatformOptions } from "../declarations";
+import { IErrors, IFileSystem } from "../common/declarations";
+import { IPlatformData, IPlatformsDataService } from "../definitions/platform";
+import { IProjectData, IProjectDataService } from "../definitions/project";
+import * as _ from "lodash";
 
 export class PlatformCommandHelper implements IPlatformCommandHelper {
 	constructor(

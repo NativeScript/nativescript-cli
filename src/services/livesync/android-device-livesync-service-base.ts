@@ -1,4 +1,10 @@
 import { DeviceLiveSyncServiceBase } from './device-livesync-service-base';
+import { IStringDictionary } from "../../common/declarations";
+import { IInjector } from "../../common/definitions/yok";
+import { IProjectData } from "../../definitions/project";
+import { IPlatformsDataService } from "../../definitions/platform";
+import { IFilesHashService } from "../../definitions/files-hash-service";
+import * as _ from "lodash";
 
 export abstract class AndroidDeviceLiveSyncServiceBase extends DeviceLiveSyncServiceBase {
 	constructor(protected $injector: IInjector,

@@ -3,6 +3,9 @@ import { cache } from "../../../decorators";
 import { DEVICE_LOG_EVENT_NAME } from "../../../constants";
 import assert from "assert";
 import { EventEmitter } from "events";
+import { IDictionary, IDisposable, IShouldDispose } from "../../../declarations";
+
+import * as _ from "lodash";
 
 export class IOSDeviceOperations extends EventEmitter implements IIOSDeviceOperations, IDisposable, IShouldDispose {
 	public isInitialized: boolean;

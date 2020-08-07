@@ -1,4 +1,11 @@
 import { DEVICE_LOG_EVENT_NAME } from "../common/constants";
+import { INetworkConnectivityValidator, IOptions } from "../declarations";
+import { IProjectData } from "../definitions/project";
+import { IAnalyticsService, IErrors } from "../common/declarations";
+import { IMigrateController } from "../definitions/migrate";
+import { ICleanupService } from "../definitions/cleanup-service";
+
+import { ICommand, ICommandParameter } from "../common/definitions/commands";
 
 export class PreviewCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];

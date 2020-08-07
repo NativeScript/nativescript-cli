@@ -1,6 +1,8 @@
 import * as _ from 'lodash';
-(<ICliGlobal><unknown>global)._ = _;
 import { injector } from './yok';
+import { ICliGlobal } from "./definitions/cli-global";
+
+(<ICliGlobal><unknown>global)._ = _;
 (<ICliGlobal><unknown>global).$injector = injector;
 
 require("colors");

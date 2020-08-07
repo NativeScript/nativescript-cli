@@ -1,5 +1,14 @@
 import { createGUID } from "../common/helpers";
 import { exported } from "../common/decorators";
+import {
+	IAnalyticsSettingsService,
+	IHostInfo,
+	IOsInfo, IPlaygroundInfo,
+	IPlaygroundService,
+	IUserSettingsService
+} from "../common/declarations";
+import { IStaticConfig } from "../declarations";
+import * as _ from "lodash";
 
 class AnalyticsSettingsService implements IAnalyticsSettingsService {
 	private static SESSIONS_STARTED_KEY_PREFIX = "SESSIONS_STARTED_";

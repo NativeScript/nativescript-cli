@@ -1,5 +1,8 @@
 import { EventEmitter } from "events";
 import { TARGET_FRAMEWORK_IDENTIFIERS } from "../constants";
+import { IDictionary, IHooksService } from "../declarations";
+import { IBuildData } from "../../definitions/build";
+import * as _ from "lodash";
 
 export abstract class ApplicationManagerBase extends EventEmitter implements Mobile.IDeviceApplicationManager {
 	private lastInstalledAppIdentifiers: string[];
@@ -7,8 +10,8 @@ export abstract class ApplicationManagerBase extends EventEmitter implements Mob
 	private lastAvailableDebuggableAppViews: IDictionary<Mobile.IDebugWebViewInfo[]> = {};
 
 	constructor(protected $logger: ILogger,
-		protected $hooksService: IHooksService,
-		protected $deviceLogProvider: Mobile.IDeviceLogProvider) {
+				protected $hooksService: IHooksService,
+				protected $deviceLogProvider: Mobile.IDeviceLogProvider) {
 		super();
 	}
 
@@ -39,6 +42,7 @@ export abstract class ApplicationManagerBase extends EventEmitter implements Mob
 	}
 
 	private checkForApplicationUpdatesPromise: Promise<void>;
+
 	public async checkForApplicationUpdates(): Promise<void> {
 		if (!this.checkForApplicationUpdatesPromise) {
 			this.checkForApplicationUpdatesPromise = new Promise<void>(async (resolve, reject) => {
@@ -84,11 +88,17 @@ export abstract class ApplicationManagerBase extends EventEmitter implements Mob
 	}
 
 	public abstract async installApplication(packageFilePath: string, appIdentifier?: string, buildData?: IBuildData): Promise<void>;
+
 	public abstract async uninstallApplication(appIdentifier: string): Promise<void>;
+
 	public abstract async startApplication(appData: Mobile.IApplicationData): Promise<void>;
+
 	public abstract async stopApplication(appData: Mobile.IApplicationData): Promise<void>;
+
 	public abstract async getInstalledApplications(): Promise<string[]>;
+
 	public abstract async getDebuggableApps(): Promise<Mobile.IDeviceApplicationInformation[]>;
+
 	public abstract async getDebuggableAppViews(appIdentifiers: string[]): Promise<IDictionary<Mobile.IDebugWebViewInfo[]>>;
 
 	private async checkForAvailableDebuggableAppsChanges(): Promise<void> {

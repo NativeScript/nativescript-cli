@@ -1,3 +1,7 @@
+import { IPlatformData, IPlatformsDataService } from "../definitions/platform";
+import { IProjectData } from "../definitions/project";
+import * as _ from "lodash";
+
 export class PlatformsDataService implements IPlatformsDataService {
 	private platformsDataService: { [index: string]: any } = {};
 

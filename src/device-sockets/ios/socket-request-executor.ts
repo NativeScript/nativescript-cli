@@ -1,4 +1,7 @@
 import * as constants from "../../common/constants";
+import { IiOSNotification, IiOSSocketRequestExecutor } from "../../declarations";
+import { IErrors, IiOSNotificationService } from "../../common/declarations";
+
 
 export class IOSSocketRequestExecutor implements IiOSSocketRequestExecutor {
 	constructor(private $errors: IErrors,

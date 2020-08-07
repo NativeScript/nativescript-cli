@@ -5,6 +5,9 @@ import * as marked from "marked";
 import { cache } from "../decorators";
 import { layout } from "./layouts/cli-layout";
 import { LoggerConfigData, LoggerLevel, LoggerAppenders } from "../../constants";
+import { IDictionary } from "../declarations";
+import * as _ from "lodash";
+
 const TerminalRenderer = require("marked-terminal");
 const chalk = require("chalk");
 
@@ -12,7 +15,7 @@ export class Logger implements ILogger {
 	private log4jsLogger: log4js.Logger = null;
 	private passwordRegex = /(password=).*?(['&,]|$)|(password["']?\s*:\s*["']).*?(["'])/i;
 	private passwordReplacement = "$1$3*******$2$4";
-	private defaultLogLevel: LoggerLevel;
+	private readonly defaultLogLevel: LoggerLevel;
 
 	constructor(private $config: Config.IConfig) {
 		this.defaultLogLevel = this.$config.DEBUG ? LoggerLevel.TRACE : LoggerLevel.INFO;

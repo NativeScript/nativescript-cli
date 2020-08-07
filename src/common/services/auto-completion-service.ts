@@ -2,6 +2,9 @@ import * as osenv from "osenv";
 import * as path from "path";
 import * as util from "util";
 import { cache } from "../decorators";
+import { IAutoCompletionService, IChildProcess, IFileSystem, IHostInfo } from "../declarations";
+
+import * as _ from "lodash";
 
 export class AutoCompletionService implements IAutoCompletionService {
 	private scriptsOk = true;

@@ -1,4 +1,15 @@
 import { SupportedPlatform } from "../common/constants";
+import {
+	IDependencyInformation,
+	IDeviceIdentifier,
+	IPlatform,
+	IProjectDir,
+	IRelease, ISpawnResult,
+	IStringDictionary
+} from "../common/declarations";
+import { IAndroidBuildOptionsSettings, IPlatformBuildData, IProvision, ITeamIdentifier } from "../declarations";
+import { IBasePluginData, IPluginData } from "./plugins";
+import { ICheckEnvironmentRequirementsOutput, IPlatformData } from "./platform";
 
 interface IProjectName {
 	/**
@@ -50,13 +61,13 @@ interface IProjectSettings extends IProjectSettingsBase {
 	force?: boolean;
 }
 
-
 interface ICreateProjectData extends IProjectDir, IProjectName {
 
 }
 
 interface IProjectService {
-	validateProjectName(opts: { projectName: string, force: boolean, pathToProject: string }): Promise<string>
+	validateProjectName(opts: { projectName: string, force: boolean, pathToProject: string }): Promise<string>;
+
 	/**
 	 * Creates new NativeScript application.
 	 * @param {any} projectSettings Options describing new project - its name, appId, path and template from which to be created.
@@ -122,10 +133,15 @@ interface IProjectData extends ICreateProjectData {
 	 * @returns {void}
 	 */
 	initializeProjectData(projectDir?: string): void;
+
 	initializeProjectDataFromContent(packageJsonContent: string, nsconfigContent: string, projectDir?: string): void;
+
 	getAppDirectoryPath(projectDir?: string): string;
+
 	getAppDirectoryRelativePath(): string;
+
 	getAppResourcesDirectoryPath(projectDir?: string): string;
+
 	getAppResourcesRelativeDirectoryPath(): string;
 }
 
@@ -181,7 +197,6 @@ interface IProjectDataService {
 	 */
 	getAssetsStructure(opts: IProjectDir): Promise<IAssetsStructure>;
 
-
 	/**
 	 * Gives information about the whole assets structure for iOS.
 	 * The returned object will contain icons, splashBackgrounds, splashCenterImages and splashImages.
@@ -205,19 +220,19 @@ interface IProjectDataService {
 	 */
 	getAppExecutableFiles(projectDir: string): string[];
 
-  /**
-   * Retruns package details for runtime
-   * @param {string} projectDir Path to application.
-   * @param {string} platform Platform key
-   */
-  getRuntimePackage(projectDir: string, platform: SupportedPlatform): IBasePluginData;
+	/**
+	 * Retruns package details for runtime
+	 * @param {string} projectDir Path to application.
+	 * @param {string} platform Platform key
+	 */
+	getRuntimePackage(projectDir: string, platform: SupportedPlatform): IBasePluginData;
 
 	/**
- * Returns a value from `nativescript` key in project's package.json.
- * @param {string} jsonData The project directory - the place where the root package.json is located.
- * @param {string} propertyName The name of the property to be checked in `nativescript` key.
- * @returns {any} The value of the property.
- */
+	 * Returns a value from `nativescript` key in project's package.json.
+	 * @param {string} jsonData The project directory - the place where the root package.json is located.
+	 * @param {string} propertyName The name of the property to be checked in `nativescript` key.
+	 * @returns {any} The value of the property.
+	 */
 	getNSValueFromContent(jsonData: Object, propertyName: string): any;
 }
 
@@ -238,6 +253,7 @@ interface IAssetItem {
 interface IAssetSubGroup {
 	images: IAssetItem[];
 	info?: { version: string, author: string };
+
 	[imageType: string]: any;
 }
 
@@ -246,6 +262,7 @@ interface IAssetGroup {
 	splashBackgrounds: IAssetSubGroup;
 	splashCenterImages: IAssetSubGroup;
 	splashImages?: IAssetSubGroup;
+
 	[imageType: string]: IAssetSubGroup;
 }
 
@@ -306,7 +323,7 @@ interface ITemplatePackageJsonContent extends IBasePluginData {
 	devDependencies: IStringDictionary;
 	nativescript?: {
 		templateVersion?: string;
-	}
+	};
 }
 
 /**
@@ -326,6 +343,7 @@ interface IProjectTemplatesService {
 
 interface IPlatformProjectServiceBase {
 	getPluginPlatformsFolderPath(pluginData: IPluginData, platform: string): string;
+
 	getFrameworkVersion(projectData: IProjectData): string;
 }
 
@@ -333,6 +351,7 @@ interface IBuildForDevice {
 	buildForDevice: boolean;
 }
 
+// tslint:disable-next-line:interface-name
 interface IiCloudContainerEnvironment {
 	iCloudContainerEnvironment: string;
 }
@@ -350,6 +369,7 @@ interface IBuildConfig extends IAndroidBuildOptionsSettings, IiOSBuildConfig, IP
 /**
  * Describes iOS-specific build configuration properties
  */
+// tslint:disable-next-line:interface-name
 interface IiOSBuildConfig extends IBuildForDevice, IiCloudContainerEnvironment, IDeviceIdentifier, IProvision, ITeamIdentifier, IRelease {
 	/**
 	 * Identifier of the mobile provision which will be used for the build. If not set a provision will be selected automatically if possible.
@@ -372,6 +392,7 @@ interface ILocalBuildService {
 	 * @return {Promise<string>} Path to the build output.
 	 */
 	build(platform: string, platformBuildOptions: IPlatformBuildData): Promise<string>;
+
 	/**
 	 * Removes build artifacts specific to the platform
 	 * @param {ICleanNativeAppData} data Data describing the clean app process
@@ -380,7 +401,8 @@ interface ILocalBuildService {
 	cleanNativeApp(data: ICleanNativeAppData): Promise<void>;
 }
 
-interface ICleanNativeAppData extends IProjectDir, IPlatform { }
+interface ICleanNativeAppData extends IProjectDir, IPlatform {
+}
 
 interface IValidatePlatformOutput {
 	checkEnvironmentRequirementsOutput: ICheckEnvironmentRequirementsOutput;
@@ -388,11 +410,13 @@ interface IValidatePlatformOutput {
 
 interface ITestExecutionService {
 	startKarmaServer(platform: string, liveSyncInfo: ILiveSyncInfo, deviceDescriptors: ILiveSyncDeviceDescriptor[]): Promise<void>;
+
 	canStartKarmaServer(projectData: IProjectData): Promise<boolean>;
 }
 
 interface ITestInitializationService {
 	getDependencies(framework: string): IDependencyInformation[];
+
 	getFrameworkNames(): string[];
 }
 
@@ -406,6 +430,7 @@ interface ICocoaPodsService {
 	 * @return {string} The header which needs to be placed at the beginning of a Podfile.
 	 */
 	getPodfileHeader(targetName: string): string;
+
 	/**
 	 * Get the footer needed for the end of every Podfile
 	 * @return {string} The footer which needs to be placed at the end of a Podfile.
@@ -473,7 +498,9 @@ interface ICocoaPodsService {
 
 interface ICocoaPodsPlatformManager {
 	addPlatformSection(projectData: IProjectData, podfilePlatformData: IPodfilePlatformData, projectPodfileContent: string): string;
+
 	removePlatformSection(moduleName: string, projectPodFileContent: string, podfilePath: string): string;
+
 	replacePlatformRow(podfileContent: string, podfilePath: string): { replacedContent: string, podfilePlatformData: IPodfilePlatformData };
 }
 
@@ -493,10 +520,14 @@ interface IXcodeTargetBuildConfigurationProperty {
  */
 interface IIOSNativeTargetService {
 	addTargetToProject(targetRootPath: string, targetFolder: string, targetType: string, project: IXcode.project, platformData: IPlatformData, parentTarget?: string): IXcode.target;
-	prepareSigning(targetUuids: string[], projectData:IProjectData, projectPath: string): void;
+
+	prepareSigning(targetUuids: string[], projectData: IProjectData, projectPath: string): void;
+
 	getTargetDirectories(folderPath: string): string[];
-	setXcodeTargetBuildConfigurationProperties(properties: IXcodeTargetBuildConfigurationProperty[], targetName: string, project: IXcode.project): void
-	setConfigurationsFromJsonFile(jsonPath: string, targetUuid: string, targetName: string, project: IXcode.project): void
+
+	setXcodeTargetBuildConfigurationProperties(properties: IXcodeTargetBuildConfigurationProperty[], targetName: string, project: IXcode.project): void;
+
+	setConfigurationsFromJsonFile(jsonPath: string, targetUuid: string, targetName: string, project: IXcode.project): void;
 }
 
 /**
@@ -504,12 +535,15 @@ interface IIOSNativeTargetService {
  */
 interface IIOSExtensionsService {
 	addExtensionsFromPath(options: IAddExtensionsFromPathOptions): Promise<boolean>;
+
 	removeExtensions(options: IRemoveExtensionsOptions): void;
 }
 
 interface IIOSWatchAppService {
 	addWatchAppFromPath(options: IAddWatchAppFromPathOptions): Promise<boolean>;
+
 	removeWatchApp(options: IRemoveWatchAppOptions): void;
+
 	hasWatchApp(platformData: IPlatformData, projectData: IProjectData): boolean;
 }
 
@@ -528,10 +562,11 @@ interface IAddWatchAppFromPathOptions extends IAddTargetFromPathOptions {
 }
 
 interface IRemoveExtensionsOptions {
-	pbxProjPath: string
+	pbxProjPath: string;
 }
 
-interface IRemoveWatchAppOptions extends IRemoveExtensionsOptions { }
+interface IRemoveWatchAppOptions extends IRemoveExtensionsOptions {
+}
 
 interface IRubyFunction {
 	functionName: string;

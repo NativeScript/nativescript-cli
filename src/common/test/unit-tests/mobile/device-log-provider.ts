@@ -15,6 +15,10 @@ import { assert } from "chai";
 import * as util from "util";
 import * as path from "path";
 import { FileSystem } from "../../../file-system";
+import { IProjectData } from "../../../../definitions/project";
+import { IInjector } from "../../../definitions/yok";
+import { IFileSystem } from "../../../declarations";
+import * as _ from "lodash";
 
 const deviceIdentifier = "deviceIdentifier";
 let runtimeVersion = "6.1.0";

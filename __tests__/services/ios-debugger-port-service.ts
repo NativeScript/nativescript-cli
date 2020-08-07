@@ -7,6 +7,8 @@ import { DevicePlatformsConstants } from "../../src/common/mobile/device-platfor
 import { Yok } from "../../src/common/yok";
 import { EventEmitter } from "events";
 import * as sinon from "sinon";
+import { IInjector } from "../../src/common/definitions/yok";
+import * as _ from "lodash";
 
 class DeviceApplicationManagerMock extends EventEmitter { }
 

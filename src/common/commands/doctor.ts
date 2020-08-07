@@ -1,3 +1,7 @@
+import { IDoctorService, IProjectHelper } from "../declarations";
+
+import { ICommand, ICommandParameter } from "../definitions/commands";
+
 export class DoctorCommand implements ICommand {
 
 	constructor(private $doctorService: IDoctorService,

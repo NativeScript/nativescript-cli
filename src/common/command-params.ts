@@ -1,13 +1,13 @@
+import { ICommandParameter, IStringParameterBuilder } from "./definitions/commands";
+
 export class StringCommandParameter implements ICommandParameter {
 	public mandatory = false;
 	public errorMessage: string;
 
-	constructor(private $injector: IInjector) { }
-
 	public async validate(validationValue: string): Promise<boolean> {
 		if (!validationValue) {
 			if (this.errorMessage) {
-				this.$injector.resolve("errors").fail(this.errorMessage);
+				$injector.resolve("errors").fail(this.errorMessage);
 			}
 
 			return false;
@@ -19,10 +19,9 @@ export class StringCommandParameter implements ICommandParameter {
 $injector.register("stringParameter", StringCommandParameter);
 
 export class StringParameterBuilder implements IStringParameterBuilder {
-	constructor(private $injector: IInjector) { }
 
 	public createMandatoryParameter(errorMsg: string): ICommandParameter {
-		const commandParameter = new StringCommandParameter(this.$injector);
+		const commandParameter = new StringCommandParameter();
 		commandParameter.mandatory = true;
 		commandParameter.errorMessage = errorMsg;
 

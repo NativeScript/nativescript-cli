@@ -4,6 +4,22 @@ import { cache } from "../../common/decorators";
 import { isInteractive, toBoolean } from '../../common/helpers';
 import { DeviceTypes, AnalyticsClients } from "../../common/constants";
 import { TrackActionNames } from "../../constants";
+import {
+	AnalyticsStatus, GoogleAnalyticsDataType,
+	IAnalyticsService, IAnalyticsSettingsService, IChildProcess,
+	IDictionary,
+	IDisposable, IProjectHelper, IStringDictionary,
+	IUserSettingsService, TrackingTypes
+} from "../../common/declarations";
+import { IOptions } from "../../declarations";
+import { IProjectDataService } from "../../definitions/project";
+import { IExceptionsTrackingInformation, IGoogleAnalyticsTrackingInformation, ITrackingInformation } from "./analytics";
+import {
+	IEventActionData,
+	IGoogleAnalyticsData,
+	IGoogleAnalyticsEventData
+} from "../../common/definitions/google-analytics";
+import * as _ from "lodash";
 
 export class AnalyticsService implements IAnalyticsService, IDisposable {
 	private static ANALYTICS_BROKER_START_TIMEOUT = 10 * 1000;

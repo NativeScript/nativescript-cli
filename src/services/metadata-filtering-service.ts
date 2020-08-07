@@ -1,6 +1,14 @@
 import * as path from "path";
 import * as os from "os";
 import { MetadataFilteringConstants } from "../constants";
+import { IFileSystem } from "../common/declarations";
+import { IPlatformsDataService } from "../definitions/platform";
+import { IProjectData } from "../definitions/project";
+import {
+	IMetadataFilteringService, INativeApiUsageConfiguartion,
+	INativeApiUsagePluginConfiguration
+} from "../definitions/metadata-filtering-service";
+import { IPluginsService } from "../definitions/plugins";
 
 export class MetadataFilteringService implements IMetadataFilteringService {
 	constructor(private $fs: IFileSystem,

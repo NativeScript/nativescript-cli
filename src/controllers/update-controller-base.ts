@@ -1,5 +1,11 @@
 import * as path from "path";
 import * as semver from "semver";
+import { IFileSystem } from "../common/declarations";
+import { IPackageInstallationManager, IPackageManager, IPlatformCommandHelper } from "../declarations";
+import { IPlatformsDataService } from "../definitions/platform";
+import { IDependency } from "../definitions/migrate";
+import { IProjectData } from "../definitions/project";
+import * as _ from "lodash";
 
 export class UpdateControllerBase {
 	protected getPackageManifest: Function;

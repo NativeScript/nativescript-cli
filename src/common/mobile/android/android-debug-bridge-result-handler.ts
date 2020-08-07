@@ -1,4 +1,7 @@
 import { EOL } from "os";
+import { IErrors } from "../../declarations";
+import * as _ from "lodash";
+
 
 export class AndroidDebugBridgeResultHandler implements Mobile.IAndroidDebugBridgeResultHandler {
 	private static ANDROID_DEBUG_BRIDGE_ERRORS: Mobile.IAndroidDebugBridgeError[] = [

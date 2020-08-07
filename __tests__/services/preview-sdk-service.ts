@@ -3,6 +3,9 @@ import { Yok } from "../../src/common/yok";
 import { assert } from "chai";
 import { LoggerStub } from "../stubs";
 import { PreviewSchemaService } from "../../src/services/livesync/playground/preview-schema-service";
+import { IInjector } from "../../src/common/definitions/yok";
+import { IProxySettings, Server } from "../../src/common/declarations";
+import * as _ from "lodash";
 
 const createTestInjector = (): IInjector => {
 	const testInjector = new Yok();

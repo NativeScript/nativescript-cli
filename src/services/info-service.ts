@@ -1,3 +1,6 @@
+
+import { IInfoService, IVersionsService } from "../declarations";
+
 export class InfoService implements IInfoService {
 	constructor(private $versionsService: IVersionsService) { }
 

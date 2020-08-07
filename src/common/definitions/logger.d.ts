@@ -1,6 +1,7 @@
 import { Layout, LoggingEvent, Configuration, Level } from "log4js";
 import { EventEmitter } from "events";
 import { LoggerLevel } from "../../constants";
+import { IDictionary } from "../declarations";
 
 declare global {
 	interface IAppenderOptions extends IDictionary<any> {
@@ -28,10 +29,12 @@ declare global {
 		isVerbose(): boolean;
 	}
 
+	// tslint:disable-next-line:interface-name
 	interface Log4JSAppenderConfiguration extends Configuration {
 		layout: Layout;
 	}
 
+	// tslint:disable-next-line:interface-name
 	interface Log4JSEmitAppenderConfiguration extends Log4JSAppenderConfiguration {
 		emitter: EventEmitter;
 	}

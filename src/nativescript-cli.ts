@@ -1,13 +1,15 @@
-import { inje } from './bootstrap';
-
 import * as shelljs from "shelljs";
 shelljs.config.silent = true;
 shelljs.config.fatal = true;
 import { installUncaughtExceptionListener } from "./common/errors";
 import { settlePromises } from "./common/helpers";
+import { ErrorCodes, ICommandDispatcher, IErrors, IMessagesService } from "./common/declarations";
+import { IInitializeService } from "./definitions/initialize-service";
+import { IExtensibilityService, IExtensionData } from "./common/definitions/extensibility";
+
 installUncaughtExceptionListener(process.exit.bind(process, ErrorCodes.UNCAUGHT));
 
-const logger: ILogger = inje.resolve("logger");
+const logger: ILogger = $injector.resolve("logger");
 const originalProcessOn = process.on;
 
 process.on = (event: string, listener: any): any => {

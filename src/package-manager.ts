@@ -2,6 +2,15 @@
 import { cache, exported, invokeInit } from './common/decorators';
 import { performanceLog } from "./common/decorators";
 import { PackageManagers } from './constants';
+import {
+	INodePackageManager,
+	INodePackageManagerInstallOptions,
+	INpmInstallResultInfo, INpmPackageNameParts, INpmsResult,
+	IOptions,
+	IPackageManager
+} from "./declarations";
+import { IDictionary, IErrors, IUserSettingsService } from "./common/declarations";
+
 export class PackageManager implements IPackageManager {
 	private packageManager: INodePackageManager;
 	private _packageManagerName: string;

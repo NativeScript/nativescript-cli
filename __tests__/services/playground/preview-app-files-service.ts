@@ -4,6 +4,8 @@ import { FileSystemStub, LoggerStub } from "../../stubs";
 import * as path from "path";
 import { assert } from "chai";
 import { FilesPayload } from "nativescript-preview-sdk";
+import { IInjector } from "../../../src/common/definitions/yok";
+import * as _ from "lodash";
 
 const projectDir = "path/to/my/test/project";
 const appDirectoryPath = path.join(projectDir, "src");

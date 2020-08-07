@@ -1,6 +1,8 @@
 import * as path from "path";
 import { EOL } from "os";
 import { Proxy } from "../constants";
+import { IProxyLibSettings, IProxyService, IProxySettings, ISettingsService } from "../declarations";
+
 const proxyLib = require("proxy-lib");
 
 export class ProxyService implements IProxyService {

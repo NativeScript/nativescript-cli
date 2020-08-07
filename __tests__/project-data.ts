@@ -4,6 +4,9 @@ import { DevicePlatformsConstants } from "../src/common/mobile/device-platforms-
 import { assert } from "chai";
 import * as stubs from "./stubs";
 import * as path from "path";
+import { IProjectData } from "../src/definitions/project";
+import { IInjector } from "../src/common/definitions/yok";
+import { IProjectHelper, IStringDictionary } from "../src/common/declarations";
 
 describe("projectData", () => {
 	const createTestInjector = (): IInjector => {

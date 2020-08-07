@@ -1,4 +1,7 @@
 import * as helpers from "../helpers";
+import { IAutoCompletionService } from "../declarations";
+
+import { ICommand, ICommandParameter } from "../definitions/commands";
 
 export class AutoCompleteCommand implements ICommand {
 	constructor(private $autoCompletionService: IAutoCompletionService,

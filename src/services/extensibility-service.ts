@@ -2,6 +2,15 @@ import * as path from "path";
 import { cache } from "../common/decorators";
 import * as constants from "../constants";
 import { createRegExp, regExpEscape } from "../common/helpers";
+import { IFileSystem, ISettingsService, IStringDictionary } from "../common/declarations";
+import { INodePackageManager, INpmsSingleResultData } from "../declarations";
+import {
+	IExtensibilityService, IExtensionCommandInfo,
+	IExtensionData,
+	IExtensionLoadingError,
+	IGetExtensionCommandInfoParams
+} from "../common/definitions/extensibility";
+import * as _ from "lodash";
 
 export class ExtensibilityService implements IExtensibilityService {
 	private customPathToExtensions: string = null;

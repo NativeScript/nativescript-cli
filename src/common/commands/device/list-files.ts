@@ -1,3 +1,9 @@
+import { IOptions } from "../../../declarations";
+import { IProjectData } from "../../../definitions/project";
+import { IErrors } from "../../declarations";
+
+import { ICommand, ICommandParameter } from "../../definitions/commands";
+
 export class ListFilesCommand implements ICommand {
 	constructor(private $devicesService: Mobile.IDevicesService,
 		private $stringParameter: ICommandParameter,

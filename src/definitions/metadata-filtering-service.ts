@@ -1,7 +1,9 @@
 /**
  * Describes service used to generate necessary files to filter the native metadata generation.
  */
-interface INativeApiUsageConfiguartion {
+import { IProjectData } from "./project";
+
+export interface INativeApiUsageConfiguartion {
 	/**
 	 * Defines if the content of plugins' native-api-usage files will be used and included in the whitelist content.
 	 */
@@ -21,7 +23,7 @@ interface INativeApiUsageConfiguartion {
 /**
  * Describes the content of plugin's native-api-usage.json file located in `<path to plugin>/platforms/<platform> directory.
  */
-interface INativeApiUsagePluginConfiguration {
+export interface INativeApiUsagePluginConfiguration {
 	/**
 	 * Defines APIs which are used by the plugin and which should be whitelisted by the application using this plugin.
 	 */
@@ -31,7 +33,7 @@ interface INativeApiUsagePluginConfiguration {
 /**
  * Describes service used to generate neccesary files to filter the metadata generation.
  */
-interface IMetadataFilteringService {
+export interface IMetadataFilteringService {
 	/**
 	 * Cleans old metadata filters and creates new ones for the current project and platform.
 	 * @param {IProjectData} projectData Information about the current project.

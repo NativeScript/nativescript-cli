@@ -1,5 +1,6 @@
 import * as path from "path";
 
+
 export class IOSSimResolver implements Mobile.IiOSSimResolver {
 	private static iOSSimName = "ios-sim-portable";
 	private static iOSStandaloneExecutableName = "ios-sim-standalone.js";

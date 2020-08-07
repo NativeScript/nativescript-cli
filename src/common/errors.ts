@@ -3,6 +3,9 @@ import * as path from "path";
 import { SourceMapConsumer } from "source-map";
 import { isInteractive } from "./helpers";
 import { deprecated } from "./decorators";
+import { IInjector } from "./definitions/yok";
+import { ErrorCodes, IErrors, IFailOptions } from "./declarations";
+import * as _ from "lodash";
 
 // we need this to overwrite .stack property (read-only in Error)
 function Exception() {
@@ -28,7 +31,7 @@ async function resolveCallStack(error: Error): Promise<string> {
 		return line;
 	});
 
-  const fs = require("fs");
+	const fs = require("fs");
 
 	const remapped = await Promise.all(_.map(parsed, async (parsedLine) => {
 		if (_.isString(parsedLine)) {
@@ -48,14 +51,14 @@ async function resolveCallStack(error: Error): Promise<string> {
 		const mapData = JSON.parse(fs.readFileSync(mapFileName).toString());
 
 		return await SourceMapConsumer.with(mapData, mapFileName, (consumer) => {
-      const sourcePos = consumer.originalPositionFor({ line: line, column: column });
-      if (sourcePos && sourcePos.source) {
-        const source = path.join(path.dirname(fileName), sourcePos.source);
-        return util.format("    at %s (%s:%s:%s)", functionName, source, sourcePos.line, sourcePos.column);
-      }
-  
-      return util.format("    at %s (%s:%s:%s)", functionName, fileName, line, column);
-    });
+			const sourcePos = consumer.originalPositionFor({line: line, column: column});
+			if (sourcePos && sourcePos.source) {
+				const source = path.join(path.dirname(fileName), sourcePos.source);
+				return util.format("    at %s (%s:%s:%s)", functionName, source, sourcePos.line, sourcePos.column);
+			}
+
+			return util.format("    at %s (%s:%s:%s)", functionName, fileName, line, column);
+		});
 	}));
 
 	let outputMessage = remapped.join("\n");
@@ -144,7 +147,7 @@ export class Errors implements IErrors {
 	private getFailOptions(optsOrFormatStr: string | IFailOptions): IFailOptions {
 		let opts = optsOrFormatStr;
 		if (_.isString(opts)) {
-			opts = { formatStr: opts };
+			opts = {formatStr: opts};
 		}
 
 		return opts;

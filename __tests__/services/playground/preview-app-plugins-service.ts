@@ -5,6 +5,9 @@ import { assert } from "chai";
 import * as util from "util";
 import { PluginComparisonMessages } from "../../../src/services/livesync/playground/preview-app-constants";
 import { ErrorsStub, PackageInstallationManagerStub } from "../../stubs";
+import { IStringDictionary } from "../../../src/common/declarations";
+import { IInjector } from "../../../src/common/definitions/yok";
+import * as _ from "lodash";
 
 let readJsonParams: string[] = [];
 let warnParams: string[] = [];

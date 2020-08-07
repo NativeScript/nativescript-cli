@@ -1,3 +1,11 @@
+import { IOptions, IPlatformCommandHelper, IPlatformValidationService } from "../declarations";
+import { IProjectData } from "../definitions/project";
+import { IErrors } from "../common/declarations";
+import { IPlatformEnvironmentRequirements } from "../definitions/platform";
+
+import { ICommand, ICommandParameter } from "../common/definitions/commands";
+import * as _ from "lodash";
+
 export class CleanCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
 

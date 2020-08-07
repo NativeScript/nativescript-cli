@@ -1,6 +1,7 @@
 import * as helpers from "../helpers";
 import * as path from "path";
 
+
 class LocalToDevicePathData implements Mobile.ILocalToDevicePathData {
 	private devicePath: string;
 	private relativeToProjectBasePath: string;

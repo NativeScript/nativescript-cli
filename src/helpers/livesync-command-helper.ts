@@ -1,5 +1,12 @@
 import { RunOnDeviceEvents } from "../constants";
 import { DeployController } from "../controllers/deploy-controller";
+import { IAndroidBundleValidatorHelper, IOptions } from "../declarations";
+import { IBuildController, IBuildDataService } from "../definitions/build";
+import { IProjectData, IValidatePlatformOutput } from "../definitions/project";
+import { ErrorCodes, IAnalyticsService, IDictionary, IErrors } from "../common/declarations";
+import { ICleanupService } from "../definitions/cleanup-service";
+import { IPlatformsDataService } from "../definitions/platform";
+import * as _ from "lodash";
 
 export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 	constructor(
@@ -11,7 +18,6 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 		private $iosDeviceOperations: IIOSDeviceOperations,
 		private $mobileHelper: Mobile.IMobileHelper,
 		private $devicesService: Mobile.IDevicesService,
-		private $injector: IInjector,
 		private $buildController: IBuildController,
 		private $analyticsService: IAnalyticsService,
 		private $errors: IErrors,
@@ -21,7 +27,7 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 	) { }
 
 	private get $platformsDataService(): IPlatformsDataService {
-		return this.$injector.resolve("platformsDataService");
+		return $injector.resolve("platformsDataService");
 	}
 
 	// TODO: Remove this and replace it with buildData

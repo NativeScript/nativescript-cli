@@ -4,6 +4,7 @@ import { AddPlatformService } from "../../src/services/platform/add-platform-ser
 import { assert } from "chai";
 import { format } from "util";
 import { AddPlaformErrors } from "../../src/constants";
+import * as _ from "lodash";
 
 let actualMessage: string = null;
 const latestFrameworkVersion = "5.3.1";

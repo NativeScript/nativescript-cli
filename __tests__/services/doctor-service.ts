@@ -4,6 +4,27 @@ import { LoggerStub, FileSystemStub } from "../stubs";
 import { assert } from "chai";
 import * as path from "path";
 import * as sinon from "sinon";
+import { IProjectDataService } from "../../src/definitions/project";
+import { IVersionsService } from "../../src/declarations";
+import {
+	IAnalyticsService,
+	IChildProcess, IDoctorService,
+	IFileSystem,
+	IHostInfo,
+	ISettingsService, IStringDictionary
+} from "../../src/common/declarations";
+import { IInjector } from "../../src/common/definitions/yok";
+import {
+	ICheckEnvironmentRequirementsInput,
+	ICheckEnvironmentRequirementsOutput
+} from "../../src/definitions/platform";
+import * as _ from "lodash";
+import {
+	ICacheTimeoutOpts,
+	IJsonFileSettingsService,
+	IUseCacheOpts
+} from "../../src/common/definitions/json-file-settings-service";
+
 const nativescriptDoctor = require("nativescript-doctor");
 
 class DoctorServiceInheritor extends DoctorService {
@@ -17,7 +38,7 @@ class DoctorServiceInheritor extends DoctorService {
 		$terminalSpinnerService: ITerminalSpinnerService,
 		$versionsService: IVersionsService,
 		$settingsService: ISettingsService) {
-		super($analyticsService, $hostInfo, $logger, $childProcess, $injector, $projectDataService, $fs, $terminalSpinnerService, $versionsService, $settingsService);
+		super($analyticsService, $hostInfo, $logger, $childProcess, $projectDataService, $fs, $terminalSpinnerService, $versionsService, $settingsService);
 	}
 
 	public getDeprecatedShortImportsInFiles(files: string[], projectDir: string): { file: string, line: string }[] {
@@ -203,7 +224,7 @@ const Observable = require("tns-core-modules-widgets/data/observable").Observabl
 			{
 				filesContents: {
 					// minified code that has both require and some of the tns-core-modules subdirs (i.e. text)
-					file1: `o.cache&&(r+="&cache="+u(o.cache)),t=["<!DOCTYPE html>","<html>","<head>",'<meta charset="UTF-8" />','<script type="text/javascript">',"   var UWA = {hosts:"+n(e.hosts)+"},",'       curl = {apiName: "require"};`
+					file1: `o.cache&&(r+="&cache="+u(o.cache)),t=["<!DOCTYPE html>","<html>","<head>",'<meta charset="UTF-8" />','<script type="text/javascript">',"   var UWA = {hosts:"+n(e.hosts)+"},",';       curl = {apiName: "require"};`
 				},
 				expectedShortImports: []
 			},

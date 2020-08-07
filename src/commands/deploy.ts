@@ -2,6 +2,13 @@ import { ANDROID_RELEASE_BUILD_ERROR_MESSAGE, ANDROID_APP_BUNDLE_SIGNING_ERROR_M
 import { ValidatePlatformCommandBase } from "./command-base";
 import { DeployCommandHelper } from "../helpers/deploy-command-helper";
 import { hasValidAndroidSigning } from "../common/helpers";
+import { IOptions, IPlatformValidationService } from "../declarations";
+import { IProjectData } from "../definitions/project";
+import { IErrors, OptionType } from "../common/declarations";
+import { IPlatformsDataService } from "../definitions/platform";
+import { IMigrateController } from "../definitions/migrate";
+
+import { ICommand, ICommandParameter } from "../common/definitions/commands";
 
 export class DeployOnDeviceCommand extends ValidatePlatformCommandBase implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];

@@ -5,6 +5,7 @@ import { DevicePlatformsConstants } from "../../src/common/mobile/device-platfor
 import { IOSDebuggerPortService } from "../../src/services/ios-debugger-port-service";
 import { EventEmitter } from "events";
 import { Yok } from "../../src/common/yok";
+import { IInjector } from "../../src/common/definitions/yok";
 
 const appId = "org.nativescript.test";
 const deviceId = "fbece8e562ac63749a1018a9f1ea57614c5c953a";

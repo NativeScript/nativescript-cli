@@ -1,6 +1,8 @@
 import * as path from "path";
 import * as helpers from "../helpers";
 import * as ValidationResult from "./validation-result";
+import { IErrors } from "../declarations";
+import * as _ from "lodash";
 
 export class ProjectNameValidator implements IProjectNameValidator {
 	private static MAX_FILENAME_LENGTH = 30;

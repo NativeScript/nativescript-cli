@@ -4,12 +4,14 @@ import { IOSDeviceLiveSyncService } from "./ios-device-livesync-service";
 import { PlatformLiveSyncServiceBase } from "./platform-livesync-service-base";
 import { APP_FOLDER_NAME } from "../../constants";
 import { performanceLog } from "../../common/decorators";
+import { IFileSystem, IProjectDir, IProjectFilesManager } from "../../common/declarations";
+import { IPlatformsDataService } from "../../definitions/platform";
 
 export class IOSLiveSyncService extends PlatformLiveSyncServiceBase implements IPlatformLiveSyncService {
 	constructor(protected $fs: IFileSystem,
 		protected $platformsDataService: IPlatformsDataService,
 		protected $projectFilesManager: IProjectFilesManager,
-		private $injector: IInjector,
+		//private $injector: IInjector,
 		private $tempService: ITempService,
 		$devicePathProvider: IDevicePathProvider,
 		$logger: ILogger) {
@@ -68,7 +70,7 @@ export class IOSLiveSyncService extends PlatformLiveSyncServiceBase implements I
 	}
 
 	protected _getDeviceLiveSyncService(device: Mobile.IDevice, data: IProjectDir): INativeScriptDeviceLiveSyncService {
-		const service = this.$injector.resolve<INativeScriptDeviceLiveSyncService>(IOSDeviceLiveSyncService, { device, data });
+		const service = $injector.resolve<INativeScriptDeviceLiveSyncService>(IOSDeviceLiveSyncService, { device, data });
 		return service;
 	}
 }

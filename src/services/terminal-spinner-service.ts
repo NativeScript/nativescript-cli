@@ -1,5 +1,6 @@
 import * as ora from 'ora';
 
+
 export class TerminalSpinnerService implements ITerminalSpinnerService {
 	public createSpinner(spinnerOptions: ITerminalSpinnerOptions = {}): ITerminalSpinner {
 		spinnerOptions.stream = spinnerOptions.stream || process.stdout;

@@ -2,6 +2,11 @@
 import { hook } from "../../common/helpers";
 import { performanceLog } from "../../common/decorators";
 import { NativePlatformStatus } from "../../constants";
+import { INodeModulesBuilder, IPlatformData } from "../../definitions/platform";
+import { IProjectData } from "../../definitions/project";
+
+import { IHooksService } from "../../common/declarations";
+import { IMetadataFilteringService } from "../../definitions/metadata-filtering-service";
 
 export class PrepareNativePlatformService implements IPrepareNativePlatformService {
 

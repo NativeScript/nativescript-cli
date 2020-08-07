@@ -1,4 +1,8 @@
 import { createTable } from "../../common/helpers";
+import { IProjectData } from "../../definitions/project";
+import { IBasePluginData, IPackageJsonDepedenciesResult, IPluginsService } from "../../definitions/plugins";
+
+import { ICommand, ICommandParameter } from "../../common/definitions/commands";
 
 export class ListPluginsCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];

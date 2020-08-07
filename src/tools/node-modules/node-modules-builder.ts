@@ -1,3 +1,12 @@
+import {
+	INodeModulesBuilder,
+	INodeModulesDependenciesBuilder,
+	IPrepareNodeModulesData
+} from "../../definitions/platform";
+
+import { IPluginsService } from "../../definitions/plugins";
+import * as _ from "lodash";
+
 export class NodeModulesBuilder implements INodeModulesBuilder {
 	constructor(
 		private $logger: ILogger,

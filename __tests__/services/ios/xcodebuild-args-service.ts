@@ -3,6 +3,8 @@ import { DevicePlatformsConstants } from "../../../src/common/mobile/device-plat
 import { XcodebuildArgsService } from "../../../src/services/ios/xcodebuild-args-service";
 import * as path from "path";
 import { assert } from "chai";
+import { IInjector } from "../../../src/common/definitions/yok";
+import * as _ from "lodash";
 
 function createTestInjector(data: { logLevel: string, hasProjectWorkspace: boolean, connectedDevices?: any[] }): IInjector {
 	const injector = new Yok();

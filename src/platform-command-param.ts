@@ -1,3 +1,7 @@
+import { IProjectData } from "./definitions/project";
+import { IPlatformValidationService } from "./declarations";
+import { ICommandParameter } from "./common/definitions/commands";
+
 export class PlatformCommandParameter implements ICommandParameter {
 	constructor(private $platformValidationService: IPlatformValidationService,
 		private $projectData: IProjectData) { }

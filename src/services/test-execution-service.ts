@@ -2,6 +2,12 @@ import * as constants from "../constants";
 import * as path from 'path';
 import * as os from 'os';
 import { RunController } from "../controllers/run-controller";
+import { IProjectData, IProjectDataService, ITestExecutionService } from "../definitions/project";
+import { ErrorCodes, IChildProcess, IFileSystem, Server } from "../common/declarations";
+import { IConfiguration, IOptions } from "../declarations";
+import { IPluginsService } from "../definitions/plugins";
+import { ICommandParameter } from "../common/definitions/commands";
+import * as _ from "lodash";
 
 interface IKarmaConfigOptions {
 	debugBrk: boolean;

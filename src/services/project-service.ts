@@ -5,6 +5,16 @@ import { format } from "util";
 import { exported } from "../common/decorators";
 import { Hooks, TemplatesV2PackageJsonKeysToRemove } from "../constants";
 import { performanceLog } from "../common/decorators";
+import {
+	ICreateProjectData, IProjectCreationSettings,
+	IProjectDataService,
+	IProjectService,
+	IProjectSettings,
+	IProjectTemplatesService, ITemplateData
+} from "../definitions/project";
+import { IErrors, IFileSystem, IHooksService, IProjectHelper, IStringDictionary } from "../common/declarations";
+import { INodePackageManager, IProjectNameService, IStaticConfig } from "../declarations";
+import * as _ from "lodash";
 
 export class ProjectService implements IProjectService {
 

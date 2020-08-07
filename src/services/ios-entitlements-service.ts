@@ -1,5 +1,8 @@
 import * as path from "path";
 import { PlistSession } from "plist-merge-patch";
+import { IFileSystem } from "../common/declarations";
+import { IProjectData } from "../definitions/project";
+import { IPluginData, IPluginsService } from "../definitions/plugins";
 
 export class IOSEntitlementsService {
 	constructor(private $fs: IFileSystem,

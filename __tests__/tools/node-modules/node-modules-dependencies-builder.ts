@@ -3,6 +3,11 @@ import { assert } from "chai";
 import { NodeModulesDependenciesBuilder } from "../../../src/tools/node-modules/node-modules-dependencies-builder";
 import * as path from "path";
 import * as constants from "../../../src/constants";
+import { IInjector } from "../../../src/common/definitions/yok";
+import { IFileSystem, IStringDictionary } from "../../../src/common/declarations";
+import { INodeModulesDependenciesBuilder } from "../../../src/definitions/platform";
+import { IDependencyData } from "../../../src/declarations";
+import * as _ from "lodash";
 
 interface IDependencyInfo {
 	name: string;

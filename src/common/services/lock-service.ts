@@ -2,6 +2,10 @@ import * as lockfile from "proper-lockfile";
 import * as path from "path";
 import { cache } from "../decorators";
 import { getHash } from "../helpers";
+import { IFileSystem, ISettingsService } from "../declarations";
+import { ICleanupService } from "../../definitions/cleanup-service";
+
+import * as _ from "lodash";
 
 export class LockService implements ILockService {
 

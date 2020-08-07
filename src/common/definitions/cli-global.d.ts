@@ -1,4 +1,8 @@
-declare var _: _.LoDashStatic;
+import { IInjector } from "./yok";
+import * as _ from 'lodash';
+
+// declare var _: _.LoDashStatic;
+
 /**
  * Defines additional properties added to global object from CLI.
  */

@@ -4,6 +4,10 @@ import * as net from "net";
 import { DeviceLiveSyncServiceBase } from "./device-livesync-service-base";
 import { performanceLog } from "../../common/decorators";
 import * as semver from "semver";
+import { IiOSSocketRequestExecutor, IPlatformCommandHelper } from "../../declarations";
+import { IProjectData } from "../../definitions/project";
+import { IPlatformsDataService } from "../../definitions/platform";
+import * as _ from "lodash";
 
 let currentPageReloadId = 0;
 

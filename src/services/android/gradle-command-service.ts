@@ -1,3 +1,6 @@
+import { IChildProcess, IErrors, IHostInfo, ISpawnFromEventOptions, ISpawnResult } from "../../common/declarations";
+import { IGradleCommandOptions, IGradleCommandService } from "../../definitions/gradle";
+
 export class GradleCommandService implements IGradleCommandService {
 	constructor(
 		private $childProcess: IChildProcess,

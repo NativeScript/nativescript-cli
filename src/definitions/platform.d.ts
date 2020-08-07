@@ -1,6 +1,12 @@
 /**
  * Describes information about how to build the native project.
  */
+import { IBuildConfig, IBuildForDevice, INativePrepare, IProjectData } from "./project";
+import { IRelease } from "../common/declarations";
+import { IDependencyData, IHasAndroidBundle, IOptions } from "../declarations";
+import { IControllerDataBase } from "./data";
+import { INotConfiguredEnvOptions } from "../common/definitions/commands";
+
 interface IBuildPlatformAction {
 	/**
 	 * Builds the native project for the specified platform for device or emulator.
@@ -21,8 +27,11 @@ interface IPlatformData {
 	normalizedPlatformName: string;
 	platformNameLowerCase: string;
 	appDestinationDirectoryPath: string;
+
 	getBuildOutputPath(options: IBuildOutputOptions): string;
+
 	getValidBuildOutputData(buildOptions: IBuildOutputOptions): IValidBuildOutputData;
+
 	frameworkDirectoriesExtensions?: string[];
 	frameworkDirectoriesNames?: string[];
 	targetedOS?: string[];
@@ -66,7 +75,7 @@ interface IBuildInfo {
 	 * As `xcrun` command does not throw an error when IPHONEOS_DEPLOYMENT_TARGET is provided in `xcconfig` file and
 	 * the simulator's version does not match IPHONEOS_DEPLOYMENT_TARGET's value, we need to save it to buildInfo file
 	 * in order check it on livesync and throw an error to the user.
-	*/
+	 */
 	deploymentTarget?: string;
 }
 
@@ -94,10 +103,12 @@ interface IAddPlatformData extends IControllerDataBase {
 
 interface IPlatformController {
 	addPlatform(addPlatformData: IAddPlatformData): Promise<void>;
+
 	addPlatformIfNeeded(addPlatformData: IAddPlatformData): Promise<void>;
 }
 
 interface IAddPlatformService {
 	addPlatformSafe(projectData: IProjectData, platformData: IPlatformData, packageToInstall: string, nativePrepare: INativePrepare): Promise<string>;
-	setPlatformVersion(platformData: IPlatformData, projectData: IProjectData, frameworkVersion: string): Promise<void>
+
+	setPlatformVersion(platformData: IPlatformData, projectData: IProjectData, frameworkVersion: string): Promise<void>;
 }

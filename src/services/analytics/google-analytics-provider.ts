@@ -2,6 +2,20 @@ import * as uuid from "uuid";
 import * as ua from "universal-analytics";
 import { AnalyticsClients } from "../../common/constants";
 import { cache } from "../../common/decorators";
+import { IGoogleAnalyticsProvider } from "./analytics";
+import { IConfiguration, IStaticConfig } from "../../declarations";
+import {
+	GoogleAnalyticsDataType,
+	IAnalyticsSettingsService,
+	IProxyService,
+	IStringDictionary
+} from "../../common/declarations";
+import {
+	IGoogleAnalyticsData,
+	IGoogleAnalyticsEventData,
+	IGoogleAnalyticsPageviewData
+} from "../../common/definitions/google-analytics";
+import * as _ from "lodash";
 
 export class GoogleAnalyticsProvider implements IGoogleAnalyticsProvider {
 	private currentPage: string;

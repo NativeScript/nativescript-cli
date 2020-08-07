@@ -3,6 +3,9 @@ import { assert } from "chai";
 import { EventEmitter } from "events";
 import { DeviceEmitter } from "../../../mobile/device-emitter";
 import { DeviceDiscoveryEventNames, DEVICE_LOG_EVENT_NAME } from "../../../constants";
+import { IInjector } from "../../../definitions/yok";
+import * as _ from "lodash";
+
 // Injector dependencies must be classes.
 // EventEmitter is function, so our annotate method will fail.
 class CustomEventEmitter extends EventEmitter {

@@ -2,7 +2,7 @@ declare module "pacote" {
 	import * as stream from "stream";
 
 	export function manifest(packageName: string, options: IPacoteManifestOptions): Promise<any>;
-	export var tarball: IPacoteTarballResult;
+	export let tarball: IPacoteTarballResult;
 
 	interface IPacoteTarballResult {
 		stream: (packageName: string, options: IPacoteBaseOptions) => IPacoteTarballStreamResult;

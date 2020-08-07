@@ -1,9 +1,16 @@
+import { IProjectData } from "../../definitions/project";
+import { IPluginData, IPluginsService } from "../../definitions/plugins";
+import { IErrors } from "../../common/declarations";
+
+import { ICommand, ICommandParameter } from "../../common/definitions/commands";
+import * as _ from "lodash";
+
 export class AddPluginCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
 
 	constructor(private $pluginsService: IPluginsService,
-		private $projectData: IProjectData,
-		private $errors: IErrors) {
+				private $projectData: IProjectData,
+				private $errors: IErrors) {
 		this.$projectData.initializeProjectData();
 	}
 

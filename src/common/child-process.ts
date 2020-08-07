@@ -1,5 +1,6 @@
 import * as child_process from "child_process";
 import { EventEmitter } from "events";
+import { IChildProcess, IErrors, IExecOptions, ISpawnFromEventOptions, ISpawnResult } from "./declarations";
 
 export class ChildProcess extends EventEmitter implements IChildProcess {
 	constructor(private $logger: ILogger,

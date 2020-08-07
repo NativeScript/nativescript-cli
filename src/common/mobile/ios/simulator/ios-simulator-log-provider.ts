@@ -1,5 +1,8 @@
 import { ChildProcess } from "child_process";
 import { EventEmitter } from "events";
+import { IDictionary, IDisposable, IShouldDispose } from "../../../declarations";
+
+import * as _ from "lodash";
 
 export class IOSSimulatorLogProvider extends EventEmitter implements Mobile.IiOSSimulatorLogProvider, IDisposable, IShouldDispose {
 	public shouldDispose: boolean;

@@ -1,4 +1,5 @@
 import { PrepareData } from "./prepare-data";
+import { IBuildData, IiOSBuildData } from "../definitions/build";
 
 export class BuildData extends PrepareData implements IBuildData {
 	public device?: string;

@@ -1,12 +1,15 @@
 import { StringCommandParameter } from "../common/command-params";
+import { IApplePortalSessionService } from "../services/apple-portal/definitions";
+import { IErrors } from "../common/declarations";
+
+import { ICommand, ICommandParameter } from "../common/definitions/commands";
 
 export class AppleLogin implements ICommand {
-	public allowedParameters: ICommandParameter[] = [new StringCommandParameter(this.$injector), new StringCommandParameter(this.$injector)];
+	public allowedParameters: ICommandParameter[] = [new StringCommandParameter(), new StringCommandParameter()];
 
 	constructor(
 		private $applePortalSessionService: IApplePortalSessionService,
 		private $errors: IErrors,
-		private $injector: IInjector,
 		private $logger: ILogger,
 		private $prompter: IPrompter
 	) { }

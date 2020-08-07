@@ -1,4 +1,7 @@
 import { MessagingService, Config, Device, DeviceConnectedMessage, SdkCallbacks, ConnectedDevices, FilesPayload } from "nativescript-preview-sdk";
+import { IConfiguration } from "../../../declarations";
+import { Server } from "../../../common/declarations";
+
 const pako = require("pako");
 
 export class PreviewSdkService implements IPreviewSdkService {

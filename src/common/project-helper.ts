@@ -1,4 +1,7 @@
 import * as path from "path";
+import { IErrors, IFileSystem, IProjectHelper } from "./declarations";
+import { IOptions } from "../declarations";
+import * as _ from "lodash";
 
 export class ProjectHelper implements IProjectHelper {
 	constructor(private $logger: ILogger,

@@ -5,6 +5,9 @@ import * as util from "util";
 import { assert } from "chai";
 import * as fileSystemFile from "../../file-system";
 import { LoggerConfigData } from "../../../constants";
+import { IInjector } from "../../definitions/yok";
+import { IFileSystem } from "../../declarations";
+import * as _ from "lodash";
 
 const passwordReplacement = "*******";
 const debugTrace = ["debug", "trace"];

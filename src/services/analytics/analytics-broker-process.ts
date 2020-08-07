@@ -3,6 +3,10 @@
 import * as fs from "fs";
 import { AnalyticsBroker } from "./analytics-broker";
 import { FileLogService } from "../../detached-processes/file-log-service";
+import { IAnalyticsBroker, IPreviewAppTrackingInformation, ITrackingInformation } from "./analytics";
+
+import { TrackingTypes } from "../../common/declarations";
+import * as _ from "lodash";
 
 const pathToBootstrap = process.argv[2];
 if (!pathToBootstrap || !fs.existsSync(pathToBootstrap)) {

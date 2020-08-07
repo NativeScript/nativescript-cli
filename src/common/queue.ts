@@ -1,3 +1,5 @@
+import { IQueue } from "./declarations";
+
 export class Queue<T> implements IQueue<T> {
 	private promiseResolve: (value?: void | PromiseLike<void>) => void;
 

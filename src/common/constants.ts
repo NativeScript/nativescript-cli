@@ -1,4 +1,6 @@
 // enumeration taken from ProvisionType.cs
+import { IDictionary } from "./declarations";
+
 export class ProvisionType {
 	static Development = "Development";
 	static AdHoc = "AdHoc";
@@ -13,9 +15,10 @@ export class DeviceTypes {
 }
 
 export const enum Platforms {
-  ios = 'ios',
-  android = 'android'
+	ios = 'ios',
+	android = 'android'
 }
+
 export type SupportedPlatform = Platforms.ios | Platforms.android;
 
 export const APP_RESOURCES_FOLDER_NAME = "App_Resources";

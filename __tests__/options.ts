@@ -2,6 +2,10 @@ import { Errors } from "../src/common/errors";
 import { Yok } from "../src/common/yok";
 import { assert } from "chai";
 import { Options } from "../src/options";
+import { IInjector } from "../src/common/definitions/yok";
+import { IConfigurationSettings, ISettingsService, OptionType } from "../src/common/declarations";
+import { IOptions } from "../src/declarations";
+import * as _ from "lodash";
 
 let isExecutionStopped = false;
 

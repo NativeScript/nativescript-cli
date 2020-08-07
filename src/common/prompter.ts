@@ -2,6 +2,9 @@ import * as prompt from "inquirer";
 import * as helpers from "./helpers";
 import * as readline from "readline";
 import { ReadStream } from "tty";
+import { IAllowEmpty, IPrompterOptions } from "./declarations";
+import * as _ from "lodash";
+
 const MuteStream = require("mute-stream");
 
 export class Prompter implements IPrompter {

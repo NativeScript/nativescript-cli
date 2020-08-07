@@ -1,5 +1,8 @@
 import * as path from "path";
 import * as mobileProvisionFinder from "ios-mobileprovision-finder";
+import { IBuildConfig, IProjectData } from "../../definitions/project";
+import { IFileSystem } from "../../common/declarations";
+
 
 export class ExportOptionsPlistService implements IExportOptionsPlistService {
 	constructor(private $fs: IFileSystem,

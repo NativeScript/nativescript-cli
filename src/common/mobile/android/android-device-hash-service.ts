@@ -2,6 +2,8 @@ import * as path from "path";
 import { cache } from "../../decorators";
 import { executeActionByChunks } from "../../helpers";
 import { DEFAULT_CHUNK_SIZE, LiveSyncPaths } from "../../constants";
+import { IFileSystem, IStringDictionary } from "../../declarations";
+import * as _ from "lodash";
 
 export class AndroidDeviceHashService implements Mobile.IAndroidDeviceHashService {
 	private static HASH_FILE_NAME = "hashes";

@@ -3,6 +3,13 @@ import { PREPARE_READY_EVENT_NAME, TrackActionNames, DEBUGGER_DETACHED_EVENT_NAM
 import { cache, performanceLog } from "../common/decorators";
 import { EventEmitter } from "events";
 import * as util from "util";
+import { IAnalyticsService, IDictionary, IErrors, IHooksService } from "../common/declarations";
+import { IBuildController } from "../definitions/build";
+import { IDebugController } from "../definitions/debug";
+import { IPlatformsDataService } from "../definitions/platform";
+import { IPluginsService } from "../definitions/plugins";
+import { IProjectData, IProjectDataService } from "../definitions/project";
+import * as _ from "lodash";
 
 export class RunController extends EventEmitter implements IRunController {
 	private prepareReadyEventHandler: any = null;
@@ -14,7 +21,6 @@ export class RunController extends EventEmitter implements IRunController {
 		private $deviceInstallAppService: IDeviceInstallAppService,
 		protected $devicesService: Mobile.IDevicesService,
 		protected $errors: IErrors,
-		protected $injector: IInjector,
 		private $hmrStatusService: IHmrStatusService,
 		public $hooksService: IHooksService,
 		private $liveSyncServiceResolver: ILiveSyncServiceResolver,

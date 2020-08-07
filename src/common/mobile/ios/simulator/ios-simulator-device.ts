@@ -6,6 +6,10 @@ import { cache } from "../../../decorators";
 import * as helpers from "../../../../common/helpers";
 import { IOSDeviceBase } from "../ios-device-base";
 import { DeviceConnectionType } from "../../../../constants";
+import { IiOSNotification } from "../../../../declarations";
+import { IErrors } from "../../../declarations";
+
+import * as _ from "lodash";
 
 export class IOSSimulator extends IOSDeviceBase implements Mobile.IiOSDevice {
 	public applicationManager: Mobile.IDeviceApplicationManager;
@@ -17,7 +21,6 @@ export class IOSSimulator extends IOSDeviceBase implements Mobile.IiOSDevice {
 		protected $deviceLogProvider: Mobile.IDeviceLogProvider,
 		protected $errors: IErrors,
 		protected $lockService: ILockService,
-		private $injector: IInjector,
 		protected $iOSDebuggerPortService: IIOSDebuggerPortService,
 		private $iOSSimResolver: Mobile.IiOSSimResolver,
 		private $iOSEmulatorServices: Mobile.IiOSSimulatorService,
@@ -25,8 +28,8 @@ export class IOSSimulator extends IOSDeviceBase implements Mobile.IiOSDevice {
 		private $iOSSimulatorLogProvider: Mobile.IiOSSimulatorLogProvider,
 		protected $logger: ILogger) {
 		super();
-		this.applicationManager = this.$injector.resolve(applicationManagerPath.IOSSimulatorApplicationManager, { iosSim: this.$iOSSimResolver.iOSSim, device: this });
-		this.fileSystem = this.$injector.resolve(fileSystemPath.IOSSimulatorFileSystem, { iosSim: this.$iOSSimResolver.iOSSim });
+		this.applicationManager = $injector.resolve(applicationManagerPath.IOSSimulatorApplicationManager, { iosSim: this.$iOSSimResolver.iOSSim, device: this });
+		this.fileSystem = $injector.resolve(fileSystemPath.IOSSimulatorFileSystem, { iosSim: this.$iOSSimResolver.iOSSim });
 		this.deviceInfo = {
 			imageIdentifier: this.simulator.id,
 			identifier: this.simulator.id,

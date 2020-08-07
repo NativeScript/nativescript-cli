@@ -3,6 +3,9 @@ import { Yok } from "../../yok";
 import { assert } from "chai";
 import { AndroidBundleToolServiceStub, CommonLoggerStub, HooksServiceStub, LogcatHelperStub, AndroidProcessServiceStub, DeviceLogProviderStub, ErrorsStub } from "./stubs";
 import { FileSystemStub } from "../../../../__tests__/stubs";
+import { IInjector } from "../../definitions/yok";
+import * as _ from "lodash";
+
 const invalidIdentifier = "invalid.identifier";
 const validDeviceIdentifier = "device.identifier";
 const validIdentifier = "org.nativescript.testApp";

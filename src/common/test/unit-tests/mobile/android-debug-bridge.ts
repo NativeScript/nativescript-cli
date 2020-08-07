@@ -4,6 +4,9 @@ import { Yok } from "../../../yok";
 import { CommonLoggerStub, ErrorsStub } from "../stubs";
 import { AndroidDebugBridgeResultHandler } from "../../../mobile/android/android-debug-bridge-result-handler";
 import { EventEmitter } from "events";
+import { ISpawnResult } from "../../../declarations";
+import * as _ from "lodash";
+
 const adbPath = "testAdb";
 const adbError = "No space left on device.";
 const adbResponse = "My Cool Response";

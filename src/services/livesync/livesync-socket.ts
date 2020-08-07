@@ -1,5 +1,6 @@
 import * as net from "net";
 
+
 export class LiveSyncSocket extends net.Socket implements ILiveSyncSocket {
 	public uid: string;
 	public writeAsync (data: Buffer): Promise<Boolean> {

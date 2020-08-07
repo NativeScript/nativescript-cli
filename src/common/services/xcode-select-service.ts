@@ -1,11 +1,11 @@
 import * as path from "path";
 import { cache } from "../decorators";
+import { IChildProcess, IErrors, IHostInfo, ISysInfo, IVersionData, IXcodeSelectService } from "../declarations";
 
 export class XcodeSelectService implements IXcodeSelectService {
 	constructor(private $childProcess: IChildProcess,
 		private $errors: IErrors,
-		private $hostInfo: IHostInfo,
-		private $injector: IInjector) {
+		private $hostInfo: IHostInfo) {
 	}
 
 	public async getDeveloperDirectoryPath(): Promise<string> {
@@ -29,7 +29,7 @@ export class XcodeSelectService implements IXcodeSelectService {
 
 	@cache()
 	public async getXcodeVersion(): Promise<IVersionData> {
-		const sysInfo = this.$injector.resolve<ISysInfo>("sysInfo");
+		const sysInfo = $injector.resolve<ISysInfo>("sysInfo");
 		const xcodeVer = await sysInfo.getXcodeVersion();
 		if (!xcodeVer) {
 			this.$errors.fail("xcodebuild execution failed. Make sure that you have latest Xcode and tools installed.");

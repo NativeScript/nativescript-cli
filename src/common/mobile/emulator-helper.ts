@@ -1,4 +1,6 @@
 import { RUNNING_EMULATOR_STATUS, DeviceTypes } from "../constants";
+import * as _ from "lodash";
+
 
 export class EmulatorHelper implements Mobile.IEmulatorHelper {
 	// https://developer.android.com/guide/topics/manifest/uses-sdk-element

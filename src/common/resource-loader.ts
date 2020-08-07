@@ -1,4 +1,5 @@
 import * as path from "path";
+import { IFileSystem, IResourceLoader } from "./declarations";
 
 export class ResourceLoader implements IResourceLoader {
 	constructor(private $fs: IFileSystem,

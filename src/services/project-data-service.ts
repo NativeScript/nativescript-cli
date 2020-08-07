@@ -12,6 +12,19 @@ import {
 	ProjectTypes,
 	NODE_MODULES_FOLDER_NAME
 } from "../constants";
+import {
+	IAssetGroup, IAssetItem,
+	IAssetsStructure, IAssetSubGroup,
+	IImageDefinitionsStructure,
+	INsConfig,
+	IProjectData,
+	IProjectDataService
+} from "../definitions/project";
+import { IDictionary, IFileSystem, IProjectDir } from "../common/declarations";
+import { IAndroidResourcesMigrationService, IStaticConfig } from "../declarations";
+import { Platforms, SupportedPlatform } from "../common/constants";
+import { IBasePluginData, IPluginsService } from "../definitions/plugins";
+import * as _ from "lodash";
 
 interface IProjectFileData {
 	projectData: any;
@@ -24,15 +37,14 @@ export class ProjectDataService implements IProjectDataService {
 	private projectDataCache: IDictionary<IProjectData> = {};
 
 	constructor(private $fs: IFileSystem,
-		private $staticConfig: IStaticConfig,
-		private $logger: ILogger,
-		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-    private $androidResourcesMigrationService: IAndroidResourcesMigrationService,
-    private $pluginService: IPluginsService,
-		private $injector: IInjector) {
+				private $staticConfig: IStaticConfig,
+				private $logger: ILogger,
+				private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
+				private $androidResourcesMigrationService: IAndroidResourcesMigrationService,
+				private $pluginService: IPluginsService) {
 		try {
 			// add the ProjectData of the default projectDir to the projectData cache
-			const projectData = this.$injector.resolve("projectData");
+			const projectData = $injector.resolve("projectData");
 			projectData.initializeProjectData();
 			this.defaultProjectDir = projectData.projectDir;
 			this.projectDataCache[this.defaultProjectDir] = projectData;
@@ -74,7 +86,7 @@ export class ProjectDataService implements IProjectDataService {
 	@exported("projectDataService")
 	public getProjectData(projectDir: string): IProjectData {
 		projectDir = projectDir || this.defaultProjectDir;
-		this.projectDataCache[projectDir] = this.projectDataCache[projectDir] || this.$injector.resolve<IProjectData>(ProjectData);
+		this.projectDataCache[projectDir] = this.projectDataCache[projectDir] || $injector.resolve<IProjectData>(ProjectData);
 		this.projectDataCache[projectDir].initializeProjectData(projectDir);
 
 		return this.projectDataCache[projectDir];
@@ -83,7 +95,7 @@ export class ProjectDataService implements IProjectDataService {
 	@exported("projectDataService")
 	public getProjectDataFromContent(packageJsonContent: string, nsconfigContent: string, projectDir?: string): IProjectData {
 		projectDir = projectDir || this.defaultProjectDir;
-		this.projectDataCache[projectDir] = this.projectDataCache[projectDir] || this.$injector.resolve<IProjectData>(ProjectData);
+		this.projectDataCache[projectDir] = this.projectDataCache[projectDir] || $injector.resolve<IProjectData>(ProjectData);
 		this.projectDataCache[projectDir].initializeProjectDataFromContent(packageJsonContent, nsconfigContent, projectDir);
 		return this.projectDataCache[projectDir];
 	}
@@ -189,6 +201,7 @@ export class ProjectDataService implements IProjectDataService {
 
 		return files;
 	}
+
 	private refreshProjectData(projectDir: string) {
 		if (this.projectDataCache[projectDir]) {
 			this.projectDataCache[projectDir].initializeProjectData(projectDir);
@@ -236,8 +249,8 @@ export class ProjectDataService implements IProjectDataService {
 
 	private async getIOSAssetSubGroup(dirPath: string): Promise<IAssetSubGroup> {
 		const pathToContentJson = path.join(dirPath, AssetConstants.iOSResourcesFileName);
-		const content = this.$fs.exists(pathToContentJson) && <IAssetSubGroup>this.$fs.readJson(pathToContentJson) || { images: [] };
-		const finalContent: IAssetSubGroup = { images: [] };
+		const content = this.$fs.exists(pathToContentJson) && <IAssetSubGroup>this.$fs.readJson(pathToContentJson) || {images: []};
+		const finalContent: IAssetSubGroup = {images: []};
 
 		const imageDefinitions = this.getImageDefinitions().ios;
 
@@ -399,17 +412,17 @@ export class ProjectDataService implements IProjectDataService {
 		Object.assign(config, data);
 
 		return config;
-  }
-  
-  public getRuntimePackage(projectDir: string, platform: SupportedPlatform): IBasePluginData {
-    return this.$pluginService.getDependenciesFromPackageJson(projectDir).devDependencies.find(d => {
-      if (platform === Platforms.ios) {
-        return [constants.SCOPED_IOS_RUNTIME_NAME, constants.TNS_IOS_RUNTIME_NAME].includes(d.name);
-      } else if (platform === Platforms.android) {
-        return [constants.SCOPED_ANDROID_RUNTIME_NAME, d.name === constants.TNS_ANDROID_RUNTIME_NAME].includes(d.name);
-      }
-    });
-  }
+	}
+
+	public getRuntimePackage(projectDir: string, platform: SupportedPlatform): IBasePluginData {
+		return this.$pluginService.getDependenciesFromPackageJson(projectDir).devDependencies.find(d => {
+			if (platform === Platforms.ios) {
+				return [constants.SCOPED_IOS_RUNTIME_NAME, constants.TNS_IOS_RUNTIME_NAME].includes(d.name);
+			} else if (platform === Platforms.android) {
+				return [constants.SCOPED_ANDROID_RUNTIME_NAME, d.name === constants.TNS_ANDROID_RUNTIME_NAME].includes(d.name);
+			}
+		});
+	}
 
 	@exported("projectDataService")
 	public getNsConfigDefaultContent(data?: Object): string {
@@ -418,4 +431,5 @@ export class ProjectDataService implements IProjectDataService {
 		return JSON.stringify(config);
 	}
 }
+
 $injector.register("projectDataService", ProjectDataService);

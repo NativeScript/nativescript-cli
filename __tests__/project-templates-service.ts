@@ -5,6 +5,16 @@ import { assert } from "chai";
 import * as path from "path";
 import * as constants from "../src/constants";
 import { format } from "util";
+import { IInjector } from "../src/common/definitions/yok";
+import {
+	INodePackageManagerInstallOptions,
+	INpmInstallOptions,
+	INpmInstallResultInfo,
+	INpmPackageNameParts
+} from "../src/declarations";
+import { IProjectTemplatesService } from "../src/definitions/project";
+import { IAnalyticsService, IFileSystem } from "../src/common/declarations";
+import { IEventActionData } from "../src/common/definitions/google-analytics";
 
 let isDeleteDirectoryCalledForNodeModulesDir = false;
 const nativeScriptValidatedTemplatePath = "nsValidatedTemplatePath";

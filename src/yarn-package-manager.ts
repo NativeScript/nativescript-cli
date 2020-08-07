@@ -1,6 +1,9 @@
 import * as path from "path";
 import { BasePackageManager } from "./base-package-manager";
 import { exported } from './common/decorators';
+import { IChildProcess, IDictionary, IErrors, IFileSystem, IHostInfo, Server } from "./common/declarations";
+import { INodePackageManagerInstallOptions, INpmInstallResultInfo, INpmsResult } from "./declarations";
+import * as _ from "lodash";
 
 export class YarnPackageManager extends BasePackageManager {
 

@@ -2,6 +2,7 @@ import { Yok } from "../../../src/common/yok";
 import { ExportOptionsPlistService } from "../../../src/services/ios/export-options-plist-service";
 import { assert } from "chai";
 import { TempServiceStub } from "../../stubs";
+import * as _ from "lodash";
 
 let actualPlistTemplate: string = null;
 const projectName = "myProjectName";

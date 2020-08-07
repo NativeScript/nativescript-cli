@@ -1,5 +1,4 @@
-import { inj } from './common/bootstrap';
-inj.requirePublicClass("logger", "./common/logger/logger");
+$injector.requirePublicClass("logger", "./common/logger/logger");
 $injector.require("config", "./config");
 $injector.require("options", "./options");
 // note: order above is important!
@@ -234,5 +233,3 @@ $injector.require("jsonFileSettingsService", "./common/services/json-file-settin
 $injector.require("markingModeService", "./services/marking-mode-service");
 $injector.require("metadataFilteringService", "./services/metadata-filtering-service");
 $injector.require("tempService", "./services/temp-service");
-
-export const inje = $injector;

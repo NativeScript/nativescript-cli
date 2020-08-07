@@ -2,10 +2,13 @@ import * as pacote from "pacote";
 import * as tar from "tar";
 import * as path from "path";
 import { cache } from "../common/decorators";
+import { IFileSystem, IProxyService } from "../common/declarations";
+
+import { INodePackageManager, INpmConfigService } from "../declarations";
+import * as _ from "lodash";
 
 export class PacoteService implements IPacoteService {
 	constructor(private $fs: IFileSystem,
-		private $injector: IInjector,
 		private $logger: ILogger,
 		private $npmConfigService: INpmConfigService,
 		private $proxyService: IProxyService) {
@@ -14,7 +17,7 @@ export class PacoteService implements IPacoteService {
 	@cache()
 	public get $packageManager(): INodePackageManager {
 		// need to be resolved here due to cyclic dependency
-		return this.$injector.resolve("packageManager");
+		return $injector.resolve("packageManager");
 	}
 
 	public async manifest(packageName: string, options?: IPacoteManifestOptions): Promise<any> {

@@ -1,19 +1,27 @@
 import { TrackActionNames } from "../constants";
 import { isInteractive, hook } from "../common/helpers";
 import { EOL } from "os";
+import { IAnalyticsService, IDoctorService, IErrors } from "../common/declarations";
+import { IOptions, IStaticConfig } from "../declarations";
+import {
+	ICheckEnvironmentRequirementsInput,
+	ICheckEnvironmentRequirementsOutput,
+	IPlatformEnvironmentRequirements
+} from "../definitions/platform";
+import { INotConfiguredEnvOptions } from "../common/definitions/commands";
 
 export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequirements {
 	constructor(private $doctorService: IDoctorService,
-		private $errors: IErrors,
-		private $logger: ILogger,
-		private $prompter: IPrompter,
-		private $staticConfig: IStaticConfig,
-		private $analyticsService: IAnalyticsService,
-		private $injector: IInjector,
-		private $previewQrCodeService: IPreviewQrCodeService) { }
+				private $errors: IErrors,
+				private $logger: ILogger,
+				private $prompter: IPrompter,
+				private $staticConfig: IStaticConfig,
+				private $analyticsService: IAnalyticsService,
+				private $previewQrCodeService: IPreviewQrCodeService) {
+	}
 
 	public get $previewAppController(): IPreviewAppController {
-		return this.$injector.resolve("previewAppController");
+		return $injector.resolve("previewAppController");
 	}
 
 	public static LOCAL_SETUP_OPTION_NAME = "Configure for Local Builds";
@@ -28,7 +36,7 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 
 	@hook("checkEnvironment")
 	public async checkEnvironmentRequirements(input: ICheckEnvironmentRequirementsInput): Promise<ICheckEnvironmentRequirementsOutput> {
-		const { platform, projectDir, runtimeVersion } = input;
+		const {platform, projectDir, runtimeVersion} = input;
 		const notConfiguredEnvOptions = input.notConfiguredEnvOptions || {};
 		const options = input.options || <IOptions>{};
 
@@ -45,7 +53,12 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 			};
 		}
 
-		const canExecute = await this.$doctorService.canExecuteLocalBuild({ platform, projectDir, runtimeVersion, forceCheck: input.forceCheck });
+		const canExecute = await this.$doctorService.canExecuteLocalBuild({
+			platform,
+			projectDir,
+			runtimeVersion,
+			forceCheck: input.forceCheck
+		});
 
 		if (!canExecute) {
 			if (!isInteractive()) {
@@ -60,7 +73,7 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 
 			const choices = this.getChoices(notConfiguredEnvOptions);
 
-			selectedOption = await this.promptForChoice({ infoMessage, choices });
+			selectedOption = await this.promptForChoice({infoMessage, choices});
 
 			this.processManuallySetupIfNeeded(selectedOption, platform);
 			await this.processSyncToPreviewAppIfNeeded(selectedOption, projectDir, options);
@@ -68,7 +81,12 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 			if (selectedOption === PlatformEnvironmentRequirements.LOCAL_SETUP_OPTION_NAME) {
 				await this.$doctorService.runSetupScript();
 
-				if (await this.$doctorService.canExecuteLocalBuild({ platform, projectDir, runtimeVersion, forceCheck: input.forceCheck })) {
+				if (await this.$doctorService.canExecuteLocalBuild({
+					platform,
+					projectDir,
+					runtimeVersion,
+					forceCheck: input.forceCheck
+				})) {
 					return {
 						canExecute: true,
 						selectedOption
@@ -103,7 +121,11 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 				useHotModuleReload: options.hmr,
 			});
 
-			await this.$previewQrCodeService.printLiveSyncQrCode({ projectDir, useHotModuleReload: options.hmr, link: options.link });
+			await this.$previewQrCodeService.printLiveSyncQrCode({
+				projectDir,
+				useHotModuleReload: options.hmr,
+				link: options.link
+			});
 		}
 	}
 
@@ -112,7 +134,7 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 	}
 
 	private fail(message: string): void {
-		this.$errors.fail({ formatStr: message, printOnStdout: true });
+		this.$errors.fail({formatStr: message, printOnStdout: true});
 	}
 
 	private getNonInteractiveConsoleMessage(platform: string) {
@@ -125,7 +147,7 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 	}
 
 	private getInteractiveConsoleMessage(options: INotConfiguredEnvOptions) {
-		const message =  PlatformEnvironmentRequirements.MISSING_LOCAL_SETUP_MESSAGE;
+		const message = PlatformEnvironmentRequirements.MISSING_LOCAL_SETUP_MESSAGE;
 		const choices = [
 			`Select "Configure for Local Builds" to run the setup script and automatically configure your environment for local builds.`,
 			`Select "Skip Step and Configure Manually" to disregard this option and install any required components manually.`
@@ -170,7 +192,7 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 		const choices: string[] = [];
 
 		choices.push(...[PlatformEnvironmentRequirements.LOCAL_SETUP_OPTION_NAME,
-		PlatformEnvironmentRequirements.MANUALLY_SETUP_OPTION_NAME]);
+			PlatformEnvironmentRequirements.MANUALLY_SETUP_OPTION_NAME]);
 
 		if (!options.hideSyncToPreviewAppOption) {
 			choices.unshift(PlatformEnvironmentRequirements.SYNC_TO_PREVIEW_APP_OPTION_NAME);
@@ -179,4 +201,5 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 		return choices;
 	}
 }
+
 $injector.register("platformEnvironmentRequirements", PlatformEnvironmentRequirements);

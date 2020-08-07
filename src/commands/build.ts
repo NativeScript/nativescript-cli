@@ -1,6 +1,14 @@
 import { ANDROID_RELEASE_BUILD_ERROR_MESSAGE, AndroidAppBundleMessages } from "../constants";
 import { ValidatePlatformCommandBase } from "./command-base";
 import { hasValidAndroidSigning } from "../common/helpers";
+import { IAndroidBundleValidatorHelper, IOptions, IPlatformValidationService } from "../declarations";
+import { IProjectData } from "../definitions/project";
+import { IErrors, OptionType } from "../common/declarations";
+import { IPlatformsDataService } from "../definitions/platform";
+import { IBuildController, IBuildDataService } from "../definitions/build";
+import { IMigrateController } from "../definitions/migrate";
+
+import { ICommand, ICommandParameter } from "../common/definitions/commands";
 
 export abstract class BuildCommandBase extends ValidatePlatformCommandBase {
 	constructor($options: IOptions,

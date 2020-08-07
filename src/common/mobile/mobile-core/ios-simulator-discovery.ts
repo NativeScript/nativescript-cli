@@ -1,16 +1,18 @@
 import { DeviceDiscovery } from "./device-discovery";
 import { IOSSimulator } from "./../ios/simulator/ios-simulator-device";
 import { EmulatorDiscoveryNames } from "../../constants";
+import { IDictionary, IHostInfo } from "../../declarations";
+
+import * as _ from "lodash";
 
 export class IOSSimulatorDiscovery extends DeviceDiscovery {
 	private cachedSimulators: Mobile.IiSimDevice[] = [];
 	private availableSimulators: IDictionary<Mobile.IDeviceInfo> = {};
 
-	constructor(private $injector: IInjector,
-		private $iOSSimResolver: Mobile.IiOSSimResolver,
-		private $mobileHelper: Mobile.IMobileHelper,
-		private $hostInfo: IHostInfo,
-		private $iOSEmulatorServices: Mobile.IiOSSimulatorService) {
+	constructor(private $iOSSimResolver: Mobile.IiOSSimResolver,
+				private $mobileHelper: Mobile.IMobileHelper,
+				private $hostInfo: IHostInfo,
+				private $iOSEmulatorServices: Mobile.IiOSSimulatorService) {
 		super();
 	}
 
@@ -73,7 +75,7 @@ export class IOSSimulatorDiscovery extends DeviceDiscovery {
 
 	private createAndAddDevice(simulator: Mobile.IiSimDevice): void {
 		this.cachedSimulators.push(_.cloneDeep(simulator));
-		this.addDevice(this.$injector.resolve(IOSSimulator, { simulator: simulator }));
+		this.addDevice($injector.resolve(IOSSimulator, {simulator: simulator}));
 	}
 
 	private deleteAndRemoveDevice(simulator: Mobile.IiSimDevice): void {

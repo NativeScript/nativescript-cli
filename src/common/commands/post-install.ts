@@ -1,3 +1,7 @@
+import { IErrors } from "../declarations";
+
+import { ICommand, ICommandParameter } from "../definitions/commands";
+
 export class PostInstallCommand implements ICommand {
 	constructor(protected $errors: IErrors) {
 	}

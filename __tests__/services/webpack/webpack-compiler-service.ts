@@ -2,6 +2,7 @@ import { Yok } from "../../../src/common/yok";
 import { WebpackCompilerService } from "../../../src/services/webpack/webpack-compiler-service";
 import { assert } from "chai";
 import { ErrorsStub } from "../../stubs";
+import { IInjector } from "../../../src/common/definitions/yok";
 
 const iOSPlatformName = "ios";
 const androidPlatformName = "android";

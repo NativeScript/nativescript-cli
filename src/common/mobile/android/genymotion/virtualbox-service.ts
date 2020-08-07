@@ -2,6 +2,9 @@ import * as path from "path";
 import { EOL } from "os";
 import { cache } from "../../../decorators";
 import { getWinRegPropertyValue } from "../../../helpers";
+import { IChildProcess, IDictionary, IFileSystem, IHostInfo, ISpawnResult } from "../../../declarations";
+import * as _ from "lodash";
+
 
 export class VirtualBoxService implements Mobile.IVirtualBoxService {
 	constructor(private $childProcess: IChildProcess,

@@ -1,6 +1,8 @@
 /**
  * Describes extension name data.
  */
+import { IStringDictionary } from "../declarations";
+
 interface IExtensionName {
 	/**
 	 * The name of the extension.

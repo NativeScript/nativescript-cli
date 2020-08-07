@@ -1,6 +1,16 @@
 import * as path from "path";
 import * as semver from "semver";
 import * as constants from "./constants";
+import { IProjectDataService } from "./definitions/project";
+import {
+	INpmInstallOptions,
+	INpmInstallResultInfo,
+	IPackageInstallationManager,
+	IPackageManager, IStaticConfig
+} from "./declarations";
+import { Platforms } from "./common/constants";
+import { IChildProcess, IFileSystem, ISettingsService } from "./common/declarations";
+
 
 export class PackageInstallationManager implements IPackageInstallationManager {
 	constructor(
@@ -9,7 +19,7 @@ export class PackageInstallationManager implements IPackageInstallationManager {
 		private $logger: ILogger,
 		private $settingsService: ISettingsService,
 		private $fs: IFileSystem,
-    private $staticConfig: IStaticConfig,
+		private $staticConfig: IStaticConfig,
 		private $projectDataService: IProjectDataService) {
 	}
 
@@ -37,7 +47,7 @@ export class PackageInstallationManager implements IPackageInstallationManager {
 	}
 
 	public async getMaxSatisfyingVersion(packageName: string, versionRange: string): Promise<string> {
-		const data = await this.$packageManager.view(packageName, { "versions": true });
+		const data = await this.$packageManager.view(packageName, {"versions": true});
 
 		return <string>semver.maxSatisfying(data, versionRange);
 	}
@@ -100,7 +110,7 @@ export class PackageInstallationManager implements IPackageInstallationManager {
 		const cachePath = this.getInspectorCachePath();
 		this.prepareCacheDir(cachePath);
 		const pathToPackageInCache = path.join(cachePath, constants.NODE_MODULES_FOLDER_NAME, inspectorNpmPackageName);
-    const iOSFrameworkNSValue = this.$projectDataService.getRuntimePackage(projectDir, Platforms.ios);
+		const iOSFrameworkNSValue = this.$projectDataService.getRuntimePackage(projectDir, Platforms.ios);
 		const version = await this.getLatestCompatibleVersion(inspectorNpmPackageName, iOSFrameworkNSValue.version);
 		let shouldInstall = !this.$fs.exists(pathToPackageInCache);
 
@@ -114,7 +124,7 @@ export class PackageInstallationManager implements IPackageInstallationManager {
 		}
 
 		if (shouldInstall) {
-			await this.$childProcess.exec(`npm install ${inspectorNpmPackageName}@${version} --prefix ${cachePath}`, { maxBuffer: 250 * 1024 });
+			await this.$childProcess.exec(`npm install ${inspectorNpmPackageName}@${version} --prefix ${cachePath}`, {maxBuffer: 250 * 1024});
 		}
 
 		this.$logger.info("Using inspector from cache.");
@@ -169,7 +179,7 @@ export class PackageInstallationManager implements IPackageInstallationManager {
 
 		packageName = packageName + (version ? `@${version}` : "");
 
-		const npmOptions: any = { silent: true, "save-exact": true };
+		const npmOptions: any = {silent: true, "save-exact": true};
 
 		if (dependencyType) {
 			npmOptions[dependencyType] = true;
@@ -183,10 +193,11 @@ export class PackageInstallationManager implements IPackageInstallationManager {
 	 * because npm view doens't work with those
 	 */
 	private async getVersion(packageName: string, version: string): Promise<string> {
-		const data: any = await this.$packageManager.view(packageName, { "dist-tags": true });
+		const data: any = await this.$packageManager.view(packageName, {"dist-tags": true});
 		this.$logger.trace("Using version %s. ", data[version]);
 
 		return data[version];
 	}
 }
+
 $injector.register("packageInstallationManager", PackageInstallationManager);

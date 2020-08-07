@@ -1,4 +1,5 @@
 import * as simplePlist from "simple-plist";
+import { IPlistParser } from "./declarations";
 
 export class PlistParser implements IPlistParser {
 	public parseFile(plistFilePath: string): Promise<any> {

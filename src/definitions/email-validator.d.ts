@@ -4,5 +4,5 @@
 // Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
 
 declare module "email-validator" {
-    export function validate(email: String): boolean;
+	export function validate(email: String): boolean;
 }

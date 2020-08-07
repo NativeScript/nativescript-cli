@@ -2,6 +2,9 @@ import { InjectorStub, TempServiceStub } from "../../stubs";
 import { AddPlatformService } from "../../../src/services/platform/add-platform-service";
 import { PacoteService } from "../../../src/services/pacote-service";
 import { assert } from "chai";
+import { INativePrepare, IProjectData } from "../../../src/definitions/project";
+import { IInjector } from "../../../src/common/definitions/yok";
+import * as _ from "lodash";
 
 const nativePrepare: INativePrepare = null;
 

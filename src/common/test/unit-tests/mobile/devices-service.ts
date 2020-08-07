@@ -14,6 +14,9 @@ import { CommonLoggerStub, ErrorsStub } from "../stubs";
 import { Messages } from "../../../messages/messages";
 import * as constants from "../../../constants";
 import { DevicePlatformsConstants } from "../../../mobile/device-platforms-constants";
+import { IInjector } from "../../../definitions/yok";
+import { IDictionary, IHostInfo } from "../../../declarations";
+import * as _ from "lodash";
 
 const helpers = require("../../../helpers");
 const originalIsInteractive = helpers.isInteractive;

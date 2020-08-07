@@ -7,6 +7,9 @@ import { assert } from "chai";
 import { NOT_RUNNING_EMULATOR_STATUS, RUNNING_EMULATOR_STATUS, AndroidVirtualDevice } from '../../../../constants';
 import { CommonLoggerStub } from "../../stubs";
 import { DeviceConnectionType } from "../../../../../constants";
+import { IInjector } from "../../../../definitions/yok";
+import { IChildProcess, IDictionary, ISpawnFromEventOptions, ISpawnResult } from "../../../../declarations";
+import * as _ from "lodash";
 
 const error = "some test error";
 const enumerateGuestPropertiesOutput = `Name: hardware_opengl, value: 1, timestamp: 1519225339826058000, flags:

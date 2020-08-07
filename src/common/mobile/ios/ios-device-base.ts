@@ -1,5 +1,6 @@
 import * as net from "net";
 import { performanceLog } from "../../decorators";
+import { IDictionary, IErrors } from "../../declarations";
 
 export abstract class IOSDeviceBase implements Mobile.IiOSDevice {
 	private cachedSockets: IDictionary<net.Socket> = {};

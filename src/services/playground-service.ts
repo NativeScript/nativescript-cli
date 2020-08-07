@@ -1,7 +1,12 @@
+import { IFileSystem, IPlaygroundInfo, IPlaygroundService, IUserSettingsService } from "../common/declarations";
+import { IProjectData, IProjectDataService } from "../definitions/project";
+
+
 export class PlaygroundService implements IPlaygroundService {
 	constructor(private $fs: IFileSystem,
-		private $projectDataService: IProjectDataService,
-		private $userSettingsService: IUserSettingsService) { }
+				private $projectDataService: IProjectDataService,
+				private $userSettingsService: IUserSettingsService) {
+	}
 
 	public async getPlaygroundInfo(projectDir?: string): Promise<IPlaygroundInfo> {
 		const projectData = this.getProjectData(projectDir);
@@ -20,7 +25,7 @@ export class PlaygroundService implements IPlaygroundService {
 				delete projectFileContent.nativescript.playground;
 				this.$fs.writeJson(projectData.projectFilePath, projectFileContent);
 
-				const result = { id , usedTutorial };
+				const result = {id, usedTutorial};
 				await this.$userSettingsService.saveSettings(<any>{playground: result});
 				return result;
 			}
@@ -46,4 +51,5 @@ export class PlaygroundService implements IPlaygroundService {
 		return this.$userSettingsService.getSettingValue<IPlaygroundInfo>("playground");
 	}
 }
+
 $injector.register('playgroundService', PlaygroundService);

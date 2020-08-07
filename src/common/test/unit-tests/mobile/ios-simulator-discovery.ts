@@ -7,6 +7,8 @@ import { DevicePlatformsConstants } from "../../../mobile/device-platforms-const
 import { ErrorsStub, CommonLoggerStub, HooksServiceStub, LockServiceStub } from "../stubs";
 import { FileSystemStub, ChildProcessStub, TempServiceStub } from "../../../../../__tests__/stubs";
 import { DeviceConnectionType } from "../../../../constants";
+import { IInjector } from "../../../definitions/yok";
+import * as _ from "lodash";
 
 let currentlyRunningSimulators: Mobile.IiSimDevice[];
 

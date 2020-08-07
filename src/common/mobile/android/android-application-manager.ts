@@ -5,6 +5,11 @@ import { hook, sleep, regExpEscape } from "../../helpers";
 import { cache } from "../../decorators";
 import { parse, join } from "path";
 import { AAB_EXTENSION_NAME, APKS_EXTENSION_NAME } from "../../../constants";
+import { IOptions } from "../../../declarations";
+import { IDictionary, IErrors, IFileSystem, IHooksService, Server } from "../../declarations";
+import { IAndroidBuildData, IAndroidSigningData } from "../../../definitions/build";
+import * as _ from "lodash";
+import { IAndroidBundleToolService } from "../../../definitions/android-bundle-tool-service";
 
 export class AndroidApplicationManager extends ApplicationManagerBase {
 	public PID_CHECK_INTERVAL = 100;

@@ -1,3 +1,7 @@
+import { IHelpService } from "../common/declarations";
+
+import { ICommand, ICommandParameter } from "../common/definitions/commands";
+
 export class GenerateHelpCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
 

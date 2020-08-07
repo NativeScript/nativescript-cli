@@ -2,6 +2,10 @@ import * as path from "path";
 import { EOL } from "os";
 import marked from "marked";
 import { CommandsDelimiters } from "../constants";
+import { IErrors, IFileSystem, IHelpService, IMicroTemplateService, IOpener } from "../declarations";
+import { IExtensibilityService } from "../definitions/extensibility";
+import _ from "lodash";
+
 
 interface IHtmlPageGenerationData {
 	basicHtmlPage: string;
@@ -47,7 +51,6 @@ export class HelpService implements IHelpService {
 	}
 
 	constructor(private $logger: ILogger,
-		private $injector: IInjector,
 		private $errors: IErrors,
 		private $fs: IFileSystem,
 		private $staticConfig: Config.IStaticConfig,
@@ -189,7 +192,7 @@ export class HelpService implements IHelpService {
 			commandName = defaultCommandMatch[1];
 		}
 
-		const availableCommands = this.$injector.getRegisteredCommandsNames(true).sort();
+		const availableCommands = $injector.getRegisteredCommandsNames(true).sort();
 		this.$logger.trace("List of registered commands: %s", availableCommands.join(", "));
 		if (commandName && !_.includes(availableCommands, commandName)) {
 			await this.throwMissingCommandError(commandData);

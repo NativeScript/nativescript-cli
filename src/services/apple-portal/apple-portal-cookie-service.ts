@@ -1,3 +1,7 @@
+import { IDictionary, IStringDictionary } from "../../common/declarations";
+import { IApplePortalCookieService } from "./definitions";
+import * as _ from "lodash";
+
 export class ApplePortalCookieService implements IApplePortalCookieService {
 	private userSessionCookies: IStringDictionary = {};
 	private validUserSessionCookieNames = ["myacinfo", "dqsid", "itctx", "itcdq", "acn01", "DES"];

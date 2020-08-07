@@ -2,6 +2,9 @@ import { EOL } from "os";
 import { hook } from "../../../helpers";
 import { ApplicationManagerBase } from "../../application-manager-base";
 import { cache } from "../../../decorators";
+import { IOptions } from "../../../../declarations";
+import { IDictionary, IErrors, IHooksService, IiOSNotificationService } from "../../../declarations";
+import * as _ from "lodash";
 
 export class IOSApplicationManager extends ApplicationManagerBase {
 	private applicationsLiveSyncInfos: Mobile.IApplicationInfo[];

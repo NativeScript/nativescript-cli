@@ -1,14 +1,17 @@
 import * as util from "util";
 import * as os from "os";
 import * as constants from "../../constants";
+import { IDictionary, IMicroTemplateService } from "../declarations";
+
+import * as _ from "lodash";
 
 export class MicroTemplateService implements IMicroTemplateService {
-	private dynamicCallRegex: RegExp;
+	private readonly dynamicCallRegex: RegExp;
 
-	constructor(private $injector: IInjector) {
+	constructor() {
 		// Injector's dynamicCallRegex doesn't have 'g' option, which we need here.
 		// Use ( ) in order to use $1 to get whole expression later
-		this.dynamicCallRegex = new RegExp(util.format("(%s)", this.$injector.dynamicCallRegex.source), "g");
+		this.dynamicCallRegex = new RegExp(util.format("(%s)", $injector.dynamicCallRegex.source), "g");
 	}
 
 	public async parseContent(data: string, options: { isHtml: boolean }): Promise<string> {

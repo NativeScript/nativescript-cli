@@ -1,3 +1,6 @@
+import { IUtils } from "./declarations";
+import { IOptions } from "../declarations";
+
 export class Utils implements IUtils {
 	constructor(private $options: IOptions,
 		private $logger: ILogger) { }

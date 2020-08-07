@@ -7,6 +7,11 @@ const inspectorNpmPackageName = "tns-ios-inspector";
 const inspectorUiDir = "WebInspectorUI/";
 import { performanceLog } from "../common/decorators";
 import { platform } from "os";
+import { IChildProcess, IErrors, IHostInfo } from "../common/declarations";
+import { IAppDebugSocketProxyFactory, IPackageInstallationManager } from "../declarations";
+import { IProjectDataService } from "../definitions/project";
+import { IDebugData, IDebugOptions, IDebugResultInfo, IDeviceDebugService } from "../definitions/debug";
+
 
 export class IOSDeviceDebugService extends DebugServiceBase implements IDeviceDebugService {
 	private deviceIdentifier: string;

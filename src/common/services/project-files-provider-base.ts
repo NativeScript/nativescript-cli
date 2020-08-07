@@ -1,6 +1,8 @@
 import * as path from "path";
 import * as util from "util";
 import { Configurations } from "../constants";
+import { IOptions } from "../../declarations";
+import { IProjectFileInfo, IProjectFilesConfig, IProjectFilesProvider } from "../declarations";
 
 export abstract class ProjectFilesProviderBase implements IProjectFilesProvider {
 	abstract isFileExcluded(filePath: string): boolean;

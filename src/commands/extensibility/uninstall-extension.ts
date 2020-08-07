@@ -1,3 +1,7 @@
+
+import { ICommand, ICommandParameter, IStringParameterBuilder } from "../../common/definitions/commands";
+import { IExtensibilityService } from "../../common/definitions/extensibility";
+
 export class UninstallExtensionCommand implements ICommand {
 	constructor(private $extensibilityService: IExtensibilityService,
 		private $stringParameterBuilder: IStringParameterBuilder,

@@ -2,6 +2,19 @@ import * as path from "path";
 import * as shelljs from "shelljs";
 import * as semver from "semver";
 import * as constants from "../constants";
+import { INodeModulesDependenciesBuilder, IPlatformData, IPlatformsDataService } from "../definitions/platform";
+import { IProjectData, IProjectDataService } from "../definitions/project";
+import { IDependencyData, INodePackageManager, INodePackageManagerInstallOptions, IOptions } from "../declarations";
+import { IDictionary, IErrors, IFileSystem, IStringDictionary } from "../common/declarations";
+import {
+	IBasePluginData, INodeModuleData,
+	IPackageJsonDepedenciesResult,
+	IPluginData,
+	IPluginsService,
+	IPreparePluginNativeCodeData
+} from "../definitions/plugins";
+import _ from "lodash";
+import { IFilesHashService } from "../definitions/files-hash-service";
 
 export class PluginsService implements IPluginsService {
 	private static INSTALL_COMMAND_NAME = "install";
@@ -13,10 +26,10 @@ export class PluginsService implements IPluginsService {
 	private static LOCK_FILES = ["package-lock.json", "npm-shrinkwrap.json", "yarn.lock", "pnpm-lock.yaml"];
 
 	private get $platformsDataService(): IPlatformsDataService {
-		return this.$injector.resolve("platformsDataService");
+		return $injector.resolve("platformsDataService");
 	}
 	private get $projectDataService(): IProjectDataService {
-		return this.$injector.resolve("projectDataService");
+		return $injector.resolve("projectDataService");
 	}
 
 	private get npmInstallOptions(): INodePackageManagerInstallOptions {
@@ -34,7 +47,6 @@ export class PluginsService implements IPluginsService {
 		private $logger: ILogger,
 		private $errors: IErrors,
 		private $filesHashService: IFilesHashService,
-		private $injector: IInjector,
 		private $mobileHelper: Mobile.IMobileHelper,
 		private $nodeModulesDependenciesBuilder: INodeModulesDependenciesBuilder) { }
 
@@ -335,7 +347,7 @@ This framework comes from ${dependencyName} plugin, which is installed multiple 
 		return pluginData;
 	}
 
-	private removeDependencyFromPackageJsonContent(dependency: string, packageJsonContent: Object): { hasModifiedPackageJson: boolean, packageJsonContent: Object } {
+	private removeDependencyFromPackageJsonContent(dependency: string, packageJsonContent: { [key: string]: any }): { hasModifiedPackageJson: boolean, packageJsonContent: Object } {
 		let hasModifiedPackageJson = false;
 
 		if (packageJsonContent.devDependencies && packageJsonContent.devDependencies[dependency]) {

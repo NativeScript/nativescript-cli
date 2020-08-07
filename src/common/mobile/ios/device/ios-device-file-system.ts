@@ -1,4 +1,6 @@
 import { EOL } from "os";
+import { IFileSystem, IStringDictionary } from "../../../declarations";
+import * as _ from "lodash";
 
 export class IOSDeviceFileSystem implements Mobile.IDeviceFileSystem {
 	private static AFC_DELETE_FILE_NOT_FOUND_ERROR = 8;

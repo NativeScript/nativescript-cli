@@ -4,14 +4,18 @@ import { AnalyticsService } from '../../../services/analytics/analytics-service'
 import { setIsInteractive } from "../../helpers";
 import { HostInfo } from "../../host-info";
 import { OsInfo } from "../../os-info";
+import { IInjector } from "../../definitions/yok";
+import { IAnalyticsService } from "../../declarations";
+
 const assert = require("chai").assert;
 
 let savedSettingNamesAndValues = "";
 
 class UserSettingsServiceStub {
 	constructor(public featureTracking: boolean,
-		public exceptionsTracking: boolean,
-		public testInjector: IInjector) { }
+				public exceptionsTracking: boolean,
+				public testInjector: IInjector) {
+	}
 
 	async getSettingValue<T>(settingName: string): Promise<T | string> {
 		const $staticConfig: Config.IStaticConfig = this.testInjector.resolve("staticConfig");
@@ -83,8 +87,8 @@ function createTestInjector(testScenario: ITestScenario): IInjector {
 	});
 	testInjector.register("hostInfo", HostInfo);
 	testInjector.register("osInfo", OsInfo);
-  testInjector.register("userSettingsService", new UserSettingsServiceStub(testScenario.featureTracking, testScenario.exceptionsTracking, testInjector));
-  setIsInteractive(() => {
+	testInjector.register("userSettingsService", new UserSettingsServiceStub(testScenario.featureTracking, testScenario.exceptionsTracking, testInjector));
+	setIsInteractive(() => {
 		return testScenario.isInteractive;
 	});
 	testInjector.register("childProcess", {});
@@ -117,7 +121,7 @@ describe("analytics-service", () => {
 	});
 
 	afterAll(() => {
-    setIsInteractive(null);
+		setIsInteractive(null);
 	});
 
 	describe("isEnabled", () => {
@@ -189,7 +193,7 @@ describe("analytics-service", () => {
 			const testInjector = createTestInjector(baseTestScenario);
 			service = testInjector.resolve<IAnalyticsService>("analyticsService");
 			const staticConfig: Config.IStaticConfig = testInjector.resolve("staticConfig");
-			assert.deepEqual(JSON.stringify({ "enabled": true }), await service.getStatusMessage(staticConfig.TRACK_FEATURE_USAGE_SETTING_NAME, true, ""));
+			assert.deepEqual(JSON.stringify({"enabled": true}), await service.getStatusMessage(staticConfig.TRACK_FEATURE_USAGE_SETTING_NAME, true, ""));
 		});
 
 		it("returns correct json results when status is disabled", async () => {
@@ -197,7 +201,7 @@ describe("analytics-service", () => {
 			const testInjector = createTestInjector(baseTestScenario);
 			service = testInjector.resolve<IAnalyticsService>("analyticsService");
 			const staticConfig: Config.IStaticConfig = testInjector.resolve("staticConfig");
-			assert.deepEqual(JSON.stringify({ "enabled": false }), await service.getStatusMessage(staticConfig.TRACK_FEATURE_USAGE_SETTING_NAME, true, ""));
+			assert.deepEqual(JSON.stringify({"enabled": false}), await service.getStatusMessage(staticConfig.TRACK_FEATURE_USAGE_SETTING_NAME, true, ""));
 		});
 
 		it("returns correct json results when status is not confirmed", async () => {
@@ -205,7 +209,7 @@ describe("analytics-service", () => {
 			const testInjector = createTestInjector(baseTestScenario);
 			service = testInjector.resolve<IAnalyticsService>("analyticsService");
 			const staticConfig: Config.IStaticConfig = testInjector.resolve("staticConfig");
-			assert.deepEqual(JSON.stringify({ "enabled": null }), await service.getStatusMessage(staticConfig.TRACK_FEATURE_USAGE_SETTING_NAME, true, ""));
+			assert.deepEqual(JSON.stringify({"enabled": null}), await service.getStatusMessage(staticConfig.TRACK_FEATURE_USAGE_SETTING_NAME, true, ""));
 		});
 	});
 

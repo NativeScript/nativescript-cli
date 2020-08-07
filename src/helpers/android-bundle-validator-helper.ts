@@ -2,16 +2,22 @@ import * as util from "util";
 import { AndroidBundleValidatorMessages } from "../constants";
 import { VersionValidatorHelper } from "./version-validator-helper";
 import * as semver from "semver";
+import { IAndroidBundleValidatorHelper, IOptions } from "../declarations";
+import { IProjectData, IProjectDataService } from "../definitions/project";
+import { IErrors } from "../common/declarations";
+import { Platforms } from "../common/constants";
+import { IAndroidBuildData, IBuildData } from "../definitions/build";
+
 
 export class AndroidBundleValidatorHelper extends VersionValidatorHelper implements IAndroidBundleValidatorHelper {
 	public static MIN_RUNTIME_VERSION = "5.0.0";
 	public static MIN_ANDROID_WITH_AAB_SUPPORT = "4.4.0";
 
 	constructor(protected $projectData: IProjectData,
-		protected $errors: IErrors,
-		protected $options: IOptions,
-		protected $projectDataService: IProjectDataService,
-		private $mobileHelper: Mobile.IMobileHelper) {
+				protected $errors: IErrors,
+				protected $options: IOptions,
+				protected $projectDataService: IProjectDataService,
+				private $mobileHelper: Mobile.IMobileHelper) {
 		super();
 	}
 
@@ -23,7 +29,7 @@ export class AndroidBundleValidatorHelper extends VersionValidatorHelper impleme
 
 	public validateRuntimeVersion(projectData: IProjectData): void {
 		if (this.$options.aab) {
-      const runtimePackage = this.$projectDataService.getRuntimePackage(projectData.projectDir, Platforms.android);
+			const runtimePackage = this.$projectDataService.getRuntimePackage(projectData.projectDir, Platforms.android);
 			const androidRuntimeVersion = runtimePackage ? runtimePackage.version : "";
 			const shouldThrowError = androidRuntimeVersion &&
 				this.isValidVersion(androidRuntimeVersion) &&

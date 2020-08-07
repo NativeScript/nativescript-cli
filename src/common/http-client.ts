@@ -6,6 +6,8 @@ import * as zlib from "zlib";
 import * as util from "util";
 import { HttpStatusCodes } from "./constants";
 import * as request from "request";
+import { IHttpRequestError, IPromiseActions, IProxyService, IProxySettings, Server } from "./declarations";
+import * as _ from "lodash";
 
 export class HttpClient implements Server.IHttpClient {
 	private static STATUS_CODE_REGEX = /statuscode=(\d+)/i;
@@ -15,11 +17,11 @@ export class HttpClient implements Server.IHttpClient {
 	// We receive multiple response packets every ms but we don't need to be very aggressive here.
 	private static STUCK_RESPONSE_CHECK_INTERVAL = 10000;
 
-private defaultUserAgent: string;
+	private defaultUserAgent: string;
 
 	constructor(private $logger: ILogger,
-		private $proxyService: IProxyService,
-		private $staticConfig: Config.IStaticConfig) {
+				private $proxyService: IProxyService,
+				private $staticConfig: Config.IStaticConfig) {
 	}
 
 	public async httpRequest(options: any, proxySettings?: IProxySettings): Promise<Server.IResponse> {
@@ -98,7 +100,7 @@ private defaultUserAgent: string;
 
 		const result = new Promise<Server.IResponse>((resolve, reject) => {
 			let timerId: NodeJS.Timer;
-			const cleanupRequestData: ICleanupRequestData = Object.create({ timers: [] });
+			const cleanupRequestData: ICleanupRequestData = Object.create({timers: []});
 
 			const promiseActions: IPromiseActions<Server.IResponse> = {
 				resolve,
@@ -109,7 +111,7 @@ private defaultUserAgent: string;
 			clonedOptions.url = clonedOptions.url || `${clonedOptions.proto}://${clonedOptions.host}${clonedOptions.path}`;
 			if (clonedOptions.timeout) {
 				timerId = setTimeout(() => {
-					this.setResponseResult(promiseActions, cleanupRequestData, { err: new Error(`Request to ${clonedOptions.url} timed out.`) });
+					this.setResponseResult(promiseActions, cleanupRequestData, {err: new Error(`Request to ${clonedOptions.url} timed out.`)});
 				}, clonedOptions.timeout);
 				cleanupRequestData.timers.push(timerId);
 
@@ -135,13 +137,13 @@ private defaultUserAgent: string;
 					const errorMessage = this.getErrorMessage(errorMessageStatusCode, null);
 					err.proxyAuthenticationRequired = errorMessageStatusCode === HttpStatusCodes.PROXY_AUTHENTICATION_REQUIRED;
 					err.message = errorMessage || err.message;
-					this.setResponseResult(promiseActions, cleanupRequestData, { err });
+					this.setResponseResult(promiseActions, cleanupRequestData, {err});
 				})
 				.on("socket", (s: TLSSocket) => {
 					let stuckRequestTimerId: NodeJS.Timer;
 
 					stuckRequestTimerId = setTimeout(() => {
-						this.setResponseResult(promiseActions, cleanupRequestData, { err: new Error(HttpClient.STUCK_REQUEST_ERROR_MESSAGE) });
+						this.setResponseResult(promiseActions, cleanupRequestData, {err: new Error(HttpClient.STUCK_REQUEST_ERROR_MESSAGE)});
 					}, clonedOptions.timeout || HttpClient.STUCK_REQUEST_TIMEOUT);
 
 					cleanupRequestData.timers.push(stuckRequestTimerId);
@@ -156,7 +158,7 @@ private defaultUserAgent: string;
 					let lastChunkTimestamp = Date.now();
 					cleanupRequestData.stuckResponseIntervalId = setInterval(() => {
 						if (Date.now() - lastChunkTimestamp > HttpClient.STUCK_RESPONSE_CHECK_INTERVAL) {
-							this.setResponseResult(promiseActions, cleanupRequestData, { err: new Error(HttpClient.STUCK_RESPONSE_ERROR_MESSAGE) });
+							this.setResponseResult(promiseActions, cleanupRequestData, {err: new Error(HttpClient.STUCK_RESPONSE_ERROR_MESSAGE)});
 						}
 					}, HttpClient.STUCK_RESPONSE_CHECK_INTERVAL);
 					const successful = helpers.isRequestSuccessful(responseData) || responseData.statusCode === HttpStatusCodes.NOT_MODIFIED;
@@ -180,7 +182,7 @@ private defaultUserAgent: string;
 					if (pipeTo) {
 						pipeTo.on("finish", () => {
 							this.$logger.trace("httpRequest: Piping done. code = %d", responseData.statusCode.toString());
-							this.setResponseResult(promiseActions, cleanupRequestData, { response: responseData });
+							this.setResponseResult(promiseActions, cleanupRequestData, {response: responseData});
 						});
 
 						responseStream.pipe(pipeTo);
@@ -196,13 +198,16 @@ private defaultUserAgent: string;
 							const responseBody = data.join("");
 
 							if (successful) {
-								this.setResponseResult(promiseActions, cleanupRequestData, { body: responseBody, response: responseData });
+								this.setResponseResult(promiseActions, cleanupRequestData, {
+									body: responseBody,
+									response: responseData
+								});
 							} else {
 								const errorMessage = this.getErrorMessage(responseData.statusCode, responseBody);
 								const err: any = new Error(errorMessage);
 								err.response = responseData;
 								err.body = responseBody;
-								this.setResponseResult(promiseActions, cleanupRequestData, { err });
+								this.setResponseResult(promiseActions, cleanupRequestData, {err});
 							}
 						});
 					}

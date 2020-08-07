@@ -1,6 +1,9 @@
 import * as path from "path";
 import * as fs from "fs";
 import { cache } from "../common/decorators";
+import { ITestInitializationService } from "../definitions/project";
+import { IDependencyInformation, IErrors, IFileSystem } from "../common/declarations";
+import * as _ from "lodash";
 
 export class TestInitializationService implements ITestInitializationService {
 	private configsPath = path.join(__dirname, "..", "..", "config");

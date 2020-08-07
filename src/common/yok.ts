@@ -3,6 +3,9 @@ import { annotate, isPromise } from "./helpers";
 import { ERROR_NO_VALID_SUBCOMMAND_FORMAT } from "./constants";
 import { CommandsDelimiters } from "./constants";
 import * as _ from 'lodash';
+import { IInjector } from "./definitions/yok";
+import { IDictionary } from "./declarations";
+import { ICommand, ICommandArgument } from "./definitions/commands";
 
 // let indent = "";
 function trace(formatStr: string, ...args: any[]) {
@@ -193,7 +196,10 @@ export class Yok implements IInjector {
 		}
 
 		if (finalSubCommandName) {
-			return { commandName: this.getHierarchicalCommandName(parentCommandName, finalSubCommandName), remainingArguments: finalRemainingArguments };
+			return {
+				commandName: this.getHierarchicalCommandName(parentCommandName, finalSubCommandName),
+				remainingArguments: finalRemainingArguments
+			};
 		}
 
 	}
@@ -365,8 +371,8 @@ export class Yok implements IInjector {
 	private resolveByName(name: string, ctorArguments?: IDictionary<any>): any {
 		if (name[0] === "$") {
 			name = name.substr(1);
-    }
-    // console.log('resolveByName:', name);
+		}
+		// console.log('resolveByName:', name);
 
 		if (this.resolutionProgress[name]) {
 			throw new Error(`Cyclic dependency detected on dependency '${name}'`);
@@ -406,12 +412,12 @@ export class Yok implements IInjector {
 	}
 
 	private resolveDependency(name: string): IDependency {
-    const module = this.modules[name];
-    // console.log('moresolveDependency:', name);
-    // console.log('this.modules[name]:', this.modules[name]);
+		const module = this.modules[name];
+		// console.log('moresolveDependency:', name);
+		// console.log('this.modules[name]:', this.modules[name]);
 		if (!module) {
 			throw new Error("unable to resolve " + name);
-    }
+		}
 
 		if (module.require) {
 			require(module.require);

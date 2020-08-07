@@ -3,6 +3,8 @@ import { PlatformEnvironmentRequirements } from '../../src/services/platform-env
 import * as stubs from "../stubs";
 import { assert } from "chai";
 import { EOL } from "os";
+import { IInjector } from "../../src/common/definitions/yok";
+import { IPlatformEnvironmentRequirements } from "../../src/definitions/platform";
 const helpers = require("../../src/common/helpers");
 
 const originalIsInteractive = helpers.isInteractive;

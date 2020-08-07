@@ -1,8 +1,9 @@
+
+
 export class LogFilter implements Mobile.ILogFilter {
 	private _loggingLevel: string = this.$loggingLevels.info;
 
 	constructor(private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-		private $injector: IInjector,
 		private $loggingLevels: Mobile.ILoggingLevels) { }
 
 	public get loggingLevel(): string {
@@ -30,9 +31,9 @@ export class LogFilter implements Mobile.ILogFilter {
 	private getDeviceLogFilterInstance(platform: string): Mobile.IPlatformLogFilter {
 		if (platform) {
 			if (platform.toLowerCase() === this.$devicePlatformsConstants.iOS.toLowerCase()) {
-				return this.$injector.resolve("iOSLogFilter");
+				return $injector.resolve("iOSLogFilter");
 			} else if (platform.toLowerCase() === this.$devicePlatformsConstants.Android.toLowerCase()) {
-				return this.$injector.resolve("androidLogFilter");
+				return $injector.resolve("androidLogFilter");
 			}
 		}
 

@@ -1,6 +1,7 @@
 import { Yok } from "../../../../yok";
 import { VirtualBoxService } from "../../../../mobile/android/genymotion/virtualbox-service";
 import { assert } from "chai";
+import { IInjector } from "../../../../definitions/yok";
 
 function createTestInjector() {
 	const testInjector = new Yok();

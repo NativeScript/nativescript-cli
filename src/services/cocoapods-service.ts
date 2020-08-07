@@ -2,6 +2,18 @@ import { EOL } from "os";
 import * as path from "path";
 import { PluginNativeDirNames, PODFILE_NAME, NS_BASE_PODFILE } from "../constants";
 import { regExpEscape, getHash } from "../common/helpers";
+import {
+	ICocoaPodsPlatformManager,
+	ICocoaPodsService,
+	IPodfilePlatformData,
+	IProjectData,
+	IRubyFunction
+} from "../definitions/project";
+import { IChildProcess, IErrors, IFileSystem, ISpawnResult } from "../common/declarations";
+import { IConfiguration, IXcconfigService } from "../declarations";
+import { IPlatformData } from "../definitions/platform";
+import { IPluginData } from "../definitions/plugins";
+import * as _ from "lodash";
 
 export class CocoaPodsService implements ICocoaPodsService {
 	private static PODFILE_POST_INSTALL_SECTION_NAME = "post_install";

@@ -1,4 +1,11 @@
 import { isInteractive } from "../../common/helpers";
+import { ICredentials, IErrors, Server } from "../../common/declarations";
+import {
+	IAppleCreateUserSessionOptions, IAppleLoginResult,
+	IApplePortalCookieService,
+	IApplePortalSessionService,
+	IApplePortalUserDetail
+} from "./definitions";
 
 export class ApplePortalSessionService implements IApplePortalSessionService {
 	private loginConfigEndpoint = "https://appstoreconnect.apple.com/olympus/v1/app/config?hostname=itunesconnect.apple.com";

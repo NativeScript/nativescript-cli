@@ -1,3 +1,17 @@
+import { IBuildConfig, IProjectData } from "./definitions/project";
+import {
+	IAvailableDevices,
+	IAvd, ICredentials, IDashedOption,
+	IDeviceIdentifier, IDictionary,
+	IHasEmulatorOption,
+	IJustLaunch,
+	IProfileDir, IProjectDir,
+	IRelease, IStringDictionary, IVersionData, IVersionInformation, IYargArgv
+} from "./common/declarations";
+import { IApplePortalUserDetail } from "./services/apple-portal/definitions";
+import { IBuildData } from "./definitions/build";
+import { IExtensionData } from "./common/definitions/extensibility";
+
 interface INodePackageManager {
 	/**
 	 * Installs dependency
@@ -37,14 +51,14 @@ interface INodePackageManager {
 	 * @param  {string} fullPackageName The full name of the package like nativescript@10.0.0.
 	 * @return {INpmPackageNameParts} An object containing the separated package name and version.
 	 */
-	getPackageNameParts(fullPackageName: string): Promise<INpmPackageNameParts>
+	getPackageNameParts(fullPackageName: string): Promise<INpmPackageNameParts>;
 
 	/**
 	 * Returns the full name of an npm package based on the provided name and version.
 	 * @param  {INpmPackageNameParts} packageNameParts An object containing the package name and version.
 	 * @return {string} The full name of the package like nativescript@10.0.0.
 	 */
-	getPackageFullName(packageNameParts: INpmPackageNameParts): Promise<string>
+	getPackageFullName(packageNameParts: INpmPackageNameParts): Promise<string>;
 
 	/**
 	 * Searches for a package.
@@ -88,7 +102,7 @@ interface IPackageManager extends INodePackageManager {
 	 * @param {string} tag The tag which we need the version of.
 	 * @returns {string} The version corresponding to the tag
 	 */
-	getTagVersion(packageName: string, tag: string): Promise<string>
+	getTagVersion(packageName: string, tag: string): Promise<string>;
 }
 
 interface IPerformanceService {
@@ -161,7 +175,7 @@ interface INpmDependencyInfo {
 		 * If invalid is set to true this will contain errors which make the dependency invalid.
 		 */
 		problems?: string[];
-	}
+	};
 }
 
 /**
@@ -311,10 +325,10 @@ interface INpm5InstallCliResult {
 	 */
 	warnings: INpm5DependencyInfo[];
 	/**
-	 *Time elapsed.
+	 * Time elapsed.
 	 * @type {Number}
 	 */
-	elapsed: Number
+	elapsed: Number;
 }
 
 /**
@@ -431,7 +445,7 @@ interface INpmsScore {
 		quality: number;
 		popularity: number;
 		maintenance: number;
-	}
+	};
 }
 
 interface IStaticConfig extends Config.IStaticConfig { }
@@ -559,8 +573,8 @@ interface IOptions extends IRelease, IDeviceIdentifier, IJustLaunch, IAvd, IAvai
 	framework: string;
 	frameworkName: string;
 	frameworkVersion: string;
-	yarn: string,
-	pnpm: string,
+	yarn: string;
+	pnpm: string;
 	ipa: string;
 	tsc: boolean;
 	ts: boolean;
@@ -588,7 +602,7 @@ interface IOptions extends IRelease, IDeviceIdentifier, IJustLaunch, IAvd, IAvai
 }
 
 interface IEnvOptions {
-	env: Object;
+	env: {[key: string]: any};
 }
 
 interface IAndroidBuildOptionsSettings extends IAndroidReleaseOptions, IRelease, Partial<IHasAndroidBundle> { }
@@ -699,7 +713,7 @@ interface IAndroidToolsInfo {
 	 * Validates target sdk
 	 * @param {IAndroidToolsInfoOptions} options @optional Defines if the warning messages should treated as error.
 	 * @returns {boolean} True if there are detected issues, false otherwise
-	*/
+	 */
 	validateTargetSdk(options?: IAndroidToolsInfoOptions): boolean;
 
 	/**
@@ -766,6 +780,7 @@ interface IAppDebugSocketProxyFactory extends NodeJS.EventEmitter {
 	removeAllProxies(): void;
 }
 
+// tslint:disable-next-line:interface-name
 interface IiOSNotification extends NodeJS.EventEmitter {
 	getAttachRequest(appId: string, deviceId: string): string;
 	getReadyForAttach(appId: string): string;
@@ -773,6 +788,7 @@ interface IiOSNotification extends NodeJS.EventEmitter {
 	getAppRefreshStarted(appId: string): string;
 }
 
+// tslint:disable-next-line:interface-name
 interface IiOSSocketRequestExecutor {
 	executeAttachRequest(device: Mobile.IiOSDevice, timeout: number, projectId: string): Promise<void>;
 	executeRefreshRequest(device: Mobile.IiOSDevice, timeout: number, appId: string): Promise<boolean>;
@@ -934,7 +950,6 @@ interface IBundleValidatorHelper {
 	getBundlerDependencyVersion(projectData: IProjectData, bundlerName?: string): string;
 }
 
-
 interface IAndroidBundleValidatorHelper {
 	/**
 	 * Validates android bundling option is not provided.
@@ -948,7 +963,7 @@ interface IAndroidBundleValidatorHelper {
 	 * @param {IProjectData} projectData DTO with information about the project.
 	 * @return {void}
 	 */
-	validateRuntimeVersion(projectData: IProjectData): void
+	validateRuntimeVersion(projectData: IProjectData): void;
 
 	/**
 	 * Validates that the specified device supports aab.
@@ -956,11 +971,11 @@ interface IAndroidBundleValidatorHelper {
 	 * @param {IBuildData} buildData The current build data.
 	 * @return {void}
 	 */
-	validateDeviceApiLevel(device: Mobile.IDevice, buildData: IBuildData): void
+	validateDeviceApiLevel(device: Mobile.IDevice, buildData: IBuildData): void;
 }
 
 interface IOptionsTracker {
-	trackOptions(options: IOptions): Promise<void>
+	trackOptions(options: IOptions): Promise<void>;
 }
 
 interface INativeScriptCloudExtensionService {
@@ -973,7 +988,7 @@ interface INativeScriptCloudExtensionService {
 	 * Checks if nativescript-cloud extension is installed
 	 * @return {boolean} returns true in case when nativescript-cloud extension is installed, false otherwise
 	 */
-	isInstalled(): boolean
+	isInstalled(): boolean;
 }
 
 /**
@@ -983,12 +998,12 @@ interface IResourceGenerationData extends IProjectDir {
 	/**
 	 * @param {string} imagePath Path to the image that will be used for generation
 	 */
-	imagePath: string,
+	imagePath: string;
 
 	/**
 	 * @param {string} platform Specify for which platform to generate assets. If not defined will generate for all platforms
 	 */
-	platform?: string
+	platform?: string;
 }
 
 /**
@@ -998,7 +1013,7 @@ interface ISplashesGenerationData extends IResourceGenerationData {
 	/**
 	 * @param {string} background Background color that will be used for background. Defaults to #FFFFFF
 	 */
-	background?: string
+	background?: string;
 }
 
 /**
@@ -1050,7 +1065,6 @@ interface IPlatformValidationService {
 	 */
 	validateOptions(provision: true | string, teamId: true | string, projectData: IProjectData, platform?: string): Promise<boolean>;
 
-
 	validatePlatformInstalled(platform: string, projectData: IProjectData): void;
 
 	/**
@@ -1064,7 +1078,7 @@ interface IPlatformValidationService {
 
 interface IPlatformCommandHelper {
 	addPlatforms(platforms: string[], projectData: IProjectData, frameworkPath?: string): Promise<void>;
-	cleanPlatforms(platforms: string[], projectData: IProjectData, framworkPath: string): Promise<void>;
+	cleanPlatforms(platforms: string[], projectData: IProjectData, frameworkPath: string): Promise<void>;
 	removePlatforms(platforms: string[], projectData: IProjectData): Promise<void>;
 	updatePlatforms(platforms: string[], projectData: IProjectData): Promise<void>;
 	getInstalledPlatforms(projectData: IProjectData): string[];

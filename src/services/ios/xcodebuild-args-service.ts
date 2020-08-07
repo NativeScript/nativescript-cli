@@ -1,6 +1,10 @@
 import * as path from "path";
 import * as constants from "../../constants";
 import { Configurations } from "../../common/constants";
+import { IFileSystem } from "../../common/declarations";
+import { IBuildConfig, IiOSBuildConfig, IIOSWatchAppService, IProjectData } from "../../definitions/project";
+import { IPlatformData } from "../../definitions/platform";
+import * as _ from "lodash";
 
 const DevicePlatformSdkName = "iphoneos";
 const SimulatorPlatformSdkName = "iphonesimulator";

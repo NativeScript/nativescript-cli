@@ -1,14 +1,14 @@
 import { DeviceDiscovery } from "./device-discovery";
 import { IOSDevice } from "../ios/device/ios-device";
 
+
 export class IOSDeviceDiscovery extends DeviceDiscovery {
 	private _iTunesErrorMessage: string;
 
-	constructor(private $injector: IInjector,
-		private $logger: ILogger,
-		private $iTunesValidator: Mobile.IiTunesValidator,
-		private $mobileHelper: Mobile.IMobileHelper,
-		private $iosDeviceOperations: IIOSDeviceOperations) {
+	constructor(private $logger: ILogger,
+				private $iTunesValidator: Mobile.IiTunesValidator,
+				private $mobileHelper: Mobile.IMobileHelper,
+				private $iosDeviceOperations: IIOSDeviceOperations) {
 		super();
 	}
 
@@ -51,7 +51,7 @@ export class IOSDeviceDiscovery extends DeviceDiscovery {
 	}
 
 	private createDevice(deviceActionInfo: IOSDeviceLib.IDeviceActionInfo): IOSDevice {
-		const device = this.$injector.resolve(IOSDevice, { deviceActionInfo: deviceActionInfo });
+		const device = $injector.resolve(IOSDevice, {deviceActionInfo: deviceActionInfo});
 		return device;
 	}
 }

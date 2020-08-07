@@ -3,5 +3,6 @@
  */
 interface ITempService {
 	mkdirSync(affixes: string): Promise<string>;
+
 	path(options: ITempPathOptions): Promise<string>;
 }

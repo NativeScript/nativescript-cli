@@ -3,6 +3,10 @@ import * as path from "path";
 import { parseJson } from "./common/helpers";
 import { EOL } from "os";
 import { cache } from "./common/decorators";
+import { INsConfig, IProjectData } from "./definitions/project";
+import { IAndroidResourcesMigrationService, IOptions, IStaticConfig } from "./declarations";
+import { IErrors, IFileSystem, IProjectHelper, IStringDictionary } from "./common/declarations";
+import * as _ from "lodash";
 
 interface IProjectType {
 	type: string;

@@ -10,6 +10,9 @@ import { DevicePlatformsConstants } from "../../../src/common/mobile/device-plat
 import * as path from "path";
 import * as temp from "temp";
 import * as crypto from "crypto";
+import { IInjector } from "../../../src/common/definitions/yok";
+import { IDictionary } from "../../../src/common/declarations";
+import * as _ from "lodash";
 
 temp.track();
 const protocolVersion = "0.2.0";

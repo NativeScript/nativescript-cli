@@ -2,6 +2,18 @@ import * as path from "path";
 import * as util from "util";
 import { annotate, getValueFromNestedObject } from "../helpers";
 import { AnalyticsEventLabelDelimiter } from "../../constants";
+import { IOptions, IPerformanceService } from "../../declarations";
+import {
+	IChildProcess,
+	IDictionary,
+	IErrors,
+	IFileSystem,
+	IHook,
+	IHooksService,
+	IProjectHelper, IStringDictionary
+} from "../declarations";
+
+import * as _ from "lodash";
 
 class Hook implements IHook {
 	constructor(public name: string,
@@ -21,7 +33,6 @@ export class HooksService implements IHooksService {
 		private $errors: IErrors,
 		private $config: Config.IConfig,
 		private $staticConfig: Config.IStaticConfig,
-		private $injector: IInjector,
 		private $projectHelper: IProjectHelper,
 		private $options: IOptions,
 		private $performanceService: IPerformanceService) { }
@@ -134,7 +145,7 @@ export class HooksService implements IHooksService {
 					hookArguments["projectData"] = hookArguments["$projectData"] = projectDataHookArg;
 				}
 
-				const maybePromise = this.$injector.resolve(hookEntryPoint, hookArguments);
+				const maybePromise = $injector.resolve(hookEntryPoint, hookArguments);
 				if (maybePromise) {
 					this.$logger.trace('Hook promises to signal completion');
 					try {
@@ -277,7 +288,7 @@ export class HooksService implements IHooksService {
 		_.each(hookConstructor.$inject.args, (argument: string) => {
 			try {
 				if (argument !== this.hookArgsName) {
-					this.$injector.resolve(argument);
+					$injector.resolve(argument);
 				}
 			} catch (err) {
 				this.$logger.trace(`Cannot resolve ${argument} of hook ${hookFullPath}, reason: ${err}`);

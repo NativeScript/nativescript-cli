@@ -1,5 +1,8 @@
 import { EOL } from "os";
 import { CodeEntityType } from "./code-entity";
+import { CodeGeneration } from "./code-generation";
+
+import * as _ from "lodash";
 
 export class CodePrinter {
 	private static INDENT_CHAR = "\t";

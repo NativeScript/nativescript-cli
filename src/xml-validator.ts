@@ -1,5 +1,8 @@
 import { EOL } from "os";
 import * as constants from "./constants";
+import { IXmlValidator } from "./declarations";
+import { IFileSystem } from "./common/declarations";
+import * as _ from "lodash";
 
 export class XmlValidator implements IXmlValidator {
 	constructor(private $fs: IFileSystem,

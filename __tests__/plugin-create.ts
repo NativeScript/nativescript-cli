@@ -7,6 +7,10 @@ import * as sinon from "sinon";
 import * as temp from "temp";
 import * as path from "path";
 import * as util from "util";
+import { IInjector } from "../src/common/definitions/yok";
+import { IOptions } from "../src/declarations";
+import { IDictionary } from "../src/common/declarations";
+
 temp.track();
 
 interface IPacoteOutput {
@@ -20,7 +24,7 @@ const dummyUser = "devUsername";
 const dummyName = "devPlugin";
 const createDemoProjectAnswer = true;
 const creteDemoProjectOption = "y";
-const dummyPacote: IPacoteOutput = { packageName: "", destinationDirectory: "" };
+const dummyPacote: IPacoteOutput = {packageName: "", destinationDirectory: ""};
 
 function createTestInjector() {
 	const testInjector = new Yok();
@@ -67,14 +71,14 @@ describe("Plugin create command tests", () => {
 	let createPluginCommand: CreatePluginCommand;
 
 	beforeEach(() => {
-    helpers.setIsInteractive(() => true);
+		helpers.setIsInteractive(() => true);
 		testInjector = createTestInjector();
 		options = testInjector.resolve("$options");
 		createPluginCommand = testInjector.resolve("$createCommand");
 	});
 
 	afterEach(() => {
-    helpers.setIsInteractive(null);
+		helpers.setIsInteractive(null);
 	});
 
 	describe("#CreatePluginCommand", () => {
@@ -83,7 +87,7 @@ describe("Plugin create command tests", () => {
 		});
 
 		it("should use correct directory when path parameter is passed", async () => {
-      helpers.setIsInteractive(() => false);
+			helpers.setIsInteractive(() => false);
 			const dummyPath = "dummyPath";
 			options.path = dummyPath;
 			dummyPacote.destinationDirectory = "";
@@ -92,7 +96,7 @@ describe("Plugin create command tests", () => {
 		});
 
 		it("should use correct download path when template parameter is passed", async () => {
-      helpers.setIsInteractive(() => false);
+			helpers.setIsInteractive(() => false);
 			const dummyTemplate = "dummyTemplate";
 			options.template = dummyTemplate;
 			dummyPacote.packageName = "";
@@ -101,7 +105,7 @@ describe("Plugin create command tests", () => {
 		});
 
 		it("should pass when only project name is set in non-interactive shell.", async () => {
-      helpers.setIsInteractive(() => false);
+			helpers.setIsInteractive(() => false);
 			await createPluginCommand.execute(dummyArgs);
 		});
 

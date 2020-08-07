@@ -1,5 +1,10 @@
 import * as helpers from "../../common/helpers";
 import * as path from "path";
+import { IErrors, IFileSystem } from "../../common/declarations";
+import { IPlatformsDataService } from "../../definitions/platform";
+import { IProjectData } from "../../definitions/project";
+
+import { IPlatformValidationService } from "../../declarations";
 
 export class PlatformValidationService implements IPlatformValidationService {
 

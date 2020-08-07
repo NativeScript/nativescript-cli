@@ -1,4 +1,5 @@
 import { ControllerDataBase } from "./controller-data-base";
+import * as _ from "lodash";
 
 export class PrepareData extends ControllerDataBase {
 	public release: boolean;

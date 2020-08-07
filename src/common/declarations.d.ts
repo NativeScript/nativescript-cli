@@ -1,18 +1,25 @@
+import { IOptions } from "../declarations";
+import { IEventActionData, IGoogleAnalyticsData } from "./definitions/google-analytics";
+import { IJsonFileSettingsService } from "./definitions/json-file-settings-service";
+
+// tslint:disable-next-line:interface-name
 interface Object {
 	[key: string]: any;
 }
 
-interface IStringDictionary extends IDictionary<string> { }
-
-declare enum Platforms {
-  ios = 'ios',
-  android = 'android'
+interface IStringDictionary extends IDictionary<string> {
 }
-type SupportedPlatform = Platforms.ios | Platforms.android;
+
+// declare enum Platforms {
+//   ios = 'ios',
+//   android = 'android'
+// }
+// type SupportedPlatform = Platforms.ios | Platforms.android;
 
 /**
  * Describes iTunes Connect application types
  */
+// tslint:disable-next-line:interface-name
 interface IiTunesConnectApplicationType {
 	/**
 	 * Applications developed for iOS
@@ -39,6 +46,7 @@ declare const enum GoogleAnalyticsDataType {
 /**
  * Descibes iTunes Connect applications
  */
+// tslint:disable-next-line:interface-name
 interface IiTunesConnectApplication {
 	/**
 	 * Unique Apple ID for each application. Automatically generated and assigned by Apple.
@@ -163,6 +171,7 @@ declare module Server {
 
 	interface IHttpClient {
 		httpRequest(url: string): Promise<IResponse>;
+
 		httpRequest(options: any, proxySettings?: IProxySettings): Promise<IResponse>;
 	}
 
@@ -170,8 +179,11 @@ declare module Server {
 		statusCode: number;
 		headers: { [index: string]: any };
 		complete: boolean;
+
 		pipe(destination: any, options?: { end?: boolean; }): IRequestResponseData;
+
 		on(event: string, listener: Function): void;
+
 		destroy(error?: Error): void;
 	}
 }
@@ -182,6 +194,7 @@ interface IDisposable {
 
 interface IShouldDispose {
 	shouldDispose: boolean;
+
 	setShouldDispose(shouldDispose: boolean): void;
 }
 
@@ -284,6 +297,7 @@ interface IReadFileOptions {
 
 interface IFileSystem {
 	zipFiles(zipFile: string, files: string[], zipPathCallback: (path: string) => string): Promise<void>;
+
 	unzip(zipFile: string, destinationDir: string, options?: { overwriteExisitingFiles?: boolean; caseSensitive?: boolean }, fileFilters?: string[]): Promise<void>;
 
 	/**
@@ -328,7 +342,7 @@ interface IFileSystem {
 	 * @param {Date}   mtime Modified time
 	 * @returns {void}
 	 */
-	utimes(path: string, atime: Date, mtime: Date): void
+	utimes(path: string, atime: Date, mtime: Date): void;
 
 	futureFromEvent(eventEmitter: NodeJS.EventEmitter, event: string): Promise<any>;
 
@@ -422,7 +436,8 @@ interface IFileSystem {
 	 */
 	isEmptyDir(directoryPath: string): boolean;
 
-	isRelativePath(path: string): boolean /* feels so lonely here, I don't have a Future */;
+	isRelativePath(path: string): boolean /* feels so lonely here, I don't have a Future */
+	;
 
 	/**
 	 * Checks if directory exists and if not - creates it.
@@ -446,7 +461,7 @@ interface IFileSystem {
 	 * @param {string} newPath The path where the file will be moved.
 	 * @return {boolean} True in case of successful rename. False in case the file does not exist.
 	 */
-	renameIfExists(oldPath: string, newPath: string): boolean
+	renameIfExists(oldPath: string, newPath: string): boolean;
 
 	/**
 	 * Returns information about the specified file.
@@ -465,7 +480,9 @@ interface IFileSystem {
 	getLsStats(path: string): IFsStats;
 
 	symlink(sourcePath: string, destinationPath: string, type: "file"): void;
+
 	symlink(sourcePath: string, destinationPath: string, type: "dir"): void;
+
 	symlink(sourcePath: string, destinationPath: string, type: "junction"): void;
 
 	/**
@@ -493,6 +510,7 @@ interface IFileSystem {
 		end?: number;
 		highWaterMark?: number;
 	}): NodeJS.ReadableStream;
+
 	createWriteStream(path: string, options?: {
 		flags?: string;
 		encoding?: string;
@@ -508,6 +526,7 @@ interface IFileSystem {
 	chmod(path: string, mode: number | string): void;
 
 	setCurrentUserAsOwner(path: string, owner: string): Promise<void>;
+
 	enumerateFilesInDirectorySync(directoryPath: string, filterCallback?: (file: string, stat: IFsStats) => boolean, opts?: { enumerateDirectories?: boolean, includeEmptyDirectories?: boolean }): string[];
 
 	/**
@@ -544,12 +563,19 @@ interface IFileSystem {
 // duplicated from fs.Stats, because I cannot import it here
 interface IFsStats {
 	isFile(): boolean;
+
 	isDirectory(): boolean;
+
 	isBlockDevice(): boolean;
+
 	isCharacterDevice(): boolean;
+
 	isSymbolicLink(): boolean;
+
 	isFIFO(): boolean;
+
 	isSocket(): boolean;
+
 	dev: number;
 	ino: number;
 	mode: number;
@@ -571,19 +597,27 @@ interface IOpener {
 
 interface IErrors {
 	fail(formatStr: string, ...args: any[]): never;
+
 	fail(opts: IFailOptions, ...args: any[]): never;
+
 	/**
 	 * @deprecated: use `fail` instead
 	 */
 	failWithoutHelp(message: string, ...args: any[]): never;
+
 	/**
 	 * @deprecated: use `fail` instead
 	 */
 	failWithoutHelp(opts: IFailOptions, ...args: any[]): never;
+
 	failWithHelp(formatStr: string, ...args: any[]): never;
+
 	failWithHelp(opts: IFailOptions, ...args: any[]): never;
+
 	beginCommand(action: () => Promise<boolean>, printCommandHelp: () => Promise<void>): Promise<boolean>;
+
 	verifyHeap(message: string): void;
+
 	printCallStack: boolean;
 }
 
@@ -626,31 +660,40 @@ declare const enum ErrorCodes {
 
 interface IFutureDispatcher {
 	run(): void;
+
 	dispatch(action: () => Promise<void>): void;
 }
 
 interface ICommandDispatcher {
 	dispatchCommand(): Promise<void>;
+
 	completeCommand(): Promise<boolean>;
 }
 
 interface ICancellationService extends IDisposable {
 	begin(name: string): Promise<void>;
+
 	end(name: string): void;
 }
 
 interface IQueue<T> {
 	enqueue(item: T): void;
+
 	dequeue(): Promise<T>;
 }
 
 interface IChildProcess extends NodeJS.EventEmitter {
 	exec(command: string, options?: any, execOptions?: IExecOptions): Promise<any>;
+
 	execFile<T>(command: string, args: string[]): Promise<T>;
+
 	spawn(command: string, args?: string[], options?: any): any; // it returns child_process.ChildProcess you can safely cast to it
 	spawnFromEvent(command: string, args: string[], event: string, options?: any, spawnFromEventOptions?: ISpawnFromEventOptions): Promise<ISpawnResult>;
+
 	trySpawnFromCloseEvent(command: string, args: string[], options?: any, spawnFromEventOptions?: ISpawnFromEventOptions): Promise<ISpawnResult>;
+
 	tryExecuteApplication(command: string, args: string[], event: string, errorMessage: string, condition?: (childProcess: any) => boolean): Promise<any>;
+
 	/**
 	 * This is a special case of the child_process.spawn() functionality for spawning Node.js processes.
 	 * In addition to having all the methods in a normal ChildProcess instance, the returned object has a communication channel built-in.
@@ -677,7 +720,7 @@ interface ISpawnFromEventOptions {
 	throwError: boolean;
 	emitOptions?: {
 		eventName: string;
-	},
+	};
 	timeout?: number;
 }
 
@@ -687,19 +730,25 @@ interface IProjectDir {
 
 interface IProjectHelper extends IProjectDir {
 	generateDefaultAppId(appName: string, baseAppId: string): string;
+
 	sanitizeName(appName: string): string;
 }
 
 interface IDictionary<T> {
-	[key: string]: T
+	[key: string]: T;
 }
 
 interface IAnalyticsService {
 	checkConsent(): Promise<void>;
+
 	trackException(exception: any, message: string): Promise<void>;
+
 	setStatus(settingName: string, enabled: boolean): Promise<void>;
+
 	getStatusMessage(settingName: string, jsonFormat: boolean, readableSettingName: string): Promise<string>;
+
 	isEnabled(settingName: string): Promise<boolean>;
+
 	finishTracking(): Promise<void>;
 
 	/**
@@ -726,7 +775,7 @@ interface IAnalyticsService {
 	/**
 	 * Tracks preview's app data to Google Analytics project.
 	 */
-	trackPreviewAppData(platform: string, projectDir: string): Promise<void>
+	trackPreviewAppData(platform: string, projectDir: string): Promise<void>;
 
 	/**
 	 * Defines if the instance should be disposed.
@@ -737,18 +786,22 @@ interface IAnalyticsService {
 }
 
 interface IAllowEmpty {
-	allowEmpty?: boolean
+	allowEmpty?: boolean;
 }
 
 interface IPrompterOptions extends IAllowEmpty {
-	defaultAction?: () => string
+	defaultAction?: () => string;
 }
 
 interface IAnalyticsSettingsService {
 	canDoRequest(): Promise<boolean>;
+
 	getUserId(): Promise<string>;
+
 	getClientName(): string;
+
 	getPrivacyPolicyLink(): string;
+
 	/**
 	 * Gets current user sessions count.
 	 * @param {string} projectName The analytics project id for which the counter should be taken.
@@ -795,6 +848,7 @@ interface IPlaygroundService {
 	 */
 	getPlaygroundInfo(projectDir?: string): Promise<IPlaygroundInfo>;
 }
+
 /**
  * Describes information about project that is exported from playground.
  */
@@ -838,7 +892,9 @@ interface IAutoCompletionService {
 
 interface IHooksService {
 	hookArgsName: string;
+
 	executeBeforeHooks(commandName: string, hookArguments?: IDictionary<any>): Promise<void>;
+
 	executeAfterHooks(commandName: string, hookArguments?: IDictionary<any>): Promise<void>;
 }
 
@@ -923,7 +979,7 @@ interface IProxyService {
 	 * Gets info about the proxy that can be printed and shown to the user.
 	 * @returns {Promise<string>} Info about the proxy.
 	 */
-	getInfo(): Promise<string>
+	getInfo(): Promise<string>;
 }
 
 interface IQrCodeGenerator {
@@ -977,12 +1033,14 @@ interface IXcodeSelectService {
 	 * @return {Promise<string>}
 	 */
 	getContentsDirectoryPath(): Promise<string>;
+
 	/**
 	 * Get the path to Developer directory inside Xcode.app.
 	 * With a default installation this path is /Applications/Xcode.app/Contents/Developer/
 	 * @return {Promise<string>}
 	 */
 	getDeveloperDirectoryPath(): Promise<string>;
+
 	/**
 	 * Get version of the currently used Xcode.
 	 * @return {Promise<IVersionData>}
@@ -1002,25 +1060,29 @@ interface ISystemWarning {
 
 interface ISysInfo {
 	getSysInfo(config?: NativeScriptDoctor.ISysInfoConfig): Promise<NativeScriptDoctor.ISysInfoData>;
+
 	/**
- 	 * Returns the currently installed version of Xcode.
- 	 * @return {Promise<string>} Returns the currently installed version of Xcode or null if Xcode is not installed or executed on Linux or Windows.
- 	 */
+	 * Returns the currently installed version of Xcode.
+	 * @return {Promise<string>} Returns the currently installed version of Xcode or null if Xcode is not installed or executed on Linux or Windows.
+	 */
 	getXcodeVersion(): Promise<string>;
+
 	/**
 	 * Returns the currently installed Java path based on JAVA_HOME and PATH..
 	 * @return {Promise<string>} The currently installed Java path.
 	 */
 	getJavaPath(): Promise<string>;
+
 	/**
 	 * Returns the currently installed Cocoapods version.
 	 * @return {Promise<string>} Returns the currently installed Cocoapods version. It will return null if Cocoapods is not installed.
 	 */
 	getCocoaPodsVersion(): Promise<string>;
+
 	/**
- 	 * Returns the currently installed Java compiler version.
- 	 * @return {Promise<string>} The currently installed Java compiler version.
- 	 */
+	 * Returns the currently installed Java compiler version.
+	 * @return {Promise<string>} The currently installed Java compiler version.
+	 */
 	getJavaCompilerVersion(): Promise<string>;
 
 	/**
@@ -1067,37 +1129,45 @@ interface IHostInfo {
 	isDarwin: boolean;
 	isLinux: boolean;
 	isLinux64: boolean;
+
 	dotNetVersion(): Promise<string>;
+
 	isDotNet40Installed(message: string): Promise<boolean>;
+
 	getMacOSVersion(): Promise<string>;
 }
 
+// tslint:disable-next-line:interface-name
 interface GenericFunction<T> extends Function {
 	(...args: any[]): T;
 }
 
-interface Function {
-	$inject: {
-		args: string[];
-		name: string;
-	};
-}
+declare global {
+	// tslint:disable-next-line:interface-name
+	interface Function {
+		$inject: {
+			args: string[];
+			name: string;
+		};
+	}
 
-/**
- * Extends Nodejs' Error interface.
- * The native interface already has name and message properties
- */
-interface Error {
 	/**
-	 * Error's stack trace
-	 * @type {string}
+	 * Extends Nodejs' Error interface.
+	 * The native interface already has name and message properties
 	 */
-	stack?: string;
-	/**
-	 * Error's code - could be a string ('ENOENT'), as well as a number (127)
-	 * @type {string|number}
-	 */
-	code?: string | number;
+	// tslint:disable-next-line:interface-name
+	interface Error {
+		/**
+		 * Error's stack trace
+		 * @type {string}
+		 */
+		stack?: string;
+		/**
+		 * Error's code - could be a string ('ENOENT'), as well as a number (127)
+		 * @type {string|number}
+		 */
+		code?: string | number;
+	}
 }
 
 interface IRelease {
@@ -1208,11 +1278,13 @@ interface IDoctorService {
 	 * @returns {Promise<void>}
 	 */
 	printWarnings(configOptions?: { trackResult?: boolean, projectDir?: string, runtimeVersion?: string, options?: IOptions, forceCheck?: boolean }): Promise<void>;
+
 	/**
 	 * Runs the setup script on host machine
 	 * @returns {Promise<ISpawnResult>}
-	*/
+	 */
 	runSetupScript(): Promise<ISpawnResult>;
+
 	/**
 	 * Checks if the envrironment is properly configured and it is possible to execute local builds
 	 * @param platform @optional The current platform
@@ -1230,6 +1302,7 @@ interface IDoctorService {
 
 interface IUtils {
 	getParsedTimeout(defaultTimeout: number): number;
+
 	getMilliSecondsTimeout(defaultTimeout: number): number;
 }
 
@@ -1243,6 +1316,7 @@ interface IPlistParser {
 	 * @return {Promise<any>} The parsed object
 	 */
 	parseFile(plistFilePath: string): Promise<any>;
+
 	parseFileSync(plistFilePath: string): any;
 }
 
@@ -1251,8 +1325,8 @@ interface IUserSettingsService extends IJsonFileSettingsService {
 }
 
 /**
- *	Used for interaction with various resources located in a resources folder.
- *	@interface
+ * Used for interaction with various resources located in a resources folder.
+ * @interface
  */
 interface IResourceLoader {
 	/**
@@ -1261,6 +1335,7 @@ interface IResourceLoader {
 	 * @return {string}      Absolute path to resource
 	 */
 	resolvePath(path: string): string;
+
 	/**
 	 * Opens a resource file for reading.
 	 * @param  {string} path Relative path to resource
@@ -1341,10 +1416,12 @@ interface IProjectFilesManager {
 	 * Enumerates all files and directories from the specified project files path.
 	 */
 	getProjectFiles(projectFilesPath: string, excludedProjectDirsAndFiles?: string[], filter?: (filePath: string, stat: IFsStats) => boolean, opts?: any): string[];
+
 	/**
 	 * Checks if the file is excluded
 	 */
 	isFileExcluded(filePath: string, excludedProjectDirsAndFiles?: string[]): boolean;
+
 	/**
 	 * Returns an object that maps every local file path to device file path
 	 * If projectFiles parameter is not specified enumerates the files from the specified projectFilesPath
@@ -1366,6 +1443,7 @@ interface IProjectFilesProvider {
 	 * Checks if the file is excluded
 	 */
 	isFileExcluded(filePath: string): boolean;
+
 	/**
 	 * Performs local file path mapping
 	 */
@@ -1379,6 +1457,7 @@ interface IProjectFilesProvider {
 	 * @return {IProjectFileInfo}
 	 */
 	getProjectFileInfo(filePath: string, platform: string, projectFilesConfig: IProjectFilesConfig): IProjectFileInfo;
+
 	/**
 	 * Parses file by removing platform or configuration from its name.
 	 * @param {string} filePath Path to the project file.
@@ -1526,20 +1605,26 @@ interface IOsInfo {
 
 interface IPromiseActions<T> {
 	resolve(value?: T | PromiseLike<T>): void;
+
 	reject(reason?: any): void;
+
 	isResolved(): boolean;
 }
 
 interface IDeferPromise<T> extends IPromiseActions<T> {
 	isRejected(): boolean;
+
 	isPending(): boolean;
+
 	getResult(): any;
+
 	promise: Promise<T>;
 }
 
 /**
  * Describes service used for interaction with Notification Center
  */
+// tslint:disable-next-line:interface-name
 interface IiOSNotificationService {
 	/**
 	 * Posts a notification and waits for a response.
@@ -1558,16 +1643,6 @@ interface IiOSNotificationService {
 	 * @return {Promise<number>} A socket which can be queried for a response.
 	 */
 	postNotification(deviceIdentifier: string, notification: string, commandType?: string): Promise<number>;
-}
-
-declare module "stringify-package" {
-	function stringifyPackage(data: any, indent: any, newline: string): string
-	export = stringifyPackage
-}
-
-declare module "detect-newline" {
-	function detectNewline(data: string): string | null;
-	export = detectNewline
 }
 
 /**

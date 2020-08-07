@@ -6,6 +6,8 @@ import { Configurations } from "./constants";
 import { EventEmitter } from "events";
 import * as crypto from "crypto";
 import * as _ from "lodash";
+import { IDeferPromise, IDictionary, IHooksService, IProjectFilesConfig, Server } from "./declarations";
+import { IAndroidSigningData } from "../definitions/build";
 
 const Table = require("cli-table");
 const STRIP_COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/mg;
@@ -71,6 +73,7 @@ function isInstallingNativeScriptGloballyWithYarn(): boolean {
 
 	return isInstallCommand && isGlobalCommand && hasNativeScriptPackage;
 }
+
 /**
  * Creates regular expression from input string.
  * The method replaces all occurences of RegExp special symbols in the input string with \<symbol>.
@@ -276,13 +279,13 @@ export function getRelativeToRootPath(rootPath: string, filePath: string): strin
 let customIsInteractive: any;
 
 export function setIsInteractive(override?: () => boolean) {
-  customIsInteractive = override;
+	customIsInteractive = override;
 }
 
 export function isInteractive(): boolean {
-  if (customIsInteractive) {
-    return customIsInteractive();
-  }
+	if (customIsInteractive) {
+		return customIsInteractive();
+	}
 	const result = isRunningInTTY() && !isCIEnvironment();
 	return result;
 }
@@ -351,7 +354,7 @@ export async function sleep(ms: number): Promise<void> {
 export function createTable(headers: string[], data: string[][]): any {
 	const table = new Table({
 		head: headers,
-		chars: { "mid": "", "left-mid": "", "mid-mid": "", "right-mid": "" }
+		chars: {"mid": "", "left-mid": "", "mid-mid": "", "right-mid": ""}
 	});
 
 	_.forEach(data, row => table.push(row));
@@ -363,7 +366,9 @@ export function getMessageWithBorders(message: string, spanLength = 3): string {
 		return "";
 	}
 
-	const longestRowLength = message.split("\n").sort((a, b) => { return b.length - a.length; })[0].length;
+	const longestRowLength = message.split("\n").sort((a, b) => {
+		return b.length - a.length;
+	})[0].length;
 	let border = "*".repeat(longestRowLength + 2 * spanLength); // * 2 for both sides
 	if (border.length % 2 === 0) {
 		border += "*"; // the * should always be an odd number in order to get * in each edge (we will remove the even *s below)
@@ -479,7 +484,7 @@ export function hook(commandName: string) {
 	function getHooksService(self: any): IHooksService {
 		let hooksService: IHooksService = self.$hooksService;
 		if (!hooksService) {
-			const injector = self.$injector;
+			const injector = self.$injector || $injector;
 			if (!injector) {
 				throw Error('Type with hooks needs to have either $hooksService or $injector injected.');
 			}
@@ -719,7 +724,7 @@ export function annotate(fn: any) {
 
 	if (typeof fn === "function") {
 		if (!($inject = fn.$inject) || $inject.name !== fn.name) {
-			$inject = { args: [], name: "" };
+			$inject = {args: [], name: ""};
 			fnText = fn.toString().replace(STRIP_COMMENTS, '');
 
 			let nameMatch = fnText.match(CLASS_NAME);

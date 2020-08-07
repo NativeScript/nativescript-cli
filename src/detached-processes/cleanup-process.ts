@@ -5,6 +5,16 @@ import * as path from "path";
 import * as shelljs from "shelljs";
 import { FileLogService } from "./file-log-service";
 
+import { IChildProcess, Server } from "../common/declarations";
+import {
+	ICleanupMessageBase, IFileCleanupMessage, IJSCleanupMessage,
+	IJSCommand, IRequestCleanupMessage,
+	IRequestInfo,
+	ISpawnCommandCleanupMessage,
+	ISpawnCommandInfo
+} from "./cleanup-process-definitions";
+import * as _ from "lodash";
+
 const pathToBootstrap = process.argv[2];
 if (!pathToBootstrap || !fs.existsSync(pathToBootstrap)) {
 	throw new Error("Invalid path to bootstrap.");

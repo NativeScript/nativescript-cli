@@ -1,4 +1,6 @@
 import { ProxyCommandBase } from "./proxy-base";
+import { IAnalyticsService, IProxyService } from "../../declarations";
+
 
 const proxyGetCommandName = "proxy|*get";
 

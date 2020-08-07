@@ -3,9 +3,10 @@ declare module "colors" {
 	export function addSequencer(name: string, callback: Function): void;
 
 	// none, browser, console
-	export var mode: string;
+	export let mode: string;
 }
 
+// tslint:disable-next-line:interface-name
 interface String {
 	// In ES6 there's a method called `bold` in String interface.
 	// bold: String;

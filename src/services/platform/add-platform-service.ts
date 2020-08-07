@@ -1,6 +1,10 @@
 import * as path from "path";
 import { PROJECT_FRAMEWORK_FOLDER_NAME, TrackActionNames, AnalyticsEventLabelDelimiter } from "../../constants";
 import { performanceLog } from "../../common/decorators";
+import { IAddPlatformService, IPlatformData } from "../../definitions/platform";
+import { IAnalyticsService, IFileSystem } from "../../common/declarations";
+import { INativePrepare, IProjectData, IProjectDataService } from "../../definitions/project";
+
 
 export class AddPlatformService implements IAddPlatformService {
 	constructor(

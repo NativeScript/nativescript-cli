@@ -1,5 +1,14 @@
 import { NativePlatformStatus } from "../constants";
 import * as path from "path";
+import {
+	IAddPlatformData,
+	IAddPlatformService,
+	IPlatformController, IPlatformData,
+	IPlatformsDataService
+} from "../definitions/platform";
+import { IErrors, IFileSystem } from "../common/declarations";
+import { IPackageInstallationManager } from "../declarations";
+import { INativePrepare, IProjectData, IProjectDataService } from "../definitions/project";
 
 export class PlatformController implements IPlatformController {
 	constructor(

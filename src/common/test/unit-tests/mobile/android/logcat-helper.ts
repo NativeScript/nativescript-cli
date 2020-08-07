@@ -6,6 +6,7 @@ import * as childProcess from "child_process";
 import * as fileSystem from "fs";
 import { EventEmitter } from "events";
 import stream from "stream";
+import { IInjector } from "../../../../definitions/yok";
 
 class ChildProcessMockInstance extends EventEmitter {
 	public stdout: stream.Readable;

@@ -1,4 +1,6 @@
 import { cache } from "./decorators";
+import { IChildProcess, IErrors, IHostInfo, IOsInfo } from "./declarations";
+import * as _ from "lodash";
 
 export class HostInfo implements IHostInfo {
 	private static WIN32_NAME = "win32";
@@ -8,19 +10,19 @@ export class HostInfo implements IHostInfo {
 	private static DOT_NET_REGISTRY_PATH = "\\Software\\Microsoft\\NET Framework Setup\\NDP\\v4\\Client";
 
 	private get $childProcess(): IChildProcess {
-		return this.$injector.resolve("childProcess");
+		return $injector.resolve("childProcess");
 	}
 
 	private get $osInfo(): IOsInfo {
-		return this.$injector.resolve("osInfo");
+		return $injector.resolve("osInfo");
 	}
 
 	private get $logger(): ILogger {
-		return this.$injector.resolve("logger");
+		return $injector.resolve("logger");
 	}
 
-	constructor(private $errors: IErrors,
-		private $injector: IInjector) { }
+	constructor(private $errors: IErrors) {
+	}
 
 	public get isWindows() {
 		return process.platform === HostInfo.WIN32_NAME;
@@ -115,4 +117,5 @@ export class HostInfo implements IHostInfo {
 		}
 	}
 }
+
 $injector.register("hostInfo", HostInfo);

@@ -1,8 +1,12 @@
+import { IAssetsGenerationService, IOptions } from "../declarations";
+import { IProjectData } from "../definitions/project";
+
+import { ICommand, ICommandParameter, IStringParameterBuilder } from "../common/definitions/commands";
+
 export abstract class GenerateCommandBase implements ICommand {
 	public allowedParameters: ICommandParameter[] = [this.$stringParameterBuilder.createMandatoryParameter("You have to provide path to image to generate other images based on it.")];
 
 	constructor(protected $options: IOptions,
-		protected $injector: IInjector,
 		protected $projectData: IProjectData,
 		protected $stringParameterBuilder: IStringParameterBuilder,
 		protected $assetsGenerationService: IAssetsGenerationService) {
@@ -19,11 +23,10 @@ export abstract class GenerateCommandBase implements ICommand {
 
 export class GenerateIconsCommand extends GenerateCommandBase implements ICommand {
 	constructor(protected $options: IOptions,
-		$injector: IInjector,
 		protected $projectData: IProjectData,
 		protected $stringParameterBuilder: IStringParameterBuilder,
 		$assetsGenerationService: IAssetsGenerationService) {
-			super($options, $injector, $projectData, $stringParameterBuilder, $assetsGenerationService);
+			super($options, $projectData, $stringParameterBuilder, $assetsGenerationService);
 	}
 
 	protected async generate(imagePath: string, background?: string): Promise<void> {
@@ -35,11 +38,10 @@ $injector.registerCommand("resources|generate|icons", GenerateIconsCommand);
 
 export class GenerateSplashScreensCommand extends GenerateCommandBase implements ICommand {
 	constructor(protected $options: IOptions,
-		$injector: IInjector,
 		protected $projectData: IProjectData,
 		protected $stringParameterBuilder: IStringParameterBuilder,
 		$assetsGenerationService: IAssetsGenerationService) {
-			super($options, $injector, $projectData, $stringParameterBuilder, $assetsGenerationService);
+			super($options, $projectData, $stringParameterBuilder, $assetsGenerationService);
 	}
 
 	protected async generate(imagePath: string, background?: string): Promise<void> {

@@ -1,4 +1,7 @@
 import { PackageManagers } from "../../constants";
+import { IErrors, IUserSettingsService } from "../declarations";
+
+import { ICommand, ICommandParameter } from "../definitions/commands";
 
 export class PackageManagerCommand implements ICommand {
 

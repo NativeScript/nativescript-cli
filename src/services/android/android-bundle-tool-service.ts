@@ -1,5 +1,13 @@
 import { resolve, join } from "path";
 import { hasValidAndroidSigning } from "../../common/helpers";
+import { IChildProcess, IErrors, ISysInfo } from "../../common/declarations";
+
+import {
+	IAndroidBundleToolService,
+	IBuildApksOptions,
+	IInstallApksOptions
+} from "../../definitions/android-bundle-tool-service";
+import * as _ from "lodash";
 
 export class AndroidBundleToolService implements IAndroidBundleToolService {
 	private javaPath: string;

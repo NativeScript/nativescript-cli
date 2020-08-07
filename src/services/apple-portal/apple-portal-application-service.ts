@@ -1,3 +1,13 @@
+import { IErrors, Server } from "../../common/declarations";
+import {
+	IApplePortalApplication,
+	IApplePortalApplicationService,
+	IApplePortalApplicationSummary,
+	IApplePortalSessionService,
+	IApplePortalUserDetail
+} from "./definitions";
+import * as _ from "lodash";
+
 export class ApplePortalApplicationService implements IApplePortalApplicationService {
 	constructor(
 		private $applePortalSessionService: IApplePortalSessionService,

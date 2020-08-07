@@ -2,6 +2,10 @@ import * as path from "path";
 import { ITMSConstants, INFO_PLIST_FILE_NAME } from "../constants";
 import { quoteString } from "../common/helpers";
 import { cache } from "../common/decorators";
+import { IITMSData, IITMSTransporterService } from "../declarations";
+import { IApplePortalApplicationService } from "./apple-portal/definitions";
+import { IChildProcess, IErrors, IFileSystem, IPlistParser, IXcodeSelectService } from "../common/declarations";
+import { IProjectData } from "../definitions/project";
 
 export class ITMSTransporterService implements IITMSTransporterService {
 	constructor(
@@ -9,14 +13,13 @@ export class ITMSTransporterService implements IITMSTransporterService {
 		private $childProcess: IChildProcess,
 		private $errors: IErrors,
 		private $fs: IFileSystem,
-		private $injector: IInjector,
 		private $logger: ILogger,
 		private $plistParser: IPlistParser,
 		private $xcodeSelectService: IXcodeSelectService,
 		private $tempService: ITempService) { }
 
 	private get $projectData(): IProjectData {
-		return this.$injector.resolve("projectData");
+		return $injector.resolve("projectData");
 	}
 
 	public async validate(): Promise<void> {

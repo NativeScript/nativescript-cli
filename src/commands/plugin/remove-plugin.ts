@@ -1,3 +1,10 @@
+import { IProjectData } from "../../definitions/project";
+import { IPluginsService } from "../../definitions/plugins";
+import { IErrors } from "../../common/declarations";
+
+import { ICommand, ICommandParameter } from "../../common/definitions/commands";
+import * as _ from "lodash";
+
 export class RemovePluginCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
 

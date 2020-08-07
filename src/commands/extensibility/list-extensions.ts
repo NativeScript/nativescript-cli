@@ -1,8 +1,13 @@
 import * as helpers from "../../common/helpers";
 
+import { ICommand, ICommandParameter } from "../../common/definitions/commands";
+import { IExtensibilityService } from "../../common/definitions/extensibility";
+import * as _ from "lodash";
+
 export class ListExtensionsCommand implements ICommand {
 	constructor(private $extensibilityService: IExtensibilityService,
-		private $logger: ILogger) { }
+				private $logger: ILogger) {
+	}
 
 	public async execute(args: string[]): Promise<void> {
 		const installedExtensions = this.$extensibilityService.getInstalledExtensions();
@@ -21,4 +26,5 @@ export class ListExtensionsCommand implements ICommand {
 
 	allowedParameters: ICommandParameter[] = [];
 }
+
 $injector.registerCommand("extension|*list", ListExtensionsCommand);

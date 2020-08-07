@@ -4,6 +4,17 @@ import { parse } from "url";
 import { CONNECTED_STATUS } from "../common/constants";
 import { TrackActionNames, DebugCommandErrors, CONNECTION_ERROR_EVENT_NAME, DebugTools, DEBUGGER_DETACHED_EVENT_NAME, DEBUGGER_ATTACHED_EVENT_NAME } from "../constants";
 import { EventEmitter } from "events";
+import {
+	IDebugController,
+	IDebugData,
+	IDebugDataService,
+	IDebugOptions, IDebugResultInfo,
+	IDeviceDebugService
+} from "../definitions/debug";
+import { IAnalyticsService, IDictionary, IErrors } from "../common/declarations";
+import { IProjectDataService } from "../definitions/project";
+import { IDebugInformation } from "../declarations";
+import * as _ from "lodash";
 
 export class DebugController extends EventEmitter implements IDebugController {
 	private _platformDebugServices: IDictionary<IDeviceDebugService> = {};
@@ -13,7 +24,6 @@ export class DebugController extends EventEmitter implements IDebugController {
 		private $debugDataService: IDebugDataService,
 		private $devicesService: Mobile.IDevicesService,
 		private $errors: IErrors,
-		private $injector: IInjector,
 		private $liveSyncProcessDataService: ILiveSyncProcessDataService,
 		private $logger: ILogger,
 		private $mobileHelper: Mobile.IMobileHelper,
@@ -180,9 +190,9 @@ export class DebugController extends EventEmitter implements IDebugController {
 		if (!this._platformDebugServices[device.deviceInfo.identifier]) {
 			const devicePlatform = device.deviceInfo.platform;
 			if (this.$mobileHelper.isiOSPlatform(devicePlatform)) {
-				this._platformDebugServices[device.deviceInfo.identifier] = this.$injector.resolve("iOSDeviceDebugService", { device });
+				this._platformDebugServices[device.deviceInfo.identifier] = $injector.resolve("iOSDeviceDebugService", { device });
 			} else if (this.$mobileHelper.isAndroidPlatform(devicePlatform)) {
-				this._platformDebugServices[device.deviceInfo.identifier] = this.$injector.resolve("androidDeviceDebugService", { device });
+				this._platformDebugServices[device.deviceInfo.identifier] = $injector.resolve("androidDeviceDebugService", { device });
 			} else {
 				this.$errors.fail(DebugCommandErrors.UNSUPPORTED_DEVICE_OS_FOR_DEBUGGING);
 			}

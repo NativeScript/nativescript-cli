@@ -1,11 +1,20 @@
 import { EventEmitter } from "events";
 import { BuildData } from "../../data/build-data";
 import { PrepareData } from "../../data/prepare-data";
+import { IPlatformProjectServiceBase, IProjectData, IValidatePlatformOutput } from "../../definitions/project";
+import { IPlatformData } from "../../definitions/platform";
+import { IDependencyData, IOptions } from "../../declarations";
+import { IRelease, ISpawnResult } from "../../common/declarations";
+import { IAddedNativePlatform, IPrepareInfo, IProjectChangesInfo } from "../../definitions/project-changes";
+import { IPluginData } from "../../definitions/plugins";
+import { INotConfiguredEnvOptions } from "../../common/definitions/commands";
 
 declare global {
 	interface IWebpackCompilerService extends EventEmitter {
 		compileWithWatch(platformData: IPlatformData, projectData: IProjectData, prepareData: IPrepareData): Promise<any>;
+
 		compileWithoutWatch(platformData: IPlatformData, projectData: IProjectData, prepareData: IPrepareData): Promise<void>;
+
 		stopWebpackCompiler(platform: string): Promise<void>;
 	}
 
@@ -17,10 +26,15 @@ declare global {
 
 	interface IProjectChangesService {
 		checkForChanges(platformData: IPlatformData, projectData: IProjectData, prepareData: IPrepareData): Promise<IProjectChangesInfo>;
+
 		getPrepareInfoFilePath(platformData: IPlatformData): string;
+
 		getPrepareInfo(platformData: IPlatformData): IPrepareInfo;
+
 		savePrepareInfo(platformData: IPlatformData, projectData: IProjectData, prepareData: IPrepareData): Promise<void>;
+
 		setNativePlatformStatus(platformData: IPlatformData, projectData: IProjectData, addedPlatform: IAddedNativePlatform): void;
+
 		currentChanges: IProjectChangesInfo;
 	}
 
@@ -40,9 +54,13 @@ declare global {
 
 	interface IPlatformProjectService extends NodeJS.EventEmitter, IPlatformProjectServiceBase {
 		getPlatformData(projectData: IProjectData): IPlatformData;
+
 		validate(projectData: IProjectData, options: IOptions, notConfiguredEnvOptions?: INotConfiguredEnvOptions): Promise<IValidatePlatformOutput>;
+
 		createProject(frameworkDir: string, frameworkVersion: string, projectData: IProjectData): Promise<void>;
+
 		interpolateData(projectData: IProjectData): Promise<void>;
+
 		interpolateConfigurationFile(projectData: IProjectData): void;
 
 		/**
@@ -108,6 +126,7 @@ declare global {
 		getAppResourcesDestinationDirectoryPath(projectData: IProjectData): string;
 
 		cleanDeviceTempFolder(deviceIdentifier: string, projectData: IProjectData): Promise<void>;
+
 		processConfigurationFilesFromAppResources(projectData: IProjectData, opts: { release: boolean }): Promise<void>;
 
 		/**
@@ -130,7 +149,7 @@ declare global {
 		 * @param {string} projectRoot The root directory of the native project.
 		 * @returns {void}
 		 */
-		cleanProject?(projectRoot: string): Promise<void>
+		cleanProject?(projectRoot: string): Promise<void>;
 
 		/**
 		 * Check the current state of the project, and validate against the options.

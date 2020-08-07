@@ -3,6 +3,9 @@ import * as semver from "semver";
 import { AndroidDeviceHashService } from "./android-device-hash-service";
 import { executeActionByChunks } from "../../helpers";
 import { DEFAULT_CHUNK_SIZE } from '../../constants';
+import { IFileSystem, IStringDictionary } from "../../declarations";
+
+import * as _ from "lodash";
 
 export class AndroidDeviceFileSystem implements Mobile.IDeviceFileSystem {
 	private _deviceHashServices = Object.create(null);
@@ -11,8 +14,7 @@ export class AndroidDeviceFileSystem implements Mobile.IDeviceFileSystem {
 		private $fs: IFileSystem,
 		private $logger: ILogger,
 		private $mobileHelper: Mobile.IMobileHelper,
-		private $tempService: ITempService,
-		private $injector: IInjector) { }
+		private $tempService: ITempService) { }
 
 	public async listFiles(devicePath: string, appIdentifier?: string): Promise<any> {
 		let listCommandArgs = ["ls", "-a", devicePath];
@@ -153,7 +155,7 @@ export class AndroidDeviceFileSystem implements Mobile.IDeviceFileSystem {
 
 	public getDeviceHashService(appIdentifier: string): Mobile.IAndroidDeviceHashService {
 		if (!this._deviceHashServices[appIdentifier]) {
-			this._deviceHashServices[appIdentifier] = this.$injector.resolve(AndroidDeviceHashService, { adb: this.adb, appIdentifier });
+			this._deviceHashServices[appIdentifier] = $injector.resolve(AndroidDeviceHashService, { adb: this.adb, appIdentifier });
 		}
 
 		return this._deviceHashServices[appIdentifier];

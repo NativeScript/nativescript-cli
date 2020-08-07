@@ -1,5 +1,9 @@
 import { createTable, formatListOfNames } from "../../helpers";
 import { DeviceConnectionType } from "../../../constants";
+import { IOptions } from "../../../declarations";
+import { IErrors } from "../../declarations";
+
+import { ICommand, ICommandParameter } from "../../definitions/commands";
 
 export class ListDevicesCommand implements ICommand {
 	constructor(private $devicesService: Mobile.IDevicesService,
@@ -64,13 +68,12 @@ export class ListDevicesCommand implements ICommand {
 $injector.registerCommand(["device|*list", "devices|*list"], ListDevicesCommand);
 
 class ListAndroidDevicesCommand implements ICommand {
-	constructor(private $injector: IInjector,
-		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants) { }
+	constructor(private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants) { }
 
 	public allowedParameters: ICommandParameter[] = [];
 
 	public async execute(args: string[]): Promise<void> {
-		const listDevicesCommand: ICommand = this.$injector.resolve(ListDevicesCommand);
+		const listDevicesCommand: ICommand = $injector.resolve(ListDevicesCommand);
 		const platform = this.$devicePlatformsConstants.Android;
 		await listDevicesCommand.execute([platform]);
 	}
@@ -79,13 +82,12 @@ class ListAndroidDevicesCommand implements ICommand {
 $injector.registerCommand(["device|android", "devices|android"], ListAndroidDevicesCommand);
 
 class ListiOSDevicesCommand implements ICommand {
-	constructor(private $injector: IInjector,
-		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants) { }
+	constructor(private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants) { }
 
 	public allowedParameters: ICommandParameter[] = [];
 
 	public async execute(args: string[]): Promise<void> {
-		const listDevicesCommand: ICommand = this.$injector.resolve(ListDevicesCommand);
+		const listDevicesCommand: ICommand = $injector.resolve(ListDevicesCommand);
 		const platform = this.$devicePlatformsConstants.iOS;
 		await listDevicesCommand.execute([platform]);
 	}

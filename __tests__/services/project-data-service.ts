@@ -7,6 +7,10 @@ import { DevicePlatformsConstants } from "../../src/common/mobile/device-platfor
 import { basename, join } from "path";
 import { FileSystem } from "../../src/common/file-system";
 import { regExpEscape } from "../../src/common/helpers";
+import { IAssetGroup, IProjectDataService } from "../../src/definitions/project";
+import { IInjector } from "../../src/common/definitions/yok";
+import { IFileSystem, IFsStats, IReadFileOptions } from "../../src/common/declarations";
+import * as _ from "lodash";
 
 const CLIENT_NAME_KEY_IN_PROJECT_FILE = "nativescript";
 

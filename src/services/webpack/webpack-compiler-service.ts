@@ -4,6 +4,19 @@ import * as semver from "semver";
 import { EventEmitter } from "events";
 import { performanceLog } from "../../common/decorators";
 import { WEBPACK_COMPILATION_COMPLETE, WEBPACK_PLUGIN_NAME, PackageManagers } from "../../constants";
+import {
+	IChildProcess,
+	IDictionary,
+	IErrors,
+	IFileSystem,
+	IHooksService, IHostInfo,
+	IStringDictionary
+} from "../../common/declarations";
+import { IPackageInstallationManager, IPackageManager } from "../../declarations";
+import { IPlatformData } from "../../definitions/platform";
+import { IProjectData } from "../../definitions/project";
+import { ICleanupService } from "../../definitions/cleanup-service";
+import * as _ from "lodash";
 
 export class WebpackCompilerService extends EventEmitter implements IWebpackCompilerService {
 	private webpackProcesses: IDictionary<child_process.ChildProcess> = {};

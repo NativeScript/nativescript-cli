@@ -1,4 +1,11 @@
 import { isInteractive } from "./common/helpers";
+import {
+	INodePackageManager,
+	INodePackageManagerInstallOptions, INpmInstallResultInfo,
+	INpmPackageNameParts,
+	INpmsResult
+} from "./declarations";
+import { IChildProcess, IDictionary, IFileSystem, IHostInfo } from "./common/declarations";
 
 export abstract class BasePackageManager implements INodePackageManager {
 	public abstract install(packageName: string, pathToSave: string, config: INodePackageManagerInstallOptions): Promise<INpmInstallResultInfo>;

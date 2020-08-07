@@ -1,4 +1,5 @@
 import * as temp from "temp";
+import { ICleanupService } from "../definitions/cleanup-service";
 
 export class TempService implements ITempService {
 	constructor(private $cleanupService: ICleanupService) {

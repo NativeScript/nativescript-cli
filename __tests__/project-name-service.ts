@@ -2,6 +2,9 @@ import { Yok } from "../src/common/yok";
 import { ProjectNameService } from "../src/services/project-name-service";
 import { assert } from "chai";
 import { ErrorsStub, LoggerStub } from "./stubs";
+import { IInjector } from "../src/common/definitions/yok";
+import { IProjectNameService } from "../src/declarations";
+import * as _ from "lodash";
 
 const mockProjectNameValidator = {
 	validate: () => true

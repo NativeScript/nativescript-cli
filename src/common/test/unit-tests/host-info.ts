@@ -2,6 +2,8 @@ import { Yok } from "../../yok";
 import { HostInfo } from "../../host-info";
 import { ErrorsStub, CommonLoggerStub } from "./stubs";
 import { assert } from "chai";
+import { IChildProcess, IErrors, IExecOptions, IHostInfo, IOsInfo } from "../../declarations";
+import { IInjector } from "../../definitions/yok";
 
 // Use custom class as isDarwin has only getter in HostInfo, while for current tests we need to set it to true or false.
 class MockHostInfo extends HostInfo {
@@ -15,8 +17,8 @@ class MockHostInfo extends HostInfo {
 		this._isDarwin = value;
 	}
 
-	constructor($errors: IErrors, $injector: IInjector) {
-		super($errors, $injector);
+	constructor($errors: IErrors) {
+		super($errors);
 	}
 }
 

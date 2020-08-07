@@ -1,6 +1,11 @@
 import { EOL } from "os";
 import * as path from "path";
 import * as constants from "../../constants";
+import { IOptions } from "../../declarations";
+import { IAndroidPluginBuildService, IPluginBuildOptions } from "../../definitions/android-plugin-migrator";
+import { IErrors, IFileSystem } from "../../common/declarations";
+
+import { ICommand, ICommandParameter } from "../../common/definitions/commands";
 
 export class BuildPluginCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];

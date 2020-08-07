@@ -2,6 +2,12 @@ import * as constants from "../constants";
 import * as helpers from "../common/helpers";
 import * as semver from "semver";
 import * as path from "path";
+import { IPackageInstallationManager, IVersionsService } from "../declarations";
+import { IProjectData, IProjectDataService } from "../definitions/project";
+import { IFileSystem, IVersionInformation } from "../common/declarations";
+import { Platforms } from "../common/constants";
+import { IBasePluginData, IPluginsService } from "../definitions/plugins";
+import * as _ from "lodash";
 
 export enum VersionInformationType {
 	UpToDate = "UpToDate",
@@ -17,13 +23,12 @@ class VersionsService implements IVersionsService {
 	private projectData: IProjectData;
 
 	constructor(private $fs: IFileSystem,
-		private $packageInstallationManager: IPackageInstallationManager,
-		private $injector: IInjector,
-		private $logger: ILogger,
-		private $staticConfig: Config.IStaticConfig,
-    private $pluginsService: IPluginsService,
-    private $projectDataService: IProjectDataService,
-		private $terminalSpinnerService: ITerminalSpinnerService) {
+				private $packageInstallationManager: IPackageInstallationManager,
+				private $logger: ILogger,
+				private $staticConfig: Config.IStaticConfig,
+				private $pluginsService: IPluginsService,
+				private $projectDataService: IProjectDataService,
+				private $terminalSpinnerService: ITerminalSpinnerService) {
 		this.projectData = this.getProjectData();
 	}
 
@@ -86,19 +91,19 @@ class VersionsService implements IVersionsService {
 	}
 
 	public async getRuntimesVersions(): Promise<IVersionInformation[]> {
-    const iosRuntime = this.$projectDataService.getRuntimePackage(this.projectData.projectDir, Platforms.ios);
-    const androidRuntime = this.$projectDataService.getRuntimePackage(this.projectData.projectDir, Platforms.android);
+		const iosRuntime = this.$projectDataService.getRuntimePackage(this.projectData.projectDir, Platforms.ios);
+		const androidRuntime = this.$projectDataService.getRuntimePackage(this.projectData.projectDir, Platforms.android);
 		const runtimes: IBasePluginData[] = [
 			iosRuntime,
 			androidRuntime
 		];
-    
+
 		const runtimesVersions: IVersionInformation[] = await Promise.all(runtimes.map(async (runtime: IBasePluginData) => {
 			const latestVersion = await this.$packageInstallationManager.getLatestVersion(runtime.name);
 			const runtimeInformation: IVersionInformation = {
 				componentName: runtime.name,
-        currentVersion: runtime.version,
-        latestVersion,
+				currentVersion: runtime.version,
+				latestVersion,
 			};
 
 			return runtimeInformation;
@@ -173,7 +178,7 @@ class VersionsService implements IVersionsService {
 
 	private getProjectData(): IProjectData {
 		try {
-			const projectData: IProjectData = this.$injector.resolve("projectData");
+			const projectData: IProjectData = $injector.resolve("projectData");
 			projectData.initializeProjectData();
 			return projectData;
 		} catch (error) {

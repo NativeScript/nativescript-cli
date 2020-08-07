@@ -1,5 +1,14 @@
 import * as path from "path";
 import { IOSDeviceTargets, IOS_WATCHAPP_FOLDER, IOS_WATCHAPP_EXTENSION_FOLDER, IOSNativeTargetProductTypes, IOSNativeTargetTypes } from "../constants";
+import {
+	IAddWatchAppFromPathOptions,
+	IIOSNativeTargetService,
+	IIOSWatchAppService, IProjectData,
+	IRemoveWatchAppOptions
+} from "../definitions/project";
+import { IFileSystem } from "../common/declarations";
+import { IPlatformData } from "../definitions/platform";
+
 
 export class IOSWatchAppService implements IIOSWatchAppService {
 	private static WATCH_APP_IDENTIFIER = "watchkitapp";

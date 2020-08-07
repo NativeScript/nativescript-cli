@@ -1,5 +1,6 @@
 interface ITerminalSpinnerService {
 	createSpinner(spinnerOptions?: ITerminalSpinnerOptions): ITerminalSpinner;
+
 	execute<T>(spinnerOptions: ITerminalSpinnerOptions, action: () => Promise<T>): Promise<T>;
 }
 
@@ -75,15 +76,24 @@ interface Spinner {
 }
 
 interface ITerminalSpinner {
-	text: string;	
+	text: string;
+
 	start(text?: string): ITerminalSpinner;
+
 	stop(): ITerminalSpinner;
+
 	succeed(text?: string): ITerminalSpinner;
+
 	fail(text?: string): ITerminalSpinner;
+
 	warn(text?: string): ITerminalSpinner;
+
 	info(text?: string): ITerminalSpinner;
+
 	clear(): ITerminalSpinner;
+
 	render(): ITerminalSpinner;
+
 	frame(): ITerminalSpinner;
 }
 

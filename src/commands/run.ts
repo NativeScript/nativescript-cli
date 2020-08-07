@@ -2,6 +2,12 @@ import { ERROR_NO_VALID_SUBCOMMAND_FORMAT } from "../common/constants";
 import { ANDROID_RELEASE_BUILD_ERROR_MESSAGE, ANDROID_APP_BUNDLE_SIGNING_ERROR_MESSAGE } from "../constants";
 import { cache } from "../common/decorators";
 import { hasValidAndroidSigning } from "../common/helpers";
+import { IOptions, IPlatformValidationService } from "../declarations";
+import { IProjectData, IProjectDataService } from "../definitions/project";
+import { IAnalyticsService, IErrors, IHostInfo } from "../common/declarations";
+import { IMigrateController } from "../definitions/migrate";
+
+import { ICommand, ICommandParameter } from "../common/definitions/commands";
 
 export class RunCommandBase implements ICommand {
 	private liveSyncCommandHelperAdditionalOptions: ILiveSyncCommandHelperAdditionalOptions = <ILiveSyncCommandHelperAdditionalOptions>{};
@@ -53,7 +59,7 @@ export class RunIosCommand implements ICommand {
 
 	@cache()
 	private get runCommand(): RunCommandBase {
-		const runCommand = this.$injector.resolve<RunCommandBase>(RunCommandBase);
+		const runCommand = $injector.resolve<RunCommandBase>(RunCommandBase);
 		runCommand.platform = this.platform;
 		return runCommand;
 	}
@@ -66,7 +72,6 @@ export class RunIosCommand implements ICommand {
 	constructor(
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $errors: IErrors,
-		private $injector: IInjector,
 		private $options: IOptions,
 		private $platformValidationService: IPlatformValidationService,
 		private $projectDataService: IProjectDataService,
@@ -95,7 +100,7 @@ export class RunAndroidCommand implements ICommand {
 
 	@cache()
 	private get runCommand(): RunCommandBase {
-		const runCommand = this.$injector.resolve<RunCommandBase>(RunCommandBase);
+		const runCommand = $injector.resolve<RunCommandBase>(RunCommandBase);
 		runCommand.platform = this.platform;
 		return runCommand;
 	}
@@ -108,7 +113,6 @@ export class RunAndroidCommand implements ICommand {
 	constructor(
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $errors: IErrors,
-		private $injector: IInjector,
 		private $options: IOptions,
 		private $platformValidationService: IPlatformValidationService,
 		private $projectData: IProjectData,

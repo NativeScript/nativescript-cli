@@ -1,6 +1,11 @@
+import { IOptions } from "../../declarations";
+
+import { IHelpService } from "../declarations";
+import { ICommand, ICommandParameter } from "../definitions/commands";
+import * as _ from "lodash";
+
 export class HelpCommand implements ICommand {
-	constructor(private $injector: IInjector,
-		private $helpService: IHelpService,
+	constructor(private $helpService: IHelpService,
 		private $options: IOptions) { }
 
 	public enableHooks = false;
@@ -13,7 +18,7 @@ export class HelpCommand implements ICommand {
 	public async execute(args: string[]): Promise<void> {
 		let commandName = (args[0] || "").toLowerCase();
 		let commandArguments = _.tail(args);
-		const hierarchicalCommand = this.$injector.buildHierarchicalCommand(args[0], commandArguments);
+		const hierarchicalCommand = $injector.buildHierarchicalCommand(args[0], commandArguments);
 		if (hierarchicalCommand) {
 			commandName = hierarchicalCommand.commandName;
 			commandArguments = hierarchicalCommand.remainingArguments;

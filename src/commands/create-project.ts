@@ -1,6 +1,11 @@
 import * as constants from "../constants";
 import * as path from "path";
 import { isInteractive } from "../common/helpers";
+import { ICreateProjectData, IProjectService } from "../definitions/project";
+import { IOptions } from "../declarations";
+import { IErrors } from "../common/declarations";
+
+import { ICommand, ICommandParameter } from "../common/definitions/commands";
 
 export class CreateProjectCommand implements ICommand {
 	public enableHooks = false;

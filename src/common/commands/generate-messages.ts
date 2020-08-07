@@ -1,4 +1,8 @@
 import * as path from "path";
+import { IOptions } from "../../declarations";
+import { IFileSystem, IServiceContractGenerator } from "../declarations";
+
+import { ICommand, ICommandParameter } from "../definitions/commands";
 
 export class GenerateMessages implements ICommand {
 	private static MESSAGES_DEFINITIONS_FILE_NAME = "messages.interface.d.ts";

@@ -1,5 +1,8 @@
 import * as path from "path";
 import * as crypto from "crypto";
+import { IDictionary, IErrors, IFileSystem } from "../../common/declarations";
+import { IInjector } from "../../common/definitions/yok";
+import * as _ from "lodash";
 
 const PROTOCOL_VERSION_LENGTH_SIZE = 1;
 const PROTOCOL_OPERATION_LENGTH_SIZE = 1;

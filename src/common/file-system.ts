@@ -9,6 +9,9 @@ import { PACKAGE_JSON_FILE_NAME } from "../constants";
 import { EOL } from "os";
 import stringifyPackage from "stringify-package";
 import detectNewline from "detect-newline";
+import { IFileSystem, IFsStats, IReadFileOptions } from "./declarations";
+
+import * as _ from "lodash";
 
 // TODO: Add .d.ts for mkdirp module (or use it from @types repo).
 const mkdirp = require("mkdirp");
@@ -18,14 +21,12 @@ export class FileSystem implements IFileSystem {
 	private static DEFAULT_INDENTATION_CHARACTER = "\t";
 	private static JSON_OBJECT_REGEXP = new RegExp(`{\\r*\\n*(\\W*)"`, "m");
 
-	constructor(private $injector: IInjector) { }
-
 	//TODO: try 'archiver' module for zipping
 	public async zipFiles(zipFile: string, files: string[], zipPathCallback: (path: string) => string): Promise<void> {
 		//we are resolving it here instead of in the constructor, because config has dependency on file system and config shouldn't require logger
-		const $logger = this.$injector.resolve("logger");
+		const $logger = $injector.resolve("logger");
 		const zipstream = require("zipstream");
-		const zip = zipstream.createZip({ level: 9 });
+		const zip = zipstream.createZip({level: 9});
 		const outFile = fs.createWriteStream(zipFile);
 		zip.pipe(outFile);
 
@@ -44,7 +45,7 @@ export class FileSystem implements IFileSystem {
 
 					zip.addFile(
 						fs.createReadStream(file),
-						{ name: relativePath },
+						{name: relativePath},
 						zipCallback);
 				} else {
 					outFile.on("finish", () => resolve());
@@ -65,10 +66,10 @@ export class FileSystem implements IFileSystem {
 	}
 
 	public async unzip(zipFile: string, destinationDir: string, options?: { overwriteExisitingFiles?: boolean; caseSensitive?: boolean },
-		fileFilters?: string[]): Promise<void> {
+					   fileFilters?: string[]): Promise<void> {
 		const shouldOverwriteFiles = !(options && options.overwriteExisitingFiles === false);
 		const isCaseSensitive = !(options && options.caseSensitive === false);
-		const $hostInfo = this.$injector.resolve("$hostInfo");
+		const $hostInfo = $injector.resolve("$hostInfo");
 
 		this.createDirectory(destinationDir);
 
@@ -93,15 +94,15 @@ export class FileSystem implements IFileSystem {
 			"-d",
 			destinationDir]);
 
-		const $childProcess = this.$injector.resolve("childProcess");
-		await $childProcess.spawnFromEvent(proc, args, "close", { stdio: "ignore", detached: true });
+		const $childProcess = $injector.resolve("childProcess");
+		await $childProcess.spawnFromEvent(proc, args, "close", {stdio: "ignore", detached: true});
 	}
 
 	private findFileCaseInsensitive(file: string): string {
 		const dir = dirname(file);
 		const baseName = basename(file);
 		const entries = this.readDirectory(dir);
-		const match = minimatch.match(entries, baseName, { nocase: true, nonegate: true, nonull: true })[0];
+		const match = minimatch.match(entries, baseName, {nocase: true, nonegate: true, nonull: true})[0];
 		const result = join(dir, match);
 		return result;
 	}
@@ -182,10 +183,10 @@ export class FileSystem implements IFileSystem {
 	}
 
 	public readText(filename: string, options?: IReadFileOptions | string): string {
-		options = options || { encoding: "utf8" };
+		options = options || {encoding: "utf8"};
 
 		if (_.isString(options)) {
-			options = { encoding: <BufferEncoding>options };
+			options = {encoding: <BufferEncoding>options};
 		}
 
 		if (!options.encoding) {
@@ -210,11 +211,11 @@ export class FileSystem implements IFileSystem {
 			// clean any null or undefined data
 			data = '';
 		}
-		fs.writeFileSync(filename, data, { encoding: <BufferEncoding>encoding });
+		fs.writeFileSync(filename, data, {encoding: <BufferEncoding>encoding});
 	}
 
 	public appendFile(filename: string, data: any, encoding?: string): void {
-		fs.appendFileSync(filename, data, { encoding: <BufferEncoding>encoding });
+		fs.appendFileSync(filename, data, {encoding: <BufferEncoding>encoding});
 	}
 
 	public writeJson(filename: string, data: any, space?: string, encoding?: string): void {
@@ -257,27 +258,27 @@ export class FileSystem implements IFileSystem {
 
 	public createReadStream(path: string, options?: {
 		flags?: string;
-    encoding?: BufferEncoding;
-    fd?: number;
-    mode?: number;
-    autoClose?: boolean;
-    emitClose?: boolean;
-    start?: number;
-    end?: number;
-    highWaterMark?: number;
+		encoding?: BufferEncoding;
+		fd?: number;
+		mode?: number;
+		autoClose?: boolean;
+		emitClose?: boolean;
+		start?: number;
+		end?: number;
+		highWaterMark?: number;
 	}): NodeJS.ReadableStream {
 		return fs.createReadStream(path, options);
 	}
 
 	public createWriteStream(path: string, options?: {
 		flags?: string;
-    encoding?: BufferEncoding;
-    fd?: number;
-    mode?: number;
-    autoClose?: boolean;
-    emitClose?: boolean;
-    start?: number;
-    highWaterMark?: number;
+		encoding?: BufferEncoding;
+		fd?: number;
+		mode?: number;
+		autoClose?: boolean;
+		emitClose?: boolean;
+		start?: number;
+		highWaterMark?: number;
 	}): any {
 		return fs.createWriteStream(path, options);
 	}
@@ -347,11 +348,11 @@ export class FileSystem implements IFileSystem {
 	}
 
 	public async setCurrentUserAsOwner(path: string, owner: string): Promise<void> {
-		const $childProcess = this.$injector.resolve("childProcess");
+		const $childProcess = $injector.resolve("childProcess");
 
-		if (!this.$injector.resolve("$hostInfo").isWindows) {
+		if (!$injector.resolve("$hostInfo").isWindows) {
 			const chown = $childProcess.spawn("chown", ["-R", owner, path],
-				{ stdio: "ignore", detached: true });
+				{stdio: "ignore", detached: true});
 			await this.futureFromEvent(chown, "close");
 		}
 		// nothing to do on Windows, as chown does not work on this platform
@@ -359,12 +360,12 @@ export class FileSystem implements IFileSystem {
 
 	// filterCallback: function(path: String, stat: fs.Stats): Boolean
 	public enumerateFilesInDirectorySync(directoryPath: string,
-		filterCallback?: (_file: string, _stat: IFsStats) => boolean,
-		opts?: { enumerateDirectories?: boolean, includeEmptyDirectories?: boolean }, foundFiles?: string[]): string[] {
+										 filterCallback?: (_file: string, _stat: IFsStats) => boolean,
+										 opts?: { enumerateDirectories?: boolean, includeEmptyDirectories?: boolean }, foundFiles?: string[]): string[] {
 		foundFiles = foundFiles || [];
 
 		if (!this.exists(directoryPath)) {
-			const $logger = this.$injector.resolve("logger");
+			const $logger = $injector.resolve("logger");
 			$logger.warn('Could not find folder: ' + directoryPath);
 			return foundFiles;
 		}
@@ -401,7 +402,7 @@ export class FileSystem implements IFileSystem {
 		return new Promise<string>((resolve, reject) => {
 			const algorithm = (options && options.algorithm) || "sha1";
 			const encoding = (options && options.encoding) || "hex";
-			const logger: ILogger = this.$injector.resolve("$logger");
+			const logger: ILogger = $injector.resolve("$logger");
 			const shasumData = crypto.createHash(algorithm);
 			const fileStream = this.createReadStream(fileName);
 			fileStream.on("data", (data: Buffer | string) => {

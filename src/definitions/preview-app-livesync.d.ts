@@ -1,9 +1,12 @@
-import { FilePayload, Device, FilesPayload } from "nativescript-preview-sdk";
+import { Device, FilesPayload } from "nativescript-preview-sdk";
 import { EventEmitter } from "events";
+import { IDictionary, IProjectDir, IQrCodeImageData } from "../common/declarations";
+import { IEnvOptions } from "../declarations";
 
 declare global {
 	interface IPreviewAppFilesService {
 		getInitialFilesPayload(liveSyncData: IPreviewAppLiveSyncData, platform: string, deviceId?: string): FilesPayload;
+
 		getFilesPayload(liveSyncData: IPreviewAppLiveSyncData, filesData: IPreviewAppFilesData, platform: string, deviceId?: string): FilesPayload;
 	}
 
@@ -12,20 +15,27 @@ declare global {
 		filesToRemove?: string[];
 	}
 
-	interface IPreviewAppLiveSyncData extends IProjectDir, IHasUseHotModuleReloadOption, IEnvOptions { }
+	interface IPreviewAppLiveSyncData extends IProjectDir, IHasUseHotModuleReloadOption, IEnvOptions {
+	}
 
 	interface IPreviewSdkService {
 		getQrCodeUrl(options: IGetQrCodeUrlOptions): string;
+
 		initialize(projectDir: string, getInitialFiles: (device: Device) => Promise<FilesPayload>): void;
+
 		applyChanges(filesPayload: FilesPayload): Promise<void>;
+
 		stop(): void;
 	}
 
-	interface IGetQrCodeUrlOptions extends IHasUseHotModuleReloadOption, IProjectDir { }
+	interface IGetQrCodeUrlOptions extends IHasUseHotModuleReloadOption, IProjectDir {
+	}
 
 	interface IPreviewAppPluginsService {
 		getPluginsUsageWarnings(data: IPreviewAppLiveSyncData, device: Device): Promise<string[]>;
+
 		comparePluginsOnDevice(data: IPreviewAppLiveSyncData, device: Device): Promise<void>;
+
 		getExternalPlugins(device: Device): string[];
 	}
 
@@ -35,7 +45,9 @@ declare global {
 
 	interface IPreviewQrCodeService {
 		getPlaygroundAppQrCode(options?: IPlaygroundAppQrCodeOptions): Promise<IDictionary<IQrCodeImageData>>;
+
 		getLiveSyncQrCode(url: string): Promise<IQrCodeImageData>;
+
 		printLiveSyncQrCode(options: IPrintLiveSyncOptions): Promise<void>;
 	}
 
@@ -53,9 +65,13 @@ declare global {
 
 	interface IPreviewDevicesService extends EventEmitter {
 		getConnectedDevices(): Device[];
+
 		updateConnectedDevices(devices: Device[]): void;
+
 		getDeviceById(id: string): Device;
+
 		getDevicesForPlatform(platform: string): Device[];
+
 		getPluginsUsageWarnings(data: IPreviewAppLiveSyncData, device: Device): Promise<string[]>;
 	}
 
@@ -77,6 +93,7 @@ declare global {
 
 	interface IPreviewAppController {
 		startPreview(data: IPreviewAppLiveSyncData): Promise<IQrCodeImageData>;
+
 		stopPreview(data: IProjectDir): Promise<void>;
 	}
 }

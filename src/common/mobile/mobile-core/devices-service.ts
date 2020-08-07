@@ -10,6 +10,10 @@ import { CONNECTED_STATUS } from "../../constants";
 import { isInteractive } from "../../helpers";
 import { DebugCommandErrors } from "../../../constants";
 import { performanceLog } from "../../decorators";
+import { IOptions } from "../../../declarations";
+import { IAppInstalledInfo, IDictionary, IErrors, IHostInfo } from "../../declarations";
+
+import * as _ from "lodash";
 
 export class DevicesService extends EventEmitter implements Mobile.IDevicesService {
 	private static DEVICE_LOOKING_INTERVAL = 200;
@@ -35,7 +39,6 @@ export class DevicesService extends EventEmitter implements Mobile.IDevicesServi
 		private $mobileHelper: Mobile.IMobileHelper,
 		private $deviceLogProvider: Mobile.IDeviceLogProvider,
 		private $hostInfo: IHostInfo,
-		private $injector: IInjector,
 		private $options: IOptions,
 		private $androidProcessService: Mobile.IAndroidProcessService,
 		private $iOSEmulatorServices: Mobile.IiOSSimulatorService,
@@ -766,9 +769,9 @@ export class DevicesService extends EventEmitter implements Mobile.IDevicesServi
 	private resolveEmulatorServices(platform?: string): Mobile.IEmulatorPlatformService {
 		platform = platform || this._platform;
 		if (this.$mobileHelper.isiOSPlatform(platform)) {
-			return this.$injector.resolve("iOSEmulatorServices");
+			return $injector.resolve("iOSEmulatorServices");
 		} else if (this.$mobileHelper.isAndroidPlatform(platform)) {
-			return this.$injector.resolve("androidEmulatorServices");
+			return $injector.resolve("androidEmulatorServices");
 		}
 
 		return null;

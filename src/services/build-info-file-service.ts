@@ -1,5 +1,10 @@
 import * as path from "path";
 import * as helpers from "../common/helpers";
+import { IBuildData, IBuildInfoFileService } from "../definitions/build";
+import { IFileSystem } from "../common/declarations";
+import { IBuildInfo, IPlatformData } from "../definitions/platform";
+import { IProjectData } from "../definitions/project";
+
 
 const buildInfoFileName = ".nsbuildinfo";
 

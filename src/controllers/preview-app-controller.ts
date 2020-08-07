@@ -7,6 +7,17 @@ import { HmrConstants } from "../common/constants";
 import { EventEmitter } from "events";
 import { PrepareDataService } from "../services/prepare-data-service";
 import { PreviewAppLiveSyncEvents } from "../services/livesync/playground/preview-app-constants";
+import {
+	IAnalyticsService,
+	IDictionary,
+	IErrors,
+	IHooksService,
+	IProjectDir,
+	IQrCodeImageData
+} from "../common/declarations";
+import { IPluginsService } from "../definitions/plugins";
+import { IProjectDataService } from "../definitions/project";
+import * as _ from "lodash";
 
 export class PreviewAppController extends EventEmitter implements IPreviewAppController {
 	private prepareReadyEventHandler: any = null;
@@ -111,7 +122,7 @@ export class PreviewAppController extends EventEmitter implements IPreviewAppCon
 				}
 
 				data.env = data.env || {};
-				data.env.externals = this.$previewAppPluginsService.getExternalPlugins(device);
+				(data.env as any).externals = this.$previewAppPluginsService.getExternalPlugins(device);
 
 				const prepareData = this.$prepareDataService.getPrepareData(data.projectDir, device.platform.toLowerCase(), { ...data, nativePrepare: { skipNativePrepare: true }, watch: true, watchNative: false });
 				await this.$prepareController.prepare(prepareData);
@@ -240,4 +251,5 @@ export class PreviewAppController extends EventEmitter implements IPreviewAppCon
 		}
 	}
 }
+
 $injector.register("previewAppController", PreviewAppController);

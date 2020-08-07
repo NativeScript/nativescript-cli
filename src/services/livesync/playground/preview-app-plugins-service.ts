@@ -5,6 +5,10 @@ import { Device } from "nativescript-preview-sdk";
 import { PluginComparisonMessages } from "./preview-app-constants";
 import { NODE_MODULES_DIR_NAME } from "../../../common/constants";
 import { PLATFORMS_DIR_NAME, PACKAGE_JSON_FILE_NAME, TNS_CORE_THEME_NAME, SCOPED_TNS_CORE_THEME_NAME, LoggerConfigData } from "../../../constants";
+import { IErrors, IFileSystem, IStringDictionary } from "../../../common/declarations";
+import { IPackageInstallationManager } from "../../../declarations";
+import { IPluginsService } from "../../../definitions/plugins";
+import * as _ from "lodash";
 
 export class PreviewAppPluginsService implements IPreviewAppPluginsService {
 	constructor(private $errors: IErrors,

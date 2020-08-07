@@ -4,6 +4,10 @@ import { assert } from "chai";
 import { format } from "util";
 import * as sinon from "sinon";
 import { MacOSVersions, MacOSDeprecationStringFormat } from "../src/constants";
+import { IInjector } from "../src/common/definitions/yok";
+import { IFileSystem, IHostInfo, ISysInfo, ISystemWarning } from "../src/common/declarations";
+import * as _ from "lodash";
+
 const verifyNodeVersion = require("../src/common/verify-node-version");
 
 describe("sysInfo", () => {

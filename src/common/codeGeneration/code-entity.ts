@@ -1,3 +1,6 @@
+import { CodeGeneration } from "./code-generation";
+import * as _ from "lodash";
+
 export enum CodeEntityType {
 	Line,
 	Block

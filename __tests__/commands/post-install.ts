@@ -2,6 +2,8 @@ import { Yok } from "../../src/common/yok";
 import { assert } from "chai";
 import { PostInstallCliCommand } from "../../src/commands/post-install";
 import { SettingsService } from "../../src/common/test/unit-tests/stubs";
+import { IInjector } from "../../src/common/definitions/yok";
+import { IAnalyticsService, IHelpService } from "../../src/common/declarations";
 
 const createTestInjector = (): IInjector => {
 	const testInjector = new Yok();

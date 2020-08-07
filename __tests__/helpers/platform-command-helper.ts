@@ -4,6 +4,9 @@ import { InjectorStub, TempServiceStub } from "../stubs";
 import { MobileHelper } from "../../src/common/mobile/mobile-helper";
 import { DevicePlatformsConstants } from "../../src/common/mobile/device-platforms-constants";
 import { PlatformCommandHelper } from "../../src/helpers/platform-command-helper";
+import { IInjector } from "../../src/common/definitions/yok";
+import { IPlatformCommandHelper } from "../../src/declarations";
+import * as _ from "lodash";
 
 let isAddPlatformCalled = false;
 

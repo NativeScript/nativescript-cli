@@ -2,6 +2,9 @@ import { TrackActionNames } from "../constants";
 const EOL = require("os").EOL;
 import { getFixedLengthDateString } from "../common/helpers";
 import * as semver from "semver";
+import { IOptions, IPerformanceService } from "../declarations";
+import { IAnalyticsService, IFileSystem } from "../common/declarations";
+import * as _ from "lodash";
 
 export class PerformanceService implements IPerformanceService {
 	public static LOG_MESSAGE_TEMPLATE = `Execution of method "%s" took %s ms.`;

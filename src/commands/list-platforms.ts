@@ -1,4 +1,8 @@
 import * as helpers from "../common/helpers";
+import { IPlatformCommandHelper } from "../declarations";
+import { IProjectData } from "../definitions/project";
+
+import { ICommand, ICommandParameter } from "../common/definitions/commands";
 
 export class ListPlatformsCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];

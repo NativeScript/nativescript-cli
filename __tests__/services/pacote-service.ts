@@ -5,6 +5,10 @@ import { LoggerStub } from "../stubs";
 import { sandbox, SinonSandbox, SinonStub } from "sinon";
 import { EventEmitter } from "events";
 import { NpmConfigService } from "../../src/services/npm-config-service";
+import { IProxySettings } from "../../src/common/declarations";
+import { IInjector } from "../../src/common/definitions/yok";
+import { INpmConfigService } from "../../src/declarations";
+import * as _ from "lodash";
 
 const pacote = require("pacote");
 const tar = require("tar");

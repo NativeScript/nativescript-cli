@@ -1,6 +1,8 @@
 /**
  * Describes data that will be tracked to Google Analytics
  */
+import { GoogleAnalyticsDataType, IStringDictionary } from "../declarations";
+
 interface IGoogleAnalyticsData {
 	/**
 	 * Describes the type of information that will be tracked (Page or Event).

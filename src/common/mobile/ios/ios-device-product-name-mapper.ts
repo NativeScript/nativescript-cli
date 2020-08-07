@@ -1,3 +1,6 @@
+
+import { IStringDictionary } from "../../declarations";
+
 class IosDeviceProductNameMapper implements Mobile.IiOSDeviceProductNameMapper {
 	// http://support.hockeyapp.net/kb/client-integration-ios-mac-os-x/ios-device-types
 	private map: IStringDictionary = {

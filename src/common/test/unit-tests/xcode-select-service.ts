@@ -2,6 +2,8 @@ import { Yok } from "../../yok";
 import { XcodeSelectService } from "../../services/xcode-select-service";
 import { assert } from "chai";
 import * as path from "path";
+import { IInjector } from "../../definitions/yok";
+import { IXcodeSelectService } from "../../declarations";
 
 let executionStopped = false;
 

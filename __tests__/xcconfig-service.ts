@@ -2,6 +2,10 @@ import * as temp from "temp";
 import { assert } from "chai";
 import { XcconfigService } from "../src/services/xcconfig-service";
 import * as yok from "../src/common/yok";
+import { IInjector } from "../src/common/definitions/yok";
+import { IXcconfigService } from "../src/declarations";
+import { IReadFileOptions } from "../src/common/declarations";
+import * as _ from "lodash";
 
 // start tracking temporary folders/files
 temp.track();

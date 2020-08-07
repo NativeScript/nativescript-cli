@@ -1,4 +1,7 @@
 import * as dns from "dns";
+import { INetworkConnectivityValidator } from "../declarations";
+import { IErrors } from "../common/declarations";
+
 
 export class NetworkConnectivityValidator implements INetworkConnectivityValidator {
 	private static DNS_LOOKUP_URL = "play.nativescript.org";

@@ -1,4 +1,7 @@
 import { EventEmitter } from "events";
+import { IControllerDataBase } from "./data";
+import { IPlatformData } from "./platform";
+import { IProjectData } from "./project";
 
 declare global {
 
@@ -7,15 +10,17 @@ declare global {
 		hmr: boolean;
 		env: any;
 		watch?: boolean;
-		watchNative: boolean
+		watchNative: boolean;
 	}
 
+	// tslint:disable-next-line:interface-name
 	interface IiOSCodeSigningData {
 		teamId: string;
 		provision: string;
 		mobileProvisionData: any;
 	}
 
+	// tslint:disable-next-line:interface-name
 	interface IiOSPrepareData extends IPrepareData, IiOSCodeSigningData { }
 
 	interface IPrepareDataService {

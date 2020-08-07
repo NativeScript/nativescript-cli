@@ -9,6 +9,8 @@ import * as path from "path";
 import { assert } from "chai";
 import { LiveSyncPaths } from "../../../constants";
 import { TempServiceStub } from "../../../../../__tests__/stubs";
+import { IInjector } from "../../../definitions/yok";
+import * as _ from "lodash";
 
 const myTestAppIdentifier = "org.nativescript.myApp";
 let isAdbPushExecuted = false;

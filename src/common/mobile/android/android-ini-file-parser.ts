@@ -1,5 +1,8 @@
 import { AndroidVirtualDevice } from '../../constants';
 import * as iconv from "iconv-lite";
+import { IFileSystem } from "../../declarations";
+
+import * as _ from "lodash";
 
 export class AndroidIniFileParser implements Mobile.IAndroidIniFileParser {
 	constructor(private $fs: IFileSystem) {

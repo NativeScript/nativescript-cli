@@ -1,4 +1,6 @@
 import * as yok from "../src/common/yok";
+import { IInjector } from "../src/common/definitions/yok";
+import { IDictionary } from "../src/common/declarations";
 
 export abstract class BaseServiceTest {
 	protected injector: IInjector;

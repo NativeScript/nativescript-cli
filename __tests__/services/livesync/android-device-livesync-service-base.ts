@@ -5,6 +5,9 @@ import { assert } from "chai";
 import * as path from "path";
 import { AndroidDeviceHashService } from "../../../src/common/mobile/android/android-device-hash-service";
 import { DeviceConnectionType } from "../../../src/constants";
+import { IInjector } from "../../../src/common/definitions/yok";
+import { IStringDictionary } from "../../../src/common/declarations";
+import * as _ from "lodash";
 
 interface ITestSetupInput {
 	existsHashesFile?: boolean;

@@ -1,5 +1,8 @@
 import * as net from "net";
 import { sleep } from "../helpers";
+import { IChildProcess, IDictionary, IErrors, INet, IOsInfo, IWaitForPortListenData } from "../declarations";
+
+import * as _ from "lodash";
 
 export class Net implements INet {
 	private static DEFAULT_INTERVAL = 1000;

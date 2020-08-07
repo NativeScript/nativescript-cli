@@ -6,6 +6,11 @@ import { EventEmitter } from "events";
 import { AnalyticsClients } from "../../../src/common/constants";
 
 import * as helpers from "../../../src/common/helpers";
+import { IProjectData } from "../../../src/definitions/project";
+import { IOptions } from "../../../src/declarations";
+import { IInjector } from "../../../src/common/definitions/yok";
+import { GoogleAnalyticsDataType, IAnalyticsService, IChildProcess } from "../../../src/common/declarations";
+import * as _ from "lodash";
 
 const trackFeatureUsage = "TrackFeatureUsage";
 const sampleProjectType = "SampleProjectType";
@@ -21,9 +26,7 @@ const createTestInjector = (opts?: { projectHelperErrorMsg?: string, projectDir?
 		PATH_TO_BOOTSTRAP: "pathToBootstrap.js"
 	});
 
-	testInjector.register("prompter", {
-
-	});
+	testInjector.register("prompter", {});
 
 	testInjector.register("userSettingsService", {
 		getSettingValue: async (settingName: string): Promise<any> => {
@@ -51,7 +54,7 @@ const createTestInjector = (opts?: { projectHelperErrorMsg?: string, projectDir?
 
 describe("analyticsService", () => {
 	afterEach(() => {
-    helpers.setIsInteractive(null);
+		helpers.setIsInteractive(null);
 	});
 
 	describe("trackInGoogleAnalytics", () => {
@@ -65,7 +68,10 @@ describe("analyticsService", () => {
 				const staticConfig = testInjector.resolve<Config.IStaticConfig>("staticConfig");
 				staticConfig.disableAnalytics = configuration.disableAnalytics;
 
-				configuration.userSettingsServiceOpts = configuration.userSettingsServiceOpts || { trackFeatureUsageValue: "false", defaultValue: "true" };
+				configuration.userSettingsServiceOpts = configuration.userSettingsServiceOpts || {
+					trackFeatureUsageValue: "false",
+					defaultValue: "true"
+				};
 				const userSettingsService = testInjector.resolve<any>("userSettingsService");
 				userSettingsService.getSettingValue = async (settingName: string): Promise<string> => {
 					if (settingName === trackFeatureUsage) {
@@ -143,7 +149,7 @@ describe("analyticsService", () => {
 			};
 
 			const setupTest = (expectedErrorMessage: string, projectHelperErrorMsg?: string): any => {
-				const testInjector = createTestInjector({ projectHelperErrorMsg });
+				const testInjector = createTestInjector({projectHelperErrorMsg});
 				const opts = {
 					isChildProcessSpawned: false,
 					expectedErrorMessage
@@ -158,7 +164,7 @@ describe("analyticsService", () => {
 			};
 
 			it("when unable to start broker process", async () => {
-				const { testInjector, childProcess, opts } = setupTest("Unable to get broker instance due to error:  Error: custom error");
+				const {testInjector, childProcess, opts} = setupTest("Unable to get broker instance due to error:  Error: custom error");
 				childProcess.spawn = (command: string, args?: string[], options?: any): any => {
 					opts.isChildProcessSpawned = true;
 					throw new Error("custom error");
@@ -168,7 +174,7 @@ describe("analyticsService", () => {
 			});
 
 			it("when broker cannot start for required timeout", async () => {
-				const { testInjector, childProcess, opts } = setupTest("Unable to get broker instance due to error:  Error: Unable to start Analytics Broker process.");
+				const {testInjector, childProcess, opts} = setupTest("Unable to get broker instance due to error:  Error: Unable to start Analytics Broker process.");
 				const originalSetTimeout = setTimeout;
 				childProcess.spawn = (command: string, args?: string[], options?: any): any => {
 					opts.isChildProcessSpawned = true;
@@ -182,7 +188,7 @@ describe("analyticsService", () => {
 			});
 
 			it("when broker is not connected", async () => {
-				const { testInjector, childProcess, opts } = setupTest("Broker not found or not connected.");
+				const {testInjector, childProcess, opts} = setupTest("Broker not found or not connected.");
 
 				childProcess.spawn = (command: string, args?: string[], options?: any): any => {
 					opts.isChildProcessSpawned = true;
@@ -198,7 +204,7 @@ describe("analyticsService", () => {
 			});
 
 			it("when sending message fails", async () => {
-				const { testInjector, childProcess, opts } = setupTest("Error while trying to send message to broker: Error: Failed to sent data.");
+				const {testInjector, childProcess, opts} = setupTest("Error while trying to send message to broker: Error: Failed to sent data.");
 
 				childProcess.spawn = (command: string, args?: string[], options?: any): any => {
 					opts.isChildProcessSpawned = true;
@@ -218,7 +224,7 @@ describe("analyticsService", () => {
 
 			it("when trying to get projectDir from projectHelper fails", async () => {
 				const projectHelperErrorMsg = "Failed to find project directory.";
-				const { testInjector, childProcess, opts } = setupTest(`Unable to get the projectDir from projectHelper Error: ${projectHelperErrorMsg}`, projectHelperErrorMsg);
+				const {testInjector, childProcess, opts} = setupTest(`Unable to get the projectDir from projectHelper Error: ${projectHelperErrorMsg}`, projectHelperErrorMsg);
 				childProcess.spawn = (command: string, args?: string[], options?: any): any => {
 					opts.isChildProcessSpawned = true;
 					const spawnedProcess: any = getSpawnedProcess();
@@ -239,7 +245,7 @@ describe("analyticsService", () => {
 
 		describe("sends correct message to broker", () => {
 			const setupTest = (expectedResult: any, dataToSend: any, terminalOpts?: { isInteractive: boolean }, projectHelperOpts?: { projectDir: string }): { testInjector: IInjector, opts: any } => {
-        helpers.setIsInteractive(() => terminalOpts ? terminalOpts.isInteractive : true)
+				helpers.setIsInteractive(() => terminalOpts ? terminalOpts.isInteractive : true);
 
 				const testInjector = createTestInjector(projectHelperOpts);
 				const opts = {
@@ -291,7 +297,7 @@ describe("analyticsService", () => {
 					type: "googleAnalyticsData",
 					category: "CLI",
 					googleAnalyticsDataType: gaDataType,
-					customDimensions: { customDimension1: "value1", cd5: analyticsClient || "CLI" }
+					customDimensions: {customDimension1: "value1", cd5: analyticsClient || "CLI"}
 				};
 
 				if (projectType) {
@@ -304,22 +310,22 @@ describe("analyticsService", () => {
 
 			_.each([GoogleAnalyticsDataType.Page, GoogleAnalyticsDataType.Event], (googleAnalyticsDataType: string) => {
 				it(`when data is ${googleAnalyticsDataType}`, async () => {
-					const { testInjector, opts } = setupTest(getExpectedResult(googleAnalyticsDataType), getDataToSend(googleAnalyticsDataType));
+					const {testInjector, opts} = setupTest(getExpectedResult(googleAnalyticsDataType), getDataToSend(googleAnalyticsDataType));
 					await assertExpectedResult(testInjector, opts);
 				});
 
 				it(`when data is ${googleAnalyticsDataType} and command is executed from projectDir`, async () => {
-					const { testInjector, opts } = setupTest(
+					const {testInjector, opts} = setupTest(
 						getExpectedResult(googleAnalyticsDataType, null, sampleProjectType),
 						getDataToSend(googleAnalyticsDataType),
 						null,
-						{ projectDir: "/some-dir" }
+						{projectDir: "/some-dir"}
 					);
 					await assertExpectedResult(testInjector, opts);
 				});
 
 				it(`when data is ${googleAnalyticsDataType} and terminal is not interactive`, async () => {
-					const { testInjector, opts } = setupTest(getExpectedResult(googleAnalyticsDataType, AnalyticsClients.Unknown), getDataToSend(googleAnalyticsDataType), { isInteractive: false });
+					const {testInjector, opts} = setupTest(getExpectedResult(googleAnalyticsDataType, AnalyticsClients.Unknown), getDataToSend(googleAnalyticsDataType), {isInteractive: false});
 					await assertExpectedResult(testInjector, opts);
 				});
 
@@ -327,7 +333,7 @@ describe("analyticsService", () => {
 					it(`when data is ${googleAnalyticsDataType} terminal is ${isInteractive ? "" : "not "}interactive and --analyticsClient is passed`, async () => {
 						const analyticsClient = "AnalyticsClient";
 
-						const { testInjector, opts } = setupTest(getExpectedResult(googleAnalyticsDataType, analyticsClient), getDataToSend(googleAnalyticsDataType), { isInteractive });
+						const {testInjector, opts} = setupTest(getExpectedResult(googleAnalyticsDataType, analyticsClient), getDataToSend(googleAnalyticsDataType), {isInteractive});
 						const options = testInjector.resolve<IOptions>("options");
 						options.analyticsClient = analyticsClient;
 

@@ -1,11 +1,14 @@
 /**
  * Describes the information that will be passed to analytics for tracking.
  */
+import { TrackingTypes } from "../../common/declarations";
+import { IGoogleAnalyticsData, IPreviewAppGoogleAnalyticsData } from "../../common/definitions/google-analytics";
+
 interface ITrackingInformation {
 	/**
-	 * The type of the data sent to analytics service - initalization data, feature to be tracked, error to be tracked, etc.
+	 * The type of the data sent to analytics service - initialization data, feature to be tracked, error to be tracked, etc.
 	 */
-	type: TrackingTypes
+	type: TrackingTypes;
 }
 
 /**

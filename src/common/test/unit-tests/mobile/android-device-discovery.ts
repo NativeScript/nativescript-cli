@@ -7,6 +7,9 @@ import { DeviceDiscoveryEventNames } from "../../../constants";
 import { EventEmitter } from "events";
 import { EOL } from "os";
 import { assert } from "chai";
+import { IInjector } from "../../../definitions/yok";
+import { IDictionary } from "../../../declarations";
+import * as _ from "lodash";
 
 class AndroidDeviceMock {
 	public deviceInfo: any = {};

@@ -3,6 +3,9 @@ import { GradleBuildArgsService } from "../../../src/services/android/gradle-bui
 import * as stubs from "../../stubs";
 import { assert } from "chai";
 import * as temp from "temp";
+import { IInjector } from "../../../src/common/definitions/yok";
+import { IGradleBuildArgsService } from "../../../src/definitions/gradle";
+import { IAndroidBuildData } from "../../../src/definitions/build";
 temp.track();
 
 function createTestInjector(): IInjector {

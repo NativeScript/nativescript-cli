@@ -1,4 +1,7 @@
 import * as constants from "../constants";
+import { IiOSNotificationService } from "../declarations";
+
+import * as _ from "lodash";
 
 export class IOSNotificationService implements IiOSNotificationService {
 	constructor(private $iosDeviceOperations: IIOSDeviceOperations) { }

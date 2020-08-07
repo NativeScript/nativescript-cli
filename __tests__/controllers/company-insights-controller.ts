@@ -2,6 +2,8 @@ import { assert } from "chai";
 import { Yok } from "../../src/common/yok";
 import { LoggerStub } from "../stubs";
 import { CompanyInsightsController } from "../../src/controllers/company-insights-controller";
+import { IInjector } from "../../src/common/definitions/yok";
+import { IProxySettings, Server } from "../../src/common/declarations";
 
 describe("companyInsightsController", () => {
 	const insightsUrlEndpoint = "/api/insights?ipAddress=%s";

@@ -3,6 +3,9 @@ import { getCurrentEpochTime, sleep } from "../../helpers";
 import { EOL } from "os";
 import { LoggerConfigData } from "../../../constants";
 import * as semver from "semver";
+import { IChildProcess, IUtils } from "../../declarations";
+
+import * as _ from "lodash";
 
 export class AndroidEmulatorServices implements Mobile.IEmulatorPlatformService {
 	constructor(private $androidGenymotionService: Mobile.IAndroidVirtualDeviceService,

@@ -1,5 +1,8 @@
 import * as path from "path";
 import { TrackActionNames } from "../constants";
+import { IAnalyticsService, IDashedOption, IDictionary, OptionType } from "../common/declarations";
+import { IOptions } from "../declarations";
+import * as _ from "lodash";
 
 export class OptionsTracker {
 	public static PASSWORD_DETECTION_STRING = "password";

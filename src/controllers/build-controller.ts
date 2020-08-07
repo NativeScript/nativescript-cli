@@ -2,6 +2,10 @@ import * as constants from "../constants";
 import { Configurations } from "../common/constants";
 import { EventEmitter } from "events";
 import { attachAwaitDetach } from "../common/helpers";
+import { IBuildArtefactsService, IBuildController, IBuildData, IBuildInfoFileService } from "../definitions/build";
+import { IAnalyticsService, IFileSystem } from "../common/declarations";
+import { IProjectDataService } from "../definitions/project";
+import { IPlatformsDataService } from "../definitions/platform";
 
 export class BuildController extends EventEmitter implements IBuildController {
 	constructor(
@@ -10,7 +14,6 @@ export class BuildController extends EventEmitter implements IBuildController {
 		private $buildInfoFileService: IBuildInfoFileService,
 		private $fs: IFileSystem,
 		private $logger: ILogger,
-		private $injector: IInjector,
 		private $mobileHelper: Mobile.IMobileHelper,
 		private $projectDataService: IProjectDataService,
 		private $projectChangesService: IProjectChangesService,
@@ -18,7 +21,7 @@ export class BuildController extends EventEmitter implements IBuildController {
 	) { super(); }
 
 	private get $platformsDataService(): IPlatformsDataService {
-		return this.$injector.resolve("platformsDataService");
+		return $injector.resolve("platformsDataService");
 	}
 
 	public async prepareAndBuild(buildData: IBuildData): Promise<string> {

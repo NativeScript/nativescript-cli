@@ -1,6 +1,15 @@
 import minimatch from "minimatch";
 import * as path from "path";
 import * as util from "util";
+import {
+	IFileSystem,
+	IFsStats,
+	IProjectFilesConfig,
+	IProjectFilesManager,
+	IProjectFilesProvider
+} from "../declarations";
+
+import * as _ from "lodash";
 
 export class ProjectFilesManager implements IProjectFilesManager {
 	constructor(private $fs: IFileSystem,

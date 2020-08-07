@@ -4,9 +4,26 @@ import * as constants from "../constants";
 import * as semver from "semver";
 import * as projectServiceBaseLib from "./platform-project-service-base";
 import { DeviceAndroidDebugBridge } from "../common/mobile/android/device-android-debug-bridge";
-import { Configurations, LiveSyncPaths } from "../common/constants";
+import { Configurations, LiveSyncPaths, Platforms } from "../common/constants";
 import { hook } from "../common/helpers";
 import { performanceLog } from ".././common/decorators";
+import { IAndroidResourcesMigrationService, IAndroidToolsInfo, IDependencyData, IOptions } from "../declarations";
+import { IAnalyticsService, IDictionary, IErrors, IFileSystem, IRelease, ISpawnResult } from "../common/declarations";
+import { IProjectData, IProjectDataService, IValidatePlatformOutput } from "../definitions/project";
+
+import { IAndroidPluginBuildService, IPluginBuildOptions } from "../definitions/android-plugin-migrator";
+import {
+	IBuildOutputOptions,
+	IPlatformData,
+	IPlatformEnvironmentRequirements,
+	IValidBuildOutputData
+} from "../definitions/platform";
+import { IAndroidBuildData } from "../definitions/build";
+import { IFilesHashService } from "../definitions/files-hash-service";
+import { IGradleBuildService, IGradleCommandService } from "../definitions/gradle";
+import { INotConfiguredEnvOptions } from "../common/definitions/commands";
+import { IPluginData } from "../definitions/plugins";
+import * as _ from "lodash";
 
 export class AndroidProjectService extends projectServiceBaseLib.PlatformProjectServiceBase {
 	private static VALUES_DIRNAME = "values";
@@ -15,23 +32,23 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	private static MIN_RUNTIME_VERSION_WITH_GRADLE = "1.5.0";
 
 	constructor(private $androidToolsInfo: IAndroidToolsInfo,
-		private $errors: IErrors,
-		$fs: IFileSystem,
-		private $logger: ILogger,
-		$projectDataService: IProjectDataService,
-		private $injector: IInjector,
-		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-		private $androidPluginBuildService: IAndroidPluginBuildService,
-		private $platformEnvironmentRequirements: IPlatformEnvironmentRequirements,
-		private $androidResourcesMigrationService: IAndroidResourcesMigrationService,
-		private $filesHashService: IFilesHashService,
-		private $gradleCommandService: IGradleCommandService,
-		private $gradleBuildService: IGradleBuildService,
-		private $analyticsService: IAnalyticsService) {
+				private $errors: IErrors,
+				$fs: IFileSystem,
+				private $logger: ILogger,
+				$projectDataService: IProjectDataService,
+				private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
+				private $androidPluginBuildService: IAndroidPluginBuildService,
+				private $platformEnvironmentRequirements: IPlatformEnvironmentRequirements,
+				private $androidResourcesMigrationService: IAndroidResourcesMigrationService,
+				private $filesHashService: IFilesHashService,
+				private $gradleCommandService: IGradleCommandService,
+				private $gradleBuildService: IGradleBuildService,
+				private $analyticsService: IAnalyticsService) {
 		super($fs, $projectDataService);
 	}
 
 	private _platformData: IPlatformData = null;
+
 	public getPlatformData(projectData: IProjectData): IPlatformData {
 		if (!projectData && !this._platformData) {
 			throw new Error("First call of getPlatformData without providing projectData.");
@@ -43,8 +60,8 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			const configurationsDirectoryArr = [projectRoot, constants.APP_FOLDER_NAME, constants.SRC_DIR, constants.MAIN_DIR, constants.MANIFEST_FILE_NAME];
 			const deviceBuildOutputArr = [projectRoot, constants.APP_FOLDER_NAME, constants.BUILD_DIR, constants.OUTPUTS_DIR, constants.APK_DIR];
 
-      const packageName = this.getProjectNameFromId(projectData);
-      const runtimePackage = this.$projectDataService.getRuntimePackage(projectData.projectDir, Platforms.android);
+			const packageName = this.getProjectNameFromId(projectData);
+			const runtimePackage = this.$projectDataService.getRuntimePackage(projectData.projectDir, Platforms.android);
 
 			this._platformData = {
 				frameworkPackageName: runtimePackage.name,
@@ -125,7 +142,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			notConfiguredEnvOptions
 		});
 
-		this.$androidToolsInfo.validateTargetSdk({ showWarningsAsErrors: true, projectDir: projectData.projectDir });
+		this.$androidToolsInfo.validateTargetSdk({showWarningsAsErrors: true, projectDir: projectData.projectDir});
 
 		return {
 			checkEnvironmentRequirementsOutput
@@ -138,7 +155,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		}
 
 		this.$fs.ensureDirectoryExists(this.getPlatformData(projectData).projectRoot);
-		const androidToolsInfo = this.$androidToolsInfo.getToolsInfo({ projectDir: projectData.projectDir });
+		const androidToolsInfo = this.$androidToolsInfo.getToolsInfo({projectDir: projectData.projectDir});
 		const targetSdkVersion = androidToolsInfo && androidToolsInfo.targetSdkVersion;
 		this.$logger.trace(`Using Android SDK '${targetSdkVersion}'.`);
 
@@ -312,7 +329,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			this.$fs.deleteDirectory(path.join(platformsAppResourcesPath, "libs"));
 		}
 
-		const androidToolsInfo = this.$androidToolsInfo.getToolsInfo({ projectDir: projectData.projectDir });
+		const androidToolsInfo = this.$androidToolsInfo.getToolsInfo({projectDir: projectData.projectDir});
 		const compileSdkVersion = androidToolsInfo && androidToolsInfo.compileSdkVersion;
 		this.cleanResValues(compileSdkVersion, projectData);
 	}
@@ -373,13 +390,13 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		const dependenciesJsonPath = path.join(platformDir, constants.DEPENDENCIES_JSON_NAME);
 		const nativeDependencies = dependencies
 			.filter(AndroidProjectService.isNativeAndroidDependency)
-			.map(({ name, directory }) => ({ name, directory: path.relative(platformDir, directory) }));
+			.map(({name, directory}) => ({name, directory: path.relative(platformDir, directory)}));
 		const jsonContent = JSON.stringify(nativeDependencies, null, 4);
 
 		this.$fs.writeFile(dependenciesJsonPath, jsonContent);
 	}
 
-	private static isNativeAndroidDependency({ nativescript }: IDependencyData): boolean {
+	private static isNativeAndroidDependency({nativescript}: IDependencyData): boolean {
 		return nativescript && (nativescript.android || (nativescript.platforms && nativescript.platforms.android));
 	}
 
@@ -394,11 +411,11 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	}
 
 	public async cleanProject(projectRoot: string): Promise<void> {
-		await this.$gradleBuildService.cleanProject(projectRoot, <any>{ release: false });
+		await this.$gradleBuildService.cleanProject(projectRoot, <any>{release: false});
 	}
 
 	public async cleanDeviceTempFolder(deviceIdentifier: string, projectData: IProjectData): Promise<void> {
-		const adb = this.$injector.resolve(DeviceAndroidDebugBridge, { identifier: deviceIdentifier });
+		const adb = $injector.resolve(DeviceAndroidDebugBridge, {identifier: deviceIdentifier});
 		const deviceRootPath = `${LiveSyncPaths.ANDROID_TMP_DIR_NAME}/${projectData.projectIdentifiers.android}`;
 		await adb.executeShellCommand(["rm", "-rf", deviceRootPath]);
 	}
@@ -407,7 +424,9 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		// Nothing android specific to check yet.
 	}
 
-	public getDeploymentTarget(projectData: IProjectData): semver.SemVer { return; }
+	public getDeploymentTarget(projectData: IProjectData): semver.SemVer {
+		return;
+	}
 
 	private copy(projectRoot: string, frameworkDir: string, files: string, cpArg: string): void {
 		const paths = files.split(' ').map(p => path.join(frameworkDir, p));
@@ -480,7 +499,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	}
 
 	private async trackKotlinUsage(projectRoot: string): Promise<void> {
-		const buildStatistics = this.tryGetAndroidBuildStatistics(projectRoot);
+		const buildStatistics = <any>this.tryGetAndroidBuildStatistics(projectRoot);
 
 		try {
 			if (buildStatistics && buildStatistics.kotlinUsage) {

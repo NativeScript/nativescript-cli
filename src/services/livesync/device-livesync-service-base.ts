@@ -1,6 +1,9 @@
 import { cache } from "../../common/decorators";
 import * as path from "path";
 import { performanceLog } from "../../common/decorators";
+import { IProjectData } from "../../definitions/project";
+import { IPlatformsDataService } from "../../definitions/platform";
+import * as _ from "lodash";
 
 export abstract class DeviceLiveSyncServiceBase {
 	private static FAST_SYNC_FILE_EXTENSIONS = [".css", ".xml", ".html"];

@@ -15,6 +15,10 @@ import { ProjectFilesProviderBase } from "../../../services/project-files-provid
 import * as temp from "temp";
 import { LiveSyncPaths } from "../../../constants";
 import { TempServiceStub } from "../../../../../__tests__/stubs";
+import { IInjector } from "../../../definitions/yok";
+import { IProjectFilesManager } from "../../../declarations";
+import * as _ from "lodash";
+
 temp.track();
 
 const testedApplicationIdentifier = "com.telerik.myApp";

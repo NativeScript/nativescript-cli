@@ -1,4 +1,5 @@
 import * as os from "os";
+import { IOsInfo } from "./declarations";
 
 export class OsInfo implements IOsInfo {
 	public type(): string {

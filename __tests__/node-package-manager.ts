@@ -2,6 +2,7 @@ import { Yok } from "../src/common/yok";
 import * as stubs from "./stubs";
 import { assert } from "chai";
 import { NodePackageManager } from "../src/node-package-manager";
+import { IInjector } from "../src/common/definitions/yok";
 
 function createTestInjector(configuration: {
 } = {}): IInjector {

@@ -1,6 +1,16 @@
 import { ChildProcess } from "child_process";
 import * as path from "path";
 import { cache, exported } from "../common/decorators";
+import { IOptions } from "../declarations";
+import { IChildProcess } from "../common/declarations";
+import { ICleanupService } from "../definitions/cleanup-service";
+import {
+	IFileCleanupMessage, IJSCleanupMessage, IJSCommand,
+	IRequestCleanupMessage,
+	IRequestInfo,
+	ISpawnCommandCleanupMessage,
+	ISpawnCommandInfo
+} from "../detached-processes/cleanup-process-definitions";
 
 export class CleanupService implements ICleanupService {
 	private static CLEANUP_PROCESS_START_TIMEOUT = 10 * 1000;

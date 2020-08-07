@@ -1,3 +1,5 @@
+import { IDictionary } from "../common/declarations";
+
 interface ITimeout {
 	/**
 	 * Timeout to execute the action.
@@ -7,8 +9,8 @@ interface ITimeout {
 
 interface IFilePath {
 	/**
-	* Path to file/directory to be deleted or required
-	*/
+	 * Path to file/directory to be deleted or required
+	 */
 	filePath: string;
 }
 
@@ -30,10 +32,10 @@ interface ISpawnCommandInfo extends ITimeout {
 }
 
 interface IRequestInfo extends ITimeout {
-	url: string,
-	method: string,
-	body: any,
-	headers: any
+	url: string;
+	method: string;
+	body: any;
+	headers: any;
 }
 
 interface ICleanupMessageBase {
@@ -57,7 +59,8 @@ interface IRequestCleanupMessage extends ICleanupMessageBase {
 	requestInfo: IRequestInfo;
 }
 
-interface IFileCleanupMessage extends ICleanupMessageBase, IFilePath { }
+interface IFileCleanupMessage extends ICleanupMessageBase, IFilePath {
+}
 
 interface IJSCommand extends ITimeout, IFilePath {
 	data: IDictionary<any>;

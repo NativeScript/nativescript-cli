@@ -6,6 +6,9 @@ import { DevicePlatformsConstants } from "../../src/common/mobile/device-platfor
 import { FileSystem } from "../../src/common/file-system";
 import { stringReplaceAll } from "../../src/common/helpers";
 import { LoggerStub } from "../stubs";
+import { IInjector } from "../../src/common/definitions/yok";
+import { IDictionary, IFileSystem } from "../../src/common/declarations";
+import * as _ from "lodash";
 
 let runtimeVersion = "6.0.0";
 function createTestInjector(): IInjector {

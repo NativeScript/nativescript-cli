@@ -5,6 +5,13 @@ import { assert } from "chai";
 import * as path from "path";
 import { MetadataFilteringConstants } from "../../src/constants";
 import { EOL } from "os";
+import { IProjectData } from "../../src/definitions/project";
+import { IDependencyData } from "../../src/declarations";
+import { IInjector } from "../../src/common/definitions/yok";
+import { IPluginData } from "../../src/definitions/plugins";
+import { IPlatformData } from "../../src/definitions/platform";
+import { IDictionary } from "../../src/common/declarations";
+import { IMetadataFilteringService } from "../../src/definitions/metadata-filtering-service";
 
 describe("metadataFilteringService", () => {
 	const platform = "platform";

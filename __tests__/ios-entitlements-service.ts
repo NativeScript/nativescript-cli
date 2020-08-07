@@ -9,6 +9,9 @@ import * as MobileHelperLib from "../src/common/mobile/mobile-helper";
 import * as DevicePlatformsConstantsLib from "../src/common/mobile/device-platforms-constants";
 import * as ErrorsLib from "../src/common/errors";
 import * as path from "path";
+import { IProjectData } from "../src/definitions/project";
+import { IInjector } from "../src/common/definitions/yok";
+import { IFileSystem } from "../src/common/declarations";
 
 // start tracking temporary folders/files
 temp.track();

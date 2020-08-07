@@ -1,3 +1,6 @@
+
+import { IStaticConfig } from "./declarations";
+
 require("./bootstrap");
 
 $injector.overrideAlreadyRequiredModule = true;

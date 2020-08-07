@@ -4,6 +4,9 @@ import * as fileSystemPath from "./android-device-file-system";
 import * as constants from "../../constants";
 import { cache } from "../../decorators";
 import { DeviceConnectionType } from "../../../constants";
+import { IDictionary } from "../../declarations";
+
+import * as _ from "lodash";
 
 interface IAndroidDeviceDetails {
 	model: string;
@@ -48,18 +51,21 @@ export class AndroidDevice implements Mobile.IAndroidDevice {
 	};
 
 	constructor(private identifier: string,
-		private status: string,
-		private $androidEmulatorServices: Mobile.IEmulatorPlatformService,
-		private $logger: ILogger,
-		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-		private $logcatHelper: Mobile.ILogcatHelper,
-		private $injector: IInjector) { }
+				private status: string,
+				private $androidEmulatorServices: Mobile.IEmulatorPlatformService,
+				private $logger: ILogger,
+				private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
+				private $logcatHelper: Mobile.ILogcatHelper) {
+	}
 
 	@cache()
 	public async init(): Promise<void> {
-		this.adb = this.$injector.resolve(DeviceAndroidDebugBridge, { identifier: this.identifier });
-		this.applicationManager = this.$injector.resolve(applicationManagerPath.AndroidApplicationManager, { adb: this.adb, identifier: this.identifier });
-		this.fileSystem = this.$injector.resolve(fileSystemPath.AndroidDeviceFileSystem, { adb: this.adb });
+		this.adb = $injector.resolve(DeviceAndroidDebugBridge, {identifier: this.identifier});
+		this.applicationManager = $injector.resolve(applicationManagerPath.AndroidApplicationManager, {
+			adb: this.adb,
+			identifier: this.identifier
+		});
+		this.fileSystem = $injector.resolve(fileSystemPath.AndroidDeviceFileSystem, {adb: this.adb});
 		let details = await this.getDeviceDetails(["getprop"]);
 
 		if (!details || !details.name) {

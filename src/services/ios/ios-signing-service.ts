@@ -4,6 +4,10 @@ import { BUILD_XCCONFIG_FILE_NAME, iOSAppResourcesFolderName, IOSNativeTargetPro
 import * as helpers from "../../common/helpers";
 import { IOSProvisionService } from "../ios-provision-service";
 import { IOSBuildData } from "../../data/build-data";
+import { IErrors, IFileSystem } from "../../common/declarations";
+import { IXcconfigService, IXcprojService } from "../../declarations";
+import { IProjectData } from "../../definitions/project";
+import * as _ from "lodash";
 
 export class IOSSigningService implements IiOSSigningService {
 	constructor(

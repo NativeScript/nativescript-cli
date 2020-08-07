@@ -1,3 +1,5 @@
+
+
 const qrcode = require("qrcode-terminal");
 
 export class QrCodeTerminalService implements IQrCodeTerminalService {

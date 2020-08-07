@@ -23,7 +23,7 @@ declare module Config {
 		RESOURCE_DIR_PATH: string;
 		PATH_TO_BOOTSTRAP: string;
 		QR_SIZE: number;
-		PROFILE_DIR_NAME: string
+		PROFILE_DIR_NAME: string;
 	}
 
 	interface IConfig {

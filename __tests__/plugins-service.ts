@@ -39,6 +39,13 @@ import { GradleCommandService } from '../src/services/android/gradle-command-ser
 import { GradleBuildService } from '../src/services/android/gradle-build-service';
 import { GradleBuildArgsService } from '../src/services/android/gradle-build-args-service';
 import * as util from "util";
+import { IProjectData } from "../src/definitions/project";
+import { IPluginData, IPluginsService } from "../src/definitions/plugins";
+import { IStringDictionary } from "../src/common/declarations";
+import { IInjector } from "../src/common/definitions/yok";
+import * as _ from "lodash";
+import { IEventActionData, IGoogleAnalyticsData } from "../src/common/definitions/google-analytics";
+
 temp.track();
 
 let isErrorThrown = false;

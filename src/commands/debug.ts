@@ -2,6 +2,16 @@ import { cache } from "../common/decorators";
 import { ValidatePlatformCommandBase } from "./command-base";
 import { hasValidAndroidSigning } from "../common/helpers";
 import { ANDROID_APP_BUNDLE_SIGNING_ERROR_MESSAGE } from "../constants";
+import { IOptions, IPlatformValidationService } from "../declarations";
+import { IProjectData } from "../definitions/project";
+import { IPlatformsDataService } from "../definitions/platform";
+import { ICleanupService } from "../definitions/cleanup-service";
+import { IErrors, ISysInfo } from "../common/declarations";
+import { IDebugController, IDebugDataService, IDebugOptions } from "../definitions/debug";
+import { IMigrateController } from "../definitions/migrate";
+
+import { ICommand, ICommandParameter } from "../common/definitions/commands";
+import * as _ from "lodash";
 
 export class DebugPlatformCommand extends ValidatePlatformCommandBase implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
@@ -75,7 +85,7 @@ export class DebugIOSCommand implements ICommand {
 
 	@cache()
 	private get debugPlatformCommand(): DebugPlatformCommand {
-		return this.$injector.resolve<DebugPlatformCommand>(DebugPlatformCommand, { platform: this.platform });
+		return $injector.resolve<DebugPlatformCommand>(DebugPlatformCommand, { platform: this.platform });
 	}
 
 	public allowedParameters: ICommandParameter[] = [];
@@ -84,7 +94,6 @@ export class DebugIOSCommand implements ICommand {
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $platformValidationService: IPlatformValidationService,
 		private $options: IOptions,
-		private $injector: IInjector,
 		private $sysInfo: ISysInfo,
 		private $projectData: IProjectData,
 		$iosDeviceOperations: IIOSDeviceOperations,
@@ -148,14 +157,13 @@ export class DebugAndroidCommand implements ICommand {
 
 	@cache()
 	private get debugPlatformCommand(): DebugPlatformCommand {
-		return this.$injector.resolve<DebugPlatformCommand>(DebugPlatformCommand, { platform: this.platform });
+		return $injector.resolve<DebugPlatformCommand>(DebugPlatformCommand, { platform: this.platform });
 	}
 
 	public allowedParameters: ICommandParameter[] = [];
 
 	constructor(protected $errors: IErrors,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-		private $injector: IInjector,
 		private $projectData: IProjectData,
 		private $markingModeService: IMarkingModeService,
 		private $options: IOptions) {

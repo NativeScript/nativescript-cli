@@ -1,6 +1,9 @@
 import * as path from "path";
 import * as shelljs from "shelljs";
 import * as os from "os";
+import { IAndroidToolsInfo, IConfiguration, IStaticConfig } from "./declarations";
+import { IChildProcess, IFileSystem, IHostInfo } from "./common/declarations";
+import * as _ from "lodash";
 
 export class Configuration implements IConfiguration { // User specific config
 	DEBUG = false;
@@ -44,9 +47,6 @@ export class StaticConfig implements IStaticConfig {
 	}
 	public RESOURCE_DIR_PATH = path.join(__dirname, "..", "resources");
 
-	constructor(private $injector: IInjector) {
-	}
-
 	public get disableCommandHooks() {
 		// Never set this to false because it will duplicate execution of hooks realized through method decoration
 		return true;
@@ -88,7 +88,7 @@ export class StaticConfig implements IStaticConfig {
 	private _adbFilePath: string = null;
 	public async getAdbFilePath(): Promise<string> {
 		if (!this._adbFilePath) {
-			const androidToolsInfo: IAndroidToolsInfo = this.$injector.resolve("androidToolsInfo");
+			const androidToolsInfo: IAndroidToolsInfo = $injector.resolve("androidToolsInfo");
 			this._adbFilePath = await androidToolsInfo.getPathToAdbFromAndroidHome() || await this.getAdbFilePathCore();
 		}
 
@@ -122,7 +122,7 @@ export class StaticConfig implements IStaticConfig {
 	}
 
 	private async getAdbFilePathCore(): Promise<string> {
-		const $childProcess: IChildProcess = this.$injector.resolve("$childProcess");
+		const $childProcess: IChildProcess = $injector.resolve("$childProcess");
 
 		try {
 			// Do NOT use the adb wrapper because it will end blow up with Segmentation fault because the wrapper uses this method!!!
@@ -152,9 +152,9 @@ export class StaticConfig implements IStaticConfig {
 		- Adb is named differently on OSes and may have additional files. The code is hairy to accommodate these differences
 	 */
 	private async spawnPrivateAdb(): Promise<string> {
-		const $fs: IFileSystem = this.$injector.resolve("$fs"),
-			$childProcess: IChildProcess = this.$injector.resolve("$childProcess"),
-			$hostInfo: IHostInfo = this.$injector.resolve("$hostInfo");
+		const $fs: IFileSystem = $injector.resolve("$fs"),
+			$childProcess: IChildProcess = $injector.resolve("$childProcess"),
+			$hostInfo: IHostInfo = $injector.resolve("$hostInfo");
 
 		// prepare the directory to host our copy of adb
 		const defaultAdbDirPath = path.join(__dirname, "common", "resources", "platform-tools", "android", process.platform);

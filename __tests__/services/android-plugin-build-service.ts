@@ -6,6 +6,10 @@ import * as FsLib from "../../src/common/file-system";
 import * as path from "path";
 import * as stubs from "../stubs";
 import * as temp from "temp";
+import { IFileSystem, ISpawnResult, IStringDictionary } from "../../src/common/declarations";
+import { IPluginBuildOptions } from "../../src/definitions/android-plugin-migrator";
+import { IInjector } from "../../src/common/definitions/yok";
+import { IFilesHashService } from "../../src/definitions/files-hash-service";
 
 temp.track();
 

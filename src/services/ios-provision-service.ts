@@ -1,5 +1,7 @@
 import * as mobileprovision from "ios-mobileprovision-finder";
 import { createTable, quoteString } from "../common/helpers";
+import { IOptions } from "../declarations";
+import * as _ from "lodash";
 
 const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 function formatDate(date: Date): string {

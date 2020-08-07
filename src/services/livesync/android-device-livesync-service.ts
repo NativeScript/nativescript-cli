@@ -6,6 +6,11 @@ import { ANDROID_DEVICE_APP_ROOT_TEMPLATE } from "../../constants";
 import * as util from "util";
 import * as path from "path";
 import * as net from "net";
+import { IInjector } from "../../common/definitions/yok";
+import { IProjectData } from "../../definitions/project";
+import { IPlatformsDataService } from "../../definitions/platform";
+import { IFilesHashService } from "../../definitions/files-hash-service";
+import * as _ from "lodash";
 
 export class AndroidDeviceLiveSyncService extends AndroidDeviceLiveSyncServiceBase implements IAndroidNativeScriptDeviceLiveSyncService, INativeScriptDeviceLiveSyncService {
 	private port: number;

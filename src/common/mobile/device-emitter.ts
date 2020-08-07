@@ -1,6 +1,7 @@
 import { EventEmitter } from "events";
 import { DeviceDiscoveryEventNames, EmulatorDiscoveryNames, DEVICE_LOG_EVENT_NAME } from "../constants";
 
+
 export class DeviceEmitter extends EventEmitter {
 	constructor(private $deviceLogProvider: EventEmitter,
 		private $devicesService: Mobile.IDevicesService) {

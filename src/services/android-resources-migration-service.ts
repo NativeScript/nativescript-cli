@@ -1,6 +1,9 @@
 import * as path from "path";
 import * as constants from "../constants";
 import { EOL } from "os";
+import { IErrors, IFileSystem } from "../common/declarations";
+
+import { IAndroidResourcesMigrationService } from "../declarations";
 
 export class AndroidResourcesMigrationService implements IAndroidResourcesMigrationService {
 	private static ANDROID_DIR = "Android";

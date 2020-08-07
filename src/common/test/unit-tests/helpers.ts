@@ -1,6 +1,8 @@
 import * as helpers from "../../helpers";
 import { assert } from "chai";
 import { EOL } from "os";
+import { IDictionary } from "../../declarations";
+import * as _ from "lodash";
 
 interface ITestData {
 	input: any;
@@ -503,6 +505,7 @@ describe("helpers", () => {
 	});
 
 	describe("getPidFromiOSSimulatorLogs", () => {
+		// tslint:disable-next-line:interface-name
 		interface IiOSSimulatorPidTestData extends ITestData {
 			appId?: string;
 		}
