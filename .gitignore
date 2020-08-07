@@ -7,8 +7,8 @@
 !bin/nsc.js
 !vendor/*.js
 !resources/**
-!lib/common/test/resources/**/*
-lib/common/test/resources/.DS_Store
+!src/common/test/resources/**/*
+src/common/test/resources/.DS_Store
 *.js.map
 !.travis/**/*
 coverage
@@ -25,7 +25,7 @@ lib-cov
 *.sublime-workspace
 tscommand*.tmp.txt
 .tscache/
-/lib/.d.ts
+/src/.d.ts
 
 pids
 logs
@@ -47,41 +47,41 @@ docs-cli
 !test/files/**/*.js
 
 # From previous submodule
-lib/common/*.js
-!lib/common/vendor/*.json
+src/common/*.js
+!src/common/vendor/*.json
 
-lib/common/*.js.map
-!lib/common/vendor/*.js
+src/common/*.js.map
+!src/common/vendor/*.js
 
-lib/common/lib-cov
-lib/common/*.seed
-lib/common/*.log
-lib/common/*.csv
-lib/common/*.dat
-lib/common/*.out
-lib/common/*.pid
-lib/common/*.gz
-lib/common/*.tgz
-lib/common/*.tmp
-lib/common/*.sublime-workspace
-lib/common/tscommand*.tmp.txt
-lib/common/.tscache/
-lib/common/pids
-lib/common/logs
-lib/common/results
-lib/common/scratch/
-lib/common/.idea/workspace.xml
-lib/common/.idea/tasks.xml
-lib/common/.idea/watcherTasks.xml
+src/common/lib-cov
+src/common/*.seed
+src/common/*.log
+src/common/*.csv
+src/common/*.dat
+src/common/*.out
+src/common/*.pid
+src/common/*.gz
+src/common/*.tgz
+src/common/*.tmp
+src/common/*.sublime-workspace
+src/common/tscommand*.tmp.txt
+src/common/.tscache/
+src/common/pids
+src/common/logs
+src/common/results
+src/common/scratch/
+src/common/.idea/workspace.xml
+src/common/.idea/tasks.xml
+src/common/.idea/watcherTasks.xml
 
-lib/common/npm-debug.log
-lib/common/node_modules
-!lib/common/Gruntfile.js
-lib/common/.d.ts
-!lib/common/bin/**/*
-lib/common/coverage/**/*
-lib/common/xunit.xml
-lib/common/test-reports.xml
-!lib/common/test-scripts/**
-!lib/common/scripts/**
+src/common/npm-debug.log
+src/common/node_modules
+!src/common/Gruntfile.js
+src/common/.d.ts
+!src/common/bin/**/*
+src/common/coverage/**/*
+src/common/xunit.xml
+src/common/test-reports.xml
+!src/common/test-scripts/**
+!src/common/scripts/**
 config/test-deps-versions-generated.json

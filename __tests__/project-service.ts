@@ -1,8 +1,8 @@
-import * as yok from "../lib/common/yok";
-import * as constants from "../lib/constants";
-import * as ProjectServiceLib from "../lib/services/project-service";
+import * as yok from "../src/common/yok";
+import * as constants from "../src/constants";
+import * as ProjectServiceLib from "../src/services/project-service";
 import { assert } from "chai";
-import { SettingsService } from "../lib/common/test/unit-tests/stubs";
+import { SettingsService } from "../src/common/test/unit-tests/stubs";
 import { LoggerStub, ErrorsStub, TempServiceStub } from "./stubs";
 import * as path from "path";
 

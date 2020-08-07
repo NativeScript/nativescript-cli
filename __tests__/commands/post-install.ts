@@ -1,7 +1,7 @@
-import { Yok } from "../../lib/common/yok";
+import { Yok } from "../../src/common/yok";
 import { assert } from "chai";
-import { PostInstallCliCommand } from "../../lib/commands/post-install";
-import { SettingsService } from "../../lib/common/test/unit-tests/stubs";
+import { PostInstallCliCommand } from "../../src/commands/post-install";
+import { SettingsService } from "../../src/common/test/unit-tests/stubs";
 
 const createTestInjector = (): IInjector => {
 	const testInjector = new Yok();

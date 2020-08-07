@@ -1,7 +1,7 @@
-import { Yok } from "../lib/common/yok";
+import { Yok } from "../src/common/yok";
 import * as stubs from "./stubs";
 import { assert } from "chai";
-import { NodePackageManager } from "../lib/node-package-manager";
+import { NodePackageManager } from "../src/node-package-manager";
 
 function createTestInjector(configuration: {
 } = {}): IInjector {

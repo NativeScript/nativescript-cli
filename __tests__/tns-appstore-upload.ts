@@ -1,10 +1,10 @@
-import { PublishIOS } from "../lib/commands/appstore-upload";
+import { PublishIOS } from "../src/commands/appstore-upload";
 import { PrompterStub, LoggerStub, ProjectDataStub, ProjectDataService } from "./stubs";
 import * as chai from "chai";
-import * as yok from "../lib/common/yok";
-import { PrepareNativePlatformService } from "../lib/services/platform/prepare-native-platform-service";
-import { BuildController } from "../lib/controllers/build-controller";
-import { IOSBuildData } from "../lib/data/build-data";
+import * as yok from "../src/common/yok";
+import { PrepareNativePlatformService } from "../src/services/platform/prepare-native-platform-service";
+import { BuildController } from "../src/controllers/build-controller";
+import { IOSBuildData } from "../src/data/build-data";
 
 class AppStore {
 	static itunesconnect = {

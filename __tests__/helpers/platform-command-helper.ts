@@ -1,9 +1,9 @@
 
 import { assert } from "chai";
 import { InjectorStub, TempServiceStub } from "../stubs";
-import { MobileHelper } from "../../lib/common/mobile/mobile-helper";
-import { DevicePlatformsConstants } from "../../lib/common/mobile/device-platforms-constants";
-import { PlatformCommandHelper } from "../../lib/helpers/platform-command-helper";
+import { MobileHelper } from "../../src/common/mobile/mobile-helper";
+import { DevicePlatformsConstants } from "../../src/common/mobile/device-platforms-constants";
+import { PlatformCommandHelper } from "../../src/helpers/platform-command-helper";
 
 let isAddPlatformCalled = false;
 

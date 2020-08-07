@@ -1,4 +1,4 @@
-import * as yok from "../lib/common/yok";
+import * as yok from "../src/common/yok";
 
 export abstract class BaseServiceTest {
 	protected injector: IInjector;

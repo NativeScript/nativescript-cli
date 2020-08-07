@@ -2,10 +2,10 @@ import * as path from "path";
 import { BaseServiceTest } from "./base-service-test";
 import * as temp from "temp";
 import { assert } from "chai";
-import { PlatformsDataService } from "../lib/services/platforms-data-service";
-import { ProjectChangesService } from "../lib/services/project-changes-service";
-import * as Constants from "../lib/constants";
-import { FileSystem } from "../lib/common/file-system";
+import { PlatformsDataService } from "../src/services/platforms-data-service";
+import { ProjectChangesService } from "../src/services/project-changes-service";
+import * as Constants from "../src/constants";
+import { FileSystem } from "../src/common/file-system";
 import { HooksServiceStub, LoggerStub } from "./stubs";
 
 // start tracking temporary folders/files

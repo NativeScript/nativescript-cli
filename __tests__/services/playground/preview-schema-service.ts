@@ -1,6 +1,6 @@
-import { Yok } from "../../../lib/common/yok";
-import { PreviewSchemaService } from "../../../lib/services/livesync/playground/preview-schema-service";
-import { PubnubKeys } from "../../../lib/services/livesync/playground/preview-app-constants";
+import { Yok } from "../../../src/common/yok";
+import { PreviewSchemaService } from "../../../src/services/livesync/playground/preview-schema-service";
+import { PubnubKeys } from "../../../src/services/livesync/playground/preview-app-constants";
 import { assert } from "chai";
 
 function createTestInjector(): IInjector {

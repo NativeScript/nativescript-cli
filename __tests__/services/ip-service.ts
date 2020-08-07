@@ -1,6 +1,6 @@
-import { Yok } from "../../lib/common/yok";
+import { Yok } from "../../src/common/yok";
 import { LoggerStub } from "../stubs";
-import { IPService } from "../../lib/services/ip-service";
+import { IPService } from "../../src/services/ip-service";
 import { assert } from "chai";
 
 describe("ipService", () => {

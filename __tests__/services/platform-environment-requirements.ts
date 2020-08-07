@@ -1,9 +1,9 @@
-import { Yok } from "../../lib/common/yok";
-import { PlatformEnvironmentRequirements } from '../../lib/services/platform-environment-requirements';
+import { Yok } from "../../src/common/yok";
+import { PlatformEnvironmentRequirements } from '../../src/services/platform-environment-requirements';
 import * as stubs from "../stubs";
 import { assert } from "chai";
 import { EOL } from "os";
-const helpers = require("../../lib/common/helpers");
+const helpers = require("../../src/common/helpers");
 
 const originalIsInteractive = helpers.isInteractive;
 const platform = "android";

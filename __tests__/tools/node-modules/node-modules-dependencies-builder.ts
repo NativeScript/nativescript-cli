@@ -1,8 +1,8 @@
-import { Yok } from "../../../lib/common/yok";
+import { Yok } from "../../../src/common/yok";
 import { assert } from "chai";
-import { NodeModulesDependenciesBuilder } from "../../../lib/tools/node-modules/node-modules-dependencies-builder";
+import { NodeModulesDependenciesBuilder } from "../../../src/tools/node-modules/node-modules-dependencies-builder";
 import * as path from "path";
-import * as constants from "../../../lib/constants";
+import * as constants from "../../../src/constants";
 
 interface IDependencyInfo {
 	name: string;

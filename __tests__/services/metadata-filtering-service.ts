@@ -1,9 +1,9 @@
-import { MetadataFilteringService } from "../../lib/services/metadata-filtering-service";
-import { Yok } from "../../lib/common/yok";
+import { MetadataFilteringService } from "../../src/services/metadata-filtering-service";
+import { Yok } from "../../src/common/yok";
 import { LoggerStub, FileSystemStub } from "../stubs";
 import { assert } from "chai";
 import * as path from "path";
-import { MetadataFilteringConstants } from "../../lib/constants";
+import { MetadataFilteringConstants } from "../../src/constants";
 import { EOL } from "os";
 
 describe("metadataFilteringService", () => {

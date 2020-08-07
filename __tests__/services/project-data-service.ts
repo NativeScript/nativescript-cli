@@ -1,12 +1,12 @@
-import { Yok } from "../../lib/common/yok";
+import { Yok } from "../../src/common/yok";
 import { assert } from "chai";
-import { ProjectDataService } from "../../lib/services/project-data-service";
+import { ProjectDataService } from "../../src/services/project-data-service";
 import { LoggerStub, ProjectDataStub, MarkingModeServiceStub } from "../stubs";
-import { NATIVESCRIPT_PROPS_INTERNAL_DELIMITER, PACKAGE_JSON_FILE_NAME, CONFIG_NS_FILE_NAME, AssetConstants, ProjectTypes } from '../../lib/constants';
-import { DevicePlatformsConstants } from "../../lib/common/mobile/device-platforms-constants";
+import { NATIVESCRIPT_PROPS_INTERNAL_DELIMITER, PACKAGE_JSON_FILE_NAME, CONFIG_NS_FILE_NAME, AssetConstants, ProjectTypes } from '../../src/constants';
+import { DevicePlatformsConstants } from "../../src/common/mobile/device-platforms-constants";
 import { basename, join } from "path";
-import { FileSystem } from "../../lib/common/file-system";
-import { regExpEscape } from "../../lib/common/helpers";
+import { FileSystem } from "../../src/common/file-system";
+import { regExpEscape } from "../../src/common/helpers";
 
 const CLIENT_NAME_KEY_IN_PROJECT_FILE = "nativescript";
 

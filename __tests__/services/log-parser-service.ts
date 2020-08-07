@@ -1,10 +1,10 @@
 import { assert } from "chai";
-import { CONNECTED_STATUS, DEVICE_LOG_EVENT_NAME } from "../../lib/common/constants";
-import { LogParserService } from "../../lib/services/log-parser-service";
-import { DevicePlatformsConstants } from "../../lib/common/mobile/device-platforms-constants";
-import { IOSDebuggerPortService } from "../../lib/services/ios-debugger-port-service";
+import { CONNECTED_STATUS, DEVICE_LOG_EVENT_NAME } from "../../src/common/constants";
+import { LogParserService } from "../../src/services/log-parser-service";
+import { DevicePlatformsConstants } from "../../src/common/mobile/device-platforms-constants";
+import { IOSDebuggerPortService } from "../../src/services/ios-debugger-port-service";
 import { EventEmitter } from "events";
-import { Yok } from "../../lib/common/yok";
+import { Yok } from "../../src/common/yok";
 
 const appId = "org.nativescript.test";
 const deviceId = "fbece8e562ac63749a1018a9f1ea57614c5c953a";

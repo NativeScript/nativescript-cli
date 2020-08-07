@@ -1,13 +1,13 @@
 import * as stubs from "./../stubs";
-import * as yok from "../../lib/common/yok";
-import { UpdateController } from "../../lib/controllers/update-controller";
+import * as yok from "../../src/common/yok";
+import { UpdateController } from "../../src/controllers/update-controller";
 import { assert } from "chai";
 import * as sinon from "sinon";
 import * as path from "path";
-import { Options } from "../../lib/options";
-import { StaticConfig } from "../../lib/config";
-import { SettingsService } from "../../lib/common/test/unit-tests/stubs";
-import { DevicePlatformsConstants } from "../../lib/common/mobile/device-platforms-constants";
+import { Options } from "../../src/options";
+import { StaticConfig } from "../../src/config";
+import { SettingsService } from "../../src/common/test/unit-tests/stubs";
+import { DevicePlatformsConstants } from "../../src/common/mobile/device-platforms-constants";
 const projectFolder = "test";
 
 function createTestInjector(

@@ -1,10 +1,10 @@
-import { Yok } from "../../lib/common/yok";
+import { Yok } from "../../src/common/yok";
 import { assert } from "chai";
 import * as path from "path";
-import { LogSourceMapService } from "../../lib/services/log-source-map-service";
-import { DevicePlatformsConstants } from "../../lib/common/mobile/device-platforms-constants";
-import { FileSystem } from "../../lib/common/file-system";
-import { stringReplaceAll } from "../../lib/common/helpers";
+import { LogSourceMapService } from "../../src/services/log-source-map-service";
+import { DevicePlatformsConstants } from "../../src/common/mobile/device-platforms-constants";
+import { FileSystem } from "../../src/common/file-system";
+import { stringReplaceAll } from "../../src/common/helpers";
 import { LoggerStub } from "../stubs";
 
 let runtimeVersion = "6.0.0";

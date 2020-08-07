@@ -1,5 +1,5 @@
-import { Yok } from "../../../lib/common/yok";
-import { PreviewAppFilesService } from "../../../lib/services/livesync/playground/preview-app-files-service";
+import { Yok } from "../../../src/common/yok";
+import { PreviewAppFilesService } from "../../../src/services/livesync/playground/preview-app-files-service";
 import { FileSystemStub, LoggerStub } from "../../stubs";
 import * as path from "path";
 import { assert } from "chai";

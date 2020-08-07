@@ -1,7 +1,7 @@
 import * as temp from "temp";
 import { assert } from "chai";
-import { XcconfigService } from "../lib/services/xcconfig-service";
-import * as yok from "../lib/common/yok";
+import { XcconfigService } from "../src/services/xcconfig-service";
+import * as yok from "../src/common/yok";
 
 // start tracking temporary folders/files
 temp.track();

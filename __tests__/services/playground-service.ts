@@ -1,7 +1,7 @@
 import { assert } from "chai";
 import { FileSystemStub } from "../stubs";
-import { PlaygroundService } from "../../lib/services/playground-service";
-import { Yok } from "../../lib/common/yok";
+import { PlaygroundService } from "../../src/services/playground-service";
+import { Yok } from "../../src/common/yok";
 
 let userSettings: any = null;
 

@@ -3,11 +3,11 @@ import * as fs from "fs";
 import * as path from "path";
 import * as childProcess from "child_process";
 
-describe("nativescript-cli-lib", () => {
+describe("nativescript-cli-src", () => {
 	it("is main entry of the package", () => {
 		const packageJsonContent = fs.readFileSync(path.join(__dirname, "..", "package.json")).toString();
 		const jsonContent = JSON.parse(packageJsonContent);
-		const expectedEntryPoint = "./lib/nativescript-cli-lib.js";
+		const expectedEntryPoint = "./src/nativescript-cli-src.js";
 		assert.deepEqual(jsonContent.main, expectedEntryPoint);
 	});
 
@@ -77,7 +77,7 @@ describe("nativescript-cli-lib", () => {
 		]
 	};
 
-	const pathToEntryPoint = path.join(__dirname, "..", "lib", "nativescript-cli-lib.js").replace(/\\/g, "\\\\");
+	const pathToEntryPoint = path.join(__dirname, "..", "src", "nativescript-cli-src.js").replace(/\\/g, "\\\\");
 
 	_.each(publicApi, (methods: string[], moduleName: string) => {
 

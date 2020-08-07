@@ -1,10 +1,10 @@
-import { Yok } from "../../../lib/common/yok";
-import { AndroidDeviceLiveSyncServiceBase } from "../../../lib/services/livesync/android-device-livesync-service-base";
-import { LiveSyncPaths } from "../../../lib/common/constants";
+import { Yok } from "../../../src/common/yok";
+import { AndroidDeviceLiveSyncServiceBase } from "../../../src/services/livesync/android-device-livesync-service-base";
+import { LiveSyncPaths } from "../../../src/common/constants";
 import { assert } from "chai";
 import * as path from "path";
-import { AndroidDeviceHashService } from "../../../lib/common/mobile/android/android-device-hash-service";
-import { DeviceConnectionType } from "../../../lib/constants";
+import { AndroidDeviceHashService } from "../../../src/common/mobile/android/android-device-hash-service";
+import { DeviceConnectionType } from "../../../src/constants";
 
 interface ITestSetupInput {
 	existsHashesFile?: boolean;

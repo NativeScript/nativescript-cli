@@ -1,6 +1,6 @@
 import { InjectorStub, TempServiceStub } from "../../stubs";
-import { AddPlatformService } from "../../../lib/services/platform/add-platform-service";
-import { PacoteService } from "../../../lib/services/pacote-service";
+import { AddPlatformService } from "../../../src/services/platform/add-platform-service";
+import { PacoteService } from "../../../src/services/pacote-service";
 import { assert } from "chai";
 
 const nativePrepare: INativePrepare = null;

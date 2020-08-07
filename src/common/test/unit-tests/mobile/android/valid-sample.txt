@@ -1,0 +1,297 @@
+08-30 12:43:32.604  1444  1494 I PackageManager.DexOptimizer: Running dexopt (dex2oat) on: /data/app/vmdl2019381610.tmp/base.apk pkg=org.nativescript.napp isa=x86 vmSafeMode=false debuggable=true target-filter=interpret-only oatDir = /data/app/vmdl2019381610.tmp/oat sharedLibraries=null
+08-30 12:43:32.616  2185  2386 W ContentTaskController: Invalid newTask was provided to startTracking.
+08-30 12:43:32.628  3170  3170 W dex2oat : Unexpected CPU variant for X86 using defaults: x86
+08-30 12:43:32.628  3170  3170 W dex2oat : Mismatch between dex2oat instruction set features (ISA: X86 Feature string: smp,-ssse3,-sse4.1,-sse4.2,-avx,-avx2,-lock_add,-popcnt) and those of dex2oat executable (ISA: X86 Feature string: smp,ssse3,-sse4.1,-sse4.2,-avx,-avx2,-lock_add,-popcnt) for the command line:
+08-30 12:43:32.628  3170  3170 W dex2oat : /system/bin/dex2oat --zip-fd=6 --zip-location=base.apk --oat-fd=7 --oat-location=/data/app/vmdl2019381610.tmp/oat/x86/base.odex --instruction-set=x86 --instruction-set-variant=x86 --instruction-set-features=default --runtime-arg -Xms64m --runtime-arg -Xmx512m --compiler-filter=interpret-only --swap-fd=9 --debuggable
+08-30 12:43:32.628  3170  3170 I dex2oat : /system/bin/dex2oat --compiler-filter=interpret-only --debuggable
+08-30 12:43:32.628  3170  3170 E cutils-trace: Error opening trace file: Permission denied (13)
+08-30 12:43:32.651  2287  2498 I CheckinService: Done disabling old GoogleServicesFramework version
+08-30 12:43:32.662  2185  2386 W ContentTaskController: Invalid newTask was provided to startTracking.
+08-30 12:43:32.682  2185  2386 W ContentTaskController: Invalid newTask was provided to startTracking.
+08-30 12:43:32.701  2185  2386 W ContentTaskController: Invalid newTask was provided to startTracking.
+08-30 12:43:32.702  3139  3139 E uncrypt : failed to clear bootloader message: failed to find /misc partition
+08-30 12:43:32.702  1444  1617 E RecoverySystemService: uncrypt failed with status: -1
+08-30 12:43:32.702  2287  3132 E SystemUpdateService: Failed to call RecoverySystem.cancelScheduledUpdate
+08-30 12:43:32.702  2287  3132 E SystemUpdateService: java.lang.reflect.InvocationTargetException
+08-30 12:43:32.702  2287  3132 E SystemUpdateService: 	at java.lang.reflect.Method.invoke(Native Method)
+08-30 12:43:32.702  2287  3132 E SystemUpdateService: 	at uiw.c(:com.google.android.gms:134)
+08-30 12:43:32.702  2287  3132 E SystemUpdateService: 	at abyt.d(:com.google.android.gms:190)
+08-30 12:43:32.702  2287  3132 E SystemUpdateService: 	at abyt.o(:com.google.android.gms:2100)
+08-30 12:43:32.702  2287  3132 E SystemUpdateService: 	at abyt.a(:com.google.android.gms:443)
+08-30 12:43:32.702  2287  3132 E SystemUpdateService: 	at abyt.doInBackground(:com.google.android.gms:50433)
+08-30 12:43:32.702  2287  3132 E SystemUpdateService: 	at android.os.AsyncTask$2.call(AsyncTask.java:305)
+08-30 12:43:32.702  2287  3132 E SystemUpdateService: 	at java.util.concurrent.FutureTask.run(FutureTask.java:237)
+08-30 12:43:32.702  2287  3132 E SystemUpdateService: 	at java.lang.Thread.run(Thread.java:761)
+08-30 12:43:32.702  2287  3132 E SystemUpdateService: Caused by: java.io.IOException: cancel scheduled update failed
+08-30 12:43:32.702  2287  3132 E SystemUpdateService: 	at android.os.RecoverySystem.cancelScheduledUpdate(RecoverySystem.java:563)
+08-30 12:43:32.702  2287  3132 E SystemUpdateService: 	... 9 more
+08-30 12:43:32.703  2287  3132 E SystemUpdateTask: exception trying to cancel scheduled update
+08-30 12:43:32.703  2287  3132 E SystemUpdateTask: java.io.IOException: Failed to invoke RecoverySystem.cancelScheduledUpdate
+08-30 12:43:32.703  2287  3132 E SystemUpdateTask: 	at uiw.c(:com.google.android.gms:140)
+08-30 12:43:32.703  2287  3132 E SystemUpdateTask: 	at abyt.d(:com.google.android.gms:190)
+08-30 12:43:32.703  2287  3132 E SystemUpdateTask: 	at abyt.o(:com.google.android.gms:2100)
+08-30 12:43:32.703  2287  3132 E SystemUpdateTask: 	at abyt.a(:com.google.android.gms:443)
+08-30 12:43:32.703  2287  3132 E SystemUpdateTask: 	at abyt.doInBackground(:com.google.android.gms:50433)
+08-30 12:43:32.703  2287  3132 E SystemUpdateTask: 	at android.os.AsyncTask$2.call(AsyncTask.java:305)
+08-30 12:43:32.703  2287  3132 E SystemUpdateTask: 	at java.util.concurrent.FutureTask.run(FutureTask.java:237)
+08-30 12:43:32.703  2287  3132 E SystemUpdateTask: 	at java.lang.Thread.run(Thread.java:761)
+08-30 12:43:32.703  3139  3139 I uncrypt :   received 0, exiting now
+08-30 12:43:32.734  2185  2386 W ContentTaskController: Invalid newTask was provided to startTracking.
+08-30 12:43:32.774  2185  2386 W ContentTaskController: Invalid newTask was provided to startTracking.
+08-30 12:43:32.775  3170  3172 W dex2oat : Before Android 4.1, method int android.support.v7.widget.ListViewCompat.lookForSelectablePosition(int, boolean) would have incorrectly overridden the package-private method in android.widget.ListView
+08-30 12:43:32.794  2185  2386 W ContentTaskController: Invalid newTask was provided to startTracking.
+08-30 12:43:32.799  3170  3172 W dex2oat : Before Android 4.1, method android.graphics.PorterDuffColorFilter android.support.graphics.drawable.VectorDrawableCompat.updateTintFilter(android.graphics.PorterDuffColorFilter, android.content.res.ColorStateList, android.graphics.PorterDuff$Mode) would have incorrectly overridden the package-private method in android.graphics.drawable.Drawable
+08-30 12:43:32.815  2185  2386 W ContentTaskController: Invalid newTask was provided to startTracking.
+08-30 12:43:32.857  2185  2386 W ContentTaskController: Invalid newTask was provided to startTracking.
+08-30 12:43:32.908  2185  2386 W ContentTaskController: Invalid newTask was provided to startTracking.
+08-30 12:43:33.046  3170  3170 I dex2oat : dex2oat took 418.645ms (threads: 2) arena alloc=2016B (2016B) java alloc=2MB (2989816B) native alloc=5MB (5598464B) free=2MB (2790144B)
+08-30 12:43:33.100  1257  1257 D installd: Detected label change from u:object_r:system_data_file:s0 to u:object_r:app_data_file:s0:c512,c768 at /data/data/org.nativescript.napp; running recursive restorecon
+08-30 12:43:33.100  1257  1257 D installd: Detected label change from u:object_r:system_data_file:s0 to u:object_r:app_data_file:s0:c512,c768 at /data/user_de/0/org.nativescript.napp; running recursive restorecon
+08-30 12:43:33.101  1444  1494 V BackupManagerService: restoreAtInstall pkg=org.nativescript.napp token=1 restoreSet=0
+08-30 12:43:33.101  1444  1494 W BackupManagerService: Requested unavailable transport: android/com.android.internal.backup.LocalTransport
+08-30 12:43:33.101  1444  1494 W BackupManagerService: No transport
+08-30 12:43:33.101  1444  1494 V BackupManagerService: Finishing install immediately
+08-30 12:43:33.102  1444  1494 I art     : Starting a blocking GC Explicit
+08-30 12:43:33.115  1444  1494 I art     : Explicit concurrent mark sweep GC freed 28690(1651KB) AllocSpace objects, 9(180KB) LOS objects, 24% free, 12MB/16MB, paused 318us total 13.885ms
+08-30 12:43:33.116  1257  1257 E         : Couldn't opendir /data/app/vmdl2019381610.tmp: No such file or directory
+08-30 12:43:33.122  1444  1566 I InputReader: Reconfiguring input devices.  changes=0x00000010
+08-30 12:43:33.126  3175  3175 W unknown : type=1400 audit(0.0:12): avc: denied { search } for comm=73657276696365203437 name="security" dev="vdc" ino=14089 scontext=u:r:adbd:s0 tcontext=u:object_r:security_file:s0 tclass=dir permissive=0
+08-30 12:43:33.128  1776  1776 D CarrierSvcBindHelper: No carrier app for: 0
+08-30 12:43:33.128  1776  1776 D CarrierConfigLoader: mHandler: 9 phoneId: 0
+08-30 12:43:33.131  3068  3068 W Finsky  : [1] com.google.android.finsky.application.FinskyAppImpl.V(1772): No account configured on this device.
+08-30 12:43:33.132  1444  1466 W InputMethodInfo: Duplicated subtype definition found: , voice
+08-30 12:43:33.133  3068  3068 W Finsky  : [1] com.google.android.finsky.application.FinskyAppImpl.V(1772): No account configured on this device.
+08-30 12:43:33.140  3068  3107 W GooglePlayServicesUtil: Google Play services signature invalid.
+08-30 12:43:33.160  3068  3068 I Finsky  : [1] com.google.android.finsky.utils.PermissionPolicies$PermissionPolicyService.onStartCommand(115): post-install permissions check for org.nativescript.napp
+08-30 12:43:33.160  3068  3068 W Finsky  : [1] com.google.android.finsky.application.FinskyAppImpl.V(1772): No account configured on this device.
+08-30 12:43:33.161  3068  3068 E Finsky  : [1] com.google.android.finsky.wear.bl.a(847): onConnectionFailed: ConnectionResult{statusCode=SERVICE_INVALID, resolution=null, message=null}
+08-30 12:43:33.161  3068  3068 I Finsky  : [1] com.google.android.finsky.wear.aj.run(2402): Dropping command=auto_install due to Gms not connected
+08-30 12:43:33.162  3068  3068 I Finsky  : [1] com.google.android.finsky.wear.aj.run(2402): Dropping command=send_installed_apps due to Gms not connected
+08-30 12:43:33.162  3068  3068 I Finsky  : [1] com.google.android.finsky.utils.bd.run(2300): Package state data is missing for org.nativescript.napp
+08-30 12:43:33.162  3068  3068 W Finsky  : [1] com.google.android.finsky.application.FinskyAppImpl.V(1772): No account configured on this device.
+08-30 12:43:33.183  2287  2287 E ChimeraRcvrProxy: Chimera config error, ComponentInfo{com.google.android.gms/com.google.android.gms.games.chimera.GamesSystemBroadcastReceiverProxy} dropping broadcast android.intent.action.PACKAGE_ADDED: com.google.android.chimera.config.InvalidConfigException: No registered Chimera receiver impl for ComponentInfo{com.google.android.gms/com.google.android.gms.games.chimera.GamesSystemBroadcastReceiverProxy}
+08-30 12:43:33.190  3186  3186 W art     : Unexpected CPU variant for X86 using defaults: x86
+08-30 12:43:33.197  1444  1617 I ActivityManager: Start proc 3186:com.svox.pico/u0a55 for broadcast com.svox.pico/.VoiceDataInstallerReceiver
+08-30 12:43:33.197  2099  3185 I UpdateIcingCorporaServi: Updating corpora: APPS=org.nativescript.napp, CONTACTS=MAYBE
+08-30 12:43:33.226  1444  2220 I ActivityManager: Killing 1794:com.android.settings:CryptKeeper/1000 (adj 906): empty #17
+08-30 12:43:33.228  1444  1458 D ActivityManager: cleanUpApplicationRecord -- 1794
+08-30 12:43:33.243  2099  2286 W GooglePlayServicesUtil: Google Play services signature invalid.
+08-30 12:43:33.243  2099  3185 E AppDataSearchHelper: Could not connect to AppDataSearch for onTableChanged, error 9
+08-30 12:43:33.243  2099  3185 W AppDataSearchHelper: Table change notification failed for com.google.android.gms.appdatasearch.a.h@be7fd6a1
+08-30 12:43:33.243  2099  3185 I UpdateIcingCorporaServi: UpdateCorporaTask done [took 46 ms] updated apps [took 46 ms] 
+08-30 12:43:33.254  2287  3205 W IcingInternalCorpora: getNumBytesRead when not calculated.
+08-30 12:43:33.254  2287  3206 I Icing   : Usage reports 0 indexed 0 rejected 0 imm upload false
+08-30 12:43:33.255  2287  3206 I Icing   : Usage reports 0 indexed 0 rejected 0 imm upload false
+08-30 12:43:33.944  3226  3226 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+08-30 12:43:33.945  3226  3226 D AndroidRuntime: CheckJNI is ON
+08-30 12:43:33.945  3226  3226 E cutils-trace: Error opening trace file: Permission denied (13)
+08-30 12:43:33.970  3226  3226 W art     : Unexpected CPU variant for X86 using defaults: x86
+08-30 12:43:33.972  3226  3226 D ICU     : No timezone override file found: /data/misc/zoneinfo/current/icu/icu_tzdata.dat
+08-30 12:43:33.981  3226  3226 E memtrack: Couldn't load memtrack module (No such file or directory)
+08-30 12:43:33.981  3226  3226 E android.os.Debug: failed to load memtrack module: -2
+08-30 12:43:33.981  3226  3226 I Radio-JNI: register_android_hardware_Radio DONE
+08-30 12:43:33.986  3226  3226 D AndroidRuntime: Calling main entry com.android.commands.am.Am
+08-30 12:43:33.987  1444  1810 I ActivityManager: Force stopping org.nativescript.napp appid=10071 user=0: from pid 3226
+08-30 12:43:33.987  3226  3226 D AndroidRuntime: Shutting down VM
+08-30 12:43:33.989  1776  1776 D CarrierSvcBindHelper: No carrier app for: 0
+08-30 12:43:34.151  3238  3238 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+08-30 12:43:34.152  3238  3238 D AndroidRuntime: CheckJNI is ON
+08-30 12:43:34.153  3238  3238 E cutils-trace: Error opening trace file: Permission denied (13)
+08-30 12:43:34.176  3238  3238 W art     : Unexpected CPU variant for X86 using defaults: x86
+08-30 12:43:34.178  3238  3238 D ICU     : No timezone override file found: /data/misc/zoneinfo/current/icu/icu_tzdata.dat
+08-30 12:43:34.186  3238  3238 E memtrack: Couldn't load memtrack module (No such file or directory)
+08-30 12:43:34.186  3238  3238 E android.os.Debug: failed to load memtrack module: -2
+08-30 12:43:34.186  3238  3238 I Radio-JNI: register_android_hardware_Radio DONE
+08-30 12:43:34.191  3238  3238 D AndroidRuntime: Calling main entry com.android.commands.pm.Pm
+08-30 12:43:34.237  1444  1603 D WifiNative-HAL: Failing getSupportedFeatureset because HAL isn't started
+08-30 12:43:34.237  1444  2844 E BluetoothAdapter: Bluetooth binder is null
+08-30 12:43:34.237  1444  2844 E BatteryStatsService: no controller energy info supplied
+08-30 12:43:34.238  1444  2844 E KernelCpuSpeedReader: Failed to read cpu-freq: /sys/devices/system/cpu/cpu0/cpufreq/stats/time_in_state (No such file or directory)
+08-30 12:43:34.239  1444  2844 E KernelUidCpuTimeReader: Failed to read uid_cputime: /proc/uid_cputime/show_uid_stat (No such file or directory)
+08-30 12:43:34.239  1444  2844 E KernelWakelockReader: neither /proc/wakelocks nor /d/wakeup_sources exists
+08-30 12:43:34.239  1444  2844 W BatteryStatsImpl: Couldn't get kernel wake lock stats
+08-30 12:43:34.239  1444  2844 E BatteryStatsService: modem info is invalid: ModemActivityInfo{ mTimestamp=0 mSleepTimeMs=0 mIdleTimeMs=0 mTxTimeMs[]=[0, 0, 0, 0, 0] mRxTimeMs=0 mEnergyUsed=0}
+08-30 12:43:34.247  3238  3238 I art     : System.exit called, status: 0
+08-30 12:43:34.247  3238  3238 I AndroidRuntime: VM exiting with result code 0.
+08-30 12:43:34.290  2287  2786 I Icing   : Indexing 042AB14F720786CBA61D588217A910C3F3C4308F from com.google.android.gms
+08-30 12:43:34.299  2287  2786 I Icing   : Indexing done 042AB14F720786CBA61D588217A910C3F3C4308F
+08-30 12:43:34.403  3265  3265 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+08-30 12:43:34.404  3265  3265 D AndroidRuntime: CheckJNI is ON
+08-30 12:43:34.404  3265  3265 E cutils-trace: Error opening trace file: Permission denied (13)
+08-30 12:43:34.430  3265  3265 W art     : Unexpected CPU variant for X86 using defaults: x86
+08-30 12:43:34.432  3265  3265 D ICU     : No timezone override file found: /data/misc/zoneinfo/current/icu/icu_tzdata.dat
+08-30 12:43:34.440  3265  3265 E memtrack: Couldn't load memtrack module (No such file or directory)
+08-30 12:43:34.440  3265  3265 E android.os.Debug: failed to load memtrack module: -2
+08-30 12:43:34.441  3265  3265 I Radio-JNI: register_android_hardware_Radio DONE
+08-30 12:43:34.446  3265  3265 D AndroidRuntime: Calling main entry com.android.commands.am.Am
+08-30 12:43:34.447  1444  1617 I ActivityManager: START u0 {flg=0x10000000 cmp=org.nativescript.napp/com.tns.NativeScriptActivity} from uid 2000 on display 0
+08-30 12:43:34.451  3265  3265 D AndroidRuntime: Shutting down VM
+08-30 12:43:34.462  1444  1810 I ActivityManager: Start proc 3275:org.nativescript.napp/u0a71 for activity org.nativescript.napp/com.tns.NativeScriptActivity
+08-30 12:43:34.464  3275  3275 I art     : Not late-enabling -Xcheck:jni (already on)
+08-30 12:43:34.464  3275  3275 W art     : Unexpected CPU variant for X86 using defaults: x86
+08-30 12:43:34.480  3275  3275 I TNS.Native: NativeScript Runtime Version 3.2.0-2017-8-28-1, commit 93760a00953e4cd3bc2bb267823c0bd0a9ca91ff
+08-30 12:43:34.480  3275  3275 D TNS.Native: JNI_ONLoad
+08-30 12:43:34.480  3275  3275 D TNS.Native: JNI_ONLoad END
+08-30 12:43:34.553  1248  1974 D gralloc_ranchu: gralloc_alloc: format 1 and usage 0x933 imply creation of host color buffer
+08-30 12:43:34.570  2099  2099 W SearchService: Abort, client detached.
+08-30 12:43:34.572  1444  1484 D         : HostConnection::get() New Host Connection established 0x90823b80, tid 1484
+08-30 12:43:34.612  3275  3275 D TNS.Native: Failed to load snapshot: dlopen failed: library "libsnapshot.so" not found
+08-30 12:43:34.651  3275  3275 D TNS.Native: V8 version 5.5.372.32
+08-30 12:43:34.683  3275  3275 D TNS.Native: lenNodes=66540, lenNames=775554, lenValues=899523
+08-30 12:43:34.683  3275  3275 D TNS.Native: time=2
+08-30 12:43:34.859  3275  3275 V JS      : ########### aaaaaaaaaaaa
+08-30 12:43:35.322  1444  1810 D VoldConnector: SND -> {34 volume mkdirs /storage/emulated/0/Android/data/org.nativescript.napp/cache/}
+08-30 12:43:35.325  1444  1568 D VoldConnector: RCV <- {200 34 Command succeeded}
+08-30 12:43:35.400  3275  3275 W art     : Before Android 4.1, method android.graphics.PorterDuffColorFilter android.support.graphics.drawable.VectorDrawableCompat.updateTintFilter(android.graphics.PorterDuffColorFilter, android.content.res.ColorStateList, android.graphics.PorterDuff$Mode) would have incorrectly overridden the package-private method in android.graphics.drawable.Drawable
+08-30 12:43:35.457  1248  1279 E SurfaceFlinger: ro.sf.lcd_density must be defined as a build property
+08-30 12:43:35.462  3275  3275 D         : HostConnection::get() New Host Connection established 0x8d377540, tid 3275
+08-30 12:43:35.464  3275  3275 W         : Process pipe failed
+08-30 12:43:35.503  1248  1974 D gralloc_ranchu: gralloc_alloc: format 1 and usage 0x900 imply creation of host color buffer
+08-30 12:43:35.504  3275  3301 D         : HostConnection::get() New Host Connection established 0x8d377c80, tid 3301
+08-30 12:43:35.507  3275  3301 I OpenGLRenderer: Initialized EGL, version 1.4
+08-30 12:43:35.507  3275  3301 D OpenGLRenderer: Swap behavior 1
+08-30 12:43:35.516  1248  1974 D gralloc_ranchu: gralloc_alloc: format 1 and usage 0x900 imply creation of host color buffer
+08-30 12:43:35.528  1248  1974 D gralloc_ranchu: gralloc_alloc: format 1 and usage 0x900 imply creation of host color buffer
+08-30 12:43:35.552  3275  3301 E EGL_emulation: tid 3301: eglSurfaceAttrib(1174): error 0x3009 (EGL_BAD_MATCH)
+08-30 12:43:35.552  3275  3301 W OpenGLRenderer: Failed to set EGL_SWAP_BEHAVIOR on surface 0x8db63560, error=EGL_BAD_MATCH
+08-30 12:43:35.596  1444  1484 I ActivityManager: Displayed org.nativescript.napp/com.tns.NativeScriptActivity: +1s145ms
+08-30 12:43:35.634  1248  1248 W SurfaceFlinger: couldn't log to binary event log: overflow.
+08-30 12:43:35.634  1248  1248 W SurfaceFlinger: couldn't log to binary event log: overflow.
+08-30 12:43:35.786  1444  1484 D gralloc_ranchu: gralloc_unregister_buffer: exiting HostConnection (is buffer-handling thread)
+08-30 12:43:35.866  1444  1617 I ActivityManager: Killing 2042:com.android.keychain/1000 (adj 906): empty #17
+08-30 12:43:35.900  1444  2220 D ActivityManager: cleanUpApplicationRecord -- 2042
+08-30 12:43:40.266  1444  1458 I ActivityManager: Killing 2124:com.google.android.apps.nexuslauncher:wallpaper_chooser/u0a14 (adj 906): empty #17
+08-30 12:43:40.310  1444  2844 D ActivityManager: cleanUpApplicationRecord -- 2124
+08-30 12:43:41.695  1444  1566 I InputReader: Reconfiguring input devices.  changes=0x00000010
+08-30 12:43:41.697  1444  1444 W BackupManagerService: Proposed transport ComponentInfo{com.google.android.gms/com.google.android.gms.backup.BackupTransportService} not whitelisted; ignoring
+08-30 12:43:41.699  1776  1776 D CarrierSvcBindHelper: No carrier app for: 0
+08-30 12:43:41.704  1776  1776 D CarrierSvcBindHelper: No carrier app for: 0
+08-30 12:43:41.714  2185  2185 I GCoreNlp: shouldConfirmNlp, NLP off. Ensuring opt-in disabled
+08-30 12:43:42.671  1254  1303 D AudioFlinger: mixer(0xa9e03c80) throttle end: throttle time(44)
+08-30 12:43:42.731  1444  1810 I ActivityManager: START u0 {flg=0x10804000 cmp=com.android.systemui/.recents.RecentsActivity} from uid 10021 on display 0
+08-30 12:43:42.768  1248  1347 D gralloc_ranchu: gralloc_alloc: format 1 and usage 0x333 imply creation of host color buffer
+08-30 12:43:42.776  1444  1810 D         : HostConnection::get() New Host Connection established 0x89f24a40, tid 1810
+08-30 12:43:42.777  1248  1248 E EGL_emulation: tid 1248: eglCreateSyncKHR(1673): error 0x3004 (EGL_BAD_ATTRIBUTE)
+08-30 12:43:42.824  1444  1810 D gralloc_ranchu: gralloc_unregister_buffer: exiting HostConnection (is buffer-handling thread)
+08-30 12:43:42.974  1248  1279 D gralloc_ranchu: gralloc_alloc: format 1 and usage 0x900 imply creation of host color buffer
+08-30 12:43:42.985  1248  1279 D gralloc_ranchu: gralloc_alloc: format 1 and usage 0x900 imply creation of host color buffer
+08-30 12:43:42.996  1248  1279 D gralloc_ranchu: gralloc_alloc: format 1 and usage 0x900 imply creation of host color buffer
+08-30 12:43:43.012  1664  1813 E EGL_emulation: tid 1813: eglSurfaceAttrib(1174): error 0x3009 (EGL_BAD_MATCH)
+08-30 12:43:43.012  1664  1813 W OpenGLRenderer: Failed to set EGL_SWAP_BEHAVIOR on surface 0xaaa84560, error=EGL_BAD_MATCH
+08-30 12:43:43.115  1248  1347 D gralloc_ranchu: gralloc_alloc: format 1 and usage 0x933 imply creation of host color buffer
+08-30 12:43:43.122  1444  1484 D         : HostConnection::get() New Host Connection established 0x87bf35c0, tid 1484
+08-30 12:43:43.156  1444  1484 I ActivityManager: Displayed com.android.systemui/.recents.RecentsActivity: +331ms
+08-30 12:43:43.537  1444  1484 D gralloc_ranchu: gralloc_unregister_buffer: exiting HostConnection (is buffer-handling thread)
+08-30 12:43:43.610  2625  2653 D InitAlarmsService: Clearing and rescheduling alarms.
+08-30 12:43:43.901  1444  1808 I ActivityManager: Killing 1818:com.android.settings/1000 (adj 906): empty #17
+08-30 12:43:43.906  1444  1808 I ActivityManager: Killing 3275:org.nativescript.napp/u0a71 (adj 900): remove task
+08-30 12:43:43.914  1444  2844 I ActivityManager: START u0 {act=android.intent.action.MAIN cat=[android.intent.category.HOME] flg=0x10200000 cmp=com.google.android.apps.nexuslauncher/.NexusLauncherActivity} from uid 10021 on display 0
+08-30 12:43:43.940  1444  1565 W InputDispatcher: channel '155e14a org.nativescript.napp/com.tns.NativeScriptActivity (server)' ~ Consumer closed input channel or an error occurred.  events=0x9
+08-30 12:43:43.940  1444  1565 E InputDispatcher: channel '155e14a org.nativescript.napp/com.tns.NativeScriptActivity (server)' ~ Channel is unrecoverably broken and will be disposed!
+08-30 12:43:43.940  1444  1808 D GraphicsStats: Buffer count: 5
+08-30 12:43:43.941  1444  1810 D ActivityManager: cleanUpApplicationRecord -- 3275
+08-30 12:43:43.941  1444  2321 D GraphicsStats: Buffer count: 4
+08-30 12:43:43.947  1248  1974 D gralloc_ranchu: gralloc_alloc: format 1 and usage 0x900 imply creation of host color buffer
+08-30 12:43:43.948  1444  2220 I WindowManager: WIN DEATH: Window{155e14a u0 org.nativescript.napp/com.tns.NativeScriptActivity}
+08-30 12:43:43.948  1444  2220 W InputDispatcher: Attempted to unregister already unregistered input channel '155e14a org.nativescript.napp/com.tns.NativeScriptActivity (server)'
+08-30 12:43:43.949  1444  1808 D ActivityManager: cleanUpApplicationRecord -- 1818
+08-30 12:43:43.969  1248  1974 D gralloc_ranchu: gralloc_alloc: format 1 and usage 0x900 imply creation of host color buffer
+08-30 12:43:43.979  1248  1974 D gralloc_ranchu: gralloc_alloc: format 1 and usage 0x900 imply creation of host color buffer
+08-30 12:43:43.981  1248  1345 D gralloc_ranchu: gralloc_alloc: format 1 and usage 0x900 imply creation of host color buffer
+08-30 12:43:44.005  1248  1345 D gralloc_ranchu: gralloc_alloc: format 1 and usage 0x900 imply creation of host color buffer
+08-30 12:43:44.012  2099  2302 E EGL_emulation: tid 2302: eglSurfaceAttrib(1174): error 0x3009 (EGL_BAD_MATCH)
+08-30 12:43:44.012  2099  2302 W OpenGLRenderer: Failed to set EGL_SWAP_BEHAVIOR on surface 0x9a2e64c0, error=EGL_BAD_MATCH
+08-30 12:43:44.012  1248  1345 D gralloc_ranchu: gralloc_alloc: format 1 and usage 0x900 imply creation of host color buffer
+08-30 12:43:44.045  2067  2150 E EGL_emulation: tid 2150: eglSurfaceAttrib(1174): error 0x3009 (EGL_BAD_MATCH)
+08-30 12:43:44.045  2067  2150 W OpenGLRenderer: Failed to set EGL_SWAP_BEHAVIOR on surface 0xaaaff2c0, error=EGL_BAD_MATCH
+08-30 12:43:44.075  2099  2311 W GooglePlayServicesUtil: Google Play services signature invalid.
+08-30 12:43:44.078  2099  2099 I OptInState: There is a new client and it does not support opt-in. Dropping request.
+08-30 12:43:44.080  2099  2099 I MicroDetectionWorker: Micro detection mode: [mDetectionMode: [1]].
+08-30 12:43:44.080  2099  2099 I AudioController: Using mInputStreamFactoryBuilder
+08-30 12:43:44.083  2099  3309 I MicroRecognitionRunner: Starting detection.
+08-30 12:43:44.083  2099  2244 I MicrophoneInputStream: mic_starting com.google.android.apps.gsa.staticplugins.z.c@a24f4c3
+08-30 12:43:44.085  1254  1305 W APM_AudioPolicyManager: getInputForAttr() failed opening input: samplingRate 16000, format 1, channelMask 10
+08-30 12:43:44.085  2099  2244 E AudioRecord: Could not get audio input for session 49, record source 1999, sample rate 16000, format 0x1, channel mask 0x10, flags 0
+08-30 12:43:44.085  2099  2244 E AudioRecord-JNI: Error creating AudioRecord instance: initialization check failed with status -22.
+08-30 12:43:44.085  2099  2244 E android.media.AudioRecord: Error code -20 when initializing native AudioRecord object.
+08-30 12:43:44.085  2099  2244 I MicrophoneInputStream: mic_started com.google.android.apps.gsa.staticplugins.z.c@a24f4c3
+08-30 12:43:44.085  2099  2244 E ActivityThread: Failed to find provider info for com.google.android.apps.gsa.testing.ui.audio.recorded
+08-30 12:43:44.086  2099  2099 I MicroDetectionWorker: onReady
+08-30 12:43:44.087  2099  2244 I MicrophoneInputStream: mic_close com.google.android.apps.gsa.staticplugins.z.c@a24f4c3
+08-30 12:43:44.087  2099  3309 I MicroRecognitionRunner: Detection finished
+08-30 12:43:44.088  2099  3309 W ErrorReporter: reportError [type: 211, code: 524300]: Error reading from input stream
+08-30 12:43:44.088  2099  2325 I MicroRecognitionRunner: Stopping hotword detection.
+08-30 12:43:44.089  2099  3309 W ErrorProcessor: onFatalError, processing error from engine(4)
+08-30 12:43:44.089  2099  3309 W ErrorProcessor: com.google.android.apps.gsa.shared.speech.a.g: Error reading from input stream
+08-30 12:43:44.089  2099  3309 W ErrorProcessor: 	at com.google.android.apps.gsa.staticplugins.recognizer.i.a.a(SourceFile:342)
+08-30 12:43:44.089  2099  3309 W ErrorProcessor: 	at com.google.android.apps.gsa.staticplugins.recognizer.i.a$1.run(SourceFile:1367)
+08-30 12:43:44.089  2099  3309 W ErrorProcessor: 	at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:428)
+08-30 12:43:44.089  2099  3309 W ErrorProcessor: 	at java.util.concurrent.FutureTask.run(FutureTask.java:237)
+08-30 12:43:44.089  2099  3309 W ErrorProcessor: 	at com.google.android.apps.gsa.shared.util.concurrent.a.ak.run(SourceFile:66)
+08-30 12:43:44.089  2099  3309 W ErrorProcessor: 	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1133)
+08-30 12:43:44.089  2099  3309 W ErrorProcessor: 	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:607)
+08-30 12:43:44.089  2099  3309 W ErrorProcessor: 	at java.lang.Thread.run(Thread.java:761)
+08-30 12:43:44.089  2099  3309 W ErrorProcessor: 	at com.google.android.apps.gsa.shared.util.concurrent.a.ad$1.run(SourceFile:85)
+08-30 12:43:44.089  2099  3309 W ErrorProcessor: Caused by: com.google.android.apps.gsa.shared.exception.GsaIOException: Error code: 393238 | Buffer overflow, no available space.
+08-30 12:43:44.089  2099  3309 W ErrorProcessor: 	at com.google.android.apps.gsa.speech.audio.Tee.g(SourceFile:2531)
+08-30 12:43:44.089  2099  3309 W ErrorProcessor: 	at com.google.android.apps.gsa.speech.audio.ap.read(SourceFile:555)
+08-30 12:43:44.089  2099  3309 W ErrorProcessor: 	at java.io.InputStream.read(InputStream.java:101)
+08-30 12:43:44.089  2099  3309 W ErrorProcessor: 	at com.google.android.apps.gsa.speech.audio.al.run(SourceFile:362)
+08-30 12:43:44.089  2099  3309 W ErrorProcessor: 	at com.google.android.apps.gsa.speech.audio.ak$1.run(SourceFile:471)
+08-30 12:43:44.089  2099  3309 W ErrorProcessor: 	at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:428)
+08-30 12:43:44.089  2099  3309 W ErrorProcessor: 	at java.util.concurrent.FutureTask.run(FutureTask.java:237)
+08-30 12:43:44.089  2099  3309 W ErrorProcessor: 	at com.google.android.apps.gsa.shared.util.concurrent.a.ak.run(SourceFile:66)
+08-30 12:43:44.089  2099  3309 W ErrorProcessor: 	at com.google.android.apps.gsa.shared.util.concurrent.a.ax.run(SourceFile:139)
+08-30 12:43:44.089  2099  3309 W ErrorProcessor: 	at com.google.android.apps.gsa.shared.util.concurrent.a.ax.run(SourceFile:139)
+08-30 12:43:44.089  2099  3309 W ErrorProcessor: 	... 4 more
+08-30 12:43:44.090  2099  3309 I AudioController: internalShutdown
+08-30 12:43:44.091  2099  2099 I MicroDetector: Keeping mic open: false
+08-30 12:43:44.092  2099  2099 I MicroDetectionWorker: #onError(false)
+08-30 12:43:44.092  2099  3308 I DeviceStateChecker: DeviceStateChecker cancelled
+08-30 12:43:44.534  2067  2150 W OpenGLRenderer: Incorrectly called buildLayer on View: ShortcutAndWidgetContainer, destroying layer...
+08-30 12:43:45.604  1444  2220 I ActivityManager: START u0 {act=android.intent.action.MAIN cat=[android.intent.category.LAUNCHER] flg=0x10200000 cmp=org.nativescript.napp/com.tns.NativeScriptActivity bnds=[32,319][307,691] (has extras)} from uid 10014 on display 0
+08-30 12:43:45.622  1444  1457 I ActivityManager: Start proc 3311:org.nativescript.napp/u0a71 for activity org.nativescript.napp/com.tns.NativeScriptActivity
+08-30 12:43:45.633  3311  3311 I art     : Not late-enabling -Xcheck:jni (already on)
+08-30 12:43:45.633  3311  3311 W art     : Unexpected CPU variant for X86 using defaults: x86
+08-30 12:43:45.651  1254  1303 D AudioFlinger: mixer(0xa9e03c80) throttle end: throttle time(44)
+08-30 12:43:45.689  3311  3311 I TNS.Native: NativeScript Runtime Version 3.2.0-2017-8-28-1, commit 93760a00953e4cd3bc2bb267823c0bd0a9ca91ff
+08-30 12:43:45.689  3311  3311 D TNS.Native: JNI_ONLoad
+08-30 12:43:45.689  3311  3311 D TNS.Native: JNI_ONLoad END
+08-30 12:43:45.712  2099  2099 W SearchService: Abort, client detached.
+08-30 12:43:45.721  3311  3311 D TNS.Native: Failed to load snapshot: dlopen failed: library "libsnapshot.so" not found
+08-30 12:43:45.749  1248  1974 D gralloc_ranchu: gralloc_alloc: format 1 and usage 0x933 imply creation of host color buffer
+08-30 12:43:45.764  1444  1484 D         : HostConnection::get() New Host Connection established 0x87bf3280, tid 1484
+08-30 12:43:45.770  3311  3311 D TNS.Native: V8 version 5.5.372.32
+08-30 12:43:45.804  3311  3311 D TNS.Native: lenNodes=66540, lenNames=775554, lenValues=899523
+08-30 12:43:45.804  3311  3311 D TNS.Native: time=3
+08-30 12:43:45.924  3311  3311 V JS      : ########### aaaaaaaaaaaa
+08-30 12:43:46.424  3311  3311 W art     : Before Android 4.1, method android.graphics.PorterDuffColorFilter android.support.graphics.drawable.VectorDrawableCompat.updateTintFilter(android.graphics.PorterDuffColorFilter, android.content.res.ColorStateList, android.graphics.PorterDuff$Mode) would have incorrectly overridden the package-private method in android.graphics.drawable.Drawable
+08-30 12:43:46.452  1248  1347 E SurfaceFlinger: ro.sf.lcd_density must be defined as a build property
+08-30 12:43:46.454  3311  3311 D         : HostConnection::get() New Host Connection established 0x8d1cf240, tid 3311
+08-30 12:43:46.454  3311  3311 W         : Process pipe failed
+08-30 12:43:46.486  1248  1275 D gralloc_ranchu: gralloc_alloc: format 1 and usage 0x900 imply creation of host color buffer
+08-30 12:43:46.486  3311  3332 D         : HostConnection::get() New Host Connection established 0x8d1cf980, tid 3332
+08-30 12:43:46.489  3311  3332 I OpenGLRenderer: Initialized EGL, version 1.4
+08-30 12:43:46.489  3311  3332 D OpenGLRenderer: Swap behavior 1
+08-30 12:43:46.495  1248  1275 D gralloc_ranchu: gralloc_alloc: format 1 and usage 0x900 imply creation of host color buffer
+08-30 12:43:46.509  1248  1275 D gralloc_ranchu: gralloc_alloc: format 1 and usage 0x900 imply creation of host color buffer
+08-30 12:43:46.526  3311  3332 E EGL_emulation: tid 3332: eglSurfaceAttrib(1174): error 0x3009 (EGL_BAD_MATCH)
+08-30 12:43:46.526  3311  3332 W OpenGLRenderer: Failed to set EGL_SWAP_BEHAVIOR on surface 0x8d1d3d20, error=EGL_BAD_MATCH
+08-30 12:43:46.582  1444  1484 I ActivityManager: Displayed org.nativescript.napp/com.tns.NativeScriptActivity: +972ms
+08-30 12:43:46.617  1248  1248 W SurfaceFlinger: couldn't log to binary event log: overflow.
+08-30 12:43:46.769  1444  1484 D gralloc_ranchu: gralloc_unregister_buffer: exiting HostConnection (is buffer-handling thread)
+08-30 12:43:52.876  1444  2321 D ConnectivityService: reportNetworkConnectivity(100, false) by 10012
+08-30 12:43:52.904  1444  1607 D NetworkNotificationManager: clearNotification id=100
+08-30 12:43:52.904  1444  1607 D ConnectivityService: NetworkAgentInfo [MOBILE (LTE) - 100] validation passed
+08-30 12:43:55.712  1444  1560 I ActivityManager: Killing 2603:com.android.dialer/u0a6 (adj 906): empty #17
+08-30 12:43:55.720  3068  3105 W Finsky  : [171] com.google.android.finsky.application.FinskyAppImpl.V(1772): No account configured on this device.
+08-30 12:43:55.720  3068  3105 I Finsky  : [171] com.google.android.finsky.d.e.run(1151): Replicating app states via AMAS.
+08-30 12:43:55.721  2099  2286 W GooglePlayServicesUtil: Google Play services signature invalid.
+08-30 12:43:55.722  2099  2311 W GooglePlayServicesUtil: Google Play services signature invalid.
+08-30 12:43:55.723  3068  3105 W Finsky  : [171] com.google.android.finsky.application.FinskyAppImpl.V(1772): No account configured on this device.
+08-30 12:43:55.746  3068  3105 I Finsky  : [171] com.google.android.finsky.d.c.a(313): Completed 0 account content syncs with 0 successful.
+08-30 12:43:55.746  3068  3068 I Finsky  : [1] com.google.android.finsky.services.j.a(148): Installation state replication succeeded.
+08-30 12:43:55.747  1444  3307 I ActivityManager: Killing 1942:com.android.deskclock/u0a34 (adj 906): empty #17
+08-30 12:43:55.749  1444  1617 D ActivityManager: cleanUpApplicationRecord -- 1942
+08-30 12:43:55.750  1444  2220 D ActivityManager: cleanUpApplicationRecord -- 2603
+end

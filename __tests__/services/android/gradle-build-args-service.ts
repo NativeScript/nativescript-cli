@@ -1,5 +1,5 @@
-import { Yok } from "../../../lib/common/yok";
-import { GradleBuildArgsService } from "../../../lib/services/android/gradle-build-args-service";
+import { Yok } from "../../../src/common/yok";
+import { GradleBuildArgsService } from "../../../src/services/android/gradle-build-args-service";
 import * as stubs from "../../stubs";
 import { assert } from "chai";
 import * as temp from "temp";

@@ -1,13 +1,13 @@
 import * as temp from "temp";
 import { EOL } from "os";
 import { assert } from "chai";
-import { IOSEntitlementsService } from "../lib/services/ios-entitlements-service";
-import * as yok from "../lib/common/yok";
+import { IOSEntitlementsService } from "../src/services/ios-entitlements-service";
+import * as yok from "../src/common/yok";
 import * as stubs from "./stubs";
-import * as FsLib from "../lib/common/file-system";
-import * as MobileHelperLib from "../lib/common/mobile/mobile-helper";
-import * as DevicePlatformsConstantsLib from "../lib/common/mobile/device-platforms-constants";
-import * as ErrorsLib from "../lib/common/errors";
+import * as FsLib from "../src/common/file-system";
+import * as MobileHelperLib from "../src/common/mobile/mobile-helper";
+import * as DevicePlatformsConstantsLib from "../src/common/mobile/device-platforms-constants";
+import * as ErrorsLib from "../src/common/errors";
 import * as path from "path";
 
 // start tracking temporary folders/files

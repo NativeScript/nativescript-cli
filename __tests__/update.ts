@@ -1,11 +1,11 @@
 import * as stubs from "./stubs";
-import * as yok from "../lib/common/yok";
-import { UpdateCommand } from "../lib/commands/update";
+import * as yok from "../src/common/yok";
+import { UpdateCommand } from "../src/commands/update";
 import { assert } from "chai";
-import { Options } from "../lib/options";
-import { StaticConfig } from "../lib/config";
-import { SettingsService } from "../lib/common/test/unit-tests/stubs";
-import { DevicePlatformsConstants } from "../lib/common/mobile/device-platforms-constants";
+import { Options } from "../src/options";
+import { StaticConfig } from "../src/config";
+import { SettingsService } from "../src/common/test/unit-tests/stubs";
+import { DevicePlatformsConstants } from "../src/common/mobile/device-platforms-constants";
 const projectFolder = "test";
 
 function createTestInjector(

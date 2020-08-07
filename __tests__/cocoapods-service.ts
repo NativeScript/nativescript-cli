@@ -1,11 +1,11 @@
-import * as yok from "../lib/common/yok";
+import * as yok from "../src/common/yok";
 import { assert } from "chai";
-import { CocoaPodsService } from "../lib/services/cocoapods-service";
+import { CocoaPodsService } from "../src/services/cocoapods-service";
 import { EOL } from "os";
 import { LoggerStub, ErrorsStub } from "./stubs";
-import { XcconfigService } from "../lib/services/xcconfig-service";
+import { XcconfigService } from "../src/services/xcconfig-service";
 import * as path from "path";
-import { CocoaPodsPlatformManager } from "../lib/services/cocoapods-platform-manager";
+import { CocoaPodsPlatformManager } from "../src/services/cocoapods-platform-manager";
 
 interface IMergePodfileHooksTestCase {
 	input: string;

@@ -1,8 +1,8 @@
 import { assert } from "chai";
-import { PrepareController } from "../../lib/controllers/prepare-controller";
-import { MobileHelper } from "../../lib/common/mobile/mobile-helper";
+import { PrepareController } from "../../src/controllers/prepare-controller";
+import { MobileHelper } from "../../src/common/mobile/mobile-helper";
 import { InjectorStub, TempServiceStub } from "../stubs";
-import { PREPARE_READY_EVENT_NAME } from "../../lib/constants";
+import { PREPARE_READY_EVENT_NAME } from "../../src/constants";
 
 const projectDir = "/path/to/my/projecDir";
 const prepareData = {

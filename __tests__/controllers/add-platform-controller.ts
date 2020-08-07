@@ -1,9 +1,9 @@
 import { InjectorStub, PacoteServiceStub, TempServiceStub } from "../stubs";
-import { PlatformController } from "../../lib/controllers/platform-controller";
-import { AddPlatformService } from "../../lib/services/platform/add-platform-service";
+import { PlatformController } from "../../src/controllers/platform-controller";
+import { AddPlatformService } from "../../src/services/platform/add-platform-service";
 import { assert } from "chai";
 import { format } from "util";
-import { AddPlaformErrors } from "../../lib/constants";
+import { AddPlaformErrors } from "../../src/constants";
 
 let actualMessage: string = null;
 const latestFrameworkVersion = "5.3.1";

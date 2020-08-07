@@ -1,10 +1,10 @@
-import { SysInfo } from "../lib/sys-info";
-import { Yok } from "../lib/common/yok";
+import { SysInfo } from "../src/sys-info";
+import { Yok } from "../src/common/yok";
 import { assert } from "chai";
 import { format } from "util";
 import * as sinon from "sinon";
-import { MacOSVersions, MacOSDeprecationStringFormat } from "../lib/constants";
-const verifyNodeVersion = require("../lib/common/verify-node-version");
+import { MacOSVersions, MacOSDeprecationStringFormat } from "../src/constants";
+const verifyNodeVersion = require("../src/common/verify-node-version");
 
 describe("sysInfo", () => {
 	let sandbox: sinon.SinonSandbox = null;

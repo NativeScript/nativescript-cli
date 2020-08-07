@@ -1,11 +1,11 @@
-import { AnalyticsService } from "../../../lib/services/analytics/analytics-service";
-import { Yok } from "../../../lib/common/yok";
+import { AnalyticsService } from "../../../src/services/analytics/analytics-service";
+import { Yok } from "../../../src/common/yok";
 import * as stubs from "../../stubs";
 import { assert } from "chai";
 import { EventEmitter } from "events";
-import { AnalyticsClients } from "../../../lib/common/constants";
+import { AnalyticsClients } from "../../../src/common/constants";
 
-import * as helpers from "../../../lib/common/helpers";
+import * as helpers from "../../../src/common/helpers";
 
 const trackFeatureUsage = "TrackFeatureUsage";
 const sampleProjectType = "SampleProjectType";

@@ -1,9 +1,9 @@
-import { Yok } from "../lib/common/yok";
+import { Yok } from "../src/common/yok";
 import * as stubs from "./stubs";
-import { ProjectTemplatesService } from "../lib/services/project-templates-service";
+import { ProjectTemplatesService } from "../src/services/project-templates-service";
 import { assert } from "chai";
 import * as path from "path";
-import * as constants from "../lib/constants";
+import * as constants from "../src/constants";
 import { format } from "util";
 
 let isDeleteDirectoryCalledForNodeModulesDir = false;

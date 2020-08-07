@@ -1,10 +1,10 @@
 import { assert } from "chai";
-import { CONNECTED_STATUS, DEBUGGER_PORT_FOUND_EVENT_NAME, DEVICE_LOG_EVENT_NAME } from "../../lib/common/constants";
+import { CONNECTED_STATUS, DEBUGGER_PORT_FOUND_EVENT_NAME, DEVICE_LOG_EVENT_NAME } from "../../src/common/constants";
 import { ErrorsStub, LoggerStub } from "../stubs";
-import { IOSDebuggerPortService } from "../../lib/services/ios-debugger-port-service";
-import { LogParserService } from "../../lib/services/log-parser-service";
-import { DevicePlatformsConstants } from "../../lib/common/mobile/device-platforms-constants";
-import { Yok } from "../../lib/common/yok";
+import { IOSDebuggerPortService } from "../../src/services/ios-debugger-port-service";
+import { LogParserService } from "../../src/services/log-parser-service";
+import { DevicePlatformsConstants } from "../../src/common/mobile/device-platforms-constants";
+import { Yok } from "../../src/common/yok";
 import { EventEmitter } from "events";
 import * as sinon from "sinon";
 

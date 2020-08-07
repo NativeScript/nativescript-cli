@@ -1,8 +1,8 @@
-import { AndroidPluginBuildService } from "../../lib/services/android-plugin-build-service";
+import { AndroidPluginBuildService } from "../../src/services/android-plugin-build-service";
 import { assert } from "chai";
-import { INCLUDE_GRADLE_NAME, AndroidBuildDefaults, PLUGIN_BUILD_DATA_FILENAME } from "../../lib/constants";
-import { getShortPluginName } from "../../lib/common/helpers";
-import * as FsLib from "../../lib/common/file-system";
+import { INCLUDE_GRADLE_NAME, AndroidBuildDefaults, PLUGIN_BUILD_DATA_FILENAME } from "../../src/constants";
+import { getShortPluginName } from "../../src/common/helpers";
+import * as FsLib from "../../src/common/file-system";
 import * as path from "path";
 import * as stubs from "../stubs";
 import * as temp from "temp";

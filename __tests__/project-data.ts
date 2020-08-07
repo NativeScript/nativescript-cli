@@ -1,6 +1,6 @@
-import { ProjectData } from "../lib/project-data";
-import { Yok } from "../lib/common/yok";
-import { DevicePlatformsConstants } from "../lib/common/mobile/device-platforms-constants";
+import { ProjectData } from "../src/project-data";
+import { Yok } from "../src/common/yok";
+import { DevicePlatformsConstants } from "../src/common/mobile/device-platforms-constants";
 import { assert } from "chai";
 import * as stubs from "./stubs";
 import * as path from "path";

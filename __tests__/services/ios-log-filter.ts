@@ -1,6 +1,6 @@
-import { IOSLogFilter } from "../../lib/services/ios-log-filter";
-import { Yok } from "../../lib/common/yok";
-import { LoggingLevels } from "../../lib/common/mobile/logging-levels";
+import { IOSLogFilter } from "../../src/services/ios-log-filter";
+import { Yok } from "../../src/common/yok";
+import { LoggingLevels } from "../../src/common/mobile/logging-levels";
 import { LoggerStub } from "../stubs";
 import * as assert from "assert";
 

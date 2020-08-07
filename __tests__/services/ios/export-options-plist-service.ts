@@ -1,5 +1,5 @@
-import { Yok } from "../../../lib/common/yok";
-import { ExportOptionsPlistService } from "../../../lib/services/ios/export-options-plist-service";
+import { Yok } from "../../../src/common/yok";
+import { ExportOptionsPlistService } from "../../../src/services/ios/export-options-plist-service";
 import { assert } from "chai";
 import { TempServiceStub } from "../../stubs";
 

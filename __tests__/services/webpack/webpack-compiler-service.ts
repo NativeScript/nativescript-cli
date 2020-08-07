@@ -1,5 +1,5 @@
-import { Yok } from "../../../lib/common/yok";
-import { WebpackCompilerService } from "../../../lib/services/webpack/webpack-compiler-service";
+import { Yok } from "../../../src/common/yok";
+import { WebpackCompilerService } from "../../../src/services/webpack/webpack-compiler-service";
 import { assert } from "chai";
 import { ErrorsStub } from "../../stubs";
 

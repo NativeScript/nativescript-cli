@@ -1,5 +1,5 @@
-import { IOSDeviceDebugService } from "../../lib/services/ios-device-debug-service";
-import { Yok } from "../../lib/common/yok";
+import { IOSDeviceDebugService } from "../../src/services/ios-device-debug-service";
+import { Yok } from "../../src/common/yok";
 import * as stubs from "../stubs";
 import { assert } from "chai";
 

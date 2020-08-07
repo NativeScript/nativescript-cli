@@ -1,5 +1,5 @@
-import { DoctorService } from "../../lib/services/doctor-service";
-import { Yok } from "../../lib/common/yok";
+import { DoctorService } from "../../src/services/doctor-service";
+import { Yok } from "../../src/common/yok";
 import { LoggerStub, FileSystemStub } from "../stubs";
 import { assert } from "chai";
 import * as path from "path";

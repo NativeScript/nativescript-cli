@@ -1,20 +1,20 @@
 import { assert } from "chai";
-import * as ConfigLib from "../lib/config";
-import * as ErrorsLib from "../lib/common/errors";
-import * as FsLib from "../lib/common/file-system";
-import * as HostInfoLib from "../lib/common/host-info";
-import * as LoggerLib from "../lib/common/logger/logger";
-import * as NpmLib from "../lib/node-package-manager";
-import * as YarnLib from "../lib/yarn-package-manager";
-import * as PnpmLib from "../lib/pnpm-package-manager";
-import * as PackageManagerLib from "../lib/package-manager";
-import * as PackageInstallationManagerLib from "../lib/package-installation-manager";
-import * as OptionsLib from "../lib/options";
-import * as StaticConfigLib from "../lib/config";
-import * as yok from "../lib/common/yok";
-import * as ChildProcessLib from "../lib/common/child-process";
-import { SettingsService } from "../lib/common/test/unit-tests/stubs";
-import { ProjectDataService } from "../lib/services/project-data-service";
+import * as ConfigLib from "../src/config";
+import * as ErrorsLib from "../src/common/errors";
+import * as FsLib from "../src/common/file-system";
+import * as HostInfoLib from "../src/common/host-info";
+import * as LoggerLib from "../src/common/logger/logger";
+import * as NpmLib from "../src/node-package-manager";
+import * as YarnLib from "../src/yarn-package-manager";
+import * as PnpmLib from "../src/pnpm-package-manager";
+import * as PackageManagerLib from "../src/package-manager";
+import * as PackageInstallationManagerLib from "../src/package-installation-manager";
+import * as OptionsLib from "../src/options";
+import * as StaticConfigLib from "../src/config";
+import * as yok from "../src/common/yok";
+import * as ChildProcessLib from "../src/common/child-process";
+import { SettingsService } from "../src/common/test/unit-tests/stubs";
+import { ProjectDataService } from "../src/services/project-data-service";
 import { MarkingModeServiceStub, ProjectDataStub } from "./stubs";
 
 function createTestInjector(): IInjector {

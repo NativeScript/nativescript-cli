@@ -1,5 +1,5 @@
-import { Yok } from "../../lib/common/yok";
-import { UserSettingsService } from "../../lib/services/user-settings-service";
+import { Yok } from "../../src/common/yok";
+import { UserSettingsService } from "../../src/services/user-settings-service";
 import { assert } from "chai";
 import * as path from "path";
 

@@ -1,12 +1,12 @@
-import { Yok } from "../../../lib/common/yok";
+import { Yok } from "../../../src/common/yok";
 import { assert } from "chai";
 import * as sinon from "sinon";
 import { LoggerStub, TempServiceStub } from "../../stubs";
-import { AndroidLivesyncTool } from "../../../lib/services/livesync/android-livesync-tool";
-import { LiveSyncSocket } from "../../../lib/services/livesync/livesync-socket";
-import { MobileHelper } from "../../../lib/common/mobile/mobile-helper";
-import { FileSystem } from "../../../lib/common/file-system";
-import { DevicePlatformsConstants } from "../../../lib/common/mobile/device-platforms-constants";
+import { AndroidLivesyncTool } from "../../../src/services/livesync/android-livesync-tool";
+import { LiveSyncSocket } from "../../../src/services/livesync/livesync-socket";
+import { MobileHelper } from "../../../src/common/mobile/mobile-helper";
+import { FileSystem } from "../../../src/common/file-system";
+import { DevicePlatformsConstants } from "../../../src/common/mobile/device-platforms-constants";
 import * as path from "path";
 import * as temp from "temp";
 import * as crypto from "crypto";

@@ -1,8 +1,8 @@
-import { PreviewSdkService } from "../../lib/services/livesync/playground/preview-sdk-service";
-import { Yok } from "../../lib/common/yok";
+import { PreviewSdkService } from "../../src/services/livesync/playground/preview-sdk-service";
+import { Yok } from "../../src/common/yok";
 import { assert } from "chai";
 import { LoggerStub } from "../stubs";
-import { PreviewSchemaService } from "../../lib/services/livesync/playground/preview-schema-service";
+import { PreviewSchemaService } from "../../src/services/livesync/playground/preview-schema-service";
 
 const createTestInjector = (): IInjector => {
 	const testInjector = new Yok();

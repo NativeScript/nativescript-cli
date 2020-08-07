@@ -1,0 +1,7 @@
+{
+	"Devices": {
+		"NotFoundDeviceByIdentifierErrorMessage": "Cannot resolve the specified connected device by the provided index or identifier. To list currently connected devices and verify that the specified index or identifier exists, run '%s device'.",
+		"NotFoundDeviceByIdentifierErrorMessageWithIdentifier": "Could not find device by specified identifier '%s'. To list currently connected devices and verify that the specified identifier exists, run '%s device'.",
+		"NotFoundDeviceByIndexErrorMessage": "Could not find device by specified index %d. To list currently connected devices and verify that the specified index exists, run '%s device'."
+	}
+}

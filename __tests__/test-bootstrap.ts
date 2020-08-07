@@ -1,4 +1,4 @@
-/// <reference path="../lib/common/definitions/cli-global.d.ts" />
+/// <reference path="../src/common/definitions/cli-global.d.ts" />
 import * as shelljs from "shelljs";
 import { use } from "chai";
 
@@ -9,7 +9,7 @@ const cliGlobal = <ICliGlobal><any>global;
 
 import * as _ from 'lodash';
 cliGlobal._ = _;
-import { injector } from '../lib/common/yok';
+import { injector } from '../src/common/yok';
 cliGlobal.$injector = injector;
 
 // Requiring colors will modify the prototype of String
@@ -30,5 +30,5 @@ cliGlobal.$injector.register("logger", LoggerStub);
 cliGlobal.$injector.register("performanceService", PerformanceService);
 
 // Converts the js callstack to typescript
-import { installUncaughtExceptionListener } from "../lib/common/errors";
+import { installUncaughtExceptionListener } from "../src/common/errors";
 installUncaughtExceptionListener();

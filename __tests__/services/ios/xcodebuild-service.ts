@@ -1,5 +1,5 @@
-import { Yok } from "../../../lib/common/yok";
-import { XcodebuildService } from "../../../lib/services/ios/xcodebuild-service";
+import { Yok } from "../../../src/common/yok";
+import { XcodebuildService } from "../../../src/services/ios/xcodebuild-service";
 import * as path from "path";
 import { assert } from "chai";
 

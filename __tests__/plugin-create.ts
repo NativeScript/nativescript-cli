@@ -1,8 +1,8 @@
-import { Yok } from "../lib/common/yok";
+import { Yok } from "../src/common/yok";
 import * as stubs from "./stubs";
-import { CreatePluginCommand } from "../lib/commands/plugin/create-plugin";
+import { CreatePluginCommand } from "../src/commands/plugin/create-plugin";
 import { assert } from "chai";
-import * as helpers from "../lib/common/helpers";
+import * as helpers from "../src/common/helpers";
 import * as sinon from "sinon";
 import * as temp from "temp";
 import * as path from "path";

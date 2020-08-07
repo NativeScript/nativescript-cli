@@ -1,5 +1,5 @@
-import { Yok } from "../lib/common/yok";
-import { ProjectFilesProvider } from "../lib/providers/project-files-provider";
+import { Yok } from "../src/common/yok";
+import { ProjectFilesProvider } from "../src/providers/project-files-provider";
 import * as stubs from "./stubs";
 import { assert } from "chai";
 import * as path from "path";

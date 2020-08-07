@@ -1,6 +1,6 @@
-import { Yok } from "../../../lib/common/yok";
-import { DevicePlatformsConstants } from "../../../lib/common/mobile/device-platforms-constants";
-import { XcodebuildArgsService } from "../../../lib/services/ios/xcodebuild-args-service";
+import { Yok } from "../../../src/common/yok";
+import { DevicePlatformsConstants } from "../../../src/common/mobile/device-platforms-constants";
+import { XcodebuildArgsService } from "../../../src/services/ios/xcodebuild-args-service";
 import * as path from "path";
 import { assert } from "chai";
 

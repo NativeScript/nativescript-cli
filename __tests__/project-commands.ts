@@ -1,9 +1,9 @@
-import { Yok } from "../lib/common/yok";
+import { Yok } from "../src/common/yok";
 import * as stubs from "./stubs";
-import { CreateProjectCommand } from "../lib/commands/create-project";
-import { StringCommandParameter } from "../lib/common/command-params";
-import * as helpers from "../lib/common/helpers";
-import * as constants from "../lib/constants";
+import { CreateProjectCommand } from "../src/commands/create-project";
+import { StringCommandParameter } from "../src/common/command-params";
+import * as helpers from "../src/common/helpers";
+import * as constants from "../src/constants";
 import { assert } from "chai";
 import { PrompterStub } from "./stubs";
 

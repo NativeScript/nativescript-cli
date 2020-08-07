@@ -2,11 +2,11 @@ import { assert } from "chai";
 
 // Use require instead of import in order to replace the `spawn` method of child_process
 const childProcess = require("child_process");
-const helpers = require("../lib/common/helpers");
+const helpers = require("../src/common/helpers");
 
 import { SpawnOptions, ChildProcess } from "child_process";
 import * as path from "path";
-import { POST_INSTALL_COMMAND_NAME } from "../lib/constants";
+import { POST_INSTALL_COMMAND_NAME } from "../src/constants";
 
 describe("postinstall.js", () => {
 	let isSpawnCalled = false;

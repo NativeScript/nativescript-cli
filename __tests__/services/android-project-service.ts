@@ -1,12 +1,12 @@
-import { AndroidProjectService } from "../../lib/services/android-project-service";
-import { Yok } from "../../lib/common/yok";
+import { AndroidProjectService } from "../../src/services/android-project-service";
+import { Yok } from "../../src/common/yok";
 import * as stubs from "../stubs";
 import { assert } from "chai";
 import * as sinon from "sinon";
 import * as path from "path";
-import { GradleCommandService } from "../../lib/services/android/gradle-command-service";
-import { GradleBuildService } from "../../lib/services/android/gradle-build-service";
-import { GradleBuildArgsService } from "../../lib/services/android/gradle-build-args-service";
+import { GradleCommandService } from "../../src/services/android/gradle-command-service";
+import { GradleBuildService } from "../../src/services/android/gradle-build-service";
+import { GradleBuildArgsService } from "../../src/services/android/gradle-build-args-service";
 
 const createTestInjector = (): IInjector => {
 	const testInjector = new Yok();

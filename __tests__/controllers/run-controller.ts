@@ -1,14 +1,14 @@
-import { RunController } from "../../lib/controllers/run-controller";
+import { RunController } from "../../src/controllers/run-controller";
 import { InjectorStub, TempServiceStub } from "../stubs";
-import { LiveSyncServiceResolver } from "../../lib/resolvers/livesync-service-resolver";
-import { MobileHelper } from "../../lib/common/mobile/mobile-helper";
+import { LiveSyncServiceResolver } from "../../src/resolvers/livesync-service-resolver";
+import { MobileHelper } from "../../src/common/mobile/mobile-helper";
 import { assert } from "chai";
-import { RunOnDeviceEvents } from "../../lib/constants";
-import { PrepareData } from "../../lib/data/prepare-data";
-import { PrepareDataService } from "../../lib/services/prepare-data-service";
-import { BuildDataService } from "../../lib/services/build-data-service";
-import { PrepareController } from "../../lib/controllers/prepare-controller";
-import { LiveSyncProcessDataService } from "../../lib/services/livesync-process-data-service";
+import { RunOnDeviceEvents } from "../../src/constants";
+import { PrepareData } from "../../src/data/prepare-data";
+import { PrepareDataService } from "../../src/services/prepare-data-service";
+import { BuildDataService } from "../../src/services/build-data-service";
+import { PrepareController } from "../../src/controllers/prepare-controller";
+import { LiveSyncProcessDataService } from "../../src/services/livesync-process-data-service";
 
 let isAttachToHmrStatusCalled = false;
 let prepareData: IPrepareData = null;

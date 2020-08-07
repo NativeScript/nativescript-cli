@@ -4,12 +4,12 @@ import * as util from "util";
 import * as chai from "chai";
 import { EventEmitter } from "events";
 import { join } from "path";
-import * as constants from "./../lib/constants";
+import * as constants from "../src/constants";
 import * as prompt from "inquirer";
-import { Yok } from "./../lib/common/yok";
-import { HostInfo } from "./../lib/common/host-info";
-import { DevicePlatformsConstants } from "./../lib/common/mobile/device-platforms-constants";
-import { PrepareData } from "../lib/data/prepare-data";
+import { Yok } from "../src/common/yok";
+import { HostInfo } from "../src/common/host-info";
+import { DevicePlatformsConstants } from "../src/common/mobile/device-platforms-constants";
+import { PrepareData } from "../src/data/prepare-data";
 import * as temp from "temp";
 temp.track();
 

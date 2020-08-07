@@ -1,7 +1,7 @@
-import { Errors } from "../lib/common/errors";
-import { Yok } from "../lib/common/yok";
+import { Errors } from "../src/common/errors";
+import { Yok } from "../src/common/yok";
 import { assert } from "chai";
-import { Options } from "../lib/options";
+import { Options } from "../src/options";
 
 let isExecutionStopped = false;
 

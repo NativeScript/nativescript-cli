@@ -1,5 +1,5 @@
 import { InjectorStub } from "../stubs";
-import { TestExecutionService } from "../../lib/services/test-execution-service";
+import { TestExecutionService } from "../../src/services/test-execution-service";
 import { assert } from "chai";
 
 const karmaPluginName = "karma";

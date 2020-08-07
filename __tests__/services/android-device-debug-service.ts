@@ -1,5 +1,5 @@
-import { AndroidDeviceDebugService } from "../../lib/services/android-device-debug-service";
-import { Yok } from "../../lib/common/yok";
+import { AndroidDeviceDebugService } from "../../src/services/android-device-debug-service";
+import { Yok } from "../../src/common/yok";
 import * as stubs from "../stubs";
 import { assert } from "chai";
 

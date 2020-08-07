@@ -43,18 +43,18 @@ module.exports = function (grunt) {
 			options: grunt.file.readJSON("tsconfig.json").compilerOptions,
 
 			devlib: {
-				src: ["lib/**/*.ts", "!lib/common/node_modules/**/*.ts"],
-				reference: "lib/.d.ts"
+				src: ["src/**/*.ts", "!src/common/node_modules/**/*.ts"],
+				reference: "src/.d.ts"
 			},
 
 			devall: {
-				src: ["lib/**/*.ts", "test/**/*.ts", "!lib/common/node_modules/**/*.ts", "lib/common/test/unit-tests/**/*.ts", "definitions/**/*.ts", "!lib/common/test/.d.ts"],
-				reference: "lib/.d.ts"
+				src: ["src/**/*.ts", "test/**/*.ts", "!src/common/node_modules/**/*.ts", "src/common/test/unit-tests/**/*.ts", "definitions/**/*.ts", "!src/common/test/.d.ts"],
+				reference: "src/.d.ts"
 			},
 
 			release_build: {
-				src: ["lib/**/*.ts", "test/**/*.ts", "!lib/common/node_modules/**/*.ts"],
-				reference: "lib/.d.ts",
+				src: ["src/**/*.ts", "test/**/*.ts", "!src/common/node_modules/**/*.ts"],
+				reference: "src/.d.ts",
 				options: {
 					sourceMap: false,
 					removeComments: true
@@ -64,7 +64,7 @@ module.exports = function (grunt) {
 
 		watch: {
 			devall: {
-				files: ["lib/**/*.ts", 'test/**/*.ts', "!lib/common/node_modules/**/*.ts", "!lib/common/messages/**/*.ts"],
+				files: ["src/**/*.ts", 'test/**/*.ts', "!src/common/node_modules/**/*.ts", "!src/common/messages/**/*.ts"],
 				tasks: [
 					'ts:devall',
 					'shell:npm_test'
@@ -75,7 +75,7 @@ module.exports = function (grunt) {
 				}
 			},
 			ts: {
-				files: ["lib/**/*.ts", 'test/**/*.ts', "!lib/common/node_modules/**/*.ts"],
+				files: ["src/**/*.ts", 'test/**/*.ts', "!src/common/node_modules/**/*.ts"],
 				tasks: [
 					'ts:devall'
 				],
@@ -115,17 +115,17 @@ module.exports = function (grunt) {
 		clean: {
 			src: ["test/**/*.js*",
 				"!test/files/**/*.js*",
-				"lib/**/*.js*",
+				"src/**/*.js*",
 				"!test-scripts/**/*",
-				"!lib/common/vendor/*.js",
-				"!lib/common/**/*.json",
-				"!lib/common/Gruntfile.js",
-				"!lib/common/node_modules/**/*",
-				"!lib/common/hooks/**/*.js",
-				"!lib/common/bin/*.js",
-				"!lib/common/test-scripts/**/*",
-				"!lib/common/scripts/**/*",
-				"!lib/common/test/resources/**/*",
+				"!src/common/vendor/*.js",
+				"!src/common/**/*.json",
+				"!src/common/Gruntfile.js",
+				"!src/common/node_modules/**/*",
+				"!src/common/hooks/**/*.js",
+				"!src/common/bin/*.js",
+				"!src/common/test-scripts/**/*",
+				"!src/common/scripts/**/*",
+				"!src/common/test/resources/**/*",
 				"*.tgz"]
 		},
 		template: {

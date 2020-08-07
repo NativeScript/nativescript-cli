@@ -1,10 +1,10 @@
-import { Yok } from "../../lib/common/yok";
+import { Yok } from "../../src/common/yok";
 import { assert } from "chai";
-import { PacoteService } from '../../lib/services/pacote-service';
+import { PacoteService } from '../../src/services/pacote-service';
 import { LoggerStub } from "../stubs";
 import { sandbox, SinonSandbox, SinonStub } from "sinon";
 import { EventEmitter } from "events";
-import { NpmConfigService } from "../../lib/services/npm-config-service";
+import { NpmConfigService } from "../../src/services/npm-config-service";
 
 const pacote = require("pacote");
 const tar = require("tar");

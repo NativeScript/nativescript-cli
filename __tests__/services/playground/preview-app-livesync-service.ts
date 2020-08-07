@@ -1,19 +1,19 @@
-import { Yok } from "../../../lib/common/yok";
+import { Yok } from "../../../src/common/yok";
 import * as _ from 'lodash';
 import { LoggerStub, ErrorsStub, MarkingModeServiceStub, TempServiceStub } from "../../stubs";
 import { FilePayload, Device, FilesPayload } from "nativescript-preview-sdk";
 import * as chai from "chai";
 import * as path from "path";
-import { ProjectFilesManager } from "../../../lib/common/services/project-files-manager";
+import { ProjectFilesManager } from "../../../src/common/services/project-files-manager";
 import { EventEmitter } from "events";
-import { PreviewAppFilesService } from "../../../lib/services/livesync/playground/preview-app-files-service";
-import { PREPARE_READY_EVENT_NAME } from "../../../lib/constants";
-import { PrepareData } from "../../../lib/data/prepare-data";
-import { PreviewAppController } from "../../../lib/controllers/preview-app-controller";
-import { PrepareDataService } from "../../../lib/services/prepare-data-service";
-import { MobileHelper } from "../../../lib/common/mobile/mobile-helper";
-import { DevicePlatformsConstants } from "../../../lib/common/mobile/device-platforms-constants";
-import { PrepareController } from "../../../lib/controllers/prepare-controller";
+import { PreviewAppFilesService } from "../../../src/services/livesync/playground/preview-app-files-service";
+import { PREPARE_READY_EVENT_NAME } from "../../../src/constants";
+import { PrepareData } from "../../../src/data/prepare-data";
+import { PreviewAppController } from "../../../src/controllers/preview-app-controller";
+import { PrepareDataService } from "../../../src/services/prepare-data-service";
+import { MobileHelper } from "../../../src/common/mobile/mobile-helper";
+import { DevicePlatformsConstants } from "../../../src/common/mobile/device-platforms-constants";
+import { PrepareController } from "../../../src/controllers/prepare-controller";
 
 interface ITestCase {
 	name: string;

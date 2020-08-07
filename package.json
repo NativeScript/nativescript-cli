@@ -10,7 +10,7 @@
     "nsc": "./bin/tns",
     "ns": "./bin/tns"
   },
-  "main": "./lib/nativescript-cli-lib.js",
+  "main": "src/nativescript-cli-lib.js",
   "scripts": {
     "clean": "npx rimraf node_modules package-lock.json",
     "build": "grunt",

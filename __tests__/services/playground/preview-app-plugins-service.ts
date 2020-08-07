@@ -1,9 +1,9 @@
-import { Yok } from "../../../lib/common/yok";
-import { PreviewAppPluginsService } from "../../../lib/services/livesync/playground/preview-app-plugins-service";
+import { Yok } from "../../../src/common/yok";
+import { PreviewAppPluginsService } from "../../../src/services/livesync/playground/preview-app-plugins-service";
 import { Device } from "nativescript-preview-sdk";
 import { assert } from "chai";
 import * as util from "util";
-import { PluginComparisonMessages } from "../../../lib/services/livesync/playground/preview-app-constants";
+import { PluginComparisonMessages } from "../../../src/services/livesync/playground/preview-app-constants";
 import { ErrorsStub, PackageInstallationManagerStub } from "../../stubs";
 
 let readJsonParams: string[] = [];

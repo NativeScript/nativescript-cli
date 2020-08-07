@@ -1,5 +1,5 @@
-import { Yok } from "../lib/common/yok";
-import { AndroidToolsInfo } from "../lib/android-tools-info";
+import { Yok } from "../src/common/yok";
+import { AndroidToolsInfo } from "../src/android-tools-info";
 import { format } from "util";
 import { assert } from "chai";
 import { ErrorsStub } from "./stubs";

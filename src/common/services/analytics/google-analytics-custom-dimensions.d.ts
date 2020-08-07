@@ -1,0 +1,16 @@
+declare const enum GoogleAnalyticsCustomDimensions {
+	cliVersion = "cd1",
+	projectType = "cd2",
+	clientID = "cd3",
+	sessionID = "cd4",
+	client = "cd5",
+	nodeVersion = "cd6",
+	playgroundId = "cd7",
+	usedTutorial = "cd8",
+	isShared = "cd9",
+	companyName = "cd10",
+	companyCountry = "cd11",
+	companyRevenue = "cd12",
+	companyIndustries = "cd13",
+	companyEmployeeCount = "cd14",
+}

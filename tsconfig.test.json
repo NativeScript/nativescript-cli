@@ -16,12 +16,12 @@
     "noUnusedLocals": true
   },
   "include": [
-    "lib/**/*",
+    "src/**/*",
     "__tests__/**/*"
   ],
   "exclude": [
     "node_modules",
-    "lib/common/node_modules",
+    "src/common/node_modules",
     "scratch",
     "coverage",
     "resources/test"
