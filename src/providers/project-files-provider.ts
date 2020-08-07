@@ -1,4 +1,4 @@
-import minimatch from "minimatch";
+import * as minimatch from "minimatch";
 import * as constants from "../constants";
 import * as path from "path";
 import { ProjectFilesProviderBase } from "../common/services/project-files-provider-base";
