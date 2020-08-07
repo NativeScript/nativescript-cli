@@ -1,3 +1,4 @@
+/// <reference path="../lib/common/definitions/cli-global.d.ts" />
 import * as shelljs from "shelljs";
 import { use } from "chai";
 
@@ -18,15 +19,15 @@ require("colors");
 
 use(require("chai-as-promised"));
 
-$injector.register("analyticsService", {
+cliGlobal.$injector.register("analyticsService", {
 	trackException: async (exception: any, message: string): Promise<void> => {
 		// Intentionally left blank.
 	}
 });
 
 import { PerformanceService, LoggerStub } from "./stubs";
-$injector.register("logger", LoggerStub);
-$injector.register("performanceService", PerformanceService);
+cliGlobal.$injector.register("logger", LoggerStub);
+cliGlobal.$injector.register("performanceService", PerformanceService);
 
 // Converts the js callstack to typescript
 import { installUncaughtExceptionListener } from "../lib/common/errors";

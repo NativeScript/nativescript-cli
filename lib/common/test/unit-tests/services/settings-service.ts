@@ -20,13 +20,13 @@ describe("settingsService", () => {
 	const appDataEnv = "appData";
 	const profileDirName = "profileDir";
 
-	before(() => {
+	beforeAll(() => {
 		osenv.home = () => osenvHome;
 		path.resolve = (p: string) => p;
 		process.env.AppData = appDataEnv;
 	});
 
-	after(() => {
+	afterAll(() => {
 		osenv.home = originalOsenvHome;
 		path.resolve = originalPathResolve;
 		process.env.AppData = originalProcessEnvAppData;

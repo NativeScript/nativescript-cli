@@ -1,5 +1,7 @@
-(<ICliGlobal><unknown>global)._ = require("lodash");
-(<ICliGlobal><unknown>global).$injector = require("./yok").injector;
+import * as _ from 'lodash';
+(<ICliGlobal><unknown>global)._ = _;
+import { injector } from './yok';
+(<ICliGlobal><unknown>global).$injector = injector;
 
 require("colors");
 $injector.require("errors", "./errors");
@@ -114,3 +116,5 @@ $injector.require("net", "./services/net-service");
 
 $injector.require("qr", "./services/qr");
 $injector.require(["lockfile", "lockService"], "./services/lock-service");
+
+export const inj = $injector;

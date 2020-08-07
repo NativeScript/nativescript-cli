@@ -49,7 +49,7 @@ describe("deviceEmitter", () => {
 
 		_.each([DeviceDiscoveryEventNames.DEVICE_FOUND, DeviceDiscoveryEventNames.DEVICE_LOST], deviceEvent => {
 			describe(deviceEvent, () => {
-				const attachDeviceEventVerificationHandler = (expectedDeviceInfo: any, done: mocha.Done) => {
+				const attachDeviceEventVerificationHandler = (expectedDeviceInfo: any, done: jest.DoneCallback) => {
 					deviceEmitter.on(deviceEvent, (deviceInfo: Mobile.IDeviceInfo) => {
 						assert.deepEqual(deviceInfo, expectedDeviceInfo);
 						// Wait for all operations to be completed and call done after that.
@@ -57,7 +57,7 @@ describe("deviceEmitter", () => {
 					});
 				};
 
-				it("is raised when working with device", (done: mocha.Done) => {
+				it("is raised when working with device", (done: jest.DoneCallback) => {
 					attachDeviceEventVerificationHandler(deviceInstance.deviceInfo, done);
 					devicesService.emit(deviceEvent, deviceInstance);
 				});
@@ -65,7 +65,7 @@ describe("deviceEmitter", () => {
 		});
 
 		describe("openDeviceLogStream", () => {
-			const attachDeviceEventVerificationHandler = (expectedDeviceInfo: any, done: mocha.Done) => {
+			const attachDeviceEventVerificationHandler = (expectedDeviceInfo: any, done: jest.DoneCallback) => {
 				deviceEmitter.on(DeviceDiscoveryEventNames.DEVICE_FOUND, (deviceInfo: Mobile.IDeviceInfo) => {
 					assert.deepEqual(deviceInfo, expectedDeviceInfo);
 
@@ -77,7 +77,7 @@ describe("deviceEmitter", () => {
 				});
 			};
 
-			it("is called when working with device", (done: mocha.Done) => {
+			it("is called when working with device", (done: jest.DoneCallback) => {
 				attachDeviceEventVerificationHandler(deviceInstance.deviceInfo, done);
 				devicesService.emit(DeviceDiscoveryEventNames.DEVICE_FOUND, deviceInstance);
 			});
@@ -93,7 +93,7 @@ describe("deviceEmitter", () => {
 			describe(`raises ${DEVICE_LOG_EVENT_NAME} with correct identifier and data`, () => {
 				const expectedDeviceLogData = "This is some log data from device.";
 
-				const attachDeviceLogDataVerificationHandler = (expectedDeviceIdentifier: string, done: mocha.Done) => {
+				const attachDeviceLogDataVerificationHandler = (expectedDeviceIdentifier: string, done: jest.DoneCallback) => {
 					deviceEmitter.on(DEVICE_LOG_EVENT_NAME, (identifier: string, data: any) => {
 						assert.deepEqual(identifier, expectedDeviceIdentifier);
 						assert.deepEqual(data, expectedDeviceLogData);
@@ -102,7 +102,7 @@ describe("deviceEmitter", () => {
 					});
 				};
 
-				it("is called when device reports data", (done: mocha.Done) => {
+				it("is called when device reports data", (done: jest.DoneCallback) => {
 					attachDeviceLogDataVerificationHandler(deviceInstance.deviceInfo.identifier, done);
 					devicesService.emit(DeviceDiscoveryEventNames.DEVICE_FOUND, deviceInstance);
 					deviceLogProvider.emit("data", deviceInstance.deviceInfo.identifier, expectedDeviceLogData);
@@ -114,7 +114,7 @@ describe("deviceEmitter", () => {
 			describe(applicationEvent, () => {
 				const expectedApplicationIdentifier = "application identifier";
 
-				const attachApplicationEventVerificationHandler = (expectedDeviceIdentifier: string, done: mocha.Done) => {
+				const attachApplicationEventVerificationHandler = (expectedDeviceIdentifier: string, done: jest.DoneCallback) => {
 					deviceEmitter.on(applicationEvent, (deviceIdentifier: string, appIdentifier: string) => {
 						assert.deepEqual(deviceIdentifier, expectedDeviceIdentifier);
 						assert.deepEqual(appIdentifier, expectedApplicationIdentifier);
@@ -124,7 +124,7 @@ describe("deviceEmitter", () => {
 					});
 				};
 
-				it("is raised when working with device", (done: mocha.Done) => {
+				it("is raised when working with device", (done: jest.DoneCallback) => {
 					attachApplicationEventVerificationHandler(deviceInstance.deviceInfo.identifier, done);
 					devicesService.emit(DeviceDiscoveryEventNames.DEVICE_FOUND, deviceInstance);
 					deviceInstance.applicationManager.emit(applicationEvent, expectedApplicationIdentifier);
@@ -135,7 +135,7 @@ describe("deviceEmitter", () => {
 		_.each(["debuggableAppFound", "debuggableAppLost"], (applicationEvent: string) => {
 			describe(applicationEvent, () => {
 
-				const attachDebuggableEventVerificationHandler = (expectedDebuggableAppInfo: Mobile.IDeviceApplicationInformation, done: mocha.Done) => {
+				const attachDebuggableEventVerificationHandler = (expectedDebuggableAppInfo: Mobile.IDeviceApplicationInformation, done: jest.DoneCallback) => {
 					deviceEmitter.on(applicationEvent, (debuggableAppInfo: Mobile.IDeviceApplicationInformation) => {
 						assert.deepEqual(debuggableAppInfo, expectedDebuggableAppInfo);
 
@@ -144,7 +144,7 @@ describe("deviceEmitter", () => {
 					});
 				};
 
-				it("is raised when working with device", (done: mocha.Done) => {
+				it("is raised when working with device", (done: jest.DoneCallback) => {
 					const debuggableAppInfo: Mobile.IDeviceApplicationInformation = {
 						appIdentifier: "app identifier",
 						deviceIdentifier: deviceInstance.deviceInfo.identifier,
@@ -175,7 +175,7 @@ describe("deviceEmitter", () => {
 
 				const appId = "appId";
 
-				const attachDebuggableEventVerificationHandler = (expectedDeviceIdentifier: string, expectedAppIdentifier: string, expectedDebuggableViewInfo: Mobile.IDebugWebViewInfo, done: mocha.Done) => {
+				const attachDebuggableEventVerificationHandler = (expectedDeviceIdentifier: string, expectedAppIdentifier: string, expectedDebuggableViewInfo: Mobile.IDebugWebViewInfo, done: jest.DoneCallback) => {
 					deviceEmitter.on(applicationEvent, (deviceIdentifier: string, appIdentifier: string, debuggableViewInfo: Mobile.IDebugWebViewInfo) => {
 						assert.deepEqual(deviceIdentifier, expectedDeviceIdentifier);
 
@@ -188,7 +188,7 @@ describe("deviceEmitter", () => {
 					});
 				};
 
-				it("is raised when working with device", (done: mocha.Done) => {
+				it("is raised when working with device", (done: jest.DoneCallback) => {
 					const expectedDebuggableViewInfo: Mobile.IDebugWebViewInfo = createDebuggableWebView("test1");
 
 					attachDebuggableEventVerificationHandler(deviceInstance.deviceInfo.identifier, appId, expectedDebuggableViewInfo, done);

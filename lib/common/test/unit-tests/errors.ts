@@ -12,11 +12,11 @@ describe("errors", () => {
 	let isInteractive = false;
 	let processExitCode = 0;
 
-	before(() => {
+	beforeAll(() => {
 		helpers.isInteractive = () => isInteractive;
 	});
 
-	after(() => {
+	afterAll(() => {
 		helpers.isInteractive = originalIsInteractive;
 	});
 

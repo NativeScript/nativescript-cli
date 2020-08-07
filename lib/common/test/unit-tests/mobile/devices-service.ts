@@ -334,7 +334,7 @@ describe("devicesService", () => {
 			platform: "android"
 		};
 
-		it(`emits ${EmulatorDiscoveryNames.EMULATOR_IMAGE_FOUND} event when new Android Emulator image is found`, (done: mocha.Done) => {
+		it(`emits ${EmulatorDiscoveryNames.EMULATOR_IMAGE_FOUND} event when new Android Emulator image is found`, (done: jest.DoneCallback) => {
 			const androidEmulatorDiscovery = testInjector.resolve<AndroidEmulatorDiscoveryStub>("androidEmulatorDiscovery");
 			devicesService.on(EmulatorDiscoveryNames.EMULATOR_IMAGE_FOUND, (emulatorImage: Mobile.IDeviceInfo) => {
 				assert.deepEqual(emulatorImage, emulatorDataToEmit);
@@ -344,7 +344,7 @@ describe("devicesService", () => {
 			androidEmulatorDiscovery.emit(EmulatorDiscoveryNames.EMULATOR_IMAGE_FOUND, emulatorDataToEmit);
 		});
 
-		it(`emits ${EmulatorDiscoveryNames.EMULATOR_IMAGE_FOUND} when new iOS Simulator image is found`, (done: mocha.Done) => {
+		it(`emits ${EmulatorDiscoveryNames.EMULATOR_IMAGE_FOUND} when new iOS Simulator image is found`, (done: jest.DoneCallback) => {
 			devicesService.on(EmulatorDiscoveryNames.EMULATOR_IMAGE_FOUND, (emulatorImage: Mobile.IDeviceInfo) => {
 				assert.deepEqual(emulatorImage, emulatorDataToEmit);
 				done();
@@ -353,7 +353,7 @@ describe("devicesService", () => {
 			iOSSimulatorDiscovery.emit(EmulatorDiscoveryNames.EMULATOR_IMAGE_FOUND, emulatorDataToEmit);
 		});
 
-		it(`emits ${EmulatorDiscoveryNames.EMULATOR_IMAGE_LOST} event when new Android Emulator image is deleted`, (done: mocha.Done) => {
+		it(`emits ${EmulatorDiscoveryNames.EMULATOR_IMAGE_LOST} event when new Android Emulator image is deleted`, (done: jest.DoneCallback) => {
 			const androidEmulatorDiscovery = testInjector.resolve<AndroidEmulatorDiscoveryStub>("androidEmulatorDiscovery");
 			devicesService.on(EmulatorDiscoveryNames.EMULATOR_IMAGE_LOST, (emulatorImage: Mobile.IDeviceInfo) => {
 				assert.deepEqual(emulatorImage, emulatorDataToEmit);
@@ -363,7 +363,7 @@ describe("devicesService", () => {
 			androidEmulatorDiscovery.emit(EmulatorDiscoveryNames.EMULATOR_IMAGE_LOST, emulatorDataToEmit);
 		});
 
-		it(`emits ${EmulatorDiscoveryNames.EMULATOR_IMAGE_LOST} when iOS Simulator image is deleted`, (done: mocha.Done) => {
+		it(`emits ${EmulatorDiscoveryNames.EMULATOR_IMAGE_LOST} when iOS Simulator image is deleted`, (done: jest.DoneCallback) => {
 			devicesService.on(EmulatorDiscoveryNames.EMULATOR_IMAGE_LOST, (emulatorImage: Mobile.IDeviceInfo) => {
 				assert.deepEqual(emulatorImage, emulatorDataToEmit);
 				done();
@@ -1756,7 +1756,7 @@ describe("devicesService", () => {
 				helpers.isInteractive = originalIsInteractive;
 			});
 
-			after(() => {
+			afterAll(() => {
 				helpers.isInteractive = originalIsInteractive;
 			});
 

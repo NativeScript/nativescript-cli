@@ -1,6 +1,6 @@
 import { Yok } from "../../../yok";
 import { FilesHashService } from "../../../../services/files-hash-service";
-import { FileSystemStub, LoggerStub } from "../../../../../test/stubs";
+import { FileSystemStub, LoggerStub } from "../../../../../__tests__/stubs";
 import { assert } from "chai";
 
 const fileHashes = {

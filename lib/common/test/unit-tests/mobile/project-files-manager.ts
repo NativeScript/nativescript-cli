@@ -14,7 +14,7 @@ import { ProjectFilesProviderBase } from "../../../services/project-files-provid
 
 import * as temp from "temp";
 import { LiveSyncPaths } from "../../../constants";
-import { TempServiceStub } from "../../../../../test/stubs";
+import { TempServiceStub } from "../../../../../__tests__/stubs";
 temp.track();
 
 const testedApplicationIdentifier = "com.telerik.myApp";

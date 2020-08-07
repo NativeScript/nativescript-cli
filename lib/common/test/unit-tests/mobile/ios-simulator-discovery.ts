@@ -5,7 +5,7 @@ import { assert } from "chai";
 import { DeviceDiscoveryEventNames, CONNECTED_STATUS } from "../../../constants";
 import { DevicePlatformsConstants } from "../../../mobile/device-platforms-constants";
 import { ErrorsStub, CommonLoggerStub, HooksServiceStub, LockServiceStub } from "../stubs";
-import { FileSystemStub, ChildProcessStub, TempServiceStub } from "../../../../../test/stubs";
+import { FileSystemStub, ChildProcessStub, TempServiceStub } from "../../../../../__tests__/stubs";
 import { DeviceConnectionType } from "../../../../constants";
 
 let currentlyRunningSimulators: Mobile.IiSimDevice[];

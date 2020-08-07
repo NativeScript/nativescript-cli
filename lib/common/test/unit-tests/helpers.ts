@@ -479,7 +479,7 @@ describe("helpers", () => {
 			});
 		});
 
-		it("executes all promises even when some of them are rejected", (done: mocha.Done) => {
+		it("executes all promises even when some of them are rejected", (done: jest.DoneCallback) => {
 			let isPromiseSettled = false;
 
 			const testData: ITestData = {

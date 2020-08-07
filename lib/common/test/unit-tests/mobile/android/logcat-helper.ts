@@ -101,7 +101,7 @@ describe("logcat-helper", () => {
 	});
 
 	describe("start", () => {
-		it("should read the whole logcat correctly", (done: mocha.Done) => {
+		it("should read the whole logcat correctly", (done: jest.DoneCallback) => {
 			injector.register("deviceLogProvider", {
 				logData(line: string, platform: string, deviceIdentifier: string): void {
 					loggedData.push(line);
@@ -115,7 +115,7 @@ describe("logcat-helper", () => {
 			startLogcatHelper(injector, { deviceIdentifier: validIdentifier });
 		});
 
-		it("should pass the pid filter to the adb process", (done: mocha.Done) => {
+		it("should pass the pid filter to the adb process", (done: jest.DoneCallback) => {
 			const expectedPid = "MyCoolPid";
 			injector.register("deviceLogProvider", {
 				logData(line: string, platform: string, deviceIdentifier: string): void {
@@ -130,7 +130,7 @@ describe("logcat-helper", () => {
 			startLogcatHelper(injector, { deviceIdentifier: validIdentifier, pid: expectedPid });
 		});
 
-		it("should not pass the pid filter to the adb process when Android version is less than 7", (done: mocha.Done) => {
+		it("should not pass the pid filter to the adb process when Android version is less than 7", (done: jest.DoneCallback) => {
 			const expectedPid = "MyCoolPid";
 			injector.register("devicesService", {
 				getDevice: (): Mobile.IDevice => {

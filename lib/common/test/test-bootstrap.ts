@@ -1,5 +1,7 @@
-(<ICliGlobal><unknown>global)._ = require("lodash");
-(<ICliGlobal><unknown>global).$injector = require("../yok").injector;
+import * as _ from 'lodash';
+(<ICliGlobal><unknown>global)._ = _;
+import { injector } from '../yok';
+(<ICliGlobal><unknown>global).$injector = injector;
 $injector.require("hostInfo", "../host-info");
 $injector.register("config", {});
 

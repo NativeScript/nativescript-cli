@@ -116,7 +116,7 @@ describe("analytics-service", () => {
 		service = null;
 	});
 
-	after(() => {
+	afterAll(() => {
     setIsInteractive(null);
 	});
 

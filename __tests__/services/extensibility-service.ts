@@ -29,11 +29,11 @@ interface ITestExtensionDefinition {
 }
 
 describe("extensibilityService", () => {
-	before(() => {
+	beforeAll(() => {
 		path.resolve = (p: string) => p;
 	});
 
-	after(() => {
+	afterAll(() => {
 		path.resolve = originalResolve;
 	});
 

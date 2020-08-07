@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
-    "target": "es5",
-    "module": "commonjs",
+    "target": "es2017",
+    "module": "esnext",
     "moduleResolution": "node",
     "lib": [
       "es2017"
@@ -17,7 +17,7 @@
   },
   "include": [
     "lib/**/*",
-    "test/**/*"
+    "__tests__/**/*"
   ],
   "exclude": [
     "node_modules",

@@ -221,7 +221,7 @@ describe("ApplicationManagerBase", () => {
 				await Promise.all([foundAppsPromise, lostAppsPromise]);
 			});
 
-			it("emits debuggableViewFound when new views are available for debug", (done: mocha.Done) => {
+			it("emits debuggableViewFound when new views are available for debug", (done: jest.DoneCallback) => {
 				currentlyAvailableAppsForDebugging = createAppsAvailableForDebugging(2);
 				const numberOfViewsPerApp = 2;
 				currentlyAvailableAppWebViewsForDebugging = createDebuggableWebViews(currentlyAvailableAppsForDebugging, numberOfViewsPerApp);
@@ -248,7 +248,7 @@ describe("ApplicationManagerBase", () => {
 				/* tslint:enable:no-floating-promises */
 			});
 
-			it("emits debuggableViewLost when views for debug are removed", (done: mocha.Done) => {
+			it("emits debuggableViewLost when views for debug are removed", (done: jest.DoneCallback) => {
 				currentlyAvailableAppsForDebugging = createAppsAvailableForDebugging(2);
 				const numberOfViewsPerApp = 2;
 				currentlyAvailableAppWebViewsForDebugging = createDebuggableWebViews(currentlyAvailableAppsForDebugging, numberOfViewsPerApp);
@@ -280,7 +280,7 @@ describe("ApplicationManagerBase", () => {
 					.catch();
 			});
 
-			it("emits debuggableViewFound when new views are available for debug", (done: mocha.Done) => {
+			it("emits debuggableViewFound when new views are available for debug", (done: jest.DoneCallback) => {
 				currentlyAvailableAppsForDebugging = createAppsAvailableForDebugging(2);
 				const numberOfViewsPerApp = 2;
 				currentlyAvailableAppWebViewsForDebugging = createDebuggableWebViews(currentlyAvailableAppsForDebugging, numberOfViewsPerApp);
@@ -320,7 +320,7 @@ describe("ApplicationManagerBase", () => {
 					.catch();
 			});
 
-			it("emits debuggableViewLost when views for debug are not available anymore", (done: mocha.Done) => {
+			it("emits debuggableViewLost when views for debug are not available anymore", (done: jest.DoneCallback) => {
 				currentlyAvailableAppsForDebugging = createAppsAvailableForDebugging(2);
 				const numberOfViewsPerApp = 2;
 				currentlyAvailableAppWebViewsForDebugging = createDebuggableWebViews(currentlyAvailableAppsForDebugging, numberOfViewsPerApp);
@@ -357,7 +357,7 @@ describe("ApplicationManagerBase", () => {
 					.catch();
 			});
 
-			it("emits debuggableViewChanged when view's property is modified (each one except id)", (done: mocha.Done) => {
+			it("emits debuggableViewChanged when view's property is modified (each one except id)", (done: jest.DoneCallback) => {
 				currentlyAvailableAppsForDebugging = createAppsAvailableForDebugging(1);
 				currentlyAvailableAppWebViewsForDebugging = createDebuggableWebViews(currentlyAvailableAppsForDebugging, 2);
 				const viewToChange = currentlyAvailableAppWebViewsForDebugging[currentlyAvailableAppsForDebugging[0].appIdentifier][0];
@@ -377,7 +377,7 @@ describe("ApplicationManagerBase", () => {
 					.catch();
 			});
 
-			it("does not emit debuggableViewChanged when id is modified", (done: mocha.Done) => {
+			it("does not emit debuggableViewChanged when id is modified", (done: jest.DoneCallback) => {
 				currentlyAvailableAppsForDebugging = createAppsAvailableForDebugging(1);
 				currentlyAvailableAppWebViewsForDebugging = createDebuggableWebViews(currentlyAvailableAppsForDebugging, 2);
 				const viewToChange = currentlyAvailableAppWebViewsForDebugging[currentlyAvailableAppsForDebugging[0].appIdentifier][0];

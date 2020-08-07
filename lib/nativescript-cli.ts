@@ -1,4 +1,4 @@
-require("./bootstrap");
+import { inje } from './bootstrap';
 
 import * as shelljs from "shelljs";
 shelljs.config.silent = true;
@@ -7,7 +7,7 @@ import { installUncaughtExceptionListener } from "./common/errors";
 import { settlePromises } from "./common/helpers";
 installUncaughtExceptionListener(process.exit.bind(process, ErrorCodes.UNCAUGHT));
 
-const logger: ILogger = $injector.resolve("logger");
+const logger: ILogger = inje.resolve("logger");
 const originalProcessOn = process.on;
 
 process.on = (event: string, listener: any): any => {

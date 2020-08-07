@@ -4,7 +4,7 @@ import { ERROR_NO_VALID_SUBCOMMAND_FORMAT } from "./constants";
 import { CommandsDelimiters } from "./constants";
 import * as _ from 'lodash';
 
-let indent = "";
+// let indent = "";
 function trace(formatStr: string, ...args: any[]) {
 	// uncomment following lines when debugging dependency injection
 	// const items: any[] = [];
@@ -15,13 +15,13 @@ function trace(formatStr: string, ...args: any[]) {
 	// console.log(util.format.apply(util, [indent + formatStr].concat(args)));
 }
 
-function pushIndent() {
-	indent += "  ";
-}
+// function pushIndent() {
+// 	indent += "  ";
+// }
 
-function popIndent() {
-	indent = indent.slice(0, -2);
-}
+// function popIndent() {
+// 	indent = indent.slice(0, -2);
+// }
 
 function forEachName(names: any, action: (name: string) => void): void {
 	if (_.isString(names)) {
@@ -365,7 +365,8 @@ export class Yok implements IInjector {
 	private resolveByName(name: string, ctorArguments?: IDictionary<any>): any {
 		if (name[0] === "$") {
 			name = name.substr(1);
-		}
+    }
+    // console.log('resolveByName:', name);
 
 		if (this.resolutionProgress[name]) {
 			throw new Error(`Cyclic dependency detected on dependency '${name}'`);
@@ -373,7 +374,7 @@ export class Yok implements IInjector {
 		this.resolutionProgress[name] = true;
 
 		trace("resolving '%s'", name);
-		pushIndent();
+		// pushIndent();
 
 		let dependency: IDependency;
 		let instance: any;
@@ -397,7 +398,7 @@ export class Yok implements IInjector {
 				instance = _.first(dependency.instances);
 			}
 		} finally {
-			popIndent();
+			// popIndent();
 			delete this.resolutionProgress[name];
 		}
 
@@ -405,10 +406,12 @@ export class Yok implements IInjector {
 	}
 
 	private resolveDependency(name: string): IDependency {
-		const module = this.modules[name];
+    const module = this.modules[name];
+    // console.log('moresolveDependency:', name);
+    // console.log('this.modules[name]:', this.modules[name]);
 		if (!module) {
 			throw new Error("unable to resolve " + name);
-		}
+    }
 
 		if (module.require) {
 			require(module.require);

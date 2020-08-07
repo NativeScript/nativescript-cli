@@ -80,7 +80,7 @@ describe("deviceLogProvider", () => {
 		assert.equal(actualFixed, expectedFixed);
 	};
 
-	before(async () => {
+	beforeAll(async () => {
 		testInjector = createTestInjector();
 		const fs = testInjector.resolve<IFileSystem>("fs");
 		const logSourceMapService = testInjector.resolve("logSourceMapService");
@@ -109,13 +109,13 @@ describe("deviceLogProvider", () => {
 				}
 			};
 
-			before(() => {
+			beforeAll(() => {
 				platform = "android";
 				deviceLogProvider.setApplicationPidForDevice(deviceIdentifier, "25038");
 			});
 
 			describe("runtime version is below 6.1.0", () => {
-				before(() => {
+				beforeAll(() => {
 					runtimeVersion = "6.0.0";
 					deviceLogProvider.setProjectDirForDevice("deviceIdentifier", "dir_with_runtime_6.0.0");
 				});
@@ -268,7 +268,7 @@ System.err: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:858)\n`)
 			});
 
 			describe("runtime version is 6.1.0 or later", () => {
-				before(() => {
+				beforeAll(() => {
 					runtimeVersion = "6.1.0";
 					deviceLogProvider.setProjectDirForDevice("deviceIdentifier", "dir_with_runtime_6.1.0");
 				});
@@ -422,7 +422,7 @@ System.err: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:858)\n`)
 		});
 
 		describe("iOS", () => {
-			before(() => {
+			beforeAll(() => {
 				platform = "ios";
 				deviceLogProvider.setProjectNameForDevice(deviceIdentifier, "appTestLogs");
 			});
@@ -432,7 +432,7 @@ System.err: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:858)\n`)
 			};
 
 			describe("runtime version is below 6.1.0", () => {
-				before(() => {
+				beforeAll(() => {
 					runtimeVersion = "6.0.0";
 					deviceLogProvider.setProjectDirForDevice("deviceIdentifier", "dir_with_runtime_6.0.0");
 				});
@@ -965,7 +965,7 @@ JS Stack:
 			});
 
 			describe("runtime version is 6.1.0 or later", () => {
-				before(() => {
+				beforeAll(() => {
 					runtimeVersion = "6.1.0";
 					// set this, so the caching in logSourceMapService will detect correct runtime
 					deviceLogProvider.setProjectDirForDevice("deviceIdentifier", "dir_with_runtime_6.1.0");

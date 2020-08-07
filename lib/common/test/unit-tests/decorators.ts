@@ -4,7 +4,7 @@ import { assert } from "chai";
 import { CacheDecoratorsTest } from "./mocks/decorators-cache";
 import { InvokeBeforeDecoratorsTest } from "./mocks/decorators-invoke-before";
 import { isPromise } from "../../helpers";
-import * as stubs from "../../../../test/stubs";
+import * as stubs from "../../../../__tests__/stubs";
 import * as sinon from "sinon";
 import { PerformanceService } from "../../../services/performance-service";
 
@@ -26,7 +26,7 @@ describe("decorators", () => {
 		$injector.register("performanceService", stubs.PerformanceService);
 	});
 
-	after(() => {
+	afterAll(() => {
 		// Make sure global $injector is clean for next tests that will be executed.
 		$injector = new Yok();
 	});
@@ -68,7 +68,7 @@ describe("decorators", () => {
 			});
 		});
 
-		it("returns Promise, which is resolved to correct value (function without arguments)", (done: mocha.Done) => {
+		it("returns Promise, which is resolved to correct value (function without arguments)", (done: jest.DoneCallback) => {
 			const expectedResult = "result";
 			$injector.register(moduleName, { propertyName: async () => expectedResult });
 			generatePublicApiFromExportedDecorator();
@@ -79,7 +79,7 @@ describe("decorators", () => {
 			}).then(done).catch(done);
 		});
 
-		it("returns Promise, which is resolved to correct value (function with arguments)", (done: mocha.Done) => {
+		it("returns Promise, which is resolved to correct value (function with arguments)", (done: jest.DoneCallback) => {
 			const expectedArgs = ["result", "result1", "result2"];
 			$injector.register(moduleName, { propertyName: async (functionArgs: string[]) => functionArgs });
 			generatePublicApiFromExportedDecorator();
@@ -90,7 +90,7 @@ describe("decorators", () => {
 			}).then(done).catch(done);
 		});
 
-		it("returns Promise, which is resolved to correct value (function returning Promise without arguments)", (done: mocha.Done) => {
+		it("returns Promise, which is resolved to correct value (function returning Promise without arguments)", (done: jest.DoneCallback) => {
 			const expectedResult = "result";
 			$injector.register(moduleName, { propertyName: async () => expectedResult });
 			generatePublicApiFromExportedDecorator();
@@ -101,7 +101,7 @@ describe("decorators", () => {
 			}).then(done).catch(done);
 		});
 
-		it("returns Promise, which is resolved to correct value (function returning Promise with arguments)", (done: mocha.Done) => {
+		it("returns Promise, which is resolved to correct value (function returning Promise with arguments)", (done: jest.DoneCallback) => {
 			const expectedArgs = ["result", "result1", "result2"];
 			$injector.register(moduleName, { propertyName: async (args: string[]) => args });
 			generatePublicApiFromExportedDecorator();
@@ -112,7 +112,7 @@ describe("decorators", () => {
 			}).then(done).catch(done);
 		});
 
-		it("rejects Promise, which is resolved to correct error (function without arguments throws)", (done: mocha.Done) => {
+		it("rejects Promise, which is resolved to correct error (function without arguments throws)", (done: jest.DoneCallback) => {
 			const expectedError = new Error("Test msg");
 			$injector.register(moduleName, { propertyName: async () => { throw expectedError; } });
 			generatePublicApiFromExportedDecorator();
@@ -125,7 +125,7 @@ describe("decorators", () => {
 			}).then(done).catch(done);
 		});
 
-		it("rejects Promise, which is resolved to correct error (function returning Promise without arguments throws)", (done: mocha.Done) => {
+		it("rejects Promise, which is resolved to correct error (function returning Promise without arguments throws)", (done: jest.DoneCallback) => {
 			const expectedError = new Error("Test msg");
 			$injector.register(moduleName, { propertyName: async () => { throw expectedError; } });
 			generatePublicApiFromExportedDecorator();
@@ -138,7 +138,7 @@ describe("decorators", () => {
 			}).then(done).catch(done);
 		});
 
-		it("returns Promises, which are resolved to correct value (function returning Promise<T>[] without arguments)", (done: mocha.Done) => {
+		it("returns Promises, which are resolved to correct value (function returning Promise<T>[] without arguments)", (done: jest.DoneCallback) => {
 			const expectedResultsArr = ["result1", "result2", "result3"];
 			$injector.register(moduleName, { propertyName: () => _.map(expectedResultsArr, async expectedResult => expectedResult) });
 			generatePublicApiFromExportedDecorator();
@@ -154,7 +154,7 @@ describe("decorators", () => {
 				.catch(done);
 		});
 
-		it("rejects Promises, which are resolved to correct error (function returning Promise<T>[] without arguments throws)", (done: mocha.Done) => {
+		it("rejects Promises, which are resolved to correct error (function returning Promise<T>[] without arguments throws)", (done: jest.DoneCallback) => {
 			const expectedErrors = [new Error("result1"), new Error("result2"), new Error("result3")];
 			$injector.register(moduleName, { propertyName: () => _.map(expectedErrors, async expectedError => { throw expectedError; }) });
 			generatePublicApiFromExportedDecorator();
@@ -175,7 +175,7 @@ describe("decorators", () => {
 			}).then(done).catch(done);
 		});
 
-		it("rejects only Promises which throw, resolves the others correctly (function returning Promise<T>[] without arguments)", (done: mocha.Done) => {
+		it("rejects only Promises which throw, resolves the others correctly (function returning Promise<T>[] without arguments)", (done: jest.DoneCallback) => {
 			const expectedResultsArr: any[] = ["result1", new Error("result2")];
 			$injector.register(moduleName, { propertyName: () => _.map(expectedResultsArr, async expectedResult => expectedResult) });
 			generatePublicApiFromExportedDecorator();
