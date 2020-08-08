@@ -1,9 +1,8 @@
 import { AndroidVirtualDevice } from '../../constants';
-import * as iconv from "iconv-lite";
 
 export class AndroidIniFileParser implements Mobile.IAndroidIniFileParser {
 	constructor(private $fs: IFileSystem) {
-		iconv.extendNodeEncodings();
+
 	}
 
 	public parseIniFile(iniFilePath: string): Mobile.IAvdInfo {

@@ -7,8 +7,8 @@ import * as shelljs from "shelljs";
 import { parseJson } from "./helpers";
 import { PACKAGE_JSON_FILE_NAME } from "../constants";
 import { EOL } from "os";
-import stringifyPackage from "stringify-package";
-import detectNewline from "detect-newline";
+import stringifyPackage = require("stringify-package");
+import detectNewline = require("detect-newline");
 
 // TODO: Add .d.ts for mkdirp module (or use it from @types repo).
 const mkdirp = require("mkdirp");

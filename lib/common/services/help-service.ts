@@ -1,6 +1,6 @@
 import * as path from "path";
 import { EOL } from "os";
-import marked from "marked";
+import marked = require("marked");
 import { CommandsDelimiters } from "../constants";
 
 interface IHtmlPageGenerationData {

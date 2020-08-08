@@ -1,4 +1,4 @@
-import * as ora from 'ora';
+const ora = require('ora');
 
 export class TerminalSpinnerService implements ITerminalSpinnerService {
 	public createSpinner(spinnerOptions: ITerminalSpinnerOptions = {}): ITerminalSpinner {

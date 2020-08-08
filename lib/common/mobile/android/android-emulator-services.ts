@@ -2,7 +2,7 @@ import { AndroidVirtualDevice } from "../../constants";
 import { getCurrentEpochTime, sleep } from "../../helpers";
 import { EOL } from "os";
 import { LoggerConfigData } from "../../../constants";
-import * as semver from "semver";
+const semver = require("semver");
 
 export class AndroidEmulatorServices implements Mobile.IEmulatorPlatformService {
 	constructor(private $androidGenymotionService: Mobile.IAndroidVirtualDeviceService,

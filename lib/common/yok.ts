@@ -1,4 +1,5 @@
 import * as path from "path";
+import * as _ from 'lodash';
 import { annotate, isPromise } from "./helpers";
 import { ERROR_NO_VALID_SUBCOMMAND_FORMAT } from "./constants";
 import { CommandsDelimiters } from "./constants";
@@ -445,4 +446,7 @@ export class Yok implements IInjector {
 	}
 }
 
-export let injector = new Yok();
+if (!global.$injector) {
+  global.$injector = new Yok(); 
+}
+export const injector = global.$injector;

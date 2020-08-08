@@ -1,4 +1,4 @@
-import byline from "byline";
+import byline = require("byline");
 import { DeviceAndroidDebugBridge } from "./device-android-debug-bridge";
 import { ChildProcess } from "child_process";
 import * as semver from "semver";
