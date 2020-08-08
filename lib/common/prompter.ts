@@ -98,7 +98,7 @@ export class Prompter implements IPrompter {
 			};
 		});
 
-		const schema: prompt.Question = {
+		const schema: any = {
 			message: promptMessage,
 			type: "list",
 			name: "userAnswer",

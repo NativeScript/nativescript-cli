@@ -1,6 +1,7 @@
 import * as path from "path";
 import { cache } from "./common/decorators";
 import { androidToolsInfo } from "nativescript-doctor";
+import { injector } from './common/yok';
 
 export class AndroidToolsInfo implements IAndroidToolsInfo {
 	constructor(private $errors: IErrors,
@@ -120,4 +121,4 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 		return targetSdk;
 	}
 }
-$injector.register("androidToolsInfo", AndroidToolsInfo);
+injector.register("androidToolsInfo", AndroidToolsInfo);

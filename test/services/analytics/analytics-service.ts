@@ -173,7 +173,7 @@ describe("analyticsService", () => {
 				const originalSetTimeout = setTimeout;
 				childProcess.spawn = (command: string, args?: string[], options?: any): any => {
 					opts.isChildProcessSpawned = true;
-					global.setTimeout = (callback: (...args: any[]) => void, ms: number, ...otherArgs: any[]) => originalSetTimeout(callback, 1);
+					(<any>global).setTimeout = (callback: (...args: any[]) => void, ms: number, ...otherArgs: any[]) => originalSetTimeout(callback, 1);
 					return getSpawnedProcess();
 				};
 

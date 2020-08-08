@@ -1,5 +1,5 @@
 import * as path from "path";
-import * as semver from "semver";
+const semver = require("semver");
 import * as constants from "./constants";
 
 export class PackageInstallationManager implements IPackageInstallationManager {

@@ -4,10 +4,12 @@ import { use } from "chai";
 shelljs.config.silent = true;
 shelljs.config.fatal = true;
 
-const cliGlobal = <ICliGlobal>global;
+const cliGlobal = <ICliGlobal><unknown>global;
 
-cliGlobal._ = require("lodash");
-cliGlobal.$injector = require("../lib/common/yok").injector;
+import * as _ from 'lodash';
+cliGlobal._ = _;
+import { injector } from '../lib/common/yok';
+cliGlobal.$injector = injector;
 
 // Requiring colors will modify the prototype of String
 // We need it as in some places we use <string>.<color>, which is undefined when colors is not required
@@ -16,16 +18,16 @@ require("colors");
 
 use(require("chai-as-promised"));
 
-$injector.register("analyticsService", {
+cliGlobal.$injector.register("analyticsService", {
 	trackException: async (exception: any, message: string): Promise<void> => {
 		// Intentionally left blank.
 	}
 });
 
 import { PerformanceService, LoggerStub } from "./stubs";
-$injector.register("logger", LoggerStub);
-$injector.register("performanceService", PerformanceService);
+cliGlobal.$injector.register("logger", LoggerStub);
+cliGlobal.$injector.register("performanceService", PerformanceService);
 
 // Converts the js callstack to typescript
-import errors = require("../lib/common/errors");
-errors.installUncaughtExceptionListener();
+import { installUncaughtExceptionListener } from "../lib/common/errors";
+installUncaughtExceptionListener();

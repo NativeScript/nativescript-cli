@@ -214,7 +214,7 @@ const nodeJsTimer = {
 
 const originalSetInterval = setInterval;
 function mockSetInterval(testCaseCallback?: Function): void {
-	global.setInterval = (callback: (...args: any[]) => void, ms: number, ...args: any[]): NodeJS.Timer => {
+	(<any>global).setInterval = (callback: (...args: any[]) => void, ms: number, ...args: any[]): any => {
 		const execution = async () => {
 			if (testCaseCallback) {
 				testCaseCallback();
@@ -1220,7 +1220,7 @@ describe("devicesService", () => {
 
 		it("should not start device detection interval if there is one running.", async () => {
 
-			global.setInterval = (callback: (...args: any[]) => void, ms: number, ...args: any[]): NodeJS.Timer => {
+			(<any>global).setInterval = (callback: (...args: any[]) => void, ms: number, ...args: any[]): any => {
 
 				const execution = async () => {
 					await callback();

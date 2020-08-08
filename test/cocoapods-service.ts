@@ -2,6 +2,7 @@ import * as yok from "../lib/common/yok";
 import { assert } from "chai";
 import { CocoaPodsService } from "../lib/services/cocoapods-service";
 import { EOL } from "os";
+import * as _ from 'lodash';
 import { LoggerStub, ErrorsStub } from "./stubs";
 import { XcconfigService } from "../lib/services/xcconfig-service";
 import * as path from "path";

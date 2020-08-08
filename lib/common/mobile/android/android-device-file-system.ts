@@ -1,5 +1,5 @@
 import * as path from "path";
-import * as semver from "semver";
+const semver = require("semver");
 import { AndroidDeviceHashService } from "./android-device-hash-service";
 import { executeActionByChunks } from "../../helpers";
 import { DEFAULT_CHUNK_SIZE } from '../../constants';

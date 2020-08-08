@@ -369,9 +369,9 @@ describe("AndroidLivesyncTool", () => {
 					const filePath = path.join(testAppPlatformPath, rootJsFilePath);
 					const errorMessage = "Some error";
 					await livesyncTool.sendFile(filePath);
-					sandbox.stub(testSocket, "writeAsync").callsFake((data) => {
+					sandbox.stub(testSocket, "writeAsync").callsFake((data: Buffer) => {
 						testSocket.emit('data', getSyncResponse(AndroidLivesyncTool.ERROR_REPORT, errorMessage));
-						return Promise.resolve();
+						return Promise.resolve(false);
 					});
 
 					//act

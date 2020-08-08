@@ -133,9 +133,9 @@ export function performanceLog(injector?: IInjector): any {
 
 // inspired by https://github.com/NativeScript/NativeScript/blob/55dfe25938569edbec89255008e5ad9804901305/tns-core-modules/globals/globals.ts#L121-L137
 export function deprecated(additionalInfo?: string, injector?: IInjector): any {
-	const isDeprecatedMessage = " is deprecated.";
+  const isDeprecatedMessage = " is deprecated.";
 	return (target: Object, key: string, descriptor: TypedPropertyDescriptor<any>): TypedPropertyDescriptor<any> => {
-		injector = injector || $injector;
+    injector = injector || $injector;
 		additionalInfo = additionalInfo || "";
 		const $logger = <ILogger>injector.resolve("logger");
 		if (descriptor) {

@@ -47,7 +47,7 @@ export class LogSourceMapService implements Mobile.ILogSourceMapService {
 			if (!this.$fs.getFsStats(filePath).isDirectory()) {
 				const source = this.$fs.readText(filePath);
 				const sourceMapRaw = sourceMapConverter.fromSource(source);
-				let smc: sourcemap.SourceMapConsumer = null;
+				let smc: any = null;
 				if (sourceMapRaw && sourceMapRaw.sourcemap) {
 					const sourceMap = sourceMapRaw.sourcemap;
 					smc = new sourcemap.SourceMapConsumer(sourceMap);

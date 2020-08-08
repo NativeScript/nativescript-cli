@@ -28,7 +28,6 @@ export class ProjectDataService implements IProjectDataService {
 		private $logger: ILogger,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
     private $androidResourcesMigrationService: IAndroidResourcesMigrationService,
-    private $pluginService: IPluginsService,
 		private $injector: IInjector) {
 		try {
 			// add the ProjectData of the default projectDir to the projectData cache
@@ -39,7 +38,11 @@ export class ProjectDataService implements IProjectDataService {
 		} catch (e) {
 			// the CLI is required as a lib from a non-project folder
 		}
-	}
+  }
+  
+  get $pluginsService(): IPluginsService {
+    return this.$injector.resolve("pluginsService");
+  }
 
 	public getNSValue(projectDir: string, propertyName: string): any {
 		return this.getValue(projectDir, this.getNativeScriptPropertyName(propertyName));
@@ -402,7 +405,7 @@ export class ProjectDataService implements IProjectDataService {
   }
   
   public getRuntimePackage(projectDir: string, platform: SupportedPlatform): IBasePluginData {
-    return this.$pluginService.getDependenciesFromPackageJson(projectDir).devDependencies.find(d => {
+    return this.$pluginsService.getDependenciesFromPackageJson(projectDir).devDependencies.find(d => {
       if (platform === Platforms.ios) {
         return [constants.SCOPED_IOS_RUNTIME_NAME, constants.TNS_IOS_RUNTIME_NAME].includes(d.name);
       } else if (platform === Platforms.android) {

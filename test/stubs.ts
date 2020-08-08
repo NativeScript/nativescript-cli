@@ -562,7 +562,14 @@ export class ProjectDataService implements IProjectDataService {
 
 	getAppExecutableFiles(projectDir: string): string[] {
 		return [];
-	}
+  }
+  
+  getRuntimePackage(projectDir: string, platform: SupportedPlatform): IBasePluginData {
+    return {
+      version: '7.0.0',
+      name: `@nativescript/${platform}`
+    };
+  }
 
 	getNSValueFromContent(): any { }
 }

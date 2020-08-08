@@ -35,7 +35,7 @@ function createTestInjector(
 	testInjector.register("fs", stubs.FileSystemStub);
 	testInjector.register("platformCommandHelper", {
 		getCurrentPlatformVersion: () => {
-			return "5.2.0";
+			return "7.0.0";
 		}
 	});
 
@@ -134,10 +134,10 @@ describe("update controller method tests", () => {
 					projectDir,
 					projectType,
 					dependencies: {
-						"tns-core-modules": "0.1.0",
+						"@nativescript/core": "~7.0.0",
 					},
 					devDependencies: {
-						"@nativescript/webpack": "1.1.3"
+						"@nativescript/webpack": "~2.1.0"
 					}
 				};
 			};
@@ -157,12 +157,12 @@ describe("update controller method tests", () => {
 
 				return {
 					dependencies: {
-						"tns-core-modules": "1.0.0",
+						"@nativescript/core": "~7.0.0",
 						"dep2": "1.1.0"
 					},
 					devDependencies: {
 						"devDep1": "1.2.0",
-						"@nativescript/webpack": "1.3.0"
+						"@nativescript/webpack": "~2.1.0"
 					},
 					name: "template1"
 				};
@@ -190,10 +190,10 @@ describe("update controller method tests", () => {
 
 			assert.deepEqual(dataAddedToPackageJson, {
 				dependencies: {
-					"tns-core-modules": "1.0.0",
+					"@nativescript/core": "~7.0.0",
 				},
 				devDependencies: {
-					"@nativescript/webpack": "1.3.0"
+					"@nativescript/webpack": "~2.1.0"
 				}
 			});
 		});

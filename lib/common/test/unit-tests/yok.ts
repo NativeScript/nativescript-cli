@@ -462,7 +462,7 @@ describe("yok", () => {
 
 	it("overrides module when it is required more than once and overrideAlreadyRequiredModule is true", () => {
 		const injector = new Yok();
-		const cliGlobal = <ICliGlobal>global;
+		const cliGlobal = <ICliGlobal><unknown>global;
 		const injectorCache = cliGlobal.$injector;
 		cliGlobal.$injector = injector;
 		const tmpPathA = temp.path({ prefix: "overrideAlreadyRequiredModule_fileA" });
@@ -516,7 +516,7 @@ $injector.register("a", A);
 			// The file is created in temp dir, but this requires modification of the import statements in it.
 			// Also we have to modify the global $injector, so when the file is required, the $injector.register... will be the same injector that we are testing.
 			const injector = new Yok();
-			const cliGlobal = <ICliGlobal>global;
+			const cliGlobal = <ICliGlobal><unknown>global;
 			const injectorCache = cliGlobal.$injector;
 			cliGlobal.$injector = injector;
 
