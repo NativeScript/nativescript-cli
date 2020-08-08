@@ -62,7 +62,12 @@ describe('androidPluginBuildService', () => {
 		hasChangesInShasums?: boolean
 	}): void {
 		const testInjector: IInjector = new stubs.InjectorStub();
-		testInjector.register("fs", FsLib.FileSystem);
+    testInjector.register("fs", FsLib.FileSystem);
+    testInjector.register('platformsDataService', {
+      getPlatformData: (platform: string, data: any) => {
+        return {}
+      }
+    });
 		testInjector.register("childProcess", {
 			spawnFromEvent: async (command: string): Promise<ISpawnResult> => {
 				const finalAarName = `${shortPluginName}-release.aar`;
@@ -71,7 +76,8 @@ describe('androidPluginBuildService', () => {
 				spawnFromEventCalled = command.indexOf("gradlew") !== -1;
 				return null;
 			}
-		});
+    });
+    
 		testInjector.register('packageManager', setupNpm(options));
 		testInjector.register('filesHashService', <IFilesHashService>{
 			generateHashes: async (files: string[]): Promise<IStringDictionary> => ({}),
@@ -277,7 +283,7 @@ dependencies {
 		});
 
 		it('builds aar with the latest runtime gradle versions when no project dir is specified', async () => {
-			const expectedGradleVersion = "1.2.3";
+			const expectedGradleVersion = "4.4";
 			const expectedAndroidVersion = "4.5.6";
 			const config: IPluginBuildOptions = setup({
 				addManifest: true,

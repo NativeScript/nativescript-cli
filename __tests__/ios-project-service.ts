@@ -5,7 +5,6 @@ import * as ConfigLib from "../src/config";
 import * as ErrorsLib from "../src/common/errors";
 import * as FileSystemLib from "../src/common/file-system";
 import * as HostInfoLib from "../src/common/host-info";
-import * as iOSProjectServiceLib from "../src/services/ios-project-service";
 import { IOSProjectService } from "../src/services/ios-project-service";
 import { IOSEntitlementsService } from "../src/services/ios-entitlements-service";
 import { XcconfigService } from "../src/services/xcconfig-service";
@@ -69,7 +68,7 @@ function createTestInjector(projectPath: string, projectName: string, xCode?: IX
 	testInjector.register("injector", testInjector);
 	testInjector.register("iOSEmulatorServices", {});
 	testInjector.register("cocoapodsService", CocoaPodsService);
-	testInjector.register("iOSProjectService", iOSProjectServiceLib.IOSProjectService);
+	testInjector.register("iOSProjectService", IOSProjectService);
 	testInjector.register("iOSProvisionService", {});
 	testInjector.register("xcconfigService", XcconfigService);
 	testInjector.register("iOSEntitlementsService", IOSEntitlementsService);
@@ -98,7 +97,14 @@ function createTestInjector(projectPath: string, projectName: string, xCode?: IX
 	testInjector.register("projectHelper", {});
 	testInjector.register("xcodeSelectService", {});
 	testInjector.register("staticConfig", ConfigLib.StaticConfig);
-	testInjector.register("projectDataService", {});
+	testInjector.register("projectDataService", {
+    getRuntimePackage(name: string, platform: string) {
+      return {
+        name: 'runtime',
+        version: '7.0.0'
+      }
+    }
+  });
 	testInjector.register("prompter", {});
 	testInjector.register("devicePlatformsConstants", { iOS: "iOS" });
 	testInjector.register("devicesService", DevicesService);

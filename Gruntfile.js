@@ -48,12 +48,12 @@ module.exports = function (grunt) {
 			},
 
 			devall: {
-				src: ["src/**/*.ts", "test/**/*.ts", "!src/common/node_modules/**/*.ts", "src/common/test/unit-tests/**/*.ts", "definitions/**/*.ts", "!src/common/test/.d.ts"],
+				src: ["src/**/*.ts", "__tests__/**/*.ts", "!src/common/node_modules/**/*.ts", "src/common/test/unit-tests/**/*.ts", "definitions/**/*.ts", "!src/common/test/.d.ts"],
 				reference: "src/.d.ts"
 			},
 
 			release_build: {
-				src: ["src/**/*.ts", "test/**/*.ts", "!src/common/node_modules/**/*.ts"],
+				src: ["src/**/*.ts", "__tests__/**/*.ts", "!src/common/node_modules/**/*.ts"],
 				reference: "src/.d.ts",
 				options: {
 					sourceMap: false,
@@ -64,7 +64,7 @@ module.exports = function (grunt) {
 
 		watch: {
 			devall: {
-				files: ["src/**/*.ts", 'test/**/*.ts', "!src/common/node_modules/**/*.ts", "!src/common/messages/**/*.ts"],
+				files: ["src/**/*.ts", '__tests__/**/*.ts', "!src/common/node_modules/**/*.ts", "!src/common/messages/**/*.ts"],
 				tasks: [
 					'ts:devall',
 					'shell:npm_test'
@@ -75,7 +75,7 @@ module.exports = function (grunt) {
 				}
 			},
 			ts: {
-				files: ["src/**/*.ts", 'test/**/*.ts', "!src/common/node_modules/**/*.ts"],
+				files: ["src/**/*.ts", '__tests__/**/*.ts', "!src/common/node_modules/**/*.ts"],
 				tasks: [
 					'ts:devall'
 				],
@@ -113,8 +113,8 @@ module.exports = function (grunt) {
 		},
 
 		clean: {
-			src: ["test/**/*.js*",
-				"!test/files/**/*.js*",
+			src: ["__tests__/**/*.js*",
+				"!__tests__/files/**/*.js*",
 				"src/**/*.js*",
 				"!test-scripts/**/*",
 				"!src/common/vendor/*.js",

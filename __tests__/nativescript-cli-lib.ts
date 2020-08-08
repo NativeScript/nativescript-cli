@@ -8,7 +8,7 @@ describe("nativescript-cli-src", () => {
 	it("is main entry of the package", () => {
 		const packageJsonContent = fs.readFileSync(path.join(__dirname, "..", "package.json")).toString();
 		const jsonContent = JSON.parse(packageJsonContent);
-		const expectedEntryPoint = "./src/nativescript-cli-src.js";
+		const expectedEntryPoint = "./src/nativescript-cli-lib.js";
 		assert.deepEqual(jsonContent.main, expectedEntryPoint);
 	});
 
@@ -78,7 +78,7 @@ describe("nativescript-cli-src", () => {
 		]
 	};
 
-	const pathToEntryPoint = path.join(__dirname, "..", "src", "nativescript-cli-src.js").replace(/\\/g, "\\\\");
+	const pathToEntryPoint = path.join(__dirname, "..", "src", "nativescript-cli-lib.js").replace(/\\/g, "\\\\");
 
 	_.each(publicApi, (methods: string[], moduleName: string) => {
 

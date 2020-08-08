@@ -7,14 +7,14 @@ import * as shelljs from "shelljs";
 import { parseJson } from "./helpers";
 import { PACKAGE_JSON_FILE_NAME } from "../constants";
 import { EOL } from "os";
-import stringifyPackage from "stringify-package";
+// const stringifyPackage = require("stringify-package").default;
 import detectNewline from "detect-newline";
 import { IFileSystem, IFsStats, IReadFileOptions } from "./declarations";
 
 import * as _ from "lodash";
 
 // TODO: Add .d.ts for mkdirp module (or use it from @types repo).
-const mkdirp = require("mkdirp");
+import { sync as mkdirSync } from "mkdirp";
 
 @injector.register("fs")
 export class FileSystem implements IFileSystem {
@@ -171,7 +171,7 @@ export class FileSystem implements IFileSystem {
 	}
 
 	public createDirectory(path: string): void {
-		mkdirp.sync(path);
+		mkdirSync(path);
 	}
 
 	public readDirectory(path: string): string[] {
@@ -230,7 +230,8 @@ export class FileSystem implements IFileSystem {
 				const existingFile = this.readText(filename);
 				newline = detectNewline(existingFile);
 			}
-			stringifiedData = stringifyPackage(data, space, newline);
+      // stringifiedData = stringifyPackage(data, space, newline);
+      stringifiedData = JSON.stringify(data, null, newline);
 		} else {
 			stringifiedData = JSON.stringify(data, null, space);
 		}

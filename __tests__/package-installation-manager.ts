@@ -36,7 +36,8 @@ function createTestInjector(): IInjector {
 	testInjector.register("settingsService", SettingsService);
 	testInjector.register("projectDataService", ProjectDataService);
 	testInjector.register("devicePlatformsConstants", {});
-	testInjector.register("androidResourcesMigrationService", {});
+  testInjector.register("androidResourcesMigrationService", {});
+  testInjector.register("pluginService", {});
 
 	testInjector.register("httpClient", {});
 	testInjector.register("pacoteService", {

@@ -19,7 +19,8 @@ function createTestInjector(): IInjector {
 	testInjector.register("projectNameService", ProjectNameService);
 	testInjector.register("projectNameValidator", mockProjectNameValidator);
 	testInjector.register("errors", ErrorsStub);
-	testInjector.register("logger", LoggerStub);
+  testInjector.register("logger", LoggerStub);
+  testInjector.register("pluginService", {});
 	testInjector.register("prompter", {
 		confirm: (message: string): Promise<boolean> => Promise.resolve(true),
 		getString: (message: string): Promise<string> => Promise.resolve(dummyString)

@@ -72,7 +72,8 @@ function createTestInjector() {
 	});
 	testInjector.register("createCommand", CreateProjectCommand);
 	testInjector.register("stringParameter", StringCommandParameter);
-	testInjector.register("prompter", PrompterStub);
+  testInjector.register("prompter", PrompterStub);
+  testInjector.register("settingsService", {});
 
 	return testInjector;
 }

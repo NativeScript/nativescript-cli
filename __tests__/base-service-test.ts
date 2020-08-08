@@ -16,3 +16,10 @@ export abstract class BaseServiceTest {
 		return this.injector.resolve(name);
 	}
 }
+
+describe("Base test", function() {
+  it("is defined", function() {
+    expect(BaseServiceTest).toBeDefined();
+  });
+});
+

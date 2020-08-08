@@ -48,7 +48,9 @@ export class PluginsService implements IPluginsService {
 		private $errors: IErrors,
 		private $filesHashService: IFilesHashService,
 		private $mobileHelper: Mobile.IMobileHelper,
-		private $nodeModulesDependenciesBuilder: INodeModulesDependenciesBuilder) { }
+    private $nodeModulesDependenciesBuilder: INodeModulesDependenciesBuilder,
+    $projectDataService: IProjectDataService
+    ) {}
 
 	public async add(plugin: string, projectData: IProjectData): Promise<void> {
 		await this.ensure(projectData);

@@ -1,5 +1,6 @@
 
 
-require("./nativescript-cli-lib-bootstrap");
+import { bootstrapCliLib } from './nativescript-cli-lib-bootstrap';
 
-module.exports = $injector.publicApi;
+const injector = bootstrapCliLib();
+export const publicApi = injector.publicApi;

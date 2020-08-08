@@ -59,7 +59,7 @@ const releaseBuildConfig = {
 };
 
 describe("GradleBuildArgsService", () => {
-	describe("getBuildTaskArgs", async () => {
+	it("getBuildTaskArgs", async () => {
 		const testCases = [
 			{
 				name: "should return correct args for debug build with info log",
@@ -114,7 +114,7 @@ describe("GradleBuildArgsService", () => {
 		await executeTests(testCases, (gradleBuildArgsService: IGradleBuildArgsService, buildData: IAndroidBuildData) => gradleBuildArgsService.getBuildTaskArgs(buildData));
 	});
 
-	describe("getCleanTaskArgs", async () => {
+	it("getCleanTaskArgs", async () => {
 		const testCases = [
 			{
 				name: "should return correct args for debug clean build with info log",

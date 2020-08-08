@@ -413,9 +413,8 @@ export class Yok implements IInjector {
 
 	private resolveDependency(name: string): IDependency {
 		const module = this.modules[name];
-		// console.log('moresolveDependency:', name);
-		// console.log('this.modules[name]:', this.modules[name]);
 		if (!module) {
+      console.log(name, this.modules[name]);
 			throw new Error("unable to resolve " + name);
 		}
 

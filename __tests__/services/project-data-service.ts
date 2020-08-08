@@ -11,6 +11,7 @@ import { IAssetGroup, IProjectDataService } from "../../src/definitions/project"
 import { IInjector } from "../../src/common/definitions/yok";
 import { IFileSystem, IFsStats, IReadFileOptions } from "../../src/common/declarations";
 import * as _ from "lodash";
+import { PluginsService } from "../../src/services/plugins-service";
 
 const CLIENT_NAME_KEY_IN_PROJECT_FILE = "nativescript";
 
@@ -80,7 +81,9 @@ const createTestInjector = (packageJsonContent?: string, nsConfigContent?: strin
 	testInjector.register("logger", LoggerStub);
 	testInjector.register("markingModeService", MarkingModeServiceStub);
 
-	testInjector.register("projectDataService", ProjectDataService);
+  testInjector.register("projectDataService", ProjectDataService);
+  
+  testInjector.register("pluginService", PluginsService);
 
 	testInjector.register("androidResourcesMigrationService", {
 		hasMigrated: (appResourcesDir: string): boolean => true

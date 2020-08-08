@@ -96,7 +96,7 @@ function createTestInjector() {
 	testInjector.register("hostInfo", HostInfo);
 	testInjector.register("projectHelper", ProjectHelper);
 
-	testInjector.register("pluginsService", PluginsService);
+	testInjector.register("pluginService", PluginsService);
 	testInjector.register("analyticsService", {
 		trackException: () => { return Promise.resolve(); },
 		checkConsent: () => { return Promise.resolve(); },
@@ -927,7 +927,7 @@ This framework comes from nativescript-ui-core plugin, which is installed multip
 
 		it(`caches result based on dependencies`, () => {
 			const unitTestsInjector: IInjector = createUnitTestsInjector();
-			const pluginsService: IPluginsService = unitTestsInjector.resolve(PluginsService);
+			const pluginsService: IPluginsService = unitTestsInjector.resolve('pluginService');
 			const inputDependencies = [
 				{
 					"name": "nativescript-ui-core",

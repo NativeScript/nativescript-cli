@@ -1,6 +1,7 @@
-/// <reference path="../src/common/definitions/cli-global.d.ts" />
+
 import * as shelljs from "shelljs";
 import { use } from "chai";
+import { ICliGlobal } from "../src/common/definitions/cli-global";
 
 shelljs.config.silent = true;
 shelljs.config.fatal = true;
@@ -32,5 +33,4 @@ cliGlobal.$injector.register("performanceService", PerformanceService);
 
 // Converts the js callstack to typescript
 import { installUncaughtExceptionListener } from "../src/common/errors";
-import { ICliGlobal } from "../src/common/definitions/cli-global";
 installUncaughtExceptionListener();

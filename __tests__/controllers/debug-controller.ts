@@ -71,7 +71,8 @@ const getDefaultTestData = (platform?: string): IDebugTestData => ({
 
 describe("debugController", () => {
 	const getTestInjectorForTestConfiguration = (testData: IDebugTestData): IInjector => {
-		const testInjector = new Yok();
+    const testInjector = new Yok();
+    testInjector.register("fs", {});
 		testInjector.register("devicesService", {
 			getDeviceByIdentifier: (identifier: string): Mobile.IDevice => {
 				return testData.isDeviceFound ?
@@ -87,9 +88,9 @@ describe("debugController", () => {
 			}
 		});
 
-		testInjector.register("androidDeviceDebugService", PlatformDebugService);
+		testInjector.register("androidDeviceDebugService", new PlatformDebugService());
 
-		testInjector.register("iOSDeviceDebugService", PlatformDebugService);
+		testInjector.register("iOSDeviceDebugService", new PlatformDebugService());
 
 		testInjector.register("mobileHelper", {
 			isAndroidPlatform: (platform: string) => {
@@ -119,12 +120,11 @@ describe("debugController", () => {
 		testInjector.register("hooksService", {});
 		testInjector.register("liveSyncServiceResolver", LiveSyncServiceResolver);
 		testInjector.register("platformsDataService", {});
-		testInjector.register("pluginsService", {});
+		testInjector.register("pluginService", {});
 		testInjector.register("prepareController", {});
 		testInjector.register("prepareDataService", PrepareDataService);
 		testInjector.register("prepareNativePlatformService", {});
 		testInjector.register("projectDataService", ProjectDataService);
-		testInjector.register("fs", {});
 		testInjector.register("staticConfig", StaticConfig);
 		testInjector.register("devicePlatformsConstants", DevicePlatformsConstants);
 		testInjector.register("androidResourcesMigrationService", {});
@@ -183,7 +183,7 @@ describe("debugController", () => {
 				const testData = getDefaultTestData();
 				testData.deviceInformation.deviceInfo.platform = platform;
 
-				const testInjector = getTestInjectorForTestConfiguration(testData);
+        const testInjector = getTestInjectorForTestConfiguration(testData);
 				const expectedErrorMessage = "Platform specific error";
 				const platformDebugService = testInjector.resolve<IDeviceDebugService>(`${platform}DeviceDebugService`);
 				platformDebugService.debug = async (data: IDebugData, debugOptions: IDebugOptions): Promise<any> => {
