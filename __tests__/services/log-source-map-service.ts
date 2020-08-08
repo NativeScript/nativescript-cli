@@ -36,7 +36,7 @@ function createTestInjector(): IInjector {
 		getPlatformData: (platform: string) => {
 			return {
 				appDestinationDirectoryPath: path.join(__dirname, "..", "files", "sourceMapBundle", platform.toLowerCase()),
-				frameworkPackageName: `tns-${platform.toLowerCase()}`
+				frameworkPackageName: `@nativescript/${platform.toLowerCase()}`
 			};
 		}
 	});
@@ -115,7 +115,7 @@ describe("log-source-map-service", () => {
 		let logSourceMapService: Mobile.ILogSourceMapService;
 		let testInjector: IInjector;
 		beforeEach(async () => {
-			runtimeVersion = "6.0.0";
+			runtimeVersion = "7.0.0";
 			testInjector = createTestInjector();
 			logSourceMapService = testInjector.resolve("logSourceMapService");
 			const originalFilesLocation = path.join(__dirname, "..", "files", "sourceMapBundle");

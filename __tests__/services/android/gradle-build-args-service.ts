@@ -29,19 +29,23 @@ function createTestInjector(): IInjector {
 
 async function executeTests(testCases: any[], testFunction: (gradleBuildArgsService: IGradleBuildArgsService, buildData: IAndroidBuildData) => Promise<string[]>) {
 	for (const testCase of testCases) {
-		it(testCase.name, async () => {
-			const injector = createTestInjector();
-			if (testCase.logLevel) {
-				const logger = injector.resolve("logger");
-				logger.getLevel = () => testCase.logLevel;
-			}
-
-			const gradleBuildArgsService = injector.resolve("gradleBuildArgsService");
-			const args = await testFunction(gradleBuildArgsService, testCase.buildConfig);
-
-			assert.deepEqual(args, testCase.expectedResult);
-		});
+		executeTestCase(testCase, testFunction);
 	}
+}
+
+async function executeTestCase(testCase: any, testFunction: (gradleBuildArgsService: IGradleBuildArgsService, buildData: IAndroidBuildData) => Promise<string[]>) {
+  it(testCase.name, async () => {
+    const injector = createTestInjector();
+    if (testCase.logLevel) {
+      const logger = injector.resolve("logger");
+      logger.getLevel = () => testCase.logLevel;
+    }
+
+    const gradleBuildArgsService = injector.resolve("gradleBuildArgsService");
+    const args = await testFunction(gradleBuildArgsService, testCase.buildConfig);
+
+    assert.deepEqual(args, testCase.expectedResult);
+  });
 }
 const ksPath = temp.path({ prefix: "ksPath" });
 const expectedInfoLoggingArgs = ["--quiet"];
