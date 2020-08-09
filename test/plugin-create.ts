@@ -208,7 +208,7 @@ describe("Plugin create command tests", () => {
 			let projectPath: string;
 
 			beforeEach(() => {
-				sandbox = sinon.sandbox.create();
+				sandbox = sinon.createSandbox();
 				const workingPath = temp.mkdirSync("test_plugin");
 				options.path = workingPath;
 				projectPath = path.join(workingPath, dummyProjectName);

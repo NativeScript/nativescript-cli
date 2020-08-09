@@ -67,7 +67,7 @@ describe("androidProjectService", () => {
 	let sandbox: sinon.SinonSandbox = null;
 
 	beforeEach(() => {
-		sandbox = sinon.sandbox.create();
+		sandbox = sinon.createSandbox();
 		injector = createTestInjector();
 		androidProjectService = injector.resolve("androidProjectService");
 	});
