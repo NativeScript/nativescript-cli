@@ -13,7 +13,9 @@ export class UpdateController extends UpdateControllerBase implements IUpdateCon
 	static readonly updatableDependencies: IPackage[] = [
 		{ name: constants.SCOPED_TNS_CORE_MODULES, alias: constants.TNS_CORE_MODULES_NAME },
 		{ name: constants.TNS_CORE_MODULES_NAME },
-		{ name: constants.TNS_CORE_MODULES_WIDGETS_NAME },
+    { name: constants.TNS_CORE_MODULES_WIDGETS_NAME },
+    { name: constants.SCOPED_IOS_RUNTIME_NAME, alias: constants.TNS_IOS_RUNTIME_NAME, isDev: true },
+		{ name: constants.SCOPED_ANDROID_RUNTIME_NAME, alias: constants.TNS_ANDROID_RUNTIME_NAME, isDev: true },
 		{ name: constants.WEBPACK_PLUGIN_NAME, isDev: true }];
 	static readonly folders: string[] = [
 		constants.LIB_DIR_NAME,

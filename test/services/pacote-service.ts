@@ -2,7 +2,7 @@ import { Yok } from "../../lib/common/yok";
 import { assert } from "chai";
 import { PacoteService } from '../../lib/services/pacote-service';
 import { LoggerStub } from "../stubs";
-import { sandbox, SinonSandbox, SinonStub } from "sinon";
+import * as sinon from "sinon";
 import { EventEmitter } from "events";
 import { NpmConfigService } from "../../lib/services/npm-config-service";
 
@@ -91,15 +91,15 @@ class MockStream extends EventEmitter {
 describe("pacoteService", () => {
 	const manifestResult: any = {};
 	const manifestOptions: IPacoteManifestOptions = { fullMetadata: true };
-	let sandboxInstance: SinonSandbox = null;
-	let manifestStub: SinonStub = null;
-	let tarballStreamStub: SinonStub = null;
-	let tarXStub: SinonStub = null;
+	let sandboxInstance: sinon.SinonSandbox = null;
+	let manifestStub: sinon.SinonStub = null;
+	let tarballStreamStub: sinon.SinonStub = null;
+	let tarXStub: sinon.SinonStub = null;
 	let tarballSourceStream: MockStream = null;
 	let tarExtractDestinationStream: MockStream = null;
 
 	beforeEach(() => {
-		sandboxInstance = sandbox.create();
+		sandboxInstance = sinon.createSandbox();
 		manifestStub = sandboxInstance.stub(pacote, "manifest").returns(Promise.resolve(manifestResult));
 		tarballSourceStream = new MockStream();
 		tarballStreamStub = sandboxInstance.stub(pacote.tarball, "stream").returns(tarballSourceStream);

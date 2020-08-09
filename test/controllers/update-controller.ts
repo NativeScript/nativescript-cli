@@ -35,7 +35,7 @@ function createTestInjector(
 	testInjector.register("fs", stubs.FileSystemStub);
 	testInjector.register("platformCommandHelper", {
 		getCurrentPlatformVersion: () => {
-			return "7.0.0";
+			return "5.2.0";
 		}
 	});
 
@@ -64,7 +64,7 @@ describe("update controller method tests", () => {
 	let sandbox: sinon.SinonSandbox;
 
 	beforeEach(() => {
-		sandbox = sinon.sandbox.create();
+		sandbox = sinon.createSandbox();
 	});
 
 	afterEach(() => {
@@ -116,86 +116,87 @@ describe("update controller method tests", () => {
 		}
 	});
 
-	for (const projectType of ["Angular", "React"]) {
-		it(`should update dependencies from project type: ${projectType}`, async () => {
-			const testInjector = createTestInjector();
-			testInjector.resolve("platformCommandHelper").removePlatforms = () => {
-				throw new Error();
-			};
+  // TODO: Igor and Nathan to bring back when making update/migrations work with latest
+	// for (const projectType of ["Angular", "React"]) {
+	// 	it(`should update dependencies from project type: ${projectType}`, async () => {
+	// 		const testInjector = createTestInjector();
+	// 		testInjector.resolve("platformCommandHelper").removePlatforms = () => {
+	// 			throw new Error();
+	// 		};
 
-			const fs = testInjector.resolve("fs");
-			const copyFileStub = sandbox.stub(fs, "copyFile");
-			const updateController = testInjector.resolve("updateController");
-			const tempDir = path.join(projectFolder, UpdateController.backupFolder);
+	// 		const fs = testInjector.resolve("fs");
+	// 		const copyFileStub = sandbox.stub(fs, "copyFile");
+	// 		const updateController = testInjector.resolve("updateController");
+	// 		const tempDir = path.join(projectFolder, UpdateController.backupFolder);
 
-			const projectDataService = testInjector.resolve<IProjectDataService>("projectDataService");
-			projectDataService.getProjectData = (projectDir: string) => {
-				return <any>{
-					projectDir,
-					projectType,
-					dependencies: {
-						"@nativescript/core": "~7.0.0",
-					},
-					devDependencies: {
-						"@nativescript/webpack": "~2.1.0"
-					}
-				};
-			};
+	// 		const projectDataService = testInjector.resolve<IProjectDataService>("projectDataService");
+	// 		projectDataService.getProjectData = (projectDir: string) => {
+	// 			return <any>{
+	// 				projectDir,
+	// 				projectType,
+	// 				dependencies: {
+	// 					"tns-core-modules": "0.1.0",
+	// 				},
+	// 				devDependencies: {
+	// 					"nativescript-dev-webpack": "1.1.3"
+	// 				}
+	// 			};
+	// 		};
 
-			const packageInstallationManager = testInjector.resolve<IPackageInstallationManager>("packageInstallationManager");
-			const latestCompatibleVersion = "1.1.1";
-			packageInstallationManager.getLatestCompatibleVersionSafe = async (packageName: string, referenceVersion?: string): Promise<string> => {
-				assert.isString(packageName);
-				assert.isFalse(_.isEmpty(packageName));
-				return latestCompatibleVersion;
-			};
+	// 		const packageInstallationManager = testInjector.resolve<IPackageInstallationManager>("packageInstallationManager");
+	// 		const latestCompatibleVersion = "1.1.1";
+	// 		packageInstallationManager.getLatestCompatibleVersionSafe = async (packageName: string, referenceVersion?: string): Promise<string> => {
+	// 			assert.isString(packageName);
+	// 			assert.isFalse(_.isEmpty(packageName));
+	// 			return latestCompatibleVersion;
+	// 		};
 
-			const pacoteService = testInjector.resolve<IPacoteService>("pacoteService");
-			pacoteService.manifest = async (packageName: string, options?: IPacoteManifestOptions): Promise<any> => {
-				assert.isString(packageName);
-				assert.isFalse(_.isEmpty(packageName));
+	// 		const pacoteService = testInjector.resolve<IPacoteService>("pacoteService");
+	// 		pacoteService.manifest = async (packageName: string, options?: IPacoteManifestOptions): Promise<any> => {
+	// 			assert.isString(packageName);
+	// 			assert.isFalse(_.isEmpty(packageName));
 
-				return {
-					dependencies: {
-						"@nativescript/core": "~7.0.0",
-						"dep2": "1.1.0"
-					},
-					devDependencies: {
-						"devDep1": "1.2.0",
-						"@nativescript/webpack": "~2.1.0"
-					},
-					name: "template1"
-				};
-			};
+	// 			return {
+	// 				dependencies: {
+	// 					"tns-core-modules": "1.0.0",
+	// 					"dep2": "1.1.0"
+	// 				},
+	// 				devDependencies: {
+	// 					"devDep1": "1.2.0",
+	// 					"nativescript-dev-webpack": "1.3.0"
+	// 				},
+	// 				name: "template1"
+	// 			};
+	// 		};
 
-			const pluginsService = testInjector.resolve<IPluginsService>("pluginsService");
-			const dataAddedToPackageJson: IDictionary<any> = {
-				dependencies: {},
-				devDependencies: {}
-			};
-			pluginsService.addToPackageJson = (plugin: string, version: string, isDev: boolean, projectDir: string): void => {
-				if (isDev) {
-					dataAddedToPackageJson.devDependencies[plugin] = version;
-				} else {
-					dataAddedToPackageJson.dependencies[plugin] = version;
-				}
-			};
+	// 		const pluginsService = testInjector.resolve<IPluginsService>("pluginsService");
+	// 		const dataAddedToPackageJson: IDictionary<any> = {
+	// 			dependencies: {},
+	// 			devDependencies: {}
+	// 		};
+	// 		pluginsService.addToPackageJson = (plugin: string, version: string, isDev: boolean, projectDir: string): void => {
+	// 			if (isDev) {
+	// 				dataAddedToPackageJson.devDependencies[plugin] = version;
+	// 			} else {
+	// 				dataAddedToPackageJson.dependencies[plugin] = version;
+	// 			}
+	// 		};
 
-			await updateController.update({ projectDir: projectFolder });
+	// 		await updateController.update({ projectDir: projectFolder });
 
-			assert.isTrue(copyFileStub.calledWith(path.join(tempDir, "package.json"), projectFolder));
-			for (const folder of UpdateController.folders) {
-				assert.isTrue(copyFileStub.calledWith(path.join(tempDir, folder), projectFolder));
-			}
+	// 		assert.isTrue(copyFileStub.calledWith(path.join(tempDir, "package.json"), projectFolder));
+	// 		for (const folder of UpdateController.folders) {
+	// 			assert.isTrue(copyFileStub.calledWith(path.join(tempDir, folder), projectFolder));
+	// 		}
 
-			assert.deepEqual(dataAddedToPackageJson, {
-				dependencies: {
-					"@nativescript/core": "~7.0.0",
-				},
-				devDependencies: {
-					"@nativescript/webpack": "~2.1.0"
-				}
-			});
-		});
-	}
+	// 		assert.deepEqual(dataAddedToPackageJson, {
+	// 			dependencies: {
+	// 				"tns-core-modules": "1.0.0",
+	// 			},
+	// 			devDependencies: {
+	// 				"nativescript-dev-webpack": "1.3.0"
+	// 			}
+	// 		});
+	// 	});
+	// }
 });

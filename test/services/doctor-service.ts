@@ -279,7 +279,7 @@ const Observable = require("tns-core-modules-widgets/data/observable").Observabl
 		let sandbox: sinon.SinonSandbox;
 
 		beforeEach(() => {
-			sandbox = sinon.sandbox.create();
+			sandbox = sinon.createSandbox();
 		});
 
 		afterEach(() => {

@@ -189,15 +189,14 @@ function createTestInjector(projectPath: string, projectName: string, xCode?: IX
 function createPackageJson(testInjector: IInjector, projectPath: string, projectName: string) {
 	const packageJsonData = {
 		"name": projectName,
-		"version": "0.1.0",
-		"nativescript": {
-			"tns-ios": {
-				"version": "1.0.0"
-			},
-			"tns-android": {
-				"version": "1.0.0"
-			}
-		}
+    "version": "0.1.0",
+    "dependencies": {
+      "@nativescript/core": "7.0.0"
+    },
+    "devDependencies": {
+      "@nativescript/ios": "7.0.0",
+      "@nativescript/android": "7.0.0"
+    }
 	};
 	testInjector.resolve("fs").writeJson(join(projectPath, "package.json"), packageJsonData);
 }
@@ -214,17 +213,18 @@ describe("Cocoapods support", () => {
 			const fs: IFileSystem = testInjector.resolve("fs");
 			const cocoapodsService = testInjector.resolve("cocoapodsService");
 
-			const packageJsonData = {
-				"name": "myProject",
-				"version": "0.1.0",
-				"nativescript": {
-					"id": "org.nativescript.myProject",
-					"tns-ios": {
-						"version": "1.0.0"
-					}
-				}
-			};
-			fs.writeJson(join(projectPath, "package.json"), packageJsonData);
+			// const packageJsonData = {
+			// 	"name": "myProject",
+			// 	"version": "0.1.0",
+			// 	"nativescript": {
+			// 		"id": "org.nativescript.myProject",
+			// 		"tns-ios": {
+			// 			"version": "1.0.0"
+			// 		}
+			// 	}
+			// };
+      // fs.writeJson(join(projectPath, "package.json"), packageJsonData);
+      createPackageJson(testInjector, projectPath, 'myProject');
 
 			const platformsFolderPath = join(projectPath, "platforms", "ios");
 			fs.createDirectory(platformsFolderPath);

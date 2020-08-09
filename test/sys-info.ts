@@ -9,7 +9,7 @@ const verifyNodeVersion = require("../lib/common/verify-node-version");
 describe("sysInfo", () => {
 	let sandbox: sinon.SinonSandbox = null;
 	beforeEach(() => {
-		sandbox = sinon.sandbox.create();
+		sandbox = sinon.createSandbox();
 	});
 
 	afterEach(() => {

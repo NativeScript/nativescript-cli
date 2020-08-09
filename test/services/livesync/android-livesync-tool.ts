@@ -217,7 +217,7 @@ describe("AndroidLivesyncTool", () => {
 			appPlatformsPath: testAppPlatformPath,
 			connectTimeout
 		};
-		sandbox = sinon.sandbox.create();
+		sandbox = sinon.createSandbox();
 		testSocket = new TestSocket();
 		fileStreams = {};
 		testInjector = createTestInjector(testSocket, fileStreams);

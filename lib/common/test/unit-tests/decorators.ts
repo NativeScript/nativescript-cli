@@ -390,7 +390,7 @@ describe("decorators", () => {
 		}
 
 		beforeEach(() => {
-			sandbox = sinon.sandbox.create();
+			sandbox = sinon.createSandbox();
 			testInjector = createTestInjector();
 
 			class TestClass implements ITestInterface {
