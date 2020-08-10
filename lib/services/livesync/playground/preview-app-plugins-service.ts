@@ -9,7 +9,7 @@ import { PLATFORMS_DIR_NAME, PACKAGE_JSON_FILE_NAME, TNS_CORE_THEME_NAME, SCOPED
 import { IPackageInstallationManager } from "../../../declarations";
 import { IPluginsService } from "../../../definitions/plugins";
 import { IErrors, IFileSystem, IStringDictionary } from "../../../common/declarations";
-import { $injector } from "../../../common/definitions/yok";
+import { injector } from "../../../common/yok";
 
 export class PreviewAppPluginsService implements IPreviewAppPluginsService {
 	constructor(private $errors: IErrors,
@@ -126,4 +126,4 @@ Those plugins will not work while building the project via \`$ tns preview\`. Pl
 		return this.$fs.exists(nativeFolderPath) && !this.$fs.isEmptyDir(nativeFolderPath);
 	}
 }
-$injector.register("previewAppPluginsService", PreviewAppPluginsService);
+injector.register("previewAppPluginsService", PreviewAppPluginsService);

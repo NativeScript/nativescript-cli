@@ -3,7 +3,7 @@ import * as util from "util";
 import * as _ from 'lodash';
 import { IOptions } from "../../../declarations";
 import { ICommandParameter, ICommand } from "../../definitions/commands";
-import { $injector } from "../../definitions/yok";
+import { injector } from "../../yok";
 
 export class ListApplicationsCommand implements ICommand {
 	constructor(private $devicesService: Mobile.IDevicesService,
@@ -26,4 +26,4 @@ export class ListApplicationsCommand implements ICommand {
 		this.$logger.info(output.join(EOL));
 	}
 }
-$injector.registerCommand(["device|list-applications", "devices|list-applications"], ListApplicationsCommand);
+injector.registerCommand(["device|list-applications", "devices|list-applications"], ListApplicationsCommand);

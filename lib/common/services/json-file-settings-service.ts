@@ -3,7 +3,7 @@ import { parseJson } from "../helpers";
 import { IFileSystem } from "../declarations";
 import { IJsonFileSettingsService } from "../definitions/json-file-settings-service";
 import * as _ from 'lodash';
-import { $injector } from "../definitions/yok";
+import { injector } from "../yok";
 
 export class JsonFileSettingsService implements IJsonFileSettingsService {
 	private jsonSettingsFilePath: string = null;
@@ -133,4 +133,4 @@ export class JsonFileSettingsService implements IJsonFileSettingsService {
 	}
 }
 
-$injector.register("jsonFileSettingsService", JsonFileSettingsService, false);
+injector.register("jsonFileSettingsService", JsonFileSettingsService, false);

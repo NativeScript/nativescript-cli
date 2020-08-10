@@ -1,4 +1,9 @@
 import * as path from "path";
+import * as _ from 'lodash';
+import { IInjector } from "../common/definitions/yok";
+import { injector } from "../common/yok";
+import { IUserSettingsService, ISettingsService, IDictionary } from "../common/declarations";
+import { IJsonFileSettingsService, ICacheTimeoutOpts, IUseCacheOpts } from "../common/definitions/json-file-settings-service";
 
 export class UserSettingsService implements IUserSettingsService {
 	private get $jsonFileSettingsService(): IJsonFileSettingsService {
@@ -30,4 +35,4 @@ export class UserSettingsService implements IUserSettingsService {
 		return this.$jsonFileSettingsService.loadUserSettingsFile();
 	}
 }
-$injector.register("userSettingsService", UserSettingsService);
+injector.register("userSettingsService", UserSettingsService);

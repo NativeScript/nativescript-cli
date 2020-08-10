@@ -3,7 +3,7 @@ import { EventEmitter } from "events";
 import { DeviceDiscoveryEventNames, DEVICE_LOG_EVENT_NAME } from "../../../../common/constants";
 import { IDictionary } from "../../../../common/declarations";
 import * as _ from 'lodash';
-import { $injector } from "../../../../common/definitions/yok";
+import { injector } from "../../../../common/yok";
 
 export class PreviewDevicesService extends EventEmitter implements IPreviewDevicesService {
 	private connectedDevices: Device[] = [];
@@ -73,4 +73,4 @@ export class PreviewDevicesService extends EventEmitter implements IPreviewDevic
 		}
 	}
 }
-$injector.register("previewDevicesService", PreviewDevicesService);
+injector.register("previewDevicesService", PreviewDevicesService);

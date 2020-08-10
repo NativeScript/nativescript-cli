@@ -1,5 +1,5 @@
 import { IOptions } from "../../../declarations";
-import { $injector } from "../../definitions/yok";
+import { injector } from "../../yok";
 import { ICommandParameter, ICommand } from "../../definitions/commands";
 
 export class StopApplicationOnDeviceCommand implements ICommand {
@@ -18,4 +18,4 @@ export class StopApplicationOnDeviceCommand implements ICommand {
 	}
 }
 
-$injector.registerCommand(["device|stop", "devices|stop"], StopApplicationOnDeviceCommand);
+injector.registerCommand(["device|stop", "devices|stop"], StopApplicationOnDeviceCommand);

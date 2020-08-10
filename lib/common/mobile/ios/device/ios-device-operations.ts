@@ -5,7 +5,7 @@ import * as _ from 'lodash';
 import assert = require("assert");
 import { EventEmitter } from "events";
 import { IDisposable, IShouldDispose, IDictionary } from "../../../declarations";
-import { $injector } from "../../../definitions/yok";
+import { injector } from "../../../yok";
 
 export class IOSDeviceOperations extends EventEmitter implements IIOSDeviceOperations, IDisposable, IShouldDispose {
 	public isInitialized: boolean;
@@ -239,4 +239,4 @@ export class IOSDeviceOperations extends EventEmitter implements IIOSDeviceOpera
 	}
 }
 
-$injector.register("iosDeviceOperations", IOSDeviceOperations);
+injector.register("iosDeviceOperations", IOSDeviceOperations);

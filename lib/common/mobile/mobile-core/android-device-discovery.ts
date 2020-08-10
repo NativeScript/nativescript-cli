@@ -1,6 +1,7 @@
 import { DeviceDiscovery } from "./device-discovery";
 import { AndroidDevice } from "../android/android-device";
-import { IInjector, $injector } from "../../definitions/yok";
+import { IInjector } from "../../definitions/yok";
+import { injector } from "../../yok";
 import * as _ from 'lodash';
 
 interface IAdbAndroidDeviceInfo {
@@ -80,4 +81,4 @@ export class AndroidDeviceDiscovery extends DeviceDiscovery implements Mobile.IA
 	}
 }
 
-$injector.register("androidDeviceDiscovery", AndroidDeviceDiscovery);
+injector.register("androidDeviceDiscovery", AndroidDeviceDiscovery);

@@ -7,7 +7,7 @@ import { IPlatformsDataService, IAddPlatformService } from "../definitions/platf
 import { IPlatformCommandHelper, IPackageInstallationManager, IPackageManager } from "../declarations";
 import { IPluginsService } from "../definitions/plugins";
 import { IFileSystem, IErrors, IDictionary } from "../common/declarations";
-import { $injector } from "../common/definitions/yok";
+import { injector } from "../common/yok";
 
 interface IPackage {
 	name: string;
@@ -309,4 +309,4 @@ export class UpdateController extends UpdateControllerBase implements IUpdateCon
 	}
 }
 
-$injector.register("updateController", UpdateController);
+injector.register("updateController", UpdateController);

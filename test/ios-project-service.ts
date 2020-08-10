@@ -734,20 +734,14 @@ describe("Relative paths", () => {
 	it("checks for correct calculation of relative paths", () => {
 		const projectName = "projectDirectory";
     const projectPath = temp.mkdirSync(projectName);
-    console.log('projectPath:', projectPath)
     const subpath = join(projectPath, "sub", "path");
-    console.log('subpath:', subpath)
 
     const testInjector = createTestInjector(projectPath, projectName);
-    console.log('testInjector:', !!testInjector)
     createPackageJson(testInjector, projectPath, projectName);
 		const iOSProjectService = testInjector.resolve("iOSProjectService");
-    console.log('iOSProjectService:', !!iOSProjectService)
     const projectData: IProjectData = testInjector.resolve("projectData");
-    console.log('projectData:', !!projectData)
 
     const result = iOSProjectService.getLibSubpathRelativeToProjectPath(subpath, projectData);
-    console.log('result:', result)
 		assert.equal(result, join("..", "..", "sub", "path"));
 	});
 });

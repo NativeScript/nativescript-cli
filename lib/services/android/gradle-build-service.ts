@@ -4,7 +4,7 @@ import { EventEmitter } from "events";
 import { IGradleBuildService, IGradleBuildArgsService, IGradleCommandService } from "../../definitions/gradle";
 import { IAndroidBuildData } from "../../definitions/build";
 import { IChildProcess } from "../../common/declarations";
-import { $injector } from "../../common/definitions/yok";
+import { injector } from "../../common/yok";
 
 export class GradleBuildService extends EventEmitter implements IGradleBuildService {
 	constructor(
@@ -31,4 +31,4 @@ export class GradleBuildService extends EventEmitter implements IGradleBuildServ
 		await this.$gradleCommandService.executeCommand(cleanTaskArgs, gradleCommandOptions);
 	}
 }
-$injector.register("gradleBuildService", GradleBuildService);
+injector.register("gradleBuildService", GradleBuildService);

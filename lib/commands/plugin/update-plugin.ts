@@ -3,7 +3,7 @@ import { IProjectData } from "../../definitions/project";
 import { IPluginsService } from "../../definitions/plugins";
 import { ICommand, ICommandParameter } from "../../common/definitions/commands";
 import { IErrors } from "../../common/declarations";
-import { $injector } from "../../common/definitions/yok";
+import { injector } from "../../common/yok";
 
 export class UpdatePluginCommand implements ICommand {
 	constructor(private $pluginsService: IPluginsService,
@@ -45,4 +45,4 @@ export class UpdatePluginCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
 }
 
-$injector.registerCommand("plugin|update", UpdatePluginCommand);
+injector.registerCommand("plugin|update", UpdatePluginCommand);

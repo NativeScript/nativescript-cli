@@ -17,7 +17,8 @@ import { IErrors, IFileSystem, IAnalyticsService, IDictionary, IRelease, ISpawnR
 import { IAndroidPluginBuildService, IPluginBuildOptions } from "../definitions/android-plugin-migrator";
 import { IFilesHashService } from "../definitions/files-hash-service";
 import { IGradleCommandService, IGradleBuildService } from "../definitions/gradle";
-import { IInjector, $injector } from "../common/definitions/yok";
+import { IInjector } from "../common/definitions/yok";
+import { injector } from "../common/yok";
 import { INotConfiguredEnvOptions } from "../common/definitions/commands";
 
 export class AndroidProjectService extends projectServiceBaseLib.PlatformProjectServiceBase {
@@ -525,4 +526,4 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	}
 }
 
-$injector.register("androidProjectService", AndroidProjectService);
+injector.register("androidProjectService", AndroidProjectService);

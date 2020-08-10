@@ -3,7 +3,7 @@ import * as path from "path";
 import * as util from "util";
 import * as _ from 'lodash';
 import { IFileSystem, IProjectFilesManager, IProjectFilesProvider, IFsStats, IProjectFilesConfig } from "../declarations";
-import { $injector } from "../definitions/yok";
+import { injector } from "../yok";
 
 export class ProjectFilesManager implements IProjectFilesManager {
 	constructor(private $fs: IFileSystem,
@@ -90,4 +90,4 @@ export class ProjectFilesManager implements IProjectFilesManager {
 		return path.basename(filePath.replace(extension === ".map" ? ".js.map" : ".js", ""));
 	}
 }
-$injector.register("projectFilesManager", ProjectFilesManager);
+injector.register("projectFilesManager", ProjectFilesManager);

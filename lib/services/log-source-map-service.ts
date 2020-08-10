@@ -1,5 +1,6 @@
 import * as path from "path";
 import * as util from "util";
+import * as _ from 'lodash';
 import * as sourcemap from "source-map";
 import * as sourceMapConverter from "convert-source-map";
 import * as semver from "semver";
@@ -8,6 +9,8 @@ import { ANDROID_DEVICE_APP_ROOT_TEMPLATE, APP_FOLDER_NAME, NODE_MODULES_FOLDER_
 import { IProjectData, IProjectDataService } from "../definitions/project";
 import { IPlatformsDataService } from "../definitions/platform";
 import { IDictionary, IStringDictionary, IFileSystem } from "../common/declarations";
+import { IInjector } from "../common/definitions/yok";
+import { injector } from "../common/yok";
 
 interface IParsedMessage {
 	filePath?: string;
@@ -229,4 +232,4 @@ export class LogSourceMapService implements Mobile.ILogSourceMapService {
 	}
 }
 
-$injector.register("logSourceMapService", LogSourceMapService);
+injector.register("logSourceMapService", LogSourceMapService);

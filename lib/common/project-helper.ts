@@ -2,7 +2,7 @@ import * as path from "path";
 import * as _ from 'lodash';
 import { IProjectHelper, IFileSystem, IErrors } from "./declarations";
 import { IOptions } from "../declarations";
-import { $injector } from "./definitions/yok";
+import { injector } from "./yok";
 
 export class ProjectHelper implements IProjectHelper {
 	constructor(private $logger: ILogger,
@@ -73,4 +73,4 @@ export class ProjectHelper implements IProjectHelper {
 		return true;
 	}
 }
-$injector.register("projectHelper", ProjectHelper);
+injector.register("projectHelper", ProjectHelper);

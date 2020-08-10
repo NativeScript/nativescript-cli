@@ -2,7 +2,7 @@ import { run, ExecutionOptions } from '@nativescript/schematics-executor';
 import { IOptions } from '../declarations';
 import { ICommand, ICommandParameter } from '../common/definitions/commands';
 import { IErrors } from '../common/declarations';
-import { $injector } from '../common/definitions/yok';
+import { injector } from '../common/yok';
 
 export class GenerateCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
@@ -85,4 +85,4 @@ function partition<T>(array: T[], predicate: (item: T) => boolean): T[][] {
 	}, [[], []]);
 }
 
-$injector.registerCommand("generate", GenerateCommand);
+injector.registerCommand("generate", GenerateCommand);

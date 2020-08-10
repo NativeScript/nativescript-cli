@@ -1,5 +1,5 @@
 import { ICommand, IStringParameterBuilder, ICommandParameter } from "../../common/definitions/commands";
-import { $injector } from "../../common/definitions/yok";
+import { injector } from "../../common/yok";
 import { IExtensibilityService } from "../../common/definitions/extensibility";
 
 export class UninstallExtensionCommand implements ICommand {
@@ -15,4 +15,4 @@ export class UninstallExtensionCommand implements ICommand {
 
 	allowedParameters: ICommandParameter[] = [this.$stringParameterBuilder.createMandatoryParameter("You have to provide a valid name for extension that you want to uninstall.")];
 }
-$injector.registerCommand("extension|uninstall", UninstallExtensionCommand);
+injector.registerCommand("extension|uninstall", UninstallExtensionCommand);

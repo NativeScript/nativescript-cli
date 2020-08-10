@@ -3,7 +3,8 @@ import { EOL } from "os";
 import marked = require("marked");
 import { CommandsDelimiters } from "../constants";
 import { IHelpService, IErrors, IFileSystem, IMicroTemplateService } from "../declarations";
-import { IInjector, $injector } from "../definitions/yok";
+import { IInjector } from "../definitions/yok";
+import { injector } from "../yok";
 import { IExtensibilityService } from "../definitions/extensibility";
 import { IOpener } from "../../declarations";
 import * as _ from 'lodash';
@@ -274,4 +275,4 @@ export class HelpService implements IHelpService {
 	}
 }
 
-$injector.register("helpService", HelpService);
+injector.register("helpService", HelpService);

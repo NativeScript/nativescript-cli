@@ -7,7 +7,7 @@ import { INodePackageManager, IOptions } from '../declarations';
 import { IPluginsService } from '../definitions/plugins';
 import { ICommand, ICommandParameter } from '../common/definitions/commands';
 import { IDictionary, IErrors, IFileSystem, IResourceLoader, IDependencyInformation } from '../common/declarations';
-import { $injector } from '../common/definitions/yok';
+import { injector } from '../common/yok';
 
 class TestInitCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
@@ -126,4 +126,4 @@ class TestInitCommand implements ICommand {
 	}
 }
 
-$injector.registerCommand("test|init", TestInitCommand);
+injector.registerCommand("test|init", TestInitCommand);

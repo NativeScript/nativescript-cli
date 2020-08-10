@@ -4,6 +4,7 @@ import { EOL } from "os";
 import { PACKAGE_JSON_FILE_NAME, LoggerConfigData } from "../constants";
 import { IProjectDataService } from "../definitions/project";
 import { IFileSystem } from "../common/declarations";
+import { injector } from "../common/yok";
 
 const enum MarkingMode {
 	None = "none",
@@ -73,4 +74,4 @@ __Improve your app by switching to "${MARKING_MODE_PROP}:${MarkingMode.None}".__
 	}
 }
 
-$injector.register("markingModeService", MarkingModeService);
+injector.register("markingModeService", MarkingModeService);

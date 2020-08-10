@@ -2,6 +2,8 @@ import * as path from "path";
 import { Configurations } from "../common/constants";
 import { IXcconfigService } from "../declarations";
 import { IChildProcess, IFileSystem, IStringDictionary } from "../common/declarations";
+import * as _ from 'lodash';
+import { injector } from "../common/yok";
 
 export class XcconfigService implements IXcconfigService {
 	constructor(
@@ -65,4 +67,4 @@ export class XcconfigService implements IXcconfigService {
 	}
 }
 
-$injector.register("xcconfigService", XcconfigService);
+injector.register("xcconfigService", XcconfigService);

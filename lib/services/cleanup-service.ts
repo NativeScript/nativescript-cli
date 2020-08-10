@@ -5,7 +5,7 @@ import { IOptions } from "../declarations";
 import { IChildProcess } from "../common/declarations";
 import { ICleanupService } from "../definitions/cleanup-service";
 import { ISpawnCommandInfo, ISpawnCommandCleanupMessage, IRequestInfo, IRequestCleanupMessage, IFileCleanupMessage, IJSCommand, IJSCleanupMessage } from "../detached-processes/cleanup-process-definitions";
-import { $injector } from "../common/definitions/yok";
+import { injector } from "../common/yok";
 
 export class CleanupService implements ICleanupService {
 	private static CLEANUP_PROCESS_START_TIMEOUT = 10 * 1000;
@@ -169,4 +169,4 @@ export class CleanupService implements ICleanupService {
 	}
 }
 
-$injector.register("cleanupService", CleanupService);
+injector.register("cleanupService", CleanupService);

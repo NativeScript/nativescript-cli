@@ -7,7 +7,7 @@ import * as osenv from "osenv";
 import { cache } from "../../../decorators";
 import { DeviceConnectionType } from "../../../../constants";
 import { IChildProcess, IFileSystem, IDictionary } from "../../../declarations";
-import { $injector } from "../../../definitions/yok";
+import { injector } from "../../../yok";
 
 export class AndroidGenymotionService implements Mobile.IAndroidVirtualDeviceService {
 	constructor(private $adb: Mobile.IAndroidDebugBridge,
@@ -193,4 +193,4 @@ In case you have installed Genymotion in a different location, please add the pa
 		return null;
 	}
 }
-$injector.register("androidGenymotionService", AndroidGenymotionService);
+injector.register("androidGenymotionService", AndroidGenymotionService);

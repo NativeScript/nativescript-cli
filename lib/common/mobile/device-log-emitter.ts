@@ -1,6 +1,6 @@
 import { DeviceLogProviderBase } from "./device-log-provider-base";
 import { DEVICE_LOG_EVENT_NAME } from "../constants";
-import { $injector } from "../definitions/yok";
+import { injector } from "../yok";
 import * as _ from 'lodash';
 
 export class DeviceLogEmitter extends DeviceLogProviderBase {
@@ -38,4 +38,4 @@ export class DeviceLogEmitter extends DeviceLogProviderBase {
 	}
 }
 
-$injector.register("deviceLogProvider", DeviceLogEmitter);
+injector.register("deviceLogProvider", DeviceLogEmitter);

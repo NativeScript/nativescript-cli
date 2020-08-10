@@ -3,7 +3,8 @@ import { DeviceConnectionType } from "../../../constants";
 import { IOptions } from "../../../declarations";
 import { ICommand, ICommandParameter } from "../../definitions/commands";
 import { IErrors } from "../../declarations";
-import { $injector, IInjector } from "../../definitions/yok";
+import { IInjector } from "../../definitions/yok";
+import { injector } from "../../yok";
 
 export class ListDevicesCommand implements ICommand {
 	constructor(private $devicesService: Mobile.IDevicesService,
@@ -65,7 +66,7 @@ export class ListDevicesCommand implements ICommand {
 	}
 }
 
-$injector.registerCommand(["device|*list", "devices|*list"], ListDevicesCommand);
+injector.registerCommand(["device|*list", "devices|*list"], ListDevicesCommand);
 
 class ListAndroidDevicesCommand implements ICommand {
 	constructor(private $injector: IInjector,
@@ -80,7 +81,7 @@ class ListAndroidDevicesCommand implements ICommand {
 	}
 }
 
-$injector.registerCommand(["device|android", "devices|android"], ListAndroidDevicesCommand);
+injector.registerCommand(["device|android", "devices|android"], ListAndroidDevicesCommand);
 
 class ListiOSDevicesCommand implements ICommand {
 	constructor(private $injector: IInjector,
@@ -95,4 +96,4 @@ class ListiOSDevicesCommand implements ICommand {
 	}
 }
 
-$injector.registerCommand(["device|ios", "devices|ios"], ListiOSDevicesCommand);
+injector.registerCommand(["device|ios", "devices|ios"], ListiOSDevicesCommand);

@@ -1,6 +1,7 @@
 import * as _ from 'lodash';
 import { IOptions } from "../../declarations";
-import { IInjector, $injector } from "../definitions/yok";
+import { IInjector } from "../definitions/yok";
+import { injector } from "../yok";
 import { ICommand, ICommandParameter } from "../definitions/commands";
 import { IHelpService } from "../declarations";
 
@@ -38,4 +39,4 @@ export class HelpCommand implements ICommand {
 	}
 }
 
-$injector.registerCommand(["help", "/?"], HelpCommand);
+injector.registerCommand(["help", "/?"], HelpCommand);

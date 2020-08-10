@@ -1,7 +1,7 @@
 import { EventEmitter } from "events";
 import { ATTACH_REQUEST_EVENT_NAME } from "../../common/constants";
 import { IiOSNotification } from "../../declarations";
-import { $injector } from "../../common/definitions/yok";
+import { injector } from "../../common/yok";
 
 export class IOSNotification extends EventEmitter implements IiOSNotification {
 	private static REFRESH_REQUEST_NOTIFICATION_NAME = "RefreshRequest";
@@ -32,4 +32,4 @@ export class IOSNotification extends EventEmitter implements IiOSNotification {
 		return `${appId}:NativeScript.Debug.${notification}`;
 	}
 }
-$injector.register("iOSNotification", IOSNotification);
+injector.register("iOSNotification", IOSNotification);

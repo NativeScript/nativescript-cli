@@ -1,6 +1,7 @@
 import { IStringDictionary, IDictionary } from "../../common/declarations";
 import * as _ from 'lodash';
-import { $injector } from "../../common/definitions/yok";
+import { injector } from "../../common/yok";
+import { IApplePortalCookieService } from "./definitions";
 
 export class ApplePortalCookieService implements IApplePortalCookieService {
 	private userSessionCookies: IStringDictionary = {};
@@ -42,4 +43,4 @@ export class ApplePortalCookieService implements IApplePortalCookieService {
 		return result;
 	}
 }
-$injector.register("applePortalCookieService", ApplePortalCookieService);
+injector.register("applePortalCookieService", ApplePortalCookieService);

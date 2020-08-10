@@ -8,7 +8,7 @@ import { IXcconfigService, IXcprojService } from "../../declarations";
 import { IProjectData } from "../../definitions/project";
 import { IErrors, IFileSystem } from "../../common/declarations";
 import * as _ from 'lodash';
-import { $injector } from "../../common/definitions/yok";
+import { injector } from "../../common/yok";
 
 export class IOSSigningService implements IiOSSigningService {
 	constructor(
@@ -207,4 +207,4 @@ export class IOSSigningService implements IiOSSigningService {
 		return this.$xcconfigService.readPropertyValue(this.getBuildXCConfigFilePath(projectData), "PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]");
 	}
 }
-$injector.register("iOSSigningService", IOSSigningService);
+injector.register("iOSSigningService", IOSSigningService);

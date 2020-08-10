@@ -4,7 +4,7 @@ import { TrackActionNames, AnalyticsEventLabelDelimiter } from "../../constants"
 import { IPackageInstallationManager } from "../../declarations";
 import { ICommand, ICommandParameter } from "../definitions/commands";
 import { IAnalyticsService, IFileSystem, ISettingsService } from "../declarations";
-import { $injector } from "../definitions/yok";
+import { injector } from "../yok";
 import { IExtensibilityService } from "../definitions/extensibility";
 
 export class PreUninstallCommand implements ICommand {
@@ -51,4 +51,4 @@ export class PreUninstallCommand implements ICommand {
 	}
 }
 
-$injector.registerCommand("dev-preuninstall", PreUninstallCommand);
+injector.registerCommand("dev-preuninstall", PreUninstallCommand);

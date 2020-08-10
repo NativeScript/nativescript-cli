@@ -1,6 +1,6 @@
 import { IChildProcess, IErrors, IHostInfo, ISpawnResult, ISpawnFromEventOptions } from "../../common/declarations";
 import { IGradleCommandService, IGradleCommandOptions } from "../../definitions/gradle";
-import { $injector } from "../../common/definitions/yok";
+import { injector } from "../../common/yok";
 
 export class GradleCommandService implements IGradleCommandService {
 	constructor(
@@ -32,4 +32,4 @@ export class GradleCommandService implements IGradleCommandService {
 		}
 	}
 }
-$injector.register("gradleCommandService", GradleCommandService);
+injector.register("gradleCommandService", GradleCommandService);

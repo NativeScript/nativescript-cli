@@ -2,7 +2,7 @@ import * as helpers from "../common/helpers";
 import { IProjectData } from "../definitions/project";
 import { IPlatformCommandHelper } from "../declarations";
 import { ICommandParameter, ICommand } from "../common/definitions/commands";
-import { $injector } from "../common/definitions/yok";
+import { injector } from "../common/yok";
 
 export class ListPlatformsCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
@@ -33,4 +33,4 @@ export class ListPlatformsCommand implements ICommand {
 	}
 }
 
-$injector.registerCommand("platform|*list", ListPlatformsCommand);
+injector.registerCommand("platform|*list", ListPlatformsCommand);

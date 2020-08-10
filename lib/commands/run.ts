@@ -7,7 +7,8 @@ import { IMigrateController } from "../definitions/migrate";
 import { IOptions, IPlatformValidationService } from "../declarations";
 import { ICommand, ICommandParameter } from "../common/definitions/commands";
 import { IAnalyticsService, IErrors, IHostInfo } from "../common/declarations";
-import { $injector, IInjector } from "../common/definitions/yok";
+import { IInjector } from "../common/definitions/yok";
+import { injector } from "../common/yok";
 
 export class RunCommandBase implements ICommand {
 	private liveSyncCommandHelperAdditionalOptions: ILiveSyncCommandHelperAdditionalOptions = <ILiveSyncCommandHelperAdditionalOptions>{};
@@ -53,7 +54,7 @@ export class RunCommandBase implements ICommand {
 	}
 }
 
-$injector.registerCommand("run|*all", RunCommandBase);
+injector.registerCommand("run|*all", RunCommandBase);
 
 export class RunIosCommand implements ICommand {
 
@@ -95,7 +96,7 @@ export class RunIosCommand implements ICommand {
 	}
 }
 
-$injector.registerCommand("run|ios", RunIosCommand);
+injector.registerCommand("run|ios", RunIosCommand);
 
 export class RunAndroidCommand implements ICommand {
 
@@ -145,4 +146,4 @@ export class RunAndroidCommand implements ICommand {
 	}
 }
 
-$injector.registerCommand("run|android", RunAndroidCommand);
+injector.registerCommand("run|android", RunAndroidCommand);

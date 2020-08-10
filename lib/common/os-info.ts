@@ -1,6 +1,6 @@
 import * as os from "os";
 import { IOsInfo } from "./declarations";
-import { $injector } from "./definitions/yok";
+import { injector } from "./yok";
 
 export class OsInfo implements IOsInfo {
 	public type(): string {
@@ -20,4 +20,4 @@ export class OsInfo implements IOsInfo {
 	}
 }
 
-$injector.register("osInfo", OsInfo);
+injector.register("osInfo", OsInfo);

@@ -1,4 +1,5 @@
 import { IOSPrepareData, AndroidPrepareData } from "../data/prepare-data";
+import { injector } from "../common/yok";
 
 export class PrepareDataService implements IPrepareDataService {
 	constructor(private $mobileHelper: Mobile.IMobileHelper) { }
@@ -13,4 +14,4 @@ export class PrepareDataService implements IPrepareDataService {
 		}
 	}
 }
-$injector.register("prepareDataService", PrepareDataService);
+injector.register("prepareDataService", PrepareDataService);

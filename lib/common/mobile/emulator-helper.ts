@@ -1,6 +1,6 @@
 import { RUNNING_EMULATOR_STATUS, DeviceTypes } from "../constants";
 import * as _ from 'lodash';
-import { $injector } from "../definitions/yok";
+import { injector } from "../yok";
 
 export class EmulatorHelper implements Mobile.IEmulatorHelper {
 	// https://developer.android.com/guide/topics/manifest/uses-sdk-element
@@ -77,4 +77,4 @@ export class EmulatorHelper implements Mobile.IEmulatorHelper {
 		//emulator.isTablet; // TODO: consider to do this here!!!
 	}
 }
-$injector.register("emulatorHelper", EmulatorHelper);
+injector.register("emulatorHelper", EmulatorHelper);

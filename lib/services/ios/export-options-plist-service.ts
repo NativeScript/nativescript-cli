@@ -2,7 +2,7 @@ import * as path from "path";
 import * as mobileProvisionFinder from "ios-mobileprovision-finder";
 import { IProjectData, IBuildConfig } from "../../definitions/project";
 import { IFileSystem } from "../../common/declarations";
-import { $injector } from "../../common/definitions/yok";
+import { injector } from "../../common/yok";
 
 export class ExportOptionsPlistService implements IExportOptionsPlistService {
 	constructor(private $fs: IFileSystem,
@@ -103,4 +103,4 @@ export class ExportOptionsPlistService implements IExportOptionsPlistService {
 		}[provision.Type];
 	}
 }
-$injector.register("exportOptionsPlistService", ExportOptionsPlistService);
+injector.register("exportOptionsPlistService", ExportOptionsPlistService);

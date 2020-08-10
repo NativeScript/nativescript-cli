@@ -9,7 +9,8 @@ import * as helpers from "../../../../common/helpers";
 import { IOSDeviceBase } from "../ios-device-base";
 import { IiOSSocketRequestExecutor } from "../../../../declarations";
 import { IErrors } from "../../../declarations";
-import { IInjector, $injector } from "../../../definitions/yok";
+import { IInjector } from "../../../definitions/yok";
+import { injector } from "../../../yok";
 
 export class IOSDevice extends IOSDeviceBase {
 	public applicationManager: Mobile.IDeviceApplicationManager;
@@ -129,4 +130,4 @@ export class IOSDevice extends IOSDeviceBase {
 	}
 }
 
-$injector.register("iOSDevice", IOSDevice);
+injector.register("iOSDevice", IOSDevice);

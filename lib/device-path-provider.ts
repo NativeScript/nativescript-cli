@@ -3,7 +3,7 @@ import { APP_FOLDER_NAME } from "./constants";
 import { LiveSyncPaths } from "./common/constants";
 import * as path from "path";
 import { IErrors } from "./common/declarations";
-import { $injector } from "./common/definitions/yok";
+import { injector } from "./common/yok";
 
 export class DevicePathProvider implements IDevicePathProvider {
 	constructor(private $mobileHelper: Mobile.IMobileHelper,
@@ -41,4 +41,4 @@ export class DevicePathProvider implements IDevicePathProvider {
 	}
 }
 
-$injector.register("devicePathProvider", DevicePathProvider);
+injector.register("devicePathProvider", DevicePathProvider);

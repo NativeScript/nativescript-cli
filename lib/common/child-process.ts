@@ -1,7 +1,7 @@
 import * as child_process from "child_process";
 import { EventEmitter } from "events";
 import { IChildProcess, IErrors, IExecOptions, ISpawnFromEventOptions, ISpawnResult } from "./declarations";
-import { $injector } from "./definitions/yok";
+import { injector } from "./yok";
 
 export class ChildProcess extends EventEmitter implements IChildProcess {
 	constructor(private $logger: ILogger,
@@ -189,4 +189,4 @@ export class ChildProcess extends EventEmitter implements IChildProcess {
 		return args && args.length && args.map(argument => `"${argument}"`).join(" ");
 	}
 }
-$injector.register("childProcess", ChildProcess);
+injector.register("childProcess", ChildProcess);

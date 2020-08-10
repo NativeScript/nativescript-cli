@@ -1,6 +1,6 @@
 import { IOptions } from "../declarations";
 import { IUtils } from "./declarations";
-import { $injector } from "./definitions/yok";
+import { injector } from "./yok";
 
 export class Utils implements IUtils {
 	constructor(private $options: IOptions,
@@ -25,4 +25,4 @@ export class Utils implements IUtils {
 		return timeout * 1000;
 	}
 }
-$injector.register("utils", Utils);
+injector.register("utils", Utils);

@@ -3,7 +3,7 @@ import * as path from "path";
 import * as os from "os";
 import * as _ from 'lodash';
 import { IHostInfo, IFileSystem, IDictionary, ICancellationService, ErrorCodes } from "../declarations";
-import { $injector } from "../definitions/yok";
+import { injector } from "../yok";
 
 class CancellationService implements ICancellationService {
 	private watches: IDictionary<choki.FSWatcher> = {};
@@ -63,4 +63,4 @@ class CancellationService implements ICancellationService {
 	}
 }
 
-$injector.register("cancellation", CancellationService);
+injector.register("cancellation", CancellationService);

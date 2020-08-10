@@ -1,7 +1,7 @@
 import { PackageManagers } from "../../constants";
 import { ICommand, ICommandParameter } from "../definitions/commands";
 import { IUserSettingsService, IErrors } from "../declarations";
-import { $injector } from "../definitions/yok";
+import { injector } from "../yok";
 
 export class PackageManagerCommand implements ICommand {
 
@@ -26,4 +26,4 @@ export class PackageManagerCommand implements ICommand {
 	}
 }
 
-$injector.registerCommand("package-manager|set", PackageManagerCommand);
+injector.registerCommand("package-manager|set", PackageManagerCommand);

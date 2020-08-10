@@ -1,5 +1,7 @@
 import { IProjectData } from "../definitions/project";
 import { IPlatformData, IPlatformsDataService } from "../definitions/platform";
+import { injector } from "../common/yok";
+import * as _ from 'lodash';
 
 export class PlatformsDataService implements IPlatformsDataService {
 	private platformsDataService: { [index: string]: any } = {};
@@ -23,4 +25,4 @@ export class PlatformsDataService implements IPlatformsDataService {
 		return platformData;
 	}
 }
-$injector.register("platformsDataService", PlatformsDataService);
+injector.register("platformsDataService", PlatformsDataService);

@@ -8,7 +8,7 @@ import { IProjectData, IProjectDataService } from "../definitions/project";
 import { IPlatformCommandHelper, IPackageInstallationManager, IUpdatePlatformOptions } from "../declarations";
 import { IPlatformsDataService, IPlatformData } from "../definitions/platform";
 import { IFileSystem, IErrors } from "../common/declarations";
-import { $injector } from "../common/definitions/yok";
+import { injector } from "../common/yok";
 
 export class PlatformCommandHelper implements IPlatformCommandHelper {
 	constructor(
@@ -190,4 +190,4 @@ export class PlatformCommandHelper implements IPlatformCommandHelper {
 		return platformData.platformProjectService.isPlatformPrepared(platformData.projectRoot, projectData);
 	}
 }
-$injector.register("platformCommandHelper", PlatformCommandHelper);
+injector.register("platformCommandHelper", PlatformCommandHelper);

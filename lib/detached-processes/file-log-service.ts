@@ -1,5 +1,6 @@
 import { EOL } from "os";
 import { getFixedLengthDateString } from "../common/helpers";
+import { IFileSystem } from "../common/declarations";
 
 export class FileLogService implements IFileLogService {
 	constructor(private $fs: IFileSystem,

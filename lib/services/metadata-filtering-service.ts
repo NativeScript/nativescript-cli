@@ -6,6 +6,7 @@ import { IPlatformsDataService } from "../definitions/platform";
 import { IProjectData } from "../definitions/project";
 import { IMetadataFilteringService, INativeApiUsageConfiguration, INativeApiUsagePluginConfiguration } from "../definitions/metadata-filtering-service";
 import { IFileSystem } from "../common/declarations";
+import { injector } from "../common/yok";
 
 export class MetadataFilteringService implements IMetadataFilteringService {
 	constructor(private $fs: IFileSystem,
@@ -97,4 +98,4 @@ export class MetadataFilteringService implements IMetadataFilteringService {
 	}
 }
 
-$injector.register("metadataFilteringService", MetadataFilteringService);
+injector.register("metadataFilteringService", MetadataFilteringService);

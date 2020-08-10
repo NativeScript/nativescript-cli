@@ -6,7 +6,8 @@ import { APP_FOLDER_NAME } from "../../constants";
 import { performanceLog } from "../../common/decorators";
 import { IPlatformsDataService } from "../../definitions/platform";
 import { IFileSystem, IProjectFilesManager, IProjectDir } from "../../common/declarations";
-import { IInjector, $injector } from "../../common/definitions/yok";
+import { IInjector } from "../../common/definitions/yok";
+import { injector } from "../../common/yok";
 
 export class IOSLiveSyncService extends PlatformLiveSyncServiceBase implements IPlatformLiveSyncService {
 	constructor(protected $fs: IFileSystem,
@@ -75,4 +76,4 @@ export class IOSLiveSyncService extends PlatformLiveSyncServiceBase implements I
 		return service;
 	}
 }
-$injector.register("iOSLiveSyncService", IOSLiveSyncService);
+injector.register("iOSLiveSyncService", IOSLiveSyncService);

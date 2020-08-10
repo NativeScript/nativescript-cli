@@ -3,7 +3,7 @@ import * as _ from 'lodash';
 import * as constants from "./constants";
 import { IXmlValidator } from "./declarations";
 import { IFileSystem } from "./common/declarations";
-import { $injector } from "./common/definitions/yok";
+import { injector } from "./common/yok";
 
 export class XmlValidator implements IXmlValidator {
 	constructor(private $fs: IFileSystem,
@@ -46,4 +46,4 @@ export class XmlValidator implements IXmlValidator {
 		return parser;
 	}
 }
-$injector.register("xmlValidator", XmlValidator);
+injector.register("xmlValidator", XmlValidator);

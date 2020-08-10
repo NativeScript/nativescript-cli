@@ -1,7 +1,7 @@
 import { EOL } from "os";
 import * as _ from 'lodash';
 import { IErrors } from "../../declarations";
-import { $injector } from "../../definitions/yok";
+import { injector } from "../../yok";
 
 export class AndroidDebugBridgeResultHandler implements Mobile.IAndroidDebugBridgeResultHandler {
 	private static ANDROID_DEBUG_BRIDGE_ERRORS: Mobile.IAndroidDebugBridgeError[] = [
@@ -275,4 +275,4 @@ export class AndroidDebugBridgeResultHandler implements Mobile.IAndroidDebugBrid
 	}
 }
 
-$injector.register("androidDebugBridgeResultHandler", AndroidDebugBridgeResultHandler);
+injector.register("androidDebugBridgeResultHandler", AndroidDebugBridgeResultHandler);

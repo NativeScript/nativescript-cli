@@ -2,7 +2,7 @@ import * as path from "path";
 import { IOptions } from "../../declarations";
 import { ICommand, ICommandParameter } from "../definitions/commands";
 import { IFileSystem, IServiceContractGenerator } from "../declarations";
-import { $injector } from "../definitions/yok";
+import { injector } from "../yok";
 
 export class GenerateMessages implements ICommand {
 	private static MESSAGES_DEFINITIONS_FILE_NAME = "messages.interface.d.ts";
@@ -34,4 +34,4 @@ export class GenerateMessages implements ICommand {
 		this.$fs.writeFile(implementationFilePath, result.implementationFile);
 	}
 }
-$injector.registerCommand("dev-generate-messages", GenerateMessages);
+injector.registerCommand("dev-generate-messages", GenerateMessages);

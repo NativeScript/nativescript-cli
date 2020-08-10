@@ -1,11 +1,10 @@
 import * as constants from './constants';
-import { $injector } from './common/definitions/yok';
 import { IDictionary } from './common/declarations';
-
+import { injector } from "./common/yok";
 export class Constants implements IDictionary<any> {
 	constructor () {
 		Object.assign(this, constants);
 	}
 }
 
-$injector.register("constants", Constants);
+injector.register("constants", Constants);

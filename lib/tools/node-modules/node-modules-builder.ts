@@ -1,5 +1,7 @@
 import { INodeModulesBuilder, INodeModulesDependenciesBuilder, IPrepareNodeModulesData } from "../../definitions/platform";
 import { IPluginsService } from "../../definitions/plugins";
+import * as _ from 'lodash';
+import { injector } from "../../common/yok";
 
 export class NodeModulesBuilder implements INodeModulesBuilder {
 	constructor(
@@ -26,4 +28,4 @@ export class NodeModulesBuilder implements INodeModulesBuilder {
 	}
 }
 
-$injector.register("nodeModulesBuilder", NodeModulesBuilder);
+injector.register("nodeModulesBuilder", NodeModulesBuilder);

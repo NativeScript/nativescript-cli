@@ -4,7 +4,7 @@ import { IPlatformValidationService } from "../../declarations";
 import { IPlatformsDataService } from "../../definitions/platform";
 import { IProjectData } from "../../definitions/project";
 import { IErrors, IFileSystem } from "../../common/declarations";
-import { $injector } from "../../common/definitions/yok";
+import { injector } from "../../common/yok";
 
 export class PlatformValidationService implements IPlatformValidationService {
 
@@ -89,4 +89,4 @@ export class PlatformValidationService implements IPlatformValidationService {
 		return res;
 	}
 }
-$injector.register("platformValidationService", PlatformValidationService);
+injector.register("platformValidationService", PlatformValidationService);

@@ -1,5 +1,6 @@
 import * as path from "path";
 import * as shell from "shelljs";
+import * as _ from 'lodash';
 import * as constants from "../constants";
 import { Configurations } from "../common/constants";
 import * as helpers from "../common/helpers";
@@ -7,7 +8,7 @@ import { attachAwaitDetach } from "../common/helpers";
 import * as projectServiceBaseLib from "./platform-project-service-base";
 import { PlistSession, Reporter } from "plist-merge-patch";
 import { EOL } from "os";
-import * as plist from "plist";
+const plist = require("plist");
 import { IOSProvisionService } from "./ios-provision-service";
 import { IOSEntitlementsService } from "./ios-entitlements-service";
 import { IOSBuildData } from "../data/build-data";
@@ -20,6 +21,10 @@ import { IBuildData } from "../definitions/build";
 import { IXcprojService, IXcconfigService, IOptions } from "../declarations";
 import { IPluginData, IPluginsService } from "../definitions/plugins";
 import { IFileSystem, IChildProcess, IErrors, IHostInfo, IPlistParser, ISysInfo, IRelease } from "../common/declarations";
+import { IInjector } from "../common/definitions/yok";
+import { injector } from "../common/yok";
+import { INotConfiguredEnvOptions } from "../common/definitions/commands";
+import { IProjectChangesInfo } from "../definitions/project-changes";
 
 interface INativeSourceCodeGroup {
 	name: string;
@@ -68,21 +73,13 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	private _platformsDirCache: string = null;
 	private _platformData: IPlatformData = null;
 	public getPlatformData(projectData: IProjectData): IPlatformData {
-    console.log('getPlatformData projectData:', !!projectData);
-    console.log('getPlatformData this._platformData:', !!this._platformData);
 		if (!projectData && !this._platformData) {
 			throw new Error("First call of getPlatformData without providing projectData.");
     }
-    console.log(`projectData && projectData.platformsDir && this._platformsDirCache !== projectData.platformsDir:`, projectData && projectData.platformsDir && this._platformsDirCache !== projectData.platformsDir);
 
 		if (projectData && projectData.platformsDir && this._platformsDirCache !== projectData.platformsDir) {
       const projectRoot = path.join(projectData.platformsDir, this.$devicePlatformsConstants.iOS.toLowerCase());
-      console.log('projectRoot:', projectRoot);
-      console.log('this.$projectDataService.getRuntimePackage:', this.$projectDataService.getRuntimePackage);
-      console.log('projectData.projectDir:', projectData.projectDir);
-      console.log('Platforms.ios:', constants.PlatformTypes.ios);
       const runtimePackage = this.$projectDataService.getRuntimePackage(projectData.projectDir, constants.PlatformTypes.ios);
-      console.log('getPlatformData runtimePackage:', runtimePackage.name);
 
 			this._platformData = {
 				frameworkPackageName: runtimePackage.name,
@@ -871,4 +868,4 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	}
 }
 
-$injector.register("iOSProjectService", IOSProjectService);
+injector.register("iOSProjectService", IOSProjectService);

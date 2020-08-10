@@ -5,7 +5,7 @@ import { IOptions } from "../../declarations";
 import { IAndroidPluginBuildService, IPluginBuildOptions } from "../../definitions/android-plugin-migrator";
 import { ICommand, ICommandParameter } from "../../common/definitions/commands";
 import { IErrors, IFileSystem } from "../../common/declarations";
-import { $injector } from "../../common/definitions/yok";
+import { injector } from "../../common/yok";
 
 export class BuildPluginCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
@@ -66,4 +66,4 @@ export class BuildPluginCommand implements ICommand {
 	}
 }
 
-$injector.registerCommand("plugin|build", BuildPluginCommand);
+injector.registerCommand("plugin|build", BuildPluginCommand);

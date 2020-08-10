@@ -2,7 +2,8 @@ import { DeviceDiscovery } from "./device-discovery";
 import { IOSSimulator } from "./../ios/simulator/ios-simulator-device";
 import { EmulatorDiscoveryNames } from "../../constants";
 import { IDictionary, IHostInfo } from "../../declarations";
-import { IInjector, $injector } from "../../definitions/yok";
+import { IInjector } from "../../definitions/yok";
+import { injector } from "../../yok";
 import * as _ from 'lodash';
 
 export class IOSSimulatorDiscovery extends DeviceDiscovery {
@@ -99,4 +100,4 @@ export class IOSSimulatorDiscovery extends DeviceDiscovery {
 	}
 }
 
-$injector.register("iOSSimulatorDiscovery", IOSSimulatorDiscovery);
+injector.register("iOSSimulatorDiscovery", IOSSimulatorDiscovery);

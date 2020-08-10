@@ -11,7 +11,8 @@ import { IPlatformCommandHelper, IPackageInstallationManager, IPackageManager, I
 import { IPlatformsDataService, IAddPlatformService } from "../definitions/platform";
 import { IPluginsService } from "../definitions/plugins";
 import { IFileSystem, IErrors, ISettingsService, IResourceLoader, IDictionary } from "../common/declarations";
-import { IInjector, $injector } from "../common/definitions/yok";
+import { IInjector } from "../common/definitions/yok";
+import { injector } from "../common/yok";
 import { IJsonFileSettingsService } from "../common/definitions/json-file-settings-service";
 
 export class MigrateController extends UpdateControllerBase implements IMigrateController {
@@ -468,4 +469,4 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 	}
 }
 
-$injector.register("migrateController", MigrateController);
+injector.register("migrateController", MigrateController);

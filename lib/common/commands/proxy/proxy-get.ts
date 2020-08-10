@@ -1,6 +1,6 @@
 import { ProxyCommandBase } from "./proxy-base";
 import { IAnalyticsService, IProxyService } from "../../declarations";
-import { $injector } from "../../definitions/yok";
+import { injector } from "../../yok";
 
 const proxyGetCommandName = "proxy|*get";
 
@@ -17,4 +17,4 @@ export class ProxyGetCommand extends ProxyCommandBase {
 	}
 }
 
-$injector.registerCommand(proxyGetCommandName, ProxyGetCommand);
+injector.registerCommand(proxyGetCommandName, ProxyGetCommand);

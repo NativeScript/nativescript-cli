@@ -5,7 +5,7 @@
 import * as fs from "fs";
 import * as uuid from "uuid";
 import { FileLogService } from "./file-log-service";
-import { $injector } from "../common/definitions/yok";
+import { injector } from "../common/yok";
 
 const pathToBootstrap = process.argv[2];
 if (!pathToBootstrap || !fs.existsSync(pathToBootstrap)) {
@@ -18,7 +18,7 @@ require(pathToBootstrap);
 const logFile = process.argv[3];
 const jsFilePath = process.argv[4];
 
-const fileLogService = $injector.resolve<IFileLogService>(FileLogService, { logFile });
+const fileLogService = injector.resolve<IFileLogService>(FileLogService, { logFile });
 const uniqueId = uuid.v4();
 fileLogService.logData({ message: `Initializing Cleanup process for path: ${jsFilePath} Unique id: ${uniqueId}` });
 

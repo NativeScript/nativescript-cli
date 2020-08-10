@@ -20,6 +20,8 @@ import { IBuildData } from "../lib/definitions/build";
 import { IFileSystem, IFsStats, IDictionary, IErrors, IFailOptions, IStringDictionary, ISpawnResult, IProjectDir, IProjectHelper, IHooksService, IAllowEmpty, IPrompterOptions, IQrCodeImageData, ISpawnFromEventOptions, IAnalyticsService, IProxySettings, Server } from "../lib/common/declarations";
 import { IAndroidPluginBuildService, IPluginBuildOptions } from "../lib/definitions/android-plugin-migrator";
 import { IInjector } from "../lib/common/definitions/yok";
+import { IProjectChangesInfo, IPrepareInfo, IAddedNativePlatform } from "../lib/definitions/project-changes";
+import { IEventActionData, IGoogleAnalyticsData } from "../lib/common/definitions/google-analytics";
 temp.track();
 
 export class LoggerStub implements ILogger {
@@ -574,7 +576,6 @@ export class ProjectDataService implements IProjectDataService {
   }
   
   getRuntimePackage(projectDir: string, platform: constants.SupportedPlatform): IBasePluginData {
-    console.log('stub getRuntimePackage platform:', platform)
     return {
       version: '7.0.0',
       name: `@nativescript/${platform}`

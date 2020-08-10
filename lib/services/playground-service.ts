@@ -1,5 +1,6 @@
 import { IProjectDataService, IProjectData } from "../definitions/project";
 import { IPlaygroundService, IFileSystem, IUserSettingsService, IPlaygroundInfo } from "../common/declarations";
+import { injector } from "../common/yok";
 
 export class PlaygroundService implements IPlaygroundService {
 	constructor(private $fs: IFileSystem,
@@ -49,4 +50,4 @@ export class PlaygroundService implements IPlaygroundService {
 		return this.$userSettingsService.getSettingValue<IPlaygroundInfo>("playground");
 	}
 }
-$injector.register('playgroundService', PlaygroundService);
+injector.register('playgroundService', PlaygroundService);

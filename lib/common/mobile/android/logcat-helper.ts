@@ -3,7 +3,8 @@ import { DeviceAndroidDebugBridge } from "./device-android-debug-bridge";
 import { ChildProcess } from "child_process";
 import * as semver from "semver";
 import { IDictionary } from "../../declarations";
-import { IInjector, $injector } from "../../definitions/yok";
+import { IInjector } from "../../definitions/yok";
+import { injector } from "../../yok";
 
 interface IDeviceLoggingData {
 	loggingProcess: ChildProcess;
@@ -107,4 +108,4 @@ export class LogcatHelper implements Mobile.ILogcatHelper {
 	}
 }
 
-$injector.register("logcatHelper", LogcatHelper);
+injector.register("logcatHelper", LogcatHelper);

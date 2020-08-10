@@ -5,7 +5,7 @@ import { INetworkConnectivityValidator, IOptions } from "../declarations";
 import { ICommandParameter, ICommand } from "../common/definitions/commands";
 import { IAnalyticsService, IErrors } from "../common/declarations";
 import { ICleanupService } from "../definitions/cleanup-service";
-import { $injector } from "../common/definitions/yok";
+import { injector } from "../common/yok";
 
 export class PreviewCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
@@ -58,4 +58,4 @@ export class PreviewCommand implements ICommand {
 		return true;
 	}
 }
-$injector.registerCommand("preview", PreviewCommand);
+injector.registerCommand("preview", PreviewCommand);

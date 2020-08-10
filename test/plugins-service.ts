@@ -44,6 +44,7 @@ import { IPluginData, IPluginsService } from '../lib/definitions/plugins';
 import { IProjectData } from '../lib/definitions/project';
 import { IStringDictionary } from '../lib/common/declarations';
 import { IInjector } from '../lib/common/definitions/yok';
+import { IEventActionData, IGoogleAnalyticsData } from '../lib/common/definitions/google-analytics';
 temp.track();
 
 let isErrorThrown = false;

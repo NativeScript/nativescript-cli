@@ -1,6 +1,6 @@
 import { IProjectData } from "./definitions/project";
 import { IPlatformValidationService } from "./declarations";
-import { $injector } from "./common/definitions/yok";
+import { injector } from "./common/yok";
 import { ICommandParameter } from "./common/definitions/commands";
 
 export class PlatformCommandParameter implements ICommandParameter {
@@ -13,4 +13,4 @@ export class PlatformCommandParameter implements ICommandParameter {
 		return true;
 	}
 }
-$injector.register("platformCommandParameter", PlatformCommandParameter);
+injector.register("platformCommandParameter", PlatformCommandParameter);

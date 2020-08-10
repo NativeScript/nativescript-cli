@@ -3,7 +3,7 @@ import { cache, invokeInit } from "../../decorators";
 import { EOL } from "os";
 import { fromWindowsRelativePathToUnix } from "../../helpers";
 import { IChildProcess, IErrors } from "../../declarations";
-import { $injector } from "../../definitions/yok";
+import { injector } from "../../yok";
 interface IComposeCommandResult {
 	command: string;
 	args: string[];
@@ -144,4 +144,4 @@ export class AndroidDebugBridge implements Mobile.IAndroidDebugBridge {
 	}
 }
 
-$injector.register("adb", AndroidDebugBridge);
+injector.register("adb", AndroidDebugBridge);

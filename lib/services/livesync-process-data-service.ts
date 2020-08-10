@@ -1,4 +1,6 @@
 import { IDictionary } from "../common/declarations";
+import { injector } from "../common/yok";
+import * as _ from 'lodash';
 
 export class LiveSyncProcessDataService implements ILiveSyncProcessDataService {
 	protected processes: IDictionary<ILiveSyncProcessData> = {};
@@ -39,4 +41,4 @@ export class LiveSyncProcessDataService implements ILiveSyncProcessDataService {
 		return currentPlatforms || [];
 	}
 }
-$injector.register("liveSyncProcessDataService", LiveSyncProcessDataService);
+injector.register("liveSyncProcessDataService", LiveSyncProcessDataService);

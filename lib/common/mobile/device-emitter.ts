@@ -1,6 +1,6 @@
 import { EventEmitter } from "events";
 import { DeviceDiscoveryEventNames, EmulatorDiscoveryNames, DEVICE_LOG_EVENT_NAME } from "../constants";
-import { $injector } from "../definitions/yok";
+import { injector } from "../yok";
 
 export class DeviceEmitter extends EventEmitter {
 	constructor(private $deviceLogProvider: EventEmitter,
@@ -72,4 +72,4 @@ export class DeviceEmitter extends EventEmitter {
 		});
 	}
 }
-$injector.register("deviceEmitter", DeviceEmitter);
+injector.register("deviceEmitter", DeviceEmitter);

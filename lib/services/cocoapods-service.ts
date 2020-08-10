@@ -1,5 +1,6 @@
 import { EOL } from "os";
 import * as path from "path";
+import * as _ from 'lodash';
 import { PlatformTypes, PODFILE_NAME, NS_BASE_PODFILE } from "../constants";
 import { regExpEscape, getHash } from "../common/helpers";
 import { IPluginData } from "../definitions/plugins";
@@ -7,6 +8,7 @@ import { IRubyFunction, IProjectData, ICocoaPodsPlatformManager, ICocoaPodsServi
 import { IPlatformData } from "../definitions/platform";
 import { IConfiguration, IXcconfigService } from "../declarations";
 import { IFileSystem, IChildProcess, IErrors, ISpawnResult } from "../common/declarations";
+import { injector } from "../common/yok";
 
 export class CocoaPodsService implements ICocoaPodsService {
 	private static PODFILE_POST_INSTALL_SECTION_NAME = "post_install";
@@ -294,4 +296,4 @@ ${versionResolutionHint}`);
 	}
 }
 
-$injector.register("cocoapodsService", CocoaPodsService);
+injector.register("cocoapodsService", CocoaPodsService);

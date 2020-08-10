@@ -4,7 +4,7 @@ import { performanceLog } from "./common/decorators";
 import { PackageManagers } from './constants';
 import { IPackageManager, INodePackageManager, IOptions, INodePackageManagerInstallOptions, INpmInstallResultInfo, INpmsResult, INpmPackageNameParts } from './declarations';
 import { IErrors, IUserSettingsService, IDictionary } from './common/declarations';
-import { $injector } from './common/definitions/yok';
+import { injector } from "./common/yok";
 export class PackageManager implements IPackageManager {
 	private packageManager: INodePackageManager;
 	private _packageManagerName: string;
@@ -120,4 +120,4 @@ export class PackageManager implements IPackageManager {
 	}
 }
 
-$injector.register('packageManager', PackageManager);
+injector.register('packageManager', PackageManager);

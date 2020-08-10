@@ -7,7 +7,7 @@ import { cache } from "./common/decorators";
 import { IProjectData, INsConfig } from "./definitions/project";
 import { IAndroidResourcesMigrationService, IStaticConfig, IOptions } from "./declarations";
 import { IStringDictionary, IFileSystem, IErrors, IProjectHelper } from "./common/declarations";
-import { $injector } from "./common/definitions/yok";
+import { injector } from "./common/yok";
 
 interface IProjectType {
 	type: string;
@@ -276,4 +276,4 @@ export class ProjectData implements IProjectData {
 		this.$logger.warn("[WARNING]: IProjectData.projectId is deprecated. Please use IProjectData.projectIdentifiers[platform].");
 	}
 }
-$injector.register("projectData", ProjectData, true);
+injector.register("projectData", ProjectData, true);

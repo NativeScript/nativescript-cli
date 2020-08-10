@@ -1,6 +1,7 @@
 import { isInteractive } from "../../common/helpers";
 import { IErrors, Server, ICredentials } from "../../common/declarations";
-import { $injector } from "../../common/definitions/yok";
+import { injector } from "../../common/yok";
+import { IAppleCreateUserSessionOptions, IApplePortalUserDetail, IApplePortalCookieService, IAppleLoginResult, IApplePortalSessionService } from "./definitions";
 
 export class ApplePortalSessionService implements IApplePortalSessionService {
 	private loginConfigEndpoint = "https://appstoreconnect.apple.com/olympus/v1/app/config?hostname=itunesconnect.apple.com";
@@ -198,4 +199,4 @@ For more details how to set up your environment, please execute "tns publish ios
 		}
 	}
 }
-$injector.register("applePortalSessionService", ApplePortalSessionService);
+injector.register("applePortalSessionService", ApplePortalSessionService);

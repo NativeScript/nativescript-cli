@@ -6,7 +6,7 @@ import { FilePayload, FilesPayload } from "nativescript-preview-sdk";
 import { IPlatformsDataService } from "../../../definitions/platform";
 import { IProjectDataService } from "../../../definitions/project";
 import { IFileSystem, IProjectFilesManager, IProjectFilesProvider } from "../../../common/declarations";
-import { $injector } from "../../../common/definitions/yok";
+import { injector } from "../../../common/yok";
 const isTextOrBinary = require('istextorbinary');
 
 export class PreviewAppFilesService implements IPreviewAppFilesService {
@@ -95,4 +95,4 @@ export class PreviewAppFilesService implements IPreviewAppFilesService {
 		return rootFilesDir;
 	}
 }
-$injector.register("previewAppFilesService", PreviewAppFilesService);
+injector.register("previewAppFilesService", PreviewAppFilesService);

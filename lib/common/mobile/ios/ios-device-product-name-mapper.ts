@@ -1,5 +1,5 @@
 import { IStringDictionary } from "../../declarations";
-import { $injector } from "../../definitions/yok";
+import { injector } from "../../yok";
 
 class IosDeviceProductNameMapper implements Mobile.IiOSDeviceProductNameMapper {
 	// http://support.hockeyapp.net/kb/client-integration-ios-mac-os-x/ios-device-types
@@ -61,4 +61,4 @@ class IosDeviceProductNameMapper implements Mobile.IiOSDeviceProductNameMapper {
 		return this.map[deviceType];
 	}
 }
-$injector.register("iOSDeviceProductNameMapper", IosDeviceProductNameMapper);
+injector.register("iOSDeviceProductNameMapper", IosDeviceProductNameMapper);

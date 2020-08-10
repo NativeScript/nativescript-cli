@@ -10,7 +10,8 @@ import { IMigrateController } from "../definitions/migrate";
 import { ICommandParameter, ICommand } from "../common/definitions/commands";
 import { IErrors, ISysInfo } from "../common/declarations";
 import { ICleanupService } from "../definitions/cleanup-service";
-import { IInjector, $injector } from "../common/definitions/yok";
+import { IInjector } from "../common/definitions/yok";
+import { injector } from "../common/yok";
 import * as _ from 'lodash';
 
 export class DebugPlatformCommand extends ValidatePlatformCommandBase implements ICommand {
@@ -152,7 +153,7 @@ export class DebugIOSCommand implements ICommand {
 	public platform = this.$devicePlatformsConstants.iOS;
 }
 
-$injector.registerCommand("debug|ios", DebugIOSCommand);
+injector.registerCommand("debug|ios", DebugIOSCommand);
 
 export class DebugAndroidCommand implements ICommand {
 
@@ -190,4 +191,4 @@ export class DebugAndroidCommand implements ICommand {
 	public platform = this.$devicePlatformsConstants.Android;
 }
 
-$injector.registerCommand("debug|android", DebugAndroidCommand);
+injector.registerCommand("debug|android", DebugAndroidCommand);

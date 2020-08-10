@@ -1,6 +1,6 @@
 import * as dns from "dns";
 import { INetworkConnectivityValidator } from "../declarations";
-import { $injector } from "../common/definitions/yok";
+import { injector } from "../common/yok";
 import { IErrors } from "../common/declarations";
 
 export class NetworkConnectivityValidator implements INetworkConnectivityValidator {
@@ -31,4 +31,4 @@ export class NetworkConnectivityValidator implements INetworkConnectivityValidat
 		});
 	}
 }
-$injector.register("networkConnectivityValidator", NetworkConnectivityValidator);
+injector.register("networkConnectivityValidator", NetworkConnectivityValidator);

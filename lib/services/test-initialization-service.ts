@@ -3,6 +3,8 @@ import * as fs from "fs";
 import { cache } from "../common/decorators";
 import { ITestInitializationService } from "../definitions/project";
 import { IErrors, IFileSystem, IDependencyInformation } from "../common/declarations";
+import * as _ from 'lodash';
+import { injector } from "../common/yok";
 
 export class TestInitializationService implements ITestInitializationService {
 	private configsPath = path.join(__dirname, "..", "..", "config");
@@ -47,4 +49,4 @@ export class TestInitializationService implements ITestInitializationService {
 	}
 }
 
-$injector.register("testInitializationService", TestInitializationService);
+injector.register("testInitializationService", TestInitializationService);

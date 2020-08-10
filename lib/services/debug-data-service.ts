@@ -1,5 +1,6 @@
 import { IProjectData } from "../definitions/project";
 import { IDebugOptions, IDebugData, IDebugDataService } from "../definitions/debug";
+import { injector } from "../common/yok";
 
 export class DebugDataService implements IDebugDataService {
 	constructor(
@@ -19,4 +20,4 @@ export class DebugDataService implements IDebugDataService {
 	}
 }
 
-$injector.register("debugDataService", DebugDataService);
+injector.register("debugDataService", DebugDataService);

@@ -1,4 +1,7 @@
 import * as temp from "temp";
+import { ICleanupService } from "../definitions/cleanup-service";
+import * as _ from 'lodash';
+import { injector } from "../common/yok";
 
 export class TempService implements ITempService {
 	constructor(private $cleanupService: ICleanupService) {
@@ -18,4 +21,4 @@ export class TempService implements ITempService {
 	}
 }
 
-$injector.register("tempService", TempService);
+injector.register("tempService", TempService);

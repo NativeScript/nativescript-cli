@@ -8,7 +8,7 @@ import { cache } from "../../decorators";
 import { settlePromises } from "../../helpers";
 import { DeviceConnectionType } from "../../../constants";
 import { IStringDictionary, IChildProcess, IFileSystem, IHostInfo, ISysInfo, ISpawnResult } from "../../declarations";
-import { $injector } from "../../definitions/yok";
+import { injector } from "../../yok";
 
 export class AndroidVirtualDeviceService implements Mobile.IAndroidVirtualDeviceService {
 	private androidHome: string;
@@ -390,4 +390,4 @@ export class AndroidVirtualDeviceService implements Mobile.IAndroidVirtualDevice
 		}
 	}
 }
-$injector.register("androidVirtualDeviceService", AndroidVirtualDeviceService);
+injector.register("androidVirtualDeviceService", AndroidVirtualDeviceService);

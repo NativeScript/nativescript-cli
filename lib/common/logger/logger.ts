@@ -7,7 +7,7 @@ import { cache } from "../decorators";
 import { layout } from "./layouts/cli-layout";
 import { LoggerConfigData, LoggerLevel, LoggerAppenders } from "../../constants";
 import { IDictionary } from "../declarations";
-import { $injector } from "../definitions/yok";
+import { injector } from "../yok";
 const TerminalRenderer = require("marked-terminal");
 const chalk = require("chalk");
 
@@ -213,4 +213,4 @@ export class Logger implements ILogger {
 	}
 }
 
-$injector.register("logger", Logger);
+injector.register("logger", Logger);

@@ -2,7 +2,7 @@ import { IProjectData } from "../../definitions/project";
 import { IAndroidResourcesMigrationService } from "../../declarations";
 import { ICommand, ICommandParameter } from "../../common/definitions/commands";
 import { IErrors } from "../../common/declarations";
-import { $injector } from "../../common/definitions/yok";
+import { injector } from "../../common/yok";
 
 export class ResourcesUpdateCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
@@ -37,4 +37,4 @@ export class ResourcesUpdateCommand implements ICommand {
 	}
 }
 
-$injector.registerCommand("resources|update", ResourcesUpdateCommand);
+injector.registerCommand("resources|update", ResourcesUpdateCommand);

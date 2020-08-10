@@ -1,6 +1,8 @@
 import * as mobileprovision from "ios-mobileprovision-finder";
 import { createTable, quoteString } from "../common/helpers";
 import { IOptions } from "../declarations";
+import * as _ from 'lodash';
+import { injector } from "../common/yok";
 
 const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 function formatDate(date: Date): string {
@@ -123,4 +125,4 @@ export class IOSProvisionService {
 	}
 }
 
-$injector.register("iOSProvisionService", IOSProvisionService);
+injector.register("iOSProvisionService", IOSProvisionService);

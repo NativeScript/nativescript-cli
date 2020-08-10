@@ -6,7 +6,7 @@ import { IAssetsGenerationService, IResourceGenerationData, ISplashesGenerationD
 import { IProjectDataService, IAssetGroup, IAssetSubGroup } from "../../definitions/project";
 import { IDictionary } from "../../common/declarations";
 import * as _ from 'lodash';
-import { $injector } from "../../common/definitions/yok";
+import { injector } from "../../common/yok";
 
 export const enum Operations {
 	OverlayWith = "overlayWith",
@@ -138,4 +138,4 @@ export class AssetsGenerationService implements IAssetsGenerationService {
 	}
 }
 
-$injector.register("assetsGenerationService", AssetsGenerationService);
+injector.register("assetsGenerationService", AssetsGenerationService);

@@ -6,7 +6,8 @@ import { IProjectDataService } from "../definitions/project";
 import { IBuildController, IBuildArtefactsService, IBuildInfoFileService, IBuildData } from "../definitions/build";
 import { IPlatformsDataService } from "../definitions/platform";
 import { IAnalyticsService, IFileSystem } from "../common/declarations";
-import { IInjector, $injector } from "../common/definitions/yok";
+import { IInjector } from "../common/definitions/yok";
+import { injector } from "../common/yok";
 
 export class BuildController extends EventEmitter implements IBuildController {
 	constructor(
@@ -126,4 +127,4 @@ export class BuildController extends EventEmitter implements IBuildController {
 		return prepareInfo.changesRequireBuildTime !== buildInfo.prepareTime;
 	}
 }
-$injector.register("buildController", BuildController);
+injector.register("buildController", BuildController);

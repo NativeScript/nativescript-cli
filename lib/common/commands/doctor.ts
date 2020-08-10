@@ -1,4 +1,4 @@
-import { $injector } from "../definitions/yok";
+import { injector } from "../yok";
 import { ICommand, ICommandParameter } from "../definitions/commands";
 import { IDoctorService, IProjectHelper } from "../declarations";
 
@@ -14,4 +14,4 @@ export class DoctorCommand implements ICommand {
 	}
 }
 
-$injector.registerCommand("doctor", DoctorCommand);
+injector.registerCommand("doctor", DoctorCommand);

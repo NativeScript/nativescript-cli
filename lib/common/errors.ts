@@ -5,7 +5,8 @@ import { SourceMapConsumer } from "source-map";
 import { isInteractive } from "./helpers";
 import { deprecated } from "./decorators";
 import { ErrorCodes, IErrors, IFailOptions } from "./declarations";
-import { $injector, IInjector } from "./definitions/yok";
+import { IInjector } from "./definitions/yok";
+import { injector } from "./yok";
 
 // we need this to overwrite .stack property (read-only in Error)
 function Exception() {
@@ -85,7 +86,7 @@ export function installUncaughtExceptionListener(actionOnException?: () => void)
 
 			console.error(callstack || err.toString());
 
-			await tryTrackException(err, $injector);
+			await tryTrackException(err, injector);
 
 			if (actionOnException) {
 				actionOnException();
@@ -207,5 +208,4 @@ export class Errors implements IErrors {
 		}
 	}
 }
-
-$injector.register("errors", Errors);
+injector.register("errors", Errors);

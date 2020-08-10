@@ -3,6 +3,8 @@ import { NODE_MODULES_FOLDER_NAME, PACKAGE_JSON_FILE_NAME } from "../../constant
 import { INodeModulesDependenciesBuilder } from "../../definitions/platform";
 import { IDependencyData } from "../../declarations";
 import { IFileSystem } from "../../common/declarations";
+import * as _ from 'lodash';
+import { injector } from "../../common/yok";
 
 interface IDependencyDescription {
 	parent: IDependencyDescription;
@@ -133,4 +135,4 @@ export class NodeModulesDependenciesBuilder implements INodeModulesDependenciesB
 	}
 }
 
-$injector.register("nodeModulesDependenciesBuilder", NodeModulesDependenciesBuilder);
+injector.register("nodeModulesDependenciesBuilder", NodeModulesDependenciesBuilder);

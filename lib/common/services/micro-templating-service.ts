@@ -1,7 +1,8 @@
 import * as util from "util";
 import * as os from "os";
 import * as constants from "../../constants";
-import { IInjector, $injector } from "../definitions/yok";
+import { IInjector } from "../definitions/yok";
+import { injector } from "../yok";
 import { IMicroTemplateService, IDictionary } from "../declarations";
 import * as _ from 'lodash';
 
@@ -43,4 +44,4 @@ export class MicroTemplateService implements IMicroTemplateService {
 		return localVariables;
 	}
 }
-$injector.register("microTemplateService", MicroTemplateService);
+injector.register("microTemplateService", MicroTemplateService);

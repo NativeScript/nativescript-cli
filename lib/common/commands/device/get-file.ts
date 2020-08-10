@@ -2,7 +2,7 @@ import { IProjectData } from "../../../definitions/project";
 import { IOptions } from "../../../declarations";
 import { ICommandParameter, ICommand } from "../../definitions/commands";
 import { IErrors } from "../../declarations";
-import { $injector } from "../../definitions/yok";
+import { injector } from "../../yok";
 
 export class GetFileCommand implements ICommand {
 	constructor(private $devicesService: Mobile.IDevicesService,
@@ -36,4 +36,4 @@ export class GetFileCommand implements ICommand {
 	}
 }
 
-$injector.registerCommand(["device|get-file", "devices|get-file"], GetFileCommand);
+injector.registerCommand(["device|get-file", "devices|get-file"], GetFileCommand);

@@ -6,6 +6,9 @@ import { ITestExecutionService, IProjectDataService, IProjectData } from "../def
 import { IConfiguration, IOptions } from "../declarations";
 import { IPluginsService } from "../definitions/plugins";
 import { Server, IFileSystem, IChildProcess, ErrorCodes } from "../common/declarations";
+import * as _ from 'lodash';
+import { injector } from "../common/yok";
+import { ICommandParameter } from "../common/definitions/commands";
 
 interface IKarmaConfigOptions {
 	debugBrk: boolean;
@@ -168,4 +171,4 @@ export class TestExecutionService implements ITestExecutionService {
 		return karmaConfig;
 	}
 }
-$injector.register('testExecutionService', TestExecutionService);
+injector.register('testExecutionService', TestExecutionService);

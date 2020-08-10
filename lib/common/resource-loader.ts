@@ -1,6 +1,6 @@
 import * as path from "path";
 import { IResourceLoader, IFileSystem } from "./declarations";
-import { $injector } from "./definitions/yok";
+import { injector } from "./yok";
 
 export class ResourceLoader implements IResourceLoader {
 	constructor(private $fs: IFileSystem,
@@ -22,4 +22,4 @@ export class ResourceLoader implements IResourceLoader {
 		return this.$fs.readJson(this.resolvePath(resourcePath));
 	}
 }
-$injector.register("resources", ResourceLoader);
+injector.register("resources", ResourceLoader);

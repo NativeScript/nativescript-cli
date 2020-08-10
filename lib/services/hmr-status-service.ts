@@ -1,6 +1,7 @@
 import { cache } from "../common/decorators";
 import { HmrConstants, IOS_APP_CRASH_LOG_REG_EXP, FAIL_LIVESYNC_LOG_REGEX } from "../common/constants";
 import { IDictionary } from "../common/declarations";
+import { injector } from "../common/yok";
 
 export class HmrStatusService implements IHmrStatusService {
 	public static HMR_STATUS_LOG_REGEX = /([a-z A-Z]*) hmr hash ([a-z0-9]*)\./;
@@ -113,4 +114,4 @@ export class HmrStatusService implements IHmrStatusService {
 	}
 }
 
-$injector.register("hmrStatusService", HmrStatusService);
+injector.register("hmrStatusService", HmrStatusService);

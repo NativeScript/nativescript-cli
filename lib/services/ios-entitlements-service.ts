@@ -3,6 +3,7 @@ import { PlistSession } from "plist-merge-patch";
 import { IPluginsService, IPluginData } from "../definitions/plugins";
 import { IProjectData } from "../definitions/project";
 import { IFileSystem } from "../common/declarations";
+import { injector } from "../common/yok";
 
 export class IOSEntitlementsService {
 	constructor(private $fs: IFileSystem,
@@ -71,4 +72,4 @@ export class IOSEntitlementsService {
 	}
 }
 
-$injector.register("iOSEntitlementsService", IOSEntitlementsService);
+injector.register("iOSEntitlementsService", IOSEntitlementsService);

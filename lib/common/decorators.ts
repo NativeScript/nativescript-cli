@@ -1,6 +1,7 @@
 import { AnalyticsEventLabelDelimiter } from "../constants";
 import { IPerformanceService } from "../declarations";
-import { $injector, IInjector } from "./definitions/yok";
+import { IInjector } from "./definitions/yok";
+import { injector } from './yok';
 
 /**
  * Caches the result of the first execution of the method and returns it whenever it is called instead of executing it again.
@@ -75,9 +76,9 @@ export function invokeInit(): any {
 
 export function exported(moduleName: string): any {
 	return (target: Object, propertyKey: string, descriptor: TypedPropertyDescriptor<any>): TypedPropertyDescriptor<any> => {
-		$injector.publicApi.__modules__[moduleName] = $injector.publicApi.__modules__[moduleName] || {};
-		$injector.publicApi.__modules__[moduleName][propertyKey] = (...args: any[]): any => {
-			const originalModule = $injector.resolve(moduleName),
+		injector.publicApi.__modules__[moduleName] = injector.publicApi.__modules__[moduleName] || {};
+		injector.publicApi.__modules__[moduleName][propertyKey] = (...args: any[]): any => {
+			const originalModule = injector.resolve(moduleName),
 				originalMethod: any = originalModule[propertyKey],
 				result = originalMethod.apply(originalModule, args);
 
@@ -89,7 +90,7 @@ export function exported(moduleName: string): any {
 }
 
 export function performanceLog(injector?: IInjector): any {
-	injector = injector || $injector;
+	injector = injector || (<any>global).$injector;
 	return function (target: any, propertyKey: string, descriptor: PropertyDescriptor): any {
 		const originalMethod = descriptor.value;
 		const className = target.constructor.name;
@@ -137,7 +138,7 @@ export function performanceLog(injector?: IInjector): any {
 export function deprecated(additionalInfo?: string, injector?: IInjector): any {
   const isDeprecatedMessage = " is deprecated.";
 	return (target: Object, key: string, descriptor: TypedPropertyDescriptor<any>): TypedPropertyDescriptor<any> => {
-    injector = injector || $injector;
+    injector = injector || (<any>global).$injector;
 		additionalInfo = additionalInfo || "";
 		const $logger = <ILogger>injector.resolve("logger");
 		if (descriptor) {

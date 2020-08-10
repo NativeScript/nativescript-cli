@@ -1,5 +1,5 @@
 import * as constants from "../constants";
-import { $injector } from "../definitions/yok";
+import { injector } from "../yok";
 import { IiOSNotificationService } from "../declarations";
 import * as _ from 'lodash';
 
@@ -25,4 +25,4 @@ export class IOSNotificationService implements IiOSNotificationService {
 	}
 }
 
-$injector.register("iOSNotificationService", IOSNotificationService);
+injector.register("iOSNotificationService", IOSNotificationService);

@@ -4,7 +4,8 @@ import { TARGET_FRAMEWORK_IDENTIFIERS } from "../../constants";
 import { exported } from "../../decorators";
 import { IDictionary, IErrors, INet } from "../../declarations";
 import { ICleanupService } from "../../../definitions/cleanup-service";
-import { IInjector, $injector } from "../../definitions/yok";
+import { IInjector } from "../../definitions/yok";
+import { injector } from "../../yok";
 import { IStaticConfig } from "../../../declarations";
 import * as _ from 'lodash';
 
@@ -283,4 +284,4 @@ export class AndroidProcessService implements Mobile.IAndroidProcessService {
 	}
 }
 
-$injector.register("androidProcessService", AndroidProcessService);
+injector.register("androidProcessService", AndroidProcessService);

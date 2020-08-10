@@ -3,7 +3,7 @@ import { IProjectData } from "../../definitions/project";
 import { IPluginsService } from "../../definitions/plugins";
 import { ICommand, ICommandParameter } from "../../common/definitions/commands";
 import { IErrors } from "../../common/declarations";
-import { $injector } from "../../common/definitions/yok";
+import { injector } from "../../common/yok";
 
 export class RemovePluginCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
@@ -44,4 +44,4 @@ export class RemovePluginCommand implements ICommand {
 
 }
 
-$injector.registerCommand("plugin|remove", RemovePluginCommand);
+injector.registerCommand("plugin|remove", RemovePluginCommand);

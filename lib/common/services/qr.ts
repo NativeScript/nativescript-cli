@@ -1,6 +1,6 @@
 import { imageSync } from "qr-image";
 import { escape } from "querystring";
-import { $injector } from "../definitions/yok";
+import { injector } from "../yok";
 import { IQrCodeGenerator } from "../declarations";
 
 export class QrCodeGenerator implements IQrCodeGenerator {
@@ -20,4 +20,4 @@ export class QrCodeGenerator implements IQrCodeGenerator {
 	}
 }
 
-$injector.register("qr", QrCodeGenerator);
+injector.register("qr", QrCodeGenerator);

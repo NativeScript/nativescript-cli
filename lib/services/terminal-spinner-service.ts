@@ -1,4 +1,6 @@
 const ora = require('ora');
+import * as _ from 'lodash';
+import { injector } from "../common/yok";
 
 export class TerminalSpinnerService implements ITerminalSpinnerService {
 	public createSpinner(spinnerOptions: ITerminalSpinnerOptions = {}): ITerminalSpinner {
@@ -24,4 +26,4 @@ export class TerminalSpinnerService implements ITerminalSpinnerService {
 		return result;
 	}
 }
-$injector.register('terminalSpinnerService', TerminalSpinnerService);
+injector.register('terminalSpinnerService', TerminalSpinnerService);

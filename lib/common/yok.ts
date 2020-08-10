@@ -4,8 +4,10 @@ import { annotate, isPromise } from "./helpers";
 import { ERROR_NO_VALID_SUBCOMMAND_FORMAT } from "./constants";
 import { CommandsDelimiters } from "./constants";
 import { IDictionary } from "./declarations";
-import { $injector, IInjector } from "./definitions/yok";
+import { IInjector } from "./definitions/yok";
 import { ICommandArgument, ICommand } from "./definitions/commands";
+
+export let injector: IInjector;
 
 let indent = "";
 function trace(formatStr: string, ...args: any[]) {
@@ -37,7 +39,7 @@ function forEachName(names: any, action: (name: string) => void): void {
 export function register(...rest: any[]) {
 	return function (target: any): void {
 		// TODO: Check if 'rest' has more arguments that have to be registered
-		$injector.register(rest[0], target);
+		injector.register(rest[0], target);
 	};
 }
 
@@ -207,7 +209,7 @@ export class Yok implements IInjector {
 				disableAnalytics: true,
 				isHierarchicalCommand: true,
 				execute: async (args: string[]): Promise<void> => {
-					const commandsService = $injector.resolve("commandsService");
+					const commandsService = injector.resolve("commandsService");
 					let commandName: string = null;
 					const defaultCommand = this.getDefaultCommand(name, args);
 					let commandArguments: ICommandArgument[] = [];
@@ -245,7 +247,7 @@ export class Yok implements IInjector {
 			};
 		};
 
-		$injector.registerCommand(name, factory);
+		injector.registerCommand(name, factory);
 	}
 
 	private getHierarchicalCommandName(parentCommandName: string, subCommandName: string) {
@@ -261,7 +263,7 @@ export class Yok implements IInjector {
 					// In case buildHierarchicalCommand doesn't find a valid command
 					// there isn't a valid command or default with those arguments
 
-					const errors = $injector.resolve("errors");
+					const errors = injector.resolve("errors");
 					errors.failWithHelp(ERROR_NO_VALID_SUBCOMMAND_FORMAT, commandName);
 				}
 
@@ -451,5 +453,5 @@ export class Yok implements IInjector {
 
 if (!(<any>global).$injector) {
   (<any>global).$injector = new Yok(); 
+  injector = (<any>global).$injector;
 }
-export const injector = (<any>global).$injector;

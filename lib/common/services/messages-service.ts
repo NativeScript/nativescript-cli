@@ -2,7 +2,7 @@ import * as util from "util";
 import { join } from "path";
 import { IMessagesService, IFileSystem } from "../declarations";
 import * as _ from 'lodash';
-import { $injector } from "../definitions/yok";
+import { injector } from "../yok";
 
 export class MessagesService implements IMessagesService {
 	private _pathsToMessageJsonFiles: string[] = null;
@@ -87,4 +87,4 @@ export class MessagesService implements IMessagesService {
 	}
 }
 
-$injector.register("messagesService", MessagesService);
+injector.register("messagesService", MessagesService);

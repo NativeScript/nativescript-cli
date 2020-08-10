@@ -10,7 +10,8 @@ import { IPlatformsDataService } from "../definitions/platform";
 import { IDebugController } from "../definitions/debug";
 import { IPluginsService } from "../definitions/plugins";
 import { IAnalyticsService, IErrors, IHooksService, IDictionary } from "../common/declarations";
-import { IInjector, $injector } from "../common/definitions/yok";
+import { IInjector } from "../common/definitions/yok";
+import { injector } from "../common/yok";
 
 export class RunController extends EventEmitter implements IRunController {
 	private prepareReadyEventHandler: any = null;
@@ -489,4 +490,4 @@ export class RunController extends EventEmitter implements IRunController {
 		this.emit(event, data);
 	}
 }
-$injector.register("runController", RunController);
+injector.register("runController", RunController);

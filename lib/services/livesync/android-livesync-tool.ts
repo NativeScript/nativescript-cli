@@ -2,7 +2,8 @@ import * as path from "path";
 import * as _ from 'lodash';
 import * as crypto from "crypto";
 import { IDictionary, IErrors, IFileSystem } from "../../common/declarations";
-import { $injector, IInjector } from "../../common/definitions/yok";
+import { IInjector } from "../../common/definitions/yok";
+import { injector } from "../../common/yok";
 
 const PROTOCOL_VERSION_LENGTH_SIZE = 1;
 const PROTOCOL_OPERATION_LENGTH_SIZE = 1;
@@ -466,4 +467,4 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 		return result;
 	}
 }
-$injector.register("androidLivesyncTool", AndroidLivesyncTool);
+injector.register("androidLivesyncTool", AndroidLivesyncTool);

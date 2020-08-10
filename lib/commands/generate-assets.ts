@@ -1,7 +1,8 @@
 import { IProjectData } from "../definitions/project";
 import { IOptions, IAssetsGenerationService } from "../declarations";
 import { ICommand, ICommandParameter, IStringParameterBuilder } from "../common/definitions/commands";
-import { IInjector, $injector } from "../common/definitions/yok";
+import { IInjector } from "../common/definitions/yok";
+import { injector } from "../common/yok";
 
 export abstract class GenerateCommandBase implements ICommand {
 	public allowedParameters: ICommandParameter[] = [this.$stringParameterBuilder.createMandatoryParameter("You have to provide path to image to generate other images based on it.")];
@@ -36,7 +37,7 @@ export class GenerateIconsCommand extends GenerateCommandBase implements IComman
 	}
 }
 
-$injector.registerCommand("resources|generate|icons", GenerateIconsCommand);
+injector.registerCommand("resources|generate|icons", GenerateIconsCommand);
 
 export class GenerateSplashScreensCommand extends GenerateCommandBase implements ICommand {
 	constructor(protected $options: IOptions,
@@ -52,4 +53,4 @@ export class GenerateSplashScreensCommand extends GenerateCommandBase implements
 	}
 }
 
-$injector.registerCommand("resources|generate|splashes", GenerateSplashScreensCommand);
+injector.registerCommand("resources|generate|splashes", GenerateSplashScreensCommand);

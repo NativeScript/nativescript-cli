@@ -1,6 +1,6 @@
 import { ICommandParameter, ICommand } from "../common/definitions/commands";
 import { IHelpService } from "../common/declarations";
-import { $injector } from "../common/definitions/yok";
+import { injector } from "../common/yok";
 
 export class GenerateHelpCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
@@ -12,4 +12,4 @@ export class GenerateHelpCommand implements ICommand {
 	}
 }
 
-$injector.registerCommand("dev-generate-help", GenerateHelpCommand);
+injector.registerCommand("dev-generate-help", GenerateHelpCommand);

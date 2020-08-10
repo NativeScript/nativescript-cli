@@ -16,6 +16,9 @@ import { IProjectDataService, IProjectData, IAssetsStructure, IAssetGroup, INsCo
 import { IStaticConfig, IAndroidResourcesMigrationService } from "../declarations";
 import { IPluginsService, IBasePluginData } from "../definitions/plugins";
 import { IDictionary, IFileSystem, IProjectDir } from "../common/declarations";
+import * as _ from 'lodash';
+import { IInjector } from "../common/definitions/yok";
+import { injector } from "../common/yok";
 
 interface IProjectFileData {
 	projectData: any;
@@ -426,4 +429,4 @@ export class ProjectDataService implements IProjectDataService {
 		return JSON.stringify(config);
 	}
 }
-$injector.register("projectDataService", ProjectDataService);
+injector.register("projectDataService", ProjectDataService);

@@ -3,8 +3,10 @@ import { StringCommandParameter } from "../common/command-params";
 import { IProjectData } from "../definitions/project";
 import { IPlatformValidationService, IOptions } from "../declarations";
 import { ICommand, ICommandParameter } from "../common/definitions/commands";
-import { IInjector, $injector } from "../common/definitions/yok";
+import { IInjector } from "../common/definitions/yok";
+import { injector } from "../common/yok";
 import { IErrors } from "../common/declarations";
+import { IApplePortalApplicationService, IApplePortalSessionService } from "../services/apple-portal/definitions";
 
 export class ListiOSApps implements ICommand {
 	public allowedParameters: ICommandParameter[] = [new StringCommandParameter(this.$injector), new StringCommandParameter(this.$injector)];
@@ -60,4 +62,4 @@ export class ListiOSApps implements ICommand {
 	}
 }
 
-$injector.registerCommand("appstore|*list", ListiOSApps);
+injector.registerCommand("appstore|*list", ListiOSApps);

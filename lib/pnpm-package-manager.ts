@@ -5,7 +5,7 @@ import { exported } from './common/decorators';
 import { CACACHE_DIRECTORY_NAME } from "./constants";
 import { INodePackageManagerInstallOptions, INpmInstallResultInfo, INpmsResult } from "./declarations";
 import { IChildProcess, IErrors, IFileSystem, IHostInfo, Server, IDictionary } from "./common/declarations";
-import { $injector } from "./common/definitions/yok";
+import { injector } from "./common/yok";
 
 export class PnpmPackageManager extends BasePackageManager {
 
@@ -107,4 +107,4 @@ export class PnpmPackageManager extends BasePackageManager {
 	}
 }
 
-$injector.register("pnpm", PnpmPackageManager);
+injector.register("pnpm", PnpmPackageManager);

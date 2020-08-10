@@ -1,6 +1,7 @@
 import { cache } from "../common/decorators";
 import { IConfiguration } from "../declarations";
 import { Server } from "../common/declarations";
+import { injector } from "../common/yok";
 
 export class IPService implements IIPService {
 	private static GET_IP_TIMEOUT = 1000;
@@ -60,4 +61,4 @@ export class IPService implements IIPService {
 	}
 }
 
-$injector.register("ipService", IPService);
+injector.register("ipService", IPService);

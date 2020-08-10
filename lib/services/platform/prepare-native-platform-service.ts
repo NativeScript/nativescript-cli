@@ -6,7 +6,7 @@ import { INodeModulesBuilder, IPlatformData } from "../../definitions/platform";
 import { IProjectData } from "../../definitions/project";
 import { IMetadataFilteringService } from "../../definitions/metadata-filtering-service";
 import { IHooksService } from "../../common/declarations";
-import { $injector } from "../../common/definitions/yok";
+import { injector } from "../../common/yok";
 
 export class PrepareNativePlatformService implements IPrepareNativePlatformService {
 
@@ -77,4 +77,4 @@ export class PrepareNativePlatformService implements IPrepareNativePlatformServi
 		}
 	}
 }
-$injector.register("prepareNativePlatformService", PrepareNativePlatformService);
+injector.register("prepareNativePlatformService", PrepareNativePlatformService);
