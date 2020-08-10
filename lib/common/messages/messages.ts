@@ -1,6 +1,9 @@
 //
 // automatically generated code; do not edit manually!
 //
+
+import { $injector } from "../definitions/yok";
+
 /* tslint:disable:all */
 export class Messages implements IMessages{
 			Devices = {

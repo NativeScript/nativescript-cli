@@ -1,3 +1,5 @@
+import { IAndroidSigningData } from "./build";
+
 interface IAndroidBundleToolService {
     buildApks(options: IBuildApksOptions): Promise<void>;
     installApks(options: IInstallApksOptions): Promise<void>;

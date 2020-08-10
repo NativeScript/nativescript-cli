@@ -1,4 +1,5 @@
 import { EventEmitter } from "events";
+import { IDebugData, IDebugOptions, IDeviceDebugService, IDebugResultInfo } from "../definitions/debug";
 
 export abstract class DebugServiceBase extends EventEmitter implements IDeviceDebugService {
 	constructor(

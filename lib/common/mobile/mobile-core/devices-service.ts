@@ -1,6 +1,7 @@
 import * as util from "util";
 import * as helpers from "../../helpers";
 import * as assert from "assert";
+import * as _ from 'lodash';
 import * as constants from "../../constants";
 import { exported } from "../../decorators";
 import { settlePromises } from "../../helpers";
@@ -10,6 +11,9 @@ import { CONNECTED_STATUS } from "../../constants";
 import { isInteractive } from "../../helpers";
 import { DebugCommandErrors } from "../../../constants";
 import { performanceLog } from "../../decorators";
+import { IDictionary, IErrors, IHostInfo, IAppInstalledInfo } from "../../declarations";
+import { IInjector, $injector } from "../../definitions/yok";
+import { IOptions } from "../../../declarations";
 
 export class DevicesService extends EventEmitter implements Mobile.IDevicesService {
 	private static DEVICE_LOOKING_INTERVAL = 200;

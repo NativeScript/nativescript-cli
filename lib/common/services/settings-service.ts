@@ -1,6 +1,8 @@
 import { exported } from "../decorators";
 import * as path from "path";
 import * as osenv from "osenv";
+import { IHostInfo, ISettingsService, IConfigurationSettings } from "../declarations";
+import { $injector } from "../definitions/yok";
 
 export class SettingsService implements ISettingsService {
 	private _profileDir: string;

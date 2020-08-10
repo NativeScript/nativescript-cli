@@ -1,6 +1,7 @@
 import { Yok } from "../../../lib/common/yok";
 import { ExportOptionsPlistService } from "../../../lib/services/ios/export-options-plist-service";
 import { assert } from "chai";
+import * as _ from 'lodash';
 import { TempServiceStub } from "../../stubs";
 
 let actualPlistTemplate: string = null;

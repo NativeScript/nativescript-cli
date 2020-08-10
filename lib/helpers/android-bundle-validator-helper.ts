@@ -1,7 +1,12 @@
 import * as util from "util";
-import { AndroidBundleValidatorMessages } from "../constants";
+import { AndroidBundleValidatorMessages, PlatformTypes } from "../constants";
 import { VersionValidatorHelper } from "./version-validator-helper";
 import * as semver from "semver";
+import { IProjectDataService, IProjectData } from "../definitions/project";
+import { IOptions, IAndroidBundleValidatorHelper } from "../declarations";
+import { IBuildData, IAndroidBuildData } from "../definitions/build";
+import { IErrors } from "../common/declarations";
+import { $injector } from "../common/definitions/yok";
 
 export class AndroidBundleValidatorHelper extends VersionValidatorHelper implements IAndroidBundleValidatorHelper {
 	public static MIN_RUNTIME_VERSION = "5.0.0";
@@ -23,7 +28,7 @@ export class AndroidBundleValidatorHelper extends VersionValidatorHelper impleme
 
 	public validateRuntimeVersion(projectData: IProjectData): void {
 		if (this.$options.aab) {
-      const runtimePackage = this.$projectDataService.getRuntimePackage(projectData.projectDir, Platforms.android);
+      const runtimePackage = this.$projectDataService.getRuntimePackage(projectData.projectDir, PlatformTypes.android);
 			const androidRuntimeVersion = runtimePackage ? runtimePackage.version : "";
 			const shouldThrowError = androidRuntimeVersion &&
 				this.isValidVersion(androidRuntimeVersion) &&

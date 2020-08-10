@@ -1,6 +1,8 @@
 import * as net from "net";
+import * as _ from 'lodash';
 import { APPLE_VENDOR_NAME, DeviceTypes, RUNNING_EMULATOR_STATUS, NOT_RUNNING_EMULATOR_STATUS } from "../../../constants";
 import { DeviceConnectionType } from "../../../../constants";
+import { $injector } from "../../../definitions/yok";
 
 class IosEmulatorServices implements Mobile.IiOSSimulatorService {
 	constructor(private $logger: ILogger,

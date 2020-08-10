@@ -3,12 +3,15 @@ import { InjectorStub, TempServiceStub } from "../stubs";
 import { LiveSyncServiceResolver } from "../../lib/resolvers/livesync-service-resolver";
 import { MobileHelper } from "../../lib/common/mobile/mobile-helper";
 import { assert } from "chai";
+import * as _ from 'lodash';
 import { RunOnDeviceEvents } from "../../lib/constants";
 import { PrepareData } from "../../lib/data/prepare-data";
 import { PrepareDataService } from "../../lib/services/prepare-data-service";
 import { BuildDataService } from "../../lib/services/build-data-service";
 import { PrepareController } from "../../lib/controllers/prepare-controller";
 import { LiveSyncProcessDataService } from "../../lib/services/livesync-process-data-service";
+import { IDictionary } from "../../lib/common/declarations";
+import { IInjector } from "../../lib/common/definitions/yok";
 
 let isAttachToHmrStatusCalled = false;
 let prepareData: IPrepareData = null;

@@ -1,5 +1,9 @@
 import * as helpers from "../helpers";
 import * as shell from "shelljs";
+import * as _ from 'lodash';
+import { IProjectData } from "../../definitions/project";
+import { IErrors, IFileSystem } from "../declarations";
+import { $injector } from "../definitions/yok";
 
 export class MobileHelper implements Mobile.IMobileHelper {
 	private static DEVICE_PATH_SEPARATOR = "/";

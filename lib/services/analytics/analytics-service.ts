@@ -1,9 +1,16 @@
 import { ChildProcess } from "child_process";
 import * as path from "path";
+import * as _ from 'lodash';
 import { cache } from "../../common/decorators";
 import { isInteractive, toBoolean } from '../../common/helpers';
 import { DeviceTypes, AnalyticsClients } from "../../common/constants";
 import { TrackActionNames } from "../../constants";
+import { IOptions } from "../../declarations";
+import { IProjectDataService } from "../../definitions/project";
+import { IAnalyticsService, IDisposable, IDictionary, AnalyticsStatus, IUserSettingsService, IAnalyticsSettingsService, IChildProcess, IProjectHelper, GoogleAnalyticsDataType, IStringDictionary, TrackingTypes } from "../../common/declarations";
+import { IGoogleAnalyticsTrackingInformation, ITrackingInformation, IExceptionsTrackingInformation } from "./analytics";
+import { IGoogleAnalyticsEventData, IGoogleAnalyticsData, IEventActionData } from "../../common/definitions/google-analytics";
+import { $injector } from "../../common/definitions/yok";
 
 export class AnalyticsService implements IAnalyticsService, IDisposable {
 	private static ANALYTICS_BROKER_START_TIMEOUT = 10 * 1000;

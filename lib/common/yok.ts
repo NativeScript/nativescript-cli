@@ -3,6 +3,9 @@ import * as _ from 'lodash';
 import { annotate, isPromise } from "./helpers";
 import { ERROR_NO_VALID_SUBCOMMAND_FORMAT } from "./constants";
 import { CommandsDelimiters } from "./constants";
+import { IDictionary } from "./declarations";
+import { $injector, IInjector } from "./definitions/yok";
+import { ICommandArgument, ICommand } from "./definitions/commands";
 
 let indent = "";
 function trace(formatStr: string, ...args: any[]) {
@@ -343,10 +346,10 @@ export class Yok implements IInjector {
 		return data;
 	}
 
-	private resolveConstructor(ctor: Function, ctorArguments?: { [key: string]: any }): any {
+	private resolveConstructor(ctor: any, ctorArguments?: { [key: string]: any }): any {
 		annotate(ctor);
 
-		const resolvedArgs = ctor.$inject.args.map(paramName => {
+		const resolvedArgs = ctor.$inject.args.map((paramName: any) => {
 			if (ctorArguments && ctorArguments.hasOwnProperty(paramName)) {
 				return ctorArguments[paramName];
 			} else {
@@ -446,7 +449,7 @@ export class Yok implements IInjector {
 	}
 }
 
-if (!global.$injector) {
-  global.$injector = new Yok(); 
+if (!(<any>global).$injector) {
+  (<any>global).$injector = new Yok(); 
 }
-export const injector = global.$injector;
+export const injector = (<any>global).$injector;

@@ -3,9 +3,13 @@ import * as fileSystemPath from "./ios-device-file-system";
 import * as commonConstants from "../../../constants";
 import * as constants from "../../../../constants";
 import * as net from "net";
+import * as _ from 'lodash';
 import { cache } from "../../../decorators";
 import * as helpers from "../../../../common/helpers";
 import { IOSDeviceBase } from "../ios-device-base";
+import { IiOSSocketRequestExecutor } from "../../../../declarations";
+import { IErrors } from "../../../declarations";
+import { IInjector, $injector } from "../../../definitions/yok";
 
 export class IOSDevice extends IOSDeviceBase {
 	public applicationManager: Mobile.IDeviceApplicationManager;

@@ -1,5 +1,10 @@
 import { TrackActionNames, HASHES_FILE_NAME } from "../../constants";
 import * as path from "path";
+import { IBuildArtefactsService, IBuildInfoFileService, IBuildData } from "../../definitions/build";
+import { IProjectDataService } from "../../definitions/project";
+import { IPlatformsDataService, IBuildInfo, IPlatformData } from "../../definitions/platform";
+import { IAnalyticsService, IFileSystem } from "../../common/declarations";
+import { $injector } from "../../common/definitions/yok";
 
 export class DeviceInstallAppService {
 	constructor(

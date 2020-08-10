@@ -1,5 +1,6 @@
 import * as path from "path";
 import * as shell from "shelljs";
+import * as _ from 'lodash';
 import * as constants from "../constants";
 import * as semver from "semver";
 import * as projectServiceBaseLib from "./platform-project-service-base";
@@ -7,6 +8,17 @@ import { DeviceAndroidDebugBridge } from "../common/mobile/android/device-androi
 import { Configurations, LiveSyncPaths } from "../common/constants";
 import { hook } from "../common/helpers";
 import { performanceLog } from ".././common/decorators";
+import { IProjectData, IProjectDataService, IValidatePlatformOutput } from "../definitions/project";
+import { IPlatformData, IBuildOutputOptions, IPlatformEnvironmentRequirements, IValidBuildOutputData } from "../definitions/platform";
+import { IAndroidToolsInfo, IAndroidResourcesMigrationService, IOptions, IDependencyData } from "../declarations";
+import { IAndroidBuildData } from "../definitions/build";
+import { IPluginData } from "../definitions/plugins";
+import { IErrors, IFileSystem, IAnalyticsService, IDictionary, IRelease, ISpawnResult } from "../common/declarations";
+import { IAndroidPluginBuildService, IPluginBuildOptions } from "../definitions/android-plugin-migrator";
+import { IFilesHashService } from "../definitions/files-hash-service";
+import { IGradleCommandService, IGradleBuildService } from "../definitions/gradle";
+import { IInjector, $injector } from "../common/definitions/yok";
+import { INotConfiguredEnvOptions } from "../common/definitions/commands";
 
 export class AndroidProjectService extends projectServiceBaseLib.PlatformProjectServiceBase {
 	private static VALUES_DIRNAME = "values";
@@ -44,7 +56,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			const deviceBuildOutputArr = [projectRoot, constants.APP_FOLDER_NAME, constants.BUILD_DIR, constants.OUTPUTS_DIR, constants.APK_DIR];
 
       const packageName = this.getProjectNameFromId(projectData);
-      const runtimePackage = this.$projectDataService.getRuntimePackage(projectData.projectDir, Platforms.android);
+      const runtimePackage = this.$projectDataService.getRuntimePackage(projectData.projectDir, constants.PlatformTypes.android);
 
 			this._platformData = {
 				frameworkPackageName: runtimePackage.name,
@@ -497,7 +509,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		}
 	}
 
-	private tryGetAndroidBuildStatistics(projectRoot: string): Object {
+	private tryGetAndroidBuildStatistics(projectRoot: string): any {
 		const staticsFilePath = path.join(projectRoot, constants.ANDROID_ANALYTICS_DATA_DIR, constants.ANDROID_ANALYTICS_DATA_FILE);
 		let buildStatistics;
 

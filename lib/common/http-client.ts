@@ -4,8 +4,11 @@ import { TLSSocket } from "tls";
 import * as helpers from "./helpers";
 import * as zlib from "zlib";
 import * as util from "util";
+import * as _ from 'lodash';
 import { HttpStatusCodes } from "./constants";
 import * as request from "request";
+import { Server, IProxyService, IProxySettings, IPromiseActions } from "./declarations";
+import { $injector } from "./definitions/yok";
 
 export class HttpClient implements Server.IHttpClient {
 	private static STATUS_CODE_REGEX = /statuscode=(\d+)/i;
@@ -124,7 +127,7 @@ private defaultUserAgent: string;
 			cleanupRequestData.req = requestObj;
 
 			requestObj
-				.on("error", (err: IHttpRequestError) => {
+				.on("error", (err: any) => {
 					this.$logger.trace("An error occurred while sending the request:", err);
 					// In case we get a 4xx error code there seems to be no better way than this regex to get the error code
 					// the tunnel-agent module that request is using is obscuring the response and hence the statusCode by throwing an error message
@@ -164,7 +167,7 @@ private defaultUserAgent: string;
 						pipeTo = undefined;
 					}
 
-					let responseStream = responseData;
+					let responseStream: any = responseData;
 					responseStream.on("data", (chunk: string) => {
 						lastChunkTimestamp = Date.now();
 					});

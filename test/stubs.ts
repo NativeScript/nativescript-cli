@@ -11,6 +11,15 @@ import { HostInfo } from "./../lib/common/host-info";
 import { DevicePlatformsConstants } from "./../lib/common/mobile/device-platforms-constants";
 import { PrepareData } from "../lib/data/prepare-data";
 import * as temp from "temp";
+import { IPackageInstallationManager, INpmInstallOptions, INodePackageManager, INpmInstallResultInfo, INodePackageManagerInstallOptions, INpmPackageNameParts, INpmsResult, IAndroidToolsInfoData, IAndroidToolsInfo, IAndroidBundleValidatorHelper, IAndroidResourcesMigrationService, IPerformanceService } from "../lib/declarations";
+import { IProjectData, IBuildConfig, IValidatePlatformOutput, IProjectDataService, IAssetsStructure, IAssetGroup, IProjectTemplatesService, ITemplateData } from "../lib/definitions/project";
+import { IPlatformData, IBuildOutputOptions, IPlatformsDataService } from "../lib/definitions/platform";
+import { IPluginData, IBasePluginData } from "../lib/definitions/plugins";
+import { IDeviceDebugService, IDebugResultInfo } from "../lib/definitions/debug";
+import { IBuildData } from "../lib/definitions/build";
+import { IFileSystem, IFsStats, IDictionary, IErrors, IFailOptions, IStringDictionary, ISpawnResult, IProjectDir, IProjectHelper, IHooksService, IAllowEmpty, IPrompterOptions, IQrCodeImageData, ISpawnFromEventOptions, IAnalyticsService, IProxySettings, Server } from "../lib/common/declarations";
+import { IAndroidPluginBuildService, IPluginBuildOptions } from "../lib/definitions/android-plugin-migrator";
+import { IInjector } from "../lib/common/definitions/yok";
 temp.track();
 
 export class LoggerStub implements ILogger {
@@ -564,7 +573,8 @@ export class ProjectDataService implements IProjectDataService {
 		return [];
   }
   
-  getRuntimePackage(projectDir: string, platform: SupportedPlatform): IBasePluginData {
+  getRuntimePackage(projectDir: string, platform: constants.SupportedPlatform): IBasePluginData {
+    console.log('stub getRuntimePackage platform:', platform)
     return {
       version: '7.0.0',
       name: `@nativescript/${platform}`

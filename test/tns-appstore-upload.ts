@@ -5,6 +5,9 @@ import * as yok from "../lib/common/yok";
 import { PrepareNativePlatformService } from "../lib/services/platform/prepare-native-platform-service";
 import { BuildController } from "../lib/controllers/build-controller";
 import { IOSBuildData } from "../lib/data/build-data";
+import { IITMSData } from "../lib/declarations";
+import { IInjector } from "../lib/common/definitions/yok";
+import { ICommand } from "../lib/common/definitions/commands";
 
 class AppStore {
 	static itunesconnect = {

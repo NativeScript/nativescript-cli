@@ -1,5 +1,9 @@
 import { DeployController } from "../controllers/deploy-controller";
 import { BuildController } from "../controllers/build-controller";
+import { IAndroidBundleValidatorHelper, IOptions } from "../declarations";
+import { IBuildDataService } from "../definitions/build";
+import { IProjectData } from "../definitions/project";
+import { $injector } from "../common/definitions/yok";
 
 export class DeployCommandHelper {
 	constructor(

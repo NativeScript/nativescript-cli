@@ -1,5 +1,8 @@
 import { EventEmitter } from "events";
 import { EmulatorDiscoveryNames } from "../../constants";
+import * as _ from 'lodash';
+import { IDictionary } from "../../declarations";
+import { $injector } from "../../definitions/yok";
 
 export class AndroidEmulatorDiscovery extends EventEmitter implements Mobile.IDeviceDiscovery {
 	private _emulators: IDictionary<Mobile.IDeviceInfo> = {};

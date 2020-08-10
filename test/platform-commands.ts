@@ -22,6 +22,12 @@ import { SettingsService } from "../lib/common/test/unit-tests/stubs";
 import { PlatformValidationService } from "../lib/services/platform/platform-validation-service";
 import { PlatformCommandHelper } from "../lib/helpers/platform-command-helper";
 import { MarkingModeServiceStub } from "./stubs";
+import { IPlatformData, IBuildOutputOptions, IPlatformsDataService, ICheckEnvironmentRequirementsOutput } from "../lib/definitions/platform";
+import { IProjectData, IValidatePlatformOutput } from "../lib/definitions/project";
+import { IPlatformCommandHelper } from "../lib/declarations";
+import { IErrors, IFailOptions, IFileSystem } from "../lib/common/declarations";
+import * as _ from 'lodash';
+import { IInjector } from "../lib/common/definitions/yok";
 
 let isCommandExecuted = true;
 

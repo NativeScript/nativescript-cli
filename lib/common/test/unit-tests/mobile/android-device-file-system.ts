@@ -4,11 +4,12 @@ import { Errors } from "../../../errors";
 import { Logger } from "../../../logger/logger";
 import { MobileHelper } from "../../../mobile/mobile-helper";
 import { DevicePlatformsConstants } from "../../../mobile/device-platforms-constants";
-
+import * as _ from 'lodash';
 import * as path from "path";
 import { assert } from "chai";
 import { LiveSyncPaths } from "../../../constants";
 import { TempServiceStub } from "../../../../../test/stubs";
+import { IInjector } from "../../../definitions/yok";
 
 const myTestAppIdentifier = "org.nativescript.myApp";
 let isAdbPushExecuted = false;

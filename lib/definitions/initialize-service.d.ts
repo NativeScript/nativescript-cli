@@ -1,3 +1,5 @@
+import { IConfigurationSettings } from "../common/declarations";
+
 interface IInitializeOptions {
 	loggerOptions?: ILoggerOptions;
 	settingsServiceOptions?: IConfigurationSettings;

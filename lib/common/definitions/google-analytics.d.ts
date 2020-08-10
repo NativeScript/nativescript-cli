@@ -1,3 +1,5 @@
+import { GoogleAnalyticsDataType, IStringDictionary } from "../declarations";
+
 /**
  * Describes data that will be tracked to Google Analytics
  */

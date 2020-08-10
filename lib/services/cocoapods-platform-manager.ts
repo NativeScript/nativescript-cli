@@ -2,6 +2,7 @@ import { EOL } from "os";
 import * as path from "path";
 import * as semver from "semver";
 import { PODFILE_NAME } from "../constants";
+import { IProjectData, ICocoaPodsPlatformManager, IPodfilePlatformData } from "../definitions/project";
 
 export class CocoaPodsPlatformManager implements ICocoaPodsPlatformManager {
 	constructor(private $logger: ILogger) { }

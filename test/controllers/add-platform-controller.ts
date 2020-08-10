@@ -3,6 +3,7 @@ import { PlatformController } from "../../lib/controllers/platform-controller";
 import { AddPlatformService } from "../../lib/services/platform/add-platform-service";
 import { assert } from "chai";
 import { format } from "util";
+import * as _ from 'lodash';
 import { AddPlaformErrors } from "../../lib/constants";
 
 let actualMessage: string = null;

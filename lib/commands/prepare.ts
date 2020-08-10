@@ -1,6 +1,13 @@
 import { ValidatePlatformCommandBase } from "./command-base";
 import { PrepareController } from "../controllers/prepare-controller";
 import { PrepareDataService } from "../services/prepare-data-service";
+import { IProjectData } from "../definitions/project";
+import { IOptions, IPlatformValidationService } from "../declarations";
+import { IPlatformsDataService } from "../definitions/platform";
+import { IMigrateController } from "../definitions/migrate";
+import { ICommand, ICommandParameter } from "../common/definitions/commands";
+import { OptionType } from "../common/declarations";
+import { $injector } from "../common/definitions/yok";
 
 export class PrepareCommand extends ValidatePlatformCommandBase implements ICommand {
 	public allowedParameters = [this.$platformCommandParameter];

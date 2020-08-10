@@ -1,7 +1,10 @@
 import { AndroidVirtualDevice } from "../../constants";
 import { getCurrentEpochTime, sleep } from "../../helpers";
 import { EOL } from "os";
+import * as _ from 'lodash';
 import { LoggerConfigData } from "../../../constants";
+import { IChildProcess, IUtils } from "../../declarations";
+import { $injector } from "../../definitions/yok";
 const semver = require("semver");
 
 export class AndroidEmulatorServices implements Mobile.IEmulatorPlatformService {

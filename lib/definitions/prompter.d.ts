@@ -1,4 +1,5 @@
 import * as prompt from "inquirer";
+import { IPrompterOptions, IAllowEmpty, IDisposable } from "../common/declarations";
 
 declare global {
     interface IPrompter extends IDisposable {

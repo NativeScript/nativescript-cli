@@ -4,6 +4,13 @@ import { LoggerStub, FileSystemStub } from "../stubs";
 import { assert } from "chai";
 import * as path from "path";
 import * as sinon from "sinon";
+import * as _ from 'lodash';
+import { IProjectDataService } from "../../lib/definitions/project";
+import { IVersionsService } from "../../lib/declarations";
+import { ICheckEnvironmentRequirementsInput, ICheckEnvironmentRequirementsOutput } from "../../lib/definitions/platform";
+import { IAnalyticsService, IHostInfo, IChildProcess, IFileSystem, ISettingsService, IStringDictionary, IDoctorService } from "../../lib/common/declarations";
+import { IInjector } from "../../lib/common/definitions/yok";
+import { ICacheTimeoutOpts, IUseCacheOpts, IJsonFileSettingsService } from "../../lib/common/definitions/json-file-settings-service";
 const nativescriptDoctor = require("nativescript-doctor");
 
 class DoctorServiceInheritor extends DoctorService {

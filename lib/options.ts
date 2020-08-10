@@ -1,5 +1,8 @@
 import * as helpers from "./common/helpers";
 import * as yargs from "yargs";
+import * as _ from 'lodash';
+import { IDictionary, IDashedOption, OptionType, IErrors, ISettingsService } from "./common/declarations";
+import { $injector } from "./common/definitions/yok";
 
 export class Options {
 	private static DASHED_OPTION_REGEX = /(.+?)([A-Z])(.*)/;

@@ -1,3 +1,7 @@
+import { IProjectData } from "./project";
+import { IDebugInformation } from "../declarations";
+import { IProjectDir, IPlatform } from "../common/declarations";
+
 interface IDebugData extends IProjectDir, Mobile.IDeviceIdentifier, IOptionalDebuggingOptions {
 	applicationIdentifier: string;
 	projectName?: string;

@@ -2,6 +2,10 @@ import * as constants from "../constants";
 import * as helpers from "../common/helpers";
 import * as semver from "semver";
 import * as path from "path";
+import { IVersionsService, IPackageInstallationManager } from "../declarations";
+import { IProjectData, IProjectDataService } from "../definitions/project";
+import { IPluginsService, IBasePluginData } from "../definitions/plugins";
+import { IFileSystem, IVersionInformation } from "../common/declarations";
 
 export enum VersionInformationType {
 	UpToDate = "UpToDate",
@@ -86,8 +90,8 @@ class VersionsService implements IVersionsService {
 	}
 
 	public async getRuntimesVersions(): Promise<IVersionInformation[]> {
-    const iosRuntime = this.$projectDataService.getRuntimePackage(this.projectData.projectDir, Platforms.ios);
-    const androidRuntime = this.$projectDataService.getRuntimePackage(this.projectData.projectDir, Platforms.android);
+    const iosRuntime = this.$projectDataService.getRuntimePackage(this.projectData.projectDir, constants.PlatformTypes.ios);
+    const androidRuntime = this.$projectDataService.getRuntimePackage(this.projectData.projectDir, constants.PlatformTypes.android);
 		const runtimes: IBasePluginData[] = [
 			iosRuntime,
 			androidRuntime

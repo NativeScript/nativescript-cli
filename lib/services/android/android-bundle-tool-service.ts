@@ -1,5 +1,9 @@
 import { resolve, join } from "path";
+import * as _ from 'lodash';
 import { hasValidAndroidSigning } from "../../common/helpers";
+import { IChildProcess, ISysInfo, IErrors } from "../../common/declarations";
+import { IAndroidBundleToolService, IBuildApksOptions, IInstallApksOptions } from "../../definitions/android-bundle-tool-service";
+import { $injector } from "../../common/definitions/yok";
 
 export class AndroidBundleToolService implements IAndroidBundleToolService {
 	private javaPath: string;

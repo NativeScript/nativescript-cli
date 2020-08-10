@@ -1,3 +1,8 @@
+import { IProjectData, IValidatePlatformOutput } from "../definitions/project";
+import { IOptions, IPlatformValidationService } from "../declarations";
+import { IPlatformsDataService } from "../definitions/platform";
+import { ICommandParameter, ICanExecuteCommandOptions, INotConfiguredEnvOptions } from "../common/definitions/commands";
+
 export abstract class ValidatePlatformCommandBase {
 	constructor(protected $options: IOptions,
 		protected $platformsDataService: IPlatformsDataService,

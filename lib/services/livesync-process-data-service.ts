@@ -1,3 +1,5 @@
+import { IDictionary } from "../common/declarations";
+
 export class LiveSyncProcessDataService implements ILiveSyncProcessDataService {
 	protected processes: IDictionary<ILiveSyncProcessData> = {};
 

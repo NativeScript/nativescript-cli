@@ -1,8 +1,10 @@
 import { Yok } from "../../../yok";
 import { assert } from "chai";
+import * as _ from 'lodash';
 import { EventEmitter } from "events";
 import { DeviceEmitter } from "../../../mobile/device-emitter";
 import { DeviceDiscoveryEventNames, DEVICE_LOG_EVENT_NAME } from "../../../constants";
+import { IInjector } from "../../../definitions/yok";
 // Injector dependencies must be classes.
 // EventEmitter is function, so our annotate method will fail.
 class CustomEventEmitter extends EventEmitter {

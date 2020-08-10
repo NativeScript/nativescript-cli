@@ -1,4 +1,7 @@
 import { StringCommandParameter } from "../common/command-params";
+import { ICommand, ICommandParameter } from "../common/definitions/commands";
+import { IErrors } from "../common/declarations";
+import { IInjector, $injector } from "../common/definitions/yok";
 
 export class AppleLogin implements ICommand {
 	public allowedParameters: ICommandParameter[] = [new StringCommandParameter(this.$injector), new StringCommandParameter(this.$injector)];

@@ -1,6 +1,9 @@
 import minimatch = require("minimatch");
 import * as path from "path";
 import * as util from "util";
+import * as _ from 'lodash';
+import { IFileSystem, IProjectFilesManager, IProjectFilesProvider, IFsStats, IProjectFilesConfig } from "../declarations";
+import { $injector } from "../definitions/yok";
 
 export class ProjectFilesManager implements IProjectFilesManager {
 	constructor(private $fs: IFileSystem,

@@ -14,6 +14,12 @@ import { IOSBuildData } from "../data/build-data";
 import { IOSPrepareData } from "../data/prepare-data";
 import { BUILD_XCCONFIG_FILE_NAME, IosProjectConstants } from "../constants";
 import { hook } from "../common/helpers";
+import { IPlatformData, IValidBuildOutputData, IPlatformEnvironmentRequirements } from "../definitions/platform";
+import { IProjectData, ICocoaPodsService, IProjectDataService, IIOSExtensionsService, IIOSWatchAppService, IIOSNativeTargetService, IValidatePlatformOutput } from "../definitions/project";
+import { IBuildData } from "../definitions/build";
+import { IXcprojService, IXcconfigService, IOptions } from "../declarations";
+import { IPluginData, IPluginsService } from "../definitions/plugins";
+import { IFileSystem, IChildProcess, IErrors, IHostInfo, IPlistParser, ISysInfo, IRelease } from "../common/declarations";
 
 interface INativeSourceCodeGroup {
 	name: string;
@@ -62,13 +68,21 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	private _platformsDirCache: string = null;
 	private _platformData: IPlatformData = null;
 	public getPlatformData(projectData: IProjectData): IPlatformData {
+    console.log('getPlatformData projectData:', !!projectData);
+    console.log('getPlatformData this._platformData:', !!this._platformData);
 		if (!projectData && !this._platformData) {
 			throw new Error("First call of getPlatformData without providing projectData.");
-		}
+    }
+    console.log(`projectData && projectData.platformsDir && this._platformsDirCache !== projectData.platformsDir:`, projectData && projectData.platformsDir && this._platformsDirCache !== projectData.platformsDir);
 
 		if (projectData && projectData.platformsDir && this._platformsDirCache !== projectData.platformsDir) {
       const projectRoot = path.join(projectData.platformsDir, this.$devicePlatformsConstants.iOS.toLowerCase());
-      const runtimePackage = this.$projectDataService.getRuntimePackage(projectData.projectDir, Platforms.ios);
+      console.log('projectRoot:', projectRoot);
+      console.log('this.$projectDataService.getRuntimePackage:', this.$projectDataService.getRuntimePackage);
+      console.log('projectData.projectDir:', projectData.projectDir);
+      console.log('Platforms.ios:', constants.PlatformTypes.ios);
+      const runtimePackage = this.$projectDataService.getRuntimePackage(projectData.projectDir, constants.PlatformTypes.ios);
+      console.log('getPlatformData runtimePackage:', runtimePackage.name);
 
 			this._platformData = {
 				frameworkPackageName: runtimePackage.name,

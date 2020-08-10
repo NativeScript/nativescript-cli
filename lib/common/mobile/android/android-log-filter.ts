@@ -1,3 +1,5 @@
+import { $injector } from "../../definitions/yok";
+
 const os = require("os");
 
 export class AndroidLogFilter implements Mobile.IPlatformLogFilter {

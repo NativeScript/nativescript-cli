@@ -1,4 +1,6 @@
 import { AndroidDebugBridge } from "./android-debug-bridge";
+import { IChildProcess, IErrors, IStringDictionary } from "../../declarations";
+import * as _ from 'lodash';
 
 interface IComposeCommandResult {
 	command: string;

@@ -3,6 +3,9 @@ import { CONNECTION_ERROR_EVENT_NAME } from "../../constants";
 import * as net from "net";
 import * as ws from "ws";
 import { MessageUnpackStream } from "ios-device-lib";
+import { IAppDebugSocketProxyFactory, IOptions } from "../../declarations";
+import { IDictionary, IErrors, INet } from "../../common/declarations";
+import { $injector } from "../../common/definitions/yok";
 
 export class AppDebugSocketProxyFactory extends EventEmitter implements IAppDebugSocketProxyFactory {
 	private deviceWebServers: IDictionary<ws.Server> = {};

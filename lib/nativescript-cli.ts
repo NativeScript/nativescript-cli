@@ -5,6 +5,9 @@ shelljs.config.silent = true;
 shelljs.config.fatal = true;
 import { installUncaughtExceptionListener } from "./common/errors";
 import { settlePromises } from "./common/helpers";
+import { $injector } from "./common/definitions/yok";
+import { ErrorCodes, IErrors, ICommandDispatcher, IMessagesService } from "./common/declarations";
+import { IExtensibilityService, IExtensionData } from "./common/definitions/extensibility";
 installUncaughtExceptionListener(process.exit.bind(process, ErrorCodes.UNCAUGHT));
 
 const logger: ILogger = $injector.resolve("logger");

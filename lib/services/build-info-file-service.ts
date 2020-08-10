@@ -1,5 +1,10 @@
 import * as path from "path";
 import * as helpers from "../common/helpers";
+import { IPlatformData, IBuildInfo } from "../definitions/platform";
+import { IBuildInfoFileService, IBuildData } from "../definitions/build";
+import { IProjectData } from "../definitions/project";
+import { IFileSystem } from "../common/declarations";
+import { $injector } from "../common/definitions/yok";
 
 const buildInfoFileName = ".nsbuildinfo";
 

@@ -1,3 +1,6 @@
+import { IProjectDataService, IProjectData } from "../definitions/project";
+import { IPlaygroundService, IFileSystem, IUserSettingsService, IPlaygroundInfo } from "../common/declarations";
+
 export class PlaygroundService implements IPlaygroundService {
 	constructor(private $fs: IFileSystem,
 		private $projectDataService: IProjectDataService,

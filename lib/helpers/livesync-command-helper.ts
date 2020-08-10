@@ -1,5 +1,13 @@
 import { RunOnDeviceEvents } from "../constants";
 import { DeployController } from "../controllers/deploy-controller";
+import { IAndroidBundleValidatorHelper, IOptions } from "../declarations";
+import { IBuildDataService, IBuildController } from "../definitions/build";
+import { IProjectData, IValidatePlatformOutput } from "../definitions/project";
+import { IPlatformsDataService } from "../definitions/platform";
+import { IInjector, $injector } from "../common/definitions/yok";
+import { IAnalyticsService, IErrors, ErrorCodes, IDictionary } from "../common/declarations";
+import { ICleanupService } from "../definitions/cleanup-service";
+import * as _ from 'lodash';
 
 export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 	constructor(

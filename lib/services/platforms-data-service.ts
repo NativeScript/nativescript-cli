@@ -1,3 +1,6 @@
+import { IProjectData } from "../definitions/project";
+import { IPlatformData, IPlatformsDataService } from "../definitions/platform";
+
 export class PlatformsDataService implements IPlatformsDataService {
 	private platformsDataService: { [index: string]: any } = {};
 

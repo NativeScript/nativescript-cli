@@ -2,8 +2,13 @@ import { AnalyticsService } from "../../../lib/services/analytics/analytics-serv
 import { Yok } from "../../../lib/common/yok";
 import * as stubs from "../../stubs";
 import { assert } from "chai";
+import * as _ from 'lodash';
 import { EventEmitter } from "events";
 import { AnalyticsClients } from "../../../lib/common/constants";
+import { IProjectData } from "../../../lib/definitions/project";
+import { IOptions } from "../../../lib/declarations";
+import { IInjector } from "../../../lib/common/definitions/yok";
+import { IChildProcess, IAnalyticsService, GoogleAnalyticsDataType } from "../../../lib/common/declarations";
 
 const helpers = require("../../../lib/common/helpers");
 const originalIsInteractive = helpers.isInteractive;

@@ -1,3 +1,7 @@
+import { IErrors, Server } from "../../common/declarations";
+import { $injector } from "../../common/definitions/yok";
+import * as _ from 'lodash';
+
 export class ApplePortalApplicationService implements IApplePortalApplicationService {
 	constructor(
 		private $applePortalSessionService: IApplePortalSessionService,

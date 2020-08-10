@@ -1,3 +1,8 @@
+import { IProjectData } from "../definitions/project";
+import { IMigrateController } from "../definitions/migrate";
+import { ICommand, ICommandParameter } from "../common/definitions/commands";
+import { $injector } from "../common/definitions/yok";
+
 export class MigrateCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
 

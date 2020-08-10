@@ -1,7 +1,12 @@
 import * as path from "path";
+import * as _ from 'lodash';
 import { APP_FOLDER_NAME, TNS_MODULES_FOLDER_NAME, APP_RESOURCES_FOLDER_NAME } from "../../../constants";
 import { PreviewSdkEventNames } from "./preview-app-constants";
 import { FilePayload, FilesPayload } from "nativescript-preview-sdk";
+import { IPlatformsDataService } from "../../../definitions/platform";
+import { IProjectDataService } from "../../../definitions/project";
+import { IFileSystem, IProjectFilesManager, IProjectFilesProvider } from "../../../common/declarations";
+import { $injector } from "../../../common/definitions/yok";
 const isTextOrBinary = require('istextorbinary');
 
 export class PreviewAppFilesService implements IPreviewAppFilesService {

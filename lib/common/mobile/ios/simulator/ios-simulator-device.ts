@@ -2,10 +2,14 @@ import * as applicationManagerPath from "./ios-simulator-application-manager";
 import * as fileSystemPath from "./ios-simulator-file-system";
 import * as constants from "../../../constants";
 import * as net from "net";
+import * as _ from 'lodash';
 import { cache } from "../../../decorators";
 import * as helpers from "../../../../common/helpers";
 import { IOSDeviceBase } from "../ios-device-base";
 import { DeviceConnectionType } from "../../../../constants";
+import { IiOSNotification } from "../../../../declarations";
+import { IErrors } from "../../../declarations";
+import { IInjector } from "../../../definitions/yok";
 
 export class IOSSimulator extends IOSDeviceBase implements Mobile.IiOSDevice {
 	public applicationManager: Mobile.IDeviceApplicationManager;

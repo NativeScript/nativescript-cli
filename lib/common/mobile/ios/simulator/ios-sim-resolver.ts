@@ -1,4 +1,5 @@
 import * as path from "path";
+import { $injector } from "../../../definitions/yok";
 
 export class IOSSimResolver implements Mobile.IiOSSimResolver {
 	private static iOSSimName = "ios-sim-portable";

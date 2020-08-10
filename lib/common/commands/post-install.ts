@@ -1,3 +1,7 @@
+import { $injector } from "../definitions/yok";
+import { ICommand, ICommandParameter } from "../definitions/commands";
+import { IErrors } from "../declarations";
+
 export class PostInstallCommand implements ICommand {
 	constructor(protected $errors: IErrors) {
 	}

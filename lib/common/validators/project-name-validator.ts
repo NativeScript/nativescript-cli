@@ -1,6 +1,9 @@
 import * as path from "path";
+import * as _ from 'lodash';
 import * as helpers from "../helpers";
 import * as ValidationResult from "./validation-result";
+import { IErrors } from "../declarations";
+import { $injector } from "../definitions/yok";
 
 export class ProjectNameValidator implements IProjectNameValidator {
 	private static MAX_FILENAME_LENGTH = 30;

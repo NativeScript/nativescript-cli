@@ -1,3 +1,9 @@
+import * as _ from 'lodash';
+import { IOptions } from "../../declarations";
+import { IInjector, $injector } from "../definitions/yok";
+import { ICommand, ICommandParameter } from "../definitions/commands";
+import { IHelpService } from "../declarations";
+
 export class HelpCommand implements ICommand {
 	constructor(private $injector: IInjector,
 		private $helpService: IHelpService,

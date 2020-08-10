@@ -2,6 +2,9 @@ import * as path from "path";
 import * as constants from "../constants";
 import { format } from "util";
 import { performanceLog } from "../common/decorators";
+import { IProjectTemplatesService, ITemplateData, ITemplatePackageJsonContent } from "../definitions/project";
+import { IPackageInstallationManager, INodePackageManager } from "../declarations";
+import { IFileSystem, IErrors, IAnalyticsService, IDictionary } from "../common/declarations";
 
 export class ProjectTemplatesService implements IProjectTemplatesService {
 	private templatePackageContents: IDictionary<any> = {};

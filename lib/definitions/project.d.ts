@@ -1,3 +1,9 @@
+import type { SupportedPlatform } from "../constants";
+import { IAndroidBuildOptionsSettings, IProvision, ITeamIdentifier, IPlatformBuildData } from "../declarations";
+import { ICheckEnvironmentRequirementsOutput, IPlatformData } from "./platform";
+import { IPluginData, IBasePluginData } from "./plugins";
+import { IStringDictionary, IProjectDir, IDeviceIdentifier, IRelease, IPlatform, IDependencyInformation, ISpawnResult } from "../common/declarations";
+
 interface IProjectName {
 	/**
 	 * Name of the newly created application.

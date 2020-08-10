@@ -4,6 +4,10 @@ import * as helpers from "../common/helpers";
 import { cache } from "../common/decorators";
 import { TrackActionNames, NODE_MODULES_FOLDER_NAME, TNS_CORE_MODULES_NAME } from "../constants";
 import { doctor, constants } from "nativescript-doctor";
+import { IProjectDataService } from "../definitions/project";
+import { IVersionsService, IOptions } from "../declarations";
+import { IPlatformEnvironmentRequirements } from "../definitions/platform";
+import { IDoctorService, IAnalyticsService, IHostInfo, IChildProcess, IFileSystem, ISettingsService, ISpawnResult } from "../common/declarations";
 
 export class DoctorService implements IDoctorService {
 	private static DarwinSetupScriptLocation = path.join(__dirname, "..", "..", "setup", "mac-startup-shell-script.sh");

@@ -2,11 +2,13 @@
 import { Yok } from "../../../../yok";
 import { AndroidGenymotionService } from "../../../../mobile/android/genymotion/genymotion-service";
 import { EmulatorHelper } from "../../../../mobile/emulator-helper";
-
+import * as _ from 'lodash';
 import { assert } from "chai";
 import { NOT_RUNNING_EMULATOR_STATUS, RUNNING_EMULATOR_STATUS, AndroidVirtualDevice } from '../../../../constants';
 import { CommonLoggerStub } from "../../stubs";
 import { DeviceConnectionType } from "../../../../../constants";
+import { IInjector } from "../../../../definitions/yok";
+import { IDictionary, ISpawnFromEventOptions, IChildProcess, ISpawnResult } from "../../../../declarations";
 
 const error = "some test error";
 const enumerateGuestPropertiesOutput = `Name: hardware_opengl, value: 1, timestamp: 1519225339826058000, flags:

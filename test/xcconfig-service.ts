@@ -1,7 +1,11 @@
 import temp = require("temp");
 import { assert } from "chai";
+import * as _ from 'lodash';
 import { XcconfigService } from "../lib/services/xcconfig-service";
 import * as yok from "../lib/common/yok";
+import { IXcconfigService } from "../lib/declarations";
+import { IInjector } from "../lib/common/definitions/yok";
+import { IReadFileOptions } from "../lib/common/declarations";
 
 // start tracking temporary folders/files
 temp.track();

@@ -1,4 +1,8 @@
 import { PubnubKeys } from "./preview-app-constants";
+import { IProjectDataService } from "../../../definitions/project";
+import { IDictionary, IErrors } from "../../../common/declarations";
+import { $injector } from "../../../common/definitions/yok";
+import * as _ from 'lodash';
 
 export class PreviewSchemaService implements IPreviewSchemaService {
 	private previewSchemas: IDictionary<IPreviewSchemaData> = {

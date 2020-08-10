@@ -1,3 +1,8 @@
+import { IProjectData, IBuildConfig } from "./definitions/project";
+import { IBuildData } from "./definitions/build";
+import { IRelease, IDeviceIdentifier, IJustLaunch, IAvd, IAvailableDevices, IProfileDir, IHasEmulatorOption, IYargArgv, IDashedOption, IDictionary, IProjectDir, ICredentials, IVersionInformation, IVersionData, IStringDictionary } from "./common/declarations";
+import { IExtensionData } from "./common/definitions/extensibility";
+
 interface INodePackageManager {
 	/**
 	 * Installs dependency
@@ -588,7 +593,7 @@ interface IOptions extends IRelease, IDeviceIdentifier, IJustLaunch, IAvd, IAvai
 }
 
 interface IEnvOptions {
-	env: Object;
+	env: any;
 }
 
 interface IAndroidBuildOptionsSettings extends IAndroidReleaseOptions, IRelease, Partial<IHasAndroidBundle> { }

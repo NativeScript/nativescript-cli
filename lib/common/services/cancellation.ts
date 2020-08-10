@@ -1,6 +1,9 @@
 import * as choki from "chokidar";
 import * as path from "path";
 import * as os from "os";
+import * as _ from 'lodash';
+import { IHostInfo, IFileSystem, IDictionary, ICancellationService, ErrorCodes } from "../declarations";
+import { $injector } from "../definitions/yok";
 
 class CancellationService implements ICancellationService {
 	private watches: IDictionary<choki.FSWatcher> = {};

@@ -1,3 +1,5 @@
+import { IDictionary } from "../declarations";
+
 interface ICacheTimeoutOpts {
 	cacheTimeout: number;
 }

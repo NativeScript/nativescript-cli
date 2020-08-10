@@ -1,4 +1,5 @@
 import * as net from "net";
+import { $injector } from "../../common/definitions/yok";
 
 export class LiveSyncSocket extends net.Socket implements ILiveSyncSocket {
 	public uid: string;

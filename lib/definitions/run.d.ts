@@ -1,4 +1,5 @@
 import { EventEmitter } from "events";
+import { IBuildData } from "./build";
 
 declare global {
 

@@ -1,3 +1,5 @@
+import { ICredentials } from "../../common/declarations";
+
 interface IApplePortalSessionService {
 	createWebSession(contentProviderId: number, dsId: string): Promise<string>;
 	createUserSession(credentials: ICredentials, opts?: IAppleCreateUserSessionOptions): Promise<IApplePortalUserDetail>;

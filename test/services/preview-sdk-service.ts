@@ -1,8 +1,11 @@
 import { PreviewSdkService } from "../../lib/services/livesync/playground/preview-sdk-service";
 import { Yok } from "../../lib/common/yok";
 import { assert } from "chai";
+import * as _ from 'lodash';
 import { LoggerStub } from "../stubs";
 import { PreviewSchemaService } from "../../lib/services/livesync/playground/preview-schema-service";
+import { IInjector } from "../../lib/common/definitions/yok";
+import { IProxySettings, Server } from "../../lib/common/declarations";
 
 const createTestInjector = (): IInjector => {
 	const testInjector = new Yok();

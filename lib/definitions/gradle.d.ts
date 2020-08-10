@@ -1,3 +1,6 @@
+import { IAndroidBuildData } from "./build";
+import { ISpawnResult, ISpawnFromEventOptions } from "../common/declarations";
+
 interface IGradleCommandService {
 	executeCommand(gradleArgs: string[], options: IGradleCommandOptions): Promise<ISpawnResult>;
 }

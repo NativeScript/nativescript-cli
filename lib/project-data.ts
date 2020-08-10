@@ -1,8 +1,13 @@
 import * as constants from "./constants";
 import * as path from "path";
+import * as _ from 'lodash';
 import { parseJson } from "./common/helpers";
 import { EOL } from "os";
 import { cache } from "./common/decorators";
+import { IProjectData, INsConfig } from "./definitions/project";
+import { IAndroidResourcesMigrationService, IStaticConfig, IOptions } from "./declarations";
+import { IStringDictionary, IFileSystem, IErrors, IProjectHelper } from "./common/declarations";
+import { $injector } from "./common/definitions/yok";
 
 interface IProjectType {
 	type: string;

@@ -1,4 +1,6 @@
 import xopen = require("open");
+import { IOpener } from "../declarations";
+import { $injector } from "./definitions/yok";
 
 export class Opener implements IOpener {
 

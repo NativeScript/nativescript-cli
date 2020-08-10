@@ -2,6 +2,8 @@ import * as path from "path";
 import { cache } from "../common/decorators";
 import * as constants from "../constants";
 import { createRegExp, regExpEscape } from "../common/helpers";
+import { INodePackageManager, INpmsSingleResultData } from "../declarations";
+import { IFileSystem, ISettingsService, IStringDictionary } from "../common/declarations";
 
 export class ExtensibilityService implements IExtensibilityService {
 	private customPathToExtensions: string = null;

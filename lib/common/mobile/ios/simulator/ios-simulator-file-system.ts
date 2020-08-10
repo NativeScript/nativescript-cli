@@ -1,5 +1,7 @@
 import * as path from "path";
 import * as shelljs from "shelljs";
+import * as _ from 'lodash';
+import { IFileSystem, IStringDictionary } from "../../../declarations";
 
 export class IOSSimulatorFileSystem implements Mobile.IDeviceFileSystem {
 	constructor(private iosSim: any,

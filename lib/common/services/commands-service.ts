@@ -2,6 +2,13 @@ const jaroWinklerDistance = require("../vendor/jaro-winkler_distance");
 import * as helpers from "../helpers";
 import { CommandsDelimiters } from "../constants";
 import { EOL } from "os";
+import * as _ from 'lodash';
+import { IOptions, IOptionsTracker } from "../../declarations";
+import { IErrors, IAnalyticsSettingsService, IHooksService, IAnalyticsService, GoogleAnalyticsDataType } from "../declarations";
+import { IInjector, $injector } from "../definitions/yok";
+import { IExtensibilityService } from "../definitions/extensibility";
+import { IGoogleAnalyticsPageviewData } from "../definitions/google-analytics";
+import { ICommandParameter, ICommand, ISimilarCommand } from "../definitions/commands";
 
 class CommandArgumentsValidationHelper {
 	constructor(public isValid: boolean, _remainingArguments: string[]) {

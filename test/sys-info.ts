@@ -3,7 +3,10 @@ import { Yok } from "../lib/common/yok";
 import { assert } from "chai";
 import { format } from "util";
 import * as sinon from "sinon";
+import * as _ from 'lodash';
 import { MacOSVersions, MacOSDeprecationStringFormat } from "../lib/constants";
+import { IInjector } from "../lib/common/definitions/yok";
+import { ISystemWarning, IHostInfo, ISysInfo, IFileSystem } from "../lib/common/declarations";
 const verifyNodeVersion = require("../lib/common/verify-node-version");
 
 describe("sysInfo", () => {

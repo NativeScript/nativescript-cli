@@ -2,6 +2,11 @@ import { IOSDeviceDebugService } from "../../lib/services/ios-device-debug-servi
 import { Yok } from "../../lib/common/yok";
 import * as stubs from "../stubs";
 import { assert } from "chai";
+import { IPackageInstallationManager, IAppDebugSocketProxyFactory } from "../../lib/declarations";
+import { IProjectDataService } from "../../lib/definitions/project";
+import { IDebugOptions } from "../../lib/definitions/debug";
+import { IChildProcess, IHostInfo, IErrors } from "../../lib/common/declarations";
+import { IInjector } from "../../lib/common/definitions/yok";
 
 const expectedDevToolsCommitSha = "02e6bde1bbe34e43b309d4ef774b1168d25fd024";
 

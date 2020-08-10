@@ -1,6 +1,13 @@
 import { EventEmitter } from "events";
 import { BuildData } from "../../data/build-data";
 import { PrepareData } from "../../data/prepare-data";
+import { IPlatformProjectServiceBase, IProjectData, IValidatePlatformOutput } from "../../definitions/project";
+import { IOptions, IDependencyData } from "../../declarations";
+import { IPlatformData } from "../../definitions/platform";
+import { IPluginData } from "../../definitions/plugins";
+import { IRelease, ISpawnResult } from "../../common/declarations";
+import { IProjectChangesInfo, IPrepareInfo, IAddedNativePlatform } from "../../definitions/project-changes";
+import { INotConfiguredEnvOptions } from "../../common/definitions/commands";
 
 declare global {
 	interface IWebpackCompilerService extends EventEmitter {

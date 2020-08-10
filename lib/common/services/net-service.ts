@@ -1,5 +1,8 @@
 import * as net from "net";
+import * as _ from 'lodash';
 import { sleep } from "../helpers";
+import { IErrors, INet, IChildProcess, IOsInfo, IWaitForPortListenData, IDictionary } from "../declarations";
+import { $injector } from "../definitions/yok";
 
 export class Net implements INet {
 	private static DEFAULT_INTERVAL = 1000;

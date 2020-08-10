@@ -5,8 +5,13 @@ import { performanceLog } from "../common/decorators";
 import { stringify, deferPromise } from "../common/helpers";
 import { HmrConstants } from "../common/constants";
 import { EventEmitter } from "events";
+import * as _ from 'lodash';
 import { PrepareDataService } from "../services/prepare-data-service";
 import { PreviewAppLiveSyncEvents } from "../services/livesync/playground/preview-app-constants";
+import { IProjectDataService } from "../definitions/project";
+import { IPluginsService } from "../definitions/plugins";
+import { IDictionary, IAnalyticsService, IErrors, IHooksService, IQrCodeImageData, IProjectDir } from "../common/declarations";
+import { $injector } from "../common/definitions/yok";
 
 export class PreviewAppController extends EventEmitter implements IPreviewAppController {
 	private prepareReadyEventHandler: any = null;

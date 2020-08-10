@@ -1,3 +1,10 @@
+import { IProjectData } from "../definitions/project";
+import { IMigrateController } from "../definitions/migrate";
+import { IOptions } from "../declarations";
+import { ICommand, ICommandParameter } from "../common/definitions/commands";
+import { IErrors } from "../common/declarations";
+import { $injector } from "../common/definitions/yok";
+
 export class UpdateCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
 	public static readonly SHOULD_MIGRATE_PROJECT_MESSAGE = 'This project is not compatible with the current NativeScript version and cannot be updated. Use "ns migrate" to make your project compatible.';

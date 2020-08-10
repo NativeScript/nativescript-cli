@@ -6,6 +6,11 @@ import helpers = require("../lib/common/helpers");
 import * as constants from "../lib/constants";
 import { assert } from "chai";
 import { PrompterStub } from "./stubs";
+import { IProjectService, IProjectSettings, ICreateProjectData } from "../lib/definitions/project";
+import { IOptions } from "../lib/declarations";
+import { IInjector } from "../lib/common/definitions/yok";
+import { ICommand } from "../lib/common/definitions/commands";
+import { IDictionary } from "../lib/common/declarations";
 
 let selectedTemplateName: string;
 let isProjectCreated: boolean;

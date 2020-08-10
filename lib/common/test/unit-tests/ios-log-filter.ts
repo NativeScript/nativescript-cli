@@ -2,6 +2,7 @@ import { IOSLogFilter } from "../../mobile/ios/ios-log-filter";
 import { LoggingLevels } from "../../mobile/logging-levels";
 import { Yok } from "../../yok";
 import * as assert from "assert";
+import * as _ from 'lodash';
 
 const iosTestData = [
 	{

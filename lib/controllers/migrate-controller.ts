@@ -2,8 +2,17 @@ import * as path from "path";
 import * as semver from "semver";
 import * as constants from "../constants";
 import * as glob from "glob";
+import * as _ from 'lodash';
 import { UpdateControllerBase } from "./update-controller-base";
 import { fromWindowsRelativePathToUnix, getHash } from "../common/helpers";
+import { IProjectDataService, IProjectData } from "../definitions/project";
+import { IMigrateController, IMigrationDependency, IMigrationData } from "../definitions/migrate";
+import { IPlatformCommandHelper, IPackageInstallationManager, IPackageManager, IAndroidResourcesMigrationService, IPlatformValidationService } from "../declarations";
+import { IPlatformsDataService, IAddPlatformService } from "../definitions/platform";
+import { IPluginsService } from "../definitions/plugins";
+import { IFileSystem, IErrors, ISettingsService, IResourceLoader, IDictionary } from "../common/declarations";
+import { IInjector, $injector } from "../common/definitions/yok";
+import { IJsonFileSettingsService } from "../common/definitions/json-file-settings-service";
 
 export class MigrateController extends UpdateControllerBase implements IMigrateController {
 	private static COMMON_MIGRATE_MESSAGE = "not affect the codebase of the application and you might need to do additional changes manually – for more information, refer to the instructions in the following blog post: https://www.nativescript.org/blog/nativescript-6.0-application-migration";

@@ -1,3 +1,7 @@
+import { IHasAndroidBundle, IApplicationPackage } from "../declarations";
+import { IProjectData } from "./project";
+import { IValidBuildOutputData, IPlatformData, IBuildOutputOptions, IBuildInfo } from "./platform";
+
 interface IBuildData extends IPrepareData {
 	device?: string;
 	emulator?: boolean;

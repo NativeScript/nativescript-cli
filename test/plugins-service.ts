@@ -34,11 +34,16 @@ import { SettingsService } from "../lib/common/test/unit-tests/stubs";
 import StaticConfigLib = require("../lib/config");
 import * as path from "path";
 import * as temp from "temp";
+import * as _ from 'lodash';
 import { PLUGINS_BUILD_DATA_FILENAME } from '../lib/constants';
 import { GradleCommandService } from '../lib/services/android/gradle-command-service';
 import { GradleBuildService } from '../lib/services/android/gradle-build-service';
 import { GradleBuildArgsService } from '../lib/services/android/gradle-build-args-service';
 import * as util from "util";
+import { IPluginData, IPluginsService } from '../lib/definitions/plugins';
+import { IProjectData } from '../lib/definitions/project';
+import { IStringDictionary } from '../lib/common/declarations';
+import { IInjector } from '../lib/common/definitions/yok';
 temp.track();
 
 let isErrorThrown = false;

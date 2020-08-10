@@ -1,7 +1,10 @@
 import * as path from "path";
+import * as _ from 'lodash';
 import { cache } from "./common/decorators";
 import { androidToolsInfo } from "nativescript-doctor";
 import { injector } from './common/yok';
+import { IAndroidToolsInfo, IOptions, IAndroidToolsInfoData, IAndroidToolsInfoValidateInput, IAndroidToolsInfoOptions } from "./declarations";
+import { IErrors, IProjectDir } from "./common/declarations";
 
 export class AndroidToolsInfo implements IAndroidToolsInfo {
 	constructor(private $errors: IErrors,

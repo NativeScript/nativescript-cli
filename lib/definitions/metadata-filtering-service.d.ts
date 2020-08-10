@@ -1,7 +1,9 @@
+import { IProjectData } from "./project";
+
 /**
  * Describes service used to generate necessary files to filter the native metadata generation.
  */
-interface INativeApiUsageConfiguartion {
+interface INativeApiUsageConfiguration {
 	/**
 	 * Defines if the content of plugins' native-api-usage files will be used and included in the whitelist content.
 	 */

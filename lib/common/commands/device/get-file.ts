@@ -1,3 +1,9 @@
+import { IProjectData } from "../../../definitions/project";
+import { IOptions } from "../../../declarations";
+import { ICommandParameter, ICommand } from "../../definitions/commands";
+import { IErrors } from "../../declarations";
+import { $injector } from "../../definitions/yok";
+
 export class GetFileCommand implements ICommand {
 	constructor(private $devicesService: Mobile.IDevicesService,
 		private $stringParameter: ICommandParameter,

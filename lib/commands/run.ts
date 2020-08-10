@@ -2,6 +2,12 @@ import { ERROR_NO_VALID_SUBCOMMAND_FORMAT } from "../common/constants";
 import { ANDROID_RELEASE_BUILD_ERROR_MESSAGE, ANDROID_APP_BUNDLE_SIGNING_ERROR_MESSAGE } from "../constants";
 import { cache } from "../common/decorators";
 import { hasValidAndroidSigning } from "../common/helpers";
+import { IProjectData, IProjectDataService } from "../definitions/project";
+import { IMigrateController } from "../definitions/migrate";
+import { IOptions, IPlatformValidationService } from "../declarations";
+import { ICommand, ICommandParameter } from "../common/definitions/commands";
+import { IAnalyticsService, IErrors, IHostInfo } from "../common/declarations";
+import { $injector, IInjector } from "../common/definitions/yok";
 
 export class RunCommandBase implements ICommand {
 	private liveSyncCommandHelperAdditionalOptions: ILiveSyncCommandHelperAdditionalOptions = <ILiveSyncCommandHelperAdditionalOptions>{};

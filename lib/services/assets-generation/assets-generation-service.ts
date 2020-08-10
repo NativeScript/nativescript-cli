@@ -2,6 +2,11 @@ const Jimp = require("jimp");
 const Color = require("color");
 import { exported } from "../../common/decorators";
 import { AssetConstants } from '../../constants';
+import { IAssetsGenerationService, IResourceGenerationData, ISplashesGenerationData } from "../../declarations";
+import { IProjectDataService, IAssetGroup, IAssetSubGroup } from "../../definitions/project";
+import { IDictionary } from "../../common/declarations";
+import * as _ from 'lodash';
+import { $injector } from "../../common/definitions/yok";
 
 export const enum Operations {
 	OverlayWith = "overlayWith",

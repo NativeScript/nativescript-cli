@@ -1,5 +1,6 @@
 import * as helpers from "../helpers";
 import * as path from "path";
+import { $injector } from "../definitions/yok";
 
 class LocalToDevicePathData implements Mobile.ILocalToDevicePathData {
 	private devicePath: string;

@@ -6,6 +6,7 @@ import { DebugCommandErrors, DeviceConnectionType } from "../../../../constants"
 import { EventEmitter } from "events";
 import { assert, use } from "chai";
 import * as util from "util";
+import * as _ from 'lodash';
 
 const chaiAsPromised = require('chai-as-promised');
 use(chaiAsPromised);
@@ -14,6 +15,8 @@ import { CommonLoggerStub, ErrorsStub } from "../stubs";
 import { Messages } from "../../../messages/messages";
 import * as constants from "../../../constants";
 import { DevicePlatformsConstants } from "../../../mobile/device-platforms-constants";
+import { IInjector } from "../../../definitions/yok";
+import { IDictionary, IHostInfo } from "../../../declarations";
 
 const helpers = require("../../../helpers");
 const originalIsInteractive = helpers.isInteractive;

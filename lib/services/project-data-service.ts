@@ -12,6 +12,10 @@ import {
 	ProjectTypes,
 	NODE_MODULES_FOLDER_NAME
 } from "../constants";
+import { IProjectDataService, IProjectData, IAssetsStructure, IAssetGroup, INsConfig, IImageDefinitionsStructure, IAssetSubGroup, IAssetItem } from "../definitions/project";
+import { IStaticConfig, IAndroidResourcesMigrationService } from "../declarations";
+import { IPluginsService, IBasePluginData } from "../definitions/plugins";
+import { IDictionary, IFileSystem, IProjectDir } from "../common/declarations";
 
 interface IProjectFileData {
 	projectData: any;
@@ -404,11 +408,12 @@ export class ProjectDataService implements IProjectDataService {
 		return config;
   }
   
-  public getRuntimePackage(projectDir: string, platform: SupportedPlatform): IBasePluginData {
+  public getRuntimePackage(projectDir: string, platform: constants.SupportedPlatform): IBasePluginData {
+    console.log('projectdataservice getRuntimePackage platform:', platform)
     return this.$pluginsService.getDependenciesFromPackageJson(projectDir).devDependencies.find(d => {
-      if (platform === Platforms.ios) {
+      if (platform === constants.PlatformTypes.ios) {
         return [constants.SCOPED_IOS_RUNTIME_NAME, constants.TNS_IOS_RUNTIME_NAME].includes(d.name);
-      } else if (platform === Platforms.android) {
+      } else if (platform === constants.PlatformTypes.android) {
         return [constants.SCOPED_ANDROID_RUNTIME_NAME, d.name === constants.TNS_ANDROID_RUNTIME_NAME].includes(d.name);
       }
     });

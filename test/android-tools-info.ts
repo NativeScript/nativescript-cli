@@ -3,6 +3,8 @@ import { AndroidToolsInfo } from "../lib/android-tools-info";
 import { format } from "util";
 import { assert } from "chai";
 import { ErrorsStub } from "./stubs";
+import { IAndroidToolsInfo } from "../lib/declarations";
+import { IInjector } from "../lib/common/definitions/yok";
 
 describe("androidToolsInfo", () => {
 	let loggedWarnings: string[] = [];

@@ -1,4 +1,6 @@
 import * as constants from "../../constants";
+import { $injector } from "../../common/definitions/yok";
+import { ISpawnResult, IErrors, IChildProcess } from "../../common/declarations";
 
 export class XcodebuildCommandService implements IXcodebuildCommandService {
 	constructor(

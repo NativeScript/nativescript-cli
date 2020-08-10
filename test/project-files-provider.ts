@@ -3,6 +3,9 @@ import { ProjectFilesProvider } from "../lib/providers/project-files-provider";
 import * as stubs from "./stubs";
 import { assert } from "chai";
 import * as path from "path";
+import { IProjectData } from "../lib/definitions/project";
+import { IInjector } from "../lib/common/definitions/yok";
+import { IProjectFilesProvider } from "../lib/common/declarations";
 
 const projectDir = "projectDir",
 	appDestinationDirectoryPath = "appDestinationDirectoryPath",

@@ -3,8 +3,12 @@ import { MicroTemplateService } from "../../../services/micro-templating-service
 import { HelpService } from "../../../services/help-service";
 import { assert } from "chai";
 import { EOL } from "os";
+import * as _ from 'lodash';
 import { Yok } from '../../../yok';
 import { join } from "path";
+import { IInjector } from "../../../definitions/yok";
+import { IExtensionData, IExtensibilityService } from "../../../definitions/extensibility";
+import { IDictionary, IHelpService } from "../../../declarations";
 
 interface ITestData {
 	input: string;

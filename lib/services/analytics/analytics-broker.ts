@@ -1,4 +1,7 @@
 import { cache } from "../../common/decorators";
+import { IGoogleAnalyticsProvider, IAnalyticsBroker, ITrackingInformation, IGoogleAnalyticsTrackingInformation } from "./analytics";
+import { IAnalyticsSettingsService } from "../../common/declarations";
+import { IInjector } from "../../common/definitions/yok";
 
 export class AnalyticsBroker implements IAnalyticsBroker {
 

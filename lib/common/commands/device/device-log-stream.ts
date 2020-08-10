@@ -1,3 +1,9 @@
+import { IOptions } from "../../../declarations";
+import { ICommandParameter, ICommand } from "../../definitions/commands";
+import { ICleanupService } from "../../../definitions/cleanup-service";
+import { IErrors } from "../../declarations";
+import { $injector } from "../../definitions/yok";
+
 export class OpenDeviceLogStreamCommand implements ICommand {
 	private static NOT_SPECIFIED_DEVICE_ERROR_MESSAGE = "More than one device found. Specify device explicitly.";
 

@@ -1,5 +1,9 @@
 import * as path from "path";
 import { isInteractive } from "../../common/helpers";
+import { IOptions, INodePackageManager } from "../../declarations";
+import { ICommand, ICommandParameter } from "../../common/definitions/commands";
+import { IErrors, IFileSystem, IChildProcess } from "../../common/declarations";
+import { $injector } from "../../common/definitions/yok";
 
 export class CreatePluginCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];

@@ -1,3 +1,6 @@
+import { ICommandParameter, IStringParameterBuilder } from "./definitions/commands";
+import { IInjector, $injector } from "./definitions/yok";
+
 export class StringCommandParameter implements ICommandParameter {
 	public mandatory = false;
 	public errorMessage: string;

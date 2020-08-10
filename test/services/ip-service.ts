@@ -2,6 +2,8 @@ import { Yok } from "../../lib/common/yok";
 import { LoggerStub } from "../stubs";
 import { IPService } from "../../lib/services/ip-service";
 import { assert } from "chai";
+import { IProxySettings, Server } from "../../lib/common/declarations";
+import { IInjector } from "../../lib/common/definitions/yok";
 
 describe("ipService", () => {
 	const ip = "8.8.8.8";

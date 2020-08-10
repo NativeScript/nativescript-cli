@@ -3,6 +3,9 @@ import { assert } from "chai";
 import { Yok } from "../../../yok";
 import { ErrorsStub, CommonLoggerStub } from "../stubs";
 import { EOL } from "os";
+import * as _ from 'lodash';
+import { IInjector } from "../../../definitions/yok";
+import { IChildProcess, IDictionary, IExecOptions, INet } from "../../../declarations";
 
 describe("net", () => {
 	const createTestInjector = (platform: string): IInjector => {

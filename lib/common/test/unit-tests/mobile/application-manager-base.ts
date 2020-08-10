@@ -1,7 +1,10 @@
 import { Yok } from "../../../yok";
 import { assert } from "chai";
+import * as _ from 'lodash';
 import { CommonLoggerStub, HooksServiceStub, DeviceLogProviderStub } from "../stubs";
 import { ApplicationManagerBase } from "../../../mobile/application-manager-base";
+import { IDictionary, IHooksService } from "../../../declarations";
+import { IInjector } from "../../../definitions/yok";
 
 let currentlyAvailableAppsForDebugging: Mobile.IDeviceApplicationInformation[];
 let currentlyInstalledApps: string[];

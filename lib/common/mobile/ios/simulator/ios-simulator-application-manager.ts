@@ -5,6 +5,9 @@ import { cache } from "../../../decorators";
 import { IOS_LOG_PREDICATE } from "../../../constants";
 import * as path from "path";
 import * as log4js from "log4js";
+import * as _ from 'lodash';
+import { IOptions } from "../../../../declarations";
+import { IDictionary, IChildProcess, IFileSystem, IHooksService } from "../../../declarations";
 
 export class IOSSimulatorApplicationManager extends ApplicationManagerBase {
 	private _lldbProcesses: IDictionary<ChildProcess> = {};

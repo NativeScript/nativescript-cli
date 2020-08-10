@@ -1,7 +1,11 @@
 import * as path from "path";
 import * as util from "util";
+import * as _ from 'lodash';
 import { annotate, getValueFromNestedObject } from "../helpers";
 import { AnalyticsEventLabelDelimiter } from "../../constants";
+import { IOptions, IPerformanceService } from "../../declarations";
+import { IHook, IHooksService, IDictionary, IChildProcess, IFileSystem, IErrors, IProjectHelper, IStringDictionary } from "../declarations";
+import { IInjector, $injector } from "../definitions/yok";
 
 class Hook implements IHook {
 	constructor(public name: string,
@@ -268,7 +272,7 @@ export class HooksService implements IHooksService {
 		}
 	}
 
-	private validateHookArguments(hookConstructor: Function, hookFullPath: string): string[] {
+	private validateHookArguments(hookConstructor: any, hookFullPath: string): string[] {
 		const invalidArguments: string[] = [];
 
 		// We need to annotate the hook in order to have the arguments of the constructor.

@@ -1,3 +1,5 @@
+import { IDictionary } from "./declarations";
+
 // enumeration taken from ProvisionType.cs
 export class ProvisionType {
 	static Development = "Development";

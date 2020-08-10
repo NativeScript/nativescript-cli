@@ -1,3 +1,7 @@
+import * as _ from 'lodash';
+import { $injector } from "../definitions/yok";
+import { CodeGeneration } from "./code-generation";
+
 export enum CodeEntityType {
 	Line,
 	Block

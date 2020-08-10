@@ -1,8 +1,12 @@
 import * as path from "path";
 import * as util from "util";
+import * as _ from 'lodash';
 import { APP_FOLDER_NAME } from "../../constants";
 import { getHash } from "../../common/helpers";
 import { performanceLog } from "../../common/decorators";
+import { IPlatformsDataService } from "../../definitions/platform";
+import { IProjectData } from "../../definitions/project";
+import { IFileSystem, IDictionary, IProjectFilesManager } from "../../common/declarations";
 
 export abstract class PlatformLiveSyncServiceBase {
 	private _deviceLiveSyncServicesCache: IDictionary<INativeScriptDeviceLiveSyncService> = {};

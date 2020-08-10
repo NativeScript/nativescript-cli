@@ -1,3 +1,5 @@
+import { IStringDictionary } from "../common/declarations";
+
 interface IAppFilesHashes {
 	appFilesHashes?: IStringDictionary;
 }

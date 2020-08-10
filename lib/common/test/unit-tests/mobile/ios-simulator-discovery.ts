@@ -1,12 +1,13 @@
 import { IOSSimulatorDiscovery } from "../../../mobile/mobile-core/ios-simulator-discovery";
 import { Yok } from "../../../yok";
-
+import * as _ from 'lodash';
 import { assert } from "chai";
 import { DeviceDiscoveryEventNames, CONNECTED_STATUS } from "../../../constants";
 import { DevicePlatformsConstants } from "../../../mobile/device-platforms-constants";
 import { ErrorsStub, CommonLoggerStub, HooksServiceStub, LockServiceStub } from "../stubs";
 import { FileSystemStub, ChildProcessStub, TempServiceStub } from "../../../../../test/stubs";
 import { DeviceConnectionType } from "../../../../constants";
+import { IInjector } from "../../../definitions/yok";
 
 let currentlyRunningSimulators: Mobile.IiSimDevice[];
 

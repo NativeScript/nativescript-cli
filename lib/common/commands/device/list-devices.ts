@@ -1,5 +1,9 @@
 import { createTable, formatListOfNames } from "../../helpers";
 import { DeviceConnectionType } from "../../../constants";
+import { IOptions } from "../../../declarations";
+import { ICommand, ICommandParameter } from "../../definitions/commands";
+import { IErrors } from "../../declarations";
+import { $injector, IInjector } from "../../definitions/yok";
 
 export class ListDevicesCommand implements ICommand {
 	constructor(private $devicesService: Mobile.IDevicesService,

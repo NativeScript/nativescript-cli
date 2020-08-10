@@ -3,6 +3,7 @@ import { Yok } from "../../yok";
 import { DevicePlatformsConstants } from "../../mobile/device-platforms-constants";
 import { LoggingLevels } from "../../mobile/logging-levels";
 import * as assert from "assert";
+import { IInjector } from "../../definitions/yok";
 
 function createTestInjector(): IInjector {
 	const testInjector = new Yok();

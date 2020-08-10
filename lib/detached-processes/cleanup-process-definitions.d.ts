@@ -1,3 +1,5 @@
+import { IDictionary } from "../common/declarations";
+
 interface ITimeout {
 	/**
 	 * Timeout to execute the action.

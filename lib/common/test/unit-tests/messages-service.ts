@@ -4,6 +4,8 @@ import { join } from "path";
 import { MessagesService } from "../../services/messages-service";
 import { existsSync } from "fs";
 import { assert } from "chai";
+import { IMessagesService } from "../../declarations";
+import { IInjector } from "../../definitions/yok";
 
 function createTestInjector(jsonContents: any, options?: { useRealFsExists: boolean }): IInjector {
 	const testInjector = new Yok();

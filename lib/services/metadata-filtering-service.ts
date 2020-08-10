@@ -1,6 +1,11 @@
 import * as path from "path";
 import * as os from "os";
 import { MetadataFilteringConstants } from "../constants";
+import { IPluginsService } from "../definitions/plugins";
+import { IPlatformsDataService } from "../definitions/platform";
+import { IProjectData } from "../definitions/project";
+import { IMetadataFilteringService, INativeApiUsageConfiguration, INativeApiUsagePluginConfiguration } from "../definitions/metadata-filtering-service";
+import { IFileSystem } from "../common/declarations";
 
 export class MetadataFilteringService implements IMetadataFilteringService {
 	constructor(private $fs: IFileSystem,
@@ -72,8 +77,8 @@ export class MetadataFilteringService implements IMetadataFilteringService {
 		}
 	}
 
-	private getNativeApiConfigurationForPlatform(projectData: IProjectData, platform: string): INativeApiUsageConfiguartion {
-		let config: INativeApiUsageConfiguartion = null;
+	private getNativeApiConfigurationForPlatform(projectData: IProjectData, platform: string): INativeApiUsageConfiguration {
+		let config: INativeApiUsageConfiguration = null;
 		const pathToApplicationConfigurationFile = this.getPathToApplicationConfigurationForPlatform(projectData, platform);
 		if (this.$fs.exists(pathToApplicationConfigurationFile)) {
 			config = this.$fs.readJson(pathToApplicationConfigurationFile);

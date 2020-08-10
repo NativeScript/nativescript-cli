@@ -2,6 +2,12 @@ import { assert } from "chai";
 import { Yok } from "../../yok";
 import { PreUninstallCommand } from "../../commands/preuninstall";
 import * as path from "path";
+import { IPackageInstallationManager } from "../../../declarations";
+import { IInjector } from "../../definitions/yok";
+import { IEventActionData } from "../../definitions/google-analytics";
+import { IFileSystem, IAnalyticsService } from "../../declarations";
+import { ICommand } from "../../definitions/commands";
+import { IExtensibilityService } from "../../definitions/extensibility";
 const helpers = require("../../helpers");
 
 describe("preuninstall", () => {

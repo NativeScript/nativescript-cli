@@ -1,5 +1,6 @@
 import { Yok } from "../../lib/common/yok";
 import { assert } from "chai";
+import * as _ from 'lodash';
 import { ProjectDataService } from "../../lib/services/project-data-service";
 import { LoggerStub, ProjectDataStub, MarkingModeServiceStub } from "../stubs";
 import { NATIVESCRIPT_PROPS_INTERNAL_DELIMITER, PACKAGE_JSON_FILE_NAME, CONFIG_NS_FILE_NAME, AssetConstants, ProjectTypes } from '../../lib/constants';
@@ -7,6 +8,9 @@ import { DevicePlatformsConstants } from "../../lib/common/mobile/device-platfor
 import { basename, join } from "path";
 import { FileSystem } from "../../lib/common/file-system";
 import { regExpEscape } from "../../lib/common/helpers";
+import { IProjectDataService, IAssetGroup } from "../../lib/definitions/project";
+import { IInjector } from "../../lib/common/definitions/yok";
+import { IReadFileOptions, IFsStats, IFileSystem } from "../../lib/common/declarations";
 
 const CLIENT_NAME_KEY_IN_PROJECT_FILE = "nativescript";
 

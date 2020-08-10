@@ -1,5 +1,9 @@
 import * as path from "path";
 import { parseJson } from "../helpers";
+import { IFileSystem } from "../declarations";
+import { IJsonFileSettingsService } from "../definitions/json-file-settings-service";
+import * as _ from 'lodash';
+import { $injector } from "../definitions/yok";
 
 export class JsonFileSettingsService implements IJsonFileSettingsService {
 	private jsonSettingsFilePath: string = null;

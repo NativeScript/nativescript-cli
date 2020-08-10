@@ -2,6 +2,11 @@ import { executeActionByChunks } from "../common/helpers";
 import { DEFAULT_CHUNK_SIZE } from "../common/constants";
 import { APP_FOLDER_NAME, HASHES_FILE_NAME } from "../constants";
 import * as path from "path";
+import * as _ from 'lodash';
+import { IFilesHashService } from "../definitions/files-hash-service";
+import { IPlatformData } from "../definitions/platform";
+import { IFileSystem, IStringDictionary } from "../common/declarations";
+import { $injector } from "../common/definitions/yok";
 
 export class FilesHashService implements IFilesHashService {
 	constructor(private $fs: IFileSystem,

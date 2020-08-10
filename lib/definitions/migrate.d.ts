@@ -1,3 +1,6 @@
+import { IProjectData } from "./project";
+import { IProjectDir } from "../common/declarations";
+
 interface IMigrateController {
 	migrate(data: IMigrationData): Promise<void>;
 	shouldMigrate(data: IMigrationData): Promise<boolean>;

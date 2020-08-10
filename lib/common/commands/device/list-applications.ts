@@ -1,5 +1,9 @@
 import { EOL } from "os";
 import * as util from "util";
+import * as _ from 'lodash';
+import { IOptions } from "../../../declarations";
+import { ICommandParameter, ICommand } from "../../definitions/commands";
+import { $injector } from "../../definitions/yok";
 
 export class ListApplicationsCommand implements ICommand {
 	constructor(private $devicesService: Mobile.IDevicesService,

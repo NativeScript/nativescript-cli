@@ -1,6 +1,7 @@
 import { Yok } from "../../../lib/common/yok";
 import { assert } from "chai";
 import * as sinon from "sinon";
+import * as _ from 'lodash';
 import { LoggerStub, TempServiceStub } from "../../stubs";
 import { AndroidLivesyncTool } from "../../../lib/services/livesync/android-livesync-tool";
 import { LiveSyncSocket } from "../../../lib/services/livesync/livesync-socket";
@@ -10,6 +11,8 @@ import { DevicePlatformsConstants } from "../../../lib/common/mobile/device-plat
 import * as path from "path";
 import temp = require("temp");
 import * as crypto from "crypto";
+import { IInjector } from "../../../lib/common/definitions/yok";
+import { IDictionary } from "../../../lib/common/declarations";
 
 temp.track();
 const protocolVersion = "0.2.0";

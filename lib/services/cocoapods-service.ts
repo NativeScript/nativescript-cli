@@ -1,7 +1,12 @@
 import { EOL } from "os";
 import * as path from "path";
-import { PluginNativeDirNames, PODFILE_NAME, NS_BASE_PODFILE } from "../constants";
+import { PlatformTypes, PODFILE_NAME, NS_BASE_PODFILE } from "../constants";
 import { regExpEscape, getHash } from "../common/helpers";
+import { IPluginData } from "../definitions/plugins";
+import { IRubyFunction, IProjectData, ICocoaPodsPlatformManager, ICocoaPodsService, IPodfilePlatformData } from "../definitions/project";
+import { IPlatformData } from "../definitions/platform";
+import { IConfiguration, IXcconfigService } from "../declarations";
+import { IFileSystem, IChildProcess, IErrors, ISpawnResult } from "../common/declarations";
 
 export class CocoaPodsService implements ICocoaPodsService {
 	private static PODFILE_POST_INSTALL_SECTION_NAME = "post_install";
@@ -120,7 +125,7 @@ ${versionResolutionHint}`);
 	}
 
 	public getPluginPodfilePath(pluginData: IPluginData): string {
-		const pluginPlatformsFolderPath = pluginData.pluginPlatformsFolderPath(PluginNativeDirNames.iOS);
+		const pluginPlatformsFolderPath = pluginData.pluginPlatformsFolderPath(PlatformTypes.ios);
 		const pluginPodFilePath = path.join(pluginPlatformsFolderPath, PODFILE_NAME);
 		return pluginPodFilePath;
 	}

@@ -1,7 +1,9 @@
 import { Yok } from "../../../lib/common/yok";
 import { XcodebuildService } from "../../../lib/services/ios/xcodebuild-service";
 import * as path from "path";
+import * as _ from 'lodash';
 import { assert } from "chai";
+import { IInjector } from "../../../lib/common/definitions/yok";
 
 const projectRoot = "path/to/my/app/folder/platforms/ios";
 const projectName = "myApp";

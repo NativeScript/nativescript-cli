@@ -1,3 +1,6 @@
+import { IPlatformData } from "./platform";
+import { IStringDictionary } from "../common/declarations";
+
 interface IFilesHashService {
 	generateHashes(files: string[]): Promise<IStringDictionary>;
 	/**

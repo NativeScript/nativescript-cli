@@ -1,4 +1,6 @@
 import { isInteractive } from "../common/helpers";
+import { IProjectNameService } from "../declarations";
+import { IErrors } from "../common/declarations";
 
 export class ProjectNameService implements IProjectNameService {
 	constructor(private $projectNameValidator: IProjectNameValidator,

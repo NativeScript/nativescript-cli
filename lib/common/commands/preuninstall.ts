@@ -1,6 +1,11 @@
 ﻿import * as path from "path";
 import { doesCurrentNpmCommandMatch, isInteractive } from "../helpers";
 import { TrackActionNames, AnalyticsEventLabelDelimiter } from "../../constants";
+import { IPackageInstallationManager } from "../../declarations";
+import { ICommand, ICommandParameter } from "../definitions/commands";
+import { IAnalyticsService, IFileSystem, ISettingsService } from "../declarations";
+import { $injector } from "../definitions/yok";
+import { IExtensibilityService } from "../definitions/extensibility";
 
 export class PreUninstallCommand implements ICommand {
 	// disabled for now (6/24/2020)

@@ -6,6 +6,8 @@ import { Configurations } from "./constants";
 import { EventEmitter } from "events";
 import * as crypto from "crypto";
 import * as _ from "lodash";
+import { IDictionary, IDeferPromise, Server, IHooksService, IProjectFilesConfig } from "./declarations";
+import { IAndroidSigningData } from "../definitions/build";
 
 const Table = require("cli-table");
 const STRIP_COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/mg;

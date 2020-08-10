@@ -2,6 +2,8 @@ import * as path from "path";
 import { cache, invokeInit } from "../../decorators";
 import { EOL } from "os";
 import { fromWindowsRelativePathToUnix } from "../../helpers";
+import { IChildProcess, IErrors } from "../../declarations";
+import { $injector } from "../../definitions/yok";
 interface IComposeCommandResult {
 	command: string;
 	args: string[];

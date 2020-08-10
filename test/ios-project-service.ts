@@ -1,5 +1,6 @@
 import { join, dirname, basename, extname } from "path";
 import { EOL } from "os";
+import * as _ from 'lodash';
 import * as ChildProcessLib from "../lib/common/child-process";
 import * as ConfigLib from "../lib/config";
 import * as ErrorsLib from "../lib/common/errors";
@@ -30,7 +31,7 @@ import { YarnPackageManager } from "../lib/yarn-package-manager";
 import { assert } from "chai";
 import { SettingsService } from "../lib/common/test/unit-tests/stubs";
 import { BUILD_XCCONFIG_FILE_NAME } from "../lib/constants";
-import { ProjectDataStub, TempServiceStub } from "./stubs";
+import { ProjectDataStub, TempServiceStub, ProjectDataService } from "./stubs";
 import { xcode } from "../lib/node/xcode";
 import temp = require("temp");
 import { CocoaPodsPlatformManager } from "../lib/services/cocoapods-platform-manager";
@@ -39,6 +40,11 @@ import { XcodebuildCommandService } from "../lib/services/ios/xcodebuild-command
 import { XcodebuildArgsService } from "../lib/services/ios/xcodebuild-args-service";
 import { ExportOptionsPlistService } from "../lib/services/ios/export-options-plist-service";
 import { IOSSigningService } from "../lib/services/ios/ios-signing-service";
+import { IProjectData } from "../lib/definitions/project";
+import { IPluginData } from "../lib/definitions/plugins";
+import { IXcconfigService } from "../lib/declarations";
+import { IInjector } from "../lib/common/definitions/yok";
+import { IStringDictionary, IFileSystem } from "../lib/common/declarations";
 temp.track();
 
 class IOSSimulatorDiscoveryMock extends DeviceDiscovery {
@@ -91,7 +97,7 @@ function createTestInjector(projectPath: string, projectName: string, xCode?: IX
 	testInjector.register("projectHelper", {});
 	testInjector.register("xcodeSelectService", {});
 	testInjector.register("staticConfig", ConfigLib.StaticConfig);
-	testInjector.register("projectDataService", {});
+	testInjector.register("projectDataService", ProjectDataService);
 	testInjector.register("prompter", {});
 	testInjector.register("devicePlatformsConstants", { iOS: "iOS" });
 	testInjector.register("devicesService", DevicesService);
@@ -727,15 +733,21 @@ describe("Static libraries support", () => {
 describe("Relative paths", () => {
 	it("checks for correct calculation of relative paths", () => {
 		const projectName = "projectDirectory";
-		const projectPath = temp.mkdirSync(projectName);
-		const subpath = join(projectPath, "sub", "path");
+    const projectPath = temp.mkdirSync(projectName);
+    console.log('projectPath:', projectPath)
+    const subpath = join(projectPath, "sub", "path");
+    console.log('subpath:', subpath)
 
-		const testInjector = createTestInjector(projectPath, projectName);
-		createPackageJson(testInjector, projectPath, projectName);
+    const testInjector = createTestInjector(projectPath, projectName);
+    console.log('testInjector:', !!testInjector)
+    createPackageJson(testInjector, projectPath, projectName);
 		const iOSProjectService = testInjector.resolve("iOSProjectService");
-		const projectData: IProjectData = testInjector.resolve("projectData");
+    console.log('iOSProjectService:', !!iOSProjectService)
+    const projectData: IProjectData = testInjector.resolve("projectData");
+    console.log('projectData:', !!projectData)
 
-		const result = iOSProjectService.getLibSubpathRelativeToProjectPath(subpath, projectData);
+    const result = iOSProjectService.getLibSubpathRelativeToProjectPath(subpath, projectData);
+    console.log('result:', result)
 		assert.equal(result, join("..", "..", "sub", "path"));
 	});
 });

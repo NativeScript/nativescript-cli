@@ -1,3 +1,8 @@
+import { IOptions } from "../../../declarations";
+import { ICommand, ICommandParameter } from "../../definitions/commands";
+import { IErrors } from "../../declarations";
+import { $injector } from "../../definitions/yok";
+
 export class RunApplicationOnDeviceCommand implements ICommand {
 
 	constructor(private $devicesService: Mobile.IDevicesService,

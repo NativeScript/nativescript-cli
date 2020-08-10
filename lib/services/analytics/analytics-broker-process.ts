@@ -1,8 +1,12 @@
 // NOTE: This file is used to track data in a separate process.
 // The instances here are not shared with the ones in main CLI process.
 import * as fs from "fs";
+import * as _ from 'lodash';
 import { AnalyticsBroker } from "./analytics-broker";
 import { FileLogService } from "../../detached-processes/file-log-service";
+import { IAnalyticsBroker, ITrackingInformation, IPreviewAppTrackingInformation } from "./analytics";
+import { $injector } from "../../common/definitions/yok";
+import { TrackingTypes } from "../../common/declarations";
 
 const pathToBootstrap = process.argv[2];
 if (!pathToBootstrap || !fs.existsSync(pathToBootstrap)) {

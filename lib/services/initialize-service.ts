@@ -1,5 +1,7 @@
 import { EOL } from "os";
 import { LoggerLevel } from "../constants";
+import { IOptions } from "../declarations";
+import { ISettingsService, ISysInfo } from "../common/declarations";
 
 export class InitializeService implements IInitializeService {
 	// NOTE: Do not inject anything here, use $injector.resolve in the code

@@ -1,6 +1,9 @@
 import { DeviceDiscovery } from "./device-discovery";
 import { IOSSimulator } from "./../ios/simulator/ios-simulator-device";
 import { EmulatorDiscoveryNames } from "../../constants";
+import { IDictionary, IHostInfo } from "../../declarations";
+import { IInjector, $injector } from "../../definitions/yok";
+import * as _ from 'lodash';
 
 export class IOSSimulatorDiscovery extends DeviceDiscovery {
 	private cachedSimulators: Mobile.IiSimDevice[] = [];

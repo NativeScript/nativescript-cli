@@ -2,6 +2,16 @@ import { cache } from "../common/decorators";
 import { ValidatePlatformCommandBase } from "./command-base";
 import { hasValidAndroidSigning } from "../common/helpers";
 import { ANDROID_APP_BUNDLE_SIGNING_ERROR_MESSAGE } from "../constants";
+import { IProjectData } from "../definitions/project";
+import { IPlatformValidationService, IOptions } from "../declarations";
+import { IPlatformsDataService } from "../definitions/platform";
+import { IDebugDataService, IDebugController, IDebugOptions } from "../definitions/debug";
+import { IMigrateController } from "../definitions/migrate";
+import { ICommandParameter, ICommand } from "../common/definitions/commands";
+import { IErrors, ISysInfo } from "../common/declarations";
+import { ICleanupService } from "../definitions/cleanup-service";
+import { IInjector, $injector } from "../common/definitions/yok";
+import * as _ from 'lodash';
 
 export class DebugPlatformCommand extends ValidatePlatformCommandBase implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];

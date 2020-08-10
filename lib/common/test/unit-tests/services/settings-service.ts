@@ -1,6 +1,9 @@
 import { Yok } from "../../../yok";
 import { SettingsService } from "../../../services/settings-service";
 import { assert } from "chai";
+import { IConfigurationSettings, IHostInfo, ISettingsService } from "../../../declarations";
+import { IInjector } from "../../../definitions/yok";
+import * as _ from 'lodash';
 
 const osenv = require("osenv");
 const path = require("path");

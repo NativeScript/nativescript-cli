@@ -5,6 +5,9 @@ import { HttpProtocolToPort } from "../../constants";
 import { parse } from "url";
 import { platform, EOL } from "os";
 import * as prompt from "inquirer";
+import { IOptions } from "../../../declarations";
+import { IErrors, IHostInfo, IAnalyticsService, IProxyService, IProxyLibSettings } from "../../declarations";
+import { IInjector, $injector } from "../../definitions/yok";
 const { getCredentialsFromAuth } = require("proxy-lib/lib/utils");
 
 const proxySetCommandName = "proxy|set";

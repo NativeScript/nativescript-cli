@@ -1,5 +1,10 @@
 import { createTable } from "../common/helpers";
 import { StringCommandParameter } from "../common/command-params";
+import { IProjectData } from "../definitions/project";
+import { IPlatformValidationService, IOptions } from "../declarations";
+import { ICommand, ICommandParameter } from "../common/definitions/commands";
+import { IInjector, $injector } from "../common/definitions/yok";
+import { IErrors } from "../common/declarations";
 
 export class ListiOSApps implements ICommand {
 	public allowedParameters: ICommandParameter[] = [new StringCommandParameter(this.$injector), new StringCommandParameter(this.$injector)];

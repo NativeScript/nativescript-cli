@@ -16,6 +16,9 @@ import ChildProcessLib = require("../lib/common/child-process");
 import { SettingsService } from "../lib/common/test/unit-tests/stubs";
 import { ProjectDataService } from "../lib/services/project-data-service";
 import { MarkingModeServiceStub, ProjectDataStub } from "./stubs";
+import { IInjector } from "../lib/common/definitions/yok";
+import * as _ from 'lodash';
+import { IDictionary } from "../lib/common/declarations";
 
 function createTestInjector(): IInjector {
 	const testInjector = new yok.Yok();

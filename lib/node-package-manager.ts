@@ -2,6 +2,10 @@ import { join, relative } from "path";
 import { BasePackageManager } from "./base-package-manager";
 import { exported, cache } from "./common/decorators";
 import { CACACHE_DIRECTORY_NAME } from "./constants";
+import * as _ from 'lodash';
+import { INodePackageManagerInstallOptions, INpmInstallResultInfo, INpmsResult } from "./declarations";
+import { IChildProcess, IErrors, IFileSystem, IHostInfo, Server } from "./common/declarations";
+import { $injector } from "./common/definitions/yok";
 
 export class NodePackageManager extends BasePackageManager {
 	constructor(

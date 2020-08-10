@@ -2,6 +2,8 @@ import byline = require("byline");
 import { DeviceAndroidDebugBridge } from "./device-android-debug-bridge";
 import { ChildProcess } from "child_process";
 import * as semver from "semver";
+import { IDictionary } from "../../declarations";
+import { IInjector, $injector } from "../../definitions/yok";
 
 interface IDeviceLoggingData {
 	loggingProcess: ChildProcess;

@@ -2,6 +2,9 @@ import * as path from "path";
 import { ITMSConstants, INFO_PLIST_FILE_NAME } from "../constants";
 import { quoteString } from "../common/helpers";
 import { cache } from "../common/decorators";
+import { IITMSTransporterService, IITMSData } from "../declarations";
+import { IProjectData } from "../definitions/project";
+import { IChildProcess, IErrors, IFileSystem, IPlistParser, IXcodeSelectService } from "../common/declarations";
 
 export class ITMSTransporterService implements IITMSTransporterService {
 	constructor(

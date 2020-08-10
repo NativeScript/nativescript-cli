@@ -1,3 +1,6 @@
+import * as _ from 'lodash';
+import { $injector } from '../common/definitions/yok';
+
 export class DeployController {
 
 	constructor(

@@ -2,7 +2,7 @@ import { assert } from "chai";
 import { DevicePlatformsConstants } from "../../../mobile/device-platforms-constants";
 import { Errors } from "../../../errors";
 import { FileSystem } from "../../../file-system";
-
+import * as _ from 'lodash';
 import { HostInfo } from "../../../host-info";
 import { LocalToDevicePathDataFactory } from "../../../mobile/local-to-device-path-data-factory";
 import { MobileHelper } from "../../../mobile/mobile-helper";
@@ -15,6 +15,8 @@ import { ProjectFilesProviderBase } from "../../../services/project-files-provid
 import temp = require("temp");
 import { LiveSyncPaths } from "../../../constants";
 import { TempServiceStub } from "../../../../../test/stubs";
+import { IInjector } from "../../../definitions/yok";
+import { IProjectFilesManager } from "../../../declarations";
 temp.track();
 
 const testedApplicationIdentifier = "com.telerik.myApp";

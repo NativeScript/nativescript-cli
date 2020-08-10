@@ -2,6 +2,9 @@ import { Yok } from "../../../yok";
 import { assert } from "chai";
 import { CommonLoggerStub } from "../stubs";
 import { JsonFileSettingsService } from "../../../services/json-file-settings-service";
+import { IDictionary, IReadFileOptions } from "../../../declarations";
+import { IInjector } from "../../../definitions/yok";
+import { IJsonFileSettingsService } from "../../../definitions/json-file-settings-service";
 
 const originalDateNow = Date.now;
 

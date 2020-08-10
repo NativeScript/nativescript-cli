@@ -1,9 +1,15 @@
 import { performanceLog } from "../common/decorators";
 import { EOL } from "os";
 import { parse } from "url";
+import * as _ from 'lodash';
 import { CONNECTED_STATUS } from "../common/constants";
 import { TrackActionNames, DebugCommandErrors, CONNECTION_ERROR_EVENT_NAME, DebugTools, DEBUGGER_DETACHED_EVENT_NAME, DEBUGGER_ATTACHED_EVENT_NAME } from "../constants";
 import { EventEmitter } from "events";
+import { IProjectDataService } from "../definitions/project";
+import { IDebugController, IDeviceDebugService, IDebugDataService, IDebugData, IDebugOptions, IDebugResultInfo } from "../definitions/debug";
+import { IDebugInformation } from "../declarations";
+import { IAnalyticsService, IDictionary, IErrors } from "../common/declarations";
+import { IInjector, $injector } from "../common/definitions/yok";
 
 export class DebugController extends EventEmitter implements IDebugController {
 	private _platformDebugServices: IDictionary<IDeviceDebugService> = {};

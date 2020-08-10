@@ -1,3 +1,5 @@
+import { $injector } from "./common/definitions/yok";
+
 require("./common/bootstrap");
 $injector.requirePublicClass("logger", "./common/logger/logger");
 $injector.require("config", "./config");

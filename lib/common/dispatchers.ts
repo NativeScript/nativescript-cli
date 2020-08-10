@@ -1,6 +1,10 @@
+import * as _ from 'lodash';
 import * as queue from "./queue";
 import * as path from "path";
 import { hook } from "./helpers";
+import { ICommandDispatcher, ICancellationService, ISysInfo, IFileSystem, IFutureDispatcher, IQueue, IErrors } from "./declarations";
+import { IOptions } from "../declarations";
+import { IInjector, $injector } from "./definitions/yok";
 
 export class CommandDispatcher implements ICommandDispatcher {
 	constructor(private $logger: ILogger,

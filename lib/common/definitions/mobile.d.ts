@@ -1,4 +1,7 @@
 import { DeviceConnectionType } from "../../constants";
+import { IProjectData } from "../../definitions/project";
+import { IBuildData } from "../../definitions/build";
+import { IPlatform, IDictionary, IProjectDir, IShouldDispose, IStringDictionary, IAppInstalledInfo, IHasEmulatorOption, IDisposable } from "../declarations";
 
 declare global {
 	export module Mobile {

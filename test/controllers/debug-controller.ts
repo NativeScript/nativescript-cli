@@ -1,6 +1,7 @@
 import { Yok } from "../../lib/common/yok";
 import * as stubs from "../stubs";
 import { assert } from "chai";
+import * as _ from 'lodash';
 import { EventEmitter } from "events";
 import * as constants from "../../lib/common/constants";
 import { CONNECTION_ERROR_EVENT_NAME, DebugCommandErrors, TrackActionNames, DebugTools } from "../../lib/constants";
@@ -13,6 +14,9 @@ import { ProjectDataService } from "../../lib/services/project-data-service";
 import { StaticConfig } from "../../lib/config";
 import { DevicePlatformsConstants } from "../../lib/common/mobile/device-platforms-constants";
 import { LiveSyncProcessDataService } from "../../lib/services/livesync-process-data-service";
+import { IDebugData, IDebugOptions, IDebugResultInfo, IDeviceDebugService } from "../../lib/definitions/debug";
+import { IInjector } from "../../lib/common/definitions/yok";
+import { IAnalyticsService } from "../../lib/common/declarations";
 
 const fakeChromeDebugPort = 123;
 const fakeChromeDebugUrl = `fakeChromeDebugUrl?experiments=true&ws=localhost:${fakeChromeDebugPort}`;

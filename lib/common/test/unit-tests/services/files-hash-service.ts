@@ -2,6 +2,10 @@ import { Yok } from "../../../yok";
 import { FilesHashService } from "../../../../services/files-hash-service";
 import { FileSystemStub, LoggerStub } from "../../../../../test/stubs";
 import { assert } from "chai";
+import { IInjector } from "../../../definitions/yok";
+import { IStringDictionary } from "../../../declarations";
+import * as _ from 'lodash';
+import { IFilesHashService } from "../../../../definitions/files-hash-service";
 
 const fileHashes = {
 	"file1": "hash1",

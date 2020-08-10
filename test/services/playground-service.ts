@@ -2,6 +2,9 @@ import { assert } from "chai";
 import { FileSystemStub } from "../stubs";
 import { PlaygroundService } from "../../lib/services/playground-service";
 import { Yok } from "../../lib/common/yok";
+import { IProjectDataService, IProjectData } from "../../lib/definitions/project";
+import { IInjector } from "../../lib/common/definitions/yok";
+import { IFileSystem, IPlaygroundService } from "../../lib/common/declarations";
 
 let userSettings: any = null;
 

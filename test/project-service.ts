@@ -5,6 +5,10 @@ import { assert } from "chai";
 import { SettingsService } from "../lib/common/test/unit-tests/stubs";
 import { LoggerStub, ErrorsStub, TempServiceStub } from "./stubs";
 import * as path from "path";
+import { IProjectData, IProjectService, IProjectDataService } from "../lib/definitions/project";
+import { IProjectNameService } from "../lib/declarations";
+import { IInjector } from "../lib/common/definitions/yok";
+import { IDictionary, IFileSystem } from "../lib/common/declarations";
 
 describe("projectService", () => {
 	describe("createProject", () => {
