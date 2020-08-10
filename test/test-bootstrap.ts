@@ -1,5 +1,6 @@
 import * as shelljs from "shelljs";
 import { use } from "chai";
+import { ICliGlobal } from "../lib/common/definitions/cli-global";
 
 shelljs.config.silent = true;
 shelljs.config.fatal = true;

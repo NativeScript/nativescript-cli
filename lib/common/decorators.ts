@@ -1,4 +1,6 @@
 import { AnalyticsEventLabelDelimiter } from "../constants";
+import { IPerformanceService } from "../declarations";
+import { $injector, IInjector } from "./definitions/yok";
 
 /**
  * Caches the result of the first execution of the method and returns it whenever it is called instead of executing it again.
@@ -56,7 +58,7 @@ export function cache(): any {
  * @return {any} Result of the decorated method.
  */
 export function invokeBefore(methodName: string, methodArgs?: any[]): any {
-	return (target: Object, propertyKey: string, descriptor: TypedPropertyDescriptor<any>): TypedPropertyDescriptor<any> => {
+	return (target: any, propertyKey: string, descriptor: TypedPropertyDescriptor<any>): TypedPropertyDescriptor<any> => {
 		const originalValue = descriptor.value;
 		descriptor.value = async function (...args: any[]) {
 			await target[methodName].apply(this, methodArgs);

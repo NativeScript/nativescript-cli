@@ -1,3 +1,6 @@
+import { IStaticConfig } from "./declarations";
+import { $injector } from "./common/definitions/yok";
+
 require("./bootstrap");
 
 $injector.overrideAlreadyRequiredModule = true;

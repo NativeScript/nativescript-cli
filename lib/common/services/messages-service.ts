@@ -1,5 +1,8 @@
 import * as util from "util";
 import { join } from "path";
+import { IMessagesService, IFileSystem } from "../declarations";
+import * as _ from 'lodash';
+import { $injector } from "../definitions/yok";
 
 export class MessagesService implements IMessagesService {
 	private _pathsToMessageJsonFiles: string[] = null;

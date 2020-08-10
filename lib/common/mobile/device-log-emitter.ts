@@ -1,5 +1,7 @@
 import { DeviceLogProviderBase } from "./device-log-provider-base";
 import { DEVICE_LOG_EVENT_NAME } from "../constants";
+import { $injector } from "../definitions/yok";
+import * as _ from 'lodash';
 
 export class DeviceLogEmitter extends DeviceLogProviderBase {
 	constructor(protected $logFilter: Mobile.ILogFilter,

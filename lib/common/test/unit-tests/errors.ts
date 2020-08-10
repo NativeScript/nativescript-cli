@@ -4,6 +4,8 @@ import { CommonLoggerStub } from "./stubs";
 import { assert } from "chai";
 import * as path from "path";
 import { LoggerLevel } from "../../../constants";
+import { IInjector } from "../../definitions/yok";
+import { IErrors } from "../../declarations";
 const helpers = require("../../helpers");
 const originalIsInteractive = helpers.isInteractive;
 const originalProcessExit = process.exit;

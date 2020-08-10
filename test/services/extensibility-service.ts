@@ -12,6 +12,11 @@ import { CommandsDelimiters } from "../../lib/common/constants";
 import { Errors } from "../../lib/common/errors";
 import { HostInfo } from "../../lib/common/host-info";
 import { SettingsService } from "../../lib/common/test/unit-tests/stubs";
+import { INodePackageManager, INpmsResult } from '../../lib/declarations';
+import { IExtensionCommandInfo, IExtensibilityService, IExtensionData } from '../../lib/common/definitions/extensibility';
+import { IInjector } from '../../lib/common/definitions/yok';
+import { ISettingsService, IFileSystem } from '../../lib/common/declarations';
+import * as _ from 'lodash';
 const path = require("path");
 const originalResolve = path.resolve;
 

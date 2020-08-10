@@ -1,14 +1,12 @@
+import { IOptions } from "../declarations"
+import { IJsonFileSettingsService } from "./definitions/json-file-settings-service";
+import { IGoogleAnalyticsData, IEventActionData } from "./definitions/google-analytics";
+
 interface Object {
 	[key: string]: any;
 }
 
 interface IStringDictionary extends IDictionary<string> { }
-
-declare enum Platforms {
-  ios = 'ios',
-  android = 'android'
-}
-type SupportedPlatform = Platforms.ios | Platforms.android;
 
 /**
  * Describes iTunes Connect application types
@@ -1560,15 +1558,15 @@ interface IiOSNotificationService {
 	postNotification(deviceIdentifier: string, notification: string, commandType?: string): Promise<number>;
 }
 
-declare module "stringify-package" {
-	function stringifyPackage(data: any, indent: any, newline: string): string
-	export = stringifyPackage
-}
+// declare module "stringify-package" {
+// 	function stringifyPackage(data: any, indent: any, newline: string): string
+// 	export = stringifyPackage
+// }
 
-declare module "detect-newline" {
-	function detectNewline(data: string): string | null;
-	export = detectNewline
-}
+// declare module "detect-newline" {
+// 	function detectNewline(data: string): string | null;
+// 	export = detectNewline
+// }
 
 /**
  * Describes information for application.

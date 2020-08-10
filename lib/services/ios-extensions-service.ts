@@ -1,5 +1,7 @@
 import * as path from "path";
 import { IOSNativeTargetProductTypes, IOSNativeTargetTypes } from "../constants";
+import { IIOSNativeTargetService, IIOSExtensionsService, IAddExtensionsFromPathOptions, IRemoveExtensionsOptions, IProjectData } from "../definitions/project";
+import { IFileSystem } from "../common/declarations";
 
 export class IOSExtensionsService implements IIOSExtensionsService {
 	constructor(protected $fs: IFileSystem,

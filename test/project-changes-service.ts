@@ -1,12 +1,16 @@
 import * as path from "path";
 import { BaseServiceTest } from "./base-service-test";
 import temp = require("temp");
+import * as _ from 'lodash';
 import { assert } from "chai";
 import { PlatformsDataService } from "../lib/services/platforms-data-service";
 import { ProjectChangesService } from "../lib/services/project-changes-service";
 import * as Constants from "../lib/constants";
 import { FileSystem } from "../lib/common/file-system";
 import { HooksServiceStub, LoggerStub } from "./stubs";
+import { IProjectData } from "../lib/definitions/project";
+import { IPlatformData } from "../lib/definitions/platform";
+import { IFileSystem } from "../lib/common/declarations";
 
 // start tracking temporary folders/files
 temp.track();

@@ -1,4 +1,7 @@
 import { EventEmitter } from "events";
+import { IControllerDataBase } from "./data";
+import { IPlatformData } from "./platform";
+import { IProjectData } from "./project";
 
 declare global {
 

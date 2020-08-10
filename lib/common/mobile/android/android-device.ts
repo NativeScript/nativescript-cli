@@ -2,8 +2,11 @@ import { DeviceAndroidDebugBridge } from "./device-android-debug-bridge";
 import * as applicationManagerPath from "./android-application-manager";
 import * as fileSystemPath from "./android-device-file-system";
 import * as constants from "../../constants";
+import * as _ from 'lodash';
 import { cache } from "../../decorators";
 import { DeviceConnectionType } from "../../../constants";
+import { IDictionary } from "../../declarations";
+import { IInjector } from "../../definitions/yok";
 
 interface IAndroidDeviceDetails {
 	model: string;

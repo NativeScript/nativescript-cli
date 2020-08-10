@@ -1,4 +1,10 @@
 import * as path from "path";
+import { IBuildArtefactsService } from "../definitions/build";
+import { IPlatformData, IBuildOutputOptions, IValidBuildOutputData } from "../definitions/platform";
+import { IApplicationPackage } from "../declarations";
+import { IErrors, IFileSystem } from "../common/declarations";
+import { $injector } from "../common/definitions/yok";
+import * as _ from 'lodash';
 
 export class BuildArtefactsService implements IBuildArtefactsService {
 	constructor(

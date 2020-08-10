@@ -2,6 +2,11 @@ import * as path from "path";
 import { StringCommandParameter } from "../common/command-params";
 import { BuildController } from "../controllers/build-controller";
 import { IOSBuildData } from "../data/build-data";
+import { IProjectData } from "../definitions/project";
+import { IITMSTransporterService, IOptions, IPlatformValidationService } from "../declarations";
+import { ICommand, ICommandParameter } from "../common/definitions/commands";
+import { IInjector, $injector } from "../common/definitions/yok";
+import { IHostInfo, IErrors } from "../common/declarations";
 
 export class PublishIOS implements ICommand {
 	public allowedParameters: ICommandParameter[] = [new StringCommandParameter(this.$injector), new StringCommandParameter(this.$injector),

@@ -4,7 +4,12 @@ import { TARGET_FRAMEWORK_IDENTIFIERS, LiveSyncPaths } from "../../constants";
 import { hook, sleep, regExpEscape } from "../../helpers";
 import { cache } from "../../decorators";
 import { parse, join } from "path";
+import * as _ from 'lodash';
 import { AAB_EXTENSION_NAME, APKS_EXTENSION_NAME } from "../../../constants";
+import { IOptions } from "../../../declarations";
+import { IAndroidBuildData, IAndroidSigningData } from "../../../definitions/build";
+import { IAndroidBundleToolService } from "../../../definitions/android-bundle-tool-service";
+import { IFileSystem, Server, IErrors, IHooksService, IDictionary } from "../../declarations";
 
 export class AndroidApplicationManager extends ApplicationManagerBase {
 	public PID_CHECK_INTERVAL = 100;

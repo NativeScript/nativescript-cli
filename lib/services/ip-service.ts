@@ -1,4 +1,6 @@
 import { cache } from "../common/decorators";
+import { IConfiguration } from "../declarations";
+import { Server } from "../common/declarations";
 
 export class IPService implements IIPService {
 	private static GET_IP_TIMEOUT = 1000;

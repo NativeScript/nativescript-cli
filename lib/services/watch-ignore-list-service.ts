@@ -1,3 +1,6 @@
+import { IWatchIgnoreListService } from "../declarations";
+import { IDictionary } from "../common/declarations";
+
 export class WatchIgnoreListService implements IWatchIgnoreListService {
 	private ignoreMap: IDictionary<boolean> = {};
 

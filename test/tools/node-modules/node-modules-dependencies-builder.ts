@@ -2,7 +2,12 @@ import { Yok } from "../../../lib/common/yok";
 import { assert } from "chai";
 import { NodeModulesDependenciesBuilder } from "../../../lib/tools/node-modules/node-modules-dependencies-builder";
 import * as path from "path";
+import * as _ from 'lodash';
 import * as constants from "../../../lib/constants";
+import { IDependencyData } from "../../../lib/declarations";
+import { INodeModulesDependenciesBuilder } from "../../../lib/definitions/platform";
+import { IInjector } from "../../../lib/common/definitions/yok";
+import { IFileSystem, IStringDictionary } from "../../../lib/common/declarations";
 
 interface IDependencyInfo {
 	name: string;

@@ -1,5 +1,10 @@
 import { NativePlatformStatus } from "../constants";
 import * as path from "path";
+import { IProjectDataService, IProjectData, INativePrepare } from "../definitions/project";
+import { IPlatformController, IAddPlatformService, IPlatformsDataService, IAddPlatformData, IPlatformData } from "../definitions/platform";
+import { IPackageInstallationManager } from "../declarations";
+import { IFileSystem, IErrors } from "../common/declarations";
+import { $injector } from "../common/definitions/yok";
 
 export class PlatformController implements IPlatformController {
 	constructor(

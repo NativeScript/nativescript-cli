@@ -1,3 +1,6 @@
+import { IInjector, $injector } from "../common/definitions/yok";
+import { IErrors } from "../common/declarations";
+
 export class LiveSyncServiceResolver implements ILiveSyncServiceResolver {
 	constructor(
 		private $errors: IErrors,

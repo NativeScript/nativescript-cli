@@ -4,6 +4,9 @@ import { IOSDeviceLiveSyncService } from "./ios-device-livesync-service";
 import { PlatformLiveSyncServiceBase } from "./platform-livesync-service-base";
 import { APP_FOLDER_NAME } from "../../constants";
 import { performanceLog } from "../../common/decorators";
+import { IPlatformsDataService } from "../../definitions/platform";
+import { IFileSystem, IProjectFilesManager, IProjectDir } from "../../common/declarations";
+import { IInjector, $injector } from "../../common/definitions/yok";
 
 export class IOSLiveSyncService extends PlatformLiveSyncServiceBase implements IPlatformLiveSyncService {
 	constructor(protected $fs: IFileSystem,

@@ -1,3 +1,5 @@
+import { IAndroidToolsInfoData } from "../declarations";
+import { IProjectDir } from "../common/declarations";
 
 interface IPluginBuildOptions extends IAndroidBuildOptions{
 	projectDir?: string

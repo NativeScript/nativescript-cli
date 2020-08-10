@@ -1,6 +1,7 @@
 require("colors");
 import { PreviewAppLiveSyncEvents } from "./services/livesync/playground/preview-app-constants";
 import { join } from "path";
+import { IStringDictionary, IiTunesConnectApplicationType } from "./common/declarations";
 
 export const APP_FOLDER_NAME = "app";
 export const APP_RESOURCES_FOLDER_NAME = "App_Resources";
@@ -287,10 +288,12 @@ export class AddPlaformErrors {
 export const PLUGIN_BUILD_DATA_FILENAME = "plugin-data.json";
 export const PLUGINS_BUILD_DATA_FILENAME = ".ns-plugins-build-data.json";
 
-export class PluginNativeDirNames {
-	public static iOS = "ios";
-	public static Android = "android";
+export const enum PlatformTypes {
+	ios = "ios",
+	android = "android"
 }
+
+export type SupportedPlatform = PlatformTypes.ios | PlatformTypes.android;
 
 export const PODFILE_NAME = "Podfile";
 

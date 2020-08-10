@@ -1,3 +1,5 @@
+import { IShouldDispose, IDisposable } from "../common/declarations";
+
 /**
  * Descibes the cleanup service which allows scheduling cleanup actions
  * The actions will be executed once CLI process exits.

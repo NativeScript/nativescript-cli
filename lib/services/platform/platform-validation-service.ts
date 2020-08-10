@@ -1,5 +1,10 @@
 import * as helpers from "../../common/helpers";
 import * as path from "path";
+import { IPlatformValidationService } from "../../declarations";
+import { IPlatformsDataService } from "../../definitions/platform";
+import { IProjectData } from "../../definitions/project";
+import { IErrors, IFileSystem } from "../../common/declarations";
+import { $injector } from "../../common/definitions/yok";
 
 export class PlatformValidationService implements IPlatformValidationService {
 

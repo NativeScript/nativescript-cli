@@ -1,8 +1,10 @@
 import { AndroidApplicationManager } from "../../mobile/android/android-application-manager";
 import { Yok } from "../../yok";
 import { assert } from "chai";
+import * as _ from 'lodash';
 import { AndroidBundleToolServiceStub, CommonLoggerStub, HooksServiceStub, LogcatHelperStub, AndroidProcessServiceStub, DeviceLogProviderStub, ErrorsStub } from "./stubs";
 import { FileSystemStub } from "../../../../test/stubs";
+import { IInjector } from "../../definitions/yok";
 const invalidIdentifier = "invalid.identifier";
 const validDeviceIdentifier = "device.identifier";
 const validIdentifier = "org.nativescript.testApp";

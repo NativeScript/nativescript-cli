@@ -2,6 +2,12 @@ import * as path from "path";
 import * as semver from "semver";
 import * as constants from "../constants";
 import { UpdateControllerBase } from "./update-controller-base";
+import { IProjectDataService, IProjectData } from "../definitions/project";
+import { IPlatformsDataService, IAddPlatformService } from "../definitions/platform";
+import { IPlatformCommandHelper, IPackageInstallationManager, IPackageManager } from "../declarations";
+import { IPluginsService } from "../definitions/plugins";
+import { IFileSystem, IErrors, IDictionary } from "../common/declarations";
+import { $injector } from "../common/definitions/yok";
 
 interface IPackage {
 	name: string;

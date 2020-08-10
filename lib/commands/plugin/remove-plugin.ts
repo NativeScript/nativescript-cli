@@ -1,3 +1,10 @@
+import * as _ from 'lodash';
+import { IProjectData } from "../../definitions/project";
+import { IPluginsService } from "../../definitions/plugins";
+import { ICommand, ICommandParameter } from "../../common/definitions/commands";
+import { IErrors } from "../../common/declarations";
+import { $injector } from "../../common/definitions/yok";
+
 export class RemovePluginCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
 

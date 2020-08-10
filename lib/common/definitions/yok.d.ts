@@ -1,3 +1,6 @@
+import { IDisposable, IDictionary } from "../declarations";
+import { ICommand } from "./commands";
+
 interface IInjector extends IDisposable {
 	require(name: string, file: string): void;
 	require(names: string[], file: string): void;

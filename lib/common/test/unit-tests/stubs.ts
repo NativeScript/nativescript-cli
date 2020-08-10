@@ -2,7 +2,10 @@
 
 import * as util from "util";
 import { EventEmitter } from "events";
+import * as _ from 'lodash';
 import { LoggerConfigData } from "../../../constants";
+import { IErrors, IFailOptions, ISettingsService, IConfigurationSettings, IDictionary, IHooksService, IStringDictionary } from "../../declarations";
+import { IBuildApksOptions, IAndroidBundleToolService, IInstallApksOptions } from "../../../definitions/android-bundle-tool-service";
 
 export class LockServiceStub implements ILockService {
 	public async lock(lockFilePath?: string, lockOpts?: ILockOptions): Promise<() => void> {

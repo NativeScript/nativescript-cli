@@ -1,3 +1,10 @@
+import * as _ from 'lodash';
+import { IProjectData } from "../definitions/project";
+import { IPlatformCommandHelper, IPlatformValidationService } from "../declarations";
+import { $injector } from "../common/definitions/yok";
+import { ICommand, ICommandParameter } from "../common/definitions/commands";
+import { IErrors } from "../common/declarations";
+
 export class RemovePlatformCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
 

@@ -7,6 +7,11 @@ import { LoggerStub, ErrorsStub } from "./stubs";
 import { XcconfigService } from "../lib/services/xcconfig-service";
 import * as path from "path";
 import { CocoaPodsPlatformManager } from "../lib/services/cocoapods-platform-manager";
+import { IPluginData } from "../lib/definitions/plugins";
+import { ICocoaPodsService, IProjectData } from "../lib/definitions/project";
+import { IConfiguration } from "../lib/declarations";
+import { IInjector } from "../lib/common/definitions/yok";
+import { IFileSystem, IChildProcess, ISpawnFromEventOptions, ISpawnResult, IExecOptions } from "../lib/common/declarations";
 
 interface IMergePodfileHooksTestCase {
 	input: string;

@@ -1,4 +1,10 @@
 import { ValidatePlatformCommandBase } from "./command-base";
+import { IProjectData } from "../definitions/project";
+import { IOptions, IPlatformCommandHelper, IPlatformValidationService } from "../declarations";
+import { IPlatformsDataService } from "../definitions/platform";
+import { ICommandParameter, ICommand } from "../common/definitions/commands";
+import { IErrors } from "../common/declarations";
+import { $injector } from "../common/definitions/yok";
 
 export class AddPlatformCommand extends ValidatePlatformCommandBase implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];

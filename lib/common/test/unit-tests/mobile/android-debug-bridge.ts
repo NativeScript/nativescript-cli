@@ -1,9 +1,11 @@
 import { AndroidDebugBridge } from "../../../mobile/android/android-debug-bridge";
 import { assert } from "chai";
+import * as _ from 'lodash';
 import { Yok } from "../../../yok";
 import { CommonLoggerStub, ErrorsStub } from "../stubs";
 import { AndroidDebugBridgeResultHandler } from "../../../mobile/android/android-debug-bridge-result-handler";
 import { EventEmitter } from "events";
+import { ISpawnResult } from "../../../declarations";
 const adbPath = "testAdb";
 const adbError = "No space left on device.";
 const adbResponse = "My Cool Response";

@@ -1,4 +1,8 @@
+import * as _ from 'lodash';
 import * as helpers from "../../common/helpers";
+import { ICommand, ICommandParameter } from "../../common/definitions/commands";
+import { $injector } from "../../common/definitions/yok";
+import { IExtensibilityService } from "../../common/definitions/extensibility";
 
 export class ListExtensionsCommand implements ICommand {
 	constructor(private $extensibilityService: IExtensibilityService,

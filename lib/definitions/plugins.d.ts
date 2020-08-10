@@ -1,3 +1,7 @@
+import { IProjectData } from "./project";
+import { IDependencyData } from "../declarations";
+import { IDictionary } from "../common/declarations";
+
 interface IPluginsService {
 	add(plugin: string, projectData: IProjectData): Promise<void>; // adds plugin by name, github url, local path and et.
 	remove(pluginName: string, projectData: IProjectData): Promise<void>; // removes plugin only by name

@@ -1,5 +1,7 @@
 import * as path from "path";
 import { Configurations } from "../common/constants";
+import { IXcconfigService } from "../declarations";
+import { IChildProcess, IFileSystem, IStringDictionary } from "../common/declarations";
 
 export class XcconfigService implements IXcconfigService {
 	constructor(
@@ -39,7 +41,7 @@ export class XcconfigService implements IXcconfigService {
 
 			let property: string;
 			let isPropertyParsed: boolean = false;
-			text.split(/\r?\n/).forEach((line) => {
+			text.split(/\r?\n/).forEach((line: string) => {
 				line = line.replace(/\/(\/)[^\n]*$/, "");
 				if (line.indexOf(propertyName) >= 0) {
 					const parts = line.split("=");

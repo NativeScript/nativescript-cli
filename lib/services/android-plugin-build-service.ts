@@ -1,7 +1,16 @@
 import * as path from "path";
-import { MANIFEST_FILE_NAME, INCLUDE_GRADLE_NAME, ASSETS_DIR, RESOURCES_DIR, AndroidBuildDefaults, PLUGIN_BUILD_DATA_FILENAME } from "../constants";
+import { MANIFEST_FILE_NAME, INCLUDE_GRADLE_NAME, ASSETS_DIR, RESOURCES_DIR, AndroidBuildDefaults, PLUGIN_BUILD_DATA_FILENAME, PlatformTypes } from "../constants";
 import { getShortPluginName, hook } from "../common/helpers";
 import { Builder, parseString } from "xml2js";
+import { IRuntimeGradleVersions, INodePackageManager, IAndroidToolsInfo, IWatchIgnoreListService } from "../declarations";
+import { IBasePluginData } from "../definitions/plugins";
+import { IPlatformsDataService } from "../definitions/platform";
+import { IProjectDataService } from "../definitions/project";
+import { IAndroidPluginBuildService, IPluginBuildOptions, IBuildAndroidPluginData } from "../definitions/android-plugin-migrator";
+import { IFileSystem, IChildProcess, IHostInfo, IErrors, IHooksService, IFsStats, IStringDictionary } from "../common/declarations";
+import { IFilesHashService } from "../definitions/files-hash-service";
+import { IInjector, $injector } from "../common/definitions/yok";
+import * as _ from 'lodash';
 
 export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 	private get $platformsDataService(): IPlatformsDataService {
@@ -300,7 +309,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			this.$logger.trace(`Got gradle versions ${JSON.stringify(runtimeGradleVersions)} from runtime v${projectRuntimeVersion}`);
     }
     
-    const runtimePackage = this.$projectDataService.getRuntimePackage(projectDir, Platforms.android);
+    const runtimePackage = this.$projectDataService.getRuntimePackage(projectDir, PlatformTypes.android);
 
 		if (!runtimeGradleVersions) {
 			const latestRuntimeVersion = await this.getLatestRuntimeVersion(runtimePackage);

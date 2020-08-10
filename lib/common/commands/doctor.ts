@@ -1,3 +1,7 @@
+import { $injector } from "../definitions/yok";
+import { ICommand, ICommandParameter } from "../definitions/commands";
+import { IDoctorService, IProjectHelper } from "../declarations";
+
 export class DoctorCommand implements ICommand {
 
 	constructor(private $doctorService: IDoctorService,

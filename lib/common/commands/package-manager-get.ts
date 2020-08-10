@@ -1,3 +1,6 @@
+import { $injector } from "../definitions/yok";
+import { IUserSettingsService, IErrors } from "../declarations";
+import { ICommand, ICommandParameter } from "../definitions/commands";
 
 export class PackageManagerGetCommand implements ICommand {
 

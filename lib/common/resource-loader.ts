@@ -1,4 +1,6 @@
 import * as path from "path";
+import { IResourceLoader, IFileSystem } from "./declarations";
+import { $injector } from "./definitions/yok";
 
 export class ResourceLoader implements IResourceLoader {
 	constructor(private $fs: IFileSystem,

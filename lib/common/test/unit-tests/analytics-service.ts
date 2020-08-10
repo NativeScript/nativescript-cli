@@ -4,6 +4,8 @@ import { AnalyticsService } from '../../../services/analytics/analytics-service'
 import { setIsInteractive } from "../../helpers";
 import { HostInfo } from "../../host-info";
 import { OsInfo } from "../../os-info";
+import { IInjector } from "../../definitions/yok";
+import { IAnalyticsService } from "../../declarations";
 const assert = require("chai").assert;
 
 let savedSettingNamesAndValues = "";

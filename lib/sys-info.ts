@@ -5,6 +5,8 @@ import { MacOSVersions, MacOSDeprecationStringFormat, XcodeDeprecationStringForm
 import { getNodeWarning } from "./common/verify-node-version";
 import { exported } from "./common/decorators";
 import * as semver from "semver";
+import { ISysInfo, IFileSystem, IHostInfo, ISystemWarning } from "./common/declarations";
+import { $injector } from "./common/definitions/yok";
 
 export class SysInfo implements ISysInfo {
 	private sysInfo: ISysInfoData = null;

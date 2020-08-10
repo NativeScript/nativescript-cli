@@ -1,6 +1,9 @@
 import { InjectorStub } from "../stubs";
 import { TestExecutionService } from "../../lib/services/test-execution-service";
 import { assert } from "chai";
+import * as _ from 'lodash';
+import { ITestExecutionService } from "../../lib/definitions/project";
+import { IDictionary } from "../../lib/common/declarations";
 
 const karmaPluginName = "karma";
 const unitTestsPluginName = "@nativescript/unit-test-runner";

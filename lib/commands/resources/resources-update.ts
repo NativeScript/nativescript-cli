@@ -1,3 +1,9 @@
+import { IProjectData } from "../../definitions/project";
+import { IAndroidResourcesMigrationService } from "../../declarations";
+import { ICommand, ICommandParameter } from "../../common/definitions/commands";
+import { IErrors } from "../../common/declarations";
+import { $injector } from "../../common/definitions/yok";
+
 export class ResourcesUpdateCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
 

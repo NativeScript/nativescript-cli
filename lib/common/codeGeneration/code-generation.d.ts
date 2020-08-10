@@ -1,3 +1,5 @@
+import { IDictionary } from "../declarations";
+
 declare module CodeGeneration {
 
 	interface IModel {

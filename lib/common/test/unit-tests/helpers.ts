@@ -1,6 +1,8 @@
 import * as helpers from "../../helpers";
 import { assert } from "chai";
 import { EOL } from "os";
+import * as _ from 'lodash';
+import { IDictionary } from "../../declarations";
 
 interface ITestData {
 	input: any;

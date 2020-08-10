@@ -1,11 +1,14 @@
 import * as net from "net";
 import * as path from "path";
 import { EOL } from "os";
+import * as _ from 'lodash';
 import * as osenv from "osenv";
 import { AndroidVirtualDevice, DeviceTypes, NOT_RUNNING_EMULATOR_STATUS } from "../../constants";
 import { cache } from "../../decorators";
 import { settlePromises } from "../../helpers";
 import { DeviceConnectionType } from "../../../constants";
+import { IStringDictionary, IChildProcess, IFileSystem, IHostInfo, ISysInfo, ISpawnResult } from "../../declarations";
+import { $injector } from "../../definitions/yok";
 
 export class AndroidVirtualDeviceService implements Mobile.IAndroidVirtualDeviceService {
 	private androidHome: string;

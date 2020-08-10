@@ -1,4 +1,5 @@
 import { exported } from "../../../decorators";
+import { $injector } from "../../../definitions/yok";
 
 export class TestPublicAPI {
 	@exported("testPublicApi")

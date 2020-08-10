@@ -1,5 +1,6 @@
 import * as pacote from "pacote";
 import * as tar from "tar";
+import { IProxySettingsBase } from "../common/declarations";
 
 declare global {
 

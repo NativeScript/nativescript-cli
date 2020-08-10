@@ -1,4 +1,7 @@
 import { IOSBuildData } from "../data/build-data";
+import { IProjectData, IBuildConfig } from "./project";
+import { IPlatformData } from "./platform";
+import { ISpawnResult } from "../common/declarations";
 
 declare global {
 	interface IiOSSigningService {

@@ -1,6 +1,7 @@
 import { Layout, LoggingEvent, Configuration, Level } from "log4js";
 import { EventEmitter } from "events";
 import { LoggerLevel } from "../../constants";
+import { IDictionary } from "../declarations";
 
 declare global {
 	interface IAppenderOptions extends IDictionary<any> {

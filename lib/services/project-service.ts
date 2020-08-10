@@ -5,6 +5,9 @@ import { format } from "util";
 import { exported } from "../common/decorators";
 import { Hooks, TemplatesV2PackageJsonKeysToRemove } from "../constants";
 import { performanceLog } from "../common/decorators";
+import { IProjectService, IProjectDataService, IProjectTemplatesService, ICreateProjectData, IProjectSettings, IProjectCreationSettings, ITemplateData } from "../definitions/project";
+import { INodePackageManager, IProjectNameService, IStaticConfig } from "../declarations";
+import { IHooksService, IErrors, IFileSystem, IProjectHelper, IStringDictionary } from "../common/declarations";
 
 export class ProjectService implements IProjectService {
 

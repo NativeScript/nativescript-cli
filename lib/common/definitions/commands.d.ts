@@ -1,3 +1,4 @@
+import { IDictionary, IDashedOption, ICommandOptions } from "../declarations";
 
 interface ICommand extends ICommandOptions {
 	execute(args: string[]): Promise<void>;

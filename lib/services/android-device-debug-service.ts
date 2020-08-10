@@ -2,6 +2,12 @@ import { sleep } from "../common/helpers";
 import { DebugServiceBase } from "./debug-service-base";
 import { LiveSyncPaths } from "../common/constants";
 import { performanceLog } from "../common/decorators";
+import { IDeviceDebugService, IDebugData, IDebugOptions, IDebugResultInfo } from "../definitions/debug";
+import { IStaticConfig } from "../declarations";
+import { IErrors, INet } from "../common/declarations";
+import { ICleanupService } from "../definitions/cleanup-service";
+import { $injector } from "../common/definitions/yok";
+import * as _ from 'lodash';
 
 export class AndroidDeviceDebugService extends DebugServiceBase implements IDeviceDebugService {
 	private _packageName: string;

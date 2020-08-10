@@ -1,4 +1,6 @@
 import * as simplePlist from "simple-plist";
+import { IPlistParser } from "./declarations";
+import { $injector } from "./definitions/yok";
 
 export class PlistParser implements IPlistParser {
 	public parseFile(plistFilePath: string): Promise<any> {

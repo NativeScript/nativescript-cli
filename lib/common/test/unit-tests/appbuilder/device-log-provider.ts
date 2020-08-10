@@ -3,6 +3,7 @@ import * as assert from "assert";
 import { DeviceLogEmitter } from "../../../mobile/device-log-emitter";
 import { CommonLoggerStub } from "../stubs";
 import { LoggingLevels } from "../../../mobile/logging-levels";
+import { IInjector } from "../../../definitions/yok";
 
 function createTestInjector(loggingLevel: string, emptyFilteredData?: boolean) {
 	const testInjector = new Yok();

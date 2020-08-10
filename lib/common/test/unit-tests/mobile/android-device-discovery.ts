@@ -2,11 +2,14 @@ import { AndroidDeviceDiscovery } from "../../../mobile/mobile-core/android-devi
 import { AndroidDebugBridge } from "../../../mobile/android/android-debug-bridge";
 import { AndroidDebugBridgeResultHandler } from "../../../mobile/android/android-debug-bridge-result-handler";
 import { Yok } from "../../../yok";
+import * as _ from 'lodash';
 import { DeviceDiscoveryEventNames } from "../../../constants";
 
 import { EventEmitter } from "events";
 import { EOL } from "os";
 import { assert } from "chai";
+import { IInjector } from "../../../definitions/yok";
+import { IDictionary } from "../../../declarations";
 
 class AndroidDeviceMock {
 	public deviceInfo: any = {};

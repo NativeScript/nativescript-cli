@@ -1,3 +1,10 @@
+import * as _ from 'lodash';
+import { IProjectData } from "../../definitions/project";
+import { IPluginsService } from "../../definitions/plugins";
+import { ICommand, ICommandParameter } from "../../common/definitions/commands";
+import { IErrors } from "../../common/declarations";
+import { $injector } from "../../common/definitions/yok";
+
 export class UpdatePluginCommand implements ICommand {
 	constructor(private $pluginsService: IPluginsService,
 		private $projectData: IProjectData,

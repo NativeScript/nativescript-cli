@@ -5,6 +5,10 @@ import { assert } from "chai";
 import * as path from "path";
 import * as constants from "../lib/constants";
 import { format } from "util";
+import { INpmInstallResultInfo, INodePackageManagerInstallOptions, INpmPackageNameParts, INpmInstallOptions } from "../lib/declarations";
+import { IProjectTemplatesService } from "../lib/definitions/project";
+import { IInjector } from "../lib/common/definitions/yok";
+import { IAnalyticsService, IFileSystem } from "../lib/common/declarations";
 
 let isDeleteDirectoryCalledForNodeModulesDir = false;
 const nativeScriptValidatedTemplatePath = "nsValidatedTemplatePath";

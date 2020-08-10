@@ -6,6 +6,7 @@ import { Options } from "../lib/options";
 import { StaticConfig } from "../lib/config";
 import { SettingsService } from "../lib/common/test/unit-tests/stubs";
 import { DevicePlatformsConstants } from "../lib/common/mobile/device-platforms-constants";
+import { IInjector } from "../lib/common/definitions/yok";
 const projectFolder = "test";
 
 function createTestInjector(

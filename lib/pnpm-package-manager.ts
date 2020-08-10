@@ -1,7 +1,11 @@
 import * as path from "path";
+import * as _ from 'lodash';
 import { BasePackageManager } from "./base-package-manager";
 import { exported } from './common/decorators';
 import { CACACHE_DIRECTORY_NAME } from "./constants";
+import { INodePackageManagerInstallOptions, INpmInstallResultInfo, INpmsResult } from "./declarations";
+import { IChildProcess, IErrors, IFileSystem, IHostInfo, Server, IDictionary } from "./common/declarations";
+import { $injector } from "./common/definitions/yok";
 
 export class PnpmPackageManager extends BasePackageManager {
 

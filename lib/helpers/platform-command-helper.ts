@@ -1,8 +1,14 @@
 import * as path from "path";
 import * as semver from "semver";
+import * as _ from 'lodash';
 import * as constants from "../constants";
 import { PlatformController } from "../controllers/platform-controller";
 import { PlatformValidationService } from "../services/platform/platform-validation-service";
+import { IProjectData, IProjectDataService } from "../definitions/project";
+import { IPlatformCommandHelper, IPackageInstallationManager, IUpdatePlatformOptions } from "../declarations";
+import { IPlatformsDataService, IPlatformData } from "../definitions/platform";
+import { IFileSystem, IErrors } from "../common/declarations";
+import { $injector } from "../common/definitions/yok";
 
 export class PlatformCommandHelper implements IPlatformCommandHelper {
 	constructor(

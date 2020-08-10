@@ -1,6 +1,9 @@
 import * as path from "path";
 import * as constants from "../constants";
 import { EOL } from "os";
+import { IAndroidResourcesMigrationService } from "../declarations";
+import { IFileSystem, IErrors } from "../common/declarations";
+import { $injector } from "../common/definitions/yok";
 
 export class AndroidResourcesMigrationService implements IAndroidResourcesMigrationService {
 	private static ANDROID_DIR = "Android";

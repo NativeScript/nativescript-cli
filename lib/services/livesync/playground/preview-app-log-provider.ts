@@ -1,5 +1,6 @@
 import { EventEmitter } from "events";
 import { DEVICE_LOG_EVENT_NAME } from "../../../common/constants";
+import { $injector } from "../../../common/definitions/yok";
 
 export class PreviewAppLogProvider extends EventEmitter implements IPreviewAppLogProvider {
 	public logData(log: string, deviceName: string, deviceId: string): void {

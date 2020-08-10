@@ -3,6 +3,10 @@ import { Yok } from "../../yok";
 import * as path from "path";
 import * as fs from "fs";
 import * as temp from "temp";
+import * as _ from 'lodash';
+import { ICliGlobal } from "../../definitions/cli-global";
+import { ICommandParameter } from "../../definitions/commands";
+import { IInjector } from "../../definitions/yok";
 temp.track();
 
 class MyClass {

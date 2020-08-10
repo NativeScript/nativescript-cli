@@ -1,8 +1,10 @@
 import { assert } from "chai";
+import * as _ from 'lodash';
 import { PrepareController } from "../../lib/controllers/prepare-controller";
 import { MobileHelper } from "../../lib/common/mobile/mobile-helper";
 import { InjectorStub, TempServiceStub } from "../stubs";
 import { PREPARE_READY_EVENT_NAME } from "../../lib/constants";
+import { IInjector } from "../../lib/common/definitions/yok";
 
 const projectDir = "/path/to/my/projecDir";
 const prepareData = {

@@ -1,4 +1,7 @@
 import { AndroidVirtualDevice } from '../../constants';
+import { IFileSystem } from '../../declarations';
+import * as _ from 'lodash';
+import { $injector } from '../../definitions/yok';
 
 export class AndroidIniFileParser implements Mobile.IAndroidIniFileParser {
 	constructor(private $fs: IFileSystem) {

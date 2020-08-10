@@ -2,7 +2,10 @@ import * as prompt from "inquirer";
 import * as helpers from "./helpers";
 import * as readline from "readline";
 import { ReadStream } from "tty";
+import { IAllowEmpty, IPrompterOptions } from "./declarations";
+import { $injector } from "./definitions/yok";
 const MuteStream = require("mute-stream");
+import * as _ from 'lodash';
 
 export class Prompter implements IPrompter {
 	private descriptionSeparator = "|";

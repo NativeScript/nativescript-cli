@@ -4,6 +4,15 @@ import { LiveSyncPaths } from "../../common/constants";
 import { AndroidLivesyncTool } from "./android-livesync-tool";
 import * as path from "path";
 import * as semver from "semver";
+import * as _ from 'lodash';
+import { IProjectData } from "../../definitions/project";
+import { IPlatformsDataService } from "../../definitions/platform";
+import { IOptions } from "../../declarations";
+import { IFileSystem } from "../../common/declarations";
+import { IFilesHashService } from "../../definitions/files-hash-service";
+import { IInjector } from "../../common/definitions/yok";
+import { ICleanupService } from "../../definitions/cleanup-service";
+import { ISpawnCommandInfo } from "../../detached-processes/cleanup-process-definitions";
 
 export class AndroidDeviceSocketsLiveSyncService extends AndroidDeviceLiveSyncServiceBase implements IAndroidNativeScriptDeviceLiveSyncService, INativeScriptDeviceLiveSyncService {
 	private livesyncTool: IAndroidLivesyncTool;

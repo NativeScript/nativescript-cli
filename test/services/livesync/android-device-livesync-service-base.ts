@@ -2,9 +2,12 @@ import { Yok } from "../../../lib/common/yok";
 import { AndroidDeviceLiveSyncServiceBase } from "../../../lib/services/livesync/android-device-livesync-service-base";
 import { LiveSyncPaths } from "../../../lib/common/constants";
 import { assert } from "chai";
+import * as _ from 'lodash';
 import * as path from "path";
 import { AndroidDeviceHashService } from "../../../lib/common/mobile/android/android-device-hash-service";
 import { DeviceConnectionType } from "../../../lib/constants";
+import { IStringDictionary } from "../../../lib/common/declarations";
+import { IInjector } from "../../../lib/common/definitions/yok";
 
 interface ITestSetupInput {
 	existsHashesFile?: boolean;

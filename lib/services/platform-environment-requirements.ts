@@ -1,6 +1,9 @@
 import { TrackActionNames } from "../constants";
 import { isInteractive, hook } from "../common/helpers";
 import { EOL } from "os";
+import { IPlatformEnvironmentRequirements, ICheckEnvironmentRequirementsInput, ICheckEnvironmentRequirementsOutput } from "../definitions/platform";
+import { IStaticConfig, IOptions } from "../declarations";
+import { IDoctorService, IErrors, IAnalyticsService } from "../common/declarations";
 
 export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequirements {
 	constructor(private $doctorService: IDoctorService,

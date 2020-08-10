@@ -1,6 +1,10 @@
 import * as path from "path";
 const semver = require("semver");
 import * as constants from "./constants";
+import { IPackageInstallationManager, IPackageManager, IStaticConfig, INpmInstallOptions, INpmInstallResultInfo } from "./declarations";
+import { IProjectDataService } from "./definitions/project";
+import { IChildProcess, ISettingsService, IFileSystem } from "./common/declarations";
+import { $injector } from "./common/definitions/yok";
 
 export class PackageInstallationManager implements IPackageInstallationManager {
 	constructor(
@@ -100,7 +104,7 @@ export class PackageInstallationManager implements IPackageInstallationManager {
 		const cachePath = this.getInspectorCachePath();
 		this.prepareCacheDir(cachePath);
 		const pathToPackageInCache = path.join(cachePath, constants.NODE_MODULES_FOLDER_NAME, inspectorNpmPackageName);
-    const iOSFrameworkNSValue = this.$projectDataService.getRuntimePackage(projectDir, Platforms.ios);
+    const iOSFrameworkNSValue = this.$projectDataService.getRuntimePackage(projectDir, constants.PlatformTypes.ios);
 		const version = await this.getLatestCompatibleVersion(inspectorNpmPackageName, iOSFrameworkNSValue.version);
 		let shouldInstall = !this.$fs.exists(pathToPackageInCache);
 

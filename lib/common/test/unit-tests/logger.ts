@@ -3,8 +3,11 @@ import { Logger } from "../../logger/logger";
 import * as path from "path";
 import * as util from "util";
 import { assert } from "chai";
+import * as _ from 'lodash';
 import * as fileSystemFile from "../../file-system";
 import { LoggerConfigData } from "../../../constants";
+import { IInjector } from "../../definitions/yok";
+import { IFileSystem } from "../../declarations";
 
 const passwordReplacement = "*******";
 const debugTrace = ["debug", "trace"];

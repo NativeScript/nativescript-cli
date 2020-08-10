@@ -2,6 +2,12 @@ import * as path from "path";
 import * as shelljs from "shelljs";
 import * as semver from "semver";
 import * as constants from "../constants";
+import { IPluginsService, IPreparePluginNativeCodeData, IPluginData, IPackageJsonDepedenciesResult, IBasePluginData, INodeModuleData } from "../definitions/plugins";
+import { IPlatformsDataService, INodeModulesDependenciesBuilder, IPlatformData } from "../definitions/platform";
+import { IProjectDataService, IProjectData } from "../definitions/project";
+import { INodePackageManagerInstallOptions, INodePackageManager, IOptions, IDependencyData } from "../declarations";
+import { IFileSystem, IErrors, IDictionary, IStringDictionary } from "../common/declarations";
+import { IFilesHashService } from "../definitions/files-hash-service";
 
 export class PluginsService implements IPluginsService {
 	private static INSTALL_COMMAND_NAME = "install";
@@ -335,7 +341,7 @@ This framework comes from ${dependencyName} plugin, which is installed multiple 
 		return pluginData;
 	}
 
-	private removeDependencyFromPackageJsonContent(dependency: string, packageJsonContent: Object): { hasModifiedPackageJson: boolean, packageJsonContent: Object } {
+	private removeDependencyFromPackageJsonContent(dependency: string, packageJsonContent: any): { hasModifiedPackageJson: boolean, packageJsonContent: any } {
 		let hasModifiedPackageJson = false;
 
 		if (packageJsonContent.devDependencies && packageJsonContent.devDependencies[dependency]) {

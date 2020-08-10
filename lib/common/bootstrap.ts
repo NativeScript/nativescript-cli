@@ -1,3 +1,6 @@
+import { $injector } from "./definitions/yok";
+import { ICliGlobal } from "./definitions/cli-global";
+
 (<ICliGlobal><unknown>global)._ = require("lodash");
 (<ICliGlobal><unknown>global).$injector = require("./yok").injector;
 

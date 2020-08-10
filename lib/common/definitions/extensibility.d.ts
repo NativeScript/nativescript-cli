@@ -1,3 +1,5 @@
+import { IStringDictionary } from "../declarations";
+
 /**
  * Describes extension name data.
  */

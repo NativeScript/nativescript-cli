@@ -1,8 +1,11 @@
 import * as path from "path";
+import * as _ from 'lodash';
 const semver = require("semver");
 import { AndroidDeviceHashService } from "./android-device-hash-service";
 import { executeActionByChunks } from "../../helpers";
 import { DEFAULT_CHUNK_SIZE } from '../../constants';
+import { IFileSystem, IStringDictionary } from "../../declarations";
+import { IInjector } from "../../definitions/yok";
 
 export class AndroidDeviceFileSystem implements Mobile.IDeviceFileSystem {
 	private _deviceHashServices = Object.create(null);

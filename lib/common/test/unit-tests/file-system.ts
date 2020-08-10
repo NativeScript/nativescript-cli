@@ -6,6 +6,9 @@ import { assert, use } from "chai";
 import * as fileSystemFile from "../../file-system";
 import * as childProcessLib from "../../child-process";
 import { CommonLoggerStub } from "./stubs";
+import { IInjector } from "../../definitions/yok";
+import * as _ from 'lodash';
+import { IFileSystem } from "../../declarations";
 
 use(require("chai-as-promised"));
 

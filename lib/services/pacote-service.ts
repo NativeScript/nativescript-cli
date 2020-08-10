@@ -2,6 +2,8 @@ import * as pacote from "pacote";
 import * as tar from "tar";
 import * as path from "path";
 import { cache } from "../common/decorators";
+import { INpmConfigService, INodePackageManager } from "../declarations";
+import { IProxyService, IFileSystem } from "../common/declarations";
 
 export class PacoteService implements IPacoteService {
 	constructor(private $fs: IFileSystem,

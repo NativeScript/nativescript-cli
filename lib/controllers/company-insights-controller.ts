@@ -2,6 +2,10 @@
 import { AnalyticsEventLabelDelimiter } from "../constants";
 import { cache } from "../common/decorators";
 import * as util from "util";
+import * as _ from 'lodash';
+import { IConfiguration } from "../declarations";
+import { Server } from "../common/declarations";
+import { $injector } from "../common/definitions/yok";
 
 export class CompanyInsightsController implements ICompanyInsightsController {
 	constructor(private $config: IConfiguration,

@@ -1,3 +1,7 @@
+import { ICommandParameter, ICommand } from "../common/definitions/commands";
+import { IHelpService } from "../common/declarations";
+import { $injector } from "../common/definitions/yok";
+
 export class GenerateHelpCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
 

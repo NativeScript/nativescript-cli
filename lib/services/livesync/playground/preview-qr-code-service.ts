@@ -1,6 +1,9 @@
 import * as util from "util";
 import { EOL } from "os";
 import { exported } from "../../../common/decorators";
+import { IConfiguration } from "../../../declarations";
+import { Server, IQrCodeGenerator, IQrCodeImageData, IDictionary } from "../../../common/declarations";
+import { $injector } from "../../../common/definitions/yok";
 
 export class PreviewQrCodeService implements IPreviewQrCodeService {
 	constructor(

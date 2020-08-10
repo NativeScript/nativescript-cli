@@ -1,5 +1,7 @@
 import * as path from "path";
 import { cache } from "../decorators";
+import { IHostInfo, IErrors, IXcodeSelectService, IChildProcess, IVersionData, ISysInfo } from "../declarations";
+import { IInjector, $injector } from "../definitions/yok";
 
 export class XcodeSelectService implements IXcodeSelectService {
 	constructor(private $childProcess: IChildProcess,

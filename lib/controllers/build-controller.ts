@@ -2,6 +2,11 @@ import * as constants from "../constants";
 import { Configurations } from "../common/constants";
 import { EventEmitter } from "events";
 import { attachAwaitDetach } from "../common/helpers";
+import { IProjectDataService } from "../definitions/project";
+import { IBuildController, IBuildArtefactsService, IBuildInfoFileService, IBuildData } from "../definitions/build";
+import { IPlatformsDataService } from "../definitions/platform";
+import { IAnalyticsService, IFileSystem } from "../common/declarations";
+import { IInjector, $injector } from "../common/definitions/yok";
 
 export class BuildController extends EventEmitter implements IBuildController {
 	constructor(

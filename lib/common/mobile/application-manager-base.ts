@@ -1,5 +1,8 @@
 import { EventEmitter } from "events";
 import { TARGET_FRAMEWORK_IDENTIFIERS } from "../constants";
+import { IBuildData } from "../../definitions/build";
+import { IDictionary, IHooksService } from "../declarations";
+import * as _ from 'lodash';
 
 export abstract class ApplicationManagerBase extends EventEmitter implements Mobile.IDeviceApplicationManager {
 	private lastInstalledAppIdentifiers: string[];

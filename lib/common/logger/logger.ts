@@ -2,9 +2,12 @@ import * as log4js from "log4js";
 import * as util from "util";
 import * as stream from "stream";
 import * as marked from "marked";
+import * as _ from 'lodash';
 import { cache } from "../decorators";
 import { layout } from "./layouts/cli-layout";
 import { LoggerConfigData, LoggerLevel, LoggerAppenders } from "../../constants";
+import { IDictionary } from "../declarations";
+import { $injector } from "../definitions/yok";
 const TerminalRenderer = require("marked-terminal");
 const chalk = require("chalk");
 

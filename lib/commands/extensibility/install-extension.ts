@@ -1,3 +1,7 @@
+import { ICommand, IStringParameterBuilder, ICommandParameter } from "../../common/definitions/commands";
+import { $injector } from "../../common/definitions/yok";
+import { IExtensibilityService } from "../../common/definitions/extensibility";
+
 export class InstallExtensionCommand implements ICommand {
 	constructor(private $extensibilityService: IExtensibilityService,
 		private $stringParameterBuilder: IStringParameterBuilder,

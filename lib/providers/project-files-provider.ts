@@ -1,7 +1,13 @@
 import minimatch = require("minimatch");
 import * as constants from "../constants";
 import * as path from "path";
+import * as _ from 'lodash';
 import { ProjectFilesProviderBase } from "../common/services/project-files-provider-base";
+import { IPlatformsDataService } from "../definitions/platform";
+import { IOptions } from "../declarations";
+import { IProjectData } from "../definitions/project";
+import { IProjectFilesConfig } from "../common/declarations";
+import { $injector } from "../common/definitions/yok";
 
 export class ProjectFilesProvider extends ProjectFilesProviderBase {
 	constructor(private $platformsDataService: IPlatformsDataService,

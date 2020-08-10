@@ -2,6 +2,8 @@ import { Yok } from "../../yok";
 import { HostInfo } from "../../host-info";
 import { ErrorsStub, CommonLoggerStub } from "./stubs";
 import { assert } from "chai";
+import { IErrors, IHostInfo, IChildProcess, IExecOptions, IOsInfo } from "../../declarations";
+import { IInjector } from "../../definitions/yok";
 
 // Use custom class as isDarwin has only getter in HostInfo, while for current tests we need to set it to true or false.
 class MockHostInfo extends HostInfo {

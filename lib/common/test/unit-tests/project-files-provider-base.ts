@@ -2,6 +2,9 @@ import { Yok } from "../../yok";
 import { ProjectFilesProviderBase } from "../../services/project-files-provider-base";
 import { assert } from "chai";
 import * as path from "path";
+import { IOptions } from "../../../declarations";
+import { IInjector } from "../../definitions/yok";
+import { IProjectFilesProvider } from "../../declarations";
 
 class ProjectFilesProvider extends ProjectFilesProviderBase {
 	constructor($mobileHelper: Mobile.IMobileHelper,

@@ -2,6 +2,8 @@ import { Yok } from "../../../lib/common/yok";
 import { PreviewSchemaService } from "../../../lib/services/livesync/playground/preview-schema-service";
 import { PubnubKeys } from "../../../lib/services/livesync/playground/preview-app-constants";
 import { assert } from "chai";
+import * as _ from 'lodash';
+import { IInjector } from "../../../lib/common/definitions/yok";
 
 function createTestInjector(): IInjector {
 	const injector = new Yok();

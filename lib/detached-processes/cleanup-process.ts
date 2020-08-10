@@ -3,7 +3,11 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as shelljs from "shelljs";
+import * as _ from 'lodash';
 import { FileLogService } from "./file-log-service";
+import { $injector } from "../common/definitions/yok";
+import { ISpawnCommandInfo, IJSCommand, IRequestInfo, ICleanupMessageBase, ISpawnCommandCleanupMessage, IRequestCleanupMessage, IJSCleanupMessage, IFileCleanupMessage } from "./cleanup-process-definitions";
+import { Server, IChildProcess } from "../common/declarations";
 
 const pathToBootstrap = process.argv[2];
 if (!pathToBootstrap || !fs.existsSync(pathToBootstrap)) {

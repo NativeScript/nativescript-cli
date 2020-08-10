@@ -1,4 +1,7 @@
 import { MessagingService, Config, Device, DeviceConnectedMessage, SdkCallbacks, ConnectedDevices, FilesPayload } from "nativescript-preview-sdk";
+import { IConfiguration } from "../../../declarations";
+import { Server } from "../../../common/declarations";
+import { $injector } from "../../../common/definitions/yok";
 const pako = require("pako");
 
 export class PreviewSdkService implements IPreviewSdkService {
@@ -86,7 +89,7 @@ export class PreviewSdkService implements IPreviewSdkService {
 					this.$logger.warn("The files to upload exceed the maximum allowed size of 15MB. Your app might not work as expected.");
 				}
 
-				const playgroundUploadResponse = await this.$httpClient.httpRequest({
+				const playgroundUploadResponse: any = await this.$httpClient.httpRequest({
 					url: this.$config.UPLOAD_PLAYGROUND_FILES_ENDPOINT,
 					method: "POST",
 					body: gzippedContent,

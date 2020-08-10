@@ -2,9 +2,12 @@ import { AndroidVirtualDevice, DeviceTypes, NOT_RUNNING_EMULATOR_STATUS } from "
 import { settlePromises } from "../../../helpers";
 import { EOL } from "os";
 import * as path from "path";
+import * as _ from 'lodash';
 import * as osenv from "osenv";
 import { cache } from "../../../decorators";
 import { DeviceConnectionType } from "../../../../constants";
+import { IChildProcess, IFileSystem, IDictionary } from "../../../declarations";
+import { $injector } from "../../../definitions/yok";
 
 export class AndroidGenymotionService implements Mobile.IAndroidVirtualDeviceService {
 	constructor(private $adb: Mobile.IAndroidDebugBridge,

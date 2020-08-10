@@ -3,8 +3,11 @@ import { PreviewAppPluginsService } from "../../../lib/services/livesync/playgro
 import { Device } from "nativescript-preview-sdk";
 import { assert } from "chai";
 import * as util from "util";
+import * as _ from 'lodash';
 import { PluginComparisonMessages } from "../../../lib/services/livesync/playground/preview-app-constants";
 import { ErrorsStub, PackageInstallationManagerStub } from "../../stubs";
+import { IStringDictionary } from "../../../lib/common/declarations";
+import { IInjector } from "../../../lib/common/definitions/yok";
 
 let readJsonParams: string[] = [];
 let warnParams: string[] = [];

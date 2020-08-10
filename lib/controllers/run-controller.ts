@@ -3,6 +3,14 @@ import { PREPARE_READY_EVENT_NAME, TrackActionNames, DEBUGGER_DETACHED_EVENT_NAM
 import { cache, performanceLog } from "../common/decorators";
 import { EventEmitter } from "events";
 import * as util from "util";
+import * as _ from 'lodash';
+import { IProjectDataService, IProjectData } from "../definitions/project";
+import { IBuildController } from "../definitions/build";
+import { IPlatformsDataService } from "../definitions/platform";
+import { IDebugController } from "../definitions/debug";
+import { IPluginsService } from "../definitions/plugins";
+import { IAnalyticsService, IErrors, IHooksService, IDictionary } from "../common/declarations";
+import { IInjector, $injector } from "../common/definitions/yok";
 
 export class RunController extends EventEmitter implements IRunController {
 	private prepareReadyEventHandler: any = null;

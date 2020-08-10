@@ -1,11 +1,14 @@
 import { Yok } from "../../lib/common/yok";
 import { assert } from "chai";
 import * as path from "path";
+import * as _ from 'lodash';
 import { LogSourceMapService } from "../../lib/services/log-source-map-service";
 import { DevicePlatformsConstants } from "../../lib/common/mobile/device-platforms-constants";
 import { FileSystem } from "../../lib/common/file-system";
 import { stringReplaceAll } from "../../lib/common/helpers";
 import { LoggerStub } from "../stubs";
+import { IInjector } from "../../lib/common/definitions/yok";
+import { IDictionary, IFileSystem } from "../../lib/common/declarations";
 
 let runtimeVersion = "6.0.0";
 function createTestInjector(): IInjector {

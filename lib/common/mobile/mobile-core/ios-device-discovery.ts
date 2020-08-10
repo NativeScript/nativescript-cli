@@ -1,5 +1,6 @@
 import { DeviceDiscovery } from "./device-discovery";
 import { IOSDevice } from "../ios/device/ios-device";
+import { IInjector, $injector } from "../../definitions/yok";
 
 export class IOSDeviceDiscovery extends DeviceDiscovery {
 	private _iTunesErrorMessage: string;

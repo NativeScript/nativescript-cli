@@ -7,6 +7,9 @@ import * as sinon from "sinon";
 import temp = require("temp");
 import * as path from "path";
 import * as util from "util";
+import { IOptions } from "../lib/declarations";
+import { IInjector } from "../lib/common/definitions/yok";
+import { IDictionary } from "../lib/common/declarations";
 temp.track();
 
 interface IPacoteOutput {

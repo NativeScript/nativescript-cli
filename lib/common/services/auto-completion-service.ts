@@ -1,7 +1,10 @@
 import * as osenv from "osenv";
 import * as path from "path";
 import * as util from "util";
+import * as _ from 'lodash';
 import { cache } from "../decorators";
+import { IAutoCompletionService, IFileSystem, IChildProcess, IHostInfo } from "../declarations";
+import { $injector } from "../definitions/yok";
 
 export class AutoCompletionService implements IAutoCompletionService {
 	private scriptsOk = true;

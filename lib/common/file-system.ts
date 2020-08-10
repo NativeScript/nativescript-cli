@@ -1,4 +1,5 @@
 import * as fs from "fs";
+import * as _ from 'lodash';
 import { join, dirname, basename, resolve as pathResolve, extname, normalize } from "path";
 import * as minimatch from "minimatch";
 import * as injector from "./yok";
@@ -7,8 +8,10 @@ import * as shelljs from "shelljs";
 import { parseJson } from "./helpers";
 import { PACKAGE_JSON_FILE_NAME } from "../constants";
 import { EOL } from "os";
-import stringifyPackage = require("stringify-package");
+const stringifyPackage: any = require("stringify-package");
 import detectNewline = require("detect-newline");
+import { IFileSystem, IReadFileOptions, IFsStats } from "./declarations";
+import { IInjector } from "./definitions/yok";
 
 // TODO: Add .d.ts for mkdirp module (or use it from @types repo).
 const mkdirp = require("mkdirp");

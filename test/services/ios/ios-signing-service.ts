@@ -1,8 +1,10 @@
 import { Yok } from "../../../lib/common/yok";
 import { IOSSigningService } from "../../../lib/services/ios/ios-signing-service";
 import { assert } from "chai";
+import * as _ from 'lodash';
 import { ManualSigning } from "pbxproj-dom/xcode";
 import { Errors } from "../../../lib/common/errors";
+import { IInjector } from "../../../lib/common/definitions/yok";
 
 interface IXcodeMock {
 	isSetManualSigningStyleCalled: boolean;

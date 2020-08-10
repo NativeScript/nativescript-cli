@@ -1,5 +1,9 @@
 import { Block } from "../codeGeneration/code-entity";
 import { CodePrinter } from "../codeGeneration/code-printer";
+import { IServiceContractGenerator, IFileSystem, IMessagesService, IServiceContractClientCode } from "../declarations";
+import { CodeGeneration } from "../codeGeneration/code-generation";
+import * as _ from 'lodash';
+import { $injector } from "../definitions/yok";
 
 export class MessageContractGenerator implements IServiceContractGenerator {
 	constructor(private $fs: IFileSystem,

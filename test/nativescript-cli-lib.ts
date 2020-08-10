@@ -2,6 +2,7 @@ import { assert } from "chai";
 import * as fs from "fs";
 import * as path from "path";
 import * as childProcess from "child_process";
+import * as _ from 'lodash';
 
 describe("nativescript-cli-lib", () => {
 	it("is main entry of the package", () => {

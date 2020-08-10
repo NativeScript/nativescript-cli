@@ -1,6 +1,9 @@
 import { Device } from "nativescript-preview-sdk";
 import { EventEmitter } from "events";
 import { DeviceDiscoveryEventNames, DEVICE_LOG_EVENT_NAME } from "../../../../common/constants";
+import { IDictionary } from "../../../../common/declarations";
+import * as _ from 'lodash';
+import { $injector } from "../../../../common/definitions/yok";
 
 export class PreviewDevicesService extends EventEmitter implements IPreviewDevicesService {
 	private connectedDevices: Device[] = [];

@@ -1,3 +1,8 @@
+import { IProjectData } from "../definitions/project";
+import { IOptions, IAssetsGenerationService } from "../declarations";
+import { ICommand, ICommandParameter, IStringParameterBuilder } from "../common/definitions/commands";
+import { IInjector, $injector } from "../common/definitions/yok";
+
 export abstract class GenerateCommandBase implements ICommand {
 	public allowedParameters: ICommandParameter[] = [this.$stringParameterBuilder.createMandatoryParameter("You have to provide path to image to generate other images based on it.")];
 

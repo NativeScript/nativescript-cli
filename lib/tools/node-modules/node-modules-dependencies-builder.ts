@@ -1,5 +1,8 @@
 import * as path from "path";
 import { NODE_MODULES_FOLDER_NAME, PACKAGE_JSON_FILE_NAME } from "../../constants";
+import { INodeModulesDependenciesBuilder } from "../../definitions/platform";
+import { IDependencyData } from "../../declarations";
+import { IFileSystem } from "../../common/declarations";
 
 interface IDependencyDescription {
 	parent: IDependencyDescription;

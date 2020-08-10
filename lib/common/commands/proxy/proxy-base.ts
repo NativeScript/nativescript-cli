@@ -1,3 +1,6 @@
+import { ICommandParameter, ICommand } from "../../definitions/commands";
+import { IAnalyticsService, IProxyService } from "../../declarations";
+
 export abstract class ProxyCommandBase implements ICommand {
 	public disableAnalytics = true;
 	public allowedParameters: ICommandParameter[] = [];

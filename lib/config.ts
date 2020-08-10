@@ -1,6 +1,10 @@
 import * as path from "path";
 import * as shelljs from "shelljs";
 import * as os from "os";
+import * as _ from 'lodash';
+import { IConfiguration, IStaticConfig, IAndroidToolsInfo } from "./declarations";
+import { IFileSystem, IChildProcess, IHostInfo } from "./common/declarations";
+import { $injector, IInjector } from "./common/definitions/yok";
 
 export class Configuration implements IConfiguration { // User specific config
 	DEBUG = false;

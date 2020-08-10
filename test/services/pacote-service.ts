@@ -3,8 +3,12 @@ import { assert } from "chai";
 import { PacoteService } from '../../lib/services/pacote-service';
 import { LoggerStub } from "../stubs";
 import * as sinon from "sinon";
+import * as _ from 'lodash';
 import { EventEmitter } from "events";
 import { NpmConfigService } from "../../lib/services/npm-config-service";
+import { INpmConfigService } from "../../lib/declarations";
+import { IProxySettings } from "../../lib/common/declarations";
+import { IInjector } from "../../lib/common/definitions/yok";
 
 const pacote = require("pacote");
 const tar = require("tar");

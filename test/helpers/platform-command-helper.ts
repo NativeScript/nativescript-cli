@@ -1,9 +1,12 @@
 
 import { assert } from "chai";
+import * as _ from 'lodash';
 import { InjectorStub, TempServiceStub } from "../stubs";
 import { MobileHelper } from "../../lib/common/mobile/mobile-helper";
 import { DevicePlatformsConstants } from "../../lib/common/mobile/device-platforms-constants";
 import { PlatformCommandHelper } from "../../lib/helpers/platform-command-helper";
+import { IPlatformCommandHelper } from "../../lib/declarations";
+import { IInjector } from "../../lib/common/definitions/yok";
 
 let isAddPlatformCalled = false;
 

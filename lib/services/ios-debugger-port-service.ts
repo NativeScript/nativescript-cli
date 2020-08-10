@@ -1,6 +1,8 @@
 import { DEBUGGER_PORT_FOUND_EVENT_NAME, ATTACH_REQUEST_EVENT_NAME, IOS_APP_CRASH_LOG_REG_EXP } from "../common/constants";
 import { cache } from "../common/decorators";
 import { APPLICATION_RESPONSE_TIMEOUT_SECONDS } from "../constants";
+import { IiOSNotification } from "../declarations";
+import { IDictionary } from "../common/declarations";
 
 export class IOSDebuggerPortService implements IIOSDebuggerPortService {
 	public static DEBUG_PORT_LOG_REGEX = /NativeScript debugger has opened inspector socket on port (\d+?) for (.*)[.]/;

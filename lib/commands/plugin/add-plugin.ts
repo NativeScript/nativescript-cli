@@ -1,3 +1,10 @@
+import * as _ from 'lodash';
+import { IProjectData } from "../../definitions/project";
+import { IPluginsService, IPluginData } from "../../definitions/plugins";
+import { ICommand, ICommandParameter } from "../../common/definitions/commands";
+import { IErrors } from "../../common/declarations";
+import { $injector } from "../../common/definitions/yok";
+
 export class AddPluginCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
 

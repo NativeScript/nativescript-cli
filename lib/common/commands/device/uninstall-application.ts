@@ -1,3 +1,7 @@
+import { IOptions } from "../../../declarations";
+import { ICommandParameter, ICommand } from "../../definitions/commands";
+import { $injector } from "../../definitions/yok";
+
 export class UninstallApplicationCommand implements ICommand {
 	constructor(private $devicesService: Mobile.IDevicesService,
 		private $stringParameter: ICommandParameter,

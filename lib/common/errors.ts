@@ -1,8 +1,11 @@
 import * as util from "util";
 import * as path from "path";
+import * as _ from 'lodash';
 import { SourceMapConsumer } from "source-map";
 import { isInteractive } from "./helpers";
 import { deprecated } from "./decorators";
+import { ErrorCodes, IErrors, IFailOptions } from "./declarations";
+import { $injector, IInjector } from "./definitions/yok";
 
 // we need this to overwrite .stack property (read-only in Error)
 function Exception() {

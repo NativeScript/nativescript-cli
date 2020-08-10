@@ -1,9 +1,13 @@
 import * as constants from "../../constants";
 import * as minimatch from "minimatch";
 import * as net from "net";
+import * as _ from 'lodash';
 import { DeviceLiveSyncServiceBase } from "./device-livesync-service-base";
 import { performanceLog } from "../../common/decorators";
 import * as semver from "semver";
+import { IiOSSocketRequestExecutor, IPlatformCommandHelper } from "../../declarations";
+import { IPlatformsDataService } from "../../definitions/platform";
+import { IProjectData } from "../../definitions/project";
 
 let currentPageReloadId = 0;
 

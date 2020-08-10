@@ -2,6 +2,11 @@ import { AndroidDeviceDebugService } from "../../lib/services/android-device-deb
 import { Yok } from "../../lib/common/yok";
 import * as stubs from "../stubs";
 import { assert } from "chai";
+import { IStaticConfig } from "../../lib/declarations";
+import { IDebugOptions } from "../../lib/definitions/debug";
+import { ICleanupService } from "../../lib/definitions/cleanup-service";
+import { IErrors, INet } from "../../lib/common/declarations";
+import { IInjector } from "../../lib/common/definitions/yok";
 
 const expectedDevToolsCommitSha = "02e6bde1bbe34e43b309d4ef774b1168d25fd024";
 

@@ -1,4 +1,11 @@
 import { EOL } from "os";
+import { IProjectData, IProjectDataService } from "../definitions/project";
+import { IOptions, IPlatformCommandHelper, INodePackageManager } from "../declarations";
+import { IPlatformsDataService } from "../definitions/platform";
+import { IPluginsService } from "../definitions/plugins";
+import { ICommand, ICommandParameter } from "../common/definitions/commands";
+import { IFileSystem } from "../common/declarations";
+import { $injector } from "../common/definitions/yok";
 
 export class InstallCommand implements ICommand {
 	public enableHooks = false;

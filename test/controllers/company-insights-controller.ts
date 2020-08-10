@@ -1,7 +1,10 @@
 import { assert } from "chai";
+import * as _ from 'lodash';
 import { Yok } from "../../lib/common/yok";
 import { LoggerStub } from "../stubs";
 import { CompanyInsightsController } from "../../lib/controllers/company-insights-controller";
+import { IInjector } from "../../lib/common/definitions/yok";
+import { IProxySettings, Server } from "../../lib/common/declarations";
 
 describe("companyInsightsController", () => {
 	const insightsUrlEndpoint = "/api/insights?ipAddress=%s";

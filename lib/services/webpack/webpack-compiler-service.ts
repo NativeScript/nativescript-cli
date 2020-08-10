@@ -1,9 +1,16 @@
 import * as path from "path";
 import * as child_process from "child_process";
 import * as semver from "semver";
+import * as _ from 'lodash';
 import { EventEmitter } from "events";
 import { performanceLog } from "../../common/decorators";
 import { WEBPACK_COMPILATION_COMPLETE, WEBPACK_PLUGIN_NAME, PackageManagers } from "../../constants";
+import { IPackageManager, IPackageInstallationManager } from "../../declarations";
+import { IPlatformData } from "../../definitions/platform";
+import { IProjectData } from "../../definitions/project";
+import { IDictionary, IErrors, IStringDictionary, IChildProcess, IFileSystem, IHooksService, IHostInfo } from "../../common/declarations";
+import { ICleanupService } from "../../definitions/cleanup-service";
+import { $injector } from "../../common/definitions/yok";
 
 export class WebpackCompilerService extends EventEmitter implements IWebpackCompilerService {
 	private webpackProcesses: IDictionary<child_process.ChildProcess> = {};
@@ -99,7 +106,7 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 
 					const exitCode = typeof arg === "number" ? arg : arg && arg.code;
 					this.$logger.trace(`Webpack process exited with code ${exitCode} when we expected it to be long living with watch.`);
-					const error = new Error(`Executing webpack failed with exit code ${exitCode}.`);
+					const error: any = new Error(`Executing webpack failed with exit code ${exitCode}.`);
 					error.code = exitCode;
 					delete this.webpackProcesses[platformData.platformNameLowerCase];
 					reject(error);
@@ -133,7 +140,7 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 					if (exitCode === 0) {
 						resolve();
 					} else {
-						const error = new Error(`Executing webpack failed with exit code ${exitCode}.`);
+						const error: any = new Error(`Executing webpack failed with exit code ${exitCode}.`);
 						error.code = exitCode;
 						reject(error);
 					}

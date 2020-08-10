@@ -1,4 +1,7 @@
 import { PackageManagers } from "../../constants";
+import { ICommand, ICommandParameter } from "../definitions/commands";
+import { IUserSettingsService, IErrors } from "../declarations";
+import { $injector } from "../definitions/yok";
 
 export class PackageManagerCommand implements ICommand {
 

@@ -1,3 +1,7 @@
+import { IOptions } from "../declarations";
+import { IUtils } from "./declarations";
+import { $injector } from "./definitions/yok";
+
 export class Utils implements IUtils {
 	constructor(private $options: IOptions,
 		private $logger: ILogger) { }

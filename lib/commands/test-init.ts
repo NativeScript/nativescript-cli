@@ -1,6 +1,13 @@
 import * as path from 'path';
+import * as _ from 'lodash';
 import { TESTING_FRAMEWORKS, ProjectTypes } from '../constants';
 import { fromWindowsRelativePathToUnix } from '../common/helpers';
+import { IProjectData, ITestInitializationService } from '../definitions/project';
+import { INodePackageManager, IOptions } from '../declarations';
+import { IPluginsService } from '../definitions/plugins';
+import { ICommand, ICommandParameter } from '../common/definitions/commands';
+import { IDictionary, IErrors, IFileSystem, IResourceLoader, IDependencyInformation } from '../common/declarations';
+import { $injector } from '../common/definitions/yok';
 
 class TestInitCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];

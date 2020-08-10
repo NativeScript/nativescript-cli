@@ -3,6 +3,7 @@ import { Yok } from "../../lib/common/yok";
 import { LoggingLevels } from "../../lib/common/mobile/logging-levels";
 import { LoggerStub } from "../stubs";
 import * as assert from "assert";
+import { IInjector } from "../../lib/common/definitions/yok";
 
 function createTestInjector(projectName: string): IInjector {
 	const testInjector = new Yok();

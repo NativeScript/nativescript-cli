@@ -1,4 +1,10 @@
 import { EventEmitter } from "events";
+import { INativePrepare, IValidatePlatformOutput, IProjectData } from "./project";
+import { IBuildPlatformAction } from "./platform";
+import { IDebugOptions } from "./debug";
+import { IBuildData } from "./build";
+import { IEnvOptions } from "../declarations";
+import { IPlatform, IProjectDir, IRelease, IQrCodeImageData, IDictionary } from "../common/declarations";
 
 declare global {
 	interface ILiveSyncProcessData {

@@ -2,6 +2,7 @@ import { Yok } from "../../lib/common/yok";
 import { UserSettingsService } from "../../lib/services/user-settings-service";
 import { assert } from "chai";
 import * as path from "path";
+import { IInjector } from "../../lib/common/definitions/yok";
 
 class JsonFileSettingsServiceMock {
 	constructor(public jsonFileSettingsPath: string) { }

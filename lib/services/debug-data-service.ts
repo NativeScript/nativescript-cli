@@ -1,3 +1,6 @@
+import { IProjectData } from "../definitions/project";
+import { IDebugOptions, IDebugData, IDebugDataService } from "../definitions/debug";
+
 export class DebugDataService implements IDebugDataService {
 	constructor(
 		private $devicesService: Mobile.IDevicesService

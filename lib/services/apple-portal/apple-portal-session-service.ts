@@ -1,4 +1,6 @@
 import { isInteractive } from "../../common/helpers";
+import { IErrors, Server, ICredentials } from "../../common/declarations";
+import { $injector } from "../../common/definitions/yok";
 
 export class ApplePortalSessionService implements IApplePortalSessionService {
 	private loginConfigEndpoint = "https://appstoreconnect.apple.com/olympus/v1/app/config?hostname=itunesconnect.apple.com";

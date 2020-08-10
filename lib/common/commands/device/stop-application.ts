@@ -1,3 +1,7 @@
+import { IOptions } from "../../../declarations";
+import { $injector } from "../../definitions/yok";
+import { ICommandParameter, ICommand } from "../../definitions/commands";
+
 export class StopApplicationOnDeviceCommand implements ICommand {
 
 	constructor(private $devicesService: Mobile.IDevicesService,

@@ -3,6 +3,11 @@ import { AndroidDeviceSocketsLiveSyncService } from "./android-device-livesync-s
 import { PlatformLiveSyncServiceBase } from "./platform-livesync-service-base";
 import { performanceLog } from "../../common/decorators";
 import * as semver from "semver";
+import * as _ from 'lodash';
+import { IPlatformsDataService } from "../../definitions/platform";
+import { IProjectData } from "../../definitions/project";
+import { IProjectFilesManager, IFileSystem, IProjectDir } from "../../common/declarations";
+import { IInjector, $injector } from "../../common/definitions/yok";
 
 export class AndroidLiveSyncService extends PlatformLiveSyncServiceBase implements IPlatformLiveSyncService {
 	private static MIN_SOCKETS_LIVESYNC_RUNTIME_VERSION = "4.2.0-2018-07-20-02";

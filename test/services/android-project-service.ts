@@ -7,6 +7,10 @@ import * as path from "path";
 import { GradleCommandService } from "../../lib/services/android/gradle-command-service";
 import { GradleBuildService } from "../../lib/services/android/gradle-build-service";
 import { GradleBuildArgsService } from "../../lib/services/android/gradle-build-args-service";
+import { IBuildConfig, IProjectData } from "../../lib/definitions/project";
+import { IAndroidToolsInfo, IAndroidToolsInfoData, IAndroidResourcesMigrationService } from "../../lib/declarations";
+import { IInjector } from "../../lib/common/definitions/yok";
+import { IDictionary, IFileSystem, IProjectDir } from "../../lib/common/declarations";
 
 const createTestInjector = (): IInjector => {
 	const testInjector = new Yok();

@@ -2,8 +2,10 @@ import { Yok } from "../../../lib/common/yok";
 import { PreviewAppFilesService } from "../../../lib/services/livesync/playground/preview-app-files-service";
 import { FileSystemStub, LoggerStub } from "../../stubs";
 import * as path from "path";
+import * as _ from 'lodash';
 import { assert } from "chai";
 import { FilesPayload } from "nativescript-preview-sdk";
+import { IInjector } from "../../../lib/common/definitions/yok";
 
 const projectDir = "path/to/my/test/project";
 const appDirectoryPath = path.join(projectDir, "src");

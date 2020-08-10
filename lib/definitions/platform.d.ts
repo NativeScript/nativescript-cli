@@ -1,3 +1,9 @@
+import { IBuildConfig, IProjectData, IBuildForDevice, INativePrepare } from "./project";
+import { IHasAndroidBundle, IDependencyData, IOptions } from "../declarations";
+import { IControllerDataBase } from "./data";
+import { IRelease } from "../common/declarations";
+import { INotConfiguredEnvOptions } from "../common/definitions/commands";
+
 /**
  * Describes information about how to build the native project.
  */
@@ -29,7 +35,8 @@ interface IPlatformData {
 	configurationFileName?: string;
 	configurationFilePath?: string;
 	relativeToFrameworkConfigurationFilePath: string;
-	fastLivesyncFileExtensions: string[];
+  fastLivesyncFileExtensions: string[];
+  getFrameworkVersion?(projectData: IProjectData): string;
 }
 
 interface IValidBuildOutputData {

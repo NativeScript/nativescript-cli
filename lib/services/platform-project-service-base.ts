@@ -1,4 +1,8 @@
 import { EventEmitter } from "events";
+import { IProjectDataService, IPlatformProjectServiceBase, IProjectData } from "../definitions/project";
+import { IPlatformData } from "../definitions/platform";
+import { IPluginData } from "../definitions/plugins";
+import { IFileSystem } from "../common/declarations";
 
 export abstract class PlatformProjectServiceBase extends EventEmitter implements IPlatformProjectServiceBase {
 	constructor(protected $fs: IFileSystem,

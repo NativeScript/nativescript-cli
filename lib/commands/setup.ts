@@ -1,3 +1,7 @@
+import { ICommand, ICommandParameter } from "../common/definitions/commands";
+import { IDoctorService } from "../common/declarations";
+import { $injector } from "../common/definitions/yok";
+
 export class SetupCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
 

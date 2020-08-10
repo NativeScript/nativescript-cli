@@ -5,6 +5,9 @@ import * as sourceMapConverter from "convert-source-map";
 import * as semver from "semver";
 import { stringReplaceAll } from "../common/helpers";
 import { ANDROID_DEVICE_APP_ROOT_TEMPLATE, APP_FOLDER_NAME, NODE_MODULES_FOLDER_NAME } from "../constants";
+import { IProjectData, IProjectDataService } from "../definitions/project";
+import { IPlatformsDataService } from "../definitions/platform";
+import { IDictionary, IStringDictionary, IFileSystem } from "../common/declarations";
 
 interface IParsedMessage {
 	filePath?: string;

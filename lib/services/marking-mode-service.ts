@@ -2,6 +2,8 @@ import * as helpers from "../common/helpers";
 import * as path from "path";
 import { EOL } from "os";
 import { PACKAGE_JSON_FILE_NAME, LoggerConfigData } from "../constants";
+import { IProjectDataService } from "../definitions/project";
+import { IFileSystem } from "../common/declarations";
 
 const enum MarkingMode {
 	None = "none",

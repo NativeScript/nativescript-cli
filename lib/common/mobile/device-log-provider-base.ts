@@ -1,5 +1,6 @@
 import { EventEmitter } from "events";
 import { getPropertyName } from "../helpers";
+import { IDictionary } from "../declarations";
 
 export abstract class DeviceLogProviderBase extends EventEmitter implements Mobile.IDeviceLogProvider {
 	protected devicesLogOptions: IDictionary<Mobile.IDeviceLogOptions> = {};
