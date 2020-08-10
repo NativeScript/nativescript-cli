@@ -3,6 +3,7 @@ import { cache } from "../common/decorators";
 import { APPLICATION_RESPONSE_TIMEOUT_SECONDS } from "../constants";
 import { IiOSNotification } from "../declarations";
 import { IDictionary } from "../common/declarations";
+import { injector } from "../common/yok";
 
 export class IOSDebuggerPortService implements IIOSDebuggerPortService {
 	public static DEBUG_PORT_LOG_REGEX = /NativeScript debugger has opened inspector socket on port (\d+?) for (.*)[.]/;
@@ -125,4 +126,4 @@ export class IOSDebuggerPortService implements IIOSDebuggerPortService {
 		}
 	}
 }
-$injector.register("iOSDebuggerPortService", IOSDebuggerPortService);
+injector.register("iOSDebuggerPortService", IOSDebuggerPortService);

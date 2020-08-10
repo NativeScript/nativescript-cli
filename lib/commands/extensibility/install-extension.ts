@@ -1,5 +1,5 @@
 import { ICommand, IStringParameterBuilder, ICommandParameter } from "../../common/definitions/commands";
-import { $injector } from "../../common/definitions/yok";
+import { injector } from "../../common/yok";
 import { IExtensibilityService } from "../../common/definitions/extensibility";
 
 export class InstallExtensionCommand implements ICommand {
@@ -17,4 +17,4 @@ export class InstallExtensionCommand implements ICommand {
 
 	allowedParameters: ICommandParameter[] = [this.$stringParameterBuilder.createMandatoryParameter("You have to provide a valid name for extension that you want to install.")];
 }
-$injector.registerCommand("extension|install", InstallExtensionCommand);
+injector.registerCommand("extension|install", InstallExtensionCommand);

@@ -4,7 +4,7 @@ import { cache } from "../decorators";
 import { getHash } from "../helpers";
 import { IFileSystem, ISettingsService } from "../declarations";
 import { ICleanupService } from "../../definitions/cleanup-service";
-import { $injector } from "../definitions/yok";
+import { injector } from "../yok";
 import * as _ from 'lodash';
 
 export class LockService implements ILockService {
@@ -122,6 +122,6 @@ export class LockService implements ILockService {
 	}
 }
 
-$injector.register("lockService", LockService);
+injector.register("lockService", LockService);
 // backwards compatibility
-$injector.register("lockfile", LockService);
+injector.register("lockfile", LockService);

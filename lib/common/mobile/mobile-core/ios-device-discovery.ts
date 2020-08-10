@@ -1,6 +1,7 @@
 import { DeviceDiscovery } from "./device-discovery";
 import { IOSDevice } from "../ios/device/ios-device";
-import { IInjector, $injector } from "../../definitions/yok";
+import { IInjector } from "../../definitions/yok";
+import { injector } from "../../yok";
 
 export class IOSDeviceDiscovery extends DeviceDiscovery {
 	private _iTunesErrorMessage: string;
@@ -57,4 +58,4 @@ export class IOSDeviceDiscovery extends DeviceDiscovery {
 	}
 }
 
-$injector.register("iOSDeviceDiscovery", IOSDeviceDiscovery);
+injector.register("iOSDeviceDiscovery", IOSDeviceDiscovery);

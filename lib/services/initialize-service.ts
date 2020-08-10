@@ -1,7 +1,12 @@
 import { EOL } from "os";
+import * as _ from 'lodash';
 import { LoggerLevel } from "../constants";
 import { IOptions } from "../declarations";
 import { ISettingsService, ISysInfo } from "../common/declarations";
+import { IInitializeOptions, IInitializeService } from "../definitions/initialize-service";
+import { IInjector } from "../common/definitions/yok";
+import { injector } from "../common/yok";
+import { IExtensibilityService } from "../common/definitions/extensibility";
 
 export class InitializeService implements IInitializeService {
 	// NOTE: Do not inject anything here, use $injector.resolve in the code
@@ -35,7 +40,7 @@ export class InitializeService implements IInitializeService {
 	}
 
 	private async showWarnings($logger: ILogger): Promise<void> {
-		const $sysInfo = $injector.resolve<ISysInfo>("sysInfo");
+		const $sysInfo = injector.resolve<ISysInfo>("sysInfo");
 		const systemWarnings = await $sysInfo.getSystemWarnings();
 		_.each(systemWarnings, systemWarning => {
 			const message = `${EOL}${systemWarning.message}${EOL}`;
@@ -48,4 +53,4 @@ export class InitializeService implements IInitializeService {
 	}
 }
 
-$injector.register("initializeService", InitializeService);
+injector.register("initializeService", InitializeService);

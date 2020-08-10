@@ -4,7 +4,7 @@ import * as constants from "./constants";
 import { IPackageInstallationManager, IPackageManager, IStaticConfig, INpmInstallOptions, INpmInstallResultInfo } from "./declarations";
 import { IProjectDataService } from "./definitions/project";
 import { IChildProcess, ISettingsService, IFileSystem } from "./common/declarations";
-import { $injector } from "./common/definitions/yok";
+import { injector } from "./common/yok";
 
 export class PackageInstallationManager implements IPackageInstallationManager {
 	constructor(
@@ -193,4 +193,4 @@ export class PackageInstallationManager implements IPackageInstallationManager {
 		return data[version];
 	}
 }
-$injector.register("packageInstallationManager", PackageInstallationManager);
+injector.register("packageInstallationManager", PackageInstallationManager);

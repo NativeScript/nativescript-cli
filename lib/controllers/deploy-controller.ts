@@ -1,5 +1,5 @@
 import * as _ from 'lodash';
-import { $injector } from '../common/definitions/yok';
+import { injector } from '../common/yok';
 
 export class DeployController {
 
@@ -26,4 +26,4 @@ export class DeployController {
 		await this.$devicesService.execute(executeAction, (device: Mobile.IDevice) => _.some(deviceDescriptors, deviceDescriptor => deviceDescriptor.identifier === device.deviceInfo.identifier));
 	}
 }
-$injector.register("deployController", DeployController);
+injector.register("deployController", DeployController);

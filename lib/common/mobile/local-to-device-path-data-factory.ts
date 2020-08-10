@@ -1,6 +1,6 @@
 import * as helpers from "../helpers";
 import * as path from "path";
-import { $injector } from "../definitions/yok";
+import { injector } from "../yok";
 
 class LocalToDevicePathData implements Mobile.ILocalToDevicePathData {
 	private devicePath: string;
@@ -38,4 +38,4 @@ export class LocalToDevicePathDataFactory implements Mobile.ILocalToDevicePathDa
 		return new LocalToDevicePathData(filePath, localProjectRootPath, onDeviceFileName, deviceProjectRootPath);
 	}
 }
-$injector.register("localToDevicePathDataFactory", LocalToDevicePathDataFactory);
+injector.register("localToDevicePathDataFactory", LocalToDevicePathDataFactory);

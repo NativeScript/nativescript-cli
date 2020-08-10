@@ -3,7 +3,7 @@ import * as helpers from "./helpers";
 import * as readline from "readline";
 import { ReadStream } from "tty";
 import { IAllowEmpty, IPrompterOptions } from "./declarations";
-import { $injector } from "./definitions/yok";
+import { injector } from "./yok";
 const MuteStream = require("mute-stream");
 import * as _ from 'lodash';
 
@@ -190,4 +190,4 @@ interface IMemoryLeakEvent {
 	listenerName: string;
 }
 
-$injector.register("prompter", Prompter);
+injector.register("prompter", Prompter);

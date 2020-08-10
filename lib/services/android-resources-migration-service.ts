@@ -3,7 +3,7 @@ import * as constants from "../constants";
 import { EOL } from "os";
 import { IAndroidResourcesMigrationService } from "../declarations";
 import { IFileSystem, IErrors } from "../common/declarations";
-import { $injector } from "../common/definitions/yok";
+import { injector } from "../common/yok";
 
 export class AndroidResourcesMigrationService implements IAndroidResourcesMigrationService {
 	private static ANDROID_DIR = "Android";
@@ -104,4 +104,4 @@ export class AndroidResourcesMigrationService implements IAndroidResourcesMigrat
 	}
 }
 
-$injector.register("androidResourcesMigrationService", AndroidResourcesMigrationService);
+injector.register("androidResourcesMigrationService", AndroidResourcesMigrationService);

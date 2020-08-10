@@ -1,7 +1,7 @@
 import { DeviceLogProviderBase } from "./device-log-provider-base";
 import { DEVICE_LOG_EVENT_NAME } from "../constants";
 import { LoggerConfigData } from "../../constants";
-import { $injector } from "../definitions/yok";
+import { injector } from "../yok";
 
 export class DeviceLogProvider extends DeviceLogProviderBase {
 	constructor(protected $logFilter: Mobile.ILogFilter,
@@ -28,4 +28,4 @@ export class DeviceLogProvider extends DeviceLogProviderBase {
 		this.$logger.info(data, { [LoggerConfigData.skipNewLine]: true });
 	}
 }
-$injector.register("deviceLogProvider", DeviceLogProvider);
+injector.register("deviceLogProvider", DeviceLogProvider);

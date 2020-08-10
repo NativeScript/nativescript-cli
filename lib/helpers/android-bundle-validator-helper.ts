@@ -6,7 +6,7 @@ import { IProjectDataService, IProjectData } from "../definitions/project";
 import { IOptions, IAndroidBundleValidatorHelper } from "../declarations";
 import { IBuildData, IAndroidBuildData } from "../definitions/build";
 import { IErrors } from "../common/declarations";
-import { $injector } from "../common/definitions/yok";
+import { injector } from "../common/yok";
 
 export class AndroidBundleValidatorHelper extends VersionValidatorHelper implements IAndroidBundleValidatorHelper {
 	public static MIN_RUNTIME_VERSION = "5.0.0";
@@ -57,4 +57,4 @@ export class AndroidBundleValidatorHelper extends VersionValidatorHelper impleme
 	}
 }
 
-$injector.register("androidBundleValidatorHelper", AndroidBundleValidatorHelper);
+injector.register("androidBundleValidatorHelper", AndroidBundleValidatorHelper);

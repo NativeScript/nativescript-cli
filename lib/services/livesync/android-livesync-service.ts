@@ -7,7 +7,8 @@ import * as _ from 'lodash';
 import { IPlatformsDataService } from "../../definitions/platform";
 import { IProjectData } from "../../definitions/project";
 import { IProjectFilesManager, IFileSystem, IProjectDir } from "../../common/declarations";
-import { IInjector, $injector } from "../../common/definitions/yok";
+import { IInjector } from "../../common/definitions/yok";
+import { injector } from "../../common/yok";
 
 export class AndroidLiveSyncService extends PlatformLiveSyncServiceBase implements IPlatformLiveSyncService {
 	private static MIN_SOCKETS_LIVESYNC_RUNTIME_VERSION = "4.2.0-2018-07-20-02";
@@ -50,4 +51,4 @@ export class AndroidLiveSyncService extends PlatformLiveSyncServiceBase implemen
 		return result;
 	}
 }
-$injector.register("androidLiveSyncService", AndroidLiveSyncService);
+injector.register("androidLiveSyncService", AndroidLiveSyncService);

@@ -3,7 +3,7 @@ import * as _ from 'lodash';
 import * as helpers from "../helpers";
 import * as ValidationResult from "./validation-result";
 import { IErrors } from "../declarations";
-import { $injector } from "../definitions/yok";
+import { injector } from "../yok";
 
 export class ProjectNameValidator implements IProjectNameValidator {
 	private static MAX_FILENAME_LENGTH = 30;
@@ -63,4 +63,4 @@ export class ProjectNameValidator implements IProjectNameValidator {
 		return isSuccessful;
 	}
 }
-$injector.register("projectNameValidator", ProjectNameValidator);
+injector.register("projectNameValidator", ProjectNameValidator);

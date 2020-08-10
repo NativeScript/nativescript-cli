@@ -5,7 +5,7 @@ import * as path from "path";
 import * as shelljs from "shelljs";
 import * as _ from 'lodash';
 import { FileLogService } from "./file-log-service";
-import { $injector } from "../common/definitions/yok";
+import { injector } from "../common/yok";
 import { ISpawnCommandInfo, IJSCommand, IRequestInfo, ICleanupMessageBase, ISpawnCommandCleanupMessage, IRequestCleanupMessage, IJSCleanupMessage, IFileCleanupMessage } from "./cleanup-process-definitions";
 import { Server, IChildProcess } from "../common/declarations";
 
@@ -18,7 +18,7 @@ const logFile = process.argv[3];
 // After requiring the bootstrap we can use $injector
 require(pathToBootstrap);
 
-const fileLogService = $injector.resolve<IFileLogService>(FileLogService, { logFile });
+const fileLogService = injector.resolve<IFileLogService>(FileLogService, { logFile });
 fileLogService.logData({ message: "Initializing Cleanup process." });
 
 const commandsInfos: ISpawnCommandInfo[] = [];
@@ -27,7 +27,7 @@ const jsCommands: IJSCommand[] = [];
 const requests: IRequestInfo[] = [];
 
 const executeRequest = async (request: IRequestInfo) => {
-	const $httpClient = $injector.resolve<Server.IHttpClient>("httpClient");
+	const $httpClient = injector.resolve<Server.IHttpClient>("httpClient");
 	try {
 		fileLogService.logData({ message: `Start executing request: ${request.method} ${request.url}` });
 		const response = await $httpClient.httpRequest({
@@ -44,7 +44,7 @@ const executeRequest = async (request: IRequestInfo) => {
 };
 
 const executeJSCleanup = async (jsCommand: IJSCommand) => {
-	const $childProcess = $injector.resolve<IChildProcess>("childProcess");
+	const $childProcess = injector.resolve<IChildProcess>("childProcess");
 
 	try {
 		fileLogService.logData({ message: `Start executing action for file: ${jsCommand.filePath} and data ${JSON.stringify(jsCommand.data)}` });
@@ -58,7 +58,7 @@ const executeJSCleanup = async (jsCommand: IJSCommand) => {
 };
 
 const executeCleanup = async () => {
-	const $childProcess = $injector.resolve<IChildProcess>("childProcess");
+	const $childProcess = injector.resolve<IChildProcess>("childProcess");
 
 	for (const request of requests) {
 		await executeRequest(request);
@@ -216,7 +216,7 @@ process.on("message", async (cleanupProcessMessage: ICleanupMessageBase) => {
 process.on("disconnect", async () => {
 	fileLogService.logData({ message: "cleanup-process received process.disconnect event" });
 	await executeCleanup();
-	$injector.dispose();
+	injector.dispose();
 	process.exit();
 });
 

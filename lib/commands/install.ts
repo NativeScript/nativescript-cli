@@ -5,7 +5,7 @@ import { IPlatformsDataService } from "../definitions/platform";
 import { IPluginsService } from "../definitions/plugins";
 import { ICommand, ICommandParameter } from "../common/definitions/commands";
 import { IFileSystem } from "../common/declarations";
-import { $injector } from "../common/definitions/yok";
+import { injector } from "../common/yok";
 
 export class InstallCommand implements ICommand {
 	public enableHooks = false;
@@ -72,4 +72,4 @@ export class InstallCommand implements ICommand {
 	}
 }
 
-$injector.registerCommand("install", InstallCommand);
+injector.registerCommand("install", InstallCommand);

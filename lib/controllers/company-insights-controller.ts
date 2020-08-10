@@ -5,7 +5,7 @@ import * as util from "util";
 import * as _ from 'lodash';
 import { IConfiguration } from "../declarations";
 import { Server } from "../common/declarations";
-import { $injector } from "../common/definitions/yok";
+import { injector } from "../common/yok";
 
 export class CompanyInsightsController implements ICompanyInsightsController {
 	constructor(private $config: IConfiguration,
@@ -56,4 +56,4 @@ export class CompanyInsightsController implements ICompanyInsightsController {
 	}
 }
 
-$injector.register("companyInsightsController", CompanyInsightsController);
+injector.register("companyInsightsController", CompanyInsightsController);

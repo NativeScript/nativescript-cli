@@ -4,7 +4,8 @@ import * as path from "path";
 import { hook } from "./helpers";
 import { ICommandDispatcher, ICancellationService, ISysInfo, IFileSystem, IFutureDispatcher, IQueue, IErrors } from "./declarations";
 import { IOptions } from "../declarations";
-import { IInjector, $injector } from "./definitions/yok";
+import { IInjector } from "./definitions/yok";
+import { injector } from "./yok";
 
 export class CommandDispatcher implements ICommandDispatcher {
 	constructor(private $logger: ILogger,
@@ -80,7 +81,7 @@ export class CommandDispatcher implements ICommandDispatcher {
 		this.$logger.info(version);
 	}
 }
-$injector.register("commandDispatcher", CommandDispatcher);
+injector.register("commandDispatcher", CommandDispatcher);
 
 class FutureDispatcher implements IFutureDispatcher {
 	private actions: IQueue<any>;
@@ -103,4 +104,4 @@ class FutureDispatcher implements IFutureDispatcher {
 		this.actions.enqueue(action);
 	}
 }
-$injector.register("dispatcher", FutureDispatcher, false);
+injector.register("dispatcher", FutureDispatcher, false);

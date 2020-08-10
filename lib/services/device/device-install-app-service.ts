@@ -4,7 +4,7 @@ import { IBuildArtefactsService, IBuildInfoFileService, IBuildData } from "../..
 import { IProjectDataService } from "../../definitions/project";
 import { IPlatformsDataService, IBuildInfo, IPlatformData } from "../../definitions/platform";
 import { IAnalyticsService, IFileSystem } from "../../common/declarations";
-import { $injector } from "../../common/definitions/yok";
+import { injector } from "../../common/yok";
 
 export class DeviceInstallAppService {
 	constructor(
@@ -93,4 +93,4 @@ export class DeviceInstallAppService {
 		await device.fileSystem.updateHashesOnDevice(hashes, appIdentifier);
 	}
 }
-$injector.register("deviceInstallAppService", DeviceInstallAppService);
+injector.register("deviceInstallAppService", DeviceInstallAppService);

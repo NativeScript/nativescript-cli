@@ -1,4 +1,5 @@
 import { IShouldDispose, IDisposable } from "../common/declarations";
+import { ISpawnCommandInfo, IJSCommand } from "../detached-processes/cleanup-process-definitions";
 
 /**
  * Descibes the cleanup service which allows scheduling cleanup actions

@@ -3,7 +3,7 @@ import * as _ from 'lodash';
 import { hasValidAndroidSigning } from "../../common/helpers";
 import { IChildProcess, ISysInfo, IErrors } from "../../common/declarations";
 import { IAndroidBundleToolService, IBuildApksOptions, IInstallApksOptions } from "../../definitions/android-bundle-tool-service";
-import { $injector } from "../../common/definitions/yok";
+import { injector } from "../../common/yok";
 
 export class AndroidBundleToolService implements IAndroidBundleToolService {
 	private javaPath: string;
@@ -64,4 +64,4 @@ export class AndroidBundleToolService implements IAndroidBundleToolService {
 	}
 }
 
-$injector.register("androidBundleToolService", AndroidBundleToolService);
+injector.register("androidBundleToolService", AndroidBundleToolService);

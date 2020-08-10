@@ -7,7 +7,7 @@ import { IPlatformsDataService } from "../definitions/platform";
 import { IMigrateController } from "../definitions/migrate";
 import { ICommand, ICommandParameter } from "../common/definitions/commands";
 import { OptionType } from "../common/declarations";
-import { $injector } from "../common/definitions/yok";
+import { injector } from "../common/yok";
 
 export class PrepareCommand extends ValidatePlatformCommandBase implements ICommand {
 	public allowedParameters = [this.$platformCommandParameter];
@@ -59,4 +59,4 @@ export class PrepareCommand extends ValidatePlatformCommandBase implements IComm
 	}
 }
 
-$injector.registerCommand("prepare", PrepareCommand);
+injector.registerCommand("prepare", PrepareCommand);

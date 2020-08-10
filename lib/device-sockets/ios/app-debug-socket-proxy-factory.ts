@@ -5,7 +5,7 @@ import * as ws from "ws";
 import { MessageUnpackStream } from "ios-device-lib";
 import { IAppDebugSocketProxyFactory, IOptions } from "../../declarations";
 import { IDictionary, IErrors, INet } from "../../common/declarations";
-import { $injector } from "../../common/definitions/yok";
+import { injector } from "../../common/yok";
 
 export class AppDebugSocketProxyFactory extends EventEmitter implements IAppDebugSocketProxyFactory {
 	private deviceWebServers: IDictionary<ws.Server> = {};
@@ -226,4 +226,4 @@ export class AppDebugSocketProxyFactory extends EventEmitter implements IAppDebu
 		this.deviceTcpServers = {};
 	}
 }
-$injector.register("appDebugSocketProxyFactory", AppDebugSocketProxyFactory);
+injector.register("appDebugSocketProxyFactory", AppDebugSocketProxyFactory);

@@ -1,7 +1,7 @@
 import { IOptions } from "../../../declarations";
 import { ICommand, ICommandParameter } from "../../definitions/commands";
 import { IErrors } from "../../declarations";
-import { $injector } from "../../definitions/yok";
+import { injector } from "../../yok";
 
 export class RunApplicationOnDeviceCommand implements ICommand {
 
@@ -24,4 +24,4 @@ export class RunApplicationOnDeviceCommand implements ICommand {
 	}
 }
 
-$injector.registerCommand(["device|run", "devices|run"], RunApplicationOnDeviceCommand);
+injector.registerCommand(["device|run", "devices|run"], RunApplicationOnDeviceCommand);

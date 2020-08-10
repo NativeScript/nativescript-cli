@@ -4,7 +4,7 @@ import { IProjectDataService, IProjectData, INativePrepare } from "../definition
 import { IPlatformController, IAddPlatformService, IPlatformsDataService, IAddPlatformData, IPlatformData } from "../definitions/platform";
 import { IPackageInstallationManager } from "../declarations";
 import { IFileSystem, IErrors } from "../common/declarations";
-import { $injector } from "../common/definitions/yok";
+import { injector } from "../common/yok";
 
 export class PlatformController implements IPlatformController {
 	constructor(
@@ -80,4 +80,4 @@ export class PlatformController implements IPlatformController {
 		return !!result;
 	}
 }
-$injector.register("platformController", PlatformController);
+injector.register("platformController", PlatformController);

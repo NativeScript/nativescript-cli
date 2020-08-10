@@ -1,4 +1,5 @@
-import { IInjector, $injector } from "../common/definitions/yok";
+import { IInjector } from "../common/definitions/yok";
+import { injector } from "../common/yok";
 import { IErrors } from "../common/declarations";
 
 export class LiveSyncServiceResolver implements ILiveSyncServiceResolver {
@@ -18,4 +19,4 @@ export class LiveSyncServiceResolver implements ILiveSyncServiceResolver {
 		this.$errors.fail(`Invalid platform ${platform}. Supported platforms are: ${this.$mobileHelper.platformNames.join(", ")}`);
 	}
 }
-$injector.register("liveSyncServiceResolver", LiveSyncServiceResolver);
+injector.register("liveSyncServiceResolver", LiveSyncServiceResolver);

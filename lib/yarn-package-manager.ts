@@ -4,7 +4,7 @@ import { BasePackageManager } from "./base-package-manager";
 import { exported } from './common/decorators';
 import { INodePackageManagerInstallOptions, INpmInstallResultInfo, INpmsResult } from "./declarations";
 import { IChildProcess, IErrors, IFileSystem, IHostInfo, Server, IDictionary } from "./common/declarations";
-import { $injector } from "./common/definitions/yok";
+import { injector } from "./common/yok";
 
 export class YarnPackageManager extends BasePackageManager {
 
@@ -104,4 +104,4 @@ export class YarnPackageManager extends BasePackageManager {
 	}
 }
 
-$injector.register("yarn", YarnPackageManager);
+injector.register("yarn", YarnPackageManager);

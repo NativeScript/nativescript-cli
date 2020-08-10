@@ -4,7 +4,7 @@ import { IGradleBuildArgsService } from "../../definitions/gradle";
 import { IAndroidToolsInfo } from "../../declarations";
 import { IAndroidBuildData } from "../../definitions/build";
 import { IHooksService, IAnalyticsService } from "../../common/declarations";
-import { $injector } from "../../common/definitions/yok";
+import { injector } from "../../common/yok";
 
 export class GradleBuildArgsService implements IGradleBuildArgsService {
 	constructor(private $androidToolsInfo: IAndroidToolsInfo,
@@ -78,4 +78,4 @@ export class GradleBuildArgsService implements IGradleBuildArgsService {
 		return buildTaskName;
 	}
 }
-$injector.register("gradleBuildArgsService", GradleBuildArgsService);
+injector.register("gradleBuildArgsService", GradleBuildArgsService);

@@ -1,7 +1,7 @@
 import { IProjectData } from "../definitions/project";
 import { IMigrateController } from "../definitions/migrate";
 import { ICommand, ICommandParameter } from "../common/definitions/commands";
-import { $injector } from "../common/definitions/yok";
+import { injector } from "../common/yok";
 
 export class MigrateCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
@@ -32,4 +32,4 @@ export class MigrateCommand implements ICommand {
 	}
 }
 
-$injector.registerCommand("migrate", MigrateCommand);
+injector.registerCommand("migrate", MigrateCommand);

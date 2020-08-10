@@ -8,7 +8,7 @@ import * as _ from 'lodash';
 import { HttpStatusCodes } from "./constants";
 import * as request from "request";
 import { Server, IProxyService, IProxySettings, IPromiseActions } from "./declarations";
-import { $injector } from "./definitions/yok";
+import { injector } from "./yok";
 
 export class HttpClient implements Server.IHttpClient {
 	private static STATUS_CODE_REGEX = /statuscode=(\d+)/i;
@@ -344,4 +344,4 @@ interface ICleanupRequestData {
 	res: Server.IRequestResponseData;
 }
 
-$injector.register("httpClient", HttpClient);
+injector.register("httpClient", HttpClient);

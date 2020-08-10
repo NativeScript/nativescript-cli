@@ -1,6 +1,8 @@
 import { isInteractive } from "../common/helpers";
 import { IProjectNameService } from "../declarations";
 import { IErrors } from "../common/declarations";
+import * as _ from 'lodash';
+import { injector } from "../common/yok";
 
 export class ProjectNameService implements IProjectNameService {
 	constructor(private $projectNameValidator: IProjectNameValidator,
@@ -59,4 +61,4 @@ export class ProjectNameService implements IProjectNameService {
 	}
 }
 
-$injector.register("projectNameService", ProjectNameService);
+injector.register("projectNameService", ProjectNameService);

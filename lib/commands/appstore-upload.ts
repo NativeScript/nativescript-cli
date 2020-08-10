@@ -5,8 +5,10 @@ import { IOSBuildData } from "../data/build-data";
 import { IProjectData } from "../definitions/project";
 import { IITMSTransporterService, IOptions, IPlatformValidationService } from "../declarations";
 import { ICommand, ICommandParameter } from "../common/definitions/commands";
-import { IInjector, $injector } from "../common/definitions/yok";
+import { IInjector } from "../common/definitions/yok";
+import { injector } from "../common/yok";
 import { IHostInfo, IErrors } from "../common/declarations";
+import { IApplePortalSessionService } from "../services/apple-portal/definitions";
 
 export class PublishIOS implements ICommand {
 	public allowedParameters: ICommandParameter[] = [new StringCommandParameter(this.$injector), new StringCommandParameter(this.$injector),
@@ -102,4 +104,4 @@ export class PublishIOS implements ICommand {
 	}
 }
 
-$injector.registerCommand(["publish|ios", "appstore|upload"], PublishIOS);
+injector.registerCommand(["publish|ios", "appstore|upload"], PublishIOS);

@@ -1,6 +1,6 @@
 import * as path from "path";
 import { IChildProcess } from "../../declarations";
-import { $injector } from "../../definitions/yok";
+import { injector } from "../../yok";
 
 class Wp8EmulatorServices implements Mobile.IEmulatorPlatformService {
 	private static WP8_LAUNCHER = "XapDeployCmd.exe";
@@ -56,4 +56,4 @@ class Wp8EmulatorServices implements Mobile.IEmulatorPlatformService {
 	}
 }
 
-$injector.register("wp8EmulatorServices", Wp8EmulatorServices);
+injector.register("wp8EmulatorServices", Wp8EmulatorServices);

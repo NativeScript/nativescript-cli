@@ -11,7 +11,7 @@ import { PreviewAppLiveSyncEvents } from "../services/livesync/playground/previe
 import { IProjectDataService } from "../definitions/project";
 import { IPluginsService } from "../definitions/plugins";
 import { IDictionary, IAnalyticsService, IErrors, IHooksService, IQrCodeImageData, IProjectDir } from "../common/declarations";
-import { $injector } from "../common/definitions/yok";
+import { injector } from "../common/yok";
 
 export class PreviewAppController extends EventEmitter implements IPreviewAppController {
 	private prepareReadyEventHandler: any = null;
@@ -245,4 +245,4 @@ export class PreviewAppController extends EventEmitter implements IPreviewAppCon
 		}
 	}
 }
-$injector.register("previewAppController", PreviewAppController);
+injector.register("previewAppController", PreviewAppController);

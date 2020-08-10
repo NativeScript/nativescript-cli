@@ -3,7 +3,7 @@ import { IMigrateController } from "../definitions/migrate";
 import { IOptions } from "../declarations";
 import { ICommand, ICommandParameter } from "../common/definitions/commands";
 import { IErrors } from "../common/declarations";
-import { $injector } from "../common/definitions/yok";
+import { injector } from "../common/yok";
 
 export class UpdateCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
@@ -51,4 +51,4 @@ export class UpdateCommand implements ICommand {
 	}
 }
 
-$injector.registerCommand("update", UpdateCommand);
+injector.registerCommand("update", UpdateCommand);

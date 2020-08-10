@@ -11,6 +11,7 @@ import { IDeviceDebugService, IDebugOptions, IDebugResultInfo, IDebugData } from
 import { IPackageInstallationManager, IAppDebugSocketProxyFactory } from "../declarations";
 import { IProjectDataService } from "../definitions/project";
 import { IChildProcess, IHostInfo, IErrors } from "../common/declarations";
+import { injector } from "../common/yok";
 
 export class IOSDeviceDebugService extends DebugServiceBase implements IDeviceDebugService {
 	private deviceIdentifier: string;
@@ -140,4 +141,4 @@ export class IOSDeviceDebugService extends DebugServiceBase implements IDeviceDe
 	}
 }
 
-$injector.register("iOSDeviceDebugService", IOSDeviceDebugService, false);
+injector.register("iOSDeviceDebugService", IOSDeviceDebugService, false);

@@ -4,7 +4,7 @@ import * as _ from 'lodash';
 import { cache } from "../../../decorators";
 import { getWinRegPropertyValue } from "../../../helpers";
 import { IChildProcess, IFileSystem, IHostInfo, ISpawnResult, IDictionary } from "../../../declarations";
-import { $injector } from "../../../definitions/yok";
+import { injector } from "../../../yok";
 
 export class VirtualBoxService implements Mobile.IVirtualBoxService {
 	constructor(private $childProcess: IChildProcess,
@@ -107,4 +107,4 @@ export class VirtualBoxService implements Mobile.IVirtualBoxService {
 		return result;
 	}
 }
-$injector.register("virtualBoxService", VirtualBoxService);
+injector.register("virtualBoxService", VirtualBoxService);

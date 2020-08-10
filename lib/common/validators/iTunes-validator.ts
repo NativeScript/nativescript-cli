@@ -1,6 +1,6 @@
 import * as path from "path";
 import { IFileSystem, IHostInfo } from "../declarations";
-import { $injector } from "../definitions/yok";
+import { injector } from "../yok";
 
 export class ITunesValidator implements Mobile.IiTunesValidator {
 	private static NOT_INSTALLED_iTUNES_ERROR_MESSAGE = "iTunes is not installed. Install it on your system and run this command again.";
@@ -63,4 +63,4 @@ export class ITunesValidator implements Mobile.IiTunesValidator {
 		return this.$fs.exists(coreFoundationDir) && this.$fs.exists(mobileDeviceDir);
 	}
 }
-$injector.register("iTunesValidator", ITunesValidator);
+injector.register("iTunesValidator", ITunesValidator);

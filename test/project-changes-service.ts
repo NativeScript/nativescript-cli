@@ -11,6 +11,7 @@ import { HooksServiceStub, LoggerStub } from "./stubs";
 import { IProjectData } from "../lib/definitions/project";
 import { IPlatformData } from "../lib/definitions/platform";
 import { IFileSystem } from "../lib/common/declarations";
+import { IProjectChangesInfo, IPrepareInfo } from "../lib/definitions/project-changes";
 
 // start tracking temporary folders/files
 temp.track();

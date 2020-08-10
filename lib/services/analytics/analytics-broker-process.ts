@@ -5,7 +5,7 @@ import * as _ from 'lodash';
 import { AnalyticsBroker } from "./analytics-broker";
 import { FileLogService } from "../../detached-processes/file-log-service";
 import { IAnalyticsBroker, ITrackingInformation, IPreviewAppTrackingInformation } from "./analytics";
-import { $injector } from "../../common/definitions/yok";
+import { injector } from "../../common/yok";
 import { TrackingTypes } from "../../common/declarations";
 
 const pathToBootstrap = process.argv[2];
@@ -17,10 +17,10 @@ const logFile = process.argv[3];
 // After requiring the bootstrap we can use $injector
 require(pathToBootstrap);
 
-const analyticsLoggingService = $injector.resolve<IFileLogService>(FileLogService, { logFile });
+const analyticsLoggingService = injector.resolve<IFileLogService>(FileLogService, { logFile });
 analyticsLoggingService.logData({ message: "Initializing AnalyticsBroker." });
 
-const analyticsBroker = $injector.resolve<IAnalyticsBroker>(AnalyticsBroker, { pathToBootstrap, analyticsLoggingService });
+const analyticsBroker = injector.resolve<IAnalyticsBroker>(AnalyticsBroker, { pathToBootstrap, analyticsLoggingService });
 
 let trackingQueue: Promise<void> = Promise.resolve();
 
@@ -37,13 +37,13 @@ const finishTracking = async (data?: ITrackingInformation) => {
 };
 
 const killCurrentProcessGracefully = () => {
-	$injector.dispose();
+	injector.dispose();
 	process.exit();
 };
 
 const trackPreviewAppData = async (data: any) => {
-	const mobileHelper = $injector.resolve<Mobile.IMobileHelper>("mobileHelper");
-	const devicesService = $injector.resolve<Mobile.IDevicesService>("devicesService");
+	const mobileHelper = injector.resolve<Mobile.IMobileHelper>("mobileHelper");
+	const devicesService = injector.resolve<Mobile.IDevicesService>("devicesService");
 	await devicesService.initialize({ platform: data.platform, skipDeviceDetectionInterval: true, skipEmulatorStart: true });
 
 	const devices = await devicesService.getDevicesForPlatform(data.platform);

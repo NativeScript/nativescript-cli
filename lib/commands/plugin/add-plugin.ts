@@ -3,7 +3,7 @@ import { IProjectData } from "../../definitions/project";
 import { IPluginsService, IPluginData } from "../../definitions/plugins";
 import { ICommand, ICommandParameter } from "../../common/definitions/commands";
 import { IErrors } from "../../common/declarations";
-import { $injector } from "../../common/definitions/yok";
+import { injector } from "../../common/yok";
 
 export class AddPluginCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
@@ -33,4 +33,4 @@ export class AddPluginCommand implements ICommand {
 	}
 }
 
-$injector.registerCommand(["plugin|add", "plugin|install"], AddPluginCommand);
+injector.registerCommand(["plugin|add", "plugin|install"], AddPluginCommand);

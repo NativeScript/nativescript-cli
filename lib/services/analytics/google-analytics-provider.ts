@@ -5,6 +5,9 @@ import { cache } from "../../common/decorators";
 import { IStaticConfig, IConfiguration } from "../../declarations";
 import { IAnalyticsSettingsService, IProxyService, GoogleAnalyticsDataType, IStringDictionary } from "../../common/declarations";
 import { IGoogleAnalyticsProvider } from "./analytics";
+import { IGoogleAnalyticsData, IGoogleAnalyticsPageviewData, IGoogleAnalyticsEventData } from "../../common/definitions/google-analytics";
+import * as _ from 'lodash';
+import { injector } from "../../common/yok";
 
 export class GoogleAnalyticsProvider implements IGoogleAnalyticsProvider {
 	private currentPage: string;
@@ -148,4 +151,4 @@ export class GoogleAnalyticsProvider implements IGoogleAnalyticsProvider {
 	}
 }
 
-$injector.register("googleAnalyticsProvider", GoogleAnalyticsProvider);
+injector.register("googleAnalyticsProvider", GoogleAnalyticsProvider);

@@ -17,6 +17,7 @@ import { LiveSyncProcessDataService } from "../../lib/services/livesync-process-
 import { IDebugData, IDebugOptions, IDebugResultInfo, IDeviceDebugService } from "../../lib/definitions/debug";
 import { IInjector } from "../../lib/common/definitions/yok";
 import { IAnalyticsService } from "../../lib/common/declarations";
+import { IEventActionData } from "../../lib/common/definitions/google-analytics";
 
 const fakeChromeDebugPort = 123;
 const fakeChromeDebugUrl = `fakeChromeDebugUrl?experiments=true&ws=localhost:${fakeChromeDebugPort}`;

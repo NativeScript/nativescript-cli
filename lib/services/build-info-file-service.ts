@@ -4,7 +4,7 @@ import { IPlatformData, IBuildInfo } from "../definitions/platform";
 import { IBuildInfoFileService, IBuildData } from "../definitions/build";
 import { IProjectData } from "../definitions/project";
 import { IFileSystem } from "../common/declarations";
-import { $injector } from "../common/definitions/yok";
+import { injector } from "../common/yok";
 
 const buildInfoFileName = ".nsbuildinfo";
 
@@ -71,4 +71,4 @@ export class BuildInfoFileService implements IBuildInfoFileService {
 		return result;
 	}
 }
-$injector.register("buildInfoFileService", BuildInfoFileService);
+injector.register("buildInfoFileService", BuildInfoFileService);

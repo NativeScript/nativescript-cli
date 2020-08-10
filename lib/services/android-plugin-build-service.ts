@@ -9,7 +9,8 @@ import { IProjectDataService } from "../definitions/project";
 import { IAndroidPluginBuildService, IPluginBuildOptions, IBuildAndroidPluginData } from "../definitions/android-plugin-migrator";
 import { IFileSystem, IChildProcess, IHostInfo, IErrors, IHooksService, IFsStats, IStringDictionary } from "../common/declarations";
 import { IFilesHashService } from "../definitions/files-hash-service";
-import { IInjector, $injector } from "../common/definitions/yok";
+import { IInjector } from "../common/definitions/yok";
+import { injector } from "../common/yok";
 import * as _ from 'lodash';
 
 export class AndroidPluginBuildService implements IAndroidPluginBuildService {
@@ -508,4 +509,4 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 
 }
 
-$injector.register("androidPluginBuildService", AndroidPluginBuildService);
+injector.register("androidPluginBuildService", AndroidPluginBuildService);

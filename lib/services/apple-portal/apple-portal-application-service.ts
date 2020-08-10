@@ -1,6 +1,7 @@
 import { IErrors, Server } from "../../common/declarations";
-import { $injector } from "../../common/definitions/yok";
+import { injector } from "../../common/yok";
 import * as _ from 'lodash';
+import { IApplePortalUserDetail, IApplePortalSessionService, IApplePortalApplicationService, IApplePortalApplicationSummary, IApplePortalApplication } from "./definitions";
 
 export class ApplePortalApplicationService implements IApplePortalApplicationService {
 	constructor(
@@ -54,4 +55,4 @@ export class ApplePortalApplicationService implements IApplePortalApplicationSer
 		return application;
 	}
 }
-$injector.register("applePortalApplicationService", ApplePortalApplicationService);
+injector.register("applePortalApplicationService", ApplePortalApplicationService);

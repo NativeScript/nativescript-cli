@@ -6,7 +6,7 @@ import * as _ from 'lodash';
 import { IFilesHashService } from "../definitions/files-hash-service";
 import { IPlatformData } from "../definitions/platform";
 import { IFileSystem, IStringDictionary } from "../common/declarations";
-import { $injector } from "../common/definitions/yok";
+import { injector } from "../common/yok";
 
 export class FilesHashService implements IFilesHashService {
 	constructor(private $fs: IFileSystem,
@@ -67,4 +67,4 @@ export class FilesHashService implements IFilesHashService {
 		return result;
 	}
 }
-$injector.register("filesHashService", FilesHashService);
+injector.register("filesHashService", FilesHashService);

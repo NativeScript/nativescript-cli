@@ -5,6 +5,8 @@ import { performanceLog } from "../common/decorators";
 import { IProjectTemplatesService, ITemplateData, ITemplatePackageJsonContent } from "../definitions/project";
 import { IPackageInstallationManager, INodePackageManager } from "../declarations";
 import { IFileSystem, IErrors, IAnalyticsService, IDictionary } from "../common/declarations";
+import * as _ from 'lodash';
+import { injector } from "../common/yok";
 
 export class ProjectTemplatesService implements IProjectTemplatesService {
 	private templatePackageContents: IDictionary<any> = {};
@@ -106,4 +108,4 @@ export class ProjectTemplatesService implements IProjectTemplatesService {
 		}
 	}
 }
-$injector.register("projectTemplatesService", ProjectTemplatesService);
+injector.register("projectTemplatesService", ProjectTemplatesService);

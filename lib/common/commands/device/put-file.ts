@@ -2,7 +2,7 @@ import { IProjectData } from "../../../definitions/project";
 import { IOptions } from "../../../declarations";
 import { ICommand, ICommandParameter } from "../../definitions/commands";
 import { IErrors } from "../../declarations";
-import { $injector } from "../../definitions/yok";
+import { injector } from "../../yok";
 
 export class PutFileCommand implements ICommand {
 	constructor(private $devicesService: Mobile.IDevicesService,
@@ -35,4 +35,4 @@ export class PutFileCommand implements ICommand {
 		await this.$devicesService.execute(action);
 	}
 }
-$injector.registerCommand(["device|put-file", "devices|put-file"], PutFileCommand);
+injector.registerCommand(["device|put-file", "devices|put-file"], PutFileCommand);

@@ -1,9 +1,12 @@
 import * as pacote from "pacote";
 import * as tar from "tar";
 import * as path from "path";
+import * as _ from 'lodash';
 import { cache } from "../common/decorators";
 import { INpmConfigService, INodePackageManager } from "../declarations";
 import { IProxyService, IFileSystem } from "../common/declarations";
+import { IInjector } from "../common/definitions/yok";
+import { injector } from "../common/yok";
 
 export class PacoteService implements IPacoteService {
 	constructor(private $fs: IFileSystem,
@@ -95,4 +98,4 @@ export class PacoteService implements IPacoteService {
 		return packageName;
 	}
 }
-$injector.register("pacoteService", PacoteService);
+injector.register("pacoteService", PacoteService);

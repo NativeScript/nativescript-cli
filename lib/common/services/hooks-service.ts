@@ -5,7 +5,8 @@ import { annotate, getValueFromNestedObject } from "../helpers";
 import { AnalyticsEventLabelDelimiter } from "../../constants";
 import { IOptions, IPerformanceService } from "../../declarations";
 import { IHook, IHooksService, IDictionary, IChildProcess, IFileSystem, IErrors, IProjectHelper, IStringDictionary } from "../declarations";
-import { IInjector, $injector } from "../definitions/yok";
+import { IInjector } from "../definitions/yok";
+import { injector } from "../yok";
 
 class Hook implements IHook {
 	constructor(public name: string,
@@ -292,4 +293,4 @@ export class HooksService implements IHooksService {
 		return invalidArguments;
 	}
 }
-$injector.register("hooksService", HooksService);
+injector.register("hooksService", HooksService);

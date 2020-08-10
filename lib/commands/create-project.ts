@@ -5,7 +5,7 @@ import { ICreateProjectData, IProjectService } from "../definitions/project";
 import { IOptions } from "../declarations";
 import { ICommand, ICommandParameter } from "../common/definitions/commands";
 import { IErrors } from "../common/declarations";
-import { $injector } from "../common/definitions/yok";
+import { injector } from "../common/yok";
 
 export class CreateProjectCommand implements ICommand {
 	public enableHooks = false;
@@ -249,4 +249,4 @@ can skip this prompt next time using the --template option, or the --ng, --react
 	}
 }
 
-$injector.registerCommand("create", CreateProjectCommand);
+injector.registerCommand("create", CreateProjectCommand);

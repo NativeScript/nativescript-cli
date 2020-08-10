@@ -1,5 +1,6 @@
 import { ICommandParameter, IStringParameterBuilder } from "./definitions/commands";
-import { IInjector, $injector } from "./definitions/yok";
+import { IInjector } from "./definitions/yok";
+import { injector } from "./yok";
 
 export class StringCommandParameter implements ICommandParameter {
 	public mandatory = false;
@@ -19,7 +20,7 @@ export class StringCommandParameter implements ICommandParameter {
 		return true;
 	}
 }
-$injector.register("stringParameter", StringCommandParameter);
+injector.register("stringParameter", StringCommandParameter);
 
 export class StringParameterBuilder implements IStringParameterBuilder {
 	constructor(private $injector: IInjector) { }
@@ -32,4 +33,4 @@ export class StringParameterBuilder implements IStringParameterBuilder {
 		return commandParameter;
 	}
 }
-$injector.register("stringParameterBuilder", StringParameterBuilder);
+injector.register("stringParameterBuilder", StringParameterBuilder);

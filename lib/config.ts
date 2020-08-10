@@ -4,7 +4,8 @@ import * as os from "os";
 import * as _ from 'lodash';
 import { IConfiguration, IStaticConfig, IAndroidToolsInfo } from "./declarations";
 import { IFileSystem, IChildProcess, IHostInfo } from "./common/declarations";
-import { $injector, IInjector } from "./common/definitions/yok";
+import { IInjector } from "./common/definitions/yok";
+import { injector } from "./common/yok";
 
 export class Configuration implements IConfiguration { // User specific config
 	DEBUG = false;
@@ -32,7 +33,7 @@ export class Configuration implements IConfiguration { // User specific config
 		return path.join(__dirname, "../config", filename + ".json");
 	}
 }
-$injector.register("config", Configuration);
+injector.register("config", Configuration);
 
 export class StaticConfig implements IStaticConfig {
 	public QR_SIZE = 5;
@@ -185,4 +186,4 @@ export class StaticConfig implements IStaticConfig {
 		return targetAdb;
 	}
 }
-$injector.register("staticConfig", StaticConfig);
+injector.register("staticConfig", StaticConfig);

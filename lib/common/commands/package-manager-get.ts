@@ -1,4 +1,4 @@
-import { $injector } from "../definitions/yok";
+import { injector } from "../yok";
 import { IUserSettingsService, IErrors } from "../declarations";
 import { ICommand, ICommandParameter } from "../definitions/commands";
 
@@ -22,4 +22,4 @@ export class PackageManagerGetCommand implements ICommand {
 	}
 }
 
-$injector.registerCommand("package-manager|*get", PackageManagerGetCommand);
+injector.registerCommand("package-manager|*get", PackageManagerGetCommand);

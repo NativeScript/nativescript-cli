@@ -4,7 +4,7 @@ import * as util from "util";
 import * as _ from 'lodash';
 import { cache } from "../decorators";
 import { IAutoCompletionService, IFileSystem, IChildProcess, IHostInfo } from "../declarations";
-import { $injector } from "../definitions/yok";
+import { injector } from "../yok";
 
 export class AutoCompletionService implements IAutoCompletionService {
 	private scriptsOk = true;
@@ -224,4 +224,4 @@ export class AutoCompletionService implements IAutoCompletionService {
 		return path.join(osenv.home(), fileName);
 	}
 }
-$injector.register("autoCompletionService", AutoCompletionService);
+injector.register("autoCompletionService", AutoCompletionService);

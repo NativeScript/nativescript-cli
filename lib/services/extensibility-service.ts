@@ -1,9 +1,12 @@
 import * as path from "path";
+import * as _ from 'lodash';
 import { cache } from "../common/decorators";
 import * as constants from "../constants";
 import { createRegExp, regExpEscape } from "../common/helpers";
 import { INodePackageManager, INpmsSingleResultData } from "../declarations";
 import { IFileSystem, ISettingsService, IStringDictionary } from "../common/declarations";
+import { IExtensibilityService, IExtensionData, IExtensionCommandInfo, IExtensionLoadingError, IGetExtensionCommandInfoParams } from "../common/definitions/extensibility";
+import { injector } from "../common/yok";
 
 export class ExtensibilityService implements IExtensibilityService {
 	private customPathToExtensions: string = null;
@@ -226,4 +229,4 @@ export class ExtensibilityService implements IExtensibilityService {
 	}
 }
 
-$injector.register("extensibilityService", ExtensibilityService);
+injector.register("extensibilityService", ExtensibilityService);

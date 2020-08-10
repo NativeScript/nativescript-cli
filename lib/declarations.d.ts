@@ -2,6 +2,7 @@ import { IProjectData, IBuildConfig } from "./definitions/project";
 import { IBuildData } from "./definitions/build";
 import { IRelease, IDeviceIdentifier, IJustLaunch, IAvd, IAvailableDevices, IProfileDir, IHasEmulatorOption, IYargArgv, IDashedOption, IDictionary, IProjectDir, ICredentials, IVersionInformation, IVersionData, IStringDictionary } from "./common/declarations";
 import { IExtensionData } from "./common/definitions/extensibility";
+import { IApplePortalUserDetail } from "./services/apple-portal/definitions";
 
 interface INodePackageManager {
 	/**

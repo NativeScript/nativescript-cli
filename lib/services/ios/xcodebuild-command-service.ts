@@ -1,5 +1,5 @@
 import * as constants from "../../constants";
-import { $injector } from "../../common/definitions/yok";
+import { injector } from "../../common/yok";
 import { ISpawnResult, IErrors, IChildProcess } from "../../common/declarations";
 
 export class XcodebuildCommandService implements IXcodebuildCommandService {
@@ -28,4 +28,4 @@ export class XcodebuildCommandService implements IXcodebuildCommandService {
 		}
 	}
 }
-$injector.register("xcodebuildCommandService", XcodebuildCommandService);
+injector.register("xcodebuildCommandService", XcodebuildCommandService);

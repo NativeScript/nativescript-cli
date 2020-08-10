@@ -1,8 +1,10 @@
 import { EOL } from "os";
 import * as path from "path";
 import * as semver from "semver";
+import * as _ from 'lodash';
 import { PODFILE_NAME } from "../constants";
 import { IProjectData, ICocoaPodsPlatformManager, IPodfilePlatformData } from "../definitions/project";
+import { injector } from "../common/yok";
 
 export class CocoaPodsPlatformManager implements ICocoaPodsPlatformManager {
 	constructor(private $logger: ILogger) { }
@@ -131,4 +133,4 @@ export class CocoaPodsPlatformManager implements ICocoaPodsPlatformManager {
 		return '# End NativeScriptPlatformSection';
 	}
 }
-$injector.register("cocoaPodsPlatformManager", CocoaPodsPlatformManager);
+injector.register("cocoaPodsPlatformManager", CocoaPodsPlatformManager);

@@ -3,7 +3,7 @@ import { EOL } from "os";
 import { exported } from "../../../common/decorators";
 import { IConfiguration } from "../../../declarations";
 import { Server, IQrCodeGenerator, IQrCodeImageData, IDictionary } from "../../../common/declarations";
-import { $injector } from "../../../common/definitions/yok";
+import { injector } from "../../../common/yok";
 
 export class PreviewQrCodeService implements IPreviewQrCodeService {
 	constructor(
@@ -88,4 +88,4 @@ To scan the QR code and deploy your app on a device, you need to have the \`Nati
 		return `https://itunes.apple.com/us/app/nativescript-playground/id${schema.scannerAppStoreId}?mt=8&ls=1`;
 	}
 }
-$injector.register("previewQrCodeService", PreviewQrCodeService);
+injector.register("previewQrCodeService", PreviewQrCodeService);

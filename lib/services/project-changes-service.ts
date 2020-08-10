@@ -4,6 +4,9 @@ import { getHash, hook } from "../common/helpers";
 import { INodeModulesDependenciesBuilder, IPlatformData } from "../definitions/platform";
 import { IProjectData } from "../definitions/project";
 import { IFileSystem, IHooksService, IFsStats } from "../common/declarations";
+import { IProjectChangesInfo, IPrepareInfo, IAddedNativePlatform } from "../definitions/project-changes";
+import * as _ from 'lodash';
+import { injector } from "../common/yok";
 
 const prepareInfoFileName = ".nsprepareinfo";
 
@@ -277,4 +280,4 @@ export class ProjectChangesService implements IProjectChangesService {
 		return changed;
 	}
 }
-$injector.register("projectChangesService", ProjectChangesService);
+injector.register("projectChangesService", ProjectChangesService);

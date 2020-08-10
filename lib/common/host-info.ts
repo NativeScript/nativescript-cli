@@ -1,7 +1,8 @@
 import { cache } from "./decorators";
 import * as _ from 'lodash';
 import { IHostInfo, IChildProcess, IOsInfo, IErrors } from "./declarations";
-import { IInjector, $injector } from "./definitions/yok";
+import { IInjector } from "./definitions/yok";
+import { injector } from "./yok";
 
 export class HostInfo implements IHostInfo {
 	private static WIN32_NAME = "win32";
@@ -118,4 +119,4 @@ export class HostInfo implements IHostInfo {
 		}
 	}
 }
-$injector.register("hostInfo", HostInfo);
+injector.register("hostInfo", HostInfo);

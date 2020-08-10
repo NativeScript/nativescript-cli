@@ -9,7 +9,8 @@ import { IProjectDataService } from "../definitions/project";
 import { IDebugController, IDeviceDebugService, IDebugDataService, IDebugData, IDebugOptions, IDebugResultInfo } from "../definitions/debug";
 import { IDebugInformation } from "../declarations";
 import { IAnalyticsService, IDictionary, IErrors } from "../common/declarations";
-import { IInjector, $injector } from "../common/definitions/yok";
+import { IInjector } from "../common/definitions/yok";
+import { injector } from "../common/yok";
 
 export class DebugController extends EventEmitter implements IDebugController {
 	private _platformDebugServices: IDictionary<IDeviceDebugService> = {};
@@ -231,4 +232,4 @@ export class DebugController extends EventEmitter implements IDebugController {
 		return this.enableDebuggingCoreWithoutWaitingCurrentAction(projectDir, deviceIdentifier, debugOptions);
 	}
 }
-$injector.register("debugController", DebugController);
+injector.register("debugController", DebugController);

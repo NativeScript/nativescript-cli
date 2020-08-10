@@ -3,7 +3,7 @@ import { isInteractive } from "../../common/helpers";
 import { IOptions, INodePackageManager } from "../../declarations";
 import { ICommand, ICommandParameter } from "../../common/definitions/commands";
 import { IErrors, IFileSystem, IChildProcess } from "../../common/declarations";
-import { $injector } from "../../common/definitions/yok";
+import { injector } from "../../common/yok";
 
 export class CreatePluginCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
@@ -151,4 +151,4 @@ export class CreatePluginCommand implements ICommand {
 	}
 }
 
-$injector.registerCommand(["plugin|create"], CreatePluginCommand);
+injector.registerCommand(["plugin|create"], CreatePluginCommand);

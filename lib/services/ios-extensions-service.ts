@@ -2,6 +2,7 @@ import * as path from "path";
 import { IOSNativeTargetProductTypes, IOSNativeTargetTypes } from "../constants";
 import { IIOSNativeTargetService, IIOSExtensionsService, IAddExtensionsFromPathOptions, IRemoveExtensionsOptions, IProjectData } from "../definitions/project";
 import { IFileSystem } from "../common/declarations";
+import { injector } from "../common/yok";
 
 export class IOSExtensionsService implements IIOSExtensionsService {
 	constructor(protected $fs: IFileSystem,
@@ -51,4 +52,4 @@ export class IOSExtensionsService implements IIOSExtensionsService {
 	}
 }
 
-$injector.register("iOSExtensionsService", IOSExtensionsService);
+injector.register("iOSExtensionsService", IOSExtensionsService);

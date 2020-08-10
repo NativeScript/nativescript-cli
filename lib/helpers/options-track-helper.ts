@@ -3,7 +3,7 @@ import { TrackActionNames } from "../constants";
 import { IOptions } from "../declarations";
 import { IAnalyticsService, IDictionary, IDashedOption, OptionType } from "../common/declarations";
 import * as _ from 'lodash';
-import { $injector } from "../common/definitions/yok";
+import { injector } from "../common/yok";
 
 export class OptionsTracker {
 	public static PASSWORD_DETECTION_STRING = "password";
@@ -81,4 +81,4 @@ export class OptionsTracker {
 	}
 }
 
-$injector.register("optionsTracker", OptionsTracker);
+injector.register("optionsTracker", OptionsTracker);

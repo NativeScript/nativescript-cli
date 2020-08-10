@@ -3,7 +3,7 @@ import * as shell from "shelljs";
 import * as _ from 'lodash';
 import { IProjectData } from "../../definitions/project";
 import { IErrors, IFileSystem } from "../declarations";
-import { $injector } from "../definitions/yok";
+import { injector } from "../yok";
 
 export class MobileHelper implements Mobile.IMobileHelper {
 	private static DEVICE_PATH_SEPARATOR = "/";
@@ -79,4 +79,4 @@ export class MobileHelper implements Mobile.IMobileHelper {
 		return null;
 	}
 }
-$injector.register("mobileHelper", MobileHelper);
+injector.register("mobileHelper", MobileHelper);

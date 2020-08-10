@@ -1,6 +1,9 @@
 import { DEVICE_LOG_EVENT_NAME } from "../common/constants";
 import { cache } from "../common/decorators";
 import { EventEmitter } from "events";
+import * as _ from 'lodash';
+import { IDictionary, IErrors } from "../common/declarations";
+import { injector } from "../common/yok";
 
 export class LogParserService extends EventEmitter implements ILogParserService {
 	private parseRules: IDictionary<ILogParseRule> = {};
@@ -44,4 +47,4 @@ export class LogParserService extends EventEmitter implements ILogParserService 
 	}
 }
 
-$injector.register("logParserService", LogParserService);
+injector.register("logParserService", LogParserService);

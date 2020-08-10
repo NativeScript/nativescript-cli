@@ -1,3 +1,5 @@
+import { injector } from "../common/yok";
+
 export class IOSLogFilter implements Mobile.IPlatformLogFilter {
 	// Used to recognize output related to the current project
 	// This looks for artifacts like: AppName[22432] or AppName(SomeTextHere)[23123]
@@ -78,4 +80,4 @@ export class IOSLogFilter implements Mobile.IPlatformLogFilter {
 	}
 }
 
-$injector.register("iOSLogFilter", IOSLogFilter);
+injector.register("iOSLogFilter", IOSLogFilter);

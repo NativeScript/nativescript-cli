@@ -7,7 +7,7 @@ import { IMigrateController } from "../definitions/migrate";
 import { ICommandParameter, ICommand } from "../common/definitions/commands";
 import { OptionType, IAnalyticsService, IErrors, IDictionary, ErrorCodes } from "../common/declarations";
 import { ICleanupService } from "../definitions/cleanup-service";
-import { $injector } from "../common/definitions/yok";
+import { injector } from "../common/yok";
 
 abstract class TestCommandBase {
 	public allowedParameters: ICommandParameter[] = [];
@@ -156,5 +156,5 @@ class TestIosCommand extends TestCommandBase implements ICommand {
 
 }
 
-$injector.registerCommand("test|android", TestAndroidCommand);
-$injector.registerCommand("test|ios", TestIosCommand);
+injector.registerCommand("test|android", TestAndroidCommand);
+injector.registerCommand("test|ios", TestIosCommand);

@@ -1,4 +1,5 @@
-import { IInjector, $injector } from "../definitions/yok";
+import { IInjector } from "../definitions/yok";
+import { injector } from "../yok";
 
 export class LogFilter implements Mobile.ILogFilter {
 	private _loggingLevel: string = this.$loggingLevels.info;
@@ -47,4 +48,4 @@ export class LogFilter implements Mobile.ILogFilter {
 	}
 
 }
-$injector.register("logFilter", LogFilter);
+injector.register("logFilter", LogFilter);

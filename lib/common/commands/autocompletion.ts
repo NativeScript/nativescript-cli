@@ -1,7 +1,7 @@
 import * as helpers from "../helpers";
 import { ICommandParameter, ICommand } from "../definitions/commands";
 import { IAutoCompletionService } from "../declarations";
-import { $injector } from "../definitions/yok";
+import { injector } from "../yok";
 
 export class AutoCompleteCommand implements ICommand {
 	constructor(private $autoCompletionService: IAutoCompletionService,
@@ -36,7 +36,7 @@ export class AutoCompleteCommand implements ICommand {
 		}
 	}
 }
-$injector.registerCommand("autocomplete|*default", AutoCompleteCommand);
+injector.registerCommand("autocomplete|*default", AutoCompleteCommand);
 
 export class DisableAutoCompleteCommand implements ICommand {
 	constructor(private $autoCompletionService: IAutoCompletionService,
@@ -54,7 +54,7 @@ export class DisableAutoCompleteCommand implements ICommand {
 		}
 	}
 }
-$injector.registerCommand("autocomplete|disable", DisableAutoCompleteCommand);
+injector.registerCommand("autocomplete|disable", DisableAutoCompleteCommand);
 
 export class EnableAutoCompleteCommand implements ICommand {
 	constructor(private $autoCompletionService: IAutoCompletionService,
@@ -71,7 +71,7 @@ export class EnableAutoCompleteCommand implements ICommand {
 		}
 	}
 }
-$injector.registerCommand("autocomplete|enable", EnableAutoCompleteCommand);
+injector.registerCommand("autocomplete|enable", EnableAutoCompleteCommand);
 
 export class AutoCompleteStatusCommand implements ICommand {
 	constructor(private $autoCompletionService: IAutoCompletionService,
@@ -88,4 +88,4 @@ export class AutoCompleteStatusCommand implements ICommand {
 		}
 	}
 }
-$injector.registerCommand("autocomplete|status", AutoCompleteStatusCommand);
+injector.registerCommand("autocomplete|status", AutoCompleteStatusCommand);

@@ -2,7 +2,7 @@ import { EventEmitter } from "events";
 import { EmulatorDiscoveryNames } from "../../constants";
 import * as _ from 'lodash';
 import { IDictionary } from "../../declarations";
-import { $injector } from "../../definitions/yok";
+import { injector } from "../../yok";
 
 export class AndroidEmulatorDiscovery extends EventEmitter implements Mobile.IDeviceDiscovery {
 	private _emulators: IDictionary<Mobile.IDeviceInfo> = {};
@@ -56,4 +56,4 @@ export class AndroidEmulatorDiscovery extends EventEmitter implements Mobile.IDe
 		});
 	}
 }
-$injector.register("androidEmulatorDiscovery", AndroidEmulatorDiscovery);
+injector.register("androidEmulatorDiscovery", AndroidEmulatorDiscovery);

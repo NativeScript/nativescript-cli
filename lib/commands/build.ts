@@ -8,7 +8,7 @@ import { IBuildController, IBuildDataService } from "../definitions/build";
 import { IMigrateController } from "../definitions/migrate";
 import { IErrors, OptionType } from "../common/declarations";
 import { ICommandParameter, ICommand } from "../common/definitions/commands";
-import { $injector } from "../common/definitions/yok";
+import { injector } from "../common/yok";
 
 export abstract class BuildCommandBase extends ValidatePlatformCommandBase {
 	constructor($options: IOptions,
@@ -91,7 +91,7 @@ export class BuildIosCommand extends BuildCommandBase implements ICommand {
 	}
 }
 
-$injector.registerCommand("build|ios", BuildIosCommand);
+injector.registerCommand("build|ios", BuildIosCommand);
 
 export class BuildAndroidCommand extends BuildCommandBase implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
@@ -143,4 +143,4 @@ export class BuildAndroidCommand extends BuildCommandBase implements ICommand {
 	}
 }
 
-$injector.registerCommand("build|android", BuildAndroidCommand);
+injector.registerCommand("build|android", BuildAndroidCommand);

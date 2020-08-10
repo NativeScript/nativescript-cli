@@ -3,7 +3,7 @@ import { BuildController } from "../controllers/build-controller";
 import { IAndroidBundleValidatorHelper, IOptions } from "../declarations";
 import { IBuildDataService } from "../definitions/build";
 import { IProjectData } from "../definitions/project";
-import { $injector } from "../common/definitions/yok";
+import { injector } from "../common/yok";
 
 export class DeployCommandHelper {
 	constructor(
@@ -66,4 +66,4 @@ export class DeployCommandHelper {
 		await this.$deployController.deploy({ deviceDescriptors });
 	}
 }
-$injector.register("deployCommandHelper", DeployCommandHelper);
+injector.register("deployCommandHelper", DeployCommandHelper);

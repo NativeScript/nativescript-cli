@@ -5,6 +5,9 @@ import { cache } from "../common/decorators";
 import { IITMSTransporterService, IITMSData } from "../declarations";
 import { IProjectData } from "../definitions/project";
 import { IChildProcess, IErrors, IFileSystem, IPlistParser, IXcodeSelectService } from "../common/declarations";
+import { IApplePortalApplicationService } from "./apple-portal/definitions";
+import { IInjector } from "../common/definitions/yok";
+import { injector } from "../common/yok";
 
 export class ITMSTransporterService implements IITMSTransporterService {
 	constructor(
@@ -130,4 +133,4 @@ export class ITMSTransporterService implements IITMSTransporterService {
 </package>`;
 	}
 }
-$injector.register("itmsTransporterService", ITMSTransporterService);
+injector.register("itmsTransporterService", ITMSTransporterService);

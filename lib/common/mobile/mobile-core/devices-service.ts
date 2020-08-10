@@ -12,7 +12,8 @@ import { isInteractive } from "../../helpers";
 import { DebugCommandErrors } from "../../../constants";
 import { performanceLog } from "../../decorators";
 import { IDictionary, IErrors, IHostInfo, IAppInstalledInfo } from "../../declarations";
-import { IInjector, $injector } from "../../definitions/yok";
+import { IInjector } from "../../definitions/yok";
+import { injector } from "../../yok";
 import { IOptions } from "../../../declarations";
 
 export class DevicesService extends EventEmitter implements Mobile.IDevicesService {
@@ -851,4 +852,4 @@ export class DevicesService extends EventEmitter implements Mobile.IDevicesServi
 	}
 }
 
-$injector.register("devicesService", DevicesService);
+injector.register("devicesService", DevicesService);

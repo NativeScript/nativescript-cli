@@ -1,5 +1,6 @@
 import { EOL } from "os";
 import * as path from "path";
+import * as _ from 'lodash';
 import * as helpers from "../common/helpers";
 import { cache } from "../common/decorators";
 import { TrackActionNames, NODE_MODULES_FOLDER_NAME, TNS_CORE_MODULES_NAME } from "../constants";
@@ -8,6 +9,9 @@ import { IProjectDataService } from "../definitions/project";
 import { IVersionsService, IOptions } from "../declarations";
 import { IPlatformEnvironmentRequirements } from "../definitions/platform";
 import { IDoctorService, IAnalyticsService, IHostInfo, IChildProcess, IFileSystem, ISettingsService, ISpawnResult } from "../common/declarations";
+import { IJsonFileSettingsService } from "../common/definitions/json-file-settings-service";
+import { IInjector } from "../common/definitions/yok";
+import { injector } from "../common/yok";
 
 export class DoctorService implements IDoctorService {
 	private static DarwinSetupScriptLocation = path.join(__dirname, "..", "..", "setup", "mac-startup-shell-script.sh");
@@ -283,4 +287,4 @@ export class DoctorService implements IDoctorService {
 		return infos;
 	}
 }
-$injector.register("doctorService", DoctorService);
+injector.register("doctorService", DoctorService);

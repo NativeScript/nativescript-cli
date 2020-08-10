@@ -6,7 +6,7 @@ import { IDeviceDebugService, IDebugData, IDebugOptions, IDebugResultInfo } from
 import { IStaticConfig } from "../declarations";
 import { IErrors, INet } from "../common/declarations";
 import { ICleanupService } from "../definitions/cleanup-service";
-import { $injector } from "../common/definitions/yok";
+import { injector } from "../common/yok";
 import * as _ from 'lodash';
 
 export class AndroidDeviceDebugService extends DebugServiceBase implements IDeviceDebugService {
@@ -151,4 +151,4 @@ export class AndroidDeviceDebugService extends DebugServiceBase implements IDevi
 	}
 }
 
-$injector.register("androidDeviceDebugService", AndroidDeviceDebugService, false);
+injector.register("androidDeviceDebugService", AndroidDeviceDebugService, false);

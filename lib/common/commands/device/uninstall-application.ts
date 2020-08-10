@@ -1,6 +1,6 @@
 import { IOptions } from "../../../declarations";
 import { ICommandParameter, ICommand } from "../../definitions/commands";
-import { $injector } from "../../definitions/yok";
+import { injector } from "../../yok";
 
 export class UninstallApplicationCommand implements ICommand {
 	constructor(private $devicesService: Mobile.IDevicesService,
@@ -16,4 +16,4 @@ export class UninstallApplicationCommand implements ICommand {
 		await this.$devicesService.execute(action);
 	}
 }
-$injector.registerCommand(["device|uninstall", "devices|uninstall"], UninstallApplicationCommand);
+injector.registerCommand(["device|uninstall", "devices|uninstall"], UninstallApplicationCommand);

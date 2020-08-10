@@ -1,6 +1,6 @@
 import { ProxyCommandBase } from "./proxy-base";
 import { IAnalyticsService, IProxyService } from "../../declarations";
-import { $injector } from "../../definitions/yok";
+import { injector } from "../../yok";
 const proxyClearCommandName = "proxy|clear";
 
 export class ProxyClearCommand extends ProxyCommandBase {
@@ -17,4 +17,4 @@ export class ProxyClearCommand extends ProxyCommandBase {
 	}
 }
 
-$injector.registerCommand(proxyClearCommandName, ProxyClearCommand);
+injector.registerCommand(proxyClearCommandName, ProxyClearCommand);

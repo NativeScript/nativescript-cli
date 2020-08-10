@@ -2,7 +2,7 @@ import * as net from "net";
 import * as _ from 'lodash';
 import { sleep } from "../helpers";
 import { IErrors, INet, IChildProcess, IOsInfo, IWaitForPortListenData, IDictionary } from "../declarations";
-import { $injector } from "../definitions/yok";
+import { injector } from "../yok";
 
 export class Net implements INet {
 	private static DEFAULT_INTERVAL = 1000;
@@ -135,4 +135,4 @@ export class Net implements INet {
 	}
 }
 
-$injector.register("net", Net);
+injector.register("net", Net);

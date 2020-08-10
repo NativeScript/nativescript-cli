@@ -8,7 +8,7 @@ import { IPlatformsDataService } from "../definitions/platform";
 import { IMigrateController } from "../definitions/migrate";
 import { ICommand, ICommandParameter } from "../common/definitions/commands";
 import { OptionType, IErrors } from "../common/declarations";
-import { $injector } from "../common/definitions/yok";
+import { injector } from "../common/yok";
 
 export class DeployOnDeviceCommand extends ValidatePlatformCommandBase implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
@@ -68,4 +68,4 @@ export class DeployOnDeviceCommand extends ValidatePlatformCommandBase implement
 	}
 }
 
-$injector.registerCommand("deploy", DeployOnDeviceCommand);
+injector.registerCommand("deploy", DeployOnDeviceCommand);

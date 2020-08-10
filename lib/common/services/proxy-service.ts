@@ -2,7 +2,7 @@ import * as path from "path";
 import { EOL } from "os";
 import { Proxy } from "../constants";
 import { IProxyService, ISettingsService, IProxyLibSettings, IProxySettings } from "../declarations";
-import { $injector } from "../definitions/yok";
+import { injector } from "../yok";
 const proxyLib = require("proxy-lib");
 
 export class ProxyService implements IProxyService {
@@ -58,4 +58,4 @@ export class ProxyService implements IProxyService {
 	}
 }
 
-$injector.register("proxyService", ProxyService);
+injector.register("proxyService", ProxyService);

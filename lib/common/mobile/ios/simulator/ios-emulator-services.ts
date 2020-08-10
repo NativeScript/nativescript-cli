@@ -2,7 +2,7 @@ import * as net from "net";
 import * as _ from 'lodash';
 import { APPLE_VENDOR_NAME, DeviceTypes, RUNNING_EMULATOR_STATUS, NOT_RUNNING_EMULATOR_STATUS } from "../../../constants";
 import { DeviceConnectionType } from "../../../../constants";
-import { $injector } from "../../../definitions/yok";
+import { injector } from "../../../yok";
 
 class IosEmulatorServices implements Mobile.IiOSSimulatorService {
 	constructor(private $logger: ILogger,
@@ -110,4 +110,4 @@ class IosEmulatorServices implements Mobile.IiOSSimulatorService {
 		};
 	}
 }
-$injector.register("iOSEmulatorServices", IosEmulatorServices);
+injector.register("iOSEmulatorServices", IosEmulatorServices);

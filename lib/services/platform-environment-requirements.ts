@@ -4,6 +4,9 @@ import { EOL } from "os";
 import { IPlatformEnvironmentRequirements, ICheckEnvironmentRequirementsInput, ICheckEnvironmentRequirementsOutput } from "../definitions/platform";
 import { IStaticConfig, IOptions } from "../declarations";
 import { IDoctorService, IErrors, IAnalyticsService } from "../common/declarations";
+import { IInjector } from "../common/definitions/yok";
+import { injector } from "../common/yok";
+import { INotConfiguredEnvOptions } from "../common/definitions/commands";
 
 export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequirements {
 	constructor(private $doctorService: IDoctorService,
@@ -182,4 +185,4 @@ export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequ
 		return choices;
 	}
 }
-$injector.register("platformEnvironmentRequirements", PlatformEnvironmentRequirements);
+injector.register("platformEnvironmentRequirements", PlatformEnvironmentRequirements);

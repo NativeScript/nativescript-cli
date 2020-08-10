@@ -1,6 +1,6 @@
 import { AndroidBuildData, IOSBuildData } from "../data/build-data";
 import { IBuildDataService } from "../definitions/build";
-import { $injector } from "../common/definitions/yok";
+import { injector } from "../common/yok";
 
 export class BuildDataService implements IBuildDataService {
 	constructor(private $mobileHelper: Mobile.IMobileHelper) { }
@@ -13,4 +13,4 @@ export class BuildDataService implements IBuildDataService {
 		}
 	}
 }
-$injector.register("buildDataService", BuildDataService);
+injector.register("buildDataService", BuildDataService);

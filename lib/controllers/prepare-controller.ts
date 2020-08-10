@@ -9,7 +9,7 @@ import { IPlatformController, INodeModulesDependenciesBuilder, IPlatformsDataSer
 import { IPluginsService } from "../definitions/plugins";
 import { IWatchIgnoreListService } from "../declarations";
 import { IDictionary, IHooksService, IAnalyticsService } from "../common/declarations";
-import { $injector } from "../common/definitions/yok";
+import { injector } from "../common/yok";
 interface IPlatformWatcherData {
 	hasWebpackCompilerProcess: boolean;
 	nativeFilesWatcher: choki.FSWatcher;
@@ -232,4 +232,4 @@ export class PrepareController extends EventEmitter {
 		}
 	}
 }
-$injector.register("prepareController", PrepareController);
+injector.register("prepareController", PrepareController);

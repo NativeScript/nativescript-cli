@@ -6,6 +6,9 @@ import { IVersionsService, IPackageInstallationManager } from "../declarations";
 import { IProjectData, IProjectDataService } from "../definitions/project";
 import { IPluginsService, IBasePluginData } from "../definitions/plugins";
 import { IFileSystem, IVersionInformation } from "../common/declarations";
+import { IInjector } from "../common/definitions/yok";
+import * as _ from 'lodash';
+import { injector } from "../common/yok";
 
 export enum VersionInformationType {
 	UpToDate = "UpToDate",
@@ -190,4 +193,4 @@ class VersionsService implements IVersionsService {
 	}
 }
 
-$injector.register("versionsService", VersionsService);
+injector.register("versionsService", VersionsService);

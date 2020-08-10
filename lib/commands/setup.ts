@@ -1,6 +1,6 @@
 import { ICommand, ICommandParameter } from "../common/definitions/commands";
 import { IDoctorService } from "../common/declarations";
-import { $injector } from "../common/definitions/yok";
+import { injector } from "../common/yok";
 
 export class SetupCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
@@ -11,4 +11,4 @@ export class SetupCommand implements ICommand {
 		return this.$doctorService.runSetupScript();
 	}
 }
-$injector.registerCommand("setup|*", SetupCommand);
+injector.registerCommand("setup|*", SetupCommand);

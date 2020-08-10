@@ -1,7 +1,7 @@
 import { IOptions } from "../../declarations";
 import { ICommandParameter, ICommand } from "../definitions/commands";
 import { IErrors, IAnalyticsService } from "../declarations";
-import { $injector } from "../definitions/yok";
+import { injector } from "../yok";
 
 export class AnalyticsCommandParameter implements ICommandParameter {
 	constructor(private $errors: IErrors) { }
@@ -61,7 +61,7 @@ export class UsageReportingCommand extends AnalyticsCommand {
 		super($analyticsService, $logger, $errors, $options, $staticConfig.TRACK_FEATURE_USAGE_SETTING_NAME, "Usage reporting");
 	}
 }
-$injector.registerCommand("usage-reporting", UsageReportingCommand);
+injector.registerCommand("usage-reporting", UsageReportingCommand);
 
 export class ErrorReportingCommand extends AnalyticsCommand {
 	constructor(protected $analyticsService: IAnalyticsService,
@@ -73,4 +73,4 @@ export class ErrorReportingCommand extends AnalyticsCommand {
 		super($analyticsService, $logger, $errors, $options, $staticConfig.ERROR_REPORT_SETTING_NAME, "Error reporting");
 	}
 }
-$injector.registerCommand("error-reporting", ErrorReportingCommand);
+injector.registerCommand("error-reporting", ErrorReportingCommand);

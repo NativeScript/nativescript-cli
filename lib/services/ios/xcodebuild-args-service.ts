@@ -4,7 +4,7 @@ import { Configurations } from "../../common/constants";
 import { IIOSWatchAppService, IProjectData, IBuildConfig, IiOSBuildConfig } from "../../definitions/project";
 import { IPlatformData } from "../../definitions/platform";
 import { IFileSystem } from "../../common/declarations";
-import { $injector } from "../../common/definitions/yok";
+import { injector } from "../../common/yok";
 import * as _ from 'lodash';
 
 const DevicePlatformSdkName = "iphoneos";
@@ -121,4 +121,4 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 		return architectures;
 	}
 }
-$injector.register("xcodebuildArgsService", XcodebuildArgsService);
+injector.register("xcodebuildArgsService", XcodebuildArgsService);

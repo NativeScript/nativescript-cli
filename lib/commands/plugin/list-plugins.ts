@@ -2,7 +2,7 @@ import { createTable } from "../../common/helpers";
 import { IProjectData } from "../../definitions/project";
 import { IPluginsService, IPackageJsonDepedenciesResult, IBasePluginData } from "../../definitions/plugins";
 import { ICommand, ICommandParameter } from "../../common/definitions/commands";
-import { $injector } from "../../common/definitions/yok";
+import { injector } from "../../common/yok";
 
 export class ListPluginsCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
@@ -47,4 +47,4 @@ export class ListPluginsCommand implements ICommand {
 	}
 }
 
-$injector.registerCommand("plugin|*list", ListPluginsCommand);
+injector.registerCommand("plugin|*list", ListPluginsCommand);

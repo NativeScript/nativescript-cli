@@ -7,7 +7,8 @@ import { platform, EOL } from "os";
 import * as prompt from "inquirer";
 import { IOptions } from "../../../declarations";
 import { IErrors, IHostInfo, IAnalyticsService, IProxyService, IProxyLibSettings } from "../../declarations";
-import { IInjector, $injector } from "../../definitions/yok";
+import { IInjector } from "../../definitions/yok";
+import { injector } from "../../yok";
 const { getCredentialsFromAuth } = require("proxy-lib/lib/utils");
 
 const proxySetCommandName = "proxy|set";
@@ -143,4 +144,4 @@ export class ProxySetCommand extends ProxyCommandBase {
 	}
 }
 
-$injector.registerCommand(proxySetCommandName, ProxySetCommand);
+injector.registerCommand(proxySetCommandName, ProxySetCommand);

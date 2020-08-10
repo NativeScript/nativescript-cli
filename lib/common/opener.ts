@@ -1,6 +1,6 @@
 import xopen = require("open");
 import { IOpener } from "../declarations";
-import { $injector } from "./definitions/yok";
+import { injector } from "./yok";
 
 export class Opener implements IOpener {
 
@@ -8,4 +8,4 @@ export class Opener implements IOpener {
 		return xopen(target, appname);
 	}
 }
-$injector.register("opener", Opener);
+injector.register("opener", Opener);

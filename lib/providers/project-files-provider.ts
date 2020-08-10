@@ -7,7 +7,7 @@ import { IPlatformsDataService } from "../definitions/platform";
 import { IOptions } from "../declarations";
 import { IProjectData } from "../definitions/project";
 import { IProjectFilesConfig } from "../common/declarations";
-import { $injector } from "../common/definitions/yok";
+import { injector } from "../common/yok";
 
 export class ProjectFilesProvider extends ProjectFilesProviderBase {
 	constructor(private $platformsDataService: IPlatformsDataService,
@@ -50,4 +50,4 @@ export class ProjectFilesProvider extends ProjectFilesProviderBase {
 		return !!_.find(ProjectFilesProvider.INTERNAL_NONPROJECT_FILES, (pattern) => minimatch(filePath, pattern, { nocase: true }));
 	}
 }
-$injector.register("projectFilesProvider", ProjectFilesProvider);
+injector.register("projectFilesProvider", ProjectFilesProvider);

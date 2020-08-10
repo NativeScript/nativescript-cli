@@ -4,7 +4,7 @@ import { IOptions, IPlatformCommandHelper, IPlatformValidationService } from "..
 import { IPlatformsDataService } from "../definitions/platform";
 import { ICommandParameter, ICommand } from "../common/definitions/commands";
 import { IErrors } from "../common/declarations";
-import { $injector } from "../common/definitions/yok";
+import { injector } from "../common/yok";
 
 export class AddPlatformCommand extends ValidatePlatformCommandBase implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
@@ -43,4 +43,4 @@ export class AddPlatformCommand extends ValidatePlatformCommandBase implements I
 	}
 }
 
-$injector.registerCommand("platform|add", AddPlatformCommand);
+injector.registerCommand("platform|add", AddPlatformCommand);

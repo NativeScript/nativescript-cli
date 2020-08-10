@@ -1,7 +1,7 @@
 import * as path from "path";
 import { IPlatformData } from "../../definitions/platform";
 import { IProjectData, IBuildConfig } from "../../definitions/project";
-import { $injector } from "../../common/definitions/yok";
+import { injector } from "../../common/yok";
 
 export class XcodebuildService implements IXcodebuildService {
 	constructor(
@@ -58,4 +58,4 @@ export class XcodebuildService implements IXcodebuildService {
 		return output.exportFilePath;
 	}
 }
-$injector.register("xcodebuildService", XcodebuildService);
+injector.register("xcodebuildService", XcodebuildService);

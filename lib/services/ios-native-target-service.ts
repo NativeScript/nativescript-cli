@@ -1,7 +1,9 @@
 import * as path from "path";
+import * as _ from 'lodash';
 import { IIOSNativeTargetService, IProjectData, IXcodeTargetBuildConfigurationProperty, BuildNames } from "../definitions/project";
 import { IPlatformData } from "../definitions/platform";
 import { IFileSystem } from "../common/declarations";
+import { injector } from "../common/yok";
 
 export class IOSNativeTargetService implements IIOSNativeTargetService {
 	constructor(protected $fs: IFileSystem,
@@ -86,4 +88,4 @@ export class IOSNativeTargetService implements IIOSNativeTargetService {
 	}
 }
 
-$injector.register("iOSNativeTargetService", IOSNativeTargetService);
+injector.register("iOSNativeTargetService", IOSNativeTargetService);

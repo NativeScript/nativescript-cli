@@ -3,6 +3,7 @@ import { IOSDeviceTargets, IOS_WATCHAPP_FOLDER, IOS_WATCHAPP_EXTENSION_FOLDER, I
 import { IIOSWatchAppService, IIOSNativeTargetService, IAddWatchAppFromPathOptions, IRemoveWatchAppOptions, IProjectData } from "../definitions/project";
 import { IPlatformData } from "../definitions/platform";
 import { IFileSystem } from "../common/declarations";
+import { injector } from "../common/yok";
 
 export class IOSWatchAppService implements IIOSWatchAppService {
 	private static WATCH_APP_IDENTIFIER = "watchkitapp";
@@ -93,4 +94,4 @@ export class IOSWatchAppService implements IIOSWatchAppService {
 	}
 }
 
-$injector.register("iOSWatchAppService", IOSWatchAppService);
+injector.register("iOSWatchAppService", IOSWatchAppService);

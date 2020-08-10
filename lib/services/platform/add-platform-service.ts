@@ -4,7 +4,7 @@ import { performanceLog } from "../../common/decorators";
 import { IAddPlatformService, IPlatformData } from "../../definitions/platform";
 import { IProjectDataService, IProjectData, INativePrepare } from "../../definitions/project";
 import { IFileSystem, IAnalyticsService } from "../../common/declarations";
-import { $injector } from "../../common/definitions/yok";
+import { injector } from "../../common/yok";
 
 export class AddPlatformService implements IAddPlatformService {
 	constructor(
@@ -73,4 +73,4 @@ export class AddPlatformService implements IAddPlatformService {
 		});
 	}
 }
-$injector.register("addPlatformService", AddPlatformService);
+injector.register("addPlatformService", AddPlatformService);

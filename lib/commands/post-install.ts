@@ -1,7 +1,7 @@
 import { doesCurrentNpmCommandMatch } from "../common/helpers";
 import { ICommand, ICommandParameter } from "../common/definitions/commands";
 import { IFileSystem, IHelpService, ISettingsService, IAnalyticsService, IHostInfo } from "../common/declarations";
-import { $injector } from "../common/definitions/yok";
+import { injector } from "../common/yok";
 
 export class PostInstallCliCommand implements ICommand {
 	constructor(private $fs: IFileSystem,
@@ -55,4 +55,4 @@ export class PostInstallCliCommand implements ICommand {
 	}
 }
 
-$injector.registerCommand("post-install-cli", PostInstallCliCommand);
+injector.registerCommand("post-install-cli", PostInstallCliCommand);

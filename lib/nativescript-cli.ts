@@ -5,12 +5,13 @@ shelljs.config.silent = true;
 shelljs.config.fatal = true;
 import { installUncaughtExceptionListener } from "./common/errors";
 import { settlePromises } from "./common/helpers";
-import { $injector } from "./common/definitions/yok";
+import { injector } from "./common/yok";
 import { ErrorCodes, IErrors, ICommandDispatcher, IMessagesService } from "./common/declarations";
 import { IExtensibilityService, IExtensionData } from "./common/definitions/extensibility";
+import { IInitializeService } from "./definitions/initialize-service";
 installUncaughtExceptionListener(process.exit.bind(process, ErrorCodes.UNCAUGHT));
 
-const logger: ILogger = $injector.resolve("logger");
+const logger: ILogger = injector.resolve("logger");
 const originalProcessOn = process.on;
 
 process.on = (event: string, listener: any): any => {
@@ -26,23 +27,23 @@ process.on = (event: string, listener: any): any => {
 
 /* tslint:disable:no-floating-promises */
 (async () => {
-	const config: Config.IConfig = $injector.resolve("$config");
-	const err: IErrors = $injector.resolve("$errors");
+	const config: Config.IConfig = injector.resolve("$config");
+	const err: IErrors = injector.resolve("$errors");
 	err.printCallStack = config.DEBUG;
 
-	const $initializeService = $injector.resolve<IInitializeService>("initializeService");
+	const $initializeService = injector.resolve<IInitializeService>("initializeService");
 	await $initializeService.initialize();
 
-	const extensibilityService: IExtensibilityService = $injector.resolve("extensibilityService");
+	const extensibilityService: IExtensibilityService = injector.resolve("extensibilityService");
 	try {
 		await settlePromises<IExtensionData>(extensibilityService.loadExtensions());
 	} catch (err) {
 		logger.trace("Unable to load extensions. Error is: ", err);
 	}
 
-	const commandDispatcher: ICommandDispatcher = $injector.resolve("commandDispatcher");
+	const commandDispatcher: ICommandDispatcher = injector.resolve("commandDispatcher");
 
-	const messages: IMessagesService = $injector.resolve("$messagesService");
+	const messages: IMessagesService = injector.resolve("$messagesService");
 	messages.pathsToMessageJsonFiles = [/* Place client-specific json message file paths here */];
 
 	if (process.argv[2] === "completion") {
@@ -51,6 +52,6 @@ process.on = (event: string, listener: any): any => {
 		await commandDispatcher.dispatchCommand();
 	}
 
-	$injector.dispose();
+	injector.dispose();
 })();
 /* tslint:enable:no-floating-promises */

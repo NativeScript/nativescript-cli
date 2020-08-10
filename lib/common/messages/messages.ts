@@ -2,7 +2,7 @@
 // automatically generated code; do not edit manually!
 //
 
-import { $injector } from "../definitions/yok";
+import { injector } from "../yok";
 
 /* tslint:disable:all */
 export class Messages implements IMessages{
@@ -13,5 +13,5 @@ export class Messages implements IMessages{
 		};
 
 }
-$injector.register('messages', Messages);
+injector.register('messages', Messages);
 /* tslint:enable */

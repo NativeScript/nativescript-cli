@@ -8,6 +8,8 @@ import { performanceLog } from "../common/decorators";
 import { IProjectService, IProjectDataService, IProjectTemplatesService, ICreateProjectData, IProjectSettings, IProjectCreationSettings, ITemplateData } from "../definitions/project";
 import { INodePackageManager, IProjectNameService, IStaticConfig } from "../declarations";
 import { IHooksService, IErrors, IFileSystem, IProjectHelper, IStringDictionary } from "../common/declarations";
+import * as _ from 'lodash';
+import { injector } from "../common/yok";
 
 export class ProjectService implements IProjectService {
 
@@ -245,4 +247,4 @@ export class ProjectService implements IProjectService {
 		this.$projectDataService.setNSValue(projectDir, "id", projectId);
 	}
 }
-$injector.register("projectService", ProjectService);
+injector.register("projectService", ProjectService);

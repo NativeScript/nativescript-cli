@@ -1,7 +1,7 @@
-import { $injector } from "../definitions/yok";
+import { injector } from "../yok";
 
 export class LoggingLevels implements Mobile.ILoggingLevels {
 	public info = "INFO";
 	public full = "FULL";
 }
-$injector.register("loggingLevels", LoggingLevels);
+injector.register("loggingLevels", LoggingLevels);

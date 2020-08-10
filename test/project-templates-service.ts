@@ -9,6 +9,7 @@ import { INpmInstallResultInfo, INodePackageManagerInstallOptions, INpmPackageNa
 import { IProjectTemplatesService } from "../lib/definitions/project";
 import { IInjector } from "../lib/common/definitions/yok";
 import { IAnalyticsService, IFileSystem } from "../lib/common/declarations";
+import { IEventActionData } from "../lib/common/definitions/google-analytics";
 
 let isDeleteDirectoryCalledForNodeModulesDir = false;
 const nativeScriptValidatedTemplatePath = "nsValidatedTemplatePath";

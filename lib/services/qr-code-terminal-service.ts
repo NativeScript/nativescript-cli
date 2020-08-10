@@ -1,4 +1,5 @@
 const qrcode = require("qrcode-terminal");
+import { injector } from "../common/yok";
 
 export class QrCodeTerminalService implements IQrCodeTerminalService {
 	constructor(private $logger: ILogger) { }
@@ -11,4 +12,4 @@ export class QrCodeTerminalService implements IQrCodeTerminalService {
 		}
 	}
 }
-$injector.register("qrCodeTerminalService", QrCodeTerminalService);
+injector.register("qrCodeTerminalService", QrCodeTerminalService);

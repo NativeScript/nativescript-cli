@@ -1,4 +1,5 @@
 import { EventEmitter } from "events";
+import * as _ from 'lodash';
 import { IProjectDataService, IPlatformProjectServiceBase, IProjectData } from "../definitions/project";
 import { IPlatformData } from "../definitions/platform";
 import { IPluginData } from "../definitions/plugins";

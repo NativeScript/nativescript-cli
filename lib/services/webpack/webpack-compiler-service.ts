@@ -10,7 +10,7 @@ import { IPlatformData } from "../../definitions/platform";
 import { IProjectData } from "../../definitions/project";
 import { IDictionary, IErrors, IStringDictionary, IChildProcess, IFileSystem, IHooksService, IHostInfo } from "../../common/declarations";
 import { ICleanupService } from "../../definitions/cleanup-service";
-import { $injector } from "../../common/definitions/yok";
+import { injector } from "../../common/yok";
 
 export class WebpackCompilerService extends EventEmitter implements IWebpackCompilerService {
 	private webpackProcesses: IDictionary<child_process.ChildProcess> = {};
@@ -329,4 +329,4 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 		}
 	}
 }
-$injector.register("webpackCompilerService", WebpackCompilerService);
+injector.register("webpackCompilerService", WebpackCompilerService);

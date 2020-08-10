@@ -8,6 +8,9 @@ import { IProjectDataService, IProjectData } from "../definitions/project";
 import { INodePackageManagerInstallOptions, INodePackageManager, IOptions, IDependencyData } from "../declarations";
 import { IFileSystem, IErrors, IDictionary, IStringDictionary } from "../common/declarations";
 import { IFilesHashService } from "../definitions/files-hash-service";
+import * as _ from 'lodash';
+import { IInjector } from "../common/definitions/yok";
+import { injector } from "../common/yok";
 
 export class PluginsService implements IPluginsService {
 	private static INSTALL_COMMAND_NAME = "install";
@@ -490,4 +493,4 @@ This framework comes from ${dependencyName} plugin, which is installed multiple 
 	}
 }
 
-$injector.register("pluginsService", PluginsService);
+injector.register("pluginsService", PluginsService);

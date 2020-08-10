@@ -5,7 +5,8 @@ import { EOL } from "os";
 import * as _ from 'lodash';
 import { IOptions, IOptionsTracker } from "../../declarations";
 import { IErrors, IAnalyticsSettingsService, IHooksService, IAnalyticsService, GoogleAnalyticsDataType } from "../declarations";
-import { IInjector, $injector } from "../definitions/yok";
+import { IInjector } from "../definitions/yok";
+import { injector } from "../yok";
 import { IExtensibilityService } from "../definitions/extensibility";
 import { IGoogleAnalyticsPageviewData } from "../definitions/google-analytics";
 import { ICommandParameter, ICommand, ISimilarCommand } from "../definitions/commands";
@@ -387,4 +388,4 @@ export class CommandsService implements ICommandsService {
 		return tabtab.log(matchingCommands, data);
 	}
 }
-$injector.register("commandsService", CommandsService);
+injector.register("commandsService", CommandsService);

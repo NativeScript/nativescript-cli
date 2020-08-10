@@ -1,4 +1,4 @@
-import { $injector } from "../../definitions/yok";
+import { injector } from "../../yok";
 
 export class IOSLogFilter implements Mobile.IPlatformLogFilter {
 	protected infoFilterRegex = /^.*?(AppBuilder|Cordova|NativeScript).*?(<Notice>:.*?|<Warning>:.*?|<Error>:.*?)$/im;
@@ -22,4 +22,4 @@ export class IOSLogFilter implements Mobile.IPlatformLogFilter {
 	}
 }
 
-$injector.register("iOSLogFilter", IOSLogFilter);
+injector.register("iOSLogFilter", IOSLogFilter);

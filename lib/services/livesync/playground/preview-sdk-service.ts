@@ -1,7 +1,7 @@
 import { MessagingService, Config, Device, DeviceConnectedMessage, SdkCallbacks, ConnectedDevices, FilesPayload } from "nativescript-preview-sdk";
 import { IConfiguration } from "../../../declarations";
 import { Server } from "../../../common/declarations";
-import { $injector } from "../../../common/definitions/yok";
+import { injector } from "../../../common/yok";
 const pako = require("pako");
 
 export class PreviewSdkService implements IPreviewSdkService {
@@ -106,4 +106,4 @@ export class PreviewSdkService implements IPreviewSdkService {
 		};
 	}
 }
-$injector.register("previewSdkService", PreviewSdkService);
+injector.register("previewSdkService", PreviewSdkService);

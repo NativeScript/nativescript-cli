@@ -1,4 +1,5 @@
 import { IInfoService, IVersionsService } from "../declarations";
+import { injector } from "../common/yok";
 
 export class InfoService implements IInfoService {
 	constructor(private $versionsService: IVersionsService) { }
@@ -8,4 +9,4 @@ export class InfoService implements IInfoService {
 	}
 }
 
-$injector.register("infoService", InfoService);
+injector.register("infoService", InfoService);
