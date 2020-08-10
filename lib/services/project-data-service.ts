@@ -412,7 +412,6 @@ export class ProjectDataService implements IProjectDataService {
   }
   
   public getRuntimePackage(projectDir: string, platform: constants.SupportedPlatform): IBasePluginData {
-    console.log('projectdataservice getRuntimePackage platform:', platform)
     return this.$pluginsService.getDependenciesFromPackageJson(projectDir).devDependencies.find(d => {
       if (platform === constants.PlatformTypes.ios) {
         return [constants.SCOPED_IOS_RUNTIME_NAME, constants.TNS_IOS_RUNTIME_NAME].includes(d.name);

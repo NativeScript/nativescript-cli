@@ -56,7 +56,9 @@ export class LogSourceMapService implements Mobile.ILogSourceMapService {
 				let smc: any = null;
 				if (sourceMapRaw && sourceMapRaw.sourcemap) {
 					const sourceMap = sourceMapRaw.sourcemap;
-					smc = new sourcemap.SourceMapConsumer(sourceMap);
+					smc = await sourcemap.SourceMapConsumer.with(sourceMap, filePath, (smc) => {
+            return smc;
+          });
 				}
 
 				this.cache[filePath] = smc;

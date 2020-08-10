@@ -1,4 +1,4 @@
-import { InjectorStub, TempServiceStub } from "../../stubs";
+import { InjectorStub, TempServiceStub, PackageInstallationManagerStub } from "../../stubs";
 import { AddPlatformService } from "../../../lib/services/platform/add-platform-service";
 import { PacoteService } from "../../../lib/services/pacote-service";
 import { assert } from "chai";
@@ -20,7 +20,8 @@ function createTestInjector() {
 				stop: () => ({})
 			};
 		}
-	});
+  });
+  injector.register("packageManager", PackageInstallationManagerStub);
 	injector.register("addPlatformService", AddPlatformService);
 	injector.register("analyticsService", {
 		trackEventActionInGoogleAnalytics: () => ({})
