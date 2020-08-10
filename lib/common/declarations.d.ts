@@ -1074,28 +1074,32 @@ interface GenericFunction<T> extends Function {
 	(...args: any[]): T;
 }
 
-interface Function {
-	$inject: {
-		args: string[];
-		name: string;
-	};
-}
+declare global {
+	// tslint:disable-next-line:interface-name
+	interface Function {
+		$inject: {
+			args: string[];
+			name: string;
+		};
+	}
 
-/**
- * Extends Nodejs' Error interface.
- * The native interface already has name and message properties
- */
-interface Error {
 	/**
-	 * Error's stack trace
-	 * @type {string}
+	 * Extends Nodejs' Error interface.
+	 * The native interface already has name and message properties
 	 */
-	stack?: string;
-	/**
-	 * Error's code - could be a string ('ENOENT'), as well as a number (127)
-	 * @type {string|number}
-	 */
-	code?: string | number;
+	// tslint:disable-next-line:interface-name
+	interface Error {
+		/**
+		 * Error's stack trace
+		 * @type {string}
+		 */
+		stack?: string;
+		/**
+		 * Error's code - could be a string ('ENOENT'), as well as a number (127)
+		 * @type {string|number}
+		 */
+		code?: string | number;
+	}
 }
 
 interface IRelease {
