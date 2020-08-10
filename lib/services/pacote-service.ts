@@ -1,6 +1,7 @@
 import * as pacote from "pacote";
 import * as tar from "tar";
 import * as path from "path";
+import { PassThrough } from 'stream';
 import * as _ from 'lodash';
 import { cache } from "../common/decorators";
 import { INpmConfigService, INodePackageManager } from "../declarations";
@@ -49,18 +50,20 @@ export class PacoteService implements IPacoteService {
 		packageName = this.getRealPackageName(packageName);
 		const pacoteOptions = await this.getPacoteBaseOptions();
 
-		return new Promise<void>((resolve, reject) => {
+		return new Promise<void>(async (resolve, reject) => {
 			this.$logger.trace(`Calling pacoteService.extractPackage for packageName: '${packageName}', destinationDir: '${destinationDirectory}' and options: ${options}`);
 
-			const source = pacote.tarball.stream(packageName, pacoteOptions);
-			source.on("error", (err: Error) => {
+			const source = await pacote.tarball(packageName, pacoteOptions).catch((err: Error) => {
 				this.$logger.trace(`Error in source while trying to extract stream from ${packageName}. Error is ${err}`);
 				reject(err);
 			});
 
 			this.$logger.trace(`Creating extract tar stream with options: ${JSON.stringify(extractOptions, null, 2)}`);
-			const destination = tar.x(extractOptions);
-			source.pipe(destination);
+      const destination = tar.x(extractOptions);
+      // Initiate the source
+      const sourceStream = new PassThrough();
+      sourceStream.end(source);
+      sourceStream.pipe(destination);
 
 			destination.on("error", (err: Error) => {
 				this.$logger.trace(`Error in destination while trying to extract stream from ${packageName}. Error is ${err}`);
