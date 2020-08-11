@@ -21,7 +21,7 @@ export class PlatformController implements IPlatformController {
 	public async addPlatform(addPlatformData: IAddPlatformData): Promise<void> {
 		const [platform, version] = addPlatformData.platform.toLowerCase().split("@");
 		const projectData = this.$projectDataService.getProjectData(addPlatformData.projectDir);
-		const platformData = this.$platformsDataService.getPlatformData(platform, projectData);
+    const platformData = this.$platformsDataService.getPlatformData(platform, projectData);
 
 		this.$logger.trace(`Creating NativeScript project for the ${platform} platform`);
 		this.$logger.trace(`Path: ${platformData.projectRoot}`);
@@ -32,7 +32,7 @@ export class PlatformController implements IPlatformController {
 
 		const packageToInstall = await this.getPackageToInstall(platformData, projectData, addPlatformData.frameworkPath, version);
 
-		const installedPlatformVersion = await this.$addPlatformService.addPlatformSafe(projectData, platformData, packageToInstall, addPlatformData.nativePrepare);
+		const installedPlatformVersion = await this.$addPlatformService.addPlatformSafe(projectData, platformData, packageToInstall, addPlatformData);
 
 		this.$fs.ensureDirectoryExists(path.join(projectData.platformsDir, platform));
 		this.$logger.info(`Platform ${platform} successfully added. v${installedPlatformVersion}`);
@@ -50,7 +50,7 @@ export class PlatformController implements IPlatformController {
 	}
 
 	private async getPackageToInstall(platformData: IPlatformData, projectData: IProjectData, frameworkPath?: string, version?: string): Promise<string> {
-		let result = null;
+    let result = null;
 		if (frameworkPath) {
 			if (!this.$fs.exists(frameworkPath)) {
 				this.$errors.fail(`Invalid frameworkPath: ${frameworkPath}. Please ensure the specified frameworkPath exists.`);
@@ -58,9 +58,13 @@ export class PlatformController implements IPlatformController {
 			result = path.resolve(frameworkPath);
 		} else {
 			if (!version) {
-				const currentPlatformData = this.$projectDataService.getNSValue(projectData.projectDir, platformData.frameworkPackageName);
-				version = (currentPlatformData && currentPlatformData.version) ||
-					await this.$packageInstallationManager.getLatestCompatibleVersion(platformData.frameworkPackageName);
+        version = projectData.devDependencies ? projectData.devDependencies[platformData.frameworkPackageName] : null;
+        if (!version) {
+          version = await this.$packageInstallationManager.getLatestCompatibleVersion(platformData.frameworkPackageName)
+        }
+				// const currentPlatformData = this.$projectDataService.getNSValue(projectData.projectDir, platformData.frameworkPackageName);
+				// version = (currentPlatformData && currentPlatformData.version) ||
+				// 	await this.$packageInstallationManager.getLatestCompatibleVersion(platformData.frameworkPackageName);
 			}
 
 			result = `${platformData.frameworkPackageName}@${version}`;

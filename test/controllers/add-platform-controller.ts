@@ -5,10 +5,14 @@ import { assert } from "chai";
 import { format } from "util";
 import * as _ from 'lodash';
 import { AddPlaformErrors } from "../../lib/constants";
+import { PackageManager } from "../../lib/package-manager";
+import { NodePackageManager } from "../../lib/node-package-manager";
+import { YarnPackageManager } from "../../lib/yarn-package-manager";
+import { PnpmPackageManager } from "../../lib/pnpm-package-manager";
 
 let actualMessage: string = null;
 const latestFrameworkVersion = "5.3.1";
-let extractedPackageFromPacote: string = null;
+// let extractedPackageFromPacote: string = null;
 
 function createInjector(data?: { latestFrameworkVersion: string }) {
 	const version = (data && data.latestFrameworkVersion) || latestFrameworkVersion;
@@ -19,10 +23,19 @@ function createInjector(data?: { latestFrameworkVersion: string }) {
 	injector.register("pacoteService", PacoteServiceStub);
 	injector.register("analyticsService", {
 		trackEventActionInGoogleAnalytics: () => ({})
+  });
+  injector.register("packageManager", PackageManager);
+  injector.register("npm", NodePackageManager);
+  injector.register("yarn", YarnPackageManager);
+  injector.register("pnpm", PnpmPackageManager);
+  injector.register("userSettingsService", {
+		getSettingValue: async (settingName: string): Promise<void> => undefined
 	});
 
 	injector.register("pacoteService", {
-		extractPackage: async (name: string): Promise<void> => { extractedPackageFromPacote = name; }
+		extractPackage: async (name: string): Promise<void> => { 
+      // extractedPackageFromPacote = name; 
+    }
 	});
 	injector.register("tempService", TempServiceStub);
 
@@ -43,8 +56,8 @@ const projectDir = "/my/test/dir";
 describe("PlatformController", () => {
 	const testCases = [
 		{
-			name: "should add the platform (tns platform add <platform>@4.2.1)",
-			latestFrameworkVersion: "4.2.1"
+			name: "should add the platform (tns platform add <platform>@7.0.0)",
+			latestFrameworkVersion: "7.0.0"
 		},
 		{
 			name: "should add the latest compatible version (tns platform add <platform>)",
@@ -54,7 +67,7 @@ describe("PlatformController", () => {
 		{
 			name: "should add the platform when --frameworkPath is provided",
 			frameworkPath: "/my/path/to/framework.tgz",
-			latestFrameworkVersion: "5.4.0"
+			latestFrameworkVersion: "6.5.0"
 		}
 	];
 
@@ -89,32 +102,34 @@ describe("PlatformController", () => {
 			const platformController: PlatformController = injector.resolve("platformController");
 
 			await assert.isRejected(platformController.addPlatform({ projectDir, platform, frameworkPath }), errorMessage);
-		});
-		it(`should respect platform version in package.json's nativescript key for ${platform}`, async () => {
-			const version = "2.5.0";
+    });
+    
+    // The following 2 tests are likely no longer needed since devDependencies are used normally now and naturally respect pinned versions or ~ or ^ semver.
+		// it(`should respect platform version in package.json's nativescript key for ${platform}`, async () => {
+		// 	const version = "2.5.0";
 
-			const injector = createInjector();
+		// 	const injector = createInjector();
 
-			const projectDataService = injector.resolve("projectDataService");
-			projectDataService.getNSValue = () => ({ version });
+		// 	const projectDataService = injector.resolve("projectDataService");
+		// 	projectDataService.getNSValue = () => ({ version });
 
-			const platformController: PlatformController = injector.resolve("platformController");
-			await platformController.addPlatform({ projectDir, platform });
+		// 	const platformController: PlatformController = injector.resolve("platformController");
+		// 	await platformController.addPlatform({ projectDir, platform });
 
-			const expectedPackageToAdd = `tns-${platform}@${version}`;
-			assert.deepEqual(extractedPackageFromPacote, expectedPackageToAdd);
-		});
-		it(`should install latest platform if no information found in package.json's nativescript key for ${platform}`, async () => {
-			const injector = createInjector();
+		// 	const expectedPackageToAdd = `@nativescript/${platform}@${version}`;
+		// 	assert.deepEqual(extractedPackageFromPacote, expectedPackageToAdd);
+		// });
+		// it(`should install latest platform if no information found in package.json's nativescript key for ${platform}`, async () => {
+		// 	const injector = createInjector();
 
-			const projectDataService = injector.resolve("projectDataService");
-			projectDataService.getNSValue = () => <any>null;
+		// 	const projectDataService = injector.resolve("projectDataService");
+		// 	projectDataService.getNSValue = () => <any>null;
 
-			const platformController: PlatformController = injector.resolve("platformController");
-			await platformController.addPlatform({ projectDir, platform });
+		// 	const platformController: PlatformController = injector.resolve("platformController");
+		// 	await platformController.addPlatform({ projectDir, platform });
 
-			const expectedPackageToAdd = `tns-${platform}@${latestFrameworkVersion}`;
-			assert.deepEqual(extractedPackageFromPacote, expectedPackageToAdd);
-		});
+		// 	const expectedPackageToAdd = `@nativescript/${platform}@${latestFrameworkVersion}`;
+		// 	assert.deepEqual(extractedPackageFromPacote, expectedPackageToAdd);
+		// });
 	});
 });

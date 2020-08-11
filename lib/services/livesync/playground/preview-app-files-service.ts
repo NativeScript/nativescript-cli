@@ -7,7 +7,7 @@ import { IPlatformsDataService } from "../../../definitions/platform";
 import { IProjectDataService } from "../../../definitions/project";
 import { IFileSystem, IProjectFilesManager, IProjectFilesProvider } from "../../../common/declarations";
 import { injector } from "../../../common/yok";
-const isTextOrBinary = require('istextorbinary');
+import { isBinary } from "istextorbinary";
 
 export class PreviewAppFilesService implements IPreviewAppFilesService {
 	private excludedFileExtensions = [".ts", ".sass", ".scss", ".less"];
@@ -67,7 +67,7 @@ export class PreviewAppFilesService implements IPreviewAppFilesService {
 		let binary = false;
 
 		if (event === PreviewSdkEventNames.CHANGE_EVENT_NAME) {
-			binary = isTextOrBinary.isBinarySync(file);
+			binary = isBinary(file);
 			if (binary) {
 				const bitmap = <string>this.$fs.readFile(file);
 				const base64 = Buffer.from(bitmap).toString('base64');

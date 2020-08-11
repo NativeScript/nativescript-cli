@@ -651,6 +651,15 @@
         "rxjs": "^6.4.0"
       }
     },
+    "@types/istextorbinary": {
+      "version": "2.3.0",
+      "resolved": "https://registry.npmjs.org/@types/istextorbinary/-/istextorbinary-2.3.0.tgz",
+      "integrity": "sha512-8Xl9onTFM8VO6cgu6aYt5o45m9mh4xbhfjLtv9A13F64R5/wCwl2Xdrt6I+M6+8j/4ndkvxdBNPbLTFdYhn+iA==",
+      "dev": true,
+      "requires": {
+        "@types/node": "*"
+      }
+    },
     "@types/lodash": {
       "version": "4.14.158",
       "resolved": "https://registry.npmjs.org/@types/lodash/-/lodash-4.14.158.tgz",

@@ -171,11 +171,11 @@ export class Options {
 
 	public validateOptions(commandSpecificDashedOptions?: IDictionary<IDashedOption>): void {
 		this.setupOptions(commandSpecificDashedOptions);
-		const parsed = Object.create(null);
-		// DO NOT REMOVE { } as when they are missing and some of the option values is false, the each stops as it thinks we have set "return false".
-		_.each(_.keys(this.argv), optionName => {
+		const parsed: any = {};
+		for (const key of Object.keys(this.argv)) {
+      const optionName = `${this.argv[key]}`;
 			parsed[optionName] = this.getOptionValue(optionName);
-		});
+		}
 
 		_.each(parsed, (value: any, originalOptionName: string) => {
 			// when this.options are passed to yargs, it returns all of them and the ones that are not part of process.argv are set to undefined.
