@@ -5,6 +5,7 @@ import { assert } from "chai";
 import * as _ from 'lodash';
 import { INativePrepare, IProjectData } from "../../../lib/definitions/project";
 import { IInjector } from "../../../lib/common/definitions/yok";
+// import { project } from "nativescript-dev-xcode";
 
 const nativePrepare: INativePrepare = null;
 
@@ -49,10 +50,10 @@ describe("AddPlatformService", () => {
 
 				const pacoteService: PacoteService = injector.resolve("pacoteService");
 				pacoteService.extractPackage = async (): Promise<void> => { throw new Error(errorMessage); };
-
 				const platformsDataService = injector.resolve("platformsDataService").getPlatformData(platform, projectData);
 
-				await assert.isRejected(addPlatformService.addPlatformSafe(projectData, platformsDataService, "somePackage", nativePrepare), errorMessage);
+        projectData.projectDir = '/some/dummy/dir';
+				await assert.isRejected(addPlatformService.addPlatformSafe(projectData, platformsDataService, "somePackage", { frameworkPath: '/tmp/notfound.tgz', projectDir: projectData.projectDir, platform, nativePrepare }), errorMessage);
 			});
 			it(`shouldn't add native platform when skipNativePrepare is provided for ${platform}`, async () => {
 				const projectDataService = injector.resolve("projectDataService");
@@ -64,7 +65,8 @@ describe("AddPlatformService", () => {
 				platformData.platformProjectService.createProject = () => isCreateNativeProjectCalled = true;
 				platformsDataService.getPlatformData = () => platformData;
 
-				await addPlatformService.addPlatformSafe(projectData, platformData, platform, { skipNativePrepare: true } );
+        projectData.projectDir = '/some/dummy/dir';
+				await addPlatformService.addPlatformSafe(projectData, platformData, platform, { projectDir: projectData.projectDir, platform, nativePrepare: { skipNativePrepare: true } } );
 				assert.isFalse(isCreateNativeProjectCalled);
 			});
 			it(`should add native platform when skipNativePrepare is not provided for ${platform}`, async () => {
@@ -77,7 +79,8 @@ describe("AddPlatformService", () => {
 				platformData.platformProjectService.createProject = () => isCreateNativeProjectCalled = true;
 				platformsDataService.getPlatformData = () => platformData;
 
-				await addPlatformService.addPlatformSafe(projectData, platformData, platform, nativePrepare);
+        projectData.projectDir = '/some/dummy/dir';
+				await addPlatformService.addPlatformSafe(projectData, platformData, platform, { projectDir: projectData.projectDir, platform, nativePrepare });
 				assert.isTrue(isCreateNativeProjectCalled);
 			});
 		});

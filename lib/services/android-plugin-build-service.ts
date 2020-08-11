@@ -181,7 +181,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		const androidSourceDirectories = this.getAndroidSourceDirectories(options.platformsAndroidDirPath);
 		const shortPluginName = getShortPluginName(options.pluginName);
 		const pluginTempDir = path.join(options.tempPluginDirPath, shortPluginName);
-		const pluginSourceFileHashesInfo = await this.getSourceFilesHashes(options.platformsAndroidDirPath, shortPluginName);
+    const pluginSourceFileHashesInfo = await this.getSourceFilesHashes(options.platformsAndroidDirPath, shortPluginName);
 
 		const shouldBuildAar = await this.shouldBuildAar({
 			manifestFilePath,
@@ -190,7 +190,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			pluginSourceDir: options.platformsAndroidDirPath,
 			shortPluginName,
 			fileHashesInfo: pluginSourceFileHashesInfo
-		});
+    });
 
 		if (shouldBuildAar) {
 			this.cleanPluginDir(pluginTempDir);
