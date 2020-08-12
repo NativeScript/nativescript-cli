@@ -3,6 +3,7 @@ import { WebpackCompilerService } from "../../../lib/services/webpack/webpack-co
 import { assert } from "chai";
 import { ErrorsStub } from "../../stubs";
 import { IInjector } from "../../../lib/common/definitions/yok";
+import { CONFIG_FILE_NAME_DISPLAY } from "../../../lib/constants";
 
 const iOSPlatformName = "ios";
 const androidPlatformName = "android";
@@ -101,7 +102,7 @@ describe("WebpackCompilerService", () => {
 			const webpackConfigPath = "some path.js";
 			testInjector.resolve("fs").exists = (filePath: string) => filePath !== webpackConfigPath;
 			await assert.isRejected(webpackCompilerService.compileWithWatch(<any>{ platformNameLowerCase: "android" }, <any>{ webpackConfigPath }, <any>{}),
-				`The webpack configuration file ${webpackConfigPath} does not exist. Ensure you have such file or set correct path in nsconfig.json`);
+				`The webpack configuration file ${webpackConfigPath} does not exist. Ensure you have such file or set correct path in ${CONFIG_FILE_NAME_DISPLAY}`);
 		});
 	});
 
@@ -110,7 +111,7 @@ describe("WebpackCompilerService", () => {
 			const webpackConfigPath = "some path.js";
 			testInjector.resolve("fs").exists = (filePath: string) => filePath !== webpackConfigPath;
 			await assert.isRejected(webpackCompilerService.compileWithoutWatch(<any>{ platformNameLowerCase: "android" }, <any>{ webpackConfigPath }, <any>{}),
-				`The webpack configuration file ${webpackConfigPath} does not exist. Ensure you have such file or set correct path in nsconfig.json`);
+				`The webpack configuration file ${webpackConfigPath} does not exist. Ensure you have such file or set correct path in ${CONFIG_FILE_NAME_DISPLAY}`);
 		});
 	});
 });

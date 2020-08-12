@@ -76,13 +76,58 @@ interface IProjectService {
 	isValidNativeScriptProject(pathToProject?: string): boolean;
 }
 
+interface INsConfigPlaform {
+  id?: string;
+}
+
+interface INsConfigIOS extends INsConfigPlaform {
+  discardUncaughtJsExceptions?: boolean;
+}
+
+interface INsConfigAndroid extends INsConfigPlaform {
+  v8Flags?: string;
+
+  codeCache?: boolean;
+
+  heapSnapshotScript?: string;
+
+  "snapshot.blob"?: string;
+
+  profilerOutputDir?: string;
+
+  gcThrottleTime?: number;
+
+  profiling?: string;
+
+  markingMode?: string;
+
+  handleTimeZoneChanges?: boolean;
+
+  maxLogcatObjectSize?: number;
+
+  forceLog?: boolean;
+
+  memoryCheckInterval?: number;
+
+  freeMemoryRatio?: number;
+
+  suppressCallJSMethodExceptions?: boolean;
+
+  discardUncaughtJsExceptions?: boolean;
+
+  enableLineBreakpoints?: boolean;
+}
+
 interface INsConfig {
+  id?: string;
 	appPath?: string;
 	appResourcesPath?: string;
 	shared?: boolean;
 	previewAppSchema?: string;
 	overridePods?: string;
-	webpackConfigPath?: string;
+  webpackConfigPath?: string;
+  ios?: INsConfigIOS;
+  android?: INsConfigAndroid;
 }
 
 interface IProjectData extends ICreateProjectData {
@@ -104,7 +149,7 @@ interface IProjectData extends ICreateProjectData {
 	podfilePath: string;
 	/**
 	 * Defines if the project is a code sharing one.
-	 * Value is true when project has nsconfig.json and it has `shared: true` in it.
+	 * Value is true when project has nativescript.config and it has `shared: true` in it.
 	 */
 	isShared: boolean;
 
@@ -116,7 +161,7 @@ interface IProjectData extends ICreateProjectData {
 	/**
 	 * Defines the path to the configuration file passed to webpack process.
 	 * By default this is the webpack.config.js at the root of the application.
-	 * The value can be changed by setting `webpackConfigPath` in nsconfig.json.
+	 * The value can be changed by setting `webpackConfigPath` in nativescript.config.
 	 */
 	webpackConfigPath: string;
 
@@ -160,8 +205,8 @@ interface IProjectDataService {
 	removeNSProperty(projectDir: string, propertyName: string): void;
 
 	/**
-	 * Removes a property from `nsconfig.json`.
-	 * @param {string} projectDir The project directory - the place where the `nsconfig.json` is located.
+	 * Removes a property from `nativescript.config`.
+	 * @param {string} projectDir The project directory - the place where the `nativescript.config` is located.
 	 * @param {string} propertyName The name of the property to be removed.
 	 * @returns {void}
 	 */
@@ -223,6 +268,19 @@ interface IProjectDataService {
  * @returns {any} The value of the property.
  */
 	getNSValueFromContent(jsonData: Object, propertyName: string): any;
+}
+
+interface IProjectConfigService {
+  /**
+   * read the nativescript.config.(js|ts) file
+   * @returns {INsConfig} the parsed config data
+   */
+  readConfig(): INsConfig;
+  /**
+   * Get value for a given config key path
+   * @param key the property key path
+   */
+  getValue(key: string): any;
 }
 
 interface IAssetItem {

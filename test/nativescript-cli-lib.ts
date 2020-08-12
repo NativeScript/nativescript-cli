@@ -25,7 +25,7 @@ describe("nativescript-cli-lib", () => {
 			"getAndroidAssetsStructure"
 		],
 		buildController: ["build"],
-		constants: ["CONFIG_NS_APP_RESOURCES_ENTRY", "CONFIG_NS_APP_ENTRY", "CONFIG_NS_FILE_NAME", "LoggerLevel", "LoggerAppenders"],
+		constants: ["CONFIG_NS_APP_RESOURCES_ENTRY", "CONFIG_NS_APP_ENTRY", "CONFIG_FILE_NAME_TS", "CONFIG_FILE_NAME_JS", "LoggerLevel", "LoggerAppenders"],
 		deviceLogProvider: null,
 		packageManager: ["install", "uninstall", "view", "search"],
 		extensibilityService: ["loadExtensions", "loadExtension", "getInstalledExtensions", "installExtension", "uninstallExtension"],

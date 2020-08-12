@@ -3,7 +3,7 @@ import { assert } from "chai";
 import * as _ from 'lodash';
 import { ProjectDataService } from "../../lib/services/project-data-service";
 import { LoggerStub, ProjectDataStub, MarkingModeServiceStub } from "../stubs";
-import { NATIVESCRIPT_PROPS_INTERNAL_DELIMITER, PACKAGE_JSON_FILE_NAME, CONFIG_NS_FILE_NAME, AssetConstants, ProjectTypes } from '../../lib/constants';
+import { NATIVESCRIPT_PROPS_INTERNAL_DELIMITER, PACKAGE_JSON_FILE_NAME, CONFIG_FILE_NAME_JS, CONFIG_FILE_NAME_TS, AssetConstants, ProjectTypes } from '../../lib/constants';
 import { DevicePlatformsConstants } from "../../lib/common/mobile/device-platforms-constants";
 import { basename, join } from "path";
 import { FileSystem } from "../../lib/common/file-system";
@@ -62,12 +62,14 @@ const createTestInjector = (packageJsonContent?: string, nsConfigContent?: strin
 		readText: (filename: string, encoding?: IReadFileOptions | string): string => {
 			if (filename.indexOf("package.json") > -1) {
 				return packageJsonContent;
-			} else if (filename.indexOf("nsconfig.json") > -1) {
+			} else if (filename.indexOf(CONFIG_FILE_NAME_JS) > -1) {
+				return nsConfigContent;
+			} else if (filename.indexOf(CONFIG_FILE_NAME_TS) > -1) {
 				return nsConfigContent;
 			}
 		},
 
-		exists: (filePath: string): boolean => (basename(filePath) === PACKAGE_JSON_FILE_NAME || basename(filePath) === CONFIG_NS_FILE_NAME),
+		exists: (filePath: string): boolean => (basename(filePath) === PACKAGE_JSON_FILE_NAME || basename(filePath) === CONFIG_FILE_NAME_JS || basename(filePath) === CONFIG_FILE_NAME_TS),
 
 		readJson: (filePath: string): any => null,
 

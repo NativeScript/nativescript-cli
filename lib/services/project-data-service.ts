@@ -186,7 +186,7 @@ export class ProjectDataService implements IProjectDataService {
 				if (fstat.isDirectory()) {
 					if (filePath === pathToProjectNodeModules) {
 						// we do not want to get the files from node_modules directory of the project.
-						// We'll get here only when you have nsconfig.json with appDirectoryPath set to "."
+						// We'll get here only when you have nativescript.config with appDirectoryPath set to "."
 						return false;
 					}
 
@@ -206,7 +206,7 @@ export class ProjectDataService implements IProjectDataService {
 	}
 
 	private updateNsConfigValue(projectDir: string, updateObject?: INsConfig, propertiesToRemove?: string[]): void {
-		const nsConfigPath = path.join(projectDir, constants.CONFIG_NS_FILE_NAME);
+		const nsConfigPath = path.join(projectDir, constants.CONFIG_FILE_NAME_JS);
 		const currentNsConfig = this.getNsConfig(nsConfigPath);
 		let newNsConfig = currentNsConfig;
 		if (updateObject) {
