@@ -1,5 +1,5 @@
 import * as path from "path";
-import { NativePlatformStatus, PACKAGE_JSON_FILE_NAME, APP_GRADLE_FILE_NAME, BUILD_XCCONFIG_FILE_NAME, PLATFORMS_DIR_NAME, CONFIG_NS_FILE_NAME } from "../constants";
+import { NativePlatformStatus, PACKAGE_JSON_FILE_NAME, APP_GRADLE_FILE_NAME, BUILD_XCCONFIG_FILE_NAME, PLATFORMS_DIR_NAME, CONFIG_FILE_NAME_JS, CONFIG_FILE_NAME_TS } from "../constants";
 import { getHash, hook } from "../common/helpers";
 import { INodeModulesDependenciesBuilder, IPlatformData } from "../definitions/platform";
 import { IProjectData } from "../definitions/project";
@@ -78,7 +78,7 @@ export class ProjectChangesService implements IProjectChangesService {
 			}
 
 			// If this causes too much rebuilds of the plugins or uncecessary builds for Android, move overrideCocoapods to prepareInfo.
-			this._changesInfo.nsConfigChanged = this.filesChanged([path.join(projectData.projectDir, CONFIG_NS_FILE_NAME)]);
+			this._changesInfo.nsConfigChanged = this.filesChanged([path.join(projectData.projectDir, CONFIG_FILE_NAME_JS), path.join(projectData.projectDir, CONFIG_FILE_NAME_TS)]);
 			this._changesInfo.nativeChanged = this._changesInfo.nativeChanged || this._changesInfo.nsConfigChanged;
 
 			this.$logger.trace(`Set nativeChanged to ${this._changesInfo.nativeChanged}.`);

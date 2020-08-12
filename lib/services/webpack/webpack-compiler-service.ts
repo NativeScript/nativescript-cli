@@ -4,7 +4,7 @@ import * as semver from "semver";
 import * as _ from 'lodash';
 import { EventEmitter } from "events";
 import { performanceLog } from "../../common/decorators";
-import { WEBPACK_COMPILATION_COMPLETE, WEBPACK_PLUGIN_NAME, PackageManagers } from "../../constants";
+import { WEBPACK_COMPILATION_COMPLETE, WEBPACK_PLUGIN_NAME, PackageManagers, CONFIG_FILE_NAME_DISPLAY } from "../../constants";
 import { IPackageManager, IPackageInstallationManager } from "../../declarations";
 import { IPlatformData } from "../../definitions/platform";
 import { IProjectData } from "../../definitions/project";
@@ -175,7 +175,7 @@ export class WebpackCompilerService extends EventEmitter implements IWebpackComp
 	@performanceLog()
 	private async startWebpackProcess(platformData: IPlatformData, projectData: IProjectData, prepareData: IPrepareData): Promise<child_process.ChildProcess> {
 		if (!this.$fs.exists(projectData.webpackConfigPath)) {
-			this.$errors.fail(`The webpack configuration file ${projectData.webpackConfigPath} does not exist. Ensure you have such file or set correct path in nsconfig.json`);
+			this.$errors.fail(`The webpack configuration file ${projectData.webpackConfigPath} does not exist. Ensure you have such file or set correct path in ${CONFIG_FILE_NAME_DISPLAY}`);
 		}
 
 		const envData = this.buildEnvData(platformData.platformNameLowerCase, projectData, prepareData);
