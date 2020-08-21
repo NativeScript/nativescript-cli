@@ -34,7 +34,7 @@ export class ProjectDataService implements IProjectDataService {
 		private $staticConfig: IStaticConfig,
 		private $logger: ILogger,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-    private $androidResourcesMigrationService: IAndroidResourcesMigrationService,
+		private $androidResourcesMigrationService: IAndroidResourcesMigrationService,
 		private $injector: IInjector) {
 		try {
 			// add the ProjectData of the default projectDir to the projectData cache
@@ -45,11 +45,11 @@ export class ProjectDataService implements IProjectDataService {
 		} catch (e) {
 			// the CLI is required as a lib from a non-project folder
 		}
-  }
-  
-  get $pluginsService(): IPluginsService {
-    return this.$injector.resolve("pluginsService");
-  }
+	}
+
+	get $pluginsService(): IPluginsService {
+		return this.$injector.resolve("pluginsService");
+	}
 
 	public getNSValue(projectDir: string, propertyName: string): any {
 		return this.getValue(projectDir, this.getNativeScriptPropertyName(propertyName));
@@ -206,6 +206,9 @@ export class ProjectDataService implements IProjectDataService {
 	}
 
 	private updateNsConfigValue(projectDir: string, updateObject?: INsConfig, propertiesToRemove?: string[]): void {
+		// todo: figure out a way to update js/ts configs
+		// most likely needs an ast parser/writer
+		// should be delegated to the config service
 		const nsConfigPath = path.join(projectDir, constants.CONFIG_FILE_NAME_JS);
 		const currentNsConfig = this.getNsConfig(nsConfigPath);
 		let newNsConfig = currentNsConfig;
@@ -409,17 +412,17 @@ export class ProjectDataService implements IProjectDataService {
 		Object.assign(config, data);
 
 		return config;
-  }
-  
-  public getRuntimePackage(projectDir: string, platform: constants.SupportedPlatform): IBasePluginData {
-    return this.$pluginsService.getDependenciesFromPackageJson(projectDir).devDependencies.find(d => {
-      if (platform === constants.PlatformTypes.ios) {
-        return [constants.SCOPED_IOS_RUNTIME_NAME, constants.TNS_IOS_RUNTIME_NAME].includes(d.name);
-      } else if (platform === constants.PlatformTypes.android) {
-        return [constants.SCOPED_ANDROID_RUNTIME_NAME, d.name === constants.TNS_ANDROID_RUNTIME_NAME].includes(d.name);
-      }
-    });
-  }
+	}
+
+	public getRuntimePackage(projectDir: string, platform: constants.SupportedPlatform): IBasePluginData {
+		return this.$pluginsService.getDependenciesFromPackageJson(projectDir).devDependencies.find(d => {
+			if (platform === constants.PlatformTypes.ios) {
+				return [constants.SCOPED_IOS_RUNTIME_NAME, constants.TNS_IOS_RUNTIME_NAME].includes(d.name);
+			} else if (platform === constants.PlatformTypes.android) {
+				return [constants.SCOPED_ANDROID_RUNTIME_NAME, d.name === constants.TNS_ANDROID_RUNTIME_NAME].includes(d.name);
+			}
+		});
+	}
 
 	@exported("projectDataService")
 	public getNsConfigDefaultContent(data?: Object): string {

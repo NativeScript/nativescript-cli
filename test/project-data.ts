@@ -16,7 +16,7 @@ describe("projectData", () => {
 		testInjector.register("projectHelper", {
 			projectDir: null,
 			sanitizeName: (name: string) => name
-    });
+		});
 
 		testInjector.register("fs", {
 			exists: () => true,
@@ -40,9 +40,9 @@ describe("projectData", () => {
 		testInjector.register("androidResourcesMigrationService", {
 			hasMigrated: () => true
 		});
-    testInjector.register("projectData", ProjectData);
-    
-    testInjector.register("projectConfigService", ProjectConfigService);
+		testInjector.register("projectData", ProjectData);
+
+		testInjector.register("projectConfigService", ProjectConfigService);
 
 		return testInjector;
 	};
@@ -52,8 +52,8 @@ describe("projectData", () => {
 		const testInjector = createTestInjector();
 		const fs = testInjector.resolve("fs");
 		fs.exists = (filePath: string) => {
-      return filePath && (path.basename(filePath) === "package.json" || path.basename(filePath) === "nativescript.config.js")
-    };
+			return filePath && (path.basename(filePath) === "package.json" || path.basename(filePath) === "nativescript.config.js")
+		};
 
 		fs.readText = (filePath: string) => {
 			if (path.basename(filePath) === "package.json") {
@@ -62,11 +62,14 @@ describe("projectData", () => {
 					devDependencies: opts && opts.packageJsonData && opts.packageJsonData.devDependencies
 				});
 			} else if (path.basename(filePath) === "nativescript.config.js") {
-        if (opts && opts.configData) {
-          return typeof opts.configData === 'string' ? opts.configData : `module.exports = JSON.parse('${JSON.stringify(opts.configData)}')`;
-        } else {
-          return `module.exports = {}`;
-        }
+				if (opts && opts.configData) {
+					if (typeof opts.configData === 'string') {
+						return opts.configData;
+					}
+					return `module.exports = ${JSON.stringify(opts.configData)}`;
+				} else {
+					return `module.exports = {}`;
+				}
 			}
 
 			return null;
@@ -88,7 +91,7 @@ describe("projectData", () => {
 				packageJsonData: {
 					dependencies,
 					devDependencies
-        }
+				}
 			});
 			assert.deepEqual(projectData.projectType, expectedProjecType);
 		};

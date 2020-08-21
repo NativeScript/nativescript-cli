@@ -62,7 +62,7 @@ export class PluginsService implements IPluginsService {
 			const pluginData = this.convertToPluginData(realNpmPackageJson, projectData.projectDir);
 
 			// Validate
-			const action = async (pluginDestinationPath: string, platform: string, platformData: IPlatformData): Promise<void> => {
+			const action = async (pluginDestinationPath: string, platform: constants.PlatformTypes, platformData: IPlatformData): Promise<void> => {
 				this.isPluginDataValidForPlatform(pluginData, platform, projectData);
 			};
 
@@ -443,13 +443,14 @@ This framework comes from ${dependencyName} plugin, which is installed multiple 
 		}
 	}
 
-	private getInstalledFrameworkVersion(platform: string, projectData: IProjectData): string {
-		const platformData = this.$platformsDataService.getPlatformData(platform, projectData);
-		const frameworkData = this.$projectDataService.getNSValue(projectData.projectDir, platformData.frameworkPackageName);
-		return frameworkData.version;
+	private getInstalledFrameworkVersion(platform: constants.PlatformTypes, projectData: IProjectData): string {
+		const runtimePackage = this.$projectDataService.getRuntimePackage(projectData.projectDir, platform);
+		// const platformData = this.$platformsDataService.getPlatformData(platform, projectData);
+		// const frameworkData = this.$projectDataService.getNSValue(projectData.projectDir, platformData.frameworkPackageName);
+		return runtimePackage.version;
 	}
 
-	private isPluginDataValidForPlatform(pluginData: IPluginData, platform: string, projectData: IProjectData): boolean {
+	private isPluginDataValidForPlatform(pluginData: IPluginData, platform: constants.PlatformTypes, projectData: IProjectData): boolean {
 		let isValid = true;
 
 		const installedFrameworkVersion = this.getInstalledFrameworkVersion(platform, projectData);
