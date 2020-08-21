@@ -171,7 +171,7 @@ interface IProjectData extends ICreateProjectData {
 	 * @returns {void}
 	 */
 	initializeProjectData(projectDir?: string): void;
-	initializeProjectDataFromContent(packageJsonContent: string, nsconfigContent: string, projectDir?: string): void;
+	initializeProjectDataFromContent(packageJsonContent: string, projectDir?: string): void;
 	getAppDirectoryPath(projectDir?: string): string;
 	getAppDirectoryRelativePath(): string;
 	getAppResourcesDirectoryPath(projectDir?: string): string;
@@ -275,7 +275,7 @@ interface IProjectConfigService {
    * read the nativescript.config.(js|ts) file
    * @returns {INsConfig} the parsed config data
    */
-  readConfig(): INsConfig;
+  readConfig(projectDir?: string): INsConfig;
   /**
    * Get value for a given config key path
    * @param key the property key path

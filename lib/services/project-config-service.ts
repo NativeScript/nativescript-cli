@@ -5,6 +5,7 @@ import * as ts from 'typescript';
 import { IFileSystem } from "../common/declarations";
 import { injector } from "../common/yok";
 import { IProjectData, INsConfig, IProjectConfigService } from "../definitions/project";
+import { IInjector } from "../common/definitions/yok";
 
 export class ProjectConfigService implements IProjectConfigService {
   private _config: INsConfig;
@@ -12,14 +13,18 @@ export class ProjectConfigService implements IProjectConfigService {
 	constructor(
 		private $fs: IFileSystem,
     private $logger: ILogger,
-    private $projectData: IProjectData,
+    private $injector: IInjector
 	) {
 
   }
 
-  public readConfig(): INsConfig {
-    const configJSFilePath = path.join(this.$projectData.projectDir, CONFIG_FILE_NAME_JS);
-    const configTSFilePath = path.join(this.$projectData.projectDir, CONFIG_FILE_NAME_TS);
+  get projectData(): IProjectData {
+    return this.$injector.resolve('projectData');
+  }
+
+  public readConfig(projectDir?: string): INsConfig {
+    const configJSFilePath = path.join(projectDir || this.projectData.projectDir, CONFIG_FILE_NAME_JS);
+    const configTSFilePath = path.join(projectDir || this.projectData.projectDir, CONFIG_FILE_NAME_TS);
 
     const hasTS = this.$fs.exists(configTSFilePath);
     const hasJS = this.$fs.exists(configJSFilePath);

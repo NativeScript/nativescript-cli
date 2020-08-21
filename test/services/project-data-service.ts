@@ -11,6 +11,7 @@ import { regExpEscape } from "../../lib/common/helpers";
 import { IProjectDataService, IAssetGroup } from "../../lib/definitions/project";
 import { IInjector } from "../../lib/common/definitions/yok";
 import { IReadFileOptions, IFsStats, IFileSystem } from "../../lib/common/declarations";
+import { ProjectConfigService } from "../../lib/services/project-config-service";
 
 const CLIENT_NAME_KEY_IN_PROJECT_FILE = "nativescript";
 
@@ -63,9 +64,9 @@ const createTestInjector = (packageJsonContent?: string, nsConfigContent?: strin
 			if (filename.indexOf("package.json") > -1) {
 				return packageJsonContent;
 			} else if (filename.indexOf(CONFIG_FILE_NAME_JS) > -1) {
-				return nsConfigContent;
+				return `module.exports = {}`;
 			} else if (filename.indexOf(CONFIG_FILE_NAME_TS) > -1) {
-				return nsConfigContent;
+				return `export default {}`;
 			}
 		},
 
@@ -82,7 +83,8 @@ const createTestInjector = (packageJsonContent?: string, nsConfigContent?: strin
 	testInjector.register("logger", LoggerStub);
 	testInjector.register("markingModeService", MarkingModeServiceStub);
 
-	testInjector.register("projectDataService", ProjectDataService);
+  testInjector.register("projectDataService", ProjectDataService);
+  testInjector.register("projectConfigService", ProjectConfigService);
 
 	testInjector.register("androidResourcesMigrationService", {
 		hasMigrated: (appResourcesDir: string): boolean => true

@@ -1,4 +1,3 @@
-import { ProjectData } from "../lib/project-data";
 import { Yok } from "../lib/common/yok";
 import { DevicePlatformsConstants } from "../lib/common/mobile/device-platforms-constants";
 import { assert } from "chai";
@@ -7,6 +6,8 @@ import * as path from "path";
 import { IProjectData } from "../lib/definitions/project";
 import { IInjector } from "../lib/common/definitions/yok";
 import { IStringDictionary, IProjectHelper } from "../lib/common/declarations";
+import { ProjectConfigService } from "../lib/services/project-config-service";
+import { ProjectData } from "../lib/project-data";
 
 describe("projectData", () => {
 	const createTestInjector = (): IInjector => {
@@ -15,7 +16,7 @@ describe("projectData", () => {
 		testInjector.register("projectHelper", {
 			projectDir: null,
 			sanitizeName: (name: string) => name
-		});
+    });
 
 		testInjector.register("fs", {
 			exists: () => true,
@@ -39,29 +40,33 @@ describe("projectData", () => {
 		testInjector.register("androidResourcesMigrationService", {
 			hasMigrated: () => true
 		});
-
-		testInjector.register("projectData", ProjectData);
+    testInjector.register("projectData", ProjectData);
+    
+    testInjector.register("projectConfigService", ProjectConfigService);
 
 		return testInjector;
 	};
 
 	const projectDir = "projectDir";
-	const prepareTest = (opts?: { packageJsonData?: { dependencies?: IStringDictionary, devDependencies: IStringDictionary }, nsconfigData?: { shared?: boolean, webpackConfigPath?: string } }): IProjectData => {
+	const prepareTest = (opts?: { packageJsonData?: { dependencies?: IStringDictionary, devDependencies: IStringDictionary }, configData?: { shared?: boolean, webpackConfigPath?: string } }): IProjectData => {
 		const testInjector = createTestInjector();
 		const fs = testInjector.resolve("fs");
-		fs.exists = (filePath: string) => filePath && (path.basename(filePath) === "package.json" || (path.basename(filePath) === "nsconfig.json" && opts && opts.nsconfigData));
+		fs.exists = (filePath: string) => {
+      return filePath && (path.basename(filePath) === "package.json" || path.basename(filePath) === "nativescript.config.js")
+    };
 
 		fs.readText = (filePath: string) => {
 			if (path.basename(filePath) === "package.json") {
 				return JSON.stringify({
-					nativescript: {
-						id: "com.test.testid"
-					},
 					dependencies: opts && opts.packageJsonData && opts.packageJsonData.dependencies,
 					devDependencies: opts && opts.packageJsonData && opts.packageJsonData.devDependencies
 				});
-			} else if (path.basename(filePath) === "nsconfig.json" && opts && opts.nsconfigData) {
-				return JSON.stringify(opts.nsconfigData);
+			} else if (path.basename(filePath) === "nativescript.config.js") {
+        if (opts && opts.configData) {
+          return typeof opts.configData === 'string' ? opts.configData : `module.exports = JSON.parse('${JSON.stringify(opts.configData)}')`;
+        } else {
+          return `module.exports = {}`;
+        }
 			}
 
 			return null;
@@ -83,7 +88,7 @@ describe("projectData", () => {
 				packageJsonData: {
 					dependencies,
 					devDependencies
-				}
+        }
 			});
 			assert.deepEqual(projectData.projectType, expectedProjecType);
 		};
@@ -132,17 +137,17 @@ describe("projectData", () => {
 		});
 
 		it("is false when nsconfig.json exists, but shared value is not populated", () => {
-			const projectData = prepareTest({ nsconfigData: { shared: undefined } });
+			const projectData = prepareTest({ configData: { shared: undefined } });
 			assert.isFalse(projectData.isShared);
 		});
 
 		it("is false when nsconfig.json exists and shared value is false", () => {
-			const projectData = prepareTest({ nsconfigData: { shared: false } });
+			const projectData = prepareTest({ configData: { shared: false } });
 			assert.isFalse(projectData.isShared);
 		});
 
 		it("is true when nsconfig.json exists and shared value is true", () => {
-			const projectData = prepareTest({ nsconfigData: { shared: true } });
+			const projectData = prepareTest({ configData: { shared: true } });
 			assert.isTrue(projectData.isShared);
 		});
 	});
@@ -155,13 +160,13 @@ describe("projectData", () => {
 
 		it("returns correct path when full path is set in nsconfig.json", () => {
 			const pathToConfig = path.resolve(path.join("/testDir", "innerDir", "mywebpack.config.js"));
-			const projectData = prepareTest({ nsconfigData: { webpackConfigPath: pathToConfig } });
+			const projectData = prepareTest({ configData: { webpackConfigPath: pathToConfig } });
 			assert.equal(projectData.webpackConfigPath, pathToConfig);
 		});
 
 		it("returns correct path when relative path is set in nsconfig.json", () => {
 			const pathToConfig = path.resolve(path.join("projectDir", "innerDir", "mywebpack.config.js"));
-			const projectData = prepareTest({ nsconfigData: { webpackConfigPath: path.join("./innerDir", "mywebpack.config.js") } });
+			const projectData = prepareTest({ configData: { webpackConfigPath: path.join("./innerDir", "mywebpack.config.js") } });
 			assert.equal(projectData.webpackConfigPath, pathToConfig);
 		});
 	});
