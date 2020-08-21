@@ -83,14 +83,14 @@ export class ProjectData implements IProjectData {
 		private $projectHelper: IProjectHelper,
 		private $staticConfig: IStaticConfig,
 		private $options: IOptions,
-    private $logger: ILogger,
-    private $injector: IInjector,
+		private $logger: ILogger,
+		private $injector: IInjector,
 		private $androidResourcesMigrationService: IAndroidResourcesMigrationService,
-    private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants) { }
-    
-  get projectConfig(): IProjectConfigService {
-    return this.$injector.resolve('projectConfigService');
-  }
+		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants) { }
+
+	get projectConfig(): IProjectConfigService {
+		return this.$injector.resolve('projectConfigService');
+	}
 
 	public initializeProjectData(projectDir?: string): void {
 		projectDir = projectDir || this.$projectHelper.projectDir;
@@ -114,8 +114,8 @@ export class ProjectData implements IProjectData {
 	public initializeProjectDataFromContent(packageJsonContent: string, projectDir?: string): void {
 		projectDir = projectDir || this.$projectHelper.projectDir || "";
 		const projectFilePath = this.getProjectFilePath(projectDir);
-    // If no project found, projectDir should be null
-    let nsConfig: INsConfig = this.projectConfig.readConfig(projectDir);
+		// If no project found, projectDir should be null
+		const nsConfig: INsConfig = this.projectConfig.readConfig(projectDir);
 		let packageJsonData = null;
 
 		try {
@@ -219,16 +219,16 @@ export class ProjectData implements IProjectData {
 	}
 
 	private initializeProjectIdentifiers(config: INsConfig): Mobile.IProjectIdentifier {
-		let identifier: Mobile.IProjectIdentifier = {
-      ios: '',
-      android: ''
-    };
+		const identifier: Mobile.IProjectIdentifier = {
+			ios: '',
+			android: ''
+		};
 		if (config.ios) {
-      identifier.ios = config.ios.id || config.id;
-    } 
-    if (config.android) {
-      identifier.android = config.android.id || config.id;
-    }
+			identifier.ios = config.ios.id || config.id;
+		}
+		if (config.android) {
+			identifier.android = config.android.id || config.id;
+		}
 
 		return identifier;
 	}

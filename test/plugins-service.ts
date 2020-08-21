@@ -12,7 +12,6 @@ import { CommandsService } from "../lib/common/services/commands-service";
 import { StaticConfig } from "../lib/config";
 import { HostInfo } from "../lib/common/host-info";
 import { Errors } from "../lib/common/errors";
-import { ProjectHelper } from "../lib/common/project-helper";
 import { PlatformsDataService } from "../lib/services/platforms-data-service";
 import { ProjectDataService } from "../lib/services/project-data-service";
 import { ProjectFilesManager } from "../lib/common/services/project-files-manager";
@@ -34,17 +33,19 @@ import StaticConfigLib = require("../lib/config");
 import * as path from "path";
 import * as temp from "temp";
 import * as _ from 'lodash';
-import { PLUGINS_BUILD_DATA_FILENAME, CONFIG_FILE_NAME_JS, CONFIG_FILE_NAME_TS } from '../lib/constants';//PACKAGE_JSON_FILE_NAME
+import { PLUGINS_BUILD_DATA_FILENAME, CONFIG_FILE_NAME_JS, PlatformTypes } from '../lib/constants'; // PACKAGE_JSON_FILE_NAME, CONFIG_FILE_NAME_JS, CONFIG_FILE_NAME_TS
 import { GradleCommandService } from '../lib/services/android/gradle-command-service';
 import { GradleBuildService } from '../lib/services/android/gradle-build-service';
 import { GradleBuildArgsService } from '../lib/services/android/gradle-build-args-service';
 import * as util from "util";
 import { IPluginData, IPluginsService } from '../lib/definitions/plugins';
 import { IProjectData } from '../lib/definitions/project';
-import { IStringDictionary, IReadFileOptions } from '../lib/common/declarations';
+import { IStringDictionary } from '../lib/common/declarations';
 import { IInjector } from '../lib/common/definitions/yok';
 import { IEventActionData, IGoogleAnalyticsData } from '../lib/common/definitions/google-analytics';
 import { ProjectConfigService } from '../lib/services/project-config-service';
+import { FileSystem } from '../lib/common/file-system';
+import { ProjectHelper } from '../lib/common/project-helper';
 // import { basename } from 'path';
 temp.track();
 
@@ -66,20 +67,28 @@ function createTestInjector() {
 	testInjector.register("packageManager", PackageManager);
 	testInjector.register("npm", NodePackageManager);
 	testInjector.register("yarn", YarnPackageManager);
-  testInjector.register("pnpm", PnpmPackageManager);
-  const fileSystemStub = new stubs.FileSystemStub();
-  fileSystemStub.readText = (filename: string, encoding?: IReadFileOptions | string): string => {
-    if (filename.indexOf("package.json") > -1) {
-      return `{}`;//packageJsonContent;
-    } else if (filename.indexOf(CONFIG_FILE_NAME_JS) > -1) {
-      return `module.exports = {}`;
-    } else if (filename.indexOf(CONFIG_FILE_NAME_TS) > -1) {
-      return `export default {}`;
-    }
-  };
-  fileSystemStub.exists = (filePath: string): boolean => true;
-  testInjector.register("fs", fileSystemStub);
-  
+	testInjector.register("pnpm", PnpmPackageManager);
+	testInjector.register("fs", FileSystem);
+	// const fileSystemStub = new stubs.FileSystemStub();
+	// fileSystemStub.exists = (fileName: string) => {
+	// 	if (fileName.indexOf('nativescript.config.ts')) {
+	// 		return false;
+	// 	}
+
+	// 	return true;
+	// };
+	// fileSystemStub.readText = (filename: string, encoding?: IReadFileOptions | string): string => {
+	// 	if (filename.indexOf("package.json") > -1) {
+	// 	return `{}`; //packageJsonContent;
+	// 	} else if (filename.indexOf(CONFIG_FILE_NAME_JS) > -1) {
+	// 	return `module.exports = {}`;
+	// 	} else if (filename.indexOf(CONFIG_FILE_NAME_TS) > -1) {
+	// 	return `export default {}`;
+	// 	}
+	// };
+	// testInjector.register("fs", fileSystemStub);
+
+
 	testInjector.register("adb", {});
 	testInjector.register("androidDebugBridgeResultHandler", {});
 	testInjector.register("projectData", ProjectData);
@@ -180,13 +189,14 @@ function createTestInjector() {
 		setShouldDispose: (shouldDispose: boolean): void => undefined
 	});
 	testInjector.register("nodeModulesDependenciesBuilder", {});
-  testInjector.register("tempService", stubs.TempServiceStub);
-  testInjector.register("projectConfigService", ProjectConfigService);
+	testInjector.register("tempService", stubs.TempServiceStub);
+	testInjector.register("projectConfigService", ProjectConfigService);
 
 	return testInjector;
 }
 
 function createProjectFile(testInjector: IInjector): string {
+	const fs = testInjector.resolve("fs") as FileSystem;
 	const tempFolder = temp.mkdirSync("pluginsService");
 	const options = testInjector.resolve("options");
 	options.path = tempFolder;
@@ -194,15 +204,22 @@ function createProjectFile(testInjector: IInjector): string {
 	const packageJsonData = {
 		"name": "testModuleName",
 		"version": "0.1.0",
-		"nativescript": {
-			"id": "org.nativescript.Test",
-			"tns-android": {
-				"version": "1.4.0"
-			}
+		"devDependencies": {
+			"tns-android": "1.4.0",
 		}
+		// "nativescript": {
+		// 	"id": "org.nativescript.Test",
+		// 	"tns-android": {
+		// 		"version": "1.4.0"
+		// 	}
+		// }
 	};
 
-	testInjector.resolve("fs").writeJson(path.join(tempFolder, "package.json"), packageJsonData);
+	fs.writeJson(path.join(tempFolder, "package.json"), packageJsonData);
+	fs.writeFile(path.join(tempFolder, CONFIG_FILE_NAME_JS), `module.exports = {
+		id: 'org.nativescript.Test'
+	}`);
+
 	return tempFolder;
 }
 
@@ -212,6 +229,7 @@ function mockBeginCommand(testInjector: IInjector, expectedErrorMessage: string)
 		try {
 			return await action();
 		} catch (err) {
+			// await new Promise(resolve => setTimeout(resolve, 100000));
 			isErrorThrown = true;
 			assert.equal(err.toString(), expectedErrorMessage);
 		}
@@ -238,7 +256,7 @@ async function addPluginWhenExpectingToFail(testInjector: IInjector, plugin: str
 	assert.isTrue(isErrorThrown);
 }
 
-describe.only("Plugins service", () => {
+describe("Plugins service", () => {
 	let testInjector: IInjector;
 	const commands = ["add", "install"];
 	beforeEach(() => {
@@ -328,6 +346,13 @@ describe.only("Plugins service", () => {
 						frameworkPackageName: "tns-android",
 						normalizedPlatformName: "Android"
 					};
+				};
+				const projectDataService = testInjector.resolve("projectDataService");
+				projectDataService.getRuntimePackage = (projectDir: string, platform: PlatformTypes) => {
+					return {
+						name: 'tns-android',
+						version: '1.4.0'
+					}
 				};
 
 				await pluginsService.add(pluginFolderPath, projectData);
@@ -905,8 +930,8 @@ This framework comes from nativescript-ui-core plugin, which is installed multip
 					},
 				],
 				expectedOutput: new Error(`Detected the framework a.framework is installed from multiple plugins at locations:\n` +
-					"/Users/username/projectDir/node_modules/nativescript-ui-core-forked/platforms/ios/a.framework\n" +
-					"/Users/username/projectDir/node_modules/nativescript-ui-core/platforms/ios/a.framework\n\n" +
+					"/Users/username/projectDir/node_modules/nativescript-ui-core-forked/platforms/ios/a.framework\n".replace(/\//g, path.sep) +
+					"/Users/username/projectDir/node_modules/nativescript-ui-core/platforms/ios/a.framework\n\n".replace(/\//g, path.sep) +
 					`Probably you need to update your dependencies, remove node_modules and try again.`),
 			}
 		];

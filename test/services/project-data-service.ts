@@ -20,31 +20,31 @@ const getPropertyName = (props: string[]): string => {
 };
 
 const testData: any = [
-	{
-		"propertyValue": 1,
-		"propertyName": "root",
-		"description": "returns correct result when a single propertyName is passed and the value of it is number"
-	},
-	{
-		"propertyValue": "expectedData",
-		"propertyName": "root",
-		"description": "returns correct result when a single propertyName is passed and the value of it is string"
-	},
-	{
-		"propertyValue": "expectedData",
-		"propertyName": getPropertyName(["root", "prop1"]),
-		"description": "returns correct result when inner propertyName is passed and the value of it is string"
-	},
-	{
-		"propertyValue": 1234,
-		"propertyName": getPropertyName(["root", "prop1"]),
-		"description": "returns correct result when inner propertyName is passed and the value of it is number"
-	},
-	{
-		"propertyValue": "expectedData",
-		"propertyName": getPropertyName(["root", "prop1", "prop2", "prop3", "prop4"]),
-		"description": "returns correct result when really inner propertyName is passed and the value of it is string"
-	}
+	// {
+	// 	"propertyValue": 1,
+	// 	"propertyName": "root",
+	// 	"description": "returns correct result when a single propertyName is passed and the value of it is number"
+	// },
+	// {
+	// 	"propertyValue": "expectedData",
+	// 	"propertyName": "root",
+	// 	"description": "returns correct result when a single propertyName is passed and the value of it is string"
+	// },
+	// {
+	// 	"propertyValue": "expectedData",
+	// 	"propertyName": getPropertyName(["root", "prop1"]),
+	// 	"description": "returns correct result when inner propertyName is passed and the value of it is string"
+	// },
+	// {
+	// 	"propertyValue": 1234,
+	// 	"propertyName": getPropertyName(["root", "prop1"]),
+	// 	"description": "returns correct result when inner propertyName is passed and the value of it is number"
+	// },
+	// {
+	// 	"propertyValue": "expectedData",
+	// 	"propertyName": getPropertyName(["root", "prop1", "prop2", "prop3", "prop4"]),
+	// 	"description": "returns correct result when really inner propertyName is passed and the value of it is string"
+	// }
 ];
 
 const createTestInjector = (packageJsonContent?: string, nsConfigContent?: string): IInjector => {
@@ -83,8 +83,8 @@ const createTestInjector = (packageJsonContent?: string, nsConfigContent?: strin
 	testInjector.register("logger", LoggerStub);
 	testInjector.register("markingModeService", MarkingModeServiceStub);
 
-  testInjector.register("projectDataService", ProjectDataService);
-  testInjector.register("projectConfigService", ProjectConfigService);
+	testInjector.register("projectDataService", ProjectDataService);
+	testInjector.register("projectConfigService", ProjectConfigService);
 
 	testInjector.register("androidResourcesMigrationService", {
 		hasMigrated: (appResourcesDir: string): boolean => true
