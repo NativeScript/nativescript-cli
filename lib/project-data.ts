@@ -4,10 +4,11 @@ import * as _ from 'lodash';
 import { parseJson } from "./common/helpers";
 import { EOL } from "os";
 import { cache } from "./common/decorators";
-import { IProjectData, INsConfig } from "./definitions/project";
+import { IProjectData, INsConfig, IProjectConfigService } from "./definitions/project";
 import { IAndroidResourcesMigrationService, IStaticConfig, IOptions } from "./declarations";
 import { IStringDictionary, IFileSystem, IErrors, IProjectHelper } from "./common/declarations";
 import { injector } from "./common/yok";
+import { IInjector } from "./common/definitions/yok";
 
 interface IProjectType {
 	type: string;
@@ -82,9 +83,14 @@ export class ProjectData implements IProjectData {
 		private $projectHelper: IProjectHelper,
 		private $staticConfig: IStaticConfig,
 		private $options: IOptions,
-		private $logger: ILogger,
+    private $logger: ILogger,
+    private $injector: IInjector,
 		private $androidResourcesMigrationService: IAndroidResourcesMigrationService,
-		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants) { }
+    private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants) { }
+    
+  get projectConfig(): IProjectConfigService {
+    return this.$injector.resolve('projectConfigService');
+  }
 
 	public initializeProjectData(projectDir?: string): void {
 		projectDir = projectDir || this.$projectHelper.projectDir;
@@ -95,9 +101,8 @@ export class ProjectData implements IProjectData {
 
 			if (this.$fs.exists(projectFilePath)) {
 				const packageJsonContent = this.$fs.readText(projectFilePath);
-				const nsConfigContent = this.getNsConfigContent(projectDir);
 
-				this.initializeProjectDataFromContent(packageJsonContent, nsConfigContent, projectDir);
+				this.initializeProjectDataFromContent(packageJsonContent, projectDir);
 			}
 
 			return;
@@ -106,37 +111,27 @@ export class ProjectData implements IProjectData {
 		this.errorInvalidProject(projectDir);
 	}
 
-	public initializeProjectDataFromContent(packageJsonContent: string, nsconfigContent: string, projectDir?: string): void {
+	public initializeProjectDataFromContent(packageJsonContent: string, projectDir?: string): void {
 		projectDir = projectDir || this.$projectHelper.projectDir || "";
 		const projectFilePath = this.getProjectFilePath(projectDir);
-		// If no project found, projectDir should be null
-		let nsData = null;
-		let nsConfig: INsConfig = null;
+    // If no project found, projectDir should be null
+    let nsConfig: INsConfig = this.projectConfig.readConfig(projectDir);
 		let packageJsonData = null;
 
 		try {
 			packageJsonData = parseJson(packageJsonContent);
-			nsData = packageJsonData[this.$staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE];
 		} catch (err) {
 			this.$errors.fail(`The project file ${this.projectFilePath} is corrupted. ${EOL}` +
 				`Consider restoring an earlier version from your source control or backup.${EOL}` +
 				`Additional technical info: ${err.toString()}`);
 		}
 
-		try {
-			nsConfig = nsconfigContent ? <INsConfig>parseJson(nsconfigContent) : null;
-		} catch (err) {
-			this.$errors.fail(`The NativeScript configuration file ${constants.CONFIG_NS_FILE_NAME} is corrupted. ${EOL}` +
-				`Consider restoring an earlier version from your source control or backup.${EOL}` +
-				`Additional technical info: ${err.toString()}`);
-		}
-
-		if (nsData) {
+		if (nsConfig) {
 			this.projectDir = projectDir;
 			this.projectName = this.$projectHelper.sanitizeName(path.basename(projectDir));
 			this.platformsDir = path.join(projectDir, constants.PLATFORMS_DIR_NAME);
 			this.projectFilePath = projectFilePath;
-			this.projectIdentifiers = this.initializeProjectIdentifiers(nsData.id);
+			this.projectIdentifiers = this.initializeProjectIdentifiers(nsConfig);
 			this.dependencies = packageJsonData.dependencies;
 			this.devDependencies = packageJsonData.devDependencies;
 			this.projectType = this.getProjectType();
@@ -207,22 +202,8 @@ export class ProjectData implements IProjectData {
 		return constants.APP_FOLDER_NAME;
 	}
 
-	private getNsConfigContent(projectDir: string): string {
-		if (!projectDir) {
-			return null;
-		}
-
-		const configNSFilePath = path.join(projectDir, this.getNsConfigRelativePath());
-
-		if (!this.$fs.exists(configNSFilePath)) {
-			return null;
-		}
-
-		return this.$fs.readText(configNSFilePath);
-	}
-
 	public getNsConfigRelativePath(): string {
-		return constants.CONFIG_NS_FILE_NAME;
+		return constants.CONFIG_FILE_NAME_JS;
 	}
 
 	private resolveToProjectDir(pathToResolve: string, projectDir?: string): string {
@@ -237,21 +218,17 @@ export class ProjectData implements IProjectData {
 		return path.resolve(projectDir, pathToResolve);
 	}
 
-	private initializeProjectIdentifiers(data: string | Mobile.IProjectIdentifier): Mobile.IProjectIdentifier {
-		let identifier: Mobile.IProjectIdentifier;
-		data = data || "";
-
-		if (typeof data === "string") {
-			identifier = {
-				android: data,
-				ios: data
-			};
-		} else {
-			identifier = {
-				android: data.android || "",
-				ios: data.ios || ""
-			};
-		}
+	private initializeProjectIdentifiers(config: INsConfig): Mobile.IProjectIdentifier {
+		let identifier: Mobile.IProjectIdentifier = {
+      ios: '',
+      android: ''
+    };
+		if (config.ios) {
+      identifier.ios = config.ios.id || config.id;
+    } 
+    if (config.android) {
+      identifier.android = config.android.id || config.id;
+    }
 
 		return identifier;
 	}

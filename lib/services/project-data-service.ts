@@ -91,10 +91,10 @@ export class ProjectDataService implements IProjectDataService {
 	}
 
 	@exported("projectDataService")
-	public getProjectDataFromContent(packageJsonContent: string, nsconfigContent: string, projectDir?: string): IProjectData {
+	public getProjectDataFromContent(packageJsonContent: string, projectDir?: string): IProjectData {
 		projectDir = projectDir || this.defaultProjectDir;
 		this.projectDataCache[projectDir] = this.projectDataCache[projectDir] || this.$injector.resolve<IProjectData>(ProjectData);
-		this.projectDataCache[projectDir].initializeProjectDataFromContent(packageJsonContent, nsconfigContent, projectDir);
+		this.projectDataCache[projectDir].initializeProjectDataFromContent(packageJsonContent, projectDir);
 		return this.projectDataCache[projectDir];
 	}
 

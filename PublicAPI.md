@@ -221,11 +221,10 @@ Returns an IProjectData object that is initialized with the provided package.jso
 /**
  * Returns an initialized IProjectData object containing data about the NativeScript project in the provided projectDir
  * @param {string} packageJsonContent The content of the project.json file in the root of the project
- * @param {string} nsconfigContent The content of the nsconfig.json file in the root of the project
  * @param {string} projectDir The path to the project
  * @returns {IProjectData} Information about the NativeScript project
  */
-getProjectDataFromContent(packageJsonContent: string, nsconfigContent: string, projectDir?: string): IProjectData
+getProjectDataFromContent(packageJsonContent: string, projectDir?: string): IProjectData
 ```
 
 ### getNsConfigDefaultContent

@@ -5,7 +5,6 @@ import { PackageInstallationManager } from "../lib/package-installation-manager"
 import { NodePackageManager } from "../lib/node-package-manager";
 import { YarnPackageManager } from "../lib/yarn-package-manager";
 import { PnpmPackageManager } from "../lib/pnpm-package-manager";
-import { FileSystem } from "../lib/common/file-system";
 import { ProjectData } from "../lib/project-data";
 import { ChildProcess } from "../lib/common/child-process";
 import { Options } from "../lib/options";
@@ -35,16 +34,18 @@ import StaticConfigLib = require("../lib/config");
 import * as path from "path";
 import * as temp from "temp";
 import * as _ from 'lodash';
-import { PLUGINS_BUILD_DATA_FILENAME } from '../lib/constants';
+import { PLUGINS_BUILD_DATA_FILENAME, CONFIG_FILE_NAME_JS, CONFIG_FILE_NAME_TS } from '../lib/constants';//PACKAGE_JSON_FILE_NAME
 import { GradleCommandService } from '../lib/services/android/gradle-command-service';
 import { GradleBuildService } from '../lib/services/android/gradle-build-service';
 import { GradleBuildArgsService } from '../lib/services/android/gradle-build-args-service';
 import * as util from "util";
 import { IPluginData, IPluginsService } from '../lib/definitions/plugins';
 import { IProjectData } from '../lib/definitions/project';
-import { IStringDictionary } from '../lib/common/declarations';
+import { IStringDictionary, IReadFileOptions } from '../lib/common/declarations';
 import { IInjector } from '../lib/common/definitions/yok';
 import { IEventActionData, IGoogleAnalyticsData } from '../lib/common/definitions/google-analytics';
+import { ProjectConfigService } from '../lib/services/project-config-service';
+// import { basename } from 'path';
 temp.track();
 
 let isErrorThrown = false;
@@ -65,8 +66,20 @@ function createTestInjector() {
 	testInjector.register("packageManager", PackageManager);
 	testInjector.register("npm", NodePackageManager);
 	testInjector.register("yarn", YarnPackageManager);
-	testInjector.register("pnpm", PnpmPackageManager);
-	testInjector.register("fs", FileSystem);
+  testInjector.register("pnpm", PnpmPackageManager);
+  const fileSystemStub = new stubs.FileSystemStub();
+  fileSystemStub.readText = (filename: string, encoding?: IReadFileOptions | string): string => {
+    if (filename.indexOf("package.json") > -1) {
+      return `{}`;//packageJsonContent;
+    } else if (filename.indexOf(CONFIG_FILE_NAME_JS) > -1) {
+      return `module.exports = {}`;
+    } else if (filename.indexOf(CONFIG_FILE_NAME_TS) > -1) {
+      return `export default {}`;
+    }
+  };
+  fileSystemStub.exists = (filePath: string): boolean => true;
+  testInjector.register("fs", fileSystemStub);
+  
 	testInjector.register("adb", {});
 	testInjector.register("androidDebugBridgeResultHandler", {});
 	testInjector.register("projectData", ProjectData);
@@ -167,7 +180,8 @@ function createTestInjector() {
 		setShouldDispose: (shouldDispose: boolean): void => undefined
 	});
 	testInjector.register("nodeModulesDependenciesBuilder", {});
-	testInjector.register("tempService", stubs.TempServiceStub);
+  testInjector.register("tempService", stubs.TempServiceStub);
+  testInjector.register("projectConfigService", ProjectConfigService);
 
 	return testInjector;
 }
@@ -224,7 +238,7 @@ async function addPluginWhenExpectingToFail(testInjector: IInjector, plugin: str
 	assert.isTrue(isErrorThrown);
 }
 
-describe("Plugins service", () => {
+describe.only("Plugins service", () => {
 	let testInjector: IInjector;
 	const commands = ["add", "install"];
 	beforeEach(() => {
