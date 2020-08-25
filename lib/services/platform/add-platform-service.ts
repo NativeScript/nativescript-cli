@@ -34,7 +34,19 @@ export class AddPlatformService implements IAddPlatformService {
   			await this.setPlatformVersion(platformData, projectData, frameworkVersion);
   			await this.trackPlatformVersion(frameworkVersion, platformData);
       } else {
-        const [ name, version ] = packageToInstall.split('@');
+        const parts = packageToInstall.split('@');
+        let name: string;
+        let version: string;
+        if (parts.length > 2) {
+          // scoped runtimes
+          name = `@${parts[1]}`;
+          version = parts[2];
+        } else {
+          // original tns-* runtimes
+          name = parts[0];
+          version = parts[1];
+        }
+
         frameworkDirPath = path.join(projectData.projectDir, 'node_modules', name, PROJECT_FRAMEWORK_FOLDER_NAME);
         frameworkVersion = version;
         if (!projectData.devDependencies) {

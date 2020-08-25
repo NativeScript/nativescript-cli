@@ -259,8 +259,8 @@ export const XcodeDeprecationStringFormat = "The current Xcode version %s will n
 
 export const PROGRESS_PRIVACY_POLICY_URL = "https://www.progress.com/legal/privacy-policy";
 export class SubscribeForNewsletterMessages {
-	public static AgreeToReceiveEmailMsg = "I agree".green.bold + " to receive email communications from Progress Software in the form of the NativeScript Newsletter. Consent may be withdrawn at any time.";
-	public static ReviewPrivacyPolicyMsg = `You can review the Progress Software Privacy Policy at \`${PROGRESS_PRIVACY_POLICY_URL}\``;
+	public static AgreeToReceiveEmailMsg = "I agree".green.bold + " to receive email communications in the form of the NativeScript Newsletter. Consent may be withdrawn at any time.";
+	public static ReviewPrivacyPolicyMsg = `You can review the Privacy Policy at \`${PROGRESS_PRIVACY_POLICY_URL}\``;
 	public static PromptMsg = "Input your e-mail address to agree".green + " or " + "leave empty to decline".red.bold + ":";
 }
 
