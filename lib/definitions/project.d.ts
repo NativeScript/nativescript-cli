@@ -78,6 +78,7 @@ interface IProjectService {
 
 interface INsConfigPlaform {
   id?: string;
+  main?: string;
 }
 
 interface INsConfigIOS extends INsConfigPlaform {
