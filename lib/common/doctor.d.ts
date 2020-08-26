@@ -1,4 +1,4 @@
-import * as doctor from "nativescript-doctor";
+import * as doctor from "@nativescript/doctor";
 
 declare global {
 	interface ISysInfoConfig extends NativeScriptDoctor.ISysInfoConfig { }

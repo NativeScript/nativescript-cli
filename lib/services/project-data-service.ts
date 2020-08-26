@@ -419,7 +419,7 @@ export class ProjectDataService implements IProjectDataService {
 			if (platform === constants.PlatformTypes.ios) {
 				return [constants.SCOPED_IOS_RUNTIME_NAME, constants.TNS_IOS_RUNTIME_NAME].includes(d.name);
 			} else if (platform === constants.PlatformTypes.android) {
-				return [constants.SCOPED_ANDROID_RUNTIME_NAME, d.name === constants.TNS_ANDROID_RUNTIME_NAME].includes(d.name);
+				return [constants.SCOPED_ANDROID_RUNTIME_NAME, constants.TNS_ANDROID_RUNTIME_NAME].includes(d.name);
 			}
 		});
 	}

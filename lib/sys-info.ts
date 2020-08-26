@@ -1,6 +1,6 @@
 import * as path from "path";
 import { format } from "util";
-import { sysInfo } from "nativescript-doctor";
+import { sysInfo } from "@nativescript/doctor";
 import { MacOSVersions, MacOSDeprecationStringFormat, XcodeDeprecationStringFormat } from "./constants";
 import { getNodeWarning } from "./common/verify-node-version";
 import { exported } from "./common/decorators";

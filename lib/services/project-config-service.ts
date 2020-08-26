@@ -8,7 +8,6 @@ import { INsConfig, IProjectConfigService } from "../definitions/project";
 import { IInjector } from "../common/definitions/yok";
 
 export class ProjectConfigService implements IProjectConfigService {
-	private _config: INsConfig;
 
 	constructor(
 		private $fs: IFileSystem,
@@ -67,10 +66,7 @@ export class ProjectConfigService implements IProjectConfigService {
 	}
 
 	public getValue(key: string): any {
-		if (!this._config) {
-			this._config = this.readConfig();
-		}
-		return _.get(this._config, key);
+		return _.get(this.readConfig(), key);
 	}
 }
 

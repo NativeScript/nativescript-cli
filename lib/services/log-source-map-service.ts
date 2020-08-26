@@ -5,7 +5,7 @@ import * as sourcemap from "source-map";
 import * as sourceMapConverter from "convert-source-map";
 import * as semver from "semver";
 import { stringReplaceAll } from "../common/helpers";
-import { ANDROID_DEVICE_APP_ROOT_TEMPLATE, APP_FOLDER_NAME, NODE_MODULES_FOLDER_NAME } from "../constants";
+import { ANDROID_DEVICE_APP_ROOT_TEMPLATE, APP_FOLDER_NAME, NODE_MODULES_FOLDER_NAME, PlatformTypes } from "../constants";
 import { IProjectData, IProjectDataService } from "../definitions/project";
 import { IPlatformsDataService } from "../definitions/platform";
 import { IDictionary, IStringDictionary, IFileSystem } from "../common/declarations";
@@ -108,7 +108,7 @@ export class LogSourceMapService implements Mobile.ILogSourceMapService {
 		try {
 			const projectData = this.getProjectData(projectDir);
 			const platformData = this.$platformsDataService.getPlatformData(platform, projectData);
-			const runtimeVersionData = this.$projectDataService.getNSValue(projectData.projectDir, platformData.frameworkPackageName);
+			const runtimeVersionData = this.$projectDataService.getRuntimePackage(projectData.projectDir, <PlatformTypes>platformData.platformNameLowerCase);
 			runtimeVersion = runtimeVersionData && runtimeVersionData.version;
 		} catch (err) {
 			this.$logger.trace(`Unable to get runtime version for project directory: ${projectDir} and platform ${platform}. Error is: `, err);

@@ -106,7 +106,7 @@ Linux | `sudo npm install nativescript -g --unsafe-perm` | `npm install nativesc
 To check if your system is configured properly, run the following command.
 
 ```Shell
-tns doctor
+ns doctor
 ```
 
 ## Configure Proxy Settings
@@ -116,7 +116,7 @@ If you are working with the NativeScript CLI behind a web proxy, you need to con
 ### Set Proxy Settings
 
 ```Shell
-tns proxy set <Url> <Username> <Password>
+ns proxy set <Url> <Username> <Password>
 ```
 
 #### Attributes
@@ -143,13 +143,13 @@ The <code>--insecure</code> flag allows you to perform insecure SSL connections 
 ### Display Current Proxy Settings
 
 ```Shell
-tns proxy
+ns proxy
 ```
 
 ### Clear Proxy Settings
 
 ```Shell
-tns proxy clear
+ns proxy clear
 ```
 
 [Back to Top][1]
@@ -165,7 +165,7 @@ Quick Start
 
 ## The Commands
 
-Run `tns help` to view all available commands in the browser. Run `tns help <Command>` to view more information about a selected command in the browser. `tns --help` opens console help, where help information is shown in the console.
+Run `ns help` to view all available commands in the browser. Run `ns help <Command>` to view more information about a selected command in the browser. `ns --help` opens console help, where help information is shown in the console.
 
 [Back to Top][1]
 
@@ -174,28 +174,28 @@ Run `tns help` to view all available commands in the browser. Run `tns help <Com
 To create a new cross-platform project from the default JavaScript template, run the following command.
 
 ```Shell
-tns create MyApp --js
+ns create MyApp --js
 ```
 
 To create a new cross-platform project from the default TypeScript, Angular or Vue template, use the `template` option followed by either `typescript`, `angular` or `vue`.
 
 ```Shell
-tns create MyApp --template typescript
-tns create MyApp --template angular
-tns create MyApp --template vue
+ns create MyApp --template typescript
+ns create MyApp --template angular
+ns create MyApp --template vue
 ```
 
 Or you can simply use the shorthand `tsc` and `ng` options.
 
 ```Shell
-tns create MyApp --tsc
-tns create MyApp --ng
+ns create MyApp --tsc
+ns create MyApp --ng
 ```
 With the `template` option you can also specify a local or a remote path to the template that you want to use to create your project.
 For example, if you want to create a React template, run the following command.
 
 ```Shell
-tns create MyApp --template https://github.com/shirakaba/tns-template-blank-react.git
+ns create MyApp --template https://github.com/shirakaba/tns-template-blank-react.git
 ```
 
 The NativeScript CLI creates a new project and sets the application identifier to `org.nativescript.myapp`.
@@ -258,8 +258,8 @@ You can always override the generated entitlements file, by pointing to your own
 You can build it for your target mobile platforms.
 
 ```Shell
-tns build android
-tns build ios
+ns build android
+ns build ios
 ```
 
 The NativeScript CLI calls the SDK for the selected target platform and uses it to build your app locally.
@@ -277,7 +277,7 @@ You can test your work in progress on connected Android or iOS devices.
 To verify that the NativeScript CLI recognizes your connected devices, run the following command.
 
 ```Shell
-tns devices
+ns devices
 ```
 
 The NativeScript CLI lists all connected physical devices and running emulators/simulators.
@@ -285,8 +285,8 @@ The NativeScript CLI lists all connected physical devices and running emulators/
 After you have listed the available devices, you can quickly run your app on connected devices by executing:
 
 ```Shell
-tns run android
-tns run ios
+ns run android
+ns run ios
 ```
 
 [Back to Top][1]
@@ -296,7 +296,7 @@ Extending the CLI
 
 The NativeScript CLI lets you extend its behavior and customize it to fit your needs by using [hooks](https://en.wikipedia.org/wiki/Hooking).
 
-When you run one of the extendable commands (for example, `tns build`), the CLI checks for hooks and executes them. Plugins can also use hooks to control the compilation of the application package.
+When you run one of the extendable commands (for example, `ns build`), the CLI checks for hooks and executes them. Plugins can also use hooks to control the compilation of the application package.
 
 For more information, see the [Extending the CLI document](https://github.com/NativeScript/nativescript-cli/blob/master/extending-cli.md)
 
@@ -308,7 +308,7 @@ Troubleshooting
 If the NativeScript CLI does not behave as expected, you might be facing a configuration issue. For example, a missing `JAVA` path. To check if your system is configured properly for the NativeScript CLI, run the following command.
 
 ```bash
-tns doctor
+ns doctor
 ```
 
 This command prints warnings about current configuration issues and provides basic information about how to resolve them.
@@ -337,7 +337,7 @@ npm run setup
 ```
 
 To use the locally built CLI instead `tns` you can call `PATH_TO_CLI_FOLDER/bin/tns`. For example:
-`PATH_TO_CLI_FOLDER/bin/tns run ios|android`
+`PATH_TO_CLI_FOLDER/bin/ns run ios|android`
 
 [Back to Top][1]
 

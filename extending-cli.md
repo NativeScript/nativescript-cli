@@ -3,7 +3,7 @@ Extending the CLI
 
 The NativeScript CLI lets you extend its behavior and customize it to fit your needs by using [hooks](https://en.wikipedia.org/wiki/Hooking).
 
-When you run one of the [extendable commands](#commands-with-hooking-support) (for example, `tns build`), the CLI checks for hooks and executes them. Plugins can also use hooks to control the compilation of the application package.
+When you run one of the [extendable commands](#commands-with-hooking-support) (for example, `ns build`), the CLI checks for hooks and executes them. Plugins can also use hooks to control the compilation of the application package.
 
 ## Hooks in the NativeScript CLI
 
@@ -105,14 +105,14 @@ The only two operations to which you can attach hooks are `prepare` operations a
 
 The NativeScriot CLI executes hooks attached to `prepare` when you run the following commands:
 
-* `tns prepare <Platform>`
-* `tns build <Platform>`
-* `tns deploy <Platform>`
-* `tns run <Platform>`
-* `tns livesync <Platform>`
-* `tns test <Platform>`
+* `ns prepare <Platform>`
+* `ns build <Platform>`
+* `ns deploy <Platform>`
+* `ns run <Platform>`
+* `ns livesync <Platform>`
+* `ns test <Platform>`
 
 The NativeScriot CLI executes hooks attached to `--watch` operations when you run the following commands:
 
-* `tns test <Platform>` with the `--watch` option.
-* `tns livesync <Platform>` with the `--watch` option.
+* `ns test <Platform>` with the `--watch` option.
+* `ns livesync <Platform>` with the `--watch` option.

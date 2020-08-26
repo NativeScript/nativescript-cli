@@ -6,6 +6,7 @@ import { IPluginsService } from "../definitions/plugins";
 import { ICommand, ICommandParameter } from "../common/definitions/commands";
 import { IFileSystem } from "../common/declarations";
 import { injector } from "../common/yok";
+import { PlatformTypes } from "../constants";
 
 export class InstallCommand implements ICommand {
 	public enableHooks = false;
@@ -35,8 +36,8 @@ export class InstallCommand implements ICommand {
 		await this.$pluginsService.ensureAllDependenciesAreInstalled(this.$projectData);
 
 		for (const platform of this.$mobileHelper.platformNames) {
-			const platformData = this.$platformsDataService.getPlatformData(platform, this.$projectData);
-			const frameworkPackageData = this.$projectDataService.getNSValue(this.$projectData.projectDir, platformData.frameworkPackageName);
+      const platformData = this.$platformsDataService.getPlatformData(platform, this.$projectData);
+			const frameworkPackageData = this.$projectDataService.getRuntimePackage(this.$projectData.projectDir, <PlatformTypes>platformData.platformNameLowerCase);
 			if (frameworkPackageData && frameworkPackageData.version) {
 				try {
 					const platformProjectService = platformData.platformProjectService;

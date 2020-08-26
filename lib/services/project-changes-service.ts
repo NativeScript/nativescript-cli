@@ -201,13 +201,13 @@ export class ProjectChangesService implements IProjectChangesService {
 	private getProjectFileStrippedHash(projectDir: string, platformData: IPlatformData): string {
 		const projectFilePath = path.join(projectDir, PACKAGE_JSON_FILE_NAME);
 		const projectFileContents = this.$fs.readJson(projectFilePath);
-		_(this.$devicePlatformsConstants)
-			.keys()
-			.map(k => k.toLowerCase())
-			.difference([platformData.platformNameLowerCase])
-			.each(otherPlatform => {
-				delete projectFileContents.nativescript[`tns-${otherPlatform}`];
-			});
+		// _(this.$devicePlatformsConstants)
+		// 	.keys()
+		// 	.map(k => k.toLowerCase())
+		// 	.difference([platformData.platformNameLowerCase])
+		// 	.each(otherPlatform => {
+		// 		delete projectFileContents.nativescript[`tns-${otherPlatform}`];
+		// 	});
 
 		return getHash(JSON.stringify(projectFileContents));
 	}

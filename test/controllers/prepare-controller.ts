@@ -2,9 +2,10 @@ import { assert } from "chai";
 import * as _ from 'lodash';
 import { PrepareController } from "../../lib/controllers/prepare-controller";
 import { MobileHelper } from "../../lib/common/mobile/mobile-helper";
-import { InjectorStub, TempServiceStub } from "../stubs";
+import { InjectorStub, TempServiceStub, FileSystemStub, ProjectDataStub } from "../stubs";
 import { PREPARE_READY_EVENT_NAME } from "../../lib/constants";
 import { IInjector } from "../../lib/common/definitions/yok";
+import { ProjectConfigService } from "../../lib/services/project-config-service";
 
 const projectDir = "/path/to/my/projecDir";
 const prepareData = {
@@ -47,9 +48,14 @@ function createTestInjector(data: { hasNativeChanges: boolean }): IInjector {
 		}
 	}));
 
-	injector.register("mobileHelper", MobileHelper);
+  injector.register("mobileHelper", MobileHelper);
+  injector.register("fs", FileSystemStub);
+  const projectData = new ProjectDataStub();
+  projectData.projectName = 'test'
+  injector.register("projectData", projectData);
 
-	injector.register("prepareController", PrepareController);
+  injector.register("prepareController", PrepareController);
+  injector.register("projectConfigService", ProjectConfigService)
 
 	injector.register("nodeModulesDependenciesBuilder", {
 		getProductionDependencies: () => (<any>[])

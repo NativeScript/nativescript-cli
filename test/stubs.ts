@@ -345,6 +345,7 @@ export class NodePackageManagerStub implements INodePackageManager {
 }
 
 export class ProjectDataStub implements IProjectData {
+  packageJsonData: any;
 	projectDir: string;
 	projectName: string;
 	webpackConfigPath: string;
@@ -577,7 +578,7 @@ export class ProjectDataService implements IProjectDataService {
   
   getRuntimePackage(projectDir: string, platform: constants.SupportedPlatform): IBasePluginData {
     return {
-      version: '7.0.0',
+      version: null,
       name: `@nativescript/${platform}`
     };
   }

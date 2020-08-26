@@ -78,7 +78,6 @@ interface IProjectService {
 
 interface INsConfigPlaform {
   id?: string;
-  main?: string;
 }
 
 interface INsConfigIOS extends INsConfigPlaform {
@@ -121,6 +120,7 @@ interface INsConfigAndroid extends INsConfigPlaform {
 
 interface INsConfig {
   id?: string;
+  main?: string;
 	appPath?: string;
 	appResourcesPath?: string;
 	shared?: boolean;
@@ -140,7 +140,8 @@ interface IProjectData extends ICreateProjectData {
 	devDependencies: IStringDictionary;
 	appDirectoryPath: string;
 	appResourcesDirectoryPath: string;
-	projectType: string;
+  projectType: string;
+  packageJsonData: any;
 	nsConfig: INsConfig;
 	androidManifestPath: string;
 	appGradlePath: string;
