@@ -108,7 +108,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	}
 
 	public getCurrentPlatformVersion(platformData: IPlatformData, projectData: IProjectData): string {
-		const currentPlatformData: IDictionary<any> = this.$projectDataService.getNSValue(projectData.projectDir, platformData.frameworkPackageName);
+		const currentPlatformData: IDictionary<any> = this.$projectDataService.getRuntimePackage(projectData.projectDir, <constants.PlatformTypes>platformData.platformNameLowerCase);
 
 		return currentPlatformData && currentPlatformData[constants.VERSION_STRING];
 	}

@@ -95,12 +95,12 @@ When the patch is reviewed and merged, you can safely delete your branch and pul
 Updating the CLI Documentation
 ===
 
-The CLI documentation is what you see when running the `tns help` command. 
+The CLI documentation is what you see when running the `ns help` command. 
 This documentation is distributed as part of the CLI package and is generated from the *.md files that can be found in <a href="https://github.com/NativeScript/nativescript-cli/tree/master/docs/man_pages" target="_blank">man_pages folder</a>
 The output of the documentation is html static pages that are generated on post install hook of the CLI installation. 
 In addition, documentation generation is triggered every time there is no html article for the respective help command that is executed.
 
-In order to see a change applied in your development workspace after editing the *.md files, you can use the `tns dev-generate-help` command. 
+In order to see a change applied in your development workspace after editing the *.md files, you can use the `ns dev-generate-help` command. 
 This will trigger regeneration of all html files on your local environment. Mind that you need to run from the /bin folder of the nativescript_cli.
 
 [Back to Top][1]

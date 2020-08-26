@@ -3,13 +3,15 @@ import { hook } from "../common/helpers";
 import { performanceLog, cache } from "../common/decorators";
 import { EventEmitter } from "events";
 import * as path from "path";
-import { PREPARE_READY_EVENT_NAME, WEBPACK_COMPILATION_COMPLETE, PACKAGE_JSON_FILE_NAME, PLATFORMS_DIR_NAME, TrackActionNames, AnalyticsEventLabelDelimiter, CONFIG_FILE_NAME_JS, CONFIG_FILE_NAME_TS } from "../constants";
-import { IProjectDataService, IProjectData } from "../definitions/project";
+import { PREPARE_READY_EVENT_NAME, WEBPACK_COMPILATION_COMPLETE, PACKAGE_JSON_FILE_NAME, PLATFORMS_DIR_NAME, TrackActionNames, AnalyticsEventLabelDelimiter, CONFIG_FILE_NAME_JS, CONFIG_FILE_NAME_TS, SCOPED_IOS_RUNTIME_NAME, SCOPED_ANDROID_RUNTIME_NAME, TNS_IOS_RUNTIME_NAME, TNS_ANDROID_RUNTIME_NAME } from "../constants";
+import { IProjectDataService, IProjectData, IProjectConfigService } from "../definitions/project";
 import { IPlatformController, INodeModulesDependenciesBuilder, IPlatformsDataService, IPlatformData } from "../definitions/platform";
 import { IPluginsService } from "../definitions/plugins";
 import { IWatchIgnoreListService } from "../declarations";
-import { IDictionary, IHooksService, IAnalyticsService } from "../common/declarations";
+import { IDictionary, IHooksService, IAnalyticsService, IFileSystem } from "../common/declarations";
 import { injector } from "../common/yok";
+// import { project } from "nativescript-dev-xcode";
+// import { platform } from "os";
 interface IPlatformWatcherData {
 	hasWebpackCompilerProcess: boolean;
 	nativeFilesWatcher: choki.FSWatcher;
@@ -24,6 +26,7 @@ export class PrepareController extends EventEmitter {
 	constructor(
 		private $platformController: IPlatformController,
 		public $hooksService: IHooksService,
+		private $fs: IFileSystem,
 		private $logger: ILogger,
 		private $mobileHelper: Mobile.IMobileHelper,
 		private $nodeModulesDependenciesBuilder: INodeModulesDependenciesBuilder,
@@ -35,7 +38,8 @@ export class PrepareController extends EventEmitter {
 		private $webpackCompilerService: IWebpackCompilerService,
 		private $watchIgnoreListService: IWatchIgnoreListService,
 		private $analyticsService: IAnalyticsService,
-		private $markingModeService: IMarkingModeService
+		private $markingModeService: IMarkingModeService,
+		private $projectConfigService: IProjectConfigService
 	) { super(); }
 
 	public async prepare(prepareData: IPrepareData): Promise<IPrepareResultData> {
@@ -69,7 +73,7 @@ export class PrepareController extends EventEmitter {
 	@hook("prepare")
 	private async prepareCore(prepareData: IPrepareData, projectData: IProjectData): Promise<IPrepareResultData> {
 		await this.$platformController.addPlatformIfNeeded(prepareData);
-
+    
 		this.$logger.info("Preparing project...");
 		let result = null;
 
@@ -83,6 +87,7 @@ export class PrepareController extends EventEmitter {
 			result = { hasNativeChanges, platform: prepareData.platform.toLowerCase() };
 		}
 
+		await this.writeRuntimePackageJson(projectData, platformData);
 		await this.$projectChangesService.savePrepareInfo(platformData, projectData, prepareData);
 
 		this.$logger.info(`Project successfully prepared (${prepareData.platform.toLowerCase()})`);
@@ -195,8 +200,8 @@ export class PrepareController extends EventEmitter {
 
 		const patterns = [
 			path.join(projectData.projectDir, PACKAGE_JSON_FILE_NAME),
-      path.join(projectData.projectDir, CONFIG_FILE_NAME_JS),
-      path.join(projectData.projectDir, CONFIG_FILE_NAME_TS),
+			path.join(projectData.projectDir, CONFIG_FILE_NAME_JS),
+			path.join(projectData.projectDir, CONFIG_FILE_NAME_TS),
 			path.join(projectData.getAppDirectoryPath(), PACKAGE_JSON_FILE_NAME),
 			path.join(projectData.getAppResourcesRelativeDirectoryPath(), platformData.normalizedPlatformName),
 		]
@@ -204,6 +209,31 @@ export class PrepareController extends EventEmitter {
 			.concat(pluginsPackageJsonFiles);
 
 		return patterns;
+	}
+
+	public async writeRuntimePackageJson(projectData: IProjectData, platformData: IPlatformData) {
+		const nsConfig = this.$projectConfigService.readConfig(projectData.projectDir);
+		const packageData = {
+			...projectData.packageJsonData,
+			...nsConfig,
+			main: 'bundle'
+		};
+		delete packageData.dependencies;
+		delete packageData.devDependencies;
+		if (packageData.ios && packageData.ios.discardUncaughtJsExceptions) {
+			packageData.discardUncaughtJsExceptions = packageData.ios.discardUncaughtJsExceptions;
+		}
+		if (packageData.android && packageData.android.discardUncaughtJsExceptions) {
+			packageData.discardUncaughtJsExceptions = packageData.android.discardUncaughtJsExceptions;
+		}
+		let packagePath: string;
+		if (platformData.platformNameLowerCase === 'ios') {
+			packagePath = path.join(platformData.projectRoot, projectData.projectName, 'app', 'package.json');
+		} else {
+			packagePath = path.join(platformData.projectRoot, 'app', 'src', 'main', 'assets', 'app', 'package.json');
+		}
+		this.$logger.info('packagePath:', packagePath);
+		this.$fs.writeJson(packagePath, packageData);
 	}
 
 	private emitPrepareEvent(filesChangeEventData: IFilesChangeEventData) {
@@ -218,9 +248,13 @@ export class PrepareController extends EventEmitter {
 	private async trackRuntimeVersion(platform: string, projectData: IProjectData): Promise<void> {
 		let runtimeVersion: string = null;
 		try {
-			const platformData = this.$platformsDataService.getPlatformData(platform, projectData);
-			const runtimeVersionData = this.$projectDataService.getNSValue(projectData.projectDir, platformData.frameworkPackageName);
-			runtimeVersion = runtimeVersionData && runtimeVersionData.version;
+			if (projectData.devDependencies) {
+				if (platform.toLowerCase() === 'ios') {
+					runtimeVersion = projectData.devDependencies[SCOPED_IOS_RUNTIME_NAME] || projectData.devDependencies[TNS_IOS_RUNTIME_NAME];
+				} else {
+					runtimeVersion = projectData.devDependencies[SCOPED_ANDROID_RUNTIME_NAME] || projectData.devDependencies[TNS_ANDROID_RUNTIME_NAME];
+				}
+			}
 		} catch (err) {
 			this.$logger.trace(`Unable to get runtime version for project directory: ${projectData.projectDir} and platform ${platform}. Error is: `, err);
 		}

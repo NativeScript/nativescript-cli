@@ -127,7 +127,7 @@ export class PlatformCommandHelper implements IPlatformCommandHelper {
 
 	public getCurrentPlatformVersion(platform: string, projectData: IProjectData): string {
 		const platformData = this.$platformsDataService.getPlatformData(platform, projectData);
-		const currentPlatformData: any = this.$projectDataService.getNSValue(projectData.projectDir, platformData.frameworkPackageName);
+		const currentPlatformData: any = this.$projectDataService.getRuntimePackage(projectData.projectDir, <constants.PlatformTypes>platformData.platformNameLowerCase);
 		const version = currentPlatformData && currentPlatformData.version;
 
 		return version;
@@ -150,7 +150,7 @@ export class PlatformCommandHelper implements IPlatformCommandHelper {
 	private async updatePlatform(platform: string, version: string, projectData: IProjectData): Promise<void> {
 		const platformData = this.$platformsDataService.getPlatformData(platform, projectData);
 
-		const data = this.$projectDataService.getNSValue(projectData.projectDir, platformData.frameworkPackageName);
+		const data = this.$projectDataService.getRuntimePackage(projectData.projectDir, <constants.PlatformTypes>platformData.platformNameLowerCase);
 		const currentVersion = data && data.version ? data.version : "0.2.0";
 
 		const installedModuleDir = await this.$tempService.mkdirSync("runtime-to-update");

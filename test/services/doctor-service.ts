@@ -11,7 +11,7 @@ import { ICheckEnvironmentRequirementsInput, ICheckEnvironmentRequirementsOutput
 import { IAnalyticsService, IHostInfo, IChildProcess, IFileSystem, ISettingsService, IStringDictionary, IDoctorService } from "../../lib/common/declarations";
 import { IInjector } from "../../lib/common/definitions/yok";
 import { ICacheTimeoutOpts, IUseCacheOpts, IJsonFileSettingsService } from "../../lib/common/definitions/json-file-settings-service";
-const nativescriptDoctor = require("nativescript-doctor");
+const nativescriptDoctor = require("@nativescript/doctor");
 
 class DoctorServiceInheritor extends DoctorService {
 	constructor($analyticsService: IAnalyticsService,
@@ -348,7 +348,7 @@ const Observable = require("tns-core-modules-widgets/data/observable").Observabl
 
 		it("returns result from cached file when they exist and the forceCheck is not passed", async () => {
 			const nsDoctorStub = sandbox.stub(nativescriptDoctor.doctor, "getInfos");
-			nsDoctorStub.throws(new Error("We should not call nativescript-doctor package when we have results in the file."));
+			nsDoctorStub.throws(new Error("We should not call @nativescript/doctor package when we have results in the file."));
 
 			const testInjector = createTestInjector();
 			const doctorService = testInjector.resolve<IDoctorService>("doctorService");
@@ -377,7 +377,7 @@ const Observable = require("tns-core-modules-widgets/data/observable").Observabl
 			assert.deepEqual(saveSettingValue, successGetInfosResult);
 		});
 
-		it("returns result from nativescript-doctor and saves them in cache when the forceCheck is passed", async () => {
+		it("returns result from @nativescript/doctor and saves them in cache when the forceCheck is passed", async () => {
 			const nsDoctorStub = sandbox.stub(nativescriptDoctor.doctor, "getInfos");
 			nsDoctorStub.returns(successGetInfosResult);
 

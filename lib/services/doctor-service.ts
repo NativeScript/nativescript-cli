@@ -4,7 +4,7 @@ import * as _ from 'lodash';
 import * as helpers from "../common/helpers";
 import { cache } from "../common/decorators";
 import { TrackActionNames, NODE_MODULES_FOLDER_NAME, TNS_CORE_MODULES_NAME } from "../constants";
-import { doctor, constants } from "nativescript-doctor";
+import { doctor, constants } from "@nativescript/doctor";
 import { IProjectDataService } from "../definitions/project";
 import { IVersionsService, IOptions } from "../declarations";
 import { IPlatformEnvironmentRequirements } from "../definitions/platform";

@@ -4,6 +4,7 @@ import { IProjectDataService, IPlatformProjectServiceBase, IProjectData } from "
 import { IPlatformData } from "../definitions/platform";
 import { IPluginData } from "../definitions/plugins";
 import { IFileSystem } from "../common/declarations";
+import { PlatformTypes } from "../constants";
 
 export abstract class PlatformProjectServiceBase extends EventEmitter implements IPlatformProjectServiceBase {
 	constructor(protected $fs: IFileSystem,
@@ -18,7 +19,7 @@ export abstract class PlatformProjectServiceBase extends EventEmitter implements
 	}
 
 	public getFrameworkVersion(projectData: IProjectData): string {
-		const frameworkData = this.$projectDataService.getNSValue(projectData.projectDir, this.getPlatformData(projectData).frameworkPackageName);
+		const frameworkData = this.$projectDataService.getRuntimePackage(projectData.projectDir, <PlatformTypes>this.getPlatformData(projectData).platformNameLowerCase);
 		return frameworkData && frameworkData.version;
 	}
 

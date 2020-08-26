@@ -61,7 +61,8 @@ export class ProjectData implements IProjectData {
 		this.projectIdentifiers.ios = identifier;
 		this.projectIdentifiers.android = identifier;
 	}
-	public projectName: string;
+  public projectName: string;
+  public packageJsonData: any;
 	public nsConfig: INsConfig;
 	public appDirectoryPath: string;
 	public appResourcesDirectoryPath: string;
@@ -131,7 +132,8 @@ export class ProjectData implements IProjectData {
 			this.projectName = this.$projectHelper.sanitizeName(path.basename(projectDir));
 			this.platformsDir = path.join(projectDir, constants.PLATFORMS_DIR_NAME);
 			this.projectFilePath = projectFilePath;
-			this.projectIdentifiers = this.initializeProjectIdentifiers(nsConfig);
+      this.projectIdentifiers = this.initializeProjectIdentifiers(nsConfig);
+      this.packageJsonData = packageJsonData;
 			this.dependencies = packageJsonData.dependencies;
 			this.devDependencies = packageJsonData.devDependencies;
 			this.projectType = this.getProjectType();

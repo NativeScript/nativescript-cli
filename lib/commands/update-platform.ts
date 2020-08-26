@@ -39,7 +39,7 @@ export class UpdatePlatformCommand implements ICommand {
 			const checkEnvironmentRequirementsInput: ICheckEnvironmentRequirementsInput = { platform, options: this.$options };
 			// If version is not specified, we know the command will install the latest compatible Android runtime.
 			// The latest compatible Android runtime supports Java version, so we do not need to pass it here.
-			// Passing projectDir to the nativescript-doctor validation will cause it to check the runtime from the current package.json
+			// Passing projectDir to the @nativescript/doctor validation will cause it to check the runtime from the current package.json
 			// So in this case, where we do not want to validate the runtime, just do not pass both projectDir and runtimeVersion.
 			if (versionToBeInstalled) {
 				checkEnvironmentRequirementsInput.projectDir = this.$projectData.projectDir;
