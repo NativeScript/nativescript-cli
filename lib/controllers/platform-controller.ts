@@ -60,7 +60,7 @@ export class PlatformController implements IPlatformController {
 			if (!version) {
         version = projectData.devDependencies ? projectData.devDependencies[platformData.frameworkPackageName] : null;
         if (!version) {
-          version = await this.$packageInstallationManager.getLatestCompatibleVersion(platformData.frameworkPackageName)
+          version = await this.$packageInstallationManager.getLatestCompatibleVersion(platformData.frameworkPackageName);
         }
 				// const currentPlatformData = this.$projectDataService.getNSValue(projectData.projectDir, platformData.frameworkPackageName);
 				// version = (currentPlatformData && currentPlatformData.version) ||

@@ -43,7 +43,7 @@ describe("hostInfo", () => {
 			hostInfo.isDarwin = false;
 
 			const macOSVersion = await hostInfo.getMacOSVersion();
-			assert.deepEqual(macOSVersion, null);
+			assert.deepStrictEqual(macOSVersion, null);
 		});
 
 		it("returns correct macOS version based on system_profile", async () => {
@@ -63,7 +63,7 @@ describe("hostInfo", () => {
 			};
 
 			const macOSVersion = await hostInfo.getMacOSVersion();
-			assert.deepEqual(macOSVersion, "10.13");
+			assert.deepStrictEqual(macOSVersion, "10.13");
 			assert.equal(calledCommand, "system_profiler SPSoftwareDataType -detailLevel mini");
 		});
 
@@ -84,7 +84,7 @@ describe("hostInfo", () => {
 			};
 
 			const macOSVersion = await hostInfo.getMacOSVersion();
-			assert.deepEqual(macOSVersion, "10.14");
+			assert.deepStrictEqual(macOSVersion, "10.14");
 			assert.equal(calledCommand, "system_profiler SPSoftwareDataType -detailLevel mini");
 		});
 
@@ -99,7 +99,7 @@ describe("hostInfo", () => {
 			const osInfo = testInjector.resolve<IOsInfo>("osInfo");
 			osInfo.release = (): string => "17.4.0";
 			const macOSVersion = await hostInfo.getMacOSVersion();
-			assert.deepEqual(macOSVersion, "10.13");
+			assert.deepStrictEqual(macOSVersion, "10.13");
 		});
 
 		it("returns correct macOS version when system_profile call returns data that does not match our RegExp", async () => {
@@ -113,7 +113,7 @@ describe("hostInfo", () => {
 			const osInfo = testInjector.resolve<IOsInfo>("osInfo");
 			osInfo.release = (): string => "17.4.0";
 			const macOSVersion = await hostInfo.getMacOSVersion();
-			assert.deepEqual(macOSVersion, "10.13");
+			assert.deepStrictEqual(macOSVersion, "10.13");
 		});
 	});
 });

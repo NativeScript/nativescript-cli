@@ -82,7 +82,7 @@ describe("projectService", () => {
 			const testInjector = getTestInjector({ projectName });
 			const projectService = testInjector.resolve<IProjectService>(ProjectServiceLib.ProjectService);
 			const projectCreationData = await projectService.createProject({ projectName: projectName, pathToProject: dirToCreateProject, force: true, template: constants.RESERVED_TEMPLATE_NAMES["default"] });
-			assert.deepEqual(projectCreationData, { projectName, projectDir: path.join(dirToCreateProject, projectName) });
+			assert.deepStrictEqual(projectCreationData, { projectName, projectDir: path.join(dirToCreateProject, projectName) });
 		});
 
 		it("fails when invalid name is passed when projectNameService fails", async () => {

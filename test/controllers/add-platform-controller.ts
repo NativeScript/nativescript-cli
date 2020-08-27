@@ -33,8 +33,8 @@ function createInjector(data?: { latestFrameworkVersion: string }) {
 	});
 
 	injector.register("pacoteService", {
-		extractPackage: async (name: string): Promise<void> => { 
-      // extractedPackageFromPacote = name; 
+		extractPackage: async (name: string): Promise<void> => {
+      // extractedPackageFromPacote = name;
     }
 	});
 	injector.register("tempService", TempServiceStub);
@@ -85,7 +85,7 @@ describe("PlatformController", () => {
 				await platformController.addPlatform({ projectDir, platform: platformParam, frameworkPath: testCase.frameworkPath });
 
 				const expectedMessage = `Platform ${platform} successfully added. v${testCase.latestFrameworkVersion}`;
-				assert.deepEqual(actualMessage, expectedMessage);
+				assert.deepStrictEqual(actualMessage, expectedMessage);
 			});
 		});
 	});
@@ -103,7 +103,7 @@ describe("PlatformController", () => {
 
 			await assert.isRejected(platformController.addPlatform({ projectDir, platform, frameworkPath }), errorMessage);
     });
-    
+
     // The following 2 tests are likely no longer needed since devDependencies are used normally now and naturally respect pinned versions or ~ or ^ semver.
 		// it(`should respect platform version in package.json's nativescript key for ${platform}`, async () => {
 		// 	const version = "2.5.0";
@@ -117,7 +117,7 @@ describe("PlatformController", () => {
 		// 	await platformController.addPlatform({ projectDir, platform });
 
 		// 	const expectedPackageToAdd = `@nativescript/${platform}@${version}`;
-		// 	assert.deepEqual(extractedPackageFromPacote, expectedPackageToAdd);
+		// 	assert.deepStrictEqual(extractedPackageFromPacote, expectedPackageToAdd);
 		// });
 		// it(`should install latest platform if no information found in package.json's nativescript key for ${platform}`, async () => {
 		// 	const injector = createInjector();
@@ -129,7 +129,7 @@ describe("PlatformController", () => {
 		// 	await platformController.addPlatform({ projectDir, platform });
 
 		// 	const expectedPackageToAdd = `@nativescript/${platform}@${latestFrameworkVersion}`;
-		// 	assert.deepEqual(extractedPackageFromPacote, expectedPackageToAdd);
+		// 	assert.deepStrictEqual(extractedPackageFromPacote, expectedPackageToAdd);
 		// });
 	});
 });

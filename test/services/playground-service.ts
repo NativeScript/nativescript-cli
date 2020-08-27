@@ -53,7 +53,7 @@ describe("PlaygroundService", () => {
 			mockPlaygroundService(testInjector, { userSettingsData: {playground: {id: "test-playground-identifier", usedTutorial: false}}});
 			const actualResult = await playgroundService.getPlaygroundInfo();
 			const expectedResult = {id: "test-playground-identifier", usedTutorial: false};
-			assert.deepEqual(actualResult, expectedResult);
+			assert.deepStrictEqual(actualResult, expectedResult);
 		});
 		it("should return null when projectFile has no nativescript key in package.json file and no playground data is saved in userSettings file", async () => {
 			mockPlaygroundService(testInjector, { userSettingsData: null });
@@ -64,7 +64,7 @@ describe("PlaygroundService", () => {
 			mockPlaygroundService(testInjector, { userSettingsData: {playground: {id: "test-playground-identifier", usedTutorial: true}}});
 			const actualResult = await playgroundService.getPlaygroundInfo();
 			const expectedResult = {id: "test-playground-identifier", usedTutorial: true};
-			assert.deepEqual(actualResult, expectedResult);
+			assert.deepStrictEqual(actualResult, expectedResult);
 		});
 
 		describe("should return playgroundInfo when project has playground key in package.json", () => {
@@ -79,7 +79,7 @@ describe("PlaygroundService", () => {
 				mockPlaygroundService(testInjector, { nativescriptKey });
 				const actualResult = await playgroundService.getPlaygroundInfo();
 				const expectedResult = { id: "test-guid", usedTutorial: false };
-				assert.deepEqual(actualResult, expectedResult);
+				assert.deepStrictEqual(actualResult, expectedResult);
 			});
 			it("and usedTutorial is true", async() => {
 				const nativescriptKey = {
@@ -93,7 +93,7 @@ describe("PlaygroundService", () => {
 				mockPlaygroundService(testInjector, { nativescriptKey });
 				const actualResult = await playgroundService.getPlaygroundInfo();
 				const expectedResult = { id: 'test-guid', usedTutorial: true };
-				assert.deepEqual(actualResult, expectedResult);
+				assert.deepStrictEqual(actualResult, expectedResult);
 			});
 			it("and usedTutorial is false", async () => {
 				const nativescriptKey = {
@@ -107,7 +107,7 @@ describe("PlaygroundService", () => {
 				mockPlaygroundService(testInjector, { nativescriptKey });
 				const actualResult = await playgroundService.getPlaygroundInfo();
 				const expectedResult = { id: "playground-test-guid", usedTutorial: false };
-				assert.deepEqual(actualResult, expectedResult);
+				assert.deepStrictEqual(actualResult, expectedResult);
 			});
 		});
 
@@ -116,20 +116,20 @@ describe("PlaygroundService", () => {
 				mockPlaygroundService(testInjector, { userSettingsData: {playground: {id: "test-playground-identifier", usedTutorial: true}}});
 				const actualResult = await playgroundService.getPlaygroundInfo();
 				const expectedResult = { id: 'test-playground-identifier', usedTutorial: true };
-				assert.deepEqual(actualResult, expectedResult);
+				assert.deepStrictEqual(actualResult, expectedResult);
 			});
 			it("when usedTutorial is false", async () => {
 				mockPlaygroundService(testInjector, { userSettingsData: {playground: {id: "test-playground-identifier", usedTutorial: false}}});
 				const actualResult = await playgroundService.getPlaygroundInfo();
 				const expectedResult = { id: 'test-playground-identifier', usedTutorial: false };
-				assert.deepEqual(actualResult, expectedResult);
+				assert.deepStrictEqual(actualResult, expectedResult);
 			});
 		});
 
 		it("should return undefined when userSettings file does not have playground key", async () => {
 			mockPlaygroundService(testInjector, { userSettingsData: {}});
 			const actualResult = await playgroundService.getPlaygroundInfo();
-			assert.deepEqual(actualResult, undefined);
+			assert.deepStrictEqual(actualResult, undefined);
 		});
 		it("should replace playgroundId when another id is already saved in userSettings file", async () => {
 			const nativescriptKey = {
@@ -142,7 +142,7 @@ describe("PlaygroundService", () => {
 			mockPlaygroundService(testInjector, { nativescriptKey });
 			let actualResult = await playgroundService.getPlaygroundInfo();
 			let expectedResult = { id: "test-guid", usedTutorial: false };
-			assert.deepEqual(actualResult, expectedResult);
+			assert.deepStrictEqual(actualResult, expectedResult);
 
 			const secondNativescriptKey = {
 				nativescript: {
@@ -154,8 +154,8 @@ describe("PlaygroundService", () => {
 			mockPlaygroundService(testInjector, { nativescriptKey: secondNativescriptKey });
 			actualResult = await playgroundService.getPlaygroundInfo();
 			expectedResult = { id: 'another-test-guid', usedTutorial: false };
-			assert.deepEqual(actualResult, expectedResult);
-			assert.deepEqual(userSettings, { playground: { id: 'another-test-guid', usedTutorial: false }});
+			assert.deepStrictEqual(actualResult, expectedResult);
+			assert.deepStrictEqual(userSettings, { playground: { id: 'another-test-guid', usedTutorial: false }});
 		});
 		it("should replace usedTutorial when false value is already saved in userSettings file", async () => {
 			const nativescriptKey = {
@@ -169,7 +169,7 @@ describe("PlaygroundService", () => {
 			mockPlaygroundService(testInjector, { nativescriptKey });
 			let actualResult = await playgroundService.getPlaygroundInfo();
 			let expectedResult = { id: "test-guid", usedTutorial: false };
-			assert.deepEqual(actualResult, expectedResult);
+			assert.deepStrictEqual(actualResult, expectedResult);
 
 			const secondNativescriptKey = {
 				nativescript: {
@@ -182,7 +182,7 @@ describe("PlaygroundService", () => {
 			mockPlaygroundService(testInjector, { nativescriptKey: secondNativescriptKey, userSettingsData: {playground: { id: "test-guid", usedTutorial: false }} });
 			actualResult = await playgroundService.getPlaygroundInfo();
 			expectedResult = { id: 'another-test-guid', usedTutorial: true };
-			assert.deepEqual(actualResult, expectedResult);
+			assert.deepStrictEqual(actualResult, expectedResult);
 		});
 		it("shouldn't replace usedTutorial when true value is already saved in userSettings file", async () => {
 			const nativescriptKey = {
@@ -196,7 +196,7 @@ describe("PlaygroundService", () => {
 			mockPlaygroundService(testInjector, { nativescriptKey });
 			let actualResult = await playgroundService.getPlaygroundInfo();
 			let expectedResult = { id: "test-guid", usedTutorial: true };
-			assert.deepEqual(actualResult, expectedResult);
+			assert.deepStrictEqual(actualResult, expectedResult);
 
 			const secondNativescriptKey = {
 				nativescript: {
@@ -209,7 +209,7 @@ describe("PlaygroundService", () => {
 			mockPlaygroundService(testInjector, { nativescriptKey: secondNativescriptKey, userSettingsData: {playground: { id: "test-guid", usedTutorial: true }} });
 			actualResult = await playgroundService.getPlaygroundInfo();
 			expectedResult = { id: 'another-test-guid', usedTutorial: true };
-			assert.deepEqual(actualResult, expectedResult);
+			assert.deepStrictEqual(actualResult, expectedResult);
 		});
 	});
 });

@@ -16,6 +16,6 @@ describe("config.json", () => {
 
 	it("validates content is correct", () => {
 		const data = require("../../config/config.json");
-		assert.deepEqual(data, expectedData, "Data in config.json is not correct. Is this expected?");
+		assert.deepStrictEqual(data, expectedData, "Data in config.json is not correct. Is this expected?");
 	});
 });

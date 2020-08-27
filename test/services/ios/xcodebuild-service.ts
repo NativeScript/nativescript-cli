@@ -54,9 +54,9 @@ describe("xcodebuildService", () => {
 				'-exportPath', exportOptionsPlistOutput.exportFileDir,
 				'-exportOptionsPlist', exportOptionsPlistOutput.exportOptionsPlistFilePath
 			];
-			assert.deepEqual(actualBuildArgs, expectedBuildArgs);
-			assert.deepEqual(actualBuildOptions, { cwd: projectRoot, stdio: undefined });
-			assert.deepEqual(buildResult, exportOptionsPlistOutput.exportFilePath);
+			assert.deepStrictEqual(actualBuildArgs, expectedBuildArgs);
+			assert.deepStrictEqual(actualBuildOptions, { cwd: projectRoot, stdio: undefined });
+			assert.deepStrictEqual(buildResult, exportOptionsPlistOutput.exportFilePath);
 		});
 	});
 	describe("buildForSimulator", () => {
@@ -68,8 +68,8 @@ describe("xcodebuildService", () => {
 
 			await xcodebuildService.buildForSimulator(platformData, projectData, {});
 
-			assert.deepEqual(actualBuildArgs, []);
-			assert.deepEqual(actualBuildOptions, { cwd: projectRoot, stdio: undefined });
+			assert.deepStrictEqual(actualBuildArgs, []);
+			assert.deepStrictEqual(actualBuildOptions, { cwd: projectRoot, stdio: undefined });
 		});
 	});
 	describe("buildForAppStore", () => {
@@ -87,9 +87,9 @@ describe("xcodebuildService", () => {
 				'-exportPath', exportOptionsPlistOutput.exportFileDir,
 				'-exportOptionsPlist', exportOptionsPlistOutput.exportOptionsPlistFilePath
 			];
-			assert.deepEqual(actualBuildArgs, expectedBuildArgs);
-			assert.deepEqual(actualBuildOptions, { cwd: projectRoot });
-			assert.deepEqual(buildResult, exportOptionsPlistOutput.exportFilePath);
+			assert.deepStrictEqual(actualBuildArgs, expectedBuildArgs);
+			assert.deepStrictEqual(actualBuildOptions, { cwd: projectRoot });
+			assert.deepStrictEqual(buildResult, exportOptionsPlistOutput.exportFilePath);
 		});
 	});
 });

@@ -278,13 +278,13 @@ export function getRelativeToRootPath(rootPath: string, filePath: string): strin
 let customIsInteractive: any;
 
 export function setIsInteractive(override?: () => boolean) {
-  customIsInteractive = override;
+	customIsInteractive = override;
 }
 
 export function isInteractive(): boolean {
-  if (customIsInteractive) {
-    return customIsInteractive();
-  }
+	if (customIsInteractive) {
+		return customIsInteractive();
+	}
 	const result = isRunningInTTY() && !isCIEnvironment();
 	return result;
 }

@@ -79,7 +79,7 @@ describe("xcodebuildArgsService", () => {
 							.concat(getBuildLoggingArgs(logLevel))
 							.concat(getXcodeProjectArgs({ hasProjectWorkspace, hasTarget: true }));
 
-						assert.deepEqual(actualArgs, expectedArgs);
+						assert.deepStrictEqual(actualArgs, expectedArgs);
 					});
 				});
 			});
@@ -127,7 +127,7 @@ describe("xcodebuildArgsService", () => {
 							.concat(testCase.expectedArgs)
 							.concat(getBuildLoggingArgs(logLevel));
 
-							assert.deepEqual(actualArgs, expectedArgs);
+							assert.deepStrictEqual(actualArgs, expectedArgs);
 						});
 					});
 				});

@@ -306,8 +306,8 @@ describe("devicesService", () => {
 		androidDeviceDiscovery.emit(DeviceDiscoveryEventNames.DEVICE_FOUND, androidDevice);
 		const devices = devicesService.getDeviceInstances();
 		assert.isTrue(devicesService.hasDevices, "After emitting two devices, hasDevices must be true");
-		assert.deepEqual(devices[0], iOSDevice);
-		assert.deepEqual(devices[1], androidDevice);
+		assert.deepStrictEqual(devices[0], iOSDevice);
+		assert.deepStrictEqual(devices[1], androidDevice);
 	});
 
 	it("attaches to events when a new custom device discovery is instantiated", () => {
@@ -318,8 +318,8 @@ describe("devicesService", () => {
 		customDeviceDiscovery.emit(DeviceDiscoveryEventNames.DEVICE_FOUND, androidDevice);
 		const devices = devicesService.getDeviceInstances();
 		assert.isTrue(devicesService.hasDevices, "After emitting two devices, hasDevices must be true");
-		assert.deepEqual(devices[0], iOSDevice);
-		assert.deepEqual(devices[1], androidDevice);
+		assert.deepStrictEqual(devices[0], iOSDevice);
+		assert.deepStrictEqual(devices[1], androidDevice);
 	});
 
 	describe("emits correct event when emulator images are changed", () => {
@@ -340,7 +340,7 @@ describe("devicesService", () => {
 		it(`emits ${EmulatorDiscoveryNames.EMULATOR_IMAGE_FOUND} event when new Android Emulator image is found`, (done: mocha.Done) => {
 			const androidEmulatorDiscovery = testInjector.resolve<AndroidEmulatorDiscoveryStub>("androidEmulatorDiscovery");
 			devicesService.on(EmulatorDiscoveryNames.EMULATOR_IMAGE_FOUND, (emulatorImage: Mobile.IDeviceInfo) => {
-				assert.deepEqual(emulatorImage, emulatorDataToEmit);
+				assert.deepStrictEqual(emulatorImage, emulatorDataToEmit);
 				done();
 			});
 
@@ -349,7 +349,7 @@ describe("devicesService", () => {
 
 		it(`emits ${EmulatorDiscoveryNames.EMULATOR_IMAGE_FOUND} when new iOS Simulator image is found`, (done: mocha.Done) => {
 			devicesService.on(EmulatorDiscoveryNames.EMULATOR_IMAGE_FOUND, (emulatorImage: Mobile.IDeviceInfo) => {
-				assert.deepEqual(emulatorImage, emulatorDataToEmit);
+				assert.deepStrictEqual(emulatorImage, emulatorDataToEmit);
 				done();
 			});
 
@@ -359,7 +359,7 @@ describe("devicesService", () => {
 		it(`emits ${EmulatorDiscoveryNames.EMULATOR_IMAGE_LOST} event when new Android Emulator image is deleted`, (done: mocha.Done) => {
 			const androidEmulatorDiscovery = testInjector.resolve<AndroidEmulatorDiscoveryStub>("androidEmulatorDiscovery");
 			devicesService.on(EmulatorDiscoveryNames.EMULATOR_IMAGE_LOST, (emulatorImage: Mobile.IDeviceInfo) => {
-				assert.deepEqual(emulatorImage, emulatorDataToEmit);
+				assert.deepStrictEqual(emulatorImage, emulatorDataToEmit);
 				done();
 			});
 
@@ -368,7 +368,7 @@ describe("devicesService", () => {
 
 		it(`emits ${EmulatorDiscoveryNames.EMULATOR_IMAGE_LOST} when iOS Simulator image is deleted`, (done: mocha.Done) => {
 			devicesService.on(EmulatorDiscoveryNames.EMULATOR_IMAGE_LOST, (emulatorImage: Mobile.IDeviceInfo) => {
-				assert.deepEqual(emulatorImage, emulatorDataToEmit);
+				assert.deepStrictEqual(emulatorImage, emulatorDataToEmit);
 				done();
 			});
 
@@ -382,63 +382,63 @@ describe("devicesService", () => {
 		});
 		describe("platform is passed and", () => {
 			it("deviceId is NOT passed and NO devices are found, an emulator is started", async () => {
-				assert.deepEqual(devicesService.getDeviceInstances(), [], "Initially getDevicesInstances must return empty array.");
+				assert.deepStrictEqual(devicesService.getDeviceInstances(), [], "Initially getDevicesInstances must return empty array.");
 				await devicesService.startEmulatorIfNecessary({ platform: "android" });
-				assert.deepEqual(devicesService.getDeviceInstances(), [androidEmulatorDevice]);
-				assert.deepEqual(devicesService.getDevices(), [androidEmulatorDevice.deviceInfo]);
+				assert.deepStrictEqual(devicesService.getDeviceInstances(), [androidEmulatorDevice]);
+				assert.deepStrictEqual(devicesService.getDevices(), [androidEmulatorDevice.deviceInfo]);
 			});
 			it("deviceId is NOT passed, but devices are found, assert no emulators are started", async () => {
-				assert.deepEqual(devicesService.getDeviceInstances(), [], "Initially getDevicesInstances must return empty array.");
+				assert.deepStrictEqual(devicesService.getDeviceInstances(), [], "Initially getDevicesInstances must return empty array.");
 				androidDeviceDiscovery.emit(DeviceDiscoveryEventNames.DEVICE_FOUND, androidEmulatorDevice);
 				await devicesService.startEmulatorIfNecessary({ platform: "android" });
-				assert.deepEqual(devicesService.getDeviceInstances(), [androidEmulatorDevice]);
+				assert.deepStrictEqual(devicesService.getDeviceInstances(), [androidEmulatorDevice]);
 				assert.equal(devicesService.getDeviceInstances().length, 1);
 			});
 			it("deviceId is passed and devices are found, assert if deviceId of the running device is the same as the passed deviceId no emulators are started", async () => {
-				assert.deepEqual(devicesService.getDeviceInstances(), [], "Initially getDevicesInstances must return empty array.");
+				assert.deepStrictEqual(devicesService.getDeviceInstances(), [], "Initially getDevicesInstances must return empty array.");
 				androidDeviceDiscovery.emit(DeviceDiscoveryEventNames.DEVICE_FOUND, androidEmulatorDevice);
 				await devicesService.startEmulatorIfNecessary({ platform: "android", deviceId: androidEmulatorDevice.deviceInfo.identifier });
-				assert.deepEqual(devicesService.getDeviceInstances(), [androidEmulatorDevice]);
+				assert.deepStrictEqual(devicesService.getDeviceInstances(), [androidEmulatorDevice]);
 				assert.equal(devicesService.getDeviceInstances().length, 1);
 			});
 			it("deviceId is passed and devices are found, assert if deviceId of the running device is different than the passed deviceId a new emulator is started", async () => {
-				assert.deepEqual(devicesService.getDeviceInstances(), [], "Initially getDevicesInstances must return empty array.");
+				assert.deepStrictEqual(devicesService.getDeviceInstances(), [], "Initially getDevicesInstances must return empty array.");
 				androidDeviceDiscovery.emit(DeviceDiscoveryEventNames.DEVICE_FOUND, androidDevice);
 				await devicesService.startEmulatorIfNecessary({ platform: "android", deviceId: "different_image_name" });
 				assert.equal(devicesService.getDeviceInstances().length, 2);
 			});
 			it("emulator is passed and NO devices are found, assert an emulator is started", async () => {
-				assert.deepEqual(devicesService.getDeviceInstances(), [], "Initially getDevicesInstances must return empty array.");
+				assert.deepStrictEqual(devicesService.getDeviceInstances(), [], "Initially getDevicesInstances must return empty array.");
 				await devicesService.startEmulatorIfNecessary({ platform: "android", emulator: true });
-				assert.deepEqual(devicesService.getDeviceInstances(), [androidEmulatorDevice]);
+				assert.deepStrictEqual(devicesService.getDeviceInstances(), [androidEmulatorDevice]);
 				assert.equal(devicesService.getDeviceInstances().length, 1);
 			});
 			it("emulator is passed and devices are found, assert no more emulators are started", async () => {
-				assert.deepEqual(devicesService.getDeviceInstances(), [], "Initially getDevicesInstances must return empty array.");
+				assert.deepStrictEqual(devicesService.getDeviceInstances(), [], "Initially getDevicesInstances must return empty array.");
 				androidDeviceDiscovery.emit(DeviceDiscoveryEventNames.DEVICE_FOUND, androidEmulatorDevice);
 				await devicesService.startEmulatorIfNecessary({ platform: "android", emulator: true });
-				assert.deepEqual(devicesService.getDeviceInstances(), [androidEmulatorDevice]);
+				assert.deepStrictEqual(devicesService.getDeviceInstances(), [androidEmulatorDevice]);
 				assert.equal(devicesService.getDeviceInstances().length, 1);
 			});
 			it("emulator is passed and devices are found, but the found devices are not emulators, assert an emulator is started", async () => {
-				assert.deepEqual(devicesService.getDeviceInstances(), [], "Initially getDevicesInstances must return empty array.");
+				assert.deepStrictEqual(devicesService.getDeviceInstances(), [], "Initially getDevicesInstances must return empty array.");
 				androidDeviceDiscovery.emit(DeviceDiscoveryEventNames.DEVICE_FOUND, androidDevice);
 				await devicesService.startEmulatorIfNecessary({ platform: "android", emulator: true });
-				assert.deepEqual(devicesService.getDeviceInstances(), [androidDevice, androidEmulatorDevice]);
+				assert.deepStrictEqual(devicesService.getDeviceInstances(), [androidDevice, androidEmulatorDevice]);
 				assert.equal(devicesService.getDeviceInstances().length, 2);
 			});
 			it("deviceid and emulator are not passed there are devices but not for the specified platform, assert all device detections are fired", async () => {
-				assert.deepEqual(devicesService.getDeviceInstances(), [], "Initially getDevicesInstances must return empty array.");
+				assert.deepStrictEqual(devicesService.getDeviceInstances(), [], "Initially getDevicesInstances must return empty array.");
 				await devicesService.startEmulatorIfNecessary({ platform: "android" });
 				assert.equal((<AndroidDeviceDiscoveryStub>androidDeviceDiscovery).count, 2);
 				assert.equal((<IOSDeviceDiscoveryStub>iOSDeviceDiscovery).count, 1);
 				assert.equal((<IOSSimulatorDiscoveryStub>iOSSimulatorDiscovery).count, 1);
 			});
 			it("deviceId is NOT passed, platform is passed and skipEmulatorStart is passed - should not start emulator", async () => {
-				assert.deepEqual(devicesService.getDeviceInstances(), [], "Initially getDevicesInstances must return empty array.");
+				assert.deepStrictEqual(devicesService.getDeviceInstances(), [], "Initially getDevicesInstances must return empty array.");
 				await devicesService.startEmulatorIfNecessary({ platform: "android", skipEmulatorStart: true });
-				assert.deepEqual(devicesService.getDeviceInstances(), []);
-				assert.deepEqual(devicesService.getDevices(), []);
+				assert.deepStrictEqual(devicesService.getDeviceInstances(), []);
+				assert.deepStrictEqual(devicesService.getDevices(), []);
 			});
 		});
 	});
@@ -468,40 +468,40 @@ describe("devicesService", () => {
 
 	describe("getDeviceInstances and getDevices", () => {
 		it("returns one android device, when only one device is attached", () => {
-			assert.deepEqual(devicesService.getDeviceInstances(), [], "Initially getDevicesInstances must return empty array.");
-			assert.deepEqual(devicesService.getDevices(), [], "Initially getDevices must return empty array.");
+			assert.deepStrictEqual(devicesService.getDeviceInstances(), [], "Initially getDevicesInstances must return empty array.");
+			assert.deepStrictEqual(devicesService.getDevices(), [], "Initially getDevices must return empty array.");
 
 			androidDeviceDiscovery.emit(DeviceDiscoveryEventNames.DEVICE_FOUND, androidDevice);
-			assert.deepEqual(devicesService.getDeviceInstances(), [androidDevice]);
-			assert.deepEqual(devicesService.getDevices(), [androidDevice.deviceInfo]);
+			assert.deepStrictEqual(devicesService.getDeviceInstances(), [androidDevice]);
+			assert.deepStrictEqual(devicesService.getDevices(), [androidDevice.deviceInfo]);
 		});
 
 		it("does not return any devices, when only one device is attached and it is removed after that", () => {
-			assert.deepEqual(devicesService.getDeviceInstances(), [], "Initially getDevicesInstances must return empty array.");
-			assert.deepEqual(devicesService.getDevices(), [], "Initially getDevices must return empty array.");
+			assert.deepStrictEqual(devicesService.getDeviceInstances(), [], "Initially getDevicesInstances must return empty array.");
+			assert.deepStrictEqual(devicesService.getDevices(), [], "Initially getDevices must return empty array.");
 
 			androidDeviceDiscovery.emit(DeviceDiscoveryEventNames.DEVICE_FOUND, androidDevice);
-			assert.deepEqual(devicesService.getDeviceInstances(), [androidDevice]);
-			assert.deepEqual(devicesService.getDevices(), [androidDevice.deviceInfo]);
+			assert.deepStrictEqual(devicesService.getDeviceInstances(), [androidDevice]);
+			assert.deepStrictEqual(devicesService.getDevices(), [androidDevice.deviceInfo]);
 
 			androidDeviceDiscovery.emit(DeviceDiscoveryEventNames.DEVICE_LOST, androidDevice);
-			assert.deepEqual(devicesService.getDeviceInstances(), [], "When all devices are lost, getDevicesInstances must return empty array.");
-			assert.deepEqual(devicesService.getDevices(), [], "When all devices are lost, getDevices must return empty array.");
+			assert.deepStrictEqual(devicesService.getDeviceInstances(), [], "When all devices are lost, getDevicesInstances must return empty array.");
+			assert.deepStrictEqual(devicesService.getDevices(), [], "When all devices are lost, getDevices must return empty array.");
 		});
 
 		it("returns one android device, when two devices are attached and one of them is removed", () => {
-			assert.deepEqual(devicesService.getDeviceInstances(), [], "Initially getDevicesInstances must return empty array.");
-			assert.deepEqual(devicesService.getDevices(), [], "Initially getDevices must return empty array.");
+			assert.deepStrictEqual(devicesService.getDeviceInstances(), [], "Initially getDevicesInstances must return empty array.");
+			assert.deepStrictEqual(devicesService.getDevices(), [], "Initially getDevices must return empty array.");
 
 			const tempDevice = { deviceInfo: { identifier: "temp-device" } };
 			androidDeviceDiscovery.emit(DeviceDiscoveryEventNames.DEVICE_FOUND, androidDevice);
 			androidDeviceDiscovery.emit(DeviceDiscoveryEventNames.DEVICE_FOUND, tempDevice);
-			assert.deepEqual(devicesService.getDeviceInstances(), [androidDevice, tempDevice]);
-			assert.deepEqual(devicesService.getDevices(), [androidDevice.deviceInfo, tempDevice.deviceInfo]);
+			assert.deepStrictEqual(devicesService.getDeviceInstances(), [androidDevice, tempDevice]);
+			assert.deepStrictEqual(devicesService.getDevices(), [androidDevice.deviceInfo, tempDevice.deviceInfo]);
 
 			androidDeviceDiscovery.emit(DeviceDiscoveryEventNames.DEVICE_LOST, tempDevice);
-			assert.deepEqual(devicesService.getDeviceInstances(), [androidDevice]);
-			assert.deepEqual(devicesService.getDevices(), [androidDevice.deviceInfo]);
+			assert.deepStrictEqual(devicesService.getDeviceInstances(), [androidDevice]);
+			assert.deepStrictEqual(devicesService.getDevices(), [androidDevice.deviceInfo]);
 		});
 	});
 
@@ -520,8 +520,8 @@ describe("devicesService", () => {
 			for (let index = 0; index < results.length; index++) {
 				const realResult = await results[index];
 				assert.isTrue(realResult.isInstalled);
-				assert.deepEqual(realResult.appIdentifier, appId);
-				assert.deepEqual(realResult.deviceIdentifier, deviceIdentifiers[index]);
+				assert.deepStrictEqual(realResult.appIdentifier, appId);
+				assert.deepStrictEqual(realResult.deviceIdentifier, deviceIdentifiers[index]);
 			}
 		});
 
@@ -529,7 +529,7 @@ describe("devicesService", () => {
 			const results = devicesService.isAppInstalledOnDevices([androidDevice.deviceInfo.identifier, iOSDevice.deviceInfo.identifier], "com.telerik.unitTest3", "cordova", "");
 			assert.isTrue(results.length > 0);
 			const isInstalledOnDevices = (await Promise.all(results)).map(r => r.isInstalled);
-			assert.deepEqual(isInstalledOnDevices, [true, false]);
+			assert.deepStrictEqual(isInstalledOnDevices, [true, false]);
 		});
 
 		it("throws error when invalid identifier is passed", async () => {
@@ -568,26 +568,26 @@ describe("devicesService", () => {
 				assert.isFalse(devicesService.hasDevices, "Initially devicesService hasDevices must be false.");
 				androidDeviceDiscovery.emit(DeviceDiscoveryEventNames.DEVICE_FOUND, androidDevice);
 				await devicesService.initialize({ platform: "android", deviceId: deviceId });
-				assert.deepEqual(devicesService.platform, "android");
-				assert.deepEqual(devicesService.deviceCount, 1);
+				assert.deepStrictEqual(devicesService.platform, "android");
+				assert.deepStrictEqual(devicesService.deviceCount, 1);
 				androidDeviceDiscovery.emit(DeviceDiscoveryEventNames.DEVICE_FOUND, tempDevice);
 				assert.isTrue(devicesService.hasDevices, "After emitting and initializing, hasDevices must be true");
-				assert.deepEqual(devicesService.getDeviceInstances(), [androidDevice, tempDevice]);
-				assert.deepEqual(devicesService.getDevices(), [androidDevice.deviceInfo, tempDevice.deviceInfo]);
-				assert.deepEqual(devicesService.deviceCount, 1);
+				assert.deepStrictEqual(devicesService.getDeviceInstances(), [androidDevice, tempDevice]);
+				assert.deepStrictEqual(devicesService.getDevices(), [androidDevice.deviceInfo, tempDevice.deviceInfo]);
+				assert.deepStrictEqual(devicesService.deviceCount, 1);
 				await devicesService.execute(() => { counter++; return Promise.resolve(); });
-				assert.deepEqual(counter, 1, "The action must be executed on only one device.");
+				assert.deepStrictEqual(counter, 1, "The action must be executed on only one device.");
 				counter = 0;
 				await devicesService.execute(() => { counter++; return Promise.resolve(); }, () => false);
-				assert.deepEqual(counter, 0, "The action must not be executed when canExecute returns false.");
+				assert.deepStrictEqual(counter, 0, "The action must not be executed when canExecute returns false.");
 				counter = 0;
 				await devicesService.execute(() => { counter++; return Promise.resolve(); }, () => true);
-				assert.deepEqual(counter, 1, "The action must be executed on only one device.");
+				assert.deepStrictEqual(counter, 1, "The action must be executed on only one device.");
 				androidDeviceDiscovery.emit(DeviceDiscoveryEventNames.DEVICE_LOST, androidDevice);
 				androidDeviceDiscovery.emit(DeviceDiscoveryEventNames.DEVICE_LOST, tempDevice);
 				counter = 0;
 				await devicesService.execute(() => { counter++; return Promise.resolve(); }, () => true, { allowNoDevices: true });
-				assert.deepEqual(counter, 0, "The action must not be executed when there are no devices.");
+				assert.deepStrictEqual(counter, 0, "The action must not be executed when there are no devices.");
 				assert.isTrue(logger.output.indexOf(constants.ERROR_NO_DEVICES) !== -1);
 			};
 
@@ -695,29 +695,29 @@ describe("devicesService", () => {
 				assert.isFalse(devicesService.hasDevices, "Initially devicesService hasDevices must be false.");
 				androidDeviceDiscovery.emit(DeviceDiscoveryEventNames.DEVICE_FOUND, androidDevice);
 				await devicesService.initialize({ deviceId: deviceId });
-				assert.deepEqual(devicesService.platform, "android");
-				assert.deepEqual(devicesService.deviceCount, 1);
+				assert.deepStrictEqual(devicesService.platform, "android");
+				assert.deepStrictEqual(devicesService.deviceCount, 1);
 				androidDeviceDiscovery.emit(DeviceDiscoveryEventNames.DEVICE_FOUND, tempDevice);
 				iOSDeviceDiscovery.emit(DeviceDiscoveryEventNames.DEVICE_FOUND, iOSDevice);
 				assert.isTrue(devicesService.hasDevices, "After emitting and initializing, hasDevices must be true");
-				assert.deepEqual(devicesService.getDeviceInstances(), [androidDevice, tempDevice, iOSDevice]);
-				assert.deepEqual(devicesService.getDevices(), [androidDevice.deviceInfo, tempDevice.deviceInfo, iOSDevice.deviceInfo]);
-				assert.deepEqual(devicesService.deviceCount, 1);
+				assert.deepStrictEqual(devicesService.getDeviceInstances(), [androidDevice, tempDevice, iOSDevice]);
+				assert.deepStrictEqual(devicesService.getDevices(), [androidDevice.deviceInfo, tempDevice.deviceInfo, iOSDevice.deviceInfo]);
+				assert.deepStrictEqual(devicesService.deviceCount, 1);
 				counter = 0;
 				await devicesService.execute(() => { counter++; return Promise.resolve(); });
-				assert.deepEqual(counter, 1, "The action must be executed on only one device.");
+				assert.deepStrictEqual(counter, 1, "The action must be executed on only one device.");
 				counter = 0;
 				await devicesService.execute(() => { counter++; return Promise.resolve(); }, () => false);
-				assert.deepEqual(counter, 0, "The action must not be executed when canExecute returns false.");
+				assert.deepStrictEqual(counter, 0, "The action must not be executed when canExecute returns false.");
 				counter = 0;
 				await devicesService.execute(() => { counter++; return Promise.resolve(); }, () => true);
-				assert.deepEqual(counter, 1, "The action must be executed on only one device.");
+				assert.deepStrictEqual(counter, 1, "The action must be executed on only one device.");
 				androidDeviceDiscovery.emit(DeviceDiscoveryEventNames.DEVICE_LOST, androidDevice);
 				androidDeviceDiscovery.emit(DeviceDiscoveryEventNames.DEVICE_LOST, tempDevice);
 				iOSDeviceDiscovery.emit(DeviceDiscoveryEventNames.DEVICE_LOST, iOSDevice);
 				counter = 0;
 				await devicesService.execute(() => { counter++; return Promise.resolve(); }, () => true, { allowNoDevices: true });
-				assert.deepEqual(counter, 0, "The action must not be executed when there are no devices.");
+				assert.deepStrictEqual(counter, 0, "The action must not be executed when there are no devices.");
 				assert.isTrue(logger.output.indexOf(constants.ERROR_NO_DEVICES) !== -1);
 			};
 
@@ -773,52 +773,52 @@ describe("devicesService", () => {
 				let deviceIdentifier: string;
 				counter = 0;
 				await devicesService.execute((d: Mobile.IDevice) => { deviceIdentifier = d.deviceInfo.identifier; counter++; return Promise.resolve(); });
-				assert.deepEqual(counter, 1, "The action must be executed on only one device. ASAAS");
-				assert.deepEqual(deviceIdentifier, iOSSimulator.deviceInfo.identifier);
+				assert.deepStrictEqual(counter, 1, "The action must be executed on only one device. ASAAS");
+				assert.deepStrictEqual(deviceIdentifier, iOSSimulator.deviceInfo.identifier);
 				counter = 0;
 				await devicesService.execute(() => { counter++; return Promise.resolve(); }, () => false);
-				assert.deepEqual(counter, 0, "The action must not be executed when canExecute returns false.");
+				assert.deepStrictEqual(counter, 0, "The action must not be executed when canExecute returns false.");
 				counter = 0;
 				iOSDeviceDiscovery.emit(DeviceDiscoveryEventNames.DEVICE_LOST, iOSDevice);
 				deviceIdentifier = null;
 				await devicesService.execute((d: Mobile.IDevice) => { deviceIdentifier = d.deviceInfo.identifier; counter++; return Promise.resolve(); });
-				assert.deepEqual(counter, 1, "The action must be executed on only one device.");
-				assert.deepEqual(deviceIdentifier, iOSSimulator.deviceInfo.identifier);
+				assert.deepStrictEqual(counter, 1, "The action must be executed on only one device.");
+				assert.deepStrictEqual(deviceIdentifier, iOSSimulator.deviceInfo.identifier);
 				counter = 0;
 				deviceIdentifier = null;
 				await devicesService.execute((d: Mobile.IDevice) => { deviceIdentifier = d.deviceInfo.identifier; counter++; return Promise.resolve(); }, () => false);
-				assert.deepEqual(counter, 0, "The action must not be executed when canExecute returns false.");
-				assert.deepEqual(deviceIdentifier, null);
+				assert.deepStrictEqual(counter, 0, "The action must not be executed when canExecute returns false.");
+				assert.deepStrictEqual(deviceIdentifier, null);
 			});
 
 			it("all methods work as expected", async () => {
 				assert.isFalse(devicesService.hasDevices, "Initially devicesService hasDevices must be false.");
 				androidDeviceDiscovery.emit(DeviceDiscoveryEventNames.DEVICE_FOUND, androidDevice);
 				await devicesService.initialize({ platform: "android" });
-				assert.deepEqual(devicesService.platform, "android");
-				assert.deepEqual(devicesService.deviceCount, 1);
+				assert.deepStrictEqual(devicesService.platform, "android");
+				assert.deepStrictEqual(devicesService.deviceCount, 1);
 				androidDeviceDiscovery.emit(DeviceDiscoveryEventNames.DEVICE_FOUND, tempDevice);
 				assert.isTrue(devicesService.hasDevices, "After emitting and initializing, hasDevices must be true");
-				assert.deepEqual(devicesService.getDeviceInstances(), [androidDevice, tempDevice]);
-				assert.deepEqual(devicesService.getDevices(), [androidDevice.deviceInfo, tempDevice.deviceInfo]);
-				assert.deepEqual(devicesService.deviceCount, 2);
+				assert.deepStrictEqual(devicesService.getDeviceInstances(), [androidDevice, tempDevice]);
+				assert.deepStrictEqual(devicesService.getDevices(), [androidDevice.deviceInfo, tempDevice.deviceInfo]);
+				assert.deepStrictEqual(devicesService.deviceCount, 2);
 				counter = 0;
 				await devicesService.execute(() => { counter++; return Promise.resolve(); });
-				assert.deepEqual(counter, 2, "The action must be executed on two devices.");
+				assert.deepStrictEqual(counter, 2, "The action must be executed on two devices.");
 				counter = 0;
 				await devicesService.execute(() => { counter++; return Promise.resolve(); }, () => false);
-				assert.deepEqual(counter, 0, "The action must not be executed when canExecute returns false.");
+				assert.deepStrictEqual(counter, 0, "The action must not be executed when canExecute returns false.");
 				counter = 0;
 				await devicesService.execute(() => { counter++; return Promise.resolve(); }, () => true);
-				assert.deepEqual(counter, 2, "The action must be executed on two devices.");
+				assert.deepStrictEqual(counter, 2, "The action must be executed on two devices.");
 				androidDeviceDiscovery.emit(DeviceDiscoveryEventNames.DEVICE_LOST, androidDevice);
 				counter = 0;
 				await devicesService.execute(() => { counter++; return Promise.resolve(); }, () => true);
-				assert.deepEqual(counter, 1, "The action must be executed on only one device.");
+				assert.deepStrictEqual(counter, 1, "The action must be executed on only one device.");
 				counter = 0;
 				androidDeviceDiscovery.emit(DeviceDiscoveryEventNames.DEVICE_LOST, tempDevice);
 				await devicesService.execute(() => { counter++; return Promise.resolve(); }, () => true, { allowNoDevices: true });
-				assert.deepEqual(counter, 0, "The action must not be executed when there are no devices.");
+				assert.deepStrictEqual(counter, 0, "The action must not be executed when there are no devices.");
 				assert.isTrue(logger.output.indexOf(constants.ERROR_NO_DEVICES) !== -1);
 				assert.isFalse(androidEmulatorServices.isStartEmulatorCalled);
 			});
@@ -830,31 +830,31 @@ describe("devicesService", () => {
 			androidDeviceDiscovery.emit(DeviceDiscoveryEventNames.DEVICE_FOUND, androidDevice);
 			iOSDeviceDiscovery.emit(DeviceDiscoveryEventNames.DEVICE_FOUND, iOSDevice);
 			await devicesService.initialize({ skipInferPlatform: true });
-			assert.deepEqual(devicesService.platform, undefined);
-			assert.deepEqual(devicesService.deviceCount, 2);
+			assert.deepStrictEqual(devicesService.platform, undefined);
+			assert.deepStrictEqual(devicesService.deviceCount, 2);
 			androidDeviceDiscovery.emit(DeviceDiscoveryEventNames.DEVICE_FOUND, tempDevice);
 			assert.isTrue(devicesService.hasDevices, "After emitting and initializing, hasDevices must be true");
-			assert.deepEqual(devicesService.getDeviceInstances(), [androidDevice, iOSDevice, tempDevice]);
-			assert.deepEqual(devicesService.getDevices(), [androidDevice.deviceInfo, iOSDevice.deviceInfo, tempDevice.deviceInfo]);
-			assert.deepEqual(devicesService.deviceCount, 3);
+			assert.deepStrictEqual(devicesService.getDeviceInstances(), [androidDevice, iOSDevice, tempDevice]);
+			assert.deepStrictEqual(devicesService.getDevices(), [androidDevice.deviceInfo, iOSDevice.deviceInfo, tempDevice.deviceInfo]);
+			assert.deepStrictEqual(devicesService.deviceCount, 3);
 			counter = 0;
 			await devicesService.execute(() => { counter++; return Promise.resolve(); });
-			assert.deepEqual(counter, 3, "The action must be executed on two devices.");
+			assert.deepStrictEqual(counter, 3, "The action must be executed on two devices.");
 			counter = 0;
 			await devicesService.execute(() => { counter++; return Promise.resolve(); }, () => false);
-			assert.deepEqual(counter, 0, "The action must not be executed when canExecute returns false.");
+			assert.deepStrictEqual(counter, 0, "The action must not be executed when canExecute returns false.");
 			counter = 0;
 			await devicesService.execute(() => { counter++; return Promise.resolve(); }, () => true);
-			assert.deepEqual(counter, 3, "The action must be executed on three devices.");
+			assert.deepStrictEqual(counter, 3, "The action must be executed on three devices.");
 			androidDeviceDiscovery.emit(DeviceDiscoveryEventNames.DEVICE_LOST, androidDevice);
 			counter = 0;
 			await devicesService.execute(() => { counter++; return Promise.resolve(); }, () => true);
-			assert.deepEqual(counter, 2, "The action must be executed on two devices.");
+			assert.deepStrictEqual(counter, 2, "The action must be executed on two devices.");
 			androidDeviceDiscovery.emit(DeviceDiscoveryEventNames.DEVICE_LOST, tempDevice);
 			iOSDeviceDiscovery.emit(DeviceDiscoveryEventNames.DEVICE_LOST, iOSDevice);
 			counter = 0;
 			await devicesService.execute(() => { counter++; return Promise.resolve(); }, () => true, { allowNoDevices: true });
-			assert.deepEqual(counter, 0, "The action must not be executed when there are no devices.");
+			assert.deepStrictEqual(counter, 0, "The action must not be executed when there are no devices.");
 			assert.isTrue(logger.output.indexOf(constants.ERROR_NO_DEVICES) !== -1);
 		});
 
@@ -862,30 +862,30 @@ describe("devicesService", () => {
 			assert.isFalse(devicesService.hasDevices, "Initially devicesService hasDevices must be false.");
 			androidDeviceDiscovery.emit(DeviceDiscoveryEventNames.DEVICE_FOUND, androidDevice);
 			await devicesService.initialize();
-			assert.deepEqual(devicesService.platform, "android");
-			assert.deepEqual(devicesService.deviceCount, 1);
+			assert.deepStrictEqual(devicesService.platform, "android");
+			assert.deepStrictEqual(devicesService.deviceCount, 1);
 			androidDeviceDiscovery.emit(DeviceDiscoveryEventNames.DEVICE_FOUND, tempDevice);
 			assert.isTrue(devicesService.hasDevices, "After emitting and initializing, hasDevices must be true");
-			assert.deepEqual(devicesService.getDeviceInstances(), [androidDevice, tempDevice]);
-			assert.deepEqual(devicesService.getDevices(), [androidDevice.deviceInfo, tempDevice.deviceInfo]);
-			assert.deepEqual(devicesService.deviceCount, 2);
+			assert.deepStrictEqual(devicesService.getDeviceInstances(), [androidDevice, tempDevice]);
+			assert.deepStrictEqual(devicesService.getDevices(), [androidDevice.deviceInfo, tempDevice.deviceInfo]);
+			assert.deepStrictEqual(devicesService.deviceCount, 2);
 			counter = 0;
 			await devicesService.execute(() => { counter++; return Promise.resolve(); });
-			assert.deepEqual(counter, 2, "The action must be executed on two devices.");
+			assert.deepStrictEqual(counter, 2, "The action must be executed on two devices.");
 			counter = 0;
 			await devicesService.execute(() => { counter++; return Promise.resolve(); }, () => false);
-			assert.deepEqual(counter, 0, "The action must not be executed when canExecute returns false.");
+			assert.deepStrictEqual(counter, 0, "The action must not be executed when canExecute returns false.");
 			counter = 0;
 			await devicesService.execute(() => { counter++; return Promise.resolve(); }, () => true);
-			assert.deepEqual(counter, 2, "The action must be executed on two devices.");
+			assert.deepStrictEqual(counter, 2, "The action must be executed on two devices.");
 			androidDeviceDiscovery.emit(DeviceDiscoveryEventNames.DEVICE_LOST, androidDevice);
 			counter = 0;
 			await devicesService.execute(() => { counter++; return Promise.resolve(); }, () => true);
-			assert.deepEqual(counter, 1, "The action must be executed on only one device.");
+			assert.deepStrictEqual(counter, 1, "The action must be executed on only one device.");
 			androidDeviceDiscovery.emit(DeviceDiscoveryEventNames.DEVICE_LOST, tempDevice);
 			counter = 0;
 			await devicesService.execute(() => { counter++; return Promise.resolve(); }, () => true, { allowNoDevices: true });
-			assert.deepEqual(counter, 0, "The action must not be executed when there are no devices.");
+			assert.deepStrictEqual(counter, 0, "The action must not be executed when there are no devices.");
 			assert.isTrue(logger.output.indexOf(constants.ERROR_NO_DEVICES) !== -1);
 		});
 
@@ -900,10 +900,10 @@ describe("devicesService", () => {
 			assert.isFalse(devicesService.hasDevices, "Initially devicesService hasDevices must be false.");
 			androidDeviceDiscovery.emit(DeviceDiscoveryEventNames.DEVICE_FOUND, androidDevice);
 			await devicesService.initialize({ platform: "android" });
-			assert.deepEqual(devicesService.platform, "android");
-			assert.deepEqual(devicesService.deviceCount, 1);
+			assert.deepStrictEqual(devicesService.platform, "android");
+			assert.deepStrictEqual(devicesService.deviceCount, 1);
 			await devicesService.initialize({ platform: "ios" });
-			assert.deepEqual(devicesService.platform, "android");
+			assert.deepStrictEqual(devicesService.platform, "android");
 		});
 
 		describe("when options.emulator is true on non-Darwin OS", () => {
@@ -1007,12 +1007,12 @@ describe("devicesService", () => {
 				expectedDeviceId = "expcetedDeviceId";
 
 			devicesService.setLogLevel(expectedLogLevel, expectedDeviceId);
-			assert.deepEqual(actualLogLevel, expectedLogLevel);
-			assert.deepEqual(actualDeviceIdentifier, expectedDeviceId);
+			assert.deepStrictEqual(actualLogLevel, expectedLogLevel);
+			assert.deepStrictEqual(actualDeviceIdentifier, expectedDeviceId);
 
 			devicesService.setLogLevel(expectedLogLevel);
-			assert.deepEqual(actualLogLevel, expectedLogLevel);
-			assert.deepEqual(actualDeviceIdentifier, undefined);
+			assert.deepStrictEqual(actualLogLevel, expectedLogLevel);
+			assert.deepStrictEqual(actualDeviceIdentifier, undefined);
 		});
 	});
 
@@ -1050,9 +1050,9 @@ describe("devicesService", () => {
 	describe("getDevicesForPlatform", () => {
 		it("returns empty array when there are no devices", () => {
 			assert.isFalse(devicesService.hasDevices, "Initially devicesService hasDevices must be false.");
-			assert.deepEqual(devicesService.getDevicesForPlatform("android"), []);
-			assert.deepEqual(devicesService.getDevicesForPlatform("ios"), []);
-			assert.deepEqual(devicesService.getDevicesForPlatform("invalid platform"), []);
+			assert.deepStrictEqual(devicesService.getDevicesForPlatform("android"), []);
+			assert.deepStrictEqual(devicesService.getDevicesForPlatform("ios"), []);
+			assert.deepStrictEqual(devicesService.getDevicesForPlatform("invalid platform"), []);
 		});
 
 		it("returns correct results when devices with different platforms are detected", () => {
@@ -1061,9 +1061,9 @@ describe("devicesService", () => {
 			iOSDeviceDiscovery.emit(DeviceDiscoveryEventNames.DEVICE_FOUND, iOSDevice);
 			const tempDeviceInstance = { deviceInfo: { identifier: "temp-device", platform: "android" } };
 			androidDeviceDiscovery.emit(DeviceDiscoveryEventNames.DEVICE_FOUND, tempDeviceInstance);
-			assert.deepEqual(devicesService.getDevicesForPlatform("android"), [androidDevice, tempDeviceInstance]);
-			assert.deepEqual(devicesService.getDevicesForPlatform("ios"), [iOSDevice]);
-			assert.deepEqual(devicesService.getDevicesForPlatform("invalid platform"), []);
+			assert.deepStrictEqual(devicesService.getDevicesForPlatform("android"), [androidDevice, tempDeviceInstance]);
+			assert.deepStrictEqual(devicesService.getDevicesForPlatform("ios"), [iOSDevice]);
+			assert.deepStrictEqual(devicesService.getDevicesForPlatform("invalid platform"), []);
 		});
 
 		it("returns correct results when devices with different platforms are detected, assert case insensitivity", () => {
@@ -1072,17 +1072,17 @@ describe("devicesService", () => {
 			iOSDeviceDiscovery.emit(DeviceDiscoveryEventNames.DEVICE_FOUND, iOSDevice);
 			const tempDeviceInstance = { deviceInfo: { identifier: "temp-device", platform: "AndroId" } };
 			androidDeviceDiscovery.emit(DeviceDiscoveryEventNames.DEVICE_FOUND, tempDeviceInstance);
-			assert.deepEqual(devicesService.getDevicesForPlatform("android"), [androidDevice, tempDeviceInstance]);
-			assert.deepEqual(devicesService.getDevicesForPlatform("ios"), [iOSDevice]);
-			assert.deepEqual(devicesService.getDevicesForPlatform("invalid platform"), []);
+			assert.deepStrictEqual(devicesService.getDevicesForPlatform("android"), [androidDevice, tempDeviceInstance]);
+			assert.deepStrictEqual(devicesService.getDevicesForPlatform("ios"), [iOSDevice]);
+			assert.deepStrictEqual(devicesService.getDevicesForPlatform("invalid platform"), []);
 
-			assert.deepEqual(devicesService.getDevicesForPlatform("AnDroID"), [androidDevice, tempDeviceInstance]);
-			assert.deepEqual(devicesService.getDevicesForPlatform("Ios"), [iOSDevice]);
-			assert.deepEqual(devicesService.getDevicesForPlatform("inValid PlatForm"), []);
+			assert.deepStrictEqual(devicesService.getDevicesForPlatform("AnDroID"), [androidDevice, tempDeviceInstance]);
+			assert.deepStrictEqual(devicesService.getDevicesForPlatform("Ios"), [iOSDevice]);
+			assert.deepStrictEqual(devicesService.getDevicesForPlatform("inValid PlatForm"), []);
 
-			assert.deepEqual(devicesService.getDevicesForPlatform("ANDROID"), [androidDevice, tempDeviceInstance]);
-			assert.deepEqual(devicesService.getDevicesForPlatform("IOS"), [iOSDevice]);
-			assert.deepEqual(devicesService.getDevicesForPlatform("INVALID PLATFORM"), []);
+			assert.deepStrictEqual(devicesService.getDevicesForPlatform("ANDROID"), [androidDevice, tempDeviceInstance]);
+			assert.deepStrictEqual(devicesService.getDevicesForPlatform("IOS"), [iOSDevice]);
+			assert.deepStrictEqual(devicesService.getDevicesForPlatform("INVALID PLATFORM"), []);
 		});
 	});
 
@@ -1159,41 +1159,41 @@ describe("devicesService", () => {
 
 	describe("getDeviceByDeviceOption", () => {
 		it("returns undefined when devicesService is not initialized", () => {
-			assert.deepEqual(devicesService.getDeviceByDeviceOption(), undefined);
+			assert.deepStrictEqual(devicesService.getDeviceByDeviceOption(), undefined);
 		});
 
 		it("returns undefined when devicesService is initialized with platform only", async () => {
 			await devicesService.initialize({ platform: "android" });
-			assert.deepEqual(devicesService.getDeviceByDeviceOption(), undefined);
+			assert.deepStrictEqual(devicesService.getDeviceByDeviceOption(), undefined);
 		});
 
 		it("returns undefined when devicesService is initialized with skipInferPlatform only", async () => {
 			await devicesService.initialize({ skipInferPlatform: true });
-			assert.deepEqual(devicesService.getDeviceByDeviceOption(), undefined);
+			assert.deepStrictEqual(devicesService.getDeviceByDeviceOption(), undefined);
 		});
 
 		it("returns deviceIdentifier when devicesService is initialized with deviceId only", async () => {
 			androidDeviceDiscovery.emit(DeviceDiscoveryEventNames.DEVICE_FOUND, androidDevice);
 			await devicesService.initialize({ deviceId: androidDevice.deviceInfo.identifier });
-			assert.deepEqual(devicesService.getDeviceByDeviceOption(), androidDevice);
+			assert.deepStrictEqual(devicesService.getDeviceByDeviceOption(), androidDevice);
 		});
 
 		it("returns deviceIdentifier when devicesService is initialized with deviceId (passed as number)", async () => {
 			androidDeviceDiscovery.emit(DeviceDiscoveryEventNames.DEVICE_FOUND, androidDevice);
 			await devicesService.initialize({ deviceId: "1" });
-			assert.deepEqual(devicesService.getDeviceByDeviceOption(), androidDevice);
+			assert.deepStrictEqual(devicesService.getDeviceByDeviceOption(), androidDevice);
 		});
 
 		it("returns deviceIdentifier when devicesService is initialized with deviceId and platform", async () => {
 			androidDeviceDiscovery.emit(DeviceDiscoveryEventNames.DEVICE_FOUND, androidDevice);
 			await devicesService.initialize({ deviceId: androidDevice.deviceInfo.identifier, platform: "android" });
-			assert.deepEqual(devicesService.getDeviceByDeviceOption(), androidDevice);
+			assert.deepStrictEqual(devicesService.getDeviceByDeviceOption(), androidDevice);
 		});
 
 		it("returns deviceIdentifier when devicesService is initialized with deviceId (passed as number) and platform", async () => {
 			androidDeviceDiscovery.emit(DeviceDiscoveryEventNames.DEVICE_FOUND, androidDevice);
 			await devicesService.initialize({ deviceId: "1", platform: "android" });
-			assert.deepEqual(devicesService.getDeviceByDeviceOption(), androidDevice);
+			assert.deepStrictEqual(devicesService.getDeviceByDeviceOption(), androidDevice);
 		});
 	});
 
@@ -1246,7 +1246,7 @@ describe("devicesService", () => {
 			devicesService.startDeviceDetectionInterval();
 			devicesService.startDeviceDetectionInterval();
 
-			assert.deepEqual(setIntervalsCalledCount, 1);
+			assert.deepStrictEqual(setIntervalsCalledCount, 1);
 		});
 
 		describe("ios devices check", () => {
@@ -1493,7 +1493,7 @@ describe("devicesService", () => {
 
 			await devicesService.detectCurrentlyAttachedDevices();
 
-			assert.deepEqual(workingDeviceDiscoveriesCalled.length, deviceDiscoveries.deviceDiscoveriesThatWork.length,
+			assert.deepStrictEqual(workingDeviceDiscoveriesCalled.length, deviceDiscoveries.deviceDiscoveriesThatWork.length,
 				"We should have called startLookingForDevices for each of the device discoveries that work.");
 		};
 
@@ -1535,9 +1535,9 @@ describe("devicesService", () => {
 
 		await devicesService.mapAbstractToTcpPort(expectedDeviceIdentifier, expectedAppIdentifier, expectedFramework);
 
-		assert.deepEqual(actualDeviceIdentifier, expectedDeviceIdentifier);
-		assert.deepEqual(actualAppIdentifier, expectedAppIdentifier);
-		assert.deepEqual(actualFramework, expectedFramework);
+		assert.deepStrictEqual(actualDeviceIdentifier, expectedDeviceIdentifier);
+		assert.deepStrictEqual(actualAppIdentifier, expectedAppIdentifier);
+		assert.deepStrictEqual(actualFramework, expectedFramework);
 	});
 
 	it("should get debuggable apps correctly for multiple devices.", async () => {
@@ -1579,7 +1579,7 @@ describe("devicesService", () => {
 		const debuggableAppsResult = await Promise.all(futures);
 		const debuggableApps = _.flatten<Mobile.IDeviceApplicationInformation>(debuggableAppsResult);
 
-		assert.deepEqual(debuggableApps, _.concat(androidDebuggableApps, iosDebuggableApps));
+		assert.deepStrictEqual(debuggableApps, _.concat(androidDebuggableApps, iosDebuggableApps));
 	});
 
 	describe("getDebuggableViews", () => {
@@ -1617,7 +1617,7 @@ describe("devicesService", () => {
 
 			const actualDebuggableViews = await devicesService.getDebuggableViews(androidDevice.deviceInfo.identifier, "com.telerik.myapp");
 
-			assert.deepEqual(actualDebuggableViews, debuggableViews);
+			assert.deepStrictEqual(actualDebuggableViews, debuggableViews);
 		});
 
 		it("should return undefined if debuggable views are found for otheer app but not for the specified.", async () => {
@@ -1629,7 +1629,7 @@ describe("devicesService", () => {
 
 			const actualDebuggableViews = await devicesService.getDebuggableViews(androidDevice.deviceInfo.identifier, "com.telerik.myapp");
 
-			assert.deepEqual(actualDebuggableViews, undefined);
+			assert.deepStrictEqual(actualDebuggableViews, undefined);
 		});
 	});
 
@@ -1648,7 +1648,7 @@ describe("devicesService", () => {
 
 		it("returns installed applications", async () => {
 			const actualResult = await devicesService.getInstalledApplications(androidDevice.deviceInfo.identifier);
-			assert.deepEqual(actualResult, ["com.telerik.unitTest1", "com.telerik.unitTest2", "com.telerik.unitTest3"]);
+			assert.deepStrictEqual(actualResult, ["com.telerik.unitTest1", "com.telerik.unitTest2", "com.telerik.unitTest3"]);
 		});
 	});
 
@@ -1667,7 +1667,7 @@ describe("devicesService", () => {
 			};
 
 			const selectedDeviceInstance = await devicesService.pickSingleDevice({ onlyDevices: false, onlyEmulators: false, deviceId: specifiedDeviceOption });
-			assert.deepEqual(selectedDeviceInstance, deviceInstance);
+			assert.deepStrictEqual(selectedDeviceInstance, deviceInstance);
 		});
 
 		const assertErrorIsThrown = async (getDeviceInstancesResult: Mobile.IDevice[], passedOptions?: { forDevice: boolean, emulator: boolean }) => {
@@ -1751,7 +1751,7 @@ describe("devicesService", () => {
 			const actualDeviceInstance =
 				await devicesService.pickSingleDevice({ onlyDevices: false, onlyEmulators: false, deviceId: null });
 
-			assert.deepEqual(actualDeviceInstance, deviceInstance);
+			assert.deepStrictEqual(actualDeviceInstance, deviceInstance);
 		});
 
 		describe("when multiple devices are detected", () => {
@@ -1810,8 +1810,8 @@ describe("devicesService", () => {
 					const actualDeviceInstance =
 						await devicesService.pickSingleDevice({ onlyDevices: false, onlyEmulators: false, deviceId: null });
 					const expectedChoicesPassedToPrompter = [deviceInstance1, deviceInstance2].map(d => `${d.deviceInfo.identifier} - ${d.deviceInfo.displayName}`);
-					assert.deepEqual(choicesPassedToPrompter, expectedChoicesPassedToPrompter);
-					assert.deepEqual(actualDeviceInstance, deviceInstance2);
+					assert.deepStrictEqual(choicesPassedToPrompter, expectedChoicesPassedToPrompter);
+					assert.deepStrictEqual(actualDeviceInstance, deviceInstance2);
 				});
 			});
 
@@ -1864,7 +1864,7 @@ describe("devicesService", () => {
 					const actualDeviceInstance =
 						await devicesService.pickSingleDevice({ onlyDevices: opts.forDevice, onlyEmulators: opts.emulator, deviceId: null });
 
-					assert.deepEqual(actualDeviceInstance, deviceInstance2);
+					assert.deepStrictEqual(actualDeviceInstance, deviceInstance2);
 				};
 
 				it("returns the emulator with highest API level when --emulator is passed", () => {

@@ -47,13 +47,13 @@ describe("preuninstall.js", () => {
 
 		const expectedPathToCliExecutable = path.join(__dirname, "..", "bin", "tns");
 
-		assert.deepEqual(argsPassedToSpawn, [expectedPathToCliExecutable, "dev-preuninstall"]);
-		assert.deepEqual(optionsPassedToSpawn, [{ stdio: "inherit" }], "The stdio must be inherit as this way CLI's command can determine correctly if terminal is in interactive mode.");
-		assert.deepEqual(dataPassedToConsoleError, []);
+		assert.deepStrictEqual(argsPassedToSpawn, [expectedPathToCliExecutable, "dev-preuninstall"]);
+		assert.deepStrictEqual(optionsPassedToSpawn, [{ stdio: "inherit" }], "The stdio must be inherit as this way CLI's command can determine correctly if terminal is in interactive mode.");
+		assert.deepStrictEqual(dataPassedToConsoleError, []);
 
 		const errMsg = "this is error message";
 		eventEmitter.emit("error", new Error(errMsg));
-		assert.deepEqual(dataPassedToConsoleError, [`Failed to complete all pre-uninstall steps. Error is ${errMsg}`]);
+		assert.deepStrictEqual(dataPassedToConsoleError, [`Failed to complete all pre-uninstall steps. Error is ${errMsg}`]);
 	});
 
 	it("passes --analyticsLogFile option when NS_CLI_PREUNINSTALL_ANALYTICS_LOG_FILE is set", () => {
@@ -70,9 +70,9 @@ describe("preuninstall.js", () => {
 		// so the expectedPathToCliExecutable should be set as it is located in current dir.
 		const expectedPathToCliExecutable = path.join(__dirname, "bin", "tns");
 
-		assert.deepEqual(argsPassedToSpawn, [expectedPathToCliExecutable, "dev-preuninstall", "--analyticsLogFile", "value from env analyticsLog.txt"]);
-		assert.deepEqual(optionsPassedToSpawn, [{ stdio: "inherit" }], "The stdio must be inherit as this way CLI's command can determine correctly if terminal is in interactive mode.");
-		assert.deepEqual(dataPassedToConsoleError, []);
+		assert.deepStrictEqual(argsPassedToSpawn, [expectedPathToCliExecutable, "dev-preuninstall", "--analyticsLogFile", "value from env analyticsLog.txt"]);
+		assert.deepStrictEqual(optionsPassedToSpawn, [{ stdio: "inherit" }], "The stdio must be inherit as this way CLI's command can determine correctly if terminal is in interactive mode.");
+		assert.deepStrictEqual(dataPassedToConsoleError, []);
 	});
 
 	it("ensure package.json has correct preuninstall script", () => {

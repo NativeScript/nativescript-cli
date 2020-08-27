@@ -40,7 +40,7 @@ describe("ipService", () => {
 			const ipAddress = await ipService.getCurrentIPv4Address();
 
 			assert.equal(ipAddress, ip);
-			assert.deepEqual(httpRequestPassedOptions, [{ method: "GET", url: whoamiDefaultEndpoint, timeout: 1000 }]);
+			assert.deepStrictEqual(httpRequestPassedOptions, [{ method: "GET", url: whoamiDefaultEndpoint, timeout: 1000 }]);
 		});
 
 		it("returns result from myip.com when the default endpoint fails", async () => {
@@ -59,7 +59,7 @@ describe("ipService", () => {
 			const ipAddress = await ipService.getCurrentIPv4Address();
 
 			assert.equal(ipAddress, ip);
-			assert.deepEqual(httpRequestPassedOptions, [
+			assert.deepStrictEqual(httpRequestPassedOptions, [
 				{ method: "GET", url: whoamiDefaultEndpoint, timeout: 1000 },
 				{ method: "GET", url: "https://api.myip.com", timeout: 1000 }
 			]);
@@ -90,7 +90,7 @@ describe("ipService", () => {
 			const ipAddress = await ipService.getCurrentIPv4Address();
 
 			assert.equal(ipAddress, ip);
-			assert.deepEqual(httpRequestPassedOptions, [
+			assert.deepStrictEqual(httpRequestPassedOptions, [
 				{ method: "GET", url: whoamiDefaultEndpoint, timeout: 1000 },
 				{ method: "GET", url: "https://api.myip.com", timeout: 1000 },
 				{ method: "GET", url: "https://api.ipify.org", timeout: 1000 }
@@ -126,7 +126,7 @@ describe("ipService", () => {
 			const ipAddress = await ipService.getCurrentIPv4Address();
 
 			assert.isNull(ipAddress);
-			assert.deepEqual(httpRequestPassedOptions, [
+			assert.deepStrictEqual(httpRequestPassedOptions, [
 				{ method: "GET", url: whoamiDefaultEndpoint, timeout: 1000 },
 				{ method: "GET", url: "https://api.myip.com", timeout: 1000 },
 				{ method: "GET", url: "https://api.ipify.org", timeout: 1000 }

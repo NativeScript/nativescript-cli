@@ -905,6 +905,6 @@ describe("handleNativeDependenciesChange", () => {
 
 		await iOSProjectService.handleNativeDependenciesChange(projectData);
 
-		assert.deepEqual(executedCocoapodsMethods, ["podInstall", "podMerge"]);
+		assert.deepStrictEqual(executedCocoapodsMethods, ["podInstall", "podMerge"]);
 	});
 });

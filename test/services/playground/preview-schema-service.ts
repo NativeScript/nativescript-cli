@@ -82,7 +82,7 @@ describe("PreviewSchemaService", () => {
 
 			const schemaData = previewSchemaService.getSchemaData("someTestProjectDir");
 
-			assert.deepEqual(schemaData, testCase.expectedSchema);
+			assert.deepStrictEqual(schemaData, testCase.expectedSchema);
 			if (testCase.expectedToThrow) {
 				assert.isNotNull(actualError);
 			}

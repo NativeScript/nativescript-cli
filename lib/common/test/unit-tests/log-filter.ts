@@ -46,22 +46,22 @@ describe("logFilter", () => {
 
 	describe("loggingLevel", () => {
 		it("verify default value is INFO", () => {
-			assert.deepEqual(logFilter.loggingLevel, infoLogLevel, "Default level should be INFO.");
+			assert.deepStrictEqual(logFilter.loggingLevel, infoLogLevel, "Default level should be INFO.");
 		});
 
 		it("sets default value to FULL", () => {
 			logFilter.loggingLevel = fullLogLevel;
-			assert.deepEqual(logFilter.loggingLevel, fullLogLevel, "Default level should be FULL.");
+			assert.deepStrictEqual(logFilter.loggingLevel, fullLogLevel, "Default level should be FULL.");
 		});
 
 		it("keeps default value to INFO when invalid value is passed", () => {
 			logFilter.loggingLevel = "invalidValue";
-			assert.deepEqual(logFilter.loggingLevel, infoLogLevel, "Default level should be INFO.");
+			assert.deepStrictEqual(logFilter.loggingLevel, infoLogLevel, "Default level should be INFO.");
 		});
 
 		it("keeps default value to INFO when falsey value is passed", () => {
 			logFilter.loggingLevel = null;
-			assert.deepEqual(logFilter.loggingLevel, infoLogLevel, "Default level should be INFO.");
+			assert.deepStrictEqual(logFilter.loggingLevel, infoLogLevel, "Default level should be INFO.");
 		});
 	});
 
@@ -69,22 +69,22 @@ describe("logFilter", () => {
 		describe("when logLevel is not specified and default log level is not changed", () => {
 			it("returns same data when platform is not correct", () => {
 				const actualData = logFilter.filterData("invalidPlatform", testData, { logLevel, projectDir: null });
-				assert.deepEqual(actualData, testData);
+				assert.deepStrictEqual(actualData, testData);
 			});
 
 			it("returns same data when platform is not passed", () => {
 				const actualData = logFilter.filterData(null, testData, { logLevel, projectDir: null });
-				assert.deepEqual(actualData, testData);
+				assert.deepStrictEqual(actualData, testData);
 			});
 
 			it("returns correct data when platform is android", () => {
 				const actualData = logFilter.filterData("android", testData, { logLevel, projectDir: null });
-				assert.deepEqual(actualData, androidInfoTestData);
+				assert.deepStrictEqual(actualData, androidInfoTestData);
 			});
 
 			it("returns correct data when platform is ios", () => {
 				const actualData = logFilter.filterData("ios", testData, { logLevel, projectDir: null });
-				assert.deepEqual(actualData, iosInfoTestData);
+				assert.deepStrictEqual(actualData, iosInfoTestData);
 			});
 		});
 
@@ -93,17 +93,17 @@ describe("logFilter", () => {
 
 			it("returns same data when platform is not correct", () => {
 				const actualData = logFilter.filterData("invalidPlatform", testData, null);
-				assert.deepEqual(actualData, testData);
+				assert.deepStrictEqual(actualData, testData);
 			});
 
 			it("returns correct data when platform is android", () => {
 				const actualData = logFilter.filterData("android", testData, null);
-				assert.deepEqual(actualData, androidFullTestData);
+				assert.deepStrictEqual(actualData, androidFullTestData);
 			});
 
 			it("returns correct data when platform is ios", () => {
 				const actualData = logFilter.filterData("ios", testData, null);
-				assert.deepEqual(actualData, iosFullTestData);
+				assert.deepStrictEqual(actualData, iosFullTestData);
 			});
 		});
 
@@ -112,17 +112,17 @@ describe("logFilter", () => {
 
 			it("returns same data when platform is not correct", () => {
 				const actualData = logFilter.filterData("invalidPlatform", testData, { logLevel });
-				assert.deepEqual(actualData, testData, logLevel);
+				assert.deepStrictEqual(actualData, testData, logLevel);
 			});
 
 			it("returns correct data when platform is android", () => {
 				const actualData = logFilter.filterData("android", testData, { logLevel });
-				assert.deepEqual(actualData, androidInfoTestData);
+				assert.deepStrictEqual(actualData, androidInfoTestData);
 			});
 
 			it("returns correct data when platform is ios", () => {
 				const actualData = logFilter.filterData("ios", testData, { logLevel });
-				assert.deepEqual(actualData, iosInfoTestData);
+				assert.deepStrictEqual(actualData, iosInfoTestData);
 			});
 		});
 
@@ -131,17 +131,17 @@ describe("logFilter", () => {
 
 			it("returns same data when platform is not correct", () => {
 				const actualData = logFilter.filterData("invalidPlatform", testData, { logLevel });
-				assert.deepEqual(actualData, testData, logLevel);
+				assert.deepStrictEqual(actualData, testData, logLevel);
 			});
 
 			it("returns correct data when platform is android", () => {
 				const actualData = logFilter.filterData("android", testData, { logLevel });
-				assert.deepEqual(actualData, androidFullTestData);
+				assert.deepStrictEqual(actualData, androidFullTestData);
 			});
 
 			it("returns correct data when platform is ios", () => {
 				const actualData = logFilter.filterData("ios", testData, { logLevel });
-				assert.deepEqual(actualData, iosFullTestData);
+				assert.deepStrictEqual(actualData, iosFullTestData);
 			});
 		});
 	});

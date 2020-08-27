@@ -310,7 +310,6 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			this.$logger.trace(`Got gradle versions ${JSON.stringify(runtimeGradleVersions)} from runtime v${projectRuntimeVersion}`);
 		}
 
-
 		if (!runtimeGradleVersions) {
 			const runtimePackage = this.$projectDataService.getRuntimePackage(projectDir, PlatformTypes.android);
 			const latestRuntimeVersion = await this.getLatestRuntimeVersion(runtimePackage);

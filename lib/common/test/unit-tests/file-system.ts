@@ -222,7 +222,7 @@ describe("FileSystem", () => {
 			fs.copyFile(testFileName, newFileName);
 			assert.isTrue(fs.exists(newFileName), "Renamed file should exists.");
 			assert.isTrue(fs.exists(testFileName), "Original file should exist.");
-			assert.deepEqual(fs.getFsStats(testFileName).size, fs.getFsStats(testFileName).size, "Original file and copied file must have the same size.");
+			assert.deepStrictEqual(fs.getFsStats(testFileName).size, fs.getFsStats(testFileName).size, "Original file and copied file must have the same size.");
 		});
 
 		it("copies file to non-existent directory", () => {
@@ -231,15 +231,15 @@ describe("FileSystem", () => {
 			fs.copyFile(testFileName, newFileNameInSubDir);
 			assert.isTrue(fs.exists(newFileNameInSubDir), "Renamed file should exists.");
 			assert.isTrue(fs.exists(testFileName), "Original file should exist.");
-			assert.deepEqual(fs.getFsStats(testFileName).size, fs.getFsStats(testFileName).size, "Original file and copied file must have the same size.");
+			assert.deepStrictEqual(fs.getFsStats(testFileName).size, fs.getFsStats(testFileName).size, "Original file and copied file must have the same size.");
 		});
 
 		it("produces correct file when source and target file are the same", () => {
 			const originalSize = fs.getFsStats(testFileName).size;
 			fs.copyFile(testFileName, testFileName);
 			assert.isTrue(fs.exists(testFileName), "Original file should exist.");
-			assert.deepEqual(fs.getFsStats(testFileName).size, originalSize, "Original file and copied file must have the same size.");
-			assert.deepEqual(fs.readText(testFileName), fileContent, "File content should not be changed.");
+			assert.deepStrictEqual(fs.getFsStats(testFileName).size, originalSize, "Original file and copied file must have the same size.");
+			assert.deepStrictEqual(fs.readText(testFileName), fileContent, "File content should not be changed.");
 		});
 	});
 
@@ -277,7 +277,7 @@ describe("FileSystem", () => {
 			fs.deleteEmptyParents(directory);
 			fs.isEmptyDir = originalIsEmptyDir;
 
-			assert.deepEqual(emptyDirectories, _.reverse(removedDirectories));
+			assert.deepStrictEqual(emptyDirectories, _.reverse(removedDirectories));
 		});
 	});
 
@@ -309,7 +309,7 @@ describe("FileSystem", () => {
 
 				JSON.stringify = originalJsonStringify;
 
-				assert.deepEqual(actualIndentation, testCase.expectedIndentation);
+				assert.deepStrictEqual(actualIndentation, testCase.expectedIndentation);
 			});
 		});
 	});

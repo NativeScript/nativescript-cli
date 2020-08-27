@@ -103,7 +103,7 @@ describe("logger", () => {
 
 					logger[methodName].call(logger, logArgument);
 
-					assert.deepEqual(outputs[methodName], `{ certificate${passwordString}: '${passwordReplacement}', otherProperty: 'pass' }`, `logger.${methodName} should obfuscate ${passwordString} properties`);
+					assert.deepStrictEqual(outputs[methodName], `{ certificate${passwordString}: '${passwordReplacement}', otherProperty: 'pass' }`, `logger.${methodName} should obfuscate ${passwordString} properties`);
 				});
 
 				it(`${methodName} should obfuscate properties ending in '${passwordString}' with values surrounded by single quotes when it is the last property`, () => {
@@ -111,7 +111,7 @@ describe("logger", () => {
 
 					logger[methodName].call(logger, logArgument);
 
-					assert.deepEqual(outputs[methodName], `{ certificate${passwordString}: '${passwordReplacement}' }`, `logger.${methodName} should obfuscate ${passwordString} properties`);
+					assert.deepStrictEqual(outputs[methodName], `{ certificate${passwordString}: '${passwordReplacement}' }`, `logger.${methodName} should obfuscate ${passwordString} properties`);
 				});
 
 				it(`${methodName} should obfuscate properties ending in '${passwordString}' with values surrounded by double quotes`, () => {
@@ -119,7 +119,7 @@ describe("logger", () => {
 
 					logger[methodName].call(logger, logArgument);
 
-					assert.deepEqual(outputs[methodName], `{ certificate${passwordString}: "${passwordReplacement}", otherProperty: "pass" }`, `logger.${methodName} should obfuscate ${passwordString} properties`);
+					assert.deepStrictEqual(outputs[methodName], `{ certificate${passwordString}: "${passwordReplacement}", otherProperty: "pass" }`, `logger.${methodName} should obfuscate ${passwordString} properties`);
 				});
 
 				it(`${methodName} should obfuscate properties ending in '${passwordString}' with values surrounded by double quotes when it is the last property`, () => {
@@ -127,7 +127,7 @@ describe("logger", () => {
 
 					logger[methodName].call(logger, logArgument);
 
-					assert.deepEqual(outputs[methodName], `{ certificate${passwordString}: "${passwordReplacement}" }`, `logger.${methodName} should obfuscate ${passwordString} properties`);
+					assert.deepStrictEqual(outputs[methodName], `{ certificate${passwordString}: "${passwordReplacement}" }`, `logger.${methodName} should obfuscate ${passwordString} properties`);
 				});
 
 				it(`${methodName} should obfuscate '${passwordString}' query parameter when it is the last query parameter`, () => {
@@ -135,7 +135,7 @@ describe("logger", () => {
 
 					logger[methodName].call(logger, logArgument);
 
-					assert.deepEqual(outputs[methodName], `{ proto: 'https', host: 'platform.telerik.com', path: '/appbuilder/api/itmstransporter/applications?username=dragon.telerikov%40yahoo.com&${passwordString}=${passwordReplacement}', method: 'POST' }`, `logger.${methodName} should obfuscate ${passwordString} when in query parameter`);
+					assert.deepStrictEqual(outputs[methodName], `{ proto: 'https', host: 'platform.telerik.com', path: '/appbuilder/api/itmstransporter/applications?username=dragon.telerikov%40yahoo.com&${passwordString}=${passwordReplacement}', method: 'POST' }`, `logger.${methodName} should obfuscate ${passwordString} when in query parameter`);
 				});
 
 				it(`${methodName} should obfuscate '${passwordString}' query parameter when it is not the last query parameter`, () => {
@@ -143,7 +143,7 @@ describe("logger", () => {
 
 					logger[methodName].call(logger, logArgument);
 
-					assert.deepEqual(outputs[methodName], `{ proto: 'https', host: 'platform.telerik.com', path: '/appbuilder/api/itmstransporter/applications?username=dragon.telerikov%40yahoo.com&${passwordString}=${passwordReplacement}&data=someOtherData', method: 'POST' }`, `logger.${methodName} should obfuscate ${passwordString} when in query parameter`);
+					assert.deepStrictEqual(outputs[methodName], `{ proto: 'https', host: 'platform.telerik.com', path: '/appbuilder/api/itmstransporter/applications?username=dragon.telerikov%40yahoo.com&${passwordString}=${passwordReplacement}&data=someOtherData', method: 'POST' }`, `logger.${methodName} should obfuscate ${passwordString} when in query parameter`);
 				});
 			});
 		});
@@ -157,7 +157,7 @@ describe("logger", () => {
 
 			logger.trace(request, requestBody);
 
-			assert.deepEqual(outputs.trace, `${request}${requestBody}`, "logger.trace should not obfuscate body of request unless it is towards api/itmstransporter");
+			assert.deepStrictEqual(outputs.trace, `${request}${requestBody}`, "logger.trace should not obfuscate body of request unless it is towards api/itmstransporter");
 		});
 	});
 
@@ -166,30 +166,30 @@ describe("logger", () => {
 			it(`handles formatted message with '${value}' value in one of the args`, () => {
 				logger.info("test %s", value);
 				assert.equal(outputs.info, util.format("test %s", value));
-				assert.deepEqual(outputs.context, {}, "Nothing should be added to logger context.");
-				assert.deepEqual(outputs.removedContext, {}, "Removed context should be empty.");
+				assert.deepStrictEqual(outputs.context, {}, "Nothing should be added to logger context.");
+				assert.deepStrictEqual(outputs.removedContext, {}, "Removed context should be empty.");
 			});
 
 			it(`handles formatted message with '${value}' value in one of the args and additional values passed to context`, () => {
 				logger.info("test %s", value, { [LoggerConfigData.skipNewLine]: true });
 				assert.equal(outputs.info, util.format("test %s", value));
-				assert.deepEqual(outputs.context, { [LoggerConfigData.skipNewLine]: true }, `${LoggerConfigData.skipNewLine} should be set with value true.`);
-				assert.deepEqual(outputs.removedContext, { [LoggerConfigData.skipNewLine]: true }, `Removed context should contain ${LoggerConfigData.skipNewLine}`);
+				assert.deepStrictEqual(outputs.context, { [LoggerConfigData.skipNewLine]: true }, `${LoggerConfigData.skipNewLine} should be set with value true.`);
+				assert.deepStrictEqual(outputs.removedContext, { [LoggerConfigData.skipNewLine]: true }, `Removed context should contain ${LoggerConfigData.skipNewLine}`);
 			});
 		});
 
 		it("sets correct context when multiple logger options are passed in one object", () => {
 			logger.info("test", { [LoggerConfigData.skipNewLine]: true, [LoggerConfigData.useStderr]: true });
 			assert.equal(outputs.info, "test");
-			assert.deepEqual(outputs.context, { [LoggerConfigData.skipNewLine]: true, [LoggerConfigData.useStderr]: true });
-			assert.deepEqual(outputs.removedContext, { [LoggerConfigData.skipNewLine]: true, [LoggerConfigData.useStderr]: true });
+			assert.deepStrictEqual(outputs.context, { [LoggerConfigData.skipNewLine]: true, [LoggerConfigData.useStderr]: true });
+			assert.deepStrictEqual(outputs.removedContext, { [LoggerConfigData.skipNewLine]: true, [LoggerConfigData.useStderr]: true });
 		});
 
 		it("sets correct context when multiple logger options are passed in multiple objects", () => {
 			logger.info({ [LoggerConfigData.useStderr]: true }, "test", { [LoggerConfigData.skipNewLine]: true });
 			assert.equal(outputs.info, "test");
-			assert.deepEqual(outputs.context, { [LoggerConfigData.skipNewLine]: true, [LoggerConfigData.useStderr]: true });
-			assert.deepEqual(outputs.removedContext, { [LoggerConfigData.skipNewLine]: true, [LoggerConfigData.useStderr]: true });
+			assert.deepStrictEqual(outputs.context, { [LoggerConfigData.skipNewLine]: true, [LoggerConfigData.useStderr]: true });
+			assert.deepStrictEqual(outputs.removedContext, { [LoggerConfigData.skipNewLine]: true, [LoggerConfigData.useStderr]: true });
 		});
 	});
 
@@ -202,8 +202,8 @@ describe("logger", () => {
 		it(`passes skipNewLine to log4js context`, () => {
 			logger.printMarkdown("`coloured` text");
 			assert.isTrue(outputs.info.indexOf("coloured") !== -1);
-			assert.deepEqual(outputs.context, { [LoggerConfigData.skipNewLine]: true }, `${LoggerConfigData.skipNewLine} should be set with value true.`);
-			assert.deepEqual(outputs.removedContext, { [LoggerConfigData.skipNewLine]: true }, `Removed context should contain ${LoggerConfigData.skipNewLine}`);
+			assert.deepStrictEqual(outputs.context, { [LoggerConfigData.skipNewLine]: true }, `${LoggerConfigData.skipNewLine} should be set with value true.`);
+			assert.deepStrictEqual(outputs.removedContext, { [LoggerConfigData.skipNewLine]: true }, `Removed context should contain ${LoggerConfigData.skipNewLine}`);
 		});
 	});
 
@@ -212,15 +212,15 @@ describe("logger", () => {
 		it(`passes useStderr to log4js context`, () => {
 			logger.error(errorMessage);
 			assert.equal(outputs.error, errorMessage);
-			assert.deepEqual(outputs.context, { [LoggerConfigData.useStderr]: true }, `${LoggerConfigData.useStderr} should be set with value true.`);
-			assert.deepEqual(outputs.removedContext, { [LoggerConfigData.useStderr]: true }, `Removed context should contain ${LoggerConfigData.useStderr}`);
+			assert.deepStrictEqual(outputs.context, { [LoggerConfigData.useStderr]: true }, `${LoggerConfigData.useStderr} should be set with value true.`);
+			assert.deepStrictEqual(outputs.removedContext, { [LoggerConfigData.useStderr]: true }, `Removed context should contain ${LoggerConfigData.useStderr}`);
 		});
 
 		it(`allows overwrite of useStderr`, () => {
 			logger.error(errorMessage, { [LoggerConfigData.useStderr]: false });
 			assert.equal(outputs.error, errorMessage);
-			assert.deepEqual(outputs.context, { [LoggerConfigData.useStderr]: false }, `${LoggerConfigData.useStderr} should be set with value false.`);
-			assert.deepEqual(outputs.removedContext, { [LoggerConfigData.useStderr]: true }, `Removed context should contain ${LoggerConfigData.useStderr}`);
+			assert.deepStrictEqual(outputs.context, { [LoggerConfigData.useStderr]: false }, `${LoggerConfigData.useStderr} should be set with value false.`);
+			assert.deepStrictEqual(outputs.removedContext, { [LoggerConfigData.useStderr]: true }, `Removed context should contain ${LoggerConfigData.useStderr}`);
 		});
 	});
 });

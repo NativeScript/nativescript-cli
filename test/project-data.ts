@@ -52,7 +52,7 @@ describe("projectData", () => {
 		const testInjector = createTestInjector();
 		const fs = testInjector.resolve("fs");
 		fs.exists = (filePath: string) => {
-			return filePath && (path.basename(filePath) === "package.json" || path.basename(filePath) === "nativescript.config.js")
+			return filePath && (path.basename(filePath) === "package.json" || path.basename(filePath) === "nativescript.config.js");
 		};
 
 		fs.readText = (filePath: string) => {
@@ -93,7 +93,7 @@ describe("projectData", () => {
 					devDependencies
 				}
 			});
-			assert.deepEqual(projectData.projectType, expectedProjecType);
+			assert.deepStrictEqual(projectData.projectType, expectedProjecType);
 		};
 
 		it("detects project as Angular when @angular/core exists as dependency", () => {

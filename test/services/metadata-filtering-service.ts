@@ -88,7 +88,7 @@ describe("metadataFilteringService", () => {
 				path.join(projectRoot, MetadataFilteringConstants.WHITELIST_FILE_NAME),
 				path.join(projectRoot, MetadataFilteringConstants.BLACKLIST_FILE_NAME)
 			];
-			assert.deepEqual(fs.deletedFiles, expectedDeletedFiles);
+			assert.deepStrictEqual(fs.deletedFiles, expectedDeletedFiles);
 		});
 
 		it(`generates ${MetadataFilteringConstants.BLACKLIST_FILE_NAME} when the file ${MetadataFilteringConstants.NATIVE_API_USAGE_FILE_NAME} exists in App_Resources/<platform>`, () => {
@@ -102,7 +102,7 @@ describe("metadataFilteringService", () => {
 
 			metadataFilteringService.generateMetadataFilters(projectData, platform);
 
-			assert.deepEqual(dataWritten, { [path.join(projectRoot, MetadataFilteringConstants.BLACKLIST_FILE_NAME)]: blacklistArray.join(EOL) });
+			assert.deepStrictEqual(dataWritten, { [path.join(projectRoot, MetadataFilteringConstants.BLACKLIST_FILE_NAME)]: blacklistArray.join(EOL) });
 		});
 
 		const getExpectedWhitelistContent = (input: { applicationWhitelist?: string[], pluginWhitelist?: string[] }): string => {
@@ -132,7 +132,7 @@ describe("metadataFilteringService", () => {
 			});
 
 			metadataFilteringService.generateMetadataFilters(projectData, platform);
-			assert.deepEqual(dataWritten, { [path.join(projectRoot, MetadataFilteringConstants.WHITELIST_FILE_NAME)]: getExpectedWhitelistContent({ applicationWhitelist: whitelistArray }) });
+			assert.deepStrictEqual(dataWritten, { [path.join(projectRoot, MetadataFilteringConstants.WHITELIST_FILE_NAME)]: getExpectedWhitelistContent({ applicationWhitelist: whitelistArray }) });
 		});
 
 		it(`generates ${MetadataFilteringConstants.WHITELIST_FILE_NAME} with content from plugins when the file ${MetadataFilteringConstants.NATIVE_API_USAGE_FILE_NAME} exists in App_Resources/<platform> and whitelist-plugins-usages is true`, () => {
@@ -148,7 +148,7 @@ describe("metadataFilteringService", () => {
 			});
 
 			metadataFilteringService.generateMetadataFilters(projectData, platform);
-			assert.deepEqual(dataWritten, { [path.join(projectRoot, MetadataFilteringConstants.WHITELIST_FILE_NAME)]: getExpectedWhitelistContent({ pluginWhitelist: whitelistArray }) });
+			assert.deepStrictEqual(dataWritten, { [path.join(projectRoot, MetadataFilteringConstants.WHITELIST_FILE_NAME)]: getExpectedWhitelistContent({ pluginWhitelist: whitelistArray }) });
 		});
 
 		it(`generates all files when both plugins and applications filters are included`, () => {
@@ -170,7 +170,7 @@ describe("metadataFilteringService", () => {
 			metadataFilteringService.generateMetadataFilters(projectData, platform);
 			const expectedWhitelist = getExpectedWhitelistContent({ pluginWhitelist: pluginsUses, applicationWhitelist: whitelistArray });
 
-			assert.deepEqual(dataWritten, {
+			assert.deepStrictEqual(dataWritten, {
 				[path.join(projectRoot, MetadataFilteringConstants.WHITELIST_FILE_NAME)]: expectedWhitelist,
 				[path.join(projectRoot, MetadataFilteringConstants.BLACKLIST_FILE_NAME)]: blacklistArray.join(EOL)
 			});
@@ -195,7 +195,7 @@ describe("metadataFilteringService", () => {
 			metadataFilteringService.generateMetadataFilters(projectData, "platform");
 			const expectedWhitelist = getExpectedWhitelistContent({ applicationWhitelist: whitelistArray });
 
-			assert.deepEqual(dataWritten, {
+			assert.deepStrictEqual(dataWritten, {
 				[path.join(projectRoot, MetadataFilteringConstants.WHITELIST_FILE_NAME)]: expectedWhitelist,
 				[path.join(projectRoot, MetadataFilteringConstants.BLACKLIST_FILE_NAME)]: blacklistArray.join(EOL)
 			});

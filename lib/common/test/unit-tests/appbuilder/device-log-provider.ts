@@ -41,7 +41,7 @@ describe("proton deviceLogProvider", () => {
 					emittedData = data;
 				});
 				deviceLogProvider.logData(testData, "platform");
-				assert.deepEqual(emittedData, filteredInfoData);
+				assert.deepStrictEqual(emittedData, filteredInfoData);
 			});
 
 			it("does not emit data when whole data is filtered", () => {
@@ -52,7 +52,7 @@ describe("proton deviceLogProvider", () => {
 					emittedData = data;
 				});
 				deviceLogProvider.logData(testData, "platform");
-				assert.deepEqual(emittedData, 'some default value that should NOT be changed');
+				assert.deepStrictEqual(emittedData, 'some default value that should NOT be changed');
 			});
 		});
 
@@ -67,8 +67,8 @@ describe("proton deviceLogProvider", () => {
 					expectedDeviceIdentifier = deviceIdentifier;
 				});
 				deviceLogProvider.logData(testData, "platform", "deviceId");
-				assert.deepEqual(emittedData, filteredInfoData);
-				assert.deepEqual(expectedDeviceIdentifier, "deviceId");
+				assert.deepStrictEqual(emittedData, filteredInfoData);
+				assert.deepStrictEqual(expectedDeviceIdentifier, "deviceId");
 			});
 
 			it("does not emit data when whole data is filtered", () => {
@@ -81,8 +81,8 @@ describe("proton deviceLogProvider", () => {
 					expectedDeviceIdentifier = deviceIdentifier;
 				});
 				deviceLogProvider.logData(testData, "platform");
-				assert.deepEqual(emittedData, 'some default value that should NOT be changed');
-				assert.deepEqual(expectedDeviceIdentifier, null);
+				assert.deepStrictEqual(emittedData, 'some default value that should NOT be changed');
+				assert.deepStrictEqual(expectedDeviceIdentifier, null);
 			});
 		});
 	});
@@ -93,7 +93,7 @@ describe("proton deviceLogProvider", () => {
 			deviceLogProvider = testInjector.resolve(DeviceLogEmitter);
 			deviceLogProvider.setLogLevel(fullLogLevel);
 			const logFilter = testInjector.resolve("logFilter");
-			assert.deepEqual(logFilter.loggingLevel, fullLogLevel);
+			assert.deepStrictEqual(logFilter.loggingLevel, fullLogLevel);
 		});
 
 		it("does not change logFilter's loggingLevel when device identifier is specified", () => {
@@ -101,7 +101,7 @@ describe("proton deviceLogProvider", () => {
 			deviceLogProvider = testInjector.resolve(DeviceLogEmitter);
 			deviceLogProvider.setLogLevel(fullLogLevel, "deviceID");
 			const logFilter = testInjector.resolve("logFilter");
-			assert.deepEqual(logFilter.loggingLevel, infoLogLevel);
+			assert.deepStrictEqual(logFilter.loggingLevel, infoLogLevel);
 		});
 	});
 
@@ -120,14 +120,14 @@ describe("proton deviceLogProvider", () => {
 				expectedDeviceIdentifier = deviceIdentifier;
 			});
 			deviceLogProvider.logData(testData, "platform", "device1");
-			assert.deepEqual(emittedData, filteredFullData);
-			assert.deepEqual(expectedDeviceIdentifier, "device1");
+			assert.deepStrictEqual(emittedData, filteredFullData);
+			assert.deepStrictEqual(expectedDeviceIdentifier, "device1");
 			deviceLogProvider.logData(testData, "platform", "device2");
-			assert.deepEqual(emittedData, filteredInfoData);
-			assert.deepEqual(expectedDeviceIdentifier, "device2");
+			assert.deepStrictEqual(emittedData, filteredInfoData);
+			assert.deepStrictEqual(expectedDeviceIdentifier, "device2");
 			deviceLogProvider.logData(testData, "platform", "device1");
-			assert.deepEqual(emittedData, filteredFullData);
-			assert.deepEqual(expectedDeviceIdentifier, "device1");
+			assert.deepStrictEqual(emittedData, filteredFullData);
+			assert.deepStrictEqual(expectedDeviceIdentifier, "device1");
 		});
 
 		it("emits info log level for all devices, when setLogLevel is called without identifier", () => {
@@ -139,18 +139,18 @@ describe("proton deviceLogProvider", () => {
 				expectedDeviceIdentifier = deviceIdentifier;
 			});
 			deviceLogProvider.logData(testData, "platform", "device1");
-			assert.deepEqual(emittedData, filteredFullData);
-			assert.deepEqual(expectedDeviceIdentifier, "device1");
+			assert.deepStrictEqual(emittedData, filteredFullData);
+			assert.deepStrictEqual(expectedDeviceIdentifier, "device1");
 
 			// Reset log level for all devices
 			deviceLogProvider.setLogLevel(infoLogLevel);
 
 			deviceLogProvider.logData(testData, "platform", "device2");
-			assert.deepEqual(emittedData, filteredInfoData);
-			assert.deepEqual(expectedDeviceIdentifier, "device2");
+			assert.deepStrictEqual(emittedData, filteredInfoData);
+			assert.deepStrictEqual(expectedDeviceIdentifier, "device2");
 			deviceLogProvider.logData(testData, "platform", "device1");
-			assert.deepEqual(emittedData, filteredInfoData);
-			assert.deepEqual(expectedDeviceIdentifier, "device1");
+			assert.deepStrictEqual(emittedData, filteredInfoData);
+			assert.deepStrictEqual(expectedDeviceIdentifier, "device1");
 		});
 	});
 });

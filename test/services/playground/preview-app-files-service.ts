@@ -108,7 +108,7 @@ describe("PreviewAppFilesService", () => {
 							const data = { projectDir, bundle, useHotModuleReload, env: {} };
 							const result = previewAppFilesService.getInitialFilesPayload(data, platform);
 							const expectedResult = getExpectedResult(data, injector, testCase.expectedFiles, platform);
-							assert.deepEqual(result, expectedResult);
+							assert.deepStrictEqual(result, expectedResult);
 						});
 					});
 				});
@@ -127,7 +127,7 @@ describe("PreviewAppFilesService", () => {
 							const data = { projectDir, bundle, useHotModuleReload, env: {} };
 							const result = previewAppFilesService.getFilesPayload(data, { filesToSync: testCase.files }, platform);
 							const expectedResult = getExpectedResult(data, injector, testCase.expectedFiles, platform);
-							assert.deepEqual(result, expectedResult);
+							assert.deepStrictEqual(result, expectedResult);
 						});
 					});
 				});

@@ -201,7 +201,7 @@ describe("pacoteService", () => {
 					const expectedArgs = [testCase.expectedPackageName, _.extend({}, defaultPacoteOpts, testCase.manifestOptions || {}, testCase.useProxySettings ? proxySettings : {})];
 
 					assert.equal(result, manifestResult);
-					assert.deepEqual(manifestStub.firstCall.args, expectedArgs);
+					assert.deepStrictEqual(manifestStub.firstCall.args, expectedArgs);
 				});
 			});
 		});
@@ -274,7 +274,7 @@ describe("pacoteService", () => {
 
 					const expectedArgs = [_.extend({}, defaultExtractOpts, testCase.additionalExtractOpts || {})];
 
-					assert.deepEqual(tarXStub.firstCall.args, expectedArgs);
+					assert.deepStrictEqual(tarXStub.firstCall.args, expectedArgs);
 				});
 			});
 		});
@@ -316,7 +316,7 @@ describe("pacoteService", () => {
 					const expectedArgs = [testCase.expectedPackageName, _.extend({}, defaultPacoteOpts, testCase.useProxySettings ? proxySettings : {})];
 
 					await assert.isFulfilled(pacoteExtractPackagePromise);
-					assert.deepEqual(tarballStreamStub.firstCall.args, expectedArgs);
+					assert.deepStrictEqual(tarballStreamStub.firstCall.args, expectedArgs);
 				});
 			});
 		});

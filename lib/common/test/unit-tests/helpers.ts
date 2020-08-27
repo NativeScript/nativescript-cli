@@ -22,7 +22,7 @@ describe("helpers", () => {
 
 	const assertTestData = (testData: ITestData, method: Function) => {
 		const actualResult = method(testData.input);
-		assert.deepEqual(actualResult, testData.expectedResult, `For input ${testData.input}, the expected result is: ${testData.expectedResult}, but actual result is: ${actualResult}.`);
+		assert.deepStrictEqual(actualResult, testData.expectedResult, `For input ${testData.input}, the expected result is: ${testData.expectedResult}, but actual result is: ${actualResult}.`);
 	};
 
 	describe("appendZeroesToVersion", () => {
@@ -75,7 +75,7 @@ describe("helpers", () => {
 
 		it("appends correct number of zeroes", () => {
 			_.each(testData, testCase => {
-				assert.deepEqual(helpers.appendZeroesToVersion(testCase.input, testCase.requiredVersionLength), testCase.expectedResult);
+				assert.deepStrictEqual(helpers.appendZeroesToVersion(testCase.input, testCase.requiredVersionLength), testCase.expectedResult);
 			});
 		});
 	});
@@ -96,7 +96,7 @@ describe("helpers", () => {
 					const chunkNumber = Math.floor(indexOfElement / passedChunkSize) + 1;
 					const expectedRemainingElements = _.drop(initialDataValues, chunkNumber * passedChunkSize);
 
-					assert.deepEqual(remainingElements, expectedRemainingElements);
+					assert.deepStrictEqual(remainingElements, expectedRemainingElements);
 				}
 
 				resolve();
@@ -109,7 +109,7 @@ describe("helpers", () => {
 
 			return helpers.executeActionByChunks(initialData, chunkSize, (element: number, index: number) => {
 				handledElements.push(element);
-				assert.deepEqual(element, initialData[index]);
+				assert.deepStrictEqual(element, initialData[index]);
 				assert.isTrue(initialData.indexOf(element) !== -1);
 				return assertElements(initialData, handledElements, element, chunkSize);
 			});
@@ -343,7 +343,7 @@ describe("helpers", () => {
 
 		it("returns false when Object.create(null) is passed", () => {
 			const actualResult = helpers.toBoolean(Object.create(null));
-			assert.deepEqual(actualResult, false);
+			assert.deepStrictEqual(actualResult, false);
 		});
 	});
 
@@ -413,7 +413,7 @@ describe("helpers", () => {
 
 		it("returns false when Object.create(null) is passed", () => {
 			const actualResult = helpers.isNullOrWhitespace(Object.create(null));
-			assert.deepEqual(actualResult, false);
+			assert.deepStrictEqual(actualResult, false);
 		});
 	});
 
@@ -471,10 +471,10 @@ describe("helpers", () => {
 			it(`returns correct data, test case ${inputNumber}`, (done: any) => {
 				helpers.settlePromises<any>(testData.input)
 					.then(res => {
-						assert.deepEqual(res, testData.expectedResult);
+						assert.deepStrictEqual(res, testData.expectedResult);
 					})
 					.catch(err => {
-						assert.deepEqual(err.message, testData.expectedError);
+						assert.deepStrictEqual(err.message, testData.expectedError);
 					})
 					.then(done)
 					.catch(done);
@@ -492,9 +492,9 @@ describe("helpers", () => {
 
 			helpers.settlePromises<any>(testData.input)
 				.then(res => {
-					assert.deepEqual(res, testData.expectedResult);
+					assert.deepStrictEqual(res, testData.expectedResult);
 				}, err => {
-					assert.deepEqual(err.message, testData.expectedError);
+					assert.deepStrictEqual(err.message, testData.expectedError);
 				})
 				.then(() => {
 					assert.isTrue(isPromiseSettled, "When the first promise is rejected, the second one should still be executed.");
@@ -505,6 +505,7 @@ describe("helpers", () => {
 	});
 
 	describe("getPidFromiOSSimulatorLogs", () => {
+		// tslint:disable-next-line:interface-name
 		interface IiOSSimulatorPidTestData extends ITestData {
 			appId?: string;
 		}
@@ -514,7 +515,7 @@ describe("helpers", () => {
 
 		const assertPidTestData = (testData: IiOSSimulatorPidTestData) => {
 			const actualResult = helpers.getPidFromiOSSimulatorLogs(testData.appId || appId, testData.input);
-			assert.deepEqual(actualResult, testData.expectedResult, `For input ${testData.input}, the expected result is: ${testData.expectedResult}, but actual result is: ${actualResult}.`);
+			assert.deepStrictEqual(actualResult, testData.expectedResult, `For input ${testData.input}, the expected result is: ${testData.expectedResult}, but actual result is: ${actualResult}.`);
 		};
 
 		const getPidFromiOSSimulatorLogsTestData: IiOSSimulatorPidTestData[] = [
@@ -659,7 +660,7 @@ describe("helpers", () => {
 
 		const assertValueFromNestedObjectTestData = (testData: IValueFromNestedObjectTestData) => {
 			const actualResult = helpers.getValueFromNestedObject(testData.input, testData.key);
-			assert.deepEqual(actualResult, testData.expectedResult, `For input ${JSON.stringify(testData.input)}, the expected result is: ${JSON.stringify(testData.expectedResult || "undefined")}, but actual result is: ${JSON.stringify(actualResult || "undefined")}.`);
+			assert.deepStrictEqual(actualResult, testData.expectedResult, `For input ${JSON.stringify(testData.input)}, the expected result is: ${JSON.stringify(testData.expectedResult || "undefined")}, but actual result is: ${JSON.stringify(actualResult || "undefined")}.`);
 		};
 
 		it("returns expected result", () => {
@@ -705,7 +706,7 @@ describe("helpers", () => {
 
 		it("returns correct result", () => {
 			_.each(testData, testCase => {
-				assert.deepEqual(helpers.isNumberWithoutExponent(testCase.input), testCase.expectedResult);
+				assert.deepStrictEqual(helpers.isNumberWithoutExponent(testCase.input), testCase.expectedResult);
 			});
 		});
 	});
@@ -802,13 +803,13 @@ describe("helpers", () => {
 			const command = ["install", "nativescript"];
 			process.env.npm_config_argv = JSON.stringify({ someOtherProp: 1, original: command });
 			const actualCommand = helpers.getCurrentNpmCommandArgv();
-			assert.deepEqual(actualCommand, command);
+			assert.deepStrictEqual(actualCommand, command);
 		});
 
 		describe("returns empty array", () => {
 			const assertResultIsEmptyArray = () => {
 				const actualCommand = helpers.getCurrentNpmCommandArgv();
-				assert.deepEqual(actualCommand, []);
+				assert.deepStrictEqual(actualCommand, []);
 			};
 
 			it("when npm_config_argv is not populated", () => {

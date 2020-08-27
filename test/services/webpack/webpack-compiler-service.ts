@@ -49,21 +49,21 @@ describe("WebpackCompilerService", () => {
 			const result = webpackCompilerService.getUpdatedEmittedFiles(getAllEmittedFiles("hash1"), chunkFiles, null, iOSPlatformName);
 			const expectedEmittedFiles = ['bundle.hash1.hot-update.js', 'hash1.hot-update.json'];
 
-			assert.deepEqual(result.emittedFiles, expectedEmittedFiles);
+			assert.deepStrictEqual(result.emittedFiles, expectedEmittedFiles);
 		});
 		// 2 successful webpack compilations
 		it("should return only hot updates when nextHash is provided", async () => {
 			webpackCompilerService.getUpdatedEmittedFiles(getAllEmittedFiles("hash1"), chunkFiles, "hash2", iOSPlatformName);
 			const result = webpackCompilerService.getUpdatedEmittedFiles(getAllEmittedFiles("hash2"), chunkFiles, "hash3", iOSPlatformName);
 
-			assert.deepEqual(result.emittedFiles, ['bundle.hash2.hot-update.js', 'hash2.hot-update.json']);
+			assert.deepStrictEqual(result.emittedFiles, ['bundle.hash2.hot-update.js', 'hash2.hot-update.json']);
 		});
 		// 1 successful webpack compilation, n compilations with no emitted files
 		it("should return all files when there is a webpack compilation with no emitted files", () => {
 			webpackCompilerService.getUpdatedEmittedFiles(getAllEmittedFiles("hash1"), chunkFiles, "hash2", iOSPlatformName);
 			const result = webpackCompilerService.getUpdatedEmittedFiles(getAllEmittedFiles("hash4"), chunkFiles, "hash5", iOSPlatformName);
 
-			assert.deepEqual(result.emittedFiles, ['bundle.js', 'runtime.js', 'bundle.hash4.hot-update.js', 'hash4.hot-update.json']);
+			assert.deepStrictEqual(result.emittedFiles, ['bundle.js', 'runtime.js', 'bundle.hash4.hot-update.js', 'hash4.hot-update.json']);
 		});
 		// 1 successful webpack compilation, n compilations with no emitted files, 1 successful webpack compilation
 		it("should return only hot updates after fixing the compilation error", () => {
@@ -71,7 +71,7 @@ describe("WebpackCompilerService", () => {
 			webpackCompilerService.getUpdatedEmittedFiles(getAllEmittedFiles("hash5"), chunkFiles, "hash6", iOSPlatformName);
 			const result = webpackCompilerService.getUpdatedEmittedFiles(getAllEmittedFiles("hash6"), chunkFiles, "hash7", iOSPlatformName);
 
-			assert.deepEqual(result.emittedFiles, ['bundle.hash6.hot-update.js', 'hash6.hot-update.json']);
+			assert.deepStrictEqual(result.emittedFiles, ['bundle.hash6.hot-update.js', 'hash6.hot-update.json']);
 		});
 		// 1 webpack compilation with no emitted files
 		it("should return all files when first compilation on livesync change is not successful", () => {
@@ -80,7 +80,7 @@ describe("WebpackCompilerService", () => {
 			};
 			const result = webpackCompilerService.getUpdatedEmittedFiles(getAllEmittedFiles("hash1"), chunkFiles, "hash2", iOSPlatformName);
 
-			assert.deepEqual(result.emittedFiles, ["bundle.hash1.hot-update.js", "hash1.hot-update.json"]);
+			assert.deepStrictEqual(result.emittedFiles, ["bundle.hash1.hot-update.js", "hash1.hot-update.json"]);
 		});
 		it("should return correct hashes when there are more than one platform", () => {
 			webpackCompilerService.getUpdatedEmittedFiles(getAllEmittedFiles("hash1"), chunkFiles, "hash2", iOSPlatformName);
@@ -90,10 +90,10 @@ describe("WebpackCompilerService", () => {
 			webpackCompilerService.getUpdatedEmittedFiles(getAllEmittedFiles("hash4"), chunkFiles, "hash6", androidPlatformName);
 
 			const iOSResult = webpackCompilerService.getUpdatedEmittedFiles(getAllEmittedFiles("hash5"), chunkFiles, "hash7", iOSPlatformName);
-			assert.deepEqual(iOSResult.emittedFiles, ["bundle.hash5.hot-update.js", "hash5.hot-update.json"]);
+			assert.deepStrictEqual(iOSResult.emittedFiles, ["bundle.hash5.hot-update.js", "hash5.hot-update.json"]);
 
 			const androidResult = webpackCompilerService.getUpdatedEmittedFiles(getAllEmittedFiles("hash6"), chunkFiles, "hash8", androidPlatformName);
-			assert.deepEqual(androidResult.emittedFiles, ["bundle.hash6.hot-update.js", "hash6.hot-update.json"]);
+			assert.deepStrictEqual(androidResult.emittedFiles, ["bundle.hash6.hot-update.js", "hash6.hot-update.json"]);
 		});
 	});
 

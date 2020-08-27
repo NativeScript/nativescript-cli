@@ -148,7 +148,7 @@ describe("project-templates-service", () => {
 			it("sends template name when the template is used from npm", async () => {
 				const templateName = "template-from-npm";
 				await projectTemplatesService.prepareTemplate(templateName, "tempFolder");
-				assert.deepEqual(dataSentToGoogleAnalytics, [
+				assert.deepStrictEqual(dataSentToGoogleAnalytics, [
 					{
 						action: constants.TrackActionNames.CreateProject,
 						isForDevice: null,
@@ -169,7 +169,7 @@ describe("project-templates-service", () => {
 				const pacoteService = testInjector.resolve<IPacoteService>("pacoteService");
 				pacoteService.manifest = () => Promise.resolve({ name: templateName });
 				await projectTemplatesService.prepareTemplate(localTemplatePath, "tempFolder");
-				assert.deepEqual(dataSentToGoogleAnalytics, [
+				assert.deepStrictEqual(dataSentToGoogleAnalytics, [
 					{
 						action: constants.TrackActionNames.CreateProject,
 						isForDevice: null,
@@ -190,7 +190,7 @@ describe("project-templates-service", () => {
 				const pacoteService = testInjector.resolve<IPacoteService>("pacoteService");
 				pacoteService.manifest = () => Promise.resolve({});
 				await projectTemplatesService.prepareTemplate(localTemplatePath, "tempFolder");
-				assert.deepEqual(dataSentToGoogleAnalytics, [
+				assert.deepStrictEqual(dataSentToGoogleAnalytics, [
 					{
 						action: constants.TrackActionNames.CreateProject,
 						isForDevice: null,

@@ -67,25 +67,25 @@ describe("PreviewDevicesService", () => {
 
 			previewDevicesService.updateConnectedDevices([device]);
 
-			assert.deepEqual(previewDevicesService.getConnectedDevices(), [device]);
-			assert.deepEqual(foundDevices, [device]);
-			assert.deepEqual(lostDevices, []);
+			assert.deepStrictEqual(previewDevicesService.getConnectedDevices(), [device]);
+			assert.deepStrictEqual(foundDevices, [device]);
+			assert.deepStrictEqual(lostDevices, []);
 		});
 		it("should add new device when there are already connected devices", () => {
 			const device1 = createDevice("device1");
 			const device2 = createDevice("device2");
 
 			previewDevicesService.updateConnectedDevices([device1]);
-			assert.deepEqual(previewDevicesService.getConnectedDevices(), [device1]);
-			assert.deepEqual(foundDevices, [device1]);
-			assert.deepEqual(lostDevices, []);
+			assert.deepStrictEqual(previewDevicesService.getConnectedDevices(), [device1]);
+			assert.deepStrictEqual(foundDevices, [device1]);
+			assert.deepStrictEqual(lostDevices, []);
 			resetDevices();
 
 			previewDevicesService.updateConnectedDevices([device1, device2]);
 
-			assert.deepEqual(previewDevicesService.getConnectedDevices(), [device1, device2]);
-			assert.deepEqual(foundDevices, [device2]);
-			assert.deepEqual(lostDevices, []);
+			assert.deepStrictEqual(previewDevicesService.getConnectedDevices(), [device1, device2]);
+			assert.deepStrictEqual(foundDevices, [device2]);
+			assert.deepStrictEqual(lostDevices, []);
 		});
 		it("should add more than one new device", () => {
 			const device1 = createDevice("device1");
@@ -94,49 +94,49 @@ describe("PreviewDevicesService", () => {
 
 			previewDevicesService.updateConnectedDevices([device1, device2, device3]);
 
-			assert.deepEqual(previewDevicesService.getConnectedDevices(), [device1, device2, device3]);
-			assert.deepEqual(foundDevices, [device1, device2, device3]);
-			assert.deepEqual(lostDevices, []);
+			assert.deepStrictEqual(previewDevicesService.getConnectedDevices(), [device1, device2, device3]);
+			assert.deepStrictEqual(foundDevices, [device1, device2, device3]);
+			assert.deepStrictEqual(lostDevices, []);
 		});
 		it("should remove device", () => {
 			const device1 = createDevice("device1");
 			previewDevicesService.updateConnectedDevices([device1]);
-			assert.deepEqual(previewDevicesService.getConnectedDevices(), [device1]);
-			assert.deepEqual(foundDevices, [device1]);
-			assert.deepEqual(lostDevices, []);
+			assert.deepStrictEqual(previewDevicesService.getConnectedDevices(), [device1]);
+			assert.deepStrictEqual(foundDevices, [device1]);
+			assert.deepStrictEqual(lostDevices, []);
 			resetDevices();
 
 			previewDevicesService.updateConnectedDevices([]);
 			clock.tick(5000);
 
-			assert.deepEqual(foundDevices, []);
-			assert.deepEqual(lostDevices, [device1]);
+			assert.deepStrictEqual(foundDevices, []);
+			assert.deepStrictEqual(lostDevices, [device1]);
 		});
 		it("should add and remove devices in the same time", () => {
 			const device1 = createDevice("device1");
 			const device2 = createDevice("device2");
 
 			previewDevicesService.updateConnectedDevices([device1]);
-			assert.deepEqual(previewDevicesService.getConnectedDevices(), [device1]);
-			assert.deepEqual(foundDevices, [device1]);
-			assert.deepEqual(lostDevices, []);
+			assert.deepStrictEqual(previewDevicesService.getConnectedDevices(), [device1]);
+			assert.deepStrictEqual(foundDevices, [device1]);
+			assert.deepStrictEqual(lostDevices, []);
 			resetDevices();
 
 			previewDevicesService.updateConnectedDevices([device2]);
 			clock.tick(5000);
 
-			assert.deepEqual(previewDevicesService.getConnectedDevices(), [device2]);
-			assert.deepEqual(foundDevices, [device2]);
-			assert.deepEqual(lostDevices, [device1]);
+			assert.deepStrictEqual(previewDevicesService.getConnectedDevices(), [device2]);
+			assert.deepStrictEqual(foundDevices, [device2]);
+			assert.deepStrictEqual(lostDevices, [device1]);
 		});
 		it("shouldn't emit deviceFound or deviceLost when preview app is restarted on device", () => {
 			const device1 = createDevice("device1");
 
 			previewDevicesService.updateConnectedDevices([device1]);
 
-			assert.deepEqual(previewDevicesService.getConnectedDevices(), [device1]);
-			assert.deepEqual(foundDevices, [device1]);
-			assert.deepEqual(lostDevices, []);
+			assert.deepStrictEqual(previewDevicesService.getConnectedDevices(), [device1]);
+			assert.deepStrictEqual(foundDevices, [device1]);
+			assert.deepStrictEqual(lostDevices, []);
 			resetDevices();
 
 			// preview app is restarted
@@ -144,9 +144,9 @@ describe("PreviewDevicesService", () => {
 			clock.tick(500);
 			previewDevicesService.updateConnectedDevices([device1]);
 
-			assert.deepEqual(foundDevices, []);
-			assert.deepEqual(lostDevices, []);
-			assert.deepEqual(previewDevicesService.getConnectedDevices(), [device1]);
+			assert.deepStrictEqual(foundDevices, []);
+			assert.deepStrictEqual(lostDevices, []);
+			assert.deepStrictEqual(previewDevicesService.getConnectedDevices(), [device1]);
 		});
 	});
 });

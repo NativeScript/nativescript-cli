@@ -167,7 +167,7 @@ describe("Project commands tests", () => {
 
 			await createProjectCommand.execute(dummyArgs);
 
-			assert.deepEqual(selectedTemplateName, constants.ANGULAR_NAME);
+			assert.deepStrictEqual(selectedTemplateName, constants.ANGULAR_NAME);
 			assert.equal(validateProjectCallsCount, 1);
 			assert.isTrue(createProjectCalledWithForce);
 		});
@@ -177,7 +177,7 @@ describe("Project commands tests", () => {
 
 			await createProjectCommand.execute(dummyArgs);
 
-			assert.deepEqual(selectedTemplateName, constants.REACT_NAME);
+			assert.deepStrictEqual(selectedTemplateName, constants.REACT_NAME);
 			assert.equal(validateProjectCallsCount, 1);
 			assert.isTrue(createProjectCalledWithForce);
 		});
@@ -187,7 +187,7 @@ describe("Project commands tests", () => {
 
 			await createProjectCommand.execute(dummyArgs);
 
-			assert.deepEqual(selectedTemplateName, constants.TYPESCRIPT_NAME);
+			assert.deepStrictEqual(selectedTemplateName, constants.TYPESCRIPT_NAME);
 			assert.equal(validateProjectCallsCount, 1);
 			assert.isTrue(createProjectCalledWithForce);
 		});
@@ -211,7 +211,7 @@ describe("Project commands tests", () => {
 
 			await createProjectCommand.execute(dummyArgs);
 
-			assert.deepEqual(selectedTemplateName, "tns-template-hello-world-ng");
+			assert.deepStrictEqual(selectedTemplateName, "tns-template-hello-world-ng");
 			assert.equal(validateProjectCallsCount, 1);
 			assert.isTrue(createProjectCalledWithForce);
 		});
@@ -221,7 +221,7 @@ describe("Project commands tests", () => {
 
 			await createProjectCommand.execute(dummyArgs);
 
-			assert.deepEqual(selectedTemplateName, "tns-template-drawer-navigation-ts");
+			assert.deepStrictEqual(selectedTemplateName, "tns-template-drawer-navigation-ts");
 			assert.equal(validateProjectCallsCount, 1);
 			assert.isTrue(createProjectCalledWithForce);
 		});
@@ -231,7 +231,7 @@ describe("Project commands tests", () => {
 
 			await createProjectCommand.execute(dummyArgs);
 
-			assert.deepEqual(selectedTemplateName, "tns-template-tab-navigation");
+			assert.deepStrictEqual(selectedTemplateName, "tns-template-tab-navigation");
 			assert.equal(validateProjectCallsCount, 1);
 			assert.isTrue(createProjectCalledWithForce);
 		});
@@ -241,7 +241,7 @@ describe("Project commands tests", () => {
 
 			await createProjectCommand.execute(dummyArgs);
 
-			assert.deepEqual(selectedTemplateName, "tns-template-drawer-navigation-vue");
+			assert.deepStrictEqual(selectedTemplateName, "tns-template-drawer-navigation-vue");
 			assert.equal(validateProjectCallsCount, 1);
 			assert.isTrue(createProjectCalledWithForce);
 		});
@@ -251,7 +251,7 @@ describe("Project commands tests", () => {
 
 			await createProjectCommand.execute(dummyArgs);
 
-			assert.deepEqual(selectedTemplateName, "tns-template-blank-react");
+			assert.deepStrictEqual(selectedTemplateName, "tns-template-blank-react");
 			assert.equal(validateProjectCallsCount, 1);
 			assert.isTrue(createProjectCalledWithForce);
 		});

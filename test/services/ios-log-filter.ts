@@ -204,7 +204,7 @@ describe("iOSLogFilter", () => {
 					currentStart = Math.min(currentStart, input.length);
 				}
 
-				assert.deepEqual(output, data.infoExpectedArr.filter(item => item !== null).join("\n"));
+				assert.deepStrictEqual(output, data.infoExpectedArr.filter(item => item !== null).join("\n"));
 			});
 
 			it(`returns correct data when logLevel is ${fullLogLevel} on iOS ${data.version} and all data is passed at once`, () => {
@@ -213,7 +213,7 @@ describe("iOSLogFilter", () => {
 				const actualData = logFilter.filterData(data.originalDataArr.join("\n"), { logLevel: fullLogLevel, projectName: data.projectName });
 				const actualArr = actualData.split("\n").map(line => line.trim());
 				const expectedArr = data.originalDataArr.map(line => line.trim()).filter(item => item !== null);
-				assert.deepEqual(actualArr, expectedArr);
+				assert.deepStrictEqual(actualArr, expectedArr);
 			});
 
 			it(`returns correct data when logLevel is ${fullLogLevel} on iOS ${data.version} and data is passed one line at a time`, () => {
@@ -221,7 +221,7 @@ describe("iOSLogFilter", () => {
 					testInjector = createTestInjector(data.projectName);
 					logFilter = testInjector.resolve(IOSLogFilter);
 					const actualData = logFilter.filterData(line, { logLevel: fullLogLevel, projectName: data.projectName });
-					assert.deepEqual(actualData.trim(), line.trim());
+					assert.deepStrictEqual(actualData.trim(), line.trim());
 				});
 			});
 
@@ -230,7 +230,7 @@ describe("iOSLogFilter", () => {
 				logFilter = testInjector.resolve(IOSLogFilter);
 				const actualData = logFilter.filterData(data.simulator.join("\n"), { logLevel: infoLogLevel, projectName: data.simProjectName, applicationPid: pid });
 				const actualArr = actualData.split("\n").map(line => line.trim());
-				assert.deepEqual(actualArr, data.simulatorExpectedArr.filter(item => item !== null));
+				assert.deepStrictEqual(actualArr, data.simulatorExpectedArr.filter(item => item !== null));
 			});
 
 			it(`parses data incorrectly when logLevel is ${infoLogLevel} on iOS ${data.version} and all data is passed at once and pid is available`, () => {
@@ -239,7 +239,7 @@ describe("iOSLogFilter", () => {
 				const actualData = logFilter.filterData(data.originalDataArr.join("\n"), { logLevel: infoLogLevel, projectName: data.projectName });
 				const actualArr = actualData.split("\n").map(line => line.trim());
 				const expectedArr = data.infoExpectedArr.filter(item => item !== null);
-				assert.deepEqual(actualArr, expectedArr);
+				assert.deepStrictEqual(actualArr, expectedArr);
 			});
 
 			it(`returns correct data when logLevel is ${infoLogLevel} on iOS ${data.version} and data is passed one line at a time`, () => {
@@ -251,7 +251,7 @@ describe("iOSLogFilter", () => {
 					}
 					const actualData = logFilter.filterData(line, { logLevel: infoLogLevel, projectName: data.projectName });
 					const expectedData = data.infoExpectedArr[index];
-					assert.equal(actualData && actualData.trim(), expectedData);
+					assert.strictEqual(actualData && actualData.trim(), expectedData);
 				});
 			});
 		});

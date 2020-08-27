@@ -113,8 +113,8 @@ describe("androidDeviceDiscovery", () => {
 
 			await androidDeviceDiscovery.startLookingForDevices();
 			assert.isTrue(devicesFound.length === 1, "We should have found ONE device.");
-			assert.deepEqual(devicesFound[0].deviceInfo.identifier, androidDeviceIdentifier);
-			assert.deepEqual(devicesFound[0].status, androidDeviceStatus);
+			assert.deepStrictEqual(devicesFound[0].deviceInfo.identifier, androidDeviceIdentifier);
+			assert.deepStrictEqual(devicesFound[0].status, androidDeviceStatus);
 		});
 	});
 
@@ -144,8 +144,8 @@ describe("androidDeviceDiscovery", () => {
 			await androidDeviceDiscovery.startLookingForDevices();
 			await promise;
 			assert.isTrue(devicesFound.length === 1, "We should have found ONE device.");
-			assert.deepEqual(devicesFound[0].deviceInfo.identifier, androidDeviceIdentifier);
-			assert.deepEqual(devicesFound[0].status, androidDeviceStatus);
+			assert.deepStrictEqual(devicesFound[0].deviceInfo.identifier, androidDeviceIdentifier);
+			assert.deepStrictEqual(devicesFound[0].status, androidDeviceStatus);
 		});
 
 		it("finds correctly more than one device", async () => {
@@ -168,10 +168,10 @@ describe("androidDeviceDiscovery", () => {
 			await androidDeviceDiscovery.startLookingForDevices();
 			await promise;
 			assert.isTrue(devicesFound.length === 2, "We should have found two devices.");
-			assert.deepEqual(devicesFound[0].deviceInfo.identifier, androidDeviceIdentifier);
-			assert.deepEqual(devicesFound[0].status, androidDeviceStatus);
-			assert.deepEqual(devicesFound[1].deviceInfo.identifier, "secondDevice");
-			assert.deepEqual(devicesFound[1].status, androidDeviceStatus);
+			assert.deepStrictEqual(devicesFound[0].deviceInfo.identifier, androidDeviceIdentifier);
+			assert.deepStrictEqual(devicesFound[0].status, androidDeviceStatus);
+			assert.deepStrictEqual(devicesFound[1].deviceInfo.identifier, "secondDevice");
+			assert.deepStrictEqual(devicesFound[1].status, androidDeviceStatus);
 		});
 
 		it("does not find any devices when there are no devices", async () => {
@@ -207,8 +207,8 @@ describe("androidDeviceDiscovery", () => {
 			await androidDeviceDiscovery.startLookingForDevices();
 			await promise;
 			assert.isTrue(devicesFound.length === 1, "We should have found ONE device.");
-			assert.deepEqual(devicesFound[0].deviceInfo.identifier, androidDeviceIdentifier);
-			assert.deepEqual(devicesFound[0].status, androidDeviceStatus);
+			assert.deepStrictEqual(devicesFound[0].deviceInfo.identifier, androidDeviceIdentifier);
+			assert.deepStrictEqual(devicesFound[0].status, androidDeviceStatus);
 		};
 
 		describe("does not report adb messages as new devices", () => {
@@ -262,8 +262,8 @@ describe("androidDeviceDiscovery", () => {
 
 				await androidDeviceDiscovery.startLookingForDevices();
 				assert.isTrue(devicesFound.length === 1, "We should have found ONE device.");
-				assert.deepEqual(devicesFound[0].deviceInfo.identifier, androidDeviceIdentifier);
-				assert.deepEqual(devicesFound[0].status, androidDeviceStatus);
+				assert.deepStrictEqual(devicesFound[0].deviceInfo.identifier, androidDeviceIdentifier);
+				assert.deepStrictEqual(devicesFound[0].status, androidDeviceStatus);
 			});
 
 			it("reports it as removed next time when called and device is removed", async () => {
@@ -280,8 +280,8 @@ describe("androidDeviceDiscovery", () => {
 				}, 0);
 				await androidDeviceDiscovery.startLookingForDevices();
 				const lostDevice = await promise;
-				assert.deepEqual(lostDevice.deviceInfo.identifier, androidDeviceIdentifier);
-				assert.deepEqual(lostDevice.deviceInfo.status, androidDeviceStatus);
+				assert.deepStrictEqual(lostDevice.deviceInfo.identifier, androidDeviceIdentifier);
+				assert.deepStrictEqual(lostDevice.deviceInfo.status, androidDeviceStatus);
 			});
 
 			it("does not report it as removed two times when called and device is removed", async () => {
@@ -300,8 +300,8 @@ describe("androidDeviceDiscovery", () => {
 				await androidDeviceDiscovery.startLookingForDevices();
 
 				const lostDevice = await promise;
-				assert.deepEqual(lostDevice.deviceInfo.identifier, androidDeviceIdentifier);
-				assert.deepEqual(lostDevice.deviceInfo.status, androidDeviceStatus);
+				assert.deepStrictEqual(lostDevice.deviceInfo.identifier, androidDeviceIdentifier);
+				assert.deepStrictEqual(lostDevice.deviceInfo.status, androidDeviceStatus);
 
 				androidDeviceDiscovery.on(DeviceDiscoveryEventNames.DEVICE_LOST, (device: Mobile.IDevice) => {
 					throw new Error("Should not report device as removed next time after it has been already reported.");
@@ -338,13 +338,13 @@ describe("androidDeviceDiscovery", () => {
 				await androidDeviceDiscovery.startLookingForDevices();
 
 				const lostDevice = await deviceLostPromise;
-				assert.deepEqual(lostDevice.deviceInfo.identifier, androidDeviceIdentifier);
-				assert.deepEqual(lostDevice.deviceInfo.status, androidDeviceStatus);
+				assert.deepStrictEqual(lostDevice.deviceInfo.identifier, androidDeviceIdentifier);
+				assert.deepStrictEqual(lostDevice.deviceInfo.status, androidDeviceStatus);
 
 				await deviceFoundPromise;
 				assert.isTrue(devicesFound.length === 1, "We should have found ONE device.");
-				assert.deepEqual(devicesFound[0].deviceInfo.identifier, androidDeviceIdentifier);
-				assert.deepEqual(devicesFound[0].status, "unauthorized");
+				assert.deepStrictEqual(devicesFound[0].deviceInfo.identifier, androidDeviceIdentifier);
+				assert.deepStrictEqual(devicesFound[0].status, "unauthorized");
 
 				// Verify the device will not be reported as found next time when adb returns the same output:
 				// In case it is reported, an error will be raised - Future resolved more than once for deviceFoundFuture
@@ -372,7 +372,7 @@ describe("androidDeviceDiscovery", () => {
 
 				await androidDeviceDiscovery.startLookingForDevices();
 			} catch (err) {
-				assert.deepEqual(err, error.toString());
+				assert.deepStrictEqual(err, error.toString());
 			}
 
 		});
@@ -391,7 +391,7 @@ describe("androidDeviceDiscovery", () => {
 				await androidDeviceDiscovery.startLookingForDevices();
 
 			} catch (err) {
-				assert.deepEqual(err, error1.toString() + error2.toString());
+				assert.deepStrictEqual(err, error1.toString() + error2.toString());
 			}
 
 		});
@@ -408,7 +408,7 @@ describe("androidDeviceDiscovery", () => {
 
 				await androidDeviceDiscovery.startLookingForDevices();
 			} catch (err) {
-				assert.deepEqual(err, error);
+				assert.deepStrictEqual(err, error);
 			}
 		});
 	});

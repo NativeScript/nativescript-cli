@@ -159,7 +159,7 @@ describe("Project Changes Service Tests", () => {
 				const actualPrepareInfo = serviceTest.projectChangesService.getPrepareInfo(serviceTest.getPlatformData(platform));
 
 				// assert
-				assert.deepEqual(actualPrepareInfo, expectedPrepareInfo);
+				assert.deepStrictEqual(actualPrepareInfo, expectedPrepareInfo);
 			}
 		});
 	});
@@ -181,7 +181,7 @@ describe("Project Changes Service Tests", () => {
 
 				const actualPrepareInfo = serviceTest.projectChangesService.getPrepareInfo(serviceTest.getPlatformData(platform));
 
-				assert.deepEqual(actualPrepareInfo, { nativePlatformStatus: Constants.NativePlatformStatus.requiresPrepare });
+				assert.deepStrictEqual(actualPrepareInfo, { nativePlatformStatus: Constants.NativePlatformStatus.requiresPrepare });
 			}
 		});
 
@@ -195,7 +195,7 @@ describe("Project Changes Service Tests", () => {
 
 				const actualPrepareInfo = serviceTest.projectChangesService.getPrepareInfo(serviceTest.getPlatformData(platform));
 				prepareInfo.nativePlatformStatus = Constants.NativePlatformStatus.alreadyPrepared;
-				assert.deepEqual(actualPrepareInfo, prepareInfo);
+				assert.deepStrictEqual(actualPrepareInfo, prepareInfo);
 			}
 		});
 
@@ -206,7 +206,7 @@ describe("Project Changes Service Tests", () => {
 					await serviceTest.projectChangesService.setNativePlatformStatus(serviceTest.getPlatformData(platform), serviceTest.projectData, { nativePlatformStatus: nativePlatformStatus });
 
 					const actualPrepareInfo = serviceTest.projectChangesService.getPrepareInfo(serviceTest.getPlatformData(platform));
-					assert.deepEqual(actualPrepareInfo, { nativePlatformStatus: nativePlatformStatus });
+					assert.deepStrictEqual(actualPrepareInfo, { nativePlatformStatus: nativePlatformStatus });
 				}
 			});
 		});

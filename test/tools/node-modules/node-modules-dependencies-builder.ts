@@ -43,7 +43,7 @@ describe("nodeModulesDependenciesBuilder", () => {
 				const nodeModulesDependenciesBuilder = testInjector.resolve<INodeModulesDependenciesBuilder>(NodeModulesDependenciesBuilder);
 				const result = await nodeModulesDependenciesBuilder.getProductionDependencies(pathToProject);
 
-				assert.deepEqual(result, []);
+				assert.deepStrictEqual(result, []);
 			};
 
 			it("when package.json does not have any data", async () => {
@@ -235,7 +235,7 @@ describe("nodeModulesDependenciesBuilder", () => {
 					getNodeModuleInfoForExpecteDependency(secondPackage, 0, null, null, null, "1.1.0")
 				];
 
-				assert.deepEqual(actualResult, expectedResult);
+				assert.deepStrictEqual(actualResult, expectedResult);
 			});
 
 			it("when there are both dependencies and devDependencies installed, does not handle dependencies of devDependencies", async () => {
@@ -256,7 +256,7 @@ describe("nodeModulesDependenciesBuilder", () => {
 
 				const nodeModulesDependenciesBuilder = generateTest(rootDeps);
 				const actualResult = await nodeModulesDependenciesBuilder.getProductionDependencies(pathToProject);
-				assert.deepEqual(actualResult, expectedResult);
+				assert.deepStrictEqual(actualResult, expectedResult);
 
 			});
 
@@ -281,7 +281,7 @@ describe("nodeModulesDependenciesBuilder", () => {
 
 				const nodeModulesDependenciesBuilder = generateTest(rootDeps);
 				const actualResult = await nodeModulesDependenciesBuilder.getProductionDependencies(pathToProject);
-				assert.deepEqual(actualResult, expectedResult);
+				assert.deepStrictEqual(actualResult, expectedResult);
 			});
 
 			it("when there are scoped dependencies as dependency of other non-scoped dependency", async () => {
@@ -305,7 +305,7 @@ describe("nodeModulesDependenciesBuilder", () => {
 
 				const nodeModulesDependenciesBuilder = generateTest(rootDeps);
 				const actualResult = await nodeModulesDependenciesBuilder.getProductionDependencies(pathToProject);
-				assert.deepEqual(actualResult, expectedResult);
+				assert.deepStrictEqual(actualResult, expectedResult);
 			});
 
 			it("when all dependencies are installed at the root level of the project", async () => {
@@ -330,7 +330,7 @@ describe("nodeModulesDependenciesBuilder", () => {
 					getNodeModuleInfoForExpecteDependency(thirdPackage, 0, null, null, null, "1.2.0")
 				];
 
-				assert.deepEqual(actualResult, expectedResult);
+				assert.deepStrictEqual(actualResult, expectedResult);
 			});
 
 			it("when the project has a dependency to a package and one of the other packages has dependency to other version of this package", async () => {
@@ -353,7 +353,7 @@ describe("nodeModulesDependenciesBuilder", () => {
 
 				const nodeModulesDependenciesBuilder = generateTest(rootDeps);
 				const actualResult = await nodeModulesDependenciesBuilder.getProductionDependencies(pathToProject);
-				assert.deepEqual(actualResult, expectedResult);
+				assert.deepStrictEqual(actualResult, expectedResult);
 			});
 
 			it("when several package depend on different versions of other packages", async () => {
@@ -389,7 +389,7 @@ describe("nodeModulesDependenciesBuilder", () => {
 
 				const nodeModulesDependenciesBuilder = generateTest(rootDeps);
 				const actualResult = await nodeModulesDependenciesBuilder.getProductionDependencies(pathToProject);
-				assert.deepEqual(actualResult, expectedResult);
+				assert.deepStrictEqual(actualResult, expectedResult);
 			});
 
 			it("when the installed packages have nativescript data in their package.json", async () => {
@@ -425,7 +425,7 @@ describe("nodeModulesDependenciesBuilder", () => {
 					getNodeModuleInfoForExpecteDependency(thirdPackage, 0, getNativeScriptDataForPlugin(thirdPackage), null, null, "1.2.0")
 				];
 
-				assert.deepEqual(actualResult, expectedResult);
+				assert.deepStrictEqual(actualResult, expectedResult);
 			});
 		});
 	});

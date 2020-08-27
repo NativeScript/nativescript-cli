@@ -39,7 +39,7 @@ async function executeTests(testCases: any[], testFunction: (gradleBuildArgsServ
 			const gradleBuildArgsService = injector.resolve("gradleBuildArgsService");
 			const args = await testFunction(gradleBuildArgsService, testCase.buildConfig);
 
-			assert.deepEqual(args, testCase.expectedResult);
+			assert.deepStrictEqual(args, testCase.expectedResult);
 		});
 	}
 }

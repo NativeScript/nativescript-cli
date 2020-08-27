@@ -151,7 +151,7 @@ describe("jsonFileSettingsService", () => {
 			};
 
 			await jsonFileSettingsService.saveSettings(settingsToSave);
-			assert.deepEqual(dataPassedToWriteJson, [{ filename: jsonFileSettingsPath, data: settingsToSave }]);
+			assert.deepStrictEqual(dataPassedToWriteJson, [{ filename: jsonFileSettingsPath, data: settingsToSave }]);
 		});
 
 		it("writes full file data and modifies only properties included in the passed object", async () => {
@@ -174,7 +174,7 @@ describe("jsonFileSettingsService", () => {
 			};
 
 			await jsonFileSettingsService.saveSettings(settingsToSave);
-			assert.deepEqual(dataPassedToWriteJson, [{
+			assert.deepStrictEqual(dataPassedToWriteJson, [{
 				filename: jsonFileSettingsPath,
 				data: {
 					prop0: {
@@ -202,7 +202,7 @@ describe("jsonFileSettingsService", () => {
 
 			await jsonFileSettingsService.saveSettings(settingsToSave, { useCaching: true });
 
-			assert.deepEqual(dataPassedToWriteJson, [{
+			assert.deepStrictEqual(dataPassedToWriteJson, [{
 				filename: jsonFileSettingsPath,
 				data: {
 					prop1: {
@@ -240,7 +240,7 @@ describe("jsonFileSettingsService", () => {
 
 			await jsonFileSettingsService.saveSettings(settingsToSave, { useCaching: true });
 
-			assert.deepEqual(dataPassedToWriteJson, [{
+			assert.deepStrictEqual(dataPassedToWriteJson, [{
 				filename: jsonFileSettingsPath,
 				data: {
 					prop1: {
@@ -269,7 +269,7 @@ describe("jsonFileSettingsService", () => {
 				innerProp1: 1
 			});
 
-			assert.deepEqual(dataPassedToWriteJson, [{ filename: jsonFileSettingsPath, data: { prop1: { innerProp1: 1 } } }]);
+			assert.deepStrictEqual(dataPassedToWriteJson, [{ filename: jsonFileSettingsPath, data: { prop1: { innerProp1: 1 } } }]);
 		});
 
 		it("writes passed data with cache when useCaching is passed", async () => {
@@ -280,7 +280,7 @@ describe("jsonFileSettingsService", () => {
 
 			await jsonFileSettingsService.saveSetting("prop1", { innerProp1: 1 }, { useCaching: true });
 
-			assert.deepEqual(dataPassedToWriteJson, [{
+			assert.deepStrictEqual(dataPassedToWriteJson, [{
 				filename: jsonFileSettingsPath,
 				data: {
 					prop1: {
@@ -309,7 +309,7 @@ describe("jsonFileSettingsService", () => {
 				}
 			}, { useCaching: true });
 
-			assert.deepEqual(dataPassedToWriteJson, [{
+			assert.deepStrictEqual(dataPassedToWriteJson, [{
 				filename: jsonFileSettingsPath,
 				data: {
 					prop1: {
@@ -330,7 +330,7 @@ describe("jsonFileSettingsService", () => {
 			const testInjector = createTestInjector();
 			const jsonFileSettingsService = testInjector.resolve<IJsonFileSettingsService>("jsonFileSettingsService", { jsonFileSettingsPath });
 			await jsonFileSettingsService.removeSetting("prop2");
-			assert.deepEqual(dataPassedToWriteJson, [{
+			assert.deepStrictEqual(dataPassedToWriteJson, [{
 				filename: jsonFileSettingsPath,
 				data: {
 					prop1: 1
@@ -358,7 +358,7 @@ describe("jsonFileSettingsService", () => {
 			const testInjector = createTestInjector();
 			const jsonFileSettingsService = testInjector.resolve<IJsonFileSettingsService>("jsonFileSettingsService", { jsonFileSettingsPath });
 			await jsonFileSettingsService.removeSetting("prop2");
-			assert.deepEqual(dataPassedToWriteJson, [{
+			assert.deepStrictEqual(dataPassedToWriteJson, [{
 				filename: jsonFileSettingsPath,
 				data: {
 					prop1: {

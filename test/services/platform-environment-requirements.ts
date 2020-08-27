@@ -96,8 +96,8 @@ describe("platformEnvironmentRequirements ", () => {
 
 			await assert.isRejected(platformEnvironmentRequirements.checkEnvironmentRequirements({ platform }));
 			assert.isTrue(promptForChoiceData.length === 1);
-			assert.deepEqual("To continue, choose one of the following options: ", promptForChoiceData[0].message);
-			assert.deepEqual(['Sync to Playground', 'Configure for Local Builds', 'Skip Step and Configure Manually'], promptForChoiceData[0].choices);
+			assert.deepStrictEqual("To continue, choose one of the following options: ", promptForChoiceData[0].message);
+			assert.deepStrictEqual(['Sync to Playground', 'Configure for Local Builds', 'Skip Step and Configure Manually'], promptForChoiceData[0].choices);
 		});
 
 		it("should not show 'Sync to Playground' option when hideSyncToPreviewAppOption is provided", async () => {
@@ -106,8 +106,8 @@ describe("platformEnvironmentRequirements ", () => {
 
 			await assert.isRejected(platformEnvironmentRequirements.checkEnvironmentRequirements({ platform, notConfiguredEnvOptions: { hideSyncToPreviewAppOption: true } }));
 			assert.isTrue(promptForChoiceData.length === 1);
-			assert.deepEqual("To continue, choose one of the following options: ", promptForChoiceData[0].message);
-			assert.deepEqual(['Configure for Local Builds', 'Skip Step and Configure Manually'], promptForChoiceData[0].choices);
+			assert.deepStrictEqual("To continue, choose one of the following options: ", promptForChoiceData[0].message);
+			assert.deepStrictEqual(['Configure for Local Builds', 'Skip Step and Configure Manually'], promptForChoiceData[0].choices);
 		});
 		it("should skip env check when NS_SKIP_ENV_CHECK environment variable is passed", async () => {
 			(<any>process.env).NS_SKIP_ENV_CHECK = true;

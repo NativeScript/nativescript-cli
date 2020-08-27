@@ -76,7 +76,7 @@ describe("userSettingsService", () => {
 
 			await userSettingsService[testCase.methodName](...testCase.input);
 
-			assert.deepEqual(dataPassedToJsonFileSettingsService, testCase.expectedArgs);
+			assert.deepStrictEqual(dataPassedToJsonFileSettingsService, testCase.expectedArgs);
 			assert.equal(jsonFileSettingsService.jsonFileSettingsPath, expectedJsonFileSettingsFilePath);
 		});
 	}

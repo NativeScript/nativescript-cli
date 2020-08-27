@@ -260,27 +260,27 @@ export class FileSystem implements IFileSystem {
 
 	public createReadStream(path: string, options?: {
 		flags?: string;
-    encoding?: BufferEncoding;
-    fd?: number;
-    mode?: number;
-    autoClose?: boolean;
-    emitClose?: boolean;
-    start?: number;
-    end?: number;
-    highWaterMark?: number;
+		encoding?: BufferEncoding;
+		fd?: number;
+		mode?: number;
+		autoClose?: boolean;
+		emitClose?: boolean;
+		start?: number;
+		end?: number;
+		highWaterMark?: number;
 	}): NodeJS.ReadableStream {
 		return fs.createReadStream(path, options);
 	}
 
 	public createWriteStream(path: string, options?: {
 		flags?: string;
-    encoding?: BufferEncoding;
-    fd?: number;
-    mode?: number;
-    autoClose?: boolean;
-    emitClose?: boolean;
-    start?: number;
-    highWaterMark?: number;
+		encoding?: BufferEncoding;
+		fd?: number;
+		mode?: number;
+		autoClose?: boolean;
+		emitClose?: boolean;
+		start?: number;
+		highWaterMark?: number;
 	}): any {
 		return fs.createWriteStream(path, options);
 	}
