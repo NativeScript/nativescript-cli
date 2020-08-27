@@ -77,58 +77,58 @@ interface IProjectService {
 }
 
 interface INsConfigPlaform {
-  id?: string;
+	id?: string;
 }
 
 interface INsConfigIOS extends INsConfigPlaform {
-  discardUncaughtJsExceptions?: boolean;
+	discardUncaughtJsExceptions?: boolean;
 }
 
 interface INsConfigAndroid extends INsConfigPlaform {
-  v8Flags?: string;
+	v8Flags?: string;
 
-  codeCache?: boolean;
+	codeCache?: boolean;
 
-  heapSnapshotScript?: string;
+	heapSnapshotScript?: string;
 
-  "snapshot.blob"?: string;
+	"snapshot.blob"?: string;
 
-  profilerOutputDir?: string;
+	profilerOutputDir?: string;
 
-  gcThrottleTime?: number;
+	gcThrottleTime?: number;
 
-  profiling?: string;
+	profiling?: string;
 
-  markingMode?: string;
+	markingMode?: string;
 
-  handleTimeZoneChanges?: boolean;
+	handleTimeZoneChanges?: boolean;
 
-  maxLogcatObjectSize?: number;
+	maxLogcatObjectSize?: number;
 
-  forceLog?: boolean;
+	forceLog?: boolean;
 
-  memoryCheckInterval?: number;
+	memoryCheckInterval?: number;
 
-  freeMemoryRatio?: number;
+	freeMemoryRatio?: number;
 
-  suppressCallJSMethodExceptions?: boolean;
+	suppressCallJSMethodExceptions?: boolean;
 
-  discardUncaughtJsExceptions?: boolean;
+	discardUncaughtJsExceptions?: boolean;
 
-  enableLineBreakpoints?: boolean;
+	enableLineBreakpoints?: boolean;
 }
 
 interface INsConfig {
-  id?: string;
-  main?: string;
+	id?: string;
+	main?: string;
 	appPath?: string;
 	appResourcesPath?: string;
 	shared?: boolean;
 	previewAppSchema?: string;
 	overridePods?: string;
-  webpackConfigPath?: string;
-  ios?: INsConfigIOS;
-  android?: INsConfigAndroid;
+	webpackConfigPath?: string;
+	ios?: INsConfigIOS;
+	android?: INsConfigAndroid;
 }
 
 interface IProjectData extends ICreateProjectData {
@@ -140,8 +140,8 @@ interface IProjectData extends ICreateProjectData {
 	devDependencies: IStringDictionary;
 	appDirectoryPath: string;
 	appResourcesDirectoryPath: string;
-  projectType: string;
-  packageJsonData: any;
+	projectType: string;
+	packageJsonData: any;
 	nsConfig: INsConfig;
 	androidManifestPath: string;
 	appGradlePath: string;
