@@ -1,6 +1,6 @@
 import { join, dirname, basename, extname } from "path";
 import { EOL } from "os";
-import * as _ from 'lodash';
+import * as _ from "lodash";
 import * as ChildProcessLib from "../lib/common/child-process";
 import * as ConfigLib from "../lib/config";
 import * as ErrorsLib from "../lib/common/errors";
@@ -31,7 +31,11 @@ import { YarnPackageManager } from "../lib/yarn-package-manager";
 import { assert } from "chai";
 import { SettingsService } from "../lib/common/test/unit-tests/stubs";
 import { BUILD_XCCONFIG_FILE_NAME } from "../lib/constants";
-import { ProjectDataStub, TempServiceStub, ProjectDataServiceStub } from "./stubs";
+import {
+	ProjectDataStub,
+	TempServiceStub,
+	ProjectDataServiceStub,
+} from "./stubs";
 import { xcode } from "../lib/node/xcode";
 import temp = require("temp");
 import { CocoaPodsPlatformManager } from "../lib/services/cocoapods-platform-manager";
@@ -57,7 +61,11 @@ class IOSSimulatorDiscoveryMock extends DeviceDiscovery {
 	}
 }
 
-function createTestInjector(projectPath: string, projectName: string, xCode?: IXcode): IInjector {
+function createTestInjector(
+	projectPath: string,
+	projectName: string,
+	xCode?: IXcode
+): IInjector {
 	const testInjector = new yok.Yok();
 	testInjector.register("childProcess", ChildProcessLib.ChildProcess);
 	testInjector.register("config", ConfigLib.Configuration);
@@ -68,7 +76,10 @@ function createTestInjector(projectPath: string, projectName: string, xCode?: IX
 	testInjector.register("injector", testInjector);
 	testInjector.register("iOSEmulatorServices", {});
 	testInjector.register("cocoapodsService", CocoaPodsService);
-	testInjector.register("iOSProjectService", iOSProjectServiceLib.IOSProjectService);
+	testInjector.register(
+		"iOSProjectService",
+		iOSProjectServiceLib.IOSProjectService
+	);
 	testInjector.register("iOSProvisionService", {});
 	testInjector.register("xcconfigService", XcconfigService);
 	testInjector.register("iOSEntitlementsService", IOSEntitlementsService);
@@ -87,12 +98,15 @@ function createTestInjector(projectPath: string, projectName: string, xCode?: IX
 		appResourcesDirectoryPath: "",
 		getAppResourcesDirectoryPath: () => "",
 		nsConfig: {
-			overridePods: false
-		}
+			overridePods: false,
+		},
 	});
 	projectData.projectDir = temp.mkdirSync("projectDir");
 	projectData.appDirectoryPath = join(projectData.projectDir, "app");
-	projectData.appResourcesDirectoryPath = join(projectData.appDirectoryPath, "App_Resources");
+	projectData.appResourcesDirectoryPath = join(
+		projectData.appDirectoryPath,
+		"App_Resources"
+	);
 	testInjector.register("projectData", projectData);
 	testInjector.register("projectHelper", {});
 	testInjector.register("xcodeSelectService", {});
@@ -115,13 +129,13 @@ function createTestInjector(projectPath: string, projectName: string, xCode?: IX
 	testInjector.register("xcprojService", {
 		getXcprojInfo: () => {
 			return {
-				shouldUseXcproj: false
+				shouldUseXcproj: false,
 			};
 		},
 		getXcodeprojPath: (projData: IProjectData, projectRoot: string) => {
 			return join(projectRoot, projData.projectName + ".xcodeproj");
 		},
-		checkIfXcodeprojIsRequired: () => ({})
+		checkIfXcodeprojIsRequired: () => ({}),
 	});
 	testInjector.register("iosDeviceOperations", {});
 	testInjector.register("pluginsService", {
@@ -130,20 +144,33 @@ function createTestInjector(projectPath: string, projectName: string, xCode?: IX
 	});
 	testInjector.register("androidProcessService", {});
 	testInjector.register("sysInfo", {
-		getXcodeVersion: async () => ""
+		getXcodeVersion: async () => "",
 	});
 	testInjector.register("pbxprojDomXcode", {});
-	testInjector.register("xcode", xCode || {
-		project: class {
-			constructor() { /* */ }
-			parseSync() { /* */ }
-			pbxGroupByName() { /* */ }
-			removeTargetsByProductType() { /* */ }
-			writeSync() { return ''; }
+	testInjector.register(
+		"xcode",
+		xCode || {
+			project: class {
+				constructor() {
+					/* */
+				}
+				parseSync() {
+					/* */
+				}
+				pbxGroupByName() {
+					/* */
+				}
+				removeTargetsByProductType() {
+					/* */
+				}
+				writeSync() {
+					return "";
+				}
+			},
 		}
-	});
+	);
 	testInjector.register("userSettingsService", {
-		getSettingValue: async (settingName: string): Promise<void> => undefined
+		getSettingValue: async (settingName: string): Promise<void> => undefined,
 	});
 	testInjector.register("packageManager", PackageManager);
 	testInjector.register("npm", NodePackageManager);
@@ -155,19 +182,28 @@ function createTestInjector(projectPath: string, projectName: string, xCode?: IX
 	testInjector.register("plistParser", {});
 	testInjector.register("androidEmulatorServices", {});
 	testInjector.register("androidEmulatorDiscovery", {
-		on: () => ({})
+		on: () => ({}),
 	});
 	testInjector.register("emulatorHelper", {});
 	testInjector.register("filesHashService", {
-		hasChangesInShasums: (oldPluginNativeHashes: IStringDictionary, currentPluginNativeHashes: IStringDictionary) => true,
-		generateHashes: async (files: string[]): Promise<IStringDictionary> => ({})
+		hasChangesInShasums: (
+			oldPluginNativeHashes: IStringDictionary,
+			currentPluginNativeHashes: IStringDictionary
+		) => true,
+		generateHashes: async (files: string[]): Promise<IStringDictionary> => ({}),
 	});
 	testInjector.register("pacoteService", {
-		extractPackage: async (packageName: string, destinationDirectory: string, options?: IPacoteExtractOptions): Promise<void> => undefined
+		extractPackage: async (
+			packageName: string,
+			destinationDirectory: string,
+			options?: IPacoteExtractOptions
+		): Promise<void> => undefined,
 	});
 	testInjector.register("iOSExtensionsService", {
-		removeExtensions: () => { /* */ },
-		addExtensionsFromPath: () => Promise.resolve()
+		removeExtensions: () => {
+			/* */
+		},
+		addExtensionsFromPath: () => Promise.resolve(),
 	});
 	testInjector.register("timers", {});
 	testInjector.register("iOSSigningService", IOSSigningService);
@@ -177,34 +213,45 @@ function createTestInjector(projectPath: string, projectName: string, xCode?: IX
 	testInjector.register("exportOptionsPlistService", ExportOptionsPlistService);
 
 	testInjector.register("iOSWatchAppService", {
-		removeWatchApp: () => { /* */ },
-		addWatchAppFromPath: () => Promise.resolve()
+		removeWatchApp: () => {
+			/* */
+		},
+		addWatchAppFromPath: () => Promise.resolve(),
 	});
 
 	testInjector.register("logSourceMapService", {
-		replaceWithOriginalFileLocations: (platform: string, message: string) => message
+		replaceWithOriginalFileLocations: (platform: string, message: string) =>
+			message,
 	});
 	testInjector.register("iOSNativeTargetService", {
-		setXcodeTargetBuildConfigurationProperties: () => { /* */ }
+		setXcodeTargetBuildConfigurationProperties: () => {
+			/* */
+		},
 	});
 	testInjector.register("tempService", TempServiceStub);
 
 	return testInjector;
 }
 
-function createPackageJson(testInjector: IInjector, projectPath: string, projectName: string) {
+function createPackageJson(
+	testInjector: IInjector,
+	projectPath: string,
+	projectName: string
+) {
 	const packageJsonData = {
-		"name": projectName,
-    "version": "0.1.0",
-    "dependencies": {
-      "@nativescript/core": "7.0.0"
-    },
-    "devDependencies": {
-      "@nativescript/ios": "7.0.0",
-      "@nativescript/android": "7.0.0"
-    }
+		name: projectName,
+		version: "0.1.0",
+		dependencies: {
+			"@nativescript/core": "7.0.0",
+		},
+		devDependencies: {
+			"@nativescript/ios": "7.0.0",
+			"@nativescript/android": "7.0.0",
+		},
 	};
-	testInjector.resolve("fs").writeJson(join(projectPath, "package.json"), packageJsonData);
+	testInjector
+		.resolve("fs")
+		.writeJson(join(projectPath, "package.json"), packageJsonData);
 }
 
 describe("Cocoapods support", () => {
@@ -229,8 +276,8 @@ describe("Cocoapods support", () => {
 			// 		}
 			// 	}
 			// };
-      // fs.writeJson(join(projectPath, "package.json"), packageJsonData);
-      createPackageJson(testInjector, projectPath, 'myProject');
+			// fs.writeJson(join(projectPath, "package.json"), packageJsonData);
+			createPackageJson(testInjector, projectPath, "myProject");
 
 			const platformsFolderPath = join(projectPath, "platforms", "ios");
 			fs.createDirectory(platformsFolderPath);
@@ -238,8 +285,12 @@ describe("Cocoapods support", () => {
 			const iOSProjectService = testInjector.resolve("iOSProjectService");
 			iOSProjectService.createPbxProj = () => {
 				return {
-					updateBuildProperty: () => { return {}; },
-					pbxXCBuildConfigurationSection: () => { return {}; },
+					updateBuildProperty: () => {
+						return {};
+					},
+					pbxXCBuildConfigurationSection: () => {
+						return {};
+					},
 				};
 			};
 			iOSProjectService.savePbxProj = (): Promise<void> => Promise.resolve();
@@ -247,38 +298,68 @@ describe("Cocoapods support", () => {
 			const projectData: IProjectData = testInjector.resolve("projectData");
 			const basePodfileModuleName = "BasePodfile";
 
-			const basePodfilePath = join(projectData.appDirectoryPath, "App_Resources", "iOS", "Podfile");
-			const pluginPodfileContent = ["source 'https://github.com/CocoaPods/Specs.git'", "platform :ios, '8.1'", "pod 'GoogleMaps'"].join("\n");
+			const basePodfilePath = join(
+				projectData.appDirectoryPath,
+				"App_Resources",
+				"iOS",
+				"Podfile"
+			);
+			const pluginPodfileContent = [
+				"source 'https://github.com/CocoaPods/Specs.git'",
+				"platform :ios, '8.1'",
+				"pod 'GoogleMaps'",
+			].join("\n");
 			fs.writeFile(basePodfilePath, pluginPodfileContent);
 
 			projectData.podfilePath = basePodfilePath;
 
-			await cocoapodsService.applyPodfileToProject(basePodfileModuleName, basePodfilePath, projectData, iOSProjectService.getPlatformData(projectData));
+			await cocoapodsService.applyPodfileToProject(
+				basePodfileModuleName,
+				basePodfilePath,
+				projectData,
+				iOSProjectService.getPlatformData(projectData)
+			);
 
 			const projectPodfilePath = join(platformsFolderPath, "Podfile");
-			assert.isTrue(fs.exists(projectPodfilePath), `File ${projectPodfilePath} must exist as we have already applied Podfile to it.`);
+			assert.isTrue(
+				fs.exists(projectPodfilePath),
+				`File ${projectPodfilePath} must exist as we have already applied Podfile to it.`
+			);
 
 			const actualProjectPodfileContent = fs.readText(projectPodfilePath);
-			const expectedPluginPodfileContent = ["source 'https://github.com/CocoaPods/Specs.git'", "# platform :ios, '8.1'", "pod 'GoogleMaps'"].join("\n");
+			const expectedPluginPodfileContent = [
+				"source 'https://github.com/CocoaPods/Specs.git'",
+				"# platform :ios, '8.1'",
+				"pod 'GoogleMaps'",
+			].join("\n");
 			const expectedPlatformSection = [
 				`# NativeScriptPlatformSection ${basePodfilePath} with 8.1`,
 				"platform :ios, '8.1'",
-				"# End NativeScriptPlatformSection\n"
+				"# End NativeScriptPlatformSection\n",
 			].join("\n");
-			const expectedProjectPodfileContent = ["use_frameworks!\n",
+			const expectedProjectPodfileContent = [
+				"use_frameworks!\n",
 				`target "${projectName}" do`,
 				expectedPlatformSection,
 				`# Begin Podfile - ${basePodfilePath}`,
 				expectedPluginPodfileContent,
 				"# End Podfile",
-				"end"]
-				.join("\n");
+				"end",
+			].join("\n");
 			assert.equal(actualProjectPodfileContent, expectedProjectPodfileContent);
 
 			fs.deleteFile(basePodfilePath);
 
-			await cocoapodsService.applyPodfileToProject(basePodfileModuleName, basePodfilePath, projectData, iOSProjectService.getPlatformData(projectData));
-			assert.isFalse(fs.exists(projectPodfilePath), `The projectPodfilePath (${projectPodfilePath}) must not exist when all Podfiles have been deleted and project is prepared again. (i.e. CLI should delete the project Podfile in this case)`);
+			await cocoapodsService.applyPodfileToProject(
+				basePodfileModuleName,
+				basePodfilePath,
+				projectData,
+				iOSProjectService.getPlatformData(projectData)
+			);
+			assert.isFalse(
+				fs.exists(projectPodfilePath),
+				`The projectPodfilePath (${projectPodfilePath}) must not exist when all Podfiles have been deleted and project is prepared again. (i.e. CLI should delete the project Podfile in this case)`
+			);
 		});
 
 		it("adds plugin with Podfile", async () => {
@@ -289,14 +370,14 @@ describe("Cocoapods support", () => {
 			const fs: IFileSystem = testInjector.resolve("fs");
 
 			const packageJsonData = {
-				"name": "myProject",
-				"version": "0.1.0",
-				"nativescript": {
-					"id": "org.nativescript.myProject",
+				name: "myProject",
+				version: "0.1.0",
+				nativescript: {
+					id: "org.nativescript.myProject",
 					"tns-ios": {
-						"version": "1.0.0"
-					}
-				}
+						version: "1.0.0",
+					},
+				},
 			};
 			fs.writeJson(join(projectPath, "package.json"), packageJsonData);
 
@@ -304,31 +385,52 @@ describe("Cocoapods support", () => {
 			fs.createDirectory(platformsFolderPath);
 
 			const iOSProjectService = testInjector.resolve("iOSProjectService");
-			iOSProjectService.prepareFrameworks = (pluginPlatformsFolderPath: string, pluginData: IPluginData): Promise<void> => {
+			iOSProjectService.prepareFrameworks = (
+				pluginPlatformsFolderPath: string,
+				pluginData: IPluginData
+			): Promise<void> => {
 				return Promise.resolve();
 			};
-			iOSProjectService.prepareStaticLibs = (pluginPlatformsFolderPath: string, pluginData: IPluginData): Promise<void> => {
+			iOSProjectService.prepareStaticLibs = (
+				pluginPlatformsFolderPath: string,
+				pluginData: IPluginData
+			): Promise<void> => {
 				return Promise.resolve();
 			};
 			iOSProjectService.createPbxProj = () => {
 				return {
-					updateBuildProperty: () => { return {}; },
-					pbxXCBuildConfigurationSection: () => { return {}; },
+					updateBuildProperty: () => {
+						return {};
+					},
+					pbxXCBuildConfigurationSection: () => {
+						return {};
+					},
 				};
 			};
 			iOSProjectService.savePbxProj = (): Promise<void> => Promise.resolve();
 
 			const pluginPath = temp.mkdirSync("pluginDirectory");
-			const samplePluginPlatformsFolderPath = join(pluginPath, "platforms", "ios");
-			const pluginPodfilePath = join(samplePluginPlatformsFolderPath, "Podfile");
-			const pluginPodfileContent = ["source 'https://github.com/CocoaPods/Specs.git'", "platform :ios, '8.1'", "pod 'GoogleMaps'"].join("\n");
+			const samplePluginPlatformsFolderPath = join(
+				pluginPath,
+				"platforms",
+				"ios"
+			);
+			const pluginPodfilePath = join(
+				samplePluginPlatformsFolderPath,
+				"Podfile"
+			);
+			const pluginPodfileContent = [
+				"source 'https://github.com/CocoaPods/Specs.git'",
+				"platform :ios, '8.1'",
+				"pod 'GoogleMaps'",
+			].join("\n");
 			fs.writeFile(pluginPodfilePath, pluginPodfileContent);
 
 			const samplePluginData = {
 				pluginPlatformsFolderPath(platform: string): string {
 					return samplePluginPlatformsFolderPath;
 				},
-				name: "somePlugin"
+				name: "somePlugin",
 			};
 			const projectData: IProjectData = testInjector.resolve("projectData");
 			const pluginsService = testInjector.resolve("pluginsService");
@@ -336,7 +438,9 @@ describe("Cocoapods support", () => {
 				return [samplePluginData];
 			};
 			const cocoapodsService = testInjector.resolve("cocoapodsService");
-			cocoapodsService.executePodInstall = async () => { /* */ };
+			cocoapodsService.executePodInstall = async () => {
+				/* */
+			};
 
 			await iOSProjectService.handleNativeDependenciesChange(projectData);
 
@@ -344,20 +448,25 @@ describe("Cocoapods support", () => {
 			assert.isTrue(fs.exists(projectPodfilePath));
 
 			const actualProjectPodfileContent = fs.readText(projectPodfilePath);
-			const expectedPluginPodfileContent = ["source 'https://github.com/CocoaPods/Specs.git'", "# platform :ios, '8.1'", "pod 'GoogleMaps'"].join("\n");
+			const expectedPluginPodfileContent = [
+				"source 'https://github.com/CocoaPods/Specs.git'",
+				"# platform :ios, '8.1'",
+				"pod 'GoogleMaps'",
+			].join("\n");
 			const expectedPlatformSection = [
 				`# NativeScriptPlatformSection ${pluginPodfilePath} with 8.1`,
 				"platform :ios, '8.1'",
 				"# End NativeScriptPlatformSection\n",
 			].join("\n");
-			const expectedProjectPodfileContent = ["use_frameworks!\n",
+			const expectedProjectPodfileContent = [
+				"use_frameworks!\n",
 				`target "${projectName}" do`,
 				expectedPlatformSection,
 				`# Begin Podfile - ${pluginPodfilePath}`,
 				expectedPluginPodfileContent,
 				"# End Podfile",
-				"end"]
-				.join("\n");
+				"end",
+			].join("\n");
 			assert.equal(actualProjectPodfileContent, expectedProjectPodfileContent);
 		});
 		it("adds and removes plugin with Podfile", async () => {
@@ -368,14 +477,14 @@ describe("Cocoapods support", () => {
 			const fs: IFileSystem = testInjector.resolve("fs");
 
 			const packageJsonData = {
-				"name": "myProject2",
-				"version": "0.1.0",
-				"nativescript": {
-					"id": "org.nativescript.myProject2",
+				name: "myProject2",
+				version: "0.1.0",
+				nativescript: {
+					id: "org.nativescript.myProject2",
 					"tns-ios": {
-						"version": "1.0.0"
-					}
-				}
+						version: "1.0.0",
+					},
+				},
 			};
 			fs.writeJson(join(projectPath, "package.json"), packageJsonData);
 
@@ -383,32 +492,63 @@ describe("Cocoapods support", () => {
 			fs.createDirectory(platformsFolderPath);
 
 			const iOSProjectService = testInjector.resolve("iOSProjectService");
-			iOSProjectService.prepareFrameworks = (pluginPlatformsPath: string, pluginData: IPluginData): Promise<void> => {
+			iOSProjectService.prepareFrameworks = (
+				pluginPlatformsPath: string,
+				pluginData: IPluginData
+			): Promise<void> => {
 				return Promise.resolve();
 			};
-			iOSProjectService.prepareStaticLibs = (pluginPlatformsPath: string, pluginData: IPluginData): Promise<void> => {
+			iOSProjectService.prepareStaticLibs = (
+				pluginPlatformsPath: string,
+				pluginData: IPluginData
+			): Promise<void> => {
 				return Promise.resolve();
 			};
-			iOSProjectService.removeFrameworks = (pluginPlatformsPath: string, pluginData: IPluginData): Promise<void> => {
+			iOSProjectService.removeFrameworks = (
+				pluginPlatformsPath: string,
+				pluginData: IPluginData
+			): Promise<void> => {
 				return Promise.resolve();
 			};
-			iOSProjectService.removeStaticLibs = (pluginPlatformsPath: string, pluginData: IPluginData): Promise<void> => {
+			iOSProjectService.removeStaticLibs = (
+				pluginPlatformsPath: string,
+				pluginData: IPluginData
+			): Promise<void> => {
 				return Promise.resolve();
 			};
 			iOSProjectService.createPbxProj = () => {
 				return {
-					updateBuildProperty: () => { return {}; },
-					pbxXCBuildConfigurationSection: () => { return {}; },
-					removePbxGroup: () => { return {}; },
-					removeFromHeaderSearchPaths: () => { return {}; },
+					updateBuildProperty: () => {
+						return {};
+					},
+					pbxXCBuildConfigurationSection: () => {
+						return {};
+					},
+					removePbxGroup: () => {
+						return {};
+					},
+					removeFromHeaderSearchPaths: () => {
+						return {};
+					},
 				};
 			};
 			iOSProjectService.savePbxProj = (): Promise<void> => Promise.resolve();
 
 			const pluginPath = temp.mkdirSync("pluginDirectory");
-			const samplePluginPlatformsFolderPath = join(pluginPath, "platforms", "ios");
-			const pluginPodfilePath = join(samplePluginPlatformsFolderPath, "Podfile");
-			const pluginPodfileContent = ["source 'https://github.com/CocoaPods/Specs.git'", "platform :ios, '8.1'", "pod 'GoogleMaps'"].join("\n");
+			const samplePluginPlatformsFolderPath = join(
+				pluginPath,
+				"platforms",
+				"ios"
+			);
+			const pluginPodfilePath = join(
+				samplePluginPlatformsFolderPath,
+				"Podfile"
+			);
+			const pluginPodfileContent = [
+				"source 'https://github.com/CocoaPods/Specs.git'",
+				"platform :ios, '8.1'",
+				"pod 'GoogleMaps'",
+			].join("\n");
 			fs.writeFile(pluginPodfilePath, pluginPodfileContent);
 
 			const samplePluginData = {
@@ -416,7 +556,7 @@ describe("Cocoapods support", () => {
 					return samplePluginPlatformsFolderPath;
 				},
 				name: "pluginName",
-				fullPath: "fullPath"
+				fullPath: "fullPath",
 			};
 			const projectData: IProjectData = testInjector.resolve("projectData");
 			const pluginsService = testInjector.resolve("pluginsService");
@@ -424,7 +564,9 @@ describe("Cocoapods support", () => {
 				return [samplePluginData];
 			};
 			const cocoapodsService = testInjector.resolve("cocoapodsService");
-			cocoapodsService.executePodInstall = async () => { /* */ };
+			cocoapodsService.executePodInstall = async () => {
+				/* */
+			};
 
 			await iOSProjectService.handleNativeDependenciesChange(projectData);
 
@@ -432,23 +574,31 @@ describe("Cocoapods support", () => {
 			assert.isTrue(fs.exists(projectPodfilePath));
 
 			const actualProjectPodfileContent = fs.readText(projectPodfilePath);
-			const expectedPluginPodfileContent = ["source 'https://github.com/CocoaPods/Specs.git'", "# platform :ios, '8.1'", "pod 'GoogleMaps'"].join("\n");
+			const expectedPluginPodfileContent = [
+				"source 'https://github.com/CocoaPods/Specs.git'",
+				"# platform :ios, '8.1'",
+				"pod 'GoogleMaps'",
+			].join("\n");
 			const expectedPlatformSection = [
 				`# NativeScriptPlatformSection ${pluginPodfilePath} with 8.1`,
 				"platform :ios, '8.1'",
 				"# End NativeScriptPlatformSection\n",
 			].join("\n");
-			const expectedProjectPodfileContent = ["use_frameworks!\n",
+			const expectedProjectPodfileContent = [
+				"use_frameworks!\n",
 				`target "${projectName}" do`,
 				expectedPlatformSection,
 				`# Begin Podfile - ${pluginPodfilePath}`,
 				expectedPluginPodfileContent,
 				"# End Podfile",
-				"end"]
-				.join("\n");
+				"end",
+			].join("\n");
 			assert.equal(actualProjectPodfileContent, expectedProjectPodfileContent);
 
-			await iOSProjectService.removePluginNativeCode(samplePluginData, projectData);
+			await iOSProjectService.removePluginNativeCode(
+				samplePluginData,
+				projectData
+			);
 
 			assert.isFalse(fs.exists(projectPodfilePath));
 		});
@@ -457,9 +607,10 @@ describe("Cocoapods support", () => {
 
 describe("Source code support", () => {
 	if (require("os").platform() !== "darwin") {
-		console.log("Skipping Source code in plugin tests. They cannot work on windows");
+		console.log(
+			"Skipping Source code in plugin tests. They cannot work on windows"
+		);
 	} else {
-
 		const getProjectWithoutPlugins = async (files: string[]) => {
 			// Arrange
 			const projectName = "projectDirectory";
@@ -468,14 +619,14 @@ describe("Source code support", () => {
 			const fs: IFileSystem = testInjector.resolve("fs");
 
 			const packageJsonData = {
-				"name": "myProject",
-				"version": "0.1.0",
-				"nativescript": {
-					"id": "org.nativescript.myProject",
+				name: "myProject",
+				version: "0.1.0",
+				nativescript: {
+					id: "org.nativescript.myProject",
 					"tns-ios": {
-						"version": "1.0.0"
-					}
-				}
+						version: "1.0.0",
+					},
+				},
 			};
 			fs.writeJson(join(projectPath, "package.json"), packageJsonData);
 
@@ -496,20 +647,30 @@ describe("Source code support", () => {
 
 			const projectData: IProjectData = testInjector.resolve("projectData");
 
-			const platformSpecificAppResourcesPath = join(projectData.appResourcesDirectoryPath, iOSProjectService.getPlatformData(projectData).normalizedPlatformName);
+			const platformSpecificAppResourcesPath = join(
+				projectData.appResourcesDirectoryPath,
+				iOSProjectService.getPlatformData(projectData).normalizedPlatformName
+			);
 
-			files.forEach(file => {
+			files.forEach((file) => {
 				const fullPath = join(platformSpecificAppResourcesPath, file);
 				fs.createDirectory(dirname(fullPath));
 				fs.writeFile(fullPath, "");
 			});
 
-			await iOSProjectService.prepareNativeSourceCode("src", platformSpecificAppResourcesPath, projectData);
+			await iOSProjectService.prepareNativeSourceCode(
+				"src",
+				platformSpecificAppResourcesPath,
+				projectData
+			);
 
 			return pbxProj;
 		};
 
-		const preparePluginWithFiles = async (files: string[], prepareMethodToCall: string) => {
+		const preparePluginWithFiles = async (
+			files: string[],
+			prepareMethodToCall: string
+		) => {
 			// Arrange
 			const projectName = "projectDirectory";
 			const projectPath = temp.mkdirSync(projectName);
@@ -517,14 +678,14 @@ describe("Source code support", () => {
 			const fs: IFileSystem = testInjector.resolve("fs");
 
 			const packageJsonData = {
-				"name": "myProject",
-				"version": "0.1.0",
-				"nativescript": {
-					"id": "org.nativescript.myProject",
+				name: "myProject",
+				version: "0.1.0",
+				nativescript: {
+					id: "org.nativescript.myProject",
 					"tns-ios": {
-						"version": "1.0.0"
-					}
-				}
+						version: "1.0.0",
+					},
+				},
 			};
 			fs.writeJson(join(projectPath, "package.json"), packageJsonData);
 
@@ -533,13 +694,23 @@ describe("Source code support", () => {
 
 			const iOSProjectService = testInjector.resolve("iOSProjectService");
 
-			const mockPrepareMethods = ["prepareFrameworks", "prepareStaticLibs", "prepareResources", "prepareNativeSourceCode"];
+			const mockPrepareMethods = [
+				"prepareFrameworks",
+				"prepareStaticLibs",
+				"prepareResources",
+				"prepareNativeSourceCode",
+			];
 
-			mockPrepareMethods.filter(m => m !== prepareMethodToCall).forEach(methodName => {
-				iOSProjectService[methodName] = (pluginPlatformsFolderPath: string, pluginData: IPluginData): Promise<void> => {
-					return Promise.resolve();
-				};
-			});
+			mockPrepareMethods
+				.filter((m) => m !== prepareMethodToCall)
+				.forEach((methodName) => {
+					iOSProjectService[methodName] = (
+						pluginPlatformsFolderPath: string,
+						pluginData: IPluginData
+					): Promise<void> => {
+						return Promise.resolve();
+					};
+				});
 
 			const xcprojService = testInjector.resolve("xcprojService");
 			xcprojService.getXcodeprojPath = () => {
@@ -553,8 +724,12 @@ describe("Source code support", () => {
 			};
 
 			const pluginPath = temp.mkdirSync("pluginDirectory");
-			const samplePluginPlatformsFolderPath = join(pluginPath, "platforms", "ios");
-			files.forEach(file => {
+			const samplePluginPlatformsFolderPath = join(
+				pluginPath,
+				"platforms",
+				"ios"
+			);
+			files.forEach((file) => {
 				const fullPath = join(samplePluginPlatformsFolderPath, file);
 				fs.createDirectory(dirname(fullPath));
 				fs.writeFile(fullPath, "");
@@ -564,22 +739,30 @@ describe("Source code support", () => {
 				name: "testPlugin",
 				pluginPlatformsFolderPath(platform: string): string {
 					return samplePluginPlatformsFolderPath;
-				}
+				},
 			};
 
 			const projectData: IProjectData = testInjector.resolve("projectData");
 
 			// Act
-			await iOSProjectService.preparePluginNativeCode(samplePluginData, projectData);
+			await iOSProjectService.preparePluginNativeCode(
+				samplePluginData,
+				projectData
+			);
 
 			return pbxProj;
 		};
 
 		it("adds source files in Sources build phase", async () => {
 			const sourceFileNames = [
-				"src/Header.h", "src/ObjC.m",
-				"src/nested/Header.hpp", "src/nested/Source.cpp", "src/nested/ObjCpp.mm",
-				"src/nested/level2/Header2.hxx", "src/nested/level2/Source2.cxx", "src/nested/level2/Source3.c",
+				"src/Header.h",
+				"src/ObjC.m",
+				"src/nested/Header.hpp",
+				"src/nested/Source.cpp",
+				"src/nested/ObjCpp.mm",
+				"src/nested/level2/Header2.hxx",
+				"src/nested/level2/Source2.cxx",
+				"src/nested/level2/Source3.c",
 				"src/SomeOtherExtension.donotadd",
 			];
 
@@ -594,76 +777,150 @@ describe("Source code support", () => {
 			const pbxProj = await await getProjectWithoutPlugins(sourceFileNames);
 
 			const pbxFileReference = pbxProj.hash.project.objects.PBXFileReference;
-			const pbxFileReferenceValues = Object.keys(pbxFileReference).map(key => pbxFileReference[key]);
-			const buildPhaseFiles = pbxProj.hash.project.objects.PBXSourcesBuildPhase["858B83F218CA22B800AB12DE"].files;
+			const pbxFileReferenceValues = Object.keys(pbxFileReference).map(
+				(key) => pbxFileReference[key]
+			);
+			const buildPhaseFiles =
+				pbxProj.hash.project.objects.PBXSourcesBuildPhase[
+					"858B83F218CA22B800AB12DE"
+				].files;
 
-			sourceFileNames.map(file => basename(file)).forEach(baseName => {
-				const ext = extname(baseName);
-				const shouldBeAdded = ext !== ".donotadd";
-				assert.notEqual(pbxFileReferenceValues.indexOf(baseName), -1, `${baseName} not added to PBXFileRefereces`);
+			sourceFileNames
+				.map((file) => basename(file))
+				.forEach((baseName) => {
+					const ext = extname(baseName);
+					const shouldBeAdded = ext !== ".donotadd";
+					assert.notEqual(
+						pbxFileReferenceValues.indexOf(baseName),
+						-1,
+						`${baseName} not added to PBXFileRefereces`
+					);
 
-				const buildPhaseFile = buildPhaseFiles.find((fileObject: any) => fileObject.comment.startsWith(baseName));
-				if (shouldBeAdded && !extname(baseName).startsWith(".h")) {
-					assert.isDefined(buildPhaseFile, `${baseName} not added to PBXSourcesBuildPhase`);
-					assert.include(buildPhaseFile.comment, "in Sources", `${baseName} must be added to Sources group`);
-				} else {
-					assert.isUndefined(buildPhaseFile, `${baseName} is added to PBXSourcesBuildPhase, but it shouldn't have been.`);
-				}
-			});
+					const buildPhaseFile = buildPhaseFiles.find((fileObject: any) =>
+						fileObject.comment.startsWith(baseName)
+					);
+					if (shouldBeAdded && !extname(baseName).startsWith(".h")) {
+						assert.isDefined(
+							buildPhaseFile,
+							`${baseName} not added to PBXSourcesBuildPhase`
+						);
+						assert.include(
+							buildPhaseFile.comment,
+							"in Sources",
+							`${baseName} must be added to Sources group`
+						);
+					} else {
+						assert.isUndefined(
+							buildPhaseFile,
+							`${baseName} is added to PBXSourcesBuildPhase, but it shouldn't have been.`
+						);
+					}
+				});
 		});
 
 		it("adds plugin with Source files", async () => {
 			const sourceFileNames = [
-				"src/Header.h", "src/ObjC.m",
-				"src/nested/Header.hpp", "src/nested/Source.cpp", "src/nested/ObjCpp.mm",
-				"src/nested/level2/Header2.hxx", "src/nested/level2/Source2.cxx", "src/nested/level2/Source3.c",
+				"src/Header.h",
+				"src/ObjC.m",
+				"src/nested/Header.hpp",
+				"src/nested/Source.cpp",
+				"src/nested/ObjCpp.mm",
+				"src/nested/level2/Header2.hxx",
+				"src/nested/level2/Source2.cxx",
+				"src/nested/level2/Source3.c",
 				"src/SomeOtherExtension.donotadd",
 			];
 
-			const pbxProj = await preparePluginWithFiles(sourceFileNames, "prepareNativeSourceCode");
+			const pbxProj = await preparePluginWithFiles(
+				sourceFileNames,
+				"prepareNativeSourceCode"
+			);
 
 			const pbxFileReference = pbxProj.hash.project.objects.PBXFileReference;
-			const pbxFileReferenceValues = Object.keys(pbxFileReference).map(key => pbxFileReference[key]);
-			const buildPhaseFiles = pbxProj.hash.project.objects.PBXSourcesBuildPhase["858B83F218CA22B800AB12DE"].files;
+			const pbxFileReferenceValues = Object.keys(pbxFileReference).map(
+				(key) => pbxFileReference[key]
+			);
+			const buildPhaseFiles =
+				pbxProj.hash.project.objects.PBXSourcesBuildPhase[
+					"858B83F218CA22B800AB12DE"
+				].files;
 
-			sourceFileNames.map(file => basename(file)).forEach(baseName => {
-				const ext = extname(baseName);
-				const shouldBeAdded = ext !== ".donotadd";
-				assert.notEqual(pbxFileReferenceValues.indexOf(baseName), -1, `${baseName} not added to PBXFileRefereces`);
+			sourceFileNames
+				.map((file) => basename(file))
+				.forEach((baseName) => {
+					const ext = extname(baseName);
+					const shouldBeAdded = ext !== ".donotadd";
+					assert.notEqual(
+						pbxFileReferenceValues.indexOf(baseName),
+						-1,
+						`${baseName} not added to PBXFileRefereces`
+					);
 
-				const buildPhaseFile = buildPhaseFiles.find((fileObject: any) => fileObject.comment.startsWith(baseName));
-				if (shouldBeAdded && !extname(baseName).startsWith(".h")) {
-					assert.isDefined(buildPhaseFile, `${baseName} not added to PBXSourcesBuildPhase`);
-					assert.include(buildPhaseFile.comment, "in Sources", `${baseName} must be added to Sources group`);
-				} else {
-					assert.isUndefined(buildPhaseFile, `${baseName} was added to PBXSourcesBuildPhase, but it shouldn't have been`);
-				}
-			});
+					const buildPhaseFile = buildPhaseFiles.find((fileObject: any) =>
+						fileObject.comment.startsWith(baseName)
+					);
+					if (shouldBeAdded && !extname(baseName).startsWith(".h")) {
+						assert.isDefined(
+							buildPhaseFile,
+							`${baseName} not added to PBXSourcesBuildPhase`
+						);
+						assert.include(
+							buildPhaseFile.comment,
+							"in Sources",
+							`${baseName} must be added to Sources group`
+						);
+					} else {
+						assert.isUndefined(
+							buildPhaseFile,
+							`${baseName} was added to PBXSourcesBuildPhase, but it shouldn't have been`
+						);
+					}
+				});
 		});
 		it("adds plugin with Resource files", async () => {
 			const resFileNames = [
-				"Resources/Image.png", "Resources/Jpeg.jpg", "Resources/screen.xib",
+				"Resources/Image.png",
+				"Resources/Jpeg.jpg",
+				"Resources/screen.xib",
 				"Resources/TestBundle.bundle/bundled.png",
-
 			];
 
-			const pbxProj = await preparePluginWithFiles(resFileNames, "prepareResources");
+			const pbxProj = await preparePluginWithFiles(
+				resFileNames,
+				"prepareResources"
+			);
 
 			const pbxFileReference = pbxProj.hash.project.objects.PBXFileReference;
-			const pbxFileReferenceValues = Object.keys(pbxFileReference).map(key => pbxFileReference[key]);
-			const buildPhaseFiles = pbxProj.hash.project.objects.PBXResourcesBuildPhase["858B842C18CA22B800AB12DE"].files;
+			const pbxFileReferenceValues = Object.keys(pbxFileReference).map(
+				(key) => pbxFileReference[key]
+			);
+			const buildPhaseFiles =
+				pbxProj.hash.project.objects.PBXResourcesBuildPhase[
+					"858B842C18CA22B800AB12DE"
+				].files;
 
-			resFileNames.forEach(filename => {
+			resFileNames.forEach((filename) => {
 				const dirName = dirname(filename);
 				const fileToCheck = dirName.endsWith(".bundle") ? dirName : filename;
 				const fileName = basename(fileToCheck);
 
-				assert.isTrue(pbxFileReferenceValues.indexOf(fileName) !== -1, `Resource ${filename} not added to PBXFileRefereces`);
+				assert.isTrue(
+					pbxFileReferenceValues.indexOf(fileName) !== -1,
+					`Resource ${filename} not added to PBXFileRefereces`
+				);
 
-				const buildPhaseFile = buildPhaseFiles.find((fileObject: any) => fileObject.comment.startsWith(fileName));
-				assert.isDefined(buildPhaseFile, `${fileToCheck} not added to PBXResourcesBuildPhase`);
-				assert.include(buildPhaseFile.comment, "in Resources", `${fileToCheck} must be added to Resources group`);
-
+				const buildPhaseFile = buildPhaseFiles.find((fileObject: any) =>
+					fileObject.comment.startsWith(fileName)
+				);
+				assert.isDefined(
+					buildPhaseFile,
+					`${fileToCheck} not added to PBXResourcesBuildPhase`
+				);
+				assert.include(
+					buildPhaseFile.comment,
+					"in Resources",
+					`${fileToCheck} must be added to Resources group`
+				);
 			});
 		});
 	}
@@ -681,78 +938,115 @@ describe("Static libraries support", () => {
 	const headers = ["TestHeader1.h", "TestHeader2.h"];
 	const testInjector = createTestInjector(projectPath, projectName);
 	const fs: IFileSystem = testInjector.resolve("fs");
-	const staticLibraryPath = join(join(temp.mkdirSync("pluginDirectory"), "platforms", "ios"));
-	const staticLibraryHeadersPath = join(staticLibraryPath, "include", libraryName);
+	const staticLibraryPath = join(
+		join(temp.mkdirSync("pluginDirectory"), "platforms", "ios")
+	);
+	const staticLibraryHeadersPath = join(
+		staticLibraryPath,
+		"include",
+		libraryName
+	);
 
 	it("checks validation of header files", async () => {
 		const iOSProjectService = testInjector.resolve("iOSProjectService");
 		fs.ensureDirectoryExists(staticLibraryHeadersPath);
-		_.each(headers, header => { fs.writeFile(join(staticLibraryHeadersPath, header), ""); });
+		_.each(headers, (header) => {
+			fs.writeFile(join(staticLibraryHeadersPath, header), "");
+		});
 
 		// Add all header files.
 		fs.writeFile(join(staticLibraryHeadersPath, libraryName + ".a"), "");
 
 		let error: any;
 		try {
-			await iOSProjectService.validateStaticLibrary(join(staticLibraryPath, libraryName + ".a"));
+			await iOSProjectService.validateStaticLibrary(
+				join(staticLibraryPath, libraryName + ".a")
+			);
 		} catch (err) {
 			error = err;
 		}
 
-		assert.instanceOf(error, Error, "Expect to fail, the .a file is not a static library.");
+		assert.instanceOf(
+			error,
+			Error,
+			"Expect to fail, the .a file is not a static library."
+		);
 	});
 
 	it("checks generation of modulemaps", () => {
 		const iOSProjectService = testInjector.resolve("iOSProjectService");
 		fs.ensureDirectoryExists(staticLibraryHeadersPath);
-		_.each(headers, header => { fs.writeFile(join(staticLibraryHeadersPath, header), ""); });
+		_.each(headers, (header) => {
+			fs.writeFile(join(staticLibraryHeadersPath, header), "");
+		});
 
 		iOSProjectService.generateModulemap(staticLibraryHeadersPath, libraryName);
 		// Read the generated modulemap and verify it.
-		let modulemap = fs.readFile(join(staticLibraryHeadersPath, "module.modulemap"));
-		const headerCommands = _.map(headers, value => `header "${value}"`);
-		const modulemapExpectation = `module ${libraryName} { explicit module ${libraryName} { ${headerCommands.join(" ")} } }`;
+		let modulemap = fs.readFile(
+			join(staticLibraryHeadersPath, "module.modulemap")
+		);
+		const headerCommands = _.map(headers, (value) => `header "${value}"`);
+		const modulemapExpectation = `module ${libraryName} { explicit module ${libraryName} { ${headerCommands.join(
+			" "
+		)} } }`;
 
 		assert.equal(modulemap, modulemapExpectation);
 
 		// Delete all header files. And try to regenerate modulemap.
-		_.each(headers, header => { fs.deleteFile(join(staticLibraryHeadersPath, header)); });
+		_.each(headers, (header) => {
+			fs.deleteFile(join(staticLibraryHeadersPath, header));
+		});
 		iOSProjectService.generateModulemap(staticLibraryHeadersPath, libraryName);
 
 		let error: any;
 		try {
-			modulemap = fs.readFile(join(staticLibraryHeadersPath, "module.modulemap"));
+			modulemap = fs.readFile(
+				join(staticLibraryHeadersPath, "module.modulemap")
+			);
 		} catch (err) {
 			error = err;
 		}
 
-		assert.instanceOf(error, Error, "Expect to fail, there shouldn't be a module.modulemap file.");
+		assert.instanceOf(
+			error,
+			Error,
+			"Expect to fail, there shouldn't be a module.modulemap file."
+		);
 	});
 });
 
 describe("Relative paths", () => {
 	it("checks for correct calculation of relative paths", () => {
 		const projectName = "projectDirectory";
-    const projectPath = temp.mkdirSync(projectName);
-    const subpath = join(projectPath, "sub", "path");
+		const projectPath = temp.mkdirSync(projectName);
+		const subpath = join(projectPath, "sub", "path");
 
-    const testInjector = createTestInjector(projectPath, projectName);
-    createPackageJson(testInjector, projectPath, projectName);
+		const testInjector = createTestInjector(projectPath, projectName);
+		createPackageJson(testInjector, projectPath, projectName);
 		const iOSProjectService = testInjector.resolve("iOSProjectService");
-    const projectData: IProjectData = testInjector.resolve("projectData");
+		const projectData: IProjectData = testInjector.resolve("projectData");
 
-    const result = iOSProjectService.getLibSubpathRelativeToProjectPath(subpath, projectData);
+		const result = iOSProjectService.getLibSubpathRelativeToProjectPath(
+			subpath,
+			projectData
+		);
 		assert.equal(result, join("..", "..", "sub", "path"));
 	});
 });
 
 describe("Merge Project XCConfig files", () => {
 	if (require("os").platform() !== "darwin") {
-		console.log("Skipping 'Merge Project XCConfig files' tests. They can work only on macOS");
+		console.log(
+			"Skipping 'Merge Project XCConfig files' tests. They can work only on macOS"
+		);
 		return;
 	}
-	const assertPropertyValues = (expected: any, xcconfigPath: string, injector: IInjector) => {
-		const service = <IXcconfigService>injector.resolve('xcconfigService');
+	const assertPropertyValues = (
+		expected: any,
+		xcconfigPath: string,
+		injector: IInjector
+	) => {
+		const service = <IXcconfigService>injector.resolve("xcconfigService");
 		_.forOwn(expected, (value, key) => {
 			const actual = service.readPropertyValue(xcconfigPath, key);
 			assert.equal(actual, value);
@@ -779,11 +1073,19 @@ describe("Merge Project XCConfig files", () => {
 		iOSProjectService = testInjector.resolve("iOSProjectService");
 		projectData = testInjector.resolve("projectData");
 		projectData.projectDir = projectPath;
-		projectData.appResourcesDirectoryPath = join(projectData.projectDir, "app", "App_Resources");
+		projectData.appResourcesDirectoryPath = join(
+			projectData.projectDir,
+			"app",
+			"App_Resources"
+		);
 
 		iOSEntitlementsService = testInjector.resolve("iOSEntitlementsService");
 
-		appResourcesXcconfigPath = join(projectData.appResourcesDirectoryPath, "iOS", BUILD_XCCONFIG_FILE_NAME);
+		appResourcesXcconfigPath = join(
+			projectData.appResourcesDirectoryPath,
+			"iOS",
+			BUILD_XCCONFIG_FILE_NAME
+		);
 		appResourceXCConfigContent = `CODE_SIGN_IDENTITY = iPhone Distribution
 			// To build for device with XCode you need to specify your development team. More info: https://developer.apple.com/library/prerelease/content/releasenotes/DeveloperTools/RN-Xcode/Introduction.html
 			// DEVELOPMENT_TEAM = YOUR_TEAM_ID;
@@ -791,8 +1093,8 @@ describe("Merge Project XCConfig files", () => {
 			ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
 			`;
 		const testPackageJson = {
-			"name": "test-project",
-			"version": "0.0.1"
+			name: "test-project",
+			version: "0.0.1",
 		};
 		fs = testInjector.resolve("fs");
 		fs.writeJson(join(projectPath, "package.json"), testPackageJson);
@@ -808,14 +1110,19 @@ describe("Merge Project XCConfig files", () => {
 		for (const release in [true, false]) {
 			await (<any>iOSProjectService).mergeProjectXcconfigFiles(projectData);
 
-			const destinationFilePaths = xcconfigService.getPluginsXcconfigFilePaths(projectRoot);
+			const destinationFilePaths = xcconfigService.getPluginsXcconfigFilePaths(
+				projectRoot
+			);
 
-			_.each(destinationFilePaths, destinationFilePath => {
-				assert.isTrue(fs.exists(destinationFilePath), 'Target build xcconfig is missing for release: ' + release);
+			_.each(destinationFilePaths, (destinationFilePath) => {
+				assert.isTrue(
+					fs.exists(destinationFilePath),
+					"Target build xcconfig is missing for release: " + release
+				);
 				const expected = {
-					'ASSETCATALOG_COMPILER_APPICON_NAME': 'AppIcon',
-					'ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME': 'LaunchImage',
-					'CODE_SIGN_IDENTITY': 'iPhone Distribution'
+					ASSETCATALOG_COMPILER_APPICON_NAME: "AppIcon",
+					ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME: "LaunchImage",
+					CODE_SIGN_IDENTITY: "iPhone Distribution",
 				};
 				assertPropertyValues(expected, destinationFilePath, testInjector);
 			});
@@ -827,21 +1134,33 @@ describe("Merge Project XCConfig files", () => {
 			const realExistsFunction = testInjector.resolve("fs").exists;
 
 			testInjector.resolve("fs").exists = (filePath: string) => {
-				if (iOSEntitlementsService.getPlatformsEntitlementsPath(projectData) === filePath) {
+				if (
+					iOSEntitlementsService.getPlatformsEntitlementsPath(projectData) ===
+					filePath
+				) {
 					return true;
 				}
 
 				return realExistsFunction(filePath);
 			};
 
-			await (<any>iOSProjectService).mergeProjectXcconfigFiles(projectData, { release });
+			await (<any>iOSProjectService).mergeProjectXcconfigFiles(projectData, {
+				release,
+			});
 
-			const destinationFilePaths = xcconfigService.getPluginsXcconfigFilePaths(projectRoot);
+			const destinationFilePaths = xcconfigService.getPluginsXcconfigFilePaths(
+				projectRoot
+			);
 
-			_.each(destinationFilePaths, destinationFilePath => {
-				assert.isTrue(fs.exists(destinationFilePath), 'Target build xcconfig is missing for release: ' + release);
+			_.each(destinationFilePaths, (destinationFilePath) => {
+				assert.isTrue(
+					fs.exists(destinationFilePath),
+					"Target build xcconfig is missing for release: " + release
+				);
 				const expected = {
-					'CODE_SIGN_ENTITLEMENTS': iOSEntitlementsService.getPlatformsEntitlementsRelativePath(projectData)
+					CODE_SIGN_ENTITLEMENTS: iOSEntitlementsService.getPlatformsEntitlementsRelativePath(
+						projectData
+					),
 				};
 				assertPropertyValues(expected, destinationFilePath, testInjector);
 			});
@@ -850,21 +1169,28 @@ describe("Merge Project XCConfig files", () => {
 
 	it("The user specified entitlements property takes precedence", async () => {
 		// setup app_resource build.xcconfig
-		const expectedEntitlementsFile = 'user.entitlements';
-		const xcconfigEntitlements = appResourceXCConfigContent + `${EOL}CODE_SIGN_ENTITLEMENTS = ${expectedEntitlementsFile}`;
+		const expectedEntitlementsFile = "user.entitlements";
+		const xcconfigEntitlements =
+			appResourceXCConfigContent +
+			`${EOL}CODE_SIGN_ENTITLEMENTS = ${expectedEntitlementsFile}`;
 		fs.writeFile(appResourcesXcconfigPath, xcconfigEntitlements);
 
 		await (<any>iOSProjectService).mergeProjectXcconfigFiles(projectData);
 
-		const destinationFilePaths = xcconfigService.getPluginsXcconfigFilePaths(projectRoot);
+		const destinationFilePaths = xcconfigService.getPluginsXcconfigFilePaths(
+			projectRoot
+		);
 
-		_.each(destinationFilePaths, destinationFilePath => {
-			assert.isTrue(fs.exists(destinationFilePath), `Target build xcconfig ${destinationFilePath} is missing.`);
+		_.each(destinationFilePaths, (destinationFilePath) => {
+			assert.isTrue(
+				fs.exists(destinationFilePath),
+				`Target build xcconfig ${destinationFilePath} is missing.`
+			);
 			const expected = {
-				'ASSETCATALOG_COMPILER_APPICON_NAME': 'AppIcon',
-				'ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME': 'LaunchImage',
-				'CODE_SIGN_IDENTITY': 'iPhone Distribution',
-				'CODE_SIGN_ENTITLEMENTS': expectedEntitlementsFile
+				ASSETCATALOG_COMPILER_APPICON_NAME: "AppIcon",
+				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME: "LaunchImage",
+				CODE_SIGN_IDENTITY: "iPhone Distribution",
+				CODE_SIGN_ENTITLEMENTS: expectedEntitlementsFile,
 			};
 			assertPropertyValues(expected, destinationFilePath, testInjector);
 		});
@@ -873,10 +1199,15 @@ describe("Merge Project XCConfig files", () => {
 	it("creates empty plugins-<config>.xcconfig in case there are no build.xcconfig in App_Resources and in plugins", async () => {
 		await (<any>iOSProjectService).mergeProjectXcconfigFiles(projectData);
 
-		const destinationFilePaths = xcconfigService.getPluginsXcconfigFilePaths(projectRoot);
+		const destinationFilePaths = xcconfigService.getPluginsXcconfigFilePaths(
+			projectRoot
+		);
 
-		_.each(destinationFilePaths, destinationFilePath => {
-			assert.isTrue(fs.exists(destinationFilePath), `Target build xcconfig ${destinationFilePath} is missing.`);
+		_.each(destinationFilePaths, (destinationFilePath) => {
+			assert.isTrue(
+				fs.exists(destinationFilePath),
+				`Target build xcconfig ${destinationFilePath} is missing.`
+			);
 			const content = fs.readFile(destinationFilePath).toString();
 			assert.equal(content, "");
 		});
@@ -894,8 +1225,10 @@ describe("handleNativeDependenciesChange", () => {
 		const projectData = testInjector.resolve("projectData");
 
 		const cocoapodsService = testInjector.resolve("cocoapodsService");
-		cocoapodsService.executePodInstall = async () => executedCocoapodsMethods.push("podInstall");
-		cocoapodsService.mergePodXcconfigFile = async () => executedCocoapodsMethods.push("podMerge");
+		cocoapodsService.executePodInstall = async () =>
+			executedCocoapodsMethods.push("podInstall");
+		cocoapodsService.mergePodXcconfigFile = async () =>
+			executedCocoapodsMethods.push("podMerge");
 		cocoapodsService.applyPodfileFromAppResources = async () => ({});
 		cocoapodsService.removeDuplicatedPlatfomsFromProjectPodFile = async () => ({});
 		cocoapodsService.getProjectPodfilePath = () => projectPodfilePath;
@@ -905,6 +1238,9 @@ describe("handleNativeDependenciesChange", () => {
 
 		await iOSProjectService.handleNativeDependenciesChange(projectData);
 
-		assert.deepStrictEqual(executedCocoapodsMethods, ["podInstall", "podMerge"]);
+		assert.deepStrictEqual(executedCocoapodsMethods, [
+			"podInstall",
+			"podMerge",
+		]);
 	});
 });

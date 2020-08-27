@@ -1,25 +1,31 @@
 import { IProjectData } from "../definitions/project";
 import { IPlatformData, IPlatformsDataService } from "../definitions/platform";
 import { injector } from "../common/yok";
-import * as _ from 'lodash';
+import * as _ from "lodash";
 
 export class PlatformsDataService implements IPlatformsDataService {
 	private platformsDataService: { [index: string]: any } = {};
 
-	constructor($androidProjectService: IPlatformProjectService,
-		$iOSProjectService: IPlatformProjectService) {
-
+	constructor(
+		$androidProjectService: IPlatformProjectService,
+		$iOSProjectService: IPlatformProjectService
+	) {
 		this.platformsDataService = {
 			ios: $iOSProjectService,
-			android: $androidProjectService
+			android: $androidProjectService,
 		};
 	}
 
-	public getPlatformData(platform: string, projectData: IProjectData): IPlatformData {
+	public getPlatformData(
+		platform: string,
+		projectData: IProjectData
+	): IPlatformData {
 		const platformKey = platform && _.first(platform.toLowerCase().split("@"));
 		let platformData: IPlatformData;
 		if (platformKey) {
-			platformData = this.platformsDataService[platformKey] && this.platformsDataService[platformKey].getPlatformData(projectData);
+			platformData =
+				this.platformsDataService[platformKey] &&
+				this.platformsDataService[platformKey].getPlatformData(projectData);
 		}
 
 		return platformData;

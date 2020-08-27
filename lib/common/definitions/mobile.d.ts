@@ -1,11 +1,19 @@
 import { DeviceConnectionType } from "../../constants";
 import { IProjectData } from "../../definitions/project";
 import { IBuildData } from "../../definitions/build";
-import { IPlatform, IDictionary, IProjectDir, IShouldDispose, IStringDictionary, IAppInstalledInfo, IHasEmulatorOption, IDisposable } from "../declarations";
+import {
+	IPlatform,
+	IDictionary,
+	IProjectDir,
+	IShouldDispose,
+	IStringDictionary,
+	IAppInstalledInfo,
+	IHasEmulatorOption,
+	IDisposable,
+} from "../declarations";
 
 declare global {
 	export module Mobile {
-
 		/**
 		 * Describes available information for a device.
 		 */
@@ -93,7 +101,7 @@ declare global {
 			imageIdentifier?: string;
 		}
 
-		interface IDeviceError extends Error, IDeviceIdentifier { }
+		interface IDeviceError extends Error, IDeviceIdentifier {}
 
 		interface IDeviceIdentifier {
 			deviceIdentifier: string;
@@ -119,7 +127,12 @@ declare global {
 		}
 
 		interface IiOSDevice extends IDevice {
-			getDebugSocket(appId: string, projectName: string, projectDir: string, ensureAppStarted?: boolean): Promise<any>;
+			getDebugSocket(
+				appId: string,
+				projectName: string,
+				projectDir: string,
+				ensureAppStarted?: boolean
+			): Promise<any>;
 			destroyDebugSocket(appId: string): Promise<void>;
 			openDeviceLogStream(options?: IiOSLogStreamOptions): Promise<void>;
 			destroyAllSockets(): Promise<void>;
@@ -132,7 +145,9 @@ declare global {
 		}
 
 		interface IAndroidDeviceFileSystem extends IDeviceFileSystem {
-			getDeviceHashService(appIdentifier: string): Mobile.IAndroidDeviceHashService;
+			getDeviceHashService(
+				appIdentifier: string
+			): Mobile.IAndroidDeviceHashService;
 		}
 
 		/**
@@ -158,7 +173,7 @@ declare global {
 			device: Mobile.IDevice;
 			getDeviceProjectRootPath(): Promise<string>;
 			deviceSyncZipPath?: string;
-			projectDir: string
+			projectDir: string;
 		}
 
 		interface ILogcatStartOptions {
@@ -213,20 +228,28 @@ declare global {
 			 * @param {string} deviceIdentifier The unique identifier of the device.
 			 * @param {string} projectName The project name of the currently running application for which we need the logs.
 			 */
-			setProjectNameForDevice(deviceIdentifier: string, projectName: string): void;
+			setProjectNameForDevice(
+				deviceIdentifier: string,
+				projectName: string
+			): void;
 
 			/**
 			 * Sets the project name of the application on the specified device.
 			 * @param {string} deviceIdentifier The unique identifier of the device.
 			 * @param {string} projectDir The project dir of the currently running application for which we need the logs.
 			 */
-			setProjectDirForDevice(deviceIdentifier: string, projectDir: string): void;
+			setProjectDirForDevice(
+				deviceIdentifier: string,
+				projectDir: string
+			): void;
 		}
 
 		/**
 		 * Describes different options for filtering device logs.
 		 */
-		interface IDeviceLogOptions extends IDictionary<string | boolean>, Partial<IProjectDir> {
+		interface IDeviceLogOptions
+			extends IDictionary<string | boolean>,
+				Partial<IProjectDir> {
 			/**
 			 * Process id of the application on the device.
 			 */
@@ -246,13 +269,18 @@ declare global {
 		/**
 		 * Describes required methods for getting iOS Simulator's logs.
 		 */
-		interface IiOSSimulatorLogProvider extends NodeJS.EventEmitter, IShouldDispose {
+		interface IiOSSimulatorLogProvider
+			extends NodeJS.EventEmitter,
+				IShouldDispose {
 			/**
 			 * Starts the process for getting simulator logs and emits and DEVICE_LOG_EVENT_NAME event.
 			 * @param {string} deviceId The unique identifier of the device.
 			 * @param {Mobile.IiOSLogStreamOptions} options Describes the options which can be passed
 			 */
-			startLogProcess(deviceId: string, options?: Mobile.IiOSLogStreamOptions): Promise<void>;
+			startLogProcess(
+				deviceId: string,
+				options?: Mobile.IiOSLogStreamOptions
+			): Promise<void>;
 		}
 
 		/**
@@ -272,7 +300,11 @@ declare global {
 			 * @param {Mobile.IDeviceLogOptions} deviceLogOptions The logging options based on which the filtering for this device logs will be executed.
 			 * @return {string} The filtered result based on the input or null when the input data shouldn't be shown.
 			 */
-			filterData(platform: string, data: string, deviceLogOptions: Mobile.IDeviceLogOptions): string;
+			filterData(
+				platform: string,
+				data: string,
+				deviceLogOptions: Mobile.IDeviceLogOptions
+			): string;
 		}
 
 		/**
@@ -285,7 +317,11 @@ declare global {
 			 * @return {Promise<void>}
 			 */
 			setSourceMapConsumerForFile(filePath: string): Promise<void>;
-			replaceWithOriginalFileLocations(platform: string, messageData: string, loggingOptions: Mobile.IDeviceLogOptions): string
+			replaceWithOriginalFileLocations(
+				platform: string,
+				messageData: string,
+				loggingOptions: Mobile.IDeviceLogOptions
+			): string;
 		}
 
 		/**
@@ -299,7 +335,10 @@ declare global {
 			 * @param {string} pid The Process ID of the currently running application for which we need the logs.
 			 * @return {string} The filtered result based on the input or null when the input data shouldn't be shown.
 			 */
-			filterData(data: string, deviceLogOptions: Mobile.IDeviceLogOptions): string;
+			filterData(
+				data: string,
+				deviceLogOptions: Mobile.IDeviceLogOptions
+			): string;
 		}
 
 		interface ILoggingLevels {
@@ -324,16 +363,26 @@ declare global {
 		interface IDeviceApplicationManager extends NodeJS.EventEmitter {
 			getInstalledApplications(): Promise<string[]>;
 			isApplicationInstalled(appIdentifier: string): Promise<boolean>;
-			installApplication(packageFilePath: string, appIdentifier?: string, buildData?: IBuildData): Promise<void>;
+			installApplication(
+				packageFilePath: string,
+				appIdentifier?: string,
+				buildData?: IBuildData
+			): Promise<void>;
 			uninstallApplication(appIdentifier: string): Promise<void>;
-			reinstallApplication(appIdentifier: string, packageFilePath: string, buildData?: IBuildData): Promise<void>;
+			reinstallApplication(
+				appIdentifier: string,
+				packageFilePath: string,
+				buildData?: IBuildData
+			): Promise<void>;
 			startApplication(appData: IStartApplicationData): Promise<void>;
 			stopApplication(appData: IApplicationData): Promise<void>;
 			restartApplication(appData: IStartApplicationData): Promise<void>;
 			checkForApplicationUpdates(): Promise<void>;
 			tryStartApplication(appData: IApplicationData): Promise<void>;
 			getDebuggableApps(): Promise<Mobile.IDeviceApplicationInformation[]>;
-			getDebuggableAppViews(appIdentifiers: string[]): Promise<IDictionary<Mobile.IDebugWebViewInfo[]>>;
+			getDebuggableAppViews(
+				appIdentifiers: string[]
+			): Promise<IDictionary<Mobile.IDebugWebViewInfo[]>>;
 			/**
 			 * Sets the files transferred on device.
 			 * @param {string[]} files Local paths to files transferred on device.
@@ -361,25 +410,52 @@ declare global {
 			 * The configuration of the currently deployed application (e.g. debug, release, live, etc.)
 			 * @type {string}
 			 */
-			configuration: string
+			configuration: string;
 		}
 
 		interface IDeviceFileSystem {
 			listFiles(devicePath: string, appIdentifier?: string): Promise<any>;
-			getFile(deviceFilePath: string, appIdentifier: string, outputFilePath?: string): Promise<void>;
-			getFileContent(deviceFilePath: string, appIdentifier: string): Promise<string>;
-			putFile(localFilePath: string, deviceFilePath: string, appIdentifier: string): Promise<void>;
+			getFile(
+				deviceFilePath: string,
+				appIdentifier: string,
+				outputFilePath?: string
+			): Promise<void>;
+			getFileContent(
+				deviceFilePath: string,
+				appIdentifier: string
+			): Promise<string>;
+			putFile(
+				localFilePath: string,
+				deviceFilePath: string,
+				appIdentifier: string
+			): Promise<void>;
 			deleteFile(deviceFilePath: string, appIdentifier: string): Promise<void>;
-			transferFiles(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]): Promise<Mobile.ILocalToDevicePathData[]>;
-			transferDirectory(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], projectFilesPath: string): Promise<Mobile.ILocalToDevicePathData[]>;
-			transferFile?(localFilePath: string, deviceFilePath: string): Promise<void>;
-			createFileOnDevice?(deviceFilePath: string, fileContent: string): Promise<void>;
+			transferFiles(
+				deviceAppData: Mobile.IDeviceAppData,
+				localToDevicePaths: Mobile.ILocalToDevicePathData[]
+			): Promise<Mobile.ILocalToDevicePathData[]>;
+			transferDirectory(
+				deviceAppData: Mobile.IDeviceAppData,
+				localToDevicePaths: Mobile.ILocalToDevicePathData[],
+				projectFilesPath: string
+			): Promise<Mobile.ILocalToDevicePathData[]>;
+			transferFile?(
+				localFilePath: string,
+				deviceFilePath: string
+			): Promise<void>;
+			createFileOnDevice?(
+				deviceFilePath: string,
+				fileContent: string
+			): Promise<void>;
 			/**
 			 * Updates the hash file on device with the current hashes of files.
 			 * @param hashes - All file's hashes
 			 * @param appIdentifier - The identifier of the application.
 			 */
-			updateHashesOnDevice(hashes: IStringDictionary, appIdentifier: string): Promise<void>;
+			updateHashesOnDevice(
+				hashes: IStringDictionary,
+				appIdentifier: string
+			): Promise<void>;
 		}
 
 		interface IAndroidDebugBridgeCommandOptions {
@@ -391,8 +467,14 @@ declare global {
 		}
 
 		interface IAndroidDebugBridge {
-			executeCommand(args: string[], options?: IAndroidDebugBridgeCommandOptions): Promise<any>;
-			executeShellCommand(args: string[], options?: IAndroidDebugBridgeCommandOptions): Promise<any>;
+			executeCommand(
+				args: string[],
+				options?: IAndroidDebugBridgeCommandOptions
+			): Promise<any>;
+			executeShellCommand(
+				args: string[],
+				options?: IAndroidDebugBridgeCommandOptions
+			): Promise<any>;
 			pushFile(localFilePath: string, deviceFilePath: string): Promise<void>;
 			removeFile(deviceFilePath: string): Promise<void>;
 			/**
@@ -416,7 +498,10 @@ declare global {
 		}
 
 		interface IDeviceAndroidDebugBridge extends IAndroidDebugBridge {
-			sendBroadcastToDevice(action: string, extras?: IStringDictionary): Promise<number>;
+			sendBroadcastToDevice(
+				action: string,
+				extras?: IStringDictionary
+			): Promise<number>;
 		}
 
 		interface IDeviceDiscovery extends NodeJS.EventEmitter {
@@ -434,7 +519,8 @@ declare global {
 		/**
 		 * Describes options that can be passed to devices service's initialization method.
 		 */
-		interface IDevicesServicesInitializationOptions extends Partial<IDeviceLookingOptions> {
+		interface IDevicesServicesInitializationOptions
+			extends Partial<IDeviceLookingOptions> {
 			/**
 			 * If passed will start an emulator if necesasry.
 			 */
@@ -484,7 +570,11 @@ declare global {
 			hasDevices: boolean;
 			deviceCount: number;
 
-			execute<T>(action: (device: Mobile.IDevice) => Promise<T>, canExecute?: (dev: Mobile.IDevice) => boolean, options?: { allowNoDevices?: boolean }): Promise<IDeviceActionResult<T>[]>;
+			execute<T>(
+				action: (device: Mobile.IDevice) => Promise<T>,
+				canExecute?: (dev: Mobile.IDevice) => boolean,
+				options?: { allowNoDevices?: boolean }
+			): Promise<IDeviceActionResult<T>[]>;
 
 			/**
 			 * Initializes DevicesService, so after that device operations could be executed.
@@ -514,13 +604,33 @@ declare global {
 			isiOSDevice(device: Mobile.IDevice): boolean;
 			isiOSSimulator(device: Mobile.IDevice): boolean;
 			isOnlyiOSSimultorRunning(): boolean;
-			isAppInstalledOnDevices(deviceIdentifiers: string[], appIdentifier: string, framework: string, projectDir: string): Promise<IAppInstalledInfo>[];
+			isAppInstalledOnDevices(
+				deviceIdentifiers: string[],
+				appIdentifier: string,
+				framework: string,
+				projectDir: string
+			): Promise<IAppInstalledInfo>[];
 			setLogLevel(logLevel: string, deviceIdentifier?: string): void;
-			deployOnDevices(deviceIdentifiers: string[], packageFile: string, packageName: string, framework: string, projectDir: string): Promise<void>[];
+			deployOnDevices(
+				deviceIdentifiers: string[],
+				packageFile: string,
+				packageName: string,
+				framework: string,
+				projectDir: string
+			): Promise<void>[];
 			getDeviceByIdentifier(identifier: string): Mobile.IDevice;
-			mapAbstractToTcpPort(deviceIdentifier: string, appIdentifier: string, framework: string): Promise<string>;
-			getDebuggableApps(deviceIdentifiers: string[]): Promise<Mobile.IDeviceApplicationInformation[]>[];
-			getDebuggableViews(deviceIdentifier: string, appIdentifier: string): Promise<Mobile.IDebugWebViewInfo[]>;
+			mapAbstractToTcpPort(
+				deviceIdentifier: string,
+				appIdentifier: string,
+				framework: string
+			): Promise<string>;
+			getDebuggableApps(
+				deviceIdentifiers: string[]
+			): Promise<Mobile.IDeviceApplicationInformation[]>[];
+			getDebuggableViews(
+				deviceIdentifier: string,
+				appIdentifier: string
+			): Promise<Mobile.IDebugWebViewInfo[]>;
 
 			/**
 			 * Returns all applications installed on the specified device.
@@ -534,7 +644,9 @@ declare global {
 			 * @param options The options that can be passed to filter the result.
 			 * @returns {Promise<Mobile.IListEmulatorsOutput>} Dictionary with the following format: { ios: { devices: Mobile.IDeviceInfo[], errors: string[] }, android: { devices: Mobile.IDeviceInfo[], errors: string[]}}.
 			 */
-			getEmulatorImages(options?: Mobile.IListEmulatorsOptions): Promise<Mobile.IListEmulatorsOutput>;
+			getEmulatorImages(
+				options?: Mobile.IListEmulatorsOptions
+			): Promise<Mobile.IListEmulatorsOutput>;
 
 			/**
 			 * Starts an emulator by provided options.
@@ -547,9 +659,13 @@ declare global {
 			 * Returns a single device based on the specified options. If more than one devices are matching,
 			 * prompts the user for a manual choice or returns the first one for non interactive terminals.
 			 */
-			pickSingleDevice(options: IPickSingleDeviceOptions): Promise<Mobile.IDevice>;
+			pickSingleDevice(
+				options: IPickSingleDeviceOptions
+			): Promise<Mobile.IDevice>;
 
-			getPlatformsFromDeviceDescriptors(deviceDescriptors: ILiveSyncDeviceDescriptor[]): string[];
+			getPlatformsFromDeviceDescriptors(
+				deviceDescriptors: ILiveSyncDeviceDescriptor[]
+			): string[];
 		}
 
 		interface IPickSingleDeviceOptions {
@@ -601,14 +717,20 @@ declare global {
 			 * @param framework {string} The framework of the application. Could be Cordova or NativeScript.
 			 * @return {string} Returns the tcp port number which is mapped to the abstract port.
 			 */
-			mapAbstractToTcpPort(deviceIdentifier: string, appIdentifier: string, framework: string): Promise<string>;
+			mapAbstractToTcpPort(
+				deviceIdentifier: string,
+				appIdentifier: string,
+				framework: string
+			): Promise<string>;
 
 			/**
 			 * Gets the applications which are available for debugging on the specified device.
 			 * @param deviceIdentifier The identifier of the device.
 			 * @return {Mobile.IDeviceApplicationInformation[]} Returns array of applications information for the applications which are available for debugging.
 			 */
-			getDebuggableApps(deviceIdentifier: string): Promise<Mobile.IDeviceApplicationInformation[]>;
+			getDebuggableApps(
+				deviceIdentifier: string
+			): Promise<Mobile.IDeviceApplicationInformation[]>;
 
 			/**
 			 * Gets all mapped abstract to tcp ports for specified device id and application identifiers.
@@ -617,7 +739,11 @@ declare global {
 			 * @param framework {string} The framework of the application. Could be Cordova or NativeScript.
 			 * @return {Promise<IDictionary<number>>} Dictionary, where the keys are app identifiers and the values are local ports.
 			 */
-			getMappedAbstractToTcpPorts(deviceIdentifier: string, appIdentifiers: string[], framework: string): Promise<IDictionary<number>>;
+			getMappedAbstractToTcpPorts(
+				deviceIdentifier: string,
+				appIdentifiers: string[],
+				framework: string
+			): Promise<IDictionary<number>>;
 
 			/**
 			 * Gets the PID of a running application.
@@ -625,7 +751,10 @@ declare global {
 			 * @param appIdentifier The identifier of the application.
 			 * @return {string} Returns the process id matching the application identifier in the device process list.
 			 */
-			getAppProcessId(deviceIdentifier: string, appIdentifier: string): Promise<string>;
+			getAppProcessId(
+				deviceIdentifier: string,
+				appIdentifier: string
+			): Promise<string>;
 
 			/**
 			 * Sets port forwarding to a specified abstract port.
@@ -634,7 +763,9 @@ declare global {
 			 * @param {IPortForwardData} portForwardInputData Data describing required information to setup port forwarding.
 			 * @returns {number} The TCP port that is used for the forwarding.
 			 */
-			forwardFreeTcpToAbstractPort(portForwardInputData: IPortForwardData): Promise<number>;
+			forwardFreeTcpToAbstractPort(
+				portForwardInputData: IPortForwardData
+			): Promise<number>;
 		}
 
 		/**
@@ -695,7 +826,12 @@ declare global {
 		}
 
 		interface ILocalToDevicePathDataFactory {
-			create(fileName: string, localProjectRootPath: string, onDeviceFileName: string, deviceProjectRootPath: string): Mobile.ILocalToDevicePathData;
+			create(
+				fileName: string,
+				localProjectRootPath: string,
+				onDeviceFileName: string,
+				deviceProjectRootPath: string
+			): Mobile.ILocalToDevicePathData;
 		}
 
 		interface IAvdInfo extends IDictionary<string | number> {
@@ -748,7 +884,9 @@ declare global {
 			 * @param options
 			 * @returns {Promise<IStartEmulatorOutput>} Starts the emulator and returns the errors if some error occurs.
 			 */
-			startEmulator(options: Mobile.IStartEmulatorOptions): Promise<IStartEmulatorOutput>;
+			startEmulator(
+				options: Mobile.IStartEmulatorOptions
+			): Promise<IStartEmulatorOutput>;
 
 			/**
 			 * Called when emulator is lost. Its purpose is to clean any resources used by the instance.
@@ -767,7 +905,9 @@ declare global {
 			 * @returns {Promise<Mobile.IEmulatorImagesOutput>} - Dictionary in the following format: { devices: Mobile.IDevice[], errors: string[] }.
 			 * Returns array of all available android emulators - genymotion and native avd emulators and array of errors.
 			 */
-			getEmulatorImages(adbDevicesOutput: string[]): Promise<Mobile.IEmulatorImagesOutput>;
+			getEmulatorImages(
+				adbDevicesOutput: string[]
+			): Promise<Mobile.IEmulatorImagesOutput>;
 			/**
 			 * Gets all identifiers of all running android emulators.
 			 * @param adbDevicesOutput The output from "adb devices" command
@@ -816,7 +956,9 @@ declare global {
 			 * @param id - The identifier of the virtual machine.
 			 * @returns {Promise<IVirtualBoxEnumerateGuestPropertiesOutput>} - Returns a dictionary in the following format: { properties: string; error?: string; }
 			 */
-			enumerateGuestProperties(id: string): Promise<IVirtualBoxEnumerateGuestPropertiesOutput>;
+			enumerateGuestProperties(
+				id: string
+			): Promise<IVirtualBoxEnumerateGuestPropertiesOutput>;
 		}
 
 		interface IVirtualBoxListVmsOutput {
@@ -858,7 +1000,10 @@ declare global {
 			 * @param iniFilePath - The full path to .ini file.
 			 * @param avdInfo - avdInfo from previously parsed .ini file in case there are such.
 			 */
-			parseIniFile(iniFilePath: string, avdInfo?: Mobile.IAvdInfo): Mobile.IAvdInfo;
+			parseIniFile(
+				iniFilePath: string,
+				avdInfo?: Mobile.IAvdInfo
+			): Mobile.IAvdInfo;
 		}
 
 		interface IiSimDevice {
@@ -894,7 +1039,11 @@ declare global {
 			getDeviceLogProcess(deviceId: string, options?: any): any;
 			getDevices(): Promise<Mobile.IiSimDevice[]>;
 			getRunningSimulators(): Promise<IiSimDevice[]>;
-			launchApplication(applicationPath: string, appIdentifier: string, options: IiOSSimLaunchApplicationOptions): Promise<any>;
+			launchApplication(
+				applicationPath: string,
+				appIdentifier: string,
+				options: IiOSSimLaunchApplicationOptions
+			): Promise<any>;
 			printDeviceTypes(): Promise<any>;
 			sendNotification(notification: string, deviceId: string): Promise<void>;
 			startSimulator(data: IiOSSimStartSimulatorInput): Promise<string>;
@@ -939,7 +1088,10 @@ declare global {
 		}
 
 		interface IiOSSimulatorService extends IEmulatorPlatformService {
-			postDarwinNotification(notification: string, deviceId: string): Promise<void>;
+			postDarwinNotification(
+				notification: string,
+				deviceId: string
+			): Promise<void>;
 
 			/**
 			 * Tries to connect to specified port for speciefied amount of time.
@@ -981,7 +1133,6 @@ declare global {
 			 */
 			waitForDebugger?: boolean;
 			captureStdin?: boolean;
-
 
 			/**
 			 * If provided, print all available devices
@@ -1036,18 +1187,38 @@ declare global {
 			buildDevicePath(...args: string[]): string;
 			correctDevicePath(filePath: string): string;
 			isiOSTablet(deviceName: string): boolean;
-			getDeviceFileContent(device: Mobile.IDevice, deviceFilePath: string, projectData: IProjectData): Promise<string>;
+			getDeviceFileContent(
+				device: Mobile.IDevice,
+				deviceFilePath: string,
+				projectData: IProjectData
+			): Promise<string>;
 		}
 
 		interface IEmulatorHelper {
 			mapAndroidApiLevelToVersion: IStringDictionary;
-			getEmulatorsFromAvailableEmulatorsOutput(availableEmulatorsOutput: Mobile.IListEmulatorsOutput): Mobile.IDeviceInfo[];
-			getErrorsFromAvailableEmulatorsOutput(availableEmulatorsOutput: Mobile.IListEmulatorsOutput): string[];
-			getEmulatorByImageIdentifier(imageIdentifier: string, emulators: Mobile.IDeviceInfo[]): Mobile.IDeviceInfo;
-			getEmulatorByIdOrName(emulatorIdOrName: string, emulators: Mobile.IDeviceInfo[]): Mobile.IDeviceInfo;
-			getEmulatorByStartEmulatorOptions(options: Mobile.IStartEmulatorOptions, emulators: Mobile.IDeviceInfo[]): Mobile.IDeviceInfo;
+			getEmulatorsFromAvailableEmulatorsOutput(
+				availableEmulatorsOutput: Mobile.IListEmulatorsOutput
+			): Mobile.IDeviceInfo[];
+			getErrorsFromAvailableEmulatorsOutput(
+				availableEmulatorsOutput: Mobile.IListEmulatorsOutput
+			): string[];
+			getEmulatorByImageIdentifier(
+				imageIdentifier: string,
+				emulators: Mobile.IDeviceInfo[]
+			): Mobile.IDeviceInfo;
+			getEmulatorByIdOrName(
+				emulatorIdOrName: string,
+				emulators: Mobile.IDeviceInfo[]
+			): Mobile.IDeviceInfo;
+			getEmulatorByStartEmulatorOptions(
+				options: Mobile.IStartEmulatorOptions,
+				emulators: Mobile.IDeviceInfo[]
+			): Mobile.IDeviceInfo;
 			isEmulatorRunning(emulator: Mobile.IDeviceInfo): boolean;
-			setRunningAndroidEmulatorProperties(emulatorId: string, emulator: Mobile.IDeviceInfo): void;
+			setRunningAndroidEmulatorProperties(
+				emulatorId: string,
+				emulator: Mobile.IDeviceInfo
+			): void;
 		}
 
 		interface IDevicePlatformsConstants {
@@ -1068,7 +1239,9 @@ declare global {
 			detectionInterval?: number;
 		}
 
-		interface IDeviceLookingOptions extends IHasEmulatorOption, IHasDetectionInterval {
+		interface IDeviceLookingOptions
+			extends IHasEmulatorOption,
+				IHasDetectionInterval {
 			shouldReturnImmediateResult: boolean;
 			platform: string;
 			fullDiscovery?: boolean;
@@ -1091,11 +1264,15 @@ declare global {
 			/**
 			 * Computes the shasums of localToDevicePaths and updates hash file on device
 			 */
-			updateHashes(localToDevicePaths: Mobile.ILocalToDevicePathData[]): Promise<void>;
+			updateHashes(
+				localToDevicePaths: Mobile.ILocalToDevicePathData[]
+			): Promise<void>;
 			/**
 			 * Computes the shasums of localToDevicePaths and removes them from hash file on device
 			 */
-			removeHashes(localToDevicePaths: Mobile.ILocalToDevicePathData[]): Promise<boolean>;
+			removeHashes(
+				localToDevicePaths: Mobile.ILocalToDevicePathData[]
+			): Promise<boolean>;
 
 			/**
 			 * Detects if there's hash file on the device for the specified device.
@@ -1109,14 +1286,19 @@ declare global {
 			 * @param {IStringDicitionary} shasums Object in which the shasums will be persisted.
 			 * @returns {Promise<IStringDictionary>} The generated/updated shasums.
 			 */
-			generateHashesFromLocalToDevicePaths(localToDevicePaths: Mobile.ILocalToDevicePathData[], initialShasums?: IStringDictionary): Promise<IStringDictionary>;
+			generateHashesFromLocalToDevicePaths(
+				localToDevicePaths: Mobile.ILocalToDevicePathData[],
+				initialShasums?: IStringDictionary
+			): Promise<IStringDictionary>;
 
 			/**
 			 * Generates DevicePaths of all elements from the input localToDevicePaths.
 			 * @param {Mobile.ILocalToDevicePathData[]} localToDevicePaths The localToDevicePaths objects for which the DevicePaths should be generated.
 			 * @returns {string[]} DevicePaths of all elements from the input localToDevicePaths.
 			 */
-			getDevicePaths(localToDevicePaths: Mobile.ILocalToDevicePathData[]): string[];
+			getDevicePaths(
+				localToDevicePaths: Mobile.ILocalToDevicePathData[]
+			): string[];
 
 			/**
 			 * Returns the changed shasums based on the provided
@@ -1124,7 +1306,10 @@ declare global {
 			 * @param {IStringDictionary} currentShasums The current shasums on the local project
 			 * @returns {string[]} Returns the shasums that changed
 			 */
-			getChangedShasums(oldShasums: IStringDictionary, currentShasums: IStringDictionary): IStringDictionary
+			getChangedShasums(
+				oldShasums: IStringDictionary,
+				currentShasums: IStringDictionary
+			): IStringDictionary;
 		}
 
 		/**
@@ -1163,7 +1348,10 @@ declare global {
 			 * @param {IAndroidDebugBridgeError[]} errors The Android debug bridge result errors.
 			 * @return {void}.
 			 */
-			handleErrors(errors: IAndroidDebugBridgeError[], treatErrorsAsWarnings?: boolean): void;
+			handleErrors(
+				errors: IAndroidDebugBridgeError[],
+				treatErrorsAsWarnings?: boolean
+			): void;
 		}
 
 		/**
@@ -1179,7 +1367,8 @@ declare global {
 		/**
 		 * Describes information about application on device.
 		 */
-		interface IDeviceApplicationInformation extends IDeviceApplicationInformationBase {
+		interface IDeviceApplicationInformation
+			extends IDeviceApplicationInformationBase {
 			/**
 			 * The framework of the project (Cordova or NativeScript).
 			 */
@@ -1188,47 +1377,96 @@ declare global {
 	}
 
 	interface IIOSDeviceOperations extends IDisposable, NodeJS.EventEmitter {
-		install(ipaPath: string, deviceIdentifiers: string[], errorHandler?: DeviceOperationErrorHandler): Promise<IOSDeviceResponse>;
+		install(
+			ipaPath: string,
+			deviceIdentifiers: string[],
+			errorHandler?: DeviceOperationErrorHandler
+		): Promise<IOSDeviceResponse>;
 
-		uninstall(appIdentifier: string, deviceIdentifiers: string[], errorHandler?: DeviceOperationErrorHandler): Promise<IOSDeviceResponse>;
+		uninstall(
+			appIdentifier: string,
+			deviceIdentifiers: string[],
+			errorHandler?: DeviceOperationErrorHandler
+		): Promise<IOSDeviceResponse>;
 
-		startLookingForDevices(deviceFoundCallback: DeviceInfoCallback, deviceUpdatedCallback: DeviceInfoCallback, deviceLostCallback: DeviceInfoCallback, options?: Mobile.IDeviceLookingOptions): Promise<void>;
+		startLookingForDevices(
+			deviceFoundCallback: DeviceInfoCallback,
+			deviceUpdatedCallback: DeviceInfoCallback,
+			deviceLostCallback: DeviceInfoCallback,
+			options?: Mobile.IDeviceLookingOptions
+		): Promise<void>;
 
 		startDeviceLog(deviceIdentifier: string): void;
 
-		apps(deviceIdentifiers: string[], errorHandler?: DeviceOperationErrorHandler): Promise<IOSDeviceAppInfo>;
+		apps(
+			deviceIdentifiers: string[],
+			errorHandler?: DeviceOperationErrorHandler
+		): Promise<IOSDeviceAppInfo>;
 
-		listDirectory(listArray: IOSDeviceLib.IReadOperationData[], errorHandler?: DeviceOperationErrorHandler): Promise<IOSDeviceMultipleResponse>;
+		listDirectory(
+			listArray: IOSDeviceLib.IReadOperationData[],
+			errorHandler?: DeviceOperationErrorHandler
+		): Promise<IOSDeviceMultipleResponse>;
 
-		readFiles(deviceFilePaths: IOSDeviceLib.IReadOperationData[], errorHandler?: DeviceOperationErrorHandler): Promise<IOSDeviceResponse>;
+		readFiles(
+			deviceFilePaths: IOSDeviceLib.IReadOperationData[],
+			errorHandler?: DeviceOperationErrorHandler
+		): Promise<IOSDeviceResponse>;
 
-		downloadFiles(deviceFilePaths: IOSDeviceLib.IFileOperationData[], errorHandler?: DeviceOperationErrorHandler): Promise<IOSDeviceResponse>;
+		downloadFiles(
+			deviceFilePaths: IOSDeviceLib.IFileOperationData[],
+			errorHandler?: DeviceOperationErrorHandler
+		): Promise<IOSDeviceResponse>;
 
-		uploadFiles(files: IOSDeviceLib.IUploadFilesData[], errorHandler?: DeviceOperationErrorHandler): Promise<IOSDeviceResponse>;
+		uploadFiles(
+			files: IOSDeviceLib.IUploadFilesData[],
+			errorHandler?: DeviceOperationErrorHandler
+		): Promise<IOSDeviceResponse>;
 
-		deleteFiles(deleteArray: IOSDeviceLib.IDeleteFileData[], errorHandler?: DeviceOperationErrorHandler): Promise<IOSDeviceResponse>;
+		deleteFiles(
+			deleteArray: IOSDeviceLib.IDeleteFileData[],
+			errorHandler?: DeviceOperationErrorHandler
+		): Promise<IOSDeviceResponse>;
 
-		start(startArray: IOSDeviceLib.IIOSApplicationData[], errorHandler?: DeviceOperationErrorHandler): Promise<IOSDeviceResponse>;
+		start(
+			startArray: IOSDeviceLib.IIOSApplicationData[],
+			errorHandler?: DeviceOperationErrorHandler
+		): Promise<IOSDeviceResponse>;
 
-		stop(stopArray: IOSDeviceLib.IIOSApplicationData[], errorHandler?: DeviceOperationErrorHandler): Promise<IOSDeviceResponse>;
+		stop(
+			stopArray: IOSDeviceLib.IIOSApplicationData[],
+			errorHandler?: DeviceOperationErrorHandler
+		): Promise<IOSDeviceResponse>;
 
-		postNotification(postNotificationArray: IOSDeviceLib.IPostNotificationData[], errorHandler?: DeviceOperationErrorHandler): Promise<IOSDeviceResponse>;
+		postNotification(
+			postNotificationArray: IOSDeviceLib.IPostNotificationData[],
+			errorHandler?: DeviceOperationErrorHandler
+		): Promise<IOSDeviceResponse>;
 
-		awaitNotificationResponse(awaitNotificationResponseArray: IOSDeviceLib.IAwaitNotificatioNResponseData[], errorHandler?: DeviceOperationErrorHandler): Promise<IOSDeviceResponse>;
+		awaitNotificationResponse(
+			awaitNotificationResponseArray: IOSDeviceLib.IAwaitNotificatioNResponseData[],
+			errorHandler?: DeviceOperationErrorHandler
+		): Promise<IOSDeviceResponse>;
 
-		connectToPort(connectToPortArray: IOSDeviceLib.IConnectToPortData[], errorHandler?: DeviceOperationErrorHandler): Promise<IDictionary<IOSDeviceLib.IConnectToPortResponse[]>>;
+		connectToPort(
+			connectToPortArray: IOSDeviceLib.IConnectToPortData[],
+			errorHandler?: DeviceOperationErrorHandler
+		): Promise<IDictionary<IOSDeviceLib.IConnectToPortResponse[]>>;
 
 		setShouldDispose(shouldDispose: boolean): void;
 	}
 
 	type DeviceOperationErrorHandler = (err: IOSDeviceLib.IDeviceError) => void;
 
-	type DeviceInfoCallback = (deviceInfo: IOSDeviceLib.IDeviceActionInfo) => void;
+	type DeviceInfoCallback = (
+		deviceInfo: IOSDeviceLib.IDeviceActionInfo
+	) => void;
 
 	type IOSDeviceResponse = IDictionary<IOSDeviceLib.IDeviceResponse[]>;
 
-	type IOSDeviceMultipleResponse = IDictionary<IOSDeviceLib.IDeviceMultipleResponse[]>;
+	type IOSDeviceMultipleResponse = IDictionary<
+		IOSDeviceLib.IDeviceMultipleResponse[]
+	>;
 
 	type IOSDeviceAppInfo = IDictionary<IOSDeviceLib.IDeviceAppInfo[]>;
-
 }

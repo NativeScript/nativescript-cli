@@ -1,5 +1,4 @@
-﻿
-interface ITempPathOptions {
+﻿interface ITempPathOptions {
 	prefix?: string;
 	suffix?: string;
 }
@@ -14,5 +13,8 @@ declare module "temp" {
 	function cleanup(): void;
 	function mkdirSync(affixes: string): string;
 	function path(options: ITempPathOptions): string;
-	function open(name: string, fn: (error: Error, info: ITempFileInfo) => void): any;
+	function open(
+		name: string,
+		fn: (error: Error, info: ITempFileInfo) => void
+	): any;
 }

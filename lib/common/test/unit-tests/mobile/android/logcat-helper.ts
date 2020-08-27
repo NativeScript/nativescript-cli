@@ -29,7 +29,11 @@ class ChildProcessStub {
 	public adbProcessArgs: string[] = [];
 	public lastSpawnedProcess: ChildProcessMockInstance = null;
 
-	public spawn(command: string, args?: string[], options?: any): childProcess.ChildProcess {
+	public spawn(
+		command: string,
+		args?: string[],
+		options?: any
+	): childProcess.ChildProcess {
 		this.adbProcessArgs = args;
 		this.processSpawnCallCount++;
 		const pathToSample = path.join(__dirname, "valid-sample.txt");
@@ -53,17 +57,17 @@ function createTestInjector(): IInjector {
 				//loghelper failed or socket closed"
 				assert.isTrue(false);
 			}
-		}
+		},
 	});
 	injector.register("errors", {});
 	injector.register("devicesService", {
 		getDevice: (): Mobile.IDevice => {
 			return <Mobile.IDevice>{
 				deviceInfo: {
-					version: "9.0.0"
-				}
+					version: "9.0.0",
+				},
 			};
-		}
+		},
 	});
 	injector.register("devicePlatformsConstants", { Android: "Android" });
 	injector.register("deviceLogProvider", {
@@ -75,14 +79,17 @@ function createTestInjector(): IInjector {
 	injector.register("staticConfig", {
 		async getAdbFilePath(): Promise<string> {
 			return "";
-		}
+		},
 	});
 	injector.register("androidDebugBridgeResultHandler", {});
 
 	return injector;
 }
 
-function startLogcatHelper(injector: IInjector, startOptions: { deviceIdentifier: string, pid?: string }) {
+function startLogcatHelper(
+	injector: IInjector,
+	startOptions: { deviceIdentifier: string; pid?: string }
+) {
 	const logcatHelper = injector.resolve<LogcatHelper>("logcatHelper");
 	/* tslint:disable:no-floating-promises */
 	logcatHelper.start(startOptions);
@@ -104,13 +111,17 @@ describe("logcat-helper", () => {
 	describe("start", () => {
 		it("should read the whole logcat correctly", (done: mocha.Done) => {
 			injector.register("deviceLogProvider", {
-				logData(line: string, platform: string, deviceIdentifier: string): void {
+				logData(
+					line: string,
+					platform: string,
+					deviceIdentifier: string
+				): void {
 					loggedData.push(line);
 					if (line === "end") {
 						assert.isAbove(loggedData.length, 0);
 						done();
 					}
-				}
+				},
 			});
 
 			startLogcatHelper(injector, { deviceIdentifier: validIdentifier });
@@ -119,16 +130,26 @@ describe("logcat-helper", () => {
 		it("should pass the pid filter to the adb process", (done: mocha.Done) => {
 			const expectedPid = "MyCoolPid";
 			injector.register("deviceLogProvider", {
-				logData(line: string, platform: string, deviceIdentifier: string): void {
+				logData(
+					line: string,
+					platform: string,
+					deviceIdentifier: string
+				): void {
 					loggedData.push(line);
 					if (line === "end") {
-						assert.include(childProcessStub.adbProcessArgs, `--pid=${expectedPid}`);
+						assert.include(
+							childProcessStub.adbProcessArgs,
+							`--pid=${expectedPid}`
+						);
 						done();
 					}
-				}
+				},
 			});
 
-			startLogcatHelper(injector, { deviceIdentifier: validIdentifier, pid: expectedPid });
+			startLogcatHelper(injector, {
+				deviceIdentifier: validIdentifier,
+				pid: expectedPid,
+			});
 		});
 
 		it("should not pass the pid filter to the adb process when Android version is less than 7", (done: mocha.Done) => {
@@ -137,36 +158,46 @@ describe("logcat-helper", () => {
 				getDevice: (): Mobile.IDevice => {
 					return <Mobile.IDevice>{
 						deviceInfo: {
-							version: "6.0.0"
-						}
+							version: "6.0.0",
+						},
 					};
-				}
+				},
 			});
 
 			injector.register("deviceLogProvider", {
-				logData(line: string, platform: string, deviceIdentifier: string): void {
+				logData(
+					line: string,
+					platform: string,
+					deviceIdentifier: string
+				): void {
 					loggedData.push(line);
 					if (line === "end") {
-						assert.notInclude(childProcessStub.adbProcessArgs, `--pid=${expectedPid}`);
+						assert.notInclude(
+							childProcessStub.adbProcessArgs,
+							`--pid=${expectedPid}`
+						);
 						done();
 					}
-				}
+				},
 			});
 
-			startLogcatHelper(injector, { deviceIdentifier: validIdentifier, pid: expectedPid });
+			startLogcatHelper(injector, {
+				deviceIdentifier: validIdentifier,
+				pid: expectedPid,
+			});
 		});
 
 		it("should start a single adb process when called multiple times with the same identifier", async () => {
 			const logcatHelper = injector.resolve<LogcatHelper>("logcatHelper");
 
 			await logcatHelper.start({
-				deviceIdentifier: validIdentifier
+				deviceIdentifier: validIdentifier,
 			});
 			await logcatHelper.start({
-				deviceIdentifier: validIdentifier
+				deviceIdentifier: validIdentifier,
 			});
 			await logcatHelper.start({
-				deviceIdentifier: validIdentifier
+				deviceIdentifier: validIdentifier,
 			});
 
 			assert.equal(childProcessStub.processSpawnCallCount, 1);
@@ -176,13 +207,13 @@ describe("logcat-helper", () => {
 			const logcatHelper = injector.resolve<LogcatHelper>("logcatHelper");
 
 			await logcatHelper.start({
-				deviceIdentifier: `${validIdentifier}1`
+				deviceIdentifier: `${validIdentifier}1`,
 			});
 			await logcatHelper.start({
-				deviceIdentifier: `${validIdentifier}2`
+				deviceIdentifier: `${validIdentifier}2`,
 			});
 			await logcatHelper.start({
-				deviceIdentifier: `${validIdentifier}3`
+				deviceIdentifier: `${validIdentifier}3`,
 			});
 
 			assert.equal(childProcessStub.processSpawnCallCount, 3);
@@ -193,12 +224,12 @@ describe("logcat-helper", () => {
 			const logcatHelper = injector.resolve<LogcatHelper>("logcatHelper");
 
 			await logcatHelper.start({
-				deviceIdentifier: validIdentifier
+				deviceIdentifier: validIdentifier,
 			});
 			assert.equal(childProcessStub.processSpawnCallCount, 1);
 			await logcatHelper.stop(validIdentifier);
 			await logcatHelper.start({
-				deviceIdentifier: validIdentifier
+				deviceIdentifier: validIdentifier,
 			});
 
 			assert.equal(childProcessStub.processSpawnCallCount, 2);
@@ -208,7 +239,7 @@ describe("logcat-helper", () => {
 			const logcatHelper = injector.resolve<LogcatHelper>("logcatHelper");
 
 			await logcatHelper.start({
-				deviceIdentifier: validIdentifier
+				deviceIdentifier: validIdentifier,
 			});
 			await logcatHelper.stop(validIdentifier);
 			await logcatHelper.stop(validIdentifier);
@@ -221,7 +252,7 @@ describe("logcat-helper", () => {
 
 			await logcatHelper.start({
 				deviceIdentifier: validIdentifier,
-				keepSingleProcess: true
+				keepSingleProcess: true,
 			});
 
 			await logcatHelper.stop(validIdentifier);
@@ -243,7 +274,7 @@ describe("logcat-helper", () => {
 
 				await logcatHelper.start({
 					deviceIdentifier: validIdentifier,
-					keepSingleProcess
+					keepSingleProcess,
 				});
 
 				assert.equal(childProcessStub.processSpawnCallCount, 1);
@@ -251,7 +282,7 @@ describe("logcat-helper", () => {
 				childProcessStub.lastSpawnedProcess.emit("close");
 
 				await logcatHelper.start({
-					deviceIdentifier: validIdentifier
+					deviceIdentifier: validIdentifier,
 				});
 
 				assert.equal(childProcessStub.processSpawnCallCount, 2);

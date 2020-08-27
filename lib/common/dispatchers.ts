@@ -1,14 +1,23 @@
-import * as _ from 'lodash';
+import * as _ from "lodash";
 import * as queue from "./queue";
 import * as path from "path";
 import { hook } from "./helpers";
-import { ICommandDispatcher, ICancellationService, ISysInfo, IFileSystem, IFutureDispatcher, IQueue, IErrors } from "./declarations";
+import {
+	ICommandDispatcher,
+	ICancellationService,
+	ISysInfo,
+	IFileSystem,
+	IFutureDispatcher,
+	IQueue,
+	IErrors,
+} from "./declarations";
 import { IOptions } from "../declarations";
 import { IInjector } from "./definitions/yok";
 import { injector } from "./yok";
 
 export class CommandDispatcher implements ICommandDispatcher {
-	constructor(private $logger: ILogger,
+	constructor(
+		private $logger: ILogger,
 		// required by the hooksService
 		protected $injector: IInjector,
 		private $cancellation: ICancellationService,
@@ -16,7 +25,8 @@ export class CommandDispatcher implements ICommandDispatcher {
 		private $staticConfig: Config.IStaticConfig,
 		private $sysInfo: ISysInfo,
 		private $options: IOptions,
-		private $fs: IFileSystem) { }
+		private $fs: IFileSystem
+	) {}
 
 	public async dispatchCommand(): Promise<void> {
 		if (this.$options.version) {
@@ -25,7 +35,14 @@ export class CommandDispatcher implements ICommandDispatcher {
 
 		if (this.$logger.getLevel() === "TRACE") {
 			// CommandDispatcher is called from external CLI's only, so pass the path to their package.json
-			const sysInfo = await this.$sysInfo.getSysInfo({ pathToNativeScriptCliPackageJson: path.join(__dirname, "..", "..", "package.json") });
+			const sysInfo = await this.$sysInfo.getSysInfo({
+				pathToNativeScriptCliPackageJson: path.join(
+					__dirname,
+					"..",
+					"..",
+					"package.json"
+				),
+			});
 			this.$logger.trace("System information:");
 			this.$logger.trace(JSON.stringify(sysInfo, null, 2));
 			this.$logger.trace("Current CLI version: ", this.$staticConfig.version);
@@ -44,11 +61,18 @@ export class CommandDispatcher implements ICommandDispatcher {
 			commandName = "help";
 		}
 
-		({ commandName, commandArguments, argv: process.argv } = await this.resolveCommand(commandName, commandArguments, process.argv));
+		({
+			commandName,
+			commandArguments,
+			argv: process.argv,
+		} = await this.resolveCommand(commandName, commandArguments, process.argv));
 
 		await this.$cancellation.begin("cli");
 
-		await this.$commandsService.tryExecuteCommand(commandName, commandArguments);
+		await this.$commandsService.tryExecuteCommand(
+			commandName,
+			commandArguments
+		);
 	}
 
 	public async completeCommand(): Promise<boolean> {
@@ -56,7 +80,11 @@ export class CommandDispatcher implements ICommandDispatcher {
 	}
 
 	@hook("resolveCommand")
-	private async resolveCommand(commandName: string, commandArguments: string[], argv: string[]) {
+	private async resolveCommand(
+		commandName: string,
+		commandArguments: string[],
+		argv: string[]
+	) {
 		// just a hook point
 		return { commandName, commandArguments, argv };
 	}
@@ -86,7 +114,7 @@ injector.register("commandDispatcher", CommandDispatcher);
 class FutureDispatcher implements IFutureDispatcher {
 	private actions: IQueue<any>;
 
-	public constructor(private $errors: IErrors) { }
+	public constructor(private $errors: IErrors) {}
 
 	public async run(): Promise<void> {
 		if (this.actions) {

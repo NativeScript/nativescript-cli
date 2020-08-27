@@ -7,8 +7,8 @@ interface ILogParserService extends NodeJS.EventEmitter {
 }
 
 interface ILogParseRule {
-	regex: RegExp,
-	handler: Function,
-	name: string,
-	platform?: string
+	regex: RegExp;
+	handler: Function;
+	name: string;
+	platform?: string;
 }

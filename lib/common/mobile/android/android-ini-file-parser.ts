@@ -1,12 +1,10 @@
-import { AndroidVirtualDevice } from '../../constants';
-import { IFileSystem } from '../../declarations';
-import * as _ from 'lodash';
-import { injector } from '../../yok';
+import { AndroidVirtualDevice } from "../../constants";
+import { IFileSystem } from "../../declarations";
+import * as _ from "lodash";
+import { injector } from "../../yok";
 
 export class AndroidIniFileParser implements Mobile.IAndroidIniFileParser {
-	constructor(private $fs: IFileSystem) {
-
-	}
+	constructor(private $fs: IFileSystem) {}
 
 	public parseIniFile(iniFilePath: string): Mobile.IAvdInfo {
 		if (!this.$fs.exists(iniFilePath)) {
@@ -18,32 +16,36 @@ export class AndroidIniFileParser implements Mobile.IAndroidIniFileParser {
 		const encoding = this.getAvdEncoding(iniFilePath);
 		const contents = this.$fs.readText(iniFilePath, encoding).split("\n");
 
-		return _.reduce(contents, (result: Mobile.IAvdInfo, line: string) => {
-			const parsedLine = line.split("=");
-			const key = parsedLine[0];
-			switch (key) {
-				case "target":
-					result.target = parsedLine[1];
-					result.targetNum = this.readTargetNum(result.target);
-					break;
-				case "path":
-				case "AvdId":
-					result[_.lowerFirst(key)] = parsedLine[1];
-					break;
-				case "hw.device.name":
-					result.device = parsedLine[1];
-					break;
-				case "avd.ini.displayname":
-					result.displayName = parsedLine[1];
-					break;
-				case "abi.type":
-				case "skin.name":
-				case "sdcard.size":
-					result[key.split(".")[0]] = parsedLine[1];
-					break;
-			}
-			return result;
-		}, <Mobile.IAvdInfo>Object.create(null));
+		return _.reduce(
+			contents,
+			(result: Mobile.IAvdInfo, line: string) => {
+				const parsedLine = line.split("=");
+				const key = parsedLine[0];
+				switch (key) {
+					case "target":
+						result.target = parsedLine[1];
+						result.targetNum = this.readTargetNum(result.target);
+						break;
+					case "path":
+					case "AvdId":
+						result[_.lowerFirst(key)] = parsedLine[1];
+						break;
+					case "hw.device.name":
+						result.device = parsedLine[1];
+						break;
+					case "avd.ini.displayname":
+						result.displayName = parsedLine[1];
+						break;
+					case "abi.type":
+					case "skin.name":
+					case "sdcard.size":
+						result[key.split(".")[0]] = parsedLine[1];
+						break;
+				}
+				return result;
+			},
+			<Mobile.IAvdInfo>Object.create(null)
+		);
 	}
 
 	private getAvdEncoding(avdName: string): any {
@@ -65,16 +67,18 @@ export class AndroidIniFileParser implements Mobile.IAndroidIniFileParser {
 
 	// Android L is not written as a number in the .ini files, and we need to convert it
 	private readTargetNum(target: string): number {
-		const platform = target.replace('android-', '');
+		const platform = target.replace("android-", "");
 		let platformNumber = +platform;
 		if (isNaN(platformNumber)) {
 			// this may be a google image
 			const googlePlatform = target.split(":")[2];
 			if (googlePlatform) {
 				platformNumber = +googlePlatform;
-			} else if (platform === "L") { // Android SDK 20 preview
+			} else if (platform === "L") {
+				// Android SDK 20 preview
 				platformNumber = 20;
-			} else if (platform === "MNC") { // Android M preview
+			} else if (platform === "MNC") {
+				// Android M preview
 				platformNumber = 22;
 			}
 		}

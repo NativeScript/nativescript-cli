@@ -4,9 +4,11 @@ import { injector } from "../yok";
 export class LogFilter implements Mobile.ILogFilter {
 	private _loggingLevel: string = this.$loggingLevels.info;
 
-	constructor(private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
+	constructor(
+		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $injector: IInjector,
-		private $loggingLevels: Mobile.ILoggingLevels) { }
+		private $loggingLevels: Mobile.ILoggingLevels
+	) {}
 
 	public get loggingLevel(): string {
 		return this._loggingLevel;
@@ -18,7 +20,11 @@ export class LogFilter implements Mobile.ILogFilter {
 		}
 	}
 
-	public filterData(platform: string, data: string, loggingOptions: Mobile.IDeviceLogOptions = <any>{}): string {
+	public filterData(
+		platform: string,
+		data: string,
+		loggingOptions: Mobile.IDeviceLogOptions = <any>{}
+	): string {
 		loggingOptions = loggingOptions || <any>{};
 		const deviceLogFilter = this.getDeviceLogFilterInstance(platform);
 		loggingOptions.logLevel = loggingOptions.logLevel || this.loggingLevel;
@@ -30,11 +36,19 @@ export class LogFilter implements Mobile.ILogFilter {
 		return data;
 	}
 
-	private getDeviceLogFilterInstance(platform: string): Mobile.IPlatformLogFilter {
+	private getDeviceLogFilterInstance(
+		platform: string
+	): Mobile.IPlatformLogFilter {
 		if (platform) {
-			if (platform.toLowerCase() === this.$devicePlatformsConstants.iOS.toLowerCase()) {
+			if (
+				platform.toLowerCase() ===
+				this.$devicePlatformsConstants.iOS.toLowerCase()
+			) {
 				return this.$injector.resolve("iOSLogFilter");
-			} else if (platform.toLowerCase() === this.$devicePlatformsConstants.Android.toLowerCase()) {
+			} else if (
+				platform.toLowerCase() ===
+				this.$devicePlatformsConstants.Android.toLowerCase()
+			) {
 				return this.$injector.resolve("androidLogFilter");
 			}
 		}
@@ -43,9 +57,11 @@ export class LogFilter implements Mobile.ILogFilter {
 	}
 
 	private verifyLogLevel(logLevel: string): boolean {
-		const upperCaseLogLevel = (logLevel || '').toUpperCase();
-		return upperCaseLogLevel === this.$loggingLevels.info.toUpperCase() || upperCaseLogLevel === this.$loggingLevels.full.toUpperCase();
+		const upperCaseLogLevel = (logLevel || "").toUpperCase();
+		return (
+			upperCaseLogLevel === this.$loggingLevels.info.toUpperCase() ||
+			upperCaseLogLevel === this.$loggingLevels.full.toUpperCase()
+		);
 	}
-
 }
 injector.register("logFilter", LogFilter);

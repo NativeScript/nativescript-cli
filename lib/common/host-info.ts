@@ -1,5 +1,5 @@
 import { cache } from "./decorators";
-import * as _ from 'lodash';
+import * as _ from "lodash";
 import { IHostInfo, IChildProcess, IOsInfo, IErrors } from "./declarations";
 import { IInjector } from "./definitions/yok";
 import { injector } from "./yok";
@@ -9,7 +9,8 @@ export class HostInfo implements IHostInfo {
 	private static PROCESSOR_ARCHITEW6432 = "PROCESSOR_ARCHITEW6432";
 	private static DARWIN_OS_NAME = "darwin";
 	private static LINUX_OS_NAME = "linux";
-	private static DOT_NET_REGISTRY_PATH = "\\Software\\Microsoft\\NET Framework Setup\\NDP\\v4\\Client";
+	private static DOT_NET_REGISTRY_PATH =
+		"\\Software\\Microsoft\\NET Framework Setup\\NDP\\v4\\Client";
 
 	private get $childProcess(): IChildProcess {
 		return this.$injector.resolve("childProcess");
@@ -23,15 +24,18 @@ export class HostInfo implements IHostInfo {
 		return this.$injector.resolve("logger");
 	}
 
-	constructor(private $errors: IErrors,
-		private $injector: IInjector) { }
+	constructor(private $errors: IErrors, private $injector: IInjector) {}
 
 	public get isWindows() {
 		return process.platform === HostInfo.WIN32_NAME;
 	}
 
 	public get isWindows64() {
-		return this.isWindows && (process.arch === "x64" || process.env.hasOwnProperty(HostInfo.PROCESSOR_ARCHITEW6432));
+		return (
+			this.isWindows &&
+			(process.arch === "x64" ||
+				process.env.hasOwnProperty(HostInfo.PROCESSOR_ARCHITEW6432))
+		);
 	}
 
 	public get isWindows32() {
@@ -56,23 +60,32 @@ export class HostInfo implements IHostInfo {
 			return null;
 		}
 
-		const systemProfileCommand = "system_profiler SPSoftwareDataType -detailLevel mini";
+		const systemProfileCommand =
+			"system_profiler SPSoftwareDataType -detailLevel mini";
 		this.$logger.trace("Trying to get macOS version.");
 		let macOSVersion: string;
 		try {
-			const systemProfileOutput = await this.$childProcess.exec(systemProfileCommand);
+			const systemProfileOutput = await this.$childProcess.exec(
+				systemProfileCommand
+			);
 
 			const versionRegExp = /System Version:\s+?macOS\s+?(\d+\.\d+)(\.\d+)?\s+/g;
 			const regExpMatchers = versionRegExp.exec(systemProfileOutput);
 			macOSVersion = regExpMatchers && regExpMatchers[1];
 			if (macOSVersion) {
-				this.$logger.trace(`macOS version based on system_profiler is ${macOSVersion}.`);
+				this.$logger.trace(
+					`macOS version based on system_profiler is ${macOSVersion}.`
+				);
 				return macOSVersion;
 			}
 
-			this.$logger.trace(`Unable to get macOS version from ${systemProfileCommand} output.`);
+			this.$logger.trace(
+				`Unable to get macOS version from ${systemProfileCommand} output.`
+			);
 		} catch (err) {
-			this.$logger.trace(`Unable to get macOS version from ${systemProfileCommand}. Error is: ${err}`);
+			this.$logger.trace(
+				`Unable to get macOS version from ${systemProfileCommand}. Error is: ${err}`
+			);
 		}
 
 		// https://en.wikipedia.org/wiki/Darwin_(operating_system)#Release_history
@@ -81,7 +94,9 @@ export class HostInfo implements IHostInfo {
 		const osRelease = this.$osInfo.release();
 		const majorVersion = osRelease && _.first(osRelease.split("."));
 		macOSVersion = majorVersion && `10.${+majorVersion - 4}`;
-		this.$logger.trace(`macOS version based on os.release() (${osRelease}) is ${macOSVersion}.`);
+		this.$logger.trace(
+			`macOS version based on os.release() (${osRelease}) is ${macOSVersion}.`
+		);
 		return macOSVersion;
 	}
 
@@ -91,7 +106,7 @@ export class HostInfo implements IHostInfo {
 				const Winreg = require("winreg");
 				const regKey = new Winreg({
 					hive: Winreg.HKLM,
-					key: HostInfo.DOT_NET_REGISTRY_PATH
+					key: HostInfo.DOT_NET_REGISTRY_PATH,
 				});
 				regKey.get("Version", (err: Error, value: any) => {
 					if (err) {
@@ -112,7 +127,9 @@ export class HostInfo implements IHostInfo {
 				await this.dotNetVersion();
 				return true;
 			} catch (e) {
-				this.$errors.fail(message || "An error occurred while reading the registry.");
+				this.$errors.fail(
+					message || "An error occurred while reading the registry."
+				);
 			}
 		} else {
 			return false;

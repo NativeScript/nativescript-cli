@@ -3,7 +3,7 @@ import { injector, setGlobalInjector, Yok } from "../../yok";
 import * as path from "path";
 import * as fs from "fs";
 import * as temp from "temp";
-import * as _ from 'lodash';
+import * as _ from "lodash";
 import { ICliGlobal } from "../../definitions/cli-global";
 import { ICommandParameter } from "../../definitions/commands";
 import { IInjector } from "../../definitions/yok";
@@ -11,8 +11,7 @@ import { IInjector } from "../../definitions/yok";
 temp.track();
 
 class MyClass {
-	constructor(private x: string, public y: any) {
-	}
+	constructor(private x: string, public y: any) {}
 
 	public checkX(): void {
 		assert.strictEqual(this.x, "foo");
@@ -209,7 +208,9 @@ describe("yok", () => {
 		it("throws when it can't resolve a registered command", () => {
 			setGlobalInjector(new Yok());
 
-			function Command(whatever: any) { /* intentionally left blank */ }
+			function Command(whatever: any) {
+				/* intentionally left blank */
+			}
 
 			injector.registerCommand("command", Command);
 
@@ -219,7 +220,9 @@ describe("yok", () => {
 		it("disposes", () => {
 			setGlobalInjector(new Yok());
 
-			function Thing() { /* intentionally left blank */ }
+			function Thing() {
+				/* intentionally left blank */
+			}
 
 			Thing.prototype.dispose = function () {
 				this.disposed = true;
@@ -235,16 +238,18 @@ describe("yok", () => {
 		it("disposes all instances", () => {
 			setGlobalInjector(new Yok());
 
-			function Thing(arg: string) { this.arg = arg; /* intentionally left blank */ }
+			function Thing(arg: string) {
+				this.arg = arg; /* intentionally left blank */
+			}
 
 			Thing.prototype.dispose = function () {
 				this.disposed = true;
 			};
 
 			injector.register("thing", Thing, false);
-			const thing1 = injector.resolve("thing", { arg: "thing1"});
-			const thing2 = injector.resolve("thing", { arg: "thing2"});
-			const thing3 = injector.resolve("thing", { arg: "thing3"});
+			const thing1 = injector.resolve("thing", { arg: "thing1" });
+			const thing2 = injector.resolve("thing", { arg: "thing2" });
+			const thing3 = injector.resolve("thing", { arg: "thing3" });
 
 			assert.equal(thing1.arg, "thing1");
 			assert.equal(thing2.arg, "thing2");
@@ -255,7 +260,6 @@ describe("yok", () => {
 			assert.isTrue(thing2.disposed);
 			assert.isTrue(thing3.disposed);
 		});
-
 	});
 
 	describe("classes", () => {
@@ -431,7 +435,9 @@ describe("yok", () => {
 			setGlobalInjector(new Yok());
 
 			class Command {
-				constructor(whatever: any) { /* intentionally left blank */ }
+				constructor(whatever: any) {
+					/* intentionally left blank */
+				}
 			}
 
 			injector.registerCommand("command", Command);
@@ -467,11 +473,15 @@ describe("yok", () => {
 
 	it("overrides module when it is required more than once and overrideAlreadyRequiredModule is true", () => {
 		setGlobalInjector(new Yok());
-		const cliGlobal = <ICliGlobal><unknown>global;
+		const cliGlobal = <ICliGlobal>(<unknown>global);
 		const injectorCache = cliGlobal.$injector;
 		cliGlobal.$injector = injector;
-		const tmpPathA = temp.path({ prefix: "overrideAlreadyRequiredModule_fileA" });
-		fs.writeFileSync(tmpPathA, `
+		const tmpPathA = temp.path({
+			prefix: "overrideAlreadyRequiredModule_fileA",
+		});
+		fs.writeFileSync(
+			tmpPathA,
+			`
 "use strict";
 
 class A {
@@ -480,12 +490,17 @@ class A {
 	}
 }
 $injector.register("a", A);
-			`);
+			`
+		);
 
 		injector.require("a", tmpPathA);
 
-		const tmpPathB = temp.path({ prefix: "overrideAlreadyRequiredModule_fileB" });
-		fs.writeFileSync(tmpPathB, `
+		const tmpPathB = temp.path({
+			prefix: "overrideAlreadyRequiredModule_fileB",
+		});
+		fs.writeFileSync(
+			tmpPathB,
+			`
 "use strict";
 
 class A {
@@ -494,7 +509,8 @@ class A {
 	}
 }
 $injector.register("a", A);
-			`);
+			`
+		);
 
 		injector.overrideAlreadyRequiredModule = true;
 
@@ -509,7 +525,9 @@ $injector.register("a", A);
 		it("adds module to public api when requirePublic is used", () => {
 			setGlobalInjector(new Yok());
 			injector.requirePublic("foo", "test");
-			assert.isTrue(_.includes(Object.getOwnPropertyNames(injector.publicApi), "foo"));
+			assert.isTrue(
+				_.includes(Object.getOwnPropertyNames(injector.publicApi), "foo")
+			);
 		});
 
 		it("resolves correct module, when publicApi is accessed", async () => {
@@ -524,13 +542,21 @@ $injector.register("a", A);
 			const injectorCache = injector;
 			setGlobalInjector(new Yok());
 
-			const testPublicApiFilePath = temp.path({ prefix: "overrideAlreadyRequiredModule_fileA" });
+			const testPublicApiFilePath = temp.path({
+				prefix: "overrideAlreadyRequiredModule_fileA",
+			});
 			const pathToMock = path.join(__dirname, "mocks", "public-api-mocks.js");
 			const originalContent = fs.readFileSync(pathToMock).toString();
 
 			// On Windows we are unable to require paths with single backslash, so replace them with double backslashes.
-			const correctPathToRequireDecorators = "'" + path.join(__dirname, "..", "..", "decorators").replace(/\\/g, "\\\\") + "'";
-			const correctPathToRequireYok = "'" + path.join(__dirname, "..", "..", "yok").replace(/\\/g, "\\\\") + "'";
+			const correctPathToRequireDecorators =
+				"'" +
+				path.join(__dirname, "..", "..", "decorators").replace(/\\/g, "\\\\") +
+				"'";
+			const correctPathToRequireYok =
+				"'" +
+				path.join(__dirname, "..", "..", "yok").replace(/\\/g, "\\\\") +
+				"'";
 			const fixedContent = originalContent
 				.replace(/".+?decorators"/, correctPathToRequireDecorators)
 				.replace(/".+?yok"/, correctPathToRequireYok);
@@ -539,8 +565,14 @@ $injector.register("a", A);
 			injector.requirePublic("testPublicApi", testPublicApiFilePath);
 
 			const result = 1;
-			assert.ok(injector.publicApi.testPublicApi, "The module testPublicApi must be resolved in its getter and the returned value should not be falsey.");
-			assert.deepStrictEqual(await injector.publicApi.testPublicApi.myMethod(result), result);
+			assert.ok(
+				injector.publicApi.testPublicApi,
+				"The module testPublicApi must be resolved in its getter and the returned value should not be falsey."
+			);
+			assert.deepStrictEqual(
+				await injector.publicApi.testPublicApi.myMethod(result),
+				result
+			);
 
 			setGlobalInjector(injectorCache);
 		});
@@ -556,63 +588,107 @@ $injector.register("a", A);
 			describe("when command consists of two parts", () => {
 				it("and is valid", () => {
 					localInjector.requireCommand("sample|command", "sampleFileName");
-					return assert.eventually.isTrue(localInjector.isValidHierarchicalCommand("sample", ["command"]));
+					return assert.eventually.isTrue(
+						localInjector.isValidHierarchicalCommand("sample", ["command"])
+					);
 				});
 
 				it("and has default value and no arguments passed", () => {
 					localInjector.requireCommand("sample|*default", "sampleFileName");
-					return assert.eventually.isTrue(localInjector.isValidHierarchicalCommand("sample", []));
+					return assert.eventually.isTrue(
+						localInjector.isValidHierarchicalCommand("sample", [])
+					);
 				});
 
 				it("and has default value and canExecute returns true", () => {
 					const command = {
-						canExecute: async () => true
+						canExecute: async () => true,
 					};
 					localInjector.registerCommand("sample|*default", command);
 					localInjector.requireCommand("sample|*default", "sampleFileName");
-					return assert.eventually.isTrue(localInjector.isValidHierarchicalCommand("sample", ["arg"]));
+					return assert.eventually.isTrue(
+						localInjector.isValidHierarchicalCommand("sample", ["arg"])
+					);
 				});
 
 				it("and has default value and allowedParameters' length is greater than 0", () => {
-					const allowedParameters: ICommandParameter[] = [{ mandatory: false, validate: async () => true }];
+					const allowedParameters: ICommandParameter[] = [
+						{ mandatory: false, validate: async () => true },
+					];
 					const command = {
-						allowedParameters
+						allowedParameters,
 					};
 					localInjector.registerCommand("sample|*default", command);
 					localInjector.requireCommand("sample|*default", "sampleFileName");
-					return assert.eventually.isTrue(localInjector.isValidHierarchicalCommand("sample", ["arg"]));
+					return assert.eventually.isTrue(
+						localInjector.isValidHierarchicalCommand("sample", ["arg"])
+					);
 				});
 
 				it("and has default value and argument default passed", () => {
 					localInjector.requireCommand("sample|*default", "sampleFileName");
-					return assert.eventually.isTrue(localInjector.isValidHierarchicalCommand("sample", ["default"]));
+					return assert.eventually.isTrue(
+						localInjector.isValidHierarchicalCommand("sample", ["default"])
+					);
 				});
 
 				it("and has default value and some arguments passed", () => {
 					localInjector.requireCommand("sample|*default", "sampleFileName");
-					return assert.eventually.isTrue(localInjector.isValidHierarchicalCommand("sample", ["arg1", "arg2"]));
+					return assert.eventually.isTrue(
+						localInjector.isValidHierarchicalCommand("sample", ["arg1", "arg2"])
+					);
 				});
 			});
 
 			describe("when command consists of multiple parts", () => {
 				it("and is valid", () => {
-					localInjector.requireCommand("sample|command|subcommand", "sampleFileName");
-					return assert.eventually.isTrue(localInjector.isValidHierarchicalCommand("sample", ["command", "subcommand"]));
+					localInjector.requireCommand(
+						"sample|command|subcommand",
+						"sampleFileName"
+					);
+					return assert.eventually.isTrue(
+						localInjector.isValidHierarchicalCommand("sample", [
+							"command",
+							"subcommand",
+						])
+					);
 				});
 
 				it("and has default value and no arguments passed", () => {
-					localInjector.requireCommand("sample|command|*default", "sampleFileName");
-					return assert.eventually.isTrue(localInjector.isValidHierarchicalCommand("sample", ["command"]));
+					localInjector.requireCommand(
+						"sample|command|*default",
+						"sampleFileName"
+					);
+					return assert.eventually.isTrue(
+						localInjector.isValidHierarchicalCommand("sample", ["command"])
+					);
 				});
 
 				it("has default value and default argument passed", () => {
-					localInjector.requireCommand("sample|command|*default", "sampleFileName");
-					return assert.eventually.isTrue(localInjector.isValidHierarchicalCommand("sample", ["command", "default"]));
+					localInjector.requireCommand(
+						"sample|command|*default",
+						"sampleFileName"
+					);
+					return assert.eventually.isTrue(
+						localInjector.isValidHierarchicalCommand("sample", [
+							"command",
+							"default",
+						])
+					);
 				});
 
 				it("has default value and some arguments passed", () => {
-					localInjector.requireCommand("sample|command|*default", "sampleFileName");
-					return assert.eventually.isTrue(localInjector.isValidHierarchicalCommand("sample", ["command", "arg1", "arg2"]));
+					localInjector.requireCommand(
+						"sample|command|*default",
+						"sampleFileName"
+					);
+					return assert.eventually.isTrue(
+						localInjector.isValidHierarchicalCommand("sample", [
+							"command",
+							"arg1",
+							"arg2",
+						])
+					);
 				});
 			});
 		});
@@ -620,13 +696,17 @@ $injector.register("a", A);
 		describe("returns false", () => {
 			it("when command is invalid", () => {
 				localInjector.requireCommand("sample|command", "sampleFileName");
-				return assert.eventually.isFalse(localInjector.isValidHierarchicalCommand("wrong", ["command"]));
+				return assert.eventually.isFalse(
+					localInjector.isValidHierarchicalCommand("wrong", ["command"])
+				);
 			});
 
 			describe("throws", () => {
 				it("when arguments are invalid", () => {
 					localInjector.requireCommand("sample|command", "sampleFileName");
-					return assert.isRejected(localInjector.isValidHierarchicalCommand("sample", ["commandarg"]));
+					return assert.isRejected(
+						localInjector.isValidHierarchicalCommand("sample", ["commandarg"])
+					);
 				});
 			});
 		});
@@ -640,20 +720,32 @@ $injector.register("a", A);
 		describe("returns undefined", () => {
 			it("when there's no valid hierarchical command", () => {
 				injector.requireCommand("sample|command", "sampleFileName");
-				assert.isUndefined(injector.buildHierarchicalCommand("command", ["subCommand"]), "When there's no matching subcommand, buildHierarchicalCommand should return undefined.");
+				assert.isUndefined(
+					injector.buildHierarchicalCommand("command", ["subCommand"]),
+					"When there's no matching subcommand, buildHierarchicalCommand should return undefined."
+				);
 			});
 
 			it("when there's no hierarchical commands required", () => {
-				assert.isUndefined(injector.buildHierarchicalCommand("command", ["subCommand"]), "When there's no hierarchical commands required, buildHierarchicalCommand should return undefined.");
+				assert.isUndefined(
+					injector.buildHierarchicalCommand("command", ["subCommand"]),
+					"When there's no hierarchical commands required, buildHierarchicalCommand should return undefined."
+				);
 			});
 
 			it("when only one argument is passed", () => {
-				assert.isUndefined(injector.buildHierarchicalCommand("command", []), "When when only one argument is passed, buildHierarchicalCommand should return undefined.");
+				assert.isUndefined(
+					injector.buildHierarchicalCommand("command", []),
+					"When when only one argument is passed, buildHierarchicalCommand should return undefined."
+				);
 			});
 
 			it("when there's matching command, but it is not hierarchical command", () => {
 				injector.requireCommand("command", "sampleFileName");
-				assert.isUndefined(injector.buildHierarchicalCommand("command", []), "When there's matching command, but it is not hierarchical command, buildHierarchicalCommand should return undefined.");
+				assert.isUndefined(
+					injector.buildHierarchicalCommand("command", []),
+					"When there's matching command, but it is not hierarchical command, buildHierarchicalCommand should return undefined."
+				);
 			});
 		});
 
@@ -661,44 +753,117 @@ $injector.register("a", A);
 			it("when only command is passed, no arguments are returned", () => {
 				const commandName = "sample|command";
 				injector.requireCommand(commandName, "sampleFileName");
-				const buildHierarchicalCommandResult = injector.buildHierarchicalCommand("sample", ["command"]);
-				assert.deepStrictEqual(buildHierarchicalCommandResult.commandName, commandName, `The expected command name is ${commandName}`);
-				assert.deepStrictEqual(buildHierarchicalCommandResult.remainingArguments, [], "There shouldn't be any arguments left.");
+				const buildHierarchicalCommandResult = injector.buildHierarchicalCommand(
+					"sample",
+					["command"]
+				);
+				assert.deepStrictEqual(
+					buildHierarchicalCommandResult.commandName,
+					commandName,
+					`The expected command name is ${commandName}`
+				);
+				assert.deepStrictEqual(
+					buildHierarchicalCommandResult.remainingArguments,
+					[],
+					"There shouldn't be any arguments left."
+				);
 			});
 
 			it("when command is passed, correct arguments are returned", () => {
 				const commandName = "sample|command";
 				injector.requireCommand(commandName, "sampleFileName");
-				const sampleArguments = ["sample", "arguments", "passed", "to", "command"];
-				const buildHierarchicalCommandResult = injector.buildHierarchicalCommand("sample", ["command"].concat(sampleArguments));
-				assert.deepStrictEqual(buildHierarchicalCommandResult.commandName, commandName, `The expected command name is ${commandName}`);
-				assert.deepStrictEqual(buildHierarchicalCommandResult.remainingArguments, sampleArguments, "All arguments except first one should be returned.");
+				const sampleArguments = [
+					"sample",
+					"arguments",
+					"passed",
+					"to",
+					"command",
+				];
+				const buildHierarchicalCommandResult = injector.buildHierarchicalCommand(
+					"sample",
+					["command"].concat(sampleArguments)
+				);
+				assert.deepStrictEqual(
+					buildHierarchicalCommandResult.commandName,
+					commandName,
+					`The expected command name is ${commandName}`
+				);
+				assert.deepStrictEqual(
+					buildHierarchicalCommandResult.remainingArguments,
+					sampleArguments,
+					"All arguments except first one should be returned."
+				);
 			});
 
 			it("when command is passed, correct arguments are returned when command argument has uppercase letters", () => {
 				const commandName = "sample|command";
 				injector.requireCommand(commandName, "sampleFileName");
-				const sampleArguments = ["sample", "arguments", "passed", "to", "command"];
-				const buildHierarchicalCommandResult = injector.buildHierarchicalCommand("sample", ["CoMmanD"].concat(sampleArguments));
-				assert.deepStrictEqual(buildHierarchicalCommandResult.commandName, commandName, `The expected command name is ${commandName}`);
-				assert.deepStrictEqual(buildHierarchicalCommandResult.remainingArguments, sampleArguments, "All arguments except first one should be returned.");
+				const sampleArguments = [
+					"sample",
+					"arguments",
+					"passed",
+					"to",
+					"command",
+				];
+				const buildHierarchicalCommandResult = injector.buildHierarchicalCommand(
+					"sample",
+					["CoMmanD"].concat(sampleArguments)
+				);
+				assert.deepStrictEqual(
+					buildHierarchicalCommandResult.commandName,
+					commandName,
+					`The expected command name is ${commandName}`
+				);
+				assert.deepStrictEqual(
+					buildHierarchicalCommandResult.remainingArguments,
+					sampleArguments,
+					"All arguments except first one should be returned."
+				);
 			});
 
 			it("when only default command is passed, no arguments are returned", () => {
 				const commandName = "sample|*command";
 				injector.requireCommand(commandName, "sampleFileName");
-				const buildHierarchicalCommandResult = injector.buildHierarchicalCommand("sample", ["command"]);
-				assert.deepStrictEqual(buildHierarchicalCommandResult.commandName, commandName, `The expected command name is ${commandName}`);
-				assert.deepStrictEqual(buildHierarchicalCommandResult.remainingArguments, [], "There shouldn't be any arguments left.");
+				const buildHierarchicalCommandResult = injector.buildHierarchicalCommand(
+					"sample",
+					["command"]
+				);
+				assert.deepStrictEqual(
+					buildHierarchicalCommandResult.commandName,
+					commandName,
+					`The expected command name is ${commandName}`
+				);
+				assert.deepStrictEqual(
+					buildHierarchicalCommandResult.remainingArguments,
+					[],
+					"There shouldn't be any arguments left."
+				);
 			});
 
 			it("when default command is passed, correct arguments are returned", () => {
 				const commandName = "sample|*command";
 				injector.requireCommand(commandName, "sampleFileName");
-				const sampleArguments = ["sample", "arguments", "passed", "to", "command"];
-				const buildHierarchicalCommandResult = injector.buildHierarchicalCommand("sample", ["command"].concat(sampleArguments));
-				assert.deepStrictEqual(buildHierarchicalCommandResult.commandName, commandName, `The expected command name is ${commandName}`);
-				assert.deepStrictEqual(buildHierarchicalCommandResult.remainingArguments, sampleArguments, "All arguments except first one should be returned.");
+				const sampleArguments = [
+					"sample",
+					"arguments",
+					"passed",
+					"to",
+					"command",
+				];
+				const buildHierarchicalCommandResult = injector.buildHierarchicalCommand(
+					"sample",
+					["command"].concat(sampleArguments)
+				);
+				assert.deepStrictEqual(
+					buildHierarchicalCommandResult.commandName,
+					commandName,
+					`The expected command name is ${commandName}`
+				);
+				assert.deepStrictEqual(
+					buildHierarchicalCommandResult.remainingArguments,
+					sampleArguments,
+					"All arguments except first one should be returned."
+				);
 			});
 		});
 
@@ -706,85 +871,216 @@ $injector.register("a", A);
 			it("when only command is passed, no arguments are returned", () => {
 				const commandName = "sample|command|with|more|pipes";
 				injector.requireCommand(commandName, "sampleFileName");
-				const buildHierarchicalCommandResult = injector.buildHierarchicalCommand("sample", ["command", "with", "more", "pipes"]);
-				assert.deepStrictEqual(buildHierarchicalCommandResult.commandName, commandName, `The expected command name is ${commandName}`);
-				assert.deepStrictEqual(buildHierarchicalCommandResult.remainingArguments, [], "There shouldn't be any arguments left.");
+				const buildHierarchicalCommandResult = injector.buildHierarchicalCommand(
+					"sample",
+					["command", "with", "more", "pipes"]
+				);
+				assert.deepStrictEqual(
+					buildHierarchicalCommandResult.commandName,
+					commandName,
+					`The expected command name is ${commandName}`
+				);
+				assert.deepStrictEqual(
+					buildHierarchicalCommandResult.remainingArguments,
+					[],
+					"There shouldn't be any arguments left."
+				);
 			});
 
 			it("when command is passed, correct arguments are returned", () => {
 				const commandName = "sample|command|pipes";
 				injector.requireCommand(commandName, "sampleFileName");
-				const sampleArguments = ["sample", "arguments", "passed", "to", "command"];
-				const buildHierarchicalCommandResult = injector.buildHierarchicalCommand("sample", ["command", "pipes"].concat(sampleArguments));
-				assert.deepStrictEqual(buildHierarchicalCommandResult.commandName, commandName, `The expected command name is ${commandName}`);
-				assert.deepStrictEqual(buildHierarchicalCommandResult.remainingArguments, sampleArguments, "All arguments except the ones used for commandName should be returned.");
+				const sampleArguments = [
+					"sample",
+					"arguments",
+					"passed",
+					"to",
+					"command",
+				];
+				const buildHierarchicalCommandResult = injector.buildHierarchicalCommand(
+					"sample",
+					["command", "pipes"].concat(sampleArguments)
+				);
+				assert.deepStrictEqual(
+					buildHierarchicalCommandResult.commandName,
+					commandName,
+					`The expected command name is ${commandName}`
+				);
+				assert.deepStrictEqual(
+					buildHierarchicalCommandResult.remainingArguments,
+					sampleArguments,
+					"All arguments except the ones used for commandName should be returned."
+				);
 			});
 
 			it("when only default command is passed, no arguments are returned", () => {
 				const commandName = "sample|*command|pipes";
 				injector.requireCommand(commandName, "sampleFileName");
-				const buildHierarchicalCommandResult = injector.buildHierarchicalCommand("sample", ["command", "pipes"]);
-				assert.deepStrictEqual(buildHierarchicalCommandResult.commandName, commandName, `The expected command name is ${commandName}`);
-				assert.deepStrictEqual(buildHierarchicalCommandResult.remainingArguments, [], "There shouldn't be any arguments left.");
+				const buildHierarchicalCommandResult = injector.buildHierarchicalCommand(
+					"sample",
+					["command", "pipes"]
+				);
+				assert.deepStrictEqual(
+					buildHierarchicalCommandResult.commandName,
+					commandName,
+					`The expected command name is ${commandName}`
+				);
+				assert.deepStrictEqual(
+					buildHierarchicalCommandResult.remainingArguments,
+					[],
+					"There shouldn't be any arguments left."
+				);
 			});
 
 			it("when default command is passed, correct arguments are returned", () => {
 				const commandName = "sample|*command|pipes";
 				injector.requireCommand(commandName, "sampleFileName");
-				const sampleArguments = ["sample", "arguments", "passed", "to", "command"];
-				const buildHierarchicalCommandResult = injector.buildHierarchicalCommand("sample", ["command", "pipes"].concat(sampleArguments));
-				assert.deepStrictEqual(buildHierarchicalCommandResult.commandName, commandName, `The expected command name is ${commandName}`);
-				assert.deepStrictEqual(buildHierarchicalCommandResult.remainingArguments, sampleArguments, "All arguments except the ones used for commandName should be returned.");
+				const sampleArguments = [
+					"sample",
+					"arguments",
+					"passed",
+					"to",
+					"command",
+				];
+				const buildHierarchicalCommandResult = injector.buildHierarchicalCommand(
+					"sample",
+					["command", "pipes"].concat(sampleArguments)
+				);
+				assert.deepStrictEqual(
+					buildHierarchicalCommandResult.commandName,
+					commandName,
+					`The expected command name is ${commandName}`
+				);
+				assert.deepStrictEqual(
+					buildHierarchicalCommandResult.remainingArguments,
+					sampleArguments,
+					"All arguments except the ones used for commandName should be returned."
+				);
 			});
 
 			describe("returns most applicable hierarchical command", () => {
-				const sampleArguments = ["sample", "arguments", "passed", "to", "command"];
+				const sampleArguments = [
+					"sample",
+					"arguments",
+					"passed",
+					"to",
+					"command",
+				];
 				beforeEach(() => {
 					injector.requireCommand("sample|command", "sampleFileName");
 					injector.requireCommand("sample|command|with", "sampleFileName");
 					injector.requireCommand("sample|command|with|more", "sampleFileName");
-					injector.requireCommand("sample|command|with|more|pipes", "sampleFileName");
+					injector.requireCommand(
+						"sample|command|with|more|pipes",
+						"sampleFileName"
+					);
 				});
 				it("when subcommand of subcommand is called", () => {
 					const commandName = "sample|command|with|more|pipes";
-					const buildHierarchicalCommandResult = injector.buildHierarchicalCommand("sample", ["command", "with", "more", "pipes"]);
-					assert.deepStrictEqual(buildHierarchicalCommandResult.commandName, commandName, `The expected command name is ${commandName}`);
-					assert.deepStrictEqual(buildHierarchicalCommandResult.remainingArguments, [], "There shouldn't be any arguments left.");
+					const buildHierarchicalCommandResult = injector.buildHierarchicalCommand(
+						"sample",
+						["command", "with", "more", "pipes"]
+					);
+					assert.deepStrictEqual(
+						buildHierarchicalCommandResult.commandName,
+						commandName,
+						`The expected command name is ${commandName}`
+					);
+					assert.deepStrictEqual(
+						buildHierarchicalCommandResult.remainingArguments,
+						[],
+						"There shouldn't be any arguments left."
+					);
 				});
 
 				it("and correct arguments, when subcommand of subcommand is called", () => {
 					const commandName = "sample|command|with|more|pipes";
-					const buildHierarchicalCommandResult = injector.buildHierarchicalCommand("sample", ["command", "with", "more", "pipes"].concat(sampleArguments));
-					assert.deepStrictEqual(buildHierarchicalCommandResult.commandName, commandName, `The expected command name is ${commandName}`);
-					assert.deepStrictEqual(buildHierarchicalCommandResult.remainingArguments, sampleArguments, "All arguments except the ones used for commandName should be returned.");
+					const buildHierarchicalCommandResult = injector.buildHierarchicalCommand(
+						"sample",
+						["command", "with", "more", "pipes"].concat(sampleArguments)
+					);
+					assert.deepStrictEqual(
+						buildHierarchicalCommandResult.commandName,
+						commandName,
+						`The expected command name is ${commandName}`
+					);
+					assert.deepStrictEqual(
+						buildHierarchicalCommandResult.remainingArguments,
+						sampleArguments,
+						"All arguments except the ones used for commandName should be returned."
+					);
 				});
 
 				it("when top subcommand is called and it has its own subcommand", () => {
 					const commandName = "sample|command";
-					const buildHierarchicalCommandResult = injector.buildHierarchicalCommand("sample", ["command"]);
-					assert.deepStrictEqual(buildHierarchicalCommandResult.commandName, commandName, `The expected command name is ${commandName}`);
-					assert.deepStrictEqual(buildHierarchicalCommandResult.remainingArguments, [], "There shouldn't be any arguments left.");
+					const buildHierarchicalCommandResult = injector.buildHierarchicalCommand(
+						"sample",
+						["command"]
+					);
+					assert.deepStrictEqual(
+						buildHierarchicalCommandResult.commandName,
+						commandName,
+						`The expected command name is ${commandName}`
+					);
+					assert.deepStrictEqual(
+						buildHierarchicalCommandResult.remainingArguments,
+						[],
+						"There shouldn't be any arguments left."
+					);
 				});
 
 				it("and correct arguments, when top subcommand is called and it has its own subcommand", () => {
 					const commandName = "sample|command";
-					const buildHierarchicalCommandResult = injector.buildHierarchicalCommand("sample", ["command"].concat(sampleArguments));
-					assert.deepStrictEqual(buildHierarchicalCommandResult.commandName, commandName, `The expected command name is ${commandName}`);
-					assert.deepStrictEqual(buildHierarchicalCommandResult.remainingArguments, sampleArguments, "All arguments except the ones used for commandName should be returned.");
+					const buildHierarchicalCommandResult = injector.buildHierarchicalCommand(
+						"sample",
+						["command"].concat(sampleArguments)
+					);
+					assert.deepStrictEqual(
+						buildHierarchicalCommandResult.commandName,
+						commandName,
+						`The expected command name is ${commandName}`
+					);
+					assert.deepStrictEqual(
+						buildHierarchicalCommandResult.remainingArguments,
+						sampleArguments,
+						"All arguments except the ones used for commandName should be returned."
+					);
 				});
 
 				it("when subcommand of subcommand is called and it has its own subcommand", () => {
 					const commandName = "sample|command|with";
-					const buildHierarchicalCommandResult = injector.buildHierarchicalCommand("sample", ["command", "with"]);
-					assert.deepStrictEqual(buildHierarchicalCommandResult.commandName, commandName, `The expected command name is ${commandName}`);
-					assert.deepStrictEqual(buildHierarchicalCommandResult.remainingArguments, [], "There shouldn't be any arguments left.");
+					const buildHierarchicalCommandResult = injector.buildHierarchicalCommand(
+						"sample",
+						["command", "with"]
+					);
+					assert.deepStrictEqual(
+						buildHierarchicalCommandResult.commandName,
+						commandName,
+						`The expected command name is ${commandName}`
+					);
+					assert.deepStrictEqual(
+						buildHierarchicalCommandResult.remainingArguments,
+						[],
+						"There shouldn't be any arguments left."
+					);
 				});
 
 				it("and correct arguments, when subcommand of subcommand is called and it has its own subcommand", () => {
 					const commandName = "sample|command|with";
-					const buildHierarchicalCommandResult = injector.buildHierarchicalCommand("sample", ["command", "with"].concat(sampleArguments));
-					assert.deepStrictEqual(buildHierarchicalCommandResult.commandName, commandName, `The expected command name is ${commandName}`);
-					assert.deepStrictEqual(buildHierarchicalCommandResult.remainingArguments, sampleArguments, "All arguments except the ones used for commandName should be returned.");
+					const buildHierarchicalCommandResult = injector.buildHierarchicalCommand(
+						"sample",
+						["command", "with"].concat(sampleArguments)
+					);
+					assert.deepStrictEqual(
+						buildHierarchicalCommandResult.commandName,
+						commandName,
+						`The expected command name is ${commandName}`
+					);
+					assert.deepStrictEqual(
+						buildHierarchicalCommandResult.remainingArguments,
+						sampleArguments,
+						"All arguments except the ones used for commandName should be returned."
+					);
 				});
 			});
 		});
@@ -795,8 +1091,8 @@ $injector.register("a", A);
 		const dataObject = {
 			a: "testA",
 			b: {
-				c: "testC"
-			}
+				c: "testC",
+			},
 		};
 
 		const filepath = path.join(__dirname, "..", "..", "temp.js");
@@ -809,7 +1105,9 @@ $injector.register("a", A);
 		// This way we'll keep the directory clean, even if assert fails.
 		const resultFooObject = injector.publicApi.foo;
 		fs.unlinkSync(filepath);
-		assert.isTrue(_.includes(Object.getOwnPropertyNames(injector.publicApi), "foo"));
+		assert.isTrue(
+			_.includes(Object.getOwnPropertyNames(injector.publicApi), "foo")
+		);
 		assert.deepStrictEqual(resultFooObject, dataObject);
 	});
 });

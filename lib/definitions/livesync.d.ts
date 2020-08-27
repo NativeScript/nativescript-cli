@@ -1,10 +1,20 @@
 import { EventEmitter } from "events";
-import { INativePrepare, IValidatePlatformOutput, IProjectData } from "./project";
+import {
+	INativePrepare,
+	IValidatePlatformOutput,
+	IProjectData,
+} from "./project";
 import { IBuildPlatformAction } from "./platform";
 import { IDebugOptions } from "./debug";
 import { IBuildData } from "./build";
 import { IEnvOptions } from "../declarations";
-import { IPlatform, IProjectDir, IRelease, IQrCodeImageData, IDictionary } from "../common/declarations";
+import {
+	IPlatform,
+	IProjectDir,
+	IRelease,
+	IQrCodeImageData,
+	IDictionary,
+} from "../common/declarations";
 
 declare global {
 	interface ILiveSyncProcessData {
@@ -84,7 +94,11 @@ declare global {
 	/**
 	 * Describes a LiveSync operation.
 	 */
-	interface ILiveSyncInfo extends IProjectDir, IEnvOptions, IRelease, IHasUseHotModuleReloadOption {
+	interface ILiveSyncInfo
+		extends IProjectDir,
+			IEnvOptions,
+			IRelease,
+			IHasUseHotModuleReloadOption {
 		emulator?: boolean;
 
 		/**
@@ -121,13 +135,13 @@ declare global {
 	}
 
 	interface ILiveSyncEventData {
-		deviceIdentifier: string,
-		applicationIdentifier?: string,
-		projectDir: string,
-		syncedFiles?: string[],
-		error?: Error,
-		notification?: string,
-		isFullSync?: boolean
+		deviceIdentifier: string;
+		applicationIdentifier?: string;
+		projectDir: string;
+		syncedFiles?: string[];
+		error?: Error;
+		notification?: string;
+		isFullSync?: boolean;
 	}
 
 	interface IIsEmulator {
@@ -148,14 +162,19 @@ declare global {
 		 * @param {ILiveSyncInfo} liveSyncData Describes the LiveSync operation - for which project directory is the operation and other settings.
 		 * @returns {Promise<void>}
 		 */
-		liveSync(deviceDescriptors: ILiveSyncDeviceDescriptor[], liveSyncData: ILiveSyncInfo): Promise<void>;
+		liveSync(
+			deviceDescriptors: ILiveSyncDeviceDescriptor[],
+			liveSyncData: ILiveSyncInfo
+		): Promise<void>;
 
 		/**
 		 * Starts LiveSync operation to Preview app.
 		 * @param {IPreviewAppLiveSyncData} data Describes information about the current operation.
 		 * @returns {Promise<IQrCodeImageData>} Data of the QR code that should be used to start the LiveSync operation.
 		 */
-		liveSyncToPreviewApp(data: IPreviewAppLiveSyncData): Promise<IQrCodeImageData>;
+		liveSyncToPreviewApp(
+			data: IPreviewAppLiveSyncData
+		): Promise<IQrCodeImageData>;
 
 		/**
 		 * Stops LiveSync operation for specified directory.
@@ -164,7 +183,11 @@ declare global {
 		 * @param { shouldAwaitAllActions: boolean } @optional stopOptions Specifies whether we should await all actions.
 		 * @returns {Promise<void>}
 		 */
-		stopLiveSync(projectDir: string, deviceIdentifiers?: string[], stopOptions?: { shouldAwaitAllActions: boolean }): Promise<void>;
+		stopLiveSync(
+			projectDir: string,
+			deviceIdentifiers?: string[],
+			stopOptions?: { shouldAwaitAllActions: boolean }
+		): Promise<void>;
 
 		/**
 		 * Returns the device information for current LiveSync operation of specified project.
@@ -173,22 +196,26 @@ declare global {
 		 * @param {string} projectDir The path to project for which the LiveSync operation is executed
 		 * @returns {ILiveSyncDeviceDescriptor[]} Array of elements describing parameters used to start LiveSync on each device.
 		 */
-		getLiveSyncDeviceDescriptors(projectDir: string): ILiveSyncDeviceDescriptor[];
+		getLiveSyncDeviceDescriptors(
+			projectDir: string
+		): ILiveSyncDeviceDescriptor[];
 	}
 
 	/**
 	 * Describes settings used when disabling debugging.
 	 */
-	interface IDisableDebuggingDeviceOptions extends Mobile.IDeviceIdentifier { }
+	interface IDisableDebuggingDeviceOptions extends Mobile.IDeviceIdentifier {}
 
 	interface IOptionalDebuggingOptions {
 		/**
 		 * Optional debug options - can be used to control the start of a debug process.
-		*/
+		 */
 		debugOptions?: IDebugOptions;
 	}
 
-	interface IEnableDebuggingData extends IProjectDir, IOptionalDebuggingOptions {
+	interface IEnableDebuggingData
+		extends IProjectDir,
+			IOptionalDebuggingOptions {
 		deviceIdentifiers: string[];
 	}
 
@@ -196,7 +223,13 @@ declare global {
 		deviceIdentifiers: string[];
 	}
 
-	interface IAttachDebuggerData extends IProjectDir, Mobile.IDeviceIdentifier, IOptionalDebuggingOptions, IIsEmulator, IPlatform, IOptionalOutputPath { }
+	interface IAttachDebuggerData
+		extends IProjectDir,
+			Mobile.IDeviceIdentifier,
+			IOptionalDebuggingOptions,
+			IIsEmulator,
+			IPlatform,
+			IOptionalOutputPath {}
 
 	/**
 	 * Describes settings passed to livesync service in order to control event emitting during refresh application.
@@ -213,7 +246,10 @@ declare global {
 		connectTimeout?: number;
 	}
 
-	interface ILiveSyncWatchInfo extends IProjectDataComposition, IHasUseHotModuleReloadOption, IConnectTimeoutOption {
+	interface ILiveSyncWatchInfo
+		extends IProjectDataComposition,
+			IHasUseHotModuleReloadOption,
+			IConnectTimeoutOption {
 		filesToRemove: string[];
 		filesToSync: string[];
 		liveSyncDeviceData: ILiveSyncDeviceDescriptor;
@@ -230,9 +266,14 @@ declare global {
 		forceRefreshWithSocket?: boolean;
 	}
 
-	interface IAndroidLiveSyncResultInfo extends ILiveSyncResultInfo, IAndroidLivesyncSyncOperationResult { }
+	interface IAndroidLiveSyncResultInfo
+		extends ILiveSyncResultInfo,
+			IAndroidLivesyncSyncOperationResult {}
 
-	interface IFullSyncInfo extends IProjectDataComposition, IHasUseHotModuleReloadOption, IConnectTimeoutOption {
+	interface IFullSyncInfo
+		extends IProjectDataComposition,
+			IHasUseHotModuleReloadOption,
+			IConnectTimeoutOption {
 		device: Mobile.IDevice;
 		watch: boolean;
 		liveSyncDeviceData: ILiveSyncDeviceDescriptor;
@@ -251,13 +292,31 @@ declare global {
 
 	interface IPlatformLiveSyncService {
 		fullSync(syncInfo: IFullSyncInfo): Promise<ILiveSyncResultInfo>;
-		liveSyncWatchAction(device: Mobile.IDevice, liveSyncInfo: ILiveSyncWatchInfo): Promise<ILiveSyncResultInfo>;
-		tryRefreshApplication(projectData: IProjectData, liveSyncInfo: ILiveSyncResultInfo): Promise<boolean>;
-		restartApplication(projectData: IProjectData, liveSyncInfo: ILiveSyncResultInfo): Promise<void>;
-		shouldRestart(projectData: IProjectData, liveSyncInfo: ILiveSyncResultInfo): Promise<boolean>;
-		getDeviceLiveSyncService(device: Mobile.IDevice, projectData: IProjectData): INativeScriptDeviceLiveSyncService;
+		liveSyncWatchAction(
+			device: Mobile.IDevice,
+			liveSyncInfo: ILiveSyncWatchInfo
+		): Promise<ILiveSyncResultInfo>;
+		tryRefreshApplication(
+			projectData: IProjectData,
+			liveSyncInfo: ILiveSyncResultInfo
+		): Promise<boolean>;
+		restartApplication(
+			projectData: IProjectData,
+			liveSyncInfo: ILiveSyncResultInfo
+		): Promise<void>;
+		shouldRestart(
+			projectData: IProjectData,
+			liveSyncInfo: ILiveSyncResultInfo
+		): Promise<boolean>;
+		getDeviceLiveSyncService(
+			device: Mobile.IDevice,
+			projectData: IProjectData
+		): INativeScriptDeviceLiveSyncService;
 		getAppData(syncInfo: IFullSyncInfo): Promise<Mobile.IDeviceAppData>;
-		syncAfterInstall(device: Mobile.IDevice, liveSyncInfo: ILiveSyncWatchInfo): Promise<void>;
+		syncAfterInstall(
+			device: Mobile.IDevice,
+			liveSyncInfo: ILiveSyncWatchInfo
+		): Promise<void>;
 	}
 
 	interface IRestartApplicationInfo {
@@ -273,20 +332,26 @@ declare global {
 		/**
 		 * Tries to refresh the application's content on the device
 		 */
-		tryRefreshApplication(projectData: IProjectData,
-			liveSyncInfo: ILiveSyncResultInfo): Promise<boolean>;
+		tryRefreshApplication(
+			projectData: IProjectData,
+			liveSyncInfo: ILiveSyncResultInfo
+		): Promise<boolean>;
 
 		/**
 		 * Restarts the specified application
 		 */
-		restartApplication(projectData: IProjectData,
-			liveSyncInfo: ILiveSyncResultInfo): Promise<void>;
+		restartApplication(
+			projectData: IProjectData,
+			liveSyncInfo: ILiveSyncResultInfo
+		): Promise<void>;
 
 		/**
 		 * Returns if the application have to be restarted in order to apply the specified livesync changes
 		 */
-		shouldRestart(projectData: IProjectData,
-			liveSyncInfo: ILiveSyncResultInfo): Promise<boolean>;
+		shouldRestart(
+			projectData: IProjectData,
+			liveSyncInfo: ILiveSyncResultInfo
+		): Promise<boolean>;
 
 		/**
 		 * Removes specified files from a connected device
@@ -295,7 +360,11 @@ declare global {
 		 * @param  {string} projectFilesPath The Path to the app folder inside platforms folder
 		 * @return {Promise<void>}
 		 */
-		removeFiles(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], projectFilesPath?: string): Promise<void>;
+		removeFiles(
+			deviceAppData: Mobile.IDeviceAppData,
+			localToDevicePaths: Mobile.ILocalToDevicePathData[],
+			projectFilesPath?: string
+		): Promise<void>;
 
 		/**
 		 * Transfers specified files to a connected device
@@ -305,21 +374,32 @@ declare global {
 		 * @param  {boolean} isFullSync Indicates if the operation is part of a fullSync
 		 * @return {Promise<Mobile.ILocalToDevicePathData[]>} Returns the ILocalToDevicePathData of all transfered files
 		 */
-		transferFiles(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], projectFilesPath: string, projectData: IProjectData, liveSyncDeviceData: ILiveSyncDeviceDescriptor, options: ITransferFilesOptions): Promise<Mobile.ILocalToDevicePathData[]>;
+		transferFiles(
+			deviceAppData: Mobile.IDeviceAppData,
+			localToDevicePaths: Mobile.ILocalToDevicePathData[],
+			projectFilesPath: string,
+			projectData: IProjectData,
+			liveSyncDeviceData: ILiveSyncDeviceDescriptor,
+			options: ITransferFilesOptions
+		): Promise<Mobile.ILocalToDevicePathData[]>;
 	}
 
-	interface IAndroidNativeScriptDeviceLiveSyncService extends INativeScriptDeviceLiveSyncService {
+	interface IAndroidNativeScriptDeviceLiveSyncService
+		extends INativeScriptDeviceLiveSyncService {
 		/**
 		 * Guarantees all remove/update operations have finished
 		 * @param  {ILiveSyncResultInfo} liveSyncInfo Describes the LiveSync operation - for which project directory is the operation and other settings.
 		 * @return {Promise<IAndroidLiveSyncResultInfo>}
 		 */
-		finalizeSync(liveSyncInfo: ILiveSyncResultInfo, projectData: IProjectData): Promise<IAndroidLivesyncSyncOperationResult>;
+		finalizeSync(
+			liveSyncInfo: ILiveSyncResultInfo,
+			projectData: IProjectData
+		): Promise<IAndroidLivesyncSyncOperationResult>;
 	}
 
 	interface ILiveSyncSocket extends INetSocket {
-		uid: string,
-		writeAsync(data: Buffer): Promise<Boolean>
+		uid: string;
+		writeAsync(data: Buffer): Promise<Boolean>;
 	}
 
 	interface IAndroidLivesyncTool {
@@ -369,7 +449,9 @@ declare global {
 		 * @param options
 		 * @returns {Promise<void>}
 		 */
-		sendDoSyncOperation(options?: IDoSyncOperationOptions): Promise<IAndroidLivesyncSyncOperationResult>;
+		sendDoSyncOperation(
+			options?: IDoSyncOperationOptions
+		): Promise<IAndroidLivesyncSyncOperationResult>;
 		/**
 		 * Generates new operation identifier.
 		 */
@@ -398,9 +480,9 @@ declare global {
 	 * timeout - The timeout in milliseconds
 	 */
 	interface IDoSyncOperationOptions {
-		doRefresh?: boolean,
-		timeout?: number,
-		operationId?: string
+		doRefresh?: boolean;
+		timeout?: number;
+		operationId?: string;
 	}
 
 	interface IAndroidLivesyncToolConfiguration extends IConnectTimeoutOption {
@@ -427,8 +509,8 @@ declare global {
 	}
 
 	interface IAndroidLivesyncSyncOperationResult {
-		operationId: string,
-		didRefresh: boolean
+		operationId: string;
+		didRefresh: boolean;
 	}
 
 	interface IDeviceProjectRootOptions {
@@ -438,14 +520,19 @@ declare global {
 	}
 
 	interface IDevicePathProvider {
-		getDeviceProjectRootPath(device: Mobile.IDevice, options: IDeviceProjectRootOptions): Promise<string>;
+		getDeviceProjectRootPath(
+			device: Mobile.IDevice,
+			options: IDeviceProjectRootOptions
+		): Promise<string>;
 		getDeviceSyncZipPath(device: Mobile.IDevice): string;
 	}
 
 	/**
 	 * Describes additional options, that can be passed to LiveSyncCommandHelper.
 	 */
-	interface ILiveSyncCommandHelperAdditionalOptions extends IBuildPlatformAction, INativePrepare {
+	interface ILiveSyncCommandHelperAdditionalOptions
+		extends IBuildPlatformAction,
+			INativePrepare {
 		/**
 		 * A map representing devices which have debugging enabled initially.
 		 */
@@ -467,7 +554,11 @@ declare global {
 		 * @param {ILiveSyncCommandHelperAdditionalOptions} additionalOptions @optional Additional options to control LiveSync.
 		 * @returns {Promise<void>}
 		 */
-		executeLiveSyncOperation(devices: Mobile.IDevice[], platform: string, additionalOptions?: ILiveSyncCommandHelperAdditionalOptions): Promise<void>;
+		executeLiveSyncOperation(
+			devices: Mobile.IDevice[],
+			platform: string,
+			additionalOptions?: ILiveSyncCommandHelperAdditionalOptions
+		): Promise<void>;
 		getPlatformsForOperation(platform: string): string[];
 
 		/**
@@ -475,7 +566,9 @@ declare global {
 		 * @param {string} platform The platform to be validated.
 		 * @return {Promise<void>}
 		 */
-		validatePlatform(platform: string): Promise<IDictionary<IValidatePlatformOutput>>;
+		validatePlatform(
+			platform: string
+		): Promise<IDictionary<IValidatePlatformOutput>>;
 
 		/**
 		 * Executes livesync operation. Meant to be called from within a command.
@@ -483,8 +576,15 @@ declare global {
 		 * @param {ILiveSyncCommandHelperAdditionalOptions} additionalOptions @optional Additional options to control LiveSync.
 		 * @returns {Promise<void>}
 		 */
-		executeCommandLiveSync(platform?: string, additionalOptions?: ILiveSyncCommandHelperAdditionalOptions): Promise<void>;
-		createDeviceDescriptors(devices: Mobile.IDevice[], platform: string, additionalOptions?: ILiveSyncCommandHelperAdditionalOptions): Promise<ILiveSyncDeviceDescriptor[]>;
+		executeCommandLiveSync(
+			platform?: string,
+			additionalOptions?: ILiveSyncCommandHelperAdditionalOptions
+		): Promise<void>;
+		createDeviceDescriptors(
+			devices: Mobile.IDevice[],
+			platform: string,
+			additionalOptions?: ILiveSyncCommandHelperAdditionalOptions
+		): Promise<ILiveSyncDeviceDescriptor[]>;
 		getDeviceInstances(platform?: string): Promise<Mobile.IDevice[]>;
 		getLiveSyncData(projectDir: string): ILiveSyncInfo;
 	}
@@ -497,7 +597,11 @@ declare global {
 		getPersistedData(projectDir: string): ILiveSyncProcessData;
 		getDeviceDescriptors(projectDir: string): ILiveSyncDeviceDescriptor[];
 		getAllPersistedData(): IDictionary<ILiveSyncProcessData>;
-		persistData(projectDir: string, deviceDescriptors: ILiveSyncDeviceDescriptor[], platforms: string[]): void;
+		persistData(
+			projectDir: string,
+			deviceDescriptors: ILiveSyncDeviceDescriptor[],
+			platforms: string[]
+		): void;
 		hasDeviceDescriptors(projectDir: string): boolean;
 		getPlatforms(projectDir: string): string[];
 	}

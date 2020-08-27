@@ -2,7 +2,10 @@ import { IProjectData } from "./project";
 import { IDebugInformation } from "../declarations";
 import { IProjectDir, IPlatform } from "../common/declarations";
 
-interface IDebugData extends IProjectDir, Mobile.IDeviceIdentifier, IOptionalDebuggingOptions {
+interface IDebugData
+	extends IProjectDir,
+		Mobile.IDeviceIdentifier,
+		IOptionalDebuggingOptions {
 	applicationIdentifier: string;
 	projectName?: string;
 }
@@ -96,7 +99,11 @@ interface IDebugDataService {
 	 * @param {IDebugOptions} debugOptions The debug options
 	 * @returns {IDebugData} Data describing the required information for starting debug process.
 	 */
-	 getDebugData(deviceIdentifier: string, projectData: IProjectData, debugOptions: IDebugOptions): IDebugData;
+	getDebugData(
+		deviceIdentifier: string,
+		projectData: IProjectData,
+		debugOptions: IDebugOptions
+	): IDebugData;
 }
 
 /**
@@ -115,7 +122,10 @@ interface IDeviceDebugService extends IPlatform, NodeJS.EventEmitter {
 	 * @param {IDebugOptions} debugOptions Describe possible options to modify the behaivor of the debug operation, for example stop on the first line.
 	 * @returns {Promise<string>} Full url where the frontend client may be connected.
 	 */
-	debug(debugData: IAppDebugData, debugOptions: IDebugOptions): Promise<IDebugResultInfo>;
+	debug(
+		debugData: IAppDebugData,
+		debugOptions: IDebugOptions
+	): Promise<IDebugResultInfo>;
 }
 
 interface IDebugResultInfo {
@@ -137,9 +147,20 @@ interface IAppDebugData extends IProjectDir {
 interface IDebugController {
 	startDebug(debugData: IDebugData): Promise<IDebugInformation>;
 	stopDebug(deviceIdentifier: string): Promise<void>;
-	printDebugInformation(debugInformation: IDebugInformation, fireDebuggerAttachedEvent?: boolean): IDebugInformation;
-	enableDebuggingCoreWithoutWaitingCurrentAction(projectDir: string, deviceIdentifier: string, debugOptions: IDebugOptions): Promise<IDebugInformation>;
-	enableDebugging(enableDebuggingData: IEnableDebuggingData): Promise<IDebugInformation>[];
+	printDebugInformation(
+		debugInformation: IDebugInformation,
+		fireDebuggerAttachedEvent?: boolean
+	): IDebugInformation;
+	enableDebuggingCoreWithoutWaitingCurrentAction(
+		projectDir: string,
+		deviceIdentifier: string,
+		debugOptions: IDebugOptions
+	): Promise<IDebugInformation>;
+	enableDebugging(
+		enableDebuggingData: IEnableDebuggingData
+	): Promise<IDebugInformation>[];
 	disableDebugging(disableDebuggingData: IDisableDebuggingData): Promise<void>;
-	attachDebugger(attachDebuggerData: IAttachDebuggerData): Promise<IDebugInformation>;
+	attachDebugger(
+		attachDebuggerData: IAttachDebuggerData
+	): Promise<IDebugInformation>;
 }

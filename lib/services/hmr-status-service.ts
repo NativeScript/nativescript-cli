@@ -1,5 +1,9 @@
 import { cache } from "../common/decorators";
-import { HmrConstants, IOS_APP_CRASH_LOG_REG_EXP, FAIL_LIVESYNC_LOG_REGEX } from "../common/constants";
+import {
+	HmrConstants,
+	IOS_APP_CRASH_LOG_REG_EXP,
+	FAIL_LIVESYNC_LOG_REGEX,
+} from "../common/constants";
 import { IDictionary } from "../common/declarations";
 import { injector } from "../common/yok";
 
@@ -11,12 +15,16 @@ export class HmrStatusService implements IHmrStatusService {
 	private hashOperationStatuses: IDictionary<any> = {};
 	private intervals: IDictionary<any> = {};
 
-	constructor(private $logParserService: ILogParserService,
+	constructor(
+		private $logParserService: ILogParserService,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-		private $logger: ILogger) {
-	}
+		private $logger: ILogger
+	) {}
 
-	public getHmrStatus(deviceId: string, operationHash: string): Promise<number> {
+	public getHmrStatus(
+		deviceId: string,
+		operationHash: string
+	): Promise<number> {
 		return new Promise((resolve, reject) => {
 			const key = `${deviceId}${operationHash}`;
 			let retryCount = 40;
@@ -43,19 +51,19 @@ export class HmrStatusService implements IHmrStatusService {
 		this.$logParserService.addParseRule({
 			regex: HmrStatusService.HMR_STATUS_LOG_REGEX,
 			handler: this.handleHmrStatusFound.bind(this),
-			name: "hmrStatus"
+			name: "hmrStatus",
 		});
 		this.$logParserService.addParseRule({
 			regex: IOS_APP_CRASH_LOG_REG_EXP,
 			handler: this.handleAppCrash.bind(this),
 			name: "appCrashHmr",
-			platform: this.$devicePlatformsConstants.iOS.toLowerCase()
+			platform: this.$devicePlatformsConstants.iOS.toLowerCase(),
 		});
 		this.$logParserService.addParseRule({
 			regex: FAIL_LIVESYNC_LOG_REGEX,
 			handler: this.handleAppCrash.bind(this),
 			name: "failedLiveSync",
-			platform: this.$devicePlatformsConstants.iOS.toLowerCase()
+			platform: this.$devicePlatformsConstants.iOS.toLowerCase(),
 		});
 	}
 
@@ -68,7 +76,10 @@ export class HmrStatusService implements IHmrStatusService {
 		}
 	}
 
-	private handleHmrStatusFound(matches: RegExpMatchArray, deviceId: string): void {
+	private handleHmrStatusFound(
+		matches: RegExpMatchArray,
+		deviceId: string
+	): void {
 		const message = matches[1].trim();
 		const hash = matches[2];
 		let status;
@@ -103,7 +114,11 @@ export class HmrStatusService implements IHmrStatusService {
 		return null;
 	}
 
-	private setData(deviceId: string, operationHash: string, status?: Number): void {
+	private setData(
+		deviceId: string,
+		operationHash: string,
+		status?: Number
+	): void {
 		const key = `${deviceId}${operationHash}`;
 
 		if (!this.hashOperationStatuses[key]) {

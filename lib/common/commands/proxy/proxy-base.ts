@@ -5,11 +5,12 @@ export abstract class ProxyCommandBase implements ICommand {
 	public disableAnalytics = true;
 	public allowedParameters: ICommandParameter[] = [];
 
-	constructor(protected $analyticsService: IAnalyticsService,
+	constructor(
+		protected $analyticsService: IAnalyticsService,
 		protected $logger: ILogger,
 		protected $proxyService: IProxyService,
-		private commandName: string) {
-	}
+		private commandName: string
+	) {}
 
 	public abstract execute(args: string[]): Promise<void>;
 

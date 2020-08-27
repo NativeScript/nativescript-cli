@@ -1,6 +1,6 @@
 import { AndroidDebugBridge } from "../../../mobile/android/android-debug-bridge";
 import { assert } from "chai";
-import * as _ from 'lodash';
+import * as _ from "lodash";
 import { Yok } from "../../../yok";
 import { CommonLoggerStub, ErrorsStub } from "../stubs";
 import { AndroidDebugBridgeResultHandler } from "../../../mobile/android/android-debug-bridge-result-handler";
@@ -15,7 +15,7 @@ class MockChildProcessEventEmitter extends EventEmitter {
 	public stderr = new EventEmitter();
 }
 
-describe('androidDebugBridge', () => {
+describe("androidDebugBridge", () => {
 	let logger: CommonLoggerStub;
 	let adb: any;
 
@@ -26,9 +26,7 @@ describe('androidDebugBridge', () => {
 	let spawnedArgs: string[] = [];
 	let allSpawnedEventsArgs: string[][] = [];
 
-	function setup(options?: {
-		returnError?: boolean
-	}): void {
+	function setup(options?: { returnError?: boolean }): void {
 		options = options || {};
 		isAdbSpawnedFromEvent = false;
 		isAdbSpawnedFromChildProcess = false;
@@ -39,9 +37,7 @@ describe('androidDebugBridge', () => {
 		createTestInjector(options);
 	}
 
-	function createTestInjector(options?: {
-		returnError?: boolean
-	}): void {
+	function createTestInjector(options?: { returnError?: boolean }): void {
 		options = options || {};
 		const injector = new Yok();
 		injector.register("logger", CommonLoggerStub);
@@ -49,12 +45,21 @@ describe('androidDebugBridge', () => {
 		injector.register("config", {});
 		injector.register("options", {});
 		injector.register("staticConfig", {
-			getAdbFilePath: async () => { return adbPath; }
+			getAdbFilePath: async () => {
+				return adbPath;
+			},
 		});
-		injector.register("androidDebugBridgeResultHandler", AndroidDebugBridgeResultHandler);
+		injector.register(
+			"androidDebugBridgeResultHandler",
+			AndroidDebugBridgeResultHandler
+		);
 		injector.register("childProcess", {
-			spawnFromEvent: async (command: string, args: string[],
-				event: string, opts?: any): Promise<ISpawnResult> => {
+			spawnFromEvent: async (
+				command: string,
+				args: string[],
+				event: string,
+				opts?: any
+			): Promise<ISpawnResult> => {
 				isAdbSpawnedFromEvent = command.indexOf(adbPath) !== -1;
 				spawnedArgs = args;
 				allSpawnedEventsArgs.push(args);
@@ -64,10 +69,14 @@ describe('androidDebugBridge', () => {
 				return {
 					stderr: options.returnError ? adbError : "",
 					stdout: options.returnError ? "" : adbResponse,
-					exitCode: options.returnError ? 1 : 0
+					exitCode: options.returnError ? 1 : 0,
 				};
 			},
-			spawn: async (command: string, args?: string[], opts?: any): Promise<any> => {
+			spawn: async (
+				command: string,
+				args?: string[],
+				opts?: any
+			): Promise<any> => {
 				isAdbSpawnedFromChildProcess = command.indexOf(adbPath) !== -1;
 				spawnedArgs = args;
 
@@ -83,16 +92,15 @@ describe('androidDebugBridge', () => {
 				});
 
 				return childProcessResult;
-			}
+			},
 		});
 		adb = injector.resolve(AndroidDebugBridge);
 		logger = injector.resolve("logger");
 	}
 
-	_.each(['executeCommand', 'executeShellCommand'], methodName => {
+	_.each(["executeCommand", "executeShellCommand"], (methodName) => {
 		describe(methodName, () => {
-
-			it('should spawn from event by default', async () => {
+			it("should spawn from event by default", async () => {
 				const expectedArgs = getArgs();
 				setup();
 
@@ -103,7 +111,7 @@ describe('androidDebugBridge', () => {
 				assert.equal(actualResponse, adbResponse);
 			});
 
-			it('should spawn a child process when specified', async () => {
+			it("should spawn a child process when specified", async () => {
 				const expectedArgs = getArgs();
 				setup();
 
@@ -113,12 +121,14 @@ describe('androidDebugBridge', () => {
 				assert.deepStrictEqual(spawnedArgs, expectedArgs);
 			});
 
-			it('should spawn with event when specified', async () => {
+			it("should spawn with event when specified", async () => {
 				const expectedArgs = getArgs();
 				const expectedEvent = "MyCoolEvent";
 				setup();
 
-				const actualResponse = await adb[methodName](expectedArgs, { fromEvent: expectedEvent });
+				const actualResponse = await adb[methodName](expectedArgs, {
+					fromEvent: expectedEvent,
+				});
 
 				assert.isTrue(isAdbSpawnedFromEvent);
 				assert.equal(spawnedEvent, expectedEvent);
@@ -126,12 +136,14 @@ describe('androidDebugBridge', () => {
 				assert.equal(actualResponse, adbResponse);
 			});
 
-			it('should spawn with event options when childProcessOptions specified', async () => {
+			it("should spawn with event options when childProcessOptions specified", async () => {
 				const expectedArgs = getArgs();
 				const expectedEventOptions = "MyCoolEventOptions";
 				setup();
 
-				const actualResponse = await adb[methodName](expectedArgs, { childProcessOptions: expectedEventOptions });
+				const actualResponse = await adb[methodName](expectedArgs, {
+					childProcessOptions: expectedEventOptions,
+				});
 
 				assert.isTrue(isAdbSpawnedFromEvent);
 				assert.equal(spawnedEventOptions, expectedEventOptions);
@@ -139,9 +151,9 @@ describe('androidDebugBridge', () => {
 				assert.equal(actualResponse, adbResponse);
 			});
 
-			it('should fail when adb returns a known error', async () => {
+			it("should fail when adb returns a known error", async () => {
 				setup({
-					returnError: true
+					returnError: true,
 				});
 
 				let actualError = "";
@@ -155,12 +167,14 @@ describe('androidDebugBridge', () => {
 				assert.isTrue(logger.output.indexOf(adbError) === -1);
 			});
 
-			it('should log a warning when adb returns a known error and treatErrorsAsWarnings is set to true', async () => {
+			it("should log a warning when adb returns a known error and treatErrorsAsWarnings is set to true", async () => {
 				setup({
-					returnError: true
+					returnError: true,
 				});
 
-				const actualResponse = await adb[methodName]([], { treatErrorsAsWarnings: true });
+				const actualResponse = await adb[methodName]([], {
+					treatErrorsAsWarnings: true,
+				});
 
 				assert.isTrue(isAdbSpawnedFromEvent);
 				assert.isTrue(logger.output.indexOf(adbError) !== -1);
@@ -169,17 +183,17 @@ describe('androidDebugBridge', () => {
 		});
 
 		function getArgs(): string[] {
-			const expectedArgs = ['MyCoolArg'];
-			if (methodName === 'executeShellCommand') {
-				expectedArgs.unshift('shell');
+			const expectedArgs = ["MyCoolArg"];
+			if (methodName === "executeShellCommand") {
+				expectedArgs.unshift("shell");
 			}
 
 			return expectedArgs;
 		}
 	});
 
-	describe('pushFile', () => {
-		it('should ensure its folder, push and set permissions', async () => {
+	describe("pushFile", () => {
+		it("should ensure its folder, push and set permissions", async () => {
 			const sampleLocalFilePath = "MyCoolLocalFolder/MyCoolLocalFile";
 			const sampleDeviceFolder = "MyCoolDeviceFolder";
 			const deviceFilePath = `${sampleDeviceFolder}/myDevicePath`;
@@ -189,9 +203,23 @@ describe('androidDebugBridge', () => {
 
 			assert.isTrue(isAdbSpawnedFromEvent);
 			assert.equal(allSpawnedEventsArgs.length, 3);
-			assert.deepStrictEqual(allSpawnedEventsArgs[0], ['shell', 'mkdir', '-p', sampleDeviceFolder]);
-			assert.deepStrictEqual(allSpawnedEventsArgs[1], ['push', sampleLocalFilePath, deviceFilePath]);
-			assert.deepStrictEqual(allSpawnedEventsArgs[2], ['shell', 'chmod', '0777', sampleDeviceFolder]);
+			assert.deepStrictEqual(allSpawnedEventsArgs[0], [
+				"shell",
+				"mkdir",
+				"-p",
+				sampleDeviceFolder,
+			]);
+			assert.deepStrictEqual(allSpawnedEventsArgs[1], [
+				"push",
+				sampleLocalFilePath,
+				deviceFilePath,
+			]);
+			assert.deepStrictEqual(allSpawnedEventsArgs[2], [
+				"shell",
+				"chmod",
+				"0777",
+				sampleDeviceFolder,
+			]);
 		});
 	});
 
@@ -199,8 +227,15 @@ describe('androidDebugBridge', () => {
 		it("does not fail when `adb devices` fail", async () => {
 			setup({ returnError: true });
 			const result = await adb.getDevicesSafe();
-			assert.deepStrictEqual(result, [], "When adb get devices fail, getDevicesSafe must return empty array");
-			assert.isTrue(logger.traceOutput.indexOf("Getting adb devices failed with error") !== -1);
+			assert.deepStrictEqual(
+				result,
+				[],
+				"When adb get devices fail, getDevicesSafe must return empty array"
+			);
+			assert.isTrue(
+				logger.traceOutput.indexOf("Getting adb devices failed with error") !==
+					-1
+			);
 		});
 	});
 });

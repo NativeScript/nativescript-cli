@@ -131,7 +131,9 @@ interface IExtensibilityService {
 	 * @param {string[]} inputStrings All strings written on the terminal.
 	 * @returns {IExtensionCommandInfo} Information about the extension and the registered command.
 	 */
-	getExtensionNameWhereCommandIsRegistered(inputOpts: IGetExtensionCommandInfoParams): Promise<IExtensionCommandInfo>;
+	getExtensionNameWhereCommandIsRegistered(
+		inputOpts: IGetExtensionCommandInfoParams
+	): Promise<IExtensionCommandInfo>;
 
 	/**
 	 * Defines the path where CLI will search for extensions.
@@ -142,4 +144,4 @@ interface IExtensibilityService {
 /**
  * Describes the error that will be raised when a problem with extension is detected.
  */
-interface IExtensionLoadingError extends Error, IExtensionData { }
+interface IExtensionLoadingError extends Error, IExtensionData {}

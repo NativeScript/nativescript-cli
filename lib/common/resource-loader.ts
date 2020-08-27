@@ -3,8 +3,10 @@ import { IResourceLoader, IFileSystem } from "./declarations";
 import { injector } from "./yok";
 
 export class ResourceLoader implements IResourceLoader {
-	constructor(private $fs: IFileSystem,
-		private $staticConfig: Config.IStaticConfig) { }
+	constructor(
+		private $fs: IFileSystem,
+		private $staticConfig: Config.IStaticConfig
+	) {}
 
 	resolvePath(resourcePath: string): string {
 		return path.join(this.$staticConfig.RESOURCE_DIR_PATH, resourcePath);

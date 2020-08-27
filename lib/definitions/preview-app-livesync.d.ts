@@ -1,12 +1,25 @@
 import { FilePayload, Device, FilesPayload } from "nativescript-preview-sdk";
 import { EventEmitter } from "events";
 import { IEnvOptions } from "../declarations";
-import { IProjectDir, IQrCodeImageData, IDictionary } from "../common/declarations";
+import {
+	IProjectDir,
+	IQrCodeImageData,
+	IDictionary,
+} from "../common/declarations";
 
 declare global {
 	interface IPreviewAppFilesService {
-		getInitialFilesPayload(liveSyncData: IPreviewAppLiveSyncData, platform: string, deviceId?: string): FilesPayload;
-		getFilesPayload(liveSyncData: IPreviewAppLiveSyncData, filesData: IPreviewAppFilesData, platform: string, deviceId?: string): FilesPayload;
+		getInitialFilesPayload(
+			liveSyncData: IPreviewAppLiveSyncData,
+			platform: string,
+			deviceId?: string
+		): FilesPayload;
+		getFilesPayload(
+			liveSyncData: IPreviewAppLiveSyncData,
+			filesData: IPreviewAppFilesData,
+			platform: string,
+			deviceId?: string
+		): FilesPayload;
 	}
 
 	interface IPreviewAppFilesData {
@@ -14,20 +27,34 @@ declare global {
 		filesToRemove?: string[];
 	}
 
-	interface IPreviewAppLiveSyncData extends IProjectDir, IHasUseHotModuleReloadOption, IEnvOptions { }
+	interface IPreviewAppLiveSyncData
+		extends IProjectDir,
+			IHasUseHotModuleReloadOption,
+			IEnvOptions {}
 
 	interface IPreviewSdkService {
 		getQrCodeUrl(options: IGetQrCodeUrlOptions): string;
-		initialize(projectDir: string, getInitialFiles: (device: Device) => Promise<FilesPayload>): void;
+		initialize(
+			projectDir: string,
+			getInitialFiles: (device: Device) => Promise<FilesPayload>
+		): void;
 		applyChanges(filesPayload: FilesPayload): Promise<void>;
 		stop(): void;
 	}
 
-	interface IGetQrCodeUrlOptions extends IHasUseHotModuleReloadOption, IProjectDir { }
+	interface IGetQrCodeUrlOptions
+		extends IHasUseHotModuleReloadOption,
+			IProjectDir {}
 
 	interface IPreviewAppPluginsService {
-		getPluginsUsageWarnings(data: IPreviewAppLiveSyncData, device: Device): Promise<string[]>;
-		comparePluginsOnDevice(data: IPreviewAppLiveSyncData, device: Device): Promise<void>;
+		getPluginsUsageWarnings(
+			data: IPreviewAppLiveSyncData,
+			device: Device
+		): Promise<string[]>;
+		comparePluginsOnDevice(
+			data: IPreviewAppLiveSyncData,
+			device: Device
+		): Promise<void>;
 		getExternalPlugins(device: Device): string[];
 	}
 
@@ -36,7 +63,9 @@ declare global {
 	}
 
 	interface IPreviewQrCodeService {
-		getPlaygroundAppQrCode(options?: IPlaygroundAppQrCodeOptions): Promise<IDictionary<IQrCodeImageData>>;
+		getPlaygroundAppQrCode(
+			options?: IPlaygroundAppQrCodeOptions
+		): Promise<IDictionary<IQrCodeImageData>>;
 		getLiveSyncQrCode(url: string): Promise<IQrCodeImageData>;
 		printLiveSyncQrCode(options: IPrintLiveSyncOptions): Promise<void>;
 	}
@@ -58,7 +87,10 @@ declare global {
 		updateConnectedDevices(devices: Device[]): void;
 		getDeviceById(id: string): Device;
 		getDevicesForPlatform(platform: string): Device[];
-		getPluginsUsageWarnings(data: IPreviewAppLiveSyncData, device: Device): Promise<string[]>;
+		getPluginsUsageWarnings(
+			data: IPreviewAppLiveSyncData,
+			device: Device
+		): Promise<string[]>;
 	}
 
 	interface IPreviewSchemaService {

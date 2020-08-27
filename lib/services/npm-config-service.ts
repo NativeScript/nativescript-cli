@@ -4,7 +4,7 @@ import { IDictionary } from "../common/declarations";
 import { injector } from "../common/yok";
 
 export class NpmConfigService implements INpmConfigService {
-	private config: IDictionary<any> = { };
+	private config: IDictionary<any> = {};
 
 	constructor() {
 		this.readConfig();
@@ -18,7 +18,10 @@ export class NpmConfigService implements INpmConfigService {
 		const data: any = npmconfig.read();
 		data.forEach((value: any, key: string) => {
 			// replace env ${VARS} in strings with the process.env value
-			this.config[key] = typeof value !== 'string' ? value : value.replace(/\${([^}]+)}/, (_, envVar) => process.env[envVar]);
+			this.config[key] =
+				typeof value !== "string"
+					? value
+					: value.replace(/\${([^}]+)}/, (_, envVar) => process.env[envVar]);
 		});
 	}
 }

@@ -1,17 +1,24 @@
 import { doesCurrentNpmCommandMatch } from "../common/helpers";
 import { ICommand, ICommandParameter } from "../common/definitions/commands";
-import { IFileSystem, IHelpService, ISettingsService, IAnalyticsService, IHostInfo } from "../common/declarations";
+import {
+	IFileSystem,
+	IHelpService,
+	ISettingsService,
+	IAnalyticsService,
+	IHostInfo,
+} from "../common/declarations";
 import { injector } from "../common/yok";
 
 export class PostInstallCliCommand implements ICommand {
-	constructor(private $fs: IFileSystem,
+	constructor(
+		private $fs: IFileSystem,
 		private $commandsService: ICommandsService,
 		private $helpService: IHelpService,
 		private $settingsService: ISettingsService,
 		private $analyticsService: IAnalyticsService,
 		private $logger: ILogger,
-		private $hostInfo: IHostInfo) {
-	}
+		private $hostInfo: IHostInfo
+	) {}
 
 	public disableAnalytics = true;
 	public allowedParameters: ICommandParameter[] = [];
@@ -25,11 +32,15 @@ export class PostInstallCliCommand implements ICommand {
 			// patch the owner here
 			if (isRunningWithSudoUser) {
 				// TODO: Check if this is the correct place, probably we should set this at the end of the command.
-				await this.$fs.setCurrentUserAsOwner(this.$settingsService.getProfileDir(), process.env.SUDO_USER);
+				await this.$fs.setCurrentUserAsOwner(
+					this.$settingsService.getProfileDir(),
+					process.env.SUDO_USER
+				);
 			}
 		}
 
-		const canExecutePostInstallTask = !isRunningWithSudoUser || doesCurrentNpmCommandMatch([/^--unsafe-perm$/]);
+		const canExecutePostInstallTask =
+			!isRunningWithSudoUser || doesCurrentNpmCommandMatch([/^--unsafe-perm$/]);
 
 		if (canExecutePostInstallTask) {
 			await this.$helpService.generateHtmlPages();
@@ -42,16 +53,23 @@ export class PostInstallCliCommand implements ICommand {
 
 	public async postCommandAction(args: string[]): Promise<void> {
 		this.$logger.info("");
-		this.$logger.info("You have successfully installed the NativeScript CLI!".green.bold);
+		this.$logger.info(
+			"You have successfully installed the NativeScript CLI!".green.bold
+		);
 		this.$logger.info("");
 		this.$logger.info("Your next step is to create a new project:");
 		this.$logger.info("ns create".green.bold);
 
 		this.$logger.info("");
-		this.$logger.printMarkdown("New to NativeScript?".bold + " Try the tutorials in NativeScript Playground: `https://play.nativescript.org`");
+		this.$logger.printMarkdown(
+			"New to NativeScript?".bold +
+				" Try the tutorials in NativeScript Playground: `https://play.nativescript.org`"
+		);
 
 		this.$logger.info("");
-		this.$logger.printMarkdown("If you have any questions, check Stack Overflow: `https://stackoverflow.com/questions/tagged/nativescript` and our public Slack channel: `https://nativescriptcommunity.slack.com/`");
+		this.$logger.printMarkdown(
+			"If you have any questions, check Stack Overflow: `https://stackoverflow.com/questions/tagged/nativescript` and our public Slack channel: `https://nativescriptcommunity.slack.com/`"
+		);
 	}
 }
 

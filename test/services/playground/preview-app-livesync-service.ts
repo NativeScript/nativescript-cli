@@ -1,6 +1,11 @@
 import { Yok } from "../../../lib/common/yok";
-import * as _ from 'lodash';
-import { LoggerStub, ErrorsStub, MarkingModeServiceStub, TempServiceStub } from "../../stubs";
+import * as _ from "lodash";
+import {
+	LoggerStub,
+	ErrorsStub,
+	MarkingModeServiceStub,
+	TempServiceStub,
+} from "../../stubs";
 import { FilePayload, Device, FilesPayload } from "nativescript-preview-sdk";
 import * as chai from "chai";
 import * as path from "path";
@@ -49,14 +54,15 @@ let applyChangesParams: FilePayload[] = [];
 let initialFiles: FilePayload[] = [];
 let readTextParams: string[] = [];
 let warnParams: string[] = [];
-const nativeFilesWarning = "Unable to apply changes from App_Resources folder. You need to build your application in order to make changes in App_Resources folder.";
+const nativeFilesWarning =
+	"Unable to apply changes from App_Resources folder. You need to build your application in order to make changes in App_Resources folder.";
 
 const projectDirPath = "/path/to/my/project";
 const platformsDirPath = path.join(projectDirPath, "platforms");
-const normalizedPlatformName = 'iOS';
+const normalizedPlatformName = "iOS";
 
 const deviceMockData = <Device>{
-	platform: normalizedPlatformName
+	platform: normalizedPlatformName,
 };
 const defaultProjectFiles = [
 	path.join("my", "test", "file1.js"),
@@ -64,13 +70,13 @@ const defaultProjectFiles = [
 	path.join("my", "test", "file3.js"),
 	path.join("my", "test", "nested", "file1.js"),
 	path.join("my", "test", "nested", "file2.js"),
-	path.join("my", "test", "nested", "file3.js")
+	path.join("my", "test", "nested", "file3.js"),
 ];
 const syncFilesMockData = {
 	projectDir: projectDirPath,
 	bundle: false,
 	useHotModuleReload: false,
-	env: {}
+	env: {},
 };
 
 class PreviewSdkServiceMock extends EventEmitter implements IPreviewSdkService {
@@ -80,7 +86,10 @@ class PreviewSdkServiceMock extends EventEmitter implements IPreviewSdkService {
 		return "my_cool_qr_code_url";
 	}
 
-	public initialize(projectDir: string, getInitialFiles: (device: Device) => Promise<FilesPayload>) {
+	public initialize(
+		projectDir: string,
+		getInitialFiles: (device: Device) => Promise<FilesPayload>
+	) {
 		this.getInitialFiles = async (device) => {
 			const filesPayload = await getInitialFiles(device);
 			initialFiles.push(...filesPayload.files);
@@ -93,7 +102,9 @@ class PreviewSdkServiceMock extends EventEmitter implements IPreviewSdkService {
 		applyChangesParams.push(...files.files);
 	}
 
-	public stop() {  /* empty block */ }
+	public stop() {
+		/* empty block */
+	}
 }
 
 class LoggerMock extends LoggerStub {
@@ -109,37 +120,35 @@ class PrepareControllerMock extends EventEmitter {
 	}
 }
 
-function createTestInjector(options?: {
-	projectFiles?: string[]
-}) {
+function createTestInjector(options?: { projectFiles?: string[] }) {
 	options = options || {};
 
 	const injector = new Yok();
 	injector.register("logger", LoggerMock);
 	injector.register("markingModeService", MarkingModeServiceStub);
 	injector.register("hmrStatusService", {
-		attachToHmrStatusEvent: () => ({})
+		attachToHmrStatusEvent: () => ({}),
 	});
 	injector.register("errors", ErrorsStub);
 	injector.register("platformsDataService", {
 		getPlatformData: () => ({
 			appDestinationDirectoryPath: platformsDirPath,
-			normalizedPlatformName
-		})
+			normalizedPlatformName,
+		}),
 	});
 	injector.register("projectDataService", {
 		getProjectData: () => ({
 			projectDir: projectDirPath,
 			getAppDirectoryPath: () => path.join(projectDirPath, "app"),
-			appDirectoryPath: () => path.join(projectDirPath, "app")
-		})
+			appDirectoryPath: () => path.join(projectDirPath, "app"),
+		}),
 	});
 	injector.register("previewSdkService", PreviewSdkServiceMock);
 	injector.register("previewAppPluginsService", {
 		comparePluginsOnDevice: async () => {
 			isComparePluginsOnDeviceCalled = true;
 		},
-		getExternalPlugins: () => <string[]>[]
+		getExternalPlugins: () => <string[]>[],
 	});
 	injector.register("projectFilesManager", ProjectFilesManager);
 	injector.register("previewAppController", PreviewAppController);
@@ -153,11 +162,15 @@ function createTestInjector(options?: {
 		},
 		enumerateFilesInDirectorySync: (projectFilesPath: string) => {
 			if (options.projectFiles) {
-				return options.projectFiles.map(file => path.join(projectDirPath, file));
+				return options.projectFiles.map((file) =>
+					path.join(projectDirPath, file)
+				);
 			}
 
-			return defaultProjectFiles.map(file => path.join(platformsDirPath, "app", file));
-		}
+			return defaultProjectFiles.map((file) =>
+				path.join(platformsDirPath, "app", file)
+			);
+		},
 	});
 	injector.register("localToDevicePathDataFactory", {});
 	injector.register("projectFilesProvider", {
@@ -165,29 +178,35 @@ function createTestInjector(options?: {
 			return {
 				filePath,
 				onDeviceFileName: path.basename(filePath),
-				shouldIncludeFile: true
+				shouldIncludeFile: true,
 			};
 		},
-		mapFilePath: (filePath: string) => path.join(path.join(platformsDirPath, "app"), path.relative(path.join(projectDirPath, "app"), filePath))
+		mapFilePath: (filePath: string) =>
+			path.join(
+				path.join(platformsDirPath, "app"),
+				path.relative(path.join(projectDirPath, "app"), filePath)
+			),
 	});
 	injector.register("previewDevicesService", {
 		getConnectedDevices: () => [deviceMockData],
-		getDevicesForPlatform: (platform: string): Device[] => [deviceMockData]
+		getDevicesForPlatform: (platform: string): Device[] => [deviceMockData],
 	});
 	injector.register("previewAppFilesService", PreviewAppFilesService);
 	injector.register("previewQrCodeService", {
 		getQrCodeUrl: () => ({}),
-		getLiveSyncQrCode: () => ({})
+		getLiveSyncQrCode: () => ({}),
 	});
 	injector.register("analyticsService", {
-		trackEventActionInGoogleAnalytics: () => ({})
+		trackEventActionInGoogleAnalytics: () => ({}),
 	});
 	injector.register("hooksService", {
 		executeBeforeHooks: () => ({}),
-		executeAfterHooks: () => ({})
+		executeAfterHooks: () => ({}),
 	});
 	injector.register("pluginsService", {
-		ensureAllDependenciesAreInstalled: () => { return Promise.resolve(); }
+		ensureAllDependenciesAreInstalled: () => {
+			return Promise.resolve();
+		},
 	});
 	injector.register("tempService", TempServiceStub);
 
@@ -198,9 +217,15 @@ function arrange(options?: { projectFiles?: string[] }) {
 	options = options || {};
 
 	const injector = createTestInjector({ projectFiles: options.projectFiles });
-	const previewSdkService: IPreviewSdkService = injector.resolve("previewSdkService");
-	const previewAppController: PreviewAppController = injector.resolve("previewAppController");
-	const prepareController: PrepareController = injector.resolve("prepareController");
+	const previewSdkService: IPreviewSdkService = injector.resolve(
+		"previewSdkService"
+	);
+	const previewAppController: PreviewAppController = injector.resolve(
+		"previewAppController"
+	);
+	const prepareController: PrepareController = injector.resolve(
+		"prepareController"
+	);
 
 	return {
 		previewSdkService,
@@ -224,7 +249,13 @@ async function initialSync(input?: IActInput) {
 async function syncFiles(input?: IActInput) {
 	input = input || {};
 
-	const { previewAppController, previewSdkService, prepareController, projectFiles, actOptions } = input;
+	const {
+		previewAppController,
+		previewSdkService,
+		prepareController,
+		projectFiles,
+		actOptions,
+	} = input;
 
 	const syncFilesData = _.cloneDeep(syncFilesMockData);
 	syncFilesData.useHotModuleReload = actOptions.hmr;
@@ -238,7 +269,9 @@ async function syncFiles(input?: IActInput) {
 
 async function assert(expectedFiles: string[], options?: IAssertOptions) {
 	options = options || {};
-	const actualFiles = options.checkInitialFiles ? initialFiles : applyChangesParams;
+	const actualFiles = options.checkInitialFiles
+		? initialFiles
+		: applyChangesParams;
 
 	chai.assert.equal(isHMRPassedToEnv, options.hmr || false);
 	chai.assert.deepStrictEqual(actualFiles, mapFiles(expectedFiles));
@@ -266,12 +299,12 @@ function mapFiles(files: string[]): FilePayload[] {
 		return [];
 	}
 
-	return files.map(file => {
+	return files.map((file) => {
 		return {
 			event: "change",
 			file,
 			fileContents: undefined,
-			binary: false
+			binary: false,
 		};
 	});
 }
@@ -280,7 +313,7 @@ function setDefaults(testCase: ITestCase): ITestCase {
 	if (!testCase.actOptions) {
 		testCase.actOptions = {
 			callGetInitialFiles: true,
-			hmr: false
+			hmr: false,
 		};
 	}
 
@@ -288,18 +321,34 @@ function setDefaults(testCase: ITestCase): ITestCase {
 }
 
 function execute(options: {
-	testCases: ITestCase[],
-	act: (input: IActInput) => Promise<void>
+	testCases: ITestCase[];
+	act: (input: IActInput) => Promise<void>;
 }) {
 	const { testCases, act } = options;
 
-	testCases.forEach(testCase => {
+	testCases.forEach((testCase) => {
 		testCase = setDefaults(testCase);
 
 		it(`${testCase.name}`, async () => {
-			const projectFiles = testCase.appFiles ? testCase.appFiles.map(file => path.join(projectDirPath, "app", file)) : null;
-			const { previewAppController, prepareController, previewSdkService } = arrange({ projectFiles });
-			await act.apply(null, [{ previewAppController, prepareController, previewSdkService, projectFiles, actOptions: testCase.actOptions }]);
+			const projectFiles = testCase.appFiles
+				? testCase.appFiles.map((file) =>
+						path.join(projectDirPath, "app", file)
+				  )
+				: null;
+			const {
+				previewAppController,
+				prepareController,
+				previewSdkService,
+			} = arrange({ projectFiles });
+			await act.apply(null, [
+				{
+					previewAppController,
+					prepareController,
+					previewSdkService,
+					projectFiles,
+					actOptions: testCase.actOptions,
+				},
+			]);
 			await assert(testCase.expectedFiles, testCase.assertOptions);
 		});
 	});
@@ -311,11 +360,12 @@ describe("previewAppController", () => {
 
 		let testCases: ITestCase[] = [
 			{
-				name: "should compare local plugins and plugins from preview app when devices are emitted"
-			}
+				name:
+					"should compare local plugins and plugins from preview app when devices are emitted",
+			},
 		];
 
-		testCases = testCases.map(testCase => {
+		testCases = testCases.map((testCase) => {
 			testCase.assertOptions = { isComparePluginsOnDeviceCalled: true };
 			return testCase;
 		});
@@ -333,11 +383,11 @@ describe("previewAppController", () => {
 				expectedFiles: [],
 				actOptions: {
 					hmr: true,
-					callGetInitialFiles: true
+					callGetInitialFiles: true,
 				},
 				assertOptions: {
-					hmr: true
-				}
+					hmr: true,
+				},
 			},
 			{
 				name: "when set to false",
@@ -345,12 +395,12 @@ describe("previewAppController", () => {
 				expectedFiles: [],
 				actOptions: {
 					hmr: false,
-					callGetInitialFiles: true
+					callGetInitialFiles: true,
 				},
 				assertOptions: {
-					hmr: false
-				}
-			}
+					hmr: false,
+				},
+			},
 		];
 
 		const noAppFilesTestCases: ITestCase[] = [
@@ -358,23 +408,23 @@ describe("previewAppController", () => {
 				name: "should transfer correctly default project files",
 				expectedFiles: defaultProjectFiles,
 				assertOptions: {
-					checkInitialFiles: true
-				}
-			}
+					checkInitialFiles: true,
+				},
+			},
 		];
 
 		const testCategories = [
 			{
 				name: "should handle correctly when no files are provided",
-				testCases: noAppFilesTestCases
+				testCases: noAppFilesTestCases,
 			},
 			{
 				name: "should pass the hmr option to the env",
-				testCases: hmrTestCases
-			}
+				testCases: hmrTestCases,
+			},
 		];
 
-		testCategories.forEach(category => {
+		testCategories.forEach((category) => {
 			describe(`${category.name}`, () => {
 				const testCases = category.testCases;
 				execute({ testCases, act: syncFiles });

@@ -3,13 +3,14 @@ import { INetworkConnectivityValidator } from "../declarations";
 import { injector } from "../common/yok";
 import { IErrors } from "../common/declarations";
 
-export class NetworkConnectivityValidator implements INetworkConnectivityValidator {
+export class NetworkConnectivityValidator
+	implements INetworkConnectivityValidator {
 	private static DNS_LOOKUP_URL = "play.nativescript.org";
 	private static NO_INTERNET_ERROR_CODE = "ENOTFOUND";
-	private static NO_INTERNET_ERROR_MESSAGE = "No internet connection. Check your internet settings and try again.";
+	private static NO_INTERNET_ERROR_MESSAGE =
+		"No internet connection. Check your internet settings and try again.";
 
-	constructor(private $errors: IErrors,
-		private $logger: ILogger) { }
+	constructor(private $errors: IErrors, private $logger: ILogger) {}
 
 	public async validate(): Promise<void> {
 		const isConnected = await this.isConnected();
@@ -20,9 +21,12 @@ export class NetworkConnectivityValidator implements INetworkConnectivityValidat
 
 	private isConnected(): Promise<boolean> {
 		return new Promise((resolve, reject) => {
-			dns.lookup(NetworkConnectivityValidator.DNS_LOOKUP_URL, err => {
+			dns.lookup(NetworkConnectivityValidator.DNS_LOOKUP_URL, (err) => {
 				this.$logger.trace(`Error from dns.lookup is ${err}.`);
-				if (err && err.code === NetworkConnectivityValidator.NO_INTERNET_ERROR_CODE) {
+				if (
+					err &&
+					err.code === NetworkConnectivityValidator.NO_INTERNET_ERROR_CODE
+				) {
 					resolve(false);
 				} else {
 					resolve(true);

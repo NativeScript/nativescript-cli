@@ -1,30 +1,39 @@
 import * as net from "net";
-import * as _ from 'lodash';
-import { APPLE_VENDOR_NAME, DeviceTypes, RUNNING_EMULATOR_STATUS, NOT_RUNNING_EMULATOR_STATUS } from "../../../constants";
+import * as _ from "lodash";
+import {
+	APPLE_VENDOR_NAME,
+	DeviceTypes,
+	RUNNING_EMULATOR_STATUS,
+	NOT_RUNNING_EMULATOR_STATUS,
+} from "../../../constants";
 import { DeviceConnectionType } from "../../../../constants";
 import { injector } from "../../../yok";
 
 class IosEmulatorServices implements Mobile.IiOSSimulatorService {
-	constructor(private $logger: ILogger,
+	constructor(
+		private $logger: ILogger,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $iOSSimResolver: Mobile.IiOSSimResolver,
-		private $mobileHelper: Mobile.IMobileHelper) { }
+		private $mobileHelper: Mobile.IMobileHelper
+	) {}
 
-	public async startEmulator(options: Mobile.IStartEmulatorOptions): Promise<Mobile.IStartEmulatorOutput> {
+	public async startEmulator(
+		options: Mobile.IStartEmulatorOptions
+	): Promise<Mobile.IStartEmulatorOutput> {
 		let error = null;
 
 		try {
 			await this.$iOSSimResolver.iOSSim.startSimulator({
 				device: options.imageIdentifier || options.emulatorIdOrName,
 				state: "None",
-				sdkVersion: options.sdk
+				sdkVersion: options.sdk,
 			});
 		} catch (err) {
 			error = err && err.message;
 		}
 
 		return {
-			errors: error ? [error] : []
+			errors: error ? [error] : [],
 		};
 	}
 
@@ -40,15 +49,22 @@ class IosEmulatorServices implements Mobile.IiOSSimulatorService {
 		return "";
 	}
 
-	public async getRunningEmulatorImageIdentifier(emulatorId: string): Promise<string> {
+	public async getRunningEmulatorImageIdentifier(
+		emulatorId: string
+	): Promise<string> {
 		return "";
 	}
 
-	public async postDarwinNotification(notification: string, deviceId: string): Promise<void> {
+	public async postDarwinNotification(
+		notification: string,
+		deviceId: string
+	): Promise<void> {
 		return this.$iOSSimResolver.iOSSim.sendNotification(notification, deviceId);
 	}
 
-	public async connectToPort(data: Mobile.IConnectToPortData): Promise<net.Socket> {
+	public async connectToPort(
+		data: Mobile.IConnectToPortData
+	): Promise<net.Socket> {
 		try {
 			const socket = net.connect(data.port);
 			return socket;
@@ -64,8 +80,8 @@ class IosEmulatorServices implements Mobile.IiOSSimulatorService {
 		const output = await this.tryGetiOSSimDevices();
 		if (output.devices && output.devices.length) {
 			devices = _(output.devices)
-				.map(simDevice => this.convertSimDeviceToDeviceInfo(simDevice))
-				.sortBy(deviceInfo => deviceInfo.version)
+				.map((simDevice) => this.convertSimDeviceToDeviceInfo(simDevice))
+				.sortBy((deviceInfo) => deviceInfo.version)
 				.value();
 		}
 
@@ -80,7 +96,10 @@ class IosEmulatorServices implements Mobile.IiOSSimulatorService {
 		return [];
 	}
 
-	private async tryGetiOSSimDevices(): Promise<{ devices: Mobile.IiSimDevice[], error: string }> {
+	private async tryGetiOSSimDevices(): Promise<{
+		devices: Mobile.IiSimDevice[];
+		error: string;
+	}> {
 		let devices: Mobile.IiSimDevice[] = [];
 		let error: string = null;
 
@@ -93,7 +112,9 @@ class IosEmulatorServices implements Mobile.IiOSSimulatorService {
 		return { devices, error };
 	}
 
-	private convertSimDeviceToDeviceInfo(simDevice: Mobile.IiSimDevice): Mobile.IDeviceInfo {
+	private convertSimDeviceToDeviceInfo(
+		simDevice: Mobile.IiSimDevice
+	): Mobile.IDeviceInfo {
 		return {
 			imageIdentifier: simDevice.id,
 			identifier: simDevice.id,
@@ -101,12 +122,15 @@ class IosEmulatorServices implements Mobile.IiOSSimulatorService {
 			model: simDevice.name,
 			version: simDevice.runtimeVersion,
 			vendor: APPLE_VENDOR_NAME,
-			status: simDevice.state && simDevice.state.toLowerCase() === "booted" ? RUNNING_EMULATOR_STATUS : NOT_RUNNING_EMULATOR_STATUS,
+			status:
+				simDevice.state && simDevice.state.toLowerCase() === "booted"
+					? RUNNING_EMULATOR_STATUS
+					: NOT_RUNNING_EMULATOR_STATUS,
 			errorHelp: null,
 			isTablet: this.$mobileHelper.isiOSTablet(simDevice.name),
 			type: DeviceTypes.Emulator,
 			connectionTypes: [DeviceConnectionType.Local],
-			platform: this.$devicePlatformsConstants.iOS
+			platform: this.$devicePlatformsConstants.iOS,
 		};
 	}
 }

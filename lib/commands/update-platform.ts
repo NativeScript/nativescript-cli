@@ -1,7 +1,14 @@
-import * as _ from 'lodash';
+import * as _ from "lodash";
 import { IProjectData } from "../definitions/project";
-import { IOptions, IPlatformCommandHelper, IPlatformValidationService } from "../declarations";
-import { IPlatformEnvironmentRequirements, ICheckEnvironmentRequirementsInput } from "../definitions/platform";
+import {
+	IOptions,
+	IPlatformCommandHelper,
+	IPlatformValidationService,
+} from "../declarations";
+import {
+	IPlatformEnvironmentRequirements,
+	ICheckEnvironmentRequirementsInput,
+} from "../definitions/platform";
 import { ICommand, ICommandParameter } from "../common/definitions/commands";
 import { IErrors } from "../common/declarations";
 import { injector } from "../common/yok";
@@ -15,7 +22,7 @@ export class UpdatePlatformCommand implements ICommand {
 		private $platformEnvironmentRequirements: IPlatformEnvironmentRequirements,
 		private $platformCommandHelper: IPlatformCommandHelper,
 		private $platformValidationService: IPlatformValidationService,
-		private $projectData: IProjectData,
+		private $projectData: IProjectData
 	) {
 		this.$projectData.initializeProjectData();
 	}
@@ -26,17 +33,25 @@ export class UpdatePlatformCommand implements ICommand {
 
 	public async canExecute(args: string[]): Promise<boolean> {
 		if (!args || args.length === 0) {
-			this.$errors.failWithHelp("No platform specified. Please specify platforms to update.");
+			this.$errors.failWithHelp(
+				"No platform specified. Please specify platforms to update."
+			);
 		}
 
-		_.each(args, arg => {
+		_.each(args, (arg) => {
 			const platform = arg.split("@")[0];
-			this.$platformValidationService.validatePlatform(platform, this.$projectData);
+			this.$platformValidationService.validatePlatform(
+				platform,
+				this.$projectData
+			);
 		});
 
 		for (const arg of args) {
 			const [platform, versionToBeInstalled] = arg.split("@");
-			const checkEnvironmentRequirementsInput: ICheckEnvironmentRequirementsInput = { platform, options: this.$options };
+			const checkEnvironmentRequirementsInput: ICheckEnvironmentRequirementsInput = {
+				platform,
+				options: this.$options,
+			};
 			// If version is not specified, we know the command will install the latest compatible Android runtime.
 			// The latest compatible Android runtime supports Java version, so we do not need to pass it here.
 			// Passing projectDir to the @nativescript/doctor validation will cause it to check the runtime from the current package.json
@@ -46,7 +61,9 @@ export class UpdatePlatformCommand implements ICommand {
 				checkEnvironmentRequirementsInput.runtimeVersion = versionToBeInstalled;
 			}
 
-			await this.$platformEnvironmentRequirements.checkEnvironmentRequirements(checkEnvironmentRequirementsInput);
+			await this.$platformEnvironmentRequirements.checkEnvironmentRequirements(
+				checkEnvironmentRequirementsInput
+			);
 		}
 
 		return true;

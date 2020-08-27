@@ -4,8 +4,7 @@ import { assert } from "chai";
 import { NodePackageManager } from "../lib/node-package-manager";
 import { IInjector } from "../lib/common/definitions/yok";
 
-function createTestInjector(configuration: {
-} = {}): IInjector {
+function createTestInjector(configuration: {} = {}): IInjector {
 	const injector = new Yok();
 	injector.register("hostInfo", {});
 	injector.register("errors", stubs.ErrorsStub);
@@ -15,14 +14,13 @@ function createTestInjector(configuration: {
 	injector.register("fs", stubs.FileSystemStub);
 	injector.register("npm", NodePackageManager);
 	injector.register("pacoteService", {
-		manifest: () => Promise.resolve()
+		manifest: () => Promise.resolve(),
 	});
 
 	return injector;
 }
 
 describe("node-package-manager", () => {
-
 	describe("getPackageNameParts", () => {
 		[
 			{
@@ -32,13 +30,15 @@ describe("node-package-manager", () => {
 				expectedName: "some-template",
 			},
 			{
-				name: "should return both name and version when valid fullName with scope passed",
+				name:
+					"should return both name and version when valid fullName with scope passed",
 				templateFullName: "@nativescript/some-template@1.0.0",
 				expectedVersion: "1.0.0",
 				expectedName: "@nativescript/some-template",
 			},
 			{
-				name: "should return only name when version is not specified and the template is scoped",
+				name:
+					"should return only name when version is not specified and the template is scoped",
 				templateFullName: "@nativescript/some-template",
 				expectedVersion: "",
 				expectedName: "@nativescript/some-template",
@@ -48,12 +48,14 @@ describe("node-package-manager", () => {
 				templateFullName: "some-template",
 				expectedVersion: "",
 				expectedName: "some-template",
-			}
-		].forEach(testCase => {
+			},
+		].forEach((testCase) => {
 			it(testCase.name, async () => {
 				const testInjector = createTestInjector();
 				const npm = testInjector.resolve<NodePackageManager>("npm");
-				const templateNameParts = await npm.getPackageNameParts(testCase.templateFullName);
+				const templateNameParts = await npm.getPackageNameParts(
+					testCase.templateFullName
+				);
 				assert.strictEqual(templateNameParts.name, testCase.expectedName);
 				assert.strictEqual(templateNameParts.version, testCase.expectedVersion);
 			});
@@ -70,21 +72,26 @@ describe("node-package-manager", () => {
 			},
 			{
 				name: "should return only the github url when no version specified",
-				templateName: "https://github.com/NativeScript/template-drawer-navigation-ng#master",
+				templateName:
+					"https://github.com/NativeScript/template-drawer-navigation-ng#master",
 				templateVersion: "",
-				expectedFullName: "https://github.com/NativeScript/template-drawer-navigation-ng#master",
+				expectedFullName:
+					"https://github.com/NativeScript/template-drawer-navigation-ng#master",
 			},
 			{
 				name: "should return only the name when no version specified",
 				templateName: "some-template",
 				templateVersion: "",
 				expectedFullName: "some-template",
-			}
-		].forEach(testCase => {
+			},
+		].forEach((testCase) => {
 			it(testCase.name, async () => {
 				const testInjector = createTestInjector();
 				const npm = testInjector.resolve<NodePackageManager>("npm");
-				const templateFullName = await npm.getPackageFullName({ name: testCase.templateName, version: testCase.templateVersion });
+				const templateFullName = await npm.getPackageFullName({
+					name: testCase.templateName,
+					version: testCase.templateVersion,
+				});
 				assert.strictEqual(templateFullName, testCase.expectedFullName);
 			});
 		});

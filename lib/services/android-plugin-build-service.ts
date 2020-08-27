@@ -1,17 +1,42 @@
 import * as path from "path";
-import { MANIFEST_FILE_NAME, INCLUDE_GRADLE_NAME, ASSETS_DIR, RESOURCES_DIR, AndroidBuildDefaults, PLUGIN_BUILD_DATA_FILENAME, PlatformTypes } from "../constants";
+import {
+	MANIFEST_FILE_NAME,
+	INCLUDE_GRADLE_NAME,
+	ASSETS_DIR,
+	RESOURCES_DIR,
+	AndroidBuildDefaults,
+	PLUGIN_BUILD_DATA_FILENAME,
+	PlatformTypes,
+} from "../constants";
 import { getShortPluginName, hook } from "../common/helpers";
 import { Builder, parseString } from "xml2js";
-import { IRuntimeGradleVersions, INodePackageManager, IAndroidToolsInfo, IWatchIgnoreListService } from "../declarations";
+import {
+	IRuntimeGradleVersions,
+	INodePackageManager,
+	IAndroidToolsInfo,
+	IWatchIgnoreListService,
+} from "../declarations";
 import { IBasePluginData } from "../definitions/plugins";
 import { IPlatformsDataService } from "../definitions/platform";
 import { IProjectDataService } from "../definitions/project";
-import { IAndroidPluginBuildService, IPluginBuildOptions, IBuildAndroidPluginData } from "../definitions/android-plugin-migrator";
-import { IFileSystem, IChildProcess, IHostInfo, IErrors, IHooksService, IFsStats, IStringDictionary } from "../common/declarations";
+import {
+	IAndroidPluginBuildService,
+	IPluginBuildOptions,
+	IBuildAndroidPluginData,
+} from "../definitions/android-plugin-migrator";
+import {
+	IFileSystem,
+	IChildProcess,
+	IHostInfo,
+	IErrors,
+	IHooksService,
+	IFsStats,
+	IStringDictionary,
+} from "../common/declarations";
 import { IFilesHashService } from "../definitions/files-hash-service";
 import { IInjector } from "../common/definitions/yok";
 import { injector } from "../common/yok";
-import * as _ from 'lodash';
+import * as _ from "lodash";
 
 export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 	private get $platformsDataService(): IPlatformsDataService {
@@ -32,12 +57,12 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		public $hooksService: IHooksService,
 		private $injector: IInjector,
 		private $watchIgnoreListService: IWatchIgnoreListService
-	) { }
+	) {}
 
 	private static MANIFEST_ROOT = {
 		$: {
-			"xmlns:android": "http://schemas.android.com/apk/res/android"
-		}
+			"xmlns:android": "http://schemas.android.com/apk/res/android",
+		},
 	};
 
 	private getAndroidSourceDirectories(source: string): Array<string> {
@@ -45,7 +70,10 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		const resultArr: Array<string> = [];
 
 		this.$fs.enumerateFilesInDirectorySync(source, (file, stat) => {
-			if (stat.isDirectory() && _.some(directories, (element) => file.endsWith(element))) {
+			if (
+				stat.isDirectory() &&
+				_.some(directories, (element) => file.endsWith(element))
+			) {
 				resultArr.push(file);
 				return true;
 			}
@@ -59,7 +87,10 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		return this.$fs.exists(manifest) ? manifest : null;
 	}
 
-	private async updateManifestContent(oldManifestContent: string, defaultPackageName: string): Promise<string> {
+	private async updateManifestContent(
+		oldManifestContent: string,
+		defaultPackageName: string
+	): Promise<string> {
 		let xml: any = await this.getXml(oldManifestContent);
 
 		let packageName = defaultPackageName;
@@ -88,7 +119,9 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 	}
 
 	private createManifestContent(packageName: string): string {
-		const newManifest: any = { manifest: AndroidPluginBuildService.MANIFEST_ROOT };
+		const newManifest: any = {
+			manifest: AndroidPluginBuildService.MANIFEST_ROOT,
+		};
 		newManifest.manifest["$"]["package"] = packageName;
 		const xmlBuilder: any = new Builder();
 		const newManifestContent = xmlBuilder.buildObject(newManifest);
@@ -110,23 +143,35 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		return promise;
 	}
 
-	private getIncludeGradleCompileDependenciesScope(includeGradleFileContent: string): Array<string> {
-		const indexOfDependenciesScope = includeGradleFileContent.indexOf("dependencies");
+	private getIncludeGradleCompileDependenciesScope(
+		includeGradleFileContent: string
+	): Array<string> {
+		const indexOfDependenciesScope = includeGradleFileContent.indexOf(
+			"dependencies"
+		);
 		const result: Array<string> = [];
 
 		if (indexOfDependenciesScope === -1) {
 			return result;
 		}
 
-		const indexOfRepositoriesScope = includeGradleFileContent.indexOf("repositories");
+		const indexOfRepositoriesScope = includeGradleFileContent.indexOf(
+			"repositories"
+		);
 
 		let repositoriesScope = "";
 		if (indexOfRepositoriesScope >= 0) {
-			repositoriesScope = this.getScope("repositories", includeGradleFileContent);
+			repositoriesScope = this.getScope(
+				"repositories",
+				includeGradleFileContent
+			);
 			result.push(repositoriesScope);
 		}
 
-		const dependenciesScope = this.getScope("dependencies", includeGradleFileContent);
+		const dependenciesScope = this.getScope(
+			"dependencies",
+			includeGradleFileContent
+		);
 		result.push(dependenciesScope);
 
 		return result;
@@ -178,10 +223,15 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 	public async buildAar(options: IPluginBuildOptions): Promise<boolean> {
 		this.validateOptions(options);
 		const manifestFilePath = this.getManifest(options.platformsAndroidDirPath);
-		const androidSourceDirectories = this.getAndroidSourceDirectories(options.platformsAndroidDirPath);
+		const androidSourceDirectories = this.getAndroidSourceDirectories(
+			options.platformsAndroidDirPath
+		);
 		const shortPluginName = getShortPluginName(options.pluginName);
 		const pluginTempDir = path.join(options.tempPluginDirPath, shortPluginName);
-		const pluginSourceFileHashesInfo = await this.getSourceFilesHashes(options.platformsAndroidDirPath, shortPluginName);
+		const pluginSourceFileHashesInfo = await this.getSourceFilesHashes(
+			options.platformsAndroidDirPath,
+			shortPluginName
+		);
 
 		const shouldBuildAar = await this.shouldBuildAar({
 			manifestFilePath,
@@ -189,18 +239,35 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			pluginTempDir,
 			pluginSourceDir: options.platformsAndroidDirPath,
 			shortPluginName,
-			fileHashesInfo: pluginSourceFileHashesInfo
+			fileHashesInfo: pluginSourceFileHashesInfo,
 		});
 
 		if (shouldBuildAar) {
 			this.cleanPluginDir(pluginTempDir);
 
 			const pluginTempMainSrcDir = path.join(pluginTempDir, "src", "main");
-			await this.updateManifest(manifestFilePath, pluginTempMainSrcDir, shortPluginName);
-			this.copySourceSetDirectories(androidSourceDirectories, pluginTempMainSrcDir);
-			await this.setupGradle(pluginTempDir, options.platformsAndroidDirPath, options.projectDir);
-			await this.buildPlugin({ pluginDir: pluginTempDir, pluginName: options.pluginName, projectDir: options.projectDir });
-			this.$watchIgnoreListService.addFileToIgnoreList(path.join(options.aarOutputDir, `${shortPluginName}.aar`));
+			await this.updateManifest(
+				manifestFilePath,
+				pluginTempMainSrcDir,
+				shortPluginName
+			);
+			this.copySourceSetDirectories(
+				androidSourceDirectories,
+				pluginTempMainSrcDir
+			);
+			await this.setupGradle(
+				pluginTempDir,
+				options.platformsAndroidDirPath,
+				options.projectDir
+			);
+			await this.buildPlugin({
+				pluginDir: pluginTempDir,
+				pluginName: options.pluginName,
+				projectDir: options.projectDir,
+			});
+			this.$watchIgnoreListService.addFileToIgnoreList(
+				path.join(options.aarOutputDir, `${shortPluginName}.aar`)
+			);
 			this.copyAar(shortPluginName, pluginTempDir, options.aarOutputDir);
 			this.writePluginHashInfo(pluginSourceFileHashesInfo, pluginTempDir);
 		}
@@ -214,36 +281,56 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		this.$fs.ensureDirectoryExists(pluginTempDir);
 	}
 
-	private getSourceFilesHashes(pluginTempPlatformsAndroidDir: string, shortPluginName: string): Promise<IStringDictionary> {
-		const pathToAar = path.join(pluginTempPlatformsAndroidDir, `${shortPluginName}.aar`);
-		const pluginNativeDataFiles = this.$fs.enumerateFilesInDirectorySync(pluginTempPlatformsAndroidDir, (file: string, stat: IFsStats) => file !== pathToAar);
+	private getSourceFilesHashes(
+		pluginTempPlatformsAndroidDir: string,
+		shortPluginName: string
+	): Promise<IStringDictionary> {
+		const pathToAar = path.join(
+			pluginTempPlatformsAndroidDir,
+			`${shortPluginName}.aar`
+		);
+		const pluginNativeDataFiles = this.$fs.enumerateFilesInDirectorySync(
+			pluginTempPlatformsAndroidDir,
+			(file: string, stat: IFsStats) => file !== pathToAar
+		);
 		return this.$filesHashService.generateHashes(pluginNativeDataFiles);
 	}
 
-	private writePluginHashInfo(fileHashesInfo: IStringDictionary, pluginTempDir: string): void {
+	private writePluginHashInfo(
+		fileHashesInfo: IStringDictionary,
+		pluginTempDir: string
+	): void {
 		const buildDataFile = this.getPathToPluginBuildDataFile(pluginTempDir);
 		this.$fs.writeJson(buildDataFile, fileHashesInfo);
 	}
 
 	private async shouldBuildAar(opts: {
-		manifestFilePath: string,
-		androidSourceDirectories: string[],
-		pluginTempDir: string,
-		pluginSourceDir: string,
-		shortPluginName: string,
-		fileHashesInfo: IStringDictionary
+		manifestFilePath: string;
+		androidSourceDirectories: string[];
+		pluginTempDir: string;
+		pluginSourceDir: string;
+		shortPluginName: string;
+		fileHashesInfo: IStringDictionary;
 	}): Promise<boolean> {
+		let shouldBuildAar =
+			!!opts.manifestFilePath || !!opts.androidSourceDirectories.length;
 
-		let shouldBuildAar = !!opts.manifestFilePath || !!opts.androidSourceDirectories.length;
-
-		if (shouldBuildAar &&
+		if (
+			shouldBuildAar &&
 			this.$fs.exists(opts.pluginTempDir) &&
-			this.$fs.exists(path.join(opts.pluginSourceDir, `${opts.shortPluginName}.aar`))) {
-
-			const buildDataFile = this.getPathToPluginBuildDataFile(opts.pluginTempDir);
+			this.$fs.exists(
+				path.join(opts.pluginSourceDir, `${opts.shortPluginName}.aar`)
+			)
+		) {
+			const buildDataFile = this.getPathToPluginBuildDataFile(
+				opts.pluginTempDir
+			);
 			if (this.$fs.exists(buildDataFile)) {
 				const oldHashes = this.$fs.readJson(buildDataFile);
-				shouldBuildAar = this.$filesHashService.hasChangesInShasums(oldHashes, opts.fileHashesInfo);
+				shouldBuildAar = this.$filesHashService.hasChangesInShasums(
+					oldHashes,
+					opts.fileHashesInfo
+				);
 			}
 		}
 
@@ -254,7 +341,11 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		return path.join(pluginDir, PLUGIN_BUILD_DATA_FILENAME);
 	}
 
-	private async updateManifest(manifestFilePath: string, pluginTempMainSrcDir: string, shortPluginName: string): Promise<void> {
+	private async updateManifest(
+		manifestFilePath: string,
+		pluginTempMainSrcDir: string,
+		shortPluginName: string
+	): Promise<void> {
 		let updatedManifestContent;
 		this.$fs.ensureDirectoryExists(pluginTempMainSrcDir);
 		const defaultPackageName = "org.nativescript." + shortPluginName;
@@ -263,23 +354,36 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			try {
 				androidManifestContent = this.$fs.readText(manifestFilePath);
 			} catch (err) {
-				this.$errors.fail(`Failed to fs.readFileSync the manifest file located at ${manifestFilePath}. Error is: ${err.toString()}`);
+				this.$errors.fail(
+					`Failed to fs.readFileSync the manifest file located at ${manifestFilePath}. Error is: ${err.toString()}`
+				);
 			}
 
-			updatedManifestContent = await this.updateManifestContent(androidManifestContent, defaultPackageName);
+			updatedManifestContent = await this.updateManifestContent(
+				androidManifestContent,
+				defaultPackageName
+			);
 		} else {
 			updatedManifestContent = this.createManifestContent(defaultPackageName);
 		}
 
-		const pathToTempAndroidManifest = path.join(pluginTempMainSrcDir, MANIFEST_FILE_NAME);
+		const pathToTempAndroidManifest = path.join(
+			pluginTempMainSrcDir,
+			MANIFEST_FILE_NAME
+		);
 		try {
 			this.$fs.writeFile(pathToTempAndroidManifest, updatedManifestContent);
 		} catch (e) {
-			this.$errors.fail(`Failed to write the updated AndroidManifest in the new location - ${pathToTempAndroidManifest}. Error is: ${e.toString()}`);
+			this.$errors.fail(
+				`Failed to write the updated AndroidManifest in the new location - ${pathToTempAndroidManifest}. Error is: ${e.toString()}`
+			);
 		}
 	}
 
-	private copySourceSetDirectories(androidSourceSetDirectories: string[], pluginTempMainSrcDir: string): void {
+	private copySourceSetDirectories(
+		androidSourceSetDirectories: string[],
+		pluginTempMainSrcDir: string
+	): void {
 		for (const dir of androidSourceSetDirectories) {
 			const dirName = path.basename(dir);
 			const destination = path.join(pluginTempMainSrcDir, dirName);
@@ -289,61 +393,118 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		}
 	}
 
-	private async setupGradle(pluginTempDir: string, platformsAndroidDirPath: string, projectDir: string): Promise<void> {
-		const gradleTemplatePath = path.resolve(path.join(__dirname, "../../vendor/gradle-plugin"));
+	private async setupGradle(
+		pluginTempDir: string,
+		platformsAndroidDirPath: string,
+		projectDir: string
+	): Promise<void> {
+		const gradleTemplatePath = path.resolve(
+			path.join(__dirname, "../../vendor/gradle-plugin")
+		);
 		const allGradleTemplateFiles = path.join(gradleTemplatePath, "*");
 		const buildGradlePath = path.join(pluginTempDir, "build.gradle");
 
 		this.$fs.copyFile(allGradleTemplateFiles, pluginTempDir);
 		this.addCompileDependencies(platformsAndroidDirPath, buildGradlePath);
-		const runtimeGradleVersions = await this.getRuntimeGradleVersions(projectDir);
-		this.replaceGradleVersion(pluginTempDir, runtimeGradleVersions.gradleVersion);
-		this.replaceGradleAndroidPluginVersion(buildGradlePath, runtimeGradleVersions.gradleAndroidPluginVersion);
+		const runtimeGradleVersions = await this.getRuntimeGradleVersions(
+			projectDir
+		);
+		this.replaceGradleVersion(
+			pluginTempDir,
+			runtimeGradleVersions.gradleVersion
+		);
+		this.replaceGradleAndroidPluginVersion(
+			buildGradlePath,
+			runtimeGradleVersions.gradleAndroidPluginVersion
+		);
 	}
 
-	private async getRuntimeGradleVersions(projectDir: string): Promise<IRuntimeGradleVersions> {
+	private async getRuntimeGradleVersions(
+		projectDir: string
+	): Promise<IRuntimeGradleVersions> {
 		let runtimeGradleVersions: IRuntimeGradleVersions = null;
 		if (projectDir) {
 			const projectData = this.$projectDataService.getProjectData(projectDir);
-			const platformData = this.$platformsDataService.getPlatformData(this.$devicePlatformsConstants.Android, projectData);
-			const projectRuntimeVersion = platformData.platformProjectService.getFrameworkVersion(projectData);
-			this.$logger.trace(`Got gradle versions ${JSON.stringify(runtimeGradleVersions)} from runtime v${projectRuntimeVersion}`);
+			const platformData = this.$platformsDataService.getPlatformData(
+				this.$devicePlatformsConstants.Android,
+				projectData
+			);
+			const projectRuntimeVersion = platformData.platformProjectService.getFrameworkVersion(
+				projectData
+			);
+			this.$logger.trace(
+				`Got gradle versions ${JSON.stringify(
+					runtimeGradleVersions
+				)} from runtime v${projectRuntimeVersion}`
+			);
 		}
 
 		if (!runtimeGradleVersions) {
-			const runtimePackage = this.$projectDataService.getRuntimePackage(projectDir, PlatformTypes.android);
-			const latestRuntimeVersion = await this.getLatestRuntimeVersion(runtimePackage);
-			runtimeGradleVersions = await this.getGradleVersions(latestRuntimeVersion, runtimePackage);
-			this.$logger.trace(`Got gradle versions ${JSON.stringify(runtimeGradleVersions)} from the latest runtime v${latestRuntimeVersion}`);
+			const runtimePackage = this.$projectDataService.getRuntimePackage(
+				projectDir,
+				PlatformTypes.android
+			);
+			const latestRuntimeVersion = await this.getLatestRuntimeVersion(
+				runtimePackage
+			);
+			runtimeGradleVersions = await this.getGradleVersions(
+				latestRuntimeVersion,
+				runtimePackage
+			);
+			this.$logger.trace(
+				`Got gradle versions ${JSON.stringify(
+					runtimeGradleVersions
+				)} from the latest runtime v${latestRuntimeVersion}`
+			);
 		}
 
 		return runtimeGradleVersions || {};
 	}
 
-	private async getLatestRuntimeVersion(runtimePackage: IBasePluginData): Promise<string> {
+	private async getLatestRuntimeVersion(
+		runtimePackage: IBasePluginData
+	): Promise<string> {
 		let runtimeVersion: string = null;
 
 		try {
-			const result = await this.$packageManager.view(runtimePackage.name, { "dist-tags": true });
+			const result = await this.$packageManager.view(runtimePackage.name, {
+				"dist-tags": true,
+			});
 			runtimeVersion = result.latest;
 		} catch (err) {
-			this.$logger.trace(`Error while getting latest android runtime version from view command: ${err}`);
-			const registryData = await this.$packageManager.getRegistryPackageData(runtimePackage.name);
+			this.$logger.trace(
+				`Error while getting latest android runtime version from view command: ${err}`
+			);
+			const registryData = await this.$packageManager.getRegistryPackageData(
+				runtimePackage.name
+			);
 			runtimeVersion = registryData["dist-tags"].latest;
 		}
 
 		return runtimeVersion;
 	}
 
-	private async getGradleVersions(runtimeVersion: string, runtimePackage: IBasePluginData): Promise<IRuntimeGradleVersions> {
-		let runtimeGradleVersions: { gradle: { version: string, android: string } } = null;
+	private async getGradleVersions(
+		runtimeVersion: string,
+		runtimePackage: IBasePluginData
+	): Promise<IRuntimeGradleVersions> {
+		let runtimeGradleVersions: {
+			gradle: { version: string; android: string };
+		} = null;
 
 		try {
-			const output = await this.$packageManager.view(`${runtimePackage.name}@${runtimeVersion}`, { gradle: true });
+			const output = await this.$packageManager.view(
+				`${runtimePackage.name}@${runtimeVersion}`,
+				{ gradle: true }
+			);
 			runtimeGradleVersions = { gradle: output };
 		} catch (err) {
-			this.$logger.trace(`Error while getting gradle data for android runtime from view command: ${err}`);
-			const registryData = await this.$packageManager.getRegistryPackageData(runtimePackage.name);
+			this.$logger.trace(
+				`Error while getting gradle data for android runtime from view command: ${err}`
+			);
+			const registryData = await this.$packageManager.getRegistryPackageData(
+				runtimePackage.name
+			);
 			runtimeGradleVersions = registryData.versions[runtimeVersion];
 		}
 
@@ -351,10 +512,15 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		return result;
 	}
 
-	private getGradleVersionsCore(packageData: { gradle: { version: string, android: string } }): IRuntimeGradleVersions {
+	private getGradleVersionsCore(packageData: {
+		gradle: { version: string; android: string };
+	}): IRuntimeGradleVersions {
 		const packageJsonGradle = packageData && packageData.gradle;
 		let runtimeVersions: IRuntimeGradleVersions = null;
-		if (packageJsonGradle && (packageJsonGradle.version || packageJsonGradle.android)) {
+		if (
+			packageJsonGradle &&
+			(packageJsonGradle.version || packageJsonGradle.android)
+		) {
 			runtimeVersions = {};
 			runtimeVersions.gradleVersion = packageJsonGradle.version;
 			runtimeVersions.gradleAndroidPluginVersion = packageJsonGradle.android;
@@ -366,48 +532,96 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 	private replaceGradleVersion(pluginTempDir: string, version: string): void {
 		const gradleVersion = version || AndroidBuildDefaults.GradleVersion;
 		const gradleVersionPlaceholder = "{{runtimeGradleVersion}}";
-		const gradleWrapperPropertiesPath = path.join(pluginTempDir, "gradle", "wrapper", "gradle-wrapper.properties");
+		const gradleWrapperPropertiesPath = path.join(
+			pluginTempDir,
+			"gradle",
+			"wrapper",
+			"gradle-wrapper.properties"
+		);
 
-		this.replaceFileContent(gradleWrapperPropertiesPath, gradleVersionPlaceholder, gradleVersion);
+		this.replaceFileContent(
+			gradleWrapperPropertiesPath,
+			gradleVersionPlaceholder,
+			gradleVersion
+		);
 	}
 
-	private replaceGradleAndroidPluginVersion(buildGradlePath: string, version: string): void {
-		const gradleAndroidPluginVersionPlaceholder = "{{runtimeAndroidPluginVersion}}";
-		const gradleAndroidPluginVersion = version || AndroidBuildDefaults.GradleAndroidPluginVersion;
+	private replaceGradleAndroidPluginVersion(
+		buildGradlePath: string,
+		version: string
+	): void {
+		const gradleAndroidPluginVersionPlaceholder =
+			"{{runtimeAndroidPluginVersion}}";
+		const gradleAndroidPluginVersion =
+			version || AndroidBuildDefaults.GradleAndroidPluginVersion;
 
-		this.replaceFileContent(buildGradlePath, gradleAndroidPluginVersionPlaceholder, gradleAndroidPluginVersion);
+		this.replaceFileContent(
+			buildGradlePath,
+			gradleAndroidPluginVersionPlaceholder,
+			gradleAndroidPluginVersion
+		);
 	}
 
-	private replaceFileContent(filePath: string, content: string, replacement: string) {
+	private replaceFileContent(
+		filePath: string,
+		content: string,
+		replacement: string
+	) {
 		const fileContent = this.$fs.readText(filePath);
 		const contentRegex = new RegExp(content, "g");
 		const replacedFileContent = fileContent.replace(contentRegex, replacement);
 		this.$fs.writeFile(filePath, replacedFileContent);
 	}
 
-	private addCompileDependencies(platformsAndroidDirPath: string, buildGradlePath: string): void {
-		const includeGradlePath = path.join(platformsAndroidDirPath, INCLUDE_GRADLE_NAME);
+	private addCompileDependencies(
+		platformsAndroidDirPath: string,
+		buildGradlePath: string
+	): void {
+		const includeGradlePath = path.join(
+			platformsAndroidDirPath,
+			INCLUDE_GRADLE_NAME
+		);
 		if (this.$fs.exists(includeGradlePath)) {
 			const includeGradleContent = this.$fs.readText(includeGradlePath);
-			const compileDependencies = this.getIncludeGradleCompileDependenciesScope(includeGradleContent);
+			const compileDependencies = this.getIncludeGradleCompileDependenciesScope(
+				includeGradleContent
+			);
 
 			if (compileDependencies.length) {
-				this.$fs.appendFile(buildGradlePath, "\n" + compileDependencies.join("\n"));
+				this.$fs.appendFile(
+					buildGradlePath,
+					"\n" + compileDependencies.join("\n")
+				);
 			}
 		}
 	}
 
-	private copyAar(shortPluginName: string, pluginTempDir: string, aarOutputDir: string): void {
+	private copyAar(
+		shortPluginName: string,
+		pluginTempDir: string,
+		aarOutputDir: string
+	): void {
 		const finalAarName = `${shortPluginName}-release.aar`;
-		const pathToBuiltAar = path.join(pluginTempDir, "build", "outputs", "aar", finalAarName);
+		const pathToBuiltAar = path.join(
+			pluginTempDir,
+			"build",
+			"outputs",
+			"aar",
+			finalAarName
+		);
 
 		if (this.$fs.exists(pathToBuiltAar)) {
 			try {
 				if (aarOutputDir) {
-					this.$fs.copyFile(pathToBuiltAar, path.join(aarOutputDir, `${shortPluginName}.aar`));
+					this.$fs.copyFile(
+						pathToBuiltAar,
+						path.join(aarOutputDir, `${shortPluginName}.aar`)
+					);
 				}
 			} catch (e) {
-				this.$errors.fail(`Failed to copy built aar to destination. ${e.message}`);
+				this.$errors.fail(
+					`Failed to copy built aar to destination. ${e.message}`
+				);
 			}
 		} else {
 			this.$errors.fail(`No built aar found at ${pathToBuiltAar}`);
@@ -421,26 +635,44 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 	public migrateIncludeGradle(options: IPluginBuildOptions): boolean {
 		this.validatePlatformsAndroidDirPathOption(options);
 
-		const includeGradleFilePath = path.join(options.platformsAndroidDirPath, INCLUDE_GRADLE_NAME);
+		const includeGradleFilePath = path.join(
+			options.platformsAndroidDirPath,
+			INCLUDE_GRADLE_NAME
+		);
 
 		if (this.$fs.exists(includeGradleFilePath)) {
 			let includeGradleFileContent: string;
 			try {
-				includeGradleFileContent = this.$fs.readFile(includeGradleFilePath).toString();
+				includeGradleFileContent = this.$fs
+					.readFile(includeGradleFilePath)
+					.toString();
 			} catch (err) {
-				this.$errors.fail(`Failed to fs.readFileSync the include.gradle file located at ${includeGradleFilePath}. Error is: ${err.toString()}`);
+				this.$errors.fail(
+					`Failed to fs.readFileSync the include.gradle file located at ${includeGradleFilePath}. Error is: ${err.toString()}`
+				);
 			}
 
-			const productFlavorsScope = this.getScope("productFlavors", includeGradleFileContent);
+			const productFlavorsScope = this.getScope(
+				"productFlavors",
+				includeGradleFileContent
+			);
 			if (productFlavorsScope) {
 				try {
-					const newIncludeGradleFileContent = includeGradleFileContent.replace(productFlavorsScope, "");
-					this.$fs.writeFile(includeGradleFilePath, newIncludeGradleFileContent);
+					const newIncludeGradleFileContent = includeGradleFileContent.replace(
+						productFlavorsScope,
+						""
+					);
+					this.$fs.writeFile(
+						includeGradleFilePath,
+						newIncludeGradleFileContent
+					);
 
 					return true;
 				} catch (e) {
-					this.$errors.fail(`Failed to write the updated include.gradle ` +
-						`in - ${includeGradleFilePath}. Error is: ${e.toString()}`);
+					this.$errors.fail(
+						`Failed to write the updated include.gradle ` +
+							`in - ${includeGradleFilePath}. Error is: ${e.toString()}`
+					);
 				}
 			}
 		}
@@ -449,10 +681,18 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 	}
 
 	@hook("buildAndroidPlugin")
-	private async buildPlugin(pluginBuildSettings: IBuildAndroidPluginData): Promise<void> {
+	private async buildPlugin(
+		pluginBuildSettings: IBuildAndroidPluginData
+	): Promise<void> {
 		if (!pluginBuildSettings.androidToolsInfo) {
-			this.$androidToolsInfo.validateInfo({ showWarningsAsErrors: true, validateTargetSdk: true, projectDir: pluginBuildSettings.projectDir });
-			pluginBuildSettings.androidToolsInfo = this.$androidToolsInfo.getToolsInfo({ projectDir: pluginBuildSettings.projectDir });
+			this.$androidToolsInfo.validateInfo({
+				showWarningsAsErrors: true,
+				validateTargetSdk: true,
+				projectDir: pluginBuildSettings.projectDir,
+			});
+			pluginBuildSettings.androidToolsInfo = this.$androidToolsInfo.getToolsInfo(
+				{ projectDir: pluginBuildSettings.projectDir }
+			);
 		}
 
 		const gradlew = this.$hostInfo.isWindows ? "gradlew.bat" : "./gradlew";
@@ -462,7 +702,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			pluginBuildSettings.pluginDir,
 			"assembleRelease",
 			`-PcompileSdk=android-${pluginBuildSettings.androidToolsInfo.compileSdkVersion}`,
-			`-PbuildToolsVersion=${pluginBuildSettings.androidToolsInfo.buildToolsVersion}`
+			`-PbuildToolsVersion=${pluginBuildSettings.androidToolsInfo.buildToolsVersion}`,
 		];
 
 		if (this.$logger.getLevel() === "INFO") {
@@ -470,15 +710,22 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		}
 
 		try {
-			await this.$childProcess.spawnFromEvent(gradlew, localArgs, "close", { cwd: pluginBuildSettings.pluginDir, stdio: "inherit" });
+			await this.$childProcess.spawnFromEvent(gradlew, localArgs, "close", {
+				cwd: pluginBuildSettings.pluginDir,
+				stdio: "inherit",
+			});
 		} catch (err) {
-			this.$errors.fail(`Failed to build plugin ${pluginBuildSettings.pluginName} : \n${err}`);
+			this.$errors.fail(
+				`Failed to build plugin ${pluginBuildSettings.pluginName} : \n${err}`
+			);
 		}
 	}
 
 	private validateOptions(options: IPluginBuildOptions): void {
 		if (!options) {
-			this.$errors.fail("Android plugin cannot be built without passing an 'options' object.");
+			this.$errors.fail(
+				"Android plugin cannot be built without passing an 'options' object."
+			);
 		}
 
 		if (!options.pluginName) {
@@ -486,26 +733,35 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		}
 
 		if (!options.aarOutputDir) {
-			this.$logger.info("No aarOutputDir provided, defaulting to the build outputs directory of the plugin");
+			this.$logger.info(
+				"No aarOutputDir provided, defaulting to the build outputs directory of the plugin"
+			);
 		}
 
 		if (!options.tempPluginDirPath) {
-			this.$errors.fail("Android plugin cannot be built without passing the path to a directory where the temporary project should be built.");
+			this.$errors.fail(
+				"Android plugin cannot be built without passing the path to a directory where the temporary project should be built."
+			);
 		}
 
 		this.validatePlatformsAndroidDirPathOption(options);
 	}
 
-	private validatePlatformsAndroidDirPathOption(options: IPluginBuildOptions): void {
+	private validatePlatformsAndroidDirPathOption(
+		options: IPluginBuildOptions
+	): void {
 		if (!options) {
-			this.$errors.fail("Android plugin cannot be built without passing an 'options' object.");
+			this.$errors.fail(
+				"Android plugin cannot be built without passing an 'options' object."
+			);
 		}
 
 		if (!options.platformsAndroidDirPath) {
-			this.$errors.fail("Android plugin cannot be built without passing the path to the platforms/android dir.");
+			this.$errors.fail(
+				"Android plugin cannot be built without passing the path to the platforms/android dir."
+			);
 		}
 	}
-
 }
 
 injector.register("androidPluginBuildService", AndroidPluginBuildService);

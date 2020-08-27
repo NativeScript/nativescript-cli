@@ -3,7 +3,12 @@ import { Configurations } from "../common/constants";
 import { EventEmitter } from "events";
 import { attachAwaitDetach } from "../common/helpers";
 import { IProjectDataService } from "../definitions/project";
-import { IBuildController, IBuildArtefactsService, IBuildInfoFileService, IBuildData } from "../definitions/build";
+import {
+	IBuildController,
+	IBuildArtefactsService,
+	IBuildInfoFileService,
+	IBuildData,
+} from "../definitions/build";
 import { IPlatformsDataService } from "../definitions/platform";
 import { IAnalyticsService, IFileSystem } from "../common/declarations";
 import { IInjector } from "../common/definitions/yok";
@@ -20,8 +25,10 @@ export class BuildController extends EventEmitter implements IBuildController {
 		private $mobileHelper: Mobile.IMobileHelper,
 		private $projectDataService: IProjectDataService,
 		private $projectChangesService: IProjectChangesService,
-		private $prepareController: IPrepareController,
-	) { super(); }
+		private $prepareController: IPrepareController
+	) {
+		super();
+	}
 
 	private get $platformsDataService(): IPlatformsDataService {
 		return this.$injector.resolve("platformsDataService");
@@ -38,40 +45,76 @@ export class BuildController extends EventEmitter implements IBuildController {
 		this.$logger.info("Building project...");
 
 		const platform = buildData.platform.toLowerCase();
-		const projectData = this.$projectDataService.getProjectData(buildData.projectDir);
-		const platformData = this.$platformsDataService.getPlatformData(platform, projectData);
+		const projectData = this.$projectDataService.getProjectData(
+			buildData.projectDir
+		);
+		const platformData = this.$platformsDataService.getPlatformData(
+			platform,
+			projectData
+		);
 
 		const action = constants.TrackActionNames.Build;
-		const isForDevice = this.$mobileHelper.isAndroidPlatform(platform) ? null : buildData && buildData.buildForDevice;
+		const isForDevice = this.$mobileHelper.isAndroidPlatform(platform)
+			? null
+			: buildData && buildData.buildForDevice;
 
 		await this.$analyticsService.trackEventActionInGoogleAnalytics({
 			action,
 			isForDevice,
 			platform,
 			projectDir: projectData.projectDir,
-			additionalData: `${buildData.release ? Configurations.Release : Configurations.Debug}_${buildData.clean ? constants.BuildStates.Clean : constants.BuildStates.Incremental}`
+			additionalData: `${
+				buildData.release ? Configurations.Release : Configurations.Debug
+			}_${
+				buildData.clean
+					? constants.BuildStates.Clean
+					: constants.BuildStates.Incremental
+			}`,
 		});
 
 		if (buildData.clean) {
-			await platformData.platformProjectService.cleanProject(platformData.projectRoot);
+			await platformData.platformProjectService.cleanProject(
+				platformData.projectRoot
+			);
 		}
 
 		const handler = (data: any) => {
 			this.emit(constants.BUILD_OUTPUT_EVENT_NAME, data);
-			this.$logger.info(data.data.toString(), { [constants.LoggerConfigData.skipNewLine]: true });
+			this.$logger.info(data.data.toString(), {
+				[constants.LoggerConfigData.skipNewLine]: true,
+			});
 		};
 
-		await attachAwaitDetach(constants.BUILD_OUTPUT_EVENT_NAME, platformData.platformProjectService, handler, platformData.platformProjectService.buildProject(platformData.projectRoot, projectData, buildData));
+		await attachAwaitDetach(
+			constants.BUILD_OUTPUT_EVENT_NAME,
+			platformData.platformProjectService,
+			handler,
+			platformData.platformProjectService.buildProject(
+				platformData.projectRoot,
+				projectData,
+				buildData
+			)
+		);
 
 		const buildInfoFileDir = platformData.getBuildOutputPath(buildData);
-		this.$buildInfoFileService.saveLocalBuildInfo(platformData, buildInfoFileDir);
+		this.$buildInfoFileService.saveLocalBuildInfo(
+			platformData,
+			buildInfoFileDir
+		);
 
 		this.$logger.info("Project successfully built.");
 
-		const result = await this.$buildArtefactsService.getLatestAppPackagePath(platformData, buildData);
+		const result = await this.$buildArtefactsService.getLatestAppPackagePath(
+			platformData,
+			buildData
+		);
 
 		if (buildData.copyTo) {
-			this.$buildArtefactsService.copyLatestAppPackage(buildData.copyTo, platformData, buildData);
+			this.$buildArtefactsService.copyLatestAppPackage(
+				buildData.copyTo,
+				platformData,
+				buildData
+			);
 		} else {
 			this.$logger.info(`The build result is located at: ${result}`);
 		}
@@ -91,10 +134,22 @@ export class BuildController extends EventEmitter implements IBuildController {
 	}
 
 	public async shouldBuild(buildData: IBuildData): Promise<boolean> {
-		const projectData = this.$projectDataService.getProjectData(buildData.projectDir);
-		const platformData = this.$platformsDataService.getPlatformData(buildData.platform, projectData);
-		const outputPath = buildData.outputPath || platformData.getBuildOutputPath(buildData);
-		const changesInfo = this.$projectChangesService.currentChanges || await this.$projectChangesService.checkForChanges(platformData, projectData, buildData);
+		const projectData = this.$projectDataService.getProjectData(
+			buildData.projectDir
+		);
+		const platformData = this.$platformsDataService.getPlatformData(
+			buildData.platform,
+			projectData
+		);
+		const outputPath =
+			buildData.outputPath || platformData.getBuildOutputPath(buildData);
+		const changesInfo =
+			this.$projectChangesService.currentChanges ||
+			(await this.$projectChangesService.checkForChanges(
+				platformData,
+				projectData,
+				buildData
+			));
 
 		if (changesInfo.changesRequireBuild) {
 			return true;
@@ -104,14 +159,24 @@ export class BuildController extends EventEmitter implements IBuildController {
 			return true;
 		}
 
-		const validBuildOutputData = platformData.getValidBuildOutputData(buildData);
-		const packages = this.$buildArtefactsService.getAllAppPackages(outputPath, validBuildOutputData);
+		const validBuildOutputData = platformData.getValidBuildOutputData(
+			buildData
+		);
+		const packages = this.$buildArtefactsService.getAllAppPackages(
+			outputPath,
+			validBuildOutputData
+		);
 		if (packages.length === 0) {
 			return true;
 		}
 
-		const prepareInfo = this.$projectChangesService.getPrepareInfo(platformData);
-		const buildInfo = this.$buildInfoFileService.getLocalBuildInfo(platformData, buildData);
+		const prepareInfo = this.$projectChangesService.getPrepareInfo(
+			platformData
+		);
+		const buildInfo = this.$buildInfoFileService.getLocalBuildInfo(
+			platformData,
+			buildData
+		);
 		if (!prepareInfo || !buildInfo) {
 			return true;
 		}

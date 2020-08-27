@@ -5,11 +5,11 @@ import { ICliGlobal } from "../lib/common/definitions/cli-global";
 shelljs.config.silent = true;
 shelljs.config.fatal = true;
 
-const cliGlobal = <ICliGlobal><unknown>global;
+const cliGlobal = <ICliGlobal>(<unknown>global);
 
-import * as _ from 'lodash';
+import * as _ from "lodash";
 cliGlobal._ = _;
-import { injector } from '../lib/common/yok';
+import { injector } from "../lib/common/yok";
 cliGlobal.$injector = injector;
 
 // Requiring colors will modify the prototype of String
@@ -22,7 +22,7 @@ use(require("chai-as-promised"));
 cliGlobal.$injector.register("analyticsService", {
 	trackException: async (exception: any, message: string): Promise<void> => {
 		// Intentionally left blank.
-	}
+	},
 });
 
 import { PerformanceService, LoggerStub } from "./stubs";

@@ -1,13 +1,18 @@
 import * as path from "path";
 import * as shelljs from "shelljs";
 import * as os from "os";
-import * as _ from 'lodash';
-import { IConfiguration, IStaticConfig, IAndroidToolsInfo } from "./declarations";
+import * as _ from "lodash";
+import {
+	IConfiguration,
+	IStaticConfig,
+	IAndroidToolsInfo,
+} from "./declarations";
 import { IFileSystem, IChildProcess, IHostInfo } from "./common/declarations";
 import { IInjector } from "./common/definitions/yok";
 import { injector } from "./common/yok";
 
-export class Configuration implements IConfiguration { // User specific config
+export class Configuration implements IConfiguration {
+	// User specific config
 	DEBUG = false;
 	ANDROID_DEBUG_UI: string = null;
 	USE_POD_SANDBOX: boolean = false;
@@ -49,8 +54,7 @@ export class StaticConfig implements IStaticConfig {
 	}
 	public RESOURCE_DIR_PATH = path.join(__dirname, "..", "resources");
 
-	constructor(private $injector: IInjector) {
-	}
+	constructor(private $injector: IInjector) {}
 
 	public get disableCommandHooks() {
 		// Never set this to false because it will duplicate execution of hooks realized through method decoration
@@ -61,13 +65,16 @@ export class StaticConfig implements IStaticConfig {
 		let linkToSysRequirements: string;
 		switch (process.platform) {
 			case "linux":
-				linkToSysRequirements = "http://docs.nativescript.org/setup/ns-cli-setup/ns-setup-linux.html#system-requirements";
+				linkToSysRequirements =
+					"http://docs.nativescript.org/setup/ns-cli-setup/ns-setup-linux.html#system-requirements";
 				break;
 			case "win32":
-				linkToSysRequirements = "http://docs.nativescript.org/setup/ns-cli-setup/ns-setup-win.html#system-requirements";
+				linkToSysRequirements =
+					"http://docs.nativescript.org/setup/ns-cli-setup/ns-setup-win.html#system-requirements";
 				break;
 			case "darwin":
-				linkToSysRequirements = "http://docs.nativescript.org/setup/ns-cli-setup/ns-setup-os-x.html#system-requirements";
+				linkToSysRequirements =
+					"http://docs.nativescript.org/setup/ns-cli-setup/ns-setup-os-x.html#system-requirements";
 				break;
 			default:
 				linkToSysRequirements = "";
@@ -93,8 +100,12 @@ export class StaticConfig implements IStaticConfig {
 	private _adbFilePath: string = null;
 	public async getAdbFilePath(): Promise<string> {
 		if (!this._adbFilePath) {
-			const androidToolsInfo: IAndroidToolsInfo = this.$injector.resolve("androidToolsInfo");
-			this._adbFilePath = await androidToolsInfo.getPathToAdbFromAndroidHome() || await this.getAdbFilePathCore();
+			const androidToolsInfo: IAndroidToolsInfo = this.$injector.resolve(
+				"androidToolsInfo"
+			);
+			this._adbFilePath =
+				(await androidToolsInfo.getPathToAdbFromAndroidHome()) ||
+				(await this.getAdbFilePathCore());
 		}
 
 		return this._adbFilePath;
@@ -127,11 +138,19 @@ export class StaticConfig implements IStaticConfig {
 	}
 
 	private async getAdbFilePathCore(): Promise<string> {
-		const $childProcess: IChildProcess = this.$injector.resolve("$childProcess");
+		const $childProcess: IChildProcess = this.$injector.resolve(
+			"$childProcess"
+		);
 
 		try {
 			// Do NOT use the adb wrapper because it will end blow up with Segmentation fault because the wrapper uses this method!!!
-			const proc = await $childProcess.spawnFromEvent("adb", ["version"], "exit", undefined, { throwError: false });
+			const proc = await $childProcess.spawnFromEvent(
+				"adb",
+				["version"],
+				"exit",
+				undefined,
+				{ throwError: false }
+			);
 
 			if (proc.stderr) {
 				return await this.spawnPrivateAdb();
@@ -162,7 +181,14 @@ export class StaticConfig implements IStaticConfig {
 			$hostInfo: IHostInfo = this.$injector.resolve("$hostInfo");
 
 		// prepare the directory to host our copy of adb
-		const defaultAdbDirPath = path.join(__dirname, "common", "resources", "platform-tools", "android", process.platform);
+		const defaultAdbDirPath = path.join(
+			__dirname,
+			"common",
+			"resources",
+			"platform-tools",
+			"android",
+			process.platform
+		);
 		const pathToPackageJson = path.join(__dirname, "..", "package.json");
 		const nsCliVersion = require(pathToPackageJson).version;
 		const tmpDir = path.join(os.tmpdir(), `nativescript-cli-${nsCliVersion}`);

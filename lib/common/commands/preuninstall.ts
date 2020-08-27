@@ -1,9 +1,16 @@
 ﻿import * as path from "path";
 import { doesCurrentNpmCommandMatch, isInteractive } from "../helpers";
-import { TrackActionNames, AnalyticsEventLabelDelimiter } from "../../constants";
+import {
+	TrackActionNames,
+	AnalyticsEventLabelDelimiter,
+} from "../../constants";
 import { IPackageInstallationManager } from "../../declarations";
 import { ICommand, ICommandParameter } from "../definitions/commands";
-import { IAnalyticsService, IFileSystem, ISettingsService } from "../declarations";
+import {
+	IAnalyticsService,
+	IFileSystem,
+	ISettingsService,
+} from "../declarations";
 import { injector } from "../yok";
 import { IExtensibilityService } from "../definitions/extensibility";
 
@@ -13,26 +20,37 @@ export class PreUninstallCommand implements ICommand {
 
 	public allowedParameters: ICommandParameter[] = [];
 
-	constructor(private $analyticsService: IAnalyticsService,
+	constructor(
+		private $analyticsService: IAnalyticsService,
 		private $extensibilityService: IExtensibilityService,
 		private $fs: IFileSystem,
 		// private $opener: IOpener,
 		private $packageInstallationManager: IPackageInstallationManager,
-		private $settingsService: ISettingsService) { }
+		private $settingsService: ISettingsService
+	) {}
 
 	public async execute(args: string[]): Promise<void> {
-		const isIntentionalUninstall = doesCurrentNpmCommandMatch([/^uninstall$/, /^remove$/, /^rm$/, /^r$/, /^un$/, /^unlink$/]);
+		const isIntentionalUninstall = doesCurrentNpmCommandMatch([
+			/^uninstall$/,
+			/^remove$/,
+			/^rm$/,
+			/^r$/,
+			/^un$/,
+			/^unlink$/,
+		]);
 
 		await this.$analyticsService.trackEventActionInGoogleAnalytics({
 			action: TrackActionNames.UninstallCLI,
-			additionalData: `isIntentionalUninstall${AnalyticsEventLabelDelimiter}${isIntentionalUninstall}${AnalyticsEventLabelDelimiter}isInteractive${AnalyticsEventLabelDelimiter}${!!isInteractive()}`
+			additionalData: `isIntentionalUninstall${AnalyticsEventLabelDelimiter}${isIntentionalUninstall}${AnalyticsEventLabelDelimiter}isInteractive${AnalyticsEventLabelDelimiter}${!!isInteractive()}`,
 		});
 
 		if (isIntentionalUninstall) {
 			await this.handleIntentionalUninstall();
 		}
 
-		this.$fs.deleteFile(path.join(this.$settingsService.getProfileDir(), "KillSwitches", "cli"));
+		this.$fs.deleteFile(
+			path.join(this.$settingsService.getProfileDir(), "KillSwitches", "cli")
+		);
 		await this.$analyticsService.finishTracking();
 	}
 

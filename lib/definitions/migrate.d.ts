@@ -23,6 +23,12 @@ interface IMigrationDependency extends IDependency {
 	warning?: string;
 	verifiedVersion?: string;
 	shouldAddIfMissing?: boolean;
-	shouldMigrateAction?: (projectData: IProjectData, allowInvalidVersions: boolean) => Promise<boolean>;
-	migrateAction?: (projectData: IProjectData, migrationBackupDirPath: string) => Promise<IMigrationDependency[]>;
+	shouldMigrateAction?: (
+		projectData: IProjectData,
+		allowInvalidVersions: boolean
+	) => Promise<boolean>;
+	migrateAction?: (
+		projectData: IProjectData,
+		migrationBackupDirPath: string
+	) => Promise<IMigrationDependency[]>;
 }

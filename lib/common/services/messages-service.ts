@@ -1,7 +1,7 @@
 import * as util from "util";
 import { join } from "path";
 import { IMessagesService, IFileSystem } from "../declarations";
-import * as _ from 'lodash';
+import * as _ from "lodash";
 import { injector } from "../yok";
 
 export class MessagesService implements IMessagesService {
@@ -13,7 +13,10 @@ export class MessagesService implements IMessagesService {
 	}
 
 	private get messageJsonFilesContents(): any[] {
-		if (!this._messageJsonFilesContentsCache || !this._messageJsonFilesContentsCache.length) {
+		if (
+			!this._messageJsonFilesContentsCache ||
+			!this._messageJsonFilesContentsCache.length
+		) {
 			this.refreshMessageJsonContentsCache();
 		}
 
@@ -33,7 +36,9 @@ export class MessagesService implements IMessagesService {
 	}
 
 	public set pathsToMessageJsonFiles(pathsToMessageJsonFiles: string[]) {
-		this._pathsToMessageJsonFiles = pathsToMessageJsonFiles.concat(this.pathToDefaultMessageJson);
+		this._pathsToMessageJsonFiles = pathsToMessageJsonFiles.concat(
+			this.pathToDefaultMessageJson
+		);
 		this.refreshMessageJsonContentsCache();
 	}
 
@@ -43,10 +48,17 @@ export class MessagesService implements IMessagesService {
 		const keys = id.split(".");
 		let result = this.getFormatedMessage.apply(this, [id].concat(argsArray));
 
-		_.each(this.messageJsonFilesContents, jsonFileContents => {
-			const messageValue = this.getMessageFromJsonRecursive(keys, jsonFileContents, 0);
+		_.each(this.messageJsonFilesContents, (jsonFileContents) => {
+			const messageValue = this.getMessageFromJsonRecursive(
+				keys,
+				jsonFileContents,
+				0
+			);
 			if (messageValue) {
-				result = this.getFormatedMessage.apply(this, [messageValue].concat(argsArray));
+				result = this.getFormatedMessage.apply(
+					this,
+					[messageValue].concat(argsArray)
+				);
 				return false;
 			}
 		});
@@ -54,7 +66,11 @@ export class MessagesService implements IMessagesService {
 		return result;
 	}
 
-	private getMessageFromJsonRecursive(keys: string[], jsonContents: any, index: number): string {
+	private getMessageFromJsonRecursive(
+		keys: string[],
+		jsonContents: any,
+		index: number
+	): string {
 		if (index >= keys.length) {
 			return null;
 		}
@@ -73,7 +89,7 @@ export class MessagesService implements IMessagesService {
 
 	private refreshMessageJsonContentsCache(): void {
 		this._messageJsonFilesContentsCache = [];
-		_.each(this.pathsToMessageJsonFiles, path => {
+		_.each(this.pathsToMessageJsonFiles, (path) => {
 			if (!this.$fs.exists(path)) {
 				throw new Error("Message json file " + path + " does not exist.");
 			}
@@ -83,7 +99,9 @@ export class MessagesService implements IMessagesService {
 	}
 
 	private getFormatedMessage(message: string, ...args: string[]): string {
-		return ~message.indexOf("%") ? util.format.apply(null, [message].concat(args || [])) : message;
+		return ~message.indexOf("%")
+			? util.format.apply(null, [message].concat(args || []))
+			: message;
 	}
 }
 

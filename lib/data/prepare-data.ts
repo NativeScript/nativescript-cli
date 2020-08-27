@@ -1,5 +1,5 @@
 import { ControllerDataBase } from "./controller-data-base";
-import * as _ from 'lodash';
+import * as _ from "lodash";
 
 export class PrepareData extends ControllerDataBase {
 	public release: boolean;
@@ -15,7 +15,7 @@ export class PrepareData extends ControllerDataBase {
 		this.hmr = data.hmr || data.useHotModuleReload;
 		this.env = {
 			...data.env,
-			hmr: data.hmr || data.useHotModuleReload
+			hmr: data.hmr || data.useHotModuleReload,
 		};
 		this.watch = data.watch;
 		if (_.isBoolean(data.watchNative)) {
@@ -38,4 +38,4 @@ export class IOSPrepareData extends PrepareData {
 	}
 }
 
-export class AndroidPrepareData extends PrepareData { }
+export class AndroidPrepareData extends PrepareData {}

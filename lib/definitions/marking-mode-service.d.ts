@@ -1,9 +1,11 @@
 interface IMarkingModeService {
-    handleMarkingModeFullDeprecation(options: IMarkingModeFullDeprecationOptions): Promise<void>;
+	handleMarkingModeFullDeprecation(
+		options: IMarkingModeFullDeprecationOptions
+	): Promise<void>;
 }
 
 interface IMarkingModeFullDeprecationOptions {
-    projectDir: string;
-    skipWarnings?: boolean;
-    forceSwitch?: boolean;
+	projectDir: string;
+	skipWarnings?: boolean;
+	forceSwitch?: boolean;
 }

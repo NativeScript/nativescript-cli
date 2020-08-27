@@ -2,9 +2,19 @@ import { join, relative } from "path";
 import { BasePackageManager } from "./base-package-manager";
 import { exported, cache } from "./common/decorators";
 import { CACACHE_DIRECTORY_NAME } from "./constants";
-import * as _ from 'lodash';
-import { INodePackageManagerInstallOptions, INpmInstallResultInfo, INpmsResult } from "./declarations";
-import { IChildProcess, IErrors, IFileSystem, IHostInfo, Server } from "./common/declarations";
+import * as _ from "lodash";
+import {
+	INodePackageManagerInstallOptions,
+	INpmInstallResultInfo,
+	INpmsResult,
+} from "./declarations";
+import {
+	IChildProcess,
+	IErrors,
+	IFileSystem,
+	IHostInfo,
+	Server,
+} from "./common/declarations";
 import { injector } from "./common/yok";
 
 export class NodePackageManager extends BasePackageManager {
@@ -15,12 +25,17 @@ export class NodePackageManager extends BasePackageManager {
 		$hostInfo: IHostInfo,
 		private $logger: ILogger,
 		private $httpClient: Server.IHttpClient,
-		$pacoteService: IPacoteService) {
-		super($childProcess, $fs, $hostInfo, $pacoteService, 'npm');
+		$pacoteService: IPacoteService
+	) {
+		super($childProcess, $fs, $hostInfo, $pacoteService, "npm");
 	}
 
 	@exported("npm")
-	public async install(packageName: string, pathToSave: string, config: INodePackageManagerInstallOptions): Promise<INpmInstallResultInfo> {
+	public async install(
+		packageName: string,
+		pathToSave: string,
+		config: INodePackageManagerInstallOptions
+	): Promise<INpmInstallResultInfo> {
 		if (config.disableNpmInstall) {
 			return;
 		}
@@ -50,7 +65,10 @@ export class NodePackageManager extends BasePackageManager {
 		if (config.path) {
 			let relativePathFromCwdToSource = "";
 			if (config.frameworkPath) {
-				relativePathFromCwdToSource = relative(config.frameworkPath, pathToSave);
+				relativePathFromCwdToSource = relative(
+					config.frameworkPath,
+					pathToSave
+				);
 				if (this.$fs.exists(relativePathFromCwdToSource)) {
 					packageName = relativePathFromCwdToSource;
 				}
@@ -58,7 +76,11 @@ export class NodePackageManager extends BasePackageManager {
 		}
 
 		try {
-			const result = await this.processPackageManagerInstall(packageName, params, { cwd, isInstallingAllDependencies });
+			const result = await this.processPackageManagerInstall(
+				packageName,
+				params,
+				{ cwd, isInstallingAllDependencies }
+			);
 			return result;
 		} catch (err) {
 			if (err.message && err.message.indexOf("EPEERINVALID") !== -1) {
@@ -79,9 +101,15 @@ export class NodePackageManager extends BasePackageManager {
 	}
 
 	@exported("npm")
-	public async uninstall(packageName: string, config?: any, path?: string): Promise<string> {
+	public async uninstall(
+		packageName: string,
+		config?: any,
+		path?: string
+	): Promise<string> {
 		const flags = this.getFlagsString(config, false);
-		return this.$childProcess.exec(`npm uninstall ${packageName} ${flags}`, { cwd: path });
+		return this.$childProcess.exec(`npm uninstall ${packageName} ${flags}`, {
+			cwd: path,
+		});
 	}
 
 	@exported("npm")
@@ -97,7 +125,9 @@ export class NodePackageManager extends BasePackageManager {
 		const flags = this.getFlagsString(wrappedConfig, false);
 		let viewResult: any;
 		try {
-			viewResult = await this.$childProcess.exec(`npm view ${packageName} ${flags}`);
+			viewResult = await this.$childProcess.exec(
+				`npm view ${packageName} ${flags}`
+			);
 		} catch (e) {
 			this.$errors.fail(e.message);
 		}
@@ -106,7 +136,9 @@ export class NodePackageManager extends BasePackageManager {
 
 	public async searchNpms(keyword: string): Promise<INpmsResult> {
 		// TODO: Fix the generation of url - in case it contains @ or / , the call may fail.
-		const httpRequestResult = await this.$httpClient.httpRequest(`https://api.npms.io/v2/search?q=keywords:${keyword}`);
+		const httpRequestResult = await this.$httpClient.httpRequest(
+			`https://api.npms.io/v2/search?q=keywords:${keyword}`
+		);
 		const result: INpmsResult = JSON.parse(httpRequestResult.body);
 		return result;
 	}
@@ -114,11 +146,17 @@ export class NodePackageManager extends BasePackageManager {
 	public async getRegistryPackageData(packageName: string): Promise<any> {
 		const registry = await this.$childProcess.exec(`npm config get registry`);
 		const url = registry.trim() + packageName;
-		this.$logger.trace(`Trying to get data from npm registry for package ${packageName}, url is: ${url}`);
+		this.$logger.trace(
+			`Trying to get data from npm registry for package ${packageName}, url is: ${url}`
+		);
 		const responseData = (await this.$httpClient.httpRequest(url)).body;
-		this.$logger.trace(`Successfully received data from npm registry for package ${packageName}. Response data is: ${responseData}`);
+		this.$logger.trace(
+			`Successfully received data from npm registry for package ${packageName}. Response data is: ${responseData}`
+		);
 		const jsonData = JSON.parse(responseData);
-		this.$logger.trace(`Successfully parsed data from npm registry for package ${packageName}.`);
+		this.$logger.trace(
+			`Successfully parsed data from npm registry for package ${packageName}.`
+		);
 		return jsonData;
 	}
 

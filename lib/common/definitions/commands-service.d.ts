@@ -1,8 +1,14 @@
 interface ICommandsService {
 	currentCommandData: ICommandData;
-	allCommands(opts: {includeDevCommands: boolean}): string[];
-	tryExecuteCommand(commandName: string, commandArguments: string[]): Promise<void>;
-	executeCommandUnchecked(commandName: string, commandArguments: string[]): Promise<boolean>;
+	allCommands(opts: { includeDevCommands: boolean }): string[];
+	tryExecuteCommand(
+		commandName: string,
+		commandArguments: string[]
+	): Promise<void>;
+	executeCommandUnchecked(
+		commandName: string,
+		commandArguments: string[]
+	): Promise<boolean>;
 	completeCommand(): Promise<boolean>;
 }
 

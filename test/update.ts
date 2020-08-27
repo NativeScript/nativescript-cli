@@ -9,9 +9,7 @@ import { DevicePlatformsConstants } from "../lib/common/mobile/device-platforms-
 import { IInjector } from "../lib/common/definitions/yok";
 const projectFolder = "test";
 
-function createTestInjector(
-	projectDir: string = projectFolder
-): IInjector {
+function createTestInjector(projectDir: string = projectFolder): IInjector {
 	const testInjector: IInjector = new yok.Yok();
 	testInjector.register("logger", stubs.LoggerStub);
 	testInjector.register("markingModeService", stubs.MarkingModeServiceStub);
@@ -19,23 +17,29 @@ function createTestInjector(
 	testInjector.register("analyticsService", {
 		trackException: async (): Promise<void> => undefined,
 		checkConsent: async (): Promise<void> => undefined,
-		trackFeature: async (): Promise<void> => undefined
+		trackFeature: async (): Promise<void> => undefined,
 	});
-	testInjector.register('errors', stubs.ErrorsStub);
+	testInjector.register("errors", stubs.ErrorsStub);
 	testInjector.register("staticConfig", StaticConfig);
 	testInjector.register("projectData", {
 		projectDir,
-		initializeProjectData: () => { /* empty */ },
-		dependencies: {}
+		initializeProjectData: () => {
+			/* empty */
+		},
+		dependencies: {},
 	});
 	testInjector.register("settingsService", SettingsService);
 	testInjector.register("devicePlatformsConstants", DevicePlatformsConstants);
 	testInjector.register("migrateController", {
-		shouldMigrate: () => { return false; },
+		shouldMigrate: () => {
+			return false;
+		},
 	});
 
 	testInjector.register("updateController", {
-		shouldUpdate: () => { return true; },
+		shouldUpdate: () => {
+			return true;
+		},
 	});
 
 	return testInjector;
@@ -46,7 +50,11 @@ describe("update command method tests", () => {
 		it("returns false if too many arguments", async () => {
 			const testInjector = createTestInjector();
 			const updateCommand = testInjector.resolve<UpdateCommand>(UpdateCommand);
-			const canExecuteOutput = await updateCommand.canExecute(["333", "111", "444"]);
+			const canExecuteOutput = await updateCommand.canExecute([
+				"333",
+				"111",
+				"444",
+			]);
 
 			return assert.equal(canExecuteOutput, false);
 		});

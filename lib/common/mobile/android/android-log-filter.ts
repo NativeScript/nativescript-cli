@@ -3,7 +3,6 @@ import { injector } from "../../yok";
 const os = require("os");
 
 export class AndroidLogFilter implements Mobile.IPlatformLogFilter {
-
 	//sample line is "I/Web Console(    4438): Received Event: deviceready at file:///storage/emulated/0/Icenium/com.telerik.TestApp/js/index.js:48"
 	private static LINE_REGEX = /.\/(.+?)\s*\(\s*\d+?\): (.*)/;
 
@@ -11,12 +10,18 @@ export class AndroidLogFilter implements Mobile.IPlatformLogFilter {
 	// or '12-28 10:45:08.020  3329  3329 W chromium: [WARNING:data_reduction_proxy_settings.cc(328)] SPDY proxy OFF at startup'
 	private static API_LEVEL_23_LINE_REGEX = /.+?\s+?(?:[A-Z]\s+?)([A-Za-z \.]+?)\s*?\: (.*)/;
 
-	constructor(private $loggingLevels: Mobile.ILoggingLevels) { }
+	constructor(private $loggingLevels: Mobile.ILoggingLevels) {}
 
-	public filterData(data: string, loggingOptions: Mobile.IDeviceLogOptions = <any>{}): string {
-		const specifiedLogLevel = (loggingOptions.logLevel || '').toUpperCase();
+	public filterData(
+		data: string,
+		loggingOptions: Mobile.IDeviceLogOptions = <any>{}
+	): string {
+		const specifiedLogLevel = (loggingOptions.logLevel || "").toUpperCase();
 		if (specifiedLogLevel === this.$loggingLevels.info) {
-			const log = this.getConsoleLogFromLine(data, loggingOptions.applicationPid);
+			const log = this.getConsoleLogFromLine(
+				data,
+				loggingOptions.applicationPid
+			);
 			if (log) {
 				if (log.tag) {
 					return `${log.tag}: ${log.message}` + os.EOL;
@@ -38,11 +43,21 @@ export class AndroidLogFilter implements Mobile.IPlatformLogFilter {
 		}
 
 		// Messages with category TNS.Native and TNS.Java will be printed by runtime to Logcat only when `__enableVerboseLogging()` is called in the application.
-		const acceptedTags = ["chromium", "Web Console", "JS", "ActivityManager", "System.err", "TNS.Native", "TNS.Java"];
+		const acceptedTags = [
+			"chromium",
+			"Web Console",
+			"JS",
+			"ActivityManager",
+			"System.err",
+			"TNS.Native",
+			"TNS.Java",
+		];
 
-		let consoleLogMessage: { tag?: string, message: string };
+		let consoleLogMessage: { tag?: string; message: string };
 
-		const match = lineText.match(AndroidLogFilter.LINE_REGEX) || lineText.match(AndroidLogFilter.API_LEVEL_23_LINE_REGEX);
+		const match =
+			lineText.match(AndroidLogFilter.LINE_REGEX) ||
+			lineText.match(AndroidLogFilter.API_LEVEL_23_LINE_REGEX);
 
 		if (match && acceptedTags.indexOf(match[1].trim()) !== -1) {
 			consoleLogMessage = { tag: match[1].trim(), message: match[2] };

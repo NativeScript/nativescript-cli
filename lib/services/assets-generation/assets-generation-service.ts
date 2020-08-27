@@ -1,56 +1,84 @@
 const Jimp = require("jimp");
 const Color = require("color");
 import { exported } from "../../common/decorators";
-import { AssetConstants } from '../../constants';
-import { IAssetsGenerationService, IResourceGenerationData, ISplashesGenerationData } from "../../declarations";
-import { IProjectDataService, IAssetGroup, IAssetSubGroup } from "../../definitions/project";
+import { AssetConstants } from "../../constants";
+import {
+	IAssetsGenerationService,
+	IResourceGenerationData,
+	ISplashesGenerationData,
+} from "../../declarations";
+import {
+	IProjectDataService,
+	IAssetGroup,
+	IAssetSubGroup,
+} from "../../definitions/project";
 import { IDictionary } from "../../common/declarations";
-import * as _ from 'lodash';
+import * as _ from "lodash";
 import { injector } from "../../common/yok";
 
 export const enum Operations {
 	OverlayWith = "overlayWith",
 	Blank = "blank",
-	Resize = "resize"
+	Resize = "resize",
 }
 
 export class AssetsGenerationService implements IAssetsGenerationService {
 	private get propertiesToEnumerate(): IDictionary<string[]> {
 		return {
 			icon: ["icons"],
-			splash: ["splashBackgrounds", "splashCenterImages", "splashImages"]
+			splash: ["splashBackgrounds", "splashCenterImages", "splashImages"],
 		};
 	}
 
-	constructor(private $logger: ILogger,
-		private $projectDataService: IProjectDataService) {
-	}
+	constructor(
+		private $logger: ILogger,
+		private $projectDataService: IProjectDataService
+	) {}
 
 	@exported("assetsGenerationService")
-	public async generateIcons(resourceGenerationData: IResourceGenerationData): Promise<void> {
+	public async generateIcons(
+		resourceGenerationData: IResourceGenerationData
+	): Promise<void> {
 		this.$logger.info("Generating icons ...");
-		await this.generateImagesForDefinitions(resourceGenerationData, this.propertiesToEnumerate.icon);
+		await this.generateImagesForDefinitions(
+			resourceGenerationData,
+			this.propertiesToEnumerate.icon
+		);
 		this.$logger.info("Icons generation completed.");
 	}
 
 	@exported("assetsGenerationService")
-	public async generateSplashScreens(splashesGenerationData: ISplashesGenerationData): Promise<void> {
+	public async generateSplashScreens(
+		splashesGenerationData: ISplashesGenerationData
+	): Promise<void> {
 		this.$logger.info("Generating splash screens ...");
-		await this.generateImagesForDefinitions(splashesGenerationData, this.propertiesToEnumerate.splash);
+		await this.generateImagesForDefinitions(
+			splashesGenerationData,
+			this.propertiesToEnumerate.splash
+		);
 		this.$logger.info("Splash screens generation completed.");
 	}
 
-	private async generateImagesForDefinitions(generationData: ISplashesGenerationData, propertiesToEnumerate: string[]): Promise<void> {
+	private async generateImagesForDefinitions(
+		generationData: ISplashesGenerationData,
+		propertiesToEnumerate: string[]
+	): Promise<void> {
 		generationData.background = generationData.background || "white";
-		const assetsStructure = await this.$projectDataService.getAssetsStructure(generationData);
+		const assetsStructure = await this.$projectDataService.getAssetsStructure(
+			generationData
+		);
 
 		const assetItems = _(assetsStructure)
-			.filter((assetGroup: IAssetGroup, platform: string) =>
-				!generationData.platform || platform.toLowerCase() === generationData.platform.toLowerCase()
+			.filter(
+				(assetGroup: IAssetGroup, platform: string) =>
+					!generationData.platform ||
+					platform.toLowerCase() === generationData.platform.toLowerCase()
 			)
 			.map((assetGroup: IAssetGroup) =>
-				_.filter(assetGroup, (assetSubGroup: IAssetSubGroup, imageTypeKey: string) =>
-					assetSubGroup && propertiesToEnumerate.indexOf(imageTypeKey) !== -1
+				_.filter(
+					assetGroup,
+					(assetSubGroup: IAssetSubGroup, imageTypeKey: string) =>
+						assetSubGroup && propertiesToEnumerate.indexOf(imageTypeKey) !== -1
 				)
 			)
 			.flatten()
@@ -66,8 +94,14 @@ export class AssetsGenerationService implements IAssetsGenerationService {
 				if (_.isNumber(assetItem.scale)) {
 					tempScale = assetItem.scale;
 				} else {
-					const splittedElements = `${assetItem.scale}`.split(AssetConstants.sizeDelimiter);
-					tempScale = splittedElements && splittedElements.length && splittedElements[0] && +splittedElements[0];
+					const splittedElements = `${assetItem.scale}`.split(
+						AssetConstants.sizeDelimiter
+					);
+					tempScale =
+						splittedElements &&
+						splittedElements.length &&
+						splittedElements[0] &&
+						+splittedElements[0];
 				}
 			}
 
@@ -78,20 +112,41 @@ export class AssetsGenerationService implements IAssetsGenerationService {
 			const height = assetItem.height * scale;
 
 			if (!width || !height) {
-				this.$logger.warn(`Image ${assetItem.filename} is skipped as its width and height are invalid.`);
+				this.$logger.warn(
+					`Image ${assetItem.filename} is skipped as its width and height are invalid.`
+				);
 				continue;
 			}
 
 			let image: typeof Jimp;
 			switch (operation) {
 				case Operations.OverlayWith:
-					const overlayImageScale = assetItem.overlayImageScale || AssetConstants.defaultOverlayImageScale;
-					const imageResize = Math.round(Math.min(width, height) * overlayImageScale);
-					image = await this.resize(generationData.imagePath, imageResize, imageResize);
-					image = this.generateImage(generationData.background, width, height, outputPath, image);
+					const overlayImageScale =
+						assetItem.overlayImageScale ||
+						AssetConstants.defaultOverlayImageScale;
+					const imageResize = Math.round(
+						Math.min(width, height) * overlayImageScale
+					);
+					image = await this.resize(
+						generationData.imagePath,
+						imageResize,
+						imageResize
+					);
+					image = this.generateImage(
+						generationData.background,
+						width,
+						height,
+						outputPath,
+						image
+					);
 					break;
 				case Operations.Blank:
-					image = this.generateImage(generationData.background, width, height, outputPath);
+					image = this.generateImage(
+						generationData.background,
+						width,
+						height,
+						outputPath
+					);
 					break;
 				case Operations.Resize:
 					image = await this.resize(generationData.imagePath, width, height);
@@ -109,12 +164,22 @@ export class AssetsGenerationService implements IAssetsGenerationService {
 		}
 	}
 
-	private async resize(imagePath: string, width: number, height: number): Promise<typeof Jimp> {
+	private async resize(
+		imagePath: string,
+		width: number,
+		height: number
+	): Promise<typeof Jimp> {
 		const image = await Jimp.read(imagePath);
 		return image.scaleToFit(width, height);
 	}
 
-	private generateImage(background: string, width: number, height: number, outputPath: string, overlayImage?: typeof Jimp): typeof Jimp {
+	private generateImage(
+		background: string,
+		width: number,
+		height: number,
+		outputPath: string,
+		overlayImage?: typeof Jimp
+	): typeof Jimp {
 		// Typescript declarations for Jimp are not updated to define the constructor with backgroundColor so we workaround it by casting it to <any> for this case only.
 		const J = <any>Jimp;
 		const backgroundColor = this.getRgbaNumber(background);
@@ -134,7 +199,12 @@ export class AssetsGenerationService implements IAssetsGenerationService {
 		const colorRgb = color.rgb();
 		const alpha = Math.round(colorRgb.alpha() * 255);
 
-		return Jimp.rgbaToInt(colorRgb.red(), colorRgb.green(), colorRgb.blue(), alpha);
+		return Jimp.rgbaToInt(
+			colorRgb.red(),
+			colorRgb.green(),
+			colorRgb.blue(),
+			alpha
+		);
 	}
 }
 

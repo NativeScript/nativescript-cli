@@ -4,14 +4,20 @@ import { quoteString } from "../common/helpers";
 import { cache } from "../common/decorators";
 import { IITMSTransporterService, IITMSData } from "../declarations";
 import { IProjectData } from "../definitions/project";
-import { IChildProcess, IErrors, IFileSystem, IPlistParser, IXcodeSelectService } from "../common/declarations";
+import {
+	IChildProcess,
+	IErrors,
+	IFileSystem,
+	IPlistParser,
+	IXcodeSelectService,
+} from "../common/declarations";
 import { IApplePortalApplicationService } from "./apple-portal/definitions";
 import { IInjector } from "../common/definitions/yok";
 import { injector } from "../common/yok";
 
 export class ITMSTransporterService implements IITMSTransporterService {
 	constructor(
-		private	$applePortalApplicationService: IApplePortalApplicationService,
+		private $applePortalApplicationService: IApplePortalApplicationService,
 		private $childProcess: IChildProcess,
 		private $errors: IErrors,
 		private $fs: IFileSystem,
@@ -19,7 +25,8 @@ export class ITMSTransporterService implements IITMSTransporterService {
 		private $logger: ILogger,
 		private $plistParser: IPlistParser,
 		private $xcodeSelectService: IXcodeSelectService,
-		private $tempService: ITempService) { }
+		private $tempService: ITempService
+	) {}
 
 	private get $projectData(): IProjectData {
 		return this.$injector.resolve("projectData");
@@ -28,7 +35,9 @@ export class ITMSTransporterService implements IITMSTransporterService {
 	public async validate(): Promise<void> {
 		const itmsTransporterPath = await this.getITMSTransporterPath();
 		if (!this.$fs.exists(itmsTransporterPath)) {
-			this.$errors.fail('iTMS Transporter not found on this machine - make sure your Xcode installation is not damaged.');
+			this.$errors.fail(
+				"iTMS Transporter not found on this machine - make sure your Xcode installation is not damaged."
+			);
 		}
 	}
 
@@ -38,41 +47,73 @@ export class ITMSTransporterService implements IITMSTransporterService {
 		const itmsDirectory = await this.$tempService.mkdirSync("itms-");
 		const innerDirectory = path.join(itmsDirectory, "mybundle.itmsp");
 		const ipaFileLocation = path.join(innerDirectory, ipaFileName);
-		const loggingLevel = data.verboseLogging ? ITMSConstants.VerboseLoggingLevels.Verbose : ITMSConstants.VerboseLoggingLevels.Informational;
+		const loggingLevel = data.verboseLogging
+			? ITMSConstants.VerboseLoggingLevels.Verbose
+			: ITMSConstants.VerboseLoggingLevels.Informational;
 		const bundleId = await this.getBundleIdentifier(data);
-		const application = await this.$applePortalApplicationService.getApplicationByBundleId(data.user, bundleId);
+		const application = await this.$applePortalApplicationService.getApplicationByBundleId(
+			data.user,
+			bundleId
+		);
 
 		this.$fs.createDirectory(innerDirectory);
 
 		this.$fs.copyFile(data.ipaFilePath, ipaFileLocation);
 
-		const ipaFileHash = await this.$fs.getFileShasum(ipaFileLocation, { algorithm: "md5" });
+		const ipaFileHash = await this.$fs.getFileShasum(ipaFileLocation, {
+			algorithm: "md5",
+		});
 		const ipaFileSize = this.$fs.getFileSize(ipaFileLocation);
-		const metadata = this.getITMSMetadataXml(application.adamId, ipaFileName, ipaFileHash, ipaFileSize);
+		const metadata = this.getITMSMetadataXml(
+			application.adamId,
+			ipaFileName,
+			ipaFileHash,
+			ipaFileSize
+		);
 
-		this.$fs.writeFile(path.join(innerDirectory, ITMSConstants.ApplicationMetadataFile), metadata);
+		this.$fs.writeFile(
+			path.join(innerDirectory, ITMSConstants.ApplicationMetadataFile),
+			metadata
+		);
 
-		const password = data.user.isTwoFactorAuthenticationEnabled ? data.applicationSpecificPassword : data.credentials.password;
-		await this.$childProcess.spawnFromEvent(itmsTransporterPath,
+		const password = data.user.isTwoFactorAuthenticationEnabled
+			? data.applicationSpecificPassword
+			: data.credentials.password;
+		await this.$childProcess.spawnFromEvent(
+			itmsTransporterPath,
 			[
-				"-m", "upload",
-				"-f", itmsDirectory,
-				"-u", quoteString(data.credentials.username),
-				"-p", quoteString(password),
-				"-v", loggingLevel
+				"-m",
+				"upload",
+				"-f",
+				itmsDirectory,
+				"-u",
+				quoteString(data.credentials.username),
+				"-p",
+				quoteString(password),
+				"-v",
+				loggingLevel,
 			],
-			"close", { stdio: "inherit" });
+			"close",
+			{ stdio: "inherit" }
+		);
 	}
 
 	private async getBundleIdentifier(data: IITMSData): Promise<string> {
 		const { shouldExtractIpa, ipaFilePath } = data;
 
 		if (shouldExtractIpa) {
-			if (!this.$fs.exists(ipaFilePath) || path.extname(ipaFilePath) !== ".ipa") {
-				this.$errors.fail(`Cannot use specified ipa file ${ipaFilePath}. File either does not exist or is not an ipa file.`);
+			if (
+				!this.$fs.exists(ipaFilePath) ||
+				path.extname(ipaFilePath) !== ".ipa"
+			) {
+				this.$errors.fail(
+					`Cannot use specified ipa file ${ipaFilePath}. File either does not exist or is not an ipa file.`
+				);
 			}
 
-			this.$logger.trace("--ipa set - extracting .ipa file to get app's bundle identifier");
+			this.$logger.trace(
+				"--ipa set - extracting .ipa file to get app's bundle identifier"
+			);
 			const destinationDir = await this.$tempService.mkdirSync("ipa-");
 			await this.$fs.unzip(ipaFilePath, destinationDir);
 
@@ -80,20 +121,30 @@ export class ITMSTransporterService implements IITMSTransporterService {
 			let allFiles = this.$fs.readDirectory(payloadDir);
 
 			this.$logger.debug("ITMSTransporter .ipa Payload files:");
-			allFiles.forEach(f => this.$logger.debug(" - " + f));
+			allFiles.forEach((f) => this.$logger.debug(" - " + f));
 
-			allFiles = allFiles.filter(f => path.extname(f).toLowerCase() === ".app");
+			allFiles = allFiles.filter(
+				(f) => path.extname(f).toLowerCase() === ".app"
+			);
 			if (allFiles.length > 1) {
-				this.$errors.fail("In the .ipa the ITMSTransporter is uploading there is more than one .app file. We don't know which one to upload.");
+				this.$errors.fail(
+					"In the .ipa the ITMSTransporter is uploading there is more than one .app file. We don't know which one to upload."
+				);
 			} else if (allFiles.length <= 0) {
-				this.$errors.fail("In the .ipa the ITMSTransporter is uploading there must be at least one .app file.");
+				this.$errors.fail(
+					"In the .ipa the ITMSTransporter is uploading there must be at least one .app file."
+				);
 			}
 			const appFile = path.join(payloadDir, allFiles[0]);
 
-			const plistObject = await this.$plistParser.parseFile(path.join(appFile, INFO_PLIST_FILE_NAME));
+			const plistObject = await this.$plistParser.parseFile(
+				path.join(appFile, INFO_PLIST_FILE_NAME)
+			);
 			const bundleId = plistObject && plistObject.CFBundleIdentifier;
 			if (!bundleId) {
-				this.$errors.fail(`Unable to determine bundle identifier from ${ipaFilePath}.`);
+				this.$errors.fail(
+					`Unable to determine bundle identifier from ${ipaFilePath}.`
+				);
 			}
 
 			this.$logger.trace(`bundle identifier determined to be ${bundleId}`);
@@ -107,18 +158,44 @@ export class ITMSTransporterService implements IITMSTransporterService {
 	@cache()
 	private async getITMSTransporterPath(): Promise<string> {
 		const xcodePath = await this.$xcodeSelectService.getContentsDirectoryPath();
-		let itmsTransporterPath = path.join(xcodePath, "..", "Contents", "SharedFrameworks", "ContentDeliveryServices.framework", "Versions", "A", "itms", "bin", ITMSConstants.iTMSExecutableName);
+		let itmsTransporterPath = path.join(
+			xcodePath,
+			"..",
+			"Contents",
+			"SharedFrameworks",
+			"ContentDeliveryServices.framework",
+			"Versions",
+			"A",
+			"itms",
+			"bin",
+			ITMSConstants.iTMSExecutableName
+		);
 
 		const xcodeVersionData = await this.$xcodeSelectService.getXcodeVersion();
 		if (+xcodeVersionData.major < 11) {
-			const loaderAppContentsPath = path.join(xcodePath, "Applications", "Application Loader.app", "Contents");
-			itmsTransporterPath = path.join(loaderAppContentsPath, ITMSConstants.iTMSDirectoryName, "bin", ITMSConstants.iTMSExecutableName);
+			const loaderAppContentsPath = path.join(
+				xcodePath,
+				"Applications",
+				"Application Loader.app",
+				"Contents"
+			);
+			itmsTransporterPath = path.join(
+				loaderAppContentsPath,
+				ITMSConstants.iTMSDirectoryName,
+				"bin",
+				ITMSConstants.iTMSExecutableName
+			);
 		}
 
 		return itmsTransporterPath;
 	}
 
-	private getITMSMetadataXml(appleId: string, ipaFileName: string, ipaFileHash: string, ipaFileSize: number): string {
+	private getITMSMetadataXml(
+		appleId: string,
+		ipaFileName: string,
+		ipaFileHash: string,
+		ipaFileSize: number
+	): string {
 		return `<?xml version="1.0" encoding="UTF-8"?>
 <package version="software4.7" xmlns="http://apple.com/itunes/importer">
     <software_assets apple_id="${appleId}">

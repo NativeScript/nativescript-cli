@@ -1,5 +1,7 @@
 export class RunData {
-	constructor(public projectDir: string,
+	constructor(
+		public projectDir: string,
 		public liveSyncInfo: ILiveSyncInfo,
-		public deviceDescriptors: ILiveSyncDeviceDescriptor[]) { }
+		public deviceDescriptors: ILiveSyncDeviceDescriptor[]
+	) {}
 }

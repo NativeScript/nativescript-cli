@@ -7,7 +7,7 @@ export class LiveSyncServiceResolver implements ILiveSyncServiceResolver {
 		private $errors: IErrors,
 		private $injector: IInjector,
 		private $mobileHelper: Mobile.IMobileHelper
-	) { }
+	) {}
 
 	public resolveLiveSyncService(platform: string): IPlatformLiveSyncService {
 		if (this.$mobileHelper.isiOSPlatform(platform)) {
@@ -16,7 +16,11 @@ export class LiveSyncServiceResolver implements ILiveSyncServiceResolver {
 			return this.$injector.resolve("androidLiveSyncService");
 		}
 
-		this.$errors.fail(`Invalid platform ${platform}. Supported platforms are: ${this.$mobileHelper.platformNames.join(", ")}`);
+		this.$errors.fail(
+			`Invalid platform ${platform}. Supported platforms are: ${this.$mobileHelper.platformNames.join(
+				", "
+			)}`
+		);
 	}
 }
 injector.register("liveSyncServiceResolver", LiveSyncServiceResolver);

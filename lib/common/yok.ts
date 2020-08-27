@@ -1,5 +1,5 @@
 import * as path from "path";
-import * as _ from 'lodash';
+import * as _ from "lodash";
 import { annotate, isPromise } from "./helpers";
 import { ERROR_NO_VALID_SUBCOMMAND_FORMAT } from "./constants";
 import { CommandsDelimiters } from "./constants";
@@ -67,11 +67,18 @@ export class Yok implements IInjector {
 
 	public requireCommand(names: any, file: string): void {
 		forEachName(names, (commandName) => {
-			const commands = commandName.split(CommandsDelimiters.HierarchicalCommand);
+			const commands = commandName.split(
+				CommandsDelimiters.HierarchicalCommand
+			);
 
 			if (commands.length > 1) {
-				if (_.startsWith(commands[1], '*') && this.modules[this.createCommandName(commands[0])]) {
-					throw new Error("Default commands should be required before child commands");
+				if (
+					_.startsWith(commands[1], "*") &&
+					this.modules[this.createCommandName(commands[0])]
+				) {
+					throw new Error(
+						"Default commands should be required before child commands"
+					);
 				}
 
 				const parentCommandName = commands[0];
@@ -80,10 +87,15 @@ export class Yok implements IInjector {
 					this.hierarchicalCommands[parentCommandName] = [];
 				}
 
-				this.hierarchicalCommands[parentCommandName].push(_.tail(commands).join(CommandsDelimiters.HierarchicalCommand));
+				this.hierarchicalCommands[parentCommandName].push(
+					_.tail(commands).join(CommandsDelimiters.HierarchicalCommand)
+				);
 			}
 
-			if (commands.length > 1 && !this.modules[this.createCommandName(commands[0])]) {
+			if (
+				commands.length > 1 &&
+				!this.modules[this.createCommandName(commands[0])]
+			) {
 				this.require(this.createCommandName(commands[0]), file);
 				if (commands[1] && !commandName.match(/\|\*/)) {
 					this.require(this.createCommandName(commandName), file);
@@ -99,7 +111,7 @@ export class Yok implements IInjector {
 	}
 
 	public publicApi: any = {
-		__modules__: {}
+		__modules__: {},
 	};
 
 	public requirePublic(names: any, file: string): void {
@@ -120,7 +132,7 @@ export class Yok implements IInjector {
 		Object.defineProperty(this.publicApi, name, {
 			get: () => {
 				return this.resolveInstance(name);
-			}
+			},
 		});
 	}
 
@@ -129,7 +141,7 @@ export class Yok implements IInjector {
 			get: () => {
 				this.resolveInstance(name);
 				return this.publicApi.__modules__[name];
-			}
+			},
 		});
 	}
 
@@ -145,8 +157,12 @@ export class Yok implements IInjector {
 	private requireOne(name: string, file: string): void {
 		const relativePath = path.join("../", file);
 		const dependency: IDependency = {
-			require: require("fs").existsSync(path.join(__dirname, relativePath + ".js")) ? relativePath : file,
-			shared: true
+			require: require("fs").existsSync(
+				path.join(__dirname, relativePath + ".js")
+			)
+				? relativePath
+				: file,
+			shared: true,
 		};
 
 		if (!this.modules[name] || this.overrideAlreadyRequiredModule) {
@@ -169,38 +185,69 @@ export class Yok implements IInjector {
 
 	private getDefaultCommand(name: string, commandArguments: string[]) {
 		const subCommands = this.hierarchicalCommands[name];
-		const defaultCommand = _.find(subCommands, command => _.some(command.split(CommandsDelimiters.HierarchicalCommand), c => _.startsWith(c, CommandsDelimiters.DefaultCommandSymbol)));
+		const defaultCommand = _.find(subCommands, (command) =>
+			_.some(command.split(CommandsDelimiters.HierarchicalCommand), (c) =>
+				_.startsWith(c, CommandsDelimiters.DefaultCommandSymbol)
+			)
+		);
 
 		return defaultCommand;
 	}
 
-	public buildHierarchicalCommand(parentCommandName: string, commandLineArguments: string[]): any {
-		let currentSubCommandName: string, finalSubCommandName: string, matchingSubCommandName: string;
+	public buildHierarchicalCommand(
+		parentCommandName: string,
+		commandLineArguments: string[]
+	): any {
+		let currentSubCommandName: string,
+			finalSubCommandName: string,
+			matchingSubCommandName: string;
 		const subCommands = this.hierarchicalCommands[parentCommandName];
 		let remainingArguments = commandLineArguments;
 		let finalRemainingArguments = commandLineArguments;
-		_.each(commandLineArguments, arg => {
+		_.each(commandLineArguments, (arg) => {
 			arg = arg.toLowerCase();
-			currentSubCommandName = currentSubCommandName ? this.getHierarchicalCommandName(currentSubCommandName, arg) : arg;
+			currentSubCommandName = currentSubCommandName
+				? this.getHierarchicalCommandName(currentSubCommandName, arg)
+				: arg;
 			remainingArguments = _.tail(remainingArguments);
-			if (matchingSubCommandName = _.find(subCommands, sc => sc === currentSubCommandName || sc === `${CommandsDelimiters.DefaultCommandSymbol}${currentSubCommandName}`)) {
+			if (
+				(matchingSubCommandName = _.find(
+					subCommands,
+					(sc) =>
+						sc === currentSubCommandName ||
+						sc ===
+							`${CommandsDelimiters.DefaultCommandSymbol}${currentSubCommandName}`
+				))
+			) {
 				finalSubCommandName = matchingSubCommandName;
 				finalRemainingArguments = remainingArguments;
 			}
 		});
 
 		if (!finalSubCommandName) {
-			finalSubCommandName = this.getDefaultCommand(parentCommandName, commandLineArguments) || "";
-			finalRemainingArguments = _.difference(commandLineArguments, finalSubCommandName
-				.split(CommandsDelimiters.HierarchicalCommand)
-				.map(command => _.startsWith(command, CommandsDelimiters.DefaultCommandSymbol) ? command.substr(1) : command));
-
+			finalSubCommandName =
+				this.getDefaultCommand(parentCommandName, commandLineArguments) || "";
+			finalRemainingArguments = _.difference(
+				commandLineArguments,
+				finalSubCommandName
+					.split(CommandsDelimiters.HierarchicalCommand)
+					.map((command) =>
+						_.startsWith(command, CommandsDelimiters.DefaultCommandSymbol)
+							? command.substr(1)
+							: command
+					)
+			);
 		}
 
 		if (finalSubCommandName) {
-			return { commandName: this.getHierarchicalCommandName(parentCommandName, finalSubCommandName), remainingArguments: finalRemainingArguments };
+			return {
+				commandName: this.getHierarchicalCommandName(
+					parentCommandName,
+					finalSubCommandName
+				),
+				remainingArguments: finalRemainingArguments,
+			};
 		}
-
 	}
 
 	private createHierarchicalCommand(name: string) {
@@ -215,15 +262,25 @@ export class Yok implements IInjector {
 					let commandArguments: ICommandArgument[] = [];
 
 					if (args.length > 0) {
-						const hierarchicalCommand = this.buildHierarchicalCommand(name, args);
+						const hierarchicalCommand = this.buildHierarchicalCommand(
+							name,
+							args
+						);
 						if (hierarchicalCommand) {
 							commandName = hierarchicalCommand.commandName;
 							commandArguments = hierarchicalCommand.remainingArguments;
 						} else {
-							commandName = defaultCommand ? this.getHierarchicalCommandName(name, defaultCommand) : "help";
+							commandName = defaultCommand
+								? this.getHierarchicalCommandName(name, defaultCommand)
+								: "help";
 							// If we'll execute the default command, but it's full name had been written by the user
 							// for example "tns run ios", we have to remove the "ios" option from the arguments that we'll pass to the command.
-							if (_.includes(this.hierarchicalCommands[name], CommandsDelimiters.DefaultCommandSymbol + args[0])) {
+							if (
+								_.includes(
+									this.hierarchicalCommands[name],
+									CommandsDelimiters.DefaultCommandSymbol + args[0]
+								)
+							) {
 								commandArguments = _.tail(args);
 							} else {
 								commandArguments = args;
@@ -232,7 +289,10 @@ export class Yok implements IInjector {
 					} else {
 						//Execute only default command without arguments
 						if (defaultCommand) {
-							commandName = this.getHierarchicalCommandName(name, defaultCommand);
+							commandName = this.getHierarchicalCommandName(
+								name,
+								defaultCommand
+							);
 						} else {
 							commandName = "help";
 
@@ -242,23 +302,37 @@ export class Yok implements IInjector {
 						}
 					}
 
-					await commandsService.tryExecuteCommand(commandName, commandName === "help" ? [name] : commandArguments);
-				}
+					await commandsService.tryExecuteCommand(
+						commandName,
+						commandName === "help" ? [name] : commandArguments
+					);
+				},
 			};
 		};
 
 		injector.registerCommand(name, factory);
 	}
 
-	private getHierarchicalCommandName(parentCommandName: string, subCommandName: string) {
-		return [parentCommandName, subCommandName].join(CommandsDelimiters.HierarchicalCommand);
+	private getHierarchicalCommandName(
+		parentCommandName: string,
+		subCommandName: string
+	) {
+		return [parentCommandName, subCommandName].join(
+			CommandsDelimiters.HierarchicalCommand
+		);
 	}
 
-	public async isValidHierarchicalCommand(commandName: string, commandArguments: string[]): Promise<boolean> {
+	public async isValidHierarchicalCommand(
+		commandName: string,
+		commandArguments: string[]
+	): Promise<boolean> {
 		if (_.includes(Object.keys(this.hierarchicalCommands), commandName)) {
 			const subCommands = this.hierarchicalCommands[commandName];
 			if (subCommands) {
-				const fullCommandName = this.buildHierarchicalCommand(commandName, commandArguments);
+				const fullCommandName = this.buildHierarchicalCommand(
+					commandName,
+					commandArguments
+				);
 				if (!fullCommandName) {
 					// In case buildHierarchicalCommand doesn't find a valid command
 					// there isn't a valid command or default with those arguments
@@ -275,7 +349,10 @@ export class Yok implements IInjector {
 	}
 
 	public isDefaultCommand(commandName: string): boolean {
-		return commandName.indexOf(CommandsDelimiters.DefaultCommandSymbol) > 0 && commandName.indexOf(CommandsDelimiters.HierarchicalCommand) > 0;
+		return (
+			commandName.indexOf(CommandsDelimiters.DefaultCommandSymbol) > 0 &&
+			commandName.indexOf(CommandsDelimiters.HierarchicalCommand) > 0
+		);
 	}
 
 	public register(name: string, resolver: any, shared?: boolean): void {
@@ -332,7 +409,7 @@ export class Yok implements IInjector {
 		const parsed = call.match(this.dynamicCallRegex);
 		const module = this.resolve(parsed[1]);
 		if (!args && parsed[3]) {
-			args = _.map(parsed[4].split(","), arg => arg.trim());
+			args = _.map(parsed[4].split(","), (arg) => arg.trim());
 		}
 
 		return module[parsed[2]].apply(module, args);
@@ -348,7 +425,10 @@ export class Yok implements IInjector {
 		return data;
 	}
 
-	private resolveConstructor(ctor: any, ctorArguments?: { [key: string]: any }): any {
+	private resolveConstructor(
+		ctor: any,
+		ctorArguments?: { [key: string]: any }
+	): any {
 		annotate(ctor);
 
 		const resolvedArgs = ctor.$inject.args.map((paramName: any) => {
@@ -389,7 +469,11 @@ export class Yok implements IInjector {
 				throw new Error("unable to resolve " + name);
 			}
 
-			if (!dependency.instances || !dependency.instances.length || !dependency.shared) {
+			if (
+				!dependency.instances ||
+				!dependency.instances.length ||
+				!dependency.shared
+			) {
 				if (!dependency.resolver) {
 					throw new Error("no resolver registered for " + name);
 				}
@@ -423,8 +507,12 @@ export class Yok implements IInjector {
 
 	public getRegisteredCommandsNames(includeDev: boolean): string[] {
 		const modulesNames: string[] = _.keys(this.modules);
-		const commandsNames: string[] = _.filter(modulesNames, moduleName => _.startsWith(moduleName, `${this.COMMANDS_NAMESPACE}.`));
-		let commands = _.map(commandsNames, (commandName: string) => commandName.substr(this.COMMANDS_NAMESPACE.length + 1));
+		const commandsNames: string[] = _.filter(modulesNames, (moduleName) =>
+			_.startsWith(moduleName, `${this.COMMANDS_NAMESPACE}.`)
+		);
+		let commands = _.map(commandsNames, (commandName: string) =>
+			commandName.substr(this.COMMANDS_NAMESPACE.length + 1)
+		);
 		if (!includeDev) {
 			commands = _.reject(commands, (command) => _.startsWith(command, "dev-"));
 		}
@@ -442,7 +530,7 @@ export class Yok implements IInjector {
 	public dispose(): void {
 		Object.keys(this.modules).forEach((moduleName) => {
 			const instances = this.modules[moduleName].instances;
-			_.forEach(instances, instance => {
+			_.forEach(instances, (instance) => {
 				if (instance && instance.dispose && instance !== this) {
 					instance.dispose();
 				}

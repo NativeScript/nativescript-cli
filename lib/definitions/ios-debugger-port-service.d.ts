@@ -4,7 +4,7 @@ interface IIOSDebuggerPortInputData {
 }
 
 interface IIOSDebuggerPortData {
-	port: number,
+	port: number;
 	deviceId: string;
 	appId: string;
 }

@@ -15,18 +15,18 @@ describe("projectData", () => {
 
 		testInjector.register("projectHelper", {
 			projectDir: null,
-			sanitizeName: (name: string) => name
+			sanitizeName: (name: string) => name,
 		});
 
 		testInjector.register("fs", {
 			exists: () => true,
 			readJson: (): any => null,
-			readText: (): any => null
+			readText: (): any => null,
 		});
 
 		testInjector.register("staticConfig", {
 			CLIENT_NAME_KEY_IN_PROJECT_FILE: "nativescript",
-			PROJECT_FILE_NAME: "package.json"
+			PROJECT_FILE_NAME: "package.json",
 		});
 
 		testInjector.register("errors", stubs.ErrorsStub);
@@ -38,7 +38,7 @@ describe("projectData", () => {
 		testInjector.register("devicePlatformsConstants", DevicePlatformsConstants);
 
 		testInjector.register("androidResourcesMigrationService", {
-			hasMigrated: () => true
+			hasMigrated: () => true,
 		});
 		testInjector.register("projectData", ProjectData);
 
@@ -48,22 +48,36 @@ describe("projectData", () => {
 	};
 
 	const projectDir = "projectDir";
-	const prepareTest = (opts?: { packageJsonData?: { dependencies?: IStringDictionary, devDependencies: IStringDictionary }, configData?: { shared?: boolean, webpackConfigPath?: string } }): IProjectData => {
+	const prepareTest = (opts?: {
+		packageJsonData?: {
+			dependencies?: IStringDictionary;
+			devDependencies: IStringDictionary;
+		};
+		configData?: { shared?: boolean; webpackConfigPath?: string };
+	}): IProjectData => {
 		const testInjector = createTestInjector();
 		const fs = testInjector.resolve("fs");
 		fs.exists = (filePath: string) => {
-			return filePath && (path.basename(filePath) === "package.json" || path.basename(filePath) === "nativescript.config.js");
+			return (
+				filePath &&
+				(path.basename(filePath) === "package.json" ||
+					path.basename(filePath) === "nativescript.config.js")
+			);
 		};
 
 		fs.readText = (filePath: string) => {
 			if (path.basename(filePath) === "package.json") {
 				return JSON.stringify({
-					dependencies: opts && opts.packageJsonData && opts.packageJsonData.dependencies,
-					devDependencies: opts && opts.packageJsonData && opts.packageJsonData.devDependencies
+					dependencies:
+						opts && opts.packageJsonData && opts.packageJsonData.dependencies,
+					devDependencies:
+						opts &&
+						opts.packageJsonData &&
+						opts.packageJsonData.devDependencies,
 				});
 			} else if (path.basename(filePath) === "nativescript.config.js") {
 				if (opts && opts.configData) {
-					if (typeof opts.configData === 'string') {
+					if (typeof opts.configData === "string") {
 						return opts.configData;
 					}
 					return `module.exports = ${JSON.stringify(opts.configData)}`;
@@ -85,13 +99,16 @@ describe("projectData", () => {
 	};
 
 	describe("projectType", () => {
-
-		const assertProjectType = (dependencies: any, devDependencies: any, expectedProjecType: string) => {
+		const assertProjectType = (
+			dependencies: any,
+			devDependencies: any,
+			expectedProjecType: string
+		) => {
 			const projectData = prepareTest({
 				packageJsonData: {
 					dependencies,
-					devDependencies
-				}
+					devDependencies,
+				},
 			});
 			assert.deepStrictEqual(projectData.projectType, expectedProjecType);
 		};
@@ -109,7 +126,11 @@ describe("projectData", () => {
 		});
 
 		it("detects project as Vue.js when nativescript-vue exists as dependency and typescript is devDependency", () => {
-			assertProjectType({ "nativescript-vue": "*" }, { "typescript": "*" }, "Vue.js");
+			assertProjectType(
+				{ "nativescript-vue": "*" },
+				{ typescript: "*" },
+				"Vue.js"
+			);
 		});
 
 		it("detects project as React when react-nativescript exists as dependency and typescript is devDependency", () => {
@@ -121,11 +142,15 @@ describe("projectData", () => {
 		});
 
 		it("detects project as TypeScript when nativescript-dev-typescript exists as dependency", () => {
-			assertProjectType(null, { "nativescript-dev-typescript": "*" }, "Pure TypeScript");
+			assertProjectType(
+				null,
+				{ "nativescript-dev-typescript": "*" },
+				"Pure TypeScript"
+			);
 		});
 
 		it("detects project as TypeScript when typescript exists as dependency", () => {
-			assertProjectType(null, { "typescript": "*" }, "Pure TypeScript");
+			assertProjectType(null, { typescript: "*" }, "Pure TypeScript");
 		});
 
 		it("detects project as JavaScript when no other project type is detected", () => {
@@ -158,18 +183,31 @@ describe("projectData", () => {
 	describe("webpackConfigPath", () => {
 		it("default path to webpack.config.js is set when nsconfig.json does not set value", () => {
 			const projectData = prepareTest();
-			assert.equal(projectData.webpackConfigPath, path.join(projectDir, "webpack.config.js"));
+			assert.equal(
+				projectData.webpackConfigPath,
+				path.join(projectDir, "webpack.config.js")
+			);
 		});
 
 		it("returns correct path when full path is set in nsconfig.json", () => {
-			const pathToConfig = path.resolve(path.join("/testDir", "innerDir", "mywebpack.config.js"));
-			const projectData = prepareTest({ configData: { webpackConfigPath: pathToConfig } });
+			const pathToConfig = path.resolve(
+				path.join("/testDir", "innerDir", "mywebpack.config.js")
+			);
+			const projectData = prepareTest({
+				configData: { webpackConfigPath: pathToConfig },
+			});
 			assert.equal(projectData.webpackConfigPath, pathToConfig);
 		});
 
 		it("returns correct path when relative path is set in nsconfig.json", () => {
-			const pathToConfig = path.resolve(path.join("projectDir", "innerDir", "mywebpack.config.js"));
-			const projectData = prepareTest({ configData: { webpackConfigPath: path.join("./innerDir", "mywebpack.config.js") } });
+			const pathToConfig = path.resolve(
+				path.join("projectDir", "innerDir", "mywebpack.config.js")
+			);
+			const projectData = prepareTest({
+				configData: {
+					webpackConfigPath: path.join("./innerDir", "mywebpack.config.js"),
+				},
+			});
 			assert.equal(projectData.webpackConfigPath, pathToConfig);
 		});
 	});

@@ -1,4 +1,4 @@
-import * as _ from 'lodash';
+import * as _ from "lodash";
 import { IProjectData } from "../../definitions/project";
 import { IPluginsService } from "../../definitions/plugins";
 import { ICommand, ICommandParameter } from "../../common/definitions/commands";
@@ -6,18 +6,22 @@ import { IErrors } from "../../common/declarations";
 import { injector } from "../../common/yok";
 
 export class UpdatePluginCommand implements ICommand {
-	constructor(private $pluginsService: IPluginsService,
+	constructor(
+		private $pluginsService: IPluginsService,
 		private $projectData: IProjectData,
-		private $errors: IErrors) {
-			this.$projectData.initializeProjectData();
-		}
+		private $errors: IErrors
+	) {
+		this.$projectData.initializeProjectData();
+	}
 
 	public async execute(args: string[]): Promise<void> {
 		let pluginNames = args;
 
 		if (!pluginNames || args.length === 0) {
-			const installedPlugins = await this.$pluginsService.getAllInstalledPlugins(this.$projectData);
-			pluginNames = installedPlugins.map(p => p.name);
+			const installedPlugins = await this.$pluginsService.getAllInstalledPlugins(
+				this.$projectData
+			);
+			pluginNames = installedPlugins.map((p) => p.name);
 		}
 
 		for (const pluginName of pluginNames) {
@@ -31,11 +35,17 @@ export class UpdatePluginCommand implements ICommand {
 			return true;
 		}
 
-		const installedPlugins = await this.$pluginsService.getAllInstalledPlugins(this.$projectData);
-		const installedPluginNames: string[] = installedPlugins.map(pl => pl.name);
+		const installedPlugins = await this.$pluginsService.getAllInstalledPlugins(
+			this.$projectData
+		);
+		const installedPluginNames: string[] = installedPlugins.map(
+			(pl) => pl.name
+		);
 
 		const pluginName = args[0].toLowerCase();
-		if (!_.some(installedPluginNames, name => name.toLowerCase() === pluginName)) {
+		if (
+			!_.some(installedPluginNames, (name) => name.toLowerCase() === pluginName)
+		) {
 			this.$errors.fail(`Plugin "${pluginName}" is not installed.`);
 		}
 

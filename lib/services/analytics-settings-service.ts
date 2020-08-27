@@ -1,19 +1,28 @@
 import { createGUID } from "../common/helpers";
 import { exported } from "../common/decorators";
 import { IStaticConfig } from "../declarations";
-import { IAnalyticsSettingsService, IUserSettingsService, IHostInfo, IOsInfo, IPlaygroundService, IPlaygroundInfo } from "../common/declarations";
-import * as _ from 'lodash';
+import {
+	IAnalyticsSettingsService,
+	IUserSettingsService,
+	IHostInfo,
+	IOsInfo,
+	IPlaygroundService,
+	IPlaygroundInfo,
+} from "../common/declarations";
+import * as _ from "lodash";
 import { injector } from "../common/yok";
 
 class AnalyticsSettingsService implements IAnalyticsSettingsService {
 	private static SESSIONS_STARTED_KEY_PREFIX = "SESSIONS_STARTED_";
 
-	constructor(private $userSettingsService: IUserSettingsService,
+	constructor(
+		private $userSettingsService: IUserSettingsService,
 		private $staticConfig: IStaticConfig,
 		private $hostInfo: IHostInfo,
 		private $osInfo: IOsInfo,
 		private $logger: ILogger,
-		private $playgroundService: IPlaygroundService) { }
+		private $playgroundService: IPlaygroundService
+	) {}
 
 	public async canDoRequest(): Promise<boolean> {
 		return true;
@@ -25,7 +34,9 @@ class AnalyticsSettingsService implements IAnalyticsSettingsService {
 
 	@exported("analyticsSettingsService")
 	public getClientId(): Promise<string> {
-		return this.getSettingValueOrDefault(this.$staticConfig.ANALYTICS_INSTALLATION_ID_SETTING_NAME);
+		return this.getSettingValueOrDefault(
+			this.$staticConfig.ANALYTICS_INSTALLATION_ID_SETTING_NAME
+		);
 	}
 
 	@exported("analyticsSettingsService")
@@ -42,12 +53,20 @@ class AnalyticsSettingsService implements IAnalyticsSettingsService {
 	}
 
 	public async getUserSessionsCount(projectName: string): Promise<number> {
-		const sessionsCountForProject = await this.$userSettingsService.getSettingValue<number>(this.getSessionsProjectKey(projectName));
+		const sessionsCountForProject = await this.$userSettingsService.getSettingValue<
+			number
+		>(this.getSessionsProjectKey(projectName));
 		return sessionsCountForProject || 0;
 	}
 
-	public async setUserSessionsCount(count: number, projectName: string): Promise<void> {
-		return this.$userSettingsService.saveSetting<number>(this.getSessionsProjectKey(projectName), count);
+	public async setUserSessionsCount(
+		count: number,
+		projectName: string
+	): Promise<void> {
+		return this.$userSettingsService.saveSetting<number>(
+			this.getSessionsProjectKey(projectName),
+			count
+		);
 	}
 
 	@exported("analyticsSettingsService")
@@ -89,7 +108,9 @@ class AnalyticsSettingsService implements IAnalyticsSettingsService {
 	}
 
 	private async getSettingValueOrDefault(settingName: string): Promise<string> {
-		let guid = await this.$userSettingsService.getSettingValue<string>(settingName);
+		let guid = await this.$userSettingsService.getSettingValue<string>(
+			settingName
+		);
 		if (!guid) {
 			guid = createGUID(false);
 

@@ -1,8 +1,8 @@
-import * as constants from './constants';
-import { IDictionary } from './common/declarations';
+import * as constants from "./constants";
+import { IDictionary } from "./common/declarations";
 import { injector } from "./common/yok";
 export class Constants implements IDictionary<any> {
-	constructor () {
+	constructor() {
 		Object.assign(this, constants);
 	}
 }

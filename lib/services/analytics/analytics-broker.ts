@@ -1,26 +1,44 @@
 import { cache } from "../../common/decorators";
-import { IGoogleAnalyticsProvider, IAnalyticsBroker, ITrackingInformation, IGoogleAnalyticsTrackingInformation } from "./analytics";
+import {
+	IGoogleAnalyticsProvider,
+	IAnalyticsBroker,
+	ITrackingInformation,
+	IGoogleAnalyticsTrackingInformation,
+} from "./analytics";
 import { IAnalyticsSettingsService } from "../../common/declarations";
 import { IInjector } from "../../common/definitions/yok";
 
 export class AnalyticsBroker implements IAnalyticsBroker {
-
 	@cache()
-	private async getGoogleAnalyticsProvider(): Promise<IGoogleAnalyticsProvider> {
+	private async getGoogleAnalyticsProvider(): Promise<
+		IGoogleAnalyticsProvider
+	> {
 		const clientId = await this.$analyticsSettingsService.getClientId();
-		return this.$injector.resolve("googleAnalyticsProvider", { clientId, analyticsLoggingService: this.analyticsLoggingService });
+		return this.$injector.resolve("googleAnalyticsProvider", {
+			clientId,
+			analyticsLoggingService: this.analyticsLoggingService,
+		});
 	}
 
-	constructor(private $analyticsSettingsService: IAnalyticsSettingsService,
+	constructor(
+		private $analyticsSettingsService: IAnalyticsSettingsService,
 		private $injector: IInjector,
-		private analyticsLoggingService: IFileLogService) { }
+		private analyticsLoggingService: IFileLogService
+	) {}
 
-	public async sendDataForTracking(trackInfo: ITrackingInformation): Promise<void> {
+	public async sendDataForTracking(
+		trackInfo: ITrackingInformation
+	): Promise<void> {
 		try {
 			const googleProvider = await this.getGoogleAnalyticsProvider();
-			await googleProvider.trackHit(<IGoogleAnalyticsTrackingInformation>trackInfo);
+			await googleProvider.trackHit(
+				<IGoogleAnalyticsTrackingInformation>trackInfo
+			);
 		} catch (err) {
-			this.analyticsLoggingService.logData({ message: `AnalyticsBroker unable to execute action in sendDataForTracking: ${err}`, type: FileLogMessageType.Error });
+			this.analyticsLoggingService.logData({
+				message: `AnalyticsBroker unable to execute action in sendDataForTracking: ${err}`,
+				type: FileLogMessageType.Error,
+			});
 		}
 	}
 }

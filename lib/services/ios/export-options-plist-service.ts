@@ -5,12 +5,19 @@ import { IFileSystem } from "../../common/declarations";
 import { injector } from "../../common/yok";
 
 export class ExportOptionsPlistService implements IExportOptionsPlistService {
-	constructor(private $fs: IFileSystem,
-		private $tempService: ITempService) { }
+	constructor(private $fs: IFileSystem, private $tempService: ITempService) {}
 
-	public async createDevelopmentExportOptionsPlist(archivePath: string, projectData: IProjectData, buildConfig: IBuildConfig): Promise<IExportOptionsPlistOutput> {
-		const exportOptionsMethod = this.getExportOptionsMethod(projectData, archivePath);
-		const provision = buildConfig.provision || buildConfig.mobileProvisionIdentifier;
+	public async createDevelopmentExportOptionsPlist(
+		archivePath: string,
+		projectData: IProjectData,
+		buildConfig: IBuildConfig
+	): Promise<IExportOptionsPlistOutput> {
+		const exportOptionsMethod = this.getExportOptionsMethod(
+			projectData,
+			archivePath
+		);
+		const provision =
+			buildConfig.provision || buildConfig.mobileProvisionIdentifier;
 		const iCloudContainerEnvironment = buildConfig.iCloudContainerEnvironment;
 		let plistTemplate = `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -40,18 +47,29 @@ export class ExportOptionsPlistService implements IExportOptionsPlistService {
 </plist>`;
 
 		// Save the options...
-		const exportOptionsPlistFilePath = await this.$tempService.path({ prefix: "export-", suffix: ".plist" });
+		const exportOptionsPlistFilePath = await this.$tempService.path({
+			prefix: "export-",
+			suffix: ".plist",
+		});
 		this.$fs.writeFile(exportOptionsPlistFilePath, plistTemplate);
 
 		// The xcodebuild exportPath expects directory and writes the <project-name>.ipa at that directory.
 		const exportFileDir = path.resolve(path.dirname(archivePath));
-		const exportFilePath = path.join(exportFileDir, projectData.projectName + ".ipa");
+		const exportFilePath = path.join(
+			exportFileDir,
+			projectData.projectName + ".ipa"
+		);
 
 		return { exportFileDir, exportFilePath, exportOptionsPlistFilePath };
 	}
 
-	public async createDistributionExportOptionsPlist(archivePath: string, projectData: IProjectData, buildConfig: IBuildConfig): Promise<IExportOptionsPlistOutput> {
-		const provision = buildConfig.provision || buildConfig.mobileProvisionIdentifier;
+	public async createDistributionExportOptionsPlist(
+		archivePath: string,
+		projectData: IProjectData,
+		buildConfig: IBuildConfig
+	): Promise<IExportOptionsPlistOutput> {
+		const provision =
+			buildConfig.provision || buildConfig.mobileProvisionIdentifier;
 		const teamId = buildConfig.teamId;
 		let plistTemplate = `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -82,24 +100,41 @@ export class ExportOptionsPlistService implements IExportOptionsPlistService {
 </plist>`;
 
 		// Save the options...
-		const exportOptionsPlistFilePath = await this.$tempService.path({ prefix: "export-", suffix: ".plist" });
+		const exportOptionsPlistFilePath = await this.$tempService.path({
+			prefix: "export-",
+			suffix: ".plist",
+		});
 		this.$fs.writeFile(exportOptionsPlistFilePath, plistTemplate);
 
 		const exportFileDir = path.resolve(path.dirname(archivePath));
-		const exportFilePath = path.join(exportFileDir, projectData.projectName + ".ipa");
+		const exportFilePath = path.join(
+			exportFileDir,
+			projectData.projectName + ".ipa"
+		);
 
 		return { exportFileDir, exportFilePath, exportOptionsPlistFilePath };
 	}
 
-	private getExportOptionsMethod(projectData: IProjectData, archivePath: string): string {
-		const embeddedMobileProvisionPath = path.join(archivePath, 'Products', 'Applications', `${projectData.projectName}.app`, "embedded.mobileprovision");
-		const provision = mobileProvisionFinder.provision.readFromFile(embeddedMobileProvisionPath);
+	private getExportOptionsMethod(
+		projectData: IProjectData,
+		archivePath: string
+	): string {
+		const embeddedMobileProvisionPath = path.join(
+			archivePath,
+			"Products",
+			"Applications",
+			`${projectData.projectName}.app`,
+			"embedded.mobileprovision"
+		);
+		const provision = mobileProvisionFinder.provision.readFromFile(
+			embeddedMobileProvisionPath
+		);
 
 		return {
-			"Development": "development",
-			"AdHoc": "ad-hoc",
-			"Distribution": "app-store",
-			"Enterprise": "enterprise"
+			Development: "development",
+			AdHoc: "ad-hoc",
+			Distribution: "app-store",
+			Enterprise: "enterprise",
 		}[provision.Type];
 	}
 }

@@ -2,10 +2,14 @@ import * as log4js from "log4js";
 import * as util from "util";
 import * as stream from "stream";
 import * as marked from "marked";
-import * as _ from 'lodash';
+import * as _ from "lodash";
 import { cache } from "../decorators";
 import { layout } from "./layouts/cli-layout";
-import { LoggerConfigData, LoggerLevel, LoggerAppenders } from "../../constants";
+import {
+	LoggerConfigData,
+	LoggerLevel,
+	LoggerAppenders,
+} from "../../constants";
 import { IDictionary } from "../declarations";
 import { injector } from "../yok";
 const TerminalRenderer = require("marked-terminal");
@@ -18,7 +22,9 @@ export class Logger implements ILogger {
 	private defaultLogLevel: LoggerLevel;
 
 	constructor(private $config: Config.IConfig) {
-		this.defaultLogLevel = this.$config.DEBUG ? LoggerLevel.TRACE : LoggerLevel.INFO;
+		this.defaultLogLevel = this.$config.DEBUG
+			? LoggerLevel.TRACE
+			: LoggerLevel.INFO;
 	}
 
 	@cache()
@@ -29,8 +35,8 @@ export class Logger implements ILogger {
 		const appender: any = {
 			type: "console",
 			layout: {
-				type: "messagePassThrough"
-			}
+				type: "messagePassThrough",
+			},
 		};
 
 		if (appenderOpts) {
@@ -38,21 +44,24 @@ export class Logger implements ILogger {
 		}
 
 		const appenders: IDictionary<log4js.Appender> = {
-			out: appender
+			out: appender,
 		};
 
-		const categories: IDictionary<{ appenders: string[]; level: string; }> = {
+		const categories: IDictionary<{ appenders: string[]; level: string }> = {
 			default: {
-				appenders: ['out'],
-				level: level || this.defaultLogLevel
-			}
+				appenders: ["out"],
+				level: level || this.defaultLogLevel,
+			},
 		};
 
 		log4js.configure({ appenders, categories });
 
 		this.log4jsLogger = log4js.getLogger();
 		if (level === LoggerLevel.TRACE || level === LoggerLevel.ALL) {
-			this.warn(`The "${level}" log level might print some sensitive data like secrets or access tokens in request URLs. Be careful when you share this output.`, { wrapMessageWithBorders: true });
+			this.warn(
+				`The "${level}" log level might print some sensitive data like secrets or access tokens in request URLs. Be careful when you share this output.`,
+				{ wrapMessageWithBorders: true }
+			);
 		}
 	}
 
@@ -60,8 +69,11 @@ export class Logger implements ILogger {
 		log4js.addLayout("cli", layout);
 
 		this.initialize({
-			appenderOptions: { type: LoggerAppenders.cliAppender, layout: { type: "cli" } },
-			level: opts.level || this.defaultLogLevel
+			appenderOptions: {
+				type: LoggerAppenders.cliAppender,
+				layout: { type: "cli" },
+			},
+			level: opts.level || this.defaultLogLevel,
 		});
 	}
 
@@ -125,15 +137,15 @@ export class Logger implements ILogger {
 			strong: chalk.green.bold,
 			firstHeading: chalk.blue.bold,
 			tableOptions: {
-				chars: { 'mid': '', 'left-mid': '', 'mid-mid': '', 'right-mid': '' },
+				chars: { mid: "", "left-mid": "", "mid-mid": "", "right-mid": "" },
 				style: {
-					'padding-left': 1,
-					'padding-right': 1,
-					head: ['green', 'bold'],
-					border: ['grey'],
-					compact: false
-				}
-			}
+					"padding-left": 1,
+					"padding-right": 1,
+					head: ["green", "bold"],
+					border: ["grey"],
+					compact: false,
+				},
+			},
 		};
 
 		marked.setOptions({ renderer: new TerminalRenderer(opts) });
@@ -157,18 +169,28 @@ export class Logger implements ILogger {
 			this.log4jsLogger.addContext(prop, logOpts[prop]);
 		}
 
-		(<IDictionary<any>>this.log4jsLogger)[logMethod.toLowerCase()].apply(this.log4jsLogger, data);
+		(<IDictionary<any>>this.log4jsLogger)[logMethod.toLowerCase()].apply(
+			this.log4jsLogger,
+			data
+		);
 
 		for (const prop in logOpts) {
 			this.log4jsLogger.removeContext(prop);
 		}
 	}
 
-	private getLogOptionsForMessage(data: any[]): { data: any[], [key: string]: any } {
+	private getLogOptionsForMessage(
+		data: any[]
+	): { data: any[]; [key: string]: any } {
 		const loggerOptionKeys = _.keys(LoggerConfigData);
-		const dataToCheck = data.filter(el => {
+		const dataToCheck = data.filter((el) => {
 			// objects created with Object.create(null) do not have `hasOwnProperty` function
-			if (!!el && typeof el === "object" && el.hasOwnProperty && typeof el.hasOwnProperty === "function") {
+			if (
+				!!el &&
+				typeof el === "object" &&
+				el.hasOwnProperty &&
+				typeof el.hasOwnProperty === "function"
+			) {
 				for (const key of loggerOptionKeys) {
 					if (el.hasOwnProperty(key)) {
 						// include only the elements which have one of the keys we've specified as logger options
@@ -181,7 +203,7 @@ export class Logger implements ILogger {
 		});
 
 		const result: any = {
-			data: _.difference(data, dataToCheck)
+			data: _.difference(data, dataToCheck),
 		};
 
 		for (const element of dataToCheck) {
@@ -203,9 +225,12 @@ export class Logger implements ILogger {
 	}
 
 	private getPasswordEncodedArguments(args: string[]): string[] {
-		return _.map(args, argument => {
-			if (typeof argument === 'string' && !!argument.match(/password/i)) {
-				argument = argument.replace(this.passwordRegex, this.passwordReplacement);
+		return _.map(args, (argument) => {
+			if (typeof argument === "string" && !!argument.match(/password/i)) {
+				argument = argument.replace(
+					this.passwordRegex,
+					this.passwordReplacement
+				);
 			}
 
 			return argument;

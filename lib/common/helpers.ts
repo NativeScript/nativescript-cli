@@ -6,11 +6,17 @@ import { Configurations } from "./constants";
 import { EventEmitter } from "events";
 import * as crypto from "crypto";
 import * as _ from "lodash";
-import { IDictionary, IDeferPromise, Server, IHooksService, IProjectFilesConfig } from "./declarations";
+import {
+	IDictionary,
+	IDeferPromise,
+	Server,
+	IHooksService,
+	IProjectFilesConfig,
+} from "./declarations";
 import { IAndroidSigningData } from "../definitions/build";
 
 const Table = require("cli-table");
-const STRIP_COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/mg;
+const STRIP_COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/gm;
 
 export function stripComments(content: string): string {
 	const newContent = content.replace(STRIP_COMMENTS, "");
@@ -36,7 +42,9 @@ export function doesCurrentNpmCommandMatch(patterns?: RegExp[]): boolean {
  * @returns {boolean} True in case any element of the array matches any of the patterns. False otherwise.
  */
 export function someWithRegExps(array: string[], patterns: RegExp[]): boolean {
-	return _.some(array, item => _.some(patterns, pattern => !!item.match(pattern)));
+	return _.some(array, (item) =>
+		_.some(patterns, (pattern) => !!item.match(pattern))
+	);
 }
 
 export function getCurrentNpmCommandArgv(): string[] {
@@ -54,13 +62,18 @@ export function getCurrentNpmCommandArgv(): string[] {
 }
 
 export function isInstallingNativeScriptGlobally(): boolean {
-	return isInstallingNativeScriptGloballyWithNpm() || isInstallingNativeScriptGloballyWithYarn();
+	return (
+		isInstallingNativeScriptGloballyWithNpm() ||
+		isInstallingNativeScriptGloballyWithYarn()
+	);
 }
 
 function isInstallingNativeScriptGloballyWithNpm(): boolean {
 	const isInstallCommand = doesCurrentNpmCommandMatch([/^install$/, /^i$/]);
 	const isGlobalCommand = doesCurrentNpmCommandMatch([/^--global$/, /^-g$/]);
-	const hasNativeScriptPackage = doesCurrentNpmCommandMatch([/^nativescript(@.*)?$/]);
+	const hasNativeScriptPackage = doesCurrentNpmCommandMatch([
+		/^nativescript(@.*)?$/,
+	]);
 
 	return isInstallCommand && isGlobalCommand && hasNativeScriptPackage;
 }
@@ -69,7 +82,9 @@ function isInstallingNativeScriptGloballyWithYarn(): boolean {
 	// yarn populates the same env used by npm - npm_config_argv, so check it for yarn specific command
 	const isInstallCommand = doesCurrentNpmCommandMatch([/^add$/]);
 	const isGlobalCommand = doesCurrentNpmCommandMatch([/^global$/]);
-	const hasNativeScriptPackage = doesCurrentNpmCommandMatch([/^nativescript(@.*)?$/]);
+	const hasNativeScriptPackage = doesCurrentNpmCommandMatch([
+		/^nativescript(@.*)?$/,
+	]);
 
 	return isInstallCommand && isGlobalCommand && hasNativeScriptPackage;
 }
@@ -96,7 +111,7 @@ export function createRegExp(input: string, opts?: string): RegExp {
  */
 export function regExpEscape(input: string): string {
 	// https://stackoverflow.com/questions/3446170/escape-string-for-use-in-javascript-regex
-	return input.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+	return input.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 export function getShortPluginName(pluginName: string): string {
@@ -108,13 +123,18 @@ function sanitizePluginName(pluginName: string): string {
 	return pluginName.split("/").pop();
 }
 
-export async function executeActionByChunks<T>(initialData: T[] | IDictionary<T>, chunkSize: number, elementAction: (element: T, key?: string | number) => Promise<any>): Promise<void> {
+export async function executeActionByChunks<T>(
+	initialData: T[] | IDictionary<T>,
+	chunkSize: number,
+	elementAction: (element: T, key?: string | number) => Promise<any>
+): Promise<void> {
 	let arrayToChunk: (T | string)[];
 	let action: (key: string | T) => Promise<any>;
 
 	if (_.isArray(initialData)) {
 		arrayToChunk = initialData;
-		action = (element: T) => elementAction(element, initialData.indexOf(element));
+		action = (element: T) =>
+			elementAction(element, initialData.indexOf(element));
 	} else {
 		arrayToChunk = _.keys(initialData);
 		action = (key: string) => elementAction(initialData[key], key);
@@ -122,7 +142,7 @@ export async function executeActionByChunks<T>(initialData: T[] | IDictionary<T>
 
 	const chunks = _.chunk(arrayToChunk, chunkSize);
 	for (const chunk of chunks) {
-		await Promise.all(_.map(chunk, element => action(element)));
+		await Promise.all(_.map(chunk, (element) => action(element)));
 	}
 }
 
@@ -156,7 +176,7 @@ export function deferPromise<T>(): IDeferPromise<T> {
 		isResolved: () => isResolved,
 		isRejected: () => isRejected,
 		isPending: () => !isResolved && !isRejected,
-		getResult: () => result
+		getResult: () => result,
 	};
 }
 
@@ -181,10 +201,10 @@ export function settlePromises<T>(promises: Promise<T>[]): Promise<T[]> {
 
 		_.forEach(promises, (currentPromise, index) => {
 			currentPromise
-				.then(result => {
+				.then((result) => {
 					results[index] = result;
 				})
-				.catch(err => {
+				.catch((err) => {
 					// Accumulate all errors.
 					errors.push(err);
 				})
@@ -192,7 +212,15 @@ export function settlePromises<T>(promises: Promise<T>[]): Promise<T[]> {
 					settledPromisesCount++;
 
 					if (settledPromisesCount === length) {
-						errors.length ? reject(new Error(`Multiple errors were thrown:${EOL}${errors.map(e => e.message || e).join(EOL)}`)) : resolve(results);
+						errors.length
+							? reject(
+									new Error(
+										`Multiple errors were thrown:${EOL}${errors
+											.map((e) => e.message || e)
+											.join(EOL)}`
+									)
+							  )
+							: resolve(results);
 					}
 				})
 				.catch();
@@ -202,7 +230,9 @@ export function settlePromises<T>(promises: Promise<T>[]): Promise<T[]> {
 
 export function getPropertyName(func: Function): string {
 	if (func) {
-		const match = func.toString().match(/(?:return\s+?.*\.(.+);)|(?:=>\s*?.*\.(.+)\b)/);
+		const match = func
+			.toString()
+			.match(/(?:return\s+?.*\.(.+);)|(?:=>\s*?.*\.(.+)\b)/);
 		if (match) {
 			return (match[1] || match[2]).trim();
 		}
@@ -216,7 +246,7 @@ function bashQuote(s: string): string {
 		return s;
 	}
 	// replace ' with '"'"' and wrap in ''
-	return "'" + s.replace(/'/g, '\'"\'"\'') + "'";
+	return "'" + s.replace(/'/g, "'\"'\"'") + "'";
 }
 
 function cmdQuote(s: string): string {
@@ -232,7 +262,7 @@ export function quoteString(s: string): string {
 		return s;
 	}
 
-	return (platform() === "win32") ? cmdQuote(s) : bashQuote(s);
+	return platform() === "win32" ? cmdQuote(s) : bashQuote(s);
 }
 
 export function createGUID(useBraces?: boolean) {
@@ -249,7 +279,11 @@ export function createGUID(useBraces?: boolean) {
 	return output;
 }
 
-export function stringReplaceAll(inputString: string, find: any, replace: string): string {
+export function stringReplaceAll(
+	inputString: string,
+	find: any,
+	replace: string
+): string {
 	return inputString.split(find).join(replace);
 }
 
@@ -261,16 +295,28 @@ export function isResponseRedirect(response: Server.IRequestResponseData) {
 	return _.includes([301, 302, 303, 307, 308], response.statusCode);
 }
 
-export function formatListOfNames(names: string[], conjunction?: string): string {
+export function formatListOfNames(
+	names: string[],
+	conjunction?: string
+): string {
 	conjunction = conjunction === undefined ? "or" : conjunction;
 	if (names.length <= 1) {
 		return names[0];
 	} else {
-		return _.initial(names).join(", ") + " " + conjunction + " " + names[names.length - 1];
+		return (
+			_.initial(names).join(", ") +
+			" " +
+			conjunction +
+			" " +
+			names[names.length - 1]
+		);
 	}
 }
 
-export function getRelativeToRootPath(rootPath: string, filePath: string): string {
+export function getRelativeToRootPath(
+	rootPath: string,
+	filePath: string
+): string {
 	const relativeToRootPath = filePath.substr(rootPath.length);
 	return relativeToRootPath;
 }
@@ -293,10 +339,12 @@ export function isInteractive(): boolean {
  * Checks if current process is running in Text Terminal (TTY)
  */
 function isRunningInTTY(): boolean {
-	return process.stdout &&
+	return (
+		process.stdout &&
 		process.stdout.isTTY &&
 		process.stdin &&
-		process.stdin.isTTY;
+		process.stdin.isTTY
+	);
 }
 
 function isCIEnvironment(): boolean {
@@ -324,10 +372,17 @@ export function block(operation: () => void): void {
 
 export function isNumberWithoutExponent(n: any): boolean {
 	const parsedNum = parseFloat(n);
-	return !isNaN(parsedNum) && isFinite(n) && n.toString && n.toString() === parsedNum.toString();
+	return (
+		!isNaN(parsedNum) &&
+		isFinite(n) &&
+		n.toString &&
+		n.toString() === parsedNum.toString()
+	);
 }
 
-export function fromWindowsRelativePathToUnix(windowsRelativePath: string): string {
+export function fromWindowsRelativePathToUnix(
+	windowsRelativePath: string
+): string {
 	return windowsRelativePath.replace(/\\/g, "/");
 }
 
@@ -353,10 +408,10 @@ export async function sleep(ms: number): Promise<void> {
 export function createTable(headers: string[], data: string[][]): any {
 	const table = new Table({
 		head: headers,
-		chars: { "mid": "", "left-mid": "", "mid-mid": "", "right-mid": "" }
+		chars: { mid: "", "left-mid": "", "mid-mid": "", "right-mid": "" },
 	});
 
-	_.forEach(data, row => table.push(row));
+	_.forEach(data, (row) => table.push(row));
 	return table;
 }
 
@@ -365,14 +420,21 @@ export function getMessageWithBorders(message: string, spanLength = 3): string {
 		return "";
 	}
 
-	const longestRowLength = message.split("\n").sort((a, b) => { return b.length - a.length; })[0].length;
+	const longestRowLength = message.split("\n").sort((a, b) => {
+		return b.length - a.length;
+	})[0].length;
 	let border = "*".repeat(longestRowLength + 2 * spanLength); // * 2 for both sides
 	if (border.length % 2 === 0) {
 		border += "*"; // the * should always be an odd number in order to get * in each edge (we will remove the even *s below)
 	}
 	border = border.replace(/\*\*/g, "* "); // ***** => * * * in order to have similar padding to the side borders
 	const formatRow = function (row: string) {
-		return _.padEnd("*", spanLength) + _.padEnd(row, border.length - (2 * spanLength)) + _.padStart("*", spanLength) + EOL;
+		return (
+			_.padEnd("*", spanLength) +
+			_.padEnd(row, border.length - 2 * spanLength) +
+			_.padStart("*", spanLength) +
+			EOL
+		);
 	};
 	const emptyRow = formatRow("");
 
@@ -381,7 +443,7 @@ export function getMessageWithBorders(message: string, spanLength = 3): string {
 		EOL,
 		border + EOL,
 		emptyRow,
-		...message.split("\n").map(row => formatRow(row.trim())),
+		...message.split("\n").map((row) => formatRow(row.trim())),
 		emptyRow,
 		border + EOL,
 		EOL
@@ -389,7 +451,11 @@ export function getMessageWithBorders(message: string, spanLength = 3): string {
 	return messageWithBorders.join("");
 }
 
-export function remove<T>(array: T[], predicate: (element: T) => boolean, numberOfElements?: number): T[] {
+export function remove<T>(
+	array: T[],
+	predicate: (element: T) => boolean,
+	numberOfElements?: number
+): T[] {
 	numberOfElements = numberOfElements || 1;
 	const index = _.findIndex(array, predicate);
 	if (index === -1) {
@@ -417,13 +483,13 @@ export function parseJson(data: string): any {
 }
 
 // TODO: Use generic for predicatе predicate: (element: T|T[]) when TypeScript support this.
-export async function getFuturesResults<T>(promises: Promise<T | T[] | T[][]>[], predicate: (element: any) => boolean): Promise<T[] | T[][]> {
+export async function getFuturesResults<T>(
+	promises: Promise<T | T[] | T[][]>[],
+	predicate: (element: any) => boolean
+): Promise<T[] | T[][]> {
 	const results = await Promise.all(promises);
 
-	return _(results)
-		.filter(predicate)
-		.flatten()
-		.value();
+	return _(results).filter(predicate).flatten().value();
 }
 
 /**
@@ -432,7 +498,10 @@ export async function getFuturesResults<T>(promises: Promise<T | T[] | T[][]>[],
  * @param requiredVersionLength The required length of the version string.
  * @returns {string} Appended version string. In case input is null, undefined or empty string, it is returned immediately without appending anything.
  */
-export function appendZeroesToVersion(version: string, requiredVersionLength: number): string {
+export function appendZeroesToVersion(
+	version: string,
+	requiredVersionLength: number
+): string {
 	if (version) {
 		const zeroesToAppend = requiredVersionLength - version.split(".").length;
 		for (let index = 0; index < zeroesToAppend; index++) {
@@ -443,8 +512,15 @@ export function appendZeroesToVersion(version: string, requiredVersionLength: nu
 	return version;
 }
 
-export function decorateMethod(before: (method1: any, self1: any, args1: any[]) => Promise<any>, after: (method2: any, self2: any, result2: any, args2: any[]) => Promise<any>) {
-	return (target: Object, propertyKey: string, descriptor: TypedPropertyDescriptor<Function>) => {
+export function decorateMethod(
+	before: (method1: any, self1: any, args1: any[]) => Promise<any>,
+	after: (method2: any, self2: any, result2: any, args2: any[]) => Promise<any>
+) {
+	return (
+		target: Object,
+		propertyKey: string,
+		descriptor: TypedPropertyDescriptor<Function>
+	) => {
 		const sink = descriptor.value;
 		descriptor.value = async function (...args: any[]): Promise<any> {
 			let newMethods: Function[] = null;
@@ -455,11 +531,14 @@ export function decorateMethod(before: (method1: any, self1: any, args1: any[]) 
 			let hasBeenReplaced = false;
 			let result: any;
 			if (newMethods && newMethods.length) {
-				const replacementMethods = _.filter(newMethods, f => _.isFunction(f));
+				const replacementMethods = _.filter(newMethods, (f) => _.isFunction(f));
 				if (replacementMethods.length > 0) {
-
 					hasBeenReplaced = true;
-					const chainedReplacementMethod = _.reduce(replacementMethods, (prev, next) => next.bind(next, args, prev), sink.bind(this));
+					const chainedReplacementMethod = _.reduce(
+						replacementMethods,
+						(prev, next) => next.bind(next, args, prev),
+						sink.bind(this)
+					);
 					result = chainedReplacementMethod();
 				}
 			}
@@ -483,14 +562,20 @@ export function hook(commandName: string) {
 		if (!hooksService) {
 			const injector = self.$injector;
 			if (!injector) {
-				throw Error('Type with hooks needs to have either $hooksService or $injector injected.');
+				throw Error(
+					"Type with hooks needs to have either $hooksService or $injector injected."
+				);
 			}
-			hooksService = injector.resolve('hooksService');
+			hooksService = injector.resolve("hooksService");
 		}
 		return hooksService;
 	}
 
-	function prepareArguments(method: any, args: any[], hooksService: IHooksService): { [key: string]: any } {
+	function prepareArguments(
+		method: any,
+		args: any[],
+		hooksService: IHooksService
+	): { [key: string]: any } {
 		annotate(method);
 		const argHash: any = {};
 		for (let i = 0; i < method.$inject.args.length; ++i) {
@@ -506,21 +591,33 @@ export function hook(commandName: string) {
 	return decorateMethod(
 		async (method: any, self: any, args: any[]) => {
 			const hooksService = getHooksService(self);
-			return hooksService.executeBeforeHooks(commandName, prepareArguments(method, args, hooksService));
+			return hooksService.executeBeforeHooks(
+				commandName,
+				prepareArguments(method, args, hooksService)
+			);
 		},
 		async (method: any, self: any, resultPromise: any, args: any[]) => {
 			const result = await resultPromise;
 			const hooksService = getHooksService(self);
-			await hooksService.executeAfterHooks(commandName, prepareArguments(method, args, hooksService));
+			await hooksService.executeAfterHooks(
+				commandName,
+				prepareArguments(method, args, hooksService)
+			);
 			return Promise.resolve(result);
-		});
+		}
+	);
 }
 
 export function isPromise(candidateFuture: any): boolean {
-	return !!(candidateFuture && typeof (candidateFuture.then) === "function");
+	return !!(candidateFuture && typeof candidateFuture.then === "function");
 }
 
-export async function attachAwaitDetach(eventName: string, eventEmitter: EventEmitter, eventHandler: (...args: any[]) => void, operation: Promise<any>) {
+export async function attachAwaitDetach(
+	eventName: string,
+	eventEmitter: EventEmitter,
+	eventHandler: (...args: any[]) => void,
+	operation: Promise<any>
+) {
 	eventEmitter.on(eventName, eventHandler);
 
 	try {
@@ -530,7 +627,10 @@ export async function attachAwaitDetach(eventName: string, eventEmitter: EventEm
 	}
 }
 
-export async function connectEventually(factory: () => Promise<net.Socket>, handler: (_socket: net.Socket) => void): Promise<void> {
+export async function connectEventually(
+	factory: () => Promise<net.Socket>,
+	handler: (_socket: net.Socket) => void
+): Promise<void> {
 	async function tryConnect() {
 		const tryConnectAfterTimeout = setTimeout.bind(undefined, tryConnect, 1000);
 
@@ -546,11 +646,20 @@ export async function connectEventually(factory: () => Promise<net.Socket>, hand
 	await tryConnect();
 }
 
-export function getHash(str: string, options?: { algorithm?: string, encoding?: crypto.HexBase64Latin1Encoding }): string {
-	return crypto.createHash(options && options.algorithm || 'sha256').update(str).digest(options && options.encoding || 'hex');
+export function getHash(
+	str: string,
+	options?: { algorithm?: string; encoding?: crypto.HexBase64Latin1Encoding }
+): string {
+	return crypto
+		.createHash((options && options.algorithm) || "sha256")
+		.update(str)
+		.digest((options && options.encoding) || "hex");
 }
 
-export async function connectEventuallyUntilTimeout(factory: () => Promise<net.Socket>, timeout: number): Promise<net.Socket> {
+export async function connectEventuallyUntilTimeout(
+	factory: () => Promise<net.Socket>,
+	timeout: number
+): Promise<net.Socket> {
 	return new Promise<net.Socket>(async (resolve, reject) => {
 		let lastKnownError: Error;
 		let isResolved = false;
@@ -558,7 +667,9 @@ export async function connectEventuallyUntilTimeout(factory: () => Promise<net.S
 		const connectionTimer = setTimeout(function () {
 			if (!isResolved) {
 				isResolved = true;
-				reject(lastKnownError || new Error(`Unable to connect for ${timeout}ms`));
+				reject(
+					lastKnownError || new Error(`Unable to connect for ${timeout}ms`)
+				);
 			}
 		}, timeout);
 
@@ -591,9 +702,13 @@ export async function connectEventuallyUntilTimeout(factory: () => Promise<net.S
 	});
 }
 
-export function getProjectFilesConfig(opts: { isReleaseBuild: boolean }): IProjectFilesConfig {
+export function getProjectFilesConfig(opts: {
+	isReleaseBuild: boolean;
+}): IProjectFilesConfig {
 	const projectFilesConfig: IProjectFilesConfig = {
-		configuration: opts.isReleaseBuild ? Configurations.Release.toLowerCase() : Configurations.Debug.toLowerCase()
+		configuration: opts.isReleaseBuild
+			? Configurations.Release.toLowerCase()
+			: Configurations.Debug.toLowerCase(),
 	};
 	return projectFilesConfig;
 }
@@ -606,7 +721,10 @@ export function getProjectFilesConfig(opts: { isReleaseBuild: boolean }): IProje
  * @param {string} logLine Line that may contain the PID of the process.
  * @returns {string} The PID of the searched application identifier in case it's found in the current line, null otherwise.
  */
-export function getPidFromiOSSimulatorLogs(applicationIdentifier: string, logLine: string): string {
+export function getPidFromiOSSimulatorLogs(
+	applicationIdentifier: string,
+	logLine: string
+): string {
 	if (logLine) {
 		const pidRegExp = new RegExp(`${applicationIdentifier}:\\s?(\\d+)`);
 		const pidMatch = logLine.match(pidRegExp);
@@ -624,7 +742,13 @@ export function getValueFromNestedObject(obj: any, key: string): any {
 
 		const res: any[] = [];
 		_.forEach(_obj, (v, k) => {
-			if (typeof v === "object" && typeof k === "string" && !_.startsWith(k, '$') && !_.endsWith(k.toLowerCase(), "service") && (v = _getValueRecursive(v, _key)).length) {
+			if (
+				typeof v === "object" &&
+				typeof k === "string" &&
+				!_.startsWith(k, "$") &&
+				!_.endsWith(k.toLowerCase(), "service") &&
+				(v = _getValueRecursive(v, _key)).length
+			) {
 				res.push.apply(res, v);
 			}
 		});
@@ -635,12 +759,15 @@ export function getValueFromNestedObject(obj: any, key: string): any {
 	return _.head(_getValueRecursive(obj, key));
 }
 
-export function getWinRegPropertyValue(key: string, propertyName: string): Promise<string> {
+export function getWinRegPropertyValue(
+	key: string,
+	propertyName: string
+): Promise<string> {
 	return new Promise((resolve, reject) => {
 		const Winreg = require("winreg");
 		const regKey = new Winreg({
 			hive: Winreg.HKLM,
-			key: key
+			key: key,
 		});
 		regKey.get(propertyName, (err: Error, value: string) => {
 			if (err) {
@@ -652,7 +779,11 @@ export function getWinRegPropertyValue(key: string, propertyName: string): Promi
 	});
 }
 
-export function stringify(value: any, replacer?: (key: string, value: any) => any, space?: string | number): string {
+export function stringify(
+	value: any,
+	replacer?: (key: string, value: any) => any,
+	space?: string | number
+): string {
 	return JSON.stringify(value, replacer, space || 2);
 }
 
@@ -660,14 +791,16 @@ export function stringify(value: any, replacer?: (key: string, value: any) => an
 export function getFixedLengthDateString(): string {
 	const currentDate = new Date();
 	const year = currentDate.getFullYear();
-	const month = getFormattedDateComponent((currentDate.getMonth() + 1));
+	const month = getFormattedDateComponent(currentDate.getMonth() + 1);
 	const day = getFormattedDateComponent(currentDate.getDate());
 	const hour = getFormattedDateComponent(currentDate.getHours());
 	const minutes = getFormattedDateComponent(currentDate.getMinutes());
 	const seconds = getFormattedDateComponent(currentDate.getSeconds());
 	const milliseconds = getFormattedMilliseconds(currentDate);
 
-	return `${[year, month, day].join('-')} ${[hour, minutes, seconds].join(":")}.${milliseconds}`;
+	return `${[year, month, day].join("-")} ${[hour, minutes, seconds].join(
+		":"
+	)}.${milliseconds}`;
 }
 
 export function getFormattedDateComponent(component: number): string {
@@ -715,14 +848,12 @@ const FN_ARG_SPLIT = /,/;
 const FN_ARG = /^\s*(_?)(\S+?)\1\s*$/;
 
 export function annotate(fn: any) {
-	let $inject: any,
-		fnText: string,
-		argDecl: string[];
+	let $inject: any, fnText: string, argDecl: string[];
 
 	if (typeof fn === "function") {
 		if (!($inject = fn.$inject) || $inject.name !== fn.name) {
 			$inject = { args: [], name: "" };
-			fnText = fn.toString().replace(STRIP_COMMENTS, '');
+			fnText = fn.toString().replace(STRIP_COMMENTS, "");
 
 			let nameMatch = fnText.match(CLASS_NAME);
 
@@ -736,7 +867,9 @@ export function annotate(fn: any) {
 
 			if (argDecl && fnText.length) {
 				argDecl[2].split(FN_ARG_SPLIT).forEach((arg) => {
-					arg.replace(FN_ARG, (all, underscore, name) => $inject.args.push(name));
+					arg.replace(FN_ARG, (all, underscore, name) =>
+						$inject.args.push(name)
+					);
 				});
 			}
 
@@ -752,8 +885,11 @@ export function annotate(fn: any) {
  * @param {IAndroidSigningData} signingData The signing data to be validated.
  * @return {void}
  */
-export function hasValidAndroidSigning(signingData: Partial<IAndroidSigningData>): boolean {
-	const isValid = signingData &&
+export function hasValidAndroidSigning(
+	signingData: Partial<IAndroidSigningData>
+): boolean {
+	const isValid =
+		signingData &&
 		signingData.keyStorePath &&
 		signingData.keyStorePassword &&
 		signingData.keyStoreAlias &&

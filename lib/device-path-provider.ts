@@ -6,15 +6,24 @@ import { IErrors } from "./common/declarations";
 import { injector } from "./common/yok";
 
 export class DevicePathProvider implements IDevicePathProvider {
-	constructor(private $mobileHelper: Mobile.IMobileHelper,
+	constructor(
+		private $mobileHelper: Mobile.IMobileHelper,
 		private $iOSSimResolver: Mobile.IiOSSimResolver,
-		private $errors: IErrors) {
-	}
+		private $errors: IErrors
+	) {}
 
-	public async getDeviceProjectRootPath(device: Mobile.IDevice, options: IDeviceProjectRootOptions): Promise<string> {
+	public async getDeviceProjectRootPath(
+		device: Mobile.IDevice,
+		options: IDeviceProjectRootOptions
+	): Promise<string> {
 		let projectRoot = "";
 		if (this.$mobileHelper.isiOSPlatform(device.deviceInfo.platform)) {
-			projectRoot = device.isEmulator ? await this.$iOSSimResolver.iOSSim.getApplicationPath(device.deviceInfo.identifier, options.appIdentifier) : LiveSyncPaths.IOS_DEVICE_PROJECT_ROOT_PATH;
+			projectRoot = device.isEmulator
+				? await this.$iOSSimResolver.iOSSim.getApplicationPath(
+						device.deviceInfo.identifier,
+						options.appIdentifier
+				  )
+				: LiveSyncPaths.IOS_DEVICE_PROJECT_ROOT_PATH;
 
 			if (!projectRoot) {
 				this.$errors.fail("Unable to get application path on device.");
@@ -23,12 +32,19 @@ export class DevicePathProvider implements IDevicePathProvider {
 			if (!options.getDirname) {
 				projectRoot = path.join(projectRoot, APP_FOLDER_NAME);
 			}
-		} else if (this.$mobileHelper.isAndroidPlatform(device.deviceInfo.platform)) {
+		} else if (
+			this.$mobileHelper.isAndroidPlatform(device.deviceInfo.platform)
+		) {
 			projectRoot = `${LiveSyncPaths.ANDROID_TMP_DIR_NAME}/${options.appIdentifier}`;
 			if (!options.getDirname) {
-				const hashService = (<Mobile.IAndroidDevice>device).fileSystem.getDeviceHashService(options.appIdentifier);
+				const hashService = (<Mobile.IAndroidDevice>(
+					device
+				)).fileSystem.getDeviceHashService(options.appIdentifier);
 				const hashFile = await hashService.doesShasumFileExistsOnDevice();
-				const syncFolderName = options.watch || hashFile ? LiveSyncPaths.SYNC_DIR_NAME : LiveSyncPaths.FULLSYNC_DIR_NAME;
+				const syncFolderName =
+					options.watch || hashFile
+						? LiveSyncPaths.SYNC_DIR_NAME
+						: LiveSyncPaths.FULLSYNC_DIR_NAME;
 				projectRoot = path.join(projectRoot, syncFolderName);
 			}
 		}
@@ -37,7 +53,10 @@ export class DevicePathProvider implements IDevicePathProvider {
 	}
 
 	public getDeviceSyncZipPath(device: Mobile.IDevice): string {
-		return this.$mobileHelper.isiOSPlatform(device.deviceInfo.platform) && !device.isEmulator ? LiveSyncPaths.IOS_DEVICE_SYNC_ZIP_PATH : undefined;
+		return this.$mobileHelper.isiOSPlatform(device.deviceInfo.platform) &&
+			!device.isEmulator
+			? LiveSyncPaths.IOS_DEVICE_SYNC_ZIP_PATH
+			: undefined;
 	}
 }
 

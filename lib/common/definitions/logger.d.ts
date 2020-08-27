@@ -33,7 +33,8 @@ declare global {
 		layout: Layout;
 	}
 
-	interface Log4JSEmitAppenderConfiguration extends Log4JSAppenderConfiguration {
+	interface Log4JSEmitAppenderConfiguration
+		extends Log4JSAppenderConfiguration {
 		emitter: EventEmitter;
 	}
 }

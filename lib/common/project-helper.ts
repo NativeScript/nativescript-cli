@@ -1,15 +1,17 @@
 import * as path from "path";
-import * as _ from 'lodash';
+import * as _ from "lodash";
 import { IProjectHelper, IFileSystem } from "./declarations";
 import { IOptions } from "../declarations";
 import { injector } from "./yok";
 
 export class ProjectHelper implements IProjectHelper {
-	constructor(private $logger: ILogger,
+	constructor(
+		private $logger: ILogger,
 		private $fs: IFileSystem,
 		private $staticConfig: Config.IStaticConfig,
 		// private $errors: IErrors,
-		private $options: IOptions) { }
+		private $options: IOptions
+	) {}
 
 	private cachedProjectDir = "";
 
@@ -22,9 +24,15 @@ export class ProjectHelper implements IProjectHelper {
 		let projectDir = path.resolve(this.$options.path || ".");
 		while (true) {
 			this.$logger.trace("Looking for project in '%s'", projectDir);
-			const projectFilePath = path.join(projectDir, this.$staticConfig.PROJECT_FILE_NAME);
+			const projectFilePath = path.join(
+				projectDir,
+				this.$staticConfig.PROJECT_FILE_NAME
+			);
 
-			if (this.$fs.exists(projectFilePath) && this.isProjectFileCorrect(projectFilePath)) {
+			if (
+				this.$fs.exists(projectFilePath) &&
+				this.isProjectFileCorrect(projectFilePath)
+			) {
 				this.$logger.debug("Project directory is '%s'.", projectDir);
 				this.cachedProjectDir = projectDir;
 				break;
@@ -32,7 +40,10 @@ export class ProjectHelper implements IProjectHelper {
 
 			const dir = path.dirname(projectDir);
 			if (dir === projectDir) {
-				this.$logger.debug("No project found at or above '%s'.", this.$options.path || path.resolve("."));
+				this.$logger.debug(
+					"No project found at or above '%s'.",
+					this.$options.path || path.resolve(".")
+				);
 				break;
 			}
 			projectDir = dir;
@@ -55,7 +66,9 @@ export class ProjectHelper implements IProjectHelper {
 	}
 
 	public sanitizeName(appName: string): string {
-		const sanitizedName = _.filter(appName.split(""), (c) => /[a-zA-Z0-9]/.test(c)).join("");
+		const sanitizedName = _.filter(appName.split(""), (c) =>
+			/[a-zA-Z0-9]/.test(c)
+		).join("");
 		return sanitizedName;
 	}
 

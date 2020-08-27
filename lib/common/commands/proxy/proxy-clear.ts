@@ -4,9 +4,11 @@ import { injector } from "../../yok";
 const proxyClearCommandName = "proxy|clear";
 
 export class ProxyClearCommand extends ProxyCommandBase {
-	constructor(protected $analyticsService: IAnalyticsService,
+	constructor(
+		protected $analyticsService: IAnalyticsService,
 		protected $logger: ILogger,
-		protected $proxyService: IProxyService) {
+		protected $proxyService: IProxyService
+	) {
 		super($analyticsService, $logger, $proxyService, proxyClearCommandName);
 	}
 

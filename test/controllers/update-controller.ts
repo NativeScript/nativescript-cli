@@ -11,48 +11,57 @@ import { DevicePlatformsConstants } from "../../lib/common/mobile/device-platfor
 import { IInjector } from "../../lib/common/definitions/yok";
 const projectFolder = "test";
 
-function createTestInjector(
-	projectDir: string = projectFolder
-): IInjector {
+function createTestInjector(projectDir: string = projectFolder): IInjector {
 	const testInjector: IInjector = new yok.Yok();
 	testInjector.register("logger", stubs.LoggerStub);
 	testInjector.register("options", Options);
 	testInjector.register("analyticsService", {
 		trackException: async (): Promise<void> => undefined,
 		checkConsent: async (): Promise<void> => undefined,
-		trackFeature: async (): Promise<void> => undefined
+		trackFeature: async (): Promise<void> => undefined,
 	});
 	testInjector.register("errors", stubs.ErrorsStub);
 	testInjector.register("staticConfig", StaticConfig);
 	testInjector.register("projectData", {
 		projectDir,
-		initializeProjectData: () => { /* empty */ },
-		dependencies: {}
+		initializeProjectData: () => {
+			/* empty */
+		},
+		dependencies: {},
 	});
 	testInjector.register("settingsService", SettingsService);
 	testInjector.register("migrateController", {
-		shouldMigrate: () => { return false; },
+		shouldMigrate: () => {
+			return false;
+		},
 	});
 	testInjector.register("fs", stubs.FileSystemStub);
 	testInjector.register("platformCommandHelper", {
 		getCurrentPlatformVersion: () => {
 			return "5.2.0";
-		}
+		},
 	});
 
 	testInjector.register("packageManager", {
 		getTagVersion: () => {
 			return "2.3.0";
-		}
+		},
 	});
 	testInjector.register("addPlatformService", {
-		setPlatformVersion: () => {/**/ }
+		setPlatformVersion: () => {
+			/**/
+		},
 	});
 	testInjector.register("pluginsService", {
-		addToPackageJson: () => {/**/ }
+		addToPackageJson: () => {
+			/**/
+		},
 	});
 	testInjector.register("devicePlatformsConstants", DevicePlatformsConstants);
-	testInjector.register("packageInstallationManager", stubs.PackageInstallationManagerStub);
+	testInjector.register(
+		"packageInstallationManager",
+		stubs.PackageInstallationManagerStub
+	);
 	testInjector.register("platformsDataService", stubs.NativeProjectDataStub);
 	testInjector.register("pacoteService", stubs.PacoteServiceStub);
 	testInjector.register("projectDataService", stubs.ProjectDataServiceStub);
@@ -75,14 +84,26 @@ describe("update controller method tests", () => {
 	it("if backup fails, platforms not deleted, temp removed", async () => {
 		const testInjector = createTestInjector();
 		const fs = testInjector.resolve("fs");
-		const deleteDirectory: sinon.SinonStub = sandbox.stub(fs, "deleteDirectory");
+		const deleteDirectory: sinon.SinonStub = sandbox.stub(
+			fs,
+			"deleteDirectory"
+		);
 		sandbox.stub(fs, "copyFile").throws();
 		const updateController = testInjector.resolve("updateController");
 
-		await updateController.update({ projectDir: projectFolder, version: "3.3.0" });
+		await updateController.update({
+			projectDir: projectFolder,
+			version: "3.3.0",
+		});
 
-		assert.isTrue(deleteDirectory.calledWith(path.join(projectFolder, UpdateController.backupFolder)));
-		assert.isFalse(deleteDirectory.calledWith(path.join(projectFolder, "platforms")));
+		assert.isTrue(
+			deleteDirectory.calledWith(
+				path.join(projectFolder, UpdateController.backupFolder)
+			)
+		);
+		assert.isFalse(
+			deleteDirectory.calledWith(path.join(projectFolder, "platforms"))
+		);
 	});
 
 	it("calls copy to temp for package.json and folders(backup)", async () => {
@@ -91,9 +112,14 @@ describe("update controller method tests", () => {
 		const copyFileStub = sandbox.stub(fs, "copyFile");
 		const updateController = testInjector.resolve("updateController");
 
-		await updateController.update({ projectDir: projectFolder, version: "3.3.0" });
+		await updateController.update({
+			projectDir: projectFolder,
+			version: "3.3.0",
+		});
 
-		assert.isTrue(copyFileStub.calledWith(path.join(projectFolder, "package.json")));
+		assert.isTrue(
+			copyFileStub.calledWith(path.join(projectFolder, "package.json"))
+		);
 		for (const folder of UpdateController.folders) {
 			assert.isTrue(copyFileStub.calledWith(path.join(projectFolder, folder)));
 		}
@@ -109,15 +135,22 @@ describe("update controller method tests", () => {
 		const updateController = testInjector.resolve("updateController");
 		const tempDir = path.join(projectFolder, UpdateController.backupFolder);
 
-		await updateController.update({ projectDir: projectFolder, version: "3.3.0" });
+		await updateController.update({
+			projectDir: projectFolder,
+			version: "3.3.0",
+		});
 
-		assert.isTrue(copyFileStub.calledWith(path.join(tempDir, "package.json"), projectFolder));
+		assert.isTrue(
+			copyFileStub.calledWith(path.join(tempDir, "package.json"), projectFolder)
+		);
 		for (const folder of UpdateController.folders) {
-			assert.isTrue(copyFileStub.calledWith(path.join(tempDir, folder), projectFolder));
+			assert.isTrue(
+				copyFileStub.calledWith(path.join(tempDir, folder), projectFolder)
+			);
 		}
 	});
 
-  // TODO: Igor and Nathan to bring back when making update/migrations work with latest
+	// TODO: Igor and Nathan to bring back when making update/migrations work with latest
 	// for (const projectType of ["Angular", "React"]) {
 	// 	it(`should update dependencies from project type: ${projectType}`, async () => {
 	// 		const testInjector = createTestInjector();

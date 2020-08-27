@@ -4,7 +4,7 @@ import { IErrors, IAnalyticsService } from "../declarations";
 import { injector } from "../yok";
 
 export class AnalyticsCommandParameter implements ICommandParameter {
-	constructor(private $errors: IErrors) { }
+	constructor(private $errors: IErrors) {}
 	mandatory = false;
 	async validate(validationValue: string): Promise<boolean> {
 		const val = validationValue || "";
@@ -15,18 +15,22 @@ export class AnalyticsCommandParameter implements ICommandParameter {
 			case "":
 				return true;
 			default:
-				this.$errors.failWithHelp(`The value '${validationValue}' is not valid. Valid values are 'enable', 'disable' and 'status'.`);
+				this.$errors.failWithHelp(
+					`The value '${validationValue}' is not valid. Valid values are 'enable', 'disable' and 'status'.`
+				);
 		}
 	}
 }
 
 class AnalyticsCommand implements ICommand {
-	constructor(protected $analyticsService: IAnalyticsService,
+	constructor(
+		protected $analyticsService: IAnalyticsService,
 		private $logger: ILogger,
 		private $errors: IErrors,
 		private $options: IOptions,
 		private settingName: string,
-		private humanReadableSettingName: string) { }
+		private humanReadableSettingName: string
+	) {}
 
 	public allowedParameters = [new AnalyticsCommandParameter(this.$errors)];
 	public disableAnalytics = true;
@@ -46,31 +50,54 @@ class AnalyticsCommand implements ICommand {
 				break;
 			case "status":
 			case "":
-				this.$logger.info(await this.$analyticsService.getStatusMessage(this.settingName, this.$options.json, this.humanReadableSettingName));
+				this.$logger.info(
+					await this.$analyticsService.getStatusMessage(
+						this.settingName,
+						this.$options.json,
+						this.humanReadableSettingName
+					)
+				);
 				break;
 		}
 	}
 }
 
 export class UsageReportingCommand extends AnalyticsCommand {
-	constructor(protected $analyticsService: IAnalyticsService,
-		$logger: ILogger,
-		$errors: IErrors,
-		$options: IOptions,
-		$staticConfig: Config.IStaticConfig) {
-		super($analyticsService, $logger, $errors, $options, $staticConfig.TRACK_FEATURE_USAGE_SETTING_NAME, "Usage reporting");
-	}
-}
-injector.registerCommand("usage-reporting", UsageReportingCommand);
-
-export class ErrorReportingCommand extends AnalyticsCommand {
-	constructor(protected $analyticsService: IAnalyticsService,
+	constructor(
+		protected $analyticsService: IAnalyticsService,
 		$logger: ILogger,
 		$errors: IErrors,
 		$options: IOptions,
 		$staticConfig: Config.IStaticConfig
 	) {
-		super($analyticsService, $logger, $errors, $options, $staticConfig.ERROR_REPORT_SETTING_NAME, "Error reporting");
+		super(
+			$analyticsService,
+			$logger,
+			$errors,
+			$options,
+			$staticConfig.TRACK_FEATURE_USAGE_SETTING_NAME,
+			"Usage reporting"
+		);
+	}
+}
+injector.registerCommand("usage-reporting", UsageReportingCommand);
+
+export class ErrorReportingCommand extends AnalyticsCommand {
+	constructor(
+		protected $analyticsService: IAnalyticsService,
+		$logger: ILogger,
+		$errors: IErrors,
+		$options: IOptions,
+		$staticConfig: Config.IStaticConfig
+	) {
+		super(
+			$analyticsService,
+			$logger,
+			$errors,
+			$options,
+			$staticConfig.ERROR_REPORT_SETTING_NAME,
+			"Error reporting"
+		);
 	}
 }
 injector.registerCommand("error-reporting", ErrorReportingCommand);
