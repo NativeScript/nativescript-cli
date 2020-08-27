@@ -288,14 +288,14 @@ export class ProjectData implements IProjectData {
 		config: INsConfig
 	): Mobile.IProjectIdentifier {
 		const identifier: Mobile.IProjectIdentifier = {
-			ios: "",
-			android: "",
+			ios: config.id,
+			android: config.id,
 		};
-		if (config.ios) {
-			identifier.ios = config.ios.id || config.id;
+		if (config.ios && config.ios.id) {
+			identifier.ios = config.ios.id;
 		}
-		if (config.android) {
-			identifier.android = config.android.id || config.id;
+		if (config.android && config.android.id) {
+			identifier.android = config.android.id;
 		}
 
 		return identifier;
