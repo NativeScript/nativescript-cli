@@ -99,7 +99,7 @@ class VersionsService implements IVersionsService {
 			iosRuntime,
 			androidRuntime
 		];
-    
+
 		const runtimesVersions: IVersionInformation[] = await Promise.all(runtimes.map(async (runtime: IBasePluginData) => {
 			const latestVersion = await this.$packageInstallationManager.getLatestVersion(runtime.name);
 			const runtimeInformation: IVersionInformation = {

@@ -32,7 +32,7 @@ async function resolveCallStack(error: Error): Promise<string> {
 		return line;
 	});
 
-  const fs = require("fs");
+	const fs = require("fs");
 
 	const remapped = await Promise.all(_.map(parsed, async (parsedLine) => {
 		if (_.isString(parsedLine)) {
@@ -103,10 +103,10 @@ export function installUncaughtExceptionListener(actionOnException?: () => void)
 	process.on("unhandledRejection", handler);
 }
 
-async function tryTrackException(error: Error, injector: IInjector): Promise<void> {
+async function tryTrackException(error: Error, localInjector: IInjector): Promise<void> {
 	let disableAnalytics: boolean;
 	try {
-		disableAnalytics = injector.resolve("staticConfig").disableAnalytics;
+		disableAnalytics = localInjector.resolve("staticConfig").disableAnalytics;
 	} catch (err) {
 		// We should get here only in our unit tests.
 		disableAnalytics = true;
@@ -114,7 +114,7 @@ async function tryTrackException(error: Error, injector: IInjector): Promise<voi
 
 	if (!disableAnalytics) {
 		try {
-			const analyticsService = injector.resolve("analyticsService");
+			const analyticsService = localInjector.resolve("analyticsService");
 			await analyticsService.trackException(error, error.message);
 		} catch (e) {
 			// Do not replace with logger due to cyclic dependency

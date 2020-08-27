@@ -282,7 +282,7 @@ describe("analyticsService", () => {
 				await analyticsService.trackInGoogleAnalytics(opts.dataToSend);
 
 				assert.isTrue(opts.isChildProcessSpawned);
-				assert.deepEqual(opts.messageSent, opts.expectedResult);
+				assert.deepStrictEqual(opts.messageSent, opts.expectedResult);
 			};
 
 			const getDataToSend = (gaDataType: string): any => ({

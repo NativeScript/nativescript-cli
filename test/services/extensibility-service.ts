@@ -167,7 +167,7 @@ describe("extensibilityService", () => {
 
 			const assertPackageNamePassedToNpmInstall = async (userSpecifiedValue: string, expectedValue: string): Promise<void> => {
 				const argsPassedToNpmInstall = await getArgsPassedToNpmInstallDuringInstallExtensionCall(userSpecifiedValue);
-				assert.deepEqual(argsPassedToNpmInstall.packageName, expectedValue);
+				assert.deepStrictEqual(argsPassedToNpmInstall.packageName, expectedValue);
 			};
 
 			it("passes full path for installation, when trying to install local package (user specifies relative path)", async () => {
@@ -185,7 +185,7 @@ describe("extensibilityService", () => {
 				const argsPassedToNpmInstall = await getArgsPassedToNpmInstallDuringInstallExtensionCall(extensionName);
 				const expectedNpmConfg: any = { save: true };
 				expectedNpmConfg["save-exact"] = true;
-				assert.deepEqual(argsPassedToNpmInstall.config, expectedNpmConfg);
+				assert.deepStrictEqual(argsPassedToNpmInstall.config, expectedNpmConfg);
 			});
 
 			it("passes full path to extensions dir for installation", async () => {
@@ -197,7 +197,7 @@ describe("extensibilityService", () => {
 
 				const expectedDirForInstallation = path.join(profileDir, "extensions");
 				const argsPassedToNpmInstall = await getArgsPassedToNpmInstallDuringInstallExtensionCall(extensionName, testInjector);
-				assert.deepEqual(argsPassedToNpmInstall.pathToSave, expectedDirForInstallation);
+				assert.deepStrictEqual(argsPassedToNpmInstall.pathToSave, expectedDirForInstallation);
 			});
 		});
 
@@ -217,7 +217,7 @@ describe("extensibilityService", () => {
 
 			const extensibilityService: IExtensibilityService = testInjector.resolve(ExtensibilityService);
 			const actualResult = await extensibilityService.installExtension(extensionName);
-			assert.deepEqual(actualResult, { extensionName, version: "1.0.0", docs: undefined, pathToExtension: getExpectedInstallationPathForExtension(testInjector, extensionName) });
+			assert.deepStrictEqual(actualResult, { extensionName, version: "1.0.0", docs: undefined, pathToExtension: getExpectedInstallationPathForExtension(testInjector, extensionName) });
 		});
 	});
 
@@ -229,7 +229,7 @@ describe("extensibilityService", () => {
 				const extensionNames = ["extension1", "extension2", "extension3"];
 				fs.exists = (pathToCheck: string): boolean => true;
 				fs.readDirectory = (dir: string): string[] => {
-					assert.deepEqual(path.basename(dir), constants.NODE_MODULES_FOLDER_NAME);
+					assert.deepStrictEqual(path.basename(dir), constants.NODE_MODULES_FOLDER_NAME);
 					// Simulates extensions are installed in node_modules
 					return extensionNames;
 				};
@@ -247,7 +247,7 @@ describe("extensibilityService", () => {
 
 				const extensibilityService: IExtensibilityService = testInjector.resolve(ExtensibilityService);
 				const actualResult = await Promise.all(extensibilityService.loadExtensions());
-				assert.deepEqual(actualResult, expectedResults);
+				assert.deepStrictEqual(actualResult, expectedResults);
 			});
 
 			it("installs extensions that are available in package.json, but are not available in node_modules", async () => {
@@ -258,7 +258,7 @@ describe("extensibilityService", () => {
 
 				let isFirstReadDirExecution = true;
 				fs.readDirectory = (dir: string): string[] => {
-					assert.deepEqual(path.basename(dir), constants.NODE_MODULES_FOLDER_NAME);
+					assert.deepStrictEqual(path.basename(dir), constants.NODE_MODULES_FOLDER_NAME);
 					// Simulates extensions are installed in node_modules
 					if (isFirstReadDirExecution) {
 						isFirstReadDirExecution = false;
@@ -273,7 +273,7 @@ describe("extensibilityService", () => {
 				let isNpmInstallCalled = false;
 				const npm: INodePackageManager = testInjector.resolve("npm");
 				npm.install = async (packageName: string, pathToSave: string, config?: any): Promise<any> => {
-					assert.deepEqual(packageName, extensionNames[0]);
+					assert.deepStrictEqual(packageName, extensionNames[0]);
 					isNpmInstallCalled = true;
 					return { name: packageName };
 				};
@@ -282,7 +282,7 @@ describe("extensibilityService", () => {
 
 				const extensibilityService: IExtensibilityService = testInjector.resolve(ExtensibilityService);
 				const actualResult = await Promise.all(extensibilityService.loadExtensions());
-				assert.deepEqual(actualResult, expectedResults);
+				assert.deepStrictEqual(actualResult, expectedResults);
 				assert.isTrue(isNpmInstallCalled);
 			});
 
@@ -292,7 +292,7 @@ describe("extensibilityService", () => {
 				const extensionNames = ["extension1", "extension2", "extension3"];
 				fs.exists = (pathToCheck: string): boolean => true;
 				fs.readDirectory = (dir: string): string[] => {
-					assert.deepEqual(path.basename(dir), constants.NODE_MODULES_FOLDER_NAME);
+					assert.deepStrictEqual(path.basename(dir), constants.NODE_MODULES_FOLDER_NAME);
 					// Simulates extensions are installed in node_modules
 					return extensionNames;
 				};
@@ -310,15 +310,15 @@ describe("extensibilityService", () => {
 				expectedResults[0] = new Error("Unable to load extension extension1. You will not be able to use the functionality that it adds. Error: Unable to load module.");
 				const extensibilityService: IExtensibilityService = testInjector.resolve(ExtensibilityService);
 				const promises = extensibilityService.loadExtensions();
-				assert.deepEqual(promises.length, extensionNames.length);
+				assert.deepStrictEqual(promises.length, extensionNames.length);
 
 				for (let index = 0; index < promises.length; index++) {
 					const loadExtensionPromise = promises[index];
 					await loadExtensionPromise
-						.then(result => assert.deepEqual(result, expectedResults[index]),
+						.then(result => assert.deepStrictEqual(result, expectedResults[index]),
 						err => {
-							assert.deepEqual(err.message, expectedResults[index].message);
-							assert.deepEqual(err.extensionName, extensionNames[index]);
+							assert.deepStrictEqual(err.message, expectedResults[index].message);
+							assert.deepStrictEqual(err.extensionName, extensionNames[index]);
 						});
 				}
 			});
@@ -334,7 +334,7 @@ describe("extensibilityService", () => {
 				let isReadDirCalled = false;
 				fs.readDirectory = (dir: string): string[] => {
 					isReadDirCalled = true;
-					assert.deepEqual(path.basename(dir), constants.NODE_MODULES_FOLDER_NAME);
+					assert.deepStrictEqual(path.basename(dir), constants.NODE_MODULES_FOLDER_NAME);
 					throw new Error(expectedErrorMessage);
 				};
 
@@ -346,12 +346,12 @@ describe("extensibilityService", () => {
 					await loadExtensionPromise.then(res => { throw new Error("Shouldn't get here!"); },
 						err => {
 							const extensionName = extensionNames[index];
-							assert.deepEqual(err.message, `Unable to load extension ${extensionName}. You will not be able to use the functionality that it adds. Error: ${expectedErrorMessage}`);
-							assert.deepEqual(err.extensionName, extensionName);
+							assert.deepStrictEqual(err.message, `Unable to load extension ${extensionName}. You will not be able to use the functionality that it adds. Error: ${expectedErrorMessage}`);
+							assert.deepStrictEqual(err.extensionName, extensionName);
 						});
 				}
 
-				assert.deepEqual(promises.length, extensionNames.length);
+				assert.deepStrictEqual(promises.length, extensionNames.length);
 				assert.isTrue(isReadDirCalled, "readDirectory should have been called for the extensions.");
 			});
 
@@ -368,7 +368,7 @@ describe("extensibilityService", () => {
 				let isReadDirCalled = false;
 				fs.readDirectory = (dir: string): string[] => {
 					isReadDirCalled = true;
-					assert.deepEqual(path.basename(dir), constants.NODE_MODULES_FOLDER_NAME);
+					assert.deepStrictEqual(path.basename(dir), constants.NODE_MODULES_FOLDER_NAME);
 					return [];
 				};
 
@@ -376,7 +376,7 @@ describe("extensibilityService", () => {
 				const npm: INodePackageManager = testInjector.resolve("npm");
 				const expectedErrorMessage = `Unable to install to ${constants.NODE_MODULES_FOLDER_NAME} dir.`;
 				npm.install = async (packageName: string, pathToSave: string, config?: any): Promise<any> => {
-					assert.deepEqual(packageName, extensionNames[0]);
+					assert.deepStrictEqual(packageName, extensionNames[0]);
 					isNpmInstallCalled = true;
 					throw new Error(expectedErrorMessage);
 				};
@@ -392,12 +392,12 @@ describe("extensibilityService", () => {
 
 						err => {
 							const extensionName = extensionNames[index];
-							assert.deepEqual(err.message, `Unable to load extension ${extensionName}. You will not be able to use the functionality that it adds. Error: ${expectedErrorMessages[index]}`);
-							assert.deepEqual(err.extensionName, extensionName);
+							assert.deepStrictEqual(err.message, `Unable to load extension ${extensionName}. You will not be able to use the functionality that it adds. Error: ${expectedErrorMessages[index]}`);
+							assert.deepStrictEqual(err.extensionName, extensionName);
 						});
 				}
 
-				assert.deepEqual(promises.length, extensionNames.length);
+				assert.deepStrictEqual(promises.length, extensionNames.length);
 				assert.isTrue(isNpmInstallCalled, "Npm install should have been called for the extensions.");
 				assert.isTrue(isReadDirCalled, "readDirectory should have been called for the extensions.");
 			});
@@ -415,7 +415,7 @@ describe("extensibilityService", () => {
 				const extensibilityService: IExtensibilityService = testInjector.resolve(ExtensibilityService);
 				const promises = extensibilityService.loadExtensions();
 
-				assert.deepEqual(promises.length, 0);
+				assert.deepStrictEqual(promises.length, 0);
 			});
 
 			it("does not return any promises when its unable to read extensions package.json", () => {
@@ -431,7 +431,7 @@ describe("extensibilityService", () => {
 				const extensibilityService: IExtensibilityService = testInjector.resolve(ExtensibilityService);
 				const promises = extensibilityService.loadExtensions();
 
-				assert.deepEqual(promises.length, 0);
+				assert.deepStrictEqual(promises.length, 0);
 			});
 
 			it("does not fail when package.json in extension dir does not exist", async () => {
@@ -439,14 +439,14 @@ describe("extensibilityService", () => {
 				const fs: IFileSystem = testInjector.resolve("fs");
 				fs.exists = (pathToCheck: string): boolean => {
 					// Add the assert here, so we are sure the only call to fs.exists is for package.json of the extensions dir.
-					assert.deepEqual(path.basename(pathToCheck), constants.PACKAGE_JSON_FILE_NAME);
+					assert.deepStrictEqual(path.basename(pathToCheck), constants.PACKAGE_JSON_FILE_NAME);
 					return false;
 				};
 
 				const expectedResults: IExtensionData[] = [];
 				const extensibilityService: IExtensibilityService = testInjector.resolve(ExtensibilityService);
 				const actualResult = await Promise.all(extensibilityService.loadExtensions());
-				assert.deepEqual(actualResult, expectedResults, "When there's no package.json in extensions dir, there's nothing for loading.");
+				assert.deepStrictEqual(actualResult, expectedResults, "When there's no package.json in extensions dir, there's nothing for loading.");
 			});
 
 			it("does not fail when unable to read extensions dir package.json", async () => {
@@ -454,7 +454,7 @@ describe("extensibilityService", () => {
 				const fs: IFileSystem = testInjector.resolve("fs");
 				fs.exists = (pathToCheck: string): boolean => {
 					// Add the assert here, so we are sure the only call to fs.exists is for package.json of the extensions dir.
-					assert.deepEqual(path.basename(pathToCheck), constants.PACKAGE_JSON_FILE_NAME);
+					assert.deepStrictEqual(path.basename(pathToCheck), constants.PACKAGE_JSON_FILE_NAME);
 					return true;
 				};
 
@@ -465,7 +465,7 @@ describe("extensibilityService", () => {
 				const expectedResults: IExtensionData[] = [];
 				const extensibilityService: IExtensibilityService = testInjector.resolve(ExtensibilityService);
 				const actualResult = await Promise.all(extensibilityService.loadExtensions());
-				assert.deepEqual(actualResult, expectedResults, "When unable to read package.json in extensions dir, there's nothing for loading.");
+				assert.deepStrictEqual(actualResult, expectedResults, "When unable to read package.json in extensions dir, there's nothing for loading.");
 			});
 
 		});
@@ -539,7 +539,7 @@ describe("extensibilityService", () => {
 
 			const assertPackageNamePassedToNpmUninstall = async (userSpecifiedValue: string, expectedValue: string): Promise<void> => {
 				const argsPassedToNpmInstall = await getArgsPassedToNpmUninstallDuringUninstallExtensionCall(userSpecifiedValue);
-				assert.deepEqual(argsPassedToNpmInstall.packageName, expectedValue);
+				assert.deepStrictEqual(argsPassedToNpmInstall.packageName, expectedValue);
 			};
 
 			it("passes the value specified by user for installation", async () => {
@@ -554,7 +554,7 @@ describe("extensibilityService", () => {
 				const extensionName = "extension1";
 				const argsPassedToNpmUninstall = await getArgsPassedToNpmUninstallDuringUninstallExtensionCall(extensionName);
 				const expectedNpmConfg: any = { save: true };
-				assert.deepEqual(argsPassedToNpmUninstall.config, expectedNpmConfg);
+				assert.deepStrictEqual(argsPassedToNpmUninstall.config, expectedNpmConfg);
 			});
 
 			it("passes full path to extensions dir for uninstallation", async () => {
@@ -566,7 +566,7 @@ describe("extensibilityService", () => {
 
 				const expectedDirForUninstall = path.join(profileDir, "extensions");
 				const argsPassedToNpmUninstall = await getArgsPassedToNpmUninstallDuringUninstallExtensionCall(extensionName, testInjector);
-				assert.deepEqual(argsPassedToNpmUninstall.pathToSave, expectedDirForUninstall);
+				assert.deepStrictEqual(argsPassedToNpmUninstall.pathToSave, expectedDirForUninstall);
 			});
 		});
 
@@ -637,7 +637,7 @@ describe("extensibilityService", () => {
 			};
 
 			const extensibilityService: IExtensibilityService = testInjector.resolve(ExtensibilityService);
-			assert.deepEqual(extensibilityService.getInstalledExtensions(), dependencies);
+			assert.deepStrictEqual(extensibilityService.getInstalledExtensions(), dependencies);
 		});
 	});
 
@@ -666,8 +666,8 @@ describe("extensibilityService", () => {
 				await extensibilityService.loadExtension(extensionName);
 			} catch (err) {
 				isErrorRaised = true;
-				assert.deepEqual(err.message, `Unable to load extension ${extensionName}. You will not be able to use the functionality that it adds. Error: ${expectedErrorMessage}`);
-				assert.deepEqual(err.extensionName, extensionName);
+				assert.deepStrictEqual(err.message, `Unable to load extension ${extensionName}. You will not be able to use the functionality that it adds. Error: ${expectedErrorMessage}`);
+				assert.deepStrictEqual(err.extensionName, extensionName);
 			}
 
 			assert.isTrue(isErrorRaised);
@@ -889,7 +889,7 @@ describe("extensibilityService", () => {
 				};
 
 				const actualExtensionName = await extensibilityService.getExtensionNameWhereCommandIsRegistered(inputData);
-				assert.deepEqual(actualExtensionName, testCase.expectedResult);
+				assert.deepStrictEqual(actualExtensionName, testCase.expectedResult);
 			});
 		});
 
@@ -909,7 +909,7 @@ describe("extensibilityService", () => {
 
 			const extensibilityService = testInjector.resolve<IExtensibilityService>(ExtensibilityService);
 			const actualExtensionName = await extensibilityService.getExtensionNameWhereCommandIsRegistered(null);
-			assert.deepEqual(actualExtensionName, null);
+			assert.deepStrictEqual(actualExtensionName, null);
 			assert.isFalse(isGetRegistryPackageDataCalled, "The method npm.getRegistryPackageData should not be called when npm.searchNpms fails.");
 		});
 	});

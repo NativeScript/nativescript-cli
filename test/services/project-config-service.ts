@@ -71,7 +71,7 @@ describe("projectConfigService", () => {
 			const projectConfigService: IProjectConfigService = testInjector.resolve("projectConfigService");
 
 			const actualValue = projectConfigService.getValue("id");
-			assert.deepEqual(actualValue, "io.test.app");
+			assert.deepStrictEqual(actualValue, "io.test.app");
 		});
 
 		it("JS config parse deep key path", () => {
@@ -79,7 +79,7 @@ describe("projectConfigService", () => {
 			const projectConfigService: IProjectConfigService = testInjector.resolve("projectConfigService");
 
 			const actualValue = projectConfigService.getValue("android.v8Flags");
-			assert.deepEqual(actualValue, "--expose-gc");
+			assert.deepStrictEqual(actualValue, "--expose-gc");
 		});
 
 		it("works with TS config", () => {
@@ -87,7 +87,7 @@ describe("projectConfigService", () => {
 			const projectConfigService: IProjectConfigService = testInjector.resolve("projectConfigService");
 
 			const actualValue = projectConfigService.getValue("id");
-			assert.deepEqual(actualValue, "io.test.app");
+			assert.deepStrictEqual(actualValue, "io.test.app");
 		});
 
 		it("TS config parse deep key path", () => {
@@ -95,7 +95,7 @@ describe("projectConfigService", () => {
 			const projectConfigService: IProjectConfigService = testInjector.resolve("projectConfigService");
 
 			const actualValue = projectConfigService.getValue("android.v8Flags");
-			assert.deepEqual(actualValue, "--expose-gc");
+			assert.deepStrictEqual(actualValue, "--expose-gc");
 		});
 
 		it("Throws error if no config file found", () => {
@@ -109,8 +109,8 @@ describe("projectConfigService", () => {
 			const projectConfigService: IProjectConfigService = testInjector.resolve("projectConfigService");
 			const logger: LoggerStub = testInjector.resolve("logger");
 			const actualValue = projectConfigService.getValue("id");
-			assert.deepEqual(actualValue, "io.test.app");
-			assert.deepEqual(logger.warnOutput, `You have both a ${CONFIG_FILE_NAME_JS} and ${CONFIG_FILE_NAME_TS} file. Defaulting to ${CONFIG_FILE_NAME_TS}.\n`)
+			assert.deepStrictEqual(actualValue, "io.test.app");
+			assert.deepStrictEqual(logger.warnOutput, `You have both a ${CONFIG_FILE_NAME_JS} and ${CONFIG_FILE_NAME_TS} file. Defaulting to ${CONFIG_FILE_NAME_TS}.\n`);
 		});
 
 	});

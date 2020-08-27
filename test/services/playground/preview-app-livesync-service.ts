@@ -241,10 +241,10 @@ async function assert(expectedFiles: string[], options?: IAssertOptions) {
 	const actualFiles = options.checkInitialFiles ? initialFiles : applyChangesParams;
 
 	chai.assert.equal(isHMRPassedToEnv, options.hmr || false);
-	chai.assert.deepEqual(actualFiles, mapFiles(expectedFiles));
+	chai.assert.deepStrictEqual(actualFiles, mapFiles(expectedFiles));
 
 	if (options.checkWarnings) {
-		chai.assert.deepEqual(warnParams, [nativeFilesWarning]);
+		chai.assert.deepStrictEqual(warnParams, [nativeFilesWarning]);
 	}
 
 	if (options.isComparePluginsOnDeviceCalled) {

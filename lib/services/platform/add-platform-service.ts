@@ -2,7 +2,7 @@ import * as path from "path";
 import { PROJECT_FRAMEWORK_FOLDER_NAME, TrackActionNames, AnalyticsEventLabelDelimiter } from "../../constants";
 import { performanceLog } from "../../common/decorators";
 import { IAddPlatformService, IPlatformData, IAddPlatformData } from "../../definitions/platform";
-import { IProjectData } from "../../definitions/project";//IProjectDataService
+import { IProjectData } from "../../definitions/project"; //IProjectDataService
 import { IFileSystem, IAnalyticsService } from "../../common/declarations";
 import { injector } from "../../common/yok";
 import { IPackageManager } from "../../declarations";
@@ -57,7 +57,7 @@ export class AddPlatformService implements IAddPlatformService {
         }
         await this.trackPlatformVersion(version, platformData);
       }
-      
+
 			if (!addPlatformData.nativePrepare || !addPlatformData.nativePrepare.skipNativePrepare) {
 				await this.addNativePlatform(platformData, projectData, frameworkDirPath, frameworkVersion);
 			}

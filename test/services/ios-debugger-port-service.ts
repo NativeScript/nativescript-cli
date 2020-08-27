@@ -185,9 +185,9 @@ describe("iOSDebuggerPortService", () => {
 				let port = 0;
 				try {
 					port = await promise;
-					assert.deepEqual(port, testCase.emittedPort);
+					assert.deepStrictEqual(port, testCase.emittedPort);
 				} catch (err) {
-					assert.deepEqual(err.message, testCase.expectedError);
+					assert.deepStrictEqual(err.message, testCase.expectedError);
 				}
 			});
 			it(`${testCase.name} for multiline debugger port message.`, async () => {
@@ -203,9 +203,9 @@ describe("iOSDebuggerPortService", () => {
 				let port = 0;
 				try {
 					port = await promise;
-					assert.deepEqual(port, testCase.emittedPort);
+					assert.deepStrictEqual(port, testCase.emittedPort);
 				} catch (err) {
-					assert.deepEqual(err.message, testCase.expectedError);
+					assert.deepStrictEqual(err.message, testCase.expectedError);
 				}
 			});
 		});

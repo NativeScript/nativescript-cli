@@ -90,7 +90,7 @@ describe("filesHashService", () => {
 			it(`${testCase.name}`, async () => {
 				const filesHashService = mockFilesHashService(testCase.newHashes);
 				const changes = await filesHashService.getChanges(_.keys(testCase.newHashes), testCase.oldHashes);
-				assert.deepEqual(changes, testCase.expectedChanges);
+				assert.deepStrictEqual(changes, testCase.expectedChanges);
 			});
 		});
 	});
@@ -100,7 +100,7 @@ describe("filesHashService", () => {
 			it(`${testCase.name}`, () => {
 				const filesHashService = mockFilesHashService(testCase.newHashes);
 				const hasChanges = filesHashService.hasChangesInShasums(testCase.newHashes, testCase.oldHashes);
-				assert.deepEqual(hasChanges, !!_.keys(testCase.expectedChanges).length);
+				assert.deepStrictEqual(hasChanges, !!_.keys(testCase.expectedChanges).length);
 			});
 		});
 	});

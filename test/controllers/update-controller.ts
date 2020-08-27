@@ -190,7 +190,7 @@ describe("update controller method tests", () => {
 	// 			assert.isTrue(copyFileStub.calledWith(path.join(tempDir, folder), projectFolder));
 	// 		}
 
-	// 		assert.deepEqual(dataAddedToPackageJson, {
+	// 		assert.deepStrictEqual(dataAddedToPackageJson, {
 	// 			dependencies: {
 	// 				"tns-core-modules": "1.0.0",
 	// 			},

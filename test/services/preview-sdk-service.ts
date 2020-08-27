@@ -75,7 +75,7 @@ describe('PreviewSdkService', () => {
 
 					const qrCodeUrl = previewSdkService.getQrCodeUrl(qrCodeOptions);
 
-					assert.deepEqual(qrCodeUrl.split(":")[0], testCase.expectedSchemaName);
+					assert.deepStrictEqual(qrCodeUrl.split(":")[0], testCase.expectedSchemaName);
 				});
 			});
 		});

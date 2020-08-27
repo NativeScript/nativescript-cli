@@ -138,7 +138,7 @@ describe("projectDataService", () => {
 				const projectDataService: IProjectDataService = testInjector.resolve("projectDataService");
 
 				const actualValue = projectDataService.getNSValue("projectDir", currentTestData.propertyName);
-				assert.deepEqual(actualValue, currentTestData.propertyValue);
+				assert.deepStrictEqual(actualValue, currentTestData.propertyValue);
 			});
 
 		});
@@ -163,7 +163,7 @@ describe("projectDataService", () => {
 				const projectDataService: IProjectDataService = testInjector.resolve("projectDataService");
 				projectDataService.setNSValue("projectDir", currentTestData.propertyName, currentTestData.propertyValue);
 
-				assert.deepEqual(dataPassedToWriteJson, generateJsonDataFromTestData(currentTestData));
+				assert.deepStrictEqual(dataPassedToWriteJson, generateJsonDataFromTestData(currentTestData));
 				assert.isTrue(!!dataPassedToWriteJson[CLIENT_NAME_KEY_IN_PROJECT_FILE], "Data passed to write JSON must contain nativescript key.");
 			});
 
@@ -191,9 +191,9 @@ describe("projectDataService", () => {
 			const expectedData = _.cloneDeep(initialData);
 			expectedData[CLIENT_NAME_KEY_IN_PROJECT_FILE].root.id = "2";
 			assert.isTrue(!!dataPassedToWriteJson[CLIENT_NAME_KEY_IN_PROJECT_FILE], "Data passed to write JSON must contain nativescript key.");
-			assert.deepEqual(dataPassedToWriteJson, expectedData);
-			assert.deepEqual(dataPassedToWriteJson[CLIENT_NAME_KEY_IN_PROJECT_FILE].root.id, "2");
-			assert.deepEqual(dataPassedToWriteJson[CLIENT_NAME_KEY_IN_PROJECT_FILE].root.constantItem, "myValue");
+			assert.deepStrictEqual(dataPassedToWriteJson, expectedData);
+			assert.deepStrictEqual(dataPassedToWriteJson[CLIENT_NAME_KEY_IN_PROJECT_FILE].root.id, "2");
+			assert.deepStrictEqual(dataPassedToWriteJson[CLIENT_NAME_KEY_IN_PROJECT_FILE].root.constantItem, "myValue");
 		});
 
 	});
@@ -230,7 +230,7 @@ describe("projectDataService", () => {
 				const projectDataService: IProjectDataService = testInjector.resolve("projectDataService");
 				projectDataService.removeNSProperty("projectDir", currentTestData.propertyName);
 
-				assert.deepEqual(dataPassedToWriteJson, generateExpectedDataFromTestData(currentTestData));
+				assert.deepStrictEqual(dataPassedToWriteJson, generateExpectedDataFromTestData(currentTestData));
 				assert.isTrue(!!dataPassedToWriteJson[CLIENT_NAME_KEY_IN_PROJECT_FILE], "Data passed to write JSON must contain nativescript key.");
 			});
 
@@ -255,7 +255,7 @@ describe("projectDataService", () => {
 
 			const projectDataService: IProjectDataService = testInjector.resolve("projectDataService");
 			projectDataService.removeNSProperty("projectDir", getPropertyName(["root", "id"]));
-			assert.deepEqual(dataPassedToWriteJson, { nativescript: { root: { constantItem: "myValue" } } });
+			assert.deepStrictEqual(dataPassedToWriteJson, { nativescript: { root: { constantItem: "myValue" } } });
 		});
 	});
 
@@ -291,7 +291,7 @@ describe("projectDataService", () => {
 				const propertySelector = currentTestData.propertyName.replace(propDelimiterRegExp, ".");
 				projectDataService.removeNSConfigProperty("projectDir", propertySelector);
 
-				assert.deepEqual(dataPassedToWriteJson, generateExpectedDataFromTestData(currentTestData));
+				assert.deepStrictEqual(dataPassedToWriteJson, generateExpectedDataFromTestData(currentTestData));
 			});
 
 		});
@@ -315,7 +315,7 @@ describe("projectDataService", () => {
 
 			const projectDataService: IProjectDataService = testInjector.resolve("projectDataService");
 			projectDataService.removeNSProperty("projectDir", getPropertyName(["root", "id"]));
-			assert.deepEqual(dataPassedToWriteJson, { nativescript: { root: { constantItem: "myValue" } } });
+			assert.deepStrictEqual(dataPassedToWriteJson, { nativescript: { root: { constantItem: "myValue" } } });
 		});
 	});
 
@@ -337,7 +337,7 @@ describe("projectDataService", () => {
 			const projectDataService: IProjectDataService = testInjector.resolve("projectDataService");
 			projectDataService.removeDependency("projectDir", "myDeps");
 
-			assert.deepEqual(dataPassedToWriteJson, { dependencies: {} });
+			assert.deepStrictEqual(dataPassedToWriteJson, { dependencies: {} });
 		});
 	});
 
@@ -372,7 +372,7 @@ describe("projectDataService", () => {
 				}
 			};
 
-			assert.deepEqual(assetStructure, { ios: emptyAssetStructure, android: _.merge(_.cloneDeep(emptyAssetStructure), { splashImages: null }) });
+			assert.deepStrictEqual(assetStructure, { ios: emptyAssetStructure, android: _.merge(_.cloneDeep(emptyAssetStructure), { splashImages: null }) });
 		});
 
 		it("generates iOS resources for files, which are not declared in image-definitions.json, but we have their size from resource's Contents.json", async () => {
@@ -466,7 +466,7 @@ describe("projectDataService", () => {
 				delete icon.path;
 			});
 
-			assert.deepEqual(assetStructure, {
+			assert.deepStrictEqual(assetStructure, {
 				ios: expectedIOSStructure,
 				android: _.merge(_.cloneDeep(emptyAssetStructure), { splashImages: null })
 			});
@@ -576,7 +576,7 @@ describe("projectDataService", () => {
 			it(`returns correct files for application type ${testCase.projectType}`, () => {
 				const { projectDataService } = setupTestCase(testCase);
 				const appExecutableFiles = projectDataService.getAppExecutableFiles("projectDir");
-				assert.deepEqual(appExecutableFiles, testCase.expectedResult);
+				assert.deepStrictEqual(appExecutableFiles, testCase.expectedResult);
 			});
 		});
 
@@ -627,7 +627,7 @@ describe("projectDataService", () => {
 			};
 
 			const appExecutableFiles = projectDataService.getAppExecutableFiles("projectDir");
-			assert.deepEqual(appExecutableFiles, testCase.expectedResult);
+			assert.deepStrictEqual(appExecutableFiles, testCase.expectedResult);
 		});
 	});
 });

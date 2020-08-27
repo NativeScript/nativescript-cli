@@ -99,7 +99,7 @@ describe('androidDebugBridge', () => {
 				const actualResponse = await adb[methodName](expectedArgs);
 
 				assert.isTrue(isAdbSpawnedFromEvent);
-				assert.deepEqual(spawnedArgs, expectedArgs);
+				assert.deepStrictEqual(spawnedArgs, expectedArgs);
 				assert.equal(actualResponse, adbResponse);
 			});
 
@@ -110,7 +110,7 @@ describe('androidDebugBridge', () => {
 				await adb[methodName](expectedArgs, { returnChildProcess: true });
 
 				assert.isTrue(isAdbSpawnedFromChildProcess);
-				assert.deepEqual(spawnedArgs, expectedArgs);
+				assert.deepStrictEqual(spawnedArgs, expectedArgs);
 			});
 
 			it('should spawn with event when specified', async () => {
@@ -122,7 +122,7 @@ describe('androidDebugBridge', () => {
 
 				assert.isTrue(isAdbSpawnedFromEvent);
 				assert.equal(spawnedEvent, expectedEvent);
-				assert.deepEqual(spawnedArgs, expectedArgs);
+				assert.deepStrictEqual(spawnedArgs, expectedArgs);
 				assert.equal(actualResponse, adbResponse);
 			});
 
@@ -135,7 +135,7 @@ describe('androidDebugBridge', () => {
 
 				assert.isTrue(isAdbSpawnedFromEvent);
 				assert.equal(spawnedEventOptions, expectedEventOptions);
-				assert.deepEqual(spawnedArgs, expectedArgs);
+				assert.deepStrictEqual(spawnedArgs, expectedArgs);
 				assert.equal(actualResponse, adbResponse);
 			});
 
@@ -189,9 +189,9 @@ describe('androidDebugBridge', () => {
 
 			assert.isTrue(isAdbSpawnedFromEvent);
 			assert.equal(allSpawnedEventsArgs.length, 3);
-			assert.deepEqual(allSpawnedEventsArgs[0], ['shell', 'mkdir', '-p', sampleDeviceFolder]);
-			assert.deepEqual(allSpawnedEventsArgs[1], ['push', sampleLocalFilePath, deviceFilePath]);
-			assert.deepEqual(allSpawnedEventsArgs[2], ['shell', 'chmod', '0777', sampleDeviceFolder]);
+			assert.deepStrictEqual(allSpawnedEventsArgs[0], ['shell', 'mkdir', '-p', sampleDeviceFolder]);
+			assert.deepStrictEqual(allSpawnedEventsArgs[1], ['push', sampleLocalFilePath, deviceFilePath]);
+			assert.deepStrictEqual(allSpawnedEventsArgs[2], ['shell', 'chmod', '0777', sampleDeviceFolder]);
 		});
 	});
 
@@ -199,7 +199,7 @@ describe('androidDebugBridge', () => {
 		it("does not fail when `adb devices` fail", async () => {
 			setup({ returnError: true });
 			const result = await adb.getDevicesSafe();
-			assert.deepEqual(result, [], "When adb get devices fail, getDevicesSafe must return empty array");
+			assert.deepStrictEqual(result, [], "When adb get devices fail, getDevicesSafe must return empty array");
 			assert.isTrue(logger.traceOutput.indexOf("Getting adb devices failed with error") !== -1);
 		});
 	});

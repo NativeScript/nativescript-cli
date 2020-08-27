@@ -165,7 +165,7 @@ describe("options", () => {
 			process.argv.pop();
 			process.argv.pop();
 			assert.isFalse(isExecutionStopped);
-			assert.deepEqual(["value"], <any>options["config"]);
+			assert.deepStrictEqual(["value"], <any>options["config"]);
 		});
 
 		it("does not break execution when valid commandSpecificOptions are passed", () => {
@@ -290,7 +290,7 @@ describe("options", () => {
 
 				(testCase.args || []).forEach(arg => process.argv.pop());
 
-				assert.deepEqual(actualError, testCase.expectedError);
+				assert.deepStrictEqual(actualError, testCase.expectedError);
 			});
 		});
 

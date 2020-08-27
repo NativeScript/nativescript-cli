@@ -85,8 +85,8 @@ function createTestInjector(testScenario: ITestScenario): IInjector {
 	});
 	testInjector.register("hostInfo", HostInfo);
 	testInjector.register("osInfo", OsInfo);
-  testInjector.register("userSettingsService", new UserSettingsServiceStub(testScenario.featureTracking, testScenario.exceptionsTracking, testInjector));
-  setIsInteractive(() => {
+	testInjector.register("userSettingsService", new UserSettingsServiceStub(testScenario.featureTracking, testScenario.exceptionsTracking, testInjector));
+	setIsInteractive(() => {
 		return testScenario.isInteractive;
 	});
 	testInjector.register("childProcess", {});
@@ -119,7 +119,7 @@ describe("analytics-service", () => {
 	});
 
 	after(() => {
-    setIsInteractive(null);
+		setIsInteractive(null);
 	});
 
 	describe("isEnabled", () => {
@@ -191,7 +191,7 @@ describe("analytics-service", () => {
 			const testInjector = createTestInjector(baseTestScenario);
 			service = testInjector.resolve<IAnalyticsService>("analyticsService");
 			const staticConfig: Config.IStaticConfig = testInjector.resolve("staticConfig");
-			assert.deepEqual(JSON.stringify({ "enabled": true }), await service.getStatusMessage(staticConfig.TRACK_FEATURE_USAGE_SETTING_NAME, true, ""));
+			assert.deepStrictEqual(JSON.stringify({ "enabled": true }), await service.getStatusMessage(staticConfig.TRACK_FEATURE_USAGE_SETTING_NAME, true, ""));
 		});
 
 		it("returns correct json results when status is disabled", async () => {
@@ -199,7 +199,7 @@ describe("analytics-service", () => {
 			const testInjector = createTestInjector(baseTestScenario);
 			service = testInjector.resolve<IAnalyticsService>("analyticsService");
 			const staticConfig: Config.IStaticConfig = testInjector.resolve("staticConfig");
-			assert.deepEqual(JSON.stringify({ "enabled": false }), await service.getStatusMessage(staticConfig.TRACK_FEATURE_USAGE_SETTING_NAME, true, ""));
+			assert.deepStrictEqual(JSON.stringify({ "enabled": false }), await service.getStatusMessage(staticConfig.TRACK_FEATURE_USAGE_SETTING_NAME, true, ""));
 		});
 
 		it("returns correct json results when status is not confirmed", async () => {
@@ -207,7 +207,7 @@ describe("analytics-service", () => {
 			const testInjector = createTestInjector(baseTestScenario);
 			service = testInjector.resolve<IAnalyticsService>("analyticsService");
 			const staticConfig: Config.IStaticConfig = testInjector.resolve("staticConfig");
-			assert.deepEqual(JSON.stringify({ "enabled": null }), await service.getStatusMessage(staticConfig.TRACK_FEATURE_USAGE_SETTING_NAME, true, ""));
+			assert.deepStrictEqual(JSON.stringify({ "enabled": null }), await service.getStatusMessage(staticConfig.TRACK_FEATURE_USAGE_SETTING_NAME, true, ""));
 		});
 	});
 
@@ -273,7 +273,7 @@ describe("analytics-service", () => {
 			const testInjector = createTestInjector(baseTestScenario);
 			service = testInjector.resolve<IAnalyticsService>("analyticsService");
 			await service.checkConsent();
-			assert.deepEqual(savedSettingNamesAndValues, "");
+			assert.deepStrictEqual(savedSettingNamesAndValues, "");
 		});
 
 		it("does nothing when cannot make request", async () => {
@@ -282,7 +282,7 @@ describe("analytics-service", () => {
 			const testInjector = createTestInjector(baseTestScenario);
 			service = testInjector.resolve<IAnalyticsService>("analyticsService");
 			await service.checkConsent();
-			assert.deepEqual(savedSettingNamesAndValues, "");
+			assert.deepStrictEqual(savedSettingNamesAndValues, "");
 		});
 
 		it("does nothing when values are not set and console is not interactive", async () => {
@@ -291,7 +291,7 @@ describe("analytics-service", () => {
 			const testInjector = createTestInjector(baseTestScenario);
 			service = testInjector.resolve<IAnalyticsService>("analyticsService");
 			await service.checkConsent();
-			assert.deepEqual(savedSettingNamesAndValues, "");
+			assert.deepStrictEqual(savedSettingNamesAndValues, "");
 		});
 	});
 });

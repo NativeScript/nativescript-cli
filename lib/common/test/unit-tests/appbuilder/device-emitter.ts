@@ -53,7 +53,7 @@ describe("deviceEmitter", () => {
 			describe(deviceEvent, () => {
 				const attachDeviceEventVerificationHandler = (expectedDeviceInfo: any, done: mocha.Done) => {
 					deviceEmitter.on(deviceEvent, (deviceInfo: Mobile.IDeviceInfo) => {
-						assert.deepEqual(deviceInfo, expectedDeviceInfo);
+						assert.deepStrictEqual(deviceInfo, expectedDeviceInfo);
 						// Wait for all operations to be completed and call done after that.
 						setTimeout(() => done(), 0);
 					});
@@ -69,7 +69,7 @@ describe("deviceEmitter", () => {
 		describe("openDeviceLogStream", () => {
 			const attachDeviceEventVerificationHandler = (expectedDeviceInfo: any, done: mocha.Done) => {
 				deviceEmitter.on(DeviceDiscoveryEventNames.DEVICE_FOUND, (deviceInfo: Mobile.IDeviceInfo) => {
-					assert.deepEqual(deviceInfo, expectedDeviceInfo);
+					assert.deepStrictEqual(deviceInfo, expectedDeviceInfo);
 
 					// Wait for all operations to be completed and call done after that.
 					setTimeout(() => {
@@ -97,8 +97,8 @@ describe("deviceEmitter", () => {
 
 				const attachDeviceLogDataVerificationHandler = (expectedDeviceIdentifier: string, done: mocha.Done) => {
 					deviceEmitter.on(DEVICE_LOG_EVENT_NAME, (identifier: string, data: any) => {
-						assert.deepEqual(identifier, expectedDeviceIdentifier);
-						assert.deepEqual(data, expectedDeviceLogData);
+						assert.deepStrictEqual(identifier, expectedDeviceIdentifier);
+						assert.deepStrictEqual(data, expectedDeviceLogData);
 						// Wait for all operations to be completed and call done after that.
 						setTimeout(() => done(), 0);
 					});
@@ -118,8 +118,8 @@ describe("deviceEmitter", () => {
 
 				const attachApplicationEventVerificationHandler = (expectedDeviceIdentifier: string, done: mocha.Done) => {
 					deviceEmitter.on(applicationEvent, (deviceIdentifier: string, appIdentifier: string) => {
-						assert.deepEqual(deviceIdentifier, expectedDeviceIdentifier);
-						assert.deepEqual(appIdentifier, expectedApplicationIdentifier);
+						assert.deepStrictEqual(deviceIdentifier, expectedDeviceIdentifier);
+						assert.deepStrictEqual(appIdentifier, expectedApplicationIdentifier);
 
 						// Wait for all operations to be completed and call done after that.
 						setTimeout(() => done(), 0);
@@ -139,7 +139,7 @@ describe("deviceEmitter", () => {
 
 				const attachDebuggableEventVerificationHandler = (expectedDebuggableAppInfo: Mobile.IDeviceApplicationInformation, done: mocha.Done) => {
 					deviceEmitter.on(applicationEvent, (debuggableAppInfo: Mobile.IDeviceApplicationInformation) => {
-						assert.deepEqual(debuggableAppInfo, expectedDebuggableAppInfo);
+						assert.deepStrictEqual(debuggableAppInfo, expectedDebuggableAppInfo);
 
 						// Wait for all operations to be completed and call done after that.
 						setTimeout(() => done(), 0);
@@ -179,11 +179,11 @@ describe("deviceEmitter", () => {
 
 				const attachDebuggableEventVerificationHandler = (expectedDeviceIdentifier: string, expectedAppIdentifier: string, expectedDebuggableViewInfo: Mobile.IDebugWebViewInfo, done: mocha.Done) => {
 					deviceEmitter.on(applicationEvent, (deviceIdentifier: string, appIdentifier: string, debuggableViewInfo: Mobile.IDebugWebViewInfo) => {
-						assert.deepEqual(deviceIdentifier, expectedDeviceIdentifier);
+						assert.deepStrictEqual(deviceIdentifier, expectedDeviceIdentifier);
 
-						assert.deepEqual(appIdentifier, expectedAppIdentifier);
+						assert.deepStrictEqual(appIdentifier, expectedAppIdentifier);
 
-						assert.deepEqual(debuggableViewInfo, expectedDebuggableViewInfo);
+						assert.deepStrictEqual(debuggableViewInfo, expectedDebuggableViewInfo);
 
 						// Wait for all operations to be completed and call done after that.
 						setTimeout(done, 0);

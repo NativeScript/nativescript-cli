@@ -48,7 +48,7 @@ describe("sysInfo", () => {
 
 		it("returns empty array when there are no warnings", async () => {
 			const warnings = await getSystemWarnings();
-			assert.deepEqual(warnings, []);
+			assert.deepStrictEqual(warnings, []);
 		});
 
 		it("returns correct single warning when macOS version is deprecated", async () => {
@@ -56,14 +56,14 @@ describe("sysInfo", () => {
 			const macOSWarning = { message: format(MacOSDeprecationStringFormat, macOSDeprecatedVersion), severity: SystemWarningsSeverity.high };
 			const warnings = await getSystemWarnings({ macOSDeprecatedVersion });
 			_.each(warnings, warning => delete warning.toString);
-			assert.deepEqual(warnings, [macOSWarning]);
+			assert.deepStrictEqual(warnings, [macOSWarning]);
 		});
 
 		it("returns correct single warning when Node.js version is deprecated", async () => {
 			const nodeJsWarning = { message: "Node.js Warning", severity: SystemWarningsSeverity.medium };
 			const warnings = await getSystemWarnings({ nodeJsWarning: nodeJsWarning.message });
 			_.each(warnings, warning => delete warning.toString);
-			assert.deepEqual(warnings, [nodeJsWarning]);
+			assert.deepStrictEqual(warnings, [nodeJsWarning]);
 		});
 
 		it("returns correct warnings when both Node.js and macOS versions are deprecated", async () => {
@@ -72,7 +72,7 @@ describe("sysInfo", () => {
 			const nodeJsWarning = { message: "Node.js Warning", severity: SystemWarningsSeverity.medium };
 			const warnings = await getSystemWarnings({ macOSDeprecatedVersion, nodeJsWarning: nodeJsWarning.message });
 			_.each(warnings, warning => delete warning.toString);
-			assert.deepEqual(warnings, [macOSWarning, nodeJsWarning]);
+			assert.deepStrictEqual(warnings, [macOSWarning, nodeJsWarning]);
 		});
 	});
 
@@ -90,7 +90,7 @@ describe("sysInfo", () => {
 
 		it("returns null when macOS version is supported", async () => {
 			const warning = await getMacOSWarning();
-			assert.deepEqual(warning, null);
+			assert.deepStrictEqual(warning, null);
 		});
 
 		it("returns correct single warning when macOS version is deprecated", async () => {
@@ -98,7 +98,7 @@ describe("sysInfo", () => {
 			const macOSWarning: ISystemWarning = { message: format(MacOSDeprecationStringFormat, macOSDeprecatedVersion), severity: SystemWarningsSeverity.high };
 			const warning = await getMacOSWarning(macOSDeprecatedVersion);
 			delete warning.toString;
-			assert.deepEqual(warning, macOSWarning);
+			assert.deepStrictEqual(warning, macOSWarning);
 		});
 	});
 

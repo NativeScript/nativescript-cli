@@ -511,7 +511,7 @@ describe('Platform Service Tests', () => {
 					{ action: "addPlatforms", platforms: ["ios"] },
 				];
 
-				assert.deepEqual(platformActions, expectedPlatformActions, "Expected `remove ios`, `add ios` calls to the platformService.");
+				assert.deepStrictEqual(platformActions, expectedPlatformActions, "Expected `remove ios`, `add ios` calls to the platformService.");
 			});
 		});
 

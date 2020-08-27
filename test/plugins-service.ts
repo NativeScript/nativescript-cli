@@ -88,7 +88,6 @@ function createTestInjector() {
 	// };
 	// testInjector.register("fs", fileSystemStub);
 
-
 	testInjector.register("adb", {});
 	testInjector.register("androidDebugBridgeResultHandler", {});
 	testInjector.register("projectData", ProjectData);
@@ -352,7 +351,7 @@ describe("Plugins service", () => {
 					return {
 						name: 'tns-android',
 						version: '1.4.0'
-					}
+					};
 				};
 
 				await pluginsService.add(pluginFolderPath, projectData);
@@ -618,7 +617,7 @@ describe("Plugins service", () => {
 			const testData = setupTest({ newPluginHashes, hasPluginPlatformsDir: true });
 			await testData.pluginsService.preparePluginNativeCode({ pluginData: testData.pluginData, platform, projectData });
 			assert.isTrue(testData.isPreparePluginNativeCodeCalled);
-			assert.deepEqual(testData.dataPassedToWriteJson, { [testData.pluginData.name]: newPluginHashes });
+			assert.deepStrictEqual(testData.dataPassedToWriteJson, { [testData.pluginData.name]: newPluginHashes });
 		});
 
 		it("does not prepare the files when plugin has platforms dir and files have not changed since then", async () => {
@@ -668,7 +667,7 @@ describe("Plugins service", () => {
 			const pluginData = (<any>pluginsService).convertToPluginData(dataFromPluginPackageJson, "my project dir");
 			// Remove the comparison of a function
 			delete pluginData["pluginPlatformsFolderPath"];
-			assert.deepEqual(pluginData, <any>{
+			assert.deepStrictEqual(pluginData, <any>{
 				name: "name",
 				version: "1.0.0",
 				fullPath: pluginDir,
@@ -958,7 +957,7 @@ This framework comes from nativescript-ui-core plugin, which is installed multip
 						delete plugin.pluginVariables;
 					}
 
-					assert.deepEqual(plugins, testCase.expectedOutput);
+					assert.deepStrictEqual(plugins, testCase.expectedOutput);
 				}
 			});
 		}

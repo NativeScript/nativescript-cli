@@ -326,7 +326,7 @@ describe("androidLogFilter", () => {
 		testInjector.register("loggingLevels", LoggingLevels);
 		const androidLogFilter = <Mobile.IPlatformLogFilter>testInjector.resolve(AndroidLogFilter);
 		const filteredData = androidLogFilter.filterData(inputData, { logLevel: _logLevel, applicationPid: _pid, projectDir: null });
-		assert.deepEqual(filteredData, expectedOutput, `The actual result '${filteredData}' did NOT match expected output '${expectedOutput}'.`);
+		assert.deepStrictEqual(filteredData, expectedOutput, `The actual result '${filteredData}' did NOT match expected output '${expectedOutput}'.`);
 	};
 
 	let logLevel = "INFO";

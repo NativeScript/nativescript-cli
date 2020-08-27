@@ -82,8 +82,8 @@ describe("iOSLogParserService", () => {
 			emitDeviceLog("test message");
 			emitDeviceLog(getDebuggerPortMessage(18181));
 
-			assert.deepEqual(data.length, emittedMessagesCount);
-			assert.deepEqual(data[0], { port: 18181, deviceId: deviceId, appId: appId });
+			assert.deepStrictEqual(data.length, emittedMessagesCount);
+			assert.deepStrictEqual(data[0], { port: 18181, deviceId: deviceId, appId: appId });
 		});
 		it("should call handler for all mactches in order for same matches", async () => {
 			const emittedMessagesCount = 5;
@@ -95,12 +95,12 @@ describe("iOSLogParserService", () => {
 			emitDeviceLog(getDebuggerPortMessage(18181));
 			emitDeviceLog(getDebuggerPortMessage(64087));
 
-			assert.deepEqual(data.length, emittedMessagesCount);
-			assert.deepEqual(data[0], { port: 18181, deviceId: deviceId, appId: appId });
-			assert.deepEqual(data[1], { port: 18181, deviceId: deviceId, appId: appId });
-			assert.deepEqual(data[2], { port: 18181, deviceId: deviceId, appId: appId });
-			assert.deepEqual(data[3], { port: 18181, deviceId: deviceId, appId: appId });
-			assert.deepEqual(data[4], { port: 64087, deviceId: deviceId, appId: appId });
+			assert.deepStrictEqual(data.length, emittedMessagesCount);
+			assert.deepStrictEqual(data[0], { port: 18181, deviceId: deviceId, appId: appId });
+			assert.deepStrictEqual(data[1], { port: 18181, deviceId: deviceId, appId: appId });
+			assert.deepStrictEqual(data[2], { port: 18181, deviceId: deviceId, appId: appId });
+			assert.deepStrictEqual(data[3], { port: 18181, deviceId: deviceId, appId: appId });
+			assert.deepStrictEqual(data[4], { port: 64087, deviceId: deviceId, appId: appId });
 		});
 		it("should call handler for all matches in order for different matches", async () => {
 			const emittedMessagesCount = 5;
@@ -112,12 +112,12 @@ describe("iOSLogParserService", () => {
 			emitDeviceLog(getDebuggerPortMessage(12345));
 			emitDeviceLog(getDebuggerPortMessage(18181));
 
-			assert.deepEqual(data.length, emittedMessagesCount);
-			assert.deepEqual(data[0], { port: 45898, deviceId: deviceId, appId: appId });
-			assert.deepEqual(data[1], { port: 1809, deviceId: deviceId, appId: appId });
-			assert.deepEqual(data[2], { port: 65072, deviceId: deviceId, appId: appId });
-			assert.deepEqual(data[3], { port: 12345, deviceId: deviceId, appId: appId });
-			assert.deepEqual(data[4], { port: 18181, deviceId: deviceId, appId: appId });
+			assert.deepStrictEqual(data.length, emittedMessagesCount);
+			assert.deepStrictEqual(data[0], { port: 45898, deviceId: deviceId, appId: appId });
+			assert.deepStrictEqual(data[1], { port: 1809, deviceId: deviceId, appId: appId });
+			assert.deepStrictEqual(data[2], { port: 65072, deviceId: deviceId, appId: appId });
+			assert.deepStrictEqual(data[3], { port: 12345, deviceId: deviceId, appId: appId });
+			assert.deepStrictEqual(data[4], { port: 18181, deviceId: deviceId, appId: appId });
 		});
 		it(`should not execute handler if no match`, async () => {
 			const data = attachOnDebuggerFoundEvent();

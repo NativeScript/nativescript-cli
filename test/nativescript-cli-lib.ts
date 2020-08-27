@@ -9,7 +9,7 @@ describe("nativescript-cli-lib", () => {
 		const packageJsonContent = fs.readFileSync(path.join(__dirname, "..", "package.json")).toString();
 		const jsonContent = JSON.parse(packageJsonContent);
 		const expectedEntryPoint = "./lib/nativescript-cli-lib.js";
-		assert.deepEqual(jsonContent.main, expectedEntryPoint);
+		assert.deepStrictEqual(jsonContent.main, expectedEntryPoint);
 	});
 
 	const publicApi: any = {

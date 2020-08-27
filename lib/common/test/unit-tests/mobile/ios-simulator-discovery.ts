@@ -143,41 +143,41 @@ describe("ios-simulator-discovery", () => {
 
 	it("finds new device when it is attached", async () => {
 		const device = await detectNewSimulatorAttached(defaultRunningSimulator);
-		assert.deepEqual(device.deviceInfo, expectedDeviceInfo);
+		assert.deepStrictEqual(device.deviceInfo, expectedDeviceInfo);
 	});
 
 	it("raises deviceLost when device is detached", async () => {
 		const device = await detectNewSimulatorAttached(defaultRunningSimulator);
-		assert.deepEqual(device.deviceInfo, expectedDeviceInfo);
+		assert.deepStrictEqual(device.deviceInfo, expectedDeviceInfo);
 		const lostDevice = await detectSimulatorDetached(device.deviceInfo.identifier);
-		assert.deepEqual(lostDevice, device);
+		assert.deepStrictEqual(lostDevice, device);
 	});
 
 	it("raises deviceLost and deviceFound when device's id has changed (change simulator type)", async () => {
 		const device = await detectNewSimulatorAttached(defaultRunningSimulator);
 		const newId = "newId";
-		assert.deepEqual(device.deviceInfo, expectedDeviceInfo);
+		assert.deepStrictEqual(device.deviceInfo, expectedDeviceInfo);
 
 		const devices = await detectSimulatorChanged(device.deviceInfo.identifier, newId);
-		assert.deepEqual(devices.deviceLost, device);
+		assert.deepStrictEqual(devices.deviceLost, device);
 		expectedDeviceInfo.identifier = newId;
 		expectedDeviceInfo.imageIdentifier = newId;
-		assert.deepEqual(devices.deviceFound.deviceInfo, expectedDeviceInfo);
+		assert.deepStrictEqual(devices.deviceFound.deviceInfo, expectedDeviceInfo);
 	});
 
 	it("raises events in correct order when simulator is started, closed and started again", async () => {
 		let device = await detectNewSimulatorAttached(defaultRunningSimulator);
-		assert.deepEqual(device.deviceInfo, expectedDeviceInfo);
+		assert.deepStrictEqual(device.deviceInfo, expectedDeviceInfo);
 		const lostDevice = await detectSimulatorDetached(device.deviceInfo.identifier);
-		assert.deepEqual(lostDevice, device);
+		assert.deepStrictEqual(lostDevice, device);
 
 		device = await detectNewSimulatorAttached(defaultRunningSimulator);
-		assert.deepEqual(device.deviceInfo, expectedDeviceInfo);
+		assert.deepStrictEqual(device.deviceInfo, expectedDeviceInfo);
 	});
 
 	it("finds new device when it is attached and reports it as new only once", async () => {
 		const device = await detectNewSimulatorAttached(defaultRunningSimulator);
-		assert.deepEqual(device.deviceInfo, expectedDeviceInfo);
+		assert.deepStrictEqual(device.deviceInfo, expectedDeviceInfo);
 		iOSSimulatorDiscovery.on(DeviceDiscoveryEventNames.DEVICE_FOUND, (d: Mobile.IDevice) => {
 			throw new Error("Device found should not be raised for the same device.");
 		});
@@ -204,7 +204,7 @@ describe("ios-simulator-discovery", () => {
 
 	it('find correctly two simulators', async () => {
 		const firstSimulator = await detectNewSimulatorAttached(defaultRunningSimulator);
-		assert.deepEqual(firstSimulator.deviceInfo, expectedDeviceInfo);
+		assert.deepStrictEqual(firstSimulator.deviceInfo, expectedDeviceInfo);
 
 		const secondRunningSimulator = {
 			id: 'secondSimulator',
@@ -214,6 +214,6 @@ describe("ios-simulator-discovery", () => {
 		};
 
 		const secondSimulator = await detectNewSimulatorAttached(secondRunningSimulator);
-		assert.deepEqual(secondSimulator.deviceInfo, getDeviceInfo(secondRunningSimulator));
+		assert.deepStrictEqual(secondSimulator.deviceInfo, getDeviceInfo(secondRunningSimulator));
 	});
 });

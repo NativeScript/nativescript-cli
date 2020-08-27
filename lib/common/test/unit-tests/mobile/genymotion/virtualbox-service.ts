@@ -38,21 +38,21 @@ describe("VirtualBoxService", () => {
 		it("should return an empty array when virtualbox is not configured", async () => {
 			mockData({isVirtualBoxInstalled: false});
 			const output = await virtualBoxService.listVms();
-			assert.deepEqual(output.vms, []);
+			assert.deepStrictEqual(output.vms, []);
 			assert.isNull(output.error);
 		});
 		it("should return correctly virtual machines", async () => {
 			mockData({isVirtualBoxInstalled: true, spawnOutput: { stdout: '"test" {4a1bf7cd-a7b4-45ef-8cb0-c5a0aafad211}', stderr: null }});
 			const output = await virtualBoxService.listVms();
-			assert.deepEqual(output.vms, [{id: "4a1bf7cd-a7b4-45ef-8cb0-c5a0aafad211", name: "test"}]);
+			assert.deepStrictEqual(output.vms, [{id: "4a1bf7cd-a7b4-45ef-8cb0-c5a0aafad211", name: "test"}]);
 			assert.isNull(output.error);
 		});
 		it("should return the error when some error is thrown", async () => {
 			const error = "some error is thrown";
 			mockData({isVirtualBoxInstalled: true, spawnOutput: { stdout: null, stderr: error}});
 			const output = await virtualBoxService.listVms();
-			assert.deepEqual(output.vms, []);
-			assert.deepEqual(output.error, error);
+			assert.deepStrictEqual(output.vms, []);
+			assert.deepStrictEqual(output.error, error);
 		});
 	});
 
@@ -68,7 +68,7 @@ describe("VirtualBoxService", () => {
 			mockData({isVirtualBoxInstalled: true, spawnOutput: { stdout: null, stderr: error }});
 			const output = await virtualBoxService.enumerateGuestProperties("testId");
 			assert.isNull(output.properties);
-			assert.deepEqual(output.error, error);
+			assert.deepStrictEqual(output.error, error);
 		});
 	});
 });

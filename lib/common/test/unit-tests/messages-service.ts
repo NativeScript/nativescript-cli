@@ -25,7 +25,7 @@ describe("messages-service", () => {
 			const injector = createTestInjector({});
 			service = injector.resolve("$messagesService");
 
-			assert.deepEqual(1, service.pathsToMessageJsonFiles.length, "Messages service should initialize with a default json file.");
+			assert.deepStrictEqual(1, service.pathsToMessageJsonFiles.length, "Messages service should initialize with a default json file.");
 		});
 
 		it("appends the default json file when setting pathsToMessageJsonFiles", () => {
@@ -33,7 +33,7 @@ describe("messages-service", () => {
 			service = injector.resolve("$messagesService");
 			service.pathsToMessageJsonFiles = ["someHackyJsonFile.json"];
 
-			assert.deepEqual(2, service.pathsToMessageJsonFiles.length, "Messages service should append the default json file.");
+			assert.deepStrictEqual(2, service.pathsToMessageJsonFiles.length, "Messages service should append the default json file.");
 		});
 
 		it("should throw if non-existent json file is provided", () => {
@@ -49,7 +49,7 @@ describe("messages-service", () => {
 			service = injector.resolve("$messagesService");
 			const stringMessage = "Some message",
 				resultMessage = service.getMessage(stringMessage);
-			assert.deepEqual(stringMessage, resultMessage, "Messages service should return the given message if not found as key in any json file in `pathsToMessageJsonFiles` property.");
+			assert.deepStrictEqual(stringMessage, resultMessage, "Messages service should return the given message if not found as key in any json file in `pathsToMessageJsonFiles` property.");
 		});
 
 		it("util.formats the given message if not found as key in any json file and contains special symbol (%s,%d, etc.)", () => {
@@ -60,7 +60,7 @@ describe("messages-service", () => {
 				expectedMessage = format(messageFormat, formatArg),
 				resultMessage = service.getMessage(messageFormat, formatArg);
 
-			assert.deepEqual(expectedMessage, resultMessage, "Messages service should apply util.format.");
+			assert.deepStrictEqual(expectedMessage, resultMessage, "Messages service should apply util.format.");
 		});
 
 		it("should return correct value from json file if found in json message files", () => {
@@ -68,7 +68,7 @@ describe("messages-service", () => {
 				injector = createTestInjector(jsonContents);
 			service = injector.resolve("$messagesService");
 
-			assert.deepEqual(jsonContents.KEY, service.getMessage("KEY"), "Messages service should return correct value from json file by given key.");
+			assert.deepStrictEqual(jsonContents.KEY, service.getMessage("KEY"), "Messages service should return correct value from json file by given key.");
 		});
 
 		it("should util.format value from json file if found in json message files and contains special symbol (%s,%d, etc.)", () => {
@@ -80,7 +80,7 @@ describe("messages-service", () => {
 				expectedMessage = format(jsonContents.KEY, formatArg),
 				actualMessage = service.getMessage(jsonContents.KEY, formatArg);
 
-			assert.deepEqual(expectedMessage, actualMessage, "Messages service should util.format value from json file by given key when value is format.");
+			assert.deepStrictEqual(expectedMessage, actualMessage, "Messages service should util.format value from json file by given key when value is format.");
 		});
 
 		it("should return correct value from json file if found in json message files with complex key", () => {
@@ -92,7 +92,7 @@ describe("messages-service", () => {
 				injector = createTestInjector(jsonContents);
 			service = injector.resolve("$messagesService");
 
-			assert.deepEqual(jsonContents.KEY.NESTED_KEY, service.getMessage("KEY.NESTED_KEY"), "Messages service should return correct value from json file by given complex key.");
+			assert.deepStrictEqual(jsonContents.KEY.NESTED_KEY, service.getMessage("KEY.NESTED_KEY"), "Messages service should return correct value from json file by given complex key.");
 		});
 
 		it("should return correct value from json file if found in client json before common json", () => {
@@ -113,7 +113,7 @@ describe("messages-service", () => {
 			service.pathsToMessageJsonFiles = ["clientJsonFile.json"];
 
 			assert.notDeepEqual(commonJsonContents.KEY, service.getMessage("KEY"), "Messages service should return correct value from json file when value is overriden by client.");
-			assert.deepEqual(clientJsonContents.KEY, service.getMessage("KEY"), "Messages service should return correct value from json file when value is overriden by client.");
+			assert.deepStrictEqual(clientJsonContents.KEY, service.getMessage("KEY"), "Messages service should return correct value from json file when value is overriden by client.");
 		});
 	});
 });

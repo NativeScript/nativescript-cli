@@ -108,7 +108,7 @@ describe("ApplicationManagerBase", () => {
 					foundAppsForDebug.push(d);
 					if (foundAppsForDebug.length === currentlyAvailableAppsForDebugging.length) {
 						_.each(foundAppsForDebug, (f: Mobile.IDeviceApplicationInformation, index: number) => {
-							assert.deepEqual(f, currentlyAvailableAppsForDebugging[index]);
+							assert.deepStrictEqual(f, currentlyAvailableAppsForDebugging[index]);
 						});
 					}
 				});
@@ -125,7 +125,7 @@ describe("ApplicationManagerBase", () => {
 					foundAppsForDebug.push(d);
 					if (foundAppsForDebug.length === currentlyAvailableAppsForDebugging.length) {
 						_.each(foundAppsForDebug, (f: Mobile.IDeviceApplicationInformation, index: number) => {
-							assert.deepEqual(f, currentlyAvailableAppsForDebugging[index]);
+							assert.deepStrictEqual(f, currentlyAvailableAppsForDebugging[index]);
 						});
 
 						if (isFinalCheck) {
@@ -152,7 +152,7 @@ describe("ApplicationManagerBase", () => {
 
 					if (lostAppsForDebug.length === expectedAppsToBeLost.length) {
 						_.each(lostAppsForDebug, (f: Mobile.IDeviceApplicationInformation, index: number) => {
-							assert.deepEqual(f, expectedAppsToBeLost[index]);
+							assert.deepStrictEqual(f, expectedAppsToBeLost[index]);
 						});
 					}
 				});
@@ -173,7 +173,7 @@ describe("ApplicationManagerBase", () => {
 				applicationManager.on("debuggableAppLost", (d: Mobile.IDeviceApplicationInformation) => {
 					lostAppsForDebug.push(d);
 					_.each(lostAppsForDebug, (f: Mobile.IDeviceApplicationInformation, index: number) => {
-						assert.deepEqual(f, _.find(initialAppsAvailableForDebug, t => t.appIdentifier === f.appIdentifier));
+						assert.deepStrictEqual(f, _.find(initialAppsAvailableForDebug, t => t.appIdentifier === f.appIdentifier));
 					});
 
 					if (lostAppsForDebug.length === initialAppsAvailableForDebug.length && isFinalCheck) {
@@ -204,7 +204,7 @@ describe("ApplicationManagerBase", () => {
 						foundAppsForDebug.push(d);
 						if (foundAppsForDebug.length === remainingAppsForDebugging.length) {
 							_.each(foundAppsForDebug, (f: Mobile.IDeviceApplicationInformation, index: number) => {
-								assert.deepEqual(f, remainingAppsForDebugging[index]);
+								assert.deepStrictEqual(f, remainingAppsForDebugging[index]);
 							});
 
 							resolve();
@@ -214,7 +214,7 @@ describe("ApplicationManagerBase", () => {
 
 				const lostAppsPromise = new Promise<void>((resolve, reject) => {
 					applicationManager.on("debuggableAppLost", (d: Mobile.IDeviceApplicationInformation) => {
-						assert.deepEqual(d, allAppsForDebug[0], "Debuggable app lost does not match.");
+						assert.deepStrictEqual(d, allAppsForDebug[0], "Debuggable app lost does not match.");
 						resolve();
 					});
 				});
@@ -294,7 +294,7 @@ describe("ApplicationManagerBase", () => {
 				applicationManager.checkForApplicationUpdates()
 					.then(() => {
 						applicationManager.on("debuggableViewFound", (appIdentifier: string, d: Mobile.IDebugWebViewInfo) => {
-							assert.deepEqual(appIdentifier, expectedAppIdentifier);
+							assert.deepStrictEqual(appIdentifier, expectedAppIdentifier);
 							assert.isTrue(_.isEqual(d, expectedViewToBeFound));
 
 							if (isLastCheck) {
@@ -334,7 +334,7 @@ describe("ApplicationManagerBase", () => {
 				applicationManager.checkForApplicationUpdates()
 					.then(() => {
 						applicationManager.on("debuggableViewLost", (appIdentifier: string, d: Mobile.IDebugWebViewInfo) => {
-							assert.deepEqual(appIdentifier, expectedAppIdentifier);
+							assert.deepStrictEqual(appIdentifier, expectedAppIdentifier);
 							assert.isTrue(_.isEqual(d, expectedViewToBeLost));
 
 							if (isLastCheck) {
@@ -428,10 +428,10 @@ describe("ApplicationManagerBase", () => {
 				await promise;
 
 				_.each(currentlyInstalledApps, (c: string, index: number) => {
-					assert.deepEqual(c, reportedInstalledApps[index]);
+					assert.deepStrictEqual(c, reportedInstalledApps[index]);
 				});
 
-				assert.deepEqual(reportedInstalledApps.length, currentlyInstalledApps.length);
+				assert.deepStrictEqual(reportedInstalledApps.length, currentlyInstalledApps.length);
 			});
 
 			it("reports installed applications when apps are changed between executions", async () => {
@@ -454,10 +454,10 @@ describe("ApplicationManagerBase", () => {
 					await promise;
 
 					_.each(currentlyInstalledApps, (c: string, index: number) => {
-						assert.deepEqual(c, reportedInstalledApps[index]);
+						assert.deepStrictEqual(c, reportedInstalledApps[index]);
 					});
 
-					assert.deepEqual(reportedInstalledApps.length, currentlyInstalledApps.length);
+					assert.deepStrictEqual(reportedInstalledApps.length, currentlyInstalledApps.length);
 				};
 
 				await testInstalledAppsResults();
@@ -490,10 +490,10 @@ describe("ApplicationManagerBase", () => {
 				await promise;
 
 				_.each(initiallyInstalledApps, (c: string, index: number) => {
-					assert.deepEqual(c, reportedUninstalledApps[index]);
+					assert.deepStrictEqual(c, reportedUninstalledApps[index]);
 				});
 
-				assert.deepEqual(reportedUninstalledApps.length, initiallyInstalledApps.length);
+				assert.deepStrictEqual(reportedUninstalledApps.length, initiallyInstalledApps.length);
 			});
 
 			it("reports uninstalled applications when apps are changed between executions", async () => {
@@ -520,10 +520,10 @@ describe("ApplicationManagerBase", () => {
 					await promise;
 
 					_.each(removedApps, (c: string, index: number) => {
-						assert.deepEqual(c, reportedUninstalledApps[index]);
+						assert.deepStrictEqual(c, reportedUninstalledApps[index]);
 					});
 
-					assert.deepEqual(reportedUninstalledApps.length, removedApps.length);
+					assert.deepStrictEqual(reportedUninstalledApps.length, removedApps.length);
 				};
 
 				while (currentlyInstalledApps.length) {
@@ -570,16 +570,16 @@ describe("ApplicationManagerBase", () => {
 					await Promise.all([appInstalledPromise, appUninstalledPromise]);
 
 					_.each(removedApps, (c: string, index: number) => {
-						assert.deepEqual(c, reportedUninstalledApps[index]);
+						assert.deepStrictEqual(c, reportedUninstalledApps[index]);
 					});
 
-					assert.deepEqual(reportedUninstalledApps.length, removedApps.length);
+					assert.deepStrictEqual(reportedUninstalledApps.length, removedApps.length);
 
 					_.each(installedApps, (c: string, index: number) => {
-						assert.deepEqual(c, reportedInstalledApps[index]);
+						assert.deepStrictEqual(c, reportedInstalledApps[index]);
 					});
 
-					assert.deepEqual(reportedInstalledApps.length, installedApps.length);
+					assert.deepStrictEqual(reportedInstalledApps.length, installedApps.length);
 				};
 
 				for (let index = 10; index < 13; index++) {
@@ -619,7 +619,7 @@ describe("ApplicationManagerBase", () => {
 			};
 
 			await applicationManager.restartApplication(applicationData);
-			assert.deepEqual(applicationData, passedApplicationData, "When bundleIdentifier is not passed to restartApplication, stopApplication must be called with application identifier.");
+			assert.deepStrictEqual(applicationData, passedApplicationData, "When bundleIdentifier is not passed to restartApplication, stopApplication must be called with application identifier.");
 		});
 
 		it("calls startApplication with correct arguments", async () => {
@@ -630,7 +630,7 @@ describe("ApplicationManagerBase", () => {
 			};
 
 			await applicationManager.restartApplication(applicationData);
-			assert.deepEqual(passedApplicationData, applicationData, "startApplication must be called with correct args.");
+			assert.deepStrictEqual(passedApplicationData, applicationData, "startApplication must be called with correct args.");
 		});
 
 		it("calls stopApplication and startApplication in correct order", async () => {
@@ -664,11 +664,11 @@ describe("ApplicationManagerBase", () => {
 			};
 
 			await applicationManager.tryStartApplication(applicationData);
-			assert.deepEqual(passedApplicationData, applicationData);
+			assert.deepStrictEqual(passedApplicationData, applicationData);
 
 			const secondApplicationData = { appId: "appId2", projectName: "appName2", projectDir: "" };
 			await applicationManager.tryStartApplication(secondApplicationData);
-			assert.deepEqual(passedApplicationData, secondApplicationData);
+			assert.deepStrictEqual(passedApplicationData, secondApplicationData);
 
 		});
 
@@ -683,7 +683,7 @@ describe("ApplicationManagerBase", () => {
 			});
 
 			const assertDoesNotThrow = async (opts?: { shouldStartApplicatinThrow: boolean }) => {
-				assert.deepEqual(logger.traceOutput, "");
+				assert.deepStrictEqual(logger.traceOutput, "");
 				applicationManager.startApplication = async (appData: Mobile.IApplicationData) => {
 					if (opts && opts.shouldStartApplicatinThrow) {
 						throw error;
@@ -718,7 +718,7 @@ describe("ApplicationManagerBase", () => {
 			applicationManager.isApplicationInstalled = (appIdentifier: string) => Promise.resolve(true);
 
 			await applicationManager.reinstallApplication("appId", "packageFilePath");
-			assert.deepEqual(uninstallApplicationAppIdParam, "appId");
+			assert.deepStrictEqual(uninstallApplicationAppIdParam, "appId");
 		});
 
 		it("calls installApplication with correct arguments", async () => {
@@ -729,7 +729,7 @@ describe("ApplicationManagerBase", () => {
 			};
 
 			await applicationManager.reinstallApplication("appId", "packageFilePath");
-			assert.deepEqual(installApplicationPackageFilePathParam, "packageFilePath");
+			assert.deepStrictEqual(installApplicationPackageFilePathParam, "packageFilePath");
 		});
 
 		it("calls uninstallApplication and installApplication in correct order", async () => {

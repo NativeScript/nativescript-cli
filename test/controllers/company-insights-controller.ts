@@ -98,7 +98,7 @@ describe("companyInsightsController", () => {
 				};
 
 				const companyData = await companyInsightsController.getCompanyData();
-				assert.deepEqual(companyData, null);
+				assert.deepStrictEqual(companyData, null);
 			});
 
 			it("unable to get current ip address", async () => {
@@ -106,7 +106,7 @@ describe("companyInsightsController", () => {
 				ipService.getCurrentIPv4Address = async (): Promise<string> => { throw new Error("Unable to get current ip addreess"); };
 
 				const companyData = await companyInsightsController.getCompanyData();
-				assert.deepEqual(companyData, null);
+				assert.deepStrictEqual(companyData, null);
 				assert.equal(httpRequestCounter, 0, "We should not have any http request");
 			});
 		});
@@ -114,7 +114,7 @@ describe("companyInsightsController", () => {
 		describe("returns correct data when", () => {
 				it("response contains company property", async () => {
 					const companyData = await companyInsightsController.getCompanyData();
-					assert.deepEqual(companyData, defaultExpectedCompanyData);
+					assert.deepStrictEqual(companyData, defaultExpectedCompanyData);
 				});
 
 				it("response contains company property and industries in it are not populated", async () => {
@@ -128,7 +128,7 @@ describe("companyInsightsController", () => {
 					};
 
 					const companyData = await companyInsightsController.getCompanyData();
-					assert.deepEqual(companyData, {
+					assert.deepStrictEqual(companyData, {
 						name: "Progress",
 						country: "Bulgaria",
 						revenue: "123131",
@@ -141,11 +141,11 @@ describe("companyInsightsController", () => {
 
 		it("is called only once per process", async () => {
 			const companyData = await companyInsightsController.getCompanyData();
-			assert.deepEqual(companyData, defaultExpectedCompanyData);
+			assert.deepStrictEqual(companyData, defaultExpectedCompanyData);
 			assert.equal(httpRequestCounter, 1);
 
 			const companyDataSecondCall = await companyInsightsController.getCompanyData();
-			assert.deepEqual(companyDataSecondCall, defaultExpectedCompanyData);
+			assert.deepStrictEqual(companyDataSecondCall, defaultExpectedCompanyData);
 			assert.equal(httpRequestCounter, 1);
 		});
 	});

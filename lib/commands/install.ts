@@ -36,7 +36,7 @@ export class InstallCommand implements ICommand {
 		await this.$pluginsService.ensureAllDependenciesAreInstalled(this.$projectData);
 
 		for (const platform of this.$mobileHelper.platformNames) {
-      const platformData = this.$platformsDataService.getPlatformData(platform, this.$projectData);
+			const platformData = this.$platformsDataService.getPlatformData(platform, this.$projectData);
 			const frameworkPackageData = this.$projectDataService.getRuntimePackage(this.$projectData.projectDir, <PlatformTypes>platformData.platformNameLowerCase);
 			if (frameworkPackageData && frameworkPackageData.version) {
 				try {

@@ -56,7 +56,7 @@ describe("preuninstall", () => {
 
 		const preUninstallCommand: ICommand = testInjector.resolveCommand("dev-preuninstall");
 		await preUninstallCommand.execute([]);
-		assert.deepEqual(deletedFiles, [path.join(profileDir, "KillSwitches", "cli")]);
+		assert.deepStrictEqual(deletedFiles, [path.join(profileDir, "KillSwitches", "cli")]);
 	});
 
 	it("tracks correct data in analytics", async () => {
@@ -101,7 +101,7 @@ describe("preuninstall", () => {
 			helpers.doesCurrentNpmCommandMatch = () => testCase.isIntentionalUninstall;
 			isFinishTrackingCalled = false;
 			await preUninstallCommand.execute([]);
-			assert.deepEqual(trackedData, [{
+			assert.deepStrictEqual(trackedData, [{
 				action: "Uninstall CLI",
 				additionalData: testCase.expecteEventLabelData
 			}]);
@@ -135,7 +135,7 @@ describe("preuninstall", () => {
 
 		const preUninstallCommand: ICommand = testInjector.resolveCommand("dev-preuninstall");
 		await preUninstallCommand.execute([]);
-		assert.deepEqual(deletedFiles, [path.join(profileDir, "KillSwitches", "cli")]);
+		assert.deepStrictEqual(deletedFiles, [path.join(profileDir, "KillSwitches", "cli")]);
 
 		assert.isTrue(isRemoveAllExtensionsCalled, "When uninstall is called, `removeAllExtensions` method must be called");
 		assert.isTrue(isClearInspectorCacheCalled, "When uninstall is called, `clearInspectorCache` method must be called");
@@ -155,6 +155,6 @@ describe("preuninstall", () => {
 
 	// 	const preUninstallCommand: ICommand = testInjector.resolveCommand("dev-preuninstall");
 	// 	await preUninstallCommand.execute([]);
-	// 	assert.deepEqual(openParams, [{ filename: "https://www.nativescript.org/uninstall-feedback", appname: undefined }]);
+	// 	assert.deepStrictEqual(openParams, [{ filename: "https://www.nativescript.org/uninstall-feedback", appname: undefined }]);
 	// });
 });

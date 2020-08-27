@@ -42,7 +42,7 @@ describe("Project Name Service Tests", () => {
 	it("returns correct name when valid name is entered", async () => {
 		const actualProjectName = await projectNameService.ensureValidName(validProjectName);
 
-		assert.deepEqual(actualProjectName, validProjectName);
+		assert.deepStrictEqual(actualProjectName, validProjectName);
 	});
 
 	_.each(invalidProjectNames, invalidProjectName => {
@@ -65,13 +65,13 @@ describe("Project Name Service Tests", () => {
 
 			const actualProjectName = await projectNameService.ensureValidName(invalidProjectName);
 
-			assert.deepEqual(actualProjectName, validProjectName);
+			assert.deepStrictEqual(actualProjectName, validProjectName);
 		});
 
 		it(`returns the invalid name when "${invalidProjectName}" is entered and --force flag is present`, async () => {
 			const actualProjectName = await projectNameService.ensureValidName(validProjectName, { force: true });
 
-			assert.deepEqual(actualProjectName, validProjectName);
+			assert.deepStrictEqual(actualProjectName, validProjectName);
 		});
 	});
 });

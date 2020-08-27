@@ -89,13 +89,13 @@ export function exported(moduleName: string): any {
 	};
 }
 
-export function performanceLog(injector?: IInjector): any {
-	injector = injector || (<any>global).$injector;
+export function performanceLog(localInjector?: IInjector): any {
+	localInjector = localInjector || injector;
 	return function (target: any, propertyKey: string, descriptor: PropertyDescriptor): any {
 		const originalMethod = descriptor.value;
 		const className = target.constructor.name;
 		const trackName = `${className}${AnalyticsEventLabelDelimiter}${propertyKey}`;
-		const performanceService: IPerformanceService = injector.resolve("performanceService");
+		const performanceService: IPerformanceService = localInjector.resolve("performanceService");
 
 		//needed for the returned function to have the same name as the original - used in hooks decorator
 		const functionWrapper = {
@@ -135,12 +135,12 @@ export function performanceLog(injector?: IInjector): any {
 }
 
 // inspired by https://github.com/NativeScript/NativeScript/blob/55dfe25938569edbec89255008e5ad9804901305/tns-core-modules/globals/globals.ts#L121-L137
-export function deprecated(additionalInfo?: string, injector?: IInjector): any {
-  const isDeprecatedMessage = " is deprecated.";
+export function deprecated(additionalInfo?: string, localInjector?: IInjector): any {
+	const isDeprecatedMessage = " is deprecated.";
 	return (target: Object, key: string, descriptor: TypedPropertyDescriptor<any>): TypedPropertyDescriptor<any> => {
-    injector = injector || (<any>global).$injector;
+		localInjector = localInjector || injector;
 		additionalInfo = additionalInfo || "";
-		const $logger = <ILogger>injector.resolve("logger");
+		const $logger = <ILogger>localInjector.resolve("logger");
 		if (descriptor) {
 			if (descriptor.value) {
 				// method

@@ -210,7 +210,7 @@ describe("RunController", () => {
 						deviceDescriptors: testCase.connectedDevices
 					});
 
-					assert.deepEqual(preparedPlatforms, testCase.expectedPreparedPlatforms);
+					assert.deepStrictEqual(preparedPlatforms, testCase.expectedPreparedPlatforms);
 				});
 			});
 		});
@@ -268,7 +268,7 @@ describe("RunController", () => {
 
 				await runController.stop({ projectDir, deviceIdentifiers: testCase.deviceIdentifiersToBeStopped });
 
-				assert.deepEqual(emittedDeviceIdentifiersForLiveSyncStoppedEvent, testCase.expectedDeviceIdentifiers);
+				assert.deepStrictEqual(emittedDeviceIdentifiersForLiveSyncStoppedEvent, testCase.expectedDeviceIdentifiers);
 			});
 		}
 	});

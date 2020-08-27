@@ -46,7 +46,7 @@ class CancellationService implements ICancellationService {
 		const watcher = this.watches[name];
 		if (watcher) {
 			delete this.watches[name];
-			watcher.close();
+			watcher.close().then().catch();
 		}
 	}
 

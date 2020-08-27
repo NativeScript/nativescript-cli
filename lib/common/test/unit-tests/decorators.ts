@@ -37,7 +37,7 @@ describe("decorators", () => {
 	describe("exported", () => {
 
 		const generatePublicApiFromExportedDecorator = () => {
-			assert.deepEqual(injector.publicApi.__modules__[moduleName], undefined);
+			assert.deepStrictEqual(injector.publicApi.__modules__[moduleName], undefined);
 			const resultFunction: any = decoratorsLib.exported(moduleName);
 			// Call this line in order to generate publicApi and get the real result
 			resultFunction({}, propertyName, {});
@@ -52,7 +52,7 @@ describe("decorators", () => {
 			const exportedFunctionResult: any = decoratorsLib.exported(moduleName);
 			const expectedResult = { "originalObject": "originalValue" };
 			const actualResult = exportedFunctionResult({}, "myTest1", expectedResult);
-			assert.deepEqual(actualResult, expectedResult);
+			assert.deepStrictEqual(actualResult, expectedResult);
 		});
 
 		_.each(expectedResults, (expectedResult: any) => {
@@ -60,14 +60,14 @@ describe("decorators", () => {
 				injector.register(moduleName, { propertyName: () => expectedResult });
 				generatePublicApiFromExportedDecorator();
 				const actualResult: any = injector.publicApi.__modules__[moduleName][propertyName]();
-				assert.deepEqual(actualResult, expectedResult);
+				assert.deepStrictEqual(actualResult, expectedResult);
 			});
 
 			it(`passes correct arguments to original function, when argument type is: ${_.isArray(expectedResult) ? "array" : typeof (expectedResult)}`, () => {
 				injector.register(moduleName, { propertyName: (arg: any) => arg });
 				generatePublicApiFromExportedDecorator();
 				const actualResult: any = injector.publicApi.__modules__[moduleName][propertyName](expectedResult);
-				assert.deepEqual(actualResult, expectedResult);
+				assert.deepStrictEqual(actualResult, expectedResult);
 			});
 		});
 
@@ -78,7 +78,7 @@ describe("decorators", () => {
 
 			const promise: any = injector.publicApi.__modules__[moduleName][propertyName]();
 			promise.then((val: string) => {
-				assert.deepEqual(val, expectedResult);
+				assert.deepStrictEqual(val, expectedResult);
 			}).then(done).catch(done);
 		});
 
@@ -89,7 +89,7 @@ describe("decorators", () => {
 
 			const promise: any = injector.publicApi.__modules__[moduleName][propertyName](expectedArgs);
 			promise.then((val: string[]) => {
-				assert.deepEqual(val, expectedArgs);
+				assert.deepStrictEqual(val, expectedArgs);
 			}).then(done).catch(done);
 		});
 
@@ -100,7 +100,7 @@ describe("decorators", () => {
 
 			const promise: any = injector.publicApi.__modules__[moduleName][propertyName]();
 			promise.then((val: string) => {
-				assert.deepEqual(val, expectedResult);
+				assert.deepStrictEqual(val, expectedResult);
 			}).then(done).catch(done);
 		});
 
@@ -111,7 +111,7 @@ describe("decorators", () => {
 
 			const promise: any = injector.publicApi.__modules__[moduleName][propertyName](expectedArgs);
 			promise.then((val: string[]) => {
-				assert.deepEqual(val, expectedArgs);
+				assert.deepStrictEqual(val, expectedArgs);
 			}).then(done).catch(done);
 		});
 
@@ -124,7 +124,7 @@ describe("decorators", () => {
 			promise.then((result: any) => {
 				throw new Error("Then method MUST not be called when promise is rejected!");
 			}, (err: Error) => {
-				assert.deepEqual(err, expectedError);
+				assert.deepStrictEqual(err, expectedError);
 			}).then(done).catch(done);
 		});
 
@@ -137,7 +137,7 @@ describe("decorators", () => {
 			promise.then((result: any) => {
 				throw new Error("Then method MUST not be called when promise is rejected!");
 			}, (err: Error) => {
-				assert.deepEqual(err.message, expectedError.message);
+				assert.deepStrictEqual(err.message, expectedError.message);
 			}).then(done).catch(done);
 		});
 
@@ -150,7 +150,7 @@ describe("decorators", () => {
 			Promise.all<string>(promises)
 				.then((promiseResults: string[]) => {
 					_.each(promiseResults, (val: string, index: number) => {
-						assert.deepEqual(val, expectedResultsArr[index]);
+						assert.deepStrictEqual(val, expectedResultsArr[index]);
 					});
 				})
 				.then(() => done())
@@ -186,12 +186,12 @@ describe("decorators", () => {
 			new Promise((onFulfilled: Function, onRejected: Function) => {
 				const promises: Promise<string>[] = injector.publicApi.__modules__[moduleName][propertyName]();
 				_.each(promises, (promise, index) => promise.then((val: string) => {
-					assert.deepEqual(val, expectedResultsArr[index]);
+					assert.deepStrictEqual(val, expectedResultsArr[index]);
 					if (index + 1 === expectedResultsArr.length) {
 						onFulfilled();
 					}
 				}, (err: Error) => {
-					assert.deepEqual(err.message, expectedResultsArr[index].message);
+					assert.deepStrictEqual(err.message, expectedResultsArr[index].message);
 					if (index + 1 === expectedResultsArr.length) {
 						onFulfilled();
 					}
@@ -218,67 +218,67 @@ describe("decorators", () => {
 			const declaredMethod = decoratorsLib.cache()({}, propertyName, descriptor);
 			const expectedResult = 5;
 			const actualResult = declaredMethod.value(expectedResult);
-			assert.deepEqual(actualResult, expectedResult);
+			assert.deepStrictEqual(actualResult, expectedResult);
 
 			_.range(10).forEach(iteration => {
 				const currentResult = declaredMethod.value(iteration);
-				assert.deepEqual(currentResult, expectedResult);
+				assert.deepStrictEqual(currentResult, expectedResult);
 			});
 
-			assert.deepEqual(count, 1);
+			assert.deepStrictEqual(count, 1);
 		});
 
 		it("works per instance", () => {
 			const instance1 = new CacheDecoratorsTest();
 			const expectedResultForInstance1 = 1;
-			assert.deepEqual(instance1.method(expectedResultForInstance1), expectedResultForInstance1); // the first call should give us the expected result. all consecutive calls must return the same result.
+			assert.deepStrictEqual(instance1.method(expectedResultForInstance1), expectedResultForInstance1); // the first call should give us the expected result. all consecutive calls must return the same result.
 
 			_.range(10).forEach(iteration => {
 				const currentResult = instance1.method(iteration);
-				assert.deepEqual(currentResult, expectedResultForInstance1);
+				assert.deepStrictEqual(currentResult, expectedResultForInstance1);
 			});
 
-			assert.deepEqual(instance1.counter, 1);
+			assert.deepStrictEqual(instance1.counter, 1);
 
 			const instance2 = new CacheDecoratorsTest();
 			const expectedResultForInstance2 = 2;
-			assert.deepEqual(instance2.method(expectedResultForInstance2), expectedResultForInstance2, "Instance 2 should return new result."); // the first call should give us the expected result. all consecutive calls must return the same result.
+			assert.deepStrictEqual(instance2.method(expectedResultForInstance2), expectedResultForInstance2, "Instance 2 should return new result."); // the first call should give us the expected result. all consecutive calls must return the same result.
 
 			_.range(10).forEach(iteration => {
 				const currentResult = instance2.method(iteration);
-				assert.deepEqual(currentResult, expectedResultForInstance2);
+				assert.deepStrictEqual(currentResult, expectedResultForInstance2);
 			});
 
-			assert.deepEqual(instance2.counter, 1);
+			assert.deepStrictEqual(instance2.counter, 1);
 		});
 
 		it("works with method returning promise", async () => {
 			const instance1 = new CacheDecoratorsTest();
 			const expectedResultForInstance1 = 1;
-			assert.deepEqual(await instance1.promisifiedMethod(expectedResultForInstance1), expectedResultForInstance1); // the first call should give us the expected result. all consecutive calls must return the same result.
+			assert.deepStrictEqual(await instance1.promisifiedMethod(expectedResultForInstance1), expectedResultForInstance1); // the first call should give us the expected result. all consecutive calls must return the same result.
 
 			for (let iteration = 0; iteration < 10; iteration++) {
 				const promise = instance1.promisifiedMethod(iteration);
 				assert.isTrue(isPromise(promise), "Returned result from the decorator should be promise.");
 				const currentResult = await promise;
-				assert.deepEqual(currentResult, expectedResultForInstance1);
+				assert.deepStrictEqual(currentResult, expectedResultForInstance1);
 			}
 
-			assert.deepEqual(instance1.counter, 1);
+			assert.deepStrictEqual(instance1.counter, 1);
 		});
 
 		it("works with getters", () => {
 			const instance1 = new CacheDecoratorsTest();
 			const expectedResultForInstance1 = 1;
 			instance1._property = expectedResultForInstance1;
-			assert.deepEqual(instance1.property, expectedResultForInstance1); // the first call should give us the expected result. all consecutive calls must return the same result.
+			assert.deepStrictEqual(instance1.property, expectedResultForInstance1); // the first call should give us the expected result. all consecutive calls must return the same result.
 
 			for (let iteration = 0; iteration < 10; iteration++) {
 				instance1._property = iteration;
-				assert.deepEqual(instance1.property, expectedResultForInstance1);
+				assert.deepStrictEqual(instance1.property, expectedResultForInstance1);
 			}
 
-			assert.deepEqual(instance1.counter, 1);
+			assert.deepStrictEqual(instance1.counter, 1);
 		});
 	});
 
@@ -288,7 +288,7 @@ describe("decorators", () => {
 				const instance: any = new InvokeBeforeDecoratorsTest();
 				assert.isFalse(instance.isInvokeBeforeMethodCalled);
 				const expectedResult = 1;
-				assert.deepEqual(await instance[methodName](expectedResult), expectedResult);
+				assert.deepStrictEqual(await instance[methodName](expectedResult), expectedResult);
 				assert.isTrue(instance.isInvokeBeforeMethodCalled);
 			};
 
@@ -306,16 +306,16 @@ describe("decorators", () => {
 				const instance: any = new InvokeBeforeDecoratorsTest();
 				assert.isFalse(instance.isInvokeBeforeMethodCalled);
 				const expectedResult = 1;
-				assert.deepEqual(await instance[methodName](expectedResult), expectedResult);
+				assert.deepStrictEqual(await instance[methodName](expectedResult), expectedResult);
 				assert.isTrue(instance.isInvokeBeforeMethodCalled);
 
 				instance.invokedBeforeCount = 0;
 
 				for (let iteration = 0; iteration < 10; iteration++) {
 					instance.isInvokeBeforeMethodCalled = false;
-					assert.deepEqual(await instance[methodName](iteration), iteration);
+					assert.deepStrictEqual(await instance[methodName](iteration), iteration);
 					assert.isTrue(instance.isInvokeBeforeMethodCalled);
-					assert.deepEqual(instance.invokedBeforeCount, iteration + 1);
+					assert.deepStrictEqual(instance.invokedBeforeCount, iteration + 1);
 				}
 			};
 
@@ -351,9 +351,9 @@ describe("decorators", () => {
 				const instance: any = new InvokeBeforeDecoratorsTest();
 				assert.isFalse(instance.isInvokeBeforeMethodCalled);
 				const expectedResult = 1;
-				assert.deepEqual(await instance[methodName](expectedResult), expectedResult);
+				assert.deepStrictEqual(await instance[methodName](expectedResult), expectedResult);
 				assert.isTrue(instance.isInvokeBeforeMethodCalled);
-				assert.deepEqual(instance.invokedBeforeArgument, "arg1");
+				assert.deepStrictEqual(instance.invokedBeforeArgument, "arg1");
 			};
 
 			it("when invokeBefore method is sync", async () => {
@@ -438,7 +438,7 @@ describe("decorators", () => {
 		_.each(expectedResults, (expectedResult: any) => {
 			it("returns proper result", () => {
 				const actualResult = testInstance.testMethod(expectedResult);
-				assert.deepEqual(actualResult, expectedResult);
+				assert.deepStrictEqual(actualResult, expectedResult);
 			});
 
 			it("returns proper result when async", () => {
@@ -447,7 +447,7 @@ describe("decorators", () => {
 				assert.notDeepEqual(promise.then, undefined);
 
 				return promise.then((actualResult: any) => {
-					assert.deepEqual(actualResult, expectedResult);
+					assert.deepStrictEqual(actualResult, expectedResult);
 				});
 			});
 		});

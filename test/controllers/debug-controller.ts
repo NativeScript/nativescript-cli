@@ -224,7 +224,7 @@ describe("debugController", () => {
 					const expectedErrorData = { deviceIdentifier: "deviceId", message: "my message", code: 2048 };
 					const platformDebugService = testInjector.resolve<IDeviceDebugService>(`${platform}DeviceDebugService`);
 					platformDebugService.emit(CONNECTION_ERROR_EVENT_NAME, expectedErrorData);
-					assert.deepEqual(dataRaisedForConnectionError, expectedErrorData);
+					assert.deepStrictEqual(dataRaisedForConnectionError, expectedErrorData);
 				});
 			});
 		});
@@ -241,7 +241,7 @@ describe("debugController", () => {
 					const debugData = getDebugData();
 					const debugInfo = await debugController.startDebug(debugData, null);
 
-					assert.deepEqual(debugInfo, {
+					assert.deepStrictEqual(debugInfo, {
 						url: fakeChromeDebugUrl,
 						port: fakeChromeDebugPort,
 						deviceIdentifier: debugData.deviceIdentifier
@@ -293,7 +293,7 @@ describe("debugController", () => {
 						}, null, 2);
 
 						// Use JSON.stringify as the compared objects link to new instances of different classes.
-						assert.deepEqual(JSON.stringify(dataTrackedToGA, null, 2), expectedData);
+						assert.deepStrictEqual(JSON.stringify(dataTrackedToGA, null, 2), expectedData);
 					});
 				});
 		});

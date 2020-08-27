@@ -204,7 +204,7 @@ describe("androidProjectService", () => {
 			it("copies everything from App_Resources/Android/src to correct location in platforms", async () => {
 				await androidProjectService.prepareAppResources(projectData);
 
-				assert.deepEqual(copiedFiles, [{ sourceFileName: path.join(pathToSrcDirInAppResources, "*"), destinationFileName: path.join(projectData.projectDir, "platforms", "android", "app", "src") }]);
+				assert.deepStrictEqual(copiedFiles, [{ sourceFileName: path.join(pathToSrcDirInAppResources, "*"), destinationFileName: path.join(projectData.projectDir, "platforms", "android", "app", "src") }]);
 			});
 
 			it("deletes correct values-<sdk> directories based on the compileSdk", async () => {
@@ -220,7 +220,7 @@ describe("androidProjectService", () => {
 
 				compileSdkVersion = 26;
 				await androidProjectService.prepareAppResources(projectData);
-				assert.deepEqual(deletedDirs, [
+				assert.deepStrictEqual(deletedDirs, [
 					valuesV27Path,
 					valuesV28Path
 				]);
@@ -249,7 +249,7 @@ describe("androidProjectService", () => {
 
 				// NOTE: Currently the drawable-mdpi directory is not deleted from prepared App_Resources as it does not exist in the currently prepared App_Resources
 				// This is not correct behavior and it should be fixed in a later point.
-				assert.deepEqual(deletedDirs, [
+				assert.deepStrictEqual(deletedDirs, [
 					drawableHdpiPath,
 					drawableLdpiPath
 				]);
@@ -265,7 +265,7 @@ describe("androidProjectService", () => {
 			it("copies everything from App_Resources/Android to correct location in platforms", async () => {
 				await androidProjectService.prepareAppResources(projectData);
 
-				assert.deepEqual(copiedFiles, [{ sourceFileName: path.join(pathToAppResourcesAndroid, "*"), destinationFileName: pathToResDirInPlatforms }]);
+				assert.deepStrictEqual(copiedFiles, [{ sourceFileName: path.join(pathToAppResourcesAndroid, "*"), destinationFileName: pathToResDirInPlatforms }]);
 			});
 
 			it("deletes correct values-<sdk> directories based on the compileSdk", async () => {
@@ -284,7 +284,7 @@ describe("androidProjectService", () => {
 				await androidProjectService.prepareAppResources(projectData);
 
 				// During preparation of old App_Resources, CLI copies all of them in platforms and after that deletes the libs directory.
-				assert.deepEqual(deletedDirs, [
+				assert.deepStrictEqual(deletedDirs, [
 					libsPath,
 					valuesV27Path,
 					valuesV28Path
@@ -314,7 +314,7 @@ describe("androidProjectService", () => {
 				// NOTE: Currently the drawable-mdpi directory is not deleted from prepared App_Resources as it does not exist in the currently prepared App_Resources
 				// This is not correct behavior and it should be fixed in a later point.
 				// During preparation of old App_Resources, CLI copies all of them in platforms and after that deletes the libs directory.
-				assert.deepEqual(deletedDirs, [
+				assert.deepStrictEqual(deletedDirs, [
 					drawableHdpiPath,
 					drawableLdpiPath,
 					libsPath

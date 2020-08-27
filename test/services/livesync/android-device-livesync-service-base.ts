@@ -285,8 +285,8 @@ describe("AndroidDeviceLiveSyncServiceBase", () => {
 				});
 				const transferredFiles = await transferFiles(testSetup, { force: false, isFullSync: true });
 				assert.equal(transferredFiles.length, 2);
-				assert.deepEqual(transferredFiles[0].getLocalPath(), testSetup.changedFileLocalPath);
-				assert.deepEqual(transferredFiles[1].getLocalPath(), testSetup.unchangedFileLocalPath);
+				assert.deepStrictEqual(transferredFiles[0].getLocalPath(), testSetup.changedFileLocalPath);
+				assert.deepStrictEqual(transferredFiles[1].getLocalPath(), testSetup.unchangedFileLocalPath);
 			});
 			it("transfers files which has different location and no changed files", async () => {
 				const testSetup = setup({
@@ -297,7 +297,7 @@ describe("AndroidDeviceLiveSyncServiceBase", () => {
 				});
 				const transferredFiles = await transferFiles(testSetup, { force: false, isFullSync: true });
 				assert.equal(transferredFiles.length, 1);
-				assert.deepEqual(transferredFiles[0].getLocalPath(), testSetup.unchangedFileLocalPath);
+				assert.deepStrictEqual(transferredFiles[0].getLocalPath(), testSetup.unchangedFileLocalPath);
 			});
 			it("transfers changed files with different location", async () => {
 				const testSetup = setup({

@@ -767,7 +767,7 @@ export class PrompterStub implements IPrompter {
 
 	async promptForDetailedChoice(question: string, choices: any[]): Promise<string> {
 		chai.assert.ok(question in this.answers, `PrompterStub didn't expect to be asked: ${question}`);
-		chai.assert.deepEqual(choices, this.questionChoices[question]);
+		chai.assert.deepStrictEqual(choices, this.questionChoices[question]);
 		const result = this.answers[question];
 		delete this.answers[question];
 		return result;
