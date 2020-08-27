@@ -632,7 +632,7 @@ export class NativeProjectDataStub extends EventEmitter implements IPlatformsDat
 	}
 }
 
-export class ProjectDataService implements IProjectDataService {
+export class ProjectDataServiceStub implements IProjectDataService {
 	getNSValue(propertyName: string): any {
 		return {};
 	}
@@ -1042,7 +1042,7 @@ export class InjectorStub extends Yok implements IInjector {
 		this.register("config", {});
 		this.register("staticConfig", {});
 		this.register("hooksService", HooksServiceStub);
-		this.register('projectDataService', ProjectDataService);
+		this.register('projectDataService', ProjectDataServiceStub);
 		this.register('devicePlatformsConstants', DevicePlatformsConstants);
 		this.register("androidResourcesMigrationService", AndroidResourcesMigrationServiceStub);
 		this.register("commandsService", CommandsService);

@@ -122,7 +122,7 @@ function createTestInjector() {
 	testInjector.register('projectData', stubs.ProjectDataStub);
 	testInjector.register('platformsDataService', PlatformsDataService);
 	testInjector.register('devicesService', {});
-	testInjector.register('projectDataService', stubs.ProjectDataService);
+	testInjector.register('projectDataService', stubs.ProjectDataServiceStub);
 	testInjector.register('prompter', {});
 	testInjector.register('sysInfo', {});
 	testInjector.register('commands-service', CommandsServiceLib.CommandsService);

@@ -119,7 +119,8 @@ describe('androidPluginBuildService', () => {
 			view: async (packageName: string, config: any): Promise<any> => {
 				let result: any = null;
 				if (config && config.gradle) {
-					const packageVersion = packageName.split("@")[1];
+					const packageNameParts = packageName.split("@");
+					const packageVersion = packageNameParts[packageNameParts.length - 1];
 					switch (packageVersion) {
 						case "1.0.0":
 							result = {
@@ -316,7 +317,7 @@ dependencies {
 			assert.isTrue(spawnFromEventCalled);
 		});
 
-		it.skip('builds aar with the specified runtime gradle versions when the project runtime has gradle versions', async () => {
+		it('builds aar with the specified runtime gradle versions when the project runtime has gradle versions', async () => {
 			const expectedGradleVersion = "4.4.4";
 			const expectedAndroidVersion = "5.5.5";
 			const config: IPluginBuildOptions = setup({
