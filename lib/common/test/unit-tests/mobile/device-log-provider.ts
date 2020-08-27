@@ -47,7 +47,7 @@ const createTestInjector = (): IInjector => {
 				projectDir: "projectDir"
 			};
 		},
-		getNSValue: (projectDir: string, propertyName: string): any => {
+		getRuntimePackage: (projectDir: string, platformName: string): any => {
 			return {
 				version: runtimeVersion
 			};

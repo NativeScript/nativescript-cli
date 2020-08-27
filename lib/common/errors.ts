@@ -51,15 +51,15 @@ async function resolveCallStack(error: Error): Promise<string> {
 
 		const mapData = JSON.parse(fs.readFileSync(mapFileName).toString());
 
-		return await SourceMapConsumer.with(mapData, mapFileName, (consumer) => {
-      const sourcePos = consumer.originalPositionFor({ line: line, column: column });
-      if (sourcePos && sourcePos.source) {
-        const source = path.join(path.dirname(fileName), sourcePos.source);
-        return util.format("    at %s (%s:%s:%s)", functionName, source, sourcePos.line, sourcePos.column);
-      }
-  
-      return util.format("    at %s (%s:%s:%s)", functionName, fileName, line, column);
-    });
+		return await SourceMapConsumer.with(mapData, null, (consumer) => {
+			const sourcePos = consumer.originalPositionFor({ line: line, column: column });
+			if (sourcePos && sourcePos.source) {
+				const source = path.join(path.dirname(fileName), sourcePos.source);
+				return util.format("    at %s (%s:%s:%s)", functionName, source, sourcePos.line, sourcePos.column);
+			}
+
+			return util.format("    at %s (%s:%s:%s)", functionName, fileName, line, column);
+		});
 	}));
 
 	let outputMessage = remapped.join("\n");

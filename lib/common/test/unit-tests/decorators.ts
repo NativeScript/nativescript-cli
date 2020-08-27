@@ -8,7 +8,7 @@ import * as stubs from "../../../../test/stubs";
 import * as sinon from "sinon";
 import { PerformanceService } from "../../../services/performance-service";
 import { IInjector } from "../../definitions/yok";
-import { injector } from "../../yok";
+import { injector, setGlobalInjector } from "../../yok";
 import * as _ from 'lodash';
 
 describe("decorators", () => {
@@ -25,13 +25,13 @@ describe("decorators", () => {
 	];
 
 	beforeEach(() => {
-		(<any>global).$injector = new Yok();
+		setGlobalInjector(new Yok());
 		injector.register("performanceService", stubs.PerformanceService);
 	});
 
 	after(() => {
-		// Make sure global $injector is clean for next tests that will be executed.
-		(<any>global).$injector = new Yok();
+		// Make sure global injector is clean for next tests that will be executed.
+		setGlobalInjector(new Yok());
 	});
 
 	describe("exported", () => {

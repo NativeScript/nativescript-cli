@@ -14,7 +14,7 @@ check-leaks: false
 color: true
 delay: false
 diff: true
-exit: false # could be expressed as "no-exit: true"
+exit: true # could be expressed as "no-exit: true"
 extension:
   - 'js'
 # fgrep and grep are mutually exclusive
@@ -38,15 +38,20 @@ inline-diffs: false
 # invert: false
 recursive: true
 reporter: 'spec'
-require: 
+require:
   - 'source-map-support/register'
   - 'test/test-bootstrap.js'
 retries: 1
-slow: 75
+slow: 500
 sort: false
-spec: 'test/**/*.js' # the positional arguments!
+spec:
+    - 'test/**/*.js'
+    - 'lib/common/test/unit-tests/**/*.js'
 timeout: 150000 # same as "no-timeout: true" or "timeout: 0"
-trace-warnings: true # node flags ok
+
+# node flags
+# trace-warnings: true
+
 ui: 'bdd'
 v8-stack-trace-limit: 100 # V8 flags are prepended with "v8-"
 watch: false

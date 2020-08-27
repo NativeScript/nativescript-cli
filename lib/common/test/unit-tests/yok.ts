@@ -1,5 +1,5 @@
 import { assert } from "chai";
-import { Yok } from "../../yok";
+import { injector, setGlobalInjector, Yok } from "../../yok";
 import * as path from "path";
 import * as fs from "fs";
 import * as temp from "temp";
@@ -7,6 +7,7 @@ import * as _ from 'lodash';
 import { ICliGlobal } from "../../definitions/cli-global";
 import { ICommandParameter } from "../../definitions/commands";
 import { IInjector } from "../../definitions/yok";
+
 temp.track();
 
 class MyClass {
@@ -21,7 +22,7 @@ class MyClass {
 describe("yok", () => {
 	describe("functions", () => {
 		it("resolves pre-constructed singleton", () => {
-			const injector = new Yok();
+			setGlobalInjector(new Yok());
 			const obj = {};
 			injector.register("foo", obj);
 
@@ -31,7 +32,7 @@ describe("yok", () => {
 		});
 
 		it("resolves given constructor", () => {
-			const injector = new Yok();
+			setGlobalInjector(new Yok());
 			let obj: any;
 			injector.register("foo", () => {
 				obj = { foo: "foo" };
@@ -44,7 +45,7 @@ describe("yok", () => {
 		});
 
 		it("resolves constructed singleton", () => {
-			const injector = new Yok();
+			setGlobalInjector(new Yok());
 			injector.register("foo", { foo: "foo" });
 
 			const r1 = injector.resolve("foo");
@@ -54,7 +55,7 @@ describe("yok", () => {
 		});
 
 		it("injects directly into passed constructor", () => {
-			const injector = new Yok();
+			setGlobalInjector(new Yok());
 			const obj = {};
 			injector.register("foo", obj);
 
@@ -68,7 +69,7 @@ describe("yok", () => {
 		});
 
 		it("injects directly into passed constructor, ES6 lambda", () => {
-			const injector = new Yok();
+			setGlobalInjector(new Yok());
 			const obj = {};
 			let resultFoo: any = null;
 
@@ -84,7 +85,7 @@ describe("yok", () => {
 		});
 
 		it("injects directly into passed constructor, ES6 lambda, constructor args", () => {
-			const injector = new Yok();
+			setGlobalInjector(new Yok());
 			const obj = {};
 			const expectedBar = {};
 
@@ -105,7 +106,7 @@ describe("yok", () => {
 		});
 
 		it("inject dependency into registered constructor", () => {
-			const injector = new Yok();
+			setGlobalInjector(new Yok());
 			const obj = {};
 			injector.register("foo", obj);
 
@@ -121,7 +122,7 @@ describe("yok", () => {
 		});
 
 		it("inject dependency into registered constructor, ES6 lambda", () => {
-			const injector = new Yok();
+			setGlobalInjector(new Yok());
 			const obj = {};
 			let resultFoo: any = null;
 
@@ -139,7 +140,7 @@ describe("yok", () => {
 		});
 
 		it("inject dependency into registered constructor, ES6 lambda, constructor args", () => {
-			const injector = new Yok();
+			setGlobalInjector(new Yok());
 			const obj = {};
 			const expectedBar = {};
 
@@ -162,7 +163,7 @@ describe("yok", () => {
 		});
 
 		it("inject dependency with $ prefix", () => {
-			const injector = new Yok();
+			setGlobalInjector(new Yok());
 			const obj = {};
 			injector.register("foo", obj);
 
@@ -176,7 +177,7 @@ describe("yok", () => {
 		});
 
 		it("inject into TS constructor", () => {
-			const injector = new Yok();
+			setGlobalInjector(new Yok());
 
 			injector.register("x", "foo");
 			injector.register("y", 123);
@@ -188,7 +189,7 @@ describe("yok", () => {
 		});
 
 		it("resolves a parameterless constructor", () => {
-			const injector = new Yok();
+			setGlobalInjector(new Yok());
 
 			function Test() {
 				this.foo = "foo";
@@ -200,13 +201,13 @@ describe("yok", () => {
 		});
 
 		it("returns null when it can't resolve a command", () => {
-			const injector = new Yok();
+			setGlobalInjector(new Yok());
 			const command = injector.resolveCommand("command");
 			assert.isNull(command);
 		});
 
 		it("throws when it can't resolve a registered command", () => {
-			const injector = new Yok();
+			setGlobalInjector(new Yok());
 
 			function Command(whatever: any) { /* intentionally left blank */ }
 
@@ -216,7 +217,7 @@ describe("yok", () => {
 		});
 
 		it("disposes", () => {
-			const injector = new Yok();
+			setGlobalInjector(new Yok());
 
 			function Thing() { /* intentionally left blank */ }
 
@@ -232,7 +233,7 @@ describe("yok", () => {
 		});
 
 		it("disposes all instances", () => {
-			const injector = new Yok();
+			setGlobalInjector(new Yok());
 
 			function Thing(arg: string) { this.arg = arg; /* intentionally left blank */ }
 
@@ -259,7 +260,7 @@ describe("yok", () => {
 
 	describe("classes", () => {
 		it("resolves pre-constructed singleton", () => {
-			const injector = new Yok();
+			setGlobalInjector(new Yok());
 			const obj = {};
 			injector.register("foo", obj);
 
@@ -269,7 +270,7 @@ describe("yok", () => {
 		});
 
 		it("resolves given constructor", () => {
-			const injector = new Yok();
+			setGlobalInjector(new Yok());
 			let obj: any;
 			injector.register("foo", () => {
 				obj = { foo: "foo" };
@@ -282,7 +283,7 @@ describe("yok", () => {
 		});
 
 		it("resolves constructed singleton", () => {
-			const injector = new Yok();
+			setGlobalInjector(new Yok());
 			injector.register("foo", { foo: "foo" });
 
 			const r1 = injector.resolve("foo");
@@ -292,7 +293,7 @@ describe("yok", () => {
 		});
 
 		it("injects directly into passed constructor", () => {
-			const injector = new Yok();
+			setGlobalInjector(new Yok());
 			const obj = {};
 			injector.register("foo", obj);
 
@@ -309,7 +310,7 @@ describe("yok", () => {
 		});
 
 		it("injects directly into passed constructor, constructor args", () => {
-			const injector = new Yok();
+			setGlobalInjector(new Yok());
 			const obj = {};
 			const expectedBar = {};
 
@@ -332,7 +333,7 @@ describe("yok", () => {
 		});
 
 		it("inject dependency into registered constructor", () => {
-			const injector = new Yok();
+			setGlobalInjector(new Yok());
 			const obj = {};
 			injector.register("foo", obj);
 
@@ -352,7 +353,7 @@ describe("yok", () => {
 		});
 
 		it("inject dependency into registered constructor, constructor args", () => {
-			const injector = new Yok();
+			setGlobalInjector(new Yok());
 			const obj = {};
 			const expectedBar = {};
 
@@ -377,7 +378,7 @@ describe("yok", () => {
 		});
 
 		it("inject dependency with $ prefix", () => {
-			const injector = new Yok();
+			setGlobalInjector(new Yok());
 			const obj = {};
 			injector.register("foo", obj);
 
@@ -394,7 +395,7 @@ describe("yok", () => {
 		});
 
 		it("inject into TS constructor", () => {
-			const injector = new Yok();
+			setGlobalInjector(new Yok());
 
 			injector.register("x", "foo");
 			injector.register("y", 123);
@@ -406,7 +407,7 @@ describe("yok", () => {
 		});
 
 		it("resolves a parameterless constructor", () => {
-			const injector = new Yok();
+			setGlobalInjector(new Yok());
 
 			class Test {
 				public foo: any;
@@ -421,13 +422,13 @@ describe("yok", () => {
 		});
 
 		it("returns null when it can't resolve a command", () => {
-			const injector = new Yok();
+			setGlobalInjector(new Yok());
 			const command = injector.resolveCommand("command");
 			assert.isNull(command);
 		});
 
 		it("throws when it can't resolve a registered command", () => {
-			const injector = new Yok();
+			setGlobalInjector(new Yok());
 
 			class Command {
 				constructor(whatever: any) { /* intentionally left blank */ }
@@ -439,7 +440,7 @@ describe("yok", () => {
 		});
 
 		it("disposes", () => {
-			const injector = new Yok();
+			setGlobalInjector(new Yok());
 
 			class Thing {
 				public disposed = false;
@@ -458,14 +459,14 @@ describe("yok", () => {
 	});
 
 	it("throws error when module is required more than once and overrideAlreadyRequiredModule is false", () => {
-		const injector = new Yok();
+		setGlobalInjector(new Yok());
 		injector.require("foo", "test");
 		injector.overrideAlreadyRequiredModule = false;
 		assert.throws(() => injector.require("foo", "test2"));
 	});
 
 	it("overrides module when it is required more than once and overrideAlreadyRequiredModule is true", () => {
-		const injector = new Yok();
+		setGlobalInjector(new Yok());
 		const cliGlobal = <ICliGlobal><unknown>global;
 		const injectorCache = cliGlobal.$injector;
 		cliGlobal.$injector = injector;
@@ -506,7 +507,7 @@ $injector.register("a", A);
 
 	describe("requirePublic", () => {
 		it("adds module to public api when requirePublic is used", () => {
-			const injector = new Yok();
+			setGlobalInjector(new Yok());
 			injector.requirePublic("foo", "test");
 			assert.isTrue(_.includes(Object.getOwnPropertyNames(injector.publicApi), "foo"));
 		});
@@ -519,10 +520,9 @@ $injector.register("a", A);
 			// So we have to create a new file, as all files inside test dir are required by mocha before starting the tests.
 			// The file is created in temp dir, but this requires modification of the import statements in it.
 			// Also we have to modify the global $injector, so when the file is required, the $injector.register... will be the same injector that we are testing.
-			const injector = new Yok();
-			const cliGlobal = <ICliGlobal><unknown>global;
-			const injectorCache = cliGlobal.$injector;
-			cliGlobal.$injector = injector;
+
+			const injectorCache = injector;
+			setGlobalInjector(new Yok());
 
 			const testPublicApiFilePath = temp.path({ prefix: "overrideAlreadyRequiredModule_fileA" });
 			const pathToMock = path.join(__dirname, "mocks", "public-api-mocks.js");
@@ -530,7 +530,10 @@ $injector.register("a", A);
 
 			// On Windows we are unable to require paths with single backslash, so replace them with double backslashes.
 			const correctPathToRequireDecorators = "'" + path.join(__dirname, "..", "..", "decorators").replace(/\\/g, "\\\\") + "'";
-			const fixedContent = originalContent.replace(/\".+?decorators\"/, correctPathToRequireDecorators);
+			const correctPathToRequireYok = "'" + path.join(__dirname, "..", "..", "yok").replace(/\\/g, "\\\\") + "'";
+			const fixedContent = originalContent
+				.replace(/".+?decorators"/, correctPathToRequireDecorators)
+				.replace(/".+?yok"/, correctPathToRequireYok);
 			fs.writeFileSync(testPublicApiFilePath, fixedContent);
 
 			injector.requirePublic("testPublicApi", testPublicApiFilePath);
@@ -539,35 +542,35 @@ $injector.register("a", A);
 			assert.ok(injector.publicApi.testPublicApi, "The module testPublicApi must be resolved in its getter and the returned value should not be falsey.");
 			assert.deepEqual(await injector.publicApi.testPublicApi.myMethod(result), result);
 
-			cliGlobal.$injector = injectorCache;
+			setGlobalInjector(injectorCache);
 		});
 	});
 
 	describe("isValidHierarchicalCommand", () => {
-		let injector: IInjector;
+		let localInjector: IInjector;
 		beforeEach(() => {
-			injector = new Yok();
+			localInjector = new Yok();
 		});
 
 		describe("returns true", () => {
 			describe("when command consists of two parts", () => {
 				it("and is valid", () => {
-					injector.requireCommand("sample|command", "sampleFileName");
-					return assert.eventually.isTrue(injector.isValidHierarchicalCommand("sample", ["command"]));
+					localInjector.requireCommand("sample|command", "sampleFileName");
+					return assert.eventually.isTrue(localInjector.isValidHierarchicalCommand("sample", ["command"]));
 				});
 
 				it("and has default value and no arguments passed", () => {
-					injector.requireCommand("sample|*default", "sampleFileName");
-					return assert.eventually.isTrue(injector.isValidHierarchicalCommand("sample", []));
+					localInjector.requireCommand("sample|*default", "sampleFileName");
+					return assert.eventually.isTrue(localInjector.isValidHierarchicalCommand("sample", []));
 				});
 
 				it("and has default value and canExecute returns true", () => {
 					const command = {
 						canExecute: async () => true
 					};
-					injector.registerCommand("sample|*default", command);
-					injector.requireCommand("sample|*default", "sampleFileName");
-					return assert.eventually.isTrue(injector.isValidHierarchicalCommand("sample", ["arg"]));
+					localInjector.registerCommand("sample|*default", command);
+					localInjector.requireCommand("sample|*default", "sampleFileName");
+					return assert.eventually.isTrue(localInjector.isValidHierarchicalCommand("sample", ["arg"]));
 				});
 
 				it("and has default value and allowedParameters' length is greater than 0", () => {
@@ -575,64 +578,63 @@ $injector.register("a", A);
 					const command = {
 						allowedParameters
 					};
-					injector.registerCommand("sample|*default", command);
-					injector.requireCommand("sample|*default", "sampleFileName");
-					return assert.eventually.isTrue(injector.isValidHierarchicalCommand("sample", ["arg"]));
+					localInjector.registerCommand("sample|*default", command);
+					localInjector.requireCommand("sample|*default", "sampleFileName");
+					return assert.eventually.isTrue(localInjector.isValidHierarchicalCommand("sample", ["arg"]));
 				});
 
 				it("and has default value and argument default passed", () => {
-					injector.requireCommand("sample|*default", "sampleFileName");
-					return assert.eventually.isTrue(injector.isValidHierarchicalCommand("sample", ["default"]));
+					localInjector.requireCommand("sample|*default", "sampleFileName");
+					return assert.eventually.isTrue(localInjector.isValidHierarchicalCommand("sample", ["default"]));
 				});
 
 				it("and has default value and some arguments passed", () => {
-					injector.requireCommand("sample|*default", "sampleFileName");
-					return assert.eventually.isTrue(injector.isValidHierarchicalCommand("sample", ["arg1", "arg2"]));
+					localInjector.requireCommand("sample|*default", "sampleFileName");
+					return assert.eventually.isTrue(localInjector.isValidHierarchicalCommand("sample", ["arg1", "arg2"]));
 				});
 			});
 
 			describe("when command consists of multiple parts", () => {
 				it("and is valid", () => {
-					injector.requireCommand("sample|command|subcommand", "sampleFileName");
-					return assert.eventually.isTrue(injector.isValidHierarchicalCommand("sample", ["command", "subcommand"]));
+					localInjector.requireCommand("sample|command|subcommand", "sampleFileName");
+					return assert.eventually.isTrue(localInjector.isValidHierarchicalCommand("sample", ["command", "subcommand"]));
 				});
 
 				it("and has default value and no arguments passed", () => {
-					injector.requireCommand("sample|command|*default", "sampleFileName");
-					return assert.eventually.isTrue(injector.isValidHierarchicalCommand("sample", ["command"]));
+					localInjector.requireCommand("sample|command|*default", "sampleFileName");
+					return assert.eventually.isTrue(localInjector.isValidHierarchicalCommand("sample", ["command"]));
 				});
 
 				it("has default value and default argument passed", () => {
-					injector.requireCommand("sample|command|*default", "sampleFileName");
-					return assert.eventually.isTrue(injector.isValidHierarchicalCommand("sample", ["command", "default"]));
+					localInjector.requireCommand("sample|command|*default", "sampleFileName");
+					return assert.eventually.isTrue(localInjector.isValidHierarchicalCommand("sample", ["command", "default"]));
 				});
 
 				it("has default value and some arguments passed", () => {
-					injector.requireCommand("sample|command|*default", "sampleFileName");
-					return assert.eventually.isTrue(injector.isValidHierarchicalCommand("sample", ["command", "arg1", "arg2"]));
+					localInjector.requireCommand("sample|command|*default", "sampleFileName");
+					return assert.eventually.isTrue(localInjector.isValidHierarchicalCommand("sample", ["command", "arg1", "arg2"]));
 				});
 			});
 		});
 
 		describe("returns false", () => {
 			it("when command is invalid", () => {
-				injector.requireCommand("sample|command", "sampleFileName");
-				return assert.eventually.isFalse(injector.isValidHierarchicalCommand("wrong", ["command"]));
+				localInjector.requireCommand("sample|command", "sampleFileName");
+				return assert.eventually.isFalse(localInjector.isValidHierarchicalCommand("wrong", ["command"]));
 			});
 
 			describe("throws", () => {
 				it("when arguments are invalid", () => {
-					injector.requireCommand("sample|command", "sampleFileName");
-					return assert.isRejected(injector.isValidHierarchicalCommand("sample", ["commandarg"]));
+					localInjector.requireCommand("sample|command", "sampleFileName");
+					return assert.isRejected(localInjector.isValidHierarchicalCommand("sample", ["commandarg"]));
 				});
 			});
 		});
 	});
 
 	describe("buildHierarchicalCommand", () => {
-		let injector: IInjector;
 		beforeEach(() => {
-			injector = new Yok();
+			setGlobalInjector(new Yok());
 		});
 
 		describe("returns undefined", () => {
@@ -789,7 +791,7 @@ $injector.register("a", A);
 	});
 
 	it("adds whole class to public api when requirePublicClass is used", () => {
-		const injector = new Yok();
+		setGlobalInjector(new Yok());
 		const dataObject = {
 			a: "testA",
 			b: {
