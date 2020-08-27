@@ -58,7 +58,7 @@ export class PrepareController extends EventEmitter {
 		const platformLowerCase = platform.toLowerCase();
 
 		if (this.watchersData && this.watchersData[projectDir] && this.watchersData[projectDir][platformLowerCase] && this.watchersData[projectDir][platformLowerCase].nativeFilesWatcher) {
-			this.watchersData[projectDir][platformLowerCase].nativeFilesWatcher.close();
+			await this.watchersData[projectDir][platformLowerCase].nativeFilesWatcher.close();
 			this.watchersData[projectDir][platformLowerCase].nativeFilesWatcher = null;
 		}
 
@@ -73,7 +73,7 @@ export class PrepareController extends EventEmitter {
 	@hook("prepare")
 	private async prepareCore(prepareData: IPrepareData, projectData: IProjectData): Promise<IPrepareResultData> {
 		await this.$platformController.addPlatformIfNeeded(prepareData);
-    
+
 		this.$logger.info("Preparing project...");
 		let result = null;
 

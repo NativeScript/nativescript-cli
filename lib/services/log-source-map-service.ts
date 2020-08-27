@@ -53,20 +53,19 @@ export class LogSourceMapService implements Mobile.ILogSourceMapService {
 			if (!this.$fs.getFsStats(filePath).isDirectory()) {
 				const source = this.$fs.readText(filePath);
 				const sourceMapRaw = sourceMapConverter.fromSource(source);
-        let smc: any = null;
+				let smc: any = null;
 				if (sourceMapRaw && sourceMapRaw.sourcemap) {
 					const sourceMap = sourceMapRaw.sourcemap;
 					smc = await sourcemap.SourceMapConsumer.with(sourceMap, null, (c) => {
-            return c;
-          });
-        }
+						return c;
+					});
+				}
 
 				this.cache[filePath] = smc;
 			}
 		} catch (err) {
 			this.$logger.trace(`Unable to set sourceMapConsumer for file ${filePath}. Error is: ${err}`);
 		}
-
 	}
 
 	public replaceWithOriginalFileLocations(platform: string, messageData: string, loggingOptions: Mobile.IDeviceLogOptions): string {
