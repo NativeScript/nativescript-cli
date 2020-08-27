@@ -90,24 +90,33 @@ class MockStream extends EventEmitter {
 	public pipe(destination: any, options?: { end?: boolean; }): any {
 		// Nothing to do here, just mock the method.
 	}
+	public end(): any {
+		//
+	}
 }
 
-describe.skip("pacoteService", () => {
+class MockBuffer {
+	constructor() {
+		return Buffer.from([]);
+	}
+}
+
+describe("pacoteService", () => {
 	const manifestResult: any = {};
 	const manifestOptions: IPacoteManifestOptions = { fullMetadata: true };
 	let sandboxInstance: sinon.SinonSandbox = null;
 	let manifestStub: sinon.SinonStub = null;
 	let tarballStreamStub: sinon.SinonStub = null;
 	let tarXStub: sinon.SinonStub = null;
-	let tarballSourceStream: MockStream = null;
+	let tarballSourceBuffer: MockBuffer = null;
 	let tarExtractDestinationStream: MockStream = null;
 
 	beforeEach(() => {
 		sandboxInstance = sinon.createSandbox();
 		manifestStub = sandboxInstance.stub(pacote, "manifest").returns(Promise.resolve(manifestResult));
-		tarballSourceStream = new MockStream();
-		tarballStreamStub = sandboxInstance.stub(pacote, "tarball").returns(Promise.resolve(<any>tarballSourceStream));
-    tarExtractDestinationStream = new MockStream();
+		tarballSourceBuffer = new MockBuffer();
+		tarballStreamStub = sandboxInstance.stub(pacote, "tarball").returns(Promise.resolve(<any>tarballSourceBuffer));
+		tarExtractDestinationStream = new MockStream();
 		tarXStub = sandboxInstance.stub(tar, "x").returns(<any>tarExtractDestinationStream);
 	});
 
@@ -205,13 +214,11 @@ describe.skip("pacoteService", () => {
 	});
 
 	describe("extractPackage", () => {
-		it("fails with correct error when pacote.tarball.stream raises error event", async () => {
+		it("fails with correct error when pacote.tarball raises error event", async () => {
 			const pacoteService = setupTest();
 
+			tarballStreamStub.returns(Promise.reject(new Error(errorMessage)));
 			const pacoteExtractPackagePromise = pacoteService.extractPackage(packageName, destinationDir);
-			setImmediate(() => {
-				tarballSourceStream.emit("error", new Error(errorMessage));
-			});
 
 			await assert.isRejected(pacoteExtractPackagePromise, errorMessage);
 		});

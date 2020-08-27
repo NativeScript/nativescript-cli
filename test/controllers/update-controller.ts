@@ -55,7 +55,7 @@ function createTestInjector(
 	testInjector.register("packageInstallationManager", stubs.PackageInstallationManagerStub);
 	testInjector.register("platformsDataService", stubs.NativeProjectDataStub);
 	testInjector.register("pacoteService", stubs.PacoteServiceStub);
-	testInjector.register("projectDataService", stubs.ProjectDataService);
+	testInjector.register("projectDataService", stubs.ProjectDataServiceStub);
 	testInjector.register("updateController", UpdateController);
 
 	return testInjector;

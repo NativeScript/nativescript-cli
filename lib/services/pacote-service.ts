@@ -59,11 +59,11 @@ export class PacoteService implements IPacoteService {
 			});
 
 			this.$logger.trace(`Creating extract tar stream with options: ${JSON.stringify(extractOptions, null, 2)}`);
-      const destination = tar.x(extractOptions);
-      // Initiate the source
-      const sourceStream = new PassThrough();
-      sourceStream.end(source);
-      sourceStream.pipe(destination);
+			const destination = tar.x(extractOptions);
+			// Initiate the source
+			const sourceStream = new PassThrough();
+			sourceStream.end(source);
+			sourceStream.pipe(destination);
 
 			destination.on("error", (err: Error) => {
 				this.$logger.trace(`Error in destination while trying to extract stream from ${packageName}. Error is ${err}`);

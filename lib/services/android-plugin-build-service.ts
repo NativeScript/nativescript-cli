@@ -181,7 +181,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		const androidSourceDirectories = this.getAndroidSourceDirectories(options.platformsAndroidDirPath);
 		const shortPluginName = getShortPluginName(options.pluginName);
 		const pluginTempDir = path.join(options.tempPluginDirPath, shortPluginName);
-    const pluginSourceFileHashesInfo = await this.getSourceFilesHashes(options.platformsAndroidDirPath, shortPluginName);
+		const pluginSourceFileHashesInfo = await this.getSourceFilesHashes(options.platformsAndroidDirPath, shortPluginName);
 
 		const shouldBuildAar = await this.shouldBuildAar({
 			manifestFilePath,
@@ -190,7 +190,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			pluginSourceDir: options.platformsAndroidDirPath,
 			shortPluginName,
 			fileHashesInfo: pluginSourceFileHashesInfo
-    });
+		});
 
 		if (shouldBuildAar) {
 			this.cleanPluginDir(pluginTempDir);
@@ -308,11 +308,11 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			const platformData = this.$platformsDataService.getPlatformData(this.$devicePlatformsConstants.Android, projectData);
 			const projectRuntimeVersion = platformData.platformProjectService.getFrameworkVersion(projectData);
 			this.$logger.trace(`Got gradle versions ${JSON.stringify(runtimeGradleVersions)} from runtime v${projectRuntimeVersion}`);
-    }
-    
-    const runtimePackage = this.$projectDataService.getRuntimePackage(projectDir, PlatformTypes.android);
+		}
+
 
 		if (!runtimeGradleVersions) {
+			const runtimePackage = this.$projectDataService.getRuntimePackage(projectDir, PlatformTypes.android);
 			const latestRuntimeVersion = await this.getLatestRuntimeVersion(runtimePackage);
 			runtimeGradleVersions = await this.getGradleVersions(latestRuntimeVersion, runtimePackage);
 			this.$logger.trace(`Got gradle versions ${JSON.stringify(runtimeGradleVersions)} from the latest runtime v${latestRuntimeVersion}`);

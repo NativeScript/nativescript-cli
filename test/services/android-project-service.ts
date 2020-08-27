@@ -18,7 +18,7 @@ const createTestInjector = (): IInjector => {
 	testInjector.register("hooksService", stubs.HooksServiceStub);
 	testInjector.register("childProcess", stubs.ChildProcessStub);
 	testInjector.register("hostInfo", {});
-	testInjector.register("projectDataService", stubs.ProjectDataService);
+	testInjector.register("projectDataService", stubs.ProjectDataServiceStub);
 	testInjector.register("pluginVariablesService", {});
 	testInjector.register("fs", stubs.FileSystemStub);
 	testInjector.register("injector", testInjector);

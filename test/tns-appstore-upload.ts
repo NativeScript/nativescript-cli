@@ -1,5 +1,5 @@
 import { PublishIOS } from "../lib/commands/appstore-upload";
-import { PrompterStub, LoggerStub, ProjectDataStub, ProjectDataService } from "./stubs";
+import { PrompterStub, LoggerStub, ProjectDataStub, ProjectDataServiceStub } from "./stubs";
 import * as chai from "chai";
 import * as yok from "../lib/common/yok";
 import { PrepareNativePlatformService } from "../lib/services/platform/prepare-native-platform-service";
@@ -99,7 +99,7 @@ class AppStore {
 			}
 		}
 
-		this.injector.register("projectDataService", ProjectDataService);
+		this.injector.register("projectDataService", ProjectDataServiceStub);
 	}
 
 	assert() {

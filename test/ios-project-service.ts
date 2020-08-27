@@ -31,7 +31,7 @@ import { YarnPackageManager } from "../lib/yarn-package-manager";
 import { assert } from "chai";
 import { SettingsService } from "../lib/common/test/unit-tests/stubs";
 import { BUILD_XCCONFIG_FILE_NAME } from "../lib/constants";
-import { ProjectDataStub, TempServiceStub, ProjectDataService } from "./stubs";
+import { ProjectDataStub, TempServiceStub, ProjectDataServiceStub } from "./stubs";
 import { xcode } from "../lib/node/xcode";
 import temp = require("temp");
 import { CocoaPodsPlatformManager } from "../lib/services/cocoapods-platform-manager";
@@ -97,7 +97,7 @@ function createTestInjector(projectPath: string, projectName: string, xCode?: IX
 	testInjector.register("projectHelper", {});
 	testInjector.register("xcodeSelectService", {});
 	testInjector.register("staticConfig", ConfigLib.StaticConfig);
-	testInjector.register("projectDataService", ProjectDataService);
+	testInjector.register("projectDataService", ProjectDataServiceStub);
 	testInjector.register("prompter", {});
 	testInjector.register("devicePlatformsConstants", { iOS: "iOS" });
 	testInjector.register("devicesService", DevicesService);
