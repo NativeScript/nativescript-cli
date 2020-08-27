@@ -15,7 +15,7 @@
     "clean": "npx rimraf node_modules package-lock.json && npm run setup",
     "build": "grunt",
     "build.all": "grunt test",
-    "setup": "npm i --ignore-scripts && ./node_modules/.bin/grunt",
+    "setup": "npm i --ignore-scripts && npm run build",
     "test": "mocha --config=test/.mocharc.yml",
     "postinstall": "node postinstall.js",
     "preuninstall": "node preuninstall.js",
@@ -157,7 +157,7 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "lint-staged"
+      "pre-commit": "npx lint-staged"
     }
   },
   "lint-staged": {
