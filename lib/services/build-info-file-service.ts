@@ -14,10 +14,14 @@ export class BuildInfoFileService implements IBuildInfoFileService {
 		private $fs: IFileSystem,
 		private $mobileHelper: Mobile.IMobileHelper,
 		private $projectChangesService: IProjectChangesService
-	) { }
+	) {}
 
-	public getLocalBuildInfo(platformData: IPlatformData, buildData: IBuildData): IBuildInfo {
-		const outputPath = buildData.outputPath || platformData.getBuildOutputPath(buildData);
+	public getLocalBuildInfo(
+		platformData: IPlatformData,
+		buildData: IBuildData
+	): IBuildInfo {
+		const outputPath =
+			buildData.outputPath || platformData.getBuildOutputPath(buildData);
 		const buildInfoFile = path.join(outputPath, buildInfoFileName);
 		if (this.$fs.exists(buildInfoFile)) {
 			try {
@@ -31,42 +35,77 @@ export class BuildInfoFileService implements IBuildInfoFileService {
 		return null;
 	}
 
-	public async getDeviceBuildInfo(device: Mobile.IDevice, projectData: IProjectData): Promise<IBuildInfo> {
-		const deviceFilePath = await this.getDeviceBuildInfoFilePath(device, projectData);
+	public async getDeviceBuildInfo(
+		device: Mobile.IDevice,
+		projectData: IProjectData
+	): Promise<IBuildInfo> {
+		const deviceFilePath = await this.getDeviceBuildInfoFilePath(
+			device,
+			projectData
+		);
 		try {
-			const deviceFileContent = await this.$mobileHelper.getDeviceFileContent(device, deviceFilePath, projectData);
+			const deviceFileContent = await this.$mobileHelper.getDeviceFileContent(
+				device,
+				deviceFilePath,
+				projectData
+			);
 			return JSON.parse(deviceFileContent);
 		} catch (e) {
 			return null;
 		}
 	}
 
-	public saveLocalBuildInfo(platformData: IPlatformData, buildInfoFileDirname: string): void {
+	public saveLocalBuildInfo(
+		platformData: IPlatformData,
+		buildInfoFileDirname: string
+	): void {
 		const buildInfoFile = path.join(buildInfoFileDirname, buildInfoFileName);
 
-		const prepareInfo = this.$projectChangesService.getPrepareInfo(platformData);
+		const prepareInfo = this.$projectChangesService.getPrepareInfo(
+			platformData
+		);
 		const buildInfo: IBuildInfo = {
 			prepareTime: prepareInfo.changesRequireBuildTime,
-			buildTime: new Date().toString()
+			buildTime: new Date().toString(),
 		};
 
 		this.$fs.writeJson(buildInfoFile, buildInfo);
 	}
 
-	public async saveDeviceBuildInfo(device: Mobile.IDevice, projectData: IProjectData, outputFilePath: string): Promise<void> {
-		const deviceFilePath = await this.getDeviceBuildInfoFilePath(device, projectData);
-		const appIdentifier = projectData.projectIdentifiers[device.deviceInfo.platform.toLowerCase()];
+	public async saveDeviceBuildInfo(
+		device: Mobile.IDevice,
+		projectData: IProjectData,
+		outputFilePath: string
+	): Promise<void> {
+		const deviceFilePath = await this.getDeviceBuildInfoFilePath(
+			device,
+			projectData
+		);
+		const appIdentifier =
+			projectData.projectIdentifiers[device.deviceInfo.platform.toLowerCase()];
 
-		await device.fileSystem.putFile(path.join(outputFilePath, buildInfoFileName), deviceFilePath, appIdentifier);
+		await device.fileSystem.putFile(
+			path.join(outputFilePath, buildInfoFileName),
+			deviceFilePath,
+			appIdentifier
+		);
 	}
 
-	private async getDeviceBuildInfoFilePath(device: Mobile.IDevice, projectData: IProjectData): Promise<string> {
+	private async getDeviceBuildInfoFilePath(
+		device: Mobile.IDevice,
+		projectData: IProjectData
+	): Promise<string> {
 		const platform = device.deviceInfo.platform.toLowerCase();
-		const deviceRootPath = await this.$devicePathProvider.getDeviceProjectRootPath(device, {
-			appIdentifier: projectData.projectIdentifiers[platform],
-			getDirname: true
-		});
-		const result = helpers.fromWindowsRelativePathToUnix(path.join(deviceRootPath, buildInfoFileName));
+		const deviceRootPath = await this.$devicePathProvider.getDeviceProjectRootPath(
+			device,
+			{
+				appIdentifier: projectData.projectIdentifiers[platform],
+				getDirname: true,
+			}
+		);
+		const result = helpers.fromWindowsRelativePathToUnix(
+			path.join(deviceRootPath, buildInfoFileName)
+		);
 
 		return result;
 	}

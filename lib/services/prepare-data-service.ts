@@ -2,7 +2,7 @@ import { IOSPrepareData, AndroidPrepareData } from "../data/prepare-data";
 import { injector } from "../common/yok";
 
 export class PrepareDataService implements IPrepareDataService {
-	constructor(private $mobileHelper: Mobile.IMobileHelper) { }
+	constructor(private $mobileHelper: Mobile.IMobileHelper) {}
 
 	public getPrepareData(projectDir: string, platform: string, data: any) {
 		const platformLowerCase = platform.toLowerCase();

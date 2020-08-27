@@ -1,5 +1,8 @@
 import { assert } from "chai";
-import { CONNECTED_STATUS, DEVICE_LOG_EVENT_NAME } from "../../lib/common/constants";
+import {
+	CONNECTED_STATUS,
+	DEVICE_LOG_EVENT_NAME,
+} from "../../lib/common/constants";
 import { LogParserService } from "../../lib/services/log-parser-service";
 import { DevicePlatformsConstants } from "../../lib/common/mobile/device-platforms-constants";
 import { IOSDebuggerPortService } from "../../lib/services/ios-debugger-port-service";
@@ -13,25 +16,24 @@ const device = <Mobile.IDevice>{
 	deviceInfo: {
 		identifier: deviceId,
 		status: CONNECTED_STATUS,
-		platform: "ios"
-	}
+		platform: "ios",
+	},
 };
-class DeveiceLogProviderMock extends EventEmitter {
-}
+class DeveiceLogProviderMock extends EventEmitter {}
 
 function createTestInjector() {
 	const injector = new Yok();
 	injector.register("previewAppLogProvider", { on: () => ({}) });
 	injector.register("deviceLogProvider", DeveiceLogProviderMock);
 	injector.register("previewSdkService", {
-		on: () => ({})
+		on: () => ({}),
 	});
 	injector.register("devicePlatformsConstants", DevicePlatformsConstants);
 	injector.register("logParserService", LogParserService);
 	injector.register("devicesService", {
 		getDeviceByIdentifier: () => {
 			return device;
-		}
+		},
 	});
 	injector.register("errors", {});
 
@@ -43,7 +45,9 @@ function getDebuggerPortMessage(port: number) {
 }
 
 describe("iOSLogParserService", () => {
-	let injector: IInjector, logParserService: LogParserService, deviceLogProvider: Mobile.IDeviceLogProvider;
+	let injector: IInjector,
+		logParserService: LogParserService,
+		deviceLogProvider: Mobile.IDeviceLogProvider;
 
 	beforeEach(() => {
 		injector = createTestInjector();
@@ -52,7 +56,11 @@ describe("iOSLogParserService", () => {
 	});
 
 	function emitDeviceLog(message: string) {
-		deviceLogProvider.emit(DEVICE_LOG_EVENT_NAME, message, device.deviceInfo.identifier);
+		deviceLogProvider.emit(
+			DEVICE_LOG_EVENT_NAME,
+			message,
+			device.deviceInfo.identifier
+		);
 	}
 
 	function attachOnDebuggerFoundEvent(): IIOSDebuggerPortData[] {
@@ -63,12 +71,12 @@ describe("iOSLogParserService", () => {
 				const data = {
 					port: parseInt(matches[1]),
 					appId: matches[2],
-					deviceId
+					deviceId,
 				};
 				receivedData.push(data);
 			},
 			regex: IOSDebuggerPortService.DEBUG_PORT_LOG_REGEX,
-			name: "testDebugPort"
+			name: "testDebugPort",
 		});
 
 		return receivedData;
@@ -83,7 +91,11 @@ describe("iOSLogParserService", () => {
 			emitDeviceLog(getDebuggerPortMessage(18181));
 
 			assert.deepStrictEqual(data.length, emittedMessagesCount);
-			assert.deepStrictEqual(data[0], { port: 18181, deviceId: deviceId, appId: appId });
+			assert.deepStrictEqual(data[0], {
+				port: 18181,
+				deviceId: deviceId,
+				appId: appId,
+			});
 		});
 		it("should call handler for all mactches in order for same matches", async () => {
 			const emittedMessagesCount = 5;
@@ -96,11 +108,31 @@ describe("iOSLogParserService", () => {
 			emitDeviceLog(getDebuggerPortMessage(64087));
 
 			assert.deepStrictEqual(data.length, emittedMessagesCount);
-			assert.deepStrictEqual(data[0], { port: 18181, deviceId: deviceId, appId: appId });
-			assert.deepStrictEqual(data[1], { port: 18181, deviceId: deviceId, appId: appId });
-			assert.deepStrictEqual(data[2], { port: 18181, deviceId: deviceId, appId: appId });
-			assert.deepStrictEqual(data[3], { port: 18181, deviceId: deviceId, appId: appId });
-			assert.deepStrictEqual(data[4], { port: 64087, deviceId: deviceId, appId: appId });
+			assert.deepStrictEqual(data[0], {
+				port: 18181,
+				deviceId: deviceId,
+				appId: appId,
+			});
+			assert.deepStrictEqual(data[1], {
+				port: 18181,
+				deviceId: deviceId,
+				appId: appId,
+			});
+			assert.deepStrictEqual(data[2], {
+				port: 18181,
+				deviceId: deviceId,
+				appId: appId,
+			});
+			assert.deepStrictEqual(data[3], {
+				port: 18181,
+				deviceId: deviceId,
+				appId: appId,
+			});
+			assert.deepStrictEqual(data[4], {
+				port: 64087,
+				deviceId: deviceId,
+				appId: appId,
+			});
 		});
 		it("should call handler for all matches in order for different matches", async () => {
 			const emittedMessagesCount = 5;
@@ -113,11 +145,31 @@ describe("iOSLogParserService", () => {
 			emitDeviceLog(getDebuggerPortMessage(18181));
 
 			assert.deepStrictEqual(data.length, emittedMessagesCount);
-			assert.deepStrictEqual(data[0], { port: 45898, deviceId: deviceId, appId: appId });
-			assert.deepStrictEqual(data[1], { port: 1809, deviceId: deviceId, appId: appId });
-			assert.deepStrictEqual(data[2], { port: 65072, deviceId: deviceId, appId: appId });
-			assert.deepStrictEqual(data[3], { port: 12345, deviceId: deviceId, appId: appId });
-			assert.deepStrictEqual(data[4], { port: 18181, deviceId: deviceId, appId: appId });
+			assert.deepStrictEqual(data[0], {
+				port: 45898,
+				deviceId: deviceId,
+				appId: appId,
+			});
+			assert.deepStrictEqual(data[1], {
+				port: 1809,
+				deviceId: deviceId,
+				appId: appId,
+			});
+			assert.deepStrictEqual(data[2], {
+				port: 65072,
+				deviceId: deviceId,
+				appId: appId,
+			});
+			assert.deepStrictEqual(data[3], {
+				port: 12345,
+				deviceId: deviceId,
+				appId: appId,
+			});
+			assert.deepStrictEqual(data[4], {
+				port: 18181,
+				deviceId: deviceId,
+				appId: appId,
+			});
 		});
 		it(`should not execute handler if no match`, async () => {
 			const data = attachOnDebuggerFoundEvent();

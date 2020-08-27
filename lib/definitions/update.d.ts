@@ -1,6 +1,12 @@
 interface IUpdateController {
 	update(updateOptions: IUpdateOptions): Promise<void>;
-	shouldUpdate({projectDir, version}: {projectDir: string, version?: string}): Promise<boolean>
+	shouldUpdate({
+		projectDir,
+		version,
+	}: {
+		projectDir: string;
+		version?: string;
+	}): Promise<boolean>;
 }
 
 interface IUpdateOptions {

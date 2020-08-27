@@ -5,24 +5,60 @@ import { ISpawnResult } from "../common/declarations";
 
 declare global {
 	interface IiOSSigningService {
-		setupSigningForDevice(projectRoot: string, projectData: IProjectData, buildConfig: IOSBuildData): Promise<void>;
-		setupSigningFromTeam(projectRoot: string, projectData: IProjectData, teamId: string): Promise<void>;
-		setupSigningFromProvision(projectRoot: string, projectData: IProjectData, provision?: string, mobileProvisionData?: any): Promise<void>;
+		setupSigningForDevice(
+			projectRoot: string,
+			projectData: IProjectData,
+			buildConfig: IOSBuildData
+		): Promise<void>;
+		setupSigningFromTeam(
+			projectRoot: string,
+			projectData: IProjectData,
+			teamId: string
+		): Promise<void>;
+		setupSigningFromProvision(
+			projectRoot: string,
+			projectData: IProjectData,
+			provision?: string,
+			mobileProvisionData?: any
+		): Promise<void>;
 	}
 
 	interface IXcodebuildService {
-		buildForSimulator(platformData: IPlatformData, projectData: IProjectData, buildConfig: IBuildConfig): Promise<void>;
-		buildForDevice(platformData: IPlatformData, projectData: IProjectData, buildConfig: IBuildConfig): Promise<string>;
-		buildForAppStore(platformData: IPlatformData, projectData: IProjectData, buildConfig: IBuildConfig): Promise<string>;
+		buildForSimulator(
+			platformData: IPlatformData,
+			projectData: IProjectData,
+			buildConfig: IBuildConfig
+		): Promise<void>;
+		buildForDevice(
+			platformData: IPlatformData,
+			projectData: IProjectData,
+			buildConfig: IBuildConfig
+		): Promise<string>;
+		buildForAppStore(
+			platformData: IPlatformData,
+			projectData: IProjectData,
+			buildConfig: IBuildConfig
+		): Promise<string>;
 	}
 
 	interface IXcodebuildArgsService {
-		getBuildForSimulatorArgs(platformData: IPlatformData, projectData: IProjectData, buildConfig: IBuildConfig): Promise<string[]>;
-		getBuildForDeviceArgs(platformData: IPlatformData, projectData: IProjectData, buildConfig: IBuildConfig): Promise<string[]>;
+		getBuildForSimulatorArgs(
+			platformData: IPlatformData,
+			projectData: IProjectData,
+			buildConfig: IBuildConfig
+		): Promise<string[]>;
+		getBuildForDeviceArgs(
+			platformData: IPlatformData,
+			projectData: IProjectData,
+			buildConfig: IBuildConfig
+		): Promise<string[]>;
 	}
 
 	interface IXcodebuildCommandService {
-		executeCommand(args: string[], options: IXcodebuildCommandOptions): Promise<ISpawnResult>;
+		executeCommand(
+			args: string[],
+			options: IXcodebuildCommandOptions
+		): Promise<ISpawnResult>;
 	}
 
 	interface IXcodebuildCommandOptions {
@@ -33,8 +69,16 @@ declare global {
 	}
 
 	interface IExportOptionsPlistService {
-		createDevelopmentExportOptionsPlist(archivePath: string, projectData: IProjectData, buildConfig: IBuildConfig): Promise<IExportOptionsPlistOutput>;
-		createDistributionExportOptionsPlist(projectRoot: string, projectData: IProjectData, buildConfig: IBuildConfig): Promise<IExportOptionsPlistOutput>;
+		createDevelopmentExportOptionsPlist(
+			archivePath: string,
+			projectData: IProjectData,
+			buildConfig: IBuildConfig
+		): Promise<IExportOptionsPlistOutput>;
+		createDistributionExportOptionsPlist(
+			projectRoot: string,
+			projectData: IProjectData,
+			buildConfig: IBuildConfig
+		): Promise<IExportOptionsPlistOutput>;
 	}
 
 	interface IExportOptionsPlistOutput {

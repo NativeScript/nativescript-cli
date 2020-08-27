@@ -3,17 +3,26 @@ import { ICommandParameter, ICommand } from "../../definitions/commands";
 import { injector } from "../../yok";
 
 export class UninstallApplicationCommand implements ICommand {
-	constructor(private $devicesService: Mobile.IDevicesService,
+	constructor(
+		private $devicesService: Mobile.IDevicesService,
 		private $stringParameter: ICommandParameter,
-		private $options: IOptions) { }
+		private $options: IOptions
+	) {}
 
 	allowedParameters: ICommandParameter[] = [this.$stringParameter];
 
 	public async execute(args: string[]): Promise<void> {
-		await this.$devicesService.initialize({ deviceId: this.$options.device, skipInferPlatform: true });
+		await this.$devicesService.initialize({
+			deviceId: this.$options.device,
+			skipInferPlatform: true,
+		});
 
-		const action = (device: Mobile.IDevice) => device.applicationManager.uninstallApplication(args[0]);
+		const action = (device: Mobile.IDevice) =>
+			device.applicationManager.uninstallApplication(args[0]);
 		await this.$devicesService.execute(action);
 	}
 }
-injector.registerCommand(["device|uninstall", "devices|uninstall"], UninstallApplicationCommand);
+injector.registerCommand(
+	["device|uninstall", "devices|uninstall"],
+	UninstallApplicationCommand
+);

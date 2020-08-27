@@ -1,13 +1,27 @@
 import * as helpers from "./common/helpers";
 import * as yargs from "yargs";
-import * as _ from 'lodash';
-import { IDictionary, IDashedOption, OptionType, IErrors, ISettingsService } from "./common/declarations";
+import * as _ from "lodash";
+import {
+	IDictionary,
+	IDashedOption,
+	OptionType,
+	IErrors,
+	ISettingsService,
+} from "./common/declarations";
 import { injector } from "./common/yok";
 export class Options {
 	private static DASHED_OPTION_REGEX = /(.+?)([A-Z])(.*)/;
 	private static NONDASHED_OPTION_REGEX = /(.+?)[-]([a-zA-Z])(.*)/;
 
-	private optionsWhiteList = ["ui", "recursive", "reporter", "require", "timeout", "_", "$0"]; // These options shouldn't be validated
+	private optionsWhiteList = [
+		"ui",
+		"recursive",
+		"reporter",
+		"require",
+		"timeout",
+		"_",
+		"$0",
+	]; // These options shouldn't be validated
 	private globalOptions: IDictionary<IDashedOption> = {
 		log: { type: OptionType.String, hasSensitiveValue: false },
 		verbose: { type: OptionType.Boolean, hasSensitiveValue: false },
@@ -17,14 +31,16 @@ export class Options {
 		analyticsClient: { type: OptionType.String, hasSensitiveValue: false },
 		path: { type: OptionType.String, alias: "p", hasSensitiveValue: true },
 		// This will parse all non-hyphenated values as strings.
-		_: { type: OptionType.String, hasSensitiveValue: false }
+		_: { type: OptionType.String, hasSensitiveValue: false },
 	};
 
 	private initialArgv: yargs.Arguments;
 	public argv: yargs.Arguments;
 	public options: IDictionary<IDashedOption>;
 
-	public setupOptions(commandSpecificDashedOptions?: IDictionary<IDashedOption>): void {
+	public setupOptions(
+		commandSpecificDashedOptions?: IDictionary<IDashedOption>
+	): void {
 		if (commandSpecificDashedOptions) {
 			_.extend(this.options, commandSpecificDashedOptions);
 			this.setArgv();
@@ -34,7 +50,9 @@ export class Options {
 
 		// Check if the user has explicitly provide --hmr and --release options from command line
 		if (this.initialArgv.release && this.initialArgv.hmr) {
-			this.$errors.fail("The options --release and --hmr cannot be used simultaneously.");
+			this.$errors.fail(
+				"The options --release and --hmr cannot be used simultaneously."
+			);
 		}
 
 		if (this.argv.hmr) {
@@ -52,16 +70,17 @@ export class Options {
 		}
 	}
 
-	constructor(private $errors: IErrors,
-		private $settingsService: ISettingsService) {
-
+	constructor(
+		private $errors: IErrors,
+		private $settingsService: ISettingsService
+	) {
 		this.options = _.extend({}, this.commonOptions, this.globalOptions);
 		this.setArgv();
 	}
 
 	public get shorthands(): string[] {
 		const result: string[] = [];
-		_.each(_.keys(this.options), optionName => {
+		_.each(_.keys(this.options), (optionName) => {
 			if (this.options[optionName].alias) {
 				result.push(this.options[optionName].alias);
 			}
@@ -77,16 +96,26 @@ export class Options {
 			framework: { type: OptionType.String, hasSensitiveValue: false },
 			frameworkVersion: { type: OptionType.String, hasSensitiveValue: false },
 			forDevice: { type: OptionType.Boolean, hasSensitiveValue: false },
-			iCloudContainerEnvironment: { type: OptionType.String, hasSensitiveValue: false },
+			iCloudContainerEnvironment: {
+				type: OptionType.String,
+				hasSensitiveValue: false,
+			},
 			provision: { type: OptionType.Object, hasSensitiveValue: true },
-			client: { type: OptionType.Boolean, default: true, hasSensitiveValue: false },
+			client: {
+				type: OptionType.Boolean,
+				default: true,
+				hasSensitiveValue: false,
+			},
 			env: { type: OptionType.Object, hasSensitiveValue: false },
 			production: { type: OptionType.Boolean, hasSensitiveValue: false },
 			debugTransport: { type: OptionType.Boolean, hasSensitiveValue: false },
 			keyStorePath: { type: OptionType.String, hasSensitiveValue: true },
 			keyStorePassword: { type: OptionType.String, hasSensitiveValue: true },
 			keyStoreAlias: { type: OptionType.String, hasSensitiveValue: true },
-			keyStoreAliasPassword: { type: OptionType.String, hasSensitiveValue: true },
+			keyStoreAliasPassword: {
+				type: OptionType.String,
+				hasSensitiveValue: true,
+			},
 			ignoreScripts: { type: OptionType.Boolean, hasSensitiveValue: false },
 			disableNpmInstall: { type: OptionType.Boolean, hasSensitiveValue: false },
 			compileSdk: { type: OptionType.Number, hasSensitiveValue: false },
@@ -112,19 +141,38 @@ export class Options {
 			chrome: { type: OptionType.Boolean, hasSensitiveValue: false },
 			inspector: { type: OptionType.Boolean, hasSensitiveValue: false },
 			clean: { type: OptionType.Boolean, hasSensitiveValue: false },
-			watch: { type: OptionType.Boolean, default: true, hasSensitiveValue: false },
+			watch: {
+				type: OptionType.Boolean,
+				default: true,
+				hasSensitiveValue: false,
+			},
 			background: { type: OptionType.String, hasSensitiveValue: false },
 			username: { type: OptionType.String, hasSensitiveValue: true },
 			pluginName: { type: OptionType.String, hasSensitiveValue: false },
-			includeTypeScriptDemo: { type: OptionType.String, hasSensitiveValue: false },
+			includeTypeScriptDemo: {
+				type: OptionType.String,
+				hasSensitiveValue: false,
+			},
 			includeAngularDemo: { type: OptionType.String, hasSensitiveValue: false },
-			hmr: { type: OptionType.Boolean, hasSensitiveValue: false, default: true },
-			collection: { type: OptionType.String, alias: "c", hasSensitiveValue: false },
+			hmr: {
+				type: OptionType.Boolean,
+				hasSensitiveValue: false,
+				default: true,
+			},
+			collection: {
+				type: OptionType.String,
+				alias: "c",
+				hasSensitiveValue: false,
+			},
 			json: { type: OptionType.Boolean, hasSensitiveValue: false },
 			avd: { type: OptionType.String, hasSensitiveValue: true },
 			// check not used
 			config: { type: OptionType.Array, hasSensitiveValue: false },
-			insecure: { type: OptionType.Boolean, alias: "k", hasSensitiveValue: false },
+			insecure: {
+				type: OptionType.Boolean,
+				alias: "k",
+				hasSensitiveValue: false,
+			},
 			debug: { type: OptionType.Boolean, alias: "d", hasSensitiveValue: false },
 			timeout: { type: OptionType.String, hasSensitiveValue: false },
 			device: { type: OptionType.String, hasSensitiveValue: true },
@@ -144,18 +192,33 @@ export class Options {
 			template: { type: OptionType.String, hasSensitiveValue: true },
 			certificate: { type: OptionType.String, hasSensitiveValue: true },
 			certificatePassword: { type: OptionType.String, hasSensitiveValue: true },
-			release: { type: OptionType.Boolean, alias: "r", hasSensitiveValue: false },
+			release: {
+				type: OptionType.Boolean,
+				alias: "r",
+				hasSensitiveValue: false,
+			},
 			markingMode: { type: OptionType.Boolean, hasSensitiveValue: false },
 			var: { type: OptionType.Object, hasSensitiveValue: true },
 			default: { type: OptionType.Boolean, hasSensitiveValue: false },
 			count: { type: OptionType.Number, hasSensitiveValue: false },
 			analyticsLogFile: { type: OptionType.String, hasSensitiveValue: true },
 			cleanupLogFile: { type: OptionType.String, hasSensitiveValue: true },
-			hooks: { type: OptionType.Boolean, default: true, hasSensitiveValue: false },
-			link: { type: OptionType.Boolean, default: false, hasSensitiveValue: false },
+			hooks: {
+				type: OptionType.Boolean,
+				default: true,
+				hasSensitiveValue: false,
+			},
+			link: {
+				type: OptionType.Boolean,
+				default: false,
+				hasSensitiveValue: false,
+			},
 			aab: { type: OptionType.Boolean, hasSensitiveValue: false },
 			performance: { type: OptionType.Object, hasSensitiveValue: true },
-			appleApplicationSpecificPassword: { type: OptionType.String, hasSensitiveValue: true },
+			appleApplicationSpecificPassword: {
+				type: OptionType.String,
+				hasSensitiveValue: true,
+			},
 			appleSessionBase64: { type: OptionType.String, hasSensitiveValue: true },
 		};
 	}
@@ -169,11 +232,13 @@ export class Options {
 		return this.argv[optionName];
 	}
 
-	public validateOptions(commandSpecificDashedOptions?: IDictionary<IDashedOption>): void {
+	public validateOptions(
+		commandSpecificDashedOptions?: IDictionary<IDashedOption>
+	): void {
 		this.setupOptions(commandSpecificDashedOptions);
 		const parsed: any = {};
 		for (const key of Object.keys(this.argv)) {
-      const optionName = `${this.argv[key]}`;
+			const optionName = `${this.argv[key]}`;
 			parsed[optionName] = this.getOptionValue(optionName);
 		}
 
@@ -187,18 +252,34 @@ export class Options {
 
 			if (!_.includes(this.optionsWhiteList, optionName)) {
 				if (!this.isOptionSupported(optionName)) {
-					this.$errors.failWithHelp(`The option '${originalOptionName}' is not supported.`);
+					this.$errors.failWithHelp(
+						`The option '${originalOptionName}' is not supported.`
+					);
 				}
 
 				const optionType = this.getOptionType(optionName),
 					optionValue = parsed[optionName];
 
 				if (_.isArray(optionValue) && optionType !== OptionType.Array) {
-					this.$errors.failWithHelp("The '%s' option requires a single value.", originalOptionName);
-				} else if (optionType === OptionType.String && helpers.isNullOrWhitespace(optionValue)) {
-					this.$errors.failWithHelp("The option '%s' requires non-empty value.", originalOptionName);
-				} else if (optionType === OptionType.Array && optionValue.length === 0) {
-					this.$errors.failWithHelp(`The option '${originalOptionName}' requires one or more values, separated by a space.`);
+					this.$errors.failWithHelp(
+						"The '%s' option requires a single value.",
+						originalOptionName
+					);
+				} else if (
+					optionType === OptionType.String &&
+					helpers.isNullOrWhitespace(optionValue)
+				) {
+					this.$errors.failWithHelp(
+						"The option '%s' requires non-empty value.",
+						originalOptionName
+					);
+				} else if (
+					optionType === OptionType.Array &&
+					optionValue.length === 0
+				) {
+					this.$errors.failWithHelp(
+						`The option '${originalOptionName}' requires one or more values, separated by a space.`
+					);
 				}
 			}
 		});
@@ -206,16 +287,19 @@ export class Options {
 
 	private getCorrectOptionName(optionName: string): string {
 		const secondaryOptionName = this.getNonDashedOptionName(optionName);
-		return _.includes(this.optionNames, secondaryOptionName) ? secondaryOptionName : optionName;
+		return _.includes(this.optionNames, secondaryOptionName)
+			? secondaryOptionName
+			: optionName;
 	}
 
 	private getOptionType(optionName: string): string {
-		const option = this.options[optionName] || this.tryGetOptionByAliasName(optionName);
+		const option =
+			this.options[optionName] || this.tryGetOptionByAliasName(optionName);
 		return option ? option.type : "";
 	}
 
 	private tryGetOptionByAliasName(aliasName: string) {
-		const option = _.find(this.options, opt => opt.alias === aliasName);
+		const option = _.find(this.options, (opt) => opt.alias === aliasName);
 		return option;
 	}
 
@@ -234,11 +318,16 @@ export class Options {
 	// IMPORTANT: In your code, it is better to use the value without dashes (profileDir in the example).
 	// This way your code will work in case "$ <cli name> emulate android --profile-dir" or "$ <cli name> emulate android --profileDir" is used by user.
 	private getNonDashedOptionName(optionName: string): string {
-		const matchUpperCaseLetters = optionName.match(Options.NONDASHED_OPTION_REGEX);
+		const matchUpperCaseLetters = optionName.match(
+			Options.NONDASHED_OPTION_REGEX
+		);
 		if (matchUpperCaseLetters) {
 			// get here if option with upperCase letter is specified, for example profileDir
 			// check if in knownOptions we have its kebabCase presentation
-			const secondaryOptionName = matchUpperCaseLetters[1] + matchUpperCaseLetters[2].toUpperCase() + matchUpperCaseLetters[3] || '';
+			const secondaryOptionName =
+				matchUpperCaseLetters[1] +
+					matchUpperCaseLetters[2].toUpperCase() +
+					matchUpperCaseLetters[3] || "";
 			return this.getNonDashedOptionName(secondaryOptionName);
 		}
 
@@ -248,7 +337,11 @@ export class Options {
 	private getDashedOptionName(optionName: string): string {
 		const matchUpperCaseLetters = optionName.match(Options.DASHED_OPTION_REGEX);
 		if (matchUpperCaseLetters) {
-			const secondaryOptionName = `${matchUpperCaseLetters[1]}-${matchUpperCaseLetters[2].toLowerCase()}${matchUpperCaseLetters[3] || ''}`;
+			const secondaryOptionName = `${
+				matchUpperCaseLetters[1]
+			}-${matchUpperCaseLetters[2].toLowerCase()}${
+				matchUpperCaseLetters[3] || ""
+			}`;
 			return this.getDashedOptionName(secondaryOptionName);
 		}
 
@@ -268,8 +361,12 @@ export class Options {
 		// For backwards compatibility
 		// Previously profileDir had a default option and calling `this.$options.profileDir` always returned valid result.
 		// Now the profileDir should be used from $settingsService, but ensure the `this.$options.profileDir` returns the same value.
-		this.$settingsService.setSettings({ profileDir: <string>this.argv.profileDir });
-		this.argv.profileDir = this.argv["profile-dir"] = this.$settingsService.getProfileDir();
+		this.$settingsService.setSettings({
+			profileDir: <string>this.argv.profileDir,
+		});
+		this.argv.profileDir = this.argv[
+			"profile-dir"
+		] = this.$settingsService.getProfileDir();
 
 		// if justlaunch is set, it takes precedence over the --watch flag and the default true value
 		if (this.argv.justlaunch) {
@@ -298,7 +395,7 @@ export class Options {
 	}
 
 	private adjustDashedOptions(): void {
-		_.each(this.optionNames, optionName => {
+		_.each(this.optionNames, (optionName) => {
 			Object.defineProperty(Options.prototype, optionName, {
 				configurable: true,
 				get: () => {
@@ -306,7 +403,7 @@ export class Options {
 				},
 				set: (value: any) => {
 					this.argv[optionName] = value;
-				}
+				},
 			});
 		});
 	}

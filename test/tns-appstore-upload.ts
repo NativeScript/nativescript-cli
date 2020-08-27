@@ -1,5 +1,10 @@
 import { PublishIOS } from "../lib/commands/appstore-upload";
-import { PrompterStub, LoggerStub, ProjectDataStub, ProjectDataServiceStub } from "./stubs";
+import {
+	PrompterStub,
+	LoggerStub,
+	ProjectDataStub,
+	ProjectDataServiceStub,
+} from "./stubs";
 import * as chai from "chai";
 import * as yok from "../lib/common/yok";
 import { PrepareNativePlatformService } from "../lib/services/platform/prepare-native-platform-service";
@@ -12,7 +17,7 @@ import { ICommand } from "../lib/common/definitions/commands";
 class AppStore {
 	static itunesconnect = {
 		user: "person@private.com",
-		pass: "god"
+		pass: "god",
 	};
 
 	// Services
@@ -40,55 +45,60 @@ class AppStore {
 
 	before() {
 		this.iOSPlatformData = {
-			"projectRoot": "/Users/person/git/MyProject"
+			projectRoot: "/Users/person/git/MyProject",
 		};
 		this.initInjector({
 			commands: {
-				"appstore": PublishIOS
+				appstore: PublishIOS,
 			},
 			services: {
-				"errors": {},
-				"fs": {},
-				"hostInfo": {},
-				"itmsTransporterService": this.itmsTransporterService = {},
-				"logger": this.loggerService = new LoggerStub(),
-				"options": this.options = {},
-				"prompter": this.prompter = new PrompterStub(),
-				"projectData": this.projectData = new ProjectDataStub(),
-				"stringParameterBuilder": {},
-				"devicePlatformsConstants": {
-					"iOS": "iOS"
+				errors: {},
+				fs: {},
+				hostInfo: {},
+				itmsTransporterService: this.itmsTransporterService = {},
+				logger: this.loggerService = new LoggerStub(),
+				options: this.options = {},
+				prompter: this.prompter = new PrompterStub(),
+				projectData: this.projectData = new ProjectDataStub(),
+				stringParameterBuilder: {},
+				devicePlatformsConstants: {
+					iOS: "iOS",
 				},
-				"prepareNativePlatformService": this.prepareNativePlatformService = <any>{},
-				"platformCommandHelper": this.platformCommandHelper = {},
-				"platformValidationService": this.platformValidationService = {},
-				"buildController": this.buildController = <any>{
+				prepareNativePlatformService: this.prepareNativePlatformService = <
+					any
+				>{},
+				platformCommandHelper: this.platformCommandHelper = {},
+				platformValidationService: this.platformValidationService = {},
+				buildController: this.buildController = <any>{
 					buildPlatform: async () => {
 						this.archiveCalls++;
 						return "/Users/person/git/MyProject/platforms/ios/archive/MyProject.ipa";
-					}
+					},
 				},
-				"platformsDataService": {
+				platformsDataService: {
 					getPlatformData: (platform: string) => {
 						chai.assert.equal(platform, "iOS");
 						return this.iOSPlatformData;
-					}
+					},
 				},
-				"applePortalSessionService": {
+				applePortalSessionService: {
 					createUserSession: () => {
 						return {
-							areCredentialsValid: true
+							areCredentialsValid: true,
 						};
-					}
-				}
-			}
+					},
+				},
+			},
 		});
 
 		this.projectData.initializeProjectData(this.iOSPlatformData.projectRoot);
 		this.command = this.injector.resolveCommand("appstore");
 	}
 
-	initInjector(services?: { commands?: { [service: string]: any }, services?: { [service: string]: any } }) {
+	initInjector(services?: {
+		commands?: { [service: string]: any };
+		services?: { [service: string]: any };
+	}) {
 		this.injector = new yok.Yok();
 		if (services) {
 			for (const cmd in services.commands) {
@@ -104,8 +114,16 @@ class AppStore {
 
 	assert() {
 		this.prompter.assert();
-		chai.assert.equal(this.archiveCalls, this.expectedArchiveCalls, "Mismatched number of iOSProjectService.archive calls.");
-		chai.assert.equal(this.itmsTransporterServiceUploadCalls, this.expectedItmsTransporterServiceUploadCalls, "Mismatched number of itmsTransporterService.upload calls.");
+		chai.assert.equal(
+			this.archiveCalls,
+			this.expectedArchiveCalls,
+			"Mismatched number of iOSProjectService.archive calls."
+		);
+		chai.assert.equal(
+			this.itmsTransporterServiceUploadCalls,
+			this.expectedItmsTransporterServiceUploadCalls,
+			"Mismatched number of itmsTransporterService.upload calls."
+		);
 	}
 
 	expectItunesPrompt() {
@@ -121,7 +139,9 @@ class AppStore {
 			this.archiveCalls++;
 			chai.assert.equal(iOSBuildData.projectDir, "/Users/person/git/MyProject");
 			chai.assert.isTrue(iOSBuildData.buildForAppStore);
-			return Promise.resolve("/Users/person/git/MyProject/platforms/ios/archive/MyProject.ipa");
+			return Promise.resolve(
+				"/Users/person/git/MyProject/platforms/ios/archive/MyProject.ipa"
+			);
 		};
 	}
 
@@ -130,9 +150,18 @@ class AppStore {
 		this.itmsTransporterService.validate = () => Promise.resolve();
 		this.itmsTransporterService.upload = (options: IITMSData) => {
 			this.itmsTransporterServiceUploadCalls++;
-			chai.assert.equal(options.ipaFilePath, "/Users/person/git/MyProject/platforms/ios/archive/MyProject.ipa");
-			chai.assert.equal(options.credentials.username, AppStore.itunesconnect.user);
-			chai.assert.equal(options.credentials.password, AppStore.itunesconnect.pass);
+			chai.assert.equal(
+				options.ipaFilePath,
+				"/Users/person/git/MyProject/platforms/ios/archive/MyProject.ipa"
+			);
+			chai.assert.equal(
+				options.credentials.username,
+				AppStore.itunesconnect.user
+			);
+			chai.assert.equal(
+				options.credentials.password,
+				AppStore.itunesconnect.pass
+			);
 			chai.assert.equal(options.verboseLogging, false);
 			return Promise.resolve();
 		};
@@ -152,7 +181,10 @@ class AppStore {
 		this.expectArchive();
 		this.expectITMSTransporterUpload();
 
-		await this.command.execute([AppStore.itunesconnect.user, AppStore.itunesconnect.pass]);
+		await this.command.execute([
+			AppStore.itunesconnect.user,
+			AppStore.itunesconnect.pass,
+		]);
 
 		this.assert();
 	}

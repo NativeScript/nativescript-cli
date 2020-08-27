@@ -8,10 +8,11 @@ export class GenerateMessages implements ICommand {
 	private static MESSAGES_DEFINITIONS_FILE_NAME = "messages.interface.d.ts";
 	private static MESSAGES_IMPLEMENTATION_FILE_NAME = "messages.ts";
 
-	constructor(private $fs: IFileSystem,
+	constructor(
+		private $fs: IFileSystem,
 		private $messageContractGenerator: IServiceContractGenerator,
-		private $options: IOptions) {
-	}
+		private $options: IOptions
+	) {}
 
 	allowedParameters: ICommandParameter[] = [];
 
@@ -23,11 +24,23 @@ export class GenerateMessages implements ICommand {
 		let implementationFilePath: string;
 
 		if (this.$options.default) {
-			interfaceFilePath = path.join(innerMessagesDirectory, GenerateMessages.MESSAGES_DEFINITIONS_FILE_NAME);
-			implementationFilePath = path.join(innerMessagesDirectory, GenerateMessages.MESSAGES_IMPLEMENTATION_FILE_NAME);
+			interfaceFilePath = path.join(
+				innerMessagesDirectory,
+				GenerateMessages.MESSAGES_DEFINITIONS_FILE_NAME
+			);
+			implementationFilePath = path.join(
+				innerMessagesDirectory,
+				GenerateMessages.MESSAGES_IMPLEMENTATION_FILE_NAME
+			);
 		} else {
-			interfaceFilePath = path.join(outerMessagesDirectory, GenerateMessages.MESSAGES_DEFINITIONS_FILE_NAME);
-			implementationFilePath = path.join(outerMessagesDirectory, GenerateMessages.MESSAGES_IMPLEMENTATION_FILE_NAME);
+			interfaceFilePath = path.join(
+				outerMessagesDirectory,
+				GenerateMessages.MESSAGES_DEFINITIONS_FILE_NAME
+			);
+			implementationFilePath = path.join(
+				outerMessagesDirectory,
+				GenerateMessages.MESSAGES_IMPLEMENTATION_FILE_NAME
+			);
 		}
 
 		this.$fs.writeFile(interfaceFilePath, result.interfaceFile);

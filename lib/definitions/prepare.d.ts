@@ -4,13 +4,12 @@ import { IPlatformData } from "./platform";
 import { IProjectData } from "./project";
 
 declare global {
-
 	interface IPrepareData extends IControllerDataBase {
 		release: boolean;
 		hmr: boolean;
 		env: any;
 		watch?: boolean;
-		watchNative: boolean
+		watchNative: boolean;
 	}
 
 	interface IiOSCodeSigningData {
@@ -19,10 +18,14 @@ declare global {
 		mobileProvisionData: any;
 	}
 
-	interface IiOSPrepareData extends IPrepareData, IiOSCodeSigningData { }
+	interface IiOSPrepareData extends IPrepareData, IiOSCodeSigningData {}
 
 	interface IPrepareDataService {
-		getPrepareData(projectDir: string, platform: string, data: any): IPrepareData;
+		getPrepareData(
+			projectDir: string,
+			platform: string,
+			data: any
+		): IPrepareData;
 	}
 
 	interface IPrepareController extends EventEmitter {
@@ -36,6 +39,10 @@ declare global {
 	}
 
 	interface IPrepareNativePlatformService {
-		prepareNativePlatform(platformData: IPlatformData, projectData: IProjectData, prepareData: IPrepareData): Promise<boolean>;
+		prepareNativePlatform(
+			platformData: IPlatformData,
+			projectData: IProjectData,
+			prepareData: IPrepareData
+		): Promise<boolean>;
 	}
 }

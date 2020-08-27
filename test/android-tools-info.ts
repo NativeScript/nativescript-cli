@@ -30,11 +30,11 @@ describe("androidToolsInfo", () => {
 
 			printMarkdown: (...args: string[]): void => {
 				loggedMarkdownMessages.push(format.apply(null, args));
-			}
+			},
 		});
 		testInjector.register("options", {});
 		testInjector.register("staticConfig", {
-			SYS_REQUIREMENTS_LINK: sysRequirementsLink
+			SYS_REQUIREMENTS_LINK: sysRequirementsLink,
 		});
 		return testInjector;
 	};
@@ -42,8 +42,16 @@ describe("androidToolsInfo", () => {
 	describe("validateJavacVersion", () => {
 		it("throws error when passing showWarningsAsErrors to true and javac is not installed", () => {
 			const testInjector = createTestInjector();
-			const androidToolsInfo = testInjector.resolve<IAndroidToolsInfo>(AndroidToolsInfo);
-			assert.throws(() => androidToolsInfo.validateJavacVersion(null, { showWarningsAsErrors: true }), "Error executing command 'javac'. Make sure you have installed The Java Development Kit (JDK) and set JAVA_HOME environment variable.");
+			const androidToolsInfo = testInjector.resolve<IAndroidToolsInfo>(
+				AndroidToolsInfo
+			);
+			assert.throws(
+				() =>
+					androidToolsInfo.validateJavacVersion(null, {
+						showWarningsAsErrors: true,
+					}),
+				"Error executing command 'javac'. Make sure you have installed The Java Development Kit (JDK) and set JAVA_HOME environment variable."
+			);
 		});
 	});
 });

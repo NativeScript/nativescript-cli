@@ -1,29 +1,47 @@
 import * as path from "path";
-import * as _ from 'lodash';
+import * as _ from "lodash";
 import { cache } from "./common/decorators";
 import { androidToolsInfo } from "@nativescript/doctor";
-import { injector } from './common/yok';
-import { IAndroidToolsInfo, IOptions, IAndroidToolsInfoData, IAndroidToolsInfoValidateInput, IAndroidToolsInfoOptions } from "./declarations";
+import { injector } from "./common/yok";
+import {
+	IAndroidToolsInfo,
+	IOptions,
+	IAndroidToolsInfoData,
+	IAndroidToolsInfoValidateInput,
+	IAndroidToolsInfoOptions,
+} from "./declarations";
 import { IErrors, IProjectDir } from "./common/declarations";
 
 export class AndroidToolsInfo implements IAndroidToolsInfo {
-	constructor(private $errors: IErrors,
+	constructor(
+		private $errors: IErrors,
 		private $logger: ILogger,
 		private $options: IOptions,
-		protected $staticConfig: Config.IStaticConfig) {
-	}
+		protected $staticConfig: Config.IStaticConfig
+	) {}
 
 	@cache()
 	public getToolsInfo(config: IProjectDir): IAndroidToolsInfoData {
-		const infoData: IAndroidToolsInfoData = <IAndroidToolsInfoData>(androidToolsInfo.getToolsInfo({projectDir: config.projectDir}));
+		const infoData: IAndroidToolsInfoData = <IAndroidToolsInfoData>(
+			androidToolsInfo.getToolsInfo({ projectDir: config.projectDir })
+		);
 
 		infoData.androidHomeEnvVar = androidToolsInfo.androidHome;
-		infoData.compileSdkVersion = this.getCompileSdkVersion(infoData.installedTargets, infoData.compileSdkVersion);
+		infoData.compileSdkVersion = this.getCompileSdkVersion(
+			infoData.installedTargets,
+			infoData.compileSdkVersion
+		);
 		infoData.targetSdkVersion = this.getTargetSdk(infoData.compileSdkVersion);
 		infoData.generateTypings = this.shouldGenerateTypings();
 
-		this.$logger.trace("Installed Android Targets are: ", infoData.installedTargets);
-		this.$logger.trace("Selected buildToolsVersion is:", infoData.buildToolsVersion);
+		this.$logger.trace(
+			"Installed Android Targets are: ",
+			infoData.installedTargets
+		);
+		this.$logger.trace(
+			"Selected buildToolsVersion is:",
+			infoData.buildToolsVersion
+		);
 
 		return infoData;
 	}
@@ -33,7 +51,12 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 		const showWarningsAsErrors = options && options.showWarningsAsErrors;
 		const isAndroidHomeValid = this.validateAndroidHomeEnvVariable(options);
 
-		detectedErrors = androidToolsInfo.validateInfo({projectDir: options.projectDir}).map(warning => this.printMessage(warning.warning, showWarningsAsErrors)).length > 0;
+		detectedErrors =
+			androidToolsInfo
+				.validateInfo({ projectDir: options.projectDir })
+				.map((warning) =>
+					this.printMessage(warning.warning, showWarningsAsErrors)
+				).length > 0;
 
 		if (options && options.validateTargetSdk) {
 			detectedErrors = this.validateTargetSdk(options);
@@ -45,22 +68,44 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 	public validateTargetSdk(options: IAndroidToolsInfoOptions): boolean {
 		let detectedErrors = false;
 
-		const toolsInfoData = this.getToolsInfo({ projectDir: options.projectDir});
+		const toolsInfoData = this.getToolsInfo({ projectDir: options.projectDir });
 		const targetSdk = toolsInfoData.targetSdkVersion;
 
-		detectedErrors = androidToolsInfo.validateMinSupportedTargetSdk({targetSdk, projectDir: options.projectDir}).map(warning => this.printMessage(warning.warning, options.showWarningsAsErrors)).length > 0;
+		detectedErrors =
+			androidToolsInfo
+				.validateMinSupportedTargetSdk({
+					targetSdk,
+					projectDir: options.projectDir,
+				})
+				.map((warning) =>
+					this.printMessage(warning.warning, options.showWarningsAsErrors)
+				).length > 0;
 
 		if (!detectedErrors) {
-			androidToolsInfo.validataMaxSupportedTargetSdk({targetSdk, projectDir: options.projectDir}).map(warning => this.$logger.warn(warning.warning));
+			androidToolsInfo
+				.validataMaxSupportedTargetSdk({
+					targetSdk,
+					projectDir: options.projectDir,
+				})
+				.map((warning) => this.$logger.warn(warning.warning));
 		}
 
 		return detectedErrors;
 	}
 
-	public validateJavacVersion(installedJavacVersion: string, options?: IAndroidToolsInfoOptions): boolean {
+	public validateJavacVersion(
+		installedJavacVersion: string,
+		options?: IAndroidToolsInfoOptions
+	): boolean {
 		const showWarningsAsErrors = options && options.showWarningsAsErrors;
 
-		return androidToolsInfo.validateJavacVersion(installedJavacVersion).map(warning => this.printMessage(warning.warning, showWarningsAsErrors)).length > 0;
+		return (
+			androidToolsInfo
+				.validateJavacVersion(installedJavacVersion)
+				.map((warning) =>
+					this.printMessage(warning.warning, showWarningsAsErrors)
+				).length > 0
+		);
 	}
 
 	public async getPathToAdbFromAndroidHome(): Promise<string> {
@@ -69,17 +114,31 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 		} catch (err) {
 			// adb does not exist, so ANDROID_HOME is not set correctly
 			// try getting default adb path (included in CLI package)
-			this.$logger.trace(`Error while executing '${path.join(androidToolsInfo.androidHome, "platform-tools", "adb")} help'. Error is: ${err.message}`);
+			this.$logger.trace(
+				`Error while executing '${path.join(
+					androidToolsInfo.androidHome,
+					"platform-tools",
+					"adb"
+				)} help'. Error is: ${err.message}`
+			);
 		}
 
 		return null;
 	}
 
 	@cache()
-	public validateAndroidHomeEnvVariable(options?: IAndroidToolsInfoOptions): boolean {
+	public validateAndroidHomeEnvVariable(
+		options?: IAndroidToolsInfoOptions
+	): boolean {
 		const showWarningsAsErrors = options && options.showWarningsAsErrors;
 
-		return androidToolsInfo.validateAndroidHomeEnvVariable().map(warning => this.printMessage(warning.warning, showWarningsAsErrors)).length > 0;
+		return (
+			androidToolsInfo
+				.validateAndroidHomeEnvVariable()
+				.map((warning) =>
+					this.printMessage(warning.warning, showWarningsAsErrors)
+				).length > 0
+		);
 	}
 
 	private shouldGenerateTypings(): boolean {
@@ -102,13 +161,18 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 		}
 	}
 
-	private getCompileSdkVersion(installedTargets: string[], latestCompileSdk: number): number {
+	private getCompileSdkVersion(
+		installedTargets: string[],
+		latestCompileSdk: number
+	): number {
 		const userSpecifiedCompileSdk = this.$options.compileSdk;
 
 		if (userSpecifiedCompileSdk) {
 			const androidCompileSdk = `${androidToolsInfo.ANDROID_TARGET_PREFIX}-${userSpecifiedCompileSdk}`;
 			if (!_.includes(installedTargets, androidCompileSdk)) {
-					this.$errors.fail(`You have specified '${userSpecifiedCompileSdk}' for compile sdk, but it is not installed on your system.`);
+				this.$errors.fail(
+					`You have specified '${userSpecifiedCompileSdk}' for compile sdk, but it is not installed on your system.`
+				);
 			}
 
 			return userSpecifiedCompileSdk;
@@ -119,7 +183,9 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 
 	// TODO check if still needed
 	private getTargetSdk(compileSdk: number): number {
-		const targetSdk = this.$options.sdk ? parseInt(this.$options.sdk) : compileSdk;
+		const targetSdk = this.$options.sdk
+			? parseInt(this.$options.sdk)
+			: compileSdk;
 		this.$logger.trace(`Selected targetSdk is: ${targetSdk}`);
 		return targetSdk;
 	}

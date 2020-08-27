@@ -15,10 +15,10 @@ const projectDir = "projectDir",
 function createTestInjector(): IInjector {
 	const testInjector = new Yok();
 	testInjector.register("mobileHelper", {
-		platformNames: ["Android", "iOS"]
+		platformNames: ["Android", "iOS"],
 	});
 
-	testInjector.register('projectData', stubs.ProjectDataStub);
+	testInjector.register("projectData", stubs.ProjectDataStub);
 
 	testInjector.register("platformsDataService", {
 		getPlatformData: (platform: string) => {
@@ -26,8 +26,9 @@ function createTestInjector(): IInjector {
 				appDestinationDirectoryPath: appDestinationDirectoryPath,
 				normalizedPlatformName: platform.toLowerCase(),
 				platformProjectService: {
-					getAppResourcesDestinationDirectoryPath: () => appResourcesDestinationDirectoryPath
-				}
+					getAppResourcesDestinationDirectoryPath: () =>
+						appResourcesDestinationDirectoryPath,
+				},
 			};
 		},
 	});
@@ -63,33 +64,75 @@ describe("project-files-provider", () => {
 
 	describe("mapFilePath", () => {
 		it("returns file path from prepared project when path from app dir is passed", () => {
-			const mappedFilePath = projectFilesProvider.mapFilePath(path.join(appSourceDir, "test.js"), "android", projectData, {});
-			assert.deepStrictEqual(mappedFilePath, path.join(appDestinationDirectoryPath, "app", "test.js"));
+			const mappedFilePath = projectFilesProvider.mapFilePath(
+				path.join(appSourceDir, "test.js"),
+				"android",
+				projectData,
+				{}
+			);
+			assert.deepStrictEqual(
+				mappedFilePath,
+				path.join(appDestinationDirectoryPath, "app", "test.js")
+			);
 		});
 
 		it("returns file path from prepared project when path from app/App_Resources/platform dir is passed", () => {
-			const mappedFilePath = projectFilesProvider.mapFilePath(path.join(appSourceDir, "App_Resources", "android", "test.js"), "android", projectData, {});
-			assert.deepStrictEqual(mappedFilePath, path.join(appResourcesDestinationDirectoryPath, "test.js"));
+			const mappedFilePath = projectFilesProvider.mapFilePath(
+				path.join(appSourceDir, "App_Resources", "android", "test.js"),
+				"android",
+				projectData,
+				{}
+			);
+			assert.deepStrictEqual(
+				mappedFilePath,
+				path.join(appResourcesDestinationDirectoryPath, "test.js")
+			);
 		});
 
 		it("returns null when path from app/App_Resources/android dir is passed and iOS platform is specified", () => {
-			const mappedFilePath = projectFilesProvider.mapFilePath(path.join(appSourceDir, "App_Resources", "android", "test.js"), "iOS", projectData, {});
+			const mappedFilePath = projectFilesProvider.mapFilePath(
+				path.join(appSourceDir, "App_Resources", "android", "test.js"),
+				"iOS",
+				projectData,
+				{}
+			);
 			assert.deepStrictEqual(mappedFilePath, null);
 		});
 
 		it("returns null when path from app/App_Resources/ dir (not platform specific) is passed", () => {
-			const mappedFilePath = projectFilesProvider.mapFilePath(path.join(appSourceDir, "App_Resources", "test.js"), "android", projectData, {});
+			const mappedFilePath = projectFilesProvider.mapFilePath(
+				path.join(appSourceDir, "App_Resources", "test.js"),
+				"android",
+				projectData,
+				{}
+			);
 			assert.deepStrictEqual(mappedFilePath, null);
 		});
 
 		it("returns file path from prepared project when path from app dir is passed and it contains platform in its name", () => {
-			const mappedFilePath = projectFilesProvider.mapFilePath(path.join(appSourceDir, "test.android.js"), "android", projectData, {});
-			assert.deepStrictEqual(mappedFilePath, path.join(appDestinationDirectoryPath, "app", "test.js"));
+			const mappedFilePath = projectFilesProvider.mapFilePath(
+				path.join(appSourceDir, "test.android.js"),
+				"android",
+				projectData,
+				{}
+			);
+			assert.deepStrictEqual(
+				mappedFilePath,
+				path.join(appDestinationDirectoryPath, "app", "test.js")
+			);
 		});
 
 		it("returns file path from prepared project when path from app dir is passed and it contains configuration in its name", () => {
-			const mappedFilePath = projectFilesProvider.mapFilePath(path.join(appSourceDir, "test.debug.js"), "android", projectData, {});
-			assert.deepStrictEqual(mappedFilePath, path.join(appDestinationDirectoryPath, "app", "test.js"));
+			const mappedFilePath = projectFilesProvider.mapFilePath(
+				path.join(appSourceDir, "test.debug.js"),
+				"android",
+				projectData,
+				{}
+			);
+			assert.deepStrictEqual(
+				mappedFilePath,
+				path.join(appDestinationDirectoryPath, "app", "test.js")
+			);
 		});
 	});
 });

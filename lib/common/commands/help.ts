@@ -1,4 +1,4 @@
-import * as _ from 'lodash';
+import * as _ from "lodash";
 import { IOptions } from "../../declarations";
 import { IInjector } from "../definitions/yok";
 import { injector } from "../yok";
@@ -6,9 +6,11 @@ import { ICommand, ICommandParameter } from "../definitions/commands";
 import { IHelpService } from "../declarations";
 
 export class HelpCommand implements ICommand {
-	constructor(private $injector: IInjector,
+	constructor(
+		private $injector: IInjector,
 		private $helpService: IHelpService,
-		private $options: IOptions) { }
+		private $options: IOptions
+	) {}
 
 	public enableHooks = false;
 	public async canExecute(args: string[]): Promise<boolean> {
@@ -20,7 +22,10 @@ export class HelpCommand implements ICommand {
 	public async execute(args: string[]): Promise<void> {
 		let commandName = (args[0] || "").toLowerCase();
 		let commandArguments = _.tail(args);
-		const hierarchicalCommand = this.$injector.buildHierarchicalCommand(args[0], commandArguments);
+		const hierarchicalCommand = this.$injector.buildHierarchicalCommand(
+			args[0],
+			commandArguments
+		);
 		if (hierarchicalCommand) {
 			commandName = hierarchicalCommand.commandName;
 			commandArguments = hierarchicalCommand.remainingArguments;
@@ -28,7 +33,7 @@ export class HelpCommand implements ICommand {
 
 		const commandData: ICommandData = {
 			commandName,
-			commandArguments
+			commandArguments,
 		};
 
 		if (this.$options.help) {

@@ -17,7 +17,7 @@ import * as path from "path";
 import { FileSystem } from "../../../file-system";
 import { IProjectData } from "../../../../definitions/project";
 import { IInjector } from "../../../definitions/yok";
-import * as _ from 'lodash';
+import * as _ from "lodash";
 import { IFileSystem } from "../../../declarations";
 
 const deviceIdentifier = "deviceIdentifier";
@@ -42,31 +42,38 @@ const createTestInjector = (): IInjector => {
 				},
 				projectIdentifiers: {
 					android: "org.nativescript.appTestLogs",
-					ios: "org.nativescript.appTestLogs"
+					ios: "org.nativescript.appTestLogs",
 				},
-				projectDir: "projectDir"
+				projectDir: "projectDir",
 			};
 		},
 		getRuntimePackage: (projectDir: string, platformName: string): any => {
 			return {
-				version: runtimeVersion
+				version: runtimeVersion,
 			};
-		}
+		},
 	});
 	testInjector.register("deviceLogProvider", DeviceLogProvider);
 
 	testInjector.register("platformsDataService", {
 		getPlatformData: (pl: string) => {
 			return {
-				appDestinationDirectoryPath: path.join(__dirname, "..", "..", "resources", "device-log-provider-integration-tests", pl.toLowerCase()),
-				frameworkPackageName: `tns-${platform.toLowerCase()}`
+				appDestinationDirectoryPath: path.join(
+					__dirname,
+					"..",
+					"..",
+					"resources",
+					"device-log-provider-integration-tests",
+					pl.toLowerCase()
+				),
+				frameworkPackageName: `tns-${platform.toLowerCase()}`,
 			};
-		}
+		},
 	});
 
 	const logger = testInjector.resolve<CommonLoggerStub>("logger");
 	logger.info = (...args: any[]): void => {
-		args = args.filter(arg => Object.keys(arg).indexOf("skipNewLine") === -1);
+		args = args.filter((arg) => Object.keys(arg).indexOf("skipNewLine") === -1);
 		logger.output += util.format.apply(null, args.filter(_.isString));
 	};
 	return testInjector;
@@ -88,15 +95,26 @@ describe("deviceLogProvider", () => {
 		testInjector = createTestInjector();
 		const fs = testInjector.resolve<IFileSystem>("fs");
 		const logSourceMapService = testInjector.resolve("logSourceMapService");
-		const originalFilesLocation = path.join(__dirname, "..", "..", "resources", "device-log-provider-integration-tests");
+		const originalFilesLocation = path.join(
+			__dirname,
+			"..",
+			"..",
+			"resources",
+			"device-log-provider-integration-tests"
+		);
 		const files = fs.enumerateFilesInDirectorySync(originalFilesLocation);
 		for (const file of files) {
 			await logSourceMapService.setSourceMapConsumerForFile(file);
 		}
 
 		logger = testInjector.resolve<CommonLoggerStub>("logger");
-		deviceLogProvider = testInjector.resolve<Mobile.IDeviceLogProvider>("deviceLogProvider");
-		deviceLogProvider.setProjectDirForDevice("deviceIdentifier", "dir_with_runtime_6.1.0");
+		deviceLogProvider = testInjector.resolve<Mobile.IDeviceLogProvider>(
+			"deviceLogProvider"
+		);
+		deviceLogProvider.setProjectDirForDevice(
+			"deviceIdentifier",
+			"dir_with_runtime_6.1.0"
+		);
 	});
 
 	beforeEach(() => {
@@ -121,13 +139,21 @@ describe("deviceLogProvider", () => {
 			describe("runtime version is below 6.1.0", () => {
 				before(() => {
 					runtimeVersion = "6.0.0";
-					deviceLogProvider.setProjectDirForDevice("deviceIdentifier", "dir_with_runtime_6.0.0");
+					deviceLogProvider.setProjectDirForDevice(
+						"deviceIdentifier",
+						"dir_with_runtime_6.0.0"
+					);
 				});
 
 				describe("SDK 28", () => {
 					it("console.log", () => {
-						logDataForAndroid("08-22 15:31:53.189 25038 25038 I JS      : HMR: Hot Module Replacement Enabled. Waiting for signal.");
-						assertData(logger.output, "JS: HMR: Hot Module Replacement Enabled. Waiting for signal.\n");
+						logDataForAndroid(
+							"08-22 15:31:53.189 25038 25038 I JS      : HMR: Hot Module Replacement Enabled. Waiting for signal."
+						);
+						assertData(
+							logger.output,
+							"JS: HMR: Hot Module Replacement Enabled. Waiting for signal.\n"
+						);
 					});
 
 					it("console.dir", () => {
@@ -144,7 +170,9 @@ describe("deviceLogProvider", () => {
 08-22 15:32:03.145 25038 25038 I JS      :   "level1_0": "value3"
 08-22 15:32:03.145 25038 25038 I JS      : }
 08-22 15:32:03.145 25038 25038 I JS      : ==== object dump end ====`);
-						assertData(logger.output, `JS: ==== object dump start ====
+						assertData(
+							logger.output,
+							`JS: ==== object dump start ====
 JS: level0_0: {
 JS:   "level1_0": {
 JS:     "level2": "value"
@@ -156,7 +184,8 @@ JS: }
 JS: level0_1: {
 JS:   "level1_0": "value3"
 JS: }
-JS: ==== object dump end ====\n`);
+JS: ==== object dump end ====\n`
+						);
 					});
 
 					it("multiline console.log statement", () => {
@@ -164,10 +193,13 @@ JS: ==== object dump end ====\n`);
 08-22 15:32:03.145 25038 25038 I JS      :         message
 08-22 15:32:03.145 25038 25038 I JS      :         from
 08-22 15:32:03.145 25038 25038 I JS      :         console.log`);
-						assertData(logger.output, `JS: multiline
+						assertData(
+							logger.output,
+							`JS: multiline
 JS:         message
 JS:         from
-JS:         console.log\n`);
+JS:         console.log\n`
+						);
 					});
 
 					it("console.trace", async () => {
@@ -176,20 +208,26 @@ JS:         console.log\n`);
 08-22 15:32:03.145 25038 25038 E JS      : at push.../node_modules/tns-core-modules/data/observable/observable.js.Observable.notify (file:///data/data/org.nativescript.appTestLogs/files/app/vendor.js:3704:32)
 08-22 15:32:03.145 25038 25038 E JS      : at push.../node_modules/tns-core-modules/data/observable/observable.js.Observable._emit (file:///data/data/org.nativescript.appTestLogs/files/app/vendor.js:3724:18)
 08-22 15:32:03.145 25038 25038 E JS      : at ClickListenerImpl.onClick (file:///data/data/org.nativescript.appTestLogs/files/app/vendor.js:14608:23)`);
-						assertData(logger.output, `JS: Trace: console.trace onTap
+						assertData(
+							logger.output,
+							`JS: Trace: console.trace onTap
 JS: at viewModel.onTap file: app/main-view-model.js:39:0
 JS: at push.../node_modules/tns-core-modules/data/observable/observable.js.Observable.notify file: node_modules/tns-core-modules/data/observable/observable.js:107:0
 JS: at push.../node_modules/tns-core-modules/data/observable/observable.js.Observable._emit file: node_modules/tns-core-modules/data/observable/observable.js:127:0
-JS: at ClickListenerImpl.onClick file: node_modules/tns-core-modules/ui/button/button.js:29:0\n`);
+JS: at ClickListenerImpl.onClick file: node_modules/tns-core-modules/ui/button/button.js:29:0\n`
+						);
 					});
 
 					it("console.time(timeEnd) statement", () => {
-						logDataForAndroid("08-22 15:32:03.145 25038 25038 I JS      : console.time: 9603.00ms");
+						logDataForAndroid(
+							"08-22 15:32:03.145 25038 25038 I JS      : console.time: 9603.00ms"
+						);
 						assertData(logger.output, "JS: console.time: 9603.00ms\n");
 					});
 
 					it("when an error is thrown, correct callstack is printed", async () => {
-						logDataForAndroid(`08-22 15:32:03.171 25038 25038 D AndroidRuntime: Shutting down VM
+						logDataForAndroid(
+							`08-22 15:32:03.171 25038 25038 D AndroidRuntime: Shutting down VM
 08-22 15:32:03.184 25038 25038 E AndroidRuntime: FATAL EXCEPTION: main
 08-22 15:32:03.184 25038 25038 E AndroidRuntime: Process: org.nativescript.appTestLogs, PID: 25038
 08-22 15:32:03.184 25038 25038 E AndroidRuntime: com.tns.NativeScriptException: Calling js method onClick failed
@@ -215,7 +253,8 @@ JS: at ClickListenerImpl.onClick file: node_modules/tns-core-modules/ui/button/b
 08-22 15:32:03.210 25038 25038 W System.err: An uncaught Exception occurred on "main" thread.
 08-22 15:32:03.210 25038 25038 W System.err: Calling js method onClick failed
 08-22 15:32:03.210 25038 25038 W System.err: Error: Error in onTap
-08-22 15:32:03.210 25038 25038 W System.err: ` + `
+08-22 15:32:03.210 25038 25038 W System.err: ` +
+								`
 08-22 15:32:03.210 25038 25038 W System.err: StackTrace:
 08-22 15:32:03.210 25038 25038 W System.err: 	Frame: function:'viewModel.onTap', file:'file:///data/data/org.nativescript.appTestLogs/files/app/bundle.js', line: 301, column: 15
 08-22 15:32:03.210 25038 25038 W System.err: 	Frame: function:'push.../node_modules/tns-core-modules/data/observable/observable.js.Observable.notify', file:'file:///data/data/org.nativescript.appTestLogs/files/app/vendor.js', line: 3704, column: 32
@@ -238,12 +277,16 @@ JS: at ClickListenerImpl.onClick file: node_modules/tns-core-modules/ui/button/b
 08-22 15:32:03.211 25038 25038 W System.err: 	at android.app.ActivityThread.main(ActivityThread.java:6669)
 08-22 15:32:03.211 25038 25038 W System.err: 	at java.lang.reflect.Method.invoke(Native Method)
 08-22 15:32:03.211 25038 25038 W System.err: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:493)
-08-22 15:32:03.211 25038 25038 W System.err: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:858)`);
+08-22 15:32:03.211 25038 25038 W System.err: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:858)`
+						);
 
-						assertData(logger.output, `System.err: An uncaught Exception occurred on "main" thread.
+						assertData(
+							logger.output,
+							`System.err: An uncaught Exception occurred on "main" thread.
 System.err: Calling js method onClick failed
 System.err: Error: Error in onTap
-System.err: ` + `
+System.err: ` +
+								`
 System.err: StackTrace:
 System.err: 	Frame: function:'viewModel.onTap', file:'file: app/main-view-model.js:43:0
 System.err: 	Frame: function:'push.../node_modules/tns-core-modules/data/observable/observable.js.Observable.notify', file:'file: node_modules/tns-core-modules/data/observable/observable.js:107:0
@@ -266,7 +309,8 @@ System.err: 	at android.os.Looper.loop(Looper.java:193)
 System.err: 	at android.app.ActivityThread.main(ActivityThread.java:6669)
 System.err: 	at java.lang.reflect.Method.invoke(Native Method)
 System.err: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:493)
-System.err: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:858)\n`);
+System.err: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:858)\n`
+						);
 					});
 				});
 			});
@@ -274,13 +318,21 @@ System.err: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:858)\n`)
 			describe("runtime version is 6.1.0 or later", () => {
 				before(() => {
 					runtimeVersion = "6.1.0";
-					deviceLogProvider.setProjectDirForDevice("deviceIdentifier", "dir_with_runtime_6.1.0");
+					deviceLogProvider.setProjectDirForDevice(
+						"deviceIdentifier",
+						"dir_with_runtime_6.1.0"
+					);
 				});
 
 				describe("SDK 28", () => {
 					it("console.log", () => {
-						logDataForAndroid("08-23 16:15:55.254 25038 25038 I JS      : HMR: Hot Module Replacement Enabled. Waiting for signal.");
-						assertData(logger.output, "JS: HMR: Hot Module Replacement Enabled. Waiting for signal.\n");
+						logDataForAndroid(
+							"08-23 16:15:55.254 25038 25038 I JS      : HMR: Hot Module Replacement Enabled. Waiting for signal."
+						);
+						assertData(
+							logger.output,
+							"JS: HMR: Hot Module Replacement Enabled. Waiting for signal.\n"
+						);
 					});
 
 					it("console.dir", () => {
@@ -297,7 +349,9 @@ System.err: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:858)\n`)
 08-23 16:16:06.570 25038 25038 I JS      :   "level1_0": "value3"
 08-23 16:16:06.570 25038 25038 I JS      : }
 08-23 16:16:06.570 25038 25038 I JS      : ==== object dump end ====`);
-						assertData(logger.output, `JS: ==== object dump start ====
+						assertData(
+							logger.output,
+							`JS: ==== object dump start ====
 JS: level0_0: {
 JS:   "level1_0": {
 JS:     "level2": "value"
@@ -309,7 +363,8 @@ JS: }
 JS: level0_1: {
 JS:   "level1_0": "value3"
 JS: }
-JS: ==== object dump end ====\n`);
+JS: ==== object dump end ====\n`
+						);
 					});
 
 					it("multiline console.log statement", () => {
@@ -317,10 +372,13 @@ JS: ==== object dump end ====\n`);
 08-23 16:16:06.570 25038 25038 I JS      :         message
 08-23 16:16:06.570 25038 25038 I JS      :         from
 08-23 16:16:06.570 25038 25038 I JS      :         console.log`);
-						assertData(logger.output, `JS: multiline
+						assertData(
+							logger.output,
+							`JS: multiline
 JS:         message
 JS:         from
-JS:         console.log\n`);
+JS:         console.log\n`
+						);
 					});
 
 					it("console.trace", async () => {
@@ -329,20 +387,26 @@ JS:         console.log\n`);
 08-23 16:16:06.571 25038 25038 E JS      : at push.../node_modules/tns-core-modules/data/observable/observable.js.Observable.notify (file:///data/data/org.nativescript.appTestLogs/files/app/vendor.js:3704:32)
 08-23 16:16:06.571 25038 25038 E JS      : at push.../node_modules/tns-core-modules/data/observable/observable.js.Observable._emit (file:///data/data/org.nativescript.appTestLogs/files/app/vendor.js:3724:18)
 08-23 16:16:06.571 25038 25038 E JS      : at ClickListenerImpl.onClick (file:///data/data/org.nativescript.appTestLogs/files/app/vendor.js:14608:23)`);
-						assertData(logger.output, `JS: Trace: console.trace onTap
+						assertData(
+							logger.output,
+							`JS: Trace: console.trace onTap
 JS: at viewModel.onTap (file: app/main-view-model.js:39:0)
 JS: at push.../node_modules/tns-core-modules/data/observable/observable.js.Observable.notify (file: node_modules/tns-core-modules/data/observable/observable.js:107:0)
 JS: at push.../node_modules/tns-core-modules/data/observable/observable.js.Observable._emit (file: node_modules/tns-core-modules/data/observable/observable.js:127:0)
-JS: at ClickListenerImpl.onClick (file: node_modules/tns-core-modules/ui/button/button.js:29:0)\n`);
+JS: at ClickListenerImpl.onClick (file: node_modules/tns-core-modules/ui/button/button.js:29:0)\n`
+						);
 					});
 
 					it("console.time(timeEnd) statement", () => {
-						logDataForAndroid("08-23 16:16:06.571 25038 25038 I JS      : console.time: 9510.00ms");
+						logDataForAndroid(
+							"08-23 16:16:06.571 25038 25038 I JS      : console.time: 9510.00ms"
+						);
 						assertData(logger.output, "JS: console.time: 9510.00ms\n");
 					});
 
 					it("when an error is thrown, correct callstack is printed", async () => {
-						logDataForAndroid(`08-23 16:16:06.693 25038 25038 D AndroidRuntime: Shutting down VM
+						logDataForAndroid(
+							`08-23 16:16:06.693 25038 25038 D AndroidRuntime: Shutting down VM
 08-23 16:16:06.695 25038 25038 E AndroidRuntime: FATAL EXCEPTION: main
 08-23 16:16:06.695 25038 25038 E AndroidRuntime: Process: org.nativescript.appTestLogs, PID: 25038
 08-23 16:16:06.695 25038 25038 E AndroidRuntime: com.tns.NativeScriptException: Calling js method onClick failed
@@ -368,7 +432,8 @@ JS: at ClickListenerImpl.onClick (file: node_modules/tns-core-modules/ui/button/
 08-23 16:16:06.798 25038 25038 W System.err: An uncaught Exception occurred on "main" thread.
 08-23 16:16:06.798 25038 25038 W System.err: Calling js method onClick failed
 08-23 16:16:06.798 25038 25038 W System.err: Error: Error in onTap
-08-23 16:16:06.798 25038 25038 W System.err: ` + `
+08-23 16:16:06.798 25038 25038 W System.err: ` +
+								`
 08-23 16:16:06.798 25038 25038 W System.err: StackTrace:
 08-23 16:16:06.798 25038 25038 W System.err: 	viewModel.onTap(file:///data/data/org.nativescript.appTestLogs/files/app/bundle.js:301:15)
 08-23 16:16:06.798 25038 25038 W System.err: 	at push.../node_modules/tns-core-modules/data/observable/observable.js.Observable.notify(file:///data/data/org.nativescript.appTestLogs/files/app/vendor.js:3704:32)
@@ -391,12 +456,16 @@ JS: at ClickListenerImpl.onClick (file: node_modules/tns-core-modules/ui/button/
 08-23 16:16:06.799 25038 25038 W System.err: 	at android.app.ActivityThread.main(ActivityThread.java:6669)
 08-23 16:16:06.799 25038 25038 W System.err: 	at java.lang.reflect.Method.invoke(Native Method)
 08-23 16:16:06.799 25038 25038 W System.err: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:493)
-08-23 16:16:06.799 25038 25038 W System.err: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:858)`);
+08-23 16:16:06.799 25038 25038 W System.err: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:858)`
+						);
 
-						assertData(logger.output, `System.err: An uncaught Exception occurred on "main" thread.
+						assertData(
+							logger.output,
+							`System.err: An uncaught Exception occurred on "main" thread.
 System.err: Calling js method onClick failed
 System.err: Error: Error in onTap
-System.err: ` + `
+System.err: ` +
+								`
 System.err: StackTrace:
 System.err: 	viewModel.onTap(file: app/main-view-model.js:43:0)
 System.err: 	at push.../node_modules/tns-core-modules/data/observable/observable.js.Observable.notify(file: node_modules/tns-core-modules/data/observable/observable.js:107:0)
@@ -419,7 +488,8 @@ System.err: 	at android.os.Looper.loop(Looper.java:193)
 System.err: 	at android.app.ActivityThread.main(ActivityThread.java:6669)
 System.err: 	at java.lang.reflect.Method.invoke(Native Method)
 System.err: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:493)
-System.err: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:858)\n`);
+System.err: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:858)\n`
+						);
 					});
 				});
 			});
@@ -428,25 +498,36 @@ System.err: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:858)\n`)
 		describe("iOS", () => {
 			before(() => {
 				platform = "ios";
-				deviceLogProvider.setProjectNameForDevice(deviceIdentifier, "appTestLogs");
+				deviceLogProvider.setProjectNameForDevice(
+					deviceIdentifier,
+					"appTestLogs"
+				);
 			});
 
 			const logDataForiOS = (data: string): void => {
-				deviceLogProvider.logData(data + '\n', platform, deviceIdentifier);
+				deviceLogProvider.logData(data + "\n", platform, deviceIdentifier);
 			};
 
 			describe("runtime version is below 6.1.0", () => {
 				before(() => {
 					runtimeVersion = "6.0.0";
-					deviceLogProvider.setProjectDirForDevice("deviceIdentifier", "dir_with_runtime_6.0.0");
+					deviceLogProvider.setProjectDirForDevice(
+						"deviceIdentifier",
+						"dir_with_runtime_6.0.0"
+					);
 				});
 
 				describe("iOS 9", () => {
 					describe("simulator output", () => {
 						it("console.log", () => {
-							logDataForiOS("Aug 23 14:38:54 mcsofvladimirov appTestLogs[8455]: CONSOLE INFO file:///app/vendor.js:168:36: HMR: Hot Module Replacement Enabled. Waiting for signal.");
+							logDataForiOS(
+								"Aug 23 14:38:54 mcsofvladimirov appTestLogs[8455]: CONSOLE INFO file:///app/vendor.js:168:36: HMR: Hot Module Replacement Enabled. Waiting for signal."
+							);
 
-							assertData(logger.output, "CONSOLE INFO file: node_modules/nativescript-dev-webpack/hot.js:3:0 HMR: Hot Module Replacement Enabled. Waiting for signal.\n");
+							assertData(
+								logger.output,
+								"CONSOLE INFO file: node_modules/nativescript-dev-webpack/hot.js:3:0 HMR: Hot Module Replacement Enabled. Waiting for signal.\n"
+							);
 						});
 
 						it("console.dir", () => {
@@ -464,7 +545,9 @@ System.err: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:858)\n`)
 	  "level1_0": "value3"
 	}
 	==== object dump end ====`);
-							assertData(logger.output, `CONSOLE LOG file: app/main-view-model.js:20:0
+							assertData(
+								logger.output,
+								`CONSOLE LOG file: app/main-view-model.js:20:0
 ==== object dump start ====
 level0_0: {
 "level1_0": {
@@ -477,7 +560,8 @@ level0_0: {
 level0_1: {
 "level1_0": "value3"
 }
-==== object dump end ====\n`);
+==== object dump end ====\n`
+							);
 						});
 
 						it("multiline console.log statement", () => {
@@ -485,10 +569,13 @@ level0_1: {
 	        message
 	        from
 	        console.log`);
-							assertData(logger.output, `CONSOLE LOG file: app/main-view-model.js:34:0 multiline
+							assertData(
+								logger.output,
+								`CONSOLE LOG file: app/main-view-model.js:34:0 multiline
 message
 from
-console.log\n`);
+console.log\n`
+							);
 						});
 
 						it("console.trace", async () => {
@@ -509,7 +596,9 @@ console.log\n`);
 	14  evaluate@[native code]
 	15  moduleEvaluation@:1:11
 	16  promiseReactionJob@:1:11`);
-							assertData(logger.output, `CONSOLE TRACE file: app/main-view-model.js:39:0 console.trace onTap
+							assertData(
+								logger.output,
+								`CONSOLE TRACE file: app/main-view-model.js:39:0 console.trace onTap
 1   onTap@file: app/main-view-model.js:39:0
 2   notify@file: node_modules/tns-core-modules/data/observable/observable.js:107:0
 3   _emit@file: node_modules/tns-core-modules/data/observable/observable.js:127:0
@@ -525,12 +614,18 @@ console.log\n`);
 13  anonymous@file:///app/bundle.js:2:61
 14  evaluate@[native code]
 15  moduleEvaluation@:1:11
-16  promiseReactionJob@:1:11\n`);
+16  promiseReactionJob@:1:11\n`
+							);
 						});
 
 						it("console.time(timeEnd) statement", () => {
-							logDataForiOS(`file:///app/main-view-model.js:41:0 CONSOLE INFO console.time: 3152.344ms`);
-							assertData(logger.output, "file:///app/main-view-model.js:41:0 CONSOLE INFO console.time: 3152.344ms\n");
+							logDataForiOS(
+								`file:///app/main-view-model.js:41:0 CONSOLE INFO console.time: 3152.344ms`
+							);
+							assertData(
+								logger.output,
+								"file:///app/main-view-model.js:41:0 CONSOLE INFO console.time: 3152.344ms\n"
+							);
 						});
 
 						it("when an error is thrown, correct callstack is printed", async () => {
@@ -616,7 +711,9 @@ Aug 23 14:38:58 mcsofvladimirov appTestLogs[8455]: 1   UIApplicationMain@[native
 	11  moduleEvaluation@:1:11
 	12  promiseReactionJob@:1:11`);
 
-							assertData(logger.output, `***** Fatal JavaScript exception - application has been terminated. *****
+							assertData(
+								logger.output,
+								`***** Fatal JavaScript exception - application has been terminated. *****
 Native stack trace:
 1   0x101a2e91f NativeScript::reportFatalErrorBeforeShutdown(JSC::ExecState*, JSC::Exception*, bool)
 2   0x101a66b60 NativeScript::FFICallback<NativeScript::ObjCMethodCallback>::ffiClosureCallback(ffi_cif*, void*, void**, void*)
@@ -696,7 +793,8 @@ JS Stack:
 9   anonymous@file:///app/bundle.js:2:61
 10  evaluate@[native code]
 11  moduleEvaluation@:1:11
-12  promiseReactionJob@:1:11\n`);
+12  promiseReactionJob@:1:11\n`
+							);
 						});
 					});
 				});
@@ -704,9 +802,14 @@ JS Stack:
 				describe("iOS 12", () => {
 					describe("simulator output", () => {
 						it("console.log", () => {
-							logDataForiOS("2019-08-22 18:21:24.066975+0300  localhost appTestLogs[55619]: (NativeScript) CONSOLE INFO file:///app/vendor.js:168:36: HMR: Hot Module Replacement Enabled. Waiting for signal.");
+							logDataForiOS(
+								"2019-08-22 18:21:24.066975+0300  localhost appTestLogs[55619]: (NativeScript) CONSOLE INFO file:///app/vendor.js:168:36: HMR: Hot Module Replacement Enabled. Waiting for signal."
+							);
 
-							assertData(logger.output, "CONSOLE INFO file: node_modules/nativescript-dev-webpack/hot.js:3:0 HMR: Hot Module Replacement Enabled. Waiting for signal.\n");
+							assertData(
+								logger.output,
+								"CONSOLE INFO file: node_modules/nativescript-dev-webpack/hot.js:3:0 HMR: Hot Module Replacement Enabled. Waiting for signal.\n"
+							);
 						});
 
 						it("console.dir", () => {
@@ -724,7 +827,9 @@ level0_1: {
   "level1_0": "value3"
 }
 ==== object dump end ====`);
-							assertData(logger.output, `CONSOLE LOG file: app/main-view-model.js:20:0
+							assertData(
+								logger.output,
+								`CONSOLE LOG file: app/main-view-model.js:20:0
 ==== object dump start ====
 level0_0: {
 "level1_0": {
@@ -737,7 +842,8 @@ level0_0: {
 level0_1: {
 "level1_0": "value3"
 }
-==== object dump end ====\n`);
+==== object dump end ====\n`
+							);
 						});
 
 						it("multiline console.log statement", () => {
@@ -745,10 +851,13 @@ level0_1: {
         message
         from
         console.log`);
-							assertData(logger.output, `CONSOLE LOG file: app/main-view-model.js:34:0 multiline
+							assertData(
+								logger.output,
+								`CONSOLE LOG file: app/main-view-model.js:34:0 multiline
 message
 from
-console.log\n`);
+console.log\n`
+							);
 						});
 
 						it("console.trace", async () => {
@@ -769,7 +878,9 @@ console.log\n`);
 14  evaluate@[native code]
 15  moduleEvaluation@:1:11
 16  promiseReactionJob@:1:11`);
-							assertData(logger.output, `CONSOLE TRACE file: app/main-view-model.js:39:0 console.trace onTap
+							assertData(
+								logger.output,
+								`CONSOLE TRACE file: app/main-view-model.js:39:0 console.trace onTap
 1   onTap@file: app/main-view-model.js:39:0
 2   notify@file: node_modules/tns-core-modules/data/observable/observable.js:107:0
 3   _emit@file: node_modules/tns-core-modules/data/observable/observable.js:127:0
@@ -785,12 +896,18 @@ console.log\n`);
 13  anonymous@file:///app/bundle.js:2:61
 14  evaluate@[native code]
 15  moduleEvaluation@:1:11
-16  promiseReactionJob@:1:11\n`);
+16  promiseReactionJob@:1:11\n`
+							);
 						});
 
 						it("console.time(timeEnd) statement", () => {
-							logDataForiOS(`2019-08-22 18:21:26.133972+0300  localhost appTestLogs[55619]: (NativeScript) file:///app/bundle.js:291:24: CONSOLE INFO console.time: 1988.737ms`);
-							assertData(logger.output, "file: app/main-view-model.js:41:0 CONSOLE INFO console.time: 1988.737ms\n");
+							logDataForiOS(
+								`2019-08-22 18:21:26.133972+0300  localhost appTestLogs[55619]: (NativeScript) file:///app/bundle.js:291:24: CONSOLE INFO console.time: 1988.737ms`
+							);
+							assertData(
+								logger.output,
+								"file: app/main-view-model.js:41:0 CONSOLE INFO console.time: 1988.737ms\n"
+							);
 						});
 
 						it("when an error is thrown, correct callstack is printed", async () => {
@@ -880,7 +997,9 @@ console.log\n`);
 11  moduleEvaluation@:1:11
 12  promiseReactionJob@:1:11`);
 
-							assertData(logger.output, `***** Fatal JavaScript exception - application has been terminated. *****
+							assertData(
+								logger.output,
+								`***** Fatal JavaScript exception - application has been terminated. *****
 Native stack trace:
 1   0x10c82491f NativeScript::reportFatalErrorBeforeShutdown(JSC::ExecState*, JSC::Exception*, bool)
 2   0x10c85cb60 NativeScript::FFICallback<NativeScript::ObjCMethodCallback>::ffiClosureCallback(ffi_cif*, void*, void**, void*)
@@ -962,7 +1081,8 @@ JS Stack:
 9   anonymous@file:///app/bundle.js:2:61
 10  evaluate@[native code]
 11  moduleEvaluation@:1:11
-12  promiseReactionJob@:1:11\n`);
+12  promiseReactionJob@:1:11\n`
+							);
 						});
 					});
 				});
@@ -972,15 +1092,23 @@ JS Stack:
 				before(() => {
 					runtimeVersion = "6.1.0";
 					// set this, so the caching in logSourceMapService will detect correct runtime
-					deviceLogProvider.setProjectDirForDevice("deviceIdentifier", "dir_with_runtime_6.1.0");
+					deviceLogProvider.setProjectDirForDevice(
+						"deviceIdentifier",
+						"dir_with_runtime_6.1.0"
+					);
 				});
 
 				describe("iOS 9", () => {
 					describe("simulator output", () => {
 						it("console.log", () => {
-							logDataForiOS("Aug 23 18:12:39 mcsofvladimirov appTestLogs[29554]: (NativeScript) CONSOLE INFO file:///app/vendor.js:168:36: HMR: Hot Module Replacement Enabled. Waiting for signal.");
+							logDataForiOS(
+								"Aug 23 18:12:39 mcsofvladimirov appTestLogs[29554]: (NativeScript) CONSOLE INFO file:///app/vendor.js:168:36: HMR: Hot Module Replacement Enabled. Waiting for signal."
+							);
 
-							assertData(logger.output, "CONSOLE INFO file: node_modules/nativescript-dev-webpack/hot.js:3:0: HMR: Hot Module Replacement Enabled. Waiting for signal.\n");
+							assertData(
+								logger.output,
+								"CONSOLE INFO file: node_modules/nativescript-dev-webpack/hot.js:3:0: HMR: Hot Module Replacement Enabled. Waiting for signal.\n"
+							);
 						});
 
 						it("console.dir", () => {
@@ -998,7 +1126,9 @@ JS Stack:
 	  "level1_0": "value3"
 	}
 	==== object dump end ====`);
-							assertData(logger.output, `CONSOLE LOG file: app/main-view-model.js:20:0:
+							assertData(
+								logger.output,
+								`CONSOLE LOG file: app/main-view-model.js:20:0:
 ==== object dump start ====
 level0_0: {
 "level1_0": {
@@ -1011,7 +1141,8 @@ level0_0: {
 level0_1: {
 "level1_0": "value3"
 }
-==== object dump end ====\n`);
+==== object dump end ====\n`
+							);
 						});
 
 						it("multiline console.log statement", () => {
@@ -1019,10 +1150,13 @@ level0_1: {
 	        message
 	        from
 	        console.log`);
-							assertData(logger.output, `CONSOLE LOG file: app/main-view-model.js:34:0: multiline
+							assertData(
+								logger.output,
+								`CONSOLE LOG file: app/main-view-model.js:34:0: multiline
 message
 from
-console.log\n`);
+console.log\n`
+							);
 						});
 
 						it("console.trace", async () => {
@@ -1043,7 +1177,9 @@ console.log\n`);
 	at evaluate([native code])
 	at moduleEvaluation
 	at promiseReactionJob`);
-							assertData(logger.output, `CONSOLE TRACE file: app/main-view-model.js:39:0: console.trace onTap
+							assertData(
+								logger.output,
+								`CONSOLE TRACE file: app/main-view-model.js:39:0: console.trace onTap
 onTap(file: app/main-view-model.js:39:0)
 at notify(file: node_modules/tns-core-modules/data/observable/observable.js:107:0)
 at _emit(file: node_modules/tns-core-modules/data/observable/observable.js:127:0)
@@ -1059,12 +1195,18 @@ at webpackJsonpCallback(file: app/webpack/bootstrap:30:0)
 at anonymous(file:///app/bundle.js:2:61)
 at evaluate([native code])
 at moduleEvaluation
-at promiseReactionJob\n`);
+at promiseReactionJob\n`
+							);
 						});
 
 						it("console.time(timeEnd) statement", () => {
-							logDataForiOS(`Aug 23 18:12:39 mcsofvladimirov appTestLogs[29554]: file:///app/bundle.js:291:24: CONSOLE INFO console.time: 27523.877ms`);
-							assertData(logger.output, "file: app/main-view-model.js:41:0: CONSOLE INFO console.time: 27523.877ms\n");
+							logDataForiOS(
+								`Aug 23 18:12:39 mcsofvladimirov appTestLogs[29554]: file:///app/bundle.js:291:24: CONSOLE INFO console.time: 27523.877ms`
+							);
+							assertData(
+								logger.output,
+								"file: app/main-view-model.js:41:0: CONSOLE INFO console.time: 27523.877ms\n"
+							);
 						});
 
 						it("when an error is thrown, correct callstack is printed", async () => {
@@ -1150,7 +1292,9 @@ Aug 23 18:12:39 mcsofvladimirov appTestLogs[29554]: UIApplicationMain([native co
 	at moduleEvaluation
 	at promiseReactionJob`);
 
-							assertData(logger.output, `***** Fatal JavaScript exception - application has been terminated. *****
+							assertData(
+								logger.output,
+								`***** Fatal JavaScript exception - application has been terminated. *****
 Native stack trace:
 1   0x10464b62a NativeScript::reportFatalErrorBeforeShutdown(JSC::ExecState*, JSC::Exception*, bool)
 2   0x104686028 NativeScript::FFICallback<NativeScript::ObjCMethodCallback>::ffiClosureCallback(ffi_cif*, void*, void**, void*)
@@ -1230,7 +1374,8 @@ at webpackJsonpCallback(file: app/webpack/bootstrap:30:0)
 at anonymous(file:///app/bundle.js:2:61)
 at evaluate([native code])
 at moduleEvaluation
-at promiseReactionJob\n`);
+at promiseReactionJob\n`
+							);
 						});
 					});
 				});
@@ -1238,9 +1383,14 @@ at promiseReactionJob\n`);
 				describe("iOS 12", () => {
 					describe("simulator output", () => {
 						it("console.log", () => {
-							logDataForiOS("2019-08-23 17:08:38.860441+0300  localhost appTestLogs[21053]: (NativeScript) CONSOLE INFO file:///app/vendor.js:168:36: HMR: Hot Module Replacement Enabled. Waiting for signal.");
+							logDataForiOS(
+								"2019-08-23 17:08:38.860441+0300  localhost appTestLogs[21053]: (NativeScript) CONSOLE INFO file:///app/vendor.js:168:36: HMR: Hot Module Replacement Enabled. Waiting for signal."
+							);
 
-							assertData(logger.output, "CONSOLE INFO file: node_modules/nativescript-dev-webpack/hot.js:3:0: HMR: Hot Module Replacement Enabled. Waiting for signal.\n");
+							assertData(
+								logger.output,
+								"CONSOLE INFO file: node_modules/nativescript-dev-webpack/hot.js:3:0: HMR: Hot Module Replacement Enabled. Waiting for signal.\n"
+							);
 						});
 
 						it("console.dir", () => {
@@ -1258,7 +1408,9 @@ level0_1: {
   "level1_0": "value3"
 }
 ==== object dump end ====`);
-							assertData(logger.output, `CONSOLE LOG file: app/main-view-model.js:20:0:
+							assertData(
+								logger.output,
+								`CONSOLE LOG file: app/main-view-model.js:20:0:
 ==== object dump start ====
 level0_0: {
 "level1_0": {
@@ -1271,7 +1423,8 @@ level0_0: {
 level0_1: {
 "level1_0": "value3"
 }
-==== object dump end ====\n`);
+==== object dump end ====\n`
+							);
 						});
 
 						it("multiline console.log statement", () => {
@@ -1279,10 +1432,13 @@ level0_1: {
         message
         from
         console.log`);
-							assertData(logger.output, `CONSOLE LOG file: app/main-view-model.js:34:0: multiline
+							assertData(
+								logger.output,
+								`CONSOLE LOG file: app/main-view-model.js:34:0: multiline
 message
 from
-console.log\n`);
+console.log\n`
+							);
 						});
 
 						it("console.trace", async () => {
@@ -1303,7 +1459,9 @@ at anonymous(file:///app/bundle.js:2:61)
 at evaluate([native code])
 at moduleEvaluation
 at promiseReactionJob`);
-							assertData(logger.output, `CONSOLE TRACE file: app/main-view-model.js:39:0: console.trace onTap
+							assertData(
+								logger.output,
+								`CONSOLE TRACE file: app/main-view-model.js:39:0: console.trace onTap
 onTap(file: app/main-view-model.js:39:0)
 at notify(file: node_modules/tns-core-modules/data/observable/observable.js:107:0)
 at _emit(file: node_modules/tns-core-modules/data/observable/observable.js:127:0)
@@ -1319,12 +1477,18 @@ at webpackJsonpCallback(file: app/webpack/bootstrap:30:0)
 at anonymous(file:///app/bundle.js:2:61)
 at evaluate([native code])
 at moduleEvaluation
-at promiseReactionJob\n`);
+at promiseReactionJob\n`
+							);
 						});
 
 						it("console.time(timeEnd) statement", () => {
-							logDataForiOS(`2019-08-23 17:08:45.219341+0300  localhost appTestLogs[21053]: (NativeScript) file:///app/bundle.js:291:24: CONSOLE INFO console.time: 6285.199ms`);
-							assertData(logger.output, "file: app/main-view-model.js:41:0: CONSOLE INFO console.time: 6285.199ms\n");
+							logDataForiOS(
+								`2019-08-23 17:08:45.219341+0300  localhost appTestLogs[21053]: (NativeScript) file:///app/bundle.js:291:24: CONSOLE INFO console.time: 6285.199ms`
+							);
+							assertData(
+								logger.output,
+								"file: app/main-view-model.js:41:0: CONSOLE INFO console.time: 6285.199ms\n"
+							);
 						});
 
 						it("when an error is thrown, correct callstack is printed", async () => {
@@ -1413,7 +1577,9 @@ at evaluate([native code])
 at moduleEvaluation
 at promiseReactionJob`);
 
-							assertData(logger.output, `***** Fatal JavaScript exception - application has been terminated. *****
+							assertData(
+								logger.output,
+								`***** Fatal JavaScript exception - application has been terminated. *****
 Native stack trace:
 1   0x10b18b62a NativeScript::reportFatalErrorBeforeShutdown(JSC::ExecState*, JSC::Exception*, bool)
 2   0x10b1c6028 NativeScript::FFICallback<NativeScript::ObjCMethodCallback>::ffiClosureCallback(ffi_cif*, void*, void**, void*)
@@ -1495,7 +1661,8 @@ at webpackJsonpCallback(file: app/webpack/bootstrap:30:0)
 at anonymous(file:///app/bundle.js:2:61)
 at evaluate([native code])
 at moduleEvaluation
-at promiseReactionJob\n`);
+at promiseReactionJob\n`
+							);
 						});
 					});
 				});

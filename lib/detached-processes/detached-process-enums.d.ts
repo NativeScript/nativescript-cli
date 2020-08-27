@@ -10,7 +10,7 @@ declare const enum DetachedProcessMessages {
 	/**
 	 * The detached process finished its tasks and will now exit.
 	 */
-	ProcessFinishedTasks = "ProcessFinishedTasks"
+	ProcessFinishedTasks = "ProcessFinishedTasks",
 }
 
 /**
@@ -25,7 +25,7 @@ declare const enum FileLogMessageType {
 	/**
 	 * Error message - used to indicate that some action did not succeed.
 	 */
-	Error = "Error"
+	Error = "Error",
 }
 
 declare const enum CleanupProcessMessage {

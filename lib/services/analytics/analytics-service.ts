@@ -1,15 +1,35 @@
 import { ChildProcess } from "child_process";
 import * as path from "path";
-import * as _ from 'lodash';
+import * as _ from "lodash";
 import { cache } from "../../common/decorators";
-import { isInteractive, toBoolean } from '../../common/helpers';
+import { isInteractive, toBoolean } from "../../common/helpers";
 import { DeviceTypes, AnalyticsClients } from "../../common/constants";
 import { TrackActionNames } from "../../constants";
 import { IOptions } from "../../declarations";
 import { IProjectDataService } from "../../definitions/project";
-import { IAnalyticsService, IDisposable, IDictionary, AnalyticsStatus, IUserSettingsService, IAnalyticsSettingsService, IChildProcess, IProjectHelper, GoogleAnalyticsDataType, IStringDictionary, TrackingTypes } from "../../common/declarations";
-import { IGoogleAnalyticsTrackingInformation, ITrackingInformation, IExceptionsTrackingInformation } from "./analytics";
-import { IGoogleAnalyticsEventData, IGoogleAnalyticsData, IEventActionData } from "../../common/definitions/google-analytics";
+import {
+	IAnalyticsService,
+	IDisposable,
+	IDictionary,
+	AnalyticsStatus,
+	IUserSettingsService,
+	IAnalyticsSettingsService,
+	IChildProcess,
+	IProjectHelper,
+	GoogleAnalyticsDataType,
+	IStringDictionary,
+	TrackingTypes,
+} from "../../common/declarations";
+import {
+	IGoogleAnalyticsTrackingInformation,
+	ITrackingInformation,
+	IExceptionsTrackingInformation,
+} from "./analytics";
+import {
+	IGoogleAnalyticsEventData,
+	IGoogleAnalyticsData,
+	IEventActionData,
+} from "../../common/definitions/google-analytics";
 import { injector } from "../../common/yok";
 
 export class AnalyticsService implements IAnalyticsService, IDisposable {
@@ -18,7 +38,8 @@ export class AnalyticsService implements IAnalyticsService, IDisposable {
 	private shouldDisposeInstance: boolean = true;
 	private analyticsStatuses: IDictionary<AnalyticsStatus> = {};
 
-	constructor(private $logger: ILogger,
+	constructor(
+		private $logger: ILogger,
 		private $options: IOptions,
 		private $staticConfig: Config.IStaticConfig,
 		private $prompter: IPrompter,
@@ -27,8 +48,8 @@ export class AnalyticsService implements IAnalyticsService, IDisposable {
 		private $childProcess: IChildProcess,
 		private $projectDataService: IProjectDataService,
 		private $mobileHelper: Mobile.IMobileHelper,
-		private $projectHelper: IProjectHelper) {
-	}
+		private $projectHelper: IProjectHelper
+	) {}
 
 	public setShouldDispose(shouldDispose: boolean): void {
 		this.shouldDisposeInstance = shouldDispose;
@@ -36,33 +57,60 @@ export class AnalyticsService implements IAnalyticsService, IDisposable {
 
 	public async checkConsent(): Promise<void> {
 		if (await this.$analyticsSettingsService.canDoRequest()) {
-			const initialTrackFeatureUsageStatus = await this.getStatus(this.$staticConfig.TRACK_FEATURE_USAGE_SETTING_NAME);
-			let trackFeatureUsage = initialTrackFeatureUsageStatus === AnalyticsStatus.enabled;
+			const initialTrackFeatureUsageStatus = await this.getStatus(
+				this.$staticConfig.TRACK_FEATURE_USAGE_SETTING_NAME
+			);
+			let trackFeatureUsage =
+				initialTrackFeatureUsageStatus === AnalyticsStatus.enabled;
 
-			if (await this.isNotConfirmed(this.$staticConfig.TRACK_FEATURE_USAGE_SETTING_NAME) && isInteractive()) {
-				this.$logger.info("Do you want to help us improve "
-					+ this.$analyticsSettingsService.getClientName()
-					+ " by automatically sending anonymous usage statistics? We will not use this information to identify or contact you."
-					+ " You can read our official Privacy Policy at");
+			if (
+				(await this.isNotConfirmed(
+					this.$staticConfig.TRACK_FEATURE_USAGE_SETTING_NAME
+				)) &&
+				isInteractive()
+			) {
+				this.$logger.info(
+					"Do you want to help us improve " +
+						this.$analyticsSettingsService.getClientName() +
+						" by automatically sending anonymous usage statistics? We will not use this information to identify or contact you." +
+						" You can read our official Privacy Policy at"
+				);
 
 				const message = this.$analyticsSettingsService.getPrivacyPolicyLink();
 				trackFeatureUsage = await this.$prompter.confirm(message, () => true);
-				await this.setStatus(this.$staticConfig.TRACK_FEATURE_USAGE_SETTING_NAME, trackFeatureUsage);
+				await this.setStatus(
+					this.$staticConfig.TRACK_FEATURE_USAGE_SETTING_NAME,
+					trackFeatureUsage
+				);
 
-				await this.trackAcceptFeatureUsage({ acceptTrackFeatureUsage: trackFeatureUsage });
+				await this.trackAcceptFeatureUsage({
+					acceptTrackFeatureUsage: trackFeatureUsage,
+				});
 			}
 
-			const isErrorReportingUnset = await this.isNotConfirmed(this.$staticConfig.ERROR_REPORT_SETTING_NAME);
-			const isUsageReportingConfirmed = !await this.isNotConfirmed(this.$staticConfig.TRACK_FEATURE_USAGE_SETTING_NAME);
+			const isErrorReportingUnset = await this.isNotConfirmed(
+				this.$staticConfig.ERROR_REPORT_SETTING_NAME
+			);
+			const isUsageReportingConfirmed = !(await this.isNotConfirmed(
+				this.$staticConfig.TRACK_FEATURE_USAGE_SETTING_NAME
+			));
 			if (isErrorReportingUnset && isUsageReportingConfirmed) {
-				await this.setStatus(this.$staticConfig.ERROR_REPORT_SETTING_NAME, trackFeatureUsage);
+				await this.setStatus(
+					this.$staticConfig.ERROR_REPORT_SETTING_NAME,
+					trackFeatureUsage
+				);
 			}
 		}
 	}
 
 	public async setStatus(settingName: string, enabled: boolean): Promise<void> {
-		this.analyticsStatuses[settingName] = enabled ? AnalyticsStatus.enabled : AnalyticsStatus.disabled;
-		await this.$userSettingsService.saveSetting(settingName, enabled.toString());
+		this.analyticsStatuses[settingName] = enabled
+			? AnalyticsStatus.enabled
+			: AnalyticsStatus.disabled;
+		await this.$userSettingsService.saveSetting(
+			settingName,
+			enabled.toString()
+		);
 	}
 
 	public async isEnabled(settingName: string): Promise<boolean> {
@@ -70,7 +118,11 @@ export class AnalyticsService implements IAnalyticsService, IDisposable {
 		return analyticsStatus === AnalyticsStatus.enabled;
 	}
 
-	public getStatusMessage(settingName: string, jsonFormat: boolean, readableSettingName: string): Promise<string> {
+	public getStatusMessage(
+		settingName: string,
+		jsonFormat: boolean,
+		readableSettingName: string
+	): Promise<string> {
 		if (jsonFormat) {
 			return this.getJsonStatusMessage(settingName);
 		}
@@ -78,29 +130,42 @@ export class AnalyticsService implements IAnalyticsService, IDisposable {
 		return this.getHumanReadableStatusMessage(settingName, readableSettingName);
 	}
 
-	public async trackAcceptFeatureUsage(settings: { acceptTrackFeatureUsage: boolean }): Promise<void> {
+	public async trackAcceptFeatureUsage(settings: {
+		acceptTrackFeatureUsage: boolean;
+	}): Promise<void> {
 		const acceptTracking = !!(settings && settings.acceptTrackFeatureUsage);
 		const googleAnalyticsEventData: IGoogleAnalyticsEventData = {
 			googleAnalyticsDataType: GoogleAnalyticsDataType.Event,
 			action: TrackActionNames.AcceptTracking,
-			label: acceptTracking.toString()
+			label: acceptTracking.toString(),
 		};
 
 		await this.forcefullyTrackInGoogleAnalytics(googleAnalyticsEventData);
 	}
 
-	public async trackInGoogleAnalytics(gaSettings: IGoogleAnalyticsData): Promise<void> {
+	public async trackInGoogleAnalytics(
+		gaSettings: IGoogleAnalyticsData
+	): Promise<void> {
 		await this.initAnalyticsStatuses();
 
-		if (!this.$staticConfig.disableAnalytics && this.analyticsStatuses[this.$staticConfig.TRACK_FEATURE_USAGE_SETTING_NAME] === AnalyticsStatus.enabled) {
+		if (
+			!this.$staticConfig.disableAnalytics &&
+			this.analyticsStatuses[
+				this.$staticConfig.TRACK_FEATURE_USAGE_SETTING_NAME
+			] === AnalyticsStatus.enabled
+		) {
 			return this.forcefullyTrackInGoogleAnalytics(gaSettings);
 		}
 	}
 
-	public async trackEventActionInGoogleAnalytics(data: IEventActionData): Promise<void> {
+	public async trackEventActionInGoogleAnalytics(
+		data: IEventActionData
+	): Promise<void> {
 		const device = data.device;
 		const platform = device ? device.deviceInfo.platform : data.platform;
-		const normalizedPlatform = platform ? this.$mobileHelper.normalizePlatformName(platform) : platform;
+		const normalizedPlatform = platform
+			? this.$mobileHelper.normalizePlatformName(platform)
+			: platform;
 		const isForDevice = device ? !device.isEmulator : data.isForDevice;
 		let label: string = "";
 		label = this.addDataToLabel(label, normalizedPlatform);
@@ -108,7 +173,11 @@ export class AnalyticsService implements IAnalyticsService, IDisposable {
 		// In some cases (like in case action is Build and platform is Android), we do not know if the deviceType is emulator or device.
 		// Just exclude the device_type in this case.
 		if (isForDevice !== null && isForDevice !== undefined) {
-			const deviceType = isForDevice ? DeviceTypes.Device : (this.$mobileHelper.isAndroidPlatform(platform) ? DeviceTypes.Emulator : DeviceTypes.Simulator);
+			const deviceType = isForDevice
+				? DeviceTypes.Device
+				: this.$mobileHelper.isAndroidPlatform(platform)
+				? DeviceTypes.Emulator
+				: DeviceTypes.Simulator;
 			label = this.addDataToLabel(label, deviceType);
 		}
 
@@ -128,18 +197,24 @@ export class AnalyticsService implements IAnalyticsService, IDisposable {
 			action: data.action,
 			label,
 			customDimensions,
-			value: data.value
+			value: data.value,
 		};
 
 		await this.trackInGoogleAnalytics(googleAnalyticsEventData);
 	}
 
-	public async trackPreviewAppData(platform: string, projectDir: string): Promise<void> {
+	public async trackPreviewAppData(
+		platform: string,
+		projectDir: string
+	): Promise<void> {
 		const customDimensions: IStringDictionary = {};
 		this.setProjectRelatedCustomDimensions(customDimensions, projectDir);
 
 		let label: string = "";
-		label = this.addDataToLabel(label, this.$mobileHelper.normalizePlatformName(platform));
+		label = this.addDataToLabel(
+			label,
+			this.$mobileHelper.normalizePlatformName(platform)
+		);
 
 		const eventActionData = {
 			googleAnalyticsDataType: GoogleAnalyticsDataType.Event,
@@ -147,7 +222,7 @@ export class AnalyticsService implements IAnalyticsService, IDisposable {
 			platform,
 			label,
 			customDimensions,
-			type: TrackingTypes.PreviewAppData
+			type: TrackingTypes.PreviewAppData,
 		};
 
 		await this.trackInGoogleAnalytics(eventActionData);
@@ -174,37 +249,61 @@ export class AnalyticsService implements IAnalyticsService, IDisposable {
 				this.brokerProcess.on("message", handler);
 
 				const msg = { type: TrackingTypes.FinishTracking };
-				this.brokerProcess.send(msg, (err: Error) => this.$logger.trace(`Error while sending ${JSON.stringify(msg)}`));
+				this.brokerProcess.send(msg, (err: Error) =>
+					this.$logger.trace(`Error while sending ${JSON.stringify(msg)}`)
+				);
 			} else {
 				resolve();
 			}
 		});
 	}
 
-	private forcefullyTrackInGoogleAnalytics(gaSettings: IGoogleAnalyticsData): Promise<void> {
+	private forcefullyTrackInGoogleAnalytics(
+		gaSettings: IGoogleAnalyticsData
+	): Promise<void> {
 		gaSettings.customDimensions = gaSettings.customDimensions || {};
-		gaSettings.customDimensions[GoogleAnalyticsCustomDimensions.client] = this.$options.analyticsClient || (isInteractive() ? AnalyticsClients.Cli : AnalyticsClients.Unknown);
+		gaSettings.customDimensions[GoogleAnalyticsCustomDimensions.client] =
+			this.$options.analyticsClient ||
+			(isInteractive() ? AnalyticsClients.Cli : AnalyticsClients.Unknown);
 		this.setProjectRelatedCustomDimensions(gaSettings.customDimensions);
 
-		const googleAnalyticsData: IGoogleAnalyticsTrackingInformation = _.merge({ type: TrackingTypes.GoogleAnalyticsData, category: AnalyticsClients.Cli }, gaSettings);
-		this.$logger.trace("Will send the following information to Google Analytics:", googleAnalyticsData);
+		const googleAnalyticsData: IGoogleAnalyticsTrackingInformation = _.merge(
+			{
+				type: TrackingTypes.GoogleAnalyticsData,
+				category: AnalyticsClients.Cli,
+			},
+			gaSettings
+		);
+		this.$logger.trace(
+			"Will send the following information to Google Analytics:",
+			googleAnalyticsData
+		);
 		return this.sendMessageToBroker(googleAnalyticsData);
 	}
 
-	private setProjectRelatedCustomDimensions(customDimensions: IStringDictionary, projectDir?: string): IStringDictionary {
+	private setProjectRelatedCustomDimensions(
+		customDimensions: IStringDictionary,
+		projectDir?: string
+	): IStringDictionary {
 		if (!projectDir) {
 			try {
 				projectDir = this.$projectHelper.projectDir;
 			} catch (err) {
 				// In case there's no project dir here, the above getter will fail.
-				this.$logger.trace("Unable to get the projectDir from projectHelper", err);
+				this.$logger.trace(
+					"Unable to get the projectDir from projectHelper",
+					err
+				);
 			}
 		}
 
 		if (projectDir) {
 			const projectData = this.$projectDataService.getProjectData(projectDir);
-			customDimensions[GoogleAnalyticsCustomDimensions.projectType] = projectData.projectType;
-			customDimensions[GoogleAnalyticsCustomDimensions.isShared] = projectData.isShared.toString();
+			customDimensions[GoogleAnalyticsCustomDimensions.projectType] =
+				projectData.projectType;
+			customDimensions[
+				GoogleAnalyticsCustomDimensions.isShared
+			] = projectData.isShared.toString();
 		}
 
 		return customDimensions;
@@ -229,11 +328,12 @@ export class AnalyticsService implements IAnalyticsService, IDisposable {
 		return new Promise<ChildProcess>((resolve, reject) => {
 			const brokerProcessArgs = this.getBrokerProcessArgs();
 
-			const broker = this.$childProcess.spawn(process.execPath,
+			const broker = this.$childProcess.spawn(
+				process.execPath,
 				brokerProcessArgs,
 				{
 					stdio: ["ignore", "ignore", "ignore", "ipc"],
-					detached: true
+					detached: true,
 				}
 			);
 
@@ -283,15 +383,23 @@ export class AnalyticsService implements IAnalyticsService, IDisposable {
 		return brokerProcessArgs;
 	}
 
-	private async sendInfoForTracking(trackingInfo: ITrackingInformation, settingName: string): Promise<void> {
+	private async sendInfoForTracking(
+		trackingInfo: ITrackingInformation,
+		settingName: string
+	): Promise<void> {
 		await this.initAnalyticsStatuses();
 
-		if (!this.$staticConfig.disableAnalytics && this.analyticsStatuses[settingName] === AnalyticsStatus.enabled) {
+		if (
+			!this.$staticConfig.disableAnalytics &&
+			this.analyticsStatuses[settingName] === AnalyticsStatus.enabled
+		) {
 			return this.sendMessageToBroker(trackingInfo);
 		}
 	}
 
-	private async sendMessageToBroker(message: ITrackingInformation): Promise<void> {
+	private async sendMessageToBroker(
+		message: ITrackingInformation
+	): Promise<void> {
 		let broker: ChildProcess;
 		try {
 			broker = await this.getAnalyticsBroker();
@@ -305,7 +413,10 @@ export class AnalyticsService implements IAnalyticsService, IDisposable {
 				try {
 					broker.send(message, (error: Error) => resolve());
 				} catch (err) {
-					this.$logger.trace("Error while trying to send message to broker:", err);
+					this.$logger.trace(
+						"Error while trying to send message to broker:",
+						err
+					);
 					resolve();
 				}
 			} else {
@@ -319,7 +430,10 @@ export class AnalyticsService implements IAnalyticsService, IDisposable {
 	private async initAnalyticsStatuses(): Promise<void> {
 		if (await this.$analyticsSettingsService.canDoRequest()) {
 			this.$logger.trace("Initializing analytics statuses.");
-			const settingsNames = [this.$staticConfig.TRACK_FEATURE_USAGE_SETTING_NAME, this.$staticConfig.ERROR_REPORT_SETTING_NAME];
+			const settingsNames = [
+				this.$staticConfig.TRACK_FEATURE_USAGE_SETTING_NAME,
+				this.$staticConfig.ERROR_REPORT_SETTING_NAME,
+			];
 
 			for (const settingName of settingsNames) {
 				await this.getStatus(settingName);
@@ -331,7 +445,9 @@ export class AnalyticsService implements IAnalyticsService, IDisposable {
 
 	private async getStatus(settingName: string): Promise<AnalyticsStatus> {
 		if (!_.has(this.analyticsStatuses, settingName)) {
-			const settingValue = await this.$userSettingsService.getSettingValue<string>(settingName);
+			const settingValue = await this.$userSettingsService.getSettingValue<
+				string
+			>(settingName);
 
 			if (settingValue) {
 				const isEnabled = toBoolean(settingValue);
@@ -353,7 +469,10 @@ export class AnalyticsService implements IAnalyticsService, IDisposable {
 		return analyticsStatus === AnalyticsStatus.notConfirmed;
 	}
 
-	private async getHumanReadableStatusMessage(settingName: string, readableSettingName: string): Promise<string> {
+	private async getHumanReadableStatusMessage(
+		settingName: string,
+		readableSettingName: string
+	): Promise<string> {
 		let status: string = null;
 
 		if (await this.isNotConfirmed(settingName)) {
@@ -367,7 +486,10 @@ export class AnalyticsService implements IAnalyticsService, IDisposable {
 
 	private async getJsonStatusMessage(settingName: string): Promise<string> {
 		const status = await this.getStatus(settingName);
-		const enabled = status === AnalyticsStatus.notConfirmed ? null : status === AnalyticsStatus.enabled;
+		const enabled =
+			status === AnalyticsStatus.notConfirmed
+				? null
+				: status === AnalyticsStatus.enabled;
 		return JSON.stringify({ enabled });
 	}
 
@@ -375,10 +497,13 @@ export class AnalyticsService implements IAnalyticsService, IDisposable {
 		const data: IExceptionsTrackingInformation = {
 			type: TrackingTypes.Exception,
 			exception,
-			message
+			message,
 		};
 
-		return this.sendInfoForTracking(data, this.$staticConfig.ERROR_REPORT_SETTING_NAME);
+		return this.sendInfoForTracking(
+			data,
+			this.$staticConfig.ERROR_REPORT_SETTING_NAME
+		);
 	}
 }
 

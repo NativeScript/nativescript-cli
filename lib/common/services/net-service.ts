@@ -1,19 +1,30 @@
 import * as net from "net";
-import * as _ from 'lodash';
+import * as _ from "lodash";
 import { sleep } from "../helpers";
-import { IErrors, INet, IChildProcess, IOsInfo, IWaitForPortListenData, IDictionary } from "../declarations";
+import {
+	IErrors,
+	INet,
+	IChildProcess,
+	IOsInfo,
+	IWaitForPortListenData,
+	IDictionary,
+} from "../declarations";
 import { injector } from "../yok";
 
 export class Net implements INet {
 	private static DEFAULT_INTERVAL = 1000;
 
-	constructor(private $errors: IErrors,
+	constructor(
+		private $errors: IErrors,
 		private $childProcess: IChildProcess,
 		private $logger: ILogger,
-		private $osInfo: IOsInfo) { }
+		private $osInfo: IOsInfo
+	) {}
 
 	public async getFreePort(): Promise<number> {
-		const server = net.createServer((sock: net.Socket) => { /* empty - noone will connect here */ });
+		const server = net.createServer((sock: net.Socket) => {
+			/* empty - noone will connect here */
+		});
 
 		return new Promise<number>((resolve, reject) => {
 			let isResolved = false;
@@ -33,7 +44,6 @@ export class Net implements INet {
 					reject(err);
 				}
 			});
-
 		});
 	}
 
@@ -50,7 +60,8 @@ export class Net implements INet {
 			});
 
 			server.once("close", () => {
-				if (!isResolved) { // "close" will be emitted right after "error"
+				if (!isResolved) {
+					// "close" will be emitted right after "error"
 					isResolved = true;
 					resolve(true);
 				}
@@ -69,7 +80,10 @@ export class Net implements INet {
 		});
 	}
 
-	public async getAvailablePortInRange(startPort: number, endPort?: number): Promise<number> {
+	public async getAvailablePortInRange(
+		startPort: number,
+		endPort?: number
+	): Promise<number> {
 		endPort = endPort || 65534;
 		while (!(await this.isPortAvailable(startPort))) {
 			startPort++;
@@ -81,7 +95,9 @@ export class Net implements INet {
 		return startPort;
 	}
 
-	public async waitForPortToListen(waitForPortListenData: IWaitForPortListenData): Promise<boolean> {
+	public async waitForPortToListen(
+		waitForPortListenData: IWaitForPortListenData
+	): Promise<boolean> {
 		if (!waitForPortListenData) {
 			this.$errors.fail("You must pass port and timeout for check.");
 		}
@@ -90,25 +106,29 @@ export class Net implements INet {
 		const interval = waitForPortListenData.interval || Net.DEFAULT_INTERVAL;
 
 		const endTime = new Date().getTime() + timeout;
-		const platformData: IDictionary<{ command: string, regex: RegExp }> = {
-			"darwin": {
+		const platformData: IDictionary<{ command: string; regex: RegExp }> = {
+			darwin: {
 				command: "netstat -f inet -p tcp -anL",
-				regex: new RegExp(`\\.${port}\\b`, "g")
+				regex: new RegExp(`\\.${port}\\b`, "g"),
 			},
-			"linux": {
+			linux: {
 				command: "netstat -tnl",
-				regex: new RegExp(`:${port}\\s`, "g")
+				regex: new RegExp(`:${port}\\s`, "g"),
 			},
-			"win32": {
+			win32: {
 				command: "netstat -ant -p tcp",
-				regex: new RegExp(`TCP\\s+(\\d+\\.){3}\\d+:${port}.*?LISTEN`, "g")
-			}
+				regex: new RegExp(`TCP\\s+(\\d+\\.){3}\\d+:${port}.*?LISTEN`, "g"),
+			},
 		};
 
 		const platform = this.$osInfo.platform();
 		const currentPlatformData = platformData[platform];
 		if (!currentPlatformData) {
-			this.$errors.fail(`Unable to check for free ports on ${platform}. Supported platforms are: ${_.keys(platformData).join(", ")}`);
+			this.$errors.fail(
+				`Unable to check for free ports on ${platform}. Supported platforms are: ${_.keys(
+					platformData
+				).join(", ")}`
+			);
 		}
 
 		while (true) {

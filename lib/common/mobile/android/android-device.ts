@@ -2,7 +2,7 @@ import { DeviceAndroidDebugBridge } from "./device-android-debug-bridge";
 import * as applicationManagerPath from "./android-application-manager";
 import * as fileSystemPath from "./android-device-file-system";
 import * as constants from "../../constants";
-import * as _ from 'lodash';
+import * as _ from "lodash";
 import { cache } from "../../decorators";
 import { DeviceConnectionType } from "../../../constants";
 import { IDictionary } from "../../declarations";
@@ -28,41 +28,53 @@ export class AndroidDevice implements Mobile.IAndroidDevice {
 
 	// http://stackoverflow.com/questions/31178195/what-does-adb-device-status-mean
 	private static ADB_DEVICE_STATUS_INFO: IDictionary<IAdbDeviceStatusInfo> = {
-		"device": {
+		device: {
 			errorHelp: null,
-			deviceStatus: constants.CONNECTED_STATUS
+			deviceStatus: constants.CONNECTED_STATUS,
 		},
-		"offline": {
-			errorHelp: "The device instance is not connected to adb or is not responding.",
-			deviceStatus: constants.UNREACHABLE_STATUS
+		offline: {
+			errorHelp:
+				"The device instance is not connected to adb or is not responding.",
+			deviceStatus: constants.UNREACHABLE_STATUS,
 		},
-		"unauthorized": {
+		unauthorized: {
 			errorHelp: "Allow USB Debugging on your device.",
-			deviceStatus: constants.UNREACHABLE_STATUS
+			deviceStatus: constants.UNREACHABLE_STATUS,
 		},
-		"recovery": {
-			errorHelp: "Your device is in recovery mode. This mode is used to recover your phone when it is broken or to install custom roms.",
-			deviceStatus: constants.UNREACHABLE_STATUS
+		recovery: {
+			errorHelp:
+				"Your device is in recovery mode. This mode is used to recover your phone when it is broken or to install custom roms.",
+			deviceStatus: constants.UNREACHABLE_STATUS,
 		},
 		"no permissions": {
 			errorHelp: "Insufficient permissions to communicate with the device.",
-			deviceStatus: constants.UNREACHABLE_STATUS
+			deviceStatus: constants.UNREACHABLE_STATUS,
 		},
 	};
 
-	constructor(private identifier: string,
+	constructor(
+		private identifier: string,
 		private status: string,
 		private $androidEmulatorServices: Mobile.IEmulatorPlatformService,
 		private $logger: ILogger,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $logcatHelper: Mobile.ILogcatHelper,
-		private $injector: IInjector) { }
+		private $injector: IInjector
+	) {}
 
 	@cache()
 	public async init(): Promise<void> {
-		this.adb = this.$injector.resolve(DeviceAndroidDebugBridge, { identifier: this.identifier });
-		this.applicationManager = this.$injector.resolve(applicationManagerPath.AndroidApplicationManager, { adb: this.adb, identifier: this.identifier });
-		this.fileSystem = this.$injector.resolve(fileSystemPath.AndroidDeviceFileSystem, { adb: this.adb });
+		this.adb = this.$injector.resolve(DeviceAndroidDebugBridge, {
+			identifier: this.identifier,
+		});
+		this.applicationManager = this.$injector.resolve(
+			applicationManagerPath.AndroidApplicationManager,
+			{ adb: this.adb, identifier: this.identifier }
+		);
+		this.fileSystem = this.$injector.resolve(
+			fileSystemPath.AndroidDeviceFileSystem,
+			{ adb: this.adb }
+		);
 		let details = await this.getDeviceDetails(["getprop"]);
 
 		if (!details || !details.name) {
@@ -76,8 +88,8 @@ export class AndroidDevice implements Mobile.IAndroidDevice {
 		const type = await this.getType();
 
 		let version = details.release;
-		if (version && version.toLowerCase() === 'q') {
-			version = '10.0.0';
+		if (version && version.toLowerCase() === "q") {
+			version = "10.0.0";
 		}
 
 		this.deviceInfo = {
@@ -91,14 +103,20 @@ export class AndroidDevice implements Mobile.IAndroidDevice {
 			errorHelp: adbStatusInfo ? adbStatusInfo.errorHelp : "Unknown status",
 			isTablet: this.getIsTablet(details),
 			type,
-			connectionTypes: [DeviceConnectionType.Local]
+			connectionTypes: [DeviceConnectionType.Local],
 		};
 
-		this.deviceInfo.connectionTypes = this.isEmulator ? [DeviceConnectionType.Local] : [DeviceConnectionType.USB];
+		this.deviceInfo.connectionTypes = this.isEmulator
+			? [DeviceConnectionType.Local]
+			: [DeviceConnectionType.USB];
 
 		if (this.isEmulator) {
-			this.deviceInfo.displayName = await this.$androidEmulatorServices.getRunningEmulatorName(this.identifier);
-			this.deviceInfo.imageIdentifier = await this.$androidEmulatorServices.getRunningEmulatorImageIdentifier(this.identifier);
+			this.deviceInfo.displayName = await this.$androidEmulatorServices.getRunningEmulatorName(
+				this.identifier
+			);
+			this.deviceInfo.imageIdentifier = await this.$androidEmulatorServices.getRunningEmulatorImageIdentifier(
+				this.identifier
+			);
 		}
 
 		this.$logger.trace(this.deviceInfo);
@@ -116,7 +134,7 @@ export class AndroidDevice implements Mobile.IAndroidDevice {
 		if (this.deviceInfo.status === constants.CONNECTED_STATUS) {
 			await this.$logcatHelper.start({
 				deviceIdentifier: this.identifier,
-				keepSingleProcess: true
+				keepSingleProcess: true,
 			});
 		}
 	}
@@ -127,10 +145,14 @@ export class AndroidDevice implements Mobile.IAndroidDevice {
 		}
 	}
 
-	private async getDeviceDetails(shellCommandArgs: string[]): Promise<IAndroidDeviceDetails> {
+	private async getDeviceDetails(
+		shellCommandArgs: string[]
+	): Promise<IAndroidDeviceDetails> {
 		const parsedDetails: any = {};
 
-		this.$logger.trace(`Trying to get information for Android device. Command is: ${shellCommandArgs}`);
+		this.$logger.trace(
+			`Trying to get information for Android device. Command is: ${shellCommandArgs}`
+		);
 
 		try {
 			const details = await this.adb.executeShellCommand(shellCommandArgs);
@@ -139,13 +161,17 @@ export class AndroidDevice implements Mobile.IAndroidDevice {
 				// sample line is "ro.build.version.release=4.4" in /system/build.prop
 				// sample line from getprop is:  [ro.build.version.release]: [6.0]
 				// NOTE: some props do not have value: [ro.build.version.base_os]: []
-				const match = /(?:\[?ro\.build\.version|ro\.product|ro\.build)\.(.+?)]?(?:\:|=)(?:\s*?\[)?(.*?)]?$/.exec(value);
+				const match = /(?:\[?ro\.build\.version|ro\.product|ro\.build)\.(.+?)]?(?:\:|=)(?:\s*?\[)?(.*?)]?$/.exec(
+					value
+				);
 				if (match) {
 					parsedDetails[match[1]] = match[2];
 				}
 			});
 		} catch (err) {
-			this.$logger.trace(`Error while getting details from Android device. Command is: ${shellCommandArgs}. Error is: ${err}`);
+			this.$logger.trace(
+				`Error while getting details from Android device. Command is: ${shellCommandArgs}. Error is: ${err}`
+			);
 		}
 
 		this.$logger.trace(parsedDetails);
@@ -155,12 +181,18 @@ export class AndroidDevice implements Mobile.IAndroidDevice {
 
 	private getIsTablet(details: any): boolean {
 		//version 3.x.x (also known as Honeycomb) is a tablet only version
-		return details && (_.startsWith(details.release, "3.") || _.includes((details.characteristics || '').toLowerCase(), "tablet"));
+		return (
+			details &&
+			(_.startsWith(details.release, "3.") ||
+				_.includes((details.characteristics || "").toLowerCase(), "tablet"))
+		);
 	}
 
 	private async getType(): Promise<string> {
 		const runningEmulatorIds = await this.$androidEmulatorServices.getRunningEmulatorIds();
-		if (_.find(runningEmulatorIds, emulatorId => emulatorId === this.identifier)) {
+		if (
+			_.find(runningEmulatorIds, (emulatorId) => emulatorId === this.identifier)
+		) {
 			return constants.DeviceTypes.Emulator;
 		}
 

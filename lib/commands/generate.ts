@@ -1,16 +1,18 @@
-import { run, ExecutionOptions } from '@nativescript/schematics-executor';
-import { IOptions } from '../declarations';
-import { ICommand, ICommandParameter } from '../common/definitions/commands';
-import { IErrors } from '../common/declarations';
-import { injector } from '../common/yok';
+import { run, ExecutionOptions } from "@nativescript/schematics-executor";
+import { IOptions } from "../declarations";
+import { ICommand, ICommandParameter } from "../common/definitions/commands";
+import { IErrors } from "../common/declarations";
+import { injector } from "../common/yok";
 
 export class GenerateCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
 	private executionOptions: ExecutionOptions;
 
-	constructor(private $logger: ILogger,
+	constructor(
+		private $logger: ILogger,
 		private $options: IOptions,
-		private $errors: IErrors) { }
+		private $errors: IErrors
+	) {}
 
 	public async execute(_rawArgs: string[]): Promise<void> {
 		try {
@@ -29,7 +31,9 @@ export class GenerateCommand implements ICommand {
 
 	private validateExecutionOptions() {
 		if (!this.executionOptions.schematic) {
-			this.$errors.failWithHelp(`The generate command requires a schematic name to be specified.`);
+			this.$errors.failWithHelp(
+				`The generate command requires a schematic name to be specified.`
+			);
 		}
 	}
 
@@ -62,9 +66,11 @@ export class GenerateCommand implements ICommand {
  * @param rawArgs The command line arguments. They should be in the format 'key=value' for strings or 'key' for booleans.
  */
 function parseSchematicSettings(rawArgs: string[]) {
-	const [optionStrings, args] = partition<string>(rawArgs, item => item.includes('='));
+	const [optionStrings, args] = partition<string>(rawArgs, (item) =>
+		item.includes("=")
+	);
 	const options = optionStrings
-		.map(o => o.split("=")) // split to key and value pairs
+		.map((o) => o.split("=")) // split to key and value pairs
 		.map(([key, ...value]) => [key, value.join("=")]) // concat the value arrays if there are multiple = signs
 		.reduce((obj, [key, value]) => {
 			return { ...obj, [key]: value };
@@ -78,11 +84,14 @@ function parseSchematicSettings(rawArgs: string[]) {
  * @param predicate The condition to be used for splitting.
  */
 function partition<T>(array: T[], predicate: (item: T) => boolean): T[][] {
-	return array.reduce(([pass, fail], item) => {
-		return predicate(item) ?
-			[[...pass, item], fail] :
-			[pass, [...fail, item]];
-	}, [[], []]);
+	return array.reduce(
+		([pass, fail], item) => {
+			return predicate(item)
+				? [[...pass, item], fail]
+				: [pass, [...fail, item]];
+		},
+		[[], []]
+	);
 }
 
 injector.registerCommand("generate", GenerateCommand);

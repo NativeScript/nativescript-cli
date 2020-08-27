@@ -1,9 +1,12 @@
 import * as path from "path";
-import { NODE_MODULES_FOLDER_NAME, PACKAGE_JSON_FILE_NAME } from "../../constants";
+import {
+	NODE_MODULES_FOLDER_NAME,
+	PACKAGE_JSON_FILE_NAME,
+} from "../../constants";
 import { INodeModulesDependenciesBuilder } from "../../definitions/platform";
 import { IDependencyData } from "../../declarations";
 import { IFileSystem } from "../../common/declarations";
-import * as _ from 'lodash';
+import * as _ from "lodash";
 import { injector } from "../../common/yok";
 
 interface IDependencyDescription {
@@ -13,38 +16,64 @@ interface IDependencyDescription {
 	depth: number;
 }
 
-export class NodeModulesDependenciesBuilder implements INodeModulesDependenciesBuilder {
-	public constructor(private $fs: IFileSystem) { }
+export class NodeModulesDependenciesBuilder
+	implements INodeModulesDependenciesBuilder {
+	public constructor(private $fs: IFileSystem) {}
 
 	public getProductionDependencies(projectPath: string): IDependencyData[] {
-		const rootNodeModulesPath = path.join(projectPath, NODE_MODULES_FOLDER_NAME);
-		const projectPackageJsonPath = path.join(projectPath, PACKAGE_JSON_FILE_NAME);
+		const rootNodeModulesPath = path.join(
+			projectPath,
+			NODE_MODULES_FOLDER_NAME
+		);
+		const projectPackageJsonPath = path.join(
+			projectPath,
+			PACKAGE_JSON_FILE_NAME
+		);
 		const packageJsonContent = this.$fs.readJson(projectPackageJsonPath);
 		const dependencies = packageJsonContent && packageJsonContent.dependencies;
 
 		const resolvedDependencies: IDependencyData[] = [];
 
-		const queue: IDependencyDescription[] = _.keys(dependencies)
-			.map(dependencyName => ({
+		const queue: IDependencyDescription[] = _.keys(dependencies).map(
+			(dependencyName) => ({
 				parent: null,
 				parentDir: projectPath,
 				name: dependencyName,
-				depth: 0
-			}));
+				depth: 0,
+			})
+		);
 
 		while (queue.length) {
 			const currentModule = queue.shift();
-			const resolvedDependency = this.findModule(rootNodeModulesPath, currentModule, resolvedDependencies);
+			const resolvedDependency = this.findModule(
+				rootNodeModulesPath,
+				currentModule,
+				resolvedDependencies
+			);
 
-			if (resolvedDependency && !_.some(resolvedDependencies, r => r.directory === resolvedDependency.directory)) {
-				_.each(resolvedDependency.dependencies, d => {
-					const dependency: IDependencyDescription = { parent: currentModule, name: d, parentDir: resolvedDependency.directory, depth: resolvedDependency.depth + 1 };
+			if (
+				resolvedDependency &&
+				!_.some(
+					resolvedDependencies,
+					(r) => r.directory === resolvedDependency.directory
+				)
+			) {
+				_.each(resolvedDependency.dependencies, (d) => {
+					const dependency: IDependencyDescription = {
+						parent: currentModule,
+						name: d,
+						parentDir: resolvedDependency.directory,
+						depth: resolvedDependency.depth + 1,
+					};
 
-					const shouldAdd = !_.some(queue, element =>
-						element.parent === dependency.parent &&
-						element.name === dependency.name &&
-						element.parentDir === dependency.parentDir &&
-						element.depth === dependency.depth);
+					const shouldAdd = !_.some(
+						queue,
+						(element) =>
+							element.parent === dependency.parent &&
+							element.name === dependency.name &&
+							element.parentDir === dependency.parentDir &&
+							element.depth === dependency.depth
+					);
 
 					if (shouldAdd) {
 						queue.push(dependency);
@@ -58,20 +87,31 @@ export class NodeModulesDependenciesBuilder implements INodeModulesDependenciesB
 		return resolvedDependencies;
 	}
 
-	private findModule(rootNodeModulesPath: string, depDescription: IDependencyDescription, resolvedDependencies: IDependencyData[]): IDependencyData {
-		let modulePath = path.join(depDescription.parentDir, NODE_MODULES_FOLDER_NAME, depDescription.name); // node_modules/parent/node_modules/<package>
+	private findModule(
+		rootNodeModulesPath: string,
+		depDescription: IDependencyDescription,
+		resolvedDependencies: IDependencyData[]
+	): IDependencyData {
+		let modulePath = path.join(
+			depDescription.parentDir,
+			NODE_MODULES_FOLDER_NAME,
+			depDescription.name
+		); // node_modules/parent/node_modules/<package>
 		const rootModulesPath = path.join(rootNodeModulesPath, depDescription.name);
 		let depthInNodeModules = depDescription.depth;
 
 		if (!this.moduleExists(modulePath)) {
-
 			let moduleExists = false;
 			let parent = depDescription.parent;
 
 			while (parent && !moduleExists) {
-				modulePath = path.join(depDescription.parent.parentDir, NODE_MODULES_FOLDER_NAME, depDescription.name);
+				modulePath = path.join(
+					depDescription.parent.parentDir,
+					NODE_MODULES_FOLDER_NAME,
+					depDescription.name
+				);
 				moduleExists = this.moduleExists(modulePath);
-				if (!moduleExists)  {
+				if (!moduleExists) {
 					parent = parent.parent;
 				}
 			}
@@ -86,20 +126,32 @@ export class NodeModulesDependenciesBuilder implements INodeModulesDependenciesB
 			depthInNodeModules = 0;
 		}
 
-		if (_.some(resolvedDependencies, r => r.name === depDescription.name && r.directory === modulePath)) {
+		if (
+			_.some(
+				resolvedDependencies,
+				(r) => r.name === depDescription.name && r.directory === modulePath
+			)
+		) {
 			return null;
-
 		}
 
-		return this.getDependencyData(depDescription.name, modulePath, depthInNodeModules);
+		return this.getDependencyData(
+			depDescription.name,
+			modulePath,
+			depthInNodeModules
+		);
 	}
 
-	private getDependencyData(name: string, directory: string, depth: number): IDependencyData {
+	private getDependencyData(
+		name: string,
+		directory: string,
+		depth: number
+	): IDependencyData {
 		const dependency: IDependencyData = {
 			name,
 			directory,
 			depth,
-			version: null
+			version: null,
 		};
 
 		const packageJsonPath = path.join(directory, PACKAGE_JSON_FILE_NAME);
@@ -135,4 +187,7 @@ export class NodeModulesDependenciesBuilder implements INodeModulesDependenciesB
 	}
 }
 
-injector.register("nodeModulesDependenciesBuilder", NodeModulesDependenciesBuilder);
+injector.register(
+	"nodeModulesDependenciesBuilder",
+	NodeModulesDependenciesBuilder
+);

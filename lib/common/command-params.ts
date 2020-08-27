@@ -1,4 +1,7 @@
-import { ICommandParameter, IStringParameterBuilder } from "./definitions/commands";
+import {
+	ICommandParameter,
+	IStringParameterBuilder,
+} from "./definitions/commands";
 import { IInjector } from "./definitions/yok";
 import { injector } from "./yok";
 
@@ -6,7 +9,7 @@ export class StringCommandParameter implements ICommandParameter {
 	public mandatory = false;
 	public errorMessage: string;
 
-	constructor(private $injector: IInjector) { }
+	constructor(private $injector: IInjector) {}
 
 	public async validate(validationValue: string): Promise<boolean> {
 		if (!validationValue) {
@@ -23,7 +26,7 @@ export class StringCommandParameter implements ICommandParameter {
 injector.register("stringParameter", StringCommandParameter);
 
 export class StringParameterBuilder implements IStringParameterBuilder {
-	constructor(private $injector: IInjector) { }
+	constructor(private $injector: IInjector) {}
 
 	public createMandatoryParameter(errorMsg: string): ICommandParameter {
 		const commandParameter = new StringCommandParameter(this.$injector);

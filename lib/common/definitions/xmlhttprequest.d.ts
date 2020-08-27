@@ -24,6 +24,6 @@ declare module "xmlhttprequest" {
 		abort: Function;
 		addEventListener: Function;
 		removeEventListener: Function;
-		dispatchEvent: [Function]
+		dispatchEvent: [Function];
 	}
 }

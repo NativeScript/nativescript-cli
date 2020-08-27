@@ -1,17 +1,29 @@
 import { EventEmitter } from "events";
 import { EmulatorDiscoveryNames } from "../../constants";
-import * as _ from 'lodash';
+import * as _ from "lodash";
 import { IDictionary } from "../../declarations";
 import { injector } from "../../yok";
 
-export class AndroidEmulatorDiscovery extends EventEmitter implements Mobile.IDeviceDiscovery {
+export class AndroidEmulatorDiscovery
+	extends EventEmitter
+	implements Mobile.IDeviceDiscovery {
 	private _emulators: IDictionary<Mobile.IDeviceInfo> = {};
 
-	constructor(private $androidEmulatorServices: Mobile.IEmulatorPlatformService,
-		private $mobileHelper: Mobile.IMobileHelper) { super(); }
+	constructor(
+		private $androidEmulatorServices: Mobile.IEmulatorPlatformService,
+		private $mobileHelper: Mobile.IMobileHelper
+	) {
+		super();
+	}
 
-	public async startLookingForDevices(options?: Mobile.IDeviceLookingOptions): Promise<void> {
-		if (options && options.platform && !this.$mobileHelper.isAndroidPlatform(options.platform)) {
+	public async startLookingForDevices(
+		options?: Mobile.IDeviceLookingOptions
+	): Promise<void> {
+		if (
+			options &&
+			options.platform &&
+			!this.$mobileHelper.isAndroidPlatform(options.platform)
+		) {
 			return;
 		}
 
@@ -21,12 +33,24 @@ export class AndroidEmulatorDiscovery extends EventEmitter implements Mobile.IDe
 
 		// Remove old emulators
 		const lostEmulators = _(cachedEmulators)
-			.reject(e => _.some(currentEmulators, emulator => emulator && e && emulator.imageIdentifier === e.imageIdentifier))
+			.reject((e) =>
+				_.some(
+					currentEmulators,
+					(emulator) =>
+						emulator && e && emulator.imageIdentifier === e.imageIdentifier
+				)
+			)
 			.value();
 
 		// Add new emulators
 		const foundEmulators = _(currentEmulators)
-			.reject(e => _.some(cachedEmulators, emulator => emulator && e && emulator.imageIdentifier === e.imageIdentifier))
+			.reject((e) =>
+				_.some(
+					cachedEmulators,
+					(emulator) =>
+						emulator && e && emulator.imageIdentifier === e.imageIdentifier
+				)
+			)
 			.value();
 
 		if (lostEmulators.length) {
@@ -43,14 +67,14 @@ export class AndroidEmulatorDiscovery extends EventEmitter implements Mobile.IDe
 	}
 
 	private raiseOnEmulatorImagesFound(emulators: Mobile.IDeviceInfo[]) {
-		_.forEach(emulators, emulator => {
+		_.forEach(emulators, (emulator) => {
 			this._emulators[emulator.imageIdentifier] = emulator;
 			this.emit(EmulatorDiscoveryNames.EMULATOR_IMAGE_FOUND, emulator);
 		});
 	}
 
 	private raiseOnEmulatorImagesLost(emulators: Mobile.IDeviceInfo[]) {
-		_.forEach(emulators, emulator => {
+		_.forEach(emulators, (emulator) => {
 			delete this._emulators[emulator.imageIdentifier];
 			this.emit(EmulatorDiscoveryNames.EMULATOR_IMAGE_LOST, emulator);
 		});

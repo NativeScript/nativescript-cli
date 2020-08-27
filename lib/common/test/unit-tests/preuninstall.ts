@@ -16,28 +16,30 @@ describe("preuninstall", () => {
 		const testInjector = new Yok();
 
 		testInjector.register("extensibilityService", {
-			removeAllExtensions: (): void => undefined
+			removeAllExtensions: (): void => undefined,
 		});
 
 		testInjector.register("fs", {
-			deleteFile: (pathToFile: string): void => undefined
+			deleteFile: (pathToFile: string): void => undefined,
 		});
 
 		testInjector.register("packageInstallationManager", {
-			clearInspectorCache: (): void => undefined
+			clearInspectorCache: (): void => undefined,
 		});
 
 		testInjector.register("settingsService", {
-			getProfileDir: (): string => profileDir
+			getProfileDir: (): string => profileDir,
 		});
 
 		testInjector.register("opener", {
-			open: (filename: string, appname?: string): void => undefined
+			open: (filename: string, appname?: string): void => undefined,
 		});
 
 		testInjector.register("analyticsService", {
-			trackEventActionInGoogleAnalytics: async (data: IEventActionData): Promise<void> => undefined,
-			finishTracking: async(): Promise<void> => undefined
+			trackEventActionInGoogleAnalytics: async (
+				data: IEventActionData
+			): Promise<void> => undefined,
+			finishTracking: async (): Promise<void> => undefined,
 		});
 
 		testInjector.registerCommand("dev-preuninstall", PreUninstallCommand);
@@ -54,39 +56,51 @@ describe("preuninstall", () => {
 			deletedFiles.push(pathToFile);
 		};
 
-		const preUninstallCommand: ICommand = testInjector.resolveCommand("dev-preuninstall");
+		const preUninstallCommand: ICommand = testInjector.resolveCommand(
+			"dev-preuninstall"
+		);
 		await preUninstallCommand.execute([]);
-		assert.deepStrictEqual(deletedFiles, [path.join(profileDir, "KillSwitches", "cli")]);
+		assert.deepStrictEqual(deletedFiles, [
+			path.join(profileDir, "KillSwitches", "cli"),
+		]);
 	});
 
 	it("tracks correct data in analytics", async () => {
-		const testData: { isInteractive: boolean, isIntentionalUninstall: boolean, expecteEventLabelData: string }[] = [
+		const testData: {
+			isInteractive: boolean;
+			isIntentionalUninstall: boolean;
+			expecteEventLabelData: string;
+		}[] = [
 			{
 				isIntentionalUninstall: false,
 				isInteractive: false,
-				expecteEventLabelData: `isIntentionalUninstall__false__isInteractive__false`
+				expecteEventLabelData: `isIntentionalUninstall__false__isInteractive__false`,
 			},
 			{
 				isIntentionalUninstall: true,
 				isInteractive: false,
-				expecteEventLabelData: `isIntentionalUninstall__true__isInteractive__false`
+				expecteEventLabelData: `isIntentionalUninstall__true__isInteractive__false`,
 			},
 			{
 				isIntentionalUninstall: false,
 				isInteractive: true,
-				expecteEventLabelData: `isIntentionalUninstall__false__isInteractive__true`
+				expecteEventLabelData: `isIntentionalUninstall__false__isInteractive__true`,
 			},
 			{
 				isIntentionalUninstall: true,
 				isInteractive: true,
-				expecteEventLabelData: `isIntentionalUninstall__true__isInteractive__true`
-			}
+				expecteEventLabelData: `isIntentionalUninstall__true__isInteractive__true`,
+			},
 		];
 
 		const testInjector = createTestInjector();
-		const analyticsService = testInjector.resolve<IAnalyticsService>("analyticsService");
+		const analyticsService = testInjector.resolve<IAnalyticsService>(
+			"analyticsService"
+		);
 		let trackedData: IEventActionData[] = [];
-		analyticsService.trackEventActionInGoogleAnalytics = async (data: IEventActionData): Promise<void> => {
+		analyticsService.trackEventActionInGoogleAnalytics = async (
+			data: IEventActionData
+		): Promise<void> => {
 			trackedData.push(data);
 		};
 
@@ -95,17 +109,25 @@ describe("preuninstall", () => {
 			isFinishTrackingCalled = true;
 		};
 
-		const preUninstallCommand: ICommand = testInjector.resolveCommand("dev-preuninstall");
+		const preUninstallCommand: ICommand = testInjector.resolveCommand(
+			"dev-preuninstall"
+		);
 		for (const testCase of testData) {
 			helpers.isInteractive = () => testCase.isInteractive;
-			helpers.doesCurrentNpmCommandMatch = () => testCase.isIntentionalUninstall;
+			helpers.doesCurrentNpmCommandMatch = () =>
+				testCase.isIntentionalUninstall;
 			isFinishTrackingCalled = false;
 			await preUninstallCommand.execute([]);
-			assert.deepStrictEqual(trackedData, [{
-				action: "Uninstall CLI",
-				additionalData: testCase.expecteEventLabelData
-			}]);
-			assert.isTrue(isFinishTrackingCalled, "At the end of the command, finishTracking must be called");
+			assert.deepStrictEqual(trackedData, [
+				{
+					action: "Uninstall CLI",
+					additionalData: testCase.expecteEventLabelData,
+				},
+			]);
+			assert.isTrue(
+				isFinishTrackingCalled,
+				"At the end of the command, finishTracking must be called"
+			);
 			trackedData = [];
 		}
 	});
@@ -121,24 +143,38 @@ describe("preuninstall", () => {
 			deletedFiles.push(pathToFile);
 		};
 
-		const extensibilityService = testInjector.resolve<IExtensibilityService>("extensibilityService");
+		const extensibilityService = testInjector.resolve<IExtensibilityService>(
+			"extensibilityService"
+		);
 		let isRemoveAllExtensionsCalled = false;
 		extensibilityService.removeAllExtensions = () => {
 			isRemoveAllExtensionsCalled = true;
 		};
 
-		const packageInstallationManager = testInjector.resolve<IPackageInstallationManager>("packageInstallationManager");
+		const packageInstallationManager = testInjector.resolve<
+			IPackageInstallationManager
+		>("packageInstallationManager");
 		let isClearInspectorCacheCalled = false;
 		packageInstallationManager.clearInspectorCache = () => {
 			isClearInspectorCacheCalled = true;
 		};
 
-		const preUninstallCommand: ICommand = testInjector.resolveCommand("dev-preuninstall");
+		const preUninstallCommand: ICommand = testInjector.resolveCommand(
+			"dev-preuninstall"
+		);
 		await preUninstallCommand.execute([]);
-		assert.deepStrictEqual(deletedFiles, [path.join(profileDir, "KillSwitches", "cli")]);
+		assert.deepStrictEqual(deletedFiles, [
+			path.join(profileDir, "KillSwitches", "cli"),
+		]);
 
-		assert.isTrue(isRemoveAllExtensionsCalled, "When uninstall is called, `removeAllExtensions` method must be called");
-		assert.isTrue(isClearInspectorCacheCalled, "When uninstall is called, `clearInspectorCache` method must be called");
+		assert.isTrue(
+			isRemoveAllExtensionsCalled,
+			"When uninstall is called, `removeAllExtensions` method must be called"
+		);
+		assert.isTrue(
+			isClearInspectorCacheCalled,
+			"When uninstall is called, `clearInspectorCache` method must be called"
+		);
 	});
 
 	// disabled (6/24/2020)

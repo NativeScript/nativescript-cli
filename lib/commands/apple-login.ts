@@ -6,7 +6,10 @@ import { injector } from "../common/yok";
 import { IApplePortalSessionService } from "../services/apple-portal/definitions";
 
 export class AppleLogin implements ICommand {
-	public allowedParameters: ICommandParameter[] = [new StringCommandParameter(this.$injector), new StringCommandParameter(this.$injector)];
+	public allowedParameters: ICommandParameter[] = [
+		new StringCommandParameter(this.$injector),
+		new StringCommandParameter(this.$injector),
+	];
 
 	constructor(
 		private $applePortalSessionService: IApplePortalSessionService,
@@ -14,12 +17,14 @@ export class AppleLogin implements ICommand {
 		private $injector: IInjector,
 		private $logger: ILogger,
 		private $prompter: IPrompter
-	) { }
+	) {}
 
 	public async execute(args: string[]): Promise<void> {
 		let username = args[0];
 		if (!username) {
-			username = await this.$prompter.getString("Apple ID", { allowEmpty: false });
+			username = await this.$prompter.getString("Apple ID", {
+				allowEmpty: false,
+			});
 		}
 
 		let password = args[1];
@@ -27,9 +32,14 @@ export class AppleLogin implements ICommand {
 			password = await this.$prompter.getPassword("Apple ID password");
 		}
 
-		const user = await this.$applePortalSessionService.createUserSession({ username, password });
+		const user = await this.$applePortalSessionService.createUserSession({
+			username,
+			password,
+		});
 		if (!user.areCredentialsValid) {
-			this.$errors.fail(`Invalid username and password combination. Used '${username}' as the username.`);
+			this.$errors.fail(
+				`Invalid username and password combination. Used '${username}' as the username.`
+			);
 		}
 
 		const output = Buffer.from(user.userSessionCookie).toString("base64");

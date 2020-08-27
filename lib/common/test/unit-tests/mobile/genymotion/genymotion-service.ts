@@ -1,14 +1,22 @@
-
 import { Yok } from "../../../../yok";
 import { AndroidGenymotionService } from "../../../../mobile/android/genymotion/genymotion-service";
 import { EmulatorHelper } from "../../../../mobile/emulator-helper";
-import * as _ from 'lodash';
+import * as _ from "lodash";
 import { assert } from "chai";
-import { NOT_RUNNING_EMULATOR_STATUS, RUNNING_EMULATOR_STATUS, AndroidVirtualDevice } from '../../../../constants';
+import {
+	NOT_RUNNING_EMULATOR_STATUS,
+	RUNNING_EMULATOR_STATUS,
+	AndroidVirtualDevice,
+} from "../../../../constants";
 import { CommonLoggerStub } from "../../stubs";
 import { DeviceConnectionType } from "../../../../../constants";
 import { IInjector } from "../../../../definitions/yok";
-import { IDictionary, ISpawnFromEventOptions, IChildProcess, ISpawnResult } from "../../../../declarations";
+import {
+	IDictionary,
+	ISpawnFromEventOptions,
+	IChildProcess,
+	ISpawnResult,
+} from "../../../../declarations";
 
 const error = "some test error";
 const enumerateGuestPropertiesOutput = `Name: hardware_opengl, value: 1, timestamp: 1519225339826058000, flags:
@@ -183,30 +191,37 @@ Name: /VirtualBox/HostInfo/VBoxVer, value: 5.2.6, timestamp: 1530176155721735000
 Name: sensor_gyro, value: 1, timestamp: 1519225322780126000, flags:
 Name: genymotion_device_version, value: 1, timestamp: 1530176161954120000, flags:
 Name: product_manufacturer, value: unknown, timestamp: 1528097816567956000, flags:`;
-const vms = [{
-	name: "Google Nexus 4 - 5.0.0 - API 21 - 768x1280",
-	id: "9d9beef2-cc60-4a54-bcc0-cc1dbf89811f"
-}, {
-	name: "Custom Tablet - 6.0.0 - API 23 - 1536x2048",
-	id: "da83e290-4d54-4b94-8654-540cf0c96604"
-}, {
-	name: "Custom Phone - 5.1.0 - API 22 - 768x1280",
-	id: "94761c90-759f-4ae4-8eb3-8929a57a7ceb"
-}, {
-	name: "test",
-	id: "4a1bf7cd-a7b4-45ef-8cb0-c5a0aafad211"
-}];
+const vms = [
+	{
+		name: "Google Nexus 4 - 5.0.0 - API 21 - 768x1280",
+		id: "9d9beef2-cc60-4a54-bcc0-cc1dbf89811f",
+	},
+	{
+		name: "Custom Tablet - 6.0.0 - API 23 - 1536x2048",
+		id: "da83e290-4d54-4b94-8654-540cf0c96604",
+	},
+	{
+		name: "Custom Phone - 5.1.0 - API 22 - 768x1280",
+		id: "94761c90-759f-4ae4-8eb3-8929a57a7ceb",
+	},
+	{
+		name: "test",
+		id: "4a1bf7cd-a7b4-45ef-8cb0-c5a0aafad211",
+	},
+];
 
 function createTestInjector(): IInjector {
 	const testInjector = new Yok();
 
 	testInjector.register("androidGenymotionService", AndroidGenymotionService);
 	testInjector.register("adb", {});
-	testInjector.register("childProcess", { trySpawnFromCloseEvent: () => Promise.resolve({}) });
+	testInjector.register("childProcess", {
+		trySpawnFromCloseEvent: () => Promise.resolve({}),
+	});
 	testInjector.register("devicePlatformsConstants", { Android: "android" });
 	testInjector.register("emulatorHelper", EmulatorHelper);
 	testInjector.register("fs", {
-		exists: () => true
+		exists: () => true,
 	});
 	testInjector.register("hostInfo", {});
 	testInjector.register("logger", CommonLoggerStub);
@@ -215,7 +230,12 @@ function createTestInjector(): IInjector {
 	return testInjector;
 }
 
-function getAvailableEmulatorData(data: { displayName: string, imageIdentifier: string, version: string, errorHelp?: string }): Mobile.IDeviceInfo {
+function getAvailableEmulatorData(data: {
+	displayName: string;
+	imageIdentifier: string;
+	version: string;
+	errorHelp?: string;
+}): Mobile.IDeviceInfo {
 	return {
 		displayName: data.displayName,
 		errorHelp: data.errorHelp || null,
@@ -228,24 +248,29 @@ function getAvailableEmulatorData(data: { displayName: string, imageIdentifier: 
 		type: "Emulator",
 		connectionTypes: [DeviceConnectionType.Local],
 		vendor: "Genymotion",
-		version: data.version
+		version: data.version,
 	};
 }
 
-function getRunningEmulatorData(data: { displayName: string, imageIdentifier: string, identifier: string, version: string }): Mobile.IDeviceInfo {
+function getRunningEmulatorData(data: {
+	displayName: string;
+	imageIdentifier: string;
+	identifier: string;
+	version: string;
+}): Mobile.IDeviceInfo {
 	return {
 		identifier: data.identifier,
 		imageIdentifier: data.imageIdentifier,
 		displayName: data.displayName,
 		model: data.displayName,
 		version: data.version,
-		vendor: 'Genymotion',
+		vendor: "Genymotion",
 		status: RUNNING_EMULATOR_STATUS,
 		errorHelp: null,
 		isTablet: false,
-		type: 'Device',
+		type: "Device",
 		connectionTypes: [DeviceConnectionType.Local],
-		platform: 'android'
+		platform: "android",
 	};
 }
 
@@ -257,11 +282,18 @@ describe("GenymotionService", () => {
 
 	beforeEach(() => {
 		testInjector = createTestInjector();
-		androidGenymotionService = testInjector.resolve("androidGenymotionService", AndroidGenymotionService);
+		androidGenymotionService = testInjector.resolve(
+			"androidGenymotionService",
+			AndroidGenymotionService
+		);
 		adb = testInjector.resolve("adb");
 	});
 
-	function mockAdbGetPropertyValue(deviceIds: string[], propName: string, propertyValue: string) {
+	function mockAdbGetPropertyValue(
+		deviceIds: string[],
+		propName: string,
+		propertyValue: string
+	) {
 		adb.getPropertyValue = (deviceId: string, propertyName: string) => {
 			if (_.includes(deviceIds, deviceId) && propName === propertyName) {
 				return Promise.resolve(propertyValue);
@@ -271,11 +303,17 @@ describe("GenymotionService", () => {
 		};
 	}
 
-	function mockVirtualBoxService(output: Mobile.IVirtualBoxListVmsOutput, mapEnumerateGuestPropertiesOutput?: IDictionary<Mobile.IVirtualBoxEnumerateGuestPropertiesOutput>) {
+	function mockVirtualBoxService(
+		output: Mobile.IVirtualBoxListVmsOutput,
+		mapEnumerateGuestPropertiesOutput?: IDictionary<
+			Mobile.IVirtualBoxEnumerateGuestPropertiesOutput
+		>
+	) {
 		virtualBoxService = testInjector.resolve("virtualBoxService");
 		virtualBoxService.listVms = () => Promise.resolve(output);
 		if (mapEnumerateGuestPropertiesOutput) {
-			virtualBoxService.enumerateGuestProperties = (id: string) => Promise.resolve(mapEnumerateGuestPropertiesOutput[id]);
+			virtualBoxService.enumerateGuestProperties = (id: string) =>
+				Promise.resolve(mapEnumerateGuestPropertiesOutput[id]);
 		}
 	}
 
@@ -296,78 +334,221 @@ describe("GenymotionService", () => {
 		});
 		it("should return all emulators when there are available emulators and no running emulators", async () => {
 			const mapEnumerateGuestPropertiesOutput = {
-				"9d9beef2-cc60-4a54-bcc0-cc1dbf89811f": { properties: enumerateGuestPropertiesOutput },
-				"da83e290-4d54-4b94-8654-540cf0c96604": { properties: enumerateGuestPropertiesOutput },
-				"94761c90-759f-4ae4-8eb3-8929a57a7ceb": { properties: enumerateGuestPropertiesOutput },
-				"4a1bf7cd-a7b4-45ef-8cb0-c5a0aafad211": { properties: enumerateGuestPropertiesOutput }
+				"9d9beef2-cc60-4a54-bcc0-cc1dbf89811f": {
+					properties: enumerateGuestPropertiesOutput,
+				},
+				"da83e290-4d54-4b94-8654-540cf0c96604": {
+					properties: enumerateGuestPropertiesOutput,
+				},
+				"94761c90-759f-4ae4-8eb3-8929a57a7ceb": {
+					properties: enumerateGuestPropertiesOutput,
+				},
+				"4a1bf7cd-a7b4-45ef-8cb0-c5a0aafad211": {
+					properties: enumerateGuestPropertiesOutput,
+				},
 			};
 
-			mockVirtualBoxService({ vms, error: null }, mapEnumerateGuestPropertiesOutput);
+			mockVirtualBoxService(
+				{ vms, error: null },
+				mapEnumerateGuestPropertiesOutput
+			);
 			const result = await androidGenymotionService.getEmulatorImages([]);
 			assert.lengthOf(result.devices, 4);
-			assert.deepStrictEqual(result.devices[0], getAvailableEmulatorData({ displayName: "Google Nexus 4 - 5.0.0 - API 21 - 768x1280", imageIdentifier: "9d9beef2-cc60-4a54-bcc0-cc1dbf89811f", version: "5.0" }));
-			assert.deepStrictEqual(result.devices[1], getAvailableEmulatorData({ displayName: "Custom Tablet - 6.0.0 - API 23 - 1536x2048", imageIdentifier: "da83e290-4d54-4b94-8654-540cf0c96604", version: "5.0" }));
-			assert.deepStrictEqual(result.devices[2], getAvailableEmulatorData({ displayName: "Custom Phone - 5.1.0 - API 22 - 768x1280", imageIdentifier: "94761c90-759f-4ae4-8eb3-8929a57a7ceb", version: "5.0" }));
-			assert.deepStrictEqual(result.devices[3], getAvailableEmulatorData({ displayName: "test", imageIdentifier: "4a1bf7cd-a7b4-45ef-8cb0-c5a0aafad211", version: "5.0" }));
+			assert.deepStrictEqual(
+				result.devices[0],
+				getAvailableEmulatorData({
+					displayName: "Google Nexus 4 - 5.0.0 - API 21 - 768x1280",
+					imageIdentifier: "9d9beef2-cc60-4a54-bcc0-cc1dbf89811f",
+					version: "5.0",
+				})
+			);
+			assert.deepStrictEqual(
+				result.devices[1],
+				getAvailableEmulatorData({
+					displayName: "Custom Tablet - 6.0.0 - API 23 - 1536x2048",
+					imageIdentifier: "da83e290-4d54-4b94-8654-540cf0c96604",
+					version: "5.0",
+				})
+			);
+			assert.deepStrictEqual(
+				result.devices[2],
+				getAvailableEmulatorData({
+					displayName: "Custom Phone - 5.1.0 - API 22 - 768x1280",
+					imageIdentifier: "94761c90-759f-4ae4-8eb3-8929a57a7ceb",
+					version: "5.0",
+				})
+			);
+			assert.deepStrictEqual(
+				result.devices[3],
+				getAvailableEmulatorData({
+					displayName: "test",
+					imageIdentifier: "4a1bf7cd-a7b4-45ef-8cb0-c5a0aafad211",
+					version: "5.0",
+				})
+			);
 			assert.deepStrictEqual(result.errors, []);
 		});
 
 		it("should return correct error when Genymotion player cannot be found", async () => {
 			const mapEnumerateGuestPropertiesOutput = {
-				"9d9beef2-cc60-4a54-bcc0-cc1dbf89811f": { properties: enumerateGuestPropertiesOutput },
-				"da83e290-4d54-4b94-8654-540cf0c96604": { properties: enumerateGuestPropertiesOutput }
+				"9d9beef2-cc60-4a54-bcc0-cc1dbf89811f": {
+					properties: enumerateGuestPropertiesOutput,
+				},
+				"da83e290-4d54-4b94-8654-540cf0c96604": {
+					properties: enumerateGuestPropertiesOutput,
+				},
 			};
 
-			mockVirtualBoxService({ vms, error: null }, mapEnumerateGuestPropertiesOutput);
+			mockVirtualBoxService(
+				{ vms, error: null },
+				mapEnumerateGuestPropertiesOutput
+			);
 			const childProcess = testInjector.resolve<IChildProcess>("childProcess");
-			childProcess.trySpawnFromCloseEvent = async (command: string, args: string[], options?: any, spawnFromEventOptions?: ISpawnFromEventOptions): Promise<ISpawnResult> => {
+			childProcess.trySpawnFromCloseEvent = async (
+				command: string,
+				args: string[],
+				options?: any,
+				spawnFromEventOptions?: ISpawnFromEventOptions
+			): Promise<ISpawnResult> => {
 				return <any>{ stderr: "some error" };
 			};
 
 			const errorHelp = "Error help";
-			(<any>androidGenymotionService).getConfigurationPlatformSpecficErrorMessage = () => errorHelp;
+			(<any>(
+				androidGenymotionService
+			)).getConfigurationPlatformSpecficErrorMessage = () => errorHelp;
 			const result = await androidGenymotionService.getEmulatorImages([]);
 			assert.lengthOf(result.devices, 2);
-			assert.deepStrictEqual(result.devices[0], getAvailableEmulatorData({ displayName: "Google Nexus 4 - 5.0.0 - API 21 - 768x1280", imageIdentifier: "9d9beef2-cc60-4a54-bcc0-cc1dbf89811f", version: "5.0", errorHelp }));
-			assert.deepStrictEqual(result.devices[1], getAvailableEmulatorData({ displayName: "Custom Tablet - 6.0.0 - API 23 - 1536x2048", imageIdentifier: "da83e290-4d54-4b94-8654-540cf0c96604", version: "5.0", errorHelp }));
+			assert.deepStrictEqual(
+				result.devices[0],
+				getAvailableEmulatorData({
+					displayName: "Google Nexus 4 - 5.0.0 - API 21 - 768x1280",
+					imageIdentifier: "9d9beef2-cc60-4a54-bcc0-cc1dbf89811f",
+					version: "5.0",
+					errorHelp,
+				})
+			);
+			assert.deepStrictEqual(
+				result.devices[1],
+				getAvailableEmulatorData({
+					displayName: "Custom Tablet - 6.0.0 - API 23 - 1536x2048",
+					imageIdentifier: "da83e290-4d54-4b94-8654-540cf0c96604",
+					version: "5.0",
+					errorHelp,
+				})
+			);
 			assert.deepStrictEqual(result.errors, []);
 		});
 
 		it("should return all emulators when Genymotion player prints its default message on stderr", async () => {
 			const mapEnumerateGuestPropertiesOutput = {
-				"9d9beef2-cc60-4a54-bcc0-cc1dbf89811f": { properties: enumerateGuestPropertiesOutput },
-				"da83e290-4d54-4b94-8654-540cf0c96604": { properties: enumerateGuestPropertiesOutput }
+				"9d9beef2-cc60-4a54-bcc0-cc1dbf89811f": {
+					properties: enumerateGuestPropertiesOutput,
+				},
+				"da83e290-4d54-4b94-8654-540cf0c96604": {
+					properties: enumerateGuestPropertiesOutput,
+				},
 			};
 
-			mockVirtualBoxService({ vms, error: null }, mapEnumerateGuestPropertiesOutput);
+			mockVirtualBoxService(
+				{ vms, error: null },
+				mapEnumerateGuestPropertiesOutput
+			);
 			const childProcess = testInjector.resolve<IChildProcess>("childProcess");
-			childProcess.trySpawnFromCloseEvent = async (command: string, args: string[], options?: any, spawnFromEventOptions?: ISpawnFromEventOptions): Promise<ISpawnResult> => {
-				return <any>{ stderr: AndroidVirtualDevice.GENYMOTION_DEFAULT_STDERR_STRING, exitCode: 1 };
+			childProcess.trySpawnFromCloseEvent = async (
+				command: string,
+				args: string[],
+				options?: any,
+				spawnFromEventOptions?: ISpawnFromEventOptions
+			): Promise<ISpawnResult> => {
+				return <any>{
+					stderr: AndroidVirtualDevice.GENYMOTION_DEFAULT_STDERR_STRING,
+					exitCode: 1,
+				};
 			};
 
 			const result = await androidGenymotionService.getEmulatorImages([]);
 			assert.lengthOf(result.devices, 2);
-			assert.deepStrictEqual(result.devices[0], getAvailableEmulatorData({ displayName: "Google Nexus 4 - 5.0.0 - API 21 - 768x1280", imageIdentifier: "9d9beef2-cc60-4a54-bcc0-cc1dbf89811f", version: "5.0" }));
-			assert.deepStrictEqual(result.devices[1], getAvailableEmulatorData({ displayName: "Custom Tablet - 6.0.0 - API 23 - 1536x2048", imageIdentifier: "da83e290-4d54-4b94-8654-540cf0c96604", version: "5.0" }));
+			assert.deepStrictEqual(
+				result.devices[0],
+				getAvailableEmulatorData({
+					displayName: "Google Nexus 4 - 5.0.0 - API 21 - 768x1280",
+					imageIdentifier: "9d9beef2-cc60-4a54-bcc0-cc1dbf89811f",
+					version: "5.0",
+				})
+			);
+			assert.deepStrictEqual(
+				result.devices[1],
+				getAvailableEmulatorData({
+					displayName: "Custom Tablet - 6.0.0 - API 23 - 1536x2048",
+					imageIdentifier: "da83e290-4d54-4b94-8654-540cf0c96604",
+					version: "5.0",
+				})
+			);
 			assert.deepStrictEqual(result.errors, []);
 		});
 
 		it("should return all emulators when there are available and running emulators", async () => {
 			const mapEnumerateGuestPropertiesOutput = {
-				"9d9beef2-cc60-4a54-bcc0-cc1dbf89811f": { properties: enumerateGuestPropertiesOutput },
-				"da83e290-4d54-4b94-8654-540cf0c96604": { properties: enumerateGuestPropertiesOutput },
-				"94761c90-759f-4ae4-8eb3-8929a57a7ceb": { properties: enumerateGuestPropertiesOutput },
-				"4a1bf7cd-a7b4-45ef-8cb0-c5a0aafad211": { properties: enumerateGuestPropertiesOutput }
+				"9d9beef2-cc60-4a54-bcc0-cc1dbf89811f": {
+					properties: enumerateGuestPropertiesOutput,
+				},
+				"da83e290-4d54-4b94-8654-540cf0c96604": {
+					properties: enumerateGuestPropertiesOutput,
+				},
+				"94761c90-759f-4ae4-8eb3-8929a57a7ceb": {
+					properties: enumerateGuestPropertiesOutput,
+				},
+				"4a1bf7cd-a7b4-45ef-8cb0-c5a0aafad211": {
+					properties: enumerateGuestPropertiesOutput,
+				},
 			};
-			mockVirtualBoxService({ vms, error: null }, mapEnumerateGuestPropertiesOutput);
-			(<any>androidGenymotionService).isGenymotionEmulator = (emulatorId: string) => Promise.resolve(true);
-			androidGenymotionService.getRunningEmulatorName = (emulatorId: string) => Promise.resolve("test");
-			const result = await androidGenymotionService.getEmulatorImages(["192.168.56.101:5555	device"]);
+			mockVirtualBoxService(
+				{ vms, error: null },
+				mapEnumerateGuestPropertiesOutput
+			);
+			(<any>androidGenymotionService).isGenymotionEmulator = (
+				emulatorId: string
+			) => Promise.resolve(true);
+			androidGenymotionService.getRunningEmulatorName = (emulatorId: string) =>
+				Promise.resolve("test");
+			const result = await androidGenymotionService.getEmulatorImages([
+				"192.168.56.101:5555	device",
+			]);
 			assert.lengthOf(result.devices, 4);
-			assert.deepStrictEqual(result.devices[0], getAvailableEmulatorData({ displayName: "Google Nexus 4 - 5.0.0 - API 21 - 768x1280", imageIdentifier: "9d9beef2-cc60-4a54-bcc0-cc1dbf89811f", version: "5.0" }));
-			assert.deepStrictEqual(result.devices[1], getAvailableEmulatorData({ displayName: "Custom Tablet - 6.0.0 - API 23 - 1536x2048", imageIdentifier: "da83e290-4d54-4b94-8654-540cf0c96604", version: "5.0" }));
-			assert.deepStrictEqual(result.devices[2], getAvailableEmulatorData({ displayName: "Custom Phone - 5.1.0 - API 22 - 768x1280", imageIdentifier: "94761c90-759f-4ae4-8eb3-8929a57a7ceb", version: "5.0" }));
-			assert.deepStrictEqual(result.devices[3], getRunningEmulatorData({ displayName: "test", identifier: "192.168.56.101:5555", imageIdentifier: "4a1bf7cd-a7b4-45ef-8cb0-c5a0aafad211", version: "5.0" }));
+			assert.deepStrictEqual(
+				result.devices[0],
+				getAvailableEmulatorData({
+					displayName: "Google Nexus 4 - 5.0.0 - API 21 - 768x1280",
+					imageIdentifier: "9d9beef2-cc60-4a54-bcc0-cc1dbf89811f",
+					version: "5.0",
+				})
+			);
+			assert.deepStrictEqual(
+				result.devices[1],
+				getAvailableEmulatorData({
+					displayName: "Custom Tablet - 6.0.0 - API 23 - 1536x2048",
+					imageIdentifier: "da83e290-4d54-4b94-8654-540cf0c96604",
+					version: "5.0",
+				})
+			);
+			assert.deepStrictEqual(
+				result.devices[2],
+				getAvailableEmulatorData({
+					displayName: "Custom Phone - 5.1.0 - API 22 - 768x1280",
+					imageIdentifier: "94761c90-759f-4ae4-8eb3-8929a57a7ceb",
+					version: "5.0",
+				})
+			);
+			assert.deepStrictEqual(
+				result.devices[3],
+				getRunningEmulatorData({
+					displayName: "test",
+					identifier: "192.168.56.101:5555",
+					imageIdentifier: "4a1bf7cd-a7b4-45ef-8cb0-c5a0aafad211",
+					version: "5.0",
+				})
+			);
 			assert.deepStrictEqual(result.errors, []);
 		});
 	});
@@ -375,13 +556,25 @@ describe("GenymotionService", () => {
 	describe("getRunningEmulatorIds", () => {
 		it("should return [] when there are no running emulators", async () => {
 			mockAdbGetPropertyValue([], "", "");
-			const emulators = await androidGenymotionService.getRunningEmulatorIds([]);
+			const emulators = await androidGenymotionService.getRunningEmulatorIds(
+				[]
+			);
 			assert.deepStrictEqual(emulators, []);
 		});
 		it("should return the devices when there are running emulators", async () => {
-			mockAdbGetPropertyValue(["192.168.56.101:5555", "192.168.56.102:5555"], "ro.build.product", "vbox");
-			const emulators = await androidGenymotionService.getRunningEmulatorIds(["192.168.56.101:5555	device", "192.168.56.102:5555	device"]);
-			assert.deepStrictEqual(emulators, ["192.168.56.101:5555", "192.168.56.102:5555"]);
+			mockAdbGetPropertyValue(
+				["192.168.56.101:5555", "192.168.56.102:5555"],
+				"ro.build.product",
+				"vbox"
+			);
+			const emulators = await androidGenymotionService.getRunningEmulatorIds([
+				"192.168.56.101:5555	device",
+				"192.168.56.102:5555	device",
+			]);
+			assert.deepStrictEqual(emulators, [
+				"192.168.56.101:5555",
+				"192.168.56.102:5555",
+			]);
 		});
 	});
 });

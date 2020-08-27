@@ -16,11 +16,16 @@ export class DeviceTypes {
 
 export const APP_RESOURCES_FOLDER_NAME = "App_Resources";
 
-export const ERROR_NO_DEVICES = "Cannot find connected devices. Reconnect any connected devices, verify that your system recognizes them, and run this command again.";
-export const ERROR_CANT_USE_SIMULATOR = "You can use iOS simulator only on OS X.";
-export const ERROR_NO_DEVICES_CANT_USE_IOS_SIMULATOR = "Cannot find connected devices and cannot start iOS simulator on this OS.";
-export const ERROR_CANNOT_RESOLVE_DEVICE = "Cannot resolve the specified connected device. The provided platform does not match the provided index or identifier. To list currently connected devices and verify that the specified pair of platform and index or identifier exists, run 'device'.";
-export const ERROR_NO_VALID_SUBCOMMAND_FORMAT = "The input is not valid sub-command for '%s' command.";
+export const ERROR_NO_DEVICES =
+	"Cannot find connected devices. Reconnect any connected devices, verify that your system recognizes them, and run this command again.";
+export const ERROR_CANT_USE_SIMULATOR =
+	"You can use iOS simulator only on OS X.";
+export const ERROR_NO_DEVICES_CANT_USE_IOS_SIMULATOR =
+	"Cannot find connected devices and cannot start iOS simulator on this OS.";
+export const ERROR_CANNOT_RESOLVE_DEVICE =
+	"Cannot resolve the specified connected device. The provided platform does not match the provided index or identifier. To list currently connected devices and verify that the specified pair of platform and index or identifier exists, run 'device'.";
+export const ERROR_NO_VALID_SUBCOMMAND_FORMAT =
+	"The input is not valid sub-command for '%s' command.";
 
 export const UNREACHABLE_STATUS = "Unreachable";
 export const CONNECTED_STATUS = "Connected";
@@ -35,7 +40,8 @@ export class LiveSyncPaths {
 	static REMOVEDSYNC_DIR_NAME = "removedsync";
 	static FULLSYNC_DIR_NAME = "fullsync";
 	static IOS_DEVICE_PROJECT_ROOT_PATH = "Library/Application Support/LiveSync";
-	static IOS_DEVICE_SYNC_ZIP_PATH = "Library/Application Support/LiveSync/sync.zip";
+	static IOS_DEVICE_SYNC_ZIP_PATH =
+		"Library/Application Support/LiveSync/sync.zip";
 	static ANDROID_TMP_DIR_NAME = "/data/local/tmp";
 }
 
@@ -56,13 +62,14 @@ export class EmulatorDiscoveryNames {
 }
 
 export const DEVICE_LOG_EVENT_NAME = "deviceLogData";
-export const IOS_LOG_PREDICATE = 'senderImagePath contains "NativeScript" || eventMessage contains[c] "NativeScript"';
+export const IOS_LOG_PREDICATE =
+	'senderImagePath contains "NativeScript" || eventMessage contains[c] "NativeScript"';
 export const IOS_APP_CRASH_LOG_REG_EXP = /Fatal JavaScript exception \- application has been terminated/;
 export const FAIL_LIVESYNC_LOG_REGEX = /Failed to refresh the application with RefreshRequest./;
 
 export const TARGET_FRAMEWORK_IDENTIFIERS = {
 	Cordova: "Cordova",
-	NativeScript: "NativeScript"
+	NativeScript: "NativeScript",
 };
 
 export class Configurations {
@@ -103,14 +110,14 @@ export class HttpStatusCodes {
 }
 
 export const HttpProtocolToPort: IDictionary<number> = {
-	'http:': 80,
-	'https:': 443
+	"http:": 80,
+	"https:": 443,
 };
 
 export const enum AnalyticsClients {
 	Cli = "CLI",
 	NonInteractive = "Non-interactive",
-	Unknown = "Unknown"
+	Unknown = "Unknown",
 }
 
 export const DEFAULT_CHUNK_SIZE = 100;
@@ -119,7 +126,7 @@ export const enum CommandsDelimiters {
 	HierarchicalCommand = "|",
 	DefaultCommandSymbol = "*",
 	DefaultHierarchicalCommand = "|*",
-	HooksCommand = "-"
+	HooksCommand = "-",
 }
 
 export const DEBUGGER_PORT_FOUND_EVENT_NAME = "DEBUGGER_PORT_FOUND";
@@ -151,8 +158,8 @@ export class AndroidVirtualDevice {
 	static TIMEOUT_SECONDS = 120;
 	static GENYMOTION_DEFAULT_STDERR_STRING = "Logging activities to file";
 
-	static UNABLE_TO_START_EMULATOR_MESSAGE = "Cannot run the app in the selected native emulator. Try to restart the adb server by running the `adb kill-server` command in the Command Prompt, or increase the allocated RAM of the virtual device through the Android Virtual Device manager. NativeScript CLI users can try to increase the timeout of the operation by adding the `--timeout` flag.";
-
+	static UNABLE_TO_START_EMULATOR_MESSAGE =
+		"Cannot run the app in the selected native emulator. Try to restart the adb server by running the `adb kill-server` command in the Command Prompt, or increase the allocated RAM of the virtual device through the Android Virtual Device manager. NativeScript CLI users can try to increase the timeout of the operation by adding the `--timeout` flag.";
 }
 
 export const SOCKET_CONNECTION_TIMEOUT_MS = 30000;

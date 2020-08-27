@@ -1,25 +1,40 @@
 import * as path from "path";
 import { format } from "util";
 import { sysInfo } from "@nativescript/doctor";
-import { MacOSVersions, MacOSDeprecationStringFormat, XcodeDeprecationStringFormat } from "./constants";
+import {
+	MacOSVersions,
+	MacOSDeprecationStringFormat,
+	XcodeDeprecationStringFormat,
+} from "./constants";
 import { getNodeWarning } from "./common/verify-node-version";
 import { exported } from "./common/decorators";
 import * as semver from "semver";
-import { ISysInfo, IFileSystem, IHostInfo, ISystemWarning } from "./common/declarations";
+import {
+	ISysInfo,
+	IFileSystem,
+	IHostInfo,
+	ISystemWarning,
+} from "./common/declarations";
 import { injector } from "./common/yok";
 
 export class SysInfo implements ISysInfo {
 	private sysInfo: ISysInfoData = null;
 
-	constructor(private $fs: IFileSystem,
-		private $hostInfo: IHostInfo) { }
+	constructor(private $fs: IFileSystem, private $hostInfo: IHostInfo) {}
 
-	public async getSysInfo(config?: NativeScriptDoctor.ISysInfoConfig): Promise<NativeScriptDoctor.ISysInfoData> {
+	public async getSysInfo(
+		config?: NativeScriptDoctor.ISysInfoConfig
+	): Promise<NativeScriptDoctor.ISysInfoData> {
 		if (!this.sysInfo) {
-			const pathToNativeScriptCliPackageJson = (config && config.pathToNativeScriptCliPackageJson) || path.join(__dirname, "..", "package.json");
+			const pathToNativeScriptCliPackageJson =
+				(config && config.pathToNativeScriptCliPackageJson) ||
+				path.join(__dirname, "..", "package.json");
 			const androidToolsInfo = config && config.androidToolsInfo;
 
-			this.sysInfo = await sysInfo.getSysInfo({ pathToNativeScriptCliPackageJson, androidToolsInfo });
+			this.sysInfo = await sysInfo.getSysInfo({
+				pathToNativeScriptCliPackageJson,
+				androidToolsInfo,
+			});
 		}
 
 		return this.sysInfo;
@@ -54,13 +69,17 @@ export class SysInfo implements ISysInfo {
 		const warnings: ISystemWarning[] = [];
 		const macOSWarningMessage = await this.getMacOSWarningMessage();
 		if (macOSWarningMessage) {
-			macOSWarningMessage.toString = function () { return this.message; };
+			macOSWarningMessage.toString = function () {
+				return this.message;
+			};
 			warnings.push(macOSWarningMessage);
 		}
 
 		const nodeWarning = getNodeWarning();
 		if (nodeWarning) {
-			nodeWarning.toString = function () { return this.message; };
+			nodeWarning.toString = function () {
+				return this.message;
+			};
 			warnings.push(nodeWarning);
 		}
 
@@ -79,7 +98,7 @@ export class SysInfo implements ISysInfo {
 		if (macOSVersion && macOSVersion < MacOSVersions.HighSierra) {
 			return {
 				message: format(MacOSDeprecationStringFormat, macOSVersion),
-				severity: SystemWarningsSeverity.high
+				severity: SystemWarningsSeverity.high,
 			};
 		}
 

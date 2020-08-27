@@ -39,11 +39,11 @@ interface ISimilarCommand {
 	rating: number;
 }
 
-interface ICommandArgument { }
+interface ICommandArgument {}
 
 interface ICommandParameter {
 	mandatory: boolean;
-	errorMessage?: string
+	errorMessage?: string;
 	validate(value: string, errorMessage?: string): Promise<boolean>;
 }
 

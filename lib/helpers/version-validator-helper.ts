@@ -1,4 +1,3 @@
-
 import * as semver from "semver";
 
 export class VersionValidatorHelper {
@@ -22,7 +21,11 @@ export class VersionValidatorHelper {
 		return this.compareCoerceVersions(v1, v2, semver.lte);
 	}
 
-	private compareCoerceVersions(version: string, minVersion: string, condition: Function): boolean {
+	private compareCoerceVersions(
+		version: string,
+		minVersion: string,
+		condition: Function
+	): boolean {
 		return condition(semver.coerce(version), semver.coerce(minVersion));
 	}
 }

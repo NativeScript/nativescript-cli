@@ -1,5 +1,5 @@
 import { assert } from "chai";
-import * as _ from 'lodash';
+import * as _ from "lodash";
 import { PrepareController } from "../../lib/controllers/prepare-controller";
 import { MobileHelper } from "../../lib/common/mobile/mobile-helper";
 import { InjectorStub, TempServiceStub } from "../stubs";
@@ -13,7 +13,7 @@ const prepareData = {
 	hmr: false,
 	env: {},
 	watch: true,
-	watchNative: true
+	watchNative: true,
 };
 
 let isCompileWithWatchCalled = false;
@@ -26,17 +26,17 @@ function createTestInjector(data: { hasNativeChanges: boolean }): IInjector {
 	const injector = new InjectorStub();
 
 	injector.register("platformController", {
-		addPlatformIfNeeded: () => ({})
+		addPlatformIfNeeded: () => ({}),
 	});
 
-	injector.register("prepareNativePlatformService", ({
+	injector.register("prepareNativePlatformService", {
 		prepareNativePlatform: async () => {
 			isNativePrepareCalled = true;
 			return data.hasNativeChanges;
-		}
-	}));
+		},
+	});
 
-	injector.register("webpackCompilerService", ({
+	injector.register("webpackCompilerService", {
 		on: () => ({}),
 		emit: () => ({}),
 		compileWithWatch: async () => {
@@ -44,28 +44,30 @@ function createTestInjector(data: { hasNativeChanges: boolean }): IInjector {
 		},
 		compileWithoutWatch: async () => {
 			isCompileWithoutWatchCalled = true;
-		}
-	}));
+		},
+	});
 
 	injector.register("mobileHelper", MobileHelper);
 	injector.register("prepareController", PrepareController);
 
 	injector.register("nodeModulesDependenciesBuilder", {
-		getProductionDependencies: () => (<any>[])
+		getProductionDependencies: () => <any>[],
 	});
 
 	injector.register("watchIgnoreListService", {
 		addFileToIgnoreList: () => ({}),
-		isFileInIgnoreList: () => false
+		isFileInIgnoreList: () => false,
 	});
 
 	injector.register("analyticsService", {
-		trackEventActionInGoogleAnalytics: () => ({})
+		trackEventActionInGoogleAnalytics: () => ({}),
 	});
 
 	injector.register("tempService", TempServiceStub);
 
-	const prepareController: PrepareController = injector.resolve("prepareController");
+	const prepareController: PrepareController = injector.resolve(
+		"prepareController"
+	);
 	prepareController.emit = (eventName: string, eventData: any) => {
 		emittedEventNames.push(eventName);
 		emittedEventData.push(eventData);
@@ -78,7 +80,6 @@ function createTestInjector(data: { hasNativeChanges: boolean }): IInjector {
 }
 
 describe("prepareController", () => {
-
 	afterEach(() => {
 		isNativePrepareCalled = false;
 		isCompileWithWatchCalled = false;
@@ -89,12 +90,14 @@ describe("prepareController", () => {
 	});
 
 	describe("preparePlatform with watch", () => {
-		_.each(["iOS", "Android"], platform => {
-			_.each([true, false], hasNativeChanges => {
+		_.each(["iOS", "Android"], (platform) => {
+			_.each([true, false], (hasNativeChanges) => {
 				it(`should execute native prepare and webpack's compilation for ${platform} platform when hasNativeChanges is ${hasNativeChanges}`, async () => {
 					const injector = createTestInjector({ hasNativeChanges });
 
-					const prepareController: PrepareController = injector.resolve("prepareController");
+					const prepareController: PrepareController = injector.resolve(
+						"prepareController"
+					);
 					await prepareController.prepare({ ...prepareData, platform });
 
 					assert.isTrue(isCompileWithWatchCalled);
@@ -104,12 +107,22 @@ describe("prepareController", () => {
 			it(`should respect native changes that are made before the initial preparation of the project had been done for ${platform}`, async () => {
 				const injector = createTestInjector({ hasNativeChanges: false });
 
-				const prepareController: PrepareController = injector.resolve("prepareController");
+				const prepareController: PrepareController = injector.resolve(
+					"prepareController"
+				);
 
-				const prepareNativePlatformService = injector.resolve("prepareNativePlatformService");
+				const prepareNativePlatformService = injector.resolve(
+					"prepareNativePlatformService"
+				);
 				prepareNativePlatformService.prepareNativePlatform = async () => {
-					const nativeFilesWatcher = (<any>prepareController).watchersData[projectDir][platform.toLowerCase()].nativeFilesWatcher;
-					nativeFilesWatcher.emit("all", "change", "my/project/App_Resources/some/file");
+					const nativeFilesWatcher = (<any>prepareController).watchersData[
+						projectDir
+					][platform.toLowerCase()].nativeFilesWatcher;
+					nativeFilesWatcher.emit(
+						"all",
+						"change",
+						"my/project/App_Resources/some/file"
+					);
 					isNativePrepareCalled = true;
 					return false;
 				};
@@ -119,18 +132,30 @@ describe("prepareController", () => {
 				assert.lengthOf(emittedEventNames, 1);
 				assert.lengthOf(emittedEventData, 1);
 				assert.deepStrictEqual(emittedEventNames[0], PREPARE_READY_EVENT_NAME);
-				assert.deepStrictEqual(emittedEventData[0], { files: [], hasNativeChanges: true, hasOnlyHotUpdateFiles: false, hmrData: null, platform: platform.toLowerCase() });
+				assert.deepStrictEqual(emittedEventData[0], {
+					files: [],
+					hasNativeChanges: true,
+					hasOnlyHotUpdateFiles: false,
+					hmrData: null,
+					platform: platform.toLowerCase(),
+				});
 			});
 		});
 	});
 
 	describe("preparePlatform without watch", () => {
-		_.each(["ios", "android"], platform => {
+		_.each(["ios", "android"], (platform) => {
 			it("shouldn't start the watcher when watch is false", async () => {
 				const injector = createTestInjector({ hasNativeChanges: false });
 
-				const prepareController: PrepareController = injector.resolve("prepareController");
-				await prepareController.prepare({ ...prepareData, watch: false, platform });
+				const prepareController: PrepareController = injector.resolve(
+					"prepareController"
+				);
+				await prepareController.prepare({
+					...prepareData,
+					watch: false,
+					platform,
+				});
 
 				assert.isTrue(isNativePrepareCalled);
 				assert.isTrue(isCompileWithoutWatchCalled);

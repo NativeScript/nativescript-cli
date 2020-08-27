@@ -4,7 +4,7 @@ import { Errors } from "../../../errors";
 import { Logger } from "../../../logger/logger";
 import { MobileHelper } from "../../../mobile/mobile-helper";
 import { DevicePlatformsConstants } from "../../../mobile/device-platforms-constants";
-import * as _ from 'lodash';
+import * as _ from "lodash";
 import * as path from "path";
 import { assert } from "chai";
 import { LiveSyncPaths } from "../../../constants";
@@ -32,27 +32,37 @@ class AndroidDebugBridgeMock {
 		return Promise.resolve();
 	}
 
-	public async pushFile(localFilePath: string, deviceFilePath: string): Promise<void> {
-		await this.executeCommand(['push', localFilePath, deviceFilePath]);
+	public async pushFile(
+		localFilePath: string,
+		deviceFilePath: string
+	): Promise<void> {
+		await this.executeCommand(["push", localFilePath, deviceFilePath]);
 	}
 }
 
 class LocalToDevicePathDataMock {
-	constructor(private filePath: string) { }
+	constructor(private filePath: string) {}
 
 	public getLocalPath(): string {
 		return this.filePath;
 	}
 
 	public getDevicePath(): string {
-		return  `${LiveSyncPaths.ANDROID_TMP_DIR_NAME}/${path.basename(this.filePath)}`;
+		return `${LiveSyncPaths.ANDROID_TMP_DIR_NAME}/${path.basename(
+			this.filePath
+		)}`;
 	}
 }
 
-function mockFsStats(options: { isDirectory: boolean, isFile: boolean }): (filePath: string) => { isDirectory: () => boolean, isFile: () => boolean } {
+function mockFsStats(options: {
+	isDirectory: boolean;
+	isFile: boolean;
+}): (
+	filePath: string
+) => { isDirectory: () => boolean; isFile: () => boolean } {
 	return (filePath: string) => ({
 		isDirectory: (): boolean => options.isDirectory,
-		isFile: (): boolean => options.isFile
+		isFile: (): boolean => options.isFile,
 	});
 }
 
@@ -72,36 +82,43 @@ function createTestInjector(): IInjector {
 
 function createAndroidDeviceFileSystem(injector: IInjector) {
 	const adb = new AndroidDebugBridgeMock();
-	const androidDeviceFS = injector.resolve(AndroidDeviceFileSystem, { "adb": adb, "identifier": myTestAppIdentifier });
+	const androidDeviceFS = injector.resolve(AndroidDeviceFileSystem, {
+		adb: adb,
+		identifier: myTestAppIdentifier,
+	});
 	androidDeviceFS.createFileOnDevice = () => Promise.resolve();
 	return androidDeviceFS;
 }
 
 function createDeviceAppData(androidVersion?: string): Mobile.IDeviceAppData {
 	return {
-		getDeviceProjectRootPath: async () => `${LiveSyncPaths.ANDROID_TMP_DIR_NAME}/${LiveSyncPaths.SYNC_DIR_NAME}`,
+		getDeviceProjectRootPath: async () =>
+			`${LiveSyncPaths.ANDROID_TMP_DIR_NAME}/${LiveSyncPaths.SYNC_DIR_NAME}`,
 		appIdentifier: myTestAppIdentifier,
 		device: <Mobile.IDevice>{
 			deviceInfo: {
-				version: androidVersion || "8.1.2"
-			}
+				version: androidVersion || "8.1.2",
+			},
 		},
 		platform: "Android",
-		projectDir: ""
+		projectDir: "",
 	};
 }
 
-function setup(options?: {
-	deviceAndroidVersion?: string,
-}) {
+function setup(options?: { deviceAndroidVersion?: string }) {
 	options = options || {};
 	const injector = createTestInjector();
 
 	const projectRoot = "~/TestApp/app";
 	const modifiedFileName = "test.js";
 	const unmodifiedFileName = "notChangedFile.js";
-	const files = [`${projectRoot}/${modifiedFileName}`, `${projectRoot}/${unmodifiedFileName}`];
-	const localToDevicePaths = _.map(files, file => injector.resolve(LocalToDevicePathDataMock, { filePath: file }));
+	const files = [
+		`${projectRoot}/${modifiedFileName}`,
+		`${projectRoot}/${unmodifiedFileName}`,
+	];
+	const localToDevicePaths = _.map(files, (file) =>
+		injector.resolve(LocalToDevicePathDataMock, { filePath: file })
+	);
 
 	const deviceAppData = createDeviceAppData(options.deviceAndroidVersion);
 
@@ -117,7 +134,7 @@ function setup(options?: {
 		localToDevicePaths,
 		deviceAppData,
 		projectRoot,
-		injector
+		injector,
 	};
 }
 
@@ -129,7 +146,11 @@ describe("AndroidDeviceFileSystem", () => {
 		it("pushes the whole directory when hash file doesn't exist on device", async () => {
 			const testSetup = setup();
 
-			await androidDeviceFileSystem.transferDirectory(testSetup.deviceAppData, testSetup.localToDevicePaths, testSetup.projectRoot);
+			await androidDeviceFileSystem.transferDirectory(
+				testSetup.deviceAppData,
+				testSetup.localToDevicePaths,
+				testSetup.projectRoot
+			);
 
 			assert.isTrue(isAdbPushExecuted);
 			assert.isTrue(isAdbPushAppDirCalled);
@@ -137,10 +158,14 @@ describe("AndroidDeviceFileSystem", () => {
 
 		it("pushes the whole directory file by file on Android P when hash file doesn't exist on device", async () => {
 			const testSetup = setup({
-				deviceAndroidVersion: "9"
+				deviceAndroidVersion: "9",
 			});
 
-			await androidDeviceFileSystem.transferDirectory(testSetup.deviceAppData, testSetup.localToDevicePaths, testSetup.projectRoot);
+			await androidDeviceFileSystem.transferDirectory(
+				testSetup.deviceAppData,
+				testSetup.localToDevicePaths,
+				testSetup.projectRoot
+			);
 
 			assert.isTrue(isAdbPushExecuted);
 			assert.isFalse(isAdbPushAppDirCalled);
@@ -148,10 +173,14 @@ describe("AndroidDeviceFileSystem", () => {
 
 		it("pushes the whole directory file by file on any future Android version when hash file doesn't exist on device", async () => {
 			const testSetup = setup({
-				deviceAndroidVersion: "999"
+				deviceAndroidVersion: "999",
 			});
 
-			await androidDeviceFileSystem.transferDirectory(testSetup.deviceAppData, testSetup.localToDevicePaths, testSetup.projectRoot);
+			await androidDeviceFileSystem.transferDirectory(
+				testSetup.deviceAppData,
+				testSetup.localToDevicePaths,
+				testSetup.projectRoot
+			);
 
 			assert.isTrue(isAdbPushExecuted);
 			assert.isFalse(isAdbPushAppDirCalled);
@@ -159,10 +188,14 @@ describe("AndroidDeviceFileSystem", () => {
 
 		it("pushes the whole directory file by file on Android P", async () => {
 			const testSetup = setup({
-				deviceAndroidVersion: "9"
+				deviceAndroidVersion: "9",
 			});
 
-			await androidDeviceFileSystem.transferDirectory(testSetup.deviceAppData, testSetup.localToDevicePaths, testSetup.projectRoot);
+			await androidDeviceFileSystem.transferDirectory(
+				testSetup.deviceAppData,
+				testSetup.localToDevicePaths,
+				testSetup.projectRoot
+			);
 
 			assert.isTrue(isAdbPushExecuted);
 			assert.isFalse(isAdbPushAppDirCalled);
@@ -173,7 +206,8 @@ describe("AndroidDeviceFileSystem", () => {
 		beforeEach(() => {
 			resolveParams = [];
 			const { injector } = setup();
-			injector.resolve = (service: any, args: string[]) => resolveParams.push({ service, args });
+			injector.resolve = (service: any, args: string[]) =>
+				resolveParams.push({ service, args });
 		});
 		it("should resolve AndroidDeviceHashService when the key is not stored in dictionary", () => {
 			androidDeviceFileSystem.getDeviceHashService(appIdentifier);

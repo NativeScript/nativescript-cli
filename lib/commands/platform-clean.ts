@@ -1,6 +1,10 @@
-import * as _ from 'lodash';
+import * as _ from "lodash";
 import { IProjectData } from "../definitions/project";
-import { IOptions, IPlatformCommandHelper, IPlatformValidationService } from "../declarations";
+import {
+	IOptions,
+	IPlatformCommandHelper,
+	IPlatformValidationService,
+} from "../declarations";
 import { IPlatformEnvironmentRequirements } from "../definitions/platform";
 import { ICommand, ICommandParameter } from "../common/definitions/commands";
 import { IErrors } from "../common/declarations";
@@ -21,27 +25,42 @@ export class CleanCommand implements ICommand {
 	}
 
 	public async execute(args: string[]): Promise<void> {
-		await this.$platformCommandHelper.cleanPlatforms(args, this.$projectData, this.$options.frameworkPath);
+		await this.$platformCommandHelper.cleanPlatforms(
+			args,
+			this.$projectData,
+			this.$options.frameworkPath
+		);
 	}
 
 	public async canExecute(args: string[]): Promise<boolean> {
 		if (!args || args.length === 0) {
-			this.$errors.failWithHelp("No platform specified. Please specify a platform to clean.");
+			this.$errors.failWithHelp(
+				"No platform specified. Please specify a platform to clean."
+			);
 		}
 
-		_.each(args, platform => {
-			this.$platformValidationService.validatePlatform(platform, this.$projectData);
+		_.each(args, (platform) => {
+			this.$platformValidationService.validatePlatform(
+				platform,
+				this.$projectData
+			);
 		});
 
 		for (const platform of args) {
-			this.$platformValidationService.validatePlatformInstalled(platform, this.$projectData);
+			this.$platformValidationService.validatePlatformInstalled(
+				platform,
+				this.$projectData
+			);
 
-			const currentRuntimeVersion = this.$platformCommandHelper.getCurrentPlatformVersion(platform, this.$projectData);
+			const currentRuntimeVersion = this.$platformCommandHelper.getCurrentPlatformVersion(
+				platform,
+				this.$projectData
+			);
 			await this.$platformEnvironmentRequirements.checkEnvironmentRequirements({
 				platform,
 				projectDir: this.$projectData.projectDir,
 				runtimeVersion: currentRuntimeVersion,
-				options: this.$options
+				options: this.$options,
 			});
 		}
 

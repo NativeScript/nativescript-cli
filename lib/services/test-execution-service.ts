@@ -1,12 +1,21 @@
 import * as constants from "../constants";
-import * as path from 'path';
-import * as os from 'os';
+import * as path from "path";
+import * as os from "os";
 import { RunController } from "../controllers/run-controller";
-import { ITestExecutionService, IProjectDataService, IProjectData } from "../definitions/project";
+import {
+	ITestExecutionService,
+	IProjectDataService,
+	IProjectData,
+} from "../definitions/project";
 import { IConfiguration, IOptions } from "../declarations";
 import { IPluginsService } from "../definitions/plugins";
-import { Server, IFileSystem, IChildProcess, ErrorCodes } from "../common/declarations";
-import * as _ from 'lodash';
+import {
+	Server,
+	IFileSystem,
+	IChildProcess,
+	ErrorCodes,
+} from "../common/declarations";
+import * as _ from "lodash";
 import { injector } from "../common/yok";
 import { ICommandParameter } from "../common/definitions/commands";
 
@@ -29,36 +38,65 @@ export class TestExecutionService implements ITestExecutionService {
 		private $options: IOptions,
 		private $pluginsService: IPluginsService,
 		private $projectDataService: IProjectDataService,
-		private $childProcess: IChildProcess) { }
+		private $childProcess: IChildProcess
+	) {}
 
 	public platform: string;
 
-	public async startKarmaServer(platform: string, liveSyncInfo: ILiveSyncInfo, deviceDescriptors: ILiveSyncDeviceDescriptor[]): Promise<void> {
+	public async startKarmaServer(
+		platform: string,
+		liveSyncInfo: ILiveSyncInfo,
+		deviceDescriptors: ILiveSyncDeviceDescriptor[]
+	): Promise<void> {
 		platform = platform.toLowerCase();
 		this.platform = platform;
 
-		const projectData = this.$projectDataService.getProjectData(liveSyncInfo.projectDir);
+		const projectData = this.$projectDataService.getProjectData(
+			liveSyncInfo.projectDir
+		);
 
 		// We need the dependencies installed here, so we can start the Karma server.
 		await this.$pluginsService.ensureAllDependenciesAreInstalled(projectData);
 
 		const karmaConfig = this.getKarmaConfiguration(platform, projectData);
 		// In case you want to debug the unit test runner, add "--inspect-brk=<port>" as a first element in the array of args.
-		const karmaRunner = this.$childProcess.spawn(process.execPath, [path.join(__dirname, "karma-execution.js")], { stdio: ["inherit", "inherit", "inherit", "ipc"] });
+		const karmaRunner = this.$childProcess.spawn(
+			process.execPath,
+			[path.join(__dirname, "karma-execution.js")],
+			{ stdio: ["inherit", "inherit", "inherit", "ipc"] }
+		);
 		const launchKarmaTests = async (karmaData: any) => {
-			this.$logger.trace("## Unit-testing: Parent process received message", karmaData);
+			this.$logger.trace(
+				"## Unit-testing: Parent process received message",
+				karmaData
+			);
 			let port: string;
 			if (karmaData.url) {
 				port = karmaData.url.port;
 				const socketIoJsUrl = `http://${karmaData.url.host}/socket.io/socket.io.js`;
-				const socketIoJs = (await this.$httpClient.httpRequest(socketIoJsUrl)).body;
-				this.$fs.writeFile(path.join(liveSyncInfo.projectDir, TestExecutionService.SOCKETIO_JS_FILE_NAME), socketIoJs);
+				const socketIoJs = (await this.$httpClient.httpRequest(socketIoJsUrl))
+					.body;
+				this.$fs.writeFile(
+					path.join(
+						liveSyncInfo.projectDir,
+						TestExecutionService.SOCKETIO_JS_FILE_NAME
+					),
+					socketIoJs
+				);
 			}
 
 			if (karmaData.launcherConfig) {
-				const configOptions: IKarmaConfigOptions = JSON.parse(karmaData.launcherConfig);
+				const configOptions: IKarmaConfigOptions = JSON.parse(
+					karmaData.launcherConfig
+				);
 				const configJs = this.generateConfig(port, configOptions);
-				this.$fs.writeFile(path.join(liveSyncInfo.projectDir, TestExecutionService.CONFIG_FILE_NAME), configJs);
+				this.$fs.writeFile(
+					path.join(
+						liveSyncInfo.projectDir,
+						TestExecutionService.CONFIG_FILE_NAME
+					),
+					configJs
+				);
 			}
 
 			// Prepare the project AFTER the TestExecutionService.CONFIG_FILE_NAME file is created in node_modules
@@ -66,7 +104,7 @@ export class TestExecutionService implements ITestExecutionService {
 
 			await this.$runController.run({
 				liveSyncInfo,
-				deviceDescriptors
+				deviceDescriptors,
 			});
 		};
 
@@ -76,11 +114,10 @@ export class TestExecutionService implements ITestExecutionService {
 				return;
 			}
 
-			launchKarmaTests(karmaData)
-				.catch((result) => {
-					this.$logger.error(result);
-					process.exit(ErrorCodes.KARMA_FAIL);
-				});
+			launchKarmaTests(karmaData).catch((result) => {
+				this.$logger.error(result);
+				process.exit(ErrorCodes.KARMA_FAIL);
+			});
 		});
 
 		return new Promise<void>((resolve, reject) => {
@@ -98,7 +135,9 @@ export class TestExecutionService implements ITestExecutionService {
 		});
 	}
 
-	public async canStartKarmaServer(projectData: IProjectData): Promise<boolean> {
+	public async canStartKarmaServer(
+		projectData: IProjectData
+	): Promise<boolean> {
 		let canStartKarmaServer = true;
 		const requiredDependencies = ["karma", "@nativescript/unit-test-runner"];
 		_.each(requiredDependencies, (dep) => {
@@ -116,9 +155,12 @@ export class TestExecutionService implements ITestExecutionService {
 	private generateConfig(port: string, options: any): string {
 		const nics = os.networkInterfaces();
 		const ips = Object.keys(nics)
-			.map(nicName => nics[nicName].filter((binding: any) => binding.family === 'IPv4')[0])
-			.filter(binding => binding)
-			.map(binding => binding.address);
+			.map(
+				(nicName) =>
+					nics[nicName].filter((binding: any) => binding.family === "IPv4")[0]
+			)
+			.filter((binding) => binding)
+			.map((binding) => binding.address);
 
 		const config = {
 			port,
@@ -126,13 +168,16 @@ export class TestExecutionService implements ITestExecutionService {
 			options,
 		};
 
-		return 'module.exports = ' + JSON.stringify(config);
+		return "module.exports = " + JSON.stringify(config);
 	}
 
-	private getKarmaConfiguration(platform: string, projectData: IProjectData): any {
+	private getKarmaConfiguration(
+		platform: string,
+		projectData: IProjectData
+	): any {
 		const karmaConfig: any = {
 			browsers: [platform],
-			configFile: path.join(projectData.projectDir, 'karma.conf.js'),
+			configFile: path.join(projectData.projectDir, "karma.conf.js"),
 			_NS: {
 				log: this.$logger.getLevel(),
 				path: this.$options.path,
@@ -143,13 +188,13 @@ export class TestExecutionService implements ITestExecutionService {
 					debugBrk: this.$options.debugBrk,
 					watch: !!this.$options.watch,
 					bundle: true,
-					appDirectoryRelativePath: projectData.getAppDirectoryRelativePath()
-				}
+					appDirectoryRelativePath: projectData.getAppDirectoryRelativePath(),
+				},
 			},
 		};
 
-		if (this.$config.DEBUG || this.$logger.getLevel() === 'TRACE') {
-			karmaConfig.logLevel = 'DEBUG';
+		if (this.$config.DEBUG || this.$logger.getLevel() === "TRACE") {
+			karmaConfig.logLevel = "DEBUG";
 		}
 
 		if (!this.$options.watch) {
@@ -171,4 +216,4 @@ export class TestExecutionService implements ITestExecutionService {
 		return karmaConfig;
 	}
 }
-injector.register('testExecutionService', TestExecutionService);
+injector.register("testExecutionService", TestExecutionService);

@@ -4,7 +4,9 @@ import { LoggerConfigData } from "../../../constants";
 function cliAppender(layout: Function) {
 	const appender = (loggingEvent: LoggingEvent) => {
 		if (loggingEvent && loggingEvent.data) {
-			const stream = loggingEvent.context[LoggerConfigData.useStderr] ? process.stderr : process.stdout;
+			const stream = loggingEvent.context[LoggerConfigData.useStderr]
+				? process.stderr
+				: process.stdout;
 			const preparedData = layout(loggingEvent);
 			stream.write(preparedData);
 		}

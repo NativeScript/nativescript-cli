@@ -1,6 +1,13 @@
 import * as fs from "fs";
-import * as _ from 'lodash';
-import { join, dirname, basename, resolve as pathResolve, extname, normalize } from "path";
+import * as _ from "lodash";
+import {
+	join,
+	dirname,
+	basename,
+	resolve as pathResolve,
+	extname,
+	normalize,
+} from "path";
 import * as minimatch from "minimatch";
 import * as injector from "./yok";
 import * as crypto from "crypto";
@@ -21,10 +28,14 @@ export class FileSystem implements IFileSystem {
 	private static DEFAULT_INDENTATION_CHARACTER = "\t";
 	private static JSON_OBJECT_REGEXP = new RegExp(`{\\r*\\n*(\\W*)"`, "m");
 
-	constructor(private $injector: IInjector) { }
+	constructor(private $injector: IInjector) {}
 
 	//TODO: try 'archiver' module for zipping
-	public async zipFiles(zipFile: string, files: string[], zipPathCallback: (path: string) => string): Promise<void> {
+	public async zipFiles(
+		zipFile: string,
+		files: string[],
+		zipPathCallback: (path: string) => string
+	): Promise<void> {
 		//we are resolving it here instead of in the constructor, because config has dependency on file system and config shouldn't require logger
 		const $logger = this.$injector.resolve("logger");
 		const zipstream = require("zipstream");
@@ -48,7 +59,8 @@ export class FileSystem implements IFileSystem {
 					zip.addFile(
 						fs.createReadStream(file),
 						{ name: relativePath },
-						zipCallback);
+						zipCallback
+					);
 				} else {
 					outFile.on("finish", () => resolve());
 
@@ -59,7 +71,6 @@ export class FileSystem implements IFileSystem {
 				}
 			};
 			zipCallback();
-
 		});
 	}
 
@@ -67,9 +78,15 @@ export class FileSystem implements IFileSystem {
 		return fs.utimesSync(path, atime, mtime);
 	}
 
-	public async unzip(zipFile: string, destinationDir: string, options?: { overwriteExisitingFiles?: boolean; caseSensitive?: boolean },
-		fileFilters?: string[]): Promise<void> {
-		const shouldOverwriteFiles = !(options && options.overwriteExisitingFiles === false);
+	public async unzip(
+		zipFile: string,
+		destinationDir: string,
+		options?: { overwriteExisitingFiles?: boolean; caseSensitive?: boolean },
+		fileFilters?: string[]
+	): Promise<void> {
+		const shouldOverwriteFiles = !(
+			options && options.overwriteExisitingFiles === false
+		);
 		const isCaseSensitive = !(options && options.caseSensitive === false);
 		const $hostInfo = this.$injector.resolve("$hostInfo");
 
@@ -88,23 +105,32 @@ export class FileSystem implements IFileSystem {
 			zipFile = this.findFileCaseInsensitive(zipFile);
 		}
 
-		const args = _.flatten<string>(["-b",
+		const args = _.flatten<string>([
+			"-b",
 			shouldOverwriteFiles ? "-o" : "-n",
 			isCaseSensitive ? [] : "-C",
 			zipFile,
 			fileFilters || [],
 			"-d",
-			destinationDir]);
+			destinationDir,
+		]);
 
 		const $childProcess = this.$injector.resolve("childProcess");
-		await $childProcess.spawnFromEvent(proc, args, "close", { stdio: "ignore", detached: true });
+		await $childProcess.spawnFromEvent(proc, args, "close", {
+			stdio: "ignore",
+			detached: true,
+		});
 	}
 
 	private findFileCaseInsensitive(file: string): string {
 		const dir = dirname(file);
 		const baseName = basename(file);
 		const entries = this.readDirectory(dir);
-		const match = minimatch.match(entries, baseName, { nocase: true, nonegate: true, nonull: true })[0];
+		const match = minimatch.match(entries, baseName, {
+			nocase: true,
+			nonegate: true,
+			nonull: true,
+		})[0];
 		const result = join(dir, match);
 		return result;
 	}
@@ -117,8 +143,9 @@ export class FileSystem implements IFileSystem {
 		try {
 			fs.unlinkSync(path);
 		} catch (err) {
-			if (err && err.code !== "ENOENT") {  // ignore "file doesn't exist" error
-				throw (err);
+			if (err && err.code !== "ENOENT") {
+				// ignore "file doesn't exist" error
+				throw err;
 			}
 		}
 	}
@@ -180,11 +207,17 @@ export class FileSystem implements IFileSystem {
 		return fs.readdirSync(path);
 	}
 
-	public readFile(filename: string, options?: IReadFileOptions): string | Buffer {
+	public readFile(
+		filename: string,
+		options?: IReadFileOptions
+	): string | Buffer {
 		return fs.readFileSync(filename, options);
 	}
 
-	public readText(filename: string, options?: IReadFileOptions | string): string {
+	public readText(
+		filename: string,
+		options?: IReadFileOptions | string
+	): string {
 		options = options || { encoding: "utf8" };
 
 		if (_.isString(options)) {
@@ -206,12 +239,16 @@ export class FileSystem implements IFileSystem {
 		return null;
 	}
 
-	public writeFile(filename: string, data: string | Buffer, encoding?: string): void {
+	public writeFile(
+		filename: string,
+		data: string | Buffer,
+		encoding?: string
+	): void {
 		this.createDirectory(dirname(filename));
 		if (!data) {
 			// node 14 will no longer coerce unsupported input to strings anymore.
 			// clean any null or undefined data
-			data = '';
+			data = "";
 		}
 		fs.writeFileSync(filename, data, { encoding: <BufferEncoding>encoding });
 	}
@@ -220,7 +257,12 @@ export class FileSystem implements IFileSystem {
 		fs.appendFileSync(filename, data, { encoding: <BufferEncoding>encoding });
 	}
 
-	public writeJson(filename: string, data: any, space?: string, encoding?: string): void {
+	public writeJson(
+		filename: string,
+		data: any,
+		space?: string,
+		encoding?: string
+	): void {
 		if (!space) {
 			space = this.getIndentationCharacter(filename);
 		}
@@ -258,30 +300,36 @@ export class FileSystem implements IFileSystem {
 		}
 	}
 
-	public createReadStream(path: string, options?: {
-		flags?: string;
-		encoding?: BufferEncoding;
-		fd?: number;
-		mode?: number;
-		autoClose?: boolean;
-		emitClose?: boolean;
-		start?: number;
-		end?: number;
-		highWaterMark?: number;
-	}): NodeJS.ReadableStream {
+	public createReadStream(
+		path: string,
+		options?: {
+			flags?: string;
+			encoding?: BufferEncoding;
+			fd?: number;
+			mode?: number;
+			autoClose?: boolean;
+			emitClose?: boolean;
+			start?: number;
+			end?: number;
+			highWaterMark?: number;
+		}
+	): NodeJS.ReadableStream {
 		return fs.createReadStream(path, options);
 	}
 
-	public createWriteStream(path: string, options?: {
-		flags?: string;
-		encoding?: BufferEncoding;
-		fd?: number;
-		mode?: number;
-		autoClose?: boolean;
-		emitClose?: boolean;
-		start?: number;
-		highWaterMark?: number;
-	}): any {
+	public createWriteStream(
+		path: string,
+		options?: {
+			flags?: string;
+			encoding?: BufferEncoding;
+			fd?: number;
+			mode?: number;
+			autoClose?: boolean;
+			emitClose?: boolean;
+			start?: number;
+			highWaterMark?: number;
+		}
+	): any {
 		return fs.createWriteStream(path, options);
 	}
 
@@ -345,30 +393,45 @@ export class FileSystem implements IFileSystem {
 		}
 	}
 
-	public symlink(sourcePath: string, destinationPath: string, type?: fs.symlink.Type): void {
+	public symlink(
+		sourcePath: string,
+		destinationPath: string,
+		type?: fs.symlink.Type
+	): void {
 		fs.symlinkSync(sourcePath, destinationPath, type);
 	}
 
-	public async setCurrentUserAsOwner(path: string, owner: string): Promise<void> {
+	public async setCurrentUserAsOwner(
+		path: string,
+		owner: string
+	): Promise<void> {
 		const $childProcess = this.$injector.resolve("childProcess");
 
 		if (!this.$injector.resolve("$hostInfo").isWindows) {
-			const chown = $childProcess.spawn("chown", ["-R", owner, path],
-				{ stdio: "ignore", detached: true });
+			const chown = $childProcess.spawn("chown", ["-R", owner, path], {
+				stdio: "ignore",
+				detached: true,
+			});
 			await this.futureFromEvent(chown, "close");
 		}
 		// nothing to do on Windows, as chown does not work on this platform
 	}
 
 	// filterCallback: function(path: String, stat: fs.Stats): Boolean
-	public enumerateFilesInDirectorySync(directoryPath: string,
+	public enumerateFilesInDirectorySync(
+		directoryPath: string,
 		filterCallback?: (_file: string, _stat: IFsStats) => boolean,
-		opts?: { enumerateDirectories?: boolean, includeEmptyDirectories?: boolean }, foundFiles?: string[]): string[] {
+		opts?: {
+			enumerateDirectories?: boolean;
+			includeEmptyDirectories?: boolean;
+		},
+		foundFiles?: string[]
+	): string[] {
 		foundFiles = foundFiles || [];
 
 		if (!this.exists(directoryPath)) {
 			const $logger = this.$injector.resolve("logger");
-			$logger.warn('Could not find folder: ' + directoryPath);
+			$logger.warn("Could not find folder: " + directoryPath);
 			return foundFiles;
 		}
 
@@ -388,11 +451,20 @@ export class FileSystem implements IFileSystem {
 				if (opts && opts.enumerateDirectories) {
 					foundFiles.push(file);
 				}
-				if (opts && opts.includeEmptyDirectories && this.readDirectory(file).length === 0) {
+				if (
+					opts &&
+					opts.includeEmptyDirectories &&
+					this.readDirectory(file).length === 0
+				) {
 					foundFiles.push(file);
 				}
 
-				this.enumerateFilesInDirectorySync(file, filterCallback, opts, foundFiles);
+				this.enumerateFilesInDirectorySync(
+					file,
+					filterCallback,
+					opts,
+					foundFiles
+				);
 			} else {
 				foundFiles.push(file);
 			}
@@ -400,7 +472,10 @@ export class FileSystem implements IFileSystem {
 		return foundFiles;
 	}
 
-	public async getFileShasum(fileName: string, options?: { algorithm?: string, encoding?: crypto.HexBase64Latin1Encoding }): Promise<string> {
+	public async getFileShasum(
+		fileName: string,
+		options?: { algorithm?: string; encoding?: crypto.HexBase64Latin1Encoding }
+	): Promise<string> {
 		return new Promise<string>((resolve, reject) => {
 			const algorithm = (options && options.algorithm) || "sha1";
 			const encoding = (options && options.encoding) || "hex";
@@ -420,15 +495,14 @@ export class FileSystem implements IFileSystem {
 			fileStream.on("error", (err: Error) => {
 				reject(err);
 			});
-
 		});
 	}
 
 	public async readStdin(): Promise<string> {
 		return new Promise<string>((resolve, reject) => {
-			let buffer = '';
-			process.stdin.on('data', (data: string) => buffer += data);
-			process.stdin.on('end', () => resolve(buffer));
+			let buffer = "";
+			process.stdin.on("data", (data: string) => (buffer += data));
+			process.stdin.on("end", () => resolve(buffer));
 		});
 	}
 
@@ -463,6 +537,8 @@ export class FileSystem implements IFileSystem {
 
 		const indentation = matches[1];
 
-		return indentation[0] === " " ? indentation : FileSystem.DEFAULT_INDENTATION_CHARACTER;
+		return indentation[0] === " "
+			? indentation
+			: FileSystem.DEFAULT_INDENTATION_CHARACTER;
 	}
 }

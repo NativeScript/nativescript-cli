@@ -6,33 +6,49 @@ import { IFileSystem } from "../common/declarations";
 import { injector } from "../common/yok";
 
 export class IOSEntitlementsService {
-	constructor(private $fs: IFileSystem,
+	constructor(
+		private $fs: IFileSystem,
 		private $logger: ILogger,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $mobileHelper: Mobile.IMobileHelper,
-		private $pluginsService: IPluginsService) {
-	}
+		private $pluginsService: IPluginsService
+	) {}
 
 	public static readonly DefaultEntitlementsName: string = "app.entitlements";
 
-	private getDefaultAppEntitlementsPath(projectData: IProjectData) : string {
+	private getDefaultAppEntitlementsPath(projectData: IProjectData): string {
 		const entitlementsName = IOSEntitlementsService.DefaultEntitlementsName;
-		const entitlementsPath = path.join(projectData.appResourcesDirectoryPath,
-			this.$mobileHelper.normalizePlatformName(this.$devicePlatformsConstants.iOS),
-			entitlementsName);
+		const entitlementsPath = path.join(
+			projectData.appResourcesDirectoryPath,
+			this.$mobileHelper.normalizePlatformName(
+				this.$devicePlatformsConstants.iOS
+			),
+			entitlementsName
+		);
 		return entitlementsPath;
 	}
 
-	public getPlatformsEntitlementsPath(projectData: IProjectData) : string {
-		return path.join(projectData.platformsDir, this.$devicePlatformsConstants.iOS.toLowerCase(),
-			projectData.projectName, projectData.projectName + ".entitlements");
+	public getPlatformsEntitlementsPath(projectData: IProjectData): string {
+		return path.join(
+			projectData.platformsDir,
+			this.$devicePlatformsConstants.iOS.toLowerCase(),
+			projectData.projectName,
+			projectData.projectName + ".entitlements"
+		);
 	}
-	public getPlatformsEntitlementsRelativePath(projectData: IProjectData): string {
-		return path.join(projectData.projectName, projectData.projectName + ".entitlements");
+	public getPlatformsEntitlementsRelativePath(
+		projectData: IProjectData
+	): string {
+		return path.join(
+			projectData.projectName,
+			projectData.projectName + ".entitlements"
+		);
 	}
 
 	public async merge(projectData: IProjectData): Promise<void> {
-		const session = new PlistSession({ log: (txt: string) => this.$logger.trace("App.entitlements: " + txt) });
+		const session = new PlistSession({
+			log: (txt: string) => this.$logger.trace("App.entitlements: " + txt),
+		});
 
 		const projectDir = projectData.projectDir;
 		const makePatch = (plistPath: string) => {
@@ -44,14 +60,16 @@ export class IOSEntitlementsService {
 			this.$logger.trace("Schedule merge plist at: " + plistPath);
 			session.patch({
 				name: path.relative(projectDir, plistPath),
-				read: () => this.$fs.readText(plistPath)
+				read: () => this.$fs.readText(plistPath),
 			});
 		};
 
 		const allPlugins = await this.getAllInstalledPlugins(projectData);
 		for (const plugin of allPlugins) {
-			const pluginInfoPlistPath = path.join(plugin.pluginPlatformsFolderPath(this.$devicePlatformsConstants.iOS),
-				IOSEntitlementsService.DefaultEntitlementsName);
+			const pluginInfoPlistPath = path.join(
+				plugin.pluginPlatformsFolderPath(this.$devicePlatformsConstants.iOS),
+				IOSEntitlementsService.DefaultEntitlementsName
+			);
 			makePatch(pluginInfoPlistPath);
 		}
 
@@ -62,12 +80,20 @@ export class IOSEntitlementsService {
 
 		if ((<any>session).patches && (<any>session).patches.length > 0) {
 			const plistContent = session.build();
-			this.$logger.trace("App.entitlements: Write to: " + this.getPlatformsEntitlementsPath(projectData));
-			this.$fs.writeFile(this.getPlatformsEntitlementsPath(projectData), plistContent);
+			this.$logger.trace(
+				"App.entitlements: Write to: " +
+					this.getPlatformsEntitlementsPath(projectData)
+			);
+			this.$fs.writeFile(
+				this.getPlatformsEntitlementsPath(projectData),
+				plistContent
+			);
 		}
 	}
 
-	private getAllInstalledPlugins(projectData: IProjectData): Promise<IPluginData[]> {
+	private getAllInstalledPlugins(
+		projectData: IProjectData
+	): Promise<IPluginData[]> {
 		return this.$pluginsService.getAllInstalledPlugins(projectData);
 	}
 }

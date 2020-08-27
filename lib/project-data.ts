@@ -1,12 +1,25 @@
 import * as constants from "./constants";
 import * as path from "path";
-import * as _ from 'lodash';
+import * as _ from "lodash";
 import { parseJson } from "./common/helpers";
 import { EOL } from "os";
 import { cache } from "./common/decorators";
-import { IProjectData, INsConfig, IProjectConfigService } from "./definitions/project";
-import { IAndroidResourcesMigrationService, IStaticConfig, IOptions } from "./declarations";
-import { IStringDictionary, IFileSystem, IErrors, IProjectHelper } from "./common/declarations";
+import {
+	IProjectData,
+	INsConfig,
+	IProjectConfigService,
+} from "./definitions/project";
+import {
+	IAndroidResourcesMigrationService,
+	IStaticConfig,
+	IOptions,
+} from "./declarations";
+import {
+	IStringDictionary,
+	IFileSystem,
+	IErrors,
+	IProjectHelper,
+} from "./common/declarations";
 import { injector } from "./common/yok";
 import { IInjector } from "./common/definitions/yok";
 
@@ -23,28 +36,28 @@ export class ProjectData implements IProjectData {
 	private static PROJECT_TYPES: IProjectType[] = [
 		{
 			type: constants.ProjectTypes.JsFlavorName,
-			isDefaultProjectType: true
+			isDefaultProjectType: true,
 		},
 		{
 			type: constants.ProjectTypes.NgFlavorName,
-			requiredDependencies: ["@angular/core", "nativescript-angular"]
+			requiredDependencies: ["@angular/core", "nativescript-angular"],
 		},
 		{
 			type: constants.ProjectTypes.VueFlavorName,
-			requiredDependencies: ["nativescript-vue"]
+			requiredDependencies: ["nativescript-vue"],
 		},
 		{
 			type: constants.ProjectTypes.ReactFlavorName,
-			requiredDependencies: ["react-nativescript"]
+			requiredDependencies: ["react-nativescript"],
 		},
 		{
 			type: constants.ProjectTypes.SvelteFlavorName,
-			requiredDependencies: ["svelte-native"]
+			requiredDependencies: ["svelte-native"],
 		},
 		{
 			type: constants.ProjectTypes.TsFlavorName,
-			requiredDependencies: ["typescript", "nativescript-dev-typescript"]
-		}
+			requiredDependencies: ["typescript", "nativescript-dev-typescript"],
+		},
 	];
 
 	public projectDir: string;
@@ -61,8 +74,8 @@ export class ProjectData implements IProjectData {
 		this.projectIdentifiers.ios = identifier;
 		this.projectIdentifiers.android = identifier;
 	}
-  public projectName: string;
-  public packageJsonData: any;
+	public projectName: string;
+	public packageJsonData: any;
 	public nsConfig: INsConfig;
 	public appDirectoryPath: string;
 	public appResourcesDirectoryPath: string;
@@ -79,7 +92,8 @@ export class ProjectData implements IProjectData {
 	public previewAppSchema: string;
 	public webpackConfigPath: string;
 
-	constructor(private $fs: IFileSystem,
+	constructor(
+		private $fs: IFileSystem,
 		private $errors: IErrors,
 		private $projectHelper: IProjectHelper,
 		private $staticConfig: IStaticConfig,
@@ -87,10 +101,11 @@ export class ProjectData implements IProjectData {
 		private $logger: ILogger,
 		private $injector: IInjector,
 		private $androidResourcesMigrationService: IAndroidResourcesMigrationService,
-		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants) { }
+		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants
+	) {}
 
 	get projectConfig(): IProjectConfigService {
-		return this.$injector.resolve('projectConfigService');
+		return this.$injector.resolve("projectConfigService");
 	}
 
 	public initializeProjectData(projectDir?: string): void {
@@ -112,7 +127,10 @@ export class ProjectData implements IProjectData {
 		this.errorInvalidProject(projectDir);
 	}
 
-	public initializeProjectDataFromContent(packageJsonContent: string, projectDir?: string): void {
+	public initializeProjectDataFromContent(
+		packageJsonContent: string,
+		projectDir?: string
+	): void {
 		projectDir = projectDir || this.$projectHelper.projectDir || "";
 		const projectFilePath = this.getProjectFilePath(projectDir);
 		// If no project found, projectDir should be null
@@ -122,33 +140,60 @@ export class ProjectData implements IProjectData {
 		try {
 			packageJsonData = parseJson(packageJsonContent);
 		} catch (err) {
-			this.$errors.fail(`The project file ${this.projectFilePath} is corrupted. ${EOL}` +
-				`Consider restoring an earlier version from your source control or backup.${EOL}` +
-				`Additional technical info: ${err.toString()}`);
+			this.$errors.fail(
+				`The project file ${this.projectFilePath} is corrupted. ${EOL}` +
+					`Consider restoring an earlier version from your source control or backup.${EOL}` +
+					`Additional technical info: ${err.toString()}`
+			);
 		}
 
 		if (nsConfig) {
 			this.projectDir = projectDir;
-			this.projectName = this.$projectHelper.sanitizeName(path.basename(projectDir));
+			this.projectName = this.$projectHelper.sanitizeName(
+				path.basename(projectDir)
+			);
 			this.platformsDir = path.join(projectDir, constants.PLATFORMS_DIR_NAME);
 			this.projectFilePath = projectFilePath;
-      this.projectIdentifiers = this.initializeProjectIdentifiers(nsConfig);
-      this.packageJsonData = packageJsonData;
+			this.projectIdentifiers = this.initializeProjectIdentifiers(nsConfig);
+			this.packageJsonData = packageJsonData;
 			this.dependencies = packageJsonData.dependencies;
 			this.devDependencies = packageJsonData.devDependencies;
 			this.projectType = this.getProjectType();
 			this.nsConfig = nsConfig;
 			this.appDirectoryPath = this.getAppDirectoryPath();
 			this.appResourcesDirectoryPath = this.getAppResourcesDirectoryPath();
-			this.androidManifestPath = this.getPathToAndroidManifest(this.appResourcesDirectoryPath);
-			this.gradleFilesDirectoryPath = path.join(this.appResourcesDirectoryPath, this.$devicePlatformsConstants.Android);
-			this.appGradlePath = path.join(this.gradleFilesDirectoryPath, constants.APP_GRADLE_FILE_NAME);
-			this.infoPlistPath = path.join(this.appResourcesDirectoryPath, this.$devicePlatformsConstants.iOS, constants.INFO_PLIST_FILE_NAME);
-			this.buildXcconfigPath = path.join(this.appResourcesDirectoryPath, this.$devicePlatformsConstants.iOS, constants.BUILD_XCCONFIG_FILE_NAME);
-			this.podfilePath = path.join(this.appResourcesDirectoryPath, this.$devicePlatformsConstants.iOS, constants.PODFILE_NAME);
+			this.androidManifestPath = this.getPathToAndroidManifest(
+				this.appResourcesDirectoryPath
+			);
+			this.gradleFilesDirectoryPath = path.join(
+				this.appResourcesDirectoryPath,
+				this.$devicePlatformsConstants.Android
+			);
+			this.appGradlePath = path.join(
+				this.gradleFilesDirectoryPath,
+				constants.APP_GRADLE_FILE_NAME
+			);
+			this.infoPlistPath = path.join(
+				this.appResourcesDirectoryPath,
+				this.$devicePlatformsConstants.iOS,
+				constants.INFO_PLIST_FILE_NAME
+			);
+			this.buildXcconfigPath = path.join(
+				this.appResourcesDirectoryPath,
+				this.$devicePlatformsConstants.iOS,
+				constants.BUILD_XCCONFIG_FILE_NAME
+			);
+			this.podfilePath = path.join(
+				this.appResourcesDirectoryPath,
+				this.$devicePlatformsConstants.iOS,
+				constants.PODFILE_NAME
+			);
 			this.isShared = !!(this.nsConfig && this.nsConfig.shared);
 			this.previewAppSchema = this.nsConfig && this.nsConfig.previewAppSchema;
-			this.webpackConfigPath = (this.nsConfig && this.nsConfig.webpackConfigPath) ? path.resolve(this.projectDir, this.nsConfig.webpackConfigPath) : path.join(this.projectDir, "webpack.config.js");
+			this.webpackConfigPath =
+				this.nsConfig && this.nsConfig.webpackConfigPath
+					? path.resolve(this.projectDir, this.nsConfig.webpackConfigPath)
+					: path.join(this.projectDir, "webpack.config.js");
 			return;
 		}
 
@@ -156,20 +201,30 @@ export class ProjectData implements IProjectData {
 	}
 
 	private getPathToAndroidManifest(appResourcesDir: string): string {
-		const androidDirPath = path.join(appResourcesDir, this.$devicePlatformsConstants.Android);
-		const androidManifestDir = this.$androidResourcesMigrationService.hasMigrated(appResourcesDir) ?
-			path.join(androidDirPath, constants.SRC_DIR, constants.MAIN_DIR) :
-			androidDirPath;
+		const androidDirPath = path.join(
+			appResourcesDir,
+			this.$devicePlatformsConstants.Android
+		);
+		const androidManifestDir = this.$androidResourcesMigrationService.hasMigrated(
+			appResourcesDir
+		)
+			? path.join(androidDirPath, constants.SRC_DIR, constants.MAIN_DIR)
+			: androidDirPath;
 
 		return path.join(androidManifestDir, constants.MANIFEST_FILE_NAME);
 	}
 
 	private errorInvalidProject(projectDir: string): void {
 		const currentDir = path.resolve(".");
-		this.$logger.trace(`Unable to find project. projectDir: ${projectDir}, options.path: ${this.$options.path}, ${currentDir}`);
+		this.$logger.trace(
+			`Unable to find project. projectDir: ${projectDir}, options.path: ${this.$options.path}, ${currentDir}`
+		);
 
 		// This is the case when no project file found
-		this.$errors.fail("No project found at or above '%s' and neither was a --path specified.", projectDir || this.$options.path || currentDir);
+		this.$errors.fail(
+			"No project found at or above '%s' and neither was a --path specified.",
+			projectDir || this.$options.path || currentDir
+		);
 	}
 
 	private getProjectFilePath(projectDir: string): string {
@@ -183,11 +238,17 @@ export class ProjectData implements IProjectData {
 	}
 
 	public getAppResourcesRelativeDirectoryPath(): string {
-		if (this.nsConfig && this.nsConfig[constants.CONFIG_NS_APP_RESOURCES_ENTRY]) {
+		if (
+			this.nsConfig &&
+			this.nsConfig[constants.CONFIG_NS_APP_RESOURCES_ENTRY]
+		) {
 			return this.nsConfig[constants.CONFIG_NS_APP_RESOURCES_ENTRY];
 		}
 
-		return path.join(this.getAppDirectoryRelativePath(), constants.APP_RESOURCES_FOLDER_NAME);
+		return path.join(
+			this.getAppDirectoryRelativePath(),
+			constants.APP_RESOURCES_FOLDER_NAME
+		);
 	}
 
 	public getAppDirectoryPath(projectDir?: string): string {
@@ -208,7 +269,10 @@ export class ProjectData implements IProjectData {
 		return constants.CONFIG_FILE_NAME_JS;
 	}
 
-	private resolveToProjectDir(pathToResolve: string, projectDir?: string): string {
+	private resolveToProjectDir(
+		pathToResolve: string,
+		projectDir?: string
+	): string {
 		if (!projectDir) {
 			projectDir = this.projectDir;
 		}
@@ -220,10 +284,12 @@ export class ProjectData implements IProjectData {
 		return path.resolve(projectDir, pathToResolve);
 	}
 
-	private initializeProjectIdentifiers(config: INsConfig): Mobile.IProjectIdentifier {
+	private initializeProjectIdentifiers(
+		config: INsConfig
+	): Mobile.IProjectIdentifier {
 		const identifier: Mobile.IProjectIdentifier = {
-			ios: '',
-			android: ''
+			ios: "",
+			android: "",
 		};
 		if (config.ios) {
 			identifier.ios = config.ios.id || config.id;
@@ -236,12 +302,22 @@ export class ProjectData implements IProjectData {
 	}
 
 	private getProjectType(): string {
-		let detectedProjectType = _.find(ProjectData.PROJECT_TYPES, (projectType) => projectType.isDefaultProjectType).type;
+		let detectedProjectType = _.find(
+			ProjectData.PROJECT_TYPES,
+			(projectType) => projectType.isDefaultProjectType
+		).type;
 
-		const deps: string[] = _.keys(this.dependencies).concat(_.keys(this.devDependencies));
+		const deps: string[] = _.keys(this.dependencies).concat(
+			_.keys(this.devDependencies)
+		);
 
-		_.each(ProjectData.PROJECT_TYPES, projectType => {
-			if (_.some(projectType.requiredDependencies, requiredDependency => deps.indexOf(requiredDependency) !== -1)) {
+		_.each(ProjectData.PROJECT_TYPES, (projectType) => {
+			if (
+				_.some(
+					projectType.requiredDependencies,
+					(requiredDependency) => deps.indexOf(requiredDependency) !== -1
+				)
+			) {
 				detectedProjectType = projectType.type;
 				return false;
 			}
@@ -252,7 +328,9 @@ export class ProjectData implements IProjectData {
 
 	@cache()
 	private warnProjectId(): void {
-		this.$logger.warn("[WARNING]: IProjectData.projectId is deprecated. Please use IProjectData.projectIdentifiers[platform].");
+		this.$logger.warn(
+			"[WARNING]: IProjectData.projectId is deprecated. Please use IProjectData.projectIdentifiers[platform]."
+		);
 	}
 }
 injector.register("projectData", ProjectData, true);

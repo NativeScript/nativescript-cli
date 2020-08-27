@@ -7,14 +7,20 @@ import * as fileSystemFile from "../../file-system";
 import * as childProcessLib from "../../child-process";
 import { CommonLoggerStub } from "./stubs";
 import { IInjector } from "../../definitions/yok";
-import * as _ from 'lodash';
+import * as _ from "lodash";
 import { IFileSystem } from "../../declarations";
 
 use(require("chai-as-promised"));
 
-const sampleZipFileTest = path.join(__dirname, "../resources/sampleZipFileTest.zip");
+const sampleZipFileTest = path.join(
+	__dirname,
+	"../resources/sampleZipFileTest.zip"
+);
 const unzippedFileName = "sampleZipFileTest.txt";
-const sampleZipFileTestIncorrectName = path.join(__dirname, "../resources/sampleZipfileTest.zip");
+const sampleZipFileTestIncorrectName = path.join(
+	__dirname,
+	"../resources/sampleZipfileTest.zip"
+);
 
 function isOsCaseSensitive(testInjector: IInjector): boolean {
 	const hostInfo = testInjector.resolve("hostInfo");
@@ -22,54 +28,67 @@ function isOsCaseSensitive(testInjector: IInjector): boolean {
 }
 temp.track();
 
-function createWriteJsonTestCases(): { exists: boolean, text: string, testCondition: string, expectedIndentation: string }[] {
+function createWriteJsonTestCases(): {
+	exists: boolean;
+	text: string;
+	testCondition: string;
+	expectedIndentation: string;
+}[] {
 	return [
 		{
 			exists: true,
 			text: `{\n\t"a" : 5 }`,
 			testCondition: "when the indentation is tab",
-			expectedIndentation: "\t"
-		}, {
+			expectedIndentation: "\t",
+		},
+		{
 			exists: true,
 			text: `{\n "a" : 5 }`,
 			testCondition: "when the indentation is space",
-			expectedIndentation: " "
-		}, {
+			expectedIndentation: " ",
+		},
+		{
 			exists: true,
 			text: `{\n  "a" : 5 }`,
 			testCondition: "when the indentation is two spaces",
-			expectedIndentation: "  "
-		}, {
+			expectedIndentation: "  ",
+		},
+		{
 			exists: false,
 			text: `{\n "a" : 5 }`,
 			testCondition: "when the file does not exist",
-			expectedIndentation: "\t"
-		}, {
+			expectedIndentation: "\t",
+		},
+		{
 			exists: true,
 			text: `"just-string"`,
 			testCondition: "when the the content is string",
-			expectedIndentation: "\t"
-		}, {
+			expectedIndentation: "\t",
+		},
+		{
 			exists: true,
 			text: `{ "a" : 5 }`,
 			testCondition: "when the content does not have new line after the {",
-			expectedIndentation: " "
-		}, {
+			expectedIndentation: " ",
+		},
+		{
 			exists: true,
 			text: `{"a" : 5 }`,
 			testCondition: "when the content is not correctly formatted",
-			expectedIndentation: "\t"
-		}, {
+			expectedIndentation: "\t",
+		},
+		{
 			exists: true,
 			text: `{\r\n "a" : 5 }`,
 			testCondition: "when the new line is in Windows format",
-			expectedIndentation: " "
-		}, {
+			expectedIndentation: " ",
+		},
+		{
 			exists: true,
 			text: `{\r\n\t"a" : 5 }`,
 			testCondition: "when the new line is in Windows format",
-			expectedIndentation: "\t"
-		}
+			expectedIndentation: "\t",
+		},
 	];
 }
 
@@ -78,13 +97,15 @@ function createTestInjector(): IInjector {
 
 	testInjector.register("fs", fileSystemFile.FileSystem);
 	testInjector.register("errors", {
-		fail: (...args: any[]) => { throw new Error(args[0]); }
+		fail: (...args: any[]) => {
+			throw new Error(args[0]);
+		},
 	});
 
 	testInjector.register("logger", CommonLoggerStub);
 	testInjector.register("childProcess", childProcessLib.ChildProcess);
 	testInjector.register("staticConfig", {
-		disableAnalytics: true
+		disableAnalytics: true,
 	});
 	testInjector.register("hostInfo", hostInfoLib.HostInfo);
 	testInjector.register("injector", testInjector);
@@ -108,27 +129,55 @@ describe("FileSystem", () => {
 				fs.writeFile(file, msg);
 			});
 			it("does not overwrite files when overwriteExisitingFiles is false", async () => {
-				await fs.unzip(sampleZipFileTest, tempDir, { overwriteExisitingFiles: false }, [unzippedFileName]);
+				await fs.unzip(
+					sampleZipFileTest,
+					tempDir,
+					{ overwriteExisitingFiles: false },
+					[unzippedFileName]
+				);
 				const data = fs.readFile(file);
-				assert.strictEqual(msg, data.toString(), "When overwriteExistingFiles is false, we should not ovewrite files.");
+				assert.strictEqual(
+					msg,
+					data.toString(),
+					"When overwriteExistingFiles is false, we should not ovewrite files."
+				);
 			});
 
 			it("overwrites files when overwriteExisitingFiles is true", async () => {
-				await fs.unzip(sampleZipFileTest, tempDir, { overwriteExisitingFiles: true }, [unzippedFileName]);
+				await fs.unzip(
+					sampleZipFileTest,
+					tempDir,
+					{ overwriteExisitingFiles: true },
+					[unzippedFileName]
+				);
 				const data = fs.readFile(file);
-				assert.notEqual(msg, data.toString(), "We must overwrite files when overwriteExisitingFiles is true.");
+				assert.notEqual(
+					msg,
+					data.toString(),
+					"We must overwrite files when overwriteExisitingFiles is true."
+				);
 			});
 
 			it("overwrites files when overwriteExisitingFiles is not set", async () => {
 				await fs.unzip(sampleZipFileTest, tempDir, {}, [unzippedFileName]);
 				const data = fs.readFile(file);
-				assert.notEqual(msg, data.toString(), "We must overwrite files when overwriteExisitingFiles is not set.");
+				assert.notEqual(
+					msg,
+					data.toString(),
+					"We must overwrite files when overwriteExisitingFiles is not set."
+				);
 			});
 
 			it("overwrites files when options is not set", async () => {
-				await fs.unzip(sampleZipFileTest, tempDir, undefined, [unzippedFileName]);
+				await fs.unzip(sampleZipFileTest, tempDir, undefined, [
+					unzippedFileName,
+				]);
 				const data = fs.readFile(file);
-				assert.notEqual(msg, data.toString(), "We must overwrite files when options is not defined.");
+				assert.notEqual(
+					msg,
+					data.toString(),
+					"We must overwrite files when options is not defined."
+				);
 			});
 		});
 
@@ -140,7 +189,12 @@ describe("FileSystem", () => {
 				const tempDir = temp.mkdirSync("projectToUnzip");
 				const fs: IFileSystem = testInjector.resolve("fs");
 				if (isOsCaseSensitive(testInjector)) {
-					await assert.isRejected(fs.unzip(sampleZipFileTestIncorrectName, tempDir, undefined, [unzippedFileName]), commandUnzipFailedMessage);
+					await assert.isRejected(
+						fs.unzip(sampleZipFileTestIncorrectName, tempDir, undefined, [
+							unzippedFileName,
+						]),
+						commandUnzipFailedMessage
+					);
 				}
 			});
 
@@ -149,7 +203,12 @@ describe("FileSystem", () => {
 				const tempDir = temp.mkdirSync("projectToUnzip");
 				const fs: IFileSystem = testInjector.resolve("fs");
 				if (isOsCaseSensitive(testInjector)) {
-					await assert.isRejected(fs.unzip(sampleZipFileTestIncorrectName, tempDir, {}, [unzippedFileName]), commandUnzipFailedMessage);
+					await assert.isRejected(
+						fs.unzip(sampleZipFileTestIncorrectName, tempDir, {}, [
+							unzippedFileName,
+						]),
+						commandUnzipFailedMessage
+					);
 				}
 			});
 
@@ -158,7 +217,15 @@ describe("FileSystem", () => {
 				const tempDir = temp.mkdirSync("projectToUnzip");
 				const fs: IFileSystem = testInjector.resolve("fs");
 				if (isOsCaseSensitive(testInjector)) {
-					await assert.isRejected(fs.unzip(sampleZipFileTestIncorrectName, tempDir, { caseSensitive: true }, [unzippedFileName]), commandUnzipFailedMessage);
+					await assert.isRejected(
+						fs.unzip(
+							sampleZipFileTestIncorrectName,
+							tempDir,
+							{ caseSensitive: true },
+							[unzippedFileName]
+						),
+						commandUnzipFailedMessage
+					);
 				}
 			});
 
@@ -167,7 +234,12 @@ describe("FileSystem", () => {
 				const tempDir = temp.mkdirSync("projectToUnzip");
 				const fs: IFileSystem = testInjector.resolve("fs");
 				const file = path.join(tempDir, unzippedFileName);
-				await fs.unzip(sampleZipFileTestIncorrectName, tempDir, { caseSensitive: false }, [unzippedFileName]);
+				await fs.unzip(
+					sampleZipFileTestIncorrectName,
+					tempDir,
+					{ caseSensitive: false },
+					[unzippedFileName]
+				);
 				// This will throw error in case file is not extracted
 				fs.readFile(file);
 			});
@@ -187,7 +259,10 @@ describe("FileSystem", () => {
 			const result = fs.renameIfExists(testFileName, newFileName);
 			assert.isTrue(result, "On successfull rename, result must be true.");
 			assert.isTrue(fs.exists(newFileName), "Renamed file should exists.");
-			assert.isFalse(fs.exists(testFileName), "Original file should not exist.");
+			assert.isFalse(
+				fs.exists(testFileName),
+				"Original file should not exist."
+			);
 		});
 
 		it("returns false when file does not exist", () => {
@@ -222,24 +297,43 @@ describe("FileSystem", () => {
 			fs.copyFile(testFileName, newFileName);
 			assert.isTrue(fs.exists(newFileName), "Renamed file should exists.");
 			assert.isTrue(fs.exists(testFileName), "Original file should exist.");
-			assert.deepStrictEqual(fs.getFsStats(testFileName).size, fs.getFsStats(testFileName).size, "Original file and copied file must have the same size.");
+			assert.deepStrictEqual(
+				fs.getFsStats(testFileName).size,
+				fs.getFsStats(testFileName).size,
+				"Original file and copied file must have the same size."
+			);
 		});
 
 		it("copies file to non-existent directory", () => {
 			const newFileNameInSubDir = path.join(tempDir, "subDir", "newfilename");
 			assert.isFalse(fs.exists(newFileNameInSubDir));
 			fs.copyFile(testFileName, newFileNameInSubDir);
-			assert.isTrue(fs.exists(newFileNameInSubDir), "Renamed file should exists.");
+			assert.isTrue(
+				fs.exists(newFileNameInSubDir),
+				"Renamed file should exists."
+			);
 			assert.isTrue(fs.exists(testFileName), "Original file should exist.");
-			assert.deepStrictEqual(fs.getFsStats(testFileName).size, fs.getFsStats(testFileName).size, "Original file and copied file must have the same size.");
+			assert.deepStrictEqual(
+				fs.getFsStats(testFileName).size,
+				fs.getFsStats(testFileName).size,
+				"Original file and copied file must have the same size."
+			);
 		});
 
 		it("produces correct file when source and target file are the same", () => {
 			const originalSize = fs.getFsStats(testFileName).size;
 			fs.copyFile(testFileName, testFileName);
 			assert.isTrue(fs.exists(testFileName), "Original file should exist.");
-			assert.deepStrictEqual(fs.getFsStats(testFileName).size, originalSize, "Original file and copied file must have the same size.");
-			assert.deepStrictEqual(fs.readText(testFileName), fileContent, "File content should not be changed.");
+			assert.deepStrictEqual(
+				fs.getFsStats(testFileName).size,
+				originalSize,
+				"Original file and copied file must have the same size."
+			);
+			assert.deepStrictEqual(
+				fs.readText(testFileName),
+				fileContent,
+				"File content should not be changed."
+			);
 		});
 	});
 
@@ -301,7 +395,11 @@ describe("FileSystem", () => {
 				let actualIndentation: string;
 				const originalJsonStringify = JSON.stringify;
 
-				(<any>JSON).stringify = (value: any, replacer: any[], space: string | number) => {
+				(<any>JSON).stringify = (
+					value: any,
+					replacer: any[],
+					space: string | number
+				) => {
 					actualIndentation = <string>space;
 				};
 

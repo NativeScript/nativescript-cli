@@ -2,20 +2,38 @@
 
 import * as util from "util";
 import { EventEmitter } from "events";
-import * as _ from 'lodash';
+import * as _ from "lodash";
 import { LoggerConfigData } from "../../../constants";
-import { IErrors, IFailOptions, ISettingsService, IConfigurationSettings, IDictionary, IHooksService, IStringDictionary } from "../../declarations";
-import { IBuildApksOptions, IAndroidBundleToolService, IInstallApksOptions } from "../../../definitions/android-bundle-tool-service";
+import {
+	IErrors,
+	IFailOptions,
+	ISettingsService,
+	IConfigurationSettings,
+	IDictionary,
+	IHooksService,
+	IStringDictionary,
+} from "../../declarations";
+import {
+	IBuildApksOptions,
+	IAndroidBundleToolService,
+	IInstallApksOptions,
+} from "../../../definitions/android-bundle-tool-service";
 
 export class LockServiceStub implements ILockService {
-	public async lock(lockFilePath?: string, lockOpts?: ILockOptions): Promise<() => void> {
-		return () => { };
+	public async lock(
+		lockFilePath?: string,
+		lockOpts?: ILockOptions
+	): Promise<() => void> {
+		return () => {};
 	}
 
-	public async unlock(lockFilePath?: string): Promise<void> {
-	}
+	public async unlock(lockFilePath?: string): Promise<void> {}
 
-	public async executeActionWithLock<T>(action: () => Promise<T>, lockFilePath?: string, lockOpts?: ILockOptions): Promise<T> {
+	public async executeActionWithLock<T>(
+		action: () => Promise<T>,
+		lockFilePath?: string,
+		lockOpts?: ILockOptions
+	): Promise<T> {
 		const result = await action();
 		return result;
 	}
@@ -23,10 +41,12 @@ export class LockServiceStub implements ILockService {
 
 export class CommonLoggerStub implements ILogger {
 	loggerLevel: string = "";
-	initialize(opts?: ILoggerOptions): void { }
-	initializeCliLogger(): void { }
-	getLevel(): string { return this.loggerLevel; }
-	fatal(...args: any[]): void { }
+	initialize(opts?: ILoggerOptions): void {}
+	initializeCliLogger(): void {}
+	getLevel(): string {
+		return this.loggerLevel;
+	}
+	fatal(...args: any[]): void {}
 	error(...args: any[]): void {
 		this.errorOutput += util.format.apply(null, args) + "\n";
 	}
@@ -36,7 +56,7 @@ export class CommonLoggerStub implements ILogger {
 	info(...args: any[]): void {
 		this.output += util.format.apply(null, args) + "\n";
 	}
-	debug(...args: any[]): void { }
+	debug(...args: any[]): void {}
 	trace(...args: any[]): void {
 		this.traceOutput += util.format.apply(null, args) + "\n";
 	}
@@ -53,11 +73,13 @@ export class CommonLoggerStub implements ILogger {
 		this.output += message;
 	}
 
-	write(...args: any[]): void { }
-	printInfoMessageOnSameLine(message: string): void { }
-	async printMsgWithTimeout(message: string, timeout: number): Promise<void> { }
-	printOnStderr(formatStr?: any, ...args: any[]): void { }
-	isVerbose(): boolean { return false; }
+	write(...args: any[]): void {}
+	printInfoMessageOnSameLine(message: string): void {}
+	async printMsgWithTimeout(message: string, timeout: number): Promise<void> {}
+	printOnStderr(formatStr?: any, ...args: any[]): void {}
+	isVerbose(): boolean {
+		return false;
+	}
 }
 
 export class ErrorsStub implements IErrors {
@@ -82,7 +104,10 @@ export class ErrorsStub implements IErrors {
 		return this.fail(<any>opts, args);
 	}
 
-	async beginCommand(action: () => Promise<boolean>, printHelpCommand: () => Promise<void>): Promise<boolean> {
+	async beginCommand(
+		action: () => Promise<boolean>,
+		printHelpCommand: () => Promise<void>
+	): Promise<boolean> {
 		return action();
 	}
 
@@ -90,7 +115,7 @@ export class ErrorsStub implements IErrors {
 		return action();
 	}
 
-	verifyHeap(message: string): void { }
+	verifyHeap(message: string): void {}
 }
 
 export class HooksServiceStub implements IHooksService {
@@ -114,7 +139,8 @@ export class SettingsService implements ISettingsService {
 	}
 }
 
-export class AndroidProcessServiceStub implements Mobile.IAndroidProcessService {
+export class AndroidProcessServiceStub
+	implements Mobile.IAndroidProcessService {
 	public MapAbstractToTcpPortResult = "stub";
 	public GetDebuggableAppsResult: Mobile.IDeviceApplicationInformation[] = [];
 	public GetMappedAbstractToTcpPortsResult: IDictionary<number> = {};
@@ -122,16 +148,29 @@ export class AndroidProcessServiceStub implements Mobile.IAndroidProcessService 
 	public GetAppProcessIdFailAttempts = 0;
 	public ForwardFreeTcpToAbstractPortResult = 0;
 
-	async mapAbstractToTcpPort(deviceIdentifier: string, appIdentifier: string, framework: string): Promise<string> {
+	async mapAbstractToTcpPort(
+		deviceIdentifier: string,
+		appIdentifier: string,
+		framework: string
+	): Promise<string> {
 		return this.MapAbstractToTcpPortResult;
 	}
-	async getDebuggableApps(deviceIdentifier: string): Promise<Mobile.IDeviceApplicationInformation[]> {
+	async getDebuggableApps(
+		deviceIdentifier: string
+	): Promise<Mobile.IDeviceApplicationInformation[]> {
 		return this.GetDebuggableAppsResult;
 	}
-	async getMappedAbstractToTcpPorts(deviceIdentifier: string, appIdentifiers: string[], framework: string): Promise<IDictionary<number>> {
+	async getMappedAbstractToTcpPorts(
+		deviceIdentifier: string,
+		appIdentifiers: string[],
+		framework: string
+	): Promise<IDictionary<number>> {
 		return this.GetMappedAbstractToTcpPortsResult;
 	}
-	async getAppProcessId(deviceIdentifier: string, appIdentifier: string): Promise<string> {
+	async getAppProcessId(
+		deviceIdentifier: string,
+		appIdentifier: string
+	): Promise<string> {
 		while (this.GetAppProcessIdFailAttempts) {
 			this.GetAppProcessIdFailAttempts--;
 			return null;
@@ -139,7 +178,9 @@ export class AndroidProcessServiceStub implements Mobile.IAndroidProcessService 
 
 		return this.GetAppProcessIdResult;
 	}
-	async forwardFreeTcpToAbstractPort(portForwardInputData: Mobile.IPortForwardData): Promise<number> {
+	async forwardFreeTcpToAbstractPort(
+		portForwardInputData: Mobile.IPortForwardData
+	): Promise<number> {
 		return this.ForwardFreeTcpToAbstractPortResult;
 	}
 }
@@ -149,7 +190,7 @@ export class LogcatHelperStub implements Mobile.ILogcatHelper {
 	public StartCallCount = 0;
 	public DumpCallCount = 0;
 	public LastStartCallOptions: Mobile.ILogcatStartOptions = {
-		deviceIdentifier: ""
+		deviceIdentifier: "",
 	};
 	public LastStopDeviceId = "";
 
@@ -168,21 +209,23 @@ export class LogcatHelperStub implements Mobile.ILogcatHelper {
 	}
 }
 
-export class DeviceLogProviderStub extends EventEmitter implements Mobile.IDeviceLogProvider {
+export class DeviceLogProviderStub
+	extends EventEmitter
+	implements Mobile.IDeviceLogProvider {
 	public logger = new CommonLoggerStub();
 	public currentDevicePids: IStringDictionary = {};
 	public currentDeviceProjectNames: IStringDictionary = {};
 	public currentDeviceProjectDirs: IStringDictionary = {};
 
-	async setSourceFileLocation(pathToSourceFile: string): Promise<void> {
-	}
+	async setSourceFileLocation(pathToSourceFile: string): Promise<void> {}
 
 	logData(line: string, platform: string, deviceIdentifier: string): void {
-		this.logger.info(line, platform, deviceIdentifier, { [LoggerConfigData.skipNewLine]: true });
+		this.logger.info(line, platform, deviceIdentifier, {
+			[LoggerConfigData.skipNewLine]: true,
+		});
 	}
 
-	setLogLevel(level: string, deviceIdentifier?: string): void {
-	}
+	setLogLevel(level: string, deviceIdentifier?: string): void {}
 
 	setApplicationPidForDevice(deviceIdentifier: string, pid: string): void {
 		this.currentDevicePids[deviceIdentifier] = pid;

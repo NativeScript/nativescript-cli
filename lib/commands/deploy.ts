@@ -1,4 +1,7 @@
-import { ANDROID_RELEASE_BUILD_ERROR_MESSAGE, ANDROID_APP_BUNDLE_SIGNING_ERROR_MESSAGE } from "../constants";
+import {
+	ANDROID_RELEASE_BUILD_ERROR_MESSAGE,
+	ANDROID_APP_BUNDLE_SIGNING_ERROR_MESSAGE,
+} from "../constants";
 import { ValidatePlatformCommandBase } from "./command-base";
 import { DeployCommandHelper } from "../helpers/deploy-command-helper";
 import { hasValidAndroidSigning } from "../common/helpers";
@@ -10,15 +13,22 @@ import { ICommand, ICommandParameter } from "../common/definitions/commands";
 import { OptionType, IErrors } from "../common/declarations";
 import { injector } from "../common/yok";
 
-export class DeployOnDeviceCommand extends ValidatePlatformCommandBase implements ICommand {
+export class DeployOnDeviceCommand
+	extends ValidatePlatformCommandBase
+	implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
 
 	public dashedOptions = {
-		watch: { type: OptionType.Boolean, default: false, hasSensitiveValue: false },
+		watch: {
+			type: OptionType.Boolean,
+			default: false,
+			hasSensitiveValue: false,
+		},
 		hmr: { type: OptionType.Boolean, default: false, hasSensitiveValue: false },
 	};
 
-	constructor($platformValidationService: IPlatformValidationService,
+	constructor(
+		$platformValidationService: IPlatformValidationService,
 		private $platformCommandParameter: ICommandParameter,
 		$options: IOptions,
 		$projectData: IProjectData,
@@ -27,15 +37,24 @@ export class DeployOnDeviceCommand extends ValidatePlatformCommandBase implement
 		$platformsDataService: IPlatformsDataService,
 		private $deployCommandHelper: DeployCommandHelper,
 		private $markingModeService: IMarkingModeService,
-		private $migrateController: IMigrateController) {
-		super($options, $platformsDataService, $platformValidationService, $projectData);
+		private $migrateController: IMigrateController
+	) {
+		super(
+			$options,
+			$platformsDataService,
+			$platformValidationService,
+			$projectData
+		);
 		this.$projectData.initializeProjectData();
 	}
 
 	public async execute(args: string[]): Promise<void> {
 		const platform = args[0];
 		if (this.$mobileHelper.isAndroidPlatform(platform)) {
-			await this.$markingModeService.handleMarkingModeFullDeprecation({ projectDir: this.$projectData.projectDir, skipWarnings: true });
+			await this.$markingModeService.handleMarkingModeFullDeprecation({
+				projectDir: this.$projectData.projectDir,
+				skipWarnings: true,
+			});
 		}
 
 		await this.$deployCommandHelper.deploy(platform);
@@ -44,7 +63,10 @@ export class DeployOnDeviceCommand extends ValidatePlatformCommandBase implement
 	public async canExecute(args: string[]): Promise<boolean> {
 		const platform = args[0];
 		if (!this.$options.force) {
-			await this.$migrateController.validate({ projectDir: this.$projectData.projectDir, platforms: [platform] });
+			await this.$migrateController.validate({
+				projectDir: this.$projectData.projectDir,
+				platforms: [platform],
+			});
 		}
 
 		if (!args || !args.length || args.length > 1) {
@@ -55,7 +77,11 @@ export class DeployOnDeviceCommand extends ValidatePlatformCommandBase implement
 			return false;
 		}
 
-		if (this.$mobileHelper.isAndroidPlatform(platform) && (this.$options.release || this.$options.aab) && !hasValidAndroidSigning(this.$options)) {
+		if (
+			this.$mobileHelper.isAndroidPlatform(platform) &&
+			(this.$options.release || this.$options.aab) &&
+			!hasValidAndroidSigning(this.$options)
+		) {
 			if (this.$options.release) {
 				this.$errors.failWithHelp(ANDROID_RELEASE_BUILD_ERROR_MESSAGE);
 			} else {
@@ -63,7 +89,9 @@ export class DeployOnDeviceCommand extends ValidatePlatformCommandBase implement
 			}
 		}
 
-		const result = await super.canExecuteCommandBase(platform, { validateOptions: true });
+		const result = await super.canExecuteCommandBase(platform, {
+			validateOptions: true,
+		});
 		return result;
 	}
 }

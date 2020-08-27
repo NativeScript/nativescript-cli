@@ -1,14 +1,20 @@
 import { exported } from "../decorators";
 import * as path from "path";
 import * as osenv from "osenv";
-import { IHostInfo, ISettingsService, IConfigurationSettings } from "../declarations";
+import {
+	IHostInfo,
+	ISettingsService,
+	IConfigurationSettings,
+} from "../declarations";
 import { injector } from "../yok";
 
 export class SettingsService implements ISettingsService {
 	private _profileDir: string;
 
-	constructor(private $staticConfig: Config.IStaticConfig,
-		private $hostInfo: IHostInfo) {
+	constructor(
+		private $staticConfig: Config.IStaticConfig,
+		private $hostInfo: IHostInfo
+	) {
 		this._profileDir = this.getDefaultProfileDir();
 	}
 
@@ -28,8 +34,13 @@ export class SettingsService implements ISettingsService {
 	}
 
 	private getDefaultProfileDir(): string {
-		const defaultProfileDirLocation = this.$hostInfo.isWindows ? process.env.AppData : path.join(osenv.home(), ".local", "share");
-		return path.join(defaultProfileDirLocation, this.$staticConfig.PROFILE_DIR_NAME);
+		const defaultProfileDirLocation = this.$hostInfo.isWindows
+			? process.env.AppData
+			: path.join(osenv.home(), ".local", "share");
+		return path.join(
+			defaultProfileDirLocation,
+			this.$staticConfig.PROFILE_DIR_NAME
+		);
 	}
 }
 

@@ -8,9 +8,17 @@ import { GradleCommandService } from "../../lib/services/android/gradle-command-
 import { GradleBuildService } from "../../lib/services/android/gradle-build-service";
 import { GradleBuildArgsService } from "../../lib/services/android/gradle-build-args-service";
 import { IBuildConfig, IProjectData } from "../../lib/definitions/project";
-import { IAndroidToolsInfo, IAndroidToolsInfoData, IAndroidResourcesMigrationService } from "../../lib/declarations";
+import {
+	IAndroidToolsInfo,
+	IAndroidToolsInfoData,
+	IAndroidResourcesMigrationService,
+} from "../../lib/declarations";
 import { IInjector } from "../../lib/common/definitions/yok";
-import { IDictionary, IFileSystem, IProjectDir } from "../../lib/common/declarations";
+import {
+	IDictionary,
+	IFileSystem,
+	IProjectDir,
+} from "../../lib/common/declarations";
 
 const createTestInjector = (): IInjector => {
 	const testInjector = new Yok();
@@ -28,7 +36,7 @@ const createTestInjector = (): IInjector => {
 	testInjector.register("androidResourcesMigrationService", {});
 	testInjector.register("androidPluginBuildService", {});
 	testInjector.register("filesHashService", {
-		saveHashesForProject: () => ({})
+		saveHashesForProject: () => ({}),
 	});
 	testInjector.register("androidPluginBuildService", {});
 	testInjector.register("errors", stubs.ErrorsStub);
@@ -37,18 +45,20 @@ const createTestInjector = (): IInjector => {
 	testInjector.register("androidToolsInfo", {
 		getToolsInfo: () => {
 			return {
-				androidHomeEnvVar: true
+				androidHomeEnvVar: true,
 			};
 		},
 		validateInfo: () => {
 			return true;
-		}
+		},
 	});
 	testInjector.register("gradleCommandService", GradleCommandService);
 	testInjector.register("gradleBuildService", GradleBuildService);
 	testInjector.register("gradleBuildArgsService", GradleBuildArgsService);
 	testInjector.register("analyticsService", stubs.AnalyticsService);
-	testInjector.register("staticConfig", { TRACK_FEATURE_USAGE_SETTING_NAME: "TrackFeatureUsage" });
+	testInjector.register("staticConfig", {
+		TRACK_FEATURE_USAGE_SETTING_NAME: "TrackFeatureUsage",
+	});
 	return testInjector;
 };
 
@@ -61,7 +71,7 @@ const getDefautlBuildConfig = (): IBuildConfig => {
 		provision: null,
 		teamId: "",
 		projectDir: "location/location",
-		keyStorePath: ""
+		keyStorePath: "",
 	};
 };
 
@@ -87,11 +97,14 @@ describe("androidProjectService", () => {
 		beforeEach(() => {
 			projectData = injector.resolve("projectData");
 			childProcess = injector.resolve("childProcess");
-			const getPlatformDataStub: sinon.SinonStub = sandbox.stub(androidProjectService, "getPlatformData");
+			const getPlatformDataStub: sinon.SinonStub = sandbox.stub(
+				androidProjectService,
+				"getPlatformData"
+			);
 			getPlatformDataStub.callsFake(() => {
 				return {
 					configurationFilePath: "",
-					getBuildOutputPath: () => ""
+					getBuildOutputPath: () => "",
 				};
 			});
 		});
@@ -101,7 +114,11 @@ describe("androidProjectService", () => {
 			const buildConfig = getDefautlBuildConfig();
 
 			//act
-			await androidProjectService.buildProject("local/local", projectData, <any>buildConfig);
+			await androidProjectService.buildProject(
+				"local/local",
+				projectData,
+				<any>buildConfig
+			);
 
 			//assert
 			assert.include(childProcess.lastCommandArgs, "assembleRelease");
@@ -113,7 +130,11 @@ describe("androidProjectService", () => {
 			buildConfig.release = false;
 
 			//act
-			await androidProjectService.buildProject("local/local", projectData, <any>buildConfig);
+			await androidProjectService.buildProject(
+				"local/local",
+				projectData,
+				<any>buildConfig
+			);
 
 			//assert
 			assert.include(childProcess.lastCommandArgs, "assembleDebug");
@@ -125,7 +146,11 @@ describe("androidProjectService", () => {
 			buildConfig.androidBundle = true;
 
 			//act
-			await androidProjectService.buildProject("local/local", projectData, <any>buildConfig);
+			await androidProjectService.buildProject(
+				"local/local",
+				projectData,
+				<any>buildConfig
+			);
 
 			//assert
 			assert.include(childProcess.lastCommandArgs, "bundleRelease");
@@ -138,7 +163,11 @@ describe("androidProjectService", () => {
 			buildConfig.release = false;
 
 			//act
-			await androidProjectService.buildProject("local/local", projectData, <any>buildConfig);
+			await androidProjectService.buildProject(
+				"local/local",
+				projectData,
+				<any>buildConfig
+			);
 
 			//assert
 			assert.include(childProcess.lastCommandArgs, "bundleDebug");
@@ -148,16 +177,38 @@ describe("androidProjectService", () => {
 	describe("prepareAppResources", () => {
 		const projectDir = "testDir";
 		const pathToAppResourcesDir = path.join(projectDir, "app", "App_Resources");
-		const pathToAppResourcesAndroid = path.join(pathToAppResourcesDir, "Android");
-		const pathToPlatformsAndroid = path.join(projectDir, "platforms", "android");
-		const pathToResDirInPlatforms = path.join(pathToPlatformsAndroid, "app", "src", "main", "res");
+		const pathToAppResourcesAndroid = path.join(
+			pathToAppResourcesDir,
+			"Android"
+		);
+		const pathToPlatformsAndroid = path.join(
+			projectDir,
+			"platforms",
+			"android"
+		);
+		const pathToResDirInPlatforms = path.join(
+			pathToPlatformsAndroid,
+			"app",
+			"src",
+			"main",
+			"res"
+		);
 		const valuesV27Path = path.join(pathToResDirInPlatforms, "values-v27");
 		const valuesV28Path = path.join(pathToResDirInPlatforms, "values-v28");
 		const libsPath = path.join(pathToResDirInPlatforms, "libs");
-		const drawableHdpiPath = path.join(pathToResDirInPlatforms, "drawable-hdpi");
-		const drawableLdpiPath = path.join(pathToResDirInPlatforms, "drawable-ldpi");
+		const drawableHdpiPath = path.join(
+			pathToResDirInPlatforms,
+			"drawable-hdpi"
+		);
+		const drawableLdpiPath = path.join(
+			pathToResDirInPlatforms,
+			"drawable-ldpi"
+		);
 		let deletedDirs: string[] = [];
-		let copiedFiles: { sourceFileName: string, destinationFileName: string }[] = [];
+		let copiedFiles: {
+			sourceFileName: string;
+			destinationFileName: string;
+		}[] = [];
 		let readDirectoryResults: IDictionary<string[]> = {};
 		let fs: IFileSystem = null;
 		let projectData: IProjectData = null;
@@ -176,7 +227,10 @@ describe("androidProjectService", () => {
 			fs.deleteDirectory = (directory: string): void => {
 				deletedDirs.push(directory);
 			};
-			fs.copyFile = (sourceFileName: string, destinationFileName: string): void => {
+			fs.copyFile = (
+				sourceFileName: string,
+				destinationFileName: string
+			): void => {
 				copiedFiles.push({ sourceFileName, destinationFileName });
 			};
 			fs.readDirectory = (dir: string): string[] => {
@@ -185,26 +239,45 @@ describe("androidProjectService", () => {
 
 			compileSdkVersion = 29;
 
-			const androidToolsInfo = injector.resolve<IAndroidToolsInfo>("androidToolsInfo");
-			androidToolsInfo.getToolsInfo = (config?: IProjectDir): IAndroidToolsInfoData => {
+			const androidToolsInfo = injector.resolve<IAndroidToolsInfo>(
+				"androidToolsInfo"
+			);
+			androidToolsInfo.getToolsInfo = (
+				config?: IProjectDir
+			): IAndroidToolsInfoData => {
 				return <any>{
-					compileSdkVersion
+					compileSdkVersion,
 				};
 			};
-
 		});
 
 		describe("when new Android App_Resources structure is detected (post {N} 4.0 structure)", () => {
-			const pathToSrcDirInAppResources = path.join(pathToAppResourcesAndroid, "src");
+			const pathToSrcDirInAppResources = path.join(
+				pathToAppResourcesAndroid,
+				"src"
+			);
 			beforeEach(() => {
-				const androidResourcesMigrationService = injector.resolve<IAndroidResourcesMigrationService>("androidResourcesMigrationService");
+				const androidResourcesMigrationService = injector.resolve<
+					IAndroidResourcesMigrationService
+				>("androidResourcesMigrationService");
 				androidResourcesMigrationService.hasMigrated = () => true;
 			});
 
 			it("copies everything from App_Resources/Android/src to correct location in platforms", async () => {
 				await androidProjectService.prepareAppResources(projectData);
 
-				assert.deepStrictEqual(copiedFiles, [{ sourceFileName: path.join(pathToSrcDirInAppResources, "*"), destinationFileName: path.join(projectData.projectDir, "platforms", "android", "app", "src") }]);
+				assert.deepStrictEqual(copiedFiles, [
+					{
+						sourceFileName: path.join(pathToSrcDirInAppResources, "*"),
+						destinationFileName: path.join(
+							projectData.projectDir,
+							"platforms",
+							"android",
+							"app",
+							"src"
+						),
+					},
+				]);
 			});
 
 			it("deletes correct values-<sdk> directories based on the compileSdk", async () => {
@@ -214,16 +287,13 @@ describe("androidProjectService", () => {
 						"values-v21",
 						"values-v26",
 						"values-v27",
-						"values-v28"
-					]
+						"values-v28",
+					],
 				};
 
 				compileSdkVersion = 26;
 				await androidProjectService.prepareAppResources(projectData);
-				assert.deepStrictEqual(deletedDirs, [
-					valuesV27Path,
-					valuesV28Path
-				]);
+				assert.deepStrictEqual(deletedDirs, [valuesV27Path, valuesV28Path]);
 			});
 
 			it("deletes drawable directories when they've been previously prepared", async () => {
@@ -233,7 +303,7 @@ describe("androidProjectService", () => {
 						"drawable-ldpi",
 						"values",
 						"values-v21",
-						"values-v29"
+						"values-v29",
 					],
 					[`${pathToResDirInPlatforms}`]: [
 						"drawable-hdpi",
@@ -241,8 +311,8 @@ describe("androidProjectService", () => {
 						"drawable-mdpi",
 						"values",
 						"values-v21",
-						"values-v29"
-					]
+						"values-v29",
+					],
 				};
 
 				await androidProjectService.prepareAppResources(projectData);
@@ -251,21 +321,28 @@ describe("androidProjectService", () => {
 				// This is not correct behavior and it should be fixed in a later point.
 				assert.deepStrictEqual(deletedDirs, [
 					drawableHdpiPath,
-					drawableLdpiPath
+					drawableLdpiPath,
 				]);
 			});
 		});
 
 		describe("when old Android App_Resources structure is detected (post {N} 4.0 structure)", () => {
 			beforeEach(() => {
-				const androidResourcesMigrationService = injector.resolve<IAndroidResourcesMigrationService>("androidResourcesMigrationService");
+				const androidResourcesMigrationService = injector.resolve<
+					IAndroidResourcesMigrationService
+				>("androidResourcesMigrationService");
 				androidResourcesMigrationService.hasMigrated = () => false;
 			});
 
 			it("copies everything from App_Resources/Android to correct location in platforms", async () => {
 				await androidProjectService.prepareAppResources(projectData);
 
-				assert.deepStrictEqual(copiedFiles, [{ sourceFileName: path.join(pathToAppResourcesAndroid, "*"), destinationFileName: pathToResDirInPlatforms }]);
+				assert.deepStrictEqual(copiedFiles, [
+					{
+						sourceFileName: path.join(pathToAppResourcesAndroid, "*"),
+						destinationFileName: pathToResDirInPlatforms,
+					},
+				]);
 			});
 
 			it("deletes correct values-<sdk> directories based on the compileSdk", async () => {
@@ -275,8 +352,8 @@ describe("androidProjectService", () => {
 						"values-v21",
 						"values-v26",
 						"values-v27",
-						"values-v28"
-					]
+						"values-v28",
+					],
 				};
 
 				compileSdkVersion = 26;
@@ -287,7 +364,7 @@ describe("androidProjectService", () => {
 				assert.deepStrictEqual(deletedDirs, [
 					libsPath,
 					valuesV27Path,
-					valuesV28Path
+					valuesV28Path,
 				]);
 			});
 
@@ -298,7 +375,7 @@ describe("androidProjectService", () => {
 						"drawable-ldpi",
 						"values",
 						"values-v21",
-						"values-v29"
+						"values-v29",
 					],
 					[`${pathToResDirInPlatforms}`]: [
 						"drawable-hdpi",
@@ -306,8 +383,8 @@ describe("androidProjectService", () => {
 						"drawable-mdpi",
 						"values",
 						"values-v21",
-						"values-v29"
-					]
+						"values-v29",
+					],
 				};
 
 				await androidProjectService.prepareAppResources(projectData);
@@ -317,7 +394,7 @@ describe("androidProjectService", () => {
 				assert.deepStrictEqual(deletedDirs, [
 					drawableHdpiPath,
 					drawableLdpiPath,
-					libsPath
+					libsPath,
 				]);
 			});
 		});

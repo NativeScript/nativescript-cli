@@ -5,7 +5,7 @@ import { ReadStream } from "tty";
 import { IAllowEmpty, IPrompterOptions } from "./declarations";
 import { injector } from "./yok";
 const MuteStream = require("mute-stream");
-import * as _ from 'lodash';
+import * as _ from "lodash";
 
 export class Prompter implements IPrompter {
 	private descriptionSeparator = "|";
@@ -19,21 +19,23 @@ export class Prompter implements IPrompter {
 	}
 
 	public async get(questions: prompt.Question[]): Promise<any> {
-		_.each(questions, q => {
-			q.filter = ((selection: string) => {
+		_.each(questions, (q) => {
+			q.filter = (selection: string) => {
 				return selection.split(this.descriptionSeparator)[0].trim();
-			});
+			};
 		});
 		try {
 			this.muteStdout();
 
 			if (!helpers.isInteractive()) {
-				if (_.some(questions, s => !s.default)) {
-					throw new Error("Console is not interactive and no default action specified.");
+				if (_.some(questions, (s) => !s.default)) {
+					throw new Error(
+						"Console is not interactive and no default action specified."
+					);
 				} else {
 					const result: any = {};
 
-					_.each(questions, s => {
+					_.each(questions, (s) => {
 						// Curly brackets needed because s.default() may return false and break the loop
 						result[s.name] = s.default();
 					});
@@ -49,55 +51,74 @@ export class Prompter implements IPrompter {
 		}
 	}
 
-	public async getPassword(message: string, options?: IAllowEmpty): Promise<string> {
+	public async getPassword(
+		message: string,
+		options?: IAllowEmpty
+	): Promise<string> {
 		const schema: prompt.Question = {
 			message,
 			type: "password",
 			name: "password",
 			validate: (value: any) => {
 				const allowEmpty = options && options.allowEmpty;
-				return (!allowEmpty && !value) ? "Password must be non-empty" : true;
-			}
+				return !allowEmpty && !value ? "Password must be non-empty" : true;
+			},
 		};
 
 		const result = await this.get([schema]);
 		return result.password;
 	}
 
-	public async getString(message: string, options?: IPrompterOptions): Promise<string> {
+	public async getString(
+		message: string,
+		options?: IPrompterOptions
+	): Promise<string> {
 		const schema: prompt.Question = {
 			message,
 			type: "input",
 			name: "inputString",
 			validate: (value: any) => {
-				const doesNotAllowEmpty = options && _.has(options, "allowEmpty") && !options.allowEmpty;
-				return (doesNotAllowEmpty && !value) ? `${message} must be non-empty` : true;
+				const doesNotAllowEmpty =
+					options && _.has(options, "allowEmpty") && !options.allowEmpty;
+				return doesNotAllowEmpty && !value
+					? `${message} must be non-empty`
+					: true;
 			},
-			default: options && options.defaultAction
+			default: options && options.defaultAction,
 		};
 
 		const result = await this.get([schema]);
 		return result.inputString;
 	}
 
-	public async promptForChoice(promptMessage: string, choices: string[]): Promise<string> {
+	public async promptForChoice(
+		promptMessage: string,
+		choices: string[]
+	): Promise<string> {
 		const schema: prompt.Answers = {
 			message: promptMessage,
 			type: "list",
 			name: "userAnswer",
-			choices
+			choices,
 		};
 
 		const result = await this.get([schema]);
 		return result.userAnswer;
 	}
 
-	public async promptForDetailedChoice(promptMessage: string, choices: { key: string, description: string }[]): Promise<string> {
-		const longestKeyLength = choices.concat().sort(function (a, b) { return b.key.length - a.key.length; })[0].key.length;
+	public async promptForDetailedChoice(
+		promptMessage: string,
+		choices: { key: string; description: string }[]
+	): Promise<string> {
+		const longestKeyLength = choices.concat().sort(function (a, b) {
+			return b.key.length - a.key.length;
+		})[0].key.length;
 		const inquirerChoices = choices.map((choice) => {
 			return {
-				name: `${_.padEnd(choice.key, longestKeyLength)}  ${choice.description ? this.descriptionSeparator : ""}  ${choice.description}`,
-				short: choice.key
+				name: `${_.padEnd(choice.key, longestKeyLength)}  ${
+					choice.description ? this.descriptionSeparator : ""
+				}  ${choice.description}`,
+				short: choice.key,
 			};
 		});
 
@@ -105,19 +126,22 @@ export class Prompter implements IPrompter {
 			message: promptMessage,
 			type: "list",
 			name: "userAnswer",
-			choices: inquirerChoices
+			choices: inquirerChoices,
 		};
 
 		const result = await this.get([schema]);
 		return result.userAnswer;
 	}
 
-	public async confirm(message: string, defaultAction?: () => boolean): Promise<boolean> {
+	public async confirm(
+		message: string,
+		defaultAction?: () => boolean
+	): Promise<boolean> {
 		const schema = {
 			type: "confirm",
 			name: "prompt",
 			default: defaultAction,
-			message
+			message,
 		};
 
 		const result = await this.get([schema]);
@@ -137,7 +161,7 @@ export class Prompter implements IPrompter {
 
 			this.ctrlcReader = readline.createInterface(<any>{
 				input: process.stdin,
-				output: this.muteStreamInstance
+				output: this.muteStreamInstance,
 			});
 
 			this.ctrlcReader.on("SIGINT", process.exit);
@@ -160,24 +184,41 @@ export class Prompter implements IPrompter {
 	private cleanEventListeners(stream: NodeJS.WritableStream): void {
 		// The events names and listeners names can be found here https://github.com/nodejs/node/blob/master/lib/stream.js
 		// Which event cause memory leak can be tested with stream.listeners("event-name") and if the listeners count keeps increasing with each prompt we need to remove the listener.
-		const memoryLeakEvents: IMemoryLeakEvent[] = [{
-			eventName: "close",
-			listenerName: "cleanup"
-		}, {
-			eventName: "error",
-			listenerName: "onerror"
-		}, {
-			eventName: "drain",
-			listenerName: "ondrain"
-		}];
+		const memoryLeakEvents: IMemoryLeakEvent[] = [
+			{
+				eventName: "close",
+				listenerName: "cleanup",
+			},
+			{
+				eventName: "error",
+				listenerName: "onerror",
+			},
+			{
+				eventName: "drain",
+				listenerName: "ondrain",
+			},
+		];
 
-		_.each(memoryLeakEvents, (memoryleakEvent: IMemoryLeakEvent) => this.cleanListener(stream, memoryleakEvent.eventName, memoryleakEvent.listenerName));
+		_.each(memoryLeakEvents, (memoryleakEvent: IMemoryLeakEvent) =>
+			this.cleanListener(
+				stream,
+				memoryleakEvent.eventName,
+				memoryleakEvent.listenerName
+			)
+		);
 	}
 
-	private cleanListener(stream: NodeJS.WritableStream, eventName: string, listenerName: string): void {
+	private cleanListener(
+		stream: NodeJS.WritableStream,
+		eventName: string,
+		listenerName: string
+	): void {
 		const eventListeners: any[] = process.stdout.listeners(eventName);
 
-		const listenerFunction: (...args: any[]) => void = _.find(eventListeners, (func: any) => func.name === listenerName);
+		const listenerFunction: (...args: any[]) => void = _.find(
+			eventListeners,
+			(func: any) => func.name === listenerName
+		);
 
 		if (listenerFunction) {
 			stream.removeListener(eventName, listenerFunction);

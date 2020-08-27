@@ -1,5 +1,8 @@
 import { ERROR_NO_VALID_SUBCOMMAND_FORMAT } from "../common/constants";
-import { ANDROID_RELEASE_BUILD_ERROR_MESSAGE, ANDROID_APP_BUNDLE_SIGNING_ERROR_MESSAGE } from "../constants";
+import {
+	ANDROID_RELEASE_BUILD_ERROR_MESSAGE,
+	ANDROID_APP_BUNDLE_SIGNING_ERROR_MESSAGE,
+} from "../constants";
 import { cache } from "../common/decorators";
 import { hasValidAndroidSigning } from "../common/helpers";
 import { IProjectData, IProjectDataService } from "../definitions/project";
@@ -11,7 +14,9 @@ import { IInjector } from "../common/definitions/yok";
 import { injector } from "../common/yok";
 
 export class RunCommandBase implements ICommand {
-	private liveSyncCommandHelperAdditionalOptions: ILiveSyncCommandHelperAdditionalOptions = <ILiveSyncCommandHelperAdditionalOptions>{};
+	private liveSyncCommandHelperAdditionalOptions: ILiveSyncCommandHelperAdditionalOptions = <
+		ILiveSyncCommandHelperAdditionalOptions
+	>{};
 
 	public platform: string;
 	constructor(
@@ -23,12 +28,18 @@ export class RunCommandBase implements ICommand {
 		private $migrateController: IMigrateController,
 		private $options: IOptions,
 		private $projectData: IProjectData
-	) { }
+	) {}
 
 	public allowedParameters: ICommandParameter[] = [];
 	public async execute(args: string[]): Promise<void> {
-		await this.$analyticsService.trackPreviewAppData(this.platform, this.$projectData.projectDir);
-		return this.$liveSyncCommandHelper.executeCommandLiveSync(this.platform, this.liveSyncCommandHelperAdditionalOptions);
+		await this.$analyticsService.trackPreviewAppData(
+			this.platform,
+			this.$projectData.projectDir
+		);
+		return this.$liveSyncCommandHelper.executeCommandLiveSync(
+			this.platform,
+			this.liveSyncCommandHelperAdditionalOptions
+		);
 	}
 
 	public async canExecute(args: string[]): Promise<boolean> {
@@ -42,10 +53,18 @@ export class RunCommandBase implements ICommand {
 		}
 
 		this.$projectData.initializeProjectData();
-		const platforms = this.platform ? [this.platform] : [this.$devicePlatformsConstants.Android, this.$devicePlatformsConstants.iOS];
+		const platforms = this.platform
+			? [this.platform]
+			: [
+					this.$devicePlatformsConstants.Android,
+					this.$devicePlatformsConstants.iOS,
+			  ];
 
 		if (!this.$options.force) {
-			await this.$migrateController.validate({ projectDir: this.$projectData.projectDir, platforms });
+			await this.$migrateController.validate({
+				projectDir: this.$projectData.projectDir,
+				platforms,
+			});
 		}
 
 		await this.$liveSyncCommandHelper.validatePlatform(this.platform);
@@ -57,7 +76,6 @@ export class RunCommandBase implements ICommand {
 injector.registerCommand("run|*all", RunCommandBase);
 
 export class RunIosCommand implements ICommand {
-
 	@cache()
 	private get runCommand(): RunCommandBase {
 		const runCommand = this.$injector.resolve<RunCommandBase>(RunCommandBase);
@@ -76,9 +94,8 @@ export class RunIosCommand implements ICommand {
 		private $injector: IInjector,
 		private $options: IOptions,
 		private $platformValidationService: IPlatformValidationService,
-		private $projectDataService: IProjectDataService,
-	) {
-	}
+		private $projectDataService: IProjectDataService
+	) {}
 
 	public async execute(args: string[]): Promise<void> {
 		return this.runCommand.execute(args);
@@ -87,11 +104,25 @@ export class RunIosCommand implements ICommand {
 	public async canExecute(args: string[]): Promise<boolean> {
 		const projectData = this.$projectDataService.getProjectData();
 
-		if (!this.$platformValidationService.isPlatformSupportedForOS(this.$devicePlatformsConstants.iOS, projectData)) {
-			this.$errors.fail(`Applications for platform ${this.$devicePlatformsConstants.iOS} can not be built on this OS`);
+		if (
+			!this.$platformValidationService.isPlatformSupportedForOS(
+				this.$devicePlatformsConstants.iOS,
+				projectData
+			)
+		) {
+			this.$errors.fail(
+				`Applications for platform ${this.$devicePlatformsConstants.iOS} can not be built on this OS`
+			);
 		}
 
-		const result = await this.runCommand.canExecute(args) && await this.$platformValidationService.validateOptions(this.$options.provision, this.$options.teamId, projectData, this.$devicePlatformsConstants.iOS.toLowerCase());
+		const result =
+			(await this.runCommand.canExecute(args)) &&
+			(await this.$platformValidationService.validateOptions(
+				this.$options.provision,
+				this.$options.teamId,
+				projectData,
+				this.$devicePlatformsConstants.iOS.toLowerCase()
+			));
 		return result;
 	}
 }
@@ -99,7 +130,6 @@ export class RunIosCommand implements ICommand {
 injector.registerCommand("run|ios", RunIosCommand);
 
 export class RunAndroidCommand implements ICommand {
-
 	@cache()
 	private get runCommand(): RunCommandBase {
 		const runCommand = this.$injector.resolve<RunCommandBase>(RunCommandBase);
@@ -120,21 +150,34 @@ export class RunAndroidCommand implements ICommand {
 		private $platformValidationService: IPlatformValidationService,
 		private $projectData: IProjectData,
 		private $markingModeService: IMarkingModeService
-	) { }
+	) {}
 
 	public async execute(args: string[]): Promise<void> {
-		await this.$markingModeService.handleMarkingModeFullDeprecation({ projectDir: this.$projectData.projectDir, skipWarnings: true });
+		await this.$markingModeService.handleMarkingModeFullDeprecation({
+			projectDir: this.$projectData.projectDir,
+			skipWarnings: true,
+		});
 		return this.runCommand.execute(args);
 	}
 
 	public async canExecute(args: string[]): Promise<boolean> {
 		await this.runCommand.canExecute(args);
 
-		if (!this.$platformValidationService.isPlatformSupportedForOS(this.$devicePlatformsConstants.Android, this.$projectData)) {
-			this.$errors.fail(`Applications for platform ${this.$devicePlatformsConstants.Android} can not be built on this OS`);
+		if (
+			!this.$platformValidationService.isPlatformSupportedForOS(
+				this.$devicePlatformsConstants.Android,
+				this.$projectData
+			)
+		) {
+			this.$errors.fail(
+				`Applications for platform ${this.$devicePlatformsConstants.Android} can not be built on this OS`
+			);
 		}
 
-		if ((this.$options.release || this.$options.aab) && !hasValidAndroidSigning(this.$options)) {
+		if (
+			(this.$options.release || this.$options.aab) &&
+			!hasValidAndroidSigning(this.$options)
+		) {
 			if (this.$options.release) {
 				this.$errors.failWithHelp(ANDROID_RELEASE_BUILD_ERROR_MESSAGE);
 			} else {
@@ -142,7 +185,12 @@ export class RunAndroidCommand implements ICommand {
 			}
 		}
 
-		return this.$platformValidationService.validateOptions(this.$options.provision, this.$options.teamId, this.$projectData, this.$devicePlatformsConstants.Android.toLowerCase());
+		return this.$platformValidationService.validateOptions(
+			this.$options.provision,
+			this.$options.teamId,
+			this.$projectData,
+			this.$devicePlatformsConstants.Android.toLowerCase()
+		);
 	}
 }
 

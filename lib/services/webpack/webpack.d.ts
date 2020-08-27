@@ -1,18 +1,34 @@
 import { EventEmitter } from "events";
 import { BuildData } from "../../data/build-data";
 import { PrepareData } from "../../data/prepare-data";
-import { IPlatformProjectServiceBase, IProjectData, IValidatePlatformOutput } from "../../definitions/project";
+import {
+	IPlatformProjectServiceBase,
+	IProjectData,
+	IValidatePlatformOutput,
+} from "../../definitions/project";
 import { IOptions, IDependencyData } from "../../declarations";
 import { IPlatformData } from "../../definitions/platform";
 import { IPluginData } from "../../definitions/plugins";
 import { IRelease, ISpawnResult } from "../../common/declarations";
-import { IProjectChangesInfo, IPrepareInfo, IAddedNativePlatform } from "../../definitions/project-changes";
+import {
+	IProjectChangesInfo,
+	IPrepareInfo,
+	IAddedNativePlatform,
+} from "../../definitions/project-changes";
 import { INotConfiguredEnvOptions } from "../../common/definitions/commands";
 
 declare global {
 	interface IWebpackCompilerService extends EventEmitter {
-		compileWithWatch(platformData: IPlatformData, projectData: IProjectData, prepareData: IPrepareData): Promise<any>;
-		compileWithoutWatch(platformData: IPlatformData, projectData: IProjectData, prepareData: IPrepareData): Promise<void>;
+		compileWithWatch(
+			platformData: IPlatformData,
+			projectData: IProjectData,
+			prepareData: IPrepareData
+		): Promise<any>;
+		compileWithoutWatch(
+			platformData: IPlatformData,
+			projectData: IProjectData,
+			prepareData: IPrepareData
+		): Promise<void>;
 		stopWebpackCompiler(platform: string): Promise<void>;
 	}
 
@@ -23,11 +39,23 @@ declare global {
 	}
 
 	interface IProjectChangesService {
-		checkForChanges(platformData: IPlatformData, projectData: IProjectData, prepareData: IPrepareData): Promise<IProjectChangesInfo>;
+		checkForChanges(
+			platformData: IPlatformData,
+			projectData: IProjectData,
+			prepareData: IPrepareData
+		): Promise<IProjectChangesInfo>;
 		getPrepareInfoFilePath(platformData: IPlatformData): string;
 		getPrepareInfo(platformData: IPlatformData): IPrepareInfo;
-		savePrepareInfo(platformData: IPlatformData, projectData: IProjectData, prepareData: IPrepareData): Promise<void>;
-		setNativePlatformStatus(platformData: IPlatformData, projectData: IProjectData, addedPlatform: IAddedNativePlatform): void;
+		savePrepareInfo(
+			platformData: IPlatformData,
+			projectData: IProjectData,
+			prepareData: IPrepareData
+		): Promise<void>;
+		setNativePlatformStatus(
+			platformData: IPlatformData,
+			projectData: IProjectData,
+			addedPlatform: IAddedNativePlatform
+		): void;
 		currentChanges: IProjectChangesInfo;
 	}
 
@@ -45,10 +73,20 @@ declare global {
 		hash: string;
 	}
 
-	interface IPlatformProjectService extends NodeJS.EventEmitter, IPlatformProjectServiceBase {
+	interface IPlatformProjectService
+		extends NodeJS.EventEmitter,
+			IPlatformProjectServiceBase {
 		getPlatformData(projectData: IProjectData): IPlatformData;
-		validate(projectData: IProjectData, options: IOptions, notConfiguredEnvOptions?: INotConfiguredEnvOptions): Promise<IValidatePlatformOutput>;
-		createProject(frameworkDir: string, frameworkVersion: string, projectData: IProjectData): Promise<void>;
+		validate(
+			projectData: IProjectData,
+			options: IOptions,
+			notConfiguredEnvOptions?: INotConfiguredEnvOptions
+		): Promise<IValidatePlatformOutput>;
+		createProject(
+			frameworkDir: string,
+			frameworkVersion: string,
+			projectData: IProjectData
+		): Promise<void>;
 		interpolateData(projectData: IProjectData): Promise<void>;
 		interpolateConfigurationFile(projectData: IProjectData): void;
 
@@ -66,9 +104,17 @@ declare global {
 		 * @param {any} provision UUID of the provisioning profile used in iOS option validation.
 		 * @returns {void}
 		 */
-		validateOptions(projectId?: string, provision?: true | string, teamId?: true | string): Promise<boolean>;
+		validateOptions(
+			projectId?: string,
+			provision?: true | string,
+			teamId?: true | string
+		): Promise<boolean>;
 
-		buildProject<T extends BuildData>(projectRoot: string, projectData: IProjectData, buildConfig: T): Promise<void>;
+		buildProject<T extends BuildData>(
+			projectRoot: string,
+			projectData: IProjectData,
+			buildConfig: T
+		): Promise<void>;
 
 		/**
 		 * Prepares images in Native project (for iOS).
@@ -76,7 +122,10 @@ declare global {
 		 * @param {any} platformSpecificData Platform specific data required for project preparation.
 		 * @returns {void}
 		 */
-		prepareProject<T extends PrepareData>(projectData: IProjectData, prepareData: T): Promise<void>;
+		prepareProject<T extends PrepareData>(
+			projectData: IProjectData,
+			prepareData: T
+		): Promise<void>;
 
 		/**
 		 * Prepares App_Resources in the native project by clearing data from other platform and applying platform specific rules.
@@ -94,7 +143,10 @@ declare global {
 		 */
 		isPlatformPrepared(projectRoot: string, projectData: IProjectData): boolean;
 
-		preparePluginNativeCode(pluginData: IPluginData, options?: any): Promise<void>;
+		preparePluginNativeCode(
+			pluginData: IPluginData,
+			options?: any
+		): Promise<void>;
 
 		/**
 		 * Removes native code of a plugin (CocoaPods, jars, libs, src).
@@ -102,11 +154,20 @@ declare global {
 		 * @param {IProjectData} projectData DTO with information about the project.
 		 * @returns {void}
 		 */
-		removePluginNativeCode(pluginData: IPluginData, projectData: IProjectData): Promise<void>;
+		removePluginNativeCode(
+			pluginData: IPluginData,
+			projectData: IProjectData
+		): Promise<void>;
 
-		beforePrepareAllPlugins(projectData: IProjectData, dependencies?: IDependencyData[]): Promise<void>;
+		beforePrepareAllPlugins(
+			projectData: IProjectData,
+			dependencies?: IDependencyData[]
+		): Promise<void>;
 
-		handleNativeDependenciesChange(projectData: IProjectData, opts: IRelease): Promise<void>;
+		handleNativeDependenciesChange(
+			projectData: IProjectData,
+			opts: IRelease
+		): Promise<void>;
 
 		/**
 		 * Gets the path wheren App_Resources should be copied.
@@ -114,8 +175,14 @@ declare global {
 		 */
 		getAppResourcesDestinationDirectoryPath(projectData: IProjectData): string;
 
-		cleanDeviceTempFolder(deviceIdentifier: string, projectData: IProjectData): Promise<void>;
-		processConfigurationFilesFromAppResources(projectData: IProjectData, opts: { release: boolean }): Promise<void>;
+		cleanDeviceTempFolder(
+			deviceIdentifier: string,
+			projectData: IProjectData
+		): Promise<void>;
+		processConfigurationFilesFromAppResources(
+			projectData: IProjectData,
+			opts: { release: boolean }
+		): Promise<void>;
 
 		/**
 		 * Ensures there is configuration file (AndroidManifest.xml, Info.plist) in app/App_Resources.
@@ -137,13 +204,17 @@ declare global {
 		 * @param {string} projectRoot The root directory of the native project.
 		 * @returns {void}
 		 */
-		cleanProject?(projectRoot: string): Promise<void>
+		cleanProject?(projectRoot: string): Promise<void>;
 
 		/**
 		 * Check the current state of the project, and validate against the options.
 		 * If there are parts in the project that are inconsistent with the desired options, marks them in the changeset flags.
 		 */
-		checkForChanges<T extends PrepareData>(changeset: IProjectChangesInfo, prepareData: T, projectData: IProjectData): Promise<void>;
+		checkForChanges<T extends PrepareData>(
+			changeset: IProjectChangesInfo,
+			prepareData: T,
+			projectData: IProjectData
+		): Promise<void>;
 
 		/**
 		 * Get the deployment target's version

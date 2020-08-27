@@ -7,12 +7,18 @@ import { injector } from "../../common/yok";
 
 export class CreatePluginCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
-	public userMessage = "What is your GitHub username?\n(will be used to update the Github URLs in the plugin's package.json)";
-	public nameMessage = "What will be the name of your plugin?\n(use lowercase characters and dashes only)";
-	public includeTypeScriptDemoMessage = 'Do you want to include a "TypeScript NativeScript" application linked with your plugin to make development easier?';
-	public includeAngularDemoMessage = 'Do you want to include an "Angular NativeScript" application linked with your plugin to make development easier?';
-	public pathAlreadyExistsMessageTemplate = "Path already exists and is not empty %s";
-	constructor(private $options: IOptions,
+	public userMessage =
+		"What is your GitHub username?\n(will be used to update the Github URLs in the plugin's package.json)";
+	public nameMessage =
+		"What will be the name of your plugin?\n(use lowercase characters and dashes only)";
+	public includeTypeScriptDemoMessage =
+		'Do you want to include a "TypeScript NativeScript" application linked with your plugin to make development easier?';
+	public includeAngularDemoMessage =
+		'Do you want to include an "Angular NativeScript" application linked with your plugin to make development easier?';
+	public pathAlreadyExistsMessageTemplate =
+		"Path already exists and is not empty %s";
+	constructor(
+		private $options: IOptions,
 		private $errors: IErrors,
 		private $terminalSpinnerService: ITerminalSpinnerService,
 		private $logger: ILogger,
@@ -20,7 +26,8 @@ export class CreatePluginCommand implements ICommand {
 		private $fs: IFileSystem,
 		private $childProcess: IChildProcess,
 		private $prompter: IPrompter,
-		private $packageManager: INodePackageManager) { }
+		private $packageManager: INodePackageManager
+	) {}
 
 	public async execute(args: string[]): Promise<void> {
 		const pluginRepoName = args[0];
@@ -41,7 +48,10 @@ export class CreatePluginCommand implements ICommand {
 			throw err;
 		}
 
-		this.$logger.printMarkdown("Solution for `%s` was successfully created.", pluginRepoName);
+		this.$logger.printMarkdown(
+			"Solution for `%s` was successfully created.",
+			pluginRepoName
+		);
 	}
 
 	public async canExecute(args: string[]): Promise<boolean> {
@@ -52,8 +62,13 @@ export class CreatePluginCommand implements ICommand {
 		return true;
 	}
 
-	private async setupSeed(projectDir: string, pluginRepoName: string): Promise<void> {
-		this.$logger.printMarkdown("Executing initial plugin configuration script...");
+	private async setupSeed(
+		projectDir: string,
+		pluginRepoName: string
+	): Promise<void> {
+		this.$logger.printMarkdown(
+			"Executing initial plugin configuration script..."
+		);
 
 		const config = this.$options;
 		const spinner = this.$terminalSpinnerService.createSpinner();
@@ -67,12 +82,29 @@ export class CreatePluginCommand implements ICommand {
 		}
 
 		const gitHubUsername = await this.getGitHubUsername(config.username);
-		const pluginNameSource = await this.getPluginNameSource(config.pluginName, pluginRepoName);
-		const includeTypescriptDemo = await this.getShouldIncludeDemoResult(config.includeTypeScriptDemo, this.includeTypeScriptDemoMessage);
-		const includeAngularDemo = await this.getShouldIncludeDemoResult(config.includeAngularDemo, this.includeAngularDemoMessage);
+		const pluginNameSource = await this.getPluginNameSource(
+			config.pluginName,
+			pluginRepoName
+		);
+		const includeTypescriptDemo = await this.getShouldIncludeDemoResult(
+			config.includeTypeScriptDemo,
+			this.includeTypeScriptDemoMessage
+		);
+		const includeAngularDemo = await this.getShouldIncludeDemoResult(
+			config.includeAngularDemo,
+			this.includeAngularDemoMessage
+		);
 
-		if (!isInteractive() && (!config.username || !config.pluginName || !config.includeAngularDemo || !config.includeTypeScriptDemo)) {
-			this.$logger.printMarkdown("Using default values for plugin creation options since your shell is not interactive.");
+		if (
+			!isInteractive() &&
+			(!config.username ||
+				!config.pluginName ||
+				!config.includeAngularDemo ||
+				!config.includeTypeScriptDemo)
+		) {
+			this.$logger.printMarkdown(
+				"Using default values for plugin creation options since your shell is not interactive."
+			);
 		}
 
 		// run postclone script manually and kill it if it takes more than 10 sec
@@ -83,10 +115,15 @@ export class CreatePluginCommand implements ICommand {
 			`pluginName=${pluginNameSource}`,
 			"initGit=y",
 			`includeTypeScriptDemo=${includeTypescriptDemo}`,
-			`includeAngularDemo=${includeAngularDemo}`
+			`includeAngularDemo=${includeAngularDemo}`,
 		];
 
-		const outputScript = (await this.$childProcess.spawnFromEvent(process.execPath, params, "close", { stdio: "inherit", cwd, timeout: 10000 }));
+		const outputScript = await this.$childProcess.spawnFromEvent(
+			process.execPath,
+			params,
+			"close",
+			{ stdio: "inherit", cwd, timeout: 10000 }
+		);
 		if (outputScript && outputScript.stdout) {
 			this.$logger.printMarkdown(outputScript.stdout);
 		}
@@ -100,15 +137,24 @@ export class CreatePluginCommand implements ICommand {
 		}
 	}
 
-	private async downloadPackage(selectedTemplate: string, projectDir: string): Promise<void> {
+	private async downloadPackage(
+		selectedTemplate: string,
+		projectDir: string
+	): Promise<void> {
 		if (selectedTemplate) {
-			this.$logger.printMarkdown("Make sure your custom template is compatible with the Plugin Seed at https://github.com/NativeScript/nativescript-plugin-seed/");
+			this.$logger.printMarkdown(
+				"Make sure your custom template is compatible with the Plugin Seed at https://github.com/NativeScript/nativescript-plugin-seed/"
+			);
 		} else {
-			this.$logger.printMarkdown("Downloading the latest version of NativeScript Plugin Seed...");
+			this.$logger.printMarkdown(
+				"Downloading the latest version of NativeScript Plugin Seed..."
+			);
 		}
 
 		const spinner = this.$terminalSpinnerService.createSpinner();
-		const packageToInstall = selectedTemplate || "https://github.com/NativeScript/nativescript-plugin-seed/archive/master.tar.gz";
+		const packageToInstall =
+			selectedTemplate ||
+			"https://github.com/NativeScript/nativescript-plugin-seed/archive/master.tar.gz";
 		try {
 			spinner.start();
 			await this.$pacoteService.extractPackage(packageToInstall, projectDir);
@@ -121,30 +167,50 @@ export class CreatePluginCommand implements ICommand {
 		if (!gitHubUsername) {
 			gitHubUsername = "NativeScriptDeveloper";
 			if (isInteractive()) {
-				gitHubUsername = await this.$prompter.getString(this.userMessage, { allowEmpty: false, defaultAction: () => { return gitHubUsername; } });
+				gitHubUsername = await this.$prompter.getString(this.userMessage, {
+					allowEmpty: false,
+					defaultAction: () => {
+						return gitHubUsername;
+					},
+				});
 			}
 		}
 
 		return gitHubUsername;
 	}
 
-	private async getPluginNameSource(pluginNameSource: string, pluginRepoName: string): Promise<string> {
+	private async getPluginNameSource(
+		pluginNameSource: string,
+		pluginRepoName: string
+	): Promise<string> {
 		if (!pluginNameSource) {
 			// remove nativescript- prefix for naming plugin files
-			const prefix = 'nativescript-';
-			pluginNameSource = pluginRepoName.toLowerCase().startsWith(prefix) ? pluginRepoName.slice(prefix.length, pluginRepoName.length) : pluginRepoName;
+			const prefix = "nativescript-";
+			pluginNameSource = pluginRepoName.toLowerCase().startsWith(prefix)
+				? pluginRepoName.slice(prefix.length, pluginRepoName.length)
+				: pluginRepoName;
 			if (isInteractive()) {
-				pluginNameSource = await this.$prompter.getString(this.nameMessage, { allowEmpty: false, defaultAction: () => { return pluginNameSource; } });
+				pluginNameSource = await this.$prompter.getString(this.nameMessage, {
+					allowEmpty: false,
+					defaultAction: () => {
+						return pluginNameSource;
+					},
+				});
 			}
 		}
 
 		return pluginNameSource;
 	}
 
-	private async getShouldIncludeDemoResult(includeDemoOption: string, message: string): Promise<string> {
+	private async getShouldIncludeDemoResult(
+		includeDemoOption: string,
+		message: string
+	): Promise<string> {
 		let shouldIncludeDemo = !!includeDemoOption;
 		if (!includeDemoOption && isInteractive()) {
-			shouldIncludeDemo = await this.$prompter.confirm(message, () => { return true; });
+			shouldIncludeDemo = await this.$prompter.confirm(message, () => {
+				return true;
+			});
 		}
 
 		return shouldIncludeDemo ? "y" : "n";

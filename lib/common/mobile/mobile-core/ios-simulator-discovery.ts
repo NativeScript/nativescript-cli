@@ -4,22 +4,30 @@ import { EmulatorDiscoveryNames } from "../../constants";
 import { IDictionary, IHostInfo } from "../../declarations";
 import { IInjector } from "../../definitions/yok";
 import { injector } from "../../yok";
-import * as _ from 'lodash';
+import * as _ from "lodash";
 
 export class IOSSimulatorDiscovery extends DeviceDiscovery {
 	private cachedSimulators: Mobile.IiSimDevice[] = [];
 	private availableSimulators: IDictionary<Mobile.IDeviceInfo> = {};
 
-	constructor(private $injector: IInjector,
+	constructor(
+		private $injector: IInjector,
 		private $iOSSimResolver: Mobile.IiOSSimResolver,
 		private $mobileHelper: Mobile.IMobileHelper,
 		private $hostInfo: IHostInfo,
-		private $iOSEmulatorServices: Mobile.IiOSSimulatorService) {
+		private $iOSEmulatorServices: Mobile.IiOSSimulatorService
+	) {
 		super();
 	}
 
-	public async startLookingForDevices(options?: Mobile.IDeviceLookingOptions): Promise<void> {
-		if (options && options.platform && !this.$mobileHelper.isiOSPlatform(options.platform)) {
+	public async startLookingForDevices(
+		options?: Mobile.IDeviceLookingOptions
+	): Promise<void> {
+		if (
+			options &&
+			options.platform &&
+			!this.$mobileHelper.isiOSPlatform(options.platform)
+		) {
 			return;
 		}
 
@@ -32,13 +40,31 @@ export class IOSSimulatorDiscovery extends DeviceDiscovery {
 
 			// Remove old simulators
 			_(this.cachedSimulators)
-				.reject(s => _.some(currentSimulators, simulator => simulator && s && simulator.id === s.id && simulator.state === s.state))
-				.each(s => this.deleteAndRemoveDevice(s));
+				.reject((s) =>
+					_.some(
+						currentSimulators,
+						(simulator) =>
+							simulator &&
+							s &&
+							simulator.id === s.id &&
+							simulator.state === s.state
+					)
+				)
+				.each((s) => this.deleteAndRemoveDevice(s));
 
 			// Add new simulators
 			_(currentSimulators)
-				.reject(s => _.some(this.cachedSimulators, simulator => simulator && s && simulator.id === s.id && simulator.state === s.state))
-				.each(s => this.createAndAddDevice(s));
+				.reject((s) =>
+					_.some(
+						this.cachedSimulators,
+						(simulator) =>
+							simulator &&
+							s &&
+							simulator.id === s.id &&
+							simulator.state === s.state
+					)
+				)
+				.each((s) => this.createAndAddDevice(s));
 		}
 	}
 
@@ -47,13 +73,19 @@ export class IOSSimulatorDiscovery extends DeviceDiscovery {
 			return [];
 		}
 
-		const simulators = (await this.$iOSEmulatorServices.getEmulatorImages()).devices;
+		const simulators = (await this.$iOSEmulatorServices.getEmulatorImages())
+			.devices;
 		const currentSimulators = _.values(this.availableSimulators);
 		const lostSimulators: Mobile.IDeviceInfo[] = [];
 		const foundSimulators: Mobile.IDeviceInfo[] = [];
 
 		for (const simulator of currentSimulators) {
-			if (!_.find(this.availableSimulators, s => s.imageIdentifier === simulator.imageIdentifier)) {
+			if (
+				!_.find(
+					this.availableSimulators,
+					(s) => s.imageIdentifier === simulator.imageIdentifier
+				)
+			) {
 				lostSimulators.push(simulator);
 			}
 		}
@@ -77,23 +109,25 @@ export class IOSSimulatorDiscovery extends DeviceDiscovery {
 
 	private createAndAddDevice(simulator: Mobile.IiSimDevice): void {
 		this.cachedSimulators.push(_.cloneDeep(simulator));
-		this.addDevice(this.$injector.resolve(IOSSimulator, { simulator: simulator }));
+		this.addDevice(
+			this.$injector.resolve(IOSSimulator, { simulator: simulator })
+		);
 	}
 
 	private deleteAndRemoveDevice(simulator: Mobile.IiSimDevice): void {
-		_.remove(this.cachedSimulators, s => s && s.id === simulator.id);
+		_.remove(this.cachedSimulators, (s) => s && s.id === simulator.id);
 		this.removeDevice(simulator.id);
 	}
 
 	private raiseOnEmulatorImagesFound(simulators: Mobile.IDeviceInfo[]) {
-		_.forEach(simulators, simulator => {
+		_.forEach(simulators, (simulator) => {
 			this.availableSimulators[simulator.imageIdentifier] = simulator;
 			this.emit(EmulatorDiscoveryNames.EMULATOR_IMAGE_FOUND, simulator);
 		});
 	}
 
 	private raiseOnEmulatorImagesLost(simulators: Mobile.IDeviceInfo[]) {
-		_.forEach(simulators, simulator => {
+		_.forEach(simulators, (simulator) => {
 			delete this.availableSimulators[simulator.imageIdentifier];
 			this.emit(EmulatorDiscoveryNames.EMULATOR_IMAGE_LOST, simulator);
 		});

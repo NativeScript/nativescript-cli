@@ -1,15 +1,13 @@
 {
 	"rulesDirectory": "node_modules/tslint-microsoft-contrib",
+	"extends": [
+		"tslint-config-prettier"
+	],
 	"rules": {
 		"deprecation": true,
 		"class-name": true,
 		"curly": true,
-		"eofline": true,
 		"mocha-avoid-only": true,
-		"indent": [
-			true,
-			"tabs"
-		],
 		"interface-name": true,
 		"jsdoc-format": true,
 		"max-line-length": [
@@ -17,7 +15,6 @@
 			140
 		],
 		"prefer-const": true,
-		"no-consecutive-blank-lines": true,
 		"no-construct": true,
 		"no-debugger": true,
 		"no-duplicate-variable": true,
@@ -25,25 +22,14 @@
 		"no-empty": true,
 		"no-eval": true,
 		"no-switch-case-fall-through": true,
-		"no-trailing-whitespace": true,
 		"no-unused-expression": true,
-		"no-use-before-declare": true,
 		"no-var-keyword": true,
 		"no-var-requires": false,
-		"one-line": [
-			true,
-			"check-catch",
-			"check-finally",
-			"check-else",
-			"check-open-brace",
-			"check-whitespace"
-		],
 		"no-floating-promises": true,
 		"quotemark": [
 			false,
 			"double"
 		],
-		"semicolon": true,
 		"space-before-function-paren": false,
 		"switch-default": false,
 		"trailing-comma": [
@@ -62,14 +48,6 @@
 			true,
 			"ban-keywords",
 			"allow-leading-underscore"
-		],
-		"whitespace": [
-			true,
-			"check-branch",
-			"check-decl",
-			"check-operator",
-			"check-module",
-			"check-separator"
 		]
 	}
 }

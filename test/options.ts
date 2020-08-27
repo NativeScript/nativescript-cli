@@ -4,20 +4,24 @@ import { assert } from "chai";
 import { Options } from "../lib/options";
 import { IOptions } from "../lib/declarations";
 import { IInjector } from "../lib/common/definitions/yok";
-import { IConfigurationSettings, OptionType, ISettingsService } from "../lib/common/declarations";
-import * as _ from 'lodash';
+import {
+	IConfigurationSettings,
+	OptionType,
+	ISettingsService,
+} from "../lib/common/declarations";
+import * as _ from "lodash";
 
 let isExecutionStopped = false;
 
 function createTestInjector(): IInjector {
 	const testInjector = new Yok();
 	testInjector.register("staticConfig", {
-		CLIENT_NAME: ""
+		CLIENT_NAME: "",
 	});
 	testInjector.register("hostInfo", {});
 	testInjector.register("settingsService", {
 		setSettings: (settings: IConfigurationSettings): any => undefined,
-		getProfileDir: () => "profileDir"
+		getProfileDir: () => "profileDir",
 	});
 
 	return testInjector;
@@ -29,8 +33,8 @@ function createOptions(testInjector: IInjector): IOptions {
 }
 
 describe("options", () => {
-  // TODO: Igor and Nathan will make this work again
-  return;
+	// TODO: Igor and Nathan will make this work again
+	return;
 	let testInjector: IInjector;
 	beforeEach(() => {
 		testInjector = createTestInjector();
@@ -49,7 +53,7 @@ describe("options", () => {
 
 	describe("validateOptions", () => {
 		it("breaks execution when option is not valid", () => {
-			process.argv.push('--pathr');
+			process.argv.push("--pathr");
 			process.argv.push("incorrect argument");
 			const options = createOptions(testInjector);
 			options.validateOptions();
@@ -59,7 +63,7 @@ describe("options", () => {
 		});
 
 		it("breaks execution when valid option does not have value", () => {
-			process.argv.push('--path');
+			process.argv.push("--path");
 			// If you do not pass value to an option, it's automatically set as true.
 			const options = createOptions(testInjector);
 			process.argv.pop();
@@ -68,7 +72,7 @@ describe("options", () => {
 		});
 
 		it("breaks execution when valid dashed option passed without dashes does not have value", () => {
-			process.argv.push('--keyStorePath');
+			process.argv.push("--keyStorePath");
 			// If you do not pass value to a string option, it's automatically set to "".
 			const options = createOptions(testInjector);
 			process.argv.pop();
@@ -77,7 +81,7 @@ describe("options", () => {
 		});
 
 		it("breaks execution when valid dashed option does not have value", () => {
-			process.argv.push('--key-store-path');
+			process.argv.push("--key-store-path");
 			// If you do not pass value to an option, it's automatically set as true.
 			const options = createOptions(testInjector);
 			process.argv.pop();
@@ -86,7 +90,7 @@ describe("options", () => {
 		});
 
 		it("does not break execution when valid option has correct value", () => {
-			process.argv.push('--path');
+			process.argv.push("--path");
 			process.argv.push("SomeDir");
 			const options = createOptions(testInjector);
 			options.validateOptions();
@@ -96,7 +100,7 @@ describe("options", () => {
 		});
 
 		it("breaks execution when valid option has empty string value", () => {
-			process.argv.push('--path');
+			process.argv.push("--path");
 			const options = createOptions(testInjector);
 			options.validateOptions();
 			process.argv.pop();
@@ -104,8 +108,8 @@ describe("options", () => {
 		});
 
 		it("breaks execution when valid option has value with spaces only", () => {
-			process.argv.push('--path');
-			process.argv.push('  ');
+			process.argv.push("--path");
+			process.argv.push("  ");
 			const options = createOptions(testInjector);
 			options.validateOptions();
 			process.argv.pop();
@@ -114,8 +118,8 @@ describe("options", () => {
 		});
 
 		it("breaks execution when shorthand option is not valid", () => {
-			process.argv.push('-j');
-			process.argv.push('incorrect shorthand');
+			process.argv.push("-j");
+			process.argv.push("incorrect shorthand");
 			const options = createOptions(testInjector);
 			options.validateOptions();
 			process.argv.pop();
@@ -124,7 +128,7 @@ describe("options", () => {
 		});
 
 		it("does not break execution when valid shorthand option has correct value", () => {
-			process.argv.push('-v');
+			process.argv.push("-v");
 			const options = createOptions(testInjector);
 			options.validateOptions();
 			process.argv.pop();
@@ -134,8 +138,8 @@ describe("options", () => {
 
 		// all numbers are changed to strings before calling validateOptions
 		it("does not break execution when valid option has number value", () => {
-			process.argv.push('--path');
-			process.argv.push('1');
+			process.argv.push("--path");
+			process.argv.push("1");
 			const options = createOptions(testInjector);
 			options.validateOptions();
 			process.argv.pop();
@@ -144,9 +148,9 @@ describe("options", () => {
 		});
 
 		it("throws error when valid option has array value", () => {
-			process.argv.push('--path');
+			process.argv.push("--path");
 			process.argv.push("value 1");
-			process.argv.push('--path');
+			process.argv.push("--path");
 			process.argv.push("value 2");
 			const options = createOptions(testInjector);
 			options.validateOptions();
@@ -172,7 +176,9 @@ describe("options", () => {
 			process.argv.push("--test1");
 			process.argv.push("value");
 			const options = createOptions(testInjector);
-			options.validateOptions({ test1: { type: OptionType.String, hasSensitiveValue: false } });
+			options.validateOptions({
+				test1: { type: OptionType.String, hasSensitiveValue: false },
+			});
 			process.argv.pop();
 			process.argv.pop();
 			assert.isFalse(isExecutionStopped);
@@ -181,13 +187,15 @@ describe("options", () => {
 		it("does not break execution when valid commandSpecificOptions are passed and user specifies globally valid option", () => {
 			const options = createOptions(testInjector);
 			process.argv.push("--version");
-			options.validateOptions({ test1: { type: OptionType.String, hasSensitiveValue: false } });
+			options.validateOptions({
+				test1: { type: OptionType.String, hasSensitiveValue: false },
+			});
 			process.argv.pop();
 			assert.isFalse(isExecutionStopped);
 		});
 
 		it("breaks execution when valid array option has value with length 0", () => {
-			process.argv.push('--config');
+			process.argv.push("--config");
 			const options = createOptions(testInjector);
 			options.validateOptions();
 			process.argv.pop();
@@ -215,9 +223,13 @@ describe("options", () => {
 				const expectedProfileDir = "TestDir";
 				process.argv.push("--profile-dir");
 				process.argv.push(expectedProfileDir);
-				const settingsService = testInjector.resolve<ISettingsService>("settingsService");
+				const settingsService = testInjector.resolve<ISettingsService>(
+					"settingsService"
+				);
 				let valuePassedToSetSettings: string;
-				settingsService.setSettings = (settings: IConfigurationSettings): any => {
+				settingsService.setSettings = (
+					settings: IConfigurationSettings
+				): any => {
 					valuePassedToSetSettings = settings.profileDir;
 				};
 
@@ -241,8 +253,11 @@ describe("options", () => {
 				options.validateOptions();
 				process.argv.pop();
 				process.argv.pop();
-				assert.isFalse(isExecutionStopped, "Dashed options should be validated in specific way. Make sure validation allows yargs specific behavior:" +
-					"Dashed options (profile-dir) are added to yargs.argv in two ways: profile-dir and profileDir");
+				assert.isFalse(
+					isExecutionStopped,
+					"Dashed options should be validated in specific way. Make sure validation allows yargs specific behavior:" +
+						"Dashed options (profile-dir) are added to yargs.argv in two ways: profile-dir and profileDir"
+				);
 			});
 
 			it("does not break execution when dashed option with two dashes is passed", () => {
@@ -252,19 +267,29 @@ describe("options", () => {
 				options.validateOptions();
 				process.argv.pop();
 				process.argv.pop();
-				assert.isFalse(isExecutionStopped, "Dashed options should be validated in specific way. Make sure validation allows yargs specific behavior:" +
-					"Dashed options (some-dashed-value) are added to yargs.argv in two ways: some-dashed-value and someDashedValue");
+				assert.isFalse(
+					isExecutionStopped,
+					"Dashed options should be validated in specific way. Make sure validation allows yargs specific behavior:" +
+						"Dashed options (some-dashed-value) are added to yargs.argv in two ways: some-dashed-value and someDashedValue"
+				);
 			});
 
 			it("does not break execution when dashed option with two dashes is passed", () => {
 				process.argv.push("--special-dashed-v");
 				const options = createOptions(testInjector);
-				options.validateOptions({ specialDashedV: { type: OptionType.Boolean, hasSensitiveValue: false } });
+				options.validateOptions({
+					specialDashedV: {
+						type: OptionType.Boolean,
+						hasSensitiveValue: false,
+					},
+				});
 				process.argv.pop();
-				assert.isFalse(isExecutionStopped, "Dashed options should be validated in specific way. Make sure validation allows yargs specific behavior:" +
-					"Dashed options (special-dashed-v) are added to yargs.argv in two ways: special-dashed-v and specialDashedV");
+				assert.isFalse(
+					isExecutionStopped,
+					"Dashed options should be validated in specific way. Make sure validation allows yargs specific behavior:" +
+						"Dashed options (special-dashed-v) are added to yargs.argv in two ways: special-dashed-v and specialDashedV"
+				);
 			});
-
 		});
 	});
 
@@ -273,54 +298,68 @@ describe("options", () => {
 			{
 				name: "--release --hmr",
 				args: ["--release", "--hmr"],
-				expectedError: "The options --release and --hmr cannot be used simultaneously."
-			}
+				expectedError:
+					"The options --release and --hmr cannot be used simultaneously.",
+			},
 		];
 
-		_.each(testCasesExpectingToThrow, testCase => {
+		_.each(testCasesExpectingToThrow, (testCase) => {
 			it(`should fail when ${testCase.name}`, () => {
 				let actualError = null;
 				const errors = testInjector.resolve("errors");
-				errors.fail = (error: string) => actualError = error;
-				errors.failWithHelp = (error: string) => actualError = error;
-				(testCase.args || []).forEach(arg => process.argv.push(arg));
+				errors.fail = (error: string) => (actualError = error);
+				errors.failWithHelp = (error: string) => (actualError = error);
+				(testCase.args || []).forEach((arg) => process.argv.push(arg));
 
 				const options: any = createOptions(testInjector);
 				options.setupOptions(null);
 
-				(testCase.args || []).forEach(arg => process.argv.pop());
+				(testCase.args || []).forEach((arg) => process.argv.pop());
 
 				assert.deepStrictEqual(actualError, testCase.expectedError);
 			});
 		});
 
 		describe("hmr option", () => {
-			const testCases = [{
-				name: "should set hmr to true by default",
-				expectedHmrValue: true
-			}, {
-				name: "should set hmr to false when --no-hmr is provided",
-				args: ["--no-hmr"],
-				expectedHmrValue: false
-			}, {
-				name: "should set hmr to false when provided through dashed options from command",
-				commandSpecificDashedOptions: {
-					hmr: { type: OptionType.Boolean, default: false, hasSensitiveValue: false },
+			const testCases = [
+				{
+					name: "should set hmr to true by default",
+					expectedHmrValue: true,
 				},
-				expectedHmrValue: false
-			}, {
-				name: "should set hmr to false by default when --release option is provided",
-				args: ["--release"],
-				expectedHmrValue: false
-			}, {
-				name: "should set hmr to false by default when --debug-brk option is provided",
-				args: ["--debugBrk"],
-				expectedHmrValue: false
-			}];
+				{
+					name: "should set hmr to false when --no-hmr is provided",
+					args: ["--no-hmr"],
+					expectedHmrValue: false,
+				},
+				{
+					name:
+						"should set hmr to false when provided through dashed options from command",
+					commandSpecificDashedOptions: {
+						hmr: {
+							type: OptionType.Boolean,
+							default: false,
+							hasSensitiveValue: false,
+						},
+					},
+					expectedHmrValue: false,
+				},
+				{
+					name:
+						"should set hmr to false by default when --release option is provided",
+					args: ["--release"],
+					expectedHmrValue: false,
+				},
+				{
+					name:
+						"should set hmr to false by default when --debug-brk option is provided",
+					args: ["--debugBrk"],
+					expectedHmrValue: false,
+				},
+			];
 
-			_.each(testCases, testCase => {
+			_.each(testCases, (testCase) => {
 				it(testCase.name, () => {
-					(testCase.args || []).forEach(arg => process.argv.push(arg));
+					(testCase.args || []).forEach((arg) => process.argv.push(arg));
 
 					const options: any = createOptions(testInjector);
 					options.setupOptions(testCase.commandSpecificDashedOptions);
@@ -328,7 +367,7 @@ describe("options", () => {
 					assert.equal(testCase.expectedHmrValue, options.argv.hmr);
 					assert.isFalse(isExecutionStopped);
 
-					(testCase.args || []).forEach(arg => process.argv.pop());
+					(testCase.args || []).forEach((arg) => process.argv.pop());
 				});
 			});
 		});
@@ -344,7 +383,7 @@ function createOptionsWithProfileDir(defaultProfileDir?: string): IOptions {
 		setSettings: (settings: IConfigurationSettings): any => {
 			valuePassedToSetSettings = settings.profileDir;
 		},
-		getProfileDir: () => valuePassedToSetSettings || defaultProfileDir
+		getProfileDir: () => valuePassedToSetSettings || defaultProfileDir,
 	});
 
 	const options = testInjector.resolve(Options);
@@ -353,7 +392,6 @@ function createOptionsWithProfileDir(defaultProfileDir?: string): IOptions {
 
 describe("common options profile-dir tests", () => {
 	describe("setProfileDir", () => {
-
 		it("uses profile-dir from yargs when it exists", () => {
 			const expectedProfileDir = "TestDir";
 			process.argv.push("--profile-dir");

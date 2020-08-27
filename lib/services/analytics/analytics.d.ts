@@ -1,5 +1,8 @@
 import { TrackingTypes } from "../../common/declarations";
-import { IGoogleAnalyticsData, IPreviewAppGoogleAnalyticsData } from "../../common/definitions/google-analytics";
+import {
+	IGoogleAnalyticsData,
+	IPreviewAppGoogleAnalyticsData,
+} from "../../common/definitions/google-analytics";
 
 /**
  * Describes the information that will be passed to analytics for tracking.
@@ -8,7 +11,7 @@ interface ITrackingInformation {
 	/**
 	 * The type of the data sent to analytics service - initalization data, feature to be tracked, error to be tracked, etc.
 	 */
-	type: TrackingTypes
+	type: TrackingTypes;
 }
 
 /**
@@ -38,9 +41,13 @@ interface IAnalyticsBroker {
 	sendDataForTracking(trackInfo: ITrackingInformation): Promise<void>;
 }
 
-interface IGoogleAnalyticsTrackingInformation extends IGoogleAnalyticsData, ITrackingInformation { }
+interface IGoogleAnalyticsTrackingInformation
+	extends IGoogleAnalyticsData,
+		ITrackingInformation {}
 
-interface IPreviewAppTrackingInformation extends IPreviewAppGoogleAnalyticsData, ITrackingInformation { }
+interface IPreviewAppTrackingInformation
+	extends IPreviewAppGoogleAnalyticsData,
+		ITrackingInformation {}
 
 /**
  * Describes methods required to track in Google Analytics.

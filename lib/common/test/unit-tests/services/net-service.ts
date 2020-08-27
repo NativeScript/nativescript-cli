@@ -3,9 +3,14 @@ import { assert } from "chai";
 import { Yok } from "../../../yok";
 import { ErrorsStub, CommonLoggerStub } from "../stubs";
 import { EOL } from "os";
-import * as _ from 'lodash';
+import * as _ from "lodash";
 import { IInjector } from "../../../definitions/yok";
-import { IChildProcess, IDictionary, IExecOptions, INet } from "../../../declarations";
+import {
+	IChildProcess,
+	IDictionary,
+	IExecOptions,
+	INet,
+} from "../../../declarations";
 
 describe("net", () => {
 	const createTestInjector = (platform: string): IInjector => {
@@ -14,7 +19,7 @@ describe("net", () => {
 		testInjector.register("childProcess", {});
 		testInjector.register("logger", CommonLoggerStub);
 		testInjector.register("osInfo", {
-			platform: () => platform
+			platform: () => platform,
 		});
 
 		return testInjector;
@@ -26,10 +31,19 @@ describe("net", () => {
 			execCalledCount = 0;
 		});
 
-		const createNetStatResult = (testInjector: IInjector, platform: string, port?: number, iteration?: number): void => {
+		const createNetStatResult = (
+			testInjector: IInjector,
+			platform: string,
+			port?: number,
+			iteration?: number
+		): void => {
 			const childProcess = testInjector.resolve<IChildProcess>("childProcess");
 
-			childProcess.exec = async (command: string, options?: any, execOptions?: IExecOptions): Promise<any> => {
+			childProcess.exec = async (
+				command: string,
+				options?: any,
+				execOptions?: IExecOptions
+			): Promise<any> => {
 				const platformsDataService: IDictionary<any> = {
 					linux: {
 						data: `Active Internet connections (only servers)
@@ -39,7 +53,7 @@ tcp        0      0 127.0.1.1:53            0.0.0.0:*               LISTEN
 tcp        0      0 127.0.0.1:631           0.0.0.0:*               LISTEN
 tcp6       0      0 :::60433                :::*                    LISTEN
 tcp6       0      0 ::1:631                 :::*                    LISTEN`,
-						portData: `tcp6       0      0 :::${port}                 :::*                    LISTEN`
+						portData: `tcp6       0      0 :::${port}                 :::*                    LISTEN`,
 					},
 
 					darwin: {
@@ -51,7 +65,7 @@ Listen         Local Address
 0/0/128        *.3283
 0/0/128        *.88
 0/0/128        *.22`,
-						portData: `0/0/128        *.${port}`
+						portData: `0/0/128        *.${port}`,
 					},
 					win32: {
 						data: `
@@ -64,8 +78,8 @@ Active Connections
   TCP    127.0.0.1:5037         127.0.0.1:54737        ESTABLISHED
   TCP    127.0.0.1:5037         127.0.0.1:54741        ESTABLISHED
   TCP    127.0.0.1:5354         0.0.0.0:0              LISTENING`,
-						portData: `  TCP    127.0.0.1:${port}        0.0.0.0:0              LISTENING`
-					}
+						portData: `  TCP    127.0.0.1:${port}        0.0.0.0:0              LISTENING`,
+					},
 				};
 
 				execCalledCount++;
@@ -83,7 +97,7 @@ Active Connections
 			};
 		};
 
-		_.each(["linux", "darwin", "win32"], platform => {
+		_.each(["linux", "darwin", "win32"], (platform) => {
 			describe(`for ${platform}`, () => {
 				it("returns true when netstat returns port is listening", async () => {
 					const port = 18181;
@@ -91,7 +105,11 @@ Active Connections
 					createNetStatResult(testInjector, platform, port);
 
 					const net = testInjector.resolve<INet>(Net);
-					const isPortListening = await net.waitForPortToListen({ port, timeout: 10, interval: 1 });
+					const isPortListening = await net.waitForPortToListen({
+						port,
+						timeout: 10,
+						interval: 1,
+					});
 					assert.isTrue(isPortListening);
 					assert.equal(execCalledCount, 1);
 				});
@@ -101,7 +119,11 @@ Active Connections
 					createNetStatResult(testInjector, platform);
 
 					const net = testInjector.resolve<INet>(Net);
-					const isPortListening = await net.waitForPortToListen({ port: 18181, timeout: 5, interval: 1 });
+					const isPortListening = await net.waitForPortToListen({
+						port: 18181,
+						timeout: 5,
+						interval: 1,
+					});
 					assert.isFalse(isPortListening);
 					assert.isTrue(execCalledCount > 1);
 				});
@@ -113,22 +135,36 @@ Active Connections
 					createNetStatResult(testInjector, platform, port, iterations);
 
 					const net = testInjector.resolve<INet>(Net);
-					const isPortListening = await net.waitForPortToListen({ port, timeout: 10, interval: 1 });
+					const isPortListening = await net.waitForPortToListen({
+						port,
+						timeout: 10,
+						interval: 1,
+					});
 					assert.isTrue(isPortListening);
 					assert.equal(execCalledCount, iterations);
 				});
 
 				it("returns false when netstat command fails", async () => {
 					const testInjector = createTestInjector(platform);
-					const childProcess = testInjector.resolve<IChildProcess>("childProcess");
+					const childProcess = testInjector.resolve<IChildProcess>(
+						"childProcess"
+					);
 					const error = new Error("test error");
-					childProcess.exec = async (command: string, options?: any, execOptions?: IExecOptions): Promise<any> => {
+					childProcess.exec = async (
+						command: string,
+						options?: any,
+						execOptions?: IExecOptions
+					): Promise<any> => {
 						execCalledCount++;
 						return Promise.reject(error);
 					};
 
 					const net = testInjector.resolve<INet>(Net);
-					const isPortListening = await net.waitForPortToListen({ port: 18181, timeout: 50, interval: 1 });
+					const isPortListening = await net.waitForPortToListen({
+						port: 18181,
+						timeout: 50,
+						interval: 1,
+					});
 					assert.isFalse(isPortListening);
 					assert.isTrue(execCalledCount > 1);
 				});
@@ -140,7 +176,10 @@ Active Connections
 			const testInjector = createTestInjector(invalidPlatform);
 
 			const net = testInjector.resolve<INet>(Net);
-			await assert.isRejected(net.waitForPortToListen({ port: 18181, timeout: 50, interval: 1 }), `Unable to check for free ports on ${invalidPlatform}. Supported platforms are: darwin, linux, win32`);
+			await assert.isRejected(
+				net.waitForPortToListen({ port: 18181, timeout: 50, interval: 1 }),
+				`Unable to check for free ports on ${invalidPlatform}. Supported platforms are: darwin, linux, win32`
+			);
 		});
 
 		it("throws correct error when null is passed", async () => {
@@ -148,8 +187,10 @@ Active Connections
 			const testInjector = createTestInjector(invalidPlatform);
 
 			const net = testInjector.resolve<INet>(Net);
-			await assert.isRejected(net.waitForPortToListen(null), "You must pass port and timeout for check.");
-
+			await assert.isRejected(
+				net.waitForPortToListen(null),
+				"You must pass port and timeout for check."
+			);
 		});
 	});
 });

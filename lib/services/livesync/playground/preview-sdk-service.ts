@@ -1,4 +1,12 @@
-import { MessagingService, Config, Device, DeviceConnectedMessage, SdkCallbacks, ConnectedDevices, FilesPayload } from "nativescript-preview-sdk";
+import {
+	MessagingService,
+	Config,
+	Device,
+	DeviceConnectedMessage,
+	SdkCallbacks,
+	ConnectedDevices,
+	FilesPayload,
+} from "nativescript-preview-sdk";
 import { IConfiguration } from "../../../declarations";
 import { Server } from "../../../common/declarations";
 import { injector } from "../../../common/yok";
@@ -9,13 +17,14 @@ export class PreviewSdkService implements IPreviewSdkService {
 	private messagingService: MessagingService = null;
 	private instanceId: string = null;
 
-	constructor(private $config: IConfiguration,
+	constructor(
+		private $config: IConfiguration,
 		private $httpClient: Server.IHttpClient,
 		private $logger: ILogger,
 		private $previewDevicesService: IPreviewDevicesService,
 		private $previewAppLogProvider: IPreviewAppLogProvider,
-		private $previewSchemaService: IPreviewSchemaService) {
-	}
+		private $previewSchemaService: IPreviewSchemaService
+	) {}
 
 	public getQrCodeUrl(options: IGetQrCodeUrlOptions): string {
 		const { projectDir, useHotModuleReload } = options;
@@ -25,7 +34,10 @@ export class PreviewSdkService implements IPreviewSdkService {
 		return result;
 	}
 
-	public async initialize(projectDir: string, getInitialFiles: (device: Device) => Promise<FilesPayload>): Promise<void> {
+	public async initialize(
+		projectDir: string,
+		getInitialFiles: (device: Device) => Promise<FilesPayload>
+	): Promise<void> {
 		const initConfig = this.getInitConfig(projectDir, getInitialFiles);
 		this.messagingService = new MessagingService();
 		this.instanceId = await this.messagingService.initialize(initConfig);
@@ -33,13 +45,17 @@ export class PreviewSdkService implements IPreviewSdkService {
 
 	public applyChanges(filesPayload: FilesPayload): Promise<void> {
 		return new Promise((resolve, reject) => {
-			this.messagingService.applyChanges(this.instanceId, filesPayload, err => {
-				if (err) {
-					reject(err);
-				} else {
-					resolve();
+			this.messagingService.applyChanges(
+				this.instanceId,
+				filesPayload,
+				(err) => {
+					if (err) {
+						reject(err);
+					} else {
+						resolve();
+					}
 				}
-			});
+			);
 		});
 	}
 
@@ -47,7 +63,10 @@ export class PreviewSdkService implements IPreviewSdkService {
 		this.messagingService.stop();
 	}
 
-	private getInitConfig(projectDir: string, getInitialFiles: (device: Device) => Promise<FilesPayload>): Config {
+	private getInitConfig(
+		projectDir: string,
+		getInitialFiles: (device: Device) => Promise<FilesPayload>
+	): Config {
 		const schema = this.$previewSchemaService.getSchemaData(projectDir);
 
 		return {
@@ -58,7 +77,7 @@ export class PreviewSdkService implements IPreviewSdkService {
 			callbacks: this.getCallbacks(),
 			getInitialFiles,
 			previewAppStoreId: schema.previewAppStoreId,
-			previewAppGooglePlayId: schema.previewAppId
+			previewAppGooglePlayId: schema.previewAppId,
 		};
 	}
 
@@ -74,35 +93,44 @@ export class PreviewSdkService implements IPreviewSdkService {
 				this.$logger.trace("Received onRestartMessage event.");
 			},
 			onUncaughtErrorMessage: () => {
-				this.$logger.warn("The Preview app has terminated unexpectedly. Please run it again to get a detailed crash report.");
+				this.$logger.warn(
+					"The Preview app has terminated unexpectedly. Please run it again to get a detailed crash report."
+				);
 			},
 			onConnectedDevicesChange: (connectedDevices: ConnectedDevices) => ({}),
-			onDeviceConnectedMessage: (deviceConnectedMessage: DeviceConnectedMessage) => ({}),
+			onDeviceConnectedMessage: (
+				deviceConnectedMessage: DeviceConnectedMessage
+			) => ({}),
 			onDeviceConnected: (device: Device) => ({}),
-			onDevicesPresence: (devices: Device[]) => this.$previewDevicesService.updateConnectedDevices(devices),
-			onSendingChange: (sending: boolean) => ({ }),
+			onDevicesPresence: (devices: Device[]) =>
+				this.$previewDevicesService.updateConnectedDevices(devices),
+			onSendingChange: (sending: boolean) => ({}),
 			onBiggerFilesUpload: async (filesContent, callback) => {
 				const gzippedContent = Buffer.from(pako.gzip(filesContent));
 				const byteLength = filesContent.length;
 
 				if (byteLength > PreviewSdkService.MAX_FILES_UPLOAD_BYTE_LENGTH) {
-					this.$logger.warn("The files to upload exceed the maximum allowed size of 15MB. Your app might not work as expected.");
+					this.$logger.warn(
+						"The files to upload exceed the maximum allowed size of 15MB. Your app might not work as expected."
+					);
 				}
 
-				const playgroundUploadResponse: any = await this.$httpClient.httpRequest({
-					url: this.$config.UPLOAD_PLAYGROUND_FILES_ENDPOINT,
-					method: "POST",
-					body: gzippedContent,
-					headers: {
-						"Content-Encoding": "gzip",
-						"Content-Type": "text/plain"
+				const playgroundUploadResponse: any = await this.$httpClient.httpRequest(
+					{
+						url: this.$config.UPLOAD_PLAYGROUND_FILES_ENDPOINT,
+						method: "POST",
+						body: gzippedContent,
+						headers: {
+							"Content-Encoding": "gzip",
+							"Content-Type": "text/plain",
+						},
 					}
-				});
+				);
 
 				const responseBody = JSON.parse(playgroundUploadResponse.body);
 				const location = responseBody && responseBody.location;
 				callback(location, playgroundUploadResponse.error);
-			}
+			},
 		};
 	}
 }

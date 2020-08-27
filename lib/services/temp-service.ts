@@ -1,6 +1,6 @@
 import * as temp from "temp";
 import { ICleanupService } from "../definitions/cleanup-service";
-import * as _ from 'lodash';
+import * as _ from "lodash";
 import { injector } from "../common/yok";
 
 export class TempService implements ITempService {

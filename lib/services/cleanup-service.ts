@@ -4,7 +4,15 @@ import { cache, exported } from "../common/decorators";
 import { IOptions } from "../declarations";
 import { IChildProcess } from "../common/declarations";
 import { ICleanupService } from "../definitions/cleanup-service";
-import { ISpawnCommandInfo, ISpawnCommandCleanupMessage, IRequestInfo, IRequestCleanupMessage, IFileCleanupMessage, IJSCommand, IJSCleanupMessage } from "../detached-processes/cleanup-process-definitions";
+import {
+	ISpawnCommandInfo,
+	ISpawnCommandCleanupMessage,
+	IRequestInfo,
+	IRequestCleanupMessage,
+	IFileCleanupMessage,
+	IJSCommand,
+	IJSCleanupMessage,
+} from "../detached-processes/cleanup-process-definitions";
 import { injector } from "../common/yok";
 
 export class CleanupService implements ICleanupService {
@@ -12,52 +20,82 @@ export class CleanupService implements ICleanupService {
 	private pathToCleanupLogFile: string;
 	private cleanupProcess: ChildProcess;
 
-	constructor($options: IOptions,
+	constructor(
+		$options: IOptions,
 		private $staticConfig: Config.IStaticConfig,
-		private $childProcess: IChildProcess) {
+		private $childProcess: IChildProcess
+	) {
 		this.pathToCleanupLogFile = $options.cleanupLogFile;
 	}
 
 	public shouldDispose = true;
 
-	public async addCleanupCommand(commandInfo: ISpawnCommandInfo): Promise<void> {
+	public async addCleanupCommand(
+		commandInfo: ISpawnCommandInfo
+	): Promise<void> {
 		const cleanupProcess = await this.getCleanupProcess();
-		cleanupProcess.send(<ISpawnCommandCleanupMessage>{ messageType: CleanupProcessMessage.AddCleanCommand, commandInfo });
+		cleanupProcess.send(<ISpawnCommandCleanupMessage>{
+			messageType: CleanupProcessMessage.AddCleanCommand,
+			commandInfo,
+		});
 	}
 
-	public async removeCleanupCommand(commandInfo: ISpawnCommandInfo): Promise<void> {
+	public async removeCleanupCommand(
+		commandInfo: ISpawnCommandInfo
+	): Promise<void> {
 		const cleanupProcess = await this.getCleanupProcess();
-		cleanupProcess.send(<ISpawnCommandCleanupMessage>{ messageType: CleanupProcessMessage.RemoveCleanCommand, commandInfo });
+		cleanupProcess.send(<ISpawnCommandCleanupMessage>{
+			messageType: CleanupProcessMessage.RemoveCleanCommand,
+			commandInfo,
+		});
 	}
 
 	public async addRequest(requestInfo: IRequestInfo): Promise<void> {
 		const cleanupProcess = await this.getCleanupProcess();
-		cleanupProcess.send(<IRequestCleanupMessage>{ messageType: CleanupProcessMessage.AddRequest, requestInfo });
+		cleanupProcess.send(<IRequestCleanupMessage>{
+			messageType: CleanupProcessMessage.AddRequest,
+			requestInfo,
+		});
 	}
 
 	public async removeRequest(requestInfo: IRequestInfo): Promise<void> {
 		const cleanupProcess = await this.getCleanupProcess();
-		cleanupProcess.send(<IRequestCleanupMessage>{ messageType: CleanupProcessMessage.RemoveRequest, requestInfo });
+		cleanupProcess.send(<IRequestCleanupMessage>{
+			messageType: CleanupProcessMessage.RemoveRequest,
+			requestInfo,
+		});
 	}
 
 	public async addCleanupDeleteAction(filePath: string): Promise<void> {
 		const cleanupProcess = await this.getCleanupProcess();
-		cleanupProcess.send(<IFileCleanupMessage>{ messageType: CleanupProcessMessage.AddDeleteFileAction, filePath });
+		cleanupProcess.send(<IFileCleanupMessage>{
+			messageType: CleanupProcessMessage.AddDeleteFileAction,
+			filePath,
+		});
 	}
 
 	public async removeCleanupDeleteAction(filePath: string): Promise<void> {
 		const cleanupProcess = await this.getCleanupProcess();
-		cleanupProcess.send(<IFileCleanupMessage>{ messageType: CleanupProcessMessage.RemoveDeleteFileAction, filePath });
+		cleanupProcess.send(<IFileCleanupMessage>{
+			messageType: CleanupProcessMessage.RemoveDeleteFileAction,
+			filePath,
+		});
 	}
 
 	public async addCleanupJS(jsCommand: IJSCommand): Promise<void> {
 		const cleanupProcess = await this.getCleanupProcess();
-		cleanupProcess.send(<IJSCleanupMessage>{ messageType: CleanupProcessMessage.AddJSFileToRequire, jsCommand });
+		cleanupProcess.send(<IJSCleanupMessage>{
+			messageType: CleanupProcessMessage.AddJSFileToRequire,
+			jsCommand,
+		});
 	}
 
 	public async removeCleanupJS(jsCommand: IJSCommand): Promise<void> {
 		const cleanupProcess = await this.getCleanupProcess();
-		cleanupProcess.send(<IJSCleanupMessage>{ messageType: CleanupProcessMessage.RemoveJSFileToRequire, jsCommand });
+		cleanupProcess.send(<IJSCleanupMessage>{
+			messageType: CleanupProcessMessage.RemoveJSFileToRequire,
+			jsCommand,
+		});
 	}
 
 	public async addKillProcess(pid: string): Promise<void> {
@@ -92,11 +130,12 @@ export class CleanupService implements ICleanupService {
 		return new Promise<ChildProcess>((resolve, reject) => {
 			const cleanupProcessArgs = this.getCleanupProcessArgs();
 
-			const cleanupProcess = this.$childProcess.spawn(process.execPath,
+			const cleanupProcess = this.$childProcess.spawn(
+				process.execPath,
 				cleanupProcessArgs,
 				{
 					stdio: ["ignore", "ignore", "ignore", "ipc"],
-					detached: true
+					detached: true,
 				}
 			);
 
@@ -151,20 +190,20 @@ export class CleanupService implements ICleanupService {
 		let command;
 		let args;
 		switch (process.platform) {
-			case 'win32':
+			case "win32":
 				command = "taskkill";
 				args = ["/pid", pid, "/T", "/F"];
 				break;
 
 			default:
-				command = path.join(__dirname, '../bash-scripts/terminateProcess.sh');
+				command = path.join(__dirname, "../bash-scripts/terminateProcess.sh");
 				args = [pid];
 				break;
 		}
 
 		return {
 			command,
-			args
+			args,
 		};
 	}
 }

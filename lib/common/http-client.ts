@@ -4,37 +4,55 @@ import { TLSSocket } from "tls";
 import * as helpers from "./helpers";
 import * as zlib from "zlib";
 import * as util from "util";
-import * as _ from 'lodash';
+import * as _ from "lodash";
 import { HttpStatusCodes } from "./constants";
 import * as request from "request";
-import { Server, IProxyService, IProxySettings, IPromiseActions } from "./declarations";
+import {
+	Server,
+	IProxyService,
+	IProxySettings,
+	IPromiseActions,
+} from "./declarations";
 import { injector } from "./yok";
 
 export class HttpClient implements Server.IHttpClient {
 	private static STATUS_CODE_REGEX = /statuscode=(\d+)/i;
-	private static STUCK_REQUEST_ERROR_MESSAGE = "The request can't receive any response.";
-	private static STUCK_RESPONSE_ERROR_MESSAGE = "Can't receive all parts of the response.";
+	private static STUCK_REQUEST_ERROR_MESSAGE =
+		"The request can't receive any response.";
+	private static STUCK_RESPONSE_ERROR_MESSAGE =
+		"Can't receive all parts of the response.";
 	private static STUCK_REQUEST_TIMEOUT = 60000;
 	// We receive multiple response packets every ms but we don't need to be very aggressive here.
 	private static STUCK_RESPONSE_CHECK_INTERVAL = 10000;
 
-private defaultUserAgent: string;
+	private defaultUserAgent: string;
 
-	constructor(private $logger: ILogger,
+	constructor(
+		private $logger: ILogger,
 		private $proxyService: IProxyService,
-		private $staticConfig: Config.IStaticConfig) {
-	}
+		private $staticConfig: Config.IStaticConfig
+	) {}
 
-	public async httpRequest(options: any, proxySettings?: IProxySettings): Promise<Server.IResponse> {
+	public async httpRequest(
+		options: any,
+		proxySettings?: IProxySettings
+	): Promise<Server.IResponse> {
 		try {
 			const result = await this.httpRequestCore(options, proxySettings);
 			return result;
 		} catch (err) {
-			if (err.message === HttpClient.STUCK_REQUEST_ERROR_MESSAGE || err.message === HttpClient.STUCK_RESPONSE_ERROR_MESSAGE) {
+			if (
+				err.message === HttpClient.STUCK_REQUEST_ERROR_MESSAGE ||
+				err.message === HttpClient.STUCK_RESPONSE_ERROR_MESSAGE
+			) {
 				// Retry the request immediately because there are at least 10 seconds between the two requests.
 				// We have to retry only once the sporadically stuck requests/responses.
 				// We can add exponential backoff retry here if we decide that we need to workaround bigger network issues on the client side.
-				this.$logger.warn("%s Retrying request to %s...", err.message, options.url || options);
+				this.$logger.warn(
+					"%s Retrying request to %s...",
+					err.message,
+					options.url || options
+				);
 				const retryResult = await this.httpRequestCore(options, proxySettings);
 				return retryResult;
 			}
@@ -43,11 +61,14 @@ private defaultUserAgent: string;
 		}
 	}
 
-	private async httpRequestCore(options: any, proxySettings?: IProxySettings): Promise<Server.IResponse> {
+	private async httpRequestCore(
+		options: any,
+		proxySettings?: IProxySettings
+	): Promise<Server.IResponse> {
 		if (_.isString(options)) {
 			options = {
 				url: options,
-				method: "GET"
+				method: "GET",
 			};
 		}
 
@@ -74,7 +95,13 @@ private defaultUserAgent: string;
 		clonedOptions.headers = clonedOptions.headers || {};
 		const headers = clonedOptions.headers;
 
-		await this.useProxySettings(proxySettings, cliProxySettings, clonedOptions, headers, requestProto);
+		await this.useProxySettings(
+			proxySettings,
+			cliProxySettings,
+			clonedOptions,
+			headers,
+			requestProto
+		);
 
 		if (!headers.Accept || headers.Accept.indexOf("application/json") < 0) {
 			if (headers.Accept) {
@@ -101,18 +128,24 @@ private defaultUserAgent: string;
 
 		const result = new Promise<Server.IResponse>((resolve, reject) => {
 			let timerId: NodeJS.Timer;
-			const cleanupRequestData: ICleanupRequestData = Object.create({ timers: [] });
+			const cleanupRequestData: ICleanupRequestData = Object.create({
+				timers: [],
+			});
 
 			const promiseActions: IPromiseActions<Server.IResponse> = {
 				resolve,
 				reject,
-				isResolved: () => false
+				isResolved: () => false,
 			};
 
-			clonedOptions.url = clonedOptions.url || `${clonedOptions.proto}://${clonedOptions.host}${clonedOptions.path}`;
+			clonedOptions.url =
+				clonedOptions.url ||
+				`${clonedOptions.proto}://${clonedOptions.host}${clonedOptions.path}`;
 			if (clonedOptions.timeout) {
 				timerId = setTimeout(() => {
-					this.setResponseResult(promiseActions, cleanupRequestData, { err: new Error(`Request to ${clonedOptions.url} timed out.`) });
+					this.setResponseResult(promiseActions, cleanupRequestData, {
+						err: new Error(`Request to ${clonedOptions.url} timed out.`),
+					});
 				}, clonedOptions.timeout);
 				cleanupRequestData.timers.push(timerId);
 
@@ -128,15 +161,26 @@ private defaultUserAgent: string;
 
 			requestObj
 				.on("error", (err: any) => {
-					this.$logger.trace("An error occurred while sending the request:", err);
+					this.$logger.trace(
+						"An error occurred while sending the request:",
+						err
+					);
 					// In case we get a 4xx error code there seems to be no better way than this regex to get the error code
 					// the tunnel-agent module that request is using is obscuring the response and hence the statusCode by throwing an error message
 					// https://github.com/request/tunnel-agent/blob/eb2b1b19e09ee0e6a2b54eb2612755731b7301dc/index.js#L166
 					// in case there is a better way to obtain status code in future version do not hesitate to remove this code
-					const errorMessageMatch = err.message.match(HttpClient.STATUS_CODE_REGEX);
-					const errorMessageStatusCode = errorMessageMatch && errorMessageMatch[1] && +errorMessageMatch[1];
-					const errorMessage = this.getErrorMessage(errorMessageStatusCode, null);
-					err.proxyAuthenticationRequired = errorMessageStatusCode === HttpStatusCodes.PROXY_AUTHENTICATION_REQUIRED;
+					const errorMessageMatch = err.message.match(
+						HttpClient.STATUS_CODE_REGEX
+					);
+					const errorMessageStatusCode =
+						errorMessageMatch && errorMessageMatch[1] && +errorMessageMatch[1];
+					const errorMessage = this.getErrorMessage(
+						errorMessageStatusCode,
+						null
+					);
+					err.proxyAuthenticationRequired =
+						errorMessageStatusCode ===
+						HttpStatusCodes.PROXY_AUTHENTICATION_REQUIRED;
 					err.message = errorMessage || err.message;
 					this.setResponseResult(promiseActions, cleanupRequestData, { err });
 				})
@@ -144,7 +188,9 @@ private defaultUserAgent: string;
 					let stuckRequestTimerId: NodeJS.Timer;
 
 					stuckRequestTimerId = setTimeout(() => {
-						this.setResponseResult(promiseActions, cleanupRequestData, { err: new Error(HttpClient.STUCK_REQUEST_ERROR_MESSAGE) });
+						this.setResponseResult(promiseActions, cleanupRequestData, {
+							err: new Error(HttpClient.STUCK_REQUEST_ERROR_MESSAGE),
+						});
 					}, clonedOptions.timeout || HttpClient.STUCK_REQUEST_TIMEOUT);
 
 					cleanupRequestData.timers.push(stuckRequestTimerId);
@@ -158,11 +204,18 @@ private defaultUserAgent: string;
 					cleanupRequestData.res = responseData;
 					let lastChunkTimestamp = Date.now();
 					cleanupRequestData.stuckResponseIntervalId = setInterval(() => {
-						if (Date.now() - lastChunkTimestamp > HttpClient.STUCK_RESPONSE_CHECK_INTERVAL) {
-							this.setResponseResult(promiseActions, cleanupRequestData, { err: new Error(HttpClient.STUCK_RESPONSE_ERROR_MESSAGE) });
+						if (
+							Date.now() - lastChunkTimestamp >
+							HttpClient.STUCK_RESPONSE_CHECK_INTERVAL
+						) {
+							this.setResponseResult(promiseActions, cleanupRequestData, {
+								err: new Error(HttpClient.STUCK_RESPONSE_ERROR_MESSAGE),
+							});
 						}
 					}, HttpClient.STUCK_RESPONSE_CHECK_INTERVAL);
-					const successful = helpers.isRequestSuccessful(responseData) || responseData.statusCode === HttpStatusCodes.NOT_MODIFIED;
+					const successful =
+						helpers.isRequestSuccessful(responseData) ||
+						responseData.statusCode === HttpStatusCodes.NOT_MODIFIED;
 					if (!successful) {
 						pipeTo = undefined;
 					}
@@ -182,8 +235,13 @@ private defaultUserAgent: string;
 
 					if (pipeTo) {
 						pipeTo.on("finish", () => {
-							this.$logger.trace("httpRequest: Piping done. code = %d", responseData.statusCode.toString());
-							this.setResponseResult(promiseActions, cleanupRequestData, { response: responseData });
+							this.$logger.trace(
+								"httpRequest: Piping done. code = %d",
+								responseData.statusCode.toString()
+							);
+							this.setResponseResult(promiseActions, cleanupRequestData, {
+								response: responseData,
+							});
 						});
 
 						responseStream.pipe(pipeTo);
@@ -195,24 +253,37 @@ private defaultUserAgent: string;
 						});
 
 						responseStream.on("end", () => {
-							this.$logger.trace("httpRequest: Done. code = %d", responseData.statusCode.toString());
+							this.$logger.trace(
+								"httpRequest: Done. code = %d",
+								responseData.statusCode.toString()
+							);
 							const responseBody = data.join("");
 
 							if (successful) {
-								this.setResponseResult(promiseActions, cleanupRequestData, { body: responseBody, response: responseData });
+								this.setResponseResult(promiseActions, cleanupRequestData, {
+									body: responseBody,
+									response: responseData,
+								});
 							} else {
-								const errorMessage = this.getErrorMessage(responseData.statusCode, responseBody);
+								const errorMessage = this.getErrorMessage(
+									responseData.statusCode,
+									responseBody
+								);
 								const err: any = new Error(errorMessage);
 								err.response = responseData;
 								err.body = responseBody;
-								this.setResponseResult(promiseActions, cleanupRequestData, { err });
+								this.setResponseResult(promiseActions, cleanupRequestData, {
+									err,
+								});
 							}
 						});
 					}
-
 				});
 
-			this.$logger.trace("httpRequest: Sending:\n%s", this.$logger.prepare(body));
+			this.$logger.trace(
+				"httpRequest: Sending:\n%s",
+				this.$logger.prepare(body)
+			);
 
 			if (!body || !body.pipe) {
 				requestObj.end(body);
@@ -237,7 +308,15 @@ private defaultUserAgent: string;
 		return response;
 	}
 
-	private setResponseResult(result: IPromiseActions<Server.IResponse>, cleanupRequestData: ICleanupRequestData, resultData: { response?: Server.IRequestResponseData, body?: string, err?: Error }): void {
+	private setResponseResult(
+		result: IPromiseActions<Server.IResponse>,
+		cleanupRequestData: ICleanupRequestData,
+		resultData: {
+			response?: Server.IRequestResponseData;
+			body?: string;
+			err?: Error;
+		}
+	): void {
 		this.cleanupAfterRequest(cleanupRequestData);
 		if (!result.isResolved()) {
 			result.isResolved = () => true;
@@ -255,7 +334,9 @@ private defaultUserAgent: string;
 	private getErrorMessage(statusCode: number, body: string): string {
 		if (statusCode === HttpStatusCodes.PROXY_AUTHENTICATION_REQUIRED) {
 			const clientNameLowerCase = this.$staticConfig.CLIENT_NAME.toLowerCase();
-			this.$logger.error(`You can run ${EOL}\t${clientNameLowerCase} proxy set <url> <username> <password>.${EOL}In order to supply ${clientNameLowerCase} with the credentials needed.`);
+			this.$logger.error(
+				`You can run ${EOL}\t${clientNameLowerCase} proxy set <url> <username> <password>.${EOL}In order to supply ${clientNameLowerCase} with the credentials needed.`
+			);
 			return "Your proxy requires authentication.";
 		} else if (statusCode === HttpStatusCodes.PAYMENT_REQUIRED) {
 			return "Your subscription has expired.";
@@ -277,7 +358,10 @@ private defaultUserAgent: string;
 					return err.Message;
 				}
 			} catch (parsingFailed) {
-				this.$logger.trace("Failed to get error from http request: ", parsingFailed);
+				this.$logger.trace(
+					"Failed to get error from http request: ",
+					parsingFailed
+				);
 				return `The server returned unexpected response: ${body}`;
 			}
 
@@ -293,13 +377,25 @@ private defaultUserAgent: string;
 	 * @param {any} headers Headers of the current request.
 	 * @param {string} requestProto The protocol used for the current request - http or https.
 	 */
-	private async useProxySettings(proxySettings: IProxySettings, cliProxySettings: IProxySettings, options: any, headers: any, requestProto: string): Promise<void> {
-		const isLocalRequest = options.host === "localhost" || options.host === "127.0.0.1";
+	private async useProxySettings(
+		proxySettings: IProxySettings,
+		cliProxySettings: IProxySettings,
+		options: any,
+		headers: any,
+		requestProto: string
+	): Promise<void> {
+		const isLocalRequest =
+			options.host === "localhost" || options.host === "127.0.0.1";
 		// don't use the proxy for requests to localhost
 		if (!isLocalRequest && (proxySettings || cliProxySettings)) {
-			const proto = (proxySettings && proxySettings.protocol) || cliProxySettings.protocol || "http:";
-			const host = (proxySettings && proxySettings.hostname) || cliProxySettings.hostname;
-			const port = (proxySettings && proxySettings.port) || cliProxySettings.port;
+			const proto =
+				(proxySettings && proxySettings.protocol) ||
+				cliProxySettings.protocol ||
+				"http:";
+			const host =
+				(proxySettings && proxySettings.hostname) || cliProxySettings.hostname;
+			const port =
+				(proxySettings && proxySettings.port) || cliProxySettings.port;
 			let credentialsPart = "";
 			if (cliProxySettings.username && cliProxySettings.password) {
 				credentialsPart = `${cliProxySettings.username}:${cliProxySettings.password}@`;
@@ -307,14 +403,16 @@ private defaultUserAgent: string;
 
 			// Note that proto ends with :
 			options.proxy = `${proto}//${credentialsPart}${host}:${port}`;
-			options.rejectUnauthorized = proxySettings ? proxySettings.rejectUnauthorized : cliProxySettings.rejectUnauthorized;
+			options.rejectUnauthorized = proxySettings
+				? proxySettings.rejectUnauthorized
+				: cliProxySettings.rejectUnauthorized;
 
 			this.$logger.trace("Using proxy: %s", options.proxy);
 		}
 	}
 
 	private cleanupAfterRequest(data: ICleanupRequestData): void {
-		data.timers.forEach(t => {
+		data.timers.forEach((t) => {
 			if (t) {
 				clearTimeout(t);
 				t = null;
@@ -334,7 +432,6 @@ private defaultUserAgent: string;
 			data.res.destroy();
 		}
 	}
-
 }
 
 interface ICleanupRequestData {

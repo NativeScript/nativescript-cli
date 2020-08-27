@@ -29,9 +29,15 @@ interface IInjector extends IDisposable {
 	dynamicCallRegex: RegExp;
 	dynamicCall(call: string, args?: any[]): Promise<any>;
 	isDefaultCommand(commandName: string): boolean;
-	isValidHierarchicalCommand(commandName: string, commandArguments: string[]): Promise<boolean>;
+	isValidHierarchicalCommand(
+		commandName: string,
+		commandArguments: string[]
+	): Promise<boolean>;
 	getChildrenCommandsNames(commandName: string): string[];
-	buildHierarchicalCommand(parentCommandName: string, commandLineArguments: string[]): any;
+	buildHierarchicalCommand(
+		parentCommandName: string,
+		commandLineArguments: string[]
+	): any;
 	publicApi: any;
 
 	/**

@@ -1,7 +1,10 @@
 require("colors");
 import { PreviewAppLiveSyncEvents } from "./services/livesync/playground/preview-app-constants";
 import { join } from "path";
-import { IStringDictionary, IiTunesConnectApplicationType } from "./common/declarations";
+import {
+	IStringDictionary,
+	IiTunesConnectApplicationType,
+} from "./common/declarations";
 
 export const APP_FOLDER_NAME = "app";
 export const APP_RESOURCES_FOLDER_NAME = "App_Resources";
@@ -27,7 +30,7 @@ export const ANDROID_DEVICE_APP_ROOT_TEMPLATE = `/data/data/%s/files`;
 export const NODE_MODULE_CACHE_PATH_KEY_NAME = "node-modules-cache-path";
 export const DEFAULT_APP_IDENTIFIER_PREFIX = "org.nativescript";
 export const LIVESYNC_EXCLUDED_DIRECTORIES = ["app_resources"];
-export const TESTING_FRAMEWORKS = ['jasmine', 'mocha', 'qunit'];
+export const TESTING_FRAMEWORKS = ["jasmine", "mocha", "qunit"];
 export const TEST_RUNNER_NAME = "@nativescript/unit-test-runner";
 export const LIVESYNC_EXCLUDED_FILE_PATTERNS = ["**/*.js.map", "**/*.ts"];
 export const XML_FILE_EXTENSION = ".xml";
@@ -90,8 +93,23 @@ export class LiveSyncTrackActionNames {
 	static DEVICE_INFO = `Device Info for ${liveSyncOperation}`;
 }
 
-export const PackageJsonKeysToKeep: Array<String> = ["name", "main", "android", "version", "pluginsData"];
-export const TemplatesV2PackageJsonKeysToRemove: Array<String> = ["name", "version", "displayName", "templateType", "author", "keywords", "homepage", "bugs"];
+export const PackageJsonKeysToKeep: Array<String> = [
+	"name",
+	"main",
+	"android",
+	"version",
+	"pluginsData",
+];
+export const TemplatesV2PackageJsonKeysToRemove: Array<String> = [
+	"name",
+	"version",
+	"displayName",
+	"templateType",
+	"author",
+	"keywords",
+	"homepage",
+	"bugs",
+];
 
 export class SaveOptions {
 	static PRODUCTION = "save";
@@ -111,15 +129,15 @@ export class ReleaseType {
 }
 
 export const RESERVED_TEMPLATE_NAMES: IStringDictionary = {
-	"default": "tns-template-hello-world",
-	"javascript": "tns-template-hello-world",
-	"tsc": "tns-template-hello-world-ts",
-	"vue": "tns-template-blank-vue",
-	"typescript": "tns-template-hello-world-ts",
-	"ng": "tns-template-hello-world-ng",
-	"angular": "tns-template-hello-world-ng",
-	"react": "tns-template-blank-react",
-	"reactjs": "tns-template-blank-react"
+	default: "tns-template-hello-world",
+	javascript: "tns-template-hello-world",
+	tsc: "tns-template-hello-world-ts",
+	vue: "tns-template-blank-vue",
+	typescript: "tns-template-hello-world-ts",
+	ng: "tns-template-hello-world-ng",
+	angular: "tns-template-hello-world-ng",
+	react: "tns-template-blank-react",
+	reactjs: "tns-template-blank-react",
 };
 
 export const ANALYTICS_LOCAL_TEMPLATE_PREFIX = "localTemplate_";
@@ -128,13 +146,14 @@ export class ITMSConstants {
 	static ApplicationMetadataFile = "metadata.xml";
 	static VerboseLoggingLevels = {
 		Informational: "informational",
-		Verbose: "detailed"
+		Verbose: "detailed",
 	};
 	static iTMSExecutableName = "iTMSTransporter";
 	static iTMSDirectoryName = "itms";
 }
 
-class ItunesConnectApplicationTypesClass implements IiTunesConnectApplicationType {
+class ItunesConnectApplicationTypesClass
+	implements IiTunesConnectApplicationType {
 	public iOS = "iOS App";
 	public Mac = "Mac OS X App";
 }
@@ -169,7 +188,8 @@ export const DEBUGGER_DETACHED_EVENT_NAME = "debuggerDetached";
 export const VERSION_STRING = "version";
 export const INSPECTOR_CACHE_DIRNAME = "ios-inspector";
 export const POST_INSTALL_COMMAND_NAME = "post-install-cli";
-const ANDROID_SIGNING_REQUIRED_MESSAGE = "you need to specify all --key-store-* options.";
+const ANDROID_SIGNING_REQUIRED_MESSAGE =
+	"you need to specify all --key-store-* options.";
 export const ANDROID_RELEASE_BUILD_ERROR_MESSAGE = `When producing a release build, ${ANDROID_SIGNING_REQUIRED_MESSAGE}`;
 export const ANDROID_APP_BUNDLE_SIGNING_ERROR_MESSAGE = `When producing Android App Bundle, ${ANDROID_SIGNING_REQUIRED_MESSAGE}`;
 export const CACACHE_DIRECTORY_NAME = "_cacache";
@@ -180,20 +200,23 @@ export const PREPARE_READY_EVENT_NAME = "prepareReadyEvent";
 export const WEBPACK_COMPILATION_COMPLETE = "webpackCompilationComplete";
 
 export class DebugCommandErrors {
-	public static UNABLE_TO_USE_FOR_DEVICE_AND_EMULATOR = "The options --for-device and --emulator cannot be used simultaneously. Please use only one of them.";
-	public static NO_DEVICES_EMULATORS_FOUND_FOR_OPTIONS = "Unable to find device or emulator for specified options.";
-	public static UNSUPPORTED_DEVICE_OS_FOR_DEBUGGING = "Unsupported device OS for debugging";
+	public static UNABLE_TO_USE_FOR_DEVICE_AND_EMULATOR =
+		"The options --for-device and --emulator cannot be used simultaneously. Please use only one of them.";
+	public static NO_DEVICES_EMULATORS_FOUND_FOR_OPTIONS =
+		"Unable to find device or emulator for specified options.";
+	public static UNSUPPORTED_DEVICE_OS_FOR_DEBUGGING =
+		"Unsupported device OS for debugging";
 }
 
 export const enum NativePlatformStatus {
 	requiresPlatformAdd = "1",
 	requiresPrepare = "2",
-	alreadyPrepared = "3"
+	alreadyPrepared = "3",
 }
 
 export const enum DebugTools {
 	Chrome = "Chrome",
-	Inspector = "Inspector"
+	Inspector = "Inspector",
 }
 
 export const enum TrackActionNames {
@@ -213,14 +236,14 @@ export const enum TrackActionNames {
 	UninstallCLI = "Uninstall CLI",
 	UsingRuntimeVersion = "Using Runtime Version",
 	AddPlatform = "Add Platform",
-	UsingKotlin = "Using Kotlin"
+	UsingKotlin = "Using Kotlin",
 }
 
 export const AnalyticsEventLabelDelimiter = "__";
 
 export const enum BuildStates {
 	Clean = "Clean",
-	Incremental = "Incremental"
+	Incremental = "Incremental",
 }
 
 /**
@@ -233,7 +256,8 @@ export class AssetConstants {
 	public static iOSResourcesFileName = "Contents.json";
 	public static iOSAssetsDirName = "Assets.xcassets";
 	public static iOSIconsDirName = "AppIcon.appiconset";
-	public static iOSSplashBackgroundsDirName = "LaunchScreen.AspectFill.imageset";
+	public static iOSSplashBackgroundsDirName =
+		"LaunchScreen.AspectFill.imageset";
 	public static iOSSplashCenterImagesDirName = "LaunchScreen.Center.imageset";
 	public static iOSSplashImagesDirName = "LaunchImage.launchimage";
 
@@ -254,14 +278,23 @@ export class MacOSVersions {
 	public static Catalina = "10.15";
 }
 
-export const MacOSDeprecationStringFormat = "NativeScript does not support macOS %s and some functionality may not work. Please, upgrade to the latest macOS version.";
-export const XcodeDeprecationStringFormat = "The current Xcode version %s will not be supported in the next release of NativeScript. Consider updating your Xcode to latest official version.";
+export const MacOSDeprecationStringFormat =
+	"NativeScript does not support macOS %s and some functionality may not work. Please, upgrade to the latest macOS version.";
+export const XcodeDeprecationStringFormat =
+	"The current Xcode version %s will not be supported in the next release of NativeScript. Consider updating your Xcode to latest official version.";
 
-export const PROGRESS_PRIVACY_POLICY_URL = "https://www.progress.com/legal/privacy-policy";
+export const PROGRESS_PRIVACY_POLICY_URL =
+	"https://www.progress.com/legal/privacy-policy";
 export class SubscribeForNewsletterMessages {
-	public static AgreeToReceiveEmailMsg = "I agree".green.bold + " to receive email communications in the form of the NativeScript Newsletter. Consent may be withdrawn at any time.";
+	public static AgreeToReceiveEmailMsg =
+		"I agree".green.bold +
+		" to receive email communications in the form of the NativeScript Newsletter. Consent may be withdrawn at any time.";
 	public static ReviewPrivacyPolicyMsg = `You can review the Privacy Policy at \`${PROGRESS_PRIVACY_POLICY_URL}\``;
-	public static PromptMsg = "Input your e-mail address to agree".green + " or " + "leave empty to decline".red.bold + ":";
+	public static PromptMsg =
+		"Input your e-mail address to agree".green +
+		" or " +
+		"leave empty to decline".red.bold +
+		":";
 }
 
 export class TemplateVersions {
@@ -270,7 +303,8 @@ export class TemplateVersions {
 }
 
 export class ProjectTemplateErrors {
-	public static InvalidTemplateVersionStringFormat = "The template '%s' has a NativeScript version '%s' that is not supported. Unable to create project from it.";
+	public static InvalidTemplateVersionStringFormat =
+		"The template '%s' has a NativeScript version '%s' that is not supported. Unable to create project from it.";
 }
 
 export class Hooks {
@@ -285,7 +319,8 @@ export class AndroidBuildDefaults {
 export const PACKAGE_PLACEHOLDER_NAME = "__PACKAGE__";
 
 export class AddPlaformErrors {
-	public static InvalidFrameworkPathStringFormat = "Invalid frameworkPath: %s. Please ensure the specified frameworkPath exists.";
+	public static InvalidFrameworkPathStringFormat =
+		"Invalid frameworkPath: %s. Please ensure the specified frameworkPath exists.";
 }
 
 export const PLUGIN_BUILD_DATA_FILENAME = "plugin-data.json";
@@ -293,7 +328,7 @@ export const PLUGINS_BUILD_DATA_FILENAME = ".ns-plugins-build-data.json";
 
 export const enum PlatformTypes {
 	ios = "ios",
-	android = "android"
+	android = "android",
 }
 
 export type SupportedPlatform = PlatformTypes.ios | PlatformTypes.android;
@@ -306,18 +341,24 @@ export class IosProjectConstants {
 }
 
 export class BundleValidatorMessages {
-	public static MissingBundlePlugin = "Passing --bundle requires a bundling plugin. No bundling plugin found or the specified bundling plugin is invalid.";
+	public static MissingBundlePlugin =
+		"Passing --bundle requires a bundling plugin. No bundling plugin found or the specified bundling plugin is invalid.";
 }
 
 export class AndroidBundleValidatorMessages {
-	public static AAB_NOT_SUPPORTED_BY_COMMNAND_MESSAGE = "This command does not support --aab (Android App Bundle) parameter.";
-	public static NOT_SUPPORTED_RUNTIME_VERSION = "Android App Bundle (--aab) option requires NativeScript Android Runtime (tns-android) version %s and above.";
-	public static NOT_SUPPORTED_ANDROID_VERSION = "Cannot use the Android App Bundle (--aab) option on device '%s' with Android '%s'. The --aab options is supported on Android '%s' and above.";
+	public static AAB_NOT_SUPPORTED_BY_COMMNAND_MESSAGE =
+		"This command does not support --aab (Android App Bundle) parameter.";
+	public static NOT_SUPPORTED_RUNTIME_VERSION =
+		"Android App Bundle (--aab) option requires NativeScript Android Runtime (tns-android) version %s and above.";
+	public static NOT_SUPPORTED_ANDROID_VERSION =
+		"Cannot use the Android App Bundle (--aab) option on device '%s' with Android '%s'. The --aab options is supported on Android '%s' and above.";
 }
 
 export class AndroidAppBundleMessages {
-	public static ANDROID_APP_BUNDLE_DOCS_MESSAGE = "What is Android App Bundle: https://docs.nativescript.org/tooling/publishing/android-app-bundle";
-	public static ANDROID_APP_BUNDLE_PUBLISH_DOCS_MESSAGE = "How to use Android App Bundle for publishing: https://docs.nativescript.org/tooling/publishing/publishing-android-apps#android-app-bundle";
+	public static ANDROID_APP_BUNDLE_DOCS_MESSAGE =
+		"What is Android App Bundle: https://docs.nativescript.org/tooling/publishing/android-app-bundle";
+	public static ANDROID_APP_BUNDLE_PUBLISH_DOCS_MESSAGE =
+		"How to use Android App Bundle for publishing: https://docs.nativescript.org/tooling/publishing/publishing-android-apps#android-app-bundle";
 }
 
 export const RunOnDeviceEvents = {
@@ -327,37 +368,42 @@ export const RunOnDeviceEvents = {
 	previewAppLiveSyncError: PreviewAppLiveSyncEvents.PREVIEW_APP_LIVE_SYNC_ERROR,
 	runOnDeviceExecuted: "runOnDeviceExecuted",
 	runOnDeviceStarted: "runOnDeviceStarted",
-	runOnDeviceNotification: "notify"
+	runOnDeviceNotification: "notify",
 };
 
 export enum IOSDeviceTargets {
 	ios = "1,2",
-	watchos = 4
+	watchos = 4,
 }
 
 export enum IOSNativeTargetProductTypes {
 	watchApp = "com.apple.product-type.application.watchapp2",
 	watchExtension = "com.apple.product-type.watchkit2-extension",
-	appExtension = "com.apple.product-type.app-extension"
+	appExtension = "com.apple.product-type.app-extension",
 }
 
 export enum IOSNativeTargetTypes {
 	watchApp = "watch_app",
 	watchExtension = "watch_extension",
-	appExtension = "app_extension"
+	appExtension = "app_extension",
 }
 
-const pathToLoggerAppendersDir = join(__dirname, "common", "logger", "appenders");
+const pathToLoggerAppendersDir = join(
+	__dirname,
+	"common",
+	"logger",
+	"appenders"
+);
 export const LoggerAppenders = {
 	emitAppender: join(pathToLoggerAppendersDir, "emit-appender"),
-	cliAppender: join(pathToLoggerAppendersDir, "cli-appender")
+	cliAppender: join(pathToLoggerAppendersDir, "cli-appender"),
 };
 
 export enum DeviceConnectionType {
 	Unknown = 0,
 	USB = 1,
 	Wifi = 2,
-	Local = 10
+	Local = 10,
 }
 
 export enum LoggerLevel {
@@ -415,13 +461,13 @@ export enum LoggerLevel {
 	 * Log levels are used to assign importance to log messages, with the integer value being used to sort them.
 	 * If you do not specify anything in your configuration, the default values are used (ALL < TRACE < DEBUG < INFO < WARN < ERROR < FATAL < MARK < OFF)
 	 */
-	OFF = "OFF"
+	OFF = "OFF",
 }
 
 export enum LoggerConfigData {
 	useStderr = "useStderr",
 	wrapMessageWithBorders = "wrapMessageWithBorders",
-	skipNewLine = "skipNewLine"
+	skipNewLine = "skipNewLine",
 }
 
 export const EMIT_APPENDER_EVENT_NAME = "logData";
@@ -429,5 +475,5 @@ export const EMIT_APPENDER_EVENT_NAME = "logData";
 export enum PackageManagers {
 	npm = "npm",
 	pnpm = "pnpm",
-	yarn = "yarn"
+	yarn = "yarn",
 }

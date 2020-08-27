@@ -5,7 +5,7 @@ import { injector } from "../common/yok";
 export class GenerateHelpCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
 
-	constructor(private $helpService: IHelpService) { }
+	constructor(private $helpService: IHelpService) {}
 
 	public async execute(args: string[]): Promise<void> {
 		return this.$helpService.generateHtmlPages();

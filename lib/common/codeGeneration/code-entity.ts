@@ -1,10 +1,10 @@
-import * as _ from 'lodash';
+import * as _ from "lodash";
 import { injector } from "../yok";
 import { CodeGeneration } from "./code-generation";
 
 export enum CodeEntityType {
 	Line,
-	Block
+	Block,
 }
 
 export class Line implements CodeGeneration.ILine {

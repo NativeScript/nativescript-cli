@@ -9,24 +9,29 @@ export class IOSLogFilter implements Mobile.IPlatformLogFilter {
 	// Example:
 	// This: "May 24 15:54:52 Dragons-iPhone NativeScript250(NativeScript)[356] <Notice>: CONSOLE ERROR file:///app/tns_modules/@angular/core/bundles/core.umd.js:3477:36: ORIGINAL STACKTRACE:"
 	// Becomes: CONSOLE ERROR file:///app/tns_modules/@angular/core/bundles/core.umd.js:3477:36: ORIGINAL STACKTRACE:
-	protected infoFilterRegex = new RegExp(`^.*(?:<Notice>:|<Error>:|<Warning>:|\\(NativeScript\\)|${this.appOutputRegex.source}:){1}`);
+	protected infoFilterRegex = new RegExp(
+		`^.*(?:<Notice>:|<Error>:|<Warning>:|\\(NativeScript\\)|${this.appOutputRegex.source}:){1}`
+	);
 
 	private filterActive: boolean = true;
 
 	private partialLine: string = null;
 
-	constructor(private $loggingLevels: Mobile.ILoggingLevels) {
-	}
+	constructor(private $loggingLevels: Mobile.ILoggingLevels) {}
 
-	public filterData(data: string, loggingOptions: Mobile.IDeviceLogOptions = <any>{}): string {
-		const specifiedLogLevel = (loggingOptions.logLevel || '').toUpperCase();
+	public filterData(
+		data: string,
+		loggingOptions: Mobile.IDeviceLogOptions = <any>{}
+	): string {
+		const specifiedLogLevel = (loggingOptions.logLevel || "").toUpperCase();
 
 		if (specifiedLogLevel !== this.$loggingLevels.info || !data) {
 			return data;
 		}
 
-		const chunkLines = data.split('\n');
-		const skipLastLine = chunkLines.length > 0 ? data[data.length - 1] !== "\n" : false;
+		const chunkLines = data.split("\n");
+		const skipLastLine =
+			chunkLines.length > 0 ? data[data.length - 1] !== "\n" : false;
 		let output = "";
 		for (let i = 0; i < chunkLines.length; i++) {
 			let currentLine = chunkLines[i];
@@ -66,17 +71,20 @@ export class IOSLogFilter implements Mobile.IPlatformLogFilter {
 			}
 
 			currentLine = currentLine.trim();
-			output += currentLine + '\n';
+			output += currentLine + "\n";
 		}
 
 		return output.length === 0 ? null : output;
 	}
 
 	private preFilter(data: string, currentLine: string): boolean {
-		return currentLine.length < 1 ||
+		return (
+			currentLine.length < 1 ||
 			currentLine.indexOf("SecTaskCopyDebugDescription") !== -1 ||
 			currentLine.indexOf("NativeScript loaded bundle") !== -1 ||
-			(currentLine.indexOf("assertion failed:") !== -1 && data.indexOf("libxpc.dylib") !== -1);
+			(currentLine.indexOf("assertion failed:") !== -1 &&
+				data.indexOf("libxpc.dylib") !== -1)
+		);
 	}
 }
 

@@ -1,16 +1,23 @@
 import { Device } from "nativescript-preview-sdk";
 import { EventEmitter } from "events";
-import { DeviceDiscoveryEventNames, DEVICE_LOG_EVENT_NAME } from "../../../../common/constants";
+import {
+	DeviceDiscoveryEventNames,
+	DEVICE_LOG_EVENT_NAME,
+} from "../../../../common/constants";
 import { IDictionary } from "../../../../common/declarations";
-import * as _ from 'lodash';
+import * as _ from "lodash";
 import { injector } from "../../../../common/yok";
 
-export class PreviewDevicesService extends EventEmitter implements IPreviewDevicesService {
+export class PreviewDevicesService
+	extends EventEmitter
+	implements IPreviewDevicesService {
 	private connectedDevices: Device[] = [];
 	private deviceLostTimers: IDictionary<NodeJS.Timer> = {};
 
-	constructor(private $previewAppLogProvider: IPreviewAppLogProvider,
-		private $previewAppPluginsService: IPreviewAppPluginsService) {
+	constructor(
+		private $previewAppLogProvider: IPreviewAppLogProvider,
+		private $previewAppPluginsService: IPreviewAppPluginsService
+	) {
 		super();
 
 		this.initialize();
@@ -22,12 +29,14 @@ export class PreviewDevicesService extends EventEmitter implements IPreviewDevic
 
 	public updateConnectedDevices(devices: Device[]): void {
 		_(devices)
-			.reject(d => _.some(this.connectedDevices, device => d.id === device.id))
-			.each(device => this.raiseDeviceFound(device));
+			.reject((d) =>
+				_.some(this.connectedDevices, (device) => d.id === device.id)
+			)
+			.each((device) => this.raiseDeviceFound(device));
 
 		_(this.connectedDevices)
-			.reject(d => _.some(devices, device => d.id === device.id))
-			.each(device => this.raiseDeviceLostAfterTimeout(device));
+			.reject((d) => _.some(devices, (device) => d.id === device.id))
+			.each((device) => this.raiseDeviceLostAfterTimeout(device));
 	}
 
 	public getDeviceById(id: string): Device {
@@ -35,17 +44,25 @@ export class PreviewDevicesService extends EventEmitter implements IPreviewDevic
 	}
 
 	public getDevicesForPlatform(platform: string): Device[] {
-		return _.filter(this.connectedDevices, { platform: platform.toLowerCase() });
+		return _.filter(this.connectedDevices, {
+			platform: platform.toLowerCase(),
+		});
 	}
 
-	public getPluginsUsageWarnings(data: IPreviewAppLiveSyncData, device: Device): Promise<string[]> {
+	public getPluginsUsageWarnings(
+		data: IPreviewAppLiveSyncData,
+		device: Device
+	): Promise<string[]> {
 		return this.$previewAppPluginsService.getPluginsUsageWarnings(data, device);
 	}
 
 	private initialize(): void {
-		this.$previewAppLogProvider.on(DEVICE_LOG_EVENT_NAME, (deviceId: string, message: string) => {
-			this.emit(DEVICE_LOG_EVENT_NAME, deviceId, message);
-		});
+		this.$previewAppLogProvider.on(
+			DEVICE_LOG_EVENT_NAME,
+			(deviceId: string, message: string) => {
+				this.emit(DEVICE_LOG_EVENT_NAME, deviceId, message);
+			}
+		);
 	}
 
 	private raiseDeviceFound(device: Device) {
@@ -60,7 +77,7 @@ export class PreviewDevicesService extends EventEmitter implements IPreviewDevic
 
 	private raiseDeviceLost(device: Device) {
 		this.emit(DeviceDiscoveryEventNames.DEVICE_LOST, device);
-		_.remove(this.connectedDevices, d => d.id === device.id);
+		_.remove(this.connectedDevices, (d) => d.id === device.id);
 	}
 
 	private raiseDeviceLostAfterTimeout(device: Device) {

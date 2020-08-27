@@ -1,16 +1,20 @@
 import { DEVICE_LOG_EVENT_NAME } from "../common/constants";
 import { cache } from "../common/decorators";
 import { EventEmitter } from "events";
-import * as _ from 'lodash';
+import * as _ from "lodash";
 import { IDictionary, IErrors } from "../common/declarations";
 import { injector } from "../common/yok";
 
-export class LogParserService extends EventEmitter implements ILogParserService {
+export class LogParserService
+	extends EventEmitter
+	implements ILogParserService {
 	private parseRules: IDictionary<ILogParseRule> = {};
 
-	constructor(private $deviceLogProvider: Mobile.IDeviceLogProvider,
+	constructor(
+		private $deviceLogProvider: Mobile.IDeviceLogProvider,
 		private $errors: IErrors,
-		private $previewAppLogProvider: IPreviewAppLogProvider) {
+		private $previewAppLogProvider: IPreviewAppLogProvider
+	) {
 		super();
 	}
 
@@ -25,17 +29,31 @@ export class LogParserService extends EventEmitter implements ILogParserService 
 
 	@cache()
 	private startParsingLogCore(): void {
-		this.$deviceLogProvider.on(DEVICE_LOG_EVENT_NAME, this.processDeviceLogResponse.bind(this));
-		this.$previewAppLogProvider.on(DEVICE_LOG_EVENT_NAME, (deviceId: string, message: string) => {
-			this.processDeviceLogResponse(message, deviceId);
-		});
+		this.$deviceLogProvider.on(
+			DEVICE_LOG_EVENT_NAME,
+			this.processDeviceLogResponse.bind(this)
+		);
+		this.$previewAppLogProvider.on(
+			DEVICE_LOG_EVENT_NAME,
+			(deviceId: string, message: string) => {
+				this.processDeviceLogResponse(message, deviceId);
+			}
+		);
 	}
 
-	private processDeviceLogResponse(message: string, deviceIdentifier: string, devicePlatform?: string) {
+	private processDeviceLogResponse(
+		message: string,
+		deviceIdentifier: string,
+		devicePlatform?: string
+	) {
 		const lines = message.split("\n");
-		_.forEach(lines, line => {
-			_.forEach(this.parseRules, parseRule => {
-				if (!devicePlatform || !parseRule.platform || parseRule.platform.toLowerCase() === devicePlatform.toLowerCase()) {
+		_.forEach(lines, (line) => {
+			_.forEach(this.parseRules, (parseRule) => {
+				if (
+					!devicePlatform ||
+					!parseRule.platform ||
+					parseRule.platform.toLowerCase() === devicePlatform.toLowerCase()
+				) {
 					const matches = parseRule.regex.exec(line);
 
 					if (matches) {

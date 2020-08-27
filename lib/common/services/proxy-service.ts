@@ -1,7 +1,12 @@
 import * as path from "path";
 import { EOL } from "os";
 import { Proxy } from "../constants";
-import { IProxyService, ISettingsService, IProxyLibSettings, IProxySettings } from "../declarations";
+import {
+	IProxyService,
+	ISettingsService,
+	IProxyLibSettings,
+	IProxySettings,
+} from "../declarations";
 import { injector } from "../yok";
 const proxyLib = require("proxy-lib");
 
@@ -11,13 +16,18 @@ export class ProxyService implements IProxyService {
 
 	constructor(
 		private $settingsService: ISettingsService,
-		private $staticConfig: Config.IStaticConfig) {
-		this.proxyCacheFilePath = path.join(this.$settingsService.getProfileDir(), Proxy.CACHE_FILE_NAME);
+		private $staticConfig: Config.IStaticConfig
+	) {
+		this.proxyCacheFilePath = path.join(
+			this.$settingsService.getProfileDir(),
+			Proxy.CACHE_FILE_NAME
+		);
 		this.credentialsKey = `${this.$staticConfig.CLIENT_NAME}_PROXY`;
 	}
 
 	public setCache(settings: IProxyLibSettings): Promise<void> {
-		settings.userSpecifiedSettingsFilePath = settings.userSpecifiedSettingsFilePath || this.proxyCacheFilePath;
+		settings.userSpecifiedSettingsFilePath =
+			settings.userSpecifiedSettingsFilePath || this.proxyCacheFilePath;
 		settings.credentialsKey = settings.credentialsKey || this.credentialsKey;
 		return proxyLib.setProxySettings(settings);
 	}
@@ -25,7 +35,7 @@ export class ProxyService implements IProxyService {
 	public getCache(): Promise<IProxySettings> {
 		const settings = {
 			credentialsKey: this.credentialsKey,
-			userSpecifiedSettingsFilePath: this.proxyCacheFilePath
+			userSpecifiedSettingsFilePath: this.proxyCacheFilePath,
 		};
 
 		return proxyLib.getProxySettings(settings);
@@ -34,7 +44,7 @@ export class ProxyService implements IProxyService {
 	public clearCache(): Promise<void> {
 		const settings = {
 			credentialsKey: this.credentialsKey,
-			userSpecifiedSettingsFilePath: this.proxyCacheFilePath
+			userSpecifiedSettingsFilePath: this.proxyCacheFilePath,
 		};
 
 		return proxyLib.clearProxySettings(settings);

@@ -1,19 +1,30 @@
 import { IDictionary } from "../common/declarations";
 import { injector } from "../common/yok";
-import * as _ from 'lodash';
+import * as _ from "lodash";
 
 export class LiveSyncProcessDataService implements ILiveSyncProcessDataService {
 	protected processes: IDictionary<ILiveSyncProcessData> = {};
 
-	public persistData(projectDir: string, deviceDescriptors: ILiveSyncDeviceDescriptor[], platforms: string[]): void {
-		this.processes[projectDir] = this.processes[projectDir] || Object.create(null);
-		this.processes[projectDir].actionsChain = this.processes[projectDir].actionsChain || Promise.resolve();
-		this.processes[projectDir].currentSyncAction = this.processes[projectDir].actionsChain;
+	public persistData(
+		projectDir: string,
+		deviceDescriptors: ILiveSyncDeviceDescriptor[],
+		platforms: string[]
+	): void {
+		this.processes[projectDir] =
+			this.processes[projectDir] || Object.create(null);
+		this.processes[projectDir].actionsChain =
+			this.processes[projectDir].actionsChain || Promise.resolve();
+		this.processes[projectDir].currentSyncAction = this.processes[
+			projectDir
+		].actionsChain;
 		this.processes[projectDir].isStopped = false;
 		this.processes[projectDir].platforms = platforms;
 
 		const currentDeviceDescriptors = this.getDeviceDescriptors(projectDir);
-		this.processes[projectDir].deviceDescriptors = _.uniqBy(currentDeviceDescriptors.concat(deviceDescriptors), "identifier");
+		this.processes[projectDir].deviceDescriptors = _.uniqBy(
+			currentDeviceDescriptors.concat(deviceDescriptors),
+			"identifier"
+		);
 	}
 
 	public getPersistedData(projectDir: string): ILiveSyncProcessData {
@@ -21,7 +32,8 @@ export class LiveSyncProcessDataService implements ILiveSyncProcessDataService {
 	}
 
 	public getDeviceDescriptors(projectDir: string): ILiveSyncDeviceDescriptor[] {
-		const liveSyncProcessesInfo = this.processes[projectDir] || <ILiveSyncProcessData>{};
+		const liveSyncProcessesInfo =
+			this.processes[projectDir] || <ILiveSyncProcessData>{};
 		const currentDescriptors = liveSyncProcessesInfo.deviceDescriptors;
 		return currentDescriptors || [];
 	}
@@ -36,7 +48,8 @@ export class LiveSyncProcessDataService implements ILiveSyncProcessDataService {
 	}
 
 	public getPlatforms(projectDir: string): string[] {
-		const liveSyncProcessesInfo = this.processes[projectDir] || <ILiveSyncProcessData>{};
+		const liveSyncProcessesInfo =
+			this.processes[projectDir] || <ILiveSyncProcessData>{};
 		const currentPlatforms = liveSyncProcessesInfo.platforms;
 		return currentPlatforms || [];
 	}

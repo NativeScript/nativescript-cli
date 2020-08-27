@@ -2,7 +2,7 @@ import { Yok } from "../../../lib/common/yok";
 import { PreviewSchemaService } from "../../../lib/services/livesync/playground/preview-schema-service";
 import { PubnubKeys } from "../../../lib/services/livesync/playground/preview-app-constants";
 import { assert } from "chai";
-import * as _ from 'lodash';
+import * as _ from "lodash";
 import { IInjector } from "../../../lib/common/definitions/yok";
 
 function createTestInjector(): IInjector {
@@ -15,26 +15,26 @@ function createTestInjector(): IInjector {
 }
 
 const nsPlaySchema = {
-	name: 'nsplay',
-	scannerAppId: 'org.nativescript.play',
-	scannerAppStoreId: '1263543946',
-	previewAppId: 'org.nativescript.preview',
-	previewAppStoreId: '1264484702',
-	msvKey: 'cli',
+	name: "nsplay",
+	scannerAppId: "org.nativescript.play",
+	scannerAppStoreId: "1263543946",
+	previewAppId: "org.nativescript.preview",
+	previewAppStoreId: "1264484702",
+	msvKey: "cli",
 	publishKey: PubnubKeys.PUBLISH_KEY,
 	subscribeKey: PubnubKeys.SUBSCRIBE_KEY,
-	default: true
+	default: true,
 };
 
 const ksPreviewSchema = {
-	name: 'kspreview',
-	scannerAppId: 'com.kinvey.scanner',
-	scannerAppStoreId: '1458317125',
-	previewAppId: 'com.kinvey.preview',
-	previewAppStoreId: '1458502055',
-	msvKey: 'kinveyStudio',
+	name: "kspreview",
+	scannerAppId: "com.kinvey.scanner",
+	scannerAppStoreId: "1458317125",
+	previewAppId: "com.kinvey.preview",
+	previewAppStoreId: "1458502055",
+	msvKey: "kinveyStudio",
 	publishKey: PubnubKeys.PUBLISH_KEY,
-	subscribeKey: PubnubKeys.SUBSCRIBE_KEY
+	subscribeKey: PubnubKeys.SUBSCRIBE_KEY,
 };
 
 describe("PreviewSchemaService", () => {
@@ -48,39 +48,47 @@ describe("PreviewSchemaService", () => {
 
 	const testCases = [
 		{
-			name: "should return default nsplay schema when no previewAppSchema in nsconfig",
+			name:
+				"should return default nsplay schema when no previewAppSchema in nsconfig",
 			previewAppSchema: <any>null,
-			expectedSchema: nsPlaySchema
+			expectedSchema: nsPlaySchema,
 		},
 		{
-			name: "should return nsplay schema when { 'previewAppSchema': 'nsplay' } in nsconfig",
+			name:
+				"should return nsplay schema when { 'previewAppSchema': 'nsplay' } in nsconfig",
 			previewAppSchema: "nsplay",
-			expectedSchema: nsPlaySchema
+			expectedSchema: nsPlaySchema,
 		},
 		{
-			name: "should return kspreview schema when { 'previewAppSchema': 'kspreview' } in nsconfig",
+			name:
+				"should return kspreview schema when { 'previewAppSchema': 'kspreview' } in nsconfig",
 			previewAppSchema: "kspreview",
-			expectedSchema: ksPreviewSchema
+			expectedSchema: ksPreviewSchema,
 		},
 		{
-			name: "should throw an error when invalid previewAppSchema is specified in nsconfig",
+			name:
+				"should throw an error when invalid previewAppSchema is specified in nsconfig",
 			previewAppSchema: "someInvalidSchema",
-			expectedToThrow: true
-		}
+			expectedToThrow: true,
+		},
 	];
 
-	_.each(testCases, testCase => {
+	_.each(testCases, (testCase) => {
 		it(`${testCase.name}`, () => {
 			const projectDataService = injector.resolve("projectDataService");
-			projectDataService.getProjectData = () => ({ previewAppSchema: testCase.previewAppSchema });
+			projectDataService.getProjectData = () => ({
+				previewAppSchema: testCase.previewAppSchema,
+			});
 
 			let actualError = null;
 			if (testCase.expectedToThrow) {
 				const errors = injector.resolve("errors");
-				errors.fail = (err: string) => actualError = err;
+				errors.fail = (err: string) => (actualError = err);
 			}
 
-			const schemaData = previewSchemaService.getSchemaData("someTestProjectDir");
+			const schemaData = previewSchemaService.getSchemaData(
+				"someTestProjectDir"
+			);
 
 			assert.deepStrictEqual(schemaData, testCase.expectedSchema);
 			if (testCase.expectedToThrow) {

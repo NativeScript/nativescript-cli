@@ -7,34 +7,50 @@ import { IAppDebugSocketProxyFactory, IOptions } from "../../declarations";
 import { IDictionary, IErrors, INet } from "../../common/declarations";
 import { injector } from "../../common/yok";
 
-export class AppDebugSocketProxyFactory extends EventEmitter implements IAppDebugSocketProxyFactory {
+export class AppDebugSocketProxyFactory
+	extends EventEmitter
+	implements IAppDebugSocketProxyFactory {
 	private deviceWebServers: IDictionary<ws.Server> = {};
 	private deviceTcpServers: IDictionary<net.Server> = {};
 
-	constructor(private $logger: ILogger,
+	constructor(
+		private $logger: ILogger,
 		private $errors: IErrors,
 		private $lockService: ILockService,
 		private $options: IOptions,
 		private $tempService: ITempService,
-		private $net: INet) {
+		private $net: INet
+	) {
 		super();
 	}
 
-	public getTCPSocketProxy(deviceIdentifier: string, appId: string): net.Server {
+	public getTCPSocketProxy(
+		deviceIdentifier: string,
+		appId: string
+	): net.Server {
 		return this.deviceTcpServers[`${deviceIdentifier}-${appId}`];
 	}
 
-	public async addTCPSocketProxy(device: Mobile.IiOSDevice, appId: string, projectName: string, projectDir: string): Promise<net.Server> {
+	public async addTCPSocketProxy(
+		device: Mobile.IiOSDevice,
+		appId: string,
+		projectName: string,
+		projectDir: string
+	): Promise<net.Server> {
 		const cacheKey = `${device.deviceInfo.identifier}-${appId}`;
 		const existingServer = this.deviceTcpServers[cacheKey];
 		if (existingServer) {
-			this.$errors.fail(`TCP socket proxy is already running for device '${device.deviceInfo.identifier}' and app '${appId}'`);
+			this.$errors.fail(
+				`TCP socket proxy is already running for device '${device.deviceInfo.identifier}' and app '${appId}'`
+			);
 		}
 
-		this.$logger.info("\nSetting up proxy...\nPress Ctrl + C to terminate, or disconnect.\n");
+		this.$logger.info(
+			"\nSetting up proxy...\nPress Ctrl + C to terminate, or disconnect.\n"
+		);
 
 		const server = net.createServer({
-			allowHalfOpen: true
+			allowHalfOpen: true,
 		});
 
 		this.deviceTcpServers[cacheKey] = server;
@@ -42,13 +58,17 @@ export class AppDebugSocketProxyFactory extends EventEmitter implements IAppDebu
 		server.on("connection", async (frontendSocket: net.Socket) => {
 			this.$logger.info("Frontend client connected.");
 			frontendSocket.on("end", () => {
-				this.$logger.info('Frontend socket closed!');
+				this.$logger.info("Frontend socket closed!");
 				if (!this.$options.watch) {
 					process.exit(0);
 				}
 			});
 
-			const appDebugSocket = await device.getDebugSocket(appId, projectName, projectDir);
+			const appDebugSocket = await device.getDebugSocket(
+				appId,
+				projectName,
+				projectDir
+			);
 			this.$logger.info("Backend socket created.");
 
 			appDebugSocket.on("end", () => {
@@ -75,7 +95,9 @@ export class AppDebugSocketProxyFactory extends EventEmitter implements IAppDebu
 			frontendSocket.resume();
 		});
 
-		const socketFileLocation = await this.$tempService.path({ suffix: ".sock" });
+		const socketFileLocation = await this.$tempService.path({
+			suffix: ".sock",
+		});
 		server.listen(socketFileLocation);
 		if (!this.$options.client) {
 			this.$logger.info("socket-file-location: " + socketFileLocation);
@@ -84,9 +106,18 @@ export class AppDebugSocketProxyFactory extends EventEmitter implements IAppDebu
 		return server;
 	}
 
-	public async ensureWebSocketProxy(device: Mobile.IiOSDevice, appId: string, projectName: string, projectDir: string): Promise<ws.Server> {
-		const existingWebProxy = this.deviceWebServers[`${device.deviceInfo.identifier}-${appId}`];
-		const result = existingWebProxy || await this.addWebSocketProxy(device, appId, projectName, projectDir);
+	public async ensureWebSocketProxy(
+		device: Mobile.IiOSDevice,
+		appId: string,
+		projectName: string,
+		projectDir: string
+	): Promise<ws.Server> {
+		const existingWebProxy = this.deviceWebServers[
+			`${device.deviceInfo.identifier}-${appId}`
+		];
+		const result =
+			existingWebProxy ||
+			(await this.addWebSocketProxy(device, appId, projectName, projectDir));
 
 		// TODO: do not remove till VSCode waits for this message in order to reattach
 		this.$logger.info("Opened localhost " + result.options.port);
@@ -94,18 +125,27 @@ export class AppDebugSocketProxyFactory extends EventEmitter implements IAppDebu
 		return result;
 	}
 
-	private async addWebSocketProxy(device: Mobile.IiOSDevice, appId: string, projectName: string, projectDir: string): Promise<ws.Server> {
+	private async addWebSocketProxy(
+		device: Mobile.IiOSDevice,
+		appId: string,
+		projectName: string,
+		projectDir: string
+	): Promise<ws.Server> {
 		let clientConnectionLockRelease: () => void;
 		const cacheKey = `${device.deviceInfo.identifier}-${appId}`;
 		const existingServer = this.deviceWebServers[cacheKey];
 		if (existingServer) {
-			this.$errors.fail(`Web socket proxy is already running for device '${device.deviceInfo.identifier}' and app '${appId}'`);
+			this.$errors.fail(
+				`Web socket proxy is already running for device '${device.deviceInfo.identifier}' and app '${appId}'`
+			);
 		}
 
 		// NOTE: We will try to provide command line options to select ports, at least on the localhost.
 		const localPort = await this.$net.getAvailablePortInRange(41000);
 
-		this.$logger.info("\nSetting up debugger proxy...\nPress Ctrl + C to terminate, or disconnect.\n");
+		this.$logger.info(
+			"\nSetting up debugger proxy...\nPress Ctrl + C to terminate, or disconnect.\n"
+		);
 
 		// NB: When the inspector frontend connects we might not have connected to the inspector backend yet.
 		// That's why we use the verifyClient callback of the websocket server to stall the upgrade request until we connect.
@@ -117,13 +157,17 @@ export class AppDebugSocketProxyFactory extends EventEmitter implements IAppDebu
 		const server = new ws.Server(<any>{
 			port: localPort,
 			host: "localhost",
-			verifyClient: async (info: any, callback: (res: boolean, code?: number, message?: string) => void) => {
+			verifyClient: async (
+				info: any,
+				callback: (res: boolean, code?: number, message?: string) => void
+			) => {
 				let acceptHandshake = true;
 				clientConnectionLockRelease = null;
 
 				try {
-					clientConnectionLockRelease =
-						await this.$lockService.lock(`debug-connection-${device.deviceInfo.identifier}-${appId}.lock`);
+					clientConnectionLockRelease = await this.$lockService.lock(
+						`debug-connection-${device.deviceInfo.identifier}-${appId}.lock`
+					);
 
 					this.$logger.info("Frontend client connected.");
 					let appDebugSocket;
@@ -137,7 +181,11 @@ export class AppDebugSocketProxyFactory extends EventEmitter implements IAppDebu
 						}
 						await device.destroyDebugSocket(appId);
 					}
-					appDebugSocket = await device.getDebugSocket(appId, projectName, projectDir);
+					appDebugSocket = await device.getDebugSocket(
+						appId,
+						projectName,
+						projectDir
+					);
 					currentAppSocket = appDebugSocket;
 					this.$logger.info("Backend socket created.");
 					info.req["__deviceSocket"] = appDebugSocket;
@@ -149,11 +197,13 @@ export class AppDebugSocketProxyFactory extends EventEmitter implements IAppDebu
 					this.$logger.trace(err);
 					this.emit(CONNECTION_ERROR_EVENT_NAME, err);
 					acceptHandshake = false;
-					this.$logger.warn(`Cannot connect to device socket. The error message is '${err.message}'.`);
+					this.$logger.warn(
+						`Cannot connect to device socket. The error message is '${err.message}'.`
+					);
 				}
 
 				callback(acceptHandshake);
-			}
+			},
 		});
 		this.deviceWebServers[cacheKey] = server;
 		server.on("connection", (webSocket, req) => {
@@ -169,15 +219,17 @@ export class AppDebugSocketProxyFactory extends EventEmitter implements IAppDebu
 				if (webSocket.readyState === webSocket.OPEN) {
 					webSocket.send(message);
 				} else {
-					this.$logger.trace(`Received message ${message}, but unable to send it to webSocket as its state is: ${webSocket.readyState}`);
+					this.$logger.trace(
+						`Received message ${message}, but unable to send it to webSocket as its state is: ${webSocket.readyState}`
+					);
 				}
 			});
 
-			webSocket.on("error", err => {
+			webSocket.on("error", (err) => {
 				this.$logger.trace("Error on debugger websocket", err);
 			});
 
-			appDebugSocket.on("error", err => {
+			appDebugSocket.on("error", (err) => {
 				this.$logger.trace("Error on debugger deviceSocket", err);
 			});
 
@@ -197,7 +249,7 @@ export class AppDebugSocketProxyFactory extends EventEmitter implements IAppDebu
 
 			webSocket.on("close", async () => {
 				currentWebSocket = null;
-				this.$logger.info('Frontend socket closed!');
+				this.$logger.info("Frontend socket closed!");
 				appDebugSocket.unpipe(packets);
 				packets.destroy();
 				await device.destroyDebugSocket(appId);

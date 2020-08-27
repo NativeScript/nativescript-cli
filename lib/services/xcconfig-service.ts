@@ -1,19 +1,25 @@
 import * as path from "path";
 import { Configurations } from "../common/constants";
 import { IXcconfigService } from "../declarations";
-import { IChildProcess, IFileSystem, IStringDictionary } from "../common/declarations";
-import * as _ from 'lodash';
+import {
+	IChildProcess,
+	IFileSystem,
+	IStringDictionary,
+} from "../common/declarations";
+import * as _ from "lodash";
 import { injector } from "../common/yok";
 
 export class XcconfigService implements IXcconfigService {
-	constructor(
-		private $childProcess: IChildProcess,
-		private $fs: IFileSystem) { }
+	constructor(private $childProcess: IChildProcess, private $fs: IFileSystem) {}
 
 	public getPluginsXcconfigFilePaths(projectRoot: string): IStringDictionary {
 		return {
-			[Configurations.Debug.toLowerCase()]: this.getPluginsDebugXcconfigFilePath(projectRoot),
-			[Configurations.Release.toLowerCase()]: this.getPluginsReleaseXcconfigFilePath(projectRoot)
+			[Configurations.Debug.toLowerCase()]: this.getPluginsDebugXcconfigFilePath(
+				projectRoot
+			),
+			[Configurations.Release.toLowerCase()]: this.getPluginsReleaseXcconfigFilePath(
+				projectRoot
+			),
 		};
 	}
 
@@ -25,7 +31,10 @@ export class XcconfigService implements IXcconfigService {
 		return path.join(projectRoot, "plugins-release.xcconfig");
 	}
 
-	public async mergeFiles(sourceFile: string, destinationFile: string): Promise<void> {
+	public async mergeFiles(
+		sourceFile: string,
+		destinationFile: string
+	): Promise<void> {
 		if (!this.$fs.exists(destinationFile)) {
 			this.$fs.writeFile(destinationFile, "");
 		}
@@ -37,7 +46,10 @@ export class XcconfigService implements IXcconfigService {
 		await this.$childProcess.exec(`ruby -e "${mergeScript}"`);
 	}
 
-	public readPropertyValue(xcconfigFilePath: string, propertyName: string): string {
+	public readPropertyValue(
+		xcconfigFilePath: string,
+		propertyName: string
+	): string {
 		if (this.$fs.exists(xcconfigFilePath)) {
 			const text = this.$fs.readText(xcconfigFilePath);
 
@@ -50,7 +62,7 @@ export class XcconfigService implements IXcconfigService {
 					if (parts.length > 1 && parts[1]) {
 						property = parts[1].trim();
 						isPropertyParsed = true;
-						if (property[property.length - 1] === ';') {
+						if (property[property.length - 1] === ";") {
 							property = property.slice(0, -1);
 						}
 					}

@@ -1,8 +1,12 @@
-import { InjectorStub, TempServiceStub, PackageInstallationManagerStub } from "../../stubs";
+import {
+	InjectorStub,
+	TempServiceStub,
+	PackageInstallationManagerStub,
+} from "../../stubs";
 import { AddPlatformService } from "../../../lib/services/platform/add-platform-service";
 import { PacoteService } from "../../../lib/services/pacote-service";
 import { assert } from "chai";
-import * as _ from 'lodash';
+import * as _ from "lodash";
 import { INativePrepare, IProjectData } from "../../../lib/definitions/project";
 import { IInjector } from "../../../lib/common/definitions/yok";
 // import { project } from "nativescript-dev-xcode";
@@ -12,20 +16,20 @@ const nativePrepare: INativePrepare = null;
 function createTestInjector() {
 	const injector = new InjectorStub();
 	injector.register("pacoteService", {
-		extractPackage: async (name: string) => ({})
+		extractPackage: async (name: string) => ({}),
 	});
 	injector.register("terminalSpinnerService", {
 		createSpinner: () => {
 			return {
 				start: () => ({}),
-				stop: () => ({})
+				stop: () => ({}),
 			};
-		}
-  });
-  injector.register("packageManager", PackageInstallationManagerStub);
+		},
+	});
+	injector.register("packageManager", PackageInstallationManagerStub);
 	injector.register("addPlatformService", AddPlatformService);
 	injector.register("analyticsService", {
-		trackEventActionInGoogleAnalytics: () => ({})
+		trackEventActionInGoogleAnalytics: () => ({}),
 	});
 	injector.register("tempService", TempServiceStub);
 
@@ -37,23 +41,42 @@ function createTestInjector() {
 
 describe("AddPlatformService", () => {
 	describe("addPlatform", () => {
-		let injector: IInjector, addPlatformService: AddPlatformService, projectData: IProjectData;
+		let injector: IInjector,
+			addPlatformService: AddPlatformService,
+			projectData: IProjectData;
 		beforeEach(() => {
 			injector = createTestInjector();
 			addPlatformService = injector.resolve("addPlatformService");
 			projectData = injector.resolve("projectData");
 		});
 
-		_.each(["ios", "android"], platform => {
+		_.each(["ios", "android"], (platform) => {
 			it(`should fail if unable to extract runtime package for ${platform}`, async () => {
 				const errorMessage = "Pacote service unable to extract package";
 
 				const pacoteService: PacoteService = injector.resolve("pacoteService");
-				pacoteService.extractPackage = async (): Promise<void> => { throw new Error(errorMessage); };
-				const platformsDataService = injector.resolve("platformsDataService").getPlatformData(platform, projectData);
+				pacoteService.extractPackage = async (): Promise<void> => {
+					throw new Error(errorMessage);
+				};
+				const platformsDataService = injector
+					.resolve("platformsDataService")
+					.getPlatformData(platform, projectData);
 
-        projectData.projectDir = '/some/dummy/dir';
-				await assert.isRejected(addPlatformService.addPlatformSafe(projectData, platformsDataService, "somePackage", { frameworkPath: '/tmp/notfound.tgz', projectDir: projectData.projectDir, platform, nativePrepare }), errorMessage);
+				projectData.projectDir = "/some/dummy/dir";
+				await assert.isRejected(
+					addPlatformService.addPlatformSafe(
+						projectData,
+						platformsDataService,
+						"somePackage",
+						{
+							frameworkPath: "/tmp/notfound.tgz",
+							projectDir: projectData.projectDir,
+							platform,
+							nativePrepare,
+						}
+					),
+					errorMessage
+				);
 			});
 			it(`shouldn't add native platform when skipNativePrepare is provided for ${platform}`, async () => {
 				const projectDataService = injector.resolve("projectDataService");
@@ -61,12 +84,25 @@ describe("AddPlatformService", () => {
 
 				let isCreateNativeProjectCalled = false;
 				const platformsDataService = injector.resolve("platformsDataService");
-				const platformData = platformsDataService.getPlatformData(platform, injector.resolve("projectData"));
-				platformData.platformProjectService.createProject = () => isCreateNativeProjectCalled = true;
+				const platformData = platformsDataService.getPlatformData(
+					platform,
+					injector.resolve("projectData")
+				);
+				platformData.platformProjectService.createProject = () =>
+					(isCreateNativeProjectCalled = true);
 				platformsDataService.getPlatformData = () => platformData;
 
-        projectData.projectDir = '/some/dummy/dir';
-				await addPlatformService.addPlatformSafe(projectData, platformData, platform, { projectDir: projectData.projectDir, platform, nativePrepare: { skipNativePrepare: true } } );
+				projectData.projectDir = "/some/dummy/dir";
+				await addPlatformService.addPlatformSafe(
+					projectData,
+					platformData,
+					platform,
+					{
+						projectDir: projectData.projectDir,
+						platform,
+						nativePrepare: { skipNativePrepare: true },
+					}
+				);
 				assert.isFalse(isCreateNativeProjectCalled);
 			});
 			it(`should add native platform when skipNativePrepare is not provided for ${platform}`, async () => {
@@ -75,12 +111,21 @@ describe("AddPlatformService", () => {
 
 				let isCreateNativeProjectCalled = false;
 				const platformsDataService = injector.resolve("platformsDataService");
-				const platformData = platformsDataService.getPlatformData(platform, injector.resolve("projectData"));
-				platformData.platformProjectService.createProject = () => isCreateNativeProjectCalled = true;
+				const platformData = platformsDataService.getPlatformData(
+					platform,
+					injector.resolve("projectData")
+				);
+				platformData.platformProjectService.createProject = () =>
+					(isCreateNativeProjectCalled = true);
 				platformsDataService.getPlatformData = () => platformData;
 
-        projectData.projectDir = '/some/dummy/dir';
-				await addPlatformService.addPlatformSafe(projectData, platformData, platform, { projectDir: projectData.projectDir, platform, nativePrepare });
+				projectData.projectDir = "/some/dummy/dir";
+				await addPlatformService.addPlatformSafe(
+					projectData,
+					platformData,
+					platform,
+					{ projectDir: projectData.projectDir, platform, nativePrepare }
+				);
 				assert.isTrue(isCreateNativeProjectCalled);
 			});
 		});

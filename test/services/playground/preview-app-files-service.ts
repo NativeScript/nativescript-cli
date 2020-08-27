@@ -2,7 +2,7 @@ import { Yok } from "../../../lib/common/yok";
 import { PreviewAppFilesService } from "../../../lib/services/livesync/playground/preview-app-files-service";
 import { FileSystemStub, LoggerStub } from "../../stubs";
 import * as path from "path";
-import * as _ from 'lodash';
+import * as _ from "lodash";
 import { assert } from "chai";
 import { FilesPayload } from "nativescript-preview-sdk";
 import { IInjector } from "../../../lib/common/definitions/yok";
@@ -14,16 +14,21 @@ class ProjectDataServiceMock {
 	public getProjectData() {
 		return {
 			getAppDirectoryPath: () => appDirectoryPath,
-			appDirectoryPath: () => appDirectoryPath
+			appDirectoryPath: () => appDirectoryPath,
 		};
 	}
 }
 
 class NativeProjectDataServiceMock {
 	public getPlatformData(platform: string) {
-		const appDestinationDirectoryPath = path.join(projectDir, "platforms", platform, "app");
+		const appDestinationDirectoryPath = path.join(
+			projectDir,
+			"platforms",
+			platform,
+			"app"
+		);
 		return {
-			appDestinationDirectoryPath
+			appDestinationDirectoryPath,
 		};
 	}
 }
@@ -36,27 +41,37 @@ function createTestInjector(data?: { files: string[] }) {
 	injector.register("platformsDataService", NativeProjectDataServiceMock);
 	injector.register("projectDataService", ProjectDataServiceMock);
 	injector.register("projectFilesManager", {
-		getProjectFiles: () => data ? data.files : []
+		getProjectFiles: () => (data ? data.files : []),
 	});
 	injector.register("projectFilesProvider", {
 		getProjectFileInfo: (filePath: string, platform: string) => {
 			return {
 				filePath,
-				shouldIncludeFile: true
+				shouldIncludeFile: true,
 			};
-		}
+		},
 	});
 	return injector;
 }
 
-function getExpectedResult(data: IPreviewAppLiveSyncData, injector: IInjector, expectedFiles: string[], platform: string): FilesPayload {
-	const platformData = injector.resolve("platformsDataService").getPlatformData(platform);
-	const files = _.map(expectedFiles, expectedFile => {
+function getExpectedResult(
+	data: IPreviewAppLiveSyncData,
+	injector: IInjector,
+	expectedFiles: string[],
+	platform: string
+): FilesPayload {
+	const platformData = injector
+		.resolve("platformsDataService")
+		.getPlatformData(platform);
+	const files = _.map(expectedFiles, (expectedFile) => {
 		return {
-			event: 'change',
-			file: path.relative(path.join(platformData.appDestinationDirectoryPath, "app"), expectedFile),
+			event: "change",
+			file: path.relative(
+				path.join(platformData.appDestinationDirectoryPath, "app"),
+				expectedFile
+			),
 			binary: false,
-			fileContents: undefined
+			fileContents: undefined,
 		};
 	});
 
@@ -64,7 +79,7 @@ function getExpectedResult(data: IPreviewAppLiveSyncData, injector: IInjector, e
 		files,
 		platform,
 		hmrMode: data.useHotModuleReload ? 1 : 0,
-		deviceId: undefined
+		deviceId: undefined,
 	};
 }
 
@@ -73,41 +88,59 @@ describe("PreviewAppFilesService", () => {
 		{
 			name: ".ts files",
 			files: ["dir1/file.js", "file.ts"],
-			expectedFiles: [`dir1/file.js`]
+			expectedFiles: [`dir1/file.js`],
 		},
 		{
 			name: ".sass files",
 			files: ["myDir1/mySubDir/myfile.css", "myDir1/mySubDir/myfile.sass"],
-			expectedFiles: [`myDir1/mySubDir/myfile.css`]
+			expectedFiles: [`myDir1/mySubDir/myfile.css`],
 		},
 		{
 			name: ".scss files",
-			files: ["myDir1/mySubDir/myfile1.css", "myDir1/mySubDir/myfile.scss", "my/file.js"],
-			expectedFiles: [`myDir1/mySubDir/myfile1.css`, `my/file.js`]
+			files: [
+				"myDir1/mySubDir/myfile1.css",
+				"myDir1/mySubDir/myfile.scss",
+				"my/file.js",
+			],
+			expectedFiles: [`myDir1/mySubDir/myfile1.css`, `my/file.js`],
 		},
 		{
 			name: ".less files",
-			files: ["myDir1/mySubDir/myfile1.css", "myDir1/mySubDir/myfile.less", "my/file.js"],
-			expectedFiles: [`myDir1/mySubDir/myfile1.css`, `my/file.js`]
+			files: [
+				"myDir1/mySubDir/myfile1.css",
+				"myDir1/mySubDir/myfile.less",
+				"my/file.js",
+			],
+			expectedFiles: [`myDir1/mySubDir/myfile1.css`, `my/file.js`],
 		},
 		{
 			name: ".DS_Store file",
 			files: ["my/test/file.js", ".DS_Store"],
-			expectedFiles: [`my/test/file.js`]
-		}
+			expectedFiles: [`my/test/file.js`],
+		},
 	];
 
 	describe("getInitialFilesPayload", () => {
-		_.each(testCases, testCase => {
-			_.each(["ios", "android"], platform => {
-				_.each([true, false], bundle => {
-					_.each([true, false], useHotModuleReload => {
+		_.each(testCases, (testCase) => {
+			_.each(["ios", "android"], (platform) => {
+				_.each([true, false], (bundle) => {
+					_.each([true, false], (useHotModuleReload) => {
 						it(`should exclude ${testCase.name} when  { platform: ${platform}, bundle: ${bundle}, useHotModuleReload: ${useHotModuleReload} }`, () => {
 							const injector = createTestInjector({ files: testCase.files });
-							const previewAppFilesService = injector.resolve("previewAppFilesService");
+							const previewAppFilesService = injector.resolve(
+								"previewAppFilesService"
+							);
 							const data = { projectDir, bundle, useHotModuleReload, env: {} };
-							const result = previewAppFilesService.getInitialFilesPayload(data, platform);
-							const expectedResult = getExpectedResult(data, injector, testCase.expectedFiles, platform);
+							const result = previewAppFilesService.getInitialFilesPayload(
+								data,
+								platform
+							);
+							const expectedResult = getExpectedResult(
+								data,
+								injector,
+								testCase.expectedFiles,
+								platform
+							);
 							assert.deepStrictEqual(result, expectedResult);
 						});
 					});
@@ -117,16 +150,27 @@ describe("PreviewAppFilesService", () => {
 	});
 
 	describe("getFilesPayload", () => {
-		_.each(testCases, testCase => {
-			_.each(["ios", "android"], platform => {
-				_.each([true, false], bundle => {
-					_.each([true, false], useHotModuleReload => {
+		_.each(testCases, (testCase) => {
+			_.each(["ios", "android"], (platform) => {
+				_.each([true, false], (bundle) => {
+					_.each([true, false], (useHotModuleReload) => {
 						it(`should exclude ${testCase.name} when  { platform: ${platform}, bundle: ${bundle}, useHotModuleReload: ${useHotModuleReload} }`, () => {
 							const injector = createTestInjector();
-							const previewAppFilesService: IPreviewAppFilesService = injector.resolve("previewAppFilesService");
+							const previewAppFilesService: IPreviewAppFilesService = injector.resolve(
+								"previewAppFilesService"
+							);
 							const data = { projectDir, bundle, useHotModuleReload, env: {} };
-							const result = previewAppFilesService.getFilesPayload(data, { filesToSync: testCase.files }, platform);
-							const expectedResult = getExpectedResult(data, injector, testCase.expectedFiles, platform);
+							const result = previewAppFilesService.getFilesPayload(
+								data,
+								{ filesToSync: testCase.files },
+								platform
+							);
+							const expectedResult = getExpectedResult(
+								data,
+								injector,
+								testCase.expectedFiles,
+								platform
+							);
 							assert.deepStrictEqual(result, expectedResult);
 						});
 					});

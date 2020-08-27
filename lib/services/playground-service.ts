@@ -1,19 +1,29 @@
 import { IProjectDataService, IProjectData } from "../definitions/project";
-import { IPlaygroundService, IFileSystem, IUserSettingsService, IPlaygroundInfo } from "../common/declarations";
+import {
+	IPlaygroundService,
+	IFileSystem,
+	IUserSettingsService,
+	IPlaygroundInfo,
+} from "../common/declarations";
 import { injector } from "../common/yok";
 
 export class PlaygroundService implements IPlaygroundService {
-	constructor(private $fs: IFileSystem,
+	constructor(
+		private $fs: IFileSystem,
 		private $projectDataService: IProjectDataService,
-		private $userSettingsService: IUserSettingsService) { }
+		private $userSettingsService: IUserSettingsService
+	) {}
 
-	public async getPlaygroundInfo(projectDir?: string): Promise<IPlaygroundInfo> {
+	public async getPlaygroundInfo(
+		projectDir?: string
+	): Promise<IPlaygroundInfo> {
 		const projectData = this.getProjectData(projectDir);
 		if (projectData) {
 			const projectFileContent = this.$fs.readJson(projectData.projectFilePath);
 			if (this.hasPlaygroundKey(projectFileContent)) {
 				const id = projectFileContent.nativescript.playground.id;
-				let usedTutorial = projectFileContent.nativescript.playground.usedTutorial || false;
+				let usedTutorial =
+					projectFileContent.nativescript.playground.usedTutorial || false;
 
 				// In case when usedTutorial=true is already saved in userSettings file, we shouldn't overwrite it
 				const playgroundInfo = await this.getPlaygroundInfoFromUserSettingsFile();
@@ -24,8 +34,10 @@ export class PlaygroundService implements IPlaygroundService {
 				delete projectFileContent.nativescript.playground;
 				this.$fs.writeJson(projectData.projectFilePath, projectFileContent);
 
-				const result = { id , usedTutorial };
-				await this.$userSettingsService.saveSettings(<any>{playground: result});
+				const result = { id, usedTutorial };
+				await this.$userSettingsService.saveSettings(<any>{
+					playground: result,
+				});
 				return result;
 			}
 		}
@@ -43,11 +55,20 @@ export class PlaygroundService implements IPlaygroundService {
 	}
 
 	private hasPlaygroundKey(projectFileContent: any): boolean {
-		return projectFileContent && projectFileContent.nativescript && projectFileContent.nativescript.playground && projectFileContent.nativescript.playground.id;
+		return (
+			projectFileContent &&
+			projectFileContent.nativescript &&
+			projectFileContent.nativescript.playground &&
+			projectFileContent.nativescript.playground.id
+		);
 	}
 
-	private async getPlaygroundInfoFromUserSettingsFile(): Promise<IPlaygroundInfo> {
-		return this.$userSettingsService.getSettingValue<IPlaygroundInfo>("playground");
+	private async getPlaygroundInfoFromUserSettingsFile(): Promise<
+		IPlaygroundInfo
+	> {
+		return this.$userSettingsService.getSettingValue<IPlaygroundInfo>(
+			"playground"
+		);
 	}
 }
-injector.register('playgroundService', PlaygroundService);
+injector.register("playgroundService", PlaygroundService);

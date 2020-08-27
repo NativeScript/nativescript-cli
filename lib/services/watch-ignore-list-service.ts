@@ -1,6 +1,6 @@
 import { IWatchIgnoreListService } from "../declarations";
 import { IDictionary } from "../common/declarations";
-import * as _ from 'lodash';
+import * as _ from "lodash";
 import { injector } from "../common/yok";
 
 export class WatchIgnoreListService implements IWatchIgnoreListService {

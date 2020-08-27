@@ -5,20 +5,26 @@ import * as path from "path";
 import { IInjector } from "../../lib/common/definitions/yok";
 
 class JsonFileSettingsServiceMock {
-	constructor(public jsonFileSettingsPath: string) { }
+	constructor(public jsonFileSettingsPath: string) {}
 }
 
 describe("userSettingsService", () => {
 	const profileDir = "my-profile-dir";
-	const expectedJsonFileSettingsFilePath = path.join(profileDir, "user-settings.json");
+	const expectedJsonFileSettingsFilePath = path.join(
+		profileDir,
+		"user-settings.json"
+	);
 
 	const createTestInjector = (): IInjector => {
 		const testInjector = new Yok();
 		testInjector.register("settingsService", {
-			getProfileDir: () => profileDir
+			getProfileDir: () => profileDir,
 		});
 
-		testInjector.register("jsonFileSettingsService", JsonFileSettingsServiceMock);
+		testInjector.register(
+			"jsonFileSettingsService",
+			JsonFileSettingsServiceMock
+		);
 		testInjector.register("userSettingsService", UserSettingsService);
 		return testInjector;
 	};
@@ -27,40 +33,28 @@ describe("userSettingsService", () => {
 		{
 			methodName: "getSettingValue",
 			input: ["settingName"],
-			expectedArgs: [
-				"settingName",
-				undefined
-			]
+			expectedArgs: ["settingName", undefined],
 		},
 		{
 			methodName: "saveSetting",
 			input: ["settingName", "settingValue"],
-			expectedArgs: [
-				"settingName",
-				"settingValue",
-				undefined
-			]
+			expectedArgs: ["settingName", "settingValue", undefined],
 		},
 		{
 			methodName: "saveSettings",
 			input: [{ value: { subValue: 1 } }],
-			expectedArgs: [
-				{ value: { subValue: 1 } },
-				undefined
-			]
+			expectedArgs: [{ value: { subValue: 1 } }, undefined],
 		},
 		{
 			methodName: "removeSetting",
 			input: ["settingName"],
-			expectedArgs: [
-				"settingName"
-			]
+			expectedArgs: ["settingName"],
 		},
 		{
 			methodName: "loadUserSettingsFile",
 			input: [],
-			expectedArgs: []
-		}
+			expectedArgs: [],
+		},
 	];
 
 	for (const testCase of testCases) {
@@ -68,16 +62,25 @@ describe("userSettingsService", () => {
 			const testInjector = createTestInjector();
 			const dataPassedToJsonFileSettingsService: any[] = [];
 			const userSettingsService = testInjector.resolve("userSettingsService");
-			const jsonFileSettingsService = userSettingsService.$jsonFileSettingsService;
+			const jsonFileSettingsService =
+				userSettingsService.$jsonFileSettingsService;
 
-			jsonFileSettingsService[testCase.methodName] = async (...args: any[]): Promise<void> => {
+			jsonFileSettingsService[testCase.methodName] = async (
+				...args: any[]
+			): Promise<void> => {
 				dataPassedToJsonFileSettingsService.push(...args);
 			};
 
 			await userSettingsService[testCase.methodName](...testCase.input);
 
-			assert.deepStrictEqual(dataPassedToJsonFileSettingsService, testCase.expectedArgs);
-			assert.equal(jsonFileSettingsService.jsonFileSettingsPath, expectedJsonFileSettingsFilePath);
+			assert.deepStrictEqual(
+				dataPassedToJsonFileSettingsService,
+				testCase.expectedArgs
+			);
+			assert.equal(
+				jsonFileSettingsService.jsonFileSettingsPath,
+				expectedJsonFileSettingsFilePath
+			);
 		});
 	}
 });

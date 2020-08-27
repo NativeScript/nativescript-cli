@@ -2,7 +2,7 @@ import { TrackActionNames } from "../constants";
 const EOL = require("os").EOL;
 import { getFixedLengthDateString } from "../common/helpers";
 import * as semver from "semver";
-import * as _ from 'lodash';
+import * as _ from "lodash";
 import { IPerformanceService, IOptions } from "../declarations";
 import { IFileSystem, IAnalyticsService } from "../common/declarations";
 import { injector } from "../common/yok";
@@ -11,7 +11,7 @@ export class PerformanceService implements IPerformanceService {
 	public static LOG_MESSAGE_TEMPLATE = `Execution of method "%s" took %s ms.`;
 	public static FAIL_LOG_MESSAGE_TEMPLATE = `Failed to log pefromance data in file for method %s.`;
 	private static MIN_NODE_PERFORMANCE_MODULE_VERSION = "8.5.0";
-	private performance: {now(): number}  = null;
+	private performance: { now(): number } = null;
 
 	constructor(
 		private $options: IOptions,
@@ -24,15 +24,29 @@ export class PerformanceService implements IPerformanceService {
 		}
 	}
 
-	public processExecutionData(methodInfo: string, startTime: number, endTime: number, args: any[]): void {
+	public processExecutionData(
+		methodInfo: string,
+		startTime: number,
+		endTime: number,
+		args: any[]
+	): void {
 		const executionTime = Math.floor(endTime - startTime);
 
 		this.trackAnalyticsData(methodInfo, executionTime);
 
 		if (typeof this.$options.performance === "string") {
-			this.logDataToFile(this.$options.performance, methodInfo, executionTime, args);
+			this.logDataToFile(
+				this.$options.performance,
+				methodInfo,
+				executionTime,
+				args
+			);
 		} else if (this.$options.performance) {
-			this.$logger.info(PerformanceService.LOG_MESSAGE_TEMPLATE, methodInfo, executionTime);
+			this.$logger.info(
+				PerformanceService.LOG_MESSAGE_TEMPLATE,
+				methodInfo,
+				executionTime
+			);
 		}
 	}
 
@@ -45,21 +59,30 @@ export class PerformanceService implements IPerformanceService {
 	}
 
 	private isPerformanceModuleSupported(): boolean {
-		return semver.gte(process.version, PerformanceService.MIN_NODE_PERFORMANCE_MODULE_VERSION);
+		return semver.gte(
+			process.version,
+			PerformanceService.MIN_NODE_PERFORMANCE_MODULE_VERSION
+		);
 	}
 
 	private trackAnalyticsData(methodInfo: string, executionTime: number): void {
-		this.$analyticsService.trackEventActionInGoogleAnalytics({
-			action: TrackActionNames.Performance,
-			additionalData: methodInfo,
-			value: executionTime
-		})
-		.catch((err) => {
-			throw err;
-		});
+		this.$analyticsService
+			.trackEventActionInGoogleAnalytics({
+				action: TrackActionNames.Performance,
+				additionalData: methodInfo,
+				value: executionTime,
+			})
+			.catch((err) => {
+				throw err;
+			});
 	}
 
-	private logDataToFile(filePath: string, methodInfo: string, executionTime: number, args: any[]) {
+	private logDataToFile(
+		filePath: string,
+		methodInfo: string,
+		executionTime: number,
+		args: any[]
+	) {
 		let methodArgs;
 
 		try {
@@ -72,14 +95,21 @@ export class PerformanceService implements IPerformanceService {
 			methodInfo,
 			executionTime,
 			timestamp: getFixedLengthDateString(),
-			methodArgs: JSON.parse(methodArgs)
+			methodArgs: JSON.parse(methodArgs),
 		};
 
 		try {
 			this.$fs.appendFile(filePath, `${JSON.stringify(info)}${EOL}`);
 		} catch (e) {
-			this.$logger.trace(PerformanceService.FAIL_LOG_MESSAGE_TEMPLATE, methodInfo);
-			this.$logger.info(PerformanceService.LOG_MESSAGE_TEMPLATE, methodInfo, executionTime);
+			this.$logger.trace(
+				PerformanceService.FAIL_LOG_MESSAGE_TEMPLATE,
+				methodInfo
+			);
+			this.$logger.info(
+				PerformanceService.LOG_MESSAGE_TEMPLATE,
+				methodInfo,
+				executionTime
+			);
 		}
 	}
 
@@ -99,4 +129,4 @@ export class PerformanceService implements IPerformanceService {
 	}
 }
 
-injector.register('performanceService', PerformanceService);
+injector.register("performanceService", PerformanceService);

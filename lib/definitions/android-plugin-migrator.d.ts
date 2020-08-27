@@ -1,15 +1,15 @@
 import { IAndroidToolsInfoData } from "../declarations";
 import { IProjectDir } from "../common/declarations";
 
-interface IPluginBuildOptions extends IAndroidBuildOptions{
-	projectDir?: string
+interface IPluginBuildOptions extends IAndroidBuildOptions {
+	projectDir?: string;
 }
 
 interface IAndroidBuildOptions {
-    platformsAndroidDirPath: string,
-    pluginName: string,
-    aarOutputDir: string,
-    tempPluginDirPath: string
+	platformsAndroidDirPath: string;
+	pluginName: string;
+	aarOutputDir: string;
+	tempPluginDirPath: string;
 }
 
 interface IAndroidPluginBuildService {

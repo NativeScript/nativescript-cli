@@ -1,5 +1,8 @@
 import { IShouldDispose, IDisposable } from "../common/declarations";
-import { ISpawnCommandInfo, IJSCommand } from "../detached-processes/cleanup-process-definitions";
+import {
+	ISpawnCommandInfo,
+	IJSCommand,
+} from "../detached-processes/cleanup-process-definitions";
 
 /**
  * Descibes the cleanup service which allows scheduling cleanup actions
@@ -19,7 +22,7 @@ interface ICleanupService extends IShouldDispose, IDisposable {
 	 * @param {ISpawnCommandInfo} commandInfo The command that should be removed from cleanup execution, including command and args.
 	 * @returns {Promise<void>}
 	 */
-	removeCleanupCommand(commandInfo: ISpawnCommandInfo): Promise<void>
+	removeCleanupCommand(commandInfo: ISpawnCommandInfo): Promise<void>;
 
 	/**
 	 * Sets the file in which the cleanup process will write its logs.

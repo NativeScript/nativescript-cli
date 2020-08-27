@@ -1,23 +1,36 @@
 import { AndroidDebugBridge } from "./android-debug-bridge";
 import { IChildProcess, IErrors, IStringDictionary } from "../../declarations";
-import * as _ from 'lodash';
+import * as _ from "lodash";
 
 interface IComposeCommandResult {
 	command: string;
 	args: string[];
 }
 
-export class DeviceAndroidDebugBridge extends AndroidDebugBridge implements Mobile.IDeviceAndroidDebugBridge {
-	constructor(private identifier: string,
+export class DeviceAndroidDebugBridge
+	extends AndroidDebugBridge
+	implements Mobile.IDeviceAndroidDebugBridge {
+	constructor(
+		private identifier: string,
 		protected $childProcess: IChildProcess,
 		protected $errors: IErrors,
 		protected $logger: ILogger,
 		protected $staticConfig: Config.IStaticConfig,
-		protected $androidDebugBridgeResultHandler: Mobile.IAndroidDebugBridgeResultHandler) {
-		super($childProcess, $errors, $logger, $staticConfig, $androidDebugBridgeResultHandler);
+		protected $androidDebugBridgeResultHandler: Mobile.IAndroidDebugBridgeResultHandler
+	) {
+		super(
+			$childProcess,
+			$errors,
+			$logger,
+			$staticConfig,
+			$androidDebugBridgeResultHandler
+		);
 	}
 
-	public async sendBroadcastToDevice(action: string, extras?: IStringDictionary): Promise<number> {
+	public async sendBroadcastToDevice(
+		action: string,
+		extras?: IStringDictionary
+	): Promise<number> {
 		extras = extras || {};
 		const broadcastCommand = ["am", "broadcast", "-a", `${action}`];
 		_.each(extras, (value, key) => broadcastCommand.push("-e", key, value));
@@ -33,7 +46,9 @@ export class DeviceAndroidDebugBridge extends AndroidDebugBridge implements Mobi
 		this.$errors.fail("Unable to broadcast to android device:\n%s", result);
 	}
 
-	protected async composeCommand(params: string[]): Promise<IComposeCommandResult> {
+	protected async composeCommand(
+		params: string[]
+	): Promise<IComposeCommandResult> {
 		return super.composeCommand(params, this.identifier);
 	}
 }

@@ -4,7 +4,10 @@ import { EMIT_APPENDER_EVENT_NAME } from "../../../constants";
 
 function emitAppender(layout: Function, emitter: EventEmitter) {
 	const appender = (loggingEvent: LoggingEvent) => {
-		emitter.emit(EMIT_APPENDER_EVENT_NAME, { loggingEvent, formattedMessage: layout(loggingEvent) });
+		emitter.emit(EMIT_APPENDER_EVENT_NAME, {
+			loggingEvent,
+			formattedMessage: layout(loggingEvent),
+		});
 	};
 
 	appender.shutdown = () => {
@@ -14,7 +17,10 @@ function emitAppender(layout: Function, emitter: EventEmitter) {
 	return appender;
 }
 
-export function configure(config: Log4JSEmitAppenderConfiguration, layouts: any) {
+export function configure(
+	config: Log4JSEmitAppenderConfiguration,
+	layouts: any
+) {
 	if (!config.emitter) {
 		throw new Error("Emitter must be passed to emit-appender");
 	}
