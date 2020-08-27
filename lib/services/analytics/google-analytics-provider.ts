@@ -1,4 +1,4 @@
-import * as uuid from "uuid";
+import { v4 as uuidv4 } from "uuid";
 import * as ua from "universal-analytics";
 import { AnalyticsClients } from "../../common/constants";
 import { cache } from "../../common/decorators";
@@ -23,7 +23,7 @@ export class GoogleAnalyticsProvider implements IGoogleAnalyticsProvider {
 	}
 
 	public async trackHit(trackInfo: IGoogleAnalyticsData): Promise<void> {
-		const sessionId = uuid.v4();
+		const sessionId = uuidv4();
 
 		try {
 			await this.track(this.$config.GA_TRACKING_ID, trackInfo, sessionId);

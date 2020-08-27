@@ -3,7 +3,7 @@
 // NOTE: This file is used to call JS functions when cleaning resources used by CLI, after the CLI is killed.
 // The instances here are not shared with the ones in main CLI process.
 import * as fs from "fs";
-import * as uuid from "uuid";
+import { v4 as uuidv4 } from "uuid";
 import { FileLogService } from "./file-log-service";
 import { injector } from "../common/yok";
 
@@ -19,7 +19,7 @@ const logFile = process.argv[3];
 const jsFilePath = process.argv[4];
 
 const fileLogService = injector.resolve<IFileLogService>(FileLogService, { logFile });
-const uniqueId = uuid.v4();
+const uniqueId = uuidv4();
 fileLogService.logData({ message: `Initializing Cleanup process for path: ${jsFilePath} Unique id: ${uniqueId}` });
 
 if (!fs.existsSync(jsFilePath)) {

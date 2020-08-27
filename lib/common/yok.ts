@@ -452,6 +452,11 @@ export class Yok implements IInjector {
 }
 
 if (!(<any>global).$injector) {
-  (<any>global).$injector = new Yok(); 
-  injector = (<any>global).$injector;
+	(<any>global).$injector = new Yok();
+	injector = (<any>global).$injector;
+}
+
+export function setGlobalInjector(inj: IInjector): IInjector {
+	(<any>global).$injector = injector = inj;
+	return inj;
 }

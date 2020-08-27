@@ -1,4 +1,4 @@
-import * as uuid from "uuid";
+import { v4 as uuidv4 } from "uuid";
 import * as net from "net";
 import { platform, EOL } from "os";
 import { ReadStream } from "tty";
@@ -241,9 +241,9 @@ export function createGUID(useBraces?: boolean) {
 	useBraces = useBraces === undefined ? true : useBraces;
 
 	if (useBraces) {
-		output = "{" + uuid.v4() + "}";
+		output = "{" + uuidv4() + "}";
 	} else {
-		output = uuid.v4();
+		output = uuidv4();
 	}
 
 	return output;
