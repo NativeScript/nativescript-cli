@@ -589,7 +589,20 @@ export class ProjectConfigServiceStub implements IProjectConfigService {
     return { hasTS: false, hasJS: true, configJSFilePath: '', configTSFilePath: '' };
   }
 
-  setAppId(projectId: string, projectDir?: string) {
+  getDefaultTSConfig(appId: string): string {
+    return `import { NativeScriptConfig } from '@nativescript/core';
+
+    export default {
+      id: '${appId}',
+      appResourcesPath: 'App_Resources',
+      android: {
+        v8Flags: '--expose_gc',
+        markingMode: 'none'
+      }
+    } as NativeScriptConfig;`;
+  }
+
+  writeDefaultConfig(appId: string, projectDir?: string): void {
 
   }
 }
@@ -851,10 +864,6 @@ export class ProjectHelperStub implements IProjectHelper {
 export class ProjectTemplatesService implements IProjectTemplatesService {
 	async prepareTemplate(templateName: string): Promise<ITemplateData> {
 		return Promise.resolve(<any>{});
-	}
-
-	getTemplateVersion(templateName: string): Promise<string> {
-		return Promise.resolve(constants.TemplateVersions.v1);
 	}
 }
 

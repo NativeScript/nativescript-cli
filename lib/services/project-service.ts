@@ -1,9 +1,7 @@
 import * as constants from "../constants";
 import * as path from "path";
-import * as shelljs from "shelljs";
-import { format } from "util";
 import { exported } from "../common/decorators";
-import { Hooks, TemplatesV2PackageJsonKeysToRemove } from "../constants";
+import { Hooks } from "../constants";
 import { performanceLog } from "../common/decorators";
 import {
 	IProjectService,
@@ -13,7 +11,7 @@ import {
 	IProjectSettings,
 	IProjectCreationSettings,
 	ITemplateData,
-  IProjectConfigService,
+	IProjectConfigService,
 } from "../definitions/project";
 import {
 	INodePackageManager,
@@ -38,13 +36,13 @@ export class ProjectService implements IProjectService {
 		private $fs: IFileSystem,
 		private $logger: ILogger,
 		private $pacoteService: IPacoteService,
-    private $projectDataService: IProjectDataService,
-    private $projectConfigService: IProjectConfigService,
+		private $projectDataService: IProjectDataService,
+		private $projectConfigService: IProjectConfigService,
 		private $projectHelper: IProjectHelper,
 		private $projectNameService: IProjectNameService,
 		private $projectTemplatesService: IProjectTemplatesService,
-		private $staticConfig: IStaticConfig,
-		private $tempService: ITempService
+		private $tempService: ITempService,
+		private $staticConfig: IStaticConfig
 	) {}
 
 	public async validateProjectName(opts: {
@@ -93,7 +91,6 @@ export class ProjectService implements IProjectService {
 				projectName,
 				constants.DEFAULT_APP_IDENTIFIER_PREFIX
 			);
-		this.createPackageJson(projectDir, appId);
 		this.$logger.trace(
 			`Creating a new NativeScript project with name ${projectName} and id ${appId} at location ${projectDir}`
 		);
@@ -161,33 +158,13 @@ export class ProjectService implements IProjectService {
 				template,
 				projectDir
 			);
-			const templatePackageJsonContent =
-				templateData.templatePackageJsonContent;
-			const templateVersion = templateData.templateVersion;
 
 			await this.extractTemplate(projectDir, templateData);
 
-			if (templateVersion === constants.TemplateVersions.v2) {
-				this.alterPackageJsonData(projectDir, appId);
-			}
+      this.alterPackageJsonData(projectDir, appId);
+			this.$projectConfigService.writeDefaultConfig(projectDir, appId);
 
 			await this.ensureAppResourcesExist(projectDir);
-
-			if (templateVersion === constants.TemplateVersions.v1) {
-				this.mergeProjectAndTemplateProperties(
-					projectDir,
-					templatePackageJsonContent
-				); // merging dependencies from template (dev && prod)
-				this.removeMergedDependencies(projectDir, templatePackageJsonContent);
-			}
-
-			if (templateVersion === constants.TemplateVersions.v1) {
-				await this.$packageManager.uninstall(
-					templatePackageJsonContent.name,
-					{ save: true },
-					projectDir
-				);
-			}
 
 			// Install devDependencies and execute all scripts:
 			await this.$packageManager.install(projectDir, projectDir, {
@@ -214,39 +191,10 @@ export class ProjectService implements IProjectService {
 	): Promise<void> {
 		this.$fs.ensureDirectoryExists(projectDir);
 
-		switch (templateData.templateVersion) {
-			case constants.TemplateVersions.v1:
-				const projectData = this.$projectDataService.getProjectData(projectDir);
-				const destinationDirectory = projectData.getAppDirectoryPath(
-					projectDir
-				);
-				this.$fs.createDirectory(destinationDirectory);
-
-				this.$logger.trace(
-					`Copying application from '${templateData.templatePath}' into '${destinationDirectory}'.`
-				);
-				shelljs.cp(
-					"-R",
-					path.join(templateData.templatePath, "*"),
-					destinationDirectory
-				);
-				break;
-			case constants.TemplateVersions.v2:
-				const fullTemplateName = templateData.version
-					? `${templateData.templateName}@${templateData.version}`
-					: templateData.templateName;
-				await this.$pacoteService.extractPackage(fullTemplateName, projectDir);
-				break;
-			default:
-				this.$errors.fail(
-					format(
-						constants.ProjectTemplateErrors.InvalidTemplateVersionStringFormat,
-						templateData.templateName,
-						templateData.templateVersion
-					)
-				);
-				break;
-		}
+		const fullTemplateName = templateData.version
+			? `${templateData.templateName}@${templateData.version}`
+			: templateData.templateName;
+		await this.$pacoteService.extractPackage(fullTemplateName, projectDir);
 	}
 
 	@performanceLog()
@@ -277,154 +225,31 @@ export class ProjectService implements IProjectService {
 		}
 	}
 
-	private removeMergedDependencies(
-		projectDir: string,
-		templatePackageJsonData: any
-	): void {
-		const appDirectoryPath = this.$projectDataService.getProjectData(projectDir)
-			.appDirectoryPath;
-		const extractedTemplatePackageJsonPath = path.join(
-			appDirectoryPath,
-			constants.PACKAGE_JSON_FILE_NAME
-		);
-		for (const key in templatePackageJsonData) {
-			if (constants.PackageJsonKeysToKeep.indexOf(key) === -1) {
-				delete templatePackageJsonData[key];
-			}
-		}
-
-		this.$logger.trace("Deleting unnecessary information from template json.");
-		this.$fs.writeJson(
-			extractedTemplatePackageJsonPath,
-			templatePackageJsonData
-		);
-	}
-
-	private mergeProjectAndTemplateProperties(
-		projectDir: string,
-		templatePackageJsonData: any
-	): void {
-		if (templatePackageJsonData) {
-			const projectPackageJsonPath = path.join(
-				projectDir,
-				constants.PACKAGE_JSON_FILE_NAME
-			);
-			const projectPackageJsonData = this.$fs.readJson(projectPackageJsonPath);
-			this.$logger.trace(
-				"Initial project package.json data: ",
-				projectPackageJsonData
-			);
-			if (
-				projectPackageJsonData.dependencies ||
-				templatePackageJsonData.dependencies
-			) {
-				projectPackageJsonData.dependencies = this.mergeDependencies(
-					projectPackageJsonData.dependencies,
-					templatePackageJsonData.dependencies
-				);
-			}
-
-			if (
-				projectPackageJsonData.devDependencies ||
-				templatePackageJsonData.devDependencies
-			) {
-				projectPackageJsonData.devDependencies = this.mergeDependencies(
-					projectPackageJsonData.devDependencies,
-					templatePackageJsonData.devDependencies
-				);
-			}
-			this.$logger.trace(
-				"New project package.json data: ",
-				projectPackageJsonData
-			);
-			this.$fs.writeJson(projectPackageJsonPath, projectPackageJsonData);
-		} else {
-			this.$errors.fail(
-				`Couldn't find package.json data in installed template`
-			);
-		}
-	}
-
-	private mergeDependencies(
-		projectDependencies: IStringDictionary,
-		templateDependencies: IStringDictionary
-	): IStringDictionary {
-		// Cast to any when logging as logger thinks it can print only string.
-		// Cannot use toString() because we want to print the whole objects, not [Object object]
-		this.$logger.trace(
-			"Merging dependencies, projectDependencies are: ",
-			<any>projectDependencies,
-			" templateDependencies are: ",
-			<any>templateDependencies
-		);
-		projectDependencies = projectDependencies || {};
-		_.extend(projectDependencies, templateDependencies || {});
-		const sortedDeps: IStringDictionary = {};
-		const dependenciesNames = _.keys(projectDependencies).sort();
-		_.each(dependenciesNames, (key: string) => {
-			sortedDeps[key] = projectDependencies[key];
-		});
-		this.$logger.trace("Sorted merged dependencies are: ", <any>sortedDeps);
-		return sortedDeps;
-	}
-
-	private createPackageJson(projectDir: string, projectId: string): void {
+	@performanceLog()
+	private alterPackageJsonData(projectDir: string, appId: string): void {
 		const projectFilePath = path.join(
 			projectDir,
 			this.$staticConfig.PROJECT_FILE_NAME
 		);
 
-		this.$fs.writeJson(projectFilePath, this.packageJsonDefaultData);
+		let packageJsonData = this.$fs.readJson(projectFilePath);
 
-		this.setAppId(projectDir, projectId);
+		packageJsonData = {
+			...packageJsonData,
+			...this.packageJsonDefaultData,
+		};
+
+		this.$fs.writeJson(projectFilePath, packageJsonData);
 	}
 
 	private get packageJsonDefaultData(): IStringDictionary {
 		return {
+			private: "true",
 			description: "NativeScript Application",
 			license: "SEE LICENSE IN <your-license-filename>",
 			readme: "NativeScript Application",
 			repository: "<fill-your-repository-here>",
 		};
-	}
-
-	@performanceLog()
-	private alterPackageJsonData(projectDir: string, projectId: string): void {
-		const projectFilePath = path.join(
-			projectDir,
-			this.$staticConfig.PROJECT_FILE_NAME
-		);
-
-		const packageJsonData = this.$fs.readJson(projectFilePath);
-
-		// Remove the metadata keys from the package.json
-		let updatedPackageJsonData = _.omitBy(
-			packageJsonData,
-			(value: any, key: string) =>
-				_.startsWith(key, "_") ||
-				TemplatesV2PackageJsonKeysToRemove.indexOf(key) !== -1
-		);
-		updatedPackageJsonData = _.merge(
-			updatedPackageJsonData,
-			this.packageJsonDefaultData
-		);
-
-		if (
-			updatedPackageJsonData.nativescript &&
-			updatedPackageJsonData.nativescript.templateVersion
-		) {
-			delete updatedPackageJsonData.nativescript.templateVersion;
-		}
-
-		this.$fs.writeJson(projectFilePath, updatedPackageJsonData);
-		this.setAppId(projectDir, projectId);
-	}
-
-	private setAppId(projectDir: string, projectId: string): void {
-    // this is what it should do:
-    // this.$projectConfigService.setValue("id", projectId);
-    this.$projectConfigService.setAppId(projectId, projectDir);
-		// this.$projectDataService.setNSValue(projectDir, "id", projectId);
 	}
 }
 injector.register("projectService", ProjectService);

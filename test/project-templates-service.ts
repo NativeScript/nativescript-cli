@@ -4,7 +4,6 @@ import { ProjectTemplatesService } from "../lib/services/project-templates-servi
 import { assert } from "chai";
 import * as path from "path";
 import * as constants from "../lib/constants";
-import { format } from "util";
 import {
 	INpmInstallResultInfo,
 	INodePackageManagerInstallOptions,
@@ -225,7 +224,7 @@ describe("project-templates-service", () => {
 					},
 					{
 						action: constants.TrackActionNames.UsingTemplate,
-						additionalData: `${templateName}${constants.AnalyticsEventLabelDelimiter}${constants.TemplateVersions.v1}`,
+						additionalData: templateName,
 					},
 				]);
 			});
@@ -251,7 +250,7 @@ describe("project-templates-service", () => {
 					},
 					{
 						action: constants.TrackActionNames.UsingTemplate,
-						additionalData: `${constants.ANALYTICS_LOCAL_TEMPLATE_PREFIX}${templateName}${constants.AnalyticsEventLabelDelimiter}${constants.TemplateVersions.v1}`,
+						additionalData: `${constants.ANALYTICS_LOCAL_TEMPLATE_PREFIX}${templateName}`,
 					},
 				]);
 			});
@@ -278,97 +277,9 @@ describe("project-templates-service", () => {
 					},
 					{
 						action: constants.TrackActionNames.UsingTemplate,
-						additionalData: `${constants.ANALYTICS_LOCAL_TEMPLATE_PREFIX}${templateName}${constants.AnalyticsEventLabelDelimiter}${constants.TemplateVersions.v1}`,
+						additionalData: `${constants.ANALYTICS_LOCAL_TEMPLATE_PREFIX}${templateName}`,
 					},
 				]);
-			});
-		});
-
-		describe("template version", () => {
-			it("is default when template does not have package.json", async () => {
-				const testInjector = createTestInjector();
-				testInjector.resolve<IFileSystem>("fs").exists = (filePath: string) =>
-					false;
-
-				const projectTemplatesService = testInjector.resolve<
-					IProjectTemplatesService
-				>("projectTemplatesService");
-				const {
-					templateVersion,
-				} = await projectTemplatesService.prepareTemplate(
-					"typescript",
-					"tempFolder"
-				);
-				assert.strictEqual(templateVersion, constants.TemplateVersions.v1);
-			});
-
-			it("is default when template does not have nativescript key in its package.json", async () => {
-				const testInjector = createTestInjector();
-				const projectTemplatesService = testInjector.resolve<
-					IProjectTemplatesService
-				>("projectTemplatesService");
-				const {
-					templateVersion,
-				} = await projectTemplatesService.prepareTemplate(
-					"typescript",
-					"tempFolder"
-				);
-				assert.strictEqual(templateVersion, constants.TemplateVersions.v1);
-			});
-
-			it("is default when template does not have templateVersion property in the nativescript key in its package.json", async () => {
-				const testInjector = createTestInjector({
-					packageJsonContent: { nativescript: {} },
-				});
-				const projectTemplatesService = testInjector.resolve<
-					IProjectTemplatesService
-				>("projectTemplatesService");
-				const {
-					templateVersion,
-				} = await projectTemplatesService.prepareTemplate(
-					"typescript",
-					"tempFolder"
-				);
-				assert.strictEqual(templateVersion, constants.TemplateVersions.v1);
-			});
-
-			it("is the one from template's package.json when it is valid version", async () => {
-				const testInjector = createTestInjector({
-					packageJsonContent: {
-						nativescript: { templateVersion: constants.TemplateVersions.v2 },
-					},
-				});
-				const projectTemplatesService = testInjector.resolve<
-					IProjectTemplatesService
-				>("projectTemplatesService");
-				const {
-					templateVersion,
-				} = await projectTemplatesService.prepareTemplate(
-					"typescript",
-					"tempFolder"
-				);
-				assert.strictEqual(templateVersion, constants.TemplateVersions.v2);
-			});
-
-			it("fails when the templateVersion is invalid", async () => {
-				const notSupportedVersionString = "not supported version";
-				const testInjector = createTestInjector({
-					packageJsonContent: {
-						nativescript: { templateVersion: notSupportedVersionString },
-					},
-				});
-				const projectTemplatesService = testInjector.resolve<
-					IProjectTemplatesService
-				>("projectTemplatesService");
-				const expectedError = format(
-					constants.ProjectTemplateErrors.InvalidTemplateVersionStringFormat,
-					`@nativescript/template-hello-world-ts@${compatibleTemplateVersion}`,
-					notSupportedVersionString
-				);
-				await assert.isRejected(
-					projectTemplatesService.prepareTemplate("typescript", "tempFolder"),
-					expectedError
-				);
 			});
 		});
 

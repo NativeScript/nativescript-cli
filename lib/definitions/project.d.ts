@@ -299,11 +299,20 @@ interface IProjectConfigService {
 	 * Get value for a given config key path
 	 * @param key the property key path
 	 */
-  getValue(key: string): any;
-  
-  detectInfo(projectDir?: string): { hasTS: boolean; hasJS: boolean, configJSFilePath: string; configTSFilePath: string };
+	getValue(key: string): any;
 
-  setAppId(projectId: string, projectDir?: string): void;
+	detectInfo(
+		projectDir?: string
+	): {
+		hasTS: boolean;
+		hasJS: boolean;
+		configJSFilePath: string;
+		configTSFilePath: string;
+	};
+
+	getDefaultTSConfig(appId: string): string;
+
+	writeDefaultConfig(projectDir?: string, appId?: string): void;
 }
 
 interface IAssetItem {
@@ -367,14 +376,6 @@ interface ITemplateData {
 	 * In case template is v2, will be null.
 	 */
 	templatePath: string;
-	/**
-	 * The templateVersion property from nativescript section inside package.json file
-	 * "nativescript": {
-			"id": "org.nativescript.app6",
-			"templateVersion": "v2"
-		}
-	 */
-	templateVersion: string;
 	/**
 	 * The whole content of package.json file
 	 */
