@@ -362,7 +362,7 @@ describe("project-templates-service", () => {
 				>("projectTemplatesService");
 				const expectedError = format(
 					constants.ProjectTemplateErrors.InvalidTemplateVersionStringFormat,
-					`tns-template-hello-world-ts@${compatibleTemplateVersion}`,
+					`@nativescript/template-hello-world-ts@${compatibleTemplateVersion}`,
 					notSupportedVersionString
 				);
 				await assert.isRejected(
@@ -384,7 +384,7 @@ describe("project-templates-service", () => {
 					name: "is correct when reserved package name with version is passed",
 					templateName: "typescript@1.0.0",
 					expectedVersion: "1.0.0",
-					expectedTemplateName: "tns-template-hello-world-ts",
+					expectedTemplateName: "@nativescript/template-hello-world-ts",
 				},
 				{
 					name: "is correct when scoped package name without version is passed",

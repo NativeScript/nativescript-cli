@@ -39,8 +39,8 @@ export class MigrateController
 	implements IMigrateController {
 	private static COMMON_MIGRATE_MESSAGE =
 		"not affect the codebase of the application and you might need to do additional changes manually – for more information, refer to the instructions in the following blog post: https://www.nativescript.org/blog/nativescript-6.0-application-migration";
-	private static UNABLE_TO_MIGRATE_APP_ERROR = `The current application is not compatible with NativeScript CLI 6.0.
-Use the \`tns migrate\` command to migrate the app dependencies to a form compatible with NativeScript 6.0.
+	private static UNABLE_TO_MIGRATE_APP_ERROR = `The current application is not compatible with NativeScript CLI 7.0.
+Use the \`ns migrate\` command to migrate the app dependencies to a form compatible with NativeScript 7.0.
 Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 	private static MIGRATE_FINISH_MESSAGE = `The \`tns migrate\` command does ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 
@@ -133,15 +133,15 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 			migrateAction: this.migrateNativeScriptVue.bind(this),
 		},
 		{
-			packageName: "nativescript-angular",
-			verifiedVersion: "8.0.2",
+			packageName: "@nativescript/angular",
+			verifiedVersion: "10.0.0",
 			shouldMigrateAction: async (
 				projectData: IProjectData,
 				allowInvalidVersions: boolean
 			) => {
 				const dependency = {
-					packageName: "nativescript-angular",
-					verifiedVersion: "8.0.2",
+					packageName: "@nativescript/angular",
+					verifiedVersion: "10.0.0",
 					isDev: false,
 				};
 				const result =
@@ -155,8 +155,6 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 			},
 			migrateAction: this.migrateNativeScriptAngular.bind(this),
 		},
-		{ packageName: "nativescript-permissions", verifiedVersion: "1.3.0" },
-		{ packageName: "nativescript-cardview", verifiedVersion: "3.2.0" },
 		{
 			packageName: "@nativescript/unit-test-runner",
 			verifiedVersion: "1.0.0",
@@ -183,17 +181,14 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 		{
 			packageName: MigrateController.typescriptPackageName,
 			isDev: true,
-			verifiedVersion: "3.4.5",
-		},
-		{ packageName: "nativescript-localize", verifiedVersion: "4.2.0" },
-		{ packageName: "nativescript-dev-babel", verifiedVersion: "0.2.1" },
-		{ packageName: "nativescript-nfc", verifiedVersion: "4.0.1" },
+			verifiedVersion: "3.9.0",
+		}
 	];
 
 	get verifiedPlatformVersions(): IDictionary<string> {
 		return {
-			[this.$devicePlatformsConstants.Android.toLowerCase()]: "6.0.0",
-			[this.$devicePlatformsConstants.iOS.toLowerCase()]: "6.0.1",
+			[this.$devicePlatformsConstants.Android.toLowerCase()]: "7.0.0",
+			[this.$devicePlatformsConstants.iOS.toLowerCase()]: "7.0.0",
 		};
 	}
 
@@ -809,68 +804,63 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 		const dependencies = [
 			{
 				packageName: "@angular/platform-browser-dynamic",
-				verifiedVersion: "8.0.0",
+				verifiedVersion: "10.0.0",
 				shouldAddIfMissing: true,
 			},
 			{
 				packageName: "@angular/common",
-				verifiedVersion: "8.0.0",
+				verifiedVersion: "10.0.0",
 				shouldAddIfMissing: true,
 			},
 			{
 				packageName: "@angular/compiler",
-				verifiedVersion: "8.0.0",
+				verifiedVersion: "10.0.0",
 				shouldAddIfMissing: true,
 			},
 			{
 				packageName: "@angular/core",
-				verifiedVersion: "8.0.0",
+				verifiedVersion: "10.0.0",
 				shouldAddIfMissing: true,
 			},
 			{
 				packageName: "@angular/forms",
-				verifiedVersion: "8.0.0",
-				shouldAddIfMissing: true,
-			},
-			{
-				packageName: "@angular/http",
-				verifiedVersion: "8.0.0-beta.10",
+				verifiedVersion: "10.0.0",
 				shouldAddIfMissing: true,
 			},
 			{
 				packageName: "@angular/platform-browser",
-				verifiedVersion: "8.0.0",
+				verifiedVersion: "10.0.0",
 				shouldAddIfMissing: true,
 			},
 			{
 				packageName: "@angular/router",
-				verifiedVersion: "8.0.0",
+				verifiedVersion: "10.0.0",
 				shouldAddIfMissing: true,
 			},
 			{
 				packageName: "rxjs",
-				verifiedVersion: "6.3.3",
+				verifiedVersion: "6.6.0",
 				shouldAddIfMissing: true,
 			},
 			{
 				packageName: "zone.js",
-				verifiedVersion: "0.9.1",
+				verifiedVersion: "0.11.1",
 				shouldAddIfMissing: true,
 			},
-			{ packageName: "@angular/animations", verifiedVersion: "8.0.0" },
+			{ packageName: "@angular/animations", verifiedVersion: "10.0.0" },
 			{
 				packageName: "@angular/compiler-cli",
-				verifiedVersion: "8.0.0",
+				verifiedVersion: "10.0.0",
 				isDev: true,
 			},
 			{
 				packageName: "@ngtools/webpack",
-				verifiedVersion: "8.0.0",
+				verifiedVersion: "10.0.0",
 				isDev: true,
 			},
 			{
 				packageName: "@angular-devkit/build-angular",
-				verifiedVersion: "0.800.3",
+				verifiedVersion: "0.1000.8",
 				isDev: true,
 			},
 		];

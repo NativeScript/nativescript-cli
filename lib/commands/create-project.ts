@@ -215,12 +215,12 @@ can skip this prompt next time using the --template option, or the --ng, --react
 			},
 			{
 				key: CreateProjectCommand.DrawerTemplateKey,
-				value: "tns-template-drawer-navigation",
+				value: "@nativescript/template-drawer-navigation",
 				description: CreateProjectCommand.DrawerTemplateDescription,
 			},
 			{
 				key: CreateProjectCommand.TabsTemplateKey,
-				value: "tns-template-tab-navigation",
+				value: "@nativescript/template-tab-navigation",
 				description: CreateProjectCommand.TabsTemplateDescription,
 			},
 		];
@@ -237,12 +237,12 @@ can skip this prompt next time using the --template option, or the --ng, --react
 			},
 			{
 				key: CreateProjectCommand.DrawerTemplateKey,
-				value: "tns-template-drawer-navigation-ts",
+				value: "@nativescript/template-drawer-navigation-ts",
 				description: CreateProjectCommand.DrawerTemplateDescription,
 			},
 			{
 				key: CreateProjectCommand.TabsTemplateKey,
-				value: "tns-template-tab-navigation-ts",
+				value: "@nativescript/template-tab-navigation-ts",
 				description: CreateProjectCommand.TabsTemplateDescription,
 			},
 		];
@@ -259,12 +259,12 @@ can skip this prompt next time using the --template option, or the --ng, --react
 			},
 			{
 				key: CreateProjectCommand.DrawerTemplateKey,
-				value: "tns-template-drawer-navigation-ng",
+				value: "@nativescript/template-drawer-navigation-ng",
 				description: CreateProjectCommand.DrawerTemplateDescription,
 			},
 			{
 				key: CreateProjectCommand.TabsTemplateKey,
-				value: "tns-template-tab-navigation-ng",
+				value: "@nativescript/template-tab-navigation-ng",
 				description: CreateProjectCommand.TabsTemplateDescription,
 			},
 		];
@@ -288,17 +288,17 @@ can skip this prompt next time using the --template option, or the --ng, --react
 		const templates = [
 			{
 				key: CreateProjectCommand.BlankTemplateKey,
-				value: "tns-template-blank-vue",
+				value: "@nativescript/template-blank-vue",
 				description: CreateProjectCommand.BlankTemplateDescription,
 			},
 			{
 				key: CreateProjectCommand.DrawerTemplateKey,
-				value: "tns-template-drawer-navigation-vue",
+				value: "@nativescript/template-drawer-navigation-vue",
 				description: CreateProjectCommand.DrawerTemplateDescription,
 			},
 			{
 				key: CreateProjectCommand.TabsTemplateKey,
-				value: "tns-template-tab-navigation-vue",
+				value: "@nativescript/template-tab-navigation-vue",
 				description: CreateProjectCommand.TabsTemplateDescription,
 			},
 		];

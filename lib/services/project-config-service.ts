@@ -30,7 +30,14 @@ export class ProjectConfigService implements IProjectConfigService {
 		return this.$injector.resolve("projectHelper");
 	}
 
-	public readConfig(projectDir?: string): INsConfig {
+	public detectInfo(
+		projectDir?: string
+	): {
+		hasTS: boolean;
+		hasJS: boolean;
+		configJSFilePath: string;
+		configTSFilePath: string;
+	} {
 		const configJSFilePath = path.join(
 			projectDir || this.projectHelper.projectDir,
 			CONFIG_FILE_NAME_JS
@@ -39,7 +46,6 @@ export class ProjectConfigService implements IProjectConfigService {
 			projectDir || this.projectHelper.projectDir,
 			CONFIG_FILE_NAME_TS
 		);
-
 		const hasTS = this.$fs.exists(configTSFilePath);
 		const hasJS = this.$fs.exists(configJSFilePath);
 
@@ -54,6 +60,19 @@ export class ProjectConfigService implements IProjectConfigService {
 				`You have both a ${CONFIG_FILE_NAME_JS} and ${CONFIG_FILE_NAME_TS} file. Defaulting to ${CONFIG_FILE_NAME_TS}.`
 			);
 		}
+
+		return {
+			hasTS,
+			hasJS,
+			configJSFilePath,
+			configTSFilePath,
+		};
+	}
+
+	public readConfig(projectDir?: string): INsConfig {
+		const { hasTS, configJSFilePath, configTSFilePath } = this.detectInfo(
+			projectDir
+		);
 
 		let config: INsConfig;
 
@@ -83,6 +102,22 @@ export class ProjectConfigService implements IProjectConfigService {
 
 	public getValue(key: string): any {
 		return _.get(this.readConfig(), key);
+	}
+
+  // TODO: improve to set any value
+	// public setValue(projectDir?: string) {
+	public setAppId(projectId: string, projectDir?: string) {
+		const { hasTS, configJSFilePath, configTSFilePath } = this.detectInfo(
+			projectDir
+		);
+
+		const configPath = hasTS ? configTSFilePath : configJSFilePath;
+
+		const rawSource = this.$fs.readText(configPath);
+		this.$fs.writeFile(
+			configPath,
+			rawSource.replace(`org.nativescript.app`, projectId)
+		);
 	}
 }
 

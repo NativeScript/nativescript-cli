@@ -13,6 +13,7 @@ import {
 	IProjectSettings,
 	IProjectCreationSettings,
 	ITemplateData,
+  IProjectConfigService,
 } from "../definitions/project";
 import {
 	INodePackageManager,
@@ -37,7 +38,8 @@ export class ProjectService implements IProjectService {
 		private $fs: IFileSystem,
 		private $logger: ILogger,
 		private $pacoteService: IPacoteService,
-		private $projectDataService: IProjectDataService,
+    private $projectDataService: IProjectDataService,
+    private $projectConfigService: IProjectConfigService,
 		private $projectHelper: IProjectHelper,
 		private $projectNameService: IProjectNameService,
 		private $projectTemplatesService: IProjectTemplatesService,
@@ -419,7 +421,10 @@ export class ProjectService implements IProjectService {
 	}
 
 	private setAppId(projectDir: string, projectId: string): void {
-		this.$projectDataService.setNSValue(projectDir, "id", projectId);
+    // this is what it should do:
+    // this.$projectConfigService.setValue("id", projectId);
+    this.$projectConfigService.setAppId(projectId, projectDir);
+		// this.$projectDataService.setNSValue(projectDir, "id", projectId);
 	}
 }
 injector.register("projectService", ProjectService);

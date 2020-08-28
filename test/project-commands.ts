@@ -262,7 +262,7 @@ describe("Project commands tests", () => {
 
 			assert.deepStrictEqual(
 				selectedTemplateName,
-				"tns-template-hello-world-ng"
+				"@nativescript/template-hello-world-ng"
 			);
 			assert.equal(validateProjectCallsCount, 1);
 			assert.isTrue(createProjectCalledWithForce);
@@ -278,7 +278,7 @@ describe("Project commands tests", () => {
 
 			assert.deepStrictEqual(
 				selectedTemplateName,
-				"tns-template-drawer-navigation-ts"
+				"@nativescript/template-drawer-navigation-ts"
 			);
 			assert.equal(validateProjectCallsCount, 1);
 			assert.isTrue(createProjectCalledWithForce);
@@ -294,7 +294,7 @@ describe("Project commands tests", () => {
 
 			assert.deepStrictEqual(
 				selectedTemplateName,
-				"tns-template-tab-navigation"
+				"@nativescript/template-tab-navigation"
 			);
 			assert.equal(validateProjectCallsCount, 1);
 			assert.isTrue(createProjectCalledWithForce);
@@ -310,7 +310,7 @@ describe("Project commands tests", () => {
 
 			assert.deepStrictEqual(
 				selectedTemplateName,
-				"tns-template-drawer-navigation-vue"
+				"@nativescript/template-drawer-navigation-vue"
 			);
 			assert.equal(validateProjectCallsCount, 1);
 			assert.isTrue(createProjectCalledWithForce);
@@ -324,7 +324,7 @@ describe("Project commands tests", () => {
 
 			await createProjectCommand.execute(dummyArgs);
 
-			assert.deepStrictEqual(selectedTemplateName, "tns-template-blank-react");
+			assert.deepStrictEqual(selectedTemplateName, "@nativescript/template-blank-react");
 			assert.equal(validateProjectCallsCount, 1);
 			assert.isTrue(createProjectCalledWithForce);
 		});
