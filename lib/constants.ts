@@ -297,15 +297,15 @@ export class SubscribeForNewsletterMessages {
 		":";
 }
 
-export class TemplateVersions {
-	public static v1 = "v1";
-	public static v2 = "v2";
-}
+// export class TemplateVersions {
+// 	public static v1 = "v1";
+// 	public static v2 = "v2";
+// }
 
-export class ProjectTemplateErrors {
-	public static InvalidTemplateVersionStringFormat =
-		"The template '%s' has a NativeScript version '%s' that is not supported. Unable to create project from it.";
-}
+// export class ProjectTemplateErrors {
+// 	public static InvalidTemplateVersionStringFormat =
+// 		"The template '%s' has a NativeScript version '%s' that is not supported. Unable to create project from it.";
+// }
 
 export class Hooks {
 	public static createProject = "createProject";

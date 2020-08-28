@@ -30,6 +30,19 @@ export class ProjectConfigService implements IProjectConfigService {
 		return this.$injector.resolve("projectHelper");
 	}
 
+	public getDefaultTSConfig(appId: string = "org.nativescript.app") {
+		return `import { NativeScriptConfig } from '@nativescript/core';
+
+export default {
+  id: '${appId}',
+  appResourcesPath: 'App_Resources',
+  android: {
+    v8Flags: '--expose_gc',
+    markingMode: 'none'
+  }
+} as NativeScriptConfig;`.trim();
+	}
+
 	public detectInfo(
 		projectDir?: string
 	): {
@@ -104,20 +117,13 @@ export class ProjectConfigService implements IProjectConfigService {
 		return _.get(this.readConfig(), key);
 	}
 
-  // TODO: improve to set any value
-	// public setValue(projectDir?: string) {
-	public setAppId(projectId: string, projectDir?: string) {
-		const { hasTS, configJSFilePath, configTSFilePath } = this.detectInfo(
-			projectDir
+	public writeDefaultConfig(projectDir: string, appId?: string) {
+		const configTSFilePath = path.join(
+			projectDir || this.projectHelper.projectDir,
+			CONFIG_FILE_NAME_TS
 		);
 
-		const configPath = hasTS ? configTSFilePath : configJSFilePath;
-
-		const rawSource = this.$fs.readText(configPath);
-		this.$fs.writeFile(
-			configPath,
-			rawSource.replace(`org.nativescript.app`, projectId)
-		);
+		this.$fs.writeFile(configTSFilePath, this.getDefaultTSConfig(appId));
 	}
 }
 

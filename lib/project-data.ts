@@ -262,7 +262,7 @@ export class ProjectData implements IProjectData {
 			return this.nsConfig[constants.CONFIG_NS_APP_ENTRY];
 		}
 
-		return constants.APP_FOLDER_NAME;
+		return constants.SRC_DIR;
 	}
 
 	public getNsConfigRelativePath(): string {
