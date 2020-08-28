@@ -129,15 +129,15 @@ export class ReleaseType {
 }
 
 export const RESERVED_TEMPLATE_NAMES: IStringDictionary = {
-	default: "tns-template-hello-world",
-	javascript: "tns-template-hello-world",
-	tsc: "tns-template-hello-world-ts",
-	vue: "tns-template-blank-vue",
-	typescript: "tns-template-hello-world-ts",
-	ng: "tns-template-hello-world-ng",
-	angular: "tns-template-hello-world-ng",
-	react: "tns-template-blank-react",
-	reactjs: "tns-template-blank-react",
+	default: "@nativescript/template-hello-world",
+	javascript: "@nativescript/template-hello-world",
+	tsc: "@nativescript/template-hello-world-ts",
+	vue: "@nativescript/template-blank-vue",
+	typescript: "@nativescript/template-hello-world-ts",
+	ng: "@nativescript/template-hello-world-ng",
+	angular: "@nativescript/template-hello-world-ng",
+	react: "@nativescript/template-blank-react",
+	reactjs: "@nativescript/template-blank-react",
 };
 
 export const ANALYTICS_LOCAL_TEMPLATE_PREFIX = "localTemplate_";

@@ -13,6 +13,7 @@ import {
 import { IProjectNameService } from "../lib/declarations";
 import { IInjector } from "../lib/common/definitions/yok";
 import { IDictionary, IFileSystem } from "../lib/common/declarations";
+import { ProjectConfigService } from "../lib/services/project-config-service";
 
 describe("projectService", () => {
 	describe("createProject", () => {
@@ -33,7 +34,9 @@ describe("projectService", () => {
 				writeJson: () => {},
 				deleteDirectory: () => {},
 				ensureDirectoryExists: () => {},
-				readJson: () => ({}),
+        readJson: () => ({}),
+        readText: (value?: string) => '',
+        writeFile: (value?: string) => {}
 			});
 			testInjector.register("logger", LoggerStub);
 			testInjector.register("projectDataService", {
@@ -46,7 +49,8 @@ describe("projectService", () => {
 			testInjector.register("projectData", {});
 			testInjector.register("projectNameService", {
 				ensureValidName: async () => opts.projectName,
-			});
+      });
+      testInjector.register("projectConfigService", ProjectConfigService);
 			testInjector.register("projectTemplatesService", {
 				prepareTemplate: async () => ({
 					templateName: constants.RESERVED_TEMPLATE_NAMES["default"],
@@ -153,13 +157,16 @@ describe("projectService", () => {
 			const testInjector = new yok.Yok();
 			testInjector.register("packageManager", {});
 			testInjector.register("errors", {});
-			testInjector.register("fs", {});
+			testInjector.register("fs", {
+        readText: (value?: string) => ''
+      });
 			testInjector.register("logger", {});
 			testInjector.register("projectDataService", {
 				getProjectData: (projectDir?: string): IProjectData => projectData,
 			});
 			testInjector.register("projectData", {});
-			testInjector.register("projectNameService", {});
+      testInjector.register("projectNameService", {});
+      testInjector.register("projectConfigService", ProjectConfigService);
 			testInjector.register("projectTemplatesService", {});
 			testInjector.register("staticConfig", {});
 			testInjector.register("projectHelper", {});

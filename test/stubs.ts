@@ -583,7 +583,15 @@ export class ProjectConfigServiceStub implements IProjectConfigService {
 
 	readConfig(projectDir?: string): INsConfig {
 		return this.config;
-	}
+  }
+  
+  detectInfo(projectDir?: string): { hasTS: boolean; hasJS: boolean, configJSFilePath: string; configTSFilePath: string } {
+    return { hasTS: false, hasJS: true, configJSFilePath: '', configTSFilePath: '' };
+  }
+
+  setAppId(projectId: string, projectDir?: string) {
+
+  }
 }
 
 export class AndroidPluginBuildServiceStub

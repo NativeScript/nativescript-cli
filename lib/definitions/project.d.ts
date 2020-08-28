@@ -299,7 +299,11 @@ interface IProjectConfigService {
 	 * Get value for a given config key path
 	 * @param key the property key path
 	 */
-	getValue(key: string): any;
+  getValue(key: string): any;
+  
+  detectInfo(projectDir?: string): { hasTS: boolean; hasJS: boolean, configJSFilePath: string; configTSFilePath: string };
+
+  setAppId(projectId: string, projectDir?: string): void;
 }
 
 interface IAssetItem {

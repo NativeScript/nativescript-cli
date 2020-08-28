@@ -13,11 +13,11 @@ Interactively creates a new NativeScript app based on a predefined template.
 
 Template | Synopsis
 ---------|---------
-JavaScript based | `$ tns create [<App Name>] [--js] [--path <Directory>] [--appid <App ID>]`
-TypeScript based | `$ tns create [<App Name>] --ts [--path <Directory>] [--appid <App ID>]`
-Angular based | `$ tns create [<App Name>] --ng [--path <Directory>] [--appid <App ID>]`
-Vue.js based | `$ tns create [<App Name>] --vue [--path <Directory>] [--appid <App ID>]`
-Custom template | `$ tns create [<App Name>] [--path <Directory>] [--appid <App ID>] --template <Template>`
+JavaScript based | `$ ns create [<App Name>] [--js] [--path <Directory>] [--appid <App ID>]`
+TypeScript based | `$ ns create [<App Name>] --ts [--path <Directory>] [--appid <App ID>]`
+Angular based | `$ ns create [<App Name>] --ng [--path <Directory>] [--appid <App ID>]`
+Vue.js based | `$ ns create [<App Name>] --vue [--path <Directory>] [--appid <App ID>]`
+Custom template | `$ ns create [<App Name>] [--path <Directory>] [--appid <App ID>] --template <Template>`
 
 ### Options
 
@@ -42,19 +42,19 @@ Below you can see a list of the recommended NativeScript starting templates and 
 
 Template | Command
 ---------|----------
-`JavaScript - Hello World`, `--js`, `--javascript` | tns create --template tns-template-hello-world
-`JavaScript - SideDrawer` | tns create --template tns-template-drawer-navigation
-`JavaScript - Tabs` | tns create --template tns-template-tab-navigation
-`TypeScript - Hello World`, `--ts`, `--tsc`, `--typescript` | tns create --template tns-template-hello-world-ts
-`TypeScript - SideDrawer` | tns create --template tns-template-drawer-navigation-ts
-`TypeScript - Tabs` | tns create --template tns-template-tab-navigation-ts
-`Angular - Hello World`, `--ng`, `--angular` | tns create --template tns-template-hello-world-ng
-`Angular - SideDrawer` | tns create --template tns-template-drawer-navigation-ng
-`Angular - Tabs` | tns create --template tns-template-tab-navigation-ng
-`React - Hello World`, `--react`, `--reactjs` | tns create --template tns-template-blank-react
-`Vue.js - Blank`, `--vue`, `--vuejs` | tns create --template tns-template-blank-vue
-`Vue.js - SideDrawer`, | tns create --template tns-template-drawer-navigation-vue
-`Vue.js - Tabs` | tns create --template tns-template-tab-navigation-vue
+`JavaScript - Hello World`, `--js`, `--javascript` | ns create --template @nativescript/template-hello-world
+`JavaScript - SideDrawer` | ns create --template @nativescript/template-drawer-navigation
+`JavaScript - Tabs` | ns create --template @nativescript/template-tab-navigation
+`TypeScript - Hello World`, `--ts`, `--tsc`, `--typescript` | ns create --template @nativescript/template-hello-world-ts
+`TypeScript - SideDrawer` | ns create --template @nativescript/template-drawer-navigation-ts
+`TypeScript - Tabs` | ns create --template @nativescript/template-tab-navigation-ts
+`Angular - Hello World`, `--ng`, `--angular` | ns create --template @nativescript/template-hello-world-ng
+`Angular - SideDrawer` | ns create --template @nativescript/template-drawer-navigation-ng
+`Angular - Tabs` | ns create --template @nativescript/template-tab-navigation-ng
+`React - Hello World`, `--react`, `--reactjs` | ns create --template @nativescript/template-blank-react
+`Vue.js - Blank`, `--vue`, `--vuejs` | ns create --template @nativescript/template-blank-vue
+`Vue.js - SideDrawer`, | ns create --template @nativescript/template-drawer-navigation-vue
+`Vue.js - Tabs` | ns create --template @nativescript/template-tab-navigation-vue
 
 ### Related Commands
 
