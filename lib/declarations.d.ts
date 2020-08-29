@@ -77,5 +77,7 @@ interface INativeScriptNode {
 }
 
 interface INativeScriptProjectPackageJson {
-	nativescript: INativeScriptNode;
+  nativescript: INativeScriptNode;
+  dependencies?: any;
+  devDependencies?: any;
 }

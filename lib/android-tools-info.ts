@@ -373,8 +373,17 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 			const pathToPackageJson = path.join(projectDir, Constants.PACKAGE_JSON);
 
 			if (this.fs.exists(pathToPackageJson)) {
-				const content = this.fs.readJson<INativeScriptProjectPackageJson>(pathToPackageJson);
-				runtimeVersion = content && content.nativescript && content.nativescript["tns-android"] && content.nativescript["tns-android"].version;
+        const content = this.fs.readJson<INativeScriptProjectPackageJson>(pathToPackageJson);
+        const scopedRuntime = "@nativescript/android";
+        const oldRuntime = "tns-android";
+        if (content) {
+          if (content.devDependencies && content.devDependencies[scopedRuntime]) {
+            runtimeVersion = content.devDependencies[scopedRuntime];
+          } else if (content.nativescript && content.nativescript[oldRuntime] && content.nativescript[oldRuntime].version) {
+            runtimeVersion = content && content.nativescript && content.nativescript[oldRuntime] && content.nativescript[oldRuntime].version;
+          }
+        }
+				
 			}
 		}
 

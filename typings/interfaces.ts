@@ -366,7 +366,7 @@ declare module NativeScriptDoctor {
 	interface ISysInfoData extends ICommonSysInfoData, IiOSSysInfoData, IAndroidSysInfoData { }
 
 	/**
-	 * Describes warning returned from nativescript-doctor check.
+	 * Describes warning returned from @nativescript/doctor check.
 	 */
 	interface IWarning {
 		/**

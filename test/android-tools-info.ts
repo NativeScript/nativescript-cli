@@ -33,7 +33,10 @@ describe("androidToolsInfo", () => {
 						"tns-android": {
 							version: runtimeVersion
 						}
-					}
+          },
+          devDependencies: {
+            "@nativescript/android": runtimeVersion
+          }
 				} : null;
 			},
 			readDirectory: (path: string) => {
@@ -231,7 +234,10 @@ describe("androidToolsInfo", () => {
 								"tns-android": {
 									version: runtimeVersion
 								}
-							}
+              },
+              devDependencies: {
+                "@nativescript/android": runtimeVersion
+              }
 						})
 				};
 

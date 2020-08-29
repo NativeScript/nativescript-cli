@@ -1,10 +1,10 @@
-# nativescript-doctor
+# @nativescript/doctor
 Library that helps identifying if the environment can be used for development of {N} apps.
 
 # Installation
 1. Using npm
 	```bash
-	$ npm install nativescript-doctor --save
+	$ npm install @nativescript/doctor --save
 	```
 
 # Requirements
@@ -14,7 +14,7 @@ Library that helps identifying if the environment can be used for development of
 * Module `doctor`:
 	- Usage:
 	```TypeScript
-	import { doctor } from "nativescript-doctor"
+	import { doctor } from "@nativescript/doctor"
 
 	async function main() {
 		const canExecuteLocalBuildForAndroid = await doctor.canExecuteLocalBuild("Android");
@@ -47,7 +47,7 @@ Library that helps identifying if the environment can be used for development of
 	}
 
 	/**
-	 * Describes warning returned from nativescript-doctor check.
+	 * Describes warning returned from @nativescript/doctor check.
 	 */
 	interface IWarning {
 		/**
@@ -73,7 +73,7 @@ Library that helps identifying if the environment can be used for development of
 * Module `sysInfo`:
 	- Usage:
 	```TypeScript
-	import { sysInfo, setShouldCacheSysInfo } from "nativescript-doctor";
+	import { sysInfo, setShouldCacheSysInfo } from "@nativescript/doctor";
 
 	async function main() {
 		// The default value is true. If set to false the result of each check for each element
@@ -451,7 +451,7 @@ Library that helps identifying if the environment can be used for development of
 * Module `androidToolsInfo`:
 	- Usage:
 	```TypeScript
-	import { androidToolsInfo } from "nativescript-doctor"
+	import { androidToolsInfo } from "@nativescript/doctor"
 
 	function main() {
 		const projectDir = "/Users/username/myProject";
@@ -542,7 +542,7 @@ Library that helps identifying if the environment can be used for development of
 * Module `constants`:
 	- Usage:
 	```TypeScript
-	import { constants } from "nativescript-doctor"
+	import { constants } from "@nativescript/doctor"
 
 	function main() {
 		for(let constantName in constants) {
