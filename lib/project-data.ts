@@ -40,7 +40,11 @@ export class ProjectData implements IProjectData {
 		},
 		{
 			type: constants.ProjectTypes.NgFlavorName,
-			requiredDependencies: ["@angular/core", "nativescript-angular"],
+			requiredDependencies: [
+				"@angular/core",
+				"nativescript-angular",
+				"@nativescript/angular",
+			],
 		},
 		{
 			type: constants.ProjectTypes.VueFlavorName,
@@ -147,7 +151,7 @@ export class ProjectData implements IProjectData {
 			);
 		}
 
-		if (nsConfig) {
+		if (nsConfig && packageJsonData) {
 			this.projectDir = projectDir;
 			this.projectName = this.$projectHelper.sanitizeName(
 				path.basename(projectDir)
@@ -291,6 +295,7 @@ export class ProjectData implements IProjectData {
 			ios: config.id,
 			android: config.id,
 		};
+
 		if (config.ios && config.ios.id) {
 			identifier.ios = config.ios.id;
 		}

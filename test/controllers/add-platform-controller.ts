@@ -32,12 +32,6 @@ function createInjector(data?: { latestFrameworkVersion: string }) {
 	injector.register("userSettingsService", {
 		getSettingValue: async (settingName: string): Promise<void> => undefined,
 	});
-
-	injector.register("pacoteService", {
-		extractPackage: async (name: string): Promise<void> => {
-			// extractedPackageFromPacote = name;
-		},
-	});
 	injector.register("tempService", TempServiceStub);
 
 	const logger = injector.resolve("logger");

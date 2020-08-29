@@ -34,9 +34,9 @@ describe("projectService", () => {
 				writeJson: () => {},
 				deleteDirectory: () => {},
 				ensureDirectoryExists: () => {},
-        readJson: () => ({}),
-        readText: (value?: string) => '',
-        writeFile: (value?: string) => {}
+				readJson: () => ({}),
+				readText: (value?: string) => "",
+				writeFile: (value?: string) => {},
 			});
 			testInjector.register("logger", LoggerStub);
 			testInjector.register("projectDataService", {
@@ -49,8 +49,8 @@ describe("projectService", () => {
 			testInjector.register("projectData", {});
 			testInjector.register("projectNameService", {
 				ensureValidName: async () => opts.projectName,
-      });
-      testInjector.register("projectConfigService", ProjectConfigService);
+			});
+			testInjector.register("projectConfigService", ProjectConfigService);
 			testInjector.register("projectTemplatesService", {
 				prepareTemplate: async () => ({
 					templateName: constants.RESERVED_TEMPLATE_NAMES["default"],
@@ -158,15 +158,15 @@ describe("projectService", () => {
 			testInjector.register("packageManager", {});
 			testInjector.register("errors", {});
 			testInjector.register("fs", {
-        readText: (value?: string) => ''
-      });
+				readText: (value?: string) => "",
+			});
 			testInjector.register("logger", {});
 			testInjector.register("projectDataService", {
 				getProjectData: (projectDir?: string): IProjectData => projectData,
 			});
 			testInjector.register("projectData", {});
-      testInjector.register("projectNameService", {});
-      testInjector.register("projectConfigService", ProjectConfigService);
+			testInjector.register("projectNameService", {});
+			testInjector.register("projectConfigService", ProjectConfigService);
 			testInjector.register("projectTemplatesService", {});
 			testInjector.register("staticConfig", {});
 			testInjector.register("projectHelper", {});

@@ -4,7 +4,6 @@ import {
 	PackageInstallationManagerStub,
 } from "../../stubs";
 import { AddPlatformService } from "../../../lib/services/platform/add-platform-service";
-import { PacoteService } from "../../../lib/services/pacote-service";
 import { assert } from "chai";
 import * as _ from "lodash";
 import { INativePrepare, IProjectData } from "../../../lib/definitions/project";
@@ -51,13 +50,14 @@ describe("AddPlatformService", () => {
 		});
 
 		_.each(["ios", "android"], (platform) => {
-			it(`should fail if unable to extract runtime package for ${platform}`, async () => {
+			it(`should fail if unable to install runtime package for ${platform}`, async () => {
 				const errorMessage = "Pacote service unable to extract package";
 
-				const pacoteService: PacoteService = injector.resolve("pacoteService");
-				pacoteService.extractPackage = async (): Promise<void> => {
-					throw new Error(errorMessage);
+				const packageManager = injector.resolve("packageManager");
+				packageManager.install = () => {
+					return Promise.reject(errorMessage);
 				};
+
 				const platformsDataService = injector
 					.resolve("platformsDataService")
 					.getPlatformData(platform, projectData);

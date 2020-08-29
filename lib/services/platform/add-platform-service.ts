@@ -1,29 +1,28 @@
 import * as path from "path";
 import {
+	AnalyticsEventLabelDelimiter,
 	PROJECT_FRAMEWORK_FOLDER_NAME,
 	TrackActionNames,
-	AnalyticsEventLabelDelimiter,
 } from "../../constants";
 import { performanceLog } from "../../common/decorators";
 import {
+	IAddPlatformData,
 	IAddPlatformService,
 	IPlatformData,
-	IAddPlatformData,
 } from "../../definitions/platform";
 import { IProjectData } from "../../definitions/project"; //IProjectDataService
-import { IFileSystem, IAnalyticsService } from "../../common/declarations";
+import { IAnalyticsService, IFileSystem } from "../../common/declarations";
 import { injector } from "../../common/yok";
 import { IPackageManager } from "../../declarations";
 
 export class AddPlatformService implements IAddPlatformService {
 	constructor(
 		private $fs: IFileSystem,
-		private $pacoteService: IPacoteService,
+		// private $pacoteService: IPacoteService,
 		// private $projectDataService: IProjectDataService,
 		private $packageManager: IPackageManager,
 		private $terminalSpinnerService: ITerminalSpinnerService,
-		private $analyticsService: IAnalyticsService,
-		private $tempService: ITempService
+		private $analyticsService: IAnalyticsService // private $tempService: ITempService
 	) {}
 
 	public async addPlatformSafe(
@@ -37,50 +36,20 @@ export class AddPlatformService implements IAddPlatformService {
 		try {
 			spinner.start();
 
-			let frameworkDirPath: string;
-			let frameworkVersion: string;
-			if (addPlatformData.frameworkPath) {
-				frameworkDirPath = await this.extractPackage(packageToInstall);
-				const frameworkPackageJsonContent = this.$fs.readJson(
-					path.join(frameworkDirPath, "..", "package.json")
-				);
-				frameworkVersion = frameworkPackageJsonContent.version;
+			// const frameworkDirPath = addPlatformData.frameworkPath ?
+			// 	await this.extractPackage(packageToInstall)
+			// 	: await this.installPackage(projectData.projectDir, packageToInstall);
+			const frameworkDirPath = await this.installPackage(
+				projectData.projectDir,
+				packageToInstall
+			);
+			const frameworkPackageJsonContent = this.$fs.readJson(
+				path.join(frameworkDirPath, "..", "package.json")
+			);
+			const frameworkVersion = frameworkPackageJsonContent.version;
 
-				await this.setPlatformVersion(
-					platformData,
-					projectData,
-					frameworkVersion
-				);
-				await this.trackPlatformVersion(frameworkVersion, platformData);
-			} else {
-				const parts = packageToInstall.split("@");
-				let name: string;
-				let version: string;
-				if (parts.length > 2) {
-					// scoped runtimes
-					name = `@${parts[1]}`;
-					version = parts[2];
-				} else {
-					// original tns-* runtimes
-					name = parts[0];
-					version = parts[1];
-				}
-
-				frameworkDirPath = path.join(
-					projectData.projectDir,
-					"node_modules",
-					name,
-					PROJECT_FRAMEWORK_FOLDER_NAME
-				);
-				frameworkVersion = version;
-				if (!projectData.devDependencies) {
-					projectData.devDependencies = {};
-				}
-				if (!projectData.devDependencies[name]) {
-					await this.setPlatformVersion(platformData, projectData, version);
-				}
-				await this.trackPlatformVersion(version, platformData);
-			}
+			// await this.setPlatformVersion(platformData, projectData, frameworkVersion);
+			await this.trackPlatformVersion(frameworkVersion, platformData);
 
 			if (
 				!addPlatformData.nativePrepare ||
@@ -112,30 +81,49 @@ export class AddPlatformService implements IAddPlatformService {
 		projectData: IProjectData,
 		frameworkVersion: string
 	): Promise<void> {
-		// TODO: We may want to write the version to nativescript.config.js here
-		// const frameworkPackageNameData = { version: frameworkVersion };
-		// this.$projectDataService.setNSValue(projectData.projectDir, platformData.frameworkPackageName, frameworkPackageNameData);
-		await this.$packageManager.install(
-			`${platformData.frameworkPackageName}@${frameworkVersion}`,
+		await this.installPackage(
 			projectData.projectDir,
-			{
-				"save-dev": true,
-				disableNpmInstall: true,
-				frameworkPath: null,
-				ignoreScripts: false,
-			}
+			`${platformData.frameworkPackageName}@${frameworkVersion}`
 		);
 	}
 
-	private async extractPackage(pkg: string): Promise<string> {
-		const downloadedPackagePath = await this.$tempService.mkdirSync(
-			"runtimeDir"
+	// private async extractPackage(pkg: string): Promise<string> {
+	// 	const downloadedPackagePath = await this.$tempService.mkdirSync(
+	// 		"runtimeDir"
+	// 	);
+	// 	await this.$pacoteService.extractPackage(pkg, downloadedPackagePath);
+	// 	const frameworkDir = path.join(
+	// 		downloadedPackagePath,
+	// 		PROJECT_FRAMEWORK_FOLDER_NAME
+	// 	);
+	// 	return path.resolve(frameworkDir);
+	// }
+
+	private async installPackage(
+		projectDir: string,
+		pkg: string
+	): Promise<string> {
+		const installedPackage = await this.$packageManager.install(
+			pkg,
+			projectDir,
+			{
+				silent: true,
+				dev: true,
+				"save-dev": true,
+				"save-exact": true,
+			} as any
 		);
-		await this.$pacoteService.extractPackage(pkg, downloadedPackagePath);
-		const frameworkDir = path.join(
-			downloadedPackagePath,
-			PROJECT_FRAMEWORK_FOLDER_NAME
-		);
+
+		if (!installedPackage.name) {
+			return "";
+		}
+
+		const frameworkDir = require
+			.resolve(`${installedPackage.name}/package.json`, {
+				paths: [projectDir],
+			})
+			.replace("package.json", PROJECT_FRAMEWORK_FOLDER_NAME);
+
 		return path.resolve(frameworkDir);
 	}
 
@@ -177,4 +165,5 @@ export class AddPlatformService implements IAddPlatformService {
 		});
 	}
 }
+
 injector.register("addPlatformService", AddPlatformService);

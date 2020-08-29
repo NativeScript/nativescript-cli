@@ -1,33 +1,33 @@
 import * as path from "path";
 import { ProjectData } from "../project-data";
 import * as constants from "../constants";
+import {
+	AssetConstants,
+	CLI_RESOURCES_DIR_NAME,
+	MAIN_DIR,
+	NATIVESCRIPT_PROPS_INTERNAL_DELIMITER,
+	NODE_MODULES_FOLDER_NAME,
+	ProjectTypes,
+	RESOURCES_DIR,
+	SRC_DIR,
+} from "../constants";
 import { parseJson } from "../common/helpers";
 import { exported } from "../common/decorators";
 import {
-	NATIVESCRIPT_PROPS_INTERNAL_DELIMITER,
-	AssetConstants,
-	SRC_DIR,
-	RESOURCES_DIR,
-	MAIN_DIR,
-	CLI_RESOURCES_DIR_NAME,
-	ProjectTypes,
-	NODE_MODULES_FOLDER_NAME,
-} from "../constants";
-import {
-	IProjectDataService,
-	IProjectData,
-	IAssetsStructure,
 	IAssetGroup,
-	INsConfig,
-	IImageDefinitionsStructure,
-	IAssetSubGroup,
 	IAssetItem,
+	IAssetsStructure,
+	IAssetSubGroup,
+	IImageDefinitionsStructure,
+	INsConfig,
+	IProjectData,
+	IProjectDataService,
 } from "../definitions/project";
 import {
-	IStaticConfig,
 	IAndroidResourcesMigrationService,
+	IStaticConfig,
 } from "../declarations";
-import { IPluginsService, IBasePluginData } from "../definitions/plugins";
+import { IBasePluginData, IPluginsService } from "../definitions/plugins";
 import { IDictionary, IFileSystem, IProjectDir } from "../common/declarations";
 import * as _ from "lodash";
 import { IInjector } from "../common/definitions/yok";
@@ -289,6 +289,7 @@ export class ProjectDataService implements IProjectDataService {
 
 		return files;
 	}
+
 	private refreshProjectData(projectDir: string) {
 		if (this.projectDataCache[projectDir]) {
 			this.projectDataCache[projectDir].initializeProjectData(projectDir);
@@ -566,7 +567,7 @@ export class ProjectDataService implements IProjectDataService {
 		projectDir: string,
 		platform: constants.SupportedPlatform
 	): IBasePluginData {
-		return this.$pluginsService
+		const runtimePackage = this.$pluginsService
 			.getDependenciesFromPackageJson(projectDir)
 			.devDependencies.find((d) => {
 				if (platform === constants.PlatformTypes.ios) {
@@ -581,6 +582,41 @@ export class ProjectDataService implements IProjectDataService {
 					].includes(d.name);
 				}
 			});
+
+		if (runtimePackage) {
+			// in case we are using a local tgz for the runtime
+			//
+			if (runtimePackage.version.includes("tgz")) {
+				try {
+					const runtimePackageJsonPath = require.resolve(
+						`${runtimePackage.name}/package.json`,
+						{
+							paths: [projectDir],
+						}
+					);
+					runtimePackage.version = this.$fs.readJson(
+						runtimePackageJsonPath
+					).version;
+				} catch (err) {
+					runtimePackage.version = null;
+				}
+			}
+
+			return runtimePackage;
+		}
+
+		// default to the scoped runtimes
+		if (platform === constants.PlatformTypes.ios) {
+			return {
+				name: constants.SCOPED_IOS_RUNTIME_NAME,
+				version: null,
+			};
+		} else if (platform === constants.PlatformTypes.android) {
+			return {
+				name: constants.SCOPED_ANDROID_RUNTIME_NAME,
+				version: null,
+			};
+		}
 	}
 
 	@exported("projectDataService")
@@ -590,4 +626,5 @@ export class ProjectDataService implements IProjectDataService {
 		return JSON.stringify(config);
 	}
 }
+
 injector.register("projectDataService", ProjectDataService);

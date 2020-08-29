@@ -182,13 +182,13 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 			packageName: MigrateController.typescriptPackageName,
 			isDev: true,
 			verifiedVersion: "3.9.0",
-		}
+		},
 	];
 
 	get verifiedPlatformVersions(): IDictionary<string> {
 		return {
-			[this.$devicePlatformsConstants.Android.toLowerCase()]: "7.0.0",
-			[this.$devicePlatformsConstants.iOS.toLowerCase()]: "7.0.0",
+			[this.$devicePlatformsConstants.Android.toLowerCase()]: "6.5.3",
+			[this.$devicePlatformsConstants.iOS.toLowerCase()]: "6.5.2",
 		};
 	}
 

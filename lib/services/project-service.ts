@@ -161,7 +161,7 @@ export class ProjectService implements IProjectService {
 
 			await this.extractTemplate(projectDir, templateData);
 
-      this.alterPackageJsonData(projectDir, appId);
+			this.alterPackageJsonData(projectDir, appId);
 			this.$projectConfigService.writeDefaultConfig(projectDir, appId);
 
 			await this.ensureAppResourcesExist(projectDir);

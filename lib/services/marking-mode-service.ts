@@ -17,6 +17,7 @@ const MARKING_MODE_NONE_CONFIRM_MSG = `Do you want to switch your app to the rec
 More info about the reasons for this change can be found in the link below:
 https://www.nativescript.org/blog/markingmode-none-is-official-boost-android-performance-while-avoiding-memory-issues`;
 
+// TODO: update to work with new configs!
 export class MarkingModeService implements IMarkingModeService {
 	constructor(
 		private $fs: IFileSystem,
@@ -28,6 +29,11 @@ export class MarkingModeService implements IMarkingModeService {
 	public async handleMarkingModeFullDeprecation(
 		options: IMarkingModeFullDeprecationOptions
 	): Promise<void> {
+		this.$logger.error(
+			"handleMarkingModeFullDeprecation has not yet been updated to the new config handling!!!!"
+		);
+		return;
+
 		const { projectDir, skipWarnings, forceSwitch } = options;
 		const projectData = this.$projectDataService.getProjectData(projectDir);
 		const innerPackageJsonPath = path.join(

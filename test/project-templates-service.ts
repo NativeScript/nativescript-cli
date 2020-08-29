@@ -15,7 +15,6 @@ import { IInjector } from "../lib/common/definitions/yok";
 import { IAnalyticsService, IFileSystem } from "../lib/common/declarations";
 import { IEventActionData } from "../lib/common/definitions/google-analytics";
 
-let isDeleteDirectoryCalledForNodeModulesDir = false;
 const nativeScriptValidatedTemplatePath = "nsValidatedTemplatePath";
 const compatibleTemplateVersion = "1.2.3";
 
@@ -32,14 +31,7 @@ function createTestInjector(
 	injector.register("logger", stubs.LoggerStub);
 	injector.register("fs", {
 		exists: (pathToCheck: string) => false,
-
 		readJson: (pathToFile: string) => configuration.packageJsonContent || {},
-
-		deleteDirectory: (directory: string) => {
-			if (directory.indexOf("node_modules") !== -1) {
-				isDeleteDirectoryCalledForNodeModulesDir = true;
-			}
-		},
 	});
 
 	class NpmStub extends stubs.NodePackageManagerStub {
@@ -105,85 +97,68 @@ function createTestInjector(
 }
 
 describe("project-templates-service", () => {
-	beforeEach(() => {
-		isDeleteDirectoryCalledForNodeModulesDir = false;
-	});
-
 	describe("prepareTemplate", () => {
-		describe("throws error", () => {
-			it("when npm install fails", async () => {
-				const testInjector = createTestInjector({
-					shouldNpmInstallThrow: true,
-				});
-				const projectTemplatesService = testInjector.resolve<
-					IProjectTemplatesService
-				>("projectTemplatesService");
-				await assert.isRejected(
-					projectTemplatesService.prepareTemplate("invalidName", "tempFolder")
-				);
-			});
-		});
-
-		describe("returns correct path to template", () => {
-			it("when reserved template name is used", async () => {
-				const testInjector = createTestInjector();
-				const projectTemplatesService = testInjector.resolve<
-					IProjectTemplatesService
-				>("projectTemplatesService");
-				const { templatePath } = await projectTemplatesService.prepareTemplate(
-					"typescript",
-					"tempFolder"
-				);
-				assert.strictEqual(
-					path.basename(templatePath),
-					nativeScriptValidatedTemplatePath
-				);
-				assert.strictEqual(
-					isDeleteDirectoryCalledForNodeModulesDir,
-					true,
-					"When correct path is returned, template's node_modules directory should be deleted."
-				);
-			});
-
-			it("when reserved template name is used (case-insensitive test)", async () => {
-				const testInjector = createTestInjector();
-				const projectTemplatesService = testInjector.resolve<
-					IProjectTemplatesService
-				>("projectTemplatesService");
-				const { templatePath } = await projectTemplatesService.prepareTemplate(
-					"tYpEsCriPT",
-					"tempFolder"
-				);
-				assert.strictEqual(
-					path.basename(templatePath),
-					nativeScriptValidatedTemplatePath
-				);
-				assert.strictEqual(
-					isDeleteDirectoryCalledForNodeModulesDir,
-					true,
-					"When correct path is returned, template's node_modules directory should be deleted."
-				);
-			});
-
-			it("uses defaultTemplate when undefined is passed as parameter", async () => {
-				const testInjector = createTestInjector();
-				const projectTemplatesService = testInjector.resolve<
-					IProjectTemplatesService
-				>("projectTemplatesService");
-				const { templatePath } = await projectTemplatesService.prepareTemplate(
-					constants.RESERVED_TEMPLATE_NAMES["default"],
-					"tempFolder"
-				);
-				assert.strictEqual(
-					path.basename(templatePath),
-					nativeScriptValidatedTemplatePath
-				);
-				assert.strictEqual(
-					isDeleteDirectoryCalledForNodeModulesDir,
-					true,
-					"When correct path is returned, template's node_modules directory should be deleted."
-				);
-			});
+		// describe("returns correct path to template", () => {
+		// 	// it("when reserved template name is used", async () => {
+		// 	// 	const testInjector = createTestInjector();
+		// 	// 	const projectTemplatesService = testInjector.resolve<
+		// 	// 		IProjectTemplatesService
+		// 	// 	>("projectTemplatesService");
+		// 	// 	const { templatePath } = await projectTemplatesService.prepareTemplate(
+		// 	// 		"typescript",
+		// 	// 		"tempFolder"
+		// 	// 	);
+		// 	// 	assert.strictEqual(
+		// 	// 		path.basename(templatePath),
+		// 	// 		nativeScriptValidatedTemplatePath
+		// 	// 	);
+		// 	// 	assert.strictEqual(
+		// 	// 		isDeleteDirectoryCalledForNodeModulesDir,
+		// 	// 		true,
+		// 	// 		"When correct path is returned, template's node_modules directory should be deleted."
+		// 	// 	);
+		// 	// });
+		// 	//
+		// 	// it("when reserved template name is used (case-insensitive test)", async () => {
+		// 	// 	const testInjector = createTestInjector();
+		// 	// 	const projectTemplatesService = testInjector.resolve<
+		// 	// 		IProjectTemplatesService
+		// 	// 	>("projectTemplatesService");
+		// 	// 	const { templatePath } = await projectTemplatesService.prepareTemplate(
+		// 	// 		"tYpEsCriPT",
+		// 	// 		"tempFolder"
+		// 	// 	);
+		// 	// 	assert.strictEqual(
+		// 	// 		path.basename(templatePath),
+		// 	// 		nativeScriptValidatedTemplatePath
+		// 	// 	);
+		// 	// 	assert.strictEqual(
+		// 	// 		isDeleteDirectoryCalledForNodeModulesDir,
+		// 	// 		true,
+		// 	// 		"When correct path is returned, template's node_modules directory should be deleted."
+		// 	// 	);
+		// 	// });
+		//
+		//
+		// });
+		it("uses defaultTemplate when undefined is passed as parameter", async () => {
+			const testInjector = createTestInjector();
+			const projectTemplatesService = testInjector.resolve<
+				IProjectTemplatesService
+			>("projectTemplatesService");
+			const { templateName } = await projectTemplatesService.prepareTemplate(
+				undefined, //constants.RESERVED_TEMPLATE_NAMES["default"],
+				"tempFolder"
+			);
+			assert.strictEqual(
+				templateName,
+				constants.RESERVED_TEMPLATE_NAMES["default"]
+			);
+			// assert.strictEqual(
+			// 	isDeleteDirectoryCalledForNodeModulesDir,
+			// 	true,
+			// 	"When correct path is returned, template's node_modules directory should be deleted."
+			// );
 		});
 
 		describe("sends correct information to Google Analytics", () => {

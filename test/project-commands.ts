@@ -324,7 +324,10 @@ describe("Project commands tests", () => {
 
 			await createProjectCommand.execute(dummyArgs);
 
-			assert.deepStrictEqual(selectedTemplateName, "@nativescript/template-blank-react");
+			assert.deepStrictEqual(
+				selectedTemplateName,
+				"@nativescript/template-blank-react"
+			);
 			assert.equal(validateProjectCallsCount, 1);
 			assert.isTrue(createProjectCalledWithForce);
 		});
