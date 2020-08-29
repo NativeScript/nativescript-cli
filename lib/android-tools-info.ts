@@ -368,22 +368,33 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 	}
 
 	private getAndroidRuntimeVersionFromProjectDir(projectDir: string): string {
+		let runtimePackage: string = null;
 		let runtimeVersion: string = null;
 		if (projectDir && this.fs.exists(projectDir)) {
 			const pathToPackageJson = path.join(projectDir, Constants.PACKAGE_JSON);
 
 			if (this.fs.exists(pathToPackageJson)) {
-        const content = this.fs.readJson<INativeScriptProjectPackageJson>(pathToPackageJson);
-        const scopedRuntime = "@nativescript/android";
-        const oldRuntime = "tns-android";
-        if (content) {
-          if (content.devDependencies && content.devDependencies[scopedRuntime]) {
-            runtimeVersion = content.devDependencies[scopedRuntime];
-          } else if (content.nativescript && content.nativescript[oldRuntime] && content.nativescript[oldRuntime].version) {
-            runtimeVersion = content && content.nativescript && content.nativescript[oldRuntime] && content.nativescript[oldRuntime].version;
-          }
-        }
-				
+				const content = this.fs.readJson<INativeScriptProjectPackageJson>(pathToPackageJson);
+				const scopedRuntime = "@nativescript/android";
+				const oldRuntime = "tns-android";
+				if (content) {
+					if (content.devDependencies && content.devDependencies[scopedRuntime]) {
+						runtimePackage = scopedRuntime;
+						runtimeVersion = content.devDependencies[scopedRuntime];
+					} else if (content.nativescript && content.nativescript[oldRuntime] && content.nativescript[oldRuntime].version) {
+						runtimePackage = oldRuntime;
+						runtimeVersion = content && content.nativescript && content.nativescript[oldRuntime] && content.nativescript[oldRuntime].version;
+					}
+				}
+
+			}
+		}
+
+		if (runtimeVersion && runtimeVersion.includes('tgz')) {
+			try {
+				runtimeVersion = require(`${runtimePackage}/package.json`).version;
+			} catch (err) {
+				runtimeVersion = null;
 			}
 		}
 
