@@ -100,7 +100,7 @@
   },
   "analyze": true,
   "devDependencies": {
-    "@nativescript/doctor": "^2.0.2",
+    "@nativescript/doctor": "^2.0.3",
     "@types/chai": "4.2.12",
     "@types/chai-as-promised": "7.1.3",
     "@types/chokidar": "2.1.3",
