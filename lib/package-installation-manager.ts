@@ -1,20 +1,22 @@
 import * as path from "path";
-const semver = require("semver");
 import * as constants from "./constants";
 import {
+	INpmInstallOptions,
+	INpmInstallResultInfo,
 	IPackageInstallationManager,
 	IPackageManager,
 	IStaticConfig,
-	INpmInstallOptions,
-	INpmInstallResultInfo,
 } from "./declarations";
 import { IProjectDataService } from "./definitions/project";
 import {
 	IChildProcess,
-	ISettingsService,
+	IDictionary,
 	IFileSystem,
+	ISettingsService,
 } from "./common/declarations";
 import { injector } from "./common/yok";
+
+const semver = require("semver");
 
 export class PackageInstallationManager implements IPackageInstallationManager {
 	constructor(
@@ -143,6 +145,24 @@ export class PackageInstallationManager implements IPackageInstallationManager {
 				pathToSave,
 				version,
 				dependencyType
+			);
+		} catch (error) {
+			this.$logger.debug(error);
+
+			throw error;
+		}
+	}
+
+	public async uninstall(
+		packageToUninstall: string,
+		projectDir: string,
+		opts?: IDictionary<string | boolean>
+	): Promise<any> {
+		try {
+			return await this.$packageManager.uninstall(
+				packageToUninstall,
+				opts,
+				projectDir
 			);
 		} catch (error) {
 			this.$logger.debug(error);
@@ -308,4 +328,5 @@ export class PackageInstallationManager implements IPackageInstallationManager {
 		return data[version];
 	}
 }
+
 injector.register("packageInstallationManager", PackageInstallationManager);

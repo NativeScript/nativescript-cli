@@ -383,6 +383,14 @@ export class PackageInstallationManagerStub
 		return Promise.resolve("");
 	}
 
+	async uninstall(
+		packageName: string,
+		pathToSave?: string,
+		options?: INpmInstallOptions
+	): Promise<string> {
+		return Promise.resolve("");
+	}
+
 	async getLatestVersion(packageName: string): Promise<string> {
 		return Promise.resolve("");
 	}
@@ -583,14 +591,26 @@ export class ProjectConfigServiceStub implements IProjectConfigService {
 
 	readConfig(projectDir?: string): INsConfig {
 		return this.config;
-  }
-  
-  detectInfo(projectDir?: string): { hasTS: boolean; hasJS: boolean, configJSFilePath: string; configTSFilePath: string } {
-    return { hasTS: false, hasJS: true, configJSFilePath: '', configTSFilePath: '' };
-  }
+	}
 
-  getDefaultTSConfig(appId: string): string {
-    return `import { NativeScriptConfig } from '@nativescript/core';
+	detectInfo(
+		projectDir?: string
+	): {
+		hasTS: boolean;
+		hasJS: boolean;
+		configJSFilePath: string;
+		configTSFilePath: string;
+	} {
+		return {
+			hasTS: false,
+			hasJS: true,
+			configJSFilePath: "",
+			configTSFilePath: "",
+		};
+	}
+
+	getDefaultTSConfig(appId: string): string {
+		return `import { NativeScriptConfig } from '@nativescript/core';
 
     export default {
       id: '${appId}',
@@ -600,11 +620,9 @@ export class ProjectConfigServiceStub implements IProjectConfigService {
         markingMode: 'none'
       }
     } as NativeScriptConfig;`;
-  }
+	}
 
-  writeDefaultConfig(appId: string, projectDir?: string): void {
-
-  }
+	writeDefaultConfig(appId: string, projectDir?: string): void {}
 }
 
 export class AndroidPluginBuildServiceStub

@@ -15,7 +15,6 @@ import {
 	IAnalyticsService,
 	IDictionary,
 } from "../common/declarations";
-import * as _ from "lodash";
 import { injector } from "../common/yok";
 
 export class ProjectTemplatesService implements IProjectTemplatesService {
@@ -59,7 +58,6 @@ export class ProjectTemplatesService implements IProjectTemplatesService {
 		const templatePackageJsonContent = await this.getTemplatePackageJsonContent(
 			fullTemplateName
 		);
-		let templatePath = null;
 
 		const templateNameToBeTracked = this.getTemplateNameToBeTracked(
 			templateValue,
@@ -80,7 +78,6 @@ export class ProjectTemplatesService implements IProjectTemplatesService {
 
 		return {
 			templateName: templateValue,
-			templatePath,
 			templatePackageJsonContent,
 			version,
 		};

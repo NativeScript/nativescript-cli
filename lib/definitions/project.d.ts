@@ -128,6 +128,8 @@ interface INsConfigAndroid extends INsConfigPlaform {
 	discardUncaughtJsExceptions?: boolean;
 
 	enableLineBreakpoints?: boolean;
+
+	enableMultithreadedJavascript?: boolean;
 }
 
 interface INsConfig {
@@ -375,7 +377,7 @@ interface ITemplateData {
 	 * In case template is v1, will be {pathToProjectDir}/node_modules/{templateName}.
 	 * In case template is v2, will be null.
 	 */
-	templatePath: string;
+	// templatePath: string;
 	/**
 	 * The whole content of package.json file
 	 */

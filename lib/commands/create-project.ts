@@ -43,11 +43,12 @@ export class CreateProjectCommand implements ICommand {
 			(this.$options.tsc ||
 				this.$options.ng ||
 				this.$options.vue ||
+				this.$options.react ||
 				this.$options.js) &&
 			this.$options.template
 		) {
 			this.$errors.failWithHelp(
-				"You cannot use a flavor option like --ng, --vue, --tsc and --js together with --template."
+				"You cannot use a flavor option like --ng, --vue, --react, --tsc and --js together with --template."
 			);
 		}
 

@@ -125,7 +125,7 @@ interface IPackageManager extends INodePackageManager {
 }
 
 interface IPerformanceService {
-	// Will process the data based on the command opitons (--performance flag and user-reporting setting)
+	// Will process the data based on the command options (--performance flag and user-reporting setting)
 	processExecutionData(
 		methodInfo: string,
 		startTime: number,
@@ -142,6 +142,11 @@ interface IPackageInstallationManager {
 		packageName: string,
 		packageDir: string,
 		options?: INpmInstallOptions
+	): Promise<any>;
+	uninstall(
+		packageName: string,
+		packageDir: string,
+		options?: IDictionary<string | boolean>
 	): Promise<any>;
 	getLatestVersion(packageName: string): Promise<string>;
 	getNextVersion(packageName: string): Promise<string>;
@@ -344,36 +349,36 @@ interface INpmInstallCLIResult {
 interface INpm5InstallCliResult {
 	/**
 	 * Added dependencies. Note that whenever add a particular dependency with npm 5 it is listed inside of array with key "Added".
-	 * @type {INpmDependencyUpdateInfo[]}
+	 * @type {INpm5DependencyInfo[]}
 	 */
 	added: INpm5DependencyInfo[];
 	/**
 	 * Removed dependencies. Note that whenever remove a particular dependency with npm 5 it is listed inside of array with key "removed".
-	 * @type {INpmDependencyUpdateInfo[]}
+	 * @type {INpm5DependencyInfo[]}
 	 */
 	removed: INpm5DependencyInfo[];
 	/**
 	 * Updated dependencies. Note that whenever update a particular dependency with npm 5 it is listed inside of array with key "updated".
-	 * @type {INpmDependencyUpdateInfo[]}
+	 * @type {INpm5DependencyInfo[]}
 	 */
 	updated: INpm5DependencyInfo[];
 	/**
 	 * Moved dependencies. Note that whenever move a particular dependency with npm 5 it is listed inside of array with key "moved".
-	 * @type {INpmDependencyUpdateInfo[]}
+	 * @type {INpm5DependencyInfo[]}
 	 */
 	moved: INpm5DependencyInfo[];
 	/**
 	 * Failed dependencies. Note that whenever use npm 5 and the operation over particular dependency fail it is listed inside of array with key "failed".
-	 * @type {INpmDependencyUpdateInfo[]}
+	 * @type {INpm5DependencyInfo[]}
 	 */
 	failed: INpm5DependencyInfo[];
 	/**
 	 * Warnings. Note that whenever use npm 5 and the operation over particular dependency have warnings they are listed inside of array with key "warnings".
-	 * @type {INpmDependencyUpdateInfo[]}
+	 * @type {INpm5DependencyInfo[]}
 	 */
 	warnings: INpm5DependencyInfo[];
 	/**
-	 *Time elapsed.
+	 * Time elapsed.
 	 * @type {Number}
 	 */
 	elapsed: Number;
@@ -515,7 +520,7 @@ interface IApplicationPackage {
 }
 
 interface IOpener {
-	open(target: string, appname: string): void;
+	open(target: string, appName: string): void;
 }
 
 interface IBundleString {
@@ -748,7 +753,7 @@ interface IITMSData {
 }
 
 /**
- * Used for communicating with Xcode's iTMS Transporter tool.
+ * Used for communicating with Xcode iTMS Transporter tool.
  */
 interface IITMSTransporterService {
 	validate(): Promise<void>;
@@ -766,7 +771,7 @@ interface IITMSTransporterService {
 interface IAndroidToolsInfo {
 	/**
 	 * Provides information about installed Android SDKs, Build Tools, Support Library
-	 * and ANDROID_HOME environement variable.
+	 * and ANDROID_HOME environment variable.
 	 * @param {IProjectDir} config Object with a single property - projectDir. This is the root directory where NativeScript project is located.
 	 * @return {IAndroidToolsInfoData} Information about installed Android Tools and SDKs.
 	 */
@@ -879,6 +884,7 @@ interface IAppDebugSocketProxyFactory extends NodeJS.EventEmitter {
 	removeAllProxies(): void;
 }
 
+// tslint:disable-next-line:interface-name
 interface IiOSNotification extends NodeJS.EventEmitter {
 	getAttachRequest(appId: string, deviceId: string): string;
 	getReadyForAttach(appId: string): string;
@@ -886,6 +892,7 @@ interface IiOSNotification extends NodeJS.EventEmitter {
 	getAppRefreshStarted(appId: string): string;
 }
 
+// tslint:disable-next-line:interface-name
 interface IiOSSocketRequestExecutor {
 	executeAttachRequest(
 		device: Mobile.IiOSDevice,
@@ -959,9 +966,9 @@ interface IVersionsService {
 interface IProjectNameService {
 	/**
 	 * Ensures the passed project name is valid. If the project name is not valid prompts for actions.
-	 * @param {string} project name to be checked.
-	 * @param {IOptions} current command options.
-	 * @return {Promise<strng>} returns the selected name of the project.
+	 * @param {string} projectName project name to be checked.
+	 * @param {IOptions} validateOptions current command options.
+	 * @return {Promise<string>} returns the selected name of the project.
 	 */
 	ensureValidName(
 		projectName: string,
@@ -997,7 +1004,7 @@ interface IXcprojService {
  */
 interface IXcprojInfo {
 	/**
-	 * determines whether the system needs xcproj to execute ios builds sucessfully
+	 * determines whether the system needs xcproj to execute ios builds successfully
 	 */
 	shouldUseXcproj: boolean;
 	/**
@@ -1005,7 +1012,7 @@ interface IXcprojInfo {
 	 */
 	cocoapodVer: string;
 	/**
-	 * Xcode's version
+	 * Xcode version
 	 */
 	xcodeVersion: IVersionData;
 	/**
@@ -1032,7 +1039,7 @@ interface IXcconfigService {
 
 	/**
 	 * Merges the content of source file into destination file
-	 * @param sourceFile The content of thes source file
+	 * @param sourceFile The content of the source file
 	 * @param destinationFile The content of the destination file
 	 * @returns {Promise<void>}
 	 */
@@ -1046,6 +1053,7 @@ interface IBundleValidatorHelper {
 	/**
 	 * Validates bundling options.
 	 * In case when minSupportedVersion is provided, gets the current version of @nativescript/webpack from package.json and compares with the provided version.
+	 * @param {IProjectData} projectData
 	 * @param {string} minSupportedVersion the minimum supported version of @nativescript/webpack
 	 * @return {void}
 	 */
@@ -1206,7 +1214,7 @@ interface IPlatformCommandHelper {
 	cleanPlatforms(
 		platforms: string[],
 		projectData: IProjectData,
-		framworkPath: string
+		frameworkPath: string
 	): Promise<void>;
 	removePlatforms(
 		platforms: string[],

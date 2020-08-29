@@ -1,6 +1,6 @@
 {
   "name": "nativescript",
-  "version": "7.0.0-rc.0",
+  "version": "7.0.0-rc.2",
   "lockfileVersion": 1,
   "requires": true,
   "dependencies": {
@@ -412,9 +412,9 @@
       }
     },
     "@nativescript/doctor": {
-      "version": "2.0.1",
-      "resolved": "https://registry.npmjs.org/@nativescript/doctor/-/doctor-2.0.1.tgz",
-      "integrity": "sha512-TT74AWIc9k5N4wCf63FqdQHqvr4UP1TPnesLPkCmHxGgFe/Dswbr2wV/E0ae3gFfczARgRFadzNGQCQQ7fGzCQ==",
+      "version": "2.0.2",
+      "resolved": "https://registry.npmjs.org/@nativescript/doctor/-/doctor-2.0.2.tgz",
+      "integrity": "sha512-mw25xFf6WxIEj0aeh6C3e8/c3jv9zEYx41R8oQnjrpg2lgb+lbJ8QGRS88CSrHMxNND+lWvJJoahARcM6jPVwA==",
       "dev": true,
       "requires": {
         "lodash": "4.17.15",

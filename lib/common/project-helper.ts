@@ -1,6 +1,6 @@
 import * as path from "path";
 import * as _ from "lodash";
-import { IProjectHelper, IFileSystem } from "./declarations";
+import { IErrors, IFileSystem, IProjectHelper } from "./declarations";
 import { IOptions } from "../declarations";
 import { injector } from "./yok";
 
@@ -9,7 +9,7 @@ export class ProjectHelper implements IProjectHelper {
 		private $logger: ILogger,
 		private $fs: IFileSystem,
 		private $staticConfig: Config.IStaticConfig,
-		// private $errors: IErrors,
+		private $errors: IErrors,
 		private $options: IOptions
 	) {}
 
@@ -73,19 +73,18 @@ export class ProjectHelper implements IProjectHelper {
 	}
 
 	private isProjectFileCorrect(projectFilePath: string): boolean {
-		// this is no longer correct, since we have moved the "nativescript" key out from package.json
+		try {
+			const fileContent = this.$fs.readText(projectFilePath);
+			return fileContent.includes("nativescript");
+		} catch (err) {
+			this.$errors.fail(
+				"The project file is corrupted. Additional technical information: %s",
+				err
+			);
+		}
 
-		// if (this.$staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE) {
-		// 	try {
-		// 		const fileContent = this.$fs.readJson(projectFilePath);
-		// 		const clientSpecificData = fileContent[this.$staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE] && fileContent[this.$staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE].id;
-		// 		return !!clientSpecificData;
-		// 	} catch (err) {
-		// 		this.$errors.fail("The project file is corrupted. Additional technical information: %s", err);
-		// 	}
-		// }
-
-		return true;
+		return false;
 	}
 }
+
 injector.register("projectHelper", ProjectHelper);

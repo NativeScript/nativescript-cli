@@ -106,10 +106,14 @@ export class PlatformCommandHelper implements IPlatformCommandHelper {
 					platform.toLowerCase()
 				);
 				this.$fs.deleteDirectory(platformDir);
-				this.$projectDataService.removeNSProperty(
-					projectData.projectDir,
-					platformData.frameworkPackageName
+				await this.$packageInstallationManager.uninstall(
+					platformData.frameworkPackageName,
+					projectData.projectDir
 				);
+				// this.$projectDataService.removeNSProperty(
+				// 	projectData.projectDir,
+				// 	platformData.frameworkPackageName
+				// );
 
 				this.$logger.info(`Platform ${platform} successfully removed.`);
 			} catch (err) {
