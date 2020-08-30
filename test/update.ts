@@ -12,6 +12,7 @@ const projectFolder = "test";
 function createTestInjector(projectDir: string = projectFolder): IInjector {
 	const testInjector: IInjector = new yok.Yok();
 	testInjector.register("logger", stubs.LoggerStub);
+	testInjector.register("markingModeService", stubs.MarkingModeServiceStub);
 	testInjector.register("options", Options);
 	testInjector.register("analyticsService", {
 		trackException: async (): Promise<void> => undefined,
