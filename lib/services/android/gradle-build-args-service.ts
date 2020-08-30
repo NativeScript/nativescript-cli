@@ -5,6 +5,7 @@ import { IAndroidToolsInfo } from "../../declarations";
 import { IAndroidBuildData } from "../../definitions/build";
 import { IHooksService, IAnalyticsService } from "../../common/declarations";
 import { injector } from "../../common/yok";
+import { IProjectData } from "../../definitions/project";
 
 export class GradleBuildArgsService implements IGradleBuildArgsService {
 	constructor(
@@ -12,6 +13,7 @@ export class GradleBuildArgsService implements IGradleBuildArgsService {
 		private $hooksService: IHooksService,
 		private $analyticsService: IAnalyticsService,
 		private $staticConfig: Config.IStaticConfig,
+		private $projectData: IProjectData,
 		private $logger: ILogger
 	) {}
 
@@ -50,11 +52,17 @@ export class GradleBuildArgsService implements IGradleBuildArgsService {
 		const toolsInfo = this.$androidToolsInfo.getToolsInfo({
 			projectDir: buildData.projectDir,
 		});
+
+		// ensure we initialize project data
+		this.$projectData.initializeProjectData(buildData.projectDir);
+
 		args.push(
 			`-PcompileSdk=android-${toolsInfo.compileSdkVersion}`,
 			`-PtargetSdk=${toolsInfo.targetSdkVersion}`,
 			`-PbuildToolsVersion=${toolsInfo.buildToolsVersion}`,
-			`-PgenerateTypings=${toolsInfo.generateTypings}`
+			`-PgenerateTypings=${toolsInfo.generateTypings}`,
+			`-PappPath=${this.$projectData.getAppDirectoryPath()}`,
+			`-PappResourcesPath=${this.$projectData.getAppResourcesDirectoryPath()}`
 		);
 
 		if (buildData.release) {

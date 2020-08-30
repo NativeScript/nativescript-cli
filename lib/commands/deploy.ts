@@ -36,7 +36,6 @@ export class DeployOnDeviceCommand
 		private $mobileHelper: Mobile.IMobileHelper,
 		$platformsDataService: IPlatformsDataService,
 		private $deployCommandHelper: DeployCommandHelper,
-		private $markingModeService: IMarkingModeService,
 		private $migrateController: IMigrateController
 	) {
 		super(
@@ -50,12 +49,6 @@ export class DeployOnDeviceCommand
 
 	public async execute(args: string[]): Promise<void> {
 		const platform = args[0];
-		if (this.$mobileHelper.isAndroidPlatform(platform)) {
-			await this.$markingModeService.handleMarkingModeFullDeprecation({
-				projectDir: this.$projectData.projectDir,
-				skipWarnings: true,
-			});
-		}
 
 		await this.$deployCommandHelper.deploy(platform);
 	}

@@ -6,6 +6,7 @@ import * as temp from "temp";
 import { IGradleBuildArgsService } from "../../../lib/definitions/gradle";
 import { IAndroidBuildData } from "../../../lib/definitions/build";
 import { IInjector } from "../../../lib/common/definitions/yok";
+import * as path from "path";
 temp.track();
 
 function createTestInjector(): IInjector {
@@ -19,6 +20,9 @@ function createTestInjector(): IInjector {
 		}),
 	});
 	injector.register("logger", {});
+	const projectData = new stubs.ProjectDataStub();
+	projectData.projectDir = "/path/to/projectDir";
+	injector.register("projectData", projectData);
 	injector.register("hooksService", stubs.HooksServiceStub);
 	injector.register("gradleBuildArgsService", GradleBuildArgsService);
 	injector.register("analyticsService", stubs.AnalyticsService);
@@ -62,6 +66,11 @@ const expectedDebugBuildArgs = [
 	"-PtargetSdk=26",
 	"-PbuildToolsVersion=my-build-tools-version",
 	"-PgenerateTypings=true",
+	"-PappPath=/path/to/projectDir/app".replace(/\//g, path.sep),
+	"-PappResourcesPath=/path/to/projectDir/app/App_Resources".replace(
+		/\//g,
+		path.sep
+	),
 ];
 const expectedReleaseBuildArgs = expectedDebugBuildArgs.concat([
 	"-Prelease",

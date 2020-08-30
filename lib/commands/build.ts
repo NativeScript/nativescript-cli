@@ -165,8 +165,7 @@ export class BuildAndroidCommand extends BuildCommandBase implements ICommand {
 		protected $androidBundleValidatorHelper: IAndroidBundleValidatorHelper,
 		$buildDataService: IBuildDataService,
 		protected $logger: ILogger,
-		private $migrateController: IMigrateController,
-		private $markingModeService: IMarkingModeService
+		private $migrateController: IMigrateController
 	) {
 		super(
 			$options,
@@ -182,10 +181,6 @@ export class BuildAndroidCommand extends BuildCommandBase implements ICommand {
 	}
 
 	public async execute(args: string[]): Promise<void> {
-		await this.$markingModeService.handleMarkingModeFullDeprecation({
-			projectDir: this.$projectData.projectDir,
-			skipWarnings: true,
-		});
 		await this.executeCore([
 			this.$devicePlatformsConstants.Android.toLowerCase(),
 		]);

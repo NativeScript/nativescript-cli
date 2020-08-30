@@ -155,17 +155,12 @@ class TestAndroidCommand extends TestCommandBase implements ICommand {
 		protected $cleanupService: ICleanupService,
 		protected $liveSyncCommandHelper: ILiveSyncCommandHelper,
 		protected $devicesService: Mobile.IDevicesService,
-		protected $migrateController: IMigrateController,
-		protected $markingModeService: IMarkingModeService
+		protected $migrateController: IMigrateController
 	) {
 		super();
 	}
 
 	public async execute(args: string[]): Promise<void> {
-		await this.$markingModeService.handleMarkingModeFullDeprecation({
-			projectDir: this.$projectData.projectDir,
-			skipWarnings: true,
-		});
 		await super.execute(args);
 	}
 

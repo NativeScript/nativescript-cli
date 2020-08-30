@@ -31,9 +31,7 @@ export class PrepareCommand
 		private $platformCommandParameter: ICommandParameter,
 		$platformsDataService: IPlatformsDataService,
 		private $prepareDataService: PrepareDataService,
-		private $migrateController: IMigrateController,
-		private $markingModeService: IMarkingModeService,
-		private $mobileHelper: Mobile.IMobileHelper
+		private $migrateController: IMigrateController
 	) {
 		super(
 			$options,
@@ -46,12 +44,6 @@ export class PrepareCommand
 
 	public async execute(args: string[]): Promise<void> {
 		const platform = args[0];
-		if (this.$mobileHelper.isAndroidPlatform(platform)) {
-			await this.$markingModeService.handleMarkingModeFullDeprecation({
-				projectDir: this.$projectData.projectDir,
-				skipWarnings: true,
-			});
-		}
 
 		const prepareData = this.$prepareDataService.getPrepareData(
 			this.$projectData.projectDir,
