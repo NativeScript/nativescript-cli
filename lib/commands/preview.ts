@@ -21,18 +21,13 @@ export class PreviewCommand implements ICommand {
 		private $options: IOptions,
 		private $previewAppLogProvider: IPreviewAppLogProvider,
 		private $previewQrCodeService: IPreviewQrCodeService,
-		$cleanupService: ICleanupService,
-		private $markingModeService: IMarkingModeService
+		$cleanupService: ICleanupService
 	) {
 		this.$analyticsService.setShouldDispose(false);
 		$cleanupService.setShouldDispose(false);
 	}
 
 	public async execute(): Promise<void> {
-		await this.$markingModeService.handleMarkingModeFullDeprecation({
-			projectDir: this.$projectData.projectDir,
-			skipWarnings: true,
-		});
 		this.$previewAppLogProvider.on(
 			DEVICE_LOG_EVENT_NAME,
 			(deviceId: string, message: string) => {

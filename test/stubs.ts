@@ -571,7 +571,7 @@ export class ProjectDataStub implements IProjectData {
 	}
 
 	public getAppDirectoryRelativePath(): string {
-		return "";
+		return "app";
 	}
 }
 
@@ -623,6 +623,11 @@ export class ProjectConfigServiceStub implements IProjectConfigService {
 	}
 
 	writeDefaultConfig(appId: string, projectDir?: string): void {}
+
+	writeLegacyNSConfigIfNeeded(
+		projectDir: string,
+		runtimePackage: IBasePluginData
+	): void {}
 }
 
 export class AndroidPluginBuildServiceStub

@@ -21,7 +21,6 @@ import { Messages } from "../lib/common/messages/messages";
 import { SettingsService } from "../lib/common/test/unit-tests/stubs";
 import { PlatformValidationService } from "../lib/services/platform/platform-validation-service";
 import { PlatformCommandHelper } from "../lib/helpers/platform-command-helper";
-import { MarkingModeServiceStub } from "./stubs";
 import {
 	IPlatformData,
 	IBuildOutputOptions,
@@ -138,7 +137,6 @@ function createTestInjector() {
 	const testInjector = new yok.Yok();
 
 	testInjector.register("injector", testInjector);
-	testInjector.register("markingModeService", MarkingModeServiceStub);
 	testInjector.register("hooksService", stubs.HooksServiceStub);
 	testInjector.register("staticConfig", StaticConfigLib.StaticConfig);
 	testInjector.register("nodeModulesDependenciesBuilder", {});

@@ -2,7 +2,7 @@ import { Yok } from "../../lib/common/yok";
 import { assert } from "chai";
 import * as _ from "lodash";
 import { ProjectDataService } from "../../lib/services/project-data-service";
-import { LoggerStub, ProjectDataStub, MarkingModeServiceStub } from "../stubs";
+import { LoggerStub, ProjectDataStub } from "../stubs";
 import {
 	NATIVESCRIPT_PROPS_INTERNAL_DELIMITER,
 	PACKAGE_JSON_FILE_NAME,
@@ -114,7 +114,6 @@ const createTestInjector = (
 	});
 
 	testInjector.register("logger", LoggerStub);
-	testInjector.register("markingModeService", MarkingModeServiceStub);
 
 	testInjector.register("projectDataService", ProjectDataService);
 	testInjector.register("projectConfigService", ProjectConfigService);

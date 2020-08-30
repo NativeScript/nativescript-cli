@@ -12,10 +12,7 @@ import {
 	AnalyticsEventLabelDelimiter,
 	CONFIG_FILE_NAME_JS,
 	CONFIG_FILE_NAME_TS,
-	SCOPED_IOS_RUNTIME_NAME,
-	SCOPED_ANDROID_RUNTIME_NAME,
-	TNS_IOS_RUNTIME_NAME,
-	TNS_ANDROID_RUNTIME_NAME,
+	SupportedPlatform,
 } from "../constants";
 import {
 	IProjectDataService,
@@ -79,6 +76,14 @@ export class PrepareController extends EventEmitter {
 			await this.$markingModeService.handleMarkingModeFullDeprecation({
 				projectDir: projectData.projectDir,
 			});
+
+			this.$projectConfigService.writeLegacyNSConfigIfNeeded(
+				projectData.projectDir,
+				this.$projectDataService.getRuntimePackage(
+					projectData.projectDir,
+					prepareData.platform as SupportedPlatform
+				)
+			);
 		}
 
 		await this.trackRuntimeVersion(prepareData.platform, projectData);
@@ -443,32 +448,22 @@ export class PrepareController extends EventEmitter {
 		platform: string,
 		projectData: IProjectData
 	): Promise<void> {
-		let runtimeVersion: string = null;
-		try {
-			if (projectData.devDependencies) {
-				if (platform.toLowerCase() === "ios") {
-					runtimeVersion =
-						projectData.devDependencies[SCOPED_IOS_RUNTIME_NAME] ||
-						projectData.devDependencies[TNS_IOS_RUNTIME_NAME];
-				} else {
-					runtimeVersion =
-						projectData.devDependencies[SCOPED_ANDROID_RUNTIME_NAME] ||
-						projectData.devDependencies[TNS_ANDROID_RUNTIME_NAME];
-				}
-			}
-		} catch (err) {
+		const { version } = this.$projectDataService.getRuntimePackage(
+			projectData.projectDir,
+			platform as SupportedPlatform
+		);
+
+		if (!version) {
 			this.$logger.trace(
-				`Unable to get runtime version for project directory: ${projectData.projectDir} and platform ${platform}. Error is: `,
-				err
+				`Unable to get runtime version for project directory: ${projectData.projectDir} and platform ${platform}.`
 			);
+			return;
 		}
 
-		if (runtimeVersion) {
-			await this.$analyticsService.trackEventActionInGoogleAnalytics({
-				action: TrackActionNames.UsingRuntimeVersion,
-				additionalData: `${platform.toLowerCase()}${AnalyticsEventLabelDelimiter}${runtimeVersion}`,
-			});
-		}
+		await this.$analyticsService.trackEventActionInGoogleAnalytics({
+			action: TrackActionNames.UsingRuntimeVersion,
+			additionalData: `${platform.toLowerCase()}${AnalyticsEventLabelDelimiter}${version}`,
+		});
 	}
 }
 injector.register("prepareController", PrepareController);

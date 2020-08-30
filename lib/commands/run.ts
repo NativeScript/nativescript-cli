@@ -148,15 +148,10 @@ export class RunAndroidCommand implements ICommand {
 		private $injector: IInjector,
 		private $options: IOptions,
 		private $platformValidationService: IPlatformValidationService,
-		private $projectData: IProjectData,
-		private $markingModeService: IMarkingModeService
+		private $projectData: IProjectData
 	) {}
 
 	public async execute(args: string[]): Promise<void> {
-		await this.$markingModeService.handleMarkingModeFullDeprecation({
-			projectDir: this.$projectData.projectDir,
-			skipWarnings: true,
-		});
 		return this.runCommand.execute(args);
 	}
 

@@ -41,7 +41,6 @@ export class PreviewAppController
 		private $hmrStatusService: IHmrStatusService,
 		private $logger: ILogger,
 		public $hooksService: IHooksService,
-		private $mobileHelper: Mobile.IMobileHelper,
 		private $pluginsService: IPluginsService,
 		private $prepareController: PrepareController,
 		private $previewAppFilesService: IPreviewAppFilesService,
@@ -50,8 +49,7 @@ export class PreviewAppController
 		private $previewQrCodeService: IPreviewQrCodeService,
 		private $previewSdkService: IPreviewSdkService,
 		private $prepareDataService: PrepareDataService,
-		private $projectDataService: IProjectDataService,
-		private $markingModeService: IMarkingModeService
+		private $projectDataService: IProjectDataService
 	) {
 		super();
 	}
@@ -100,12 +98,6 @@ export class PreviewAppController
 		await this.$previewSdkService.initialize(
 			data.projectDir,
 			async (device: Device) => {
-				if (this.$mobileHelper.isAndroidPlatform(device.platform)) {
-					await this.$markingModeService.handleMarkingModeFullDeprecation({
-						projectDir: projectData.projectDir,
-					});
-				}
-
 				try {
 					if (!device) {
 						this.$errors.fail(

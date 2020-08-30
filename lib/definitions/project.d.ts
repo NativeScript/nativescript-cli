@@ -315,6 +315,11 @@ interface IProjectConfigService {
 	getDefaultTSConfig(appId: string): string;
 
 	writeDefaultConfig(projectDir?: string, appId?: string): void;
+
+	writeLegacyNSConfigIfNeeded(
+		projectDir: string,
+		runtimePackage: IBasePluginData
+	): void;
 }
 
 interface IAssetItem {
