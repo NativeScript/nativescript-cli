@@ -138,13 +138,17 @@ export default {
 		) {
 			return;
 		}
-		this.$logger.warn();
-		this.$logger.printMarkdown(`
-Using __${runtimePackage.name}${
+
+		const runtimePackageDisplay = `${runtimePackage.name}${
 			runtimePackage.version ? "@" + runtimePackage.version : ""
-		}__ which requires \`nsconfig.json\` to be present.
+		}`;
+
+		this.$logger.info();
+		this.$logger.printMarkdown(`
+Using __${runtimePackageDisplay}__ which requires \`nsconfig.json\` to be present.
 Writing \`nsconfig.json\` based on the values set in \`${CONFIG_FILE_NAME_DISPLAY}\`.
 You may add \`nsconfig.json\` to \`.gitignore\` as the CLI will regenerate it as necessary.`);
+
 		const nsConfigPath = path.join(
 			projectDir || this.projectHelper.projectDir,
 			"nsconfig.json"
