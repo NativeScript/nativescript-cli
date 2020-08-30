@@ -29,6 +29,7 @@ Command | Description
 Command | Description
 ---|---
 [create](project/creation/create.html) | Creates a new project for native development with NativeScript.
+[clean](general/clean.html) | Cleans project artifacts.
 [preview](project/testing/preview.html) | Generates a QR code that can be scanned by the NativeScript PlayGround app.
 [platform add `<Platform>`](project/configuration/platform-add.html) | Configures the current project to target the selected platform.
 [platform list](project/configuration/platform.html) | Lists all platforms that the project currently targets.
