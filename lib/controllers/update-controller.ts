@@ -181,7 +181,7 @@ export class UpdateController
 	}
 
 	private async cleanUpProject(projectData: IProjectData) {
-		this.$logger.info("Clean old project artefacts.");
+		this.$logger.info("Clean old project artifacts.");
 		this.$fs.deleteDirectory(
 			path.join(projectData.projectDir, constants.HOOKS_DIR_NAME)
 		);
@@ -206,7 +206,7 @@ export class UpdateController
 		this.$fs.deleteFile(
 			path.join(projectData.projectDir, constants.PACKAGE_LOCK_JSON_FILE_NAME)
 		);
-		this.$logger.info("Clean old project artefacts complete.");
+		this.$logger.info("Clean old project artifacts complete.");
 	}
 
 	private async updateProject(
