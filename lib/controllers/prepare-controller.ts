@@ -1,39 +1,40 @@
 import * as choki from "chokidar";
 import { hook } from "../common/helpers";
-import { performanceLog, cache } from "../common/decorators";
+import { cache, performanceLog } from "../common/decorators";
 import { EventEmitter } from "events";
 import * as path from "path";
 import {
-	PREPARE_READY_EVENT_NAME,
-	WEBPACK_COMPILATION_COMPLETE,
-	PACKAGE_JSON_FILE_NAME,
-	PLATFORMS_DIR_NAME,
-	TrackActionNames,
 	AnalyticsEventLabelDelimiter,
 	CONFIG_FILE_NAME_JS,
 	CONFIG_FILE_NAME_TS,
+	PACKAGE_JSON_FILE_NAME,
+	PLATFORMS_DIR_NAME,
+	PREPARE_READY_EVENT_NAME,
 	SupportedPlatform,
+	TrackActionNames,
+	WEBPACK_COMPILATION_COMPLETE,
 } from "../constants";
 import {
-	IProjectDataService,
-	IProjectData,
 	IProjectConfigService,
+	IProjectData,
+	IProjectDataService,
 } from "../definitions/project";
 import {
-	IPlatformController,
 	INodeModulesDependenciesBuilder,
-	IPlatformsDataService,
+	IPlatformController,
 	IPlatformData,
+	IPlatformsDataService,
 } from "../definitions/platform";
 import { IPluginsService } from "../definitions/plugins";
 import { IWatchIgnoreListService } from "../declarations";
 import {
-	IDictionary,
-	IHooksService,
 	IAnalyticsService,
+	IDictionary,
 	IFileSystem,
+	IHooksService,
 } from "../common/declarations";
 import { injector } from "../common/yok";
+import * as _ from "lodash";
 // import { project } from "nativescript-dev-xcode";
 // import { platform } from "os";
 interface IPlatformWatcherData {
@@ -76,14 +77,6 @@ export class PrepareController extends EventEmitter {
 			await this.$markingModeService.handleMarkingModeFullDeprecation({
 				projectDir: projectData.projectDir,
 			});
-
-			this.$projectConfigService.writeLegacyNSConfigIfNeeded(
-				projectData.projectDir,
-				this.$projectDataService.getRuntimePackage(
-					projectData.projectDir,
-					prepareData.platform as SupportedPlatform
-				)
-			);
 		}
 
 		await this.trackRuntimeVersion(prepareData.platform, projectData);
@@ -138,6 +131,17 @@ export class PrepareController extends EventEmitter {
 		await this.$platformController.addPlatformIfNeeded(prepareData);
 
 		this.$logger.info("Preparing project...");
+
+		if (this.$mobileHelper.isAndroidPlatform(prepareData.platform)) {
+			this.$projectConfigService.writeLegacyNSConfigIfNeeded(
+				projectData.projectDir,
+				this.$projectDataService.getRuntimePackage(
+					projectData.projectDir,
+					prepareData.platform as SupportedPlatform
+				)
+			);
+		}
+
 		let result = null;
 
 		const platformData = this.$platformsDataService.getPlatformData(
@@ -335,6 +339,7 @@ export class PrepareController extends EventEmitter {
 					this.$watchIgnoreListService.removeFileFromIgnoreList(filePath);
 				} else {
 					this.$logger.info(`Chokidar raised event ${event} for ${filePath}.`);
+					await this.writeRuntimePackageJson(projectData, platformData);
 					this.emitPrepareEvent({
 						files: [],
 						hasOnlyHotUpdateFiles: false,
@@ -391,21 +396,27 @@ export class PrepareController extends EventEmitter {
 		projectData: IProjectData,
 		platformData: IPlatformData
 	) {
+		this.$logger.info(
+			"Updating runtime package.json with configuration values..."
+		);
 		const nsConfig = this.$projectConfigService.readConfig(
 			projectData.projectDir
 		);
-		const packageData = {
-			...projectData.packageJsonData,
-			...nsConfig,
+		const packageData: any = {
 			main: "bundle",
+			..._.pick(projectData.packageJsonData, ["name"]),
+			...nsConfig,
 		};
-		delete packageData.dependencies;
-		delete packageData.devDependencies;
-		if (packageData.ios && packageData.ios.discardUncaughtJsExceptions) {
+		if (
+			platformData.platformNameLowerCase === "ios" &&
+			packageData.ios &&
+			packageData.ios.discardUncaughtJsExceptions
+		) {
 			packageData.discardUncaughtJsExceptions =
 				packageData.ios.discardUncaughtJsExceptions;
 		}
 		if (
+			platformData.platformNameLowerCase === "android" &&
 			packageData.android &&
 			packageData.android.discardUncaughtJsExceptions
 		) {
@@ -431,7 +442,7 @@ export class PrepareController extends EventEmitter {
 				"package.json"
 			);
 		}
-		this.$logger.info("packagePath:", packagePath);
+
 		this.$fs.writeJson(packagePath, packageData);
 	}
 
@@ -466,4 +477,5 @@ export class PrepareController extends EventEmitter {
 		});
 	}
 }
+
 injector.register("prepareController", PrepareController);

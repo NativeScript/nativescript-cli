@@ -106,7 +106,7 @@ export class PlatformController implements IPlatformController {
 					`Invalid frameworkPath: ${frameworkPath}. Please ensure the specified frameworkPath exists.`
 				);
 			}
-			result = path.resolve(frameworkPath);
+			result = "file:" + path.resolve(frameworkPath);
 		} else {
 			if (!version) {
 				version = projectData.devDependencies
