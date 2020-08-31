@@ -396,6 +396,13 @@ export class PrepareController extends EventEmitter {
 		projectData: IProjectData,
 		platformData: IPlatformData
 	) {
+		const projectInfo = this.$projectConfigService.detectInfo(
+			projectData.projectDir
+		);
+		if (projectInfo.usesLegacyConfig) {
+			return;
+		}
+
 		this.$logger.info(
 			"Updating runtime package.json with configuration values..."
 		);

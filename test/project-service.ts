@@ -14,6 +14,7 @@ import { IProjectNameService } from "../lib/declarations";
 import { IInjector } from "../lib/common/definitions/yok";
 import { IDictionary, IFileSystem } from "../lib/common/declarations";
 import { ProjectConfigService } from "../lib/services/project-config-service";
+import { Options } from "../lib/options";
 
 describe("projectService", () => {
 	describe("createProject", () => {
@@ -37,7 +38,8 @@ describe("projectService", () => {
 				readJson: () => ({}),
 				readText: (value?: string) => "",
 				writeFile: (value?: string) => {},
-			});
+      });
+      testInjector.register("options", Options);
 			testInjector.register("logger", LoggerStub);
 			testInjector.register("projectDataService", {
 				getProjectData: (projectDir?: string): IProjectData =>
@@ -160,7 +162,8 @@ describe("projectService", () => {
 			testInjector.register("fs", {
 				readText: (value?: string) => "",
 			});
-			testInjector.register("logger", {});
+      testInjector.register("logger", {});
+      testInjector.register("options", Options);
 			testInjector.register("projectDataService", {
 				getProjectData: (projectDir?: string): IProjectData => projectData,
 			});

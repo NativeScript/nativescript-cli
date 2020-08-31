@@ -1,13 +1,15 @@
 import { Yok } from "../../lib/common/yok";
 import { assert } from "chai";
 import * as _ from "lodash";
-import { LoggerStub, ProjectHelperStub } from "../stubs";
+import { LoggerStub, ProjectHelperStub, ErrorsStub } from "../stubs";
 import { CONFIG_FILE_NAME_JS, CONFIG_FILE_NAME_TS } from "../../lib/constants";
 import { basename } from "path";
 import { IInjector } from "../../lib/common/definitions/yok";
 import { IReadFileOptions, IFsStats } from "../../lib/common/declarations";
 import { ProjectConfigService } from "../../lib/services/project-config-service";
 import { IProjectConfigService } from "../../lib/definitions/project";
+import { Options } from "../../lib/options";
+import { SettingsService } from "../../lib/common/test/unit-tests/stubs";
 
 const createTestInjector = (
 	readTextCallback: (filename: string) => string,
@@ -15,6 +17,9 @@ const createTestInjector = (
 ): IInjector => {
 	const testInjector = new Yok();
 
+	testInjector.register("settingsService", SettingsService);
+	testInjector.register("errors", ErrorsStub);
+	testInjector.register("options", Options);
 	testInjector.register(
 		"projectHelper",
 		new ProjectHelperStub(null, "/my/project")

@@ -602,15 +602,19 @@ export class ProjectConfigServiceStub implements IProjectConfigService {
 		projectDir?: string
 	): {
 		hasTS: boolean;
-		hasJS: boolean;
+    hasJS: boolean;
+    usesLegacyConfig: boolean;
 		configJSFilePath: string;
-		configTSFilePath: string;
+    configTSFilePath: string;
+    configNSConfigFilePath: string;
 	} {
 		return {
 			hasTS: false,
-			hasJS: true,
+      hasJS: true,
+      usesLegacyConfig: false,
 			configJSFilePath: "",
-			configTSFilePath: "",
+      configTSFilePath: "",
+      configNSConfigFilePath: ""
 		};
 	}
 
