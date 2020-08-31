@@ -82,6 +82,7 @@ import {
 	IGoogleAnalyticsData,
 } from "../lib/common/definitions/google-analytics";
 import * as _ from "lodash";
+import { SupportedConfigValues } from "../lib/tools/config-manipulation/config-transformer";
 
 temp.track();
 
@@ -587,6 +588,10 @@ export class ProjectConfigServiceStub implements IProjectConfigService {
 
 	getValue(key: string): any {
 		return _.get(this.readConfig(), key);
+	}
+
+	setValue(key: string, value: SupportedConfigValues): any {
+		return _.set(this.readConfig(), key, value);
 	}
 
 	readConfig(projectDir?: string): INsConfig {

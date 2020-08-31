@@ -5,20 +5,20 @@ import { parseJson } from "./common/helpers";
 import { EOL } from "os";
 import { cache } from "./common/decorators";
 import {
-	IProjectData,
 	INsConfig,
 	IProjectConfigService,
+	IProjectData,
 } from "./definitions/project";
 import {
 	IAndroidResourcesMigrationService,
-	IStaticConfig,
 	IOptions,
+	IStaticConfig,
 } from "./declarations";
 import {
-	IStringDictionary,
-	IFileSystem,
 	IErrors,
+	IFileSystem,
 	IProjectHelper,
+	IStringDictionary,
 } from "./common/declarations";
 import { injector } from "./common/yok";
 import { IInjector } from "./common/definitions/yok";
@@ -68,16 +68,19 @@ export class ProjectData implements IProjectData {
 	public platformsDir: string;
 	public projectFilePath: string;
 	public projectIdentifiers: Mobile.IProjectIdentifier;
+
 	get projectId(): string {
 		this.warnProjectId();
 		return this.projectIdentifiers.ios;
 	}
+
 	//just in case hook/extension modifies it.
 	set projectId(identifier: string) {
 		this.warnProjectId();
 		this.projectIdentifiers.ios = identifier;
 		this.projectIdentifiers.android = identifier;
 	}
+
 	public projectName: string;
 	public packageJsonData: any;
 	public nsConfig: INsConfig;
@@ -137,16 +140,23 @@ export class ProjectData implements IProjectData {
 	): void {
 		projectDir = projectDir || this.$projectHelper.projectDir || "";
 		const projectFilePath = this.getProjectFilePath(projectDir);
-    // If no project found, projectDir should be null
-    // handle migration cases
-    let isMigrate = false;
-    if (this.$options.argv && this.$options.argv._ && this.$options.argv._.length) {
-      this.$logger.info('this.$options.argv._[0]:', this.$options.argv._[0]);
-      isMigrate = this.$options.argv._[0] === 'migrate';
-    }
-    this.$logger.info('about to call readConfig...')
-    this.$logger.info('isMigrate:', isMigrate);
-		const nsConfig: INsConfig = isMigrate ? null : this.projectConfig.readConfig(projectDir);
+		// If no project found, projectDir should be null
+		// handle migration cases
+		let isMigrate = false;
+		if (
+			this.$options.argv &&
+			this.$options.argv._ &&
+			this.$options.argv._.length
+		) {
+			this.$logger.debug(
+				"the value of this.$options.argv._[0] is: " + this.$options.argv._[0]
+			);
+			isMigrate = this.$options.argv._[0] === "migrate";
+		}
+		this.$logger.debug(`'initializingProjectData, isMigrate is ${isMigrate}.`);
+		const nsConfig: INsConfig = isMigrate
+			? null
+			: this.projectConfig.readConfig(projectDir);
 		let packageJsonData = null;
 
 		try {
@@ -272,15 +282,14 @@ export class ProjectData implements IProjectData {
 	public getAppDirectoryRelativePath(): string {
 		if (this.nsConfig && this.nsConfig[constants.CONFIG_NS_APP_ENTRY]) {
 			return this.nsConfig[constants.CONFIG_NS_APP_ENTRY];
-    }
-    
-    if (this.$fs.exists(path.resolve(this.projectDir, constants.SRC_DIR))) {
-      return constants.SRC_DIR;
-    } else {
-      // legacy project setup often uses app folder
-      return constants.APP_FOLDER_NAME;
-    }
+		}
 
+		if (this.$fs.exists(path.resolve(this.projectDir, constants.SRC_DIR))) {
+			return constants.SRC_DIR;
+		} else {
+			// legacy project setup often uses app folder
+			return constants.APP_FOLDER_NAME;
+		}
 	}
 
 	public getNsConfigRelativePath(): string {
@@ -305,27 +314,27 @@ export class ProjectData implements IProjectData {
 	private initializeProjectIdentifiers(
 		config: INsConfig
 	): Mobile.IProjectIdentifier {
-    if (config) {
-      const identifier: Mobile.IProjectIdentifier = {
-        ios: config.id,
-        android: config.id,
-      };
-  
-      if (config.ios && config.ios.id) {
-        identifier.ios = config.ios.id;
-      }
-      if (config.android && config.android.id) {
-        identifier.android = config.android.id;
-      }
-  
-      return identifier;
-    } else {
-      // when migrating projects this can be ignored
-      return {
-        ios: '',
-        android: ''
-      };
-    }
+		if (config) {
+			const identifier: Mobile.IProjectIdentifier = {
+				ios: config.id,
+				android: config.id,
+			};
+
+			if (config.ios && config.ios.id) {
+				identifier.ios = config.ios.id;
+			}
+			if (config.android && config.android.id) {
+				identifier.android = config.android.id;
+			}
+
+			return identifier;
+		} else {
+			// when migrating projects this can be ignored
+			return {
+				ios: "",
+				android: "",
+			};
+		}
 	}
 
 	private getProjectType(): string {
@@ -360,4 +369,5 @@ export class ProjectData implements IProjectData {
 		);
 	}
 }
+
 injector.register("projectData", ProjectData, true);

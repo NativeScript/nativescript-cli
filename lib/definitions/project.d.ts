@@ -16,6 +16,7 @@ import {
 	IDependencyInformation,
 	ISpawnResult,
 } from "../common/declarations";
+import { SupportedConfigValues } from "../tools/config-manipulation/config-transformer";
 
 interface IProjectName {
 	/**
@@ -302,6 +303,12 @@ interface IProjectConfigService {
 	 * @param key the property key path
 	 */
 	getValue(key: string): any;
+	/**
+	 * Set value for a given config key path
+	 * @param key the property key path
+	 * @param value
+	 */
+	setValue(key: string, value: SupportedConfigValues): any;
 
 	detectInfo(
 		projectDir?: string

@@ -27,6 +27,7 @@ export class UpdateCommand implements ICommand {
 
 	public async execute(args: string[]): Promise<void> {
 		if (this.$options.markingMode) {
+			// ns update --markingMode
 			await this.$markingModeService.handleMarkingModeFullDeprecation({
 				projectDir: this.$projectData.projectDir,
 				forceSwitch: true,

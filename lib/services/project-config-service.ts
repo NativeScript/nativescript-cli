@@ -7,11 +7,17 @@ import * as path from "path";
 import * as _ from "lodash";
 import * as ts from "typescript";
 import { IFileSystem, IProjectHelper } from "../common/declarations";
-import { injector } from "../common/yok";
 import { INsConfig, IProjectConfigService } from "../definitions/project";
 import { IInjector } from "../common/definitions/yok";
+import {
+	ConfigTransformer,
+	IConfigTransformer,
+	SupportedConfigValues,
+} from "../tools/config-manipulation/config-transformer";
 import { IBasePluginData } from "../definitions/plugins";
 import semver = require("semver/preload");
+import { injector } from "../common/yok";
+import { EOL } from "os";
 
 export class ProjectConfigService implements IProjectConfigService {
 	constructor(
@@ -117,6 +123,39 @@ export default {
 
 	public getValue(key: string): any {
 		return _.get(this.readConfig(), key);
+	}
+
+	public setValue(key: string, value: SupportedConfigValues) {
+		const { hasTS, configJSFilePath, configTSFilePath } = this.detectInfo();
+		const configFilePath = configTSFilePath || configJSFilePath;
+		const configContent = this.$fs.readText(configFilePath);
+
+		try {
+			const transformer: IConfigTransformer = new ConfigTransformer(
+				configContent
+			);
+			const newContent = transformer.setValue(key, value);
+			this.$fs.writeFile(configFilePath, newContent);
+		} catch (error) {
+			this.$logger.error(`Failed to update config.` + error);
+		} finally {
+			// verify config is updated correctly
+			if (this.getValue(key) !== value) {
+				this.$logger.error(
+					`${EOL}Failed to update ${
+						hasTS ? CONFIG_FILE_NAME_TS : CONFIG_FILE_NAME_JS
+					}.${EOL}`
+				);
+				this.$logger.printMarkdown(
+					`Please manually update \`${
+						hasTS ? CONFIG_FILE_NAME_TS : CONFIG_FILE_NAME_JS
+					}\` and set \`${key}\` to \`${value}\`.${EOL}`
+				);
+
+				// restore original content
+				this.$fs.writeFile(configFilePath, configContent);
+			}
+		}
 	}
 
 	public writeDefaultConfig(projectDir: string, appId?: string) {
