@@ -1,9 +1,7 @@
 import * as helpers from "../common/helpers";
-import * as path from "path";
 import { EOL } from "os";
-import { PACKAGE_JSON_FILE_NAME, LoggerConfigData } from "../constants";
-import { IProjectDataService } from "../definitions/project";
-import { IFileSystem } from "../common/declarations";
+import { LoggerConfigData } from "../constants";
+import { IProjectConfigService } from "../definitions/project";
 import { injector } from "../common/yok";
 
 const enum MarkingMode {
@@ -17,47 +15,23 @@ const MARKING_MODE_NONE_CONFIRM_MSG = `Do you want to switch your app to the rec
 More info about the reasons for this change can be found in the link below:
 https://www.nativescript.org/blog/markingmode-none-is-official-boost-android-performance-while-avoiding-memory-issues`;
 
-// TODO: update to work with new configs!
 export class MarkingModeService implements IMarkingModeService {
 	constructor(
-		private $fs: IFileSystem,
 		private $logger: ILogger,
-		private $projectDataService: IProjectDataService,
+		private $projectConfigService: IProjectConfigService,
 		private $prompter: IPrompter
 	) {}
 
 	public async handleMarkingModeFullDeprecation(
 		options: IMarkingModeFullDeprecationOptions
 	): Promise<void> {
-		this.$logger.error(
-			"handleMarkingModeFullDeprecation has not yet been updated to the new config handling!!!!"
+		let markingModeValue = this.$projectConfigService.getValue(
+			"android.markingMode"
 		);
-		return;
-
-		const { projectDir, skipWarnings, forceSwitch } = options;
-		const projectData = this.$projectDataService.getProjectData(projectDir);
-		const innerPackageJsonPath = path.join(
-			projectData.getAppDirectoryPath(projectDir),
-			PACKAGE_JSON_FILE_NAME
-		);
-		if (!this.$fs.exists(innerPackageJsonPath)) {
-			return;
-		}
-
-		const innerPackageJson = this.$fs.readJson(innerPackageJsonPath);
-		let markingModeValue =
-			(innerPackageJson &&
-				innerPackageJson.android &&
-				typeof innerPackageJson.android[MARKING_MODE_PROP] === "string" &&
-				innerPackageJson.android[MARKING_MODE_PROP]) ||
-			"";
+		const { skipWarnings, forceSwitch } = options;
 
 		if (forceSwitch) {
-			this.setMarkingMode(
-				innerPackageJsonPath,
-				innerPackageJson,
-				MarkingMode.None
-			);
+			this.setMarkingMode(MarkingMode.None);
 			return;
 		}
 
@@ -73,11 +47,7 @@ __Improve your app by switching to "${MARKING_MODE_PROP}:${MarkingMode.None}".__
 			);
 
 			markingModeValue = hasSwitched ? MarkingMode.None : MarkingMode.Full;
-			this.setMarkingMode(
-				innerPackageJsonPath,
-				innerPackageJson,
-				markingModeValue
-			);
+			this.setMarkingMode(markingModeValue);
 		}
 
 		if (!skipWarnings && markingModeValue.toLowerCase() !== MarkingMode.None) {
@@ -85,15 +55,8 @@ __Improve your app by switching to "${MARKING_MODE_PROP}:${MarkingMode.None}".__
 		}
 	}
 
-	private setMarkingMode(
-		packagePath: string,
-		packageValue: any,
-		newMode: string
-	) {
-		packageValue = packageValue || {};
-		packageValue.android = packageValue.android || {};
-		packageValue.android[MARKING_MODE_PROP] = newMode;
-		this.$fs.writeJson(packagePath, packageValue);
+	private setMarkingMode(newMode: string) {
+		this.$projectConfigService.setValue("android.markingMode", newMode);
 	}
 
 	private showMarkingModeFullWarning() {

@@ -8,10 +8,10 @@ export class CleanCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
 
 	constructor(
-    private $fs: IFileSystem,
-    private $logger: ILogger,
-    private $projectHelper: IProjectHelper
-  ) {}
+		private $fs: IFileSystem,
+		private $logger: ILogger,
+		private $projectHelper: IProjectHelper
+	) {}
 
 	public async execute(args: string[]): Promise<void> {
 		this.$fs.deleteDirectory(
@@ -21,10 +21,16 @@ export class CleanCommand implements ICommand {
 			path.join(this.$projectHelper.projectDir, constants.PLATFORMS_DIR_NAME)
 		);
 		this.$fs.deleteDirectory(
-			path.join(this.$projectHelper.projectDir, constants.NODE_MODULES_FOLDER_NAME)
+			path.join(
+				this.$projectHelper.projectDir,
+				constants.NODE_MODULES_FOLDER_NAME
+			)
 		);
 		this.$fs.deleteFile(
-			path.join(this.$projectHelper.projectDir, constants.PACKAGE_LOCK_JSON_FILE_NAME)
+			path.join(
+				this.$projectHelper.projectDir,
+				constants.PACKAGE_LOCK_JSON_FILE_NAME
+			)
 		);
 
 		this.$logger.info("Project successfully cleaned.");

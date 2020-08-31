@@ -89,6 +89,7 @@
     "tabtab": "https://github.com/Icenium/node-tabtab/tarball/master",
     "tar": "6.0.2",
     "temp": "0.9.1",
+    "ts-morph": "8.1.0",
     "typescript": "3.9.7",
     "universal-analytics": "0.4.23",
     "uuid": "8.3.0",
