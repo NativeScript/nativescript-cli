@@ -5,7 +5,11 @@ import * as glob from "glob";
 import * as _ from "lodash";
 import { UpdateControllerBase } from "./update-controller-base";
 import { fromWindowsRelativePathToUnix, getHash } from "../common/helpers";
-import { IProjectDataService, IProjectData } from "../definitions/project";
+import {
+	IProjectDataService,
+	IProjectData,
+	IProjectConfigService,
+} from "../definitions/project";
 import {
 	IMigrateController,
 	IMigrationDependency,
@@ -15,8 +19,9 @@ import {
 	IPlatformCommandHelper,
 	IPackageInstallationManager,
 	IPackageManager,
-	IAndroidResourcesMigrationService,
+	// IAndroidResourcesMigrationService,
 	IPlatformValidationService,
+	IOptions,
 } from "../declarations";
 import {
 	IPlatformsDataService,
@@ -33,6 +38,7 @@ import {
 import { IInjector } from "../common/definitions/yok";
 import { injector } from "../common/yok";
 import { IJsonFileSettingsService } from "../common/definitions/json-file-settings-service";
+// import { project } from "nativescript-dev-xcode";
 
 export class MigrateController
 	extends UpdateControllerBase
@@ -51,13 +57,15 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 		protected $packageInstallationManager: IPackageInstallationManager,
 		protected $packageManager: IPackageManager,
 		protected $pacoteService: IPacoteService,
-		private $androidResourcesMigrationService: IAndroidResourcesMigrationService,
+		// private $androidResourcesMigrationService: IAndroidResourcesMigrationService,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $logger: ILogger,
 		private $errors: IErrors,
 		private $addPlatformService: IAddPlatformService,
 		private $pluginsService: IPluginsService,
 		private $projectDataService: IProjectDataService,
+		private $projectConfigService: IProjectConfigService,
+		private $options: IOptions,
 		private $platformValidationService: IPlatformValidationService,
 		private $resources: IResourceLoader,
 		private $injector: IInjector,
@@ -88,6 +96,7 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 		constants.PACKAGE_LOCK_JSON_FILE_NAME,
 		constants.TSCCONFIG_TNS_JSON_NAME,
 		constants.KARMA_CONFIG_NAME,
+		constants.CONFIG_NS_FILE_NAME,
 	];
 
 	private get $jsonFileSettingsService(): IJsonFileSettingsService {
@@ -234,7 +243,13 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 
 		try {
 			this.$logger.info("Backup project configuration.");
-			this.backup(MigrateController.folders, backupDir, projectData.projectDir);
+			const backupFolders = MigrateController.folders;
+			const embeddedPackagePath = path.join(
+				projectData.getAppDirectoryRelativePath(),
+				"package.json"
+			);
+			backupFolders.push(embeddedPackagePath);
+			this.backup(backupFolders, backupDir, projectData.projectDir);
 			this.$logger.info("Backup project configuration complete.");
 		} catch (error) {
 			this.$logger.error(MigrateController.backupFailMessage);
@@ -254,21 +269,24 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 			);
 		}
 
-		await this.migrateOldAndroidAppResources(projectData, backupDir);
+		// await this.migrateOldAndroidAppResources(projectData, backupDir);
 
 		try {
 			await this.cleanUpProject(projectData);
+			await this.migrateConfig(projectData);
 			await this.migrateDependencies(
 				projectData,
 				platforms,
 				allowInvalidVersions
 			);
 		} catch (error) {
-			this.restoreBackup(
-				MigrateController.folders,
-				backupDir,
-				projectData.projectDir
+			const backupFolders = MigrateController.folders;
+			const embeddedPackagePath = path.join(
+				projectData.getAppDirectoryRelativePath(),
+				"package.json"
 			);
+			backupFolders.push(embeddedPackagePath);
+			this.restoreBackup(backupFolders, backupDir, projectData.projectDir);
 			this.$errors.fail(
 				`${MigrateController.migrateFailMessage} The error is: ${error}`
 			);
@@ -325,6 +343,14 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 		allowInvalidVersions,
 	}: IMigrationData): Promise<boolean> {
 		const projectData = this.$projectDataService.getProjectData(projectDir);
+		const isMigrate = this.$options.argv._[0] === "migrate";
+		const projectInfo = this.$projectConfigService.detectInfo(
+			projectData.projectDir
+		);
+		if (!isMigrate && projectInfo.usesLegacyConfig) {
+			return;
+		}
+
 		const shouldMigrateCommonMessage =
 			"The app is not compatible with this CLI version and it should be migrated. Reason: ";
 
@@ -458,26 +484,26 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 		return await this.$fs.getFileShasum(projectPackageJsonFilePath);
 	}
 
-	private async migrateOldAndroidAppResources(
-		projectData: IProjectData,
-		backupDir: string
-	) {
-		const appResourcesPath = projectData.getAppResourcesDirectoryPath();
-		if (!this.$androidResourcesMigrationService.hasMigrated(appResourcesPath)) {
-			this.$logger.info("Migrate old Android App_Resources structure.");
-			try {
-				await this.$androidResourcesMigrationService.migrate(
-					appResourcesPath,
-					backupDir
-				);
-			} catch (error) {
-				this.$logger.warn(
-					"Migrate old Android App_Resources structure failed: ",
-					error.message
-				);
-			}
-		}
-	}
+	// private async migrateOldAndroidAppResources(
+	// 	projectData: IProjectData,
+	// 	backupDir: string
+	// ) {
+	// 	const appResourcesPath = projectData.getAppResourcesDirectoryPath();
+	// 	if (!this.$androidResourcesMigrationService.hasMigrated(appResourcesPath)) {
+	// 		this.$logger.info("Migrate old Android App_Resources structure.");
+	// 		try {
+	// 			await this.$androidResourcesMigrationService.migrate(
+	// 				appResourcesPath,
+	// 				backupDir
+	// 			);
+	// 		} catch (error) {
+	// 			this.$logger.warn(
+	// 				"Migrate old Android App_Resources structure failed: ",
+	// 				error.message
+	// 			);
+	// 		}
+	// 	}
+	// }
 
 	private async cleanUpProject(projectData: IProjectData): Promise<void> {
 		this.$logger.info("Clean old project artifacts.");
@@ -774,6 +800,79 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 		return !!version
 			? semver.lt(version, targetVersion)
 			: !allowInvalidVersions;
+	}
+
+	private async migrateConfig(projectData: IProjectData) {
+		const embeddedPackagePath = path.resolve(
+			projectData.projectDir,
+			projectData.getAppDirectoryRelativePath(),
+			constants.PACKAGE_JSON_FILE_NAME
+		);
+		const legacyNsConfigPath = path.resolve(
+			projectData.projectDir,
+			constants.CONFIG_NS_FILE_NAME
+		);
+		let embeddedPackageData: any = {};
+		if (this.$fs.exists(embeddedPackagePath)) {
+			embeddedPackageData = this.$fs.readJson(embeddedPackagePath);
+		}
+		let legacyNsConfigData: any = {};
+		if (this.$fs.exists(legacyNsConfigPath)) {
+			legacyNsConfigData = this.$fs.readJson(legacyNsConfigPath);
+		}
+		const legacyData: any = {
+			...embeddedPackageData,
+			...legacyNsConfigData,
+		};
+		const packageJsonPath: any = path.resolve(
+			projectData.projectDir,
+			constants.PACKAGE_JSON_FILE_NAME
+		);
+		const packageJsonData: any = this.$fs.readFile(packageJsonPath);
+		if (legacyData.main) {
+			packageJsonPath.main = legacyData.main;
+			delete legacyData.main;
+		}
+		if (
+			legacyData &&
+			legacyData.android &&
+			typeof legacyData.android.codeCache === "string"
+		) {
+			legacyData.android.codeCache = legacyData.android.codeCache === "true";
+		}
+		const flattenObjectToPaths = (obj: any, basePath?: string): any => {
+			const toPath = (key: any) => [basePath, key].filter(Boolean).join(".");
+			return Object.keys(obj).reduce((all: any, key) => {
+				if (typeof obj[key] === "object") {
+					return [...all, ...flattenObjectToPaths(obj[key], toPath(key))];
+				}
+				return [
+					...all,
+					{
+						key: toPath(key),
+						value: obj[key],
+					},
+				];
+			}, []);
+		};
+		const dotNotationPaths = flattenObjectToPaths(legacyData);
+		dotNotationPaths.forEach((p: any) => {
+			// this.$logger.info(p.key, p.value);
+			this.$projectConfigService.setValue(p.key, p.value);
+		});
+		if (
+			packageJsonData &&
+			packageJsonData.nativescript &&
+			packageJsonData.nativescript.id
+		) {
+			this.$projectConfigService.setValue(
+				"id",
+				packageJsonData.nativescript.id
+			);
+			delete packageJsonData.nativescript;
+		}
+		this.$fs.writeJson(packageJsonPath, packageJsonData);
+		this.$logger.info(`Migrated to ${constants.CONFIG_FILE_NAME_TS}`);
 	}
 
 	private async migrateUnitTestRunner(

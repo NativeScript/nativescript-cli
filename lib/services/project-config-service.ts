@@ -2,6 +2,7 @@ import {
 	CONFIG_FILE_NAME_DISPLAY,
 	CONFIG_FILE_NAME_JS,
 	CONFIG_FILE_NAME_TS,
+	CONFIG_NS_FILE_NAME,
 } from "../constants";
 import * as path from "path";
 import * as _ from "lodash";
@@ -18,11 +19,16 @@ import { IBasePluginData } from "../definitions/plugins";
 import semver = require("semver/preload");
 import { injector } from "../common/yok";
 import { EOL } from "os";
+import { IOptions } from "../declarations";
 
 export class ProjectConfigService implements IProjectConfigService {
+	private _hasWarnedLegacy = false;
+	private _handledLegacyId = false;
+
 	constructor(
 		private $fs: IFileSystem,
 		private $logger: ILogger,
+		private $options: IOptions,
 		private $injector: IInjector
 	) {}
 
@@ -56,8 +62,10 @@ export default {
 	): {
 		hasTS: boolean;
 		hasJS: boolean;
+		usesLegacyConfig: boolean;
 		configJSFilePath: string;
 		configTSFilePath: string;
+		configNSConfigFilePath: string;
 	} {
 		const configJSFilePath = path.join(
 			projectDir || this.projectHelper.projectDir,
@@ -67,13 +75,31 @@ export default {
 			projectDir || this.projectHelper.projectDir,
 			CONFIG_FILE_NAME_TS
 		);
+		const configNSConfigFilePath = path.join(
+			projectDir || this.projectHelper.projectDir,
+			CONFIG_NS_FILE_NAME
+		);
 		const hasTS = this.$fs.exists(configTSFilePath);
 		const hasJS = this.$fs.exists(configJSFilePath);
+		let usesLegacyConfig = false;
 
-		if (!hasTS && !hasJS) {
-			throw new Error(
-				`You do not appear to have a ${CONFIG_FILE_NAME_DISPLAY} file. Please install NativeScript 7+ "npm i -g nativescript". You can also try running "ns migrate" after you have the latest installed. Exiting for now.`
-			);
+		if (this.$fs.exists(configNSConfigFilePath) && !hasTS && !hasJS) {
+			usesLegacyConfig = true;
+			if (!this._hasWarnedLegacy) {
+				this._hasWarnedLegacy = true;
+				this.$logger.debug(
+					"the value of this.$options.argv._[0] is: " + this.$options.argv._[0]
+				);
+				const isMigrate = this.$options.argv._[0] === "migrate";
+				if (!isMigrate) {
+					this.$logger.warn(
+						`You are using the deprecated ${CONFIG_NS_FILE_NAME} file. Just be aware that NativeScript 7 has an improved ${CONFIG_FILE_NAME_DISPLAY} file for when you're ready to upgrade this project.`
+					);
+				}
+			}
+			// throw new Error(
+			// 	`You do not appear to have a ${CONFIG_FILE_NAME_DISPLAY} file. Please install NativeScript 7+ "npm i -g nativescript". You can also try running "ns migrate" after you have the latest installed. Exiting for now.`
+			// );
 		}
 
 		if (hasTS && hasJS) {
@@ -85,18 +111,27 @@ export default {
 		return {
 			hasTS,
 			hasJS,
+			usesLegacyConfig,
 			configJSFilePath,
 			configTSFilePath,
+			configNSConfigFilePath,
 		};
 	}
 
 	public readConfig(projectDir?: string): INsConfig {
-		const { hasTS, configJSFilePath, configTSFilePath } = this.detectInfo(
-			projectDir
-		);
+		const {
+			hasTS,
+			configJSFilePath,
+			configTSFilePath,
+			usesLegacyConfig,
+			configNSConfigFilePath,
+		} = this.detectInfo(projectDir);
 
 		let config: INsConfig;
 
+		if (usesLegacyConfig) {
+			return this._readAndUpdateLegacyConfig(configNSConfigFilePath);
+		}
 		if (hasTS) {
 			const rawSource = this.$fs.readText(configTSFilePath);
 			const transpiledSource = ts.transpileModule(rawSource, {
@@ -128,6 +163,9 @@ export default {
 	public setValue(key: string, value: SupportedConfigValues) {
 		const { hasTS, configJSFilePath, configTSFilePath } = this.detectInfo();
 		const configFilePath = configTSFilePath || configJSFilePath;
+		if (!this.$fs.exists(configFilePath)) {
+			this.writeDefaultConfig(this.projectHelper.projectDir);
+		}
 		const configContent = this.$fs.readText(configFilePath);
 
 		try {
@@ -167,10 +205,39 @@ export default {
 		this.$fs.writeFile(configTSFilePath, this.getDefaultTSConfig(appId));
 	}
 
+	private _readAndUpdateLegacyConfig(configNSConfigFilePath: string) {
+		let configNs: any = this.$fs.readJson(configNSConfigFilePath);
+		if (!this._handledLegacyId) {
+			this._handledLegacyId = true;
+			const packageJson = this.$fs.readJson(
+				path.join(this.projectHelper.projectDir, "package.json")
+			);
+			if (
+				packageJson &&
+				packageJson.nativescript &&
+				packageJson.nativescript.id
+			) {
+				configNs = {
+					id: packageJson.nativescript.id,
+					...configNs,
+				};
+				this.$fs.writeJson(configNSConfigFilePath, configNs);
+			}
+		}
+		return configNs;
+	}
+
 	public writeLegacyNSConfigIfNeeded(
 		projectDir: string,
 		runtimePackage: IBasePluginData
 	) {
+		const projectInfo = this.detectInfo(
+			projectDir || this.projectHelper.projectDir
+		);
+		if (projectInfo.usesLegacyConfig) {
+			return;
+		}
+
 		if (
 			runtimePackage.version &&
 			semver.gte(runtimePackage.version, "7.0.0-rc.5")

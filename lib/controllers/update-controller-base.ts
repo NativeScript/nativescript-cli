@@ -51,7 +51,8 @@ export class UpdateControllerBase {
 		this.$fs.deleteDirectory(backupDir);
 		this.$fs.createDirectory(backupDir);
 		for (const folder of folders) {
-			const folderToCopy = path.join(projectDir, folder);
+			const fileName = folder.replace(path.sep, "_");
+			const folderToCopy = path.join(projectDir, fileName);
 			if (this.$fs.exists(folderToCopy)) {
 				this.$fs.copyFile(folderToCopy, backupDir);
 			}

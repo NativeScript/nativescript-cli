@@ -315,8 +315,10 @@ interface IProjectConfigService {
 	): {
 		hasTS: boolean;
 		hasJS: boolean;
+		usesLegacyConfig: boolean;
 		configJSFilePath: string;
 		configTSFilePath: string;
+		configNSConfigFilePath: string;
 	};
 
 	getDefaultTSConfig(appId: string): string;
