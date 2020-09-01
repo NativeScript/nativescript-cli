@@ -19,6 +19,10 @@ import { IBasePluginData } from "../definitions/plugins";
 import { injector } from "../common/yok";
 import { EOL } from "os";
 import { IOptions } from "../declarations";
+import {
+	format as prettierFormat,
+	resolveConfig as resolvePrettierConfig,
+} from "prettier";
 import semver = require("semver/preload");
 
 export class ProjectConfigService implements IProjectConfigService {
@@ -161,7 +165,10 @@ export default {
 		return _.get(this.readConfig(), key);
 	}
 
-	public setValue(key: string, value: SupportedConfigValues): boolean {
+	public async setValue(
+		key: string,
+		value: SupportedConfigValues
+	): Promise<boolean> {
 		const { hasTS, configJSFilePath, configTSFilePath } = this.detectInfo();
 		const configFilePath = configTSFilePath || configJSFilePath;
 
@@ -188,7 +195,24 @@ export default {
 				configContent
 			);
 			const newContent = transformer.setValue(key, value);
-			this.$fs.writeFile(configFilePath, newContent);
+			const prettierOptions = (await resolvePrettierConfig(
+				this.projectHelper.projectDir,
+				{ editorconfig: true }
+			)) || {
+				semi: false,
+				singleQuote: true,
+			};
+			this.$logger.trace(
+				"updating config, prettier options: ",
+				prettierOptions
+			);
+			this.$fs.writeFile(
+				configFilePath,
+				prettierFormat(newContent, {
+					...prettierOptions,
+					parser: "typescript",
+				})
+			);
 		} catch (error) {
 			this.$logger.error(`Failed to update config.` + error);
 		} finally {

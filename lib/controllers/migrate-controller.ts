@@ -855,7 +855,10 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 		}
 
 		// migrate data into nativescript.config.ts
-		const success = this.$projectConfigService.setValue("", dataToMigrate);
+		const success = await this.$projectConfigService.setValue(
+			"",
+			dataToMigrate
+		);
 
 		if (!success) {
 			this.$errors.fail(
@@ -869,7 +872,7 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 			rootPackageJsonData.nativescript &&
 			rootPackageJsonData.nativescript.id
 		) {
-			this.$projectConfigService.setValue(
+			await this.$projectConfigService.setValue(
 				"id",
 				rootPackageJsonData.nativescript.id
 			);

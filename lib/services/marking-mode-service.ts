@@ -27,7 +27,7 @@ export class MarkingModeService implements IMarkingModeService {
 		const { skipWarnings, forceSwitch } = options;
 
 		if (forceSwitch) {
-			this.setMarkingMode(MarkingMode.None);
+			await this.setMarkingMode(MarkingMode.None);
 			return;
 		}
 
@@ -36,8 +36,8 @@ export class MarkingModeService implements IMarkingModeService {
 		}
 	}
 
-	private setMarkingMode(newMode: string) {
-		this.$projectConfigService.setValue("android.markingMode", newMode);
+	private async setMarkingMode(newMode: string) {
+		await this.$projectConfigService.setValue("android.markingMode", newMode);
 	}
 
 	private showMarkingModeFullWarning() {
