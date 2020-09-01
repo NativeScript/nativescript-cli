@@ -125,6 +125,7 @@ export default {
 	public readConfig(projectDir?: string): INsConfig {
 		const {
 			hasTS,
+			hasJS,
 			configJSFilePath,
 			configTSFilePath,
 			usesLegacyConfig,
@@ -134,6 +135,9 @@ export default {
 		let config: INsConfig;
 
 		if (usesLegacyConfig) {
+			this.$logger.trace(
+				"Project Config Service: Using legacy nsconfig.json..."
+			);
 			return this._readAndUpdateLegacyConfig(configNSConfigFilePath);
 		}
 
@@ -149,7 +153,7 @@ export default {
 			config = result["default"] ? result["default"] : result;
 			// console.log('transpiledSource.outputText:', transpiledSource.outputText)
 			// config = eval(transpiledSource.outputText);
-		} else {
+		} else if (hasJS) {
 			const rawSource = this.$fs.readText(configJSFilePath);
 			// console.log('rawSource:', rawSource)
 			// config = eval(rawSource);
