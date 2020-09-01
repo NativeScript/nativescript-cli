@@ -243,13 +243,14 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 
 		try {
 			this.$logger.info("Backup project configuration.");
-			const backupFolders = MigrateController.folders;
-			const embeddedPackagePath = path.join(
-				projectData.getAppDirectoryRelativePath(),
-				"package.json"
+			this.backup(
+				[
+					...MigrateController.folders,
+					path.join(projectData.getAppDirectoryRelativePath(), "package.json"),
+				],
+				backupDir,
+				projectData.projectDir
 			);
-			backupFolders.push(embeddedPackagePath);
-			this.backup(backupFolders, backupDir, projectData.projectDir);
 			this.$logger.info("Backup project configuration complete.");
 		} catch (error) {
 			this.$logger.error(MigrateController.backupFailMessage);
@@ -342,8 +343,8 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 		platforms,
 		allowInvalidVersions,
 	}: IMigrationData): Promise<boolean> {
+		const isMigrate = _.get(this.$options, "argv._[0]") === "migrate";
 		const projectData = this.$projectDataService.getProjectData(projectDir);
-		const isMigrate = this.$options.argv._[0] === "migrate";
 		const projectInfo = this.$projectConfigService.detectInfo(
 			projectData.projectDir
 		);
@@ -803,76 +804,88 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 	}
 
 	private async migrateConfig(projectData: IProjectData) {
-		const embeddedPackagePath = path.resolve(
+		this.$logger.info(
+			`Migrating project to use ${constants.CONFIG_FILE_NAME_TS}...`
+		);
+
+		// app/package.json or src/package.json usually
+		const embeddedPackageJsonPath = path.resolve(
 			projectData.projectDir,
 			projectData.getAppDirectoryRelativePath(),
 			constants.PACKAGE_JSON_FILE_NAME
 		);
+		this.$logger.debug(`embeddedPackageJsonPath: ${embeddedPackageJsonPath}`);
+		// nsconfig.json
 		const legacyNsConfigPath = path.resolve(
 			projectData.projectDir,
 			constants.CONFIG_NS_FILE_NAME
 		);
+		this.$logger.debug(`legacyNsConfigPath: ${legacyNsConfigPath}`);
+		// package.json
+		const rootPackageJsonPath: any = path.resolve(
+			projectData.projectDir,
+			constants.PACKAGE_JSON_FILE_NAME
+		);
+		this.$logger.debug(`rootPackageJsonPath: ${rootPackageJsonPath}`);
+
 		let embeddedPackageData: any = {};
-		if (this.$fs.exists(embeddedPackagePath)) {
-			embeddedPackageData = this.$fs.readJson(embeddedPackagePath);
+		if (this.$fs.exists(embeddedPackageJsonPath)) {
+			embeddedPackageData = this.$fs.readJson(embeddedPackageJsonPath);
 		}
+
 		let legacyNsConfigData: any = {};
 		if (this.$fs.exists(legacyNsConfigPath)) {
 			legacyNsConfigData = this.$fs.readJson(legacyNsConfigPath);
 		}
-		const legacyData: any = {
+
+		let rootPackageJsonData: any = {};
+		if (this.$fs.exists(rootPackageJsonPath)) {
+			rootPackageJsonData = this.$fs.readJson(rootPackageJsonPath);
+		}
+
+		const dataToMigrate: any = {
 			...embeddedPackageData,
 			...legacyNsConfigData,
 		};
-		const packageJsonPath: any = path.resolve(
-			projectData.projectDir,
-			constants.PACKAGE_JSON_FILE_NAME
-		);
-		const packageJsonData: any = this.$fs.readFile(packageJsonPath);
-		if (legacyData.main) {
-			packageJsonPath.main = legacyData.main;
-			delete legacyData.main;
+
+		// move main key into root packagejson
+		if (dataToMigrate.main) {
+			rootPackageJsonData.main = dataToMigrate.main;
+			delete dataToMigrate.main;
 		}
-		if (
-			legacyData &&
-			legacyData.android &&
-			typeof legacyData.android.codeCache === "string"
-		) {
-			legacyData.android.codeCache = legacyData.android.codeCache === "true";
+
+		// migrate data into nativescript.config.ts
+		const success = this.$projectConfigService.setValue("", dataToMigrate);
+
+		if (!success) {
+			this.$errors.fail(
+				`Failed to migrate project to use ${constants.CONFIG_FILE_NAME_TS}. One or more values could not be updated.`
+			);
 		}
-		const flattenObjectToPaths = (obj: any, basePath?: string): any => {
-			const toPath = (key: any) => [basePath, key].filter(Boolean).join(".");
-			return Object.keys(obj).reduce((all: any, key) => {
-				if (typeof obj[key] === "object") {
-					return [...all, ...flattenObjectToPaths(obj[key], toPath(key))];
-				}
-				return [
-					...all,
-					{
-						key: toPath(key),
-						value: obj[key],
-					},
-				];
-			}, []);
-		};
-		const dotNotationPaths = flattenObjectToPaths(legacyData);
-		dotNotationPaths.forEach((p: any) => {
-			// this.$logger.info(p.key, p.value);
-			this.$projectConfigService.setValue(p.key, p.value);
-		});
+
+		// move app id into nativescript.config.ts
 		if (
-			packageJsonData &&
-			packageJsonData.nativescript &&
-			packageJsonData.nativescript.id
+			rootPackageJsonData &&
+			rootPackageJsonData.nativescript &&
+			rootPackageJsonData.nativescript.id
 		) {
 			this.$projectConfigService.setValue(
 				"id",
-				packageJsonData.nativescript.id
+				rootPackageJsonData.nativescript.id
 			);
-			delete packageJsonData.nativescript;
+			delete rootPackageJsonData.nativescript;
 		}
-		this.$fs.writeJson(packageJsonPath, packageJsonData);
-		this.$logger.info(`Migrated to ${constants.CONFIG_FILE_NAME_TS}`);
+
+		// save root package.json
+		this.$fs.writeJson(rootPackageJsonPath, rootPackageJsonData);
+
+		// delete migrated files
+		this.$fs.deleteFile(embeddedPackageJsonPath);
+		this.$fs.deleteFile(legacyNsConfigPath);
+
+		this.$logger.info(
+			`Migrated project to use ${constants.CONFIG_FILE_NAME_TS}`
+		);
 	}
 
 	private async migrateUnitTestRunner(

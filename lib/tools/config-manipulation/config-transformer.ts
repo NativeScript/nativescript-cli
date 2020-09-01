@@ -17,7 +17,11 @@ import {
 	SyntaxKind,
 } from "ts-morph";
 
-export type SupportedConfigValues = string | number | boolean;
+export type SupportedConfigValues =
+	| string
+	| number
+	| boolean
+	| { [key: string]: SupportedConfigValues };
 
 export interface IConfigTransformer {
 	/**
