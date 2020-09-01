@@ -142,9 +142,9 @@ export class CommandsService implements ICommandsService {
 					" "
 			  ) + " "
 			: "";
-		const commandHelp = `tns ${command}--help`;
+		const commandHelp = `ns ${command}--help`;
 		this.$logger.printMarkdown(
-			`\`Run '${commandHelp}' for more information.\``
+			`__Run \`${commandHelp}\` for more information.__`
 		);
 		return;
 	}

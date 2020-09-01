@@ -354,7 +354,7 @@ export class Options {
 			opts[this.getDashedOptionName(key)] = value;
 		});
 
-		const parsed = yargs(process.argv.slice(2));
+		const parsed = yargs(process.argv.slice(2)).help(false);
 		this.initialArgv = parsed.argv;
 		this.argv = parsed.options(<any>opts).argv;
 
