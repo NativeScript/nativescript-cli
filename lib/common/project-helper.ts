@@ -3,6 +3,7 @@ import * as _ from "lodash";
 import { IErrors, IFileSystem, IProjectHelper } from "./declarations";
 import { IOptions } from "../declarations";
 import { injector } from "./yok";
+import { SCOPED_TNS_CORE_MODULES, TNS_CORE_MODULES_NAME } from "../constants";
 
 export class ProjectHelper implements IProjectHelper {
 	constructor(
@@ -75,7 +76,10 @@ export class ProjectHelper implements IProjectHelper {
 	private isProjectFileCorrect(projectFilePath: string): boolean {
 		try {
 			const fileContent = this.$fs.readText(projectFilePath);
-			return fileContent.includes("nativescript");
+			return (
+				fileContent.includes(SCOPED_TNS_CORE_MODULES) ||
+				fileContent.includes(TNS_CORE_MODULES_NAME)
+			);
 		} catch (err) {
 			this.$errors.fail(
 				"The project file is corrupted. Additional technical information: %s",
