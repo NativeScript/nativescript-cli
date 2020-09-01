@@ -1,3 +1,31 @@
+## [7.0.1](https://github.com/NativeScript/nativescript-cli/compare/v6.7.8...v7.0.1) (2020-09-01)
+
+
+### Bug Fixes
+
+* broken test due to missing dependency ([51a3fb4](https://github.com/NativeScript/nativescript-cli/commit/51a3fb49428c449b5ee01ab9e90052cbbba5c7a0))
+* failing tests ([ab9f2a9](https://github.com/NativeScript/nativescript-cli/commit/ab9f2a923bc0bdf1ead995013bd99639037174bc))
+* failing tests + config service stub ([d5d62bd](https://github.com/NativeScript/nativescript-cli/commit/d5d62bd967758e0cca5ddfd399c9da3aca9c2ede))
+* global Error extension and Function injection ([f46ddb9](https://github.com/NativeScript/nativescript-cli/commit/f46ddb947def168f253f60c7db217fc16b0631d3))
+* plugin service tests and config reading ([bc3568e](https://github.com/NativeScript/nativescript-cli/commit/bc3568e820511d946c137af93614f46e61d7e21c))
+* properly resolve bundle id ([4ece731](https://github.com/NativeScript/nativescript-cli/commit/4ece731075f146ee9ad10dea992b4bd60ee64c62))
+* runtime name/version parse ([e3ee3a4](https://github.com/NativeScript/nativescript-cli/commit/e3ee3a4088a539d90b2c4d48905e24831aec7c48))
+* scoped runtimes, project detection, frameworkPath ([9ca68e5](https://github.com/NativeScript/nativescript-cli/commit/9ca68e5c611134947c67440fc224cca651d0d3ca))
+* unit-tests ([1076a78](https://github.com/NativeScript/nativescript-cli/commit/1076a785708f6580036f226747337ede918f0837))
+* update runtime package.json when config changes ([a460652](https://github.com/NativeScript/nativescript-cli/commit/a460652cf54c5a603172def2f91e6a4a4972af92))
+* version format to use v instead of @ ([c7900ad](https://github.com/NativeScript/nativescript-cli/commit/c7900adc62cf2136a584edce14c21b678ac34ac6))
+
+
+### Features
+
+* config file handling ([1dfdfa4](https://github.com/NativeScript/nativescript-cli/commit/1dfdfa44e623c3c292090eafa8dfed8035fe9fa2))
+* config manipulation ([93175f4](https://github.com/NativeScript/nativescript-cli/commit/93175f4cb8a13cb416b24af491b5caac4b86c799))
+* passing appPath and appResourcesPath through gradle args ([24e07c0](https://github.com/NativeScript/nativescript-cli/commit/24e07c060cb30941ec905444310416f202e546dd))
+* use scoped app templates and fix create project appid ([fd370d3](https://github.com/NativeScript/nativescript-cli/commit/fd370d353b2ccc1cd7803f03978047c9fbfbfade))
+* **webpack:** use scoped @nativescript/webpack ([8307d78](https://github.com/NativeScript/nativescript-cli/commit/8307d78a1fe7954709ec9bf1dcfcabd68cc832e5))
+
+
+
 ## [6.7.8](https://github.com/NativeScript/nativescript-cli/compare/v6.7.7...v6.7.8) (2020-06-27)
 
 
