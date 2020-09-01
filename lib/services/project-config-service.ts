@@ -268,7 +268,7 @@ export default {
 		}
 
 		const runtimePackageDisplay = `${runtimePackage.name}${
-			runtimePackage.version ? "@" + runtimePackage.version : ""
+			runtimePackage.version ? " v" + runtimePackage.version : ""
 		}`;
 
 		this.$logger.info();
