@@ -11,6 +11,22 @@
     "ns": "./bin/tns"
   },
   "main": "./lib/nativescript-cli-lib.js",
+  "files": [
+    "bin/nativescript.js",
+    "config",
+    "docs",
+    "!docs/html",
+    "lib",
+    "!lib/**/*.ts",
+    "!lib/**/*.js.map",
+    "!lib/common/test",
+    "!lib/common/docs/fonts",
+    "resources",
+    "setup",
+    "vendor",
+    "postinstall.js",
+    "preuninstall.js"
+  ],
   "scripts": {
     "clean": "npx rimraf node_modules package-lock.json && npm run setup",
     "build": "grunt",
