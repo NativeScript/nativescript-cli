@@ -73,6 +73,7 @@ function isInstallingNativeScriptGloballyWithNpm(): boolean {
 	const isGlobalCommand = doesCurrentNpmCommandMatch([/^--global$/, /^-g$/]);
 	const hasNativeScriptPackage = doesCurrentNpmCommandMatch([
 		/^nativescript(@.*)?$/,
+		/nativescript-(.*)\.tgz?$/,
 	]);
 
 	return isInstallCommand && isGlobalCommand && hasNativeScriptPackage;
@@ -84,6 +85,7 @@ function isInstallingNativeScriptGloballyWithYarn(): boolean {
 	const isGlobalCommand = doesCurrentNpmCommandMatch([/^global$/]);
 	const hasNativeScriptPackage = doesCurrentNpmCommandMatch([
 		/^nativescript(@.*)?$/,
+		/nativescript-(.*)\.tgz?$/,
 	]);
 
 	return isInstallCommand && isGlobalCommand && hasNativeScriptPackage;

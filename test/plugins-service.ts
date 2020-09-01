@@ -245,7 +245,7 @@ function createProjectFile(testInjector: IInjector): string {
 
 	const packageJsonData = {
 		name: "testModuleName",
-		description: "nativescript", // important for project file checks - currently just looking for the nativescript keyword
+		description: "@nativescript/core", // important for project file checks - currently just looking for the @nativescript/core keyword
 		version: "0.1.0",
 		devDependencies: {
 			"tns-android": "1.4.0",
