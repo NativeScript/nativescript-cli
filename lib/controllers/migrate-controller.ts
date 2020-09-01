@@ -113,7 +113,7 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 	private migrationDependencies: IMigrationDependency[] = [
 		{
 			packageName: constants.SCOPED_TNS_CORE_MODULES,
-			verifiedVersion: "7.0.0-rc.57",
+			verifiedVersion: "7.0.0",
 			shouldAddIfMissing: true,
 		},
 		{
@@ -122,13 +122,13 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 		},
 		{
 			packageName: "@nativescript/types",
-			verifiedVersion: "7.0.0-rc.0",
+			verifiedVersion: "7.0.0",
 			isDev: true,
 		},
 		{
 			packageName: "tns-platform-declarations",
 			replaceWith: "@nativescript/types",
-			verifiedVersion: "7.0.0-rc.0",
+			verifiedVersion: "7.0.0",
 			isDev: true,
 		},
 		{
@@ -141,7 +141,7 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 		},
 		{
 			packageName: constants.WEBPACK_PLUGIN_NAME,
-			verifiedVersion: "3.0.0-rc.2",
+			verifiedVersion: "3.0.0",
 			shouldAddIfMissing: true,
 			isDev: true,
 		},
@@ -877,6 +877,55 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 				rootPackageJsonData.nativescript.id
 			);
 			delete rootPackageJsonData.nativescript;
+		}
+
+		// detect path to src and App_Resources
+		const possibleAppPaths = [
+			path.resolve(projectData.projectDir, constants.SRC_DIR),
+			path.resolve(projectData.projectDir, constants.APP_FOLDER_NAME),
+		];
+
+		const appPath = possibleAppPaths.find((possiblePath) =>
+			this.$fs.exists(possiblePath)
+		);
+		if (appPath) {
+			const relativeAppPath = path
+				.relative(projectData.projectDir, appPath)
+				.replace(path.sep, "/");
+			this.$logger.trace(
+				`Found app source at '${appPath}'. Writing '${relativeAppPath}' to config.`
+			);
+			const ok = await this.$projectConfigService.setValue(
+				"appPath",
+				relativeAppPath.toString()
+			);
+			this.$logger.trace(ok ? `Ok...` : "Could not write...");
+		}
+
+		const possibleAppResourcesPaths = [
+			path.resolve(
+				projectData.projectDir,
+				appPath,
+				constants.APP_RESOURCES_FOLDER_NAME
+			),
+			path.resolve(projectData.projectDir, constants.APP_RESOURCES_FOLDER_NAME),
+		];
+
+		const appResourcesPath = possibleAppResourcesPaths.find((possiblePath) =>
+			this.$fs.exists(possiblePath)
+		);
+		if (appResourcesPath) {
+			const relativeAppResourcesPath = path
+				.relative(projectData.projectDir, appResourcesPath)
+				.replace(path.sep, "/");
+			this.$logger.trace(
+				`Found App_Resources at '${appResourcesPath}'. Writing '${relativeAppResourcesPath}' to config.`
+			);
+			const ok = await this.$projectConfigService.setValue(
+				"appResourcesPath",
+				relativeAppResourcesPath.toString()
+			);
+			this.$logger.trace(ok ? `Ok...` : "Could not write...");
 		}
 
 		// save root package.json
