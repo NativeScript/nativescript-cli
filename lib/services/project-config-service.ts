@@ -16,10 +16,10 @@ import {
 	SupportedConfigValues,
 } from "../tools/config-manipulation/config-transformer";
 import { IBasePluginData } from "../definitions/plugins";
-import semver = require("semver/preload");
 import { injector } from "../common/yok";
 import { EOL } from "os";
 import { IOptions } from "../declarations";
+import semver = require("semver/preload");
 
 export class ProjectConfigService implements IProjectConfigService {
 	private _hasWarnedLegacy = false;
@@ -90,7 +90,7 @@ export default {
 				this.$logger.debug(
 					"the value of this.$options.argv._[0] is: " + this.$options.argv._[0]
 				);
-				const isMigrate = this.$options.argv._[0] === "migrate";
+				const isMigrate = _.get(this.$options, "argv._[0]") === "migrate";
 				if (!isMigrate) {
 					this.$logger.warn(
 						`You are using the deprecated ${CONFIG_NS_FILE_NAME} file. Just be aware that NativeScript 7 has an improved ${CONFIG_FILE_NAME_DISPLAY} file for when you're ready to upgrade this project.`
@@ -132,6 +132,7 @@ export default {
 		if (usesLegacyConfig) {
 			return this._readAndUpdateLegacyConfig(configNSConfigFilePath);
 		}
+
 		if (hasTS) {
 			const rawSource = this.$fs.readText(configTSFilePath);
 			const transpiledSource = ts.transpileModule(rawSource, {
@@ -160,12 +161,26 @@ export default {
 		return _.get(this.readConfig(), key);
 	}
 
-	public setValue(key: string, value: SupportedConfigValues) {
+	public setValue(key: string, value: SupportedConfigValues): boolean {
 		const { hasTS, configJSFilePath, configTSFilePath } = this.detectInfo();
 		const configFilePath = configTSFilePath || configJSFilePath;
+
 		if (!this.$fs.exists(configFilePath)) {
 			this.writeDefaultConfig(this.projectHelper.projectDir);
 		}
+
+		if (typeof value === "object") {
+			let allSuccessful = true;
+
+			this.flattenObjectToPaths(value).forEach((prop) => {
+				if (!this.setValue(prop.key, prop.value)) {
+					allSuccessful = false;
+				}
+			});
+
+			return allSuccessful;
+		}
+
 		const configContent = this.$fs.readText(configFilePath);
 
 		try {
@@ -192,7 +207,9 @@ export default {
 
 				// restore original content
 				this.$fs.writeFile(configFilePath, configContent);
+				return false;
 			}
+			return true;
 		}
 	}
 
@@ -206,35 +223,40 @@ export default {
 	}
 
 	private _readAndUpdateLegacyConfig(configNSConfigFilePath: string) {
-		let configNs: any = this.$fs.readJson(configNSConfigFilePath);
-		if (!this._handledLegacyId) {
-			this._handledLegacyId = true;
-			const packageJson = this.$fs.readJson(
-				path.join(this.projectHelper.projectDir, "package.json")
-			);
-			if (
-				packageJson &&
-				packageJson.nativescript &&
-				packageJson.nativescript.id
-			) {
-				configNs = {
-					id: packageJson.nativescript.id,
-					...configNs,
-				};
-				this.$fs.writeJson(configNSConfigFilePath, configNs);
-			}
+		let nsConfig: any = this.$fs.readJson(configNSConfigFilePath);
+		if (this._handledLegacyId) {
+			return;
 		}
-		return configNs;
+		this._handledLegacyId = true;
+
+		const packageJson = this.$fs.readJson(
+			path.join(this.projectHelper.projectDir, "package.json")
+		);
+
+		if (
+			packageJson &&
+			packageJson.nativescript &&
+			packageJson.nativescript.id
+		) {
+			nsConfig = {
+				id: packageJson.nativescript.id,
+				...nsConfig,
+			};
+			this.$fs.writeJson(configNSConfigFilePath, nsConfig);
+		}
+
+		return nsConfig;
 	}
 
 	public writeLegacyNSConfigIfNeeded(
 		projectDir: string,
 		runtimePackage: IBasePluginData
 	) {
-		const projectInfo = this.detectInfo(
+		const { usesLegacyConfig } = this.detectInfo(
 			projectDir || this.projectHelper.projectDir
 		);
-		if (projectInfo.usesLegacyConfig) {
+
+		if (usesLegacyConfig) {
 			return;
 		}
 
@@ -267,6 +289,25 @@ You may add \`nsconfig.json\` to \`.gitignore\` as the CLI will regenerate it as
 			appPath: this.getValue("appPath"),
 			appResourcesPath: this.getValue("appResourcesPath"),
 		});
+	}
+
+	private flattenObjectToPaths(
+		obj: any,
+		basePath?: string
+	): Array<{ key: string; value: any }> {
+		const toPath = (key: any) => [basePath, key].filter(Boolean).join(".");
+		return Object.keys(obj).reduce((all: any, key) => {
+			if (typeof obj[key] === "object") {
+				return [...all, ...this.flattenObjectToPaths(obj[key], toPath(key))];
+			}
+			return [
+				...all,
+				{
+					key: toPath(key),
+					value: obj[key],
+				},
+			];
+		}, []);
 	}
 }
 

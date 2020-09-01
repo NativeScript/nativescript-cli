@@ -26,7 +26,7 @@ export class MigrateCommand implements ICommand {
 
 		if (!shouldMigrateResult) {
 			this.$logger.printMarkdown(
-				'__Project is compatible with NativeScript "v6.0.0". To get the latest NativeScript packages execute "ns update".__'
+				'__Project is compatible with NativeScript "v7.0.0". To get the latest NativeScript packages execute "ns update".__'
 			);
 			return;
 		}

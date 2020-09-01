@@ -35,10 +35,11 @@ export class UpdateControllerBase {
 		for (const folder of folders) {
 			this.$fs.deleteDirectory(path.join(projectDir, folder));
 
-			const folderToCopy = path.join(backupDir, folder);
+			const fileName = folder.replace(path.sep, "_");
+			const folderToCopy = path.join(backupDir, fileName);
 
 			if (this.$fs.exists(folderToCopy)) {
-				this.$fs.copyFile(folderToCopy, projectDir);
+				this.$fs.copyFile(folderToCopy, path.resolve(projectDir, folder));
 			}
 		}
 	}
@@ -52,9 +53,9 @@ export class UpdateControllerBase {
 		this.$fs.createDirectory(backupDir);
 		for (const folder of folders) {
 			const fileName = folder.replace(path.sep, "_");
-			const folderToCopy = path.join(projectDir, fileName);
+			const folderToCopy = path.join(projectDir, folder);
 			if (this.$fs.exists(folderToCopy)) {
-				this.$fs.copyFile(folderToCopy, backupDir);
+				this.$fs.copyFile(folderToCopy, path.resolve(backupDir, fileName));
 			}
 		}
 	}

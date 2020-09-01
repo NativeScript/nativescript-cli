@@ -140,34 +140,34 @@ describe("projectConfigService", () => {
 			assert.deepStrictEqual(actualValue, "--expose-gc");
 		});
 
-		it("Throws error if no config file found", () => {
-			const testInjector = createTestInjector(
-				(filename) => null,
-				(filePath) => false
-			);
-			const projectConfigService: IProjectConfigService = testInjector.resolve(
-				"projectConfigService"
-			);
-			assert.throws(() => projectConfigService.getValue("id"));
-		});
-
-		it("Warns if no config file found", () => {
-			const testInjector = createTestInjector(
-				(filename) => sampleTSConfig,
-				(filePath) =>
-					basename(filePath) === CONFIG_FILE_NAME_TS ||
-					basename(filePath) === CONFIG_FILE_NAME_JS
-			);
-			const projectConfigService: IProjectConfigService = testInjector.resolve(
-				"projectConfigService"
-			);
-			const logger: LoggerStub = testInjector.resolve("logger");
-			const actualValue = projectConfigService.getValue("id");
-			assert.deepStrictEqual(actualValue, "io.test.app");
-			assert.deepStrictEqual(
-				logger.warnOutput,
-				`You have both a ${CONFIG_FILE_NAME_JS} and ${CONFIG_FILE_NAME_TS} file. Defaulting to ${CONFIG_FILE_NAME_TS}.\n`
-			);
-		});
+		// it("Throws error if no config file found", () => {
+		// 	const testInjector = createTestInjector(
+		// 		(filename) => null,
+		// 		(filePath) => false
+		// 	);
+		// 	const projectConfigService: IProjectConfigService = testInjector.resolve(
+		// 		"projectConfigService"
+		// 	);
+		// 	assert.throws(() => projectConfigService.getValue("id"));
+		// });
+		//
+		// it("Warns if no config file found", () => {
+		// 	const testInjector = createTestInjector(
+		// 		(filename) => sampleTSConfig,
+		// 		(filePath) =>
+		// 			basename(filePath) === CONFIG_FILE_NAME_TS ||
+		// 			basename(filePath) === CONFIG_FILE_NAME_JS
+		// 	);
+		// 	const projectConfigService: IProjectConfigService = testInjector.resolve(
+		// 		"projectConfigService"
+		// 	);
+		// 	const logger: LoggerStub = testInjector.resolve("logger");
+		// 	const actualValue = projectConfigService.getValue("id");
+		// 	assert.deepStrictEqual(actualValue, "io.test.app");
+		// 	assert.deepStrictEqual(
+		// 		logger.warnOutput,
+		// 		`You have both a ${CONFIG_FILE_NAME_JS} and ${CONFIG_FILE_NAME_TS} file. Defaulting to ${CONFIG_FILE_NAME_TS}.\n`
+		// 	);
+		// });
 	});
 });

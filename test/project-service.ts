@@ -3,12 +3,12 @@ import * as constants from "../lib/constants";
 import * as ProjectServiceLib from "../lib/services/project-service";
 import { assert } from "chai";
 import { SettingsService } from "../lib/common/test/unit-tests/stubs";
-import { LoggerStub, ErrorsStub, TempServiceStub } from "./stubs";
+import { ErrorsStub, LoggerStub, TempServiceStub } from "./stubs";
 import * as path from "path";
 import {
 	IProjectData,
-	IProjectService,
 	IProjectDataService,
+	IProjectService,
 } from "../lib/definitions/project";
 import { IProjectNameService } from "../lib/declarations";
 import { IInjector } from "../lib/common/definitions/yok";
@@ -38,8 +38,8 @@ describe("projectService", () => {
 				readJson: () => ({}),
 				readText: (value?: string) => "",
 				writeFile: (value?: string) => {},
-      });
-      testInjector.register("options", Options);
+			});
+			testInjector.register("options", Options);
 			testInjector.register("logger", LoggerStub);
 			testInjector.register("projectDataService", {
 				getProjectData: (projectDir?: string): IProjectData =>
@@ -162,8 +162,8 @@ describe("projectService", () => {
 			testInjector.register("fs", {
 				readText: (value?: string) => "",
 			});
-      testInjector.register("logger", {});
-      testInjector.register("options", Options);
+			testInjector.register("logger", {});
+			testInjector.register("options", Options);
 			testInjector.register("projectDataService", {
 				getProjectData: (projectDir?: string): IProjectData => projectData,
 			});

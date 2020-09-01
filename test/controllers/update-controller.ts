@@ -141,11 +141,17 @@ describe("update controller method tests", () => {
 		});
 
 		assert.isTrue(
-			copyFileStub.calledWith(path.join(tempDir, "package.json"), projectFolder)
+			copyFileStub.calledWith(
+				path.join(tempDir, "package.json"),
+				path.resolve(projectFolder, "package.json")
+			)
 		);
 		for (const folder of UpdateController.folders) {
 			assert.isTrue(
-				copyFileStub.calledWith(path.join(tempDir, folder), projectFolder)
+				copyFileStub.calledWith(
+					path.join(tempDir, folder),
+					path.resolve(projectFolder, folder)
+				)
 			);
 		}
 	});
