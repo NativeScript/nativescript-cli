@@ -167,13 +167,14 @@ export class UpdateController
 			const templateRuntimeVersion =
 				templatePlatformData && templatePlatformData.version;
 			if (
-				templateRuntimeVersion &&
-				(await this.shouldUpdateRuntimeVersion(
-					templateRuntimeVersion,
+				await this.shouldUpdateRuntimeVersion(
+					// templateRuntimeVersion is only set if the template has the legacy nativescript key in package.json
+					// in other cases, we are just going to default to using the latest
+					templateRuntimeVersion || "*",
 					platformData.frameworkPackageName,
 					platform,
 					projectData
-				))
+				)
 			) {
 				return true;
 			}
@@ -441,17 +442,26 @@ export class UpdateController
 			const templateRuntimeVersion =
 				templatePlatformData && templatePlatformData.version;
 			if (
-				templateRuntimeVersion &&
-				(await this.shouldUpdateRuntimeVersion(
-					templateRuntimeVersion,
+				await this.shouldUpdateRuntimeVersion(
+					// templateRuntimeVersion is only set if the template has the legacy nativescript key in package.json
+					// in other cases, we are just going to default to using the latest
+					templateRuntimeVersion || "*",
 					platformData.frameworkPackageName,
 					platform,
 					projectData
-				))
+				)
 			) {
+				const version =
+					templateRuntimeVersion ||
+					(await this.$packageInstallationManager.getMaxSatisfyingVersionSafe(
+						platformData.frameworkPackageName,
+						"*"
+					));
+
 				this.$logger.info(
-					`Updating ${platform} platform to version '${templateRuntimeVersion}'.`
+					`Updating ${platform} platform to version '${version}'.`
 				);
+
 				await this.$addPlatformService.setPlatformVersion(
 					platformData,
 					projectData,
