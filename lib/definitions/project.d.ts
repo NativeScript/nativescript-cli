@@ -308,7 +308,7 @@ interface IProjectConfigService {
 	 * @param key the property key path
 	 * @param value
 	 */
-	setValue(key: string, value: SupportedConfigValues): any;
+	setValue(key: string, value: SupportedConfigValues): Promise<boolean>;
 
 	detectInfo(
 		projectDir?: string

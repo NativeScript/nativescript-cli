@@ -142,21 +142,19 @@ export class ProjectData implements IProjectData {
 		const projectFilePath = this.getProjectFilePath(projectDir);
 		// If no project found, projectDir should be null
 		// handle migration cases
-		let isMigrate = false;
-		if (
-			this.$options.argv &&
-			this.$options.argv._ &&
-			this.$options.argv._.length
-		) {
-			this.$logger.debug(
-				"the value of this.$options.argv._[0] is: " + this.$options.argv._[0]
-			);
-			isMigrate = this.$options.argv._[0] === "migrate";
-		}
-		this.$logger.debug(`'initializingProjectData, isMigrate is ${isMigrate}.`);
-		const nsConfig: INsConfig = isMigrate
-			? null
-			: this.projectConfig.readConfig(projectDir);
+		// let isMigrate = false;
+		// if (
+		// 	this.$options.argv &&
+		// 	this.$options.argv._ &&
+		// 	this.$options.argv._.length
+		// ) {
+		// 	this.$logger.debug(
+		// 		"the value of this.$options.argv._[0] is: " + this.$options.argv._[0]
+		// 	);
+		// 	isMigrate = this.$options.argv._[0] === "migrate";
+		// }
+		// this.$logger.debug(`'initializingProjectData, isMigrate is ${isMigrate}.`);
+		const nsConfig: INsConfig = this.projectConfig.readConfig(projectDir);
 		let packageJsonData = null;
 
 		try {
@@ -169,7 +167,7 @@ export class ProjectData implements IProjectData {
 			);
 		}
 
-		if ((isMigrate || nsConfig) && packageJsonData) {
+		if (packageJsonData) {
 			this.projectDir = projectDir;
 			this.projectName = this.$projectHelper.sanitizeName(
 				path.basename(projectDir)
