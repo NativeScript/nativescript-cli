@@ -9,7 +9,7 @@ import { IStringDictionary, IProjectHelper } from "../lib/common/declarations";
 import { ProjectConfigService } from "../lib/services/project-config-service";
 import { ProjectData } from "../lib/project-data";
 
-describe.only("projectData", () => {
+describe("projectData", () => {
 	const createTestInjector = (): IInjector => {
 		const testInjector = new Yok();
 
