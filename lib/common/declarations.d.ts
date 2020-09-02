@@ -1,10 +1,12 @@
 import { IOptions } from "../declarations";
 import { IJsonFileSettingsService } from "./definitions/json-file-settings-service";
 import {
-	IGoogleAnalyticsData,
 	IEventActionData,
+	IGoogleAnalyticsData,
 } from "./definitions/google-analytics";
+import * as child_process from "child_process";
 
+// tslint:disable-next-line:interface-name
 interface Object {
 	[key: string]: any;
 }
@@ -14,6 +16,7 @@ interface IStringDictionary extends IDictionary<string> {}
 /**
  * Describes iTunes Connect application types
  */
+// tslint:disable-next-line:interface-name
 interface IiTunesConnectApplicationType {
 	/**
 	 * Applications developed for iOS
@@ -40,6 +43,7 @@ declare const enum GoogleAnalyticsDataType {
 /**
  * Descibes iTunes Connect applications
  */
+// tslint:disable-next-line:interface-name
 interface IiTunesConnectApplication {
 	/**
 	 * Unique Apple ID for each application. Automatically generated and assigned by Apple.
@@ -68,7 +72,7 @@ interface IiTunesConnectApplication {
 	sku: string;
 	/**
 	 * Application's type
-	 * @type {IItunesConnectApplicationTypes}
+	 * @type {string}
 	 */
 	type: string;
 	/**
@@ -128,7 +132,7 @@ interface IContentDeliveryBody {
 	result: {
 		/**
 		 * A list of the user's applications.
-		 * @type {IItunesConnectApplication[]}
+		 * @type {IiTunesConnectApplication[]}
 		 */
 		Applications: IiTunesConnectApplication[];
 		/**
@@ -365,7 +369,7 @@ interface IFileSystem {
 	/**
 	 * Reads the entire contents of a file.
 	 * @param {string} filename Path to the file that has to be read.
-	 * @param {string} @optional options Options used for reading the file - encoding and flags.
+	 * @param {string} options Options used for reading the file - encoding and flags.
 	 * @returns {string|Buffer} Content of the file as buffer. In case encoding is specified, the content is returned as string.
 	 */
 	readFile(filename: string, options?: IReadFileOptions): string | Buffer;
@@ -373,7 +377,7 @@ interface IFileSystem {
 	/**
 	 * Reads the entire contents of a file and returns the result as string.
 	 * @param {string} filename Path to the file that has to be read.
-	 * @param {string} @optional options Options used for reading the file - encoding and flags. If options are not passed, utf8 is used.
+	 * @param {IReadFileOptions | string} encoding Options used for reading the file - encoding and flags. If options are not passed, utf8 is used.
 	 * @returns {string} Content of the file as string.
 	 */
 	readText(filename: string, encoding?: IReadFileOptions | string): string;
@@ -381,7 +385,7 @@ interface IFileSystem {
 	/**
 	 * Reads the entire content of a file and parses it to JSON object.
 	 * @param {string} filename Path to the file that has to be read.
-	 * @param {string} @optional encoding File encoding, defaults to utf8.
+	 * @param {string} encoding File encoding, defaults to utf8.
 	 * @returns {string} Content of the file as JSON object.
 	 */
 	readJson(filename: string, encoding?: string): any;
@@ -498,7 +502,7 @@ interface IFileSystem {
 	 * or directory.
 	 * @param {string} sourcePath The original path of the file/dir.
 	 * @param {string} destinationPath The destination where symlink will be created.
-	 * @param {string} @optional type "file", "dir" or "junction". Default is 'file'.
+	 * @param {string} type "file", "dir" or "junction". Default is 'file'.
 	 * Type option is only available on Windows (ignored on other platforms).
 	 * Note that Windows junction points require the destination path to be absolute.
 	 * When using 'junction', the target argument will automatically be normalized to absolute path.
@@ -556,8 +560,8 @@ interface IFileSystem {
 
 	// shell.js wrappers
 	/**
-	 * @param (string) options Options, can be undefined or a combination of "-r" (recursive) and "-f" (force)
-	 * @param (string[]) files files and direcories to delete
+	 * @param {string} options Options, can be undefined or a combination of "-r" (recursive) and "-f" (force)
+	 * @param {string[]} files files and direcories to delete
 	 */
 	rm(options: string, ...files: string[]): void;
 
@@ -689,7 +693,11 @@ interface IChildProcess extends NodeJS.EventEmitter {
 		execOptions?: IExecOptions
 	): Promise<any>;
 	execFile<T>(command: string, args: string[]): Promise<T>;
-	spawn(command: string, args?: string[], options?: any): any; // it returns child_process.ChildProcess you can safely cast to it
+	spawn(
+		command: string,
+		args?: string[],
+		options?: any
+	): child_process.ChildProcess; // it returns child_process.ChildProcess you can safely cast to it
 	spawnFromEvent(
 		command: string,
 		args: string[],
@@ -987,7 +995,7 @@ interface IProxyLibSettings extends IRejectUnauthorized, ICredentials {
 interface IProxyService {
 	/**
 	 * Caches proxy data.
-	 * @param cacheData {IProxyLibSettings} Data to be cached.
+	 * @param {IProxyLibSettings} settings Data to be cached.
 	 * @returns {Promise<void>} The cache.
 	 */
 	setCache(settings: IProxyLibSettings): Promise<void>;
@@ -1039,14 +1047,14 @@ interface IHelpService {
 
 	/**
 	 * Finds the html help for specified command and opens it in the browser.
-	 * @param {IComandData} commandData Data describing searched command - name and arguments.
+	 * @param {ICommandData} commandData Data describing searched command - name and arguments.
 	 * @returns {Promise<void>}
 	 */
 	openHelpForCommandInBrowser(commandData: ICommandData): Promise<void>;
 
 	/**
 	 * Shows command line help for specified command.
-	 * @param {string} commandName The name of the command for which to show the help.
+	 * @param {string} commandData The name of the command for which to show the help.
 	 * @returns {Promise<void>}
 	 */
 	showCommandLineHelp(commandData: ICommandData): Promise<void>;
@@ -1159,6 +1167,7 @@ interface IHostInfo {
 	getMacOSVersion(): Promise<string>;
 }
 
+// tslint:disable-next-line:interface-name
 interface GenericFunction<T> extends Function {
 	(...args: any[]): T;
 }
@@ -1312,8 +1321,8 @@ interface IDoctorService {
 	runSetupScript(): Promise<ISpawnResult>;
 	/**
 	 * Checks if the envrironment is properly configured and it is possible to execute local builds
-	 * @param platform @optional The current platform
 	 * @returns {Promise<boolean>} true if the environment is properly configured for local builds
+	 * @param {object} configuration
 	 */
 	canExecuteLocalBuild(configuration?: {
 		platform?: string;
@@ -1353,8 +1362,8 @@ interface IUserSettingsService extends IJsonFileSettingsService {
 }
 
 /**
- *	Used for interaction with various resources located in a resources folder.
- *	@interface
+ * Used for interaction with various resources located in a resources folder.
+ * @interface
  */
 interface IResourceLoader {
 	/**
@@ -1471,6 +1480,7 @@ interface IProjectFilesManager {
 	 * Handle platform specific files.
 	 * @param {string} directoryPath Directory from which to start looking for platform specific files. All subdirectories will be included.
 	 * @param {string} platform Mobile platform - only platform specific files for this platform will be included.
+	 * @param {IProjectFilesConfig} projectFilesConfig
 	 * @param {string[]} excludedDirs Directories which should be skipped.
 	 * @returns {void}
 	 */
@@ -1512,6 +1522,7 @@ interface IProjectFilesProvider {
 	/**
 	 * Parses file by removing platform or configuration from its name.
 	 * @param {string} filePath Path to the project file.
+	 * @param {IProjectFilesConfig} projectFilesConfig
 	 * @return {string} Parsed file name or original file name in case it does not have platform/configuration in the filename.
 	 */
 	getPreparedFilePath(
@@ -1600,7 +1611,7 @@ interface INet {
 	/**
 	 * Returns the first available port in the provided range.
 	 * @param {number} startPort the first port to check.
-	 * @param {number} @optional endPort the last port to check. The default value is 65534.
+	 * @param {number} endPort the last port to check. The default value is 65534.
 	 * @return {Promise<number>} returns the first available prot in the given range.
 	 */
 	getAvailablePortInRange(startPort: number, endPort?: number): Promise<number>;
@@ -1674,6 +1685,7 @@ interface IDeferPromise<T> extends IPromiseActions<T> {
 /**
  * Describes service used for interaction with Notification Center
  */
+// tslint:disable-next-line:interface-name
 interface IiOSNotificationService {
 	/**
 	 * Posts a notification and waits for a response.
@@ -1692,7 +1704,7 @@ interface IiOSNotificationService {
 	 * Posts a notification.
 	 * @param {string} deviceIdentifier Device's identifier.
 	 * @param {string} notification The xml value of the Name key of the notification to be post.
-	 * @param {string} @optional commandType The xml value of the Command key of the notification to be post.
+	 * @param {string} commandType The xml value of the Command key of the notification to be post.
 	 * @return {Promise<number>} A socket which can be queried for a response.
 	 */
 	postNotification(

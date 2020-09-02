@@ -139,21 +139,9 @@ export class ProjectData implements IProjectData {
 		projectDir?: string
 	): void {
 		projectDir = projectDir || this.$projectHelper.projectDir || "";
+		this.projectDir = projectDir;
+
 		const projectFilePath = this.getProjectFilePath(projectDir);
-		// If no project found, projectDir should be null
-		// handle migration cases
-		// let isMigrate = false;
-		// if (
-		// 	this.$options.argv &&
-		// 	this.$options.argv._ &&
-		// 	this.$options.argv._.length
-		// ) {
-		// 	this.$logger.debug(
-		// 		"the value of this.$options.argv._[0] is: " + this.$options.argv._[0]
-		// 	);
-		// 	isMigrate = this.$options.argv._[0] === "migrate";
-		// }
-		// this.$logger.debug(`'initializingProjectData, isMigrate is ${isMigrate}.`);
 		const nsConfig: INsConfig = this.projectConfig.readConfig(projectDir);
 		let packageJsonData = null;
 
@@ -168,7 +156,6 @@ export class ProjectData implements IProjectData {
 		}
 
 		if (packageJsonData) {
-			this.projectDir = projectDir;
 			this.projectName = this.$projectHelper.sanitizeName(
 				path.basename(projectDir)
 			);
@@ -309,30 +296,33 @@ export class ProjectData implements IProjectData {
 		return path.resolve(projectDir, pathToResolve);
 	}
 
+	@cache()
 	private initializeProjectIdentifiers(
 		config: INsConfig
 	): Mobile.IProjectIdentifier {
-		if (config) {
-			const identifier: Mobile.IProjectIdentifier = {
-				ios: config.id,
-				android: config.id,
-			};
+		this.$logger.trace(`Initializing project identifiers. Config: `, config);
 
-			if (config.ios && config.ios.id) {
-				identifier.ios = config.ios.id;
-			}
-			if (config.android && config.android.id) {
-				identifier.android = config.android.id;
-			}
-
-			return identifier;
-		} else {
-			// when migrating projects this can be ignored
+		if (!config) {
+			this.$logger.error("Unable to determine app id.");
 			return {
 				ios: "",
 				android: "",
 			};
 		}
+
+		const identifier: Mobile.IProjectIdentifier = {
+			ios: config.id,
+			android: config.id,
+		};
+
+		if (config.ios && config.ios.id) {
+			identifier.ios = config.ios.id;
+		}
+		if (config.android && config.android.id) {
+			identifier.android = config.android.id;
+		}
+
+		return identifier;
 	}
 
 	private getProjectType(): string {

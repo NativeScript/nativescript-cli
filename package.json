@@ -1,7 +1,7 @@
 {
   "name": "nativescript",
   "preferGlobal": true,
-  "version": "7.0.3",
+  "version": "7.0.4-rc.0",
   "author": "NativeScript <support@nativescript.org>",
   "description": "Command-line interface for building NativeScript projects",
   "bin": {
@@ -85,7 +85,7 @@
     "nativescript-dev-xcode": "0.2.1",
     "nativescript-preview-sdk": "0.4.2",
     "open": "7.1.0",
-    "ora": "4.0.5",
+    "ora": "5.0.0",
     "osenv": "0.1.5",
     "pacote": "11.1.11",
     "pako": "1.0.11",

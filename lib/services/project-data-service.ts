@@ -7,6 +7,7 @@ import {
 	MAIN_DIR,
 	NATIVESCRIPT_PROPS_INTERNAL_DELIMITER,
 	NODE_MODULES_FOLDER_NAME,
+	PlatformTypes,
 	ProjectTypes,
 	RESOURCES_DIR,
 	SRC_DIR,
@@ -567,6 +568,36 @@ export class ProjectDataService implements IProjectDataService {
 		projectDir: string,
 		platform: constants.SupportedPlatform
 	): IBasePluginData {
+		const packageJson = this.$fs.readJson(
+			path.join(projectDir, constants.PACKAGE_JSON_FILE_NAME)
+		);
+		const runtimeName =
+			platform === PlatformTypes.android
+				? constants.TNS_ANDROID_RUNTIME_NAME
+				: constants.TNS_IOS_RUNTIME_NAME;
+
+		if (
+			packageJson &&
+			packageJson.nativescript &&
+			packageJson.nativescript[runtimeName] &&
+			packageJson.nativescript[runtimeName].version
+		) {
+			// if we have a nativescript key with a runtime version in package.json
+			// that means we are dealing with a legacy project, and should respect
+			// that information
+			return {
+				name: runtimeName,
+				version: packageJson.nativescript[runtimeName].version,
+			};
+		}
+
+		return this.getInstalledRuntimePackage(projectDir, platform);
+	}
+
+	private getInstalledRuntimePackage(
+		projectDir: string,
+		platform: constants.SupportedPlatform
+	): IBasePluginData {
 		const runtimePackage = this.$pluginsService
 			.getDependenciesFromPackageJson(projectDir)
 			.devDependencies.find((d) => {
@@ -606,6 +637,9 @@ export class ProjectDataService implements IProjectDataService {
 		}
 
 		// default to the scoped runtimes
+		this.$logger.trace(
+			"Could not find an installed runtime, falling back to default runtimes"
+		);
 		if (platform === constants.PlatformTypes.ios) {
 			return {
 				name: constants.SCOPED_IOS_RUNTIME_NAME,

@@ -1,3 +1,4 @@
+import * as constants from "../constants";
 import {
 	CONFIG_FILE_NAME_DISPLAY,
 	CONFIG_FILE_NAME_JS,
@@ -8,7 +9,11 @@ import * as path from "path";
 import * as _ from "lodash";
 import * as ts from "typescript";
 import { IFileSystem, IProjectHelper } from "../common/declarations";
-import { INsConfig, IProjectConfigService } from "../definitions/project";
+import {
+	INsConfig,
+	IProjectConfigInformation,
+	IProjectConfigService,
+} from "../definitions/project";
 import { IInjector } from "../common/definitions/yok";
 import {
 	ConfigTransformer,
@@ -18,23 +23,25 @@ import {
 import { IBasePluginData } from "../definitions/plugins";
 import { injector } from "../common/yok";
 import { EOL } from "os";
-import { IOptions } from "../declarations";
 import {
 	format as prettierFormat,
 	resolveConfig as resolvePrettierConfig,
 } from "prettier";
+import { cache } from "../common/decorators";
 import semver = require("semver/preload");
 
 export class ProjectConfigService implements IProjectConfigService {
-	private _hasWarnedLegacy = false;
-	private _handledLegacyId = false;
+	private forceUsingNSConfig: boolean = false;
 
 	constructor(
 		private $fs: IFileSystem,
 		private $logger: ILogger,
-		private $options: IOptions,
 		private $injector: IInjector
 	) {}
+
+	public setForceUsingNSConfig(force: boolean) {
+		return (this.forceUsingNSConfig = force);
+	}
 
 	private requireFromString(src: string, filename: string): NodeModule {
 		// @ts-ignore
@@ -61,106 +68,88 @@ export default {
 } as NativeScriptConfig;`.trim();
 	}
 
-	public detectInfo(
-		projectDir?: string
-	): {
-		hasTS: boolean;
-		hasJS: boolean;
-		usesLegacyConfig: boolean;
-		configJSFilePath: string;
-		configTSFilePath: string;
-		configNSConfigFilePath: string;
-	} {
-		const configJSFilePath = path.join(
+	@cache() // @cache should prevent the message being printed multiple times
+	private warnUsingLegacyNSConfig() {
+		this.$logger.warn(
+			`You are using the deprecated ${CONFIG_NS_FILE_NAME} file. Just be aware that NativeScript 7 has an improved ${CONFIG_FILE_NAME_DISPLAY} file for when you're ready to upgrade this project.`
+		);
+	}
+
+	public detectProjectConfigs(projectDir?: string): IProjectConfigInformation {
+		const JSConfigPath = path.join(
 			projectDir || this.projectHelper.projectDir,
 			CONFIG_FILE_NAME_JS
 		);
-		const configTSFilePath = path.join(
+		const TSConfigPath = path.join(
 			projectDir || this.projectHelper.projectDir,
 			CONFIG_FILE_NAME_TS
 		);
-		const configNSConfigFilePath = path.join(
+		const NSConfigPath = path.join(
 			projectDir || this.projectHelper.projectDir,
 			CONFIG_NS_FILE_NAME
 		);
-		const hasTS = this.$fs.exists(configTSFilePath);
-		const hasJS = this.$fs.exists(configJSFilePath);
-		let usesLegacyConfig = false;
 
-		if (this.$fs.exists(configNSConfigFilePath) && !hasTS && !hasJS) {
-			usesLegacyConfig = true;
-			if (!this._hasWarnedLegacy) {
-				this._hasWarnedLegacy = true;
-				this.$logger.debug(
-					"the value of this.$options.argv._[0] is: " + this.$options.argv._[0]
-				);
-				const isMigrate = _.get(this.$options, "argv._[0]") === "migrate";
-				if (!isMigrate) {
-					this.$logger.warn(
-						`You are using the deprecated ${CONFIG_NS_FILE_NAME} file. Just be aware that NativeScript 7 has an improved ${CONFIG_FILE_NAME_DISPLAY} file for when you're ready to upgrade this project.`
-					);
-				}
-			}
-			// throw new Error(
-			// 	`You do not appear to have a ${CONFIG_FILE_NAME_DISPLAY} file. Please install NativeScript 7+ "npm i -g nativescript". You can also try running "ns migrate" after you have the latest installed. Exiting for now.`
-			// );
-		}
+		const hasTSConfig = this.$fs.exists(TSConfigPath);
+		const hasJSConfig = this.$fs.exists(JSConfigPath);
+		const hasNSConfig = this.$fs.exists(NSConfigPath);
+		const usingNSConfig = !(hasTSConfig || hasJSConfig);
 
-		if (hasTS && hasJS) {
+		if (hasTSConfig && hasJSConfig) {
 			this.$logger.warn(
 				`You have both a ${CONFIG_FILE_NAME_JS} and ${CONFIG_FILE_NAME_TS} file. Defaulting to ${CONFIG_FILE_NAME_TS}.`
 			);
 		}
 
+		if (hasNSConfig && usingNSConfig) {
+			this.warnUsingLegacyNSConfig();
+
+			// const NSConfig = this.$fs.readJson(NSConfigPath)
+			// // if the nsconfig.json has an _info1 key - it's generated for backwards compatibility only
+			// if (NSConfig['_info1']) {
+			// 	usingNSConfig = false
+			// }
+			//
+			// if (usingNSConfig) {
+			// }
+		}
+
 		return {
-			hasTS,
-			hasJS,
-			usesLegacyConfig,
-			configJSFilePath,
-			configTSFilePath,
-			configNSConfigFilePath,
+			hasTSConfig,
+			hasJSConfig,
+			hasNSConfig,
+			usingNSConfig,
+			TSConfigPath,
+			JSConfigPath,
+			NSConfigPath,
 		};
 	}
 
 	public readConfig(projectDir?: string): INsConfig {
-		const {
-			hasTS,
-			hasJS,
-			configJSFilePath,
-			configTSFilePath,
-			usesLegacyConfig,
-			configNSConfigFilePath,
-		} = this.detectInfo(projectDir);
+		const info = this.detectProjectConfigs(projectDir);
+
+		if (info.usingNSConfig && !this.forceUsingNSConfig) {
+			this.$logger.trace(
+				"Project Config Service using legacy configuration..."
+			);
+			return this.fallbackToLegacyNSConfig(info);
+		}
 
 		let config: INsConfig;
 
-		if (usesLegacyConfig) {
-			this.$logger.trace(
-				"Project Config Service: Using legacy nsconfig.json..."
-			);
-			return this._readAndUpdateLegacyConfig(configNSConfigFilePath);
-		}
-
-		if (hasTS) {
-			const rawSource = this.$fs.readText(configTSFilePath);
+		if (info.hasTSConfig) {
+			const rawSource = this.$fs.readText(info.TSConfigPath);
 			const transpiledSource = ts.transpileModule(rawSource, {
 				compilerOptions: { module: ts.ModuleKind.CommonJS },
 			});
 			const result: any = this.requireFromString(
 				transpiledSource.outputText,
-				configTSFilePath
+				info.TSConfigPath
 			);
 			config = result["default"] ? result["default"] : result;
-			// console.log('transpiledSource.outputText:', transpiledSource.outputText)
-			// config = eval(transpiledSource.outputText);
-		} else if (hasJS) {
-			const rawSource = this.$fs.readText(configJSFilePath);
-			// console.log('rawSource:', rawSource)
-			// config = eval(rawSource);
-			config = this.requireFromString(rawSource, configJSFilePath);
+		} else if (info.hasJSConfig) {
+			const rawSource = this.$fs.readText(info.JSConfigPath);
+			config = this.requireFromString(rawSource, info.JSConfigPath);
 		}
-
-		// console.log('config: ', config);
 
 		return config;
 	}
@@ -173,8 +162,33 @@ export default {
 		key: string,
 		value: SupportedConfigValues
 	): Promise<boolean> {
-		const { hasTS, configJSFilePath, configTSFilePath } = this.detectInfo();
-		const configFilePath = configTSFilePath || configJSFilePath;
+		const {
+			hasTSConfig,
+			hasNSConfig,
+			TSConfigPath,
+			JSConfigPath,
+			usingNSConfig,
+			NSConfigPath,
+		} = this.detectProjectConfigs();
+		const configFilePath = TSConfigPath || JSConfigPath;
+
+		if (usingNSConfig && !this.forceUsingNSConfig) {
+			try {
+				this.$logger.trace(
+					"Project Config Service -> setValue writing to legacy config."
+				);
+				const NSConfig = hasNSConfig ? this.$fs.readJson(NSConfigPath) : {};
+				_.set(NSConfig, key, value);
+				this.$fs.writeJson(NSConfigPath, NSConfig);
+				return true;
+			} catch (error) {
+				this.$logger.trace(
+					`Failed to setValue on legacy config. Error is ${error.message}`,
+					error
+				);
+				return false;
+			}
+		}
 
 		if (!this.$fs.exists(configFilePath)) {
 			this.writeDefaultConfig(this.projectHelper.projectDir);
@@ -224,12 +238,12 @@ export default {
 			if (this.getValue(key) !== value) {
 				this.$logger.error(
 					`${EOL}Failed to update ${
-						hasTS ? CONFIG_FILE_NAME_TS : CONFIG_FILE_NAME_JS
+						hasTSConfig ? CONFIG_FILE_NAME_TS : CONFIG_FILE_NAME_JS
 					}.${EOL}`
 				);
 				this.$logger.printMarkdown(
 					`Please manually update \`${
-						hasTS ? CONFIG_FILE_NAME_TS : CONFIG_FILE_NAME_JS
+						hasTSConfig ? CONFIG_FILE_NAME_TS : CONFIG_FILE_NAME_JS
 					}\` and set \`${key}\` to \`${value}\`.${EOL}`
 				);
 
@@ -242,49 +256,61 @@ export default {
 	}
 
 	public writeDefaultConfig(projectDir: string, appId?: string) {
-		const configTSFilePath = path.join(
-			projectDir || this.projectHelper.projectDir,
-			CONFIG_FILE_NAME_TS
-		);
+		const { TSConfigPath } = this.detectProjectConfigs(projectDir);
 
-		this.$fs.writeFile(configTSFilePath, this.getDefaultTSConfig(appId));
+		this.$fs.writeFile(TSConfigPath, this.getDefaultTSConfig(appId));
 	}
 
-	private _readAndUpdateLegacyConfig(configNSConfigFilePath: string) {
-		let nsConfig: any = this.$fs.readJson(configNSConfigFilePath);
-		if (this._handledLegacyId) {
-			return;
+	private fallbackToLegacyNSConfig(info: IProjectConfigInformation) {
+		const additionalData: Array<object> = [];
+		const NSConfig: any = info.hasNSConfig
+			? this.$fs.readJson(info.NSConfigPath)
+			: {};
+
+		try {
+			// injecting here to avoid circular dependency
+			const projectData = this.$injector.resolve("projectData");
+			const embeddedPackageJsonPath = path.resolve(
+				this.projectHelper.projectDir,
+				projectData.getAppDirectoryRelativePath(),
+				constants.PACKAGE_JSON_FILE_NAME
+			);
+			const embeddedPackageJson = this.$fs.readJson(embeddedPackageJsonPath);
+			additionalData.push(embeddedPackageJson);
+		} catch (err) {
+			this.$logger.trace(
+				"failed to add embedded package.json data to config",
+				err
+			);
+			// ignore if the file doesn't exist
 		}
-		this._handledLegacyId = true;
 
 		const packageJson = this.$fs.readJson(
 			path.join(this.projectHelper.projectDir, "package.json")
 		);
 
+		// add app id to additionalData for backwards compatibility
 		if (
+			!NSConfig.id &&
 			packageJson &&
 			packageJson.nativescript &&
 			packageJson.nativescript.id
 		) {
-			nsConfig = {
+			additionalData.push({
 				id: packageJson.nativescript.id,
-				...nsConfig,
-			};
-			this.$fs.writeJson(configNSConfigFilePath, nsConfig);
+			});
 		}
 
-		return nsConfig;
+		return Object.assign({}, ...additionalData, NSConfig);
 	}
 
 	public writeLegacyNSConfigIfNeeded(
 		projectDir: string,
 		runtimePackage: IBasePluginData
 	) {
-		const { usesLegacyConfig } = this.detectInfo(
-			projectDir || this.projectHelper.projectDir
-		);
+		const { usingNSConfig } = this.detectProjectConfigs(projectDir);
 
-		if (usesLegacyConfig) {
+		if (usingNSConfig) {
 			return;
 		}
 
@@ -292,6 +318,8 @@ export default {
 			runtimePackage.version &&
 			semver.gte(runtimePackage.version, "7.0.0-rc.5")
 		) {
+			// runtimes >= 7.0.0-rc.5 support passing appPath and appResourcesPath through gradle project flags
+			// so writing an nsconfig is not necessary.
 			return;
 		}
 
@@ -319,6 +347,7 @@ You may add \`nsconfig.json\` to \`.gitignore\` as the CLI will regenerate it as
 		});
 	}
 
+	// todo: move into config manipulation
 	private flattenObjectToPaths(
 		obj: any,
 		basePath?: string
