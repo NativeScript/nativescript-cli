@@ -745,7 +745,9 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		//Make the package conform to Java package types
 		//Enforce underscore limitation
 		if (!/^[a-zA-Z]+(\.[a-zA-Z0-9][a-zA-Z0-9_]*)+$/.test(packageName)) {
-			this.$errors.fail("Package name must look like: com.company.Name");
+			this.$errors.fail(
+				`Package name must look like: com.company.Name. Got: ${packageName}`
+			);
 		}
 
 		//Class is a reserved word

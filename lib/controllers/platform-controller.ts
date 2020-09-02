@@ -1,4 +1,4 @@
-import { NativePlatformStatus } from "../constants";
+import { NativePlatformStatus, SupportedPlatform } from "../constants";
 import * as path from "path";
 import {
 	IProjectDataService,
@@ -56,6 +56,8 @@ export class PlatformController implements IPlatformController {
 			version
 		);
 
+		this.$logger.trace("Determined package to install is", packageToInstall);
+
 		const installedPlatformVersion = await this.$addPlatformService.addPlatformSafe(
 			projectData,
 			platformData,
@@ -108,21 +110,20 @@ export class PlatformController implements IPlatformController {
 			}
 			result = "file:" + path.resolve(frameworkPath);
 		} else {
-			if (!version) {
-				version = projectData.devDependencies
-					? projectData.devDependencies[platformData.frameworkPackageName]
-					: null;
-				if (!version) {
-					version = await this.$packageInstallationManager.getLatestCompatibleVersion(
-						platformData.frameworkPackageName
-					);
-				}
-				// const currentPlatformData = this.$projectDataService.getNSValue(projectData.projectDir, platformData.frameworkPackageName);
-				// version = (currentPlatformData && currentPlatformData.version) ||
-				// 	await this.$packageInstallationManager.getLatestCompatibleVersion(platformData.frameworkPackageName);
+			const desiredRuntimePackage = this.$projectDataService.getRuntimePackage(
+				projectData.projectDir,
+				platformData.platformNameLowerCase as SupportedPlatform
+			);
+			// if no version is explicitly added, then we use the latest
+			if (!version && !desiredRuntimePackage.version) {
+				desiredRuntimePackage.version = await this.$packageInstallationManager.getLatestCompatibleVersion(
+					desiredRuntimePackage.name
+				);
 			}
-
-			result = `${platformData.frameworkPackageName}@${version}`;
+			// const currentPlatformData = this.$projectDataService.getNSValue(projectData.projectDir, platformData.frameworkPackageName);
+			// version = (currentPlatformData && currentPlatformData.version) ||
+			// 	await this.$packageInstallationManager.getLatestCompatibleVersion(platformData.frameworkPackageName);
+			result = `${desiredRuntimePackage.name}@${desiredRuntimePackage.version}`;
 		}
 
 		return result;

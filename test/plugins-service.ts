@@ -33,11 +33,7 @@ import StaticConfigLib = require("../lib/config");
 import * as path from "path";
 import * as temp from "temp";
 import * as _ from "lodash";
-import {
-	PLUGINS_BUILD_DATA_FILENAME,
-	CONFIG_FILE_NAME_JS,
-	PlatformTypes,
-} from "../lib/constants"; // PACKAGE_JSON_FILE_NAME, CONFIG_FILE_NAME_JS, CONFIG_FILE_NAME_TS
+import { PLUGINS_BUILD_DATA_FILENAME, PlatformTypes } from "../lib/constants"; // PACKAGE_JSON_FILE_NAME, CONFIG_FILE_NAME_JS, CONFIG_FILE_NAME_TS
 import { GradleCommandService } from "../lib/services/android/gradle-command-service";
 import { GradleBuildService } from "../lib/services/android/gradle-build-service";
 import { GradleBuildArgsService } from "../lib/services/android/gradle-build-args-service";
@@ -50,7 +46,7 @@ import {
 	IEventActionData,
 	IGoogleAnalyticsData,
 } from "../lib/common/definitions/google-analytics";
-import { ProjectConfigService } from "../lib/services/project-config-service";
+// import { ProjectConfigService } from "../lib/services/project-config-service";
 import { FileSystem } from "../lib/common/file-system";
 import { ProjectHelper } from "../lib/common/project-helper";
 // import { basename } from 'path';
@@ -232,7 +228,12 @@ function createTestInjector() {
 	});
 	testInjector.register("nodeModulesDependenciesBuilder", {});
 	testInjector.register("tempService", stubs.TempServiceStub);
-	testInjector.register("projectConfigService", ProjectConfigService);
+	testInjector.register(
+		"projectConfigService",
+		stubs.ProjectConfigServiceStub.initWithConfig({
+			id: "org.nativescript.Test",
+		})
+	);
 
 	return testInjector;
 }
@@ -259,12 +260,10 @@ function createProjectFile(testInjector: IInjector): string {
 	};
 
 	fs.writeJson(path.join(tempFolder, "package.json"), packageJsonData);
-	fs.writeFile(
-		path.join(tempFolder, CONFIG_FILE_NAME_JS),
-		`module.exports = {
-		id: 'org.nativescript.Test'
-	}`
-	);
+	// fs.writeFile(
+	// 	path.join(tempFolder, CONFIG_FILE_NAME_TS),
+	// 	`export default { id: 'org.nativescript.Test' }`
+	// );
 
 	return tempFolder;
 }

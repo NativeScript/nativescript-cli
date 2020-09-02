@@ -483,10 +483,6 @@ export class RunController extends EventEmitter implements IRunController {
 				deviceDescriptors,
 				(dd) => dd.identifier === device.deviceInfo.identifier
 			);
-			const platformData = this.$platformsDataService.getPlatformData(
-				device.deviceInfo.platform,
-				projectData
-			);
 			const prepareData = this.$prepareDataService.getPrepareData(
 				liveSyncInfo.projectDir,
 				device.deviceInfo.platform,
@@ -507,6 +503,10 @@ export class RunController extends EventEmitter implements IRunController {
 				...deviceDescriptor.buildData,
 				buildForDevice: !device.isEmulator,
 			};
+			const platformData = this.$platformsDataService.getPlatformData(
+				device.deviceInfo.platform,
+				projectData
+			);
 
 			try {
 				let packageFilePath: string = null;
@@ -591,6 +591,7 @@ export class RunController extends EventEmitter implements IRunController {
 				this.$logger.warn(
 					`Unable to apply changes on device: ${device.deviceInfo.identifier}. Error is: ${err.message}.`
 				);
+				this.$logger.trace(err);
 
 				this.emitCore(RunOnDeviceEvents.runOnDeviceError, {
 					projectDir: projectData.projectDir,

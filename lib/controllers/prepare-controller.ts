@@ -79,7 +79,6 @@ export class PrepareController extends EventEmitter {
 			});
 		}
 
-		await this.trackRuntimeVersion(prepareData.platform, projectData);
 		await this.$pluginsService.ensureAllDependenciesAreInstalled(projectData);
 
 		return this.prepareCore(prepareData, projectData);
@@ -129,6 +128,7 @@ export class PrepareController extends EventEmitter {
 		projectData: IProjectData
 	): Promise<IPrepareResultData> {
 		await this.$platformController.addPlatformIfNeeded(prepareData);
+		await this.trackRuntimeVersion(prepareData.platform, projectData);
 
 		this.$logger.info("Preparing project...");
 
@@ -173,6 +173,7 @@ export class PrepareController extends EventEmitter {
 		}
 
 		await this.writeRuntimePackageJson(projectData, platformData);
+
 		await this.$projectChangesService.savePrepareInfo(
 			platformData,
 			projectData,
@@ -396,10 +397,10 @@ export class PrepareController extends EventEmitter {
 		projectData: IProjectData,
 		platformData: IPlatformData
 	) {
-		const projectInfo = this.$projectConfigService.detectInfo(
+		const configInfo = this.$projectConfigService.detectProjectConfigs(
 			projectData.projectDir
 		);
-		if (projectInfo.usesLegacyConfig) {
+		if (configInfo.usingNSConfig) {
 			return;
 		}
 

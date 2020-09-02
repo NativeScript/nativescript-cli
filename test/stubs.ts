@@ -36,6 +36,7 @@ import {
 	IAssetGroup,
 	IProjectTemplatesService,
 	ITemplateData,
+	IProjectConfigInformation,
 } from "../lib/definitions/project";
 import {
 	IPlatformData,
@@ -586,6 +587,10 @@ export class ProjectConfigServiceStub implements IProjectConfigService {
 
 	protected config: INsConfig;
 
+	setForceUsingNSConfig(force: boolean): boolean {
+		return false;
+	}
+
 	getValue(key: string): any {
 		return _.get(this.readConfig(), key);
 	}
@@ -598,23 +603,15 @@ export class ProjectConfigServiceStub implements IProjectConfigService {
 		return this.config;
 	}
 
-	detectInfo(
-		projectDir?: string
-	): {
-		hasTS: boolean;
-		hasJS: boolean;
-		usesLegacyConfig: boolean;
-		configJSFilePath: string;
-		configTSFilePath: string;
-		configNSConfigFilePath: string;
-	} {
+	detectProjectConfigs(projectDir?: string): IProjectConfigInformation {
 		return {
-			hasTS: false,
-			hasJS: true,
-			usesLegacyConfig: false,
-			configJSFilePath: "",
-			configTSFilePath: "",
-			configNSConfigFilePath: "",
+			hasTSConfig: true,
+			hasJSConfig: false,
+			hasNSConfig: false,
+			usingNSConfig: false,
+			TSConfigPath: "",
+			JSConfigPath: "",
+			NSConfigPath: "",
 		};
 	}
 
@@ -862,8 +859,8 @@ export class ProjectDataServiceStub implements IProjectDataService {
 		platform: constants.SupportedPlatform
 	): IBasePluginData {
 		return {
-			version: null,
 			name: `@nativescript/${platform}`,
+			version: null,
 		};
 	}
 

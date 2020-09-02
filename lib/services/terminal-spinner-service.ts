@@ -1,5 +1,4 @@
 const ora = require("ora");
-import * as _ from "lodash";
 import { injector } from "../common/yok";
 
 export class TerminalSpinnerService implements ITerminalSpinnerService {

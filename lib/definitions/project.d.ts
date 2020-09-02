@@ -17,6 +17,7 @@ import {
 	ISpawnResult,
 } from "../common/declarations";
 import { SupportedConfigValues } from "../tools/config-manipulation/config-transformer";
+import * as constants from "../constants";
 
 interface IProjectName {
 	/**
@@ -274,7 +275,7 @@ interface IProjectDataService {
 	getAppExecutableFiles(projectDir: string): string[];
 
 	/**
-	 * Retruns package details for runtime
+	 * Returns package details for runtime, respecting the nativescript key for legacy projects
 	 * @param {string} projectDir Path to application.
 	 * @param {string} platform Platform key
 	 */
@@ -290,6 +291,16 @@ interface IProjectDataService {
 	 * @returns {any} The value of the property.
 	 */
 	getNSValueFromContent(jsonData: Object, propertyName: string): any;
+}
+
+interface IProjectConfigInformation {
+	hasTSConfig: boolean;
+	hasJSConfig: boolean;
+	hasNSConfig: boolean;
+	usingNSConfig: boolean;
+	TSConfigPath: string;
+	JSConfigPath: string;
+	NSConfigPath: string;
 }
 
 interface IProjectConfigService {
@@ -310,16 +321,15 @@ interface IProjectConfigService {
 	 */
 	setValue(key: string, value: SupportedConfigValues): Promise<boolean>;
 
-	detectInfo(
-		projectDir?: string
-	): {
-		hasTS: boolean;
-		hasJS: boolean;
-		usesLegacyConfig: boolean;
-		configJSFilePath: string;
-		configTSFilePath: string;
-		configNSConfigFilePath: string;
-	};
+	/**
+	 * Override legacy fallback - and force using the new configs
+	 * Used by the migrate service to force the config service to
+	 * write new values into the new configs.
+	 * @param force
+	 */
+	setForceUsingNSConfig(force: boolean): boolean;
+
+	detectProjectConfigs(projectDir?: string): IProjectConfigInformation;
 
 	getDefaultTSConfig(appId: string): string;
 

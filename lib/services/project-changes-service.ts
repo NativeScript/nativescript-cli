@@ -7,6 +7,7 @@ import {
 	PLATFORMS_DIR_NAME,
 	CONFIG_FILE_NAME_JS,
 	CONFIG_FILE_NAME_TS,
+	CONFIG_NS_FILE_NAME,
 } from "../constants";
 import { getHash, hook } from "../common/helpers";
 import {
@@ -135,6 +136,7 @@ export class ProjectChangesService implements IProjectChangesService {
 			this._changesInfo.nsConfigChanged = this.filesChanged([
 				path.join(projectData.projectDir, CONFIG_FILE_NAME_JS),
 				path.join(projectData.projectDir, CONFIG_FILE_NAME_TS),
+				path.join(projectData.projectDir, CONFIG_NS_FILE_NAME),
 			]);
 			this._changesInfo.nativeChanged =
 				this._changesInfo.nativeChanged || this._changesInfo.nsConfigChanged;

@@ -9,7 +9,7 @@ import { IStringDictionary, IProjectHelper } from "../lib/common/declarations";
 import { ProjectConfigService } from "../lib/services/project-config-service";
 import { ProjectData } from "../lib/project-data";
 
-describe("projectData", () => {
+describe.only("projectData", () => {
 	const createTestInjector = (): IInjector => {
 		const testInjector = new Yok();
 
@@ -57,12 +57,13 @@ describe("projectData", () => {
 	}): IProjectData => {
 		const testInjector = createTestInjector();
 		const fs = testInjector.resolve("fs");
+		testInjector.register(
+			"projectConfigService",
+			stubs.ProjectConfigServiceStub.initWithConfig(opts?.configData)
+		);
+
 		fs.exists = (filePath: string) => {
-			return (
-				filePath &&
-				(path.basename(filePath) === "package.json" ||
-					path.basename(filePath) === "nativescript.config.js")
-			);
+			return filePath && path.basename(filePath) === "package.json";
 		};
 
 		fs.readText = (filePath: string) => {
@@ -75,15 +76,6 @@ describe("projectData", () => {
 						opts.packageJsonData &&
 						opts.packageJsonData.devDependencies,
 				});
-			} else if (path.basename(filePath) === "nativescript.config.js") {
-				if (opts && opts.configData) {
-					if (typeof opts.configData === "string") {
-						return opts.configData;
-					}
-					return `module.exports = ${JSON.stringify(opts.configData)}`;
-				} else {
-					return `module.exports = {}`;
-				}
 			}
 
 			return null;
