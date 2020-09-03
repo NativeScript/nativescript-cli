@@ -6,38 +6,38 @@ import * as _ from "lodash";
 import { UpdateControllerBase } from "./update-controller-base";
 import { fromWindowsRelativePathToUnix, getHash } from "../common/helpers";
 import {
-	IProjectDataService,
-	IProjectData,
 	IProjectConfigService,
+	IProjectData,
+	IProjectDataService,
 } from "../definitions/project";
 import {
 	IMigrateController,
-	IMigrationDependency,
 	IMigrationData,
+	IMigrationDependency,
 } from "../definitions/migrate";
 import {
-	IPlatformCommandHelper,
+	IOptions,
 	IPackageInstallationManager,
 	IPackageManager,
-	// IAndroidResourcesMigrationService,
+	IPlatformCommandHelper,
 	IPlatformValidationService,
-	IOptions,
 } from "../declarations";
 import {
-	IPlatformsDataService,
 	IAddPlatformService,
+	IPlatformsDataService,
 } from "../definitions/platform";
 import { IPluginsService } from "../definitions/plugins";
 import {
-	IFileSystem,
-	IErrors,
-	ISettingsService,
-	IResourceLoader,
 	IDictionary,
+	IErrors,
+	IFileSystem,
+	IResourceLoader,
+	ISettingsService,
 } from "../common/declarations";
 import { IInjector } from "../common/definitions/yok";
 import { injector } from "../common/yok";
 import { IJsonFileSettingsService } from "../common/definitions/json-file-settings-service";
+
 // import { project } from "nativescript-dev-xcode";
 
 export class MigrateController
@@ -891,10 +891,22 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 			rootPackageJsonData.nativescript &&
 			rootPackageJsonData.nativescript.id
 		) {
-			await this.$projectConfigService.setValue(
-				"id",
-				rootPackageJsonData.nativescript.id
-			);
+			const ids = rootPackageJsonData.nativescript.id;
+
+			if (typeof ids === "string") {
+				await this.$projectConfigService.setValue(
+					"id",
+					rootPackageJsonData.nativescript.id
+				);
+			} else if (typeof ids === "object") {
+				for (const platform of Object.keys(ids)) {
+					await this.$projectConfigService.setValue(
+						`${platform}.id`,
+						rootPackageJsonData.nativescript.id[platform]
+					);
+				}
+				// todo: what to do with a root level id - remove?
+			}
 			delete rootPackageJsonData.nativescript;
 		}
 
