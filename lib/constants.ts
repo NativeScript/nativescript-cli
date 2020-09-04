@@ -208,6 +208,12 @@ export class DebugCommandErrors {
 		"Unsupported device OS for debugging";
 }
 
+export const enum ShouldMigrate {
+	NO,
+	YES,
+	ADVISED,
+}
+
 export const enum NativePlatformStatus {
 	requiresPlatformAdd = "1",
 	requiresPrepare = "2",

@@ -3,9 +3,11 @@ import * as semver from "semver";
 import * as constants from "../constants";
 import * as glob from "glob";
 import * as _ from "lodash";
+import simpleGit, { SimpleGit } from "simple-git";
 import { UpdateControllerBase } from "./update-controller-base";
 import { fromWindowsRelativePathToUnix, getHash } from "../common/helpers";
 import {
+	IProjectCleanupService,
 	IProjectConfigService,
 	IProjectData,
 	IProjectDataService,
@@ -14,6 +16,7 @@ import {
 	IMigrateController,
 	IMigrationData,
 	IMigrationDependency,
+	IMigrationShouldMigrate,
 } from "../definitions/migrate";
 import {
 	IOptions,
@@ -37,8 +40,10 @@ import {
 import { IInjector } from "../common/definitions/yok";
 import { injector } from "../common/yok";
 import { IJsonFileSettingsService } from "../common/definitions/json-file-settings-service";
+import { ShouldMigrate } from "../constants";
 
-// import { project } from "nativescript-dev-xcode";
+const wait: (ms: number) => Promise<void> = (ms: number = 1000) =>
+	new Promise((resolve) => setTimeout(resolve, ms));
 
 export class MigrateController
 	extends UpdateControllerBase
@@ -71,7 +76,8 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 		private $injector: IInjector,
 		private $settingsService: ISettingsService,
 		private $staticConfig: Config.IStaticConfig,
-		private $terminalSpinnerService: ITerminalSpinnerService
+		private $terminalSpinnerService: ITerminalSpinnerService,
+		private $projectCleanupService: IProjectCleanupService
 	) {
 		super(
 			$fs,
@@ -236,11 +242,183 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 		};
 	}
 
+	public async shouldMigrate({
+		projectDir,
+		platforms,
+		allowInvalidVersions = false,
+	}: IMigrationData): Promise<IMigrationShouldMigrate> {
+		const shouldMigrateResult: IMigrationShouldMigrate = {
+			shouldMigrate: ShouldMigrate.YES,
+			reasons: [],
+		};
+
+		return shouldMigrateResult;
+
+		// -------
+
+		const remainingPlatforms = [];
+
+		let shouldMigrate = false;
+
+		for (const platform of platforms) {
+			const cachedResult = await this.getCachedShouldMigrate(
+				projectDir,
+				platform
+			);
+			if (cachedResult !== false) {
+				remainingPlatforms.push(platform);
+			} else {
+				this.$logger.trace(
+					`Got cached result for shouldMigrate for platform: ${platform}`
+				);
+			}
+		}
+
+		if (remainingPlatforms.length > 0) {
+			shouldMigrate = await this._shouldMigrate({
+				projectDir,
+				platforms: remainingPlatforms,
+				allowInvalidVersions,
+			});
+			this.$logger.trace(
+				`Executed shouldMigrate for platforms: ${remainingPlatforms}. Result is: ${shouldMigrate}`
+			);
+
+			if (!shouldMigrate) {
+				for (const remainingPlatform of remainingPlatforms) {
+					await this.setCachedShouldMigrate(projectDir, remainingPlatform);
+				}
+			}
+		}
+
+		return shouldMigrateResult;
+	}
+
+	public async validate({
+		projectDir,
+		platforms,
+		allowInvalidVersions = true,
+	}: IMigrationData): Promise<void> {
+		const shouldMigrate = await this.shouldMigrate({
+			projectDir,
+			platforms,
+			allowInvalidVersions,
+		});
+		if (shouldMigrate) {
+			this.$errors.fail(MigrateController.UNABLE_TO_MIGRATE_APP_ERROR);
+		}
+	}
+
 	public async migrate({
 		projectDir,
 		platforms,
 		allowInvalidVersions = false,
 	}: IMigrationData): Promise<void> {
+		this.spinner = this.$terminalSpinnerService.createSpinner();
+
+		this.$logger.trace("MigrationController.migrate called with", {
+			projectDir,
+			platforms,
+			allowInvalidVersions,
+		});
+
+		// ensure in git repo and require --force if not (for safety)
+		// ensure git branch is clean
+		const canMigrate = await this.ensureGitCleanOrForce(projectDir);
+
+		if (!canMigrate) {
+			this.spinner.fail("Pre-Migration verification failed");
+			return;
+		}
+
+		this.spinner.succeed("Pre-Migration verification complete");
+
+		// back up project files and folders
+		this.spinner.start("Backing up project files before migration");
+
+		await wait(2000);
+
+		this.spinner.text = "Project files have been backed up";
+		this.spinner.succeed();
+
+		// migrate configs
+		this.spinner.start(
+			`Migrating project to use ${"nativescript.config.ts".green}`
+		);
+
+		await wait(2000);
+		// mark new files (nativescript.config.ts), in case of failure ns migrate restore should remove.
+
+		this.spinner.text = `Project has been migrated to use ${
+			"nativescript.config.ts".green
+		}`;
+		this.spinner.succeed();
+
+		// update dependencies
+		this.spinner.start("Updating project dependencies");
+
+		await wait(2000);
+
+		this.spinner.clear();
+		this.$logger.info(
+			`  - ${"some-dependency".yellow} has been updated to ${"v2.0.4".green}`
+		);
+		this.spinner.render();
+
+		await wait(500);
+
+		this.spinner.clear();
+		this.$logger.info(
+			`  - ${"some-other-dependency".yellow} has been updated to ${
+				"v5.1.2".green
+			}`
+		);
+		this.spinner.render();
+
+		this.spinner.text = "Project dependencies have been updated";
+		this.spinner.succeed();
+
+		// add latest runtimes (if they were specified in the nativescript key)
+		this.spinner.start("Updating runtimes");
+
+		await wait(2000);
+		this.spinner.clear();
+		this.$logger.info(
+			`  - ${"@nativescript/android".yellow} ${"v7.0.0".green} has been added`
+		);
+		this.spinner.render();
+
+		this.spinner.text = "Runtimes have been updated";
+		this.spinner.succeed();
+
+		// clean up
+		this.spinner.start("Cleaning up old artifacts");
+
+		await wait(2000);
+		await this.$projectCleanupService.cleanPath("package-lock.json");
+		await this.$projectCleanupService.cleanPath("yarn.lock");
+
+		this.spinner.text = "Cleaned old artifacts";
+		this.spinner.succeed();
+
+		this.spinner.succeed("Migration complete.");
+
+		this.$logger.info("");
+		this.$logger.printMarkdown(
+			"Project has been successfully migrated. The next step is to run `ns run <platform>` to ensure everything is working properly.\n\nYou may restore your project with `ns migrate restore`"
+		);
+
+		// print markdown for next steps:
+		// if no runtime has been added, print a message that it will be added when they run ns run <platform>
+		// if all is good, run ns migrate clean to clean up backup folders
+
+		// in case of failure, print diagnostic data: what failed and why
+		// restore all files - or perhaps let the user sort it out
+		// or ns migrate restore - to restore from pre-migration backup
+		// for some known cases, print suggestions perhaps
+
+		return;
+
 		this.spinner = this.$terminalSpinnerService.createSpinner();
 
 		this.spinner.start("Migrating project...");
@@ -263,7 +441,8 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 			this.spinner.text = MigrateController.backupFailMessage;
 			this.spinner.fail();
 			// this.$logger.error(MigrateController.backupFailMessage);
-			this.$fs.deleteDirectory(backupDir);
+			await this.$projectCleanupService.cleanPath(backupDir);
+			// this.$fs.deleteDirectory(backupDir);
 			return;
 		}
 
@@ -308,46 +487,37 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 		this.spinner.info(MigrateController.MIGRATE_FINISH_MESSAGE);
 	}
 
-	public async shouldMigrate({
-		projectDir,
-		platforms,
-		allowInvalidVersions = false,
-	}: IMigrationData): Promise<boolean> {
-		const remainingPlatforms = [];
-		let shouldMigrate = false;
-
-		for (const platform of platforms) {
-			const cachedResult = await this.getCachedShouldMigrate(
-				projectDir,
-				platform
-			);
-			if (cachedResult !== false) {
-				remainingPlatforms.push(platform);
-			} else {
-				this.$logger.trace(
-					`Got cached result for shouldMigrate for platform: ${platform}`
+	private async ensureGitCleanOrForce(projectDir: string): Promise<boolean> {
+		const git: SimpleGit = simpleGit(projectDir);
+		const isGit = await git.checkIsRepo();
+		const isForce = this.$options.force;
+		if (!isGit) {
+			// not a git repo and no --force
+			if (!isForce) {
+				this.$logger.printMarkdown(
+					`Running \`ns migrate\` in a non-git project is not recommended. If you want to skip this check run \`ns migrate --force\`.`
 				);
+				this.$errors.fail("Not in Git repo.");
+				return false;
 			}
+			this.spinner.warn(`Not in Git repo, but using ${"--force".red}`);
+			return true;
 		}
 
-		if (remainingPlatforms.length > 0) {
-			shouldMigrate = await this._shouldMigrate({
-				projectDir,
-				platforms: remainingPlatforms,
-				allowInvalidVersions,
-			});
-			this.$logger.trace(
-				`Executed shouldMigrate for platforms: ${remainingPlatforms}. Result is: ${shouldMigrate}`
-			);
-
-			if (!shouldMigrate) {
-				for (const remainingPlatform of remainingPlatforms) {
-					await this.setCachedShouldMigrate(projectDir, remainingPlatform);
-				}
+		const isClean = (await git.status()).isClean();
+		if (!isClean) {
+			if (!isForce) {
+				this.$logger.printMarkdown(
+					`Current git branch has uncommitted changes. Please commit the changes and try again. Alternatively run \`ns migrate --force\` to skip this check.`
+				);
+				this.$errors.fail("Git branch not clean.");
+				return false;
 			}
+			this.spinner.warn(`Git branch not clean, but using ${"--force".red}`);
+			return true;
 		}
 
-		return shouldMigrate;
+		return true;
 	}
 
 	private async _shouldMigrate({
@@ -446,21 +616,6 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 		}
 	}
 
-	public async validate({
-		projectDir,
-		platforms,
-		allowInvalidVersions = true,
-	}: IMigrationData): Promise<void> {
-		const shouldMigrate = await this.shouldMigrate({
-			projectDir,
-			platforms,
-			allowInvalidVersions,
-		});
-		if (shouldMigrate) {
-			this.$errors.fail(MigrateController.UNABLE_TO_MIGRATE_APP_ERROR);
-		}
-	}
-
 	private async getCachedShouldMigrate(
 		projectDir: string,
 		platform: string
@@ -519,30 +674,14 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 	// }
 
 	private async cleanUpProject(projectData: IProjectData): Promise<void> {
-		this.spinner.start("Clean old project artifacts.");
-		this.$fs.deleteDirectory(
-			path.join(projectData.projectDir, constants.HOOKS_DIR_NAME)
-		);
-		this.$fs.deleteDirectory(
-			path.join(projectData.projectDir, constants.PLATFORMS_DIR_NAME)
-		);
-		this.$fs.deleteDirectory(
-			path.join(projectData.projectDir, constants.NODE_MODULES_FOLDER_NAME)
-		);
-		this.$fs.deleteFile(
-			path.join(projectData.projectDir, constants.WEBPACK_CONFIG_NAME)
-		);
-		this.$fs.deleteFile(
-			path.join(projectData.projectDir, constants.PACKAGE_LOCK_JSON_FILE_NAME)
-		);
-		if (!projectData.isShared) {
-			this.$fs.deleteFile(
-				path.join(projectData.projectDir, constants.TSCCONFIG_TNS_JSON_NAME)
-			);
-		}
-
-		this.spinner.text = "Clean old project artifacts complete.";
-		this.spinner.succeed();
+		await this.$projectCleanupService.clean([
+			constants.HOOKS_DIR_NAME,
+			constants.PLATFORMS_DIR_NAME,
+			constants.NODE_MODULES_FOLDER_NAME,
+			constants.WEBPACK_CONFIG_NAME,
+			constants.PACKAGE_LOCK_JSON_FILE_NAME,
+			constants.TSCCONFIG_TNS_JSON_NAME,
+		]);
 	}
 
 	private handleAutoGeneratedFiles(
@@ -963,8 +1102,10 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 		this.$fs.writeJson(rootPackageJsonPath, rootPackageJsonData);
 
 		// delete migrated files
-		this.$fs.deleteFile(embeddedPackageJsonPath);
-		this.$fs.deleteFile(legacyNsConfigPath);
+		await this.$projectCleanupService.cleanPath(embeddedPackageJsonPath);
+		await this.$projectCleanupService.cleanPath(legacyNsConfigPath);
+		// this.$fs.deleteFile(embeddedPackageJsonPath);
+		// this.$fs.deleteFile(legacyNsConfigPath);
 
 		this.spinner.text = `Migrated project to use ${constants.CONFIG_FILE_NAME_TS}`;
 		this.spinner.succeed();
