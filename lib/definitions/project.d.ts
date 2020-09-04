@@ -293,6 +293,20 @@ interface IProjectDataService {
 	getNSValueFromContent(jsonData: Object, propertyName: string): any;
 }
 
+interface IProjectCleanupService {
+	/**
+	 * Clean multiple paths
+	 * @param {string[]} pathsToClean
+	 */
+	clean(pathsToClean: string[]): Promise<void>;
+
+	/**
+	 * Clean a single path
+	 * @param {string} pathToClean
+	 */
+	cleanPath(pathToClean: string): Promise<void>;
+}
+
 interface IProjectConfigInformation {
 	hasTSConfig: boolean;
 	hasJSConfig: boolean;
