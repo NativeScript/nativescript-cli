@@ -28,6 +28,7 @@ import {
 	resolveConfig as resolvePrettierConfig,
 } from "prettier";
 import { cache } from "../common/decorators";
+import { IOptions } from "../declarations";
 import semver = require("semver/preload");
 
 export class ProjectConfigService implements IProjectConfigService {
@@ -37,12 +38,14 @@ export class ProjectConfigService implements IProjectConfigService {
 	constructor(
 		private $fs: IFileSystem,
 		private $logger: ILogger,
-		private $injector: IInjector
+		private $injector: IInjector,
+		private $options: IOptions
 	) {}
 
 	public setForceUsingNewConfig(force: boolean) {
 		return (this.forceUsingNewConfig = force);
 	}
+
 	public setForceUsingLegacyConfig(force: boolean) {
 		return (this.forceUsingLegacyConfig = force);
 	}
@@ -74,6 +77,11 @@ export default {
 
 	@cache() // @cache should prevent the message being printed multiple times
 	private warnUsingLegacyNSConfig() {
+		// todo: remove hack
+		const isMigrate = _.get(this.$options, "argv._[0]") === "migrate";
+		if (isMigrate) {
+			return;
+		}
 		this.$logger.warn(
 			`You are using the deprecated ${CONFIG_NS_FILE_NAME} file. Just be aware that NativeScript 7 has an improved ${CONFIG_FILE_NAME_DISPLAY} file for when you're ready to upgrade this project.`
 		);
@@ -104,19 +112,6 @@ export default {
 			);
 		}
 
-		if (hasNSConfig && usingNSConfig) {
-			this.warnUsingLegacyNSConfig();
-
-			// const NSConfig = this.$fs.readJson(NSConfigPath)
-			// // if the nsconfig.json has an _info1 key - it's generated for backwards compatibility only
-			// if (NSConfig['_info1']) {
-			// 	usingNSConfig = false
-			// }
-			//
-			// if (usingNSConfig) {
-			// }
-		}
-
 		return {
 			hasTSConfig,
 			hasJSConfig,
@@ -138,6 +133,9 @@ export default {
 			this.$logger.trace(
 				"Project Config Service using legacy configuration..."
 			);
+			if (!this.forceUsingLegacyConfig) {
+				this.warnUsingLegacyNSConfig();
+			}
 			return this.fallbackToLegacyNSConfig(info);
 		}
 

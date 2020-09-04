@@ -10,12 +10,16 @@ injector.requirePublicClass("constants", "./constants-provider");
 injector.require("projectData", "./project-data");
 injector.requirePublic("projectDataService", "./services/project-data-service");
 injector.requirePublic(
-	"projectConfigService",
-	"./services/project-config-service"
+	"projectBackupService",
+	"./services/project-backup-service"
 );
 injector.requirePublic(
 	"projectCleanupService",
 	"./services/project-cleanup-service"
+);
+injector.requirePublic(
+	"projectConfigService",
+	"./services/project-config-service"
 );
 injector.require("performanceService", "./services/performance-service");
 injector.requirePublic("projectService", "./services/project-service");

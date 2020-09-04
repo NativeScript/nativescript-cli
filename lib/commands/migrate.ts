@@ -2,7 +2,6 @@ import { IProjectData } from "../definitions/project";
 import { IMigrateController } from "../definitions/migrate";
 import { ICommand, ICommandParameter } from "../common/definitions/commands";
 import { injector } from "../common/yok";
-import { ShouldMigrate } from "../constants";
 
 export class MigrateCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
@@ -28,18 +27,19 @@ export class MigrateCommand implements ICommand {
 			migrationData
 		);
 
-		if (shouldMigrateResult.shouldMigrate === ShouldMigrate.NO) {
+		if (!shouldMigrateResult) {
 			this.$logger.printMarkdown(
 				'__Project is compatible with NativeScript "v7.0.0". To get the latest NativeScript packages execute "ns update".__'
 			);
 			return;
-		} else if (shouldMigrateResult.shouldMigrate === ShouldMigrate.ADVISED) {
-			// todo: this shouldn't be here, because this is already the `ns migrate` path.
-			this.$logger.printMarkdown(
-				'__Project should work with NativeScript "v7.0.0" but a migration is advised. Run ns migrate to migrate.__'
-			);
-			return;
 		}
+		// else if (shouldMigrateResult.shouldMigrate === ShouldMigrate.ADVISED) {
+		// 	// todo: this shouldn't be here, because this is already the `ns migrate` path.
+		// 	this.$logger.printMarkdown(
+		// 		'__Project should work with NativeScript "v7.0.0" but a migration is advised. Run ns migrate to migrate.__'
+		// 	);
+		// 	return;
+		// }
 
 		await this.$migrateController.migrate(migrationData);
 	}
