@@ -100,6 +100,7 @@
     "request": "2.88.2",
     "semver": "7.3.2",
     "shelljs": "0.8.4",
+    "simple-git": "^2.20.1",
     "simple-plist": "1.1.0",
     "source-map": "0.7.3",
     "stringify-package": "1.0.1",

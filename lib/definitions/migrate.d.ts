@@ -1,15 +1,27 @@
 import { IProjectData } from "./project";
 import { IProjectDir } from "../common/declarations";
+import { ShouldMigrate } from "../constants";
 
 interface IMigrateController {
-	migrate(data: IMigrationData): Promise<void>;
-	shouldMigrate(data: IMigrationData): Promise<boolean>;
+	shouldMigrate(data: IMigrationData): Promise<IMigrationShouldMigrate>;
 	validate(data: IMigrationData): Promise<void>;
+	migrate(data: IMigrationData): Promise<void>;
 }
 
 interface IMigrationData extends IProjectDir {
 	platforms: string[];
 	allowInvalidVersions?: boolean;
+}
+
+// declare const enum ShouldMigrate {
+// 	NO,
+// 	YES ,
+// 	ADVISED
+// }
+
+interface IMigrationShouldMigrate {
+	shouldMigrate: ShouldMigrate;
+	reasons: string[];
 }
 
 interface IDependency {
