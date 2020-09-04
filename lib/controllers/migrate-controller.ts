@@ -7,6 +7,7 @@ import simpleGit, { SimpleGit } from "simple-git";
 import { UpdateControllerBase } from "./update-controller-base";
 import { fromWindowsRelativePathToUnix, getHash } from "../common/helpers";
 import {
+	INsConfig,
 	IProjectCleanupService,
 	IProjectConfigService,
 	IProjectData,
@@ -41,6 +42,7 @@ import { IInjector } from "../common/definitions/yok";
 import { injector } from "../common/yok";
 import { IJsonFileSettingsService } from "../common/definitions/json-file-settings-service";
 import { ShouldMigrate } from "../constants";
+import { SupportedConfigValues } from "../tools/config-manipulation/config-transformer";
 
 const wait: (ms: number) => Promise<void> = (ms: number = 1000) =>
 	new Promise((resolve) => setTimeout(resolve, ms));
@@ -48,12 +50,12 @@ const wait: (ms: number) => Promise<void> = (ms: number = 1000) =>
 export class MigrateController
 	extends UpdateControllerBase
 	implements IMigrateController {
-	private static COMMON_MIGRATE_MESSAGE =
-		"not affect the codebase of the application and you might need to do additional changes manually – for more information, refer to the instructions in the following blog post: https://www.nativescript.org/blog/nativescript-6.0-application-migration";
-	private static UNABLE_TO_MIGRATE_APP_ERROR = `The current application is not compatible with NativeScript CLI 7.0.
-Use the \`ns migrate\` command to migrate the app dependencies to a form compatible with NativeScript 7.0.
-Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
-	private static MIGRATE_FINISH_MESSAGE = `The \`tns migrate\` command does ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
+	// 	private static COMMON_MIGRATE_MESSAGE =
+	// 		"not affect the codebase of the application and you might need to do additional changes manually – for more information, refer to the instructions in the following blog post: https://www.nativescript.org/blog/nativescript-6.0-application-migration";
+	// 	private static UNABLE_TO_MIGRATE_APP_ERROR = `The current application is not compatible with NativeScript CLI 7.0.
+	// Use the \`ns migrate\` command to migrate the app dependencies to a form compatible with NativeScript 7.0.
+	// Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
+	// 	private static MIGRATE_FINISH_MESSAGE = `The \`tns migrate\` command does ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 
 	constructor(
 		protected $fs: IFileSystem,
@@ -89,13 +91,10 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 		);
 	}
 
-	static readonly typescriptPackageName: string = "typescript";
-	static readonly backupFolder: string = ".migration_backup";
-	static readonly migrateFailMessage: string = "Could not migrate the project!";
-	static readonly backupFailMessage: string =
-		"Could not backup project folders!";
+	// static readonly typescriptPackageName: string = "typescript";
 
-	static readonly folders: string[] = [
+	static readonly backupFolderName: string = ".migration_backup";
+	static readonly pathsToBackup: string[] = [
 		constants.LIB_DIR_NAME,
 		constants.HOOKS_DIR_NAME,
 		constants.WEBPACK_CONFIG_NAME,
@@ -229,7 +228,7 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 			migrateAction: this.migrateUnitTestRunner.bind(this),
 		},
 		{
-			packageName: MigrateController.typescriptPackageName,
+			packageName: "typescript",
 			isDev: true,
 			verifiedVersion: "3.9.7",
 		},
@@ -305,7 +304,9 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 			allowInvalidVersions,
 		});
 		if (shouldMigrate) {
-			this.$errors.fail(MigrateController.UNABLE_TO_MIGRATE_APP_ERROR);
+			this.$errors.fail(
+				`The current application is not compatible with NativeScript CLI 7.0.`
+			);
 		}
 	}
 
@@ -336,7 +337,7 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 		// back up project files and folders
 		this.spinner.start("Backing up project files before migration");
 
-		await wait(2000);
+		await this.backupProject(projectDir);
 
 		this.spinner.text = "Project files have been backed up";
 		this.spinner.succeed();
@@ -346,8 +347,7 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 			`Migrating project to use ${"nativescript.config.ts".green}`
 		);
 
-		await wait(2000);
-		// mark new files (nativescript.config.ts), in case of failure ns migrate restore should remove.
+		await this.migrateConfigs(projectDir);
 
 		this.spinner.text = `Project has been migrated to use ${
 			"nativescript.config.ts".green
@@ -357,23 +357,12 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 		// update dependencies
 		this.spinner.start("Updating project dependencies");
 
-		await wait(2000);
-
-		this.spinner.clear();
-		this.$logger.info(
-			`  - ${"some-dependency".yellow} has been updated to ${"v2.0.4".green}`
+		const projectData = this.$projectDataService.getProjectData(projectDir);
+		await this.migrateDependencies(
+			projectData,
+			platforms,
+			allowInvalidVersions
 		);
-		this.spinner.render();
-
-		await wait(500);
-
-		this.spinner.clear();
-		this.$logger.info(
-			`  - ${"some-other-dependency".yellow} has been updated to ${
-				"v5.1.2".green
-			}`
-		);
-		this.spinner.render();
 
 		this.spinner.text = "Project dependencies have been updated";
 		this.spinner.succeed();
@@ -422,14 +411,14 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 		this.spinner = this.$terminalSpinnerService.createSpinner();
 
 		this.spinner.start("Migrating project...");
-		const projectData = this.$projectDataService.getProjectData(projectDir);
-		const backupDir = path.join(projectDir, MigrateController.backupFolder);
+		// const projectData = this.$projectDataService.getProjectData(projectDir);
+		const backupDir = path.join(projectDir, MigrateController.backupFolderName);
 
 		try {
 			this.spinner.start("Backup project configuration.");
 			this.backup(
 				[
-					...MigrateController.folders,
+					...MigrateController.pathsToBackup,
 					path.join(projectData.getAppDirectoryRelativePath(), "package.json"),
 				],
 				backupDir,
@@ -438,7 +427,7 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 			this.spinner.text = "Backup project configuration complete.";
 			this.spinner.succeed();
 		} catch (error) {
-			this.spinner.text = MigrateController.backupFailMessage;
+			// this.spinner.text = MigrateController.backupFailMessage;
 			this.spinner.fail();
 			// this.$logger.error(MigrateController.backupFailMessage);
 			await this.$projectCleanupService.cleanPath(backupDir);
@@ -463,14 +452,14 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 
 		try {
 			await this.cleanUpProject(projectData);
-			await this.migrateConfig(projectData);
+			// await this.migrateConfigs(projectData);
 			await this.migrateDependencies(
 				projectData,
 				platforms,
 				allowInvalidVersions
 			);
 		} catch (error) {
-			const backupFolders = MigrateController.folders;
+			const backupFolders = MigrateController.pathsToBackup;
 			const embeddedPackagePath = path.join(
 				projectData.getAppDirectoryRelativePath(),
 				"package.json"
@@ -478,13 +467,13 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 			backupFolders.push(embeddedPackagePath);
 			this.restoreBackup(backupFolders, backupDir, projectData.projectDir);
 			this.spinner.fail();
-			this.$errors.fail(
-				`${MigrateController.migrateFailMessage} The error is: ${error}`
-			);
+			// this.$errors.fail(
+			// 	`${MigrateController.migrateFailMessage} The error is: ${error}`
+			// );
 		}
 
 		this.spinner.stop();
-		this.spinner.info(MigrateController.MIGRATE_FINISH_MESSAGE);
+		// this.spinner.info(MigrateController.MIGRATE_FINISH_MESSAGE);
 	}
 
 	private async ensureGitCleanOrForce(projectDir: string): Promise<boolean> {
@@ -516,6 +505,116 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 			this.spinner.warn(`Git branch not clean, but using ${"--force".red}`);
 			return true;
 		}
+
+		return true;
+	}
+
+	private async backupProject(projectDir: string): Promise<boolean> {
+		const projectData = this.$projectDataService.getProjectData(projectDir);
+		const backupDir = path.join(projectDir, MigrateController.backupFolderName);
+
+		try {
+			this.backup(
+				[
+					...MigrateController.pathsToBackup,
+					path.join(projectData.getAppDirectoryRelativePath(), "package.json"),
+				],
+				backupDir,
+				projectData.projectDir
+			);
+			return true;
+		} catch (error) {
+			this.spinner.fail(`Project backup failed.`);
+			await this.$projectCleanupService.cleanPath(backupDir);
+			this.$errors.fail(`Project backup failed. Error is: ${error.message}`);
+			return false;
+		}
+	}
+
+	private async migrateConfigs(projectDir: string): Promise<boolean> {
+		const projectData = this.$projectDataService.getProjectData(projectDir);
+
+		// package.json
+		const rootPackageJsonPath: any = path.resolve(
+			projectDir,
+			constants.PACKAGE_JSON_FILE_NAME
+		);
+		// nested package.json
+		const embeddedPackageJsonPath = path.resolve(
+			projectData.projectDir,
+			projectData.getAppDirectoryRelativePath(),
+			constants.PACKAGE_JSON_FILE_NAME
+		);
+		// nsconfig.json
+		const legacyNsConfigPath = path.resolve(
+			projectData.projectDir,
+			constants.CONFIG_NS_FILE_NAME
+		);
+
+		let rootPackageJsonData: any = {};
+		if (this.$fs.exists(rootPackageJsonPath)) {
+			rootPackageJsonData = this.$fs.readJson(rootPackageJsonPath);
+		}
+
+		// write the default config unless it already exists
+		const newConfigPath = this.$projectConfigService.writeDefaultConfig(
+			projectData.projectDir
+		);
+
+		// force legacy config mode
+		this.$projectConfigService.setForceUsingLegacyConfig(true);
+
+		// all different sources are combined into configData (nested package.json, nsconfig and root package.json[nativescript])
+		const configData = this.$projectConfigService.readConfig(
+			projectData.projectDir
+		);
+
+		// we no longer want to force legacy config mode
+		this.$projectConfigService.setForceUsingLegacyConfig(false);
+
+		// move main key into root package.json
+		if (configData.main) {
+			rootPackageJsonData.main = configData.main;
+			delete configData.main;
+		}
+
+		// detect appPath and App_Resources path
+		configData.appPath = this.detectAppPath(projectDir, configData);
+		configData.appResourcesPath = this.detectAppResourcesPath(
+			projectDir,
+			configData
+		);
+
+		// delete nativescript key from root package.json
+		if (rootPackageJsonData.nativescript) {
+			delete rootPackageJsonData.nativescript;
+		}
+
+		// force the config service to use nativescript.config.ts
+		this.$projectConfigService.setForceUsingNewConfig(true);
+		// migrate data into nativescript.config.ts
+		const hasUpdatedConfigSuccessfully = await this.$projectConfigService.setValue(
+			"", // root
+			configData as { [key: string]: SupportedConfigValues }
+		);
+
+		if (!hasUpdatedConfigSuccessfully) {
+			if (typeof newConfigPath === "string") {
+				// only clean the config if it was created by the migration script
+				await this.$projectCleanupService.cleanPath(newConfigPath);
+			}
+
+			this.$errors.fail(
+				`Failed to migrate project to use ${constants.CONFIG_FILE_NAME_TS}. One or more values could not be updated.`
+			);
+		}
+
+		// save root package.json
+		this.$fs.writeJson(rootPackageJsonPath, rootPackageJsonData);
+
+		// delete migrated files
+		await this.$projectCleanupService.cleanPath(embeddedPackageJsonPath);
+		await this.$projectCleanupService.cleanPath(legacyNsConfigPath);
 
 		return true;
 	}
@@ -756,7 +855,6 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 		platforms: string[],
 		allowInvalidVersions: boolean
 	): Promise<void> {
-		this.spinner.start("Start dependencies migration.");
 		for (let i = 0; i < this.migrationDependencies.length; i++) {
 			const dependency = this.migrationDependencies[i];
 			const hasDependency = this.hasDependency(dependency, projectData);
@@ -771,7 +869,7 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 			) {
 				const newDependencies = await dependency.migrateAction(
 					projectData,
-					path.join(projectData.projectDir, MigrateController.backupFolder)
+					path.join(projectData.projectDir, MigrateController.backupFolderName)
 				);
 				for (const newDependency of newDependencies) {
 					await this.migrateDependency(
@@ -781,13 +879,11 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 					);
 				}
 			}
-			this.spinner.start(`Migrating ${dependency.packageName}...`);
 			await this.migrateDependency(
 				dependency,
 				projectData,
 				allowInvalidVersions
 			);
-			this.spinner.succeed();
 		}
 
 		for (const platform of platforms) {
@@ -824,21 +920,21 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 			}
 		}
 
-		this.spinner.info("Installing packages.");
-		await this.$packageManager.install(
-			projectData.projectDir,
-			projectData.projectDir,
-			{
-				disableNpmInstall: false,
-				frameworkPath: null,
-				ignoreScripts: false,
-				path: projectData.projectDir,
-			}
-		);
-		this.spinner.text = "Installing packages... Complete";
-		this.spinner.succeed();
-
-		this.spinner.succeed("Migration complete.");
+		// this.spinner.info("Installing packages.");
+		// await this.$packageManager.install(
+		// 	projectData.projectDir,
+		// 	projectData.projectDir,
+		// 	{
+		// 		disableNpmInstall: false,
+		// 		frameworkPath: null,
+		// 		ignoreScripts: false,
+		// 		path: projectData.projectDir,
+		// 	}
+		// );
+		// this.spinner.text = "Installing packages... Complete";
+		// this.spinner.succeed();
+		//
+		// this.spinner.succeed("Migration complete.");
 	}
 
 	private async migrateDependency(
@@ -866,15 +962,20 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 					this.$errors.fail("Failed to find replacement dependency.");
 				}
 
-				this.spinner.info(
-					`Replacing '${dependency.packageName}' with '${replacementDep.packageName}'.`
-				);
 				this.$pluginsService.addToPackageJson(
 					replacementDep.packageName,
 					replacementDep.verifiedVersion,
 					replacementDep.isDev,
 					projectData.projectDir
 				);
+
+				this.spinner.clear();
+				this.$logger.info(
+					`  - ${dependency.packageName.yellow} has been replaced with ${
+						replacementDep.packageName.cyan
+					} ${`v${replacementDep.verifiedVersion}`.green}`
+				);
+				this.spinner.render();
 			}
 
 			return;
@@ -888,28 +989,39 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 				allowInvalidVersions
 			))
 		) {
-			this.spinner.info(
-				`Updating '${dependency.packageName}' to compatible version '${dependency.verifiedVersion}'`
-			);
 			this.$pluginsService.addToPackageJson(
 				dependency.packageName,
 				dependency.verifiedVersion,
 				dependency.isDev,
 				projectData.projectDir
 			);
+
+			this.spinner.clear();
+			this.$logger.info(
+				`  - ${dependency.packageName.yellow} has been updated to ${
+					`v${dependency.verifiedVersion}`.green
+				}`
+			);
+			this.spinner.render();
+
 			return;
 		}
 
 		if (!hasDependency && dependency.shouldAddIfMissing) {
-			this.spinner.info(
-				`Adding '${dependency.packageName}' with version '${dependency.verifiedVersion}'`
-			);
 			this.$pluginsService.addToPackageJson(
 				dependency.packageName,
 				dependency.verifiedVersion,
 				dependency.isDev,
 				projectData.projectDir
 			);
+
+			this.spinner.clear();
+			this.$logger.info(
+				`  - ${dependency.packageName.yellow} ${
+					`v${dependency.verifiedVersion}`.green
+				} has been added`
+			);
+			this.spinner.render();
 		}
 	}
 
@@ -959,100 +1071,14 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 			: !allowInvalidVersions;
 	}
 
-	private async migrateConfig(projectData: IProjectData) {
-		this.spinner.start(
-			`Migrating project to use ${constants.CONFIG_FILE_NAME_TS}...`
-		);
-
-		this.$projectConfigService.setForceUsingNSConfig(true);
-
-		// app/package.json or src/package.json usually
-		const embeddedPackageJsonPath = path.resolve(
-			projectData.projectDir,
-			projectData.getAppDirectoryRelativePath(),
-			constants.PACKAGE_JSON_FILE_NAME
-		);
-		this.$logger.debug(`embeddedPackageJsonPath: ${embeddedPackageJsonPath}`);
-		// nsconfig.json
-		const legacyNsConfigPath = path.resolve(
-			projectData.projectDir,
-			constants.CONFIG_NS_FILE_NAME
-		);
-		this.$logger.debug(`legacyNsConfigPath: ${legacyNsConfigPath}`);
-		// package.json
-		const rootPackageJsonPath: any = path.resolve(
-			projectData.projectDir,
-			constants.PACKAGE_JSON_FILE_NAME
-		);
-		this.$logger.debug(`rootPackageJsonPath: ${rootPackageJsonPath}`);
-
-		let embeddedPackageData: any = {};
-		if (this.$fs.exists(embeddedPackageJsonPath)) {
-			embeddedPackageData = this.$fs.readJson(embeddedPackageJsonPath);
+	private detectAppPath(projectDir: string, configData: INsConfig) {
+		if (configData.appPath) {
+			return configData.appPath;
 		}
 
-		let legacyNsConfigData: any = {};
-		if (this.$fs.exists(legacyNsConfigPath)) {
-			legacyNsConfigData = this.$fs.readJson(legacyNsConfigPath);
-		}
-
-		let rootPackageJsonData: any = {};
-		if (this.$fs.exists(rootPackageJsonPath)) {
-			rootPackageJsonData = this.$fs.readJson(rootPackageJsonPath);
-		}
-
-		const dataToMigrate: any = {
-			...embeddedPackageData,
-			...legacyNsConfigData,
-		};
-
-		// move main key into root packagejson
-		if (dataToMigrate.main) {
-			rootPackageJsonData.main = dataToMigrate.main;
-			delete dataToMigrate.main;
-		}
-
-		// migrate data into nativescript.config.ts
-		const success = await this.$projectConfigService.setValue(
-			"",
-			dataToMigrate
-		);
-
-		if (!success) {
-			this.$errors.fail(
-				`Failed to migrate project to use ${constants.CONFIG_FILE_NAME_TS}. One or more values could not be updated.`
-			);
-		}
-
-		// move app id into nativescript.config.ts
-		if (
-			rootPackageJsonData &&
-			rootPackageJsonData.nativescript &&
-			rootPackageJsonData.nativescript.id
-		) {
-			const ids = rootPackageJsonData.nativescript.id;
-
-			if (typeof ids === "string") {
-				await this.$projectConfigService.setValue(
-					"id",
-					rootPackageJsonData.nativescript.id
-				);
-			} else if (typeof ids === "object") {
-				for (const platform of Object.keys(ids)) {
-					await this.$projectConfigService.setValue(
-						`${platform}.id`,
-						rootPackageJsonData.nativescript.id[platform]
-					);
-				}
-				// todo: what to do with a root level id - remove?
-			}
-			delete rootPackageJsonData.nativescript;
-		}
-
-		// detect path to src and App_Resources
 		const possibleAppPaths = [
-			path.resolve(projectData.projectDir, constants.SRC_DIR),
-			path.resolve(projectData.projectDir, constants.APP_FOLDER_NAME),
+			path.resolve(projectDir, constants.SRC_DIR),
+			path.resolve(projectDir, constants.APP_FOLDER_NAME),
 		];
 
 		const appPath = possibleAppPaths.find((possiblePath) =>
@@ -1060,25 +1086,25 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 		);
 		if (appPath) {
 			const relativeAppPath = path
-				.relative(projectData.projectDir, appPath)
+				.relative(projectDir, appPath)
 				.replace(path.sep, "/");
-			this.$logger.trace(
-				`Found app source at '${appPath}'. Writing '${relativeAppPath}' to config.`
-			);
-			const ok = await this.$projectConfigService.setValue(
-				"appPath",
-				relativeAppPath.toString()
-			);
-			this.$logger.trace(ok ? `Ok...` : "Could not write...");
+			this.$logger.trace(`Found app source at '${appPath}'.`);
+			return relativeAppPath.toString();
+		}
+	}
+
+	private detectAppResourcesPath(projectDir: string, configData: INsConfig) {
+		if (configData.appResourcesPath) {
+			return configData.appResourcesPath;
 		}
 
 		const possibleAppResourcesPaths = [
 			path.resolve(
-				projectData.projectDir,
-				appPath,
+				projectDir,
+				configData.appPath,
 				constants.APP_RESOURCES_FOLDER_NAME
 			),
-			path.resolve(projectData.projectDir, constants.APP_RESOURCES_FOLDER_NAME),
+			path.resolve(projectDir, constants.APP_RESOURCES_FOLDER_NAME),
 		];
 
 		const appResourcesPath = possibleAppResourcesPaths.find((possiblePath) =>
@@ -1086,29 +1112,11 @@ Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
 		);
 		if (appResourcesPath) {
 			const relativeAppResourcesPath = path
-				.relative(projectData.projectDir, appResourcesPath)
+				.relative(projectDir, appResourcesPath)
 				.replace(path.sep, "/");
-			this.$logger.trace(
-				`Found App_Resources at '${appResourcesPath}'. Writing '${relativeAppResourcesPath}' to config.`
-			);
-			const ok = await this.$projectConfigService.setValue(
-				"appResourcesPath",
-				relativeAppResourcesPath.toString()
-			);
-			this.$logger.trace(ok ? `Ok...` : "Could not write...");
+			this.$logger.trace(`Found App_Resources at '${appResourcesPath}'.`);
+			return relativeAppResourcesPath.toString();
 		}
-
-		// save root package.json
-		this.$fs.writeJson(rootPackageJsonPath, rootPackageJsonData);
-
-		// delete migrated files
-		await this.$projectCleanupService.cleanPath(embeddedPackageJsonPath);
-		await this.$projectCleanupService.cleanPath(legacyNsConfigPath);
-		// this.$fs.deleteFile(embeddedPackageJsonPath);
-		// this.$fs.deleteFile(legacyNsConfigPath);
-
-		this.spinner.text = `Migrated project to use ${constants.CONFIG_FILE_NAME_TS}`;
-		this.spinner.succeed();
 	}
 
 	private async migrateUnitTestRunner(
