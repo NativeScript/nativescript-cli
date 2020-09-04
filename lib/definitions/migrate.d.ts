@@ -3,7 +3,7 @@ import { IProjectDir } from "../common/declarations";
 import { ShouldMigrate } from "../constants";
 
 interface IMigrateController {
-	shouldMigrate(data: IMigrationData): Promise<IMigrationShouldMigrate>;
+	shouldMigrate(data: IMigrationData): Promise<boolean>;
 	validate(data: IMigrationData): Promise<void>;
 	migrate(data: IMigrationData): Promise<void>;
 }
@@ -34,6 +34,7 @@ interface IMigrationDependency extends IDependency {
 	replaceWith?: string;
 	warning?: string;
 	verifiedVersion?: string;
+	shouldUseExactVersion?: boolean;
 	shouldAddIfMissing?: boolean;
 	shouldMigrateAction?: (
 		projectData: IProjectData,

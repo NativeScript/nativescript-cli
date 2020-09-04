@@ -307,6 +307,21 @@ interface IProjectCleanupService {
 	cleanPath(pathToClean: string): Promise<void>;
 }
 
+interface IBackup {
+	create(): IBackup;
+	restore(): IBackup;
+	remove(): IBackup;
+	isUpToDate(): boolean;
+	addPath(path: string): IBackup;
+	addPaths(paths: string[]): IBackup;
+}
+
+interface IProjectBackupService {
+	getBackup(name: string): IBackup;
+	backup(name: string, pathsToBackup: string[]): IBackup;
+	restore(name: string, pathsToRestore: string[]): IBackup;
+}
+
 interface IProjectConfigInformation {
 	hasTSConfig: boolean;
 	hasJSConfig: boolean;
