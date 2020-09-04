@@ -587,7 +587,11 @@ export class ProjectConfigServiceStub implements IProjectConfigService {
 
 	protected config: INsConfig;
 
-	setForceUsingNSConfig(force: boolean): boolean {
+	setForceUsingNewConfig(force: boolean): boolean {
+		return false;
+	}
+
+	setForceUsingLegacyConfig(force: boolean): boolean {
 		return false;
 	}
 
@@ -628,7 +632,9 @@ export class ProjectConfigServiceStub implements IProjectConfigService {
     } as NativeScriptConfig;`;
 	}
 
-	writeDefaultConfig(appId: string, projectDir?: string): void {}
+	writeDefaultConfig(appId: string, projectDir?: string): string | boolean {
+		return true;
+	}
 
 	writeLegacyNSConfigIfNeeded(
 		projectDir: string,

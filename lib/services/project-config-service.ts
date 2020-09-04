@@ -31,7 +31,8 @@ import { cache } from "../common/decorators";
 import semver = require("semver/preload");
 
 export class ProjectConfigService implements IProjectConfigService {
-	private forceUsingNSConfig: boolean = false;
+	private forceUsingNewConfig: boolean = false;
+	private forceUsingLegacyConfig: boolean = false;
 
 	constructor(
 		private $fs: IFileSystem,
@@ -39,8 +40,11 @@ export class ProjectConfigService implements IProjectConfigService {
 		private $injector: IInjector
 	) {}
 
-	public setForceUsingNSConfig(force: boolean) {
-		return (this.forceUsingNSConfig = force);
+	public setForceUsingNewConfig(force: boolean) {
+		return (this.forceUsingNewConfig = force);
+	}
+	public setForceUsingLegacyConfig(force: boolean) {
+		return (this.forceUsingLegacyConfig = force);
 	}
 
 	private requireFromString(src: string, filename: string): NodeModule {
@@ -127,7 +131,10 @@ export default {
 	public readConfig(projectDir?: string): INsConfig {
 		const info = this.detectProjectConfigs(projectDir);
 
-		if (info.usingNSConfig && !this.forceUsingNSConfig) {
+		if (
+			this.forceUsingLegacyConfig ||
+			(info.usingNSConfig && !this.forceUsingNewConfig)
+		) {
 			this.$logger.trace(
 				"Project Config Service using legacy configuration..."
 			);
@@ -172,7 +179,10 @@ export default {
 		} = this.detectProjectConfigs();
 		const configFilePath = TSConfigPath || JSConfigPath;
 
-		if (usingNSConfig && !this.forceUsingNSConfig) {
+		if (
+			this.forceUsingLegacyConfig ||
+			(usingNSConfig && !this.forceUsingNewConfig)
+		) {
 			try {
 				this.$logger.trace(
 					"Project Config Service -> setValue writing to legacy config."
@@ -197,12 +207,11 @@ export default {
 		if (typeof value === "object") {
 			let allSuccessful = true;
 
-			this.flattenObjectToPaths(value).forEach((prop) => {
-				if (!this.setValue(prop.key, prop.value)) {
+			for (const prop of this.flattenObjectToPaths(value)) {
+				if (!(await this.setValue(prop.key, prop.value))) {
 					allSuccessful = false;
 				}
-			});
-
+			}
 			return allSuccessful;
 		}
 
@@ -258,7 +267,13 @@ export default {
 	public writeDefaultConfig(projectDir: string, appId?: string) {
 		const { TSConfigPath } = this.detectProjectConfigs(projectDir);
 
+		if (this.$fs.exists(TSConfigPath)) {
+			return false;
+		}
+
 		this.$fs.writeFile(TSConfigPath, this.getDefaultTSConfig(appId));
+
+		return TSConfigPath;
 	}
 
 	private fallbackToLegacyNSConfig(info: IProjectConfigInformation) {
@@ -312,7 +327,8 @@ export default {
 			}
 		}
 
-		return Object.assign({}, ...additionalData, NSConfig);
+		return _.defaultsDeep({}, ...additionalData, NSConfig);
+		// return Object.assign({}, ...additionalData, NSConfig);
 	}
 
 	public writeLegacyNSConfigIfNeeded(

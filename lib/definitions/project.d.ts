@@ -341,13 +341,21 @@ interface IProjectConfigService {
 	 * write new values into the new configs.
 	 * @param force
 	 */
-	setForceUsingNSConfig(force: boolean): boolean;
+	setForceUsingNewConfig(force: boolean): boolean;
+
+	/**
+	 * Override legacy fallback - and force using the legacy configs
+	 * Used by the migrate service to force the config service to
+	 * read values from the old configs
+	 * @param force
+	 */
+	setForceUsingLegacyConfig(force: boolean): boolean;
 
 	detectProjectConfigs(projectDir?: string): IProjectConfigInformation;
 
 	getDefaultTSConfig(appId: string): string;
 
-	writeDefaultConfig(projectDir?: string, appId?: string): void;
+	writeDefaultConfig(projectDir?: string, appId?: string): boolean | string;
 
 	writeLegacyNSConfigIfNeeded(
 		projectDir: string,
