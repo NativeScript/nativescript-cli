@@ -40,6 +40,7 @@ export class PnpmPackageManager extends BasePackageManager {
 		if (config.disableNpmInstall) {
 			return;
 		}
+		delete config.dev; // temporary fix for unsupported yarn flag
 		if (config.ignoreScripts) {
 			config["ignore-scripts"] = true;
 		}
