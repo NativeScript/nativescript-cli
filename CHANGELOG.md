@@ -1,3 +1,9 @@
+## [7.0.6](https://github.com/NativeScript/nativescript-cli/compare/v7.0.5...v7.0.6) (2020-09-04)
+
+### Bug Fixes
+
+* Forced gradle scripts to LF instead of CRLF
+
 ## [7.0.5](https://github.com/NativeScript/nativescript-cli/compare/v7.0.4...v7.0.5) (2020-09-04)
 
 
