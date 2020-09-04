@@ -13,6 +13,10 @@ injector.requirePublic(
 	"projectConfigService",
 	"./services/project-config-service"
 );
+injector.requirePublic(
+	"projectCleanupService",
+	"./services/project-cleanup-service"
+);
 injector.require("performanceService", "./services/performance-service");
 injector.requirePublic("projectService", "./services/project-service");
 injector.require("androidProjectService", "./services/android-project-service");
