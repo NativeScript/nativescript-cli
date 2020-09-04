@@ -296,9 +296,20 @@ export default {
 			packageJson.nativescript &&
 			packageJson.nativescript.id
 		) {
-			additionalData.push({
-				id: packageJson.nativescript.id,
-			});
+			const ids = packageJson.nativescript.id;
+			if (typeof ids === "string") {
+				additionalData.push({
+					id: packageJson.nativescript.id,
+				});
+			} else if (typeof ids === "object") {
+				for (const platform of Object.keys(ids)) {
+					additionalData.push({
+						[platform]: {
+							id: packageJson.nativescript.id[platform],
+						},
+					});
+				}
+			}
 		}
 
 		return Object.assign({}, ...additionalData, NSConfig);
