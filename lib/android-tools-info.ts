@@ -72,8 +72,8 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 		const errors: NativeScriptDoctor.IWarning[] = [];
 		const toolsInfoData = this.getToolsInfo(config);
 		const isAndroidHomeValid = this.isAndroidHomeValid();
-		const runtimeVersion = this.getRuntimeVersion(config);
-		const supportsOnlyMinRequiredCompileTarget = this.getMaxSupportedCompileVersion(runtimeVersion) === AndroidToolsInfo.MIN_REQUIRED_COMPILE_TARGET;
+		const supportsOnlyMinRequiredCompileTarget = this.getMaxSupportedCompileVersion(config) === AndroidToolsInfo.MIN_REQUIRED_COMPILE_TARGET;
+
 		if (!toolsInfoData.compileSdkVersion) {
 			errors.push({
 				warning: `Cannot find a compatible Android SDK for compilation. To be able to build for Android, install Android SDK ${AndroidToolsInfo.MIN_REQUIRED_COMPILE_TARGET}${supportsOnlyMinRequiredCompileTarget ? "" : " or later"}.`,
@@ -367,48 +367,78 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 		return !errors && !errors.length;
 	}
 
-	private getAndroidRuntimeVersionFromProjectDir(projectDir: string): string {
-		let runtimePackage: string = null;
-		let runtimeVersion: string = null;
-		if (projectDir && this.fs.exists(projectDir)) {
-			const pathToPackageJson = path.join(projectDir, Constants.PACKAGE_JSON);
+	private getAndroidRuntimePackageFromProjectDir(projectDir: string): { name: string, version: string } {
+		if (!projectDir || !this.fs.exists(projectDir)) {
+		  return null
+    }
+		const pathToPackageJson = path.join(projectDir, Constants.PACKAGE_JSON);
 
-			if (this.fs.exists(pathToPackageJson)) {
-				const content = this.fs.readJson<INativeScriptProjectPackageJson>(pathToPackageJson);
-				const scopedRuntime = "@nativescript/android";
-				const oldRuntime = "tns-android";
-				if (content) {
-					if (content.devDependencies && content.devDependencies[scopedRuntime]) {
-						runtimePackage = scopedRuntime;
-						runtimeVersion = content.devDependencies[scopedRuntime];
-					} else if (content.nativescript && content.nativescript[oldRuntime] && content.nativescript[oldRuntime].version) {
-						runtimePackage = oldRuntime;
-						runtimeVersion = content && content.nativescript && content.nativescript[oldRuntime] && content.nativescript[oldRuntime].version;
-					}
-				}
+		if(!this.fs.exists(pathToPackageJson)) {
+		  return null
+    }
 
-			}
-		}
+    const content = this.fs.readJson<INativeScriptProjectPackageJson>(pathToPackageJson);
 
-		if (runtimeVersion && runtimeVersion.includes('tgz')) {
-			try {
-				runtimeVersion = require(`${runtimePackage}/package.json`).version;
-			} catch (err) {
-				runtimeVersion = null;
-			}
-		}
+		if(!content) {
+		  return null
+    }
 
-		return runtimeVersion;
+		// in case we have a nativescript key and a runtime with a version
+    // we are dealing with a legacy project and should respect the values
+    // in the nativescript key
+		if(content && content.nativescript && content.nativescript['tns-android'] &&  content.nativescript['tns-android'].version) {
+      return {
+        name: Constants.ANDROID_OLD_RUNTIME,
+        version: content.nativescript && content.nativescript['tns-android'] &&  content.nativescript['tns-android'].version
+      };
+    }
+
+    if(content && content.devDependencies) {
+      const foundRuntime = Object.keys(content.devDependencies).find(depName => {
+        return depName === Constants.ANDROID_SCOPED_RUNTIME || depName === Constants.ANDROID_OLD_RUNTIME
+      })
+
+      if(foundRuntime) {
+        let version = content.devDependencies[foundRuntime]
+
+        if(version.includes('tgz')) {
+          try {
+            const packagePath = require.resolve(`${foundRuntime}/package.json`, {
+              paths: [projectDir]
+            })
+            version = require(packagePath).version;
+          } catch (err) {
+            version = '*';
+          }
+        }
+
+        return {
+          name: foundRuntime,
+          version
+        }
+      }
+    }
+
+		return null
 	}
 
 	private getRuntimeVersion({ runtimeVersion, projectDir } : { runtimeVersion?: string, projectDir?: string}): string {
-		runtimeVersion = runtimeVersion || this.getAndroidRuntimeVersionFromProjectDir(projectDir);
+	  let runtimePackage = {
+      name: Constants.ANDROID_SCOPED_RUNTIME,
+      version: runtimeVersion
+    }
+	  if(!runtimeVersion) {
+	    runtimePackage = this.getAndroidRuntimePackageFromProjectDir(projectDir)
+	    runtimeVersion = runtimePackage?.version;
+    }
+
 		if (runtimeVersion) {
 			// Check if the version is not "next" or "rc", i.e. tag from npm
-			if (!semver.valid(runtimeVersion)) {
+			if (!semver.validRange(runtimeVersion)) {
 				try {
-					const npmViewOutput = this.childProcess.execSync(`npm view ${Constants.ANDROID_RUNTIME} dist-tags --json`);
+					const npmViewOutput = this.childProcess.execSync(`npm view ${runtimePackage.name} dist-tags --json`);
 					const jsonNpmViewOutput = JSON.parse(npmViewOutput);
+
 					runtimeVersion = jsonNpmViewOutput[runtimeVersion] || runtimeVersion;
 				} catch (err) {
 					// Maybe there's no npm here
@@ -416,7 +446,7 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 			}
 		}
 
-		if (runtimeVersion && !semver.valid(runtimeVersion)) {
+		if (runtimeVersion && !semver.validRange(runtimeVersion)) {
 			// If we got here, something terribly wrong happened.
 			throw new Error(`The determined Android runtime version ${runtimeVersion} is not valid. Unable to verify if the current system is setup for Android development.`);
 		}
@@ -424,11 +454,10 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 		return runtimeVersion;
 	}
 
-	private getMaxSupportedCompileVersion(runtimeVersion: string): number {
-		if (runtimeVersion && semver.lt(semver.coerce(runtimeVersion), "6.1.0")) {
+	private getMaxSupportedCompileVersion(config: Partial<NativeScriptDoctor.IProjectDir> & { runtimeVersion?: string}): number {
+		if (config.runtimeVersion && semver.lt(semver.coerce(config.runtimeVersion), "6.1.0")) {
 			return 28;
 		}
-
-		return this.parseAndroidSdkString(_.last(this.getSupportedTargets(runtimeVersion).sort()));
+		return this.parseAndroidSdkString(_.last(this.getSupportedTargets(config.projectDir).sort()));
 	}
 }

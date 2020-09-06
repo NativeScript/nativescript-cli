@@ -12,7 +12,8 @@ export class Constants {
 
 	public static PACKAGE_JSON = "package.json";
 	public static NATIVESCRIPT_KEY = "nativescript";
-	public static ANDROID_RUNTIME = "tns-android";
+	public static ANDROID_OLD_RUNTIME = "tns-android";
+	public static ANDROID_SCOPED_RUNTIME = "@nativescript/android";
 	public static VERSION_PROPERTY_NAME = "version";
 	public static XCODE_MIN_REQUIRED_VERSION = 10;
 	public static JAVAC_EXECUTABLE_NAME = "javac";
