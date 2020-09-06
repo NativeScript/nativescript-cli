@@ -151,39 +151,47 @@ class VersionsService implements IVersionsService {
 	}
 
 	public async getAllComponentsVersions(): Promise<IVersionInformation[]> {
-		let allComponents: IVersionInformation[] = [];
+		try {
+			let allComponents: IVersionInformation[] = [];
 
-		const nativescriptCliInformation: IVersionInformation = await this.getNativescriptCliVersion();
-		if (nativescriptCliInformation) {
-			allComponents.push(nativescriptCliInformation);
-		}
-
-		if (this.projectData) {
-			const nativescriptCoreModulesInformation: IVersionInformation[] = await this.getTnsCoreModulesVersion();
-			if (nativescriptCoreModulesInformation) {
-				allComponents.push(...nativescriptCoreModulesInformation);
+			const nativescriptCliInformation: IVersionInformation = await this.getNativescriptCliVersion();
+			if (nativescriptCliInformation) {
+				allComponents.push(nativescriptCliInformation);
 			}
 
-			const runtimesVersions: IVersionInformation[] = await this.getRuntimesVersions();
-			allComponents = allComponents.concat(runtimesVersions);
-		}
-
-		return allComponents.map((componentInformation) => {
-			if (componentInformation.currentVersion) {
-				if (this.hasUpdate(componentInformation)) {
-					componentInformation.type = VersionInformationType.UpdateAvailable;
-					componentInformation.message = `${VersionsService.UPDATE_AVAILABLE_MESSAGE} for component ${componentInformation.componentName}. Your current version is ${componentInformation.currentVersion} and the latest available version is ${componentInformation.latestVersion}.`;
-				} else {
-					componentInformation.type = VersionInformationType.UpToDate;
-					componentInformation.message = `Component ${componentInformation.componentName} has ${componentInformation.currentVersion} version and is ${VersionsService.UP_TO_DATE_MESSAGE}.`;
+			if (this.projectData) {
+				const nativescriptCoreModulesInformation: IVersionInformation[] = await this.getTnsCoreModulesVersion();
+				if (nativescriptCoreModulesInformation) {
+					allComponents.push(...nativescriptCoreModulesInformation);
 				}
-			} else {
-				componentInformation.type = VersionInformationType.NotInstalled;
-				componentInformation.message = `Component ${componentInformation.componentName} is ${VersionsService.NOT_INSTALLED_MESSAGE}.`;
+
+				const runtimesVersions: IVersionInformation[] = await this.getRuntimesVersions();
+				allComponents = allComponents.concat(runtimesVersions);
 			}
 
-			return componentInformation;
-		});
+			return allComponents.map((componentInformation) => {
+				if (componentInformation.currentVersion) {
+					if (this.hasUpdate(componentInformation)) {
+						componentInformation.type = VersionInformationType.UpdateAvailable;
+						componentInformation.message = `${VersionsService.UPDATE_AVAILABLE_MESSAGE} for component ${componentInformation.componentName}. Your current version is ${componentInformation.currentVersion} and the latest available version is ${componentInformation.latestVersion}.`;
+					} else {
+						componentInformation.type = VersionInformationType.UpToDate;
+						componentInformation.message = `Component ${componentInformation.componentName} has ${componentInformation.currentVersion} version and is ${VersionsService.UP_TO_DATE_MESSAGE}.`;
+					}
+				} else {
+					componentInformation.type = VersionInformationType.NotInstalled;
+					componentInformation.message = `Component ${componentInformation.componentName} is ${VersionsService.NOT_INSTALLED_MESSAGE}.`;
+				}
+
+				return componentInformation;
+			});
+		} catch (error) {
+			this.$logger.trace(
+				"Error while trying to get component information. Error is: ",
+				error
+			);
+			return [];
+		}
 	}
 
 	public async printVersionsInformation(): Promise<void> {
@@ -231,7 +239,10 @@ class VersionsService implements IVersionsService {
 	}
 
 	private hasUpdate(component: IVersionInformation): boolean {
-		return semver.lt(component.currentVersion, component.latestVersion);
+		return !semver.satisfies(
+			component.latestVersion,
+			semver.validRange(component.currentVersion)
+		);
 	}
 }
 

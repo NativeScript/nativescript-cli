@@ -135,6 +135,7 @@ export class DoctorService implements IDoctorService {
 			);
 		}
 
+		// todo: check for deprecated imports from `tns-core-modules`
 		this.checkForDeprecatedShortImportsInAppDir(configOptions.projectDir);
 
 		await this.$injector
