@@ -46,7 +46,7 @@ export class MarkingModeService implements IMarkingModeService {
 				PlatformTypes.android
 			);
 			const isMarkingModeFullDefault =
-				version && semver.lt(version, "7.0.0-rc.5");
+				version && semver.lt(semver.coerce(version), "7.0.0-rc.5");
 
 			if (isMarkingModeFullDefault) {
 				this.showMarkingModeFullWarning();

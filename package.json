@@ -55,7 +55,7 @@
     "mobile"
   ],
   "dependencies": {
-    "@nativescript/doctor": "^2.0.3",
+    "@nativescript/doctor": "^2.0.4",
     "@nativescript/schematics-executor": "0.0.2",
     "byline": "5.0.0",
     "chalk": "4.1.0",
