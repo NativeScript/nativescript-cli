@@ -33,10 +33,10 @@ describe("androidToolsInfo", () => {
 						"tns-android": {
 							version: runtimeVersion
 						}
-          },
-          devDependencies: {
-            "@nativescript/android": runtimeVersion
-          }
+					},
+					devDependencies: {
+						"@nativescript/android": runtimeVersion
+					}
 				} : null;
 			},
 			readDirectory: (path: string) => {
@@ -65,14 +65,14 @@ describe("androidToolsInfo", () => {
 	describe("getToolsInfo", () => {
 		it("runtime 6.0.0", () => {
 			const androidToolsInfo = getAndroidToolsInfo("6.0.0");
-			const toolsInfo = androidToolsInfo.getToolsInfo({projectDir: "test"});
+			const toolsInfo = androidToolsInfo.getToolsInfo({ projectDir: "test" });
 
 			assert.equal(toolsInfo.compileSdkVersion, 28);
 		});
 
 		it("runtime 6.1.0", () => {
 			const androidToolsInfo = getAndroidToolsInfo("6.1.0");
-			const toolsInfo = androidToolsInfo.getToolsInfo({projectDir: "test"});
+			const toolsInfo = androidToolsInfo.getToolsInfo({ projectDir: "test" });
 
 			assert.equal(toolsInfo.compileSdkVersion, 29);
 		});
@@ -86,8 +86,8 @@ describe("androidToolsInfo", () => {
 			const androidToolsInfo = getAndroidToolsInfo("6.5.0");
 			const supportedTargets = androidToolsInfo.getSupportedTargets("test");
 			for (let i = 0; i < supportedTargets.length; i++) {
-				assert.equal(supportedTargets[i], `android-${min+i}`);
-				cnt = min+i;
+				assert.equal(supportedTargets[i], `android-${min + i}`);
+				cnt = min + i;
 			}
 			assert.equal(cnt, max);
 		});
@@ -234,10 +234,10 @@ describe("androidToolsInfo", () => {
 								"tns-android": {
 									version: runtimeVersion
 								}
-              },
-              devDependencies: {
-                "@nativescript/android": runtimeVersion
-              }
+							},
+							devDependencies: {
+								"@nativescript/android": runtimeVersion
+							}
 						})
 				};
 
