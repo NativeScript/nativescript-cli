@@ -1,6 +1,6 @@
-import { cache, exported, invokeInit } from "./common/decorators";
-import { performanceLog } from "./common/decorators";
-import { PackageManagers } from "./constants";
+import { cache, exported, invokeInit } from "../common/decorators";
+import { performanceLog } from "../common/decorators";
+import { PackageManagers } from "../constants";
 import {
 	IPackageManager,
 	INodePackageManager,
@@ -9,13 +9,14 @@ import {
 	INpmInstallResultInfo,
 	INpmsResult,
 	INpmPackageNameParts,
-} from "./declarations";
+} from "../declarations";
 import {
 	IErrors,
 	IUserSettingsService,
 	IDictionary,
-} from "./common/declarations";
-import { injector } from "./common/yok";
+} from "../common/declarations";
+import { injector } from "../common/yok";
+
 export class PackageManager implements IPackageManager {
 	private packageManager: INodePackageManager;
 	private _packageManagerName: string;
@@ -152,5 +153,9 @@ export class PackageManager implements IPackageManager {
 		}
 	}
 }
+
+// export { NPM } from './npm'
+// export { PNPM } from './pnpm'
+// export { Yarn } from './yarn'
 
 injector.register("packageManager", PackageManager);

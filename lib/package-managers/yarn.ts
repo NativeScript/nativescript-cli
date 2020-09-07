@@ -1,13 +1,12 @@
 import * as path from "path";
 import * as _ from "lodash";
 import { BasePackageManager } from "./base-package-manager";
-import { exported } from "./common/decorators";
-import { CACACHE_DIRECTORY_NAME } from "./constants";
+import { exported } from "../common/decorators";
 import {
 	INodePackageManagerInstallOptions,
 	INpmInstallResultInfo,
 	INpmsResult,
-} from "./declarations";
+} from "../declarations";
 import {
 	IChildProcess,
 	IErrors,
@@ -15,10 +14,10 @@ import {
 	IHostInfo,
 	Server,
 	IDictionary,
-} from "./common/declarations";
-import { injector } from "./common/yok";
+} from "../common/declarations";
+import { injector } from "../common/yok";
 
-export class PnpmPackageManager extends BasePackageManager {
+export class Yarn extends BasePackageManager {
 	constructor(
 		$childProcess: IChildProcess,
 		private $errors: IErrors,
@@ -28,10 +27,10 @@ export class PnpmPackageManager extends BasePackageManager {
 		private $logger: ILogger,
 		$pacoteService: IPacoteService
 	) {
-		super($childProcess, $fs, $hostInfo, $pacoteService, "pnpm");
+		super($childProcess, $fs, $hostInfo, $pacoteService, "yarn");
 	}
 
-	@exported("pnpm")
+	@exported("yarn")
 	public async install(
 		packageName: string,
 		pathToSave: string,
@@ -40,7 +39,6 @@ export class PnpmPackageManager extends BasePackageManager {
 		if (config.disableNpmInstall) {
 			return;
 		}
-		delete config.dev; // temporary fix for unsupported yarn flag
 		if (config.ignoreScripts) {
 			config["ignore-scripts"] = true;
 		}
@@ -49,11 +47,10 @@ export class PnpmPackageManager extends BasePackageManager {
 		const jsonContentBefore = this.$fs.readJson(packageJsonPath);
 
 		const flags = this.getFlagsString(config, true);
-		// With pnpm we need to install as "flat" or some imports wont be found
-		let params = ["i", "--shamefully-hoist"];
+		let params = [];
 		const isInstallingAllDependencies = packageName === pathToSave;
 		if (!isInstallingAllDependencies) {
-			params.push(packageName);
+			params.push("add", packageName);
 		}
 
 		params = params.concat(flags);
@@ -72,21 +69,19 @@ export class PnpmPackageManager extends BasePackageManager {
 		}
 	}
 
-	@exported("pnpm")
+	@exported("yarn")
 	public uninstall(
 		packageName: string,
 		config?: IDictionary<string | boolean>,
 		cwd?: string
 	): Promise<string> {
-		// pnpm does not want save option in remove. It saves it by default
-		delete config["save"];
 		const flags = this.getFlagsString(config, false);
-		return this.$childProcess.exec(`pnpm remove ${packageName} ${flags}`, {
+		return this.$childProcess.exec(`yarn remove ${packageName} ${flags}`, {
 			cwd,
 		});
 	}
 
-	@exported("pnpm")
+	@exported("yarn")
 	public async view(packageName: string, config: Object): Promise<any> {
 		const wrappedConfig = _.extend({}, config, { json: true });
 
@@ -94,22 +89,25 @@ export class PnpmPackageManager extends BasePackageManager {
 		let viewResult: any;
 		try {
 			viewResult = await this.$childProcess.exec(
-				`pnpm info ${packageName} ${flags}`
+				`yarn info ${packageName} ${flags}`
 			);
 		} catch (e) {
 			this.$errors.fail(e.message);
 		}
+
 		const result = JSON.parse(viewResult);
-		return result;
+		return result.data;
 	}
 
-	@exported("pnpm")
+	@exported("yarn")
 	public search(
 		filter: string[],
 		config: IDictionary<string | boolean>
 	): Promise<string> {
-		const flags = this.getFlagsString(config, false);
-		return this.$childProcess.exec(`pnpm search ${filter.join(" ")} ${flags}`);
+		this.$errors.fail(
+			"Method not implemented. Yarn does not support searching for packages in the registry."
+		);
+		return null;
 	}
 
 	public async searchNpms(keyword: string): Promise<INpmsResult> {
@@ -120,29 +118,29 @@ export class PnpmPackageManager extends BasePackageManager {
 		return result;
 	}
 
-	@exported("pnpm")
+	@exported("yarn")
 	public async getRegistryPackageData(packageName: string): Promise<any> {
-		const registry = await this.$childProcess.exec(`pnpm config get registry`);
+		const registry = await this.$childProcess.exec(`yarn config get registry`);
 		const url = `${registry.trim()}/${packageName}`;
 		this.$logger.trace(
-			`Trying to get data from pnpm registry for package ${packageName}, url is: ${url}`
+			`Trying to get data from yarn registry for package ${packageName}, url is: ${url}`
 		);
 		const responseData = (await this.$httpClient.httpRequest(url)).body;
 		this.$logger.trace(
-			`Successfully received data from pnpm registry for package ${packageName}. Response data is: ${responseData}`
+			`Successfully received data from yarn registry for package ${packageName}. Response data is: ${responseData}`
 		);
 		const jsonData = JSON.parse(responseData);
 		this.$logger.trace(
-			`Successfully parsed data from pnpm registry for package ${packageName}.`
+			`Successfully parsed data from yarn registry for package ${packageName}.`
 		);
 		return jsonData;
 	}
 
-	@exported("pnpm")
+	@exported("yarn")
 	public async getCachePath(): Promise<string> {
-		const cachePath = await this.$childProcess.exec(`pnpm config get cache`);
-		return path.join(cachePath.trim(), CACACHE_DIRECTORY_NAME);
+		const result = await this.$childProcess.exec(`yarn cache dir`);
+		return result.toString().trim();
 	}
 }
 
-injector.register("pnpm", PnpmPackageManager);
+injector.register("yarn", Yarn);

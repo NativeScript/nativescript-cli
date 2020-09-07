@@ -1,23 +1,23 @@
 import { join, relative } from "path";
 import { BasePackageManager } from "./base-package-manager";
-import { exported, cache } from "./common/decorators";
-import { CACACHE_DIRECTORY_NAME } from "./constants";
+import { exported, cache } from "../common/decorators";
+import { CACACHE_DIRECTORY_NAME } from "../constants";
 import * as _ from "lodash";
 import {
 	INodePackageManagerInstallOptions,
 	INpmInstallResultInfo,
 	INpmsResult,
-} from "./declarations";
+} from "../declarations";
 import {
 	IChildProcess,
 	IErrors,
 	IFileSystem,
 	IHostInfo,
 	Server,
-} from "./common/declarations";
-import { injector } from "./common/yok";
+} from "../common/declarations";
+import { injector } from "../common/yok";
 
-export class NodePackageManager extends BasePackageManager {
+export class NPM extends BasePackageManager {
 	constructor(
 		$childProcess: IChildProcess,
 		private $errors: IErrors,
@@ -167,4 +167,4 @@ export class NodePackageManager extends BasePackageManager {
 	}
 }
 
-injector.register("npm", NodePackageManager);
+injector.register("npm", NPM);

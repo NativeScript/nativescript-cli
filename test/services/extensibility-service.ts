@@ -2,10 +2,10 @@ import { ExtensibilityService } from "../../lib/services/extensibility-service";
 import { Yok } from "../../lib/common/yok";
 import * as stubs from "../stubs";
 import { assert } from "chai";
-import { NodePackageManager } from "../../lib/node-package-manager";
-import { PackageManager } from "../../lib/package-manager";
-import { YarnPackageManager } from "../../lib/yarn-package-manager";
-import { PnpmPackageManager } from "../../lib/pnpm-package-manager";
+import { PackageManager } from "../../lib/package-managers";
+import { NPM } from "../../lib/package-managers/npm";
+import { PNPM } from "../../lib/package-managers/pnpm";
+import { Yarn } from "../../lib/package-managers/yarn";
 import * as constants from "../../lib/constants";
 import { ChildProcess } from "../../lib/common/child-process";
 import { CommandsDelimiters } from "../../lib/common/constants";
@@ -69,9 +69,9 @@ describe("extensibilityService", () => {
 		testInjector.register("userSettingsService", {
 			getSettingValue: async (settingName: string): Promise<void> => undefined,
 		});
-		testInjector.register("npm", NodePackageManager);
-		testInjector.register("yarn", YarnPackageManager);
-		testInjector.register("pnpm", PnpmPackageManager);
+		testInjector.register("npm", NPM);
+		testInjector.register("yarn", Yarn);
+		testInjector.register("pnpm", PNPM);
 		testInjector.register("settingsService", SettingsService);
 		testInjector.register("requireService", {
 			require: (pathToRequire: string): any => undefined,

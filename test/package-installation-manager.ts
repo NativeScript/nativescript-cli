@@ -4,11 +4,11 @@ import * as ErrorsLib from "../lib/common/errors";
 import * as FsLib from "../lib/common/file-system";
 import * as HostInfoLib from "../lib/common/host-info";
 import * as LoggerLib from "../lib/common/logger/logger";
-import * as NpmLib from "../lib/node-package-manager";
-import * as YarnLib from "../lib/yarn-package-manager";
-import * as PnpmLib from "../lib/pnpm-package-manager";
-import * as PackageManagerLib from "../lib/package-manager";
-import * as PackageInstallationManagerLib from "../lib/package-installation-manager";
+import * as NpmLib from "../lib/package-managers/npm";
+import * as YarnLib from "../lib/package-managers/yarn";
+import * as PnpmLib from "../lib/package-managers/pnpm";
+import * as PackageManagerLib from "../lib/package-managers";
+import * as PackageInstallationManagerLib from "../lib/package-managers/package-installation-manager";
 import * as OptionsLib from "../lib/options";
 import * as StaticConfigLib from "../lib/config";
 import * as yok from "../lib/common/yok";
@@ -44,9 +44,9 @@ function createTestInjector(): IInjector {
 	testInjector.register("userSettingsService", {
 		getSettingValue: async (settingName: string): Promise<void> => undefined,
 	});
-	testInjector.register("npm", NpmLib.NodePackageManager);
-	testInjector.register("yarn", YarnLib.YarnPackageManager);
-	testInjector.register("pnpm", PnpmLib.PnpmPackageManager);
+	testInjector.register("npm", NpmLib.NPM);
+	testInjector.register("pnpm", PnpmLib.PNPM);
+	testInjector.register("yarn", YarnLib.Yarn);
 	testInjector.register("packageManager", PackageManagerLib.PackageManager);
 	testInjector.register(
 		"packageInstallationManager",
