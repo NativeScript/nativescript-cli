@@ -1223,16 +1223,6 @@ export class MigrateController
 			configContents.compilerOptions.lib = [
 				...new Set([...(configContents.compilerOptions.lib || []), "es2017"]),
 			];
-			configContents.compilerOptions.plugins = [
-				...new Set([
-					...(configContents.compilerOptions.plugins || []),
-					{
-						transform:
-							"@nativescript/webpack/transformers/ns-transform-native-classes",
-						type: "raw",
-					},
-				]),
-			];
 
 			this.$fs.writeJson(tsConfigPath, configContents);
 
