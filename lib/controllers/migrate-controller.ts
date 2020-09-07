@@ -381,6 +381,16 @@ export class MigrateController
 		this.spinner.text = "Project dependencies have been updated";
 		this.spinner.succeed();
 
+		// update tsconfig
+		const tsConfigPath = path.resolve(projectDir, "tsconfig.json");
+		if (this.$fs.exists(tsConfigPath)) {
+			this.spinner.start("Updating tsconfig.json");
+
+			await this.migrateTSConfig(tsConfigPath);
+
+			this.spinner.succeed("Updated tsconfig.json");
+		}
+
 		// add latest runtimes (if they were specified in the nativescript key)
 		// this.spinner.start("Updating runtimes");
 		//
@@ -1180,6 +1190,41 @@ export class MigrateController
 		];
 
 		return dependencies;
+	}
+
+	private async migrateTSConfig(tsConfigPath: string): Promise<boolean> {
+		try {
+			const configContents = this.$fs.readJson(tsConfigPath);
+
+			// update
+			configContents.compilerOptions = configContents.compilerOptions || {};
+			configContents.compilerOptions.target = "es2017";
+			configContents.compilerOptions.module = "esnext";
+			configContents.compilerOptions.moduleResolution = "node";
+			configContents.compilerOptions.experimentalDecorators = true;
+			configContents.compilerOptions.removeComments = false;
+
+			configContents.compilerOptions.lib = [
+				...new Set([...(configContents.compilerOptions.lib || []), "es2017"]),
+			];
+			configContents.compilerOptions.plugins = [
+				...new Set([
+					...(configContents.compilerOptions.plugins || []),
+					{
+						transform:
+							"@nativescript/webpack/transformers/ns-transform-native-classes",
+						type: "raw",
+					},
+				]),
+			];
+
+			this.$fs.writeJson(tsConfigPath, configContents);
+
+			return true;
+		} catch (error) {
+			this.$logger.trace("Failed to migrate tsconfig.json. Error is: ", error);
+			return false;
+		}
 	}
 
 	private async migrateNativeScriptAngular(): Promise<IMigrationDependency[]> {
