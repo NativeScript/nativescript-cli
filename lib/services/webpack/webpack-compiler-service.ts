@@ -318,7 +318,15 @@ export class WebpackCompilerService
 		Object.assign(
 			envData,
 			appPath && { appPath },
-			appResourcesPath && { appResourcesPath }
+			appResourcesPath && { appResourcesPath },
+			{
+				nativescriptLibPath: path.resolve(
+					__dirname,
+					"..",
+					"..",
+					"nativescript-cli-lib.js"
+				),
+			}
 		);
 
 		envData.verbose = envData.verbose || this.$logger.isVerbose();
