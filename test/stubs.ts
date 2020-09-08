@@ -636,10 +636,10 @@ export class ProjectConfigServiceStub implements IProjectConfigService {
 		return true;
 	}
 
-	writeLegacyNSConfigIfNeeded(
+	async writeLegacyNSConfigIfNeeded(
 		projectDir: string,
 		runtimePackage: IBasePluginData
-	): void {}
+	): Promise<void> {}
 }
 
 export class AndroidPluginBuildServiceStub

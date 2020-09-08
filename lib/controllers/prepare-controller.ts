@@ -133,7 +133,7 @@ export class PrepareController extends EventEmitter {
 		this.$logger.info("Preparing project...");
 
 		if (this.$mobileHelper.isAndroidPlatform(prepareData.platform)) {
-			this.$projectConfigService.writeLegacyNSConfigIfNeeded(
+			await this.$projectConfigService.writeLegacyNSConfigIfNeeded(
 				projectData.projectDir,
 				this.$projectDataService.getRuntimePackage(
 					projectData.projectDir,

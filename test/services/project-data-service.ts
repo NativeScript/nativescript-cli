@@ -133,6 +133,7 @@ const createTestInjector = (
 	});
 
 	testInjector.register("options", {});
+	testInjector.register("cleanupService", {});
 
 	return testInjector;
 };

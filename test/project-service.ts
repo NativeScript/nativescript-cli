@@ -53,6 +53,7 @@ describe("projectService", () => {
 				ensureValidName: async () => opts.projectName,
 			});
 			testInjector.register("projectConfigService", ProjectConfigService);
+			testInjector.register("cleanupService", {});
 			testInjector.register("projectTemplatesService", {
 				prepareTemplate: async () => ({
 					templateName: constants.RESERVED_TEMPLATE_NAMES["default"],
@@ -170,6 +171,7 @@ describe("projectService", () => {
 			testInjector.register("projectData", {});
 			testInjector.register("projectNameService", {});
 			testInjector.register("projectConfigService", ProjectConfigService);
+			testInjector.register("cleanupService", {});
 			testInjector.register("projectTemplatesService", {});
 			testInjector.register("staticConfig", {});
 			testInjector.register("projectHelper", {});

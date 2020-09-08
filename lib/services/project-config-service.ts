@@ -30,6 +30,7 @@ import {
 import { cache } from "../common/decorators";
 import { IOptions } from "../declarations";
 import semver = require("semver/preload");
+import { ICleanupService } from "../definitions/cleanup-service";
 
 export class ProjectConfigService implements IProjectConfigService {
 	private forceUsingNewConfig: boolean = false;
@@ -39,7 +40,8 @@ export class ProjectConfigService implements IProjectConfigService {
 		private $fs: IFileSystem,
 		private $logger: ILogger,
 		private $injector: IInjector,
-		private $options: IOptions
+		private $options: IOptions,
+		private $cleanupService: ICleanupService
 	) {}
 
 	public setForceUsingNewConfig(force: boolean) {
@@ -329,7 +331,7 @@ export default {
 		// return Object.assign({}, ...additionalData, NSConfig);
 	}
 
-	public writeLegacyNSConfigIfNeeded(
+	public async writeLegacyNSConfigIfNeeded(
 		projectDir: string,
 		runtimePackage: IBasePluginData
 	) {
@@ -370,6 +372,9 @@ You may add \`nsconfig.json\` to \`.gitignore\` as the CLI will regenerate it as
 			appPath: this.getValue("appPath"),
 			appResourcesPath: this.getValue("appResourcesPath"),
 		});
+
+		// mark the file for cleanup after the CLI exits
+		await this.$cleanupService.addCleanupDeleteAction(nsConfigPath);
 	}
 
 	// todo: move into config manipulation
