@@ -710,6 +710,19 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		}
 
 		try {
+			if (!this.$hostInfo.isWindows) {
+				// make sure gradlew is executable
+				this.$fs.chmod(
+					path.join(pluginBuildSettings.pluginDir, gradlew),
+					"0755"
+				);
+			}
+		} catch (error) {
+			this.$logger.trace("Failed to chmod gradlew. Error is: ", error);
+			// ignore - worst case it fails further down
+		}
+
+		try {
 			await this.$childProcess.spawnFromEvent(gradlew, localArgs, "close", {
 				cwd: pluginBuildSettings.pluginDir,
 				stdio: "inherit",
