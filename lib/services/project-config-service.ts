@@ -27,7 +27,7 @@ import {
 	format as prettierFormat,
 	resolveConfig as resolvePrettierConfig,
 } from "prettier";
-import { cache } from "../common/decorators";
+import { cache, exported } from "../common/decorators";
 import { IOptions } from "../declarations";
 import semver = require("semver/preload");
 import { ICleanupService } from "../definitions/cleanup-service";
@@ -125,6 +125,7 @@ export default {
 		};
 	}
 
+	@exported("projectConfigService")
 	public readConfig(projectDir?: string): INsConfig {
 		const info = this.detectProjectConfigs(projectDir);
 
@@ -161,10 +162,12 @@ export default {
 		return config;
 	}
 
+	@exported("projectConfigService")
 	public getValue(key: string): any {
 		return _.get(this.readConfig(), key);
 	}
 
+	@exported("projectConfigService")
 	public async setValue(
 		key: string,
 		value: SupportedConfigValues
