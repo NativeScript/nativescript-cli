@@ -375,7 +375,7 @@ interface IProjectConfigService {
 	writeLegacyNSConfigIfNeeded(
 		projectDir: string,
 		runtimePackage: IBasePluginData
-	): void;
+	): Promise<void>;
 }
 
 interface IAssetItem {

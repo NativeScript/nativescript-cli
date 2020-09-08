@@ -58,6 +58,7 @@ const createTestInjector = (
 	testInjector.register("logger", LoggerStub);
 	testInjector.register("injector", testInjector);
 	testInjector.register("projectConfigService", ProjectConfigService);
+	testInjector.register("cleanupService", {});
 
 	return testInjector;
 };
