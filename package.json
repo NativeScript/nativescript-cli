@@ -31,7 +31,7 @@
     "clean": "npx rimraf node_modules package-lock.json && npm run setup",
     "build": "grunt",
     "build.all": "grunt test",
-    "setup": "npm i --ignore-scripts && npm run build",
+    "setup": "npm i --ignore-scripts && npm rebuild husky",
     "test": "mocha --config=test/.mocharc.yml",
     "postinstall": "node postinstall.js",
     "preuninstall": "node preuninstall.js",
