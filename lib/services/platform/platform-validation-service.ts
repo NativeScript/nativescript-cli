@@ -54,7 +54,7 @@ export class PlatformValidationService implements IPlatformValidationService {
 		);
 		if (!hasPlatformDirectory) {
 			this.$errors.fail(
-				"The platform %s is not added to this project. Please use 'tns platform add <platform>'",
+				"The platform %s is not added to this project. Please use 'ns platform add <platform>'",
 				platform
 			);
 		}

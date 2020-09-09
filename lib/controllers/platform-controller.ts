@@ -114,8 +114,13 @@ export class PlatformController implements IPlatformController {
 				projectData.projectDir,
 				platformData.platformNameLowerCase as SupportedPlatform
 			);
-			// if no version is explicitly added, then we use the latest
-			if (!version && !desiredRuntimePackage.version) {
+
+			if (version) {
+				desiredRuntimePackage.version = version;
+			}
+
+			if (!desiredRuntimePackage.version) {
+				// if no version is explicitly added, then we use the latest
 				desiredRuntimePackage.version = await this.$packageInstallationManager.getLatestCompatibleVersion(
 					desiredRuntimePackage.name
 				);
