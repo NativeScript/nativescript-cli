@@ -1,3 +1,20 @@
+## [7.0.7](https://github.com/NativeScript/nativescript-cli/compare/v7.0.6...v7.0.7) (2020-09-09)
+
+
+### Bug Fixes
+
+* platform clean not adding the platform back ([#5383](https://github.com/NativeScript/nativescript-cli/issues/5383)) ([daea022](https://github.com/NativeScript/nativescript-cli/commit/daea022875c996e1d521238d6587c2e45a1f8336)), closes [#5365](https://github.com/NativeScript/nativescript-cli/issues/5365)
+* **doctor:** cannot read property 'filter' of null ([#5374](https://github.com/NativeScript/nativescript-cli/issues/5374)) ([dd09547](https://github.com/NativeScript/nativescript-cli/commit/dd095473daca8436979e8dd95d87f69c1fbf5f9c)), closes [#5366](https://github.com/NativeScript/nativescript-cli/issues/5366)
+
+
+### Features
+
+* clean up legacy nsconfig if created for bw compat ([#5380](https://github.com/NativeScript/nativescript-cli/issues/5380)) ([233091b](https://github.com/NativeScript/nativescript-cli/commit/233091b2d33447b9e5b060c05d19dcb95c9f7431))
+* migrate tsconfig.json for ns7 projects ([#5378](https://github.com/NativeScript/nativescript-cli/issues/5378)) ([8491b07](https://github.com/NativeScript/nativescript-cli/commit/8491b072210bf6db4007d7737ae0d875624c5147))
+* pass current CLI public lib path to webpack env ([#5381](https://github.com/NativeScript/nativescript-cli/issues/5381)) ([6f91984](https://github.com/NativeScript/nativescript-cli/commit/6f91984c90ac65786e5679cadf98341cccabb84e))
+
+
+
 ## [7.0.6](https://github.com/NativeScript/nativescript-cli/compare/v7.0.5...v7.0.6) (2020-09-04)
 
 ### Bug Fixes
