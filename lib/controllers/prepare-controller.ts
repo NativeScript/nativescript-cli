@@ -132,6 +132,15 @@ export class PrepareController extends EventEmitter {
 
 		this.$logger.info("Preparing project...");
 
+		// we need to mark the ~/package.json (used by core modules)
+		// as external for us to be able to write the config to it
+		// in writeRuntimePackageJson() below, because otherwise
+		// webpack will inline it into the bundle/vendor chunks
+		prepareData.env = prepareData.env || {};
+		prepareData.env.externals = prepareData.env.externals || [];
+		prepareData.env.externals.push("~/package.json");
+		prepareData.env.externals.push("package.json");
+
 		if (this.$mobileHelper.isAndroidPlatform(prepareData.platform)) {
 			await this.$projectConfigService.writeLegacyNSConfigIfNeeded(
 				projectData.projectDir,
@@ -411,10 +420,11 @@ export class PrepareController extends EventEmitter {
 			projectData.projectDir
 		);
 		const packageData: any = {
-			main: "bundle",
 			..._.pick(projectData.packageJsonData, ["name"]),
 			...nsConfig,
+			main: "bundle",
 		};
+
 		if (
 			platformData.platformNameLowerCase === "ios" &&
 			packageData.ios &&
@@ -448,6 +458,23 @@ export class PrepareController extends EventEmitter {
 				"assets",
 				"app",
 				"package.json"
+			);
+		}
+
+		try {
+			// this will read the package.json that is already emitted by
+			// the GenerateNativeScriptEntryPointsPlugin webpack plugin
+			const emittedPackageData = this.$fs.readJson(packagePath);
+
+			// since ns7 we only care about the main key from the emitted
+			// package.json, the rest is coming from the new config.
+			if (emittedPackageData?.main) {
+				packageData.main = emittedPackageData.main;
+			}
+		} catch (error) {
+			this.$logger.trace(
+				"Failed to read emitted package.json. Error is: ",
+				error
 			);
 		}
 
