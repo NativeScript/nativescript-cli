@@ -1,3 +1,13 @@
+## [7.0.8](https://github.com/NativeScript/nativescript-cli/compare/v7.0.7...v7.0.8) (2020-09-12)
+
+
+### Bug Fixes
+
+* **migrate:** filter out keys from invalid nested package.json ([685d3c9](https://github.com/NativeScript/nativescript-cli/commit/685d3c9d67eea93ac919d799c999354d83032412))
+* try use emitted packagejson's main field ([9641bea](https://github.com/NativeScript/nativescript-cli/commit/9641bea992e05978dbb64d28dc7d60bf14ea2f76))
+
+
+
 ## [7.0.7](https://github.com/NativeScript/nativescript-cli/compare/v7.0.6...v7.0.7) (2020-09-09)
 
 
