@@ -294,7 +294,17 @@ export default {
 				constants.PACKAGE_JSON_FILE_NAME
 			);
 			const embeddedPackageJson = this.$fs.readJson(embeddedPackageJsonPath);
-			additionalData.push(embeddedPackageJson);
+			// filter only the supported keys
+			additionalData.push(
+				_.pick(embeddedPackageJson, [
+					"android",
+					"ios",
+					"profiling",
+					"cssParser",
+					"discardUncaughtJsExceptions",
+					"main",
+				])
+			);
 		} catch (err) {
 			this.$logger.trace(
 				"failed to add embedded package.json data to config",
