@@ -101,10 +101,16 @@ export class AddPlatformService implements IAddPlatformService {
 
 	private async installPackage(
 		projectDir: string,
-		pkg: string
+		packageName: string
 	): Promise<string> {
+		const frameworkDir = this.resolveFrameworkDir(projectDir, packageName);
+		if (frameworkDir && this.$fs.exists(frameworkDir)) {
+			// don't install if it's already installed
+			return frameworkDir;
+		}
+
 		const installedPackage = await this.$packageManager.install(
-			pkg,
+			packageName,
 			projectDir,
 			{
 				silent: true,
@@ -115,16 +121,26 @@ export class AddPlatformService implements IAddPlatformService {
 		);
 
 		if (!installedPackage.name) {
-			return "";
+			return null;
 		}
 
-		const frameworkDir = require
-			.resolve(`${installedPackage.name}/package.json`, {
-				paths: [projectDir],
-			})
-			.replace("package.json", PROJECT_FRAMEWORK_FOLDER_NAME);
+		return this.resolveFrameworkDir(projectDir, installedPackage.name);
+	}
 
-		return path.resolve(frameworkDir);
+	private resolveFrameworkDir(projectDir: string, packageName: string): string {
+		try {
+			// strip version info if present <package>@1.2.3 -> <package>
+			packageName = packageName.replace(/@[\d.]+$/g, "");
+			const frameworkDir = require
+				.resolve(`${packageName}/package.json`, {
+					paths: [projectDir],
+				})
+				.replace("package.json", PROJECT_FRAMEWORK_FOLDER_NAME);
+
+			return path.resolve(frameworkDir);
+		} catch (err) {
+			return null;
+		}
 	}
 
 	@performanceLog()
