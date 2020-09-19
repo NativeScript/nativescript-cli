@@ -1,8 +1,4 @@
-import {
-	InjectorStub,
-	TempServiceStub,
-	PackageInstallationManagerStub,
-} from "../../stubs";
+import * as stubs from "../../stubs";
 import { AddPlatformService } from "../../../lib/services/platform/add-platform-service";
 import { assert } from "chai";
 import * as _ from "lodash";
@@ -13,7 +9,7 @@ import { IInjector } from "../../../lib/common/definitions/yok";
 const nativePrepare: INativePrepare = null;
 
 function createTestInjector() {
-	const injector = new InjectorStub();
+	const injector = new stubs.InjectorStub();
 	injector.register("pacoteService", {
 		extractPackage: async (name: string) => ({}),
 	});
@@ -25,12 +21,12 @@ function createTestInjector() {
 			};
 		},
 	});
-	injector.register("packageManager", PackageInstallationManagerStub);
+	injector.register("packageManager", stubs.NodePackageManagerStub);
 	injector.register("addPlatformService", AddPlatformService);
 	injector.register("analyticsService", {
 		trackEventActionInGoogleAnalytics: () => ({}),
 	});
-	injector.register("tempService", TempServiceStub);
+	injector.register("tempService", stubs.TempServiceStub);
 
 	const fs = injector.resolve("fs");
 	fs.exists = () => false;

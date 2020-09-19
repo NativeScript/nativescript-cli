@@ -18,6 +18,7 @@ import { IPackageManager } from "../../declarations";
 export class AddPlatformService implements IAddPlatformService {
 	constructor(
 		private $fs: IFileSystem,
+		private $logger: ILogger,
 		// private $pacoteService: IPacoteService,
 		// private $projectDataService: IProjectDataService,
 		private $packageManager: IPackageManager,
@@ -121,10 +122,10 @@ export class AddPlatformService implements IAddPlatformService {
 		);
 
 		if (!installedPackage.name) {
-			return null;
+			return "";
 		}
 
-		return this.resolveFrameworkDir(projectDir, installedPackage.name);
+		return this.resolveFrameworkDir(projectDir, installedPackage.name) || "";
 	}
 
 	private resolveFrameworkDir(projectDir: string, packageName: string): string {
@@ -137,10 +138,15 @@ export class AddPlatformService implements IAddPlatformService {
 				})
 				.replace("package.json", PROJECT_FRAMEWORK_FOLDER_NAME);
 
-			return path.resolve(frameworkDir);
+			if (frameworkDir) {
+				return path.resolve(frameworkDir);
+			}
 		} catch (err) {
-			return null;
+			this.$logger.trace(
+				`Couldn't resolve installed framework. Continuing with install...`
+			);
 		}
+		return null;
 	}
 
 	@performanceLog()

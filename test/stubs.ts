@@ -443,7 +443,10 @@ export class NodePackageManagerStub implements INodePackageManager {
 		pathToSave: string,
 		config: INodePackageManagerInstallOptions
 	): Promise<INpmInstallResultInfo> {
-		return null;
+		return {
+			name: packageName,
+			version: "latest",
+		};
 	}
 
 	public async uninstall(
