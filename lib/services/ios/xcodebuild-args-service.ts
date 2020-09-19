@@ -122,6 +122,12 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 			args.push("ONLY_ACTIVE_ARCH=NO");
 		}
 
+		if (!devicesArchitectures.includes("arm64")) {
+			// don't build form arm64 if we have no arm64 targets
+			// todo: re-visit if arm64 simulators start failing
+			args.push("EXCLUDED_ARCHS=arm64");
+		}
+
 		return args;
 	}
 
