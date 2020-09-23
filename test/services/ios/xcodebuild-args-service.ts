@@ -95,7 +95,6 @@ describe("xcodebuildArgsService", () => {
 
 						const expectedArgs = [
 							"ONLY_ACTIVE_ARCH=NO",
-							"EXCLUDED_ARCHS=arm64",
 							"CODE_SIGN_IDENTITY=",
 							"build",
 							"-configuration",
@@ -137,9 +136,7 @@ describe("xcodebuildArgsService", () => {
 			{
 				name: "should return correct args when no connected devices",
 				connectedDevices: [],
-				expectedArgs: ["EXCLUDED_ARCHS=arm64", "-sdk", "iphoneos"].concat(
-					getCommonArgs()
-				),
+				expectedArgs: ["-sdk", "iphoneos"].concat(getCommonArgs()),
 			},
 		];
 
