@@ -18,6 +18,7 @@
     "!docs/html",
     "lib",
     "!lib/**/*.ts",
+    "lib/**/*.d.ts",
     "!lib/**/*.js.map",
     "!lib/common/test",
     "!lib/common/docs/fonts",
