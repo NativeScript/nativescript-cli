@@ -172,6 +172,9 @@ injector.requirePublicClass(
 injector.require("platformCommandParameter", "./platform-command-param");
 injector.requireCommand("create", "./commands/create-project");
 injector.requireCommand("clean", "./commands/clean");
+injector.requireCommand("config|*list", "./commands/config");
+injector.requireCommand("config|get", "./commands/config");
+injector.requireCommand("config|set", "./commands/config");
 injector.requireCommand("generate", "./commands/generate");
 injector.requireCommand("platform|*list", "./commands/list-platforms");
 injector.requireCommand("platform|add", "./commands/add-platform");
