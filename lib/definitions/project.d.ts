@@ -594,6 +594,11 @@ interface ICocoaPodsService {
 		platformData: IPlatformData
 	): Promise<void>;
 
+	applyPodfileArchExclusions(
+		projectData: IProjectData,
+		platformData: IPlatformData
+	): Promise<void>;
+
 	/**
 	 * Prepares the Podfile content of a plugin and merges it in the project's Podfile.
 	 * @param {string} moduleName The module which the Podfile is from.

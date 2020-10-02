@@ -937,6 +937,10 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			projectData,
 			platformData
 		);
+		await this.$cocoapodsService.applyPodfileArchExclusions(
+			projectData,
+			platformData
+		);
 
 		const projectPodfilePath = this.$cocoapodsService.getProjectPodfilePath(
 			platformData.projectRoot

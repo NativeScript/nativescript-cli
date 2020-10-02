@@ -135,6 +135,36 @@ ${versionResolutionHint}`);
 		}
 	}
 
+	public async applyPodfileArchExclusions(
+		projectData: IProjectData,
+		platformData: IPlatformData
+	): Promise<void> {
+		const { projectRoot } = platformData;
+		const exclusionsPodfile = path.join(projectRoot, "Podfile-exclusions");
+
+		if (!this.$fs.exists(exclusionsPodfile)) {
+			const exclusions = `
+post_install do |installer|
+  installer.pods_project.build_configurations.each do |config|
+    config.build_settings["EXCLUDED_ARCHS_x86_64"] = "arm64 arm64e"
+    config.build_settings["EXCLUDED_ARCHS[sdk=iphonesimulator*]"] = "i386 armv6 armv7 armv7s armv8 $(EXCLUDED_ARCHS_$(NATIVE_ARCH_64_BIT))"
+    config.build_settings["EXCLUDED_ARCHS[sdk=iphoneos*]"] = "i386 armv6 armv7 armv7s armv8 x86_64"
+  end
+end`.trim();
+			this.$fs.writeFile(exclusionsPodfile, exclusions);
+		}
+
+		await this.applyPodfileToProject(
+			"NativeScript-CLI-Architecture-Exclusions",
+			exclusionsPodfile,
+			projectData,
+			platformData
+		);
+
+		// clean up
+		this.$fs.deleteFile(exclusionsPodfile);
+	}
+
 	public async applyPodfileToProject(
 		moduleName: string,
 		podfilePath: string,
