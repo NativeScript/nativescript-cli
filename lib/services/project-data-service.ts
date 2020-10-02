@@ -568,6 +568,7 @@ export class ProjectDataService implements IProjectDataService {
 		projectDir: string,
 		platform: constants.SupportedPlatform
 	): IBasePluginData {
+		platform = platform.toLowerCase() as constants.SupportedPlatform;
 		const packageJson = this.$fs.readJson(
 			path.join(projectDir, constants.PACKAGE_JSON_FILE_NAME)
 		);
