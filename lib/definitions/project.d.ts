@@ -660,6 +660,8 @@ interface ICocoaPodsService {
 		platformData: IPlatformData,
 		opts: IRelease
 	): Promise<void>;
+
+	applyPodfileArchExclusions(platformData: IPlatformData): Promise<void>;
 }
 
 interface ICocoaPodsPlatformManager {

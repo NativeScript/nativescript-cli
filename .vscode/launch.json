@@ -46,7 +46,16 @@
 			// In case you want to debug Analytics Broker process, add `--debug-brk=9897` (or --inspect-brk=9897) when spawning analytics-broker-process.
 			"port": 9897,
 			"sourceMaps": true
-		}
+    },
+    {
+      "name": "Attach",
+      "port": 9229,
+      "request": "attach",
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+      "type": "pwa-node"
+    }
 
 	]
 }

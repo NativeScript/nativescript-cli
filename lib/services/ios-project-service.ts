@@ -933,6 +933,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		this.setProductBundleIdentifier(projectData);
 
 		await this.applyPluginsCocoaPods(pluginsData, projectData, platformData);
+		await this.$cocoapodsService.applyPodfileArchExclusions(platformData);
 		await this.$cocoapodsService.applyPodfileFromAppResources(
 			projectData,
 			platformData

@@ -48,6 +48,27 @@ export class CocoaPodsService implements ICocoaPodsService {
 		return `${EOL}end`;
 	}
 
+	public async applyPodfileArchExclusions(
+		platformData: IPlatformData
+	): Promise<void> {
+		const { projectRoot } = platformData;
+		const projectPodfilePath = this.getProjectPodfilePath(projectRoot);
+		if (this.$fs.exists(projectPodfilePath)) {
+			let projectPodfileContent = this.$fs.exists(projectPodfilePath)
+				? this.$fs.readText(projectPodfilePath).trim()
+				: "";
+			projectPodfileContent += `${EOL}post_install do |installer|
+  installer.pods_project.build_configurations.each do |config|
+    # config.build_settings.delete "VALID_ARCHS"
+    config.build_settings["EXCLUDED_ARCHS_x86_64"] = "arm64 arm64e"
+    config.build_settings["EXCLUDED_ARCHS[sdk=iphonesimulator*]"] = "i386 armv6 armv7 armv7s armv8 $(EXCLUDED_ARCHS_$(NATIVE_ARCH_64_BIT))"
+    config.build_settings["EXCLUDED_ARCHS[sdk=iphoneos*]"] = "i386 armv6 armv7 armv7s armv8 x86_64"
+  end
+end`;
+			this.$fs.writeFile(projectPodfilePath, projectPodfileContent);
+		}
+	}
+
 	public getProjectPodfilePath(projectRoot: string): string {
 		return path.join(projectRoot, PODFILE_NAME);
 	}
