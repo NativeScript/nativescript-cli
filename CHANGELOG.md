@@ -1,3 +1,12 @@
+## [7.0.10](https://github.com/NativeScript/nativescript-cli/compare/7.0.9...7.0.10) (2020-10-03)
+
+
+### Bug Fixes
+
+* **ios:** remove VALID_ARCHS from cocoapods for xcode 12 ([#5407](https://github.com/NativeScript/nativescript-cli/issues/5407)) ([03ecac9](https://github.com/NativeScript/nativescript-cli/commit/03ecac9dcde06f361f59ae990139906dc96a45f0))
+
+
+
 ## [7.0.9](https://github.com/NativeScript/nativescript-cli/compare/v7.0.9-rc.2...v7.0.9) (2020-10-03)
 
 
