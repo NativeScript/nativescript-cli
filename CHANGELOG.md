@@ -1,3 +1,18 @@
+## [7.0.9](https://github.com/NativeScript/nativescript-cli/compare/v7.0.9-rc.2...v7.0.9) (2020-10-03)
+
+
+### Bug Fixes
+
+* exclude unsupported architectures from cocoapods ([#5405](https://github.com/NativeScript/nativescript-cli/issues/5405)) ([e866d70](https://github.com/NativeScript/nativescript-cli/commit/e866d709b8518161db4166d3ba0fe7c65e505d36))
+* platform sometimes not in lower case ([#5406](https://github.com/NativeScript/nativescript-cli/issues/5406)) ([21f48ab](https://github.com/NativeScript/nativescript-cli/commit/21f48abaa0a16363867f0715e3166f84479bdad8)), closes [#5391](https://github.com/NativeScript/nativescript-cli/issues/5391)
+
+
+### Features
+
+* config manipulation commands ([#5402](https://github.com/NativeScript/nativescript-cli/issues/5402)) ([25410b7](https://github.com/NativeScript/nativescript-cli/commit/25410b74a411bfa04d0aa968d47e2bd5a3c2cd1a))
+
+
+
 ## [7.0.8](https://github.com/NativeScript/nativescript-cli/compare/v7.0.7...v7.0.8) (2020-09-12)
 
 
