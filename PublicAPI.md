@@ -228,7 +228,7 @@ getProjectDataFromContent(packageJsonContent: string, projectDir?: string): IPro
 ```
 
 ### getNsConfigDefaultContent
-Returns the default content of "nsconfig.json" merged with the properties provided by the the `data` argument.
+Returns the default content of "nsconfig.json" merged with the properties provided by the `data` argument.
 * Definition:
 ```TypeScript
 /**
