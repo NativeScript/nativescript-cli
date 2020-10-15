@@ -129,6 +129,7 @@ export class Options {
 			reactjs: { type: OptionType.Boolean, hasSensitiveValue: false },
 			vue: { type: OptionType.Boolean, hasSensitiveValue: false },
 			vuejs: { type: OptionType.Boolean, hasSensitiveValue: false },
+			svelte: { type: OptionType.Boolean, hasSensitiveValue: false },
 			tsc: { type: OptionType.Boolean, hasSensitiveValue: false },
 			ts: { type: OptionType.Boolean, hasSensitiveValue: false },
 			typescript: { type: OptionType.Boolean, hasSensitiveValue: false },
