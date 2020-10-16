@@ -213,14 +213,14 @@ export class MigrateController
 		},
 		{
 			packageName: "svelte-native",
-			verifiedVersion: "0.9.1",
+			verifiedVersion: "0.9.4",
 			shouldMigrateAction: async (
 				projectData: IProjectData,
 				allowInvalidVersions: boolean
 			) => {
 				const dependency = {
 					packageName: "svelte-native",
-					verifiedVersion: "0.9.1",
+					verifiedVersion: "0.9.0", // minimum version required - anything less will need a migration
 					isDev: false,
 				};
 				const result =
@@ -1331,7 +1331,7 @@ export class MigrateController
 			},
 			{
 				packageName: "svelte-loader-hot",
-				verifiedVersion: "0.3.0",
+				verifiedVersion: "0.3.1",
 				shouldUseExactVersion: true,
 				isDev: true,
 				shouldAddIfMissing: true,
