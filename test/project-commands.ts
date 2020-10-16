@@ -33,6 +33,10 @@ const expectedFlavorChoices = [
 	},
 	{ key: "Vue.js", description: "Learn more at https://nativescript.org/vue" },
 	{
+		key: "Svelte",
+		description: "Learn more at https://svelte-native.technology",
+	},
+	{
 		key: "Plain TypeScript",
 		description: "Learn more at https://nativescript.org/typescript",
 	},
@@ -188,6 +192,16 @@ describe("Project commands tests", () => {
 			assert.isTrue(createProjectCalledWithForce);
 		});
 
+		it("should not fail when using only --svelte.", async () => {
+			options.svelte = true;
+
+			await createProjectCommand.execute(dummyArgs);
+
+			assert.isTrue(isProjectCreated);
+			assert.equal(validateProjectCallsCount, 1);
+			assert.isTrue(createProjectCalledWithForce);
+		});
+
 		it("should not fail when using only --tsc.", async () => {
 			options.tsc = true;
 
@@ -224,6 +238,16 @@ describe("Project commands tests", () => {
 			await createProjectCommand.execute(dummyArgs);
 
 			assert.deepStrictEqual(selectedTemplateName, constants.REACT_NAME);
+			assert.equal(validateProjectCallsCount, 1);
+			assert.isTrue(createProjectCalledWithForce);
+		});
+
+		it("should set the template name correctly when used --svelte.", async () => {
+			options.svelte = true;
+
+			await createProjectCommand.execute(dummyArgs);
+
+			assert.deepStrictEqual(selectedTemplateName, constants.SVELTE_NAME);
 			assert.equal(validateProjectCallsCount, 1);
 			assert.isTrue(createProjectCalledWithForce);
 		});
@@ -327,6 +351,22 @@ describe("Project commands tests", () => {
 			assert.deepStrictEqual(
 				selectedTemplateName,
 				"@nativescript/template-blank-react"
+			);
+			assert.equal(validateProjectCallsCount, 1);
+			assert.isTrue(createProjectCalledWithForce);
+		});
+
+		it("should ask for a template when svelte flavor is selected.", async () => {
+			setupAnswers({
+				flavorAnswer: constants.SvelteFlavorName,
+				templateAnswer: "Hello World",
+			});
+
+			await createProjectCommand.execute(dummyArgs);
+
+			assert.deepStrictEqual(
+				selectedTemplateName,
+				"@nativescript/template-blank-svelte"
 			);
 			assert.equal(validateProjectCallsCount, 1);
 			assert.isTrue(createProjectCalledWithForce);
