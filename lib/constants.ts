@@ -138,6 +138,7 @@ export const RESERVED_TEMPLATE_NAMES: IStringDictionary = {
 	angular: "@nativescript/template-hello-world-ng",
 	react: "@nativescript/template-blank-react",
 	reactjs: "@nativescript/template-blank-react",
+	svelte: "@nativescript/template-blank-svelte",
 };
 
 export const ANALYTICS_LOCAL_TEMPLATE_PREFIX = "localTemplate_";
@@ -167,9 +168,11 @@ export const ANGULAR_NAME = "angular";
 export const JAVASCRIPT_NAME = "javascript";
 export const TYPESCRIPT_NAME = "typescript";
 export const REACT_NAME = "react";
+export const SVELTE_NAME = "svelte";
 export const NgFlavorName = "Angular";
 export const VueFlavorName = "Vue.js";
 export const ReactFlavorName = "React";
+export const SvelteFlavorName = "Svelte";
 export const TsFlavorName = "Plain TypeScript";
 export const JsFlavorName = "Plain JavaScript";
 export class ProjectTypes {

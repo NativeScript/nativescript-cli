@@ -44,11 +44,12 @@ export class CreateProjectCommand implements ICommand {
 				this.$options.ng ||
 				this.$options.vue ||
 				this.$options.react ||
+				this.$options.svelte ||
 				this.$options.js) &&
 			this.$options.template
 		) {
 			this.$errors.failWithHelp(
-				"You cannot use a flavor option like --ng, --vue, --react, --tsc and --js together with --template."
+				"You cannot use a flavor option like --ng, --vue, --react, --svelte, --tsc and --js together with --template."
 			);
 		}
 
@@ -64,6 +65,8 @@ export class CreateProjectCommand implements ICommand {
 			selectedTemplate = constants.VUE_NAME;
 		} else if (this.$options.react) {
 			selectedTemplate = constants.REACT_NAME;
+		} else if (this.$options.svelte) {
+			selectedTemplate = constants.SVELTE_NAME;
 		} else {
 			selectedTemplate = this.$options.template;
 		}
@@ -133,6 +136,10 @@ export class CreateProjectCommand implements ICommand {
 					description: "Learn more at https://nativescript.org/vue",
 				},
 				{
+					key: constants.SvelteFlavorName,
+					description: "Learn more at https://svelte-native.technology",
+				},
+				{
 					key: constants.TsFlavorName,
 					description: "Learn more at https://nativescript.org/typescript",
 				},
@@ -152,7 +159,7 @@ export class CreateProjectCommand implements ICommand {
 			this.$logger.printMarkdown(`# Let’s create a NativeScript app!`);
 			this.$logger.printMarkdown(`
 Answer the following questions to help us build the right app for you. (Note: you
-can skip this prompt next time using the --template option, or the --ng, --react, --vue, --ts, or --js flags.)
+can skip this prompt next time using the --template option, or the --ng, --react, --vue, --svelte, --ts, or --js flags.)
 `);
 		}
 	}
@@ -178,6 +185,10 @@ can skip this prompt next time using the --template option, or the --ng, --react
 			}
 			case constants.VueFlavorName: {
 				selectedFlavorTemplates.push(...this.getVueTemplates());
+				break;
+			}
+			case constants.SvelteFlavorName: {
+				selectedFlavorTemplates.push(...this.getSvelteTemplates());
 				break;
 			}
 			case constants.TsFlavorName: {
@@ -278,6 +289,18 @@ can skip this prompt next time using the --template option, or the --ng, --react
 			{
 				key: CreateProjectCommand.HelloWorldTemplateKey,
 				value: constants.RESERVED_TEMPLATE_NAMES.react,
+				description: CreateProjectCommand.HelloWorldTemplateDescription,
+			},
+		];
+
+		return templates;
+	}
+
+	private getSvelteTemplates() {
+		const templates = [
+			{
+				key: CreateProjectCommand.HelloWorldTemplateKey,
+				value: constants.RESERVED_TEMPLATE_NAMES.svelte,
 				description: CreateProjectCommand.HelloWorldTemplateDescription,
 			},
 		];
