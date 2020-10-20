@@ -212,6 +212,30 @@ export class MigrateController
 			migrateAction: this.migrateNativeScriptAngular.bind(this),
 		},
 		{
+			packageName: "svelte-native",
+			verifiedVersion: "0.9.4",
+			shouldMigrateAction: async (
+				projectData: IProjectData,
+				allowInvalidVersions: boolean
+			) => {
+				const dependency = {
+					packageName: "svelte-native",
+					verifiedVersion: "0.9.0", // minimum version required - anything less will need a migration
+					isDev: false,
+				};
+				const result =
+					this.hasDependency(dependency, projectData) &&
+					(await this.shouldMigrateDependencyVersion(
+						dependency,
+						projectData,
+						allowInvalidVersions
+					));
+
+				return result;
+			},
+			migrateAction: this.migrateNativeScriptSvelte.bind(this),
+		},
+		{
 			packageName: "@nativescript/unit-test-runner",
 			verifiedVersion: "1.0.0",
 			shouldMigrateAction: async (
@@ -1328,6 +1352,48 @@ export class MigrateController
 			{
 				packageName: "vue",
 				verifiedVersion: "2.6.12",
+				shouldUseExactVersion: true,
+				isDev: true,
+			},
+		];
+
+		return dependencies;
+	}
+
+	private async migrateNativeScriptSvelte(): Promise<IMigrationDependency[]> {
+		const dependencies: IMigrationDependency[] = [
+			{
+				packageName: "svelte-native-nativescript-ui",
+				verifiedVersion: "0.9.0",
+				shouldUseExactVersion: true,
+				isDev: true,
+				shouldAddIfMissing: true,
+			},
+			{
+				packageName: "svelte-native-preprocessor",
+				verifiedVersion: "0.2.0",
+				shouldUseExactVersion: true,
+				isDev: true,
+				shouldAddIfMissing: true,
+			},
+			{
+				packageName: "svelte-loader",
+				shouldRemove: true,
+			},
+			{
+				packageName: "svelte-loader-hot",
+				verifiedVersion: "0.3.1",
+				shouldUseExactVersion: true,
+				isDev: true,
+				shouldAddIfMissing: true,
+			},
+			{
+				packageName: "svelte",
+				shouldRemove: true,
+			},
+			{
+				packageName: "svelte",
+				verifiedVersion: "3.24.1",
 				shouldUseExactVersion: true,
 				isDev: true,
 			},
