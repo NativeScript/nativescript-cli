@@ -52,12 +52,14 @@
     },
     {
       "name": "Attach to Node Debugger",
-      "port": 9229,
+      "type": "node",
       "request": "attach",
+      "port": 9229,
+      "address": "127.0.0.1",
       "skipFiles": [
         "<node_internals>/**"
       ],
-      "type": "pwa-node"
+      "sourceMaps": true
     }
   ]
 }

@@ -6,7 +6,7 @@ import {
 	RESOURCES_DIR,
 	AndroidBuildDefaults,
 	PLUGIN_BUILD_DATA_FILENAME,
-	PlatformTypes,
+	SCOPED_ANDROID_RUNTIME_NAME,
 } from "../constants";
 import { getShortPluginName, hook } from "../common/helpers";
 import { Builder, parseString } from "xml2js";
@@ -16,7 +16,6 @@ import {
 	IAndroidToolsInfo,
 	IWatchIgnoreListService,
 } from "../declarations";
-import { IBasePluginData } from "../definitions/plugins";
 import { IPlatformsDataService } from "../definitions/platform";
 import { IProjectDataService } from "../definitions/project";
 import {
@@ -440,16 +439,9 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		}
 
 		if (!runtimeGradleVersions) {
-			const runtimePackage = this.$projectDataService.getRuntimePackage(
-				projectDir,
-				PlatformTypes.android
-			);
-			const latestRuntimeVersion = await this.getLatestRuntimeVersion(
-				runtimePackage
-			);
+			const latestRuntimeVersion = await this.getLatestRuntimeVersion();
 			runtimeGradleVersions = await this.getGradleVersions(
-				latestRuntimeVersion,
-				runtimePackage
+				latestRuntimeVersion
 			);
 			this.$logger.trace(
 				`Got gradle versions ${JSON.stringify(
@@ -461,22 +453,23 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		return runtimeGradleVersions || {};
 	}
 
-	private async getLatestRuntimeVersion(
-		runtimePackage: IBasePluginData
-	): Promise<string> {
+	private async getLatestRuntimeVersion(): Promise<string> {
 		let runtimeVersion: string = null;
 
 		try {
-			const result = await this.$packageManager.view(runtimePackage.name, {
-				"dist-tags": true,
-			});
+			const result = await this.$packageManager.view(
+				SCOPED_ANDROID_RUNTIME_NAME,
+				{
+					"dist-tags": true,
+				}
+			);
 			runtimeVersion = result.latest;
 		} catch (err) {
 			this.$logger.trace(
 				`Error while getting latest android runtime version from view command: ${err}`
 			);
 			const registryData = await this.$packageManager.getRegistryPackageData(
-				runtimePackage.name
+				SCOPED_ANDROID_RUNTIME_NAME
 			);
 			runtimeVersion = registryData["dist-tags"].latest;
 		}
@@ -485,8 +478,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 	}
 
 	private async getGradleVersions(
-		runtimeVersion: string,
-		runtimePackage: IBasePluginData
+		runtimeVersion: string
 	): Promise<IRuntimeGradleVersions> {
 		let runtimeGradleVersions: {
 			gradle: { version: string; android: string };
@@ -494,7 +486,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 
 		try {
 			const output = await this.$packageManager.view(
-				`${runtimePackage.name}@${runtimeVersion}`,
+				`${SCOPED_ANDROID_RUNTIME_NAME}@${runtimeVersion}`,
 				{ gradle: true }
 			);
 			runtimeGradleVersions = { gradle: output };
@@ -503,7 +495,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 				`Error while getting gradle data for android runtime from view command: ${err}`
 			);
 			const registryData = await this.$packageManager.getRegistryPackageData(
-				runtimePackage.name
+				SCOPED_ANDROID_RUNTIME_NAME
 			);
 			runtimeGradleVersions = registryData.versions[runtimeVersion];
 		}
