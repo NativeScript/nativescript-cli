@@ -1,3 +1,19 @@
+## [7.0.11](https://github.com/NativeScript/nativescript-cli/compare/v7.0.10...v7.0.11) (2020-10-21)
+
+
+### Bug Fixes
+
+* **plugin-build:** invalid path argument ([1fc3893](https://github.com/NativeScript/nativescript-cli/commit/1fc3893e5bff66816d195d28aeafa01f2649ba5d)), closes [#5387](https://github.com/NativeScript/nativescript-cli/issues/5387)
+* asset generation alpha value ([#5420](https://github.com/NativeScript/nativescript-cli/issues/5420)) ([becbe60](https://github.com/NativeScript/nativescript-cli/commit/becbe6076ae2ad2bdd56a1bc6c5ee9b538240d04))
+
+
+### Features
+
+* add svelte support ([#5418](https://github.com/NativeScript/nativescript-cli/issues/5418)) ([08a0d91](https://github.com/NativeScript/nativescript-cli/commit/08a0d91775e9504410fb898c34fa7c6b8d514a2a))
+* migration rules for svelte-native ([#5372](https://github.com/NativeScript/nativescript-cli/issues/5372)) ([c5db5fe](https://github.com/NativeScript/nativescript-cli/commit/c5db5feff0069e8ae82bbfe0e770fe6c70ee42bc))
+
+
+
 ## [7.0.10](https://github.com/NativeScript/nativescript-cli/compare/7.0.9...7.0.10) (2020-10-03)
 
 
