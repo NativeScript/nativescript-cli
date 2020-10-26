@@ -145,8 +145,14 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 						!!buildOptions.buildForDevice ||
 						!!buildOptions.buildForAppStore;
 					if (forDevice) {
+						const ipaFileName = _.find(
+							this.$fs.readDirectory(
+								this._platformData.getBuildOutputPath(buildOptions)
+							),
+							(directory) => path.extname(directory) === ".ipa"
+						);
 						return {
-							packageNames: [`${projectData.projectName}.ipa`],
+							packageNames: [ipaFileName],
 						};
 					}
 
