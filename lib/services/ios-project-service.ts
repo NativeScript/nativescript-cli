@@ -149,10 +149,10 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 							this.$fs.readDirectory(
 								this._platformData.getBuildOutputPath(buildOptions)
 							),
-							(directory) => path.extname(directory) === ".ipa"
+							(entry) => path.extname(entry) === ".ipa"
 						);
 						return {
-							packageNames: [ipaFileName],
+							packageNames: [ipaFileName || `${projectData.projectName}.ipa`],
 						};
 					}
 
