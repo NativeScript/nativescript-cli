@@ -152,7 +152,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 							(entry) => path.extname(entry) === ".ipa"
 						);
 						return {
-							packageNames: [ipaFileName || `${projectData.projectName}.ipa`],
+							packageNames: [ipaFileName, `${projectData.projectName}.ipa`],
 						};
 					}
 
