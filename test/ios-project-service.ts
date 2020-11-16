@@ -125,7 +125,6 @@ function createTestInjector(
 	testInjector.register("logFilter", LogFilter);
 	testInjector.register("loggingLevels", LoggingLevels);
 	testInjector.register("utils", Utils);
-	testInjector.register("iTunesValidator", {});
 	testInjector.register("xcprojService", {
 		getXcprojInfo: () => {
 			return {

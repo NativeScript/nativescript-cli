@@ -74,7 +74,6 @@ injector.require(
 	"./mobile/ios/device/ios-device-operations"
 );
 
-injector.require("iTunesValidator", "./validators/iTunes-validator");
 injector.require("deviceDiscovery", "./mobile/mobile-core/device-discovery");
 injector.require(
 	"iOSDeviceDiscovery",
