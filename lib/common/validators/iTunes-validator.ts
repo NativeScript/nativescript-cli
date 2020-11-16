@@ -58,7 +58,7 @@ export class ITunesValidator implements Mobile.IiTunesValidator {
 				"/System/Library/PrivateFrameworks/MobileDevice.framework/MobileDevice";
 
 			if (!this.isiTunesInstalledCore(coreFoundationDir, mobileDeviceDir)) {
-				return ITunesValidator.NOT_INSTALLED_iTUNES_ERROR_MESSAGE;
+				// return ITunesValidator.NOT_INSTALLED_iTUNES_ERROR_MESSAGE;
 			}
 
 			return null;
