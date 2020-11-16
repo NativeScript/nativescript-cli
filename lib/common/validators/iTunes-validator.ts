@@ -52,16 +52,22 @@ export class ITunesValidator implements Mobile.IiTunesValidator {
 
 			return null;
 		} else if (this.$hostInfo.isDarwin) {
-			const coreFoundationDir =
-				"/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation";
-			const mobileDeviceDir =
-				"/System/Library/PrivateFrameworks/MobileDevice.framework/MobileDevice";
-
-			if (!this.isiTunesInstalledCore(coreFoundationDir, mobileDeviceDir)) {
-				return ITunesValidator.NOT_INSTALLED_iTUNES_ERROR_MESSAGE;
-			}
-
+			// Commented out check to get macOS Big Sur working
+			// by the looks of it - iTunes is no longer used by the CLI
+			// so we likely want to remove any legacy code related to it
+			// this is currently in progress
+			// TODO: remove this comment when no longer relevant.
 			return null;
+			// const coreFoundationDir =
+			// 	"/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation";
+			// const mobileDeviceDir =
+			// 	"/System/Library/PrivateFrameworks/MobileDevice.framework/MobileDevice";
+			//
+			// if (!this.isiTunesInstalledCore(coreFoundationDir, mobileDeviceDir)) {
+			// 	return ITunesValidator.NOT_INSTALLED_iTUNES_ERROR_MESSAGE;
+			// }
+			//
+			// return null;
 		}
 
 		return ITunesValidator.UNSUPPORTED_OS_ERROR_MESSAGE;
