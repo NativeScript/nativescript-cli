@@ -15,6 +15,7 @@ import {
 import { IPluginsService } from "../definitions/plugins";
 import { IFileSystem, IErrors, IDictionary } from "../common/declarations";
 import { injector } from "../common/yok";
+import { PackageVersion } from "../constants";
 
 interface IPackage {
 	name: string;
@@ -160,17 +161,12 @@ export class UpdateController
 				lowercasePlatform,
 				projectData
 			);
-			const templatePlatformData = this.$projectDataService.getNSValueFromContent(
-				templateManifest,
-				platformData.frameworkPackageName
-			);
-			const templateRuntimeVersion =
-				templatePlatformData && templatePlatformData.version;
+
 			if (
 				await this.shouldUpdateRuntimeVersion(
 					// templateRuntimeVersion is only set if the template has the legacy nativescript key in package.json
 					// in other cases, we are just going to default to using the latest
-					templateRuntimeVersion || "*",
+					PackageVersion.LATEST,
 					platformData.frameworkPackageName,
 					platform,
 					projectData
@@ -241,7 +237,7 @@ export class UpdateController
 		this.$logger.info("Finished updating devDependencies.");
 
 		this.$logger.info("Start updating runtimes.");
-		await this.updateRuntimes(templateManifest, projectData);
+		await this.updateRuntimes(projectData);
 		this.$logger.info("Finished updating runtimes.");
 
 		this.$logger.info("Install packages.");
@@ -425,38 +421,28 @@ export class UpdateController
 		}
 	}
 
-	private async updateRuntimes(
-		templateManifest: Object,
-		projectData: IProjectData
-	) {
+	private async updateRuntimes(projectData: IProjectData) {
 		for (const platform in this.$devicePlatformsConstants) {
 			const lowercasePlatform = platform.toLowerCase();
 			const platformData = this.$platformsDataService.getPlatformData(
 				lowercasePlatform,
 				projectData
 			);
-			const templatePlatformData = this.$projectDataService.getNSValueFromContent(
-				templateManifest,
-				platformData.frameworkPackageName
-			);
-			const templateRuntimeVersion =
-				templatePlatformData && templatePlatformData.version;
+
 			if (
 				await this.shouldUpdateRuntimeVersion(
 					// templateRuntimeVersion is only set if the template has the legacy nativescript key in package.json
 					// in other cases, we are just going to default to using the latest
-					templateRuntimeVersion || "*",
+					PackageVersion.LATEST,
 					platformData.frameworkPackageName,
 					platform,
 					projectData
 				)
 			) {
-				const version =
-					templateRuntimeVersion ||
-					(await this.$packageInstallationManager.getMaxSatisfyingVersionSafe(
-						platformData.frameworkPackageName,
-						"*"
-					));
+				const version = await this.$packageInstallationManager.getMaxSatisfyingVersionSafe(
+					platformData.frameworkPackageName,
+					PackageVersion.LATEST
+				);
 
 				this.$logger.info(
 					`Updating ${platform} platform to version '${version}'.`
@@ -465,7 +451,7 @@ export class UpdateController
 				await this.$addPlatformService.setPlatformVersion(
 					platformData,
 					projectData,
-					templateRuntimeVersion
+					version
 				);
 			}
 		}

@@ -289,6 +289,7 @@ interface IProjectDataService {
 	 * @param {string} jsonData The project directory - the place where the root package.json is located.
 	 * @param {string} propertyName The name of the property to be checked in `nativescript` key.
 	 * @returns {any} The value of the property.
+	 * @deprecated no longer used - will be removed in 8.0.
 	 */
 	getNSValueFromContent(jsonData: Object, propertyName: string): any;
 }
