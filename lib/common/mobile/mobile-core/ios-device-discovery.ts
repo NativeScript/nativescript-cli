@@ -4,28 +4,13 @@ import { IInjector } from "../../definitions/yok";
 import { injector } from "../../yok";
 
 export class IOSDeviceDiscovery extends DeviceDiscovery {
-	private _iTunesErrorMessage: string;
-
 	constructor(
 		private $injector: IInjector,
 		private $logger: ILogger,
-		private $iTunesValidator: Mobile.IiTunesValidator,
 		private $mobileHelper: Mobile.IMobileHelper,
 		private $iosDeviceOperations: IIOSDeviceOperations
 	) {
 		super();
-	}
-
-	private validateiTunes(): boolean {
-		if (!this._iTunesErrorMessage) {
-			this._iTunesErrorMessage = this.$iTunesValidator.getError();
-
-			if (this._iTunesErrorMessage) {
-				this.$logger.warn(this._iTunesErrorMessage);
-			}
-		}
-
-		return !this._iTunesErrorMessage;
 	}
 
 	public async startLookingForDevices(
@@ -41,28 +26,26 @@ export class IOSDeviceDiscovery extends DeviceDiscovery {
 			return;
 		}
 
-		if (this.validateiTunes()) {
-			await this.$iosDeviceOperations.startLookingForDevices(
-				(deviceInfo: IOSDeviceLib.IDeviceActionInfo) => {
+		await this.$iosDeviceOperations.startLookingForDevices(
+			(deviceInfo: IOSDeviceLib.IDeviceActionInfo) => {
+				const device = this.createDevice(deviceInfo);
+				this.addDevice(device);
+			},
+			(deviceInfo: IOSDeviceLib.IDeviceActionInfo) => {
+				const currentDevice = this.getDevice(deviceInfo.deviceId);
+				if (currentDevice) {
+					const device = this.createDevice(deviceInfo);
+					this.updateDeviceInfo(device);
+				} else {
 					const device = this.createDevice(deviceInfo);
 					this.addDevice(device);
-				},
-				(deviceInfo: IOSDeviceLib.IDeviceActionInfo) => {
-					const currentDevice = this.getDevice(deviceInfo.deviceId);
-					if (currentDevice) {
-						const device = this.createDevice(deviceInfo);
-						this.updateDeviceInfo(device);
-					} else {
-						const device = this.createDevice(deviceInfo);
-						this.addDevice(device);
-					}
-				},
-				(deviceInfo: IOSDeviceLib.IDeviceActionInfo) => {
-					this.removeDevice(deviceInfo.deviceId);
-				},
-				options
-			);
-		}
+				}
+			},
+			(deviceInfo: IOSDeviceLib.IDeviceActionInfo) => {
+				this.removeDevice(deviceInfo.deviceId);
+			},
+			options
+		);
 	}
 
 	private createDevice(

@@ -56,7 +56,7 @@ Before installing the `mobile-cli-lib`, verify that your system meets the follow
 
 * iTunes (latest official)
 * For testing in the native emulator
-	* Xcode 5 or later
+	* Xcode
 
 **Additional Software Requirements for Android On-Device Deployment**
 
