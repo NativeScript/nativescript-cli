@@ -663,19 +663,16 @@ export class RunController extends EventEmitter implements IRunController {
 				const platformLiveSyncService = this.$liveSyncServiceResolver.resolveLiveSyncService(
 					device.deviceInfo.platform
 				);
-				const allAppFiles =
-					data.hmrData &&
-					data.hmrData.fallbackFiles &&
-					data.hmrData.fallbackFiles.length
-						? data.hmrData.fallbackFiles
-						: data.files;
+				const allAppFiles = data.hmrData?.fallbackFiles?.length
+					? data.hmrData.fallbackFiles
+					: data.files;
 				const filesToSync = data.hasOnlyHotUpdateFiles
 					? data.files
 					: allAppFiles;
 				const watchInfo = {
 					liveSyncDeviceData: deviceDescriptor,
 					projectData,
-					filesToRemove: <any>[],
+					filesToRemove: data.staleFiles ?? [],
 					filesToSync,
 					hmrData: data.hmrData,
 					useHotModuleReload: liveSyncInfo.useHotModuleReload,
@@ -746,6 +743,7 @@ export class RunController extends EventEmitter implements IRunController {
 					}
 
 					const watchAction = async (): Promise<void> => {
+						console.time("watchAction");
 						const liveSyncResultInfo = await platformLiveSyncService.liveSyncWatchAction(
 							device,
 							watchInfo
@@ -769,12 +767,17 @@ export class RunController extends EventEmitter implements IRunController {
 						);
 
 						if (!liveSyncResultInfo.didRecover && isInHMRMode) {
-							const status = await this.$hmrStatusService.getHmrStatus(
-								device.deviceInfo.identifier,
-								data.hmrData.hash
-							);
+							console.time("getHmrStatus");
+							const status = HmrConstants.HMR_SUCCESS_STATUS;
+							// await this.$hmrStatusService.getHmrStatus(
+							// 	device.deviceInfo.identifier,
+							// 	data.hmrData.hash
+							// );
+							console.timeEnd("getHmrStatus");
+
 							// the timeout is assumed OK as the app could be blocked on a breakpoint
 							if (status === HmrConstants.HMR_ERROR_STATUS) {
+								console.log("HMR_ERROR_STATUS!!", status);
 								await fullSyncAction();
 								liveSyncResultInfo.isFullSync = true;
 								await this.refreshApplication(

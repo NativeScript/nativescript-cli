@@ -62,6 +62,7 @@ declare global {
 	interface IFilesChangeEventData {
 		platform: string;
 		files: string[];
+		staleFiles: string[];
 		hmrData: IPlatformHmrData;
 		hasOnlyHotUpdateFiles: boolean;
 		hasNativeChanges: boolean;

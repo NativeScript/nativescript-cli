@@ -28,6 +28,17 @@ import {
 import { ICleanupService } from "../../definitions/cleanup-service";
 import { injector } from "../../common/yok";
 
+// todo: move out of here
+interface IWebpackMessage {
+	type: "compilation";
+	version?: number;
+
+	isWatchMode?: boolean;
+	hash?: string;
+	emittedAssets?: string[];
+	staleAssets?: string[];
+}
+
 export class WebpackCompilerService
 	extends EventEmitter
 	implements IWebpackCompilerService {
@@ -71,6 +82,27 @@ export class WebpackCompilerService
 
 				childProcess.on("message", (message: string | IWebpackEmitMessage) => {
 					this.$logger.trace("Message from webpack", message);
+
+					if (
+						typeof message === "object" &&
+						"version" in message &&
+						"type" in message
+					) {
+						// first compilation can be ignored because it will be synced regardless
+						// handling it here would trigger 2 syncs
+						if (isFirstWebpackWatchCompilation) {
+							isFirstWebpackWatchCompilation = false;
+							resolve(childProcess);
+							return;
+						}
+
+						return this.handleHMRMessage(
+							message as IWebpackMessage,
+							platformData,
+							projectData,
+							prepareData
+						);
+					}
 
 					if (message === "Webpack compilation complete.") {
 						this.$logger.info("Webpack build done!");
@@ -398,17 +430,17 @@ export class WebpackCompilerService
 			}
 			if (typeof envValue === "boolean") {
 				if (envValue) {
-					args.push(`--env.${item}`);
+					args.push(`--env=${item}`);
 				}
 			} else {
 				if (!Array.isArray(envValue)) {
 					envValue = [envValue];
 				}
 
-				envValue.map((value: any) => args.push(`--env.${item}=${value}`));
+				envValue.map((value: any) => args.push(`--env=${item}=${value}`));
 			}
 		});
-
+		// console.log(args)
 		return args;
 	}
 
@@ -472,6 +504,44 @@ export class WebpackCompilerService
 			webpackProcess.kill("SIGINT");
 			delete this.webpackProcesses[platform];
 		}
+	}
+
+	private handleHMRMessage(
+		message: IWebpackMessage,
+		platformData: IPlatformData,
+		projectData: IProjectData,
+		prepareData: IPrepareData
+	) {
+		// handle new webpack hmr packets
+		this.$logger.trace("Received packet from webpack process:", message);
+
+		if (message.type !== "compilation") {
+			return;
+		}
+
+		this.$logger.trace("Webpack build done!");
+
+		const files = message.emittedAssets.map((asset) =>
+			path.join(platformData.appDestinationDirectoryPath, "app", asset)
+		);
+		const staleFiles = message.staleAssets.map((asset) =>
+			path.join(platformData.appDestinationDirectoryPath, "app", asset)
+		);
+
+		console.log({ staleFiles });
+
+		console.time("hmrSync");
+
+		this.emit(WEBPACK_COMPILATION_COMPLETE, {
+			files,
+			staleFiles,
+			hasOnlyHotUpdateFiles: prepareData.hmr,
+			hmrData: {
+				hash: message.hash,
+				fallbackFiles: [],
+			},
+			platform: platformData.platformNameLowerCase,
+		});
 	}
 }
 injector.register("webpackCompilerService", WebpackCompilerService);
