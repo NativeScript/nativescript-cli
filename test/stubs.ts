@@ -5,7 +5,6 @@ import * as chai from "chai";
 import { EventEmitter } from "events";
 import { join } from "path";
 import * as constants from "./../lib/constants";
-import * as prompt from "inquirer";
 import { Yok } from "./../lib/common/yok";
 import { HostInfo } from "./../lib/common/host-info";
 import { DevicePlatformsConstants } from "./../lib/common/mobile/device-platforms-constants";
@@ -67,6 +66,7 @@ import {
 	IAnalyticsService,
 	IProxySettings,
 	Server,
+	IPrompterQuestion,
 } from "../lib/common/declarations";
 import {
 	IAndroidPluginBuildService,
@@ -940,7 +940,7 @@ export class PrompterStub implements IPrompter {
 		}
 	}
 
-	async get(schemas: prompt.Question[]): Promise<any> {
+	async get(schemas: IPrompterQuestion[]): Promise<any> {
 		throw unreachable();
 	}
 
