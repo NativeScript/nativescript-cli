@@ -5,7 +5,6 @@ import {
 	IGoogleAnalyticsData,
 } from "./definitions/google-analytics";
 import * as child_process from "child_process";
-import { Answers } from "prompts";
 
 // tslint:disable-next-line:interface-name
 interface Object {
@@ -830,9 +829,11 @@ interface IPrompterOptions extends IAllowEmpty {
 	defaultAction?: () => string;
 }
 
-interface IPrompterAnswers extends Record<string, any> {}
+type IPrompterAnswers<T extends string = string> = { [id in T]: any };
 
-interface IPrompterQuestion<T extends Answers<any> = Answers<any>> {
+interface IPrompterQuestion<
+	T extends IPrompterAnswers<any> = IPrompterAnswers<any>
+> {
 	type?: string;
 	name?: string;
 	message?: string;
