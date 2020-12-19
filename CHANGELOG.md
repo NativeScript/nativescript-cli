@@ -1,3 +1,20 @@
+## [7.0.12](https://github.com/NativeScript/nativescript-cli/compare/v7.0.11...v7.0.12) (2020-12-19)
+
+
+### Bug Fixes
+
+* Big Sur - iTunes is not installed ([799bb76](https://github.com/NativeScript/nativescript-cli/commit/799bb76aec76f6595d744614719f57a863d557aa)), closes [#5342](https://github.com/NativeScript/nativescript-cli/issues/5342)
+* CFBundleName cannot be changed ([#5427](https://github.com/NativeScript/nativescript-cli/issues/5427)) ([ca32dc2](https://github.com/NativeScript/nativescript-cli/commit/ca32dc2f6b46b93be9df8d216a7d8ecbee200f1e))
+* ns update version null ([#5441](https://github.com/NativeScript/nativescript-cli/issues/5441)) ([6de0c3e](https://github.com/NativeScript/nativescript-cli/commit/6de0c3e513da0b91f4deef84748417a842c4bbf0)), closes [#5440](https://github.com/NativeScript/nativescript-cli/issues/5440)
+* remove iTunesValidator ([#5439](https://github.com/NativeScript/nativescript-cli/issues/5439)) ([6b3da6e](https://github.com/NativeScript/nativescript-cli/commit/6b3da6e3c84bd2bfb69f26041866736e7208fb83))
+
+
+### Performance Improvements
+
+* use prompts instead of inquirer ([#5443](https://github.com/NativeScript/nativescript-cli/issues/5443)) ([ab24ece](https://github.com/NativeScript/nativescript-cli/commit/ab24ece0aaf5ad38b574c52bdd753728a1b6d72b))
+
+
+
 ## [7.0.11](https://github.com/NativeScript/nativescript-cli/compare/v7.0.10...v7.0.11) (2020-10-21)
 
 
