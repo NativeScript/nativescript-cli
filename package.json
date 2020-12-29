@@ -69,7 +69,7 @@
     "email-validator": "2.0.4",
     "esprima": "4.0.1",
     "glob": "7.1.6",
-    "ios-device-lib": "0.8.0-rc.1",
+    "ios-device-lib": "0.8.0",
     "ios-mobileprovision-finder": "1.0.11",
     "ios-sim-portable": "4.2.1",
     "istextorbinary": "5.9.0",
