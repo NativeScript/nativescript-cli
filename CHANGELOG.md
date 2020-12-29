@@ -1,3 +1,14 @@
+# [7.1.0](https://github.com/NativeScript/nativescript-cli/compare/v7.0.12...v7.1.0) (2020-12-29)
+
+
+### Features
+
+* **logs:** support external sourcemaps from `.map` files ([#5434](https://github.com/NativeScript/nativescript-cli/issues/5434)) ([de678cf](https://github.com/NativeScript/nativescript-cli/commit/de678cff9f9478f8f7960fc412984cc3d1921898))
+* fonts command ([#5452](https://github.com/NativeScript/nativescript-cli/issues/5452)) ([a6b0e3c](https://github.com/NativeScript/nativescript-cli/commit/a6b0e3cce55c6c7b6cecfffb9b9f231d48c5820b))
+* vue-ts-template ([#5453](https://github.com/NativeScript/nativescript-cli/issues/5453)) ([7cdaed7](https://github.com/NativeScript/nativescript-cli/commit/7cdaed74dba0d8c171fa43ae1597f803ed83cd73))
+
+
+
 ## [7.0.12](https://github.com/NativeScript/nativescript-cli/compare/v7.0.11...v7.0.12) (2020-12-19)
 
 
