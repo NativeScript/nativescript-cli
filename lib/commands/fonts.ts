@@ -34,6 +34,11 @@ export class FontsCommand implements ICommand {
 		const fontsFolderPath = defaultFontsFolderPaths.find((entry) =>
 			this.$fs.exists(entry)
 		);
+		
+		if(!fontsFolderPath) {
+		  this.$logger.warn("No fonts folder found.");
+		  return;
+		}
 
 		const table: any = createTable(["Font", "CSS Properties"], []);
 
