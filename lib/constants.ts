@@ -45,6 +45,7 @@ export const AWAIT_NOTIFICATION_TIMEOUT_SECONDS = 9;
 export const SRC_DIR = "src";
 export const MAIN_DIR = "main";
 export const ASSETS_DIR = "assets";
+export const FONTS_DIR = "fonts";
 export const ANDROID_ANALYTICS_DATA_DIR = "analytics";
 export const ANDROID_ANALYTICS_DATA_FILE = "build-statistics.json";
 export const MANIFEST_FILE_NAME = "AndroidManifest.xml";
