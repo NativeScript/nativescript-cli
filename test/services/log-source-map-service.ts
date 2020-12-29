@@ -95,6 +95,23 @@ const testCases: IDictionary<Array<{
 			expected:
 				"System.err: 	at com.tns.Runtime.dispatchCallJSMethodNative(Runtime.java:1203)\n",
 		},
+		// External maps
+		{
+			caseName: "trace message (external map)",
+			message:
+				"JS: at onTap (file:///data/data/org.nativescript.sourceMap/files/app/external.js:12:22)",
+			expected: `JS: at onTap file: ${toPlatformSep(
+				"src/external-test.js"
+			)}:3:4\n`,
+		},
+		{
+			caseName: "error message (external map)",
+			message:
+				"System.err: 	Frame: function:'./external-test.js.onTap', file:'file:///data/data/org.nativescript.sourceMap/files/app/external.js', line: 13, column: 32",
+			expected: `System.err: 	Frame: function:'./external-test.js.onTap', file:'file: ${toPlatformSep(
+				"src/external-test.js"
+			)}:4:4\n`,
+		},
 	],
 	ios: [
 		{
@@ -119,7 +136,7 @@ const testCases: IDictionary<Array<{
 			)}:31:31 JS ERROR Error: Test\n`,
 		},
 		{
-			caseName: "error stack tracew",
+			caseName: "error stack trace",
 			message: "onTap@file:///app/bundle.js:296:32",
 			expected: `onTap@file: ${toPlatformSep(
 				"src/main-view-model.ts"
@@ -137,6 +154,33 @@ const testCases: IDictionary<Array<{
 			expected: `onTap(file: ${toPlatformSep(
 				"src/main-view-model.ts"
 			)}:31:18)\n`,
+		},
+		// External maps
+		{
+			caseName: "console message (external map)",
+			message: "CONSOLE LOG file:///app/external.js:11:20: Test.",
+			expected: `CONSOLE LOG file: ${toPlatformSep(
+				"src/external-test.js"
+			)}:2:16 Test.\n`,
+		},
+		{
+			caseName: "trace message (external map)",
+			message: "CONSOLE TRACE file:///app/external.js:12:22: Test",
+			expected: `CONSOLE TRACE file: ${toPlatformSep(
+				"src/external-test.js"
+			)}:3:4 Test\n`,
+		},
+		{
+			caseName: "error message (external map)",
+			message: "file:///app/external.js:13:32: JS ERROR Error: Test",
+			expected: `file: ${toPlatformSep(
+				"src/external-test.js"
+			)}:4:4 JS ERROR Error: Test\n`,
+		},
+		{
+			caseName: "error stack trace (external map)",
+			message: "onTap@file:///app/external.js:13:32",
+			expected: `onTap@file: ${toPlatformSep("src/external-test.js")}:4:4\n`,
 		},
 	],
 };
@@ -158,6 +202,10 @@ describe("log-source-map-service", () => {
 			const fs = testInjector.resolve<IFileSystem>("fs");
 			const files = fs.enumerateFilesInDirectorySync(originalFilesLocation);
 			for (const file of files) {
+				if (file.endsWith(".map")) {
+					continue;
+				}
+
 				await logSourceMapService.setSourceMapConsumerForFile(file);
 			}
 		});
