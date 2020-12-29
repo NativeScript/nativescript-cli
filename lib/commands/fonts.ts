@@ -34,24 +34,30 @@ export class FontsCommand implements ICommand {
 		const fontsFolderPath = defaultFontsFolderPaths.find((entry) =>
 			this.$fs.exists(entry)
 		);
-		
-		if(!fontsFolderPath) {
-		  this.$logger.warn("No fonts folder found.");
-		  return;
+
+		if (!fontsFolderPath) {
+			this.$logger.warn("No fonts folder found.");
+			return;
+		}
+
+		const files = this.$fs
+			.readDirectory(fontsFolderPath)
+			.map((entry) => path.parse(entry))
+			.filter((entry) => {
+				return supportedExtensions.includes(entry.ext);
+			});
+
+		if (!files.length) {
+			this.$logger.warn("No custom fonts found.");
+			return;
 		}
 
 		const table: any = createTable(["Font", "CSS Properties"], []);
 
-		for (const entry of this.$fs.readDirectory(fontsFolderPath)) {
-			const file = path.parse(entry);
-
-			if (!supportedExtensions.includes(file.ext)) {
-				continue;
-			}
-
-			const font = await fontFinder.get(fontsFolderPath + "/" + entry);
+		for (const file of files) {
+			const font = await fontFinder.get(fontsFolderPath + "/" + file.base);
 			table.push([
-				entry,
+				file.base,
 				`font-family: "${font.name}", "${file.name}"; font-weight: ${font.weight};`,
 			]);
 		}
