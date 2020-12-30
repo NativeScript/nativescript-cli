@@ -102,7 +102,7 @@ export class Prompter implements IPrompter {
 		};
 
 		const result = await this.get([schema]);
-		return result.userAnswer;
+		return choices[result.userAnswer];
 	}
 
 	public async promptForDetailedChoice(
@@ -125,7 +125,7 @@ export class Prompter implements IPrompter {
 		};
 
 		const result = await this.get([schema]);
-		return result.userAnswer;
+		return inquirerChoices[result.userAnswer].value;
 	}
 
 	public async confirm(
