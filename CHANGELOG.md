@@ -1,3 +1,12 @@
+## [7.1.1](https://github.com/NativeScript/nativescript-cli/compare/v7.1.0...v7.1.1) (2020-12-30)
+
+
+### Bug Fixes
+
+* prompter returning index instead of value ([c1d5a27](https://github.com/NativeScript/nativescript-cli/commit/c1d5a271a0b689d1e734e55363dbc55015ef102a))
+
+
+
 # [7.1.0](https://github.com/NativeScript/nativescript-cli/compare/v7.0.12...v7.1.0) (2020-12-29)
 
 
