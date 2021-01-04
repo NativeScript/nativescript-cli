@@ -125,7 +125,7 @@ export class Prompter implements IPrompter {
 		};
 
 		const result = await this.get([schema]);
-		return inquirerChoices[result.userAnswer].value;
+		return result.userAnswer;
 	}
 
 	public async confirm(
