@@ -1,3 +1,12 @@
+## [7.1.2](https://github.com/NativeScript/nativescript-cli/compare/v7.1.1...v7.1.2) (2021-01-04)
+
+
+### Bug Fixes
+
+* prompter returning undefined instead of value ([#5457](https://github.com/NativeScript/nativescript-cli/issues/5457)) ([4cc4bca](https://github.com/NativeScript/nativescript-cli/commit/4cc4bcac62abbe328ddc9abb4816f0ed733c5269))
+
+
+
 ## [7.1.1](https://github.com/NativeScript/nativescript-cli/compare/v7.1.0...v7.1.1) (2020-12-30)
 
 
