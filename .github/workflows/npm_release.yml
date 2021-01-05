@@ -22,7 +22,7 @@ jobs:
           echo NPM_VERSION=$(node -e "console.log(require('./package.json').version);")-$NPM_TAG-$(date +"%m-%d-%Y")-$GITHUB_RUN_ID >> $GITHUB_ENV
 
       - name: Bump Version
-        run: npm version $NPM_VERSION
+        run: npm --no-git-tag-version version $NPM_VERSION
 
       - name: Build @nativescript/doctor
         run: npm run pack
