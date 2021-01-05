@@ -5,11 +5,11 @@
   "main": "lib/index.js",
   "types": "./typings/nativescript-doctor.d.ts",
   "scripts": {
-    "clean": "npx rimraf node_modules package-lock.json && npm i && ./node_modules/.bin/grunt clean",
-    "build": "./node_modules/.bin/grunt",
-    "build.all": "./node_modules/.bin/grunt ts:devall",
-    "pack": "./node_modules/.bin/grunt pack",
-    "test": "node_modules/.bin/istanbul cover ./node_modules/mocha/bin/_mocha -- --recursive",
+    "clean": "npx rimraf node_modules package-lock.json && npm i && grunt clean",
+    "build": "grunt",
+    "build.all": "grunt ts:devall",
+    "pack": "grunt pack",
+    "test": "istanbul cover ./node_modules/mocha/bin/_mocha -- --recursive",
     "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s"
   },
   "repository": {
