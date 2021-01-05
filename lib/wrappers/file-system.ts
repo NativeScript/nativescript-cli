@@ -1,11 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as yauzl from "yauzl";
-import * as util from "util";
 import * as shelljs from "shelljs";
-
-const access = util.promisify(fs.access);
-const mkdir = util.promisify(fs.mkdir);
 
 export class FileSystem {
 	public exists(filePath: string): boolean {
@@ -66,12 +62,5 @@ export class FileSystem {
 }
 
 function createParentDirsIfNeeded(filePath: string) {
-	const dirs = path.dirname(filePath).split(path.sep);
-	return dirs.reduce((p, dir) => p.then(parent => {
-		const current = `${parent}${path.sep}${dir}`;
-
-		return access(current)
-			.catch(e => mkdir(current))
-			.then(() => current);
-	}), Promise.resolve(''));
+	return fs.promises.mkdir(path.dirname(filePath), {recursive: true});
 }

@@ -18,7 +18,7 @@ describe('FileSystem', () => {
 		].join('');
 		const tmpDir = `${tmpdir()}/${datetime}`;
 		const testFilePath = `${__dirname}/example.zip`;
-		const filesThatNeedToExtsit = [
+		const filesThatNeedToExist = [
 			`${tmpDir}/test/android-local-build-requirements.ts`,
 			`${tmpDir}/test/android-tools-info.ts`,
 			`${tmpDir}/test/ios-local-build-requirements.ts`,
@@ -27,11 +27,11 @@ describe('FileSystem', () => {
 		];
 
 		it('should extract in example zip archive in tmp folder', done => {
-			const fs  = new FileSystem();
+			const fs = new FileSystem();
 
 			fs.extractZip(testFilePath, tmpDir)
 				.then(() => {
-					const allExists = filesThatNeedToExtsit
+					const allExists = filesThatNeedToExist
 						.map(fs.exists)
 						.reduce((acc, r) => acc && r, true);
 
