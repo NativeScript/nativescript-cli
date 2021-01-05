@@ -32,6 +32,6 @@ jobs:
         env:
           NPM_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
         run: |
-          echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ../../.npmrc
+          echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc
           echo "Publishing @nativescript/doctor@$NPM_VERSION to NPM with tag $NPM_TAG..."
           npm publish nativescript-doctor-$NPM_VERSION.tgz --tag $NPM_TAG
