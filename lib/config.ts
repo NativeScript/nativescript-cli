@@ -66,15 +66,15 @@ export class StaticConfig implements IStaticConfig {
 		switch (process.platform) {
 			case "linux":
 				linkToSysRequirements =
-					"http://docs.nativescript.org/setup/ns-cli-setup/ns-setup-linux.html#system-requirements";
+					"https://docs.nativescript.org/start/general-requirements#full-setup-requirements-linux";
 				break;
 			case "win32":
 				linkToSysRequirements =
-					"http://docs.nativescript.org/setup/ns-cli-setup/ns-setup-win.html#system-requirements";
+					"https://docs.nativescript.org/start/general-requirements#full-setup-requirements-windows";
 				break;
 			case "darwin":
 				linkToSysRequirements =
-					"http://docs.nativescript.org/setup/ns-cli-setup/ns-setup-os-x.html#system-requirements";
+					"https://docs.nativescript.org/start/general-requirements#full-setup-requirements-macos";
 				break;
 			default:
 				linkToSysRequirements = "";
