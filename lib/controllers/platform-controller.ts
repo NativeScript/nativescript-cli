@@ -143,6 +143,21 @@ export class PlatformController implements IPlatformController {
 		const hasPlatformDirectory = this.$fs.exists(
 			path.join(projectData.platformsDir, platformName)
 		);
+
+		if (hasPlatformDirectory) {
+			const isPlatformDirectoryEmpty =
+				this.$fs.readDirectory(
+					path.join(projectData.platformsDir, platformName)
+				).length <= 5;
+
+			if (isPlatformDirectoryEmpty) {
+				this.$logger.warn(
+					`${projectData.platformsDir}/${platformName} folder is empty. Run 'ns clean' to generate required files.`,
+					{ wrapMessageWithBorders: true }
+				);
+			}
+		}
+
 		const shouldAddNativePlatform =
 			!nativePrepare || !nativePrepare.skipNativePrepare;
 		const prepareInfo = this.$projectChangesService.getPrepareInfo(
