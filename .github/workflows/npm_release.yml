@@ -27,7 +27,7 @@ jobs:
       - name: Build @nativescript/doctor
         run: npm run pack
 
-      - name: Publish @nativescript/core
+      - name: Publish @nativescript/doctor
         env:
           NPM_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
         run: |
