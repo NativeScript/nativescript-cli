@@ -26,6 +26,7 @@ import {
 	IStringDictionary,
 } from "../common/declarations";
 import * as _ from "lodash";
+import * as shelljs from "shelljs";
 import { injector } from "../common/yok";
 
 export class ProjectService implements IProjectService {
@@ -102,6 +103,10 @@ export class ProjectService implements IProjectService {
 			appId: appId,
 			projectName,
 		});
+
+		shelljs.exec(`git init ${projectDir}`);
+		shelljs.exec(`git -C ${projectDir} add --all`);
+		shelljs.exec(`git -C ${projectDir} commit -m "Initialize new project"`);
 
 		this.$logger.info();
 		this.$logger.printMarkdown(
