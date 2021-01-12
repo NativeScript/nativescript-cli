@@ -64,11 +64,15 @@ export class ProjectConfigService implements IProjectConfigService {
 		return this.$injector.resolve("projectHelper");
 	}
 
-	public getDefaultTSConfig(appId: string = "org.nativescript.app") {
+	public getDefaultTSConfig(
+		appId: string = "org.nativescript.app",
+		appPath: string = "app"
+	) {
 		return `import { NativeScriptConfig } from '@nativescript/core';
 
 export default {
   id: '${appId}',
+  appPath: '${appPath}',
   appResourcesPath: 'App_Resources',
   android: {
     v8Flags: '--expose_gc',
@@ -274,7 +278,19 @@ export default {
 			return false;
 		}
 
-		this.$fs.writeFile(TSConfigPath, this.getDefaultTSConfig(appId));
+		const possibleAppPaths = [
+			path.resolve(projectDir, constants.SRC_DIR),
+			path.resolve(projectDir, constants.APP_FOLDER_NAME),
+		];
+
+		let appPath = possibleAppPaths.find((possiblePath) =>
+			this.$fs.exists(possiblePath)
+		);
+		if (appPath) {
+			appPath = path.relative(projectDir, appPath).replace(path.sep, "/");
+		}
+
+		this.$fs.writeFile(TSConfigPath, this.getDefaultTSConfig(appId, appPath));
 
 		return TSConfigPath;
 	}
