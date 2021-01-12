@@ -145,12 +145,11 @@ export class PlatformController implements IPlatformController {
 		);
 
 		if (hasPlatformDirectory) {
-			const isPlatformDirectoryEmpty =
-				this.$fs.readDirectory(
-					path.join(projectData.platformsDir, platformName)
-				).length <= 5;
+			const platformDirectoryItemCount = this.$fs.readDirectory(
+				path.join(projectData.platformsDir, platformName)
+			).length;
 
-			if (isPlatformDirectoryEmpty) {
+			if (platformDirectoryItemCount <= 5) {
 				this.$logger.warn(
 					`The platforms/${platformName} folder appears to be invalid. If the build fails, run 'ns clean' and rebuild the app.`,
 					{ wrapMessageWithBorders: true }
