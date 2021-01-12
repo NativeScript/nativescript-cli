@@ -152,7 +152,7 @@ export class PlatformController implements IPlatformController {
 
 			if (isPlatformDirectoryEmpty) {
 				this.$logger.warn(
-					`${projectData.platformsDir}/${platformName} folder is empty. Run 'ns clean' to generate required files.`,
+					`The platforms/${platformName} folder appears to be invalid. If the build fails, run 'ns clean' and rebuild the app.`,
 					{ wrapMessageWithBorders: true }
 				);
 			}
