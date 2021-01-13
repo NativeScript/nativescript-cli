@@ -123,7 +123,7 @@ describe("projectService", () => {
 				[
 					`git init ${projectDir}`,
 					`git -C ${projectDir} add --all`,
-					`git -C ${projectDir} commit -m "init"`,
+					`git -C ${projectDir} commit --no-verify -m "init"`,
 				]
 			);
 		});
