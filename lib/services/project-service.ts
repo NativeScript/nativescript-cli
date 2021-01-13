@@ -108,7 +108,7 @@ export class ProjectService implements IProjectService {
 		try {
 			await this.$childProcess.exec(`git init ${projectDir}`);
 			await this.$childProcess.exec(`git -C ${projectDir} add --all`);
-			await this.$childProcess.exec(`git -C ${projectDir} commit -m "init"`);
+			await this.$childProcess.exec(`git -C ${projectDir} commit --no-verify -m "init"`);
 		} catch (err) {
 			this.$logger.trace(
 				"Unable to initialize git repository. Error is: ",
