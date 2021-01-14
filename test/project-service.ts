@@ -87,6 +87,13 @@ describe("projectService", () => {
 				extractPackage: () => Promise.resolve(),
 			});
 			testInjector.register("tempService", TempServiceStub);
+			const executedCommands: string[] = [];
+			testInjector.register("childProcess", {
+				_getExecutedCommands: () => executedCommands,
+				exec: (executedCommand: string) => {
+					executedCommands.push(executedCommand);
+				},
+			});
 
 			return testInjector;
 		};
@@ -98,16 +105,27 @@ describe("projectService", () => {
 			const projectService = testInjector.resolve<IProjectService>(
 				ProjectServiceLib.ProjectService
 			);
+			const projectDir = path.join(dirToCreateProject, projectName);
 			const projectCreationData = await projectService.createProject({
 				projectName: projectName,
 				pathToProject: dirToCreateProject,
 				force: true,
 				template: constants.RESERVED_TEMPLATE_NAMES["default"],
 			});
+
 			assert.deepStrictEqual(projectCreationData, {
 				projectName,
-				projectDir: path.join(dirToCreateProject, projectName),
+				projectDir,
 			});
+
+			assert.deepEqual(
+				testInjector.resolve("childProcess")._getExecutedCommands(),
+				[
+					`git init ${projectDir}`,
+					`git -C ${projectDir} add --all`,
+					`git -C ${projectDir} commit --no-verify -m "init"`,
+				]
+			);
 		});
 
 		it("fails when invalid name is passed when projectNameService fails", async () => {
@@ -188,6 +206,7 @@ describe("projectService", () => {
 				downloadAndExtract: () => Promise.resolve(),
 			});
 			testInjector.register("tempService", TempServiceStub);
+			testInjector.register("childProcess", {});
 
 			return testInjector;
 		};
