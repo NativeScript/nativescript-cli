@@ -5,6 +5,7 @@ import { Server, IProxySettings, IProxyService } from "./declarations";
 import { injector } from "./yok";
 import axios from "axios";
 import { HttpStatusCodes } from "./constants";
+import * as tunnel from "tunnel";
 
 export class HttpClient implements Server.IHttpClient {
 	private static STUCK_REQUEST_ERROR_MESSAGE =
@@ -97,7 +98,19 @@ export class HttpClient implements Server.IHttpClient {
 
 		this.$logger.trace("httpRequest: %s", util.inspect(options));
 
-		const result = await axios(options).catch((err) => {
+		const agent = tunnel.httpsOverHttp({
+			proxy: {
+				host: cliProxySettings.hostname,
+				port: parseInt(cliProxySettings.port),
+			},
+		});
+		const result = await axios({
+			url: options.url,
+			headers: options.headers,
+			method: options.method,
+			proxy: false,
+			httpAgent: agent,
+		}).catch((err) => {
 			this.$logger.trace("An error occurred while sending the request:", err);
 			if (err.response) {
 				// The request was made and the server responded with a status code
