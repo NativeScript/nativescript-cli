@@ -35,6 +35,7 @@ General | `$ tns build android [--compileSdk <API Level>] [--key-store-path <Fil
     *   `--env.hiddenSourceMap` - creates sources maps in the root folder (useful for Crashlytics usage with bundled app in release).
 * `--aab` - Specifies that the build will produce an Android App Bundle(`.aab`) file.
 * `--force` - If set, skips the application compatibility checks and forces `npm i` to ensure all dependencies are installed. Otherwise, the command will check the application compatibility with the current CLI version and could fail requiring `tns migrate`.
+* `--path <Directory>` | Specifies the directory that contains the project. If not set, the project is searched for in the current directory and all directories above it.
 
 <% if(isHtml) { %>
 
