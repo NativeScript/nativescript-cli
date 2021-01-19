@@ -165,6 +165,7 @@ interface IProjectData extends ICreateProjectData {
 	infoPlistPath: string;
 	buildXcconfigPath: string;
 	podfilePath: string;
+	initialized?: boolean;
 	/**
 	 * Defines if the project is a code sharing one.
 	 * Value is true when project has nativescript.config and it has `shared: true` in it.
