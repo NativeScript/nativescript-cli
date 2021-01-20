@@ -88,6 +88,20 @@ export class UpdateController
 		const projectData = this.$projectDataService.getProjectData(
 			updateOptions.projectDir
 		);
+
+		try {
+			for (const updatableDependency of UpdateController.updatableDependencies) {
+				await this.getVersionFromTag(
+					updatableDependency.name,
+					updateOptions.version
+				);
+			}
+		} catch (error) {
+			this.$errors.fail(
+				`${UpdateController.updateFailMessage} Reason is: ${error.message}`
+			);
+		}
+
 		const backupDir = path.join(
 			updateOptions.projectDir,
 			UpdateController.backupFolder
