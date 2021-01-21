@@ -200,7 +200,16 @@ export class FileSystem implements IFileSystem {
 	}
 
 	public createDirectory(path: string): void {
-		mkdirp.sync(path);
+		try {
+			mkdirp.sync(path);
+		} catch (error) {
+			const $errors = this.$injector.resolve("errors");
+			let errorMessage = `Unable to create directory ${path}. \nError is: ${error}.`;
+			if (error.code === "EACCES") {
+				errorMessage += "\n\nYou may need to call the command with 'sudo'.";
+			}
+			$errors.fail(errorMessage);
+		}
 	}
 
 	public readDirectory(path: string): string[] {
@@ -372,15 +381,8 @@ export class FileSystem implements IFileSystem {
 	}
 
 	public ensureDirectoryExists(directoryPath: string): void {
-		try {
-			if (!this.exists(directoryPath)) {
-				this.createDirectory(directoryPath);
-			}
-		} catch (error) {
-			const $errors = this.$injector.resolve("errors");
-			$errors.fail(
-				`Unable to generate CLI documentation.\n\nUnable to write to a system directory (${directoryPath}).\n\nYou may need to call the command with 'sudo'.`
-			);
+		if (!this.exists(directoryPath)) {
+			this.createDirectory(directoryPath);
 		}
 	}
 
