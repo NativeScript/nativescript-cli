@@ -372,8 +372,15 @@ export class FileSystem implements IFileSystem {
 	}
 
 	public ensureDirectoryExists(directoryPath: string): void {
-		if (!this.exists(directoryPath)) {
-			this.createDirectory(directoryPath);
+		try {
+			if (!this.exists(directoryPath)) {
+				this.createDirectory(directoryPath);
+			}
+		} catch (error) {
+			const $errors = this.$injector.resolve("errors");
+			$errors.fail(
+				`Unable to generate CLI documentation.\n\nUnable to write to a system directory (${directoryPath}).\n\nYou may need to call the command with 'sudo'.`
+			);
 		}
 	}
 
