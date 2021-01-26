@@ -1,5 +1,5 @@
 <% if (isJekyll) { %>---
-title: tns info
+title: ns resources
 position: 11
 ---<% } %>
 
