@@ -26,7 +26,8 @@ export class CommandDispatcher implements ICommandDispatcher {
 		private $sysInfo: ISysInfo,
 		private $options: IOptions,
 		private $versionsService: IVersionsService,
-		private $packageManager: IPackageManager
+		private $packageManager: IPackageManager,
+		private $terminalSpinnerService: ITerminalSpinnerService
 	) {}
 
 	public async dispatchCommand(): Promise<void> {
@@ -102,7 +103,12 @@ export class CommandDispatcher implements ICommandDispatcher {
 
 	private async printVersion(): Promise<void> {
 		this.$logger.info(this.$staticConfig.version);
+
+		const spinner = this.$terminalSpinnerService.createSpinner();
+		spinner.start("Checking for updates...");
 		const nativescriptCliVersion = await this.$versionsService.getNativescriptCliVersion();
+		spinner.stop();
+
 		const packageManagerName = await this.$packageManager.getPackageManagerName();
 		let updateCommand = "";
 
@@ -118,11 +124,14 @@ export class CommandDispatcher implements ICommandDispatcher {
 				break;
 		}
 		if (
-			nativescriptCliVersion.currentVersion !==
+			nativescriptCliVersion.currentVersion ===
 			nativescriptCliVersion.latestVersion
 		) {
-			this.$logger.info(
-				`Newer version of NativeScript is available (${nativescriptCliVersion.latestVersion}), run '${updateCommand}' to update.`
+			// up-to-date
+			spinner.succeed("Up to date.");
+		} else {
+			spinner.info(
+				`New version of NativeScript CLI is available (${nativescriptCliVersion.latestVersion}), run '${updateCommand}' to update.`
 			);
 		}
 	}
