@@ -1,6 +1,6 @@
 <% if (isJekyll) { %>---
 title: ns resources
-position: 11
+position: 9
 ---<% } %>
 
 # ns resources
