@@ -117,6 +117,9 @@ export class ProjectData implements IProjectData {
 	}
 
 	public initializeProjectData(projectDir?: string): void {
+		if (!this.initialized) {
+			return;
+		}
 		projectDir = projectDir || this.$projectHelper.projectDir;
 
 		// If no project found, projectDir should be null
@@ -126,10 +129,8 @@ export class ProjectData implements IProjectData {
 			if (this.$fs.exists(projectFilePath)) {
 				const packageJsonContent = this.$fs.readText(projectFilePath);
 
-				if (!this.initialized) {
-					this.initializeProjectDataFromContent(packageJsonContent, projectDir);
-					this.initialized = true;
-				}
+				this.initializeProjectDataFromContent(packageJsonContent, projectDir);
+				this.initialized = true;
 			}
 
 			return;
