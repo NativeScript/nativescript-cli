@@ -117,7 +117,7 @@ export class ProjectData implements IProjectData {
 	}
 
 	public initializeProjectData(projectDir?: string): void {
-		if (!this.initialized) {
+		if (this.initialized) {
 			return;
 		}
 		projectDir = projectDir || this.$projectHelper.projectDir;
