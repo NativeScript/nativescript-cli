@@ -369,7 +369,7 @@ interface IProjectConfigService {
 
 	detectProjectConfigs(projectDir?: string): IProjectConfigInformation;
 
-	getDefaultTSConfig(appId: string): string;
+	getDefaultTSConfig(appId: string, appPath: string): string;
 
 	writeDefaultConfig(projectDir?: string, appId?: string): boolean | string;
 

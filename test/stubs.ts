@@ -622,11 +622,12 @@ export class ProjectConfigServiceStub implements IProjectConfigService {
 		};
 	}
 
-	getDefaultTSConfig(appId: string): string {
+	getDefaultTSConfig(appId: string, appPath: string): string {
 		return `import { NativeScriptConfig } from '@nativescript/core';
 
     export default {
       id: '${appId}',
+      appPath: '${appPath}'
       appResourcesPath: 'App_Resources',
       android: {
         v8Flags: '--expose_gc',
