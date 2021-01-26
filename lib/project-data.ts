@@ -98,6 +98,7 @@ export class ProjectData implements IProjectData {
 	public isShared: boolean;
 	public previewAppSchema: string;
 	public webpackConfigPath: string;
+	public initialized: boolean;
 
 	constructor(
 		private $fs: IFileSystem,
@@ -125,7 +126,10 @@ export class ProjectData implements IProjectData {
 			if (this.$fs.exists(projectFilePath)) {
 				const packageJsonContent = this.$fs.readText(projectFilePath);
 
-				this.initializeProjectDataFromContent(packageJsonContent, projectDir);
+				if (!this.initialized) {
+					this.initializeProjectDataFromContent(packageJsonContent, projectDir);
+					this.initialized = true;
+				}
 			}
 
 			return;
