@@ -155,7 +155,7 @@ export class AddPlatformService implements IAddPlatformService {
 			// tns-ios@^7.0.0
 			// tns-ios@~7.0.0
 			packageName = packageName.replace(/(.+)@.+$/g, "$1");
-			console.log({ packageName });
+
 			const frameworkDir = require
 				.resolve(`${packageName}/package.json`, {
 					paths: [projectDir],
