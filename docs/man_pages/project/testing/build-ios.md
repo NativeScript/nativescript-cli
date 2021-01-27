@@ -34,7 +34,7 @@ General | `$ tns build ios [--for-device] [--release] [--copy-to <File Path>] [-
     *   `--env.sourceMap` - creates inline source maps.
     *   `--env.hiddenSourceMap` - creates sources maps in the root folder (useful for Crashlytics usage with bundled app in release).
 * `--force` - If set, skips the application compatibility checks and forces `npm i` to ensure all dependencies are installed. Otherwise, the command will check the application compatibility with the current CLI version and could fail requiring `tns migrate`.
-* `--path <Directory>` | Specifies the directory that contains the project. If not set, the project is searched for in the current directory and all directories above it.
+* `--path <Directory>` - Specifies the directory that contains the project. If not set, the project is searched for in the current directory and all directories above it.
 
 <% } %>
 
