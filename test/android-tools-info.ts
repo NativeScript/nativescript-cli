@@ -115,20 +115,19 @@ describe("androidToolsInfo", () => {
 			},
 			{
 				javacVersion: "1.7.0",
-				warnings: ["Javac version 1.7.0 is not supported. You have to install at least 1.8.0 and below 13.0.0."]
+				warnings: [AndroidToolsInfo.unsupportedJavaMessage("1.7.0")]
 			},
 			{
 				javacVersion: "1.7.0_132",
-				warnings: ["Javac version 1.7.0_132 is not supported. You have to install at least 1.8.0 and below 13.0.0."]
+				warnings: [AndroidToolsInfo.unsupportedJavaMessage("1.7.0_132")]
 			},
-			{
-				javacVersion: "13.0.0",
-				warnings: ["Javac version 13.0.0 is not supported. You have to install at least 1.8.0 and below 13.0.0."]
-			},
-			{
-				javacVersion: "14.1.0",
-				warnings: ["Javac version 14.1.0 is not supported. You have to install at least 1.8.0 and below 13.0.0."]
-			},
+			//
+			// Reinstate this test if there is some future max java version found to be not supported.
+			//
+			// {
+			// 	javacVersion: "14.1.0",
+			// 	warnings: [AndroidToolsInfo.unsupportedJavaMessage("14.1.0")]
+			// },
 			{
 				javacVersion: null,
 				warnings: ["Error executing command 'javac'. Make sure you have installed The Java Development Kit (JDK) and set JAVA_HOME environment variable."]
