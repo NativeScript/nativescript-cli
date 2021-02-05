@@ -1,7 +1,7 @@
 {
   "name": "nativescript",
   "preferGlobal": true,
-  "version": "7.1.2",
+  "version": "7.2.0",
   "author": "NativeScript <support@nativescript.org>",
   "description": "Command-line interface for building NativeScript projects",
   "bin": {
@@ -56,7 +56,7 @@
     "mobile"
   ],
   "dependencies": {
-    "@nativescript/doctor": "^2.0.4",
+    "@nativescript/doctor": "2.0.4-next-02-05-2021-541397986",
     "@nativescript/schematics-executor": "0.0.2",
     "byline": "5.0.0",
     "chalk": "4.1.0",

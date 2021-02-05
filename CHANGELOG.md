@@ -1,3 +1,28 @@
+# [7.2.0](https://github.com/NativeScript/nativescript-cli/compare/v7.1.2...v7.2.0) (2021-02-05)
+
+
+### Bug Fixes
+
+* default appPath in new projects ([#5466](https://github.com/NativeScript/nativescript-cli/issues/5466)) ([0675896](https://github.com/NativeScript/nativescript-cli/commit/0675896bf86327092b08377e9523c7be0fdc1332))
+* handle permissions error on directory creation ([#5480](https://github.com/NativeScript/nativescript-cli/issues/5480)) ([58e833d](https://github.com/NativeScript/nativescript-cli/commit/58e833d64787bbd29b3792b7550e8923ed141f52))
+* tgz runtime resolution ([101bfae](https://github.com/NativeScript/nativescript-cli/commit/101bfae8279f81912512fd6ac7839e033e41f8e5))
+* update setup requirements link ([#5459](https://github.com/NativeScript/nativescript-cli/issues/5459)) ([c8447cd](https://github.com/NativeScript/nativescript-cli/commit/c8447cdda5bc5c56a4021798ffe7cdfaedd8ebb7))
+
+
+### Features
+
+* -v checking for updates ([#5461](https://github.com/NativeScript/nativescript-cli/issues/5461)) ([2d6683c](https://github.com/NativeScript/nativescript-cli/commit/2d6683c984a032f631dc80bc935393ac347a4baa))
+* initialize git repo on project create ([#5468](https://github.com/NativeScript/nativescript-cli/issues/5468)) ([9f78c15](https://github.com/NativeScript/nativescript-cli/commit/9f78c15d031931d557dc7cfcf0561ce88eeac2ff))
+* warn invalid platform folders ([#5463](https://github.com/NativeScript/nativescript-cli/issues/5463)) ([fde4403](https://github.com/NativeScript/nativescript-cli/commit/fde440342f2b2205982506891533f58db5418e64))
+
+
+### Performance Improvements
+
+* initialize project data only if uninitialized ([#5478](https://github.com/NativeScript/nativescript-cli/issues/5478)) ([27c2f0c](https://github.com/NativeScript/nativescript-cli/commit/27c2f0cdfd1ea0a662e66551b86a3d8e4f630395))
+* validate update version before backup ([#5479](https://github.com/NativeScript/nativescript-cli/issues/5479)) ([d312f14](https://github.com/NativeScript/nativescript-cli/commit/d312f14e819ac5194eab9a7e5c7a19a980ed3fe4))
+
+
+
 ## [7.1.2](https://github.com/NativeScript/nativescript-cli/compare/v7.1.1...v7.1.2) (2021-01-04)
 
 
