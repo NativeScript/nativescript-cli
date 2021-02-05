@@ -62,9 +62,6 @@ function createTestInjector(testScenario: ITestScenario): IInjector {
 		getClientName: () => {
 			return "UnitTests";
 		},
-		getPrivacyPolicyLink: () => {
-			return "privacy policy link";
-		},
 		getUserId: () => {
 			return Promise.resolve("UnitTestsUserId");
 		},
