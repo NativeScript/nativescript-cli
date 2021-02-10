@@ -89,6 +89,7 @@ export class UpdateController
 			updateOptions.projectDir
 		);
 
+		updateOptions.version = updateOptions.version || PackageVersion.LATEST;
 		try {
 			// this is a preventive check to make sure the passed version exists before doing any backups, however
 			// the update can still fail if the specified tag doesn't exist in one of the updatableDependencies
