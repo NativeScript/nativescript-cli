@@ -1,20 +1,20 @@
 import * as path from "path";
-import * as constants from "./constants";
+import * as constants from "../constants";
 import {
 	INpmInstallOptions,
 	INpmInstallResultInfo,
 	IPackageInstallationManager,
 	IPackageManager,
 	IStaticConfig,
-} from "./declarations";
-import { IProjectDataService } from "./definitions/project";
+} from "../declarations";
+import { IProjectDataService } from "../definitions/project";
 import {
 	IChildProcess,
 	IDictionary,
 	IFileSystem,
 	ISettingsService,
-} from "./common/declarations";
-import { injector } from "./common/yok";
+} from "../common/declarations";
+import { injector } from "../common/yok";
 
 const semver = require("semver");
 

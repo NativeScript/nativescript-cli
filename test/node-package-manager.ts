@@ -1,7 +1,7 @@
 import { Yok } from "../lib/common/yok";
 import * as stubs from "./stubs";
 import { assert } from "chai";
-import { NodePackageManager } from "../lib/node-package-manager";
+import { NPM } from "../lib/package-managers/npm";
 import { IInjector } from "../lib/common/definitions/yok";
 
 function createTestInjector(configuration: {} = {}): IInjector {
@@ -12,7 +12,7 @@ function createTestInjector(configuration: {} = {}): IInjector {
 	injector.register("childProcess", stubs.ChildProcessStub);
 	injector.register("httpClient", {});
 	injector.register("fs", stubs.FileSystemStub);
-	injector.register("npm", NodePackageManager);
+	injector.register("npm", NPM);
 	injector.register("pacoteService", {
 		manifest: () => Promise.resolve(),
 	});
@@ -52,7 +52,7 @@ describe("node-package-manager", () => {
 		].forEach((testCase) => {
 			it(testCase.name, async () => {
 				const testInjector = createTestInjector();
-				const npm = testInjector.resolve<NodePackageManager>("npm");
+				const npm = testInjector.resolve<NPM>("npm");
 				const templateNameParts = await npm.getPackageNameParts(
 					testCase.templateFullName
 				);
@@ -87,7 +87,7 @@ describe("node-package-manager", () => {
 		].forEach((testCase) => {
 			it(testCase.name, async () => {
 				const testInjector = createTestInjector();
-				const npm = testInjector.resolve<NodePackageManager>("npm");
+				const npm = testInjector.resolve<NPM>("npm");
 				const templateFullName = await npm.getPackageFullName({
 					name: testCase.templateName,
 					version: testCase.templateVersion,
