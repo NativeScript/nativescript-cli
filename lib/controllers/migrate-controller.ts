@@ -1128,7 +1128,7 @@ export class MigrateController
 		allowInvalidVersions: boolean
 	): boolean {
 		return !!version
-			? semver.lt(version, targetVersion)
+			? semver.lt(semver.coerce(version), targetVersion)
 			: !allowInvalidVersions;
 	}
 
