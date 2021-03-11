@@ -1,3 +1,74 @@
+# [7.2.0](https://github.com/NativeScript/nativescript-cli/compare/v7.1.2...v7.2.0) (2021-02-05)
+
+
+### Bug Fixes
+
+* default appPath in new projects ([#5466](https://github.com/NativeScript/nativescript-cli/issues/5466)) ([0675896](https://github.com/NativeScript/nativescript-cli/commit/0675896bf86327092b08377e9523c7be0fdc1332))
+* handle permissions error on directory creation ([#5480](https://github.com/NativeScript/nativescript-cli/issues/5480)) ([58e833d](https://github.com/NativeScript/nativescript-cli/commit/58e833d64787bbd29b3792b7550e8923ed141f52))
+* tgz runtime resolution ([101bfae](https://github.com/NativeScript/nativescript-cli/commit/101bfae8279f81912512fd6ac7839e033e41f8e5))
+* update setup requirements link ([#5459](https://github.com/NativeScript/nativescript-cli/issues/5459)) ([c8447cd](https://github.com/NativeScript/nativescript-cli/commit/c8447cdda5bc5c56a4021798ffe7cdfaedd8ebb7))
+
+
+### Features
+
+* -v checking for updates ([#5461](https://github.com/NativeScript/nativescript-cli/issues/5461)) ([2d6683c](https://github.com/NativeScript/nativescript-cli/commit/2d6683c984a032f631dc80bc935393ac347a4baa))
+* initialize git repo on project create ([#5468](https://github.com/NativeScript/nativescript-cli/issues/5468)) ([9f78c15](https://github.com/NativeScript/nativescript-cli/commit/9f78c15d031931d557dc7cfcf0561ce88eeac2ff))
+* warn invalid platform folders ([#5463](https://github.com/NativeScript/nativescript-cli/issues/5463)) ([fde4403](https://github.com/NativeScript/nativescript-cli/commit/fde440342f2b2205982506891533f58db5418e64))
+
+
+### Performance Improvements
+
+* initialize project data only if uninitialized ([#5478](https://github.com/NativeScript/nativescript-cli/issues/5478)) ([27c2f0c](https://github.com/NativeScript/nativescript-cli/commit/27c2f0cdfd1ea0a662e66551b86a3d8e4f630395))
+* validate update version before backup ([#5479](https://github.com/NativeScript/nativescript-cli/issues/5479)) ([d312f14](https://github.com/NativeScript/nativescript-cli/commit/d312f14e819ac5194eab9a7e5c7a19a980ed3fe4))
+
+
+
+## [7.1.2](https://github.com/NativeScript/nativescript-cli/compare/v7.1.1...v7.1.2) (2021-01-04)
+
+
+### Bug Fixes
+
+* prompter returning undefined instead of value ([#5457](https://github.com/NativeScript/nativescript-cli/issues/5457)) ([4cc4bca](https://github.com/NativeScript/nativescript-cli/commit/4cc4bcac62abbe328ddc9abb4816f0ed733c5269))
+
+
+
+## [7.1.1](https://github.com/NativeScript/nativescript-cli/compare/v7.1.0...v7.1.1) (2020-12-30)
+
+
+### Bug Fixes
+
+* prompter returning index instead of value ([c1d5a27](https://github.com/NativeScript/nativescript-cli/commit/c1d5a271a0b689d1e734e55363dbc55015ef102a))
+
+
+
+# [7.1.0](https://github.com/NativeScript/nativescript-cli/compare/v7.0.12...v7.1.0) (2020-12-29)
+
+
+### Features
+
+* **logs:** support external sourcemaps from `.map` files ([#5434](https://github.com/NativeScript/nativescript-cli/issues/5434)) ([de678cf](https://github.com/NativeScript/nativescript-cli/commit/de678cff9f9478f8f7960fc412984cc3d1921898))
+* fonts command ([#5452](https://github.com/NativeScript/nativescript-cli/issues/5452)) ([a6b0e3c](https://github.com/NativeScript/nativescript-cli/commit/a6b0e3cce55c6c7b6cecfffb9b9f231d48c5820b))
+* vue-ts-template ([#5453](https://github.com/NativeScript/nativescript-cli/issues/5453)) ([7cdaed7](https://github.com/NativeScript/nativescript-cli/commit/7cdaed74dba0d8c171fa43ae1597f803ed83cd73))
+
+
+
+## [7.0.12](https://github.com/NativeScript/nativescript-cli/compare/v7.0.11...v7.0.12) (2020-12-19)
+
+
+### Bug Fixes
+
+* Big Sur - iTunes is not installed ([799bb76](https://github.com/NativeScript/nativescript-cli/commit/799bb76aec76f6595d744614719f57a863d557aa)), closes [#5342](https://github.com/NativeScript/nativescript-cli/issues/5342)
+* CFBundleName cannot be changed ([#5427](https://github.com/NativeScript/nativescript-cli/issues/5427)) ([ca32dc2](https://github.com/NativeScript/nativescript-cli/commit/ca32dc2f6b46b93be9df8d216a7d8ecbee200f1e))
+* ns update version null ([#5441](https://github.com/NativeScript/nativescript-cli/issues/5441)) ([6de0c3e](https://github.com/NativeScript/nativescript-cli/commit/6de0c3e513da0b91f4deef84748417a842c4bbf0)), closes [#5440](https://github.com/NativeScript/nativescript-cli/issues/5440)
+* remove iTunesValidator ([#5439](https://github.com/NativeScript/nativescript-cli/issues/5439)) ([6b3da6e](https://github.com/NativeScript/nativescript-cli/commit/6b3da6e3c84bd2bfb69f26041866736e7208fb83))
+
+
+### Performance Improvements
+
+* use prompts instead of inquirer ([#5443](https://github.com/NativeScript/nativescript-cli/issues/5443)) ([ab24ece](https://github.com/NativeScript/nativescript-cli/commit/ab24ece0aaf5ad38b574c52bdd753728a1b6d72b))
+
+
+
 ## [7.0.11](https://github.com/NativeScript/nativescript-cli/compare/v7.0.10...v7.0.11) (2020-10-21)
 
 
@@ -214,7 +285,7 @@
 NativeScript CLI Changelog
 ================
 
-6.4.1 (2020, February 21)
+6.5.0 (2020, May 22)
 ===
 
 ### New
@@ -223,15 +294,22 @@ NativeScript CLI Changelog
 
 ### Fixed
 
-* [Fixed #5236](https://github.com/NativeScript/nativescript-cli/issues/5236): File paths from device logs are not clickable
-* [Fixed #5251](https://github.com/NativeScript/nativescript-cli/issues/5251): External files are not livesynced
-* [Fixed #5252](https://github.com/NativeScript/nativescript-cli/issues/5252): Logs from platform specific files point to incorrect file
 * [Fixed #5259](https://github.com/NativeScript/nativescript-cli/issues/5259): Unable to use pnpm on macOS and Linux
 * [Fixed #5260](https://github.com/NativeScript/nativescript-cli/issues/5260): `tns package-manager set invalid_value` does not say pnpm is supported
 * [Fixed #5261](https://github.com/NativeScript/nativescript-cli/issues/5261): `tns package-manager set <valid value>` does not give any output
 * [Fixed #5262](https://github.com/NativeScript/nativescript-cli/issues/5262): `tns package-manager` fails with error
 * [Fixed #5263](https://github.com/NativeScript/nativescript-cli/issues/5263): `tns package-manager` docs does not list pnpm as supported value
 * [Fixed #5264](https://github.com/NativeScript/nativescript-cli/issues/5264): `tns package-manager --help` fails with error
+
+
+6.4.1 (2020, February 25)
+===
+
+### Fixed
+
+* [Fixed #5236](https://github.com/NativeScript/nativescript-cli/issues/5236): File paths from device logs are not clickable
+* [Fixed #5251](https://github.com/NativeScript/nativescript-cli/issues/5251): External files are not livesynced
+* [Fixed #5252](https://github.com/NativeScript/nativescript-cli/issues/5252): Logs from platform specific files point to incorrect file
 
 
 6.4.0 (2020, February 11)

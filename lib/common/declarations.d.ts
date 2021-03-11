@@ -829,11 +829,28 @@ interface IPrompterOptions extends IAllowEmpty {
 	defaultAction?: () => string;
 }
 
+type IPrompterAnswers<T extends string = string> = { [id in T]: any };
+
+interface IPrompterQuestion<
+	T extends IPrompterAnswers<any> = IPrompterAnswers<any>
+> {
+	type?: string;
+	name?: string;
+	message?: string;
+	default?: any;
+	prefix?: string;
+	suffix?: string;
+	filter?(input: any, answers: T): any;
+	validate?(
+		input: any,
+		answers?: T
+	): boolean | string | Promise<boolean | string>;
+}
+
 interface IAnalyticsSettingsService {
 	canDoRequest(): Promise<boolean>;
 	getUserId(): Promise<string>;
 	getClientName(): string;
-	getPrivacyPolicyLink(): string;
 	/**
 	 * Gets current user sessions count.
 	 * @param {string} projectName The analytics project id for which the counter should be taken.

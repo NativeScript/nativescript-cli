@@ -12,6 +12,8 @@ export class CreateProjectCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [this.$stringParameter];
 	private static BlankTemplateKey = "Blank";
 	private static BlankTemplateDescription = "A blank app";
+	private static BlankTsTemplateKey = "Blank Typescript";
+	private static BlankTsTemplateDescription = "A blank typescript app";
 	private static HelloWorldTemplateKey = "Hello World";
 	private static HelloWorldTemplateDescription = "A Hello World app";
 	private static DrawerTemplateKey = "SideDrawer";
@@ -57,6 +59,8 @@ export class CreateProjectCommand implements ICommand {
 		let selectedTemplate: string;
 		if (this.$options.js) {
 			selectedTemplate = constants.JAVASCRIPT_NAME;
+		} else if (this.$options.vue && this.$options.tsc) {
+			selectedTemplate = "@nativescript/template-blank-vue-ts";
 		} else if (this.$options.tsc) {
 			selectedTemplate = constants.TYPESCRIPT_NAME;
 		} else if (this.$options.ng) {
@@ -314,6 +318,11 @@ can skip this prompt next time using the --template option, or the --ng, --react
 				key: CreateProjectCommand.BlankTemplateKey,
 				value: "@nativescript/template-blank-vue",
 				description: CreateProjectCommand.BlankTemplateDescription,
+			},
+			{
+				key: CreateProjectCommand.BlankTsTemplateKey,
+				value: "@nativescript/template-blank-vue-ts",
+				description: CreateProjectCommand.BlankTsTemplateDescription,
 			},
 			{
 				key: CreateProjectCommand.DrawerTemplateKey,

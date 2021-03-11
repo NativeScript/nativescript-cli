@@ -24,6 +24,7 @@ import {
 	IFileSystem,
 	IProjectHelper,
 	IStringDictionary,
+	IChildProcess,
 } from "../common/declarations";
 import * as _ from "lodash";
 import { injector } from "../common/yok";
@@ -42,7 +43,8 @@ export class ProjectService implements IProjectService {
 		private $projectNameService: IProjectNameService,
 		private $projectTemplatesService: IProjectTemplatesService,
 		private $tempService: ITempService,
-		private $staticConfig: IStaticConfig
+		private $staticConfig: IStaticConfig,
+		private $childProcess: IChildProcess
 	) {}
 
 	public async validateProjectName(opts: {
@@ -102,6 +104,17 @@ export class ProjectService implements IProjectService {
 			appId: appId,
 			projectName,
 		});
+
+		try {
+			await this.$childProcess.exec(`git init ${projectDir}`);
+			await this.$childProcess.exec(`git -C ${projectDir} add --all`);
+			await this.$childProcess.exec(`git -C ${projectDir} commit --no-verify -m "init"`);
+		} catch (err) {
+			this.$logger.trace(
+				"Unable to initialize git repository. Error is: ",
+				err
+			);
+		}
 
 		this.$logger.info();
 		this.$logger.printMarkdown(

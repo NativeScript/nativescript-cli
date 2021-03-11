@@ -1,3 +1,0 @@
-<component name="DependencyValidationManager">
-  <scope name="Nativescript CLI TypeScript" pattern="file:lib/*.ts||file:README.md||file:package.json||file:Gruntfile.js||file:test/*.ts||file:config/*||file:resources//*||file:postinstall.js||file:preinstall.js||file:.npmignore||file:.gitignore||file:.gitattributes||file:vendor//*||file:scratch//*||file:bin/*||file:test/resources/*||file:prepublish.js" />
-</component>

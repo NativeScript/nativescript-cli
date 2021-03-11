@@ -45,9 +45,13 @@ const expectedFlavorChoices = [
 		description: "Use NativeScript without any framework",
 	},
 ];
-const templateChoises = {
+const templateChoices = {
 	helloWorld: { key: "Hello World", description: "A Hello World app" },
 	blank: { key: "Blank", description: "A blank app" },
+	blankTypeScript: {
+		key: "Blank Typescript",
+		description: "A blank typescript app",
+	},
 	sideDrawer: {
 		key: "SideDrawer",
 		description:
@@ -59,14 +63,15 @@ const templateChoises = {
 	},
 };
 const expectedTemplateChoices = [
-	templateChoises.helloWorld,
-	templateChoises.sideDrawer,
-	templateChoises.tabs,
+	templateChoices.helloWorld,
+	templateChoices.sideDrawer,
+	templateChoices.tabs,
 ];
 const expectedTemplateChoicesVue = [
-	templateChoises.blank,
-	templateChoises.sideDrawer,
-	templateChoises.tabs,
+	templateChoices.blank,
+	templateChoices.blankTypeScript,
+	templateChoices.sideDrawer,
+	templateChoices.tabs,
 ];
 
 class ProjectServiceMock implements IProjectService {
@@ -194,6 +199,27 @@ describe("Project commands tests", () => {
 
 		it("should not fail when using only --svelte.", async () => {
 			options.svelte = true;
+
+			await createProjectCommand.execute(dummyArgs);
+
+			assert.isTrue(isProjectCreated);
+			assert.equal(validateProjectCallsCount, 1);
+			assert.isTrue(createProjectCalledWithForce);
+		});
+
+		it("should not fail when using only --vue.", async () => {
+			options.vue = true;
+
+			await createProjectCommand.execute(dummyArgs);
+
+			assert.isTrue(isProjectCreated);
+			assert.equal(validateProjectCallsCount, 1);
+			assert.isTrue(createProjectCalledWithForce);
+		});
+
+		it("should not fail when using --vue and --tsc.", async () => {
+			options.vue = true;
+			options.tsc = true;
 
 			await createProjectCommand.execute(dummyArgs);
 

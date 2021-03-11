@@ -1,14 +1,18 @@
-import * as prompt from "inquirer";
+import * as prompt from "prompts";
 import * as helpers from "./helpers";
 import * as readline from "readline";
 import { ReadStream } from "tty";
-import { IAllowEmpty, IPrompterOptions } from "./declarations";
+import {
+	IAllowEmpty,
+	IPrompterAnswers,
+	IPrompterOptions,
+	IPrompterQuestion,
+} from "./declarations";
 import { injector } from "./yok";
 const MuteStream = require("mute-stream");
 import * as _ from "lodash";
 
 export class Prompter implements IPrompter {
-	private descriptionSeparator = "|";
 	private ctrlcReader: readline.ReadLine;
 	private muteStreamInstance: any = null;
 
@@ -18,12 +22,7 @@ export class Prompter implements IPrompter {
 		}
 	}
 
-	public async get(questions: prompt.Question[]): Promise<any> {
-		_.each(questions, (q) => {
-			q.filter = (selection: string) => {
-				return selection.split(this.descriptionSeparator)[0].trim();
-			};
-		});
+	public async get(questions: IPrompterQuestion[]): Promise<any> {
 		try {
 			this.muteStdout();
 
@@ -55,7 +54,7 @@ export class Prompter implements IPrompter {
 		message: string,
 		options?: IAllowEmpty
 	): Promise<string> {
-		const schema: prompt.Question = {
+		const schema: IPrompterQuestion = {
 			message,
 			type: "password",
 			name: "password",
@@ -73,9 +72,9 @@ export class Prompter implements IPrompter {
 		message: string,
 		options?: IPrompterOptions
 	): Promise<string> {
-		const schema: prompt.Question = {
+		const schema: IPrompterQuestion = {
 			message,
-			type: "input",
+			type: "text",
 			name: "inputString",
 			validate: (value: any) => {
 				const doesNotAllowEmpty =
@@ -95,36 +94,32 @@ export class Prompter implements IPrompter {
 		promptMessage: string,
 		choices: string[]
 	): Promise<string> {
-		const schema: prompt.Answers = {
+		const schema: IPrompterAnswers = {
 			message: promptMessage,
-			type: "list",
+			type: "select",
 			name: "userAnswer",
 			choices,
 		};
 
 		const result = await this.get([schema]);
-		return result.userAnswer;
+		return choices[result.userAnswer];
 	}
 
 	public async promptForDetailedChoice(
 		promptMessage: string,
 		choices: { key: string; description: string }[]
 	): Promise<string> {
-		const longestKeyLength = choices.concat().sort(function (a, b) {
-			return b.key.length - a.key.length;
-		})[0].key.length;
 		const inquirerChoices = choices.map((choice) => {
 			return {
-				name: `${_.padEnd(choice.key, longestKeyLength)}  ${
-					choice.description ? this.descriptionSeparator : ""
-				}  ${choice.description}`,
-				short: choice.key,
+				title: choice.key,
+				value: choice.key,
+				description: choice.description,
 			};
 		});
 
 		const schema: any = {
 			message: promptMessage,
-			type: "list",
+			type: "select",
 			name: "userAnswer",
 			choices: inquirerChoices,
 		};

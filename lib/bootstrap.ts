@@ -188,6 +188,7 @@ injector.requireCommand("preview", "./commands/preview");
 
 injector.requireCommand("debug|ios", "./commands/debug");
 injector.requireCommand("debug|android", "./commands/debug");
+injector.requireCommand("fonts", "./commands/fonts");
 
 injector.requireCommand("prepare", "./commands/prepare");
 injector.requireCommand("build|ios", "./commands/build");
