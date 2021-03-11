@@ -1,3 +1,13 @@
+## [7.2.1](https://github.com/NativeScript/nativescript-cli/compare/v7.2.0...v7.2.1) (2021-03-11)
+
+
+### Bug Fixes
+
+* npm7 peerDependecies ([5e2688f](https://github.com/NativeScript/nativescript-cli/commit/5e2688fd38dae9cd293e08afaa67018dc0d271c2))
+* ns update default to latest version ([#5497](https://github.com/NativeScript/nativescript-cli/issues/5497)) ([04202dc](https://github.com/NativeScript/nativescript-cli/commit/04202dcb8f828939205ccf58fb8121304e21d61a))
+
+
+
 # [7.2.0](https://github.com/NativeScript/nativescript-cli/compare/v7.1.2...v7.2.0) (2021-02-05)
 
 
