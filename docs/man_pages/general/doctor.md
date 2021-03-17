@@ -1,19 +1,19 @@
 <% if (isJekyll) { %>---
-title: tns doctor
+title: ns doctor
 position: 5
 ---<% } %>
 
-# tns doctor
+# ns doctor
 
 ### Description
 
-Checks your system for configuration problems which might prevent the NativeScript CLI from working properly.
+Checks your system for configuration problems which might prevent the NativeScript CLI from working properly for the specified platform, if configured.
 
 ### Commands
 
 Usage | Synopsis
 ------|-------
-General | `$ tns doctor`
+General | `$ ns doctor <Platform>`
 
 <% if(isHtml) { %>
 

@@ -9,6 +9,7 @@ import { IFileSystem, IVersionInformation } from "../common/declarations";
 import { IInjector } from "../common/definitions/yok";
 import * as _ from "lodash";
 import { injector } from "../common/yok";
+import { PlatformTypes } from "../constants";
 
 export enum VersionInformationType {
 	UpToDate = "UpToDate",
@@ -121,7 +122,9 @@ class VersionsService implements IVersionsService {
 		return versionInformations;
 	}
 
-	public async getRuntimesVersions(): Promise<IVersionInformation[]> {
+	public async getRuntimesVersions(
+		platform?: string
+	): Promise<IVersionInformation[]> {
 		const iosRuntime = this.$projectDataService.getRuntimePackage(
 			this.projectData.projectDir,
 			constants.PlatformTypes.ios
@@ -130,7 +133,15 @@ class VersionsService implements IVersionsService {
 			this.projectData.projectDir,
 			constants.PlatformTypes.android
 		);
-		const runtimes: IBasePluginData[] = [iosRuntime, androidRuntime];
+		let runtimes: IBasePluginData[] = [];
+
+		if (!platform) {
+			runtimes = [iosRuntime, androidRuntime];
+		} else if (platform === PlatformTypes.ios) {
+			runtimes.push(iosRuntime);
+		} else if (platform === PlatformTypes.android) {
+			runtimes.push(androidRuntime);
+		}
 
 		const runtimesVersions: IVersionInformation[] = await Promise.all(
 			runtimes.map(async (runtime: IBasePluginData) => {
@@ -150,7 +161,9 @@ class VersionsService implements IVersionsService {
 		return runtimesVersions;
 	}
 
-	public async getAllComponentsVersions(): Promise<IVersionInformation[]> {
+	public async getAllComponentsVersions(
+		platform?: string
+	): Promise<IVersionInformation[]> {
 		try {
 			let allComponents: IVersionInformation[] = [];
 
@@ -165,7 +178,9 @@ class VersionsService implements IVersionsService {
 					allComponents.push(...nativescriptCoreModulesInformation);
 				}
 
-				const runtimesVersions: IVersionInformation[] = await this.getRuntimesVersions();
+				const runtimesVersions: IVersionInformation[] = await this.getRuntimesVersions(
+					platform
+				);
 				allComponents = allComponents.concat(runtimesVersions);
 			}
 
@@ -194,14 +209,14 @@ class VersionsService implements IVersionsService {
 		}
 	}
 
-	public async printVersionsInformation(): Promise<void> {
+	public async printVersionsInformation(platform?: string): Promise<void> {
 		const versionsInformation = await this.$terminalSpinnerService.execute<
 			IVersionInformation[]
 		>(
 			{
 				text: `Getting NativeScript components versions information...`,
 			},
-			() => this.getAllComponentsVersions()
+			() => this.getAllComponentsVersions(platform)
 		);
 
 		if (!helpers.isInteractive()) {

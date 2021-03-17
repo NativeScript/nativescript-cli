@@ -1330,6 +1330,7 @@ interface IDoctorService {
 		runtimeVersion?: string;
 		options?: IOptions;
 		forceCheck?: boolean;
+		platform?: string;
 	}): Promise<void>;
 	/**
 	 * Runs the setup script on host machine
