@@ -18,7 +18,7 @@ Command | Description
 [autocomplete](general/autocomplete.html) | Configures your current command-line completion settings.
 [usage-reporting](general/usage-reporting.html) | Configures anonymous usage reporting for the NativeScript CLI.
 [error-reporting](general/error-reporting.html) | Configures anonymous error reporting for the NativeScript CLI.
-[doctor `<Platform>`](general/doctor.html) | Checks your system for configuration problems which might prevent the NativeScript CLI from working properly for the specified platform, if configured.
+[doctor `<platform>`](general/doctor.html) | Checks your system for configuration problems which might prevent the NativeScript CLI from working properly for the specified platform, if configured.
 [info](general/info.html) | Displays version information about the NativeScript CLI, core modules, and runtimes.
 [proxy](general/proxy.html) | Displays proxy settings.
 [migrate](general/migrate.html) | Migrates the app dependencies to a form compatible with NativeScript 6.0.
