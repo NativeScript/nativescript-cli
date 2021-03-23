@@ -13,7 +13,7 @@ Checks your system for configuration problems which might prevent the NativeScri
 
 Usage | Synopsis
 ------|-------
-General | `$ ns doctor <Platform>`
+General | `$ ns doctor <platform>`
 
 <% if(isHtml) { %>
 
