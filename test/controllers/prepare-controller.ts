@@ -134,6 +134,7 @@ describe("prepareController", () => {
 				assert.deepStrictEqual(emittedEventNames[0], PREPARE_READY_EVENT_NAME);
 				assert.deepStrictEqual(emittedEventData[0], {
 					files: [],
+					staleFiles: [],
 					hasNativeChanges: true,
 					hasOnlyHotUpdateFiles: false,
 					hmrData: null,
