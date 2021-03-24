@@ -83,6 +83,7 @@ export class WebpackCompilerService
 				childProcess.on("message", (message: string | IWebpackEmitMessage) => {
 					this.$logger.trace("Message from webpack", message);
 
+					// if we are on webpack5 - we handle HMR in a  slightly different way
 					if (
 						typeof message === "object" &&
 						"version" in message &&
@@ -422,6 +423,27 @@ export class WebpackCompilerService
 			}
 		}
 
+		// todo: we can remove this when switching to our nativescript-webpack bin
+		// todo: CHANGE BEFORE 8.0 RELEASE!!
+		let separatorToUse = ".";
+		try {
+			const packagePath = require.resolve(
+				"@nativescript/webpack/package.json",
+				{
+					paths: [projectData.projectDir],
+				}
+			);
+			const ver = semver.coerce(require(packagePath).version, {
+				loose: true,
+			});
+
+			if (semver.satisfies(ver, ">=5.0.0 || 5.0.0-dev")) {
+				separatorToUse = "=";
+			}
+		} catch (ignore) {
+			//
+		}
+
 		const args: any[] = [];
 		envFlagNames.map((item) => {
 			let envValue = envData[item];
@@ -430,14 +452,16 @@ export class WebpackCompilerService
 			}
 			if (typeof envValue === "boolean") {
 				if (envValue) {
-					args.push(`--env=${item}`);
+					args.push(`--env${separatorToUse}${item}`);
 				}
 			} else {
 				if (!Array.isArray(envValue)) {
 					envValue = [envValue];
 				}
 
-				envValue.map((value: any) => args.push(`--env=${item}=${value}`));
+				envValue.map((value: any) =>
+					args.push(`--env${separatorToUse}${item}=${value}`)
+				);
 			}
 		});
 		// console.log(args)
@@ -529,8 +553,6 @@ export class WebpackCompilerService
 		);
 
 		console.log({ staleFiles });
-
-		console.time("hmrSync");
 
 		this.emit(WEBPACK_COMPILATION_COMPLETE, {
 			files,

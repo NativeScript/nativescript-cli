@@ -672,7 +672,10 @@ export class RunController extends EventEmitter implements IRunController {
 				const watchInfo = {
 					liveSyncDeviceData: deviceDescriptor,
 					projectData,
-					filesToRemove: data.staleFiles ?? [],
+					// todo: remove stale files once everything is stable
+					// currently, watcher fires multiple times & may clean up unsynced files
+					// filesToRemove: data.staleFiles ?? [],
+					filesToRemove: [] as string[],
 					filesToSync,
 					hmrData: data.hmrData,
 					useHotModuleReload: liveSyncInfo.useHotModuleReload,
@@ -743,7 +746,6 @@ export class RunController extends EventEmitter implements IRunController {
 					}
 
 					const watchAction = async (): Promise<void> => {
-						console.time("watchAction");
 						const liveSyncResultInfo = await platformLiveSyncService.liveSyncWatchAction(
 							device,
 							watchInfo
@@ -767,17 +769,16 @@ export class RunController extends EventEmitter implements IRunController {
 						);
 
 						if (!liveSyncResultInfo.didRecover && isInHMRMode) {
-							console.time("getHmrStatus");
-							const status = HmrConstants.HMR_SUCCESS_STATUS;
-							// await this.$hmrStatusService.getHmrStatus(
+							// todo: figure out a faster way - perhaps use websockets...
+							// const status = await this.$hmrStatusService.getHmrStatus(
 							// 	device.deviceInfo.identifier,
 							// 	data.hmrData.hash
 							// );
-							console.timeEnd("getHmrStatus");
+							// todo: remove hard-coded success status!!!
+							const status = HmrConstants.HMR_SUCCESS_STATUS;
 
 							// the timeout is assumed OK as the app could be blocked on a breakpoint
 							if (status === HmrConstants.HMR_ERROR_STATUS) {
-								console.log("HMR_ERROR_STATUS!!", status);
 								await fullSyncAction();
 								liveSyncResultInfo.isFullSync = true;
 								await this.refreshApplication(
