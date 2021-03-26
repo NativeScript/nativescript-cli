@@ -472,3 +472,5 @@ injector.require(
 	"./services/metadata-filtering-service"
 );
 injector.require("tempService", "./services/temp-service");
+
+injector.require("sharedEventBus", "./shared-event-bus");

@@ -6,6 +6,7 @@ import {
 } from "../common/constants";
 import { IDictionary } from "../common/declarations";
 import { injector } from "../common/yok";
+import { ISharedEventBus } from "../declarations";
 
 export class HmrStatusService implements IHmrStatusService {
 	public static HMR_STATUS_LOG_REGEX = /([a-z A-Z]*) hmr hash ([a-z0-9]*)\./;
@@ -13,12 +14,14 @@ export class HmrStatusService implements IHmrStatusService {
 	public static SUCCESS_MESSAGE = "Successfully applied update with";
 	public static FAILED_MESSAGE = "Cannot apply update with";
 	private hashOperationStatuses: IDictionary<any> = {};
+	private uuidToDeviceMap: IDictionary<any> = {};
 	private intervals: IDictionary<any> = {};
 
 	constructor(
 		private $logParserService: ILogParserService,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-		private $logger: ILogger
+		private $logger: ILogger,
+		private $sharedEventBus: ISharedEventBus
 	) {}
 
 	public getHmrStatus(
@@ -64,6 +67,33 @@ export class HmrStatusService implements IHmrStatusService {
 			handler: this.handleAppCrash.bind(this),
 			name: "failedLiveSync",
 			platform: this.$devicePlatformsConstants.iOS.toLowerCase(),
+		});
+
+		// webpack5
+		// todo: figure out a better way to map Device.uuid -> CLI.DeviceId
+		this.$logParserService.addParseRule({
+			regex: /\[HMR]\suuid\s=\s(.+)/,
+			handler: (matches: RegExpMatchArray, deviceId: string) => {
+				try {
+					this.uuidToDeviceMap[matches[1]] = deviceId;
+				} catch (err) {
+					// should not happen
+				}
+			},
+			name: "hmrUUID",
+		});
+		this.$sharedEventBus.on("webpack:hmr-status", (message) => {
+			const deviceId = this.uuidToDeviceMap[message?.data?.uuid];
+			const hash = message?.hash;
+			const status = message?.data?.status;
+
+			if (deviceId && hash && status) {
+				if (status === "success") {
+					this.setData(deviceId, hash, HmrConstants.HMR_SUCCESS_STATUS);
+				} else if (status === "failure") {
+					this.setData(deviceId, hash, HmrConstants.HMR_ERROR_STATUS);
+				}
+			}
 		});
 	}
 

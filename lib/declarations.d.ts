@@ -1243,3 +1243,5 @@ interface IWatchIgnoreListService {
 interface INpmConfigService {
 	getConfig(): IDictionary<any>;
 }
+
+interface ISharedEventBus extends NodeJS.EventEmitter {}

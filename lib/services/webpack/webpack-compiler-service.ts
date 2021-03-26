@@ -13,6 +13,7 @@ import {
 import {
 	IPackageManager,
 	IPackageInstallationManager,
+	ISharedEventBus,
 } from "../../declarations";
 import { IPlatformData } from "../../definitions/platform";
 import { IProjectData } from "../../definitions/project";
@@ -29,14 +30,16 @@ import { ICleanupService } from "../../definitions/cleanup-service";
 import { injector } from "../../common/yok";
 
 // todo: move out of here
-interface IWebpackMessage {
-	type: "compilation";
+interface IWebpackMessage<T = any> {
+	type: "compilation" | "hmr-status";
 	version?: number;
-
-	isWatchMode?: boolean;
 	hash?: string;
-	emittedAssets?: string[];
-	staleAssets?: string[];
+	data?: T;
+}
+
+interface IWebpackCompilation {
+	emittedAssets: string[];
+	staleAssets: string[];
 }
 
 export class WebpackCompilerService
@@ -55,7 +58,8 @@ export class WebpackCompilerService
 		private $mobileHelper: Mobile.IMobileHelper,
 		private $cleanupService: ICleanupService,
 		private $packageManager: IPackageManager,
-		private $packageInstallationManager: IPackageInstallationManager
+		private $packageInstallationManager: IPackageInstallationManager,
+		private $sharedEventBus: ISharedEventBus
 	) {
 		super();
 	}
@@ -97,8 +101,15 @@ export class WebpackCompilerService
 							return;
 						}
 
+						if ((message as IWebpackMessage).type === "hmr-status") {
+							// we pass message through our event-bus to be handled wherever needed
+							// in this case webpack-hmr-status-service listens for this event
+							this.$sharedEventBus.emit("webpack:hmr-status", message);
+							return;
+						}
+
 						return this.handleHMRMessage(
-							message as IWebpackMessage,
+							message as IWebpackMessage<IWebpackCompilation>,
 							platformData,
 							projectData,
 							prepareData
@@ -280,7 +291,7 @@ export class WebpackCompilerService
 	): Promise<child_process.ChildProcess> {
 		if (!this.$fs.exists(projectData.webpackConfigPath)) {
 			this.$errors.fail(
-				`The webpack configuration file ${projectData.webpackConfigPath} does not exist. Ensure you have such file or set correct path in ${CONFIG_FILE_NAME_DISPLAY}`
+				`The webpack configuration file ${projectData.webpackConfigPath} does not exist. Ensure you the file exists, or update the path in ${CONFIG_FILE_NAME_DISPLAY}.`
 			);
 		}
 
@@ -308,16 +319,11 @@ export class WebpackCompilerService
 
 		const args = [
 			...additionalNodeArgs,
-			path.join(
-				projectData.projectDir,
-				"node_modules",
-				"webpack",
-				"bin",
-				"webpack.js"
-			),
+			this.getWebpackExecutablePath(projectData),
+			this.isWebpack5(projectData) ? `build` : null,
 			`--config=${projectData.webpackConfigPath}`,
 			...envParams,
-		];
+		].filter(Boolean);
 
 		if (prepareData.watch) {
 			args.push("--watch");
@@ -423,27 +429,6 @@ export class WebpackCompilerService
 			}
 		}
 
-		// todo: we can remove this when switching to our nativescript-webpack bin
-		// todo: CHANGE BEFORE 8.0 RELEASE!!
-		let separatorToUse = ".";
-		try {
-			const packagePath = require.resolve(
-				"@nativescript/webpack/package.json",
-				{
-					paths: [projectData.projectDir],
-				}
-			);
-			const ver = semver.coerce(require(packagePath).version, {
-				loose: true,
-			});
-
-			if (semver.satisfies(ver, ">=5.0.0 || 5.0.0-dev")) {
-				separatorToUse = "=";
-			}
-		} catch (ignore) {
-			//
-		}
-
 		const args: any[] = [];
 		envFlagNames.map((item) => {
 			let envValue = envData[item];
@@ -452,16 +437,14 @@ export class WebpackCompilerService
 			}
 			if (typeof envValue === "boolean") {
 				if (envValue) {
-					args.push(`--env${separatorToUse}${item}`);
+					args.push(`--env.${item}`);
 				}
 			} else {
 				if (!Array.isArray(envValue)) {
 					envValue = [envValue];
 				}
 
-				envValue.map((value: any) =>
-					args.push(`--env${separatorToUse}${item}=${value}`)
-				);
+				envValue.map((value: any) => args.push(`--env.${item}=${value}`));
 			}
 		});
 		// console.log(args)
@@ -537,7 +520,7 @@ export class WebpackCompilerService
 		prepareData: IPrepareData
 	) {
 		// handle new webpack hmr packets
-		this.$logger.trace("Received packet from webpack process:", message);
+		this.$logger.trace("Received message from webpack process:", message);
 
 		if (message.type !== "compilation") {
 			return;
@@ -545,25 +528,88 @@ export class WebpackCompilerService
 
 		this.$logger.trace("Webpack build done!");
 
-		const files = message.emittedAssets.map((asset) =>
+		const files = message.data.emittedAssets.map((asset: string) =>
 			path.join(platformData.appDestinationDirectoryPath, "app", asset)
 		);
-		const staleFiles = message.staleAssets.map((asset) =>
+		const staleFiles = message.data.staleAssets.map((asset: string) =>
 			path.join(platformData.appDestinationDirectoryPath, "app", asset)
 		);
 
-		console.log({ staleFiles });
+		// console.log({ staleFiles });
+
+		// extract last hash from emitted filenames
+		const lastHash = (() => {
+			const fileWithLastHash = files.find((fileName: string) =>
+				fileName.endsWith("hot-update.js")
+			);
+
+			if (!fileWithLastHash) {
+				return null;
+			}
+			const matches = fileWithLastHash.match(/\.(.+).hot-update\.js/);
+
+			if (matches) {
+				return matches[1];
+			}
+		})();
 
 		this.emit(WEBPACK_COMPILATION_COMPLETE, {
 			files,
 			staleFiles,
 			hasOnlyHotUpdateFiles: prepareData.hmr,
 			hmrData: {
-				hash: message.hash,
+				hash: lastHash || message.hash,
 				fallbackFiles: [],
 			},
 			platform: platformData.platformNameLowerCase,
 		});
 	}
+
+	private getWebpackExecutablePath(projectData: IProjectData): string {
+		if (this.isWebpack5(projectData)) {
+			const packagePath = require.resolve(
+				"@nativescript/webpack/package.json",
+				{
+					paths: [projectData.projectDir],
+				}
+			);
+
+			return path.resolve(
+				packagePath.replace("package.json", ""),
+				"dist",
+				"bin",
+				"index.js"
+			);
+		}
+
+		return path.join(
+			projectData.projectDir,
+			"node_modules",
+			"webpack",
+			"bin",
+			"webpack.js"
+		);
+	}
+
+	private isWebpack5(projectData: IProjectData): boolean {
+		try {
+			const packagePath = require.resolve(
+				"@nativescript/webpack/package.json",
+				{
+					paths: [projectData.projectDir],
+				}
+			);
+			const ver = semver.coerce(require(packagePath).version);
+
+			if (semver.satisfies(ver, ">= 5.0.0")) {
+				return true;
+			}
+		} catch (ignore) {
+			//
+		}
+
+		return false;
+	}
 }
+
 injector.register("webpackCompilerService", WebpackCompilerService);
