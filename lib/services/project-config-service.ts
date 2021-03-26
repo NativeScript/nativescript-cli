@@ -372,7 +372,7 @@ export default {
 
 		if (
 			runtimePackage.version &&
-			semver.gte(runtimePackage.version, "7.0.0-rc.5")
+			semver.gte(semver.coerce(runtimePackage.version), "7.0.0-rc.5")
 		) {
 			// runtimes >= 7.0.0-rc.5 support passing appPath and appResourcesPath through gradle project flags
 			// so writing an nsconfig is not necessary.
