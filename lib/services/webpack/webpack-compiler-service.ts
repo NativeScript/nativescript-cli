@@ -57,9 +57,8 @@ export class WebpackCompilerService
 		private $mobileHelper: Mobile.IMobileHelper,
 		private $cleanupService: ICleanupService,
 		private $packageManager: IPackageManager,
-		private $packageInstallationManager: IPackageInstallationManager
-	) // private $sharedEventBus: ISharedEventBus
-	{
+		private $packageInstallationManager: IPackageInstallationManager // private $sharedEventBus: ISharedEventBus
+	) {
 		super();
 	}
 
@@ -551,6 +550,11 @@ export class WebpackCompilerService
 				return matches[1];
 			}
 		})();
+
+		if (!files.length) {
+			// ignore compilations if no new files are emitted
+			return;
+		}
 
 		this.emit(WEBPACK_COMPILATION_COMPLETE, {
 			files,

@@ -75,10 +75,6 @@ export class HmrStatusService implements IHmrStatusService {
 			regex: /\[HMR]\[(.+)]\s*(.+)/,
 			handler: (matches: RegExpMatchArray, deviceId: string) => {
 				const [hash, status] = matches.slice(1);
-				console.log({
-					hash,
-					status,
-				});
 				this.setData(deviceId, hash, statusStringMap[status]);
 			},
 			name: "hmr-status",
