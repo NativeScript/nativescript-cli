@@ -13,7 +13,6 @@ import {
 import {
 	IPackageManager,
 	IPackageInstallationManager,
-	ISharedEventBus,
 } from "../../declarations";
 import { IPlatformData } from "../../definitions/platform";
 import { IProjectData } from "../../definitions/project";
@@ -58,9 +57,9 @@ export class WebpackCompilerService
 		private $mobileHelper: Mobile.IMobileHelper,
 		private $cleanupService: ICleanupService,
 		private $packageManager: IPackageManager,
-		private $packageInstallationManager: IPackageInstallationManager,
-		private $sharedEventBus: ISharedEventBus
-	) {
+		private $packageInstallationManager: IPackageInstallationManager
+	) // private $sharedEventBus: ISharedEventBus
+	{
 		super();
 	}
 
@@ -101,12 +100,12 @@ export class WebpackCompilerService
 							return;
 						}
 
-						if ((message as IWebpackMessage).type === "hmr-status") {
-							// we pass message through our event-bus to be handled wherever needed
-							// in this case webpack-hmr-status-service listens for this event
-							this.$sharedEventBus.emit("webpack:hmr-status", message);
-							return;
-						}
+						// if ((message as IWebpackMessage).type === "hmr-status") {
+						// 	// we pass message through our event-bus to be handled wherever needed
+						// 	// in this case webpack-hmr-status-service listens for this event
+						// 	this.$sharedEventBus.emit("webpack:hmr-status", message);
+						// 	return;
+						// }
 
 						return this.handleHMRMessage(
 							message as IWebpackMessage<IWebpackCompilation>,
