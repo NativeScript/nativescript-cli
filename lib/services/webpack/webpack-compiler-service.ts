@@ -289,7 +289,7 @@ export class WebpackCompilerService
 	): Promise<child_process.ChildProcess> {
 		if (!this.$fs.exists(projectData.webpackConfigPath)) {
 			this.$errors.fail(
-				`The webpack configuration file ${projectData.webpackConfigPath} does not exist. Ensure you the file exists, or update the path in ${CONFIG_FILE_NAME_DISPLAY}.`
+				`The webpack configuration file ${projectData.webpackConfigPath} does not exist. Ensure the file exists, or update the path in ${CONFIG_FILE_NAME_DISPLAY}.`
 			);
 		}
 

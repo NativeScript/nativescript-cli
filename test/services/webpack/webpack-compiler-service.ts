@@ -211,7 +211,7 @@ describe("WebpackCompilerService", () => {
 					<any>{ webpackConfigPath },
 					<any>{}
 				),
-				`The webpack configuration file ${webpackConfigPath} does not exist. Ensure you have such file or set correct path in ${CONFIG_FILE_NAME_DISPLAY}`
+				`The webpack configuration file ${webpackConfigPath} does not exist. Ensure the file exists, or update the path in ${CONFIG_FILE_NAME_DISPLAY}`
 			);
 		});
 	});
@@ -227,7 +227,7 @@ describe("WebpackCompilerService", () => {
 					<any>{ webpackConfigPath },
 					<any>{}
 				),
-				`The webpack configuration file ${webpackConfigPath} does not exist. Ensure you have such file or set correct path in ${CONFIG_FILE_NAME_DISPLAY}`
+				`The webpack configuration file ${webpackConfigPath} does not exist. Ensure the file exists, or update the path in ${CONFIG_FILE_NAME_DISPLAY}`
 			);
 		});
 	});
