@@ -72,10 +72,13 @@ export class HmrStatusService implements IHmrStatusService {
 			failure: HmrConstants.HMR_ERROR_STATUS,
 		};
 		this.$logParserService.addParseRule({
-			regex: /\[HMR]\[(.+)]\s*(.+)/,
+			regex: /\[HMR]\[(.+)]\s*(\w+)\s*\|/,
 			handler: (matches: RegExpMatchArray, deviceId: string) => {
 				const [hash, status] = matches.slice(1);
-				this.setData(deviceId, hash, statusStringMap[status]);
+				const mappedStatus = statusStringMap[status.trim()];
+				if (mappedStatus) {
+					this.setData(deviceId, hash, statusStringMap[status]);
+				}
 			},
 			name: "hmr-status",
 		});
