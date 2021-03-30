@@ -445,7 +445,7 @@ export class WebpackCompilerService
 				envValue.map((value: any) => args.push(`--env.${item}=${value}`));
 			}
 		});
-		// console.log(args)
+
 		return args;
 	}
 

@@ -61,7 +61,7 @@ export class CocoaPodsService implements ICocoaPodsService {
 		const args = ["install"];
 
 		if (process.platform === "darwin" && process.arch === "arm64") {
-			console.log("Running on arm64 - running pod through rosetta2.");
+			this.$logger.trace("Running on arm64 - running pod through rosetta2.");
 			args.unshift(podTool);
 			args.unshift("-x86_64");
 			podTool = "arch";
