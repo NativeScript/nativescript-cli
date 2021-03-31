@@ -1,3 +1,18 @@
+# [8.0.0](https://github.com/NativeScript/nativescript-cli/compare/v7.2.1...v8.0.0) (2021-03-31)
+
+
+### Bug Fixes
+
+* handle caret and tilde in runtime versions ([#5501](https://github.com/NativeScript/nativescript-cli/issues/5501)) ([04eba0d](https://github.com/NativeScript/nativescript-cli/commit/04eba0deb50637a6402ee2bfb14243aad597ce0f))
+
+
+### Features
+
+* ns8 ([#5508](https://github.com/NativeScript/nativescript-cli/issues/5508)) ([10a2d2e](https://github.com/NativeScript/nativescript-cli/commit/10a2d2e3b4b6a6856b1f1898dbf9b180c0dd649b))
+* platform specific doctor ([#5505](https://github.com/NativeScript/nativescript-cli/issues/5505)) ([ff04446](https://github.com/NativeScript/nativescript-cli/commit/ff04446906f8d2b16d3d92e40ce2e97dc3aa98eb))
+
+
+
 ## [7.2.1](https://github.com/NativeScript/nativescript-cli/compare/v7.2.0...v7.2.1) (2021-03-11)
 
 
