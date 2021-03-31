@@ -64,13 +64,12 @@ export class UpdateControllerBase {
 		dependency: IDependency,
 		projectData: IProjectData
 	): boolean {
-		const devDependencies = projectData.devDependencies;
-		const dependencies = projectData.dependencies;
+		const devDependencies = Object.keys(projectData.devDependencies);
+		const dependencies = Object.keys(projectData.dependencies);
 
-		return (
-			(dependencies && dependencies[dependency.packageName]) ||
-			(devDependencies && devDependencies[dependency.packageName])
-		);
+		return [...devDependencies, ...dependencies].some((packageName) => {
+			return packageName === dependency.packageName;
+		});
 	}
 
 	protected hasRuntimeDependency({

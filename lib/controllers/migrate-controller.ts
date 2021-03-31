@@ -16,6 +16,7 @@ import {
 	IProjectDataService,
 } from "../definitions/project";
 import {
+	IDependencyVersion,
 	IMigrateController,
 	IMigrationData,
 	IMigrationDependency,
@@ -33,6 +34,7 @@ import {
 } from "../definitions/platform";
 import { IPluginsService } from "../definitions/plugins";
 import {
+	IChildProcess,
 	IDictionary,
 	IErrors,
 	IFileSystem,
@@ -80,7 +82,8 @@ export class MigrateController
 		private $staticConfig: Config.IStaticConfig,
 		private $terminalSpinnerService: ITerminalSpinnerService,
 		private $projectCleanupService: IProjectCleanupService,
-		private $projectBackupService: IProjectBackupService
+		private $projectBackupService: IProjectBackupService,
+		private $childProcess: IChildProcess
 	) {
 		super(
 			$fs,
@@ -114,6 +117,9 @@ export class MigrateController
 			this.$settingsService.getProfileDir(),
 			`should-migrate-cache-${cliVersion}.json`
 		);
+		this.$logger.trace(
+			`Migration cache path is: ${shouldMigrateCacheFilePath}`
+		);
 		return this.$injector.resolve("jsonFileSettingsService", {
 			jsonFileSettingsPath: shouldMigrateCacheFilePath,
 		});
@@ -122,7 +128,8 @@ export class MigrateController
 	private migrationDependencies: IMigrationDependency[] = [
 		{
 			packageName: constants.SCOPED_TNS_CORE_MODULES,
-			verifiedVersion: "7.0.0",
+			minVersion: "6.5.0",
+			desiredVersion: "~8.0.0",
 			shouldAddIfMissing: true,
 		},
 		{
@@ -131,13 +138,14 @@ export class MigrateController
 		},
 		{
 			packageName: "@nativescript/types",
-			verifiedVersion: "7.0.0",
+			minVersion: "7.0.0",
+			desiredVersion: "~8.0.0",
 			isDev: true,
 		},
 		{
 			packageName: "tns-platform-declarations",
 			replaceWith: "@nativescript/types",
-			verifiedVersion: "7.0.0",
+			minVersion: "6.5.0",
 			isDev: true,
 		},
 		{
@@ -149,133 +157,129 @@ export class MigrateController
 			replaceWith: constants.WEBPACK_PLUGIN_NAME,
 			shouldRemove: true,
 			isDev: true,
-			shouldMigrateAction: async () => {
+			async shouldMigrateAction() {
 				return true;
 			},
 			migrateAction: this.migrateWebpack.bind(this),
 		},
 		{
 			packageName: constants.WEBPACK_PLUGIN_NAME,
-			verifiedVersion: "3.0.0",
+			minVersion: "3.0.0",
+			desiredVersion: "~5.0.0-beta.0",
 			shouldAddIfMissing: true,
+			isDev: true,
 		},
 		{
 			packageName: "nativescript-vue",
-			verifiedVersion: "2.8.0",
-			shouldMigrateAction: async (
+			minVersion: "2.7.0",
+			desiredVersion: "~2.9.0",
+			async shouldMigrateAction(
+				dependency: IMigrationDependency,
 				projectData: IProjectData,
-				allowInvalidVersions: boolean
-			) => {
-				const dependency = {
-					packageName: "nativescript-vue",
-					verifiedVersion: "2.8.0",
-					isDev: false,
-				};
-				const result =
-					this.hasDependency(dependency, projectData) &&
-					(await this.shouldMigrateDependencyVersion(
-						dependency,
-						projectData,
-						allowInvalidVersions
-					));
+				loose: boolean
+			) {
+				if (!this.hasDependency(dependency, projectData)) {
+					return false;
+				}
 
-				return result;
+				return await this.shouldMigrateDependencyVersion(
+					dependency,
+					projectData,
+					loose
+				);
 			},
 			migrateAction: this.migrateNativeScriptVue.bind(this),
 		},
 		{
 			packageName: "nativescript-angular",
 			replaceWith: "@nativescript/angular",
-			verifiedVersion: "10.0.0",
+			minVersion: "10.0.0",
 		},
 		{
 			packageName: "@nativescript/angular",
-			verifiedVersion: "10.0.0",
-			shouldMigrateAction: async (
+			minVersion: "10.0.0",
+			desiredVersion: "~11.8.0",
+			async shouldMigrateAction(
+				dependency: IMigrationDependency,
 				projectData: IProjectData,
-				allowInvalidVersions: boolean
-			) => {
-				const dependency = {
-					packageName: "@nativescript/angular",
-					verifiedVersion: "10.0.0",
-					isDev: false,
-				};
-				const result =
-					this.hasDependency(dependency, projectData) &&
-					(await this.shouldMigrateDependencyVersion(
-						dependency,
-						projectData,
-						allowInvalidVersions
-					));
-				return result;
+				loose: boolean
+			) {
+				if (!this.hasDependency(dependency, projectData)) {
+					return false;
+				}
+
+				return await this.shouldMigrateDependencyVersion(
+					dependency,
+					projectData,
+					loose
+				);
 			},
 			migrateAction: this.migrateNativeScriptAngular.bind(this),
 		},
 		{
 			packageName: "svelte-native",
-			verifiedVersion: "0.9.4",
-			shouldMigrateAction: async (
+			minVersion: "0.9.0",
+			desiredVersion: "~0.9.4",
+			async shouldMigrateAction(
+				dependency: IMigrationDependency,
 				projectData: IProjectData,
-				allowInvalidVersions: boolean
-			) => {
-				const dependency = {
-					packageName: "svelte-native",
-					verifiedVersion: "0.9.0", // minimum version required - anything less will need a migration
-					isDev: false,
-				};
-				const result =
-					this.hasDependency(dependency, projectData) &&
-					(await this.shouldMigrateDependencyVersion(
-						dependency,
-						projectData,
-						allowInvalidVersions
-					));
-
-				return result;
+				loose: boolean
+			) {
+				if (!this.hasDependency(dependency, projectData)) {
+					return false;
+				}
+				return await this.shouldMigrateDependencyVersion(
+					dependency,
+					projectData,
+					loose
+				);
 			},
 			migrateAction: this.migrateNativeScriptSvelte.bind(this),
 		},
 		{
 			packageName: "@nativescript/unit-test-runner",
-			verifiedVersion: "1.0.0",
-			shouldMigrateAction: async (
+			minVersion: "1.0.0",
+			async shouldMigrateAction(
+				dependency: IMigrationDependency,
 				projectData: IProjectData,
-				allowInvalidVersions: boolean
-			) => {
-				const dependency = {
-					packageName: "@nativescript/unit-test-runner",
-					verifiedVersion: "1.0.0",
-					isDev: false,
-				};
-				const result =
-					this.hasDependency(dependency, projectData) &&
-					(await this.shouldMigrateDependencyVersion(
-						dependency,
-						projectData,
-						allowInvalidVersions
-					));
-				return result;
+				loose: boolean
+			) {
+				if (!this.hasDependency(dependency, projectData)) {
+					return false;
+				}
+				return await this.shouldMigrateDependencyVersion(
+					dependency,
+					projectData,
+					loose
+				);
 			},
 			migrateAction: this.migrateUnitTestRunner.bind(this),
 		},
 		{
 			packageName: "typescript",
 			isDev: true,
-			verifiedVersion: "3.9.7",
+			minVersion: "3.7.0",
+			desiredVersion: "~4.0.0",
 		},
 	];
 
-	get verifiedPlatformVersions(): IDictionary<string> {
+	get verifiedPlatformVersions(): IDictionary<IDependencyVersion> {
 		return {
-			[this.$devicePlatformsConstants.Android.toLowerCase()]: "6.5.3",
-			[this.$devicePlatformsConstants.iOS.toLowerCase()]: "6.5.2",
+			[this.$devicePlatformsConstants.Android.toLowerCase()]: {
+				minVersion: "6.5.3",
+				desiredVersion: "8.0.0",
+			},
+			[this.$devicePlatformsConstants.iOS.toLowerCase()]: {
+				minVersion: "6.5.4",
+				desiredVersion: "8.0.0",
+			},
 		};
 	}
 
 	public async shouldMigrate({
 		projectDir,
 		platforms,
-		allowInvalidVersions = false,
+		loose = false,
 	}: IMigrationData): Promise<boolean> {
 		const remainingPlatforms = [];
 
@@ -284,14 +288,16 @@ export class MigrateController
 		for (const platform of platforms) {
 			const cachedResult = await this.getCachedShouldMigrate(
 				projectDir,
-				platform
+				platform,
+				loose
 			);
+			this.$logger.trace(
+				`Got cached result for shouldMigrate for platform: ${platform}: ${cachedResult}`
+			);
+
+			// the cached result is only used if it's false, otherwise we need to check again
 			if (cachedResult !== false) {
 				remainingPlatforms.push(platform);
-			} else {
-				this.$logger.trace(
-					`Got cached result for shouldMigrate for platform: ${platform}`
-				);
 			}
 		}
 
@@ -299,7 +305,7 @@ export class MigrateController
 			shouldMigrate = await this._shouldMigrate({
 				projectDir,
 				platforms: remainingPlatforms,
-				allowInvalidVersions,
+				loose: loose,
 			});
 			this.$logger.trace(
 				`Executed shouldMigrate for platforms: ${remainingPlatforms}. Result is: ${shouldMigrate}`
@@ -307,7 +313,11 @@ export class MigrateController
 
 			if (!shouldMigrate) {
 				for (const remainingPlatform of remainingPlatforms) {
-					await this.setCachedShouldMigrate(projectDir, remainingPlatform);
+					await this.setCachedShouldMigrate(
+						projectDir,
+						remainingPlatform,
+						loose
+					);
 				}
 			}
 		}
@@ -318,12 +328,12 @@ export class MigrateController
 	public async validate({
 		projectDir,
 		platforms,
-		allowInvalidVersions = true,
+		loose = true,
 	}: IMigrationData): Promise<void> {
 		const shouldMigrate = await this.shouldMigrate({
 			projectDir,
 			platforms,
-			allowInvalidVersions,
+			loose,
 		});
 		if (shouldMigrate) {
 			this.$errors.fail(
@@ -335,7 +345,7 @@ export class MigrateController
 	public async migrate({
 		projectDir,
 		platforms,
-		allowInvalidVersions = false,
+		loose = false,
 	}: IMigrationData): Promise<void> {
 		this.spinner = this.$terminalSpinnerService.createSpinner();
 		const projectData = this.$projectDataService.getProjectData(projectDir);
@@ -343,7 +353,7 @@ export class MigrateController
 		this.$logger.trace("MigrationController.migrate called with", {
 			projectDir,
 			platforms,
-			allowInvalidVersions,
+			loose: loose,
 		});
 
 		// ensure in git repo and require --force if not (for safety)
@@ -366,7 +376,7 @@ export class MigrateController
 		this.spinner.succeed();
 
 		// clean up project files
-		this.spinner.start("Cleaning up project files before migration");
+		this.spinner.info("Cleaning up project files before migration");
 
 		await this.cleanUpProject(projectData);
 
@@ -381,26 +391,25 @@ export class MigrateController
 		this.spinner.text = "Cleaned old artifacts";
 		this.spinner.succeed();
 
-		// migrate configs
-		this.spinner.start(
-			`Migrating project to use ${"nativescript.config.ts".green}`
-		);
+		const newConfigPath = path.resolve(projectDir, "nativescript.config.ts");
+		if (!this.$fs.exists(newConfigPath)) {
+			// migrate configs
+			this.spinner.start(
+				`Migrating project to use ${"nativescript.config.ts".green}`
+			);
 
-		await this.migrateConfigs(projectDir);
+			await this.migrateConfigs(projectDir);
 
-		this.spinner.text = `Project has been migrated to use ${
-			"nativescript.config.ts".green
-		}`;
-		this.spinner.succeed();
+			this.spinner.text = `Project has been migrated to use ${
+				"nativescript.config.ts".green
+			}`;
+			this.spinner.succeed();
+		}
 
 		// update dependencies
 		this.spinner.start("Updating project dependencies");
 
-		await this.migrateDependencies(
-			projectData,
-			platforms,
-			allowInvalidVersions
-		);
+		await this.migrateDependencies(projectData, platforms, loose);
 
 		this.spinner.text = "Project dependencies have been updated";
 		this.spinner.succeed();
@@ -408,12 +417,23 @@ export class MigrateController
 		// update tsconfig
 		const tsConfigPath = path.resolve(projectDir, "tsconfig.json");
 		if (this.$fs.exists(tsConfigPath)) {
-			this.spinner.start("Updating tsconfig.json");
+			this.spinner.start(`Updating ${"tsconfig.json".yellow}`);
 
 			await this.migrateTSConfig(tsConfigPath);
 
-			this.spinner.succeed("Updated tsconfig.json");
+			this.spinner.succeed(`Updated ${"tsconfig.json".yellow}`);
 		}
+
+		await this.migrateWebpack5(projectDir, projectData);
+
+		// npx -p @nativescript/webpack@alpha nativescript-webpack init
+
+		// run @nativescript/eslint over codebase
+		// this.spinner.start("Checking project code...");
+
+		await this.runESLint(projectDir);
+
+		// this.spinner.succeed("Updated tsconfig.json");
 
 		// add latest runtimes (if they were specified in the nativescript key)
 		// this.spinner.start("Updating runtimes");
@@ -433,7 +453,7 @@ export class MigrateController
 		this.$logger.info("");
 		this.$logger.printMarkdown(
 			"Project has been successfully migrated. The next step is to run `ns run <platform>` to ensure everything is working properly." +
-				"\n\nPlease note that `ns migrate` does not make changes to your source code, you may need additional changes to complete the migration."
+				"\n\nPlease note that you may need additional changes to complete the migration."
 			// + "\n\nYou may restore your project with `ns migrate restore`"
 		);
 
@@ -496,7 +516,7 @@ export class MigrateController
 		// 	await this.migrateDependencies(
 		// 		projectData,
 		// 		platforms,
-		// 		allowInvalidVersions
+		// 		loose
 		// 	);
 		// } catch (error) {
 		// 	const backupFolders = MigrateController.pathsToBackup;
@@ -515,6 +535,232 @@ export class MigrateController
 		// this.spinner.stop();
 		// // this.spinner.info(MigrateController.MIGRATE_FINISH_MESSAGE);
 	}
+
+	private async _shouldMigrate({
+		projectDir,
+		platforms,
+		loose,
+	}: IMigrationData): Promise<boolean> {
+		const isMigrate = _.get(this.$options, "argv._[0]") === "migrate";
+		const projectData = this.$projectDataService.getProjectData(projectDir);
+		const projectInfo = this.$projectConfigService.detectProjectConfigs(
+			projectData.projectDir
+		);
+		if (!isMigrate && projectInfo.hasNSConfig) {
+			return;
+		}
+
+		const shouldMigrateCommonMessage =
+			"The app is not compatible with this CLI version and it should be migrated. Reason: ";
+
+		for (let i = 0; i < this.migrationDependencies.length; i++) {
+			const dependency = this.migrationDependencies[i];
+			const hasDependency = this.hasDependency(dependency, projectData);
+
+			if (!hasDependency) {
+				if (dependency.shouldAddIfMissing) {
+					this.$logger.trace(
+						`${shouldMigrateCommonMessage}'${dependency.packageName}' is missing.`
+					);
+					return true;
+				}
+
+				continue;
+			}
+
+			if (dependency.shouldMigrateAction) {
+				const shouldMigrate = await dependency.shouldMigrateAction.bind(this)(
+					dependency,
+					projectData,
+					loose
+				);
+
+				if (shouldMigrate) {
+					this.$logger.trace(
+						`${shouldMigrateCommonMessage}'${dependency.packageName}' requires an update.`
+					);
+					return true;
+				}
+			}
+
+			if (dependency.replaceWith || dependency.shouldRemove) {
+				this.$logger.trace(
+					`${shouldMigrateCommonMessage}'${dependency.packageName}' is deprecated.`
+				);
+
+				// in loose mode we ignore deprecated dependencies
+				if (loose) {
+					continue;
+				}
+
+				return true;
+			}
+
+			const shouldUpdate = await this.shouldMigrateDependencyVersion(
+				dependency,
+				projectData,
+				loose
+			);
+
+			if (shouldUpdate) {
+				this.$logger.trace(
+					`${shouldMigrateCommonMessage}'${dependency.packageName}' should be updated.`
+				);
+
+				return true;
+			}
+		}
+
+		for (let platform of platforms) {
+			platform = platform?.toLowerCase();
+
+			if (
+				!this.$platformValidationService.isValidPlatform(platform, projectData)
+			) {
+				continue;
+			}
+
+			const hasRuntimeDependency = this.hasRuntimeDependency({
+				platform,
+				projectData,
+			});
+
+			if (!hasRuntimeDependency) {
+				continue;
+			}
+
+			const verifiedPlatformVersion = this.verifiedPlatformVersions[
+				platform.toLowerCase()
+			];
+			const shouldUpdateRuntime = await this.shouldUpdateRuntimeVersion(
+				verifiedPlatformVersion,
+				platform,
+				projectData,
+				loose
+			);
+
+			if (!shouldUpdateRuntime) {
+				continue;
+			}
+
+			this.$logger.trace(
+				`${shouldMigrateCommonMessage}Platform '${platform}' should be updated.`
+			);
+			if (loose) {
+				this.$logger.warn(
+					`Platform '${platform}' should be updated. The minimum version supported is ${verifiedPlatformVersion.minVersion}`
+				);
+				continue;
+			}
+
+			return true;
+		}
+
+		return false;
+	}
+
+	private async shouldMigrateDependencyVersion(
+		dependency: IMigrationDependency,
+		projectData: IProjectData,
+		loose: boolean
+	): Promise<boolean> {
+		const installedVersion = await this.$packageInstallationManager.getInstalledDependencyVersion(
+			dependency.packageName,
+			projectData.projectDir
+		);
+
+		const desiredVersion = dependency.desiredVersion ?? dependency.minVersion;
+		const minVersion = dependency.minVersion ?? dependency.desiredVersion;
+
+		if (
+			dependency.shouldUseExactVersion &&
+			installedVersion !== desiredVersion
+		) {
+			return true;
+		}
+
+		return this.isOutdatedVersion(
+			installedVersion,
+			{ minVersion, desiredVersion },
+			loose
+		);
+	}
+
+	private async shouldUpdateRuntimeVersion(
+		version: IDependencyVersion,
+		platform: string,
+		projectData: IProjectData,
+		loose: boolean
+	): Promise<boolean> {
+		const installedVersion = await this.getMaxRuntimeVersion({
+			platform,
+			projectData,
+		});
+
+		return this.isOutdatedVersion(installedVersion, version, loose);
+	}
+
+	private async getCachedShouldMigrate(
+		projectDir: string,
+		platform: string,
+		loose: boolean = false
+	): Promise<boolean> {
+		let cachedShouldMigrateValue = null;
+
+		const cachedHash = await this.$jsonFileSettingsService.getSettingValue(
+			getHash(`${projectDir}${platform.toLowerCase()}`) + loose ? "-loose" : ""
+		);
+		const packageJsonHash = await this.getPackageJsonHash(projectDir);
+		if (cachedHash === packageJsonHash) {
+			cachedShouldMigrateValue = false;
+		}
+
+		return cachedShouldMigrateValue;
+	}
+
+	private async setCachedShouldMigrate(
+		projectDir: string,
+		platform: string,
+		loose: boolean = false
+	): Promise<void> {
+		this.$logger.trace(
+			`Caching shouldMigrate result for platform ${platform} (loose = ${loose}).`
+		);
+		const packageJsonHash = await this.getPackageJsonHash(projectDir);
+		await this.$jsonFileSettingsService.saveSetting(
+			getHash(`${projectDir}${platform.toLowerCase()}`) + loose ? "-loose" : "",
+			packageJsonHash
+		);
+	}
+
+	private async getPackageJsonHash(projectDir: string) {
+		const projectPackageJsonFilePath = path.join(
+			projectDir,
+			constants.PACKAGE_JSON_FILE_NAME
+		);
+		return await this.$fs.getFileShasum(projectPackageJsonFilePath);
+	}
+
+	// private async migrateOldAndroidAppResources(
+	// 	projectData: IProjectData,
+	// 	backupDir: string
+	// ) {
+	// 	const appResourcesPath = projectData.getAppResourcesDirectoryPath();
+	// 	if (!this.$androidResourcesMigrationService.hasMigrated(appResourcesPath)) {
+	// 		this.spinner.info("Migrate old Android App_Resources structure.");
+	// 		try {
+	// 			await this.$androidResourcesMigrationService.migrate(
+	// 				appResourcesPath,
+	// 				backupDir
+	// 			);
+	// 		} catch (error) {
+	// 			this.$logger.warn(
+	// 				"Migrate old Android App_Resources structure failed: ",
+	// 				error.message
+	// 			);
+	// 		}
+	// 	}
+	// }
 
 	private async ensureGitCleanOrForce(projectDir: string): Promise<boolean> {
 		const git: SimpleGit = simpleGit(projectDir);
@@ -564,6 +810,366 @@ export class MigrateController
 			backup.remove();
 			this.$errors.fail(`Project backup failed. Error is: ${error.message}`);
 		}
+	}
+
+	private async cleanUpProject(projectData: IProjectData): Promise<void> {
+		await this.$projectCleanupService.clean([
+			constants.HOOKS_DIR_NAME,
+			constants.PLATFORMS_DIR_NAME,
+			constants.NODE_MODULES_FOLDER_NAME,
+			constants.WEBPACK_CONFIG_NAME,
+			constants.PACKAGE_LOCK_JSON_FILE_NAME,
+		]);
+
+		const {
+			dependencies,
+			devDependencies,
+		} = await this.$pluginsService.getDependenciesFromPackageJson(
+			projectData.projectDir
+		);
+		const hasSchematics = [...dependencies, ...devDependencies].find(
+			(p) => p.name === "@nativescript/schematics"
+		);
+
+		if (!hasSchematics) {
+			// clean tsconfig.tns.json if not in a shared project
+			await this.$projectCleanupService.clean([
+				constants.TSCCONFIG_TNS_JSON_NAME,
+			]);
+		}
+	}
+
+	private async handleAutoGeneratedFiles(
+		backup: IBackup,
+		projectData: IProjectData
+	): Promise<void> {
+		const globOptions: glob.IOptions = {
+			silent: true,
+			nocase: true,
+			matchBase: true,
+			nodir: true,
+			absolute: false,
+			cwd: projectData.appDirectoryPath,
+		};
+
+		const jsFiles = glob.sync("*.@(js|ts|js.map)", globOptions);
+		const autoGeneratedJsFiles = this.getGeneratedFiles(
+			jsFiles,
+			[".js"],
+			[".ts"]
+		);
+		const autoGeneratedJsMapFiles = this.getGeneratedFiles(
+			jsFiles,
+			[".map"],
+			[""]
+		);
+		const cssFiles = glob.sync("*.@(less|sass|scss|css)", globOptions);
+		const autoGeneratedCssFiles = this.getGeneratedFiles(
+			cssFiles,
+			[".css"],
+			[".scss", ".sass", ".less"]
+		);
+
+		const allGeneratedFiles = autoGeneratedJsFiles
+			.concat(autoGeneratedJsMapFiles)
+			.concat(autoGeneratedCssFiles);
+
+		const pathsToBackup = allGeneratedFiles.map((generatedFile) =>
+			path.join(projectData.appDirectoryPath, generatedFile)
+		);
+		backup.addPaths(pathsToBackup);
+		backup.create();
+
+		if (backup.isUpToDate()) {
+			await this.$projectCleanupService.clean(pathsToBackup);
+		}
+	}
+
+	private getGeneratedFiles(
+		allFiles: string[],
+		generatedFileExts: string[],
+		sourceFileExts: string[]
+	): string[] {
+		return allFiles.filter((file) => {
+			let isGenerated = false;
+			const { dir, name, ext } = path.parse(file);
+			if (generatedFileExts.indexOf(ext) > -1) {
+				for (const sourceExt of sourceFileExts) {
+					const possibleSourceFile = path.format({ dir, name, ext: sourceExt });
+					isGenerated = allFiles.indexOf(possibleSourceFile) > -1;
+					if (isGenerated) {
+						break;
+					}
+				}
+			}
+
+			return isGenerated;
+		});
+	}
+
+	private isOutdatedVersion(
+		current: string,
+		target: IDependencyVersion,
+		loose: boolean
+	): boolean {
+		// in loose mode, a falsy version is not considered outdated
+		if (!current && loose) {
+			return false;
+		}
+
+		const installed = semver.coerce(current);
+		const min = semver.coerce(target.minVersion);
+		const desired = semver.coerce(target.desiredVersion);
+
+		// in loose mode we check if we satisfy the min version
+		if (loose) {
+			if (!installed || !min) {
+				return false;
+			}
+			return semver.lt(installed, min);
+		}
+
+		if (!installed || !desired) {
+			return true;
+		}
+		// otherwise we compare with the desired version
+		return semver.lt(installed, desired);
+	}
+
+	private detectAppPath(projectDir: string, configData: INsConfig) {
+		if (configData.appPath) {
+			return configData.appPath;
+		}
+
+		const possibleAppPaths = [
+			path.resolve(projectDir, constants.SRC_DIR),
+			path.resolve(projectDir, constants.APP_FOLDER_NAME),
+		];
+
+		const appPath = possibleAppPaths.find((possiblePath) =>
+			this.$fs.exists(possiblePath)
+		);
+		if (appPath) {
+			const relativeAppPath = path
+				.relative(projectDir, appPath)
+				.replace(path.sep, "/");
+			this.$logger.trace(`Found app source at '${appPath}'.`);
+			return relativeAppPath.toString();
+		}
+	}
+
+	private detectAppResourcesPath(projectDir: string, configData: INsConfig) {
+		if (configData.appResourcesPath) {
+			return configData.appResourcesPath;
+		}
+
+		const possibleAppResourcesPaths = [
+			path.resolve(
+				projectDir,
+				configData.appPath,
+				constants.APP_RESOURCES_FOLDER_NAME
+			),
+			path.resolve(projectDir, constants.APP_RESOURCES_FOLDER_NAME),
+		];
+
+		const appResourcesPath = possibleAppResourcesPaths.find((possiblePath) =>
+			this.$fs.exists(possiblePath)
+		);
+		if (appResourcesPath) {
+			const relativeAppResourcesPath = path
+				.relative(projectDir, appResourcesPath)
+				.replace(path.sep, "/");
+			this.$logger.trace(`Found App_Resources at '${appResourcesPath}'.`);
+			return relativeAppResourcesPath.toString();
+		}
+	}
+
+	private async migrateDependencies(
+		projectData: IProjectData,
+		platforms: string[],
+		loose: boolean
+	): Promise<void> {
+		for (let i = 0; i < this.migrationDependencies.length; i++) {
+			const dependency = this.migrationDependencies[i];
+			const hasDependency = this.hasDependency(dependency, projectData);
+
+			if (!hasDependency && !dependency.shouldAddIfMissing) {
+				continue;
+			}
+
+			if (dependency.migrateAction) {
+				const shouldMigrate = await dependency.shouldMigrateAction.bind(this)(
+					dependency,
+					projectData,
+					loose
+				);
+
+				if (shouldMigrate) {
+					const newDependencies = await dependency.migrateAction(
+						projectData,
+						path.join(
+							projectData.projectDir,
+							MigrateController.backupFolderName
+						)
+					);
+					for (const newDependency of newDependencies) {
+						await this.migrateDependency(newDependency, projectData, loose);
+					}
+				}
+			}
+
+			await this.migrateDependency(dependency, projectData, loose);
+		}
+
+		for (const platform of platforms) {
+			const lowercasePlatform = platform.toLowerCase();
+			const hasRuntimeDependency = this.hasRuntimeDependency({
+				platform,
+				projectData,
+			});
+
+			if (!hasRuntimeDependency) {
+				continue;
+			}
+
+			const shouldUpdate = await this.shouldUpdateRuntimeVersion(
+				this.verifiedPlatformVersions[lowercasePlatform],
+				platform,
+				projectData,
+				loose
+			);
+
+			if (!shouldUpdate) {
+				continue;
+			}
+
+			const verifiedPlatformVersion = this.verifiedPlatformVersions[
+				lowercasePlatform
+			];
+			const platformData = this.$platformsDataService.getPlatformData(
+				lowercasePlatform,
+				projectData
+			);
+
+			this.spinner.info(
+				`Updating ${platform} platform to version ${verifiedPlatformVersion.desiredVersion.green}.`
+			);
+
+			await this.$addPlatformService.setPlatformVersion(
+				platformData,
+				projectData,
+				verifiedPlatformVersion.desiredVersion
+			);
+
+			this.spinner.succeed();
+		}
+	}
+
+	private async migrateDependency(
+		dependency: IMigrationDependency,
+		projectData: IProjectData,
+		loose: boolean
+	): Promise<void> {
+		const hasDependency = this.hasDependency(dependency, projectData);
+
+		// show warning if needed
+		if (hasDependency && dependency.warning) {
+			this.$logger.warn(dependency.warning);
+		}
+
+		if (!hasDependency) {
+			if (!dependency.shouldAddIfMissing) {
+				return;
+			}
+			const version = dependency.desiredVersion ?? dependency.minVersion;
+
+			this.$pluginsService.addToPackageJson(
+				dependency.packageName,
+				version,
+				dependency.isDev,
+				projectData.projectDir
+			);
+
+			this.spinner.clear();
+			this.$logger.info(
+				`  - ${dependency.packageName.yellow} ${
+					`${version}`.green
+				} has been added`
+			);
+			this.spinner.render();
+
+			return;
+		}
+
+		if (dependency.replaceWith || dependency.shouldRemove) {
+			// remove
+			this.$pluginsService.removeFromPackageJson(
+				dependency.packageName,
+				projectData.projectDir
+			);
+
+			// no replacement required - we're done
+			if (!dependency.replaceWith) {
+				return;
+			}
+
+			const replacementDep = _.find(
+				this.migrationDependencies,
+				(migrationPackage) =>
+					migrationPackage.packageName === dependency.replaceWith
+			);
+
+			if (!replacementDep) {
+				this.$errors.fail("Failed to find replacement dependency.");
+			}
+
+			const version = dependency.desiredVersion ?? dependency.minVersion;
+
+			// add replacement dependency
+			this.$pluginsService.addToPackageJson(
+				replacementDep.packageName,
+				version,
+				replacementDep.isDev,
+				projectData.projectDir
+			);
+
+			this.spinner.clear();
+			this.$logger.info(
+				`  - ${dependency.packageName.yellow} has been replaced with ${
+					replacementDep.packageName.cyan
+				} ${`${version}`.green}`
+			);
+			this.spinner.render();
+
+			return;
+		}
+
+		const shouldMigrateVersion = await this.shouldMigrateDependencyVersion(
+			dependency,
+			projectData,
+			loose
+		);
+
+		if (!shouldMigrateVersion) {
+			return;
+		}
+
+		const version = dependency.desiredVersion ?? dependency.minVersion;
+
+		this.$pluginsService.addToPackageJson(
+			dependency.packageName,
+			version,
+			dependency.isDev,
+			projectData.projectDir
+		);
+
+		this.spinner.clear();
+		this.$logger.info(
+			`  - ${dependency.packageName.yellow} has been updated to ${
+				`${version}`.green
+			}`
+		);
+		this.spinner.render();
 	}
 
 	private async migrateConfigs(projectDir: string): Promise<boolean> {
@@ -654,532 +1260,6 @@ export class MigrateController
 		return true;
 	}
 
-	private async _shouldMigrate({
-		projectDir,
-		platforms,
-		allowInvalidVersions,
-	}: IMigrationData): Promise<boolean> {
-		const isMigrate = _.get(this.$options, "argv._[0]") === "migrate";
-		const projectData = this.$projectDataService.getProjectData(projectDir);
-		const projectInfo = this.$projectConfigService.detectProjectConfigs(
-			projectData.projectDir
-		);
-		if (!isMigrate && projectInfo.hasNSConfig) {
-			return;
-		}
-
-		const shouldMigrateCommonMessage =
-			"The app is not compatible with this CLI version and it should be migrated. Reason: ";
-
-		for (let i = 0; i < this.migrationDependencies.length; i++) {
-			const dependency = this.migrationDependencies[i];
-			const hasDependency = this.hasDependency(dependency, projectData);
-
-			if (
-				hasDependency &&
-				dependency.shouldMigrateAction &&
-				(await dependency.shouldMigrateAction(
-					projectData,
-					allowInvalidVersions
-				))
-			) {
-				this.$logger.trace(
-					`${shouldMigrateCommonMessage}'${dependency.packageName}' requires an update.`
-				);
-				return true;
-			}
-
-			if (
-				hasDependency &&
-				(dependency.replaceWith || dependency.shouldRemove)
-			) {
-				this.$logger.trace(
-					`${shouldMigrateCommonMessage}'${dependency.packageName}' is deprecated.`
-				);
-				return true;
-			}
-
-			if (
-				hasDependency &&
-				(await this.shouldMigrateDependencyVersion(
-					dependency,
-					projectData,
-					allowInvalidVersions
-				))
-			) {
-				this.$logger.trace(
-					`${shouldMigrateCommonMessage}'${dependency.packageName}' should be updated.`
-				);
-				return true;
-			}
-
-			if (!hasDependency && dependency.shouldAddIfMissing) {
-				this.$logger.trace(
-					`${shouldMigrateCommonMessage}'${dependency.packageName}' is missing.`
-				);
-				return true;
-			}
-		}
-
-		for (let platform of platforms) {
-			platform = platform && platform.toLowerCase();
-			if (
-				!this.$platformValidationService.isValidPlatform(platform, projectData)
-			) {
-				continue;
-			}
-
-			const hasRuntimeDependency = this.hasRuntimeDependency({
-				platform,
-				projectData,
-			});
-			if (
-				hasRuntimeDependency &&
-				(await this.shouldUpdateRuntimeVersion(
-					this.verifiedPlatformVersions[platform.toLowerCase()],
-					platform,
-					projectData,
-					allowInvalidVersions
-				))
-			) {
-				this.$logger.trace(
-					`${shouldMigrateCommonMessage}Platform '${platform}' should be updated.`
-				);
-				return true;
-			}
-		}
-	}
-
-	private async getCachedShouldMigrate(
-		projectDir: string,
-		platform: string
-	): Promise<boolean> {
-		let cachedShouldMigrateValue = null;
-
-		const cachedHash = await this.$jsonFileSettingsService.getSettingValue(
-			getHash(`${projectDir}${platform.toLowerCase()}`)
-		);
-		const packageJsonHash = await this.getPackageJsonHash(projectDir);
-		if (cachedHash === packageJsonHash) {
-			cachedShouldMigrateValue = false;
-		}
-
-		return cachedShouldMigrateValue;
-	}
-
-	private async setCachedShouldMigrate(
-		projectDir: string,
-		platform: string
-	): Promise<void> {
-		const packageJsonHash = await this.getPackageJsonHash(projectDir);
-		await this.$jsonFileSettingsService.saveSetting(
-			getHash(`${projectDir}${platform.toLowerCase()}`),
-			packageJsonHash
-		);
-	}
-
-	private async getPackageJsonHash(projectDir: string) {
-		const projectPackageJsonFilePath = path.join(
-			projectDir,
-			constants.PACKAGE_JSON_FILE_NAME
-		);
-		return await this.$fs.getFileShasum(projectPackageJsonFilePath);
-	}
-
-	// private async migrateOldAndroidAppResources(
-	// 	projectData: IProjectData,
-	// 	backupDir: string
-	// ) {
-	// 	const appResourcesPath = projectData.getAppResourcesDirectoryPath();
-	// 	if (!this.$androidResourcesMigrationService.hasMigrated(appResourcesPath)) {
-	// 		this.spinner.info("Migrate old Android App_Resources structure.");
-	// 		try {
-	// 			await this.$androidResourcesMigrationService.migrate(
-	// 				appResourcesPath,
-	// 				backupDir
-	// 			);
-	// 		} catch (error) {
-	// 			this.$logger.warn(
-	// 				"Migrate old Android App_Resources structure failed: ",
-	// 				error.message
-	// 			);
-	// 		}
-	// 	}
-	// }
-
-	private async cleanUpProject(projectData: IProjectData): Promise<void> {
-		await this.$projectCleanupService.clean([
-			constants.HOOKS_DIR_NAME,
-			constants.PLATFORMS_DIR_NAME,
-			constants.NODE_MODULES_FOLDER_NAME,
-			constants.WEBPACK_CONFIG_NAME,
-			constants.PACKAGE_LOCK_JSON_FILE_NAME,
-		]);
-
-		const {
-			dependencies,
-			devDependencies,
-		} = await this.$pluginsService.getDependenciesFromPackageJson(
-			projectData.projectDir
-		);
-		const hasSchematics = [...dependencies, ...devDependencies].find(
-			(p) => p.name === "@nativescript/schematics"
-		);
-
-		if (!hasSchematics) {
-			// clean tsconfig.tns.json if not in a shared project
-			await this.$projectCleanupService.clean([
-				constants.TSCCONFIG_TNS_JSON_NAME,
-			]);
-		}
-	}
-
-	private async handleAutoGeneratedFiles(
-		backup: IBackup,
-		projectData: IProjectData
-	): Promise<void> {
-		const globOptions: glob.IOptions = {
-			silent: true,
-			nocase: true,
-			matchBase: true,
-			nodir: true,
-			absolute: false,
-			cwd: projectData.appDirectoryPath,
-		};
-
-		const jsFiles = glob.sync("*.@(js|ts|js.map)", globOptions);
-		const autoGeneratedJsFiles = this.getGeneratedFiles(
-			jsFiles,
-			[".js"],
-			[".ts"]
-		);
-		const autoGeneratedJsMapFiles = this.getGeneratedFiles(
-			jsFiles,
-			[".map"],
-			[""]
-		);
-		const cssFiles = glob.sync("*.@(le|sa|sc|c)ss", globOptions);
-		const autoGeneratedCssFiles = this.getGeneratedFiles(
-			cssFiles,
-			[".css"],
-			[".scss", ".sass", ".less"]
-		);
-
-		const allGeneratedFiles = autoGeneratedJsFiles
-			.concat(autoGeneratedJsMapFiles)
-			.concat(autoGeneratedCssFiles);
-
-		const pathsToBackup = allGeneratedFiles.map((generatedFile) =>
-			path.join(projectData.appDirectoryPath, generatedFile)
-		);
-		backup.addPaths(pathsToBackup);
-		backup.create();
-
-		if (backup.isUpToDate()) {
-			await this.$projectCleanupService.clean(pathsToBackup);
-		}
-	}
-
-	private getGeneratedFiles(
-		allFiles: string[],
-		generatedFileExts: string[],
-		sourceFileExts: string[]
-	): string[] {
-		const autoGeneratedFiles = allFiles.filter((file) => {
-			let isGenerated = false;
-			const { dir, name, ext } = path.parse(file);
-			if (generatedFileExts.indexOf(ext) > -1) {
-				for (const sourceExt of sourceFileExts) {
-					const possibleSourceFile = path.format({ dir, name, ext: sourceExt });
-					isGenerated = allFiles.indexOf(possibleSourceFile) > -1;
-					if (isGenerated) {
-						break;
-					}
-				}
-			}
-
-			return isGenerated;
-		});
-
-		return autoGeneratedFiles;
-	}
-
-	private async migrateDependencies(
-		projectData: IProjectData,
-		platforms: string[],
-		allowInvalidVersions: boolean
-	): Promise<void> {
-		for (let i = 0; i < this.migrationDependencies.length; i++) {
-			const dependency = this.migrationDependencies[i];
-			const hasDependency = this.hasDependency(dependency, projectData);
-
-			if (
-				hasDependency &&
-				dependency.migrateAction &&
-				(await dependency.shouldMigrateAction(
-					projectData,
-					allowInvalidVersions
-				))
-			) {
-				const newDependencies = await dependency.migrateAction(
-					projectData,
-					path.join(projectData.projectDir, MigrateController.backupFolderName)
-				);
-				for (const newDependency of newDependencies) {
-					await this.migrateDependency(
-						newDependency,
-						projectData,
-						allowInvalidVersions
-					);
-				}
-			}
-			await this.migrateDependency(
-				dependency,
-				projectData,
-				allowInvalidVersions
-			);
-		}
-
-		for (const platform of platforms) {
-			const lowercasePlatform = platform.toLowerCase();
-			const hasRuntimeDependency = this.hasRuntimeDependency({
-				platform,
-				projectData,
-			});
-			if (
-				hasRuntimeDependency &&
-				(await this.shouldUpdateRuntimeVersion(
-					this.verifiedPlatformVersions[lowercasePlatform],
-					platform,
-					projectData,
-					allowInvalidVersions
-				))
-			) {
-				const verifiedPlatformVersion = this.verifiedPlatformVersions[
-					lowercasePlatform
-				];
-				const platformData = this.$platformsDataService.getPlatformData(
-					lowercasePlatform,
-					projectData
-				);
-				this.spinner.info(
-					`Updating ${platform} platform to version '${verifiedPlatformVersion}'.`
-				);
-				await this.$addPlatformService.setPlatformVersion(
-					platformData,
-					projectData,
-					verifiedPlatformVersion
-				);
-				this.spinner.succeed();
-			}
-		}
-
-		// this.spinner.info("Installing packages.");
-		// await this.$packageManager.install(
-		// 	projectData.projectDir,
-		// 	projectData.projectDir,
-		// 	{
-		// 		disableNpmInstall: false,
-		// 		frameworkPath: null,
-		// 		ignoreScripts: false,
-		// 		path: projectData.projectDir,
-		// 	}
-		// );
-		// this.spinner.text = "Installing packages... Complete";
-		// this.spinner.succeed();
-		//
-		// this.spinner.succeed("Migration complete.");
-	}
-
-	private async migrateDependency(
-		dependency: IMigrationDependency,
-		projectData: IProjectData,
-		allowInvalidVersions: boolean
-	): Promise<void> {
-		const hasDependency = this.hasDependency(dependency, projectData);
-		if (hasDependency && dependency.warning) {
-			this.$logger.warn(dependency.warning);
-		}
-
-		if (hasDependency && (dependency.replaceWith || dependency.shouldRemove)) {
-			this.$pluginsService.removeFromPackageJson(
-				dependency.packageName,
-				projectData.projectDir
-			);
-			if (dependency.replaceWith) {
-				const replacementDep = _.find(
-					this.migrationDependencies,
-					(migrationPackage) =>
-						migrationPackage.packageName === dependency.replaceWith
-				);
-				if (!replacementDep) {
-					this.$errors.fail("Failed to find replacement dependency.");
-				}
-
-				this.$pluginsService.addToPackageJson(
-					replacementDep.packageName,
-					replacementDep.verifiedVersion,
-					replacementDep.isDev,
-					projectData.projectDir
-				);
-
-				this.spinner.clear();
-				this.$logger.info(
-					`  - ${dependency.packageName.yellow} has been replaced with ${
-						replacementDep.packageName.cyan
-					} ${`v${replacementDep.verifiedVersion}`.green}`
-				);
-				this.spinner.render();
-			}
-
-			return;
-		}
-
-		if (
-			hasDependency &&
-			(await this.shouldMigrateDependencyVersion(
-				dependency,
-				projectData,
-				allowInvalidVersions
-			))
-		) {
-			this.$pluginsService.addToPackageJson(
-				dependency.packageName,
-				dependency.verifiedVersion,
-				dependency.isDev,
-				projectData.projectDir
-			);
-
-			this.spinner.clear();
-			this.$logger.info(
-				`  - ${dependency.packageName.yellow} has been updated to ${
-					`v${dependency.verifiedVersion}`.green
-				}`
-			);
-			this.spinner.render();
-
-			return;
-		}
-
-		if (!hasDependency && dependency.shouldAddIfMissing) {
-			this.$pluginsService.addToPackageJson(
-				dependency.packageName,
-				dependency.verifiedVersion,
-				dependency.isDev,
-				projectData.projectDir
-			);
-
-			this.spinner.clear();
-			this.$logger.info(
-				`  - ${dependency.packageName.yellow} ${
-					`v${dependency.verifiedVersion}`.green
-				} has been added`
-			);
-			this.spinner.render();
-		}
-	}
-
-	private async shouldMigrateDependencyVersion(
-		dependency: IMigrationDependency,
-		projectData: IProjectData,
-		allowInvalidVersions: boolean
-	): Promise<boolean> {
-		const installedVersion = await this.$packageInstallationManager.getInstalledDependencyVersion(
-			dependency.packageName,
-			projectData.projectDir
-		);
-		const requiredVersion = dependency.verifiedVersion;
-
-		if (
-			dependency.shouldUseExactVersion &&
-			installedVersion !== requiredVersion
-		) {
-			return true;
-		}
-
-		return this.isOutdatedVersion(
-			installedVersion,
-			requiredVersion,
-			allowInvalidVersions
-		);
-	}
-
-	private async shouldUpdateRuntimeVersion(
-		targetVersion: string,
-		platform: string,
-		projectData: IProjectData,
-		allowInvalidVersions: boolean
-	): Promise<boolean> {
-		const installedVersion = await this.getMaxRuntimeVersion({
-			platform,
-			projectData,
-		});
-
-		return this.isOutdatedVersion(
-			installedVersion,
-			targetVersion,
-			allowInvalidVersions
-		);
-	}
-
-	private isOutdatedVersion(
-		version: string,
-		targetVersion: string,
-		allowInvalidVersions: boolean
-	): boolean {
-		return !!version
-			? semver.lt(semver.coerce(version), targetVersion)
-			: !allowInvalidVersions;
-	}
-
-	private detectAppPath(projectDir: string, configData: INsConfig) {
-		if (configData.appPath) {
-			return configData.appPath;
-		}
-
-		const possibleAppPaths = [
-			path.resolve(projectDir, constants.SRC_DIR),
-			path.resolve(projectDir, constants.APP_FOLDER_NAME),
-		];
-
-		const appPath = possibleAppPaths.find((possiblePath) =>
-			this.$fs.exists(possiblePath)
-		);
-		if (appPath) {
-			const relativeAppPath = path
-				.relative(projectDir, appPath)
-				.replace(path.sep, "/");
-			this.$logger.trace(`Found app source at '${appPath}'.`);
-			return relativeAppPath.toString();
-		}
-	}
-
-	private detectAppResourcesPath(projectDir: string, configData: INsConfig) {
-		if (configData.appResourcesPath) {
-			return configData.appResourcesPath;
-		}
-
-		const possibleAppResourcesPaths = [
-			path.resolve(
-				projectDir,
-				configData.appPath,
-				constants.APP_RESOURCES_FOLDER_NAME
-			),
-			path.resolve(projectDir, constants.APP_RESOURCES_FOLDER_NAME),
-		];
-
-		const appResourcesPath = possibleAppResourcesPaths.find((possiblePath) =>
-			this.$fs.exists(possiblePath)
-		);
-		if (appResourcesPath) {
-			const relativeAppResourcesPath = path
-				.relative(projectDir, appResourcesPath)
-				.replace(path.sep, "/");
-			this.$logger.trace(`Found App_Resources at '${appResourcesPath}'.`);
-			return relativeAppResourcesPath.toString();
-		}
-	}
-
 	private async migrateUnitTestRunner(
 		projectData: IProjectData,
 		migrationBackupDirPath: string
@@ -1215,18 +1295,44 @@ export class MigrateController
 		}
 
 		// Dependencies to migrate
-		const dependencies = [
+		const dependencies: IMigrationDependency[] = [
 			{
 				packageName: "karma-webpack",
-				verifiedVersion: "3.0.5",
+				minVersion: "3.0.5",
+				desiredVersion: "~5.0.0",
 				isDev: true,
 				shouldAddIfMissing: true,
 			},
-			{ packageName: "karma-jasmine", verifiedVersion: "2.0.1", isDev: true },
-			{ packageName: "karma-mocha", verifiedVersion: "1.3.0", isDev: true },
-			{ packageName: "karma-chai", verifiedVersion: "0.1.0", isDev: true },
-			{ packageName: "karma-qunit", verifiedVersion: "3.1.2", isDev: true },
-			{ packageName: "karma", verifiedVersion: "4.1.0", isDev: true },
+			{
+				packageName: "karma-jasmine",
+				minVersion: "2.0.1",
+				desiredVersion: "~4.0.1",
+				isDev: true,
+			},
+			{
+				packageName: "karma-mocha",
+				minVersion: "1.3.0",
+				desiredVersion: "~2.0.1",
+				isDev: true,
+			},
+			{
+				packageName: "karma-chai",
+				minVersion: "0.1.0",
+				desiredVersion: "~0.1.0",
+				isDev: true,
+			},
+			{
+				packageName: "karma-qunit",
+				minVersion: "3.1.2",
+				desiredVersion: "~4.1.2",
+				isDev: true,
+			},
+			{
+				packageName: "karma",
+				minVersion: "4.1.0",
+				desiredVersion: "~6.3.2",
+				isDev: true,
+			},
 		];
 
 		return dependencies;
@@ -1258,71 +1364,93 @@ export class MigrateController
 	}
 
 	private async migrateNativeScriptAngular(): Promise<IMigrationDependency[]> {
-		const dependencies = [
+		const minVersion = "10.0.0";
+		const desiredVersion = "~11.2.7";
+
+		/*
+    "@angular/router": "~11.2.7",
+     */
+
+		const dependencies: IMigrationDependency[] = [
 			{
-				packageName: "@angular/platform-browser-dynamic",
-				verifiedVersion: "10.0.0",
+				packageName: "@angular/animations",
+				minVersion,
+				desiredVersion,
 				shouldAddIfMissing: true,
 			},
 			{
 				packageName: "@angular/common",
-				verifiedVersion: "10.0.0",
+				minVersion,
+				desiredVersion,
 				shouldAddIfMissing: true,
 			},
 			{
 				packageName: "@angular/compiler",
-				verifiedVersion: "10.0.0",
+				minVersion,
+				desiredVersion,
 				shouldAddIfMissing: true,
 			},
 			{
 				packageName: "@angular/core",
-				verifiedVersion: "10.0.0",
+				minVersion,
+				desiredVersion,
 				shouldAddIfMissing: true,
 			},
 			{
 				packageName: "@angular/forms",
-				verifiedVersion: "10.0.0",
+				minVersion,
+				desiredVersion,
 				shouldAddIfMissing: true,
 			},
 			{
 				packageName: "@angular/platform-browser",
-				verifiedVersion: "10.0.0",
+				minVersion,
+				desiredVersion,
+				shouldAddIfMissing: true,
+			},
+			{
+				packageName: "@angular/platform-browser-dynamic",
+				minVersion,
+				desiredVersion,
 				shouldAddIfMissing: true,
 			},
 			{
 				packageName: "@angular/router",
-				verifiedVersion: "10.0.0",
+				minVersion,
+				desiredVersion,
 				shouldAddIfMissing: true,
 			},
 			{
 				packageName: "rxjs",
-				verifiedVersion: "6.6.0",
+				minVersion: "6.6.0",
+				desiredVersion: "~6.6.7",
 				shouldAddIfMissing: true,
 			},
 			{
 				packageName: "zone.js",
-				verifiedVersion: "0.11.1",
+				minVersion: "0.11.1",
+				desiredVersion: "~0.11.1",
 				shouldAddIfMissing: true,
 			},
-			{
-				packageName: "@angular/animations",
-				verifiedVersion: "10.0.0",
-				shouldAddIfMissing: true,
-			},
+
+			// devDependencies
 			{
 				packageName: "@angular/compiler-cli",
-				verifiedVersion: "10.0.0",
+				minVersion,
+				desiredVersion,
 				isDev: true,
 			},
 			{
 				packageName: "@ngtools/webpack",
-				verifiedVersion: "10.0.0",
+				minVersion,
+				desiredVersion: "~11.2.6",
 				isDev: true,
 			},
+
+			// obsolete
 			{
 				packageName: "@angular-devkit/build-angular",
-				verifiedVersion: "0.1000.8",
-				isDev: true,
+				shouldRemove: true,
 			},
 		];
 
@@ -1333,26 +1461,30 @@ export class MigrateController
 		const dependencies: IMigrationDependency[] = [
 			{
 				packageName: "nativescript-vue-template-compiler",
-				verifiedVersion: "2.8.0",
-				shouldUseExactVersion: true,
+				minVersion: "2.7.0",
+				desiredVersion: "~2.8.4",
 				isDev: true,
 				shouldAddIfMissing: true,
 			},
 			{
-				packageName: "vue-loader",
-				verifiedVersion: "15.9.3",
-				shouldUseExactVersion: true,
+				packageName: "nativescript-vue-devtools",
+				minVersion: "1.4.0",
+				desiredVersion: "~1.5.0",
 				isDev: true,
-				shouldAddIfMissing: true,
 			},
+			{
+				packageName: "vue-loader",
+				shouldRemove: true,
+			},
+			// remove any version of vue
 			{
 				packageName: "vue",
 				shouldRemove: true,
 			},
+			// add latest
 			{
 				packageName: "vue",
-				verifiedVersion: "2.6.12",
-				shouldUseExactVersion: true,
+				desiredVersion: "2.6.12",
 				isDev: true,
 			},
 		];
@@ -1364,15 +1496,15 @@ export class MigrateController
 		const dependencies: IMigrationDependency[] = [
 			{
 				packageName: "svelte-native-nativescript-ui",
-				verifiedVersion: "0.9.0",
-				shouldUseExactVersion: true,
+				minVersion: "0.9.0",
+				desiredVersion: "~0.9.0",
 				isDev: true,
 				shouldAddIfMissing: true,
 			},
 			{
 				packageName: "svelte-native-preprocessor",
-				verifiedVersion: "0.2.0",
-				shouldUseExactVersion: true,
+				minVersion: "0.2.0",
+				desiredVersion: "~0.2.0",
 				isDev: true,
 				shouldAddIfMissing: true,
 			},
@@ -1382,10 +1514,7 @@ export class MigrateController
 			},
 			{
 				packageName: "svelte-loader-hot",
-				verifiedVersion: "0.3.1",
-				shouldUseExactVersion: true,
-				isDev: true,
-				shouldAddIfMissing: true,
+				shouldRemove: true,
 			},
 			{
 				packageName: "svelte",
@@ -1393,7 +1522,8 @@ export class MigrateController
 			},
 			{
 				packageName: "svelte",
-				verifiedVersion: "3.24.1",
+				minVersion: "3.24.1",
+				desiredVersion: "3.24.1",
 				shouldUseExactVersion: true,
 				isDev: true,
 			},
@@ -1403,7 +1533,7 @@ export class MigrateController
 	}
 
 	private async migrateWebpack(): Promise<IMigrationDependency[]> {
-		const scopedWebpackDeps = [
+		const webpackDependencies = [
 			"@angular-devkit/core",
 			"clean-webpack-plugin",
 			"copy-webpack-plugin",
@@ -1435,14 +1565,91 @@ export class MigrateController
 			"webpack-sources",
 		];
 
-		const dependencies = scopedWebpackDeps.map((dep) => {
+		return webpackDependencies.map((dep) => {
 			return {
 				packageName: dep,
 				shouldRemove: true,
 			};
 		});
+	}
 
-		return dependencies;
+	private async migrateWebpack5(projectDir: string, projectData: IProjectData) {
+		this.spinner.start(`Initializing new ${"webpack.config.js".yellow}`);
+		const { desiredVersion: webpackVersion } = this.migrationDependencies.find(
+			(dep) => dep.packageName === constants.WEBPACK_PLUGIN_NAME
+		);
+
+		try {
+			await this.$childProcess.spawnFromEvent(
+				"npx",
+				[
+					"--package",
+					`@nativescript/webpack@${webpackVersion}`,
+					"nativescript-webpack",
+					"init",
+				],
+				"close",
+				{
+					cwd: projectDir,
+					stdio: "ignore",
+				}
+			);
+		} catch (err) {
+			this.$logger.trace(
+				"Failed to initialize webpack.config.js. Error is: ",
+				err
+			);
+			this.$logger.printMarkdown(
+				`Failed to initialize \`webpack.config.js\`, you can try again by running \`npm install\` (or yarn, pnpm) and then \`npx @nativescript/webpack init\`.`
+			);
+		}
+		this.spinner.succeed(`Initialized new ${"webpack.config.js".yellow}`);
+
+		const packageJSON = this.$fs.readJson(projectData.projectFilePath);
+		const currentMain = packageJSON.main;
+		const currentMainTS = currentMain.replace(/.js$/, ".ts");
+
+		const appPath = projectData.appDirectoryPath;
+
+		const possibleMains = [
+			`./${appPath}/${currentMain}`,
+			`./${appPath}/${currentMainTS}`,
+			`./app/${currentMain}`,
+			`./app/${currentMainTS}`,
+			`./src/${currentMain}`,
+			`./src/${currentMainTS}`,
+		];
+		const replacedMain = possibleMains.find((possibleMain) => {
+			return this.$fs.exists(path.resolve(projectDir, possibleMain));
+		});
+
+		if (replacedMain) {
+			packageJSON.main = replacedMain;
+			this.$fs.writeJson(projectData.projectFilePath, packageJSON);
+
+			this.spinner.info(
+				`Updated ${"package.json".yellow} main field to ${replacedMain.green}`
+			);
+		} else {
+			this.$logger.warn();
+			this.$logger.warn("Note:\n-----");
+			this.$logger.printMarkdown(
+				`Could not determine the correct \`main\` field for \`package.json\`. Make sure to update it manually, pointing to the actual entry file relative to the \`package.json\`.\n`
+			);
+		}
+	}
+
+	private async runESLint(projectDir: string) {
+		// todo: run @nativescript/eslint-plugin on project folder to update imports
+		// const childProcess = injector.resolve('childProcess') as IChildProcess;
+		// const args = [
+		//   'npx',
+		//   '--package typescript',
+		//   '--package @nativescript/eslint-plugin',
+		//   '-c eslint-plugin',
+		//   projectDir
+		// ]
+		// await childProcess.exec(args.join(' '))
 	}
 }
 

@@ -65,6 +65,23 @@ export class HmrStatusService implements IHmrStatusService {
 			name: "failedLiveSync",
 			platform: this.$devicePlatformsConstants.iOS.toLowerCase(),
 		});
+
+		// webpack5
+		const statusStringMap: any = {
+			success: HmrConstants.HMR_SUCCESS_STATUS,
+			failure: HmrConstants.HMR_ERROR_STATUS,
+		};
+		this.$logParserService.addParseRule({
+			regex: /\[HMR]\[(.+)]\s*(\w+)\s*\|/,
+			handler: (matches: RegExpMatchArray, deviceId: string) => {
+				const [hash, status] = matches.slice(1);
+				const mappedStatus = statusStringMap[status.trim()];
+				if (mappedStatus) {
+					this.setData(deviceId, hash, statusStringMap[status]);
+				}
+			},
+			name: "hmr-status",
+		});
 	}
 
 	private handleAppCrash(matches: RegExpMatchArray, deviceId: string): void {
