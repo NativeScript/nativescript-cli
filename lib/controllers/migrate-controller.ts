@@ -129,7 +129,7 @@ export class MigrateController
 		{
 			packageName: constants.SCOPED_TNS_CORE_MODULES,
 			minVersion: "6.5.0",
-			desiredVersion: "~8.0.0-alpha.9",
+			desiredVersion: "~8.0.0",
 			shouldAddIfMissing: true,
 		},
 		{
@@ -139,7 +139,7 @@ export class MigrateController
 		{
 			packageName: "@nativescript/types",
 			minVersion: "7.0.0",
-			desiredVersion: "~7.3.0",
+			desiredVersion: "~8.0.0",
 			isDev: true,
 		},
 		{
@@ -165,14 +165,14 @@ export class MigrateController
 		{
 			packageName: constants.WEBPACK_PLUGIN_NAME,
 			minVersion: "3.0.0",
-			desiredVersion: "~5.0.0-alpha.7",
+			desiredVersion: "~5.0.0-beta.0",
 			shouldAddIfMissing: true,
 			isDev: true,
 		},
 		{
 			packageName: "nativescript-vue",
 			minVersion: "2.7.0",
-			desiredVersion: "~2.8.0",
+			desiredVersion: "~2.9.0",
 			async shouldMigrateAction(
 				dependency: IMigrationDependency,
 				projectData: IProjectData,
@@ -267,11 +267,11 @@ export class MigrateController
 		return {
 			[this.$devicePlatformsConstants.Android.toLowerCase()]: {
 				minVersion: "6.5.3",
-				desiredVersion: "7.2.0",
+				desiredVersion: "8.0.0",
 			},
 			[this.$devicePlatformsConstants.iOS.toLowerCase()]: {
 				minVersion: "6.5.4",
-				desiredVersion: "7.2.0",
+				desiredVersion: "8.0.0",
 			},
 		};
 	}
@@ -923,9 +923,15 @@ export class MigrateController
 
 		// in loose mode we check if we satisfy the min version
 		if (loose) {
+			if (!installed || !min) {
+				return false;
+			}
 			return semver.lt(installed, min);
 		}
 
+		if (!installed || !desired) {
+			return true;
+		}
 		// otherwise we compare with the desired version
 		return semver.lt(installed, desired);
 	}
@@ -1046,7 +1052,7 @@ export class MigrateController
 			);
 
 			this.spinner.info(
-				`Updating ${platform} platform to version '${verifiedPlatformVersion}'.`
+				`Updating ${platform} platform to version ${verifiedPlatformVersion.desiredVersion.green}.`
 			);
 
 			await this.$addPlatformService.setPlatformVersion(
@@ -1461,6 +1467,12 @@ export class MigrateController
 				shouldAddIfMissing: true,
 			},
 			{
+				packageName: "nativescript-vue-devtools",
+				minVersion: "1.4.0",
+				desiredVersion: "~1.5.0",
+				isDev: true,
+			},
+			{
 				packageName: "vue-loader",
 				shouldRemove: true,
 			},
@@ -1583,6 +1595,10 @@ export class MigrateController
 				}
 			);
 		} catch (err) {
+			this.$logger.trace(
+				"Failed to initialize webpack.config.js. Error is: ",
+				err
+			);
 			this.$logger.printMarkdown(
 				`Failed to initialize \`webpack.config.js\`, you can try again by running \`npm install\` (or yarn, pnpm) and then \`npx @nativescript/webpack init\`.`
 			);
