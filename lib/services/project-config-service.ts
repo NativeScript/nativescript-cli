@@ -167,8 +167,8 @@ export default {
 	}
 
 	@exported("projectConfigService")
-	public getValue(key: string): any {
-		return _.get(this.readConfig(), key);
+	public getValue(key: string, defaultValue?: any): any {
+		return _.get(this.readConfig(), key, defaultValue);
 	}
 
 	@exported("projectConfigService")
