@@ -1,3 +1,19 @@
+## [8.0.1](https://github.com/NativeScript/nativescript-cli/compare/v8.0.0...v8.0.1) (2021-04-01)
+
+
+### Bug Fixes
+
+* compat message updates ([7c475e6](https://github.com/NativeScript/nativescript-cli/commit/7c475e6de9c11e0cf428ee83390db0db89bf4249))
+* empty main fields during migrate ([7403e4d](https://github.com/NativeScript/nativescript-cli/commit/7403e4d16343df110d32d02653c188b8ac67978b))
+
+
+### Features
+
+* enable ESLint plugin in migrate ([d8537fa](https://github.com/NativeScript/nativescript-cli/commit/d8537faa1cc21f2fb6665aa2c136d129c589363a))
+* handle --env <name> flags ([23fe6a3](https://github.com/NativeScript/nativescript-cli/commit/23fe6a3cc9b8f7624fffeb0be39301ebcc234291))
+
+
+
 # [8.0.0](https://github.com/NativeScript/nativescript-cli/compare/v7.2.1...v8.0.0) (2021-03-31)
 
 
