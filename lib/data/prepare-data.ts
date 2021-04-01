@@ -11,10 +11,25 @@ export class PrepareData extends ControllerDataBase {
 	constructor(public projectDir: string, public platform: string, data: any) {
 		super(projectDir, platform, data);
 
+		const env: any = {};
+
+		if (Array.isArray(data.env)) {
+			data.env.forEach((flag: string | object) => {
+				if (typeof flag === "string") {
+					env.env = flag;
+					return;
+				}
+
+				Object.assign(env, flag);
+			});
+		} else {
+			Object.assign(env, data.env);
+		}
+
 		this.release = data.release;
 		this.hmr = data.hmr || data.useHotModuleReload;
 		this.env = {
-			...data.env,
+			...env,
 			hmr: data.hmr || data.useHotModuleReload,
 		};
 		this.watch = data.watch;

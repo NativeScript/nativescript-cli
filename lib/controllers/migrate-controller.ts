@@ -337,7 +337,7 @@ export class MigrateController
 		});
 		if (shouldMigrate) {
 			this.$errors.fail(
-				`The current application is not compatible with NativeScript CLI 7.0.\n\nRun 'ns migrate' to migrate your project to NativeScript 7.\n\nAlternatively you may try running it with '--force' to skip this check.`
+				`The current application is not compatible with NativeScript CLI ${this.$staticConfig.version}.\n\nRun 'ns migrate' to migrate your project to the latest NativeScript version.\n\nAlternatively you may try running it with '--force' to skip this check.`
 			);
 		}
 	}
@@ -1476,6 +1476,18 @@ export class MigrateController
 				packageName: "vue-loader",
 				shouldRemove: true,
 			},
+			{
+				packageName: "babel-loader",
+				shouldRemove: true,
+			},
+			{
+				packageName: "@babel/core",
+				shouldRemove: true,
+			},
+			{
+				packageName: "@babel/preset-env",
+				shouldRemove: true,
+			},
 			// remove any version of vue
 			{
 				packageName: "vue",
@@ -1606,7 +1618,7 @@ export class MigrateController
 		this.spinner.succeed(`Initialized new ${"webpack.config.js".yellow}`);
 
 		const packageJSON = this.$fs.readJson(projectData.projectFilePath);
-		const currentMain = packageJSON.main;
+		const currentMain = packageJSON.main ?? "app.js";
 		const currentMainTS = currentMain.replace(/.js$/, ".ts");
 
 		const appPath = projectData.appDirectoryPath;
@@ -1614,10 +1626,16 @@ export class MigrateController
 		const possibleMains = [
 			`./${appPath}/${currentMain}`,
 			`./${appPath}/${currentMainTS}`,
+			`./${appPath}/main.js`,
+			`./${appPath}/main.ts`,
 			`./app/${currentMain}`,
 			`./app/${currentMainTS}`,
 			`./src/${currentMain}`,
 			`./src/${currentMainTS}`,
+			`./app/main.js`,
+			`./app/main.ts`,
+			`./src/main.js`,
+			`./src/main.ts`,
 		];
 		const replacedMain = possibleMains.find((possibleMain) => {
 			return this.$fs.exists(path.resolve(projectDir, possibleMain));
@@ -1640,16 +1658,29 @@ export class MigrateController
 	}
 
 	private async runESLint(projectDir: string) {
-		// todo: run @nativescript/eslint-plugin on project folder to update imports
-		// const childProcess = injector.resolve('childProcess') as IChildProcess;
-		// const args = [
-		//   'npx',
-		//   '--package typescript',
-		//   '--package @nativescript/eslint-plugin',
-		//   '-c eslint-plugin',
-		//   projectDir
-		// ]
-		// await childProcess.exec(args.join(' '))
+		this.spinner.start(`Running ESLint fixes`);
+		try {
+			const childProcess = injector.resolve("childProcess") as IChildProcess;
+			const npxVersion = await childProcess.exec("npx -v");
+
+			const npxFlags = [];
+
+			if (semver.gt(semver.coerce(npxVersion), "7.0.0")) {
+				npxFlags.push("-y");
+			}
+
+			const args = [
+				"npx",
+				...npxFlags,
+				"@nativescript/eslint-plugin",
+				projectDir,
+			];
+			await childProcess.exec(args.join(" "));
+			this.spinner.succeed(`Applied ESLint fixes`);
+		} catch (err) {
+			this.spinner.fail(`Failed to apply ESLint fixes`);
+			this.$logger.trace("Failed to apply ESLint fixes. Error is:", err);
+		}
 	}
 }
 
