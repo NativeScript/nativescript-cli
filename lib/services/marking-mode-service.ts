@@ -14,7 +14,7 @@ const enum MarkingMode {
 }
 
 const MARKING_MODE_PROP = "markingMode";
-const MARKING_MODE_FULL_DEPRECATION_MSG = `In NativeScript 8.0 "${MARKING_MODE_PROP}:${MarkingMode.Full}" is no longer supported.`;
+const MARKING_MODE_FULL_DEPRECATION_MSG = `In the current version of NativeScript "${MARKING_MODE_PROP}:${MarkingMode.Full}" is no longer supported.`;
 
 export class MarkingModeService implements IMarkingModeService {
 	constructor(
