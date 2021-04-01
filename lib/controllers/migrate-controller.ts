@@ -1640,16 +1640,29 @@ export class MigrateController
 	}
 
 	private async runESLint(projectDir: string) {
-		// todo: run @nativescript/eslint-plugin on project folder to update imports
-		// const childProcess = injector.resolve('childProcess') as IChildProcess;
-		// const args = [
-		//   'npx',
-		//   '--package typescript',
-		//   '--package @nativescript/eslint-plugin',
-		//   '-c eslint-plugin',
-		//   projectDir
-		// ]
-		// await childProcess.exec(args.join(' '))
+		this.spinner.start(`Running ESLint fixes`);
+		try {
+			const childProcess = injector.resolve("childProcess") as IChildProcess;
+			const npxVersion = await childProcess.exec("npx -v");
+
+			const npxFlags = [];
+
+			if (semver.gt(semver.coerce(npxVersion), "7.0.0")) {
+				npxFlags.push("-y");
+			}
+
+			const args = [
+				"npx",
+				...npxFlags,
+				"@nativescript/eslint-plugin",
+				projectDir,
+			];
+			await childProcess.exec(args.join(" "));
+			this.spinner.succeed(`Applied ESLint fixes`);
+		} catch (err) {
+			this.spinner.fail(`Failed to apply ESLint fixes`);
+			this.$logger.trace("Failed to apply ESLint fixes. Error is:", err);
+		}
 	}
 }
 
