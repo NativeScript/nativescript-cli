@@ -1606,7 +1606,7 @@ export class MigrateController
 		this.spinner.succeed(`Initialized new ${"webpack.config.js".yellow}`);
 
 		const packageJSON = this.$fs.readJson(projectData.projectFilePath);
-		const currentMain = packageJSON.main;
+		const currentMain = packageJSON.main ?? "app.js";
 		const currentMainTS = currentMain.replace(/.js$/, ".ts");
 
 		const appPath = projectData.appDirectoryPath;
@@ -1614,10 +1614,16 @@ export class MigrateController
 		const possibleMains = [
 			`./${appPath}/${currentMain}`,
 			`./${appPath}/${currentMainTS}`,
+			`./${appPath}/main.js`,
+			`./${appPath}/main.ts`,
 			`./app/${currentMain}`,
 			`./app/${currentMainTS}`,
 			`./src/${currentMain}`,
 			`./src/${currentMainTS}`,
+			`./app/main.js`,
+			`./app/main.ts`,
+			`./src/main.js`,
+			`./src/main.ts`,
 		];
 		const replacedMain = possibleMains.find((possibleMain) => {
 			return this.$fs.exists(path.resolve(projectDir, possibleMain));
