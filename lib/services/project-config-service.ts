@@ -89,7 +89,7 @@ export default {
 			return;
 		}
 		this.$logger.warn(
-			`You are using the deprecated ${CONFIG_NS_FILE_NAME} file. Just be aware that NativeScript 7 has an improved ${CONFIG_FILE_NAME_DISPLAY} file for when you're ready to upgrade this project.`
+			`You are using the deprecated ${CONFIG_NS_FILE_NAME} file. Just be aware that NativeScript 8 has an improved ${CONFIG_FILE_NAME_DISPLAY} file for when you're ready to upgrade this project.`
 		);
 	}
 

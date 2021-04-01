@@ -337,7 +337,7 @@ export class MigrateController
 		});
 		if (shouldMigrate) {
 			this.$errors.fail(
-				`The current application is not compatible with NativeScript CLI 7.0.\n\nRun 'ns migrate' to migrate your project to NativeScript 7.\n\nAlternatively you may try running it with '--force' to skip this check.`
+				`The current application is not compatible with NativeScript CLI 8.0.\n\nRun 'ns migrate' to migrate your project to NativeScript 7.\n\nAlternatively you may try running it with '--force' to skip this check.`
 			);
 		}
 	}
