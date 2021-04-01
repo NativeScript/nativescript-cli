@@ -1476,6 +1476,18 @@ export class MigrateController
 				packageName: "vue-loader",
 				shouldRemove: true,
 			},
+			{
+				packageName: "babel-loader",
+				shouldRemove: true,
+			},
+			{
+				packageName: "@babel/core",
+				shouldRemove: true,
+			},
+			{
+				packageName: "@babel/preset-env",
+				shouldRemove: true,
+			},
 			// remove any version of vue
 			{
 				packageName: "vue",
