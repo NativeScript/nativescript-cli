@@ -16,7 +16,6 @@ import { IAnalyticsService, IFileSystem } from "../lib/common/declarations";
 import { IEventActionData } from "../lib/common/definitions/google-analytics";
 
 const nativeScriptValidatedTemplatePath = "nsValidatedTemplatePath";
-const compatibleTemplateVersion = "1.2.3";
 
 function createTestInjector(
 	configuration: {
@@ -33,6 +32,7 @@ function createTestInjector(
 		exists: (pathToCheck: string) => false,
 		readJson: (pathToFile: string) => configuration.packageJsonContent || {},
 	});
+	injector.register("staticConfig", { version: "8.0.0" });
 
 	class NpmStub extends stubs.NodePackageManagerStub {
 		public async install(
@@ -69,9 +69,6 @@ function createTestInjector(
 			}
 
 			return Promise.resolve(nativeScriptValidatedTemplatePath);
-		}
-		async getLatestCompatibleVersionSafe(packageName: string): Promise<string> {
-			return compatibleTemplateVersion;
 		}
 	}
 
@@ -275,7 +272,7 @@ describe("project-templates-service", () => {
 				{
 					name: "is correct when scoped package name without version is passed",
 					templateName: "@nativescript/vue-template",
-					expectedVersion: compatibleTemplateVersion,
+					expectedVersion: "^8.0.0",
 					expectedTemplateName: "@nativescript/vue-template",
 				},
 				{

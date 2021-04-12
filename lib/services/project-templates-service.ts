@@ -1,4 +1,5 @@
 import * as path from "path";
+import * as semver from "semver";
 import * as constants from "../constants";
 import { performanceLog } from "../common/decorators";
 import {
@@ -9,6 +10,7 @@ import {
 import {
 	IPackageInstallationManager,
 	INodePackageManager,
+	IStaticConfig,
 } from "../declarations";
 import {
 	IFileSystem,
@@ -26,7 +28,8 @@ export class ProjectTemplatesService implements IProjectTemplatesService {
 		private $logger: ILogger,
 		private $packageInstallationManager: IPackageInstallationManager,
 		private $pacoteService: IPacoteService,
-		private $packageManager: INodePackageManager
+		private $packageManager: INodePackageManager,
+		private $staticConfig: IStaticConfig
 	) {}
 
 	@performanceLog()
@@ -45,11 +48,11 @@ export class ProjectTemplatesService implements IProjectTemplatesService {
 			constants.RESERVED_TEMPLATE_NAMES[templateNameParts.name] ||
 			templateNameParts.name;
 
-		const version =
-			templateNameParts.version ||
-			(await this.$packageInstallationManager.getLatestCompatibleVersionSafe(
-				templateValue
-			));
+		const version = await this.getDesiredVersion(
+			templateValue,
+			templateNameParts.version
+		);
+
 		const fullTemplateName = await this.$packageManager.getPackageFullName({
 			name: templateValue,
 			version: version,
@@ -113,6 +116,26 @@ export class ProjectTemplatesService implements IProjectTemplatesService {
 		} catch (err) {
 			this.$logger.trace(
 				`Unable to get template name to be tracked, error is: ${err}`
+			);
+		}
+	}
+
+	private async getDesiredVersion(
+		templateName: string,
+		defaultVersion?: string
+	) {
+		if (defaultVersion) {
+			return defaultVersion;
+		}
+
+		try {
+			const cliMajorVersion = semver.parse(
+				semver.coerce(this.$staticConfig.version)
+			).major;
+			return `^${cliMajorVersion}.0.0`;
+		} catch (err) {
+			return this.$packageInstallationManager.getLatestCompatibleVersionSafe(
+				templateName
 			);
 		}
 	}
