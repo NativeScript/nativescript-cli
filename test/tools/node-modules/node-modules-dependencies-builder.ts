@@ -790,6 +790,46 @@ describe("nodeModulesDependenciesBuilder", () => {
 
 				assert.deepStrictEqual(actualResult, expectedResult);
 			});
+
+			it("ignoring dependencies", async () => {
+				// The test validates the following dependency tree, when npm 3+ is used.
+				// <project dir>
+				// ├── firstPackage@1.0.0
+				// ├── secondPackage@1.1.0
+				// └── thirdPackage@1.2.0
+
+				const rootDeps: IDependencyInfo[] = [
+					generateDependency(firstPackage, "1.0.0", 0, null),
+					generateDependency(secondPackage, "1.1.0", 0, null),
+					generateDependency(thirdPackage, "1.2.0", 0, null),
+				];
+
+				const nodeModulesDependenciesBuilder = generateTest(rootDeps);
+				const actualResult = await nodeModulesDependenciesBuilder.getProductionDependencies(
+					pathToProject, [firstPackage]
+				);
+
+				const expectedResult: IDependencyData[] = [
+					getNodeModuleInfoForExpecteDependency(
+						secondPackage,
+						0,
+						null,
+						null,
+						null,
+						"1.1.0"
+					),
+					getNodeModuleInfoForExpecteDependency(
+						thirdPackage,
+						0,
+						null,
+						null,
+						null,
+						"1.2.0"
+					),
+				];
+
+				assert.deepStrictEqual(actualResult, expectedResult);
+			});
 		});
 	});
 });
