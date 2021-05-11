@@ -238,7 +238,7 @@ export class MigrateController
 		},
 		{
 			packageName: "@nativescript/unit-test-runner",
-			minVersion: "1.0.0",
+			minVersion: "2.0.0",
 			async shouldMigrateAction(
 				dependency: IMigrationDependency,
 				projectData: IProjectData,
