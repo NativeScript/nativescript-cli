@@ -344,7 +344,7 @@ To use the locally built CLI instead `tns` you can call `PATH_TO_CLI_FOLDER/bin/
 Get Help
 ===
 
-Please, use [github issues](https://github.com/NativeScript/nativescript-cli/issues) strictly for [reporting bugs](CONTRIBUTING.md#report-an-issue) or [requesting features](CONTRIBUTING.md#request-a-feature). For general NativeScript questions and support, check out [Stack Overflow](https://stackoverflow.com/questions/tagged/nativescript) or ask our experts in the [NativeScript community Slack channel](https://www.nativescript.org/slack-invitation-form).
+Please, use [github issues](https://github.com/NativeScript/nativescript-cli/issues) strictly for [reporting bugs](CONTRIBUTING.md#report-an-issue) or [requesting features](CONTRIBUTING.md#request-a-feature). For general NativeScript questions and support, check out [Stack Overflow](https://stackoverflow.com/questions/tagged/nativescript) or ask our experts in the [NativeScript community Discord channel](https://nativescript.org/discord).
 
 [Back to Top][1]
 
