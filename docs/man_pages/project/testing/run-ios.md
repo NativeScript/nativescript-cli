@@ -47,7 +47,7 @@ Start an emulator with specified device identifier and sdk | `$ tns run ios [--d
 
 ### Environment Variables
 
-* `IOS_SIMULATOR_RUN_ARGS` - specifies extra command line arguments to pass to the application when running on the iOS Simulator. E.g. `$ IOS_SIMULATOR_RUN_ARGS=-FIRDebugEnabled tns device run ios`.
+* `IOS_SIMULATOR_RUN_ARGS` - specifies extra command line arguments to pass to the application when running on the iOS Simulator. E.g. `$ IOS_SIMULATOR_RUN_ARGS=-FIRDebugEnabled ns device run ios`.
 
 <% } %>
 <% if(isHtml) { %>
