@@ -20,7 +20,7 @@ export class NodeModulesDependenciesBuilder
 	implements INodeModulesDependenciesBuilder {
 	public constructor(private $fs: IFileSystem) {}
 
-	public getProductionDependencies(projectPath: string): IDependencyData[] {
+	public getProductionDependencies(projectPath: string, ignore?:string[]): IDependencyData[] {
 		const rootNodeModulesPath = path.join(
 			projectPath,
 			NODE_MODULES_FOLDER_NAME
@@ -83,7 +83,9 @@ export class NodeModulesDependenciesBuilder
 				resolvedDependencies.push(resolvedDependency);
 			}
 		}
-
+		if (ignore && ignore.length > 0) {
+			return resolvedDependencies.filter(d => ignore.indexOf(d.name) === -1);
+		}
 		return resolvedDependencies;
 	}
 
