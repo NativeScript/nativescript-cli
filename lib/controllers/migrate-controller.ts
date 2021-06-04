@@ -1287,6 +1287,7 @@ export class MigrateController
 			const karmaConf = _.template(karmaConfTemplate)({
 				frameworks,
 				testFiles,
+				basePath: projectData.getAppDirectoryRelativePath(),
 			});
 			this.$fs.writeFile(
 				path.join(projectData.projectDir, constants.KARMA_CONFIG_NAME),
