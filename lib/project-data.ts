@@ -257,10 +257,11 @@ export class ProjectData implements IProjectData {
 			return this.nsConfig[constants.CONFIG_NS_APP_RESOURCES_ENTRY];
 		}
 
-		return path.join(
-			this.getAppDirectoryRelativePath(),
-			constants.APP_RESOURCES_FOLDER_NAME
-		);
+		return constants.APP_RESOURCES_FOLDER_NAME;
+		// return path.join(
+		// 	this.getAppDirectoryRelativePath(),
+		// 	constants.APP_RESOURCES_FOLDER_NAME
+		// );
 	}
 
 	public getAppDirectoryPath(projectDir?: string): string {
