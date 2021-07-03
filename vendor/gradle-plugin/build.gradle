@@ -46,20 +46,8 @@ android {
 }
 
 dependencies {
-    def supportVer = "28.0.0"
-    if (project.hasProperty("supportVersion")) {
-        supportVer = supportVersion
-    }
-    compileOnly "com.android.support:support-v4:$supportVer"
-    compileOnly "com.android.support:appcompat-v7:$supportVer"
-
-    configurations.all {
-       resolutionStrategy.eachDependency { DependencyResolveDetails details ->
-           if (details.requested.group == "com.android.support" && !details.requested.name.startsWith("multidex")) {
-               details.useVersion supportVer
-           }
-       }
-    }
+    def androidXAppCompatVersion =  project.hasProperty("androidXAppCompatVersion") ? project.androidXAppCompatVersion : "1.2.0"
+	compile "androidx.appcompat:appcompat:$androidXAppCompatVersion"
 }
 
 def getAppResourcesPath() {
