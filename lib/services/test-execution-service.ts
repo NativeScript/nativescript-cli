@@ -139,13 +139,20 @@ export class TestExecutionService implements ITestExecutionService {
 		projectData: IProjectData
 	): Promise<boolean> {
 		let canStartKarmaServer = true;
-		const requiredDependencies = ["karma", "@nativescript/unit-test-runner"];
+		const requiredDependencies = ["@nativescript/unit-test-runner"]; // we need @nativescript/unit-test-runner at the local level because of hooks!
 		_.each(requiredDependencies, (dep) => {
 			if (!projectData.dependencies[dep] && !projectData.devDependencies[dep]) {
 				canStartKarmaServer = false;
 				return;
 			}
 		});
+		try {
+			require.resolve("karma/package.json", {
+				paths: [projectData.projectDir],
+			});
+		} catch (ignore) {
+			canStartKarmaServer = false;
+		}
 
 		return canStartKarmaServer;
 	}

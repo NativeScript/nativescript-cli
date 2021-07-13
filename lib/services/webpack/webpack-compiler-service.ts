@@ -377,14 +377,16 @@ export class WebpackCompilerService
 		envData.skipSnapshotTools =
 			prepareData.nativePrepare && prepareData.nativePrepare.skipNativePrepare;
 
-		if (
-			prepareData.env &&
-			(prepareData.env.sourceMap === false ||
-				prepareData.env.sourceMap === "false")
-		) {
-			delete envData.sourceMap;
-		} else if (!prepareData.release) {
-			envData.sourceMap = true;
+		// only set sourceMap if not explicitly set through a flag
+		if (typeof prepareData?.env?.sourceMap === "undefined") {
+			if (!prepareData.release) {
+				envData.sourceMap = true;
+			}
+		}
+
+		// convert string to boolean
+		if (envData.sourceMap === "true" || envData.sourceMap === "false") {
+			envData.sourceMap = envData.sourceMap === "true";
 		}
 
 		return envData;

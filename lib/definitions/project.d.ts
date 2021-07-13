@@ -153,6 +153,7 @@ interface IProjectData extends ICreateProjectData {
 	projectId: string;
 	projectIdentifiers?: Mobile.IProjectIdentifier;
 	dependencies: any;
+	ignoredDependencies?: string[];
 	devDependencies: IStringDictionary;
 	appDirectoryPath: string;
 	appResourcesDirectoryPath: string;

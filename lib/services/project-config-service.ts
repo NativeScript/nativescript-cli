@@ -140,7 +140,7 @@ export default {
 			this.$logger.trace(
 				"Project Config Service using legacy configuration..."
 			);
-			if (!this.forceUsingLegacyConfig) {
+			if (!this.forceUsingLegacyConfig && info.hasNSConfig) {
 				this.warnUsingLegacyNSConfig();
 			}
 			return this.fallbackToLegacyNSConfig(info);
@@ -329,31 +329,36 @@ export default {
 			// ignore if the file doesn't exist
 		}
 
-		const packageJson = this.$fs.readJson(
-			path.join(this.projectHelper.projectDir, "package.json")
-		);
+		try {
+			const packageJson = this.$fs.readJson(
+				path.join(this.projectHelper.projectDir, "package.json")
+			);
 
-		// add app id to additionalData for backwards compatibility
-		if (
-			!NSConfig.id &&
-			packageJson &&
-			packageJson.nativescript &&
-			packageJson.nativescript.id
-		) {
-			const ids = packageJson.nativescript.id;
-			if (typeof ids === "string") {
-				additionalData.push({
-					id: packageJson.nativescript.id,
-				});
-			} else if (typeof ids === "object") {
-				for (const platform of Object.keys(ids)) {
+			// add app id to additionalData for backwards compatibility
+			if (
+				!NSConfig.id &&
+				packageJson &&
+				packageJson.nativescript &&
+				packageJson.nativescript.id
+			) {
+				const ids = packageJson.nativescript.id;
+				if (typeof ids === "string") {
 					additionalData.push({
-						[platform]: {
-							id: packageJson.nativescript.id[platform],
-						},
+						id: packageJson.nativescript.id,
 					});
+				} else if (typeof ids === "object") {
+					for (const platform of Object.keys(ids)) {
+						additionalData.push({
+							[platform]: {
+								id: packageJson.nativescript.id[platform],
+							},
+						});
+					}
 				}
 			}
+		} catch (err) {
+			this.$logger.trace("failed to read package.json data for config", err);
+			// ignore if the file doesn't exist
 		}
 
 		return _.defaultsDeep({}, ...additionalData, NSConfig);

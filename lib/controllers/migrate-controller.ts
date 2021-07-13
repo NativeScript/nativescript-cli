@@ -237,8 +237,19 @@ export class MigrateController
 			migrateAction: this.migrateNativeScriptSvelte.bind(this),
 		},
 		{
+			packageName: "nativescript-unit-test-runner",
+			replaceWith: "@nativescript/unit-test-runner",
+			shouldRemove: true,
+			isDev: true,
+			async shouldMigrateAction() {
+				return true;
+			},
+			migrateAction: this.migrateUnitTestRunner.bind(this),
+		},
+		{
 			packageName: "@nativescript/unit-test-runner",
 			minVersion: "1.0.0",
+			desiredVersion: "~2.0.0",
 			async shouldMigrateAction(
 				dependency: IMigrationDependency,
 				projectData: IProjectData,
@@ -1123,7 +1134,11 @@ export class MigrateController
 				this.$errors.fail("Failed to find replacement dependency.");
 			}
 
-			const version = dependency.desiredVersion ?? dependency.minVersion;
+			const version =
+				replacementDep.desiredVersion ??
+				replacementDep.minVersion ??
+				dependency.desiredVersion ??
+				dependency.minVersion;
 
 			// add replacement dependency
 			this.$pluginsService.addToPackageJson(
@@ -1287,6 +1302,7 @@ export class MigrateController
 			const karmaConf = _.template(karmaConfTemplate)({
 				frameworks,
 				testFiles,
+				basePath: projectData.getAppDirectoryRelativePath(),
 			});
 			this.$fs.writeFile(
 				path.join(projectData.projectDir, constants.KARMA_CONFIG_NAME),

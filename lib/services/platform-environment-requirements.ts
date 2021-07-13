@@ -178,7 +178,7 @@ export class PlatformEnvironmentRequirements
 				platform ? `build for ${platform}` : "build"
 			}, verify that your environment is configured according to the system requirements described at ${
 				this.$staticConfig.SYS_REQUIREMENTS_LINK
-			}. If you have any questions, check Stack Overflow: 'https://stackoverflow.com/questions/tagged/nativescript' and our public Slack channel: 'https://nativescriptcommunity.slack.com/'`
+			}. If you have any questions, check Stack Overflow: 'https://stackoverflow.com/questions/tagged/nativescript' and our public Discord channel: 'https://nativescript.org/discord/'`
 		);
 	}
 
