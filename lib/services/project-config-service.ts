@@ -89,7 +89,7 @@ export default {
 			return;
 		}
 		this.$logger.warn(
-			`You are using the deprecated ${CONFIG_NS_FILE_NAME} file. Just be aware that NativeScript 7 has an improved ${CONFIG_FILE_NAME_DISPLAY} file for when you're ready to upgrade this project.`
+			`You are using the deprecated ${CONFIG_NS_FILE_NAME} file. Just be aware that NativeScript now has an improved ${CONFIG_FILE_NAME_DISPLAY} file for when you're ready to upgrade this project.`
 		);
 	}
 
@@ -167,8 +167,8 @@ export default {
 	}
 
 	@exported("projectConfigService")
-	public getValue(key: string): any {
-		return _.get(this.readConfig(), key);
+	public getValue(key: string, defaultValue?: any): any {
+		return _.get(this.readConfig(), key, defaultValue);
 	}
 
 	@exported("projectConfigService")
@@ -372,7 +372,7 @@ export default {
 
 		if (
 			runtimePackage.version &&
-			semver.gte(runtimePackage.version, "7.0.0-rc.5")
+			semver.gte(semver.coerce(runtimePackage.version), "7.0.0-rc.5")
 		) {
 			// runtimes >= 7.0.0-rc.5 support passing appPath and appResourcesPath through gradle project flags
 			// so writing an nsconfig is not necessary.

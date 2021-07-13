@@ -57,11 +57,19 @@ export class CocoaPodsService implements ICocoaPodsService {
 		xcodeProjPath: string
 	): Promise<ISpawnResult> {
 		this.$logger.info("Installing pods...");
-		const podTool = this.$config.USE_POD_SANDBOX ? "sandbox-pod" : "pod";
+		let podTool = this.$config.USE_POD_SANDBOX ? "sandbox-pod" : "pod";
+		const args = ["install"];
+
+		if (process.platform === "darwin" && process.arch === "arm64") {
+			this.$logger.trace("Running on arm64 - running pod through rosetta2.");
+			args.unshift(podTool);
+			args.unshift("-x86_64");
+			podTool = "arch";
+		}
 		// cocoapods print a lot of non-error information on stderr. Pipe the `stderr` to `stdout`, so we won't polute CLI's stderr output.
 		const podInstallResult = await this.$childProcess.spawnFromEvent(
 			podTool,
-			["install"],
+			args,
 			"close",
 			{ cwd: projectRoot, stdio: ["pipe", process.stdout, process.stdout] },
 			{ throwError: false }

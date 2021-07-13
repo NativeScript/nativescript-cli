@@ -1,3 +1,44 @@
+## [8.0.1](https://github.com/NativeScript/nativescript-cli/compare/v8.0.0...v8.0.1) (2021-04-01)
+
+
+### Bug Fixes
+
+* compat message updates ([7c475e6](https://github.com/NativeScript/nativescript-cli/commit/7c475e6de9c11e0cf428ee83390db0db89bf4249))
+* empty main fields during migrate ([7403e4d](https://github.com/NativeScript/nativescript-cli/commit/7403e4d16343df110d32d02653c188b8ac67978b))
+
+
+### Features
+
+* enable ESLint plugin in migrate ([d8537fa](https://github.com/NativeScript/nativescript-cli/commit/d8537faa1cc21f2fb6665aa2c136d129c589363a))
+* handle --env <name> flags ([23fe6a3](https://github.com/NativeScript/nativescript-cli/commit/23fe6a3cc9b8f7624fffeb0be39301ebcc234291))
+
+
+
+# [8.0.0](https://github.com/NativeScript/nativescript-cli/compare/v7.2.1...v8.0.0) (2021-03-31)
+
+
+### Bug Fixes
+
+* handle caret and tilde in runtime versions ([#5501](https://github.com/NativeScript/nativescript-cli/issues/5501)) ([04eba0d](https://github.com/NativeScript/nativescript-cli/commit/04eba0deb50637a6402ee2bfb14243aad597ce0f))
+
+
+### Features
+
+* ns8 ([#5508](https://github.com/NativeScript/nativescript-cli/issues/5508)) ([10a2d2e](https://github.com/NativeScript/nativescript-cli/commit/10a2d2e3b4b6a6856b1f1898dbf9b180c0dd649b))
+* platform specific doctor ([#5505](https://github.com/NativeScript/nativescript-cli/issues/5505)) ([ff04446](https://github.com/NativeScript/nativescript-cli/commit/ff04446906f8d2b16d3d92e40ce2e97dc3aa98eb))
+
+
+
+## [7.2.1](https://github.com/NativeScript/nativescript-cli/compare/v7.2.0...v7.2.1) (2021-03-11)
+
+
+### Bug Fixes
+
+* npm7 peerDependecies ([5e2688f](https://github.com/NativeScript/nativescript-cli/commit/5e2688fd38dae9cd293e08afaa67018dc0d271c2))
+* ns update default to latest version ([#5497](https://github.com/NativeScript/nativescript-cli/issues/5497)) ([04202dc](https://github.com/NativeScript/nativescript-cli/commit/04202dcb8f828939205ccf58fb8121304e21d61a))
+
+
+
 # [7.2.0](https://github.com/NativeScript/nativescript-cli/compare/v7.1.2...v7.2.0) (2021-02-05)
 
 

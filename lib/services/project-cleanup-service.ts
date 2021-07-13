@@ -27,6 +27,8 @@ export class ProjectCleanupService implements IProjectCleanupService {
 	}
 
 	public async cleanPath(pathToClean: string): Promise<void> {
+		this.spinner.clear();
+
 		if (!pathToClean || pathToClean.trim().length === 0) {
 			this.$logger.trace("cleanPath called with no pathToClean.");
 			return;
@@ -38,7 +40,6 @@ export class ProjectCleanupService implements IProjectCleanupService {
 			filePath
 		)}`.yellow;
 
-		this.spinner.start(`Cleaning ${displayPath}`);
 		this.$logger.trace(`Trying to clean '${filePath}'`);
 
 		if (this.$fs.exists(filePath)) {
@@ -46,25 +47,18 @@ export class ProjectCleanupService implements IProjectCleanupService {
 
 			if (stat.isDirectory()) {
 				this.$logger.trace(`Path '${filePath}' is a directory, deleting.`);
-
 				this.$fs.deleteDirectorySafe(filePath);
-
-				this.spinner.text = `Cleaned directory ${displayPath}`;
-				this.spinner.succeed();
+				this.spinner.succeed(`Cleaned directory ${displayPath}`);
 			} else {
 				this.$logger.trace(`Path '${filePath}' is a file, deleting.`);
-
 				this.$fs.deleteFile(filePath);
-
-				this.spinner.text = `Cleaned file ${displayPath}`;
-				this.spinner.succeed();
+				this.spinner.succeed(`Cleaned file ${displayPath}`);
 			}
 			return;
 		}
-
 		this.$logger.trace(`Path '${filePath}' not found, skipping.`);
-		this.spinner.text = `Skipping ${displayPath} because it doesn't exist.`;
-		this.spinner.info();
+		// this.spinner.text = `Skipping ${displayPath} because it doesn't exist.`;
+		// this.spinner.info();
 	}
 }
 

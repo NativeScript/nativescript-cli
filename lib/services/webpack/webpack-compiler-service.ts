@@ -28,6 +28,19 @@ import {
 import { ICleanupService } from "../../definitions/cleanup-service";
 import { injector } from "../../common/yok";
 
+// todo: move out of here
+interface IWebpackMessage<T = any> {
+	type: "compilation" | "hmr-status";
+	version?: number;
+	hash?: string;
+	data?: T;
+}
+
+interface IWebpackCompilation {
+	emittedAssets: string[];
+	staleAssets: string[];
+}
+
 export class WebpackCompilerService
 	extends EventEmitter
 	implements IWebpackCompilerService {
@@ -44,7 +57,7 @@ export class WebpackCompilerService
 		private $mobileHelper: Mobile.IMobileHelper,
 		private $cleanupService: ICleanupService,
 		private $packageManager: IPackageManager,
-		private $packageInstallationManager: IPackageInstallationManager
+		private $packageInstallationManager: IPackageInstallationManager // private $sharedEventBus: ISharedEventBus
 	) {
 		super();
 	}
@@ -71,6 +84,35 @@ export class WebpackCompilerService
 
 				childProcess.on("message", (message: string | IWebpackEmitMessage) => {
 					this.$logger.trace("Message from webpack", message);
+
+					// if we are on webpack5 - we handle HMR in a  slightly different way
+					if (
+						typeof message === "object" &&
+						"version" in message &&
+						"type" in message
+					) {
+						// first compilation can be ignored because it will be synced regardless
+						// handling it here would trigger 2 syncs
+						if (isFirstWebpackWatchCompilation) {
+							isFirstWebpackWatchCompilation = false;
+							resolve(childProcess);
+							return;
+						}
+
+						// if ((message as IWebpackMessage).type === "hmr-status") {
+						// 	// we pass message through our event-bus to be handled wherever needed
+						// 	// in this case webpack-hmr-status-service listens for this event
+						// 	this.$sharedEventBus.emit("webpack:hmr-status", message);
+						// 	return;
+						// }
+
+						return this.handleHMRMessage(
+							message as IWebpackMessage<IWebpackCompilation>,
+							platformData,
+							projectData,
+							prepareData
+						);
+					}
 
 					if (message === "Webpack compilation complete.") {
 						this.$logger.info("Webpack build done!");
@@ -247,7 +289,7 @@ export class WebpackCompilerService
 	): Promise<child_process.ChildProcess> {
 		if (!this.$fs.exists(projectData.webpackConfigPath)) {
 			this.$errors.fail(
-				`The webpack configuration file ${projectData.webpackConfigPath} does not exist. Ensure you have such file or set correct path in ${CONFIG_FILE_NAME_DISPLAY}`
+				`The webpack configuration file ${projectData.webpackConfigPath} does not exist. Ensure the file exists, or update the path in ${CONFIG_FILE_NAME_DISPLAY}.`
 			);
 		}
 
@@ -275,16 +317,11 @@ export class WebpackCompilerService
 
 		const args = [
 			...additionalNodeArgs,
-			path.join(
-				projectData.projectDir,
-				"node_modules",
-				"webpack",
-				"bin",
-				"webpack.js"
-			),
+			this.getWebpackExecutablePath(projectData),
+			this.isWebpack5(projectData) ? `build` : null,
 			`--config=${projectData.webpackConfigPath}`,
 			...envParams,
-		];
+		].filter(Boolean);
 
 		if (prepareData.watch) {
 			args.push("--watch");
@@ -473,5 +510,109 @@ export class WebpackCompilerService
 			delete this.webpackProcesses[platform];
 		}
 	}
+
+	private handleHMRMessage(
+		message: IWebpackMessage,
+		platformData: IPlatformData,
+		projectData: IProjectData,
+		prepareData: IPrepareData
+	) {
+		// handle new webpack hmr packets
+		this.$logger.trace("Received message from webpack process:", message);
+
+		if (message.type !== "compilation") {
+			return;
+		}
+
+		this.$logger.trace("Webpack build done!");
+
+		const files = message.data.emittedAssets.map((asset: string) =>
+			path.join(platformData.appDestinationDirectoryPath, "app", asset)
+		);
+		const staleFiles = message.data.staleAssets.map((asset: string) =>
+			path.join(platformData.appDestinationDirectoryPath, "app", asset)
+		);
+
+		// console.log({ staleFiles });
+
+		// extract last hash from emitted filenames
+		const lastHash = (() => {
+			const fileWithLastHash = files.find((fileName: string) =>
+				fileName.endsWith("hot-update.js")
+			);
+
+			if (!fileWithLastHash) {
+				return null;
+			}
+			const matches = fileWithLastHash.match(/\.(.+).hot-update\.js/);
+
+			if (matches) {
+				return matches[1];
+			}
+		})();
+
+		if (!files.length) {
+			// ignore compilations if no new files are emitted
+			return;
+		}
+
+		this.emit(WEBPACK_COMPILATION_COMPLETE, {
+			files,
+			staleFiles,
+			hasOnlyHotUpdateFiles: prepareData.hmr,
+			hmrData: {
+				hash: lastHash || message.hash,
+				fallbackFiles: [],
+			},
+			platform: platformData.platformNameLowerCase,
+		});
+	}
+
+	private getWebpackExecutablePath(projectData: IProjectData): string {
+		if (this.isWebpack5(projectData)) {
+			const packagePath = require.resolve(
+				"@nativescript/webpack/package.json",
+				{
+					paths: [projectData.projectDir],
+				}
+			);
+
+			return path.resolve(
+				packagePath.replace("package.json", ""),
+				"dist",
+				"bin",
+				"index.js"
+			);
+		}
+
+		return path.join(
+			projectData.projectDir,
+			"node_modules",
+			"webpack",
+			"bin",
+			"webpack.js"
+		);
+	}
+
+	private isWebpack5(projectData: IProjectData): boolean {
+		try {
+			const packagePath = require.resolve(
+				"@nativescript/webpack/package.json",
+				{
+					paths: [projectData.projectDir],
+				}
+			);
+			const ver = semver.coerce(require(packagePath).version);
+
+			if (semver.satisfies(ver, ">= 5.0.0")) {
+				return true;
+			}
+		} catch (ignore) {
+			//
+		}
+
+		return false;
+	}
 }
+
 injector.register("webpackCompilerService", WebpackCompilerService);

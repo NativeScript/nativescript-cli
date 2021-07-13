@@ -171,7 +171,9 @@ injector.requireCommand(
 	"dev-generate-messages",
 	"./commands/generate-messages"
 );
-injector.requireCommand("doctor", "./commands/doctor");
+injector.requireCommand("doctor|*all", "./commands/doctor");
+injector.requireCommand("doctor|ios", "./commands/doctor");
+injector.requireCommand("doctor|android", "./commands/doctor");
 
 injector.requireCommand("proxy|*get", "./commands/proxy/proxy-get");
 injector.requireCommand("proxy|set", "./commands/proxy/proxy-set");

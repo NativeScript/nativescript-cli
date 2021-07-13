@@ -953,19 +953,19 @@ interface IVersionsService {
 	 * Gets versions information about nativescript runtimes.
 	 * @return {Promise<IVersionInformation[]>} The version information.
 	 */
-	getRuntimesVersions(): Promise<IVersionInformation[]>;
+	getRuntimesVersions(platform?: string): Promise<IVersionInformation[]>;
 
 	/**
 	 * Gets versions information about all nativescript components.
 	 * @return {Promise<IVersionInformation[]>} The version information.
 	 */
-	getAllComponentsVersions(): Promise<IVersionInformation[]>;
+	getAllComponentsVersions(platform?: string): Promise<IVersionInformation[]>;
 
 	/**
 	 * Checks version information about the nativescript components and prints versions information.
 	 * @return {Promise<void>}
 	 */
-	printVersionsInformation(): Promise<void>;
+	printVersionsInformation(platform?: string): Promise<void>;
 }
 
 /**
@@ -1250,3 +1250,5 @@ interface IWatchIgnoreListService {
 interface INpmConfigService {
 	getConfig(): IDictionary<any>;
 }
+
+interface ISharedEventBus extends NodeJS.EventEmitter {}

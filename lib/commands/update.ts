@@ -61,7 +61,7 @@ export class UpdateCommand implements ICommand {
 				this.$devicePlatformsConstants.Android,
 				this.$devicePlatformsConstants.iOS,
 			],
-			allowInvalidVersions: true,
+			loose: true,
 		});
 
 		if (shouldMigrate) {
