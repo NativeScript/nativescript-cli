@@ -222,7 +222,7 @@ export class Options {
 			},
 			appleSessionBase64: { type: OptionType.String, hasSensitiveValue: true },
 			jar: { type: OptionType.String, hasSensitiveValue: true },
-			aar: { type: OptionType.Boolean, hasSensitiveValue: false },
+			aar: { type: OptionType.String, hasSensitiveValue: true },
 			filter: { type: OptionType.String, hasSensitiveValue: true },
 		};
 	}

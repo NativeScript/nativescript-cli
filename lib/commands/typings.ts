@@ -54,9 +54,7 @@ Rename classes.jar if necessary
 
 ns typings android --jar classes.jar --jar dependency-of-classes-jar.jar
 			`);
-		}
-
-		if (!this.$options.jar) {
+		} else if (!this.$options.jar) {
 			return this.$logger.warn(
 				"No .jar file specified. Please specify a .jar file with --jar <Jar>."
 			);

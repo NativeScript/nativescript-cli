@@ -7,13 +7,13 @@ position: 25
 
 ### Description
 
-Generate ios & android typings by default (respecting platform support, so no ios typings generated on windows/linux machines)
+Generate iOS & Android typings by default (respecting platform support, so no ios typings generated on windows/linux machines)
 
 ### Commands
 
 Usage | Synopsis
 ---|---
-Generate typings to Android | `$ ns typings android [--jar <Jar1> --jar <Jar2>] [--aar] [--copy-to <Path>]`
+Generate typings to Android | `$ ns typings android [--jar <Jar1> --jar <Jar2>] [--aar <Aar1>] [--copy-to <Path>]`
 Generate typings to iOS | `$ ns typings ios [--filter <Filter>] [--copy-to <Path>]`
 
 ### Options
