@@ -13,15 +13,16 @@ Generate ios & android typings by default (respecting platform support, so no io
 
 Usage | Synopsis
 ---|---
-Generate typings | `$ ns typings <Platform>`
+Generate typings to Android | `$ ns typings android [--jar <Jar1> --jar <Jar2>] [--aar] [--copy-to <Path>]`
+Generate typings to iOS | `$ ns typings ios [--filter <Filter>] [--copy-to <Path>]`
 
 ### Options
 
-* `--jar` - jar (android only)
-* `--aar` - aar (android only)
-* `--filter` - filter (ios only)
+* `--jar` - Path to jar file to generate typings for (Supports multiple by passing them individually) (Android only)
+* `--aar` - Path to aar file to generate typings for (Currently unsupported) (Android only)
+* `--filter` - Regex to filter typings (Currently unsupported) (iOS only)
 
-* `--copy-to` - Copy generated typings to target
+* `--copy-to` - Copy generated typings to the specified folder
 
 <% if((isConsole && isMacOS) || isHtml) { %>### Arguments
 `<Platform>` is the target mobile platform for which you want to generate typings. You can set the following target platforms:
