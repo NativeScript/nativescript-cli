@@ -7,7 +7,7 @@ position: 25
 
 ### Description
 
-Generate ios & android by default (respecting platform support, so no ios typings generated on windows/linux machines)
+Generate ios & android typings by default (respecting platform support, so no ios typings generated on windows/linux machines)
 
 ### Commands
 
@@ -17,9 +17,10 @@ Generate typings | `$ ns typings <Platform>`
 
 ### Options
 
-* `--jar` - jar
-* `--aar` - aar
-* `--filter` - filter
+* `--jar` - jar (android only)
+* `--aar` - aar (android only)
+* `--filter` - filter (ios only)
+
 * `--copy-to` - Copy generated typings to target
 
 <% if((isConsole && isMacOS) || isHtml) { %>### Arguments

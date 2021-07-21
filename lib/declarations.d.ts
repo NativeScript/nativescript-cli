@@ -581,7 +581,7 @@ interface IAndroidBundleOptions {
 
 interface ITypingsOptions {
 	jar: string;
-	aar: string;
+	aar: boolean;
 	filter: string;
 }
 

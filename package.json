@@ -39,7 +39,7 @@
     "prepack": "grunt prepare",
     "postpack": "grunt set_dev_ga_id",
     "mocha": "mocha",
-    "tsc": "tsc",
+    "tsc": "tsc --watch",
     "tslint": "tslint -p tsconfig.json",
     "test-watch": "node ./dev/tsc-to-mocha-watch.js",
     "tslint-fix": "tslint -p tsconfig.json --fix",
