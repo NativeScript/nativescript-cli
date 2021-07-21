@@ -13,7 +13,7 @@ import { IOSProvisionService } from "./ios-provision-service";
 import { IOSEntitlementsService } from "./ios-entitlements-service";
 import { IOSBuildData } from "../data/build-data";
 import { IOSPrepareData } from "../data/prepare-data";
-import { BUILD_XCCONFIG_FILE_NAME, IosProjectConstants } from "../constants";
+import { BUILD_XCCONFIG_FILE_NAME, CONFIG_FILE_NAME_DISPLAY, IosProjectConstants } from "../constants";
 import { hook } from "../common/helpers";
 import {
 	IPlatformData,
@@ -1489,7 +1489,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			infoPlist.CFBundleIdentifier !== mergedPlist.CFBundleIdentifier
 		) {
 			this.$logger.warn(
-				"[WARNING]: The CFBundleIdentifier key inside the 'Info.plist' will be overriden by the 'id' inside 'package.json'."
+				`[WARNING]: The CFBundleIdentifier key inside the 'Info.plist' will be overriden by the 'id' set inside the "${CONFIG_FILE_NAME_DISPLAY}".`
 			);
 		}
 	}
