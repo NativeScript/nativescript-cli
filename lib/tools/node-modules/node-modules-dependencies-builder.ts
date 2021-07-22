@@ -48,7 +48,8 @@ export class NodeModulesDependenciesBuilder
 			const resolvedDependency = this.findModule(
 				rootNodeModulesPath,
 				currentModule,
-				resolvedDependencies
+				resolvedDependencies,
+        projectPath
 			);
 
 			if (
@@ -92,56 +93,78 @@ export class NodeModulesDependenciesBuilder
 	private findModule(
 		rootNodeModulesPath: string,
 		depDescription: IDependencyDescription,
-		resolvedDependencies: IDependencyData[]
+		resolvedDependencies: IDependencyData[],
+    projectPath: string,
 	): IDependencyData {
-		let modulePath = path.join(
-			depDescription.parentDir,
-			NODE_MODULES_FOLDER_NAME,
-			depDescription.name
-		); // node_modules/parent/node_modules/<package>
-		const rootModulesPath = path.join(rootNodeModulesPath, depDescription.name);
-		let depthInNodeModules = depDescription.depth;
+    try {
+      const modulePath = require.resolve(`${depDescription.name}/package.json`, {
+        paths: [projectPath]
+      }).replace('/package.json', '')
 
-		if (!this.moduleExists(modulePath)) {
-			let moduleExists = false;
-			let parent = depDescription.parent;
+      // if we already resolved this dependency, we return null to avoid a duplicate resolution
+      if(resolvedDependencies.some(r => {
+        return r.name === depDescription.name && r.directory === modulePath
+      })) {
+        return null;
+      }
 
-			while (parent && !moduleExists) {
-				modulePath = path.join(
-					depDescription.parent.parentDir,
-					NODE_MODULES_FOLDER_NAME,
-					depDescription.name
-				);
-				moduleExists = this.moduleExists(modulePath);
-				if (!moduleExists) {
-					parent = parent.parent;
-				}
-			}
+      return this.getDependencyData(
+        depDescription.name,
+        modulePath,
+        depDescription.depth
+      );
+    } catch (err) {
+      return null;
+    }
 
-			if (!moduleExists) {
-				modulePath = rootModulesPath; // /node_modules/<package>
-				if (!this.moduleExists(modulePath)) {
-					return null;
-				}
-			}
-
-			depthInNodeModules = 0;
-		}
-
-		if (
-			_.some(
-				resolvedDependencies,
-				(r) => r.name === depDescription.name && r.directory === modulePath
-			)
-		) {
-			return null;
-		}
-
-		return this.getDependencyData(
-			depDescription.name,
-			modulePath,
-			depthInNodeModules
-		);
+		// let modulePath = path.join(
+		// 	depDescription.parentDir,
+		// 	NODE_MODULES_FOLDER_NAME,
+		// 	depDescription.name
+		// ); // node_modules/parent/node_modules/<package>
+		// const rootModulesPath = path.join(rootNodeModulesPath, depDescription.name);
+		// let depthInNodeModules = depDescription.depth;
+    //
+		// if (!this.moduleExists(modulePath)) {
+		// 	let moduleExists = false;
+		// 	let parent = depDescription.parent;
+    //
+		// 	while (parent && !moduleExists) {
+		// 		modulePath = path.join(
+		// 			depDescription.parent.parentDir,
+		// 			NODE_MODULES_FOLDER_NAME,
+		// 			depDescription.name
+		// 		);
+		// 		moduleExists = this.moduleExists(modulePath);
+		// 		if (!moduleExists) {
+		// 			parent = parent.parent;
+		// 		}
+		// 	}
+    //
+		// 	if (!moduleExists) {
+		// 		modulePath = rootModulesPath; // /node_modules/<package>
+		// 		if (!this.moduleExists(modulePath)) {
+		// 			return null;
+		// 		}
+		// 	}
+    //
+		// 	depthInNodeModules = 0;
+		// }
+    //
+		// if (
+		// 	_.some(
+		// 		resolvedDependencies,
+		// 		(r) => r.name === depDescription.name && r.directory === modulePath
+		// 	)
+		// ) {
+		// 	return null;
+		// }
+    //
+		// return this.getDependencyData(
+		// 	depDescription.name,
+		// 	modulePath,
+		// 	depthInNodeModules
+		// );
 	}
 
 	private getDependencyData(
@@ -175,18 +198,18 @@ export class NodeModulesDependenciesBuilder
 		return null;
 	}
 
-	private moduleExists(modulePath: string): boolean {
-		try {
-			let modulePathLsStat = this.$fs.getLsStats(modulePath);
-			if (modulePathLsStat.isSymbolicLink()) {
-				modulePathLsStat = this.$fs.getLsStats(this.$fs.realpath(modulePath));
-			}
-
-			return modulePathLsStat.isDirectory();
-		} catch (e) {
-			return false;
-		}
-	}
+	// private moduleExists(modulePath: string): boolean {
+	// 	try {
+	// 		let modulePathLsStat = this.$fs.getLsStats(modulePath);
+	// 		if (modulePathLsStat.isSymbolicLink()) {
+	// 			modulePathLsStat = this.$fs.getLsStats(this.$fs.realpath(modulePath));
+	// 		}
+  //
+	// 		return modulePathLsStat.isDirectory();
+	// 	} catch (e) {
+	// 		return false;
+	// 	}
+	// }
 }
 
 injector.register(
