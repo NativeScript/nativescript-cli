@@ -247,7 +247,7 @@ The NativeScript CLI respects any platform configuration files placed inside `ap
 
 ### Modifying Entitlements File (iOS only)
 
-To specify which Capabilities are required by your App - Maps, Push Notifications, Wallet and etc. you can add or edit the `app.entitlements` file placed inside `app/App_Resources/iOS`. When building the project, the default `app/App_Resources/iOS/app.entitlements` file gets merged with all Plugins entitlement files and a new `yourAppName.entitlements` is created in the platforms directory. The path would be `app/platforms/ios/<application name>/<application name>.entitlements` and will be linked in the `build.xcconfig` file.
+To specify which capabilities are required by your App - Maps, Push Notifications, Wallet etc. you can add or edit the `app.entitlements` file placed inside `app/App_Resources/iOS`. When building the project, the default `app/App_Resources/iOS/app.entitlements` file gets merged with all Plugins entitlement files and a new `yourAppName.entitlements` is created in the platforms directory. The path would be `app/platforms/ios/<application name>/<application name>.entitlements` and will be linked in the `build.xcconfig` file.
 
 You can always override the generated entitlements file, by pointing to your own entitlements file by setting the `CODE_SIGN_ENTITLEMENTS` property in the `app/App_Resources/iOS/build.xcconfig` file.
 
@@ -344,7 +344,7 @@ To use the locally built CLI instead `tns` you can call `PATH_TO_CLI_FOLDER/bin/
 Get Help
 ===
 
-Please, use [github issues](https://github.com/NativeScript/nativescript-cli/issues) strictly for [reporting bugs](CONTRIBUTING.md#report-an-issue) or [requesting features](CONTRIBUTING.md#request-a-feature). For general NativeScript questions and support, check out [Stack Overflow](https://stackoverflow.com/questions/tagged/nativescript) or ask our experts in the [NativeScript community Slack channel](https://www.nativescript.org/slack-invitation-form).
+Please, use [github issues](https://github.com/NativeScript/nativescript-cli/issues) strictly for [reporting bugs](CONTRIBUTING.md#report-an-issue) or [requesting features](CONTRIBUTING.md#request-a-feature). For general NativeScript questions and support, check out [Stack Overflow](https://stackoverflow.com/questions/tagged/nativescript) or ask our experts in the [NativeScript community Discord channel](https://nativescript.org/discord).
 
 [Back to Top][1]
 

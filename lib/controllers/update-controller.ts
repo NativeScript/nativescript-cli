@@ -88,6 +88,22 @@ export class UpdateController
 		const projectData = this.$projectDataService.getProjectData(
 			updateOptions.projectDir
 		);
+
+		updateOptions.version = updateOptions.version || PackageVersion.LATEST;
+		try {
+			// this is a preventive check to make sure the passed version exists before doing any backups, however
+			// the update can still fail if the specified tag doesn't exist in one of the updatableDependencies
+			// at this stage we only care to check a single dependency to catch invalid versions early.
+			await this.getVersionFromTag(
+				UpdateController.updatableDependencies[0].name,
+				updateOptions.version
+			);
+		} catch (error) {
+			this.$errors.fail(
+				`${UpdateController.updateFailMessage} Reason is: ${error.message}`
+			);
+		}
+
 		const backupDir = path.join(
 			updateOptions.projectDir,
 			UpdateController.backupFolder

@@ -247,6 +247,7 @@ export class PrepareController extends EventEmitter {
 		if (this.persistedData && this.persistedData.length) {
 			this.emitPrepareEvent({
 				files: [],
+				staleFiles: [],
 				hasOnlyHotUpdateFiles: false,
 				hasNativeChanges: result.hasNativeChanges,
 				hmrData: null,
@@ -352,6 +353,7 @@ export class PrepareController extends EventEmitter {
 					await this.writeRuntimePackageJson(projectData, platformData);
 					this.emitPrepareEvent({
 						files: [],
+						staleFiles: [],
 						hasOnlyHotUpdateFiles: false,
 						hmrData: null,
 						hasNativeChanges: true,
@@ -373,7 +375,7 @@ export class PrepareController extends EventEmitter {
 		projectData: IProjectData
 	): Promise<string[]> {
 		const dependencies = this.$nodeModulesDependenciesBuilder
-			.getProductionDependencies(projectData.projectDir)
+			.getProductionDependencies(projectData.projectDir, projectData.ignoredDependencies)
 			.filter((dep) => dep.nativescript);
 		const pluginsNativeDirectories = dependencies.map((dep) =>
 			path.join(

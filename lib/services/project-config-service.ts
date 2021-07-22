@@ -64,11 +64,15 @@ export class ProjectConfigService implements IProjectConfigService {
 		return this.$injector.resolve("projectHelper");
 	}
 
-	public getDefaultTSConfig(appId: string = "org.nativescript.app") {
+	public getDefaultTSConfig(
+		appId: string = "org.nativescript.app",
+		appPath: string = "app"
+	) {
 		return `import { NativeScriptConfig } from '@nativescript/core';
 
 export default {
   id: '${appId}',
+  appPath: '${appPath}',
   appResourcesPath: 'App_Resources',
   android: {
     v8Flags: '--expose_gc',
@@ -85,7 +89,7 @@ export default {
 			return;
 		}
 		this.$logger.warn(
-			`You are using the deprecated ${CONFIG_NS_FILE_NAME} file. Just be aware that NativeScript 7 has an improved ${CONFIG_FILE_NAME_DISPLAY} file for when you're ready to upgrade this project.`
+			`You are using the deprecated ${CONFIG_NS_FILE_NAME} file. Just be aware that NativeScript now has an improved ${CONFIG_FILE_NAME_DISPLAY} file for when you're ready to upgrade this project.`
 		);
 	}
 
@@ -136,7 +140,7 @@ export default {
 			this.$logger.trace(
 				"Project Config Service using legacy configuration..."
 			);
-			if (!this.forceUsingLegacyConfig) {
+			if (!this.forceUsingLegacyConfig && info.hasNSConfig) {
 				this.warnUsingLegacyNSConfig();
 			}
 			return this.fallbackToLegacyNSConfig(info);
@@ -163,8 +167,8 @@ export default {
 	}
 
 	@exported("projectConfigService")
-	public getValue(key: string): any {
-		return _.get(this.readConfig(), key);
+	public getValue(key: string, defaultValue?: any): any {
+		return _.get(this.readConfig(), key, defaultValue);
 	}
 
 	@exported("projectConfigService")
@@ -274,7 +278,19 @@ export default {
 			return false;
 		}
 
-		this.$fs.writeFile(TSConfigPath, this.getDefaultTSConfig(appId));
+		const possibleAppPaths = [
+			path.resolve(projectDir, constants.SRC_DIR),
+			path.resolve(projectDir, constants.APP_FOLDER_NAME),
+		];
+
+		let appPath = possibleAppPaths.find((possiblePath) =>
+			this.$fs.exists(possiblePath)
+		);
+		if (appPath) {
+			appPath = path.relative(projectDir, appPath).replace(path.sep, "/");
+		}
+
+		this.$fs.writeFile(TSConfigPath, this.getDefaultTSConfig(appId, appPath));
 
 		return TSConfigPath;
 	}
@@ -313,31 +329,36 @@ export default {
 			// ignore if the file doesn't exist
 		}
 
-		const packageJson = this.$fs.readJson(
-			path.join(this.projectHelper.projectDir, "package.json")
-		);
+		try {
+			const packageJson = this.$fs.readJson(
+				path.join(this.projectHelper.projectDir, "package.json")
+			);
 
-		// add app id to additionalData for backwards compatibility
-		if (
-			!NSConfig.id &&
-			packageJson &&
-			packageJson.nativescript &&
-			packageJson.nativescript.id
-		) {
-			const ids = packageJson.nativescript.id;
-			if (typeof ids === "string") {
-				additionalData.push({
-					id: packageJson.nativescript.id,
-				});
-			} else if (typeof ids === "object") {
-				for (const platform of Object.keys(ids)) {
+			// add app id to additionalData for backwards compatibility
+			if (
+				!NSConfig.id &&
+				packageJson &&
+				packageJson.nativescript &&
+				packageJson.nativescript.id
+			) {
+				const ids = packageJson.nativescript.id;
+				if (typeof ids === "string") {
 					additionalData.push({
-						[platform]: {
-							id: packageJson.nativescript.id[platform],
-						},
+						id: packageJson.nativescript.id,
 					});
+				} else if (typeof ids === "object") {
+					for (const platform of Object.keys(ids)) {
+						additionalData.push({
+							[platform]: {
+								id: packageJson.nativescript.id[platform],
+							},
+						});
+					}
 				}
 			}
+		} catch (err) {
+			this.$logger.trace("failed to read package.json data for config", err);
+			// ignore if the file doesn't exist
 		}
 
 		return _.defaultsDeep({}, ...additionalData, NSConfig);
@@ -356,7 +377,7 @@ export default {
 
 		if (
 			runtimePackage.version &&
-			semver.gte(runtimePackage.version, "7.0.0-rc.5")
+			semver.gte(semver.coerce(runtimePackage.version), "7.0.0-rc.5")
 		) {
 			// runtimes >= 7.0.0-rc.5 support passing appPath and appResourcesPath through gradle project flags
 			// so writing an nsconfig is not necessary.

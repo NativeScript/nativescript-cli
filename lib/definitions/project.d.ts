@@ -153,6 +153,7 @@ interface IProjectData extends ICreateProjectData {
 	projectId: string;
 	projectIdentifiers?: Mobile.IProjectIdentifier;
 	dependencies: any;
+	ignoredDependencies?: string[];
 	devDependencies: IStringDictionary;
 	appDirectoryPath: string;
 	appResourcesDirectoryPath: string;
@@ -165,6 +166,7 @@ interface IProjectData extends ICreateProjectData {
 	infoPlistPath: string;
 	buildXcconfigPath: string;
 	podfilePath: string;
+	initialized?: boolean;
 	/**
 	 * Defines if the project is a code sharing one.
 	 * Value is true when project has nativescript.config and it has `shared: true` in it.
@@ -369,7 +371,7 @@ interface IProjectConfigService {
 
 	detectProjectConfigs(projectDir?: string): IProjectConfigInformation;
 
-	getDefaultTSConfig(appId: string): string;
+	getDefaultTSConfig(appId: string, appPath: string): string;
 
 	writeDefaultConfig(projectDir?: string, appId?: string): boolean | string;
 

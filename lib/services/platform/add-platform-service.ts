@@ -130,8 +130,32 @@ export class AddPlatformService implements IAddPlatformService {
 
 	private resolveFrameworkDir(projectDir: string, packageName: string): string {
 		try {
-			// strip version info if present <package>@1.2.3 -> <package>
-			packageName = packageName.replace(/@[\d.]+$/g, "");
+			// strip version info if present <package>@1.2.3-rc.0 -> <package>
+			// tested cases:
+			// @nativescript/ios
+			// @nativescript/ios@1
+			// @nativescript/ios@1.2
+			// @nativescript/ios@1.2.3
+			// @nativescript/ios@1.2.3-
+			// @nativescript/ios@1.2.3-rc
+			// @nativescript/ios@1.2.3-rc.
+			// @nativescript/ios@1.2.3-rc.0
+			// @nativescript/ios@rc
+			// @nativescript/ios@^7.0.0
+			// @nativescript/ios@~7.0.0
+			// tns-ios
+			// tns-ios@1
+			// tns-ios@1.2
+			// tns-ios@1.2.3
+			// tns-ios@1.2.3-
+			// tns-ios@1.2.3-rc
+			// tns-ios@1.2.3-rc.
+			// tns-ios@1.2.3-rc.0
+			// tns-ios@rc
+			// tns-ios@^7.0.0
+			// tns-ios@~7.0.0
+			packageName = packageName.replace(/(.+)@.+$/g, "$1");
+
 			const frameworkDir = require
 				.resolve(`${packageName}/package.json`, {
 					paths: [projectDir],
@@ -143,7 +167,8 @@ export class AddPlatformService implements IAddPlatformService {
 			}
 		} catch (err) {
 			this.$logger.trace(
-				`Couldn't resolve installed framework. Continuing with install...`
+				`Couldn't resolve installed framework. Continuing with install...`,
+				err
 			);
 		}
 		return null;

@@ -851,7 +851,6 @@ interface IAnalyticsSettingsService {
 	canDoRequest(): Promise<boolean>;
 	getUserId(): Promise<string>;
 	getClientName(): string;
-	getPrivacyPolicyLink(): string;
 	/**
 	 * Gets current user sessions count.
 	 * @param {string} projectName The analytics project id for which the counter should be taken.
@@ -1331,6 +1330,7 @@ interface IDoctorService {
 		runtimeVersion?: string;
 		options?: IOptions;
 		forceCheck?: boolean;
+		platform?: string;
 	}): Promise<void>;
 	/**
 	 * Runs the setup script on host machine

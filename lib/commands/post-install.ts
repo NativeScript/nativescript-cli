@@ -68,7 +68,7 @@ export class PostInstallCliCommand implements ICommand {
 
 		this.$logger.info("");
 		this.$logger.printMarkdown(
-			"If you have any questions, check Stack Overflow: `https://stackoverflow.com/questions/tagged/nativescript` and our public Slack channel: `https://nativescriptcommunity.slack.com/`"
+			"If you have any questions, check Stack Overflow: `https://stackoverflow.com/questions/tagged/nativescript` and our public Discord channel: `https://nativescript.org/discord`"
 		);
 	}
 }

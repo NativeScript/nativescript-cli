@@ -78,7 +78,7 @@ interface IPrepareNodeModulesData {
 }
 
 interface INodeModulesDependenciesBuilder {
-	getProductionDependencies(projectPath: string): IDependencyData[];
+	getProductionDependencies(projectPath: string, ignore?: string[]): IDependencyData[];
 }
 
 interface IBuildInfo {

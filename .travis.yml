@@ -16,7 +16,7 @@ node_js:
 git:
   submodules: true
 install:
-- npm install --ignore-scripts
+- npm install --ignore-scripts --legacy-peer-deps
 before_script:
 - gem install xcodeproj
 - gem install cocoapods

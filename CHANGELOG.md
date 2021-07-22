@@ -1,3 +1,83 @@
+## [8.0.2](https://github.com/NativeScript/nativescript-cli/compare/v8.0.1...v8.0.2) (2021-05-11)
+
+
+### Bug Fixes
+
+* test init and karma conf for 8.0 with webpack5 ([#5528](https://github.com/NativeScript/nativescript-cli/issues/5528)) ([03d68d6](https://github.com/NativeScript/nativescript-cli/commit/03d68d6572f896c9cba6b95cb1bf204ce27bfc2b))
+
+
+### Features
+
+* --env.sourceMap custom values ([f32773d](https://github.com/NativeScript/nativescript-cli/commit/f32773db5899e3133395f1e27f82cead27c0a7b3))
+
+
+
+## [8.0.1](https://github.com/NativeScript/nativescript-cli/compare/v8.0.0...v8.0.1) (2021-04-01)
+
+
+### Bug Fixes
+
+* compat message updates ([7c475e6](https://github.com/NativeScript/nativescript-cli/commit/7c475e6de9c11e0cf428ee83390db0db89bf4249))
+* empty main fields during migrate ([7403e4d](https://github.com/NativeScript/nativescript-cli/commit/7403e4d16343df110d32d02653c188b8ac67978b))
+
+
+### Features
+
+* enable ESLint plugin in migrate ([d8537fa](https://github.com/NativeScript/nativescript-cli/commit/d8537faa1cc21f2fb6665aa2c136d129c589363a))
+* handle --env <name> flags ([23fe6a3](https://github.com/NativeScript/nativescript-cli/commit/23fe6a3cc9b8f7624fffeb0be39301ebcc234291))
+
+
+
+# [8.0.0](https://github.com/NativeScript/nativescript-cli/compare/v7.2.1...v8.0.0) (2021-03-31)
+
+
+### Bug Fixes
+
+* handle caret and tilde in runtime versions ([#5501](https://github.com/NativeScript/nativescript-cli/issues/5501)) ([04eba0d](https://github.com/NativeScript/nativescript-cli/commit/04eba0deb50637a6402ee2bfb14243aad597ce0f))
+
+
+### Features
+
+* ns8 ([#5508](https://github.com/NativeScript/nativescript-cli/issues/5508)) ([10a2d2e](https://github.com/NativeScript/nativescript-cli/commit/10a2d2e3b4b6a6856b1f1898dbf9b180c0dd649b))
+* platform specific doctor ([#5505](https://github.com/NativeScript/nativescript-cli/issues/5505)) ([ff04446](https://github.com/NativeScript/nativescript-cli/commit/ff04446906f8d2b16d3d92e40ce2e97dc3aa98eb))
+
+
+
+## [7.2.1](https://github.com/NativeScript/nativescript-cli/compare/v7.2.0...v7.2.1) (2021-03-11)
+
+
+### Bug Fixes
+
+* npm7 peerDependecies ([5e2688f](https://github.com/NativeScript/nativescript-cli/commit/5e2688fd38dae9cd293e08afaa67018dc0d271c2))
+* ns update default to latest version ([#5497](https://github.com/NativeScript/nativescript-cli/issues/5497)) ([04202dc](https://github.com/NativeScript/nativescript-cli/commit/04202dcb8f828939205ccf58fb8121304e21d61a))
+
+
+
+# [7.2.0](https://github.com/NativeScript/nativescript-cli/compare/v7.1.2...v7.2.0) (2021-02-05)
+
+
+### Bug Fixes
+
+* default appPath in new projects ([#5466](https://github.com/NativeScript/nativescript-cli/issues/5466)) ([0675896](https://github.com/NativeScript/nativescript-cli/commit/0675896bf86327092b08377e9523c7be0fdc1332))
+* handle permissions error on directory creation ([#5480](https://github.com/NativeScript/nativescript-cli/issues/5480)) ([58e833d](https://github.com/NativeScript/nativescript-cli/commit/58e833d64787bbd29b3792b7550e8923ed141f52))
+* tgz runtime resolution ([101bfae](https://github.com/NativeScript/nativescript-cli/commit/101bfae8279f81912512fd6ac7839e033e41f8e5))
+* update setup requirements link ([#5459](https://github.com/NativeScript/nativescript-cli/issues/5459)) ([c8447cd](https://github.com/NativeScript/nativescript-cli/commit/c8447cdda5bc5c56a4021798ffe7cdfaedd8ebb7))
+
+
+### Features
+
+* -v checking for updates ([#5461](https://github.com/NativeScript/nativescript-cli/issues/5461)) ([2d6683c](https://github.com/NativeScript/nativescript-cli/commit/2d6683c984a032f631dc80bc935393ac347a4baa))
+* initialize git repo on project create ([#5468](https://github.com/NativeScript/nativescript-cli/issues/5468)) ([9f78c15](https://github.com/NativeScript/nativescript-cli/commit/9f78c15d031931d557dc7cfcf0561ce88eeac2ff))
+* warn invalid platform folders ([#5463](https://github.com/NativeScript/nativescript-cli/issues/5463)) ([fde4403](https://github.com/NativeScript/nativescript-cli/commit/fde440342f2b2205982506891533f58db5418e64))
+
+
+### Performance Improvements
+
+* initialize project data only if uninitialized ([#5478](https://github.com/NativeScript/nativescript-cli/issues/5478)) ([27c2f0c](https://github.com/NativeScript/nativescript-cli/commit/27c2f0cdfd1ea0a662e66551b86a3d8e4f630395))
+* validate update version before backup ([#5479](https://github.com/NativeScript/nativescript-cli/issues/5479)) ([d312f14](https://github.com/NativeScript/nativescript-cli/commit/d312f14e819ac5194eab9a7e5c7a19a980ed3fe4))
+
+
+
 ## [7.1.2](https://github.com/NativeScript/nativescript-cli/compare/v7.1.1...v7.1.2) (2021-01-04)
 
 
@@ -260,7 +340,7 @@
 NativeScript CLI Changelog
 ================
 
-6.4.1 (2020, February 21)
+6.5.0 (2020, May 22)
 ===
 
 ### New
@@ -269,15 +349,22 @@ NativeScript CLI Changelog
 
 ### Fixed
 
-* [Fixed #5236](https://github.com/NativeScript/nativescript-cli/issues/5236): File paths from device logs are not clickable
-* [Fixed #5251](https://github.com/NativeScript/nativescript-cli/issues/5251): External files are not livesynced
-* [Fixed #5252](https://github.com/NativeScript/nativescript-cli/issues/5252): Logs from platform specific files point to incorrect file
 * [Fixed #5259](https://github.com/NativeScript/nativescript-cli/issues/5259): Unable to use pnpm on macOS and Linux
 * [Fixed #5260](https://github.com/NativeScript/nativescript-cli/issues/5260): `tns package-manager set invalid_value` does not say pnpm is supported
 * [Fixed #5261](https://github.com/NativeScript/nativescript-cli/issues/5261): `tns package-manager set <valid value>` does not give any output
 * [Fixed #5262](https://github.com/NativeScript/nativescript-cli/issues/5262): `tns package-manager` fails with error
 * [Fixed #5263](https://github.com/NativeScript/nativescript-cli/issues/5263): `tns package-manager` docs does not list pnpm as supported value
 * [Fixed #5264](https://github.com/NativeScript/nativescript-cli/issues/5264): `tns package-manager --help` fails with error
+
+
+6.4.1 (2020, February 25)
+===
+
+### Fixed
+
+* [Fixed #5236](https://github.com/NativeScript/nativescript-cli/issues/5236): File paths from device logs are not clickable
+* [Fixed #5251](https://github.com/NativeScript/nativescript-cli/issues/5251): External files are not livesynced
+* [Fixed #5252](https://github.com/NativeScript/nativescript-cli/issues/5252): Logs from platform specific files point to incorrect file
 
 
 6.4.0 (2020, February 11)

@@ -10,14 +10,8 @@ interface IMigrateController {
 
 interface IMigrationData extends IProjectDir {
 	platforms: string[];
-	allowInvalidVersions?: boolean;
+	loose?: boolean;
 }
-
-// declare const enum ShouldMigrate {
-// 	NO,
-// 	YES ,
-// 	ADVISED
-// }
 
 interface IMigrationShouldMigrate {
 	shouldMigrate: ShouldMigrate;
@@ -29,16 +23,21 @@ interface IDependency {
 	isDev?: boolean;
 }
 
-interface IMigrationDependency extends IDependency {
+interface IDependencyVersion {
+	minVersion?: string;
+	desiredVersion?: string;
+}
+
+interface IMigrationDependency extends IDependency, IDependencyVersion {
 	shouldRemove?: boolean;
 	replaceWith?: string;
 	warning?: string;
-	verifiedVersion?: string;
 	shouldUseExactVersion?: boolean;
 	shouldAddIfMissing?: boolean;
 	shouldMigrateAction?: (
+		dependency: IMigrationDependency,
 		projectData: IProjectData,
-		allowInvalidVersions: boolean
+		loose: boolean
 	) => Promise<boolean>;
 	migrateAction?: (
 		projectData: IProjectData,

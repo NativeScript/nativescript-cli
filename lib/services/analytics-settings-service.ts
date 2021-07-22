@@ -48,10 +48,6 @@ class AnalyticsSettingsService implements IAnalyticsSettingsService {
 		return "" + this.$staticConfig.CLIENT_NAME_ALIAS.cyan.bold;
 	}
 
-	public getPrivacyPolicyLink(): string {
-		return "http://www.telerik.com/company/privacy-policy";
-	}
-
 	public async getUserSessionsCount(projectName: string): Promise<number> {
 		const sessionsCountForProject = await this.$userSettingsService.getSettingValue<
 			number

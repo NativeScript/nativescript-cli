@@ -120,7 +120,6 @@ export class ProjectDataService implements IProjectDataService {
 			this.projectDataCache[projectDir] ||
 			this.$injector.resolve<IProjectData>(ProjectData);
 		this.projectDataCache[projectDir].initializeProjectData(projectDir);
-
 		return this.projectDataCache[projectDir];
 	}
 
