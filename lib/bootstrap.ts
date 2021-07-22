@@ -183,6 +183,7 @@ injector.requireCommand("platform|update", "./commands/update-platform");
 injector.requireCommand("run|*all", "./commands/run");
 injector.requireCommand("run|ios", "./commands/run");
 injector.requireCommand("run|android", "./commands/run");
+injector.requireCommand("typings", "./commands/typings");
 
 injector.requireCommand("preview", "./commands/preview");
 
