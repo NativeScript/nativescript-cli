@@ -221,6 +221,9 @@ export class Options {
 				hasSensitiveValue: true,
 			},
 			appleSessionBase64: { type: OptionType.String, hasSensitiveValue: true },
+			jar: { type: OptionType.String, hasSensitiveValue: true },
+			aar: { type: OptionType.String, hasSensitiveValue: true },
+			filter: { type: OptionType.String, hasSensitiveValue: true },
 		};
 	}
 
