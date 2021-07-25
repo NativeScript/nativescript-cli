@@ -6,6 +6,7 @@ import { executeActionByChunks } from "../../helpers";
 import { DEFAULT_CHUNK_SIZE } from "../../constants";
 import { IFileSystem, IStringDictionary } from "../../declarations";
 import { IInjector } from "../../definitions/yok";
+import { ITempService } from "../../../definitions/temp-service";
 
 export class AndroidDeviceFileSystem implements Mobile.IDeviceFileSystem {
 	private _deviceHashServices = Object.create(null);

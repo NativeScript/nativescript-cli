@@ -45,6 +45,7 @@ import { IInjector } from "../common/definitions/yok";
 import { injector } from "../common/yok";
 import { INotConfiguredEnvOptions } from "../common/definitions/commands";
 import { IProjectChangesInfo } from "../definitions/project-changes";
+import { ITempService } from "../definitions/temp-service";
 
 interface INativeSourceCodeGroup {
 	name: string;

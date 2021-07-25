@@ -13,6 +13,7 @@ import {
 import { IPlatformsDataService, IPlatformData } from "../definitions/platform";
 import { IFileSystem, IErrors } from "../common/declarations";
 import { injector } from "../common/yok";
+import { ITempService } from "../definitions/temp-service";
 
 export class PlatformCommandHelper implements IPlatformCommandHelper {
 	constructor(

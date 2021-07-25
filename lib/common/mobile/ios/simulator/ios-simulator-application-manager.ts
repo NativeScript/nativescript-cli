@@ -13,6 +13,7 @@ import {
 	IFileSystem,
 	IHooksService,
 } from "../../../declarations";
+import { ITempService } from "../../../../definitions/temp-service";
 
 export class IOSSimulatorApplicationManager extends ApplicationManagerBase {
 	private _lldbProcesses: IDictionary<ChildProcess> = {};

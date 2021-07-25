@@ -12,6 +12,7 @@ import {
 } from "../../common/declarations";
 import { IInjector } from "../../common/definitions/yok";
 import { injector } from "../../common/yok";
+import { ITempService } from "../../definitions/temp-service";
 
 export class IOSLiveSyncService
 	extends PlatformLiveSyncServiceBase
