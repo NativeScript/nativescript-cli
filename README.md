@@ -10,14 +10,13 @@
 
 <h4 align="center">The NativeScript CLI lets you create, build, and deploy <a href="https://docs.nativescript.org/" target="_blank">NativeScript</a>-based apps on iOS and Android devices.</h4>
   </a>
-</p>
+</h4>
 
-<p align="center"> 
-<a href="https://travis-ci.com/NativeScript/nativescript-cli"><img alt="Build Status" src="https://travis-ci.com/NativeScript/nativescript-cli.svg?branch=master"></a>
-</p>
+---
+
+[![nativescript -> npm](https://github.com/NativeScript/nativescript-cli/actions/workflows/npm_release.yml/badge.svg)](https://github.com/NativeScript/nativescript-cli/actions/workflows/npm_release.yml)
 
 Get it using: `npm install -g nativescript`
-
 
 * [What is NativeScript](#what-is-nativescript "Quick overview of NativeScript, the JavaScript framework for cross-platform development of native iOS and Android apps")
 * [How the NativeScript CLI works](#how-the-nativescript-cli-works "How the CLI works in more detail")
