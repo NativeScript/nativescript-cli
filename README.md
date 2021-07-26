@@ -13,7 +13,7 @@
 </p>
 
 <p align="center"> 
-<a href="https://travis-ci.org/NativeScript/nativescript-cli"><img alt="Build Status" src="https://travis-ci.org/NativeScript/nativescript-cli.svg?branch=build"></a>
+<a href="https://travis-ci.com/NativeScript/nativescript-cli"><img alt="Build Status" src="https://travis-ci.com/NativeScript/nativescript-cli.svg?branch=master"></a>
 </p>
 
 Get it using: `npm install -g nativescript`
