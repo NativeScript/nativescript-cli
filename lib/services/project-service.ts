@@ -28,6 +28,7 @@ import {
 } from "../common/declarations";
 import * as _ from "lodash";
 import { injector } from "../common/yok";
+import { ITempService } from "../definitions/temp-service";
 
 export class ProjectService implements IProjectService {
 	constructor(

@@ -276,40 +276,30 @@ export class PluginsService implements IPluginsService {
 	public async ensureAllDependenciesAreInstalled(
 		projectData: IProjectData
 	): Promise<void> {
-		let installedDependencies = this.$fs.exists(
-			this.getNodeModulesPath(projectData.projectDir)
-		)
-			? this.$fs.readDirectory(this.getNodeModulesPath(projectData.projectDir))
-			: [];
-		// Scoped dependencies are not on the root of node_modules,
-		// so we have to list the contents of all directories, starting with @
-		// and add them to installed dependencies, so we can apply correct comparison against package.json's dependencies.
-		_(installedDependencies)
-			.filter((dependencyName) => _.startsWith(dependencyName, "@"))
-			.each((scopedDependencyDir) => {
-				const contents = this.$fs.readDirectory(
-					path.join(
-						this.getNodeModulesPath(projectData.projectDir),
-						scopedDependencyDir
-					)
-				);
-				installedDependencies = installedDependencies.concat(
-					contents.map(
-						(dependencyName) => `${scopedDependencyDir}/${dependencyName}`
-					)
-				);
-			});
-
 		const packageJsonContent = this.$fs.readJson(
 			this.getPackageJsonFilePath(projectData.projectDir)
 		);
 		const allDependencies = _.keys(packageJsonContent.dependencies).concat(
 			_.keys(packageJsonContent.devDependencies)
 		);
-		const notInstalledDependencies = _.difference(
-			allDependencies,
-			installedDependencies
-		);
+
+		const notInstalledDependencies = allDependencies.map(dep => {
+		  try {
+		    this.$logger.trace(`Checking if ${dep} is installed...`);
+		    require.resolve(`${dep}/package.json`, {
+		      paths: [projectData.projectDir]
+        })
+
+        // return false if the dependency is installed - we'll filter out boolean values
+        // and end up with an array of dep names that are not installed if we end up
+        // inside the catch block.
+        return false;
+      } catch(err) {
+		    this.$logger.trace(`Error while checking if ${dep} is installed. Error is: `, err)
+		    return dep;
+      }
+    }).filter(Boolean);
+
 		if (this.$options.force || notInstalledDependencies.length) {
 			this.$logger.trace(
 				"Npm install will be called from CLI. Force option is: ",

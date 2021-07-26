@@ -84,6 +84,8 @@ import {
 } from "../lib/common/definitions/google-analytics";
 import * as _ from "lodash";
 import { SupportedConfigValues } from "../lib/tools/config-manipulation/config-transformer";
+import { AffixOptions } from "temp";
+import { ITempService } from "../lib/definitions/temp-service";
 
 temp.track();
 
@@ -1430,7 +1432,7 @@ export class TempServiceStub implements ITempService {
 		return temp.mkdirSync(affixes);
 	}
 
-	public async path(options: ITempPathOptions): Promise<string> {
+	public async path(options: string | AffixOptions): Promise<string> {
 		return temp.path(options);
 	}
 }

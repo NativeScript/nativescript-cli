@@ -3,6 +3,7 @@ import * as mobileProvisionFinder from "ios-mobileprovision-finder";
 import { IProjectData, IBuildConfig } from "../../definitions/project";
 import { IFileSystem } from "../../common/declarations";
 import { injector } from "../../common/yok";
+import { ITempService } from "../../definitions/temp-service";
 
 export class ExportOptionsPlistService implements IExportOptionsPlistService {
 	constructor(private $fs: IFileSystem, private $tempService: ITempService) {}

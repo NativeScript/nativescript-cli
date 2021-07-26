@@ -145,6 +145,7 @@
     "@types/sinon": "9.0.4",
     "@types/source-map": "0.5.7",
     "@types/tar": "4.0.3",
+    "@types/temp": "0.9.1",
     "@types/tunnel": "0.0.1",
     "@types/universal-analytics": "0.4.4",
     "@types/uuid": "^8.3.0",

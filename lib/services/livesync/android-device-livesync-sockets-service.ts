@@ -13,6 +13,7 @@ import { IFilesHashService } from "../../definitions/files-hash-service";
 import { IInjector } from "../../common/definitions/yok";
 import { ICleanupService } from "../../definitions/cleanup-service";
 import { ISpawnCommandInfo } from "../../detached-processes/cleanup-process-definitions";
+import { ITempService } from "../../definitions/temp-service";
 
 export class AndroidDeviceSocketsLiveSyncService
 	extends AndroidDeviceLiveSyncServiceBase
