@@ -10,15 +10,15 @@ env:
 
 jobs:
   release:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
 
     steps:
       - uses: actions/checkout@v2
 
-      - name: Environement Setup
-        run: |
-          gem install xcodeproj
-          gem install cocoapods
+#      - name: Environement Setup
+#        run: |
+#          gem install xcodeproj
+#          gem install cocoapods
 
       - name: Setup
         run: npm run setup
