@@ -15,13 +15,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-#      - name: Environement Setup
-#        run: |
-#          gem install xcodeproj
-#          gem install cocoapods
 
       - name: Setup
-        run: npm run setup
+        run: npm i --ignore-scripts --legacy-peer-deps --no-package-lock
 
       - name: Generate Version
         run: |
