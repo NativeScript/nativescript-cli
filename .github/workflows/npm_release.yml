@@ -1,0 +1,42 @@
+name: 'nativescript -> npm'
+
+on:
+  push:
+    branches: [ 'master' ]
+  workflow_dispatch:
+
+env:
+  NPM_TAG: 'next'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Environement Setup
+        run: |
+          gem install xcodeproj
+          gem install cocoapods
+
+      - name: Setup
+        run: npm run setup
+
+      - name: Generate Version
+        run: |
+          echo NPM_VERSION=$(node -e "console.log(require('./package.json').version);")-$NPM_TAG-$(date +"%m-%d-%Y")-$GITHUB_RUN_ID >> $GITHUB_ENV
+
+      - name: Bump Version
+        run: npm version $NPM_VERSION
+
+      - name: Build nativescript
+        run: npm pack
+
+      - name: Publish nativescript
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
+        run: |
+          echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ../../.npmrc
+          echo "Publishing nativescript@$NPM_VERSION to NPM with tag $NPM_TAG..."
+          // npm publish nativescript-$NPM_VERSION.tgz --tag $NPM_TAG
