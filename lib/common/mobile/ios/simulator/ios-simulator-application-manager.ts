@@ -13,6 +13,7 @@ import {
 	IFileSystem,
 	IHooksService,
 } from "../../../declarations";
+import { ITempService } from "../../../../definitions/temp-service";
 
 export class IOSSimulatorApplicationManager extends ApplicationManagerBase {
 	private _lldbProcesses: IDictionary<ChildProcess> = {};
@@ -71,11 +72,14 @@ export class IOSSimulatorApplicationManager extends ApplicationManagerBase {
 	public async startApplication(
 		appData: Mobile.IStartApplicationData
 	): Promise<void> {
+		const args = process.env.IOS_SIMULATOR_RUN_ARGS || "";
 		const options = appData.waitForDebugger
 			? {
 					waitForDebugger: true,
-					args: "--nativescript-debug-brk",
+					args: `--nativescript-debug-brk ${args}`.trim(),
 			  }
+			: args
+			? { args }
 			: {};
 		await this.setDeviceLogData(appData);
 		const launchResult = await this.iosSim.startApplication(

@@ -579,6 +579,12 @@ interface IAndroidBundleOptions {
 	aab: boolean;
 }
 
+interface ITypingsOptions {
+	jar: string;
+	aar: string;
+	filter: string;
+}
+
 interface IOptions
 	extends IRelease,
 		IDeviceIdentifier,
@@ -598,7 +604,8 @@ interface IOptions
 		IPort,
 		IEnvOptions,
 		IPluginSeedOptions,
-		IGenerateOptions {
+		IGenerateOptions,
+		ITypingsOptions {
 	argv: IYargArgv;
 	validateOptions(
 		commandSpecificDashedOptions?: IDictionary<IDashedOption>,

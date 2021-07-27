@@ -7,8 +7,7 @@
     },
     {
         "name": "karma-webpack",
-        "excludedPeerDependencies": ["webpack"],
-        "version": "3.0.5"
+        "excludedPeerDependencies": ["webpack"]
     },
     {
         "name": "mocha",

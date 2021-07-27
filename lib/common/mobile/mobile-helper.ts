@@ -4,6 +4,7 @@ import * as _ from "lodash";
 import { IProjectData } from "../../definitions/project";
 import { IErrors, IFileSystem } from "../declarations";
 import { injector } from "../yok";
+import { ITempService } from "../../definitions/temp-service";
 
 export class MobileHelper implements Mobile.IMobileHelper {
 	private static DEVICE_PATH_SEPARATOR = "/";

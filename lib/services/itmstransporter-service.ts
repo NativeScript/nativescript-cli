@@ -14,6 +14,7 @@ import {
 import { IApplePortalApplicationService } from "./apple-portal/definitions";
 import { IInjector } from "../common/definitions/yok";
 import { injector } from "../common/yok";
+import { ITempService } from "../definitions/temp-service";
 
 export class ITMSTransporterService implements IITMSTransporterService {
 	constructor(

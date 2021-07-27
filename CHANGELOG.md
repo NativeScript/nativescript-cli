@@ -1,3 +1,17 @@
+## [8.0.2](https://github.com/NativeScript/nativescript-cli/compare/v8.0.1...v8.0.2) (2021-05-11)
+
+
+### Bug Fixes
+
+* test init and karma conf for 8.0 with webpack5 ([#5528](https://github.com/NativeScript/nativescript-cli/issues/5528)) ([03d68d6](https://github.com/NativeScript/nativescript-cli/commit/03d68d6572f896c9cba6b95cb1bf204ce27bfc2b))
+
+
+### Features
+
+* --env.sourceMap custom values ([f32773d](https://github.com/NativeScript/nativescript-cli/commit/f32773db5899e3133395f1e27f82cead27c0a7b3))
+
+
+
 ## [8.0.1](https://github.com/NativeScript/nativescript-cli/compare/v8.0.0...v8.0.1) (2021-04-01)
 
 

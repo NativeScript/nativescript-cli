@@ -1,8 +1,9 @@
+const filePatterns = [${ testFiles }];
 module.exports = function (config) {
   const options = {
 
     // base path that will be used to resolve all patterns (eg. files, exclude)
-    basePath: '',
+    basePath: '${ basePath }',
 
 
     // frameworks to use
@@ -11,7 +12,7 @@ module.exports = function (config) {
 
 
     // list of files / patterns to load in the browser
-    files: [${ testFiles }],
+    files: filePatterns,
 
 
     // list of files to exclude
@@ -78,6 +79,9 @@ module.exports = function (config) {
 
   config.set(options);
 }
+module.exports.filePatterns = filePatterns;
+// You can also use RegEx if you'd like:
+// module.exports.filesRegex = /\.\/tests\/.*\.ts$/;
 
 function setWebpackPreprocessor(config, options) {
   if (config && config.bundle) {
@@ -100,6 +104,7 @@ function setWebpack(config, options) {
     env[config.platform] = true;
     env.sourceMap = config.debugBrk;
     env.appPath = config.appPath;
+    env.karmaWebpack = true;
     options.webpack = require('./webpack.config')(env);
     delete options.webpack.entry;
     delete options.webpack.output.libraryTarget;

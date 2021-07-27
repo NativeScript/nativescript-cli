@@ -9,6 +9,7 @@ import {
 import { ICommand, ICommandParameter } from "../../common/definitions/commands";
 import { IErrors, IFileSystem } from "../../common/declarations";
 import { injector } from "../../common/yok";
+import { ITempService } from "../../definitions/temp-service";
 
 export class BuildPluginCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];

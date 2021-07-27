@@ -498,11 +498,6 @@
     "multimatch" "^4.0.0"
     "typescript" "~4.0.2"
 
-"@types/caseless@*":
-  "integrity" "sha512-6ckxMjBBD8URvjB6J3NcnuAn5Pkl7t3TizAg+xdlzzQGSPSmBcXf8KoIH0ua/i+tio+ZRUHEXp0HEmvaR4kt0w=="
-  "resolved" "https://registry.npmjs.org/@types/caseless/-/caseless-0.12.2.tgz"
-  "version" "0.12.2"
-
 "@types/chai-as-promised@7.1.3":
   "integrity" "sha512-FQnh1ohPXJELpKhzjuDkPLR2BZCAqed+a6xV4MI/T3XzHfd2FlarfUGUdZYgqYe8oxkYn0fchHEeHfHqdZ96sg=="
   "resolved" "https://registry.npmjs.org/@types/chai-as-promised/-/chai-as-promised-7.1.3.tgz"
@@ -682,16 +677,6 @@
   dependencies:
     "@types/node" "*"
 
-"@types/request@2.48.5":
-  "integrity" "sha512-/LO7xRVnL3DxJ1WkPGDQrp4VTV1reX9RkC85mJ+Qzykj2Bdw+mG15aAfDahc76HtknjzE16SX/Yddn6MxVbmGQ=="
-  "resolved" "https://registry.npmjs.org/@types/request/-/request-2.48.5.tgz"
-  "version" "2.48.5"
-  dependencies:
-    "@types/caseless" "*"
-    "@types/node" "*"
-    "@types/tough-cookie" "*"
-    "form-data" "^2.5.0"
-
 "@types/retry@*", "@types/retry@0.12.0":
   "integrity" "sha512-wWKOClTTiizcZhXnPY4wikVAwmdYHp8q6DmC+EJUzAMsycb7HB32Kh9RN4+0gExjmPmZSAQjgURXIGATPegAvA=="
   "resolved" "https://registry.npmjs.org/@types/retry/-/retry-0.12.0.tgz"
@@ -743,10 +728,19 @@
     "@types/minipass" "*"
     "@types/node" "*"
 
-"@types/tough-cookie@*":
-  "integrity" "sha512-I99sngh224D0M7XgW1s120zxCt3VYQ3IQsuw3P3jbq5GG4yc79+ZjyKznyOGIQrflfylLgcfekeZW/vk0yng6A=="
-  "resolved" "https://registry.npmjs.org/@types/tough-cookie/-/tough-cookie-4.0.0.tgz"
-  "version" "4.0.0"
+"@types/temp@0.9.1":
+  "integrity" "sha512-yDQ8Y+oQi9V7VkexwE6NBSVyNuyNFeGI275yWXASc2DjmxNicMi9O50KxDpNlST1kBbV9jKYBHGXhgNYFMPqtA=="
+  "resolved" "https://registry.npmjs.org/@types/temp/-/temp-0.9.1.tgz"
+  "version" "0.9.1"
+  dependencies:
+    "@types/node" "*"
+
+"@types/tunnel@0.0.1":
+  "integrity" "sha512-AOqu6bQu5MSWwYvehMXLukFHnupHrpZ8nvgae5Ggie9UwzDR1CCwoXgSSWNZJuyOlCdfdsWMA5F2LlmvyoTv8A=="
+  "resolved" "https://registry.npmjs.org/@types/tunnel/-/tunnel-0.0.1.tgz"
+  "version" "0.0.1"
+  dependencies:
+    "@types/node" "*"
 
 "@types/universal-analytics@0.4.4":
   "integrity" "sha512-9g3F0SGxVr4UDd6y07bWtFnkpSSX1Ake7U7AGHgSFrwM6pF53/fV85bfxT2JLWS/3sjLCcyzoYzQlCxpkVo7wA=="
@@ -1115,6 +1109,13 @@
   "resolved" "https://registry.npmjs.org/aws4/-/aws4-1.10.1.tgz"
   "version" "1.10.1"
 
+"axios@^0.21.1":
+  "integrity" "sha512-dKQiRHxGD9PPRIUNIWvZhPTPpl1rf/OxTYKsqKUDjBwYylTvV7SjSHJb9ratfyzM6wCdLCOYLzs73qpg5c4iGA=="
+  "resolved" "https://registry.npmjs.org/axios/-/axios-0.21.1.tgz"
+  "version" "0.21.1"
+  dependencies:
+    "follow-redirects" "^1.10.0"
+
 "axios@0.18.0":
   "integrity" "sha1-MtU+SFHv3AoRmTts0AB4nXDAUQI="
   "resolved" "https://registry.npmjs.org/axios/-/axios-0.18.0.tgz"
@@ -1226,6 +1227,7 @@
 "bplist-parser@https://github.com/telerik/node-bplist-parser/tarball/master":
   "integrity" "sha512-B7Agq6ELA8hOERzvUhhgQPFe1Hcx6HCAtdaxHv/YS/PAUdxhxtCYzWFJ3zDfGIWXT1X2Nt2Q8lqeEASKoY3Wfw=="
   "resolved" "https://github.com/telerik/node-bplist-parser/tarball/master"
+  "version" "0.2.0"
   dependencies:
     "big-integer" "^1.6.7"
 
@@ -1537,10 +1539,10 @@
   "resolved" "https://registry.npmjs.org/check-error/-/check-error-1.0.2.tgz"
   "version" "1.0.2"
 
-"chokidar@*", "chokidar@3.4.1":
-  "integrity" "sha512-TQTJyr2stihpC4Sya9hs2Xh+O2wf+igjL36Y75xx2WdHuiICcn/XJza46Jwt0eT5hVpQOzo3FpY3cj3RVYLX0g=="
-  "resolved" "https://registry.npmjs.org/chokidar/-/chokidar-3.4.1.tgz"
-  "version" "3.4.1"
+"chokidar@*", "chokidar@3.5.1":
+  "integrity" "sha512-9+s+Od+W0VJJzawDma/gvBNQqkTiqYTWLuZoyAsivsI4AaWTCzHG06/TMjsf1cYe9Cb97UCEhjz7HvnPk2p/tw=="
+  "resolved" "https://registry.npmjs.org/chokidar/-/chokidar-3.5.1.tgz"
+  "version" "3.5.1"
   dependencies:
     "anymatch" "~3.1.1"
     "braces" "~3.0.2"
@@ -1548,9 +1550,9 @@
     "is-binary-path" "~2.1.0"
     "is-glob" "~4.0.1"
     "normalize-path" "~3.0.0"
-    "readdirp" "~3.4.0"
+    "readdirp" "~3.5.0"
   optionalDependencies:
-    "fsevents" "~2.1.2"
+    "fsevents" "~2.3.1"
 
 "chokidar@^2.0.4":
   "integrity" "sha512-ZmZUazfOzf0Nve7duiCKD23PFSCs4JPoYyccjUFF3aQkQadqBhfzhjkwBH2mNOG9cTBwhamM37EIsIkZw3nRgg=="
@@ -1631,6 +1633,7 @@
 "cli-table@*", "cli-table@https://github.com/telerik/cli-table/tarball/v0.3.1.2":
   "integrity" "sha512-bf7UQUo6n0c3Fxn5OXckpausCWjFg+qGLzN/LnaMsjF+9HYuSMbPPciWI6zPLu+KLnwjqwKzwPkozi/vxJYpvw=="
   "resolved" "https://github.com/telerik/cli-table/tarball/v0.3.1.2"
+  "version" "0.3.1"
   dependencies:
     "colors" "1.0.3"
     "lodash" "3.6.0"
@@ -2812,7 +2815,7 @@
   "resolved" "https://registry.npmjs.org/flatted/-/flatted-2.0.2.tgz"
   "version" "2.0.2"
 
-"follow-redirects@^1.3.0":
+"follow-redirects@^1.10.0", "follow-redirects@^1.3.0":
   "integrity" "sha512-aq6gF1BEKje4a9i9+5jimNFIpq4Q1WiwBToeRK5NvZBd/TRsmW8BsJfOEGkr76TbOyPVD3OVDN910EcUNtRYEA=="
   "resolved" "https://registry.npmjs.org/follow-redirects/-/follow-redirects-1.13.0.tgz"
   "version" "1.13.0"
@@ -2842,7 +2845,7 @@
   "resolved" "https://registry.npmjs.org/forever-agent/-/forever-agent-0.6.1.tgz"
   "version" "0.6.1"
 
-"form-data@*", "form-data@^2.3.1", "form-data@^2.5.0":
+"form-data@*", "form-data@^2.3.1":
   "integrity" "sha512-m21N3WOmEEURgk6B9GLOE4RuWOFf28Lhh9qGYeNlGq4VDXUlJy2th2slBNU8Gp8EzloYZOibZJ7t5ecIrFSjVA=="
   "resolved" "https://registry.npmjs.org/form-data/-/form-data-2.5.1.tgz"
   "version" "2.5.1"
@@ -2931,6 +2934,11 @@
   "integrity" "sha512-Auw9a4AxqWpa9GUfj370BMPzzyncfBABW8Mab7BGWBYDj4Isgq+cDKtx0i6u9jcX9pQDnswsaaOTgTmA5pEjuQ=="
   "resolved" "https://registry.npmjs.org/fsevents/-/fsevents-2.1.3.tgz"
   "version" "2.1.3"
+
+"fsevents@~2.3.1":
+  "integrity" "sha512-xiqMQR4xAeHTuB9uWm+fFRcIOgKBMiOBP+eXiyT7jsgVCq1bkVygt00oASowB7EdtpOHaaPgKt812P9ab+DDKA=="
+  "resolved" "https://registry.npmjs.org/fsevents/-/fsevents-2.3.2.tgz"
+  "version" "2.3.2"
 
 "ftp@~0.3.10":
   "integrity" "sha1-kZfYYa2BQvPmPVqDv+TFn3MwiF0="
@@ -3666,13 +3674,13 @@
   "resolved" "https://registry.npmjs.org/invert-kv/-/invert-kv-1.0.0.tgz"
   "version" "1.0.0"
 
-"ios-device-lib@0.8.0":
-  "integrity" "sha512-DPLKoL04r00NfMd1zaysyhcv++qQErGI5jeC7kCXu68JlfNWlQ7hNMkzgbDUJ3G0e0si33ltb+RWiv2xjVbWIg=="
-  "resolved" "https://registry.npmjs.org/ios-device-lib/-/ios-device-lib-0.8.0.tgz"
-  "version" "0.8.0"
+"ios-device-lib@0.9.2":
+  "integrity" "sha512-sD14ue++SlM2s036oZjyGPznbPWY40wpu42XKQooVWQvyAWqU9ESsCg/xUEMLE8sQhry2D9BJbwr6XnyxOVUHA=="
+  "resolved" "https://registry.npmjs.org/ios-device-lib/-/ios-device-lib-0.9.2.tgz"
+  "version" "0.9.2"
   dependencies:
     "bufferpack" "0.0.6"
-    "node-uuid" "1.4.7"
+    "uuid" "8.3.2"
 
 "ios-mobileprovision-finder@1.0.11":
   "integrity" "sha512-abq25CblgdjIAD2t6YkYoE7SvK8eN9OWKLH4Bspi8mzpGhZEBhwkWr5HT9nTy+9BA8Zyz1bMuvUyC5pBPDVFlg=="
@@ -4177,7 +4185,7 @@
   "integrity" "sha1-h3Gq4HmbZAdrdmQPygWPnBDjPss="
   "resolved" "https://registry.npmjs.org/jsonfile/-/jsonfile-4.0.0.tgz"
   "version" "4.0.0"
-  dependencies:
+  optionalDependencies:
     "graceful-fs" "^4.1.6"
 
 "jsonfile@^6.0.1":
@@ -4185,8 +4193,9 @@
   "resolved" "https://registry.npmjs.org/jsonfile/-/jsonfile-6.0.1.tgz"
   "version" "6.0.1"
   dependencies:
-    "graceful-fs" "^4.1.6"
     "universalify" "^1.0.0"
+  optionalDependencies:
+    "graceful-fs" "^4.1.6"
 
 "jsonparse@^1.2.0", "jsonparse@^1.3.1":
   "integrity" "sha1-P02uSpH6wxX3EGL4UhzCOfE2YoA="
@@ -4605,6 +4614,7 @@
 "marked-terminal@https://github.com/NativeScript/marked-terminal/tarball/v3.1.1n":
   "integrity" "sha512-u6ohADNIqv+ptDbniFWCuBuOpX0WxM2xtImX58NWqH7DW4ioWW1XQUwMe4WnO+0ZAEz+iUwzJH9rdQ/r9mvfDg=="
   "resolved" "https://github.com/NativeScript/marked-terminal/tarball/v3.1.1n"
+  "version" "3.1.1"
   dependencies:
     "cardinal" "^2.1.1"
     "chalk" "^2.4.1"
@@ -5093,11 +5103,6 @@
     "semver" "^5.7.1"
     "tar" "^4.4.12"
     "which" "^1.3.1"
-
-"node-uuid@1.4.7":
-  "integrity" "sha1-baWhdmjEs91ZYjvaEc9/pMH2Cm8="
-  "resolved" "https://registry.npmjs.org/node-uuid/-/node-uuid-1.4.7.tgz"
-  "version" "1.4.7"
 
 "nopt@^4.0.1":
   "integrity" "sha512-CvaGwVMztSMJLOeXPrez7fyfObdZqNUK1cPAEzLHrTybIua9pMdmmPR5YwtfNftIOMv3DPUhFaxsZMNTQO20Kg=="
@@ -6132,10 +6137,10 @@
   dependencies:
     "picomatch" "^2.0.7"
 
-"readdirp@~3.4.0":
-  "integrity" "sha512-0xe001vZBnJEK+uKcj8qOhyAKPzIT+gStxWr3LCB0DwcXR5NZJ3IaC+yGnHCYzB/S7ov3m3EEbZI2zeNvX+hGQ=="
-  "resolved" "https://registry.npmjs.org/readdirp/-/readdirp-3.4.0.tgz"
-  "version" "3.4.0"
+"readdirp@~3.5.0":
+  "integrity" "sha512-cMhu7c/8rdhkHXWsY+osBhfSy0JikwpHK/5+imo+LpeasTF8ouErHrlYkwT0++njiyuDvc7OFY5T3ukvZ8qmFQ=="
+  "resolved" "https://registry.npmjs.org/readdirp/-/readdirp-3.5.0.tgz"
+  "version" "3.5.0"
   dependencies:
     "picomatch" "^2.2.1"
 
@@ -6226,7 +6231,7 @@
   dependencies:
     "is-finite" "^1.0.0"
 
-"request@^2.88.0", "request@^2.88.2", "request@2.88.2":
+"request@^2.88.0", "request@^2.88.2":
   "integrity" "sha512-MsvtOrfG9ZcrOwAW+Qi+F6HbD0CWXEh9ou77uOb7FM2WPhwT7smM833PzanhJLsgXjN89Ir6V2PczXNnMpwKhw=="
   "resolved" "https://registry.npmjs.org/request/-/request-2.88.2.tgz"
   "version" "2.88.2"
@@ -7116,6 +7121,7 @@
 "tabtab@https://github.com/Icenium/node-tabtab/tarball/master":
   "integrity" "sha512-cl3/EU3olHHTbjZ3Gcmvh79y2LGgv7WrEGnuIcFB5rgG/Cmrf0n5akGYyAJsCyIhQXehKlCae89YdXJdae0Nyg=="
   "resolved" "https://github.com/Icenium/node-tabtab/tarball/master"
+  "version" "0.0.3"
 
 "tar@^4.4.12":
   "integrity" "sha512-w2VwSrBoHa5BsSyH+KxEqeQBAllHhccyMFVHtGtdMpF4W7IRWfZjFiQceJPChOeTsSDVUpER2T8FA93pr0L+QA=="
@@ -7393,6 +7399,11 @@
   dependencies:
     "safe-buffer" "^5.0.1"
 
+"tunnel@0.0.6":
+  "integrity" "sha512-1h/Lnq9yajKY2PEbBadPXj3VxsDDu844OnaAo52UVmIzIvwwtBPIuNvkjuzBlTWpfJyUbG3ez0KSBibQkj4ojg=="
+  "resolved" "https://registry.npmjs.org/tunnel/-/tunnel-0.0.6.tgz"
+  "version" "0.0.6"
+
 "tweetnacl@^0.14.3", "tweetnacl@~0.14.0":
   "integrity" "sha1-WuaBd/GS1EViadEIr6k/+HQ/T2Q="
   "resolved" "https://registry.npmjs.org/tweetnacl/-/tweetnacl-0.14.5.tgz"
@@ -7574,6 +7585,11 @@
   "integrity" "sha512-fX6Z5o4m6XsXBdli9g7DtWgAx+osMsRRZFKma1mIUsLCz6vRvv+pz5VNbyu9UEDzpMWulZfvpgb/cmDXVulYFQ=="
   "resolved" "https://registry.npmjs.org/uuid/-/uuid-8.3.0.tgz"
   "version" "8.3.0"
+
+"uuid@8.3.2":
+  "integrity" "sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg=="
+  "resolved" "https://registry.npmjs.org/uuid/-/uuid-8.3.2.tgz"
+  "version" "8.3.2"
 
 "v8flags@~3.1.1":
   "integrity" "sha512-amh9CCg3ZxkzQ48Mhcb8iX7xpAfYJgePHxWMQCBWECpOSqJUXgY26ncA61UTV0BkPqfhcy6mzwCIoP4ygxpW8w=="
@@ -7995,3 +8011,4 @@
 "zipstream@https://github.com/Icenium/node-zipstream/tarball/master":
   "integrity" "sha512-99p+ohUBZ2Es0AXrw/tpazMcJ0/acpdQXr0UPrVWF0p7i8XiOYvjiXTdwXUVCTPopBGCSDtWBzOoYNPtF3z/8w=="
   "resolved" "https://github.com/Icenium/node-zipstream/tarball/master"
+  "version" "0.2.1"

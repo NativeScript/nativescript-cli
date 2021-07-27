@@ -93,7 +93,7 @@ export class ProjectChangesService implements IProjectChangesService {
 			);
 
 			this.$nodeModulesDependenciesBuilder
-				.getProductionDependencies(projectData.projectDir, projectData.dependenciesToIgnore)
+				.getProductionDependencies(projectData.projectDir, projectData.ignoredDependencies)
 				.filter(
 					(dep) =>
 						dep.nativescript &&

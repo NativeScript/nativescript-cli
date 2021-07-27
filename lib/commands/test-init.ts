@@ -135,14 +135,18 @@ class TestInitCommand implements ICommand {
 		);
 
 		const testsDir = path.join(this.$projectData.appDirectoryPath, "tests");
-		const relativeTestsDir = path.relative(
+		const projectTestsDir = path.relative(
 			this.$projectData.projectDir,
+			testsDir
+		);
+		const relativeTestsDir = path.relative(
+			this.$projectData.appDirectoryPath,
 			testsDir
 		);
 		let shouldCreateSampleTests = true;
 		if (this.$fs.exists(testsDir)) {
 			this.$logger.info(
-				`${relativeTestsDir} directory already exists, will not create an example test project.`
+				`${projectTestsDir} directory already exists, will not create an example test project.`
 			);
 			shouldCreateSampleTests = false;
 		}
@@ -157,7 +161,11 @@ class TestInitCommand implements ICommand {
 			relativeTestsDir
 		)}/**/*${projectFilesExtension}'`;
 		const karmaConfTemplate = this.$resources.readText("test/karma.conf.js");
-		const karmaConf = _.template(karmaConfTemplate)({ frameworks, testFiles });
+		const karmaConf = _.template(karmaConfTemplate)({
+			frameworks,
+			testFiles,
+			basePath: this.$projectData.getAppDirectoryRelativePath(),
+		});
 
 		this.$fs.writeFile(path.join(projectDir, "karma.conf.js"), karmaConf);
 
@@ -171,11 +179,11 @@ class TestInitCommand implements ICommand {
 				path.join(testsDir, `example${projectFilesExtension}`)
 			);
 			this.$logger.info(
-				`\nExample test file created in ${relativeTestsDir}`.yellow
+				`\nExample test file created in ${projectTestsDir}`.yellow
 			);
 		} else {
 			this.$logger.info(
-				`\nPlace your test files under ${relativeTestsDir}`.yellow
+				`\nPlace your test files under ${projectTestsDir}`.yellow
 			);
 		}
 

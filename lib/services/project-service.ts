@@ -28,6 +28,7 @@ import {
 } from "../common/declarations";
 import * as _ from "lodash";
 import { injector } from "../common/yok";
+import { ITempService } from "../definitions/temp-service";
 
 export class ProjectService implements IProjectService {
 	constructor(
@@ -108,7 +109,9 @@ export class ProjectService implements IProjectService {
 		try {
 			await this.$childProcess.exec(`git init ${projectDir}`);
 			await this.$childProcess.exec(`git -C ${projectDir} add --all`);
-			await this.$childProcess.exec(`git -C ${projectDir} commit --no-verify -m "init"`);
+			await this.$childProcess.exec(
+				`git -C ${projectDir} commit --no-verify -m "init"`
+			);
 		} catch (err) {
 			this.$logger.trace(
 				"Unable to initialize git repository. Error is: ",
@@ -218,6 +221,9 @@ export class ProjectService implements IProjectService {
 		);
 
 		if (!this.$fs.exists(appResourcesDestinationPath)) {
+			this.$logger.trace(
+				"Project does not have App_Resources - fetching from default template."
+			);
 			this.$fs.createDirectory(appResourcesDestinationPath);
 			const tempDir = await this.$tempService.mkdirSync("ns-default-template");
 			// the template installed doesn't have App_Resources -> get from a default template
@@ -265,4 +271,5 @@ export class ProjectService implements IProjectService {
 		};
 	}
 }
+
 injector.register("projectService", ProjectService);
