@@ -35,7 +35,7 @@ export class TypingsCommand implements ICommand {
 			typingsFolder = this.$options.copyTo;
 		}
 		this.$logger.info(
-			"Typing have been generated in the following directory:",
+			"Typings have been generated in the following directory:",
 			typingsFolder
 		);
 	}
