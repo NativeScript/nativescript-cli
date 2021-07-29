@@ -1,5 +1,5 @@
 import { IOptions } from "../declarations";
-import { IChildProcess, IFileSystem } from "../common/declarations";
+import { IChildProcess, IFileSystem, IHostInfo } from "../common/declarations";
 import { ICommand, ICommandParameter } from "../common/definitions/commands";
 import { injector } from "../common/yok";
 import { IProjectData } from "../definitions/project";
@@ -13,7 +13,8 @@ export class TypingsCommand implements ICommand {
 		private $fs: IFileSystem,
 		private $projectData: IProjectData,
 		private $mobileHelper: Mobile.IMobileHelper,
-		private $childProcess: IChildProcess
+		private $childProcess: IChildProcess,
+		private $hostInfo: IHostInfo,
 	) {}
 
 	public async execute(args: string[]): Promise<void> {
@@ -74,7 +75,7 @@ ns typings android --jar classes.jar --jar dependency-of-classes-jar.jar
 		if (!this.$fs.exists(dtsGeneratorPath)) {
 			this.$logger.warn("No platforms folder found, preparing project now...");
 			await this.$childProcess.spawnFromEvent(
-				"ns",
+				this.$hostInfo.isWindows ? "ns.cmd" : "ns",
 				["prepare", "android"],
 				"exit",
 				{ stdio: "inherit" }
