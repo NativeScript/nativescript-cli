@@ -345,9 +345,10 @@ can skip this prompt next time using the --template option, or the --ng, --react
 		this.$logger.printMarkdown(
 			`Now you can navigate to your project with \`$ cd ${relativePath}\``
 		);
-		this.$logger.printMarkdown(
-			`After that you can preview it on device by executing \`$ ns preview\``
-		);
+		// Commented as we may bring this back with a playground revision/rewrite
+		// this.$logger.printMarkdown(
+		// 	`After that you can preview it on device by executing \`$ ns preview\``
+		// );
 	}
 }
 
