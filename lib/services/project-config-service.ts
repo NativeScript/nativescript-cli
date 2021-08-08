@@ -94,42 +94,61 @@ export default {
 	}
 
 	public detectProjectConfigs(projectDir?: string): IProjectConfigInformation {
-		let JSConfigPath;
-		let TSConfigPath;
-		const configFilename = this.$options.config;
+		const possibleTSConfigPaths = [
+			path.join(
+				projectDir || this.projectHelper.projectDir,
+				CONFIG_FILE_NAME_TS
+			),
+		];
+		const possibleJSConfigPaths = [
+			path.join(
+				projectDir || this.projectHelper.projectDir,
+				CONFIG_FILE_NAME_JS
+			),
+		];
+		const possibleNSConfigPaths = [
+			path.join(
+				projectDir || this.projectHelper.projectDir,
+				CONFIG_NS_FILE_NAME
+			),
+		];
+
 		// allow overriding config name with --config (or -c)
+		const configFilename = this.$options.config;
 		if (configFilename) {
 			const fullPath = this.$fs.isRelativePath(configFilename)
 				? path.join(projectDir || this.projectHelper.projectDir, configFilename)
 				: configFilename;
-			if (configFilename.endsWith(".ts")) {
-				TSConfigPath = fullPath;
-			} else if (configFilename.endsWith(".js")) {
-				JSConfigPath = fullPath;
-			} else {
-				// the user might have passed the name without extension
-				TSConfigPath = fullPath + ".ts";
-				JSConfigPath = fullPath + ".js";
-			}
-		} else {
-			JSConfigPath = path.join(
-				projectDir || this.projectHelper.projectDir,
-				CONFIG_FILE_NAME_JS
-			);
-			TSConfigPath = path.join(
-				projectDir || this.projectHelper.projectDir,
-				CONFIG_FILE_NAME_TS
-			);
-		}
-		const NSConfigPath = path.join(
-			projectDir || this.projectHelper.projectDir,
-			CONFIG_NS_FILE_NAME
-		);
 
-		const hasTSConfig = this.$fs.exists(TSConfigPath);
-		const hasJSConfig = this.$fs.exists(JSConfigPath);
-		const hasNSConfig = this.$fs.exists(NSConfigPath);
+			possibleTSConfigPaths.unshift(fullPath, `${fullPath}.ts`);
+			possibleJSConfigPaths.unshift(fullPath, `${fullPath}.js`);
+			possibleNSConfigPaths.unshift(fullPath, `${fullPath}.json`);
+		}
+
+		const TSConfigPath = possibleTSConfigPaths
+			.filter(Boolean)
+			.find((path) => this.$fs.exists(path));
+		const JSConfigPath = possibleJSConfigPaths
+			.filter(Boolean)
+			.find((path) => this.$fs.exists(path));
+		const NSConfigPath = possibleNSConfigPaths
+			.filter(Boolean)
+			.find((path) => this.$fs.exists(path));
+
+		const hasTSConfig = TSConfigPath && this.$fs.exists(TSConfigPath);
+		const hasJSConfig = JSConfigPath && this.$fs.exists(JSConfigPath);
+		const hasNSConfig = NSConfigPath && this.$fs.exists(NSConfigPath);
 		const usingNSConfig = !(hasTSConfig || hasJSConfig);
+
+		console.log({
+			hasTSConfig,
+			hasJSConfig,
+			hasNSConfig,
+			usingNSConfig,
+			TSConfigPath,
+			JSConfigPath,
+			NSConfigPath,
+		});
 
 		if (hasTSConfig && hasJSConfig) {
 			this.$logger.warn(
