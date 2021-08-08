@@ -173,7 +173,7 @@ export class ProjectData implements IProjectData {
 			this.devDependencies = packageJsonData.devDependencies;
 			this.projectType = this.getProjectType();
 			this.nsConfig = nsConfig;
-			this.ignoredDependencies = nsConfig.ignoredNativeDependencies;
+			this.ignoredDependencies = nsConfig?.ignoredNativeDependencies;
 			this.appDirectoryPath = this.getAppDirectoryPath();
 			this.appResourcesDirectoryPath = this.getAppResourcesDirectoryPath();
 			this.androidManifestPath = this.getPathToAndroidManifest(

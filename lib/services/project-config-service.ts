@@ -31,7 +31,6 @@ import { cache, exported } from "../common/decorators";
 import { IOptions } from "../declarations";
 import semver = require("semver/preload");
 import { ICleanupService } from "../definitions/cleanup-service";
-import * as FsLib from "../../lib/common/file-system";
 
 export class ProjectConfigService implements IProjectConfigService {
 	private forceUsingNewConfig: boolean = false;
@@ -98,26 +97,26 @@ export default {
 		let JSConfigPath;
 		let TSConfigPath;
 		const configFilename = this.$options.config;
+		// allow overriding config name with --config (or -c)
 		if (configFilename) {
-			const fullPath = this.$fs.isRelativePath(configFilename) ? path.join(
-				projectDir || this.projectHelper.projectDir,
-				configFilename
-			) :  configFilename;
-			if (configFilename.endsWith('.ts')) {
+			const fullPath = this.$fs.isRelativePath(configFilename)
+				? path.join(projectDir || this.projectHelper.projectDir, configFilename)
+				: configFilename;
+			if (configFilename.endsWith(".ts")) {
 				TSConfigPath = fullPath;
-			} else if (configFilename.endsWith('.js')) {
+			} else if (configFilename.endsWith(".js")) {
 				JSConfigPath = fullPath;
 			} else {
 				// the user might have passed the name without extension
-				TSConfigPath = fullPath + '.ts';
-				JSConfigPath =fullPath + '.js';
+				TSConfigPath = fullPath + ".ts";
+				JSConfigPath = fullPath + ".js";
 			}
 		} else {
-			 JSConfigPath = path.join(
+			JSConfigPath = path.join(
 				projectDir || this.projectHelper.projectDir,
 				CONFIG_FILE_NAME_JS
 			);
-			 TSConfigPath = path.join(
+			TSConfigPath = path.join(
 				projectDir || this.projectHelper.projectDir,
 				CONFIG_FILE_NAME_TS
 			);
@@ -126,7 +125,6 @@ export default {
 			projectDir || this.projectHelper.projectDir,
 			CONFIG_NS_FILE_NAME
 		);
-		
 
 		const hasTSConfig = this.$fs.exists(TSConfigPath);
 		const hasJSConfig = this.$fs.exists(JSConfigPath);
