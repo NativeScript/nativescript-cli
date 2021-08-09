@@ -13,6 +13,7 @@ import {
 import {
 	IPackageManager,
 	IPackageInstallationManager,
+	IOptions,
 } from "../../declarations";
 import { IPlatformData } from "../../definitions/platform";
 import { IProjectData } from "../../definitions/project";
@@ -48,6 +49,7 @@ export class WebpackCompilerService
 	private expectedHashes: IStringDictionary = {};
 
 	constructor(
+		private $options: IOptions,
 		private $errors: IErrors,
 		private $childProcess: IChildProcess,
 		public $fs: IFileSystem,
@@ -368,6 +370,13 @@ export class WebpackCompilerService
 
 		envData.verbose = envData.verbose || this.$logger.isVerbose();
 		envData.production = envData.production || prepareData.release;
+
+		// add the config file name to the env data so the webpack process can read the
+		// correct config file when resolving the CLI lib and the config service
+		// we are explicityly setting it to false to force using the defaults
+		envData.config =
+			process.env.NATIVESCRIPT_CONFIG_NAME ?? this.$options.config ?? "false";
+
 		// The snapshot generation is wrongly located in the Webpack plugin.
 		// It should be moved in the Native Prepare of the CLI or a Gradle task in the Runtime.
 		// As a workaround, we skip the mksnapshot, xxd and android-ndk calls based on skipNativePrepare.

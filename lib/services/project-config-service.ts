@@ -113,8 +113,9 @@ export default {
 			),
 		];
 
-		// allow overriding config name with --config (or -c)
-		const configFilename = this.$options.config;
+		// allow overriding config name with env variable or --config (or -c)
+		const configFilename =
+			process.env.NATIVESCRIPT_CONFIG_NAME ?? this.$options.config;
 		if (configFilename) {
 			const fullPath = this.$fs.isRelativePath(configFilename)
 				? path.join(projectDir || this.projectHelper.projectDir, configFilename)
