@@ -1,16 +1,72 @@
 import groovy.json.JsonSlurper
 
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
+
+
 buildscript {
+    def computeKotlinVersion = { -> project.hasProperty("kotlinVersion") ? kotlinVersion : "1.4.21" }
+    def kotlinVersion = computeKotlinVersion()
     repositories {
         google()
         jcenter()
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:{{runtimeAndroidPluginVersion}}'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
 
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
     }
+
+    project.ext.getAppResourcesPath = { ->
+        def relativePathToApp = "app"
+        def relativePathToAppResources
+        def absolutePathToAppResources
+        def projectRoot = "$rootDir/../../.."
+        def nsConfigFile = file("$projectRoot/nsconfig.json")
+        def nsConfig
+
+        if (nsConfigFile.exists()) {
+            nsConfig = new JsonSlurper().parseText(nsConfigFile.getText("UTF-8"))
+        }
+
+        if(nsConfig != null && nsConfig.appPath != null){
+            relativePathToApp = nsConfig.appPath
+        }
+
+        if(nsConfig != null && nsConfig.appResourcesPath != null ) {
+            relativePathToAppResources = nsConfig.appResourcesPath
+        } else {
+            relativePathToAppResources  = "$relativePathToApp/App_Resources"
+        }
+
+        absolutePathToAppResources = java.nio.file.Paths.get(projectRoot).resolve(relativePathToAppResources).toAbsolutePath()
+
+        project.ext.appResourcesPath = absolutePathToAppResources
+
+        return absolutePathToAppResources
+    }
+
+    def applyBuildScriptConfigurations = { ->
+        def absolutePathToAppResources = getAppResourcesPath()
+        def pathToBuildScriptGradle = "$absolutePathToAppResources/Android/buildscript.gradle"
+        def buildScriptGradle = file(pathToBuildScriptGradle)
+        if (buildScriptGradle.exists()) {
+            outLogger.withStyle(Style.SuccessHeader).println "\t + applying user-defined buildscript from ${buildScriptGradle}"
+            apply from: pathToBuildScriptGradle, to: buildscript
+        }
+
+        def pathToPluginBuildScriptGradle = "$rootDir/buildscript.gradle"
+        def pluginBuildScriptGradle = file(pathToPluginBuildScriptGradle)
+        if (pluginBuildScriptGradle.exists()) {
+            outLogger.withStyle(Style.SuccessHeader).println "\t + applying user-defined buildscript from dependency ${pluginBuildScriptGradle}"
+            apply from: pathToPluginBuildScriptGradle, to: buildscript
+        }
+    }
+    applyBuildScriptConfigurations()
+
 }
 
 allprojects {
@@ -25,7 +81,6 @@ allprojects {
     }
 }
 
-apply plugin: 'com.android.library'
 
 def computeCompileSdkVersion = { -> project.hasProperty("compileSdk") ? compileSdk : 28 }
 def computeBuildToolsVersion = { ->
@@ -60,35 +115,6 @@ dependencies {
            }
        }
     }
-}
-
-def getAppResourcesPath() {
-    def relativePathToApp = "app"
-    def relativePathToAppResources
-    def absolutePathToAppResources
-    def projectRoot = "$rootDir/../../.."
-    def nsConfigFile = file("$projectRoot/nsconfig.json")
-    def nsConfig
-
-    if (nsConfigFile.exists()) {
-        nsConfig = new JsonSlurper().parseText(nsConfigFile.getText("UTF-8"))
-    }
-
-    if(nsConfig != null && nsConfig.appPath != null){
-        relativePathToApp = nsConfig.appPath
-    }
-
-    if(nsConfig != null && nsConfig.appResourcesPath != null ) {
-        relativePathToAppResources = nsConfig.appResourcesPath
-    } else {
-        relativePathToAppResources  = "$relativePathToApp/App_Resources"
-    }
-
-    absolutePathToAppResources = java.nio.file.Paths.get(projectRoot).resolve(relativePathToAppResources).toAbsolutePath()
-
-    project.ext.appResourcesPath = absolutePathToAppResources
-
-    return absolutePathToAppResources
 }
 
 def applyBeforePluginGradleConfiguration() {
