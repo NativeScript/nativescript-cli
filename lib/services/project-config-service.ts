@@ -197,16 +197,6 @@ export default {
 		const hasNSConfig = !!paths.NSConfigPath;
 		const usingNSConfig = !(hasTSConfig || hasJSConfig);
 
-		console.log({
-			hasTSConfig,
-			hasJSConfig,
-			hasNSConfig,
-			usingNSConfig,
-			TSConfigPath: paths.TSConfigPath,
-			JSConfigPath: paths.JSConfigPath,
-			NSConfigPath: paths.NSConfigPath,
-		});
-
 		if (hasTSConfig && hasJSConfig) {
 			this.$logger.warn(
 				`You have both a ${CONFIG_FILE_NAME_JS} and ${CONFIG_FILE_NAME_TS} file. Defaulting to ${CONFIG_FILE_NAME_TS}.`
