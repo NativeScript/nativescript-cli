@@ -93,25 +93,51 @@ export default {
 		);
 	}
 
+	private getConfigPathsFromPossiblePaths(paths: {
+		[key: string]: string[];
+	}): any {
+		const {
+			possibleTSConfigPaths,
+			possibleJSConfigPaths,
+			possibleNSConfigPaths,
+		} = paths;
+
+		let TSConfigPath;
+		let JSConfigPath;
+		let NSConfigPath;
+
+		// look up a ts config first
+		TSConfigPath = possibleTSConfigPaths
+			.filter(Boolean)
+			.find((path) => this.$fs.exists(path));
+
+		// if not found, look up a JS config
+		if (!TSConfigPath) {
+			JSConfigPath = possibleJSConfigPaths
+				.filter(Boolean)
+				.find((path) => this.$fs.exists(path));
+		}
+
+		// lastly look for nsconfig/json config
+		if (!TSConfigPath && !JSConfigPath) {
+			NSConfigPath = possibleNSConfigPaths
+				.filter(Boolean)
+				.find((path) => this.$fs.exists(path));
+		}
+
+		return {
+			TSConfigPath,
+			JSConfigPath,
+			NSConfigPath,
+			found: TSConfigPath || JSConfigPath || NSConfigPath,
+		};
+	}
+
 	public detectProjectConfigs(projectDir?: string): IProjectConfigInformation {
-		const possibleTSConfigPaths = [
-			path.join(
-				projectDir || this.projectHelper.projectDir,
-				CONFIG_FILE_NAME_TS
-			),
-		];
-		const possibleJSConfigPaths = [
-			path.join(
-				projectDir || this.projectHelper.projectDir,
-				CONFIG_FILE_NAME_JS
-			),
-		];
-		const possibleNSConfigPaths = [
-			path.join(
-				projectDir || this.projectHelper.projectDir,
-				CONFIG_NS_FILE_NAME
-			),
-		];
+		const possibleTSConfigPaths = [];
+		const possibleJSConfigPaths = [];
+		const possibleNSConfigPaths = [];
+		let paths;
 
 		// allow overriding config name with env variable or --config (or -c)
 		const configFilename =
@@ -121,24 +147,54 @@ export default {
 				? path.join(projectDir || this.projectHelper.projectDir, configFilename)
 				: configFilename;
 
-			possibleTSConfigPaths.unshift(fullPath, `${fullPath}.ts`);
-			possibleJSConfigPaths.unshift(fullPath, `${fullPath}.js`);
-			possibleNSConfigPaths.unshift(fullPath, `${fullPath}.json`);
+			possibleTSConfigPaths.unshift(
+				fullPath.endsWith(".ts") ? fullPath : `${fullPath}.ts`
+			);
+			possibleJSConfigPaths.unshift(
+				fullPath.endsWith(".js") ? fullPath : `${fullPath}.js`
+			);
+			possibleNSConfigPaths.unshift(
+				fullPath.endsWith(".json") ? fullPath : `${fullPath}.json`
+			);
+
+			paths = this.getConfigPathsFromPossiblePaths({
+				possibleTSConfigPaths,
+				possibleJSConfigPaths,
+				possibleNSConfigPaths,
+			});
 		}
 
-		const TSConfigPath = possibleTSConfigPaths
-			.filter(Boolean)
-			.find((path) => this.$fs.exists(path));
-		const JSConfigPath = possibleJSConfigPaths
-			.filter(Boolean)
-			.find((path) => this.$fs.exists(path));
-		const NSConfigPath = possibleNSConfigPaths
-			.filter(Boolean)
-			.find((path) => this.$fs.exists(path));
+		// look up default paths if no path found yet
+		if (!paths?.found) {
+			possibleTSConfigPaths.push(
+				path.join(
+					projectDir || this.projectHelper.projectDir,
+					CONFIG_FILE_NAME_TS
+				)
+			);
+			possibleJSConfigPaths.push(
+				path.join(
+					projectDir || this.projectHelper.projectDir,
+					CONFIG_FILE_NAME_JS
+				)
+			);
+			possibleNSConfigPaths.push(
+				path.join(
+					projectDir || this.projectHelper.projectDir,
+					CONFIG_NS_FILE_NAME
+				)
+			);
 
-		const hasTSConfig = TSConfigPath && this.$fs.exists(TSConfigPath);
-		const hasJSConfig = JSConfigPath && this.$fs.exists(JSConfigPath);
-		const hasNSConfig = NSConfigPath && this.$fs.exists(NSConfigPath);
+			paths = this.getConfigPathsFromPossiblePaths({
+				possibleTSConfigPaths,
+				possibleJSConfigPaths,
+				possibleNSConfigPaths,
+			});
+		}
+
+		const hasTSConfig = !!paths.TSConfigPath;
+		const hasJSConfig = !!paths.JSConfigPath;
+		const hasNSConfig = !!paths.NSConfigPath;
 		const usingNSConfig = !(hasTSConfig || hasJSConfig);
 
 		console.log({
@@ -146,9 +202,9 @@ export default {
 			hasJSConfig,
 			hasNSConfig,
 			usingNSConfig,
-			TSConfigPath,
-			JSConfigPath,
-			NSConfigPath,
+			TSConfigPath: paths.TSConfigPath,
+			JSConfigPath: paths.JSConfigPath,
+			NSConfigPath: paths.NSConfigPath,
 		});
 
 		if (hasTSConfig && hasJSConfig) {
@@ -162,9 +218,9 @@ export default {
 			hasJSConfig,
 			hasNSConfig,
 			usingNSConfig,
-			TSConfigPath,
-			JSConfigPath,
-			NSConfigPath,
+			TSConfigPath: paths.TSConfigPath,
+			JSConfigPath: paths.JSConfigPath,
+			NSConfigPath: paths.NSConfigPath,
 		};
 	}
 
