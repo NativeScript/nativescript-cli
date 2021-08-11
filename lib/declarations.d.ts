@@ -616,10 +616,10 @@ interface IOptions
 	/**
 	 * Project Configuration
 	 */
-	config: string[];
 	log: string;
 	verbose: boolean;
 	path: string;
+	config: string;
 	version: boolean;
 	help: boolean;
 	json: boolean;

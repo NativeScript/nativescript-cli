@@ -88,6 +88,7 @@ export class ProjectData implements IProjectData {
 	public appResourcesDirectoryPath: string;
 	public dependencies: any;
 	public devDependencies: IStringDictionary;
+	public ignoredDependencies: string[];
 	public projectType: string;
 	public androidManifestPath: string;
 	public infoPlistPath: string;
@@ -172,6 +173,7 @@ export class ProjectData implements IProjectData {
 			this.devDependencies = packageJsonData.devDependencies;
 			this.projectType = this.getProjectType();
 			this.nsConfig = nsConfig;
+			this.ignoredDependencies = nsConfig?.ignoredNativeDependencies;
 			this.appDirectoryPath = this.getAppDirectoryPath();
 			this.appResourcesDirectoryPath = this.getAppResourcesDirectoryPath();
 			this.androidManifestPath = this.getPathToAndroidManifest(

@@ -75,5 +75,6 @@ Option | Description
 -------|---------
 --help, -h, /? | Prints help about the selected command in the console.
 --path `<Directory>` | Specifies the directory that contains the project. If not set, the project is searched for in the current directory and all directories above it.
+--config | Specifies the name of the Nativescript configuration file to load (relative to the project directory). The default is `nativescript.config.ts` or `nativescript.config.js` (as a fallback).
 --version | Prints the client version.
 --log trace | Prints a detailed diagnostic log for the execution of the current command.

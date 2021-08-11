@@ -27,6 +27,7 @@ function createTestInjector(): IInjector {
 	testInjector.register("childProcess", {});
 	testInjector.register("hooksService", {});
 	testInjector.register("hostInfo", {});
+	testInjector.register("options", {});
 	testInjector.register("logger", {});
 	testInjector.register("errors", ErrorsStub);
 	testInjector.register("packageInstallationManager", {});
