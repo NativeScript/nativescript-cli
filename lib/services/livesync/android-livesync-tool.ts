@@ -77,7 +77,7 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 
 		if (!configuration.localHostAddress) {
 			configuration.localHostAddress =
-				process.env.LIVESYNC_ADDR || DEFAULT_LOCAL_HOST_ADDRESS;
+				process.env.NATIVESCRIPT_LIVESYNC_ADDRESS || DEFAULT_LOCAL_HOST_ADDRESS;
 		}
 
 		const connectTimeout = configuration.connectTimeout || TRY_CONNECT_TIMEOUT;
