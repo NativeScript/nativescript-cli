@@ -9,7 +9,6 @@ declare module Config {
 		ANALYTICS_INSTALLATION_ID_SETTING_NAME: string;
 		TRACK_FEATURE_USAGE_SETTING_NAME: string;
 		ERROR_REPORT_SETTING_NAME: string;
-		SYS_REQUIREMENTS_LINK: string;
 		version: string;
 		getAdbFilePath(): Promise<string>;
 		disableAnalytics?: boolean;
