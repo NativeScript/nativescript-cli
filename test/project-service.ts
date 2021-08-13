@@ -31,6 +31,7 @@ describe("projectService", () => {
 			testInjector.register("fs", {
 				exists: () => true,
 				isEmptyDir: () => true,
+				isRelativePath: () => true,
 				createDirectory: () => {},
 				writeJson: () => {},
 				deleteDirectory: () => {},

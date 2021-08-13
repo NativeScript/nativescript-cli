@@ -82,6 +82,8 @@ const createTestInjector = (
 			/** intentionally left blank */
 		},
 
+		isRelativePath: () => true,
+
 		readText: (
 			filename: string,
 			encoding?: IReadFileOptions | string
