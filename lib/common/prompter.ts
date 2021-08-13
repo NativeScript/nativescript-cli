@@ -159,7 +159,12 @@ export class Prompter implements IPrompter {
 				output: this.muteStreamInstance,
 			});
 
-			this.ctrlcReader.on("SIGINT", process.exit);
+			this.ctrlcReader.on("SIGINT", () => {
+				// enable terminal cursor
+				process.stdout.write("\x1B[?25h");
+
+				process.exit();
+			});
 		}
 	}
 
