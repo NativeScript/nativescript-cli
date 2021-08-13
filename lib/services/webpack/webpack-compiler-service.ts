@@ -373,9 +373,12 @@ export class WebpackCompilerService
 
 		// add the config file name to the env data so the webpack process can read the
 		// correct config file when resolving the CLI lib and the config service
-		// we are explicityly setting it to false to force using the defaults
+		// we are explicitly setting it to false to force using the defaults
 		envData.config =
 			process.env.NATIVESCRIPT_CONFIG_NAME ?? this.$options.config ?? "false";
+
+		// explicitly set the env variable
+		process.env.NATIVESCRIPT_CONFIG_NAME = envData.config;
 
 		// The snapshot generation is wrongly located in the Webpack plugin.
 		// It should be moved in the Native Prepare of the CLI or a Gradle task in the Runtime.
