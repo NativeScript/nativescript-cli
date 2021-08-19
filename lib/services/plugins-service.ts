@@ -359,7 +359,9 @@ export class PluginsService implements IPluginsService {
 		);
 		const pluginData = productionPlugins.map((plugin) =>
 			this.convertToPluginData(plugin, projectData.projectDir)
-		);
+		).filter(function(item, pos, self) {
+			return self.findIndex(p=>p.name === item.name) == pos;
+		});
 		return pluginData;
 	}
 
