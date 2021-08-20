@@ -145,6 +145,7 @@ interface INsConfig {
 	webpackConfigPath?: string;
 	ios?: INsConfigIOS;
 	android?: INsConfigAndroid;
+	ignoredNativeDependencies?: string[];
 }
 
 interface IProjectData extends ICreateProjectData {

@@ -30,6 +30,7 @@ export class Options {
 		profileDir: { type: OptionType.String, hasSensitiveValue: true },
 		analyticsClient: { type: OptionType.String, hasSensitiveValue: false },
 		path: { type: OptionType.String, alias: "p", hasSensitiveValue: true },
+		config: { type: OptionType.String, alias: "c", hasSensitiveValue: true },
 		// This will parse all non-hyphenated values as strings.
 		_: { type: OptionType.String, hasSensitiveValue: false },
 	};

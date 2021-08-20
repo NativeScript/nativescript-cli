@@ -107,6 +107,24 @@ describe("options", () => {
 			assert.isTrue(isExecutionStopped);
 		});
 
+		it("does not break execution when valid option has correct value", () => {
+			process.argv.push("--config");
+			process.argv.push("SomeFilename");
+			const options = createOptions(testInjector);
+			options.validateOptions();
+			process.argv.pop();
+			process.argv.pop();
+			assert.isFalse(isExecutionStopped);
+		});
+
+		it("breaks execution when valid option has empty string value", () => {
+			process.argv.push("--config");
+			const options = createOptions(testInjector);
+			options.validateOptions();
+			process.argv.pop();
+			assert.isTrue(isExecutionStopped);
+		});
+
 		it("breaks execution when valid option has value with spaces only", () => {
 			process.argv.push("--path");
 			process.argv.push("  ");

@@ -343,11 +343,22 @@ can skip this prompt next time using the --template option, or the --ng, --react
 		const { projectDir } = this.createdProjectData;
 		const relativePath = path.relative(process.cwd(), projectDir);
 		this.$logger.printMarkdown(
-			`Now you can navigate to your project with \`$ cd ${relativePath}\``
+			`Now you can navigate to your project with \`$ cd ${relativePath}\` and then:`
 		);
 		this.$logger.printMarkdown(
-			`After that you can preview it on device by executing \`$ ns preview\``
+			[
+				`- Run the project on iOS \`$ ns run ios\``,
+				`- Run the project on Android \`$ ns run android\``,
+				`- Debug the project on iOS \`$ ns debug ios\``,
+				`- Debug the project on Android \`$ ns debug android\``,
+				``,
+				`For more options consult the docs or run \`$ ns --help\``,
+			].join("\n")
 		);
+		// Commented as we may bring this back with a playground revision/rewrite
+		// this.$logger.printMarkdown(
+		// 	`After that you can preview it on device by executing \`$ ns preview\``
+		// );
 	}
 }
 

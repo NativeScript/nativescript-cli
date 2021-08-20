@@ -30,7 +30,6 @@ Command | Description
 ---|---
 [create](project/creation/create.html) | Creates a new project for native development with NativeScript.
 [clean](general/clean.html) | Cleans project artifacts.
-[preview](project/testing/preview.html) | Generates a QR code that can be scanned by the NativeScript PlayGround app.
 [platform add `<Platform>`](project/configuration/platform-add.html) | Configures the current project to target the selected platform.
 [platform list](project/configuration/platform.html) | Lists all platforms that the project currently targets.
 [platform remove `<Platform>`](project/configuration/platform-remove.html) | Removes the selected platform from the platforms that the project currently targets. This operation deletes all platform-specific files and subdirectories from your project.
@@ -75,5 +74,6 @@ Option | Description
 -------|---------
 --help, -h, /? | Prints help about the selected command in the console.
 --path `<Directory>` | Specifies the directory that contains the project. If not set, the project is searched for in the current directory and all directories above it.
+--config | Specifies the name of the Nativescript configuration file to load (relative to the project directory). The default is `nativescript.config.ts` or `nativescript.config.js` (as a fallback).
 --version | Prints the client version.
 --log trace | Prints a detailed diagnostic log for the execution of the current command.

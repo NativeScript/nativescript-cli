@@ -94,22 +94,60 @@ export default {
 	}
 
 	public detectProjectConfigs(projectDir?: string): IProjectConfigInformation {
-		const JSConfigPath = path.join(
-			projectDir || this.projectHelper.projectDir,
-			CONFIG_FILE_NAME_JS
+		// allow overriding config name with env variable or --config (or -c)
+		let configName: string | boolean =
+			process.env.NATIVESCRIPT_CONFIG_NAME ?? this.$options.config;
+
+		if (configName === "false") {
+			configName = false;
+		}
+
+		const possibleConfigPaths = [
+			configName &&
+				(configName?.endsWith(".ts") ? configName : `${configName}.ts`),
+			configName &&
+				(configName?.endsWith(".js") ? configName : `${configName}.js`),
+			configName &&
+				(configName?.endsWith(".json") ? configName : `${configName}.json`),
+			CONFIG_FILE_NAME_TS,
+			CONFIG_FILE_NAME_JS,
+			CONFIG_NS_FILE_NAME,
+		]
+			.filter(Boolean)
+			.map((c) => {
+				if (this.$fs.isRelativePath(c)) {
+					return path.join(projectDir || this.projectHelper.projectDir, c);
+				}
+
+				return c;
+			});
+
+		const existingConfigs = possibleConfigPaths.filter((path) => {
+			return this.$fs.exists(path);
+		});
+
+		// push the first possible config into the "existing" list
+		const hasExistingConfig = !!existingConfigs.length;
+		if (!hasExistingConfig) {
+			this.$logger.trace(
+				`No config file found - falling back to ${possibleConfigPaths[0]}.`
+			);
+			existingConfigs.push(possibleConfigPaths[0]);
+		}
+
+		const TSConfigPath = existingConfigs.find((config) =>
+			config.endsWith(".ts")
 		);
-		const TSConfigPath = path.join(
-			projectDir || this.projectHelper.projectDir,
-			CONFIG_FILE_NAME_TS
+		const JSConfigPath = existingConfigs.find((config) =>
+			config.endsWith(".js")
 		);
-		const NSConfigPath = path.join(
-			projectDir || this.projectHelper.projectDir,
-			CONFIG_NS_FILE_NAME
+		const NSConfigPath = existingConfigs.find((config) =>
+			config.endsWith(".json")
 		);
 
-		const hasTSConfig = this.$fs.exists(TSConfigPath);
-		const hasJSConfig = this.$fs.exists(JSConfigPath);
-		const hasNSConfig = this.$fs.exists(NSConfigPath);
+		const hasTSConfig = !!TSConfigPath && hasExistingConfig;
+		const hasJSConfig = !!JSConfigPath && hasExistingConfig;
+		const hasNSConfig = !!NSConfigPath && hasExistingConfig;
 		const usingNSConfig = !(hasTSConfig || hasJSConfig);
 
 		if (hasTSConfig && hasJSConfig) {
