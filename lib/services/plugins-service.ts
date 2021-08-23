@@ -283,22 +283,27 @@ export class PluginsService implements IPluginsService {
 			_.keys(packageJsonContent.devDependencies)
 		);
 
-		const notInstalledDependencies = allDependencies.map(dep => {
-		  try {
-		    this.$logger.trace(`Checking if ${dep} is installed...`);
-		    require.resolve(`${dep}/package.json`, {
-		      paths: [projectData.projectDir]
-        })
+		const notInstalledDependencies = allDependencies
+			.map((dep) => {
+				try {
+					this.$logger.trace(`Checking if ${dep} is installed...`);
+					require.resolve(`${dep}/package.json`, {
+						paths: [projectData.projectDir],
+					});
 
-        // return false if the dependency is installed - we'll filter out boolean values
-        // and end up with an array of dep names that are not installed if we end up
-        // inside the catch block.
-        return false;
-      } catch(err) {
-		    this.$logger.trace(`Error while checking if ${dep} is installed. Error is: `, err)
-		    return dep;
-      }
-    }).filter(Boolean);
+					// return false if the dependency is installed - we'll filter out boolean values
+					// and end up with an array of dep names that are not installed if we end up
+					// inside the catch block.
+					return false;
+				} catch (err) {
+					this.$logger.trace(
+						`Error while checking if ${dep} is installed. Error is: `,
+						err
+					);
+					return dep;
+				}
+			})
+			.filter(Boolean);
 
 		if (this.$options.force || notInstalledDependencies.length) {
 			this.$logger.trace(
@@ -342,7 +347,8 @@ export class PluginsService implements IPluginsService {
 		dependencies =
 			dependencies ||
 			this.$nodeModulesDependenciesBuilder.getProductionDependencies(
-				projectData.projectDir, projectData.ignoredDependencies
+				projectData.projectDir,
+				projectData.ignoredDependencies
 			);
 
 		if (_.isEmpty(dependencies)) {
@@ -357,10 +363,14 @@ export class PluginsService implements IPluginsService {
 			projectData.projectDir,
 			platform
 		);
-		const pluginData = productionPlugins.map((plugin) =>
-			this.convertToPluginData(plugin, projectData.projectDir)
-		);
-		return pluginData;
+		return productionPlugins
+			.map((plugin) => this.convertToPluginData(plugin, projectData.projectDir))
+			.filter((item, idx, self) => {
+				// Filter out duplicates to speed up build times by not building the same dependency
+				// multiple times. One possible downside is that if there are different versions
+				// of the same native dependency only the first one in the array will be built
+				return self.findIndex((p) => p.name === item.name) === idx;
+			});
 	}
 
 	public getDependenciesFromPackageJson(
