@@ -95,7 +95,7 @@ export class NodeModulesDependenciesBuilder
 				.resolve(`${depDescription.name}/package.json`, {
 					paths: [parentModulesPath],
 				})
-				.replace("package.json", "");
+				.replace(/[\\/]+package\.json$/, "");
 
 			// if we already resolved this dependency, we return null to avoid a duplicate resolution
 			if (
