@@ -1,7 +1,7 @@
 
 <h1 id="nativescript-command-line-interface" align="center">
   <br>
-  <a href="https://www.npmjs.com/package/nativescript"><img src="https://user-images.githubusercontent.com/760518/54612598-e70a3600-4a61-11e9-8d6d-7dd0c557e7cf.png" alt="Nativescript Logo" width="200"></a>
+  <a href="https://www.npmjs.com/package/nativescript"><img src="https://art.nativescript.org/logo/export/NativeScript_Logo_Wide_White_Blue_Rounded_Blue.svg" alt="Nativescript Logo" width="200"></a>
   <br>
 	  <br>
    NativeScript Command-Line Interface
