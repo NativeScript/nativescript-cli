@@ -513,16 +513,11 @@ export class CommandsService implements ICommandsService {
 			}
 		};
 
-		await tabtab.complete(
-			this.$staticConfig.CLIENT_NAME.toLowerCase(),
-			completeCallback
-		);
+		// aliases to do autocompletion for
+		const aliases = ["ns", "nsc", "tns", "nativescript"];
 
-		if (this.$staticConfig.CLIENT_NAME_ALIAS) {
-			tabtab.complete(
-				this.$staticConfig.CLIENT_NAME_ALIAS.toLowerCase(),
-				completeCallback
-			);
+		for await (const alias of aliases) {
+			await tabtab.complete(alias, completeCallback);
 		}
 
 		return true;
