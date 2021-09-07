@@ -38,17 +38,15 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 		let productType: ProductArgs;
 		if (this.$iOSWatchAppService.hasWatchApp(platformData, projectData)) {
 			productType = ProductArgs.scheme;
-			args = args.concat([
-				"-destination",
-				"generic/platform=iOS Simulator",
-				"CODE_SIGNING_ALLOWED=NO",
-			]);
+			args = args.concat(["CODE_SIGNING_ALLOWED=NO"]);
 		} else {
 			args = args.concat(["CODE_SIGN_IDENTITY="]);
 		}
 
 		args = args
 			.concat([
+				"-destination",
+				"generic/platform=iOS Simulator",
 				"build",
 				"-configuration",
 				buildConfig.release ? Configurations.Release : Configurations.Debug,
@@ -83,6 +81,8 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 			projectData.projectName + ".xcarchive"
 		);
 		const args = [
+			"-destination",
+			"generic/platform=iOS",
 			"archive",
 			"-archivePath",
 			archivePath,
