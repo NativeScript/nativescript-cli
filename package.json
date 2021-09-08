@@ -33,7 +33,7 @@
     "build": "grunt",
     "build.all": "grunt test",
     "dev": "tsc --watch",
-    "setup": "npm i --ignore-scripts --legacy-peer-deps && npm rebuild husky",
+    "setup": "npm i --ignore-scripts --legacy-peer-deps && husky install",
     "test": "mocha --config=test/.mocharc.yml",
     "postinstall": "node postinstall.js",
     "preuninstall": "node preuninstall.js",
@@ -163,7 +163,7 @@
     "grunt-shell": "3.0.1",
     "grunt-template": "1.0.0",
     "grunt-ts": "6.0.0-beta.22",
-    "husky": "^4.2.5",
+    "husky": "7.0.2",
     "istanbul": "0.4.5",
     "latest-version": "5.1.0",
     "lint-staged": "^10.2.13",
@@ -178,11 +178,6 @@
   "license": "Apache-2.0",
   "engines": {
     "node": ">=10.0.0"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "npx lint-staged"
-    }
   },
   "lint-staged": {
     "*.ts": "prettier --write"
