@@ -174,7 +174,7 @@ export class FileSystem implements IFileSystem {
 	}
 
 	public async futureFromEvent(eventEmitter: any, event: string): Promise<any> {
-		return new Promise<any | void>((resolve, reject) => {
+		return new Promise<any>((resolve, reject) => {
 			eventEmitter.once(event, function () {
 				const args = _.toArray(arguments);
 
