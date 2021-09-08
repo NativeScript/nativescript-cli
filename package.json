@@ -63,7 +63,7 @@
     "byline": "5.0.0",
     "chalk": "4.1.2",
     "chokidar": "3.5.2",
-    "cli-table": "0.3.6",
+    "cli-table": "https://github.com/telerik/cli-table/tarball/v0.3.1.2",
     "color": "4.0.1",
     "colors": "1.4.0",
     "convert-source-map": "1.8.0",
