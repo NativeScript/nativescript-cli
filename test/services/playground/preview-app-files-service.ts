@@ -4,11 +4,13 @@ import { FileSystemStub, LoggerStub } from "../../stubs";
 import * as path from "path";
 import * as _ from "lodash";
 import { assert } from "chai";
-import { FilesPayload } from "nativescript-preview-sdk";
 import { IInjector } from "../../../lib/common/definitions/yok";
 
 const projectDir = "path/to/my/test/project";
 const appDirectoryPath = path.join(projectDir, "src");
+
+// import { FilesPayload } from "nativescript-preview-sdk";
+type FilesPayload = any;
 
 class ProjectDataServiceMock {
 	public getProjectData() {
@@ -156,9 +158,8 @@ describe("PreviewAppFilesService", () => {
 					_.each([true, false], (useHotModuleReload) => {
 						it(`should exclude ${testCase.name} when  { platform: ${platform}, bundle: ${bundle}, useHotModuleReload: ${useHotModuleReload} }`, () => {
 							const injector = createTestInjector();
-							const previewAppFilesService: IPreviewAppFilesService = injector.resolve(
-								"previewAppFilesService"
-							);
+							const previewAppFilesService: IPreviewAppFilesService =
+								injector.resolve("previewAppFilesService");
 							const data = { projectDir, bundle, useHotModuleReload, env: {} };
 							const result = previewAppFilesService.getFilesPayload(
 								data,

@@ -2,7 +2,6 @@ import * as path from "path";
 import * as semver from "semver";
 import * as util from "util";
 import * as _ from "lodash";
-import { Device } from "nativescript-preview-sdk";
 import { PluginComparisonMessages } from "./preview-app-constants";
 import { NODE_MODULES_DIR_NAME } from "../../../common/constants";
 import {
@@ -20,6 +19,9 @@ import {
 	IStringDictionary,
 } from "../../../common/declarations";
 import { injector } from "../../../common/yok";
+
+// import { Device } from "nativescript-preview-sdk";
+type Device = any;
 
 export class PreviewAppPluginsService implements IPreviewAppPluginsService {
 	constructor(
@@ -170,14 +172,16 @@ Those plugins will not work while building the project via \`$ tns preview\`. Pl
 			return null;
 		}
 
-		const localPluginVersionData = await this.$packageInstallationManager.getMaxSatisfyingVersionSafe(
-			pluginName,
-			localPluginVersion
-		);
-		const devicePluginVersionData = await this.$packageInstallationManager.getMaxSatisfyingVersionSafe(
-			pluginName,
-			devicePluginVersion
-		);
+		const localPluginVersionData =
+			await this.$packageInstallationManager.getMaxSatisfyingVersionSafe(
+				pluginName,
+				localPluginVersion
+			);
+		const devicePluginVersionData =
+			await this.$packageInstallationManager.getMaxSatisfyingVersionSafe(
+				pluginName,
+				devicePluginVersion
+			);
 
 		if (
 			semver.valid(localPluginVersionData) &&

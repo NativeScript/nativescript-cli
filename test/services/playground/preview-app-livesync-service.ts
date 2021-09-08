@@ -1,7 +1,6 @@
 import { Yok } from "../../../lib/common/yok";
 import * as _ from "lodash";
 import { LoggerStub, ErrorsStub, TempServiceStub } from "../../stubs";
-import { FilePayload, Device, FilesPayload } from "nativescript-preview-sdk";
 import * as chai from "chai";
 import * as path from "path";
 import { ProjectFilesManager } from "../../../lib/common/services/project-files-manager";
@@ -14,6 +13,11 @@ import { PrepareDataService } from "../../../lib/services/prepare-data-service";
 import { MobileHelper } from "../../../lib/common/mobile/mobile-helper";
 import { DevicePlatformsConstants } from "../../../lib/common/mobile/device-platforms-constants";
 import { PrepareController } from "../../../lib/controllers/prepare-controller";
+
+// import { FilePayload, Device, FilesPayload } from "nativescript-preview-sdk";
+type FilePayload = any;
+type Device = any;
+type FilesPayload = any;
 
 interface ITestCase {
 	name: string;
@@ -211,15 +215,13 @@ function arrange(options?: { projectFiles?: string[] }) {
 	options = options || {};
 
 	const injector = createTestInjector({ projectFiles: options.projectFiles });
-	const previewSdkService: IPreviewSdkService = injector.resolve(
-		"previewSdkService"
-	);
+	const previewSdkService: IPreviewSdkService =
+		injector.resolve("previewSdkService");
 	const previewAppController: PreviewAppController = injector.resolve(
 		"previewAppController"
 	);
-	const prepareController: PrepareController = injector.resolve(
-		"prepareController"
-	);
+	const prepareController: PrepareController =
+		injector.resolve("prepareController");
 
 	return {
 		previewSdkService,
@@ -329,11 +331,8 @@ function execute(options: {
 						path.join(projectDirPath, "app", file)
 				  )
 				: null;
-			const {
-				previewAppController,
-				prepareController,
-				previewSdkService,
-			} = arrange({ projectFiles });
+			const { previewAppController, prepareController, previewSdkService } =
+				arrange({ projectFiles });
 			await act.apply(null, [
 				{
 					previewAppController,
@@ -354,8 +353,7 @@ describe("previewAppController", () => {
 
 		let testCases: ITestCase[] = [
 			{
-				name:
-					"should compare local plugins and plugins from preview app when devices are emitted",
+				name: "should compare local plugins and plugins from preview app when devices are emitted",
 			},
 		];
 

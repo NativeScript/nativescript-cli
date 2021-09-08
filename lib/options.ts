@@ -360,8 +360,8 @@ export class Options {
 		});
 
 		const parsed = yargs(process.argv.slice(2)).version(false).help(false);
-		this.initialArgv = parsed.argv;
-		this.argv = parsed.options(<any>opts).argv;
+		this.initialArgv = parsed.argv as any;
+		this.argv = parsed.options(opts as any).argv as any;
 
 		// For backwards compatibility
 		// Previously profileDir had a default option and calling `this.$options.profileDir` always returned valid result.
@@ -369,9 +369,8 @@ export class Options {
 		this.$settingsService.setSettings({
 			profileDir: <string>this.argv.profileDir,
 		});
-		this.argv.profileDir = this.argv[
-			"profile-dir"
-		] = this.$settingsService.getProfileDir();
+		this.argv.profileDir = this.argv["profile-dir"] =
+			this.$settingsService.getProfileDir();
 
 		// if justlaunch is set, it takes precedence over the --watch flag and the default true value
 		if (this.argv.justlaunch) {

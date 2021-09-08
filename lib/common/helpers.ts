@@ -198,7 +198,7 @@ export function settlePromises<T>(promises: Promise<T>[]): Promise<T[]> {
 		const length = promises.length;
 
 		if (!promises.length) {
-			resolve();
+			resolve(void 0);
 		}
 
 		_.forEach(promises, (currentPromise, index) => {
@@ -491,7 +491,10 @@ export async function getFuturesResults<T>(
 ): Promise<T[] | T[][]> {
 	const results = await Promise.all(promises);
 
-	return _(results).filter(predicate).flatten().value();
+	return _(results as any)
+		.filter(predicate)
+		.flatten()
+		.value();
 }
 
 /**
@@ -650,7 +653,7 @@ export async function connectEventually(
 
 export function getHash(
 	str: string,
-	options?: { algorithm?: string; encoding?: crypto.HexBase64Latin1Encoding }
+	options?: { algorithm?: string; encoding?: crypto.BinaryToTextEncoding }
 ): string {
 	return crypto
 		.createHash((options && options.algorithm) || "sha256")
@@ -845,7 +848,8 @@ export function getFormattedMilliseconds(date: Date): string {
 
 const CLASS_NAME = /class\s+([A-Z].+?)(?:\s+.*?)?\{/;
 const CONSTRUCTOR_ARGS = /constructor\s*([^\(]*)\(\s*([^\)]*)\)/m;
-const FN_NAME_AND_ARGS = /^(?:function)?\s*([^\(]*)\(\s*([^\)]*)\)\s*(=>)?\s*[{_]/m;
+const FN_NAME_AND_ARGS =
+	/^(?:function)?\s*([^\(]*)\(\s*([^\)]*)\)\s*(=>)?\s*[{_]/m;
 const FN_ARG_SPLIT = /,/;
 const FN_ARG = /^\s*(_?)(\S+?)\1\s*$/;
 

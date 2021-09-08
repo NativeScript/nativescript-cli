@@ -1,4 +1,3 @@
-import { FilePayload, Device, FilesPayload } from "nativescript-preview-sdk";
 import { EventEmitter } from "events";
 import { IEnvOptions } from "../declarations";
 import {
@@ -6,6 +5,9 @@ import {
 	IQrCodeImageData,
 	IDictionary,
 } from "../common/declarations";
+// import { FilePayload, Device, FilesPayload } from "nativescript-preview-sdk";
+type FilesPayload = any;
+type Device = any;
 
 declare global {
 	interface IPreviewAppFilesService {

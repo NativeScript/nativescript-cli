@@ -1,6 +1,5 @@
 import { Yok } from "../../../lib/common/yok";
 import { PreviewAppPluginsService } from "../../../lib/services/livesync/playground/preview-app-plugins-service";
-import { Device } from "nativescript-preview-sdk";
 import { assert } from "chai";
 import * as util from "util";
 import * as _ from "lodash";
@@ -8,6 +7,9 @@ import { PluginComparisonMessages } from "../../../lib/services/livesync/playgro
 import { ErrorsStub, PackageInstallationManagerStub } from "../../stubs";
 import { IStringDictionary } from "../../../lib/common/declarations";
 import { IInjector } from "../../../lib/common/definitions/yok";
+
+// import { Device } from "nativescript-preview-sdk";
+type Device = any;
 
 let readJsonParams: string[] = [];
 let warnParams: string[] = [];
@@ -107,8 +109,7 @@ describe("previewAppPluginsService", () => {
 	describe("comparePluginsOnDevice with bundle", () => {
 		const testCases = [
 			{
-				name:
-					"should not show warning for non nativescript plugin that has lower major version",
+				name: "should not show warning for non nativescript plugin that has lower major version",
 				localPlugins: {
 					lodash: "1.2.3",
 				},
@@ -120,8 +121,7 @@ describe("previewAppPluginsService", () => {
 				expectedWarnings: <string[]>[],
 			},
 			{
-				name:
-					"should not show warning for non nativescript plugin that has greather major version",
+				name: "should not show warning for non nativescript plugin that has greather major version",
 				localPlugins: {
 					lodash: "3.2.3",
 				},
@@ -133,8 +133,7 @@ describe("previewAppPluginsService", () => {
 				expectedWarnings: [],
 			},
 			{
-				name:
-					"should show warning for non nativescript plugin that has greather minor version",
+				name: "should show warning for non nativescript plugin that has greather minor version",
 				localPlugins: {
 					lodash: "3.4.5",
 				},
@@ -146,8 +145,7 @@ describe("previewAppPluginsService", () => {
 				expectedWarnings: [],
 			},
 			{
-				name:
-					"should not show warning for non nativescript plugin that has the same version",
+				name: "should not show warning for non nativescript plugin that has the same version",
 				localPlugins: {
 					lodash: "3.4.5",
 				},
@@ -159,8 +157,7 @@ describe("previewAppPluginsService", () => {
 				expectedWarnings: [],
 			},
 			{
-				name:
-					"should not show warning for nativescript plugin without native code that has lower major version",
+				name: "should not show warning for nativescript plugin without native code that has lower major version",
 				localPlugins: {
 					"nativescript-theme-core": "2.4.5",
 				},
@@ -172,8 +169,7 @@ describe("previewAppPluginsService", () => {
 				expectedWarnings: <string[]>[],
 			},
 			{
-				name:
-					"should not show warning for nativescript plugin without native code that has greather major version",
+				name: "should not show warning for nativescript plugin without native code that has greather major version",
 				localPlugins: {
 					"nativescript-theme-core": "4.4.5",
 				},
@@ -185,8 +181,7 @@ describe("previewAppPluginsService", () => {
 				expectedWarnings: [],
 			},
 			{
-				name:
-					"should not show warning for nativescript plugin without native code that has greather minor version",
+				name: "should not show warning for nativescript plugin without native code that has greather minor version",
 				localPlugins: {
 					"nativescript-theme-core": "4.6.5",
 				},
@@ -198,8 +193,7 @@ describe("previewAppPluginsService", () => {
 				expectedWarnings: [],
 			},
 			{
-				name:
-					"should not show warning for nativescript plugin without native code that has the same version",
+				name: "should not show warning for nativescript plugin without native code that has the same version",
 				localPlugins: {
 					"nativescript-theme-core": "4.6.5",
 				},
@@ -211,8 +205,7 @@ describe("previewAppPluginsService", () => {
 				expectedWarnings: [],
 			},
 			{
-				name:
-					"should show warning for nativescript plugin with native code that has lower major version",
+				name: "should show warning for nativescript plugin with native code that has lower major version",
 				localPlugins: {
 					"nativescript-theme-core": "2.4.5",
 				},
@@ -231,8 +224,7 @@ describe("previewAppPluginsService", () => {
 				],
 			},
 			{
-				name:
-					"should show warning for nativescript plugin with native code that has greather major version",
+				name: "should show warning for nativescript plugin with native code that has greather major version",
 				localPlugins: {
 					"nativescript-theme-core": "4.4.5",
 				},
@@ -251,8 +243,7 @@ describe("previewAppPluginsService", () => {
 				],
 			},
 			{
-				name:
-					"should show warning for nativescript plugin with native code that has greather minor version",
+				name: "should show warning for nativescript plugin with native code that has greather minor version",
 				localPlugins: {
 					"nativescript-theme-core": "4.4.5",
 				},

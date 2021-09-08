@@ -6,7 +6,6 @@ import {
 	APP_RESOURCES_FOLDER_NAME,
 } from "../../../constants";
 import { PreviewSdkEventNames } from "./preview-app-constants";
-import { FilePayload, FilesPayload } from "nativescript-preview-sdk";
 import { IPlatformsDataService } from "../../../definitions/platform";
 import { IProjectDataService } from "../../../definitions/project";
 import {
@@ -16,6 +15,10 @@ import {
 } from "../../../common/declarations";
 import { injector } from "../../../common/yok";
 import { isBinary } from "istextorbinary";
+
+// import { FilePayload, FilesPayload } from "nativescript-preview-sdk";
+type FilePayload = any;
+type FilesPayload = any;
 
 export class PreviewAppFilesService implements IPreviewAppFilesService {
 	private excludedFileExtensions = [".ts", ".sass", ".scss", ".less"];

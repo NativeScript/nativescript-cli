@@ -174,7 +174,7 @@ export class FileSystem implements IFileSystem {
 	}
 
 	public async futureFromEvent(eventEmitter: any, event: string): Promise<any> {
-		return new Promise((resolve, reject) => {
+		return new Promise<any | void>((resolve, reject) => {
 			eventEmitter.once(event, function () {
 				const args = _.toArray(arguments);
 
@@ -186,7 +186,7 @@ export class FileSystem implements IFileSystem {
 
 				switch (args.length) {
 					case 0:
-						resolve();
+						resolve(void 0);
 						break;
 					case 1:
 						resolve(args[0]);
@@ -483,7 +483,7 @@ export class FileSystem implements IFileSystem {
 
 	public async getFileShasum(
 		fileName: string,
-		options?: { algorithm?: string; encoding?: crypto.HexBase64Latin1Encoding }
+		options?: { algorithm?: string; encoding?: crypto.BinaryToTextEncoding }
 	): Promise<string> {
 		return new Promise<string>((resolve, reject) => {
 			const algorithm = (options && options.algorithm) || "sha1";

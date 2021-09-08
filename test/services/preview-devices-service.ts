@@ -1,11 +1,13 @@
 import { Yok } from "../../lib/common/yok";
 import { PreviewDevicesService } from "../../lib/services/livesync/playground/devices/preview-devices-service";
-import { Device } from "nativescript-preview-sdk";
 import { assert } from "chai";
 import { DeviceDiscoveryEventNames } from "../../lib/common/constants";
 import { LoggerStub, ErrorsStub } from "../stubs";
 import * as sinon from "sinon";
 import { IInjector } from "../../lib/common/definitions/yok";
+
+// import { Device } from "nativescript-preview-sdk";
+type Device = any;
 
 let foundDevices: Device[] = [];
 let lostDevices: Device[] = [];

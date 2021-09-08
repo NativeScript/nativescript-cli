@@ -99,7 +99,7 @@ describe("helpers", () => {
 			element: any,
 			passedChunkSize: number
 		) => {
-			return new Promise((resolve) =>
+			return new Promise<void>((resolve) =>
 				setImmediate(() => {
 					const remainingElements = _.difference(
 						initialDataValues,
@@ -845,14 +845,12 @@ describe("helpers", () => {
 					expectedOutput: false,
 				},
 				{
-					name:
-						"returns false when neither -g/--global are passed on terminal, but similar flag is passed",
+					name: "returns false when neither -g/--global are passed on terminal, but similar flag is passed",
 					input: ["install", "nativescript", "--globalEnv"],
 					expectedOutput: false,
 				},
 				{
-					name:
-						"returns false when neither -g/--global are passed on terminal, but trying to install global package",
+					name: "returns false when neither -g/--global are passed on terminal, but trying to install global package",
 					input: ["install", "global"],
 					expectedOutput: false,
 				},

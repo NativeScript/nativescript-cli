@@ -1,6 +1,5 @@
 import { TrackActionNames, PREPARE_READY_EVENT_NAME } from "../constants";
 import { PrepareController } from "./prepare-controller";
-import { Device, FilesPayload } from "nativescript-preview-sdk";
 import { performanceLog } from "../common/decorators";
 import { stringify, deferPromise } from "../common/helpers";
 import { HmrConstants } from "../common/constants";
@@ -20,9 +19,14 @@ import {
 } from "../common/declarations";
 import { injector } from "../common/yok";
 
+// import { Device, FilesPayload } from "nativescript-preview-sdk";
+type Device = any;
+type FilesPayload = any;
+
 export class PreviewAppController
 	extends EventEmitter
-	implements IPreviewAppController {
+	implements IPreviewAppController
+{
 	private prepareReadyEventHandler: any = null;
 	private deviceInitializationPromise: IDictionary<boolean> = {};
 	private devicesLiveSyncChain: IDictionary<Promise<void>> = {};
@@ -151,9 +155,8 @@ export class PreviewAppController
 					}
 
 					data.env = data.env || {};
-					data.env.externals = this.$previewAppPluginsService.getExternalPlugins(
-						device
-					);
+					data.env.externals =
+						this.$previewAppPluginsService.getExternalPlugins(device);
 
 					const prepareData = this.$prepareDataService.getPrepareData(
 						data.projectDir,
@@ -202,9 +205,8 @@ export class PreviewAppController
 	) {
 		const { hmrData, files, platform } = currentPrepareData;
 		const platformHmrData = _.cloneDeep(hmrData) || <IPlatformHmrData>{};
-		const connectedDevices = this.$previewDevicesService.getDevicesForPlatform(
-			platform
-		);
+		const connectedDevices =
+			this.$previewDevicesService.getDevicesForPlatform(platform);
 		if (!connectedDevices || !connectedDevices.length) {
 			this.$logger.warn(
 				`Unable to find any connected devices for platform '${platform}'. In order to execute livesync, open your Preview app and optionally re-scan the QR code using the Playground app.`
@@ -357,7 +359,7 @@ export class PreviewAppController
 				await this.$previewSdkService.applyChanges(payloads);
 				this.$logger.info(
 					`Successfully synced '${payloads.files.map(
-						(filePayload) => filePayload.file.yellow
+						(filePayload: FilesPayload) => filePayload.file.yellow
 					)}' for device ${this.getDeviceDisplayName(device)}.`
 				);
 			}

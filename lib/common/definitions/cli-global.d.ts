@@ -1,6 +1,13 @@
 import { IInjector } from "./yok";
 
 declare var _: _.LoDashStatic;
+
+declare global {
+	namespace NodeJS {
+		interface Global {}
+	}
+}
+
 /**
  * Defines additional properties added to global object from CLI.
  */

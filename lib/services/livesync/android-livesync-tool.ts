@@ -178,8 +178,8 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 		);
 		const { doRefresh, timeout, operationId } = options;
 		const id = operationId || this.generateOperationIdentifier();
-		const operationPromise: Promise<IAndroidLivesyncSyncOperationResult> = new Promise(
-			(resolve, reject) => {
+		const operationPromise: Promise<IAndroidLivesyncSyncOperationResult> =
+			new Promise((resolve, reject) => {
 				if (!this.verifyActiveConnection(reject)) {
 					return;
 				}
@@ -216,8 +216,7 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 					socketId,
 					timeoutId,
 				};
-			}
-		);
+			});
 
 		return operationPromise;
 	}
@@ -308,7 +307,7 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 				})
 				.on("end", () => {
 					this.writeToSocket(fileHash.digest())
-						.then(() => resolve())
+						.then(() => resolve(true))
 						.catch(reject);
 				})
 				.on("error", (error: Error) => {
@@ -410,10 +409,11 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 						clearTimeout(this.pendingConnectionData.socketTimer);
 					}
 
-					const applicationPid = await this.$androidProcessService.getAppProcessId(
-						configuration.deviceIdentifier,
-						configuration.appIdentifier
-					);
+					const applicationPid =
+						await this.$androidProcessService.getAppProcessId(
+							configuration.deviceIdentifier,
+							configuration.appIdentifier
+						);
 					if (!applicationPid) {
 						this.$logger.trace(
 							"In Android LiveSync tool, lastKnownError is: ",
@@ -559,9 +559,7 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 		return error;
 	}
 
-	private getFilePathData(
-		filePath: string
-	): {
+	private getFilePathData(filePath: string): {
 		relativeFilePath: string;
 		filePathLengthBytes: number;
 		filePathLengthString: string;

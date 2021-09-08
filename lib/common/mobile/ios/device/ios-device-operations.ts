@@ -13,7 +13,8 @@ import { injector } from "../../../yok";
 
 export class IOSDeviceOperations
 	extends EventEmitter
-	implements IIOSDeviceOperations, IDisposable, IShouldDispose {
+	implements IIOSDeviceOperations, IDisposable, IShouldDispose
+{
 	public isInitialized: boolean;
 	public shouldDispose: boolean;
 	private deviceLib: IOSDeviceLib.IOSDeviceLib;
@@ -84,7 +85,7 @@ export class IOSDeviceOperations
 			}
 
 			// We need this because we need to make sure that we have devices.
-			await new Promise((resolve, reject) => {
+			await new Promise<void>((resolve, reject) => {
 				let iterationsCount = 0;
 				const maxIterationsCount = 3;
 

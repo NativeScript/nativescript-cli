@@ -46,7 +46,7 @@ describe("nativescript-cli-lib", () => {
 		],
 		runController: ["run", "stop"],
 		debugController: ["enableDebugging", "disableDebugging", "attachDebugger"],
-		previewAppController: ["startPreview", "stopPreview"],
+		// previewAppController: ["startPreview", "stopPreview"],
 		analyticsSettingsService: ["getClientId"],
 		devicesService: [
 			"addDeviceDiscovery",

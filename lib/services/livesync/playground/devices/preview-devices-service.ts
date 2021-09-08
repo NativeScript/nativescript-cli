@@ -1,4 +1,3 @@
-import { Device } from "nativescript-preview-sdk";
 import { EventEmitter } from "events";
 import {
 	DeviceDiscoveryEventNames,
@@ -8,9 +7,13 @@ import { IDictionary } from "../../../../common/declarations";
 import * as _ from "lodash";
 import { injector } from "../../../../common/yok";
 
+// import { Device } from "nativescript-preview-sdk";
+type Device = any;
+
 export class PreviewDevicesService
 	extends EventEmitter
-	implements IPreviewDevicesService {
+	implements IPreviewDevicesService
+{
 	private connectedDevices: Device[] = [];
 	private deviceLostTimers: IDictionary<NodeJS.Timer> = {};
 

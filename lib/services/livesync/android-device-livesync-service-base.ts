@@ -17,11 +17,11 @@ export abstract class AndroidDeviceLiveSyncServiceBase extends DeviceLiveSyncSer
 		super($platformsDataService, device);
 	}
 
-	public abstract async transferFilesOnDevice(
+	public abstract transferFilesOnDevice(
 		deviceAppData: Mobile.IDeviceAppData,
 		localToDevicePaths: Mobile.ILocalToDevicePathData[]
 	): Promise<void>;
-	public abstract async transferDirectoryOnDevice(
+	public abstract transferDirectoryOnDevice(
 		deviceAppData: Mobile.IDeviceAppData,
 		localToDevicePaths: Mobile.ILocalToDevicePathData[],
 		projectFilesPath: string
@@ -38,9 +38,10 @@ export abstract class AndroidDeviceLiveSyncServiceBase extends DeviceLiveSyncSer
 		const deviceHashService = this.device.fileSystem.getDeviceHashService(
 			deviceAppData.appIdentifier
 		);
-		const currentHashes = await deviceHashService.generateHashesFromLocalToDevicePaths(
-			localToDevicePaths
-		);
+		const currentHashes =
+			await deviceHashService.generateHashesFromLocalToDevicePaths(
+				localToDevicePaths
+			);
 		const transferredFiles = await this.transferFilesCore(
 			deviceAppData,
 			localToDevicePaths,
@@ -82,12 +83,13 @@ export abstract class AndroidDeviceLiveSyncServiceBase extends DeviceLiveSyncSer
 			return localToDevicePaths;
 		}
 
-		const localToDevicePathsToTransfer = await this.getLocalToDevicePathsToTransfer(
-			deviceAppData,
-			localToDevicePaths,
-			currentHashes,
-			options
-		);
+		const localToDevicePathsToTransfer =
+			await this.getLocalToDevicePathsToTransfer(
+				deviceAppData,
+				localToDevicePaths,
+				currentHashes,
+				options
+			);
 		this.$logger.trace("Files to transfer: ", localToDevicePathsToTransfer);
 		await this.transferFilesOnDevice(
 			deviceAppData,
@@ -119,9 +121,8 @@ export abstract class AndroidDeviceLiveSyncServiceBase extends DeviceLiveSyncSer
 		localToDevicePaths: Mobile.ILocalToDevicePathData[],
 		currentHashes: IStringDictionary
 	): Promise<Mobile.ILocalToDevicePathData[]> {
-		const deviceHashService = this.device.fileSystem.getDeviceHashService(
-			appIdentifier
-		);
+		const deviceHashService =
+			this.device.fileSystem.getDeviceHashService(appIdentifier);
 		const oldHashes = (await deviceHashService.getShasumsFromDevice()) || {};
 		const changedHashes = deviceHashService.getChangedShasums(
 			oldHashes,
