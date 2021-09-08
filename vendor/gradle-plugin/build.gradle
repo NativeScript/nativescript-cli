@@ -1,4 +1,6 @@
 import groovy.json.JsonSlurper
+import org.gradle.internal.logging.text.StyledTextOutputFactory
+import static org.gradle.internal.logging.text.StyledTextOutput.Style
 
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
@@ -20,6 +22,10 @@ buildscript {
         // in the individual module build.gradle files
     }
 
+    // Set up styled logger
+    project.ext.outLogger = services.get(StyledTextOutputFactory).create("colouredOutputLogger")
+
+    // todo: pass appResourcesPath from CLI as a gradle arg
     project.ext.getAppResourcesPath = { ->
         def relativePathToApp = "app"
         def relativePathToAppResources
@@ -54,14 +60,14 @@ buildscript {
         def pathToBuildScriptGradle = "$absolutePathToAppResources/Android/buildscript.gradle"
         def buildScriptGradle = file(pathToBuildScriptGradle)
         if (buildScriptGradle.exists()) {
-            outLogger.withStyle(Style.SuccessHeader).println "\t + applying user-defined buildscript from ${buildScriptGradle}"
+            outLogger.withStyle(Style.SuccessHeader).println "\t ~ applying user-defined buildscript from ${buildScriptGradle}"
             apply from: pathToBuildScriptGradle, to: buildscript
         }
 
         def pathToPluginBuildScriptGradle = "$rootDir/buildscript.gradle"
         def pluginBuildScriptGradle = file(pathToPluginBuildScriptGradle)
         if (pluginBuildScriptGradle.exists()) {
-            outLogger.withStyle(Style.SuccessHeader).println "\t + applying user-defined buildscript from dependency ${pluginBuildScriptGradle}"
+            outLogger.withStyle(Style.SuccessHeader).println "\t ~ applying user-defined buildscript from dependency ${pluginBuildScriptGradle}"
             apply from: pathToPluginBuildScriptGradle, to: buildscript
         }
     }
@@ -122,7 +128,7 @@ def applyBeforePluginGradleConfiguration() {
     def pathToBeforePluginGradle = "$appResourcesPath/Android/before-plugins.gradle"
     def beforePluginGradle = file(pathToBeforePluginGradle)
     if (beforePluginGradle.exists()) {
-        println "\t + applying user-defined configuration from ${beforePluginGradle}"
+        outLogger.withStyle(Style.SuccessHeader).println "\t ~ applying user-defined configuration from ${beforePluginGradle}"
         apply from: pathToBeforePluginGradle
     }
 }
