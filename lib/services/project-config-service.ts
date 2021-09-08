@@ -310,7 +310,7 @@ export default {
 	}
 
 	public writeDefaultConfig(projectDir: string, appId?: string) {
-		const { TSConfigPath } = this.detectProjectConfigs(projectDir);
+		const TSConfigPath = path.resolve(projectDir, CONFIG_FILE_NAME_TS);
 
 		if (this.$fs.exists(TSConfigPath)) {
 			return false;
