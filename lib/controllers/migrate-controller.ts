@@ -47,13 +47,6 @@ import { SupportedConfigValues } from "../tools/config-manipulation/config-trans
 export class MigrateController
 	extends UpdateControllerBase
 	implements IMigrateController {
-	// 	private static COMMON_MIGRATE_MESSAGE =
-	// 		"not affect the codebase of the application and you might need to do additional changes manually – for more information, refer to the instructions in the following blog post: https://www.nativescript.org/blog/nativescript-6.0-application-migration";
-	// 	private static UNABLE_TO_MIGRATE_APP_ERROR = `The current application is not compatible with NativeScript CLI 7.0.
-	// Use the \`ns migrate\` command to migrate the app dependencies to a form compatible with NativeScript 7.0.
-	// Running this command will ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
-	// 	private static MIGRATE_FINISH_MESSAGE = `The \`tns migrate\` command does ${MigrateController.COMMON_MIGRATE_MESSAGE}`;
-
 	constructor(
 		protected $fs: IFileSystem,
 		protected $platformCommandHelper: IPlatformCommandHelper,
@@ -119,13 +112,13 @@ export class MigrateController
 
 	private migrationDependencies: IMigrationDependency[] = [
 		{
-			packageName: constants.SCOPED_TNS_CORE_MODULES,
+			packageName: "@nativescript/core",
 			minVersion: "6.5.0",
 			desiredVersion: "~8.1.0",
 			shouldAddIfMissing: true,
 		},
 		{
-			packageName: constants.TNS_CORE_MODULES_NAME,
+			packageName: "tns-core-modules",
 			shouldRemove: true,
 		},
 		{
@@ -141,12 +134,12 @@ export class MigrateController
 			isDev: true,
 		},
 		{
-			packageName: constants.TNS_CORE_MODULES_WIDGETS_NAME,
+			packageName: "tns-core-modules-widgets",
 			shouldRemove: true,
 		},
 		{
 			packageName: "nativescript-dev-webpack",
-			replaceWith: constants.WEBPACK_PLUGIN_NAME,
+			replaceWith: "@nativescript/webpack",
 			shouldRemove: true,
 			isDev: true,
 			async shouldMigrateAction() {
@@ -155,7 +148,7 @@ export class MigrateController
 			migrateAction: this.migrateWebpack.bind(this),
 		},
 		{
-			packageName: constants.WEBPACK_PLUGIN_NAME,
+			packageName: "@nativescript/webpack",
 			minVersion: "3.0.0",
 			desiredVersion: "~5.0.0",
 			shouldAddIfMissing: true,
@@ -190,7 +183,7 @@ export class MigrateController
 		{
 			packageName: "@nativescript/angular",
 			minVersion: "10.0.0",
-			desiredVersion: "~12.0.6", // :::~12.1.0
+			desiredVersion: "~12.2.0",
 			async shouldMigrateAction(
 				dependency: IMigrationDependency,
 				projectData: IProjectData,
@@ -303,19 +296,6 @@ export class MigrateController
 			isDev: true,
 		},
 	];
-
-	// get verifiedPlatformVersions(): IDictionary<IDependencyVersion> {
-	// 	return {
-	// 		[this.$devicePlatformsConstants.Android.toLowerCase()]: {
-	// 			minVersion: "6.5.3",
-	// 			desiredVersion: "~8.1.0", // :::8.1.0
-	// 		},
-	// 		[this.$devicePlatformsConstants.iOS.toLowerCase()]: {
-	// 			minVersion: "6.5.4",
-	// 			desiredVersion: "~8.1.0", // :::8.1.0
-	// 		},
-	// 	};
-	// }
 
 	public async shouldMigrate({
 		projectDir,
@@ -464,27 +444,8 @@ export class MigrateController
 
 		await this.migrateWebpack5(projectDir, projectData);
 
-		// npx -p @nativescript/webpack@alpha nativescript-webpack init
-
 		// run @nativescript/eslint over codebase
-		// this.spinner.start("Checking project code...");
-
 		await this.runESLint(projectDir);
-
-		// this.spinner.succeed("Updated tsconfig.json");
-
-		// add latest runtimes (if they were specified in the nativescript key)
-		// this.spinner.start("Updating runtimes");
-		//
-		// await wait(2000);
-		// this.spinner.clear();
-		// this.$logger.info(
-		// 	`  - ${"@nativescript/android".yellow} ${"v7.0.0".green} has been added`
-		// );
-		// this.spinner.render();
-		//
-		// this.spinner.text = "Runtimes have been updated";
-		// this.spinner.succeed();
 
 		this.spinner.succeed("Migration complete.");
 
@@ -503,75 +464,6 @@ export class MigrateController
 		// restore all files - or perhaps let the user sort it out
 		// or ns migrate restore - to restore from pre-migration backup
 		// for some known cases, print suggestions perhaps
-		//
-		// return;
-		//
-		// this.spinner = this.$terminalSpinnerService.createSpinner();
-		//
-		// this.spinner.start("Migrating project...");
-		// // const projectData = this.$projectDataService.getProjectData(projectDir);
-		// const backupDir = path.join(projectDir, MigrateController.backupFolderName);
-		//
-		// try {
-		// 	this.spinner.start("Backup project configuration.");
-		// 	this.backup(
-		// 		[
-		// 			...MigrateController.pathsToBackup,
-		// 			path.join(projectData.getAppDirectoryRelativePath(), "package.json"),
-		// 		],
-		// 		backupDir,
-		// 		projectData.projectDir
-		// 	);
-		// 	this.spinner.text = "Backup project configuration complete.";
-		// 	this.spinner.succeed();
-		// } catch (error) {
-		// 	// this.spinner.text = MigrateController.backupFailMessage;
-		// 	this.spinner.fail();
-		// 	// this.$logger.error(MigrateController.backupFailMessage);
-		// 	await this.$projectCleanupService.cleanPath(backupDir);
-		// 	// this.$fs.deleteDirectory(backupDir);
-		// 	return;
-		// }
-		//
-		// try {
-		// 	this.spinner.start("Clean auto-generated files.");
-		// 	this.handleAutoGeneratedFiles(backupDir, projectData);
-		// 	this.spinner.text = "Clean auto-generated files complete.";
-		// 	this.spinner.succeed();
-		// } catch (error) {
-		// 	this.$logger.trace(
-		// 		`Error during auto-generated files handling. ${
-		// 			(error && error.message) || error
-		// 		}`
-		// 	);
-		// }
-		//
-		// // await this.migrateOldAndroidAppResources(projectData, backupDir);
-		//
-		// try {
-		// 	await this.cleanUpProject(projectData);
-		// 	// await this.migrateConfigs(projectData);
-		// 	await this.migrateDependencies(
-		// 		projectData,
-		// 		platforms,
-		// 		loose
-		// 	);
-		// } catch (error) {
-		// 	const backupFolders = MigrateController.pathsToBackup;
-		// 	const embeddedPackagePath = path.join(
-		// 		projectData.getAppDirectoryRelativePath(),
-		// 		"package.json"
-		// 	);
-		// 	backupFolders.push(embeddedPackagePath);
-		// 	this.restoreBackup(backupFolders, backupDir, projectData.projectDir);
-		// 	this.spinner.fail();
-		// 	// this.$errors.fail(
-		// 	// 	`${MigrateController.migrateFailMessage} The error is: ${error}`
-		// 	// );
-		// }
-		//
-		// this.spinner.stop();
-		// // this.spinner.info(MigrateController.MIGRATE_FINISH_MESSAGE);
 	}
 
 	private async _shouldMigrate({
@@ -648,50 +540,6 @@ export class MigrateController
 				return true;
 			}
 		}
-
-		// for (let platform of platforms) {
-		// 	platform = platform?.toLowerCase();
-
-		// 	if (
-		// 		!this.$platformValidationService.isValidPlatform(platform, projectData)
-		// 	) {
-		// 		continue;
-		// 	}
-
-		// 	const hasRuntimeDependency = this.hasRuntimeDependency({
-		// 		platform,
-		// 		projectData,
-		// 	});
-
-		// 	if (!hasRuntimeDependency) {
-		// 		continue;
-		// 	}
-
-		// 	const verifiedPlatformVersion =
-		// 		this.verifiedPlatformVersions[platform.toLowerCase()];
-		// 	const shouldUpdateRuntime = await this.shouldUpdateRuntimeVersion(
-		// 		verifiedPlatformVersion,
-		// 		platform,
-		// 		projectData,
-		// 		loose
-		// 	);
-
-		// 	if (!shouldUpdateRuntime) {
-		// 		continue;
-		// 	}
-
-		// 	this.$logger.trace(
-		// 		`${shouldMigrateCommonMessage}Platform '${platform}' should be updated.`
-		// 	);
-		// 	if (loose) {
-		// 		this.$logger.warn(
-		// 			`Platform '${platform}' should be updated. The minimum version supported is ${verifiedPlatformVersion.minVersion}`
-		// 		);
-		// 		continue;
-		// 	}
-
-		// 	return true;
-		// }
 
 		return false;
 	}
@@ -1048,48 +896,6 @@ export class MigrateController
 
 			await this.migrateDependency(dependency, projectData, loose);
 		}
-
-		// for (const platform of platforms) {
-		// 	const lowercasePlatform = platform.toLowerCase();
-		// 	const hasRuntimeDependency = this.hasRuntimeDependency({
-		// 		platform,
-		// 		projectData,
-		// 	});
-
-		// 	if (!hasRuntimeDependency) {
-		// 		continue;
-		// 	}
-
-		// 	const shouldUpdate = await this.shouldUpdateRuntimeVersion(
-		// 		this.verifiedPlatformVersions[lowercasePlatform],
-		// 		platform,
-		// 		projectData,
-		// 		loose
-		// 	);
-
-		// 	if (!shouldUpdate) {
-		// 		continue;
-		// 	}
-
-		// 	const verifiedPlatformVersion =
-		// 		this.verifiedPlatformVersions[lowercasePlatform];
-		// 	const platformData = this.$platformsDataService.getPlatformData(
-		// 		lowercasePlatform,
-		// 		projectData
-		// 	);
-
-		// 	this.spinner.info(
-		// 		`Updating ${platform} platform to version ${verifiedPlatformVersion.desiredVersion.green}.`
-		// 	);
-
-		// 	await this.$addPlatformService.setPlatformVersion(
-		// 		platformData,
-		// 		projectData,
-		// 		verifiedPlatformVersion.desiredVersion
-		// 	);
-
-		// 	this.spinner.succeed();
-		// }
 	}
 
 	private async migrateDependency(
@@ -1405,10 +1211,6 @@ export class MigrateController
 	private async migrateNativeScriptAngular(): Promise<IMigrationDependency[]> {
 		const minVersion = "10.0.0";
 		const desiredVersion = "~12.2.5";
-
-		/*
-    "@angular/router": "~11.2.7",
-     */
 
 		const dependencies: IMigrationDependency[] = [
 			{
