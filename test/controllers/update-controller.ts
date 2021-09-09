@@ -3,36 +3,31 @@ import * as yok from "../../lib/common/yok";
 import { UpdateController } from "../../lib/controllers/update-controller";
 import { assert } from "chai";
 import * as sinon from "sinon";
-import * as path from "path";
-import { Options } from "../../lib/options";
-import { StaticConfig } from "../../lib/config";
-import { SettingsService } from "../../lib/common/test/unit-tests/stubs";
-import { DevicePlatformsConstants } from "../../lib/common/mobile/device-platforms-constants";
 import { IInjector } from "../../lib/common/definitions/yok";
+import { IPluginsService } from "../../lib/definitions/plugins";
 const projectFolder = "test";
 
 function createTestInjector(projectDir: string = projectFolder): IInjector {
 	const testInjector: IInjector = new yok.Yok();
 	testInjector.register("logger", stubs.LoggerStub);
-	testInjector.register("options", Options);
-	testInjector.register("analyticsService", {
-		trackException: async (): Promise<void> => undefined,
-		checkConsent: async (): Promise<void> => undefined,
-		trackFeature: async (): Promise<void> => undefined,
-	});
 	testInjector.register("errors", stubs.ErrorsStub);
-	testInjector.register("staticConfig", StaticConfig);
+	testInjector.register(
+		"terminalSpinnerService",
+		stubs.TerminalSpinnerServiceStub
+	);
 	testInjector.register("projectData", {
 		projectDir,
 		initializeProjectData: () => {
 			/* empty */
 		},
-		dependencies: {},
-	});
-	testInjector.register("settingsService", SettingsService);
-	testInjector.register("migrateController", {
-		shouldMigrate: () => {
-			return false;
+		dependencies: {
+			"@nativescript/core": "next",
+		},
+		devDependencies: {
+			"@nativescript/ios": "8.0.0",
+			"@nativescript/android": "~8.0.0",
+			"@nativescript/webpack": "5.0.0-beta.9",
+			"@nativescript/types": "8.1.0",
 		},
 	});
 	testInjector.register("fs", stubs.FileSystemStub);
@@ -41,33 +36,66 @@ function createTestInjector(projectDir: string = projectFolder): IInjector {
 			return "5.2.0";
 		},
 	});
-
 	testInjector.register("packageManager", {
-		getTagVersion: () => {
-			return "2.3.0";
-		},
-	});
-	testInjector.register("addPlatformService", {
-		setPlatformVersion: () => {
-			/**/
+		getTagVersion(packageName: string, tag: string) {
+			switch (tag) {
+				case "next":
+					return "8.0.0-next";
+				case "latest":
+					return "8.0.4567";
+				case "JSC":
+					if (packageName === "@nativescript/ios") {
+						return "6.5.4-jsc";
+					}
+			}
+
+			return false;
 		},
 	});
 	testInjector.register("pluginsService", {
-		addToPackageJson: () => {
-			/**/
-		},
+		addToPackageJson() {},
 	});
-	testInjector.register("devicePlatformsConstants", DevicePlatformsConstants);
+
+	class PackageInstallationManagerStub extends stubs.PackageInstallationManagerStub {
+		getInstalledDependencyVersion = async (packageName: string) => {
+			const projectData = testInjector.resolve("projectData");
+			const deps = {
+				...projectData.dependencies,
+				...projectData.devDependencies,
+			};
+
+			if (deps[packageName]) {
+				return deps[packageName];
+			}
+
+			return "";
+		};
+	}
 	testInjector.register(
 		"packageInstallationManager",
-		stubs.PackageInstallationManagerStub
+		PackageInstallationManagerStub
 	);
 	testInjector.register("platformsDataService", stubs.NativeProjectDataStub);
 	testInjector.register("pacoteService", stubs.PacoteServiceStub);
-	testInjector.register("projectDataService", stubs.ProjectDataServiceStub);
+	testInjector.register("projectDataService", {
+		getProjectData() {
+			return testInjector.resolve("projectData");
+		},
+	});
 	testInjector.register("updateController", UpdateController);
+	testInjector.register("projectBackupService", stubs.ProjectBackupServiceStub);
+	testInjector.register("projectCleanupService", {
+		clean() {},
+	});
 
 	return testInjector;
+}
+
+function assertCalled(stub: sinon.SinonStub, ...args: any[]) {
+	assert(
+		stub.calledWith(...args),
+		`Expected a call with (${args.join(", ")}).`
+	);
 }
 
 describe("update controller method tests", () => {
@@ -81,162 +109,205 @@ describe("update controller method tests", () => {
 		sandbox.restore();
 	});
 
-	it("if backup fails, platforms not deleted, temp removed", async () => {
+	it("if backup fails, project is not cleaned", async () => {
 		const testInjector = createTestInjector();
-		const fs = testInjector.resolve("fs");
-		const deleteDirectory: sinon.SinonStub = sandbox.stub(
-			fs,
-			"deleteDirectory"
-		);
-		sandbox.stub(fs, "copyFile").throws();
+		const projectBackupService = testInjector.resolve("projectBackupService");
+		const projectCleanupService = testInjector.resolve("projectCleanupService");
 		const updateController = testInjector.resolve("updateController");
 
-		await updateController.update({
-			projectDir: projectFolder,
-			version: "3.3.0",
-		});
+		projectBackupService.shouldFail(true);
 
-		assert.isTrue(
-			deleteDirectory.calledWith(
-				path.join(projectFolder, UpdateController.backupFolder)
-			)
-		);
-		assert.isFalse(
-			deleteDirectory.calledWith(path.join(projectFolder, "platforms"))
-		);
-	});
-
-	it("calls copy to temp for package.json and folders(backup)", async () => {
-		const testInjector = createTestInjector();
-		const fs = testInjector.resolve("fs");
-		const copyFileStub = sandbox.stub(fs, "copyFile");
-		const updateController = testInjector.resolve("updateController");
-
-		await updateController.update({
-			projectDir: projectFolder,
-			version: "3.3.0",
-		});
-
-		assert.isTrue(
-			copyFileStub.calledWith(path.join(projectFolder, "package.json"))
-		);
-		for (const folder of UpdateController.folders) {
-			assert.isTrue(copyFileStub.calledWith(path.join(projectFolder, folder)));
-		}
-	});
-
-	it("calls copy from temp for package.json and folders to project folder(restore)", async () => {
-		const testInjector = createTestInjector();
-		testInjector.resolve("platformCommandHelper").removePlatforms = () => {
-			throw new Error();
+		let cleanCalled = false;
+		projectCleanupService.clean = () => {
+			cleanCalled = true;
 		};
-		const fs = testInjector.resolve("fs");
-		const copyFileStub = sandbox.stub(fs, "copyFile");
+
+		let hasError = false;
+		await updateController
+			.update({
+				projectDir: projectFolder,
+				version: "3.3.0",
+			})
+			.catch(() => {
+				hasError = true;
+			});
+
+		assert.equal(projectBackupService._backups.length, 1);
+
+		const backup = projectBackupService._backups[0];
+
+		assert.isTrue(
+			hasError,
+			"expected updateController.update to throw an error"
+		);
+		assert.isTrue(
+			backup._meta.createCalled,
+			"expected backup.create() to have been called"
+		);
+		assert.isFalse(cleanCalled, "clean called even though backup failed");
+		assert.isTrue(
+			backup._meta.removeCalled,
+			"expected backup.remove() to have been called"
+		);
+	});
+
+	it("handles exact versions", async () => {
+		const testInjector = createTestInjector();
 		const updateController = testInjector.resolve("updateController");
-		const tempDir = path.join(projectFolder, UpdateController.backupFolder);
+		const pluginsService = testInjector.resolve<IPluginsService>(
+			"pluginsService"
+		);
+
+		const stub = sinon.stub(pluginsService, "addToPackageJson");
 
 		await updateController.update({
 			projectDir: projectFolder,
-			version: "3.3.0",
+			version: "8.0.1234",
 		});
 
-		assert.isTrue(
-			copyFileStub.calledWith(
-				path.join(tempDir, "package.json"),
-				path.resolve(projectFolder, "package.json")
-			)
-		);
-		for (const folder of UpdateController.folders) {
-			assert.isTrue(
-				copyFileStub.calledWith(
-					path.join(tempDir, folder),
-					path.resolve(projectFolder, folder)
-				)
-			);
-		}
+		assertCalled(stub, "@nativescript/core", "8.0.1234");
+		assertCalled(stub, "@nativescript/webpack", "8.0.1234");
+		assertCalled(stub, "@nativescript/types", "8.0.1234");
+		assertCalled(stub, "@nativescript/ios", "8.0.1234");
+		assertCalled(stub, "@nativescript/android", "8.0.1234");
 	});
 
-	// TODO: Igor and Nathan to bring back when making update/migrations work with latest
-	// for (const projectType of ["Angular", "React"]) {
-	// 	it(`should update dependencies from project type: ${projectType}`, async () => {
-	// 		const testInjector = createTestInjector();
-	// 		testInjector.resolve("platformCommandHelper").removePlatforms = () => {
-	// 			throw new Error();
-	// 		};
+	it("handles range versions", async () => {
+		const testInjector = createTestInjector();
+		const updateController = testInjector.resolve("updateController");
+		const pluginsService = testInjector.resolve<IPluginsService>(
+			"pluginsService"
+		);
 
-	// 		const fs = testInjector.resolve("fs");
-	// 		const copyFileStub = sandbox.stub(fs, "copyFile");
-	// 		const updateController = testInjector.resolve("updateController");
-	// 		const tempDir = path.join(projectFolder, UpdateController.backupFolder);
+		const stub = sinon.stub(pluginsService, "addToPackageJson");
 
-	// 		const projectDataService = testInjector.resolve<IProjectDataService>("projectDataService");
-	// 		projectDataService.getProjectData = (projectDir: string) => {
-	// 			return <any>{
-	// 				projectDir,
-	// 				projectType,
-	// 				dependencies: {
-	// 					"tns-core-modules": "0.1.0",
-	// 				},
-	// 				devDependencies: {
-	// 					"nativescript-dev-webpack": "1.1.3"
-	// 				}
-	// 			};
-	// 		};
+		await updateController.update({
+			projectDir: projectFolder,
+			version: "~8.0.1234",
+		});
 
-	// 		const packageInstallationManager = testInjector.resolve<IPackageInstallationManager>("packageInstallationManager");
-	// 		const latestCompatibleVersion = "1.1.1";
-	// 		packageInstallationManager.getLatestCompatibleVersionSafe = async (packageName: string, referenceVersion?: string): Promise<string> => {
-	// 			assert.isString(packageName);
-	// 			assert.isFalse(_.isEmpty(packageName));
-	// 			return latestCompatibleVersion;
-	// 		};
+		assertCalled(stub, "@nativescript/core", "~8.0.1234");
+		assertCalled(stub, "@nativescript/webpack", "~8.0.1234");
+		assertCalled(stub, "@nativescript/types", "~8.0.1234");
+		assertCalled(stub, "@nativescript/ios", "~8.0.1234");
+		assertCalled(stub, "@nativescript/android", "~8.0.1234");
+	});
 
-	// 		const pacoteService = testInjector.resolve<IPacoteService>("pacoteService");
-	// 		pacoteService.manifest = async (packageName: string, options?: IPacoteManifestOptions): Promise<any> => {
-	// 			assert.isString(packageName);
-	// 			assert.isFalse(_.isEmpty(packageName));
+	it("handles range versions", async () => {
+		const testInjector = createTestInjector();
+		const updateController = testInjector.resolve("updateController");
+		const pluginsService = testInjector.resolve<IPluginsService>(
+			"pluginsService"
+		);
 
-	// 			return {
-	// 				dependencies: {
-	// 					"tns-core-modules": "1.0.0",
-	// 					"dep2": "1.1.0"
-	// 				},
-	// 				devDependencies: {
-	// 					"devDep1": "1.2.0",
-	// 					"nativescript-dev-webpack": "1.3.0"
-	// 				},
-	// 				name: "template1"
-	// 			};
-	// 		};
+		const stub = sinon.stub(pluginsService, "addToPackageJson");
 
-	// 		const pluginsService = testInjector.resolve<IPluginsService>("pluginsService");
-	// 		const dataAddedToPackageJson: IDictionary<any> = {
-	// 			dependencies: {},
-	// 			devDependencies: {}
-	// 		};
-	// 		pluginsService.addToPackageJson = (plugin: string, version: string, isDev: boolean, projectDir: string): void => {
-	// 			if (isDev) {
-	// 				dataAddedToPackageJson.devDependencies[plugin] = version;
-	// 			} else {
-	// 				dataAddedToPackageJson.dependencies[plugin] = version;
-	// 			}
-	// 		};
+		await updateController.update({
+			projectDir: projectFolder,
+			version: "^8.0.1234",
+		});
 
-	// 		await updateController.update({ projectDir: projectFolder });
+		assertCalled(stub, "@nativescript/core", "^8.0.1234");
+		assertCalled(stub, "@nativescript/webpack", "^8.0.1234");
+		assertCalled(stub, "@nativescript/types", "^8.0.1234");
+		assertCalled(stub, "@nativescript/ios", "^8.0.1234");
+		assertCalled(stub, "@nativescript/android", "^8.0.1234");
+	});
 
-	// 		assert.isTrue(copyFileStub.calledWith(path.join(tempDir, "package.json"), projectFolder));
-	// 		for (const folder of UpdateController.folders) {
-	// 			assert.isTrue(copyFileStub.calledWith(path.join(tempDir, folder), projectFolder));
-	// 		}
+	it("handles latest tag versions", async () => {
+		const testInjector = createTestInjector();
+		const updateController = testInjector.resolve("updateController");
+		const pluginsService = testInjector.resolve<IPluginsService>(
+			"pluginsService"
+		);
 
-	// 		assert.deepStrictEqual(dataAddedToPackageJson, {
-	// 			dependencies: {
-	// 				"tns-core-modules": "1.0.0",
-	// 			},
-	// 			devDependencies: {
-	// 				"nativescript-dev-webpack": "1.3.0"
-	// 			}
-	// 		});
-	// 	});
-	// }
+		const stub = sinon.stub(pluginsService, "addToPackageJson");
+
+		await updateController.update({
+			projectDir: projectFolder,
+			version: "latest",
+		});
+
+		assertCalled(stub, "@nativescript/core", "~8.0.4567");
+		assertCalled(stub, "@nativescript/webpack", "~8.0.4567");
+		assertCalled(stub, "@nativescript/types", "~8.0.4567");
+		assertCalled(stub, "@nativescript/ios", "~8.0.4567");
+		assertCalled(stub, "@nativescript/android", "~8.0.4567");
+	});
+
+	it("handles existing tag versions", async () => {
+		const testInjector = createTestInjector();
+		const updateController = testInjector.resolve("updateController");
+		const pluginsService = testInjector.resolve<IPluginsService>(
+			"pluginsService"
+		);
+
+		const stub = sinon.stub(pluginsService, "addToPackageJson");
+
+		await updateController.update({
+			projectDir: projectFolder,
+			version: "next",
+		});
+
+		assertCalled(stub, "@nativescript/core", "8.0.0-next");
+		assertCalled(stub, "@nativescript/webpack", "8.0.0-next");
+		assertCalled(stub, "@nativescript/types", "8.0.0-next");
+		assertCalled(stub, "@nativescript/ios", "8.0.0-next");
+		assertCalled(stub, "@nativescript/android", "8.0.0-next");
+	});
+
+	it("handles non-existing tag versions", async () => {
+		const testInjector = createTestInjector();
+		const updateController = testInjector.resolve("updateController");
+		const pluginsService = testInjector.resolve<IPluginsService>(
+			"pluginsService"
+		);
+
+		const stub = sinon.stub(pluginsService, "addToPackageJson");
+
+		await updateController.update({
+			projectDir: projectFolder,
+			version: "nonexistent",
+		});
+
+		assert(stub.notCalled);
+	});
+
+	it("handles partially existing tag versions", async () => {
+		const testInjector = createTestInjector();
+		const updateController = testInjector.resolve("updateController");
+		const pluginsService = testInjector.resolve<IPluginsService>(
+			"pluginsService"
+		);
+
+		const stub = sinon.stub(pluginsService, "addToPackageJson");
+
+		await updateController.update({
+			projectDir: projectFolder,
+			version: "JSC",
+		});
+
+		assert(stub.calledOnce);
+		assertCalled(stub, "@nativescript/ios", "6.5.4-jsc");
+	});
+
+	it("handles no version - falls back to latest", async () => {
+		const testInjector = createTestInjector();
+		const updateController = testInjector.resolve("updateController");
+		const pluginsService = testInjector.resolve<IPluginsService>(
+			"pluginsService"
+		);
+
+		const stub = sinon.stub(pluginsService, "addToPackageJson");
+
+		await updateController.update({
+			projectDir: projectFolder,
+		});
+
+		assertCalled(stub, "@nativescript/core", "~8.0.4567");
+		assertCalled(stub, "@nativescript/webpack", "~8.0.4567");
+		assertCalled(stub, "@nativescript/types", "~8.0.4567");
+		assertCalled(stub, "@nativescript/ios", "~8.0.4567");
+		assertCalled(stub, "@nativescript/android", "~8.0.4567");
+	});
 });
