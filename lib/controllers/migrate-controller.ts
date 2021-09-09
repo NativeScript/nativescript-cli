@@ -26,16 +26,11 @@ import {
 	IPackageInstallationManager,
 	IPackageManager,
 	IPlatformCommandHelper,
-	IPlatformValidationService,
 } from "../declarations";
-import {
-	IAddPlatformService,
-	IPlatformsDataService,
-} from "../definitions/platform";
+import { IPlatformsDataService } from "../definitions/platform";
 import { IPluginsService } from "../definitions/plugins";
 import {
 	IChildProcess,
-	IDictionary,
 	IErrors,
 	IFileSystem,
 	IResourceLoader,
@@ -67,15 +62,12 @@ export class MigrateController
 		protected $packageManager: IPackageManager,
 		protected $pacoteService: IPacoteService,
 		// private $androidResourcesMigrationService: IAndroidResourcesMigrationService,
-		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $logger: ILogger,
 		private $errors: IErrors,
-		private $addPlatformService: IAddPlatformService,
 		private $pluginsService: IPluginsService,
 		private $projectDataService: IProjectDataService,
 		private $projectConfigService: IProjectConfigService,
 		private $options: IOptions,
-		private $platformValidationService: IPlatformValidationService,
 		private $resources: IResourceLoader,
 		private $injector: IInjector,
 		private $settingsService: ISettingsService,
@@ -284,20 +276,46 @@ export class MigrateController
 			desiredVersion: "~1.39.0",
 			isDev: true,
 		},
+
+		// runtimes
+		{
+			packageName: "tns-ios",
+			minVersion: "6.5.3",
+			replaceWith: "@nativescript/ios",
+			isDev: true,
+		},
+		{
+			packageName: "tns-android",
+			minVersion: "6.5.4",
+			replaceWith: "@nativescript/android",
+			isDev: true,
+		},
+		{
+			packageName: "@nativescript/ios",
+			minVersion: "6.5.3",
+			desiredVersion: "~8.1.0",
+			isDev: true,
+		},
+		{
+			packageName: "@nativescript/android",
+			minVersion: "7.0.0",
+			desiredVersion: "~8.1.0",
+			isDev: true,
+		},
 	];
 
-	get verifiedPlatformVersions(): IDictionary<IDependencyVersion> {
-		return {
-			[this.$devicePlatformsConstants.Android.toLowerCase()]: {
-				minVersion: "6.5.3",
-				desiredVersion: "~8.0.0", // :::8.1.0
-			},
-			[this.$devicePlatformsConstants.iOS.toLowerCase()]: {
-				minVersion: "6.5.4",
-				desiredVersion: "~8.0.0", // :::8.1.0
-			},
-		};
-	}
+	// get verifiedPlatformVersions(): IDictionary<IDependencyVersion> {
+	// 	return {
+	// 		[this.$devicePlatformsConstants.Android.toLowerCase()]: {
+	// 			minVersion: "6.5.3",
+	// 			desiredVersion: "~8.1.0", // :::8.1.0
+	// 		},
+	// 		[this.$devicePlatformsConstants.iOS.toLowerCase()]: {
+	// 			minVersion: "6.5.4",
+	// 			desiredVersion: "~8.1.0", // :::8.1.0
+	// 		},
+	// 	};
+	// }
 
 	public async shouldMigrate({
 		projectDir,
@@ -631,50 +649,49 @@ export class MigrateController
 			}
 		}
 
-		for (let platform of platforms) {
-			platform = platform?.toLowerCase();
+		// for (let platform of platforms) {
+		// 	platform = platform?.toLowerCase();
 
-			if (
-				!this.$platformValidationService.isValidPlatform(platform, projectData)
-			) {
-				continue;
-			}
+		// 	if (
+		// 		!this.$platformValidationService.isValidPlatform(platform, projectData)
+		// 	) {
+		// 		continue;
+		// 	}
 
-			const hasRuntimeDependency = this.hasRuntimeDependency({
-				platform,
-				projectData,
-			});
+		// 	const hasRuntimeDependency = this.hasRuntimeDependency({
+		// 		platform,
+		// 		projectData,
+		// 	});
 
-			if (!hasRuntimeDependency) {
-				continue;
-			}
+		// 	if (!hasRuntimeDependency) {
+		// 		continue;
+		// 	}
 
-			const verifiedPlatformVersion = this.verifiedPlatformVersions[
-				platform.toLowerCase()
-			];
-			const shouldUpdateRuntime = await this.shouldUpdateRuntimeVersion(
-				verifiedPlatformVersion,
-				platform,
-				projectData,
-				loose
-			);
+		// 	const verifiedPlatformVersion =
+		// 		this.verifiedPlatformVersions[platform.toLowerCase()];
+		// 	const shouldUpdateRuntime = await this.shouldUpdateRuntimeVersion(
+		// 		verifiedPlatformVersion,
+		// 		platform,
+		// 		projectData,
+		// 		loose
+		// 	);
 
-			if (!shouldUpdateRuntime) {
-				continue;
-			}
+		// 	if (!shouldUpdateRuntime) {
+		// 		continue;
+		// 	}
 
-			this.$logger.trace(
-				`${shouldMigrateCommonMessage}Platform '${platform}' should be updated.`
-			);
-			if (loose) {
-				this.$logger.warn(
-					`Platform '${platform}' should be updated. The minimum version supported is ${verifiedPlatformVersion.minVersion}`
-				);
-				continue;
-			}
+		// 	this.$logger.trace(
+		// 		`${shouldMigrateCommonMessage}Platform '${platform}' should be updated.`
+		// 	);
+		// 	if (loose) {
+		// 		this.$logger.warn(
+		// 			`Platform '${platform}' should be updated. The minimum version supported is ${verifiedPlatformVersion.minVersion}`
+		// 		);
+		// 		continue;
+		// 	}
 
-			return true;
-		}
+		// 	return true;
+		// }
 
 		return false;
 	}
@@ -704,20 +721,6 @@ export class MigrateController
 			{ minVersion, desiredVersion },
 			loose
 		);
-	}
-
-	private async shouldUpdateRuntimeVersion(
-		version: IDependencyVersion,
-		platform: string,
-		projectData: IProjectData,
-		loose: boolean
-	): Promise<boolean> {
-		const installedVersion = await this.getMaxRuntimeVersion({
-			platform,
-			projectData,
-		});
-
-		return this.isOutdatedVersion(installedVersion, version, loose);
 	}
 
 	private async getCachedShouldMigrate(
@@ -1046,48 +1049,47 @@ export class MigrateController
 			await this.migrateDependency(dependency, projectData, loose);
 		}
 
-		for (const platform of platforms) {
-			const lowercasePlatform = platform.toLowerCase();
-			const hasRuntimeDependency = this.hasRuntimeDependency({
-				platform,
-				projectData,
-			});
+		// for (const platform of platforms) {
+		// 	const lowercasePlatform = platform.toLowerCase();
+		// 	const hasRuntimeDependency = this.hasRuntimeDependency({
+		// 		platform,
+		// 		projectData,
+		// 	});
 
-			if (!hasRuntimeDependency) {
-				continue;
-			}
+		// 	if (!hasRuntimeDependency) {
+		// 		continue;
+		// 	}
 
-			const shouldUpdate = await this.shouldUpdateRuntimeVersion(
-				this.verifiedPlatformVersions[lowercasePlatform],
-				platform,
-				projectData,
-				loose
-			);
+		// 	const shouldUpdate = await this.shouldUpdateRuntimeVersion(
+		// 		this.verifiedPlatformVersions[lowercasePlatform],
+		// 		platform,
+		// 		projectData,
+		// 		loose
+		// 	);
 
-			if (!shouldUpdate) {
-				continue;
-			}
+		// 	if (!shouldUpdate) {
+		// 		continue;
+		// 	}
 
-			const verifiedPlatformVersion = this.verifiedPlatformVersions[
-				lowercasePlatform
-			];
-			const platformData = this.$platformsDataService.getPlatformData(
-				lowercasePlatform,
-				projectData
-			);
+		// 	const verifiedPlatformVersion =
+		// 		this.verifiedPlatformVersions[lowercasePlatform];
+		// 	const platformData = this.$platformsDataService.getPlatformData(
+		// 		lowercasePlatform,
+		// 		projectData
+		// 	);
 
-			this.spinner.info(
-				`Updating ${platform} platform to version ${verifiedPlatformVersion.desiredVersion.green}.`
-			);
+		// 	this.spinner.info(
+		// 		`Updating ${platform} platform to version ${verifiedPlatformVersion.desiredVersion.green}.`
+		// 	);
 
-			await this.$addPlatformService.setPlatformVersion(
-				platformData,
-				projectData,
-				verifiedPlatformVersion.desiredVersion
-			);
+		// 	await this.$addPlatformService.setPlatformVersion(
+		// 		platformData,
+		// 		projectData,
+		// 		verifiedPlatformVersion.desiredVersion
+		// 	);
 
-			this.spinner.succeed();
-		}
+		// 	this.spinner.succeed();
+		// }
 	}
 
 	private async migrateDependency(
