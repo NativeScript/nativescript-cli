@@ -114,7 +114,7 @@ export class MigrateController
 		{
 			packageName: "@nativescript/core",
 			minVersion: "6.5.0",
-			desiredVersion: "~8.1.0",
+			desiredVersion: "~8.1.1",
 			shouldAddIfMissing: true,
 		},
 		{
@@ -183,7 +183,7 @@ export class MigrateController
 		{
 			packageName: "@nativescript/angular",
 			minVersion: "10.0.0",
-			desiredVersion: "~12.2.0",
+			desiredVersion: "^12.2.0",
 			async shouldMigrateAction(
 				dependency: IMigrationDependency,
 				projectData: IProjectData,
@@ -292,7 +292,7 @@ export class MigrateController
 		{
 			packageName: "@nativescript/android",
 			minVersion: "7.0.0",
-			desiredVersion: "~8.1.0",
+			desiredVersion: "~8.1.1",
 			isDev: true,
 		},
 	];
@@ -1210,7 +1210,7 @@ export class MigrateController
 
 	private async migrateNativeScriptAngular(): Promise<IMigrationDependency[]> {
 		const minVersion = "10.0.0";
-		const desiredVersion = "~12.2.5";
+		const desiredVersion = "^12.2.5";
 
 		const dependencies: IMigrationDependency[] = [
 			{
