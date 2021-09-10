@@ -54,6 +54,90 @@ export function cache(): any {
 	};
 }
 
+interface MemoizeOptions {
+	hashFn?: (...args: any[]) => any;
+	shouldCache?: (result: any) => boolean;
+}
+let memoizeIDCounter = 0;
+export function memoize(options: MemoizeOptions): any {
+	return (
+		target: Object,
+		propertyKey: string,
+		descriptor: TypedPropertyDescriptor<any>
+	): TypedPropertyDescriptor<any> => {
+		// todo: remove once surely working as intended.
+		const DEBUG = false;
+		const memoizeID = memoizeIDCounter++;
+		const valueOrGet: "value" | "get" = descriptor.value ? "value" : "get";
+		const originalMethod = descriptor[valueOrGet];
+
+		descriptor[valueOrGet] = function (...args: any[]) {
+			const cacheMapName = `__memoize_cache_map_${memoizeID}`;
+
+			DEBUG && console.log(options);
+			let hashKey: any;
+			if (options.hashFn) {
+				DEBUG && console.log({ args });
+				hashKey = options.hashFn.apply(this, args);
+			} else {
+				hashKey = `__memoize_cache_value_${memoizeID}`;
+			}
+
+			DEBUG &&
+				console.log({
+					cacheMapName,
+					hashKey,
+				});
+
+			// initialize cache map if not exists
+			if (!this.hasOwnProperty(cacheMapName)) {
+				DEBUG && console.log("NO CACHE MAP YET, CREATING ONE NOW");
+				Object.defineProperty(this, cacheMapName, {
+					configurable: false,
+					enumerable: false,
+					writable: false,
+					value: new Map<any, any>(),
+				});
+			}
+			const cacheMap: Map<any, any> = this[cacheMapName];
+
+			DEBUG &&
+				console.log({
+					cacheMap,
+				});
+
+			// check if has memoized value based on hashFn
+			if (cacheMap.has(hashKey)) {
+				DEBUG && console.log("CACHE HIT");
+				// if yes, return cached value
+				return cacheMap.get(hashKey);
+			}
+			DEBUG && console.log("CACHE MISS");
+
+			// if not call original and get result
+			const result = originalMethod.apply(this, args);
+
+			// call shouldCache (if passed) with the result or default to true
+			let shouldCache: boolean = true;
+			if (options.shouldCache) {
+				shouldCache = options.shouldCache.call(this, result);
+			}
+
+			DEBUG && console.log("GOT BACK SHOULDCACHE", shouldCache);
+
+			if (shouldCache) {
+				DEBUG && console.log("CACHING NOW");
+				cacheMap.set(hashKey, result);
+			}
+			// if shouldCache: save result
+			DEBUG && console.log("RETURNING", result);
+			return result;
+		};
+
+		return descriptor;
+	};
+}
+
 /**
  * Calls specific method of the instance before executing the decorated method.
  * This is usable when some of your methods depend on initialize async method, that cannot be invoked in constructor of the class.

@@ -13,7 +13,7 @@ import {
 	SRC_DIR,
 } from "../constants";
 import { parseJson } from "../common/helpers";
-import { exported } from "../common/decorators";
+import { exported, memoize } from "../common/decorators";
 import {
 	IAssetGroup,
 	IAssetItem,
@@ -595,6 +595,20 @@ export class ProjectDataService implements IProjectDataService {
 		return this.getInstalledRuntimePackage(projectDir, platform);
 	}
 
+	@memoize({
+		hashFn(projectDir: string, platform: constants.SupportedPlatform) {
+			return projectDir + ":" + platform;
+		},
+		shouldCache(result: IBasePluginData) {
+			// don't cache coerced versions
+			if ((result as any)._coerced) {
+				return false;
+			}
+
+			// only cache if version is defined
+			return !!result.version;
+		},
+	})
 	private getInstalledRuntimePackage(
 		projectDir: string,
 		platform: constants.SupportedPlatform
