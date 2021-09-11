@@ -27,6 +27,7 @@ declare global {
 		printMarkdown(...args: any[]): void;
 		prepare(item: any): string;
 		isVerbose(): boolean;
+		clearScreen(): void;
 	}
 
 	interface Log4JSAppenderConfiguration extends Configuration {
