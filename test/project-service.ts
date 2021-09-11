@@ -10,7 +10,7 @@ import {
 	IProjectDataService,
 	IProjectService,
 } from "../lib/definitions/project";
-import { IProjectNameService } from "../lib/declarations";
+import { IOptions, IProjectNameService } from "../lib/declarations";
 import { IInjector } from "../lib/common/definitions/yok";
 import { IDictionary, IFileSystem } from "../lib/common/declarations";
 import { ProjectConfigService } from "../lib/services/project-config-service";
@@ -118,6 +118,26 @@ describe("projectService", () => {
 				projectName,
 				projectDir,
 			});
+		});
+
+		it("creates a git repo", async () => {
+			const projectName = invalidProjectName;
+			const testInjector = getTestInjector({ projectName });
+			const options = testInjector.resolve<IOptions>("options");
+			const projectService = testInjector.resolve<IProjectService>(
+				ProjectServiceLib.ProjectService
+			);
+			const projectDir = path.join(dirToCreateProject, projectName);
+
+			// force creation to skip git repo check...
+			options.force = true;
+
+			await projectService.createProject({
+				projectName: projectName,
+				pathToProject: dirToCreateProject,
+				force: true,
+				template: constants.RESERVED_TEMPLATE_NAMES["default"],
+			});
 
 			assert.deepEqual(
 				testInjector.resolve("childProcess")._getExecutedCommands(),
@@ -126,6 +146,30 @@ describe("projectService", () => {
 					`git -C ${projectDir} add --all`,
 					`git -C ${projectDir} commit --no-verify -m "init"`,
 				]
+			);
+		});
+
+		it("does not create a git repo with --no-git", async () => {
+			const projectName = invalidProjectName;
+			const testInjector = getTestInjector({ projectName });
+			const options = testInjector.resolve<IOptions>("options");
+			const projectService = testInjector.resolve<IProjectService>(
+				ProjectServiceLib.ProjectService
+			);
+
+			// simulate --no-git
+			options.git = false;
+
+			await projectService.createProject({
+				projectName: projectName,
+				pathToProject: dirToCreateProject,
+				force: true,
+				template: constants.RESERVED_TEMPLATE_NAMES["default"],
+			});
+
+			assert.deepEqual(
+				testInjector.resolve("childProcess")._getExecutedCommands(),
+				[]
 			);
 		});
 

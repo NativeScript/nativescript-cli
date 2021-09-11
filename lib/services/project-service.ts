@@ -114,10 +114,12 @@ export class ProjectService implements IProjectService {
 		// sub projects in an existing git repo.
 		if (this.$options.git) {
 			try {
-				const git: SimpleGit = simpleGit(projectDir);
-				if (await git.checkIsRepo()) {
-					// throwing here since we're catching below.
-					throw new Error("Already part of a git repository.");
+				if (!this.$options.force) {
+					const git: SimpleGit = simpleGit(projectDir);
+					if (await git.checkIsRepo()) {
+						// throwing here since we're catching below.
+						throw new Error("Already part of a git repository.");
+					}
 				}
 				await this.$childProcess.exec(`git init ${projectDir}`);
 				await this.$childProcess.exec(`git -C ${projectDir} add --all`);
