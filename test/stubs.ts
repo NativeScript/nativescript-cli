@@ -139,6 +139,8 @@ export class LoggerStub implements ILogger {
 	isVerbose(): boolean {
 		return false;
 	}
+
+	clearScreen(): void {}
 }
 
 export class FileSystemStub implements IFileSystem {
