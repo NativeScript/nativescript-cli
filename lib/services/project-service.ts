@@ -1,5 +1,6 @@
 import * as constants from "../constants";
 import * as path from "path";
+import simpleGit, { SimpleGit } from "simple-git";
 import { exported } from "../common/decorators";
 import { Hooks } from "../constants";
 import { performanceLog } from "../common/decorators";
@@ -15,6 +16,7 @@ import {
 } from "../definitions/project";
 import {
 	INodePackageManager,
+	IOptions,
 	IProjectNameService,
 	IStaticConfig,
 } from "../declarations";
@@ -32,6 +34,7 @@ import { ITempService } from "../definitions/temp-service";
 
 export class ProjectService implements IProjectService {
 	constructor(
+		private $options: IOptions,
 		private $hooksService: IHooksService,
 		private $packageManager: INodePackageManager,
 		private $errors: IErrors,
@@ -106,24 +109,30 @@ export class ProjectService implements IProjectService {
 			projectName,
 		});
 
-		try {
-			await this.$childProcess.exec(`git init ${projectDir}`);
-			await this.$childProcess.exec(`git -C ${projectDir} add --all`);
-			await this.$childProcess.exec(
-				`git -C ${projectDir} commit --no-verify -m "init"`
-			);
-		} catch (err) {
-			this.$logger.trace(
-				"Unable to initialize git repository. Error is: ",
-				err
-			);
+		// can pass --no-git to skip creating a git repo
+		// useful in monorepos where we're creating
+		// sub projects in an existing git repo.
+		if (this.$options.git) {
+			try {
+				const git: SimpleGit = simpleGit(projectDir);
+				if (await git.checkIsRepo()) {
+					// throwing here since we're catching below.
+					throw new Error("Already part of a git repository.");
+				}
+				await this.$childProcess.exec(`git init ${projectDir}`);
+				await this.$childProcess.exec(`git -C ${projectDir} add --all`);
+				await this.$childProcess.exec(
+					`git -C ${projectDir} commit --no-verify -m "init"`
+				);
+			} catch (err) {
+				this.$logger.trace(
+					"Unable to initialize git repository. Error is: ",
+					err
+				);
+			}
 		}
 
-		this.$logger.info();
-		this.$logger.printMarkdown(
-			"__Project `%s` was successfully created.__",
-			projectName
-		);
+		this.$logger.trace(`Project ${projectName} was successfully created.`);
 
 		return projectCreationData;
 	}

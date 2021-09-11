@@ -683,6 +683,7 @@ interface IOptions
 	appleApplicationSpecificPassword: string;
 	appleSessionBase64: string;
 	markingMode: boolean;
+	git: boolean;
 }
 
 interface IEnvOptions {
