@@ -331,7 +331,7 @@ export class MigrateController
 			shouldMigrate = await this._shouldMigrate({
 				projectDir,
 				platforms: remainingPlatforms,
-				loose: loose,
+				loose,
 			});
 			this.$logger.trace(
 				`Executed shouldMigrate for platforms: ${remainingPlatforms}. Result is: ${shouldMigrate}`

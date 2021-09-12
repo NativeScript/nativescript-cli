@@ -1,5 +1,5 @@
 import { IProjectData } from "../definitions/project";
-import { IMigrateController } from "../definitions/migrate";
+import { IMigrateController, IMigrationData } from "../definitions/migrate";
 import { ICommand, ICommandParameter } from "../common/definitions/commands";
 import { injector } from "../common/yok";
 
@@ -17,7 +17,7 @@ export class MigrateCommand implements ICommand {
 	}
 
 	public async execute(args: string[]): Promise<void> {
-		const migrationData = {
+		const migrationData: IMigrationData = {
 			projectDir: this.$projectData.projectDir,
 			platforms: [
 				this.$devicePlatformsConstants.Android,
