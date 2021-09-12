@@ -25,7 +25,6 @@ import {
 	IErrors,
 	IFileSystem,
 	IProjectHelper,
-	IStringDictionary,
 	IChildProcess,
 } from "../common/declarations";
 import * as _ from "lodash";
@@ -188,7 +187,7 @@ export class ProjectService implements IProjectService {
 
 			await this.extractTemplate(projectDir, templateData);
 
-			this.alterPackageJsonData(projectDir, appId);
+			this.alterPackageJsonData(projectCreationSettings);
 			this.$projectConfigService.writeDefaultConfig(projectDir, appId);
 
 			await this.ensureAppResourcesExist(projectDir);
@@ -256,7 +255,10 @@ export class ProjectService implements IProjectService {
 	}
 
 	@performanceLog()
-	private alterPackageJsonData(projectDir: string, appId: string): void {
+	private alterPackageJsonData(
+		projectCreationSettings: IProjectCreationSettings
+	): void {
+		const { projectDir, projectName } = projectCreationSettings;
 		const projectFilePath = path.join(
 			projectDir,
 			this.$staticConfig.PROJECT_FILE_NAME
@@ -264,22 +266,34 @@ export class ProjectService implements IProjectService {
 
 		let packageJsonData = this.$fs.readJson(projectFilePath);
 
-		packageJsonData = {
-			...packageJsonData,
-			...this.packageJsonDefaultData,
+		// clean up keys from the template package.json that we don't care about.
+		Object.keys(packageJsonData).forEach((key) => {
+			if (
+				key.startsWith("_") ||
+				constants.TemplatesV2PackageJsonKeysToRemove.includes(key)
+			) {
+				delete packageJsonData[key];
+			}
+		});
+
+		// this is used to ensure the order of keys is consistent, the blanks are filled in from the template
+		const packageJsonSchema = {
+			name: projectName,
+			main: "",
+			version: "1.0.0",
+			private: true,
+			dependencies: {},
+			devDependencies: {},
+			// anythign else would go below
 		};
+
+		packageJsonData = Object.assign(packageJsonSchema, packageJsonData);
+
+		console.log({
+			packageJsonData,
+		});
 
 		this.$fs.writeJson(projectFilePath, packageJsonData);
-	}
-
-	private get packageJsonDefaultData(): IStringDictionary {
-		return {
-			private: "true",
-			description: "NativeScript Application",
-			license: "SEE LICENSE IN <your-license-filename>",
-			readme: "NativeScript Application",
-			repository: "<fill-your-repository-here>",
-		};
 	}
 }
 
