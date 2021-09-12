@@ -1,3 +1,30 @@
+## [8.1.1](https://github.com/NativeScript/nativescript-cli/compare/v8.1.0...v8.1.1) (2021-09-12)
+
+
+### Bug Fixes
+
+* launching android 11 and 12 emulators ([f32642e](https://github.com/NativeScript/nativescript-cli/commit/f32642e8fa2eaf799c872da96a7240805fc164ad))
+* order package.json keys the right way on project creation ([e68dcc8](https://github.com/NativeScript/nativescript-cli/commit/e68dcc89826704d83cf03bdfc9f7112ecfc092cd))
+* **create-project:** local template handling ([4f8d644](https://github.com/NativeScript/nativescript-cli/commit/4f8d6440538f5687ef198b61605c4479da0e41f3))
+* gradle build error when building some plugins ([58a0e60](https://github.com/NativeScript/nativescript-cli/commit/58a0e60bcbb8f0ee4732a4947cb2a78241fc065f))
+* runtime versions with a range ([e0bbf1b](https://github.com/NativeScript/nativescript-cli/commit/e0bbf1b4548b235c9638cdf9688035c99e4552f9))
+
+
+### Features
+
+* **create-project:** allow --force to forcefully create git repo inside another one ([30d42d2](https://github.com/NativeScript/nativescript-cli/commit/30d42d253e13d071c33aba7aded7affd5695fe32))
+* **create-project:** cleaner post-create message ([7c8741e](https://github.com/NativeScript/nativescript-cli/commit/7c8741eae122983b495dc82bb559e540684cc315))
+* **create-project:** detect git repo before initializing and --no-git support ([6d9b7df](https://github.com/NativeScript/nativescript-cli/commit/6d9b7df1284ec8f7332f32d14079c6858a8859f1))
+* new ns update handling ([bff78e3](https://github.com/NativeScript/nativescript-cli/commit/bff78e32b0a5cf5cd2d01f6ff35c46b9373b7fe7))
+* updated migration rules ([b2d51da](https://github.com/NativeScript/nativescript-cli/commit/b2d51da373c4d81ffa75bb313c55ac50362beeb3))
+
+
+### Performance Improvements
+
+* implement a memoize decorator with smart caching ([6521671](https://github.com/NativeScript/nativescript-cli/commit/6521671f17e8c4dc16d7c6c3378d1814b6ab1cb4))
+
+
+
 # [8.1.0](https://github.com/NativeScript/nativescript-cli/compare/v8.0.2...v8.1.0) (2021-09-08)
 
 
