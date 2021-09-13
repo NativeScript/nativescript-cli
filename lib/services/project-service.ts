@@ -289,10 +289,6 @@ export class ProjectService implements IProjectService {
 
 		packageJsonData = Object.assign(packageJsonSchema, packageJsonData);
 
-		console.log({
-			packageJsonData,
-		});
-
 		this.$fs.writeJson(projectFilePath, packageJsonData);
 	}
 }
