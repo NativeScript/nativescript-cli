@@ -6,7 +6,6 @@ import { injector } from "./yok";
 import axios from "axios";
 import { HttpStatusCodes } from "./constants";
 import * as tunnel from "tunnel";
-import { Agent } from "http";
 
 export class HttpClient implements Server.IHttpClient {
 	private static STUCK_REQUEST_ERROR_MESSAGE =
