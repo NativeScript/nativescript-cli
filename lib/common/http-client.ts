@@ -98,12 +98,15 @@ export class HttpClient implements Server.IHttpClient {
 
 		this.$logger.trace("httpRequest: %s", util.inspect(options));
 
-		const agent = tunnel.httpsOverHttp({
-			proxy: {
-				host: cliProxySettings.hostname,
-				port: parseInt(cliProxySettings.port),
-			},
-		});
+		let agent;
+		if (cliProxySettings) {
+			agent = tunnel.httpsOverHttp({
+				proxy: {
+					host: cliProxySettings.hostname,
+					port: parseInt(cliProxySettings.port),
+				},
+			});
+		}
 		const result = await axios({
 			url: options.url,
 			headers: options.headers,

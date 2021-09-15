@@ -81,7 +81,7 @@ export class TestExecutionService implements ITestExecutionService {
 						liveSyncInfo.projectDir,
 						TestExecutionService.SOCKETIO_JS_FILE_NAME
 					),
-					socketIoJs
+					JSON.parse(socketIoJs)
 				);
 			}
 
