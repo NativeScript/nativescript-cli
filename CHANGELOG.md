@@ -1,3 +1,12 @@
+## [8.1.2](https://github.com/NativeScript/nativescript-cli/compare/v8.1.1...v8.1.2) (2021-09-15)
+
+
+### Bug Fixes
+
+* **http-client:** requests with no proxy configured ([#5573](https://github.com/NativeScript/nativescript-cli/issues/5573)) ([d5121b4](https://github.com/NativeScript/nativescript-cli/commit/d5121b4082ed49dfc5c8994005d938223d114f25))
+
+
+
 ## [8.1.1](https://github.com/NativeScript/nativescript-cli/compare/v8.1.0...v8.1.1) (2021-09-12)
 
 
