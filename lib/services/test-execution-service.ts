@@ -18,6 +18,7 @@ import {
 import * as _ from "lodash";
 import { injector } from "../common/yok";
 import { ICommandParameter } from "../common/definitions/commands";
+import { resolvePackagePath } from "../helpers/package-path-helper";
 
 interface IKarmaConfigOptions {
 	debugBrk: boolean;
@@ -146,13 +147,12 @@ export class TestExecutionService implements ITestExecutionService {
 				return;
 			}
 		});
-		try {
-			require.resolve("karma/package.json", {
-				paths: [projectData.projectDir],
-			});
-		} catch (ignore) {
-			canStartKarmaServer = false;
-		}
+
+		const pathToKarma = resolvePackagePath("karma", {
+			paths: [projectData.projectDir],
+		});
+
+		canStartKarmaServer = !!pathToKarma;
 
 		return canStartKarmaServer;
 	}
