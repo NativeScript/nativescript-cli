@@ -96,6 +96,8 @@ describe("xcodebuildArgsService", () => {
 						const expectedArgs = [
 							"ONLY_ACTIVE_ARCH=NO",
 							"CODE_SIGN_IDENTITY=",
+							"-destination",
+							"generic/platform=iOS Simulator",
 							"build",
 							"-configuration",
 							configuration,
@@ -170,6 +172,8 @@ describe("xcodebuildArgsService", () => {
 							);
 
 							const expectedArgs = [
+								"-destination",
+								"generic/platform=iOS",
 								"archive",
 								"-archivePath",
 								path.join(buildOutputPath, `${projectName}.xcarchive`),

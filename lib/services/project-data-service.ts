@@ -13,7 +13,7 @@ import {
 	SRC_DIR,
 } from "../constants";
 import { parseJson } from "../common/helpers";
-import { exported } from "../common/decorators";
+import { exported, memoize } from "../common/decorators";
 import {
 	IAssetGroup,
 	IAssetItem,
@@ -33,6 +33,7 @@ import { IDictionary, IFileSystem, IProjectDir } from "../common/declarations";
 import * as _ from "lodash";
 import { IInjector } from "../common/definitions/yok";
 import { injector } from "../common/yok";
+import * as semver from "semver";
 
 interface IProjectFileData {
 	projectData: any;
@@ -594,6 +595,20 @@ export class ProjectDataService implements IProjectDataService {
 		return this.getInstalledRuntimePackage(projectDir, platform);
 	}
 
+	@memoize({
+		hashFn(projectDir: string, platform: constants.SupportedPlatform) {
+			return projectDir + ":" + platform;
+		},
+		shouldCache(result: IBasePluginData) {
+			// don't cache coerced versions
+			if ((result as any)._coerced) {
+				return false;
+			}
+
+			// only cache if version is defined
+			return !!result.version;
+		},
+	})
 	private getInstalledRuntimePackage(
 		projectDir: string,
 		platform: constants.SupportedPlatform
@@ -615,9 +630,12 @@ export class ProjectDataService implements IProjectDataService {
 			});
 
 		if (runtimePackage) {
-			// in case we are using a local tgz for the runtime
-			//
-			if (runtimePackage.version.includes("tgz")) {
+			const isRange =
+				semver.coerce(runtimePackage.version).version !==
+				runtimePackage.version;
+
+			// in case we are using a local tgz for the runtime or a range like ~8.0.0, ^8.0.0 etc.
+			if (runtimePackage.version.includes("tgz") || isRange) {
 				try {
 					const runtimePackageJsonPath = require.resolve(
 						`${runtimePackage.name}/package.json`,
@@ -629,7 +647,15 @@ export class ProjectDataService implements IProjectDataService {
 						runtimePackageJsonPath
 					).version;
 				} catch (err) {
-					runtimePackage.version = null;
+					if (isRange) {
+						runtimePackage.version = semver.coerce(
+							runtimePackage.version
+						).version;
+
+						(runtimePackage as any)._coerced = true;
+					} else {
+						runtimePackage.version = null;
+					}
 				}
 			}
 

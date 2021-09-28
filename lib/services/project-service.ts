@@ -1,5 +1,6 @@
 import * as constants from "../constants";
 import * as path from "path";
+import simpleGit, { SimpleGit } from "simple-git";
 import { exported } from "../common/decorators";
 import { Hooks } from "../constants";
 import { performanceLog } from "../common/decorators";
@@ -15,6 +16,7 @@ import {
 } from "../definitions/project";
 import {
 	INodePackageManager,
+	IOptions,
 	IProjectNameService,
 	IStaticConfig,
 } from "../declarations";
@@ -23,7 +25,6 @@ import {
 	IErrors,
 	IFileSystem,
 	IProjectHelper,
-	IStringDictionary,
 	IChildProcess,
 } from "../common/declarations";
 import * as _ from "lodash";
@@ -32,6 +33,7 @@ import { ITempService } from "../definitions/temp-service";
 
 export class ProjectService implements IProjectService {
 	constructor(
+		private $options: IOptions,
 		private $hooksService: IHooksService,
 		private $packageManager: INodePackageManager,
 		private $errors: IErrors,
@@ -106,24 +108,32 @@ export class ProjectService implements IProjectService {
 			projectName,
 		});
 
-		try {
-			await this.$childProcess.exec(`git init ${projectDir}`);
-			await this.$childProcess.exec(`git -C ${projectDir} add --all`);
-			await this.$childProcess.exec(
-				`git -C ${projectDir} commit --no-verify -m "init"`
-			);
-		} catch (err) {
-			this.$logger.trace(
-				"Unable to initialize git repository. Error is: ",
-				err
-			);
+		// can pass --no-git to skip creating a git repo
+		// useful in monorepos where we're creating
+		// sub projects in an existing git repo.
+		if (this.$options.git) {
+			try {
+				if (!this.$options.force) {
+					const git: SimpleGit = simpleGit(projectDir);
+					if (await git.checkIsRepo()) {
+						// throwing here since we're catching below.
+						throw new Error("Already part of a git repository.");
+					}
+				}
+				await this.$childProcess.exec(`git init ${projectDir}`);
+				await this.$childProcess.exec(`git -C ${projectDir} add --all`);
+				await this.$childProcess.exec(
+					`git -C ${projectDir} commit --no-verify -m "init"`
+				);
+			} catch (err) {
+				this.$logger.trace(
+					"Unable to initialize git repository. Error is: ",
+					err
+				);
+			}
 		}
 
-		this.$logger.info();
-		this.$logger.printMarkdown(
-			"__Project `%s` was successfully created.__",
-			projectName
-		);
+		this.$logger.trace(`Project ${projectName} was successfully created.`);
 
 		return projectCreationData;
 	}
@@ -177,7 +187,7 @@ export class ProjectService implements IProjectService {
 
 			await this.extractTemplate(projectDir, templateData);
 
-			this.alterPackageJsonData(projectDir, appId);
+			this.alterPackageJsonData(projectCreationSettings);
 			this.$projectConfigService.writeDefaultConfig(projectDir, appId);
 
 			await this.ensureAppResourcesExist(projectDir);
@@ -245,7 +255,10 @@ export class ProjectService implements IProjectService {
 	}
 
 	@performanceLog()
-	private alterPackageJsonData(projectDir: string, appId: string): void {
+	private alterPackageJsonData(
+		projectCreationSettings: IProjectCreationSettings
+	): void {
+		const { projectDir, projectName } = projectCreationSettings;
 		const projectFilePath = path.join(
 			projectDir,
 			this.$staticConfig.PROJECT_FILE_NAME
@@ -253,22 +266,30 @@ export class ProjectService implements IProjectService {
 
 		let packageJsonData = this.$fs.readJson(projectFilePath);
 
-		packageJsonData = {
-			...packageJsonData,
-			...this.packageJsonDefaultData,
+		// clean up keys from the template package.json that we don't care about.
+		Object.keys(packageJsonData).forEach((key) => {
+			if (
+				key.startsWith("_") ||
+				constants.TemplatesV2PackageJsonKeysToRemove.includes(key)
+			) {
+				delete packageJsonData[key];
+			}
+		});
+
+		// this is used to ensure the order of keys is consistent, the blanks are filled in from the template
+		const packageJsonSchema = {
+			name: projectName,
+			main: "",
+			version: "1.0.0",
+			private: true,
+			dependencies: {},
+			devDependencies: {},
+			// anythign else would go below
 		};
+
+		packageJsonData = Object.assign(packageJsonSchema, packageJsonData);
 
 		this.$fs.writeJson(projectFilePath, packageJsonData);
-	}
-
-	private get packageJsonDefaultData(): IStringDictionary {
-		return {
-			private: "true",
-			description: "NativeScript Application",
-			license: "SEE LICENSE IN <your-license-filename>",
-			readme: "NativeScript Application",
-			repository: "<fill-your-repository-here>",
-		};
 	}
 }
 

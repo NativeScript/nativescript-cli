@@ -106,10 +106,16 @@ export const TemplatesV2PackageJsonKeysToRemove: Array<String> = [
 	"version",
 	"displayName",
 	"templateType",
+	"description",
 	"author",
+	"license",
+	"repository",
+	"publishConfig",
+	"files",
 	"keywords",
 	"homepage",
 	"bugs",
+	"nativescript",
 ];
 
 export class SaveOptions {

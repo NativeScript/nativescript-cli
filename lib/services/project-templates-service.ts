@@ -128,6 +128,10 @@ export class ProjectTemplatesService implements IProjectTemplatesService {
 			return defaultVersion;
 		}
 
+		if (this.$fs.exists(templateName)) {
+			return "";
+		}
+
 		try {
 			const cliMajorVersion = semver.parse(
 				semver.coerce(this.$staticConfig.version)

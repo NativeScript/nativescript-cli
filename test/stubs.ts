@@ -36,6 +36,8 @@ import {
 	IProjectTemplatesService,
 	ITemplateData,
 	IProjectConfigInformation,
+	IProjectBackupService,
+	IBackup,
 } from "../lib/definitions/project";
 import {
 	IPlatformData,
@@ -137,6 +139,8 @@ export class LoggerStub implements ILogger {
 	isVerbose(): boolean {
 		return false;
 	}
+
+	clearScreen(): void {}
 }
 
 export class FileSystemStub implements IFileSystem {
@@ -501,6 +505,144 @@ export class NodePackageManagerStub implements INodePackageManager {
 	}
 }
 
+export class ProjectBackupServiceStub implements IProjectBackupService {
+	public _backups: any[] = [];
+	public _shouldFail: boolean = false;
+
+	shouldFail(shouldFail: boolean) {
+		this._shouldFail = shouldFail;
+	}
+
+	getBackup(name: string): IBackup {
+		const backup = new ProjectBackupServiceStub.Backup();
+		this._backups.push(backup);
+
+		if (this._shouldFail) {
+			const origCreate = backup.create;
+			backup.create = () => {
+				origCreate.call(backup);
+				throw new Error("backup failed (intended for tests)");
+			};
+		}
+
+		return backup;
+	}
+	backup(name: string, pathsToBackup: string[]): IBackup {
+		return this.getBackup(name).create();
+	}
+	restore(name: string, pathsToRestore: string[]): IBackup {
+		return this.getBackup(name).restore();
+	}
+
+	static Backup = class Backup implements IBackup {
+		public _meta = {
+			createCalled: false,
+			restoreCalled: false,
+			removeCalled: false,
+			isUpToDateCalled: false,
+			addPathCalled: false,
+			addPathsCalled: false,
+		};
+		constructor(public pathsToBackup: string[] = []) {}
+		create(): IBackup {
+			this._meta.createCalled = true;
+
+			return this;
+		}
+		restore(): IBackup {
+			this._meta.restoreCalled = true;
+
+			return this;
+		}
+		remove(): IBackup {
+			this._meta.removeCalled = true;
+
+			return this;
+		}
+		isUpToDate(): boolean {
+			this._meta.isUpToDateCalled = true;
+
+			return true;
+		}
+		addPath(path: string): IBackup {
+			this._meta.addPathCalled = true;
+
+			return this;
+		}
+		addPaths(paths: string[]): IBackup {
+			this._meta.addPathsCalled = true;
+
+			return this;
+		}
+	};
+}
+
+export class ProjectConfigServiceStub implements IProjectConfigService {
+	static initWithConfig(config: any) {
+		const projectConfigService = new ProjectConfigServiceStub();
+		projectConfigService.config = config;
+
+		return projectConfigService;
+	}
+
+	protected config: INsConfig;
+
+	setForceUsingNewConfig(force: boolean): boolean {
+		return false;
+	}
+
+	setForceUsingLegacyConfig(force: boolean): boolean {
+		return false;
+	}
+
+	getValue(key: string): any {
+		return _.get(this.readConfig(), key);
+	}
+
+	setValue(key: string, value: SupportedConfigValues): any {
+		return _.set(this.readConfig(), key, value);
+	}
+
+	readConfig(projectDir?: string): INsConfig {
+		return this.config;
+	}
+
+	detectProjectConfigs(projectDir?: string): IProjectConfigInformation {
+		return {
+			hasTSConfig: true,
+			hasJSConfig: false,
+			hasNSConfig: false,
+			usingNSConfig: false,
+			TSConfigPath: "",
+			JSConfigPath: "",
+			NSConfigPath: "",
+		};
+	}
+
+	getDefaultTSConfig(appId: string, appPath: string): string {
+		return `import { NativeScriptConfig } from '@nativescript/core';
+
+    export default {
+      id: '${appId}',
+      appPath: '${appPath}'
+      appResourcesPath: 'App_Resources',
+      android: {
+        v8Flags: '--expose_gc',
+        markingMode: 'none'
+      }
+    } as NativeScriptConfig;`;
+	}
+
+	writeDefaultConfig(appId: string, projectDir?: string): string | boolean {
+		return true;
+	}
+
+	async writeLegacyNSConfigIfNeeded(
+		projectDir: string,
+		runtimePackage: IBasePluginData
+	): Promise<void> {}
+}
+
 export class ProjectDataStub implements IProjectData {
 	packageJsonData: any;
 	projectDir: string;
@@ -580,72 +722,6 @@ export class ProjectDataStub implements IProjectData {
 	public getAppDirectoryRelativePath(): string {
 		return "app";
 	}
-}
-
-export class ProjectConfigServiceStub implements IProjectConfigService {
-	static initWithConfig(config: any) {
-		const projectConfigService = new ProjectConfigServiceStub();
-		projectConfigService.config = config;
-
-		return projectConfigService;
-	}
-
-	protected config: INsConfig;
-
-	setForceUsingNewConfig(force: boolean): boolean {
-		return false;
-	}
-
-	setForceUsingLegacyConfig(force: boolean): boolean {
-		return false;
-	}
-
-	getValue(key: string): any {
-		return _.get(this.readConfig(), key);
-	}
-
-	setValue(key: string, value: SupportedConfigValues): any {
-		return _.set(this.readConfig(), key, value);
-	}
-
-	readConfig(projectDir?: string): INsConfig {
-		return this.config;
-	}
-
-	detectProjectConfigs(projectDir?: string): IProjectConfigInformation {
-		return {
-			hasTSConfig: true,
-			hasJSConfig: false,
-			hasNSConfig: false,
-			usingNSConfig: false,
-			TSConfigPath: "",
-			JSConfigPath: "",
-			NSConfigPath: "",
-		};
-	}
-
-	getDefaultTSConfig(appId: string, appPath: string): string {
-		return `import { NativeScriptConfig } from '@nativescript/core';
-
-    export default {
-      id: '${appId}',
-      appPath: '${appPath}'
-      appResourcesPath: 'App_Resources',
-      android: {
-        v8Flags: '--expose_gc',
-        markingMode: 'none'
-      }
-    } as NativeScriptConfig;`;
-	}
-
-	writeDefaultConfig(appId: string, projectDir?: string): string | boolean {
-		return true;
-	}
-
-	async writeLegacyNSConfigIfNeeded(
-		projectDir: string,
-		runtimePackage: IBasePluginData
-	): Promise<void> {}
 }
 
 export class AndroidPluginBuildServiceStub

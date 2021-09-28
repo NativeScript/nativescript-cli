@@ -1,3 +1,76 @@
+## [8.1.2](https://github.com/NativeScript/nativescript-cli/compare/v8.1.1...v8.1.2) (2021-09-15)
+
+
+### Bug Fixes
+
+* **http-client:** requests with no proxy configured ([#5573](https://github.com/NativeScript/nativescript-cli/issues/5573)) ([d5121b4](https://github.com/NativeScript/nativescript-cli/commit/d5121b4082ed49dfc5c8994005d938223d114f25))
+
+
+
+## [8.1.1](https://github.com/NativeScript/nativescript-cli/compare/v8.1.0...v8.1.1) (2021-09-12)
+
+
+### Bug Fixes
+
+* launching android 11 and 12 emulators ([f32642e](https://github.com/NativeScript/nativescript-cli/commit/f32642e8fa2eaf799c872da96a7240805fc164ad))
+* order package.json keys the right way on project creation ([e68dcc8](https://github.com/NativeScript/nativescript-cli/commit/e68dcc89826704d83cf03bdfc9f7112ecfc092cd))
+* **create-project:** local template handling ([4f8d644](https://github.com/NativeScript/nativescript-cli/commit/4f8d6440538f5687ef198b61605c4479da0e41f3))
+* gradle build error when building some plugins ([58a0e60](https://github.com/NativeScript/nativescript-cli/commit/58a0e60bcbb8f0ee4732a4947cb2a78241fc065f))
+* runtime versions with a range ([e0bbf1b](https://github.com/NativeScript/nativescript-cli/commit/e0bbf1b4548b235c9638cdf9688035c99e4552f9))
+
+
+### Features
+
+* **create-project:** allow --force to forcefully create git repo inside another one ([30d42d2](https://github.com/NativeScript/nativescript-cli/commit/30d42d253e13d071c33aba7aded7affd5695fe32))
+* **create-project:** cleaner post-create message ([7c8741e](https://github.com/NativeScript/nativescript-cli/commit/7c8741eae122983b495dc82bb559e540684cc315))
+* **create-project:** detect git repo before initializing and --no-git support ([6d9b7df](https://github.com/NativeScript/nativescript-cli/commit/6d9b7df1284ec8f7332f32d14079c6858a8859f1))
+* new ns update handling ([bff78e3](https://github.com/NativeScript/nativescript-cli/commit/bff78e32b0a5cf5cd2d01f6ff35c46b9373b7fe7))
+* updated migration rules ([b2d51da](https://github.com/NativeScript/nativescript-cli/commit/b2d51da373c4d81ffa75bb313c55ac50362beeb3))
+
+
+### Performance Improvements
+
+* implement a memoize decorator with smart caching ([6521671](https://github.com/NativeScript/nativescript-cli/commit/6521671f17e8c4dc16d7c6c3378d1814b6ab1cb4))
+
+
+
+# [8.1.0](https://github.com/NativeScript/nativescript-cli/compare/v8.0.2...v8.1.0) (2021-09-08)
+
+
+### Bug Fixes
+
+* autocompletion aliases ([1640eee](https://github.com/NativeScript/nativescript-cli/commit/1640eee23b4592f12500b88162de2f562ee5a8f8))
+* CFBundleIdentifier override warning ([e62784e](https://github.com/NativeScript/nativescript-cli/commit/e62784ed802cb3f63cb2b157980af11d7b91b2c1))
+* check for not installed dependencies using require.resolve ([1fc817f](https://github.com/NativeScript/nativescript-cli/commit/1fc817f0220507ae5454fa56e150ab4969410e88))
+* xcodebuild destination warning ([#5564](https://github.com/NativeScript/nativescript-cli/issues/5564)) ([943eec6](https://github.com/NativeScript/nativescript-cli/commit/943eec6d94410a4f57435d90b59e6c62a39d8634))
+* config detection ([404a511](https://github.com/NativeScript/nativescript-cli/commit/404a5114614826c1d32d63d20a212890b555f2d8))
+* enable terminal cursor when Ctrl+C during a prompt ([cfb80a2](https://github.com/NativeScript/nativescript-cli/commit/cfb80a2ab7a64e9c18c45385894403397c636f73))
+* properly handle missing App_Resources ([#5536](https://github.com/NativeScript/nativescript-cli/issues/5536)) ([0a112f3](https://github.com/NativeScript/nativescript-cli/commit/0a112f30043ac2c2516033bcf4275af0ec55d502))
+* race condition when getting iOS inspector port ([#5544](https://github.com/NativeScript/nativescript-cli/issues/5544)) ([8f8dd83](https://github.com/NativeScript/nativescript-cli/commit/8f8dd83dc6042e0f67952981da4cde5d11a582c7)), closes [#3701](https://github.com/NativeScript/nativescript-cli/issues/3701)
+* remove ns preview note on project creation ([db53037](https://github.com/NativeScript/nativescript-cli/commit/db53037fbeffe739db95766681e4afad98681816))
+* windows path issue ([fa90b60](https://github.com/NativeScript/nativescript-cli/commit/fa90b60e0cbc30b633db6d94e69e71ad9dad0266))
+* **migrate:** nativescript-unit-test-runner & missing basePath ([#5537](https://github.com/NativeScript/nativescript-cli/issues/5537)) ([0be8aca](https://github.com/NativeScript/nativescript-cli/commit/0be8acab10792d031471d4f0d613547b4e91a3ad))
+* **typings:** spawn to work with Windows as well ([d6e431e](https://github.com/NativeScript/nativescript-cli/commit/d6e431e3a65f4b960d12caf124b7179eafcfa02b))
+
+
+### Features
+
+* add `--config` option ([#5554](https://github.com/NativeScript/nativescript-cli/issues/5554)) ([9f844ea](https://github.com/NativeScript/nativescript-cli/commit/9f844ea59140801fb7c83886a7ecb31ddd63e3e6))
+* **livesync:** support livesync in remote machine ([#5560](https://github.com/NativeScript/nativescript-cli/issues/5560)) ([4e94ad4](https://github.com/NativeScript/nativescript-cli/commit/4e94ad44945ce4490fad3e558f0ed55ef429310c))
+* **plugins:** allow plugins to use kotlin files ([#5555](https://github.com/NativeScript/nativescript-cli/issues/5555)) ([37e2dbb](https://github.com/NativeScript/nativescript-cli/commit/37e2dbb92b0ea6876f2281cbd9ff850d7700a551))
+* allow passing cli args when running in the iOS Simulator ([#5518](https://github.com/NativeScript/nativescript-cli/issues/5518)) ([6b700b4](https://github.com/NativeScript/nativescript-cli/commit/6b700b4090b181db0d0dc627573bb9b90750f61a))
+* allow tests to run on monorepos ([#5547](https://github.com/NativeScript/nativescript-cli/issues/5547)) ([bfa8e91](https://github.com/NativeScript/nativescript-cli/commit/bfa8e91de63206b15b0408c7cf4dd9ae0fedff13))
+* default template version based on cli major ([#5517](https://github.com/NativeScript/nativescript-cli/issues/5517)) ([2f1d876](https://github.com/NativeScript/nativescript-cli/commit/2f1d876c9008f18f19a9a130f28296ea5910fa0d))
+* ignoring native dependencies ([#5524](https://github.com/NativeScript/nativescript-cli/issues/5524)) ([6ba5cd6](https://github.com/NativeScript/nativescript-cli/commit/6ba5cd6d79d9e88dcb66e7d6c7defba2d41ec601))
+* ns typings command ([#5551](https://github.com/NativeScript/nativescript-cli/issues/5551)) ([4703cef](https://github.com/NativeScript/nativescript-cli/commit/4703cef32b779bb195429c459f7efb00a5ce7806))
+
+
+### Performance Improvements
+
+* remove duplicate plugins data ([#5563](https://github.com/NativeScript/nativescript-cli/issues/5563)) ([7d80902](https://github.com/NativeScript/nativescript-cli/commit/7d80902161e24ae92d0459620bdaa46077d1ffde))
+
+
+
 ## [8.0.2](https://github.com/NativeScript/nativescript-cli/compare/v8.0.1...v8.0.2) (2021-05-11)
 
 

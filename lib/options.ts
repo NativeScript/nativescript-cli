@@ -225,6 +225,11 @@ export class Options {
 			jar: { type: OptionType.String, hasSensitiveValue: true },
 			aar: { type: OptionType.String, hasSensitiveValue: true },
 			filter: { type: OptionType.String, hasSensitiveValue: true },
+			git: {
+				type: OptionType.Boolean,
+				hasSensitiveValue: false,
+				default: true,
+			},
 		};
 	}
 
