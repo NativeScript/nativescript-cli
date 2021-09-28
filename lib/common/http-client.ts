@@ -107,12 +107,20 @@ export class HttpClient implements Server.IHttpClient {
 				},
 			});
 		}
+
+		let data;
+
+		if (options.body) {
+			data = options.body;
+		}
+
 		const result = await axios({
 			url: options.url,
 			headers: options.headers,
 			method: options.method,
 			proxy: false,
 			httpAgent: agent,
+			data: data,
 		}).catch((err) => {
 			this.$logger.trace("An error occurred while sending the request:", err);
 			if (err.response) {
