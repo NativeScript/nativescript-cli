@@ -59,6 +59,7 @@
   "dependencies": {
     "@nativescript/doctor": "2.0.4-next-02-05-2021-541397986",
     "@nativescript/schematics-executor": "0.0.2",
+    "@rigor789/resolve-package-path": "^1.0.5",
     "axios": "^0.21.1",
     "byline": "5.0.0",
     "chalk": "4.1.0",
