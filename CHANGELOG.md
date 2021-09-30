@@ -1,3 +1,23 @@
+## [8.1.3](https://github.com/NativeScript/nativescript-cli/compare/v8.1.2...v8.1.3) (2021-09-30)
+
+
+### Bug Fixes
+
+* **ios-publish:** update API ([#5580](https://github.com/NativeScript/nativescript-cli/issues/5580)) ([63acaa6](https://github.com/NativeScript/nativescript-cli/commit/63acaa6defdf610aecbd49abd59ef3185948720c))
+* **m1:** cocoapods command when installed natively ([#5584](https://github.com/NativeScript/nativescript-cli/issues/5584)) ([65dcf01](https://github.com/NativeScript/nativescript-cli/commit/65dcf01bb213c5c7b0581a1f92d7aba7fb3aec0c))
+* **metadata-filtering:** only add when there are items to add ([ab9fc0f](https://github.com/NativeScript/nativescript-cli/commit/ab9fc0f9b7fd3a4adde10c28d538518d61039107))
+* **test-execution-service:** canStartKarma condition ([c68d58e](https://github.com/NativeScript/nativescript-cli/commit/c68d58edff8023875d4b973d7b5c65528e550b66))
+* fix source map path ([#5583](https://github.com/NativeScript/nativescript-cli/issues/5583)) ([8ecb335](https://github.com/NativeScript/nativescript-cli/commit/8ecb33541cdf405f5769b7cfa7385423e512ae80))
+* require.resolve for packages with exports field in package.json ([#5579](https://github.com/NativeScript/nativescript-cli/issues/5579)) ([56ed35b](https://github.com/NativeScript/nativescript-cli/commit/56ed35b71323f25759d36e1e1750ed9cd267a66d))
+* source-map appPath prefix detection ([77a8ce7](https://github.com/NativeScript/nativescript-cli/commit/77a8ce77d1d3110b67c858b19651abfde71afe8c))
+
+
+### Features
+
+* allow plugin blacklist metadata ([#5582](https://github.com/NativeScript/nativescript-cli/issues/5582)) ([5e9de51](https://github.com/NativeScript/nativescript-cli/commit/5e9de518785717ae44aff85c900d06e1dbebf882))
+
+
+
 ## [8.1.2](https://github.com/NativeScript/nativescript-cli/compare/v8.1.1...v8.1.2) (2021-09-15)
 
 
