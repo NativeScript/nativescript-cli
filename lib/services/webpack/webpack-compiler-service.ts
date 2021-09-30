@@ -28,6 +28,10 @@ import {
 } from "../../common/declarations";
 import { ICleanupService } from "../../definitions/cleanup-service";
 import { injector } from "../../common/yok";
+import {
+	resolvePackagePath,
+	resolvePackageJSONPath,
+} from "../../helpers/package-path-helper";
 
 // todo: move out of here
 interface IWebpackMessage<T = any> {
@@ -71,7 +75,7 @@ export class WebpackCompilerService
 	): Promise<any> {
 		return new Promise(async (resolve, reject) => {
 			if (this.webpackProcesses[platformData.platformNameLowerCase]) {
-				resolve();
+				resolve(void 0);
 				return;
 			}
 
@@ -584,45 +588,38 @@ export class WebpackCompilerService
 
 	private getWebpackExecutablePath(projectData: IProjectData): string {
 		if (this.isWebpack5(projectData)) {
-			const packagePath = require.resolve(
-				"@nativescript/webpack/package.json",
-				{
-					paths: [projectData.projectDir],
-				}
-			);
+			const packagePath = resolvePackagePath("@nativescript/webpack", {
+				paths: [projectData.projectDir],
+			});
 
-			return path.resolve(
-				packagePath.replace("package.json", ""),
-				"dist",
-				"bin",
-				"index.js"
-			);
+			if (packagePath) {
+				return path.resolve(packagePath, "dist", "bin", "index.js");
+			}
 		}
 
-		return path.join(
-			projectData.projectDir,
-			"node_modules",
-			"webpack",
-			"bin",
-			"webpack.js"
-		);
+		const packagePath = resolvePackagePath("webpack", {
+			paths: [projectData.projectDir],
+		});
+
+		if (!packagePath) {
+			return "";
+		}
+
+		return path.resolve(packagePath, "bin", "webpack.js");
 	}
 
 	private isWebpack5(projectData: IProjectData): boolean {
-		try {
-			const packagePath = require.resolve(
-				"@nativescript/webpack/package.json",
-				{
-					paths: [projectData.projectDir],
-				}
-			);
-			const ver = semver.coerce(require(packagePath).version);
+		const packageJSONPath = resolvePackageJSONPath("@nativescript/webpack", {
+			paths: [projectData.projectDir],
+		});
+
+		if (packageJSONPath) {
+			const packageData = this.$fs.readJson(packageJSONPath);
+			const ver = semver.coerce(packageData.version);
 
 			if (semver.satisfies(ver, ">= 5.0.0")) {
 				return true;
 			}
-		} catch (ignore) {
-			//
 		}
 
 		return false;

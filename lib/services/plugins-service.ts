@@ -32,6 +32,10 @@ import { IFilesHashService } from "../definitions/files-hash-service";
 import * as _ from "lodash";
 import { IInjector } from "../common/definitions/yok";
 import { injector } from "../common/yok";
+import {
+	resolvePackagePath,
+	resolvePackageJSONPath,
+} from "../helpers/package-path-helper";
 
 export class PluginsService implements IPluginsService {
 	private static INSTALL_COMMAND_NAME = "install";
@@ -285,23 +289,20 @@ export class PluginsService implements IPluginsService {
 
 		const notInstalledDependencies = allDependencies
 			.map((dep) => {
-				try {
-					this.$logger.trace(`Checking if ${dep} is installed...`);
-					require.resolve(`${dep}/package.json`, {
-						paths: [projectData.projectDir],
-					});
+				this.$logger.trace(`Checking if ${dep} is installed...`);
+				const pathToPackage = resolvePackagePath(dep, {
+					paths: [projectData.projectDir],
+				});
 
+				if (pathToPackage) {
 					// return false if the dependency is installed - we'll filter out boolean values
 					// and end up with an array of dep names that are not installed if we end up
 					// inside the catch block.
 					return false;
-				} catch (err) {
-					this.$logger.trace(
-						`Error while checking if ${dep} is installed. Error is: `,
-						err
-					);
-					return dep;
 				}
+
+				this.$logger.trace(`${dep} is not installed, or couldn't be found`);
+				return dep;
 			})
 			.filter(Boolean);
 
@@ -684,7 +685,7 @@ This framework comes from ${dependencyName} plugin, which is installed multiple 
 		moduleName: string,
 		projectDir: string
 	): string {
-		const pathToJsonFile = require.resolve(`${moduleName}/package.json`, {
+		const pathToJsonFile = resolvePackageJSONPath(moduleName, {
 			paths: [projectDir],
 		});
 		return pathToJsonFile;

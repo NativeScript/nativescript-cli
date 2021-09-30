@@ -34,6 +34,7 @@ import * as _ from "lodash";
 import { IInjector } from "../common/definitions/yok";
 import { injector } from "../common/yok";
 import * as semver from "semver";
+import { resolvePackageJSONPath } from "../helpers/package-path-helper";
 
 interface IProjectFileData {
 	projectData: any;
@@ -637,12 +638,18 @@ export class ProjectDataService implements IProjectDataService {
 			// in case we are using a local tgz for the runtime or a range like ~8.0.0, ^8.0.0 etc.
 			if (runtimePackage.version.includes("tgz") || isRange) {
 				try {
-					const runtimePackageJsonPath = require.resolve(
-						`${runtimePackage.name}/package.json`,
+					const runtimePackageJsonPath = resolvePackageJSONPath(
+						runtimePackage.name,
 						{
 							paths: [projectDir],
 						}
 					);
+
+					if (!runtimePackageJsonPath) {
+						// caught below
+						throw new Error("Runtime package.json not found.");
+					}
+
 					runtimePackage.version = this.$fs.readJson(
 						runtimePackageJsonPath
 					).version;
