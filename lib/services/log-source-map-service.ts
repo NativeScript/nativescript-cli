@@ -203,11 +203,11 @@ export class LogSourceMapService implements Mobile.ILogSourceMapService {
 					originalPosition.source.replace("webpack:///", "");
 				if (sourceFile) {
 					const appPath = projectData.getAppDirectoryRelativePath();
-					if (!_.startsWith(sourceFile, NODE_MODULES_FOLDER_NAME) && !_.startsWith(sourceFile, appPath)) {
-						sourceFile = path.join(
-							appPath,
-							sourceFile
-						);
+					if (
+						!_.startsWith(sourceFile, NODE_MODULES_FOLDER_NAME) &&
+						!_.startsWith(sourceFile, appPath + "/")
+					) {
+						sourceFile = path.join(appPath, sourceFile);
 					}
 
 					sourceFile = stringReplaceAll(sourceFile, "/", path.sep);
