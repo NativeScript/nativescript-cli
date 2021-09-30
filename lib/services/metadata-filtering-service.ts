@@ -140,13 +140,15 @@ export class MetadataFilteringService implements IMetadataFilteringService {
 							)}`
 						);
 						const itemsToAdd = pluginConfig.blacklist || [];
-						blacklistedItems.push(
-							`// Added from: ${pathToPluginsMetadataConfig}`
-						);
-						blacklistedItems.push(...itemsToAdd);
-						blacklistedItems.push(
-							`// Finished part from ${pathToPluginsMetadataConfig}${os.EOL}`
-						);
+						if (itemsToAdd.length) {
+							blacklistedItems.push(
+								`// Added from: ${pathToPluginsMetadataConfig}`
+							);
+							blacklistedItems.push(...itemsToAdd);
+							blacklistedItems.push(
+								`// Finished part from ${pathToPluginsMetadataConfig}${os.EOL}`
+							);
+						}
 					}
 				}
 			}
