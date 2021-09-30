@@ -28,6 +28,10 @@ interface INativeApiUsagePluginConfiguration {
 	 * Defines APIs which are used by the plugin and which should be whitelisted by the application using this plugin.
 	 */
 	uses: string[];
+	/**
+	 * Defines APIs which can be safely ignored by this plugin
+	 */
+	blacklist?: string[];
 }
 
 /**
