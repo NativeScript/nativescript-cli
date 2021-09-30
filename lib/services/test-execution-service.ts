@@ -152,7 +152,7 @@ export class TestExecutionService implements ITestExecutionService {
 			paths: [projectData.projectDir],
 		});
 
-		canStartKarmaServer = !!pathToKarma;
+		canStartKarmaServer = canStartKarmaServer && !!pathToKarma;
 
 		return canStartKarmaServer;
 	}
