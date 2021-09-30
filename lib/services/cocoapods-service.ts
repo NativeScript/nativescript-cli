@@ -75,7 +75,9 @@ export class CocoaPodsService implements ICocoaPodsService {
 				.catch((err) => err.message);
 
 			if (!res.includes("Bad CPU type in executable")) {
-				this.$logger.trace("Running on arm64 - running pod through rosetta2.");
+				this.$logger.trace(
+					"Running on arm64 but pod is installed under rosetta2 - running pod through rosetta2"
+				);
 				args.unshift(podTool);
 				args.unshift("-x86_64");
 				podTool = "arch";
