@@ -60,7 +60,7 @@ export class CocoaPodsService implements ICocoaPodsService {
 		let podTool = this.$config.USE_POD_SANDBOX ? "sandbox-pod" : "pod";
 		const args = ["install"];
 
-		if (true || (process.platform === "darwin" && process.arch === "arm64")) {
+		if (process.platform === "darwin" && process.arch === "arm64") {
 			// check if pod is installed as an x86_64 binary or a native arm64 one
 			// we run the following:
 			// arch -x86_64 pod --version
