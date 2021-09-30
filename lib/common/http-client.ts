@@ -113,7 +113,7 @@ export class HttpClient implements Server.IHttpClient {
 			method: options.method,
 			proxy: false,
 			httpAgent: agent,
-			data: data,
+			data: options.body,
 		}).catch((err) => {
 			this.$logger.trace("An error occurred while sending the request:", err);
 			if (err.response) {
