@@ -107,13 +107,6 @@ export class HttpClient implements Server.IHttpClient {
 				},
 			});
 		}
-
-		let data;
-
-		if (options.body) {
-			data = options.body;
-		}
-
 		const result = await axios({
 			url: options.url,
 			headers: options.headers,
