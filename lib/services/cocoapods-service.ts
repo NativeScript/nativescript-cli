@@ -60,11 +60,26 @@ export class CocoaPodsService implements ICocoaPodsService {
 		let podTool = this.$config.USE_POD_SANDBOX ? "sandbox-pod" : "pod";
 		const args = ["install"];
 
-		if (process.platform === "darwin" && process.arch === "arm64") {
-			this.$logger.trace("Running on arm64 - running pod through rosetta2.");
-			args.unshift(podTool);
-			args.unshift("-x86_64");
-			podTool = "arch";
+		if (true || (process.platform === "darwin" && process.arch === "arm64")) {
+			// check if pod is installed as an x86_64 binary or a native arm64 one
+			// we run the following:
+			// arch -x86_64 pod --version
+			// if it's an arm64 binary, we'll get something like this as a result:
+			// arch: posix_spawnp: pod: Bad CPU type in executable
+			// in which case, we should run it natively.
+			const res: string = await this.$childProcess
+				.exec("arch -x86_64 pod --version", null, {
+					showStderr: true,
+				})
+				.then((res) => res.stdout + " " + res.stderr)
+				.catch((err) => err.message);
+
+			if (!res.includes("Bad CPU type in executable")) {
+				this.$logger.trace("Running on arm64 - running pod through rosetta2.");
+				args.unshift(podTool);
+				args.unshift("-x86_64");
+				podTool = "arch";
+			}
 		}
 		// cocoapods print a lot of non-error information on stderr. Pipe the `stderr` to `stdout`, so we won't polute CLI's stderr output.
 		const podInstallResult = await this.$childProcess.spawnFromEvent(
