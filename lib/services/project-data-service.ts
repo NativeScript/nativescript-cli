@@ -631,12 +631,12 @@ export class ProjectDataService implements IProjectDataService {
 			});
 
 		if (runtimePackage) {
-			const isRange =
-				semver.coerce(runtimePackage.version).version !==
-				runtimePackage.version;
+			const coerced = semver.coerce(runtimePackage.version);
+			const isRange = !!coerced && coerced.version !== runtimePackage.version;
+			const isTag = !coerced;
 
-			// in case we are using a local tgz for the runtime or a range like ~8.0.0, ^8.0.0 etc.
-			if (runtimePackage.version.includes("tgz") || isRange) {
+			// in case we are using a local tgz for the runtime or a range like ~8.0.0, ^8.0.0 etc. or a tag like JSC
+			if (runtimePackage.version.includes("tgz") || isRange || isTag) {
 				try {
 					const runtimePackageJsonPath = resolvePackageJSONPath(
 						runtimePackage.name,
