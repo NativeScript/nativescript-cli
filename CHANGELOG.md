@@ -1,3 +1,14 @@
+## [2.0.5](https://github.com/NativeScript/nativescript-doctor/compare/v2.0.4...v2.0.5) (2021-10-08)
+
+
+### Bug Fixes
+
+* android-31 target version ([#71](https://github.com/NativeScript/nativescript-doctor/issues/71)) ([b7c7278](https://github.com/NativeScript/nativescript-doctor/commit/b7c7278b1425950a3168784293090617c021303f))
+* removed max java version limitation ([#67](https://github.com/NativeScript/nativescript-doctor/issues/67)) ([3e96ec1](https://github.com/NativeScript/nativescript-doctor/commit/3e96ec16298f5205ed2511baf94b23d36d80c454))
+* **windows:** handle paths correctly ([#64](https://github.com/NativeScript/nativescript-doctor/issues/64)) ([9db60b6](https://github.com/NativeScript/nativescript-doctor/commit/9db60b64970d229c539e03b888b1e93195367da4))
+
+
+
 ## [2.0.4](https://github.com/NativeScript/nativescript-doctor/compare/v2.0.3...v2.0.4) (2020-09-06)
 
 
