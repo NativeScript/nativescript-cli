@@ -1,3 +1,13 @@
+## [8.1.4](https://github.com/NativeScript/nativescript-cli/compare/v8.1.3...v8.1.4) (2021-10-11)
+
+
+### Bug Fixes
+
+* **migrate:** loosen up migrate condition for missing dependencies ([96af85b](https://github.com/NativeScript/nativescript-cli/commit/96af85bc985ee0881bfc95eae96182d0638dbe01))
+* runtime version detection for tags ([#5587](https://github.com/NativeScript/nativescript-cli/issues/5587)) ([a0663f4](https://github.com/NativeScript/nativescript-cli/commit/a0663f4e8733eee748060f47d7358b4a37b4ce98)), closes [#5574](https://github.com/NativeScript/nativescript-cli/issues/5574)
+
+
+
 ## [8.1.3](https://github.com/NativeScript/nativescript-cli/compare/v8.1.2...v8.1.3) (2021-09-30)
 
 
