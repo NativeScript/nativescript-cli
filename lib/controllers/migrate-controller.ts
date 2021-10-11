@@ -492,6 +492,12 @@ export class MigrateController
 					this.$logger.trace(
 						`${shouldMigrateCommonMessage}'${dependency.packageName}' is missing.`
 					);
+
+					if (loose) {
+						// in loose mode we ignore missing dependencies
+						continue;
+					}
+
 					return true;
 				}
 
