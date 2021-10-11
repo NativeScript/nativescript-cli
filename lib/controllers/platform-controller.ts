@@ -162,10 +162,10 @@ export class PlatformController implements IPlatformController {
 				path.join(projectData.platformsDir, platformName)
 			).length;
 
-			// 3 is a magic number to approximate a valid platform folder
-			// any valid platform should contain at least 3 files
-			// we choose 3 to avoid false-positives due to system files like .DS_Store etc.
-			if (platformDirectoryItemCount <= 3) {
+			// 2 is a magic number to approximate a valid platform folder
+			// any valid platform should contain at least 2 files/folders
+			// we choose 2 to avoid false-positives due to system files like .DS_Store etc.
+			if (platformDirectoryItemCount <= 2) {
 				this.$logger.warn(
 					`The platforms/${platformName} folder appears to be invalid. If the build fails, run 'ns clean' and rebuild the app.`,
 					{ wrapMessageWithBorders: true }
