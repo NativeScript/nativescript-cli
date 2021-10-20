@@ -57,6 +57,10 @@ describe("extensibilityService", () => {
 		testInjector.register("hostInfo", HostInfo);
 		testInjector.register("httpClient", {});
 		testInjector.register("packageManager", PackageManager);
+		testInjector.register(
+			"projectConfigService",
+			stubs.ProjectConfigServiceStub
+		);
 		testInjector.register("options", {});
 		testInjector.register("pacoteService", {
 			manifest: async (

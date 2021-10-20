@@ -16,6 +16,7 @@ import {
 	IDictionary,
 } from "./common/declarations";
 import { injector } from "./common/yok";
+import { IProjectConfigService } from "./definitions/project";
 export class PackageManager implements IPackageManager {
 	private packageManager: INodePackageManager;
 	private _packageManagerName: string;
@@ -27,7 +28,8 @@ export class PackageManager implements IPackageManager {
 		private $yarn: INodePackageManager,
 		private $pnpm: INodePackageManager,
 		private $logger: ILogger,
-		private $userSettingsService: IUserSettingsService
+		private $userSettingsService: IUserSettingsService,
+		private $projectConfigService: IProjectConfigService
 	) {}
 
 	@cache()
@@ -134,6 +136,19 @@ export class PackageManager implements IPackageManager {
 		let pm = null;
 		try {
 			pm = await this.$userSettingsService.getSettingValue("packageManager");
+
+			// try reading from project config - errors will be caught and the
+			// above will be used (if set) before falling back to the default
+			const configPm = this.$projectConfigService.getValue(
+				"cli.packageManager"
+			);
+
+			if (configPm) {
+				this.$logger.trace(
+					`Determined packageManager to use from user config is: ${configPm}`
+				);
+				pm = configPm;
+			}
 		} catch (err) {
 			this.$errors.fail(
 				`Unable to read package manager config from user settings ${err}`
