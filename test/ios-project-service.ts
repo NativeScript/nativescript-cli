@@ -35,6 +35,7 @@ import {
 	ProjectDataStub,
 	TempServiceStub,
 	ProjectDataServiceStub,
+	ProjectConfigServiceStub,
 } from "./stubs";
 import { xcode } from "../lib/node/xcode";
 import temp = require("temp");
@@ -172,6 +173,7 @@ function createTestInjector(
 		getSettingValue: async (settingName: string): Promise<void> => undefined,
 	});
 	testInjector.register("packageManager", PackageManager);
+	testInjector.register("projectConfigService", ProjectConfigServiceStub);
 	testInjector.register("npm", NodePackageManager);
 	testInjector.register("yarn", YarnPackageManager);
 	testInjector.register("xcconfigService", XcconfigService);

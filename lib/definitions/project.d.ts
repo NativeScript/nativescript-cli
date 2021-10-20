@@ -346,7 +346,7 @@ interface IProjectConfigService {
 	 * Get value for a given config key path
 	 * @param key the property key path
 	 */
-	getValue(key: string): any;
+	getValue(key: string, defaultValue?: any): any;
 	/**
 	 * Set value for a given config key path
 	 * @param key the property key path
