@@ -136,9 +136,13 @@ export class PackageManager implements IPackageManager {
 		let pm = null;
 		try {
 			pm = await this.$userSettingsService.getSettingValue("packageManager");
+		} catch (err) {
+			this.$errors.fail(
+				`Unable to read package manager config from user settings ${err}`
+			);
+		}
 
-			// try reading from project config - errors will be caught and the
-			// above will be used (if set) before falling back to the default
+		try {
 			const configPm = this.$projectConfigService.getValue(
 				"cli.packageManager"
 			);
@@ -150,8 +154,10 @@ export class PackageManager implements IPackageManager {
 				pm = configPm;
 			}
 		} catch (err) {
-			this.$errors.fail(
-				`Unable to read package manager config from user settings ${err}`
+			// ignore error, but log info
+			this.$logger.trace(
+				"Tried to read cli.packageManager from project config and failed. Error is: ",
+				err
 			);
 		}
 
