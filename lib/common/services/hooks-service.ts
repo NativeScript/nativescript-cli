@@ -67,7 +67,7 @@ export class HooksService implements IHooksService {
 			"Hooks directories: " + util.inspect(this.hooksDirectories)
 		);
 
-		const customHooks = this.$projectConfigService.getValue("hooks") || [];
+		const customHooks = this.$projectConfigService.getValue("hooks", []);
 
 		if (customHooks.length) {
 			this.$logger.trace("Custom hooks: " + util.inspect(customHooks));
@@ -305,7 +305,7 @@ export class HooksService implements IHooksService {
 	private getCustomHooksByName(hookName: string): IHook[] {
 		const hooks: IHook[] = [];
 		const customHooks: INsConfigHooks[] =
-			this.$projectConfigService.getValue("hooks") || [];
+			this.$projectConfigService.getValue("hooks", []);
 
 		for (const cHook of customHooks) {
 			if (cHook.type === hookName) {
