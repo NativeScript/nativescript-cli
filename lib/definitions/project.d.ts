@@ -134,6 +134,11 @@ interface INsConfigAndroid extends INsConfigPlaform {
 	enableMultithreadedJavascript?: boolean;
 }
 
+interface INsConfigHooks {
+	type?: string;
+	script: string;
+}
+
 interface INsConfig {
 	id?: string;
 	main?: string;
@@ -146,6 +151,7 @@ interface INsConfig {
 	ios?: INsConfigIOS;
 	android?: INsConfigAndroid;
 	ignoredNativeDependencies?: string[];
+	hooks?: INsConfigHooks[];
 }
 
 interface IProjectData extends ICreateProjectData {
