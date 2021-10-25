@@ -595,8 +595,8 @@ export class ProjectConfigServiceStub implements IProjectConfigService {
 		return false;
 	}
 
-	getValue(key: string): any {
-		return _.get(this.readConfig(), key);
+	getValue(key: string, defaultValue?: any): any {
+		return _.get(this.readConfig(), key, defaultValue);
 	}
 
 	setValue(key: string, value: SupportedConfigValues): any {
