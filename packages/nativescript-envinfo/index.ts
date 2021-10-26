@@ -1,8 +1,23 @@
 #!/usr/bin/env node
 
 import { run } from "envinfo";
-import { readFile } from "fs/promises";
+import { readFileSync } from "fs";
 import { resolve } from "path";
+
+interface IPackageJSON {
+	dependencies?: any;
+	devDependencies?: any;
+}
+
+function readPackageJSON(): IPackageJSON {
+	try {
+		return JSON.parse(
+			readFileSync(resolve(process.cwd(), "package.json")).toString()
+		);
+	} catch (err) {
+		return {};
+	}
+}
 
 async function main() {
 	const res = JSON.parse(
@@ -20,45 +35,58 @@ async function main() {
 		)
 	);
 
-	const packageJSON = await readFile(resolve(process.cwd(), "package.json"))
-		.then((res: Buffer) => JSON.parse(res.toString()))
-		.catch(() => {});
-
+	const packageJSON = readPackageJSON();
 	const dependencies = packageJSON?.dependencies ?? {};
 	const devDependencies = packageJSON?.devDependencies ?? {};
+
+	const get = (key: string, defaultValue: any = "Not Found") => {
+		try {
+			return key.split(".").reduce((res, key) => res[key], res) ?? defaultValue;
+		} catch (err) {
+			return defaultValue;
+		}
+	};
+
+	const asList = (key: string) => {
+		const list = get(key);
+
+		if (Array.isArray(list)) {
+			return "\n" + list.map((image: string) => `  - ${image}`).join("\n");
+		}
+
+		return list ?? "Not Found";
+	};
 
 	console.log(
 		[
 			`<!-- COPY START -->`,
 			"```yaml",
-			`OS: ${res.System.OS}`,
-			`CPU: ${res.System.CPU}`,
-			`Shell: ${res.System.Shell.path}`,
-			`node: ${res.Binaries.Node.version}`,
-			`npm: ${res.Binaries.npm.version}`,
-			`nativescript: ${res.npmGlobalPackages.nativescript}`,
+			`OS: ${get("System.OS")}`,
+			`CPU: ${get("System.CPU")}`,
+			`Shell: ${get("System.Shell.path")}`,
+			`node: ${get("Binaries.Node.version")}`,
+			`npm: ${get("Binaries.npm.version")}`,
+			`nativescript: ${get("npmGlobalPackages.nativescript")}`,
 			// `git: ${sysInfo.gitVer}`,
 			``,
 			`# android`,
-			`java: ${res.Languages.Java.version}`,
-			`ndk: ${res["SDKs"]["Android SDK"]["Android NDK"]}`,
-			`apis: ${res["SDKs"]["Android SDK"]["API Levels"].join(", ")}`,
-			`build_tools: ${res["SDKs"]["Android SDK"]["Build Tools"].join(", ")}`,
-			`system_images: `,
-			...res["SDKs"]["Android SDK"]["System Images"].map(
-				(image: string) => `  - ${image}`
-			),
+			`java: ${get("Languages.Java.version")}`,
+			`ndk: ${get("SDKs.Android SDK.Android NDK")}`,
+			`apis: ${
+				get("SDKs.Android SDK.API Levels")?.join?.(", ") ?? "Not Found"
+			}`,
+			`build_tools: ${
+				get("SDKs.Android SDK.Build Tools")?.join?.(", ") ?? "Not Found"
+			}`,
+			`system_images: ` + asList("SDKs.Android SDK.System Images"),
 			``,
 			`# ios`,
-			`xcode: ${res.IDEs.Xcode.version}`,
-			`cocoapods: ${res.Managers.CocoaPods.version}`,
-			`python: ${res.Languages.Python.version}`,
-			`python3: ${res.Languages.Python3.version}`,
-			`ruby: ${res.Languages.Ruby.version}`,
-			`platforms:`,
-			...res.SDKs["iOS SDK"]["Platforms"].map(
-				(platform: string) => `  - ${platform}`
-			),
+			`xcode: ${get("IDEs.Xcode.version")}`,
+			`cocoapods: ${get("Managers.CocoaPods.version")}`,
+			`python: ${get("Languages.Python.version")}`,
+			`python3: ${get("Languages.Python3.version")}`,
+			`ruby: ${get("Languages.Ruby.version")}`,
+			`platforms: ` + asList("SDKs.iOS SDK.Platforms"),
 			"```",
 			``,
 			`### Dependencies`,
