@@ -33,7 +33,7 @@ export class ProjectCleanupService implements IProjectCleanupService {
 	public async cleanPath(pathToClean: string): Promise<boolean> {
 		this.spinner.clear();
 		let result = true;
-		var fileType: string;
+		let fileType: string;
 		if (!pathToClean || pathToClean.trim().length === 0) {
 			this.$logger.trace("cleanPath called with no pathToClean.");
 			return result;
