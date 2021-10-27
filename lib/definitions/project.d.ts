@@ -308,13 +308,13 @@ interface IProjectCleanupService {
 	 * Clean multiple paths
 	 * @param {string[]} pathsToClean
 	 */
-	clean(pathsToClean: string[]): Promise<void>;
+	clean(pathsToClean: string[]): Promise<boolean>;
 
 	/**
 	 * Clean a single path
 	 * @param {string} pathToClean
 	 */
-	cleanPath(pathToClean: string): Promise<void>;
+	cleanPath(pathToClean: string): Promise<boolean>;
 }
 
 interface IBackup {
