@@ -16,7 +16,7 @@ export class ProjectCleanupService implements IProjectCleanupService {
 	}
 
 	public async clean(pathsToClean: string[]): Promise<boolean> {
-		let result = true;
+		let success = true;
 		for (const pathToClean of pathsToClean) {
 			const isCleaned = await this.cleanPath(pathToClean).catch((error) => {
 				this.$logger.trace(
@@ -25,9 +25,9 @@ export class ProjectCleanupService implements IProjectCleanupService {
 				);
 				return false;
 			});
-			result = result && isCleaned;
+			success = success && isCleaned;
 		}
-		return result;
+		return success;
 	}
 
 	public async cleanPath(pathToClean: string): Promise<boolean> {
