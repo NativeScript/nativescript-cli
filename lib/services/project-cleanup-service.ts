@@ -32,11 +32,11 @@ export class ProjectCleanupService implements IProjectCleanupService {
 
 	public async cleanPath(pathToClean: string): Promise<boolean> {
 		this.spinner.clear();
-		let result = true;
+		let success = true;
 		let fileType: string;
 		if (!pathToClean || pathToClean.trim().length === 0) {
 			this.$logger.trace("cleanPath called with no pathToClean.");
-			return result;
+			return success;
 		}
 
 		const filePath = path.resolve(this.$projectHelper.projectDir, pathToClean);
@@ -60,19 +60,19 @@ export class ProjectCleanupService implements IProjectCleanupService {
 				fileType = "file";
 			}
 
-			result = !this.$fs.exists(filePath);
-			if (result) {
+			success = !this.$fs.exists(filePath);
+			if (success) {
 				this.spinner.succeed(`Cleaned ${fileType} ${displayPath}`);
 			} else {
 				const message = `Failed to Clean ${fileType}`.red;
 				this.spinner.fail(`${message} ${displayPath}`);
 			}
-			return result;
+			return success;
 		}
 		this.$logger.trace(`Path '${filePath}' not found, skipping.`);
 		// this.spinner.text = `Skipping ${displayPath} because it doesn't exist.`;
 		// this.spinner.info();
-		return result;
+		return success;
 	}
 }
 
