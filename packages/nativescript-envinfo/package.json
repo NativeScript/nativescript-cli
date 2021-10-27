@@ -1,0 +1,15 @@
+{
+	"name": "nativescript-envinfo",
+	"version": "1.0.9",
+	"main": "dist/index.js",
+  "bin": "dist/index.js",
+	"files": [],
+	"license": "MIT",
+	"scripts": {
+		"prepack": "tsc"
+	},
+	"dependencies": {
+		"@types/envinfo": "^7.8.1",
+		"envinfo": "^7.8.1"
+	}
+}
