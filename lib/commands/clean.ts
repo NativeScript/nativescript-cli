@@ -39,7 +39,7 @@ export class CleanCommand implements ICommand {
 
 		const success = await this.$projectCleanupService.clean(pathsToClean);
 
-		if (result) {
+		if (success) {
 			spinner.succeed("Project successfully cleaned.");
 		} else {
 			spinner.fail(`${"Project unsuccessfully cleaned.".red}`);
