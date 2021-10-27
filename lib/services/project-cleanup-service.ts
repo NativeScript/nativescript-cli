@@ -15,23 +15,28 @@ export class ProjectCleanupService implements IProjectCleanupService {
 		this.spinner = this.$terminalSpinnerService.createSpinner();
 	}
 
-	public async clean(pathsToClean: string[]): Promise<void> {
+	public async clean(pathsToClean: string[]): Promise<boolean> {
+		let result = true;
 		for (const pathToClean of pathsToClean) {
-			await this.cleanPath(pathToClean).catch((error) => {
+			const isCleaned = await this.cleanPath(pathToClean).catch((error) => {
 				this.$logger.trace(
 					`Encountered error while cleaning. Error is: ${error.message}.`,
 					error
 				);
+				return false;
 			});
+			result = result && isCleaned;
 		}
+		return result;
 	}
 
-	public async cleanPath(pathToClean: string): Promise<void> {
+	public async cleanPath(pathToClean: string): Promise<boolean> {
 		this.spinner.clear();
-
+		let result = true;
+		var fileType: string;
 		if (!pathToClean || pathToClean.trim().length === 0) {
 			this.$logger.trace("cleanPath called with no pathToClean.");
-			return;
+			return result;
 		}
 
 		const filePath = path.resolve(this.$projectHelper.projectDir, pathToClean);
@@ -48,17 +53,26 @@ export class ProjectCleanupService implements IProjectCleanupService {
 			if (stat.isDirectory()) {
 				this.$logger.trace(`Path '${filePath}' is a directory, deleting.`);
 				this.$fs.deleteDirectorySafe(filePath);
-				this.spinner.succeed(`Cleaned directory ${displayPath}`);
+				fileType = "directory";
 			} else {
 				this.$logger.trace(`Path '${filePath}' is a file, deleting.`);
 				this.$fs.deleteFile(filePath);
-				this.spinner.succeed(`Cleaned file ${displayPath}`);
+				fileType = "file";
 			}
-			return;
+
+			result = !this.$fs.exists(filePath);
+			if (result) {
+				this.spinner.succeed(`Cleaned ${fileType} ${displayPath}`);
+			} else {
+				const message = `Failed to Clean ${fileType}`.red;
+				this.spinner.fail(`${message} ${displayPath}`);
+			}
+			return result;
 		}
 		this.$logger.trace(`Path '${filePath}' not found, skipping.`);
 		// this.spinner.text = `Skipping ${displayPath} because it doesn't exist.`;
 		// this.spinner.info();
+		return result;
 	}
 }
 
