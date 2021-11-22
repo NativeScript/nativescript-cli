@@ -172,23 +172,62 @@ class TestInitCommand implements ICommand {
 		const exampleFilePath = this.$resources.resolvePath(
 			`test/example.${frameworkToInstall}${projectFilesExtension}`
 		);
+		const targetExampleTestPath = path.join(
+			testsDir,
+			`example.spec${projectFilesExtension}`
+		);
 
 		if (shouldCreateSampleTests && this.$fs.exists(exampleFilePath)) {
-			this.$fs.copyFile(
-				exampleFilePath,
-				path.join(testsDir, `example${projectFilesExtension}`)
-			);
+			this.$fs.copyFile(exampleFilePath, targetExampleTestPath);
 			this.$logger.info(
-				`\nExample test file created in ${projectTestsDir}`.yellow
+				`\nExample test added: ${targetExampleTestPath}`.yellow
 			);
 		} else {
 			this.$logger.info(
-				`\nPlace your test files under ${projectTestsDir}`.yellow
+				`\nCreate filename.spec${projectFilesExtension} files anywhere you'd like.`
+					.yellow
 			);
 		}
 
+		// test main entry
+		const testMainResourcesPath = this.$resources.resolvePath(
+			`test/test-main${projectFilesExtension}`
+		);
+		const testMainPath = path.join(
+			this.$projectData.appDirectoryPath,
+			`test${projectFilesExtension}`
+		);
+
+		if (!this.$fs.exists(testMainPath)) {
+			this.$fs.copyFile(testMainResourcesPath, testMainPath);
+			this.$logger.info(
+				`\nMain test entrypoint created: ${path.join(
+					this.$projectData.appDirectoryPath,
+					`test${projectFilesExtension}`
+				)}`.yellow
+			);
+		}
+
+		const testTsConfigTemplate = this.$resources.readText(
+			"test/tsconfig.spec.json"
+		);
+		const testTsConfig = _.template(testTsConfigTemplate)({
+			basePath: this.$projectData.getAppDirectoryRelativePath(),
+		});
+
+		this.$fs.writeFile(
+			path.join(projectDir, "tsconfig.spec.json"),
+			testTsConfig
+		);
+		this.$logger.info(`\nAdded/replaced tsconfig.spec.json`.yellow);
+
 		this.$logger.info(
-			'Run your tests using the "$ ns test <platform>" command.'.yellow
+			`\nNOTE: @nativescript/unit-test-runner was included in "dependencies" as a convenience to automatically adjust your app's Info.plist on iOS and AndroidManifest.xml on Android to ensure the socket connects properly. For production you may want to move to "devDependencies" and manage the settings yourself.`
+				.yellow
+		);
+
+		this.$logger.info(
+			'\nRun your tests using the "$ ns test <platform>" command.'.yellow
 		);
 	}
 }

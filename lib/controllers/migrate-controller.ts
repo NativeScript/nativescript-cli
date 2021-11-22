@@ -235,7 +235,7 @@ export class MigrateController
 		{
 			packageName: "@nativescript/unit-test-runner",
 			minVersion: "1.0.0",
-			desiredVersion: "~2.0.5",
+			desiredVersion: "~3.0.0",
 			async shouldMigrateAction(
 				dependency: IMigrationDependency,
 				projectData: IProjectData,
@@ -1167,10 +1167,7 @@ export class MigrateController
 		const dependencies: IMigrationDependency[] = [
 			{
 				packageName: "karma-webpack",
-				minVersion: "3.0.5",
-				desiredVersion: "~5.0.0",
-				isDev: true,
-				shouldAddIfMissing: true,
+				shouldRemove: true,
 			},
 			{
 				packageName: "karma-jasmine",
