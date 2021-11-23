@@ -134,6 +134,10 @@ class TestInitCommand implements ICommand {
 			this.$projectData
 		);
 
+		this.$logger.clearScreen();
+
+		const bufferedLogs = [];
+
 		const testsDir = path.join(this.$projectData.appDirectoryPath, "tests");
 		const projectTestsDir = path.relative(
 			this.$projectData.projectDir,
@@ -145,8 +149,13 @@ class TestInitCommand implements ICommand {
 		);
 		let shouldCreateSampleTests = true;
 		if (this.$fs.exists(testsDir)) {
-			this.$logger.info(
-				`${projectTestsDir} directory already exists, will not create an example test project.`
+			const specFilenamePattern = `<filename>.spec${projectFilesExtension}`;
+			bufferedLogs.push(
+				[
+					`Note: The "${projectTestsDir}" directory already exists, will not create example tests in the project.`,
+					`You may create "${specFilenamePattern}" files anywhere you'd like.`,
+					"",
+				].join("\n").yellow
 			);
 			shouldCreateSampleTests = false;
 		}
@@ -179,13 +188,12 @@ class TestInitCommand implements ICommand {
 
 		if (shouldCreateSampleTests && this.$fs.exists(exampleFilePath)) {
 			this.$fs.copyFile(exampleFilePath, targetExampleTestPath);
-			this.$logger.info(
-				`\nExample test added: ${targetExampleTestPath}`.yellow
+			const targetExampleTestRelativePath = path.relative(
+				projectDir,
+				targetExampleTestPath
 			);
-		} else {
-			this.$logger.info(
-				`\nCreate filename.spec${projectFilesExtension} files anywhere you'd like.`
-					.yellow
+			bufferedLogs.push(
+				`Added example test: ${targetExampleTestRelativePath.yellow}`
 			);
 		}
 
@@ -200,11 +208,9 @@ class TestInitCommand implements ICommand {
 
 		if (!this.$fs.exists(testMainPath)) {
 			this.$fs.copyFile(testMainResourcesPath, testMainPath);
-			this.$logger.info(
-				`\nMain test entrypoint created: ${path.join(
-					this.$projectData.appDirectoryPath,
-					`test${projectFilesExtension}`
-				)}`.yellow
+			const testMainRelativePath = path.relative(projectDir, testMainPath);
+			bufferedLogs.push(
+				`Main test entrypoint created: ${testMainRelativePath.yellow}`
 			);
 		}
 
@@ -219,15 +225,32 @@ class TestInitCommand implements ICommand {
 			path.join(projectDir, "tsconfig.spec.json"),
 			testTsConfig
 		);
-		this.$logger.info(`\nAdded/replaced tsconfig.spec.json`.yellow);
+		bufferedLogs.push(`Added/replaced ${"tsconfig.spec.json".yellow}`);
 
+		const greyDollarSign = "$".grey;
 		this.$logger.info(
-			`\nNOTE: @nativescript/unit-test-runner was included in "dependencies" as a convenience to automatically adjust your app's Info.plist on iOS and AndroidManifest.xml on Android to ensure the socket connects properly. For production you may want to move to "devDependencies" and manage the settings yourself.`
-				.yellow
-		);
-
-		this.$logger.info(
-			'\nRun your tests using the "$ ns test <platform>" command.'.yellow
+			[
+				[
+					`Tests using`.green,
+					frameworkToInstall.cyan,
+					`were successfully initialized.`.green,
+				].join(" "),
+				"",
+				...bufferedLogs,
+				"",
+				`Note: @nativescript/unit-test-runner was included in "dependencies" as a convenience to automatically adjust your app's Info.plist on iOS and AndroidManifest.xml on Android to ensure the socket connects properly.`
+					.yellow,
+				"",
+				`For production you may want to move to "devDependencies" and manage the settings yourself.`
+					.yellow,
+				"",
+				"",
+				`You can now run your tests:`,
+				"",
+				`  ${greyDollarSign} ${"ns test ios".green}`,
+				`  ${greyDollarSign} ${"ns test android".green}`,
+				"",
+			].join("\n")
 		);
 	}
 }
