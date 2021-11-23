@@ -190,6 +190,7 @@ export class TestExecutionService implements ITestExecutionService {
 				path: this.$options.path,
 				tns: process.argv[1],
 				node: process.execPath,
+				env: this.$options.env,
 				options: {
 					debugTransport: this.$options.debugTransport,
 					debugBrk: this.$options.debugBrk,
