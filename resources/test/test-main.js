@@ -3,7 +3,7 @@ import { runTestApp } from "@nativescript/unit-test-runner";
 
 runTestApp({
 	runTests: () => {
-		const tests = require.context("./", true, /\.spec\.ts$/);
+		const tests = require.context("./", true, /\.spec\.js$/);
 		tests.keys().map(tests);
 	},
 });
