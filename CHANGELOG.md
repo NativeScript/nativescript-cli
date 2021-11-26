@@ -1,3 +1,24 @@
+## [8.1.5](https://github.com/NativeScript/nativescript-cli/compare/v8.1.4...v8.1.5) (2021-11-26)
+
+
+### Bug Fixes
+
+* **clean:** report failures to remove item ([#5601](https://github.com/NativeScript/nativescript-cli/issues/5601)) ([3902257](https://github.com/NativeScript/nativescript-cli/commit/3902257b335a0b652bda6ebfcf35585c02e05fb9))
+* **config:** handle invalid/unset projectDir ([b844498](https://github.com/NativeScript/nativescript-cli/commit/b8444986f34d1552b68a9257a4a4224d1f799abe))
+* **migrate:** create polyfills.ts if missing for angular projects ([#5593](https://github.com/NativeScript/nativescript-cli/issues/5593)) ([8728335](https://github.com/NativeScript/nativescript-cli/commit/87283355bba2e0a7bfa487fee15dfa82798db755))
+
+
+### Features
+
+* `ns -v --json` to skip update checks ([d7330b0](https://github.com/NativeScript/nativescript-cli/commit/d7330b0cdb4ca392b8b3f6c81b49ae1a0eb3a07a))
+* github issue forms ([#5609](https://github.com/NativeScript/nativescript-cli/issues/5609)) ([676630b](https://github.com/NativeScript/nativescript-cli/commit/676630bcb86203c532c52dd004d2ccd78cc17e6b))
+* nativescript-envinfo package ([#5600](https://github.com/NativeScript/nativescript-cli/issues/5600)) ([fd3b3a8](https://github.com/NativeScript/nativescript-cli/commit/fd3b3a86de02e512471158aa1fe501ec49c5c6e7))
+* unit-test-runner 3.0 with optional coverage report handling ([#5610](https://github.com/NativeScript/nativescript-cli/issues/5610)) ([ae7f286](https://github.com/NativeScript/nativescript-cli/commit/ae7f28634ca3de0167c309d2019cf7f78e3fc2c5))
+* **config:** cli.packageManager override support ([#5596](https://github.com/NativeScript/nativescript-cli/issues/5596)) ([3c03579](https://github.com/NativeScript/nativescript-cli/commit/3c035794489c26fe9100b30d011b7eaa94f4b353))
+* **hooks:** project persistent hooks in config ([#5597](https://github.com/NativeScript/nativescript-cli/issues/5597)) ([97bbe33](https://github.com/NativeScript/nativescript-cli/commit/97bbe3388fa150c7818fbe24e4220c9a6238267b))
+
+
+
 ## [8.1.4](https://github.com/NativeScript/nativescript-cli/compare/v8.1.3...v8.1.4) (2021-10-11)
 
 
