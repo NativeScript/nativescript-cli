@@ -17,7 +17,7 @@ export class CleanCommand implements ICommand {
 
 	public async execute(args: string[]): Promise<void> {
 		const spinner = this.$terminalSpinnerService.createSpinner();
-		spinner.start("Cleaning project...");
+		spinner.start("Cleaning project...\n");
 
 		const pathsToClean = [
 			constants.HOOKS_DIR_NAME,
