@@ -104,8 +104,9 @@ export class BuildController extends EventEmitter implements IBuildController {
 		);
 
 		const endTime = performance.now();
-		this.$logger.info("Project successfully built.");
 		const buildTime = (endTime - startTime) / 1000;
+
+		this.$logger.info("Project successfully built.");
 		this.$logger.info(`Build time: ${buildTime.toFixed(3)} s.`);
 
 		const result = await this.$buildArtefactsService.getLatestAppPackagePath(
