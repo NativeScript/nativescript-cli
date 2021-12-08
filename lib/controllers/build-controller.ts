@@ -43,6 +43,7 @@ export class BuildController extends EventEmitter implements IBuildController {
 
 	public async build(buildData: IBuildData): Promise<string> {
 		this.$logger.info("Building project...");
+		const startTime = performance.now();
 
 		const platform = buildData.platform.toLowerCase();
 		const projectData = this.$projectDataService.getProjectData(
@@ -102,7 +103,11 @@ export class BuildController extends EventEmitter implements IBuildController {
 			buildInfoFileDir
 		);
 
+		const endTime = performance.now();
+		const buildTime = (endTime - startTime) / 1000;
+
 		this.$logger.info("Project successfully built.");
+		this.$logger.info(`Build time: ${buildTime.toFixed(3)} s.`);
 
 		const result = await this.$buildArtefactsService.getLatestAppPackagePath(
 			platformData,
