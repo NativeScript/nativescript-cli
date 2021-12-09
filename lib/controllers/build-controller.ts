@@ -13,6 +13,7 @@ import { IPlatformsDataService } from "../definitions/platform";
 import { IAnalyticsService, IFileSystem } from "../common/declarations";
 import { IInjector } from "../common/definitions/yok";
 import { injector } from "../common/yok";
+import { performance } from "perf_hooks";
 
 export class BuildController extends EventEmitter implements IBuildController {
 	constructor(
