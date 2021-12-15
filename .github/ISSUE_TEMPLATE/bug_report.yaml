@@ -102,9 +102,9 @@ body:
 
         ---
   - type: checkboxes
-    label: Terms
     id: terms
     attributes:
+      label: false
       options:
         - label: I have searched the [existing issues](https://github.com/NativeScript/nativescript-cli/issues) as well as [StackOverflow](https://stackoverflow.com/questions/tagged/nativescript) and this has not been posted before
           required: true
