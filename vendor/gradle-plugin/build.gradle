@@ -121,6 +121,7 @@ dependencies {
            }
        }
     }
+    implementation files('../../../node_modules/@nativescript/core/platforms/android/widgets-release.aar')
 }
 
 def applyBeforePluginGradleConfiguration() {
