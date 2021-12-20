@@ -1,3 +1,54 @@
+## [8.1.5](https://github.com/NativeScript/nativescript-cli/compare/v8.1.4...v8.1.5) (2021-11-26)
+
+
+### Bug Fixes
+
+* **clean:** report failures to remove item ([#5601](https://github.com/NativeScript/nativescript-cli/issues/5601)) ([3902257](https://github.com/NativeScript/nativescript-cli/commit/3902257b335a0b652bda6ebfcf35585c02e05fb9))
+* **config:** handle invalid/unset projectDir ([b844498](https://github.com/NativeScript/nativescript-cli/commit/b8444986f34d1552b68a9257a4a4224d1f799abe))
+* **migrate:** create polyfills.ts if missing for angular projects ([#5593](https://github.com/NativeScript/nativescript-cli/issues/5593)) ([8728335](https://github.com/NativeScript/nativescript-cli/commit/87283355bba2e0a7bfa487fee15dfa82798db755))
+
+
+### Features
+
+* `ns -v --json` to skip update checks ([d7330b0](https://github.com/NativeScript/nativescript-cli/commit/d7330b0cdb4ca392b8b3f6c81b49ae1a0eb3a07a))
+* github issue forms ([#5609](https://github.com/NativeScript/nativescript-cli/issues/5609)) ([676630b](https://github.com/NativeScript/nativescript-cli/commit/676630bcb86203c532c52dd004d2ccd78cc17e6b))
+* nativescript-envinfo package ([#5600](https://github.com/NativeScript/nativescript-cli/issues/5600)) ([fd3b3a8](https://github.com/NativeScript/nativescript-cli/commit/fd3b3a86de02e512471158aa1fe501ec49c5c6e7))
+* unit-test-runner 3.0 with optional coverage report handling ([#5610](https://github.com/NativeScript/nativescript-cli/issues/5610)) ([ae7f286](https://github.com/NativeScript/nativescript-cli/commit/ae7f28634ca3de0167c309d2019cf7f78e3fc2c5))
+* **config:** cli.packageManager override support ([#5596](https://github.com/NativeScript/nativescript-cli/issues/5596)) ([3c03579](https://github.com/NativeScript/nativescript-cli/commit/3c035794489c26fe9100b30d011b7eaa94f4b353))
+* **hooks:** project persistent hooks in config ([#5597](https://github.com/NativeScript/nativescript-cli/issues/5597)) ([97bbe33](https://github.com/NativeScript/nativescript-cli/commit/97bbe3388fa150c7818fbe24e4220c9a6238267b))
+
+
+
+## [8.1.4](https://github.com/NativeScript/nativescript-cli/compare/v8.1.3...v8.1.4) (2021-10-11)
+
+
+### Bug Fixes
+
+* **migrate:** loosen up migrate condition for missing dependencies ([96af85b](https://github.com/NativeScript/nativescript-cli/commit/96af85bc985ee0881bfc95eae96182d0638dbe01))
+* runtime version detection for tags ([#5587](https://github.com/NativeScript/nativescript-cli/issues/5587)) ([a0663f4](https://github.com/NativeScript/nativescript-cli/commit/a0663f4e8733eee748060f47d7358b4a37b4ce98)), closes [#5574](https://github.com/NativeScript/nativescript-cli/issues/5574)
+
+
+
+## [8.1.3](https://github.com/NativeScript/nativescript-cli/compare/v8.1.2...v8.1.3) (2021-09-30)
+
+
+### Bug Fixes
+
+* **ios-publish:** update API ([#5580](https://github.com/NativeScript/nativescript-cli/issues/5580)) ([63acaa6](https://github.com/NativeScript/nativescript-cli/commit/63acaa6defdf610aecbd49abd59ef3185948720c))
+* **m1:** cocoapods command when installed natively ([#5584](https://github.com/NativeScript/nativescript-cli/issues/5584)) ([65dcf01](https://github.com/NativeScript/nativescript-cli/commit/65dcf01bb213c5c7b0581a1f92d7aba7fb3aec0c))
+* **metadata-filtering:** only add when there are items to add ([ab9fc0f](https://github.com/NativeScript/nativescript-cli/commit/ab9fc0f9b7fd3a4adde10c28d538518d61039107))
+* **test-execution-service:** canStartKarma condition ([c68d58e](https://github.com/NativeScript/nativescript-cli/commit/c68d58edff8023875d4b973d7b5c65528e550b66))
+* fix source map path ([#5583](https://github.com/NativeScript/nativescript-cli/issues/5583)) ([8ecb335](https://github.com/NativeScript/nativescript-cli/commit/8ecb33541cdf405f5769b7cfa7385423e512ae80))
+* require.resolve for packages with exports field in package.json ([#5579](https://github.com/NativeScript/nativescript-cli/issues/5579)) ([56ed35b](https://github.com/NativeScript/nativescript-cli/commit/56ed35b71323f25759d36e1e1750ed9cd267a66d))
+* source-map appPath prefix detection ([77a8ce7](https://github.com/NativeScript/nativescript-cli/commit/77a8ce77d1d3110b67c858b19651abfde71afe8c))
+
+
+### Features
+
+* allow plugin blacklist metadata ([#5582](https://github.com/NativeScript/nativescript-cli/issues/5582)) ([5e9de51](https://github.com/NativeScript/nativescript-cli/commit/5e9de518785717ae44aff85c900d06e1dbebf882))
+
+
+
 ## [8.1.2](https://github.com/NativeScript/nativescript-cli/compare/v8.1.1...v8.1.2) (2021-09-15)
 
 

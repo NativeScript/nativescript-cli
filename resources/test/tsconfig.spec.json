@@ -1,0 +1,9 @@
+{
+	"extends": "./tsconfig.json",
+    "compilerOptions": {
+        "sourceMap": true
+    },
+	"files": ["${ basePath }/test.ts"],
+	"include": ["${ basePath }/**/*.spec.ts", "${ basePath }/**/*.d.ts"],
+	"exclude": ["node_modules", "platforms", "e2e"]
+}

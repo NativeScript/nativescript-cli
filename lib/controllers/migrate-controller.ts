@@ -40,6 +40,7 @@ import { IInjector } from "../common/definitions/yok";
 import { injector } from "../common/yok";
 import { IJsonFileSettingsService } from "../common/definitions/json-file-settings-service";
 import { SupportedConfigValues } from "../tools/config-manipulation/config-transformer";
+import * as temp from "temp";
 
 // const wait: (ms: number) => Promise<void> = (ms: number = 1000) =>
 // 	new Promise((resolve) => setTimeout(resolve, ms));
@@ -234,7 +235,7 @@ export class MigrateController
 		{
 			packageName: "@nativescript/unit-test-runner",
 			minVersion: "1.0.0",
-			desiredVersion: "~2.0.5",
+			desiredVersion: "~3.0.0",
 			async shouldMigrateAction(
 				dependency: IMigrationDependency,
 				projectData: IProjectData,
@@ -432,12 +433,29 @@ export class MigrateController
 
 		this.spinner.succeed("Project dependencies have been updated");
 
+		const isAngular = this.hasDependency(
+			{
+				packageName: "@nativescript/angular",
+			},
+			projectData
+		);
+
+		// ensure polyfills.ts exists in angular projects
+		let polyfillsPath;
+		if (isAngular) {
+			polyfillsPath = await this.checkOrCreatePolyfillsTS(projectData);
+		}
+
 		// update tsconfig
 		const tsConfigPath = path.resolve(projectDir, "tsconfig.json");
 		if (this.$fs.exists(tsConfigPath)) {
 			this.spinner.info(`Updating ${"tsconfig.json".yellow}`);
 
-			await this.migrateTSConfig(tsConfigPath);
+			await this.migrateTSConfig({
+				tsConfigPath,
+				isAngular,
+				polyfillsPath,
+			});
 
 			this.spinner.succeed(`Updated ${"tsconfig.json".yellow}`);
 		}
@@ -492,6 +510,12 @@ export class MigrateController
 					this.$logger.trace(
 						`${shouldMigrateCommonMessage}'${dependency.packageName}' is missing.`
 					);
+
+					if (loose) {
+						// in loose mode we ignore missing dependencies
+						continue;
+					}
+
 					return true;
 				}
 
@@ -1143,10 +1167,7 @@ export class MigrateController
 		const dependencies: IMigrationDependency[] = [
 			{
 				packageName: "karma-webpack",
-				minVersion: "3.0.5",
-				desiredVersion: "~5.0.0",
-				isDev: true,
-				shouldAddIfMissing: true,
+				shouldRemove: true,
 			},
 			{
 				packageName: "karma-jasmine",
@@ -1183,7 +1204,15 @@ export class MigrateController
 		return dependencies;
 	}
 
-	private async migrateTSConfig(tsConfigPath: string): Promise<boolean> {
+	private async migrateTSConfig({
+		tsConfigPath,
+		isAngular,
+		polyfillsPath,
+	}: {
+		tsConfigPath: string;
+		isAngular: boolean;
+		polyfillsPath?: string;
+	}): Promise<boolean> {
 		try {
 			const configContents = this.$fs.readJson(tsConfigPath);
 
@@ -1199,6 +1228,18 @@ export class MigrateController
 				...new Set([...(configContents.compilerOptions.lib || []), "es2017"]),
 			];
 
+			if (isAngular) {
+				// make sure polyfills.ts is in files
+				if (configContents.files) {
+					configContents.files = [
+						...new Set([
+							...(configContents.files || []),
+							polyfillsPath ?? "./src/polyfills.ts",
+						]),
+					];
+				}
+			}
+
 			this.$fs.writeJson(tsConfigPath, configContents);
 
 			return true;
@@ -1206,6 +1247,48 @@ export class MigrateController
 			this.$logger.trace("Failed to migrate tsconfig.json. Error is: ", error);
 			return false;
 		}
+	}
+
+	private async checkOrCreatePolyfillsTS(
+		projectData: IProjectData
+	): Promise<string> {
+		const { projectDir, appDirectoryPath } = projectData;
+
+		const possiblePaths = [
+			`${appDirectoryPath}/polyfills.ts`,
+			`./src/polyfills.ts`,
+			`./app/polyfills.ts`,
+		].map((possiblePath) => path.resolve(projectDir, possiblePath));
+
+		let polyfillsPath = possiblePaths.find((possiblePath) => {
+			return this.$fs.exists(possiblePath);
+		});
+
+		if (polyfillsPath) {
+			return "./" + path.relative(projectDir, polyfillsPath);
+		}
+
+		const tempDir = temp.mkdirSync({
+			prefix: "migrate-angular-polyfills",
+		});
+
+		// get from default angular template
+		await this.$pacoteService.extractPackage(
+			constants.RESERVED_TEMPLATE_NAMES["angular"],
+			tempDir
+		);
+
+		this.$fs.copyFile(
+			path.resolve(tempDir, "src/polyfills.ts"),
+			possiblePaths[0]
+		);
+
+		// clean up temp project
+		this.$fs.deleteDirectory(tempDir);
+
+		this.spinner.succeed(`Created fresh ${"polyfills.ts".cyan}`);
+
+		return "./" + path.relative(projectDir, possiblePaths[0]);
 	}
 
 	private async migrateNativeScriptAngular(): Promise<IMigrationDependency[]> {
@@ -1275,6 +1358,12 @@ export class MigrateController
 			},
 
 			// devDependencies
+			{
+				packageName: "@angular/cli",
+				minVersion,
+				desiredVersion,
+				isDev: true,
+			},
 			{
 				packageName: "@angular/compiler-cli",
 				minVersion,

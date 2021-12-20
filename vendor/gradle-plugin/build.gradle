@@ -4,17 +4,16 @@ import static org.gradle.internal.logging.text.StyledTextOutput.Style
 
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-android-extensions'
+apply plugin: 'kotlin-parcelize'
 
 def computeKotlinVersion = { -> project.hasProperty("kotlinVersion") ? kotlinVersion : "1.4.21" }
-def computeCompileSdkVersion = { -> project.hasProperty("compileSdk") ? compileSdk : 28 as int }
-def computeTargetSdkVersion = { -> project.hasProperty("targetSdk") ? targetSdk : 28 as int }
+def computeCompileSdkVersion = { -> project.hasProperty("compileSdk") ? compileSdk : 31 as int }
+def computeTargetSdkVersion = { -> project.hasProperty("targetSdk") ? targetSdk : 31 as int }
 def computeBuildToolsVersion = { ->
-    project.hasProperty("buildToolsVersion") ? buildToolsVersion : "28.0.3" as String
+    project.hasProperty("buildToolsVersion") ? buildToolsVersion : "31.0.0"
 }
-
 buildscript {
-    def computeKotlinVersion = { -> project.hasProperty("kotlinVersion") ? kotlinVersion : "1.4.21" }
+    def computeKotlinVersion = { -> project.hasProperty("kotlinVersion") ? kotlinVersion : "1.6.0" }
     def kotlinVersion = computeKotlinVersion()
     repositories {
         google()
@@ -93,7 +92,6 @@ allprojects {
     }
 }
 
-
 android {
     kotlinOptions {
         jvmTarget = '1.8'
@@ -115,16 +113,6 @@ android {
     }
 }
 
-dependencies {
-    def androidXMultidexVersion =  project.hasProperty("androidXMultidexVersion") ? project.androidXMultidexVersion : "2.0.1"
-    def androidxVersion =  project.hasProperty("androidxVersion") ? project.androidxVersion : "1.2.0"
-    def androidXAppCompatVersion =  project.hasProperty("androidXAppCompat") ? project.androidXAppCompat : "1.3.1"
-    def kotlinVersion = computeKotlinVersion()
-    implementation "androidx.multidex:multidex:$androidXMultidexVersion"
-	implementation "androidx.core:core:$androidxVersion"
-    implementation "androidx.appcompat:appcompat:$androidXAppCompatVersion"
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion"
-}
 
 def applyBeforePluginGradleConfiguration() {
     def appResourcesPath = getAppResourcesPath()

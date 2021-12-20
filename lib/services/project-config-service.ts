@@ -116,7 +116,13 @@ export default {
 			.filter(Boolean)
 			.map((c) => {
 				if (this.$fs.isRelativePath(c)) {
-					return path.join(projectDir || this.projectHelper.projectDir, c);
+					const dir = projectDir || this.projectHelper.projectDir;
+
+					if (!dir) {
+						return c;
+					}
+
+					return path.join(dir, c);
 				}
 
 				return c;

@@ -105,6 +105,12 @@ export class CommandDispatcher implements ICommandDispatcher {
 	private async printVersion(): Promise<void> {
 		this.$logger.info(this.$staticConfig.version);
 
+		if (this.$options.json) {
+			// we don't check for updates when --json is passed
+			// useful for tools that rely on the output of the command
+			return;
+		}
+
 		const spinner = this.$terminalSpinnerService.createSpinner();
 		spinner.start("Checking for updates...");
 		const nativescriptCliVersion = await this.$versionsService.getNativescriptCliVersion();

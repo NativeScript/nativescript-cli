@@ -32,9 +32,12 @@ results
 scratch/
 .idea/
 .settings/
+test-reports.xml
+
+# VSCode
 .vscode/**
 !.vscode/launch.json
-test-reports.xml
+!.vscode/settings.json
 
 npm-debug.log
 node_modules

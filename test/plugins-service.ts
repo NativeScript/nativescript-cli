@@ -68,6 +68,10 @@ function createTestInjector() {
 		getSettingValue: async (settingName: string): Promise<void> => undefined,
 	});
 	testInjector.register("packageManager", PackageManager);
+	testInjector.register(
+		"projectConfigService",
+		stubs.PackageInstallationManagerStub
+	);
 	testInjector.register("npm", NodePackageManager);
 	testInjector.register("yarn", YarnPackageManager);
 	testInjector.register("pnpm", PnpmPackageManager);

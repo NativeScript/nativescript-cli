@@ -13,6 +13,7 @@ import { IPlatformsDataService } from "../definitions/platform";
 import { IAnalyticsService, IFileSystem } from "../common/declarations";
 import { IInjector } from "../common/definitions/yok";
 import { injector } from "../common/yok";
+import { performance } from "perf_hooks";
 
 export class BuildController extends EventEmitter implements IBuildController {
 	constructor(
@@ -43,6 +44,7 @@ export class BuildController extends EventEmitter implements IBuildController {
 
 	public async build(buildData: IBuildData): Promise<string> {
 		this.$logger.info("Building project...");
+		const startTime = performance.now();
 
 		const platform = buildData.platform.toLowerCase();
 		const projectData = this.$projectDataService.getProjectData(
@@ -102,7 +104,11 @@ export class BuildController extends EventEmitter implements IBuildController {
 			buildInfoFileDir
 		);
 
+		const endTime = performance.now();
+		const buildTime = (endTime - startTime) / 1000;
+
 		this.$logger.info("Project successfully built.");
+		this.$logger.info(`Build time: ${buildTime.toFixed(3)} s.`);
 
 		const result = await this.$buildArtefactsService.getLatestAppPackagePath(
 			platformData,

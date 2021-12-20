@@ -144,22 +144,6 @@ export class PlatformController implements IPlatformController {
 			path.join(projectData.platformsDir, platformName)
 		);
 
-		if (hasPlatformDirectory) {
-			const platformDirectoryItemCount = this.$fs.readDirectory(
-				path.join(projectData.platformsDir, platformName)
-			).length;
-
-			// 5 is a magic number to approximate a valid platform folder
-			// any valid platform should contain at least 5 files
-			// we choose 5 to avoid false-positives due to system files like .DS_Store etc.
-			if (platformDirectoryItemCount <= 5) {
-				this.$logger.warn(
-					`The platforms/${platformName} folder appears to be invalid. If the build fails, run 'ns clean' and rebuild the app.`,
-					{ wrapMessageWithBorders: true }
-				);
-			}
-		}
-
 		const shouldAddNativePlatform =
 			!nativePrepare || !nativePrepare.skipNativePrepare;
 		const prepareInfo = this.$projectChangesService.getPrepareInfo(
@@ -169,11 +153,27 @@ export class PlatformController implements IPlatformController {
 			prepareInfo &&
 			prepareInfo.nativePlatformStatus ===
 				NativePlatformStatus.requiresPlatformAdd;
-		const result =
+		const shouldAddPlatform =
 			!hasPlatformDirectory ||
 			(shouldAddNativePlatform && requiresNativePlatformAdd);
 
-		return !!result;
+		if (hasPlatformDirectory && !shouldAddPlatform) {
+			const platformDirectoryItemCount = this.$fs.readDirectory(
+				path.join(projectData.platformsDir, platformName)
+			).length;
+
+			// 2 is a magic number to approximate a valid platform folder
+			// any valid platform should contain at least 2 files/folders
+			// we choose 2 to avoid false-positives due to system files like .DS_Store etc.
+			if (platformDirectoryItemCount <= 2) {
+				this.$logger.warn(
+					`The platforms/${platformName} folder appears to be invalid. If the build fails, run 'ns clean' and rebuild the app.`,
+					{ wrapMessageWithBorders: true }
+				);
+			}
+		}
+
+		return !!shouldAddPlatform;
 	}
 }
 injector.register("platformController", PlatformController);

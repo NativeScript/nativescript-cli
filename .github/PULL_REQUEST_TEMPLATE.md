@@ -9,7 +9,7 @@ To help the rest of the community review your change, please follow the instruct
 
 ## PR Checklist
 
-- [ ] The PR title follows our guidelines: https://github.com/NativeScript/NativeScript/blob/master/CONTRIBUTING.md#commit-messages.
+- [ ] The PR title follows our guidelines: https://github.com/NativeScript/NativeScript/blob/master/tools/notes/CONTRIBUTING.md#commit-messages.
 - [ ] There is an issue for the bug/feature this PR is for. To avoid wasting your time, it's best to open a suggestion issue first and wait for approval before working on it.
 - [ ] You have signed the [CLA](http://www.nativescript.org/cla).
 - [ ] All existing tests are passing: https://github.com/NativeScript/nativescript-cli/blob/master/CONTRIBUTING.md#contribute-to-the-code-base

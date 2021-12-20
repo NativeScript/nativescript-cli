@@ -1,7 +1,7 @@
 {
   "name": "nativescript",
   "preferGlobal": true,
-  "version": "8.1.2",
+  "version": "8.1.5",
   "author": "NativeScript <support@nativescript.org>",
   "description": "Command-line interface for building NativeScript projects",
   "bin": {
@@ -57,7 +57,7 @@
     "mobile"
   ],
   "dependencies": {
-    "@nativescript/doctor": "2.0.4-next-02-05-2021-541397986",
+    "@nativescript/doctor": "2.0.6",
     "@nativescript/schematics-executor": "0.0.2",
     "@rigor789/resolve-package-path": "^1.0.5",
     "axios": "^0.21.1",
@@ -75,7 +75,7 @@
     "glob": "7.1.6",
     "ios-device-lib": "0.9.2",
     "ios-mobileprovision-finder": "1.0.11",
-    "ios-sim-portable": "4.2.1",
+    "ios-sim-portable": "4.2.4",
     "istextorbinary": "5.9.0",
     "jimp": "0.14.0",
     "libnpmconfig": "1.2.1",
