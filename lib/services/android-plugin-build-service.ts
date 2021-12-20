@@ -481,7 +481,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		runtimeVersion: string
 	): Promise<IRuntimeGradleVersions> {
 		let runtimeGradleVersions: {
-			gradle: { version: string; android: string };
+			versions: { gradle: string; gradleAndroid: string };
 		} = null;
 
 		try {
@@ -489,7 +489,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 				`${SCOPED_ANDROID_RUNTIME_NAME}@${runtimeVersion}`,
 				{ gradle: true }
 			);
-			runtimeGradleVersions = { gradle: output };
+			runtimeGradleVersions = { versions: output };
 		} catch (err) {
 			this.$logger.trace(
 				`Error while getting gradle data for android runtime from view command: ${err}`
@@ -505,17 +505,18 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 	}
 
 	private getGradleVersionsCore(packageData: {
-		gradle: { version: string; android: string };
+		versions: { gradle: string; gradleAndroid: string };
 	}): IRuntimeGradleVersions {
-		const packageJsonGradle = packageData && packageData.gradle;
+		const packageJsonGradle = packageData && packageData.versions;
 		let runtimeVersions: IRuntimeGradleVersions = null;
 		if (
 			packageJsonGradle &&
-			(packageJsonGradle.version || packageJsonGradle.android)
+			(packageJsonGradle.gradle || packageJsonGradle.gradleAndroid)
 		) {
 			runtimeVersions = {};
-			runtimeVersions.gradleVersion = packageJsonGradle.version;
-			runtimeVersions.gradleAndroidPluginVersion = packageJsonGradle.android;
+			runtimeVersions.gradleVersion = packageJsonGradle.gradle;
+			runtimeVersions.gradleAndroidPluginVersion =
+				packageJsonGradle.gradleAndroid;
 		}
 
 		return runtimeVersions;
