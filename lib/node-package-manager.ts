@@ -131,7 +131,12 @@ export class NodePackageManager extends BasePackageManager {
 		} catch (e) {
 			this.$errors.fail(e.message);
 		}
-		return JSON.parse(viewResult);
+
+		try {
+			return JSON.parse(viewResult);
+		} catch (err) {
+			return null;
+		}
 	}
 
 	public async searchNpms(keyword: string): Promise<INpmsResult> {
