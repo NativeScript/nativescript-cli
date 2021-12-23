@@ -485,10 +485,34 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		} = null;
 
 		try {
-			const output = await this.$packageManager.view(
+			let output = await this.$packageManager.view(
 				`${SCOPED_ANDROID_RUNTIME_NAME}@${runtimeVersion}`,
-				{ gradle: true }
+				{ version_info: true }
 			);
+
+			if (!output) {
+				/**
+				 * fallback to the old 'gradle' key in package.json
+				 *
+				 * format:
+				 *
+				 * gradle: { version: '6.4', android: '3.6.4' }
+				 *
+				 */
+				output = await this.$packageManager.view(
+					`${SCOPED_ANDROID_RUNTIME_NAME}@${runtimeVersion}`,
+					{ gradle: true }
+				);
+
+				const { version, android } = output;
+
+				// covert output to the new format...
+				output = {
+					gradle: version,
+					gradleAndroid: android,
+				};
+			}
+
 			runtimeGradleVersions = { versions: output };
 		} catch (err) {
 			this.$logger.trace(
