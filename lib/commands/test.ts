@@ -89,6 +89,8 @@ abstract class TestCommandBase {
 			liveSyncInfo,
 			deviceDescriptors
 		);
+		// if we got here, it means karma exited with exit code 0 (success)
+		process.exit(0);
 	}
 
 	async canExecute(args: string[]): Promise<boolean> {
