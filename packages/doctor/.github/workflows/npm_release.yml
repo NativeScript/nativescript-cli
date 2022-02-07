@@ -1,0 +1,36 @@
+name: '@nativescript/doctor -> npm'
+
+on:
+  push:
+    branches: [ 'master' ]
+
+env:
+  NPM_TAG: 'next'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup
+        run: npm install
+
+      - name: Generate Version
+        run: |
+          echo NPM_VERSION=$(node -e "console.log(require('./package.json').version);")-$NPM_TAG-$(date +"%m-%d-%Y")-$GITHUB_RUN_ID >> $GITHUB_ENV
+
+      - name: Bump Version
+        run: npm --no-git-tag-version version $NPM_VERSION
+
+      - name: Build @nativescript/doctor
+        run: npm run pack
+
+      - name: Publish @nativescript/doctor
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
+        run: |
+          echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc
+          echo "Publishing @nativescript/doctor@$NPM_VERSION to NPM with tag $NPM_TAG..."
+          npm publish nativescript-doctor-$NPM_VERSION.tgz --tag $NPM_TAG
