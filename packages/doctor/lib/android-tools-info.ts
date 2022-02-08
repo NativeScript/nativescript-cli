@@ -2,7 +2,7 @@ import { ChildProcess } from "./wrappers/child-process";
 import { FileSystem } from "./wrappers/file-system";
 import { HostInfo } from "./host-info";
 import { Constants } from "./constants";
-import { Helpers } from './helpers';
+import { Helpers } from "./helpers";
 import { EOL } from "os";
 import * as semver from "semver";
 import * as path from "path";
@@ -28,6 +28,7 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 			"android-29",
 			"android-30",
 			"android-31",
+			"android-32",
 		];
 
 		if (runtimeVersion && semver.lt(semver.coerce(runtimeVersion), "6.1.0")) {
@@ -51,17 +52,26 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 	}
 	private pathToEmulatorExecutable: string;
 
-	constructor(private childProcess: ChildProcess,
+	constructor(
+		private childProcess: ChildProcess,
 		private fs: FileSystem,
 		private hostInfo: HostInfo,
-		private helpers: Helpers) { }
+		private helpers: Helpers
+	) {}
 
-	public getToolsInfo(config: Partial<NativeScriptDoctor.IProjectDir> = {}): NativeScriptDoctor.IAndroidToolsInfoData {
+	public getToolsInfo(
+		config: Partial<NativeScriptDoctor.IProjectDir> = {}
+	): NativeScriptDoctor.IAndroidToolsInfoData {
 		if (!this.toolsInfo) {
-			const infoData: NativeScriptDoctor.IAndroidToolsInfoData = Object.create(null);
+			const infoData: NativeScriptDoctor.IAndroidToolsInfoData = Object.create(
+				null
+			);
 			infoData.androidHomeEnvVar = this.androidHome;
 			infoData.installedTargets = this.getInstalledTargets();
-			infoData.compileSdkVersion = this.getCompileSdk(infoData.installedTargets, config.projectDir);
+			infoData.compileSdkVersion = this.getCompileSdk(
+				infoData.installedTargets,
+				config.projectDir
+			);
 			infoData.buildToolsVersion = this.getBuildToolsVersion(config.projectDir);
 
 			this.toolsInfo = infoData;
@@ -70,46 +80,64 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 		return this.toolsInfo;
 	}
 
-	public validateInfo(config: Partial<NativeScriptDoctor.IProjectDir> = {}): NativeScriptDoctor.IWarning[] {
+	public validateInfo(
+		config: Partial<NativeScriptDoctor.IProjectDir> = {}
+	): NativeScriptDoctor.IWarning[] {
 		const errors: NativeScriptDoctor.IWarning[] = [];
 		const toolsInfoData = this.getToolsInfo(config);
 		const isAndroidHomeValid = this.isAndroidHomeValid();
-		const supportsOnlyMinRequiredCompileTarget = this.getMaxSupportedCompileVersion(config) === AndroidToolsInfo.MIN_REQUIRED_COMPILE_TARGET;
+		const supportsOnlyMinRequiredCompileTarget =
+			this.getMaxSupportedCompileVersion(config) ===
+			AndroidToolsInfo.MIN_REQUIRED_COMPILE_TARGET;
 
 		if (!toolsInfoData.compileSdkVersion) {
 			errors.push({
-				warning: `Cannot find a compatible Android SDK for compilation. To be able to build for Android, install Android SDK ${AndroidToolsInfo.MIN_REQUIRED_COMPILE_TARGET}${supportsOnlyMinRequiredCompileTarget ? "" : " or later"}.`,
+				warning: `Cannot find a compatible Android SDK for compilation. To be able to build for Android, install Android SDK ${
+					AndroidToolsInfo.MIN_REQUIRED_COMPILE_TARGET
+				}${supportsOnlyMinRequiredCompileTarget ? "" : " or later"}.`,
 				additionalInformation: `Run \`\$ ${this.getPathToSdkManagementTool()}\` to manage your Android SDK versions.`,
-				platforms: [Constants.ANDROID_PLATFORM_NAME]
+				platforms: [Constants.ANDROID_PLATFORM_NAME],
 			});
 		}
 
 		if (!toolsInfoData.buildToolsVersion) {
 			const buildToolsRange = this.getBuildToolsRange(config.projectDir);
-			const versionRangeMatches = buildToolsRange.match(/^.*?([\d\.]+)\s+.*?([\d\.]+)$/);
+			const versionRangeMatches = buildToolsRange.match(
+				/^.*?([\d\.]+)\s+.*?([\d\.]+)$/
+			);
 			let message = `You can install any version in the following range: '${buildToolsRange}'.`;
 
 			// Improve message in case buildToolsRange is something like: ">=22.0.0 <=22.0.0" - same numbers on both sides
-			if (versionRangeMatches && versionRangeMatches[1] && versionRangeMatches[2] && versionRangeMatches[1] === versionRangeMatches[2]) {
+			if (
+				versionRangeMatches &&
+				versionRangeMatches[1] &&
+				versionRangeMatches[2] &&
+				versionRangeMatches[1] === versionRangeMatches[2]
+			) {
 				message = `You have to install version ${versionRangeMatches[1]}.`;
 			}
 
 			let invalidBuildToolsAdditionalMsg = `Run \`\$ ${this.getPathToSdkManagementTool()}\` from your command-line to install required \`Android Build Tools\`.`;
 			if (!isAndroidHomeValid) {
-				invalidBuildToolsAdditionalMsg += ' In case you already have them installed, make sure `ANDROID_HOME` environment variable is set correctly.';
+				invalidBuildToolsAdditionalMsg +=
+					" In case you already have them installed, make sure `ANDROID_HOME` environment variable is set correctly.";
 			}
 
 			errors.push({
-				warning: "You need to have the Android SDK Build-tools installed on your system. " + message,
+				warning:
+					"You need to have the Android SDK Build-tools installed on your system. " +
+					message,
 				additionalInformation: invalidBuildToolsAdditionalMsg,
-				platforms: [Constants.ANDROID_PLATFORM_NAME]
+				platforms: [Constants.ANDROID_PLATFORM_NAME],
 			});
 		}
 
 		return errors;
 	}
 
-	public static unsupportedJavaMessage(installedJavaCompilerVersion: string): string {
+	public static unsupportedJavaMessage(
+		installedJavaCompilerVersion: string
+	): string {
 		return `Javac version ${installedJavaCompilerVersion} is not supported. You must install a java version greater than ${
 			AndroidToolsInfo.MIN_JAVA_VERSION
 		}${
@@ -119,40 +147,71 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 		}.`;
 	}
 
-	public validateJavacVersion(installedJavaCompilerVersion: string, projectDir?: string, runtimeVersion?: string): NativeScriptDoctor.IWarning[] {
+	public validateJavacVersion(
+		installedJavaCompilerVersion: string,
+		projectDir?: string,
+		runtimeVersion?: string
+	): NativeScriptDoctor.IWarning[] {
 		const errors: NativeScriptDoctor.IWarning[] = [];
 
-		let additionalMessage = "You will not be able to build your projects for Android." + EOL
-			+ "To be able to build for Android, verify that you have installed The Java Development Kit (JDK) and configured it according to system requirements as" + EOL +
-			" described in " + this.getSystemRequirementsLink();
+		let additionalMessage =
+			"You will not be able to build your projects for Android." +
+			EOL +
+			"To be able to build for Android, verify that you have installed The Java Development Kit (JDK) and configured it according to system requirements as" +
+			EOL +
+			" described in " +
+			this.getSystemRequirementsLink();
 
-		const matchingVersion = this.helpers.appendZeroesToVersion(installedJavaCompilerVersion || "", 3).match(AndroidToolsInfo.VERSION_REGEX);
-		const installedJavaCompilerSemverVersion = matchingVersion && matchingVersion[1];
+		const matchingVersion = this.helpers
+			.appendZeroesToVersion(installedJavaCompilerVersion || "", 3)
+			.match(AndroidToolsInfo.VERSION_REGEX);
+		const installedJavaCompilerSemverVersion =
+			matchingVersion && matchingVersion[1];
 		if (installedJavaCompilerSemverVersion) {
 			let warning: string = null;
 
 			const supportedVersions: IDictionary<string> = {
-				"^10.0.0": "4.1.0-2018.5.18.1"
+				"^10.0.0": "4.1.0-2018.5.18.1",
 			};
 
-			if (semver.lt(installedJavaCompilerSemverVersion, AndroidToolsInfo.MIN_JAVA_VERSION) || (AndroidToolsInfo.MAX_JAVA_VERSION ? semver.gte(installedJavaCompilerSemverVersion, AndroidToolsInfo.MAX_JAVA_VERSION) : false)) {
-				warning = AndroidToolsInfo.unsupportedJavaMessage(installedJavaCompilerVersion);
+			if (
+				semver.lt(
+					installedJavaCompilerSemverVersion,
+					AndroidToolsInfo.MIN_JAVA_VERSION
+				) ||
+				(AndroidToolsInfo.MAX_JAVA_VERSION
+					? semver.gte(
+							installedJavaCompilerSemverVersion,
+							AndroidToolsInfo.MAX_JAVA_VERSION
+					  )
+					: false)
+			) {
+				warning = AndroidToolsInfo.unsupportedJavaMessage(
+					installedJavaCompilerVersion
+				);
 			} else {
 				runtimeVersion = this.getRuntimeVersion({ runtimeVersion, projectDir });
 				if (runtimeVersion) {
 					// get the item from the dictionary that corresponds to our current Javac version:
 					let runtimeMinVersion: string = null;
-					Object.keys(supportedVersions)
-						.forEach(javacRange => {
-							if (semver.satisfies(installedJavaCompilerSemverVersion, javacRange)) {
-								runtimeMinVersion = supportedVersions[javacRange];
-							}
-						});
+					Object.keys(supportedVersions).forEach((javacRange) => {
+						if (
+							semver.satisfies(installedJavaCompilerSemverVersion, javacRange)
+						) {
+							runtimeMinVersion = supportedVersions[javacRange];
+						}
+					});
 
-					if (runtimeMinVersion && semver.lt(runtimeVersion, runtimeMinVersion)) {
-						warning = `The Java compiler version ${installedJavaCompilerVersion} is not compatible with the current Android runtime version ${runtimeVersion}. ` +
+					if (
+						runtimeMinVersion &&
+						semver.lt(runtimeVersion, runtimeMinVersion)
+					) {
+						warning =
+							`The Java compiler version ${installedJavaCompilerVersion} is not compatible with the current Android runtime version ${runtimeVersion}. ` +
 							`In order to use this Javac version, you need to update your Android runtime or downgrade your Java compiler version.`;
-						additionalMessage = "You will not be able to build your projects for Android." + EOL +
+						additionalMessage =
+							"You will not be able to build your projects for Android." +
+							EOL +
 							"To be able to build for Android, downgrade your Java compiler version or update your Android runtime.";
 					}
 				}
@@ -162,14 +221,15 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 				errors.push({
 					warning,
 					additionalInformation: additionalMessage,
-					platforms: [Constants.ANDROID_PLATFORM_NAME]
+					platforms: [Constants.ANDROID_PLATFORM_NAME],
 				});
 			}
 		} else {
 			errors.push({
-				warning: "Error executing command 'javac'. Make sure you have installed The Java Development Kit (JDK) and set JAVA_HOME environment variable.",
+				warning:
+					"Error executing command 'javac'. Make sure you have installed The Java Development Kit (JDK) and set JAVA_HOME environment variable.",
 				additionalInformation: additionalMessage,
-				platforms: [Constants.ANDROID_PLATFORM_NAME]
+				platforms: [Constants.ANDROID_PLATFORM_NAME],
 			});
 		}
 
@@ -192,27 +252,43 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 
 	public validateAndroidHomeEnvVariable(): NativeScriptDoctor.IWarning[] {
 		const errors: NativeScriptDoctor.IWarning[] = [];
-		const expectedDirectoriesInAndroidHome = ["build-tools", "tools", "platform-tools", "extras"];
+		const expectedDirectoriesInAndroidHome = [
+			"build-tools",
+			"tools",
+			"platform-tools",
+			"extras",
+		];
 
 		if (!this.androidHome || !this.fs.exists(this.androidHome)) {
 			errors.push({
-				warning: "The ANDROID_HOME environment variable is not set or it points to a non-existent directory. You will not be able to perform any build-related operations for Android.",
-				additionalInformation: "To be able to perform Android build-related operations, set the `ANDROID_HOME` variable to point to the root of your Android SDK installation directory.",
-				platforms: [Constants.ANDROID_PLATFORM_NAME]
+				warning:
+					"The ANDROID_HOME environment variable is not set or it points to a non-existent directory. You will not be able to perform any build-related operations for Android.",
+				additionalInformation:
+					"To be able to perform Android build-related operations, set the `ANDROID_HOME` variable to point to the root of your Android SDK installation directory.",
+				platforms: [Constants.ANDROID_PLATFORM_NAME],
 			});
-		} else if (expectedDirectoriesInAndroidHome.map(dir => this.fs.exists(path.join(this.androidHome, dir))).length === 0) {
+		} else if (
+			expectedDirectoriesInAndroidHome.map((dir) =>
+				this.fs.exists(path.join(this.androidHome, dir))
+			).length === 0
+		) {
 			errors.push({
-				warning: "The ANDROID_HOME environment variable points to incorrect directory. You will not be able to perform any build-related operations for Android.",
-				additionalInformation: "To be able to perform Android build-related operations, set the `ANDROID_HOME` variable to point to the root of your Android SDK installation directory, " +
+				warning:
+					"The ANDROID_HOME environment variable points to incorrect directory. You will not be able to perform any build-related operations for Android.",
+				additionalInformation:
+					"To be able to perform Android build-related operations, set the `ANDROID_HOME` variable to point to the root of your Android SDK installation directory, " +
 					"where you will find `tools` and `platform-tools` directories.",
-				platforms: [Constants.ANDROID_PLATFORM_NAME]
+				platforms: [Constants.ANDROID_PLATFORM_NAME],
 			});
 		}
 
 		return errors;
 	}
 
-	public validateMinSupportedTargetSdk({ targetSdk, projectDir }: NativeScriptDoctor.ITargetValidationOptions): NativeScriptDoctor.IWarning[] {
+	public validateMinSupportedTargetSdk({
+		targetSdk,
+		projectDir,
+	}: NativeScriptDoctor.ITargetValidationOptions): NativeScriptDoctor.IWarning[] {
 		const errors: NativeScriptDoctor.IWarning[] = [];
 		const newTarget = `${this.ANDROID_TARGET_PREFIX}-${targetSdk}`;
 		const supportedTargets = this.getSupportedTargets(projectDir);
@@ -220,13 +296,15 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 
 		if (!_.includes(supportedTargets, newTarget)) {
 			const supportedVersions = supportedTargets.sort();
-			const minSupportedVersion = this.parseAndroidSdkString(_.first(supportedVersions));
+			const minSupportedVersion = this.parseAndroidSdkString(
+				_.first(supportedVersions)
+			);
 
-			if (!targetSupported && targetSdk && (targetSdk < minSupportedVersion)) {
+			if (!targetSupported && targetSdk && targetSdk < minSupportedVersion) {
 				errors.push({
 					warning: `The selected Android target SDK ${newTarget} is not supported. You must target ${minSupportedVersion} or later.`,
 					additionalInformation: "",
-					platforms: [Constants.ANDROID_PLATFORM_NAME]
+					platforms: [Constants.ANDROID_PLATFORM_NAME],
 				});
 			}
 		}
@@ -234,16 +312,25 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 		return errors;
 	}
 
-	public validataMaxSupportedTargetSdk({ targetSdk, projectDir }: NativeScriptDoctor.ITargetValidationOptions): NativeScriptDoctor.IWarning[] {
+	public validataMaxSupportedTargetSdk({
+		targetSdk,
+		projectDir,
+	}: NativeScriptDoctor.ITargetValidationOptions): NativeScriptDoctor.IWarning[] {
 		const errors: NativeScriptDoctor.IWarning[] = [];
 		const newTarget = `${this.ANDROID_TARGET_PREFIX}-${targetSdk}`;
-		const targetSupported = _.includes(this.getSupportedTargets(projectDir), newTarget);
+		const targetSupported = _.includes(
+			this.getSupportedTargets(projectDir),
+			newTarget
+		);
 
-		if (!targetSupported && !targetSdk || targetSdk > this.getMaxSupportedVersion(projectDir)) {
+		if (
+			(!targetSupported && !targetSdk) ||
+			targetSdk > this.getMaxSupportedVersion(projectDir)
+		) {
 			errors.push({
 				warning: `Support for the selected Android target SDK ${newTarget} is not verified. Your Android app might not work as expected.`,
 				additionalInformation: "",
-				platforms: [Constants.ANDROID_PLATFORM_NAME]
+				platforms: [Constants.ANDROID_PLATFORM_NAME],
 			});
 		}
 
@@ -260,13 +347,23 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 				// Check https://developer.android.com/studio/releases/sdk-tools.html (25.3.0)
 				// Since this version of SDK tools, the emulator is a separate package.
 				// However the emulator executable still exists in the "tools" dir.
-				const pathToEmulatorFromAndroidStudio = path.join(this.androidHome, emulatorExecutableName, emulatorExecutableName);
-				const realFilePath = this.hostInfo.isWindows ? `${pathToEmulatorFromAndroidStudio}.exe` : pathToEmulatorFromAndroidStudio;
+				const pathToEmulatorFromAndroidStudio = path.join(
+					this.androidHome,
+					emulatorExecutableName,
+					emulatorExecutableName
+				);
+				const realFilePath = this.hostInfo.isWindows
+					? `${pathToEmulatorFromAndroidStudio}.exe`
+					: pathToEmulatorFromAndroidStudio;
 
 				if (this.fs.exists(realFilePath)) {
 					this.pathToEmulatorExecutable = pathToEmulatorFromAndroidStudio;
 				} else {
-					this.pathToEmulatorExecutable = path.join(this.androidHome, "tools", emulatorExecutableName);
+					this.pathToEmulatorExecutable = path.join(
+						this.androidHome,
+						"tools",
+						emulatorExecutableName
+					);
 				}
 			}
 		}
@@ -283,22 +380,47 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 		if (isAndroidHomeValid) {
 			// In case ANDROID_HOME is correct, check if sdkmanager exists and if not it means the SDK has not been updated.
 			// In this case user shoud use `android` from the command-line instead of sdkmanager.
-			const pathToSdkmanager = path.join(this.androidHome, "tools", "bin", sdkmanagerName);
-			const pathToAndroidExecutable = path.join(this.androidHome, "tools", "android");
-			const pathToExecutable = this.fs.exists(pathToSdkmanager) ? pathToSdkmanager : pathToAndroidExecutable;
+			const pathToSdkmanager = path.join(
+				this.androidHome,
+				"tools",
+				"bin",
+				sdkmanagerName
+			);
+			const pathToAndroidExecutable = path.join(
+				this.androidHome,
+				"tools",
+				"android"
+			);
+			const pathToExecutable = this.fs.exists(pathToSdkmanager)
+				? pathToSdkmanager
+				: pathToAndroidExecutable;
 
-			sdkManagementToolPath = pathToExecutable.replace(this.androidHome, this.hostInfo.isWindows ? "%ANDROID_HOME%" : "$ANDROID_HOME");
+			sdkManagementToolPath = pathToExecutable.replace(
+				this.androidHome,
+				this.hostInfo.isWindows ? "%ANDROID_HOME%" : "$ANDROID_HOME"
+			);
 		}
 
 		return sdkManagementToolPath;
 	}
 
-	private getCompileSdk(installedTargets: string[], projectDir: string): number {
-		const latestValidAndroidTarget = this.getLatestValidAndroidTarget(installedTargets, projectDir);
+	private getCompileSdk(
+		installedTargets: string[],
+		projectDir: string
+	): number {
+		const latestValidAndroidTarget = this.getLatestValidAndroidTarget(
+			installedTargets,
+			projectDir
+		);
 		if (latestValidAndroidTarget) {
-			const integerVersion = this.parseAndroidSdkString(latestValidAndroidTarget);
+			const integerVersion = this.parseAndroidSdkString(
+				latestValidAndroidTarget
+			);
 
-			if (integerVersion && integerVersion >= AndroidToolsInfo.MIN_REQUIRED_COMPILE_TARGET) {
+			if (
+				integerVersion &&
+				integerVersion >= AndroidToolsInfo.MIN_REQUIRED_COMPILE_TARGET
+			) {
 				return integerVersion;
 			}
 		}
@@ -310,7 +432,7 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 			const subDirs = this.fs.readDirectory(pathToDir);
 
 			const subDirsVersions = subDirs
-				.map(dirName => {
+				.map((dirName) => {
 					const dirNameGroups = dirName.match(AndroidToolsInfo.VERSION_REGEX);
 					if (dirNameGroups) {
 						return dirNameGroups[1];
@@ -318,11 +440,11 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 
 					return null;
 				})
-				.filter(dirName => !!dirName);
+				.filter((dirName) => !!dirName);
 
 			const version = semver.maxSatisfying(subDirsVersions, versionRange);
 			if (version) {
-				selectedVersion = subDirs.find(dir => dir.indexOf(version) !== -1);
+				selectedVersion = subDirs.find((dir) => dir.indexOf(version) !== -1);
 			}
 		}
 
@@ -330,7 +452,9 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 	}
 
 	private getBuildToolsRange(projectDir: string): string {
-		return `${AndroidToolsInfo.REQUIRED_BUILD_TOOLS_RANGE_PREFIX} <=${this.getMaxSupportedVersion(projectDir)}`;
+		return `${
+			AndroidToolsInfo.REQUIRED_BUILD_TOOLS_RANGE_PREFIX
+		} <=${this.getMaxSupportedVersion(projectDir)}`;
 	}
 
 	private getBuildToolsVersion(projectDir: string): string {
@@ -338,18 +462,29 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 		if (this.androidHome) {
 			const pathToBuildTools = path.join(this.androidHome, "build-tools");
 			const buildToolsRange = this.getBuildToolsRange(projectDir);
-			buildToolsVersion = this.getMatchingDir(pathToBuildTools, buildToolsRange);
+			buildToolsVersion = this.getMatchingDir(
+				pathToBuildTools,
+				buildToolsRange
+			);
 		}
 
 		return buildToolsVersion;
 	}
 
-	private getLatestValidAndroidTarget(installedTargets: string[], projectDir: string): string {
-		return _.findLast(this.getSupportedTargets(projectDir).sort(), supportedTarget => _.includes(installedTargets, supportedTarget));
+	private getLatestValidAndroidTarget(
+		installedTargets: string[],
+		projectDir: string
+	): string {
+		return _.findLast(
+			this.getSupportedTargets(projectDir).sort(),
+			(supportedTarget) => _.includes(installedTargets, supportedTarget)
+		);
 	}
 
 	private parseAndroidSdkString(androidSdkString: string): number {
-		return parseInt(androidSdkString.replace(`${this.ANDROID_TARGET_PREFIX}-`, ""));
+		return parseInt(
+			androidSdkString.replace(`${this.ANDROID_TARGET_PREFIX}-`, "")
+		);
 	}
 
 	private getInstalledTargets(): string[] {
@@ -367,7 +502,9 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 
 	private getMaxSupportedVersion(projectDir: string): number {
 		const supportedTargets = this.getSupportedTargets(projectDir);
-		return this.parseAndroidSdkString(supportedTargets.sort()[supportedTargets.length - 1]);
+		return this.parseAndroidSdkString(
+			supportedTargets.sort()[supportedTargets.length - 1]
+		);
 	}
 
 	private getSystemRequirementsLink(): string {
@@ -379,7 +516,9 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 		return !errors && !errors.length;
 	}
 
-	private getAndroidRuntimePackageFromProjectDir(projectDir: string): { name: string, version: string } {
+	private getAndroidRuntimePackageFromProjectDir(
+		projectDir: string
+	): { name: string; version: string } {
 		if (!projectDir || !this.fs.exists(projectDir)) {
 			return null;
 		}
@@ -389,7 +528,9 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 			return null;
 		}
 
-		const content = this.fs.readJson<INativeScriptProjectPackageJson>(pathToPackageJson);
+		const content = this.fs.readJson<INativeScriptProjectPackageJson>(
+			pathToPackageJson
+		);
 
 		if (!content) {
 			return null;
@@ -398,35 +539,51 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 		// in case we have a nativescript key and a runtime with a version
 		// we are dealing with a legacy project and should respect the values
 		// in the nativescript key
-		if (content && content.nativescript && content.nativescript['tns-android'] && content.nativescript['tns-android'].version) {
+		if (
+			content &&
+			content.nativescript &&
+			content.nativescript["tns-android"] &&
+			content.nativescript["tns-android"].version
+		) {
 			return {
 				name: Constants.ANDROID_OLD_RUNTIME,
-				version: content.nativescript && content.nativescript['tns-android'] && content.nativescript['tns-android'].version
+				version:
+					content.nativescript &&
+					content.nativescript["tns-android"] &&
+					content.nativescript["tns-android"].version,
 			};
 		}
 
 		if (content && content.devDependencies) {
-			const foundRuntime = Object.keys(content.devDependencies).find(depName => {
-				return depName === Constants.ANDROID_SCOPED_RUNTIME || depName === Constants.ANDROID_OLD_RUNTIME;
-			});
+			const foundRuntime = Object.keys(content.devDependencies).find(
+				(depName) => {
+					return (
+						depName === Constants.ANDROID_SCOPED_RUNTIME ||
+						depName === Constants.ANDROID_OLD_RUNTIME
+					);
+				}
+			);
 
 			if (foundRuntime) {
 				let version = content.devDependencies[foundRuntime];
 
-				if (version.includes('tgz')) {
+				if (version.includes("tgz")) {
 					try {
-						const packagePath = require.resolve(`${foundRuntime}/package.json`, {
-							paths: [projectDir]
-						});
+						const packagePath = require.resolve(
+							`${foundRuntime}/package.json`,
+							{
+								paths: [projectDir],
+							}
+						);
 						version = require(packagePath).version;
 					} catch (err) {
-						version = '*';
+						version = "*";
 					}
 				}
 
 				return {
 					name: foundRuntime,
-					version
+					version,
 				};
 			}
 		}
@@ -434,10 +591,16 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 		return null;
 	}
 
-	private getRuntimeVersion({ runtimeVersion, projectDir }: { runtimeVersion?: string, projectDir?: string }): string {
+	private getRuntimeVersion({
+		runtimeVersion,
+		projectDir,
+	}: {
+		runtimeVersion?: string;
+		projectDir?: string;
+	}): string {
 		let runtimePackage = {
 			name: Constants.ANDROID_SCOPED_RUNTIME,
-			version: runtimeVersion
+			version: runtimeVersion,
 		};
 		if (!runtimeVersion) {
 			runtimePackage = this.getAndroidRuntimePackageFromProjectDir(projectDir);
@@ -448,7 +611,9 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 			// Check if the version is not "next" or "rc", i.e. tag from npm
 			if (!semver.validRange(runtimeVersion)) {
 				try {
-					const npmViewOutput = this.childProcess.execSync(`npm view ${runtimePackage.name} dist-tags --json`);
+					const npmViewOutput = this.childProcess.execSync(
+						`npm view ${runtimePackage.name} dist-tags --json`
+					);
 					const jsonNpmViewOutput = JSON.parse(npmViewOutput);
 
 					runtimeVersion = jsonNpmViewOutput[runtimeVersion] || runtimeVersion;
@@ -460,16 +625,27 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 
 		if (runtimeVersion && !semver.validRange(runtimeVersion)) {
 			// If we got here, something terribly wrong happened.
-			throw new Error(`The determined Android runtime version ${runtimeVersion} is not valid. Unable to verify if the current system is setup for Android development.`);
+			throw new Error(
+				`The determined Android runtime version ${runtimeVersion} is not valid. Unable to verify if the current system is setup for Android development.`
+			);
 		}
 
 		return runtimeVersion;
 	}
 
-	private getMaxSupportedCompileVersion(config: Partial<NativeScriptDoctor.IProjectDir> & { runtimeVersion?: string }): number {
-		if (config.runtimeVersion && semver.lt(semver.coerce(config.runtimeVersion), "6.1.0")) {
+	private getMaxSupportedCompileVersion(
+		config: Partial<NativeScriptDoctor.IProjectDir> & {
+			runtimeVersion?: string;
+		}
+	): number {
+		if (
+			config.runtimeVersion &&
+			semver.lt(semver.coerce(config.runtimeVersion), "6.1.0")
+		) {
 			return 28;
 		}
-		return this.parseAndroidSdkString(_.last(this.getSupportedTargets(config.projectDir).sort()));
+		return this.parseAndroidSdkString(
+			_.last(this.getSupportedTargets(config.projectDir).sort())
+		);
 	}
 }
