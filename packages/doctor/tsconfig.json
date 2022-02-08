@@ -6,10 +6,8 @@
 		"declaration": false,
 		"removeComments": false,
 		"noImplicitAny": true,
-		"experimentalDecorators": true
+		"experimentalDecorators": true,
+		"skipLibCheck": true
 	},
-	"exclude": [
-		"node_modules",
-		"coverage"
-	]
+	"exclude": ["node_modules", "coverage"]
 }
