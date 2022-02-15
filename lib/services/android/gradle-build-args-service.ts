@@ -64,6 +64,9 @@ export class GradleBuildArgsService implements IGradleBuildArgsService {
 			`-PappPath=${this.$projectData.getAppDirectoryPath()}`,
 			`-PappResourcesPath=${this.$projectData.getAppResourcesDirectoryPath()}`
 		);
+		if (buildData.gradleArgs) {
+			args.push(buildData.gradleArgs);
+		}
 
 		if (buildData.release) {
 			args.push(
