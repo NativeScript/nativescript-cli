@@ -1,11 +1,11 @@
-import { AndroidToolsInfo } from "../lib/android-tools-info";
+import { AndroidToolsInfo } from "../src/android-tools-info";
 import { EOL } from "os";
 import { assert } from "chai";
-import { ChildProcess } from "../lib/wrappers/child-process";
-import { FileSystem } from "../lib/wrappers/file-system";
-import { HostInfo } from "../lib/host-info";
-import { Helpers } from "../lib/helpers";
-import { Constants } from "../lib/constants";
+import { ChildProcess } from "../src/wrappers/child-process";
+import { FileSystem } from "../src/wrappers/file-system";
+import { HostInfo } from "../src/host-info";
+import { Helpers } from "../src/helpers";
+import { Constants } from "../src/constants";
 
 interface ITestData {
 	javacVersion: string;

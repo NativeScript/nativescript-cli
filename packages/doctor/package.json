@@ -2,10 +2,10 @@
   "name": "@nativescript/doctor",
   "version": "2.0.6",
   "description": "Library that helps identifying if the environment can be used for development of {N} apps.",
-  "main": "lib/index.js",
+  "main": "src/index.js",
   "types": "./typings/nativescript-doctor.d.ts",
   "files": [
-    "lib/**/*.js",
+    "src/**/*.js",
     "resources",
     "typings",
     "CHANGELOG.md",
@@ -15,7 +15,7 @@
     "clean": "npx rimraf node_modules package-lock.json && npm i && grunt clean",
     "build": "grunt",
     "build.all": "grunt ts:devall",
-    "pack": "grunt pack",
+    "prepack": "grunt pack",
     "test": "istanbul cover ./node_modules/mocha/bin/_mocha -- --recursive",
     "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s"
   },
