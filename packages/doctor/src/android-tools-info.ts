@@ -47,8 +47,21 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 	private static MAX_JAVA_VERSION = null as string;
 
 	private toolsInfo: NativeScriptDoctor.IAndroidToolsInfoData;
+
+	/**
+	 * Excerpt from: https://developer.android.com/studio/command-line/variables#envar
+	 *
+	 * ANDROID_SDK_ROOT - Sets the path to the SDK installation directory.
+	 * Once set, the value does not typically change, and can be shared by multiple users on the same machine.
+	 * ANDROID_HOME, which also points to the SDK installation directory, is deprecated.
+	 * If you continue to use it, the following rules apply:
+	 *
+	 * 	- If ANDROID_HOME is defined and contains a valid SDK installation, its value is used instead of the value in ANDROID_SDK_ROOT.
+	 * 	- If ANDROID_HOME is not defined, the value in ANDROID_SDK_ROOT is used.
+	 * 	- If ANDROID_HOME is defined but does not exist or does not contain a valid SDK installation, the value in ANDROID_SDK_ROOT is used instead.
+	 */
 	public get androidHome(): string {
-		return process.env["ANDROID_HOME"];
+		return process.env["ANDROID_SDK_ROOT"] ?? process.env["ANDROID_HOME"];
 	}
 	private pathToEmulatorExecutable: string;
 
@@ -120,7 +133,7 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 			let invalidBuildToolsAdditionalMsg = `Run \`\$ ${this.getPathToSdkManagementTool()}\` from your command-line to install required \`Android Build Tools\`.`;
 			if (!isAndroidHomeValid) {
 				invalidBuildToolsAdditionalMsg +=
-					" In case you already have them installed, make sure `ANDROID_HOME` environment variable is set correctly.";
+					" In case you already have them installed, make sure `ANDROID_SDK_ROOT` environment variable is set correctly.";
 			}
 
 			errors.push({
@@ -250,7 +263,23 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 		return null;
 	}
 
-	public validateAndroidHomeEnvVariable(): NativeScriptDoctor.IWarning[] {
+	public validateAndroidHomeEnvVariable(
+		androidSdkPath: string = this.androidHome
+	): NativeScriptDoctor.IWarning[] {
+		// ANDROID_HOME is deprecated but has priority over ANDROID_SDK_HOME
+		if (process.env["ANDROID_HOME"] !== this.androidHome) {
+			const errors = this.validateAndroidHomeEnvVariable(
+				process.env["ANDROID_HOME"]
+			);
+
+			// return ok if no errors in "ANDROID_HOME"
+			if (!errors.length) {
+				return errors;
+			}
+
+			// otherwise continue to check "ANDROID_SDK_ROOT"...
+		}
+
 		const errors: NativeScriptDoctor.IWarning[] = [];
 		const expectedDirectoriesInAndroidHome = [
 			"build-tools",
@@ -259,24 +288,24 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 			"extras",
 		];
 
-		if (!this.androidHome || !this.fs.exists(this.androidHome)) {
+		if (!androidSdkPath || !this.fs.exists(androidSdkPath)) {
 			errors.push({
 				warning:
-					"The ANDROID_HOME environment variable is not set or it points to a non-existent directory. You will not be able to perform any build-related operations for Android.",
+					"The ANDROID_SDK_ROOT environment variable is not set or it points to a non-existent directory. You will not be able to perform any build-related operations for Android.",
 				additionalInformation:
-					"To be able to perform Android build-related operations, set the `ANDROID_HOME` variable to point to the root of your Android SDK installation directory.",
+					"To be able to perform Android build-related operations, set the `ANDROID_SDK_ROOT` variable to point to the root of your Android SDK installation directory.",
 				platforms: [Constants.ANDROID_PLATFORM_NAME],
 			});
 		} else if (
 			expectedDirectoriesInAndroidHome.map((dir) =>
-				this.fs.exists(path.join(this.androidHome, dir))
+				this.fs.exists(path.join(androidSdkPath, dir))
 			).length === 0
 		) {
 			errors.push({
 				warning:
-					"The ANDROID_HOME environment variable points to incorrect directory. You will not be able to perform any build-related operations for Android.",
+					"The ANDROID_SDK_ROOT environment variable points to incorrect directory. You will not be able to perform any build-related operations for Android.",
 				additionalInformation:
-					"To be able to perform Android build-related operations, set the `ANDROID_HOME` variable to point to the root of your Android SDK installation directory, " +
+					"To be able to perform Android build-related operations, set the `ANDROID_SDK_ROOT` variable to point to the root of your Android SDK installation directory, " +
 					"where you will find `tools` and `platform-tools` directories.",
 				platforms: [Constants.ANDROID_PLATFORM_NAME],
 			});
@@ -378,7 +407,7 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 		const isAndroidHomeValid = this.isAndroidHomeValid();
 
 		if (isAndroidHomeValid) {
-			// In case ANDROID_HOME is correct, check if sdkmanager exists and if not it means the SDK has not been updated.
+			// In case ANDROID_SDK_ROOT is correct, check if sdkmanager exists and if not it means the SDK has not been updated.
 			// In this case user shoud use `android` from the command-line instead of sdkmanager.
 			const pathToSdkmanager = path.join(
 				this.androidHome,
@@ -397,7 +426,7 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 
 			sdkManagementToolPath = pathToExecutable.replace(
 				this.androidHome,
-				this.hostInfo.isWindows ? "%ANDROID_HOME%" : "$ANDROID_HOME"
+				this.hostInfo.isWindows ? "%ANDROID_SDK_ROOT%" : "$ANDROID_SDK_ROOT"
 			);
 		}
 
