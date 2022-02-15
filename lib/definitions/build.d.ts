@@ -30,8 +30,8 @@ interface IAndroidBuildData
 	extends IBuildData,
 		IAndroidSigningData,
 		IHasAndroidBundle {
-			gradlePath?: string;
-		}
+	gradlePath?: string;
+}
 
 interface IAndroidSigningData {
 	keyStoreAlias: string;

@@ -42,6 +42,5 @@ interface IBuildAndroidPluginData extends Partial<IProjectDir> {
 	/**
 	 * Optional custom Gradle path.
 	 */
-	gradlePath?: string,
-
+	gradlePath?: string;
 }

@@ -716,7 +716,9 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			);
 		}
 
-		const gradlew = pluginBuildSettings.gradlePath ?? (this.$hostInfo.isWindows ? "gradlew.bat" : "./gradlew");
+		const gradlew =
+			pluginBuildSettings.gradlePath ??
+			(this.$hostInfo.isWindows ? "gradlew.bat" : "./gradlew");
 
 		const localArgs = [
 			"-p",
