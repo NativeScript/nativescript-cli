@@ -17,7 +17,7 @@ import {
 	IWatchIgnoreListService,
 } from "../declarations";
 import { IPlatformsDataService } from "../definitions/platform";
-import { IProjectDataService } from "../definitions/project";
+import { IProjectData, IProjectDataService } from "../definitions/project";
 import {
 	IAndroidPluginBuildService,
 	IPluginBuildOptions,
@@ -49,6 +49,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		private $androidToolsInfo: IAndroidToolsInfo,
 		private $logger: ILogger,
 		private $packageManager: INodePackageManager,
+		private $projectData: IProjectData,
 		private $projectDataService: IProjectDataService,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $errors: IErrors,
@@ -725,6 +726,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			"assembleRelease",
 			`-PcompileSdk=android-${pluginBuildSettings.androidToolsInfo.compileSdkVersion}`,
 			`-PbuildToolsVersion=${pluginBuildSettings.androidToolsInfo.buildToolsVersion}`,
+			`-PappResourcesPath=${this.$projectData.getAppResourcesDirectoryPath()}`
 		];
 		if (pluginBuildSettings.gradleArgs) {
 			localArgs.push(pluginBuildSettings.gradleArgs)
