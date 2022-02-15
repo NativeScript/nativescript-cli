@@ -132,7 +132,6 @@ android {
         versionCode 1
         versionName "1.0"
     }
-    println "computeCompileSdkVersion2() ${computeCompileSdkVersion()} ${computeandroidxVersion()}"
 }
 
 
@@ -141,7 +140,6 @@ def applyBeforePluginGradleConfiguration() {
     def pathToBeforePluginGradle = "$appResourcesPath/Android/before-plugins.gradle"
     def beforePluginGradle = file(pathToBeforePluginGradle)
     if (beforePluginGradle.exists()) {
-        println "applyBeforePluginGradleConfiguration"
         outLogger.withStyle(Style.SuccessHeader).println "\t ~ applying user-defined configuration from ${beforePluginGradle}"
         apply from: pathToBeforePluginGradle
     }
