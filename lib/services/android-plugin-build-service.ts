@@ -728,6 +728,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			"assembleRelease",
 			`-PcompileSdk=android-${pluginBuildSettings.androidToolsInfo.compileSdkVersion}`,
 			`-PbuildToolsVersion=${pluginBuildSettings.androidToolsInfo.buildToolsVersion}`,
+			`-PappPath=${this.$projectData.getAppDirectoryPath()}`,
 			`-PappResourcesPath=${this.$projectData.getAppResourcesDirectoryPath()}`
 		];
 		if (pluginBuildSettings.gradleArgs) {
