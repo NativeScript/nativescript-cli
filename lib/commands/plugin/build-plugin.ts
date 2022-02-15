@@ -52,6 +52,7 @@ export class BuildPluginCommand implements ICommand {
 		);
 
 		const options: IPluginBuildOptions = {
+			gradleArgs: this.$options.gradle,
 			gradlePath: this.$options.gradlePath,
 			aarOutputDir: platformsAndroidPath,
 			platformsAndroidDirPath: platformsAndroidPath,

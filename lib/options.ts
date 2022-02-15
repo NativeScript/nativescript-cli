@@ -216,6 +216,7 @@ export class Options {
 				default: false,
 				hasSensitiveValue: false,
 			},
+			gradle: { type: OptionType.String, hasSensitiveValue: false },
 			gradlePath: { type: OptionType.String, hasSensitiveValue: false },
 			aab: { type: OptionType.Boolean, hasSensitiveValue: false },
 			performance: { type: OptionType.Object, hasSensitiveValue: true },

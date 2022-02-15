@@ -261,6 +261,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			);
 			await this.buildPlugin({
 				gradlePath: options.gradlePath,
+				gradleArgs: options.gradleArgs,
 				pluginDir: pluginTempDir,
 				pluginName: options.pluginName,
 				projectDir: options.projectDir,
@@ -725,6 +726,9 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			`-PcompileSdk=android-${pluginBuildSettings.androidToolsInfo.compileSdkVersion}`,
 			`-PbuildToolsVersion=${pluginBuildSettings.androidToolsInfo.buildToolsVersion}`,
 		];
+		if (pluginBuildSettings.gradleArgs) {
+			localArgs.push(pluginBuildSettings.gradleArgs)
+		}
 
 		if (this.$logger.getLevel() === "INFO") {
 			localArgs.push("--quiet");
