@@ -6,15 +6,20 @@ export class WinReg {
 		HKCU: { registry: Registry.HKCU },
 		HKCR: { registry: Registry.HKCR },
 		HKCC: { registry: Registry.HKCC },
-		HKU: { registry: Registry.HKU }
+		HKU: { registry: Registry.HKU },
 	};
 
-	public getRegistryItem(valueName: string, hive?: IHiveId, key?: string, host?: string): Promise<Winreg.RegistryItem> {
+	public getRegistryItem(
+		valueName: string,
+		hive?: IHiveId,
+		key?: string,
+		host?: string
+	): Promise<Winreg.RegistryItem> {
 		return new Promise<Winreg.RegistryItem>((resolve, reject) => {
 			const regKey = new Registry({
-				hive: (hive && hive.registry) ? hive.registry : null,
+				hive: hive && hive.registry ? hive.registry : null,
 				key: key,
-				host: host
+				host: host,
 			});
 
 			regKey.get(valueName, (err: Error, value: Registry.RegistryItem) => {
@@ -27,7 +32,12 @@ export class WinReg {
 		});
 	}
 
-	public getRegistryValue(valueName: string, hive?: IHiveId, key?: string, host?: string): Promise<string> {
+	public getRegistryValue(
+		valueName: string,
+		hive?: IHiveId,
+		key?: string,
+		host?: string
+	): Promise<string> {
 		return new Promise<string>((resolve, reject) => {
 			return this.getRegistryItem(valueName, hive, key, host)
 				.then((data) => {

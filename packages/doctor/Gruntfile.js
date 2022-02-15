@@ -3,79 +3,77 @@ module.exports = function (grunt) {
 		ts: {
 			options: grunt.file.readJSON("tsconfig.json").compilerOptions,
 
-			devlib: {
-				src: ["lib/**/*.ts", "typings/**/*.ts"],
-				reference: "lib/.d.ts"
+			devsrc: {
+				src: ["src/**/*.ts", "typings/**/*.ts"],
+				reference: "src/.d.ts",
 			},
 
 			devall: {
-				src: ["lib/**/*.ts", "test/**/*.ts", "typings/**/*.ts"],
-				reference: "lib/.d.ts"
+				src: ["src/**/*.ts", "test/**/*.ts", "typings/**/*.ts"],
+				reference: "src/.d.ts",
 			},
 
 			release_build: {
-				src: ["lib/**/*.ts", "test/**/*.ts", "typings/**/*.ts"],
-				reference: "lib/.d.ts",
+				src: ["src/**/*.ts", "test/**/*.ts", "typings/**/*.ts"],
+				reference: "src/.d.ts",
 				options: {
 					sourceMap: false,
-					removeComments: true
-				}
-			}
+					removeComments: true,
+				},
+			},
 		},
 
 		tslint: {
 			build: {
 				files: {
-					src: ["lib/**/*.ts", "test/**/*.ts", "typings/**/*.ts", "!**/*.d.ts"]
+					src: ["src/**/*.ts", "test/**/*.ts", "typings/**/*.ts", "!**/*.d.ts"],
 				},
 				options: {
 					configuration: grunt.file.readJSON("./tslint.json"),
-					project: "tsconfig.json"
-				}
-			}
+					project: "tsconfig.json",
+				},
+			},
 		},
 
 		watch: {
 			devall: {
-				files: ["lib/**/*.ts", 'test/**/*.ts'],
-				tasks: [
-					'ts:devall',
-					'shell:npm_test'
-				],
+				files: ["src/**/*.ts", "test/**/*.ts"],
+				tasks: ["ts:devall", "shell:npm_test"],
 				options: {
 					atBegin: true,
-					interrupt: true
-				}
+					interrupt: true,
+				},
 			},
 			ts: {
-				files: ["lib/**/*.ts", "test/**/*.ts"],
-				tasks: [
-					'ts:devall'
-				],
+				files: ["src/**/*.ts", "test/**/*.ts"],
+				tasks: ["ts:devall"],
 				options: {
 					atBegin: true,
-					interrupt: true
-				}
-			}
+					interrupt: true,
+				},
+			},
 		},
 
 		shell: {
 			options: {
 				stdout: true,
 				stderr: true,
-				failOnError: true
-			},
-			build_package: {
-				command: "npm pack"
+				failOnError: true,
 			},
 			npm_test: {
-				command: "npm test"
-			}
+				command: "npm test",
+			},
 		},
 
 		clean: {
-			src: ["test/**/*.js*", "lib/**/*.js*", "!lib/hooks/**/*.js", "!Gruntfile.js", "*.tgz"]
-		}
+			src: [
+				"test/**/*.js*",
+				"src/**/*.js*",
+				"!src/hooks/**/*.js",
+				"!Gruntfile.js",
+				"*.tgz",
+			],
+		},
 	});
 
 	grunt.loadNpmTasks("grunt-contrib-clean");
@@ -84,30 +82,10 @@ module.exports = function (grunt) {
 	grunt.loadNpmTasks("grunt-ts");
 	grunt.loadNpmTasks("grunt-tslint");
 
-	grunt.registerTask("delete_coverage_dir", function () {
-		var done = this.async();
-		var rimraf = require("rimraf");
-		rimraf("coverage", function (err) {
-			if (err) {
-				console.log("Error while deleting coverage directory from the package: ", err);
-				done(false);
-			}
-
-			done();
-		});
-	});
-
 	grunt.registerTask("test", ["ts:devall", "shell:npm_test"]);
-
-	grunt.registerTask("pack", [
-		"clean",
-		"ts:release_build",
-		"shell:npm_test",
-		"delete_coverage_dir",
-		"shell:build_package"
-	]);
+	grunt.registerTask("pack", ["clean", "ts:release_build", "shell:npm_test"]);
 	grunt.registerTask("lint", ["tslint:build"]);
 	grunt.registerTask("all", ["clean", "test", "lint"]);
-	grunt.registerTask("rebuild", ["clean", "ts:devlib"]);
-	grunt.registerTask("default", "ts:devlib");
+	grunt.registerTask("rebuild", ["clean", "ts:devsrc"]);
+	grunt.registerTask("default", "ts:devsrc");
 };
