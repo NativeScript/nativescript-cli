@@ -84,7 +84,7 @@ export class IOSDeviceOperations
 			}
 
 			// We need this because we need to make sure that we have devices.
-			await new Promise((resolve, reject) => {
+			await new Promise<void>((resolve, reject) => {
 				let iterationsCount = 0;
 				const maxIterationsCount = 3;
 

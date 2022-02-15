@@ -292,7 +292,7 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 		await this.writeToSocket(hash);
 	}
 
-	private sendFileContent(filePath: string): Promise<boolean> {
+	private sendFileContent(filePath: string): Promise<void> {
 		return new Promise((resolve, reject) => {
 			if (!this.verifyActiveConnection(reject)) {
 				return;
