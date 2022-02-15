@@ -6,13 +6,13 @@ apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-parcelize'
 
-def computeKotlinVersion = { -> project.hasProperty("kotlinVersion") ? kotlinVersion : "1.6.0" }
 def computeCompileSdkVersion = { -> project.hasProperty("compileSdk") ? compileSdk : 31 as int }
 def computeTargetSdkVersion = { -> project.hasProperty("targetSdk") ? targetSdk : 31 as int }
 def computeBuildToolsVersion = { ->
     project.hasProperty("buildToolsVersion") ? buildToolsVersion : "31.0.0"
 }
 buildscript {
+    def computeKotlinVersion = { -> project.hasProperty("kotlinVersion") ? kotlinVersion : "1.6.0" }
     def kotlinVersion = computeKotlinVersion()
     repositories {
         google()
