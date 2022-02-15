@@ -1,6 +1,7 @@
 import groovy.json.JsonSlurper
 import org.gradle.internal.logging.text.StyledTextOutputFactory
 import static org.gradle.internal.logging.text.StyledTextOutput.Style
+import java.nio.file.Paths
 
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
@@ -25,30 +26,51 @@ buildscript {
     // Set up styled logger
     project.ext.outLogger = services.get(StyledTextOutputFactory).create("colouredOutputLogger")
 
-    // todo: pass appResourcesPath from CLI as a gradle arg
-    project.ext.getAppResourcesPath = { ->
+    project.ext.USER_PROJECT_ROOT = "$rootDir/../../.."
+
+    project.ext.getAppPath = { ->
         def relativePathToApp = "app"
-        def relativePathToAppResources
-        def absolutePathToAppResources
-        def projectRoot = "$rootDir/../../.."
-        def nsConfigFile = file("$projectRoot/nsconfig.json")
+        def nsConfigFile = file("$USER_PROJECT_ROOT/nsconfig.json")
         def nsConfig
 
         if (nsConfigFile.exists()) {
             nsConfig = new JsonSlurper().parseText(nsConfigFile.getText("UTF-8"))
         }
 
-        if(nsConfig != null && nsConfig.appPath != null){
+        if (project.hasProperty("appPath")) {
+            // when appPath is passed through -PappPath=/path/to/app
+            // the path could be relative or absolute - either case will work
+            relativePathToApp = appPath
+        } else if (nsConfig != null && nsConfig.appPath != null) {
             relativePathToApp = nsConfig.appPath
         }
 
-        if(nsConfig != null && nsConfig.appResourcesPath != null ) {
-            relativePathToAppResources = nsConfig.appResourcesPath
-        } else {
-            relativePathToAppResources  = "$relativePathToApp/App_Resources"
+        project.ext.appPath = Paths.get(USER_PROJECT_ROOT).resolve(relativePathToApp).toAbsolutePath()
+
+        return project.ext.appPath
+    }
+
+    project.ext.getAppResourcesPath = { ->
+        def relativePathToAppResources
+        def absolutePathToAppResources
+        def nsConfigFile = file("$USER_PROJECT_ROOT/nsconfig.json")
+        def nsConfig
+
+        if (nsConfigFile.exists()) {
+            nsConfig = new JsonSlurper().parseText(nsConfigFile.getText("UTF-8"))
         }
 
-        absolutePathToAppResources = java.nio.file.Paths.get(projectRoot).resolve(relativePathToAppResources).toAbsolutePath()
+        if (project.hasProperty("appResourcesPath")) {
+            // when appResourcesPath is passed through -PappResourcesPath=/path/to/App_Resources
+            // the path could be relative or absolute - either case will work
+            relativePathToAppResources = appResourcesPath
+            absolutePathToAppResources = Paths.get(USER_PROJECT_ROOT).resolve(relativePathToAppResources).toAbsolutePath()
+        } else if (nsConfig != null && nsConfig.appResourcesPath != null) {
+            relativePathToAppResources = nsConfig.appResourcesPath
+            absolutePathToAppResources = Paths.get(USER_PROJECT_ROOT).resolve(relativePathToAppResources).toAbsolutePath()
+        } else {
+            absolutePathToAppResources = "${getAppPath()}/App_Resources"
+        }
 
         project.ext.appResourcesPath = absolutePathToAppResources
 
@@ -104,6 +126,7 @@ android {
         versionCode 1
         versionName "1.0"
     }
+    println "computeCompileSdkVersion2() ${computeCompileSdkVersion()} ${computeandroidxVersion()}"
 }
 
 
@@ -112,6 +135,7 @@ def applyBeforePluginGradleConfiguration() {
     def pathToBeforePluginGradle = "$appResourcesPath/Android/before-plugins.gradle"
     def beforePluginGradle = file(pathToBeforePluginGradle)
     if (beforePluginGradle.exists()) {
+        println "applyBeforePluginGradleConfiguration"
         outLogger.withStyle(Style.SuccessHeader).println "\t ~ applying user-defined configuration from ${beforePluginGradle}"
         apply from: pathToBeforePluginGradle
     }
