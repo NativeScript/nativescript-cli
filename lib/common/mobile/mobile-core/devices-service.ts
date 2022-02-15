@@ -882,7 +882,9 @@ export class DevicesService
 			return;
 		}
 
-		this.$logger.info("Searching for devices...");
+		if (!this.$options.json) {
+			this.$logger.info("Searching for devices...");
+		}
 
 		deviceInitOpts = deviceInitOpts || {};
 		this._data = deviceInitOpts;

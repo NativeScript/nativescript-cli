@@ -41,6 +41,7 @@ const createTestInjector = (): IInjector => {
 	testInjector.register("androidPluginBuildService", {});
 	testInjector.register("errors", stubs.ErrorsStub);
 	testInjector.register("logger", stubs.LoggerStub);
+	testInjector.register("options", {});
 	testInjector.register("projectData", stubs.ProjectDataStub);
 	testInjector.register("androidToolsInfo", {
 		getToolsInfo: () => {

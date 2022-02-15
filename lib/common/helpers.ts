@@ -198,7 +198,7 @@ export function settlePromises<T>(promises: Promise<T>[]): Promise<T[]> {
 		const length = promises.length;
 
 		if (!promises.length) {
-			resolve();
+			resolve(null);
 		}
 
 		_.forEach(promises, (currentPromise, index) => {
@@ -491,7 +491,7 @@ export async function getFuturesResults<T>(
 ): Promise<T[] | T[][]> {
 	const results = await Promise.all(promises);
 
-	return _(results).filter(predicate).flatten().value();
+	return _(results).filter(predicate).flatten().value() as T[] | T[][];
 }
 
 /**

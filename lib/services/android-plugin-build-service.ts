@@ -261,6 +261,8 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 				options.projectDir
 			);
 			await this.buildPlugin({
+				gradlePath: options.gradlePath,
+				gradleArgs: options.gradleArgs,
 				pluginDir: pluginTempDir,
 				pluginName: options.pluginName,
 				projectDir: options.projectDir,
@@ -716,7 +718,9 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			);
 		}
 
-		const gradlew = this.$hostInfo.isWindows ? "gradlew.bat" : "./gradlew";
+		const gradlew =
+			pluginBuildSettings.gradlePath ??
+			(this.$hostInfo.isWindows ? "gradlew.bat" : "./gradlew");
 
 		const localArgs = [
 			"-p",
@@ -726,6 +730,9 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			`-PbuildToolsVersion=${pluginBuildSettings.androidToolsInfo.buildToolsVersion}`,
 			`-PappResourcesPath=${this.$projectData.getAppResourcesDirectoryPath()}`
 		];
+		if (pluginBuildSettings.gradleArgs) {
+			localArgs.push(pluginBuildSettings.gradleArgs);
+		}
 
 		if (this.$logger.getLevel() === "INFO") {
 			localArgs.push("--quiet");
