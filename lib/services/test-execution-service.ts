@@ -18,6 +18,7 @@ import {
 import * as _ from "lodash";
 import { injector } from "../common/yok";
 import { ICommandParameter } from "../common/definitions/commands";
+import { resolvePackagePath } from "../helpers/package-path-helper";
 
 interface IKarmaConfigOptions {
 	debugBrk: boolean;
@@ -81,7 +82,7 @@ export class TestExecutionService implements ITestExecutionService {
 						liveSyncInfo.projectDir,
 						TestExecutionService.SOCKETIO_JS_FILE_NAME
 					),
-					socketIoJs
+					JSON.parse(socketIoJs)
 				);
 			}
 
@@ -146,13 +147,12 @@ export class TestExecutionService implements ITestExecutionService {
 				return;
 			}
 		});
-		try {
-			require.resolve("karma/package.json", {
-				paths: [projectData.projectDir],
-			});
-		} catch (ignore) {
-			canStartKarmaServer = false;
-		}
+
+		const pathToKarma = resolvePackagePath("karma", {
+			paths: [projectData.projectDir],
+		});
+
+		canStartKarmaServer = canStartKarmaServer && !!pathToKarma;
 
 		return canStartKarmaServer;
 	}
@@ -190,6 +190,7 @@ export class TestExecutionService implements ITestExecutionService {
 				path: this.$options.path,
 				tns: process.argv[1],
 				node: process.execPath,
+				env: this.$options.env,
 				options: {
 					debugTransport: this.$options.debugTransport,
 					debugBrk: this.$options.debugBrk,

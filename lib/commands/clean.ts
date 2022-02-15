@@ -17,7 +17,7 @@ export class CleanCommand implements ICommand {
 
 	public async execute(args: string[]): Promise<void> {
 		const spinner = this.$terminalSpinnerService.createSpinner();
-		spinner.start("Cleaning project...");
+		spinner.start("Cleaning project...\n");
 
 		const pathsToClean = [
 			constants.HOOKS_DIR_NAME,
@@ -37,9 +37,13 @@ export class CleanCommand implements ICommand {
 			// ignore
 		}
 
-		await this.$projectCleanupService.clean(pathsToClean);
+		const success = await this.$projectCleanupService.clean(pathsToClean);
 
-		spinner.succeed("Project successfully cleaned.");
+		if (success) {
+			spinner.succeed("Project successfully cleaned.");
+		} else {
+			spinner.fail(`${"Project unsuccessfully cleaned.".red}`);
+		}
 	}
 }
 

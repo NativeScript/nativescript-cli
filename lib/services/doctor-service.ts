@@ -147,7 +147,7 @@ export class DoctorService implements IDoctorService {
 				"platformEnvironmentRequirements"
 			)
 			.checkEnvironmentRequirements({
-				platform: null,
+				platform: configOptions.platform,
 				projectDir: configOptions.projectDir,
 				runtimeVersion: configOptions.runtimeVersion,
 				options: configOptions.options,

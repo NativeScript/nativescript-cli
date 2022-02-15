@@ -116,7 +116,13 @@ export default {
 			.filter(Boolean)
 			.map((c) => {
 				if (this.$fs.isRelativePath(c)) {
-					return path.join(projectDir || this.projectHelper.projectDir, c);
+					const dir = projectDir || this.projectHelper.projectDir;
+
+					if (!dir) {
+						return c;
+					}
+
+					return path.join(dir, c);
 				}
 
 				return c;
@@ -310,7 +316,7 @@ export default {
 	}
 
 	public writeDefaultConfig(projectDir: string, appId?: string) {
-		const { TSConfigPath } = this.detectProjectConfigs(projectDir);
+		const TSConfigPath = path.resolve(projectDir, CONFIG_FILE_NAME_TS);
 
 		if (this.$fs.exists(TSConfigPath)) {
 			return false;

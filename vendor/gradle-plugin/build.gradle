@@ -1,12 +1,14 @@
 import groovy.json.JsonSlurper
+import org.gradle.internal.logging.text.StyledTextOutputFactory
+import static org.gradle.internal.logging.text.StyledTextOutput.Style
 
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-android-extensions'
+apply plugin: 'kotlin-parcelize'
 
 
 buildscript {
-    def computeKotlinVersion = { -> project.hasProperty("kotlinVersion") ? kotlinVersion : "1.4.21" }
+    def computeKotlinVersion = { -> project.hasProperty("kotlinVersion") ? kotlinVersion : "1.6.0" }
     def kotlinVersion = computeKotlinVersion()
     repositories {
         google()
@@ -20,6 +22,10 @@ buildscript {
         // in the individual module build.gradle files
     }
 
+    // Set up styled logger
+    project.ext.outLogger = services.get(StyledTextOutputFactory).create("colouredOutputLogger")
+
+    // todo: pass appResourcesPath from CLI as a gradle arg
     project.ext.getAppResourcesPath = { ->
         def relativePathToApp = "app"
         def relativePathToAppResources
@@ -54,14 +60,14 @@ buildscript {
         def pathToBuildScriptGradle = "$absolutePathToAppResources/Android/buildscript.gradle"
         def buildScriptGradle = file(pathToBuildScriptGradle)
         if (buildScriptGradle.exists()) {
-            outLogger.withStyle(Style.SuccessHeader).println "\t + applying user-defined buildscript from ${buildScriptGradle}"
+            outLogger.withStyle(Style.SuccessHeader).println "\t ~ applying user-defined buildscript from ${buildScriptGradle}"
             apply from: pathToBuildScriptGradle, to: buildscript
         }
 
         def pathToPluginBuildScriptGradle = "$rootDir/buildscript.gradle"
         def pluginBuildScriptGradle = file(pathToPluginBuildScriptGradle)
         if (pluginBuildScriptGradle.exists()) {
-            outLogger.withStyle(Style.SuccessHeader).println "\t + applying user-defined buildscript from dependency ${pluginBuildScriptGradle}"
+            outLogger.withStyle(Style.SuccessHeader).println "\t ~ applying user-defined buildscript from dependency ${pluginBuildScriptGradle}"
             apply from: pathToPluginBuildScriptGradle, to: buildscript
         }
     }
@@ -82,9 +88,9 @@ allprojects {
 }
 
 
-def computeCompileSdkVersion = { -> project.hasProperty("compileSdk") ? compileSdk : 28 }
+def computeCompileSdkVersion = { -> project.hasProperty("compileSdk") ? compileSdk : 31 }
 def computeBuildToolsVersion = { ->
-    project.hasProperty("buildToolsVersion") ? buildToolsVersion : "28.0.3"
+    project.hasProperty("buildToolsVersion") ? buildToolsVersion : "31.0.0"
 }
 
 android {
@@ -94,35 +100,19 @@ android {
     buildToolsVersion computeBuildToolsVersion()
 
     defaultConfig {
-        targetSdkVersion 26
+        targetSdkVersion 31
         versionCode 1
         versionName "1.0"
     }
 }
 
-dependencies {
-    def supportVer = "28.0.0"
-    if (project.hasProperty("supportVersion")) {
-        supportVer = supportVersion
-    }
-    compileOnly "com.android.support:support-v4:$supportVer"
-    compileOnly "com.android.support:appcompat-v7:$supportVer"
-
-    configurations.all {
-       resolutionStrategy.eachDependency { DependencyResolveDetails details ->
-           if (details.requested.group == "com.android.support" && !details.requested.name.startsWith("multidex")) {
-               details.useVersion supportVer
-           }
-       }
-    }
-}
 
 def applyBeforePluginGradleConfiguration() {
     def appResourcesPath = getAppResourcesPath()
     def pathToBeforePluginGradle = "$appResourcesPath/Android/before-plugins.gradle"
     def beforePluginGradle = file(pathToBeforePluginGradle)
     if (beforePluginGradle.exists()) {
-        println "\t + applying user-defined configuration from ${beforePluginGradle}"
+        outLogger.withStyle(Style.SuccessHeader).println "\t ~ applying user-defined configuration from ${beforePluginGradle}"
         apply from: pathToBeforePluginGradle
     }
 }

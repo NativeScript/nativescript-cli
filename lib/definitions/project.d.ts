@@ -134,6 +134,11 @@ interface INsConfigAndroid extends INsConfigPlaform {
 	enableMultithreadedJavascript?: boolean;
 }
 
+interface INsConfigHooks {
+	type?: string;
+	script: string;
+}
+
 interface INsConfig {
 	id?: string;
 	main?: string;
@@ -146,6 +151,7 @@ interface INsConfig {
 	ios?: INsConfigIOS;
 	android?: INsConfigAndroid;
 	ignoredNativeDependencies?: string[];
+	hooks?: INsConfigHooks[];
 }
 
 interface IProjectData extends ICreateProjectData {
@@ -302,13 +308,13 @@ interface IProjectCleanupService {
 	 * Clean multiple paths
 	 * @param {string[]} pathsToClean
 	 */
-	clean(pathsToClean: string[]): Promise<void>;
+	clean(pathsToClean: string[]): Promise<boolean>;
 
 	/**
 	 * Clean a single path
 	 * @param {string} pathToClean
 	 */
-	cleanPath(pathToClean: string): Promise<void>;
+	cleanPath(pathToClean: string): Promise<boolean>;
 }
 
 interface IBackup {
@@ -346,7 +352,7 @@ interface IProjectConfigService {
 	 * Get value for a given config key path
 	 * @param key the property key path
 	 */
-	getValue(key: string): any;
+	getValue(key: string, defaultValue?: any): any;
 	/**
 	 * Set value for a given config key path
 	 * @param key the property key path

@@ -99,8 +99,12 @@ export class PnpmPackageManager extends BasePackageManager {
 		} catch (e) {
 			this.$errors.fail(e.message);
 		}
-		const result = JSON.parse(viewResult);
-		return result;
+
+		try {
+			return JSON.parse(viewResult);
+		} catch (err) {
+			return null;
+		}
 	}
 
 	@exported("pnpm")

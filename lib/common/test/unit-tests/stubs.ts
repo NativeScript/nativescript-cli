@@ -80,6 +80,7 @@ export class CommonLoggerStub implements ILogger {
 	isVerbose(): boolean {
 		return false;
 	}
+	clearScreen(): void {}
 }
 
 export class ErrorsStub implements IErrors {

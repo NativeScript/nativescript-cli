@@ -1,7 +1,7 @@
 {
   "name": "nativescript",
   "preferGlobal": true,
-  "version": "8.0.2",
+  "version": "8.1.5",
   "author": "NativeScript <support@nativescript.org>",
   "description": "Command-line interface for building NativeScript projects",
   "bin": {
@@ -33,7 +33,7 @@
     "build": "grunt",
     "build.all": "grunt test",
     "dev": "tsc --watch",
-    "setup": "npm i --ignore-scripts --legacy-peer-deps && npm rebuild husky",
+    "setup": "npm i --ignore-scripts --legacy-peer-deps && npx husky install",
     "test": "mocha --config=test/.mocharc.yml",
     "postinstall": "node postinstall.js",
     "preuninstall": "node preuninstall.js",
@@ -57,8 +57,9 @@
     "mobile"
   ],
   "dependencies": {
-    "@nativescript/doctor": "2.0.4-next-02-05-2021-541397986",
+    "@nativescript/doctor": "2.0.6",
     "@nativescript/schematics-executor": "0.0.2",
+    "@rigor789/resolve-package-path": "^1.0.5",
     "axios": "^0.21.1",
     "byline": "5.0.0",
     "chalk": "4.1.0",
@@ -74,7 +75,7 @@
     "glob": "7.1.6",
     "ios-device-lib": "0.9.2",
     "ios-mobileprovision-finder": "1.0.11",
-    "ios-sim-portable": "4.2.1",
+    "ios-sim-portable": "4.2.5",
     "istextorbinary": "5.9.0",
     "jimp": "0.14.0",
     "libnpmconfig": "1.2.1",
@@ -163,7 +164,7 @@
     "grunt-shell": "3.0.1",
     "grunt-template": "1.0.0",
     "grunt-ts": "6.0.0-beta.22",
-    "husky": "^4.2.5",
+    "husky": "7.0.2",
     "istanbul": "0.4.5",
     "latest-version": "5.1.0",
     "lint-staged": "^10.2.13",
@@ -178,11 +179,6 @@
   "license": "Apache-2.0",
   "engines": {
     "node": ">=10.0.0"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "npx lint-staged"
-    }
   },
   "lint-staged": {
     "*.ts": "prettier --write"

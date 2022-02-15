@@ -340,19 +340,35 @@ can skip this prompt next time using the --template option, or the --ng, --react
 	}
 
 	public async postCommandAction(args: string[]): Promise<void> {
-		const { projectDir } = this.createdProjectData;
+		const { projectDir, projectName } = this.createdProjectData;
 		const relativePath = path.relative(process.cwd(), projectDir);
-		this.$logger.printMarkdown(
-			`Now you can navigate to your project with \`$ cd ${relativePath}\` and then:`
-		);
-		this.$logger.printMarkdown(
+
+		const greyDollarSign = "$".grey;
+		this.$logger.clearScreen();
+		this.$logger.info(
 			[
-				`- Run the project on iOS \`$ ns run ios\``,
-				`- Run the project on Android \`$ ns run android\``,
-				`- Debug the project on iOS \`$ ns debug ios\``,
-				`- Debug the project on Android \`$ ns debug android\``,
+				[
+					`Project`.green,
+					projectName.cyan,
+					`was successfully created.`.green,
+				].join(" "),
+				"",
+				`Now you can navigate to your project with ${
+					`cd ${relativePath}`.cyan
+				} and then:`,
+				"",
+				`Run the project on multiple devices:`,
+				"",
+				`  ${greyDollarSign} ${"ns run ios".green}`,
+				`  ${greyDollarSign} ${"ns run android".green}`,
+				"",
+				"Debug the project with Chrome DevTools:",
+				"",
+				`  ${greyDollarSign} ${"ns debug ios".green}`,
+				`  ${greyDollarSign} ${"ns debug android".green}`,
 				``,
-				`For more options consult the docs or run \`$ ns --help\``,
+				`For more options consult the docs or run ${"ns --help".green}`,
+				"",
 			].join("\n")
 		);
 		// Commented as we may bring this back with a playground revision/rewrite
