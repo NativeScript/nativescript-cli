@@ -13,6 +13,7 @@ interface IGradleCommandOptions {
 	message?: string;
 	stdio?: string;
 	spawnOptions?: ISpawnFromEventOptions;
+	gradlePath?: string;
 }
 
 interface IGradleBuildService {
