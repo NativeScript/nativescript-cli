@@ -57,7 +57,7 @@ export abstract class IOSDeviceBase implements Mobile.IiOSDevice {
 		}, `ios-debug-socket-${this.deviceInfo.identifier}-${appId}.lock`);
 	}
 
-	protected abstract async getDebugSocketCore(
+	protected abstract getDebugSocketCore(
 		appId: string
 	): Promise<net.Socket>;
 
