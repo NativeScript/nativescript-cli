@@ -3607,10 +3607,10 @@
     "plist" "^2.0.1"
     "yargs" "^6.5.0"
 
-"ios-sim-portable@4.2.4":
-  "integrity" "sha512-TqgrBp3omXkKwXEHVpLxo3+uJqi6XTLdXpL/YGlXdQ0fL7RYySmqkVQcc98vea/eQMpR9ImTGxyAsKerW/819A=="
-  "resolved" "https://registry.npmjs.org/ios-sim-portable/-/ios-sim-portable-4.2.4.tgz"
-  "version" "4.2.4"
+"ios-sim-portable@4.2.5":
+  "integrity" "sha512-2xuE60u+cjSwDoj3rXeN7PbuVtCDTZUhY5vkWWjlJj/TlWuLJMFEx9lgr5OGuYv7jRldpqD/nwGhtOdM2llKHw=="
+  "resolved" "https://registry.npmjs.org/ios-sim-portable/-/ios-sim-portable-4.2.5.tgz"
+  "version" "4.2.5"
   dependencies:
     "bplist-parser" "https://github.com/telerik/node-bplist-parser/tarball/master"
     "colors" "~1.4.0"

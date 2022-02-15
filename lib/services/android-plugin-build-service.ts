@@ -260,6 +260,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 				options.projectDir
 			);
 			await this.buildPlugin({
+				gradlePath: options.gradlePath,
 				pluginDir: pluginTempDir,
 				pluginName: options.pluginName,
 				projectDir: options.projectDir,
@@ -715,7 +716,9 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			);
 		}
 
-		const gradlew = this.$hostInfo.isWindows ? "gradlew.bat" : "./gradlew";
+		const gradlew =
+			pluginBuildSettings.gradlePath ??
+			(this.$hostInfo.isWindows ? "gradlew.bat" : "./gradlew");
 
 		const localArgs = [
 			"-p",
