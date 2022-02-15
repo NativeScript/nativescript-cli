@@ -605,6 +605,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		if (this.$fs.exists(pluginPlatformsFolderPath)) {
 			const options: IPluginBuildOptions = {
 				gradlePath: this.$options.gradlePath,
+				gradleArgs: this.$options.gradleArgs,
 				projectDir: projectData.projectDir,
 				pluginName: pluginData.name,
 				platformsAndroidDirPath: pluginPlatformsFolderPath,
