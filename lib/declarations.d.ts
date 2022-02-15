@@ -580,7 +580,7 @@ interface IAndroidBundleOptions {
 }
 
 interface IAndroidOptions {
-	gradle: string;
+	gradlePath: string;
 }
 
 interface ITypingsOptions {
