@@ -13,6 +13,9 @@ interface IAndroidDeviceDetails {
 	name: string;
 	release: string;
 	brand: string;
+	'cpu.abi': string;
+	'cpu.abilist64': string;
+	'cpu.abilist32': string;
 }
 
 interface IAdbDeviceStatusInfo {
@@ -96,6 +99,7 @@ export class AndroidDevice implements Mobile.IAndroidDevice {
 			identifier: this.identifier,
 			displayName: details.name,
 			model: details.model,
+			abis: details['cpu.abilist64'].split(',').concat(details['cpu.abilist32'].split(',')),
 			version,
 			vendor: details.brand,
 			platform: this.$devicePlatformsConstants.Android,
