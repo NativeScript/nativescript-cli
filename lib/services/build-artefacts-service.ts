@@ -92,23 +92,27 @@ export class BuildArtefactsService implements IBuildArtefactsService {
 
 		this.$fs.ensureDirectoryExists(path.dirname(targetPath));
 
-		let filterFilename: string;
+		let filterRegex: RegExp;
+		let targetIsDirectory = false;
 		if (
-			applicationPackages.length > 1 &&
 			this.$fs.exists(targetPath) &&
-			!this.$fs.getFsStats(targetPath).isDirectory()
+			this.$fs.getFsStats(targetPath).isDirectory()
 		) {
-			filterFilename = path.basename(targetPath);
-			targetPath = path.dirname(targetPath);
-			this.$logger.trace(
-				`Multiple packages were built but only ${filterFilename} will be copied if existing'.`
-			);
+			targetIsDirectory = true;
+		} else if (targetPath.match(/\.(ipa|aab|apk)/)){
+			if (applicationPackages.length > 1){
+				filterRegex = new RegExp('universal');
+				this.$logger.trace(
+					`Multiple packages were built but only the universal one will be copied if existing'.`
+				);
+			}
+		} else {
+			targetIsDirectory = true;
 		}
 		applicationPackages.forEach(pack => {
-			const fileName = path.basename(pack.packageName);
-			if (!filterFilename || fileName === filterFilename) {
-				const targetFilePath = path.join(targetPath, path.basename(pack.packageName));
-				this.$fs.copyFile(pack.packageName, path.join(targetPath, path.basename(pack.packageName)));
+			const targetFilePath = targetIsDirectory ? path.join(targetPath, path.basename(pack.packageName)) : targetPath;
+			if (!filterRegex || filterRegex.test(pack.packageName)) {
+				this.$fs.copyFile(pack.packageName, targetFilePath);
 				this.$logger.info(`Copied file '${pack.packageName}' to '${targetFilePath}'.`);
 			}
 		});
