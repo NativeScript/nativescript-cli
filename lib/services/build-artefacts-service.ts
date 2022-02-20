@@ -75,7 +75,7 @@ export class BuildArtefactsService implements IBuildArtefactsService {
 		return [];
 	}
 
-	public copyLatestAppPackage(
+	public copyAppPackages(
 		targetPath: string,
 		platformData: IPlatformData,
 		buildOutputOptions: IBuildOutputOptions
@@ -85,31 +85,39 @@ export class BuildArtefactsService implements IBuildArtefactsService {
 		const outputPath =
 			buildOutputOptions.outputPath ||
 			platformData.getBuildOutputPath(buildOutputOptions);
-		const applicationPackage = this.getLatestApplicationPackage(
+		const applicationPackages = this.getAllAppPackages(
 			outputPath,
 			platformData.getValidBuildOutputData(buildOutputOptions)
 		);
-		const packageFile = applicationPackage.packageName;
 
 		this.$fs.ensureDirectoryExists(path.dirname(targetPath));
 
+		let filterFilename: string;
 		if (
+			applicationPackages.length > 1 &&
 			this.$fs.exists(targetPath) &&
-			this.$fs.getFsStats(targetPath).isDirectory()
+			!this.$fs.getFsStats(targetPath).isDirectory()
 		) {
-			const sourceFileName = path.basename(packageFile);
+			filterFilename = path.basename(targetPath);
+			targetPath = path.dirname(targetPath);
 			this.$logger.trace(
-				`Specified target path: '${targetPath}' is directory. Same filename will be used: '${sourceFileName}'.`
+				`Multiple packages were built but only ${filterFilename} will be copied if existing'.`
 			);
-			targetPath = path.join(targetPath, sourceFileName);
 		}
-		this.$fs.copyFile(packageFile, targetPath);
-		this.$logger.info(`Copied file '${packageFile}' to '${targetPath}'.`);
+		applicationPackages.forEach(pack => {
+			const fileName = path.basename(pack.packageName);
+			if (!filterFilename || fileName === filterFilename) {
+				const targetFilePath = path.join(targetPath, path.basename(pack.packageName));
+				this.$fs.copyFile(pack.packageName, path.join(targetPath, path.basename(pack.packageName)));
+				this.$logger.info(`Copied file '${pack.packageName}' to '${targetFilePath}'.`);
+			}
+		});
 	}
 
 	private getLatestApplicationPackage(
 		buildOutputPath: string,
-		validBuildOutputData: IValidBuildOutputData
+		validBuildOutputData: IValidBuildOutputData,
+		abis?: string[]
 	): IApplicationPackage {
 		let packages = this.getAllAppPackages(
 			buildOutputPath,

@@ -61,7 +61,7 @@ interface IBuildArtefactsService {
 		platformData: IPlatformData,
 		buildOutputOptions: IBuildOutputOptions
 	): Promise<string>;
-	copyLatestAppPackage(
+	copyAppPackages(
 		targetPath: string,
 		platformData: IPlatformData,
 		buildOutputOptions: IBuildOutputOptions
