@@ -16,7 +16,8 @@ export class GradleBuildService
 	constructor(
 		private $childProcess: IChildProcess,
 		private $gradleBuildArgsService: IGradleBuildArgsService,
-		private $gradleCommandService: IGradleCommandService
+		private $gradleCommandService: IGradleCommandService,
+		private $devicesService: Mobile.IDevicesService
 	) {
 		super();
 	}
@@ -28,6 +29,14 @@ export class GradleBuildService
 		const buildTaskArgs = await this.$gradleBuildArgsService.getBuildTaskArgs(
 			buildData
 		);
+		if (buildData.buildFilterDevicesArch) {
+			const devices = this.$devicesService.getDevicesForPlatform(buildData.platform);
+			const abis = devices.map(d=>d.deviceInfo.abis[0]);
+			if (abis.length > 0) {
+				buildTaskArgs.push(`-PabiFilters=${abis.join(',')}`);
+			}
+		}
+		console.log('buildTaskArgs', buildTaskArgs);
 		const spawnOptions = {
 			emitOptions: { eventName: constants.BUILD_OUTPUT_EVENT_NAME },
 			throwError: true,
