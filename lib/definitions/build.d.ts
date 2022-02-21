@@ -30,6 +30,7 @@ interface IAndroidBuildData
 	extends IBuildData,
 		IAndroidSigningData,
 		IHasAndroidBundle {
+	buildFilterDevicesArch?: boolean;
 	gradlePath?: string;
 	gradleArgs?: string;
 }

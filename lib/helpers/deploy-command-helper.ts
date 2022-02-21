@@ -53,6 +53,7 @@ export class DeployCommandHelper {
 				{
 					...this.$options.argv,
 					outputPath,
+					buildFilterDevicesArch: false,
 					buildForDevice: !d.isEmulator,
 					skipWatcher: !this.$options.watch,
 					nativePrepare: {
