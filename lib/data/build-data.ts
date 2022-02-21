@@ -59,7 +59,7 @@ export class AndroidBuildData extends BuildData {
 		this.keyStoreAliasPassword = data.keyStoreAliasPassword;
 		this.keyStorePassword = data.keyStorePassword;
 		this.androidBundle = data.androidBundle || data.aab;
-		this.buildFilterDevicesArch = !this.androidBundle && data.filterDevicesArch;
+		this.buildFilterDevicesArch = !this.androidBundle && data.filterDevicesArch !== false ;
 		this.gradlePath = data.gradlePath;
 		this.gradleArgs = data.gradleArgs;
 	}
