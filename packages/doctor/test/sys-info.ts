@@ -1,9 +1,9 @@
 import * as assert from "assert";
 import * as path from "path";
 import { EOL } from "os";
-import { SysInfo } from "../lib/sys-info";
-import { Helpers } from "../lib/helpers";
-import { ChildProcess } from "../lib/wrappers/child-process";
+import { SysInfo } from "../src/sys-info";
+import { Helpers } from "../src/helpers";
+import { ChildProcess } from "../src/wrappers/child-process";
 
 const JavaHomeName = "JAVA_HOME";
 const AndroidHomeName = "ANDROID_HOME";

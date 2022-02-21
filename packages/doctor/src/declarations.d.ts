@@ -64,7 +64,7 @@ interface IHiveIds {
 }
 
 interface IDictionary<T> {
-	[key: string]: T
+	[key: string]: T;
 }
 
 interface IVersion {

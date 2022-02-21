@@ -718,7 +718,9 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			);
 		}
 
-		const gradlew = pluginBuildSettings.gradlePath ?? (this.$hostInfo.isWindows ? "gradlew.bat" : "./gradlew");
+		const gradlew =
+			pluginBuildSettings.gradlePath ??
+			(this.$hostInfo.isWindows ? "gradlew.bat" : "./gradlew");
 
 		const localArgs = [
 			"-p",
@@ -730,7 +732,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			`-PappResourcesPath=${this.$projectData.getAppResourcesDirectoryPath()}`
 		];
 		if (pluginBuildSettings.gradleArgs) {
-			localArgs.push(pluginBuildSettings.gradleArgs)
+			localArgs.push(pluginBuildSettings.gradleArgs);
 		}
 
 		if (this.$logger.getLevel() === "INFO") {

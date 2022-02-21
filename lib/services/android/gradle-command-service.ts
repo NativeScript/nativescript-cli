@@ -27,9 +27,9 @@ export class GradleCommandService implements IGradleCommandService {
 		this.$logger.info(message);
 
 		const childProcessOptions = { cwd, stdio: stdio || "inherit" };
-		const gradleExecutable = options.gradlePath ?? (this.$hostInfo.isWindows
-			? "gradlew.bat"
-			: "./gradlew");
+		const gradleExecutable =
+			options.gradlePath ??
+			(this.$hostInfo.isWindows ? "gradlew.bat" : "./gradlew");
 
 		const result = await this.executeCommandSafe(
 			gradleExecutable,
