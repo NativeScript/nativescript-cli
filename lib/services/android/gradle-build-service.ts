@@ -30,7 +30,10 @@ export class GradleBuildService
 			buildData
 		);
 		if (buildData.buildFilterDevicesArch) {
-			const devices = this.$devicesService.getDevicesForPlatform(buildData.platform);
+			let devices = this.$devicesService.getDevicesForPlatform(buildData.platform);
+			if(buildData.emulator) {
+				devices = devices.filter(d=>d.isEmulator);
+			}
 			const abis = devices.map(d=>d.deviceInfo.abis[0]);
 			if (abis.length > 0) {
 				buildTaskArgs.push(`-PabiFilters=${abis.join(',')}`);
