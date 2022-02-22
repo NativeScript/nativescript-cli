@@ -31,7 +31,7 @@ interface IAndroidBuildData
 		IAndroidSigningData,
 		IHasAndroidBundle {
 	gradlePath?: string;
-	gradleArgs?: string;
+	gradleArgs?: string[];
 }
 
 interface IAndroidSigningData {
