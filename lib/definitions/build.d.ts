@@ -32,7 +32,7 @@ interface IAndroidBuildData
 		IHasAndroidBundle {
 	buildFilterDevicesArch?: boolean;
 	gradlePath?: string;
-	gradleArgs?: string;
+	gradleArgs?: string[];
 }
 
 interface IAndroidSigningData {

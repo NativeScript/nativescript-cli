@@ -217,7 +217,7 @@ export class Options {
 				hasSensitiveValue: false,
 			},
 			gradlePath: { type: OptionType.String, hasSensitiveValue: false },
-			gradleArgs: { type: OptionType.String, hasSensitiveValue: false },
+			gradleArgs: { type: OptionType.String, hasSensitiveValue: false, array: true },
 			aab: { type: OptionType.Boolean, hasSensitiveValue: false },
 			filterDevicesArch: { type: OptionType.Boolean, hasSensitiveValue: false },
 			performance: { type: OptionType.Object, hasSensitiveValue: true },
