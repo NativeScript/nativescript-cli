@@ -732,7 +732,11 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			`-PappResourcesPath=${this.$projectData.getAppResourcesDirectoryPath()}`
 		];
 		if (pluginBuildSettings.gradleArgs) {
-			localArgs.push(pluginBuildSettings.gradleArgs);
+			const additionalArgs: string[] = []
+			pluginBuildSettings.gradleArgs.forEach(arg=>{
+				additionalArgs.push(...arg.split(' -P').map((a,i) => i === 0 ? a : `-P${a}`));
+			});
+			localArgs.push(...additionalArgs);
 		}
 
 		if (this.$logger.getLevel() === "INFO") {

@@ -1311,6 +1311,11 @@ interface IDashedOption {
 	 * Specifies either a single option key (string), or an array of options that must be followed by option values.
 	 */
 	requiresArg?: any;
+
+	/**
+	 * Set to true to define the option as an array option https://github.com/yargs/yargs/blob/main/docs/api.md#array
+	 */
+	array?: any;
 }
 
 /**
