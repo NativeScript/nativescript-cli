@@ -281,7 +281,7 @@ end`.trim();
 			const regExpToRemove = new RegExp(
 				`${this.getPluginPodfileHeader(
 					podfilePath
-				).replaceAll("+", "\\+")}[\\s\\S]*?${this.getPluginPodfileEnd()}`,
+				).replace(/\+/g, "\\+")}[\\s\\S]*?${this.getPluginPodfileEnd()}`,
 				"mg"
 			);
 			projectPodFileContent = projectPodFileContent.replace(regExpToRemove, "");
