@@ -32,6 +32,7 @@ interface IAndroidBuildData
 		IHasAndroidBundle {
 	buildFilterDevicesArch?: boolean;
 	gradlePath?: string;
+	gradleFlavor?: string;
 	gradleArgs?: string[];
 }
 

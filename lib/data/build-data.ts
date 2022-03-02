@@ -48,6 +48,7 @@ export class AndroidBuildData extends BuildData {
 	public keyStoreAliasPassword: string;
 	public keyStorePassword: string;
 	public androidBundle: boolean;
+	public gradleFlavor: string;
 	public gradlePath: string;
 	public gradleArgs: string;
 
@@ -60,6 +61,7 @@ export class AndroidBuildData extends BuildData {
 		this.keyStorePassword = data.keyStorePassword;
 		this.androidBundle = data.androidBundle || data.aab;
 		this.buildFilterDevicesArch = !this.androidBundle && data.filterDevicesArch !== false ;
+		this.gradleFlavor = data.flavor;
 		this.gradlePath = data.gradlePath;
 		this.gradleArgs = data.gradleArgs;
 	}
