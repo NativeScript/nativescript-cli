@@ -78,7 +78,10 @@ interface IPrepareNodeModulesData {
 }
 
 interface INodeModulesDependenciesBuilder {
-	getProductionDependencies(projectPath: string, ignore?: string[]): IDependencyData[];
+	getProductionDependencies(
+		projectPath: string,
+		ignore?: string[]
+	): IDependencyData[];
 }
 
 interface IBuildInfo {
@@ -118,8 +121,14 @@ interface IAddPlatformData extends IControllerDataBase {
 }
 
 interface IPlatformController {
-	addPlatform(addPlatformData: IAddPlatformData): Promise<void>;
-	addPlatformIfNeeded(addPlatformData: IAddPlatformData): Promise<void>;
+	addPlatform(
+		addPlatformData: IAddPlatformData,
+		projectData?: IProjectData
+	): Promise<void>;
+	addPlatformIfNeeded(
+		addPlatformData: IAddPlatformData,
+		projectData?: IProjectData
+	): Promise<void>;
 }
 
 interface IAddPlatformService {

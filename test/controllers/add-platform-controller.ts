@@ -9,6 +9,7 @@ import { PackageManager } from "../../lib/package-manager";
 import { NodePackageManager } from "../../lib/node-package-manager";
 import { YarnPackageManager } from "../../lib/yarn-package-manager";
 import { PnpmPackageManager } from "../../lib/pnpm-package-manager";
+import { MobileHelper } from "../../lib/common/mobile/mobile-helper";
 
 let actualMessage: string = null;
 const latestFrameworkVersion = "5.3.1";
@@ -33,6 +34,7 @@ function createInjector(data?: { latestFrameworkVersion: string }) {
 		getSettingValue: async (settingName: string): Promise<void> => undefined,
 	});
 	injector.register("tempService", TempServiceStub);
+	injector.register("mobileHelper", MobileHelper);
 
 	const logger = injector.resolve("logger");
 	logger.info = (message: string) => (actualMessage = message);
@@ -43,7 +45,15 @@ function createInjector(data?: { latestFrameworkVersion: string }) {
 	packageInstallationManager.getLatestCompatibleVersion = async () => version;
 
 	const fs = injector.resolve("fs");
+	const exists: Function = fs.exists.bind(fs);
 	fs.readJson = () => ({ version });
+	fs.exists = (path: string) => {
+		if (path.includes("gradle.properties")) {
+			return false;
+		}
+		return exists(path);
+	};
+	fs.writeFile = () => {};
 
 	return injector;
 }
@@ -148,5 +158,33 @@ describe("PlatformController", () => {
 		// 	const expectedPackageToAdd = `@nativescript/${platform}@${latestFrameworkVersion}`;
 		// 	assert.deepStrictEqual(extractedPackageFromPacote, expectedPackageToAdd);
 		// });
+	});
+
+	it(`should update gradle.properties after adding android platform`, async () => {
+		const injector = createInjector();
+		const fs = injector.resolve("fs");
+
+		let writeFileCalled = false;
+		let writeFileContents = "";
+		fs.writeFile = (path: string, contents: string) => {
+			if (path.includes("gradle.properties")) {
+				writeFileCalled = true;
+				writeFileContents = contents;
+			}
+		};
+
+		const platformController: PlatformController = injector.resolve(
+			"platformController"
+		);
+		await platformController.addPlatform({
+			projectDir,
+			platform: "android",
+		});
+
+		assert(writeFileCalled, "expected to write gradle.properties");
+		assert(
+			writeFileContents.includes("# App configuration"),
+			"expected gradle.properties to have the project data written to it"
+		);
 	});
 });
