@@ -127,7 +127,10 @@ export class PrepareController extends EventEmitter {
 		prepareData: IPrepareData,
 		projectData: IProjectData
 	): Promise<IPrepareResultData> {
-		await this.$platformController.addPlatformIfNeeded(prepareData);
+		await this.$platformController.addPlatformIfNeeded(
+			prepareData,
+			projectData
+		);
 		await this.trackRuntimeVersion(prepareData.platform, projectData);
 
 		this.$logger.info("Preparing project...");
@@ -375,7 +378,10 @@ export class PrepareController extends EventEmitter {
 		projectData: IProjectData
 	): Promise<string[]> {
 		const dependencies = this.$nodeModulesDependenciesBuilder
-			.getProductionDependencies(projectData.projectDir, projectData.ignoredDependencies)
+			.getProductionDependencies(
+				projectData.projectDir,
+				projectData.ignoredDependencies
+			)
 			.filter((dep) => dep.nativescript);
 		const pluginsNativeDirectories = dependencies.map((dep) =>
 			path.join(

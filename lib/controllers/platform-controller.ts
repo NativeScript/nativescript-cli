@@ -25,14 +25,18 @@ export class PlatformController implements IPlatformController {
 		private $packageInstallationManager: IPackageInstallationManager,
 		private $projectDataService: IProjectDataService,
 		private $platformsDataService: IPlatformsDataService,
-		private $projectChangesService: IProjectChangesService
+		private $projectChangesService: IProjectChangesService,
+		private $mobileHelper: Mobile.IMobileHelper
 	) {}
 
-	public async addPlatform(addPlatformData: IAddPlatformData): Promise<void> {
+	public async addPlatform(
+		addPlatformData: IAddPlatformData,
+		projectData?: IProjectData
+	): Promise<void> {
 		const [platform, version] = addPlatformData.platform
 			.toLowerCase()
 			.split("@");
-		const projectData = this.$projectDataService.getProjectData(
+		projectData ??= this.$projectDataService.getProjectData(
 			addPlatformData.projectDir
 		);
 		const platformData = this.$platformsDataService.getPlatformData(
@@ -68,18 +72,54 @@ export class PlatformController implements IPlatformController {
 		this.$fs.ensureDirectoryExists(
 			path.join(projectData.platformsDir, platform)
 		);
+
+		if (this.$mobileHelper.isAndroidPlatform(platform)) {
+			const gradlePropertiesPath = path.resolve(
+				platformData.projectRoot,
+				"gradle.properties"
+			);
+			const commentHeader = "# App configuration";
+			const appPath = projectData.getAppDirectoryRelativePath();
+			const appResourcesPath = projectData.getAppResourcesRelativeDirectoryPath();
+
+			let gradlePropertiesContents = "";
+			if (this.$fs.exists(gradlePropertiesPath)) {
+				gradlePropertiesContents = this.$fs
+					.readFile(gradlePropertiesPath)
+					.toString();
+			}
+
+			if (!gradlePropertiesContents.includes(commentHeader)) {
+				const dataToWrite = [
+					"",
+					"",
+					commentHeader,
+					`appPath = ${appPath}`,
+					`appResourcesPath = ${appResourcesPath}`,
+					"",
+				].join("\n");
+
+				gradlePropertiesContents += dataToWrite;
+
+				this.$logger.trace("Updated gradle.properties with project data...");
+				this.$fs.writeFile(gradlePropertiesPath, gradlePropertiesContents);
+			}
+		}
 		this.$logger.info(
 			`Platform ${platform} successfully added. v${installedPlatformVersion}`
 		);
 	}
 
 	public async addPlatformIfNeeded(
-		addPlatformData: IAddPlatformData
+		addPlatformData: IAddPlatformData,
+		projectData?: IProjectData
 	): Promise<void> {
 		const [platform] = addPlatformData.platform.toLowerCase().split("@");
-		const projectData = this.$projectDataService.getProjectData(
+
+		projectData ??= this.$projectDataService.getProjectData(
 			addPlatformData.projectDir
 		);
+
 		const platformData = this.$platformsDataService.getPlatformData(
 			platform,
 			projectData
@@ -91,7 +131,7 @@ export class PlatformController implements IPlatformController {
 			addPlatformData.nativePrepare
 		);
 		if (shouldAddPlatform) {
-			await this.addPlatform(addPlatformData);
+			await this.addPlatform(addPlatformData, projectData);
 		}
 	}
 
