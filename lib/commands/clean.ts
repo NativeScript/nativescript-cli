@@ -28,7 +28,7 @@ export class CleanCommand implements ICommand {
 
 		try {
 			const additionalPaths = this.$projectConfigService.getValue(
-				"additionalPathsToClean"
+				"cli.additionalPathsToClean"
 			);
 			if (Array.isArray(additionalPaths)) {
 				pathsToClean.push(...additionalPaths);
