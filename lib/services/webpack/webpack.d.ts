@@ -163,7 +163,7 @@ declare global {
 		beforePrepareAllPlugins(
 			projectData: IProjectData,
 			dependencies?: IDependencyData[]
-		): Promise<void>;
+		): Promise<IDependencyData[]>;
 
 		handleNativeDependenciesChange(
 			projectData: IProjectData,
