@@ -281,7 +281,7 @@ end`.trim();
 			const regExpToRemove = new RegExp(
 				`${this.getPluginPodfileHeader(
 					podfilePath
-				).replace(/\+/g, "\\+")}[\\s\\S]*?${this.getPluginPodfileEnd()}`,
+				)}[\\s\\S]*?${this.getPluginPodfileEnd()}`,
 				"mg"
 			);
 			projectPodFileContent = projectPodFileContent.replace(regExpToRemove, "");
@@ -479,6 +479,8 @@ end`.trim();
 	}
 
 	private getPluginPodfileHeader(pluginPodFilePath: string): string {
+		// escape special + from the podfile path (pnpm)
+		pluginPodFilePath = pluginPodFilePath.replace(/\+/g, "\\+");
 		return `# Begin Podfile - ${pluginPodFilePath}`;
 	}
 
