@@ -12,7 +12,11 @@ def computeTargetSdkVersion = { -> project.hasProperty("targetSdk") ? targetSdk 
 def computeBuildToolsVersion = { ->
     project.hasProperty("buildToolsVersion") ? buildToolsVersion : "31.0.0"
 }
+
 buildscript {
+    def getDepPlatformDir = { dep ->
+        file("${project.ext.USER_PROJECT_ROOT}/${project.ext.PLATFORMS_ANDROID}/${dep.directory}/$PLATFORMS_ANDROID")
+    }
     def computeKotlinVersion = { -> project.hasProperty("kotlinVersion") ? kotlinVersion : "1.6.0" }
     def kotlinVersion = computeKotlinVersion()
     repositories {
@@ -28,10 +32,18 @@ buildscript {
     }
 
     // Set up styled logger
+    project.ext.getDepPlatformDir = getDepPlatformDir
     project.ext.outLogger = services.get(StyledTextOutputFactory).create("colouredOutputLogger")
 
     project.ext.USER_PROJECT_ROOT = "$rootDir/../../.."
+    project.ext.PLATFORMS_ANDROID = "platforms/android"
+    project.ext.PLUGIN_NAME = "{{pluginName}}"
 
+    // the build script will not work with previous versions of the CLI (3.1 or earlier)
+    def dependenciesJson = file("${project.ext.USER_PROJECT_ROOT}/${project.ext.PLATFORMS_ANDROID}/dependencies.json")
+    def appDependencies = new JsonSlurper().parseText(dependenciesJson.text)
+    def pluginData = appDependencies.find { it.name == project.ext.PLUGIN_NAME }
+    project.ext.nativescriptDependencies = appDependencies.findAll{pluginData.dependencies.contains(it.name)}
     project.ext.getAppPath = { ->
         def relativePathToApp = "app"
         def nsConfigFile = file("$USER_PROJECT_ROOT/nsconfig.json")
@@ -90,6 +102,15 @@ buildscript {
             apply from: pathToBuildScriptGradle, to: buildscript
         }
 
+        nativescriptDependencies.each { dep ->
+            def pathToPluginBuildScriptGradle = "${getDepPlatformDir(dep)}/buildscript.gradle"
+            def pluginBuildScriptGradle = file(pathToPluginBuildScriptGradle)
+            if (pluginBuildScriptGradle.exists()) {
+                outLogger.withStyle(Style.SuccessHeader).println "\t + applying user-defined buildscript from dependency ${pluginBuildScriptGradle}"
+                apply from: pathToPluginBuildScriptGradle, to: buildscript
+            }
+        }
+
         def pathToPluginBuildScriptGradle = "$rootDir/buildscript.gradle"
         def pluginBuildScriptGradle = file(pathToPluginBuildScriptGradle)
         if (pluginBuildScriptGradle.exists()) {
@@ -101,8 +122,19 @@ buildscript {
 
 }
 
+def pluginDependencies
+
 allprojects {
     repositories {
+        // used for local *.AAR files
+        pluginDependencies = nativescriptDependencies.collect {
+            getDepPlatformDir(it)
+        }
+
+        // some plugins may have their android dependencies in a /libs subdirectory
+        pluginDependencies.addAll(nativescriptDependencies.collect {
+            "${getDepPlatformDir(it)}/libs"
+        })
         mavenLocal()
         mavenCentral()
         maven {
@@ -110,14 +142,28 @@ allprojects {
             name 'Google'
         }
         jcenter()
+        if (pluginDependencies.size() > 0) {
+            flatDir {
+                dirs pluginDependencies
+            }
+        }
     }
 }
 
 android {
+    def applyPluginGradleConfigurations = { ->
+        nativescriptDependencies.each { dep ->
+            def includeGradlePath = "${getDepPlatformDir(dep)}/include.gradle"
+            if (file(includeGradlePath).exists()) {
+                apply from: includeGradlePath
+            }
+        }
+    }
     kotlinOptions {
         jvmTarget = '1.8'
     }
     applyBeforePluginGradleConfiguration()
+    applyPluginGradleConfigurations()
 
     compileSdkVersion computeCompileSdkVersion()
     buildToolsVersion computeBuildToolsVersion()
@@ -165,3 +211,26 @@ tasks.whenTaskAdded({ DefaultTask currentTask ->
         }
     }
 })
+
+
+
+task addDependenciesFromNativeScriptPlugins {
+    nativescriptDependencies.each { dep ->
+        def aarFiles = fileTree(dir: getDepPlatformDir(dep), include: ["**/*.aar"])
+        aarFiles.each { aarFile ->
+            def length = aarFile.name.length() - 4
+            def fileName = aarFile.name[0..<length]
+            outLogger.withStyle(Style.SuccessHeader).println "\t + adding aar plugin dependency: " + aarFile.getAbsolutePath()
+            project.dependencies.add("implementation", [name: fileName, ext: "aar"])
+        }
+
+        def jarFiles = fileTree(dir: getDepPlatformDir(dep), include: ["**/*.jar"])
+        jarFiles.each { jarFile ->
+            def jarFileAbsolutePath = jarFile.getAbsolutePath()
+            outLogger.withStyle(Style.SuccessHeader).println "\t + adding jar plugin dependency: $jarFileAbsolutePath"
+            pluginsJarLibraries.add(jarFile.getAbsolutePath())
+        }
+
+        project.dependencies.add("implementation", jarFiles)
+    }
+}
