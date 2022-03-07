@@ -508,7 +508,7 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 	}
 
 	private getSystemRequirementsLink(): string {
-		return Constants.SYSTEM_REQUIREMENTS_LINKS[process.platform] || "";
+		return Constants.SYSTEM_REQUIREMENTS_LINKS;
 	}
 
 	private isAndroidHomeValid(): boolean {
