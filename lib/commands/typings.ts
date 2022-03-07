@@ -14,18 +14,16 @@ export class TypingsCommand implements ICommand {
 		private $projectData: IProjectData,
 		private $mobileHelper: Mobile.IMobileHelper,
 		private $childProcess: IChildProcess,
-		private $hostInfo: IHostInfo,
+		private $hostInfo: IHostInfo
 	) {}
 
 	public async execute(args: string[]): Promise<void> {
 		const platform = args[0];
-
+		let result;
 		if (this.$mobileHelper.isAndroidPlatform(platform)) {
-			await this.handleAndroidTypings();
-		}
-
-		if (this.$mobileHelper.isiOSPlatform(platform)) {
-			await this.handleiOSTypings();
+			result = await this.handleAndroidTypings();
+		} else if (this.$mobileHelper.isiOSPlatform(platform)) {
+			result = await this.handleiOSTypings();
 		}
 		let typingsFolder = "./typings";
 		if (this.$options.copyTo) {
@@ -35,10 +33,13 @@ export class TypingsCommand implements ICommand {
 			);
 			typingsFolder = this.$options.copyTo;
 		}
-		this.$logger.info(
-			"Typings have been generated in the following directory:",
-			typingsFolder
-		);
+
+		if (result !== false) {
+			this.$logger.info(
+				"Typings have been generated in the following directory:",
+				typingsFolder
+			);
+		}
 	}
 
 	public async canExecute(args: string[]): Promise<boolean> {
@@ -48,17 +49,15 @@ export class TypingsCommand implements ICommand {
 	}
 
 	private async handleAndroidTypings() {
-		if (this.$options.aar) {
-			return this.$logger.warn(`Open the .aar archive
-Extract the classes.jar and any dependencies it may have inside libs/
-Rename classes.jar if necessary
-
-ns typings android --jar classes.jar --jar dependency-of-classes-jar.jar
-			`);
-		} else if (!this.$options.jar) {
-			return this.$logger.warn(
-				"No .jar file specified. Please specify a .jar file with --jar <Jar>."
+		if (!(this.$options.jar || this.$options.aar)) {
+			this.$logger.warn(
+				[
+					"No .jar or .aar file specified. Please specify at least one of the following:",
+					"  - path to .jar file with --jar <jar>",
+					"  - path to .aar file with --aar <aar>",
+				].join("\n")
 			);
+			return false;
 		}
 
 		this.$fs.ensureDirectoryExists(
@@ -82,25 +81,36 @@ ns typings android --jar classes.jar --jar dependency-of-classes-jar.jar
 			);
 		}
 
-		if (this.$options.jar) {
-			const jars: string[] =
-				typeof this.$options.jar === "string"
-					? [this.$options.jar]
-					: this.$options.jar;
-			await this.$childProcess.spawnFromEvent(
-				"java",
-				[
-					"-jar",
-					dtsGeneratorPath,
-					"-input",
-					...jars,
-					"-output",
-					path.resolve(this.$projectData.projectDir, "typings", "android"),
-				],
-				"exit",
-				{ stdio: "inherit" }
-			);
-		}
+		const asArray = (input: string | string[]) => {
+			if (!input) {
+				return [];
+			}
+
+			if (typeof input === "string") {
+				return [input];
+			}
+
+			return input;
+		};
+
+		const inputs: string[] = [
+			...asArray(this.$options.jar),
+			...asArray(this.$options.aar),
+		];
+
+		await this.$childProcess.spawnFromEvent(
+			"java",
+			[
+				"-jar",
+				dtsGeneratorPath,
+				"-input",
+				...inputs,
+				"-output",
+				path.resolve(this.$projectData.projectDir, "typings", "android"),
+			],
+			"exit",
+			{ stdio: "inherit" }
+		);
 	}
 
 	private async handleiOSTypings() {
