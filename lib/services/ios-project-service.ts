@@ -13,7 +13,11 @@ import { IOSProvisionService } from "./ios-provision-service";
 import { IOSEntitlementsService } from "./ios-entitlements-service";
 import { IOSBuildData } from "../data/build-data";
 import { IOSPrepareData } from "../data/prepare-data";
-import { BUILD_XCCONFIG_FILE_NAME, CONFIG_FILE_NAME_DISPLAY, IosProjectConstants } from "../constants";
+import {
+	BUILD_XCCONFIG_FILE_NAME,
+	CONFIG_FILE_NAME_DISPLAY,
+	IosProjectConstants,
+} from "../constants";
 import { hook } from "../common/helpers";
 import {
 	IPlatformData,
@@ -31,7 +35,12 @@ import {
 } from "../definitions/project";
 
 import { IBuildData } from "../definitions/build";
-import { IXcprojService, IXcconfigService, IDependencyData, IOptions } from "../declarations";
+import {
+	IXcprojService,
+	IXcconfigService,
+	IDependencyData,
+	IOptions,
+} from "../declarations";
 import { IPluginData, IPluginsService } from "../definitions/plugins";
 import {
 	IFileSystem,

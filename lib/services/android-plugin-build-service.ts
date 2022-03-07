@@ -421,11 +421,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			buildGradlePath,
 			runtimeGradleVersions.gradleAndroidPluginVersion
 		);
-		this.replaceFileContent(
-			buildGradlePath,
-			"{{pluginName}}",
-			pluginName
-		);
+		this.replaceFileContent(buildGradlePath, "{{pluginName}}", pluginName);
 	}
 
 	private async getRuntimeGradleVersions(
@@ -736,7 +732,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			`-PcompileSdk=android-${pluginBuildSettings.androidToolsInfo.compileSdkVersion}`,
 			`-PbuildToolsVersion=${pluginBuildSettings.androidToolsInfo.buildToolsVersion}`,
 			`-PappPath=${this.$projectData.getAppDirectoryPath()}`,
-			`-PappResourcesPath=${this.$projectData.getAppResourcesDirectoryPath()}`
+			`-PappResourcesPath=${this.$projectData.getAppResourcesDirectoryPath()}`,
 		];
 		if (pluginBuildSettings.gradleArgs) {
 			localArgs.push(pluginBuildSettings.gradleArgs);

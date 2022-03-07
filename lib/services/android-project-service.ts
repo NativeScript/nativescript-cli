@@ -48,21 +48,28 @@ import { IInjector } from "../common/definitions/yok";
 import { injector } from "../common/yok";
 import { INotConfiguredEnvOptions } from "../common/definitions/commands";
 
-
-
 interface NativeDependency {
 	name: string;
 	directory: string;
 	dependencies: string[];
 }
-function treeSort(obj: NativeDependency[], start:NativeDependency[], depth = 0):NativeDependency[] {
-	const processed = obj.reduce((a,b,i) => {
-	  if (b.dependencies.every(Array.prototype.includes, a.map(n=>n.name))) {
-		  a.push(b);
-	  }
-	  return  a;
+function treeSort(
+	obj: NativeDependency[],
+	start: NativeDependency[],
+	depth = 0
+): NativeDependency[] {
+	const processed = obj.reduce((a, b, i) => {
+		if (
+			b.dependencies.every(
+				Array.prototype.includes,
+				a.map((n) => n.name)
+			)
+		) {
+			a.push(b);
+		}
+		return a;
 	}, start);
-	const nextNames = obj.filter(n => !processed.includes(n));
+	const nextNames = obj.filter((n) => !processed.includes(n));
 	const goAgain = nextNames.length && depth <= obj.length;
 	return goAgain ? treeSort(nextNames, processed, depth + 1) : processed;
 }
@@ -694,20 +701,29 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			platformDir,
 			constants.DEPENDENCIES_JSON_NAME
 		);
-		let nativeDependencyDatas = dependencies
-			.filter(AndroidProjectService.isNativeAndroidDependency);
-		
-		let nativeDependencies = nativeDependencyDatas.map(({ name, directory, dependencies }) => ({
-				name,
-				directory: path.relative(platformDir, directory),
-				dependencies:dependencies.filter(d=>nativeDependencyDatas.findIndex(nd=>nd.name===d) !== -1)
-			} as NativeDependency));
+		let nativeDependencyDatas = dependencies.filter(
+			AndroidProjectService.isNativeAndroidDependency
+		);
+
+		let nativeDependencies = nativeDependencyDatas.map(
+			({ name, directory, dependencies }) =>
+				({
+					name,
+					directory: path.relative(platformDir, directory),
+					dependencies: dependencies.filter(
+						(d) => nativeDependencyDatas.findIndex((nd) => nd.name === d) !== -1
+					),
+				} as NativeDependency)
+		);
 		nativeDependencies = treeSort(nativeDependencies, []);
 		const jsonContent = JSON.stringify(nativeDependencies, null, 4);
 
 		this.$fs.writeFile(dependenciesJsonPath, jsonContent);
-		return dependencies.sort(function(a, b){  
-			return nativeDependencies.findIndex(n => n.name === a.name) - nativeDependencies.findIndex(n => n.name === b.name);
+		return dependencies.sort(function (a, b) {
+			return (
+				nativeDependencies.findIndex((n) => n.name === a.name) -
+				nativeDependencies.findIndex((n) => n.name === b.name)
+			);
 		});
 	}
 
