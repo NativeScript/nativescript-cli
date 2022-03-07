@@ -53,25 +53,64 @@ interface NativeDependency {
 	directory: string;
 	dependencies: string[];
 }
-function treeSort(
-	obj: NativeDependency[],
-	start: NativeDependency[],
+
+//
+// we sort the native dependencies topologically to make sure they are processed in the right order
+// native dependenciess need to be sorted so the deepst dependencies are built before it's parents
+//
+// for example, given this dep structure (assuming these are all native dependencies that need to be built)
+//   |- dep1
+//   |- dep2
+//     |- dep3
+//     |- dep4
+//       |-dep5
+//     |- dep6
+//
+// It is sorted:
+//  |- dep1 - doesn't depend on anything, so the order stays the same as in the input list
+//  |- dep3 - doesn't depend on anything, so the order stays the same as in the input list
+//  |- dep5 - doesn't depend on anything, so the order stays the same as in the input list
+//  |- dep6 - doesn't depend on anything, so the order stays the same as in the input list
+//  |- dep4 - depends on dep6, so dep6 must be built first, ie above ^
+//  |- dep2 - depends on dep3, dep4, dep5 and dep6, so all of them must be built first
+//
+// for more details see: https://wikiless.org/wiki/Topological_sorting?lang=en
+//
+function topologicalSortNativeDependencies(
+	nativeDeps: NativeDependency[],
+	start: NativeDependency[] = [],
 	depth = 0
 ): NativeDependency[] {
-	const processed = obj.reduce((a, b, i) => {
-		if (
-			b.dependencies.every(
-				Array.prototype.includes,
-				a.map((n) => n.name)
-			)
-		) {
-			a.push(b);
-		}
-		return a;
-	}, start);
-	const nextNames = obj.filter((n) => !processed.includes(n));
-	const goAgain = nextNames.length && depth <= obj.length;
-	return goAgain ? treeSort(nextNames, processed, depth + 1) : processed;
+	const processedDeps = nativeDeps.reduce(
+		(accumulator, nativeDep: NativeDependency) => {
+			if (
+				nativeDep.dependencies.every(
+					Array.prototype.includes,
+					accumulator.map((n) => n.name)
+				)
+			) {
+				accumulator.push(nativeDep);
+			}
+			return accumulator;
+		},
+		start
+	);
+
+	const remainingDeps = nativeDeps.filter(
+		(nativeDep) => !processedDeps.includes(nativeDep)
+	);
+
+	// recurse if we still have unprocessed deps
+	// the second condition here prevents infinite recursion
+	if (remainingDeps.length && depth <= nativeDeps.length) {
+		return topologicalSortNativeDependencies(
+			remainingDeps,
+			processedDeps,
+			depth + 1
+		);
+	}
+
+	return processedDeps;
 }
 
 export class AndroidProjectService extends projectServiceBaseLib.PlatformProjectServiceBase {
@@ -701,24 +740,31 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			platformDir,
 			constants.DEPENDENCIES_JSON_NAME
 		);
-		let nativeDependencyDatas = dependencies.filter(
+		let nativeDependencyData = dependencies.filter(
 			AndroidProjectService.isNativeAndroidDependency
 		);
 
-		let nativeDependencies = nativeDependencyDatas.map(
-			({ name, directory, dependencies }) =>
-				({
+		let nativeDependencies = nativeDependencyData.map(
+			({ name, directory, dependencies }) => {
+				return {
 					name,
 					directory: path.relative(platformDir, directory),
-					dependencies: dependencies.filter(
-						(d) => nativeDependencyDatas.findIndex((nd) => nd.name === d) !== -1
-					),
-				} as NativeDependency)
+					dependencies: dependencies.filter((dep) => {
+						// filter out transient dependencies that don't have native dependencies
+						return (
+							nativeDependencyData.findIndex(
+								(nativeDep) => nativeDep.name === dep
+							) !== -1
+						);
+					}),
+				} as NativeDependency;
+			}
 		);
-		nativeDependencies = treeSort(nativeDependencies, []);
+		nativeDependencies = topologicalSortNativeDependencies(nativeDependencies);
 		const jsonContent = JSON.stringify(nativeDependencies, null, 4);
-
 		this.$fs.writeFile(dependenciesJsonPath, jsonContent);
+
+		// we sort all the dependencies to respect the topological sorting of the native dependencies
 		return dependencies.sort(function (a, b) {
 			return (
 				nativeDependencies.findIndex((n) => n.name === a.name) -
