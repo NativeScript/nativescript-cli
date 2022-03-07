@@ -258,7 +258,8 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			await this.setupGradle(
 				pluginTempDir,
 				options.platformsAndroidDirPath,
-				options.projectDir
+				options.projectDir,
+				options.pluginName
 			);
 			await this.buildPlugin({
 				gradlePath: options.gradlePath,
@@ -398,7 +399,8 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 	private async setupGradle(
 		pluginTempDir: string,
 		platformsAndroidDirPath: string,
-		projectDir: string
+		projectDir: string,
+		pluginName: string
 	): Promise<void> {
 		const gradleTemplatePath = path.resolve(
 			path.join(__dirname, "../../vendor/gradle-plugin")
@@ -419,6 +421,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			buildGradlePath,
 			runtimeGradleVersions.gradleAndroidPluginVersion
 		);
+		this.replaceFileContent(buildGradlePath, "{{pluginName}}", pluginName);
 	}
 
 	private async getRuntimeGradleVersions(
@@ -729,7 +732,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			`-PcompileSdk=android-${pluginBuildSettings.androidToolsInfo.compileSdkVersion}`,
 			`-PbuildToolsVersion=${pluginBuildSettings.androidToolsInfo.buildToolsVersion}`,
 			`-PappPath=${this.$projectData.getAppDirectoryPath()}`,
-			`-PappResourcesPath=${this.$projectData.getAppResourcesDirectoryPath()}`
+			`-PappResourcesPath=${this.$projectData.getAppResourcesDirectoryPath()}`,
 		];
 		if (pluginBuildSettings.gradleArgs) {
 			localArgs.push(pluginBuildSettings.gradleArgs);
