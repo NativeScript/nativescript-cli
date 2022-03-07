@@ -49,6 +49,9 @@ import {
 	IDeviceDebugService,
 	IDebugResultInfo,
 } from "../lib/definitions/debug";
+import {
+	IDependencyData,
+} from "../lib/declarations";
 import { IBuildData } from "../lib/definitions/build";
 import {
 	IFileSystem,
@@ -827,8 +830,11 @@ export class PlatformProjectServiceStub
 		return Promise.resolve();
 	}
 
-	async beforePrepareAllPlugins(): Promise<void> {
-		return Promise.resolve();
+	async beforePrepareAllPlugins(
+		projectData: IProjectData,
+		dependencies?: IDependencyData[]
+	): Promise<IDependencyData[]> {
+		return Promise.resolve(dependencies);
 	}
 
 	async cleanDeviceTempFolder(deviceIdentifier: string): Promise<void> {

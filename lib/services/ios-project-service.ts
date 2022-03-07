@@ -29,8 +29,9 @@ import {
 	IIOSNativeTargetService,
 	IValidatePlatformOutput,
 } from "../definitions/project";
+
 import { IBuildData } from "../definitions/build";
-import { IXcprojService, IXcconfigService, IOptions } from "../declarations";
+import { IXcprojService, IXcconfigService, IDependencyData, IOptions } from "../declarations";
 import { IPluginData, IPluginsService } from "../definitions/plugins";
 import {
 	IFileSystem,
@@ -976,8 +977,11 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		await this.addExtensions(projectData, pluginsData);
 	}
 
-	public beforePrepareAllPlugins(): Promise<void> {
-		return Promise.resolve();
+	public beforePrepareAllPlugins(
+		projectData: IProjectData,
+		dependencies?: IDependencyData[]
+	): Promise<IDependencyData[]> {
+		return Promise.resolve(dependencies);
 	}
 
 	public async checkForChanges(
