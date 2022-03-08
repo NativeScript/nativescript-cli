@@ -479,6 +479,8 @@ end`.trim();
 	}
 
 	private getPluginPodfileHeader(pluginPodFilePath: string): string {
+		// escape special + from the podfile path (pnpm)
+		pluginPodFilePath = pluginPodFilePath.replace(/\+/g, "\\+");
 		return `# Begin Podfile - ${pluginPodFilePath}`;
 	}
 

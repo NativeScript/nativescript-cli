@@ -22,7 +22,7 @@ describe("androidToolsInfo", () => {
 		"To be able to build for Android, verify that you have installed The Java Development Kit (JDK) and configured it according to system requirements as" +
 		EOL +
 		" described in " +
-		Constants.SYSTEM_REQUIREMENTS_LINKS[process.platform];
+		Constants.SYSTEM_REQUIREMENTS_LINKS;
 	before(() => {
 		process.env["ANDROID_HOME"] = "test";
 	});

@@ -11,11 +11,10 @@ export class ProjectCleanupService implements IProjectCleanupService {
 		private $logger: ILogger,
 		private $projectHelper: IProjectHelper,
 		private $terminalSpinnerService: ITerminalSpinnerService
-	) {
-		this.spinner = this.$terminalSpinnerService.createSpinner();
-	}
+	) {}
 
 	public async clean(pathsToClean: string[]): Promise<boolean> {
+		this.spinner = this.$terminalSpinnerService.createSpinner();
 		let success = true;
 		for (const pathToClean of pathsToClean) {
 			const isCleaned = await this.cleanPath(pathToClean).catch((error) => {
@@ -27,6 +26,9 @@ export class ProjectCleanupService implements IProjectCleanupService {
 			});
 			success = success && isCleaned;
 		}
+
+		// required to print an empty line for the spinner to not replace the last status... (probably a bug in the spinners)
+		console.log();
 		return success;
 	}
 
@@ -34,6 +36,7 @@ export class ProjectCleanupService implements IProjectCleanupService {
 		this.spinner.clear();
 		let success = true;
 		let fileType: string;
+
 		if (!pathToClean || pathToClean.trim().length === 0) {
 			this.$logger.trace("cleanPath called with no pathToClean.");
 			return success;
@@ -70,8 +73,8 @@ export class ProjectCleanupService implements IProjectCleanupService {
 			return success;
 		}
 		this.$logger.trace(`Path '${filePath}' not found, skipping.`);
-		// this.spinner.text = `Skipping ${displayPath} because it doesn't exist.`;
-		// this.spinner.info();
+		this.spinner.info(`Skipping ${displayPath} because it doesn't exist.`);
+
 		return success;
 	}
 }

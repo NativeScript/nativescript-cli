@@ -52,6 +52,8 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 	}
 	private pathToEmulatorExecutable: string;
 
+	private _cachedRuntimeVersion: string;
+
 	constructor(
 		private childProcess: ChildProcess,
 		private fs: FileSystem,
@@ -508,7 +510,7 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 	}
 
 	private getSystemRequirementsLink(): string {
-		return Constants.SYSTEM_REQUIREMENTS_LINKS[process.platform] || "";
+		return Constants.SYSTEM_REQUIREMENTS_LINKS;
 	}
 
 	private isAndroidHomeValid(): boolean {
@@ -598,6 +600,10 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 		runtimeVersion?: string;
 		projectDir?: string;
 	}): string {
+		if (this._cachedRuntimeVersion) {
+			return this._cachedRuntimeVersion;
+		}
+
 		let runtimePackage = {
 			name: Constants.ANDROID_SCOPED_RUNTIME,
 			version: runtimeVersion,
@@ -630,6 +636,7 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 			);
 		}
 
+		this._cachedRuntimeVersion = runtimeVersion;
 		return runtimeVersion;
 	}
 

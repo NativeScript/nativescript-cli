@@ -24,9 +24,8 @@ export class PlatformEnvironmentRequirements
 		// private $staticConfig: IStaticConfig,
 		private $analyticsService: IAnalyticsService,
 		// @ts-ignore - required by the hook helper!
-		private $injector: IInjector
-	) // private $previewQrCodeService: IPreviewQrCodeService
-	{}
+		private $injector: IInjector // private $previewQrCodeService: IPreviewQrCodeService
+	) {}
 
 	// public get $previewAppController(): IPreviewAppController {
 	//   return this.$injector.resolve("previewAppController");
