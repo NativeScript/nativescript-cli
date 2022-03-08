@@ -158,7 +158,7 @@ export class MigrateController
 		{
 			packageName: "nativescript-vue",
 			minVersion: "2.7.0",
-			desiredVersion: "~2.9.0",
+			desiredVersion: "~2.9.1",
 			async shouldMigrateAction(
 				dependency: IMigrationDependency,
 				projectData: IProjectData,
@@ -1392,7 +1392,7 @@ export class MigrateController
 			{
 				packageName: "nativescript-vue-template-compiler",
 				minVersion: "2.7.0",
-				desiredVersion: "~2.9.0",
+				desiredVersion: "~2.9.1",
 				isDev: true,
 				shouldAddIfMissing: true,
 			},
