@@ -1,0 +1,13 @@
+diff --git a/node_modules/git-raw-commits/index.js b/node_modules/git-raw-commits/index.js
+index 767d4a0..e76c33c 100644
+--- a/node_modules/git-raw-commits/index.js
++++ b/node_modules/git-raw-commits/index.js
+@@ -32,7 +32,7 @@ function getGitArgs (gitOpts) {
+   // allow commits to focus on a single directory
+   // this is useful for monorepos.
+   if (gitOpts.path) {
+-    gitArgs.push('--', gitOpts.path)
++    gitArgs.push('--', ...gitOpts.path.split(' '))
+   }
+ 
+   return gitArgs.concat(dargs(gitOpts, {
