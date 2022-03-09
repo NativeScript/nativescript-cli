@@ -36,6 +36,7 @@ import { IFilesHashService } from "../definitions/files-hash-service";
 import { IInjector } from "../common/definitions/yok";
 import { injector } from "../common/yok";
 import * as _ from "lodash";
+import { resolvePackageJSONPath } from "@rigor789/resolve-package-path";
 
 export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 	private get $platformsDataService(): IPlatformsDataService {
@@ -486,6 +487,66 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		return runtimeVersion;
 	}
 
+	private getLocalGradleVersions(): IRuntimeGradleVersions {
+		// partial interface of the runtime package.json
+		// including new 8.2+ format and legacy
+		interface IRuntimePackageJSON {
+			// 8.2+
+			version_info?: {
+				gradle: string;
+				gradleAndroid: string;
+			};
+			// legacy
+			gradle?: {
+				version: string;
+				android: string;
+			};
+		}
+
+		// try reading from installed runtime first before reading from the npm registry...
+		const installedRuntimePackageJSONPath = resolvePackageJSONPath(
+			SCOPED_ANDROID_RUNTIME_NAME,
+			{
+				paths: [this.$projectData.projectDir],
+			}
+		);
+
+		if (!installedRuntimePackageJSONPath) {
+			return null;
+		}
+
+		const installedRuntimePackageJSON: IRuntimePackageJSON = this.$fs.readJson(
+			installedRuntimePackageJSONPath
+		);
+
+		if (!installedRuntimePackageJSON) {
+			return null;
+		}
+
+		if (installedRuntimePackageJSON.version_info) {
+			const {
+				gradle,
+				gradleAndroid,
+			} = installedRuntimePackageJSON.version_info;
+
+			return {
+				gradleVersion: gradle,
+				gradleAndroidPluginVersion: gradleAndroid,
+			};
+		}
+
+		if (installedRuntimePackageJSON.gradle) {
+			const { version, android } = installedRuntimePackageJSON.gradle;
+
+			return {
+				gradleVersion: version,
+				gradleAndroidPluginVersion: android,
+			};
+		}
+
+		return null;
+	}
+
 	private async getGradleVersions(
 		runtimeVersion: string
 	): Promise<IRuntimeGradleVersions> {
@@ -493,6 +554,13 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			versions: { gradle: string; gradleAndroid: string };
 		} = null;
 
+		const localVersionInfo = this.getLocalGradleVersions();
+
+		if (localVersionInfo) {
+			return localVersionInfo;
+		}
+
+		// fallback to reading from npm...
 		try {
 			let output = await this.$packageManager.view(
 				`${SCOPED_ANDROID_RUNTIME_NAME}@${runtimeVersion}`,
