@@ -340,17 +340,17 @@
   "resolved" "https://registry.npmjs.org/@kwsites/promise-deferred/-/promise-deferred-1.1.1.tgz"
   "version" "1.1.1"
 
-"@nativescript/doctor@2.0.6":
-  "integrity" "sha512-OdjlCNkaOnMyHdygPd0MYAomZS+lzyaDPxEH5rQ4pr6sz48gSQRvtGIOCJHH3cJ03lQNTIMc3EuQBn7xsKSOWw=="
-  "resolved" "https://registry.npmjs.org/@nativescript/doctor/-/doctor-2.0.6.tgz"
-  "version" "2.0.6"
+"@nativescript/doctor@2.0.7":
+  "integrity" "sha512-Pd3NlFGXN+SC03sBC/pj/9t5v5h7bh2xnbjbXHCo1MTjjm6fpLGFSxlCZRPPFgDIisf4OqGmEeIglNpy7CbyZg=="
+  "resolved" "https://registry.npmjs.org/@nativescript/doctor/-/doctor-2.0.7.tgz"
+  "version" "2.0.7"
   dependencies:
-    "lodash" "4.17.15"
-    "osenv" "0.1.3"
-    "semver" "5.5.1"
+    "lodash" "4.17.21"
+    "osenv" "0.1.5"
+    "semver" "7.3.5"
     "shelljs" "~0.8.4"
-    "temp" "0.8.3"
-    "winreg" "1.2.2"
+    "temp" "0.9.4"
+    "winreg" "1.2.4"
     "yauzl" "2.10.0"
 
 "@nativescript/schematics-executor@0.0.2":
@@ -4390,10 +4390,10 @@
   "resolved" "https://registry.npmjs.org/lodash/-/lodash-3.6.0.tgz"
   "version" "3.6.0"
 
-"lodash@4.17.15":
-  "integrity" "sha512-8xOcRHvCjnocdS5cpwXQXVzmmh5e5+saE2QGoeQmbKmRS6J3VQppPOIt0MnmE+4xlZoumy0GPG0D0MVIQbNA1A=="
-  "resolved" "https://registry.npmjs.org/lodash/-/lodash-4.17.15.tgz"
-  "version" "4.17.15"
+"lodash@4.17.21":
+  "integrity" "sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg=="
+  "resolved" "https://registry.npmjs.org/lodash/-/lodash-4.17.21.tgz"
+  "version" "4.17.21"
 
 "lodash@4.17.4":
   "integrity" "sha1-eCA6TRwyiuHYbcpkYONptX9AVa4="
@@ -5285,14 +5285,6 @@
   "integrity" "sha512-0CWcCECdMVc2Rw3U5w9ZjqX6ga6ubk1xDVKxtBQPK7wis/0F2r9T6k4ydGYhecl7YUBxBVxhL5oisPsNxAPe2g=="
   "resolved" "https://registry.npmjs.org/osenv/-/osenv-0.1.5.tgz"
   "version" "0.1.5"
-  dependencies:
-    "os-homedir" "^1.0.0"
-    "os-tmpdir" "^1.0.0"
-
-"osenv@0.1.3":
-  "integrity" "sha1-g88FxtZFj8TVrGNi6jJdkvJ1Qhc="
-  "resolved" "https://registry.npmjs.org/osenv/-/osenv-0.1.3.tgz"
-  "version" "0.1.3"
   dependencies:
     "os-homedir" "^1.0.0"
     "os-tmpdir" "^1.0.0"
@@ -6237,11 +6229,6 @@
   dependencies:
     "glob" "^7.1.3"
 
-"rimraf@~2.2.6":
-  "integrity" "sha1-5Dm+Kq7jJzIZUnMPmaiSnk/FBYI="
-  "resolved" "https://registry.npmjs.org/rimraf/-/rimraf-2.2.8.tgz"
-  "version" "2.2.8"
-
 "rimraf@~2.6.2":
   "integrity" "sha512-mwqeW5XsA2qAejG46gYdENaxXjx9onRNCfn7L0duuP4hCuTIi/QO7PDK07KJfp1d+izWPrzEJDcSqBa0OZQriA=="
   "resolved" "https://registry.npmjs.org/rimraf/-/rimraf-2.6.3.tgz"
@@ -6333,15 +6320,17 @@
   "resolved" "https://registry.npmjs.org/semver/-/semver-5.7.1.tgz"
   "version" "5.7.1"
 
-"semver@5.5.1":
-  "integrity" "sha512-PqpAxfrEhlSUWge8dwIp4tZnQ25DIOthpiaHNIthsjEFQD6EvqUKUDM7L8O2rShkFccYo1VjJR0coWfNkCubRw=="
-  "resolved" "https://registry.npmjs.org/semver/-/semver-5.5.1.tgz"
-  "version" "5.5.1"
-
 "semver@6.3.0":
   "integrity" "sha512-b39TBaTSfV6yBrapU89p5fKekE2m/NwnDocOVruQFS1/veMgdzuPcnOM34M6CwxW8jH/lxEa5rBoDeUwu5HHTw=="
   "resolved" "https://registry.npmjs.org/semver/-/semver-6.3.0.tgz"
   "version" "6.3.0"
+
+"semver@7.3.5":
+  "integrity" "sha512-PoeGJYh8HK4BTO/a9Tf6ZG3veo/A7ZVsYrSA6J8ny9nb3B1VrpkuN+z9OE5wfE5p6H4LchYZsegiQgbJD94ZFQ=="
+  "resolved" "https://registry.npmjs.org/semver/-/semver-7.3.5.tgz"
+  "version" "7.3.5"
+  dependencies:
+    "lru-cache" "^6.0.0"
 
 "serialize-javascript@4.0.0":
   "integrity" "sha512-GaNA54380uFefWghODBWEGisLZFj00nS5ACs6yHa9nLqlLpVLO8ChDGeKRjZnV4Nh4n0Qi7nhYZD/9fCPzEqkw=="
@@ -6998,19 +6987,19 @@
   "resolved" "https://registry.npmjs.org/temp-dir/-/temp-dir-2.0.0.tgz"
   "version" "2.0.0"
 
-"temp@0.8.3":
-  "integrity" "sha1-4Ma8TSa5AxJEEOT+2BEDAU38H1k="
-  "resolved" "https://registry.npmjs.org/temp/-/temp-0.8.3.tgz"
-  "version" "0.8.3"
-  dependencies:
-    "os-tmpdir" "^1.0.0"
-    "rimraf" "~2.2.6"
-
 "temp@0.9.1":
   "integrity" "sha512-WMuOgiua1xb5R56lE0eH6ivpVmg/lq2OHm4+LtT/xtEtPQ+sz6N3bBM6WZ5FvO1lO4IKIOb43qnhoc4qxP5OeA=="
   "resolved" "https://registry.npmjs.org/temp/-/temp-0.9.1.tgz"
   "version" "0.9.1"
   dependencies:
+    "rimraf" "~2.6.2"
+
+"temp@0.9.4":
+  "integrity" "sha512-yYrrsWnrXMcdsnu/7YMYAofM1ktpL5By7vZhf15CrXijWWrEYZks5AXBudalfSWJLlnen/QUJUB5aoB0kqZUGA=="
+  "resolved" "https://registry.npmjs.org/temp/-/temp-0.9.4.tgz"
+  "version" "0.9.4"
+  dependencies:
+    "mkdirp" "^0.5.1"
     "rimraf" "~2.6.2"
 
 "tempfile@^3.0.0":
@@ -7527,11 +7516,6 @@
   "version" "1.1.3"
   dependencies:
     "string-width" "^1.0.2 || 2"
-
-"winreg@1.2.2":
-  "integrity" "sha1-hQmvo7ccW70RCm18YkfsZ3NsWY8="
-  "resolved" "https://registry.npmjs.org/winreg/-/winreg-1.2.2.tgz"
-  "version" "1.2.2"
 
 "winreg@1.2.4":
   "integrity" "sha1-ugZWKbepJRMOFXeRCM9UCZDpjRs="

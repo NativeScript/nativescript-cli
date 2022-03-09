@@ -1,3 +1,17 @@
+## [8.2.2](https://github.com/NativeScript/nativescript-cli/compare/v8.2.1...v8.2.2) (2022-03-09)
+
+
+### Bug Fixes
+
+* topological dependency sorting ([#5647](https://github.com/NativeScript/nativescript-cli/issues/5647)) ([9d8d967](https://github.com/NativeScript/nativescript-cli/commit/9d8d967096fba41325ee9082eed02a880cb803f6))
+
+
+### Features
+
+* read gradle versions from local runtime first ([#5646](https://github.com/NativeScript/nativescript-cli/issues/5646)) ([1b9cde3](https://github.com/NativeScript/nativescript-cli/commit/1b9cde38f2272ae142520141469962fbe5f55954))
+
+
+
 # [8.2.1](https://github.com/NativeScript/nativescript-cli/compare/v8.2.0...v8.2.1) (2022-03-08)
 
 ### Bug Fixes
