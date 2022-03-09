@@ -104,7 +104,7 @@ export class Doctor implements NativeScriptDoctor.IDoctor {
 			this.processValidationErrors({
 				warnings: this.androidToolsInfo.validateAndroidHomeEnvVariable(),
 				infoMessage:
-					"Your ANDROID_HOME environment variable is set and points to correct directory.",
+					"Your ANDROID_SDK_ROOT environment variable is set and points to correct directory.",
 				platforms: [Constants.ANDROID_PLATFORM_NAME],
 			}),
 			this.processSysInfoItem({
