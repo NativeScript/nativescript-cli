@@ -59,7 +59,7 @@ interface NativeDependency {
 // native dependenciess need to be sorted so the deepst dependencies are built before it's parents
 //
 // for example, given this dep structure (assuming these are all native dependencies that need to be built)
-// (note: we list all dependencies at the root level, so the leaf nodes are essentiall references to the root nodes)
+// (note: we list all dependencies at the root level, so the leaf nodes are essentially references to the root nodes)
 //
 //   |- dep1
 //   |- dep2
