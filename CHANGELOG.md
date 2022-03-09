@@ -1,3 +1,9 @@
+# [8.2.1](https://github.com/NativeScript/nativescript-cli/compare/v8.2.0...v8.2.1) (2022-03-08)
+
+### Bug Fixes
+
+* node17 debugger can't attach ([fc84d92](https://github.com/NativeScript/nativescript-cli/commit/fc84d92d9c102ddaca036c0cda1800b8e41fd653))
+
 # [8.2.0](https://github.com/NativeScript/nativescript-cli/compare/v8.1.5...v8.2.0) (2022-03-08)
 
 
