@@ -59,58 +59,74 @@ interface NativeDependency {
 // native dependenciess need to be sorted so the deepst dependencies are built before it's parents
 //
 // for example, given this dep structure (assuming these are all native dependencies that need to be built)
+// (note: we list all dependencies at the root level, so the leaf nodes are essentially references to the root nodes)
+//
 //   |- dep1
 //   |- dep2
-//     |- dep3
-//     |- dep4
-//       |-dep5
-//     |- dep6
+//   |- |- dep3
+//   |- |- dep4
+//   |- |- |- dep5
+//   |- dep3
+//   |- dep4
+//   |- |- dep5
+//   |- dep5
 //
 // It is sorted:
-//  |- dep1 - doesn't depend on anything, so the order stays the same as in the input list
-//  |- dep3 - doesn't depend on anything, so the order stays the same as in the input list
-//  |- dep5 - doesn't depend on anything, so the order stays the same as in the input list
-//  |- dep6 - doesn't depend on anything, so the order stays the same as in the input list
-//  |- dep4 - depends on dep6, so dep6 must be built first, ie above ^
-//  |- dep2 - depends on dep3, dep4, dep5 and dep6, so all of them must be built first
+//
+//   |- dep1
+//   |- dep3
+//   |- dep5
+//   |- dep4        # depends on dep5, so dep5 must be built first, ie above ^
+//   |- |- dep5
+//   |- dep2        # depends on dep3, dep4 (and dep5 through dep4) so all of them must be built first before dep2 is built
+//   |- |- dep3
+//   |- |- dep4
+//   |- |- |- dep5
 //
 // for more details see: https://wikiless.org/wiki/Topological_sorting?lang=en
 //
 function topologicalSortNativeDependencies(
-	nativeDeps: NativeDependency[],
+	dependencies: NativeDependency[],
 	start: NativeDependency[] = [],
-	depth = 0
+	depth = 0,
+	total = 0 // do not pass in, we calculate it in the initial run!
 ): NativeDependency[] {
-	const processedDeps = nativeDeps.reduce(
-		(accumulator, nativeDep: NativeDependency) => {
-			if (
-				nativeDep.dependencies.every(
-					Array.prototype.includes,
-					accumulator.map((n) => n.name)
-				)
-			) {
-				accumulator.push(nativeDep);
+	// we set the total on the initial call - and never increment it, as it's used for esacaping the recursion
+	if (total === 0) {
+		total = dependencies.length;
+	}
+
+	const sortedDeps = dependencies.reduce(
+		(sortedDeps, currentDependency: NativeDependency) => {
+			const allSubDependenciesProcessed = currentDependency.dependencies.every(
+				(subDependency) => {
+					return sortedDeps.some((dep) => dep.name === subDependency);
+				}
+			);
+			if (allSubDependenciesProcessed) {
+				sortedDeps.push(currentDependency);
 			}
-			return accumulator;
+			return sortedDeps;
 		},
 		start
 	);
 
-	const remainingDeps = nativeDeps.filter(
-		(nativeDep) => !processedDeps.includes(nativeDep)
+	const remainingDeps = dependencies.filter(
+		(nativeDep) => !sortedDeps.includes(nativeDep)
 	);
 
-	// recurse if we still have unprocessed deps
+	// recurse if we still have remaining deps
 	// the second condition here prevents infinite recursion
-	if (remainingDeps.length && depth <= nativeDeps.length) {
+	if (remainingDeps.length && sortedDeps.length < total) {
 		return topologicalSortNativeDependencies(
 			remainingDeps,
-			processedDeps,
-			depth + 1
+			sortedDeps,
+			depth + 1,
+			total
 		);
 	}
 
-	return processedDeps;
+	return sortedDeps;
 }
 
 export class AndroidProjectService extends projectServiceBaseLib.PlatformProjectServiceBase {
