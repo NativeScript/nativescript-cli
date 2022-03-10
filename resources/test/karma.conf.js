@@ -40,6 +40,8 @@ module.exports = function (config) {
       ]
     },
 
+    // web server hostname
+    hostname: '127.0.0.1',
 
     // web server port
     port: 9876,
