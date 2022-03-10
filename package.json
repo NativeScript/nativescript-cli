@@ -1,7 +1,7 @@
 {
   "name": "nativescript",
   "preferGlobal": true,
-  "version": "8.1.5",
+  "version": "8.2.2",
   "author": "NativeScript <support@nativescript.org>",
   "description": "Command-line interface for building NativeScript projects",
   "bin": {
@@ -57,7 +57,7 @@
     "mobile"
   ],
   "dependencies": {
-    "@nativescript/doctor": "2.0.6",
+    "@nativescript/doctor": "2.0.7",
     "@nativescript/schematics-executor": "0.0.2",
     "@rigor789/resolve-package-path": "^1.0.5",
     "axios": "^0.21.1",

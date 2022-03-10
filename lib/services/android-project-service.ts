@@ -48,23 +48,85 @@ import { IInjector } from "../common/definitions/yok";
 import { injector } from "../common/yok";
 import { INotConfiguredEnvOptions } from "../common/definitions/commands";
 
-
-
 interface NativeDependency {
 	name: string;
 	directory: string;
 	dependencies: string[];
 }
-function treeSort(obj: NativeDependency[], start:NativeDependency[], depth = 0):NativeDependency[] {
-	const processed = obj.reduce((a,b,i) => {
-	  if (b.dependencies.every(Array.prototype.includes, a.map(n=>n.name))) {
-		  a.push(b);
-	  }
-	  return  a;
-	}, start);
-	const nextNames = obj.filter(n => !processed.includes(n));
-	const goAgain = nextNames.length && depth <= obj.length;
-	return goAgain ? treeSort(nextNames, processed, depth + 1) : processed;
+
+//
+// we sort the native dependencies topologically to make sure they are processed in the right order
+// native dependenciess need to be sorted so the deepst dependencies are built before it's parents
+//
+// for example, given this dep structure (assuming these are all native dependencies that need to be built)
+// (note: we list all dependencies at the root level, so the leaf nodes are essentially references to the root nodes)
+//
+//   |- dep1
+//   |- dep2
+//   |- |- dep3
+//   |- |- dep4
+//   |- |- |- dep5
+//   |- dep3
+//   |- dep4
+//   |- |- dep5
+//   |- dep5
+//
+// It is sorted:
+//
+//   |- dep1
+//   |- dep3
+//   |- dep5
+//   |- dep4        # depends on dep5, so dep5 must be built first, ie above ^
+//   |- |- dep5
+//   |- dep2        # depends on dep3, dep4 (and dep5 through dep4) so all of them must be built first before dep2 is built
+//   |- |- dep3
+//   |- |- dep4
+//   |- |- |- dep5
+//
+// for more details see: https://wikiless.org/wiki/Topological_sorting?lang=en
+//
+function topologicalSortNativeDependencies(
+	dependencies: NativeDependency[],
+	start: NativeDependency[] = [],
+	depth = 0,
+	total = 0 // do not pass in, we calculate it in the initial run!
+): NativeDependency[] {
+	// we set the total on the initial call - and never increment it, as it's used for esacaping the recursion
+	if (total === 0) {
+		total = dependencies.length;
+	}
+
+	const sortedDeps = dependencies.reduce(
+		(sortedDeps, currentDependency: NativeDependency) => {
+			const allSubDependenciesProcessed = currentDependency.dependencies.every(
+				(subDependency) => {
+					return sortedDeps.some((dep) => dep.name === subDependency);
+				}
+			);
+			if (allSubDependenciesProcessed) {
+				sortedDeps.push(currentDependency);
+			}
+			return sortedDeps;
+		},
+		start
+	);
+
+	const remainingDeps = dependencies.filter(
+		(nativeDep) => !sortedDeps.includes(nativeDep)
+	);
+
+	// recurse if we still have remaining deps
+	// the second condition here prevents infinite recursion
+	if (remainingDeps.length && sortedDeps.length < total) {
+		return topologicalSortNativeDependencies(
+			remainingDeps,
+			sortedDeps,
+			depth + 1,
+			total
+		);
+	}
+
+	return sortedDeps;
 }
 
 export class AndroidProjectService extends projectServiceBaseLib.PlatformProjectServiceBase {
@@ -694,20 +756,36 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			platformDir,
 			constants.DEPENDENCIES_JSON_NAME
 		);
-		let nativeDependencyDatas = dependencies
-			.filter(AndroidProjectService.isNativeAndroidDependency);
-		
-		let nativeDependencies = nativeDependencyDatas.map(({ name, directory, dependencies }) => ({
-				name,
-				directory: path.relative(platformDir, directory),
-				dependencies:dependencies.filter(d=>nativeDependencyDatas.findIndex(nd=>nd.name===d) !== -1)
-			} as NativeDependency));
-		nativeDependencies = treeSort(nativeDependencies, []);
-		const jsonContent = JSON.stringify(nativeDependencies, null, 4);
+		let nativeDependencyData = dependencies.filter(
+			AndroidProjectService.isNativeAndroidDependency
+		);
 
+		let nativeDependencies = nativeDependencyData.map(
+			({ name, directory, dependencies }) => {
+				return {
+					name,
+					directory: path.relative(platformDir, directory),
+					dependencies: dependencies.filter((dep) => {
+						// filter out transient dependencies that don't have native dependencies
+						return (
+							nativeDependencyData.findIndex(
+								(nativeDep) => nativeDep.name === dep
+							) !== -1
+						);
+					}),
+				} as NativeDependency;
+			}
+		);
+		nativeDependencies = topologicalSortNativeDependencies(nativeDependencies);
+		const jsonContent = JSON.stringify(nativeDependencies, null, 4);
 		this.$fs.writeFile(dependenciesJsonPath, jsonContent);
-		return dependencies.sort(function(a, b){  
-			return nativeDependencies.findIndex(n => n.name === a.name) - nativeDependencies.findIndex(n => n.name === b.name);
+
+		// we sort all the dependencies to respect the topological sorting of the native dependencies
+		return dependencies.sort(function (a, b) {
+			return (
+				nativeDependencies.findIndex((n) => n.name === a.name) -
+				nativeDependencies.findIndex((n) => n.name === b.name)
+			);
 		});
 	}
 

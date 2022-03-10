@@ -32,7 +32,7 @@ jobs:
         run: npm --no-git-tag-version version $NPM_VERSION
 
       - name: Build @nativescript/doctor
-        run: npm run pack
+        run: npm pack
 
       - name: Publish @nativescript/doctor
         env:

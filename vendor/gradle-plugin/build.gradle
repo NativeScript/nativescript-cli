@@ -7,12 +7,6 @@ apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-parcelize'
 
-def computeCompileSdkVersion = { -> project.hasProperty("compileSdk") ? compileSdk : 31 as int }
-def computeTargetSdkVersion = { -> project.hasProperty("targetSdk") ? targetSdk : 31 as int }
-def computeBuildToolsVersion = { ->
-    project.hasProperty("buildToolsVersion") ? buildToolsVersion : "31.0.0"
-}
-
 buildscript {
     def getDepPlatformDir = { dep ->
         file("${project.ext.USER_PROJECT_ROOT}/${project.ext.PLATFORMS_ANDROID}/${dep.directory}/$PLATFORMS_ANDROID")
@@ -150,6 +144,11 @@ allprojects {
     }
 }
 
+def computeCompileSdkVersion = { -> project.hasProperty("compileSdk") ? compileSdk : 31 }
+def computeBuildToolsVersion = { ->
+    project.hasProperty("buildToolsVersion") ? buildToolsVersion : "31.0.0"
+}
+
 android {
     def applyPluginGradleConfigurations = { ->
         nativescriptDependencies.each { dep ->
@@ -158,9 +157,6 @@ android {
                 apply from: includeGradlePath
             }
         }
-    }
-    kotlinOptions {
-        jvmTarget = '1.8'
     }
     applyBeforePluginGradleConfiguration()
     applyPluginGradleConfigurations()
@@ -191,29 +187,6 @@ def applyBeforePluginGradleConfiguration() {
     }
 }
 
-afterEvaluate {
-    def generateBuildConfig =  project.hasProperty("generateBuildConfig") ? project.generateBuildConfig : false
-    def generateR =  project.hasProperty("generateR") ? project.generateR : false
-    generateReleaseBuildConfig.enabled = generateBuildConfig
-    generateDebugBuildConfig.enabled = generateBuildConfig
-    generateReleaseResValues.enabled = generateR
-    generateDebugResValues.enabled = generateR
-}
-tasks.whenTaskAdded({ DefaultTask currentTask ->
-    if (currentTask.name == 'bundleRelease' || currentTask.name == 'bundleDebug') {
-        def generateBuildConfig =  project.hasProperty("generateBuildConfig") ? project.generateBuildConfig : false
-        def generateR =  project.hasProperty("generateR") ? project.generateR : false
-        if (!generateBuildConfig) {
-            currentTask.exclude '**/BuildConfig.class'
-        }
-        if (!generateR) {
-            currentTask.exclude '**/R.class', '**/R$*.class'
-        }
-    }
-})
-
-
-
 task addDependenciesFromNativeScriptPlugins {
     nativescriptDependencies.each { dep ->
         def aarFiles = fileTree(dir: getDepPlatformDir(dep), include: ["**/*.aar"])
@@ -234,3 +207,24 @@ task addDependenciesFromNativeScriptPlugins {
         project.dependencies.add("implementation", jarFiles)
     }
 }
+
+afterEvaluate {
+    def generateBuildConfig =  project.hasProperty("generateBuildConfig") ? project.generateBuildConfig : false
+    def generateR =  project.hasProperty("generateR") ? project.generateR : false
+    generateReleaseBuildConfig.enabled = generateBuildConfig
+    generateDebugBuildConfig.enabled = generateBuildConfig
+    generateReleaseResValues.enabled = generateR
+    generateDebugResValues.enabled = generateR
+}
+tasks.whenTaskAdded({ DefaultTask currentTask ->
+    if (currentTask.name == 'bundleRelease' || currentTask.name == 'bundleDebug') {
+        def generateBuildConfig =  project.hasProperty("generateBuildConfig") ? project.generateBuildConfig : false
+        def generateR =  project.hasProperty("generateR") ? project.generateR : false
+        if (!generateBuildConfig) {
+            currentTask.exclude '**/BuildConfig.class'
+        }
+        if (!generateR) {
+            currentTask.exclude '**/R.class', '**/R$*.class'
+        }
+    }
+})

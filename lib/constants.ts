@@ -328,8 +328,8 @@ export class Hooks {
 }
 
 export class AndroidBuildDefaults {
-	public static GradleVersion = "7.0.2";
-	public static GradleAndroidPluginVersion = "7.0.4";
+	public static GradleVersion = "7.4.0";
+	public static GradleAndroidPluginVersion = "7.1.2";
 }
 
 export const PACKAGE_PLACEHOLDER_NAME = "__PACKAGE__";
