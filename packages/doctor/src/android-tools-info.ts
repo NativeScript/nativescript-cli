@@ -128,15 +128,16 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 				message = `You have to install version ${versionRangeMatches[1]}.`;
 			}
 
-			let invalidBuildToolsAdditionalMsg = `Run \`\$ ${this.getPathToSdkManagementTool()}\` from your command-line to install required \`Android Build Tools\`.`;
+			// let invalidBuildToolsAdditionalMsg = `Run \`\$ ${this.getPathToSdkManagementTool()}\` from your command-line to install required \`Android Build Tools\`.`;
+			let invalidBuildToolsAdditionalMsg = `Install the required build-tools through Android Studio.`;
 			if (!isAndroidHomeValid) {
 				invalidBuildToolsAdditionalMsg +=
-					" In case you already have them installed, make sure `ANDROID_HOME` environment variable is set correctly.";
+					" In case you already have them installed, make sure the `ANDROID_HOME` environment variable is set correctly.";
 			}
 
 			errors.push({
 				warning:
-					"You need to have the Android SDK Build-tools installed on your system. " +
+					"No compatible version of the Android SDK Build-tools are installed on your system. " +
 					message,
 				additionalInformation: invalidBuildToolsAdditionalMsg,
 				platforms: [Constants.ANDROID_PLATFORM_NAME],
