@@ -36,6 +36,11 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 			const indexOfSdk29 = baseTargets.indexOf("android-29");
 			baseTargets = baseTargets.slice(0, indexOfSdk29);
 		}
+		if (runtimeVersion && semver.lt(semver.coerce(runtimeVersion), "8.2.0")) {
+			baseTargets.sort();
+			const indexOfSdk32 = baseTargets.indexOf("android-32");
+			baseTargets = baseTargets.slice(0, indexOfSdk32);
+		}
 
 		return baseTargets;
 	}
@@ -503,7 +508,13 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 	}
 
 	private getMaxSupportedVersion(projectDir: string): number {
-		const supportedTargets = this.getSupportedTargets(projectDir);
+		let supportedTargets = this.getSupportedTargets(projectDir);
+		const runtimeVersion = this.getRuntimeVersion({ projectDir });
+		if (semver.lt(semver.coerce(runtimeVersion), "8.2.0")) {
+			supportedTargets = supportedTargets.filter(
+				(target) => this.parseAndroidSdkString(target) <= 30
+			);
+		}
 		return this.parseAndroidSdkString(
 			supportedTargets.sort()[supportedTargets.length - 1]
 		);
