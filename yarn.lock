@@ -340,10 +340,10 @@
   "resolved" "https://registry.npmjs.org/@kwsites/promise-deferred/-/promise-deferred-1.1.1.tgz"
   "version" "1.1.1"
 
-"@nativescript/doctor@2.0.7":
-  "integrity" "sha512-Pd3NlFGXN+SC03sBC/pj/9t5v5h7bh2xnbjbXHCo1MTjjm6fpLGFSxlCZRPPFgDIisf4OqGmEeIglNpy7CbyZg=="
-  "resolved" "https://registry.npmjs.org/@nativescript/doctor/-/doctor-2.0.7.tgz"
-  "version" "2.0.7"
+"@nativescript/doctor@2.0.8":
+  "integrity" "sha512-/jVGBBBBY2BX1IwriDyXHNi0ZNAkSuzdDQuGY3nUl3BDLu5AM+FFg4qCG3D9IW664WLbA1KbJQd+HUSjRHM/ZQ=="
+  "resolved" "https://registry.npmjs.org/@nativescript/doctor/-/doctor-2.0.8.tgz"
+  "version" "2.0.8"
   dependencies:
     "lodash" "4.17.21"
     "osenv" "0.1.5"

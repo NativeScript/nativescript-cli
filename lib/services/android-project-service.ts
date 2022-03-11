@@ -313,9 +313,10 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			}
 		);
 
-		this.$androidToolsInfo.validateTargetSdk({
+		this.$androidToolsInfo.validateInfo({
 			showWarningsAsErrors: true,
 			projectDir: projectData.projectDir,
+			validateTargetSdk: true,
 		});
 
 		return {
