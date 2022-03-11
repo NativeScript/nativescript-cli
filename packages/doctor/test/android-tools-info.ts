@@ -47,9 +47,25 @@ describe("androidToolsInfo", () => {
 			},
 			readDirectory: (path: string) => {
 				if (path.indexOf("build-tools") >= 0) {
-					return ["20.0.0", "27.0.3", "28.0.3", "29.0.1"];
+					return [
+						"20.0.0",
+						"27.0.3",
+						"28.0.3",
+						"29.0.1",
+						"30.0.0",
+						"31.0.0",
+						"32.0.0",
+					];
 				} else {
-					return ["android-16", "android-27", "android-28", "android-29"];
+					return [
+						"android-16",
+						"android-27",
+						"android-28",
+						"android-29",
+						"android-30",
+						"android-31",
+						"android-32",
+					];
 				}
 			},
 		};
@@ -58,34 +74,68 @@ describe("androidToolsInfo", () => {
 		return new AndroidToolsInfo(childProcess, fs, hostInfo, helpers);
 	};
 
-	describe("getToolsInfo", () => {
-		it("runtime 6.0.0", () => {
+	describe("getToolsInfo -> compileSdkVersion", () => {
+		it("runtime 6.0.0 - 28", () => {
 			const androidToolsInfo = getAndroidToolsInfo("6.0.0");
 			const toolsInfo = androidToolsInfo.getToolsInfo({ projectDir: "test" });
 
 			assert.equal(toolsInfo.compileSdkVersion, 28);
 		});
 
-		it("runtime 6.1.0", () => {
+		it("runtime 6.1.0 - 30", () => {
 			const androidToolsInfo = getAndroidToolsInfo("6.1.0");
 			const toolsInfo = androidToolsInfo.getToolsInfo({ projectDir: "test" });
 
-			assert.equal(toolsInfo.compileSdkVersion, 29);
+			assert.equal(toolsInfo.compileSdkVersion, 30);
+		});
+
+		it("runtime 8.1.1 - 30", () => {
+			const androidToolsInfo = getAndroidToolsInfo("8.1.1");
+			const toolsInfo = androidToolsInfo.getToolsInfo({ projectDir: "test" });
+
+			assert.equal(toolsInfo.compileSdkVersion, 30);
+		});
+
+		it("runtime 8.2.0 - 32", () => {
+			const androidToolsInfo = getAndroidToolsInfo("8.2.0");
+			const toolsInfo = androidToolsInfo.getToolsInfo({ projectDir: "test" });
+
+			assert.equal(toolsInfo.compileSdkVersion, 32);
 		});
 	});
 
 	describe("supportedAndroidSdks", () => {
-		it("should support android-17 - android-32", () => {
-			const min = 17;
-			const max = 32;
+		const assertSupportedRange = (
+			runtimeVersion: string,
+			min: number,
+			max: number
+		) => {
 			let cnt = 0;
-			const androidToolsInfo = getAndroidToolsInfo("6.5.0");
+			const androidToolsInfo = getAndroidToolsInfo(runtimeVersion);
 			const supportedTargets = androidToolsInfo.getSupportedTargets("test");
 			for (let i = 0; i < supportedTargets.length; i++) {
 				assert.equal(supportedTargets[i], `android-${min + i}`);
 				cnt = min + i;
 			}
 			assert.equal(cnt, max);
+		};
+
+		it("runtime 6.0.0 should support android-17 - android-28", () => {
+			const min = 17;
+			const max = 28;
+			assertSupportedRange("6.0.0", min, max);
+		});
+
+		it("runtime 8.1.0 should support android-17 - android-30", () => {
+			const min = 17;
+			const max = 30;
+			assertSupportedRange("8.1.0", min, max);
+		});
+
+		it("runtime 8.2.0 should support android-17 - android-32", () => {
+			const min = 17;
+			const max = 32;
+			assertSupportedRange("8.2.0", min, max);
 		});
 	});
 
@@ -293,6 +343,52 @@ describe("androidToolsInfo", () => {
 				});
 			}
 		);
+	});
+
+	describe("validataMaxSupportedTargetSdk", () => {
+		const testCases = [
+			{
+				runtimeVersion: "8.1.0",
+				targetSdk: 30,
+				expectWarning: false,
+			},
+			{
+				runtimeVersion: "8.1.0",
+				targetSdk: 31,
+				expectWarning: true,
+			},
+			{
+				runtimeVersion: "8.1.0",
+				targetSdk: 32,
+				expectWarning: true,
+			},
+			{
+				runtimeVersion: "8.2.0",
+				targetSdk: 32,
+				expectWarning: false,
+			},
+		];
+
+		testCases.forEach(({ runtimeVersion, targetSdk, expectWarning }) => {
+			it(`for runtime ${runtimeVersion} - and targetSdk ${targetSdk}`, () => {
+				const androidToolsInfo = getAndroidToolsInfo(runtimeVersion);
+				const actualWarnings = androidToolsInfo.validataMaxSupportedTargetSdk({
+					projectDir: "test",
+					targetSdk,
+				});
+				let expectedWarnings: NativeScriptDoctor.IWarning[] = [];
+
+				if (expectWarning) {
+					expectedWarnings.push({
+						additionalInformation: "",
+						platforms: ["Android"],
+						warning: `Support for the selected Android target SDK android-${targetSdk} is not verified. Your Android app might not work as expected.`,
+					});
+				}
+
+				assert.deepEqual(actualWarnings, expectedWarnings);
+			});
+		});
 	});
 
 	after(() => {
