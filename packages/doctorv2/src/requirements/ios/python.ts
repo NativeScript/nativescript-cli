@@ -1,6 +1,7 @@
-import { exec, execSafe } from "../../helpers/child-process";
 import { error, ok, warn } from "../../helpers/results";
+import { execSafe } from "../../helpers/child-process";
 import { details, RequirementFunction } from "../..";
+import { safeMatch } from "../../helpers";
 
 const VERSION_RE = /Python\s(.+)\n/;
 
@@ -12,42 +13,39 @@ declare module "../.." {
 
 details.python = null;
 
-async function PythonRequirement() {
+const pythonRequirement: RequirementFunction = async () => {
 	const res = await execSafe(`python3 --version`);
 
 	if (res) {
-		const [, version] = res.stdout.match(VERSION_RE);
+		const [, version] = safeMatch(res.stdout, VERSION_RE);
 		// console.log("python", {
 		// 	version,
 		// });
 
 		details.python = { version };
+
+		return ok(`Python is installed (${version})`);
+	}
+	return error(
+		`Python (3.x) is not installed`,
+		`Make sure you have 'python3' in your PATH`
+	);
+};
+
+const pythonSixRequirement: RequirementFunction = async () => {
+	const hasSix = await execSafe(`python3 -c "import six"`);
+
+	if (hasSix) {
+		return ok(`Python package "six" is installed`);
 	}
 
-	try {
-		await exec(`python3 -c "import six"`);
-		// prettier-ignore
-		return [
-            ok(`Python3 is installed`),
-            ok('Python3 "six" is installed')
-        ];
-	} catch (err) {
-		if (err.code === 1) {
-			// error.code = 1 means Python is found, but failed to import "six"
-			return [
-				ok("Python3 is installed"),
-				warn(
-					`Python3 "six" is not installed.`,
-					"Some debugger features might not work correctly"
-				),
-			];
-		}
-	}
+	return warn(
+		`Python package "six" is not installed`,
+		"Some debugger features might not work correctly"
+	);
+};
 
-	return [
-		error(`Python3 is not installed`),
-		error(`Python3 "six" is not installed.`),
-	];
-}
-
-export const pythonRequirements: RequirementFunction[] = [PythonRequirement];
+export const pythonRequirements: RequirementFunction[] = [
+	pythonRequirement,
+	pythonSixRequirement,
+];

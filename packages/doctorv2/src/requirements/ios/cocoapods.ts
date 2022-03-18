@@ -1,6 +1,7 @@
 import { execSafe } from "../../helpers/child-process";
-import { error, ok } from "../../helpers/results";
 import { details, RequirementFunction } from "../..";
+import { error, ok } from "../../helpers/results";
+import { notInRange } from "../../helpers/semver";
 
 declare module "../.." {
 	interface RequirementDetails {
@@ -21,10 +22,21 @@ async function CocoaPodsRequirement() {
 		// });
 		details.cocoapods = { version };
 
-		return ok(`CocoaPods is installed`);
+		const minVersion = "1.0.0";
+		if (notInRange(version, { min: minVersion })) {
+			return error(
+				`CocoaPods is installed (${version}) but does not satisfy the minimum version of ${minVersion}`,
+				`Update CocoaPods to at least ${minVersion}`
+			);
+		}
+
+		return ok(`CocoaPods is installed (${version})`);
 	}
 
-	return error("CocoaPods is missing");
+	return error(
+		`CocoaPods is missing`,
+		`You need to install CocoaPods to be able to build and run projects.`
+	);
 }
 
 export const cocoaPodsRequirements: RequirementFunction[] = [

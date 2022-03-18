@@ -1,6 +1,7 @@
 import { execSafe } from "../../helpers/child-process";
-import { error, ok } from "../../helpers/results";
 import { details, RequirementFunction } from "../..";
+import { error, ok } from "../../helpers/results";
+import { safeMatch } from "../../helpers";
 
 const VERSION_RE = /Xcode\s(.+)\n/;
 const BUILD_VERSION_RE = /Build version\s(.+)\n/;
@@ -19,8 +20,8 @@ async function XCodeRequirement() {
 	const res = await execSafe(`xcodebuild -version`);
 
 	if (res) {
-		const [, version] = res.stdout.match(VERSION_RE);
-		const [, buildVersion] = res.stdout.match(BUILD_VERSION_RE);
+		const [, version] = safeMatch(res.stdout, VERSION_RE);
+		const [, buildVersion] = safeMatch(res.stdout, BUILD_VERSION_RE);
 		// console.log("xcode", {
 		// 	version,
 		// 	buildVersion,
@@ -31,7 +32,7 @@ async function XCodeRequirement() {
 			buildVersion,
 		};
 		// prettier-ignore
-		return ok(`XCode is installed`)
+		return ok(`XCode is installed (${version} / ${buildVersion})`)
 	}
 
 	return error(
@@ -52,10 +53,13 @@ async function XCodeProjRequirement() {
 
 		details.xcodeproj = { version };
 
-		return ok(`xcodeproj is installed`);
+		return ok(`xcodeproj is installed (${version})`);
 	}
 
-	return error("xcodeproj is missing");
+	return error(
+		`xcodeproj is missing`,
+		`The xcodeproj gem is required to build projects.`
+	);
 }
 
 export const xcodeRequirements: RequirementFunction[] = [

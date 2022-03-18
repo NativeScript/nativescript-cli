@@ -1,4 +1,4 @@
-import { redBright, yellowBright, green } from "ansi-colors";
+import { redBright, yellowBright, green, gray } from "ansi-colors";
 
 export type TPlatform = "android" | "ios";
 
@@ -115,12 +115,44 @@ function printResults(res: IRequirementResult[]) {
 			console.log(line);
 		});
 	console.log("");
-	console.log(
-		`  ${green(`${stats[ResultType.OK]} ok`)}, ${redBright(
-			`${stats[ResultType.ERROR]} errors`
-		)}, ${yellowBright(`${stats[ResultType.WARN]} warnings`)} / ${
-			stats.total
-		} total`
-	);
+
+	const pluralize = (count: number, singular: string, plural: string) => {
+		if (count === 0 || count > 1) {
+			return plural;
+		}
+		return singular;
+	};
+
+	const oks =
+		stats[ResultType.OK] > 0
+			? green(`${stats[ResultType.OK]} ok`)
+			: gray(`${stats[ResultType.OK]} ok`);
+	const errors =
+		stats[ResultType.ERROR] > 0
+			? redBright(
+					`${stats[ResultType.ERROR]} ${pluralize(
+						stats[ResultType.ERROR],
+						"error",
+						"errors"
+					)}`
+			  )
+			: gray(`${stats[ResultType.ERROR]} errors`);
+	const warnings =
+		stats[ResultType.WARN] > 0
+			? yellowBright(
+					`${stats[ResultType.WARN]} ${pluralize(
+						stats[ResultType.WARN],
+						"warning",
+						"warnings"
+					)}`
+			  )
+			: gray(`${stats[ResultType.WARN]} warnings`);
+
+	console.log(`  ${oks}, ${warnings}, ${errors} / ${stats.total} total`);
+
 	console.log("");
+
+	if (stats[ResultType.ERROR] === 0) {
+		console.log(green.bold("No issues detected."));
+	}
 }
