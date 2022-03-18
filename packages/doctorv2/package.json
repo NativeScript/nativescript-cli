@@ -1,0 +1,15 @@
+{
+	"name": "@nativescript/doctorv2",
+	"version": "1.0.0",
+	"private": true,
+	"scripts": {
+		"build": "tsc"
+	},
+	"devDependencies": {
+		"typescript": "~4.5.5"
+	},
+	"dependencies": {
+		"ansi-colors": "^4.1.1",
+		"semver": "^7.3.5"
+	}
+}
