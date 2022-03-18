@@ -1,4 +1,4 @@
-import { redBright, yellowBright, green, gray } from "ansi-colors";
+import { printResults } from "./printers/pretty";
 
 export type TPlatform = "android" | "ios";
 
@@ -11,12 +11,6 @@ export const enum ResultType {
 	OK = "OK",
 	WARN = "WARN",
 }
-
-const resultTypeColorMap = {
-	[ResultType.ERROR]: redBright,
-	[ResultType.OK]: green,
-	[ResultType.WARN]: yellowBright,
-};
 
 export interface IRequirementResult {
 	type: ResultType;
@@ -82,77 +76,3 @@ Promise.allSettled(promises).then((results) => {
 
 	printResults(filtered);
 });
-
-// "custom reporter" that prints the results - should live outside of this package...
-function printResults(res: IRequirementResult[]) {
-	const stats = {
-		total: 0,
-		[ResultType.OK]: 0,
-		[ResultType.WARN]: 0,
-		[ResultType.ERROR]: 0,
-	};
-	console.log("");
-	res
-		.map((requirementResult) => {
-			const color = resultTypeColorMap[requirementResult.type];
-			const pad = " ".repeat(5 - requirementResult.type.length);
-
-			stats.total++;
-			stats[requirementResult.type]++;
-
-			const details = requirementResult.details
-				? `\n  ${pad}${" ".repeat(2 + requirementResult.type.length)} - ` +
-				  requirementResult.details
-				: "";
-
-			return (
-				`  ${pad}[${color(requirementResult.type)}] ${
-					requirementResult.message
-				}` + details
-			);
-		})
-		.forEach((line) => {
-			console.log(line);
-		});
-	console.log("");
-
-	const pluralize = (count: number, singular: string, plural: string) => {
-		if (count === 0 || count > 1) {
-			return plural;
-		}
-		return singular;
-	};
-
-	const oks =
-		stats[ResultType.OK] > 0
-			? green(`${stats[ResultType.OK]} ok`)
-			: gray(`${stats[ResultType.OK]} ok`);
-	const errors =
-		stats[ResultType.ERROR] > 0
-			? redBright(
-					`${stats[ResultType.ERROR]} ${pluralize(
-						stats[ResultType.ERROR],
-						"error",
-						"errors"
-					)}`
-			  )
-			: gray(`${stats[ResultType.ERROR]} errors`);
-	const warnings =
-		stats[ResultType.WARN] > 0
-			? yellowBright(
-					`${stats[ResultType.WARN]} ${pluralize(
-						stats[ResultType.WARN],
-						"warning",
-						"warnings"
-					)}`
-			  )
-			: gray(`${stats[ResultType.WARN]} warnings`);
-
-	console.log(`  ${oks}, ${warnings}, ${errors} / ${stats.total} total`);
-
-	console.log("");
-
-	if (stats[ResultType.ERROR] === 0) {
-		console.log(green.bold("No issues detected."));
-	}
-}
