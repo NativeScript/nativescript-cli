@@ -19,6 +19,7 @@ export function printResults(res: IRequirementResult[]) {
 		[ResultType.WARN]: 0,
 		[ResultType.ERROR]: 0,
 	};
+	let lastResultType;
 	console.log("");
 	res
 		.map((requirementResult) => {
@@ -42,7 +43,24 @@ export function printResults(res: IRequirementResult[]) {
 				paddedDetails = "\n" + paddedDetails + "\n";
 			}
 
-			return `${indent}${prefix} ${requirementResult.message}${paddedDetails}`;
+			// todo: implement verbose mode to print OK result details
+			// strip them for now...
+			if (paddedDetails.length && requirementResult.type === ResultType.OK) {
+				paddedDetails = "";
+			}
+
+			let optionalNewLine = "";
+
+			if (
+				lastResultType === ResultType.OK &&
+				requirementResult.type !== ResultType.OK
+			) {
+				optionalNewLine = "\n";
+			}
+
+			lastResultType = requirementResult.type;
+
+			return `${optionalNewLine}${indent}${prefix} ${requirementResult.message}${paddedDetails}`;
 		})
 		.forEach((line) => {
 			console.log(line);

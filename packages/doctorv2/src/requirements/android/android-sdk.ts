@@ -4,7 +4,7 @@ import { resolve } from "path";
 import { safeMatch, safeMatchAll } from "../../helpers";
 import { execSafe } from "../../helpers/child-process";
 import { details, RequirementFunction } from "../..";
-import { error, ok } from "../../helpers/results";
+import { error, ok, warn } from "../../helpers/results";
 
 // example: augment details with new values
 declare module "../.." {
@@ -36,7 +36,6 @@ details.adb = null;
  * 	- If ANDROID_HOME is not defined, the value in ANDROID_SDK_ROOT is used.
  * 	- If ANDROID_HOME is defined but does not exist or does not contain a valid SDK installation, the value in ANDROID_SDK_ROOT is used instead.
  */
-
 const getAndroidSdkInfo = () => {
 	if (details.android) {
 		return details.android;
@@ -77,10 +76,10 @@ const androidSdk: RequirementFunction = async (results) => {
 	const sdk = getAndroidSdkInfo();
 
 	if (!sdk.sdkPath) {
-		return error(`Could not find Android SDK`);
+		return error(`Android SDK: Could not find an Android SDK`);
 	}
 
-	return ok(`Found Android SDK at ${sdk.sdkPath} (from ${sdk.sdkFrom})`);
+	return ok(`Android SDK: found at "${sdk.sdkPath}" (from ${sdk.sdkFrom})`);
 };
 
 const androidTargets: RequirementFunction = async (results) => {
@@ -93,7 +92,17 @@ const androidTargets: RequirementFunction = async (results) => {
 	const sdkPlatformsPath = resolve(sdk.sdkPath, "platforms");
 	if (existsSync(sdkPlatformsPath)) {
 		details.android.installedTargets = readdirSync(sdkPlatformsPath);
+
+		return ok(
+			`Android SDK: found valid targets`,
+			details.android.installedTargets.join("\n")
+		);
 	}
+
+	return warn(
+		`Android SDK: no targets found`,
+		`Make sure to install at least one target through Android Studio (or sdkmanager)`
+	);
 };
 
 const androidBuildTools: RequirementFunction = async (results) => {
@@ -106,7 +115,17 @@ const androidBuildTools: RequirementFunction = async (results) => {
 	const sdkBuildToolsPath = resolve(sdk.sdkPath, "build-tools");
 	if (existsSync(sdkBuildToolsPath)) {
 		details.android.installedBuildTools = readdirSync(sdkBuildToolsPath);
+
+		return ok(
+			`Android SDK: found valid build tools`,
+			details.android.installedBuildTools.join("\n")
+		);
 	}
+
+	return error(
+		`Android SDK: no build tools found`,
+		`Make sure to install at least one build tool version through Android Studio (or sdkmanager)`
+	);
 };
 
 const androidNDK: RequirementFunction = async (results) => {
@@ -160,10 +179,18 @@ const androidImages: RequirementFunction = async (results) => {
 				});
 
 			details.android.installedSystemImages = images;
-			// break the loop on first successful sdkmanager output
-			break;
+
+			return ok(
+				`Android SDK: found emulator images`,
+				details.android.installedSystemImages.join("\n")
+			);
 		}
 	}
+
+	return warn(
+		`Android SDK: emulator images found`,
+		`You will not be able to run apps in an emulator.\nMake sure to install at least one emulator image through Android Studio (or sdkmanager)`
+	);
 };
 
 const ADB_VERSION_RE = /Android Debug Bridge version (.+)\n/im;
@@ -174,11 +201,11 @@ const androidAdb: RequirementFunction = async (results) => {
 		const [, version] = safeMatch(res.stdout, ADB_VERSION_RE);
 		details.adb = { version };
 
-		return ok(`adb from the Android SDK is found (${version})`);
+		return ok(`Android SDK: found adb (${version})`);
 	}
 
 	return error(
-		`Could not find adb from the Android SDK`,
+		`Android SDK: could not find adb`,
 		`Make sure you have a valid Android SDK installed, and it's available in your PATH`
 	);
 };
