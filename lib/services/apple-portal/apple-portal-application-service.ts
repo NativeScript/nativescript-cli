@@ -23,7 +23,7 @@ export class ApplePortalApplicationService
 		let result: IApplePortalApplicationSummary[] = [];
 
 		for (const account of user.associatedAccounts) {
-			const contentProviderId = account.contentProvider.contentProviderPublicId;
+			const contentProviderId = account.contentProvider.contentProviderId;
 			const applications = await this.getApplicationsByProvider(
 				contentProviderId
 			);
@@ -34,7 +34,7 @@ export class ApplePortalApplicationService
 	}
 
 	public async getApplicationsByProvider(
-		contentProviderId: string
+		contentProviderId: number
 	): Promise<IApplePortalApplication> {
 		const webSessionCookie = await this.$applePortalSessionService.createWebSession(
 			contentProviderId

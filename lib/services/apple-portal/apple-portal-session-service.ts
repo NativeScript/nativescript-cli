@@ -79,22 +79,13 @@ export class ApplePortalSessionService implements IApplePortalSessionService {
 		return result;
 	}
 
-	public async createWebSession(contentProviderId: string): Promise<string> {
+	public async createWebSession(contentProviderId: number): Promise<string> {
 		const webSessionResponse = await this.$httpClient.httpRequest({
-			url:
-				"https://appstoreconnect.apple.com/olympus/v1/providerSwitchRequests",
+			url: "https://appstoreconnect.apple.com/olympus/v1/session",
 			method: "POST",
 			body: {
-				data: {
-					type: "providerSwitchRequests",
-					relationships: {
-						provider: {
-							data: {
-								type: "providers",
-								id: contentProviderId,
-							},
-						},
-					},
+				provider: {
+					providerId: contentProviderId,
 				},
 			},
 			headers: {
@@ -102,6 +93,7 @@ export class ApplePortalSessionService implements IApplePortalSessionService {
 				"Accept-Encoding": "gzip, deflate, br",
 				"X-Csrf-Itc": "itc",
 				"Content-Type": "application/json;charset=UTF-8",
+				"X-Requested-With": "olympus-ui",
 				Cookie: this.$applePortalCookieService.getUserSessionCookie(),
 			},
 		});
