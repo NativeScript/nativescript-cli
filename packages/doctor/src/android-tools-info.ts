@@ -31,10 +31,19 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 			"android-32",
 		];
 
-		if (runtimeVersion && semver.lt(semver.coerce(runtimeVersion), "6.1.0")) {
-			baseTargets.sort();
-			const indexOfSdk29 = baseTargets.indexOf("android-29");
-			baseTargets = baseTargets.slice(0, indexOfSdk29);
+		const isRuntimeVersionLessThan = (targetVersion: string) => {
+			return (
+				runtimeVersion &&
+				semver.lt(semver.coerce(runtimeVersion), targetVersion)
+			);
+		};
+
+		if (isRuntimeVersionLessThan("6.1.0")) {
+			// limit baseTargets to android-17 - android-28 if the runtime is < 6.1.0
+			baseTargets = baseTargets.slice(0, baseTargets.indexOf("android-29"));
+		} else if (isRuntimeVersionLessThan("8.2.0")) {
+			// limit baseTargets to android-17 - android-30 if the runtime is < 8.2.0
+			baseTargets = baseTargets.slice(0, baseTargets.indexOf("android-31"));
 		}
 
 		return baseTargets;
@@ -119,15 +128,16 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 				message = `You have to install version ${versionRangeMatches[1]}.`;
 			}
 
-			let invalidBuildToolsAdditionalMsg = `Run \`\$ ${this.getPathToSdkManagementTool()}\` from your command-line to install required \`Android Build Tools\`.`;
+			// let invalidBuildToolsAdditionalMsg = `Run \`\$ ${this.getPathToSdkManagementTool()}\` from your command-line to install required \`Android Build Tools\`.`;
+			let invalidBuildToolsAdditionalMsg = `Install the required build-tools through Android Studio.`;
 			if (!isAndroidHomeValid) {
 				invalidBuildToolsAdditionalMsg +=
-					" In case you already have them installed, make sure `ANDROID_HOME` environment variable is set correctly.";
+					" In case you already have them installed, make sure the `ANDROID_HOME` environment variable is set correctly.";
 			}
 
 			errors.push({
 				warning:
-					"You need to have the Android SDK Build-tools installed on your system. " +
+					"No compatible version of the Android SDK Build-tools are installed on your system. " +
 					message,
 				additionalInformation: invalidBuildToolsAdditionalMsg,
 				platforms: [Constants.ANDROID_PLATFORM_NAME],
@@ -504,6 +514,7 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 
 	private getMaxSupportedVersion(projectDir: string): number {
 		const supportedTargets = this.getSupportedTargets(projectDir);
+
 		return this.parseAndroidSdkString(
 			supportedTargets.sort()[supportedTargets.length - 1]
 		);

@@ -1,3 +1,15 @@
+## [8.2.3](https://github.com/NativeScript/nativescript-cli/compare/v8.2.2...v8.2.3) (2022-03-23)
+
+
+### Bug Fixes
+
+* **doctor:** improve target and sdk compatibility detection on <8.2 ([#5648](https://github.com/NativeScript/nativescript-cli/issues/5648)) ([fa257dd](https://github.com/NativeScript/nativescript-cli/commit/fa257dd455ca55374cf419d638ac74166dc727db))
+* **ios-publish:** changes in Apple API to set Team ([#5653](https://github.com/NativeScript/nativescript-cli/issues/5653)) ([5ceb254](https://github.com/NativeScript/nativescript-cli/commit/5ceb254f317d0cb186bfc31b89e2d2b28625094c))
+* **spawn:** resolve relative paths to prevent ENOENT errors ([37d576b](https://github.com/NativeScript/nativescript-cli/commit/37d576bcde7352b7fa6c937d5e765e10486fedf3)), closes [#5649](https://github.com/NativeScript/nativescript-cli/issues/5649)
+* **test:** node17 resolves localhost to ipv6 instead of ipv4 ([81cb9c3](https://github.com/NativeScript/nativescript-cli/commit/81cb9c37cdd4e24115be79b24b68dfbaf8cdcfd2))
+
+
+
 ## [8.2.2](https://github.com/NativeScript/nativescript-cli/compare/v8.2.1...v8.2.2) (2022-03-09)
 
 
