@@ -10,11 +10,15 @@ declare module "../.." {
 	interface RequirementDetails {
 		xcode?: { version: string; buildVersion: string };
 		xcodeproj?: { version: string };
+		ios?: {
+			platforms?: string[];
+		};
 	}
 }
 
 details.xcode = null;
 details.xcodeproj = null;
+details.ios = null;
 
 async function XCodeRequirement() {
 	const res = await execSafe(`xcodebuild -version`);
@@ -62,7 +66,25 @@ async function XCodeProjRequirement() {
 	);
 }
 
+const iosSDKs: RequirementFunction = async () => {
+	const res = await execSafe("xcodebuild -showsdks");
+
+	if (res) {
+		const platforms = res.stdout.match(/[\w]+\s[\d|.]+/g);
+
+		const uniqPlatforms = Array.from(new Set([...platforms]));
+
+		details.ios = {
+			...details.ios,
+			platforms: uniqPlatforms,
+		};
+	}
+};
+// '')
+// .then(sdks => )
+
 export const xcodeRequirements: RequirementFunction[] = [
 	XCodeRequirement,
 	XCodeProjRequirement,
+	iosSDKs,
 ];

@@ -1,4 +1,4 @@
-import { platform, arch, cpus } from "os";
+import * as os from "os";
 
 import { error, ok, warn } from "../../helpers/results";
 import { execSafe } from "../../helpers/child-process";
@@ -7,12 +7,16 @@ import { safeMatch } from "../../helpers";
 
 declare module "../.." {
 	interface RequirementDetails {
-		os?: string;
-		platform?: string;
-		arch?: string;
+		os?: {
+			platform?: string;
+			name?: string;
+			version?: string;
+			arch?: string;
+			uname?: string;
+		};
 		cpu?: string;
 		shell?: string;
-		node?: { version: string };
+		node?: { version: string; path?: string };
 		npm?: { version: string };
 		yarn?: { version: string };
 		pnpm?: { version: string };
@@ -21,8 +25,6 @@ declare module "../.." {
 }
 
 details.os = null;
-details.platform = null;
-details.arch = null;
 details.cpu = null;
 details.shell = null;
 details.node = null;
@@ -31,16 +33,32 @@ details.yarn = null;
 details.pnpm = null;
 details.nativescript = null;
 
+const osNameMap: { [key: string]: string } = {
+	darwin: "macOS",
+	win32: "Windows",
+	aix: "Aix",
+	freebsd: "FreeBSD",
+	linux: "Linux",
+	openbsd: "OpenBSD",
+	sunos: "SunOS",
+};
+
 const platformInfo: RequirementFunction = async () => {
-	details.os = await execSafe("uname -a").then((res) => {
+	const uname = await execSafe("uname -a").then((res) => {
 		return res ? res.stdout : null;
 	});
-	details.platform = platform();
-	details.arch = arch();
+
+	details.os = {
+		platform: os.platform(),
+		name: osNameMap[os.platform()] ?? "Unknown",
+		version: os.release(),
+		arch: os.arch(),
+		uname,
+	};
 
 	try {
-		const _cpus = cpus();
-		details.cpu = "(" + _cpus.length + ") " + arch() + " " + _cpus[0].model;
+		const _cpus = os.cpus();
+		details.cpu = "(" + _cpus.length + ") " + os.arch() + " " + _cpus[0].model;
 	} catch (err) {
 		details.cpu = "Unknown";
 	}
@@ -51,12 +69,15 @@ const platformInfo: RequirementFunction = async () => {
 const NODE_VERSION_RE = /v?(.+)\n/im;
 const node: RequirementFunction = async () => {
 	const res = await execSafe("node -v");
+	const whichRes = await execSafe("which node");
 
 	if (res) {
 		const [, version] = safeMatch(res.stdout, NODE_VERSION_RE);
+		const path = whichRes ? whichRes.stdout.trim() : "";
 
 		details.node = {
 			version,
+			path,
 		};
 	}
 };

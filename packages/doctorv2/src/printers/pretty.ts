@@ -19,7 +19,7 @@ export function printResults(res: IRequirementResult[]) {
 		[ResultType.WARN]: 0,
 		[ResultType.ERROR]: 0,
 	};
-	let lastResultType;
+	let lastResultType: ResultType;
 	console.log("");
 	res
 		.map((requirementResult) => {

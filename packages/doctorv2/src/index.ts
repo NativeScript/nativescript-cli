@@ -1,4 +1,5 @@
 import { printResults } from "./printers/pretty";
+import { printResults as printResultsMD } from "./printers/markdown";
 
 export type TPlatform = "android" | "ios";
 
@@ -22,6 +23,10 @@ export interface IRequirementResult {
 export type RequirementFunction = (
 	results: IRequirementResult[]
 ) => Promise<IRequirementResult | IRequirementResult[] | void>;
+
+// export interface RequirementFunction {
+// 	platforms: TPlatforms
+// }
 
 // todo: rename or whatever, but this is augmented by all requirements that provide new info
 export interface RequirementDetails {
@@ -75,4 +80,8 @@ Promise.allSettled(promises).then((results) => {
 	console.log("-".repeat(100));
 
 	printResults(filtered);
+
+	const data = { results: filtered, details };
+
+	printResultsMD(data);
 });
