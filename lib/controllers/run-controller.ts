@@ -759,6 +759,15 @@ export class RunController extends EventEmitter implements IRunController {
 							// IMPORTANT: keep the same instance as we rely on side effects
 							_.assign(liveSyncResultInfo, fullLiveSyncResultInfo);
 						};
+						await this.$hooksService.executeBeforeHooks("watchAction", {
+							hookArgs: {
+								liveSyncResultInfo,
+								filesToSync,
+								allAppFiles,
+								isInHMRMode,
+								filesChangedEvent: data,
+							},
+						});
 
 						await this.refreshApplication(
 							projectData,
@@ -786,6 +795,13 @@ export class RunController extends EventEmitter implements IRunController {
 								);
 							}
 						}
+						await this.$hooksService.executeAfterHooks("watchAction", {
+							liveSyncResultInfo,
+							filesToSync,
+							allAppFiles,
+							filesChangedEvent: data,
+							isInHMRMode,
+						});
 
 						this.$logger.info(
 							util.format(
