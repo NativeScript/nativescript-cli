@@ -27,9 +27,19 @@ export class HmrStatusService implements IHmrStatusService {
 	): Promise<number> {
 		return new Promise((resolve, reject) => {
 			const key = `${deviceId}${operationHash}`;
+
+			console.log("1. CHECKING HASH STATUS", key);
+			const status = this.getStatusByKey(key);
+			if (status) {
+				resolve(status);
+
+				return;
+			}
+
 			let retryCount = 40;
 
 			this.intervals[key] = setInterval(() => {
+				console.log("CHECKING HASH STATUS", key);
 				const status = this.getStatusByKey(key);
 				if (status || retryCount === 0) {
 					clearInterval(this.intervals[key]);

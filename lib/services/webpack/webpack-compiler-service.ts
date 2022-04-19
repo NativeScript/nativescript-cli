@@ -562,7 +562,7 @@ export class WebpackCompilerService
 			if (!fileWithLastHash) {
 				return null;
 			}
-			const matches = fileWithLastHash.match(/\.(.+).hot-update\.js/);
+			const matches = fileWithLastHash.match(/\.([^.]+?)\.hot-update\.js$/);
 
 			if (matches) {
 				return matches[1];
@@ -579,7 +579,7 @@ export class WebpackCompilerService
 			staleFiles,
 			hasOnlyHotUpdateFiles: prepareData.hmr,
 			hmrData: {
-				hash: lastHash || message.hash,
+				hash: message.hash || lastHash,
 				fallbackFiles: [],
 			},
 			platform: platformData.platformNameLowerCase,

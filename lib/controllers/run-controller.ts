@@ -778,10 +778,14 @@ export class RunController extends EventEmitter implements IRunController {
 						);
 
 						if (!liveSyncResultInfo.didRecover && isInHMRMode) {
+							console.time("hmrStatus");
+
 							const status = await this.$hmrStatusService.getHmrStatus(
 								device.deviceInfo.identifier,
 								data.hmrData.hash
 							);
+
+							console.timeEnd("hmrStatus");
 
 							// the timeout is assumed OK as the app could be blocked on a breakpoint
 							if (status === HmrConstants.HMR_ERROR_STATUS) {
