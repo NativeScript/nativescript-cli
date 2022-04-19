@@ -776,8 +776,14 @@ export class RunController extends EventEmitter implements IRunController {
 							deviceDescriptor,
 							fullSyncAction
 						);
+						console.log(`FILESTOSYNC ${filesToSync}`);
+						// if() {
 
-						if (!liveSyncResultInfo.didRecover && isInHMRMode) {
+						if (
+							!liveSyncResultInfo.didRecover &&
+							isInHMRMode &&
+							filesToSync.some((file) => file.includes("hot-update"))
+						) {
 							console.time("hmrStatus");
 
 							const status = await this.$hmrStatusService.getHmrStatus(
