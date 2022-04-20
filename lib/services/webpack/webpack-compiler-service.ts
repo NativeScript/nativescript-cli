@@ -66,7 +66,7 @@ export class WebpackCompilerService
 		private $mobileHelper: Mobile.IMobileHelper,
 		private $cleanupService: ICleanupService,
 		private $packageManager: IPackageManager,
-		private $packageInstallationManager: IPackageInstallationManager // private $sharedEventBus: ISharedEventBus
+		private $packageInstallationManager: IPackageInstallationManager
 	) {
 		super();
 	}
@@ -543,6 +543,7 @@ export class WebpackCompilerService
 		}
 	}
 
+	lastEmittedHash = "";
 	private handleHMRMessage(
 		message: IWebpackMessage,
 		platformData: IPlatformData,

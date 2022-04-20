@@ -12,6 +12,7 @@ export class HmrStatusService implements IHmrStatusService {
 	public static STARTED_MESSAGE = "Checking for updates to the bundle with";
 	public static SUCCESS_MESSAGE = "Successfully applied update with";
 	public static FAILED_MESSAGE = "Cannot apply update with";
+	private startingBundleHash: string;
 	private hashOperationStatuses: IDictionary<any> = {};
 	private intervals: IDictionary<any> = {};
 
@@ -44,7 +45,7 @@ export class HmrStatusService implements IHmrStatusService {
 				if (status || retryCount === 0) {
 					clearInterval(this.intervals[key]);
 					this.intervals[key] = null;
-					resolve(status);
+					resolve(status ?? HmrConstants.HMR_ERROR_STATUS);
 				} else {
 					retryCount--;
 				}
@@ -85,6 +86,9 @@ export class HmrStatusService implements IHmrStatusService {
 			regex: /\[HMR]\[(.+)]\s*(\w+)\s*\|/,
 			handler: (matches: RegExpMatchArray, deviceId: string) => {
 				const [hash, status] = matches.slice(1);
+				if (status.trim() === "boot") {
+					this.startingBundleHash = hash;
+				}
 				const mappedStatus = statusStringMap[status.trim()];
 				if (mappedStatus) {
 					this.setData(deviceId, hash, statusStringMap[status]);
@@ -92,6 +96,10 @@ export class HmrStatusService implements IHmrStatusService {
 			},
 			name: "hmr-status",
 		});
+	}
+
+	public getStartingHash() {
+		return this.startingBundleHash;
 	}
 
 	private handleAppCrash(matches: RegExpMatchArray, deviceId: string): void {

@@ -23,6 +23,7 @@ import {
 } from "../common/declarations";
 import { IInjector } from "../common/definitions/yok";
 import { injector } from "../common/yok";
+// import { ISharedEventBus } from "../declarations";
 
 export class RunController extends EventEmitter implements IRunController {
 	private prepareReadyEventHandler: any = null;
@@ -48,11 +49,17 @@ export class RunController extends EventEmitter implements IRunController {
 		private $prepareNativePlatformService: IPrepareNativePlatformService,
 		private $projectChangesService: IProjectChangesService,
 		protected $projectDataService: IProjectDataService
-	) {
+	) // private $sharedEventBus: ISharedEventBus
+	{
 		super();
 	}
+	currentStartingHash = "";
 
 	public async run(runData: IRunData): Promise<void> {
+		// this.$sharedEventBus.on("lastHashChanged", (v) => {
+		// 	this.lastHash = v;
+		// 	console.log("lasthashchanged", v);
+		// });
 		const { liveSyncInfo, deviceDescriptors } = runData;
 		const { projectDir } = liveSyncInfo;
 
@@ -777,13 +784,17 @@ export class RunController extends EventEmitter implements IRunController {
 							fullSyncAction
 						);
 						console.log(`FILESTOSYNC ${filesToSync}`);
-						// if() {
+						const startingHash = this.$hmrStatusService.getStartingHash();
 
 						if (
 							!liveSyncResultInfo.didRecover &&
 							isInHMRMode &&
-							filesToSync.some((file) => file.includes("hot-update"))
+							filesToSync.some((file) => file.includes("hot-update")) &&
+							(!startingHash ||
+								this.currentStartingHash === startingHash ||
+								startingHash === data.hmrData.hash)
 						) {
+							this.currentStartingHash = startingHash;
 							console.time("hmrStatus");
 
 							const status = await this.$hmrStatusService.getHmrStatus(
