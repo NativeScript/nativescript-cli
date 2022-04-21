@@ -99,7 +99,7 @@ export class CreateProjectCommand implements ICommand {
 		}
 
 		this.createdProjectData = await this.$projectService.createProject({
-			projectName: projectName.toLowerCase(),
+			projectName: projectName?.toLowerCase(),
 			template: selectedTemplate,
 			appId: this.$options.appid,
 			pathToProject: this.$options.path,

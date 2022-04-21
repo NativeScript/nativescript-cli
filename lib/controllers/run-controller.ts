@@ -48,9 +48,8 @@ export class RunController extends EventEmitter implements IRunController {
 		private $prepareDataService: IPrepareDataService,
 		private $prepareNativePlatformService: IPrepareNativePlatformService,
 		private $projectChangesService: IProjectChangesService,
-		protected $projectDataService: IProjectDataService
-	) // private $sharedEventBus: ISharedEventBus
-	{
+		protected $projectDataService: IProjectDataService // private $sharedEventBus: ISharedEventBus
+	) {
 		super();
 	}
 	currentStartingHash = "";
@@ -783,7 +782,7 @@ export class RunController extends EventEmitter implements IRunController {
 							deviceDescriptor,
 							fullSyncAction
 						);
-						console.log(`FILESTOSYNC ${filesToSync}`);
+						// console.log(`FILESTOSYNC ${filesToSync}`);
 						const startingHash = this.$hmrStatusService.getStartingHash();
 
 						if (

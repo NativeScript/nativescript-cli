@@ -574,9 +574,9 @@ export class WebpackCompilerService
 			// ignore compilations if no new files are emitted
 			return;
 		}
-		console.log(
-			`HANDLE HMR MESSAGE ${this.hashQueue} ${this.currentCompilationHash} ${files}`
-		);
+		// console.log(
+		// 	`HANDLE HMR MESSAGE ${this.hashQueue} ${this.currentCompilationHash} ${files}`
+		// );
 		let currentIdx = 0;
 		let lastHash =
 			this.hashQueue.length > 0

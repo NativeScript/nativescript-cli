@@ -29,7 +29,7 @@ export class HmrStatusService implements IHmrStatusService {
 		return new Promise((resolve, reject) => {
 			const key = `${deviceId}${operationHash}`;
 
-			console.log("1. CHECKING HASH STATUS", operationHash);
+			this.$logger.trace("INITIAL CHECKING HASH STATUS", operationHash);
 			const status = this.getStatusByKey(operationHash);
 			if (status) {
 				resolve(status);
@@ -40,7 +40,7 @@ export class HmrStatusService implements IHmrStatusService {
 			let retryCount = 40;
 
 			this.intervals[key] = setInterval(() => {
-				console.log("CHECKING HASH STATUS", operationHash);
+				this.$logger.trace("CHECKING HASH STATUS", operationHash);
 				const status = this.getStatusByKey(key);
 				if (status || retryCount === 0) {
 					clearInterval(this.intervals[key]);
