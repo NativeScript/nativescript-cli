@@ -4926,10 +4926,10 @@
     "snapdragon" "^0.8.1"
     "to-regex" "^3.0.1"
 
-"nativescript-dev-xcode@0.2.1":
-  "integrity" "sha512-uzqkcUnEx0YIi6jkz/EvdhkCBoOmv6XL40qoNYnPQpSAHmbHIOduZC2sg3TQJs4nq1vnKz+J6myq7Pmyocm6tw=="
-  "resolved" "https://registry.npmjs.org/nativescript-dev-xcode/-/nativescript-dev-xcode-0.2.1.tgz"
-  "version" "0.2.1"
+"nativescript-dev-xcode@0.4.0":
+  "integrity" "sha512-6pSGJOoFvTd1nNRA6RvBSgXWW5VV4WChhqiAWpLBv46VePwpccPqrAQ0qXvxHk373DwU9GwojQVFa178KVYTBw=="
+  "resolved" "https://registry.npmjs.org/nativescript-dev-xcode/-/nativescript-dev-xcode-0.4.0.tgz"
+  "version" "0.4.0"
   dependencies:
     "simple-plist" "^1.0.0"
     "uuid" "^3.3.2"
