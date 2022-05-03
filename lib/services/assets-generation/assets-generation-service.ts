@@ -20,6 +20,7 @@ export const enum Operations {
 	OverlayWith = "overlayWith",
 	Blank = "blank",
 	Resize = "resize",
+	OuterScale = "outerScale",
 }
 
 export class AssetsGenerationService implements IAssetsGenerationService {
@@ -150,6 +151,22 @@ export class AssetsGenerationService implements IAssetsGenerationService {
 					break;
 				case Operations.Resize:
 					image = await this.resize(generationData.imagePath, width, height);
+					break;
+				case Operations.OuterScale:
+					// Resize image without applying scale
+					image = await this.resize(
+						generationData.imagePath,
+						assetItem.width,
+						assetItem.height
+					);
+					// The scale will apply to the underlying layer of the generated image
+					image = this.generateImage(
+						"#00000000",
+						width,
+						height,
+						outputPath,
+						image
+					);
 					break;
 				default:
 					throw new Error(`Invalid image generation operation: ${operation}`);
