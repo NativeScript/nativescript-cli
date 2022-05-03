@@ -490,7 +490,7 @@
 				"filename": "ic_launcher_foreground.png",
 				"resizeOperation": "outerScale",
 				"scale": "1.5x"
-			},
+			}
 		],
 		"splashBackgrounds": [
 			{
