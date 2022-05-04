@@ -456,15 +456,24 @@ export class ProjectDataService implements IProjectDataService {
 
 		const normalizedPaths = _.map(realPaths, (p) => path.normalize(p));
 		_.each(assetItems, (assetItem) => {
+			const imagePath = path.join(assetItem.directory, assetItem.filename);
+
+			let found = false;
 			_.each(normalizedPaths, (currentNormalizedPath) => {
-				const imagePath = path.join(assetItem.directory, assetItem.filename);
 				if (currentNormalizedPath.indexOf(path.normalize(imagePath)) !== -1) {
 					assetItem.path = currentNormalizedPath;
 					assetItem.size = `${assetItem.width}${AssetConstants.sizeDelimiter}${assetItem.height}`;
 					assetSubGroup.images.push(assetItem);
+					found = true;
 					return false;
 				}
 			});
+
+			if (!found) {
+				this.$logger.warn(
+					`Didn't find a matching old image definition for file ${imagePath}. This file will be skipped from resources generation.`
+				);
+			}
 		});
 
 		return assetSubGroup;
