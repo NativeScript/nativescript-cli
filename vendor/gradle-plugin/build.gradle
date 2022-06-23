@@ -48,8 +48,6 @@ buildscript {
         def appDependencies = new JsonSlurper().parseText(dependenciesJson.text)
         def pluginData = appDependencies.find { it.name == project.ext.PLUGIN_NAME }
         project.ext.nativescriptDependencies = appDependencies.findAll{pluginData.dependencies.contains(it.name)}.plus([pluginData])
-        outLogger.withStyle(Style.SuccessHeader).println "\t ~ nativescriptDependencies ${nativescriptDependencies}"
-    
 
         project.ext.getAppResourcesPath = { ->
             def relativePathToAppResources
@@ -245,7 +243,6 @@ def applyBeforePluginGradleConfiguration() {
 
 task addDependenciesFromNativeScriptPlugins {
     nativescriptDependencies.each { dep ->
-        outLogger.withStyle(Style.SuccessHeader).println "\t +addDependenciesFromNativeScriptPlugins: " +  getDepPlatformDir(dep)
         def aarFiles = fileTree(dir: getDepPlatformDir(dep), include: ["**/*.aar"])
         def currentDirname = file(project.buildscript.sourceFile).getParentFile().getName()
         aarFiles.each { aarFile ->
