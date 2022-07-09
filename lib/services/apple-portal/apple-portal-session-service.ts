@@ -79,24 +79,21 @@ export class ApplePortalSessionService implements IApplePortalSessionService {
 		return result;
 	}
 
-	public async createWebSession(
-		contentProviderId: number,
-		dsId: string
-	): Promise<string> {
+	public async createWebSession(contentProviderId: number): Promise<string> {
 		const webSessionResponse = await this.$httpClient.httpRequest({
-			url:
-				"https://appstoreconnect.apple.com/WebObjects/iTunesConnect.woa/ra/v1/session/webSession",
+			url: "https://appstoreconnect.apple.com/olympus/v1/session",
 			method: "POST",
-			body: JSON.stringify({
-				contentProviderId,
-				dsId,
-				ipAddress: null,
-			}),
+			body: {
+				provider: {
+					providerId: contentProviderId,
+				},
+			},
 			headers: {
 				Accept: "application/json, text/plain, */*",
 				"Accept-Encoding": "gzip, deflate, br",
 				"X-Csrf-Itc": "itc",
 				"Content-Type": "application/json;charset=UTF-8",
+				"X-Requested-With": "olympus-ui",
 				Cookie: this.$applePortalCookieService.getUserSessionCookie(),
 			},
 		});
@@ -132,7 +129,7 @@ export class ApplePortalSessionService implements IApplePortalSessionService {
 			try {
 				await this.loginCore(credentials);
 			} catch (err) {
-				const statusCode = err && err.response && err.response.statusCode;
+				const statusCode = err && err.response && err.response.status;
 				result.areCredentialsValid = statusCode !== 401 && statusCode !== 403;
 				result.isTwoFactorAuthenticationEnabled = statusCode === 409;
 
@@ -177,11 +174,11 @@ For more details how to set up your environment, please execute "tns publish ios
 			"X-Apple-Widget-Key": loginConfig.authServiceKey,
 			Accept: "application/json, text/javascript",
 		};
-		const body = JSON.stringify({
+		const body = {
 			accountName: credentials.username,
 			password: credentials.password,
 			rememberMe: true,
-		});
+		};
 
 		const loginResponse = await this.$httpClient.httpRequest({
 			url: loginUrl,
@@ -244,11 +241,11 @@ For more details how to set up your environment, please execute "tns publish ios
 			await this.$httpClient.httpRequest({
 				url: `https://idmsa.apple.com/appleauth/auth/verify/trusteddevice/securitycode`,
 				method: "POST",
-				body: JSON.stringify({
+				body: {
 					securityCode: {
 						code: token.toString(),
 					},
-				}),
+				},
 				headers: { ...headers, "Content-Type": "application/json" },
 			});
 

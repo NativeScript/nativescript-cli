@@ -134,6 +134,11 @@ interface INsConfigAndroid extends INsConfigPlaform {
 	enableMultithreadedJavascript?: boolean;
 }
 
+interface INsConfigHooks {
+	type?: string;
+	script: string;
+}
+
 interface INsConfig {
 	id?: string;
 	main?: string;
@@ -145,6 +150,8 @@ interface INsConfig {
 	webpackConfigPath?: string;
 	ios?: INsConfigIOS;
 	android?: INsConfigAndroid;
+	ignoredNativeDependencies?: string[];
+	hooks?: INsConfigHooks[];
 }
 
 interface IProjectData extends ICreateProjectData {
@@ -153,6 +160,7 @@ interface IProjectData extends ICreateProjectData {
 	projectId: string;
 	projectIdentifiers?: Mobile.IProjectIdentifier;
 	dependencies: any;
+	ignoredDependencies?: string[];
 	devDependencies: IStringDictionary;
 	appDirectoryPath: string;
 	appResourcesDirectoryPath: string;
@@ -165,6 +173,7 @@ interface IProjectData extends ICreateProjectData {
 	infoPlistPath: string;
 	buildXcconfigPath: string;
 	podfilePath: string;
+	initialized?: boolean;
 	/**
 	 * Defines if the project is a code sharing one.
 	 * Value is true when project has nativescript.config and it has `shared: true` in it.
@@ -289,6 +298,7 @@ interface IProjectDataService {
 	 * @param {string} jsonData The project directory - the place where the root package.json is located.
 	 * @param {string} propertyName The name of the property to be checked in `nativescript` key.
 	 * @returns {any} The value of the property.
+	 * @deprecated no longer used - will be removed in 8.0.
 	 */
 	getNSValueFromContent(jsonData: Object, propertyName: string): any;
 }
@@ -298,13 +308,13 @@ interface IProjectCleanupService {
 	 * Clean multiple paths
 	 * @param {string[]} pathsToClean
 	 */
-	clean(pathsToClean: string[]): Promise<void>;
+	clean(pathsToClean: string[]): Promise<boolean>;
 
 	/**
 	 * Clean a single path
 	 * @param {string} pathToClean
 	 */
-	cleanPath(pathToClean: string): Promise<void>;
+	cleanPath(pathToClean: string): Promise<boolean>;
 }
 
 interface IBackup {
@@ -342,7 +352,7 @@ interface IProjectConfigService {
 	 * Get value for a given config key path
 	 * @param key the property key path
 	 */
-	getValue(key: string): any;
+	getValue(key: string, defaultValue?: any): any;
 	/**
 	 * Set value for a given config key path
 	 * @param key the property key path
@@ -368,14 +378,14 @@ interface IProjectConfigService {
 
 	detectProjectConfigs(projectDir?: string): IProjectConfigInformation;
 
-	getDefaultTSConfig(appId: string): string;
+	getDefaultTSConfig(appId: string, appPath: string): string;
 
 	writeDefaultConfig(projectDir?: string, appId?: string): boolean | string;
 
 	writeLegacyNSConfigIfNeeded(
 		projectDir: string,
 		runtimePackage: IBasePluginData
-	): void;
+	): Promise<void>;
 }
 
 interface IAssetItem {
@@ -590,6 +600,11 @@ interface ICocoaPodsService {
 	 * @returns {Promise<void>}
 	 */
 	applyPodfileFromAppResources(
+		projectData: IProjectData,
+		platformData: IPlatformData
+	): Promise<void>;
+
+	applyPodfileArchExclusions(
 		projectData: IProjectData,
 		platformData: IPlatformData
 	): Promise<void>;

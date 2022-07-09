@@ -172,6 +172,9 @@ injector.requirePublicClass(
 injector.require("platformCommandParameter", "./platform-command-param");
 injector.requireCommand("create", "./commands/create-project");
 injector.requireCommand("clean", "./commands/clean");
+injector.requireCommand("config|*list", "./commands/config");
+injector.requireCommand("config|get", "./commands/config");
+injector.requireCommand("config|set", "./commands/config");
 injector.requireCommand("generate", "./commands/generate");
 injector.requireCommand("platform|*list", "./commands/list-platforms");
 injector.requireCommand("platform|add", "./commands/add-platform");
@@ -180,11 +183,13 @@ injector.requireCommand("platform|update", "./commands/update-platform");
 injector.requireCommand("run|*all", "./commands/run");
 injector.requireCommand("run|ios", "./commands/run");
 injector.requireCommand("run|android", "./commands/run");
+injector.requireCommand("typings", "./commands/typings");
 
 injector.requireCommand("preview", "./commands/preview");
 
 injector.requireCommand("debug|ios", "./commands/debug");
 injector.requireCommand("debug|android", "./commands/debug");
+injector.requireCommand("fonts", "./commands/fonts");
 
 injector.requireCommand("prepare", "./commands/prepare");
 injector.requireCommand("build|ios", "./commands/build");
@@ -468,3 +473,5 @@ injector.require(
 	"./services/metadata-filtering-service"
 );
 injector.require("tempService", "./services/temp-service");
+
+injector.require("sharedEventBus", "./shared-event-bus");

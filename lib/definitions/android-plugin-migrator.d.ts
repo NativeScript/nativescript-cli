@@ -10,6 +10,8 @@ interface IAndroidBuildOptions {
 	pluginName: string;
 	aarOutputDir: string;
 	tempPluginDirPath: string;
+	gradlePath?: string;
+	gradleArgs?: string;
 }
 
 interface IAndroidPluginBuildService {
@@ -37,4 +39,14 @@ interface IBuildAndroidPluginData extends Partial<IProjectDir> {
 	 * Information about tools that will be used to build the plugin, for example compile SDK version, build tools version, etc.
 	 */
 	androidToolsInfo?: IAndroidToolsInfoData;
+
+	/**
+	 * Optional custom Gradle path.
+	 */
+	gradlePath?: string;
+
+	/**
+	 * Optional custom Gradle arguments.
+	 */
+	gradleArgs?: string;
 }

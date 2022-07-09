@@ -88,6 +88,7 @@ describe("androidPluginBuildService", () => {
 			},
 		});
 		testInjector.register("packageManager", setupNpm(options));
+		testInjector.register("projectData", stubs.ProjectDataStub);
 		testInjector.register("filesHashService", <IFilesHashService>{
 			generateHashes: async (
 				files: string[]
@@ -110,6 +111,10 @@ describe("androidPluginBuildService", () => {
 		androidBuildPluginService = testInjector.resolve<AndroidPluginBuildService>(
 			AndroidPluginBuildService
 		);
+
+		// initialize dummy projectData
+		const projectData = testInjector.resolve("projectData");
+		projectData.initializeProjectData("test-project");
 	}
 
 	function setupNpm(options: {

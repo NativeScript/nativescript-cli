@@ -10,7 +10,7 @@ import {
 	IProjectDataService,
 	IProjectService,
 } from "../lib/definitions/project";
-import { IProjectNameService } from "../lib/declarations";
+import { IOptions, IProjectNameService } from "../lib/declarations";
 import { IInjector } from "../lib/common/definitions/yok";
 import { IDictionary, IFileSystem } from "../lib/common/declarations";
 import { ProjectConfigService } from "../lib/services/project-config-service";
@@ -31,6 +31,7 @@ describe("projectService", () => {
 			testInjector.register("fs", {
 				exists: () => true,
 				isEmptyDir: () => true,
+				isRelativePath: () => true,
 				createDirectory: () => {},
 				writeJson: () => {},
 				deleteDirectory: () => {},
@@ -53,6 +54,7 @@ describe("projectService", () => {
 				ensureValidName: async () => opts.projectName,
 			});
 			testInjector.register("projectConfigService", ProjectConfigService);
+			testInjector.register("cleanupService", {});
 			testInjector.register("projectTemplatesService", {
 				prepareTemplate: async () => ({
 					templateName: constants.RESERVED_TEMPLATE_NAMES["default"],
@@ -86,6 +88,13 @@ describe("projectService", () => {
 				extractPackage: () => Promise.resolve(),
 			});
 			testInjector.register("tempService", TempServiceStub);
+			const executedCommands: string[] = [];
+			testInjector.register("childProcess", {
+				_getExecutedCommands: () => executedCommands,
+				exec: (executedCommand: string) => {
+					executedCommands.push(executedCommand);
+				},
+			});
 
 			return testInjector;
 		};
@@ -97,16 +106,71 @@ describe("projectService", () => {
 			const projectService = testInjector.resolve<IProjectService>(
 				ProjectServiceLib.ProjectService
 			);
+			const projectDir = path.join(dirToCreateProject, projectName);
 			const projectCreationData = await projectService.createProject({
 				projectName: projectName,
 				pathToProject: dirToCreateProject,
 				force: true,
 				template: constants.RESERVED_TEMPLATE_NAMES["default"],
 			});
+
 			assert.deepStrictEqual(projectCreationData, {
 				projectName,
-				projectDir: path.join(dirToCreateProject, projectName),
+				projectDir,
 			});
+		});
+
+		it("creates a git repo", async () => {
+			const projectName = invalidProjectName;
+			const testInjector = getTestInjector({ projectName });
+			const options = testInjector.resolve<IOptions>("options");
+			const projectService = testInjector.resolve<IProjectService>(
+				ProjectServiceLib.ProjectService
+			);
+			const projectDir = path.join(dirToCreateProject, projectName);
+
+			// force creation to skip git repo check...
+			options.force = true;
+
+			await projectService.createProject({
+				projectName: projectName,
+				pathToProject: dirToCreateProject,
+				force: true,
+				template: constants.RESERVED_TEMPLATE_NAMES["default"],
+			});
+
+			assert.deepEqual(
+				testInjector.resolve("childProcess")._getExecutedCommands(),
+				[
+					`git init ${projectDir}`,
+					`git -C ${projectDir} add --all`,
+					`git -C ${projectDir} commit --no-verify -m "init"`,
+				]
+			);
+		});
+
+		it("does not create a git repo with --no-git", async () => {
+			const projectName = invalidProjectName;
+			const testInjector = getTestInjector({ projectName });
+			const options = testInjector.resolve<IOptions>("options");
+			const projectService = testInjector.resolve<IProjectService>(
+				ProjectServiceLib.ProjectService
+			);
+
+			// simulate --no-git
+			options.git = false;
+
+			await projectService.createProject({
+				projectName: projectName,
+				pathToProject: dirToCreateProject,
+				force: true,
+				template: constants.RESERVED_TEMPLATE_NAMES["default"],
+			});
+
+			assert.deepEqual(
+				testInjector.resolve("childProcess")._getExecutedCommands(),
+				[]
+			);
 		});
 
 		it("fails when invalid name is passed when projectNameService fails", async () => {
@@ -170,6 +234,7 @@ describe("projectService", () => {
 			testInjector.register("projectData", {});
 			testInjector.register("projectNameService", {});
 			testInjector.register("projectConfigService", ProjectConfigService);
+			testInjector.register("cleanupService", {});
 			testInjector.register("projectTemplatesService", {});
 			testInjector.register("staticConfig", {});
 			testInjector.register("projectHelper", {});
@@ -186,6 +251,7 @@ describe("projectService", () => {
 				downloadAndExtract: () => Promise.resolve(),
 			});
 			testInjector.register("tempService", TempServiceStub);
+			testInjector.register("childProcess", {});
 
 			return testInjector;
 		};

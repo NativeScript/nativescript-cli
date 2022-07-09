@@ -116,7 +116,42 @@ export class MetadataFilteringService implements IMetadataFilteringService {
 		);
 		if (nativeApiConfiguration) {
 			const blacklistedItems: string[] = nativeApiConfiguration.blacklist || [];
-
+			if (nativeApiConfiguration["whitelist-plugins-usages"]) {
+				const plugins = this.$pluginsService.getAllProductionPlugins(
+					projectData,
+					platform
+				);
+				for (const pluginData of plugins) {
+					const pathToPlatformsDir = pluginData.pluginPlatformsFolderPath(
+						platform
+					);
+					const pathToPluginsMetadataConfig = path.join(
+						pathToPlatformsDir,
+						MetadataFilteringConstants.NATIVE_API_USAGE_FILE_NAME
+					);
+					if (this.$fs.exists(pathToPluginsMetadataConfig)) {
+						const pluginConfig: INativeApiUsagePluginConfiguration =
+							this.$fs.readJson(pathToPluginsMetadataConfig) || {};
+						this.$logger.trace(
+							`Adding content of ${pathToPluginsMetadataConfig} to whitelisted items of metadata filtering: ${JSON.stringify(
+								pluginConfig,
+								null,
+								2
+							)}`
+						);
+						const itemsToAdd = pluginConfig.blacklist || [];
+						if (itemsToAdd.length) {
+							blacklistedItems.push(
+								`// Added from: ${pathToPluginsMetadataConfig}`
+							);
+							blacklistedItems.push(...itemsToAdd);
+							blacklistedItems.push(
+								`// Finished part from ${pathToPluginsMetadataConfig}${os.EOL}`
+							);
+						}
+					}
+				}
+			}
 			if (blacklistedItems.length) {
 				this.$fs.writeFile(pathToBlacklistFile, blacklistedItems.join(os.EOL));
 			}

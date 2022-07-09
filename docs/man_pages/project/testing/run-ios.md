@@ -45,6 +45,10 @@ Start an emulator with specified device identifier and sdk | `$ tns run ios [--d
     *   `--env.hiddenSourceMap` - creates sources maps in the root folder (useful for Crashlytics usage with bundled app in release).
 * `--force` - If set, skips the application compatibility checks and forces `npm i` to ensure all dependencies are installed. Otherwise, the command will check the application compatibility with the current CLI version and could fail requiring `tns migrate`.
 
+### Environment Variables
+
+* `IOS_SIMULATOR_RUN_ARGS` - specifies extra command line arguments to pass to the application when running on the iOS Simulator. E.g. `$ IOS_SIMULATOR_RUN_ARGS=-FIRDebugEnabled ns device run ios`.
+
 <% } %>
 <% if(isHtml) { %>
 

@@ -14,6 +14,10 @@ import {
 	IProjectHelper,
 	IStringDictionary,
 } from "../declarations";
+import {
+	INsConfigHooks,
+	IProjectConfigService,
+} from "../../definitions/project";
 import { IInjector } from "../definitions/yok";
 import { injector } from "../yok";
 
@@ -38,7 +42,8 @@ export class HooksService implements IHooksService {
 		private $injector: IInjector,
 		private $projectHelper: IProjectHelper,
 		private $options: IOptions,
-		private $performanceService: IPerformanceService
+		private $performanceService: IPerformanceService,
+		private $projectConfigService: IProjectConfigService
 	) {}
 
 	public get hookArgsName(): string {
@@ -61,6 +66,12 @@ export class HooksService implements IHooksService {
 		this.$logger.trace(
 			"Hooks directories: " + util.inspect(this.hooksDirectories)
 		);
+
+		const customHooks = this.$projectConfigService.getValue("hooks", []);
+
+		if (customHooks.length) {
+			this.$logger.trace("Custom hooks: " + util.inspect(customHooks));
+		}
 	}
 
 	private static formatHookName(commandName: string): string {
@@ -118,12 +129,151 @@ export class HooksService implements IHooksService {
 					)
 				);
 			}
+
+			const customHooks = this.getCustomHooksByName(hookName);
+
+			for (const hook of customHooks) {
+				results.push(
+					await this.executeHook(
+						this.$projectHelper.projectDir,
+						hookName,
+						hook,
+						hookArguments
+					)
+				);
+			}
 		} catch (err) {
 			this.$logger.trace(`Failed during hook execution ${hookName}.`);
 			this.$errors.fail(err.message || err);
 		}
 
 		return _.flatten(results);
+	}
+
+	private async executeHook(
+		directoryPath: string,
+		hookName: string,
+		hook: IHook,
+		hookArguments?: IDictionary<any>
+	): Promise<any> {
+		hookArguments = hookArguments || {};
+
+		let result;
+
+		const relativePath = path.relative(directoryPath, hook.fullPath);
+		const trackId = relativePath.replace(
+			new RegExp("\\" + path.sep, "g"),
+			AnalyticsEventLabelDelimiter
+		);
+		let command = this.getSheBangInterpreter(hook);
+		let inProc = false;
+		if (!command) {
+			command = hook.fullPath;
+			if (path.extname(hook.fullPath).toLowerCase() === ".js") {
+				command = process.argv[0];
+				inProc = this.shouldExecuteInProcess(this.$fs.readText(hook.fullPath));
+			}
+		}
+
+		const startTime = this.$performanceService.now();
+		if (inProc) {
+			this.$logger.trace(
+				"Executing %s hook at location %s in-process",
+				hookName,
+				hook.fullPath
+			);
+			const hookEntryPoint = require(hook.fullPath);
+
+			this.$logger.trace(`Validating ${hookName} arguments.`);
+
+			const invalidArguments = this.validateHookArguments(
+				hookEntryPoint,
+				hook.fullPath
+			);
+
+			if (invalidArguments.length) {
+				this.$logger.warn(
+					`${
+						hook.fullPath
+					} will NOT be executed because it has invalid arguments - ${
+						invalidArguments.join(", ").grey
+					}.`
+				);
+				return;
+			}
+
+			// HACK for backwards compatibility:
+			// In case $projectData wasn't resolved by the time we got here (most likely we got here without running a command but through a service directly)
+			// then it is probably passed as a hookArg
+			// if that is the case then pass it directly to the hook instead of trying to resolve $projectData via injector
+			// This helps make hooks stateless
+			const projectDataHookArg =
+				hookArguments["hookArgs"] && hookArguments["hookArgs"]["projectData"];
+			if (projectDataHookArg) {
+				hookArguments["projectData"] = hookArguments[
+					"$projectData"
+				] = projectDataHookArg;
+			}
+
+			const maybePromise = this.$injector.resolve(
+				hookEntryPoint,
+				hookArguments
+			);
+			if (maybePromise) {
+				this.$logger.trace("Hook promises to signal completion");
+				try {
+					result = await maybePromise;
+				} catch (err) {
+					if (
+						err &&
+						_.isBoolean(err.stopExecution) &&
+						err.errorAsWarning === true
+					) {
+						this.$logger.warn(err.message || err);
+					} else {
+						// Print the actual error with its callstack, so it is easy to find out which hooks is causing troubles.
+						this.$logger.error(err);
+						throw err || new Error(`Failed to execute hook: ${hook.fullPath}.`);
+					}
+				}
+
+				this.$logger.trace("Hook completed");
+			}
+		} else {
+			const environment = this.prepareEnvironment(hook.fullPath);
+			this.$logger.trace(
+				"Executing %s hook at location %s with environment ",
+				hookName,
+				hook.fullPath,
+				environment
+			);
+
+			const output = await this.$childProcess.spawnFromEvent(
+				command,
+				[hook.fullPath],
+				"close",
+				environment,
+				{ throwError: false }
+			);
+			result = output;
+
+			if (output.exitCode !== 0) {
+				throw new Error(output.stdout + output.stderr);
+			}
+
+			this.$logger.trace(
+				"Finished executing %s hook at location %s with environment ",
+				hookName,
+				hook.fullPath,
+				environment
+			);
+		}
+		const endTime = this.$performanceService.now();
+		this.$performanceService.processExecutionData(trackId, startTime, endTime, [
+			hookArguments,
+		]);
+
+		return result;
 	}
 
 	private async executeHooksInDirectory(
@@ -137,129 +287,49 @@ export class HooksService implements IHooksService {
 
 		for (let i = 0; i < hooks.length; ++i) {
 			const hook = hooks[i];
-			const relativePath = path.relative(directoryPath, hook.fullPath);
-			const trackId = relativePath.replace(
-				new RegExp("\\" + path.sep, "g"),
-				AnalyticsEventLabelDelimiter
+			const result = await this.executeHook(
+				directoryPath,
+				hookName,
+				hook,
+				hookArguments
 			);
-			let command = this.getSheBangInterpreter(hook);
-			let inProc = false;
-			if (!command) {
-				command = hook.fullPath;
-				if (path.extname(hook.fullPath).toLowerCase() === ".js") {
-					command = process.argv[0];
-					inProc = this.shouldExecuteInProcess(
-						this.$fs.readText(hook.fullPath)
-					);
-				}
+
+			if (result) {
+				results.push(result);
 			}
-
-			const startTime = this.$performanceService.now();
-			if (inProc) {
-				this.$logger.trace(
-					"Executing %s hook at location %s in-process",
-					hookName,
-					hook.fullPath
-				);
-				const hookEntryPoint = require(hook.fullPath);
-
-				this.$logger.trace(`Validating ${hookName} arguments.`);
-
-				const invalidArguments = this.validateHookArguments(
-					hookEntryPoint,
-					hook.fullPath
-				);
-
-				if (invalidArguments.length) {
-					this.$logger.warn(
-						`${
-							hook.fullPath
-						} will NOT be executed because it has invalid arguments - ${
-							invalidArguments.join(", ").grey
-						}.`
-					);
-					continue;
-				}
-
-				// HACK for backwards compatibility:
-				// In case $projectData wasn't resolved by the time we got here (most likely we got here without running a command but through a service directly)
-				// then it is probably passed as a hookArg
-				// if that is the case then pass it directly to the hook instead of trying to resolve $projectData via injector
-				// This helps make hooks stateless
-				const projectDataHookArg =
-					hookArguments["hookArgs"] && hookArguments["hookArgs"]["projectData"];
-				if (projectDataHookArg) {
-					hookArguments["projectData"] = hookArguments[
-						"$projectData"
-					] = projectDataHookArg;
-				}
-
-				const maybePromise = this.$injector.resolve(
-					hookEntryPoint,
-					hookArguments
-				);
-				if (maybePromise) {
-					this.$logger.trace("Hook promises to signal completion");
-					try {
-						const result = await maybePromise;
-						results.push(result);
-					} catch (err) {
-						if (
-							err &&
-							_.isBoolean(err.stopExecution) &&
-							err.errorAsWarning === true
-						) {
-							this.$logger.warn(err.message || err);
-						} else {
-							// Print the actual error with its callstack, so it is easy to find out which hooks is causing troubles.
-							this.$logger.error(err);
-							throw (
-								err || new Error(`Failed to execute hook: ${hook.fullPath}.`)
-							);
-						}
-					}
-
-					this.$logger.trace("Hook completed");
-				}
-			} else {
-				const environment = this.prepareEnvironment(hook.fullPath);
-				this.$logger.trace(
-					"Executing %s hook at location %s with environment ",
-					hookName,
-					hook.fullPath,
-					environment
-				);
-
-				const output = await this.$childProcess.spawnFromEvent(
-					command,
-					[hook.fullPath],
-					"close",
-					environment,
-					{ throwError: false }
-				);
-				results.push(output);
-
-				if (output.exitCode !== 0) {
-					throw new Error(output.stdout + output.stderr);
-				}
-
-				this.$logger.trace(
-					"Finished executing %s hook at location %s with environment ",
-					hookName,
-					hook.fullPath,
-					environment
-				);
-			}
-			const endTime = this.$performanceService.now();
-			this.$performanceService.processExecutionData(
-				trackId,
-				startTime,
-				endTime,
-				[hookArguments]
-			);
 		}
 
 		return results;
+	}
+
+	private getCustomHooksByName(hookName: string): IHook[] {
+		const hooks: IHook[] = [];
+		const customHooks: INsConfigHooks[] = this.$projectConfigService.getValue(
+			"hooks",
+			[]
+		);
+
+		for (const cHook of customHooks) {
+			if (cHook.type === hookName) {
+				const fullPath = path.join(
+					this.$projectHelper.projectDir,
+					cHook.script
+				);
+				const isFile = this.$fs.getFsStats(fullPath).isFile();
+
+				if (isFile) {
+					const fileNameParts = cHook.script.split("/");
+					hooks.push(
+						new Hook(
+							this.getBaseFilename(fileNameParts[fileNameParts.length - 1]),
+							fullPath
+						)
+					);
+				}
+			}
+		}
+
+		return hooks;
 	}
 
 	private getHooksByName(directoryPath: string, hookName: string): IHook[] {

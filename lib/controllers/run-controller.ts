@@ -663,19 +663,19 @@ export class RunController extends EventEmitter implements IRunController {
 				const platformLiveSyncService = this.$liveSyncServiceResolver.resolveLiveSyncService(
 					device.deviceInfo.platform
 				);
-				const allAppFiles =
-					data.hmrData &&
-					data.hmrData.fallbackFiles &&
-					data.hmrData.fallbackFiles.length
-						? data.hmrData.fallbackFiles
-						: data.files;
+				const allAppFiles = data.hmrData?.fallbackFiles?.length
+					? data.hmrData.fallbackFiles
+					: data.files;
 				const filesToSync = data.hasOnlyHotUpdateFiles
 					? data.files
 					: allAppFiles;
 				const watchInfo = {
 					liveSyncDeviceData: deviceDescriptor,
 					projectData,
-					filesToRemove: <any>[],
+					// todo: remove stale files once everything is stable
+					// currently, watcher fires multiple times & may clean up unsynced files
+					// filesToRemove: data.staleFiles ?? [],
+					filesToRemove: [] as string[],
 					filesToSync,
 					hmrData: data.hmrData,
 					useHotModuleReload: liveSyncInfo.useHotModuleReload,
@@ -759,6 +759,15 @@ export class RunController extends EventEmitter implements IRunController {
 							// IMPORTANT: keep the same instance as we rely on side effects
 							_.assign(liveSyncResultInfo, fullLiveSyncResultInfo);
 						};
+						await this.$hooksService.executeBeforeHooks("watchAction", {
+							hookArgs: {
+								liveSyncResultInfo,
+								filesToSync,
+								allAppFiles,
+								isInHMRMode,
+								filesChangedEvent: data,
+							},
+						});
 
 						await this.refreshApplication(
 							projectData,
@@ -773,6 +782,7 @@ export class RunController extends EventEmitter implements IRunController {
 								device.deviceInfo.identifier,
 								data.hmrData.hash
 							);
+
 							// the timeout is assumed OK as the app could be blocked on a breakpoint
 							if (status === HmrConstants.HMR_ERROR_STATUS) {
 								await fullSyncAction();
@@ -785,6 +795,13 @@ export class RunController extends EventEmitter implements IRunController {
 								);
 							}
 						}
+						await this.$hooksService.executeAfterHooks("watchAction", {
+							liveSyncResultInfo,
+							filesToSync,
+							allAppFiles,
+							filesChangedEvent: data,
+							isInHMRMode,
+						});
 
 						this.$logger.info(
 							util.format(

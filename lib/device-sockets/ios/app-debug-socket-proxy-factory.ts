@@ -6,6 +6,7 @@ import { MessageUnpackStream } from "ios-device-lib";
 import { IAppDebugSocketProxyFactory, IOptions } from "../../declarations";
 import { IDictionary, IErrors, INet } from "../../common/declarations";
 import { injector } from "../../common/yok";
+import { ITempService } from "../../definitions/temp-service";
 
 export class AppDebugSocketProxyFactory
 	extends EventEmitter

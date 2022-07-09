@@ -15,7 +15,7 @@ import * as yok from "../lib/common/yok";
 import ChildProcessLib = require("../lib/common/child-process");
 import { SettingsService } from "../lib/common/test/unit-tests/stubs";
 import { ProjectDataService } from "../lib/services/project-data-service";
-import { ProjectDataStub } from "./stubs";
+import { ProjectConfigServiceStub, ProjectDataStub } from "./stubs";
 import { IInjector } from "../lib/common/definitions/yok";
 import * as _ from "lodash";
 import { IDictionary } from "../lib/common/declarations";
@@ -48,6 +48,7 @@ function createTestInjector(): IInjector {
 	testInjector.register("pnpm", PnpmLib.PNPM);
 	testInjector.register("yarn", YarnLib.Yarn);
 	testInjector.register("packageManager", PackageManagerLib.PackageManager);
+	testInjector.register("projectConfigService", ProjectConfigServiceStub);
 	testInjector.register(
 		"packageInstallationManager",
 		PackageInstallationManagerLib.PackageInstallationManager

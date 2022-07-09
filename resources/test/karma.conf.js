@@ -2,7 +2,7 @@ module.exports = function (config) {
   const options = {
 
     // base path that will be used to resolve all patterns (eg. files, exclude)
-    basePath: '',
+    basePath: '${ basePath }',
 
 
     // frameworks to use
@@ -10,8 +10,8 @@ module.exports = function (config) {
     frameworks: [${ frameworks }],
 
 
-    // list of files / patterns to load in the browser
-    files: [${ testFiles }],
+    // list of files / patterns to load in the browser. Leave empty for webpack projects
+    // files: [],
 
 
     // list of files to exclude
@@ -30,6 +30,18 @@ module.exports = function (config) {
     // available reporters: https://npmjs.org/browse/keyword/karma-reporter
     reporters: ['progress'],
 
+    // configure optional coverage, enable via --env.codeCoverage
+    coverageReporter: {
+      dir: require('path').join(__dirname, './coverage'),
+      subdir: '.',
+      reporters: [
+        { type: 'html' },
+        { type: 'text-summary' }
+      ]
+    },
+
+    // web server hostname
+    hostname: '127.0.0.1',
 
     // web server port
     port: 9876,
@@ -73,37 +85,9 @@ module.exports = function (config) {
     singleRun: false
   };
 
-  setWebpackPreprocessor(config, options);
-  setWebpack(config, options);
+  if(config._NS && config._NS.env && config._NS.env.codeCoverage) {
+    options.reporters = (options.reporters || []).concat(['coverage']);
+  }
 
   config.set(options);
-}
-
-function setWebpackPreprocessor(config, options) {
-  if (config && config.bundle) {
-    if (!options.preprocessors) {
-      options.preprocessors = {};
-    }
-
-    options.files.forEach(file => {
-      if (!options.preprocessors[file]) {
-        options.preprocessors[file] = [];
-      }
-      options.preprocessors[file].push('webpack');
-    });
-  }
-}
-
-function setWebpack(config, options) {
-  if (config && config.bundle) {
-    const env = {};
-    env[config.platform] = true;
-    env.sourceMap = config.debugBrk;
-    env.appPath = config.appPath;
-    options.webpack = require('./webpack.config')(env);
-    delete options.webpack.entry;
-    delete options.webpack.output.libraryTarget;
-    const invalidPluginsForUnitTesting = ["GenerateBundleStarterPlugin", "GenerateNativeScriptEntryPointsPlugin"];
-    options.webpack.plugins = options.webpack.plugins.filter(p => !invalidPluginsForUnitTesting.includes(p.constructor.name));
-  }
 }

@@ -24,10 +24,8 @@ export class ApplePortalApplicationService
 
 		for (const account of user.associatedAccounts) {
 			const contentProviderId = account.contentProvider.contentProviderId;
-			const dsId = user.sessionToken.dsId;
 			const applications = await this.getApplicationsByProvider(
-				contentProviderId,
-				dsId
+				contentProviderId
 			);
 			result = result.concat(applications.summaries);
 		}
@@ -36,20 +34,18 @@ export class ApplePortalApplicationService
 	}
 
 	public async getApplicationsByProvider(
-		contentProviderId: number,
-		dsId: string
+		contentProviderId: number
 	): Promise<IApplePortalApplication> {
 		const webSessionCookie = await this.$applePortalSessionService.createWebSession(
-			contentProviderId,
-			dsId
+			contentProviderId
 		);
 		const response = await this.$httpClient.httpRequest({
 			url:
 				"https://appstoreconnect.apple.com/WebObjects/iTunesConnect.woa/ra/apps/manageyourapps/summary/v2",
 			method: "GET",
-			body: JSON.stringify({
+			body: {
 				contentProviderId,
-			}),
+			},
 			headers: {
 				"Content-Type": "application/json",
 				Cookie: webSessionCookie,

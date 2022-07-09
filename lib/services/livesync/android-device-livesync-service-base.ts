@@ -17,11 +17,11 @@ export abstract class AndroidDeviceLiveSyncServiceBase extends DeviceLiveSyncSer
 		super($platformsDataService, device);
 	}
 
-	public abstract async transferFilesOnDevice(
+	public abstract transferFilesOnDevice(
 		deviceAppData: Mobile.IDeviceAppData,
 		localToDevicePaths: Mobile.ILocalToDevicePathData[]
 	): Promise<void>;
-	public abstract async transferDirectoryOnDevice(
+	public abstract transferDirectoryOnDevice(
 		deviceAppData: Mobile.IDeviceAppData,
 		localToDevicePaths: Mobile.ILocalToDevicePathData[],
 		projectFilesPath: string

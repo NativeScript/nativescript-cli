@@ -260,9 +260,13 @@ export class AndroidDeviceLiveSyncService
 			let isResolved = false;
 			const socket = new net.Socket();
 
-			socket.connect(this.port, "127.0.0.1", () => {
-				socket.write(Buffer.from([0, 0, 0, 1, 1]));
-			});
+			socket.connect(
+				this.port,
+				process.env.NATIVESCRIPT_LIVESYNC_ADDRESS || "127.0.0.1",
+				() => {
+					socket.write(Buffer.from([0, 0, 0, 1, 1]));
+				}
+			);
 			socket.on("data", (data: any) => {
 				isResolved = true;
 				socket.destroy();

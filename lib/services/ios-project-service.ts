@@ -13,7 +13,11 @@ import { IOSProvisionService } from "./ios-provision-service";
 import { IOSEntitlementsService } from "./ios-entitlements-service";
 import { IOSBuildData } from "../data/build-data";
 import { IOSPrepareData } from "../data/prepare-data";
-import { BUILD_XCCONFIG_FILE_NAME, IosProjectConstants } from "../constants";
+import {
+	BUILD_XCCONFIG_FILE_NAME,
+	CONFIG_FILE_NAME_DISPLAY,
+	IosProjectConstants,
+} from "../constants";
 import { hook } from "../common/helpers";
 import {
 	IPlatformData,
@@ -29,8 +33,14 @@ import {
 	IIOSNativeTargetService,
 	IValidatePlatformOutput,
 } from "../definitions/project";
+
 import { IBuildData } from "../definitions/build";
-import { IXcprojService, IXcconfigService, IOptions } from "../declarations";
+import {
+	IXcprojService,
+	IXcconfigService,
+	IDependencyData,
+	IOptions,
+} from "../declarations";
 import { IPluginData, IPluginsService } from "../definitions/plugins";
 import {
 	IFileSystem,
@@ -45,6 +55,7 @@ import { IInjector } from "../common/definitions/yok";
 import { injector } from "../common/yok";
 import { INotConfiguredEnvOptions } from "../common/definitions/commands";
 import { IProjectChangesInfo } from "../definitions/project-changes";
+import { ITempService } from "../definitions/temp-service";
 
 interface INativeSourceCodeGroup {
 	name: string;
@@ -145,8 +156,14 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 						!!buildOptions.buildForDevice ||
 						!!buildOptions.buildForAppStore;
 					if (forDevice) {
+						const ipaFileName = _.find(
+							this.$fs.readDirectory(
+								this._platformData.getBuildOutputPath(buildOptions)
+							),
+							(entry) => path.extname(entry) === ".ipa"
+						);
 						return {
-							packageNames: [`${projectData.projectName}.ipa`],
+							packageNames: [ipaFileName, `${projectData.projectName}.ipa`],
 						};
 					}
 
@@ -937,6 +954,10 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			projectData,
 			platformData
 		);
+		await this.$cocoapodsService.applyPodfileArchExclusions(
+			projectData,
+			platformData
+		);
 
 		const projectPodfilePath = this.$cocoapodsService.getProjectPodfilePath(
 			platformData.projectRoot
@@ -965,8 +986,11 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		await this.addExtensions(projectData, pluginsData);
 	}
 
-	public beforePrepareAllPlugins(): Promise<void> {
-		return Promise.resolve();
+	public beforePrepareAllPlugins(
+		projectData: IProjectData,
+		dependencies?: IDependencyData[]
+	): Promise<IDependencyData[]> {
+		return Promise.resolve(dependencies);
 	}
 
 	public async checkForChanges(
@@ -1479,7 +1503,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			infoPlist.CFBundleIdentifier !== mergedPlist.CFBundleIdentifier
 		) {
 			this.$logger.warn(
-				"[WARNING]: The CFBundleIdentifier key inside the 'Info.plist' will be overriden by the 'id' inside 'package.json'."
+				`[WARNING]: The CFBundleIdentifier key inside the 'Info.plist' will be overriden by the 'id' set inside the "${CONFIG_FILE_NAME_DISPLAY}".`
 			);
 		}
 	}

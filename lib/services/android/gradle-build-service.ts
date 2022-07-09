@@ -36,6 +36,7 @@ export class GradleBuildService
 			cwd: projectRoot,
 			message: "Gradle build...",
 			stdio: buildData.buildOutputStdio,
+			gradlePath: buildData.gradlePath,
 			spawnOptions,
 		};
 
@@ -60,6 +61,7 @@ export class GradleBuildService
 		const gradleCommandOptions = {
 			cwd: projectRoot,
 			message: "Gradle clean...",
+			gradlePath: buildData.gradlePath,
 		};
 		await this.$gradleCommandService.executeCommand(
 			cleanTaskArgs,

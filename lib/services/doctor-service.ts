@@ -79,11 +79,13 @@ export class DoctorService implements IDoctorService {
 		runtimeVersion?: string;
 		options?: IOptions;
 		forceCheck?: boolean;
+		platform?: string;
 	}): Promise<void> {
 		configOptions = configOptions || <any>{};
 		const getInfosData: any = {
 			projectDir: configOptions.projectDir,
 			androidRuntimeVersion: configOptions.runtimeVersion,
+			platform: configOptions.platform,
 		};
 		const infos = await this.$terminalSpinnerService.execute<
 			NativeScriptDoctor.IInfo[]
@@ -128,7 +130,9 @@ export class DoctorService implements IDoctorService {
 		}
 
 		try {
-			await this.$versionsService.printVersionsInformation();
+			await this.$versionsService.printVersionsInformation(
+				configOptions.platform
+			);
 		} catch (err) {
 			this.$logger.error(
 				"Cannot get the latest versions information from npm. Please try again later."
@@ -143,7 +147,7 @@ export class DoctorService implements IDoctorService {
 				"platformEnvironmentRequirements"
 			)
 			.checkEnvironmentRequirements({
-				platform: null,
+				platform: configOptions.platform,
 				projectDir: configOptions.projectDir,
 				runtimeVersion: configOptions.runtimeVersion,
 				options: configOptions.options,

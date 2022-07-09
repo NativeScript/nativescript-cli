@@ -62,6 +62,7 @@ declare global {
 	interface IFilesChangeEventData {
 		platform: string;
 		files: string[];
+		staleFiles: string[];
 		hmrData: IPlatformHmrData;
 		hasOnlyHotUpdateFiles: boolean;
 		hasNativeChanges: boolean;
@@ -162,7 +163,7 @@ declare global {
 		beforePrepareAllPlugins(
 			projectData: IProjectData,
 			dependencies?: IDependencyData[]
-		): Promise<void>;
+		): Promise<IDependencyData[]>;
 
 		handleNativeDependenciesChange(
 			projectData: IProjectData,

@@ -127,13 +127,25 @@ export class PrepareController extends EventEmitter {
 		prepareData: IPrepareData,
 		projectData: IProjectData
 	): Promise<IPrepareResultData> {
-		await this.$platformController.addPlatformIfNeeded(prepareData);
+		await this.$platformController.addPlatformIfNeeded(
+			prepareData,
+			projectData
+		);
 		await this.trackRuntimeVersion(prepareData.platform, projectData);
 
 		this.$logger.info("Preparing project...");
 
+		// we need to mark the ~/package.json (used by core modules)
+		// as external for us to be able to write the config to it
+		// in writeRuntimePackageJson() below, because otherwise
+		// webpack will inline it into the bundle/vendor chunks
+		prepareData.env = prepareData.env || {};
+		prepareData.env.externals = prepareData.env.externals || [];
+		prepareData.env.externals.push("~/package.json");
+		prepareData.env.externals.push("package.json");
+
 		if (this.$mobileHelper.isAndroidPlatform(prepareData.platform)) {
-			this.$projectConfigService.writeLegacyNSConfigIfNeeded(
+			await this.$projectConfigService.writeLegacyNSConfigIfNeeded(
 				projectData.projectDir,
 				this.$projectDataService.getRuntimePackage(
 					projectData.projectDir,
@@ -238,6 +250,7 @@ export class PrepareController extends EventEmitter {
 		if (this.persistedData && this.persistedData.length) {
 			this.emitPrepareEvent({
 				files: [],
+				staleFiles: [],
 				hasOnlyHotUpdateFiles: false,
 				hasNativeChanges: result.hasNativeChanges,
 				hmrData: null,
@@ -343,6 +356,7 @@ export class PrepareController extends EventEmitter {
 					await this.writeRuntimePackageJson(projectData, platformData);
 					this.emitPrepareEvent({
 						files: [],
+						staleFiles: [],
 						hasOnlyHotUpdateFiles: false,
 						hmrData: null,
 						hasNativeChanges: true,
@@ -364,7 +378,10 @@ export class PrepareController extends EventEmitter {
 		projectData: IProjectData
 	): Promise<string[]> {
 		const dependencies = this.$nodeModulesDependenciesBuilder
-			.getProductionDependencies(projectData.projectDir)
+			.getProductionDependencies(
+				projectData.projectDir,
+				projectData.ignoredDependencies
+			)
 			.filter((dep) => dep.nativescript);
 		const pluginsNativeDirectories = dependencies.map((dep) =>
 			path.join(
@@ -411,10 +428,11 @@ export class PrepareController extends EventEmitter {
 			projectData.projectDir
 		);
 		const packageData: any = {
-			main: "bundle",
 			..._.pick(projectData.packageJsonData, ["name"]),
 			...nsConfig,
+			main: "bundle",
 		};
+
 		if (
 			platformData.platformNameLowerCase === "ios" &&
 			packageData.ios &&
@@ -448,6 +466,23 @@ export class PrepareController extends EventEmitter {
 				"assets",
 				"app",
 				"package.json"
+			);
+		}
+
+		try {
+			// this will read the package.json that is already emitted by
+			// the GenerateNativeScriptEntryPointsPlugin webpack plugin
+			const emittedPackageData = this.$fs.readJson(packagePath);
+
+			// since ns7 we only care about the main key from the emitted
+			// package.json, the rest is coming from the new config.
+			if (emittedPackageData?.main) {
+				packageData.main = emittedPackageData.main;
+			}
+		} catch (error) {
+			this.$logger.trace(
+				"Failed to read emitted package.json. Error is: ",
+				error
 			);
 		}
 

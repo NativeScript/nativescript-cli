@@ -6,14 +6,14 @@ import {
 	ICommandDispatcher,
 	ICancellationService,
 	ISysInfo,
-	IFileSystem,
 	IFutureDispatcher,
 	IQueue,
 	IErrors,
 } from "./declarations";
-import { IOptions } from "../declarations";
+import { IOptions, IPackageManager, IVersionsService } from "../declarations";
 import { IInjector } from "./definitions/yok";
 import { injector } from "./yok";
+import { PackageManagers } from "../constants";
 
 export class CommandDispatcher implements ICommandDispatcher {
 	constructor(
@@ -25,7 +25,9 @@ export class CommandDispatcher implements ICommandDispatcher {
 		private $staticConfig: Config.IStaticConfig,
 		private $sysInfo: ISysInfo,
 		private $options: IOptions,
-		private $fs: IFileSystem
+		private $versionsService: IVersionsService,
+		private $packageManager: IPackageManager,
+		private $terminalSpinnerService: ITerminalSpinnerService
 	) {}
 
 	public async dispatchCommand(): Promise<void> {
@@ -35,6 +37,7 @@ export class CommandDispatcher implements ICommandDispatcher {
 
 		if (this.$logger.getLevel() === "TRACE") {
 			// CommandDispatcher is called from external CLI's only, so pass the path to their package.json
+			this.$logger.trace("Collecting system information...");
 			const sysInfo = await this.$sysInfo.getSysInfo({
 				pathToNativeScriptCliPackageJson: path.join(
 					__dirname,
@@ -99,14 +102,45 @@ export class CommandDispatcher implements ICommandDispatcher {
 		return "";
 	}
 
-	private printVersion(): void {
-		let version = this.$staticConfig.version;
+	private async printVersion(): Promise<void> {
+		this.$logger.info(this.$staticConfig.version);
 
-		const json = this.$fs.readJson(this.$staticConfig.pathToPackageJson);
-		if (json && json.buildVersion) {
-			version = `${version}-${json.buildVersion}`;
+		if (this.$options.json) {
+			// we don't check for updates when --json is passed
+			// useful for tools that rely on the output of the command
+			return;
 		}
-		this.$logger.info(version);
+
+		const spinner = this.$terminalSpinnerService.createSpinner();
+		spinner.start("Checking for updates...");
+		const nativescriptCliVersion = await this.$versionsService.getNativescriptCliVersion();
+		spinner.stop();
+
+		const packageManagerName = await this.$packageManager.getPackageManagerName();
+		let updateCommand = "";
+
+		switch (packageManagerName) {
+			case PackageManagers.npm:
+				updateCommand = "npm i -g nativescript";
+				break;
+			case PackageManagers.yarn:
+				updateCommand = "yarn global add nativescript";
+				break;
+			case PackageManagers.pnpm:
+				updateCommand = "pnpm i -g nativescript";
+				break;
+		}
+		if (
+			nativescriptCliVersion.currentVersion ===
+			nativescriptCliVersion.latestVersion
+		) {
+			// up-to-date
+			spinner.succeed("Up to date.");
+		} else {
+			spinner.info(
+				`New version of NativeScript CLI is available (${nativescriptCliVersion.latestVersion}), run '${updateCommand}' to update.`
+			);
+		}
 	}
 }
 injector.register("commandDispatcher", CommandDispatcher);

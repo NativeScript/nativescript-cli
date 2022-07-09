@@ -1,5 +1,6 @@
 import * as log4js from "log4js";
 import * as util from "util";
+import * as readline from "readline";
 import * as stream from "stream";
 import * as marked from "marked";
 import * as _ from "lodash";
@@ -156,6 +157,14 @@ export class Logger implements ILogger {
 
 	public isVerbose(): boolean {
 		return log4js.levels.DEBUG.isGreaterThanOrEqualTo(this.getLevel());
+	}
+
+	public clearScreen() {
+		const repeatCount = process.stdout.rows - 2;
+		const blank = repeatCount > 0 ? "\n".repeat(repeatCount) : "";
+		console.log(blank);
+		readline.cursorTo(process.stdout, 0, 0);
+		readline.clearScreenDown(process.stdout);
 	}
 
 	private logMessage(inputData: any[], logMethod: string): void {

@@ -66,7 +66,9 @@ class IosEmulatorServices implements Mobile.IiOSSimulatorService {
 		data: Mobile.IConnectToPortData
 	): Promise<net.Socket> {
 		try {
-			const socket = net.connect(data.port);
+			// node v17+ resolves localhost to ::1 (ipv6) instead of 127.0.0.1 (ipv4)
+			// so we explicitly pass ipv4
+			const socket = net.connect(data.port, "127.0.0.1");
 			return socket;
 		} catch (e) {
 			this.$logger.debug(e);

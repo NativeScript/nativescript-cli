@@ -32,6 +32,10 @@ import { IFilesHashService } from "../definitions/files-hash-service";
 import * as _ from "lodash";
 import { IInjector } from "../common/definitions/yok";
 import { injector } from "../common/yok";
+import {
+	resolvePackagePath,
+	resolvePackageJSONPath,
+} from "../helpers/package-path-helper";
 
 export class PluginsService implements IPluginsService {
 	private static INSTALL_COMMAND_NAME = "install";
@@ -276,40 +280,32 @@ export class PluginsService implements IPluginsService {
 	public async ensureAllDependenciesAreInstalled(
 		projectData: IProjectData
 	): Promise<void> {
-		let installedDependencies = this.$fs.exists(
-			this.getNodeModulesPath(projectData.projectDir)
-		)
-			? this.$fs.readDirectory(this.getNodeModulesPath(projectData.projectDir))
-			: [];
-		// Scoped dependencies are not on the root of node_modules,
-		// so we have to list the contents of all directories, starting with @
-		// and add them to installed dependencies, so we can apply correct comparison against package.json's dependencies.
-		_(installedDependencies)
-			.filter((dependencyName) => _.startsWith(dependencyName, "@"))
-			.each((scopedDependencyDir) => {
-				const contents = this.$fs.readDirectory(
-					path.join(
-						this.getNodeModulesPath(projectData.projectDir),
-						scopedDependencyDir
-					)
-				);
-				installedDependencies = installedDependencies.concat(
-					contents.map(
-						(dependencyName) => `${scopedDependencyDir}/${dependencyName}`
-					)
-				);
-			});
-
 		const packageJsonContent = this.$fs.readJson(
 			this.getPackageJsonFilePath(projectData.projectDir)
 		);
 		const allDependencies = _.keys(packageJsonContent.dependencies).concat(
 			_.keys(packageJsonContent.devDependencies)
 		);
-		const notInstalledDependencies = _.difference(
-			allDependencies,
-			installedDependencies
-		);
+
+		const notInstalledDependencies = allDependencies
+			.map((dep) => {
+				this.$logger.trace(`Checking if ${dep} is installed...`);
+				const pathToPackage = resolvePackagePath(dep, {
+					paths: [projectData.projectDir],
+				});
+
+				if (pathToPackage) {
+					// return false if the dependency is installed - we'll filter out boolean values
+					// and end up with an array of dep names that are not installed if we end up
+					// inside the catch block.
+					return false;
+				}
+
+				this.$logger.trace(`${dep} is not installed, or couldn't be found`);
+				return dep;
+			})
+			.filter(Boolean);
+
 		if (this.$options.force || notInstalledDependencies.length) {
 			this.$logger.trace(
 				"Npm install will be called from CLI. Force option is: ",
@@ -352,7 +348,8 @@ export class PluginsService implements IPluginsService {
 		dependencies =
 			dependencies ||
 			this.$nodeModulesDependenciesBuilder.getProductionDependencies(
-				projectData.projectDir
+				projectData.projectDir,
+				projectData.ignoredDependencies
 			);
 
 		if (_.isEmpty(dependencies)) {
@@ -367,10 +364,14 @@ export class PluginsService implements IPluginsService {
 			projectData.projectDir,
 			platform
 		);
-		const pluginData = productionPlugins.map((plugin) =>
-			this.convertToPluginData(plugin, projectData.projectDir)
-		);
-		return pluginData;
+		return productionPlugins
+			.map((plugin) => this.convertToPluginData(plugin, projectData.projectDir))
+			.filter((item, idx, self) => {
+				// Filter out duplicates to speed up build times by not building the same dependency
+				// multiple times. One possible downside is that if there are different versions
+				// of the same native dependency only the first one in the array will be built
+				return self.findIndex((p) => p.name === item.name) === idx;
+			});
 	}
 
 	public getDependenciesFromPackageJson(
@@ -684,7 +685,7 @@ This framework comes from ${dependencyName} plugin, which is installed multiple 
 		moduleName: string,
 		projectDir: string
 	): string {
-		const pathToJsonFile = require.resolve(`${moduleName}/package.json`, {
+		const pathToJsonFile = resolvePackageJSONPath(moduleName, {
 			paths: [projectDir],
 		});
 		return pathToJsonFile;

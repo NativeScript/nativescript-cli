@@ -4,6 +4,7 @@ import { cache } from "../../decorators";
 import { executeActionByChunks } from "../../helpers";
 import { DEFAULT_CHUNK_SIZE, LiveSyncPaths } from "../../constants";
 import { IFileSystem, IStringDictionary } from "../../declarations";
+import { ITempService } from "../../../definitions/temp-service";
 
 export class AndroidDeviceHashService
 	implements Mobile.IAndroidDeviceHashService {

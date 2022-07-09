@@ -814,10 +814,6 @@ declare global {
 			webSocketDebuggerUrl: string;
 		}
 
-		interface IiTunesValidator {
-			getError(): string;
-		}
-
 		interface ILocalToDevicePathData {
 			getLocalPath(): string;
 			getDevicePath(): string;

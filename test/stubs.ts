@@ -5,7 +5,6 @@ import * as chai from "chai";
 import { EventEmitter } from "events";
 import { join } from "path";
 import * as constants from "./../lib/constants";
-import * as prompt from "inquirer";
 import { Yok } from "./../lib/common/yok";
 import { HostInfo } from "./../lib/common/host-info";
 import { DevicePlatformsConstants } from "./../lib/common/mobile/device-platforms-constants";
@@ -37,6 +36,8 @@ import {
 	IProjectTemplatesService,
 	ITemplateData,
 	IProjectConfigInformation,
+	IProjectBackupService,
+	IBackup,
 } from "../lib/definitions/project";
 import {
 	IPlatformData,
@@ -48,6 +49,7 @@ import {
 	IDeviceDebugService,
 	IDebugResultInfo,
 } from "../lib/definitions/debug";
+import { IDependencyData } from "../lib/declarations";
 import { IBuildData } from "../lib/definitions/build";
 import {
 	IFileSystem,
@@ -67,6 +69,7 @@ import {
 	IAnalyticsService,
 	IProxySettings,
 	Server,
+	IPrompterQuestion,
 } from "../lib/common/declarations";
 import {
 	IAndroidPluginBuildService,
@@ -84,6 +87,8 @@ import {
 } from "../lib/common/definitions/google-analytics";
 import * as _ from "lodash";
 import { SupportedConfigValues } from "../lib/tools/config-manipulation/config-transformer";
+import { AffixOptions } from "temp";
+import { ITempService } from "../lib/definitions/temp-service";
 
 temp.track();
 
@@ -135,6 +140,8 @@ export class LoggerStub implements ILogger {
 	isVerbose(): boolean {
 		return false;
 	}
+
+	clearScreen(): void {}
 }
 
 export class FileSystemStub implements IFileSystem {
@@ -443,7 +450,10 @@ export class NodePackageManagerStub implements INodePackageManager {
 		pathToSave: string,
 		config: INodePackageManagerInstallOptions
 	): Promise<INpmInstallResultInfo> {
-		return null;
+		return {
+			name: packageName,
+			version: "latest",
+		};
 	}
 
 	public async uninstall(
@@ -494,6 +504,144 @@ export class NodePackageManagerStub implements INodePackageManager {
 	public async getCachePath(): Promise<string> {
 		return "";
 	}
+}
+
+export class ProjectBackupServiceStub implements IProjectBackupService {
+	public _backups: any[] = [];
+	public _shouldFail: boolean = false;
+
+	shouldFail(shouldFail: boolean) {
+		this._shouldFail = shouldFail;
+	}
+
+	getBackup(name: string): IBackup {
+		const backup = new ProjectBackupServiceStub.Backup();
+		this._backups.push(backup);
+
+		if (this._shouldFail) {
+			const origCreate = backup.create;
+			backup.create = () => {
+				origCreate.call(backup);
+				throw new Error("backup failed (intended for tests)");
+			};
+		}
+
+		return backup;
+	}
+	backup(name: string, pathsToBackup: string[]): IBackup {
+		return this.getBackup(name).create();
+	}
+	restore(name: string, pathsToRestore: string[]): IBackup {
+		return this.getBackup(name).restore();
+	}
+
+	static Backup = class Backup implements IBackup {
+		public _meta = {
+			createCalled: false,
+			restoreCalled: false,
+			removeCalled: false,
+			isUpToDateCalled: false,
+			addPathCalled: false,
+			addPathsCalled: false,
+		};
+		constructor(public pathsToBackup: string[] = []) {}
+		create(): IBackup {
+			this._meta.createCalled = true;
+
+			return this;
+		}
+		restore(): IBackup {
+			this._meta.restoreCalled = true;
+
+			return this;
+		}
+		remove(): IBackup {
+			this._meta.removeCalled = true;
+
+			return this;
+		}
+		isUpToDate(): boolean {
+			this._meta.isUpToDateCalled = true;
+
+			return true;
+		}
+		addPath(path: string): IBackup {
+			this._meta.addPathCalled = true;
+
+			return this;
+		}
+		addPaths(paths: string[]): IBackup {
+			this._meta.addPathsCalled = true;
+
+			return this;
+		}
+	};
+}
+
+export class ProjectConfigServiceStub implements IProjectConfigService {
+	static initWithConfig(config: any) {
+		const projectConfigService = new ProjectConfigServiceStub();
+		projectConfigService.config = config;
+
+		return projectConfigService;
+	}
+
+	protected config: INsConfig;
+
+	setForceUsingNewConfig(force: boolean): boolean {
+		return false;
+	}
+
+	setForceUsingLegacyConfig(force: boolean): boolean {
+		return false;
+	}
+
+	getValue(key: string, defaultValue?: any): any {
+		return _.get(this.readConfig(), key, defaultValue);
+	}
+
+	setValue(key: string, value: SupportedConfigValues): any {
+		return _.set(this.readConfig(), key, value);
+	}
+
+	readConfig(projectDir?: string): INsConfig {
+		return this.config;
+	}
+
+	detectProjectConfigs(projectDir?: string): IProjectConfigInformation {
+		return {
+			hasTSConfig: true,
+			hasJSConfig: false,
+			hasNSConfig: false,
+			usingNSConfig: false,
+			TSConfigPath: "",
+			JSConfigPath: "",
+			NSConfigPath: "",
+		};
+	}
+
+	getDefaultTSConfig(appId: string, appPath: string): string {
+		return `import { NativeScriptConfig } from '@nativescript/core';
+
+    export default {
+      id: '${appId}',
+      appPath: '${appPath}'
+      appResourcesPath: 'App_Resources',
+      android: {
+        v8Flags: '--expose_gc',
+        markingMode: 'none'
+      }
+    } as NativeScriptConfig;`;
+	}
+
+	writeDefaultConfig(appId: string, projectDir?: string): string | boolean {
+		return true;
+	}
+
+	async writeLegacyNSConfigIfNeeded(
+		projectDir: string,
+		runtimePackage: IBasePluginData
+	): Promise<void> {}
 }
 
 export class ProjectDataStub implements IProjectData {
@@ -575,71 +723,6 @@ export class ProjectDataStub implements IProjectData {
 	public getAppDirectoryRelativePath(): string {
 		return "app";
 	}
-}
-
-export class ProjectConfigServiceStub implements IProjectConfigService {
-	static initWithConfig(config: any) {
-		const projectConfigService = new ProjectConfigServiceStub();
-		projectConfigService.config = config;
-
-		return projectConfigService;
-	}
-
-	protected config: INsConfig;
-
-	setForceUsingNewConfig(force: boolean): boolean {
-		return false;
-	}
-
-	setForceUsingLegacyConfig(force: boolean): boolean {
-		return false;
-	}
-
-	getValue(key: string): any {
-		return _.get(this.readConfig(), key);
-	}
-
-	setValue(key: string, value: SupportedConfigValues): any {
-		return _.set(this.readConfig(), key, value);
-	}
-
-	readConfig(projectDir?: string): INsConfig {
-		return this.config;
-	}
-
-	detectProjectConfigs(projectDir?: string): IProjectConfigInformation {
-		return {
-			hasTSConfig: true,
-			hasJSConfig: false,
-			hasNSConfig: false,
-			usingNSConfig: false,
-			TSConfigPath: "",
-			JSConfigPath: "",
-			NSConfigPath: "",
-		};
-	}
-
-	getDefaultTSConfig(appId: string): string {
-		return `import { NativeScriptConfig } from '@nativescript/core';
-
-    export default {
-      id: '${appId}',
-      appResourcesPath: 'App_Resources',
-      android: {
-        v8Flags: '--expose_gc',
-        markingMode: 'none'
-      }
-    } as NativeScriptConfig;`;
-	}
-
-	writeDefaultConfig(appId: string, projectDir?: string): string | boolean {
-		return true;
-	}
-
-	writeLegacyNSConfigIfNeeded(
-		projectDir: string,
-		runtimePackage: IBasePluginData
-	): void {}
 }
 
 export class AndroidPluginBuildServiceStub
@@ -745,8 +828,11 @@ export class PlatformProjectServiceStub
 		return Promise.resolve();
 	}
 
-	async beforePrepareAllPlugins(): Promise<void> {
-		return Promise.resolve();
+	async beforePrepareAllPlugins(
+		projectData: IProjectData,
+		dependencies?: IDependencyData[]
+	): Promise<IDependencyData[]> {
+		return Promise.resolve(dependencies);
 	}
 
 	async cleanDeviceTempFolder(deviceIdentifier: string): Promise<void> {
@@ -937,7 +1023,7 @@ export class PrompterStub implements IPrompter {
 		}
 	}
 
-	async get(schemas: prompt.Question[]): Promise<any> {
+	async get(schemas: IPrompterQuestion[]): Promise<any> {
 		throw unreachable();
 	}
 
@@ -1426,7 +1512,7 @@ export class TempServiceStub implements ITempService {
 		return temp.mkdirSync(affixes);
 	}
 
-	public async path(options: ITempPathOptions): Promise<string> {
+	public async path(options: string | AffixOptions): Promise<string> {
 		return temp.path(options);
 	}
 }

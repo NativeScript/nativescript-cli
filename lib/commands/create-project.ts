@@ -12,6 +12,8 @@ export class CreateProjectCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [this.$stringParameter];
 	private static BlankTemplateKey = "Blank";
 	private static BlankTemplateDescription = "A blank app";
+	private static BlankTsTemplateKey = "Blank Typescript";
+	private static BlankTsTemplateDescription = "A blank typescript app";
 	private static HelloWorldTemplateKey = "Hello World";
 	private static HelloWorldTemplateDescription = "A Hello World app";
 	private static DrawerTemplateKey = "SideDrawer";
@@ -44,11 +46,12 @@ export class CreateProjectCommand implements ICommand {
 				this.$options.ng ||
 				this.$options.vue ||
 				this.$options.react ||
+				this.$options.svelte ||
 				this.$options.js) &&
 			this.$options.template
 		) {
 			this.$errors.failWithHelp(
-				"You cannot use a flavor option like --ng, --vue, --react, --tsc and --js together with --template."
+				"You cannot use a flavor option like --ng, --vue, --react, --svelte, --tsc and --js together with --template."
 			);
 		}
 
@@ -56,6 +59,8 @@ export class CreateProjectCommand implements ICommand {
 		let selectedTemplate: string;
 		if (this.$options.js) {
 			selectedTemplate = constants.JAVASCRIPT_NAME;
+		} else if (this.$options.vue && this.$options.tsc) {
+			selectedTemplate = "@nativescript/template-blank-vue-ts";
 		} else if (this.$options.tsc) {
 			selectedTemplate = constants.TYPESCRIPT_NAME;
 		} else if (this.$options.ng) {
@@ -64,6 +69,8 @@ export class CreateProjectCommand implements ICommand {
 			selectedTemplate = constants.VUE_NAME;
 		} else if (this.$options.react) {
 			selectedTemplate = constants.REACT_NAME;
+		} else if (this.$options.svelte) {
+			selectedTemplate = constants.SVELTE_NAME;
 		} else {
 			selectedTemplate = this.$options.template;
 		}
@@ -133,6 +140,10 @@ export class CreateProjectCommand implements ICommand {
 					description: "Learn more at https://nativescript.org/vue",
 				},
 				{
+					key: constants.SvelteFlavorName,
+					description: "Learn more at https://svelte-native.technology",
+				},
+				{
 					key: constants.TsFlavorName,
 					description: "Learn more at https://nativescript.org/typescript",
 				},
@@ -152,7 +163,7 @@ export class CreateProjectCommand implements ICommand {
 			this.$logger.printMarkdown(`# Let’s create a NativeScript app!`);
 			this.$logger.printMarkdown(`
 Answer the following questions to help us build the right app for you. (Note: you
-can skip this prompt next time using the --template option, or the --ng, --react, --vue, --ts, or --js flags.)
+can skip this prompt next time using the --template option, or the --ng, --react, --vue, --svelte, --ts, or --js flags.)
 `);
 		}
 	}
@@ -178,6 +189,10 @@ can skip this prompt next time using the --template option, or the --ng, --react
 			}
 			case constants.VueFlavorName: {
 				selectedFlavorTemplates.push(...this.getVueTemplates());
+				break;
+			}
+			case constants.SvelteFlavorName: {
+				selectedFlavorTemplates.push(...this.getSvelteTemplates());
 				break;
 			}
 			case constants.TsFlavorName: {
@@ -285,12 +300,29 @@ can skip this prompt next time using the --template option, or the --ng, --react
 		return templates;
 	}
 
+	private getSvelteTemplates() {
+		const templates = [
+			{
+				key: CreateProjectCommand.HelloWorldTemplateKey,
+				value: constants.RESERVED_TEMPLATE_NAMES.svelte,
+				description: CreateProjectCommand.HelloWorldTemplateDescription,
+			},
+		];
+
+		return templates;
+	}
+
 	private getVueTemplates() {
 		const templates = [
 			{
 				key: CreateProjectCommand.BlankTemplateKey,
 				value: "@nativescript/template-blank-vue",
 				description: CreateProjectCommand.BlankTemplateDescription,
+			},
+			{
+				key: CreateProjectCommand.BlankTsTemplateKey,
+				value: "@nativescript/template-blank-vue-ts",
+				description: CreateProjectCommand.BlankTsTemplateDescription,
 			},
 			{
 				key: CreateProjectCommand.DrawerTemplateKey,
@@ -308,14 +340,41 @@ can skip this prompt next time using the --template option, or the --ng, --react
 	}
 
 	public async postCommandAction(args: string[]): Promise<void> {
-		const { projectDir } = this.createdProjectData;
+		const { projectDir, projectName } = this.createdProjectData;
 		const relativePath = path.relative(process.cwd(), projectDir);
-		this.$logger.printMarkdown(
-			`Now you can navigate to your project with \`$ cd ${relativePath}\``
+
+		const greyDollarSign = "$".grey;
+		this.$logger.clearScreen();
+		this.$logger.info(
+			[
+				[
+					`Project`.green,
+					projectName.cyan,
+					`was successfully created.`.green,
+				].join(" "),
+				"",
+				`Now you can navigate to your project with ${
+					`cd ${relativePath}`.cyan
+				} and then:`,
+				"",
+				`Run the project on multiple devices:`,
+				"",
+				`  ${greyDollarSign} ${"ns run ios".green}`,
+				`  ${greyDollarSign} ${"ns run android".green}`,
+				"",
+				"Debug the project with Chrome DevTools:",
+				"",
+				`  ${greyDollarSign} ${"ns debug ios".green}`,
+				`  ${greyDollarSign} ${"ns debug android".green}`,
+				``,
+				`For more options consult the docs or run ${"ns --help".green}`,
+				"",
+			].join("\n")
 		);
-		this.$logger.printMarkdown(
-			`After that you can preview it on device by executing \`$ ns preview\``
-		);
+		// Commented as we may bring this back with a playground revision/rewrite
+		// this.$logger.printMarkdown(
+		// 	`After that you can preview it on device by executing \`$ ns preview\``
+		// );
 	}
 }
 

@@ -45,6 +45,7 @@ export const AWAIT_NOTIFICATION_TIMEOUT_SECONDS = 9;
 export const SRC_DIR = "src";
 export const MAIN_DIR = "main";
 export const ASSETS_DIR = "assets";
+export const FONTS_DIR = "fonts";
 export const ANDROID_ANALYTICS_DATA_DIR = "analytics";
 export const ANDROID_ANALYTICS_DATA_FILE = "build-statistics.json";
 export const MANIFEST_FILE_NAME = "AndroidManifest.xml";
@@ -105,10 +106,16 @@ export const TemplatesV2PackageJsonKeysToRemove: Array<String> = [
 	"version",
 	"displayName",
 	"templateType",
+	"description",
 	"author",
+	"license",
+	"repository",
+	"publishConfig",
+	"files",
 	"keywords",
 	"homepage",
 	"bugs",
+	"nativescript",
 ];
 
 export class SaveOptions {
@@ -138,6 +145,7 @@ export const RESERVED_TEMPLATE_NAMES: IStringDictionary = {
 	angular: "@nativescript/template-hello-world-ng",
 	react: "@nativescript/template-blank-react",
 	reactjs: "@nativescript/template-blank-react",
+	svelte: "@nativescript/template-blank-svelte",
 };
 
 export const ANALYTICS_LOCAL_TEMPLATE_PREFIX = "localTemplate_";
@@ -167,9 +175,11 @@ export const ANGULAR_NAME = "angular";
 export const JAVASCRIPT_NAME = "javascript";
 export const TYPESCRIPT_NAME = "typescript";
 export const REACT_NAME = "react";
+export const SVELTE_NAME = "svelte";
 export const NgFlavorName = "Angular";
 export const VueFlavorName = "Vue.js";
 export const ReactFlavorName = "React";
+export const SvelteFlavorName = "Svelte";
 export const TsFlavorName = "Plain TypeScript";
 export const JsFlavorName = "Plain JavaScript";
 export class ProjectTypes {
@@ -318,8 +328,8 @@ export class Hooks {
 }
 
 export class AndroidBuildDefaults {
-	public static GradleVersion = "4.4";
-	public static GradleAndroidPluginVersion = "4.5.6";
+	public static GradleVersion = "7.4.0";
+	public static GradleAndroidPluginVersion = "7.1.2";
 }
 
 export const PACKAGE_PLACEHOLDER_NAME = "__PACKAGE__";

@@ -174,7 +174,7 @@ export class FileSystem implements IFileSystem {
 	}
 
 	public async futureFromEvent(eventEmitter: any, event: string): Promise<any> {
-		return new Promise((resolve, reject) => {
+		return new Promise<any>((resolve, reject) => {
 			eventEmitter.once(event, function () {
 				const args = _.toArray(arguments);
 
@@ -186,7 +186,7 @@ export class FileSystem implements IFileSystem {
 
 				switch (args.length) {
 					case 0:
-						resolve();
+						resolve(undefined);
 						break;
 					case 1:
 						resolve(args[0]);
@@ -200,7 +200,16 @@ export class FileSystem implements IFileSystem {
 	}
 
 	public createDirectory(path: string): void {
-		mkdirp.sync(path);
+		try {
+			mkdirp.sync(path);
+		} catch (error) {
+			const $errors = this.$injector.resolve("errors");
+			let errorMessage = `Unable to create directory ${path}. \nError is: ${error}.`;
+			if (error.code === "EACCES") {
+				errorMessage += "\n\nYou may need to call the command with 'sudo'.";
+			}
+			$errors.fail(errorMessage);
+		}
 	}
 
 	public readDirectory(path: string): string[] {

@@ -45,6 +45,8 @@ const createTestInjector = (
 
 		readJson: (filePath: string): any => null,
 
+		isRelativePath: (filePath: string): any => true,
+
 		enumerateFilesInDirectorySync: (
 			directoryPath: string,
 			filterCallback?: (_file: string, _stat: IFsStats) => boolean,
@@ -58,6 +60,7 @@ const createTestInjector = (
 	testInjector.register("logger", LoggerStub);
 	testInjector.register("injector", testInjector);
 	testInjector.register("projectConfigService", ProjectConfigService);
+	testInjector.register("cleanupService", {});
 
 	return testInjector;
 };
@@ -138,6 +141,82 @@ describe("projectConfigService", () => {
 
 			const actualValue = projectConfigService.getValue("android.v8Flags");
 			assert.deepStrictEqual(actualValue, "--expose-gc");
+		});
+
+		it("can read a named JS config file when passing --config", async () => {
+			const testInjector = createTestInjector(
+				(filename) => sampleJSConfig,
+				(filePath) => basename(filePath) === "custom.config.js"
+			);
+
+			// mock "--config custom.config.js"
+			const options: Options = testInjector.resolve("options") as Options;
+			// @ts-ignore
+			options.config = "custom.config.js";
+
+			const projectConfigService: IProjectConfigService = testInjector.resolve(
+				"projectConfigService"
+			);
+
+			const actualValue = projectConfigService.getValue("id");
+			assert.deepStrictEqual(actualValue, "io.test.app");
+		});
+
+		it("can read a named TS config file when passing --config", async () => {
+			const testInjector = createTestInjector(
+				(filename) => sampleTSConfig,
+				(filePath) => basename(filePath) === "custom.config.ts"
+			);
+
+			// mock "--config custom.config.ts"
+			const options: Options = testInjector.resolve("options") as Options;
+			// @ts-ignore
+			options.config = "custom.config.ts";
+
+			const projectConfigService: IProjectConfigService = testInjector.resolve(
+				"projectConfigService"
+			);
+
+			const actualValue = projectConfigService.getValue("id");
+			assert.deepStrictEqual(actualValue, "io.test.app");
+		});
+
+		it("can read a named JS config file when passing --config without extension", async () => {
+			const testInjector = createTestInjector(
+				(filename) => sampleJSConfig,
+				(filePath) => basename(filePath) === "custom.config.js"
+			);
+
+			// mock "--config custom.config"
+			const options: Options = testInjector.resolve("options") as Options;
+			// @ts-ignore
+			options.config = "custom.config";
+
+			const projectConfigService: IProjectConfigService = testInjector.resolve(
+				"projectConfigService"
+			);
+
+			const actualValue = projectConfigService.getValue("id");
+			assert.deepStrictEqual(actualValue, "io.test.app");
+		});
+
+		it("can read a named TS config file when passing --config without extension", async () => {
+			const testInjector = createTestInjector(
+				(filename) => sampleTSConfig,
+				(filePath) => basename(filePath) === "custom.config.ts"
+			);
+
+			// mock "--config custom.config"
+			const options: Options = testInjector.resolve("options") as Options;
+			// @ts-ignore
+			options.config = "custom.config";
+
+			const projectConfigService: IProjectConfigService = testInjector.resolve(
+				"projectConfigService"
+			);
+
+			const actualValue = projectConfigService.getValue("id");
+			assert.deepStrictEqual(actualValue, "io.test.app");
 		});
 
 		// it("Throws error if no config file found", () => {

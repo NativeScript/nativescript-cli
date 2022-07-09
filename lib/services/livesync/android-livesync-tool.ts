@@ -76,7 +76,8 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 		}
 
 		if (!configuration.localHostAddress) {
-			configuration.localHostAddress = DEFAULT_LOCAL_HOST_ADDRESS;
+			configuration.localHostAddress =
+				process.env.NATIVESCRIPT_LIVESYNC_ADDRESS || DEFAULT_LOCAL_HOST_ADDRESS;
 		}
 
 		const connectTimeout = configuration.connectTimeout || TRY_CONNECT_TIMEOUT;
@@ -291,7 +292,7 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 		await this.writeToSocket(hash);
 	}
 
-	private sendFileContent(filePath: string): Promise<boolean> {
+	private sendFileContent(filePath: string): Promise<void> {
 		return new Promise((resolve, reject) => {
 			if (!this.verifyActiveConnection(reject)) {
 				return;

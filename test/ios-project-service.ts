@@ -35,6 +35,7 @@ import {
 	ProjectDataStub,
 	TempServiceStub,
 	ProjectDataServiceStub,
+	ProjectConfigServiceStub,
 } from "./stubs";
 import { xcode } from "../lib/node/xcode";
 import temp = require("temp");
@@ -125,7 +126,6 @@ function createTestInjector(
 	testInjector.register("logFilter", LogFilter);
 	testInjector.register("loggingLevels", LoggingLevels);
 	testInjector.register("utils", Utils);
-	testInjector.register("iTunesValidator", {});
 	testInjector.register("xcprojService", {
 		getXcprojInfo: () => {
 			return {
@@ -175,6 +175,7 @@ function createTestInjector(
 	testInjector.register("packageManager", PackageManager);
 	testInjector.register("npm", NPM);
 	testInjector.register("yarn", Yarn);
+	testInjector.register("projectConfigService", ProjectConfigServiceStub);
 	testInjector.register("xcconfigService", XcconfigService);
 	testInjector.register("settingsService", SettingsService);
 	testInjector.register("httpClient", {});
@@ -258,6 +259,25 @@ describe("Cocoapods support", () => {
 	if (require("os").platform() !== "darwin") {
 		console.log("Skipping Cocoapods tests. They cannot work on windows");
 	} else {
+		const expectedArchExclusions = (projectPath: string) =>
+			[
+				``,
+				`post_install do |installer|`,
+				`  post_installNativeScript_CLI_Architecture_Exclusions_0 installer`,
+				`end`,
+				``,
+				`# Begin Podfile - ${projectPath}/platforms/ios/Podfile-exclusions`,
+				`def post_installNativeScript_CLI_Architecture_Exclusions_0 (installer)`,
+				`  installer.pods_project.build_configurations.each do |config|`,
+				`    config.build_settings.delete "VALID_ARCHS"`,
+				`    config.build_settings["EXCLUDED_ARCHS_x86_64"] = "arm64 arm64e"`,
+				`    config.build_settings["EXCLUDED_ARCHS[sdk=iphonesimulator*]"] = "i386 armv6 armv7 armv7s armv8 $(EXCLUDED_ARCHS_$(NATIVE_ARCH_64_BIT))"`,
+				`    config.build_settings["EXCLUDED_ARCHS[sdk=iphoneos*]"] = "i386 armv6 armv7 armv7s armv8 x86_64"`,
+				`  end`,
+				`end`,
+				`# End Podfile`,
+			].join("\n");
+
 		it("adds а base Podfile", async () => {
 			const projectName = "projectDirectory";
 			const projectPath = temp.mkdirSync(projectName);
@@ -458,6 +478,7 @@ describe("Cocoapods support", () => {
 				"platform :ios, '8.1'",
 				"# End NativeScriptPlatformSection\n",
 			].join("\n");
+
 			const expectedProjectPodfileContent = [
 				"use_frameworks!\n",
 				`target "${projectName}" do`,
@@ -465,6 +486,7 @@ describe("Cocoapods support", () => {
 				`# Begin Podfile - ${pluginPodfilePath}`,
 				expectedPluginPodfileContent,
 				"# End Podfile",
+				expectedArchExclusions(projectPath),
 				"end",
 			].join("\n");
 			assert.equal(actualProjectPodfileContent, expectedProjectPodfileContent);
@@ -573,7 +595,7 @@ describe("Cocoapods support", () => {
 			const projectPodfilePath = join(platformsFolderPath, "Podfile");
 			assert.isTrue(fs.exists(projectPodfilePath));
 
-			const actualProjectPodfileContent = fs.readText(projectPodfilePath);
+			let actualProjectPodfileContent = fs.readText(projectPodfilePath);
 			const expectedPluginPodfileContent = [
 				"source 'https://github.com/CocoaPods/Specs.git'",
 				"# platform :ios, '8.1'",
@@ -591,6 +613,7 @@ describe("Cocoapods support", () => {
 				`# Begin Podfile - ${pluginPodfilePath}`,
 				expectedPluginPodfileContent,
 				"# End Podfile",
+				expectedArchExclusions(projectPath),
 				"end",
 			].join("\n");
 			assert.equal(actualProjectPodfileContent, expectedProjectPodfileContent);
@@ -600,7 +623,18 @@ describe("Cocoapods support", () => {
 				projectData
 			);
 
-			assert.isFalse(fs.exists(projectPodfilePath));
+			const expectedProjectPodfileContentAfter = [
+				"use_frameworks!\n",
+				`target "${projectName}" do`,
+				"",
+				expectedArchExclusions(projectPath),
+				"end",
+			].join("\n");
+			actualProjectPodfileContent = fs.readText(projectPodfilePath);
+			assert.equal(
+				actualProjectPodfileContent,
+				expectedProjectPodfileContentAfter
+			);
 		});
 	}
 });
@@ -1234,6 +1268,7 @@ describe("handleNativeDependenciesChange", () => {
 		cocoapodsService.getProjectPodfilePath = () => projectPodfilePath;
 
 		const fs = testInjector.resolve("fs");
+		fs.readText = (filePath: string) => "";
 		fs.exists = (filePath: string) => filePath === projectPodfilePath;
 
 		await iOSProjectService.handleNativeDependenciesChange(projectData);

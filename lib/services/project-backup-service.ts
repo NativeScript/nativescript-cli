@@ -37,7 +37,8 @@ export class ProjectBackupService implements IProjectBackupService {
 		}
 
 		create() {
-			const backedUpPaths = [];
+			const backupData = this.getBackupData();
+			const backedUpPaths = backupData?.paths || [];
 			this.$super.$logger.trace("creating backup: ", this.name);
 
 			this.$super.$fs.createDirectory(this.backupDir);

@@ -27,6 +27,7 @@ function createTestInjector(): IInjector {
 	testInjector.register("childProcess", {});
 	testInjector.register("hooksService", {});
 	testInjector.register("hostInfo", {});
+	testInjector.register("options", {});
 	testInjector.register("logger", {});
 	testInjector.register("errors", ErrorsStub);
 	testInjector.register("packageInstallationManager", {});
@@ -211,7 +212,7 @@ describe("WebpackCompilerService", () => {
 					<any>{ webpackConfigPath },
 					<any>{}
 				),
-				`The webpack configuration file ${webpackConfigPath} does not exist. Ensure you have such file or set correct path in ${CONFIG_FILE_NAME_DISPLAY}`
+				`The webpack configuration file ${webpackConfigPath} does not exist. Ensure the file exists, or update the path in ${CONFIG_FILE_NAME_DISPLAY}`
 			);
 		});
 	});
@@ -227,7 +228,7 @@ describe("WebpackCompilerService", () => {
 					<any>{ webpackConfigPath },
 					<any>{}
 				),
-				`The webpack configuration file ${webpackConfigPath} does not exist. Ensure you have such file or set correct path in ${CONFIG_FILE_NAME_DISPLAY}`
+				`The webpack configuration file ${webpackConfigPath} does not exist. Ensure the file exists, or update the path in ${CONFIG_FILE_NAME_DISPLAY}`
 			);
 		});
 	});

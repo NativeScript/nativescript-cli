@@ -138,7 +138,8 @@ export abstract class BasePackageManager implements INodePackageManager {
 					flag === "dist-tags" ||
 					flag === "versions" ||
 					flag === "name" ||
-					flag === "gradle"
+					flag === "gradle" ||
+					flag === "version_info"
 				) {
 					array.push(` ${flag}`);
 					continue;

@@ -82,6 +82,8 @@ const createTestInjector = (
 			/** intentionally left blank */
 		},
 
+		isRelativePath: () => true,
+
 		readText: (
 			filename: string,
 			encoding?: IReadFileOptions | string
@@ -133,6 +135,7 @@ const createTestInjector = (
 	});
 
 	testInjector.register("options", {});
+	testInjector.register("cleanupService", {});
 
 	return testInjector;
 };

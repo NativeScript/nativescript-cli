@@ -67,8 +67,17 @@ export class LogSourceMapService implements Mobile.ILogSourceMapService {
 	public async setSourceMapConsumerForFile(filePath: string): Promise<void> {
 		try {
 			if (!this.$fs.getFsStats(filePath).isDirectory()) {
+				const mapFile = filePath + ".map";
+				let sourceMapRaw;
 				const source = this.$fs.readText(filePath);
-				const sourceMapRaw = sourceMapConverter.fromSource(source);
+				if (this.$fs.exists(mapFile)) {
+					sourceMapRaw = sourceMapConverter.fromMapFileSource(
+						source,
+						path.dirname(filePath)
+					);
+				} else {
+					sourceMapRaw = sourceMapConverter.fromSource(source);
+				}
 				let smc: any = null;
 				if (sourceMapRaw && sourceMapRaw.sourcemap) {
 					const sourceMap = sourceMapRaw.sourcemap;
@@ -193,11 +202,12 @@ export class LogSourceMapService implements Mobile.ILogSourceMapService {
 					originalPosition.source &&
 					originalPosition.source.replace("webpack:///", "");
 				if (sourceFile) {
-					if (!_.startsWith(sourceFile, NODE_MODULES_FOLDER_NAME)) {
-						sourceFile = path.join(
-							projectData.getAppDirectoryRelativePath(),
-							sourceFile
-						);
+					const appPath = projectData.getAppDirectoryRelativePath();
+					if (
+						!_.startsWith(sourceFile, NODE_MODULES_FOLDER_NAME) &&
+						!_.startsWith(sourceFile, appPath + "/")
+					) {
+						sourceFile = path.join(appPath, sourceFile);
 					}
 
 					sourceFile = stringReplaceAll(sourceFile, "/", path.sep);

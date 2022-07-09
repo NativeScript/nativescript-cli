@@ -1,52 +1,65 @@
 {
-	// Use IntelliSense to learn about possible Node.js debug attributes.
-	// Hover to view descriptions of existing attributes.
-	// For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
-	"version": "0.2.0",
-	"configurations": [
-		{
-			"type": "node",
-			"request": "launch",
-			"cwd": "${workspaceRoot}",
-			"sourceMaps": true,
-			// In case you want to debug child processes started from CLI:
-			// "autoAttachChildProcesses": true,
-			"name": "Launch CLI (Node 6+)",
-			"program": "${workspaceRoot}/lib/nativescript-cli.js",
-
-			// example commands
-			"args": [ "create", "cliapp", "--path", "${workspaceRoot}/scratch"]
-			// "args": [ "test", "android", "--justlaunch"]
-			// "args": [ "platform", "add", "android@1.3.0", "--path", "cliapp"]
-			// "args": [ "platform", "remove", "android", "--path", "cliapp"]
-			// "args": [ "plugin", "add", "nativescript-barcodescanner", "--path", "cliapp"]
-			// "args": [ "plugin", "remove", "nativescript-barcodescanner", "--path", "cliapp"]
-			// "args": [ "build", "android", "--path", "cliapp"]
-			// "args": [ "run", "android", "--path", "cliapp"]
-			// "args": [ "debug", "android", "--path", "cliapp"]
-			// "args": [ "livesync", "android", "--path", "cliapp"]
-			// "args": [ "livesync", "android", "--watch", "--path", "cliapp"],
-			// "args": [ "resources", "generate", "icons", "./test/image-generation-test.png", "--path", "cliapp" ],
-			// "args": [ "resources", "generate", "splashes", "./test/image-generation-test.png", "--path", "cliapp", "--background", "#8000ff" ],
-		},
-		{
-			// in case you want to debug a single test, modify it's code to be `it.only(...` instead of `it(...`
-			"type": "node",
-			"request": "launch",
-			"name": "Launch Tests (Node 6+)",
-			"program": "${workspaceRoot}/node_modules/mocha/bin/_mocha",
-			"cwd": "${workspaceRoot}",
-			"sourceMaps": true
-		},
-
-		{
-			"type": "node",
-			"request": "attach",
-			"name": "Attach to Broker Process",
-			// In case you want to debug Analytics Broker process, add `--debug-brk=9897` (or --inspect-brk=9897) when spawning analytics-broker-process.
-			"port": 9897,
-			"sourceMaps": true
-		}
-
-	]
+  // Use IntelliSense to learn about possible Node.js debug attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceRoot}",
+      "sourceMaps": true,
+      // In case you want to debug child processes started from CLI:
+      // "autoAttachChildProcesses": true,
+      "name": "Launch CLI (Node 6+)",
+      "program": "${workspaceRoot}/lib/nativescript-cli.js",
+      // example commands
+      "args": [
+        "create",
+        "cliapp",
+        "--path",
+        "${workspaceRoot}/scratch"
+      ]
+      // "args": [ "test", "android", "--justlaunch"]
+      // "args": [ "platform", "add", "android@1.3.0", "--path", "cliapp"]
+      // "args": [ "platform", "remove", "android", "--path", "cliapp"]
+      // "args": [ "plugin", "add", "nativescript-barcodescanner", "--path", "cliapp"]
+      // "args": [ "plugin", "remove", "nativescript-barcodescanner", "--path", "cliapp"]
+      // "args": [ "build", "android", "--path", "cliapp"]
+      // "args": [ "run", "android", "--path", "cliapp"]
+      // "args": [ "debug", "android", "--path", "cliapp"]
+      // "args": [ "livesync", "android", "--path", "cliapp"]
+      // "args": [ "livesync", "android", "--watch", "--path", "cliapp"],
+      // "args": [ "resources", "generate", "icons", "./test/image-generation-test.png", "--path", "cliapp" ],
+      // "args": [ "resources", "generate", "splashes", "./test/image-generation-test.png", "--path", "cliapp", "--background", "#8000ff" ],
+    },
+    {
+      // in case you want to debug a single test, modify it's code to be `it.only(...` instead of `it(...`
+      "type": "node",
+      "request": "launch",
+      "name": "Launch Tests (Node 6+)",
+      "program": "${workspaceRoot}/node_modules/mocha/bin/_mocha",
+      "cwd": "${workspaceRoot}",
+      "sourceMaps": true
+    },
+    {
+      "type": "node",
+      "request": "attach",
+      "name": "Attach to Broker Process",
+      // In case you want to debug Analytics Broker process, add `--debug-brk=9897` (or --inspect-brk=9897) when spawning analytics-broker-process.
+      "port": 9897,
+      "sourceMaps": true
+    },
+    {
+      "name": "Attach to Node Debugger",
+      "type": "node",
+      "request": "attach",
+      "port": 9229,
+      "address": "127.0.0.1",
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+      "sourceMaps": true
+    }
+  ]
 }

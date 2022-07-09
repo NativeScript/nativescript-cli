@@ -1,14 +1,15 @@
 [
     {
+        "name": "@jsdevtools/coverage-istanbul-loader"
+    },
+    {
         "name": "karma"
     },
     {
-        "name": "karma-nativescript-launcher"
+        "name": "karma-coverage"
     },
     {
-        "name": "karma-webpack",
-        "excludedPeerDependencies": ["webpack"],
-        "version": "3.0.5"
+        "name": "karma-nativescript-launcher"
     },
     {
         "name": "mocha",
@@ -49,5 +50,8 @@
         "name": "@types/qunit",
         "framework": "qunit",
         "projectType": ".ts"
+    },
+    {
+        "name": "nyc"
     }
 ]

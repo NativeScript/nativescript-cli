@@ -4,7 +4,6 @@ import { ProxyCommandBase } from "./proxy-base";
 import { HttpProtocolToPort } from "../../constants";
 import { parse } from "url";
 import { platform, EOL } from "os";
-import * as prompt from "inquirer";
 import { IOptions } from "../../../declarations";
 import {
 	IErrors,
@@ -12,6 +11,7 @@ import {
 	IAnalyticsService,
 	IProxyService,
 	IProxyLibSettings,
+	IPrompterQuestion,
 } from "../../declarations";
 import { IInjector } from "../../definitions/yok";
 import { injector } from "../../yok";
@@ -165,9 +165,9 @@ export class ProxySetCommand extends ProxyCommandBase {
 
 	private async getPortFromUserInput(): Promise<number> {
 		const schemaName = "port";
-		const schema: prompt.Question = {
+		const schema: IPrompterQuestion = {
 			message: "Port",
-			type: "input",
+			type: "text",
 			name: schemaName,
 			validate: (value: any) => {
 				return !value || !this.isValidPort(value)

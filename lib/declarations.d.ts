@@ -579,6 +579,17 @@ interface IAndroidBundleOptions {
 	aab: boolean;
 }
 
+interface IAndroidOptions {
+	gradlePath: string;
+	gradleArgs: string;
+}
+
+interface ITypingsOptions {
+	jar: string;
+	aar: string;
+	filter: string;
+}
+
 interface IOptions
 	extends IRelease,
 		IDeviceIdentifier,
@@ -592,13 +603,15 @@ interface IOptions
 		IClean,
 		IProvision,
 		ITeamIdentifier,
+		IAndroidOptions,
 		IAndroidReleaseOptions,
 		IAndroidBundleOptions,
 		INpmInstallConfigurationOptions,
 		IPort,
 		IEnvOptions,
 		IPluginSeedOptions,
-		IGenerateOptions {
+		IGenerateOptions,
+		ITypingsOptions {
 	argv: IYargArgv;
 	validateOptions(
 		commandSpecificDashedOptions?: IDictionary<IDashedOption>,
@@ -609,10 +622,10 @@ interface IOptions
 	/**
 	 * Project Configuration
 	 */
-	config: string[];
 	log: string;
 	verbose: boolean;
 	path: string;
+	config: string;
 	version: boolean;
 	help: boolean;
 	json: boolean;
@@ -658,6 +671,7 @@ interface IOptions
 	ng: boolean;
 	angular: boolean;
 	react: boolean;
+	svelte: boolean;
 	vue: boolean;
 	vuejs: boolean;
 	js: boolean;
@@ -675,6 +689,7 @@ interface IOptions
 	appleApplicationSpecificPassword: string;
 	appleSessionBase64: string;
 	markingMode: boolean;
+	git: boolean;
 }
 
 interface IEnvOptions {
@@ -945,19 +960,19 @@ interface IVersionsService {
 	 * Gets versions information about nativescript runtimes.
 	 * @return {Promise<IVersionInformation[]>} The version information.
 	 */
-	getRuntimesVersions(): Promise<IVersionInformation[]>;
+	getRuntimesVersions(platform?: string): Promise<IVersionInformation[]>;
 
 	/**
 	 * Gets versions information about all nativescript components.
 	 * @return {Promise<IVersionInformation[]>} The version information.
 	 */
-	getAllComponentsVersions(): Promise<IVersionInformation[]>;
+	getAllComponentsVersions(platform?: string): Promise<IVersionInformation[]>;
 
 	/**
 	 * Checks version information about the nativescript components and prints versions information.
 	 * @return {Promise<void>}
 	 */
-	printVersionsInformation(): Promise<void>;
+	printVersionsInformation(platform?: string): Promise<void>;
 }
 
 /**
@@ -1242,3 +1257,5 @@ interface IWatchIgnoreListService {
 interface INpmConfigService {
 	getConfig(): IDictionary<any>;
 }
+
+interface ISharedEventBus extends NodeJS.EventEmitter {}

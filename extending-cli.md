@@ -103,7 +103,7 @@ Commands with Hooking Support
 
 The only two operations to which you can attach hooks are `prepare` operations and `--watch` operations.
 
-The NativeScriot CLI executes hooks attached to `prepare` when you run the following commands:
+The NativeScript CLI executes hooks attached to `prepare` when you run the following commands:
 
 * `ns prepare <Platform>`
 * `ns build <Platform>`
@@ -112,7 +112,7 @@ The NativeScriot CLI executes hooks attached to `prepare` when you run the follo
 * `ns livesync <Platform>`
 * `ns test <Platform>`
 
-The NativeScriot CLI executes hooks attached to `--watch` operations when you run the following commands:
+The NativeScript CLI executes hooks attached to `--watch` operations when you run the following commands:
 
 * `ns test <Platform>` with the `--watch` option.
 * `ns livesync <Platform>` with the `--watch` option.

@@ -157,7 +157,13 @@ export class AssetsGenerationService implements IAssetsGenerationService {
 
 			// This code disables the alpha chanel, as some images for the Apple App Store must not have transparency.
 			if (assetItem.rgba === false) {
-				image = image.rgba(false);
+				//
+				// The original code here became broken at some time and there is an issue posted here..
+				//    https://github.com/oliver-moran/jimp/issues/954
+				// But NathanaelA recommended the below change and it works so maybe that's just what we go with.
+				//
+				// image = image.rgba(false);
+				image = image.colorType(2);
 			}
 
 			image.write(outputPath);

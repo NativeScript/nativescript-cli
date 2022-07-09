@@ -1,5 +1,6 @@
 import * as helpers from "./common/helpers";
 import * as yargs from "yargs";
+import { hideBin } from "yargs/helpers";
 import * as _ from "lodash";
 import {
 	IDictionary,
@@ -30,6 +31,7 @@ export class Options {
 		profileDir: { type: OptionType.String, hasSensitiveValue: true },
 		analyticsClient: { type: OptionType.String, hasSensitiveValue: false },
 		path: { type: OptionType.String, alias: "p", hasSensitiveValue: true },
+		config: { type: OptionType.String, alias: "c", hasSensitiveValue: true },
 		// This will parse all non-hyphenated values as strings.
 		_: { type: OptionType.String, hasSensitiveValue: false },
 	};
@@ -129,6 +131,7 @@ export class Options {
 			reactjs: { type: OptionType.Boolean, hasSensitiveValue: false },
 			vue: { type: OptionType.Boolean, hasSensitiveValue: false },
 			vuejs: { type: OptionType.Boolean, hasSensitiveValue: false },
+			svelte: { type: OptionType.Boolean, hasSensitiveValue: false },
 			tsc: { type: OptionType.Boolean, hasSensitiveValue: false },
 			ts: { type: OptionType.Boolean, hasSensitiveValue: false },
 			typescript: { type: OptionType.Boolean, hasSensitiveValue: false },
@@ -213,6 +216,8 @@ export class Options {
 				default: false,
 				hasSensitiveValue: false,
 			},
+			gradlePath: { type: OptionType.String, hasSensitiveValue: false },
+			gradleArgs: { type: OptionType.String, hasSensitiveValue: false },
 			aab: { type: OptionType.Boolean, hasSensitiveValue: false },
 			performance: { type: OptionType.Object, hasSensitiveValue: true },
 			appleApplicationSpecificPassword: {
@@ -220,6 +225,14 @@ export class Options {
 				hasSensitiveValue: true,
 			},
 			appleSessionBase64: { type: OptionType.String, hasSensitiveValue: true },
+			jar: { type: OptionType.String, hasSensitiveValue: true },
+			aar: { type: OptionType.String, hasSensitiveValue: true },
+			filter: { type: OptionType.String, hasSensitiveValue: true },
+			git: {
+				type: OptionType.Boolean,
+				hasSensitiveValue: false,
+				default: true,
+			},
 		};
 	}
 
@@ -354,9 +367,9 @@ export class Options {
 			opts[this.getDashedOptionName(key)] = value;
 		});
 
-		const parsed = yargs(process.argv.slice(2)).help(false);
-		this.initialArgv = parsed.argv;
-		this.argv = parsed.options(<any>opts).argv;
+		const parsed = yargs(hideBin(process.argv)).version(false).help(false);
+		this.initialArgv = parsed.argv as any;
+		this.argv = parsed.options(<any>opts).argv as any;
 
 		// For backwards compatibility
 		// Previously profileDir had a default option and calling `this.$options.profileDir` always returned valid result.

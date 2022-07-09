@@ -71,6 +71,10 @@ function createTestInjector() {
 	testInjector.register("npm", NPM);
 	testInjector.register("yarn", Yarn);
 	testInjector.register("pnpm", PNPM);
+	testInjector.register(
+		"projectConfigService",
+		stubs.PackageInstallationManagerStub
+	);
 	testInjector.register("fs", FileSystem);
 	// const fileSystemStub = new stubs.FileSystemStub();
 	// fileSystemStub.exists = (fileName: string) => {

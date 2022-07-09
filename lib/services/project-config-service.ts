@@ -27,9 +27,10 @@ import {
 	format as prettierFormat,
 	resolveConfig as resolvePrettierConfig,
 } from "prettier";
-import { cache } from "../common/decorators";
+import { cache, exported } from "../common/decorators";
 import { IOptions } from "../declarations";
 import semver = require("semver/preload");
+import { ICleanupService } from "../definitions/cleanup-service";
 
 export class ProjectConfigService implements IProjectConfigService {
 	private forceUsingNewConfig: boolean = false;
@@ -39,7 +40,8 @@ export class ProjectConfigService implements IProjectConfigService {
 		private $fs: IFileSystem,
 		private $logger: ILogger,
 		private $injector: IInjector,
-		private $options: IOptions
+		private $options: IOptions,
+		private $cleanupService: ICleanupService
 	) {}
 
 	public setForceUsingNewConfig(force: boolean) {
@@ -62,11 +64,15 @@ export class ProjectConfigService implements IProjectConfigService {
 		return this.$injector.resolve("projectHelper");
 	}
 
-	public getDefaultTSConfig(appId: string = "org.nativescript.app") {
+	public getDefaultTSConfig(
+		appId: string = "org.nativescript.app",
+		appPath: string = "app"
+	) {
 		return `import { NativeScriptConfig } from '@nativescript/core';
 
 export default {
   id: '${appId}',
+  appPath: '${appPath}',
   appResourcesPath: 'App_Resources',
   android: {
     v8Flags: '--expose_gc',
@@ -83,27 +89,71 @@ export default {
 			return;
 		}
 		this.$logger.warn(
-			`You are using the deprecated ${CONFIG_NS_FILE_NAME} file. Just be aware that NativeScript 7 has an improved ${CONFIG_FILE_NAME_DISPLAY} file for when you're ready to upgrade this project.`
+			`You are using the deprecated ${CONFIG_NS_FILE_NAME} file. Just be aware that NativeScript now has an improved ${CONFIG_FILE_NAME_DISPLAY} file for when you're ready to upgrade this project.`
 		);
 	}
 
 	public detectProjectConfigs(projectDir?: string): IProjectConfigInformation {
-		const JSConfigPath = path.join(
-			projectDir || this.projectHelper.projectDir,
-			CONFIG_FILE_NAME_JS
+		// allow overriding config name with env variable or --config (or -c)
+		let configName: string | boolean =
+			process.env.NATIVESCRIPT_CONFIG_NAME ?? this.$options.config;
+
+		if (configName === "false") {
+			configName = false;
+		}
+
+		const possibleConfigPaths = [
+			configName &&
+				(configName?.endsWith(".ts") ? configName : `${configName}.ts`),
+			configName &&
+				(configName?.endsWith(".js") ? configName : `${configName}.js`),
+			configName &&
+				(configName?.endsWith(".json") ? configName : `${configName}.json`),
+			CONFIG_FILE_NAME_TS,
+			CONFIG_FILE_NAME_JS,
+			CONFIG_NS_FILE_NAME,
+		]
+			.filter(Boolean)
+			.map((c) => {
+				if (this.$fs.isRelativePath(c)) {
+					const dir = projectDir || this.projectHelper.projectDir;
+
+					if (!dir) {
+						return c;
+					}
+
+					return path.join(dir, c);
+				}
+
+				return c;
+			});
+
+		const existingConfigs = possibleConfigPaths.filter((path) => {
+			return this.$fs.exists(path);
+		});
+
+		// push the first possible config into the "existing" list
+		const hasExistingConfig = !!existingConfigs.length;
+		if (!hasExistingConfig) {
+			this.$logger.trace(
+				`No config file found - falling back to ${possibleConfigPaths[0]}.`
+			);
+			existingConfigs.push(possibleConfigPaths[0]);
+		}
+
+		const TSConfigPath = existingConfigs.find((config) =>
+			config.endsWith(".ts")
 		);
-		const TSConfigPath = path.join(
-			projectDir || this.projectHelper.projectDir,
-			CONFIG_FILE_NAME_TS
+		const JSConfigPath = existingConfigs.find((config) =>
+			config.endsWith(".js")
 		);
-		const NSConfigPath = path.join(
-			projectDir || this.projectHelper.projectDir,
-			CONFIG_NS_FILE_NAME
+		const NSConfigPath = existingConfigs.find((config) =>
+			config.endsWith(".json")
 		);
 
-		const hasTSConfig = this.$fs.exists(TSConfigPath);
-		const hasJSConfig = this.$fs.exists(JSConfigPath);
-		const hasNSConfig = this.$fs.exists(NSConfigPath);
+		const hasTSConfig = !!TSConfigPath && hasExistingConfig;
+		const hasJSConfig = !!JSConfigPath && hasExistingConfig;
+		const hasNSConfig = !!NSConfigPath && hasExistingConfig;
 		const usingNSConfig = !(hasTSConfig || hasJSConfig);
 
 		if (hasTSConfig && hasJSConfig) {
@@ -123,6 +173,7 @@ export default {
 		};
 	}
 
+	@exported("projectConfigService")
 	public readConfig(projectDir?: string): INsConfig {
 		const info = this.detectProjectConfigs(projectDir);
 
@@ -133,7 +184,7 @@ export default {
 			this.$logger.trace(
 				"Project Config Service using legacy configuration..."
 			);
-			if (!this.forceUsingLegacyConfig) {
+			if (!this.forceUsingLegacyConfig && info.hasNSConfig) {
 				this.warnUsingLegacyNSConfig();
 			}
 			return this.fallbackToLegacyNSConfig(info);
@@ -159,10 +210,12 @@ export default {
 		return config;
 	}
 
-	public getValue(key: string): any {
-		return _.get(this.readConfig(), key);
+	@exported("projectConfigService")
+	public getValue(key: string, defaultValue?: any): any {
+		return _.get(this.readConfig(), key, defaultValue);
 	}
 
+	@exported("projectConfigService")
 	public async setValue(
 		key: string,
 		value: SupportedConfigValues
@@ -263,13 +316,25 @@ export default {
 	}
 
 	public writeDefaultConfig(projectDir: string, appId?: string) {
-		const { TSConfigPath } = this.detectProjectConfigs(projectDir);
+		const TSConfigPath = path.resolve(projectDir, CONFIG_FILE_NAME_TS);
 
 		if (this.$fs.exists(TSConfigPath)) {
 			return false;
 		}
 
-		this.$fs.writeFile(TSConfigPath, this.getDefaultTSConfig(appId));
+		const possibleAppPaths = [
+			path.resolve(projectDir, constants.SRC_DIR),
+			path.resolve(projectDir, constants.APP_FOLDER_NAME),
+		];
+
+		let appPath = possibleAppPaths.find((possiblePath) =>
+			this.$fs.exists(possiblePath)
+		);
+		if (appPath) {
+			appPath = path.relative(projectDir, appPath).replace(path.sep, "/");
+		}
+
+		this.$fs.writeFile(TSConfigPath, this.getDefaultTSConfig(appId, appPath));
 
 		return TSConfigPath;
 	}
@@ -289,7 +354,17 @@ export default {
 				constants.PACKAGE_JSON_FILE_NAME
 			);
 			const embeddedPackageJson = this.$fs.readJson(embeddedPackageJsonPath);
-			additionalData.push(embeddedPackageJson);
+			// filter only the supported keys
+			additionalData.push(
+				_.pick(embeddedPackageJson, [
+					"android",
+					"ios",
+					"profiling",
+					"cssParser",
+					"discardUncaughtJsExceptions",
+					"main",
+				])
+			);
 		} catch (err) {
 			this.$logger.trace(
 				"failed to add embedded package.json data to config",
@@ -298,38 +373,43 @@ export default {
 			// ignore if the file doesn't exist
 		}
 
-		const packageJson = this.$fs.readJson(
-			path.join(this.projectHelper.projectDir, "package.json")
-		);
+		try {
+			const packageJson = this.$fs.readJson(
+				path.join(this.projectHelper.projectDir, "package.json")
+			);
 
-		// add app id to additionalData for backwards compatibility
-		if (
-			!NSConfig.id &&
-			packageJson &&
-			packageJson.nativescript &&
-			packageJson.nativescript.id
-		) {
-			const ids = packageJson.nativescript.id;
-			if (typeof ids === "string") {
-				additionalData.push({
-					id: packageJson.nativescript.id,
-				});
-			} else if (typeof ids === "object") {
-				for (const platform of Object.keys(ids)) {
+			// add app id to additionalData for backwards compatibility
+			if (
+				!NSConfig.id &&
+				packageJson &&
+				packageJson.nativescript &&
+				packageJson.nativescript.id
+			) {
+				const ids = packageJson.nativescript.id;
+				if (typeof ids === "string") {
 					additionalData.push({
-						[platform]: {
-							id: packageJson.nativescript.id[platform],
-						},
+						id: packageJson.nativescript.id,
 					});
+				} else if (typeof ids === "object") {
+					for (const platform of Object.keys(ids)) {
+						additionalData.push({
+							[platform]: {
+								id: packageJson.nativescript.id[platform],
+							},
+						});
+					}
 				}
 			}
+		} catch (err) {
+			this.$logger.trace("failed to read package.json data for config", err);
+			// ignore if the file doesn't exist
 		}
 
 		return _.defaultsDeep({}, ...additionalData, NSConfig);
 		// return Object.assign({}, ...additionalData, NSConfig);
 	}
 
-	public writeLegacyNSConfigIfNeeded(
+	public async writeLegacyNSConfigIfNeeded(
 		projectDir: string,
 		runtimePackage: IBasePluginData
 	) {
@@ -341,7 +421,7 @@ export default {
 
 		if (
 			runtimePackage.version &&
-			semver.gte(runtimePackage.version, "7.0.0-rc.5")
+			semver.gte(semver.coerce(runtimePackage.version), "7.0.0-rc.5")
 		) {
 			// runtimes >= 7.0.0-rc.5 support passing appPath and appResourcesPath through gradle project flags
 			// so writing an nsconfig is not necessary.
@@ -370,6 +450,9 @@ You may add \`nsconfig.json\` to \`.gitignore\` as the CLI will regenerate it as
 			appPath: this.getValue("appPath"),
 			appResourcesPath: this.getValue("appResourcesPath"),
 		});
+
+		// mark the file for cleanup after the CLI exits
+		await this.$cleanupService.addCleanupDeleteAction(nsConfigPath);
 	}
 
 	// todo: move into config manipulation

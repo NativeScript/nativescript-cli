@@ -17,9 +17,9 @@ export class CleanCommand implements ICommand {
 
 	public async execute(args: string[]): Promise<void> {
 		const spinner = this.$terminalSpinnerService.createSpinner();
-		spinner.start("Cleaning project...");
+		spinner.start("Cleaning project...\n");
 
-		const pathsToClean = [
+		let pathsToClean = [
 			constants.HOOKS_DIR_NAME,
 			constants.PLATFORMS_DIR_NAME,
 			constants.NODE_MODULES_FOLDER_NAME,
@@ -27,9 +27,18 @@ export class CleanCommand implements ICommand {
 		];
 
 		try {
-			const additionalPaths = this.$projectConfigService.getValue(
-				"additionalPathsToClean"
+			const overridePathsToClean = this.$projectConfigService.getValue(
+				"cli.pathsToClean"
 			);
+			const additionalPaths = this.$projectConfigService.getValue(
+				"cli.additionalPathsToClean"
+			);
+
+			// allow overriding default paths to clean
+			if (Array.isArray(overridePathsToClean)) {
+				pathsToClean = overridePathsToClean;
+			}
+
 			if (Array.isArray(additionalPaths)) {
 				pathsToClean.push(...additionalPaths);
 			}
@@ -37,9 +46,13 @@ export class CleanCommand implements ICommand {
 			// ignore
 		}
 
-		await this.$projectCleanupService.clean(pathsToClean);
+		const success = await this.$projectCleanupService.clean(pathsToClean);
 
-		spinner.succeed("Project successfully cleaned.");
+		if (success) {
+			spinner.succeed("Project successfully cleaned.");
+		} else {
+			spinner.fail(`${"Project unsuccessfully cleaned.".red}`);
+		}
 	}
 }
 

@@ -134,15 +134,28 @@ class TestInitCommand implements ICommand {
 			this.$projectData
 		);
 
+		this.$logger.clearScreen();
+
+		const bufferedLogs = [];
+
 		const testsDir = path.join(this.$projectData.appDirectoryPath, "tests");
-		const relativeTestsDir = path.relative(
+		const projectTestsDir = path.relative(
 			this.$projectData.projectDir,
+			testsDir
+		);
+		const relativeTestsDir = path.relative(
+			this.$projectData.appDirectoryPath,
 			testsDir
 		);
 		let shouldCreateSampleTests = true;
 		if (this.$fs.exists(testsDir)) {
-			this.$logger.info(
-				`${relativeTestsDir} directory already exists, will not create an example test project.`
+			const specFilenamePattern = `<filename>.spec${projectFilesExtension}`;
+			bufferedLogs.push(
+				[
+					`Note: The "${projectTestsDir}" directory already exists, will not create example tests in the project.`,
+					`You may create "${specFilenamePattern}" files anywhere you'd like.`,
+					"",
+				].join("\n").yellow
 			);
 			shouldCreateSampleTests = false;
 		}
@@ -157,30 +170,87 @@ class TestInitCommand implements ICommand {
 			relativeTestsDir
 		)}/**/*${projectFilesExtension}'`;
 		const karmaConfTemplate = this.$resources.readText("test/karma.conf.js");
-		const karmaConf = _.template(karmaConfTemplate)({ frameworks, testFiles });
+		const karmaConf = _.template(karmaConfTemplate)({
+			frameworks,
+			testFiles,
+			basePath: this.$projectData.getAppDirectoryRelativePath(),
+		});
 
 		this.$fs.writeFile(path.join(projectDir, "karma.conf.js"), karmaConf);
 
 		const exampleFilePath = this.$resources.resolvePath(
 			`test/example.${frameworkToInstall}${projectFilesExtension}`
 		);
+		const targetExampleTestPath = path.join(
+			testsDir,
+			`example.spec${projectFilesExtension}`
+		);
 
 		if (shouldCreateSampleTests && this.$fs.exists(exampleFilePath)) {
-			this.$fs.copyFile(
-				exampleFilePath,
-				path.join(testsDir, `example${projectFilesExtension}`)
+			this.$fs.copyFile(exampleFilePath, targetExampleTestPath);
+			const targetExampleTestRelativePath = path.relative(
+				projectDir,
+				targetExampleTestPath
 			);
-			this.$logger.info(
-				`\nExample test file created in ${relativeTestsDir}`.yellow
-			);
-		} else {
-			this.$logger.info(
-				`\nPlace your test files under ${relativeTestsDir}`.yellow
+			bufferedLogs.push(
+				`Added example test: ${targetExampleTestRelativePath.yellow}`
 			);
 		}
 
+		// test main entry
+		const testMainResourcesPath = this.$resources.resolvePath(
+			`test/test-main${projectFilesExtension}`
+		);
+		const testMainPath = path.join(
+			this.$projectData.appDirectoryPath,
+			`test${projectFilesExtension}`
+		);
+
+		if (!this.$fs.exists(testMainPath)) {
+			this.$fs.copyFile(testMainResourcesPath, testMainPath);
+			const testMainRelativePath = path.relative(projectDir, testMainPath);
+			bufferedLogs.push(
+				`Main test entrypoint created: ${testMainRelativePath.yellow}`
+			);
+		}
+
+		const testTsConfigTemplate = this.$resources.readText(
+			"test/tsconfig.spec.json"
+		);
+		const testTsConfig = _.template(testTsConfigTemplate)({
+			basePath: this.$projectData.getAppDirectoryRelativePath(),
+		});
+
+		this.$fs.writeFile(
+			path.join(projectDir, "tsconfig.spec.json"),
+			testTsConfig
+		);
+		bufferedLogs.push(`Added/replaced ${"tsconfig.spec.json".yellow}`);
+
+		const greyDollarSign = "$".grey;
 		this.$logger.info(
-			'Run your tests using the "$ ns test <platform>" command.'.yellow
+			[
+				[
+					`Tests using`.green,
+					frameworkToInstall.cyan,
+					`were successfully initialized.`.green,
+				].join(" "),
+				"",
+				...bufferedLogs,
+				"",
+				`Note: @nativescript/unit-test-runner was included in "dependencies" as a convenience to automatically adjust your app's Info.plist on iOS and AndroidManifest.xml on Android to ensure the socket connects properly.`
+					.yellow,
+				"",
+				`For production you may want to move to "devDependencies" and manage the settings yourself.`
+					.yellow,
+				"",
+				"",
+				`You can now run your tests:`,
+				"",
+				`  ${greyDollarSign} ${"ns test ios".green}`,
+				`  ${greyDollarSign} ${"ns test android".green}`,
+				"",
+			].join("\n")
 		);
 	}
 }

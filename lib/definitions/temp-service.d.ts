@@ -1,7 +1,9 @@
+import { AffixOptions } from "temp";
+
 /**
  * Declares wrapped functions of temp module
  */
 interface ITempService {
-	mkdirSync(affixes: string): Promise<string>;
-	path(options: ITempPathOptions): Promise<string>;
+	mkdirSync(affixes: string | AffixOptions): Promise<string>;
+	path(options: string | AffixOptions): Promise<string>;
 }

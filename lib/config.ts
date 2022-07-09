@@ -61,28 +61,6 @@ export class StaticConfig implements IStaticConfig {
 		return true;
 	}
 
-	public get SYS_REQUIREMENTS_LINK(): string {
-		let linkToSysRequirements: string;
-		switch (process.platform) {
-			case "linux":
-				linkToSysRequirements =
-					"http://docs.nativescript.org/setup/ns-cli-setup/ns-setup-linux.html#system-requirements";
-				break;
-			case "win32":
-				linkToSysRequirements =
-					"http://docs.nativescript.org/setup/ns-cli-setup/ns-setup-win.html#system-requirements";
-				break;
-			case "darwin":
-				linkToSysRequirements =
-					"http://docs.nativescript.org/setup/ns-cli-setup/ns-setup-os-x.html#system-requirements";
-				break;
-			default:
-				linkToSysRequirements = "";
-		}
-
-		return linkToSysRequirements;
-	}
-
 	public version = require("../package.json").version;
 
 	public get HTML_CLI_HELPERS_DIR(): string {

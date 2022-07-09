@@ -87,7 +87,23 @@ export class IOSSimulator extends IOSDeviceBase implements Mobile.IiOSDevice {
 			attachRequestMessage,
 			this.deviceInfo.identifier
 		);
-		const port = await super.getDebuggerPort(appId);
+
+		// Retry posting the notification every five seconds, in case the AttachRequest
+		// event handler wasn't registered when the first one was sent
+		const postNotificationRetryInterval = setInterval(() => {
+			this.$iOSEmulatorServices
+				.postDarwinNotification(
+					attachRequestMessage,
+					this.deviceInfo.identifier
+				)
+				.catch((e) => this.$logger.error(e));
+		}, 5e3);
+
+		// the internal retry-mechanism of getDebuggerPort will ensure the above
+		// interval has a chance to execute multiple times
+		const port = await super.getDebuggerPort(appId).finally(() => {
+			clearInterval(postNotificationRetryInterval);
+		});
 		try {
 			socket = await helpers.connectEventuallyUntilTimeout(async () => {
 				return this.$iOSEmulatorServices.connectToPort({ port });

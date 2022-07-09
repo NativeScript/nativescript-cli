@@ -1,13 +1,11 @@
 import * as path from "path";
-import {
-	NODE_MODULES_FOLDER_NAME,
-	PACKAGE_JSON_FILE_NAME,
-} from "../../constants";
+import { PACKAGE_JSON_FILE_NAME } from "../../constants";
 import { INodeModulesDependenciesBuilder } from "../../definitions/platform";
 import { IDependencyData } from "../../declarations";
 import { IFileSystem } from "../../common/declarations";
 import * as _ from "lodash";
 import { injector } from "../../common/yok";
+import { resolvePackagePath } from "@rigor789/resolve-package-path";
 
 interface IDependencyDescription {
 	parent: IDependencyDescription;
@@ -20,11 +18,10 @@ export class NodeModulesDependenciesBuilder
 	implements INodeModulesDependenciesBuilder {
 	public constructor(private $fs: IFileSystem) {}
 
-	public getProductionDependencies(projectPath: string): IDependencyData[] {
-		const rootNodeModulesPath = path.join(
-			projectPath,
-			NODE_MODULES_FOLDER_NAME
-		);
+	public getProductionDependencies(
+		projectPath: string,
+		ignore?: string[]
+	): IDependencyData[] {
 		const projectPackageJsonPath = path.join(
 			projectPath,
 			PACKAGE_JSON_FILE_NAME
@@ -46,9 +43,9 @@ export class NodeModulesDependenciesBuilder
 		while (queue.length) {
 			const currentModule = queue.shift();
 			const resolvedDependency = this.findModule(
-				rootNodeModulesPath,
 				currentModule,
-				resolvedDependencies
+				resolvedDependencies,
+				projectPath
 			);
 
 			if (
@@ -83,63 +80,55 @@ export class NodeModulesDependenciesBuilder
 				resolvedDependencies.push(resolvedDependency);
 			}
 		}
-
+		if (ignore && ignore.length > 0) {
+			return resolvedDependencies.filter((d) => ignore.indexOf(d.name) === -1);
+		}
 		return resolvedDependencies;
 	}
 
 	private findModule(
-		rootNodeModulesPath: string,
 		depDescription: IDependencyDescription,
-		resolvedDependencies: IDependencyData[]
+		resolvedDependencies: IDependencyData[],
+		rootPath: string
 	): IDependencyData {
-		let modulePath = path.join(
-			depDescription.parentDir,
-			NODE_MODULES_FOLDER_NAME,
-			depDescription.name
-		); // node_modules/parent/node_modules/<package>
-		const rootModulesPath = path.join(rootNodeModulesPath, depDescription.name);
-		let depthInNodeModules = depDescription.depth;
+		try {
+			const parentModulesPath =
+				depDescription?.parentDir ?? depDescription?.parent?.parentDir;
 
-		if (!this.moduleExists(modulePath)) {
-			let moduleExists = false;
-			let parent = depDescription.parent;
+			let modulePath: string = resolvePackagePath(depDescription.name, {
+				paths: [parentModulesPath],
+			});
 
-			while (parent && !moduleExists) {
-				modulePath = path.join(
-					depDescription.parent.parentDir,
-					NODE_MODULES_FOLDER_NAME,
-					depDescription.name
-				);
-				moduleExists = this.moduleExists(modulePath);
-				if (!moduleExists) {
-					parent = parent.parent;
-				}
+			// perhaps traverse up the tree here?
+			if (!modulePath) {
+				// fallback to searching in the root path
+				modulePath = resolvePackagePath(depDescription.name, {
+					paths: [rootPath],
+				});
 			}
 
-			if (!moduleExists) {
-				modulePath = rootModulesPath; // /node_modules/<package>
-				if (!this.moduleExists(modulePath)) {
-					return null;
-				}
+			// if we failed to find the module...
+			if (!modulePath) {
+				return null;
 			}
 
-			depthInNodeModules = 0;
-		}
+			// if we already resolved this dependency, we return null to avoid a duplicate resolution
+			if (
+				resolvedDependencies.some((r) => {
+					return r.name === depDescription.name && r.directory === modulePath;
+				})
+			) {
+				return null;
+			}
 
-		if (
-			_.some(
-				resolvedDependencies,
-				(r) => r.name === depDescription.name && r.directory === modulePath
-			)
-		) {
+			return this.getDependencyData(
+				depDescription.name,
+				modulePath,
+				depDescription.depth
+			);
+		} catch (err) {
 			return null;
 		}
-
-		return this.getDependencyData(
-			depDescription.name,
-			modulePath,
-			depthInNodeModules
-		);
 	}
 
 	private getDependencyData(
@@ -171,19 +160,6 @@ export class NodeModulesDependenciesBuilder
 		}
 
 		return null;
-	}
-
-	private moduleExists(modulePath: string): boolean {
-		try {
-			let modulePathLsStat = this.$fs.getLsStats(modulePath);
-			if (modulePathLsStat.isSymbolicLink()) {
-				modulePathLsStat = this.$fs.getLsStats(this.$fs.realpath(modulePath));
-			}
-
-			return modulePathLsStat.isDirectory();
-		} catch (e) {
-			return false;
-		}
 	}
 }
 

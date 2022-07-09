@@ -18,7 +18,7 @@ Command | Description
 [autocomplete](general/autocomplete.html) | Configures your current command-line completion settings.
 [usage-reporting](general/usage-reporting.html) | Configures anonymous usage reporting for the NativeScript CLI.
 [error-reporting](general/error-reporting.html) | Configures anonymous error reporting for the NativeScript CLI.
-[doctor](general/doctor.html) | Checks your system for configuration problems which might prevent the NativeScript CLI from working properly.
+[doctor `<platform>`](general/doctor.html) | Checks your system for configuration problems which might prevent the NativeScript CLI from working properly for the specified platform, if configured.
 [info](general/info.html) | Displays version information about the NativeScript CLI, core modules, and runtimes.
 [proxy](general/proxy.html) | Displays proxy settings.
 [migrate](general/migrate.html) | Migrates the app dependencies to a form compatible with NativeScript 6.0.
@@ -30,7 +30,6 @@ Command | Description
 ---|---
 [create](project/creation/create.html) | Creates a new project for native development with NativeScript.
 [clean](general/clean.html) | Cleans project artifacts.
-[preview](project/testing/preview.html) | Generates a QR code that can be scanned by the NativeScript PlayGround app.
 [platform add `<Platform>`](project/configuration/platform-add.html) | Configures the current project to target the selected platform.
 [platform list](project/configuration/platform.html) | Lists all platforms that the project currently targets.
 [platform remove `<Platform>`](project/configuration/platform-remove.html) | Removes the selected platform from the platforms that the project currently targets. This operation deletes all platform-specific files and subdirectories from your project.
@@ -41,6 +40,7 @@ Command | Description
 [prepare `<Platform>`](project/configuration/prepare.html) | Copies relevant content from the app directory to the subdirectory for the selected target platform to let you build the project.
 [build `<Platform>`](project/testing/build.html) | Builds the project for the selected target platform and produces an application package or an emulator package.
 [deploy `<Platform>`](project/testing/deploy.html) | Deploys the project to a connected physical or virtual device.
+[typings `<Platform>`](project/testing/typings.html) | Generate iOS & Android typings
 [run](project/testing/run.html) | Runs your project on a connected device or in the native emulator, if configured.
 [run `<Platform>`](project/testing/run.html) | Runs your project on a connected device or in the native emulator for the specified platform, if configured.
 [debug `<Platform>`](project/testing/debug.html) | Debugs your project on a connected physical or virtual device.
@@ -74,5 +74,6 @@ Option | Description
 -------|---------
 --help, -h, /? | Prints help about the selected command in the console.
 --path `<Directory>` | Specifies the directory that contains the project. If not set, the project is searched for in the current directory and all directories above it.
+--config | Specifies the name of the Nativescript configuration file to load (relative to the project directory). The default is `nativescript.config.ts` or `nativescript.config.js` (as a fallback).
 --version | Prints the client version.
 --log trace | Prints a detailed diagnostic log for the execution of the current command.

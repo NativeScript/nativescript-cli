@@ -88,6 +88,7 @@ export class ProjectData implements IProjectData {
 	public appResourcesDirectoryPath: string;
 	public dependencies: any;
 	public devDependencies: IStringDictionary;
+	public ignoredDependencies: string[];
 	public projectType: string;
 	public androidManifestPath: string;
 	public infoPlistPath: string;
@@ -98,6 +99,7 @@ export class ProjectData implements IProjectData {
 	public isShared: boolean;
 	public previewAppSchema: string;
 	public webpackConfigPath: string;
+	public initialized: boolean;
 
 	constructor(
 		private $fs: IFileSystem,
@@ -116,6 +118,9 @@ export class ProjectData implements IProjectData {
 	}
 
 	public initializeProjectData(projectDir?: string): void {
+		if (this.initialized) {
+			return;
+		}
 		projectDir = projectDir || this.$projectHelper.projectDir;
 
 		// If no project found, projectDir should be null
@@ -126,6 +131,7 @@ export class ProjectData implements IProjectData {
 				const packageJsonContent = this.$fs.readText(projectFilePath);
 
 				this.initializeProjectDataFromContent(packageJsonContent, projectDir);
+				this.initialized = true;
 			}
 
 			return;
@@ -167,6 +173,7 @@ export class ProjectData implements IProjectData {
 			this.devDependencies = packageJsonData.devDependencies;
 			this.projectType = this.getProjectType();
 			this.nsConfig = nsConfig;
+			this.ignoredDependencies = nsConfig?.ignoredNativeDependencies;
 			this.appDirectoryPath = this.getAppDirectoryPath();
 			this.appResourcesDirectoryPath = this.getAppResourcesDirectoryPath();
 			this.androidManifestPath = this.getPathToAndroidManifest(
@@ -252,10 +259,11 @@ export class ProjectData implements IProjectData {
 			return this.nsConfig[constants.CONFIG_NS_APP_RESOURCES_ENTRY];
 		}
 
-		return path.join(
-			this.getAppDirectoryRelativePath(),
-			constants.APP_RESOURCES_FOLDER_NAME
-		);
+		return constants.APP_RESOURCES_FOLDER_NAME;
+		// return path.join(
+		// 	this.getAppDirectoryRelativePath(),
+		// 	constants.APP_RESOURCES_FOLDER_NAME
+		// );
 	}
 
 	public getAppDirectoryPath(projectDir?: string): string {

@@ -13,7 +13,7 @@ import {
 	SRC_DIR,
 } from "../constants";
 import { parseJson } from "../common/helpers";
-import { exported } from "../common/decorators";
+import { exported, memoize } from "../common/decorators";
 import {
 	IAssetGroup,
 	IAssetItem,
@@ -33,6 +33,8 @@ import { IDictionary, IFileSystem, IProjectDir } from "../common/declarations";
 import * as _ from "lodash";
 import { IInjector } from "../common/definitions/yok";
 import { injector } from "../common/yok";
+import * as semver from "semver";
+import { resolvePackageJSONPath } from "../helpers/package-path-helper";
 
 interface IProjectFileData {
 	projectData: any;
@@ -120,7 +122,6 @@ export class ProjectDataService implements IProjectDataService {
 			this.projectDataCache[projectDir] ||
 			this.$injector.resolve<IProjectData>(ProjectData);
 		this.projectDataCache[projectDir].initializeProjectData(projectDir);
-
 		return this.projectDataCache[projectDir];
 	}
 
@@ -568,6 +569,7 @@ export class ProjectDataService implements IProjectDataService {
 		projectDir: string,
 		platform: constants.SupportedPlatform
 	): IBasePluginData {
+		platform = platform.toLowerCase() as constants.SupportedPlatform;
 		const packageJson = this.$fs.readJson(
 			path.join(projectDir, constants.PACKAGE_JSON_FILE_NAME)
 		);
@@ -594,6 +596,20 @@ export class ProjectDataService implements IProjectDataService {
 		return this.getInstalledRuntimePackage(projectDir, platform);
 	}
 
+	@memoize({
+		hashFn(projectDir: string, platform: constants.SupportedPlatform) {
+			return projectDir + ":" + platform;
+		},
+		shouldCache(result: IBasePluginData) {
+			// don't cache coerced versions
+			if ((result as any)._coerced) {
+				return false;
+			}
+
+			// only cache if version is defined
+			return !!result.version;
+		},
+	})
 	private getInstalledRuntimePackage(
 		projectDir: string,
 		platform: constants.SupportedPlatform
@@ -615,21 +631,38 @@ export class ProjectDataService implements IProjectDataService {
 			});
 
 		if (runtimePackage) {
-			// in case we are using a local tgz for the runtime
-			//
-			if (runtimePackage.version.includes("tgz")) {
+			const coerced = semver.coerce(runtimePackage.version);
+			const isRange = !!coerced && coerced.version !== runtimePackage.version;
+			const isTag = !coerced;
+
+			// in case we are using a local tgz for the runtime or a range like ~8.0.0, ^8.0.0 etc. or a tag like JSC
+			if (runtimePackage.version.includes("tgz") || isRange || isTag) {
 				try {
-					const runtimePackageJsonPath = require.resolve(
-						`${runtimePackage.name}/package.json`,
+					const runtimePackageJsonPath = resolvePackageJSONPath(
+						runtimePackage.name,
 						{
 							paths: [projectDir],
 						}
 					);
+
+					if (!runtimePackageJsonPath) {
+						// caught below
+						throw new Error("Runtime package.json not found.");
+					}
+
 					runtimePackage.version = this.$fs.readJson(
 						runtimePackageJsonPath
 					).version;
 				} catch (err) {
-					runtimePackage.version = null;
+					if (isRange) {
+						runtimePackage.version = semver.coerce(
+							runtimePackage.version
+						).version;
+
+						(runtimePackage as any)._coerced = true;
+					} else {
+						runtimePackage.version = null;
+					}
 				}
 			}
 
