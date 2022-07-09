@@ -1,17 +1,50 @@
 import { ICommandParameter, ICommand } from "../common/definitions/commands";
-import { IErrors } from "../common/declarations";
+import { IChildProcess, IErrors } from "../common/declarations";
 import { injector } from "../common/yok";
+import { IPackageManager } from "../declarations";
+import { IProjectData } from "../definitions/project";
+import path = require("path");
+import { resolvePackagePath } from "@rigor789/resolve-package-path";
+
+const PREVIEW_CLI_PACKAGE = "@nativescript/preview-cli";
 
 export class PreviewCommand implements ICommand {
 	allowedParameters: ICommandParameter[] = [];
 
-	constructor(private $errors: IErrors) {}
+	constructor(
+		private $errors: IErrors,
+		private $projectData: IProjectData,
+		private $packageManager: IPackageManager,
+		private $childProcess: IChildProcess
+	) {}
+
+	private getPreviewCLIPath(): string {
+		return resolvePackagePath(PREVIEW_CLI_PACKAGE, {
+			paths: [this.$projectData.projectDir],
+		});
+	}
 
 	async execute(args: string[]): Promise<void> {
-		this.$errors.fail(
-			`The Preview service has been disabled until further notice.\n\n` +
-				`Configure local builds and use "ns run ${args.join(" ")}" instead.`
+		await this.$packageManager.install(
+			`${PREVIEW_CLI_PACKAGE}@exp`,
+			this.$projectData.projectDir,
+			{
+				"save-dev": true,
+				"save-exact": true,
+			} as any
 		);
+
+		const previewCLIPath = this.getPreviewCLIPath();
+
+		if (!previewCLIPath) {
+			this.$errors.fail("No Preview CLI found.");
+		}
+
+		const previewCLIBinPath = path.resolve(previewCLIPath, "./dist/index.js");
+
+		this.$childProcess.spawn(previewCLIBinPath, args, {
+			stdio: "inherit",
+		});
 	}
 
 	async canExecute(args: string[]): Promise<boolean> {
