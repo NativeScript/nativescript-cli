@@ -1,10 +1,11 @@
 import { ICommandParameter, ICommand } from "../common/definitions/commands";
 import { IChildProcess, IErrors } from "../common/declarations";
 import { injector } from "../common/yok";
-import { IPackageManager } from "../declarations";
+import { IOptions, IPackageManager } from "../declarations";
 import { IProjectData } from "../definitions/project";
 import path = require("path");
 import { resolvePackagePath } from "@rigor789/resolve-package-path";
+import { PackageManagers } from "../constants";
 
 const PREVIEW_CLI_PACKAGE = "@nativescript/preview-cli";
 
@@ -12,10 +13,12 @@ export class PreviewCommand implements ICommand {
 	allowedParameters: ICommandParameter[] = [];
 
 	constructor(
+		private $logger: ILogger,
 		private $errors: IErrors,
 		private $projectData: IProjectData,
 		private $packageManager: IPackageManager,
-		private $childProcess: IChildProcess
+		private $childProcess: IChildProcess,
+		private $options: IOptions
 	) {}
 
 	private getPreviewCLIPath(): string {
@@ -25,24 +28,60 @@ export class PreviewCommand implements ICommand {
 	}
 
 	async execute(args: string[]): Promise<void> {
-		await this.$packageManager.install(
-			`${PREVIEW_CLI_PACKAGE}@exp`,
-			this.$projectData.projectDir,
-			{
-				"save-dev": true,
-				"save-exact": true,
-			} as any
-		);
+		if (!this.$options.disableNpmInstall) {
+			await this.$packageManager.install(
+				`${PREVIEW_CLI_PACKAGE}@exp`,
+				this.$projectData.projectDir,
+				{
+					"save-dev": true,
+					"save-exact": true,
+				} as any
+			);
+		}
 
 		const previewCLIPath = this.getPreviewCLIPath();
 
 		if (!previewCLIPath) {
-			this.$errors.fail("No Preview CLI found.");
+			const packageManagerName = await this.$packageManager.getPackageManagerName();
+			let installCommand = "";
+
+			switch (packageManagerName) {
+				case PackageManagers.npm:
+					installCommand = "npm install --save-dev @nativescript/preview-cli";
+					break;
+				case PackageManagers.yarn:
+					installCommand = "yarn add -D @nativescript/preview-cli";
+					break;
+				case PackageManagers.pnpm:
+					installCommand = "pnpm install --save-dev @nativescript/preview-cli";
+					break;
+			}
+			this.$logger.info(
+				[
+					`Uhh ohh, no Preview CLI found.`,
+					"",
+					`This should not happen under regular circumstances, but seems like it did somehow... :(`,
+					`Good news though, you can install the Preview CLI by running`,
+					"",
+					"  " + installCommand.green,
+					"",
+					"Once installed, run this command again and everything should work!",
+					"If it still fails, you can invoke the preview-cli directly as a last resort with",
+					"",
+					"  ./node_modules/.bin/preview-cli".cyan,
+					"",
+					"And if you are still having issues, try again - or reach out on Discord/open an issue on GitHub.",
+				].join("\n")
+			);
+
+			this.$errors.fail("Running preview failed.");
 		}
 
 		const previewCLIBinPath = path.resolve(previewCLIPath, "./dist/index.js");
 
-		this.$childProcess.spawn(previewCLIBinPath, args, {
+		const commandIndex = process.argv.indexOf("preview");
+		const commandArgs = process.argv.slice(commandIndex + 1);
+		this.$childProcess.spawn(previewCLIBinPath, commandArgs, {
 			stdio: "inherit",
 		});
 	}
