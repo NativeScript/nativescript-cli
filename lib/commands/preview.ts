@@ -29,8 +29,9 @@ export class PreviewCommand implements ICommand {
 
 	async execute(args: string[]): Promise<void> {
 		if (!this.$options.disableNpmInstall) {
+			// ensure latest is installed
 			await this.$packageManager.install(
-				`${PREVIEW_CLI_PACKAGE}@exp`,
+				`${PREVIEW_CLI_PACKAGE}@latest`,
 				this.$projectData.projectDir,
 				{
 					"save-dev": true,
