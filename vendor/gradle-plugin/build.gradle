@@ -72,6 +72,27 @@ buildscript {
             logger.warn "\t + failed to load gradle properties from \"$path\". Error is: ${ex.getMessage()}"
         }
     }
+    def getAppPath = { ->
+        def relativePathToApp = "app"
+        def nsConfigFile = file("$USER_PROJECT_ROOT/nsconfig.json")
+        def nsConfig
+
+        if (nsConfigFile.exists()) {
+            nsConfig = new JsonSlurper().parseText(nsConfigFile.getText("UTF-8"))
+        }
+
+        if (project.hasProperty("appPath")) {
+            // when appPath is passed through -PappPath=/path/to/app
+            // the path could be relative or absolute - either case will work
+            relativePathToApp = appPath
+        } else if (nsConfig != null && nsConfig.appPath != null) {
+            relativePathToApp = nsConfig.appPath
+        }
+
+        project.ext.appPath = Paths.get(USER_PROJECT_ROOT).resolve(relativePathToApp).toAbsolutePath()
+
+        return project.ext.appPath
+    }
     def getAppResourcesPath = { ->
         def relativePathToAppResources
         def absolutePathToAppResources
@@ -99,28 +120,6 @@ buildscript {
         return absolutePathToAppResources
     }
 
-
-    def getAppPath = { ->
-        def relativePathToApp = "app"
-        def nsConfigFile = file("$USER_PROJECT_ROOT/nsconfig.json")
-        def nsConfig
-
-        if (nsConfigFile.exists()) {
-            nsConfig = new JsonSlurper().parseText(nsConfigFile.getText("UTF-8"))
-        }
-
-        if (project.hasProperty("appPath")) {
-            // when appPath is passed through -PappPath=/path/to/app
-            // the path could be relative or absolute - either case will work
-            relativePathToApp = appPath
-        } else if (nsConfig != null && nsConfig.appPath != null) {
-            relativePathToApp = nsConfig.appPath
-        }
-
-        project.ext.appPath = Paths.get(USER_PROJECT_ROOT).resolve(relativePathToApp).toAbsolutePath()
-
-        return project.ext.appPath
-    }
     def initialize = { ->
         // set up our logger
         project.ext.outLogger = services.get(StyledTextOutputFactory).create("colouredOutputLogger")
@@ -295,6 +294,7 @@ android {
         nativescriptDependencies.each { dep ->
             def includeGradlePath = "${getDepPlatformDir(dep)}/include.gradle"
             if (file(includeGradlePath).exists()) {
+                outLogger.withStyle(Style.SuccessHeader).println "\t + applying plugin include.gradle from dependency ${includeGradlePath}"
                 apply from: includeGradlePath
             }
         }
@@ -309,6 +309,10 @@ android {
         targetSdkVersion 31
         versionCode 1
         versionName "1.0"
+    }
+    lintOptions {
+        checkReleaseBuilds false
+        abortOnError false
     }
 }
 
