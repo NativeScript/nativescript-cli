@@ -1,7 +1,7 @@
 {
   "name": "nativescript",
   "preferGlobal": true,
-  "version": "8.2.3",
+  "version": "8.3.0-beta.0",
   "author": "NativeScript <support@nativescript.org>",
   "description": "Command-line interface for building NativeScript projects",
   "bin": {
@@ -106,7 +106,7 @@
     "shelljs": "0.8.4",
     "simple-git": "^2.20.1",
     "simple-plist": "1.1.0",
-    "source-map": "0.7.3",
+    "source-map": "0.7.4",
     "stringify-package": "1.0.1",
     "tabtab": "https://github.com/Icenium/node-tabtab/tarball/master",
     "tar": "6.0.2",
