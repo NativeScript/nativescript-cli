@@ -74,27 +74,13 @@ interface IApplePortalAssociatedAccountData {
 
 interface IApplePortalApplication {
 	summaries: IApplePortalApplicationSummary[];
-	showSharedSecret: boolean;
-	macBundlesEnabled: boolean;
-	canCreateMacApps: boolean;
-	cloudStorageEnabled: boolean;
-	sharedSecretLink: string;
-	gameCenterGroupLink: string;
-	enabledPlatforms: string[];
-	cloudStorageLink: string;
-	catalogReportsLink: string;
-	canCreateIOSApps: boolean;
 }
 
 interface IApplePortalApplicationSummary {
 	name: string;
 	adamId: string;
-	vendorId: string;
+
 	bundleId: string;
-	appType: any;
+
 	versionSets: any[];
-	lastModifiedDate: number;
-	iconUrl: string;
-	issuesCount: number;
-	priceTier: string;
 }
