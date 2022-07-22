@@ -14,10 +14,10 @@ export class IOSLogFilter implements Mobile.IPlatformLogFilter {
 	);
 
 	// Used to post filter messages that slip through but are not coming from NativeScript itself.
-	// Looks text in parenthesis at the beginning
+	// Looks for text in parenthesis at the beginning
 	// Example:
 	// (RunningBoardServices) [com.apple.runningboard:connection] Identity resolved as application<...>
-	//  ^^^^^^^^^^^^^^^^^^^^
+	// ^(~~capture group~~~)^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 	// we then use this to filter out non-NativeScript lines
 	protected postFilterRegex: RegExp = /^\((.+)\) \[com\.apple.+\]/;
 
