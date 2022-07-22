@@ -3,7 +3,7 @@ import { injector } from "../common/yok";
 export class IOSLogFilter implements Mobile.IPlatformLogFilter {
 	// Used to recognize output related to the current project
 	// This looks for artifacts like: AppName[22432] or AppName(SomeTextHere)[23123]
-	private appOutputRegex: RegExp = /([^\s\(\)]+)(?:\([^\s]+\))?\[[0-9]+\]/;
+	private appOutputRegex: RegExp = /([^\s\(\)]+)(?:\(([^\s]+)\))?\[[0-9]+\]/;
 
 	// Used to trim the passed messages to a simpler output
 	// Example:
@@ -19,7 +19,7 @@ export class IOSLogFilter implements Mobile.IPlatformLogFilter {
 	// (RunningBoardServices) [com.apple.runningboard:connection] Identity resolved as application<...>
 	//  ^^^^^^^^^^^^^^^^^^^^
 	// we then use this to filter out non-NativeScript lines
-	protected postFilterRegex: RegExp = /^\((.+)\)/;
+	protected postFilterRegex: RegExp = /^\((.+)\) \[com\.apple.+\]/;
 
 	private filterActive: boolean = true;
 
@@ -67,6 +67,10 @@ export class IOSLogFilter implements Mobile.IPlatformLogFilter {
 				// of this filter may be used accross multiple projects.
 				const projectName = loggingOptions && loggingOptions.projectName;
 				this.filterActive = matchResult[1] !== projectName;
+
+				if (matchResult?.[2]) {
+					this.filterActive ||= matchResult[2] !== "NativeScript";
+				}
 			}
 
 			if (this.filterActive) {
