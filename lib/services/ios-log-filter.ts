@@ -13,6 +13,14 @@ export class IOSLogFilter implements Mobile.IPlatformLogFilter {
 		`^.*(?:<Notice>:|<Error>:|<Warning>:|\\(NativeScript\\)|${this.appOutputRegex.source}:){1}`
 	);
 
+	// Used to post filter messages that slip through but are not coming from NativeScript itself.
+	// Looks text in parenthesis at the beginning
+	// Example:
+	// (RunningBoardServices) [com.apple.runningboard:connection] Identity resolved as application<...>
+	//  ^^^^^^^^^^^^^^^^^^^^
+	// we then use this to filter out non-NativeScript lines
+	protected postFilterRegex: RegExp = /^\((.+)\)/;
+
 	private filterActive: boolean = true;
 
 	private partialLine: string = null;
@@ -71,6 +79,13 @@ export class IOSLogFilter implements Mobile.IPlatformLogFilter {
 			}
 
 			currentLine = currentLine.trim();
+
+			// post filtering: (<anything>) check if <anything> is not "NativeScript"
+			const postFilterMatch = this.postFilterRegex.exec(currentLine);
+			if (postFilterMatch && postFilterMatch?.[1] !== "NativeScript") {
+				continue;
+			}
+
 			output += currentLine + "\n";
 		}
 
