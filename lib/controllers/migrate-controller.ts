@@ -184,7 +184,7 @@ export class MigrateController
 		{
 			packageName: "@nativescript/angular",
 			minVersion: "10.0.0",
-			desiredVersion: "^13.0.0",
+			desiredVersion: "^14.0.0",
 			async shouldMigrateAction(
 				dependency: IMigrationDependency,
 				projectData: IProjectData,
@@ -1293,7 +1293,7 @@ export class MigrateController
 
 	private async migrateNativeScriptAngular(): Promise<IMigrationDependency[]> {
 		const minVersion = "10.0.0";
-		const desiredVersion = "~13.2.0";
+		const desiredVersion = "~14.1.0";
 
 		const dependencies: IMigrationDependency[] = [
 			{
@@ -1376,11 +1376,11 @@ export class MigrateController
 				desiredVersion,
 				isDev: true,
 			},
-
-			// obsolete
 			{
 				packageName: "@angular-devkit/build-angular",
-				shouldRemove: true,
+				minVersion,
+				desiredVersion,
+				isDev: true,
 			},
 		];
 
