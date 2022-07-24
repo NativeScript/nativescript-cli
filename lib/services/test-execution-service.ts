@@ -164,9 +164,11 @@ export class TestExecutionService implements ITestExecutionService {
 		const ips = Object.keys(nics)
 			.map(
 				(nicName) =>
-					nics[nicName].filter((binding: any) => binding.family === "IPv4")[0]
+					nics[nicName].filter(
+						(binding: any) => binding.family === "IPv4" || binding.family === 4
+					)[0]
 			)
-			.filter((binding) => binding)
+			.filter((binding) => !!binding)
 			.map((binding) => binding.address);
 
 		const config = {
