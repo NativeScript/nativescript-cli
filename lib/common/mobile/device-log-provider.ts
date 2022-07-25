@@ -4,12 +4,14 @@ import { injector } from "../yok";
 
 import * as chalk from "chalk";
 import { LoggerConfigData } from "../../constants";
+import { IOptions } from "../../declarations";
 
 export class DeviceLogProvider extends DeviceLogProviderBase {
 	constructor(
 		protected $logFilter: Mobile.ILogFilter,
 		protected $logger: ILogger,
-		protected $logSourceMapService: Mobile.ILogSourceMapService
+		protected $logSourceMapService: Mobile.ILogSourceMapService,
+		protected $options: IOptions
 	) {
 		super($logFilter, $logger, $logSourceMapService);
 	}
@@ -78,8 +80,8 @@ export class DeviceLogProvider extends DeviceLogProviderBase {
 	}
 
 	private logDataCore(data: string, deviceIdentifier: string): void {
-		// todo: allow toggling "legacy/classic" printer/logger
-		if (false) {
+		// todo: use config to set logger - --env.classicLogs is temporary!
+		if ("classicLogs" in this.$options.env) {
 			// legacy logging
 			this.$logger.info(data, { [LoggerConfigData.skipNewLine]: true });
 			return;
