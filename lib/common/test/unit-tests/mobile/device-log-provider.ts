@@ -31,6 +31,11 @@ const createTestInjector = (): IInjector => {
 	testInjector.register("iOSLogFilter", IOSLogFilter);
 	testInjector.register("logger", CommonLoggerStub);
 	testInjector.register("logSourceMapService", LogSourceMapService);
+	testInjector.register("options", {
+		env: {
+			classicLogs: true,
+		},
+	});
 	testInjector.register("loggingLevels", LoggingLevels);
 	testInjector.register("devicePlatformsConstants", DevicePlatformsConstants);
 	testInjector.register("fs", FileSystem);

@@ -81,7 +81,7 @@ export class DeviceLogProvider extends DeviceLogProviderBase {
 
 	private logDataCore(data: string, deviceIdentifier: string): void {
 		// todo: use config to set logger - --env.classicLogs is temporary!
-		if ("classicLogs" in this.$options.env) {
+		if ("classicLogs" in (this.$options.env ?? {})) {
 			// legacy logging
 			this.$logger.info(data, { [LoggerConfigData.skipNewLine]: true });
 			return;
