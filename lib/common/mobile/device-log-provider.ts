@@ -130,11 +130,27 @@ export class DeviceLogProvider extends DeviceLogProviderBase {
 				.trim();
 
 			toLog.split("\n").forEach((actualLine) => {
-				console.log(
+				this.printLine(
 					chalk[this.getDeviceColor(deviceIdentifier)](" "),
 					this.consoleLevelColor[level](actualLine)
 				);
 			});
+		}
+	}
+
+	private printLine(prefix: string, ...parts: string[]) {
+		const maxWidth = process.stdout.columns - 2;
+		const fullLine = parts.join(" ");
+
+		// console.log(prefix, fullLine);
+		// return;
+		if (fullLine.length < maxWidth) {
+			console.log(prefix, fullLine);
+		} else {
+			for (let i = 0; i < fullLine.length; i += maxWidth) {
+				const part = fullLine.substring(i, i + maxWidth);
+				console.log(prefix, part);
+			}
 		}
 	}
 }
