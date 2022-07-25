@@ -3,6 +3,7 @@ import { DEVICE_LOG_EVENT_NAME } from "../constants";
 import { injector } from "../yok";
 
 import * as chalk from "chalk";
+import { LoggerConfigData } from "../../constants";
 
 export class DeviceLogProvider extends DeviceLogProviderBase {
 	constructor(
@@ -77,6 +78,14 @@ export class DeviceLogProvider extends DeviceLogProviderBase {
 	}
 
 	private logDataCore(data: string, deviceIdentifier: string): void {
+		// todo: allow toggling "legacy/classic" printer/logger
+		if (false) {
+			// legacy logging
+			this.$logger.info(data, { [LoggerConfigData.skipNewLine]: true });
+			return;
+		}
+
+		// todo: extract into an injectable printer/logger service
 		let shouldPrepend = false;
 		let splitIndexes: number[] = [];
 		const lines = data
