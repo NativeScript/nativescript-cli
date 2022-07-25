@@ -88,6 +88,7 @@
     "mute-stream": "0.0.8",
     "nativescript-dev-xcode": "0.2.1",
     "nativescript-preview-sdk": "0.4.2",
+    "ndjson": "^2.0.0",
     "open": "7.1.0",
     "ora": "5.0.0",
     "osenv": "0.1.5",

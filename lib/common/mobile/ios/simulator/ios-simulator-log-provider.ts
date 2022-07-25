@@ -7,6 +7,7 @@ import {
 	IDisposable,
 } from "../../../declarations";
 import { injector } from "../../../yok";
+import { PassThrough } from "stream";
 
 export class IOSSimulatorLogProvider
 	extends EventEmitter
@@ -39,8 +40,35 @@ export class IOSSimulatorLogProvider
 				options ? options.predicate : null
 			);
 
+			const outStream = new PassThrough();
+			const ndjson = require("ndjson");
+
+			outStream
+				.pipe(
+					ndjson.parse({
+						strict: false,
+					})
+				)
+				.on("data", (obj: any) => {
+					if ("eventMessage" in obj) {
+						this.$deviceLogProvider.logData(
+							obj.eventMessage,
+							this.$devicePlatformsConstants.iOS,
+							deviceId
+						);
+					}
+
+					// require("fs").appendFileSync(
+					// 	"/Users/rigor789/Code/_tmp/8.3/cliLoggingApp/messages.txt",
+					// 	JSON.stringify(obj) + "\n\n\n\n"
+					// );
+				});
+
 			const action = (data: Buffer | string) => {
 				const message = data.toString();
+
+				// require('fs').appendFileSync('/Users/rigor789/Code/_tmp/8.3/cliLoggingApp/messages.txt', `[START]\n${message}\n[END]\n\n\n\n`);
+
 				this.$deviceLogProvider.logData(
 					message,
 					this.$devicePlatformsConstants.iOS,
@@ -62,11 +90,13 @@ export class IOSSimulatorLogProvider
 			}
 
 			if (deviceLogChildProcess.stdout) {
-				deviceLogChildProcess.stdout.on("data", action.bind(this));
+				deviceLogChildProcess.stdout.pipe(outStream);
+				// deviceLogChildProcess.stdout.on("data", action.bind(this));
 			}
 
 			if (deviceLogChildProcess.stderr) {
-				deviceLogChildProcess.stderr.on("data", action.bind(this));
+				deviceLogChildProcess.stderr.pipe(outStream);
+				// deviceLogChildProcess.stderr.on("data", action.bind(this));
 			}
 
 			this.simulatorsLoggingEnabled[deviceId] = true;

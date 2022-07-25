@@ -23,6 +23,8 @@ export class IOSLogFilter implements Mobile.IPlatformLogFilter {
 		data: string,
 		loggingOptions: Mobile.IDeviceLogOptions = <any>{}
 	): string {
+		return data;
+
 		const specifiedLogLevel = (loggingOptions.logLevel || "").toUpperCase();
 
 		if (specifiedLogLevel !== this.$loggingLevels.info || !data) {
