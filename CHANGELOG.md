@@ -1,3 +1,17 @@
+## [8.3.1](https://github.com/NativeScript/nativescript-cli/compare/v8.3.0...v8.3.1) (2022-07-29)
+
+
+### Bug Fixes
+
+* use correct path to emulator executable ([#5663](https://github.com/NativeScript/nativescript-cli/issues/5663)) ([d49b666](https://github.com/NativeScript/nativescript-cli/commit/d49b6664f216456f84bfbf3dc5f1b362588e1951))
+
+
+### Features
+
+* **migrate:** update to 8.3 ([#5685](https://github.com/NativeScript/nativescript-cli/issues/5685)) ([50de194](https://github.com/NativeScript/nativescript-cli/commit/50de1946986b634bd3a9cf6d06d5f9b0c93a3caf))
+
+
+
 # [8.3.0](https://github.com/NativeScript/nativescript-cli/compare/v8.2.3...v8.3.0) (2022-07-25)
 
 
