@@ -115,7 +115,7 @@ export class MigrateController
 		{
 			packageName: "@nativescript/core",
 			minVersion: "6.5.0",
-			desiredVersion: "~8.2.0",
+			desiredVersion: "~8.3.0",
 			shouldAddIfMissing: true,
 		},
 		{
@@ -125,7 +125,7 @@ export class MigrateController
 		{
 			packageName: "@nativescript/types",
 			minVersion: "7.0.0",
-			desiredVersion: "~8.2.0",
+			desiredVersion: "~8.3.0",
 			isDev: true,
 		},
 		{
@@ -287,13 +287,13 @@ export class MigrateController
 		{
 			packageName: "@nativescript/ios",
 			minVersion: "6.5.3",
-			desiredVersion: "~8.2.0",
+			desiredVersion: "~8.3.0",
 			isDev: true,
 		},
 		{
 			packageName: "@nativescript/android",
 			minVersion: "7.0.0",
-			desiredVersion: "~8.2.0",
+			desiredVersion: "~8.3.0",
 			isDev: true,
 		},
 	];
