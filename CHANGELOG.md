@@ -1,3 +1,12 @@
+## [8.3.2](https://github.com/NativeScript/nativescript-cli/compare/v8.3.1...v8.3.2) (2022-07-31)
+
+
+### Bug Fixes
+
+* **logger:** don't trim text if maxWidth is NaN or <10 ([5415582](https://github.com/NativeScript/nativescript-cli/commit/541558270d54be32f2d38f0848a958e0cbca2a0b))
+
+
+
 ## [8.3.1](https://github.com/NativeScript/nativescript-cli/compare/v8.3.0...v8.3.1) (2022-07-29)
 
 
