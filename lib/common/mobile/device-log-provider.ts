@@ -155,7 +155,7 @@ export class DeviceLogProvider extends DeviceLogProviderBase {
 
 		// console.log(prefix, fullLine);
 		// return;
-		if (fullLine.length < maxWidth) {
+		if (!maxWidth || maxWidth < 10 || fullLine.length < maxWidth) {
 			console.log(prefix, fullLine);
 		} else {
 			for (let i = 0; i < fullLine.length; i += maxWidth) {
