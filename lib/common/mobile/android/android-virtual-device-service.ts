@@ -331,7 +331,7 @@ export class AndroidVirtualDeviceService
 	private getConfigurationError(): string {
 		const pathToEmulatorExecutable = this.$hostInfo.isWindows
 			? `${this.pathToEmulatorExecutable}.exe`
-			: this.pathToAndroidExecutable;
+			: this.pathToEmulatorExecutable;
 		if (!this.$fs.exists(pathToEmulatorExecutable)) {
 			return "Unable to find the path to emulator executable and will not be able to start the emulator. Searched paths: [$ANDROID_HOME/tools/emulator, $ANDROID_HOME/emulator/emulator]";
 		}

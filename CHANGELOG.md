@@ -1,3 +1,48 @@
+## [8.3.2](https://github.com/NativeScript/nativescript-cli/compare/v8.3.1...v8.3.2) (2022-07-31)
+
+
+### Bug Fixes
+
+* **logger:** don't trim text if maxWidth is NaN or <10 ([5415582](https://github.com/NativeScript/nativescript-cli/commit/541558270d54be32f2d38f0848a958e0cbca2a0b))
+
+
+
+## [8.3.1](https://github.com/NativeScript/nativescript-cli/compare/v8.3.0...v8.3.1) (2022-07-29)
+
+
+### Bug Fixes
+
+* use correct path to emulator executable ([#5663](https://github.com/NativeScript/nativescript-cli/issues/5663)) ([d49b666](https://github.com/NativeScript/nativescript-cli/commit/d49b6664f216456f84bfbf3dc5f1b362588e1951))
+
+
+### Features
+
+* **migrate:** update to 8.3 ([#5685](https://github.com/NativeScript/nativescript-cli/issues/5685)) ([50de194](https://github.com/NativeScript/nativescript-cli/commit/50de1946986b634bd3a9cf6d06d5f9b0c93a3caf))
+
+
+
+# [8.3.0](https://github.com/NativeScript/nativescript-cli/compare/v8.2.3...v8.3.0) (2022-07-25)
+
+
+### Bug Fixes
+
+* **ios-publish:** Update API calls to get applications ([#5678](https://github.com/NativeScript/nativescript-cli/issues/5678)) ([4abe2c9](https://github.com/NativeScript/nativescript-cli/commit/4abe2c901829b28f1e1fa26009996db96af06047))
+* **unit-test-runner:** node 18 binding family ([#5673](https://github.com/NativeScript/nativescript-cli/issues/5673)) ([1da28bc](https://github.com/NativeScript/nativescript-cli/commit/1da28bcb506650a0c43f468a43f4d577a7d9d3d4))
+* ios log filtering ([#5679](https://github.com/NativeScript/nativescript-cli/issues/5679)) ([8446000](https://github.com/NativeScript/nativescript-cli/commit/8446000ec7580fdc2aff4d7154edd174bf2d1d52))
+
+
+### Features
+
+* bump @nativescript/doctor version ([893989b](https://github.com/NativeScript/nativescript-cli/commit/893989b250c6372937a67f4c55ac05e92c1f26a8))
+* cleaner log output ([#5680](https://github.com/NativeScript/nativescript-cli/issues/5680)) ([5330207](https://github.com/NativeScript/nativescript-cli/commit/53302079e30580242e7bf4f9cad88f9b37d1a789))
+* **doctor:** add android-33 to supported sdks ([b8f15a0](https://github.com/NativeScript/nativescript-cli/commit/b8f15a06ffab855ed7f77b580b6421650bbed52a))
+* **migrate:** use Angular 14.1 ([#5681](https://github.com/NativeScript/nativescript-cli/issues/5681)) ([d5d4206](https://github.com/NativeScript/nativescript-cli/commit/d5d4206c4041e10e4abb0e11ae6f7a9c8c89412e))
+* add watchAction hooks ([#5661](https://github.com/NativeScript/nativescript-cli/issues/5661)) ([bb3a696](https://github.com/NativeScript/nativescript-cli/commit/bb3a6965792cc565ab6d516c30a640ac98313ee7))
+* alias --simulator to --emulator ([e9d9d5a](https://github.com/NativeScript/nativescript-cli/commit/e9d9d5a878c455d9a69cc1416fe21d07c1c5e5c4))
+* re-enable preview command ([#5676](https://github.com/NativeScript/nativescript-cli/issues/5676)) ([98124e7](https://github.com/NativeScript/nativescript-cli/commit/98124e70a8867ad6161a199ee11129ca6b269eb4))
+
+
+
 ## [8.2.3](https://github.com/NativeScript/nativescript-cli/compare/v8.2.2...v8.2.3) (2022-03-23)
 
 
