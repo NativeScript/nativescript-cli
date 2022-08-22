@@ -82,9 +82,13 @@ export class PreviewCommand implements ICommand {
 
 		const commandIndex = process.argv.indexOf("preview");
 		const commandArgs = process.argv.slice(commandIndex + 1);
-		this.$childProcess.spawn(previewCLIBinPath, commandArgs, {
-			stdio: "inherit",
-		});
+		this.$childProcess.spawn(
+			process.execPath,
+			[previewCLIBinPath, ...commandArgs],
+			{
+				stdio: "inherit",
+			}
+		);
 	}
 
 	async canExecute(args: string[]): Promise<boolean> {
