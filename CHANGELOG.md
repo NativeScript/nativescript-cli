@@ -1,3 +1,18 @@
+## [8.3.3](https://github.com/NativeScript/nativescript-cli/compare/v8.3.2...v8.3.3) (2022-08-22)
+
+
+### Bug Fixes
+
+* **console:** disable long line splitting ([be8274d](https://github.com/NativeScript/nativescript-cli/commit/be8274d7dce5f9d43a4aa3bf78d6beb414115dfc))
+* **preview:** windows spawn error ([f737579](https://github.com/NativeScript/nativescript-cli/commit/f73757929550f54fca4509f597da4dd746297ba7))
+
+
+### Features
+
+* ensure App_Resources exists before running ([#5689](https://github.com/NativeScript/nativescript-cli/issues/5689)) ([ba8dd58](https://github.com/NativeScript/nativescript-cli/commit/ba8dd58e289c0e2b8a3bc847a4c8a4e5d1bc0d73))
+
+
+
 ## [8.3.2](https://github.com/NativeScript/nativescript-cli/compare/v8.3.1...v8.3.2) (2022-07-31)
 
 
