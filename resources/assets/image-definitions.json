@@ -416,32 +416,38 @@
 			{
 				"width": 72,
 				"height": 72,
-				"directory": "mipmap-hdpi",
-				"filename": "ic_launcher.png"
+				"directory": "drawable-hdpi",
+				"filename": "icon.png"
+			},
+			{
+				"width": 36,
+				"height": 36,
+				"directory": "drawable-ldpi",
+				"filename": "icon.png"
 			},
 			{
 				"width": 48,
 				"height": 48,
-				"directory": "mipmap-mdpi",
-				"filename": "ic_launcher.png"
+				"directory": "drawable-mdpi",
+				"filename": "icon.png"
 			},
 			{
 				"width": 96,
 				"height": 96,
-				"directory": "mipmap-xhdpi",
-				"filename": "ic_launcher.png"
+				"directory": "drawable-xhdpi",
+				"filename": "icon.png"
 			},
 			{
 				"width": 144,
 				"height": 144,
-				"directory": "mipmap-xxhdpi",
-				"filename": "ic_launcher.png"
+				"directory": "drawable-xxhdpi",
+				"filename": "icon.png"
 			},
 			{
-				"width": 192,
-				"height": 192,
-				"directory": "mipmap-xxxhdpi",
-				"filename": "ic_launcher.png"
+				"width": 345,
+				"height": 345,
+				"directory": "drawable-xxxhdpi",
+				"filename": "icon.png"
 			},
 			{
 				"width": 108,
@@ -490,6 +496,36 @@
 				"filename": "ic_launcher_foreground.png",
 				"resizeOperation": "outerScale",
 				"scale": "1.5x"
+			},
+			{
+				"width": 72,
+				"height": 72,
+				"directory": "mipmap-hdpi",
+				"filename": "ic_launcher.png"
+			},
+			{
+				"width": 48,
+				"height": 48,
+				"directory": "mipmap-mdpi",
+				"filename": "ic_launcher.png"
+			},
+			{
+				"width": 96,
+				"height": 96,
+				"directory": "mipmap-xhdpi",
+				"filename": "ic_launcher.png"
+			},
+			{
+				"width": 144,
+				"height": 144,
+				"directory": "mipmap-xxhdpi",
+				"filename": "ic_launcher.png"
+			},
+			{
+				"width": 192,
+				"height": 192,
+				"directory": "mipmap-xxxhdpi",
+				"filename": "ic_launcher.png"
 			}
 		],
 		"splashBackgrounds": [
