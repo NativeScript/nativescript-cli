@@ -236,18 +236,17 @@ export class ProjectDataService implements IProjectDataService {
 			? path.join(pathToAndroidDir, SRC_DIR, MAIN_DIR, RESOURCES_DIR)
 			: pathToAndroidDir;
 
-		const currentStructure = this.$fs.enumerateFilesInDirectorySync(basePath);
 		const content = this.getImageDefinitions().android;
 
 		return {
-			icons: this.getAndroidAssetSubGroup(content.icons, currentStructure),
+			icons: this.getAndroidAssetSubGroup(content.icons, basePath),
 			splashBackgrounds: this.getAndroidAssetSubGroup(
 				content.splashBackgrounds,
-				currentStructure
+				basePath
 			),
 			splashCenterImages: this.getAndroidAssetSubGroup(
 				content.splashCenterImages,
-				currentStructure
+				basePath
 			),
 			splashImages: null,
 		};
@@ -448,32 +447,21 @@ export class ProjectDataService implements IProjectDataService {
 
 	private getAndroidAssetSubGroup(
 		assetItems: IAssetItem[],
-		realPaths: string[]
+		basePath: string
 	): IAssetSubGroup {
 		const assetSubGroup: IAssetSubGroup = {
 			images: <any>[],
 		};
 
-		const normalizedPaths = _.map(realPaths, (p) => path.normalize(p));
 		_.each(assetItems, (assetItem) => {
-			const imagePath = path.join(assetItem.directory, assetItem.filename);
-
-			let found = false;
-			_.each(normalizedPaths, (currentNormalizedPath) => {
-				if (currentNormalizedPath.indexOf(path.normalize(imagePath)) !== -1) {
-					assetItem.path = currentNormalizedPath;
-					assetItem.size = `${assetItem.width}${AssetConstants.sizeDelimiter}${assetItem.height}`;
-					assetSubGroup.images.push(assetItem);
-					found = true;
-					return false;
-				}
-			});
-
-			if (!found) {
-				this.$logger.warn(
-					`Didn't find a matching old image definition for file ${imagePath}. This file will be skipped from resources generation.`
-				);
-			}
+			const imagePath = path.join(
+				basePath,
+				assetItem.directory,
+				assetItem.filename
+			);
+			assetItem.path = imagePath;
+			assetItem.size = `${assetItem.width}${AssetConstants.sizeDelimiter}${assetItem.height}`;
+			assetSubGroup.images.push(assetItem);
 		});
 
 		return assetSubGroup;
