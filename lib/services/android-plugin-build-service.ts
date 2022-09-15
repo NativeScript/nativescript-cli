@@ -797,6 +797,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			"-p",
 			pluginBuildSettings.pluginDir,
 			"assembleRelease",
+			`-PtempBuild=true`,
 			`-PcompileSdk=android-${pluginBuildSettings.androidToolsInfo.compileSdkVersion}`,
 			`-PbuildToolsVersion=${pluginBuildSettings.androidToolsInfo.buildToolsVersion}`,
 			`-PappPath=${this.$projectData.getAppDirectoryPath()}`,
