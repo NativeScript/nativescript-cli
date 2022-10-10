@@ -154,6 +154,10 @@ injector.require(
 	"./services/android-device-debug-service"
 );
 
+injector.require(
+	"timelineProfilerService",
+	"./services/timeline-profiler-service"
+);
 injector.require("userSettingsService", "./services/user-settings-service");
 injector.requirePublic(
 	"analyticsSettingsService",

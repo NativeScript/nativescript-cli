@@ -1,6 +1,6 @@
 import * as helpers from "./common/helpers";
-import * as yargs from 'yargs';
-import { hideBin } from 'yargs/helpers';
+import * as yargs from "yargs";
+import { hideBin } from "yargs/helpers";
 import * as _ from "lodash";
 import {
 	IDictionary,
@@ -191,6 +191,7 @@ export class Options {
 			file: { type: OptionType.String, hasSensitiveValue: true },
 			force: { type: OptionType.Boolean, alias: "f", hasSensitiveValue: false },
 			emulator: { type: OptionType.Boolean, hasSensitiveValue: false },
+			simulator: { type: OptionType.Boolean, hasSensitiveValue: false },
 			sdk: { type: OptionType.String, hasSensitiveValue: false },
 			template: { type: OptionType.String, hasSensitiveValue: true },
 			certificate: { type: OptionType.String, hasSensitiveValue: true },
@@ -402,6 +403,11 @@ export class Options {
 
 		if (this.argv.javascript) {
 			this.argv.js = true;
+		}
+
+		// alias --simulator to --emulator
+		if (this.argv.simulator) {
+			this.argv.emulator = this.argv.simulator;
 		}
 
 		this.argv.bundle = "webpack";

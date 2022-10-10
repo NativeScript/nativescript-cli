@@ -340,10 +340,10 @@
   "resolved" "https://registry.npmjs.org/@kwsites/promise-deferred/-/promise-deferred-1.1.1.tgz"
   "version" "1.1.1"
 
-"@nativescript/doctor@2.0.8":
-  "integrity" "sha512-/jVGBBBBY2BX1IwriDyXHNi0ZNAkSuzdDQuGY3nUl3BDLu5AM+FFg4qCG3D9IW664WLbA1KbJQd+HUSjRHM/ZQ=="
-  "resolved" "https://registry.npmjs.org/@nativescript/doctor/-/doctor-2.0.8.tgz"
-  "version" "2.0.8"
+"@nativescript/doctor@2.0.9":
+  "integrity" "sha512-/4Y3wkB5fQHr7oZVl15uQz1vwZPeL5dxVdts/djakJczIFKHozTL4k31rH1/82fExB5HvzzfJZhEvocwkS+/lw=="
+  "resolved" "https://registry.npmjs.org/@nativescript/doctor/-/doctor-2.0.9.tgz"
+  "version" "2.0.9"
   dependencies:
     "lodash" "4.17.21"
     "osenv" "0.1.5"
@@ -6594,10 +6594,10 @@
   "resolved" "https://registry.npmjs.org/source-map-url/-/source-map-url-0.4.0.tgz"
   "version" "0.4.0"
 
-"source-map@*", "source-map@0.7.3":
-  "integrity" "sha512-CkCj6giN3S+n9qrYiBTX5gystlENnRW5jZeNLHpe6aue+SrHcG5VYwujhW9s4dY31mEGsxBDrHR6oI69fTXsaQ=="
-  "resolved" "https://registry.npmjs.org/source-map/-/source-map-0.7.3.tgz"
-  "version" "0.7.3"
+"source-map@*", "source-map@0.7.4":
+  "integrity" "sha512-l3BikUxvPOcn5E74dZiq5BGsTb5yEwhaTSzccU6t4sDOH8NWJCstKO5QT2CvtFoK6F0saL7p9xHAqHOlCPJygA=="
+  "resolved" "https://registry.npmjs.org/source-map/-/source-map-0.7.4.tgz"
+  "version" "0.7.4"
 
 "source-map@^0.5.6":
   "integrity" "sha1-igOdLRAh0i0eoUyA2OpGi6LvP8w="

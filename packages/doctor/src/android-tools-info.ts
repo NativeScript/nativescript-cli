@@ -29,6 +29,7 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 			"android-30",
 			"android-31",
 			"android-32",
+			"android-33",
 		];
 
 		const isRuntimeVersionLessThan = (targetVersion: string) => {
