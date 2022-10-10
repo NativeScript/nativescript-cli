@@ -155,19 +155,26 @@ export class DeviceLogProvider extends DeviceLogProviderBase {
 	}
 
 	private printLine(prefix: string, ...parts: string[]) {
-		const maxWidth = process.stdout.columns - 2;
 		const fullLine = parts.join(" ");
+		console.log(prefix, fullLine);
 
-		// console.log(prefix, fullLine);
-		// return;
-		if (!maxWidth || maxWidth < 10 || fullLine.length < maxWidth) {
-			console.log(prefix, fullLine);
-		} else {
-			for (let i = 0; i < fullLine.length; i += maxWidth) {
-				const part = fullLine.substring(i, i + maxWidth);
-				console.log(prefix, part);
-			}
-		}
+		/**
+		 * Note: Disabled
+		 *
+		 * This splits the output into lines that fit within the current
+		 * terminal width, however this makes copying json objects that
+		 * span across multiple lines difficult, as it introduces
+		 * whitespace & line breaks
+		 */
+		// const maxWidth = process.stdout.columns - 2;
+		// if (!maxWidth || maxWidth < 10 || fullLine.length < maxWidth) {
+		// 	console.log(prefix, fullLine);
+		// } else {
+		// 	for (let i = 0; i < fullLine.length; i += maxWidth) {
+		// 		const part = fullLine.substring(i, i + maxWidth);
+		// 		console.log(prefix, part);
+		// 	}
+		// }
 	}
 }
 injector.register("deviceLogProvider", DeviceLogProvider);

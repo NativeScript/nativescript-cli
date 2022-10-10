@@ -88,6 +88,13 @@ interface IProjectService {
 	 * @returns {boolean} returns true if the project is valid NativeScript project.
 	 */
 	isValidNativeScriptProject(pathToProject?: string): boolean;
+
+	/**
+	 * Checks if App_Resources exists, or pulls down a fresh set
+	 * from the default template otherwise.
+	 * @param {string} projectDir
+	 */
+	ensureAppResourcesExist(projectDir: string): Promise<void>;
 }
 
 interface INsConfigPlaform {
