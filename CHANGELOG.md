@@ -1,3 +1,132 @@
+## [8.3.3](https://github.com/NativeScript/nativescript-cli/compare/v8.3.2...v8.3.3) (2022-08-22)
+
+
+### Bug Fixes
+
+* **console:** disable long line splitting ([be8274d](https://github.com/NativeScript/nativescript-cli/commit/be8274d7dce5f9d43a4aa3bf78d6beb414115dfc))
+* **preview:** windows spawn error ([f737579](https://github.com/NativeScript/nativescript-cli/commit/f73757929550f54fca4509f597da4dd746297ba7))
+
+
+### Features
+
+* ensure App_Resources exists before running ([#5689](https://github.com/NativeScript/nativescript-cli/issues/5689)) ([ba8dd58](https://github.com/NativeScript/nativescript-cli/commit/ba8dd58e289c0e2b8a3bc847a4c8a4e5d1bc0d73))
+
+
+
+## [8.3.2](https://github.com/NativeScript/nativescript-cli/compare/v8.3.1...v8.3.2) (2022-07-31)
+
+
+### Bug Fixes
+
+* **logger:** don't trim text if maxWidth is NaN or <10 ([5415582](https://github.com/NativeScript/nativescript-cli/commit/541558270d54be32f2d38f0848a958e0cbca2a0b))
+
+
+
+## [8.3.1](https://github.com/NativeScript/nativescript-cli/compare/v8.3.0...v8.3.1) (2022-07-29)
+
+
+### Bug Fixes
+
+* use correct path to emulator executable ([#5663](https://github.com/NativeScript/nativescript-cli/issues/5663)) ([d49b666](https://github.com/NativeScript/nativescript-cli/commit/d49b6664f216456f84bfbf3dc5f1b362588e1951))
+
+
+### Features
+
+* **migrate:** update to 8.3 ([#5685](https://github.com/NativeScript/nativescript-cli/issues/5685)) ([50de194](https://github.com/NativeScript/nativescript-cli/commit/50de1946986b634bd3a9cf6d06d5f9b0c93a3caf))
+
+
+
+# [8.3.0](https://github.com/NativeScript/nativescript-cli/compare/v8.2.3...v8.3.0) (2022-07-25)
+
+
+### Bug Fixes
+
+* **ios-publish:** Update API calls to get applications ([#5678](https://github.com/NativeScript/nativescript-cli/issues/5678)) ([4abe2c9](https://github.com/NativeScript/nativescript-cli/commit/4abe2c901829b28f1e1fa26009996db96af06047))
+* **unit-test-runner:** node 18 binding family ([#5673](https://github.com/NativeScript/nativescript-cli/issues/5673)) ([1da28bc](https://github.com/NativeScript/nativescript-cli/commit/1da28bcb506650a0c43f468a43f4d577a7d9d3d4))
+* ios log filtering ([#5679](https://github.com/NativeScript/nativescript-cli/issues/5679)) ([8446000](https://github.com/NativeScript/nativescript-cli/commit/8446000ec7580fdc2aff4d7154edd174bf2d1d52))
+
+
+### Features
+
+* bump @nativescript/doctor version ([893989b](https://github.com/NativeScript/nativescript-cli/commit/893989b250c6372937a67f4c55ac05e92c1f26a8))
+* cleaner log output ([#5680](https://github.com/NativeScript/nativescript-cli/issues/5680)) ([5330207](https://github.com/NativeScript/nativescript-cli/commit/53302079e30580242e7bf4f9cad88f9b37d1a789))
+* **doctor:** add android-33 to supported sdks ([b8f15a0](https://github.com/NativeScript/nativescript-cli/commit/b8f15a06ffab855ed7f77b580b6421650bbed52a))
+* **migrate:** use Angular 14.1 ([#5681](https://github.com/NativeScript/nativescript-cli/issues/5681)) ([d5d4206](https://github.com/NativeScript/nativescript-cli/commit/d5d4206c4041e10e4abb0e11ae6f7a9c8c89412e))
+* add watchAction hooks ([#5661](https://github.com/NativeScript/nativescript-cli/issues/5661)) ([bb3a696](https://github.com/NativeScript/nativescript-cli/commit/bb3a6965792cc565ab6d516c30a640ac98313ee7))
+* alias --simulator to --emulator ([e9d9d5a](https://github.com/NativeScript/nativescript-cli/commit/e9d9d5a878c455d9a69cc1416fe21d07c1c5e5c4))
+* re-enable preview command ([#5676](https://github.com/NativeScript/nativescript-cli/issues/5676)) ([98124e7](https://github.com/NativeScript/nativescript-cli/commit/98124e70a8867ad6161a199ee11129ca6b269eb4))
+
+
+
+## [8.2.3](https://github.com/NativeScript/nativescript-cli/compare/v8.2.2...v8.2.3) (2022-03-23)
+
+
+### Bug Fixes
+
+* **doctor:** improve target and sdk compatibility detection on <8.2 ([#5648](https://github.com/NativeScript/nativescript-cli/issues/5648)) ([fa257dd](https://github.com/NativeScript/nativescript-cli/commit/fa257dd455ca55374cf419d638ac74166dc727db))
+* **ios-publish:** changes in Apple API to set Team ([#5653](https://github.com/NativeScript/nativescript-cli/issues/5653)) ([5ceb254](https://github.com/NativeScript/nativescript-cli/commit/5ceb254f317d0cb186bfc31b89e2d2b28625094c))
+* **spawn:** resolve relative paths to prevent ENOENT errors ([37d576b](https://github.com/NativeScript/nativescript-cli/commit/37d576bcde7352b7fa6c937d5e765e10486fedf3)), closes [#5649](https://github.com/NativeScript/nativescript-cli/issues/5649)
+* **test:** node17 resolves localhost to ipv6 instead of ipv4 ([81cb9c3](https://github.com/NativeScript/nativescript-cli/commit/81cb9c37cdd4e24115be79b24b68dfbaf8cdcfd2))
+
+
+
+## [8.2.2](https://github.com/NativeScript/nativescript-cli/compare/v8.2.1...v8.2.2) (2022-03-09)
+
+
+### Bug Fixes
+
+* topological dependency sorting ([#5647](https://github.com/NativeScript/nativescript-cli/issues/5647)) ([9d8d967](https://github.com/NativeScript/nativescript-cli/commit/9d8d967096fba41325ee9082eed02a880cb803f6))
+
+
+### Features
+
+* read gradle versions from local runtime first ([#5646](https://github.com/NativeScript/nativescript-cli/issues/5646)) ([1b9cde3](https://github.com/NativeScript/nativescript-cli/commit/1b9cde38f2272ae142520141469962fbe5f55954))
+
+
+
+# [8.2.1](https://github.com/NativeScript/nativescript-cli/compare/v8.2.0...v8.2.1) (2022-03-08)
+
+### Bug Fixes
+
+* node17 debugger can't attach ([fc84d92](https://github.com/NativeScript/nativescript-cli/commit/fc84d92d9c102ddaca036c0cda1800b8e41fd653))
+
+# [8.2.0](https://github.com/NativeScript/nativescript-cli/compare/v8.1.5...v8.2.0) (2022-03-08)
+
+
+### Bug Fixes
+
+* remove deprecated property ([f7b4a74](https://github.com/NativeScript/nativescript-cli/commit/f7b4a74f58cb4b5fb8c6baa6f6b9d75512f21c1f))
+* **pnpm:** escape + in podfile path string ([#5638](https://github.com/NativeScript/nativescript-cli/issues/5638)) ([a11cace](https://github.com/NativeScript/nativescript-cli/commit/a11cace045856499a44637cd3052501ef34b5757))
+* add a missing newline to the clean command ([#5611](https://github.com/NativeScript/nativescript-cli/issues/5611)) ([46c396d](https://github.com/NativeScript/nativescript-cli/commit/46c396d6caecb88aae9774157e86d1f6bd7a6d1f))
+* correctly allow plugins build to detect before-plugins.gradle ([#5631](https://github.com/NativeScript/nativescript-cli/issues/5631)) ([3b42042](https://github.com/NativeScript/nativescript-cli/commit/3b420428e80594661968313ec63bd44089f960b0))
+* import performance from perf_hooks ([fade332](https://github.com/NativeScript/nativescript-cli/commit/fade3326765bac5cd9bbbda9efe54320e34360a9))
+* move additionalPathsToClean under cli object ([d16a932](https://github.com/NativeScript/nativescript-cli/commit/d16a932c1d660bf34f1bb0135899471f1de08260))
+* write project settings to gradle.properties ([#5640](https://github.com/NativeScript/nativescript-cli/issues/5640)) ([e0ed7f2](https://github.com/NativeScript/nativescript-cli/commit/e0ed7f2dd7e23d5fbb4fe3185e0b7f85534018d7))
+* **doctor:** Cannot read property 'toLowerCase' of null ([#5604](https://github.com/NativeScript/nativescript-cli/issues/5604)) ([0be52e9](https://github.com/NativeScript/nativescript-cli/commit/0be52e914540898fa0cdc679edfa303192c812f7))
+* **test:** exit test command if karma finishes execution ([#5618](https://github.com/NativeScript/nativescript-cli/issues/5618)) ([9f73e96](https://github.com/NativeScript/nativescript-cli/commit/9f73e9640357ebe6736dfd52e0ad5997c5c0b339))
+
+
+### Features
+
+* --gradlePath argument support ([#5628](https://github.com/NativeScript/nativescript-cli/issues/5628)) ([387c7c0](https://github.com/NativeScript/nativescript-cli/commit/387c7c0f2eaefcf942e9d6087edaa2a9c42ce064))
+* `--gradleArgs` option to pass gradle parameters ([#5630](https://github.com/NativeScript/nativescript-cli/issues/5630)) ([02d179a](https://github.com/NativeScript/nativescript-cli/commit/02d179a358297d099f1e2d2377b042db374edcad))
+* build transient native dependencies ([#5643](https://github.com/NativeScript/nativescript-cli/issues/5643)) ([1435eef](https://github.com/NativeScript/nativescript-cli/commit/1435eef272aced36e7f97a355ff5c7ea936f94e7))
+* bump migrate versions for 8.2.0 ([#5645](https://github.com/NativeScript/nativescript-cli/issues/5645)) ([6726ccc](https://github.com/NativeScript/nativescript-cli/commit/6726ccc3816afd17369633eb94e2c28735984efa))
+* compute and log build time ([#5602](https://github.com/NativeScript/nativescript-cli/issues/5602)) ([fb0a7b8](https://github.com/NativeScript/nativescript-cli/commit/fb0a7b80a0710226b57627246df7470c67ad4c8a))
+* improved --json output from devices ([#5565](https://github.com/NativeScript/nativescript-cli/issues/5565)) ([8446795](https://github.com/NativeScript/nativescript-cli/commit/84467951331982cc001504e078df23865bb25f31))
+* reduce aar size by removing R.class and BuildConfig.class ([#5644](https://github.com/NativeScript/nativescript-cli/issues/5644)) ([9ad80bf](https://github.com/NativeScript/nativescript-cli/commit/9ad80bfedf1f9e8c726ef8a546da2132c2b40897))
+* **android:** add gradle 7+ support ([#5614](https://github.com/NativeScript/nativescript-cli/issues/5614)) ([be6706a](https://github.com/NativeScript/nativescript-cli/commit/be6706af99c89765f3773e7e324a70037b2ec7b8))
+* **clean:** allow overriding pathsToClean in config ([b33507d](https://github.com/NativeScript/nativescript-cli/commit/b33507d703ce416e0c89423d55a2ad9d8f085a31))
+* **typings:** support --aar inputs ([#5641](https://github.com/NativeScript/nativescript-cli/issues/5641)) ([67fdd0a](https://github.com/NativeScript/nativescript-cli/commit/67fdd0afd05492543e74584f54986a274131c723))
+* launch last used simulator instead of iPhone 6 ([289317d](https://github.com/NativeScript/nativescript-cli/commit/289317d3bc3e78fe31de477f01bd8f452dd68512))
+
+
+### Performance Improvements
+
+* doctor cache runtimeVersion ([#5642](https://github.com/NativeScript/nativescript-cli/issues/5642)) ([3063550](https://github.com/NativeScript/nativescript-cli/commit/306355042065435348c77fefe163429c6164c643))
+
+
+
 ## [8.1.5](https://github.com/NativeScript/nativescript-cli/compare/v8.1.4...v8.1.5) (2021-11-26)
 
 

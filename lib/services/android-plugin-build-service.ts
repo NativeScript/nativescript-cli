@@ -17,7 +17,7 @@ import {
 	IWatchIgnoreListService,
 } from "../declarations";
 import { IPlatformsDataService } from "../definitions/platform";
-import { IProjectDataService } from "../definitions/project";
+import { IProjectData, IProjectDataService } from "../definitions/project";
 import {
 	IAndroidPluginBuildService,
 	IPluginBuildOptions,
@@ -36,6 +36,7 @@ import { IFilesHashService } from "../definitions/files-hash-service";
 import { IInjector } from "../common/definitions/yok";
 import { injector } from "../common/yok";
 import * as _ from "lodash";
+import { resolvePackageJSONPath } from "@rigor789/resolve-package-path";
 
 export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 	private get $platformsDataService(): IPlatformsDataService {
@@ -49,6 +50,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		private $androidToolsInfo: IAndroidToolsInfo,
 		private $logger: ILogger,
 		private $packageManager: INodePackageManager,
+		private $projectData: IProjectData,
 		private $projectDataService: IProjectDataService,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $errors: IErrors,
@@ -257,9 +259,12 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			await this.setupGradle(
 				pluginTempDir,
 				options.platformsAndroidDirPath,
-				options.projectDir
+				options.projectDir,
+				options.pluginName
 			);
 			await this.buildPlugin({
+				gradlePath: options.gradlePath,
+				gradleArgs: options.gradleArgs,
 				pluginDir: pluginTempDir,
 				pluginName: options.pluginName,
 				projectDir: options.projectDir,
@@ -395,7 +400,8 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 	private async setupGradle(
 		pluginTempDir: string,
 		platformsAndroidDirPath: string,
-		projectDir: string
+		projectDir: string,
+		pluginName: string
 	): Promise<void> {
 		const gradleTemplatePath = path.resolve(
 			path.join(__dirname, "../../vendor/gradle-plugin")
@@ -416,6 +422,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			buildGradlePath,
 			runtimeGradleVersions.gradleAndroidPluginVersion
 		);
+		this.replaceFileContent(buildGradlePath, "{{pluginName}}", pluginName);
 	}
 
 	private async getRuntimeGradleVersions(
@@ -480,6 +487,66 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		return runtimeVersion;
 	}
 
+	private getLocalGradleVersions(): IRuntimeGradleVersions {
+		// partial interface of the runtime package.json
+		// including new 8.2+ format and legacy
+		interface IRuntimePackageJSON {
+			// 8.2+
+			version_info?: {
+				gradle: string;
+				gradleAndroid: string;
+			};
+			// legacy
+			gradle?: {
+				version: string;
+				android: string;
+			};
+		}
+
+		// try reading from installed runtime first before reading from the npm registry...
+		const installedRuntimePackageJSONPath = resolvePackageJSONPath(
+			SCOPED_ANDROID_RUNTIME_NAME,
+			{
+				paths: [this.$projectData.projectDir],
+			}
+		);
+
+		if (!installedRuntimePackageJSONPath) {
+			return null;
+		}
+
+		const installedRuntimePackageJSON: IRuntimePackageJSON = this.$fs.readJson(
+			installedRuntimePackageJSONPath
+		);
+
+		if (!installedRuntimePackageJSON) {
+			return null;
+		}
+
+		if (installedRuntimePackageJSON.version_info) {
+			const {
+				gradle,
+				gradleAndroid,
+			} = installedRuntimePackageJSON.version_info;
+
+			return {
+				gradleVersion: gradle,
+				gradleAndroidPluginVersion: gradleAndroid,
+			};
+		}
+
+		if (installedRuntimePackageJSON.gradle) {
+			const { version, android } = installedRuntimePackageJSON.gradle;
+
+			return {
+				gradleVersion: version,
+				gradleAndroidPluginVersion: android,
+			};
+		}
+
+		return null;
+	}
+
 	private async getGradleVersions(
 		runtimeVersion: string
 	): Promise<IRuntimeGradleVersions> {
@@ -487,6 +554,13 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			versions: { gradle: string; gradleAndroid: string };
 		} = null;
 
+		const localVersionInfo = this.getLocalGradleVersions();
+
+		if (localVersionInfo) {
+			return localVersionInfo;
+		}
+
+		// fallback to reading from npm...
 		try {
 			let output = await this.$packageManager.view(
 				`${SCOPED_ANDROID_RUNTIME_NAME}@${runtimeVersion}`,
@@ -715,15 +789,23 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			);
 		}
 
-		const gradlew = this.$hostInfo.isWindows ? "gradlew.bat" : "./gradlew";
+		const gradlew =
+			pluginBuildSettings.gradlePath ??
+			(this.$hostInfo.isWindows ? "gradlew.bat" : "./gradlew");
 
 		const localArgs = [
 			"-p",
 			pluginBuildSettings.pluginDir,
 			"assembleRelease",
+			`-PtempBuild=true`,
 			`-PcompileSdk=android-${pluginBuildSettings.androidToolsInfo.compileSdkVersion}`,
 			`-PbuildToolsVersion=${pluginBuildSettings.androidToolsInfo.buildToolsVersion}`,
+			`-PappPath=${this.$projectData.getAppDirectoryPath()}`,
+			`-PappResourcesPath=${this.$projectData.getAppResourcesDirectoryPath()}`,
 		];
+		if (pluginBuildSettings.gradleArgs) {
+			localArgs.push(pluginBuildSettings.gradleArgs);
+		}
 
 		if (this.$logger.getLevel() === "INFO") {
 			localArgs.push("--quiet");

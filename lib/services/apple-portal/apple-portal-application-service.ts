@@ -23,7 +23,7 @@ export class ApplePortalApplicationService
 		let result: IApplePortalApplicationSummary[] = [];
 
 		for (const account of user.associatedAccounts) {
-			const contentProviderId = account.contentProvider.contentProviderPublicId;
+			const contentProviderId = account.contentProvider.contentProviderId;
 			const applications = await this.getApplicationsByProvider(
 				contentProviderId
 			);
@@ -34,25 +34,55 @@ export class ApplePortalApplicationService
 	}
 
 	public async getApplicationsByProvider(
-		contentProviderId: string
+		contentProviderId: number
 	): Promise<IApplePortalApplication> {
 		const webSessionCookie = await this.$applePortalSessionService.createWebSession(
 			contentProviderId
 		);
+		const summaries: IApplePortalApplicationSummary[] = [];
+		await this.getApplicationsByUrl(
+			webSessionCookie,
+			"https://appstoreconnect.apple.com/iris/v1/apps?include=appStoreVersions,prices",
+			summaries
+		);
+
+		return { summaries: summaries };
+	}
+
+	private async getApplicationsByUrl(
+		webSessionCookie: string,
+		url: string,
+		summaries: IApplePortalApplicationSummary[]
+	): Promise<void> {
 		const response = await this.$httpClient.httpRequest({
-			url:
-				"https://appstoreconnect.apple.com/WebObjects/iTunesConnect.woa/ra/apps/manageyourapps/summary/v2",
+			url,
 			method: "GET",
-			body: {
-				contentProviderId,
-			},
 			headers: {
 				"Content-Type": "application/json",
 				Cookie: webSessionCookie,
 			},
 		});
+		const result = JSON.parse(response.body);
+		const data = result.data;
 
-		return JSON.parse(response.body).data;
+		for (const app of data) {
+			let summary: IApplePortalApplicationSummary;
+			summary = {
+				bundleId: app.attributes.bundleId,
+				adamId: app.id,
+				name: app.attributes.name,
+				versionSets: [],
+			};
+			summaries.push(summary);
+		}
+
+		if (result.links.next) {
+			await this.getApplicationsByUrl(
+				webSessionCookie,
+				result.links.next,
+				summaries
+			);
+		}
 	}
 
 	public async getApplicationByBundleId(

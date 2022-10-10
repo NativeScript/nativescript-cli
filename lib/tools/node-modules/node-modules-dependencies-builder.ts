@@ -5,6 +5,7 @@ import { IDependencyData } from "../../declarations";
 import { IFileSystem } from "../../common/declarations";
 import * as _ from "lodash";
 import { injector } from "../../common/yok";
+import { resolvePackagePath } from "@rigor789/resolve-package-path";
 
 interface IDependencyDescription {
 	parent: IDependencyDescription;
@@ -43,7 +44,8 @@ export class NodeModulesDependenciesBuilder
 			const currentModule = queue.shift();
 			const resolvedDependency = this.findModule(
 				currentModule,
-				resolvedDependencies
+				resolvedDependencies,
+				projectPath
 			);
 
 			if (
@@ -86,16 +88,29 @@ export class NodeModulesDependenciesBuilder
 
 	private findModule(
 		depDescription: IDependencyDescription,
-		resolvedDependencies: IDependencyData[]
+		resolvedDependencies: IDependencyData[],
+		rootPath: string
 	): IDependencyData {
 		try {
 			const parentModulesPath =
 				depDescription?.parentDir ?? depDescription?.parent?.parentDir;
-			const modulePath = require
-				.resolve(`${depDescription.name}/package.json`, {
-					paths: [parentModulesPath],
-				})
-				.replace(/[\\/]+package\.json$/, "");
+
+			let modulePath: string = resolvePackagePath(depDescription.name, {
+				paths: [parentModulesPath],
+			});
+
+			// perhaps traverse up the tree here?
+			if (!modulePath) {
+				// fallback to searching in the root path
+				modulePath = resolvePackagePath(depDescription.name, {
+					paths: [rootPath],
+				});
+			}
+
+			// if we failed to find the module...
+			if (!modulePath) {
+				return null;
+			}
 
 			// if we already resolved this dependency, we return null to avoid a duplicate resolution
 			if (

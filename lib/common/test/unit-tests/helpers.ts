@@ -99,7 +99,7 @@ describe("helpers", () => {
 			element: any,
 			passedChunkSize: number
 		) => {
-			return new Promise((resolve) =>
+			return new Promise<void>((resolve) =>
 				setImmediate(() => {
 					const remainingElements = _.difference(
 						initialDataValues,

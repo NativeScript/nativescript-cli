@@ -579,6 +579,11 @@ interface IAndroidBundleOptions {
 	aab: boolean;
 }
 
+interface IAndroidOptions {
+	gradlePath: string;
+	gradleArgs: string;
+}
+
 interface ITypingsOptions {
 	jar: string;
 	aar: string;
@@ -598,6 +603,7 @@ interface IOptions
 		IClean,
 		IProvision,
 		ITeamIdentifier,
+		IAndroidOptions,
 		IAndroidReleaseOptions,
 		IAndroidBundleOptions,
 		INpmInstallConfigurationOptions,

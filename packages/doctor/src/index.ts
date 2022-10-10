@@ -15,21 +15,40 @@ const winReg = new WinReg();
 const hostInfo = new HostInfo(winReg);
 const fileSystem = new FileSystem();
 const helpers = new Helpers(hostInfo);
-const androidToolsInfo = new AndroidToolsInfo(childProcess, fileSystem, hostInfo, helpers);
+const androidToolsInfo = new AndroidToolsInfo(
+	childProcess,
+	fileSystem,
+	hostInfo,
+	helpers
+);
 
-const sysInfo: NativeScriptDoctor.ISysInfo = new SysInfo(childProcess, fileSystem, helpers, hostInfo, winReg, androidToolsInfo);
+const sysInfo: NativeScriptDoctor.ISysInfo = new SysInfo(
+	childProcess,
+	fileSystem,
+	helpers,
+	hostInfo,
+	winReg,
+	androidToolsInfo
+);
 
-const androidLocalBuildRequirements = new AndroidLocalBuildRequirements(androidToolsInfo, sysInfo);
-const iOSLocalBuildRequirements = new IosLocalBuildRequirements(sysInfo, hostInfo);
+const androidLocalBuildRequirements = new AndroidLocalBuildRequirements(
+	androidToolsInfo,
+	sysInfo
+);
+const iOSLocalBuildRequirements = new IosLocalBuildRequirements(
+	sysInfo,
+	hostInfo
+);
 
-const doctor: NativeScriptDoctor.IDoctor = new Doctor(androidLocalBuildRequirements, helpers, hostInfo, iOSLocalBuildRequirements, sysInfo, androidToolsInfo);
+const doctor: NativeScriptDoctor.IDoctor = new Doctor(
+	androidLocalBuildRequirements,
+	helpers,
+	hostInfo,
+	iOSLocalBuildRequirements,
+	sysInfo,
+	androidToolsInfo
+);
 
 const setShouldCacheSysInfo = sysInfo.setShouldCacheSysInfo.bind(sysInfo);
 
-export {
-	sysInfo,
-	doctor,
-	constants,
-	setShouldCacheSysInfo,
-	androidToolsInfo
-};
+export { sysInfo, doctor, constants, setShouldCacheSysInfo, androidToolsInfo };

@@ -300,7 +300,7 @@ function resetDefaultSetInterval(): void {
 }
 
 async function assertOnNextTick(assertionFunction: Function): Promise<void> {
-	await new Promise((resolve) => {
+	await new Promise<void>((resolve) => {
 		setTimeout(() => {
 			assertionFunction();
 			resolve();

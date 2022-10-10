@@ -1,12 +1,12 @@
 export class Constants {
 	public static ANDROID_PLATFORM_NAME = "Android";
 	public static IOS_PLATFORM_NAME = "iOS";
-	public static SUPPORTED_PLATFORMS = [Constants.ANDROID_PLATFORM_NAME, Constants.IOS_PLATFORM_NAME];
-	public static SYSTEM_REQUIREMENTS_LINKS: IDictionary<string> = {
-		"win32": "http://docs.nativescript.org/setup/ns-cli-setup/ns-setup-win.html#system-requirements",
-		"linux": "http://docs.nativescript.org/setup/ns-cli-setup/ns-setup-linux.html#system-requirements",
-		"darwin": "http://docs.nativescript.org/setup/ns-cli-setup/ns-setup-os-x.html#system-requirements",
-	};
+	public static SUPPORTED_PLATFORMS = [
+		Constants.ANDROID_PLATFORM_NAME,
+		Constants.IOS_PLATFORM_NAME,
+	];
+	public static SYSTEM_REQUIREMENTS_LINKS =
+		"https://docs.nativescript.org/environment-setup.html";
 	public static INFO_TYPE_NAME = "info";
 	public static WARNING_TYPE_NAME = "warning";
 

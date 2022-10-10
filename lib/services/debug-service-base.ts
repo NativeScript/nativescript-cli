@@ -18,12 +18,12 @@ export abstract class DebugServiceBase
 
 	public abstract get platform(): string;
 
-	public abstract async debug(
+	public abstract debug(
 		debugData: IDebugData,
 		debugOptions: IDebugOptions
 	): Promise<IDebugResultInfo>;
 
-	public abstract async debugStop(): Promise<void>;
+	public abstract debugStop(): Promise<void>;
 
 	protected getCanExecuteAction(
 		deviceIdentifier: string

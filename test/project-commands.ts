@@ -96,6 +96,10 @@ class ProjectServiceMock implements IProjectService {
 	isValidNativeScriptProject(pathToProject?: string): boolean {
 		return true;
 	}
+
+	ensureAppResourcesExist(projectDir: string): Promise<void> {
+		return;
+	}
 }
 
 class ProjectNameValidatorMock implements IProjectNameValidator {

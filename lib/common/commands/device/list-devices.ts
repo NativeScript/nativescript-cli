@@ -20,6 +20,13 @@ export class ListDevicesCommand implements ICommand {
 	public allowedParameters = [this.$stringParameter];
 
 	public async execute(args: string[]): Promise<void> {
+		const devices: {
+			available?: any[];
+			devices: any[];
+		} = {
+			devices: [],
+		};
+
 		if (this.$options.availableDevices) {
 			const platform = this.$mobileHelper.normalizePlatformName(args[0]);
 			if (!platform && args[0]) {
@@ -38,10 +45,17 @@ export class ListDevicesCommand implements ICommand {
 			const emulators = this.$emulatorHelper.getEmulatorsFromAvailableEmulatorsOutput(
 				availableEmulatorsOutput
 			);
-			this.printEmulators("\nAvailable emulators", emulators);
+			devices.available = emulators;
+
+			if (!this.$options.json) {
+				this.printEmulators("\nAvailable emulators", emulators);
+			}
 		}
 
-		this.$logger.info("\nConnected devices & emulators");
+		if (!this.$options.json) {
+			this.$logger.info("\nConnected devices & emulators");
+		}
+
 		let index = 1;
 		await this.$devicesService.initialize({
 			platform: args[0],
@@ -67,7 +81,7 @@ export class ListDevicesCommand implements ICommand {
 		let action: (_device: Mobile.IDevice) => Promise<void>;
 		if (this.$options.json) {
 			action = async (device) => {
-				this.$logger.info(JSON.stringify(device.deviceInfo));
+				devices.devices.push(device.deviceInfo);
 			};
 		} else {
 			action = async (device) => {
@@ -89,7 +103,11 @@ export class ListDevicesCommand implements ICommand {
 			allowNoDevices: true,
 		});
 
-		if (!this.$options.json && table.length) {
+		if (this.$options.json) {
+			return this.$logger.info(JSON.stringify(devices, null, 2));
+		}
+
+		if (table.length) {
 			this.$logger.info(table.toString());
 		}
 	}

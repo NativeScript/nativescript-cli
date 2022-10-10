@@ -1,10 +1,19 @@
 import * as childProcess from "child_process";
 
 export class ChildProcess {
-	public spawnFromEvent(command: string, args: string[], event: string, options?: ISpawnFromEventOptions): Promise<IProcessInfo> {
+	public spawnFromEvent(
+		command: string,
+		args: string[],
+		event: string,
+		options?: ISpawnFromEventOptions
+	): Promise<IProcessInfo> {
 		return new Promise<IProcessInfo>((resolve, reject) => {
 			options = options || {};
-			const commandChildProcess = childProcess.spawn(command, args, options.spawnOptions);
+			const commandChildProcess = childProcess.spawn(
+				command,
+				args,
+				options.spawnOptions
+			);
 			let capturedOut = "";
 			let capturedErr = "";
 
@@ -25,7 +34,7 @@ export class ChildProcess {
 				const result = {
 					stdout: capturedOut,
 					stderr: capturedErr,
-					exitCode: exitCode
+					exitCode: exitCode,
 				};
 
 				if (options.ignoreError) {
@@ -49,7 +58,7 @@ export class ChildProcess {
 					const result = {
 						stdout: capturedOut,
 						stderr: err.message,
-						exitCode: (<any>err).code
+						exitCode: (<any>err).code,
 					};
 					resolve(result);
 				} else {
@@ -59,7 +68,10 @@ export class ChildProcess {
 		});
 	}
 
-	public exec(command: string, options?: childProcess.ExecOptions): Promise<IProcessInfo> {
+	public exec(
+		command: string,
+		options?: childProcess.ExecOptions
+	): Promise<IProcessInfo> {
 		return new Promise<IProcessInfo>((resolve, reject) => {
 			childProcess.exec(command, options, (err, stdout, stderr) => {
 				if (err) {
@@ -68,7 +80,7 @@ export class ChildProcess {
 
 				const result: IProcessInfo = {
 					stdout,
-					stderr
+					stderr,
 				};
 
 				resolve(result);
@@ -76,7 +88,10 @@ export class ChildProcess {
 		});
 	}
 
-	public execSync(command: string, options?: childProcess.ExecSyncOptions): string {
+	public execSync(
+		command: string,
+		options?: childProcess.ExecSyncOptions
+	): string {
 		return childProcess.execSync(command, options).toString();
 	}
 

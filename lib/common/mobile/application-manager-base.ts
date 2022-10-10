@@ -117,25 +117,25 @@ export abstract class ApplicationManagerBase
 		}
 	}
 
-	public abstract async installApplication(
+	public abstract installApplication(
 		packageFilePath: string,
 		appIdentifier?: string,
 		buildData?: IBuildData
 	): Promise<void>;
-	public abstract async uninstallApplication(
+	public abstract uninstallApplication(
 		appIdentifier: string
 	): Promise<void>;
-	public abstract async startApplication(
+	public abstract startApplication(
 		appData: Mobile.IApplicationData
 	): Promise<void>;
-	public abstract async stopApplication(
+	public abstract stopApplication(
 		appData: Mobile.IApplicationData
 	): Promise<void>;
-	public abstract async getInstalledApplications(): Promise<string[]>;
-	public abstract async getDebuggableApps(): Promise<
+	public abstract getInstalledApplications(): Promise<string[]>;
+	public abstract getDebuggableApps(): Promise<
 		Mobile.IDeviceApplicationInformation[]
 	>;
-	public abstract async getDebuggableAppViews(
+	public abstract getDebuggableAppViews(
 		appIdentifiers: string[]
 	): Promise<IDictionary<Mobile.IDebugWebViewInfo[]>>;
 

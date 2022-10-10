@@ -7,14 +7,9 @@
 		"removeComments": false,
 		"noImplicitAny": true,
 		"experimentalDecorators": true,
+		"skipLibCheck": true,
 		"alwaysStrict": true,
 		"noUnusedLocals": true
 	},
-	"exclude": [
-		"node_modules",
-		"lib/common/node_modules",
-		"scratch",
-		"coverage",
-		"resources/test"
-	]
+	"include": ["lib/", "test/"]
 }

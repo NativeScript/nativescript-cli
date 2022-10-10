@@ -2,10 +2,10 @@ import { tmpdir } from "os";
 import { assert } from "chai";
 import * as rimraf from "rimraf";
 
-import { FileSystem } from "../../lib/wrappers/file-system";
+import { FileSystem } from "../../src/wrappers/file-system";
 
-describe('FileSystem', () => {
-	describe('extractZip', () => {
+describe("FileSystem", () => {
+	describe("extractZip", () => {
 		const d = new Date();
 		const datetime = [
 			d.getFullYear(),
@@ -14,8 +14,8 @@ describe('FileSystem', () => {
 			d.getHours(),
 			d.getMinutes(),
 			d.getSeconds(),
-			d.getMilliseconds()
-		].join('');
+			d.getMilliseconds(),
+		].join("");
 		const tmpDir = `${tmpdir()}/${datetime}`;
 		const testFilePath = `${__dirname}/example.zip`;
 		const filesThatNeedToExist = [
@@ -23,10 +23,10 @@ describe('FileSystem', () => {
 			`${tmpDir}/test/android-tools-info.ts`,
 			`${tmpDir}/test/ios-local-build-requirements.ts`,
 			`${tmpDir}/test/sys-info.ts`,
-			`${tmpDir}/test/wrappers/file-system.ts`
+			`${tmpDir}/test/wrappers/file-system.ts`,
 		];
 
-		it('should extract in example zip archive in tmp folder', done => {
+		it("should extract in example zip archive in tmp folder", (done) => {
 			const fs = new FileSystem();
 
 			fs.extractZip(testFilePath, tmpDir)
@@ -39,9 +39,9 @@ describe('FileSystem', () => {
 
 					done();
 				})
-				.catch(e => done(e));
+				.catch((e) => done(e));
 		});
 
-		afterEach(done => rimraf(tmpDir, done));
+		afterEach((done) => rimraf(tmpDir, done));
 	});
 });
