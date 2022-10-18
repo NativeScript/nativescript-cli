@@ -408,7 +408,8 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		);
 		const allGradleTemplateFiles = path.join(gradleTemplatePath, "*");
 		const buildGradlePath = path.join(pluginTempDir, "build.gradle");
-
+		const settingsGradlePath = path.join(pluginTempDir, "settings.gradle");
+		
 		this.$fs.copyFile(allGradleTemplateFiles, pluginTempDir);
 		this.addCompileDependencies(platformsAndroidDirPath, buildGradlePath);
 		const runtimeGradleVersions = await this.getRuntimeGradleVersions(
@@ -423,6 +424,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			runtimeGradleVersions.gradleAndroidPluginVersion
 		);
 		this.replaceFileContent(buildGradlePath, "{{pluginName}}", pluginName);
+		this.replaceFileContent(settingsGradlePath, "{{pluginName}}", pluginName);
 	}
 
 	private async getRuntimeGradleVersions(
