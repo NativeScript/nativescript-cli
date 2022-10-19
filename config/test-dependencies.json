@@ -25,7 +25,8 @@
     },
     {
         "name": "karma-jasmine",
-        "framework": "jasmine"
+        "framework": "jasmine",
+        "version": "4.0.2"
     },
     {
         "name": "karma-qunit",
