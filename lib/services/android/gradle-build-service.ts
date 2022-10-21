@@ -34,8 +34,8 @@ export class GradleBuildService
 			if(buildData.emulator) {
 				devices = devices.filter(d=>d.isEmulator);
 			}
-			const abis = devices.map(d=>d.deviceInfo.abis[0]);
-			if (abis.length > 0) {
+			const abis = devices.map(d=>d.deviceInfo.abis.filter(a=>!!a && a.length)[0]).filter(a=>!!a);
+			if (abis.length > 0 && buildTaskArgs.findIndex(b=>b.startsWith('-PabiFilters')) === -1) {
 				buildTaskArgs.push(`-PabiFilters=${abis.join(',')}`);
 			}
 		}
