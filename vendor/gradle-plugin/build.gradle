@@ -72,7 +72,9 @@ buildscript {
             logger.warn "\t + failed to load gradle properties from \"$path\". Error is: ${ex.getMessage()}"
         }
     }
-    def getAppPath = { ->
+    
+
+    project.ext.getAppPath = { ->
         def relativePathToApp = "app"
         def nsConfigFile = file("$USER_PROJECT_ROOT/nsconfig.json")
         def nsConfig
@@ -93,7 +95,7 @@ buildscript {
 
         return project.ext.appPath
     }
-    def getAppResourcesPath = { ->
+    project.ext.getAppResourcesPath = { ->
         def relativePathToAppResources
         def absolutePathToAppResources
         def nsConfigFile = file("$USER_PROJECT_ROOT/nsconfig.json")
@@ -112,13 +114,24 @@ buildscript {
             relativePathToAppResources = nsConfig.appResourcesPath
             absolutePathToAppResources = Paths.get(USER_PROJECT_ROOT).resolve(relativePathToAppResources).toAbsolutePath()
         } else {
-            absolutePathToAppResources = "${getAppPath()}/App_Resources"
+            absolutePathToAppResources = "${project.ext.getAppPath()}/App_Resources"
         }
 
         project.ext.appResourcesPath = absolutePathToAppResources
 
         return absolutePathToAppResources
     }
+
+    project.ext.applyBeforePluginGradleConfiguration = { ->
+        def appResourcesPath = project.ext.getAppResourcesPath()
+        def pathToBeforePluginGradle = "$appResourcesPath/Android/before-plugins.gradle"
+        def beforePluginGradle = file(pathToBeforePluginGradle)
+        if (beforePluginGradle.exists()) {
+            outLogger.withStyle(Style.SuccessHeader).println "\t ~ applying user-defined configuration from ${beforePluginGradle}"
+            apply from: pathToBeforePluginGradle
+        }
+    }
+
 
     def initialize = { ->
         // set up our logger
@@ -131,7 +144,7 @@ buildscript {
         project.ext.PLUGIN_NAME = "{{pluginName}}"
         
         def userDir = "$USER_PROJECT_ROOT"
-        rootProject.ext.userDefinedGradleProperties = getUserProperties("${getAppResourcesPath()}/Android")
+        rootProject.ext.userDefinedGradleProperties = getUserProperties("${project.ext.getAppResourcesPath()}/Android")
 
         loadPropertyFile("$USER_PROJECT_ROOT/${project.ext.PLATFORMS_ANDROID}/gradle.properties")
         loadPropertyFile("$USER_PROJECT_ROOT/${project.ext.PLATFORMS_ANDROID}/additional_gradle.properties")
@@ -158,59 +171,9 @@ buildscript {
         def appDependencies = new JsonSlurper().parseText(dependenciesJson.text)
         def pluginData = appDependencies.find { it.name == project.ext.PLUGIN_NAME }
         project.ext.nativescriptDependencies = appDependencies.findAll{pluginData.dependencies.contains(it.name)}.plus([pluginData])
-
-        project.ext.getAppResourcesPath = { ->
-            def relativePathToAppResources
-            def absolutePathToAppResources
-            def nsConfigFile = file("$USER_PROJECT_ROOT/nsconfig.json")
-            def nsConfig
-
-            if (nsConfigFile.exists()) {
-                nsConfig = new JsonSlurper().parseText(nsConfigFile.getText("UTF-8"))
-            }
-
-            if (project.hasProperty("appResourcesPath")) {
-                // when appResourcesPath is passed through -PappResourcesPath=/path/to/App_Resources
-                // the path could be relative or absolute - either case will work
-                relativePathToAppResources = appResourcesPath
-                absolutePathToAppResources = Paths.get(USER_PROJECT_ROOT).resolve(relativePathToAppResources).toAbsolutePath()
-            } else if (nsConfig != null && nsConfig.appResourcesPath != null) {
-                relativePathToAppResources = nsConfig.appResourcesPath
-                absolutePathToAppResources = Paths.get(USER_PROJECT_ROOT).resolve(relativePathToAppResources).toAbsolutePath()
-            } else {
-                absolutePathToAppResources = "${getAppPath()}/App_Resources"
-            }
-
-            project.ext.appResourcesPath = absolutePathToAppResources
-
-            return absolutePathToAppResources
-        }
-
-
-        project.ext.getAppPath = { ->
-            def relativePathToApp = "app"
-            def nsConfigFile = file("$USER_PROJECT_ROOT/nsconfig.json")
-            def nsConfig
-
-            if (nsConfigFile.exists()) {
-                nsConfig = new JsonSlurper().parseText(nsConfigFile.getText("UTF-8"))
-            }
-
-            if (project.hasProperty("appPath")) {
-                // when appPath is passed through -PappPath=/path/to/app
-                // the path could be relative or absolute - either case will work
-                relativePathToApp = appPath
-            } else if (nsConfig != null && nsConfig.appPath != null) {
-                relativePathToApp = nsConfig.appPath
-            }
-
-            project.ext.appPath = Paths.get(USER_PROJECT_ROOT).resolve(relativePathToApp).toAbsolutePath()
-
-            return project.ext.appPath
-        }
     }
     def applyBuildScriptConfigurations = { ->
-        def absolutePathToAppResources = getAppResourcesPath()
+        def absolutePathToAppResources = project.ext.getAppResourcesPath()
         def pathToBuildScriptGradle = "$absolutePathToAppResources/Android/buildscript.gradle"
         def buildScriptGradle = file(pathToBuildScriptGradle)
         if (buildScriptGradle.exists()) {
@@ -225,6 +188,12 @@ buildscript {
                 outLogger.withStyle(Style.SuccessHeader).println "\t + applying user-defined buildscript from dependency ${pluginBuildScriptGradle}"
                 apply from: pathToPluginBuildScriptGradle, to: buildscript
             }
+            // def pathToPluginProjectBuildScriptGradle = "${getDepPlatformDir(dep)}/project-buildscript.gradle"
+            // def pluginProjectBuildScriptGradle = file(pathToPluginProjectBuildScriptGradle)
+            // if (pluginProjectBuildScriptGradle.exists()) {
+            //     outLogger.withStyle(Style.SuccessHeader).println "\t + applying user-defined project-buildscript from dependency ${pluginProjectBuildScriptGradle}"
+            //     apply from: pathToPluginProjectBuildScriptGradle, to: project
+            // }
         }
 
         def pathToPluginBuildScriptGradle = "$rootDir/buildscript.gradle"
@@ -236,6 +205,7 @@ buildscript {
     }
 
     initialize()
+    project.ext.applyBeforePluginGradleConfiguration()
     applyBuildScriptConfigurations()
 
     def computeKotlinVersion = { -> project.hasProperty("kotlinVersion") ? kotlinVersion : "${ns_default_kotlin_version}" }
@@ -283,12 +253,6 @@ allprojects {
     }
 }
 
-def computeCompileSdkVersion = { -> project.hasProperty("compileSdk") ? compileSdk : 31 }
-def computeTargetSdkVersion = { -> project.hasProperty("targetSdk") ? targetSdk : 31 as int }
-def computeBuildToolsVersion = { ->
-    project.hasProperty("buildToolsVersion") ? buildToolsVersion : "31.0.0"
-}
-
 android {
     def applyPluginGradleConfigurations = { ->
         nativescriptDependencies.each { dep ->
@@ -299,7 +263,14 @@ android {
             }
         }
     }
-    applyBeforePluginGradleConfiguration()
+
+    def computeCompileSdkVersion = { -> project.hasProperty("compileSdk") ? project.compileSdk : 31 }
+    def computeTargetSdkVersion = { -> project.hasProperty("targetSdk") ? project.targetSdk : 31 as int }
+    def computeBuildToolsVersion = { ->
+        project.hasProperty("buildToolsVersion") ? project.buildToolsVersion : "31.0.0"
+    }
+
+    project.ext.applyBeforePluginGradleConfiguration()
     applyPluginGradleConfigurations()
 
     compileSdkVersion computeCompileSdkVersion()
@@ -318,17 +289,6 @@ android {
     lintOptions {
         checkReleaseBuilds false
         abortOnError false
-    }
-}
-
-
-def applyBeforePluginGradleConfiguration() {
-    def appResourcesPath = getAppResourcesPath()
-    def pathToBeforePluginGradle = "$appResourcesPath/Android/before-plugins.gradle"
-    def beforePluginGradle = file(pathToBeforePluginGradle)
-    if (beforePluginGradle.exists()) {
-        outLogger.withStyle(Style.SuccessHeader).println "\t ~ applying user-defined configuration from ${beforePluginGradle}"
-        apply from: pathToBeforePluginGradle
     }
 }
 
