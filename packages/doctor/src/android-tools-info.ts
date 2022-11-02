@@ -98,15 +98,15 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 		const errors: NativeScriptDoctor.IWarning[] = [];
 		const toolsInfoData = this.getToolsInfo(config);
 		const isAndroidHomeValid = this.isAndroidHomeValid();
-		const supportsOnlyMinRequiredCompileTarget =
-			this.getMaxSupportedCompileVersion(config) ===
-			AndroidToolsInfo.MIN_REQUIRED_COMPILE_TARGET;
-
 		if (!toolsInfoData.compileSdkVersion) {
+			const supportedTargetsForAndroidRuntime = this.getSupportedTargets(config.projectDir)
 			errors.push({
-				warning: `Cannot find a compatible Android SDK for compilation. To be able to build for Android, install Android SDK ${
-					AndroidToolsInfo.MIN_REQUIRED_COMPILE_TARGET
-				}${supportsOnlyMinRequiredCompileTarget ? "" : " or later"}.`,
+				warning: [
+					`Cannot find a compatible Android SDK for compilation.`,
+					`To be able to build for Android with your current android runtime, install one of the following supported Android SDK targets:`,
+					...supportedTargetsForAndroidRuntime.map(target => `  ${target}`),
+					`Supported targets vary based on what android runtime you have installed. Currently your app uses @nativescript/android ${this.getRuntimeVersion({ projectDir: config.projectDir })}`
+				].join('\n'),
 				additionalInformation: `Run \`\$ ${this.getPathToSdkManagementTool()}\` to manage your Android SDK versions.`,
 				platforms: [Constants.ANDROID_PLATFORM_NAME],
 			});
