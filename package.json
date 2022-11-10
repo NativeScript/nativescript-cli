@@ -86,7 +86,7 @@
     "minimatch": "3.0.4",
     "mkdirp": "1.0.4",
     "mute-stream": "0.0.8",
-    "nativescript-dev-xcode": "0.2.1",
+    "nativescript-dev-xcode": "0.4.0",
     "nativescript-preview-sdk": "0.4.2",
     "open": "7.1.0",
     "ora": "5.0.0",

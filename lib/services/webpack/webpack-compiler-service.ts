@@ -52,6 +52,9 @@ export class WebpackCompilerService
 	private webpackProcesses: IDictionary<child_process.ChildProcess> = {};
 	private expectedHashes: IStringDictionary = {};
 
+	private hashQueue: string[] = [];
+	private currentCompilationHash: string;
+
 	constructor(
 		private $options: IOptions,
 		private $errors: IErrors,
@@ -63,7 +66,7 @@ export class WebpackCompilerService
 		private $mobileHelper: Mobile.IMobileHelper,
 		private $cleanupService: ICleanupService,
 		private $packageManager: IPackageManager,
-		private $packageInstallationManager: IPackageInstallationManager // private $sharedEventBus: ISharedEventBus
+		private $packageInstallationManager: IPackageInstallationManager
 	) {
 		super();
 	}
@@ -97,6 +100,16 @@ export class WebpackCompilerService
 						"version" in message &&
 						"type" in message
 					) {
+						const currentHash = (message as IWebpackMessage<
+							IWebpackCompilation
+						>).hash;
+						if (
+							this.hashQueue.length == 0 ||
+							this.hashQueue[this.hashQueue.length - 1] !== currentHash
+						) {
+							this.hashQueue.push(currentHash);
+						}
+						this.currentCompilationHash = currentHash;
 						// first compilation can be ignored because it will be synced regardless
 						// handling it here would trigger 2 syncs
 						if (isFirstWebpackWatchCompilation) {
@@ -504,6 +517,7 @@ export class WebpackCompilerService
 	}
 
 	private getCurrentHotUpdateHash(emittedFiles: string[]) {
+		// TODO: don't do this. use the hashQueue instead
 		let hotHash;
 		const hotUpdateScripts = emittedFiles.filter((x) =>
 			x.endsWith(".hot-update.js")
@@ -529,6 +543,7 @@ export class WebpackCompilerService
 		}
 	}
 
+	lastEmittedHash = "";
 	private handleHMRMessage(
 		message: IWebpackMessage,
 		platformData: IPlatformData,
@@ -544,7 +559,7 @@ export class WebpackCompilerService
 
 		this.$logger.trace("Webpack build done!");
 
-		const files = message.data.emittedAssets.map((asset: string) =>
+		const files: string[] = message.data.emittedAssets.map((asset: string) =>
 			path.join(platformData.appDestinationDirectoryPath, "app", asset)
 		);
 		const staleFiles = message.data.staleAssets.map((asset: string) =>
@@ -553,25 +568,30 @@ export class WebpackCompilerService
 
 		// console.log({ staleFiles });
 
-		// extract last hash from emitted filenames
-		const lastHash = (() => {
-			const fileWithLastHash = files.find((fileName: string) =>
-				fileName.endsWith("hot-update.js")
-			);
-
-			if (!fileWithLastHash) {
-				return null;
-			}
-			const matches = fileWithLastHash.match(/\.(.+).hot-update\.js/);
-
-			if (matches) {
-				return matches[1];
-			}
-		})();
+		// grab the next hash that needs to be processed. Fallback to current hash.
 
 		if (!files.length) {
 			// ignore compilations if no new files are emitted
 			return;
+		}
+		// console.log(
+		// 	`HANDLE HMR MESSAGE ${this.hashQueue} ${this.currentCompilationHash} ${files}`
+		// );
+		let currentIdx = 0;
+		let lastHash =
+			this.hashQueue.length > 0
+				? this.hashQueue[currentIdx]
+				: this.currentCompilationHash;
+		while (lastHash !== this.currentCompilationHash) {
+			if (files.some((f) => f.endsWith(`${lastHash}.hot-update.js`))) {
+				this.hashQueue.splice(0, currentIdx + 1);
+				break;
+			}
+			currentIdx++;
+			lastHash =
+				this.hashQueue.length > currentIdx
+					? this.hashQueue[currentIdx]
+					: this.currentCompilationHash;
 		}
 
 		this.emit(WEBPACK_COMPILATION_COMPLETE, {
@@ -579,7 +599,7 @@ export class WebpackCompilerService
 			staleFiles,
 			hasOnlyHotUpdateFiles: prepareData.hmr,
 			hmrData: {
-				hash: lastHash || message.hash,
+				hash: lastHash,
 				fallbackFiles: [],
 			},
 			platform: platformData.platformNameLowerCase,
