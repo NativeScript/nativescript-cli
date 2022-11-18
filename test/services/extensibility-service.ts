@@ -5,6 +5,7 @@ import { assert } from "chai";
 import { NodePackageManager } from "../../lib/node-package-manager";
 import { PackageManager } from "../../lib/package-manager";
 import { YarnPackageManager } from "../../lib/yarn-package-manager";
+import { Yarn2PackageManager } from "../../lib/yarn2-package-manager";
 import { PnpmPackageManager } from "../../lib/pnpm-package-manager";
 import * as constants from "../../lib/constants";
 import { ChildProcess } from "../../lib/common/child-process";
@@ -75,6 +76,7 @@ describe("extensibilityService", () => {
 		});
 		testInjector.register("npm", NodePackageManager);
 		testInjector.register("yarn", YarnPackageManager);
+		testInjector.register("yarn2", Yarn2PackageManager);
 		testInjector.register("pnpm", PnpmPackageManager);
 		testInjector.register("settingsService", SettingsService);
 		testInjector.register("requireService", {
