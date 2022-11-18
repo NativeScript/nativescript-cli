@@ -663,6 +663,7 @@ interface IOptions
 	frameworkName: string;
 	frameworkVersion: string;
 	yarn: string;
+	yarn2: string;
 	pnpm: string;
 	ipa: string;
 	tsc: boolean;
