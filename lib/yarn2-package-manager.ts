@@ -89,16 +89,16 @@ export class Yarn2PackageManager extends BasePackageManager {
 		let viewResult: any;
 		try {
 			viewResult = await this.$childProcess.exec(
-				`yarn info ${packageName} ${flags}`
+				`yarn npm info ${packageName} ${flags}`
 			);
 		} catch (e) {
 			this.$errors.fail(e.message);
 		}
 
 		try {
-			const result = JSON.parse(viewResult);
-			return result.data;
+			return JSON.parse(viewResult);
 		} catch (err) {
+			this.$errors.fail(err.message);
 			return null;
 		}
 	}
