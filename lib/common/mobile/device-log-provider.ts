@@ -39,7 +39,7 @@ export class DeviceLogProvider extends DeviceLogProviderBase {
 		this.$logFilter.loggingLevel = logLevel.toUpperCase();
 	}
 
-	private consoleLogLevelRegex: RegExp = /^CONSOLE (LOG|INFO|WARN|ERROR|TRACE|INFO( .+)):\s/;
+	private consoleLogLevelRegex: RegExp = /^CONSOLE (LOG|INFO|WARN|ERROR|TRACE|(INFO( .+)|TIME:( .+))):\s/;
 	private consoleLevelColor: Record<string, (line: string) => string> = {
 		log: (line) => line,
 		info: chalk.cyanBright,
@@ -87,6 +87,11 @@ export class DeviceLogProvider extends DeviceLogProviderBase {
 			return;
 		}
 
+		// remove JS: prefix (android only)
+		// technically could be done in the android-log-filter (it adds the tag), but
+		// this way we can support "classicLogs" more easily...
+		data = data.replace(/(JS:\s*)?/, "");
+
 		// todo: extract into an injectable printer/logger service
 		let shouldPrepend = false;
 		let splitIndexes: number[] = [];
@@ -131,7 +136,7 @@ export class DeviceLogProvider extends DeviceLogProviderBase {
 
 			if (timeLabel) {
 				level = "time";
-				timeLabel = timeLabel.replace("INFO ", "").trim() + ": ";
+				timeLabel = timeLabel.replace(/(INFO |TIME: )/, "").trim() + ": ";
 			} else {
 				level = level?.toLowerCase() ?? "log";
 			}
